@@ -1,5 +1,5 @@
 import { createFileRoute } from '@tanstack/react-router';
-import { Loader2, Plus, ServerIcon, Terminal } from 'lucide-react';
+import { Loader2, Plus, ServerIcon } from 'lucide-react';
 import { useState } from 'react';
 import { toast } from 'sonner';
 import { Button } from '#/components/ui/button';
