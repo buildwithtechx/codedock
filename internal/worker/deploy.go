@@ -13,7 +13,7 @@ import (
 	"github.com/docker/docker/client"
 )
 
-func (d *WorkerDaemon) processDeployment(ctx context.Context, commandID string, payload models.WorkerDeployAppPayload) error {
+func (d *WorkerDaemon) processDeployment(ctx context.Context, payload models.WorkerDeployAppPayload) error {
 	// Initialize Docker client
 	dockerClient, err := client.NewClientWithOpts(client.FromEnv, client.WithAPIVersionNegotiation())
 	if err != nil {

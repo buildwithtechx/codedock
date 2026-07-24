@@ -153,7 +153,7 @@ func (d *WorkerDaemon) handleMessage(ctx context.Context, msg models.WorkerMessa
 func (d *WorkerDaemon) executeDeployment(ctx context.Context, commandID string, payload models.WorkerDeployAppPayload) {
 	slog.Info("executing deployment", "app_id", payload.AppID)
 
-	err := d.processDeployment(ctx, commandID, payload)
+	err := d.processDeployment(ctx, payload)
 
 	ack := models.WorkerCommandAckPayload{
 		CommandID: commandID,
