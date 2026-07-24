@@ -29,7 +29,7 @@ func NewWorkerWSHandler(hub *engine.WorkerHub, serverRepo repositories.ServerRep
 	}
 }
 
-// Connect upgrades the HTTP request to a WebSocket connection for a codedock-worker.
+// Connect upgrades the HTTP request to a WebSocket connection for a codedockw.
 func (h *WorkerWSHandler) Connect(c echo.Context) error {
 	token := c.QueryParam("token")
 	if token == "" {

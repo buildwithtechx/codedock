@@ -11,6 +11,7 @@ import (
 	"github.com/labstack/echo/v4"
 
 	"codedock.run/codedock/internal/models"
+	"codedock.run/codedock/internal/repositories"
 	"codedock.run/codedock/internal/services"
 	"codedock.run/codedock/internal/utils"
 )
@@ -28,19 +29,20 @@ type ProjectTokenProvider interface {
 	UpdateTokenLastUsed(ctx context.Context, id string) error
 }
 
-type ProjectMemberProvider interface {
-	GetMember(ctx context.Context, projectID, userID string) (*models.ProjectMember, error)
+type OrganizationMemberProvider interface {
+	GetMember(ctx context.Context, orgID, userID string) (*models.OrganizationMember, error)
 }
 
 type AuthGuard struct {
-	TokenService   *services.TokenService
-	Settings       SettingsProvider
-	ProjectTokens  ProjectTokenProvider
-	ProjectMembers ProjectMemberProvider
+	TokenService  *services.TokenService
+	Settings      SettingsProvider
+	ProjectTokens ProjectTokenProvider
+	OrgMembers    OrganizationMemberProvider
+	ProjectRepo   repositories.ProjectRepository
 }
 
-func NewAuthGuard(ts *services.TokenService, sp SettingsProvider, pt ProjectTokenProvider, pm ProjectMemberProvider) *AuthGuard {
-	return &AuthGuard{TokenService: ts, Settings: sp, ProjectTokens: pt, ProjectMembers: pm}
+func NewAuthGuard(ts *services.TokenService, sp SettingsProvider, pt ProjectTokenProvider, orgMembers OrganizationMemberProvider, pr repositories.ProjectRepository) *AuthGuard {
+	return &AuthGuard{TokenService: ts, Settings: sp, ProjectTokens: pt, OrgMembers: orgMembers, ProjectRepo: pr}
 }
 
 func (g *AuthGuard) checkIPAllowlist(c echo.Context) error {
@@ -230,20 +232,29 @@ func (g *AuthGuard) RequireProjectRole(minPermission models.MemberPermission) ec
 				return next(c)
 			}
 
-			if g.ProjectMembers == nil {
-				return utils.Error(c, http.StatusInternalServerError, "project members provider not configured")
+			if g.OrgMembers == nil || g.ProjectRepo == nil {
+				return utils.Error(c, http.StatusInternalServerError, "project or organization members provider not configured")
 			}
 
-			member, err := g.ProjectMembers.GetMember(c.Request().Context(), projectID, userClaims.UserID)
-			if err != nil {
-				return utils.Error(c, http.StatusInternalServerError, "failed to verify project membership")
+			project, err := g.ProjectRepo.Get(c.Request().Context(), projectID)
+			if err != nil || project == nil {
+				return utils.Error(c, http.StatusNotFound, "project not found")
 			}
-			if member == nil {
-				return utils.Error(c, http.StatusForbidden, "you do not have access to this project")
+
+			if project.OrganizationID == "" {
+				return utils.Error(c, http.StatusForbidden, "project does not belong to any organization")
+			}
+
+			member, err := g.OrgMembers.GetMember(c.Request().Context(), project.OrganizationID, userClaims.UserID)
+			if err != nil {
+				return utils.Error(c, http.StatusInternalServerError, "failed to verify organization membership")
+			}
+			if member == nil || member.Status != models.MemberStatusAccepted {
+				return utils.Error(c, http.StatusForbidden, "you do not have access to this project's organization")
 			}
 
 			if minPermission != "" && member.Permission != minPermission && member.Permission != models.MemberPermissionAdmin && member.Permission != models.MemberPermissionOwner {
-				return utils.Error(c, http.StatusForbidden, "insufficient project permissions")
+				return utils.Error(c, http.StatusForbidden, "insufficient organization permissions")
 			}
 
 			return next(c)

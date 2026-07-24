@@ -150,7 +150,7 @@ func selectOrCreateProject(projectRepo *repositories.ProjectRepo, projectID stri
 	if projectID != "" {
 		return projectID
 	}
-	projects, _, _ := projectRepo.List(context.Background(), 1000, 0)
+	projects, _, _ := projectRepo.ListAll(context.Background(), 1000, 0)
 	if len(projects) > 0 {
 		fmt.Println("📁 Select a project for this deployment:")
 		fmt.Println("  [0] Create a new project")

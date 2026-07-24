@@ -3,7 +3,9 @@ CREATE TABLE IF NOT EXISTS projects (
 			name TEXT UNIQUE NOT NULL,
 			description TEXT DEFAULT '',
 			created_at DATETIME DEFAULT CURRENT_TIMESTAMP,
-			updated_at DATETIME DEFAULT CURRENT_TIMESTAMP
+			updated_at DATETIME DEFAULT CURRENT_TIMESTAMP,
+			server_id TEXT REFERENCES servers(id) ON DELETE SET NULL,
+			organization_id TEXT REFERENCES organizations(id) ON DELETE CASCADE
 );
 
 CREATE TABLE IF NOT EXISTS domains (
@@ -15,6 +17,8 @@ CREATE TABLE IF NOT EXISTS domains (
 			path_prefix TEXT DEFAULT '/',
 			created_at DATETIME DEFAULT CURRENT_TIMESTAMP,
 			updated_at DATETIME DEFAULT CURRENT_TIMESTAMP,
+			server_id TEXT REFERENCES servers(id) ON DELETE SET NULL,
+			organization_id TEXT REFERENCES organizations(id) ON DELETE CASCADE,
 			FOREIGN KEY (service_id) REFERENCES app_services(id) ON DELETE CASCADE
 		);
 
@@ -30,7 +34,9 @@ CREATE TABLE IF NOT EXISTS users (
 			oauth_provider TEXT DEFAULT '',
 			last_login DATETIME,
 			created_at DATETIME DEFAULT CURRENT_TIMESTAMP,
-			updated_at DATETIME DEFAULT CURRENT_TIMESTAMP
+			updated_at DATETIME DEFAULT CURRENT_TIMESTAMP,
+			server_id TEXT REFERENCES servers(id) ON DELETE SET NULL,
+			organization_id TEXT REFERENCES organizations(id) ON DELETE CASCADE
 		);
 
 CREATE TABLE IF NOT EXISTS invites (
@@ -51,6 +57,8 @@ CREATE TABLE IF NOT EXISTS env_vars (
 			encrypted_value TEXT NOT NULL,
 			created_at DATETIME DEFAULT CURRENT_TIMESTAMP,
 			updated_at DATETIME DEFAULT CURRENT_TIMESTAMP,
+			server_id TEXT REFERENCES servers(id) ON DELETE SET NULL,
+			organization_id TEXT REFERENCES organizations(id) ON DELETE CASCADE,
 			FOREIGN KEY (project_id) REFERENCES projects(id) ON DELETE CASCADE,
 			UNIQUE(project_id, key)
 		);
@@ -71,7 +79,9 @@ CREATE TABLE IF NOT EXISTS databases (
 			external_dns TEXT,
 			custom_args TEXT DEFAULT '',
 			created_at DATETIME DEFAULT CURRENT_TIMESTAMP,
-			updated_at DATETIME DEFAULT CURRENT_TIMESTAMP
+			updated_at DATETIME DEFAULT CURRENT_TIMESTAMP,
+			server_id TEXT REFERENCES servers(id) ON DELETE SET NULL,
+			organization_id TEXT REFERENCES organizations(id) ON DELETE CASCADE
 		,
 			environment_id TEXT DEFAULT '',
             logical_replication INTEGER DEFAULT 0,
@@ -91,6 +101,8 @@ CREATE TABLE IF NOT EXISTS scheduled_tasks (
 			last_output TEXT DEFAULT '',
 			created_at DATETIME DEFAULT CURRENT_TIMESTAMP,
 			updated_at DATETIME DEFAULT CURRENT_TIMESTAMP,
+			server_id TEXT REFERENCES servers(id) ON DELETE SET NULL,
+			organization_id TEXT REFERENCES organizations(id) ON DELETE CASCADE,
 			FOREIGN KEY (service_id) REFERENCES app_services(id) ON DELETE CASCADE
 		);
 
@@ -102,6 +114,8 @@ CREATE TABLE IF NOT EXISTS user_git_providers (
 			account_name TEXT NOT NULL,
 			created_at DATETIME DEFAULT CURRENT_TIMESTAMP,
 			updated_at DATETIME DEFAULT CURRENT_TIMESTAMP,
+			server_id TEXT REFERENCES servers(id) ON DELETE SET NULL,
+			organization_id TEXT REFERENCES organizations(id) ON DELETE CASCADE,
 			UNIQUE(user_id, provider)
 		);
 
@@ -158,6 +172,8 @@ CREATE TABLE IF NOT EXISTS app_services (
 			deploy_token TEXT DEFAULT '',
 			cpu_limit REAL DEFAULT 0,
 			memory_limit INTEGER DEFAULT 0,
+			maintenance_mode BOOLEAN NOT NULL DEFAULT 0,
+			registry_id TEXT REFERENCES registries(id) ON DELETE SET NULL,
 			UNIQUE(environment_id, name)
 		);
 
@@ -258,7 +274,8 @@ CREATE TABLE IF NOT EXISTS project_members (
 CREATE TABLE IF NOT EXISTS backup_configs (
 			id TEXT PRIMARY KEY,
 			database_id TEXT,
-			storage_id TEXT,
+			service_id TEXT,
+			volume_name TEXT,
 			s3_destination_id TEXT,
 			name TEXT NOT NULL,
 			description TEXT,
@@ -369,7 +386,9 @@ CREATE TABLE IF NOT EXISTS github_apps (
 			private_key TEXT NOT NULL,
 			is_public BOOLEAN DEFAULT FALSE,
 			created_at DATETIME DEFAULT CURRENT_TIMESTAMP,
-			updated_at DATETIME DEFAULT CURRENT_TIMESTAMP
+			updated_at DATETIME DEFAULT CURRENT_TIMESTAMP,
+			server_id TEXT REFERENCES servers(id) ON DELETE SET NULL,
+			organization_id TEXT REFERENCES organizations(id) ON DELETE CASCADE
 		);
 
 
@@ -383,10 +402,11 @@ CREATE TABLE IF NOT EXISTS oauth_providers (
 			redirect_uri TEXT DEFAULT '',
 			base_url TEXT DEFAULT '',
 			tenant TEXT DEFAULT '',
-			updated_at DATETIME DEFAULT CURRENT_TIMESTAMP
+			updated_at DATETIME DEFAULT CURRENT_TIMESTAMP,
+			server_id TEXT REFERENCES servers(id) ON DELETE SET NULL,
+			organization_id TEXT REFERENCES organizations(id) ON DELETE CASCADE
 		);
 
--- CREATE INDEX IF NOT EXISTS idx_domains_project_id ON domains(project_id);
 CREATE INDEX IF NOT EXISTS idx_env_vars_project_id ON env_vars(project_id);
 CREATE INDEX IF NOT EXISTS idx_scheduled_tasks_service_id ON scheduled_tasks(service_id);
 CREATE INDEX IF NOT EXISTS idx_user_git_providers_user_id ON user_git_providers(user_id);
@@ -410,3 +430,163 @@ CREATE TABLE IF NOT EXISTS service_volumes (
     container_path TEXT NOT NULL,
     created_at DATETIME NOT NULL DEFAULT CURRENT_TIMESTAMP
 );
+
+CREATE TABLE IF NOT EXISTS dns_records (
+    id TEXT PRIMARY KEY,
+    domain_name TEXT NOT NULL,
+    record_type TEXT NOT NULL,
+    record_name TEXT NOT NULL,
+    record_value TEXT NOT NULL,
+    ttl INTEGER DEFAULT 3600,
+    created_at DATETIME DEFAULT CURRENT_TIMESTAMP,
+    updated_at DATETIME DEFAULT CURRENT_TIMESTAMP,
+			server_id TEXT REFERENCES servers(id) ON DELETE SET NULL,
+			organization_id TEXT REFERENCES organizations(id) ON DELETE CASCADE
+);
+
+CREATE TABLE IF NOT EXISTS audit_logs (
+    id TEXT PRIMARY KEY,
+    user_id TEXT NOT NULL,
+    action TEXT NOT NULL,
+    resource TEXT NOT NULL,
+    details TEXT,
+    ip_address TEXT,
+    created_at TEXT DEFAULT CURRENT_TIMESTAMP
+);
+
+CREATE TABLE IF NOT EXISTS ai_settings (
+    id TEXT PRIMARY KEY,
+    default_provider TEXT DEFAULT 'none',
+    openai_key TEXT DEFAULT '',
+    openai_model TEXT DEFAULT '',
+    anthropic_key TEXT DEFAULT '',
+    anthropic_model TEXT DEFAULT '',
+    google_key TEXT DEFAULT '',
+    google_model TEXT DEFAULT '',
+    mistral_key TEXT DEFAULT '',
+    mistral_model TEXT DEFAULT '',
+    groq_key TEXT DEFAULT '',
+    groq_model TEXT DEFAULT '',
+    deepseek_key TEXT DEFAULT '',
+    deepseek_model TEXT DEFAULT '',
+    xai_key TEXT DEFAULT '',
+    xai_model TEXT DEFAULT '',
+    moonshot_key TEXT DEFAULT '',
+    moonshot_model TEXT DEFAULT '',
+    created_at DATETIME DEFAULT CURRENT_TIMESTAMP,
+    updated_at DATETIME DEFAULT CURRENT_TIMESTAMP,
+			server_id TEXT REFERENCES servers(id) ON DELETE SET NULL,
+			organization_id TEXT REFERENCES organizations(id) ON DELETE CASCADE
+);
+
+CREATE TABLE IF NOT EXISTS notification_settings (
+    id TEXT PRIMARY KEY,
+    discord_webhook_url TEXT,
+    discord_ping_enabled BOOLEAN DEFAULT FALSE,
+    discord_enabled BOOLEAN DEFAULT FALSE,
+    slack_webhook_url TEXT,
+    slack_enabled BOOLEAN DEFAULT FALSE,
+    telegram_bot_token TEXT,
+    telegram_chat_id TEXT,
+    telegram_enabled BOOLEAN DEFAULT FALSE,
+    smtp_host TEXT,
+    smtp_port INTEGER DEFAULT 587,
+    smtp_user TEXT,
+    smtp_password TEXT,
+    smtp_from_name TEXT,
+    smtp_from_address TEXT,
+    smtp_enabled BOOLEAN DEFAULT FALSE,
+    resend_api_key TEXT,
+    resend_enabled BOOLEAN DEFAULT FALSE,
+    pushover_user_key TEXT,
+    pushover_api_token TEXT,
+    pushover_enabled BOOLEAN DEFAULT FALSE,
+    generic_webhook_url TEXT,
+    generic_webhook_enabled BOOLEAN DEFAULT FALSE,
+    notification_alerts BOOLEAN DEFAULT FALSE,
+    created_at DATETIME DEFAULT CURRENT_TIMESTAMP,
+    updated_at DATETIME DEFAULT CURRENT_TIMESTAMP,
+			server_id TEXT REFERENCES servers(id) ON DELETE SET NULL,
+			organization_id TEXT REFERENCES organizations(id) ON DELETE CASCADE
+);
+
+CREATE INDEX IF NOT EXISTS idx_dns_records_domain_name ON dns_records(domain_name);
+CREATE INDEX IF NOT EXISTS idx_audit_logs_user_id_created_at ON audit_logs(user_id, created_at DESC);
+
+
+
+CREATE TABLE log_drains (
+    id TEXT PRIMARY KEY,
+    project_id TEXT NOT NULL DEFAULT '',
+    service_id TEXT NOT NULL,
+    drain_type TEXT NOT NULL,
+    endpoint_url TEXT NOT NULL,
+    auth_token TEXT,
+    created_at TEXT NOT NULL,
+    updated_at TEXT NOT NULL,
+    FOREIGN KEY(service_id) REFERENCES app_services(id) ON DELETE CASCADE
+);
+
+CREATE TABLE IF NOT EXISTS servers (
+    id TEXT PRIMARY KEY,
+    user_id TEXT NOT NULL,
+    name TEXT NOT NULL,
+    ip_address TEXT NOT NULL,
+    status TEXT DEFAULT 'provisioning',
+    worker_token TEXT NOT NULL,
+    last_seen_at DATETIME,
+    metrics TEXT,
+    created_at DATETIME DEFAULT CURRENT_TIMESTAMP,
+    updated_at DATETIME DEFAULT CURRENT_TIMESTAMP,
+			server_id TEXT REFERENCES servers(id) ON DELETE SET NULL,
+			organization_id TEXT REFERENCES organizations(id) ON DELETE CASCADE
+);
+
+CREATE INDEX IF NOT EXISTS idx_servers_user_id ON servers(user_id);
+CREATE INDEX IF NOT EXISTS idx_servers_worker_token ON servers(worker_token);
+
+
+
+CREATE TABLE IF NOT EXISTS registries (
+    id TEXT PRIMARY KEY,
+    project_id TEXT NOT NULL REFERENCES projects(id) ON DELETE CASCADE,
+    name TEXT NOT NULL,
+    registry_url TEXT NOT NULL,
+    username TEXT,
+    password_token TEXT,
+    created_at DATETIME DEFAULT CURRENT_TIMESTAMP,
+    updated_at DATETIME DEFAULT CURRENT_TIMESTAMP,
+			server_id TEXT REFERENCES servers(id) ON DELETE SET NULL,
+			organization_id TEXT REFERENCES organizations(id) ON DELETE CASCADE
+);
+
+CREATE INDEX IF NOT EXISTS idx_registries_project_id ON registries(project_id);
+
+CREATE TABLE organizations (
+    id TEXT PRIMARY KEY,
+    name TEXT NOT NULL,
+    created_at DATETIME DEFAULT CURRENT_TIMESTAMP,
+    updated_at DATETIME DEFAULT CURRENT_TIMESTAMP,
+			server_id TEXT REFERENCES servers(id) ON DELETE SET NULL,
+			organization_id TEXT REFERENCES organizations(id) ON DELETE CASCADE
+);
+
+CREATE TABLE organization_members (
+    id TEXT PRIMARY KEY,
+    organization_id TEXT NOT NULL,
+    user_id TEXT,
+    email TEXT NOT NULL,
+    permission TEXT NOT NULL,
+    status TEXT NOT NULL,
+    invited_at DATETIME NOT NULL,
+    accepted_at DATETIME,
+    FOREIGN KEY (organization_id) REFERENCES organizations(id) ON DELETE CASCADE,
+    FOREIGN KEY (user_id) REFERENCES users(id) ON DELETE SET NULL
+);
+
+
+
+
+CREATE INDEX idx_organization_members_org_id ON organization_members(organization_id);
+CREATE INDEX idx_organization_members_user_id ON organization_members(user_id);
+CREATE INDEX idx_projects_organization_id ON projects(organization_id);

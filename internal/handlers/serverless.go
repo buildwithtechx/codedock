@@ -40,7 +40,7 @@ func (h *ServerlessHandler) SaveCode(c echo.Context) error {
 		return utils.Error(c, http.StatusInternalServerError, err.Error())
 	}
 
-	return utils.Success(c, "code saved successfully", map[string]interface{}{
+	return utils.Success(c, "code saved successfully", map[string]any{
 		"code": code,
 	})
 }
@@ -59,7 +59,7 @@ func (h *ServerlessHandler) GetCode(c echo.Context) error {
 		return utils.Error(c, http.StatusInternalServerError, err.Error())
 	}
 
-	return utils.Success(c, "Code fetched successfully", map[string]interface{}{
+	return utils.Success(c, "Code fetched successfully", map[string]any{
 		"code": code,
 	})
 }

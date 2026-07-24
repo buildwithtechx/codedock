@@ -3,12 +3,13 @@ package models
 import "time"
 
 type ProjectConfig struct {
-	ID          string    `json:"id" db:"id"`
-	ServerID    string    `json:"serverId,omitempty" db:"server_id"` // Node where this project runs
-	Name        string    `json:"name" db:"name"`
-	Description string    `json:"description,omitempty" db:"description"`
-	CreatedAt   time.Time `json:"createdAt" db:"created_at"`
-	UpdatedAt   time.Time `json:"updatedAt" db:"updated_at"`
+	ID             string    `json:"id" db:"id"`
+	OrganizationID string    `json:"organizationId,omitempty" db:"organization_id"`
+	ServerID       string    `json:"serverId,omitempty" db:"server_id"`
+	Name           string    `json:"name" db:"name"`
+	Description    string    `json:"description,omitempty" db:"description"`
+	CreatedAt      time.Time `json:"createdAt" db:"created_at"`
+	UpdatedAt      time.Time `json:"updatedAt" db:"updated_at"`
 }
 
 type SSLCertStatus string
@@ -86,6 +87,7 @@ type EnvironmentCanvas struct {
 
 type CreateProjectRequest struct {
 	ID                 string `json:"id"`
+	OrganizationID     string `json:"organizationId"`
 	Name               string `json:"name"`
 	Description        string `json:"description,omitempty"`
 	RepositoryURL      string `json:"repositoryUrl,omitempty"`
@@ -94,6 +96,7 @@ type CreateProjectRequest struct {
 	InternalPort       int    `json:"internalPort,omitempty"`
 	InternalPortSnake  int    `json:"internal_port,omitempty"`
 	Domain             string `json:"domain,omitempty"`
+	ServerID           string `json:"serverId,omitempty"`
 }
 
 type (
@@ -110,17 +113,6 @@ type ProjectToken struct {
 	IPAllowlist   []string   `json:"ipAllowlist" db:"-"`
 	ExpiresAt     *time.Time `json:"expiresAt,omitempty" db:"expires_at"`
 	CreatedAt     time.Time  `json:"createdAt" db:"created_at"`
-}
-
-type ProjectMember struct {
-	ID         string           `json:"id" db:"id"`
-	ProjectID  string           `json:"projectId" db:"project_id"`
-	UserID     string           `json:"userId,omitempty" db:"user_id"`
-	Email      string           `json:"email" db:"email"`
-	Permission MemberPermission `json:"permission" db:"permission"`
-	Status     MemberStatus     `json:"status" db:"status"`
-	InvitedAt  time.Time        `json:"invitedAt" db:"invited_at"`
-	AcceptedAt time.Time        `json:"acceptedAt,omitempty" db:"accepted_at"`
 }
 
 type CreateTokenRequest struct {

@@ -6,13 +6,11 @@ import "time"
 type WorkerMessageType string
 
 const (
-	// Control Plane -> Worker Commands
 	WorkerMessageTypeDeployApp  WorkerMessageType = "deploy_app"
 	WorkerMessageTypeStopApp    WorkerMessageType = "stop_app"
 	WorkerMessageTypeRestartApp WorkerMessageType = "restart_app"
 	WorkerMessageTypeDeployDB   WorkerMessageType = "deploy_db"
 
-	// Worker -> Control Plane Responses/Events
 	WorkerMessageTypeAuth       WorkerMessageType = "auth"
 	WorkerMessageTypeAuthResult WorkerMessageType = "auth_result"
 	WorkerMessageTypeLogStream  WorkerMessageType = "log_stream"
@@ -20,19 +18,12 @@ const (
 	WorkerMessageTypeCommandAck WorkerMessageType = "command_ack"
 )
 
-// WorkerMessage is the universal envelope for all WebSocket communication
-// between the control plane and the worker daemon.
 type WorkerMessage struct {
 	ID        string            `json:"id"`
 	Type      WorkerMessageType `json:"type"`
 	Timestamp time.Time         `json:"timestamp"`
-	// Payload contains the actual data, which will be unmarshaled based on the Type.
-	Payload []byte `json:"payload"`
+	Payload   []byte            `json:"payload"`
 }
-
-// -----------------------------------------------------------------------------
-// Authentication Schemas
-// -----------------------------------------------------------------------------
 
 type WorkerAuthPayload struct {
 	WorkerToken string `json:"worker_token"`
@@ -44,19 +35,32 @@ type WorkerAuthResultPayload struct {
 	Error   string `json:"error,omitempty"`
 }
 
-// -----------------------------------------------------------------------------
-// Command Schemas (Control Plane -> Worker)
-// -----------------------------------------------------------------------------
-
-// WorkerDeployAppPayload contains everything the worker needs to deploy an app.
 type WorkerDeployAppPayload struct {
-	AppID    string            `json:"app_id"`
-	Image    string            `json:"image"`
-	Env      map[string]string `json:"env"`
-	Ports    []string          `json:"ports"`
-	Volumes  []string          `json:"volumes"`
-	Network  string            `json:"network"`
-	Registry *RegistryConfig   `json:"registry,omitempty"`
+	AppID        string            `json:"app_id"`
+	DeploymentID string            `json:"deployment_id,omitempty"`
+	Image        string            `json:"image,omitempty"`
+	Env          map[string]string `json:"env"`
+	Ports        []string          `json:"ports"`
+	Volumes      []string          `json:"volumes"`
+	Network      string            `json:"network"`
+	Registry     *RegistryConfig   `json:"registry,omitempty"`
+
+	// Build specific (Decentralized Builds)
+	GitRepoURL      string `json:"git_repo_url,omitempty"`
+	GitBranch       string `json:"git_branch,omitempty"`
+	GitCommitHash   string `json:"git_commit_hash,omitempty"`
+	GitAuthToken    string `json:"git_auth_token,omitempty"`
+	BuildCommand    string `json:"build_command,omitempty"`
+	InstallCommand  string `json:"install_command,omitempty"`
+	StartCommand    string `json:"start_command,omitempty"`
+	BaseDirectory   string `json:"base_directory,omitempty"`
+	NixpacksVersion string `json:"nixpacks_version,omitempty"`
+	MemoryLimitMB   int    `json:"memory_limit_mb,omitempty"`
+	CPURequest      int    `json:"cpu_request,omitempty"`
+
+	Domain          string `json:"domain,omitempty"`
+	RuntimeMode     string `json:"runtime_mode,omitempty"`
+	HealthCheckPath string `json:"health_check_path,omitempty"`
 }
 
 type RegistryConfig struct {
@@ -71,14 +75,10 @@ type WorkerCommandAckPayload struct {
 	Error     string `json:"error,omitempty"`
 }
 
-// -----------------------------------------------------------------------------
-// Telemetry Schemas (Worker -> Control Plane)
-// -----------------------------------------------------------------------------
-
 type WorkerLogStreamPayload struct {
 	ContainerID string `json:"container_id"`
 	LogLine     string `json:"log_line"`
-	StreamType  string `json:"stream_type"` // "stdout" or "stderr"
+	StreamType  string `json:"stream_type"`
 }
 
 type WorkerMetricsPayload struct {

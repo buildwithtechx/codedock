@@ -55,7 +55,20 @@ jobs:
           done
 
           # ---------------------------------------------------------
-          # 2. Build the remote client CLI (codedock)
+          # 2. Build the worker daemon (codedockw)
+          # Worker only runs on Linux
+          # ---------------------------------------------------------
+          for GOARCH in amd64 arm64; do
+            echo "Building codedockw for linux/$GOARCH..."
+            GOOS=linux GOARCH=$GOARCH go build -ldflags="-s -w" -o dist/codedockw_linux_$GOARCH ./cmd/codedockw
+
+            # Compress
+            tar -czf dist/codedockw_linux_$GOARCH.tar.gz -C dist codedockw_linux_$GOARCH
+            rm dist/codedockw_linux_$GOARCH
+          done
+
+          # ---------------------------------------------------------
+          # 3. Build the remote client CLI (codedock)
           # Client runs on laptops, so we build for Mac, Linux, Windows
           # ---------------------------------------------------------
           # macOS

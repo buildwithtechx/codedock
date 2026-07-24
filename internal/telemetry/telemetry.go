@@ -38,7 +38,7 @@ func Init() {
 	client = c
 }
 
-func Track(distinctID string, event string, properties map[string]interface{}) {
+func Track(distinctID string, event string, properties map[string]any) {
 	if client == nil {
 		return
 	}

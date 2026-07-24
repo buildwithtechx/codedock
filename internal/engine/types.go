@@ -3,7 +3,7 @@ package engine
 type ComposeTemplate struct {
 	Version   string                    `yaml:"version,omitempty"`
 	Services  map[string]ComposeService `yaml:"services"`
-	Volumes   map[string]interface{}    `yaml:"volumes,omitempty"`
+	Volumes   map[string]any            `yaml:"volumes,omitempty"`
 	XCodedock *CodedockMetadata         `yaml:"x-codedock,omitempty"`
 }
 

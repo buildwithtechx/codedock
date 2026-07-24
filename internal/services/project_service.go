@@ -19,17 +19,17 @@ type ProjectService struct {
 	appRepo        repositories.AppServiceRepository
 	serviceVarRepo repositories.ServiceVarRepository
 	settingsRepo   repositories.SettingsRepository
-	membersRepo    repositories.ProjectSettingsRepository
+	orgRepo        repositories.OrganizationRepository
 }
 
-func NewProjectService(pr repositories.ProjectRepository, er repositories.EnvironmentRepository, ar repositories.AppServiceRepository, svr repositories.ServiceVarRepository, sr repositories.SettingsRepository, mr repositories.ProjectSettingsRepository) *ProjectService {
+func NewProjectService(pr repositories.ProjectRepository, er repositories.EnvironmentRepository, ar repositories.AppServiceRepository, svr repositories.ServiceVarRepository, sr repositories.SettingsRepository, orgRepo repositories.OrganizationRepository) *ProjectService {
 	return &ProjectService{
 		projectRepo:    pr,
 		envRepo:        er,
 		appRepo:        ar,
 		serviceVarRepo: svr,
 		settingsRepo:   sr,
-		membersRepo:    mr,
+		orgRepo:        orgRepo,
 	}
 }
 
@@ -60,12 +60,22 @@ func (s *ProjectService) CreateProjectFromRequest(ctx context.Context, req *mode
 	if id == "" {
 		id = uuid.NewString()
 	}
+	orgID := req.OrganizationID
+	if orgID == "none" {
+		orgID = ""
+	}
+	serverID := req.ServerID
+	if serverID == "local" {
+		serverID = ""
+	}
 	p := &models.ProjectConfig{
-		ID:          id,
-		Name:        req.Name,
-		Description: req.Description,
-		CreatedAt:   time.Now(),
-		UpdatedAt:   time.Now(),
+		ID:             id,
+		OrganizationID: orgID,
+		ServerID:       serverID,
+		Name:           req.Name,
+		Description:    req.Description,
+		CreatedAt:      time.Now(),
+		UpdatedAt:      time.Now(),
 	}
 	if err := s.projectRepo.Create(ctx, p); err != nil {
 		return nil, fmt.Errorf("failed to create project: %w", err)
@@ -81,15 +91,25 @@ func (s *ProjectService) CreateProjectWithMemberFromRequest(ctx context.Context,
 	if id == "" {
 		id = uuid.NewString()
 	}
-	p := &models.ProjectConfig{
-		ID:          id,
-		Name:        req.Name,
-		Description: req.Description,
-		CreatedAt:   time.Now(),
-		UpdatedAt:   time.Now(),
+	orgID := req.OrganizationID
+	if orgID == "none" {
+		orgID = ""
 	}
-	if err := s.projectRepo.CreateWithMember(ctx, p, userID, role); err != nil {
-		return nil, fmt.Errorf("failed to create project with member: %w", err)
+	serverID := req.ServerID
+	if serverID == "local" {
+		serverID = ""
+	}
+	p := &models.ProjectConfig{
+		ID:             id,
+		OrganizationID: orgID,
+		ServerID:       serverID,
+		Name:           req.Name,
+		Description:    req.Description,
+		CreatedAt:      time.Now(),
+		UpdatedAt:      time.Now(),
+	}
+	if err := s.projectRepo.Create(ctx, p); err != nil {
+		return nil, fmt.Errorf("failed to create project: %w", err)
 	}
 	return p, nil
 }
@@ -101,22 +121,19 @@ func (s *ProjectService) GetProject(ctx context.Context, id string) (*models.Pro
 	return s.projectRepo.Get(ctx, id)
 }
 
-func (s *ProjectService) IsMemberOrOwner(ctx context.Context, projectID, userID string, userRole models.UserRole) bool {
-	if userRole == models.UserRoleOwner || userRole == models.UserRoleAdmin {
-		return true
-	}
-	member, err := s.membersRepo.GetMember(ctx, projectID, userID)
-	if err != nil || member == nil {
-		return false
-	}
-	return member.Status == models.MemberStatusAccepted
-}
-
 func (s *ProjectService) HasPermission(ctx context.Context, projectID, userID string, userRole models.UserRole, minPermission models.MemberPermission) bool {
 	if userRole == models.UserRoleOwner || userRole == models.UserRoleAdmin {
 		return true
 	}
-	member, err := s.membersRepo.GetMember(ctx, projectID, userID)
+	project, err := s.projectRepo.Get(ctx, projectID)
+	if err != nil || project == nil {
+		return false
+	}
+	if project.OrganizationID == "" {
+		return false // No organization means no access unless admin
+	}
+
+	member, err := s.orgRepo.GetMember(ctx, project.OrganizationID, userID)
 	if err != nil || member == nil || member.Status != models.MemberStatusAccepted {
 		return false
 	}
@@ -133,8 +150,16 @@ func (s *ProjectService) HasPermission(ctx context.Context, projectID, userID st
 	}
 }
 
+func (s *ProjectService) IsMemberOrOwner(ctx context.Context, projectID string, userID string, userRole models.UserRole) bool {
+	hasPerm := s.HasPermission(ctx, projectID, userID, userRole, "")
+	return hasPerm
+}
+func (s *ProjectService) ListProjectsByOrganization(ctx context.Context, organizationID string, limit, offset int) ([]models.ProjectConfig, int, error) {
+	return s.projectRepo.ListByOrganization(ctx, organizationID, limit, offset)
+}
+
 func (s *ProjectService) ListProjects(ctx context.Context, limit, offset int) ([]models.ProjectConfig, int, error) {
-	return s.projectRepo.List(ctx, limit, offset)
+	return s.projectRepo.ListAll(ctx, limit, offset)
 }
 
 func (s *ProjectService) DeleteProject(ctx context.Context, id string) error {

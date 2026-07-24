@@ -35,7 +35,7 @@ func (c *Client) ListBackups(databaseID string) ([]models.BackupConfig, error) {
 	return result.Data, nil
 }
 
-func (c *Client) CreateBackup(req interface{}) (*models.BackupConfig, error) {
+func (c *Client) CreateBackup(req any) (*models.BackupConfig, error) {
 	resp, err := c.sendRequest("POST", "/backups", req)
 	if err != nil {
 		return nil, err

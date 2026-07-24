@@ -80,7 +80,7 @@ func (h *AuthHandler) Register(c echo.Context) error {
 		return utils.Error(c, http.StatusBadRequest, err.Error())
 	}
 	SetAuthCookie(c, token)
-	telemetry.Track(u.Email, "user_signed_up", map[string]interface{}{
+	telemetry.Track(u.Email, "user_signed_up", map[string]any{
 		"email": u.Email,
 		"name":  u.Name,
 	})
@@ -101,7 +101,7 @@ func (h *AuthHandler) Login(c echo.Context) error {
 		return utils.Error(c, http.StatusUnauthorized, err.Error())
 	}
 	SetAuthCookie(c, token)
-	telemetry.Track(u.Email, "user_logged_in", map[string]interface{}{
+	telemetry.Track(u.Email, "user_logged_in", map[string]any{
 		"email": u.Email,
 	})
 	return utils.Success(c, "Login successful", map[string]any{

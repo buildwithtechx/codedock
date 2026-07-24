@@ -102,7 +102,7 @@ func (h *AppHandler) Create(c echo.Context) error {
 	if created.ImageRef != "" {
 		sourceType = "docker_image"
 	}
-	telemetry.Track(distinctID, "app_created", map[string]interface{}{
+	telemetry.Track(distinctID, "app_created", map[string]any{
 		"app_id": created.ID,
 		"name":   created.Name,
 		"type":   sourceType,
@@ -194,6 +194,8 @@ func (h *AppHandler) Update(c echo.Context) error {
 	existing.DeployToken = req.DeployToken
 	existing.MaintenanceMode = req.MaintenanceMode
 	existing.EnablePRPreviews = req.EnablePRPreviews
+	existing.ImageRef = req.ImageRef
+	existing.RegistryID = req.RegistryID
 	if err := h.appService.UpdateAppService(c.Request().Context(), existing); err != nil {
 		return utils.Error(c, http.StatusInternalServerError, err.Error())
 	}

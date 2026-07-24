@@ -138,6 +138,7 @@ type AppService struct {
 	UpdatedAt        time.Time        `json:"updatedAt" db:"updated_at"`
 	EnablePRPreviews bool             `json:"enablePRPreviews" db:"enable_pr_previews"`
 	MaintenanceMode  bool             `json:"maintenanceMode" db:"maintenance_mode"`
+	RegistryID       *string          `json:"registryId,omitempty" db:"registry_id"`
 
 	Volumes []ServiceVolume `json:"volumes,omitempty" db:"-"`
 }
@@ -151,23 +152,25 @@ type ServiceVolume struct {
 }
 
 type CreateAppServiceRequest struct {
-	ProjectID       string      `json:"projectId"`
-	Name            string      `json:"name"`
-	RepositoryURL   string      `json:"repositoryUrl"`
-	ImageRef        string      `json:"imageRef,omitempty"`
-	Branch          string      `json:"branch"`
-	RootDirectory   string      `json:"rootDirectory"`
-	RuntimeMode     RuntimeMode `json:"runtimeMode"`
-	InstallCommand  string      `json:"installCommand"`
-	BuildCommand    string      `json:"buildCommand"`
-	StartCommand    string      `json:"startCommand"`
-	DockerfilePath  string      `json:"dockerfilePath"`
-	BuildEngine     string      `json:"buildEngine"`
-	InternalPort    int         `json:"internalPort"`
-	Domain          string      `json:"domain"`
-	StaticOutput    string      `json:"staticOutput"`
-	HealthCheckPath string      `json:"healthCheckPath"`
-	MaintenanceMode bool        `json:"maintenanceMode,omitempty"`
+	ProjectID        string      `json:"projectId"`
+	Name             string      `json:"name"`
+	RepositoryURL    string      `json:"repositoryUrl"`
+	ImageRef         string      `json:"imageRef,omitempty"`
+	Branch           string      `json:"branch"`
+	RootDirectory    string      `json:"rootDirectory"`
+	RuntimeMode      RuntimeMode `json:"runtimeMode"`
+	InstallCommand   string      `json:"installCommand"`
+	BuildCommand     string      `json:"buildCommand"`
+	StartCommand     string      `json:"startCommand"`
+	DockerfilePath   string      `json:"dockerfilePath"`
+	BuildEngine      string      `json:"buildEngine"`
+	InternalPort     int         `json:"internalPort"`
+	Domain           string      `json:"domain"`
+	StaticOutput     string      `json:"staticOutput"`
+	HealthCheckPath  string      `json:"healthCheckPath"`
+	EnablePRPreviews bool        `json:"enablePRPreviews"`
+	MaintenanceMode  bool        `json:"maintenanceMode,omitempty"`
+	RegistryID       *string     `json:"registryId,omitempty"`
 }
 
 type UpdateAppServiceRequest struct {
@@ -189,6 +192,7 @@ type UpdateAppServiceRequest struct {
 	Status          string      `json:"status"`
 	DeployToken     string      `json:"deployToken"`
 	MaintenanceMode bool        `json:"maintenanceMode,omitempty"`
+	RegistryID      *string     `json:"registryId,omitempty"`
 }
 
 type Variable struct {
@@ -245,6 +249,8 @@ type UpdateScheduledTaskRequest struct {
 type BackupConfig struct {
 	ID              string             `json:"id" db:"id"`
 	DatabaseID      string             `json:"databaseId,omitempty" db:"database_id"`
+	ServiceID       string             `json:"serviceId,omitempty" db:"service_id"`
+	VolumeName      string             `json:"volumeName,omitempty" db:"volume_name"`
 	S3DestinationID string             `json:"s3DestinationId,omitempty" db:"s3_destination_id"`
 	Name            string             `json:"name" db:"name"`
 	Description     string             `json:"description" db:"description"`

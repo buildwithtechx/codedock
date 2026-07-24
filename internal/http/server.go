@@ -50,6 +50,7 @@ type Server struct {
 	gitHandler             *handlers.GitHandler
 	webhookHandler         *handlers.WebhookHandler
 	projectHandler         *handlers.ProjectHandler
+	orgHandler             *handlers.OrganizationHandler
 	environmentHandler     *handlers.EnvironmentHandler
 	domainHandler          *handlers.DomainHandler
 	projectEnvHandler      *handlers.ProjectEnvHandler
@@ -67,7 +68,9 @@ type Server struct {
 	logHandler             *handlers.LogHandler
 	auditLogHandler        *handlers.AuditLogHandler
 	exampleHandler         *handlers.ExampleHandler
+	serverHandler          *handlers.ServerHandler
 	workerWSHandler        *handlers.WorkerWSHandler
+	registryHandler        *handlers.RegistryHandler
 }
 
 func (s *Server) ServeHTTP(w http.ResponseWriter, r *http.Request) {

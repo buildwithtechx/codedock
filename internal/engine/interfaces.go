@@ -14,6 +14,7 @@ type DeployerStore interface {
 	GetServerlessFunctionCode(serviceID string) (*models.ServerlessFunctionCode, error)
 	UpdateAppService(app *models.AppService) error
 	ListLogDrainsByService(serviceID string) ([]*models.LogDrain, error)
+	GetRegistry(id string) (*models.Registry, error)
 }
 
 type DatabaseDeployerStore interface {

@@ -117,12 +117,12 @@ func (h *ServiceVarHandler) Suggest(c echo.Context) error {
 	}
 
 	if svc.RepositoryURL == "" {
-		return utils.Success(c, "No repository attached", []interface{}{})
+		return utils.Success(c, "No repository attached", []any{})
 	}
 
 	suggestions, err := h.envSugg.SuggestEnvVars(c.Request().Context(), svc.RepositoryURL, svc.Branch, svc.RootDirectory)
 	if err != nil {
-		return utils.Success(c, "No suggestions available", []interface{}{})
+		return utils.Success(c, "No suggestions available", []any{})
 	}
 
 	return utils.Success(c, "Suggestions loaded", suggestions)

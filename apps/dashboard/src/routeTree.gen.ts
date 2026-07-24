@@ -26,9 +26,11 @@ import { Route as DashboardDnsRouteImport } from './routes/_dashboard.dns'
 import { Route as DashboardDomainsRouteImport } from './routes/_dashboard.domains'
 import { Route as DashboardMaintenanceRouteImport } from './routes/_dashboard.maintenance'
 import { Route as DashboardMigrationsRouteImport } from './routes/_dashboard.migrations'
+import { Route as DashboardOrganizationsRouteImport } from './routes/_dashboard.organizations'
 import { Route as DashboardProfileRouteImport } from './routes/_dashboard.profile'
 import { Route as DashboardS3DestinationsRouteImport } from './routes/_dashboard.s3-destinations'
 import { Route as DashboardScheduledTasksRouteImport } from './routes/_dashboard.scheduled-tasks'
+import { Route as DashboardServersRouteImport } from './routes/_dashboard.servers'
 import { Route as DashboardSettingsRouteImport } from './routes/_dashboard.settings'
 import { Route as DashboardSourcesRouteImport } from './routes/_dashboard.sources'
 import { Route as DashboardUpdatesRouteImport } from './routes/_dashboard.updates'
@@ -138,6 +140,11 @@ const DashboardMigrationsRoute = DashboardMigrationsRouteImport.update({
   path: '/migrations',
   getParentRoute: () => DashboardRoute,
 } as any)
+const DashboardOrganizationsRoute = DashboardOrganizationsRouteImport.update({
+  id: '/organizations',
+  path: '/organizations',
+  getParentRoute: () => DashboardRoute,
+} as any)
 const DashboardProfileRoute = DashboardProfileRouteImport.update({
   id: '/profile',
   path: '/profile',
@@ -151,6 +158,11 @@ const DashboardS3DestinationsRoute = DashboardS3DestinationsRouteImport.update({
 const DashboardScheduledTasksRoute = DashboardScheduledTasksRouteImport.update({
   id: '/scheduled-tasks',
   path: '/scheduled-tasks',
+  getParentRoute: () => DashboardRoute,
+} as any)
+const DashboardServersRoute = DashboardServersRouteImport.update({
+  id: '/servers',
+  path: '/servers',
   getParentRoute: () => DashboardRoute,
 } as any)
 const DashboardSettingsRoute = DashboardSettingsRouteImport.update({
@@ -316,9 +328,11 @@ export interface FileRoutesByFullPath {
   '/domains': typeof DashboardDomainsRoute
   '/maintenance': typeof DashboardMaintenanceRoute
   '/migrations': typeof DashboardMigrationsRoute
+  '/organizations': typeof DashboardOrganizationsRoute
   '/profile': typeof DashboardProfileRoute
   '/s3-destinations': typeof DashboardS3DestinationsRoute
   '/scheduled-tasks': typeof DashboardScheduledTasksRoute
+  '/servers': typeof DashboardServersRoute
   '/settings': typeof DashboardSettingsRoute
   '/sources': typeof DashboardSourcesRoute
   '/updates': typeof DashboardUpdatesRoute
@@ -361,9 +375,11 @@ export interface FileRoutesByTo {
   '/domains': typeof DashboardDomainsRoute
   '/maintenance': typeof DashboardMaintenanceRoute
   '/migrations': typeof DashboardMigrationsRoute
+  '/organizations': typeof DashboardOrganizationsRoute
   '/profile': typeof DashboardProfileRoute
   '/s3-destinations': typeof DashboardS3DestinationsRoute
   '/scheduled-tasks': typeof DashboardScheduledTasksRoute
+  '/servers': typeof DashboardServersRoute
   '/settings': typeof DashboardSettingsRoute
   '/sources': typeof DashboardSourcesRoute
   '/updates': typeof DashboardUpdatesRoute
@@ -407,9 +423,11 @@ export interface FileRoutesById {
   '/_dashboard/domains': typeof DashboardDomainsRoute
   '/_dashboard/maintenance': typeof DashboardMaintenanceRoute
   '/_dashboard/migrations': typeof DashboardMigrationsRoute
+  '/_dashboard/organizations': typeof DashboardOrganizationsRoute
   '/_dashboard/profile': typeof DashboardProfileRoute
   '/_dashboard/s3-destinations': typeof DashboardS3DestinationsRoute
   '/_dashboard/scheduled-tasks': typeof DashboardScheduledTasksRoute
+  '/_dashboard/servers': typeof DashboardServersRoute
   '/_dashboard/settings': typeof DashboardSettingsRoute
   '/_dashboard/sources': typeof DashboardSourcesRoute
   '/_dashboard/updates': typeof DashboardUpdatesRoute
@@ -455,9 +473,11 @@ export interface FileRouteTypes {
     | '/domains'
     | '/maintenance'
     | '/migrations'
+    | '/organizations'
     | '/profile'
     | '/s3-destinations'
     | '/scheduled-tasks'
+    | '/servers'
     | '/settings'
     | '/sources'
     | '/updates'
@@ -500,9 +520,11 @@ export interface FileRouteTypes {
     | '/domains'
     | '/maintenance'
     | '/migrations'
+    | '/organizations'
     | '/profile'
     | '/s3-destinations'
     | '/scheduled-tasks'
+    | '/servers'
     | '/settings'
     | '/sources'
     | '/updates'
@@ -545,9 +567,11 @@ export interface FileRouteTypes {
     | '/_dashboard/domains'
     | '/_dashboard/maintenance'
     | '/_dashboard/migrations'
+    | '/_dashboard/organizations'
     | '/_dashboard/profile'
     | '/_dashboard/s3-destinations'
     | '/_dashboard/scheduled-tasks'
+    | '/_dashboard/servers'
     | '/_dashboard/settings'
     | '/_dashboard/sources'
     | '/_dashboard/updates'
@@ -704,6 +728,13 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof DashboardMigrationsRouteImport
       parentRoute: typeof DashboardRoute
     }
+    '/_dashboard/organizations': {
+      id: '/_dashboard/organizations'
+      path: '/organizations'
+      fullPath: '/organizations'
+      preLoaderRoute: typeof DashboardOrganizationsRouteImport
+      parentRoute: typeof DashboardRoute
+    }
     '/_dashboard/profile': {
       id: '/_dashboard/profile'
       path: '/profile'
@@ -723,6 +754,13 @@ declare module '@tanstack/react-router' {
       path: '/scheduled-tasks'
       fullPath: '/scheduled-tasks'
       preLoaderRoute: typeof DashboardScheduledTasksRouteImport
+      parentRoute: typeof DashboardRoute
+    }
+    '/_dashboard/servers': {
+      id: '/_dashboard/servers'
+      path: '/servers'
+      fullPath: '/servers'
+      preLoaderRoute: typeof DashboardServersRouteImport
       parentRoute: typeof DashboardRoute
     }
     '/_dashboard/settings': {
@@ -980,9 +1018,11 @@ interface DashboardRouteChildren {
   DashboardDomainsRoute: typeof DashboardDomainsRoute
   DashboardMaintenanceRoute: typeof DashboardMaintenanceRoute
   DashboardMigrationsRoute: typeof DashboardMigrationsRoute
+  DashboardOrganizationsRoute: typeof DashboardOrganizationsRoute
   DashboardProfileRoute: typeof DashboardProfileRoute
   DashboardS3DestinationsRoute: typeof DashboardS3DestinationsRoute
   DashboardScheduledTasksRoute: typeof DashboardScheduledTasksRoute
+  DashboardServersRoute: typeof DashboardServersRoute
   DashboardSettingsRoute: typeof DashboardSettingsRoute
   DashboardSourcesRoute: typeof DashboardSourcesRoute
   DashboardUpdatesRoute: typeof DashboardUpdatesRoute
@@ -1006,9 +1046,11 @@ const DashboardRouteChildren: DashboardRouteChildren = {
   DashboardDomainsRoute: DashboardDomainsRoute,
   DashboardMaintenanceRoute: DashboardMaintenanceRoute,
   DashboardMigrationsRoute: DashboardMigrationsRoute,
+  DashboardOrganizationsRoute: DashboardOrganizationsRoute,
   DashboardProfileRoute: DashboardProfileRoute,
   DashboardS3DestinationsRoute: DashboardS3DestinationsRoute,
   DashboardScheduledTasksRoute: DashboardScheduledTasksRoute,
+  DashboardServersRoute: DashboardServersRoute,
   DashboardSettingsRoute: DashboardSettingsRoute,
   DashboardSourcesRoute: DashboardSourcesRoute,
   DashboardUpdatesRoute: DashboardUpdatesRoute,

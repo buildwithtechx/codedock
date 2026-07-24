@@ -27,7 +27,7 @@ func NewClient(baseURL, token string) *Client {
 }
 
 // sendRequest is a helper for making HTTP requests to the Codedock API.
-func (c *Client) sendRequest(method, endpoint string, payload interface{}) (*nethttp.Response, error) {
+func (c *Client) sendRequest(method, endpoint string, payload any) (*nethttp.Response, error) {
 	var reqBytes []byte
 	var err error
 
