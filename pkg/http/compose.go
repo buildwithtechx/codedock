@@ -16,8 +16,8 @@ type ComposeAnalyzeRequest struct {
 }
 
 type ComposeAnalyzeResponse struct {
-	AppServices []map[string]interface{} `json:"appServices"`
-	Databases   []map[string]interface{} `json:"databases"`
+	AppServices []map[string]any `json:"appServices"`
+	Databases   []map[string]any `json:"databases"`
 }
 
 func (c *Client) AnalyzeCompose(req *ComposeAnalyzeRequest) (*ComposeAnalyzeResponse, error) {

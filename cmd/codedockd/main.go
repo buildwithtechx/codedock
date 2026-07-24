@@ -103,7 +103,7 @@ func startServer() {
 
 	telemetry.Init()
 	defer telemetry.Close()
-	telemetry.Track("system", "daemon_start", map[string]interface{}{
+	telemetry.Track("system", "daemon_start", map[string]any{
 		"version": codedockVersion,
 		"os":      runtime.GOOS,
 		"arch":    runtime.GOARCH,

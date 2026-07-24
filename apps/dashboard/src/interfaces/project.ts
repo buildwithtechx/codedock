@@ -72,6 +72,8 @@ export interface CreateProjectRequest {
   branch?: string;
   internalPort?: number;
   domain?: string;
+  serverId?: string;
+  organizationId?: string;
 }
 
 export interface ProjectToken {

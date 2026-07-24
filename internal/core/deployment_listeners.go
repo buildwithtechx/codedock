@@ -81,7 +81,7 @@ func (l *DeploymentListeners) TriggerWebhook(e DeploymentCompleted) {
 
 	eventType := "deployment." + strings.ToLower(e.Status)
 
-	payloadMap := map[string]interface{}{
+	payloadMap := map[string]any{
 		"event":      eventType,
 		"serviceId":  e.ServiceID,
 		"projectId":  e.ProjectID,

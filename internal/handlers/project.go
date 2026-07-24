@@ -33,8 +33,12 @@ func (h *ProjectHandler) ListProjects(c echo.Context) error {
 		limit = 10
 	}
 	offset := (page - 1) * limit
+	orgID := c.QueryParam("organizationId")
+	if orgID == "" {
+		return utils.Error(c, http.StatusBadRequest, "organizationId is required")
+	}
 
-	projects, total, err := h.projectService.ListProjects(c.Request().Context(), limit, offset)
+	projects, total, err := h.projectService.ListProjectsByOrganization(c.Request().Context(), orgID, limit, offset)
 	if err != nil {
 		return utils.Error(c, http.StatusInternalServerError, err.Error())
 	}
@@ -47,26 +51,24 @@ func (h *ProjectHandler) CreateProject(c echo.Context) error {
 	if err := c.Bind(&req); err != nil {
 		return utils.Error(c, http.StatusBadRequest, "invalid payload")
 	}
+	if req.OrganizationID == "none" {
+		req.OrganizationID = ""
+	}
 
 	userClaims, ok := c.Get("user").(*models.UserClaims)
-	var p *models.ProjectConfig
-	var err error
+
+	p, err := h.projectService.CreateProjectFromRequest(c.Request().Context(), &req)
+	if err != nil {
+		return utils.Error(c, http.StatusInternalServerError, err.Error())
+	}
 
 	if ok && userClaims != nil {
-		p, err = h.projectService.CreateProjectWithMemberFromRequest(c.Request().Context(), &req, userClaims.UserID, string(models.MemberPermissionOwner))
-		if err != nil {
-			return utils.Error(c, http.StatusInternalServerError, "failed to create project and assign owner: "+err.Error())
-		}
-		telemetry.Track(userClaims.Email, "project_created", map[string]interface{}{
+		telemetry.Track(userClaims.Email, "project_created", map[string]any{
 			"project_id": p.ID,
 			"name":       p.Name,
 		})
 	} else {
-		p, err = h.projectService.CreateProjectFromRequest(c.Request().Context(), &req)
-		if err != nil {
-			return utils.Error(c, http.StatusInternalServerError, err.Error())
-		}
-		telemetry.Track("anonymous", "project_created", map[string]interface{}{
+		telemetry.Track("anonymous", "project_created", map[string]any{
 			"project_id": p.ID,
 			"name":       p.Name,
 		})

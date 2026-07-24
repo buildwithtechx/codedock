@@ -33,7 +33,7 @@ func runProjects(args []string) {
 
 	switch cmd {
 	case "list":
-		projects, total, err := projectRepo.List(context.Background(), 100, 0)
+		projects, total, err := projectRepo.ListAll(context.Background(), 100, 0)
 		if err != nil {
 			exitError("Failed to list projects: %v", err)
 		}

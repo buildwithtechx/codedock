@@ -152,15 +152,15 @@ Once Multi-Server is built, launching Codedock Cloud is trivial:
 - [x] Create `WorkerHub` (`internal/engine/worker_hub.go`) — registry of `server_id → live WebSocket conn`.
 - [x] Create Worker WebSocket endpoint (`/ws/worker`) — workers dial in, authenticate with `worker_token`, register in the hub.
 - [x] Update `Deployer` — if `project.ServerID != nil`, route deployment command through `WorkerHub` instead of local Docker socket.
-- [ ] WorkerHub handles heartbeats and updates `servers.last_seen_at` + `servers.status`.
+- [x] WorkerHub handles heartbeats and updates `servers.last_seen_at` + `servers.status`.
 
 ### Worker Binary (New)
 
 - [x] Scaffold `cmd/codedock-worker/` — new Go entrypoint.
 - [x] Worker connects to control plane via WebSocket using its `worker_token`.
 - [x] Worker receives deployment commands (JSON), executes them on the local Docker socket.
-- [ ] Worker streams container logs and CPU/RAM/disk metrics back over the WebSocket.
-- [ ] Worker reconnects with exponential backoff on disconnect.
+- [x] Worker streams container logs and CPU/RAM/disk metrics back over the WebSocket.
+- [x] Worker reconnects with exponential backoff on disconnect.
 - [ ] Worker installs Traefik on first boot if not already running.
 - [ ] Build & release `codedock-worker` as a separate binary in CI.
 
@@ -183,11 +183,11 @@ Once Multi-Server is built, launching Codedock Cloud is trivial:
 
 ### Features Dokploy has that Codedock doesn't (Yet)
 
-- **PR Previews:** Dokploy can automatically spin up ephemeral environments when a Pull Request is opened on GitHub, and tear it down when closed. We don't have this yet.
-- **More Git Providers:** We currently only support GitHub. Dokploy supports GitHub, GitLab, Bitbucket, and Gitea.
-- **Private Docker Registries:** They allow users to link AWS ECR, Google GCR, or private DockerHub accounts to pull private images.
-- **Organizations & Teams:** They have a full RBAC (Role-Based Access Control) system where users can create Organizations, invite members, and assign permissions.
-- **Volume Backups:** They can back up persistent Docker volumes to S3. We currently only back up Databases natively.
+- [ ] **PR Previews:** Dokploy can automatically spin up ephemeral environments when a Pull Request is opened on GitHub, and tear it down when closed. We don't have this yet.
+- [ ] **More Git Providers:** We currently only support GitHub. Dokploy supports GitHub, GitLab, Bitbucket, and Gitea.
+- [x] **Private Docker Registries:** They allow users to link AWS ECR, Google GCR, or private DockerHub accounts to pull private images.
+- [ ] **Organizations & Teams:** They have a full RBAC (Role-Based Access Control) system where users can create Organizations, invite members, and assign permissions.
+- [ ] **Volume Backups:** They can back up persistent Docker volumes to S3. We currently only back up Databases natively.
 
 ### Features we both have, but we did MUCH better (Where Dokploy went wrong)
 
@@ -203,7 +203,7 @@ Once Multi-Server is built, launching Codedock Cloud is trivial:
 
 ### A Feature we both had, but WE did totally wrong (The NATS / Type Safety issue)
 
-- **Type Safety between Backend and Workers:**
+- [x] **Type Safety between Backend and Workers:**
   - *Dokploy's win:* Because Dokploy is 100% TypeScript (Next.js frontend, Node.js backend), they use tRPC. If they rename a variable in the backend, the frontend instantly throws a compiler error. Perfect type safety.
   - *Our massive flaw (historically):* As noted earlier, our Go backend was sending raw JSON payloads over NATS to the workers without a single source of truth. If a Go struct changed, the worker wouldn't know until it crashed in production!
   - *The fix:* We are moving to the new Worker Architecture using shared schemas (like Protobuf or central types) so our Go backend and Go workers share the exact same structs natively.

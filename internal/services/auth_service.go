@@ -189,7 +189,7 @@ func (a *AuthService) ForgotPassword(ctx context.Context, email string, originUr
 		return err
 	}
 
-	data := map[string]interface{}{
+	data := map[string]any{
 		"ResetUrl": originUrl + "/reset-password?token=" + token,
 	}
 
@@ -225,8 +225,6 @@ func (a *AuthService) ResetPassword(ctx context.Context, tokenStr, newPassword s
 	if err := a.userRepo.UpdateUser(ctx, u); err != nil {
 		return err
 	}
-
-	_ = a.projectSettings.AcceptAllInvitesForUser(ctx, u.ID)
 
 	return nil
 }

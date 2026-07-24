@@ -50,6 +50,7 @@ type Server struct {
 	gitHandler             *handlers.GitHandler
 	webhookHandler         *handlers.WebhookHandler
 	projectHandler         *handlers.ProjectHandler
+	orgHandler             *handlers.OrganizationHandler
 	environmentHandler     *handlers.EnvironmentHandler
 	domainHandler          *handlers.DomainHandler
 	projectEnvHandler      *handlers.ProjectEnvHandler

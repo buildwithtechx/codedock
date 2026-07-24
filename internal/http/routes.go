@@ -20,6 +20,7 @@ func (s *Server) registerRoutes() {
 	s.registerSystemRoutes(apiGroup, authGroup)
 	s.registerUserRoutes(apiGroup, authGroup)
 	s.registerProjectRoutes(apiGroup, authGroup)
+	s.registerOrganizationRoutes(authGroup)
 	s.registerServerRoutes(authGroup)
 	s.registerDatabaseRoutes(authGroup)
 	s.registerAppRoutes(apiGroup, authGroup)
@@ -144,14 +145,18 @@ func (s *Server) registerProjectRoutes(apiGroup, authGroup *echo.Group) {
 	authGroup.POST("/projects/:projectId/registries", s.registryHandler.Create, projectAuthAdmin)
 	authGroup.DELETE("/projects/:projectId/registries/:id", s.registryHandler.Delete, projectAuthAdmin)
 
-	authGroup.GET("/projects/:projectId/members", s.projectSettingsHandler.ListMembers, projectAuth)
-	authGroup.POST("/projects/:projectId/members", s.projectSettingsHandler.AddMember, projectAuthAdmin)
-	authGroup.DELETE("/projects/:projectId/members/:id", s.projectSettingsHandler.RemoveMember, projectAuthAdmin)
 }
 
 func (s *Server) registerServerRoutes(authGroup *echo.Group) {
 	authGroup.GET("/servers", s.serverHandler.List, s.authGuard.RequireScope("server:read"))
 	authGroup.POST("/servers", s.serverHandler.Create, s.authGuard.RequireScope("server:write"))
+}
+
+func (s *Server) registerOrganizationRoutes(authGroup *echo.Group) {
+	authGroup.GET("/organizations", s.orgHandler.List)
+	authGroup.POST("/organizations", s.orgHandler.Create)
+	authGroup.GET("/organizations/:id", s.orgHandler.Get)
+	authGroup.DELETE("/organizations/:id", s.orgHandler.Delete)
 }
 
 func (s *Server) registerDatabaseRoutes(authGroup *echo.Group) {

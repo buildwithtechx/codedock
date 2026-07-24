@@ -12,10 +12,11 @@ import (
 )
 
 type ProjectRepository interface {
-	List(ctx context.Context, limit, offset int) ([]models.ProjectConfig, int, error)
+	ListByOrganization(ctx context.Context, organizationID string, limit, offset int) ([]models.ProjectConfig, int, error)
+	ListAll(ctx context.Context, limit, offset int) ([]models.ProjectConfig, int, error)
 	Get(ctx context.Context, id string) (*models.ProjectConfig, error)
+	GetByOrganization(ctx context.Context, id, organizationID string) (*models.ProjectConfig, error)
 	Create(ctx context.Context, p *models.ProjectConfig) error
-	CreateWithMember(ctx context.Context, p *models.ProjectConfig, userID, role string) error
 	Delete(ctx context.Context, id string) error
 }
 
@@ -33,7 +34,33 @@ func NewProjectRepo(db *sql.DB, envRepo EnvironmentRepository) *ProjectRepo {
 	return &ProjectRepo{db: sqlx.NewDb(db, "sqlite"), environments: envRepo}
 }
 
-func (r *ProjectRepo) List(_ context.Context, limit, offset int) ([]models.ProjectConfig, int, error) {
+func (r *ProjectRepo) ListByOrganization(_ context.Context, organizationID string, limit, offset int) ([]models.ProjectConfig, int, error) {
+	var total int
+	var err error
+	var projects []models.ProjectConfig
+
+	if organizationID == "none" {
+		if err = r.db.Get(&total, `SELECT COUNT(*) FROM projects WHERE organization_id IS NULL`); err != nil {
+			return nil, 0, err
+		}
+		err = r.db.Select(&projects, `SELECT id, COALESCE(organization_id, '') AS organization_id, name, COALESCE(server_id, '') AS server_id, COALESCE(description,'') AS description, created_at, updated_at FROM projects WHERE organization_id IS NULL ORDER BY created_at DESC LIMIT ? OFFSET ?`, limit, offset)
+	} else {
+		if err = r.db.Get(&total, `SELECT COUNT(*) FROM projects WHERE organization_id = ?`, organizationID); err != nil {
+			return nil, 0, err
+		}
+		err = r.db.Select(&projects, `SELECT id, COALESCE(organization_id, '') AS organization_id, name, COALESCE(server_id, '') AS server_id, COALESCE(description,'') AS description, created_at, updated_at FROM projects WHERE organization_id = ? ORDER BY created_at DESC LIMIT ? OFFSET ?`, organizationID, limit, offset)
+	}
+
+	if err != nil {
+		return nil, 0, err
+	}
+	if projects == nil {
+		projects = make([]models.ProjectConfig, 0)
+	}
+	return projects, total, nil
+}
+
+func (r *ProjectRepo) ListAll(_ context.Context, limit, offset int) ([]models.ProjectConfig, int, error) {
 	var total int
 	var err error
 	var projects []models.ProjectConfig
@@ -41,7 +68,7 @@ func (r *ProjectRepo) List(_ context.Context, limit, offset int) ([]models.Proje
 	if err = r.db.Get(&total, `SELECT COUNT(*) FROM projects`); err != nil {
 		return nil, 0, err
 	}
-	err = r.db.Select(&projects, `SELECT id, name, COALESCE(server_id, '') AS server_id, COALESCE(description,'') AS description, created_at, updated_at FROM projects ORDER BY created_at DESC LIMIT ? OFFSET ?`, limit, offset)
+	err = r.db.Select(&projects, `SELECT id, COALESCE(organization_id, '') AS organization_id, name, COALESCE(server_id, '') AS server_id, COALESCE(description,'') AS description, created_at, updated_at FROM projects ORDER BY created_at DESC LIMIT ? OFFSET ?`, limit, offset)
 
 	if err != nil {
 		return nil, 0, err
@@ -54,7 +81,24 @@ func (r *ProjectRepo) List(_ context.Context, limit, offset int) ([]models.Proje
 
 func (r *ProjectRepo) Get(_ context.Context, id string) (*models.ProjectConfig, error) {
 	var p models.ProjectConfig
-	err := r.db.Get(&p, `SELECT id, name, COALESCE(server_id, '') AS server_id, COALESCE(description,'') AS description, created_at, updated_at FROM projects WHERE id = ?`, id)
+	err := r.db.Get(&p, `SELECT id, COALESCE(organization_id, '') AS organization_id, name, COALESCE(server_id, '') AS server_id, COALESCE(description,'') AS description, created_at, updated_at FROM projects WHERE id = ?`, id)
+	if err == sql.ErrNoRows {
+		return nil, nil
+	}
+	if err != nil {
+		return nil, err
+	}
+	return &p, nil
+}
+
+func (r *ProjectRepo) GetByOrganization(_ context.Context, id, organizationID string) (*models.ProjectConfig, error) {
+	var p models.ProjectConfig
+	var err error
+	if organizationID == "none" {
+		err = r.db.Get(&p, `SELECT id, COALESCE(organization_id, '') AS organization_id, name, COALESCE(server_id, '') AS server_id, COALESCE(description,'') AS description, created_at, updated_at FROM projects WHERE id = ? AND organization_id IS NULL`, id)
+	} else {
+		err = r.db.Get(&p, `SELECT id, COALESCE(organization_id, '') AS organization_id, name, COALESCE(server_id, '') AS server_id, COALESCE(description,'') AS description, created_at, updated_at FROM projects WHERE id = ? AND organization_id = ?`, id, organizationID)
+	}
 	if err == sql.ErrNoRows {
 		return nil, nil
 	}
@@ -71,63 +115,21 @@ func (r *ProjectRepo) Create(ctx context.Context, p *models.ProjectConfig) error
 	now := time.Now().UTC()
 	p.CreatedAt = now
 	p.UpdatedAt = now
-	var serverID interface{}
+	var serverID any
 	if p.ServerID != "" {
 		serverID = p.ServerID
+	}
+	var orgID any
+	if p.OrganizationID != "" {
+		orgID = p.OrganizationID
 	}
 	_, err := r.db.Exec(
-		`INSERT INTO projects (id, server_id, name, description, created_at, updated_at) VALUES (?, ?, ?, ?, ?, ?)`,
-		p.ID, serverID, p.Name, p.Description, p.CreatedAt, p.UpdatedAt,
+		`INSERT INTO projects (id, organization_id, server_id, name, description, created_at, updated_at) VALUES (?, ?, ?, ?, ?, ?, ?)`,
+		p.ID, orgID, serverID, p.Name, p.Description, p.CreatedAt, p.UpdatedAt,
 	)
 	if err != nil {
 		return err
 	}
-	defaultEnv := &models.EnvironmentConfig{
-		ProjectID: p.ID,
-		Name:      "production",
-		IsDefault: true,
-	}
-	return r.environments.Create(ctx, defaultEnv)
-}
-
-func (r *ProjectRepo) CreateWithMember(ctx context.Context, p *models.ProjectConfig, userID, role string) error {
-	if p.ID == "" {
-		p.ID = uuid.NewString()
-	}
-	now := time.Now().UTC()
-	p.CreatedAt = now
-	p.UpdatedAt = now
-
-	tx, err := r.db.BeginTxx(ctx, nil)
-	if err != nil {
-		return err
-	}
-	defer tx.Rollback()
-
-	var serverID interface{}
-	if p.ServerID != "" {
-		serverID = p.ServerID
-	}
-	_, err = tx.ExecContext(ctx,
-		`INSERT INTO projects (id, server_id, name, description, created_at, updated_at) VALUES (?, ?, ?, ?, ?, ?)`,
-		p.ID, serverID, p.Name, p.Description, p.CreatedAt, p.UpdatedAt,
-	)
-	if err != nil {
-		return err
-	}
-
-	_, err = tx.ExecContext(ctx,
-		`INSERT INTO project_members (project_id, user_id, role, status, created_at, updated_at) VALUES (?, ?, ?, ?, ?, ?)`,
-		p.ID, userID, role, models.MemberStatusAccepted, now, now,
-	)
-	if err != nil {
-		return err
-	}
-
-	if err := tx.Commit(); err != nil {
-		return err
-	}
-
 	defaultEnv := &models.EnvironmentConfig{
 		ProjectID: p.ID,
 		Name:      "production",

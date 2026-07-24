@@ -50,7 +50,7 @@ func (s *DatabaseService) QueryDatabase(ctx context.Context, id string, query st
 		if len(parts) == 0 {
 			return nil, errors.New("empty command")
 		}
-		var args []interface{}
+		var args []any
 		for _, p := range parts {
 			args = append(args, p)
 		}
@@ -93,8 +93,8 @@ func (s *DatabaseService) querySQL(driver, dsn, query string) (*models.DatabaseQ
 	}
 	var resultRows []map[string]any
 	for rows.Next() {
-		columns := make([]interface{}, len(cols))
-		columnPointers := make([]interface{}, len(cols))
+		columns := make([]any, len(cols))
+		columnPointers := make([]any, len(cols))
 		for i := range columns {
 			columnPointers[i] = &columns[i]
 		}
@@ -103,7 +103,7 @@ func (s *DatabaseService) querySQL(driver, dsn, query string) (*models.DatabaseQ
 		}
 		m := make(map[string]any)
 		for i, colName := range cols {
-			val := columnPointers[i].(*interface{})
+			val := columnPointers[i].(*any)
 			if b, ok := (*val).([]byte); ok {
 				m[colName] = string(b)
 			} else {

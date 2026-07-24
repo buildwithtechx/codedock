@@ -162,7 +162,7 @@ func (s *GitService) ListRepositories(ctx context.Context, userID, provider stri
 	}
 }
 
-func (s *GitService) fetchGitAPI(ctx context.Context, reqURL, token string, headers map[string]string, target interface{}) error {
+func (s *GitService) fetchGitAPI(ctx context.Context, reqURL, token string, headers map[string]string, target any) error {
 	req, err := http.NewRequestWithContext(ctx, http.MethodGet, reqURL, nil)
 	if err != nil {
 		return err

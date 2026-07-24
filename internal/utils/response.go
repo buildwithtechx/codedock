@@ -22,7 +22,7 @@ type PaginatedData struct {
 	TotalPages int `json:"totalPages"`
 }
 
-func Success(c echo.Context, message string, data interface{}) error {
+func Success(c echo.Context, message string, data any) error {
 	start := time.Now()
 	if v := c.Get("startTime"); v != nil {
 		if s, ok := v.(time.Time); ok {
@@ -40,7 +40,7 @@ func Success(c echo.Context, message string, data interface{}) error {
 	})
 }
 
-func Created(c echo.Context, message string, data interface{}) error {
+func Created(c echo.Context, message string, data any) error {
 	return c.JSON(http.StatusCreated, APIResponse{
 		Status:  "success",
 		Message: message,
@@ -49,7 +49,7 @@ func Created(c echo.Context, message string, data interface{}) error {
 	})
 }
 
-func Accepted(c echo.Context, message string, data interface{}) error {
+func Accepted(c echo.Context, message string, data any) error {
 	return c.JSON(http.StatusAccepted, APIResponse{
 		Status:  "success",
 		Message: message,
@@ -66,7 +66,7 @@ func Error(c echo.Context, statusCode int, message string) error {
 	})
 }
 
-func Paginated(c echo.Context, message string, records interface{}, total, page, limit int) error {
+func Paginated(c echo.Context, message string, records any, total, page, limit int) error {
 	totalPages := 0
 	if limit > 0 {
 		totalPages = (total + limit - 1) / limit

@@ -85,6 +85,7 @@ func NewServer(db *sql.DB, v *utils.Vault, deployer *engine.Deployer, traefikMan
 	dnsRepo := repositories.NewDNSRepo(db)
 	auditRepository := repositories.NewAuditLogRepo(db)
 	volumeRepo := repositories.NewServiceVolumeRepo(db)
+	orgRepo := repositories.NewOrganizationRepository(db)
 
 	httpEngineAdapter := newEngineAdapter(settingsRepo, appRepo, envVarRepo, dbRepo, projectRepo, scheduledTaskRepo, backupRepo, s3DestinationRepo, serviceVarRepo, serverlessRepository)
 	databaseDeployer := engine.NewDatabaseDeployer(dockerClient, httpEngineAdapter)
@@ -104,7 +105,7 @@ func NewServer(db *sql.DB, v *utils.Vault, deployer *engine.Deployer, traefikMan
 	backupManager := engine.NewBackupManager(dockerClient, httpEngineAdapter, "")
 	_ = backupManager.Start()
 
-	projectService := services.NewProjectService(projectRepo, environmentRepo, appRepo, serviceVarRepo, settingsRepo, projectSettingsRepo)
+	projectService := services.NewProjectService(projectRepo, environmentRepo, appRepo, serviceVarRepo, settingsRepo, orgRepo)
 	appService := services.NewAppService(appRepo, serviceVarRepo, volumeRepo)
 	databaseService := services.NewDatabaseService(dbRepo, databaseDeployer)
 	tokenService, err := services.NewTokenService()
@@ -131,6 +132,7 @@ func NewServer(db *sql.DB, v *utils.Vault, deployer *engine.Deployer, traefikMan
 
 	scheduledTaskService := services.NewScheduledTaskService(scheduledTaskRepo, cronManager)
 	canvasService := services.NewCanvasService(canvasRepo)
+	orgService := services.NewOrganizationService(orgRepo)
 	gitService := services.NewGitService(gitRepo)
 	statsMonitor := engine.NewStatsMonitor(dockerClient)
 	deploymentService := services.NewDeploymentService(deployRepo, appRepo, projectRepo, deployer, gitService, statsMonitor, volumeRepo, workerHub)
@@ -159,7 +161,7 @@ func NewServer(db *sql.DB, v *utils.Vault, deployer *engine.Deployer, traefikMan
 
 	bridge := NewBridge(projectService, appService, databaseService)
 
-	authGuard := middleware.NewAuthGuard(tokenService, settingsService, projectSettingsService, projectSettingsRepo)
+	authGuard := middleware.NewAuthGuard(tokenService, settingsService, projectSettingsService, orgRepo, projectRepo)
 
 	appHandler := handlers.NewAppHandler(appService, projectService, deployer, deploymentService, environmentService)
 	databaseHandler := handlers.NewDatabaseHandler(databaseService, projectService)
@@ -167,6 +169,7 @@ func NewServer(db *sql.DB, v *utils.Vault, deployer *engine.Deployer, traefikMan
 	canvasHandler := handlers.NewCanvasHandler(canvasService)
 	terminalHandler := handlers.NewTerminalHandler(dockerClient, tokenService, appService)
 	projectHandler := handlers.NewProjectHandler(projectService, projectSettingsService)
+	orgHandler := handlers.NewOrganizationHandler(orgService)
 	environmentHandler := handlers.NewEnvironmentHandler(environmentService)
 	deploymentHandler := handlers.NewDeploymentHandler(deploymentService, appService, auditService, aiAnalysisService, prPreviewService, projectService)
 	serviceVarHandler := handlers.NewServiceVarHandler(appService, auditService, envSuggestionService)
@@ -252,6 +255,7 @@ func NewServer(db *sql.DB, v *utils.Vault, deployer *engine.Deployer, traefikMan
 		gitHandler:             gitHandler,
 		webhookHandler:         webhookHandler,
 		projectHandler:         projectHandler,
+		orgHandler:             orgHandler,
 		environmentHandler:     environmentHandler,
 		domainHandler:          domainHandler,
 		projectEnvHandler:      projectEnvHandler,

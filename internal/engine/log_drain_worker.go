@@ -66,7 +66,7 @@ func StartLogDrains(ctx context.Context, dockerClient *client.Client, containerI
 }
 
 func sendToDrain(drain *models.LogDrain, serviceName, logLine string) {
-	payload := map[string]interface{}{
+	payload := map[string]any{
 		"service": serviceName,
 		"message": logLine,
 		"time":    time.Now().UTC().Format(time.RFC3339),
@@ -74,11 +74,11 @@ func sendToDrain(drain *models.LogDrain, serviceName, logLine string) {
 
 	switch drain.DrainType {
 	case models.LogDrainTypeAxiom:
-		sendHTTP(drain.EndpointURL, drain.AuthToken, []interface{}{payload})
+		sendHTTP(drain.EndpointURL, drain.AuthToken, []any{payload})
 	case models.LogDrainTypeNewRelic:
 		sendHTTP(drain.EndpointURL, drain.AuthToken, payload)
 	case models.LogDrainTypeDatadog:
-		ddPayload := map[string]interface{}{
+		ddPayload := map[string]any{
 			"ddsource": "codedock",
 			"service":  serviceName,
 			"message":  logLine,
@@ -137,7 +137,7 @@ var safeHTTPClient = &http.Client{
 	},
 }
 
-func sendHTTP(url, token string, payload interface{}) {
+func sendHTTP(url, token string, payload any) {
 	data, err := json.Marshal(payload)
 	if err != nil {
 		return

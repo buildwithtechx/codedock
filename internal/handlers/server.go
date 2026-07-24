@@ -5,7 +5,9 @@ import (
 
 	"github.com/labstack/echo/v4"
 
+	"codedock.run/codedock/internal/models"
 	"codedock.run/codedock/internal/services"
+	"codedock.run/codedock/internal/utils"
 )
 
 type ServerHandler struct {
@@ -24,32 +26,38 @@ type CreateServerRequest struct {
 }
 
 func (h *ServerHandler) Create(c echo.Context) error {
-	userID := c.Get("user_id").(string)
+	userClaims, ok := c.Get("user").(*models.UserClaims)
+	if !ok || userClaims == nil {
+		return utils.Error(c, http.StatusUnauthorized, "unauthorized")
+	}
 
 	var req CreateServerRequest
 	if err := c.Bind(&req); err != nil {
-		return echo.NewHTTPError(http.StatusBadRequest, "Invalid request payload")
+		return utils.Error(c, http.StatusBadRequest, "invalid request payload")
 	}
 
 	if req.Name == "" {
-		return echo.NewHTTPError(http.StatusBadRequest, "Server name is required")
+		return utils.Error(c, http.StatusBadRequest, "server name is required")
 	}
 
-	server, err := h.serverService.CreateServer(c.Request().Context(), userID, req.Name, req.IPAddress)
+	server, err := h.serverService.CreateServer(c.Request().Context(), userClaims.UserID, req.Name, req.IPAddress)
 	if err != nil {
-		return echo.NewHTTPError(http.StatusInternalServerError, err.Error())
+		return utils.Error(c, http.StatusInternalServerError, err.Error())
 	}
 
-	return c.JSON(http.StatusCreated, server)
+	return utils.Success(c, "Server created", server)
 }
 
 func (h *ServerHandler) List(c echo.Context) error {
-	userID := c.Get("user_id").(string)
-
-	servers, err := h.serverService.ListServersByUser(c.Request().Context(), userID)
-	if err != nil {
-		return echo.NewHTTPError(http.StatusInternalServerError, err.Error())
+	userClaims, ok := c.Get("user").(*models.UserClaims)
+	if !ok || userClaims == nil {
+		return utils.Error(c, http.StatusUnauthorized, "unauthorized")
 	}
 
-	return c.JSON(http.StatusOK, servers)
+	servers, err := h.serverService.ListServersByUser(c.Request().Context(), userClaims.UserID)
+	if err != nil {
+		return utils.Error(c, http.StatusInternalServerError, err.Error())
+	}
+
+	return utils.Success(c, "Operation successful", servers)
 }

@@ -1,5 +1,6 @@
 import {
   Bot,
+  Building,
   Cloud,
   Code,
   Download,
@@ -10,6 +11,7 @@ import {
   PanelLeft,
   RefreshCw,
   ScrollText,
+  Server,
   Settings,
   Users,
   Wrench,
@@ -28,6 +30,8 @@ const navGroups: NavGroup[] = [
     title: 'Overview',
     items: [
       { title: 'Dashboard', url: '/', icon: LayoutDashboard, exact: true },
+      { title: 'Servers', url: '/servers', icon: Server },
+      { title: 'Organizations', url: '/organizations', icon: Building },
       { title: 'Users', url: '/users', icon: Users },
     ],
   },

@@ -102,7 +102,7 @@ func (h *AppHandler) Create(c echo.Context) error {
 	if created.ImageRef != "" {
 		sourceType = "docker_image"
 	}
-	telemetry.Track(distinctID, "app_created", map[string]interface{}{
+	telemetry.Track(distinctID, "app_created", map[string]any{
 		"app_id": created.ID,
 		"name":   created.Name,
 		"type":   sourceType,
