@@ -11,6 +11,9 @@ import (
 
 	"github.com/docker/docker/client"
 	"github.com/gorilla/websocket"
+	"github.com/shirou/gopsutil/v4/cpu"
+	"github.com/shirou/gopsutil/v4/disk"
+	"github.com/shirou/gopsutil/v4/mem"
 
 	"codedock.run/codedock/internal/engine"
 	"codedock.run/codedock/internal/models"
@@ -46,9 +49,10 @@ func (d *WorkerDaemon) Start(ctx context.Context) error {
 		return err
 	}
 	u.Path = "/api/ws/worker"
-	if u.Scheme == "http" {
+	switch u.Scheme {
+	case "http":
 		u.Scheme = "ws"
-	} else if u.Scheme == "https" {
+	case "https":
 		u.Scheme = "wss"
 	}
 
@@ -89,13 +93,29 @@ func (d *WorkerDaemon) heartbeat(ctx context.Context) {
 		case <-ctx.Done():
 			return
 		case <-ticker.C:
-			// Send heartbeat or metrics
+			var cpuPercent float64
+			if p, err := cpu.PercentWithContext(ctx, 0, false); err == nil && len(p) > 0 {
+				cpuPercent = p[0]
+			}
+
+			var memUsage, memTotal uint64
+			if v, err := mem.VirtualMemoryWithContext(ctx); err == nil {
+				memUsage = v.Used
+				memTotal = v.Total
+			}
+
+			var diskUsage, diskTotal uint64
+			if u, err := disk.UsageWithContext(ctx, "/"); err == nil {
+				diskUsage = u.Used
+				diskTotal = u.Total
+			}
+
 			metricsPayload := models.WorkerMetricsPayload{
-				CPUUsagePercentage: 5.0,                     // Placeholder
-				MemoryUsageBytes:   1024 * 1024 * 100,       // Placeholder
-				DiskUsageBytes:     1024 * 1024 * 1024 * 10, // Placeholder
-				MemoryLimitBytes:   1024 * 1024 * 1024,
-				DiskTotalBytes:     1024 * 1024 * 1024 * 100,
+				CPUUsagePercentage: cpuPercent,
+				MemoryUsageBytes:   memUsage,
+				DiskUsageBytes:     diskUsage,
+				MemoryLimitBytes:   memTotal,
+				DiskTotalBytes:     diskTotal,
 			}
 			payloadBytes, _ := json.Marshal(metricsPayload)
 
