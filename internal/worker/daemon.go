@@ -9,8 +9,10 @@ import (
 	"net/url"
 	"time"
 
+	"github.com/docker/docker/client"
 	"github.com/gorilla/websocket"
 
+	"codedock.run/codedock/internal/engine"
 	"codedock.run/codedock/internal/models"
 )
 
@@ -28,6 +30,17 @@ func NewWorkerDaemon(serverURL, token string) *WorkerDaemon {
 }
 
 func (d *WorkerDaemon) Start(ctx context.Context) error {
+	// Ensure Traefik is running first
+	dockerClient, err := client.NewClientWithOpts(client.FromEnv, client.WithAPIVersionNegotiation())
+	if err != nil {
+		return fmt.Errorf("failed to create docker client for traefik: %w", err)
+	}
+	traefikManager := engine.NewTraefikManager(dockerClient, "")
+	if err := traefikManager.EnsureTraefikRunning(ctx); err != nil {
+		return fmt.Errorf("failed to ensure traefik is running: %w", err)
+	}
+	slog.Info("traefik is running on worker")
+
 	u, err := url.Parse(d.serverURL)
 	if err != nil {
 		return err
@@ -64,7 +77,41 @@ func (d *WorkerDaemon) Start(ctx context.Context) error {
 	}
 
 	go d.listen(ctx)
+	go d.heartbeat(ctx)
 	return nil
+}
+
+func (d *WorkerDaemon) heartbeat(ctx context.Context) {
+	ticker := time.NewTicker(30 * time.Second)
+	defer ticker.Stop()
+	for {
+		select {
+		case <-ctx.Done():
+			return
+		case <-ticker.C:
+			// Send heartbeat or metrics
+			metricsPayload := models.WorkerMetricsPayload{
+				CPUUsagePercentage: 5.0,                     // Placeholder
+				MemoryUsageBytes:   1024 * 1024 * 100,       // Placeholder
+				DiskUsageBytes:     1024 * 1024 * 1024 * 10, // Placeholder
+				MemoryLimitBytes:   1024 * 1024 * 1024,
+				DiskTotalBytes:     1024 * 1024 * 1024 * 100,
+			}
+			payloadBytes, _ := json.Marshal(metricsPayload)
+
+			msg := models.WorkerMessage{
+				ID:        "heartbeat",
+				Type:      models.WorkerMessageTypeMetrics,
+				Timestamp: time.Now(),
+				Payload:   payloadBytes,
+			}
+
+			if err := d.conn.WriteJSON(msg); err != nil {
+				slog.Error("Heartbeat error", "err", err)
+				return
+			}
+		}
+	}
 }
 
 func (d *WorkerDaemon) listen(ctx context.Context) {

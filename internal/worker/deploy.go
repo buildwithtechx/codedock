@@ -21,7 +21,7 @@ func (d *WorkerDaemon) processDeployment(ctx context.Context, commandID string, 
 	}
 
 	// Create workspace
-	workspace := filepath.Join(os.TempDir(), "codedock-worker", payload.AppID)
+	workspace := filepath.Join(os.TempDir(), "codedockw", payload.AppID)
 	_ = os.RemoveAll(workspace)
 	if err := os.MkdirAll(workspace, 0755); err != nil {
 		return err

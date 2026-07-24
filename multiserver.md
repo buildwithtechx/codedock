@@ -21,7 +21,7 @@ This document outlines the architectural changes, features, and steps required t
 ```text
 User's VPS                          Codedock Cloud (api.codedock.dev)
 ┌─────────────────────┐             ┌──────────────────────────┐
-│  codedock-worker       │──WebSocket──▶  Control Plane (Go API)  │
+│  codedockw            │──WebSocket──▶  Control Plane (Go API)  │
 │  - Runs deployments │◀─Commands───│  - Dashboard UI          │
 │  - Streams logs     │──Metrics───▶│  - Billing (Stripe)      │
 │  - Reports health   │             │  - License validation    │
@@ -32,11 +32,11 @@ User's VPS                          Codedock Cloud (api.codedock.dev)
 
 1. User creates an account on `app.codedock.dev` and gets a **license/registration key**.
 2. User runs a one-liner on their VPS: `curl -sL get.codedock.dev | bash -s -- --key <LICENSE_KEY>`
-3. The script installs `codedock-worker` as a systemd service.
-4. `codedock-worker` dials out to `api.codedock.dev` via WebSocket and registers itself.
+3. The script installs `codedockw` as a systemd service.
+4. `codedockw` dials out to `api.codedock.dev` via WebSocket and registers itself.
 5. The user's server appears in their dashboard. All deployments, logs, and metrics flow through the persistent WebSocket tunnel.
 
-### Worker Binary (`cmd/codedock-worker/`)
+### Worker Binary (`cmd/codedockw/`)
 
 - Written in Go, single static binary (~15 MB stripped).
 - Connects to control plane via `gorilla/websocket`.
@@ -56,7 +56,7 @@ We need to make Codedock aware of physical servers. The **project** is the serve
   - `name` (e.g., "EU Production")
   - `ip_address` (e.g., "198.51.100.1")
   - `status` (`online`, `offline`, `provisioning`)
-  - `worker_token` — the secret the `codedock-worker` binary uses to authenticate
+  - `worker_token` — the secret the `codedockw` binary uses to authenticate
   - `last_seen_at` — heartbeat timestamp
   - `metrics` (JSON — latest CPU/RAM/Disk snapshot pushed by the worker)
 
@@ -156,13 +156,13 @@ Once Multi-Server is built, launching Codedock Cloud is trivial:
 
 ### Worker Binary (New)
 
-- [x] Scaffold `cmd/codedock-worker/` — new Go entrypoint.
+- [x] Scaffold `cmd/codedockw/` — new Go entrypoint.
 - [x] Worker connects to control plane via WebSocket using its `worker_token`.
 - [x] Worker receives deployment commands (JSON), executes them on the local Docker socket.
 - [x] Worker streams container logs and CPU/RAM/disk metrics back over the WebSocket.
 - [x] Worker reconnects with exponential backoff on disconnect.
-- [ ] Worker installs Traefik on first boot if not already running.
-- [ ] Build & release `codedock-worker` as a separate binary in CI.
+- [x] Worker installs Traefik on first boot if not already running.
+- [x] Build & release `codedockw` as a separate binary in CI.
 
 ### Frontend
 

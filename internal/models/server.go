@@ -11,7 +11,7 @@ const (
 	ServerStatusProvisioning ServerStatus = "provisioning"
 )
 
-// Server represents a physical or virtual machine running the codedock-worker daemon.
+// Server represents a physical or virtual machine running the codedockw daemon.
 type Server struct {
 	ID          string       `json:"id" db:"id"`
 	UserID      string       `json:"userId" db:"user_id"` // Owner of the server (for multi-tenancy)
