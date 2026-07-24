@@ -157,6 +157,10 @@ func (s *Server) registerOrganizationRoutes(authGroup *echo.Group) {
 	authGroup.POST("/organizations", s.orgHandler.Create)
 	authGroup.GET("/organizations/:id", s.orgHandler.Get)
 	authGroup.DELETE("/organizations/:id", s.orgHandler.Delete)
+	authGroup.GET("/organizations/:id/members", s.orgHandler.ListMembers)
+	authGroup.POST("/organizations/:id/members", s.orgHandler.InviteMember)
+	authGroup.PUT("/organizations/:id/members/:userId", s.orgHandler.UpdateMember)
+	authGroup.DELETE("/organizations/:id/members/:memberId", s.orgHandler.RemoveMember)
 }
 
 func (s *Server) registerDatabaseRoutes(authGroup *echo.Group) {

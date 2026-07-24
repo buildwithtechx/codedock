@@ -39,3 +39,7 @@ func (s *WorkerLocalStore) UpdateAppService(app *models.AppService) error {
 func (s *WorkerLocalStore) ListLogDrainsByService(serviceID string) ([]*models.LogDrain, error) {
 	return nil, nil // No log drains supported in standalone worker yet
 }
+
+func (s *WorkerLocalStore) GetRegistry(id string) (*models.Registry, error) {
+	return nil, nil // Assume no private registries in worker payload yet, or could add it to payload later
+}

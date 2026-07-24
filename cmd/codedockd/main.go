@@ -64,6 +64,11 @@ func (a *dbDeployerStore) UpdateAppService(app *models.AppService) error {
 	return repo.Update(context.Background(), app)
 }
 
+func (a *dbDeployerStore) GetRegistry(id string) (*models.Registry, error) {
+	repo := repositories.NewRegistryRepository(a.db)
+	return repo.Get(context.Background(), id)
+}
+
 func main() {
 	_ = godotenv.Load(".env")
 	mainCLI()

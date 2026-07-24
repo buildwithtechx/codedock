@@ -51,9 +51,9 @@ func (s *GitService) SaveProvider(ctx context.Context, gp *models.GitProviderCon
 
 func (s *GitService) ConnectProvider(ctx context.Context, userID string, req *models.GitConnectRequest) (*models.GitProviderConfig, error) {
 	switch req.Provider {
-	case "github":
+	case "github", "gitlab", "bitbucket", "gitea":
 	default:
-		return nil, errors.New("unsupported git provider; must be 'github'")
+		return nil, errors.New("unsupported git provider")
 	}
 	if req.AccessToken == "" {
 		return nil, errors.New("access token is required")
@@ -88,7 +88,7 @@ func (s *GitService) GetConnectedProviders(ctx context.Context, userID string) (
 		providerMap[gp.Provider] = gp
 	}
 	var results []map[string]any
-	for _, provider := range []string{"github"} {
+	for _, provider := range []string{"github", "gitlab", "bitbucket", "gitea"} {
 		if gp, ok := providerMap[provider]; ok && gp != nil {
 			results = append(results, map[string]any{
 				"provider":    provider,
@@ -157,6 +157,12 @@ func (s *GitService) ListRepositories(ctx context.Context, userID, provider stri
 	switch provider {
 	case "github":
 		return s.listGitHubRepos(ctx, gp.AccessToken)
+	case "gitlab":
+		return s.listGitLabRepos(ctx, gp.AccessToken)
+	case "bitbucket":
+		return s.listBitbucketRepos(ctx, gp.AccessToken)
+	case "gitea":
+		return s.listGiteaRepos(ctx, gp.AccessToken)
 	default:
 		return nil, errors.New("unsupported provider: " + provider)
 	}
@@ -208,6 +214,119 @@ func (s *GitService) listGitHubRepos(ctx context.Context, token string) ([]model
 
 	var results []models.GitRepository
 	for _, r := range ghRepos {
+		results = append(results, models.GitRepository{
+			ID:            r.ID,
+			Name:          r.Name,
+			FullName:      r.FullName,
+			Private:       r.Private,
+			CloneURL:      r.CloneURL,
+			HTMLURL:       r.HTMLURL,
+			DefaultBranch: r.Default,
+		})
+	}
+	return results, nil
+}
+
+func (s *GitService) listGitLabRepos(ctx context.Context, token string) ([]models.GitRepository, error) {
+	reqURL := "https://gitlab.com/api/v4/projects?membership=true&per_page=100&order_by=updated_at"
+	var glRepos []struct {
+		ID            int64  `json:"id"`
+		Name          string `json:"name"`
+		PathWithNames string `json:"path_with_namespace"`
+		Visibility    string `json:"visibility"`
+		HTTPURL       string `json:"http_url_to_repo"`
+		WebURL        string `json:"web_url"`
+		DefaultBranch string `json:"default_branch"`
+	}
+
+	err := s.fetchGitAPI(ctx, reqURL, token, nil, &glRepos)
+	if err != nil {
+		return nil, fmt.Errorf("gitlab: %w", err)
+	}
+
+	var results []models.GitRepository
+	for _, r := range glRepos {
+		results = append(results, models.GitRepository{
+			ID:            r.ID,
+			Name:          r.Name,
+			FullName:      r.PathWithNames,
+			Private:       r.Visibility != "public",
+			CloneURL:      r.HTTPURL,
+			HTMLURL:       r.WebURL,
+			DefaultBranch: r.DefaultBranch,
+		})
+	}
+	return results, nil
+}
+
+func (s *GitService) listBitbucketRepos(ctx context.Context, token string) ([]models.GitRepository, error) {
+	reqURL := "https://api.bitbucket.org/2.0/repositories?role=member"
+	var bbResponse struct {
+		Values []struct {
+			UUID     string `json:"uuid"`
+			Name     string `json:"name"`
+			FullName string `json:"full_name"`
+			IsPriv   bool   `json:"is_private"`
+			Links    struct {
+				HTML struct {
+					Href string `json:"href"`
+				} `json:"html"`
+				Clone []struct {
+					Name string `json:"name"`
+					Href string `json:"href"`
+				} `json:"clone"`
+			} `json:"links"`
+			Mainbranch struct {
+				Name string `json:"name"`
+			} `json:"mainbranch"`
+		} `json:"values"`
+	}
+
+	err := s.fetchGitAPI(ctx, reqURL, token, nil, &bbResponse)
+	if err != nil {
+		return nil, fmt.Errorf("bitbucket: %w", err)
+	}
+
+	var results []models.GitRepository
+	for i, r := range bbResponse.Values {
+		cloneURL := ""
+		for _, link := range r.Links.Clone {
+			if link.Name == "https" {
+				cloneURL = link.Href
+			}
+		}
+		results = append(results, models.GitRepository{
+			ID:            int64(i + 1), // Bitbucket uses UUIDs, fake it for ID
+			Name:          r.Name,
+			FullName:      r.FullName,
+			Private:       r.IsPriv,
+			CloneURL:      cloneURL,
+			HTMLURL:       r.Links.HTML.Href,
+			DefaultBranch: r.Mainbranch.Name,
+		})
+	}
+	return results, nil
+}
+
+func (s *GitService) listGiteaRepos(ctx context.Context, token string) ([]models.GitRepository, error) {
+	reqURL := "https://gitea.com/api/v1/user/repos" // assuming public gitea.com for simplicity
+	var gtRepos []struct {
+		ID       int64  `json:"id"`
+		Name     string `json:"name"`
+		FullName string `json:"full_name"`
+		Private  bool   `json:"private"`
+		CloneURL string `json:"clone_url"`
+		HTMLURL  string `json:"html_url"`
+		Default  string `json:"default_branch"`
+	}
+
+	err := s.fetchGitAPI(ctx, reqURL, token, nil, &gtRepos)
+	if err != nil {
+		return nil, fmt.Errorf("gitea: %w", err)
+	}
+
+	var results []models.GitRepository
+	for _, r := range gtRepos {
 		results = append(results, models.GitRepository{
 			ID:            r.ID,
 			Name:          r.Name,

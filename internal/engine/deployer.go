@@ -7,6 +7,11 @@ import (
 	"strings"
 	"time"
 
+	"encoding/base64"
+	"encoding/json"
+	"github.com/docker/docker/api/types/image"
+	"github.com/docker/docker/api/types/registry"
+
 	"github.com/containerd/errdefs"
 	"github.com/docker/docker/api/types/container"
 	"github.com/docker/docker/client"
@@ -263,6 +268,35 @@ func (d *Deployer) DeployImage(ctx context.Context, app *models.AppService, logW
 		newContainerName := fmt.Sprintf("%s-dryrun", utils.NormalizeContainerName(app.ID))
 		return newContainerName, nil
 	}
+
+	pullOpts := image.PullOptions{}
+	if app.RegistryID != nil && *app.RegistryID != "" {
+		reg, err := d.store.GetRegistry(*app.RegistryID)
+		if err == nil && reg != nil {
+			authConfig := registry.AuthConfig{
+				Username:      reg.Username,
+				Password:      reg.PasswordToken,
+				ServerAddress: reg.RegistryURL,
+			}
+			authBytes, _ := json.Marshal(authConfig)
+			pullOpts.RegistryAuth = base64.URLEncoding.EncodeToString(authBytes)
+		}
+	}
+
+	if logWriter != nil {
+		fmt.Fprintf(logWriter, "📥 [Deployer] Pulling image %s...\n", app.ImageRef)
+	}
+
+	out, err := d.containerManager.dockerClient.ImagePull(ctx, app.ImageRef, pullOpts)
+	if err != nil {
+		return "", fmt.Errorf("failed to pull image: %w", err)
+	}
+	if logWriter != nil {
+		_, _ = io.Copy(logWriter, out)
+	} else {
+		_, _ = io.Copy(io.Discard, out)
+	}
+	out.Close()
 
 	port := app.InternalPort
 	if port <= 0 {

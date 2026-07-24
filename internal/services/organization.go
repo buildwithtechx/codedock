@@ -60,3 +60,47 @@ func (s *OrganizationService) GetOrganization(ctx context.Context, id string) (*
 func (s *OrganizationService) DeleteOrganization(ctx context.Context, id string) error {
 	return s.orgRepo.Delete(ctx, id)
 }
+
+func (s *OrganizationService) InviteMember(ctx context.Context, orgID, email string, permission models.MemberPermission) (*models.OrganizationMember, error) {
+	if email == "" {
+		return nil, errors.New("email is required")
+	}
+	existing, _ := s.orgRepo.GetMemberByEmail(ctx, orgID, email)
+	if existing != nil {
+		return nil, errors.New("user already invited or is a member")
+	}
+
+	member := &models.OrganizationMember{
+		ID:             uuid.New().String(),
+		OrganizationID: orgID,
+		Email:          email,
+		Permission:     permission,
+		Status:         models.MemberStatusPending,
+		InvitedAt:      time.Now(),
+	}
+
+	if err := s.orgRepo.AddMember(ctx, member); err != nil {
+		return nil, err
+	}
+	return member, nil
+}
+
+func (s *OrganizationService) ListMembers(ctx context.Context, orgID string) ([]*models.OrganizationMember, error) {
+	return s.orgRepo.ListMembers(ctx, orgID)
+}
+
+func (s *OrganizationService) RemoveMember(ctx context.Context, memberID string) error {
+	return s.orgRepo.RemoveMember(ctx, memberID)
+}
+
+func (s *OrganizationService) UpdateMemberPermission(ctx context.Context, orgID, userID string, permission models.MemberPermission) error {
+	member, err := s.orgRepo.GetMember(ctx, orgID, userID)
+	if err != nil || member == nil {
+		return errors.New("member not found")
+	}
+	if member.Permission == models.MemberPermissionOwner && permission != models.MemberPermissionOwner {
+		return errors.New("cannot change permission of owner")
+	}
+	member.Permission = permission
+	return s.orgRepo.UpdateMember(ctx, member)
+}

@@ -68,3 +68,51 @@ func (h *OrganizationHandler) Delete(c echo.Context) error {
 	}
 	return c.NoContent(http.StatusNoContent)
 }
+
+func (h *OrganizationHandler) ListMembers(c echo.Context) error {
+	orgID := c.Param("id")
+	members, err := h.orgService.ListMembers(c.Request().Context(), orgID)
+	if err != nil {
+		return utils.Error(c, http.StatusInternalServerError, err.Error())
+	}
+	return c.JSON(http.StatusOK, members)
+}
+
+func (h *OrganizationHandler) InviteMember(c echo.Context) error {
+	orgID := c.Param("id")
+	var req struct {
+		Email      string                  `json:"email"`
+		Permission models.MemberPermission `json:"permission"`
+	}
+	if err := c.Bind(&req); err != nil {
+		return utils.Error(c, http.StatusBadRequest, "invalid request")
+	}
+	member, err := h.orgService.InviteMember(c.Request().Context(), orgID, req.Email, req.Permission)
+	if err != nil {
+		return utils.Error(c, http.StatusInternalServerError, err.Error())
+	}
+	return c.JSON(http.StatusCreated, member)
+}
+
+func (h *OrganizationHandler) UpdateMember(c echo.Context) error {
+	orgID := c.Param("id")
+	userID := c.Param("userId")
+	var req struct {
+		Permission models.MemberPermission `json:"permission"`
+	}
+	if err := c.Bind(&req); err != nil {
+		return utils.Error(c, http.StatusBadRequest, "invalid request")
+	}
+	if err := h.orgService.UpdateMemberPermission(c.Request().Context(), orgID, userID, req.Permission); err != nil {
+		return utils.Error(c, http.StatusInternalServerError, err.Error())
+	}
+	return c.NoContent(http.StatusNoContent)
+}
+
+func (h *OrganizationHandler) RemoveMember(c echo.Context) error {
+	memberID := c.Param("memberId")
+	if err := h.orgService.RemoveMember(c.Request().Context(), memberID); err != nil {
+		return utils.Error(c, http.StatusInternalServerError, err.Error())
+	}
+	return c.NoContent(http.StatusNoContent)
+}
