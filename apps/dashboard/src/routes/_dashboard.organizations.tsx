@@ -3,7 +3,7 @@ import { Building, Loader2, Plus, Trash2 } from 'lucide-react';
 import { useState } from 'react';
 import { toast } from 'sonner';
 import { Button } from '#/components/ui/button';
-import { Input } from '#/components/ui/input';
+import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '#/components/ui/card';
 import {
   Dialog,
   DialogContent,
@@ -12,17 +12,11 @@ import {
   DialogHeader,
   DialogTitle,
 } from '#/components/ui/dialog';
+import { Input } from '#/components/ui/input';
 import {
-  Card,
-  CardContent,
-  CardDescription,
-  CardHeader,
-  CardTitle,
-} from '#/components/ui/card';
-import {
-  useListOrganizations,
   useCreateOrganization,
   useDeleteOrganization,
+  useListOrganizations,
 } from '#/hooks/useOrganizations';
 
 export const Route = createFileRoute('/_dashboard/organizations')({
@@ -97,9 +91,7 @@ function OrganizationCard({ org }: { org: any }) {
   return (
     <Card>
       <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-        <CardTitle className="font-medium text-sm">
-          {org.name}
-        </CardTitle>
+        <CardTitle className="font-medium text-sm">{org.name}</CardTitle>
         <Building className="h-4 w-4 text-muted-foreground" />
       </CardHeader>
       <CardContent>
@@ -108,7 +100,11 @@ function OrganizationCard({ org }: { org: any }) {
         </CardDescription>
         <div className="mt-4 flex justify-end">
           <Button variant="destructive" size="sm" onClick={handleDelete} disabled={isPending}>
-            {isPending ? <Loader2 className="h-4 w-4 animate-spin" /> : <Trash2 className="h-4 w-4" />}
+            {isPending ? (
+              <Loader2 className="h-4 w-4 animate-spin" />
+            ) : (
+              <Trash2 className="h-4 w-4" />
+            )}
           </Button>
         </div>
       </CardContent>
@@ -164,7 +160,12 @@ function CreateOrganizationModal({
             </div>
           </div>
           <DialogFooter>
-            <Button type="button" variant="outline" onClick={() => onOpenChange(false)} disabled={isPending}>
+            <Button
+              type="button"
+              variant="outline"
+              onClick={() => onOpenChange(false)}
+              disabled={isPending}
+            >
               Cancel
             </Button>
             <Button type="submit" disabled={!name || isPending}>

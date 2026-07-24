@@ -1,9 +1,9 @@
 import { createFileRoute } from '@tanstack/react-router';
-import { ServerIcon, Loader2, Plus, Terminal } from 'lucide-react';
+import { Loader2, Plus, ServerIcon, Terminal } from 'lucide-react';
 import { useState } from 'react';
 import { toast } from 'sonner';
 import { Button } from '#/components/ui/button';
-import { Input } from '#/components/ui/input';
+import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '#/components/ui/card';
 import {
   Dialog,
   DialogContent,
@@ -12,17 +12,8 @@ import {
   DialogHeader,
   DialogTitle,
 } from '#/components/ui/dialog';
-import {
-  Card,
-  CardContent,
-  CardDescription,
-  CardHeader,
-  CardTitle,
-} from '#/components/ui/card';
-import {
-  useListServers,
-  useCreateServer,
-} from '#/hooks/useServers';
+import { Input } from '#/components/ui/input';
+import { useCreateServer, useListServers } from '#/hooks/useServers';
 import type { Server } from '#/interfaces/server';
 
 export const Route = createFileRoute('/_dashboard/servers')({
@@ -43,7 +34,9 @@ function ServersPage() {
           </div>
           <div>
             <h1 className="font-bold text-xl">Servers</h1>
-            <p className="text-muted-foreground text-sm">Manage your distributed fleet of worker servers.</p>
+            <p className="text-muted-foreground text-sm">
+              Manage your distributed fleet of worker servers.
+            </p>
           </div>
         </div>
 
@@ -96,19 +89,15 @@ function ServerCard({ server }: { server: Server }) {
   return (
     <Card>
       <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-        <CardTitle className="font-medium text-sm">
-          {server.name}
-        </CardTitle>
+        <CardTitle className="font-medium text-sm">{server.name}</CardTitle>
         <ServerIcon className="h-4 w-4 text-muted-foreground" />
       </CardHeader>
       <CardContent>
-        <div className="flex items-center gap-2 mt-2">
+        <div className="mt-2 flex items-center gap-2">
           <div className={`h-2 w-2 rounded-full ${statusColor}`} />
-          <span className="text-sm font-medium capitalize">{server.status}</span>
+          <span className="font-medium text-sm capitalize">{server.status}</span>
         </div>
-        <CardDescription className="text-xs mt-2">
-          IP: {server.ipAddress}
-        </CardDescription>
+        <CardDescription className="mt-2 text-xs">IP: {server.ipAddress}</CardDescription>
         <CardDescription className="text-xs">
           Last seen: {server.lastSeenAt ? new Date(server.lastSeenAt).toLocaleString() : 'Never'}
         </CardDescription>
@@ -154,14 +143,15 @@ function CreateServerModal({
             <DialogHeader>
               <DialogTitle>Connect your Server</DialogTitle>
               <DialogDescription>
-                Run the following command on your server to install the Codedock Worker and connect it to your dashboard.
+                Run the following command on your server to install the Codedock Worker and connect
+                it to your dashboard.
               </DialogDescription>
             </DialogHeader>
-            <div className="py-6 space-y-4">
-              <div className="rounded-md bg-muted p-4 relative font-mono text-sm break-all">
+            <div className="space-y-4 py-6">
+              <div className="relative break-all rounded-md bg-muted p-4 font-mono text-sm">
                 {curlCommand}
               </div>
-              <p className="text-xs text-muted-foreground">
+              <p className="text-muted-foreground text-xs">
                 Note: Keep this token secret. It gives full access to your server.
               </p>
             </div>
@@ -173,11 +163,9 @@ function CreateServerModal({
           <form onSubmit={handleSubmit}>
             <DialogHeader>
               <DialogTitle>Add Server</DialogTitle>
-              <DialogDescription>
-                Add a new worker node to your Codedock cluster.
-              </DialogDescription>
+              <DialogDescription>Add a new worker node to your Codedock cluster.</DialogDescription>
             </DialogHeader>
-            <div className="py-6 space-y-4">
+            <div className="space-y-4 py-6">
               <div className="space-y-2">
                 <label htmlFor="name" className="font-medium text-sm">
                   Name
@@ -204,7 +192,12 @@ function CreateServerModal({
               </div>
             </div>
             <DialogFooter>
-              <Button type="button" variant="outline" onClick={() => onOpenChange(false)} disabled={isPending}>
+              <Button
+                type="button"
+                variant="outline"
+                onClick={() => onOpenChange(false)}
+                disabled={isPending}
+              >
                 Cancel
               </Button>
               <Button type="submit" disabled={!name || !ipAddress || isPending}>

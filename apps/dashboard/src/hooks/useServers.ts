@@ -1,6 +1,6 @@
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
 import type { BaseResponse } from '#/interfaces/base';
-import type { Server, CreateServerRequest } from '#/interfaces/server';
+import type { CreateServerRequest, Server } from '#/interfaces/server';
 import { apiClient } from '#/lib/apiClient';
 import { handleApiError } from '#/lib/error';
 

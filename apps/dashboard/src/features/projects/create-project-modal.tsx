@@ -11,10 +11,16 @@ import {
 } from '#/components/ui/dialog';
 import { Input } from '#/components/ui/input';
 import { Label } from '#/components/ui/label';
-import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '#/components/ui/select';
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from '#/components/ui/select';
+import { useListOrganizations } from '#/hooks/useOrganizations';
 import { useCreateProject } from '#/hooks/useProjects';
 import { useListServers } from '#/hooks/useServers';
-import { useOrganizations } from '#/hooks/useOrganizations';
 
 export function CreateProjectModal({
   open,
@@ -27,22 +33,22 @@ export function CreateProjectModal({
   const [description, setDescription] = useState('');
   const [serverId, setServerId] = useState('');
   const [organizationId, setOrganizationId] = useState('');
-  
+
   const { data: servers } = useListServers();
-  const { data: orgs } = useOrganizations();
-  
+  const { data: orgs } = useListOrganizations();
+
   const { mutateAsync: createProject, isPending } = useCreateProject();
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     try {
-      await createProject({ 
-        payload: { 
-          name, 
-          description, 
-          ...(serverId ? { serverId } : {}), 
-          ...(organizationId ? { organizationId } : {}) 
-        } 
+      await createProject({
+        payload: {
+          name,
+          description,
+          ...(serverId ? { serverId } : {}),
+          ...(organizationId ? { organizationId } : {}),
+        },
       });
       toast.success('Project created');
       onOpenChange(false);
@@ -106,7 +112,7 @@ export function CreateProjectModal({
                 className="h-10 rounded-lg border-border/50 bg-background/80 px-3 text-sm transition-all duration-300 focus:border-primary/50 focus:ring-1 focus:ring-primary/20"
               />
             </div>
-            
+
             <div className="space-y-2.5">
               <Label className="font-mono font-semibold text-[10px] text-muted-foreground uppercase tracking-[0.2em]">
                 SERVER (OPTIONAL)
