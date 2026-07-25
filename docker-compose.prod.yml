@@ -1,0 +1,112 @@
+# =============================================================================
+# Codedock Cloud — Production Docker Compose
+# Usage: docker compose -f docker-compose.prod.yml up -d
+# =============================================================================
+
+services:
+  codedock:
+    image: ghcr.io/buildwithtechx/codedock:${CODEDOCK_VERSION:-latest}
+    container_name: codedock
+    restart: unless-stopped
+    env_file: .env
+    environment:
+      PORT: "8080"
+      CODEDOCK_DATA_DIR: /codedock/data
+    ports:
+      - "8080:8080"
+    volumes:
+      - codedock_data:/codedock/data
+      - /var/run/docker.sock:/var/run/docker.sock:ro
+      - nixpacks_cache:/root/.nixpacks
+    networks:
+      - proxy
+      - codedock-internal
+    labels:
+      - traefik.enable=true
+      - traefik.docker.network=proxy
+      # App dashboard + API
+      - traefik.http.routers.codedock.rule=Host(`app.codedock.dev`)
+      - traefik.http.routers.codedock.entrypoints=websecure
+      - traefik.http.routers.codedock.tls.certresolver=letsencrypt
+      - traefik.http.services.codedock.loadbalancer.server.port=8080
+      # WebSocket sticky (worker daemon connections)
+      - traefik.http.routers.codedock.middlewares=codedock-ws@docker
+      - traefik.http.middlewares.codedock-ws.headers.customrequestheaders.Connection=Upgrade
+      - traefik.http.middlewares.codedock-ws.headers.customrequestheaders.Upgrade=websocket
+    healthcheck:
+      test: ["CMD", "wget", "-qO-", "http://localhost:8080/healthz"]
+      interval: 30s
+      timeout: 10s
+      retries: 3
+      start_period: 15s
+    deploy:
+      resources:
+        limits:
+          cpus: "2"
+          memory: 2G
+        reservations:
+          memory: 256M
+
+  traefik:
+    image: traefik:v3.3
+    container_name: traefik
+    restart: unless-stopped
+    command:
+      - --api.dashboard=false
+      - --providers.docker=true
+      - --providers.docker.exposedbydefault=false
+      - --providers.docker.network=proxy
+      - --entrypoints.web.address=:80
+      - --entrypoints.websecure.address=:443
+      - --entrypoints.web.http.redirections.entrypoint.to=websecure
+      - --entrypoints.web.http.redirections.entrypoint.scheme=https
+      - --certificatesresolvers.letsencrypt.acme.tlschallenge=true
+      - --certificatesresolvers.letsencrypt.acme.email=${CODEDOCK_TLS_EMAIL}
+      - --certificatesresolvers.letsencrypt.acme.storage=/acme/acme.json
+      - --log.level=WARN
+      - --accesslog=false
+    ports:
+      - "80:80"
+      - "443:443"
+    volumes:
+      - /var/run/docker.sock:/var/run/docker.sock:ro
+      - traefik_acme:/acme
+    networks:
+      - proxy
+    deploy:
+      resources:
+        limits:
+          cpus: "0.5"
+          memory: 128M
+
+  watchtower:
+    image: containrrr/watchtower:latest
+    container_name: watchtower
+    restart: unless-stopped
+    environment:
+      WATCHTOWER_CLEANUP: "true"
+      WATCHTOWER_POLL_INTERVAL: "300"
+      WATCHTOWER_INCLUDE_STOPPED: "false"
+      WATCHTOWER_LABEL_ENABLE: "true"
+    volumes:
+      - /var/run/docker.sock:/var/run/docker.sock
+    networks:
+      - codedock-internal
+    labels:
+      - com.centurylinklabs.watchtower.enable=true
+
+volumes:
+  codedock_data:
+    name: codedock_data
+  traefik_acme:
+    name: traefik_acme
+  nixpacks_cache:
+    name: nixpacks_cache
+
+networks:
+  proxy:
+    name: proxy
+    driver: bridge
+  codedock-internal:
+    name: codedock-internal
+    driver: bridge
