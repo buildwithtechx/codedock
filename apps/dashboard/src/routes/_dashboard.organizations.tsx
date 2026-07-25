@@ -1,4 +1,4 @@
-import { createFileRoute } from '@tanstack/react-router';
+import { createFileRoute, Link } from '@tanstack/react-router';
 import { Building, Loader2, Plus, Trash2 } from 'lucide-react';
 import { useState } from 'react';
 import { toast } from 'sonner';
@@ -78,7 +78,9 @@ function OrganizationsPage() {
 function OrganizationCard({ org }: { org: any }) {
   const { mutateAsync: deleteOrg, isPending } = useDeleteOrganization();
 
-  const handleDelete = async () => {
+  const handleDelete = async (e: React.MouseEvent) => {
+    e.preventDefault();
+    e.stopPropagation();
     if (!confirm('Are you sure you want to delete this organization?')) return;
     try {
       await deleteOrg(org.id);
@@ -89,26 +91,28 @@ function OrganizationCard({ org }: { org: any }) {
   };
 
   return (
-    <Card>
-      <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-        <CardTitle className="font-medium text-sm">{org.name}</CardTitle>
-        <Building className="h-4 w-4 text-muted-foreground" />
-      </CardHeader>
-      <CardContent>
-        <CardDescription className="text-xs">
-          Created at {new Date(org.createdAt).toLocaleDateString()}
-        </CardDescription>
-        <div className="mt-4 flex justify-end">
-          <Button variant="destructive" size="sm" onClick={handleDelete} disabled={isPending}>
-            {isPending ? (
-              <Loader2 className="h-4 w-4 animate-spin" />
-            ) : (
-              <Trash2 className="h-4 w-4" />
-            )}
-          </Button>
-        </div>
-      </CardContent>
-    </Card>
+    <Link to="/organizations/$organizationId" params={{ organizationId: org.id }}>
+      <Card className="cursor-pointer transition-colors hover:border-primary/50">
+        <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
+          <CardTitle className="font-medium text-sm">{org.name}</CardTitle>
+          <Building className="h-4 w-4 text-muted-foreground" />
+        </CardHeader>
+        <CardContent>
+          <CardDescription className="text-xs">
+            Created at {new Date(org.createdAt).toLocaleDateString()}
+          </CardDescription>
+          <div className="mt-4 flex justify-end">
+            <Button variant="destructive" size="sm" onClick={handleDelete} disabled={isPending}>
+              {isPending ? (
+                <Loader2 className="h-4 w-4 animate-spin" />
+              ) : (
+                <Trash2 className="h-4 w-4" />
+              )}
+            </Button>
+          </div>
+        </CardContent>
+      </Card>
+    </Link>
   );
 }
 

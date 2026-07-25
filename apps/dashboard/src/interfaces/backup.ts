@@ -7,6 +7,8 @@ export interface BackupConfig {
   id: string;
   projectId: string;
   databaseId?: string;
+  serviceId?: string;
+  volumeName?: string;
   s3DestinationId?: string;
   name: string;
   description: string;
@@ -70,6 +72,8 @@ export interface CreateBackupConfigRequest {
   maxBackups: number;
   maxStorageGb: number;
   databaseId?: string;
+  serviceId?: string;
+  volumeName?: string;
   s3DestinationId?: string;
 }
 

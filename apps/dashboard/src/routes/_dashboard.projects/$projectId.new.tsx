@@ -5,6 +5,7 @@ import { Button } from '#/components/ui/button';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '#/components/ui/card';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '#/components/ui/tabs';
 import { CreateDatabaseModal } from '#/features/databases/create-database-modal';
+import { CreateDockerImageModal } from '#/features/instance/create-docker-image-modal';
 import { CreateGitAppModal } from '#/features/instance/create-git-app-modal';
 import { useListExampleApps, useListOneClickApps } from '#/hooks/useTemplates';
 
@@ -17,6 +18,7 @@ function NewResourcePage() {
   const navigate = useNavigate();
   const [dbModalOpen, setDbModalOpen] = useState(false);
   const [gitModalOpen, setGitModalOpen] = useState(false);
+  const [dockerModalOpen, setDockerModalOpen] = useState(false);
 
   const { data: oneClickResponse, isLoading: oneClickLoading } = useListOneClickApps();
   const { data: examplesResponse, isLoading: examplesLoading } = useListExampleApps();
@@ -81,7 +83,7 @@ function NewResourcePage() {
 
             <Card
               className="cursor-pointer transition-colors hover:border-primary/50"
-              onClick={() => alert('Docker Image deployment flow coming soon!')}
+              onClick={() => setDockerModalOpen(true)}
             >
               <CardHeader>
                 <CardTitle className="flex items-center gap-2">
@@ -205,6 +207,11 @@ function NewResourcePage() {
       <CreateGitAppModal
         isOpen={gitModalOpen}
         onOpenChange={setGitModalOpen}
+        projectId={projectId}
+      />
+      <CreateDockerImageModal
+        isOpen={dockerModalOpen}
+        onOpenChange={setDockerModalOpen}
         projectId={projectId}
       />
     </div>

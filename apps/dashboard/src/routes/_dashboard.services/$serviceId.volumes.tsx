@@ -1,6 +1,6 @@
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
 import { createFileRoute } from '@tanstack/react-router';
-import { HardDrive, Loader2, Plus, Trash2 } from 'lucide-react';
+import { DatabaseBackup, HardDrive, Loader2, Plus, Trash2 } from 'lucide-react';
 import { useState } from 'react';
 import { toast } from 'sonner';
 import { Button } from '#/components/ui/button';
@@ -15,6 +15,7 @@ import {
   TableHeader,
   TableRow,
 } from '#/components/ui/table';
+import { VolumeBackupModal } from '#/features/services/volume-backup-modal';
 import { useGetApp } from '#/hooks/useApps';
 import { apiClient } from '#/lib/apiClient';
 
@@ -31,6 +32,7 @@ function ServiceVolumesRoute() {
   const [isCreating, setIsCreating] = useState(false);
   const [hostPath, setHostPath] = useState('');
   const [containerPath, setContainerPath] = useState('');
+  const [backupVolume, setBackupVolume] = useState<string | null>(null);
 
   const { data: volumesResponse, isLoading: isLoadingVolumes } = useQuery({
     queryKey: ['volumes', 'service', serviceId],
@@ -166,15 +168,25 @@ function ServiceVolumesRoute() {
                     <TableCell className="font-mono text-sm">{vol.hostPath}</TableCell>
                     <TableCell className="font-mono text-sm">{vol.containerPath}</TableCell>
                     <TableCell className="text-right">
-                      <Button
-                        variant="destructive"
-                        size="icon"
-                        title="Delete"
-                        onClick={() => deleteMutation.mutate(vol.id)}
-                        disabled={deleteMutation.isPending}
-                      >
-                        <Trash2 className="h-4 w-4" />
-                      </Button>
+                      <div className="flex justify-end gap-2">
+                        <Button
+                          variant="outline"
+                          size="icon"
+                          title="Configure Backup"
+                          onClick={() => setBackupVolume(vol.hostPath)}
+                        >
+                          <DatabaseBackup className="h-4 w-4" />
+                        </Button>
+                        <Button
+                          variant="destructive"
+                          size="icon"
+                          title="Delete"
+                          onClick={() => deleteMutation.mutate(vol.id)}
+                          disabled={deleteMutation.isPending}
+                        >
+                          <Trash2 className="h-4 w-4" />
+                        </Button>
+                      </div>
                     </TableCell>
                   </TableRow>
                 ))}
@@ -183,6 +195,16 @@ function ServiceVolumesRoute() {
           )}
         </CardContent>
       </Card>
+
+      {backupVolume && app?.projectId && (
+        <VolumeBackupModal
+          serviceId={serviceId}
+          projectId={app.projectId}
+          volumeName={backupVolume}
+          open={!!backupVolume}
+          onOpenChange={(open) => !open && setBackupVolume(null)}
+        />
+      )}
     </div>
   );
 }

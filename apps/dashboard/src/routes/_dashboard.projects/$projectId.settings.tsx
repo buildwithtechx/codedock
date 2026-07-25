@@ -1,6 +1,7 @@
 import { createFileRoute } from '@tanstack/react-router';
 import { ProjectMembers } from '#/features/projects/project-members';
 import { ProjectTokens } from '#/features/projects/project-tokens';
+import { ProjectRegistries } from '#/features/registries/project-registries';
 
 export const Route = createFileRoute('/_dashboard/projects/$projectId/settings')({
   component: SettingsRouteComponent,
@@ -16,6 +17,10 @@ function SettingsRouteComponent() {
       <div className="grid grid-cols-1 gap-8">
         <section className="rounded-lg border bg-white p-6 shadow-sm">
           <ProjectMembers projectId={projectId} />
+        </section>
+
+        <section className="rounded-lg border bg-white p-6 shadow-sm">
+          <ProjectRegistries projectId={projectId} />
         </section>
 
         <section className="rounded-lg border bg-white p-6 shadow-sm">

@@ -1,34 +1,10 @@
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
-import type { BaseResponse } from '#/interfaces/base';
-import type { CreateOrganizationRequest, Organization } from '#/interfaces/organization';
-import { apiClient } from '#/lib/apiClient';
-import { handleApiError } from '#/lib/error';
-
-const orgService = {
-  list: async (): Promise<Organization[]> => {
-    try {
-      const res = await apiClient.get<BaseResponse<Organization[]>>('/organizations');
-      return res.data;
-    } catch (err) {
-      throw handleApiError(err);
-    }
-  },
-  create: async (payload: CreateOrganizationRequest): Promise<Organization> => {
-    try {
-      const res = await apiClient.post<BaseResponse<Organization>>('/organizations', payload);
-      return res.data;
-    } catch (err) {
-      throw handleApiError(err);
-    }
-  },
-  delete: async (id: string): Promise<void> => {
-    try {
-      await apiClient.delete(`/organizations/${id}`);
-    } catch (err) {
-      throw handleApiError(err);
-    }
-  },
-};
+import type {
+  CreateOrganizationRequest,
+  InviteOrganizationMemberRequest,
+  UpdateOrganizationMemberRequest,
+} from '#/interfaces/organization';
+import { orgService } from '#/services/organizations';
 
 export const useListOrganizations = () =>
   useQuery({ queryKey: ['organizations'], queryFn: () => orgService.list() });
@@ -46,5 +22,49 @@ export const useDeleteOrganization = () => {
   return useMutation({
     mutationFn: (id: string) => orgService.delete(id),
     onSuccess: () => qc.invalidateQueries({ queryKey: ['organizations'] }),
+  });
+};
+
+export const useGetOrganization = (id: string) =>
+  useQuery({
+    queryKey: ['organization', id],
+    queryFn: () => orgService.get(id),
+    enabled: !!id,
+  });
+
+export const useListOrganizationMembers = (id: string) =>
+  useQuery({
+    queryKey: ['organizationMembers', id],
+    queryFn: () => orgService.listMembers(id),
+    enabled: !!id,
+  });
+
+export const useInviteOrganizationMember = (id: string) => {
+  const qc = useQueryClient();
+  return useMutation({
+    mutationFn: (payload: InviteOrganizationMemberRequest) => orgService.inviteMember(id, payload),
+    onSuccess: () => qc.invalidateQueries({ queryKey: ['organizationMembers', id] }),
+  });
+};
+
+export const useUpdateOrganizationMember = (orgId: string) => {
+  const qc = useQueryClient();
+  return useMutation({
+    mutationFn: ({
+      memberId,
+      payload,
+    }: {
+      memberId: string;
+      payload: UpdateOrganizationMemberRequest;
+    }) => orgService.updateMember(orgId, memberId, payload),
+    onSuccess: () => qc.invalidateQueries({ queryKey: ['organizationMembers', orgId] }),
+  });
+};
+
+export const useRemoveOrganizationMember = (orgId: string) => {
+  const qc = useQueryClient();
+  return useMutation({
+    mutationFn: (memberId: string) => orgService.removeMember(orgId, memberId),
+    onSuccess: () => qc.invalidateQueries({ queryKey: ['organizationMembers', orgId] }),
   });
 };
