@@ -1,11 +1,11 @@
 import { CreditCard, Loader2 } from 'lucide-react';
 import { Button } from '#/components/ui/button';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '#/components/ui/card';
-import { useAuth } from '#/hooks/useAuth';
 import { useBillingConfig, useCreateCheckoutSession } from '#/hooks/useBilling';
+import { useAuthStore } from '#/stores/authStore';
 
 export function BillingSection() {
-  const { user } = useAuth();
+  const user = useAuthStore((s) => s.user);
   const { data: config, isLoading } = useBillingConfig();
   const { mutateAsync: createCheckoutSession, isPending } = useCreateCheckoutSession();
 
@@ -13,8 +13,8 @@ export function BillingSection() {
     try {
       const { url } = await createCheckoutSession({
         priceId,
-        successUrl: window.location.href + '?billing=success',
-        cancelUrl: window.location.href + '?billing=canceled',
+        successUrl: `${window.location.href}?billing=success`,
+        cancelUrl: `${window.location.href}?billing=canceled`,
       });
       window.location.href = url;
     } catch (e) {
@@ -38,12 +38,10 @@ export function BillingSection() {
           <Loader2 className="h-5 w-5 animate-spin" />
         ) : (
           <div className="space-y-4">
-            <div className="flex items-center justify-between p-4 border rounded-lg bg-card">
+            <div className="flex items-center justify-between rounded-lg border bg-card p-4">
               <div>
-                <h3 className="font-semibold text-lg">
-                  {isPro ? 'Pro Plan' : 'Hobby Plan'}
-                </h3>
-                <p className="text-sm text-muted-foreground">
+                <h3 className="font-semibold text-lg">{isPro ? 'Pro Plan' : 'Hobby Plan'}</h3>
+                <p className="text-muted-foreground text-sm">
                   {isPro
                     ? 'You are currently on the Pro plan with all features unlocked.'
                     : 'You are on the free Hobby plan. Upgrade to unlock more features.'}
@@ -51,9 +49,7 @@ export function BillingSection() {
               </div>
               {!isPro && config?.plans.find((p) => p.id === 'pro')?.priceId && (
                 <Button
-                  onClick={() =>
-                    handleUpgrade(config.plans.find((p) => p.id === 'pro')!.priceId!)
-                  }
+                  onClick={() => handleUpgrade(config.plans.find((p) => p.id === 'pro')!.priceId!)}
                   disabled={isPending}
                 >
                   {isPending && <Loader2 className="mr-2 h-4 w-4 animate-spin" />}

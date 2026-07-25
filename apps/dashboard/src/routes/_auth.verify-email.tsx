@@ -3,9 +3,9 @@ import { createFileRoute, useNavigate, useSearch } from '@tanstack/react-router'
 import { CheckCircle, Loader2, XCircle } from 'lucide-react';
 import { useEffect, useState } from 'react';
 import { toast } from 'sonner';
+import { apiClient } from '#/lib/apiClient';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
-import { api } from '@/lib/api';
 
 export const Route = createFileRoute('/_auth/verify-email')({
   component: VerifyEmailPage,
@@ -19,7 +19,7 @@ function VerifyEmailPage() {
 
   const verifyMutation = useMutation({
     mutationFn: async (t: string) => {
-      return api.post('/auth/email/verify', { token: t });
+      return apiClient.post('/auth/email/verify', { token: t });
     },
     onSuccess: () => {
       setStatus('success');

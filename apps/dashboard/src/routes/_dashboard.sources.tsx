@@ -1,5 +1,5 @@
 import { createFileRoute } from '@tanstack/react-router';
-import { GithubIntegration } from '#/features/sources';
+import { GithubIntegration, GitProviders } from '#/features/sources';
 
 export const Route = createFileRoute('/_dashboard/sources')({
   validateSearch: (search: Record<string, unknown>): { code?: string } => {
@@ -7,5 +7,11 @@ export const Route = createFileRoute('/_dashboard/sources')({
       code: (search.code as string) || undefined,
     };
   },
-  component: () => <GithubIntegration />,
+  component: () => (
+    <div className="space-y-12 pb-12">
+      <GithubIntegration />
+      <div className="h-px w-full bg-border/50" />
+      <GitProviders />
+    </div>
+  ),
 });

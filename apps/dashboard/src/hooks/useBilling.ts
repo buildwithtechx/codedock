@@ -1,5 +1,5 @@
 import { useMutation, useQuery } from '@tanstack/react-query';
-import { api } from '#/lib/api';
+import { apiClient } from '#/lib/apiClient';
 
 export interface BillingConfig {
   publishableKey: string;
@@ -16,7 +16,7 @@ export function useBillingConfig() {
   return useQuery<BillingConfig>({
     queryKey: ['billing-config'],
     queryFn: async () => {
-      const res = await api.get('/billing/config');
+      const res = await apiClient.get<any>('/billing/config');
       return res.data;
     },
   });
@@ -25,7 +25,7 @@ export function useBillingConfig() {
 export function useCreateCheckoutSession() {
   return useMutation({
     mutationFn: async (payload: { priceId: string; successUrl: string; cancelUrl: string }) => {
-      const res = await api.post<{ url: string }>('/billing/checkout', payload);
+      const res = await apiClient.post<any>('/billing/checkout', payload);
       return res.data;
     },
   });

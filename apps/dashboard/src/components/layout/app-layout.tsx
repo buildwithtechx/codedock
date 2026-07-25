@@ -4,9 +4,9 @@ import { AlertCircle, Menu, X } from 'lucide-react';
 import type * as React from 'react';
 import { useEffect, useState } from 'react';
 import { toast } from 'sonner';
+import { apiClient } from '#/lib/apiClient';
 import { useAuthStore } from '#/stores/authStore';
 import { Button } from '@/components/ui/button';
-import { api } from '@/lib/api';
 import { AppSidebar } from './app-sidebar';
 import { BackgroundPattern } from './background-pattern';
 import { CommandPalette } from './command-palette';
@@ -28,7 +28,7 @@ export function AppLayout({ children }: { children: React.ReactNode }) {
 
   const resendMutation = useMutation({
     mutationFn: async () => {
-      return api.post('/auth/email/resend', { email: user?.email });
+      return apiClient.post('/auth/email/resend', { email: user?.email });
     },
     onSuccess: () => {
       toast.success('Verification email sent! Please check your inbox.');

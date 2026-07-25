@@ -22,7 +22,9 @@ export interface GitBranch {
 
 export interface ConnectGitRequest {
   provider: string;
-  code: string;
+  code?: string;
+  accessToken?: string;
+  accountName?: string;
 }
 
 export type GetGitStatusResponse = BaseResponse<GitStatus[]>;
