@@ -17,7 +17,7 @@ export const StepRuntime = () => {
           <Input
             {...register('env.jwtSecret')}
             placeholder="Generated if blank or enter a 32-character secret"
-            className="h-11 rounded-xl border-border bg-card px-4 text-sm transition-all duration-300 focus:border-primary/50 focus:ring-1 focus:ring-primary/50"
+            className="h-11 rounded-xl border bg-card px-4 text-sm transition-all duration-300 focus:border-primary/50 focus:ring-1 focus:ring-primary/50"
           />
           {errors.env?.jwtSecret && (
             <p className="text-destructive text-xs">{errors.env.jwtSecret.message}</p>
@@ -28,7 +28,7 @@ export const StepRuntime = () => {
           <Label className="font-medium text-foreground/90 text-sm">CODEDOCK_DATA_DIR</Label>
           <Input
             {...register('env.dataDir')}
-            className="h-11 rounded-xl border-border bg-card px-4 text-sm transition-all duration-300 focus:border-primary/50 focus:ring-1 focus:ring-primary/50"
+            className="h-11 rounded-xl border bg-card px-4 text-sm transition-all duration-300 focus:border-primary/50 focus:ring-1 focus:ring-primary/50"
           />
           {errors.env?.dataDir && (
             <p className="text-destructive text-xs">{errors.env.dataDir.message}</p>
@@ -40,7 +40,7 @@ export const StepRuntime = () => {
           <Input
             type="number"
             {...register('env.port', { valueAsNumber: true })}
-            className="h-11 rounded-xl border-border bg-card px-4 text-sm transition-all duration-300 focus:border-primary/50 focus:ring-1 focus:ring-primary/50"
+            className="h-11 rounded-xl border bg-card px-4 text-sm transition-all duration-300 focus:border-primary/50 focus:ring-1 focus:ring-primary/50"
           />
           {errors.env?.port && (
             <p className="text-destructive text-xs">{errors.env.port.message}</p>
@@ -52,7 +52,7 @@ export const StepRuntime = () => {
           <Input
             {...register('env.dashboardUrl')}
             placeholder="http://localhost:3000"
-            className="h-11 rounded-xl border-border bg-card px-4 text-sm transition-all duration-300 focus:border-primary/50 focus:ring-1 focus:ring-primary/50"
+            className="h-11 rounded-xl border bg-card px-4 text-sm transition-all duration-300 focus:border-primary/50 focus:ring-1 focus:ring-primary/50"
           />
           {errors.env?.dashboardUrl && (
             <p className="text-destructive text-xs">{errors.env.dashboardUrl.message}</p>

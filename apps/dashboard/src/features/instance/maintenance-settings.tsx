@@ -93,7 +93,7 @@ export const MaintenancePage = () => {
           <Button
             variant="outline"
             onClick={() => refetch()}
-            className="flex h-11 items-center gap-2 rounded-xl border-border/50 bg-background/50 px-6 font-semibold text-foreground text-xs uppercase tracking-widest hover:bg-background"
+            className="border/50 flex h-11 items-center gap-2 rounded-xl bg-background/50 px-6 font-semibold text-foreground text-xs uppercase tracking-widest hover:bg-background"
           >
             <RefreshCw className="h-4 w-4" /> REFRESH
           </Button>
@@ -107,7 +107,7 @@ export const MaintenancePage = () => {
       ) : null}
 
       <div className="grid grid-cols-1 gap-6 md:grid-cols-3">
-        <div className="flex flex-col justify-between space-y-6 rounded-2xl border border-border/50 bg-card/40 p-6">
+        <div className="border/50 flex flex-col justify-between space-y-6 rounded-2xl border bg-card/40 p-6">
           <div className="flex items-center justify-between">
             <p className="font-bold text-[10px] text-muted-foreground uppercase tracking-[0.15em]">
               ROOT DISK FREE
@@ -125,7 +125,7 @@ export const MaintenancePage = () => {
           </div>
         </div>
 
-        <div className="flex flex-col justify-between space-y-6 rounded-2xl border border-border/50 bg-card/40 p-6">
+        <div className="border/50 flex flex-col justify-between space-y-6 rounded-2xl border bg-card/40 p-6">
           <div className="flex items-center justify-between">
             <p className="w-32 font-bold text-[10px] text-muted-foreground uppercase tracking-[0.15em]">
               DOCKER CLEANUP CANDIDATES
@@ -143,7 +143,7 @@ export const MaintenancePage = () => {
           </div>
         </div>
 
-        <div className="flex flex-col justify-between space-y-6 rounded-2xl border border-border/50 bg-card/40 p-6">
+        <div className="border/50 flex flex-col justify-between space-y-6 rounded-2xl border bg-card/40 p-6">
           <div className="flex items-center justify-between">
             <p className="font-bold text-[10px] text-muted-foreground uppercase tracking-[0.15em]">
               BUILD ARTIFACTS
@@ -161,7 +161,7 @@ export const MaintenancePage = () => {
       </div>
 
       <div className="grid grid-cols-1 gap-6 md:grid-cols-3">
-        <div className="flex h-32 flex-col rounded-2xl border border-border/50 bg-card/40 p-6">
+        <div className="border/50 flex h-32 flex-col rounded-2xl border bg-card/40 p-6">
           <p className="mb-4 font-bold text-[10px] text-muted-foreground uppercase tracking-[0.15em]">
             DISK TREND
           </p>
@@ -175,7 +175,7 @@ export const MaintenancePage = () => {
             ))}
           </div>
         </div>
-        <div className="flex h-32 flex-col rounded-2xl border border-border/50 bg-card/40 p-6">
+        <div className="border/50 flex h-32 flex-col rounded-2xl border bg-card/40 p-6">
           <p className="mb-4 font-bold text-[10px] text-muted-foreground uppercase tracking-[0.15em]">
             DOCKER RECLAIMABLE TREND
           </p>
@@ -189,7 +189,7 @@ export const MaintenancePage = () => {
             ))}
           </div>
         </div>
-        <div className="flex h-32 flex-col rounded-2xl border border-border/50 bg-card/40 p-6">
+        <div className="border/50 flex h-32 flex-col rounded-2xl border bg-card/40 p-6">
           <p className="mb-4 font-bold text-[10px] text-muted-foreground uppercase tracking-[0.15em]">
             BUILD ARTIFACT TREND
           </p>
@@ -202,8 +202,8 @@ export const MaintenancePage = () => {
       </div>
 
       <div className="grid grid-cols-1 gap-6 lg:grid-cols-3">
-        <div className="overflow-hidden rounded-2xl border border-border/50 bg-card/40 lg:col-span-2">
-          <div className="flex items-center justify-between border-border/50 border-b p-6">
+        <div className="border/50 overflow-hidden rounded-2xl border bg-card/40 lg:col-span-2">
+          <div className="border/50 flex items-center justify-between border-b p-6">
             <h3 className="font-bold text-xl">Docker storage</h3>
             <Badge
               variant="outline"
@@ -313,7 +313,7 @@ export const MaintenancePage = () => {
           </div>
         </div>
 
-        <div className="flex flex-col space-y-6 rounded-2xl border border-border/50 bg-card/40 p-6 lg:col-span-1">
+        <div className="border/50 flex flex-col space-y-6 rounded-2xl border bg-card/40 p-6 lg:col-span-1">
           <div className="flex items-center gap-4">
             <div className="flex h-12 w-12 items-center justify-center rounded-lg border border-primary/20 bg-primary/10 text-primary">
               <HardDrive className="h-5 w-5" />
@@ -326,7 +326,7 @@ export const MaintenancePage = () => {
             </div>
           </div>
 
-          <div className="divide-y divide-border/50 rounded-xl border border-border/50 text-sm">
+          <div className="border/50 divide-y divide-border/50 rounded-xl border text-sm">
             <div className="flex justify-between bg-background/30 p-4">
               <span className="text-muted-foreground">Top Docker candidate</span>
               <span className="font-mono">

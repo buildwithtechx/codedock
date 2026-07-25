@@ -66,7 +66,7 @@ function WebhooksRoute() {
         </p>
       </div>
 
-      <Card className="border-border/50 bg-card/40">
+      <Card className="border/50 bg-card/40">
         <CardHeader>
           <div className="flex items-center gap-3">
             <div className="flex h-10 w-10 items-center justify-center rounded-lg border border-primary/20 bg-primary/10 text-primary">
@@ -104,7 +104,7 @@ function WebhooksRoute() {
 
           <div className="space-y-2">
             <div className="font-medium text-sm">cURL Example</div>
-            <div className="rounded-lg border border-border/50 bg-black/50 p-4 font-mono text-muted-foreground text-sm">
+            <div className="border/50 rounded-lg border bg-black/50 p-4 font-mono text-muted-foreground text-sm">
               {app.deployToken ? (
                 <span>
                   <span className="text-primary">curl</span> -X POST {webhookUrl}
@@ -115,7 +115,7 @@ function WebhooksRoute() {
             </div>
           </div>
 
-          <div className="flex items-center gap-4 border-border/50 border-t pt-6">
+          <div className="border/50 flex items-center gap-4 border-t pt-6">
             <Button
               onClick={handleGenerateToken}
               disabled={isPending}

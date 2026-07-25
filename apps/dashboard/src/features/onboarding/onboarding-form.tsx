@@ -106,7 +106,7 @@ export const OnboardingForm = ({ cwd }: { cwd?: string }) => {
 
   return (
     <div className="mx-auto w-full max-w-5xl pt-8 pb-6">
-      <div className="mb-6 flex items-center justify-between border-border/50 border-b pb-6">
+      <div className="border/50 mb-6 flex items-center justify-between border-b pb-6">
         <div className="flex items-center gap-4">
           <div className="flex h-12 w-12 items-center justify-center rounded-lg bg-primary/10 text-primary">
             <Server className="h-6 w-6" />
@@ -165,7 +165,7 @@ export const OnboardingForm = ({ cwd }: { cwd?: string }) => {
 
       <FormProvider {...methods}>
         <form onSubmit={handleSubmit(onSubmit)}>
-          <div className="mb-6 min-h-87.5 rounded-xl border border-border/50 bg-card/40 p-6 shadow-xl backdrop-blur-xl">
+          <div className="border/50 mb-6 min-h-87.5 rounded-xl border bg-card/40 p-6 shadow-xl backdrop-blur-xl">
             <div className="mb-6">
               <p className="mb-3 font-bold text-primary text-xs uppercase tracking-widest">
                 STEP 0{currentStep}
@@ -213,7 +213,7 @@ export const OnboardingForm = ({ cwd }: { cwd?: string }) => {
         </form>
       </FormProvider>
 
-      <div className="mt-16 flex justify-center border-border/50 border-t pt-10">
+      <div className="border/50 mt-16 flex justify-center border-t pt-10">
         <Button
           variant="outline"
           onClick={() => useOnboardingStore.getState().setImportModalOpen(true)}

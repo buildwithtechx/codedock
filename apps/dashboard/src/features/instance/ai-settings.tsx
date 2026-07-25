@@ -138,7 +138,7 @@ export function AISettings() {
             <button
               type="button"
               key={provider.id}
-              className="relative flex flex-col justify-between space-y-4 rounded-xl border border-border/50 bg-card/40 p-6 text-left transition-colors hover:border-border"
+              className="border/50 relative flex flex-col justify-between space-y-4 rounded-xl border bg-card/40 p-6 text-left transition-colors hover:border"
               onClick={() => {
                 if (!isEditing) setEditingId(provider.id);
               }}
@@ -198,7 +198,7 @@ export function AISettings() {
                     e.stopPropagation();
                     handleSetDefault(isDefault ? 'none' : provider.id);
                   }}
-                  className="flex h-8 w-8 items-center justify-center rounded-md border border-border/50 bg-background/50 text-muted-foreground hover:text-foreground"
+                  className="border/50 flex h-8 w-8 items-center justify-center rounded-md border bg-background/50 text-muted-foreground hover:text-foreground"
                 >
                   <Star
                     className={`h-4 w-4 ${isDefault ? 'fill-foreground text-foreground' : ''}`}

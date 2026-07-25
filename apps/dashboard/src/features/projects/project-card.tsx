@@ -38,7 +38,7 @@ export const ProjectCard = ({ project }: { project: CanvasSummary }) => {
       params={{ projectId: project.id }}
       className="group block h-full"
     >
-      <div className="flex h-full flex-col rounded-2xl border border-border/50 bg-card/40 p-5 transition-colors hover:border-primary/50 hover:bg-card/80">
+      <div className="border/50 flex h-full flex-col rounded-2xl border bg-card/40 p-5 transition-colors hover:border-primary/50 hover:bg-card/80">
         <div className="flex items-start justify-between">
           <div>
             <h3 className="font-bold text-foreground text-lg transition-colors group-hover:text-primary">
@@ -63,9 +63,9 @@ export const ProjectCard = ({ project }: { project: CanvasSummary }) => {
           </div>
         </div>
 
-        <div className="mt-4 flex-1 border-border/50 border-t pt-4">
+        <div className="border/50 mt-4 flex-1 border-t pt-4">
           {project.totalServices === 0 ? (
-            <div className="flex h-18 items-center justify-center rounded-xl border border-border/50 border-dashed bg-background/30">
+            <div className="border/50 flex h-18 items-center justify-center rounded-xl border border-dashed bg-background/30">
               <span className="font-mono text-[10px] text-muted-foreground uppercase tracking-widest">
                 No services attached
               </span>
@@ -79,13 +79,13 @@ export const ProjectCard = ({ project }: { project: CanvasSummary }) => {
                 {project.serviceIcons?.slice(0, 5).map((icon, i) => (
                   <div
                     key={i}
-                    className="flex h-10 w-10 items-center justify-center rounded-lg border border-border/50 bg-background/50 shadow-sm transition-colors group-hover:border-primary/30"
+                    className="border/50 flex h-10 w-10 items-center justify-center rounded-lg border bg-background/50 shadow-sm transition-colors group-hover:border-primary/30"
                   >
                     {getIcon(icon)}
                   </div>
                 ))}
                 {project.totalServices > 5 && (
-                  <div className="flex h-10 w-10 items-center justify-center rounded-lg border border-border/50 bg-background/50 font-mono text-[10px] text-muted-foreground shadow-sm">
+                  <div className="border/50 flex h-10 w-10 items-center justify-center rounded-lg border bg-background/50 font-mono text-[10px] text-muted-foreground shadow-sm">
                     +{project.totalServices - 5}
                   </div>
                 )}

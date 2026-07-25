@@ -38,7 +38,7 @@ export function HealthcheckCard({ serviceId }: { serviceId: string }) {
   if (!app) return null;
 
   return (
-    <Card className="border-border/50 bg-card/40">
+    <Card className="border/50 bg-card/40">
       <CardHeader>
         <CardTitle>Networking & Healthchecks</CardTitle>
         <CardDescription>
@@ -78,7 +78,7 @@ export function HealthcheckCard({ serviceId }: { serviceId: string }) {
           </div>
         </div>
 
-        <div className="flex justify-end border-border/50 border-t pt-4">
+        <div className="border/50 flex justify-end border-t pt-4">
           <Button onClick={handleSave} disabled={isPending}>
             {isPending ? 'Saving...' : 'Save Settings'}
           </Button>

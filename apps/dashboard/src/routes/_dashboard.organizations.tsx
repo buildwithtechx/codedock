@@ -51,7 +51,7 @@ function OrganizationsPage() {
           <Loader2 className="h-8 w-8 animate-spin text-muted-foreground" />
         </div>
       ) : orgs?.length === 0 ? (
-        <div className="flex h-64 flex-col items-center justify-center rounded-xl border border-border border-dashed bg-card/40">
+        <div className="flex h-64 flex-col items-center justify-center rounded-xl border border border-dashed bg-card/40">
           <Building className="mb-4 h-8 w-8 text-muted-foreground" />
           <h3 className="font-bold text-foreground text-lg tracking-tight">No organizations yet</h3>
           <p className="mt-1 text-center text-muted-foreground text-sm">

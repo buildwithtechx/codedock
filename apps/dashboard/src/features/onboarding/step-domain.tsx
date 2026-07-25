@@ -16,7 +16,7 @@ export const StepDomain = () => {
           <Input
             id="dashboardDomain"
             placeholder="app.codedock.run"
-            className="h-11 rounded-xl border-border bg-background/80 px-4 text-sm transition-all duration-300 focus:border-primary/50 focus:ring-2 focus:ring-primary/20"
+            className="h-11 rounded-xl border bg-background/80 px-4 text-sm transition-all duration-300 focus:border-primary/50 focus:ring-2 focus:ring-primary/20"
             {...register('dashboardDomain')}
           />
         </div>
@@ -27,7 +27,7 @@ export const StepDomain = () => {
           <Input
             id="defaultWildcardDomain"
             placeholder="codedock.run"
-            className="h-11 rounded-xl border-border bg-background/80 px-4 text-sm transition-all duration-300 focus:border-primary/50 focus:ring-2 focus:ring-primary/20"
+            className="h-11 rounded-xl border bg-background/80 px-4 text-sm transition-all duration-300 focus:border-primary/50 focus:ring-2 focus:ring-primary/20"
             {...register('defaultWildcardDomain')}
           />
         </div>

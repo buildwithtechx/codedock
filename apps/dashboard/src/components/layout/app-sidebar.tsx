@@ -145,7 +145,7 @@ export function AppSidebar({ collapsed, onToggle, mobileOpen, onMobileClose }: A
             <button
               type="button"
               onClick={onToggle}
-              className="absolute top-2 right-0 z-30 hidden h-7 w-7 translate-x-1/2 items-center justify-center rounded-lg border border-border/60 bg-card text-muted-foreground shadow-md transition-all duration-300 hover:bg-sidebar-accent hover:text-sidebar-foreground active:scale-[0.95] md:flex"
+              className="border/60 absolute top-2 right-0 z-30 hidden h-7 w-7 translate-x-1/2 items-center justify-center rounded-lg border bg-card text-muted-foreground shadow-md transition-all duration-300 hover:bg-sidebar-accent hover:text-sidebar-foreground active:scale-[0.95] md:flex"
             >
               <PanelLeft className="h-4 w-4" />
             </button>

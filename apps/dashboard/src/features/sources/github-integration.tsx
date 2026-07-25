@@ -213,7 +213,7 @@ export function GithubIntegration() {
       {apps.length > 0 ? (
         <div className="grid grid-cols-1 gap-4">
           {apps.map((app) => (
-            <div key={app.id} className="rounded-xl border border-border bg-card p-6">
+            <div key={app.id} className="rounded-xl border border bg-card p-6">
               <div className="flex items-start justify-between">
                 <div className="flex items-start gap-4">
                   <div className="flex h-12 w-12 shrink-0 items-center justify-center rounded-lg border border-primary/20 bg-primary/10 text-primary">
@@ -237,7 +237,7 @@ export function GithubIntegration() {
                   <Button
                     variant="outline"
                     size="icon"
-                    className="h-10 w-10 border-border/50 bg-transparent hover:bg-card"
+                    className="border/50 h-10 w-10 bg-transparent hover:bg-card"
                     onClick={() => {
                       setEditingApp(app);
                       setIsEditing(true);
@@ -248,7 +248,7 @@ export function GithubIntegration() {
                   <Button
                     variant="outline"
                     size="icon"
-                    className="h-10 w-10 border-border/50 bg-transparent hover:bg-destructive/10 hover:text-destructive"
+                    className="border/50 h-10 w-10 bg-transparent hover:bg-destructive/10 hover:text-destructive"
                     onClick={() => setDeletingApp(app.id)}
                     disabled={deleteMutation.isPending}
                   >
@@ -258,13 +258,13 @@ export function GithubIntegration() {
               </div>
 
               <div className="mt-6 grid grid-cols-1 gap-4 md:grid-cols-2">
-                <div className="rounded-lg border border-border/50 bg-background/50 p-4">
+                <div className="border/50 rounded-lg border bg-background/50 p-4">
                   <p className="font-medium text-[10px] text-muted-foreground uppercase tracking-widest">
                     APP SLUG
                   </p>
                   <p className="mt-2 font-mono text-sm">{app.name || 'Not set'}</p>
                 </div>
-                <div className="rounded-lg border border-border/50 bg-background/50 p-4">
+                <div className="border/50 rounded-lg border bg-background/50 p-4">
                   <p className="font-medium text-[10px] text-muted-foreground uppercase tracking-widest">
                     APP ID
                   </p>
@@ -275,7 +275,7 @@ export function GithubIntegration() {
           ))}
         </div>
       ) : (
-        <div className="flex h-64 flex-col items-center justify-center rounded-xl border border-border border-dashed bg-card/40">
+        <div className="flex h-64 flex-col items-center justify-center rounded-xl border border border-dashed bg-card/40">
           <div className="flex h-12 w-12 items-center justify-center rounded-xl border border-primary/20 bg-primary/10">
             <GithubIcon className="h-5 w-5 text-primary" />
           </div>
@@ -299,7 +299,7 @@ export function GithubIntegration() {
       )}
 
       <Dialog open={isEditing} onOpenChange={setIsEditing}>
-        <DialogContent className="gap-0 border-border/50 bg-card/95 p-0 backdrop-blur-xl sm:max-w-4xl [&>button]:hidden">
+        <DialogContent className="border/50 gap-0 bg-card/95 p-0 backdrop-blur-xl sm:max-w-4xl [&>button]:hidden">
           <div className="px-5 pt-5 pb-4">
             <div className="flex items-start justify-between">
               <div className="flex flex-col">
@@ -367,7 +367,7 @@ export function GithubIntegration() {
             )}
 
             {!editingApp && (
-              <div className="relative mt-12 mb-8 flex w-full justify-center border-border/50 border-t">
+              <div className="border/50 relative mt-12 mb-8 flex w-full justify-center border-t">
                 <span className="absolute -top-3 bg-card px-4 font-bold text-[10px] text-muted-foreground uppercase tracking-widest">
                   OR ENTER MANUALLY
                 </span>
@@ -475,7 +475,7 @@ export function GithubIntegration() {
       </Dialog>
 
       <Dialog open={!!deletingApp} onOpenChange={(open) => !open && setDeletingApp(null)}>
-        <DialogContent className="gap-0 border-border/50 bg-card/95 p-0 backdrop-blur-xl sm:max-w-md [&>button]:hidden">
+        <DialogContent className="border/50 gap-0 bg-card/95 p-0 backdrop-blur-xl sm:max-w-md [&>button]:hidden">
           <div className="p-5">
             <div className="flex items-start justify-between">
               <div className="flex flex-col">

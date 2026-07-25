@@ -21,7 +21,7 @@ func (s *Server) registerRoutes() {
 	s.registerUserRoutes(apiGroup, authGroup)
 	s.registerProjectRoutes(apiGroup, authGroup)
 	s.registerOrganizationRoutes(authGroup)
-	s.registerServerRoutes(authGroup)
+	s.registerServerRoutes(apiGroup, authGroup)
 	s.registerDatabaseRoutes(authGroup)
 	s.registerAppRoutes(apiGroup, authGroup)
 	s.registerDeploymentRoutes(authGroup)
@@ -150,9 +150,10 @@ func (s *Server) registerProjectRoutes(apiGroup, authGroup *echo.Group) {
 
 }
 
-func (s *Server) registerServerRoutes(authGroup *echo.Group) {
+func (s *Server) registerServerRoutes(apiGroup, authGroup *echo.Group) {
 	authGroup.GET("/servers", s.serverHandler.List, s.authGuard.RequireScope("server:read"))
 	authGroup.POST("/servers", s.serverHandler.Create, s.authGuard.RequireScope("server:write"))
+	apiGroup.GET("/ws/servers/:serverId/metrics", s.serverMetricsWSHandler.Handle)
 }
 
 func (s *Server) registerOrganizationRoutes(authGroup *echo.Group) {

@@ -99,7 +99,7 @@ export function GitProviders() {
           return (
             <div
               key={provider.id}
-              className="flex flex-col justify-between rounded-xl border border-border bg-card p-6"
+              className="flex flex-col justify-between rounded-xl border border bg-card p-6"
             >
               <div className="flex items-start gap-4">
                 <div className="flex h-12 w-12 shrink-0 items-center justify-center rounded-lg bg-background p-2">
@@ -125,7 +125,7 @@ export function GitProviders() {
                 {isConnected ? (
                   <Button
                     variant="outline"
-                    className="border-border/50 bg-transparent text-destructive hover:bg-destructive/10 hover:text-destructive"
+                    className="border/50 bg-transparent text-destructive hover:bg-destructive/10 hover:text-destructive"
                     onClick={() => setIsDisconnecting(provider.id)}
                   >
                     Disconnect
@@ -133,7 +133,7 @@ export function GitProviders() {
                 ) : (
                   <Button
                     variant="outline"
-                    className="border-border/50 bg-transparent hover:bg-card"
+                    className="border/50 bg-transparent hover:bg-card"
                     onClick={() => {
                       setAccessToken('');
                       setAccountName('');
@@ -150,7 +150,7 @@ export function GitProviders() {
       </div>
 
       <Dialog open={!!isConnecting} onOpenChange={(open) => !open && setIsConnecting(null)}>
-        <DialogContent className="gap-0 border-border/50 bg-card/95 p-0 backdrop-blur-xl sm:max-w-md [&>button]:hidden">
+        <DialogContent className="border/50 gap-0 bg-card/95 p-0 backdrop-blur-xl sm:max-w-md [&>button]:hidden">
           <div className="px-5 pt-5 pb-4">
             <div className="flex items-start justify-between">
               <div className="flex flex-col">
@@ -213,7 +213,7 @@ export function GitProviders() {
       </Dialog>
 
       <Dialog open={!!isDisconnecting} onOpenChange={(open) => !open && setIsDisconnecting(null)}>
-        <DialogContent className="gap-0 border-border/50 bg-card/95 p-0 backdrop-blur-xl sm:max-w-md [&>button]:hidden">
+        <DialogContent className="border/50 gap-0 bg-card/95 p-0 backdrop-blur-xl sm:max-w-md [&>button]:hidden">
           <div className="p-5">
             <div className="flex items-start justify-between">
               <div className="flex flex-col">

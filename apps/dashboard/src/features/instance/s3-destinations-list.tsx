@@ -129,7 +129,7 @@ export function S3DestinationsList() {
               NEW DESTINATION
             </Button>
           </DialogTrigger>
-          <DialogContent className="gap-0 border-border/50 bg-card/95 p-0 backdrop-blur-xl sm:max-w-150 [&>button]:hidden">
+          <DialogContent className="border/50 gap-0 bg-card/95 p-0 backdrop-blur-xl sm:max-w-150 [&>button]:hidden">
             <div className="px-5 pt-5 pb-4">
               <div className="flex items-start justify-between">
                 <div className="flex flex-col">
@@ -318,7 +318,7 @@ export function S3DestinationsList() {
 
       <div className="grid grid-cols-1 gap-4 md:grid-cols-2 lg:grid-cols-3">
         {list.length === 0 ? (
-          <div className="col-span-full flex h-64 flex-col items-center justify-center rounded-xl border border-border border-dashed bg-card/40">
+          <div className="col-span-full flex h-64 flex-col items-center justify-center rounded-xl border border border-dashed bg-card/40">
             <div className="flex h-12 w-12 items-center justify-center rounded-xl border border-primary/20 bg-primary/10">
               <Database className="h-5 w-5 text-primary" />
             </div>
@@ -337,7 +337,7 @@ export function S3DestinationsList() {
           list.map((dest) => (
             <div
               key={dest.id}
-              className="group relative flex flex-col rounded-2xl border border-border/50 bg-card/40 p-5 transition-colors hover:border-border"
+              className="group border/50 relative flex flex-col rounded-2xl border bg-card/40 p-5 transition-colors hover:border"
             >
               <div className="mb-4 flex items-start justify-between gap-4">
                 <div className="flex h-10 w-10 shrink-0 items-center justify-center rounded-xl border border-primary/20 bg-primary/10 text-primary">
@@ -355,7 +355,7 @@ export function S3DestinationsList() {
                   </DropdownMenuTrigger>
                   <DropdownMenuContent
                     align="end"
-                    className="w-40 border-border/50 bg-card/95 backdrop-blur-xl"
+                    className="border/50 w-40 bg-card/95 backdrop-blur-xl"
                   >
                     <DropdownMenuItem
                       className="text-destructive focus:bg-destructive/10 focus:text-destructive"
@@ -373,7 +373,7 @@ export function S3DestinationsList() {
                   <p className="text-muted-foreground text-sm">{dest.description}</p>
                 )}
               </div>
-              <div className="mt-4 flex flex-col gap-2 border-border/50 border-t pt-4 text-sm">
+              <div className="border/50 mt-4 flex flex-col gap-2 border-t pt-4 text-sm">
                 <div className="flex items-center justify-between">
                   <span className="text-muted-foreground">Provider</span>
                   <span className="font-medium capitalize">{dest.provider}</span>

@@ -49,7 +49,7 @@ export function UserMenu({ collapsed }: UserMenuProps) {
     >
       {open && (
         <div
-          className={`fade-in slide-in-from-bottom-2 absolute z-50 mb-3 animate-in rounded-2xl border border-border/80 bg-card p-1.5 shadow-2xl shadow-black/10 backdrop-blur-xl duration-200 dark:shadow-black/40 ${
+          className={`fade-in slide-in-from-bottom-2 border/80 absolute z-50 mb-3 animate-in rounded-2xl border bg-card p-1.5 shadow-2xl shadow-black/10 backdrop-blur-xl duration-200 dark:shadow-black/40 ${
             collapsed ? 'bottom-0 left-full ml-3 w-56' : 'right-2 bottom-full left-2'
           }`}
         >

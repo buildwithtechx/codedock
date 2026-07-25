@@ -44,7 +44,7 @@ export function ApiKeyNewDialog({
         onOpenChange(o);
       }}
     >
-      <DialogContent className="gap-0 border-border/50 bg-card/95 p-0 backdrop-blur-xl sm:max-w-2xl [&>button]:hidden">
+      <DialogContent className="border/50 gap-0 bg-card/95 p-0 backdrop-blur-xl sm:max-w-2xl [&>button]:hidden">
         <div className="px-5 pt-5 pb-4">
           <div className="flex items-start justify-between">
             <div className="flex flex-col">
@@ -91,7 +91,7 @@ export function ApiKeyNewDialog({
               dialog.
             </p>
 
-            <div className="flex items-center justify-between rounded-xl border border-border/50 bg-background/50 p-1 pl-4">
+            <div className="border/50 flex items-center justify-between rounded-xl border bg-background/50 p-1 pl-4">
               <span className="break-all py-2 pr-4 font-mono text-foreground/90 text-sm">
                 {newKeyPlain}
               </span>

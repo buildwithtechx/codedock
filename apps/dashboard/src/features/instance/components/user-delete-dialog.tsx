@@ -32,7 +32,7 @@ export function UserDeleteDialog({ target, onClose }: UserDeleteDialogProps) {
 
   return (
     <Dialog open={!!target} onOpenChange={(o) => !o && onClose()}>
-      <DialogContent className="gap-0 border-border/50 bg-card/95 p-0 backdrop-blur-xl sm:max-w-100 [&>button]:hidden">
+      <DialogContent className="border/50 gap-0 bg-card/95 p-0 backdrop-blur-xl sm:max-w-100 [&>button]:hidden">
         <div className="p-5">
           <div className="flex items-start justify-between">
             <div className="flex flex-col">

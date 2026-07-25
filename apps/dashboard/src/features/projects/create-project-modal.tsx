@@ -63,7 +63,7 @@ export function CreateProjectModal({
 
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
-      <DialogContent className="gap-0 border-border/50 bg-card/95 p-0 backdrop-blur-xl sm:max-w-125 [&>button]:hidden">
+      <DialogContent className="border/50 gap-0 bg-card/95 p-0 backdrop-blur-xl sm:max-w-125 [&>button]:hidden">
         <form onSubmit={handleSubmit}>
           <div className="px-5 pt-5 pb-4">
             <div className="flex items-start justify-between">
@@ -98,7 +98,7 @@ export function CreateProjectModal({
                 onChange={(e) => setName(e.target.value)}
                 required
                 placeholder="Acme platform"
-                className="h-10 rounded-lg border-border/50 bg-background/80 px-3 text-sm transition-all duration-300 focus:border-primary/50 focus:ring-1 focus:ring-primary/20"
+                className="border/50 h-10 rounded-lg bg-background/80 px-3 text-sm transition-all duration-300 focus:border-primary/50 focus:ring-1 focus:ring-primary/20"
               />
             </div>
             <div className="space-y-2.5">
@@ -109,7 +109,7 @@ export function CreateProjectModal({
                 value={description}
                 onChange={(e) => setDescription(e.target.value)}
                 placeholder="Internal tools and APIs"
-                className="h-10 rounded-lg border-border/50 bg-background/80 px-3 text-sm transition-all duration-300 focus:border-primary/50 focus:ring-1 focus:ring-primary/20"
+                className="border/50 h-10 rounded-lg bg-background/80 px-3 text-sm transition-all duration-300 focus:border-primary/50 focus:ring-1 focus:ring-primary/20"
               />
             </div>
 

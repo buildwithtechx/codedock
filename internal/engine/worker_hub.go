@@ -115,6 +115,7 @@ func (wc *WorkerConnection) handleMessage(msg models.WorkerMessage) {
 			if err := wc.hub.serverRepo.UpdateMetrics(context.Background(), wc.ServerID, msg.Payload); err != nil {
 				slog.Error("failed to update metrics", "serverID", wc.ServerID, "err", err)
 			}
+			GlobalUIMetricsHub.Broadcast(wc.ServerID, msg.Payload)
 		}
 	case models.WorkerMessageTypeLogStream:
 		var logStream models.WorkerLogStreamPayload

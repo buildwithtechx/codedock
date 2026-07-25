@@ -62,7 +62,7 @@ export function AppLayout({ children }: { children: React.ReactNode }) {
           <button
             type="button"
             onClick={() => setMobileMenuOpen((p) => !p)}
-            className="flex h-9 w-9 items-center justify-center rounded-xl border border-border/60 text-muted-foreground transition-colors hover:bg-muted"
+            className="border/60 flex h-9 w-9 items-center justify-center rounded-xl border text-muted-foreground transition-colors hover:bg-muted"
           >
             {mobileMenuOpen ? <X className="h-4 w-4" /> : <Menu className="h-4 w-4" />}
           </button>

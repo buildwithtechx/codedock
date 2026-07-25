@@ -41,7 +41,7 @@ export function DnsProviderForm({
                     cloudflareApiToken: e.target.value,
                   })
                 }
-                className="h-12 rounded-xl border-border/50 bg-background/80 px-4 font-medium"
+                className="border/50 h-12 rounded-xl bg-background/80 px-4 font-medium"
               />
               <p className="text-[11px] text-muted-foreground/70">
                 API Tokens only. Global API keys are not supported.
@@ -64,7 +64,7 @@ export function DnsProviderForm({
                     cloudflareEmail: e.target.value,
                   })
                 }
-                className="h-12 rounded-xl border-border/50 bg-background/80 px-4 font-medium placeholder:text-muted-foreground/40"
+                className="border/50 h-12 rounded-xl bg-background/80 px-4 font-medium placeholder:text-muted-foreground/40"
               />
             </div>
           </div>
@@ -85,7 +85,7 @@ export function DnsProviderForm({
                   cloudflareZoneId: e.target.value,
                 })
               }
-              className="h-12 rounded-xl border-border/50 bg-background/80 px-4 font-medium placeholder:text-muted-foreground/40"
+              className="border/50 h-12 rounded-xl bg-background/80 px-4 font-medium placeholder:text-muted-foreground/40"
             />
           </div>
         </div>
@@ -111,7 +111,7 @@ export function DnsProviderForm({
                     namecheapApiUser: e.target.value,
                   })
                 }
-                className="h-12 rounded-xl border-border/50 bg-background/80 px-4 font-medium"
+                className="border/50 h-12 rounded-xl bg-background/80 px-4 font-medium"
               />
             </div>
             <div className="space-y-3">
@@ -132,7 +132,7 @@ export function DnsProviderForm({
                     namecheapApiKey: e.target.value,
                   })
                 }
-                className="h-12 rounded-xl border-border/50 bg-background/80 px-4 font-medium"
+                className="border/50 h-12 rounded-xl bg-background/80 px-4 font-medium"
               />
             </div>
           </div>
@@ -153,7 +153,7 @@ export function DnsProviderForm({
                   namecheapClientIp: e.target.value,
                 })
               }
-              className="h-12 rounded-xl border-border/50 bg-background/80 px-4 font-medium placeholder:text-muted-foreground/40"
+              className="border/50 h-12 rounded-xl bg-background/80 px-4 font-medium placeholder:text-muted-foreground/40"
             />
           </div>
         </div>
@@ -180,7 +180,7 @@ export function DnsProviderForm({
                     spaceshipApiKey: e.target.value,
                   })
                 }
-                className="h-12 rounded-xl border-border/50 bg-background/80 px-4 font-medium"
+                className="border/50 h-12 rounded-xl bg-background/80 px-4 font-medium"
               />
             </div>
             <div className="space-y-3">
@@ -201,7 +201,7 @@ export function DnsProviderForm({
                     spaceshipApiSecret: e.target.value,
                   })
                 }
-                className="h-12 rounded-xl border-border/50 bg-background/80 px-4 font-medium placeholder:text-muted-foreground/40"
+                className="border/50 h-12 rounded-xl bg-background/80 px-4 font-medium placeholder:text-muted-foreground/40"
               />
             </div>
           </div>

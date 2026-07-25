@@ -124,7 +124,7 @@ function NewResourcePage() {
               <Loader2 className="h-8 w-8 animate-spin text-muted-foreground" />
             </div>
           ) : templates.length === 0 ? (
-            <div className="flex h-64 flex-col items-center justify-center rounded-xl border border-border border-dashed bg-card/40">
+            <div className="flex h-64 flex-col items-center justify-center rounded-xl border border border-dashed bg-card/40">
               <div className="flex h-12 w-12 items-center justify-center rounded-xl border border-primary/20 bg-primary/10">
                 <LayoutTemplate className="h-5 w-5 text-primary" />
               </div>
@@ -163,7 +163,7 @@ function NewResourcePage() {
               <Loader2 className="h-8 w-8 animate-spin text-muted-foreground" />
             </div>
           ) : examples.length === 0 ? (
-            <div className="flex h-64 flex-col items-center justify-center rounded-xl border border-border border-dashed bg-card/40">
+            <div className="flex h-64 flex-col items-center justify-center rounded-xl border border border-dashed bg-card/40">
               <div className="flex h-12 w-12 items-center justify-center rounded-xl border border-primary/20 bg-primary/10">
                 <Code2 className="h-5 w-5 text-primary" />
               </div>

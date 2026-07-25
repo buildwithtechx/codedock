@@ -47,7 +47,7 @@ export function UserInviteDialog({ open, onOpenChange }: UserInviteDialogProps) 
 
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
-      <DialogContent className="gap-0 border-border/50 bg-card/95 p-0 backdrop-blur-xl sm:max-w-100 [&>button]:hidden">
+      <DialogContent className="border/50 gap-0 bg-card/95 p-0 backdrop-blur-xl sm:max-w-100 [&>button]:hidden">
         <form onSubmit={handleInvite}>
           <div className="px-5 pt-5 pb-4">
             <div className="flex items-start justify-between">
@@ -88,7 +88,7 @@ export function UserInviteDialog({ open, onOpenChange }: UserInviteDialogProps) 
                   value={inviteEmail}
                   onChange={(e) => setInviteEmail(e.target.value)}
                   required
-                  className="h-10 rounded-lg border-border/50 bg-background/80 px-3 text-sm transition-all duration-300 focus:border-primary/50 focus:ring-1 focus:ring-primary/20"
+                  className="border/50 h-10 rounded-lg bg-background/80 px-3 text-sm transition-all duration-300 focus:border-primary/50 focus:ring-1 focus:ring-primary/20"
                 />
               </div>
 
@@ -102,7 +102,7 @@ export function UserInviteDialog({ open, onOpenChange }: UserInviteDialogProps) 
                 <Select value={role} onValueChange={setRole}>
                   <SelectTrigger
                     id="role"
-                    className="h-10 rounded-lg border-border/50 bg-background/80 px-3 text-sm transition-all duration-300 focus:border-primary/50 focus:ring-1 focus:ring-primary/20"
+                    className="border/50 h-10 rounded-lg bg-background/80 px-3 text-sm transition-all duration-300 focus:border-primary/50 focus:ring-1 focus:ring-primary/20"
                   >
                     <SelectValue placeholder="Select role" />
                   </SelectTrigger>

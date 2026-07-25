@@ -43,7 +43,7 @@ export const ResetPasswordForm = ({ token }: ResetPasswordFormProps) => {
             id="new-password"
             type="password"
             placeholder="Enter new password"
-            className="h-11 rounded-xl border-border bg-background/80 pl-10 text-sm transition-all duration-300 focus:border-primary/50 focus:ring-2 focus:ring-primary/20"
+            className="h-11 rounded-xl border bg-background/80 pl-10 text-sm transition-all duration-300 focus:border-primary/50 focus:ring-2 focus:ring-primary/20"
             value={newPassword}
             onChange={(e) => {
               setNewPassword(e.target.value);
@@ -67,7 +67,7 @@ export const ResetPasswordForm = ({ token }: ResetPasswordFormProps) => {
             id="confirm-password"
             type="password"
             placeholder="Confirm new password"
-            className="h-11 rounded-xl border-border bg-background/80 pl-10 text-sm transition-all duration-300 focus:border-primary/50 focus:ring-2 focus:ring-primary/20"
+            className="h-11 rounded-xl border bg-background/80 pl-10 text-sm transition-all duration-300 focus:border-primary/50 focus:ring-2 focus:ring-primary/20"
             value={confirmPassword}
             onChange={(e) => {
               setConfirmPassword(e.target.value);

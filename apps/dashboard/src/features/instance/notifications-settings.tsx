@@ -87,7 +87,7 @@ const Section = ({
   testing,
   children,
 }: SectionProps) => (
-  <div className="rounded-xl border border-border/50 bg-card/40 p-6">
+  <div className="border/50 rounded-xl border bg-card/40 p-6">
     <div className="mb-4 flex items-center justify-between">
       <div className="flex items-center gap-3">
         <div className="flex h-9 w-9 items-center justify-center rounded-lg bg-primary/10 text-primary">

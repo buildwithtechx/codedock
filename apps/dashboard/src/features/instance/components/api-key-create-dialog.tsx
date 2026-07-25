@@ -70,7 +70,7 @@ export function ApiKeyCreateDialog({ open, onOpenChange, onSuccess }: ApiKeyCrea
 
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
-      <DialogContent className="gap-0 border-border/50 bg-card/95 p-0 backdrop-blur-xl sm:max-w-2xl [&>button]:hidden">
+      <DialogContent className="border/50 gap-0 bg-card/95 p-0 backdrop-blur-xl sm:max-w-2xl [&>button]:hidden">
         <div className="px-5 pt-5 pb-4">
           <div className="flex items-start justify-between">
             <div className="flex flex-col">
@@ -99,7 +99,7 @@ export function ApiKeyCreateDialog({ open, onOpenChange, onSuccess }: ApiKeyCrea
               value={name}
               onChange={(e) => setName(e.target.value)}
               placeholder="Production deploys"
-              className="h-10 rounded-lg border-border/50 bg-background/50 px-3 text-sm"
+              className="border/50 h-10 rounded-lg bg-background/50 px-3 text-sm"
             />
           </div>
 
@@ -114,7 +114,7 @@ export function ApiKeyCreateDialog({ open, onOpenChange, onSuccess }: ApiKeyCrea
                 className={`flex h-12 items-center justify-center gap-2 rounded-xl border transition-colors ${
                   accessLevel === 'read'
                     ? 'border-primary/50 bg-primary/10 text-primary'
-                    : 'border-border/50 bg-transparent text-muted-foreground hover:bg-background/50 hover:text-foreground'
+                    : 'border/50 bg-transparent text-muted-foreground hover:bg-background/50 hover:text-foreground'
                 }`}
               >
                 <Key className="h-4 w-4" /> READ
@@ -125,7 +125,7 @@ export function ApiKeyCreateDialog({ open, onOpenChange, onSuccess }: ApiKeyCrea
                 className={`flex h-12 items-center justify-center gap-2 rounded-xl border transition-colors ${
                   accessLevel === 'read_write'
                     ? 'border-primary/50 bg-primary/10 text-primary'
-                    : 'border-border/50 bg-transparent text-muted-foreground hover:bg-background/50 hover:text-foreground'
+                    : 'border/50 bg-transparent text-muted-foreground hover:bg-background/50 hover:text-foreground'
                 }`}
               >
                 <Key className="h-4 w-4" /> READ AND WRITE
@@ -144,7 +144,7 @@ export function ApiKeyCreateDialog({ open, onOpenChange, onSuccess }: ApiKeyCrea
                 className={`flex h-12 items-center justify-center gap-2 rounded-xl border transition-colors ${
                   projectScope === 'all'
                     ? 'border-primary/50 bg-primary/10 text-primary'
-                    : 'border-border/50 bg-transparent text-muted-foreground hover:bg-background/50 hover:text-foreground'
+                    : 'border/50 bg-transparent text-muted-foreground hover:bg-background/50 hover:text-foreground'
                 }`}
               >
                 <FolderOpen className="h-4 w-4" /> ALL PROJECTS
@@ -155,7 +155,7 @@ export function ApiKeyCreateDialog({ open, onOpenChange, onSuccess }: ApiKeyCrea
                 className={`flex h-12 items-center justify-center gap-2 rounded-xl border transition-colors ${
                   projectScope === 'specific'
                     ? 'border-primary/50 bg-primary/10 text-primary'
-                    : 'border-border/50 bg-transparent text-muted-foreground hover:bg-background/50 hover:text-foreground'
+                    : 'border/50 bg-transparent text-muted-foreground hover:bg-background/50 hover:text-foreground'
                 }`}
               >
                 <FolderOpen className="h-4 w-4" /> SPECIFIC PROJECTS
@@ -174,7 +174,7 @@ export function ApiKeyCreateDialog({ open, onOpenChange, onSuccess }: ApiKeyCrea
                 className={`flex h-12 items-center justify-center gap-2 rounded-xl border transition-colors ${
                   expirationDays === 7
                     ? 'border-primary/50 bg-primary/10 text-primary'
-                    : 'border-border/50 bg-transparent text-muted-foreground hover:bg-background/50 hover:text-foreground'
+                    : 'border/50 bg-transparent text-muted-foreground hover:bg-background/50 hover:text-foreground'
                 }`}
               >
                 <Clock className="h-4 w-4" /> 7 DAYS
@@ -185,7 +185,7 @@ export function ApiKeyCreateDialog({ open, onOpenChange, onSuccess }: ApiKeyCrea
                 className={`flex h-12 items-center justify-center gap-2 rounded-xl border transition-colors ${
                   expirationDays === 30
                     ? 'border-primary/50 bg-primary/10 text-primary'
-                    : 'border-border/50 bg-transparent text-muted-foreground hover:bg-background/50 hover:text-foreground'
+                    : 'border/50 bg-transparent text-muted-foreground hover:bg-background/50 hover:text-foreground'
                 }`}
               >
                 <Clock className="h-4 w-4" /> 30 DAYS
@@ -196,7 +196,7 @@ export function ApiKeyCreateDialog({ open, onOpenChange, onSuccess }: ApiKeyCrea
                 className={`flex h-12 items-center justify-center gap-2 rounded-xl border transition-colors ${
                   expirationDays === 90
                     ? 'border-primary/50 bg-primary/10 text-primary'
-                    : 'border-border/50 bg-transparent text-muted-foreground hover:bg-background/50 hover:text-foreground'
+                    : 'border/50 bg-transparent text-muted-foreground hover:bg-background/50 hover:text-foreground'
                 }`}
               >
                 <Clock className="h-4 w-4" /> 90 DAYS
@@ -207,7 +207,7 @@ export function ApiKeyCreateDialog({ open, onOpenChange, onSuccess }: ApiKeyCrea
                 className={`flex h-12 items-center justify-center gap-2 rounded-xl border transition-colors ${
                   expirationDays === null
                     ? 'border-primary/50 bg-primary/10 text-primary'
-                    : 'border-border/50 bg-transparent text-muted-foreground hover:bg-background/50 hover:text-foreground'
+                    : 'border/50 bg-transparent text-muted-foreground hover:bg-background/50 hover:text-foreground'
                 }`}
               >
                 <Clock className="h-4 w-4" /> NO EXPIRATION

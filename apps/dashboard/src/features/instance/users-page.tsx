@@ -18,7 +18,7 @@ const formatLastLogin = (dateStr?: string) => {
 };
 
 const StatBox = ({ icon: Icon, label, value }: { icon: any; label: string; value: number }) => (
-  <div className="flex items-center justify-between rounded-lg border border-border/50 bg-card/20 px-4 py-3">
+  <div className="border/50 flex items-center justify-between rounded-lg border bg-card/20 px-4 py-3">
     <div className="flex items-center gap-3">
       <Icon className="h-4 w-4 text-muted-foreground" />
       <span className="font-bold text-[10px] text-muted-foreground uppercase tracking-widest">
@@ -30,7 +30,7 @@ const StatBox = ({ icon: Icon, label, value }: { icon: any; label: string; value
 );
 
 const UserRow = ({ user, onDelete }: { user: User; onDelete: (u: User) => void }) => (
-  <div className="group relative rounded-2xl border border-border/50 bg-card/40 p-6">
+  <div className="group border/50 relative rounded-2xl border bg-card/40 p-6">
     <div className="flex items-start justify-between">
       <div className="space-y-2">
         <div className="flex items-center gap-3">
@@ -51,7 +51,7 @@ const UserRow = ({ user, onDelete }: { user: User; onDelete: (u: User) => void }
         <Button
           variant="outline"
           onClick={() => onDelete(user)}
-          className="absolute top-6 right-6 h-8 w-8 border-border/50 bg-transparent p-0 text-muted-foreground opacity-0 transition-colors hover:border-destructive/30 hover:bg-destructive/10 hover:text-destructive group-hover:opacity-100"
+          className="border/50 absolute top-6 right-6 h-8 w-8 bg-transparent p-0 text-muted-foreground opacity-0 transition-colors hover:border-destructive/30 hover:bg-destructive/10 hover:text-destructive group-hover:opacity-100"
         >
           <Trash2 className="h-4 w-4" />
         </Button>
@@ -97,7 +97,7 @@ export const UsersPage = () => {
         {isLoading &&
           [1, 2, 3].map((i) => <Skeleton key={i} className="h-30 w-full rounded-2xl" />)}
         {!isLoading && users.length === 0 && (
-          <div className="flex items-center gap-3 rounded-2xl border border-border/50 bg-card/40 p-6">
+          <div className="border/50 flex items-center gap-3 rounded-2xl border bg-card/40 p-6">
             <Users className="h-4 w-4 text-muted-foreground" />
             <span className="font-bold text-[10px] text-muted-foreground uppercase tracking-[0.15em]">
               NO USERS

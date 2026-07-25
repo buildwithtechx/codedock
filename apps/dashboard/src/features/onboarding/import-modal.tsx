@@ -45,7 +45,7 @@ export const ImportModal = ({
 
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
-      <DialogContent className="gap-0 border-border/50 bg-card/95 p-0 backdrop-blur-xl sm:max-w-150 [&>button]:hidden">
+      <DialogContent className="border/50 gap-0 bg-card/95 p-0 backdrop-blur-xl sm:max-w-150 [&>button]:hidden">
         <div className="px-5 pt-5 pb-4">
           <div className="flex items-start justify-between">
             <div className="flex flex-col">
@@ -76,7 +76,7 @@ export const ImportModal = ({
             >
               MIGRATION BUNDLE
             </Label>
-            <div className="relative flex h-10 w-full items-center gap-3 rounded-lg border border-border/50 bg-background/80 px-3 transition-all duration-300 focus-within:border-primary/50 focus-within:ring-1 focus-within:ring-primary/20 hover:bg-background">
+            <div className="border/50 relative flex h-10 w-full items-center gap-3 rounded-lg border bg-background/80 px-3 transition-all duration-300 focus-within:border-primary/50 focus-within:ring-1 focus-within:ring-primary/20 hover:bg-background">
               <CloudUpload className="h-4 w-4 text-muted-foreground" />
               <span className="truncate font-mono text-foreground/90 text-sm">
                 {fileName || 'Choose .codedock file'}
@@ -111,7 +111,7 @@ export const ImportModal = ({
               type="password"
               value={passphrase}
               onChange={(e) => setPassphrase(e.target.value)}
-              className="h-10 rounded-lg border-border/50 bg-background/80 px-3 text-sm transition-all duration-300 focus:border-primary/50 focus:ring-1 focus:ring-primary/20"
+              className="border/50 h-10 rounded-lg bg-background/80 px-3 text-sm transition-all duration-300 focus:border-primary/50 focus:ring-1 focus:ring-primary/20"
             />
           </div>
         </div>

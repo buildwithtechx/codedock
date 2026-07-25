@@ -114,14 +114,14 @@ export const DnsSettings = () => {
               className={`group relative w-full cursor-pointer rounded-2xl border p-6 text-left transition-all duration-200 ${
                 isActive
                   ? 'border-primary/50 bg-card/40 shadow-sm'
-                  : 'border-border/50 bg-background/50 hover:border-border/80 hover:bg-card/40'
+                  : 'border/50 hover:border/80 bg-background/50 hover:bg-card/40'
               }`}
             >
               <div className="flex items-start justify-between">
                 <div className="flex items-center gap-4">
                   <div
                     className={`flex h-10 w-10 items-center justify-center rounded-xl border transition-colors ${
-                      isActive ? 'border-primary/30 bg-primary/5' : 'border-border/50 bg-background'
+                      isActive ? 'border-primary/30 bg-primary/5' : 'border/50 bg-background'
                     }`}
                   >
                     <img src={`/dns-providers/${p.id}.svg`} alt={p.name} className="h-5 w-auto" />
@@ -137,7 +137,7 @@ export const DnsSettings = () => {
                   className={`rounded-md border px-2 py-0.5 font-bold text-[8px] uppercase tracking-wider ${
                     isActive
                       ? 'border-primary/30 text-primary'
-                      : 'border-border/50 text-muted-foreground/50'
+                      : 'border/50 text-muted-foreground/50'
                   }`}
                 >
                   NEW
@@ -148,9 +148,9 @@ export const DnsSettings = () => {
         })}
       </div>
 
-      <div className="mt-4 space-y-10 rounded-2xl border border-border/50 bg-card/40 p-6">
+      <div className="border/50 mt-4 space-y-10 rounded-2xl border bg-card/40 p-6">
         <div className="flex items-center gap-4">
-          <div className="flex h-14 w-14 items-center justify-center rounded-2xl border border-border/50 bg-background/50">
+          <div className="border/50 flex h-14 w-14 items-center justify-center rounded-2xl border bg-background/50">
             <img
               src={`/dns-providers/${activeProvider}.svg`}
               alt={activeProvider}

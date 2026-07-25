@@ -23,7 +23,7 @@ export const OAuthButtons = () => {
             variant="outline"
             type="button"
             onClick={() => handleOAuthLogin(provider)}
-            className="h-10 w-full rounded-xl border-border/80 font-medium text-sm capitalize transition-all hover:border-primary/30 hover:bg-muted/50"
+            className="border/80 h-10 w-full rounded-xl font-medium text-sm capitalize transition-all hover:border-primary/30 hover:bg-muted/50"
           >
             Continue with {provider}
           </Button>

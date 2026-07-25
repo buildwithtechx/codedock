@@ -49,7 +49,7 @@ export const LoginForm = () => {
             id="email"
             type="email"
             placeholder="name@example.com"
-            className="h-11 rounded-xl border-border bg-background/80 pl-10 text-sm transition-all duration-300 focus:border-primary/50 focus:ring-2 focus:ring-primary/20"
+            className="h-11 rounded-xl border bg-background/80 pl-10 text-sm transition-all duration-300 focus:border-primary/50 focus:ring-2 focus:ring-primary/20"
             {...register('email')}
           />
         </div>
@@ -75,7 +75,7 @@ export const LoginForm = () => {
           <Input
             id="password"
             type={showPassword ? 'text' : 'password'}
-            className="h-11 rounded-xl border-border bg-background/80 pr-10 pl-10 text-sm transition-all duration-300 focus:border-primary/50 focus:ring-2 focus:ring-primary/20"
+            className="h-11 rounded-xl border bg-background/80 pr-10 pl-10 text-sm transition-all duration-300 focus:border-primary/50 focus:ring-2 focus:ring-primary/20"
             {...register('password')}
           />
           <button

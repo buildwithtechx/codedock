@@ -24,7 +24,7 @@ function OtpSlots() {
         <InputOTPSlot
           key={i}
           index={i}
-          className="size-12 rounded-xl border border-border/50 bg-background/80 text-base first:rounded-xl first:border last:rounded-xl last:border"
+          className="border/50 size-12 rounded-xl border bg-background/80 text-base first:rounded-xl first:border last:rounded-xl last:border"
         />
       ))}
     </InputOTPGroup>
@@ -47,7 +47,7 @@ function QrCodeImage({ uri }: { uri: string }) {
 
   if (!dataUrl) {
     return (
-      <div className="flex h-50 w-50 items-center justify-center rounded-xl border border-border/50 bg-muted/30">
+      <div className="border/50 flex h-50 w-50 items-center justify-center rounded-xl border bg-muted/30">
         <Loader2 className="h-6 w-6 animate-spin text-muted-foreground" />
       </div>
     );
@@ -122,7 +122,7 @@ export function Security2FASetup() {
 
   if (isLoading) {
     return (
-      <div className="flex justify-center rounded-2xl border border-border/50 bg-card/40 p-10">
+      <div className="border/50 flex justify-center rounded-2xl border bg-card/40 p-10">
         <Loader2 className="h-6 w-6 animate-spin text-muted-foreground" />
       </div>
     );
@@ -156,7 +156,7 @@ export function Security2FASetup() {
       </Section>
 
       <Dialog open={verifyOpen} onOpenChange={setVerifyOpen}>
-        <DialogContent className="gap-0 border-border/50 bg-card/95 p-0 backdrop-blur-xl sm:max-w-100 [&>button]:hidden">
+        <DialogContent className="border/50 gap-0 bg-card/95 p-0 backdrop-blur-xl sm:max-w-100 [&>button]:hidden">
           <div className="px-5 pt-5 pb-4">
             <div className="flex items-start justify-between">
               <div className="flex flex-col">
@@ -218,7 +218,7 @@ export function Security2FASetup() {
       </Dialog>
 
       <Dialog open={disableOpen} onOpenChange={setDisableOpen}>
-        <DialogContent className="gap-0 border-border/50 bg-card/95 p-0 backdrop-blur-xl sm:max-w-100 [&>button]:hidden">
+        <DialogContent className="border/50 gap-0 bg-card/95 p-0 backdrop-blur-xl sm:max-w-100 [&>button]:hidden">
           <div className="px-5 pt-5 pb-4">
             <div className="flex items-start justify-between">
               <div className="flex flex-col">

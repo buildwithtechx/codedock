@@ -48,7 +48,7 @@ const EMPTY: GeneralFields = {
 
 type RowProps = { label: string; description?: string; children: React.ReactNode };
 const Row = ({ label, description, children }: RowProps) => (
-  <div className="flex items-start justify-between gap-8 border-border/30 border-b py-4 last:border-0">
+  <div className="border/30 flex items-start justify-between gap-8 border-b py-4 last:border-0">
     <div className="min-w-0 flex-1">
       <Label className="font-medium text-sm">{label}</Label>
       {description && <p className="mt-0.5 text-muted-foreground text-xs">{description}</p>}
@@ -59,7 +59,7 @@ const Row = ({ label, description, children }: RowProps) => (
 
 type SectionProps = { icon: React.ReactNode; title: string; children: React.ReactNode };
 const Section = ({ icon, title, children }: SectionProps) => (
-  <div className="rounded-xl border border-border/50 bg-card/40 p-6">
+  <div className="border/50 rounded-xl border bg-card/40 p-6">
     <div className="mb-4 flex items-center gap-3">
       <div className="flex h-8 w-8 items-center justify-center rounded-lg bg-primary/10 text-primary">
         {icon}

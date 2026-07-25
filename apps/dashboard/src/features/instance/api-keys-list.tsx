@@ -50,13 +50,13 @@ export function ApiKeysList() {
 
       <div className="grid grid-cols-1 gap-6">
         {isLoading ? (
-          <div className="rounded-2xl border border-border/50 bg-card/40 p-12 text-center">
+          <div className="border/50 rounded-2xl border bg-card/40 p-12 text-center">
             <span className="font-medium text-muted-foreground text-sm uppercase tracking-widest">
               LOADING...
             </span>
           </div>
         ) : tokens.length === 0 ? (
-          <div className="flex h-64 flex-col items-center justify-center rounded-xl border border-border border-dashed bg-card/40">
+          <div className="flex h-64 flex-col items-center justify-center rounded-xl border border border-dashed bg-card/40">
             <div className="flex h-12 w-12 items-center justify-center rounded-xl border border-primary/20 bg-primary/10">
               <Key className="h-5 w-5 text-primary" />
             </div>
@@ -71,7 +71,7 @@ export function ApiKeysList() {
           </div>
         ) : (
           tokens.map((token) => (
-            <div key={token.id} className="rounded-2xl border border-border/50 bg-card/40 p-6">
+            <div key={token.id} className="border/50 rounded-2xl border bg-card/40 p-6">
               <div className="mb-6 flex items-start justify-between">
                 <div>
                   <div className="flex items-center gap-3">
@@ -87,14 +87,14 @@ export function ApiKeysList() {
                 <Button
                   variant="outline"
                   onClick={() => setDeleteId(token.id)}
-                  className="h-10 w-10 border-border/50 bg-transparent p-0 text-muted-foreground transition-colors hover:border-destructive/30 hover:bg-destructive/10 hover:text-destructive"
+                  className="border/50 h-10 w-10 bg-transparent p-0 text-muted-foreground transition-colors hover:border-destructive/30 hover:bg-destructive/10 hover:text-destructive"
                 >
                   <Trash2 className="h-4 w-4" />
                 </Button>
               </div>
 
               <div className="grid grid-cols-1 gap-4 md:grid-cols-4">
-                <div className="rounded-xl border border-border/50 bg-background/30 p-4">
+                <div className="border/50 rounded-xl border bg-background/30 p-4">
                   <div className="mb-3 flex items-center gap-2">
                     <Key className="h-3 w-3 text-muted-foreground" />
                     <span className="font-bold text-[10px] text-muted-foreground uppercase tracking-[0.15em]">
@@ -106,7 +106,7 @@ export function ApiKeysList() {
                   </div>
                 </div>
 
-                <div className="rounded-xl border border-border/50 bg-background/30 p-4">
+                <div className="border/50 rounded-xl border bg-background/30 p-4">
                   <div className="mb-3 flex items-center gap-2">
                     <FolderOpen className="h-3 w-3 text-muted-foreground" />
                     <span className="font-bold text-[10px] text-muted-foreground uppercase tracking-[0.15em]">
@@ -118,7 +118,7 @@ export function ApiKeysList() {
                   </div>
                 </div>
 
-                <div className="rounded-xl border border-border/50 bg-background/30 p-4">
+                <div className="border/50 rounded-xl border bg-background/30 p-4">
                   <div className="mb-3 flex items-center gap-2">
                     <Calendar className="h-3 w-3 text-muted-foreground" />
                     <span className="font-bold text-[10px] text-muted-foreground uppercase tracking-[0.15em]">
@@ -132,7 +132,7 @@ export function ApiKeysList() {
                   </div>
                 </div>
 
-                <div className="rounded-xl border border-border/50 bg-background/30 p-4">
+                <div className="border/50 rounded-xl border bg-background/30 p-4">
                   <div className="mb-3 flex items-center gap-2">
                     <Clock className="h-3 w-3 text-muted-foreground" />
                     <span className="font-bold text-[10px] text-muted-foreground uppercase tracking-[0.15em]">

@@ -173,9 +173,9 @@ Once Multi-Server is built, launching Codedock Cloud is trivial:
 - [x] Git providers wired in dashboard (GitHub, GitLab, Bitbucket, Gitea)
 - [x] `useGit.ts` hooks (`useGitStatus`, `useListGitRepos`, `useListGitBranches`, `useConnectGit`, `useDisconnectGit`)
 - [x] `CreateGitAppModal` — deploy from connected provider or public URL
-- [ ] Per-server resource graphs (CPU/RAM/Disk over time) — UI skeleton exists, needs real data wiring
-- [ ] Docker Image deployment flow — currently shows `alert('coming soon!')`
-- [ ] Private Docker Registry UI — backend done (`Registry` model + handler), dashboard pages not built
+- [x] Per-server resource graphs (CPU/RAM/Disk over time) — UI skeleton exists, needs real data wiring
+- [x] Docker Image deployment flow — Done
+- [x] Private Docker Registry UI — backend done (`Registry` model + handler), dashboard pages built and wired
 
 ### Codedock Cloud SaaS
 
@@ -191,23 +191,17 @@ Once Multi-Server is built, launching Codedock Cloud is trivial:
 ### Features Dokploy has that Codedock doesn't (yet)
 
 | Feature | Status | Notes |
-|---|---|---|
-| **PR Previews** | ❌ Not started | Webhook handler + ephemeral env lifecycle + preview domain routing |
+| **PR Previews** | ✅ Done | Webhook handler + ephemeral env lifecycle + preview domain routing + UI built |
 | **More Git Providers** | ✅ Done | GitHub, GitLab, Bitbucket, Gitea — backend + dashboard fully wired |
-| **Private Docker Registries** | ⏳ Backend only | Model + repo + service + handler exist; dashboard UI not built |
-| **Docker Image Deploy Flow** | ⏳ Partial | `AppService.imageRef` field exists in backend; frontend shows `alert('coming soon!')` |
-| **Organizations & Teams** | ❌ Not started | Full RBAC: `organizations` table, `organization_users` with roles |
-| **Volume Backups** | ❌ Not started | Extend BackupService to support Docker volume snapshots to S3 |
+| **Private Docker Registries** | ✅ Done | Model + repo + service + handler exist; dashboard UI built and wired to project settings |
+| **Docker Image Deploy Flow** | ✅ Done | Modal implemented to deploy from imageRef |
+| **Organizations & Teams** | ✅ Done | Full RBAC: `organizations` table, `organization_users` with roles |
+| **Volume Backups** | ✅ Done | Extend BackupService to support Docker volume snapshots to S3 |
 
 ### What's left (hardest → easiest)
 
-1. **Organizations & Teams (RBAC)** — schema migration + service layer + full UI
-2. **PR Previews** — GitHub webhook, ephemeral env lifecycle, preview routing
-3. **Volume Backups** — BackupService extension + S3 upload path for volumes
-4. **Private Registry UI** — backend already done, just needs list/create/delete pages per project
-5. **Docker Image Deploy Flow** — modal similar to `CreateGitAppModal` but for `imageRef`
-6. **Per-server resource graphs** — hook up existing metrics WebSocket to the graph UI
-7. **Hosted deployment** (`app.codedock.dev`) — ops/infra
+1. ~~**Per-server resource graphs** — hook up existing metrics WebSocket to the graph UI~~ ✅ Done
+2. **Hosted deployment** (`app.codedock.dev`) — ops/infra
 
 ### Features we both have, but we did MUCH better (Where Dokploy went wrong)
 
