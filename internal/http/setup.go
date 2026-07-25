@@ -218,6 +218,9 @@ func NewServer(db *sql.DB, v *utils.Vault, deployer *engine.Deployer, traefikMan
 	registryService := services.NewRegistryService(registryRepo)
 	registryHandler := handlers.NewRegistryHandler(registryService)
 
+	billingService := services.NewBillingService(userRepo)
+	billingHandler := handlers.NewBillingHandler(billingService)
+
 	authLimiter := middleware.NewRateLimiter(10, time.Minute)
 	otpLimiter := middleware.NewRateLimiter(5, time.Minute)
 
@@ -276,6 +279,7 @@ func NewServer(db *sql.DB, v *utils.Vault, deployer *engine.Deployer, traefikMan
 		serverHandler:          serverHandler,
 		workerWSHandler:        workerWSHandler,
 		registryHandler:        registryHandler,
+		billingHandler:         billingHandler,
 	}
 
 	if srv.deployer != nil {

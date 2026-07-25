@@ -44,7 +44,7 @@ func NewAuthService(
 	}
 }
 
-func (a *AuthService) Register(ctx context.Context, name, email, password string) (*models.User, string, string, error) {
+func (a *AuthService) Register(ctx context.Context, name, email, password, originUrl string) (*models.User, string, string, error) {
 	if email == "" || password == "" || name == "" {
 		return nil, "", "", errors.New("name, email and password are required")
 	}
@@ -80,16 +80,21 @@ func (a *AuthService) Register(ctx context.Context, name, email, password string
 		role = models.UserRoleOwner
 	}
 	u := &models.User{
-		ID:           uuid.New().String(),
-		Email:        email,
-		Name:         name,
-		PasswordHash: string(hashed),
-		Role:         role,
-		CreatedAt:    time.Now(),
-		UpdatedAt:    time.Now(),
+		ID:            uuid.New().String(),
+		Email:         email,
+		Name:          name,
+		PasswordHash:  string(hashed),
+		Role:          role,
+		EmailVerified: isInitial,
+		CreatedAt:     time.Now(),
+		UpdatedAt:     time.Now(),
 	}
 	if err := a.userRepo.CreateUser(ctx, u); err != nil {
 		return nil, "", "", err
+	}
+
+	if !u.EmailVerified {
+		_ = a.SendEmailVerification(ctx, u.Email, originUrl)
 	}
 
 	token, err := a.tokenService.GenerateToken(u)
@@ -253,4 +258,66 @@ func (a *AuthService) InviteUser(ctx context.Context, email string, role models.
 	_ = a.ForgotPassword(ctx, u.Email, originUrl)
 
 	return u, nil
+}
+
+func (a *AuthService) SendEmailVerification(ctx context.Context, email string, originUrl string) error {
+	if email == "" {
+		return errors.New("email is required")
+	}
+
+	cfg, err := a.notifRepo.GetNotificationSettings(ctx)
+	if err != nil || cfg == nil {
+		return errors.New("could not load notification settings")
+	}
+
+	if !cfg.SMTPEnabled && !cfg.ResendEnabled {
+		return errors.New("email is not configured on this server")
+	}
+
+	u, err := a.userRepo.GetUserByEmail(ctx, email)
+	if err != nil || u == nil {
+		return nil
+	}
+	if u.EmailVerified {
+		return errors.New("email is already verified")
+	}
+
+	token, err := a.tokenService.GenerateEmailVerificationToken(u.Email)
+	if err != nil {
+		return err
+	}
+
+	data := map[string]any{
+		"VerifyUrl": originUrl + "/verify-email?token=" + token,
+	}
+
+	err = a.mailer.SendSystemEmail(ctx, "email_verification", u.Email, "Verify Your Email", data)
+	if err != nil {
+		return err
+	}
+
+	return nil
+}
+
+func (a *AuthService) VerifyEmail(ctx context.Context, tokenStr string) error {
+	email, err := a.tokenService.ValidateEmailVerificationToken(tokenStr)
+	if err != nil {
+		return errors.New("invalid or expired verification token")
+	}
+
+	u, err := a.userRepo.GetUserByEmail(ctx, email)
+	if err != nil || u == nil {
+		return utils.NewNotFoundError("User", email)
+	}
+
+	if u.EmailVerified {
+		return nil
+	}
+
+	u.EmailVerified = true
+	if err := a.userRepo.UpdateUser(ctx, u); err != nil {
+		return err
+	}
+
+	return nil
 }

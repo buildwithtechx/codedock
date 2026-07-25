@@ -28,6 +28,7 @@ func (s *Server) registerRoutes() {
 	s.registerBackupRoutes(authGroup)
 	s.registerSettingsRoutes(apiGroup, authGroup)
 	s.registerMiscRoutes(apiGroup, authGroup)
+	s.registerBillingRoutes(apiGroup, authGroup)
 
 	s.setupSPAFallback()
 }
@@ -80,6 +81,8 @@ func (s *Server) registerAuthRoutes(apiGroup, authGroup *echo.Group) {
 	apiGroup.POST("/auth/refresh", s.authHandler.Refresh)
 	apiGroup.POST("/auth/forgot-password", s.authHandler.ForgotPassword, s.authRateLimiter.Middleware)
 	apiGroup.POST("/auth/reset-password", s.authHandler.ResetPassword, s.authRateLimiter.Middleware)
+	apiGroup.POST("/auth/email/resend", s.authHandler.ResendVerificationEmail, s.authRateLimiter.Middleware)
+	apiGroup.POST("/auth/email/verify", s.authHandler.VerifyEmail, s.authRateLimiter.Middleware)
 	apiGroup.POST("/auth/logout", s.authHandler.Logout)
 	authGroup.GET("/auth/me", s.userHandler.GetProfile)
 
@@ -303,6 +306,15 @@ func (s *Server) registerMiscRoutes(apiGroup, authGroup *echo.Group) {
 	apiGroup.GET("/ws/terminal/:id", s.terminalHandler.HandleWebSocket)
 	apiGroup.GET("/ws/services/:id/terminal", s.terminalHandler.HandleWebSocket)
 	apiGroup.GET("/ws/worker", s.workerWSHandler.Connect)
+}
+
+func (s *Server) registerBillingRoutes(apiGroup, authGroup *echo.Group) {
+	// Webhooks don't require auth
+	apiGroup.POST("/billing/webhook", s.billingHandler.Webhook)
+
+	// Protected billing routes
+	authGroup.GET("/billing/config", s.billingHandler.GetConfig)
+	authGroup.POST("/billing/checkout", s.billingHandler.CreateCheckoutSession)
 }
 
 func (s *Server) setupSPAFallback() {

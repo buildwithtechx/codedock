@@ -17,6 +17,7 @@ import { Route as AuthForgotPasswordRouteImport } from './routes/_auth.forgot-pa
 import { Route as AuthResetPasswordRouteImport } from './routes/_auth.reset-password'
 import { Route as AuthSigninRouteImport } from './routes/_auth.signin'
 import { Route as AuthSignupRouteImport } from './routes/_auth.signup'
+import { Route as AuthVerifyEmailRouteImport } from './routes/_auth.verify-email'
 import { Route as DashboardIndexRouteImport } from './routes/_dashboard.index'
 import { Route as DashboardAiRouteImport } from './routes/_dashboard.ai'
 import { Route as DashboardApiAccessRouteImport } from './routes/_dashboard.api-access'
@@ -93,6 +94,11 @@ const AuthSigninRoute = AuthSigninRouteImport.update({
 const AuthSignupRoute = AuthSignupRouteImport.update({
   id: '/signup',
   path: '/signup',
+  getParentRoute: () => AuthRoute,
+} as any)
+const AuthVerifyEmailRoute = AuthVerifyEmailRouteImport.update({
+  id: '/verify-email',
+  path: '/verify-email',
   getParentRoute: () => AuthRoute,
 } as any)
 const DashboardIndexRoute = DashboardIndexRouteImport.update({
@@ -320,6 +326,7 @@ export interface FileRoutesByFullPath {
   '/reset-password': typeof AuthResetPasswordRoute
   '/signin': typeof AuthSigninRoute
   '/signup': typeof AuthSignupRoute
+  '/verify-email': typeof AuthVerifyEmailRoute
   '/ai': typeof DashboardAiRoute
   '/api-access': typeof DashboardApiAccessRoute
   '/audit-logs': typeof DashboardAuditLogsRoute
@@ -367,6 +374,7 @@ export interface FileRoutesByTo {
   '/reset-password': typeof AuthResetPasswordRoute
   '/signin': typeof AuthSigninRoute
   '/signup': typeof AuthSignupRoute
+  '/verify-email': typeof AuthVerifyEmailRoute
   '/ai': typeof DashboardAiRoute
   '/api-access': typeof DashboardApiAccessRoute
   '/audit-logs': typeof DashboardAuditLogsRoute
@@ -415,6 +423,7 @@ export interface FileRoutesById {
   '/_auth/reset-password': typeof AuthResetPasswordRoute
   '/_auth/signin': typeof AuthSigninRoute
   '/_auth/signup': typeof AuthSignupRoute
+  '/_auth/verify-email': typeof AuthVerifyEmailRoute
   '/_dashboard/ai': typeof DashboardAiRoute
   '/_dashboard/api-access': typeof DashboardApiAccessRoute
   '/_dashboard/audit-logs': typeof DashboardAuditLogsRoute
@@ -465,6 +474,7 @@ export interface FileRouteTypes {
     | '/reset-password'
     | '/signin'
     | '/signup'
+    | '/verify-email'
     | '/ai'
     | '/api-access'
     | '/audit-logs'
@@ -512,6 +522,7 @@ export interface FileRouteTypes {
     | '/reset-password'
     | '/signin'
     | '/signup'
+    | '/verify-email'
     | '/ai'
     | '/api-access'
     | '/audit-logs'
@@ -559,6 +570,7 @@ export interface FileRouteTypes {
     | '/_auth/reset-password'
     | '/_auth/signin'
     | '/_auth/signup'
+    | '/_auth/verify-email'
     | '/_dashboard/ai'
     | '/_dashboard/api-access'
     | '/_dashboard/audit-logs'
@@ -663,6 +675,13 @@ declare module '@tanstack/react-router' {
       path: '/signup'
       fullPath: '/signup'
       preLoaderRoute: typeof AuthSignupRouteImport
+      parentRoute: typeof AuthRoute
+    }
+    '/_auth/verify-email': {
+      id: '/_auth/verify-email'
+      path: '/verify-email'
+      fullPath: '/verify-email'
+      preLoaderRoute: typeof AuthVerifyEmailRouteImport
       parentRoute: typeof AuthRoute
     }
     '/_dashboard/': {
@@ -946,6 +965,7 @@ interface AuthRouteChildren {
   AuthResetPasswordRoute: typeof AuthResetPasswordRoute
   AuthSigninRoute: typeof AuthSigninRoute
   AuthSignupRoute: typeof AuthSignupRoute
+  AuthVerifyEmailRoute: typeof AuthVerifyEmailRoute
 }
 
 const AuthRouteChildren: AuthRouteChildren = {
@@ -953,6 +973,7 @@ const AuthRouteChildren: AuthRouteChildren = {
   AuthResetPasswordRoute: AuthResetPasswordRoute,
   AuthSigninRoute: AuthSigninRoute,
   AuthSignupRoute: AuthSignupRoute,
+  AuthVerifyEmailRoute: AuthVerifyEmailRoute,
 }
 
 const AuthRouteWithChildren = AuthRoute._addFileChildren(AuthRouteChildren)

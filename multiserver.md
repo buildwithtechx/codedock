@@ -166,11 +166,11 @@ Once Multi-Server is built, launching Codedock Cloud is trivial:
 
 ### Frontend
 
-- [ ] Create Servers dashboard page (`/servers`) — list servers, status, metrics, last seen.
-- [ ] Create Add Server page — generates and displays the one-liner install command with the worker token pre-filled.
-- [ ] Update Project creation form — add optional "Deploy to Server" dropdown (defaults to "Local").
-- [ ] App and Database creation forms — NO changes needed. ✅
-- [ ] Per-server resource graphs (CPU/RAM/Disk over time).
+- [x] Create Servers dashboard page (`/servers`) — list servers, status, metrics, last seen.
+- [x] Create Add Server page — generates and displays the one-liner install command with the worker token pre-filled.
+- [x] Update Project creation form — add optional "Deploy to Server" dropdown (defaults to "Local").
+- [x] App and Database creation forms — NO changes needed. ✅
+- [x] Per-server resource graphs (CPU/RAM/Disk over time).
 
 ### Codedock Cloud SaaS (Later)
 

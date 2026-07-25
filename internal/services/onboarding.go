@@ -61,7 +61,7 @@ func (s *OnboardingService) CompleteSetup(ctx context.Context, req SetupRequest)
 		return nil, "", "", fmt.Errorf("setup has already been completed")
 	}
 
-	u, token, refreshToken, err := s.authService.Register(ctx, req.Name, req.Email, req.Password)
+	u, token, refreshToken, err := s.authService.Register(ctx, req.Name, req.Email, req.Password, "")
 	if err != nil {
 		return nil, "", "", fmt.Errorf("registration failed: %w", err)
 	}

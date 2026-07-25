@@ -1,7 +1,12 @@
+import { useMutation } from '@tanstack/react-query';
 import { useRouterState } from '@tanstack/react-router';
-import { Menu, X } from 'lucide-react';
+import { AlertCircle, Menu, X } from 'lucide-react';
 import type * as React from 'react';
 import { useEffect, useState } from 'react';
+import { toast } from 'sonner';
+import { useAuthStore } from '#/stores/authStore';
+import { Button } from '@/components/ui/button';
+import { api } from '@/lib/api';
 import { AppSidebar } from './app-sidebar';
 import { BackgroundPattern } from './background-pattern';
 import { CommandPalette } from './command-palette';
@@ -17,6 +22,29 @@ export function AppLayout({ children }: { children: React.ReactNode }) {
   useEffect(() => {
     setMobileMenuOpen(false);
   }, [pathname]);
+
+  const { user } = useAuthStore();
+  const [isResending, setIsResending] = useState(false);
+
+  const resendMutation = useMutation({
+    mutationFn: async () => {
+      return api.post('/auth/email/resend', { email: user?.email });
+    },
+    onSuccess: () => {
+      toast.success('Verification email sent! Please check your inbox.');
+    },
+    onError: () => {
+      toast.error('Failed to send verification email. Please try again later.');
+    },
+    onSettled: () => {
+      setIsResending(false);
+    },
+  });
+
+  const handleResend = () => {
+    setIsResending(true);
+    resendMutation.mutate();
+  };
 
   return (
     <div className="relative flex min-h-screen bg-background">
@@ -41,6 +69,25 @@ export function AppLayout({ children }: { children: React.ReactNode }) {
         </div>
         <main className="flex-1 overflow-auto p-4 md:p-8 md:pt-12">
           <div key={pathname} className="page-transition mx-auto w-full max-w-7xl">
+            {user && user.emailVerified === false && (
+              <div className="mb-6 flex flex-col items-center justify-between gap-4 rounded-lg border border-warning/50 bg-warning/20 p-4 sm:flex-row">
+                <div className="flex items-center gap-3">
+                  <AlertCircle className="h-5 w-5 text-warning" />
+                  <p className="font-medium text-sm">
+                    Please verify your email address to unlock all features.
+                  </p>
+                </div>
+                <Button
+                  variant="outline"
+                  size="sm"
+                  onClick={handleResend}
+                  disabled={isResending}
+                  className="whitespace-nowrap"
+                >
+                  {isResending ? 'Sending...' : 'Resend Email'}
+                </Button>
+              </div>
+            )}
             {children}
           </div>
         </main>

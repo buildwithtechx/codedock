@@ -40,11 +40,13 @@ func (h *AuthHandler) ForgotPassword(c echo.Context) error {
 		return utils.Error(c, http.StatusBadRequest, "invalid payload")
 	}
 
-	scheme := "http"
-	if c.Request().TLS != nil || c.Request().Header.Get("X-Forwarded-Proto") == "https" {
-		scheme = "https"
+	originUrl := c.Request().Header.Get("Origin")
+	if originUrl == "" {
+		originUrl = c.Request().Header.Get("Referer")
 	}
-	originUrl := scheme + "://" + c.Request().Host
+	if originUrl == "" {
+		originUrl = "http://localhost:3000"
+	}
 
 	err := h.authService.ForgotPassword(c.Request().Context(), payload.Email, originUrl)
 	if err != nil {
@@ -75,7 +77,15 @@ func (h *AuthHandler) Register(c echo.Context) error {
 	if err := c.Bind(&payload); err != nil {
 		return utils.Error(c, http.StatusBadRequest, "invalid payload")
 	}
-	u, token, refreshToken, err := h.authService.Register(c.Request().Context(), payload.Name, payload.Email, payload.Password)
+	originUrl := c.Request().Header.Get("Origin")
+	if originUrl == "" {
+		originUrl = c.Request().Header.Get("Referer")
+	}
+	if originUrl == "" {
+		originUrl = "http://localhost:3000"
+	}
+
+	u, token, refreshToken, err := h.authService.Register(c.Request().Context(), payload.Name, payload.Email, payload.Password, originUrl)
 	if err != nil {
 		return utils.Error(c, http.StatusBadRequest, err.Error())
 	}
@@ -168,4 +178,45 @@ func (h *AuthHandler) AdminInviteUser(c echo.Context) error {
 	}
 	u.PasswordHash = ""
 	return utils.Created(c, "User invited", u)
+}
+
+type ResendVerificationEmailRequest struct {
+	Email string `json:"email"`
+}
+
+func (h *AuthHandler) ResendVerificationEmail(c echo.Context) error {
+	var payload ResendVerificationEmailRequest
+	if err := c.Bind(&payload); err != nil {
+		return utils.Error(c, http.StatusBadRequest, "invalid payload")
+	}
+
+	originUrl := c.Request().Header.Get("Origin")
+	if originUrl == "" {
+		originUrl = c.Request().Header.Get("Referer")
+	}
+	if originUrl == "" {
+		originUrl = "http://localhost:3000"
+	}
+
+	err := h.authService.SendEmailVerification(c.Request().Context(), payload.Email, originUrl)
+	if err != nil {
+		return utils.Error(c, http.StatusBadRequest, err.Error())
+	}
+	return utils.Success(c, "If your email is not verified, a verification link has been sent.", nil)
+}
+
+type VerifyEmailRequest struct {
+	Token string `json:"token"`
+}
+
+func (h *AuthHandler) VerifyEmail(c echo.Context) error {
+	var payload VerifyEmailRequest
+	if err := c.Bind(&payload); err != nil {
+		return utils.Error(c, http.StatusBadRequest, "invalid payload")
+	}
+	err := h.authService.VerifyEmail(c.Request().Context(), payload.Token)
+	if err != nil {
+		return utils.Error(c, http.StatusBadRequest, err.Error())
+	}
+	return utils.Success(c, "Email verified successfully", nil)
 }

@@ -7,6 +7,7 @@ export interface User {
   email: string;
   name: string;
   role: UserRole;
+  emailVerified: boolean;
   totpEnabled: boolean;
   oauthProvider?: string;
   createdAt: string;
@@ -15,6 +16,10 @@ export interface User {
   projectsCount?: number;
   servicesCount?: number;
   apiKeysCount?: number;
+  planType: string;
+  stripeCustomerId?: string;
+  stripeSubscriptionId?: string;
+  stripePriceId?: string;
 }
 
 export interface PersonalAccessToken {

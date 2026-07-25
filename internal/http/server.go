@@ -71,6 +71,7 @@ type Server struct {
 	serverHandler          *handlers.ServerHandler
 	workerWSHandler        *handlers.WorkerWSHandler
 	registryHandler        *handlers.RegistryHandler
+	billingHandler         *handlers.BillingHandler
 }
 
 func (s *Server) ServeHTTP(w http.ResponseWriter, r *http.Request) {

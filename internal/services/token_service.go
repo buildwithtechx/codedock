@@ -36,13 +36,14 @@ func (ts *TokenService) GenerateToken(u *models.User) (string, error) {
 		return "", errors.New("user cannot be nil when generating token")
 	}
 	claims := jwt.MapClaims{
-		"sub":         u.ID,
-		"email":       u.Email,
-		"role":        u.Role,
-		"totpEnabled": u.TOTPEnabled,
-		"exp":         time.Now().Add(72 * time.Hour).Unix(),
-		"iat":         time.Now().Unix(),
-		"iss":         "codedock-auth",
+		"sub":           u.ID,
+		"email":         u.Email,
+		"role":          u.Role,
+		"emailVerified": u.EmailVerified,
+		"totpEnabled":   u.TOTPEnabled,
+		"exp":           time.Now().Add(72 * time.Hour).Unix(),
+		"iat":           time.Now().Unix(),
+		"iss":           "codedock-auth",
 	}
 	token := jwt.NewWithClaims(jwt.SigningMethodHS256, claims)
 	return token.SignedString(ts.secretKey)
@@ -139,4 +140,40 @@ func (ts *TokenService) ValidateRefreshToken(tokenStr string) (string, error) {
 		return "", errors.New("invalid token claims")
 	}
 	return sub, nil
+}
+
+func (ts *TokenService) GenerateEmailVerificationToken(email string) (string, error) {
+	claims := jwt.MapClaims{
+		"email": email,
+		"exp":   time.Now().Add(24 * time.Hour).Unix(),
+		"iss":   "codedock-email-verification",
+	}
+	token := jwt.NewWithClaims(jwt.SigningMethodHS256, claims)
+	return token.SignedString(ts.secretKey)
+}
+
+func (ts *TokenService) ValidateEmailVerificationToken(tokenStr string) (string, error) {
+	token, err := jwt.Parse(tokenStr, func(t *jwt.Token) (any, error) {
+		if _, ok := t.Method.(*jwt.SigningMethodHMAC); !ok {
+			return nil, errors.New("unexpected signing method")
+		}
+		return ts.secretKey, nil
+	})
+	if err != nil {
+		return "", err
+	}
+	claims, ok := token.Claims.(jwt.MapClaims)
+	if !ok || !token.Valid {
+		return "", errors.New("invalid token claims or signature")
+	}
+
+	if iss, ok := claims["iss"].(string); !ok || iss != "codedock-email-verification" {
+		return "", errors.New("invalid token issuer")
+	}
+
+	email, ok := claims["email"].(string)
+	if !ok || email == "" {
+		return "", errors.New("invalid token claims")
+	}
+	return email, nil
 }

@@ -54,6 +54,9 @@ func (h *ProjectHandler) CreateProject(c echo.Context) error {
 	if req.OrganizationID == "none" {
 		req.OrganizationID = ""
 	}
+	if req.ServerID == "local" {
+		req.ServerID = ""
+	}
 
 	userClaims, ok := c.Get("user").(*models.UserClaims)
 

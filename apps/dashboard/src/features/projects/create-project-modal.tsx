@@ -46,8 +46,8 @@ export function CreateProjectModal({
         payload: {
           name,
           description,
-          ...(serverId ? { serverId } : {}),
-          ...(organizationId ? { organizationId } : {}),
+          ...(serverId && serverId !== 'local' ? { serverId } : {}),
+          ...(organizationId && organizationId !== 'none' ? { organizationId } : {}),
         },
       });
       toast.success('Project created');

@@ -1,6 +1,7 @@
 import { createFileRoute } from '@tanstack/react-router';
 import { User } from 'lucide-react';
 import { AccessTokensList } from '#/features/profile/access-tokens-list';
+import { BillingSection } from '#/features/profile/billing-section';
 import { Security2FASetup } from '#/features/profile/security-2fa-setup';
 import {
   ProfileEmailForm,
@@ -34,6 +35,7 @@ function ProfilePage() {
         <ProfileEmailForm />
         <ProfilePasswordForm />
         <Security2FASetup />
+        <BillingSection />
         <AccessTokensList />
       </div>
     </div>

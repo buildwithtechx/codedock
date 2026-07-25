@@ -1,5 +1,5 @@
 import { createFileRoute } from '@tanstack/react-router';
-import { Loader2, Plus, ServerIcon } from 'lucide-react';
+import { Cpu, HardDrive, Loader2, MemoryStick, Plus, ServerIcon } from 'lucide-react';
 import { useState } from 'react';
 import { toast } from 'sonner';
 import { Button } from '#/components/ui/button';
@@ -13,6 +13,7 @@ import {
   DialogTitle,
 } from '#/components/ui/dialog';
 import { Input } from '#/components/ui/input';
+import { Progress } from '#/components/ui/progress';
 import { useCreateServer, useListServers } from '#/hooks/useServers';
 import type { Server } from '#/interfaces/server';
 
@@ -83,24 +84,94 @@ function ServersPage() {
   );
 }
 
+function formatBytes(bytes: number) {
+  if (bytes === 0) return '0 B';
+  const k = 1024;
+  const sizes = ['B', 'KB', 'MB', 'GB', 'TB'];
+  const i = Math.floor(Math.log(bytes) / Math.log(k));
+  return `${Number.parseFloat((bytes / k ** i).toFixed(1))} ${sizes[i]}`;
+}
+
 function ServerCard({ server }: { server: Server }) {
   const statusColor = server.status === 'online' ? 'bg-green-500' : 'bg-yellow-500';
+  const m = server.metrics;
+
+  const memPercent =
+    m && m.memory_limit_bytes > 0 ? (m.memory_usage_bytes / m.memory_limit_bytes) * 100 : 0;
+  const diskPercent =
+    m && m.disk_total_bytes > 0 ? (m.disk_usage_bytes / m.disk_total_bytes) * 100 : 0;
+  const cpuPercent = m ? m.cpu_usage_percentage : 0;
 
   return (
-    <Card>
-      <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-        <CardTitle className="font-medium text-sm">{server.name}</CardTitle>
-        <ServerIcon className="h-4 w-4 text-muted-foreground" />
-      </CardHeader>
-      <CardContent>
-        <div className="mt-2 flex items-center gap-2">
-          <div className={`h-2 w-2 rounded-full ${statusColor}`} />
-          <span className="font-medium text-sm capitalize">{server.status}</span>
+    <Card className="flex flex-col overflow-hidden transition-all hover:shadow-md">
+      <CardHeader className="flex flex-row items-center justify-between border-b bg-muted/20 px-6 py-4 pb-4">
+        <div className="flex items-center gap-3">
+          <div className="flex h-10 w-10 items-center justify-center rounded-full bg-primary/10">
+            <ServerIcon className="h-5 w-5 text-primary" />
+          </div>
+          <div>
+            <CardTitle className="font-semibold text-base">{server.name}</CardTitle>
+            <CardDescription className="text-xs">{server.ipAddress}</CardDescription>
+          </div>
         </div>
-        <CardDescription className="mt-2 text-xs">IP: {server.ipAddress}</CardDescription>
-        <CardDescription className="text-xs">
-          Last seen: {server.lastSeenAt ? new Date(server.lastSeenAt).toLocaleString() : 'Never'}
-        </CardDescription>
+        <div className="flex items-center gap-2 rounded-full border bg-background px-3 py-1 shadow-sm">
+          <div className={`h-2.5 w-2.5 rounded-full ${statusColor} animate-pulse shadow-sm`} />
+          <span className="font-semibold text-xs uppercase tracking-wider">{server.status}</span>
+        </div>
+      </CardHeader>
+
+      <CardContent className="flex-1 space-y-5 p-6">
+        <div className="grid grid-cols-3 gap-4">
+          {/* CPU */}
+          <div className="space-y-2">
+            <div className="flex items-center justify-between text-xs">
+              <span className="flex items-center gap-1.5 font-medium text-muted-foreground">
+                <Cpu className="h-3.5 w-3.5" /> CPU
+              </span>
+              <span className="font-semibold">{cpuPercent.toFixed(1)}%</span>
+            </div>
+            <Progress value={cpuPercent} className="h-1.5" />
+          </div>
+
+          {/* RAM */}
+          <div className="space-y-2">
+            <div className="flex items-center justify-between text-xs">
+              <span className="flex items-center gap-1.5 font-medium text-muted-foreground">
+                <MemoryStick className="h-3.5 w-3.5" /> RAM
+              </span>
+              <span className="font-semibold">{memPercent.toFixed(1)}%</span>
+            </div>
+            <Progress value={memPercent} className="h-1.5" />
+            <div className="text-right text-[10px] text-muted-foreground">
+              {m
+                ? `${formatBytes(m.memory_usage_bytes)} / ${formatBytes(m.memory_limit_bytes)}`
+                : 'N/A'}
+            </div>
+          </div>
+
+          {/* Disk */}
+          <div className="space-y-2">
+            <div className="flex items-center justify-between text-xs">
+              <span className="flex items-center gap-1.5 font-medium text-muted-foreground">
+                <HardDrive className="h-3.5 w-3.5" /> Disk
+              </span>
+              <span className="font-semibold">{diskPercent.toFixed(1)}%</span>
+            </div>
+            <Progress value={diskPercent} className="h-1.5" />
+            <div className="text-right text-[10px] text-muted-foreground">
+              {m
+                ? `${formatBytes(m.disk_usage_bytes)} / ${formatBytes(m.disk_total_bytes)}`
+                : 'N/A'}
+            </div>
+          </div>
+        </div>
+
+        <div className="pt-2">
+          <CardDescription className="text-center text-[11px]">
+            Last heartbeat:{' '}
+            {server.lastSeenAt ? new Date(server.lastSeenAt).toLocaleString() : 'Never'}
+          </CardDescription>
+        </div>
       </CardContent>
     </Card>
   );
