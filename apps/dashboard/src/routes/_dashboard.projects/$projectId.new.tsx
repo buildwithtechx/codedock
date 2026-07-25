@@ -5,6 +5,7 @@ import { Button } from '#/components/ui/button';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '#/components/ui/card';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '#/components/ui/tabs';
 import { CreateDatabaseModal } from '#/features/databases/create-database-modal';
+import { CreateGitAppModal } from '#/features/instance/create-git-app-modal';
 import { useListExampleApps, useListOneClickApps } from '#/hooks/useTemplates';
 
 export const Route = createFileRoute('/_dashboard/projects/$projectId/new')({
@@ -15,6 +16,7 @@ function NewResourcePage() {
   const { projectId } = Route.useParams();
   const navigate = useNavigate();
   const [dbModalOpen, setDbModalOpen] = useState(false);
+  const [gitModalOpen, setGitModalOpen] = useState(false);
 
   const { data: oneClickResponse, isLoading: oneClickLoading } = useListOneClickApps();
   const { data: examplesResponse, isLoading: examplesLoading } = useListExampleApps();
@@ -49,7 +51,7 @@ function NewResourcePage() {
           <div className="grid grid-cols-1 gap-6 md:grid-cols-2 lg:grid-cols-3">
             <Card
               className="cursor-pointer transition-colors hover:border-primary/50"
-              onClick={() => navigate({ to: '/sources' })}
+              onClick={() => setGitModalOpen(true)}
             >
               <CardHeader>
                 <CardTitle className="flex items-center gap-2">
@@ -198,6 +200,11 @@ function NewResourcePage() {
       <CreateDatabaseModal
         isOpen={dbModalOpen}
         onOpenChange={setDbModalOpen}
+        projectId={projectId}
+      />
+      <CreateGitAppModal
+        isOpen={gitModalOpen}
+        onOpenChange={setGitModalOpen}
         projectId={projectId}
       />
     </div>

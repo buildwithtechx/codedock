@@ -43,7 +43,7 @@ export function GitProviders() {
     if (!isConnecting) return;
 
     connectMutation.mutate(
-      { payload: { provider: isConnecting, accessToken, accountName: accountName || 'Personal' } },
+      { provider: isConnecting, accessToken, accountName: accountName || 'Personal' },
       {
         onSuccess: () => {
           setIsConnecting(null);
@@ -60,18 +60,15 @@ export function GitProviders() {
 
   const confirmDisconnect = () => {
     if (!isDisconnecting) return;
-    disconnectMutation.mutate(
-      { provider: isDisconnecting },
-      {
-        onSuccess: () => {
-          toast.success(`Successfully disconnected ${isDisconnecting}`);
-          setIsDisconnecting(null);
-        },
-        onError: (err: any) => {
-          toast.error(err.message || 'Failed to disconnect provider');
-        },
-      }
-    );
+    disconnectMutation.mutate(isDisconnecting, {
+      onSuccess: () => {
+        toast.success(`Successfully disconnected ${isDisconnecting}`);
+        setIsDisconnecting(null);
+      },
+      onError: (err: any) => {
+        toast.error(err.message || 'Failed to disconnect provider');
+      },
+    });
   };
 
   if (isLoading) {

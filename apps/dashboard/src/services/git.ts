@@ -2,6 +2,7 @@ import type {
   ConnectGitRequest,
   ConnectGitResponse,
   GetGitStatusResponse,
+  ListGitBranchesResponse,
   ListGitReposResponse,
 } from '#/interfaces/git';
 import { apiClient } from '#/lib/apiClient';
@@ -35,6 +36,16 @@ export const gitService = {
   listRepos: async (provider: string): Promise<ListGitReposResponse> => {
     try {
       return await apiClient.get<ListGitReposResponse>(`/git/repos?provider=${provider}`);
+    } catch (error) {
+      throw handleApiError(error);
+    }
+  },
+
+  listBranches: async (provider: string, repo: string): Promise<ListGitBranchesResponse> => {
+    try {
+      return await apiClient.get<ListGitBranchesResponse>(
+        `/git/branches?provider=${provider}&repo=${encodeURIComponent(repo)}`
+      );
     } catch (error) {
       throw handleApiError(error);
     }
