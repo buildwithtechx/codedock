@@ -16,7 +16,7 @@ export const registryService = {
     return res.data as Registry;
   },
 
-  delete: async (id: string): Promise<void> => {
-    await apiClient.delete(`/registries/${id}`);
+  delete: async (projectId: string, id: string): Promise<void> => {
+    await apiClient.delete(`/projects/${projectId}/registries/${id}`);
   },
 };

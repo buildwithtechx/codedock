@@ -20,7 +20,7 @@ export const useCreateRegistry = (projectId: string) => {
 export const useDeleteRegistry = (projectId: string) => {
   const qc = useQueryClient();
   return useMutation({
-    mutationFn: (id: string) => registryService.delete(id),
+    mutationFn: (id: string) => registryService.delete(projectId, id),
     onSuccess: () => qc.invalidateQueries({ queryKey: ['projects', projectId, 'registries'] }),
   });
 };
