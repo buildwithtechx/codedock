@@ -167,7 +167,7 @@ func NewServer(db *sql.DB, v *utils.Vault, deployer *engine.Deployer, traefikMan
 	databaseHandler := handlers.NewDatabaseHandler(databaseService, projectService)
 	scheduledTaskHandler := handlers.NewScheduledTaskHandler(scheduledTaskService)
 	canvasHandler := handlers.NewCanvasHandler(canvasService)
-	terminalHandler := handlers.NewTerminalHandler(dockerClient, tokenService, appService)
+	terminalHandler := handlers.NewTerminalHandler(dockerClient, tokenService, appService, projectService)
 	projectHandler := handlers.NewProjectHandler(projectService, projectSettingsService)
 	orgHandler := handlers.NewOrganizationHandler(orgService)
 	environmentHandler := handlers.NewEnvironmentHandler(environmentService)

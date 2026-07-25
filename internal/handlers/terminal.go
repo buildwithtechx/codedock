@@ -12,6 +12,7 @@ import (
 	"github.com/labstack/echo/v4"
 
 	"codedock.run/codedock/internal/http/middleware"
+	"codedock.run/codedock/internal/models"
 	"codedock.run/codedock/internal/services"
 	"codedock.run/codedock/internal/utils"
 )
@@ -25,34 +26,40 @@ var terminalUpgrader = websocket.Upgrader{
 }
 
 type TerminalHandler struct {
-	dockerClient  *client.Client
-	tokenService  *services.TokenService
-	appService    *services.AppService
-	normalizeName func(id string) string
+	dockerClient   *client.Client
+	tokenService   *services.TokenService
+	appService     *services.AppService
+	projectService *services.ProjectService
+	normalizeName  func(id string) string
 }
 
 func NewTerminalHandler(
 	dockerClient *client.Client,
 	tokenService *services.TokenService,
 	appService *services.AppService,
+	projectService *services.ProjectService,
 ) *TerminalHandler {
 	return &TerminalHandler{
-		dockerClient:  dockerClient,
-		tokenService:  tokenService,
-		appService:    appService,
-		normalizeName: utils.NormalizeContainerName,
+		dockerClient:   dockerClient,
+		tokenService:   tokenService,
+		appService:     appService,
+		projectService: projectService,
+		normalizeName:  utils.NormalizeContainerName,
 	}
 }
 
 func (h *TerminalHandler) HandleWebSocket(c echo.Context) error {
+	var claimsMap map[string]interface{}
 	if h.tokenService != nil {
 		tokenStr := middleware.ExtractTokenFromRequest(c)
 		if tokenStr == "" {
 			return utils.Error(c, http.StatusUnauthorized, "missing authentication token for terminal access")
 		}
-		if _, err := h.tokenService.ValidateToken(tokenStr); err != nil {
+		cm, err := h.tokenService.ValidateToken(tokenStr)
+		if err != nil {
 			return utils.Error(c, http.StatusUnauthorized, "invalid authentication token for terminal access")
 		}
+		claimsMap = cm
 	}
 	id := c.Param("id")
 	if id == "" {
@@ -61,6 +68,16 @@ func (h *TerminalHandler) HandleWebSocket(c echo.Context) error {
 	containerName := h.normalizeName(id)
 	if h.appService != nil {
 		if svc, err := h.appService.GetAppService(c.Request().Context(), id); err == nil && svc != nil {
+			if h.projectService != nil && claimsMap != nil {
+				userID, _ := claimsMap["sub"].(string)
+				role, _ := claimsMap["role"].(string)
+				if role != "admin" {
+					if !h.projectService.HasPermission(c.Request().Context(), svc.ProjectID, userID, models.UserRole(role), "") {
+						return utils.Error(c, http.StatusForbidden, "insufficient permissions to access this terminal")
+					}
+				}
+			}
+
 			if svc.ContainerID != "" && svc.ContainerID != "-" {
 				containerName = svc.ContainerID
 			} else {

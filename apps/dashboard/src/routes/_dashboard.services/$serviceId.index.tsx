@@ -59,7 +59,7 @@ function ServiceIndexRoute() {
           <RedisKeyBrowser databaseId={db.id} />
         ) : (
           <div className="rounded-lg border p-8 text-center text-muted-foreground">
-            Data browser coming soon for {db.engine}
+            Data browser is currently unsupported for {db.engine}.
           </div>
         )}
         <BackupManager database={db} />
