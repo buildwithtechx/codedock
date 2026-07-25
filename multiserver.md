@@ -137,73 +137,84 @@ Once Multi-Server is built, launching Codedock Cloud is trivial:
 
 ### Backend — Models & Repositories
 
-- [x] Create `servers` model (`internal/models/server.go`) — id, user_id, name, ip_address, status, worker_token, last_seen_at, metrics JSON.
-- [x] Create `ServerRepository` (`internal/repositories/server.go`) — CRUD + `GetByWorkerToken`.
-- [x] Add `server_id` (nullable FK) to `projects` table only — NOT to app_services or databases.
+- [x] Create `servers` model (`internal/models/server.go`)
+- [x] Create `ServerRepository` (`internal/repositories/server.go`) — CRUD + `GetByWorkerToken`
+- [x] Add `server_id` (nullable FK) to `projects` table only
 
 ### Backend — Services & Handlers
 
-- [x] Create `ServerService` (`internal/services/server.go`) — create server, generate worker token, list, delete.
-- [x] Create `ServerHandler` (`internal/handlers/server.go`) — REST endpoints for server management.
-- [x] Add server routes to `internal/http/routes.go`.
+- [x] Create `ServerService` (`internal/services/server.go`) — enforces plan-based server limits (hobby = 1)
+- [x] Create `ServerHandler` (`internal/handlers/server.go`) — REST endpoints
+- [x] Add server routes to `internal/http/routes.go`
+- [x] Plan-based project limit enforced in `ProjectHandler` (hobby = 2 projects)
 
 ### Backend — Worker Engine
 
-- [x] Create `WorkerHub` (`internal/engine/worker_hub.go`) — registry of `server_id → live WebSocket conn`.
-- [x] Create Worker WebSocket endpoint (`/ws/worker`) — workers dial in, authenticate with `worker_token`, register in the hub.
-- [x] Update `Deployer` — if `project.ServerID != nil`, route deployment command through `WorkerHub` instead of local Docker socket.
-- [x] WorkerHub handles heartbeats and updates `servers.last_seen_at` + `servers.status`.
+- [x] Create `WorkerHub` (`internal/engine/worker_hub.go`)
+- [x] Create Worker WebSocket endpoint (`/ws/worker`) — authenticate with `worker_token`, register in hub
+- [x] Update `Deployer` — route to WorkerHub if `project.ServerID != nil`
+- [x] WorkerHub handles heartbeats and updates `servers.last_seen_at` + `servers.status`
 
-### Worker Binary (New)
+### Worker Binary
 
-- [x] Scaffold `cmd/codedockw/` — new Go entrypoint.
-- [x] Worker connects to control plane via WebSocket using its `worker_token`.
-- [x] Worker receives deployment commands (JSON), executes them on the local Docker socket.
-- [x] Worker streams container logs and CPU/RAM/disk metrics back over the WebSocket.
-- [x] Worker reconnects with exponential backoff on disconnect.
-- [x] Worker installs Traefik on first boot if not already running.
-- [x] Build & release `codedockw` as a separate binary in CI.
+- [x] Scaffold `cmd/codedockw/` — separate Go entrypoint
+- [x] Worker connects via WebSocket using `worker_token`
+- [x] Worker executes deployment commands on local Docker socket
+- [x] Worker streams logs and metrics back over the WebSocket
+- [x] Worker reconnects with exponential backoff
+- [x] Worker installs Traefik on first boot
 
 ### Frontend
 
-- [x] Create Servers dashboard page (`/servers`) — list servers, status, metrics, last seen.
-- [x] Create Add Server page — generates and displays the one-liner install command with the worker token pre-filled.
-- [x] Update Project creation form — add optional "Deploy to Server" dropdown (defaults to "Local").
-- [x] App and Database creation forms — NO changes needed. ✅
-- [x] Per-server resource graphs (CPU/RAM/Disk over time).
+- [x] Servers dashboard page (`/servers`) — list, status, last seen, metrics
+- [x] Add Server flow — one-liner install command with pre-filled worker token
+- [x] Project creation — optional "Deploy to Server" dropdown
+- [x] App and Database creation — NO changes (server inherited from project) ✅
+- [x] Git providers wired in dashboard (GitHub, GitLab, Bitbucket, Gitea)
+- [x] `useGit.ts` hooks (`useGitStatus`, `useListGitRepos`, `useListGitBranches`, `useConnectGit`, `useDisconnectGit`)
+- [x] `CreateGitAppModal` — deploy from connected provider or public URL
+- [ ] Per-server resource graphs (CPU/RAM/Disk over time) — UI skeleton exists, needs real data wiring
+- [ ] Docker Image deployment flow — currently shows `alert('coming soon!')`
+- [ ] Private Docker Registry UI — backend done (`Registry` model + handler), dashboard pages not built
 
-### Codedock Cloud SaaS (Later)
+### Codedock Cloud SaaS
 
-- [x] Add user registration + email verification (currently only admin account exists).
-- [x] Integrate Stripe for subscription billing.
-- [x] Add plan-based limits (server count, project count) validated server-side.
-- [ ] Set up hosted deployment of control plane (`app.codedock.dev`).
+- [x] User registration + email verification
+- [x] Stripe subscription billing
+- [x] Plan-based limits validated server-side (server count, project count)
+- [ ] Hosted deployment of control plane (`app.codedock.dev`)
 
-## 7. Competitive Analysis (Codedock vs Dokploy)
+---
 
-### Features Dokploy has that Codedock doesn't (Yet)
+## 8. Competitive Analysis (Codedock vs Dokploy)
 
-- [ ] **PR Previews:** Dokploy can automatically spin up ephemeral environments when a Pull Request is opened on GitHub, and tear it down when closed. We don't have this yet.
-- [x] **More Git Providers:** We currently only support GitHub. Dokploy supports GitHub, GitLab, Bitbucket, and Gitea. *(Update: Done!)*
-- [ ] **Private Docker Registries:** They allow users to link AWS ECR, Google GCR, or private DockerHub accounts to pull private images.
-- [ ] **Organizations & Teams:** They have a full RBAC (Role-Based Access Control) system where users can create Organizations, invite members, and assign permissions.
-- [ ] **Volume Backups:** They can back up persistent Docker volumes to S3. We currently only back up Databases natively.
+### Features Dokploy has that Codedock doesn't (yet)
+
+| Feature | Status | Notes |
+|---|---|---|
+| **PR Previews** | ❌ Not started | Webhook handler + ephemeral env lifecycle + preview domain routing |
+| **More Git Providers** | ✅ Done | GitHub, GitLab, Bitbucket, Gitea — backend + dashboard fully wired |
+| **Private Docker Registries** | ⏳ Backend only | Model + repo + service + handler exist; dashboard UI not built |
+| **Docker Image Deploy Flow** | ⏳ Partial | `AppService.imageRef` field exists in backend; frontend shows `alert('coming soon!')` |
+| **Organizations & Teams** | ❌ Not started | Full RBAC: `organizations` table, `organization_users` with roles |
+| **Volume Backups** | ❌ Not started | Extend BackupService to support Docker volume snapshots to S3 |
+
+### What's left (hardest → easiest)
+
+1. **Organizations & Teams (RBAC)** — schema migration + service layer + full UI
+2. **PR Previews** — GitHub webhook, ephemeral env lifecycle, preview routing
+3. **Volume Backups** — BackupService extension + S3 upload path for volumes
+4. **Private Registry UI** — backend already done, just needs list/create/delete pages per project
+5. **Docker Image Deploy Flow** — modal similar to `CreateGitAppModal` but for `imageRef`
+6. **Per-server resource graphs** — hook up existing metrics WebSocket to the graph UI
+7. **Hosted deployment** (`app.codedock.dev`) — ops/infra
 
 ### Features we both have, but we did MUCH better (Where Dokploy went wrong)
 
-- **Multi-Server Clustering (Docker Swarm vs Worker Daemon):**
-  - *Their mistake:* They used Docker Swarm, forcing users to open SSH ports and deal with extremely fragile Swarm overlay networking (UDP 4789).
-  - *Our fix:* Our WebSocket Worker Daemon (what we are building now) dials outward over standard HTTPS (port 443), bypassing firewalls completely. It's infinitely more stable and secure.
-- **Background Tasks & Schedules:**
-  - *Their mistake:* Because Node.js is single-threaded, Dokploy had to build completely separate microservices (apps/monitoring and apps/schedules) just to run cron jobs without freezing the dashboard.
-  - *Our fix:* Go has goroutines. We run our cron scheduler and metrics monitors inside the exact same binary seamlessly, drastically reducing RAM usage and deployment complexity.
-- **Database Models:**
-  - *Their mistake:* They created separate database tables and APIs for every single database type (postgres.ts, mysql.ts, mongo.ts, mariadb.ts, redis.ts). If they want to add a feature to databases, they have to update 5 different files.
-  - *Our fix:* We have one unified database.go model with an engine_type enum. It’s vastly cleaner to maintain.
+- **Multi-Server Clustering:** Docker Swarm (them) vs WebSocket Worker Daemon (us) — outbound-only, no open ports.
+- **Background Tasks:** Separate Node.js microservices (them) vs Go goroutines inside one binary (us).
+- **Database Models:** Per-engine tables (them) vs one unified `database.go` with `engine_type` (us).
 
-### A Feature we both had, but WE did totally wrong (The NATS / Type Safety issue)
+### Type Safety between Backend and Workers
 
-- [x] **Type Safety between Backend and Workers:**
-  - *Dokploy's win:* Because Dokploy is 100% TypeScript (Next.js frontend, Node.js backend), they use tRPC. If they rename a variable in the backend, the frontend instantly throws a compiler error. Perfect type safety.
-  - *Our massive flaw (historically):* As noted earlier, our Go backend was sending raw JSON payloads over NATS to the workers without a single source of truth. If a Go struct changed, the worker wouldn't know until it crashed in production!
-  - *The fix:* We are moving to the new Worker Architecture using shared schemas (like Protobuf or central types) so our Go backend and Go workers share the exact same structs natively.
+- [x] Moved to shared Go structs — control plane and worker binary use the same native types, no raw JSON drift.
