@@ -162,6 +162,10 @@ func (s *ProjectService) ListProjects(ctx context.Context, limit, offset int) ([
 	return s.projectRepo.ListAll(ctx, limit, offset)
 }
 
+func (s *ProjectService) CountProjectsByUser(ctx context.Context, userID string) (int, error) {
+	return s.projectRepo.CountByUser(ctx, userID)
+}
+
 func (s *ProjectService) DeleteProject(ctx context.Context, id string) error {
 	if id == "" {
 		return errors.New("project id is required")

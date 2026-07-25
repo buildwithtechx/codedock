@@ -22,11 +22,13 @@ type ServerService interface {
 
 type serverService struct {
 	serverRepo repositories.ServerRepository
+	userRepo   *repositories.UserRepo
 }
 
-func NewServerService(serverRepo repositories.ServerRepository) ServerService {
+func NewServerService(serverRepo repositories.ServerRepository, userRepo *repositories.UserRepo) ServerService {
 	return &serverService{
 		serverRepo: serverRepo,
+		userRepo:   userRepo,
 	}
 }
 
@@ -37,6 +39,21 @@ func generateWorkerToken() string {
 }
 
 func (s *serverService) CreateServer(ctx context.Context, userID, name, ipAddress string) (*models.Server, error) {
+	u, err := s.userRepo.GetUserByID(ctx, userID)
+	if err != nil {
+		return nil, fmt.Errorf("failed to get user: %w", err)
+	}
+
+	if u.PlanType != "pro" {
+		servers, err := s.serverRepo.ListByUser(ctx, userID)
+		if err != nil {
+			return nil, fmt.Errorf("failed to check server limit: %w", err)
+		}
+		if len(servers) >= 1 {
+			return nil, fmt.Errorf("hobby plan is limited to 1 server. please upgrade to pro")
+		}
+	}
+
 	now := time.Now().UTC()
 	server := &models.Server{
 		ID:          uuid.New().String(),

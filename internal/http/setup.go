@@ -210,7 +210,7 @@ func NewServer(db *sql.DB, v *utils.Vault, deployer *engine.Deployer, traefikMan
 	exampleService := services.NewExampleService()
 	exampleHandler := handlers.NewExampleHandler(exampleService)
 
-	serverService := services.NewServerService(serverRepo)
+	serverService := services.NewServerService(serverRepo, userRepo)
 	serverHandler := handlers.NewServerHandler(serverService)
 	workerWSHandler := handlers.NewWorkerWSHandler(workerHub, serverRepo)
 

@@ -60,6 +60,18 @@ func (h *ProjectHandler) CreateProject(c echo.Context) error {
 
 	userClaims, ok := c.Get("user").(*models.UserClaims)
 
+	if ok && userClaims != nil {
+		if userClaims.PlanType != "pro" {
+			count, err := h.projectService.CountProjectsByUser(c.Request().Context(), userClaims.UserID)
+			if err != nil {
+				return utils.Error(c, http.StatusInternalServerError, "failed to check project limits")
+			}
+			if count >= 2 {
+				return utils.Error(c, http.StatusPaymentRequired, "hobby plan is limited to 2 projects. please upgrade to pro")
+			}
+		}
+	}
+
 	p, err := h.projectService.CreateProjectFromRequest(c.Request().Context(), &req)
 	if err != nil {
 		return utils.Error(c, http.StatusInternalServerError, err.Error())

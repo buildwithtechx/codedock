@@ -174,20 +174,20 @@ Once Multi-Server is built, launching Codedock Cloud is trivial:
 
 ### Codedock Cloud SaaS (Later)
 
-- [ ] Add user registration + email verification (currently only admin account exists).
-- [ ] Integrate Stripe for subscription billing.
-- [ ] Add plan-based limits (server count, project count) validated server-side.
+- [x] Add user registration + email verification (currently only admin account exists).
+- [x] Integrate Stripe for subscription billing.
+- [x] Add plan-based limits (server count, project count) validated server-side.
 - [ ] Set up hosted deployment of control plane (`app.codedock.dev`).
 
 ## 7. Competitive Analysis (Codedock vs Dokploy)
 
 ### Features Dokploy has that Codedock doesn't (Yet)
 
-- [x] **PR Previews:** Dokploy can automatically spin up ephemeral environments when a Pull Request is opened on GitHub, and tear it down when closed. We don't have this yet.
-- [x] **More Git Providers:** We currently only support GitHub. Dokploy supports GitHub, GitLab, Bitbucket, and Gitea.
-- [x] **Private Docker Registries:** They allow users to link AWS ECR, Google GCR, or private DockerHub accounts to pull private images.
-- [x] **Organizations & Teams:** They have a full RBAC (Role-Based Access Control) system where users can create Organizations, invite members, and assign permissions.
-- [x] **Volume Backups:** They can back up persistent Docker volumes to S3. We currently only back up Databases natively.
+- [ ] **PR Previews:** Dokploy can automatically spin up ephemeral environments when a Pull Request is opened on GitHub, and tear it down when closed. We don't have this yet.
+- [x] **More Git Providers:** We currently only support GitHub. Dokploy supports GitHub, GitLab, Bitbucket, and Gitea. *(Update: Done!)*
+- [ ] **Private Docker Registries:** They allow users to link AWS ECR, Google GCR, or private DockerHub accounts to pull private images.
+- [ ] **Organizations & Teams:** They have a full RBAC (Role-Based Access Control) system where users can create Organizations, invite members, and assign permissions.
+- [ ] **Volume Backups:** They can back up persistent Docker volumes to S3. We currently only back up Databases natively.
 
 ### Features we both have, but we did MUCH better (Where Dokploy went wrong)
 

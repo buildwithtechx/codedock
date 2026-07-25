@@ -54,10 +54,10 @@ function NewResourcePage() {
               <CardHeader>
                 <CardTitle className="flex items-center gap-2">
                   <GitBranch className="h-5 w-5" />
-                  GitHub Repository
+                  Git Repository
                 </CardTitle>
                 <CardDescription>
-                  Deploy source code from a public or private GitHub repository.
+                  Deploy source code from a public or private Git repository.
                 </CardDescription>
               </CardHeader>
             </Card>

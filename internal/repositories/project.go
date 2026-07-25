@@ -16,6 +16,7 @@ type ProjectRepository interface {
 	ListAll(ctx context.Context, limit, offset int) ([]models.ProjectConfig, int, error)
 	Get(ctx context.Context, id string) (*models.ProjectConfig, error)
 	GetByOrganization(ctx context.Context, id, organizationID string) (*models.ProjectConfig, error)
+	CountByUser(ctx context.Context, userID string) (int, error)
 	Create(ctx context.Context, p *models.ProjectConfig) error
 	Delete(ctx context.Context, id string) error
 }
@@ -77,6 +78,17 @@ func (r *ProjectRepo) ListAll(_ context.Context, limit, offset int) ([]models.Pr
 		projects = make([]models.ProjectConfig, 0)
 	}
 	return projects, total, nil
+}
+
+func (r *ProjectRepo) CountByUser(ctx context.Context, userID string) (int, error) {
+	var total int
+	query := `
+		SELECT COUNT(p.id) 
+		FROM projects p 
+		INNER JOIN organization_members om ON p.organization_id = om.organization_id 
+		WHERE om.user_id = ?`
+	err := r.db.GetContext(ctx, &total, query, userID)
+	return total, err
 }
 
 func (r *ProjectRepo) Get(_ context.Context, id string) (*models.ProjectConfig, error) {
