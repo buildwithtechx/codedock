@@ -1,9 +1,9 @@
 import { Bell, Database, Lock, Settings as SettingsIcon } from 'lucide-react';
 import { useState } from 'react';
-import { BackupsList } from './backups-list';
+import { BackupsList } from '#/features/backups/backups-list';
+import { NotificationsSettings } from '#/features/notifications/notifications-settings';
+import { OAuthProvidersList } from '#/features/users/oauth-providers-list';
 import { GeneralSettings } from './general-settings';
-import { NotificationsSettings } from './notifications-settings';
-import { OAuthProvidersList } from './oauth-providers-list';
 
 type TabId = 'general' | 'notifications' | 'oauth' | 'backups';
 

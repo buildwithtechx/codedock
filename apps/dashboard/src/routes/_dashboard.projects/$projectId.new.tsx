@@ -5,8 +5,8 @@ import { Button } from '#/components/ui/button';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '#/components/ui/card';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '#/components/ui/tabs';
 import { CreateDatabaseModal } from '#/features/databases/create-database-modal';
-import { CreateDockerImageModal } from '#/features/instance/create-docker-image-modal';
-import { CreateGitAppModal } from '#/features/instance/create-git-app-modal';
+import { CreateDockerImageModal } from '#/features/sources/create-docker-image-modal';
+import { CreateGitAppModal } from '#/features/sources/create-git-app-modal';
 import { useListExampleApps, useListOneClickApps } from '#/hooks/use-templates';
 
 export const Route = createFileRoute('/_dashboard/projects/$projectId/new')({

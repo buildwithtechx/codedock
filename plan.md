@@ -63,8 +63,8 @@ This roadmap tracks all active security remediations, architectural refactoring,
 
 ### Dashboard Structure
 
-- [ ] **Colocate Domain Concepts:** `services/`, `hooks/`, and `interfaces/` duplicate domain concepts. Colocate them within `features/<domain>/` (e.g., `features/projects/api.ts`, `hooks.ts`, `types.ts`).
-- [ ] **Feature Granularity:** `features/instance/` is too broad. Split into `features/settings/`, `backups/`, `dns/`, `notifications/`, `users/`, `registries/`.
+- [x] **Colocate Domain Concepts:** `services/`, `hooks/`, and `interfaces/` duplicate domain concepts. Colocate them within `features/<domain>/` (e.g., `features/projects/api.ts`, `hooks.ts`, `types.ts`).
+- [x] **Feature Granularity:** `features/instance/` is too broad. Split into `features/settings/`, `backups/`, `dns/`, `notifications/`, `users/`, `registries/`.
 
 ---
 

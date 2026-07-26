@@ -74,7 +74,7 @@ export function DatabaseConnectionCard({ database }: Props) {
                 variant="ghost"
                 size="icon"
                 className="h-6 w-6"
-                onClick={() => copyToClipboard(database.internalDns, 'Host')}
+                onClick={() => copyToClipboard(database.internalDns || '', 'Host')}
               >
                 <Copy className="h-3 w-3" />
               </Button>
@@ -118,7 +118,7 @@ export function DatabaseConnectionCard({ database }: Props) {
                 variant="ghost"
                 size="icon"
                 className="h-6 w-6"
-                onClick={() => copyToClipboard(database.password, 'Password')}
+                onClick={() => copyToClipboard(database.password || '', 'Password')}
               >
                 <Copy className="h-3 w-3" />
               </Button>

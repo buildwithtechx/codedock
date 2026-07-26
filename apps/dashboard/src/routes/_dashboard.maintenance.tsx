@@ -1,5 +1,5 @@
 import { createFileRoute } from '@tanstack/react-router';
-import { MaintenancePage } from '#/features/instance/maintenance-settings';
+import { MaintenancePage } from '#/features/settings/maintenance-settings';
 
 export const Route = createFileRoute('/_dashboard/maintenance')({
   component: MaintenancePage,
