@@ -3,7 +3,7 @@ services:
     build:
       context: .
       dockerfile: Dockerfile
-    image: ghcr.io/buildwithtechx/codedock:${CODEDOCK_VERSION:-latest}
+    image: ghcr.io/buildwithtechx/codedock:${CODEDOCK_VERSION:-1.0.0}
     container_name: codedock-control-plane
     restart: unless-stopped
     ports:

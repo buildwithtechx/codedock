@@ -3,11 +3,14 @@
 # Usage: curl -fsSL https://get.codedock.run | sh
 set -eo pipefail
 
-RELEASE=${CODEDOCK_VERSION:-latest}
+RELEASE=${CODEDOCK_VERSION:-1.0.0}
 CODEDOCK_DIR=/codedock
 REPO_URL="https://raw.githubusercontent.com/buildwithtechx/codedock/main"
 COMPOSE_URL="$REPO_URL/docker-compose.yml"
 CTL_URL="$REPO_URL/bootstrap/codedockd"
+
+COMPOSE_SHA256="${CODEDOCK_COMPOSE_SHA256:-}"
+CTL_SHA256="${CODEDOCK_CTL_SHA256:-}"
 
 setup_colors() {
   BOLD="\033[1m"
@@ -60,11 +63,52 @@ detect_server_ip() {
   echo ""
 }
 
+verify_checksum() {
+  local file="$1"
+  local expected="$2"
+  local label="$3"
+
+  if [ -z "$expected" ]; then
+    if [ "${CODEDOCK_ENFORCE_CHECKSUMS:-false}" = "true" ] || [ "${CODEDOCK_ENFORCE_CHECKSUMS:-false}" = "1" ]; then
+      echo -e "${RED}❌ Checksum enforcement enabled (CODEDOCK_ENFORCE_CHECKSUMS=true), but no checksum provided for ${label}!${NC}"
+      rm -f "$file"
+      exit 1
+    fi
+    echo -e "  ${YELLOW}⚠️  No checksum provided for ${label}; skipping verification.${NC}"
+    return
+  fi
+
+  local actual
+  actual=$(sha256sum "$file" | awk '{print $1}')
+  if [ "$actual" != "$expected" ]; then
+    echo -e "${RED}❌ Checksum mismatch for ${label}!${NC}"
+    echo -e "${RED}   Expected: ${expected}${NC}"
+    echo -e "${RED}   Got:      ${actual}${NC}"
+    rm -f "$file"
+    exit 1
+  fi
+  echo -e "  ${GREEN}✅ Checksum verified for ${label}${NC}"
+}
+
 install_docker() {
   if ! command -v docker &> /dev/null; then
     echo -e "${BOLD}📦 Installing Docker...${NC}"
-    curl -fsSL https://get.docker.com | sh
-    systemctl enable --now docker
+    if command -v apt-get &> /dev/null; then
+      apt-get update -qq && apt-get install -y -qq docker.io docker-compose-plugin 2>/dev/null || true
+    elif command -v dnf &> /dev/null; then
+      dnf install -y -q docker docker-compose-plugin 2>/dev/null || true
+    elif command -v yum &> /dev/null; then
+      yum install -y -q docker 2>/dev/null || true
+    fi
+
+    if ! command -v docker &> /dev/null; then
+      DOCKER_SCRIPT=$(mktemp)
+      curl -fsSL https://get.docker.com -o "$DOCKER_SCRIPT"
+      verify_checksum "$DOCKER_SCRIPT" "${DOCKER_INSTALLER_SHA256:-}" "Docker installer"
+      sh "$DOCKER_SCRIPT"
+      rm -f "$DOCKER_SCRIPT"
+    fi
+    systemctl enable --now docker 2>/dev/null || true
   fi
 
   if ! docker info &> /dev/null; then
@@ -72,7 +116,6 @@ install_docker() {
     sleep 3
   fi
 
-  # Ensure Docker Compose plugin is available
   if ! docker compose version &> /dev/null; then
     echo -e "${YELLOW}📦 Installing Docker Compose plugin...${NC}"
     apt-get update -qq && apt-get install -y -qq docker-compose-plugin 2>/dev/null || \
@@ -88,12 +131,22 @@ setup_directories() {
 
 fetch_config_files() {
   echo -e "${BOLD}⬇️  Fetching configuration files...${NC}"
-  curl -fsSL "$COMPOSE_URL" -o "$CODEDOCK_DIR/docker-compose.yml"
-  curl -fsSL "$CTL_URL" -o "$CODEDOCK_DIR/codedockd"
+
+  local compose_tmp ctl_tmp
+  compose_tmp=$(mktemp)
+  ctl_tmp=$(mktemp)
+
+  curl -fsSL "$COMPOSE_URL" -o "$compose_tmp"
+  verify_checksum "$compose_tmp" "$COMPOSE_SHA256" "docker-compose.yml"
+  mv "$compose_tmp" "$CODEDOCK_DIR/docker-compose.yml"
+
+  curl -fsSL "$CTL_URL" -o "$ctl_tmp"
+  verify_checksum "$ctl_tmp" "$CTL_SHA256" "codedockd"
+  mv "$ctl_tmp" "$CODEDOCK_DIR/codedockd"
   chmod +x "$CODEDOCK_DIR/codedockd"
 
-  # Install codedockd to PATH (shell wrapper that proxies commands into the container)
   ln -sf "$CODEDOCK_DIR/codedockd" /usr/local/bin/codedockd
+  ln -sf "$CODEDOCK_DIR/codedockd" /usr/local/bin/codedockctl
 }
 
 generate_env_file() {
@@ -151,7 +204,7 @@ ENV
 }
 
 start_codedock() {
-  echo -e "${BOLD}🐳 Pulling codedock:v${RELEASE}...${NC}"
+  echo -e "${BOLD}🐳 Pulling codedock:${RELEASE}...${NC}"
   docker compose -f "$CODEDOCK_DIR/docker-compose.yml" pull
   echo -e "${BOLD}🚀 Starting Codedock...${NC}"
   docker compose -f "$CODEDOCK_DIR/docker-compose.yml" up -d

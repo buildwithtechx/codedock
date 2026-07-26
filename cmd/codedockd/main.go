@@ -26,7 +26,7 @@ import (
 	"codedock.run/codedock/internal/utils"
 )
 
-var codedockVersion = "dev"
+var codedockVersion = "1.0.0"
 
 type dbDeployerStore struct {
 	db    *sql.DB

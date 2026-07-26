@@ -5,8 +5,8 @@
 
 services:
   codedock:
-    image: ghcr.io/buildwithtechx/codedock:${CODEDOCK_VERSION:-latest}
-    container_name: codedock
+    image: ghcr.io/buildwithtechx/codedock:${CODEDOCK_VERSION:-1.0.0}
+    container_name: codedock-control-plane
     restart: unless-stopped
     env_file: .env
     environment:
@@ -80,7 +80,7 @@ services:
           memory: 128M
 
   watchtower:
-    image: containrrr/watchtower:latest
+    image: containrrr/watchtower:1.7.1
     container_name: watchtower
     restart: unless-stopped
     environment:

@@ -118,7 +118,7 @@ func promptOptional(msg string) string {
 func runRestart() {
 	fmt.Println("🔄 Restarting Codedock daemon...")
 	if _, err := os.Stat("/codedock/docker-compose.yml"); err == nil {
-		cmd := exec.Command("docker", "compose", "-f", "/codedock/docker-compose.yml", "restart", "codedock-control-plane")
+		cmd := exec.Command("docker", "compose", "-f", "/codedock/docker-compose.yml", "restart", "codedock")
 		cmd.Stdout = os.Stdout
 		cmd.Stderr = os.Stderr
 		if err := cmd.Run(); err != nil {

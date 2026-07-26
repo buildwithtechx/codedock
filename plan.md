@@ -69,13 +69,13 @@ A recent static audit revealed several critical authorization and configuration 
 
 ### Bootstrap/Update Problems
 
-- [ ] Installer executes remote Docker installer code directly and downloads scripts without checksums (`bootstrap/install.sh`).
-- [ ] Default compose image tag is `latest`; needs pinning for reproducibility.
-- [ ] `docker-compose.prod.yml` uses unpinned `watchtower:latest`.
-- [ ] Add path-traversal protection to `restore.sh` when extracting tar archives.
-- [ ] Worker installer embeds token directly in systemd unit.
-- [ ] Fix naming mismatch: systemd installer references `codedock` while compose container is `codedock-control-plane`.
-- [ ] Fix uninstall script binary path (`codedockctl` vs `codedockd`).
+- [x] Installer executes remote Docker installer code directly and downloads scripts without checksums (`bootstrap/install.sh`).
+- [x] Default compose image tag is `latest`; needs pinning for reproducibility.
+- [x] `docker-compose.prod.yml` uses unpinned `watchtower:latest`.
+- [x] Add path-traversal protection to `restore.sh` when extracting tar archives.
+- [x] Worker installer embeds token directly in systemd unit.
+- [x] Fix naming mismatch: systemd installer references `codedock` while compose container is `codedock-control-plane`.
+- [x] Fix uninstall script binary path (`codedockctl` vs `codedockd`).
 
 ### Dashboard Issues
 

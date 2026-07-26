@@ -1,7 +1,7 @@
 #!/usr/bin/env bash
 set -eo pipefail
 
-VERSION=${1:-latest}
+VERSION=${1:-1.0.0}
 CODEDOCK_DIR=${CODEDOCK_DIR:-/codedock}
 
 echo "🛰️  Starting Codedock upgrade to v${VERSION}..."

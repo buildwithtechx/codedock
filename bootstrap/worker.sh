@@ -4,9 +4,9 @@
 
 set -eo pipefail
 
-RELEASE="latest"
 CODEDOCK_DIR="/opt/codedock"
 DOWNLOAD_URL="https://github.com/buildwithtechx/codedock/releases/latest/download"
+ENV_FILE="/etc/codedockw.env"
 
 setup_colors() {
   BOLD="\033[1m"
@@ -23,11 +23,52 @@ check_root() {
   fi
 }
 
+verify_checksum() {
+  local file="$1"
+  local expected="$2"
+  local label="$3"
+
+  if [ -z "$expected" ]; then
+    if [ "${CODEDOCK_ENFORCE_CHECKSUMS:-false}" = "true" ] || [ "${CODEDOCK_ENFORCE_CHECKSUMS:-false}" = "1" ]; then
+      echo -e "${RED}❌ Checksum enforcement enabled (CODEDOCK_ENFORCE_CHECKSUMS=true), but no checksum provided for ${label}!${NC}"
+      rm -f "$file"
+      exit 1
+    fi
+    echo -e "  ${YELLOW}⚠️  No checksum provided for ${label}; skipping verification.${NC}"
+    return
+  fi
+
+  local actual
+  actual=$(sha256sum "$file" | awk '{print $1}')
+  if [ "$actual" != "$expected" ]; then
+    echo -e "${RED}❌ Checksum mismatch for ${label}!${NC}"
+    echo -e "${RED}   Expected: ${expected}${NC}"
+    echo -e "${RED}   Got:      ${actual}${NC}"
+    rm -f "$file"
+    exit 1
+  fi
+  echo -e "  ${GREEN}✅ Checksum verified for ${label}${NC}"
+}
+
 install_docker() {
   if ! command -v docker &> /dev/null; then
     echo -e "${BOLD}📦 Installing Docker...${NC}"
-    curl -fsSL https://get.docker.com | sh
-    systemctl enable --now docker
+    if command -v apt-get &> /dev/null; then
+      apt-get update -qq && apt-get install -y -qq docker.io docker-compose-plugin 2>/dev/null || true
+    elif command -v dnf &> /dev/null; then
+      dnf install -y -q docker docker-compose-plugin 2>/dev/null || true
+    elif command -v yum &> /dev/null; then
+      yum install -y -q docker 2>/dev/null || true
+    fi
+
+    if ! command -v docker &> /dev/null; then
+      DOCKER_SCRIPT=$(mktemp)
+      curl -fsSL https://get.docker.com -o "$DOCKER_SCRIPT"
+      verify_checksum "$DOCKER_SCRIPT" "${DOCKER_INSTALLER_SHA256:-}" "Docker installer"
+      sh "$DOCKER_SCRIPT"
+      rm -f "$DOCKER_SCRIPT"
+    fi
+    systemctl enable --now docker 2>/dev/null || true
   fi
 }
 
@@ -53,7 +94,7 @@ parse_args() {
     echo -e "${RED}❌ Missing required argument: --key <LICENSE_KEY>${NC}"
     exit 1
   fi
-  
+
   if [ -z "$API_HOST" ]; then
     API_HOST="wss://api.codedock.dev"
   fi
@@ -62,7 +103,7 @@ parse_args() {
 download_worker() {
   echo -e "${BOLD}⬇️  Downloading codedockw...${NC}"
   mkdir -p "$CODEDOCK_DIR/bin"
-  
+
   ARCH=$(uname -m)
   case $ARCH in
     x86_64) GOARCH="amd64" ;;
@@ -71,20 +112,33 @@ download_worker() {
   esac
 
   TAR_FILE="codedockw_linux_${GOARCH}.tar.gz"
-  
-  curl -fsSL "${DOWNLOAD_URL}/${TAR_FILE}" -o "/tmp/${TAR_FILE}" || {
+  TMP_TAR=$(mktemp)
+
+  curl -fsSL "${DOWNLOAD_URL}/${TAR_FILE}" -o "$TMP_TAR" || {
     echo -e "${RED}Failed to download worker binary.${NC}"
+    rm -f "$TMP_TAR"
     exit 1
   }
-  
-  tar -xzf "/tmp/${TAR_FILE}" -C "$CODEDOCK_DIR/bin"
+
+  verify_checksum "$TMP_TAR" "${CODEDOCK_WORKER_SHA256:-}" "codedockw"
+  tar --no-same-owner -xzf "$TMP_TAR" -C "$CODEDOCK_DIR/bin" codedockw
   chmod +x "$CODEDOCK_DIR/bin/codedockw"
-  rm "/tmp/${TAR_FILE}"
+  rm -f "$TMP_TAR"
+}
+
+write_env_file() {
+  echo -e "${BOLD}🔑 Writing credentials to ${ENV_FILE}...${NC}"
+  install -m 0600 /dev/null "$ENV_FILE"
+  cat > "$ENV_FILE" <<EOF
+CODEDOCK_WORKER_TOKEN=${LICENSE_KEY}
+CODEDOCK_CONTROL_PLANE=${API_HOST}
+EOF
+  echo -e "  ${GREEN}✅ Credentials written (readable by root only).${NC}"
 }
 
 setup_systemd() {
   echo -e "${BOLD}⚙️  Setting up systemd service...${NC}"
-  
+
   cat > /etc/systemd/system/codedockw.service <<EOF
 [Unit]
 Description=Codedock Worker Daemon
@@ -93,11 +147,10 @@ Requires=docker.service
 
 [Service]
 Type=simple
-ExecStart=$CODEDOCK_DIR/bin/codedockw
+ExecStart=${CODEDOCK_DIR}/bin/codedockw
 Restart=always
 RestartSec=10
-Environment="CODEDOCK_WORKER_TOKEN=$LICENSE_KEY"
-Environment="CODEDOCK_CONTROL_PLANE=$API_HOST"
+EnvironmentFile=${ENV_FILE}
 
 [Install]
 WantedBy=multi-user.target
@@ -110,15 +163,16 @@ EOF
 main() {
   setup_colors
   parse_args "$@"
-  
+
   echo -e "${BOLD}🛰️  Installing Codedock Worker Daemon${NC}"
   echo "━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━"
-  
+
   check_root
   install_docker
   download_worker
+  write_env_file
   setup_systemd
-  
+
   echo ""
   echo -e "${GREEN}✅ Worker daemon installed and started!${NC}"
   echo -e "   It will automatically connect to your control plane."
