@@ -17,8 +17,9 @@ const getInitialAuth = () => {
     return { token: null, refreshToken: null, user: null, isAuthenticated: false };
   }
 
-  const storedToken = localStorage.getItem('codedock_auth_token');
-  const storedRefreshToken = localStorage.getItem('codedock_refresh_token');
+  localStorage.removeItem('codedock_auth_token');
+  localStorage.removeItem('codedock_refresh_token');
+
   const storedUser = localStorage.getItem('codedock_auth_user');
   let parsedUser = null;
   if (storedUser) {
@@ -31,10 +32,10 @@ const getInitialAuth = () => {
   }
 
   return {
-    token: storedToken,
-    refreshToken: storedRefreshToken,
+    token: null,
+    refreshToken: null,
     user: parsedUser,
-    isAuthenticated: !!storedToken,
+    isAuthenticated: !!parsedUser,
   };
 };
 
@@ -50,18 +51,6 @@ export const useAuthStore = create<AuthState>((set) => ({
 
 if (isBrowser) {
   useAuthStore.subscribe((state) => {
-    if (state.token) {
-      localStorage.setItem('codedock_auth_token', state.token);
-    } else {
-      localStorage.removeItem('codedock_auth_token');
-    }
-
-    if (state.refreshToken) {
-      localStorage.setItem('codedock_refresh_token', state.refreshToken);
-    } else {
-      localStorage.removeItem('codedock_refresh_token');
-    }
-
     if (state.user) {
       localStorage.setItem('codedock_auth_user', JSON.stringify(state.user));
     } else {

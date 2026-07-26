@@ -2,6 +2,7 @@ package handlers
 
 import (
 	"net/http"
+	"strings"
 
 	"github.com/labstack/echo/v4"
 
@@ -90,6 +91,7 @@ func (h *AuthHandler) Register(c echo.Context) error {
 		return utils.Error(c, http.StatusBadRequest, err.Error())
 	}
 	SetAuthCookie(c, token)
+	SetRefreshCookie(c, refreshToken)
 	telemetry.Track(u.Email, "user_signed_up", map[string]any{
 		"email": u.Email,
 		"name":  u.Name,
@@ -111,6 +113,7 @@ func (h *AuthHandler) Login(c echo.Context) error {
 		return utils.Error(c, http.StatusUnauthorized, err.Error())
 	}
 	SetAuthCookie(c, token)
+	SetRefreshCookie(c, refreshToken)
 	telemetry.Track(u.Email, "user_logged_in", map[string]any{
 		"email": u.Email,
 	})
@@ -127,14 +130,21 @@ type RefreshRequest struct {
 
 func (h *AuthHandler) Refresh(c echo.Context) error {
 	var payload RefreshRequest
-	if err := c.Bind(&payload); err != nil {
-		return utils.Error(c, http.StatusBadRequest, "invalid payload")
+	_ = c.Bind(&payload)
+	if payload.RefreshToken == "" {
+		if cookie, err := c.Cookie("codedock_refresh_token"); err == nil {
+			payload.RefreshToken = strings.TrimSpace(cookie.Value)
+		}
+	}
+	if payload.RefreshToken == "" {
+		return utils.Error(c, http.StatusBadRequest, "missing refresh token")
 	}
 	u, token, newRefreshToken, err := h.authService.RefreshToken(c.Request().Context(), payload.RefreshToken)
 	if err != nil {
 		return utils.Error(c, http.StatusUnauthorized, err.Error())
 	}
 	SetAuthCookie(c, token)
+	SetRefreshCookie(c, newRefreshToken)
 	return utils.Success(c, "Token refreshed successfully", map[string]any{
 		"token":        token,
 		"refreshToken": newRefreshToken,
@@ -144,6 +154,7 @@ func (h *AuthHandler) Refresh(c echo.Context) error {
 
 func (h *AuthHandler) Logout(c echo.Context) error {
 	ClearAuthCookie(c)
+	ClearRefreshCookie(c)
 	return utils.Success(c, "Logged out successfully", nil)
 }
 

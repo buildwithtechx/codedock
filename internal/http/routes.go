@@ -221,6 +221,8 @@ func (s *Server) registerAppRoutes(apiGroup, authGroup *echo.Group) {
 
 	authGroup.GET("/services/:serviceId/serverless/code", s.serverlessHandler.GetCode, serviceAuth)
 	authGroup.POST("/services/:serviceId/serverless/code", s.serverlessHandler.SaveCode, serviceAuthAdmin)
+
+	apiGroup.GET("/services/:serviceId/logs", s.serviceLogsWSHandler.Handle)
 }
 
 func (s *Server) registerDeploymentRoutes(authGroup *echo.Group) {

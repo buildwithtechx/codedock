@@ -24,9 +24,10 @@ import (
 	"codedock.run/codedock/internal/services"
 	"codedock.run/codedock/internal/telemetry"
 	"codedock.run/codedock/internal/utils"
+	"codedock.run/codedock/internal/version"
 )
 
-var codedockVersion = "1.0.0"
+var codedockVersion = version.Version
 
 type dbDeployerStore struct {
 	db    *sql.DB

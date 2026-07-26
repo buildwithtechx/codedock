@@ -73,6 +73,7 @@ type Server struct {
 	registryHandler        *handlers.RegistryHandler
 	billingHandler         *handlers.BillingHandler
 	serverMetricsWSHandler *handlers.ServerMetricsWSHandler
+	serviceLogsWSHandler   *handlers.ServiceLogsWSHandler
 }
 
 func (s *Server) ServeHTTP(w http.ResponseWriter, r *http.Request) {

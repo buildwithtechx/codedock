@@ -5,6 +5,7 @@ import (
 	"fmt"
 
 	"codedock.run/codedock/internal/services"
+	"codedock.run/codedock/internal/version"
 	"github.com/mark3labs/mcp-go/mcp"
 	"github.com/mark3labs/mcp-go/server"
 )
@@ -17,7 +18,7 @@ type Bridge struct {
 }
 
 func NewBridge(ps *services.ProjectService, as *services.AppService, db *services.DatabaseService) *Bridge {
-	mcpServer := server.NewMCPServer("codedock-mcp", "1.0.0", server.WithResourceCapabilities(true, true), server.WithPromptCapabilities(true))
+	mcpServer := server.NewMCPServer("codedock-mcp", version.Version, server.WithResourceCapabilities(true, true), server.WithPromptCapabilities(true))
 	b := &Bridge{
 		server:         mcpServer,
 		projectService: ps,
@@ -88,6 +89,6 @@ func (b *Bridge) handleListDatabases(ctx context.Context, request mcp.CallToolRe
 }
 
 func (b *Bridge) handleGetSystemStatus(ctx context.Context, request mcp.CallToolRequest) (*mcp.CallToolResult, error) {
-	res := "Codedock Status: OK\nEngine: Active\nVersion: 1.0.0"
+	res := fmt.Sprintf("Codedock Status: OK\nEngine: Active\nVersion: %s", version.Version)
 	return mcp.NewToolResultText(res), nil
 }

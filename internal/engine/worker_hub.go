@@ -120,7 +120,9 @@ func (wc *WorkerConnection) handleMessage(msg models.WorkerMessage) {
 	case models.WorkerMessageTypeLogStream:
 		var logStream models.WorkerLogStreamPayload
 		if err := json.Unmarshal(msg.Payload, &logStream); err == nil {
-			// In the future, emit to pub/sub or SSE clients watching this container
+			lineBytes := []byte(logStream.LogLine + "\r\n")
+			GlobalUILogStreamHub.Broadcast(logStream.ContainerID, lineBytes)
+			GlobalUILogStreamHub.Broadcast(wc.ServerID, lineBytes)
 			slog.Debug("received log from worker", "containerID", logStream.ContainerID, "line", logStream.LogLine)
 		}
 	case models.WorkerMessageTypeCommandAck:

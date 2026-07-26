@@ -3,9 +3,15 @@ import { SearchAddon } from '@xterm/addon-search';
 import { WebLinksAddon } from '@xterm/addon-web-links';
 import { Terminal } from '@xterm/xterm';
 import { env } from '#/env';
-
 import '@xterm/xterm/css/xterm.css';
 import { useEffect, useRef, useState } from 'react';
+
+function getCookie(name: string) {
+  const value = `; ${document.cookie}`;
+  const parts = value.split(`; ${name}=`);
+  if (parts.length === 2) return parts.pop()?.split(';').shift();
+  return null;
+}
 
 interface WebTerminalProps {
   serviceId: string;
@@ -49,8 +55,9 @@ export function WebTerminal({ serviceId }: WebTerminalProps) {
     const apiUrl = new URL(env.VITE_API_URL || '', window.location.origin);
     const protocol = apiUrl.protocol === 'https:' ? 'wss:' : 'ws:';
     const wsUrl = `${protocol}//${apiUrl.host}/api/ws/services/${serviceId}/terminal`;
-
-    const socket = new WebSocket(wsUrl);
+    const csrfToken = getCookie('csrf_token');
+    const protocols = csrfToken ? ['csrf', csrfToken] : undefined;
+    const socket = new WebSocket(wsUrl, protocols);
     socket.binaryType = 'arraybuffer';
 
     socket.onopen = () => {

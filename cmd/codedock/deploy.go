@@ -25,7 +25,7 @@ var deployCmd = &cobra.Command{
 		fmt.Printf("✅ Deployment started!\n")
 		fmt.Printf("ID: %s\n", deployment.ID)
 		fmt.Printf("Status: %s\n", deployment.Status)
-		fmt.Println("To check status, use the dashboard or future CLI commands.")
+		fmt.Printf("To check status, run: codedock status %s\n", serviceID)
 	},
 }
 

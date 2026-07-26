@@ -58,6 +58,9 @@ func NewTerminalHandler(
 }
 
 func (h *TerminalHandler) HandleWebSocket(c echo.Context) error {
+	if err := ValidateWebSocketCSWSH(c); err != nil {
+		return err
+	}
 	var claimsMap map[string]interface{}
 	if h.tokenService != nil {
 		tokenStr := middleware.ExtractTokenFromRequest(c)

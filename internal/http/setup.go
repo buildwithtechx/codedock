@@ -214,6 +214,7 @@ func NewServer(db *sql.DB, v *utils.Vault, deployer *engine.Deployer, traefikMan
 	serverHandler := handlers.NewServerHandler(serverService)
 	workerWSHandler := handlers.NewWorkerWSHandler(workerHub, serverRepo)
 	serverMetricsWSHandler := handlers.NewServerMetricsWSHandler(tokenService, serverService)
+	serviceLogsWSHandler := handlers.NewServiceLogsWSHandler(tokenService, appService)
 
 	registryRepo := repositories.NewRegistryRepository(db)
 	registryService := services.NewRegistryService(registryRepo)
@@ -282,6 +283,7 @@ func NewServer(db *sql.DB, v *utils.Vault, deployer *engine.Deployer, traefikMan
 		registryHandler:        registryHandler,
 		billingHandler:         billingHandler,
 		serverMetricsWSHandler: serverMetricsWSHandler,
+		serviceLogsWSHandler:   serviceLogsWSHandler,
 	}
 
 	if srv.deployer != nil {

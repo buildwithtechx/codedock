@@ -2,7 +2,6 @@ import { FitAddon } from '@xterm/addon-fit';
 import { SearchAddon } from '@xterm/addon-search';
 import { Terminal } from '@xterm/xterm';
 import { env } from '#/env';
-import { useAuthStore } from '#/stores/authStore';
 import '@xterm/xterm/css/xterm.css';
 import { useEffect, useRef, useState } from 'react';
 import { AIDiagnoseDialog } from './ai-diagnose-dialog';
@@ -47,9 +46,9 @@ export function LiveLogsViewer({ serviceId, deploymentId }: LiveLogsViewerProps)
 
     const protocol = window.location.protocol === 'https:' ? 'wss:' : 'ws:';
     const wsHost = env.VITE_API_URL.replace(/^http(s?):\/\//, '');
-    let wsUrl = `${protocol}//${wsHost}/api/services/${serviceId}/logs?token=${useAuthStore.getState().token || ''}`;
+    let wsUrl = `${protocol}//${wsHost}/api/services/${serviceId}/logs`;
     if (deploymentId) {
-      wsUrl += `&deploymentId=${deploymentId}`;
+      wsUrl += `?deploymentId=${deploymentId}`;
     }
 
     const socket = new WebSocket(wsUrl);
@@ -61,7 +60,7 @@ export function LiveLogsViewer({ serviceId, deploymentId }: LiveLogsViewerProps)
 
     socket.onmessage = (event) => {
       term.write(event.data);
-      setLogsBuffer((prev) => (prev + event.data).slice(-5000)); // Keep last 5000 chars
+      setLogsBuffer((prev) => (prev + event.data).slice(-5000));
     };
 
     socket.onclose = () => {

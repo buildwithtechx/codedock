@@ -41,6 +41,9 @@ func NewServerMetricsWSHandler(ts *services.TokenService, ss services.ServerServ
 }
 
 func (h *ServerMetricsWSHandler) Handle(c echo.Context) error {
+	if err := ValidateWebSocketCSWSH(c); err != nil {
+		return err
+	}
 	serverID := c.Param("serverId")
 	if serverID == "" {
 		return utils.Error(c, http.StatusBadRequest, "missing serverId parameter")

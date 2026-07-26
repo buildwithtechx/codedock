@@ -79,19 +79,19 @@ A recent static audit revealed several critical authorization and configuration 
 
 ### Dashboard Issues
 
-- [ ] Move access/refresh tokens from localStorage to HttpOnly cookies to prevent XSS theft (`apps/dashboard/src/stores/authStore.ts`).
-- [ ] Remove JWT from URL query string in live-log WebSocket (`live-logs-viewer.tsx`).
-- [ ] Terminal WebSocket has no explicit auth header and relies purely on cookies (needs CSRF/CSWSH mitigation).
-- [ ] Dashboard route layout has no client-side auth guard (`apps/dashboard/src/routes/_dashboard.tsx`).
-- [ ] Backup UI exposes restore functionality which lacks backend authorization.
+- [x] Move access/refresh tokens from localStorage to HttpOnly cookies to prevent XSS theft (`apps/dashboard/src/stores/authStore.ts`).
+- [x] Remove JWT from URL query string in live-log WebSocket (`live-logs-viewer.tsx`).
+- [x] Terminal WebSocket has no explicit auth header and relies purely on cookies (needs CSRF/CSWSH mitigation).
+- [x] Dashboard route layout has no client-side auth guard (`apps/dashboard/src/routes/_dashboard.tsx`).
+- [x] Backup UI exposes restore functionality which lacks backend authorization.
 
 ### TODOs/Placeholders/Stale Values
 
-- [ ] Implement CLI `status` functionality.
-- [ ] Update MCP version from hardcoded `1.0.0` (`internal/http/bridge.go:90`).
-- [ ] Update Bootstrap server hardcoded version `0.1.0`.
-- [ ] Implement "future" worker log streaming behavior (`internal/engine/worker_hub.go:120`).
-- [ ] Refactor large files exceeding 350 lines (e.g., `git_service.go`, `app_services.go`, `github-integration.tsx`).
+- [x] Implement CLI `status` functionality.
+- [x] Update MCP version from hardcoded `1.0.0` (`internal/http/bridge.go:90`).
+- [x] Update Bootstrap server hardcoded version `0.1.0`.
+- [x] Implement "future" worker log streaming behavior (`internal/engine/worker_hub.go:120`).
+- [x] Refactor large files exceeding 350 lines (e.g., `git_service.go`, `app_services.go`, `github-integration.tsx`).
 
 ## 5. Structural Cleanup & Domain Boundaries
 
@@ -118,6 +118,5 @@ The React dashboard structure is generally good, but suffers from inconsistent d
 - [ ] **Feature Granularity:** `features/instance/` is too broad. Split into `features/settings/`, `backups/`, `dns/`, `notifications/`, `users/`, `registries/`.
 - [ ] **Fix Kebab-case Naming:** Rename files violating conventions (e.g., `authStore.ts` -> `auth-store.ts`, `useAuth.ts` -> `use-auth.ts`, `apiClient.ts` -> `api-client.ts`).
 - [ ] **API Client Refactor:** Separate token/auth refresh behavior from `api-client.ts` so it isn't overly central.
-- [ ] **Route Protection:** Centralize route protection in the dashboard layout or router context, rather than relying on API failures to trigger redirects.
-- [ ] **Build Artifacts:** Stop tracking `tsconfig.tsbuildinfo` in the dashboard directory.
-- [ ] **Generated Files:** `routeTree.gen.ts` and UI primitives (`components/ui/`) should not be manually modified unless strictly necessary.
+- [x] **Route Protection:** Centralize route protection in the dashboard layout or router context, rather than relying on API failures to trigger redirects.
+- [x] **Build Artifacts:** Stop tracking `tsconfig.tsbuildinfo` in the dashboard directory.

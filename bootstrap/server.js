@@ -7,6 +7,21 @@ const SCRIPTS = new Set(['/install.sh', '/upgrade.sh', '/cli']);
 const POSTHOG_KEY = process.env.POSTHOG_API_KEY;
 const POSTHOG_HOST = process.env.POSTHOG_HOST || 'https://us.i.posthog.com';
 
+function getVersion() {
+  if (process.env.CODEDOCK_VERSION) return process.env.CODEDOCK_VERSION;
+  if (process.env.VERSION) return process.env.VERSION;
+  try {
+    const pkgPath = path.resolve(__dirname, '../package.json');
+    if (fs.existsSync(pkgPath)) {
+      const pkg = JSON.parse(fs.readFileSync(pkgPath, 'utf8'));
+      if (pkg.version) return pkg.version;
+    }
+  } catch (e) {
+    // ignore
+  }
+  return '0.1.0';
+}
+
 function trackEvent(eventName, req) {
   if (!POSTHOG_KEY) return;
   const ip = req.headers['x-forwarded-for'] || req.socket.remoteAddress;
@@ -30,7 +45,7 @@ function trackEvent(eventName, req) {
 const server = http.createServer((req, res) => {
   if (req.url === '/version') {
     res.writeHead(200, { 'Content-Type': 'application/json' });
-    res.end(JSON.stringify({ version: '0.1.0', latest: true }));
+    res.end(JSON.stringify({ version: getVersion(), latest: true }));
     return;
   }
 

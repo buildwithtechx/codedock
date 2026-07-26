@@ -338,13 +338,31 @@ func (h *BackupHandler) Restore(c echo.Context) error {
 	}
 
 	rec, err := h.backupService.GetRecord(c.Request().Context(), id)
-	if err == nil && rec != nil {
-		cfg, err := h.backupService.GetConfig(c.Request().Context(), rec.BackupConfigID)
-		if err == nil && cfg != nil {
-			if !h.hasAccess(c, cfg.DatabaseID, cfg.ServiceID) {
-				return utils.Error(c, http.StatusForbidden, "insufficient permissions to restore this backup")
-			}
+	if err != nil {
+		var notFound *utils.NotFoundError
+		if !errors.As(err, &notFound) {
+			return utils.Error(c, http.StatusInternalServerError, "failed to get backup record: "+err.Error())
 		}
+		return utils.Error(c, http.StatusNotFound, "backup record not found")
+	}
+	if rec == nil {
+		return utils.Error(c, http.StatusNotFound, "backup record not found")
+	}
+
+	cfg, err := h.backupService.GetConfig(c.Request().Context(), rec.BackupConfigID)
+	if err != nil {
+		var notFound *utils.NotFoundError
+		if !errors.As(err, &notFound) {
+			return utils.Error(c, http.StatusInternalServerError, "failed to get backup config: "+err.Error())
+		}
+		return utils.Error(c, http.StatusNotFound, "backup config not found")
+	}
+	if cfg == nil {
+		return utils.Error(c, http.StatusNotFound, "backup config not found")
+	}
+
+	if !h.hasAccess(c, cfg.DatabaseID, cfg.ServiceID) {
+		return utils.Error(c, http.StatusForbidden, "insufficient permissions to restore this backup")
 	}
 
 	err = h.backupService.RestoreBackup(c.Request().Context(), id)

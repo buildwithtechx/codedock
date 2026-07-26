@@ -12,8 +12,8 @@ func IsIPAllowed(clientIPStr string, allowlistStr string) bool {
 	if clientIP == nil {
 		return false
 	}
-	entries := strings.Split(allowlistStr, ",")
-	for _, entry := range entries {
+	entries := strings.SplitSeq(allowlistStr, ",")
+	for entry := range entries {
 		entry = strings.TrimSpace(entry)
 		if entry == "" {
 			continue
@@ -40,6 +40,16 @@ func ExtractTokenFromRequest(c echo.Context) string {
 	authHeader := c.Request().Header.Get("Authorization")
 	if authHeader != "" && strings.HasPrefix(authHeader, "Bearer ") {
 		return strings.TrimSpace(strings.TrimPrefix(authHeader, "Bearer "))
+	}
+	if wsProtocols := c.Request().Header.Get("Sec-WebSocket-Protocol"); wsProtocols != "" {
+		parts := strings.Split(wsProtocols, ",")
+		for i := 0; i < len(parts)-1; i++ {
+			key := strings.TrimSpace(strings.ToLower(parts[i]))
+			val := strings.TrimSpace(parts[i+1])
+			if (key == "auth" || key == "bearer" || key == "token") && val != "" {
+				return val
+			}
+		}
 	}
 	cookie, err := c.Cookie("codedock_token")
 	if err == nil && cookie.Value != "" {

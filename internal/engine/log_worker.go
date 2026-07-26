@@ -121,6 +121,11 @@ func (w *LogWorker) tailContainerLogs(ctx context.Context, containerID, serviceI
 	scanner := bufio.NewScanner(pipeReader)
 	for scanner.Scan() {
 		line := scanner.Text()
+		lineBytes := []byte(line + "\r\n")
+		GlobalUILogStreamHub.Broadcast(containerID, lineBytes)
+		if serviceID != "" && serviceID != "unknown" {
+			GlobalUILogStreamHub.Broadcast(serviceID, lineBytes)
+		}
 		w.pushToLoki(containerID, serviceID, line)
 	}
 }
