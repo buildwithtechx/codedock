@@ -14,7 +14,7 @@ import {
 } from '#/components/ui/dialog';
 import { Input } from '#/components/ui/input';
 import { Label } from '#/components/ui/label';
-import { apiClient } from '#/lib/apiClient';
+import { apiClient } from '#/lib/api-client';
 
 interface RowEditorModalProps {
   isOpen: boolean;

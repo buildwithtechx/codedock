@@ -22,7 +22,7 @@ import {
 } from '#/components/ui/select';
 import { Switch } from '#/components/ui/switch';
 import type { CreateDatabaseResponse, DatabaseEngine } from '#/interfaces/database';
-import { apiClient } from '#/lib/apiClient';
+import { apiClient } from '#/lib/api-client';
 
 const engines: { label: string; value: DatabaseEngine }[] = [
   { label: 'PostgreSQL', value: 'postgres' },

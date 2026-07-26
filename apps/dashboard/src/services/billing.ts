@@ -1,4 +1,4 @@
-import { apiClient } from '#/lib/apiClient';
+import { apiClient } from '#/lib/api-client';
 
 export interface BillingConfig {
   publishableKey: string;

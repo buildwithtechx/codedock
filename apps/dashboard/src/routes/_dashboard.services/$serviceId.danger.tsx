@@ -2,13 +2,13 @@ import { createFileRoute, useNavigate } from '@tanstack/react-router';
 import { PowerOff, RefreshCw, Trash2 } from 'lucide-react';
 import { toast } from 'sonner';
 import { Button } from '#/components/ui/button';
-import { useDeleteApp, useGetApp, useRestartApp, useStopApp } from '#/hooks/useApps';
+import { useDeleteApp, useGetApp, useRestartApp, useStopApp } from '#/hooks/use-apps';
 import {
   useDeleteDatabase,
   useGetDatabase,
   useRestartDatabase,
   useStopDatabase,
-} from '#/hooks/useDatabases';
+} from '#/hooks/use-databases';
 
 export const Route = createFileRoute('/_dashboard/services/$serviceId/danger')({
   component: DangerZoneRoute,

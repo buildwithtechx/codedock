@@ -11,7 +11,7 @@ import type {
   CreatePATResponseType,
   PersonalAccessToken,
 } from '#/interfaces/users';
-import { apiClient } from '#/lib/apiClient';
+import { apiClient } from '#/lib/api-client';
 import { handleApiError } from '#/lib/error';
 
 type ListPATsResponse = BaseResponse<PersonalAccessToken[]>;

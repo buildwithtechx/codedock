@@ -8,7 +8,7 @@ import { z } from 'zod';
 import { Button } from '#/components/ui/button';
 import { Input } from '#/components/ui/input';
 import { Switch } from '#/components/ui/switch';
-import { useCreateVariable, useDeleteVariable, useListVariables } from '#/hooks/useApps';
+import { useCreateVariable, useDeleteVariable, useListVariables } from '#/hooks/use-apps';
 
 export const Route = createFileRoute('/_dashboard/services/$serviceId/variables')({
   component: VariablesTab,

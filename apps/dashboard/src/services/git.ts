@@ -5,7 +5,7 @@ import type {
   ListGitBranchesResponse,
   ListGitReposResponse,
 } from '#/interfaces/git';
-import { apiClient } from '#/lib/apiClient';
+import { apiClient } from '#/lib/api-client';
 import { handleApiError } from '#/lib/error';
 
 export const gitService = {

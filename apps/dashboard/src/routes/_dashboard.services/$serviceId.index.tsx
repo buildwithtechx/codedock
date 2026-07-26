@@ -12,8 +12,8 @@ import { RedisKeyBrowser } from '#/features/databases/redis-key-browser';
 import { HealthcheckCard } from '#/features/services/healthcheck-card';
 import { MaintenanceModeCard } from '#/features/services/maintenance-mode-card';
 import { RuntimeModeCard } from '#/features/services/runtime-mode-card';
-import { useGetApp } from '#/hooks/useApps';
-import { useGetDatabase } from '#/hooks/useDatabases';
+import { useGetApp } from '#/hooks/use-apps';
+import { useGetDatabase } from '#/hooks/use-databases';
 
 export const Route = createFileRoute('/_dashboard/services/$serviceId/')({
   component: ServiceIndexRoute,

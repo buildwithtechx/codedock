@@ -1,5 +1,5 @@
 import { Loader2 } from 'lucide-react';
-import { useListByService } from '#/hooks/useDeployments';
+import { useListByService } from '#/hooks/use-deployments';
 import { DeploymentFailureAi } from './deployment-failure-ai';
 
 export function ServiceDeployments({ app }: { app: any }) {

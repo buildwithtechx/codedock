@@ -11,8 +11,8 @@ import {
   SelectTrigger,
   SelectValue,
 } from '#/components/ui/select';
-import { useGetApp } from '#/hooks/useApps';
-import { useGetCode, useSaveCode } from '#/hooks/useServerless';
+import { useGetApp } from '#/hooks/use-apps';
+import { useGetCode, useSaveCode } from '#/hooks/use-serverless';
 
 const TEMPLATES: Record<string, string> = {
   nodejs: `module.exports = async (req, res) => {

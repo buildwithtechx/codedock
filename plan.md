@@ -116,7 +116,7 @@ The React dashboard structure is generally good, but suffers from inconsistent d
 
 - [ ] **Colocate Domain Concepts:** `services/`, `hooks/`, and `interfaces/` duplicate domain concepts. Colocate them within `features/<domain>/` (e.g., `features/projects/api.ts`, `hooks.ts`, `types.ts`).
 - [ ] **Feature Granularity:** `features/instance/` is too broad. Split into `features/settings/`, `backups/`, `dns/`, `notifications/`, `users/`, `registries/`.
-- [ ] **Fix Kebab-case Naming:** Rename files violating conventions (e.g., `authStore.ts` -> `auth-store.ts`, `useAuth.ts` -> `use-auth.ts`, `apiClient.ts` -> `api-client.ts`).
-- [ ] **API Client Refactor:** Separate token/auth refresh behavior from `api-client.ts` so it isn't overly central.
+- [x] **Fix Kebab-case Naming:** Rename files violating conventions (e.g., `authStore.ts` -> `auth-store.ts`, `useAuth.ts` -> `use-auth.ts`, `apiClient.ts` -> `api-client.ts`).
+- [x] **API Client Refactor:** Separate token/auth refresh behavior from `api-client.ts` so it isn't overly central.
 - [x] **Route Protection:** Centralize route protection in the dashboard layout or router context, rather than relying on API failures to trigger redirects.
 - [x] **Build Artifacts:** Stop tracking `tsconfig.tsbuildinfo` in the dashboard directory.

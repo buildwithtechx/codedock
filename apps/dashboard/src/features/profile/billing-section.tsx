@@ -1,8 +1,8 @@
 import { CreditCard, Loader2 } from 'lucide-react';
 import { Button } from '#/components/ui/button';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '#/components/ui/card';
-import { useBillingConfig, useCreateCheckoutSession } from '#/hooks/useBilling';
-import { useAuthStore } from '#/stores/authStore';
+import { useBillingConfig, useCreateCheckoutSession } from '#/hooks/use-billing';
+import { useAuthStore } from '#/stores/auth-store';
 
 export function BillingSection() {
   const user = useAuthStore((s) => s.user);

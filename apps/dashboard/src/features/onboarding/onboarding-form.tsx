@@ -11,8 +11,8 @@ import {
 } from 'lucide-react';
 import { FormProvider, useForm } from 'react-hook-form';
 import { Button } from '#/components/ui/button';
-import { useSetup } from '#/hooks/useAuth';
-import { useOnboardingStore } from '#/stores/onboardingStore';
+import { useSetup } from '#/hooks/use-auth';
+import { useOnboardingStore } from '#/stores/onboarding-store';
 import { ImportModal, type SetupSchema, StepDomain, StepOwner, StepRuntime, setupSchema } from '.';
 
 export const OnboardingForm = ({ cwd }: { cwd?: string }) => {

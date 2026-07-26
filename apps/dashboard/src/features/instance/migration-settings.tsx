@@ -4,7 +4,7 @@ import { toast } from 'sonner';
 import { Button } from '#/components/ui/button';
 import { Input } from '#/components/ui/input';
 import { Row, Section } from '#/components/ui/section';
-import { useExportSystem } from '#/hooks/useSystem';
+import { useExportSystem } from '#/hooks/use-system';
 
 export function MigrationSettings() {
   const [passphrase, setPassphrase] = useState('');

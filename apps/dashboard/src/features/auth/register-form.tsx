@@ -6,7 +6,7 @@ import { z } from 'zod';
 import { Button } from '#/components/ui/button';
 import { Input } from '#/components/ui/input';
 import { Label } from '#/components/ui/label';
-import { useRegister } from '#/hooks/useAuth';
+import { useRegister } from '#/hooks/use-auth';
 
 const registerSchema = z.object({
   name: z.string().min(2, 'Name must be at least 2 characters'),

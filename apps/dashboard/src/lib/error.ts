@@ -1,4 +1,4 @@
-import { ApiError } from '#/lib/apiClient';
+import { ApiError } from '#/lib/api-client';
 
 export class CodedockError extends Error {
   public status: number;

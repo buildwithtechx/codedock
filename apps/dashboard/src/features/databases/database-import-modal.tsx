@@ -14,7 +14,7 @@ import {
 import { Input } from '#/components/ui/input';
 import { Label } from '#/components/ui/label';
 import type { ImportDatabaseResponse } from '#/interfaces/database';
-import { apiClient } from '#/lib/apiClient';
+import { apiClient } from '#/lib/api-client';
 
 const schema = z.object({
   sourceUrl: z.string().min(1, 'Source URL is required').url('Must be a valid URL'),

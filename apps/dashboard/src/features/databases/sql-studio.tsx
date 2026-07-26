@@ -15,7 +15,7 @@ import {
   TableHeader,
   TableRow,
 } from '#/components/ui/table';
-import { apiClient } from '#/lib/apiClient';
+import { apiClient } from '#/lib/api-client';
 
 interface SqlStudioProps {
   databaseId: string;

@@ -10,7 +10,7 @@ import {
   useGetNotificationSettings,
   useTestNotification,
   useUpdateNotificationSettings,
-} from '#/hooks/useSettings';
+} from '#/hooks/use-settings';
 import type { ServerSettings } from '#/interfaces/settings';
 
 type NotifSettings = Pick<

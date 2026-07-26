@@ -17,9 +17,9 @@ import {
   TableHeader,
   TableRow,
 } from '#/components/ui/table';
-import { useListByProject } from '#/hooks/useApps';
-import { useListByService } from '#/hooks/useDeployments';
-import { useListProjects } from '#/hooks/useProjects';
+import { useListByProject } from '#/hooks/use-apps';
+import { useListByService } from '#/hooks/use-deployments';
+import { useListProjects } from '#/hooks/use-projects';
 
 export const Route = createFileRoute('/_dashboard/deployments')({
   component: DeploymentsPage,

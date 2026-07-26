@@ -10,7 +10,7 @@ import type {
   ListTablesResponse,
   TableRowPayload,
 } from '#/interfaces/database';
-import { apiClient } from '#/lib/apiClient';
+import { apiClient } from '#/lib/api-client';
 import { handleApiError } from '#/lib/error';
 
 export const databasesService = {

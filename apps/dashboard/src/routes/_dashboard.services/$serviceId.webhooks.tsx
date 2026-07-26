@@ -6,7 +6,7 @@ import { v4 as uuidv4 } from 'uuid';
 import { Button } from '#/components/ui/button';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '#/components/ui/card';
 import { Input } from '#/components/ui/input';
-import { useGetApp, useUpdateApp } from '#/hooks/useApps';
+import { useGetApp, useUpdateApp } from '#/hooks/use-apps';
 
 export const Route = createFileRoute('/_dashboard/services/$serviceId/webhooks')({
   component: WebhooksRoute,

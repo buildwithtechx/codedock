@@ -13,7 +13,7 @@ import type {
   Verify2FARequest,
   Verify2FAResponse,
 } from '#/interfaces/auth';
-import { apiClient } from '#/lib/apiClient';
+import { apiClient } from '#/lib/api-client';
 import { handleApiError } from '#/lib/error';
 
 export const authService = {

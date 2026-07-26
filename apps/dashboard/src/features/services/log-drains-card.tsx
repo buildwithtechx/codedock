@@ -22,7 +22,7 @@ import {
   SelectTrigger,
   SelectValue,
 } from '#/components/ui/select';
-import { useCreateLogDrain, useDeleteLogDrain, useListLogDrains } from '#/hooks/useApps';
+import { useCreateLogDrain, useDeleteLogDrain, useListLogDrains } from '#/hooks/use-apps';
 
 export function LogDrainsCard({ serviceId }: { serviceId: string }) {
   const { data: drains, isLoading } = useListLogDrains(serviceId);

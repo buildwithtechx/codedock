@@ -5,7 +5,7 @@ import { toast } from 'sonner';
 
 import { Button } from '#/components/ui/button';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '#/components/ui/card';
-import { useAnalyzeCompose, useDeployCompose } from '#/hooks/useCompose';
+import { useAnalyzeCompose, useDeployCompose } from '#/hooks/use-compose';
 import type { ComposeAnalyzeResponse } from '#/services/compose';
 
 export function ComposeDeployForm({ projectId }: { projectId: string }) {

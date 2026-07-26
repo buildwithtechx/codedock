@@ -14,7 +14,7 @@ import {
 } from '#/components/ui/dialog';
 import { Input } from '#/components/ui/input';
 import { Progress } from '#/components/ui/progress';
-import { useCreateServer, useListServers } from '#/hooks/useServers';
+import { useCreateServer, useListServers } from '#/hooks/use-servers';
 import type { Server } from '#/interfaces/server';
 
 export const Route = createFileRoute('/_dashboard/servers')({

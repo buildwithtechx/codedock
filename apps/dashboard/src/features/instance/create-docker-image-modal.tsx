@@ -12,8 +12,8 @@ import {
 } from '#/components/ui/dialog';
 import { Input } from '#/components/ui/input';
 import { Label } from '#/components/ui/label';
-import { useCreateApp } from '#/hooks/useApps';
-import { useListByProject as useListEnvironments } from '#/hooks/useEnvironments';
+import { useCreateApp } from '#/hooks/use-apps';
+import { useListByProject as useListEnvironments } from '#/hooks/use-environments';
 
 const schema = z.object({
   name: z.string().min(1, 'Name is required'),

@@ -15,8 +15,8 @@ import {
   TableHeader,
   TableRow,
 } from '#/components/ui/table';
-import { useGetApp } from '#/hooks/useApps';
-import { apiClient } from '#/lib/apiClient';
+import { useGetApp } from '#/hooks/use-apps';
+import { apiClient } from '#/lib/api-client';
 
 export const Route = createFileRoute('/_dashboard/services/$serviceId/scheduled-tasks')({
   component: ServiceJobsRoute,

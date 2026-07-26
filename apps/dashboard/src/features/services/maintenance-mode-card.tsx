@@ -2,7 +2,7 @@ import { Loader2, Wrench } from 'lucide-react';
 import { toast } from 'sonner';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '#/components/ui/card';
 import { Switch } from '#/components/ui/switch';
-import { useGetApp, useRedeployApp, useUpdateApp } from '#/hooks/useApps';
+import { useGetApp, useRedeployApp, useUpdateApp } from '#/hooks/use-apps';
 
 export function MaintenanceModeCard({ serviceId }: { serviceId: string }) {
   const { data: appData, isLoading } = useGetApp(serviceId);

@@ -3,7 +3,7 @@ import { Cpu, HardDrive, Loader2, MemoryStick, ServerIcon } from 'lucide-react';
 import { useEffect, useMemo, useState } from 'react';
 import { env } from '#/env';
 import { MetricChartCard } from '#/features/services/metric-chart-card';
-import { useListServers } from '#/hooks/useServers';
+import { useListServers } from '#/hooks/use-servers';
 
 export const Route = createFileRoute('/_dashboard/servers/$serverId')({
   component: ServerDetailsPage,

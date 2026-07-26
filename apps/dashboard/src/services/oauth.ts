@@ -4,7 +4,7 @@ import type {
   SaveOAuthProviderRequest,
   SaveOAuthProviderResponse,
 } from '#/interfaces/oauth';
-import { apiClient } from '#/lib/apiClient';
+import { apiClient } from '#/lib/api-client';
 import { handleApiError } from '#/lib/error';
 
 export const oauthService = {

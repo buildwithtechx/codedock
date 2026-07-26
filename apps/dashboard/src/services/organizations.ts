@@ -6,7 +6,7 @@ import type {
   OrganizationMember,
   UpdateOrganizationMemberRequest,
 } from '#/interfaces/organization';
-import { apiClient } from '#/lib/apiClient';
+import { apiClient } from '#/lib/api-client';
 import { handleApiError } from '#/lib/error';
 
 export const orgService = {

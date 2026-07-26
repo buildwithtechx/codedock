@@ -1,6 +1,6 @@
 import type { BaseResponse, PaginatedData } from '#/interfaces/base';
 import type { User } from '#/interfaces/users';
-import { apiClient } from '#/lib/apiClient';
+import { apiClient } from '#/lib/api-client';
 import { handleApiError } from '#/lib/error';
 
 export const usersService = {

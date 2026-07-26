@@ -2,7 +2,7 @@ import { createFileRoute } from '@tanstack/react-router';
 import { Loader2 } from 'lucide-react';
 import { BuildSettings } from '#/features/services/build-settings';
 import { ResourceLimitsCard } from '#/features/services/resource-limits-card';
-import { useGetApp } from '#/hooks/useApps';
+import { useGetApp } from '#/hooks/use-apps';
 
 export const Route = createFileRoute('/_dashboard/services/$serviceId/build')({
   component: ServiceBuildRoute,

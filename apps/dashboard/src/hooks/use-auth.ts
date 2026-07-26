@@ -2,7 +2,7 @@ import { useMutation, useQueryClient } from '@tanstack/react-query';
 import { useRouter } from '@tanstack/react-router';
 import { toast } from 'sonner';
 import { authService } from '#/services/auth';
-import { useAuthStore } from '#/stores/authStore';
+import { useAuthStore } from '#/stores/auth-store';
 
 export const useLogin = () => {
   const queryClient = useQueryClient();

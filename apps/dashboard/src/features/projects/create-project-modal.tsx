@@ -18,9 +18,9 @@ import {
   SelectTrigger,
   SelectValue,
 } from '#/components/ui/select';
-import { useListOrganizations } from '#/hooks/useOrganizations';
-import { useCreateProject } from '#/hooks/useProjects';
-import { useListServers } from '#/hooks/useServers';
+import { useListOrganizations } from '#/hooks/use-organizations';
+import { useCreateProject } from '#/hooks/use-projects';
+import { useListServers } from '#/hooks/use-servers';
 
 export function CreateProjectModal({
   open,

@@ -9,7 +9,7 @@ import {
   TableHeader,
   TableRow,
 } from '#/components/ui/table';
-import { useAuditLogs } from '#/hooks/useAuditLogs';
+import { useAuditLogs } from '#/hooks/use-audit-logs';
 
 export const Route = createFileRoute('/_dashboard/audit-logs')({
   component: AuditLogsPage,

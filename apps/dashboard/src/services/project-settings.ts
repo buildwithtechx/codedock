@@ -6,7 +6,7 @@ import type {
   ProjectMember,
   ProjectToken,
 } from '#/interfaces/project';
-import { apiClient } from '#/lib/apiClient';
+import { apiClient } from '#/lib/api-client';
 import { handleApiError } from '#/lib/error';
 
 export interface ServiceWebhook {

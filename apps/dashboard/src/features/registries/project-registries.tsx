@@ -19,7 +19,7 @@ import {
   TableHeader,
   TableRow,
 } from '#/components/ui/table';
-import { useCreateRegistry, useDeleteRegistry, useListRegistries } from '#/hooks/useRegistries';
+import { useCreateRegistry, useDeleteRegistry, useListRegistries } from '#/hooks/use-registries';
 import type { Registry } from '#/interfaces/registry';
 
 export function ProjectRegistries({ projectId }: { projectId: string }) {

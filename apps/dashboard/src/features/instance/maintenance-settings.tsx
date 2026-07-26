@@ -3,7 +3,7 @@ import { useState } from 'react';
 import { toast } from 'sonner';
 import { Badge } from '#/components/ui/badge';
 import { Button } from '#/components/ui/button';
-import { useCleanupSystem, useGetSystemStats, useRestartSystem } from '#/hooks/useSystem';
+import { useCleanupSystem, useGetSystemStats, useRestartSystem } from '#/hooks/use-system';
 import { MaintenanceDialogs } from './components/maintenance-dialogs';
 
 const ProgressBar = ({ value, colorClass }: { value: number; colorClass: string }) => (

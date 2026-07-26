@@ -26,7 +26,7 @@ import {
   useRestore,
   useTrigger,
   useUpdate,
-} from '#/hooks/useBackups';
+} from '#/hooks/use-backups';
 
 export function BackupsList() {
   const { data: configsData, isLoading } = useList();

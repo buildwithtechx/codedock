@@ -3,7 +3,7 @@ import { Database } from 'lucide-react';
 import { Badge } from '#/components/ui/badge';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '#/components/ui/card';
 import type { GetDatabasesResponse } from '#/interfaces/database';
-import { apiClient } from '#/lib/apiClient';
+import { apiClient } from '#/lib/api-client';
 
 export function DatabaseList() {
   const { data, isLoading, error } = useQuery({

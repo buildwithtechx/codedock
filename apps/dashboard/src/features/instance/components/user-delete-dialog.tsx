@@ -8,7 +8,7 @@ import {
   DialogDescription,
   DialogTitle,
 } from '#/components/ui/dialog';
-import { useDeleteUser } from '#/hooks/useUsers';
+import { useDeleteUser } from '#/hooks/use-users';
 import type { User } from '#/interfaces/users';
 
 interface UserDeleteDialogProps {

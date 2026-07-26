@@ -11,7 +11,7 @@ import {
 } from '#/components/ui/dialog';
 import { Input } from '#/components/ui/input';
 import { Label } from '#/components/ui/label';
-import { useConnect, useDisconnect, useGetStatus } from '#/hooks/useGit';
+import { useConnect, useDisconnect, useGetStatus } from '#/hooks/use-git';
 
 const PROVIDERS = [
   { id: 'github', name: 'GitHub', icon: '/git-providers/github-icon.svg' },

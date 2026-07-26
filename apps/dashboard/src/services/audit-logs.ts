@@ -1,6 +1,6 @@
 import type { AuditLog } from '#/interfaces/audit';
 import type { BaseResponse } from '#/interfaces/base';
-import { apiClient } from '#/lib/apiClient';
+import { apiClient } from '#/lib/api-client';
 import { handleApiError } from '#/lib/error';
 
 export const auditLogsService = {

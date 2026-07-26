@@ -1,6 +1,6 @@
 import type { BaseResponse } from '#/interfaces/base';
 import type { GetHistoricalMetricsResponse } from '#/interfaces/metrics';
-import { apiClient } from '#/lib/apiClient';
+import { apiClient } from '#/lib/api-client';
 import { handleApiError } from '#/lib/error';
 
 export const metricsService = {

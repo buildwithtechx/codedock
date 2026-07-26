@@ -29,7 +29,7 @@ import {
   useCreateS3Destination,
   useDeleteS3Destination,
   useListS3Destinations,
-} from '#/hooks/useBackups';
+} from '#/hooks/use-backups';
 
 export function S3DestinationsList() {
   const [isOpen, setIsOpen] = useState(false);

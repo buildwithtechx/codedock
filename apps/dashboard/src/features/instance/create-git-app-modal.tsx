@@ -19,9 +19,9 @@ import {
   SelectTrigger,
   SelectValue,
 } from '#/components/ui/select';
-import { useCreateApp } from '#/hooks/useApps';
-import { useListByProject as useListEnvironments } from '#/hooks/useEnvironments';
-import { useGitStatus, useListGitRepos } from '#/hooks/useGit';
+import { useCreateApp } from '#/hooks/use-apps';
+import { useListByProject as useListEnvironments } from '#/hooks/use-environments';
+import { useGitStatus, useListGitRepos } from '#/hooks/use-git';
 import type { BuildEngine } from '#/interfaces/deployment';
 
 const schema = z.object({

@@ -19,8 +19,8 @@ import {
   TableHeader,
   TableRow,
 } from '#/components/ui/table';
-import { useGetProfile } from '#/hooks/useProfile';
-import { useAddMember, useListMembers, useRemoveMember } from '#/hooks/useProjectSettings';
+import { useGetProfile } from '#/hooks/use-profile';
+import { useAddMember, useListMembers, useRemoveMember } from '#/hooks/use-project-settings';
 
 export function ProjectMembers({ projectId }: { projectId: string }) {
   const { data: members, isLoading } = useListMembers(projectId);

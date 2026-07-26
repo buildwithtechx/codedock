@@ -9,7 +9,7 @@ import type {
   TriggerDeploymentRequest,
   TriggerDeploymentResponse,
 } from '#/interfaces/deployment';
-import { apiClient } from '#/lib/apiClient';
+import { apiClient } from '#/lib/api-client';
 import { handleApiError } from '#/lib/error';
 
 export const deploymentsService = {

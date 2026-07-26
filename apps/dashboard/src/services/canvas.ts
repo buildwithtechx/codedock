@@ -1,6 +1,6 @@
 import type { BaseResponse } from '#/interfaces/base';
 import type { CanvasSummary, EnvironmentCanvas } from '#/interfaces/project';
-import { apiClient } from '#/lib/apiClient';
+import { apiClient } from '#/lib/api-client';
 import { handleApiError } from '#/lib/error';
 
 export const canvasService = {

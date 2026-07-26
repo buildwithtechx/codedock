@@ -21,7 +21,7 @@ import {
   TableHeader,
   TableRow,
 } from '#/components/ui/table';
-import { useCreateToken, useDeleteToken, useListTokens } from '#/hooks/useProfile';
+import { useCreateToken, useDeleteToken, useListTokens } from '#/hooks/use-profile';
 
 export function AccessTokensList() {
   const { data: response, isLoading } = useListTokens();

@@ -1,6 +1,6 @@
 import { createFileRoute } from '@tanstack/react-router';
 import { EnvironmentCanvas } from '#/features/canvas/environment-canvas';
-import { useGetCanvasSummary, useGetEnvironmentCanvas } from '#/hooks/useCanvas';
+import { useGetCanvasSummary, useGetEnvironmentCanvas } from '#/hooks/use-canvas';
 
 export const Route = createFileRoute('/_dashboard/projects/$projectId/canvas')({
   component: CanvasRouteComponent,

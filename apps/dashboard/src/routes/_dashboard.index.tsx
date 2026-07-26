@@ -4,7 +4,7 @@ import { useState } from 'react';
 import { Button } from '#/components/ui/button';
 import { CreateProjectModal } from '#/features/projects/create-project-modal';
 import { ProjectCard } from '#/features/projects/project-card';
-import { useListCanvasSummaries } from '#/hooks/useCanvas';
+import { useListCanvasSummaries } from '#/hooks/use-canvas';
 
 export const Route = createFileRoute('/_dashboard/')({
   component: DashboardIndex,

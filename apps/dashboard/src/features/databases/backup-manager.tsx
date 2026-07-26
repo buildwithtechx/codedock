@@ -1,5 +1,5 @@
 import { Loader2 } from 'lucide-react';
-import { useList } from '#/hooks/useBackups';
+import { useList } from '#/hooks/use-backups';
 
 export function BackupManager({ database }: { database: any }) {
   const { data, isLoading } = useList();

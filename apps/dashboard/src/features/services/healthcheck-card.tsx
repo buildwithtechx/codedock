@@ -5,7 +5,7 @@ import { Button } from '#/components/ui/button';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '#/components/ui/card';
 import { Input } from '#/components/ui/input';
 import { Label } from '#/components/ui/label';
-import { useGetApp, useUpdateApp } from '#/hooks/useApps';
+import { useGetApp, useUpdateApp } from '#/hooks/use-apps';
 
 export function HealthcheckCard({ serviceId }: { serviceId: string }) {
   const queryClient = useQueryClient();

@@ -2,7 +2,7 @@ import { AlertCircle, Bot, Code2, Loader2, Terminal } from 'lucide-react';
 import { useState } from 'react';
 import { Alert, AlertDescription, AlertTitle } from '#/components/ui/alert';
 import { Button } from '#/components/ui/button';
-import { useExplainFailure } from '#/hooks/useDeployments';
+import { useExplainFailure } from '#/hooks/use-deployments';
 
 interface DeploymentFailureAiProps {
   deploymentId: string;

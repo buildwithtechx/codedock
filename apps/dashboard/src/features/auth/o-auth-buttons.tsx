@@ -1,5 +1,5 @@
 import { Button } from '#/components/ui/button';
-import { useEnabledOAuthProviders } from '#/hooks/useOAuth';
+import { useEnabledOAuthProviders } from '#/hooks/use-oauth';
 import { oauthService } from '#/services/oauth';
 
 export const OAuthButtons = () => {

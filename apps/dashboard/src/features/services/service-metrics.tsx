@@ -2,8 +2,8 @@ import { Activity, Cpu, HardDrive, Network, RefreshCw } from 'lucide-react';
 import { useState } from 'react';
 import { Button } from '#/components/ui/button';
 import { Card, CardContent } from '#/components/ui/card';
-import { useGetMetrics } from '#/hooks/useDeployments';
-import { useHistoricalMetrics } from '#/hooks/useMetrics';
+import { useGetMetrics } from '#/hooks/use-deployments';
+import { useHistoricalMetrics } from '#/hooks/use-metrics';
 import { MetricChartCard } from './metric-chart-card';
 import { formatBytes, formatBytesPerSec, getLatestValue, parseMetricSeries } from './metrics-utils';
 

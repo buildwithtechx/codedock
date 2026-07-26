@@ -19,8 +19,8 @@ import {
 } from 'lucide-react';
 import { Button } from '#/components/ui/button';
 import { ServiceIcon } from '#/components/ui/service-icon';
-import { useGetApp } from '#/hooks/useApps';
-import { useGetDatabase } from '#/hooks/useDatabases';
+import { useGetApp } from '#/hooks/use-apps';
+import { useGetDatabase } from '#/hooks/use-databases';
 
 export const Route = createFileRoute('/_dashboard/services/$serviceId')({
   component: ServiceLayoutRoute,

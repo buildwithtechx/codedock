@@ -1,6 +1,6 @@
 import { createFileRoute, useNavigate } from '@tanstack/react-router';
 import { ResetPasswordForm } from '#/features/auth/reset-password-form';
-import { useSystemStore } from '#/stores/systemStore';
+import { useSystemStore } from '#/stores/system-store';
 
 export const Route = createFileRoute('/_auth/reset-password')({
   validateSearch: (search: Record<string, unknown>) => {

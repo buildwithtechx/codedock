@@ -22,7 +22,7 @@ import {
   TableRow,
 } from '#/components/ui/table';
 import { RowEditorModal } from '#/features/databases/row-editor-modal';
-import { apiClient } from '#/lib/apiClient';
+import { apiClient } from '#/lib/api-client';
 
 interface TableDataGridProps {
   databaseId: string;

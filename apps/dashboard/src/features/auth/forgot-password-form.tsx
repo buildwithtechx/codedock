@@ -4,7 +4,7 @@ import { useState } from 'react';
 import { Button } from '#/components/ui/button';
 import { Input } from '#/components/ui/input';
 import { Label } from '#/components/ui/label';
-import { useForgotPassword } from '#/hooks/useAuth';
+import { useForgotPassword } from '#/hooks/use-auth';
 
 export const ForgotPasswordForm = () => {
   const [email, setEmail] = useState('');

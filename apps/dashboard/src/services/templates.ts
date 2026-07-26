@@ -5,7 +5,7 @@ import type {
   OneClickDeployRequest,
   OneClickDeployResponse,
 } from '#/interfaces/templates';
-import { apiClient } from '#/lib/apiClient';
+import { apiClient } from '#/lib/api-client';
 import { handleApiError } from '#/lib/error';
 
 export const templatesService = {
