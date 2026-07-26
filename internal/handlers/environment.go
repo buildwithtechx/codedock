@@ -12,11 +12,32 @@ import (
 )
 
 type EnvironmentHandler struct {
-	envService *services.EnvironmentService
+	envService     *services.EnvironmentService
+	projectService *services.ProjectService
 }
 
-func NewEnvironmentHandler(s *services.EnvironmentService) *EnvironmentHandler {
-	return &EnvironmentHandler{envService: s}
+func NewEnvironmentHandler(s *services.EnvironmentService, proj *services.ProjectService) *EnvironmentHandler {
+	return &EnvironmentHandler{
+		envService:     s,
+		projectService: proj,
+	}
+}
+
+func (h *EnvironmentHandler) hasAccess(ctx echo.Context, projectID string) bool {
+	userClaims, ok := ctx.Get("user").(*models.UserClaims)
+	if !ok || userClaims == nil {
+		return false
+	}
+	if userClaims.Role == models.UserRoleAdmin || userClaims.Role == models.UserRoleOwner {
+		return true
+	}
+
+	if projectID == "" {
+		return false
+	}
+
+	hasPerm := h.projectService.HasPermission(ctx.Request().Context(), projectID, userClaims.UserID, userClaims.Role, models.MemberPermissionAdmin)
+	return hasPerm
 }
 
 func (h *EnvironmentHandler) ListByProject(c echo.Context) error {
@@ -56,6 +77,14 @@ func (h *EnvironmentHandler) Delete(c echo.Context) error {
 	if id == "" {
 		return utils.Error(c, http.StatusBadRequest, "missing id parameter")
 	}
+
+	env, err := h.envService.GetEnvironment(c.Request().Context(), id)
+	if err == nil && env != nil {
+		if !h.hasAccess(c, env.ProjectID) {
+			return utils.Error(c, http.StatusForbidden, "insufficient permissions")
+		}
+	}
+
 	if err := h.envService.DeleteEnvironment(c.Request().Context(), id); err != nil {
 		return utils.Error(c, http.StatusInternalServerError, err.Error())
 	}

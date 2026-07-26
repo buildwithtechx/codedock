@@ -159,12 +159,12 @@ func (s *Server) registerServerRoutes(apiGroup, authGroup *echo.Group) {
 func (s *Server) registerOrganizationRoutes(authGroup *echo.Group) {
 	authGroup.GET("/organizations", s.orgHandler.List)
 	authGroup.POST("/organizations", s.orgHandler.Create)
-	authGroup.GET("/organizations/:id", s.orgHandler.Get)
-	authGroup.DELETE("/organizations/:id", s.orgHandler.Delete)
-	authGroup.GET("/organizations/:id/members", s.orgHandler.ListMembers)
-	authGroup.POST("/organizations/:id/members", s.orgHandler.InviteMember)
-	authGroup.PUT("/organizations/:id/members/:userId", s.orgHandler.UpdateMember)
-	authGroup.DELETE("/organizations/:id/members/:memberId", s.orgHandler.RemoveMember)
+	authGroup.GET("/organizations/:id", s.orgHandler.Get, s.authGuard.RequireOrgRole(models.MemberPermissionMember))
+	authGroup.DELETE("/organizations/:id", s.orgHandler.Delete, s.authGuard.RequireOrgRole(models.MemberPermissionOwner))
+	authGroup.GET("/organizations/:id/members", s.orgHandler.ListMembers, s.authGuard.RequireOrgRole(models.MemberPermissionMember))
+	authGroup.POST("/organizations/:id/members", s.orgHandler.InviteMember, s.authGuard.RequireOrgRole(models.MemberPermissionAdmin))
+	authGroup.PUT("/organizations/:id/members/:userId", s.orgHandler.UpdateMember, s.authGuard.RequireOrgRole(models.MemberPermissionAdmin))
+	authGroup.DELETE("/organizations/:id/members/:memberId", s.orgHandler.RemoveMember, s.authGuard.RequireOrgRole(models.MemberPermissionAdmin))
 }
 
 func (s *Server) registerDatabaseRoutes(authGroup *echo.Group) {

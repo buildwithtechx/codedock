@@ -3,24 +3,40 @@ package handlers
 import (
 	"log/slog"
 	"net/http"
+	"net/url"
 
 	"codedock.run/codedock/internal/engine"
+	"codedock.run/codedock/internal/http/middleware"
+	"codedock.run/codedock/internal/models"
+	"codedock.run/codedock/internal/services"
 	"codedock.run/codedock/internal/utils"
 	"github.com/gorilla/websocket"
 	"github.com/labstack/echo/v4"
 )
 
 type ServerMetricsWSHandler struct {
-	upgrader websocket.Upgrader
+	upgrader      websocket.Upgrader
+	tokenService  *services.TokenService
+	serverService services.ServerService
 }
 
-func NewServerMetricsWSHandler() *ServerMetricsWSHandler {
+func NewServerMetricsWSHandler(ts *services.TokenService, ss services.ServerService) *ServerMetricsWSHandler {
 	return &ServerMetricsWSHandler{
 		upgrader: websocket.Upgrader{
 			CheckOrigin: func(r *http.Request) bool {
-				return true
+				origin := r.Header.Get("Origin")
+				if origin == "" {
+					return true
+				}
+				u, err := url.Parse(origin)
+				if err != nil {
+					return false
+				}
+				return u.Host == r.Host
 			},
 		},
+		tokenService:  ts,
+		serverService: ss,
 	}
 }
 
@@ -28,6 +44,34 @@ func (h *ServerMetricsWSHandler) Handle(c echo.Context) error {
 	serverID := c.Param("serverId")
 	if serverID == "" {
 		return utils.Error(c, http.StatusBadRequest, "missing serverId parameter")
+	}
+
+	if h.tokenService != nil {
+		tokenStr := middleware.ExtractTokenFromRequest(c)
+		if tokenStr == "" {
+			return utils.Error(c, http.StatusUnauthorized, "missing authentication token")
+		}
+
+		claimsMap, err := h.tokenService.ValidateToken(tokenStr)
+		if err != nil {
+			return utils.Error(c, http.StatusUnauthorized, "invalid authentication token")
+		}
+
+		userID, _ := claimsMap["sub"].(string)
+		role, _ := claimsMap["role"].(string)
+
+		if role != string(models.UserRoleAdmin) && role != string(models.UserRoleOwner) {
+			if h.serverService == nil {
+				return utils.Error(c, http.StatusInternalServerError, "server service not configured")
+			}
+			server, err := h.serverService.GetServer(c.Request().Context(), serverID)
+			if err != nil || server == nil {
+				return utils.Error(c, http.StatusNotFound, "server not found")
+			}
+			if server.UserID != userID {
+				return utils.Error(c, http.StatusForbidden, "insufficient permissions")
+			}
+		}
 	}
 
 	ws, err := h.upgrader.Upgrade(c.Response().Writer, c.Request(), nil)

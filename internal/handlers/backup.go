@@ -14,11 +14,47 @@ import (
 )
 
 type BackupHandler struct {
-	backupService *services.BackupService
+	backupService  *services.BackupService
+	appService     *services.AppService
+	dbService      *services.DatabaseService
+	projectService *services.ProjectService
 }
 
-func NewBackupHandler(s *services.BackupService) *BackupHandler {
-	return &BackupHandler{backupService: s}
+func NewBackupHandler(backup *services.BackupService, app *services.AppService, db *services.DatabaseService, proj *services.ProjectService) *BackupHandler {
+	return &BackupHandler{
+		backupService:  backup,
+		appService:     app,
+		dbService:      db,
+		projectService: proj,
+	}
+}
+
+func (h *BackupHandler) hasAccess(c echo.Context, databaseID, serviceID string) bool {
+	userClaims, ok := c.Get("user").(*models.UserClaims)
+	if !ok || userClaims == nil {
+		return false
+	}
+	if userClaims.Role == models.UserRoleAdmin || userClaims.Role == models.UserRoleOwner {
+		return true
+	}
+
+	var projectID string
+	if databaseID != "" {
+		db, err := h.dbService.GetDatabase(c.Request().Context(), databaseID)
+		if err == nil && db != nil {
+			projectID = db.ProjectID
+		}
+	} else if serviceID != "" {
+		app, err := h.appService.GetAppService(c.Request().Context(), serviceID)
+		if err == nil && app != nil {
+			projectID = app.ProjectID
+		}
+	}
+	if projectID == "" {
+		return false
+	}
+
+	return h.projectService.HasPermission(c.Request().Context(), projectID, userClaims.UserID, userClaims.Role, "")
 }
 
 func (h *BackupHandler) List(c echo.Context) error {
@@ -26,10 +62,15 @@ func (h *BackupHandler) List(c echo.Context) error {
 	if err != nil {
 		return utils.Error(c, http.StatusInternalServerError, err.Error())
 	}
-	for i := range list {
-		list[i].DbPassword = "********"
+
+	var filtered []*models.BackupConfig
+	for _, cfg := range list {
+		if h.hasAccess(c, cfg.DatabaseID, cfg.ServiceID) {
+			cfg.DbPassword = "********"
+			filtered = append(filtered, cfg)
+		}
 	}
-	return utils.Success(c, "Operation successful", list)
+	return utils.Success(c, "Operation successful", filtered)
 }
 
 func (h *BackupHandler) Create(c echo.Context) error {
@@ -37,6 +78,11 @@ func (h *BackupHandler) Create(c echo.Context) error {
 	if err := c.Bind(&cfg); err != nil {
 		return utils.Error(c, http.StatusBadRequest, "invalid payload")
 	}
+
+	if !h.hasAccess(c, cfg.DatabaseID, cfg.ServiceID) {
+		return utils.Error(c, http.StatusForbidden, "insufficient permissions to create backup for this resource")
+	}
+
 	if err := h.backupService.CreateConfig(c.Request().Context(), &cfg); err != nil {
 		return utils.Error(c, http.StatusInternalServerError, err.Error())
 	}
@@ -53,6 +99,10 @@ func (h *BackupHandler) Update(c echo.Context) error {
 			return utils.Error(c, http.StatusInternalServerError, "failed to get backup config")
 		}
 		return utils.Error(c, http.StatusNotFound, "backup config not found")
+	}
+
+	if !h.hasAccess(c, existing.DatabaseID, existing.ServiceID) {
+		return utils.Error(c, http.StatusForbidden, "insufficient permissions")
 	}
 
 	var req struct {
@@ -144,6 +194,10 @@ func (h *BackupHandler) Get(c echo.Context) error {
 		}
 		return utils.Error(c, http.StatusNotFound, "backup config not found")
 	}
+
+	if !h.hasAccess(c, cfg.DatabaseID, cfg.ServiceID) {
+		return utils.Error(c, http.StatusForbidden, "insufficient permissions")
+	}
 	cfg.DbPassword = "********"
 	return utils.Success(c, "Operation successful", cfg)
 }
@@ -153,6 +207,14 @@ func (h *BackupHandler) Delete(c echo.Context) error {
 	if id == "" {
 		return utils.Error(c, http.StatusBadRequest, "missing id")
 	}
+
+	cfg, err := h.backupService.GetConfig(c.Request().Context(), id)
+	if err == nil && cfg != nil {
+		if !h.hasAccess(c, cfg.DatabaseID, cfg.ServiceID) {
+			return utils.Error(c, http.StatusForbidden, "insufficient permissions")
+		}
+	}
+
 	if err := h.backupService.DeleteConfig(c.Request().Context(), id); err != nil {
 		return utils.Error(c, http.StatusInternalServerError, err.Error())
 	}
@@ -164,6 +226,14 @@ func (h *BackupHandler) Trigger(c echo.Context) error {
 	if id == "" {
 		return utils.Error(c, http.StatusBadRequest, "missing id parameter")
 	}
+
+	cfg, err := h.backupService.GetConfig(c.Request().Context(), id)
+	if err == nil && cfg != nil {
+		if !h.hasAccess(c, cfg.DatabaseID, cfg.ServiceID) {
+			return utils.Error(c, http.StatusForbidden, "insufficient permissions")
+		}
+	}
+
 	rec, err := h.backupService.TriggerBackup(c.Request().Context(), id)
 	if err != nil {
 		return utils.Error(c, http.StatusInternalServerError, err.Error())
@@ -176,6 +246,14 @@ func (h *BackupHandler) ListRecords(c echo.Context) error {
 	if id == "" {
 		return utils.Error(c, http.StatusBadRequest, "missing id parameter")
 	}
+
+	cfg, err := h.backupService.GetConfig(c.Request().Context(), id)
+	if err == nil && cfg != nil {
+		if !h.hasAccess(c, cfg.DatabaseID, cfg.ServiceID) {
+			return utils.Error(c, http.StatusForbidden, "insufficient permissions")
+		}
+	}
+
 	recs, err := h.backupService.ListRecordsByConfig(c.Request().Context(), id)
 	if err != nil {
 		return utils.Error(c, http.StatusInternalServerError, err.Error())
@@ -189,6 +267,14 @@ func (h *BackupHandler) DownloadRecord(c echo.Context) error {
 	if id == "" || recordID == "" {
 		return utils.Error(c, http.StatusBadRequest, "missing id or recordId parameter")
 	}
+
+	cfg, err := h.backupService.GetConfig(c.Request().Context(), id)
+	if err == nil && cfg != nil {
+		if !h.hasAccess(c, cfg.DatabaseID, cfg.ServiceID) {
+			return utils.Error(c, http.StatusForbidden, "insufficient permissions")
+		}
+	}
+
 	rec, err := h.backupService.GetRecord(c.Request().Context(), recordID)
 	if err != nil {
 		var notFound *utils.NotFoundError
@@ -216,6 +302,14 @@ func (h *BackupHandler) DeleteRecord(c echo.Context) error {
 	if id == "" || recordID == "" {
 		return utils.Error(c, http.StatusBadRequest, "missing id or recordId parameter")
 	}
+
+	cfg, err := h.backupService.GetConfig(c.Request().Context(), id)
+	if err == nil && cfg != nil {
+		if !h.hasAccess(c, cfg.DatabaseID, cfg.ServiceID) {
+			return utils.Error(c, http.StatusForbidden, "insufficient permissions")
+		}
+	}
+
 	rec, err := h.backupService.GetRecord(c.Request().Context(), recordID)
 	if err != nil {
 		var notFound *utils.NotFoundError
@@ -242,7 +336,18 @@ func (h *BackupHandler) Restore(c echo.Context) error {
 	if id == "" {
 		return utils.Error(c, http.StatusBadRequest, "missing record id parameter")
 	}
-	err := h.backupService.RestoreBackup(c.Request().Context(), id)
+
+	rec, err := h.backupService.GetRecord(c.Request().Context(), id)
+	if err == nil && rec != nil {
+		cfg, err := h.backupService.GetConfig(c.Request().Context(), rec.BackupConfigID)
+		if err == nil && cfg != nil {
+			if !h.hasAccess(c, cfg.DatabaseID, cfg.ServiceID) {
+				return utils.Error(c, http.StatusForbidden, "insufficient permissions to restore this backup")
+			}
+		}
+	}
+
+	err = h.backupService.RestoreBackup(c.Request().Context(), id)
 	if err != nil {
 		return utils.Error(c, http.StatusInternalServerError, err.Error())
 	}

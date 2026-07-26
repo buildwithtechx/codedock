@@ -61,6 +61,12 @@ func (h *RegistryHandler) List(c echo.Context) error {
 		return utils.Error(c, 500, "failed to list registries")
 	}
 
+	for _, r := range registries {
+		if r.PasswordToken != "" {
+			r.PasswordToken = "********"
+		}
+	}
+
 	return utils.Success(c, "registries listed", registries)
 }
 

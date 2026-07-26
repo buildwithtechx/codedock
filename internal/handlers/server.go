@@ -59,5 +59,9 @@ func (h *ServerHandler) List(c echo.Context) error {
 		return utils.Error(c, http.StatusInternalServerError, err.Error())
 	}
 
+	for _, s := range servers {
+		s.WorkerToken = "********"
+	}
+
 	return utils.Success(c, "Operation successful", servers)
 }

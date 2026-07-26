@@ -287,6 +287,52 @@ func GetUserClaimsFromContext(ctx context.Context) *models.UserClaims {
 	return nil
 }
 
+func (g *AuthGuard) RequireOrgRole(minPermission models.MemberPermission) echo.MiddlewareFunc {
+	return func(next echo.HandlerFunc) echo.HandlerFunc {
+		return func(c echo.Context) error {
+			userClaims, ok := c.Get("user").(*models.UserClaims)
+			if !ok || userClaims == nil {
+				return utils.Error(c, http.StatusUnauthorized, "unauthorized")
+			}
+
+			if userClaims.Role == "admin" {
+				return next(c)
+			}
+
+			orgID := c.Param("orgId")
+			if orgID == "" {
+				orgID = c.Param("id") // fallback if route uses :id instead of :orgId
+			}
+			if orgID == "" {
+				return utils.Error(c, http.StatusBadRequest, "missing organization id")
+			}
+
+			if userClaims.Role == "api" {
+				// We don't support API tokens directly scoped to Orgs yet, or if we do, handle it here
+				return utils.Error(c, http.StatusForbidden, "api tokens cannot be used for organization management")
+			}
+
+			if g.OrgMembers == nil {
+				return utils.Error(c, http.StatusInternalServerError, "organization members provider not configured")
+			}
+
+			member, err := g.OrgMembers.GetMember(c.Request().Context(), orgID, userClaims.UserID)
+			if err != nil {
+				return utils.Error(c, http.StatusInternalServerError, "failed to verify organization membership")
+			}
+			if member == nil || member.Status != models.MemberStatusAccepted {
+				return utils.Error(c, http.StatusForbidden, "you do not have access to this organization")
+			}
+
+			if minPermission != "" && member.Permission != minPermission && member.Permission != models.MemberPermissionAdmin && member.Permission != models.MemberPermissionOwner {
+				return utils.Error(c, http.StatusForbidden, "insufficient organization permissions")
+			}
+
+			return next(c)
+		}
+	}
+}
+
 func ExtractTokenFromRequest(c echo.Context) string {
 	authHeader := c.Request().Header.Get("Authorization")
 	if authHeader != "" && strings.HasPrefix(authHeader, "Bearer ") {

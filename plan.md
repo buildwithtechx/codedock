@@ -45,16 +45,16 @@ A recent static audit revealed several critical authorization and configuration 
 
 ### Critical Security Issues
 
-- [ ] **Organization authorization bypass:** Add membership/role middleware to `internal/http/routes.go:159` and ownership checks to `internal/handlers/organization.go:52`.
-- [ ] **Global backup control exposed to all users:** Add user/project authorization to backup routes (`internal/http/routes.go:241`) and handlers (`internal/handlers/backup.go:24`).
-- [ ] **Scheduled-task authorization bypass:** Add project/service authorization to scheduled task routes (`internal/http/routes.go:294`) and handlers (`internal/handlers/scheduled_tasks.go:22`).
-- [ ] **Domain management authorization bypass:** Add service ownership checks to domain handlers (`internal/handlers/domain.go:22`).
-- [ ] **Environment deletion authorization bypass:** Add project-role middleware and ownership verify for `DELETE /api/environments/:id` (`internal/handlers/environment.go:54`).
-- [ ] **Unauthenticated server metrics WebSocket:** Add authentication and server ownership checks to the metrics WebSocket (`internal/handlers/server_metrics_ws.go:27`).
-- [ ] **Secrets returned in API responses:** Redact database passwords, registry tokens, worker tokens, and AI API keys before returning models.
-- [ ] **WebSocket origin checks disabled:** Enforce strict origin checks for Terminal, Worker, and Metrics WebSockets to prevent CSWSH.
-- [ ] **Worker token passed in query string:** Move worker token authentication to HTTP headers (`internal/handlers/worker_ws.go:32`, `bootstrap/worker.sh:88`).
-- [ ] **Password-reset URLs trust attacker-controlled headers:** Use a configured base URL instead of `Origin`/`Referer` headers (`internal/services/auth_service.go`).
+- [x] **Organization authorization bypass:** Add membership/role middleware to `internal/http/routes.go:159` and ownership checks to `internal/handlers/organization.go:52`.
+- [x] **Global backup control exposed to all users:** Add user/project authorization to backup routes (`internal/http/routes.go:241`) and handlers (`internal/handlers/backup.go:24`).
+- [x] **Scheduled-task authorization bypass:** Add project/service authorization to scheduled task routes (`internal/http/routes.go:294`) and handlers (`internal/handlers/scheduled_tasks.go:22`).
+- [x] **Domain management authorization bypass:** Add service ownership checks to domain handlers (`internal/handlers/domain.go:22`).
+- [x] **Environment deletion authorization bypass:** Add project-role middleware and ownership verify for `DELETE /api/environments/:id` (`internal/handlers/environment.go:54`).
+- [x] **Unauthenticated server metrics WebSocket:** Add authentication and server ownership checks to the metrics WebSocket (`internal/handlers/server_metrics_ws.go:27`).
+- [x] **Secrets returned in API responses:** Redact database passwords, registry tokens, worker tokens, and AI API keys before returning models.
+- [x] **WebSocket origin checks disabled:** Enforce strict origin checks for Terminal, Worker, and Metrics WebSockets to prevent CSWSH.
+- [x] **Worker token passed in query string:** Move worker token authentication to HTTP headers (`internal/handlers/worker_ws.go:32`, `bootstrap/worker.sh:88`).
+- [x] **Password-reset URLs trust attacker-controlled headers:** Use a configured base URL instead of `Origin`/`Referer` headers (`internal/services/auth_service.go`).
 
 ### High-risk Correctness/Security Issues
 

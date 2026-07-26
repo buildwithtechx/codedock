@@ -25,6 +25,7 @@ type EnvironmentRepository interface {
 type DomainRepository interface {
 	ListByService(ctx context.Context, serviceID string) ([]models.DomainConfig, error)
 	ListAll(ctx context.Context) ([]models.DomainConfig, error)
+	GetByID(ctx context.Context, id string) (*models.DomainConfig, error)
 	Create(ctx context.Context, d *models.DomainConfig) error
 	Delete(ctx context.Context, id string) error
 }
@@ -141,4 +142,16 @@ func (r *DomainRepo) Create(_ context.Context, d *models.DomainConfig) error {
 func (r *DomainRepo) Delete(_ context.Context, id string) error {
 	_, err := r.db.Exec(`DELETE FROM domains WHERE id = ?`, id)
 	return err
+}
+
+func (r *DomainRepo) GetByID(_ context.Context, id string) (*models.DomainConfig, error) {
+	var domain models.DomainConfig
+	err := r.db.Get(&domain, `SELECT * FROM domains WHERE id = ?`, id)
+	if err != nil {
+		if err == sql.ErrNoRows {
+			return nil, nil
+		}
+		return nil, err
+	}
+	return &domain, nil
 }

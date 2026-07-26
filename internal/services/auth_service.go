@@ -44,6 +44,16 @@ func NewAuthService(
 	}
 }
 
+func (a *AuthService) getBaseUrl(ctx context.Context, fallback string) string {
+	if s, err := a.settingsRepo.GetServerSettings(ctx); err == nil && s != nil && s.PanelDomain != "" {
+		if strings.HasPrefix(s.PanelDomain, "http") {
+			return s.PanelDomain
+		}
+		return "https://" + s.PanelDomain
+	}
+	return fallback
+}
+
 func (a *AuthService) Register(ctx context.Context, name, email, password, originUrl string) (*models.User, string, string, error) {
 	if email == "" || password == "" || name == "" {
 		return nil, "", "", errors.New("name, email and password are required")
@@ -56,7 +66,7 @@ func (a *AuthService) Register(ctx context.Context, name, email, password, origi
 	}
 	if cfg != nil && !isInitial && strings.TrimSpace(cfg.RegistrationDomainAllowlist) != "" {
 		allowed := false
-		for _, d := range strings.Split(cfg.RegistrationDomainAllowlist, ",") {
+		for d := range strings.SplitSeq(cfg.RegistrationDomainAllowlist, ",") {
 			d = strings.TrimSpace(d)
 			if d != "" && strings.HasSuffix(strings.ToLower(email), "@"+strings.ToLower(d)) {
 				allowed = true
@@ -171,6 +181,7 @@ func (a *AuthService) RefreshToken(ctx context.Context, refreshTokenStr string) 
 }
 
 func (a *AuthService) ForgotPassword(ctx context.Context, email string, originUrl string) error {
+	originUrl = a.getBaseUrl(ctx, originUrl)
 	if email == "" {
 		return errors.New("email is required")
 	}
@@ -261,6 +272,7 @@ func (a *AuthService) InviteUser(ctx context.Context, email string, role models.
 }
 
 func (a *AuthService) SendEmailVerification(ctx context.Context, email string, originUrl string) error {
+	originUrl = a.getBaseUrl(ctx, originUrl)
 	if email == "" {
 		return errors.New("email is required")
 	}

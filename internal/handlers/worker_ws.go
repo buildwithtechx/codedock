@@ -3,6 +3,7 @@ package handlers
 import (
 	"encoding/json"
 	"net/http"
+	"net/url"
 	"time"
 
 	"codedock.run/codedock/internal/engine"
@@ -24,14 +25,34 @@ func NewWorkerWSHandler(hub *engine.WorkerHub, serverRepo repositories.ServerRep
 		hub:        hub,
 		serverRepo: serverRepo,
 		upgrader: websocket.Upgrader{
-			CheckOrigin: func(r *http.Request) bool { return true },
+			CheckOrigin: func(r *http.Request) bool {
+				origin := r.Header.Get("Origin")
+				if origin == "" {
+					return true
+				}
+				u, err := url.Parse(origin)
+				if err != nil {
+					return false
+				}
+				return u.Host == r.Host
+			},
 		},
 	}
 }
 
 // Connect upgrades the HTTP request to a WebSocket connection for a codedockw.
 func (h *WorkerWSHandler) Connect(c echo.Context) error {
-	token := c.QueryParam("token")
+	authHeader := c.Request().Header.Get("Authorization")
+	if authHeader == "" {
+		return c.JSON(http.StatusUnauthorized, map[string]string{"error": "missing token"})
+	}
+	token := ""
+	if len(authHeader) > 7 && authHeader[:7] == "Bearer " {
+		token = authHeader[7:]
+	} else {
+		token = authHeader
+	}
+
 	if token == "" {
 		return c.JSON(http.StatusUnauthorized, map[string]string{"error": "missing token"})
 	}

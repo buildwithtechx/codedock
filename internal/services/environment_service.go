@@ -100,6 +100,13 @@ func (s *EnvironmentService) ListAllDomains(ctx context.Context) ([]models.Domai
 	return s.domainRepo.ListAll(ctx)
 }
 
+func (s *EnvironmentService) GetDomain(ctx context.Context, id string) (*models.DomainConfig, error) {
+	if id == "" {
+		return nil, errors.New("id required")
+	}
+	return s.domainRepo.GetByID(ctx, id)
+}
+
 func (s *EnvironmentService) DeleteDomain(ctx context.Context, id string) error {
 	if id == "" {
 		return errors.New("id required")
