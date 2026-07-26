@@ -2,12 +2,10 @@ package main
 
 import (
 	"context"
-	"database/sql"
 	"log/slog"
 	"net/http"
 	"os"
 	"os/signal"
-	"path/filepath"
 	"runtime"
 	"syscall"
 	"time"
@@ -17,94 +15,24 @@ import (
 
 	_ "modernc.org/sqlite"
 
+	"codedock.run/codedock/cmd/codedockd/commands"
 	"codedock.run/codedock/internal/engine"
 	codedockhttp "codedock.run/codedock/internal/http"
-	"codedock.run/codedock/internal/models"
-	"codedock.run/codedock/internal/repositories"
 	"codedock.run/codedock/internal/services"
 	"codedock.run/codedock/internal/telemetry"
-	"codedock.run/codedock/internal/utils"
 	"codedock.run/codedock/internal/version"
 )
 
 var codedockVersion = version.Version
 
-type dbDeployerStore struct {
-	db    *sql.DB
-	vault *utils.Vault
-}
-
-func (a *dbDeployerStore) GetServerSettings() (*models.ServerSettings, error) {
-	return repositories.NewSettingsRepo(a.db).GetServerSettings(context.Background())
-}
-
-func (a *dbDeployerStore) ListAppServicesByProject(projectID string) ([]*models.AppService, error) {
-	return repositories.NewAppServiceRepo(a.db).ListByProject(context.Background(), projectID)
-}
-
-func (a *dbDeployerStore) GetEnvVars(projectID string) (map[string]string, error) {
-	return repositories.NewEnvRepo(a.db, a.vault).GetVars(context.Background(), projectID)
-}
-
-func (a *dbDeployerStore) ListServiceVariables(serviceID string) ([]*models.Variable, error) {
-	svVarRepo := repositories.NewServiceVarRepo(a.db)
-	return svVarRepo.ListByService(context.Background(), serviceID)
-}
-
-func (a *dbDeployerStore) ListLogDrainsByService(serviceID string) ([]*models.LogDrain, error) {
-	return repositories.NewAppServiceRepo(a.db).ListLogDrainsByService(context.Background(), serviceID)
-}
-
-func (a *dbDeployerStore) GetServerlessFunctionCode(serviceID string) (*models.ServerlessFunctionCode, error) {
-	svlsRepo := repositories.NewServerlessRepository(a.db)
-	return svlsRepo.GetCodeByServiceID(context.Background(), serviceID)
-}
-
-func (a *dbDeployerStore) UpdateAppService(app *models.AppService) error {
-	repo := repositories.NewAppServiceRepo(a.db)
-	return repo.Update(context.Background(), app)
-}
-
-func (a *dbDeployerStore) GetRegistry(id string) (*models.Registry, error) {
-	repo := repositories.NewRegistryRepository(a.db)
-	return repo.Get(context.Background(), id)
-}
-
 func main() {
 	_ = godotenv.Load(".env")
-	mainCLI()
-}
-
-func initDataDir() (string, *sql.DB, *utils.Vault) {
-	dataDir := os.Getenv("CODEDOCK_DATA_DIR")
-	if dataDir == "" {
-		dataDir = "data"
-	}
-	if err := os.MkdirAll(dataDir, 0o755); err != nil {
-		slog.Error("failed to create data directory", "err", err)
-		os.Exit(1)
-	}
-	vlt, err := utils.NewVault(dataDir)
-	if err != nil {
-		slog.Error("failed to initialize secrets vault", "err", err)
-		os.Exit(1)
-	}
-	dbPath := filepath.Join(dataDir, "codedock.db")
-	db, err := sql.Open("sqlite", dbPath+"?_pragma=journal_mode(WAL)&_pragma=busy_timeout(5000)&_pragma=foreign_keys(ON)")
-	if err != nil {
-		slog.Error("failed to open SQLite database", "err", err)
-		os.Exit(1)
-	}
-	if err := repositories.RunMigrations(db); err != nil {
-		slog.Error("failed to run database migrations", "err", err)
-		os.Exit(1)
-	}
-	return dataDir, db, vlt
+	commands.Execute(codedockVersion, startServer, runMCP)
 }
 
 func startServer() {
 	slog.Info("booting daemon", "version", codedockVersion, "os", runtime.GOOS, "arch", runtime.GOARCH)
-	dataDir, db, vlt := initDataDir()
+	dataDir, db, vlt := commands.InitDataDir()
 	defer db.Close()
 
 	telemetry.Init()
@@ -150,7 +78,7 @@ func startServer() {
 	}
 	addr := host + ":" + port
 
-	deployer := engine.NewDeployer(dockerClient, &dbDeployerStore{db: db, vault: vlt})
+	deployer := engine.NewDeployer(dockerClient, commands.NewDBDeployerStore(db, vlt))
 	apiServer, err := codedockhttp.NewServer(db, vlt, deployer, traefikMgr, dockerClient, dataDir)
 	if err != nil {
 		slog.Error("failed to initialize server", "err", err)
@@ -175,7 +103,8 @@ func startServer() {
 	<-quit
 	slog.Info("shutting down server gracefully...")
 
-	ctx, cancel := context.WithTimeout(context.Background(), 10*time.Second)
+	ctx, cancel := context.Background(), func() {}
+	ctx, cancel = context.WithTimeout(ctx, 10*time.Second)
 	defer cancel()
 	if err := srv.Shutdown(ctx); err != nil {
 		slog.Error("server forced to shutdown", "err", err)
@@ -185,11 +114,11 @@ func startServer() {
 
 func runMCP() {
 	slog.Info("starting MCP stdio server")
-	_, db, vlt := initDataDir()
+	_, db, vlt := commands.InitDataDir()
 	defer db.Close()
 
 	dockerClient, _ := client.NewClientWithOpts(client.FromEnv, client.WithAPIVersionNegotiation())
-	deployer := engine.NewDeployer(dockerClient, &dbDeployerStore{db: db, vault: vlt})
+	deployer := engine.NewDeployer(dockerClient, commands.NewDBDeployerStore(db, vlt))
 	traefikMgr := engine.NewTraefikManager(dockerClient, os.Getenv("CODEDOCK_TLS_EMAIL"))
 	apiServer, err := codedockhttp.NewServer(db, vlt, deployer, traefikMgr, dockerClient, "")
 	if err != nil {

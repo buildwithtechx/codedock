@@ -1,22 +1,14 @@
 package models
 
-import "time"
+import (
+	"time"
 
-type AuthResult struct {
-	Token string `json:"token"`
-	User  *User  `json:"user"`
-}
+	"codedock.run/codedock/pkg/types"
+)
 
-type SignupRequest struct {
-	Email    string   `json:"email"`
-	Password string   `json:"password"`
-	Role     UserRole `json:"role"`
-}
-
-type SigninRequest struct {
-	Email    string `json:"email"`
-	Password string `json:"password"`
-}
+type AuthResult = types.AuthResult
+type SignupRequest = types.SignupRequest
+type SigninRequest = types.SigninRequest
 
 type OAuthProviderConfig struct {
 	ID           string    `json:"id" db:"id"`

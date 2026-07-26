@@ -6,10 +6,10 @@ import (
 	"io"
 	"net/http"
 
-	"codedock.run/codedock/internal/models"
+	"codedock.run/codedock/pkg/types"
 )
 
-func (c *Client) Me() (*models.User, error) {
+func (c *Client) Me() (*types.User, error) {
 	resp, err := c.sendRequest("GET", "/auth/me", nil)
 	if err != nil {
 		return nil, err
@@ -22,7 +22,7 @@ func (c *Client) Me() (*models.User, error) {
 	}
 
 	var result struct {
-		Data *models.User `json:"data"`
+		Data *types.User `json:"data"`
 	}
 	if err := json.NewDecoder(resp.Body).Decode(&result); err != nil {
 		return nil, err

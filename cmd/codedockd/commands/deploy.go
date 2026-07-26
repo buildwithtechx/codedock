@@ -1,4 +1,4 @@
-package main
+package commands
 
 import (
 	"context"
@@ -46,7 +46,7 @@ func runDeploy(args []string) {
 		exitError("Specify only one: Git URL, --image, or --archive")
 	}
 
-	dataDir, db, vlt := initDataDir()
+	dataDir, db, vlt := InitDataDir()
 	defer db.Close()
 
 	dockerClient, err := client.NewClientWithOpts(client.FromEnv, client.WithAPIVersionNegotiation())
@@ -65,7 +65,7 @@ func runDeploy(args []string) {
 	envID := setupEnvironment(envRepo, dArgs.projectID)
 	svc := setupAppService(appRepo, dArgs.projectID, envID, appName, dArgs)
 
-	deployer := engine.NewDeployer(dockerClient, &dbDeployerStore{db: db, vault: vlt})
+	deployer := engine.NewDeployer(dockerClient, &DBDeployerStore{DB: db, Vault: vlt})
 
 	performDeployment(deployer, dockerClient, svc, dArgs, dataDir)
 	printDeploymentURL(settingsRepo, appName)

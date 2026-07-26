@@ -1,4 +1,4 @@
-package main
+package commands
 
 import (
 	"context"
@@ -17,7 +17,7 @@ func runSetup() {
 	fmt.Println("🛰️  Codedock Setup Wizard")
 	fmt.Println("━━━━━━━━━━━━━━━━━━━━━━━")
 
-	_, db, _ := initDataDir()
+	_, db, _ := InitDataDir()
 
 	repo := repositories.NewUserRepo(db)
 

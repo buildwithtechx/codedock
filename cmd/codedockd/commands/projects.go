@@ -1,4 +1,4 @@
-package main
+package commands
 
 import (
 	"context"
@@ -23,7 +23,7 @@ func runProjects(args []string) {
 		return
 	}
 
-	_, db, _ := initDataDir()
+	_, db, _ := InitDataDir()
 	defer db.Close()
 
 	envRepo := repositories.NewEnvironmentRepo(db)
@@ -138,7 +138,7 @@ func runEnvVars(args []string) {
 		return
 	}
 
-	_, db, vlt := initDataDir()
+	_, db, vlt := InitDataDir()
 	defer db.Close()
 
 	envRepo := repositories.NewEnvRepo(db, vlt)

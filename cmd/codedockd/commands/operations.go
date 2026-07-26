@@ -1,4 +1,4 @@
-package main
+package commands
 
 import (
 	"context"
@@ -23,7 +23,7 @@ func runDeployments(args []string) {
 		return
 	}
 
-	_, db, _ := initDataDir()
+	_, db, _ := InitDataDir()
 	defer db.Close()
 
 	deployRepo := repositories.NewDeploymentRepo(db)
@@ -108,7 +108,7 @@ func runDomains(args []string) {
 		return
 	}
 
-	_, db, _ := initDataDir()
+	_, db, _ := InitDataDir()
 	defer db.Close()
 
 	domainRepo := repositories.NewDomainRepo(db)

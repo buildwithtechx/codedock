@@ -6,11 +6,11 @@ import (
 	"io"
 	nethttp "net/http"
 
-	"codedock.run/codedock/internal/models"
+	"codedock.run/codedock/pkg/types"
 )
 
 // ListServices returns all app services in a specific environment.
-func (c *Client) ListServices(environmentID string) ([]*models.AppService, error) {
+func (c *Client) ListServices(environmentID string) ([]*types.AppService, error) {
 	resp, err := c.sendRequest("GET", fmt.Sprintf("/environments/%s/services", environmentID), nil)
 	if err != nil {
 		return nil, err
@@ -23,7 +23,7 @@ func (c *Client) ListServices(environmentID string) ([]*models.AppService, error
 	}
 
 	var result struct {
-		Data []*models.AppService `json:"data"`
+		Data []*types.AppService `json:"data"`
 	}
 	if err := json.NewDecoder(resp.Body).Decode(&result); err != nil {
 		return nil, err
@@ -33,7 +33,7 @@ func (c *Client) ListServices(environmentID string) ([]*models.AppService, error
 }
 
 // CreateService creates a new application service.
-func (c *Client) CreateService(service *models.AppService) (*models.AppService, error) {
+func (c *Client) CreateService(service *types.AppService) (*types.AppService, error) {
 	resp, err := c.sendRequest("POST", "/services", service)
 	if err != nil {
 		return nil, err
@@ -46,7 +46,7 @@ func (c *Client) CreateService(service *models.AppService) (*models.AppService, 
 	}
 
 	var result struct {
-		Data *models.AppService `json:"data"`
+		Data *types.AppService `json:"data"`
 	}
 	if err := json.NewDecoder(resp.Body).Decode(&result); err != nil {
 		return nil, err
@@ -56,7 +56,7 @@ func (c *Client) CreateService(service *models.AppService) (*models.AppService, 
 }
 
 // GetService retrieves a single service by its ID.
-func (c *Client) GetService(id string) (*models.AppService, error) {
+func (c *Client) GetService(id string) (*types.AppService, error) {
 	resp, err := c.sendRequest("GET", fmt.Sprintf("/services/%s", id), nil)
 	if err != nil {
 		return nil, err
@@ -69,7 +69,7 @@ func (c *Client) GetService(id string) (*models.AppService, error) {
 	}
 
 	var result struct {
-		Data *models.AppService `json:"data"`
+		Data *types.AppService `json:"data"`
 	}
 	if err := json.NewDecoder(resp.Body).Decode(&result); err != nil {
 		return nil, err

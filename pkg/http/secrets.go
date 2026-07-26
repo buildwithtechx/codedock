@@ -6,11 +6,11 @@ import (
 	"io"
 	nethttp "net/http"
 
-	"codedock.run/codedock/internal/models"
+	"codedock.run/codedock/pkg/types"
 )
 
 // GetSecrets retrieves the secrets/environment variables for a project.
-func (c *Client) GetSecrets(projectID string) (models.VarsRequest, error) {
+func (c *Client) GetSecrets(projectID string) (types.VarsRequest, error) {
 	resp, err := c.sendRequest("GET", fmt.Sprintf("/projects/%s/env", projectID), nil)
 	if err != nil {
 		return nil, err
@@ -23,7 +23,7 @@ func (c *Client) GetSecrets(projectID string) (models.VarsRequest, error) {
 	}
 
 	var result struct {
-		Data models.VarsRequest `json:"data"`
+		Data types.VarsRequest `json:"data"`
 	}
 	if err := json.NewDecoder(resp.Body).Decode(&result); err != nil {
 		return nil, err
@@ -33,7 +33,7 @@ func (c *Client) GetSecrets(projectID string) (models.VarsRequest, error) {
 }
 
 // SetSecrets updates the secrets/environment variables for a project.
-func (c *Client) SetSecrets(projectID string, req models.SetEnvVarsRequest) error {
+func (c *Client) SetSecrets(projectID string, req types.SetEnvVarsRequest) error {
 	resp, err := c.sendRequest("PUT", fmt.Sprintf("/projects/%s/env", projectID), req)
 	if err != nil {
 		return err

@@ -1,6 +1,13 @@
 package models
 
-import "time"
+import (
+	"time"
+
+	"codedock.run/codedock/pkg/types"
+)
+
+type Domain = types.Domain
+type DomainConfig = types.DomainConfig
 
 type DNSRecord struct {
 	ID          string    `json:"id" db:"id"`

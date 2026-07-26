@@ -1,4 +1,4 @@
-package main
+package commands
 
 import (
 	"fmt"
@@ -8,15 +8,15 @@ import (
 	"strings"
 )
 
-func mainCLI() {
+func Execute(ver string, startServerFunc func(), runMCPFunc func()) {
 	if len(os.Args) < 2 || os.Args[1] == "serve" {
-		startServer()
+		startServerFunc()
 		return
 	}
 
 	switch os.Args[1] {
 	case "serve":
-		startServer()
+		startServerFunc()
 	case "setup":
 		runSetup()
 	case "reset-password":
@@ -30,9 +30,9 @@ func mainCLI() {
 	case "restart":
 		runRestart()
 	case "mcp":
-		runMCP()
+		runMCPFunc()
 	case "version", "--version", "-v":
-		fmt.Printf("codedockd %s %s/%s\n", codedockVersion, runtime.GOOS, runtime.GOARCH)
+		fmt.Printf("codedockd %s %s/%s\n", ver, runtime.GOOS, runtime.GOARCH)
 	default:
 		if strings.Contains(os.Args[1], ":") {
 			parts := strings.SplitN(os.Args[1], ":", 2)

@@ -1,4 +1,4 @@
-package main
+package commands
 
 import (
 	"context"
@@ -24,7 +24,7 @@ func runApps(args []string) {
 		return
 	}
 
-	_, db, _ := initDataDir()
+	_, db, _ := InitDataDir()
 	defer db.Close()
 
 	appRepo := repositories.NewAppServiceRepo(db)

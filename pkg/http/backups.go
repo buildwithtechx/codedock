@@ -6,10 +6,10 @@ import (
 	"io"
 	nethttp "net/http"
 
-	"codedock.run/codedock/internal/models"
+	"codedock.run/codedock/pkg/types"
 )
 
-func (c *Client) ListBackups(databaseID string) ([]models.BackupConfig, error) {
+func (c *Client) ListBackups(databaseID string) ([]types.BackupConfig, error) {
 	endpoint := "/backups"
 	if databaseID != "" {
 		endpoint = fmt.Sprintf("/backups?databaseId=%s", databaseID)
@@ -26,7 +26,7 @@ func (c *Client) ListBackups(databaseID string) ([]models.BackupConfig, error) {
 	}
 
 	var result struct {
-		Data []models.BackupConfig `json:"data"`
+		Data []types.BackupConfig `json:"data"`
 	}
 	if err := json.NewDecoder(resp.Body).Decode(&result); err != nil {
 		return nil, err
@@ -35,7 +35,7 @@ func (c *Client) ListBackups(databaseID string) ([]models.BackupConfig, error) {
 	return result.Data, nil
 }
 
-func (c *Client) CreateBackup(req any) (*models.BackupConfig, error) {
+func (c *Client) CreateBackup(req any) (*types.BackupConfig, error) {
 	resp, err := c.sendRequest("POST", "/backups", req)
 	if err != nil {
 		return nil, err
@@ -48,7 +48,7 @@ func (c *Client) CreateBackup(req any) (*models.BackupConfig, error) {
 	}
 
 	var result struct {
-		Data *models.BackupConfig `json:"data"`
+		Data *types.BackupConfig `json:"data"`
 	}
 	if err := json.NewDecoder(resp.Body).Decode(&result); err != nil {
 		return nil, err
@@ -57,7 +57,7 @@ func (c *Client) CreateBackup(req any) (*models.BackupConfig, error) {
 	return result.Data, nil
 }
 
-func (c *Client) TriggerBackup(id string) (*models.BackupRecord, error) {
+func (c *Client) TriggerBackup(id string) (*types.BackupRecord, error) {
 	resp, err := c.sendRequest("POST", fmt.Sprintf("/backups/%s/trigger", id), nil)
 	if err != nil {
 		return nil, err
@@ -70,7 +70,7 @@ func (c *Client) TriggerBackup(id string) (*models.BackupRecord, error) {
 	}
 
 	var result struct {
-		Data *models.BackupRecord `json:"data"`
+		Data *types.BackupRecord `json:"data"`
 	}
 	if err := json.NewDecoder(resp.Body).Decode(&result); err != nil {
 		return nil, err
@@ -79,7 +79,7 @@ func (c *Client) TriggerBackup(id string) (*models.BackupRecord, error) {
 	return result.Data, nil
 }
 
-func (c *Client) ListBackupRecords(id string) ([]models.BackupRecord, error) {
+func (c *Client) ListBackupRecords(id string) ([]types.BackupRecord, error) {
 	resp, err := c.sendRequest("GET", fmt.Sprintf("/backups/%s/records", id), nil)
 	if err != nil {
 		return nil, err
@@ -92,7 +92,7 @@ func (c *Client) ListBackupRecords(id string) ([]models.BackupRecord, error) {
 	}
 
 	var result struct {
-		Data []models.BackupRecord `json:"data"`
+		Data []types.BackupRecord `json:"data"`
 	}
 	if err := json.NewDecoder(resp.Body).Decode(&result); err != nil {
 		return nil, err

@@ -1,4 +1,4 @@
-package main
+package commands
 
 import (
 	"context"
@@ -23,7 +23,7 @@ func runDatabases(args []string) {
 		return
 	}
 
-	_, db, vlt := initDataDir()
+	_, db, vlt := InitDataDir()
 	defer db.Close()
 
 	dbRepo := repositories.NewDatabaseRepo(db, vlt)

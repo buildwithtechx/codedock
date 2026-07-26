@@ -1,4 +1,4 @@
-package main
+package commands
 
 import (
 	"context"
@@ -9,7 +9,7 @@ import (
 )
 
 func runConfig() {
-	_, db, _ := initDataDir()
+	_, db, _ := InitDataDir()
 	repo := repositories.NewSettingsRepo(db)
 	notifRepo := repositories.NewNotificationSettingsRepo(db)
 	settings, err := repo.GetServerSettings(context.Background())

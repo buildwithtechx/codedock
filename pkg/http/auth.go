@@ -6,7 +6,7 @@ import (
 	"io"
 	"net/http"
 
-	"codedock.run/codedock/internal/models"
+	"codedock.run/codedock/pkg/types"
 )
 
 type AuthRequest struct {
@@ -17,7 +17,7 @@ type AuthRequest struct {
 
 type AuthResponse struct {
 	Token string       `json:"token"`
-	User  *models.User `json:"user"`
+	User  *types.User `json:"user"`
 }
 
 func (c *Client) Login(email, password string) (*AuthResponse, error) {

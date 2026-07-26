@@ -6,11 +6,11 @@ import (
 	"io"
 	nethttp "net/http"
 
-	"codedock.run/codedock/internal/models"
+	"codedock.run/codedock/pkg/types"
 )
 
 // TriggerDeployment triggers a new manual deployment for an app service.
-func (c *Client) TriggerDeployment(serviceID string) (*models.Deployment, error) {
+func (c *Client) TriggerDeployment(serviceID string) (*types.Deployment, error) {
 	resp, err := c.sendRequest("POST", fmt.Sprintf("/services/%s/deploy", serviceID), nil)
 	if err != nil {
 		return nil, err
@@ -23,7 +23,7 @@ func (c *Client) TriggerDeployment(serviceID string) (*models.Deployment, error)
 	}
 
 	var result struct {
-		Data *models.Deployment `json:"data"`
+		Data *types.Deployment `json:"data"`
 	}
 	if err := json.NewDecoder(resp.Body).Decode(&result); err != nil {
 		return nil, err
@@ -33,7 +33,7 @@ func (c *Client) TriggerDeployment(serviceID string) (*models.Deployment, error)
 }
 
 // GetDeploymentStatus checks the status of a specific deployment.
-func (c *Client) GetDeploymentStatus(deploymentID string) (*models.Deployment, error) {
+func (c *Client) GetDeploymentStatus(deploymentID string) (*types.Deployment, error) {
 	resp, err := c.sendRequest("GET", fmt.Sprintf("/deployments/%s", deploymentID), nil)
 	if err != nil {
 		return nil, err
@@ -46,7 +46,7 @@ func (c *Client) GetDeploymentStatus(deploymentID string) (*models.Deployment, e
 	}
 
 	var result struct {
-		Data *models.Deployment `json:"data"`
+		Data *types.Deployment `json:"data"`
 	}
 	if err := json.NewDecoder(resp.Body).Decode(&result); err != nil {
 		return nil, err
@@ -56,7 +56,7 @@ func (c *Client) GetDeploymentStatus(deploymentID string) (*models.Deployment, e
 }
 
 // ListDeployments gets all deployments for a service.
-func (c *Client) ListDeployments(serviceID string) ([]models.Deployment, error) {
+func (c *Client) ListDeployments(serviceID string) ([]types.Deployment, error) {
 	resp, err := c.sendRequest("GET", fmt.Sprintf("/services/%s/deployments", serviceID), nil)
 	if err != nil {
 		return nil, err
@@ -69,7 +69,7 @@ func (c *Client) ListDeployments(serviceID string) ([]models.Deployment, error) 
 	}
 
 	var result struct {
-		Data []models.Deployment `json:"data"`
+		Data []types.Deployment `json:"data"`
 	}
 	if err := json.NewDecoder(resp.Body).Decode(&result); err != nil {
 		return nil, err
@@ -102,7 +102,7 @@ func (c *Client) GetDeploymentLogs(deploymentID string) (string, error) {
 }
 
 // GetServiceMetrics fetches performance metrics for a service.
-func (c *Client) GetServiceMetrics(serviceID string) ([]models.ServiceMetric, error) {
+func (c *Client) GetServiceMetrics(serviceID string) ([]types.ServiceMetric, error) {
 	resp, err := c.sendRequest("GET", fmt.Sprintf("/services/%s/metrics", serviceID), nil)
 	if err != nil {
 		return nil, err
@@ -115,7 +115,7 @@ func (c *Client) GetServiceMetrics(serviceID string) ([]models.ServiceMetric, er
 	}
 
 	var result struct {
-		Data []models.ServiceMetric `json:"data"`
+		Data []types.ServiceMetric `json:"data"`
 	}
 	if err := json.NewDecoder(resp.Body).Decode(&result); err != nil {
 		return nil, err

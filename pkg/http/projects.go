@@ -6,11 +6,11 @@ import (
 	"io"
 	nethttp "net/http"
 
-	"codedock.run/codedock/internal/models"
+	"codedock.run/codedock/pkg/types"
 )
 
 // ListProjects returns all projects accessible by the authenticated user.
-func (c *Client) ListProjects() ([]*models.ProjectConfig, error) {
+func (c *Client) ListProjects() ([]*types.ProjectConfig, error) {
 	resp, err := c.sendRequest("GET", "/projects", nil)
 	if err != nil {
 		return nil, err
@@ -23,7 +23,7 @@ func (c *Client) ListProjects() ([]*models.ProjectConfig, error) {
 	}
 
 	var result struct {
-		Data []*models.ProjectConfig `json:"data"`
+		Data []*types.ProjectConfig `json:"data"`
 	}
 	if err := json.NewDecoder(resp.Body).Decode(&result); err != nil {
 		return nil, err
@@ -33,7 +33,7 @@ func (c *Client) ListProjects() ([]*models.ProjectConfig, error) {
 }
 
 // CreateProject creates a new project.
-func (c *Client) CreateProject(req *models.CreateProjectRequest) (*models.ProjectConfig, error) {
+func (c *Client) CreateProject(req *types.CreateProjectRequest) (*types.ProjectConfig, error) {
 	resp, err := c.sendRequest("POST", "/projects", req)
 	if err != nil {
 		return nil, err
@@ -46,7 +46,7 @@ func (c *Client) CreateProject(req *models.CreateProjectRequest) (*models.Projec
 	}
 
 	var result struct {
-		Data *models.ProjectConfig `json:"data"`
+		Data *types.ProjectConfig `json:"data"`
 	}
 	if err := json.NewDecoder(resp.Body).Decode(&result); err != nil {
 		return nil, err
@@ -56,7 +56,7 @@ func (c *Client) CreateProject(req *models.CreateProjectRequest) (*models.Projec
 }
 
 // GetProject retrieves a single project by its ID.
-func (c *Client) GetProject(id string) (*models.ProjectConfig, error) {
+func (c *Client) GetProject(id string) (*types.ProjectConfig, error) {
 	resp, err := c.sendRequest("GET", fmt.Sprintf("/projects/%s", id), nil)
 	if err != nil {
 		return nil, err
@@ -69,7 +69,7 @@ func (c *Client) GetProject(id string) (*models.ProjectConfig, error) {
 	}
 
 	var result struct {
-		Data *models.ProjectConfig `json:"data"`
+		Data *types.ProjectConfig `json:"data"`
 	}
 	if err := json.NewDecoder(resp.Body).Decode(&result); err != nil {
 		return nil, err

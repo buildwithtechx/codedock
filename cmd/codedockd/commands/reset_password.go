@@ -1,4 +1,4 @@
-package main
+package commands
 
 import (
 	"context"
@@ -9,7 +9,7 @@ import (
 )
 
 func runResetPassword() {
-	_, db, _ := initDataDir()
+	_, db, _ := InitDataDir()
 
 	email := prompt("Admin email: ")
 	repo := repositories.NewUserRepo(db)
