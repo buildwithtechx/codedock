@@ -1,18 +1,7 @@
-import { format } from 'date-fns';
-import {
-  ArchiveRestore,
-  Calendar,
-  Check,
-  Database,
-  Download,
-  History,
-  Play,
-  Trash2,
-} from 'lucide-react';
+import { Calendar, Check, Database, Play, Trash2 } from 'lucide-react';
 import { useEffect, useState } from 'react';
 import { toast } from 'sonner';
 
-import { Badge } from '#/components/ui/badge';
 import { Button } from '#/components/ui/button';
 import { Input } from '#/components/ui/input';
 import { Row, Section } from '#/components/ui/section';
@@ -27,6 +16,7 @@ import {
   useTrigger,
   useUpdate,
 } from '#/hooks/use-backups';
+import { BackupExecutionsList } from './backup-executions-list';
 
 export function BackupsList() {
   const { data: configsData, isLoading } = useList();
@@ -132,7 +122,9 @@ export function BackupsList() {
       await restoreBackup.mutateAsync({ id: recordId });
       toast.success('Backup restored successfully');
     } catch (err: unknown) {
-      toast.error((err as any)?.response?.data?.error || 'Failed to restore backup');
+      toast.error(
+        (err as Record<string, any>)?.response?.data?.error || 'Failed to restore backup'
+      );
     }
   };
 
@@ -241,112 +233,15 @@ export function BackupsList() {
         </Row>
       </Section>
 
-      <Section icon={<History className="h-4 w-4" />} title={`Executions (${records.length})`}>
-        <div className="flex flex-col gap-4 py-4">
-          <div className="flex flex-col gap-4">
-            {isLoadingRecords ? (
-              <div className="py-8 text-center text-muted-foreground">Loading executions...</div>
-            ) : records.length === 0 ? (
-              <div className="py-8 text-center text-muted-foreground">No executions yet.</div>
-            ) : (
-              records.map((record) => (
-                <div
-                  key={record.id}
-                  className="border/50 flex flex-col gap-3 rounded-lg border bg-background/50 p-4"
-                >
-                  <Badge
-                    variant="outline"
-                    className={
-                      record.status === 'completed'
-                        ? 'w-fit border-green-500/20 bg-green-500/10 text-green-500'
-                        : record.status === 'failed'
-                          ? 'w-fit border-red-500/20 bg-red-500/10 text-red-500'
-                          : 'w-fit border-yellow-500/20 bg-yellow-500/10 text-yellow-500'
-                    }
-                  >
-                    {record.status === 'completed'
-                      ? 'Success'
-                      : record.status === 'failed'
-                        ? 'Failed'
-                        : 'Running'}
-                  </Badge>
-
-                  <div className="text-muted-foreground text-sm leading-relaxed">
-                    {record.startedAt
-                      ? format(new Date(record.startedAt), 'MMM d, HH:mm')
-                      : 'Unknown time'}{' '}
-                    • Database: codedock • Size: {(record.fileSizeBytes / 1024 / 1024).toFixed(2)}{' '}
-                    MB
-                    <br />
-                    Location: {record.filePath}
-                  </div>
-
-                  <div className="flex items-center gap-2 text-sm">
-                    <span className="text-muted-foreground">Backup Availability:</span>
-                    <Badge
-                      variant="outline"
-                      className="gap-1 border-green-500/20 bg-green-500/10 text-green-500"
-                    >
-                      <Check className="h-3 w-3" /> Local Storage
-                    </Badge>
-                  </div>
-
-                  <div className="mt-2 flex items-center gap-2">
-                    <Button
-                      variant="outline"
-                      size="sm"
-                      onClick={() => handleRestore(record.id)}
-                      disabled={
-                        restoreBackup.isPending || record.status !== 'completed' || !record.filePath
-                      }
-                    >
-                      <ArchiveRestore className="mr-2 h-4 w-4" />
-                      Restore
-                    </Button>
-                    <Button
-                      variant="outline"
-                      size="sm"
-                      asChild
-                      disabled={!record.s3Url && !record.filePath}
-                    >
-                      {record.s3Url ? (
-                        <a href={record.s3Url} target="_blank" rel="noreferrer">
-                          <Download className="mr-2 h-4 w-4" />
-                          Download S3
-                        </a>
-                      ) : record.filePath ? (
-                        <a
-                          href={`${import.meta.env.VITE_API_URL}/backups/${config?.id}/records/${record.id}/download`}
-                          target="_blank"
-                          rel="noreferrer"
-                        >
-                          <Download className="mr-2 h-4 w-4" />
-                          Download Local
-                        </a>
-                      ) : (
-                        <span>
-                          <Download className="mr-2 h-4 w-4" />
-                          Download
-                        </span>
-                      )}
-                    </Button>
-                    <Button
-                      variant="destructive"
-                      size="sm"
-                      onClick={() =>
-                        deleteRecord.mutate({ id: config?.id || '', recordId: record.id })
-                      }
-                    >
-                      <Trash2 className="mr-2 h-4 w-4" />
-                      {deleteRecord.isPending ? 'Deleting...' : 'Delete'}
-                    </Button>
-                  </div>
-                </div>
-              ))
-            )}
-          </div>
-        </div>
-      </Section>
+      <BackupExecutionsList
+        records={records}
+        configId={config?.id || ''}
+        isLoadingRecords={isLoadingRecords}
+        handleRestore={handleRestore}
+        restorePending={restoreBackup.isPending}
+        onDeleteRecord={(cfgId, recId) => deleteRecord.mutate({ id: cfgId, recordId: recId })}
+        deletePending={deleteRecord.isPending}
+      />
     </div>
   );
 }

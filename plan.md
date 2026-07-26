@@ -72,9 +72,9 @@ This roadmap tracks all active security remediations, architectural refactoring,
 
 The following files exceed the project's 350-line limit and require refactoring:
 
-- [ ] `apps/dashboard/src/features/instance/notifications-settings.tsx` — 436 lines
-- [ ] `internal/handlers/backup.go` — 403 lines
-- [ ] `apps/dashboard/src/features/instance/s3-destinations-list.tsx` — 398 lines
-- [ ] `apps/dashboard/src/features/instance/maintenance-settings.tsx` — 387 lines
-- [ ] `internal/engine/backup_manager.go` — 383 lines
-- [ ] `apps/dashboard/src/features/instance/backups-list.tsx` — 352 lines
+- [x] `apps/dashboard/src/features/instance/notifications-settings.tsx` — 149 lines (was 436 lines)
+- [x] `internal/handlers/backup.go` — 273 lines (was 403 lines)
+- [x] `apps/dashboard/src/features/instance/s3-destinations-list.tsx` — 125 lines (was 398 lines)
+- [x] `apps/dashboard/src/features/instance/maintenance-settings.tsx` — 280 lines (was 387 lines)
+- [x] `internal/engine/backup_manager.go` — 235 lines (was 383 lines)
+- [x] `apps/dashboard/src/features/instance/backups-list.tsx` — 246 lines (was 352 lines)
