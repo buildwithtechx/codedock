@@ -15,7 +15,8 @@ services:
       - "8080:8080"
     volumes:
       - codedock_data:/codedock/data
-      - /var/run/docker.sock:/var/run/docker.sock:ro
+      # SECURITY NOTICE: For production hardening, use Tecnativa/docker-socket-proxy to restrict Docker API endpoints
+      - /var/run/docker.sock:/var/run/docker.sock
       - nixpacks_cache:/root/.nixpacks
     networks:
       - proxy

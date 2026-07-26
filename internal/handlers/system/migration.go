@@ -58,9 +58,13 @@ func (h *MigrationHandler) Import(c echo.Context) error {
 	}
 	defer src.Close()
 
-	bundleData, err := io.ReadAll(src)
+	const maxBundleUploadBytes = 500 * 1024 * 1024 // 500 MB
+	bundleData, err := io.ReadAll(io.LimitReader(src, maxBundleUploadBytes+1))
 	if err != nil {
 		return utils.Error(c, http.StatusInternalServerError, "failed to read bundle data")
+	}
+	if len(bundleData) > maxBundleUploadBytes {
+		return utils.Error(c, http.StatusRequestEntityTooLarge, "migration bundle file exceeds maximum allowed size (500MB)")
 	}
 
 	manifest, err := h.service.Import(c.Request().Context(), bundleData, passphrase)

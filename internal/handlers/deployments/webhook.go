@@ -113,16 +113,28 @@ func (h *WebhookHandler) HandleGitHubWebhook(c echo.Context) error {
 		return utils.Error(c, http.StatusBadRequest, "failed to read body")
 	}
 
-	signature := c.Request().Header.Get("X-Hub-Signature-256")
-	if signature != "" {
-		apps, err := h.gitAppsService.ListGithubApps(c.Request().Context())
-		if err != nil {
-			return utils.Error(c, http.StatusInternalServerError, "failed to check webhook secrets")
-		}
+	apps, err := h.gitAppsService.ListGithubApps(c.Request().Context())
+	if err != nil {
+		return utils.Error(c, http.StatusInternalServerError, "failed to check webhook secrets")
+	}
 
+	hasSecret := false
+	for _, app := range apps {
+		if app.WebhookSecret != "" {
+			hasSecret = true
+			break
+		}
+	}
+
+	signature := c.Request().Header.Get("X-Hub-Signature-256")
+	if hasSecret && signature == "" {
+		return utils.Error(c, http.StatusUnauthorized, "missing X-Hub-Signature-256 header")
+	}
+
+	if signature != "" {
 		valid := false
 		for _, app := range apps {
-			if verifyHMAC(bodyBytes, app.WebhookSecret, signature) {
+			if app.WebhookSecret != "" && verifyHMAC(bodyBytes, app.WebhookSecret, signature) {
 				valid = true
 				break
 			}

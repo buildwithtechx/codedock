@@ -13,7 +13,7 @@ type Database struct {
 	Engine             DatabaseEngine `json:"engine" db:"engine"`
 	Version            string         `json:"version" db:"version"`
 	Username           string         `json:"username" db:"username"`
-	Password           string         `json:"password,omitempty" db:"password"`
+	Password           string         `json:"-" db:"password"`
 	EncryptedPassword  string         `json:"-" db:"encrypted_password"`
 	DatabaseName       string         `json:"databaseName" db:"database_name"`
 	InternalHost       string         `json:"internalHost" db:"internal_host"`

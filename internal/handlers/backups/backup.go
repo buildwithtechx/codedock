@@ -108,8 +108,8 @@ func (h *BackupHandler) Create(c echo.Context) error {
 		return utils.Error(c, http.StatusBadRequest, "invalid payload")
 	}
 
-	if !h.hasAccess(c, cfg.DatabaseID, cfg.ServiceID) {
-		return utils.Error(c, http.StatusForbidden, "insufficient permissions to create backup for this resource")
+	if !h.hasAdminAccess(c, cfg.DatabaseID, cfg.ServiceID) {
+		return utils.Error(c, http.StatusForbidden, "insufficient admin permissions to create backup for this resource")
 	}
 
 	if err := h.backupService.CreateConfig(c.Request().Context(), &cfg); err != nil {
@@ -130,8 +130,8 @@ func (h *BackupHandler) Update(c echo.Context) error {
 		return utils.Error(c, http.StatusNotFound, "backup config not found")
 	}
 
-	if !h.hasAccess(c, existing.DatabaseID, existing.ServiceID) {
-		return utils.Error(c, http.StatusForbidden, "insufficient permissions")
+	if !h.hasAdminAccess(c, existing.DatabaseID, existing.ServiceID) {
+		return utils.Error(c, http.StatusForbidden, "insufficient admin permissions")
 	}
 
 	var req struct {
@@ -241,8 +241,8 @@ func (h *BackupHandler) Delete(c echo.Context) error {
 	if err != nil || cfg == nil {
 		return utils.Error(c, http.StatusNotFound, "backup config not found")
 	}
-	if !h.hasAccess(c, cfg.DatabaseID, cfg.ServiceID) {
-		return utils.Error(c, http.StatusForbidden, "insufficient permissions")
+	if !h.hasAdminAccess(c, cfg.DatabaseID, cfg.ServiceID) {
+		return utils.Error(c, http.StatusForbidden, "insufficient admin permissions")
 	}
 
 	if err := h.backupService.DeleteConfig(c.Request().Context(), id); err != nil {
@@ -261,8 +261,8 @@ func (h *BackupHandler) Trigger(c echo.Context) error {
 	if err != nil || cfg == nil {
 		return utils.Error(c, http.StatusNotFound, "backup config not found")
 	}
-	if !h.hasAccess(c, cfg.DatabaseID, cfg.ServiceID) {
-		return utils.Error(c, http.StatusForbidden, "insufficient permissions")
+	if !h.hasAdminAccess(c, cfg.DatabaseID, cfg.ServiceID) {
+		return utils.Error(c, http.StatusForbidden, "insufficient admin permissions")
 	}
 
 	rec, err := h.backupService.TriggerBackup(c.Request().Context(), id)

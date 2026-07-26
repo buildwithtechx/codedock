@@ -3,6 +3,7 @@ package deployments
 import (
 	"bytes"
 	"context"
+	"encoding/base64"
 	"errors"
 	"fmt"
 	"io"
@@ -131,6 +132,13 @@ func (s *GitService) DeleteProvider(ctx context.Context, userID, provider string
 }
 
 func (s *GitService) CloneOrPullAppRepository(ctx context.Context, app *models.AppService, targetDir string, logWriter io.Writer) error {
+	return s.SyncCodebase(ctx, app, targetDir, logWriter)
+}
+
+func (s *GitService) SyncCodebase(ctx context.Context, app *models.AppService, targetDir string, logWriter io.Writer) error {
+	if app == nil {
+		return errors.New("app service is nil")
+	}
 	repoURL := strings.TrimSpace(app.RepositoryURL)
 	if repoURL == "" {
 		return errors.New("repositoryUrl is not set for service")
@@ -143,16 +151,24 @@ func (s *GitService) CloneOrPullAppRepository(ctx context.Context, app *models.A
 	if !validBranch.MatchString(branch) {
 		return errors.New("invalid branch name")
 	}
-	authURL := s.injectAuthTokenIfAvailable(ctx, repoURL)
+
+	cleanURL, token := s.getAuthTokenIfAvailable(ctx, repoURL)
+	var gitConfigArgs []string
+	if token != "" {
+		authHeader := fmt.Sprintf("Authorization: Basic %s", base64.StdEncoding.EncodeToString([]byte("x-access-token:"+token)))
+		gitConfigArgs = []string{"-c", fmt.Sprintf("http.extraheader=%s", authHeader)}
+	}
+
 	if logWriter != nil {
-		fmt.Fprintf(logWriter, "📥 [GitService] Preparing to sync codebase from %s (branch: %s)...\n", repoURL, branch)
+		fmt.Fprintf(logWriter, "📥 [GitService] Preparing to sync codebase from %s (branch: %s)...\n", cleanURL, branch)
 	}
 	gitDir := filepath.Join(targetDir, ".git")
 	if _, err := os.Stat(gitDir); err == nil {
 		if logWriter != nil {
 			fmt.Fprintf(logWriter, "🔄 [GitService] Existing local directory detected; pulling latest changes...\n")
 		}
-		fetchCmd := exec.CommandContext(ctx, "git", "-C", targetDir, "fetch", "origin", branch)
+		fetchArgs := append(append([]string{}, gitConfigArgs...), "-C", targetDir, "fetch", "origin", branch)
+		fetchCmd := exec.CommandContext(ctx, "git", fetchArgs...)
 		if out, err := fetchCmd.CombinedOutput(); err != nil {
 			return utils.NewDeploymentError(fmt.Sprintf("git fetch failed: %s", string(out)), err)
 		}
@@ -169,7 +185,8 @@ func (s *GitService) CloneOrPullAppRepository(ctx context.Context, app *models.A
 	if err := os.MkdirAll(filepath.Dir(targetDir), 0o755); err != nil {
 		return fmt.Errorf("failed to create build parent dir: %w", err)
 	}
-	cloneArgs := []string{"clone", "--depth", "1", "-b", branch, authURL, targetDir}
+
+	cloneArgs := append(append([]string{}, gitConfigArgs...), "clone", "--depth", "1", "-b", branch, cleanURL, targetDir)
 	if logWriter != nil {
 		fmt.Fprintf(logWriter, "🚀 [GitService] Running git clone --depth 1 -b %s...\n", branch)
 	}
@@ -182,7 +199,8 @@ func (s *GitService) CloneOrPullAppRepository(ctx context.Context, app *models.A
 				fmt.Fprintf(logWriter, "⚠️ [GitService] Branch 'main' not found; retrying clone with repository default branch...\n")
 			}
 			_ = os.RemoveAll(targetDir)
-			cloneCmd = exec.CommandContext(ctx, "git", "clone", "--depth", "1", authURL, targetDir)
+			fallbackArgs := append(append([]string{}, gitConfigArgs...), "clone", "--depth", "1", cleanURL, targetDir)
+			cloneCmd = exec.CommandContext(ctx, "git", fallbackArgs...)
 			if errFallback := cloneCmd.Run(); errFallback != nil {
 				return utils.NewDeploymentError(fmt.Sprintf("git clone failed: %s", stderr.String()), errFallback)
 			}
@@ -196,24 +214,25 @@ func (s *GitService) CloneOrPullAppRepository(ctx context.Context, app *models.A
 	return nil
 }
 
-func (s *GitService) injectAuthTokenIfAvailable(ctx context.Context, repoURL string) string {
+func (s *GitService) getAuthTokenIfAvailable(ctx context.Context, repoURL string) (string, string) {
 	u, err := url.Parse(repoURL)
-	if err != nil || u.Scheme != "https" {
-		return repoURL
+	if err != nil {
+		return repoURL, ""
+	}
+	u.User = nil
+	cleanURL := u.String()
+	if u.Scheme != "https" {
+		return cleanURL, ""
 	}
 	var provider string
 	if strings.Contains(u.Host, "github.com") {
 		provider = "github"
 	} else {
-		return repoURL
+		return cleanURL, ""
 	}
 	gp, err := s.repo.GetAnyProviderByType(ctx, provider)
 	if err != nil || gp == nil || gp.AccessToken == "" {
-		return repoURL
+		return cleanURL, ""
 	}
-	switch provider {
-	case "github":
-		u.User = url.UserPassword("x-access-token", gp.AccessToken)
-	}
-	return u.String()
+	return cleanURL, gp.AccessToken
 }

@@ -32,23 +32,31 @@ type OrganizationMemberProvider interface {
 	GetMember(ctx context.Context, orgID, userID string) (*models.OrganizationMember, error)
 }
 
-type AuthGuard struct {
-	TokenService  *auth.TokenService
-	Settings      SettingsProvider
-	ProjectTokens ProjectTokenProvider
-	OrgMembers    OrganizationMemberProvider
-	ProjectRepo   repositories.ProjectRepository
+type UserStatusProvider interface {
+	GetUserByID(ctx context.Context, id string) (*models.User, error)
 }
 
-func NewAuthGuard(ts *auth.TokenService, sp SettingsProvider, pt ProjectTokenProvider, orgMembers OrganizationMemberProvider, pr repositories.ProjectRepository) *AuthGuard {
-	return &AuthGuard{TokenService: ts, Settings: sp, ProjectTokens: pt, OrgMembers: orgMembers, ProjectRepo: pr}
+type AuthGuard struct {
+	TokenService       *auth.TokenService
+	Settings           SettingsProvider
+	ProjectTokens      ProjectTokenProvider
+	OrgMembers         OrganizationMemberProvider
+	ProjectRepo        repositories.ProjectRepository
+	UserStatusProvider UserStatusProvider
+}
+
+func NewAuthGuard(ts *auth.TokenService, sp SettingsProvider, pt ProjectTokenProvider, orgMembers OrganizationMemberProvider, pr repositories.ProjectRepository, userStatus UserStatusProvider) *AuthGuard {
+	return &AuthGuard{TokenService: ts, Settings: sp, ProjectTokens: pt, OrgMembers: orgMembers, ProjectRepo: pr, UserStatusProvider: userStatus}
 }
 
 func (g *AuthGuard) checkIPAllowlist(c echo.Context) error {
 	if g.Settings == nil {
 		return nil
 	}
-	settings, _ := g.Settings.GetSettings(c.Request().Context())
+	settings, err := g.Settings.GetSettings(c.Request().Context())
+	if err != nil {
+		return utils.Error(c, http.StatusInternalServerError, "failed to load server security policy")
+	}
 	if settings == nil || strings.TrimSpace(settings.IPAllowlist) == "" {
 		return nil
 	}
@@ -97,9 +105,17 @@ func (g *AuthGuard) validateJWT(c echo.Context, tokenStr string) (*models.UserCl
 		return nil, utils.Error(c, http.StatusUnauthorized, "invalid authentication token: "+err.Error())
 	}
 
+	userID := fmt.Sprintf("%v", claimsMap["sub"])
+	if g.UserStatusProvider != nil && userID != "" {
+		u, err := g.UserStatusProvider.GetUserByID(c.Request().Context(), userID)
+		if err != nil || u == nil {
+			return nil, utils.Error(c, http.StatusUnauthorized, "user account not found or deactivated")
+		}
+	}
+
 	totpEnabled, _ := claimsMap["totpEnabled"].(bool)
 	return &models.UserClaims{
-		UserID:      fmt.Sprintf("%v", claimsMap["sub"]),
+		UserID:      userID,
 		Email:       fmt.Sprintf("%v", claimsMap["email"]),
 		Role:        models.UserRole(fmt.Sprintf("%v", claimsMap["role"])),
 		TOTPEnabled: totpEnabled,

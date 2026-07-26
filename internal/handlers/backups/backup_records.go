@@ -133,8 +133,8 @@ func (h *BackupHandler) Restore(c echo.Context) error {
 		return utils.Error(c, http.StatusNotFound, "backup config not found")
 	}
 
-	if !h.hasAccess(c, cfg.DatabaseID, cfg.ServiceID) {
-		return utils.Error(c, http.StatusForbidden, "insufficient permissions to restore this backup")
+	if !h.hasAdminAccess(c, cfg.DatabaseID, cfg.ServiceID) {
+		return utils.Error(c, http.StatusForbidden, "insufficient admin permissions to restore this backup")
 	}
 
 	err = h.backupService.RestoreBackup(c.Request().Context(), id)
