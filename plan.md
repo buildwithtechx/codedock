@@ -17,12 +17,12 @@ This roadmap tracks all active security remediations, architectural refactoring,
 ## 2. High-Risk Findings
 
 - [x] **6. App services can be reassigned across projects:** Validate that `EnvironmentID` belongs to `ProjectID` on app service create/update (`internal/handlers/app_services.go:59, 153`).
-- [ ] **7. Rollback authorization is weaker than deployment authorization:** Enforce consistent admin-level service access for rollback (`internal/handlers/deployment.go:130`) matching deployment triggering (`internal/http/routes.go:232`).
-- [ ] **8. Database passwords returned in API models:** Prevent returning decrypted password fields in `json:"password"` (`internal/models/database.go:35`, `internal/repositories/database.go:56`).
-- [ ] **9. 2FA is not enforced during login:** Implement interactive TOTP second-factor challenge during login when `TOTPEnabled` is true (`internal/services/auth_service.go:126`).
-- [ ] **10. JWT sessions survive user disablement/deletion:** Verify account status, password-version revocation, or disablement during JWT token validation/authorization.
-- [ ] **11. Refresh tokens are replayable:** Implement server-side storage and revocation tracking for refresh tokens (`internal/services/auth_service.go:156`).
-- [ ] **12. Unbounded archive/upload reads:** Enforce maximum size limits on Compose and Archive upload readers (`internal/handlers/compose.go:98`, `internal/handlers/archive.go:60`).
+- [x] **7. Rollback authorization is weaker than deployment authorization:** Enforce consistent admin-level service access for rollback (`internal/handlers/deployment.go:130`) matching deployment triggering (`internal/http/routes.go:232`).
+- [x] **8. Database passwords returned in API models:** Prevent returning decrypted password fields in `json:"password"` (`internal/models/database.go:35`, `internal/repositories/database.go:56`).
+- [x] **9. 2FA is not enforced during login:** Implement interactive TOTP second-factor challenge during login when `TOTPEnabled` is true (`internal/services/auth_service.go:126`).
+- [x] **10. JWT sessions survive user disablement/deletion:** Verify account status, password-version revocation, or disablement during JWT token validation/authorization.
+- [x] **11. Refresh tokens are replayable:** Implement server-side storage and revocation tracking for refresh tokens (`internal/services/auth_service.go:156`).
+- [x] **12. Unbounded archive/upload reads:** Enforce maximum size limits on Compose and Archive upload readers (`internal/handlers/compose.go:98`, `internal/handlers/archive.go:60`).
 
 ---
 

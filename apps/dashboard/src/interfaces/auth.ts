@@ -14,6 +14,7 @@ export interface ApiErrorResponse {
 export interface AuthCredentials {
   email: string;
   password: string;
+  totpCode?: string;
 }
 
 export interface RegisterCredentials extends AuthCredentials {

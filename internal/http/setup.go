@@ -86,6 +86,7 @@ func NewServer(db *sql.DB, v *utils.Vault, deployer *engine.Deployer, traefikMan
 	auditRepository := repositories.NewAuditLogRepo(db)
 	volumeRepo := repositories.NewServiceVolumeRepo(db)
 	orgRepo := repositories.NewOrganizationRepository(db)
+	refreshTokenRepo := repositories.NewRefreshTokenRepo(db)
 
 	httpEngineAdapter := newEngineAdapter(settingsRepo, appRepo, envVarRepo, dbRepo, projectRepo, scheduledTaskRepo, backupRepo, s3DestinationRepo, serviceVarRepo, serverlessRepository)
 	databaseDeployer := engine.NewDatabaseDeployer(dockerClient, httpEngineAdapter)
@@ -120,7 +121,7 @@ func NewServer(db *sql.DB, v *utils.Vault, deployer *engine.Deployer, traefikMan
 	if err != nil {
 		return nil, fmt.Errorf("mailer service: %w", err)
 	}
-	authService := services.NewAuthService(userRepo, settingsRepo, notifRepo, projectSettingsRepo, tokenService, mailerService)
+	authService := services.NewAuthService(userRepo, settingsRepo, notifRepo, projectSettingsRepo, tokenService, mailerService, refreshTokenRepo)
 	projectSettingsService := services.NewProjectSettingsService(projectSettingsRepo, userRepo, authService)
 	dispatcherService := core.NewDispatcherService(settingsRepo, notifRepo, userRepo, mailerService)
 

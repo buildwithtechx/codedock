@@ -16,6 +16,7 @@ type User struct {
 	Name                 string     `json:"name" db:"name"`
 	PasswordHash         string     `json:"-" db:"password_hash"`
 	Role                 UserRole   `json:"role" db:"role"`
+	IsActive             bool       `json:"isActive" db:"is_active"`
 	EmailVerified        bool       `json:"emailVerified" db:"email_verified"`
 	TOTPEnabled          bool       `json:"totpEnabled" db:"totp_enabled"`
 	OAuthProvider        string     `json:"oauthProvider,omitempty" db:"oauth_provider"`

@@ -6,6 +6,7 @@ import (
 	"database/sql"
 	"errors"
 	"fmt"
+	"strings"
 	"sync"
 	"time"
 
@@ -20,6 +21,7 @@ type UserRepository interface {
 	GetUserByEmail(ctx context.Context, email string) (*models.User, error)
 	GetUserByStripeCustomerID(ctx context.Context, stripeCustomerID string) (*models.User, error)
 	GetUserByID(ctx context.Context, id string) (*models.User, error)
+	GetUserTOTPSecret(ctx context.Context, userID string) (string, []string, error)
 	ListUsers(ctx context.Context, limit, offset int) ([]models.User, int, error)
 	CountUsers(ctx context.Context) (int, error)
 	UpdateUser(ctx context.Context, u *models.User) error
@@ -236,4 +238,22 @@ func (r *UserRepo) DeleteUser(ctx context.Context, id string) error {
 		return utils.NewNotFoundError("User", id)
 	}
 	return nil
+}
+
+func (r *UserRepo) GetUserTOTPSecret(ctx context.Context, userID string) (string, []string, error) {
+	var secret string
+	var recovery string
+	err := r.db.QueryRowContext(ctx, `SELECT COALESCE(totp_secret, ''), COALESCE(recovery_codes, '') FROM users WHERE id = ?`, userID).Scan(&secret, &recovery)
+	if err != nil {
+		return "", nil, fmt.Errorf("failed to get totp secret: %w", err)
+	}
+	var codes []string
+	if recovery != "" {
+		for _, part := range strings.Split(recovery, ",") {
+			if part = strings.TrimSpace(part); part != "" {
+				codes = append(codes, part)
+			}
+		}
+	}
+	return secret, codes, nil
 }

@@ -23,6 +23,7 @@ func NewAuthHandler(s *services.AuthService) *AuthHandler {
 type AuthRequest struct {
 	Email    string `json:"email"`
 	Password string `json:"password"`
+	TOTPCode string `json:"totpCode,omitempty"`
 }
 
 type ForgotPasswordRequest struct {
@@ -108,7 +109,7 @@ func (h *AuthHandler) Login(c echo.Context) error {
 	if err := c.Bind(&payload); err != nil {
 		return utils.Error(c, http.StatusBadRequest, "invalid payload")
 	}
-	u, token, refreshToken, err := h.authService.Login(c.Request().Context(), payload.Email, payload.Password)
+	u, token, refreshToken, err := h.authService.Login(c.Request().Context(), payload.Email, payload.Password, payload.TOTPCode)
 	if err != nil {
 		return utils.Error(c, http.StatusUnauthorized, err.Error())
 	}

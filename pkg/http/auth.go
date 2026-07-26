@@ -12,6 +12,7 @@ import (
 type AuthRequest struct {
 	Email    string `json:"email"`
 	Password string `json:"password"`
+	TOTPCode string `json:"totpCode,omitempty"`
 }
 
 type AuthResponse struct {
@@ -20,9 +21,14 @@ type AuthResponse struct {
 }
 
 func (c *Client) Login(email, password string) (*AuthResponse, error) {
+	return c.LoginWithTOTP(email, password, "")
+}
+
+func (c *Client) LoginWithTOTP(email, password, totpCode string) (*AuthResponse, error) {
 	payload := AuthRequest{
 		Email:    email,
 		Password: password,
+		TOTPCode: totpCode,
 	}
 
 	resp, err := c.sendRequest("POST", "/auth/signin", payload)
@@ -40,7 +46,11 @@ func (c *Client) Login(email, password string) (*AuthResponse, error) {
 		Data *AuthResponse `json:"data"`
 	}
 	if err := json.NewDecoder(resp.Body).Decode(&result); err != nil {
-		return nil, err
+		return nil, fmt.Errorf("failed to decode response: %w", err)
+	}
+
+	if result.Data == nil {
+		return nil, fmt.Errorf("empty response data")
 	}
 
 	return result.Data, nil

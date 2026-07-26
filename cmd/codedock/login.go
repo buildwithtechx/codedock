@@ -48,6 +48,12 @@ var loginCmd = &cobra.Command{
 		client := http.NewClient(serverURL, "")
 
 		authResp, err := client.Login(email, password)
+		if err != nil && strings.Contains(err.Error(), "2FA code required") {
+			fmt.Print("Enter 2FA Code: ")
+			var totpCode string
+			fmt.Scanln(&totpCode)
+			authResp, err = client.LoginWithTOTP(email, password, strings.TrimSpace(totpCode))
+		}
 		if err != nil {
 			fmt.Printf("❌ Authentication failed: %v\n", err)
 			os.Exit(1)

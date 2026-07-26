@@ -26,7 +26,9 @@ export const useLogin = () => {
       toast.success('Welcome back!');
     },
     onError: (error: Error) => {
-      toast.error(error?.message || 'Login failed. Please try again.');
+      if (!error?.message?.toLowerCase().includes('2fa code required')) {
+        toast.error(error?.message || 'Login failed. Please try again.');
+      }
     },
   });
 };

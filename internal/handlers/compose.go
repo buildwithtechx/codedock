@@ -104,9 +104,14 @@ func (h *ComposeHandler) Deploy(c echo.Context) error {
 }
 
 func (h *ComposeHandler) readUploadedFile(c echo.Context) ([]byte, error) {
+	const maxUploadBytes = 50 * 1024 * 1024
 	file, err := c.FormFile("file")
 	if err != nil {
 		return nil, echo.NewHTTPError(http.StatusBadRequest, "compose file is required")
+	}
+
+	if file.Size > maxUploadBytes {
+		return nil, echo.NewHTTPError(http.StatusRequestEntityTooLarge, "compose file exceeds 50 MB limit")
 	}
 
 	src, err := file.Open()
@@ -115,7 +120,7 @@ func (h *ComposeHandler) readUploadedFile(c echo.Context) ([]byte, error) {
 	}
 	defer src.Close()
 
-	return io.ReadAll(src)
+	return io.ReadAll(io.LimitReader(src, maxUploadBytes))
 }
 
 func (h *ComposeHandler) provisionComposeResources(ctx context.Context, result *services.ParsedComposeResult) (int, error) {

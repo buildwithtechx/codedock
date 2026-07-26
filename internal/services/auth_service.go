@@ -18,12 +18,13 @@ type Mailer interface {
 }
 
 type AuthService struct {
-	userRepo        repositories.UserRepository
-	settingsRepo    repositories.SettingsRepository
-	notifRepo       repositories.NotificationSettingsRepository
-	projectSettings repositories.ProjectSettingsRepository
-	tokenService    *TokenService
-	mailer          Mailer
+	userRepo         repositories.UserRepository
+	settingsRepo     repositories.SettingsRepository
+	notifRepo        repositories.NotificationSettingsRepository
+	projectSettings  repositories.ProjectSettingsRepository
+	tokenService     *TokenService
+	mailer           Mailer
+	refreshTokenRepo repositories.RefreshTokenRepository
 }
 
 func NewAuthService(
@@ -33,14 +34,16 @@ func NewAuthService(
 	psr repositories.ProjectSettingsRepository,
 	ts *TokenService,
 	mailer Mailer,
+	rtr repositories.RefreshTokenRepository,
 ) *AuthService {
 	return &AuthService{
-		userRepo:        ur,
-		settingsRepo:    sr,
-		notifRepo:       nr,
-		projectSettings: psr,
-		tokenService:    ts,
-		mailer:          mailer,
+		userRepo:         ur,
+		settingsRepo:     sr,
+		notifRepo:        nr,
+		projectSettings:  psr,
+		tokenService:     ts,
+		mailer:           mailer,
+		refreshTokenRepo: rtr,
 	}
 }
 
@@ -123,7 +126,7 @@ func (a *AuthService) Register(ctx context.Context, name, email, password, origi
 	return &uCopy, token, refreshToken, nil
 }
 
-func (a *AuthService) Login(ctx context.Context, email, password string) (*models.User, string, string, error) {
+func (a *AuthService) Login(ctx context.Context, email, password, totpCode string) (*models.User, string, string, error) {
 	if email == "" || password == "" {
 		return nil, "", "", errors.New("email and password are required")
 	}
@@ -131,9 +134,35 @@ func (a *AuthService) Login(ctx context.Context, email, password string) (*model
 	if err != nil || u == nil {
 		return nil, "", "", errors.New("invalid email or password")
 	}
+	if !u.IsActive {
+		return nil, "", "", errors.New("account is disabled")
+	}
 	if !utils.CheckPasswordHash(password, u.PasswordHash) {
 		return nil, "", "", errors.New("invalid email or password")
 	}
+
+	if u.TOTPEnabled {
+		if totpCode == "" {
+			return nil, "", "", errors.New("2FA code required")
+		}
+		secret, recoveryCodes, err := a.userRepo.GetUserTOTPSecret(ctx, u.ID)
+		if err != nil || secret == "" {
+			return nil, "", "", errors.New("failed to retrieve TOTP configuration")
+		}
+		if !ValidateTOTP(secret, totpCode) {
+			validRecovery := false
+			for _, rc := range recoveryCodes {
+				if rc == totpCode {
+					validRecovery = true
+					break
+				}
+			}
+			if !validRecovery {
+				return nil, "", "", errors.New("invalid 2FA verification code")
+			}
+		}
+	}
+
 	token, err := a.tokenService.GenerateToken(u)
 	if err != nil {
 		return nil, "", "", err
@@ -142,6 +171,11 @@ func (a *AuthService) Login(ctx context.Context, email, password string) (*model
 	refreshToken, err := a.tokenService.GenerateRefreshToken(u)
 	if err != nil {
 		return nil, "", "", err
+	}
+
+	if a.refreshTokenRepo != nil {
+		tokenHash := repositories.HashToken(refreshToken)
+		_ = a.refreshTokenRepo.StoreToken(ctx, u.ID, tokenHash, time.Now().Add(7*24*time.Hour))
 	}
 
 	now := time.Now()
@@ -163,9 +197,21 @@ func (a *AuthService) RefreshToken(ctx context.Context, refreshTokenStr string) 
 		return nil, "", "", errors.New("invalid or expired refresh token")
 	}
 
+	if a.refreshTokenRepo != nil {
+		inboundHash := repositories.HashToken(refreshTokenStr)
+		revoked, err := a.refreshTokenRepo.IsRevoked(ctx, inboundHash)
+		if err != nil || revoked {
+			return nil, "", "", errors.New("refresh token has been revoked")
+		}
+		_ = a.refreshTokenRepo.RevokeToken(ctx, inboundHash)
+	}
+
 	u, err := a.userRepo.GetUserByID(ctx, userID)
 	if err != nil || u == nil {
 		return nil, "", "", errors.New("user not found")
+	}
+	if !u.IsActive {
+		return nil, "", "", errors.New("account is disabled")
 	}
 	expectedHash := u.PasswordHash
 	if len(expectedHash) > 10 {
@@ -183,6 +229,11 @@ func (a *AuthService) RefreshToken(ctx context.Context, refreshTokenStr string) 
 	newRefreshToken, err := a.tokenService.GenerateRefreshToken(u)
 	if err != nil {
 		return nil, "", "", err
+	}
+
+	if a.refreshTokenRepo != nil {
+		newHash := repositories.HashToken(newRefreshToken)
+		_ = a.refreshTokenRepo.StoreToken(ctx, u.ID, newHash, time.Now().Add(7*24*time.Hour))
 	}
 
 	uCopy := *u

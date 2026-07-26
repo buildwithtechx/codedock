@@ -62,8 +62,13 @@ func (h *ArchiveHandler) DeployArchive(c echo.Context) error {
 	}
 	defer src.Close()
 
+	const maxArchiveBytes = 500 * 1024 * 1024
+	if file.Size > maxArchiveBytes {
+		return utils.Error(c, http.StatusRequestEntityTooLarge, "archive exceeds 500 MB limit")
+	}
+
 	tmpPath := filepath.Join(os.TempDir(), "codedock-upload", uuid.New().String()+".tar.gz")
-	if err := writeFile(tmpPath, src); err != nil {
+	if err := writeFile(tmpPath, io.LimitReader(src, maxArchiveBytes)); err != nil {
 		return utils.Error(c, http.StatusInternalServerError, "failed to save archive")
 	}
 	defer os.Remove(tmpPath)

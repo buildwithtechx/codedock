@@ -39,7 +39,7 @@ type Database struct {
 	Version            string         `json:"version" db:"version"`
 	Port               int            `json:"port" db:"port"`
 	Username           string         `json:"username" db:"username"`
-	Password           string         `json:"password" db:"-"`
+	Password           string         `json:"-" db:"-"`
 	EncryptedPassword  string         `json:"-" db:"encrypted_password"`
 	DatabaseName       string         `json:"databaseName" db:"database_name"`
 	VolumePath         string         `json:"volumePath" db:"volume_path"`
