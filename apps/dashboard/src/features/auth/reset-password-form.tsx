@@ -3,7 +3,7 @@ import { useState } from 'react';
 import { Button } from '#/components/ui/button';
 import { Input } from '#/components/ui/input';
 import { Label } from '#/components/ui/label';
-import { useResetPassword } from '#/hooks/use-auth';
+import { useResetPassword } from '#/features/auth/hooks';
 
 interface ResetPasswordFormProps {
   token: string;

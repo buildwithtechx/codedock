@@ -10,8 +10,8 @@ import {
   SheetTitle,
   SheetTrigger,
 } from '#/components/ui/sheet';
+import { useGetDatabases } from '#/features/databases/hooks';
 import { useListByProject } from '#/hooks/use-apps';
-import { useGetDatabases } from '#/hooks/use-databases';
 
 interface SmartLinkerDrawerProps {
   projectId: string;

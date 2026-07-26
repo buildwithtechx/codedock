@@ -11,8 +11,8 @@ import {
 } from '#/components/ui/card';
 import { Input } from '#/components/ui/input';
 import { Label } from '#/components/ui/label';
+import type { AppService } from '#/features/services/types';
 import { useUpdateApp } from '#/hooks/use-apps';
-import type { AppService } from '#/interfaces/deployment';
 
 interface ResourceLimitsProps {
   app: AppService;

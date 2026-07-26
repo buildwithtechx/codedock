@@ -18,7 +18,7 @@ import {
   useRequestEmailChange,
   useUpdateProfile,
   useVerifyEmailChange,
-} from '#/hooks/use-profile';
+} from '#/features/profile/hooks';
 
 export function ProfileNameForm() {
   const { data: profile, isLoading } = useGetProfile();

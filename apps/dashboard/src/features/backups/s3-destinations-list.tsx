@@ -8,7 +8,7 @@ import {
   DropdownMenuItem,
   DropdownMenuTrigger,
 } from '#/components/ui/dropdown-menu';
-import { useDeleteS3Destination, useListS3Destinations } from '#/hooks/use-backups';
+import { useDeleteS3Destination, useListS3Destinations } from '#/features/backups/hooks';
 import { CreateS3DestinationDialog } from './create-s3-destination-dialog';
 
 export function S3DestinationsList() {

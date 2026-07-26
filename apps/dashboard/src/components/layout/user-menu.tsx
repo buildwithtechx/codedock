@@ -11,7 +11,7 @@ import {
 } from 'lucide-react';
 import { useTheme } from 'next-themes';
 import { useEffect, useRef, useState } from 'react';
-import { useLogout } from '#/hooks/use-auth';
+import { useLogout } from '#/features/auth/hooks';
 import { useAuthStore } from '#/stores/auth-store';
 
 interface UserMenuProps {

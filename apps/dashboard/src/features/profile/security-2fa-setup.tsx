@@ -13,8 +13,8 @@ import {
 } from '#/components/ui/dialog';
 import { InputOTP, InputOTPGroup, InputOTPSlot } from '#/components/ui/input-otp';
 import { Section } from '#/components/ui/section';
-import { useDisable2FA, useSetup2FA, useVerify2FA } from '#/hooks/use-auth';
-import { useGetProfile } from '#/hooks/use-profile';
+import { useDisable2FA, useSetup2FA, useVerify2FA } from '#/features/auth/hooks';
+import { useGetProfile } from '#/features/profile/hooks';
 
 function OtpSlots() {
   const indices = [0, 1, 2, 3, 4, 5] as const;

@@ -69,3 +69,6 @@ export const useDeleteDomain = () => {
     },
   });
 };
+
+export const useCreate = useCreateDomain;
+export const useDelete = useDeleteDomain;

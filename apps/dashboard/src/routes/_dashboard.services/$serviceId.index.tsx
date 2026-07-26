@@ -7,13 +7,12 @@ import { DataBrowser } from '#/features/databases/data-browser';
 import { DatabaseConnectionCard } from '#/features/databases/database-connection-card';
 import { DatabaseImportModal } from '#/features/databases/database-import-modal';
 import { DatabaseNetworking } from '#/features/databases/database-networking';
+import { useGetDatabase } from '#/features/databases/hooks';
 import { RedisKeyBrowser } from '#/features/databases/redis-key-browser';
-
 import { HealthcheckCard } from '#/features/services/healthcheck-card';
 import { MaintenanceModeCard } from '#/features/services/maintenance-mode-card';
 import { RuntimeModeCard } from '#/features/services/runtime-mode-card';
 import { useGetApp } from '#/hooks/use-apps';
-import { useGetDatabase } from '#/hooks/use-databases';
 
 export const Route = createFileRoute('/_dashboard/services/$serviceId/')({
   component: ServiceIndexRoute,

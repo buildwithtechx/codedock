@@ -5,7 +5,7 @@ import { Button } from '#/components/ui/button';
 import { Input } from '#/components/ui/input';
 import { Label } from '#/components/ui/label';
 import { Skeleton } from '#/components/ui/skeleton';
-import { useGetSettings, useUpdateSettings } from '#/hooks/use-settings';
+import { useGetSettings, useUpdateSettings } from '#/features/settings/hooks';
 
 type SectionProps = {
   icon: React.ReactNode;

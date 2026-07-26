@@ -5,9 +5,9 @@ import { Button } from '#/components/ui/button';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '#/components/ui/card';
 import { Label } from '#/components/ui/label';
 import { Switch } from '#/components/ui/switch';
+import type { PRPreviewStatus } from '#/features/services/types';
 import { useGetApp, useUpdateApp } from '#/hooks/use-apps';
 import { useListPRPreviews } from '#/hooks/use-pr-previews';
-import type { PRPreviewStatus } from '#/interfaces/deployment';
 
 export function PRPreviews({ serviceId }: { serviceId: string }) {
   const { data: appData, isLoading: isAppLoading } = useGetApp(serviceId);

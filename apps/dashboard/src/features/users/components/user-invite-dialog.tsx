@@ -18,7 +18,7 @@ import {
   SelectTrigger,
   SelectValue,
 } from '#/components/ui/select';
-import { useInviteUser } from '#/hooks/use-users';
+import { useInviteUser } from '#/features/users/hooks';
 
 interface UserInviteDialogProps {
   open: boolean;

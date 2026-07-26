@@ -31,8 +31,8 @@ import {
   useListOrganizationMembers,
   useRemoveOrganizationMember,
   useUpdateOrganizationMember,
-} from '#/hooks/use-organizations';
-import type { OrganizationMember } from '#/interfaces/organization';
+} from '#/features/organizations/hooks';
+import type { OrganizationMember } from '#/features/organizations/types';
 
 export function OrganizationMembers({ organizationId }: { organizationId: string }) {
   const { data: members, isLoading } = useListOrganizationMembers(organizationId);

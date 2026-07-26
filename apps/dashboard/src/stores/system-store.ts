@@ -1,5 +1,5 @@
 import { create } from 'zustand';
-import { settingsService } from '#/services/settings';
+import { settingsService } from '#/features/settings/api';
 
 export interface SystemState {
   registrationEnabled: boolean;

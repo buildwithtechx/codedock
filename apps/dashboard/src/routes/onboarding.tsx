@@ -1,7 +1,7 @@
 import { createFileRoute, Navigate } from '@tanstack/react-router';
 import { BackgroundPattern } from '#/components/layout/background-pattern';
 import { OnboardingForm } from '#/features/onboarding/onboarding-form';
-import { useGetSetupStatus } from '#/hooks/use-settings';
+import { useGetSetupStatus } from '#/features/settings/hooks';
 import { useSystemStore } from '#/stores/system-store';
 
 export const Route = createFileRoute('/onboarding')({

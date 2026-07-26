@@ -3,7 +3,7 @@ import { toast } from 'sonner';
 import { Badge } from '#/components/ui/badge';
 import { Button } from '#/components/ui/button';
 import { Skeleton } from '#/components/ui/skeleton';
-import { useCheckUpdate, useDeployUpdate, useGetUpdateStatus } from '#/hooks/use-settings';
+import { useCheckUpdate, useDeployUpdate, useGetUpdateStatus } from '#/features/settings/hooks';
 
 export const UpdatesPage = () => {
   const { data, isLoading, refetch } = useGetUpdateStatus();

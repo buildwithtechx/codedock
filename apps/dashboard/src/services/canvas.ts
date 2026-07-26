@@ -1,5 +1,5 @@
+import type { CanvasSummary, EnvironmentCanvas } from '#/features/projects/types';
 import type { BaseResponse } from '#/interfaces/base';
-import type { CanvasSummary, EnvironmentCanvas } from '#/interfaces/project';
 import { apiClient } from '#/lib/api-client';
 import { handleApiError } from '#/lib/error';
 

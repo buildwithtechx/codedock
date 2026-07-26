@@ -1,6 +1,6 @@
+import type { Database } from '#/features/databases/types';
+import type { AppService } from '#/features/services/types';
 import type { BaseResponse, PaginatedData } from '#/interfaces/base';
-import type { Database } from '#/interfaces/database';
-import type { AppService } from '#/interfaces/deployment';
 
 export type MemberPermission = 'admin' | 'member' | 'viewer';
 export type MemberStatus = 'pending' | 'accepted';

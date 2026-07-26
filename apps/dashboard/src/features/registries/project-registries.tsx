@@ -19,8 +19,12 @@ import {
   TableHeader,
   TableRow,
 } from '#/components/ui/table';
-import { useCreateRegistry, useDeleteRegistry, useListRegistries } from '#/hooks/use-registries';
-import type { Registry } from '#/interfaces/registry';
+import {
+  useCreateRegistry,
+  useDeleteRegistry,
+  useListRegistries,
+} from '#/features/registries/hooks';
+import type { Registry } from '#/features/registries/types';
 
 export function ProjectRegistries({ projectId }: { projectId: string }) {
   const { data: registries, isLoading } = useListRegistries(projectId);

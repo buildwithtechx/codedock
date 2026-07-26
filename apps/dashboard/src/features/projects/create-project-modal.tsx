@@ -18,8 +18,8 @@ import {
   SelectTrigger,
   SelectValue,
 } from '#/components/ui/select';
-import { useListOrganizations } from '#/hooks/use-organizations';
-import { useCreateProject } from '#/hooks/use-projects';
+import { useListOrganizations } from '#/features/organizations/hooks';
+import { useCreateProject } from '#/features/projects/hooks';
 import { useListServers } from '#/hooks/use-servers';
 
 export function CreateProjectModal({

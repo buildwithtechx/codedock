@@ -1,10 +1,10 @@
-import type { BaseResponse } from '#/interfaces/base';
 import type {
   CreateServiceVarRequest,
   EnvExampleVariableSuggestion,
   UpdateServiceVarRequest,
   Variable,
-} from '#/interfaces/deployment';
+} from '#/features/services/types';
+import type { BaseResponse } from '#/interfaces/base';
 import { apiClient } from '#/lib/api-client';
 import { handleApiError } from '#/lib/error';
 

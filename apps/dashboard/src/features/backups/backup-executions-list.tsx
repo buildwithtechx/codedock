@@ -3,7 +3,7 @@ import { ArchiveRestore, Check, Download, History, Trash2 } from 'lucide-react';
 import { Badge } from '#/components/ui/badge';
 import { Button } from '#/components/ui/button';
 import { Section } from '#/components/ui/section';
-import type { BackupRecord } from '#/interfaces/backup';
+import type { BackupRecord } from '#/features/backups/types';
 
 type Props = {
   records: BackupRecord[];

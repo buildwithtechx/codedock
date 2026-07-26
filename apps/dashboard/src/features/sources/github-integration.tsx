@@ -8,8 +8,8 @@ import {
   useExchangeGithubManifest,
   useGetGitApps,
   useSaveGitApp,
-} from '#/hooks/use-settings';
-import type { GithubApp } from '#/interfaces/settings';
+} from '#/features/settings/hooks';
+import type { GithubApp } from '#/features/settings/types';
 import { Route } from '#/routes/_dashboard.sources';
 import { GithubAppDialogs, GithubIcon } from './github-app-dialogs';
 

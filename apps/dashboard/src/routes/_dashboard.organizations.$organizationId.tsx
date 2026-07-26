@@ -1,7 +1,7 @@
 import { createFileRoute } from '@tanstack/react-router';
 import { Building, Loader2 } from 'lucide-react';
+import { useGetOrganization } from '#/features/organizations/hooks';
 import { OrganizationMembers } from '#/features/organizations/organization-members';
-import { useGetOrganization } from '#/hooks/use-organizations';
 
 export const Route = createFileRoute('/_dashboard/organizations/$organizationId')({
   component: OrganizationDetailRoute,

@@ -1,14 +1,12 @@
-export * from './auth';
-export * from './backup';
+export * from '#/features/auth/types';
+export * from '#/features/backups/types';
+export * from '#/features/databases/types';
+export * from '#/features/notifications/types';
+export * from '#/features/profile/types';
+export * from '#/features/projects/types';
+export * from '#/features/services/types';
+export * from '#/features/settings/types';
+export * from '#/features/users/types';
 export * from './base';
-
-export * from './database';
-export * from './deployment';
 export * from './git';
-export * from './notification';
-export * from './profile';
-export * from './project';
-export * from './settings';
-
 export * from './templates';
-export * from './users';

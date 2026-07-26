@@ -1,5 +1,5 @@
+import type { User } from '#/features/users/types';
 import type { BaseResponse } from '#/interfaces/base';
-import type { User } from '#/interfaces/users';
 
 export interface AuthResponse {
   token: string;

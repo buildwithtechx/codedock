@@ -1,5 +1,5 @@
+import type { DomainConfig } from '#/features/projects/types';
 import type { BaseResponse } from '#/interfaces/base';
-import type { DomainConfig } from '#/interfaces/project';
 import { apiClient } from '#/lib/api-client';
 import { handleApiError } from '#/lib/error';
 import type { CreateDNSRecordRequest, DNSRecord, UpdateDNSRecordRequest } from './types';

@@ -2,7 +2,7 @@ import { Trash2 } from 'lucide-react';
 import { toast } from 'sonner';
 import { Button } from '#/components/ui/button';
 import { Dialog, DialogContent, DialogTitle } from '#/components/ui/dialog';
-import { useDeleteToken } from '#/hooks/use-profile';
+import { useDeleteToken } from '#/features/profile/hooks';
 
 interface ApiKeyDeleteDialogProps {
   deleteId: string | null;

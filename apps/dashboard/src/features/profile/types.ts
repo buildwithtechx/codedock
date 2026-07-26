@@ -1,5 +1,5 @@
+import type { UserRole } from '#/features/users/types';
 import type { BaseResponse } from '#/interfaces/base';
-import type { UserRole } from '#/interfaces/users';
 
 export interface UserProfile {
   id: string;

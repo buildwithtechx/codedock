@@ -7,7 +7,7 @@ import {
   DropdownMenuTrigger,
 } from '#/components/ui/dropdown-menu';
 import { Input } from '#/components/ui/input';
-import { useGetAISettings, useUpdateAISettings } from '#/hooks/use-settings';
+import { useGetAISettings, useUpdateAISettings } from '#/features/settings/hooks';
 import { aiProviderCatalog } from '#/lib/ai-providers';
 
 const PROVIDERS = [

@@ -8,7 +8,7 @@ import {
   useGetNotificationSettings,
   useTestNotification,
   useUpdateNotificationSettings,
-} from '#/hooks/use-settings';
+} from '#/features/settings/hooks';
 import { NotificationChannelsList, type NotifSettingsForm } from './notification-channels-list';
 
 const EMPTY: NotifSettingsForm = {
