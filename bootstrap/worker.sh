@@ -29,13 +29,16 @@ verify_checksum() {
   local label="$3"
 
   if [ -z "$expected" ]; then
-    if [ "${CODEDOCK_ENFORCE_CHECKSUMS:-false}" = "true" ] || [ "${CODEDOCK_ENFORCE_CHECKSUMS:-false}" = "1" ]; then
-      echo -e "${RED}❌ Checksum enforcement enabled (CODEDOCK_ENFORCE_CHECKSUMS=true), but no checksum provided for ${label}!${NC}"
-      rm -f "$file"
-      exit 1
-    fi
-    echo -e "  ${YELLOW}⚠️  No checksum provided for ${label}; skipping verification.${NC}"
-    return
+    echo -e "${RED}❌ No checksum provided for ${label}. Set ${label^^}_SHA256 to continue.${NC}"
+    echo -e "${YELLOW}   Tip: compute it with: sha256sum <file>${NC}"
+    rm -f "$file"
+    exit 1
+  fi
+
+  if ! command -v sha256sum &>/dev/null; then
+    echo -e "${RED}❌ sha256sum is not installed. Cannot verify ${label}.${NC}"
+    rm -f "$file"
+    exit 1
   fi
 
   local actual

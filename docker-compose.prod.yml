@@ -1,7 +1,6 @@
 # =============================================================================
 # Codedock Cloud — Production Docker Compose
 # Usage: docker compose -f docker-compose.prod.yml up -d
-# =============================================================================
 
 services:
   codedock:
@@ -21,6 +20,8 @@ services:
     networks:
       - proxy
       - codedock-internal
+    security_opt:
+      - no-new-privileges:true
     labels:
       - traefik.enable=true
       - traefik.docker.network=proxy
@@ -51,6 +52,8 @@ services:
     image: traefik:v3.3
     container_name: traefik
     restart: unless-stopped
+    security_opt:
+      - no-new-privileges:true
     command:
       - --api.dashboard=false
       - --providers.docker=true
@@ -83,13 +86,15 @@ services:
     image: containrrr/watchtower:1.7.1
     container_name: watchtower
     restart: unless-stopped
+    security_opt:
+      - no-new-privileges:true
     environment:
       WATCHTOWER_CLEANUP: "true"
       WATCHTOWER_POLL_INTERVAL: "300"
       WATCHTOWER_INCLUDE_STOPPED: "false"
       WATCHTOWER_LABEL_ENABLE: "true"
     volumes:
-      - /var/run/docker.sock:/var/run/docker.sock
+      - /var/run/docker.sock:/var/run/docker.sock:ro
     networks:
       - codedock-internal
     labels:

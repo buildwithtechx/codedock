@@ -28,11 +28,11 @@ This roadmap tracks all active security remediations, architectural refactoring,
 
 ## 3. Bootstrap & Operational Issues
 
-- [ ] **13. Installer checksum verification is optional:** Require checksum validation for Compose, control binaries, Docker installer, and worker binaries (`bootstrap/install.sh:12`, `bootstrap/worker.sh:117`).
-- [ ] **14. Generated .env permissions are not explicitly restricted:** Enforce `0600` permissions when writing `.env` secrets (`bootstrap/install.sh:152`).
-- [ ] **15. Docker socket grants control-plane-level host access:** Tighten container permissions or document security implications of Docker socket access in `docker-compose.prod.yml:18, 64`.
-- [ ] **16. Production healthcheck appears invalid:** Ensure backend route `/healthz` exists and matches `docker-compose.prod.yml:37` healthcheck definition.
-- [ ] **17. Restore script should validate archive entry types:** Reject symlinks/hardlinks in archive extraction in addition to path traversal (`scripts/restore.sh:22`).
+- [x] **13. Installer checksum verification is optional:** Require checksum validation for Compose, control binaries, Docker installer, and worker binaries (`bootstrap/install.sh:12`, `bootstrap/worker.sh:117`).
+- [x] **14. Generated .env permissions are not explicitly restricted:** Enforce `0600` permissions when writing `.env` secrets (`bootstrap/install.sh:152`).
+- [x] **15. Docker socket grants control-plane-level host access:** Tighten container permissions or document security implications of Docker socket access in `docker-compose.prod.yml:18, 64`.
+- [x] **16. Production healthcheck appears invalid:** Ensure backend route `/healthz` exists and matches `docker-compose.prod.yml:37` healthcheck definition.
+- [x] **17. Restore script should validate archive entry types:** Reject symlinks/hardlinks in archive extraction in addition to path traversal (`scripts/restore.sh:22`).
 
 ---
 
