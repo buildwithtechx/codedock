@@ -37,3 +37,17 @@
 
 - [ ] **5-Column Mega Footer (`apps/web/src/components/footer.astro`)**: Update to 5-column layout (Product, Enterprise, Solutions, Compare & Learn, Company) matching Dokploy footer.
 - [ ] **Homepage Visual Elevation (`apps/web/src/pages/index.astro`)**: Upgrade hero with install script copy box, GitHub/Discord CTA badges, glassmorphic control plane preview, and glowing dark mesh background.
+
+## Documentation (`apps/docs`) Roadmap (Dokploy Parity & Uncollapsed Navigation)
+
+- [x] **Uncollapsed Sidebar Config (`apps/docs/astro.config.mjs`)**: Set `collapsed: false` on all Starlight sidebar groups so navigation categories stay permanently open.
+- [ ] **Dokploy-Style Navigation Hierarchy (`apps/docs/astro.config.mjs`)**: Reorganize documentation into clean sections: Getting Started, Deployments, Databases, Storage & Backups, Networking & SSL, Fleet Management, Security & Operations, and Reference.
+- [ ] **Missing Feature Docs (`apps/docs/src/content/docs/`)**: Write comprehensive docs for missing/sparse topics:
+  - Docker Compose deployments & environment override rules
+  - Railpack & Nixpacks build engine configuration
+  - Native Database Data Browser & SQL Studio usage
+  - Automated S3 / Cloudflare R2 / MinIO backup scheduling & restores
+  - Canvas topology view & interactive dependency mapping
+  - Traefik routing, custom domains, and automatic Let's Encrypt SSL
+  - Yamux tunnel fleet management & agentless server setup
+  - `codedockd` CLI commands and full REST API endpoint specifications
