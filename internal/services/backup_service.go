@@ -8,7 +8,7 @@ import (
 
 	"github.com/google/uuid"
 
-	"codedock.run/codedock/internal/engine"
+	"codedock.run/codedock/internal/engine/backup"
 	"codedock.run/codedock/internal/models"
 	"codedock.run/codedock/internal/repositories"
 )
@@ -16,10 +16,10 @@ import (
 type BackupService struct {
 	backupRepo repositories.BackupRepository
 	s3Repo     repositories.S3DestinationRepository
-	manager    *engine.BackupManager
+	manager    *backup.BackupManager
 }
 
-func NewBackupService(br repositories.BackupRepository, sr repositories.S3DestinationRepository, m *engine.BackupManager) *BackupService {
+func NewBackupService(br repositories.BackupRepository, sr repositories.S3DestinationRepository, m *backup.BackupManager) *BackupService {
 	return &BackupService{
 		backupRepo: br,
 		s3Repo:     sr,
@@ -102,7 +102,7 @@ func (s *BackupService) CreateS3Destination(ctx context.Context, dest *models.S3
 	}
 	dest.CreatedAt = time.Now().UTC().Format(time.RFC3339)
 
-	if err := engine.EnsureS3Bucket(ctx, dest); err != nil {
+	if err := backup.EnsureS3Bucket(ctx, dest); err != nil {
 		return fmt.Errorf("failed to verify or create bucket: %w", err)
 	}
 

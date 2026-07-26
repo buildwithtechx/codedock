@@ -1,4 +1,4 @@
-package engine
+package observability
 
 import (
 	"github.com/gorilla/websocket"

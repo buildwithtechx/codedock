@@ -1,4 +1,4 @@
-package engine
+package cron
 
 import (
 	"bytes"
@@ -17,26 +17,34 @@ import (
 	"github.com/docker/docker/api/types/filters"
 	"github.com/docker/docker/client"
 	"github.com/docker/docker/pkg/stdcopy"
-	"github.com/robfig/cron/v3"
+	cronv3 "github.com/robfig/cron/v3"
 
 	"codedock.run/codedock/internal/models"
 	"codedock.run/codedock/internal/utils"
 )
 
+type Store interface {
+	ListScheduledTasks() ([]models.ScheduledTask, error)
+	GetScheduledTask(id string) (*models.ScheduledTask, error)
+	GetProject(id string) (*models.ProjectConfig, error)
+	GetAppService(id string) (*models.AppService, error)
+	UpdateScheduledTaskStatusAndOutput(id string, status models.ScheduledTaskStatus, lastRunAt *time.Time, output string) error
+}
+
 type CronManager struct {
 	dockerClient *client.Client
-	store        CronManagerStore
-	cronEngine   *cron.Cron
-	entries      map[string]cron.EntryID
+	store        Store
+	cronEngine   *cronv3.Cron
+	entries      map[string]cronv3.EntryID
 	mu           sync.Mutex
 }
 
-func NewCronManager(dockerClient *client.Client, s CronManagerStore) *CronManager {
+func NewCronManager(dockerClient *client.Client, s Store) *CronManager {
 	return &CronManager{
 		dockerClient: dockerClient,
 		store:        s,
-		cronEngine:   cron.New(cron.WithSeconds()),
-		entries:      make(map[string]cron.EntryID),
+		cronEngine:   cronv3.New(cronv3.WithSeconds()),
+		entries:      make(map[string]cronv3.EntryID),
 	}
 }
 

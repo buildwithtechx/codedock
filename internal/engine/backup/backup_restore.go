@@ -1,4 +1,4 @@
-package engine
+package backup
 
 import (
 	"bytes"
@@ -14,6 +14,8 @@ import (
 
 	"codedock.run/codedock/internal/models"
 	"codedock.run/codedock/internal/utils"
+
+	"codedock.run/codedock/internal/engine/compose"
 )
 
 func (bm *BackupManager) RestoreBackup(ctx context.Context, recordID string) error {
@@ -77,7 +79,7 @@ func (bm *BackupManager) buildRestoreCommand(cfg *models.BackupConfig) (string, 
 			return "", nil, fmt.Errorf("target database %s not found", cfg.DatabaseID)
 		}
 		containerName := utils.NormalizeContainerName(db.ID)
-		tmplMgr, err := NewTemplateManager()
+		tmplMgr, err := compose.NewTemplateManager()
 		if err != nil {
 			return "", nil, fmt.Errorf("failed to init template manager: %v", err)
 		}
@@ -114,7 +116,7 @@ func (bm *BackupManager) buildRestoreCommand(cfg *models.BackupConfig) (string, 
 
 func (bm *BackupManager) executeRestore(ctx context.Context, containerName string, restoreCmd []string, data []byte) error {
 	if bm.dockerClient == nil {
-		return nil // Simulated restore
+		return nil
 	}
 
 	inspectResp, err := bm.dockerClient.ContainerInspect(ctx, containerName)

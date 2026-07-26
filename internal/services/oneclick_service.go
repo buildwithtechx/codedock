@@ -8,19 +8,20 @@ import (
 	"github.com/google/uuid"
 
 	"codedock.run/codedock/internal/engine"
+	"codedock.run/codedock/internal/engine/compose"
 	"codedock.run/codedock/internal/models"
 	"codedock.run/codedock/internal/repositories"
 )
 
 type OneClickService struct {
-	tmplManager *engine.TemplateManager
+	tmplManager *compose.TemplateManager
 	dbDeployer  *engine.DatabaseDeployer
 	envRepo     repositories.EnvironmentRepository
 	dbRepo      repositories.DatabaseRepository
 }
 
 func NewOneClickService(
-	tm *engine.TemplateManager,
+	tm *compose.TemplateManager,
 	dd *engine.DatabaseDeployer,
 	er repositories.EnvironmentRepository,
 	dr repositories.DatabaseRepository,
@@ -97,7 +98,7 @@ func (s *OneClickService) DeployApp(ctx context.Context, appID, projectID, name 
 	return db, nil
 }
 
-func extractOneClickApp(id string, tmpl *engine.ComposeTemplate) *models.OneClickApp {
+func extractOneClickApp(id string, tmpl *compose.ComposeTemplate) *models.OneClickApp {
 	if tmpl.XCodedock != nil && tmpl.XCodedock.IsOneClick {
 		return &models.OneClickApp{
 			ID:          id,
@@ -119,7 +120,7 @@ func extractOneClickApp(id string, tmpl *engine.ComposeTemplate) *models.OneClic
 	return nil
 }
 
-func findOneClickMetadata(tmpl *engine.ComposeTemplate) *engine.CodedockMetadata {
+func findOneClickMetadata(tmpl *compose.ComposeTemplate) *compose.CodedockMetadata {
 	if tmpl.XCodedock != nil && tmpl.XCodedock.IsOneClick {
 		return tmpl.XCodedock
 	}
@@ -131,7 +132,7 @@ func findOneClickMetadata(tmpl *engine.ComposeTemplate) *engine.CodedockMetadata
 	return nil
 }
 
-func extractPort(tmpl *engine.ComposeTemplate) int {
+func extractPort(tmpl *compose.ComposeTemplate) int {
 	for _, svc := range tmpl.Services {
 		if svc.XCodedock != nil && svc.XCodedock.IsOneClick && len(svc.Ports) > 0 {
 			return parsePortFromString(svc.Ports)

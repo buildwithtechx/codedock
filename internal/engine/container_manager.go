@@ -14,6 +14,8 @@ import (
 
 	"codedock.run/codedock/internal/models"
 	"codedock.run/codedock/internal/utils"
+
+	"codedock.run/codedock/internal/engine/observability"
 )
 
 type ContainerManager struct {
@@ -103,7 +105,7 @@ func (c *ContainerManager) CreateAndStart(ctx context.Context, opts ContainerRun
 	}
 
 	if len(opts.LogDrains) > 0 {
-		StartLogDrains(context.Background(), c.dockerClient, resp.ID, opts.Name, opts.LogDrains)
+		observability.StartLogDrains(context.Background(), c.dockerClient, resp.ID, opts.Name, opts.LogDrains)
 	}
 
 	return resp.ID, nil

@@ -17,6 +17,8 @@ import (
 
 	"codedock.run/codedock/cmd/codedockd/commands"
 	"codedock.run/codedock/internal/engine"
+	"codedock.run/codedock/internal/engine/networking"
+	"codedock.run/codedock/internal/engine/observability"
 	codedockhttp "codedock.run/codedock/internal/http"
 	"codedock.run/codedock/internal/services"
 	"codedock.run/codedock/internal/telemetry"
@@ -48,25 +50,25 @@ func startServer() {
 		slog.Warn("Docker daemon connection warning", "err", err, "detail", "container deployment features disabled")
 	}
 
-	traefikMgr := engine.NewTraefikManager(dockerClient, os.Getenv("CODEDOCK_TLS_EMAIL"))
+	traefikMgr := networking.NewTraefikManager(dockerClient, os.Getenv("CODEDOCK_TLS_EMAIL"))
 	if err := traefikMgr.EnsureTraefikRunning(context.Background()); err != nil {
 		slog.Warn("failed to start Traefik proxy", "err", err)
 	}
 
-	tsdbMgr := engine.NewTSDBManager(dockerClient)
+	tsdbMgr := observability.NewTSDBManager(dockerClient)
 	if err := tsdbMgr.EnsureTSDBRunning(context.Background()); err != nil {
 		slog.Warn("failed to start TSDB", "err", err)
 	}
 
-	lokiMgr := engine.NewLokiManager(dockerClient)
+	lokiMgr := observability.NewLokiManager(dockerClient)
 	if err := lokiMgr.EnsureLokiRunning(context.Background()); err != nil {
 		slog.Warn("failed to start Loki", "err", err)
 	}
 
-	metricsWorker := engine.NewMetricsWorker(dockerClient)
+	metricsWorker := observability.NewMetricsWorker(dockerClient)
 	metricsWorker.Start()
 
-	logWorker := engine.NewLogWorker(dockerClient)
+	logWorker := observability.NewLogWorker(dockerClient)
 	logWorker.Start(context.Background())
 
 	services.StartTelemetryReporter(db, codedockVersion)
@@ -119,7 +121,7 @@ func runMCP() {
 
 	dockerClient, _ := client.NewClientWithOpts(client.FromEnv, client.WithAPIVersionNegotiation())
 	deployer := engine.NewDeployer(dockerClient, commands.NewDBDeployerStore(db, vlt))
-	traefikMgr := engine.NewTraefikManager(dockerClient, os.Getenv("CODEDOCK_TLS_EMAIL"))
+	traefikMgr := networking.NewTraefikManager(dockerClient, os.Getenv("CODEDOCK_TLS_EMAIL"))
 	apiServer, err := codedockhttp.NewServer(db, vlt, deployer, traefikMgr, dockerClient, "")
 	if err != nil {
 		slog.Error("failed to initialize server", "err", err)

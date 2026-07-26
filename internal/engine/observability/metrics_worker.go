@@ -1,4 +1,4 @@
-package engine
+package observability
 
 import (
 	"bytes"
@@ -11,6 +11,8 @@ import (
 
 	"github.com/docker/docker/api/types/container"
 	"github.com/docker/docker/client"
+
+	"codedock.run/codedock/internal/engine/networking"
 )
 
 type MetricsWorker struct {
@@ -56,7 +58,7 @@ func (w *MetricsWorker) collectAndPush() {
 	for _, c := range containers {
 		if len(c.Names) > 0 {
 			name := strings.TrimPrefix(c.Names[0], "/")
-			if name == TraefikContainerName || name == TSDBContainerName {
+			if name == networking.TraefikContainerName || name == TSDBContainerName {
 				continue
 			}
 		}

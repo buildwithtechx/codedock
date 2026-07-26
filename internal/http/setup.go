@@ -15,6 +15,11 @@ import (
 
 	"codedock.run/codedock/internal/core"
 	"codedock.run/codedock/internal/engine"
+	"codedock.run/codedock/internal/engine/backup"
+	"codedock.run/codedock/internal/engine/compose"
+	"codedock.run/codedock/internal/engine/cron"
+	"codedock.run/codedock/internal/engine/networking"
+	"codedock.run/codedock/internal/engine/observability"
 	"codedock.run/codedock/internal/handlers"
 	"codedock.run/codedock/internal/http/middleware"
 	"codedock.run/codedock/internal/notifications"
@@ -23,7 +28,7 @@ import (
 	"codedock.run/codedock/internal/utils"
 )
 
-func NewServer(db *sql.DB, v *utils.Vault, deployer *engine.Deployer, traefikManager *engine.TraefikManager, dockerClient *client.Client, dataDir string) (*Server, error) {
+func NewServer(db *sql.DB, v *utils.Vault, deployer *engine.Deployer, traefikManager *networking.TraefikManager, dockerClient *client.Client, dataDir string) (*Server, error) {
 
 	e := echo.New()
 	e.Use(echomiddleware.RequestLoggerWithConfig(echomiddleware.RequestLoggerConfig{
@@ -91,7 +96,7 @@ func NewServer(db *sql.DB, v *utils.Vault, deployer *engine.Deployer, traefikMan
 	httpEngineAdapter := newEngineAdapter(settingsRepo, appRepo, envVarRepo, dbRepo, projectRepo, scheduledTaskRepo, backupRepo, s3DestinationRepo, serviceVarRepo, serverlessRepository)
 	databaseDeployer := engine.NewDatabaseDeployer(dockerClient, httpEngineAdapter)
 
-	cronManager := engine.NewCronManager(dockerClient, httpEngineAdapter)
+	cronManager := cron.NewCronManager(dockerClient, httpEngineAdapter)
 
 	settings, _ := settingsRepo.GetServerSettings(context.Background())
 	if settings != nil && settings.DockerCleanupCron != "" {
@@ -103,7 +108,7 @@ func NewServer(db *sql.DB, v *utils.Vault, deployer *engine.Deployer, traefikMan
 
 	_ = cronManager.Start()
 
-	backupManager := engine.NewBackupManager(dockerClient, httpEngineAdapter, "")
+	backupManager := backup.NewBackupManager(dockerClient, httpEngineAdapter, "")
 	_ = backupManager.Start()
 
 	projectService := services.NewProjectService(projectRepo, environmentRepo, appRepo, serviceVarRepo, settingsRepo, orgRepo)
@@ -135,7 +140,7 @@ func NewServer(db *sql.DB, v *utils.Vault, deployer *engine.Deployer, traefikMan
 	canvasService := services.NewCanvasService(canvasRepo)
 	orgService := services.NewOrganizationService(orgRepo)
 	gitService := services.NewGitService(gitRepo)
-	statsMonitor := engine.NewStatsMonitor(dockerClient)
+	statsMonitor := observability.NewStatsMonitor(dockerClient)
 	deploymentService := services.NewDeploymentService(deployRepo, appRepo, projectRepo, deployer, gitService, statsMonitor, volumeRepo, workerHub)
 	aiAnalysisService := services.NewAIAnalysisService(deployRepo, appRepo, aiRepo)
 
@@ -190,7 +195,7 @@ func NewServer(db *sql.DB, v *utils.Vault, deployer *engine.Deployer, traefikMan
 	projectEnvHandler := handlers.NewProjectEnvHandler(environmentService)
 	notificationHandler := handlers.NewNotificationHandler(notificationService)
 	gitAppsHandler := handlers.NewGitAppsHandler(gitAppsService)
-	tmplMgr, _ := engine.NewTemplateManager()
+	tmplMgr, _ := compose.NewTemplateManager()
 	composeParserService := services.NewComposeParserService()
 	composeHandler := handlers.NewComposeHandler(projectService, appService, databaseService, environmentRepo, appRepo, composeParserService)
 	oneClickService := services.NewOneClickService(tmplMgr, databaseDeployer, environmentRepo, dbRepo)

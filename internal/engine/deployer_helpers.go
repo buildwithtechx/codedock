@@ -10,6 +10,8 @@ import (
 	"time"
 
 	"codedock.run/codedock/internal/models"
+
+	"codedock.run/codedock/internal/engine/build"
 )
 
 func (d *Deployer) getEnvironmentVariables(app *models.AppService, logWriter io.Writer) (map[string]string, error) {
@@ -41,7 +43,7 @@ func (d *Deployer) getEnvironmentVariables(app *models.AppService, logWriter io.
 
 	if d.EnvInterpolator != nil {
 		if registry, err := d.EnvInterpolator(app.ProjectID); err == nil && len(registry) > 0 {
-			envVarsMap = InterpolateEnvVars(envVarsMap, registry)
+			envVarsMap = build.InterpolateEnvVars(envVarsMap, registry)
 			if logWriter != nil {
 				fmt.Fprintf(logWriter, "🔀 [Deployer] Interpolated dynamic variable references (${service.VAR_KEY} syntax).\n")
 			}

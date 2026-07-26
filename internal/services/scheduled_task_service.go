@@ -7,17 +7,17 @@ import (
 
 	"github.com/google/uuid"
 
-	"codedock.run/codedock/internal/engine"
+	"codedock.run/codedock/internal/engine/cron"
 	"codedock.run/codedock/internal/models"
 	"codedock.run/codedock/internal/repositories"
 )
 
 type ScheduledTaskService struct {
 	repo    repositories.ScheduledTaskRepository
-	manager *engine.CronManager
+	manager *cron.CronManager
 }
 
-func NewScheduledTaskService(r repositories.ScheduledTaskRepository, m *engine.CronManager) *ScheduledTaskService {
+func NewScheduledTaskService(r repositories.ScheduledTaskRepository, m *cron.CronManager) *ScheduledTaskService {
 	return &ScheduledTaskService{
 		repo:    r,
 		manager: m,

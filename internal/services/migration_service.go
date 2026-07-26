@@ -10,7 +10,7 @@ import (
 	"path/filepath"
 	"time"
 
-	"codedock.run/codedock/internal/engine"
+	"codedock.run/codedock/internal/engine/networking"
 	"codedock.run/codedock/internal/models"
 	"codedock.run/codedock/internal/repositories"
 )
@@ -71,12 +71,12 @@ func (s *MigrationService) Export(ctx context.Context, passphrase string) ([]byt
 	files["manifest.json"] = manifestData
 
 	var tarBuf bytes.Buffer
-	if err := engine.CreateTarGz(&tarBuf, files); err != nil {
+	if err := networking.CreateTarGz(&tarBuf, files); err != nil {
 		return nil, fmt.Errorf("failed to create bundle archive: %w", err)
 	}
 
 	var encBuf bytes.Buffer
-	if err := engine.EncryptBundle(&tarBuf, &encBuf, passphrase); err != nil {
+	if err := networking.EncryptBundle(&tarBuf, &encBuf, passphrase); err != nil {
 		return nil, fmt.Errorf("failed to encrypt bundle: %w", err)
 	}
 
@@ -85,11 +85,11 @@ func (s *MigrationService) Export(ctx context.Context, passphrase string) ([]byt
 
 func (s *MigrationService) Import(ctx context.Context, bundleData []byte, passphrase string) (*BundleManifest, error) {
 	var decBuf bytes.Buffer
-	if err := engine.DecryptBundle(bytes.NewReader(bundleData), &decBuf, passphrase); err != nil {
+	if err := networking.DecryptBundle(bytes.NewReader(bundleData), &decBuf, passphrase); err != nil {
 		return nil, err
 	}
 
-	files, err := engine.ExtractTarGz(&decBuf)
+	files, err := networking.ExtractTarGz(&decBuf)
 	if err != nil {
 		return nil, fmt.Errorf("failed to extract bundle: %w", err)
 	}

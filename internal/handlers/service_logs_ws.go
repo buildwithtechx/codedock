@@ -5,7 +5,7 @@ import (
 	"net/http"
 	"strings"
 
-	"codedock.run/codedock/internal/engine"
+	"codedock.run/codedock/internal/engine/observability"
 	"codedock.run/codedock/internal/http/middleware"
 	"codedock.run/codedock/internal/models"
 	"codedock.run/codedock/internal/services"
@@ -94,8 +94,8 @@ func (h *ServiceLogsWSHandler) Handle(c echo.Context) error {
 		return err
 	}
 
-	engine.GlobalUILogStreamHub.AddClient(serviceID, ws)
-	defer engine.GlobalUILogStreamHub.RemoveClient(serviceID, ws)
+	observability.GlobalUILogStreamHub.AddClient(serviceID, ws)
+	defer observability.GlobalUILogStreamHub.RemoveClient(serviceID, ws)
 	defer ws.Close()
 
 	for {

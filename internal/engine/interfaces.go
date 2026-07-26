@@ -3,6 +3,7 @@ package engine
 import (
 	"time"
 
+	"codedock.run/codedock/internal/engine/backup"
 	"codedock.run/codedock/internal/models"
 )
 
@@ -31,16 +32,7 @@ type CronManagerStore interface {
 	UpdateScheduledTaskStatusAndOutput(id string, status models.ScheduledTaskStatus, lastRunAt *time.Time, output string) error
 }
 
-type BackupManagerStore interface {
-	ListAllActiveBackupConfigs() ([]*models.BackupConfig, error)
-	GetBackupConfig(id string) (*models.BackupConfig, error)
-	CreateBackupRecord(rec *models.BackupRecord) error
-	GetDatabase(id string) (*models.Database, error)
-	UpdateBackupRecord(opts models.UpdateBackupRecordOpts) error
-	GetS3Destination(id string) (*models.S3Destination, error)
-	GetBackupRecord(id string) (*models.BackupRecord, error)
-	ListBackupRecords(backupConfigID string) ([]*models.BackupRecord, error)
-}
+type BackupManagerStore = backup.Store
 
 type ContainerManagerStore interface {
 	GetServerSettings() (*models.ServerSettings, error)

@@ -9,7 +9,7 @@
 *.dylib
 bin/
 dist/
-build/
+/build/
 
 # Runtime data & secrets
 data/codedock.db*

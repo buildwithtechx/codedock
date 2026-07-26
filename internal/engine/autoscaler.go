@@ -6,6 +6,7 @@ import (
 	"log"
 	"time"
 
+	"codedock.run/codedock/internal/engine/observability"
 	"codedock.run/codedock/internal/models"
 )
 
@@ -21,13 +22,13 @@ type DeploymentCreator interface {
 
 type AutoscalerWorker struct {
 	appRepo           AppRepository
-	statsMonitor      *StatsMonitor
+	statsMonitor      *observability.StatsMonitor
 	deploymentService DeploymentCreator
 	ticker            *time.Ticker
 	quit              chan struct{}
 }
 
-func NewAutoscalerWorker(appRepo AppRepository, statsMonitor *StatsMonitor, deploymentService DeploymentCreator) *AutoscalerWorker {
+func NewAutoscalerWorker(appRepo AppRepository, statsMonitor *observability.StatsMonitor, deploymentService DeploymentCreator) *AutoscalerWorker {
 	return &AutoscalerWorker{
 		appRepo:           appRepo,
 		statsMonitor:      statsMonitor,

@@ -1,4 +1,4 @@
-package engine
+package backup
 
 import (
 	"context"
@@ -16,20 +16,30 @@ import (
 	"github.com/robfig/cron/v3"
 
 	"codedock.run/codedock/internal/models"
-
 	"codedock.run/codedock/internal/utils"
 )
 
+type Store interface {
+	ListAllActiveBackupConfigs() ([]*models.BackupConfig, error)
+	GetBackupConfig(id string) (*models.BackupConfig, error)
+	CreateBackupRecord(rec *models.BackupRecord) error
+	GetDatabase(id string) (*models.Database, error)
+	UpdateBackupRecord(opts models.UpdateBackupRecordOpts) error
+	GetS3Destination(id string) (*models.S3Destination, error)
+	GetBackupRecord(id string) (*models.BackupRecord, error)
+	ListBackupRecords(backupConfigID string) ([]*models.BackupRecord, error)
+}
+
 type BackupManager struct {
 	dockerClient *client.Client
-	store        BackupManagerStore
+	store        Store
 	cronEngine   *cron.Cron
 	entries      map[string]cron.EntryID
 	backupDir    string
 	mu           sync.Mutex
 }
 
-func NewBackupManager(dockerClient *client.Client, s BackupManagerStore, backupDir string) *BackupManager {
+func NewBackupManager(dockerClient *client.Client, s Store, backupDir string) *BackupManager {
 	if backupDir == "" {
 		backupDir = filepath.Join(utils.GetDataDir(), "backups")
 	}

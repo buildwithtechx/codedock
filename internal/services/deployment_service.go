@@ -13,6 +13,7 @@ import (
 	"github.com/google/uuid"
 
 	"codedock.run/codedock/internal/engine"
+	"codedock.run/codedock/internal/engine/observability"
 	"codedock.run/codedock/internal/models"
 	"codedock.run/codedock/internal/repositories"
 )
@@ -23,7 +24,7 @@ type DeploymentService struct {
 	projectRepo  repositories.ProjectRepository
 	deployer     *engine.Deployer
 	gitService   *GitService
-	statsMonitor *engine.StatsMonitor
+	statsMonitor *observability.StatsMonitor
 	volumeRepo   repositories.ServiceVolumeRepository
 	workerHub    *engine.WorkerHub
 }
@@ -34,7 +35,7 @@ func NewDeploymentService(
 	pr repositories.ProjectRepository,
 	d *engine.Deployer,
 	gs *GitService,
-	sm *engine.StatsMonitor,
+	sm *observability.StatsMonitor,
 	vr repositories.ServiceVolumeRepository,
 	wh *engine.WorkerHub,
 ) *DeploymentService {
@@ -187,13 +188,13 @@ func (s *DeploymentService) DeployAppService(ctx context.Context, appID, sourceD
 	return containerID, err
 }
 
-func (s *DeploymentService) GetMetrics(ctx context.Context, appID string) (*engine.ContainerHealth, error) {
+func (s *DeploymentService) GetMetrics(ctx context.Context, appID string) (*observability.ContainerHealth, error) {
 	app, err := s.appRepo.GetByID(ctx, appID)
 	if err != nil {
 		return nil, err
 	}
 	if app.ContainerID == "" {
-		return &engine.ContainerHealth{Status: engine.ContainerHealthStatusNotDeployed}, nil
+		return &observability.ContainerHealth{Status: observability.ContainerHealthStatusNotDeployed}, nil
 	}
 	if s.statsMonitor == nil {
 		return nil, errors.New("stats monitor not available")

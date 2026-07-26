@@ -1,4 +1,4 @@
-package engine
+package compose
 
 import (
 	"embed"
@@ -11,7 +11,7 @@ import (
 	"codedock.run/codedock/internal/utils"
 )
 
-//go:embed compose/*.yaml
+//go:embed *.yaml
 var templateFiles embed.FS
 
 type TemplateManager struct {
@@ -23,7 +23,7 @@ func NewTemplateManager() (*TemplateManager, error) {
 		templates: make(map[string]ComposeTemplate),
 	}
 
-	err := fs.WalkDir(templateFiles, "compose", mgr.walkDir)
+	err := fs.WalkDir(templateFiles, ".", mgr.walkDir)
 	if err != nil {
 		fmt.Printf("warning: template manager WalkDir error: %v\n", err)
 	}
@@ -47,7 +47,7 @@ func (m *TemplateManager) walkDir(path string, d fs.DirEntry, err error) error {
 	var tmpl ComposeTemplate
 	if err := yaml.Unmarshal(data, &tmpl); err != nil {
 		fmt.Printf("warning: failed to parse template %s: %v\n", path, err)
-		return nil // skip bad files instead of failing everything
+		return nil
 	}
 
 	id := strings.TrimSuffix(d.Name(), ".yaml")

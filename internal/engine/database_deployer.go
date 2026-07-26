@@ -16,6 +16,8 @@ import (
 	"codedock.run/codedock/internal/models"
 
 	"codedock.run/codedock/internal/utils"
+
+	"codedock.run/codedock/internal/engine/compose"
 )
 
 type DatabaseDeployer struct {
@@ -86,7 +88,7 @@ func (d *DatabaseDeployer) buildContainerConfig(dbConfig *models.Database) (stri
 	var cmd []string
 	var containerMountPath string
 
-	tmplMgr, err := NewTemplateManager()
+	tmplMgr, err := compose.NewTemplateManager()
 	if err != nil {
 		return "", nil, nil, "", fmt.Errorf("failed to initialize template manager: %w", err)
 	}

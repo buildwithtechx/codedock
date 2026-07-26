@@ -15,7 +15,7 @@ import (
 	"github.com/shirou/gopsutil/v4/disk"
 	"github.com/shirou/gopsutil/v4/mem"
 
-	"codedock.run/codedock/internal/engine"
+	"codedock.run/codedock/internal/engine/networking"
 	"codedock.run/codedock/internal/models"
 )
 
@@ -38,7 +38,7 @@ func (d *WorkerDaemon) Start(ctx context.Context) error {
 	if err != nil {
 		return fmt.Errorf("failed to create docker client for traefik: %w", err)
 	}
-	traefikManager := engine.NewTraefikManager(dockerClient, "")
+	traefikManager := networking.NewTraefikManager(dockerClient, "")
 	if err := traefikManager.EnsureTraefikRunning(ctx); err != nil {
 		return fmt.Errorf("failed to ensure traefik is running: %w", err)
 	}

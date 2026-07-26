@@ -1,4 +1,4 @@
-package engine
+package observability
 
 import (
 	"context"
@@ -13,6 +13,8 @@ import (
 	"github.com/docker/docker/api/types/network"
 	"github.com/docker/docker/client"
 	"github.com/docker/go-connections/nat"
+
+	"codedock.run/codedock/internal/engine/networking"
 )
 
 const (
@@ -78,7 +80,7 @@ func (m *LokiManager) createLokiContainer(ctx context.Context) error {
 		},
 	}, hostConfig, &network.NetworkingConfig{
 		EndpointsConfig: map[string]*network.EndpointSettings{
-			CodedockNetworkName: {},
+			networking.CodedockNetworkName: {},
 		},
 	}, nil, LokiContainerName)
 

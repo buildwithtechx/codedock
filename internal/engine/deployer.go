@@ -19,10 +19,12 @@ import (
 
 	"codedock.run/codedock/internal/models"
 	"codedock.run/codedock/internal/utils"
+
+	"codedock.run/codedock/internal/engine/build"
 )
 
 type Deployer struct {
-	builder          Builder
+	builder          build.Builder
 	containerManager *ContainerManager
 	store            DeployerStore
 	EnvProvider      func(projectID string) (map[string]string, error)
@@ -31,7 +33,7 @@ type Deployer struct {
 
 func NewDeployer(dockerClient *client.Client, s DeployerStore) *Deployer {
 	return &Deployer{
-		builder:          NewBuilder(dockerClient),
+		builder:          build.NewBuilder(dockerClient),
 		containerManager: NewContainerManager(dockerClient, s),
 		store:            s,
 	}
@@ -110,7 +112,7 @@ type BuildImageOpts struct {
 }
 
 func (d *Deployer) buildImage(ctx context.Context, opts BuildImageOpts) (string, error) {
-	buildOpts := BuildOptions{
+	buildOpts := build.BuildOptions{
 		ProjectID: opts.App.ProjectID,
 		ServiceID: opts.App.ID,
 		SourceDir: opts.SourceDir,

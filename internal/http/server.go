@@ -10,6 +10,8 @@ import (
 
 	"codedock.run/codedock/internal/core"
 	"codedock.run/codedock/internal/engine"
+	"codedock.run/codedock/internal/engine/cron"
+	"codedock.run/codedock/internal/engine/networking"
 	"codedock.run/codedock/internal/handlers"
 	"codedock.run/codedock/internal/http/middleware"
 	"codedock.run/codedock/internal/models"
@@ -23,11 +25,11 @@ type Server struct {
 	otpRateLimiter         *middleware.RateLimiter
 	aiRateLimiter          *middleware.RateLimiter
 	deployer               *engine.Deployer
-	traefikManager         *engine.TraefikManager
+	traefikManager         *networking.TraefikManager
 	dockerClient           *client.Client
 	tokenService           *services.TokenService
 	authGuard              *middleware.AuthGuard
-	cronManager            *engine.CronManager
+	cronManager            *cron.CronManager
 	serviceLinker          *services.ServiceLinker
 	dispatcherService      *core.DispatcherService
 	projectService         *services.ProjectService

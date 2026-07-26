@@ -4,7 +4,7 @@ import (
 	"log/slog"
 	"net/http"
 
-	"codedock.run/codedock/internal/engine"
+	"codedock.run/codedock/internal/engine/observability"
 	"codedock.run/codedock/internal/http/middleware"
 	"codedock.run/codedock/internal/models"
 	"codedock.run/codedock/internal/services"
@@ -81,8 +81,8 @@ func (h *ServerMetricsWSHandler) Handle(c echo.Context) error {
 		return err
 	}
 
-	engine.GlobalUIMetricsHub.AddClient(serverID, ws)
-	defer engine.GlobalUIMetricsHub.RemoveClient(serverID, ws)
+	observability.GlobalUIMetricsHub.AddClient(serverID, ws)
+	defer observability.GlobalUIMetricsHub.RemoveClient(serverID, ws)
 	defer ws.Close()
 
 	// Keep alive / Wait for close
