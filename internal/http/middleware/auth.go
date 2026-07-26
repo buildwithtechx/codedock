@@ -108,7 +108,7 @@ func (g *AuthGuard) validateJWT(c echo.Context, tokenStr string) (*models.UserCl
 	userID := fmt.Sprintf("%v", claimsMap["sub"])
 	if g.UserStatusProvider != nil && userID != "" {
 		u, err := g.UserStatusProvider.GetUserByID(c.Request().Context(), userID)
-		if err != nil || u == nil {
+		if err != nil || u == nil || !u.IsActive {
 			return nil, utils.Error(c, http.StatusUnauthorized, "user account not found or deactivated")
 		}
 	}

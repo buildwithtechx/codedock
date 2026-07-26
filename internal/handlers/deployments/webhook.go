@@ -125,23 +125,24 @@ func (h *WebhookHandler) HandleGitHubWebhook(c echo.Context) error {
 			break
 		}
 	}
+	if !hasSecret {
+		return utils.Error(c, http.StatusUnauthorized, "github webhook secret is not configured")
+	}
 
 	signature := c.Request().Header.Get("X-Hub-Signature-256")
-	if hasSecret && signature == "" {
+	if signature == "" {
 		return utils.Error(c, http.StatusUnauthorized, "missing X-Hub-Signature-256 header")
 	}
 
-	if signature != "" {
-		valid := false
-		for _, app := range apps {
-			if app.WebhookSecret != "" && verifyHMAC(bodyBytes, app.WebhookSecret, signature) {
-				valid = true
-				break
-			}
+	valid := false
+	for _, app := range apps {
+		if app.WebhookSecret != "" && verifyHMAC(bodyBytes, app.WebhookSecret, signature) {
+			valid = true
+			break
 		}
-		if !valid {
-			return utils.Error(c, http.StatusUnauthorized, "invalid webhook signature")
-		}
+	}
+	if !valid {
+		return utils.Error(c, http.StatusUnauthorized, "invalid webhook signature")
 	}
 
 	var payload models.GithubWebhookPayload
