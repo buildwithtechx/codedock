@@ -70,20 +70,7 @@ func (h *DatabaseHandler) InsertTableRow(c echo.Context) error {
 	if err != nil {
 		return utils.Error(c, http.StatusInternalServerError, err.Error())
 	}
-	if h.auditService != nil {
-		user := middleware.GetUserClaimsFromContext(c.Request().Context())
-		userID := ""
-		if user != nil {
-			userID = user.UserID
-		}
-		h.auditService.LogAction(c.Request().Context(), authservices.AuditActionOpts{
-			UserID:    userID,
-			Action:    "database.table.insert",
-			Resource:  id,
-			IPAddress: c.RealIP(),
-			Details:   map[string]any{"table": table, "database_id": id},
-		})
-	}
+	h.logDataBrowserAudit(c, "database.table.insert", id, table)
 	return utils.Success(c, "Operation successful", res)
 }
 
@@ -111,20 +98,7 @@ func (h *DatabaseHandler) UpdateTableRow(c echo.Context) error {
 	if err != nil {
 		return utils.Error(c, http.StatusInternalServerError, err.Error())
 	}
-	if h.auditService != nil {
-		user := middleware.GetUserClaimsFromContext(c.Request().Context())
-		userID := ""
-		if user != nil {
-			userID = user.UserID
-		}
-		h.auditService.LogAction(c.Request().Context(), authservices.AuditActionOpts{
-			UserID:    userID,
-			Action:    "database.table.update",
-			Resource:  id,
-			IPAddress: c.RealIP(),
-			Details:   map[string]any{"table": table, "database_id": id},
-		})
-	}
+	h.logDataBrowserAudit(c, "database.table.update", id, table)
 	return utils.Success(c, "Operation successful", res)
 }
 
@@ -146,19 +120,24 @@ func (h *DatabaseHandler) DeleteTableRow(c echo.Context) error {
 	if err != nil {
 		return utils.Error(c, http.StatusInternalServerError, err.Error())
 	}
-	if h.auditService != nil {
-		user := middleware.GetUserClaimsFromContext(c.Request().Context())
-		userID := ""
-		if user != nil {
-			userID = user.UserID
-		}
-		h.auditService.LogAction(c.Request().Context(), authservices.AuditActionOpts{
-			UserID:    userID,
-			Action:    "database.table.delete",
-			Resource:  id,
-			IPAddress: c.RealIP(),
-			Details:   map[string]any{"table": table, "database_id": id},
-		})
-	}
+	h.logDataBrowserAudit(c, "database.table.delete", id, table)
 	return utils.Success(c, "Operation successful", res)
+}
+
+func (h *DatabaseHandler) logDataBrowserAudit(c echo.Context, action, databaseID, tableName string) {
+	if h.auditService == nil {
+		return
+	}
+	user := middleware.GetUserClaimsFromContext(c.Request().Context())
+	userID := ""
+	if user != nil {
+		userID = user.UserID
+	}
+	h.auditService.LogAction(c.Request().Context(), authservices.AuditActionOpts{
+		UserID:    userID,
+		Action:    action,
+		Resource:  databaseID,
+		IPAddress: c.RealIP(),
+		Details:   map[string]any{"table": tableName, "database_id": databaseID},
+	})
 }

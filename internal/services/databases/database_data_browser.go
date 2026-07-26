@@ -192,27 +192,10 @@ func (s *DatabaseService) InsertTableRow(ctx context.Context, id, table string, 
 		return nil, errors.New("database not found")
 	}
 
-	var cols []string
-	var vals []string
-	for k, v := range data {
-		if db.Engine == "postgresql" || db.Engine == "postgres" {
-			cols = append(cols, fmt.Sprintf("\"%s\"", k))
-		} else {
-			cols = append(cols, fmt.Sprintf("`%s`", k))
-		}
-		vals = append(vals, escapeSQLValue(v))
+	query, err := buildInsertSQL(db.Engine, table, data)
+	if err != nil {
+		return nil, err
 	}
-
-	var query string
-	switch db.Engine {
-	case "postgresql", "postgres":
-		query = fmt.Sprintf("INSERT INTO \"%s\" (%s) VALUES (%s)", table, strings.Join(cols, ", "), strings.Join(vals, ", "))
-	case "mysql", "mariadb":
-		query = fmt.Sprintf("INSERT INTO `%s` (%s) VALUES (%s)", table, strings.Join(cols, ", "), strings.Join(vals, ", "))
-	default:
-		return nil, fmt.Errorf("inserts not supported for engine: %s", db.Engine)
-	}
-
 	return s.QueryDatabase(ctx, id, query, db.ProjectID)
 }
 
@@ -229,45 +212,11 @@ func (s *DatabaseService) UpdateTableRow(ctx context.Context, opts UpdateTableRo
 		return nil, errors.New("database not found")
 	}
 
-	var query string
-	switch db.Engine {
-	case "postgresql", "postgres":
-		var sets []string
-		for k, v := range opts.Data {
-			sets = append(sets, fmt.Sprintf("\"%s\"=%s", k, escapeSQLValue(v)))
-		}
-
-		var wheres []string
-		for k, v := range opts.Keys {
-			wheres = append(wheres, fmt.Sprintf("\"%s\"=%s", k, escapeSQLValue(v)))
-		}
-
-		if len(wheres) == 0 {
-			return nil, errors.New("at least one primary key is required for updates")
-		}
-
-		query = fmt.Sprintf("UPDATE \"%s\" SET %s WHERE %s", opts.Table, strings.Join(sets, ", "), strings.Join(wheres, " AND "))
-		return s.QueryDatabase(ctx, opts.ID, query, db.ProjectID)
-	case "mysql", "mariadb":
-		var sets []string
-		for k, v := range opts.Data {
-			sets = append(sets, fmt.Sprintf("`%s`=%s", k, escapeSQLValue(v)))
-		}
-
-		var wheres []string
-		for k, v := range opts.Keys {
-			wheres = append(wheres, fmt.Sprintf("`%s`=%s", k, escapeSQLValue(v)))
-		}
-
-		if len(wheres) == 0 {
-			return nil, errors.New("at least one primary key is required for updates")
-		}
-
-		query = fmt.Sprintf("UPDATE `%s` SET %s WHERE %s", opts.Table, strings.Join(sets, ", "), strings.Join(wheres, " AND "))
-		return s.QueryDatabase(ctx, opts.ID, query, db.ProjectID)
-	default:
-		return nil, fmt.Errorf("updates not supported for engine: %s", db.Engine)
+	query, err := buildUpdateSQL(db.Engine, opts.Table, opts.Keys, opts.Data)
+	if err != nil {
+		return nil, err
 	}
+	return s.QueryDatabase(ctx, opts.ID, query, db.ProjectID)
 }
 
 func (s *DatabaseService) DeleteTableRow(ctx context.Context, id, table string, keys map[string]any) (*models.DatabaseQueryResponse, error) {
@@ -276,28 +225,89 @@ func (s *DatabaseService) DeleteTableRow(ctx context.Context, id, table string, 
 		return nil, errors.New("database not found")
 	}
 
+	query, err := buildDeleteSQL(db.Engine, table, keys)
+	if err != nil {
+		return nil, err
+	}
+	return s.QueryDatabase(ctx, id, query, db.ProjectID)
+}
+
+func buildInsertSQL(engine, table string, data map[string]any) (string, error) {
+	var cols []string
+	var vals []string
+	for k, v := range data {
+		if engine == "postgresql" || engine == "postgres" {
+			cols = append(cols, fmt.Sprintf("\"%s\"", k))
+		} else {
+			cols = append(cols, fmt.Sprintf("`%s`", k))
+		}
+		vals = append(vals, escapeSQLValue(v))
+	}
+
+	switch engine {
+	case "postgresql", "postgres":
+		return fmt.Sprintf("INSERT INTO \"%s\" (%s) VALUES (%s)", table, strings.Join(cols, ", "), strings.Join(vals, ", ")), nil
+	case "mysql", "mariadb":
+		return fmt.Sprintf("INSERT INTO `%s` (%s) VALUES (%s)", table, strings.Join(cols, ", "), strings.Join(vals, ", ")), nil
+	default:
+		return "", fmt.Errorf("inserts not supported for engine: %s", engine)
+	}
+}
+
+func buildUpdateSQL(engine, table string, keys, data map[string]any) (string, error) {
+	if len(keys) == 0 {
+		return "", errors.New("at least one primary key is required for updates")
+	}
+	var sets []string
 	var wheres []string
+	isPostgres := engine == "postgresql" || engine == "postgres"
+
+	for k, v := range data {
+		if isPostgres {
+			sets = append(sets, fmt.Sprintf("\"%s\"=%s", k, escapeSQLValue(v)))
+		} else {
+			sets = append(sets, fmt.Sprintf("`%s`=%s", k, escapeSQLValue(v)))
+		}
+	}
 	for k, v := range keys {
-		if db.Engine == "postgresql" || db.Engine == "postgres" {
+		if isPostgres {
 			wheres = append(wheres, fmt.Sprintf("\"%s\"=%s", k, escapeSQLValue(v)))
 		} else {
 			wheres = append(wheres, fmt.Sprintf("`%s`=%s", k, escapeSQLValue(v)))
 		}
 	}
 
-	if len(wheres) == 0 {
-		return nil, errors.New("at least one primary key is required for deletes")
-	}
-
-	var query string
-	switch db.Engine {
+	switch engine {
 	case "postgresql", "postgres":
-		query = fmt.Sprintf("DELETE FROM \"%s\" WHERE %s", table, strings.Join(wheres, " AND "))
+		return fmt.Sprintf("UPDATE \"%s\" SET %s WHERE %s", table, strings.Join(sets, ", "), strings.Join(wheres, " AND ")), nil
 	case "mysql", "mariadb":
-		query = fmt.Sprintf("DELETE FROM `%s` WHERE %s", table, strings.Join(wheres, " AND "))
+		return fmt.Sprintf("UPDATE `%s` SET %s WHERE %s", table, strings.Join(sets, ", "), strings.Join(wheres, " AND ")), nil
 	default:
-		return nil, fmt.Errorf("deletes not supported for engine: %s", db.Engine)
+		return "", fmt.Errorf("updates not supported for engine: %s", engine)
+	}
+}
+
+func buildDeleteSQL(engine, table string, keys map[string]any) (string, error) {
+	if len(keys) == 0 {
+		return "", errors.New("at least one primary key is required for deletes")
+	}
+	var wheres []string
+	isPostgres := engine == "postgresql" || engine == "postgres"
+
+	for k, v := range keys {
+		if isPostgres {
+			wheres = append(wheres, fmt.Sprintf("\"%s\"=%s", k, escapeSQLValue(v)))
+		} else {
+			wheres = append(wheres, fmt.Sprintf("`%s`=%s", k, escapeSQLValue(v)))
+		}
 	}
 
-	return s.QueryDatabase(ctx, id, query, db.ProjectID)
+	switch engine {
+	case "postgresql", "postgres":
+		return fmt.Sprintf("DELETE FROM \"%s\" WHERE %s", table, strings.Join(wheres, " AND ")), nil
+	case "mysql", "mariadb":
+		return fmt.Sprintf("DELETE FROM `%s` WHERE %s", table, strings.Join(wheres, " AND ")), nil
+	default:
+		return "", fmt.Errorf("deletes not supported for engine: %s", engine)
+	}
 }

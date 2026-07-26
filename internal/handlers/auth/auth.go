@@ -98,10 +98,10 @@ func (h *AuthHandler) Register(c echo.Context) error {
 		"email": u.Email,
 		"name":  u.Name,
 	})
-	return utils.Success(c, "Registration successful", map[string]any{
-		"token":        token,
-		"refreshToken": refreshToken,
-		"user":         u,
+	return utils.Success(c, "Registration successful", models.AuthResponse{
+		User:         u,
+		Token:        token,
+		RefreshToken: refreshToken,
 	})
 }
 
@@ -119,10 +119,10 @@ func (h *AuthHandler) Login(c echo.Context) error {
 	telemetry.Track(u.Email, "user_logged_in", map[string]any{
 		"email": u.Email,
 	})
-	return utils.Success(c, "Login successful", map[string]any{
-		"token":        token,
-		"refreshToken": refreshToken,
-		"user":         u,
+	return utils.Success(c, "Login successful", models.AuthResponse{
+		User:         u,
+		Token:        token,
+		RefreshToken: refreshToken,
 	})
 }
 
@@ -147,10 +147,10 @@ func (h *AuthHandler) Refresh(c echo.Context) error {
 	}
 	handlerutils.SetAuthCookie(c, token)
 	handlerutils.SetRefreshCookie(c, newRefreshToken)
-	return utils.Success(c, "Token refreshed successfully", map[string]any{
-		"token":        token,
-		"refreshToken": newRefreshToken,
-		"user":         u,
+	return utils.Success(c, "Token refreshed successfully", models.AuthResponse{
+		User:         u,
+		Token:        token,
+		RefreshToken: newRefreshToken,
 	})
 }
 

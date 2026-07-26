@@ -9,6 +9,9 @@ import (
 type AuthResult = types.AuthResult
 type SignupRequest = types.SignupRequest
 type SigninRequest = types.SigninRequest
+type AuthResponse = types.AuthResponse
+type TokenResponse = types.TokenResponse
+type SetupStatusResponse = types.SetupStatusResponse
 
 type OAuthProviderConfig struct {
 	ID           string    `json:"id" db:"id"`

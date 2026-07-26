@@ -10,12 +10,12 @@ import (
 
 	"github.com/docker/docker/api/types/container"
 	"github.com/docker/docker/client"
+	"github.com/golang-jwt/jwt/v5"
 	"github.com/gorilla/websocket"
 	"github.com/labstack/echo/v4"
 
 	"codedock.run/codedock/internal/http/middleware"
 	"codedock.run/codedock/internal/models"
-	authservices "codedock.run/codedock/internal/services/auth"
 	projectservices "codedock.run/codedock/internal/services/projects"
 	"codedock.run/codedock/internal/utils"
 )
@@ -35,9 +35,13 @@ var terminalUpgrader = websocket.Upgrader{
 	},
 }
 
+type tokenValidator interface {
+	ValidateToken(token string) (jwt.MapClaims, error)
+}
+
 type TerminalHandler struct {
 	dockerClient   *client.Client
-	tokenService   *authservices.TokenService
+	tokenService   tokenValidator
 	appService     *projectservices.AppService
 	projectService *projectservices.ProjectService
 	normalizeName  func(id string) string
@@ -45,7 +49,7 @@ type TerminalHandler struct {
 
 func NewTerminalHandler(
 	dockerClient *client.Client,
-	tokenService *authservices.TokenService,
+	tokenService tokenValidator,
 	appService *projectservices.AppService,
 	projectService *projectservices.ProjectService,
 ) *TerminalHandler {

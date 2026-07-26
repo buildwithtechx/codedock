@@ -47,3 +47,19 @@ type SignupRequest struct {
 	Password string   `json:"password"`
 	Role     UserRole `json:"role"`
 }
+
+type AuthResponse struct {
+	User         *User  `json:"user"`
+	Token        string `json:"token"`
+	RefreshToken string `json:"refreshToken,omitempty"`
+}
+
+type TokenResponse struct {
+	User         *User  `json:"user"`
+	Token        string `json:"token"`
+	RefreshToken string `json:"refreshToken,omitempty"`
+}
+
+type SetupStatusResponse struct {
+	IsConfigured bool `json:"isConfigured"`
+}

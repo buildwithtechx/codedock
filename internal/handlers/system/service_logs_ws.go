@@ -9,21 +9,25 @@ import (
 	"codedock.run/codedock/internal/engine/observability"
 	"codedock.run/codedock/internal/http/middleware"
 	"codedock.run/codedock/internal/models"
-	authservices "codedock.run/codedock/internal/services/auth"
 	projectservices "codedock.run/codedock/internal/services/projects"
 	"codedock.run/codedock/internal/utils"
+	"github.com/golang-jwt/jwt/v5"
 	"github.com/gorilla/websocket"
 	"github.com/labstack/echo/v4"
 )
 
+type tokenValidator interface {
+	ValidateToken(token string) (jwt.MapClaims, error)
+}
+
 type ServiceLogsWSHandler struct {
 	upgrader       websocket.Upgrader
-	tokenService   *authservices.TokenService
+	tokenService   tokenValidator
 	appService     *projectservices.AppService
 	projectService *projectservices.ProjectService
 }
 
-func NewServiceLogsWSHandler(ts *authservices.TokenService, as *projectservices.AppService, ps *projectservices.ProjectService) *ServiceLogsWSHandler {
+func NewServiceLogsWSHandler(ts tokenValidator, as *projectservices.AppService, ps *projectservices.ProjectService) *ServiceLogsWSHandler {
 	return &ServiceLogsWSHandler{
 		upgrader: websocket.Upgrader{
 			CheckOrigin: func(r *http.Request) bool {
