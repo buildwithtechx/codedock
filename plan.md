@@ -1,105 +1,58 @@
-# Codedock vs Dokploy (Competitive Analysis & Roadmap)
+# Codedock Security & Architectural Roadmap
 
-After completing the Multi-Server architecture, Organizations, Private Registries, and PR Previews, Codedock has fundamentally surpassed many of the initial roadmap goals.
+This roadmap tracks all active security remediations, architectural refactoring, and code-style compliance tasks across the Codedock codebase (`internal/`, `cmd/`, `pkg/`, `bootstrap/`, `scripts/`, and `apps/dashboard/src/`). All historical and completed tasks have been pruned.
 
-A thorough scan of the `dokploy` codebase (UI and Backend) has revealed key architectural differences, areas where Codedock is already vastly superior, and a few minor features we can plan next to achieve total dominance.
+---
 
-## 1. Architectural Superiority
+## 1. Critical Security Findings
 
-| Concern | Dokploy | Codedock (Winner) |
-| :--- | :--- | :--- |
-| **Backend Architecture** | Next.js API Routes + Node.js + BullMQ for queues | Single Go Binary (`codedockd`) + Goroutines |
-| **Resource Footprint** | Heavy (requires Node.js, Redis for queues, etc.) | Extremely light (~15MB stripped binary) |
-| **Clustering / Multi-Node** | **Docker Swarm** (Requires open ports, complex networking) | **WebSocket Worker Daemon** (`codedockw`) — Outbound only, zero open ports, firewall-friendly |
-| **Database Support** | Postgres, MySQL, MariaDB, Mongo, Redis, LibSQL | **Postgres, MySQL, MariaDB, Mongo, Redis, Clickhouse, Kafka, RabbitMQ, Nats, Dragonfly, KeyDB** |
-| **Deployment Speed** | Slow (Node.js overhead) | Lightning fast (Native Go + WebSocket tunneling) |
+- [ ] **1. Service log WebSocket authorization bypass:** Add project/service membership verification in `internal/handlers/service_logs_ws.go:42` so arbitrary JWTs cannot connect to logs of unrelated services.
+- [ ] **2. Unauthorised cross-project deployments:** Enforce project membership checks in Compose (`internal/handlers/compose.go:67`), Archive (`internal/handlers/archive.go:25`), and One-click (`internal/handlers/oneclick.go:30`) deployments.
+- [ ] **3. OAuth client secrets exposed:** Make `GET /settings/oauth/providers` admin-only and always redact `clientSecret` (`internal/handlers/oauth.go:30`, `internal/models/auth.go:21`).
+- [ ] **4. OAuth login CSRF/account-linking vulnerability:** Validate returned OAuth `state` values against session/cookie state in `internal/handlers/oauth.go:60, 81`.
+- [ ] **5. Canvas and audit-log tenant leakage:** Restrict global canvas summaries (`internal/handlers/canvas.go:21`) and audit logs (`internal/handlers/audit_log.go:21`) by project, organization, or admin role.
 
-## 2. Security & Multi-Tenancy
+---
 
-Dokploy is primarily designed for self-hosting on a single or trusted cluster.
-**Codedock is built for SaaS (`app.codedock.dev`) from day one.**
+## 2. High-Risk Findings
 
-- **Terminal Isolation:** Codedock strictly enforces project-level RBAC (`ProjectService.HasPermission`) even on WebSocket terminal upgrades. This ensures true multi-tenant security where a logged-in user can only attach to containers in projects they own or belong to via their Organization.
-- **Worker Authentication:** Codedock uses unique `worker_tokens` per server, meaning a compromised worker node cannot affect the control plane or other users' nodes.
+- [ ] **6. App services can be reassigned across projects:** Validate that `EnvironmentID` belongs to `ProjectID` on app service create/update (`internal/handlers/app_services.go:59, 153`).
+- [ ] **7. Rollback authorization is weaker than deployment authorization:** Enforce consistent admin-level service access for rollback (`internal/handlers/deployment.go:130`) matching deployment triggering (`internal/http/routes.go:232`).
+- [ ] **8. Database passwords returned in API models:** Prevent returning decrypted password fields in `json:"password"` (`internal/models/database.go:35`, `internal/repositories/database.go:56`).
+- [ ] **9. 2FA is not enforced during login:** Implement interactive TOTP second-factor challenge during login when `TOTPEnabled` is true (`internal/services/auth_service.go:126`).
+- [ ] **10. JWT sessions survive user disablement/deletion:** Verify account status, password-version revocation, or disablement during JWT token validation/authorization.
+- [ ] **11. Refresh tokens are replayable:** Implement server-side storage and revocation tracking for refresh tokens (`internal/services/auth_service.go:156`).
+- [ ] **12. Unbounded archive/upload reads:** Enforce maximum size limits on Compose and Archive upload readers (`internal/handlers/compose.go:98`, `internal/handlers/archive.go:60`).
 
-## 3. New Findings & Next Steps (What we can improve on)
+---
 
-While Codedock is architecturally stronger, Dokploy has some UI/UX polishing that we should match or exceed:
+## 3. Bootstrap & Operational Issues
 
-1. **Data Browser Expansion:**
-   - Currently, Codedock supports data browsing for Postgres/MySQL variants and Redis. We need to implement viewers for Mongo, Clickhouse, and messaging queues (Kafka/RabbitMQ), which currently show "currently unsupported".
-2. **Advanced Traefik / Network UI:**
-   - Dokploy has a dedicated `traefik.tsx` settings page for advanced routing rules. Codedock's Traefik configuration is currently mostly automatic. Exposing a UI for custom Traefik middlewares (like basic auth, rate limiting) per service would be highly valuable.
-3. **Server SSH Keys Management:**
-   - Dokploy has a dedicated UI for managing SSH keys for accessing servers. While `codedockw` avoids SSH entirely for deployments, allowing users to inject their public SSH keys into the worker nodes via the Codedock UI could be a nice "Server Management" feature.
-4. **Hosted Deployment (Ops):**
-   - The final remaining step is launching `app.codedock.dev`. The `Dockerfile.cloud` and `docker-compose.prod.yml` are ready.
+- [ ] **13. Installer checksum verification is optional:** Require checksum validation for Compose, control binaries, Docker installer, and worker binaries (`bootstrap/install.sh:12`, `bootstrap/worker.sh:117`).
+- [ ] **14. Generated .env permissions are not explicitly restricted:** Enforce `0600` permissions when writing `.env` secrets (`bootstrap/install.sh:152`).
+- [ ] **15. Docker socket grants control-plane-level host access:** Tighten container permissions or document security implications of Docker socket access in `docker-compose.prod.yml:18, 64`.
+- [ ] **16. Production healthcheck appears invalid:** Ensure backend route `/healthz` exists and matches `docker-compose.prod.yml:37` healthcheck definition.
+- [ ] **17. Restore script should validate archive entry types:** Reject symlinks/hardlinks in archive extraction in addition to path traversal (`scripts/restore.sh:22`).
 
-## Conclusion
+---
 
-Codedock's decision to use a **Go-based WebSocket Worker Daemon** instead of Node.js + Docker Swarm makes it infinitely more scalable, secure, and easier to monetize as a SaaS. The focus should now shift to user acquisition, ops (launching the cloud version), and expanding the supported UI modules (Data Browsers, custom Traefik middlewares).
+## 4. Medium-Risk & Dashboard Security Findings
 
-## 4. Security & Static Audit TODOs
+- [ ] **AI Diagnosis Rate Limiting:** Add per-user rate or cost limits for AI deployment failure diagnosis.
+- [ ] **Database Query Endpoints:** Require strict authorization and add audit logging/safeguards for destructive SQL/Redis query endpoints.
+- [ ] **WebSocket Origin Protection:** Reject empty `Origin` headers where appropriate to strengthen CSRF protection.
+- [ ] **Strict JWT HMAC Algorithm:** Explicitly restrict token validation to `HS256` only.
+- [ ] **Fail-Safe Handler Lookups:** Ensure handlers fail closed rather than open when database errors occur during lookup before destructive operations.
+- [ ] **Backup Record Permissions:** Enforce strict admin authorization and secure filesystem permissions for backup records containing sensitive data.
+- [ ] **WebSocket Authentication:** Send explicit authentication token/header for live logs WebSocket rather than relying solely on cookies.
+- [ ] **Backend Authorization Source of Truth:** Ensure dashboard UX guards are backed by rigorous backend authorization checks.
+- [ ] **Frontend Credential Redaction:** Ensure sensitive credential fields in frontend models remain redacted by default.
 
-A recent static audit revealed several critical authorization and configuration issues that must be addressed before SaaS deployment.
+---
 
-### Critical Security Issues
+## 5. Architectural & Structural Cleanup
 
-- [x] **Organization authorization bypass:** Add membership/role middleware to `internal/http/routes.go:159` and ownership checks to `internal/handlers/organization.go:52`.
-- [x] **Global backup control exposed to all users:** Add user/project authorization to backup routes (`internal/http/routes.go:241`) and handlers (`internal/handlers/backup.go:24`).
-- [x] **Scheduled-task authorization bypass:** Add project/service authorization to scheduled task routes (`internal/http/routes.go:294`) and handlers (`internal/handlers/scheduled_tasks.go:22`).
-- [x] **Domain management authorization bypass:** Add service ownership checks to domain handlers (`internal/handlers/domain.go:22`).
-- [x] **Environment deletion authorization bypass:** Add project-role middleware and ownership verify for `DELETE /api/environments/:id` (`internal/handlers/environment.go:54`).
-- [x] **Unauthenticated server metrics WebSocket:** Add authentication and server ownership checks to the metrics WebSocket (`internal/handlers/server_metrics_ws.go:27`).
-- [x] **Secrets returned in API responses:** Redact database passwords, registry tokens, worker tokens, and AI API keys before returning models.
-- [x] **WebSocket origin checks disabled:** Enforce strict origin checks for Terminal, Worker, and Metrics WebSockets to prevent CSWSH.
-- [x] **Worker token passed in query string:** Move worker token authentication to HTTP headers (`internal/handlers/worker_ws.go:32`, `bootstrap/worker.sh:88`).
-- [x] **Password-reset URLs trust attacker-controlled headers:** Use a configured base URL instead of `Origin`/`Referer` headers (`internal/services/auth_service.go`).
-
-### High-risk Correctness/Security Issues
-
-- [x] Environment and Database listings filter by project existence, not user membership (`internal/handlers/app_services.go:114`, `internal/handlers/database.go:42`).
-- [x] DNS records are globally readable/mutable by any authenticated user (`internal/handlers/dns.go:21`).
-- [x] Project creation must verify organization membership before creation (`internal/handlers/project.go:49`).
-- [x] Password reset tokens should be single-use and revoke existing sessions.
-- [x] Enforce consistent password strength on registration and reset.
-- [x] Remove the dangerous fallback in `baseAuth` that grants admin identity if token service is nil (`internal/http/middleware/auth.go:112`).
-- [x] Project-level authorization must strictly protect the database query endpoint (`internal/services/database_query.go:18`).
-- [x] Log-drain SSRF validation is vulnerable to DNS rebinding (`internal/handlers/app_services.go:368`).
-
-### Bootstrap/Update Problems
-
-- [x] Installer executes remote Docker installer code directly and downloads scripts without checksums (`bootstrap/install.sh`).
-- [x] Default compose image tag is `latest`; needs pinning for reproducibility.
-- [x] `docker-compose.prod.yml` uses unpinned `watchtower:latest`.
-- [x] Add path-traversal protection to `restore.sh` when extracting tar archives.
-- [x] Worker installer embeds token directly in systemd unit.
-- [x] Fix naming mismatch: systemd installer references `codedock` while compose container is `codedock-control-plane`.
-- [x] Fix uninstall script binary path (`codedockctl` vs `codedockd`).
-
-### Dashboard Issues
-
-- [x] Move access/refresh tokens from localStorage to HttpOnly cookies to prevent XSS theft (`apps/dashboard/src/stores/authStore.ts`).
-- [x] Remove JWT from URL query string in live-log WebSocket (`live-logs-viewer.tsx`).
-- [x] Terminal WebSocket has no explicit auth header and relies purely on cookies (needs CSRF/CSWSH mitigation).
-- [x] Dashboard route layout has no client-side auth guard (`apps/dashboard/src/routes/_dashboard.tsx`).
-- [x] Backup UI exposes restore functionality which lacks backend authorization.
-
-### TODOs/Placeholders/Stale Values
-
-- [x] Implement CLI `status` functionality.
-- [x] Update MCP version from hardcoded `1.0.0` (`internal/http/bridge.go:90`).
-- [x] Update Bootstrap server hardcoded version `0.1.0`.
-- [x] Implement "future" worker log streaming behavior (`internal/engine/worker_hub.go:120`).
-- [x] Refactor large files exceeding 350 lines (e.g., `git_service.go`, `app_services.go`, `github-integration.tsx`).
-
-## 5. Structural Cleanup & Domain Boundaries
-
-The overall structure of Codedock is reasonable, but both the Go backend and the React dashboard need cleanup and stronger domain boundaries to prevent monolithic God-classes and ensure maintainability.
-
-### Go Backend Structure
-
-The current structure follows the intended layered architecture (`cmd/`, `internal/`, `pkg/`), but main structural problems exist:
+### Go Backend
 
 - [ ] **Broad Handlers:** `internal/handlers/` is becoming too broad. Split by domain (e.g., `auth/`, `users/`, `projects/`, `deployments/`, `backups/`).
 - [ ] **Bloated Services:** `internal/services/` has too many unrelated responsibilities. Group related services similarly to handlers.
@@ -108,15 +61,20 @@ The current structure follows the intended layered architecture (`cmd/`, `intern
 - [ ] **Script Overlap:** `bootstrap/` and `scripts/` overlap in responsibilities (upgrade, restore, install, backup). Define one canonical lifecycle location.
 - [ ] **Public SDK Leakage:** `pkg/http/` imports internal models, making it less reusable as a public SDK.
 
-**Note:** Large files violating the 350-line rule (`git_service.go`, `app_services.go`, `backup_manager.go`, `backup.go`, `service.go`) should be refactored as part of this structural split.
-
 ### Dashboard Structure
-
-The React dashboard structure is generally good, but suffers from inconsistent domain ownership. The biggest structural improvement is to make backend authorization domain-specific and colocate dashboard API/hooks/types with each feature.
 
 - [ ] **Colocate Domain Concepts:** `services/`, `hooks/`, and `interfaces/` duplicate domain concepts. Colocate them within `features/<domain>/` (e.g., `features/projects/api.ts`, `hooks.ts`, `types.ts`).
 - [ ] **Feature Granularity:** `features/instance/` is too broad. Split into `features/settings/`, `backups/`, `dns/`, `notifications/`, `users/`, `registries/`.
-- [x] **Fix Kebab-case Naming:** Rename files violating conventions (e.g., `authStore.ts` -> `auth-store.ts`, `useAuth.ts` -> `use-auth.ts`, `apiClient.ts` -> `api-client.ts`).
-- [x] **API Client Refactor:** Separate token/auth refresh behavior from `api-client.ts` so it isn't overly central.
-- [x] **Route Protection:** Centralize route protection in the dashboard layout or router context, rather than relying on API failures to trigger redirects.
-- [x] **Build Artifacts:** Stop tracking `tsconfig.tsbuildinfo` in the dashboard directory.
+
+---
+
+## 6. Code Style: 350-Line Limit Compliance
+
+The following files exceed the project's 350-line limit and require refactoring:
+
+- [ ] `apps/dashboard/src/features/instance/notifications-settings.tsx` — 436 lines
+- [ ] `internal/handlers/backup.go` — 403 lines
+- [ ] `apps/dashboard/src/features/instance/s3-destinations-list.tsx` — 398 lines
+- [ ] `apps/dashboard/src/features/instance/maintenance-settings.tsx` — 387 lines
+- [ ] `internal/engine/backup_manager.go` — 383 lines
+- [ ] `apps/dashboard/src/features/instance/backups-list.tsx` — 352 lines
