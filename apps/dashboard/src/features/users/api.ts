@@ -1,7 +1,7 @@
 import type { BaseResponse, PaginatedData } from '#/interfaces/base';
 import { apiClient } from '#/lib/api-client';
 import { handleApiError } from '#/lib/error';
-import type { User } from './types';
+import type { User } from './interfaces';
 
 export const usersService = {
   list: async (): Promise<BaseResponse<PaginatedData<User>>> => {

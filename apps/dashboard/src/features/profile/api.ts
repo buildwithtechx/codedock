@@ -2,7 +2,7 @@ import type {
   CreatePATRequest,
   CreatePATResponseType,
   PersonalAccessToken,
-} from '#/features/users/types';
+} from '#/features/users/interfaces';
 import type { BaseResponse } from '#/interfaces/base';
 import { apiClient } from '#/lib/api-client';
 import { handleApiError } from '#/lib/error';
@@ -12,7 +12,7 @@ import type {
   RequestEmailChangeRequest,
   UpdateProfileRequest,
   VerifyEmailChangeRequest,
-} from './types';
+} from './interfaces';
 
 type ListPATsResponse = BaseResponse<PersonalAccessToken[]>;
 

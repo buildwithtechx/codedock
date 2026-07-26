@@ -11,7 +11,7 @@ import {
 import { Input } from '#/components/ui/input';
 import { Label } from '#/components/ui/label';
 import { Textarea } from '#/components/ui/textarea';
-import type { GithubApp } from '#/features/settings/types';
+import type { GithubApp } from '#/features/settings/interfaces';
 
 export const GithubIcon = ({ className }: { className?: string }) => (
   <svg

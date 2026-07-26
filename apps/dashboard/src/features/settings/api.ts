@@ -1,4 +1,4 @@
-import type { TeamNotificationChannel } from '#/features/notifications/types';
+import type { TeamNotificationChannel } from '#/features/notifications/interfaces';
 import type { BaseResponse } from '#/interfaces/base';
 import { apiClient } from '#/lib/api-client';
 import { handleApiError } from '#/lib/error';
@@ -17,7 +17,7 @@ import type {
   TestNotificationResponseType,
   UpdateServerSettingsResponse,
   UpdateSettingsRequest,
-} from './types';
+} from './interfaces';
 
 export const settingsService = {
   getSettings: async (): Promise<GetServerSettingsResponse> => {

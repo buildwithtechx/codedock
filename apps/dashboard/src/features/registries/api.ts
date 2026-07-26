@@ -1,6 +1,6 @@
 import type { BaseResponse } from '#/interfaces/base';
 import { apiClient } from '#/lib/api-client';
-import type { CreateRegistryRequest, Registry } from './types';
+import type { CreateRegistryRequest, Registry } from './interfaces';
 
 export const registryService = {
   listByProject: async (projectId: string): Promise<Registry[]> => {

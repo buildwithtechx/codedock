@@ -14,7 +14,7 @@ import type {
   SetupResponse,
   Verify2FARequest,
   Verify2FAResponse,
-} from './types';
+} from './interfaces';
 
 export const authService = {
   login: async (credentials: AuthCredentials): Promise<AuthResponse> => {

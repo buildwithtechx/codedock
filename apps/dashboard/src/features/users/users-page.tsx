@@ -4,7 +4,7 @@ import { useState } from 'react';
 import { Button } from '#/components/ui/button';
 import { Skeleton } from '#/components/ui/skeleton';
 import { useListUsers } from '#/features/users/hooks';
-import type { User } from '#/features/users/types';
+import type { User } from '#/features/users/interfaces';
 import { UserDeleteDialog } from './components/user-delete-dialog';
 import { UserInviteDialog } from './components/user-invite-dialog';
 

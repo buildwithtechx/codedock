@@ -1,4 +1,4 @@
-import type { OneClickApp } from '#/features/databases/types';
+import type { OneClickApp } from '#/features/databases/interfaces';
 import type {
   ArchiveDeployResponse,
   ComposeDeployResponse,

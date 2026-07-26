@@ -11,7 +11,7 @@ import type {
   ListProjectsResponse,
   ProjectMember,
   ProjectToken,
-} from './types';
+} from './interfaces';
 
 export interface ServiceWebhook {
   id: string;

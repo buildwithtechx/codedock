@@ -7,7 +7,7 @@ import type {
   Organization,
   OrganizationMember,
   UpdateOrganizationMemberRequest,
-} from './types';
+} from './interfaces';
 
 export const orgService = {
   list: async (): Promise<Organization[]> => {

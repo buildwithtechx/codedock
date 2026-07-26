@@ -1,6 +1,6 @@
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
 import { dnsService, domainsService } from './api';
-import type { CreateDNSRecordRequest, UpdateDNSRecordRequest } from './types';
+import type { CreateDNSRecordRequest, UpdateDNSRecordRequest } from './interfaces';
 
 export const useListDNS = () => {
   return useQuery({

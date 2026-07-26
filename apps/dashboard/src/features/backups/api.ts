@@ -9,7 +9,7 @@ import type {
   ListBackupRecordsResponse,
   ListBackupsResponse,
   ListS3DestinationsResponse,
-} from './types';
+} from './interfaces';
 
 export const backupsService = {
   list: async (): Promise<ListBackupsResponse> => {

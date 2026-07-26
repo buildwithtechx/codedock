@@ -1,5 +1,5 @@
 import { Badge } from '#/components/ui/badge';
-import type { SystemStats } from '#/features/settings/types';
+import type { SystemStats } from '#/features/settings/interfaces';
 
 type Props = {
   stats?: SystemStats;

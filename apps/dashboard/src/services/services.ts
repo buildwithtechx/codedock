@@ -3,7 +3,7 @@ import type {
   EnvExampleVariableSuggestion,
   UpdateServiceVarRequest,
   Variable,
-} from '#/features/services/types';
+} from '#/features/services/interfaces';
 import type { BaseResponse } from '#/interfaces/base';
 import { apiClient } from '#/lib/api-client';
 import { handleApiError } from '#/lib/error';

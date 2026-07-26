@@ -24,7 +24,7 @@ import {
   useDeleteRegistry,
   useListRegistries,
 } from '#/features/registries/hooks';
-import type { Registry } from '#/features/registries/types';
+import type { Registry } from '#/features/registries/interfaces';
 
 export function ProjectRegistries({ projectId }: { projectId: string }) {
   const { data: registries, isLoading } = useListRegistries(projectId);

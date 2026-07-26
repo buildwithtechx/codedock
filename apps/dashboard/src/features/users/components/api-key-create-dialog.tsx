@@ -12,7 +12,7 @@ import {
 import { Input } from '#/components/ui/input';
 import { Label } from '#/components/ui/label';
 import { useCreateToken } from '#/features/profile/hooks';
-import type { CreatePATRequest } from '#/features/users/types';
+import type { CreatePATRequest } from '#/features/users/interfaces';
 
 interface ApiKeyCreateDialogProps {
   open: boolean;

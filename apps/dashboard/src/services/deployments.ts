@@ -8,7 +8,7 @@ import type {
   RollbackDeploymentResponse,
   TriggerDeploymentRequest,
   TriggerDeploymentResponse,
-} from '#/features/services/types';
+} from '#/features/services/interfaces';
 import { apiClient } from '#/lib/api-client';
 import { handleApiError } from '#/lib/error';
 

@@ -11,7 +11,7 @@ import type {
   ImportDatabaseRequest,
   ListTablesResponse,
   TableRowPayload,
-} from './types';
+} from './interfaces';
 
 export const databasesService = {
   listDatabases: async (): Promise<GetDatabasesResponse> => {

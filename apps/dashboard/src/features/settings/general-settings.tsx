@@ -7,7 +7,7 @@ import { Label } from '#/components/ui/label';
 import { Skeleton } from '#/components/ui/skeleton';
 import { Switch } from '#/components/ui/switch';
 import { useGetSettings, useUpdateSettings } from '#/features/settings/hooks';
-import type { ServerSettings } from '#/features/settings/types';
+import type { ServerSettings } from '#/features/settings/interfaces';
 
 type GeneralFields = Pick<
   ServerSettings,

@@ -9,7 +9,7 @@ import {
   DialogTitle,
 } from '#/components/ui/dialog';
 import { useDeleteUser } from '#/features/users/hooks';
-import type { User } from '#/features/users/types';
+import type { User } from '#/features/users/interfaces';
 
 interface UserDeleteDialogProps {
   target: User | null;

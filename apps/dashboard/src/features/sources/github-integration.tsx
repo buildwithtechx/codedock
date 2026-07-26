@@ -9,7 +9,7 @@ import {
   useGetGitApps,
   useSaveGitApp,
 } from '#/features/settings/hooks';
-import type { GithubApp } from '#/features/settings/types';
+import type { GithubApp } from '#/features/settings/interfaces';
 import { Route } from '#/routes/_dashboard.sources';
 import { GithubAppDialogs, GithubIcon } from './github-app-dialogs';
 

@@ -1,6 +1,6 @@
-import type { CreateDatabaseRequest } from '#/features/databases/types';
+import type { CreateDatabaseRequest } from '#/features/databases/interfaces';
 
-import type { CreateAppServiceRequest } from '#/features/services/types';
+import type { CreateAppServiceRequest } from '#/features/services/interfaces';
 import { apiClient } from '#/lib/api-client';
 
 export interface ComposeAnalyzeRequest {

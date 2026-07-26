@@ -32,7 +32,7 @@ import {
   useRemoveOrganizationMember,
   useUpdateOrganizationMember,
 } from '#/features/organizations/hooks';
-import type { OrganizationMember } from '#/features/organizations/types';
+import type { OrganizationMember } from '#/features/organizations/interfaces';
 
 export function OrganizationMembers({ organizationId }: { organizationId: string }) {
   const { data: members, isLoading } = useListOrganizationMembers(organizationId);

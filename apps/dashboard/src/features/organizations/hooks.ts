@@ -4,7 +4,7 @@ import type {
   CreateOrganizationRequest,
   InviteOrganizationMemberRequest,
   UpdateOrganizationMemberRequest,
-} from './types';
+} from './interfaces';
 
 export const useListOrganizations = () =>
   useQuery({ queryKey: ['organizations'], queryFn: () => orgService.list() });
