@@ -13,7 +13,7 @@ import {
 } from '#/components/ui/dialog';
 import { Input } from '#/components/ui/input';
 import { Label } from '#/components/ui/label';
-import type { ImportDatabaseResponse } from '#/features/databases/interfaces';
+import type { ImportDatabaseResponse } from '#/features/databases';
 import { apiClient } from '#/lib/api-client';
 
 const schema = z.object({

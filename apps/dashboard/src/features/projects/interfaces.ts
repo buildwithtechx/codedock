@@ -1,5 +1,5 @@
-import type { Database } from '#/features/databases/interfaces';
-import type { AppService } from '#/features/services/interfaces';
+import type { Database } from '#/features/databases';
+import type { AppService } from '#/features/services';
 import type { BaseResponse, PaginatedData } from '#/interfaces/base';
 
 export type MemberPermission = 'admin' | 'member' | 'viewer';

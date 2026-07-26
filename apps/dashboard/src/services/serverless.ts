@@ -1,4 +1,4 @@
-import type { ServerlessFunctionCode } from '#/features/projects/interfaces';
+import type { ServerlessFunctionCode } from '#/features/projects';
 import type { BaseResponse } from '#/interfaces/base';
 import { apiClient } from '#/lib/api-client';
 import { handleApiError } from '#/lib/error';

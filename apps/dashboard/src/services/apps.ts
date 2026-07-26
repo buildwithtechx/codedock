@@ -9,7 +9,7 @@ import type {
   UpdateAppServiceRequest,
   UpdateServiceVarRequest,
   Variable,
-} from '#/features/services/interfaces';
+} from '#/features/services';
 import type { BaseResponse } from '#/interfaces/base';
 import { apiClient } from '#/lib/api-client';
 import { handleApiError } from '#/lib/error';

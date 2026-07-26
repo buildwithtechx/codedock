@@ -15,7 +15,7 @@ import {
   useRestore,
   useTrigger,
   useUpdate,
-} from '#/features/backups/hooks';
+} from '#/features/backups';
 import { BackupExecutionsList } from './backup-executions-list';
 
 export function BackupsList() {

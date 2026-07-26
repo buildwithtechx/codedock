@@ -12,7 +12,7 @@ import {
 import { Input } from '#/components/ui/input';
 import { Label } from '#/components/ui/label';
 import { Switch } from '#/components/ui/switch';
-import { useCreate } from '#/features/backups/hooks';
+import { useCreate } from '#/features/backups';
 
 export function VolumeBackupModal({
   serviceId,

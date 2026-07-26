@@ -11,8 +11,8 @@ import {
 } from '#/components/ui/dialog';
 import { Input } from '#/components/ui/input';
 import { Label } from '#/components/ui/label';
-import { useCreateToken } from '#/features/profile/hooks';
-import type { CreatePATRequest } from '#/features/users/interfaces';
+import { useCreateToken } from '#/features/profile';
+import type { CreatePATRequest } from '#/features/users';
 
 interface ApiKeyCreateDialogProps {
   open: boolean;

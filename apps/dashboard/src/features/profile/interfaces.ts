@@ -1,4 +1,4 @@
-import type { UserRole } from '#/features/users/interfaces';
+import type { UserRole } from '#/features/users';
 import type { BaseResponse } from '#/interfaces/base';
 
 export interface UserProfile {

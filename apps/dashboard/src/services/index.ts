@@ -1,10 +1,10 @@
-export { authService } from '#/features/auth/api';
-export { backupsService } from '#/features/backups/api';
-export { databasesService } from '#/features/databases/api';
-export { dnsService as domainsService } from '#/features/dns/api';
-export { profileService } from '#/features/profile/api';
-export { projectSettingsService, projectsService } from '#/features/projects/api';
-export { settingsService, systemService } from '#/features/settings/api';
+export { authService } from '#/features/auth';
+export { backupsService } from '#/features/backups';
+export { databasesService } from '#/features/databases';
+export { dnsService as domainsService } from '#/features/dns';
+export { profileService } from '#/features/profile';
+export { projectSettingsService, projectsService } from '#/features/projects';
+export { settingsService, systemService } from '#/features/settings';
 export { appsService } from './apps';
 export { canvasService } from './canvas';
 export { deploymentsService } from './deployments';

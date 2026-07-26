@@ -8,7 +8,7 @@ import {
   DropdownMenuItem,
   DropdownMenuTrigger,
 } from '#/components/ui/dropdown-menu';
-import { useDeleteS3Destination, useListS3Destinations } from '#/features/backups/hooks';
+import { useDeleteS3Destination, useListS3Destinations } from '#/features/backups';
 import { CreateS3DestinationDialog } from './create-s3-destination-dialog';
 
 export function S3DestinationsList() {
@@ -114,10 +114,7 @@ export function S3DestinationsList() {
                   </div>
                   <div className="flex justify-between">
                     <span className="text-muted-foreground">Endpoint:</span>
-                    <span
-                      className="max-w-[200px] truncate pl-2 text-foreground"
-                      title={dest.endpoint}
-                    >
+                    <span className="max-w-50 truncate pl-2 text-foreground" title={dest.endpoint}>
                       {dest.endpoint}
                     </span>
                   </div>

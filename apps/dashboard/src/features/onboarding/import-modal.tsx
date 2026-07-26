@@ -11,7 +11,7 @@ import {
 } from '#/components/ui/dialog';
 import { Input } from '#/components/ui/input';
 import { Label } from '#/components/ui/label';
-import { useImportSystem } from '#/features/settings/hooks';
+import { useImportSystem } from '#/features/settings';
 
 export const ImportModal = ({
   open,

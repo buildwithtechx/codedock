@@ -12,13 +12,8 @@ import {
   TableHeader,
   TableRow,
 } from '#/components/ui/table';
-import { useGetProfile } from '#/features/profile/hooks';
-import {
-  useCreateToken,
-  useDeleteToken,
-  useListMembers,
-  useListTokens,
-} from '#/features/projects/hooks';
+import { useGetProfile } from '#/features/profile';
+import { useCreateToken, useDeleteToken, useListMembers, useListTokens } from '#/features/projects';
 
 export function ProjectTokens({ projectId }: { projectId: string }) {
   const { data: tokens, isLoading } = useListTokens(projectId);

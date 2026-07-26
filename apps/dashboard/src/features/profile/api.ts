@@ -2,7 +2,7 @@ import type {
   CreatePATRequest,
   CreatePATResponseType,
   PersonalAccessToken,
-} from '#/features/users/interfaces';
+} from '#/features/users';
 import type { BaseResponse } from '#/interfaces/base';
 import { apiClient } from '#/lib/api-client';
 import { handleApiError } from '#/lib/error';

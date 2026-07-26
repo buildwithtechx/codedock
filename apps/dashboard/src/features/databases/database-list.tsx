@@ -2,7 +2,7 @@ import { useQuery } from '@tanstack/react-query';
 import { Database } from 'lucide-react';
 import { Badge } from '#/components/ui/badge';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '#/components/ui/card';
-import type { GetDatabasesResponse } from '#/features/databases/interfaces';
+import type { GetDatabasesResponse } from '#/features/databases';
 import { apiClient } from '#/lib/api-client';
 
 export function DatabaseList() {

@@ -1,4 +1,4 @@
-import type { DomainConfig } from '#/features/projects/interfaces';
+import type { DomainConfig } from '#/features/projects';
 import type { BaseResponse } from '#/interfaces/base';
 import { apiClient } from '#/lib/api-client';
 import { handleApiError } from '#/lib/error';

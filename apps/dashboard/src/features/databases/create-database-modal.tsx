@@ -21,7 +21,7 @@ import {
   SelectValue,
 } from '#/components/ui/select';
 import { Switch } from '#/components/ui/switch';
-import type { CreateDatabaseResponse, DatabaseEngine } from '#/features/databases/interfaces';
+import type { CreateDatabaseResponse, DatabaseEngine } from '#/features/databases';
 import { apiClient } from '#/lib/api-client';
 
 const engines: { label: string; value: DatabaseEngine }[] = [

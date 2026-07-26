@@ -1,7 +1,7 @@
 import { Link } from '@tanstack/react-router';
 import { Box, Cloud, Database, Folder } from 'lucide-react';
 
-import type { CanvasSummary } from '#/features/projects/interfaces';
+import type { CanvasSummary } from '#/features/projects';
 
 const GithubIcon = ({ className }: { className?: string }) => (
   <svg

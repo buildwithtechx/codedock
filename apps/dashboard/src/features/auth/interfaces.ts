@@ -1,4 +1,4 @@
-import type { User } from '#/features/users/interfaces';
+import type { User } from '#/features/users';
 import type { BaseResponse } from '#/interfaces/base';
 
 export interface AuthResponse {

@@ -17,7 +17,7 @@ import {
   useCreateOrganization,
   useDeleteOrganization,
   useListOrganizations,
-} from '#/features/organizations/hooks';
+} from '#/features/organizations';
 
 export const Route = createFileRoute('/_dashboard/organizations')({
   component: OrganizationsPage,

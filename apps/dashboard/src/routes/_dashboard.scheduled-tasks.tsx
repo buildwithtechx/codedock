@@ -17,7 +17,7 @@ import {
   TableHeader,
   TableRow,
 } from '#/components/ui/table';
-import { useListProjects } from '#/features/projects/hooks';
+import { useListProjects } from '#/features/projects';
 import { useListScheduledTasks } from '#/hooks/use-scheduled-tasks';
 
 export const Route = createFileRoute('/_dashboard/scheduled-tasks')({

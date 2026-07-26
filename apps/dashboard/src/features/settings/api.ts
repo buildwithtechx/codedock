@@ -1,4 +1,4 @@
-import type { TeamNotificationChannel } from '#/features/notifications/interfaces';
+import type { TeamNotificationChannel } from '#/features/notifications';
 import type { BaseResponse } from '#/interfaces/base';
 import { apiClient } from '#/lib/api-client';
 import { handleApiError } from '#/lib/error';

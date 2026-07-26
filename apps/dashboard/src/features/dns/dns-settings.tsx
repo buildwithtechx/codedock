@@ -2,7 +2,7 @@ import { Globe } from 'lucide-react';
 import { useEffect, useState } from 'react';
 import { toast } from 'sonner';
 import { Skeleton } from '#/components/ui/skeleton';
-import { useGetSettings, useUpdateSettings } from '#/features/settings/hooks';
+import { useGetSettings, useUpdateSettings } from '#/features/settings';
 import { DnsProviderForm } from './components/dns-provider-form';
 
 const providers = [

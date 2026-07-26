@@ -19,7 +19,7 @@ import {
   SelectTrigger,
   SelectValue,
 } from '#/components/ui/select';
-import { useCreateS3Destination } from '#/features/backups/hooks';
+import { useCreateS3Destination } from '#/features/backups';
 
 type Props = {
   isOpen: boolean;

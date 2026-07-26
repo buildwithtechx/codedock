@@ -2,7 +2,7 @@ import { createFileRoute, Link, useNavigate } from '@tanstack/react-router';
 import { Activity, Box, Database, Folder, Plus, Server } from 'lucide-react';
 import { Button } from '#/components/ui/button';
 import { ServiceIcon } from '#/components/ui/service-icon';
-import { useGetProject } from '#/features/projects/hooks';
+import { useGetProject } from '#/features/projects';
 import { useGetCanvasSummary, useGetEnvironmentCanvas } from '#/hooks/use-canvas';
 
 export const Route = createFileRoute('/_dashboard/projects/$projectId/')({

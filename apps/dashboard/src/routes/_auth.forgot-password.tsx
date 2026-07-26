@@ -2,7 +2,7 @@ import { createFileRoute, Link } from '@tanstack/react-router';
 import { AlertCircle } from 'lucide-react';
 import { Button } from '#/components/ui/button';
 import { ForgotPasswordForm } from '#/features/auth/forgot-password-form';
-import { useGetPublicSettings } from '#/features/settings/hooks';
+import { useGetPublicSettings } from '#/features/settings';
 import { useSystemStore } from '#/stores/system-store';
 
 export const Route = createFileRoute('/_auth/forgot-password')({

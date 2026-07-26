@@ -3,8 +3,8 @@ import { Key, Plus, Server, Trash2, Users } from 'lucide-react';
 import { useState } from 'react';
 import { Button } from '#/components/ui/button';
 import { Skeleton } from '#/components/ui/skeleton';
-import { useListUsers } from '#/features/users/hooks';
-import type { User } from '#/features/users/interfaces';
+import type { User } from '#/features/users';
+import { useListUsers } from '#/features/users';
 import { UserDeleteDialog } from './components/user-delete-dialog';
 import { UserInviteDialog } from './components/user-invite-dialog';
 

@@ -17,7 +17,7 @@ import {
   TableHeader,
   TableRow,
 } from '#/components/ui/table';
-import type { ListTablesResponse } from '#/features/databases/interfaces';
+import type { ListTablesResponse } from '#/features/databases';
 import { apiClient } from '#/lib/api-client';
 
 interface Props {

@@ -26,13 +26,13 @@ import {
   TableHeader,
   TableRow,
 } from '#/components/ui/table';
+import type { OrganizationMember } from '#/features/organizations';
 import {
   useInviteOrganizationMember,
   useListOrganizationMembers,
   useRemoveOrganizationMember,
   useUpdateOrganizationMember,
-} from '#/features/organizations/hooks';
-import type { OrganizationMember } from '#/features/organizations/interfaces';
+} from '#/features/organizations';
 
 export function OrganizationMembers({ organizationId }: { organizationId: string }) {
   const { data: members, isLoading } = useListOrganizationMembers(organizationId);
@@ -60,7 +60,7 @@ export function OrganizationMembers({ organizationId }: { organizationId: string
               <TableHead>Email</TableHead>
               <TableHead>Permission</TableHead>
               <TableHead>Status</TableHead>
-              <TableHead className="w-[100px] text-right">Actions</TableHead>
+              <TableHead className="w-25 text-right">Actions</TableHead>
             </TableRow>
           </TableHeader>
           <TableBody>
@@ -136,7 +136,7 @@ function MemberRow({
           onValueChange={handlePermissionChange}
           disabled={isPending}
         >
-          <SelectTrigger className="h-8 w-[140px]">
+          <SelectTrigger className="h-8 w-35">
             <SelectValue />
           </SelectTrigger>
           <SelectContent>

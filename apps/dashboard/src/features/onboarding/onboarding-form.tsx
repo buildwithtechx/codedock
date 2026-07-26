@@ -11,7 +11,7 @@ import {
 } from 'lucide-react';
 import { FormProvider, useForm } from 'react-hook-form';
 import { Button } from '#/components/ui/button';
-import { useSetup } from '#/features/auth/hooks';
+import { useSetup } from '#/features/auth';
 import { useOnboardingStore } from '#/stores/onboarding-store';
 import { ImportModal, type SetupSchema, StepDomain, StepOwner, StepRuntime, setupSchema } from '.';
 

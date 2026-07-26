@@ -2,11 +2,7 @@ import { FileSearch, Loader2, Plus, Trash } from 'lucide-react';
 import { useState } from 'react';
 import { Button } from '#/components/ui/button';
 import { Input } from '#/components/ui/input';
-import type {
-  AppService,
-  EnvExampleVariableSuggestion,
-  Variable,
-} from '#/features/services/interfaces';
+import type { AppService, EnvExampleVariableSuggestion, Variable } from '#/features/services';
 import { useCreate, useDelete, useEnvSuggestions, useList } from '#/hooks/use-services';
 
 export function ServiceVariables({ app }: { app: AppService }) {

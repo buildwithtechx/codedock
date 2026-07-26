@@ -2,7 +2,7 @@ import { format } from 'date-fns';
 import { Calendar, Clock, FolderOpen, Key, Plus, Trash2 } from 'lucide-react';
 import { useState } from 'react';
 import { Button } from '#/components/ui/button';
-import { useListTokens } from '#/features/profile/hooks';
+import { useListTokens } from '#/features/profile';
 import { ApiKeyCreateDialog } from './components/api-key-create-dialog';
 import { ApiKeyDeleteDialog } from './components/api-key-delete-dialog';
 import { ApiKeyNewDialog } from './components/api-key-new-dialog';

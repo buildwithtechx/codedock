@@ -17,7 +17,7 @@ import {
   TableHeader,
   TableRow,
 } from '#/components/ui/table';
-import { useListProjects } from '#/features/projects/hooks';
+import { useListProjects } from '#/features/projects';
 import { useListByProject } from '#/hooks/use-apps';
 import { useListByService } from '#/hooks/use-deployments';
 

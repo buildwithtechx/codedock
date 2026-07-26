@@ -1,7 +1,4 @@
-import type {
-  CreateEnvironmentResponse,
-  ListEnvironmentsResponse,
-} from '#/features/projects/interfaces';
+import type { CreateEnvironmentResponse, ListEnvironmentsResponse } from '#/features/projects';
 import { apiClient } from '#/lib/api-client';
 import { handleApiError } from '#/lib/error';
 

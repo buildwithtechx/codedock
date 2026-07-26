@@ -19,7 +19,7 @@ import {
   SelectTrigger,
   SelectValue,
 } from '#/components/ui/select';
-import type { BuildEngine } from '#/features/services/interfaces';
+import type { BuildEngine } from '#/features/services';
 import { useCreateApp } from '#/hooks/use-apps';
 import { useListByProject as useListEnvironments } from '#/hooks/use-environments';
 import { useGitStatus, useListGitRepos } from '#/hooks/use-git';
