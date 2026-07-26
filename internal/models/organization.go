@@ -8,10 +8,12 @@ type MemberPermission = types.MemberPermission
 type MemberStatus = types.MemberStatus
 
 const (
+	MemberPermissionOwner  = types.MemberPermissionOwner
 	MemberPermissionAdmin  = types.MemberPermissionAdmin
 	MemberPermissionMember = types.MemberPermissionMember
 	MemberStatusPending    = types.MemberStatusPending
 	MemberStatusActive     = types.MemberStatusActive
+	MemberStatusAccepted   = types.MemberStatusAccepted
 )
 
 type Organization = types.Organization

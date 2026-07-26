@@ -16,7 +16,7 @@ type AuthRequest struct {
 }
 
 type AuthResponse struct {
-	Token string       `json:"token"`
+	Token string      `json:"token"`
 	User  *types.User `json:"user"`
 }
 

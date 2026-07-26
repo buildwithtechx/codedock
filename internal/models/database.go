@@ -25,9 +25,21 @@ const (
 	DatabaseStatusError   = "error"
 )
 
+type UpdateDatabaseRequest struct {
+	Name               string  `json:"name,omitempty"`
+	Version            string  `json:"version,omitempty"`
+	ExternalDNS        string  `json:"externalDns,omitempty"`
+	CPULimit           float64 `json:"cpuLimit,omitempty"`
+	MemoryLimit        int     `json:"memoryLimit,omitempty"`
+	LogicalReplication bool    `json:"logicalReplication,omitempty"`
+	CustomArgs         string  `json:"customArgs,omitempty"`
+}
+
 type QueryDatabaseRequest struct {
 	Query string `json:"query"`
 }
+
+type DatabaseQueryRequest = QueryDatabaseRequest
 
 type QueryDatabaseResponse struct {
 	Columns         []string         `json:"columns"`
@@ -58,5 +70,6 @@ type ColumnSchema = DatabaseColumnInfo
 type TableRowPayload map[string]any
 
 type ImportDatabaseRequest struct {
-	SQL string `json:"sql"`
+	SQL       string `json:"sql,omitempty"`
+	SourceURL string `json:"sourceUrl,omitempty"`
 }

@@ -31,9 +31,12 @@ type ProjectToken struct {
 }
 
 type CreateTokenRequest struct {
-	Name      string     `json:"name"`
-	Role      string     `json:"role"`
-	ExpiresAt *time.Time `json:"expiresAt"`
+	Name          string     `json:"name"`
+	Role          string     `json:"role"`
+	EnvironmentID string     `json:"environmentId,omitempty"`
+	Scopes        []string   `json:"scopes,omitempty"`
+	IPAllowlist   []string   `json:"ipAllowlist,omitempty"`
+	ExpiresAt     *time.Time `json:"expiresAt"`
 }
 
 type CreateTokenResponse struct {

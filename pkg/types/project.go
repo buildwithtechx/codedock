@@ -22,6 +22,9 @@ type EnvironmentConfig struct {
 }
 
 type CreateProjectRequest struct {
-	Name        string `json:"name"`
-	Description string `json:"description"`
+	ID             string `json:"id,omitempty"`
+	Name           string `json:"name"`
+	Description    string `json:"description"`
+	OrganizationID string `json:"organizationId,omitempty"`
+	ServerID       string `json:"serverId,omitempty"`
 }

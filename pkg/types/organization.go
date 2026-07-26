@@ -6,10 +6,12 @@ type MemberPermission string
 type MemberStatus string
 
 const (
+	MemberPermissionOwner  MemberPermission = "owner"
 	MemberPermissionAdmin  MemberPermission = "admin"
 	MemberPermissionMember MemberPermission = "member"
 	MemberStatusPending    MemberStatus     = "pending"
 	MemberStatusActive     MemberStatus     = "active"
+	MemberStatusAccepted   MemberStatus     = "accepted"
 )
 
 type Organization struct {
