@@ -7,6 +7,8 @@ import (
 	"fmt"
 	"io"
 	"net/http"
+	"os"
+	"strings"
 
 	"codedock.run/codedock/internal/models"
 )
@@ -73,21 +75,16 @@ func (s *GitService) fetchGitAPI(ctx context.Context, reqURL, token string, head
 }
 
 func (s *GitService) listGitHubRepos(ctx context.Context, token string) ([]models.GitRepository, error) {
-	reqURL := "https://api.github.com/user/repos?per_page=100&sort=updated"
-	var ghRepos []struct {
-		ID       int64  `json:"id"`
-		Name     string `json:"name"`
-		FullName string `json:"full_name"`
-		Private  bool   `json:"private"`
-		CloneURL string `json:"clone_url"`
-		HTMLURL  string `json:"html_url"`
-		Default  string `json:"default_branch"`
+	baseURL := os.Getenv("GITHUB_BASE_URL")
+	if baseURL == "" {
+		baseURL = "https://api.github.com"
 	}
+	reqURL := strings.TrimRight(baseURL, "/") + "/user/repos?per_page=100&sort=updated"
+	var ghRepos []models.GitHubRepoDTO
 
 	err := s.fetchGitAPI(ctx, reqURL, token, map[string]string{
 		"Accept": "application/vnd.github+json",
 	}, &ghRepos)
-
 	if err != nil {
 		return nil, fmt.Errorf("github: %w", err)
 	}
@@ -101,23 +98,19 @@ func (s *GitService) listGitHubRepos(ctx context.Context, token string) ([]model
 			Private:       r.Private,
 			CloneURL:      r.CloneURL,
 			HTMLURL:       r.HTMLURL,
-			DefaultBranch: r.Default,
+			DefaultBranch: r.DefaultBranch,
 		})
 	}
 	return results, nil
 }
 
 func (s *GitService) listGitLabRepos(ctx context.Context, token string) ([]models.GitRepository, error) {
-	reqURL := "https://gitlab.com/api/v4/projects?membership=true&per_page=100&order_by=updated_at"
-	var glRepos []struct {
-		ID            int64  `json:"id"`
-		Name          string `json:"name"`
-		PathWithNames string `json:"path_with_namespace"`
-		Visibility    string `json:"visibility"`
-		HTTPURL       string `json:"http_url_to_repo"`
-		WebURL        string `json:"web_url"`
-		DefaultBranch string `json:"default_branch"`
+	baseURL := os.Getenv("GITLAB_BASE_URL")
+	if baseURL == "" {
+		baseURL = "https://gitlab.com"
 	}
+	reqURL := strings.TrimRight(baseURL, "/") + "/api/v4/projects?membership=true&per_page=100&order_by=updated_at"
+	var glRepos []models.GitLabRepoDTO
 
 	err := s.fetchGitAPI(ctx, reqURL, token, nil, &glRepos)
 	if err != nil {
@@ -129,7 +122,7 @@ func (s *GitService) listGitLabRepos(ctx context.Context, token string) ([]model
 		results = append(results, models.GitRepository{
 			ID:            r.ID,
 			Name:          r.Name,
-			FullName:      r.PathWithNames,
+			FullName:      r.PathWithNamespace,
 			Private:       r.Visibility != "public",
 			CloneURL:      r.HTTPURL,
 			HTMLURL:       r.WebURL,
@@ -141,26 +134,7 @@ func (s *GitService) listGitLabRepos(ctx context.Context, token string) ([]model
 
 func (s *GitService) listBitbucketRepos(ctx context.Context, token string) ([]models.GitRepository, error) {
 	reqURL := "https://api.bitbucket.org/2.0/repositories?role=member"
-	var bbResponse struct {
-		Values []struct {
-			UUID     string `json:"uuid"`
-			Name     string `json:"name"`
-			FullName string `json:"full_name"`
-			IsPriv   bool   `json:"is_private"`
-			Links    struct {
-				HTML struct {
-					Href string `json:"href"`
-				} `json:"html"`
-				Clone []struct {
-					Name string `json:"name"`
-					Href string `json:"href"`
-				} `json:"clone"`
-			} `json:"links"`
-			Mainbranch struct {
-				Name string `json:"name"`
-			} `json:"mainbranch"`
-		} `json:"values"`
-	}
+	var bbResponse models.BitbucketRepoListDTO
 
 	err := s.fetchGitAPI(ctx, reqURL, token, nil, &bbResponse)
 	if err != nil {
@@ -176,7 +150,7 @@ func (s *GitService) listBitbucketRepos(ctx context.Context, token string) ([]mo
 			}
 		}
 		results = append(results, models.GitRepository{
-			ID:            int64(i + 1), // Bitbucket uses UUIDs, fake it for ID
+			ID:            int64(i + 1),
 			Name:          r.Name,
 			FullName:      r.FullName,
 			Private:       r.IsPriv,
@@ -189,16 +163,12 @@ func (s *GitService) listBitbucketRepos(ctx context.Context, token string) ([]mo
 }
 
 func (s *GitService) listGiteaRepos(ctx context.Context, token string) ([]models.GitRepository, error) {
-	reqURL := "https://gitea.com/api/v1/user/repos" // assuming public gitea.com for simplicity
-	var gtRepos []struct {
-		ID       int64  `json:"id"`
-		Name     string `json:"name"`
-		FullName string `json:"full_name"`
-		Private  bool   `json:"private"`
-		CloneURL string `json:"clone_url"`
-		HTMLURL  string `json:"html_url"`
-		Default  string `json:"default_branch"`
+	baseURL := os.Getenv("GITEA_BASE_URL")
+	if baseURL == "" {
+		baseURL = "https://gitea.com"
 	}
+	reqURL := strings.TrimRight(baseURL, "/") + "/api/v1/user/repos"
+	var gtRepos []models.GiteaRepoDTO
 
 	err := s.fetchGitAPI(ctx, reqURL, token, nil, &gtRepos)
 	if err != nil {
@@ -214,7 +184,7 @@ func (s *GitService) listGiteaRepos(ctx context.Context, token string) ([]models
 			Private:       r.Private,
 			CloneURL:      r.CloneURL,
 			HTMLURL:       r.HTMLURL,
-			DefaultBranch: r.Default,
+			DefaultBranch: r.DefaultBranch,
 		})
 	}
 	return results, nil
