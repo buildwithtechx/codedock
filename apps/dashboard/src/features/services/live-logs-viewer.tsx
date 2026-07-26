@@ -4,6 +4,7 @@ import { Terminal } from '@xterm/xterm';
 import { env } from '#/env';
 import '@xterm/xterm/css/xterm.css';
 import { useEffect, useRef, useState } from 'react';
+import { useAuthStore } from '#/stores/auth-store';
 import { AIDiagnoseDialog } from './ai-diagnose-dialog';
 
 interface LiveLogsViewerProps {
@@ -28,7 +29,7 @@ export function LiveLogsViewer({ serviceId, deploymentId }: LiveLogsViewerProps)
       disableStdin: true,
       theme: {
         background: '#09090b',
-        foreground: '#fafafa',
+        foreground: '#f4f4f5',
       },
     });
 
@@ -51,7 +52,9 @@ export function LiveLogsViewer({ serviceId, deploymentId }: LiveLogsViewerProps)
       wsUrl += `?deploymentId=${deploymentId}`;
     }
 
-    const socket = new WebSocket(wsUrl);
+    const token = useAuthStore.getState().token;
+    const protocols = token ? ['auth', token] : undefined;
+    const socket = new WebSocket(wsUrl, protocols);
 
     socket.onopen = () => {
       setIsConnected(true);

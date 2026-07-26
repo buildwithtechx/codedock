@@ -51,8 +51,8 @@ func (ts *TokenService) GenerateToken(u *models.User) (string, error) {
 
 func (ts *TokenService) ValidateToken(tokenStr string) (jwt.MapClaims, error) {
 	token, err := jwt.Parse(tokenStr, func(t *jwt.Token) (any, error) {
-		if _, ok := t.Method.(*jwt.SigningMethodHMAC); !ok {
-			return nil, errors.New("unexpected signing method")
+		if t.Method.Alg() != jwt.SigningMethodHS256.Alg() {
+			return nil, errors.New("unexpected signing method: must be HS256")
 		}
 		return ts.secretKey, nil
 	})
@@ -83,8 +83,8 @@ func (ts *TokenService) GeneratePasswordResetToken(u *models.User) (string, erro
 
 func (ts *TokenService) ValidatePasswordResetToken(tokenStr string) (string, string, error) {
 	token, err := jwt.Parse(tokenStr, func(t *jwt.Token) (any, error) {
-		if _, ok := t.Method.(*jwt.SigningMethodHMAC); !ok {
-			return nil, errors.New("unexpected signing method")
+		if t.Method.Alg() != jwt.SigningMethodHS256.Alg() {
+			return nil, errors.New("unexpected signing method: must be HS256")
 		}
 		return ts.secretKey, nil
 	})
@@ -129,8 +129,8 @@ func (ts *TokenService) GenerateRefreshToken(u *models.User) (string, error) {
 
 func (ts *TokenService) ValidateRefreshToken(tokenStr string) (string, string, error) {
 	token, err := jwt.Parse(tokenStr, func(t *jwt.Token) (any, error) {
-		if _, ok := t.Method.(*jwt.SigningMethodHMAC); !ok {
-			return nil, errors.New("unexpected signing method")
+		if t.Method.Alg() != jwt.SigningMethodHS256.Alg() {
+			return nil, errors.New("unexpected signing method: must be HS256")
 		}
 		return ts.refreshSecretKey, nil
 	})
@@ -166,8 +166,8 @@ func (ts *TokenService) GenerateEmailVerificationToken(email string) (string, er
 
 func (ts *TokenService) ValidateEmailVerificationToken(tokenStr string) (string, error) {
 	token, err := jwt.Parse(tokenStr, func(t *jwt.Token) (any, error) {
-		if _, ok := t.Method.(*jwt.SigningMethodHMAC); !ok {
-			return nil, errors.New("unexpected signing method")
+		if t.Method.Alg() != jwt.SigningMethodHS256.Alg() {
+			return nil, errors.New("unexpected signing method: must be HS256")
 		}
 		return ts.secretKey, nil
 	})

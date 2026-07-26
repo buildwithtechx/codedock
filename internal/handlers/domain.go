@@ -96,10 +96,11 @@ func (h *DomainHandler) Delete(c echo.Context) error {
 	}
 
 	domain, err := h.envService.GetDomain(c.Request().Context(), id)
-	if err == nil && domain != nil {
-		if !h.hasAccess(c, domain.ServiceID) {
-			return utils.Error(c, http.StatusForbidden, "insufficient permissions")
-		}
+	if err != nil || domain == nil {
+		return utils.Error(c, http.StatusNotFound, "domain not found")
+	}
+	if !h.hasAccess(c, domain.ServiceID) {
+		return utils.Error(c, http.StatusForbidden, "insufficient permissions")
 	}
 
 	if err := h.envService.DeleteDomain(c.Request().Context(), id); err != nil {

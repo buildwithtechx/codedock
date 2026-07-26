@@ -57,6 +57,34 @@ func (h *BackupHandler) hasAccess(c echo.Context, databaseID, serviceID string) 
 	return h.projectService.HasPermission(c.Request().Context(), projectID, userClaims.UserID, userClaims.Role, "")
 }
 
+func (h *BackupHandler) hasAdminAccess(c echo.Context, databaseID, serviceID string) bool {
+	userClaims, ok := c.Get("user").(*models.UserClaims)
+	if !ok || userClaims == nil {
+		return false
+	}
+	if userClaims.Role == models.UserRoleAdmin || userClaims.Role == models.UserRoleOwner {
+		return true
+	}
+
+	var projectID string
+	if databaseID != "" {
+		db, err := h.dbService.GetDatabase(c.Request().Context(), databaseID)
+		if err == nil && db != nil {
+			projectID = db.ProjectID
+		}
+	} else if serviceID != "" {
+		app, err := h.appService.GetAppService(c.Request().Context(), serviceID)
+		if err == nil && app != nil {
+			projectID = app.ProjectID
+		}
+	}
+	if projectID == "" {
+		return false
+	}
+
+	return h.projectService.HasPermission(c.Request().Context(), projectID, userClaims.UserID, userClaims.Role, models.MemberPermissionAdmin)
+}
+
 func (h *BackupHandler) List(c echo.Context) error {
 	list, err := h.backupService.ListConfigs(c.Request().Context())
 	if err != nil {
@@ -209,10 +237,11 @@ func (h *BackupHandler) Delete(c echo.Context) error {
 	}
 
 	cfg, err := h.backupService.GetConfig(c.Request().Context(), id)
-	if err == nil && cfg != nil {
-		if !h.hasAccess(c, cfg.DatabaseID, cfg.ServiceID) {
-			return utils.Error(c, http.StatusForbidden, "insufficient permissions")
-		}
+	if err != nil || cfg == nil {
+		return utils.Error(c, http.StatusNotFound, "backup config not found")
+	}
+	if !h.hasAccess(c, cfg.DatabaseID, cfg.ServiceID) {
+		return utils.Error(c, http.StatusForbidden, "insufficient permissions")
 	}
 
 	if err := h.backupService.DeleteConfig(c.Request().Context(), id); err != nil {
@@ -228,10 +257,11 @@ func (h *BackupHandler) Trigger(c echo.Context) error {
 	}
 
 	cfg, err := h.backupService.GetConfig(c.Request().Context(), id)
-	if err == nil && cfg != nil {
-		if !h.hasAccess(c, cfg.DatabaseID, cfg.ServiceID) {
-			return utils.Error(c, http.StatusForbidden, "insufficient permissions")
-		}
+	if err != nil || cfg == nil {
+		return utils.Error(c, http.StatusNotFound, "backup config not found")
+	}
+	if !h.hasAccess(c, cfg.DatabaseID, cfg.ServiceID) {
+		return utils.Error(c, http.StatusForbidden, "insufficient permissions")
 	}
 
 	rec, err := h.backupService.TriggerBackup(c.Request().Context(), id)
@@ -248,10 +278,11 @@ func (h *BackupHandler) ListRecords(c echo.Context) error {
 	}
 
 	cfg, err := h.backupService.GetConfig(c.Request().Context(), id)
-	if err == nil && cfg != nil {
-		if !h.hasAccess(c, cfg.DatabaseID, cfg.ServiceID) {
-			return utils.Error(c, http.StatusForbidden, "insufficient permissions")
-		}
+	if err != nil || cfg == nil {
+		return utils.Error(c, http.StatusNotFound, "backup config not found")
+	}
+	if !h.hasAccess(c, cfg.DatabaseID, cfg.ServiceID) {
+		return utils.Error(c, http.StatusForbidden, "insufficient permissions")
 	}
 
 	recs, err := h.backupService.ListRecordsByConfig(c.Request().Context(), id)
@@ -269,10 +300,11 @@ func (h *BackupHandler) DownloadRecord(c echo.Context) error {
 	}
 
 	cfg, err := h.backupService.GetConfig(c.Request().Context(), id)
-	if err == nil && cfg != nil {
-		if !h.hasAccess(c, cfg.DatabaseID, cfg.ServiceID) {
-			return utils.Error(c, http.StatusForbidden, "insufficient permissions")
-		}
+	if err != nil || cfg == nil {
+		return utils.Error(c, http.StatusNotFound, "backup config not found")
+	}
+	if !h.hasAdminAccess(c, cfg.DatabaseID, cfg.ServiceID) {
+		return utils.Error(c, http.StatusForbidden, "insufficient admin permissions to download backup record")
 	}
 
 	rec, err := h.backupService.GetRecord(c.Request().Context(), recordID)
@@ -304,10 +336,11 @@ func (h *BackupHandler) DeleteRecord(c echo.Context) error {
 	}
 
 	cfg, err := h.backupService.GetConfig(c.Request().Context(), id)
-	if err == nil && cfg != nil {
-		if !h.hasAccess(c, cfg.DatabaseID, cfg.ServiceID) {
-			return utils.Error(c, http.StatusForbidden, "insufficient permissions")
-		}
+	if err != nil || cfg == nil {
+		return utils.Error(c, http.StatusNotFound, "backup config not found")
+	}
+	if !h.hasAdminAccess(c, cfg.DatabaseID, cfg.ServiceID) {
+		return utils.Error(c, http.StatusForbidden, "insufficient admin permissions to delete backup record")
 	}
 
 	rec, err := h.backupService.GetRecord(c.Request().Context(), recordID)

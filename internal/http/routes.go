@@ -264,7 +264,7 @@ func (s *Server) registerSettingsRoutes(apiGroup, authGroup *echo.Group) {
 	authGroup.GET("/settings", s.settingsHandler.GetSettings)
 	apiGroup.PUT("/settings", s.settingsHandler.UpdateSettings, s.authGuard.RequireRole("admin"))
 	authGroup.GET("/ai", s.aiSettingsHandler.GetAISettings)
-	authGroup.POST("/ai/diagnose", s.aiSettingsHandler.DiagnoseLogs)
+	authGroup.POST("/ai/diagnose", s.aiSettingsHandler.DiagnoseLogs, s.aiRateLimiter.Middleware)
 	apiGroup.PUT("/ai", s.aiSettingsHandler.UpdateAISettings, s.authGuard.RequireRole("admin"))
 	authGroup.GET("/notifications", s.notifSettingsHandler.GetNotificationSettings)
 	apiGroup.PUT("/notifications", s.notifSettingsHandler.UpdateNotificationSettings, s.authGuard.RequireRole("admin"))

@@ -137,10 +137,11 @@ func (h *ScheduledTaskHandler) Delete(c echo.Context) error {
 		return utils.Error(c, http.StatusBadRequest, "missing id parameter")
 	}
 	j, err := h.scheduledTaskService.GetScheduledTask(c.Request().Context(), id)
-	if err == nil && j != nil {
-		if !h.hasAccess(c, j.ServiceID) {
-			return utils.Error(c, http.StatusForbidden, "insufficient permissions")
-		}
+	if err != nil || j == nil {
+		return utils.Error(c, http.StatusNotFound, "scheduled task not found")
+	}
+	if !h.hasAccess(c, j.ServiceID) {
+		return utils.Error(c, http.StatusForbidden, "insufficient permissions")
 	}
 
 	if err := h.scheduledTaskService.DeleteScheduledTask(c.Request().Context(), id); err != nil {
@@ -155,10 +156,11 @@ func (h *ScheduledTaskHandler) Run(c echo.Context) error {
 		return utils.Error(c, http.StatusBadRequest, "missing id parameter")
 	}
 	j, err := h.scheduledTaskService.GetScheduledTask(c.Request().Context(), id)
-	if err == nil && j != nil {
-		if !h.hasAccess(c, j.ServiceID) {
-			return utils.Error(c, http.StatusForbidden, "insufficient permissions")
-		}
+	if err != nil || j == nil {
+		return utils.Error(c, http.StatusNotFound, "scheduled task not found")
+	}
+	if !h.hasAccess(c, j.ServiceID) {
+		return utils.Error(c, http.StatusForbidden, "insufficient permissions")
 	}
 
 	out, err := h.scheduledTaskService.ExecuteScheduledTask(c.Request().Context(), id)

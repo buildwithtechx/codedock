@@ -4,6 +4,7 @@ import { useEffect, useMemo, useState } from 'react';
 import { env } from '#/env';
 import { MetricChartCard } from '#/features/services/metric-chart-card';
 import { useListServers } from '#/hooks/use-servers';
+import { useAuthStore } from '#/stores/auth-store';
 
 export const Route = createFileRoute('/_dashboard/servers/$serverId')({
   component: ServerDetailsPage,
@@ -31,7 +32,9 @@ function ServerDetailsPage() {
     const wsHost = env.VITE_API_URL.replace(/^http(s?):\/\//, '');
     const wsUrl = `${protocol}//${wsHost}/api/ws/servers/${serverId}/metrics`;
 
-    const socket = new WebSocket(wsUrl);
+    const token = useAuthStore.getState().token;
+    const protocols = token ? ['auth', token] : undefined;
+    const socket = new WebSocket(wsUrl, protocols);
 
     socket.onopen = () => setIsConnected(true);
     socket.onclose = () => setIsConnected(false);

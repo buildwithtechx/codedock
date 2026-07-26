@@ -38,15 +38,15 @@ This roadmap tracks all active security remediations, architectural refactoring,
 
 ## 4. Medium-Risk & Dashboard Security Findings
 
-- [ ] **AI Diagnosis Rate Limiting:** Add per-user rate or cost limits for AI deployment failure diagnosis.
-- [ ] **Database Query Endpoints:** Require strict authorization and add audit logging/safeguards for destructive SQL/Redis query endpoints.
-- [ ] **WebSocket Origin Protection:** Reject empty `Origin` headers where appropriate to strengthen CSRF protection.
-- [ ] **Strict JWT HMAC Algorithm:** Explicitly restrict token validation to `HS256` only.
-- [ ] **Fail-Safe Handler Lookups:** Ensure handlers fail closed rather than open when database errors occur during lookup before destructive operations.
-- [ ] **Backup Record Permissions:** Enforce strict admin authorization and secure filesystem permissions for backup records containing sensitive data.
-- [ ] **WebSocket Authentication:** Send explicit authentication token/header for live logs WebSocket rather than relying solely on cookies.
-- [ ] **Backend Authorization Source of Truth:** Ensure dashboard UX guards are backed by rigorous backend authorization checks.
-- [ ] **Frontend Credential Redaction:** Ensure sensitive credential fields in frontend models remain redacted by default.
+- [x] **AI Diagnosis Rate Limiting:** Add per-user rate or cost limits for AI deployment failure diagnosis.
+- [x] **Database Query Endpoints:** Require strict authorization and add audit logging/safeguards for destructive SQL/Redis query endpoints.
+- [x] **WebSocket Origin Protection:** Reject empty `Origin` headers where appropriate to strengthen CSRF protection.
+- [x] **Strict JWT HMAC Algorithm:** Explicitly restrict token validation to `HS256` only.
+- [x] **Fail-Safe Handler Lookups:** Ensure handlers fail closed rather than open when database errors occur during lookup before destructive operations.
+- [x] **Backup Record Permissions:** Enforce strict admin authorization and secure filesystem permissions for backup records containing sensitive data.
+- [x] **WebSocket Authentication:** Send explicit authentication token/header for live logs WebSocket rather than relying solely on cookies.
+- [x] **Backend Authorization Source of Truth:** Ensure dashboard UX guards are backed by rigorous backend authorization checks.
+- [x] **Frontend Credential Redaction:** Ensure sensitive credential fields in frontend models remain redacted by default.
 
 ---
 

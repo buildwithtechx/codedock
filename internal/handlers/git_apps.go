@@ -6,9 +6,9 @@ import (
 
 	"github.com/labstack/echo/v4"
 
-	"codedock.run/codedock/internal/utils"
-
+	"codedock.run/codedock/internal/models"
 	"codedock.run/codedock/internal/services"
+	"codedock.run/codedock/internal/utils"
 )
 
 type GitAppsHandler struct {
@@ -28,6 +28,23 @@ type GitAppsManifestRequest struct {
 	Code string `json:"code"`
 }
 
+func redactApp[T any](item T) T {
+	if app, ok := any(item).(*models.GithubApp); ok && app != nil {
+		copyApp := *app
+		if copyApp.ClientSecret != "" {
+			copyApp.ClientSecret = "********"
+		}
+		if copyApp.WebhookSecret != "" {
+			copyApp.WebhookSecret = "********"
+		}
+		if copyApp.PrivateKey != "" {
+			copyApp.PrivateKey = "********"
+		}
+		return any(&copyApp).(T)
+	}
+	return item
+}
+
 func listAppsHandler[T any](list listFunc[T]) echo.HandlerFunc {
 	return func(c echo.Context) error {
 		apps, err := list(c.Request().Context())
@@ -37,7 +54,11 @@ func listAppsHandler[T any](list listFunc[T]) echo.HandlerFunc {
 		if apps == nil {
 			apps = []T{}
 		}
-		return utils.Success(c, "Operation successful", apps)
+		redacted := make([]T, len(apps))
+		for i, app := range apps {
+			redacted[i] = redactApp(app)
+		}
+		return utils.Success(c, "Operation successful", redacted)
 	}
 }
 
@@ -51,7 +72,7 @@ func getAppHandler[T any](get getFunc[T]) echo.HandlerFunc {
 		if app == nil {
 			return utils.Error(c, http.StatusNotFound, "App not found")
 		}
-		return utils.Success(c, "Operation successful", app)
+		return utils.Success(c, "Operation successful", redactApp(app))
 	}
 }
 

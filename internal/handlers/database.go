@@ -16,10 +16,11 @@ import (
 type DatabaseHandler struct {
 	databaseService *services.DatabaseService
 	projectService  *services.ProjectService
+	auditService    *services.AuditService
 }
 
-func NewDatabaseHandler(s *services.DatabaseService, ps *services.ProjectService) *DatabaseHandler {
-	return &DatabaseHandler{databaseService: s, projectService: ps}
+func NewDatabaseHandler(s *services.DatabaseService, ps *services.ProjectService, as *services.AuditService) *DatabaseHandler {
+	return &DatabaseHandler{databaseService: s, projectService: ps, auditService: as}
 }
 
 func (h *DatabaseHandler) verifyProjectOwnership(c echo.Context, projectID string) error {
@@ -235,6 +236,20 @@ func (h *DatabaseHandler) QueryDatabase(c echo.Context) error {
 	res, err := h.databaseService.QueryDatabase(c.Request().Context(), id, req.Query, db.ProjectID)
 	if err != nil {
 		return utils.Error(c, http.StatusInternalServerError, err.Error())
+	}
+	if h.auditService != nil {
+		user := middleware.GetUserClaimsFromContext(c.Request().Context())
+		userID := ""
+		if user != nil {
+			userID = user.UserID
+		}
+		h.auditService.LogAction(c.Request().Context(), services.AuditActionOpts{
+			UserID:    userID,
+			Action:    "database.query",
+			Resource:  id,
+			IPAddress: c.RealIP(),
+			Details:   map[string]any{"query": req.Query, "database_id": id},
+		})
 	}
 	return utils.Success(c, "Operation successful", res)
 }

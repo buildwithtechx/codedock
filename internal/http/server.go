@@ -21,6 +21,7 @@ type Server struct {
 	mcpBridge              *Bridge
 	authRateLimiter        *middleware.RateLimiter
 	otpRateLimiter         *middleware.RateLimiter
+	aiRateLimiter          *middleware.RateLimiter
 	deployer               *engine.Deployer
 	traefikManager         *engine.TraefikManager
 	dockerClient           *client.Client

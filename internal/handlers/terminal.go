@@ -4,7 +4,7 @@ import (
 	"context"
 	"io"
 	"net/http"
-	"net/url"
+	"strings"
 	"time"
 
 	"github.com/docker/docker/api/types/container"
@@ -24,13 +24,12 @@ var terminalUpgrader = websocket.Upgrader{
 	CheckOrigin: func(r *http.Request) bool {
 		origin := r.Header.Get("Origin")
 		if origin == "" {
-			return true
-		}
-		u, err := url.Parse(origin)
-		if err != nil {
+			if r.Header.Get("Authorization") != "" || r.Header.Get("Sec-WebSocket-Protocol") != "" {
+				return true
+			}
 			return false
 		}
-		return u.Host == r.Host
+		return isAllowedWebSocketOrigin(r, origin)
 	},
 }
 
@@ -116,7 +115,14 @@ func (h *TerminalHandler) HandleWebSocket(c echo.Context) error {
 		return utils.Error(c, http.StatusInternalServerError, "failed to attach to exec instance: "+err.Error())
 	}
 	defer hijackedResp.Close()
-	ws, err := terminalUpgrader.Upgrade(c.Response().Writer, c.Request(), nil)
+	responseHeader := http.Header{}
+	if reqProto := c.Request().Header.Get("Sec-WebSocket-Protocol"); reqProto != "" {
+		parts := strings.Split(reqProto, ",")
+		if len(parts) > 0 {
+			responseHeader.Set("Sec-WebSocket-Protocol", strings.TrimSpace(parts[0]))
+		}
+	}
+	ws, err := terminalUpgrader.Upgrade(c.Response().Writer, c.Request(), responseHeader)
 	if err != nil {
 		return err
 	}

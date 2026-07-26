@@ -37,7 +37,7 @@ func NewBackupManager(dockerClient *client.Client, s BackupManagerStore, backupD
 	if backupDir == "" {
 		backupDir = filepath.Join(utils.GetDataDir(), "backups")
 	}
-	_ = os.MkdirAll(backupDir, 0o755)
+	_ = os.MkdirAll(backupDir, 0o700)
 	return &BackupManager{
 		dockerClient: dockerClient,
 		store:        s,

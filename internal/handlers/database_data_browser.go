@@ -6,6 +6,7 @@ import (
 
 	"github.com/labstack/echo/v4"
 
+	"codedock.run/codedock/internal/http/middleware"
 	"codedock.run/codedock/internal/services"
 	"codedock.run/codedock/internal/utils"
 )
@@ -67,6 +68,20 @@ func (h *DatabaseHandler) InsertTableRow(c echo.Context) error {
 	if err != nil {
 		return utils.Error(c, http.StatusInternalServerError, err.Error())
 	}
+	if h.auditService != nil {
+		user := middleware.GetUserClaimsFromContext(c.Request().Context())
+		userID := ""
+		if user != nil {
+			userID = user.UserID
+		}
+		h.auditService.LogAction(c.Request().Context(), services.AuditActionOpts{
+			UserID:    userID,
+			Action:    "database.table.insert",
+			Resource:  id,
+			IPAddress: c.RealIP(),
+			Details:   map[string]any{"table": table, "database_id": id},
+		})
+	}
 	return utils.Success(c, "Operation successful", res)
 }
 
@@ -94,6 +109,20 @@ func (h *DatabaseHandler) UpdateTableRow(c echo.Context) error {
 	if err != nil {
 		return utils.Error(c, http.StatusInternalServerError, err.Error())
 	}
+	if h.auditService != nil {
+		user := middleware.GetUserClaimsFromContext(c.Request().Context())
+		userID := ""
+		if user != nil {
+			userID = user.UserID
+		}
+		h.auditService.LogAction(c.Request().Context(), services.AuditActionOpts{
+			UserID:    userID,
+			Action:    "database.table.update",
+			Resource:  id,
+			IPAddress: c.RealIP(),
+			Details:   map[string]any{"table": table, "database_id": id},
+		})
+	}
 	return utils.Success(c, "Operation successful", res)
 }
 
@@ -114,6 +143,20 @@ func (h *DatabaseHandler) DeleteTableRow(c echo.Context) error {
 	res, err := h.databaseService.DeleteTableRow(c.Request().Context(), id, table, keys)
 	if err != nil {
 		return utils.Error(c, http.StatusInternalServerError, err.Error())
+	}
+	if h.auditService != nil {
+		user := middleware.GetUserClaimsFromContext(c.Request().Context())
+		userID := ""
+		if user != nil {
+			userID = user.UserID
+		}
+		h.auditService.LogAction(c.Request().Context(), services.AuditActionOpts{
+			UserID:    userID,
+			Action:    "database.table.delete",
+			Resource:  id,
+			IPAddress: c.RealIP(),
+			Details:   map[string]any{"table": table, "database_id": id},
+		})
 	}
 	return utils.Success(c, "Operation successful", res)
 }

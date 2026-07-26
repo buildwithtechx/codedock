@@ -79,10 +79,11 @@ func (h *EnvironmentHandler) Delete(c echo.Context) error {
 	}
 
 	env, err := h.envService.GetEnvironment(c.Request().Context(), id)
-	if err == nil && env != nil {
-		if !h.hasAccess(c, env.ProjectID) {
-			return utils.Error(c, http.StatusForbidden, "insufficient permissions")
-		}
+	if err != nil || env == nil {
+		return utils.Error(c, http.StatusNotFound, "environment not found")
+	}
+	if !h.hasAccess(c, env.ProjectID) {
+		return utils.Error(c, http.StatusForbidden, "insufficient permissions")
 	}
 
 	if err := h.envService.DeleteEnvironment(c.Request().Context(), id); err != nil {

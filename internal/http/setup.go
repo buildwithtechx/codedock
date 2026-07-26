@@ -165,7 +165,7 @@ func NewServer(db *sql.DB, v *utils.Vault, deployer *engine.Deployer, traefikMan
 	authGuard := middleware.NewAuthGuard(tokenService, settingsService, projectSettingsService, orgRepo, projectRepo)
 
 	appHandler := handlers.NewAppHandler(appService, projectService, deployer, deploymentService, environmentService)
-	databaseHandler := handlers.NewDatabaseHandler(databaseService, projectService)
+	databaseHandler := handlers.NewDatabaseHandler(databaseService, projectService, auditService)
 	scheduledTaskHandler := handlers.NewScheduledTaskHandler(scheduledTaskService, appService, projectService)
 	canvasHandler := handlers.NewCanvasHandler(canvasService, projectService)
 	terminalHandler := handlers.NewTerminalHandler(dockerClient, tokenService, appService, projectService)
@@ -226,12 +226,14 @@ func NewServer(db *sql.DB, v *utils.Vault, deployer *engine.Deployer, traefikMan
 
 	authLimiter := middleware.NewRateLimiter(10, time.Minute)
 	otpLimiter := middleware.NewRateLimiter(5, time.Minute)
+	aiLimiter := middleware.NewRateLimiter(5, time.Minute)
 
 	srv := &Server{
 		router:                 e,
 		mcpBridge:              bridge,
 		authRateLimiter:        authLimiter,
 		otpRateLimiter:         otpLimiter,
+		aiRateLimiter:          aiLimiter,
 		deployer:               deployer,
 		traefikManager:         traefikManager,
 		dockerClient:           dockerClient,

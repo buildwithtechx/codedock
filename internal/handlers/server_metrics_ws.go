@@ -3,7 +3,6 @@ package handlers
 import (
 	"log/slog"
 	"net/http"
-	"net/url"
 
 	"codedock.run/codedock/internal/engine"
 	"codedock.run/codedock/internal/http/middleware"
@@ -26,13 +25,12 @@ func NewServerMetricsWSHandler(ts *services.TokenService, ss services.ServerServ
 			CheckOrigin: func(r *http.Request) bool {
 				origin := r.Header.Get("Origin")
 				if origin == "" {
-					return true
-				}
-				u, err := url.Parse(origin)
-				if err != nil {
+					if r.Header.Get("Authorization") != "" || r.Header.Get("Sec-WebSocket-Protocol") != "" {
+						return true
+					}
 					return false
 				}
-				return u.Host == r.Host
+				return isAllowedWebSocketOrigin(r, origin)
 			},
 		},
 		tokenService:  ts,
