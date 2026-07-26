@@ -15,13 +15,16 @@ import (
 	"codedock.run/codedock/internal/utils"
 )
 
-func (s *DatabaseService) QueryDatabase(ctx context.Context, id string, query string) (*models.DatabaseQueryResponse, error) {
+func (s *DatabaseService) QueryDatabase(ctx context.Context, id string, query string, projectID string) (*models.DatabaseQueryResponse, error) {
 	if id == "" {
 		return nil, errors.New("id is required")
 	}
 	db, err := s.repo.GetByID(ctx, id)
 	if err != nil || db == nil {
 		return nil, utils.NewNotFoundError("Database", id)
+	}
+	if projectID != "" && db.ProjectID != projectID {
+		return nil, errors.New("database does not belong to the authorized project")
 	}
 	if query == "" {
 		return nil, errors.New("query cannot be empty")

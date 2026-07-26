@@ -58,14 +58,14 @@ A recent static audit revealed several critical authorization and configuration 
 
 ### High-risk Correctness/Security Issues
 
-- [ ] Environment and Database listings filter by project existence, not user membership (`internal/handlers/app_services.go:114`, `internal/handlers/database.go:42`).
-- [ ] DNS records are globally readable/mutable by any authenticated user (`internal/handlers/dns.go:21`).
-- [ ] Project creation must verify organization membership before creation (`internal/handlers/project.go:49`).
-- [ ] Password reset tokens should be single-use and revoke existing sessions.
-- [ ] Enforce consistent password strength on registration and reset.
-- [ ] Remove the dangerous fallback in `baseAuth` that grants admin identity if token service is nil (`internal/http/middleware/auth.go:112`).
-- [ ] Project-level authorization must strictly protect the database query endpoint (`internal/services/database_query.go:18`).
-- [ ] Log-drain SSRF validation is vulnerable to DNS rebinding (`internal/handlers/app_services.go:368`).
+- [x] Environment and Database listings filter by project existence, not user membership (`internal/handlers/app_services.go:114`, `internal/handlers/database.go:42`).
+- [x] DNS records are globally readable/mutable by any authenticated user (`internal/handlers/dns.go:21`).
+- [x] Project creation must verify organization membership before creation (`internal/handlers/project.go:49`).
+- [x] Password reset tokens should be single-use and revoke existing sessions.
+- [x] Enforce consistent password strength on registration and reset.
+- [x] Remove the dangerous fallback in `baseAuth` that grants admin identity if token service is nil (`internal/http/middleware/auth.go:112`).
+- [x] Project-level authorization must strictly protect the database query endpoint (`internal/services/database_query.go:18`).
+- [x] Log-drain SSRF validation is vulnerable to DNS rebinding (`internal/handlers/app_services.go:368`).
 
 ### Bootstrap/Update Problems
 

@@ -150,6 +150,25 @@ func (s *ProjectService) HasPermission(ctx context.Context, projectID, userID st
 	}
 }
 
+func (s *ProjectService) HasOrgPermission(ctx context.Context, orgID, userID string, userRole models.UserRole, minPermission models.MemberPermission) bool {
+	if userRole == models.UserRoleOwner || userRole == models.UserRoleAdmin {
+		return true
+	}
+	if orgID == "" {
+		return false
+	}
+	member, err := s.orgRepo.GetMember(ctx, orgID, userID)
+	if err != nil || member == nil || member.Status != models.MemberStatusAccepted {
+		return false
+	}
+	if minPermission != "" {
+		if member.Permission != minPermission && member.Permission != models.MemberPermissionAdmin && member.Permission != models.MemberPermissionOwner {
+			return false
+		}
+	}
+	return true
+}
+
 func (s *ProjectService) IsMemberOrOwner(ctx context.Context, projectID string, userID string, userRole models.UserRole) bool {
 	hasPerm := s.HasPermission(ctx, projectID, userID, userRole, "")
 	return hasPerm

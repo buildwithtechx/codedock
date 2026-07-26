@@ -168,10 +168,10 @@ func (s *DatabaseService) GetTableData(ctx context.Context, id, table string, li
 	switch db.Engine {
 	case "postgresql", "postgres":
 		query := fmt.Sprintf("SELECT * FROM \"%s\" LIMIT %d OFFSET %d", table, limit, offset)
-		return s.QueryDatabase(ctx, id, query)
+		return s.QueryDatabase(ctx, id, query, db.ProjectID)
 	case "mysql", "mariadb":
 		query := fmt.Sprintf("SELECT * FROM `%s` LIMIT %d OFFSET %d", table, limit, offset)
-		return s.QueryDatabase(ctx, id, query)
+		return s.QueryDatabase(ctx, id, query, db.ProjectID)
 	default:
 		return nil, fmt.Errorf("data browsing not supported for engine: %s", db.Engine)
 	}
@@ -213,7 +213,7 @@ func (s *DatabaseService) InsertTableRow(ctx context.Context, id, table string, 
 		return nil, fmt.Errorf("inserts not supported for engine: %s", db.Engine)
 	}
 
-	return s.QueryDatabase(ctx, id, query)
+	return s.QueryDatabase(ctx, id, query, db.ProjectID)
 }
 
 type UpdateTableRowOpts struct {
@@ -247,7 +247,7 @@ func (s *DatabaseService) UpdateTableRow(ctx context.Context, opts UpdateTableRo
 		}
 
 		query = fmt.Sprintf("UPDATE \"%s\" SET %s WHERE %s", opts.Table, strings.Join(sets, ", "), strings.Join(wheres, " AND "))
-		return s.QueryDatabase(ctx, opts.ID, query)
+		return s.QueryDatabase(ctx, opts.ID, query, db.ProjectID)
 	case "mysql", "mariadb":
 		var sets []string
 		for k, v := range opts.Data {
@@ -264,7 +264,7 @@ func (s *DatabaseService) UpdateTableRow(ctx context.Context, opts UpdateTableRo
 		}
 
 		query = fmt.Sprintf("UPDATE `%s` SET %s WHERE %s", opts.Table, strings.Join(sets, ", "), strings.Join(wheres, " AND "))
-		return s.QueryDatabase(ctx, opts.ID, query)
+		return s.QueryDatabase(ctx, opts.ID, query, db.ProjectID)
 	default:
 		return nil, fmt.Errorf("updates not supported for engine: %s", db.Engine)
 	}
@@ -299,5 +299,5 @@ func (s *DatabaseService) DeleteTableRow(ctx context.Context, id, table string, 
 		return nil, fmt.Errorf("deletes not supported for engine: %s", db.Engine)
 	}
 
-	return s.QueryDatabase(ctx, id, query)
+	return s.QueryDatabase(ctx, id, query, db.ProjectID)
 }

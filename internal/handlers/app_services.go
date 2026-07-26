@@ -121,8 +121,7 @@ func (h *AppHandler) ListByEnvironment(c echo.Context) error {
 	if user != nil && user.Role != "admin" {
 		var filtered []*models.AppService
 		for _, app := range apps {
-			_, err := h.projectService.GetProject(c.Request().Context(), app.ProjectID)
-			if err == nil {
+			if h.projectService.IsMemberOrOwner(c.Request().Context(), app.ProjectID, user.UserID, user.Role) {
 				filtered = append(filtered, app)
 			}
 		}
@@ -374,11 +373,7 @@ func validateDrainURL(u string) error {
 		return errors.New("url must use http or https")
 	}
 	host := parsed.Hostname()
-	ips, err := net.LookupIP(host)
-	if err != nil {
-		return nil
-	}
-	for _, ip := range ips {
+	if ip := net.ParseIP(host); ip != nil {
 		if ip.IsPrivate() || ip.IsLoopback() || ip.IsLinkLocalUnicast() || ip.IsLinkLocalMulticast() || ip.IsUnspecified() {
 			return errors.New("internal or private IPs are not allowed for log drains")
 		}

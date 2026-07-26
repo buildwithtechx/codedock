@@ -66,17 +66,22 @@ func (ts *TokenService) ValidateToken(tokenStr string) (jwt.MapClaims, error) {
 	return claims, nil
 }
 
-func (ts *TokenService) GeneratePasswordResetToken(email string) (string, error) {
+func (ts *TokenService) GeneratePasswordResetToken(u *models.User) (string, error) {
+	pwdHash := u.PasswordHash
+	if len(pwdHash) > 10 {
+		pwdHash = pwdHash[:10]
+	}
 	claims := jwt.MapClaims{
-		"email": email,
-		"exp":   time.Now().Add(1 * time.Hour).Unix(),
-		"iss":   "codedock-password-reset",
+		"email":    u.Email,
+		"pwd_hash": pwdHash,
+		"exp":      time.Now().Add(1 * time.Hour).Unix(),
+		"iss":      "codedock-password-reset",
 	}
 	token := jwt.NewWithClaims(jwt.SigningMethodHS256, claims)
 	return token.SignedString(ts.secretKey)
 }
 
-func (ts *TokenService) ValidatePasswordResetToken(tokenStr string) (string, error) {
+func (ts *TokenService) ValidatePasswordResetToken(tokenStr string) (string, string, error) {
 	token, err := jwt.Parse(tokenStr, func(t *jwt.Token) (any, error) {
 		if _, ok := t.Method.(*jwt.SigningMethodHMAC); !ok {
 			return nil, errors.New("unexpected signing method")
@@ -84,39 +89,45 @@ func (ts *TokenService) ValidatePasswordResetToken(tokenStr string) (string, err
 		return ts.secretKey, nil
 	})
 	if err != nil {
-		return "", err
+		return "", "", err
 	}
 	claims, ok := token.Claims.(jwt.MapClaims)
 	if !ok || !token.Valid {
-		return "", errors.New("invalid token claims or signature")
+		return "", "", errors.New("invalid token claims or signature")
 	}
 
 	if iss, ok := claims["iss"].(string); !ok || iss != "codedock-password-reset" {
-		return "", errors.New("invalid token issuer")
+		return "", "", errors.New("invalid token issuer")
 	}
 
 	email, ok := claims["email"].(string)
 	if !ok || email == "" {
-		return "", errors.New("invalid token claims")
+		return "", "", errors.New("invalid token claims")
 	}
-	return email, nil
+	pwdHash, _ := claims["pwd_hash"].(string)
+	return email, pwdHash, nil
 }
 
 func (ts *TokenService) GenerateRefreshToken(u *models.User) (string, error) {
 	if u == nil {
 		return "", errors.New("user cannot be nil when generating token")
 	}
+	pwdHash := u.PasswordHash
+	if len(pwdHash) > 10 {
+		pwdHash = pwdHash[:10]
+	}
 	claims := jwt.MapClaims{
-		"sub": u.ID,
-		"exp": time.Now().Add(7 * 24 * time.Hour).Unix(),
-		"iat": time.Now().Unix(),
-		"iss": "codedock-refresh",
+		"sub":      u.ID,
+		"pwd_hash": pwdHash,
+		"exp":      time.Now().Add(7 * 24 * time.Hour).Unix(),
+		"iat":      time.Now().Unix(),
+		"iss":      "codedock-refresh",
 	}
 	token := jwt.NewWithClaims(jwt.SigningMethodHS256, claims)
 	return token.SignedString(ts.refreshSecretKey)
 }
 
-func (ts *TokenService) ValidateRefreshToken(tokenStr string) (string, error) {
+func (ts *TokenService) ValidateRefreshToken(tokenStr string) (string, string, error) {
 	token, err := jwt.Parse(tokenStr, func(t *jwt.Token) (any, error) {
 		if _, ok := t.Method.(*jwt.SigningMethodHMAC); !ok {
 			return nil, errors.New("unexpected signing method")
@@ -124,22 +135,23 @@ func (ts *TokenService) ValidateRefreshToken(tokenStr string) (string, error) {
 		return ts.refreshSecretKey, nil
 	})
 	if err != nil {
-		return "", err
+		return "", "", err
 	}
 	claims, ok := token.Claims.(jwt.MapClaims)
 	if !ok || !token.Valid {
-		return "", errors.New("invalid token claims or signature")
+		return "", "", errors.New("invalid token claims or signature")
 	}
 
 	if iss, ok := claims["iss"].(string); !ok || iss != "codedock-refresh" {
-		return "", errors.New("invalid token issuer")
+		return "", "", errors.New("invalid token issuer")
 	}
 
 	sub, ok := claims["sub"].(string)
 	if !ok || sub == "" {
-		return "", errors.New("invalid token claims")
+		return "", "", errors.New("invalid token claims")
 	}
-	return sub, nil
+	pwdHash, _ := claims["pwd_hash"].(string)
+	return sub, pwdHash, nil
 }
 
 func (ts *TokenService) GenerateEmailVerificationToken(email string) (string, error) {

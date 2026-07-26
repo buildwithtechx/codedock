@@ -51,8 +51,7 @@ func (h *DatabaseHandler) ListDatabases(c echo.Context) error {
 	if user != nil && user.Role != "admin" {
 		var filtered []*models.Database
 		for _, db := range databases {
-			_, err := h.projectService.GetProject(c.Request().Context(), db.ProjectID)
-			if err == nil {
+			if h.projectService.IsMemberOrOwner(c.Request().Context(), db.ProjectID, user.UserID, user.Role) {
 				filtered = append(filtered, db)
 			}
 		}
@@ -233,7 +232,7 @@ func (h *DatabaseHandler) QueryDatabase(c echo.Context) error {
 	if err := c.Bind(&req); err != nil {
 		return utils.Error(c, http.StatusBadRequest, "invalid payload")
 	}
-	res, err := h.databaseService.QueryDatabase(c.Request().Context(), id, req.Query)
+	res, err := h.databaseService.QueryDatabase(c.Request().Context(), id, req.Query, db.ProjectID)
 	if err != nil {
 		return utils.Error(c, http.StatusInternalServerError, err.Error())
 	}

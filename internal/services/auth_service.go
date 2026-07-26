@@ -77,6 +77,9 @@ func (a *AuthService) Register(ctx context.Context, name, email, password, origi
 			return nil, "", "", errors.New("email domain is not allowed on this server")
 		}
 	}
+	if err := utils.ValidatePassword(password); err != nil {
+		return nil, "", "", err
+	}
 	existing, _ := a.userRepo.GetUserByEmail(ctx, email)
 	if existing != nil {
 		return nil, "", "", errors.New("user already exists with that email")
@@ -155,7 +158,7 @@ func (a *AuthService) RefreshToken(ctx context.Context, refreshTokenStr string) 
 		return nil, "", "", errors.New("refresh token is required")
 	}
 
-	userID, err := a.tokenService.ValidateRefreshToken(refreshTokenStr)
+	userID, tokenHash, err := a.tokenService.ValidateRefreshToken(refreshTokenStr)
 	if err != nil {
 		return nil, "", "", errors.New("invalid or expired refresh token")
 	}
@@ -163,6 +166,13 @@ func (a *AuthService) RefreshToken(ctx context.Context, refreshTokenStr string) 
 	u, err := a.userRepo.GetUserByID(ctx, userID)
 	if err != nil || u == nil {
 		return nil, "", "", errors.New("user not found")
+	}
+	expectedHash := u.PasswordHash
+	if len(expectedHash) > 10 {
+		expectedHash = expectedHash[:10]
+	}
+	if expectedHash != tokenHash {
+		return nil, "", "", errors.New("session revoked: password changed")
 	}
 
 	token, err := a.tokenService.GenerateToken(u)
@@ -200,7 +210,7 @@ func (a *AuthService) ForgotPassword(ctx context.Context, email string, originUr
 		return nil
 	}
 
-	token, err := a.tokenService.GeneratePasswordResetToken(u.Email)
+	token, err := a.tokenService.GeneratePasswordResetToken(u)
 	if err != nil {
 		return err
 	}
@@ -218,11 +228,11 @@ func (a *AuthService) ForgotPassword(ctx context.Context, email string, originUr
 }
 
 func (a *AuthService) ResetPassword(ctx context.Context, tokenStr, newPassword string) error {
-	if newPassword == "" {
-		return errors.New("new password is required")
+	if err := utils.ValidatePassword(newPassword); err != nil {
+		return err
 	}
 
-	email, err := a.tokenService.ValidatePasswordResetToken(tokenStr)
+	email, tokenHash, err := a.tokenService.ValidatePasswordResetToken(tokenStr)
 	if err != nil {
 		return errors.New("invalid or expired reset token")
 	}
@@ -230,6 +240,14 @@ func (a *AuthService) ResetPassword(ctx context.Context, tokenStr, newPassword s
 	u, err := a.userRepo.GetUserByEmail(ctx, email)
 	if err != nil || u == nil {
 		return utils.NewNotFoundError("User", email)
+	}
+
+	expectedHash := u.PasswordHash
+	if len(expectedHash) > 10 {
+		expectedHash = expectedHash[:10]
+	}
+	if expectedHash != tokenHash {
+		return errors.New("reset token revoked: password has already been changed")
 	}
 
 	hashed, err := utils.HashPassword(newPassword)

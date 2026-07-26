@@ -59,8 +59,13 @@ func (h *ProjectHandler) CreateProject(c echo.Context) error {
 	}
 
 	userClaims, ok := c.Get("user").(*models.UserClaims)
-
 	if ok && userClaims != nil {
+		if req.OrganizationID != "" {
+			if !h.projectService.HasOrgPermission(c.Request().Context(), req.OrganizationID, userClaims.UserID, userClaims.Role, "") {
+				return utils.Error(c, http.StatusForbidden, "you do not have permission to create a project in this organization")
+			}
+		}
+
 		if userClaims.PlanType != "pro" {
 			count, err := h.projectService.CountProjectsByUser(c.Request().Context(), userClaims.UserID)
 			if err != nil {

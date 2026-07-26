@@ -112,13 +112,6 @@ func (g *AuthGuard) baseAuth(c echo.Context, denyAPITokens bool) (*models.UserCl
 	}
 	tokenStr := ExtractTokenFromRequest(c)
 	if tokenStr == "" {
-		if g.TokenService == nil {
-			return &models.UserClaims{
-				UserID: "default",
-				Email:  "default@codedock.run",
-				Role:   "admin",
-			}, nil
-		}
 		return nil, utils.Error(c, http.StatusUnauthorized, "missing authentication token")
 	}
 
