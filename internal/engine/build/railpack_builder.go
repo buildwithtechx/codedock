@@ -150,7 +150,7 @@ func (r *RailpackBuilder) detectLanguageStack(sourceDir string) string {
 	return "Static / Universal HTML"
 }
 
-//go:embed templates/*.Dockerfile
+//go:embed templates
 var templateFS embed.FS
 
 type dockerfileOverrides struct {
