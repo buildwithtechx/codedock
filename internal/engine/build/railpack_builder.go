@@ -36,10 +36,7 @@ func (r *RailpackBuilder) Build(ctx context.Context, opts BuildOptions, engineNa
 		return "", fmt.Errorf("failed to resolve absolute source dir: %w", err)
 	}
 
-	dockerSock := os.Getenv("DOCKER_SOCKET_PATH")
-	if dockerSock == "" {
-		dockerSock = "/var/run/docker.sock"
-	}
+	dockerRunArgs := r.dockerRunArgs()
 
 	if engineName == "buildpacks" {
 		if opts.LogWriter != nil {
@@ -53,10 +50,10 @@ func (r *RailpackBuilder) Build(ctx context.Context, opts BuildOptions, engineNa
 		if builderImage == "" {
 			builderImage = "paketobuildpacks/builder:base"
 		}
-		args := []string{"run", "--rm",
-			"-v", fmt.Sprintf("%s:/var/run/docker.sock", dockerSock),
+		args := append([]string{}, dockerRunArgs...)
+		args = append(args,
 			"-v", fmt.Sprintf("%s:/app", absSourceDir),
-			packImage, "build", imageTag, "--path", "/app", "--builder", builderImage}
+			packImage, "build", imageTag, "--path", "/app", "--builder", builderImage)
 		for k, v := range opts.EnvVars {
 			args = append(args, "--env", fmt.Sprintf("%s=%s", k, v))
 		}
@@ -78,10 +75,10 @@ func (r *RailpackBuilder) Build(ctx context.Context, opts BuildOptions, engineNa
 		if nixpacksImage == "" {
 			nixpacksImage = "ghcr.io/railwayapp/nixpacks:latest"
 		}
-		args := []string{"run", "--rm",
-			"-v", fmt.Sprintf("%s:/var/run/docker.sock", dockerSock),
+		args := append([]string{}, dockerRunArgs...)
+		args = append(args,
 			"-v", fmt.Sprintf("%s:/app", absSourceDir),
-			nixpacksImage, "build", "/app", "--name", imageTag}
+			nixpacksImage, "build", "/app", "--name", imageTag)
 		for k, v := range opts.EnvVars {
 			args = append(args, "--env", fmt.Sprintf("%s=%s", k, v))
 		}
@@ -123,6 +120,24 @@ func (r *RailpackBuilder) Build(ctx context.Context, opts BuildOptions, engineNa
 	fallbackOpts.DockerfilePath = ".codedock.Dockerfile"
 	fallbackBuilder := NewDockerfileBuilder(r.dockerClient)
 	return fallbackBuilder.Build(ctx, fallbackOpts)
+}
+
+func (r *RailpackBuilder) dockerRunArgs() []string {
+	args := []string{"run", "--rm"}
+	dockerHost := os.Getenv("DOCKER_HOST")
+	if dockerHost == "" {
+		dockerSocket := os.Getenv("DOCKER_SOCKET_PATH")
+		if dockerSocket == "" {
+			dockerSocket = "/var/run/docker.sock"
+		}
+		return append(args, "-v", fmt.Sprintf("%s:/var/run/docker.sock", dockerSocket))
+	}
+
+	network := os.Getenv("CODEDOCK_DOCKER_NETWORK")
+	if network == "" {
+		network = "codedock-network"
+	}
+	return append(args, "--network", network, "-e", "DOCKER_HOST="+dockerHost)
 }
 
 func (r *RailpackBuilder) detectLanguageStack(sourceDir string) string {

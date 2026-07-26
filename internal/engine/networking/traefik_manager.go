@@ -158,10 +158,17 @@ func (m *TraefikManager) buildTraefikCmdArgs() []string {
 			"--certificatesresolvers.letsencrypt.acme.storage=/letsencrypt/acme.json",
 		)
 	}
+	if dockerHost := os.Getenv("CODEDOCK_TRAEFIK_DOCKER_HOST"); dockerHost != "" {
+		cmdArgs = append(cmdArgs, "--providers.docker.endpoint="+dockerHost)
+	}
 	return cmdArgs
 }
 
 func (m *TraefikManager) buildTraefikMounts() []mount.Mount {
+	if os.Getenv("CODEDOCK_TRAEFIK_DOCKER_HOST") != "" {
+		return m.buildTraefikDataMounts()
+	}
+
 	sockPath := dockerSocketPath()
 	mounts := []mount.Mount{
 		{
@@ -171,6 +178,11 @@ func (m *TraefikManager) buildTraefikMounts() []mount.Mount {
 			ReadOnly: true,
 		},
 	}
+	return append(mounts, m.buildTraefikDataMounts()...)
+}
+
+func (m *TraefikManager) buildTraefikDataMounts() []mount.Mount {
+	mounts := make([]mount.Mount, 0, 1)
 	if m.tlsEmail != "" {
 		mounts = append(mounts, mount.Mount{
 			Type:   mount.TypeVolume,

@@ -115,6 +115,7 @@ func (h *BackupHandler) Create(c echo.Context) error {
 	if err := h.backupService.CreateConfig(c.Request().Context(), &cfg); err != nil {
 		return utils.Error(c, http.StatusInternalServerError, err.Error())
 	}
+	cfg.DbPassword = "********"
 	return utils.Created(c, "Created successfully", cfg)
 }
 

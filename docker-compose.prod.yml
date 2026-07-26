@@ -3,6 +3,42 @@
 # Usage: docker compose -f docker-compose.prod.yml up -d
 
 services:
+  docker-socket-proxy:
+    image: tecnativa/docker-socket-proxy:0.3
+    container_name: codedock-docker-socket-proxy
+    restart: unless-stopped
+    environment:
+      CONTAINERS: "1"
+      EVENTS: "1"
+      EXEC: "1"
+      IMAGES: "1"
+      INFO: "1"
+      NETWORKS: "1"
+      POST: "1"
+      VERSION: "1"
+      VOLUMES: "1"
+    volumes:
+      - /var/run/docker.sock:/var/run/docker.sock:ro
+    networks:
+      - codedock-internal
+
+  traefik-docker-socket-proxy:
+    image: tecnativa/docker-socket-proxy:0.3
+    container_name: codedock-traefik-docker-socket-proxy
+    restart: unless-stopped
+    environment:
+      CONTAINERS: "1"
+      EVENTS: "1"
+      INFO: "1"
+      NETWORKS: "1"
+      PING: "1"
+      VERSION: "1"
+    volumes:
+      - /var/run/docker.sock:/var/run/docker.sock:ro
+    networks:
+      - proxy
+      - codedock-network
+
   codedock:
     image: ghcr.io/buildwithtechx/codedock:${CODEDOCK_VERSION:-1.0.0}
     container_name: codedock-control-plane
@@ -11,16 +47,18 @@ services:
     environment:
       PORT: "8080"
       CODEDOCK_DATA_DIR: /codedock/data
+      DOCKER_HOST: tcp://docker-socket-proxy:2375
+      CODEDOCK_DOCKER_NETWORK: codedock-internal
+      CODEDOCK_TRAEFIK_DOCKER_HOST: tcp://traefik-docker-socket-proxy:2375
     ports:
       - "8080:8080"
     volumes:
       - codedock_data:/codedock/data
-      # SECURITY NOTICE: For production hardening, use Tecnativa/docker-socket-proxy to restrict Docker API endpoints
-      - /var/run/docker.sock:/var/run/docker.sock
       - nixpacks_cache:/root/.nixpacks
     networks:
       - proxy
       - codedock-internal
+      - codedock-network
     security_opt:
       - no-new-privileges:true
     labels:
@@ -55,9 +93,12 @@ services:
     restart: unless-stopped
     security_opt:
       - no-new-privileges:true
+    environment:
+      DOCKER_HOST: tcp://traefik-docker-socket-proxy:2375
     command:
       - --api.dashboard=false
       - --providers.docker=true
+      - --providers.docker.endpoint=tcp://traefik-docker-socket-proxy:2375
       - --providers.docker.exposedbydefault=false
       - --providers.docker.network=proxy
       - --entrypoints.web.address=:80
@@ -73,7 +114,6 @@ services:
       - "80:80"
       - "443:443"
     volumes:
-      - /var/run/docker.sock:/var/run/docker.sock:ro
       - traefik_acme:/acme
     networks:
       - proxy
@@ -90,12 +130,11 @@ services:
     security_opt:
       - no-new-privileges:true
     environment:
+      DOCKER_HOST: tcp://docker-socket-proxy:2375
       WATCHTOWER_CLEANUP: "true"
       WATCHTOWER_POLL_INTERVAL: "300"
       WATCHTOWER_INCLUDE_STOPPED: "false"
       WATCHTOWER_LABEL_ENABLE: "true"
-    volumes:
-      - /var/run/docker.sock:/var/run/docker.sock:ro
     networks:
       - codedock-internal
     labels:
@@ -115,4 +154,7 @@ networks:
     driver: bridge
   codedock-internal:
     name: codedock-internal
+    driver: bridge
+  codedock-network:
+    name: codedock-network
     driver: bridge
