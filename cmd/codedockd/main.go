@@ -20,7 +20,8 @@ import (
 	"codedock.run/codedock/internal/engine/networking"
 	"codedock.run/codedock/internal/engine/observability"
 	codedockhttp "codedock.run/codedock/internal/http"
-	"codedock.run/codedock/internal/services"
+	"codedock.run/codedock/internal/services/system"
+
 	"codedock.run/codedock/internal/telemetry"
 	"codedock.run/codedock/internal/version"
 )
@@ -71,7 +72,7 @@ func startServer() {
 	logWorker := observability.NewLogWorker(dockerClient)
 	logWorker.Start(context.Background())
 
-	services.StartTelemetryReporter(db, codedockVersion)
+	system.StartTelemetryReporter(db, codedockVersion)
 
 	host := os.Getenv("HOST")
 	port := os.Getenv("PORT")

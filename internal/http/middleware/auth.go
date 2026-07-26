@@ -11,7 +11,7 @@ import (
 
 	"codedock.run/codedock/internal/models"
 	"codedock.run/codedock/internal/repositories"
-	"codedock.run/codedock/internal/services"
+	"codedock.run/codedock/internal/services/auth"
 	"codedock.run/codedock/internal/utils"
 )
 
@@ -33,14 +33,14 @@ type OrganizationMemberProvider interface {
 }
 
 type AuthGuard struct {
-	TokenService  *services.TokenService
+	TokenService  *auth.TokenService
 	Settings      SettingsProvider
 	ProjectTokens ProjectTokenProvider
 	OrgMembers    OrganizationMemberProvider
 	ProjectRepo   repositories.ProjectRepository
 }
 
-func NewAuthGuard(ts *services.TokenService, sp SettingsProvider, pt ProjectTokenProvider, orgMembers OrganizationMemberProvider, pr repositories.ProjectRepository) *AuthGuard {
+func NewAuthGuard(ts *auth.TokenService, sp SettingsProvider, pt ProjectTokenProvider, orgMembers OrganizationMemberProvider, pr repositories.ProjectRepository) *AuthGuard {
 	return &AuthGuard{TokenService: ts, Settings: sp, ProjectTokens: pt, OrgMembers: orgMembers, ProjectRepo: pr}
 }
 

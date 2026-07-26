@@ -1,0 +1,24 @@
+package system
+
+import (
+	"github.com/labstack/echo/v4"
+
+	systemservices "codedock.run/codedock/internal/services/system"
+	"codedock.run/codedock/internal/utils"
+)
+
+type ExampleHandler struct {
+	service *systemservices.ExampleService
+}
+
+func NewExampleHandler(s *systemservices.ExampleService) *ExampleHandler {
+	return &ExampleHandler{service: s}
+}
+
+func (h *ExampleHandler) List(c echo.Context) error {
+	examples, err := h.service.ListExamples()
+	if err != nil {
+		return utils.Error(c, 500, "failed to list examples")
+	}
+	return utils.Success(c, "Available examples", examples)
+}

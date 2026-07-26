@@ -54,8 +54,8 @@ This roadmap tracks all active security remediations, architectural refactoring,
 
 ### Go Backend
 
-- [ ] **Broad Handlers:** `internal/handlers/` is becoming too broad. Split by domain (e.g., `auth/`, `users/`, `projects/`, `deployments/`, `backups/`).
-- [ ] **Bloated Services:** `internal/services/` has too many unrelated responsibilities. Group related services similarly to handlers.
+- [x] **Broad Handlers:** `internal/handlers/` is becoming too broad. Split by domain (e.g., `auth/`, `users/`, `projects/`, `deployments/`, `backups/`).
+- [x] **Bloated Services:** `internal/services/` has too many unrelated responsibilities. Group related services similarly to handlers.
 - [x] **Mixed Engine Package:** `internal/engine/` is a large mixed package. Separate infrastructure concerns (e.g., `docker/`, `cron/`, `networking/`, `observability/`).
 - [x] **CLI Mix:** `cmd/codedockd/` mixes CLI parsing, setup, deployment, DB ops, and password management. Move command implementations into `cmd/codedockd/commands/`.
 - [x] **Script Overlap:** `bootstrap/` and `scripts/` overlap in responsibilities (upgrade, restore, install, backup). Define one canonical lifecycle location.

@@ -6,14 +6,14 @@ import (
 	"fmt"
 	"net/smtp"
 
-	"codedock.run/codedock/internal/services"
+	"codedock.run/codedock/internal/services/system"
 )
 
 type MailerService struct {
-	notifSettingsService *services.NotificationSettingsService
+	notifSettingsService *system.NotificationSettingsService
 }
 
-func NewMailerService(notifSettings *services.NotificationSettingsService) (*MailerService, error) {
+func NewMailerService(notifSettings *system.NotificationSettingsService) (*MailerService, error) {
 	if err := LoadTemplates(); err != nil {
 		return nil, fmt.Errorf("failed to load email templates: %w", err)
 	}

@@ -12,10 +12,16 @@ import (
 	"codedock.run/codedock/internal/engine"
 	"codedock.run/codedock/internal/engine/cron"
 	"codedock.run/codedock/internal/engine/networking"
-	"codedock.run/codedock/internal/handlers"
+	"codedock.run/codedock/internal/handlers/auth"
+	"codedock.run/codedock/internal/handlers/backups"
+	"codedock.run/codedock/internal/handlers/databases"
+	"codedock.run/codedock/internal/handlers/deployments"
+	"codedock.run/codedock/internal/handlers/projects"
+	"codedock.run/codedock/internal/handlers/system"
 	"codedock.run/codedock/internal/http/middleware"
 	"codedock.run/codedock/internal/models"
-	"codedock.run/codedock/internal/services"
+	authservices "codedock.run/codedock/internal/services/auth"
+	projectservices "codedock.run/codedock/internal/services/projects"
 )
 
 type Server struct {
@@ -27,56 +33,56 @@ type Server struct {
 	deployer               *engine.Deployer
 	traefikManager         *networking.TraefikManager
 	dockerClient           *client.Client
-	tokenService           *services.TokenService
+	tokenService           *authservices.TokenService
 	authGuard              *middleware.AuthGuard
 	cronManager            *cron.CronManager
-	serviceLinker          *services.ServiceLinker
+	serviceLinker          *projectservices.ServiceLinker
 	dispatcherService      *core.DispatcherService
-	projectService         *services.ProjectService
-	appService             *services.AppService
-	appServiceHandler      *handlers.AppHandler
-	dbHandler              *handlers.DatabaseHandler
-	scheduledTaskHandler   *handlers.ScheduledTaskHandler
-	canvasHandler          *handlers.CanvasHandler
-	terminalHandler        *handlers.TerminalHandler
-	deploymentHandler      *handlers.DeploymentHandler
-	serviceVarHandler      *handlers.ServiceVarHandler
-	projectSettingsHandler *handlers.ProjectSettingsHandler
-	backupHandler          *handlers.BackupHandler
-	settingsHandler        *handlers.SettingsHandler
-	notifSettingsHandler   *handlers.NotificationSettingsHandler
-	aiSettingsHandler      *handlers.AISettingsHandler
-	updaterHandler         *handlers.UpdaterHandler
-	userHandler            *handlers.UserHandler
-	authHandler            *handlers.AuthHandler
-	oauthHandler           *handlers.OAuthHandler
-	gitHandler             *handlers.GitHandler
-	webhookHandler         *handlers.WebhookHandler
-	projectHandler         *handlers.ProjectHandler
-	orgHandler             *handlers.OrganizationHandler
-	environmentHandler     *handlers.EnvironmentHandler
-	domainHandler          *handlers.DomainHandler
-	projectEnvHandler      *handlers.ProjectEnvHandler
-	notificationHandler    *handlers.NotificationHandler
-	gitAppsHandler         *handlers.GitAppsHandler
-	serverlessHandler      *handlers.ServerlessHandler
-	systemHandler          *handlers.SystemHandler
-	composeHandler         *handlers.ComposeHandler
-	oneClickHandler        *handlers.OneClickHandler
-	archiveHandler         *handlers.ArchiveHandler
-	migrationHandler       *handlers.MigrationHandler
-	onboardingHandler      *handlers.OnboardingHandler
-	dnsHandler             *handlers.DNSHandler
-	metricsHandler         *handlers.MetricsHandler
-	logHandler             *handlers.LogHandler
-	auditLogHandler        *handlers.AuditLogHandler
-	exampleHandler         *handlers.ExampleHandler
-	serverHandler          *handlers.ServerHandler
-	workerWSHandler        *handlers.WorkerWSHandler
-	registryHandler        *handlers.RegistryHandler
-	billingHandler         *handlers.BillingHandler
-	serverMetricsWSHandler *handlers.ServerMetricsWSHandler
-	serviceLogsWSHandler   *handlers.ServiceLogsWSHandler
+	projectService         *projectservices.ProjectService
+	appService             *projectservices.AppService
+	appServiceHandler      *projects.AppHandler
+	dbHandler              *databases.DatabaseHandler
+	scheduledTaskHandler   *system.ScheduledTaskHandler
+	canvasHandler          *projects.CanvasHandler
+	terminalHandler        *deployments.TerminalHandler
+	deploymentHandler      *deployments.DeploymentHandler
+	serviceVarHandler      *projects.ServiceVarHandler
+	projectSettingsHandler *projects.ProjectSettingsHandler
+	backupHandler          *backups.BackupHandler
+	settingsHandler        *auth.SettingsHandler
+	notifSettingsHandler   *system.NotificationSettingsHandler
+	aiSettingsHandler      *system.AISettingsHandler
+	updaterHandler         *system.UpdaterHandler
+	userHandler            *auth.UserHandler
+	authHandler            *auth.AuthHandler
+	oauthHandler           *auth.OAuthHandler
+	gitHandler             *deployments.GitHandler
+	webhookHandler         *deployments.WebhookHandler
+	projectHandler         *projects.ProjectHandler
+	orgHandler             *auth.OrganizationHandler
+	environmentHandler     *projects.EnvironmentHandler
+	domainHandler          *projects.DomainHandler
+	projectEnvHandler      *projects.ProjectEnvHandler
+	notificationHandler    *system.NotificationHandler
+	gitAppsHandler         *deployments.GitAppsHandler
+	serverlessHandler      *projects.ServerlessHandler
+	systemHandler          *system.SystemHandler
+	composeHandler         *projects.ComposeHandler
+	oneClickHandler        *projects.OneClickHandler
+	archiveHandler         *deployments.ArchiveHandler
+	migrationHandler       *system.MigrationHandler
+	onboardingHandler      *auth.OnboardingHandler
+	dnsHandler             *system.DNSHandler
+	metricsHandler         *system.MetricsHandler
+	logHandler             *system.LogHandler
+	auditLogHandler        *auth.AuditLogHandler
+	exampleHandler         *system.ExampleHandler
+	serverHandler          *system.ServerHandler
+	workerWSHandler        *system.WorkerWSHandler
+	registryHandler        *deployments.RegistryHandler
+	billingHandler         *system.BillingHandler
+	serverMetricsWSHandler *system.ServerMetricsWSHandler
+	serviceLogsWSHandler   *system.ServiceLogsWSHandler
 }
 
 func (s *Server) ServeHTTP(w http.ResponseWriter, r *http.Request) {

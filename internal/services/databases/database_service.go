@@ -1,0 +1,193 @@
+package databases
+
+import (
+	"context"
+	"errors"
+	"strings"
+	"time"
+
+	"github.com/google/uuid"
+
+	"codedock.run/codedock/internal/engine"
+	"codedock.run/codedock/internal/models"
+	"codedock.run/codedock/internal/repositories"
+	"codedock.run/codedock/internal/utils"
+)
+
+type DatabaseService struct {
+	repo     repositories.DatabaseRepository
+	deployer *engine.DatabaseDeployer
+}
+
+func NewDatabaseService(r repositories.DatabaseRepository, d *engine.DatabaseDeployer) *DatabaseService {
+	return &DatabaseService{
+		repo:     r,
+		deployer: d,
+	}
+}
+
+func (s *DatabaseService) CreateDatabase(ctx context.Context, db *models.Database) (*models.Database, error) {
+	if db == nil || db.Name == "" || db.Engine == "" {
+		return nil, errors.New("database name and engine required")
+	}
+	if db.ID == "" {
+		db.ID = uuid.New().String()
+	}
+	if db.Status == "" {
+		db.Status = models.DatabaseStatusStopped
+	}
+	now := time.Now()
+	if db.CreatedAt.IsZero() {
+		db.CreatedAt = now
+	}
+	db.UpdatedAt = now
+	if err := s.repo.Create(ctx, db); err != nil {
+		return nil, err
+	}
+	if s.deployer != nil {
+		containerID, err := s.deployer.SpinUp(ctx, db)
+		if err == nil && containerID != "" {
+			db.ContainerID = containerID
+			db.Status = models.DatabaseStatusRunning
+			_ = s.repo.Update(ctx, db)
+		} else if err != nil {
+			db.Status = models.DatabaseStatusError
+			_ = s.repo.Update(ctx, db)
+		}
+	}
+	return db, nil
+}
+
+func (s *DatabaseService) CreateDatabaseFromRequest(ctx context.Context, req *models.CreateDatabaseRequest) (*models.Database, error) {
+	if req.Name == "" || req.Engine == "" {
+		return nil, errors.New("name and engine fields are required")
+	}
+	if req.Port <= 0 {
+		switch strings.ToLower(string(req.Engine)) {
+		case "postgres", "postgresql":
+			req.Port = 5432
+		case "mysql":
+			req.Port = 3306
+		case "redis":
+			req.Port = 6379
+		case "mongodb", "mongo":
+			req.Port = 27017
+		default:
+			req.Port = 5432
+		}
+	}
+	if req.Username == "" && strings.ToLower(string(req.Engine)) != "redis" {
+		req.Username = "codedockadmin"
+	}
+	if req.DatabaseName == "" {
+		req.DatabaseName = "appdb"
+	}
+	db := &models.Database{
+		ProjectID:          req.ProjectID,
+		EnvironmentID:      req.EnvironmentID,
+		Name:               req.Name,
+		Engine:             req.Engine,
+		Version:            req.Version,
+		Port:               req.Port,
+		Username:           req.Username,
+		Password:           req.Password,
+		DatabaseName:       req.DatabaseName,
+		VolumePath:         req.VolumePath,
+		CustomArgs:         req.CustomArgs,
+		LogicalReplication: req.LogicalReplication,
+		Status:             models.DatabaseStatusStopped,
+	}
+	return s.CreateDatabase(ctx, db)
+}
+
+func (s *DatabaseService) GetDatabase(ctx context.Context, id string) (*models.Database, error) {
+	if id == "" {
+		return nil, errors.New("id is required")
+	}
+	return s.repo.GetByID(ctx, id)
+}
+
+func (s *DatabaseService) ListDatabases(ctx context.Context) ([]*models.Database, error) {
+	return s.repo.List(ctx)
+}
+
+func (s *DatabaseService) ListDatabasesByProject(ctx context.Context, projectID string) ([]*models.Database, error) {
+	if projectID == "" {
+		return nil, errors.New("project id is required")
+	}
+	return s.repo.ListByProject(ctx, projectID)
+}
+
+func (s *DatabaseService) UpdateDatabase(ctx context.Context, db *models.Database) error {
+	if db == nil || db.ID == "" {
+		return errors.New("valid database required for update")
+	}
+	db.UpdatedAt = time.Now()
+	return s.repo.Update(ctx, db)
+}
+
+func (s *DatabaseService) DeleteDatabase(ctx context.Context, id string) error {
+	if id == "" {
+		return errors.New("id is required")
+	}
+	if s.deployer != nil {
+		_ = s.deployer.Stop(ctx, id)
+	}
+	return s.repo.Delete(ctx, id)
+}
+
+func (s *DatabaseService) StartDatabase(ctx context.Context, id string) (*models.Database, error) {
+	if id == "" {
+		return nil, errors.New("id is required")
+	}
+	db, err := s.repo.GetByID(ctx, id)
+	if err != nil || db == nil {
+		return nil, utils.NewNotFoundError("Database", id)
+	}
+	if s.deployer == nil {
+		return nil, errors.New("database deployer unavailable")
+	}
+	containerID, err := s.deployer.SpinUp(ctx, db)
+	if err != nil {
+		db.Status = models.DatabaseStatusError
+		_ = s.repo.Update(ctx, db)
+		return nil, err
+	}
+	if containerID != "" {
+		db.ContainerID = containerID
+	}
+	db.Status = models.DatabaseStatusRunning
+	db.UpdatedAt = time.Now()
+	_ = s.repo.Update(ctx, db)
+	return db, nil
+}
+
+func (s *DatabaseService) StopDatabase(ctx context.Context, id string) error {
+	if id == "" {
+		return errors.New("id is required")
+	}
+	db, err := s.repo.GetByID(ctx, id)
+	if err != nil || db == nil {
+		return errors.New("database not found")
+	}
+	if s.deployer != nil {
+		_ = s.deployer.Stop(ctx, id)
+	}
+	db.Status = models.DatabaseStatusStopped
+	db.UpdatedAt = time.Now()
+	return s.repo.Update(ctx, db)
+}
+
+func (s *DatabaseService) ImportData(ctx context.Context, id string, sourceURL string) error {
+	if id == "" || sourceURL == "" {
+		return errors.New("id and sourceURL are required")
+	}
+	db, err := s.repo.GetByID(ctx, id)
+	if err != nil || db == nil {
+		return errors.New("database not found")
+	}
+	if s.deployer == nil {
+		return errors.New("database deployer unavailable")
+	}
+	return s.deployer.ImportData(ctx, db, sourceURL)
+}

@@ -4,7 +4,8 @@ import (
 	"context"
 	"fmt"
 
-	"codedock.run/codedock/internal/services"
+	"codedock.run/codedock/internal/services/databases"
+	"codedock.run/codedock/internal/services/projects"
 	"codedock.run/codedock/internal/version"
 	"github.com/mark3labs/mcp-go/mcp"
 	"github.com/mark3labs/mcp-go/server"
@@ -12,12 +13,12 @@ import (
 
 type Bridge struct {
 	server         *server.MCPServer
-	projectService *services.ProjectService
-	appService     *services.AppService
-	dbService      *services.DatabaseService
+	projectService *projects.ProjectService
+	appService     *projects.AppService
+	dbService      *databases.DatabaseService
 }
 
-func NewBridge(ps *services.ProjectService, as *services.AppService, db *services.DatabaseService) *Bridge {
+func NewBridge(ps *projects.ProjectService, as *projects.AppService, db *databases.DatabaseService) *Bridge {
 	mcpServer := server.NewMCPServer("codedock-mcp", version.Version, server.WithResourceCapabilities(true, true), server.WithPromptCapabilities(true))
 	b := &Bridge{
 		server:         mcpServer,
