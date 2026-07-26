@@ -74,6 +74,14 @@ func (h *ComposeHandler) Deploy(c echo.Context) error {
 	if projectID == "" {
 		projectID = c.FormValue("project_id")
 	}
+	if projectID == "" {
+		return utils.Error(c, http.StatusBadRequest, "projectId parameter is required")
+	}
+	if user.Role != "admin" {
+		if !h.projectService.HasPermission(c.Request().Context(), projectID, user.UserID, models.UserRole(user.Role), "") {
+			return utils.Error(c, http.StatusForbidden, "insufficient permissions for this project")
+		}
+	}
 
 	composeBytes, err := h.readUploadedFile(c)
 	if err != nil {

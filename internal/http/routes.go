@@ -267,7 +267,7 @@ func (s *Server) registerSettingsRoutes(apiGroup, authGroup *echo.Group) {
 	authGroup.GET("/settings/updates/status", s.updaterHandler.GetUpdateStatus)
 	apiGroup.POST("/settings/updates/check", s.updaterHandler.CheckUpdate, s.authGuard.RequireRole("admin"))
 	apiGroup.POST("/settings/updates/deploy", s.updaterHandler.DeployUpdate, s.authGuard.RequireRole("admin"))
-	authGroup.GET("/settings/oauth/providers", s.oauthHandler.ListProviders)
+	apiGroup.GET("/settings/oauth/providers", s.oauthHandler.ListProviders, s.authGuard.RequireRole("admin"))
 	apiGroup.PUT("/settings/oauth/providers", s.oauthHandler.SaveProvider, s.authGuard.RequireRole("admin"))
 
 	apiGroup.POST("/settings/git_apps/github/manifest-callback", s.gitAppsHandler.ExchangeGithubManifestCode, s.authGuard.RequireRole("admin"))
@@ -303,7 +303,7 @@ func (s *Server) registerMiscRoutes(apiGroup, authGroup *echo.Group) {
 	authGroup.GET("/canvas/projects", s.canvasHandler.ListCanvasSummaries)
 	authGroup.GET("/projects/:id/summary", s.canvasHandler.GetCanvasSummary)
 	authGroup.GET("/environments/:id/canvas", s.canvasHandler.GetEnvironmentCanvas)
-	authGroup.GET("/audit-logs", s.auditLogHandler.List)
+	authGroup.GET("/audit-logs", s.auditLogHandler.List, s.authGuard.RequireRole("admin"))
 	authGroup.GET("/mcp/sse", s.HandleMCPSSE)
 	authGroup.POST("/mcp/messages", s.HandleMCPMessage)
 	apiGroup.GET("/ws/terminal/:id", s.terminalHandler.HandleWebSocket)

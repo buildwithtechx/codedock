@@ -4,6 +4,7 @@ import (
 	"net/http"
 	"strconv"
 
+	"codedock.run/codedock/internal/http/middleware"
 	"codedock.run/codedock/internal/models"
 	"codedock.run/codedock/internal/services"
 	"codedock.run/codedock/internal/utils"
@@ -19,6 +20,11 @@ func NewAuditLogHandler(as *services.AuditService) *AuditLogHandler {
 }
 
 func (h *AuditLogHandler) List(c echo.Context) error {
+	user := middleware.GetUserClaimsFromContext(c.Request().Context())
+	if user == nil || user.Role != "admin" {
+		return utils.Error(c, http.StatusForbidden, "insufficient permissions to view audit logs")
+	}
+
 	limitParam := c.QueryParam("limit")
 	limit, err := strconv.Atoi(limitParam)
 	if err != nil || limit <= 0 {

@@ -5,16 +5,19 @@ import (
 
 	"github.com/labstack/echo/v4"
 
+	"codedock.run/codedock/internal/http/middleware"
+	"codedock.run/codedock/internal/models"
 	"codedock.run/codedock/internal/services"
 	"codedock.run/codedock/internal/utils"
 )
 
 type OneClickHandler struct {
-	service *services.OneClickService
+	service        *services.OneClickService
+	projectService *services.ProjectService
 }
 
-func NewOneClickHandler(s *services.OneClickService) *OneClickHandler {
-	return &OneClickHandler{service: s}
+func NewOneClickHandler(s *services.OneClickService, ps *services.ProjectService) *OneClickHandler {
+	return &OneClickHandler{service: s, projectService: ps}
 }
 
 type oneClickDeployRequest struct {
@@ -31,6 +34,19 @@ func (h *OneClickHandler) Deploy(c echo.Context) error {
 	var req oneClickDeployRequest
 	if err := c.Bind(&req); err != nil {
 		return utils.Error(c, http.StatusBadRequest, "invalid payload")
+	}
+	if req.ProjectID == "" {
+		return utils.Error(c, http.StatusBadRequest, "projectId is required")
+	}
+
+	user := middleware.GetUserClaimsFromContext(c.Request().Context())
+	if user == nil {
+		return utils.Error(c, http.StatusUnauthorized, "unauthorized")
+	}
+	if user.Role != "admin" {
+		if !h.projectService.HasPermission(c.Request().Context(), req.ProjectID, user.UserID, models.UserRole(user.Role), "") {
+			return utils.Error(c, http.StatusForbidden, "insufficient permissions for this project")
+		}
 	}
 
 	db, err := h.service.DeployApp(c.Request().Context(), req.AppID, req.ProjectID, req.Name)

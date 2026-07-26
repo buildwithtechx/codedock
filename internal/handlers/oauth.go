@@ -32,6 +32,9 @@ func (h *OAuthHandler) ListProviders(c echo.Context) error {
 	if err != nil {
 		return utils.Error(c, http.StatusInternalServerError, err.Error())
 	}
+	for i := range providers {
+		providers[i].ClientSecret = ""
+	}
 	return utils.Success(c, "Operation successful", providers)
 }
 
@@ -42,6 +45,9 @@ func (h *OAuthHandler) ListEnabledProviders(c echo.Context) error {
 	}
 	if providers == nil {
 		providers = []models.OAuthProviderConfig{}
+	}
+	for i := range providers {
+		providers[i].ClientSecret = ""
 	}
 	return utils.Success(c, "Operation successful", providers)
 }
@@ -71,6 +77,15 @@ func (h *OAuthHandler) OAuthRedirect(c echo.Context) error {
 		return utils.Error(c, http.StatusInternalServerError, "failed to generate secure state token")
 	}
 	state := hex.EncodeToString(stateBytes)
+	c.SetCookie(&http.Cookie{
+		Name:     "oauth_state_" + providerName,
+		Value:    state,
+		Path:     "/",
+		HttpOnly: true,
+		Secure:   c.Request().TLS != nil || strings.HasPrefix(c.Request().Header.Get("X-Forwarded-Proto"), "https"),
+		SameSite: http.SameSiteLaxMode,
+		MaxAge:   600,
+	})
 	authURL, err := services.GetAuthorizationURL(p, state)
 	if err != nil {
 		return utils.Error(c, http.StatusBadRequest, err.Error())
@@ -85,6 +100,18 @@ func (h *OAuthHandler) OAuthCallback(c echo.Context) error {
 	if code == "" {
 		return utils.Error(c, http.StatusBadRequest, "missing authorization code parameter")
 	}
+	stateParam := c.QueryParam("state")
+	cookie, err := c.Cookie("oauth_state_" + providerName)
+	if err != nil || cookie.Value == "" || cookie.Value != stateParam {
+		return utils.Error(c, http.StatusUnauthorized, "invalid or expired oauth state parameter")
+	}
+	c.SetCookie(&http.Cookie{
+		Name:     "oauth_state_" + providerName,
+		Value:    "",
+		Path:     "/",
+		HttpOnly: true,
+		MaxAge:   -1,
+	})
 	token, refreshToken, _, err := h.oauthService.HandleCallback(c.Request().Context(), providerName, code)
 	if err != nil {
 		return utils.Error(c, http.StatusUnauthorized, err.Error())

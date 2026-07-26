@@ -71,6 +71,13 @@ func (h *AppHandler) Create(c echo.Context) error {
 	if err := h.verifyProjectOwnership(c, req.ProjectID); err != nil {
 		return err
 	}
+	env, err := h.envService.GetEnvironment(c.Request().Context(), envID)
+	if err != nil || env == nil {
+		return utils.Error(c, http.StatusNotFound, "environment not found")
+	}
+	if env.ProjectID != req.ProjectID {
+		return utils.Error(c, http.StatusBadRequest, "environment does not belong to specified project")
+	}
 	req.EnvironmentID = envID
 	if req.InternalPort == 0 {
 		req.InternalPort = 3000
@@ -166,9 +173,29 @@ func (h *AppHandler) Update(c echo.Context) error {
 	if req.HealthCheckPath != "" && !isValidHealthCheckPath(req.HealthCheckPath) {
 		return utils.Error(c, http.StatusBadRequest, "invalid health check path")
 	}
+	targetProjectID := existing.ProjectID
+	if req.ProjectID != "" && req.ProjectID != existing.ProjectID {
+		if err := h.verifyProjectOwnership(c, req.ProjectID); err != nil {
+			return err
+		}
+		targetProjectID = req.ProjectID
+	}
+	targetEnvID := existing.EnvironmentID
+	if req.EnvironmentID != "" {
+		targetEnvID = req.EnvironmentID
+	}
+	if targetEnvID != "" {
+		env, err := h.envService.GetEnvironment(c.Request().Context(), targetEnvID)
+		if err != nil || env == nil {
+			return utils.Error(c, http.StatusNotFound, "environment not found")
+		}
+		if env.ProjectID != targetProjectID {
+			return utils.Error(c, http.StatusBadRequest, "environment does not belong to target project")
+		}
+	}
 	existing.Name = req.Name
-	existing.ProjectID = req.ProjectID
-	existing.EnvironmentID = req.EnvironmentID
+	existing.ProjectID = targetProjectID
+	existing.EnvironmentID = targetEnvID
 	existing.RepositoryURL = req.RepositoryURL
 	existing.Branch = req.Branch
 	existing.RootDirectory = req.RootDirectory

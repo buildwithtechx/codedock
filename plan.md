@@ -6,17 +6,17 @@ This roadmap tracks all active security remediations, architectural refactoring,
 
 ## 1. Critical Security Findings
 
-- [ ] **1. Service log WebSocket authorization bypass:** Add project/service membership verification in `internal/handlers/service_logs_ws.go:42` so arbitrary JWTs cannot connect to logs of unrelated services.
-- [ ] **2. Unauthorised cross-project deployments:** Enforce project membership checks in Compose (`internal/handlers/compose.go:67`), Archive (`internal/handlers/archive.go:25`), and One-click (`internal/handlers/oneclick.go:30`) deployments.
-- [ ] **3. OAuth client secrets exposed:** Make `GET /settings/oauth/providers` admin-only and always redact `clientSecret` (`internal/handlers/oauth.go:30`, `internal/models/auth.go:21`).
-- [ ] **4. OAuth login CSRF/account-linking vulnerability:** Validate returned OAuth `state` values against session/cookie state in `internal/handlers/oauth.go:60, 81`.
-- [ ] **5. Canvas and audit-log tenant leakage:** Restrict global canvas summaries (`internal/handlers/canvas.go:21`) and audit logs (`internal/handlers/audit_log.go:21`) by project, organization, or admin role.
+- [x] **1. Service log WebSocket authorization bypass:** Add project/service membership verification in `internal/handlers/service_logs_ws.go:42` so arbitrary JWTs cannot connect to logs of unrelated services.
+- [x] **2. Unauthorised cross-project deployments:** Enforce project membership checks in Compose (`internal/handlers/compose.go:67`), Archive (`internal/handlers/archive.go:25`), and One-click (`internal/handlers/oneclick.go:30`) deployments.
+- [x] **3. OAuth client secrets exposed:** Make `GET /settings/oauth/providers` admin-only and always redact `clientSecret` (`internal/handlers/oauth.go:30`, `internal/models/auth.go:21`).
+- [x] **4. OAuth login CSRF/account-linking vulnerability:** Validate returned OAuth `state` values against session/cookie state in `internal/handlers/oauth.go:60, 81`.
+- [x] **5. Canvas and audit-log tenant leakage:** Restrict global canvas summaries (`internal/handlers/canvas.go:21`) and audit logs (`internal/handlers/audit_log.go:21`) by project, organization, or admin role.
 
 ---
 
 ## 2. High-Risk Findings
 
-- [ ] **6. App services can be reassigned across projects:** Validate that `EnvironmentID` belongs to `ProjectID` on app service create/update (`internal/handlers/app_services.go:59, 153`).
+- [x] **6. App services can be reassigned across projects:** Validate that `EnvironmentID` belongs to `ProjectID` on app service create/update (`internal/handlers/app_services.go:59, 153`).
 - [ ] **7. Rollback authorization is weaker than deployment authorization:** Enforce consistent admin-level service access for rollback (`internal/handlers/deployment.go:130`) matching deployment triggering (`internal/http/routes.go:232`).
 - [ ] **8. Database passwords returned in API models:** Prevent returning decrypted password fields in `json:"password"` (`internal/models/database.go:35`, `internal/repositories/database.go:56`).
 - [ ] **9. 2FA is not enforced during login:** Implement interactive TOTP second-factor challenge during login when `TOTPEnabled` is true (`internal/services/auth_service.go:126`).

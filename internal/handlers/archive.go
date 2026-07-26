@@ -10,20 +10,39 @@ import (
 	"github.com/google/uuid"
 	"github.com/labstack/echo/v4"
 
+	"codedock.run/codedock/internal/http/middleware"
+	"codedock.run/codedock/internal/models"
 	"codedock.run/codedock/internal/services"
 	"codedock.run/codedock/internal/utils"
 )
 
 type ArchiveHandler struct {
-	service *services.ArchiveService
+	service        *services.ArchiveService
+	projectService *services.ProjectService
 }
 
-func NewArchiveHandler(s *services.ArchiveService) *ArchiveHandler {
-	return &ArchiveHandler{service: s}
+func NewArchiveHandler(s *services.ArchiveService, ps *services.ProjectService) *ArchiveHandler {
+	return &ArchiveHandler{service: s, projectService: ps}
 }
 
 func (h *ArchiveHandler) DeployArchive(c echo.Context) error {
+	user := middleware.GetUserClaimsFromContext(c.Request().Context())
+	if user == nil {
+		return utils.Error(c, http.StatusUnauthorized, "unauthorized")
+	}
+
 	projectID := c.FormValue("projectId")
+	if projectID == "" {
+		projectID = c.FormValue("project_id")
+	}
+	if projectID == "" {
+		return utils.Error(c, http.StatusBadRequest, "projectId is required")
+	}
+	if user.Role != "admin" {
+		if !h.projectService.HasPermission(c.Request().Context(), projectID, user.UserID, models.UserRole(user.Role), "") {
+			return utils.Error(c, http.StatusForbidden, "insufficient permissions for this project")
+		}
+	}
 	appName := c.FormValue("name")
 
 	file, err := c.FormFile("file")

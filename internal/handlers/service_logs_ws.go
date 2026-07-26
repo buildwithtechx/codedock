@@ -7,6 +7,7 @@ import (
 
 	"codedock.run/codedock/internal/engine"
 	"codedock.run/codedock/internal/http/middleware"
+	"codedock.run/codedock/internal/models"
 	"codedock.run/codedock/internal/services"
 	"codedock.run/codedock/internal/utils"
 	"github.com/gorilla/websocket"
@@ -14,12 +15,13 @@ import (
 )
 
 type ServiceLogsWSHandler struct {
-	upgrader     websocket.Upgrader
-	tokenService *services.TokenService
-	appService   *services.AppService
+	upgrader       websocket.Upgrader
+	tokenService   *services.TokenService
+	appService     *services.AppService
+	projectService *services.ProjectService
 }
 
-func NewServiceLogsWSHandler(ts *services.TokenService, as *services.AppService) *ServiceLogsWSHandler {
+func NewServiceLogsWSHandler(ts *services.TokenService, as *services.AppService, ps *services.ProjectService) *ServiceLogsWSHandler {
 	return &ServiceLogsWSHandler{
 		upgrader: websocket.Upgrader{
 			CheckOrigin: func(r *http.Request) bool {
@@ -34,8 +36,9 @@ func NewServiceLogsWSHandler(ts *services.TokenService, as *services.AppService)
 				return u.Host == r.Host
 			},
 		},
-		tokenService: ts,
-		appService:   as,
+		tokenService:   ts,
+		appService:     as,
+		projectService: ps,
 	}
 }
 
@@ -48,15 +51,33 @@ func (h *ServiceLogsWSHandler) Handle(c echo.Context) error {
 		return utils.Error(c, http.StatusBadRequest, "missing serviceId parameter")
 	}
 
+	var claimsMap map[string]interface{}
 	if h.tokenService != nil {
 		tokenStr := middleware.ExtractTokenFromRequest(c)
 		if tokenStr == "" {
 			return utils.Error(c, http.StatusUnauthorized, "missing authentication token")
 		}
 
-		_, err := h.tokenService.ValidateToken(tokenStr)
+		cm, err := h.tokenService.ValidateToken(tokenStr)
 		if err != nil {
 			return utils.Error(c, http.StatusUnauthorized, "invalid authentication token")
+		}
+		claimsMap = cm
+	}
+
+	if h.appService != nil {
+		svc, err := h.appService.GetAppService(c.Request().Context(), serviceID)
+		if err != nil || svc == nil {
+			return utils.Error(c, http.StatusNotFound, "service not found")
+		}
+		if h.projectService != nil && claimsMap != nil {
+			userID, _ := claimsMap["sub"].(string)
+			role, _ := claimsMap["role"].(string)
+			if role != "admin" {
+				if !h.projectService.HasPermission(c.Request().Context(), svc.ProjectID, userID, models.UserRole(role), "") {
+					return utils.Error(c, http.StatusForbidden, "insufficient permissions to access service logs")
+				}
+			}
 		}
 	}
 
