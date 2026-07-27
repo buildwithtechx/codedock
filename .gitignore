@@ -1,5 +1,31 @@
-node_modules
-dist
-.astro
+# Dependencies
+node_modules/
+
+# Build and output directories
+dist/
+.astro/
+.output/
+.vinxi/
+.nitro/
+
+# Environment variables
 .env
+.env.*
+!.env.example
+
+# Logs
+npm-debug.log*
+yarn-debug.log*
+yarn-error.log*
+pnpm-debug.log*
+
+# Editor & OS files
 .DS_Store
+Thumbs.db
+.idea/
+.vscode/
+*.suo
+*.ntvs*
+*.njsproj
+*.sln
+*.sw?

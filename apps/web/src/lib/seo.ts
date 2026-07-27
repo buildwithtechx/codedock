@@ -1,7 +1,9 @@
-const SITE_NAME = "Codedock";
+import { env } from "../env";
+
+const SITE_NAME = env.VITE_SITE_NAME || "Codedock";
 const SITE_DESCRIPTION =
   "The open-source Heroku & Vercel alternative. Deploy apps, databases, backups, and services to your own server with zero vendor lock-in.";
-const SITE_URL = "https://codedock.run";
+const SITE_URL = env.VITE_SITE_URL || "https://codedock.run";
 const DEFAULT_OG_IMAGE = "/og.png";
 const TWITTER_HANDLE = "@codedockdotdev";
 

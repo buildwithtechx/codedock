@@ -1,4 +1,5 @@
 import { useEffect } from "react";
+import { env } from "../env";
 
 declare global {
   interface Window {
@@ -10,9 +11,9 @@ declare global {
 }
 
 export function PosthogTracking() {
-  const posthogKey = import.meta.env.VITE_PUBLIC_POSTHOG_KEY;
-  const posthogHost = import.meta.env.VITE_PUBLIC_POSTHOG_HOST || "https://us.i.posthog.com";
-  const posthogDefaults = import.meta.env.VITE_PUBLIC_POSTHOG_DEFAULTS || "2026-01-30";
+  const posthogKey = env.VITE_PUBLIC_POSTHOG_KEY;
+  const posthogHost = env.VITE_PUBLIC_POSTHOG_HOST;
+  const posthogDefaults = env.VITE_PUBLIC_POSTHOG_DEFAULTS;
 
   useEffect(() => {
     if (!posthogKey || window.__codedock_posthog_initialized) return;
