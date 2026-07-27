@@ -1,9 +1,17 @@
 import { createFileRoute } from "@tanstack/react-router";
 import { CheckCircle, Cloud } from "lucide-react";
 import { GithubIcon } from "../components/github-icon";
+import { createMeta } from "../lib/seo";
 
 export const Route = createFileRoute("/philosophy")({
   component: PhilosophyComponent,
+  head: () => ({
+    meta: createMeta({
+      title: "Our Philosophy — Codedock",
+      description:
+        "Why we built Codedock as MIT-licensed infrastructure software, and how we plan to keep it that way forever.",
+    }),
+  }),
 });
 
 function PhilosophyComponent() {

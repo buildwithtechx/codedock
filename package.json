@@ -20,6 +20,6 @@
     "format:fix": "biome check --write ."
   },
   "devDependencies": {
-    "@biomejs/biome": "^2.5.4"
+    "@biomejs/biome": "^2.5.5"
   }
 }

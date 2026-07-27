@@ -1,8 +1,16 @@
 import { createFileRoute } from "@tanstack/react-router";
 import { ArrowRight, Book, Check, ChevronDown, Cloud, Info, Server } from "lucide-react";
+import { createMeta } from "../lib/seo";
 
 export const Route = createFileRoute("/pricing")({
   component: PricingComponent,
+  head: () => ({
+    meta: createMeta({
+      title: "Pricing — Codedock",
+      description:
+        "Self-hosted is MIT-licensed and free forever. Codedock Cloud adds fleet management and metering from $5/month.",
+    }),
+  }),
 });
 
 function PricingComponent() {

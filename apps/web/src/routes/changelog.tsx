@@ -1,7 +1,14 @@
 import { createFileRoute } from "@tanstack/react-router";
+import { createMeta } from "../lib/seo";
 
 export const Route = createFileRoute("/changelog")({
   component: ChangelogComponent,
+  head: () => ({
+    meta: createMeta({
+      title: "Changelog — Codedock",
+      description: "What's new in Codedock. Every release, every improvement, every fix.",
+    }),
+  }),
 });
 
 function ChangelogComponent() {
@@ -12,10 +19,19 @@ function ChangelogComponent() {
       badge: "Latest",
       badgeColor: "bg-primary/20 text-primary border border-primary/30",
       changes: [
-        { type: "feat", text: "Fleet & agents handshake via Yamux over WebSockets" },
+        {
+          type: "feat",
+          text: "Fleet & agents handshake via Yamux over WebSockets",
+        },
         { type: "feat", text: "Usage metering aggregation and billing alerts" },
-        { type: "feat", text: "Agent telemetry reporting loop (container hours, deployments)" },
-        { type: "refactor", text: "Removed Google Wire — manual constructor injection throughout" },
+        {
+          type: "feat",
+          text: "Agent telemetry reporting loop (container hours, deployments)",
+        },
+        {
+          type: "refactor",
+          text: "Removed Google Wire — manual constructor injection throughout",
+        },
         {
           type: "refactor",
           text: "Extracted dependency wiring to setup.go in both codedock and codedock-cloud",
@@ -32,14 +48,26 @@ function ChangelogComponent() {
       badge: null,
       badgeColor: "",
       changes: [
-        { type: "feat", text: "Notifications module with email (Resend) and webhook channels" },
-        { type: "feat", text: "SSO / SAML handler with env-based configuration" },
+        {
+          type: "feat",
+          text: "Notifications module with email (Resend) and webhook channels",
+        },
+        {
+          type: "feat",
+          text: "SSO / SAML handler with env-based configuration",
+        },
         {
           type: "feat",
           text: "Codedock Cloud metering handler with repo-authenticated usage reporting",
         },
-        { type: "feat", text: "Admin and internal staff routing split from public feature routes" },
-        { type: "fix", text: "service/notifications renamed to avoid double-nesting" },
+        {
+          type: "feat",
+          text: "Admin and internal staff routing split from public feature routes",
+        },
+        {
+          type: "fix",
+          text: "service/notifications renamed to avoid double-nesting",
+        },
       ],
     },
     {
@@ -64,9 +92,15 @@ function ChangelogComponent() {
       badge: null,
       badgeColor: "",
       changes: [
-        { type: "feat", text: "Initial release — single-binary Codedock daemon" },
+        {
+          type: "feat",
+          text: "Initial release — single-binary Codedock daemon",
+        },
         { type: "feat", text: "Docker-based app and database deployments" },
-        { type: "feat", text: "Traefik reverse proxy integration with automatic SSL" },
+        {
+          type: "feat",
+          text: "Traefik reverse proxy integration with automatic SSL",
+        },
         { type: "feat", text: "Encrypted secrets vault" },
         { type: "feat", text: "Git webhook push-to-deploy" },
         { type: "feat", text: "Real-time browser terminal" },
@@ -94,7 +128,7 @@ function ChangelogComponent() {
       </div>
 
       <div className="relative bg-background/80 backdrop-blur-md border border-border rounded-xl p-6 md:p-10 mb-16">
-        <div className="absolute left-6 md:left-10 top-10 bottom-10 w-px bg-border ml-[3px]" />
+        <div className="absolute left-6 md:left-10 top-10 bottom-10 w-px bg-border ml-0.75" />
 
         <div className="space-y-14 md:pl-8">
           {entries.map((entry) => (
