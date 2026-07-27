@@ -9,7 +9,6 @@ import (
 	"codedock.run/codedock/pkg/types"
 )
 
-// ListServices returns all app services in a specific environment.
 func (c *Client) ListServices(environmentID string) ([]*types.AppService, error) {
 	resp, err := c.sendRequest("GET", fmt.Sprintf("/environments/%s/services", environmentID), nil)
 	if err != nil {
@@ -32,7 +31,6 @@ func (c *Client) ListServices(environmentID string) ([]*types.AppService, error)
 	return result.Data, nil
 }
 
-// CreateService creates a new application service.
 func (c *Client) CreateService(service *types.AppService) (*types.AppService, error) {
 	resp, err := c.sendRequest("POST", "/services", service)
 	if err != nil {
@@ -55,7 +53,6 @@ func (c *Client) CreateService(service *types.AppService) (*types.AppService, er
 	return result.Data, nil
 }
 
-// GetService retrieves a single service by its ID.
 func (c *Client) GetService(id string) (*types.AppService, error) {
 	resp, err := c.sendRequest("GET", fmt.Sprintf("/services/%s", id), nil)
 	if err != nil {
@@ -78,7 +75,6 @@ func (c *Client) GetService(id string) (*types.AppService, error) {
 	return result.Data, nil
 }
 
-// DeleteService deletes a service by its ID.
 func (c *Client) DeleteService(id string) error {
 	resp, err := c.sendRequest("DELETE", fmt.Sprintf("/services/%s", id), nil)
 	if err != nil {

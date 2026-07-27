@@ -9,7 +9,6 @@ import (
 	"codedock.run/codedock/pkg/types"
 )
 
-// GetSecrets retrieves the secrets/environment variables for a project.
 func (c *Client) GetSecrets(projectID string) (types.VarsRequest, error) {
 	resp, err := c.sendRequest("GET", fmt.Sprintf("/projects/%s/env", projectID), nil)
 	if err != nil {
@@ -32,7 +31,6 @@ func (c *Client) GetSecrets(projectID string) (types.VarsRequest, error) {
 	return result.Data, nil
 }
 
-// SetSecrets updates the secrets/environment variables for a project.
 func (c *Client) SetSecrets(projectID string, req types.SetEnvVarsRequest) error {
 	resp, err := c.sendRequest("PUT", fmt.Sprintf("/projects/%s/env", projectID), req)
 	if err != nil {
