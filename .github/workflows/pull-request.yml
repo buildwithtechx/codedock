@@ -24,15 +24,15 @@ jobs:
         with:
           go-version: "1.25"
 
-      - name: Install Dashboard Dependencies
-        run: cd dashboard && npm ci
-
-      - name: Generate TanStack Routes
-        run: cd dashboard && npm run generate-routes
+      - name: Install Dashboard & Build GUI
+        run: |
+          cd dashboard && npm ci
+          cd dashboard && npm run generate-routes
+          cd dashboard && npm run build
 
       - name: Run Build
         if: matrix.job == 'build'
-        run: make build
+        run: make build-daemon
 
       - name: Run Tests
         if: matrix.job == 'test'
