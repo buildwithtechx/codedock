@@ -10,26 +10,59 @@ import (
 	"net/smtp"
 	"time"
 
+	"errors"
+
 	"codedock.run/codedock/internal/config"
 	"codedock.run/codedock/internal/services/system"
+	"codedock.run/codedock/internal/utils"
+	"codedock.run/codedock/pkg/types"
 )
+
+type HTTPClient interface {
+	Do(req *http.Request) (*http.Response, error)
+}
 
 type MailerService struct {
 	notifSettingsService *system.NotificationSettingsService
+	config               *types.Config
+	httpClient           HTTPClient
 }
 
-func NewMailerService(notifSettings *system.NotificationSettingsService) (*MailerService, error) {
+func NewMailerService(notifSettings *system.NotificationSettingsService, cfg ...*types.Config) (*MailerService, error) {
 	if err := LoadTemplates(); err != nil {
 		return nil, fmt.Errorf("failed to load email templates: %w", err)
 	}
+	var selectedCfg *types.Config
+	if len(cfg) > 0 && cfg[0] != nil {
+		selectedCfg = cfg[0]
+	} else {
+		selectedCfg = config.Get()
+	}
 	return &MailerService{
 		notifSettingsService: notifSettings,
+		config:               selectedCfg,
+		httpClient:           &http.Client{Timeout: 10 * time.Second},
 	}, nil
 }
 
+func (s *MailerService) SetHTTPClient(client HTTPClient) {
+	if client != nil {
+		s.httpClient = client
+	}
+}
+
 func (s *MailerService) SendSystemEmail(ctx context.Context, templateName string, toAddress string, subject string, data any) error {
-	settings, _ := s.notifSettingsService.GetNotificationSettings(ctx)
-	cfg := config.Get()
+	settings, err := s.notifSettingsService.GetNotificationSettings(ctx)
+	if err != nil {
+		var notFound *utils.NotFoundError
+		if !errors.As(err, &notFound) {
+			return fmt.Errorf("fetching notification settings: %w", err)
+		}
+	}
+	cfg := s.config
+	if cfg == nil {
+		cfg = config.Get()
+	}
 
 	var buf bytes.Buffer
 	if err := HTMLTemplates.ExecuteTemplate(&buf, templateName, data); err != nil {
@@ -48,7 +81,7 @@ func (s *MailerService) SendSystemEmail(ctx context.Context, templateName string
 	}
 
 	if resendKey != "" {
-		return sendResendEmail(ctx, resendKey, fromAddress, toAddress, subject, htmlContent)
+		return s.sendResendEmail(ctx, resendKey, fromAddress, toAddress, subject, htmlContent)
 	}
 
 	var host, port, user, pass string
@@ -83,15 +116,14 @@ func (s *MailerService) SendSystemEmail(ctx context.Context, templateName string
 	}
 
 	addr := fmt.Sprintf("%s:%s", host, port)
-	err := smtp.SendMail(addr, auth, fromAddress, []string{toAddress}, msg)
-	if err != nil {
+	if err := smtp.SendMail(addr, auth, fromAddress, []string{toAddress}, msg); err != nil {
 		return fmt.Errorf("smtp.SendMail: %w", err)
 	}
 
 	return nil
 }
 
-func sendResendEmail(ctx context.Context, apiKey, from, to, subject, htmlContent string) error {
+func (s *MailerService) sendResendEmail(ctx context.Context, apiKey, from, to, subject, htmlContent string) error {
 	if from == "" {
 		from = "Codedock <no-reply@codedock.run>"
 	}
@@ -113,7 +145,10 @@ func sendResendEmail(ctx context.Context, apiKey, from, to, subject, htmlContent
 	req.Header.Set("Authorization", "Bearer "+apiKey)
 	req.Header.Set("Content-Type", "application/json")
 
-	client := &http.Client{Timeout: 10 * time.Second}
+	client := s.httpClient
+	if client == nil {
+		client = &http.Client{Timeout: 10 * time.Second}
+	}
 	resp, err := client.Do(req)
 	if err != nil {
 		return fmt.Errorf("sending resend request: %w", err)

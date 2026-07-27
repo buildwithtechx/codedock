@@ -65,6 +65,10 @@ func (s *OAuthService) ListProviders(ctx context.Context) ([]models.OAuthProvide
 func (s *OAuthService) ListEnabledProviders(ctx context.Context) ([]models.OAuthProviderConfig, error) {
 	allProviders, err := s.oauthRepo.ListProviders(ctx)
 	if err != nil {
+		var notFound *utils.NotFoundError
+		if !errors.As(err, &notFound) {
+			return nil, fmt.Errorf("failed to list oauth providers: %w", err)
+		}
 		allProviders = []models.OAuthProviderConfig{}
 	}
 	providerMap := make(map[string]bool)
@@ -153,7 +157,7 @@ func (s *OAuthService) UpdateUserTOTP(ctx context.Context, userID string, enable
 }
 
 func (s *OAuthService) HandleCallback(ctx context.Context, providerName, code string) (string, string, *models.User, error) {
-	p, err := s.oauthRepo.GetProvider(ctx, providerName)
+	p, err := s.GetProvider(ctx, providerName)
 	if err != nil || p == nil {
 		return "", "", nil, errors.New("oauth provider not found: " + providerName)
 	}

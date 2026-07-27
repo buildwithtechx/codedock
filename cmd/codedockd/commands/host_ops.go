@@ -15,9 +15,6 @@ import (
 
 func runBackup() {
 	dataDir := filepath.Clean(config.Get().Server.DataDir)
-	if dataDir == "." || dataDir == "" {
-		dataDir = "/codedock/data"
-	}
 
 	parentDir := filepath.Dir(dataDir)
 	baseName := filepath.Base(dataDir)
@@ -52,9 +49,6 @@ func runRestore(args []string) {
 	}
 
 	dataDir := filepath.Clean(config.Get().Server.DataDir)
-	if dataDir == "." || dataDir == "" {
-		dataDir = "/codedock/data"
-	}
 	baseName := filepath.Base(dataDir)
 
 	conn, err := net.DialTimeout("tcp", fmt.Sprintf("127.0.0.1:%d", config.Get().Server.Port), 500*time.Millisecond)

@@ -6,6 +6,7 @@ import (
 	"fmt"
 	"log/slog"
 	"net/http"
+	"slices"
 	"time"
 
 	"github.com/docker/docker/client"
@@ -57,7 +58,7 @@ func NewServer(db *sql.DB, v *utils.Vault, deployer *deploy.Deployer, traefikMan
 	}))
 
 	allowOrigins := []string{"http://localhost:3000", "http://localhost:8080"}
-	if dashboardURL := config.Get().Server.DashboardURL; dashboardURL != "" {
+	if dashboardURL := config.Get().Server.DashboardURL; dashboardURL != "" && !slices.Contains(allowOrigins, dashboardURL) {
 		allowOrigins = append(allowOrigins, dashboardURL)
 	}
 

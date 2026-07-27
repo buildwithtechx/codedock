@@ -29,8 +29,8 @@ func Load() *types.Config {
 			HostIP:       getEnv("CODEDOCK_HOST_IP", ""),
 			Domain:       getEnv("CODEDOCK_DOMAIN", ""),
 			DashboardURL: getEnv("CODEDOCK_DASHBOARD_URL", "http://localhost:3000"),
-			ServerURL:    getEnv("CODEDOCK_SERVER_URL", "http://localhost:8080"),
-			ApiHost:      getEnv("CODEDOCK_API_HOST", "http://localhost:8080"),
+			ServerURL:    getEnv("CODEDOCK_SERVER_URL", ""),
+			APIHost:      getEnv("CODEDOCK_API_HOST", ""),
 			StaticDir:    getEnv("CODEDOCK_STATIC_DIR", ""),
 		},
 		Security: types.SecurityConfig{
@@ -122,7 +122,7 @@ func getEnv(key, fallback string) string {
 
 func getEnvInt(key string, fallback int) int {
 	if val := os.Getenv(key); val != "" {
-		if n, err := strconv.Atoi(val); err == nil {
+		if n, err := strconv.Atoi(val); err == nil && n > 0 {
 			return n
 		}
 	}
@@ -131,7 +131,7 @@ func getEnvInt(key string, fallback int) int {
 
 func getEnvFloat(key string, fallback float64) float64 {
 	if val := os.Getenv(key); val != "" {
-		if f, err := strconv.ParseFloat(val, 64); err == nil {
+		if f, err := strconv.ParseFloat(val, 64); err == nil && f > 0 {
 			return f
 		}
 	}

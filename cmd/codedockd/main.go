@@ -96,6 +96,7 @@ func startServer() {
 		slog.Info("codedock server running", "addr", addr, "version", codedockVersion)
 		if err := srv.ListenAndServe(); err != nil && err != http.ErrServerClosed {
 			slog.Error("server error", "err", err)
+			os.Exit(1)
 		}
 	}()
 

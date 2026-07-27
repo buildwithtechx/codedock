@@ -24,13 +24,8 @@ func Init() {
 		return
 	}
 
-	host := cfg.Telemetry.PosthogHost
-	if host == "" {
-		host = "https://us.i.posthog.com"
-	}
-
 	c, err := posthog.NewWithConfig(apiKey, posthog.Config{
-		Endpoint: host,
+		Endpoint: cfg.Telemetry.PosthogHost,
 	})
 	if err != nil {
 		log.Printf("failed to initialize telemetry: %v", err)

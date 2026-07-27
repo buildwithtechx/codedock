@@ -47,7 +47,7 @@ function trackEvent(eventName, req) {
         $user_agent: userAgent,
         $current_url: req.url,
         version: getVersion(),
-        script_requested: req.url === '/' ? 'install.sh' : req.url,
+        script_requested: req.url === '/' ? '/install.sh' : req.url,
       },
     }),
   }).catch((err) => console.error('PostHog error:', err));

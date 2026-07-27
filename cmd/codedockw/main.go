@@ -21,9 +21,13 @@ func main() {
 		os.Exit(1)
 	}
 
-	apiHost := cfg.Server.ApiHost
+	apiHost := cfg.Server.APIHost
 	if apiHost == "" {
-		apiHost = "http://localhost:8080"
+		apiHost = cfg.Server.ServerURL
+	}
+	if apiHost == "" {
+		slog.Error("CODEDOCK_API_HOST or CODEDOCK_SERVER_URL is required")
+		os.Exit(1)
 	}
 
 	daemon := worker.NewWorkerDaemon(apiHost, token)

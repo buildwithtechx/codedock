@@ -10,19 +10,11 @@ import (
 )
 
 func GetDataDir() string {
-	dir := config.Get().Server.DataDir
-	if dir == "" {
-		return "data"
-	}
-	return dir
+	return config.Get().Server.DataDir
 }
 
 func GetRuntimeNetwork() string {
-	net := config.Get().Docker.RuntimeNetwork
-	if net == "" {
-		return "codedock-network"
-	}
-	return net
+	return config.Get().Docker.RuntimeNetwork
 }
 
 func EnsureCodedockNetwork(ctx context.Context, cli *client.Client) error {

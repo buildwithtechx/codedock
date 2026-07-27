@@ -145,15 +145,17 @@ func (m *TraefikManager) buildTraefikCmdArgs() []string {
 		"--entrypoints.web.address=:80",
 		"--entrypoints.websecure.address=:443",
 		"--api.insecure=true",
+		"--ping=true",
+		"--ping.entrypoint=web",
 		"--log.level=INFO",
 	}
 
 	if m.tlsEmail != "" {
 		cmdArgs = append(cmdArgs,
-			"--certificatesresolvers.codedock-resolver.acme.email="+m.tlsEmail,
-			"--certificatesresolvers.codedock-resolver.acme.storage=/letsencrypt/acme.json",
-			"--certificatesresolvers.codedock-resolver.acme.httpchallenge=true",
-			"--certificatesresolvers.codedock-resolver.acme.httpchallenge.entrypoint=web",
+			"--certificatesresolvers.letsencrypt.acme.email="+m.tlsEmail,
+			"--certificatesresolvers.letsencrypt.acme.storage=/letsencrypt/acme.json",
+			"--certificatesresolvers.letsencrypt.acme.httpchallenge=true",
+			"--certificatesresolvers.letsencrypt.acme.httpchallenge.entrypoint=web",
 		)
 	}
 	if dockerHost := config.Get().Traefik.DockerHost; dockerHost != "" {
