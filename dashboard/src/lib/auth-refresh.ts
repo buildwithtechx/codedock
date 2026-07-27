@@ -31,9 +31,13 @@ export async function refreshAuthSession(apiBaseUrl: string): Promise<string | n
     const authState = useAuthStore.getState();
 
     try {
+      const headers: Record<string, string> = {
+        'Content-Type': 'application/json',
+        ...getAuthHeaders(),
+      };
       const res = await fetch(`${apiBaseUrl}/auth/refresh`, {
         method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
+        headers,
         body: JSON.stringify({ refreshToken: authState.refreshToken || '' }),
         credentials: 'include',
       });

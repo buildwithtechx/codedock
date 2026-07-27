@@ -231,8 +231,8 @@ func NewServer(db *sql.DB, v *utils.Vault, deployer *deploy.Deployer, traefikMan
 	serverService := systemservices.NewServerService(serverRepo, userRepo)
 	serverHandler := system.NewServerHandler(serverService)
 	workerWSHandler := system.NewWorkerWSHandler(workerHub, serverRepo)
-	serverMetricsWSHandler := system.NewServerMetricsWSHandler(tokenService, serverService)
-	serviceLogsWSHandler := system.NewServiceLogsWSHandler(tokenService, appService, projectService)
+	serverMetricsWSHandler := system.NewServerMetricsWSHandler(tokenService, serverService, userRepo)
+	serviceLogsWSHandler := system.NewServiceLogsWSHandler(tokenService, appService, projectService, userRepo)
 
 	registryRepo := repositories.NewRegistryRepository(db)
 	registryService := deploymentservices.NewRegistryService(registryRepo)

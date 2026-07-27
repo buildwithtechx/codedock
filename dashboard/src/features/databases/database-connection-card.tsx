@@ -111,17 +111,23 @@ export function DatabaseConnectionCard({ database }: Props) {
           <div className="space-y-1">
             <Label className="text-muted-foreground text-xs">Password</Label>
             <div className="flex items-center space-x-2">
-              <span className="flex-1 font-mono text-sm">
-                {showPassword ? database.password : '••••••••'}
+              <span className="flex-1 font-mono text-muted-foreground text-sm italic">
+                {database.password
+                  ? showPassword
+                    ? database.password
+                    : '••••••••'
+                  : 'Configured via Environment Variable'}
               </span>
-              <Button
-                variant="ghost"
-                size="icon"
-                className="h-6 w-6"
-                onClick={() => copyToClipboard(database.password || '', 'Password')}
-              >
-                <Copy className="h-3 w-3" />
-              </Button>
+              {database.password ? (
+                <Button
+                  variant="ghost"
+                  size="icon"
+                  className="h-6 w-6"
+                  onClick={() => copyToClipboard(database.password || '', 'Password')}
+                >
+                  <Copy className="h-3 w-3" />
+                </Button>
+              ) : null}
             </div>
           </div>
           <div className="space-y-1">

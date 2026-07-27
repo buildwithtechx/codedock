@@ -56,7 +56,7 @@ ensure_docker() {
   if ! docker info &> /dev/null; then
     echo -e "${YELLOW}⏳ Waiting for Docker daemon to start...${NC}"
     systemctl start docker 2>/dev/null || true
-    for _ in $(seq 1 10); do
+    for _ in {1..10}; do
       if docker info &> /dev/null; then break; fi
       sleep 1
     done
