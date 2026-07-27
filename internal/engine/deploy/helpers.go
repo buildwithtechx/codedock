@@ -1,16 +1,36 @@
-package engine
+package deploy
 
 import (
 	"context"
 	"fmt"
 	"io"
 	"net/http"
+	"strings"
 	"time"
+
+	"github.com/docker/docker/api/types/container"
 
 	"codedock.run/codedock/internal/config"
 	"codedock.run/codedock/internal/engine/build"
 	"codedock.run/codedock/internal/models"
 )
+
+func ApplyCustomDNS(hostCfg *container.HostConfig, customDNS string) {
+	if strings.TrimSpace(customDNS) == "" {
+		return
+	}
+	parts := strings.Split(customDNS, ",")
+	var dnsList []string
+	for _, p := range parts {
+		p = strings.TrimSpace(p)
+		if p != "" {
+			dnsList = append(dnsList, p)
+		}
+	}
+	if len(dnsList) > 0 {
+		hostCfg.DNS = dnsList
+	}
+}
 
 func (d *Deployer) getEnvironmentVariables(app *models.AppService, logWriter io.Writer) (map[string]string, error) {
 	envVarsMap, err := d.store.GetEnvVars(app.ProjectID)
@@ -21,30 +41,10 @@ func (d *Deployer) getEnvironmentVariables(app *models.AppService, logWriter io.
 		envVarsMap = make(map[string]string)
 	}
 
-	serviceVars, _ := d.store.ListServiceVariables(app.ID)
-	for _, sv := range serviceVars {
-		envVarsMap[sv.Key] = sv.Value
-	}
-
-	if d.EnvProvider != nil {
-		if linkedEnvs, err := d.EnvProvider(app.ProjectID); err == nil {
-			for k, v := range linkedEnvs {
-				if _, exists := envVarsMap[k]; !exists {
-					envVarsMap[k] = v
-				}
-			}
-			if logWriter != nil && len(linkedEnvs) > 0 {
-				fmt.Fprintf(logWriter, "🔗 [Deployer] Automatically linked %d service connection strings (DATABASE_URL, REDIS_URL, etc.)\n", len(linkedEnvs))
-			}
-		}
-	}
-
-	if d.EnvInterpolator != nil {
-		if registry, err := d.EnvInterpolator(app.ProjectID); err == nil && len(registry) > 0 {
-			envVarsMap = build.InterpolateEnvVars(envVarsMap, registry)
-			if logWriter != nil {
-				fmt.Fprintf(logWriter, "🔀 [Deployer] Interpolated dynamic variable references (${service.VAR_KEY} syntax).\n")
-			}
+	appVars, err := d.store.ListServiceVariables(app.ID)
+	if err == nil {
+		for _, v := range appVars {
+			envVarsMap[v.Key] = v.Value
 		}
 	}
 
@@ -89,39 +89,46 @@ func (d *Deployer) waitForHealthyContainer(ctx context.Context, containerName st
 	for i := 0; i < maxRetries; i++ {
 		time.Sleep(2 * time.Second)
 		inspect, err := d.containerManager.Inspect(ctx, containerName)
-		if err == nil {
-			if !inspect.State.Running {
-				if inspect.State.Status == "exited" {
+		if err != nil || !inspect.State.Running {
+			continue
+		}
+
+		checkPath := healthCheckPath
+		if checkPath == "" {
+			checkPath = "/"
+		}
+		containerIP := ""
+		if inspect.NetworkSettings != nil {
+			for _, net := range inspect.NetworkSettings.Networks {
+				if net.IPAddress != "" {
+					containerIP = net.IPAddress
 					break
 				}
-				continue
 			}
-			if healthCheckPath != "" && inspect.State.Health != nil {
-				if inspect.State.Health.Status == "healthy" {
-					return true
-				}
-				if inspect.State.Health.Status == "unhealthy" {
-					return false
-				}
-			} else if healthCheckPath != "" {
-				ip := ""
-				for _, net := range inspect.NetworkSettings.Networks {
-					ip = net.IPAddress
-					break
-				}
-				if ip != "" {
-					resp, err := http.Get(fmt.Sprintf("http://%s:%d%s", ip, internalPort, healthCheckPath))
-					if err == nil {
-						resp.Body.Close()
-						if resp.StatusCode >= 200 && resp.StatusCode < 400 {
-							return true
-						}
-					}
-				}
-			} else {
+		}
+		if containerIP == "" {
+			containerIP = containerName
+		}
+		targetURL := fmt.Sprintf("http://%s:%d%s", containerIP, internalPort, checkPath)
+		client := http.Client{Timeout: 2 * time.Second}
+		resp, err := client.Get(targetURL)
+		if err == nil {
+			resp.Body.Close()
+			if resp.StatusCode >= 200 && resp.StatusCode < 500 {
 				return true
 			}
 		}
 	}
 	return false
+}
+
+func parseBuildStrategy(engine models.BuildEngine) build.BuildStrategy {
+	switch engine {
+	case models.BuildEngineNixpacks:
+		return build.StrategyNixpacks
+	case models.BuildEngineBuildpacks:
+		return build.StrategyBuildpacks
+	default:
+		return build.StrategyDockerfile
+	}
 }

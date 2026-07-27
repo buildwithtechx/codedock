@@ -8,7 +8,7 @@ import (
 
 	"github.com/google/uuid"
 
-	"codedock.run/codedock/internal/engine"
+	"codedock.run/codedock/internal/engine/deploy"
 	"codedock.run/codedock/internal/models"
 	"codedock.run/codedock/internal/repositories"
 	"codedock.run/codedock/internal/utils"
@@ -16,10 +16,10 @@ import (
 
 type DatabaseService struct {
 	repo     repositories.DatabaseRepository
-	deployer *engine.DatabaseDeployer
+	deployer *deploy.DatabaseDeployer
 }
 
-func NewDatabaseService(r repositories.DatabaseRepository, d *engine.DatabaseDeployer) *DatabaseService {
+func NewDatabaseService(r repositories.DatabaseRepository, d *deploy.DatabaseDeployer) *DatabaseService {
 	return &DatabaseService{
 		repo:     r,
 		deployer: d,

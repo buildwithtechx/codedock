@@ -8,7 +8,7 @@ import (
 	"path/filepath"
 	"strings"
 
-	"codedock.run/codedock/internal/engine"
+	"codedock.run/codedock/internal/engine/deploy"
 	"codedock.run/codedock/internal/models"
 	"github.com/docker/docker/client"
 )
@@ -44,7 +44,7 @@ func (d *WorkerDaemon) processDeployment(ctx context.Context, payload models.Wor
 	}
 
 	store := NewWorkerLocalStore(payload)
-	deployer := engine.NewDeployer(dockerClient, store)
+	deployer := deploy.NewDeployer(dockerClient, store)
 
 	app := &models.AppService{
 		ID:              payload.AppID,

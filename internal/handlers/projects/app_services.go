@@ -8,7 +8,7 @@ import (
 
 	"codedock.run/codedock/internal/utils"
 
-	"codedock.run/codedock/internal/engine"
+	"codedock.run/codedock/internal/engine/deploy"
 	"codedock.run/codedock/internal/http/middleware"
 	"codedock.run/codedock/internal/models"
 	deploymentservices "codedock.run/codedock/internal/services/deployments"
@@ -19,12 +19,12 @@ import (
 type AppHandler struct {
 	appService        *projectservices.AppService
 	projectService    *projectservices.ProjectService
-	deployer          *engine.Deployer
+	deployer          *deploy.Deployer
 	deploymentService *deploymentservices.DeploymentService
 	envService        *projectservices.EnvironmentService
 }
 
-func NewAppHandler(s *projectservices.AppService, ps *projectservices.ProjectService, d *engine.Deployer, ds *deploymentservices.DeploymentService, es *projectservices.EnvironmentService) *AppHandler {
+func NewAppHandler(s *projectservices.AppService, ps *projectservices.ProjectService, d *deploy.Deployer, ds *deploymentservices.DeploymentService, es *projectservices.EnvironmentService) *AppHandler {
 	return &AppHandler{
 		appService:        s,
 		projectService:    ps,
@@ -238,13 +238,8 @@ func (h *AppHandler) Delete(c echo.Context) error {
 		return err
 	}
 
-	if err := h.deployer.StopAppService(c.Request().Context(), id); err != nil {
+	if err := h.deployer.StopAppService(c.Request().Context(), existing); err != nil {
 		slog.Warn("failed to stop app service", "error", err)
-	}
-	if existing.ContainerID != "" {
-		if err := h.deployer.StopAppService(c.Request().Context(), id); err != nil {
-			slog.Warn("failed to stop container", "error", err)
-		}
 	}
 
 	if err := h.appService.DeleteAppService(c.Request().Context(), id); err != nil {
@@ -262,7 +257,7 @@ func (h *AppHandler) StopService(c echo.Context) error {
 	if err := h.verifyProjectOwnership(c, existing.ProjectID); err != nil {
 		return err
 	}
-	if err := h.deployer.StopAppService(c.Request().Context(), id); err != nil {
+	if err := h.deployer.StopAppService(c.Request().Context(), existing); err != nil {
 		return utils.Error(c, http.StatusInternalServerError, err.Error())
 	}
 	existing.Status = models.AppServiceStatusStopped
@@ -307,7 +302,7 @@ func (h *AppHandler) RestartService(c echo.Context) error {
 	if err := h.verifyProjectOwnership(c, existing.ProjectID); err != nil {
 		return err
 	}
-	if err := h.deployer.RestartAppService(c.Request().Context(), id); err != nil {
+	if err := h.deployer.RestartAppService(c.Request().Context(), existing); err != nil {
 		return utils.Error(c, http.StatusInternalServerError, err.Error())
 	}
 	existing.Status = models.AppServiceStatusRunning

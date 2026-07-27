@@ -16,6 +16,7 @@ import (
 
 	"codedock.run/codedock/internal/config"
 	"codedock.run/codedock/internal/engine"
+	"codedock.run/codedock/internal/engine/deploy"
 	"codedock.run/codedock/internal/models"
 	"codedock.run/codedock/internal/repositories"
 	"codedock.run/codedock/internal/services/projects"
@@ -26,7 +27,7 @@ type PRPreviewService struct {
 	repo        repositories.PRPreviewRepository
 	appService  *projects.AppService
 	gitService  *GitService
-	deployer    *engine.Deployer
+	deployer    *deploy.Deployer
 	workerHub   *engine.WorkerHub
 	projectRepo repositories.ProjectRepository
 }
@@ -35,7 +36,7 @@ func NewPRPreviewService(
 	repo repositories.PRPreviewRepository,
 	appService *projects.AppService,
 	gitService *GitService,
-	deployer *engine.Deployer,
+	deployer *deploy.Deployer,
 	workerHub *engine.WorkerHub,
 	projectRepo repositories.ProjectRepository,
 ) *PRPreviewService {
@@ -122,8 +123,11 @@ func (s *PRPreviewService) DestroyPRPreview(ctx context.Context, appID string, p
 	if err != nil {
 		return err
 	}
+	app, _ := s.appService.GetAppService(ctx, appID)
 	for _, p := range previews {
-		_ = s.deployer.StopAppService(ctx, p.ID)
+		if app != nil {
+			_ = s.deployer.StopAppService(ctx, app)
+		}
 		sourceDir := filepath.Join(utils.GetDataDir(), "builds", "pr-previews", p.ID)
 		_ = os.RemoveAll(sourceDir)
 		_ = s.repo.Delete(ctx, p.ID)

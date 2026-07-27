@@ -9,8 +9,8 @@ import (
 	"github.com/mark3labs/mcp-go/server"
 
 	"codedock.run/codedock/internal/core"
-	"codedock.run/codedock/internal/engine"
 	"codedock.run/codedock/internal/engine/cron"
+	"codedock.run/codedock/internal/engine/deploy"
 	"codedock.run/codedock/internal/engine/networking"
 	"codedock.run/codedock/internal/handlers/auth"
 	"codedock.run/codedock/internal/handlers/backups"
@@ -30,7 +30,7 @@ type Server struct {
 	authRateLimiter        *middleware.RateLimiter
 	otpRateLimiter         *middleware.RateLimiter
 	aiRateLimiter          *middleware.RateLimiter
-	deployer               *engine.Deployer
+	deployer               *deploy.Deployer
 	traefikManager         *networking.TraefikManager
 	dockerClient           *client.Client
 	tokenService           *authservices.TokenService

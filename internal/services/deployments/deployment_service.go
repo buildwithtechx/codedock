@@ -13,6 +13,7 @@ import (
 	"github.com/google/uuid"
 
 	"codedock.run/codedock/internal/engine"
+	"codedock.run/codedock/internal/engine/deploy"
 	"codedock.run/codedock/internal/engine/observability"
 	"codedock.run/codedock/internal/models"
 	"codedock.run/codedock/internal/repositories"
@@ -22,7 +23,7 @@ type DeploymentService struct {
 	repo         repositories.DeploymentRepository
 	appRepo      repositories.AppServiceRepository
 	projectRepo  repositories.ProjectRepository
-	deployer     *engine.Deployer
+	deployer     *deploy.Deployer
 	gitService   *GitService
 	statsMonitor *observability.StatsMonitor
 	volumeRepo   repositories.ServiceVolumeRepository
@@ -33,7 +34,7 @@ func NewDeploymentService(
 	r repositories.DeploymentRepository,
 	ar repositories.AppServiceRepository,
 	pr repositories.ProjectRepository,
-	d *engine.Deployer,
+	d *deploy.Deployer,
 	gs *GitService,
 	sm *observability.StatsMonitor,
 	vr repositories.ServiceVolumeRepository,
@@ -131,7 +132,7 @@ func (s *DeploymentService) ExecuteDeploymentAsync(d *models.Deployment) {
 			d.Status = models.DeploymentStatusPulling
 			_ = s.repo.Update(bgCtx, d)
 
-			containerID, err := s.deployer.DeployImage(bgCtx, app, nil)
+			containerID, err := s.deployer.DeployAppService(bgCtx, app, "", nil)
 			if err != nil {
 				_ = s.UpdateStatus(bgCtx, DeployStatusOpts{ID: d.ID, Status: models.DeploymentStatusFailed, BuildLogs: fmt.Sprintf("Image deploy failed: %v\n", err), ContainerID: ""})
 				return

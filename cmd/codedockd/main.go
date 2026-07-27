@@ -18,7 +18,7 @@ import (
 
 	"codedock.run/codedock/cmd/codedockd/commands"
 	"codedock.run/codedock/internal/config"
-	"codedock.run/codedock/internal/engine"
+	"codedock.run/codedock/internal/engine/deploy"
 	"codedock.run/codedock/internal/engine/networking"
 	"codedock.run/codedock/internal/engine/observability"
 	codedockhttp "codedock.run/codedock/internal/http"
@@ -80,7 +80,7 @@ func startServer() {
 	port := fmt.Sprintf("%d", config.Get().Server.Port)
 	addr := host + ":" + port
 
-	deployer := engine.NewDeployer(dockerClient, commands.NewDBDeployerStore(db, vlt))
+	deployer := deploy.NewDeployer(dockerClient, commands.NewDBDeployerStore(db, vlt))
 	apiServer, err := codedockhttp.NewServer(db, vlt, deployer, traefikMgr, dockerClient, dataDir)
 	if err != nil {
 		slog.Error("failed to initialize server", "err", err)
@@ -121,7 +121,7 @@ func runMCP() {
 	defer db.Close()
 
 	dockerClient, _ := client.NewClientWithOpts(client.FromEnv, client.WithAPIVersionNegotiation())
-	deployer := engine.NewDeployer(dockerClient, commands.NewDBDeployerStore(db, vlt))
+	deployer := deploy.NewDeployer(dockerClient, commands.NewDBDeployerStore(db, vlt))
 	traefikMgr := networking.NewTraefikManager(dockerClient, config.Get().Security.TLSEmail)
 	apiServer, err := codedockhttp.NewServer(db, vlt, deployer, traefikMgr, dockerClient, "")
 	if err != nil {

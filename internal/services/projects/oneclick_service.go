@@ -7,22 +7,22 @@ import (
 
 	"github.com/google/uuid"
 
-	"codedock.run/codedock/internal/engine"
 	"codedock.run/codedock/internal/engine/compose"
+	"codedock.run/codedock/internal/engine/deploy"
 	"codedock.run/codedock/internal/models"
 	"codedock.run/codedock/internal/repositories"
 )
 
 type OneClickService struct {
 	tmplManager *compose.TemplateManager
-	dbDeployer  *engine.DatabaseDeployer
+	dbDeployer  *deploy.DatabaseDeployer
 	envRepo     repositories.EnvironmentRepository
 	dbRepo      repositories.DatabaseRepository
 }
 
 func NewOneClickService(
 	tm *compose.TemplateManager,
-	dd *engine.DatabaseDeployer,
+	dd *deploy.DatabaseDeployer,
 	er repositories.EnvironmentRepository,
 	dr repositories.DatabaseRepository,
 ) *OneClickService {

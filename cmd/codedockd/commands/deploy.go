@@ -13,7 +13,7 @@ import (
 	"github.com/docker/docker/client"
 	"github.com/google/uuid"
 
-	"codedock.run/codedock/internal/engine"
+	"codedock.run/codedock/internal/engine/deploy"
 	"codedock.run/codedock/internal/models"
 	"codedock.run/codedock/internal/repositories"
 	"codedock.run/codedock/internal/utils"
@@ -65,7 +65,7 @@ func runDeploy(args []string) {
 	envID := setupEnvironment(envRepo, dArgs.projectID)
 	svc := setupAppService(appRepo, dArgs.projectID, envID, appName, dArgs)
 
-	deployer := engine.NewDeployer(dockerClient, &DBDeployerStore{DB: db, Vault: vlt})
+	deployer := deploy.NewDeployer(dockerClient, &DBDeployerStore{DB: db, Vault: vlt})
 
 	performDeployment(deployer, dockerClient, svc, dArgs, dataDir)
 	printDeploymentURL(settingsRepo, appName)
@@ -246,7 +246,7 @@ func setupAppService(appRepo *repositories.AppServiceRepo, projectID, envID, app
 	return svc
 }
 
-func performDeployment(deployer *engine.Deployer, dockerClient *client.Client, svc *models.AppService, dArgs deployArgs, dataDir string) {
+func performDeployment(deployer *deploy.Deployer, dockerClient *client.Client, svc *models.AppService, dArgs deployArgs, dataDir string) {
 	switch {
 	case dArgs.gitURL != "":
 		cloneDir := filepath.Join(dataDir, "builds", svc.ID)
@@ -272,7 +272,7 @@ func performDeployment(deployer *engine.Deployer, dockerClient *client.Client, s
 
 	case dArgs.imageRef != "":
 		fmt.Printf("🐳 Deploying image %s...\n", dArgs.imageRef)
-		containerID, err := deployer.DeployImage(context.Background(), svc, os.Stdout)
+		containerID, err := deployer.DeployAppService(context.Background(), svc, "", os.Stdout)
 		if err != nil {
 			exitError("Image deploy failed: %v", err)
 		}

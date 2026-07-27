@@ -1,4 +1,4 @@
-package engine
+package deploy
 
 import (
 	"context"
@@ -12,10 +12,9 @@ import (
 	"github.com/docker/docker/client"
 	"github.com/docker/go-connections/nat"
 
+	"codedock.run/codedock/internal/engine/observability"
 	"codedock.run/codedock/internal/models"
 	"codedock.run/codedock/internal/utils"
-
-	"codedock.run/codedock/internal/engine/observability"
 )
 
 type ContainerManager struct {

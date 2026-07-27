@@ -18,6 +18,7 @@ import (
 	"codedock.run/codedock/internal/engine/backup"
 	"codedock.run/codedock/internal/engine/compose"
 	"codedock.run/codedock/internal/engine/cron"
+	"codedock.run/codedock/internal/engine/deploy"
 	"codedock.run/codedock/internal/engine/networking"
 	"codedock.run/codedock/internal/engine/observability"
 	"codedock.run/codedock/internal/handlers/auth"
@@ -38,7 +39,7 @@ import (
 	"codedock.run/codedock/internal/utils"
 )
 
-func NewServer(db *sql.DB, v *utils.Vault, deployer *engine.Deployer, traefikManager *networking.TraefikManager, dockerClient *client.Client, dataDir string) (*Server, error) {
+func NewServer(db *sql.DB, v *utils.Vault, deployer *deploy.Deployer, traefikManager *networking.TraefikManager, dockerClient *client.Client, dataDir string) (*Server, error) {
 
 	e := echo.New()
 	e.Use(echomiddleware.RequestLoggerWithConfig(echomiddleware.RequestLoggerConfig{
@@ -104,7 +105,7 @@ func NewServer(db *sql.DB, v *utils.Vault, deployer *engine.Deployer, traefikMan
 	refreshTokenRepo := repositories.NewRefreshTokenRepo(db)
 
 	httpEngineAdapter := newEngineAdapter(settingsRepo, appRepo, envVarRepo, dbRepo, projectRepo, scheduledTaskRepo, backupRepo, s3DestinationRepo, serviceVarRepo, serverlessRepository)
-	databaseDeployer := engine.NewDatabaseDeployer(dockerClient, httpEngineAdapter)
+	databaseDeployer := deploy.NewDatabaseDeployer(dockerClient, httpEngineAdapter)
 
 	cronManager := cron.NewCronManager(dockerClient, httpEngineAdapter)
 
@@ -154,7 +155,7 @@ func NewServer(db *sql.DB, v *utils.Vault, deployer *engine.Deployer, traefikMan
 	deploymentService := deploymentservices.NewDeploymentService(deployRepo, appRepo, projectRepo, deployer, gitService, statsMonitor, volumeRepo, workerHub)
 	aiAnalysisService := projectservices.NewAIAnalysisService(deployRepo, appRepo, aiRepo)
 
-	autoscaler := engine.NewAutoscalerWorker(appRepo, statsMonitor, deploymentService)
+	autoscaler := deploy.NewAutoscalerWorker(appRepo, statsMonitor, deploymentService)
 	autoscaler.Start()
 
 	backupService := backupservices.NewBackupService(backupRepo, s3DestinationRepo, backupManager)
