@@ -1,32 +1,55 @@
 import { createContext, type ReactNode, useContext, useEffect, useState } from "react";
 
-type Theme = "dark";
+export type Theme = "dark" | "light" | "system";
 
 type ThemeContextValue = {
   theme: Theme;
-  toggleTheme: () => void;
   setTheme: (theme: Theme) => void;
 };
 
 const ThemeContext = createContext<ThemeContextValue | undefined>(undefined);
-const FIXED_THEME: Theme = "dark";
 
-export function ThemeProvider({ children }: { children: ReactNode }) {
-  const [theme, setThemeState] = useState<Theme>(FIXED_THEME);
+export interface ThemeProviderProps {
+  children: ReactNode;
+  defaultTheme?: Theme;
+  storageKey?: string;
+}
+
+export function ThemeProvider({
+  children,
+  defaultTheme = "dark",
+  storageKey = "codedock-theme",
+}: ThemeProviderProps) {
+  const [theme, setThemeState] = useState<Theme>(() => {
+    if (typeof window !== "undefined") {
+      return (localStorage.getItem(storageKey) as Theme) || defaultTheme;
+    }
+    return defaultTheme;
+  });
 
   useEffect(() => {
     const root = document.documentElement;
     root.classList.remove("light", "dark");
-    root.classList.add(FIXED_THEME);
-  }, []);
 
-  const value: ThemeContextValue = {
-    theme,
-    setTheme: () => setThemeState(FIXED_THEME),
-    toggleTheme: () => setThemeState(FIXED_THEME),
+    if (theme === "system") {
+      const systemTheme = window.matchMedia("(prefers-color-scheme: dark)").matches
+        ? "dark"
+        : "light";
+      root.classList.add(systemTheme);
+      return;
+    }
+
+    root.classList.add(theme);
+  }, [theme]);
+
+  const setTheme = (newTheme: Theme) => {
+    if (typeof window !== "undefined") {
+      localStorage.setItem(storageKey, newTheme);
+    }
+    setThemeState(newTheme);
   };
 
-  return <ThemeContext.Provider value={value}>{children}</ThemeContext.Provider>;
+  return <ThemeContext.Provider value={{ theme, setTheme }}>{children}</ThemeContext.Provider>;
 }
 
 export function useTheme() {

@@ -1,9 +1,9 @@
 import { createFileRoute } from "@tanstack/react-router";
-import { BottomCta } from "../components/bottom-cta";
-import { Features } from "../components/features";
-import { Hero } from "../components/hero";
-import { SocialProof } from "../components/social-proof";
-import { StackCarousel } from "../components/stack-carousel";
+import { BottomCta } from "../features/home/bottom-cta";
+import { Features } from "../features/home/features";
+import { Hero } from "../features/home/hero";
+import { SocialProof } from "../features/home/social-proof";
+import { StackCarousel } from "../features/home/stack-carousel";
 import { createMeta } from "../lib/seo";
 
 export const Route = createFileRoute("/")({

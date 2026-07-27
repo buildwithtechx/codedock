@@ -10,7 +10,7 @@ import { ThemeProvider } from "../components/theme-provider";
 import { Toaster } from "../components/ui/sonner";
 import { TooltipProvider } from "../components/ui/tooltip";
 import { createMeta, globalLinks } from "../lib/seo";
-import appCss from "../styles/global.css?url";
+import appCss from "../styles.css?url";
 
 interface MyRouterContext {
   queryClient: QueryClient;
@@ -30,13 +30,13 @@ export const Route = createRootRouteWithContext<MyRouterContext>()({
 
 function RootDocument({ children }: { children: ReactNode }) {
   return (
-    <html lang="en" className="dark bg-[#0f0f11]">
+    <html lang="en" suppressHydrationWarning>
       <head>
         <HeadContent />
       </head>
-      <body className="bg-[#0f0f11] text-white antialiased">
+      <body className="bg-background text-foreground font-sans antialiased overflow-x-hidden min-h-screen">
         <PosthogTracking />
-        <ThemeProvider>
+        <ThemeProvider defaultTheme="dark">
           <TooltipProvider>
             <div className="pointer-events-none fixed inset-0 bg-[radial-gradient(#6d28d9_1.5px,transparent_1.5px)] bg-size-[40px_40px] opacity-30 -z-10" />
             <Header />
