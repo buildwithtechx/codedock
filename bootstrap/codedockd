@@ -1,6 +1,4 @@
 #!/usr/bin/env bash
-# Codedock Control - CLI admin tool for Docker-based installations
-# Usage: codedockd <command> [args]
 set -eo pipefail
 
 CODEDOCK_DIR=${CODEDOCK_DIR:-/codedock}
@@ -13,25 +11,12 @@ YELLOW="\033[0;33m"
 RED="\033[0;31m"
 NC="\033[0m"
 
-if [ ! -f "$CODEDOCK_DIR/docker-compose.yml" ] && [ ! -f "./docker-compose.yml" ] && [ ! -f "./docker/docker-compose.yml" ]; then
-  echo -e "${RED}❌ No Codedock installation found.${NC} Expected docker-compose.yml in $CODEDOCK_DIR, current directory, or ./docker/docker-compose.yml."
-  exit 1
-fi
-
-if [ ! -f "$CODEDOCK_DIR/docker-compose.yml" ]; then
-  if [ -f "./docker-compose.yml" ]; then
-    CODEDOCK_DIR="."
-  elif [ -f "./docker/docker-compose.yml" ]; then
-    CODEDOCK_DIR="./docker"
-  fi
-fi
-
 exec_in_container() {
-  docker compose -f "$CODEDOCK_DIR/docker-compose.yml" exec -T "$SERVICE_NAME" codedockd "$@"
+  docker exec -i codedock-control-plane codedockd "$@"
 }
 
 container_running() {
-  docker ps --filter name="$CONTAINER_NAME" --format '{{.Status}}' 2>/dev/null | grep -q .
+  docker ps --filter name=codedock-control-plane --format '{{.Status}}' 2>/dev/null | grep -q .
 }
 
 show_help() {
@@ -101,19 +86,18 @@ case "${1:-help}" in
     fi
     echo ""
     echo -e "${BOLD}🔄 Restarting Codedock...${NC}"
-    docker compose -f "$CODEDOCK_DIR/docker-compose.yml" restart "$SERVICE_NAME"
+    docker restart codedock-control-plane
     echo -e "${GREEN}✅ Codedock restarted.${NC}"
     echo "   Run 'codedockctl status' to verify."
     ;;
   logs)
     shift
-    docker compose -f "$CODEDOCK_DIR/docker-compose.yml" logs "$@" "$SERVICE_NAME"
+    docker logs "$@" codedock-control-plane
     ;;
   status)
     echo -e "${BOLD}📊 Codedock Status${NC}"
     echo "━━━━━━━━━━━━━━━━━━━━━━"
 
-    # Daemon
     STATUS=$(docker ps --filter name="$CONTAINER_NAME" --format '{{.Status}}' 2>/dev/null)
     if [ -n "$STATUS" ]; then
       echo -e "  ${BOLD}Daemon:${NC}     ${GREEN}running${NC} ($STATUS)"
@@ -125,7 +109,6 @@ case "${1:-help}" in
     echo -e "  ${BOLD}Data dir:${NC}   $CODEDOCK_DIR/data"
     echo ""
 
-    # System resources
     echo -e "${BOLD}  System:${NC}"
     TOTAL_RAM=$(free -m | awk '/^Mem:/{print $2}')
     USED_RAM=$(free -m | awk '/^Mem:/{print $3}')
@@ -141,7 +124,6 @@ case "${1:-help}" in
     echo -e "    Load:      ${LOAD}"
     echo ""
 
-    # Active containers
     echo -e "${BOLD}  Active Containers:${NC}"
     CONTAINERS=$(docker ps --filter network=codedock-network --format '  {{.Names}} ({{.Image}}, {{.Status}})' 2>/dev/null)
     if [ -n "$CONTAINERS" ]; then
@@ -157,13 +139,11 @@ case "${1:-help}" in
     echo -e "${BOLD}🛰️  Codedock Update Check${NC}"
     echo "━━━━━━━━━━━━━━━━━━━━━━━━"
 
-    # Get current version
     CURRENT=$(exec_in_container version 2>/dev/null | awk '{print $2}' || echo "unknown")
 
     if [ "$TARGET_VERSION" = "latest" ]; then
       echo -e "  Current:    ${CURRENT}"
       echo -e "  Target:     ${BOLD}latest${NC} (checking GitHub...)"
-      # Try to fetch latest from GitHub
       LATEST=$(curl -fsS "https://api.github.com/repos/buildwithtechx/codedock/releases/latest" 2>/dev/null | grep '"tag_name"' | head -1 | cut -d'"' -f4 || echo "unknown")
       echo -e "  Available:  ${BOLD}${LATEST}${NC}"
       echo ""
@@ -197,15 +177,26 @@ case "${1:-help}" in
     echo -e "${BOLD}💾 Creating pre-update backup...${NC}"
     mkdir -p "$CODEDOCK_DIR/data/backups"
     if container_running; then
-      docker compose -f "$CODEDOCK_DIR/docker-compose.yml" exec -T "$SERVICE_NAME" sh -c "cp /codedock/data/codedock.db /codedock/data/backups/codedock-pre-upgrade-$(date +%Y%m%d%H%M%S).db" 2>/dev/null || true
+      docker exec -i codedock-control-plane sh -c "cp /codedock/data/codedock.db /codedock/data/backups/codedock-pre-upgrade-$(date +%Y%m%d%H%M%S).db" 2>/dev/null || true
     fi
     echo -e "${GREEN}✅ Backup saved to $CODEDOCK_DIR/data/backups/${NC}"
 
     export CODEDOCK_VERSION="${TARGET_VERSION}"
     echo -e "${BOLD}🐳 Pulling codedock:${TARGET_VERSION}...${NC}"
-    docker compose -f "$CODEDOCK_DIR/docker-compose.yml" pull
+    docker pull "ghcr.io/buildwithtechx/codedock:${TARGET_VERSION}"
     echo -e "${BOLD}🚀 Recreating container...${NC}"
-    docker compose -f "$CODEDOCK_DIR/docker-compose.yml" up -d --force-recreate
+    docker stop codedock-control-plane 2>/dev/null || true
+    docker rm codedock-control-plane 2>/dev/null || true
+    docker run -d \
+      --name codedock-control-plane \
+      --restart unless-stopped \
+      -p 8080:8080 -p 80:80 -p 443:443 \
+      --env-file "$CODEDOCK_DIR/.env" \
+      -e CODEDOCK_DATA_DIR=/codedock/data \
+      -v codedock_data:/codedock/data \
+      -v "${DOCKER_SOCKET_PATH:-/var/run/docker.sock}":/var/run/docker.sock:ro \
+      --network codedock-network \
+      ghcr.io/buildwithtechx/codedock:"${TARGET_VERSION}"
     echo -e "${GREEN}✅ Codedock updated to ${TARGET_VERSION}.${NC}"
     echo "   Your apps and databases experienced zero downtime."
     echo "   Run 'codedockctl status' to verify."
@@ -251,15 +242,26 @@ case "${1:-help}" in
     echo -e "${BOLD}💾 Creating pre-downgrade backup...${NC}"
     mkdir -p "$CODEDOCK_DIR/data/backups"
     if container_running; then
-      docker compose -f "$CODEDOCK_DIR/docker-compose.yml" exec -T "$SERVICE_NAME" sh -c "cp /codedock/data/codedock.db /codedock/data/backups/codedock-pre-downgrade-$(date +%Y%m%d%H%M%S).db" 2>/dev/null || true
+      docker exec -i codedock-control-plane sh -c "cp /codedock/data/codedock.db /codedock/data/backups/codedock-pre-downgrade-$(date +%Y%m%d%H%M%S).db" 2>/dev/null || true
       echo -e "${GREEN}✅ Backup saved.${NC}"
     fi
 
     export CODEDOCK_VERSION="${TARGET_VERSION}"
     echo -e "${BOLD}🐳 Pulling codedock:${TARGET_VERSION}...${NC}"
-    docker compose -f "$CODEDOCK_DIR/docker-compose.yml" pull
+    docker pull "ghcr.io/buildwithtechx/codedock:${TARGET_VERSION}"
     echo -e "${BOLD}🚀 Recreating container with v${TARGET_VERSION}...${NC}"
-    docker compose -f "$CODEDOCK_DIR/docker-compose.yml" up -d --force-recreate
+    docker stop codedock-control-plane 2>/dev/null || true
+    docker rm codedock-control-plane 2>/dev/null || true
+    docker run -d \
+      --name codedock-control-plane \
+      --restart unless-stopped \
+      -p 8080:8080 -p 80:80 -p 443:443 \
+      --env-file "$CODEDOCK_DIR/.env" \
+      -e CODEDOCK_DATA_DIR=/codedock/data \
+      -v codedock_data:/codedock/data \
+      -v "${DOCKER_SOCKET_PATH:-/var/run/docker.sock}":/var/run/docker.sock:ro \
+      --network codedock-network \
+      ghcr.io/buildwithtechx/codedock:"${TARGET_VERSION}"
     echo -e "${GREEN}✅ Downgraded to ${TARGET_VERSION}.${NC}"
     echo -e "${YELLOW}⚠️  If you encounter issues, restore from backup:${NC}"
     echo "   cp $CODEDOCK_DIR/data/backups/codedock-pre-downgrade-*.db $CODEDOCK_DIR/data/codedock.db"
@@ -278,7 +280,8 @@ case "${1:-help}" in
     fi
     echo ""
     echo -e "${BOLD}🛑 Stopping Codedock daemon...${NC}"
-    docker compose -f "$CODEDOCK_DIR/docker-compose.yml" stop "$SERVICE_NAME" 2>/dev/null || true
+    docker stop codedock-control-plane 2>/dev/null || true
+    docker rm codedock-control-plane 2>/dev/null || true
     if command -v systemctl &>/dev/null; then
       systemctl stop codedock.service 2>/dev/null || true
       systemctl disable codedock.service 2>/dev/null || true
@@ -295,7 +298,7 @@ case "${1:-help}" in
     echo "     docker ps --filter network=codedock-network"
     echo ""
     echo "   To fully remove all data (apps, databases, volumes):"
-    echo "     docker compose -f $CODEDOCK_DIR/docker-compose.yml down -v"
+    echo "     docker run --rm -v codedock_data:/codedock/data alpine rm -rf /codedock/data/* 2>/dev/null || true"
     echo "     rm -rf $CODEDOCK_DIR"
     ;;
 
@@ -304,9 +307,9 @@ case "${1:-help}" in
     mkdir -p "$CODEDOCK_DIR/data/backups"
     echo -e "${BOLD}💾 Creating database backup...${NC}"
     if container_running; then
-      docker compose -f "$CODEDOCK_DIR/docker-compose.yml" exec -T "$SERVICE_NAME" sh -c "cp /codedock/data/codedock.db /codedock/data/backups/tmp.db"
-      docker compose cp "$CONTAINER_NAME:/codedock/data/backups/tmp.db" "$BACKUP_FILE"
-      docker compose -f "$CODEDOCK_DIR/docker-compose.yml" exec -T "$SERVICE_NAME" sh -c "rm /codedock/data/backups/tmp.db"
+      docker exec -i codedock-control-plane sh -c "cp /codedock/data/codedock.db /codedock/data/backups/tmp.db"
+      docker cp codedock-control-plane:/codedock/data/backups/tmp.db "$BACKUP_FILE"
+      docker exec -i codedock-control-plane sh -c "rm /codedock/data/backups/tmp.db"
       echo -e "${GREEN}✅ Database backed up to $BACKUP_FILE${NC}"
       echo "   Size: $(du -h "$BACKUP_FILE" | cut -f1)"
     else

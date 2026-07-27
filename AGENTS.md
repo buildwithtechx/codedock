@@ -73,4 +73,3 @@ cd dashboard && npm run generate-routes  # regenerate TanStack route tree
 - Routes live in `dashboard/src/routes/` — TanStack Router file conventions.
 - Add shadcn/Radix UI components via `npx shadcn@latest add button`.
 - Components go in `dashboard/src/components/ui/`. Prefer existing Radix over building from scratch.
-

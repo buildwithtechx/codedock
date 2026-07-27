@@ -31,6 +31,12 @@ func Execute(ver string, startServerFunc func(), runMCPFunc func()) {
 		runRestart()
 	case "mcp":
 		runMCPFunc()
+	case "backup":
+		runBackup()
+	case "restore":
+		runRestore(os.Args[2:])
+	case "diagnostics":
+		runDiagnostics()
 	case "version", "--version", "-v":
 		fmt.Printf("codedockd %s %s/%s\n", ver, runtime.GOOS, runtime.GOARCH)
 	default:
@@ -95,6 +101,10 @@ func printHelp() {
 	fmt.Printf("  domain:list --project <id>         List domains\n")
 	fmt.Printf("  domain:add <host> --project <id>   Add a domain\n")
 	fmt.Printf("  domain:remove <id>                 Remove a domain\n\n")
+	fmt.Printf("Operations:\n")
+	fmt.Printf("  backup                   Create a full data backup archive\n")
+	fmt.Printf("  restore <file>           Restore from a backup archive\n")
+	fmt.Printf("  diagnostics              Show system diagnostics\n\n")
 	fmt.Printf("Other:\n")
 	fmt.Printf("  mcp                                Run MCP stdio server\n")
 	fmt.Printf("  version                            Show version\n")
@@ -117,16 +127,11 @@ func promptOptional(msg string) string {
 
 func runRestart() {
 	fmt.Println("🔄 Restarting Codedock daemon...")
-	if _, err := os.Stat("/codedock/docker-compose.yml"); err == nil {
-		cmd := exec.Command("docker", "compose", "-f", "/codedock/docker-compose.yml", "restart", "codedock")
-		cmd.Stdout = os.Stdout
-		cmd.Stderr = os.Stderr
-		if err := cmd.Run(); err != nil {
-			exitError("Restart failed: %v", err)
-		}
-	} else {
-		fmt.Println("   Standalone mode — exiting. Use systemd/supervisor to restart.")
-		os.Exit(0)
+	cmd := exec.Command("docker", "restart", "codedock-control-plane")
+	cmd.Stdout = os.Stdout
+	cmd.Stderr = os.Stderr
+	if err := cmd.Run(); err != nil {
+		exitError("Restart failed: %v", err)
 	}
 }
 

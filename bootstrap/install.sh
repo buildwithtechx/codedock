@@ -6,10 +6,8 @@ set -eo pipefail
 RELEASE=${CODEDOCK_VERSION:-1.0.0}
 CODEDOCK_DIR=/codedock
 REPO_URL="https://raw.githubusercontent.com/buildwithtechx/codedock/main"
-COMPOSE_URL="$REPO_URL/docker-compose.yml"
 CTL_URL="$REPO_URL/bootstrap/codedockd"
 
-COMPOSE_SHA256="${CODEDOCK_COMPOSE_SHA256:-}"
 CTL_SHA256="${CODEDOCK_CTL_SHA256:-}"
 
 setup_colors() {
@@ -135,13 +133,8 @@ setup_directories() {
 fetch_config_files() {
   echo -e "${BOLD}⬇️  Fetching configuration files...${NC}"
 
-  local compose_tmp ctl_tmp
-  compose_tmp=$(mktemp)
+  local ctl_tmp
   ctl_tmp=$(mktemp)
-
-  curl -fsSL "$COMPOSE_URL" -o "$compose_tmp"
-  verify_checksum "$compose_tmp" "$COMPOSE_SHA256" "docker-compose.yml"
-  mv "$compose_tmp" "$CODEDOCK_DIR/docker-compose.yml"
 
   curl -fsSL "$CTL_URL" -o "$ctl_tmp"
   verify_checksum "$ctl_tmp" "$CTL_SHA256" "codedockd"
@@ -212,9 +205,27 @@ ENV
 
 start_codedock() {
   echo -e "${BOLD}🐳 Pulling codedock:${RELEASE}...${NC}"
-  docker compose -f "$CODEDOCK_DIR/docker-compose.yml" pull
+  docker pull "ghcr.io/buildwithtechx/codedock:${RELEASE}"
+
+  echo -e "${BOLD}🔧 Creating Docker network...${NC}"
+  docker network create codedock-network 2>/dev/null || true
+
   echo -e "${BOLD}🚀 Starting Codedock...${NC}"
-  docker compose -f "$CODEDOCK_DIR/docker-compose.yml" up -d
+  docker run -d \
+    --name codedock-control-plane \
+    --restart unless-stopped \
+    -p 8080:8080 \
+    -p 80:80 \
+    -p 443:443 \
+    --env-file "$CODEDOCK_DIR/.env" \
+    -e CODEDOCK_DATA_DIR=/codedock/data \
+    -v codedock_data:/codedock/data \
+    -v "${DOCKER_SOCKET_PATH:-/var/run/docker.sock}":/var/run/docker.sock:ro \
+    --network codedock-network \
+    --label "traefik.enable=true" \
+    --label "traefik.http.routers.dashboard.rule=Host(\`${CODEDOCK_DOMAIN:-codedock.local}\`)" \
+    --label "traefik.http.services.dashboard.loadbalancer.server.port=8080" \
+    ghcr.io/buildwithtechx/codedock:"${RELEASE}"
 }
 
 check_health() {
@@ -243,8 +254,8 @@ Requires=docker.service
 Restart=always
 RestartSec=10
 WorkingDirectory=/codedock
-ExecStart=/usr/bin/docker compose -f /codedock/docker-compose.yml up codedock
-ExecStop=/usr/bin/docker compose -f /codedock/docker-compose.yml stop codedock
+ExecStart=/usr/bin/docker start -a codedock-control-plane
+ExecStop=/usr/bin/docker stop codedock-control-plane
 
 [Install]
 WantedBy=multi-user.target
