@@ -11,6 +11,8 @@ import (
 	"strings"
 
 	"github.com/docker/docker/client"
+
+	"codedock.run/codedock/internal/config"
 )
 
 type RailpackBuilder struct {
@@ -41,11 +43,11 @@ func (r *RailpackBuilder) Build(ctx context.Context, opts BuildOptions, engineNa
 		if opts.LogWriter != nil {
 			fmt.Fprintf(opts.LogWriter, "⚙️ [Buildpacks] Executing pack builder engine via Docker container...\n")
 		}
-		packImage := os.Getenv("CODEDOCK_PACK_IMAGE")
+		packImage := config.Get().Builder.PackImage
 		if packImage == "" {
 			packImage = "buildpacksio/pack:latest"
 		}
-		builderImage := os.Getenv("CODEDOCK_BUILDER_IMAGE")
+		builderImage := config.Get().Builder.BuilderImage
 		if builderImage == "" {
 			builderImage = "paketobuildpacks/builder:base"
 		}
@@ -70,7 +72,7 @@ func (r *RailpackBuilder) Build(ctx context.Context, opts BuildOptions, engineNa
 		if opts.LogWriter != nil {
 			fmt.Fprintf(opts.LogWriter, "⚙️ [Nixpacks] Executing Nixpacks builder engine via Docker container...\n")
 		}
-		nixpacksImage := os.Getenv("CODEDOCK_NIXPACKS_IMAGE")
+		nixpacksImage := config.Get().Builder.NixpacksImage
 		if nixpacksImage == "" {
 			nixpacksImage = "ghcr.io/railwayapp/nixpacks:latest"
 		}
@@ -125,14 +127,14 @@ func (r *RailpackBuilder) dockerRunArgs() []string {
 	args := []string{"run", "--rm"}
 	dockerHost := os.Getenv("DOCKER_HOST")
 	if dockerHost == "" {
-		dockerSocket := os.Getenv("DOCKER_SOCKET_PATH")
+		dockerSocket := config.Get().Docker.SocketPath
 		if dockerSocket == "" {
 			dockerSocket = "/var/run/docker.sock"
 		}
 		return append(args, "-v", fmt.Sprintf("%s:/var/run/docker.sock", dockerSocket))
 	}
 
-	network := os.Getenv("CODEDOCK_DOCKER_NETWORK")
+	network := config.Get().Docker.RuntimeNetwork
 	if network == "" {
 		network = "codedock-network"
 	}

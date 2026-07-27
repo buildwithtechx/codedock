@@ -7,16 +7,17 @@ import (
 	"os/signal"
 	"syscall"
 
+	"codedock.run/codedock/internal/config"
 	"codedock.run/codedock/internal/worker"
 )
 
 func runWorker() {
-	token := os.Getenv("CODEDOCK_WORKER_TOKEN")
+	token := config.Get().Worker.WorkerToken
 	if token == "" {
 		fmt.Println("Error: CODEDOCK_WORKER_TOKEN environment variable is required")
 		os.Exit(1)
 	}
-	serverURL := os.Getenv("CODEDOCK_SERVER_URL")
+	serverURL := config.Get().Server.ServerURL
 	if serverURL == "" {
 		fmt.Println("Error: CODEDOCK_SERVER_URL environment variable is required (e.g. wss://control-plane.example.com)")
 		os.Exit(1)

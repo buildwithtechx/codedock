@@ -5,7 +5,6 @@ import (
 	"fmt"
 	"io"
 	"log/slog"
-	"os"
 	"time"
 
 	"github.com/containerd/errdefs"
@@ -15,6 +14,8 @@ import (
 	"github.com/docker/docker/api/types/network"
 	"github.com/docker/docker/client"
 	"github.com/docker/go-connections/nat"
+
+	"codedock.run/codedock/internal/config"
 )
 
 const (
@@ -70,14 +71,14 @@ func (m *TraefikManager) ensureNetwork(ctx context.Context) error {
 }
 
 func traefikImage() string {
-	if img := os.Getenv("CODEDOCK_TRAEFIK_IMAGE"); img != "" {
+	if img := config.Get().Traefik.Image; img != "" {
 		return img
 	}
 	return "traefik:v3.6"
 }
 
 func dockerSocketPath() string {
-	if p := os.Getenv("DOCKER_SOCKET_PATH"); p != "" {
+	if p := config.Get().Docker.SocketPath; p != "" {
 		return p
 	}
 	return "/var/run/docker.sock"
@@ -138,34 +139,31 @@ func (m *TraefikManager) createTraefikContainer(ctx context.Context) error {
 
 func (m *TraefikManager) buildTraefikCmdArgs() []string {
 	cmdArgs := []string{
-		"--ping=true",
-		"--ping.entrypoint=http",
-		"--api.insecure=true",
 		"--providers.docker=true",
 		"--providers.docker.exposedbydefault=false",
-		"--providers.docker.network=" + CodedockNetworkName,
+		"--providers.docker.network=codedock-network",
 		"--entrypoints.web.address=:80",
 		"--entrypoints.websecure.address=:443",
-		"--entrypoints.https.http3=true",
-		"--entrypoints.web.http.redirections.entryPoint.to=websecure",
-		"--entrypoints.web.http.redirections.entryPoint.scheme=https",
+		"--api.insecure=true",
+		"--log.level=INFO",
 	}
 
 	if m.tlsEmail != "" {
 		cmdArgs = append(cmdArgs,
-			"--certificatesresolvers.letsencrypt.acme.tlschallenge=true",
-			"--certificatesresolvers.letsencrypt.acme.email="+m.tlsEmail,
-			"--certificatesresolvers.letsencrypt.acme.storage=/letsencrypt/acme.json",
+			"--certificatesresolvers.codedock-resolver.acme.email="+m.tlsEmail,
+			"--certificatesresolvers.codedock-resolver.acme.storage=/letsencrypt/acme.json",
+			"--certificatesresolvers.codedock-resolver.acme.httpchallenge=true",
+			"--certificatesresolvers.codedock-resolver.acme.httpchallenge.entrypoint=web",
 		)
 	}
-	if dockerHost := os.Getenv("CODEDOCK_TRAEFIK_DOCKER_HOST"); dockerHost != "" {
+	if dockerHost := config.Get().Traefik.DockerHost; dockerHost != "" {
 		cmdArgs = append(cmdArgs, "--providers.docker.endpoint="+dockerHost)
 	}
 	return cmdArgs
 }
 
 func (m *TraefikManager) buildTraefikMounts() []mount.Mount {
-	if os.Getenv("CODEDOCK_TRAEFIK_DOCKER_HOST") != "" {
+	if config.Get().Traefik.DockerHost != "" {
 		return m.buildTraefikDataMounts()
 	}
 
@@ -194,18 +192,10 @@ func (m *TraefikManager) buildTraefikDataMounts() []mount.Mount {
 }
 
 func (m *TraefikManager) buildPortBindings() nat.PortMap {
-	httpPort := os.Getenv("CODEDOCK_TRAEFIK_HTTP_PORT")
-	if httpPort == "" {
-		httpPort = "80"
-	}
-	httpsPort := os.Getenv("CODEDOCK_TRAEFIK_HTTPS_PORT")
-	if httpsPort == "" {
-		httpsPort = "443"
-	}
-	apiPort := os.Getenv("CODEDOCK_TRAEFIK_API_PORT")
-	if apiPort == "" {
-		apiPort = "8080"
-	}
+	cfg := config.Get()
+	httpPort := fmt.Sprintf("%d", cfg.Traefik.HTTPPort)
+	httpsPort := fmt.Sprintf("%d", cfg.Traefik.HTTPSPort)
+	apiPort := fmt.Sprintf("%d", cfg.Traefik.APIPort)
 	return nat.PortMap{
 		"80/tcp":   []nat.PortBinding{{HostIP: "0.0.0.0", HostPort: httpPort}},
 		"443/tcp":  []nat.PortBinding{{HostIP: "0.0.0.0", HostPort: httpsPort}},

@@ -8,10 +8,12 @@ import (
 	"runtime"
 	"strings"
 	"time"
+
+	"codedock.run/codedock/internal/config"
 )
 
 func runBackup() {
-	dataDir := os.Getenv("CODEDOCK_DATA_DIR")
+	dataDir := config.Get().Server.DataDir
 	if dataDir == "" {
 		dataDir = "/codedock/data"
 	}
@@ -48,7 +50,7 @@ func runRestore(args []string) {
 		exitError("Backup file not found: %s", backupFile)
 	}
 
-	dataDir := os.Getenv("CODEDOCK_DATA_DIR")
+	dataDir := config.Get().Server.DataDir
 	if dataDir == "" {
 		dataDir = "/codedock/data"
 	}

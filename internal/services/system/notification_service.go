@@ -3,8 +3,8 @@ package system
 import (
 	"context"
 	"errors"
-	"os"
 
+	"codedock.run/codedock/internal/config"
 	"codedock.run/codedock/internal/models"
 )
 
@@ -24,7 +24,7 @@ func (s *NotificationService) TestGlobalNotification(ctx context.Context, provid
 	if s.dispatcher == nil {
 		return errors.New("dispatcher unavailable")
 	}
-	dashboardURL := os.Getenv("CODEDOCK_DASHBOARD_URL")
+	dashboardURL := config.Get().Server.DashboardURL
 	return s.dispatcher.Send(&models.NotificationEvent{
 		EventType: "test_global_" + provider,
 		Title:     "Global Test Notification from Codedock",

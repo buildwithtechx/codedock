@@ -3,29 +3,15 @@ package networking
 import (
 	"fmt"
 	"net"
-	"os"
-	"strconv"
 
+	"codedock.run/codedock/internal/config"
 	"codedock.run/codedock/internal/utils"
 )
 
 func GetAvailablePort() (int, error) {
-	startStr := os.Getenv("DEPLOY_HOST_PORT_START")
-	endStr := os.Getenv("DEPLOY_HOST_PORT_END")
-
-	start := 4100
-	end := 4999
-
-	if startStr != "" {
-		if s, err := strconv.Atoi(startStr); err == nil {
-			start = s
-		}
-	}
-	if endStr != "" {
-		if e, err := strconv.Atoi(endStr); err == nil {
-			end = e
-		}
-	}
+	cfg := config.Get()
+	start := cfg.Docker.PortStart
+	end := cfg.Docker.PortEnd
 
 	if start > end {
 		start, end = end, start

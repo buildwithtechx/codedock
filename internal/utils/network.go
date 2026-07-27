@@ -2,14 +2,15 @@ package utils
 
 import (
 	"context"
-	"os"
 
 	"github.com/docker/docker/api/types/network"
 	"github.com/docker/docker/client"
+
+	"codedock.run/codedock/internal/config"
 )
 
 func GetDataDir() string {
-	dir := os.Getenv("CODEDOCK_DATA_DIR")
+	dir := config.Get().Server.DataDir
 	if dir == "" {
 		return "data"
 	}
@@ -17,7 +18,7 @@ func GetDataDir() string {
 }
 
 func GetRuntimeNetwork() string {
-	net := os.Getenv("CODEDOCK_RUNTIME_NETWORK")
+	net := config.Get().Docker.RuntimeNetwork
 	if net == "" {
 		return "codedock-network"
 	}

@@ -2,6 +2,7 @@ package main
 
 import (
 	"context"
+	"fmt"
 	"log/slog"
 	"net/http"
 	"os"
@@ -16,6 +17,7 @@ import (
 	_ "modernc.org/sqlite"
 
 	"codedock.run/codedock/cmd/codedockd/commands"
+	"codedock.run/codedock/internal/config"
 	"codedock.run/codedock/internal/engine"
 	"codedock.run/codedock/internal/engine/networking"
 	"codedock.run/codedock/internal/engine/observability"
@@ -51,7 +53,7 @@ func startServer() {
 		slog.Warn("Docker daemon connection warning", "err", err, "detail", "container deployment features disabled")
 	}
 
-	traefikMgr := networking.NewTraefikManager(dockerClient, os.Getenv("CODEDOCK_TLS_EMAIL"))
+	traefikMgr := networking.NewTraefikManager(dockerClient, config.Get().Security.TLSEmail)
 	if err := traefikMgr.EnsureTraefikRunning(context.Background()); err != nil {
 		slog.Warn("failed to start Traefik proxy", "err", err)
 	}
@@ -74,11 +76,8 @@ func startServer() {
 
 	system.StartTelemetryReporter(db, codedockVersion)
 
-	host := os.Getenv("HOST")
-	port := os.Getenv("PORT")
-	if port == "" {
-		port = "8080"
-	}
+	host := config.Get().Server.Host
+	port := fmt.Sprintf("%d", config.Get().Server.Port)
 	addr := host + ":" + port
 
 	deployer := engine.NewDeployer(dockerClient, commands.NewDBDeployerStore(db, vlt))
@@ -94,24 +93,25 @@ func startServer() {
 	}
 
 	go func() {
-		slog.Info("control plane listening", "addr", addr)
+		slog.Info("codedock server running", "addr", addr, "version", codedockVersion)
 		if err := srv.ListenAndServe(); err != nil && err != http.ErrServerClosed {
-			slog.Error("server crashed", "err", err)
-			os.Exit(1)
+			slog.Error("server error", "err", err)
 		}
 	}()
 
 	quit := make(chan os.Signal, 1)
 	signal.Notify(quit, syscall.SIGINT, syscall.SIGTERM)
 	<-quit
-	slog.Info("shutting down server gracefully...")
 
-	ctx, cancel := context.Background(), func() {}
-	ctx, cancel = context.WithTimeout(ctx, 10*time.Second)
+	slog.Info("shutting down server...")
+
+	ctx, cancel := context.WithTimeout(context.Background(), 10*time.Second)
 	defer cancel()
+
 	if err := srv.Shutdown(ctx); err != nil {
 		slog.Error("server forced to shutdown", "err", err)
 	}
+
 	slog.Info("server exited")
 }
 
@@ -122,7 +122,7 @@ func runMCP() {
 
 	dockerClient, _ := client.NewClientWithOpts(client.FromEnv, client.WithAPIVersionNegotiation())
 	deployer := engine.NewDeployer(dockerClient, commands.NewDBDeployerStore(db, vlt))
-	traefikMgr := networking.NewTraefikManager(dockerClient, os.Getenv("CODEDOCK_TLS_EMAIL"))
+	traefikMgr := networking.NewTraefikManager(dockerClient, config.Get().Security.TLSEmail)
 	apiServer, err := codedockhttp.NewServer(db, vlt, deployer, traefikMgr, dockerClient, "")
 	if err != nil {
 		slog.Error("failed to initialize server", "err", err)

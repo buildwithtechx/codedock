@@ -14,6 +14,7 @@ import (
 
 	"github.com/google/uuid"
 
+	"codedock.run/codedock/internal/config"
 	"codedock.run/codedock/internal/engine"
 	"codedock.run/codedock/internal/models"
 	"codedock.run/codedock/internal/repositories"
@@ -66,7 +67,7 @@ func (s *PRPreviewService) DeployPRPreview(ctx context.Context, opts DeployPRPre
 	}
 	previewDomain := fmt.Sprintf("pr-%d.%s", opts.PRNumber, app.Domain)
 	if app.Domain == "" {
-		magicDomain := os.Getenv("CODEDOCK_MAGIC_DOMAIN")
+		magicDomain := config.Get().Domains.MagicDomain
 		if magicDomain == "" {
 			magicDomain = "sslip.io"
 		}

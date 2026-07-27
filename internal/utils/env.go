@@ -1,7 +1,7 @@
 package utils
 
-import "os"
+import "codedock.run/codedock/internal/config"
 
 func IsDryRun() bool {
-	return os.Getenv("DEPLOY_DRY_RUN") == "true"
+	return config.Get().Docker.DryRun
 }

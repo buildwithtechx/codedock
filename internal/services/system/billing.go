@@ -4,13 +4,13 @@ import (
 	"context"
 	"encoding/json"
 	"fmt"
-	"os"
 
 	"github.com/stripe/stripe-go/v78"
 	"github.com/stripe/stripe-go/v78/checkout/session"
 	"github.com/stripe/stripe-go/v78/customer"
 	"github.com/stripe/stripe-go/v78/webhook"
 
+	"codedock.run/codedock/internal/config"
 	"codedock.run/codedock/internal/models"
 	"codedock.run/codedock/internal/repositories"
 )
@@ -20,7 +20,7 @@ type BillingService struct {
 }
 
 func NewBillingService(userRepo *repositories.UserRepo) *BillingService {
-	stripe.Key = os.Getenv("STRIPE_SECRET_KEY")
+	stripe.Key = config.Get().Stripe.SecretKey
 	return &BillingService{
 		userRepo: userRepo,
 	}
@@ -63,7 +63,7 @@ func (s *BillingService) CreateCheckoutSession(ctx context.Context, userID, pric
 }
 
 func (s *BillingService) HandleWebhook(ctx context.Context, payload []byte, signature string) error {
-	webhookSecret := os.Getenv("STRIPE_WEBHOOK_SECRET")
+	webhookSecret := config.Get().Stripe.WebhookSecret
 	if webhookSecret == "" {
 		return fmt.Errorf("stripe webhook secret not configured")
 	}

@@ -6,11 +6,11 @@ import (
 	"io"
 	"os"
 	"path/filepath"
-	"strconv"
 
 	"github.com/docker/docker/client"
 	"golang.org/x/sync/semaphore"
 
+	"codedock.run/codedock/internal/config"
 	"codedock.run/codedock/internal/models"
 )
 
@@ -47,10 +47,8 @@ type EngineBuilder struct {
 }
 
 func defaultConcurrentBuilds() int64 {
-	if s := os.Getenv("CODEDOCK_MAX_CONCURRENT_BUILDS"); s != "" {
-		if v, err := strconv.ParseInt(s, 10, 64); err == nil && v > 0 {
-			return v
-		}
+	if v := config.Get().Limits.MaxConcurrentBuilds; v > 0 {
+		return int64(v)
 	}
 	return 2
 }

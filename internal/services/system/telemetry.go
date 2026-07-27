@@ -4,10 +4,10 @@ import (
 	"context"
 	"database/sql"
 	"log/slog"
-	"os"
 	"runtime"
 	"time"
 
+	"codedock.run/codedock/internal/config"
 	"codedock.run/codedock/internal/repositories"
 	"codedock.run/codedock/internal/telemetry"
 )
@@ -51,6 +51,6 @@ func pingTelemetry(db *sql.DB, version string) {
 		"os":          runtime.GOOS,
 		"arch":        runtime.GOARCH,
 		"active_apps": activeApps,
-		"cloud_mode":  os.Getenv("CODEDOCK_CLOUD_MODE") == "true",
+		"cloud_mode":  config.Get().Cloud.Enabled,
 	})
 }

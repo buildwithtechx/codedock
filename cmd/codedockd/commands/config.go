@@ -5,6 +5,7 @@ import (
 	"fmt"
 	"os"
 
+	"codedock.run/codedock/internal/config"
 	"codedock.run/codedock/internal/repositories"
 )
 
@@ -23,7 +24,7 @@ func runConfig() {
 		fmt.Printf("  site-name:         %s\n", settings.SiteName)
 		fmt.Printf("  registration:      %v\n", settings.RegistrationEnabled)
 		fmt.Printf("  telemetry:         %v\n", settings.TelemetryEnabled)
-		fmt.Printf("  domain:            %s\n", os.Getenv("CODEDOCK_DOMAIN"))
+		fmt.Printf("  domain:            %s\n", config.Get().Server.Domain)
 		fmt.Printf("  smtp-enabled:      %v\n", notif.SMTPEnabled)
 		fmt.Printf("  resend-enabled:    %v\n", notif.ResendEnabled)
 		fmt.Println("\nUsage: codedockd config <key>=<value>")

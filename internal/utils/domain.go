@@ -2,13 +2,14 @@ package utils
 
 import (
 	"fmt"
-	"os"
 	"strings"
+
+	"codedock.run/codedock/internal/config"
 )
 
 func GenerateAppDomain(projectNameOrID string, hostIP string, wildcardDomain string) string {
 	if wildcardDomain == "" {
-		wildcardDomain = os.Getenv("CODEDOCK_WILDCARD_DOMAIN")
+		wildcardDomain = config.Get().Domains.WildcardDomain
 	}
 
 	if wildcardDomain != "" {
@@ -21,7 +22,7 @@ func GenerateAppDomain(projectNameOrID string, hostIP string, wildcardDomain str
 	}
 
 	if hostIP == "" {
-		hostIP = os.Getenv("CODEDOCK_HOST_IP")
+		hostIP = config.Get().Server.HostIP
 	}
 
 	if hostIP == "" {
@@ -30,7 +31,7 @@ func GenerateAppDomain(projectNameOrID string, hostIP string, wildcardDomain str
 
 	cleanIP := strings.ReplaceAll(strings.TrimSpace(hostIP), ".", "-")
 	cleanName := SanitizeDomainName(projectNameOrID)
-	magicDomain := os.Getenv("CODEDOCK_MAGIC_DOMAIN")
+	magicDomain := config.Get().Domains.MagicDomain
 	if magicDomain == "" {
 		magicDomain = "sslip.io"
 	}

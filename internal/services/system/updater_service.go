@@ -12,6 +12,7 @@ import (
 	"sync"
 	"time"
 
+	"codedock.run/codedock/internal/config"
 	"codedock.run/codedock/internal/repositories"
 )
 
@@ -111,11 +112,11 @@ func (u *UpdaterService) CheckForUpdates(ctx context.Context) (*UpdateInfo, erro
 	}
 	latestVer := currentVer
 	releaseNotes := "System is running optimal build."
-	downloadURL := os.Getenv("CODEDOCK_DOWNLOAD_URL")
+	downloadURL := config.Get().Updates.DownloadURL
 	if downloadURL == "" {
 		downloadURL = "https://github.com/buildwithtechx/codedock/releases"
 	}
-	releaseAPI := os.Getenv("CODEDOCK_UPDATE_URL")
+	releaseAPI := config.Get().Updates.UpdateURL
 	if releaseAPI == "" {
 		releaseAPI = "https://api.github.com/repos/buildwithtechx/codedock/releases/latest"
 	}

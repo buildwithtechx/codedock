@@ -2,26 +2,17 @@ package utils
 
 import (
 	"fmt"
-	"os"
 	"strings"
+
+	"codedock.run/codedock/internal/config"
 )
 
 func DefaultDBMemoryMB() int {
-	if m := os.Getenv("CODEDOCK_DEFAULT_DB_MEMORY_MB"); m != "" {
-		if v, err := parseInt(m); err == nil && v > 0 {
-			return v
-		}
-	}
-	return 1024
+	return int(config.Get().Defaults.DBMemoryMB)
 }
 
 func DefaultDBCPURequest() float64 {
-	if c := os.Getenv("CODEDOCK_DEFAULT_DB_CPU"); c != "" {
-		if v, err := parseFloat(c); err == nil && v > 0 {
-			return v
-		}
-	}
-	return 1.0
+	return config.Get().Defaults.DBCPU
 }
 
 func MegaBytesToBytes(mb int) int64 {
