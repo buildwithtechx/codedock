@@ -29,11 +29,11 @@ jobs:
           go-version: "1.25"
 
       - name: Install dependencies & build dashboard
+        working-directory: dashboard
         run: |
-          cd dashboard && npm ci
-          cd dashboard && npm run generate-routes
-          cd dashboard && npm run build
-        # We must build the dashboard first because Go uses //go:embed to bundle the React app inside the binary.
+          npm ci
+          npm run generate-routes
+          npm run build
 
       - name: Build and Package Binaries
         env:
