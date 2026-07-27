@@ -1,23 +1,33 @@
 {
-  "name": "@codedock/dashboard",
+  "name": "codedock",
   "private": true,
   "version": "0.1.0",
-  "description": "Codedock control panel GUI — React 19, TanStack Router, Tailwind CSS v4.",
+  "description": "Codedock self-hosted PaaS control plane & dashboard",
   "license": "Codedock Source-Available License",
   "type": "module",
   "imports": {
-    "#/*": "./src/*"
+    "#/*": "./dashboard/src/*"
   },
   "scripts": {
-    "dev": "vite dev --port 3000",
+    "dev": "concurrently -k -n \"daemon,dashboard\" -c \"blue,magenta\" \"npm run dev:daemon\" \"npm run dev:dashboard\"",
+    "dev:dryrun": "DEPLOY_DRY_RUN=true npm run dev",
+    "dev:daemon": "go run github.com/air-verse/air@latest -c .air.toml",
+    "dev:dashboard": "vite dev --port 3000",
     "generate-routes": "tsr generate",
-    "build": "vite build",
+    "build": "npm run build:dashboard && npm run build:daemon",
+    "build:daemon": "go build -ldflags \"-s -w\" -o bin/codedockd ./cmd/codedockd",
+    "build:dashboard": "vite build",
     "preview": "vite preview",
+    "check": "go fmt ./... && go vet ./... && npm run format",
+    "fmt": "go fmt ./... && npm run format:fix",
+    "format": "biome check dashboard/src",
+    "format:fix": "biome check --write dashboard/src",
     "typecheck": "tsc --noEmit",
-    "lint": "eslint .",
-    "format": "biome check src",
-    "format:fix": "biome check --write src",
-    "test": "vitest run"
+    "test": "go test ./... -v && vitest run",
+    "docker:build": "docker build -t ghcr.io/buildwithtechx/codedock:dev .",
+    "docker:up": "docker network create codedock-network 2>/dev/null || true && docker run -d --name codedock-control-plane --restart unless-stopped -p 8080:8080 -p 80:80 -p 443:443 -v codedock_data:/codedock/data -e CODEDOCK_DATA_DIR=/codedock/data -v /var/run/docker.sock:/var/run/docker.sock:ro --network codedock-network ghcr.io/buildwithtechx/codedock:dev",
+    "docker:down": "docker stop codedock-control-plane && docker rm codedock-control-plane",
+    "clean": "rm -rf bin codedockd dashboard/dist"
   },
   "dependencies": {
     "@ai-sdk/react": "^4.0.34",
@@ -69,6 +79,7 @@
     "@types/react-dom": "^19.2.3",
     "@vitejs/plugin-react": "^6.0.3",
     "babel-plugin-react-compiler": "^1.0.0",
+    "concurrently": "^10.0.4",
     "jsdom": "^29.1.1",
     "typescript": "^7.0.2",
     "vite": "^8.1.5",
