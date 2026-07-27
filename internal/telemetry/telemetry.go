@@ -2,10 +2,11 @@ package telemetry
 
 import (
 	"log"
-	"os"
 	"sync"
 
 	"github.com/posthog/posthog-go"
+
+	"codedock.run/codedock/internal/config"
 )
 
 var (
@@ -17,12 +18,13 @@ func Init() {
 	mu.Lock()
 	defer mu.Unlock()
 
-	apiKey := os.Getenv("POSTHOG_API_KEY")
+	cfg := config.Get()
+	apiKey := cfg.Telemetry.PosthogKey
 	if apiKey == "" {
-		return // telemetry disabled
+		return
 	}
 
-	host := os.Getenv("POSTHOG_HOST")
+	host := cfg.Telemetry.PosthogHost
 	if host == "" {
 		host = "https://us.i.posthog.com"
 	}

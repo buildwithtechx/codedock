@@ -4,10 +4,12 @@ import (
 	"os"
 	"path/filepath"
 
+	"github.com/labstack/echo/v4"
+
 	"codedock.run/codedock/dashboard"
+	"codedock.run/codedock/internal/config"
 	"codedock.run/codedock/internal/models"
 	"codedock.run/codedock/internal/utils"
-	"github.com/labstack/echo/v4"
 )
 
 func (s *Server) registerRoutes() {
@@ -323,7 +325,7 @@ func (s *Server) registerBillingRoutes(apiGroup, authGroup *echo.Group) {
 }
 
 func (s *Server) setupSPAFallback() {
-	staticDir := os.Getenv("CODEDOCK_STATIC_DIR")
+	staticDir := config.Get().Server.StaticDir
 
 	if staticDir != "" {
 		if stat, err := os.Stat(staticDir); err == nil && stat.IsDir() {

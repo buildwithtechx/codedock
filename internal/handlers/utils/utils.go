@@ -3,11 +3,11 @@ package handlerutils
 import (
 	"net/http"
 	"net/url"
-	"os"
 	"strings"
 
 	"github.com/labstack/echo/v4"
 
+	"codedock.run/codedock/internal/config"
 	"codedock.run/codedock/internal/models"
 	"codedock.run/codedock/internal/utils"
 )
@@ -89,7 +89,7 @@ func IsAllowedWebSocketOrigin(r *http.Request, origin string) bool {
 		"http://127.0.0.1:3000",
 		"http://127.0.0.1:8080",
 	}
-	if dashURL := os.Getenv("CODEDOCK_DASHBOARD_URL"); dashURL != "" {
+	if dashURL := config.Get().Server.DashboardURL; dashURL != "" {
 		allowed = append(allowed, dashURL)
 	}
 	for _, a := range allowed {

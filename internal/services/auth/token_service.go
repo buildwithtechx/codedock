@@ -2,11 +2,11 @@ package auth
 
 import (
 	"errors"
-	"os"
 	"time"
 
 	"github.com/golang-jwt/jwt/v5"
 
+	"codedock.run/codedock/internal/config"
 	"codedock.run/codedock/internal/models"
 )
 
@@ -16,11 +16,12 @@ type TokenService struct {
 }
 
 func NewTokenService() (*TokenService, error) {
-	secret := os.Getenv("CODEDOCK_JWT_SECRET")
+	cfg := config.Get()
+	secret := cfg.Security.JWTSecret
 	if secret == "" {
 		return nil, errors.New("CODEDOCK_JWT_SECRET environment variable is required")
 	}
-	refreshSecret := os.Getenv("CODEDOCK_REFRESH_SECRET")
+	refreshSecret := cfg.Security.RefreshSecret
 	if refreshSecret == "" {
 		refreshSecret = secret
 	}

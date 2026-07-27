@@ -9,6 +9,7 @@ import (
 
 	_ "modernc.org/sqlite"
 
+	"codedock.run/codedock/internal/config"
 	"codedock.run/codedock/internal/models"
 	"codedock.run/codedock/internal/repositories"
 	"codedock.run/codedock/internal/utils"
@@ -60,7 +61,7 @@ func (a *DBDeployerStore) GetRegistry(id string) (*models.Registry, error) {
 }
 
 func InitDataDir() (string, *sql.DB, *utils.Vault) {
-	dataDir := os.Getenv("CODEDOCK_DATA_DIR")
+	dataDir := config.Get().Server.DataDir
 	if dataDir == "" {
 		dataDir = "data"
 	}

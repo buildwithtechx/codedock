@@ -4,10 +4,12 @@ import (
 	"context"
 	"database/sql"
 	"log/slog"
+	"os"
 	"runtime"
 	"time"
 
 	"codedock.run/codedock/internal/repositories"
+	"codedock.run/codedock/internal/telemetry"
 )
 
 func StartTelemetryReporter(db *sql.DB, version string) {
@@ -43,4 +45,12 @@ func pingTelemetry(db *sql.DB, version string) {
 	}
 
 	slog.Info("telemetry", "instance", settings.ID, "version", version, "os", runtime.GOOS, "arch", runtime.GOARCH, "apps", activeApps)
+
+	telemetry.Track(settings.ID, "telemetry_heartbeat", map[string]any{
+		"version":     version,
+		"os":          runtime.GOOS,
+		"arch":        runtime.GOARCH,
+		"active_apps": activeApps,
+		"cloud_mode":  os.Getenv("CODEDOCK_CLOUD_MODE") == "true",
+	})
 }

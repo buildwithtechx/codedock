@@ -3,10 +3,10 @@ package system
 import (
 	"io"
 	"net/http"
-	"os"
 
 	"github.com/labstack/echo/v4"
 
+	"codedock.run/codedock/internal/config"
 	"codedock.run/codedock/internal/models"
 	systemservices "codedock.run/codedock/internal/services/system"
 )
@@ -69,8 +69,9 @@ func (h *BillingHandler) Webhook(c echo.Context) error {
 }
 
 func (h *BillingHandler) GetConfig(c echo.Context) error {
+	cfg := config.Get()
 	return c.JSON(http.StatusOK, map[string]any{
-		"publishableKey": os.Getenv("STRIPE_PUBLISHABLE_KEY"),
+		"publishableKey": cfg.Stripe.PublishableKey,
 		"plans": []map[string]any{
 			{
 				"id":       "free",
@@ -82,7 +83,7 @@ func (h *BillingHandler) GetConfig(c echo.Context) error {
 				"id":       "pro",
 				"name":     "Pro",
 				"price":    9.99,
-				"priceId":  os.Getenv("STRIPE_PRICE_ID_PRO"),
+				"priceId":  cfg.Stripe.PriceIDPro,
 				"features": []string{"Unlimited Projects", "Priority Support", "Analytics"},
 			},
 		},

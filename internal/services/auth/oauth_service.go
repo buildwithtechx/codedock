@@ -4,11 +4,13 @@ import (
 	"context"
 	"errors"
 	"fmt"
+	"strings"
 	"sync"
 	"time"
 
 	"github.com/google/uuid"
 
+	"codedock.run/codedock/internal/config"
 	"codedock.run/codedock/internal/models"
 	"codedock.run/codedock/internal/repositories"
 	"codedock.run/codedock/internal/utils"
@@ -32,6 +34,30 @@ func NewOAuthService(or repositories.OAuthRepository, ur repositories.UserReposi
 	}
 }
 
+func getEnvOAuthProvider(name string) *models.OAuthProviderConfig {
+	name = strings.ToLower(name)
+	cfg := config.Get()
+	var id, secret string
+	switch name {
+	case "github":
+		id = cfg.OAuth.GitHubClientID
+		secret = cfg.OAuth.GitHubClientSecret
+	case "google":
+		id = cfg.OAuth.GoogleClientID
+		secret = cfg.OAuth.GoogleClientSecret
+	}
+	if id != "" && secret != "" {
+		return &models.OAuthProviderConfig{
+			ID:           "env-" + name,
+			ProviderName: name,
+			ClientID:     id,
+			ClientSecret: secret,
+			Enabled:      true,
+		}
+	}
+	return nil
+}
+
 func (s *OAuthService) ListProviders(ctx context.Context) ([]models.OAuthProviderConfig, error) {
 	return s.oauthRepo.ListProviders(ctx)
 }
@@ -39,15 +65,27 @@ func (s *OAuthService) ListProviders(ctx context.Context) ([]models.OAuthProvide
 func (s *OAuthService) ListEnabledProviders(ctx context.Context) ([]models.OAuthProviderConfig, error) {
 	allProviders, err := s.oauthRepo.ListProviders(ctx)
 	if err != nil {
-		return nil, err
+		allProviders = []models.OAuthProviderConfig{}
 	}
+	providerMap := make(map[string]bool)
 	var enabledProviders []models.OAuthProviderConfig
 	for _, p := range allProviders {
 		if p.Enabled {
 			p.ClientSecret = ""
 			enabledProviders = append(enabledProviders, p)
+			providerMap[strings.ToLower(p.ProviderName)] = true
 		}
 	}
+
+	for _, name := range []string{"github", "google"} {
+		if !providerMap[name] {
+			if envP := getEnvOAuthProvider(name); envP != nil {
+				envP.ClientSecret = ""
+				enabledProviders = append(enabledProviders, *envP)
+			}
+		}
+	}
+
 	return enabledProviders, nil
 }
 
@@ -55,7 +93,17 @@ func (s *OAuthService) GetProvider(ctx context.Context, idOrName string) (*model
 	if idOrName == "" {
 		return nil, errors.New("provider id or name required")
 	}
-	return s.oauthRepo.GetProvider(ctx, idOrName)
+	p, err := s.oauthRepo.GetProvider(ctx, idOrName)
+	if err == nil && p != nil && p.Enabled {
+		return p, nil
+	}
+	if envP := getEnvOAuthProvider(idOrName); envP != nil {
+		return envP, nil
+	}
+	if p != nil {
+		return p, nil
+	}
+	return nil, err
 }
 
 func (s *OAuthService) SaveProvider(ctx context.Context, p *models.OAuthProviderConfig) error {

@@ -6,13 +6,13 @@ import (
 	"fmt"
 	"log/slog"
 	"net/http"
-	"os"
 	"time"
 
 	"github.com/docker/docker/client"
 	"github.com/labstack/echo/v4"
 	echomiddleware "github.com/labstack/echo/v4/middleware"
 
+	"codedock.run/codedock/internal/config"
 	"codedock.run/codedock/internal/core"
 	"codedock.run/codedock/internal/engine"
 	"codedock.run/codedock/internal/engine/backup"
@@ -56,7 +56,7 @@ func NewServer(db *sql.DB, v *utils.Vault, deployer *engine.Deployer, traefikMan
 	}))
 
 	allowOrigins := []string{"http://localhost:3000", "http://localhost:8080"}
-	if dashboardURL := os.Getenv("CODEDOCK_DASHBOARD_URL"); dashboardURL != "" {
+	if dashboardURL := config.Get().Server.DashboardURL; dashboardURL != "" {
 		allowOrigins = append(allowOrigins, dashboardURL)
 	}
 

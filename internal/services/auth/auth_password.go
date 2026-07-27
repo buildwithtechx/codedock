@@ -8,9 +8,21 @@ import (
 
 	"github.com/google/uuid"
 
+	"codedock.run/codedock/internal/config"
 	"codedock.run/codedock/internal/models"
 	"codedock.run/codedock/internal/utils"
 )
+
+func isEmailEnabled(cfg *models.NotificationSettings) bool {
+	if cfg != nil && (cfg.SMTPEnabled || cfg.ResendEnabled) {
+		return true
+	}
+	appCfg := config.Get()
+	if appCfg.Cloud.Enabled {
+		return true
+	}
+	return appCfg.SMTP.Host != "" || appCfg.Resend.APIKey != ""
+}
 
 func (a *AuthService) ForgotPassword(ctx context.Context, email string, originUrl string) error {
 	originUrl = a.getBaseUrl(ctx, originUrl)
@@ -18,12 +30,8 @@ func (a *AuthService) ForgotPassword(ctx context.Context, email string, originUr
 		return errors.New("email is required")
 	}
 
-	cfg, err := a.notifRepo.GetNotificationSettings(ctx)
-	if err != nil || cfg == nil {
-		return errors.New("could not load notification settings")
-	}
-
-	if !cfg.SMTPEnabled && !cfg.ResendEnabled {
+	cfg, _ := a.notifRepo.GetNotificationSettings(ctx)
+	if !isEmailEnabled(cfg) {
 		return errors.New("your team is yet to set or enable email")
 	}
 
@@ -117,12 +125,8 @@ func (a *AuthService) SendEmailVerification(ctx context.Context, email string, o
 		return errors.New("email is required")
 	}
 
-	cfg, err := a.notifRepo.GetNotificationSettings(ctx)
-	if err != nil || cfg == nil {
-		return errors.New("could not load notification settings")
-	}
-
-	if !cfg.SMTPEnabled && !cfg.ResendEnabled {
+	cfg, _ := a.notifRepo.GetNotificationSettings(ctx)
+	if !isEmailEnabled(cfg) {
 		return errors.New("email is not configured on this server")
 	}
 
