@@ -1,0 +1,72 @@
+name: Bug Report
+description: Create a bug report for Codedock
+labels: ["needs-triage🔍"]
+body:
+  - type: markdown
+    attributes:
+      value: |
+        Before opening a new issue, please search existing issues and discussions.
+
+        If you need help configuring your deployment, start a discussion in [GitHub Discussions](https://github.com/buildwithtechx/codedock/discussions).
+  - type: textarea
+    attributes:
+      label: To Reproduce
+      description: |
+        A detailed, step-by-step description of how to reproduce the issue is required.
+        Please ensure your report includes clear instructions using numbered lists.
+      placeholder: |
+        1. Create an application service
+        2. Set environment variable X
+        3. Click Deploy
+    validations:
+      required: true
+  - type: textarea
+    attributes:
+      label: Current vs. Expected behavior
+      description: A clear and concise description of what the bug is, and what you expected to happen.
+      placeholder: "Following the steps above, I expected A to happen, but I observed B instead"
+    validations:
+      required: true
+  - type: textarea
+    attributes:
+      label: Provide environment information
+      description: Please provide details about your environment.
+      render: bash
+      placeholder: |
+        Operating System: Ubuntu 22.04 LTS (x86_64)
+        Codedock version: v1.0.0
+        VPS Provider: DigitalOcean, Hetzner, AWS, etc.
+        Application/Database type being deployed: Postgres, Node.js, Go, Docker Compose, etc.
+    validations:
+      required: true
+  - type: dropdown
+    attributes:
+      label: Which area(s) are affected? (Select all that apply)
+      multiple: true
+      options:
+        - "Installation & Daemon Setup"
+        - "Application Deployments"
+        - "Databases & Data Browser"
+        - "Docker Compose"
+        - "Networking & Traefik"
+        - "S3 / R2 Backups"
+        - "Yamux Tunnel / Remote Nodes"
+        - "Dashboard UI"
+    validations:
+      required: true
+  - type: textarea
+    attributes:
+      label: Additional context
+      description: Any extra logs, stack traces, or screenshots that might help us investigate.
+      placeholder: |
+        Container logs or error traceback from codedockd.
+  - type: dropdown
+    attributes:
+      label: Will you send a PR to fix it?
+      description: Let us know if you are planning to submit a pull request to address this issue.
+      options:
+        - "Yes"
+        - "No"
+        - "Maybe, need help"
+    validations:
+      required: true

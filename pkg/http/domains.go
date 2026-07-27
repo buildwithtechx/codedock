@@ -6,11 +6,10 @@ import (
 	"io"
 	nethttp "net/http"
 
-	"codedock.run/codedock/internal/models"
+	"codedock.run/codedock/pkg/types"
 )
 
-// ListDomains retrieves the domains for a service.
-func (c *Client) ListDomains(serviceID string) ([]*models.DomainConfig, error) {
+func (c *Client) ListDomains(serviceID string) ([]*types.DomainConfig, error) {
 	resp, err := c.sendRequest("GET", fmt.Sprintf("/services/%s/domains", serviceID), nil)
 	if err != nil {
 		return nil, err
@@ -23,7 +22,7 @@ func (c *Client) ListDomains(serviceID string) ([]*models.DomainConfig, error) {
 	}
 
 	var result struct {
-		Data []*models.DomainConfig `json:"data"`
+		Data []*types.DomainConfig `json:"data"`
 	}
 	if err := json.NewDecoder(resp.Body).Decode(&result); err != nil {
 		return nil, err
@@ -32,8 +31,7 @@ func (c *Client) ListDomains(serviceID string) ([]*models.DomainConfig, error) {
 	return result.Data, nil
 }
 
-// AddDomain adds a new domain to a service.
-func (c *Client) AddDomain(serviceID string, req *models.DomainConfig) (*models.DomainConfig, error) {
+func (c *Client) AddDomain(serviceID string, req *types.DomainConfig) (*types.DomainConfig, error) {
 	resp, err := c.sendRequest("POST", fmt.Sprintf("/services/%s/domains", serviceID), req)
 	if err != nil {
 		return nil, err
@@ -46,7 +44,7 @@ func (c *Client) AddDomain(serviceID string, req *models.DomainConfig) (*models.
 	}
 
 	var result struct {
-		Data *models.DomainConfig `json:"data"`
+		Data *types.DomainConfig `json:"data"`
 	}
 	if err := json.NewDecoder(resp.Body).Decode(&result); err != nil {
 		return nil, err
@@ -55,7 +53,6 @@ func (c *Client) AddDomain(serviceID string, req *models.DomainConfig) (*models.
 	return result.Data, nil
 }
 
-// RemoveDomain removes a domain.
 func (c *Client) RemoveDomain(domainID string) error {
 	resp, err := c.sendRequest("DELETE", fmt.Sprintf("/domains/%s", domainID), nil)
 	if err != nil {

@@ -7,14 +7,12 @@ import (
 	"path/filepath"
 )
 
-// Config represents the CLI configuration state stored on the user's machine.
 type Config struct {
 	ServerURL string `json:"serverUrl"`
 	Token     string `json:"token"`
 	Email     string `json:"email,omitempty"`
 }
 
-// GetConfigPath returns the absolute path to ~/.codedock/config.json
 func GetConfigPath() (string, error) {
 	home, err := os.UserHomeDir()
 	if err != nil {
@@ -23,8 +21,6 @@ func GetConfigPath() (string, error) {
 	return filepath.Join(home, ".codedock", "config.json"), nil
 }
 
-// Load reads the configuration from disk.
-// If the file does not exist, it returns an empty configuration.
 func Load() (*Config, error) {
 	path, err := GetConfigPath()
 	if err != nil {
@@ -34,7 +30,7 @@ func Load() (*Config, error) {
 	data, err := os.ReadFile(path)
 	if err != nil {
 		if os.IsNotExist(err) {
-			return &Config{}, nil // Return empty config if file doesn't exist yet
+			return &Config{}, nil
 		}
 		return nil, fmt.Errorf("failed to read config file: %w", err)
 	}
@@ -47,7 +43,6 @@ func Load() (*Config, error) {
 	return &cfg, nil
 }
 
-// Save writes the configuration to disk, creating the directory if needed.
 func Save(cfg *Config) error {
 	path, err := GetConfigPath()
 	if err != nil {

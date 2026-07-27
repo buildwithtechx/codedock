@@ -6,7 +6,7 @@ import (
 	"testing"
 
 	"codedock.run/codedock/internal/models"
-	"codedock.run/codedock/internal/services"
+	"codedock.run/codedock/internal/services/projects"
 )
 
 type mockAppRepo struct {
@@ -95,7 +95,7 @@ func (m *mockVolRepo) Delete(ctx context.Context, id string) error { return nil 
 
 func TestCreateAppService(t *testing.T) {
 	repo := &mockAppRepo{apps: make(map[string]*models.AppService)}
-	svc := services.NewAppService(repo, &mockVarRepo{}, &mockVolRepo{})
+	svc := projects.NewAppService(repo, &mockVarRepo{}, &mockVolRepo{})
 
 	ctx := context.Background()
 
@@ -126,7 +126,7 @@ func TestCreateAppService(t *testing.T) {
 
 func TestGetAppService(t *testing.T) {
 	repo := &mockAppRepo{apps: make(map[string]*models.AppService)}
-	svc := services.NewAppService(repo, &mockVarRepo{}, &mockVolRepo{})
+	svc := projects.NewAppService(repo, &mockVarRepo{}, &mockVolRepo{})
 
 	ctx := context.Background()
 	_, err := svc.GetAppService(ctx, "")

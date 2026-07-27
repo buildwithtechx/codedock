@@ -3,7 +3,6 @@ package middleware
 import (
 	"context"
 	"fmt"
-	"net"
 	"net/http"
 	"strings"
 	"time"
@@ -12,7 +11,7 @@ import (
 
 	"codedock.run/codedock/internal/models"
 	"codedock.run/codedock/internal/repositories"
-	"codedock.run/codedock/internal/services"
+	"codedock.run/codedock/internal/services/auth"
 	"codedock.run/codedock/internal/utils"
 )
 
@@ -33,23 +32,31 @@ type OrganizationMemberProvider interface {
 	GetMember(ctx context.Context, orgID, userID string) (*models.OrganizationMember, error)
 }
 
-type AuthGuard struct {
-	TokenService  *services.TokenService
-	Settings      SettingsProvider
-	ProjectTokens ProjectTokenProvider
-	OrgMembers    OrganizationMemberProvider
-	ProjectRepo   repositories.ProjectRepository
+type UserStatusProvider interface {
+	GetUserByID(ctx context.Context, id string) (*models.User, error)
 }
 
-func NewAuthGuard(ts *services.TokenService, sp SettingsProvider, pt ProjectTokenProvider, orgMembers OrganizationMemberProvider, pr repositories.ProjectRepository) *AuthGuard {
-	return &AuthGuard{TokenService: ts, Settings: sp, ProjectTokens: pt, OrgMembers: orgMembers, ProjectRepo: pr}
+type AuthGuard struct {
+	TokenService       *auth.TokenService
+	Settings           SettingsProvider
+	ProjectTokens      ProjectTokenProvider
+	OrgMembers         OrganizationMemberProvider
+	ProjectRepo        repositories.ProjectRepository
+	UserStatusProvider UserStatusProvider
+}
+
+func NewAuthGuard(ts *auth.TokenService, sp SettingsProvider, pt ProjectTokenProvider, orgMembers OrganizationMemberProvider, pr repositories.ProjectRepository, userStatus UserStatusProvider) *AuthGuard {
+	return &AuthGuard{TokenService: ts, Settings: sp, ProjectTokens: pt, OrgMembers: orgMembers, ProjectRepo: pr, UserStatusProvider: userStatus}
 }
 
 func (g *AuthGuard) checkIPAllowlist(c echo.Context) error {
 	if g.Settings == nil {
 		return nil
 	}
-	settings, _ := g.Settings.GetSettings(c.Request().Context())
+	settings, err := g.Settings.GetSettings(c.Request().Context())
+	if err != nil {
+		return utils.Error(c, http.StatusInternalServerError, "failed to load server security policy")
+	}
 	if settings == nil || strings.TrimSpace(settings.IPAllowlist) == "" {
 		return nil
 	}
@@ -98,9 +105,17 @@ func (g *AuthGuard) validateJWT(c echo.Context, tokenStr string) (*models.UserCl
 		return nil, utils.Error(c, http.StatusUnauthorized, "invalid authentication token: "+err.Error())
 	}
 
+	userID := fmt.Sprintf("%v", claimsMap["sub"])
+	if g.UserStatusProvider != nil && userID != "" {
+		u, err := g.UserStatusProvider.GetUserByID(c.Request().Context(), userID)
+		if err != nil || u == nil || !u.IsActive {
+			return nil, utils.Error(c, http.StatusUnauthorized, "user account not found or deactivated")
+		}
+	}
+
 	totpEnabled, _ := claimsMap["totpEnabled"].(bool)
 	return &models.UserClaims{
-		UserID:      fmt.Sprintf("%v", claimsMap["sub"]),
+		UserID:      userID,
 		Email:       fmt.Sprintf("%v", claimsMap["email"]),
 		Role:        models.UserRole(fmt.Sprintf("%v", claimsMap["role"])),
 		TOTPEnabled: totpEnabled,
@@ -113,13 +128,6 @@ func (g *AuthGuard) baseAuth(c echo.Context, denyAPITokens bool) (*models.UserCl
 	}
 	tokenStr := ExtractTokenFromRequest(c)
 	if tokenStr == "" {
-		if g.TokenService == nil {
-			return &models.UserClaims{
-				UserID: "default",
-				Email:  "default@codedock.run",
-				Role:   "admin",
-			}, nil
-		}
 		return nil, utils.Error(c, http.StatusUnauthorized, "missing authentication token")
 	}
 
@@ -128,173 +136,4 @@ func (g *AuthGuard) baseAuth(c echo.Context, denyAPITokens bool) (*models.UserCl
 	}
 
 	return g.validateJWT(c, tokenStr)
-}
-
-func (g *AuthGuard) RequireAuth() echo.MiddlewareFunc {
-	return func(next echo.HandlerFunc) echo.HandlerFunc {
-		return func(c echo.Context) error {
-			userClaims, err := g.baseAuth(c, false)
-			if err != nil {
-				return err
-			}
-			c.Set("user", userClaims)
-			ctx := context.WithValue(c.Request().Context(), userClaimsKey, userClaims)
-			c.SetRequest(c.Request().WithContext(ctx))
-			return next(c)
-		}
-	}
-}
-
-func IsIPAllowed(clientIPStr string, allowlistStr string) bool {
-	clientIP := net.ParseIP(clientIPStr)
-	if clientIP == nil {
-		return false
-	}
-	entries := strings.Split(allowlistStr, ",")
-	for _, entry := range entries {
-		entry = strings.TrimSpace(entry)
-		if entry == "" {
-			continue
-		}
-		if strings.Contains(entry, "/") {
-			_, cidrNet, err := net.ParseCIDR(entry)
-			if err == nil && cidrNet.Contains(clientIP) {
-				return true
-			}
-		} else {
-			if clientIPStr == entry {
-				return true
-			}
-		}
-	}
-	return false
-}
-
-func ExtractClientIP(c echo.Context) string {
-	return c.RealIP()
-}
-
-func (g *AuthGuard) RequireScope(requiredScope string) echo.MiddlewareFunc {
-	return func(next echo.HandlerFunc) echo.HandlerFunc {
-		return func(c echo.Context) error {
-			userClaims, ok := c.Get("user").(*models.UserClaims)
-			if !ok || userClaims == nil {
-				return utils.Error(c, http.StatusUnauthorized, "unauthorized")
-			}
-			if userClaims.Role == "api" {
-				scopes, ok := c.Get("api_scopes").([]string)
-				if !ok {
-					return utils.Error(c, http.StatusForbidden, "insufficient scopes")
-				}
-				hasScope := false
-				for _, s := range scopes {
-					if s == requiredScope || s == "admin" || s == "*" {
-						hasScope = true
-						break
-					}
-				}
-				if !hasScope {
-					return utils.Error(c, http.StatusForbidden, "missing required scope: "+requiredScope)
-				}
-			}
-			return next(c)
-		}
-	}
-}
-
-func (g *AuthGuard) RequireProjectRole(minPermission models.MemberPermission) echo.MiddlewareFunc {
-	return func(next echo.HandlerFunc) echo.HandlerFunc {
-		return func(c echo.Context) error {
-			userClaims, ok := c.Get("user").(*models.UserClaims)
-			if !ok || userClaims == nil {
-				return utils.Error(c, http.StatusUnauthorized, "unauthorized")
-			}
-
-			if userClaims.Role == "admin" {
-				return next(c)
-			}
-
-			projectID := c.Param("projectId")
-			if projectID == "" {
-				projectID = c.Param("id") // fallback if route uses :id instead of :projectId
-			}
-			if projectID == "" {
-				return utils.Error(c, http.StatusBadRequest, "missing project id")
-			}
-
-			if userClaims.Role == "api" {
-				if c.Get("project_id") != projectID {
-					return utils.Error(c, http.StatusForbidden, "api token not authorized for this project")
-				}
-				if minPermission != "" && minPermission != models.MemberPermissionMember {
-					return utils.Error(c, http.StatusForbidden, "api tokens cannot perform administrative actions")
-				}
-				return next(c)
-			}
-
-			if g.OrgMembers == nil || g.ProjectRepo == nil {
-				return utils.Error(c, http.StatusInternalServerError, "project or organization members provider not configured")
-			}
-
-			project, err := g.ProjectRepo.Get(c.Request().Context(), projectID)
-			if err != nil || project == nil {
-				return utils.Error(c, http.StatusNotFound, "project not found")
-			}
-
-			if project.OrganizationID == "" {
-				return utils.Error(c, http.StatusForbidden, "project does not belong to any organization")
-			}
-
-			member, err := g.OrgMembers.GetMember(c.Request().Context(), project.OrganizationID, userClaims.UserID)
-			if err != nil {
-				return utils.Error(c, http.StatusInternalServerError, "failed to verify organization membership")
-			}
-			if member == nil || member.Status != models.MemberStatusAccepted {
-				return utils.Error(c, http.StatusForbidden, "you do not have access to this project's organization")
-			}
-
-			if minPermission != "" && member.Permission != minPermission && member.Permission != models.MemberPermissionAdmin && member.Permission != models.MemberPermissionOwner {
-				return utils.Error(c, http.StatusForbidden, "insufficient organization permissions")
-			}
-
-			return next(c)
-		}
-	}
-}
-
-func (g *AuthGuard) RequireRole(requiredRole models.UserRole) echo.MiddlewareFunc {
-	return func(next echo.HandlerFunc) echo.HandlerFunc {
-		return func(c echo.Context) error {
-			userClaims, err := g.baseAuth(c, true)
-			if err != nil {
-				return err
-			}
-			if userClaims.Role != requiredRole && userClaims.Role != models.UserRoleAdmin && userClaims.Role != models.UserRoleOwner {
-				return utils.Error(c, http.StatusForbidden, "insufficient instance permissions")
-			}
-			c.Set("user", userClaims)
-			ctx := context.WithValue(c.Request().Context(), userClaimsKey, userClaims)
-			c.SetRequest(c.Request().WithContext(ctx))
-			return next(c)
-		}
-	}
-}
-
-func GetUserClaimsFromContext(ctx context.Context) *models.UserClaims {
-	if c, ok := ctx.Value(userClaimsKey).(*models.UserClaims); ok {
-		return c
-	}
-	return nil
-}
-
-func ExtractTokenFromRequest(c echo.Context) string {
-	authHeader := c.Request().Header.Get("Authorization")
-	if authHeader != "" && strings.HasPrefix(authHeader, "Bearer ") {
-		return strings.TrimSpace(strings.TrimPrefix(authHeader, "Bearer "))
-	}
-	cookie, err := c.Cookie("codedock_token")
-	if err == nil && cookie.Value != "" {
-		return strings.TrimSpace(cookie.Value)
-	}
-	return ""
 }

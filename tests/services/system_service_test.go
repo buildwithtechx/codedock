@@ -3,11 +3,11 @@ package services_test
 import (
 	"testing"
 
-	"codedock.run/codedock/internal/services"
+	"codedock.run/codedock/internal/services/system"
 )
 
 func TestSystemService_GetStats(t *testing.T) {
-	svc := services.NewSystemService()
+	svc := system.NewSystemService()
 
 	stats, err := svc.GetStats()
 	if err != nil {
@@ -17,6 +17,5 @@ func TestSystemService_GetStats(t *testing.T) {
 		t.Fatal("expected stats to be non-nil")
 	}
 
-	// Check delta parsing
 	_, _ = svc.GetStats()
 }

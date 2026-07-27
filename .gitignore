@@ -9,7 +9,7 @@
 *.dylib
 bin/
 dist/
-build/
+/build/
 
 # Runtime data & secrets
 data/codedock.db*
@@ -32,3 +32,8 @@ node_modules/
 
 data/
 tmp/
+*.tsbuildinfo
+
+# Ignore deploy workflow for now
+.github/workflows/deploy.yml
+

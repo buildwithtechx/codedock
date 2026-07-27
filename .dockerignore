@@ -1,0 +1,9 @@
+node_modules/
+**/node_modules/
+.git/
+.gitignore
+dashboard/dist/
+dist/
+data/
+tmp/
+**/*.md

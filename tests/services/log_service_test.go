@@ -5,16 +5,16 @@ import (
 	"testing"
 	"time"
 
-	"codedock.run/codedock/internal/services"
+	"codedock.run/codedock/internal/services/system"
 )
 
 func TestLogService_GetHistoricalLogs_InvalidHost(t *testing.T) {
-	svc := services.NewLogService()
+	svc := system.NewLogService()
 
 	ctx, cancel := context.WithTimeout(context.Background(), 10*time.Millisecond)
 	defer cancel()
 
-	opts := services.HistoricalLogsOpts{
+	opts := system.HistoricalLogsOpts{
 		ServiceID: "svc-1",
 		Start:     time.Now().Add(-1 * time.Hour),
 		End:       time.Now(),

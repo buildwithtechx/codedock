@@ -2,7 +2,6 @@ package models
 
 import "time"
 
-// WorkerMessageType defines the kind of message being sent over the WebSocket.
 type WorkerMessageType string
 
 const (
@@ -45,7 +44,6 @@ type WorkerDeployAppPayload struct {
 	Network      string            `json:"network"`
 	Registry     *RegistryConfig   `json:"registry,omitempty"`
 
-	// Build specific (Decentralized Builds)
 	GitRepoURL      string `json:"git_repo_url,omitempty"`
 	GitBranch       string `json:"git_branch,omitempty"`
 	GitCommitHash   string `json:"git_commit_hash,omitempty"`

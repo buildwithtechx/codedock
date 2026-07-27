@@ -6,11 +6,10 @@ import (
 	"io"
 	nethttp "net/http"
 
-	"codedock.run/codedock/internal/models"
+	"codedock.run/codedock/pkg/types"
 )
 
-// ListDatabases returns all databases.
-func (c *Client) ListDatabases(projectID string) ([]*models.Database, error) {
+func (c *Client) ListDatabases(projectID string) ([]*types.Database, error) {
 	url := "/databases"
 	if projectID != "" {
 		url = fmt.Sprintf("/databases?projectId=%s", projectID)
@@ -27,7 +26,7 @@ func (c *Client) ListDatabases(projectID string) ([]*models.Database, error) {
 	}
 
 	var result struct {
-		Data []*models.Database `json:"data"`
+		Data []*types.Database `json:"data"`
 	}
 	if err := json.NewDecoder(resp.Body).Decode(&result); err != nil {
 		return nil, err
@@ -36,8 +35,7 @@ func (c *Client) ListDatabases(projectID string) ([]*models.Database, error) {
 	return result.Data, nil
 }
 
-// GetDatabase retrieves a single database by its ID.
-func (c *Client) GetDatabase(id string) (*models.Database, error) {
+func (c *Client) GetDatabase(id string) (*types.Database, error) {
 	resp, err := c.sendRequest("GET", fmt.Sprintf("/databases/%s", id), nil)
 	if err != nil {
 		return nil, err
@@ -50,7 +48,7 @@ func (c *Client) GetDatabase(id string) (*models.Database, error) {
 	}
 
 	var result struct {
-		Data *models.Database `json:"data"`
+		Data *types.Database `json:"data"`
 	}
 	if err := json.NewDecoder(resp.Body).Decode(&result); err != nil {
 		return nil, err
@@ -59,8 +57,7 @@ func (c *Client) GetDatabase(id string) (*models.Database, error) {
 	return result.Data, nil
 }
 
-// CreateDatabase creates a new database.
-func (c *Client) CreateDatabase(req *models.CreateDatabaseRequest) (*models.Database, error) {
+func (c *Client) CreateDatabase(req *types.CreateDatabaseRequest) (*types.Database, error) {
 	resp, err := c.sendRequest("POST", "/databases", req)
 	if err != nil {
 		return nil, err
@@ -73,7 +70,7 @@ func (c *Client) CreateDatabase(req *models.CreateDatabaseRequest) (*models.Data
 	}
 
 	var result struct {
-		Data *models.Database `json:"data"`
+		Data *types.Database `json:"data"`
 	}
 	if err := json.NewDecoder(resp.Body).Decode(&result); err != nil {
 		return nil, err
@@ -82,7 +79,6 @@ func (c *Client) CreateDatabase(req *models.CreateDatabaseRequest) (*models.Data
 	return result.Data, nil
 }
 
-// DeleteDatabase deletes a database by its ID.
 func (c *Client) DeleteDatabase(id string) error {
 	resp, err := c.sendRequest("DELETE", fmt.Sprintf("/databases/%s", id), nil)
 	if err != nil {
@@ -98,8 +94,7 @@ func (c *Client) DeleteDatabase(id string) error {
 	return nil
 }
 
-// ImportDatabase triggers a data import from a source URL into the database.
-func (c *Client) ImportDatabase(id string, req *models.ImportDatabaseRequest) error {
+func (c *Client) ImportDatabase(id string, req *types.ImportDatabaseRequest) error {
 	resp, err := c.sendRequest("POST", fmt.Sprintf("/databases/%s/import", id), req)
 	if err != nil {
 		return err

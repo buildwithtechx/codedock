@@ -15,7 +15,7 @@ import (
 	"github.com/shirou/gopsutil/v4/disk"
 	"github.com/shirou/gopsutil/v4/mem"
 
-	"codedock.run/codedock/internal/engine"
+	"codedock.run/codedock/internal/engine/networking"
 	"codedock.run/codedock/internal/models"
 )
 
@@ -33,12 +33,11 @@ func NewWorkerDaemon(serverURL, token string) *WorkerDaemon {
 }
 
 func (d *WorkerDaemon) Start(ctx context.Context) error {
-	// Ensure Traefik is running first
 	dockerClient, err := client.NewClientWithOpts(client.FromEnv, client.WithAPIVersionNegotiation())
 	if err != nil {
 		return fmt.Errorf("failed to create docker client for traefik: %w", err)
 	}
-	traefikManager := engine.NewTraefikManager(dockerClient, "")
+	traefikManager := networking.NewTraefikManager(dockerClient, "")
 	if err := traefikManager.EnsureTraefikRunning(ctx); err != nil {
 		return fmt.Errorf("failed to ensure traefik is running: %w", err)
 	}
@@ -69,7 +68,6 @@ func (d *WorkerDaemon) Start(ctx context.Context) error {
 	}
 	d.conn = conn
 
-	// Send auth message
 	authPayload := []byte(fmt.Sprintf(`{"token":"%s"}`, d.token))
 	err = d.conn.WriteJSON(models.WorkerMessage{
 		Type:      models.WorkerMessageTypeAuth,
@@ -146,7 +144,7 @@ func (d *WorkerDaemon) listen(ctx context.Context) {
 		var msg models.WorkerMessage
 		if err := d.conn.ReadJSON(&msg); err != nil {
 			slog.Error("failed to read websocket message", "err", err)
-			time.Sleep(2 * time.Second) // basic backoff
+			time.Sleep(2 * time.Second)
 			continue
 		}
 

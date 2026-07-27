@@ -47,13 +47,16 @@ func (rl *RateLimiter) cleanup() {
 
 func (rl *RateLimiter) Middleware(next echo.HandlerFunc) echo.HandlerFunc {
 	return func(c echo.Context) error {
-		ip := c.RealIP()
+		key := c.RealIP()
+		if claims := GetUserClaimsFromContext(c.Request().Context()); claims != nil && claims.UserID != "" {
+			key = "user:" + claims.UserID
+		}
 		now := time.Now()
 
 		rl.mu.Lock()
-		v, exists := rl.visitors[ip]
+		v, exists := rl.visitors[key]
 		if !exists || v.lastSeen.Add(rl.window).Before(now) {
-			rl.visitors[ip] = &visitor{count: 1, lastSeen: now}
+			rl.visitors[key] = &visitor{count: 1, lastSeen: now}
 			rl.mu.Unlock()
 			return next(c)
 		}

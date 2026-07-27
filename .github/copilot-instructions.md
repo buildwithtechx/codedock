@@ -2,13 +2,11 @@
 
 ## What This Is
 
-This is the Codedock monorepo — an open-source, self-hosted PaaS that turns any bare-metal VPS into a private Vercel & Railway. It's written in Go (backend daemon) and TypeScript (dashboard UI, marketing site, docs).
+This is the Codedock codebase — an open-source, self-hosted PaaS that turns any bare-metal VPS into a private Vercel & Railway. It's written in Go (backend daemon) and TypeScript (React 19 control panel dashboard in `dashboard/`).
 
-- **Language (backend)**: Go — `cmd`, `internal/`
-- **Language (frontend)**: TypeScript/TSX — React 19, Astro 7
-- **Runtime (dashboard)**: Vite + TanStack Start
-- **Runtime (apps/web/docs)**: Astro 7 + Starlight
-- **Monorepo**: npm workspaces (`apps/dashboard/`, `apps/web/`, `apps/docs/`)
+- **Language (backend)**: Go — `cmd/`, `internal/`, `pkg/`
+- **Language (frontend)**: TypeScript/TSX — React 19 in `dashboard/`
+- **Dashboard Stack**: React 19 + TanStack Router + Vite + Tailwind CSS v4
 - **Database**: embedded SQLite (`modernc.org/sqlite`, CGO-free)
 - **Container runtime**: Docker SDK (`github.com/docker/docker/client`)
 
@@ -20,21 +18,13 @@ This is the Codedock monorepo — an open-source, self-hosted PaaS that turns an
 2. **Models** — `internal/models/`: Domain structs, DTOs, database entities (no circular imports)
 3. **Repositories** — `internal/repositories/`: Database persistence, SQL interfaces, SQLite implementations
 4. **Services** — `internal/services/`: Business logic, external integrations
-5. **Handlers** — `internal/handlers/`: HTTP controllers, route handlers
+5. **Handlers** — `internal/handlers/`: HTTP controllers, Echo route handlers
 6. **HTTP Setup** — `internal/http/`: Server setup, routes, CORS, auth middleware
 7. **Engine** — `internal/engine/`: Container engine, Docker deployer, runtime management, cron, backup workers
 
-### Dashboard (`apps/dashboard/`)
+### Dashboard (`dashboard/`)
 
 React 19 + TanStack Router + TanStack Query + Zustand + Radix UI + Tailwind CSS v4. The self-hosted control panel where users deploy apps, manage databases, view logs, and configure settings.
-
-### Marketing Site (`apps/web/`)
-
-Astro 7 + Tailwind CSS v4. Public landing page at `codedock.dev` — hero section, feature comparisons, install command.
-
-### Docs (`apps/docs/`)
-
-Astro 7 + Starlight. Documentation site with full-text search, sidebar navigation.
 
 ## Code Style & Conventions
 
@@ -44,7 +34,7 @@ Astro 7 + Starlight. Documentation site with full-text search, sidebar navigatio
 - **Consumer-Defined Interfaces**: Define narrow interfaces where they are _consumed_ (`Accept interfaces, return structs`).
 - **Files**: `snake_case.go` — `container_health.go`
 - **Packages**: short, lowercase, single word — `cron`, `auth`, `apikeys`
-- **No inline `//` comments** — only GoDoc when logic is non-obvious
+- **No inline comments** — only GoDoc when logic is non-obvious
 - **No GoDoc** on self-explanatory types (`// User represents a user`) or HTTP handlers
 - **No global state** — pass deps via struct fields, wire in `main.go`
 - **Always check errors** — wrap with `fmt.Errorf("context: %w", err)`
@@ -56,32 +46,30 @@ Astro 7 + Starlight. Documentation site with full-text search, sidebar navigatio
 - **Files**: `kebab-case.tsx` — `project-card.tsx`
 - **Named exports** over default exports
 - **One component per file**
-- Routes in `apps/dashboard/src/routes/` (TanStack Router file conventions)
+- Routes in `dashboard/src/routes/` (TanStack Router file conventions)
 - Do **not** edit `routeTree.gen.ts` by hand
 - **State Management:** Use standard Zustand (`create`) for global UI state. No wrappers, shortcuts, or legacy APIs.
 - **Data Tables:** Use `@tanstack/react-table` for data grid components.
-- **Telemetry:** Use `posthog-js` and `@posthog/react`. Integrations go in `apps/dashboard/src/integrations/`.
+- **Telemetry:** Use `posthog-js` and `@posthog/react`. Integrations go in `dashboard/src/integrations/`.
 - Use `tailwind-merge` + `clsx` + `class-variance-authority` for class composition
 
-### npm Workspace Scripts
+### Commands (`Makefile`)
 
-| Command                 | Action                                   |
-| ----------------------- | ---------------------------------------- |
-| `npm run dev:dashboard` | Start dashboard at `localhost:3000`      |
-| `npm run dev:web`       | Start marketing site at `localhost:4321` |
-| `npm run dev:docs`      | Start docs at `localhost:4322`           |
-| `npm run build:all`     | Build all workspaces                     |
-| `npm run format:fix`    | Format all files with Biome              |
+| Command       | Action                                                                               |
+| ------------- | ------------------------------------------------------------------------------------ |
+| `make dev`    | Start Go daemon + Vite dashboard dev server concurrently (port 3000)                 |
+| `make build`  | Build dashboard GUI to `dashboard/dist` and Go binary `bin/codedockd`                |
+| `make format` | Format Go code (`go fmt ./...`) and dashboard (`cd dashboard && npm run format:fix`) |
+| `make check`  | Run Go fmt + vet and Biome format check                                              |
+| `make test`   | Run Go unit tests and dashboard tests                                                |
 
 ## Navigation Tips
 
-- **Find a handler**: `internal/handlers/<domain>.go`
+- **Find a handler**: `internal/handlers/<domain>/<handler>.go`
 - **Find a repository**: `internal/repositories/<entity>.go`
-- **Find a service**: `internal/services/<domain>.go`
-- **Find a dashboard route**: `apps/dashboard/src/routes/` (TanStack Router file-based)
-- **Find a dashboard component**: `apps/dashboard/src/components/<domain>/`
-- **Find a web page**: `apps/web/src/pages/`
-- **Find docs content**: `apps/docs/src/content/apps/docs/`
+- **Find a service**: `internal/services/<domain>/<service>.go`
+- **Find a dashboard route**: `dashboard/src/routes/` (TanStack Router file-based)
+- **Find a dashboard component**: `dashboard/src/components/<domain>/`
 
 ## Constraints
 
@@ -91,4 +79,4 @@ Astro 7 + Starlight. Documentation site with full-text search, sidebar navigatio
 - Do NOT add `init()` in Go — use explicit constructors
 - Do NOT use `mattn/go-sqlite3` — use `modernc.org/sqlite`
 - Do NOT add unnecessary dependencies
-- Run `npm run format:fix` before finishing a session
+- Run `make format` before finishing a session

@@ -7,25 +7,27 @@ import (
 	"os/signal"
 	"syscall"
 
+	"codedock.run/codedock/internal/config"
 	"codedock.run/codedock/internal/worker"
 )
 
 func main() {
 	slog.Info("Starting codedockw...")
 
-	token := os.Getenv("CODEDOCK_WORKER_TOKEN")
+	cfg := config.Get()
+	token := cfg.Worker.WorkerToken
 	if token == "" {
 		slog.Error("CODEDOCK_WORKER_TOKEN is required")
 		os.Exit(1)
 	}
 
-	apiHost := os.Getenv("CODEDOCK_API_HOST")
+	apiHost := cfg.Server.APIHost
 	if apiHost == "" {
-		apiHost = "http://localhost:8080"
-	} else if os.Getenv("CODEDOCK_USE_WSS") == "true" {
-		apiHost = "https://" + apiHost
-	} else {
-		apiHost = "http://" + apiHost
+		apiHost = cfg.Server.ServerURL
+	}
+	if apiHost == "" {
+		slog.Error("CODEDOCK_API_HOST or CODEDOCK_SERVER_URL is required")
+		os.Exit(1)
 	}
 
 	daemon := worker.NewWorkerDaemon(apiHost, token)

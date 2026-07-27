@@ -1,13 +1,15 @@
 package repositories
 
 import (
-	"codedock.run/codedock/internal/utils"
 	"context"
 	"database/sql"
 	"errors"
 	"fmt"
+	"strings"
 	"sync"
 	"time"
+
+	"codedock.run/codedock/internal/utils"
 
 	"github.com/google/uuid"
 	"github.com/jmoiron/sqlx"
@@ -18,7 +20,9 @@ import (
 type UserRepository interface {
 	CreateUser(ctx context.Context, u *models.User) error
 	GetUserByEmail(ctx context.Context, email string) (*models.User, error)
+	GetUserByStripeCustomerID(ctx context.Context, stripeCustomerID string) (*models.User, error)
 	GetUserByID(ctx context.Context, id string) (*models.User, error)
+	GetUserTOTPSecret(ctx context.Context, userID string) (string, []string, error)
 	ListUsers(ctx context.Context, limit, offset int) ([]models.User, int, error)
 	CountUsers(ctx context.Context) (int, error)
 	UpdateUser(ctx context.Context, u *models.User) error
@@ -52,8 +56,8 @@ func (r *UserRepo) CreateUser(ctx context.Context, u *models.User) error {
 	u.UpdatedAt = now
 	r.mu.Lock()
 	defer r.mu.Unlock()
-	_, err := r.db.ExecContext(ctx, `INSERT INTO users (id, email, name, password_hash, role, created_at, updated_at)
-		VALUES (?, ?, ?, ?, ?, ?, ?)`, u.ID, u.Email, u.Name, u.PasswordHash, u.Role, u.CreatedAt, u.UpdatedAt)
+	_, err := r.db.ExecContext(ctx, `INSERT INTO users (id, email, name, password_hash, role, email_verified, plan_type, stripe_customer_id, stripe_subscription_id, stripe_price_id, created_at, updated_at)
+		VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)`, u.ID, u.Email, u.Name, u.PasswordHash, u.Role, u.EmailVerified, u.PlanType, u.StripeCustomerID, u.StripeSubscriptionID, u.StripePriceID, u.CreatedAt, u.UpdatedAt)
 	return err
 }
 
@@ -61,10 +65,25 @@ func (r *UserRepo) GetUserByEmail(ctx context.Context, email string) (*models.Us
 	r.mu.Lock()
 	defer r.mu.Unlock()
 	var u models.User
-	err := r.db.GetContext(ctx, &u, `SELECT id, email, name, password_hash, role, created_at, updated_at, last_login
+	err := r.db.GetContext(ctx, &u, `SELECT id, email, name, password_hash, role, email_verified, plan_type, stripe_customer_id, stripe_subscription_id, stripe_price_id, created_at, updated_at, last_login
 		FROM users WHERE email = ?`, email)
 	if errors.Is(err, sql.ErrNoRows) {
 		return nil, utils.NewNotFoundError("User", email)
+	}
+	if err != nil {
+		return nil, err
+	}
+	return &u, nil
+}
+
+func (r *UserRepo) GetUserByStripeCustomerID(ctx context.Context, stripeCustomerID string) (*models.User, error) {
+	r.mu.Lock()
+	defer r.mu.Unlock()
+	var u models.User
+	err := r.db.GetContext(ctx, &u, `SELECT id, email, name, password_hash, role, email_verified, plan_type, stripe_customer_id, stripe_subscription_id, stripe_price_id, created_at, updated_at, last_login
+		FROM users WHERE stripe_customer_id = ?`, stripeCustomerID)
+	if errors.Is(err, sql.ErrNoRows) {
+		return nil, utils.NewNotFoundError("User by StripeCustomerID", stripeCustomerID)
 	}
 	if err != nil {
 		return nil, err
@@ -76,7 +95,7 @@ func (r *UserRepo) GetUserByID(ctx context.Context, id string) (*models.User, er
 	r.mu.Lock()
 	defer r.mu.Unlock()
 	var u models.User
-	err := r.db.GetContext(ctx, &u, `SELECT id, email, name, password_hash, role, created_at, updated_at, last_login
+	err := r.db.GetContext(ctx, &u, `SELECT id, email, name, password_hash, role, email_verified, plan_type, stripe_customer_id, stripe_subscription_id, stripe_price_id, created_at, updated_at, last_login
 		FROM users WHERE id = ?`, id)
 	if errors.Is(err, sql.ErrNoRows) {
 		return nil, utils.NewNotFoundError("User", id)
@@ -99,7 +118,7 @@ func (r *UserRepo) ListUsers(ctx context.Context, limit, offset int) ([]models.U
 	var users []models.User
 	err := r.db.SelectContext(ctx, &users, `
 		SELECT
-			id, email, name, password_hash, role, created_at, updated_at, last_login,
+			id, email, name, password_hash, role, email_verified, plan_type, stripe_customer_id, stripe_subscription_id, stripe_price_id, created_at, updated_at, last_login,
 			(SELECT COUNT(*) FROM project_members WHERE user_id = users.id) AS projects_count,
 			(SELECT COUNT(*) FROM app_services WHERE project_id IN (SELECT project_id FROM project_members WHERE user_id = users.id) AND status = 'running') AS services_count,
 			(SELECT COUNT(*) FROM personal_access_tokens WHERE user_id = users.id) AS api_keys_count
@@ -119,8 +138,8 @@ func (r *UserRepo) UpdateUser(ctx context.Context, u *models.User) error {
 	u.UpdatedAt = time.Now()
 	r.mu.Lock()
 	defer r.mu.Unlock()
-	_, err := r.db.ExecContext(ctx, `UPDATE users SET email = ?, name = ?, password_hash = ?, role = ?, last_login = ?, updated_at = ? WHERE id = ?`,
-		u.Email, u.Name, u.PasswordHash, u.Role, u.LastLogin, u.UpdatedAt, u.ID)
+	_, err := r.db.ExecContext(ctx, `UPDATE users SET email = ?, name = ?, password_hash = ?, role = ?, email_verified = ?, plan_type = ?, stripe_customer_id = ?, stripe_subscription_id = ?, stripe_price_id = ?, last_login = ?, updated_at = ? WHERE id = ?`,
+		u.Email, u.Name, u.PasswordHash, u.Role, u.EmailVerified, u.PlanType, u.StripeCustomerID, u.StripeSubscriptionID, u.StripePriceID, u.LastLogin, u.UpdatedAt, u.ID)
 	return err
 }
 
@@ -220,4 +239,22 @@ func (r *UserRepo) DeleteUser(ctx context.Context, id string) error {
 		return utils.NewNotFoundError("User", id)
 	}
 	return nil
+}
+
+func (r *UserRepo) GetUserTOTPSecret(ctx context.Context, userID string) (string, []string, error) {
+	var secret string
+	var recovery string
+	err := r.db.QueryRowContext(ctx, `SELECT COALESCE(totp_secret, ''), COALESCE(recovery_codes, '') FROM users WHERE id = ?`, userID).Scan(&secret, &recovery)
+	if err != nil {
+		return "", nil, fmt.Errorf("failed to get totp secret: %w", err)
+	}
+	var codes []string
+	if recovery != "" {
+		for _, part := range strings.Split(recovery, ",") {
+			if part = strings.TrimSpace(part); part != "" {
+				codes = append(codes, part)
+			}
+		}
+	}
+	return secret, codes, nil
 }

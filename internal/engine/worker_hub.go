@@ -7,6 +7,7 @@ import (
 	"log/slog"
 	"sync"
 
+	"codedock.run/codedock/internal/engine/observability"
 	"codedock.run/codedock/internal/models"
 	"codedock.run/codedock/internal/repositories"
 	"github.com/gorilla/websocket"
@@ -115,11 +116,14 @@ func (wc *WorkerConnection) handleMessage(msg models.WorkerMessage) {
 			if err := wc.hub.serverRepo.UpdateMetrics(context.Background(), wc.ServerID, msg.Payload); err != nil {
 				slog.Error("failed to update metrics", "serverID", wc.ServerID, "err", err)
 			}
+			observability.GlobalUIMetricsHub.Broadcast(wc.ServerID, msg.Payload)
 		}
 	case models.WorkerMessageTypeLogStream:
 		var logStream models.WorkerLogStreamPayload
 		if err := json.Unmarshal(msg.Payload, &logStream); err == nil {
-			// In the future, emit to pub/sub or SSE clients watching this container
+			lineBytes := []byte(logStream.LogLine + "\r\n")
+			observability.GlobalUILogStreamHub.Broadcast(logStream.ContainerID, lineBytes)
+			observability.GlobalUILogStreamHub.Broadcast(wc.ServerID, lineBytes)
 			slog.Debug("received log from worker", "containerID", logStream.ContainerID, "line", logStream.LogLine)
 		}
 	case models.WorkerMessageTypeCommandAck:

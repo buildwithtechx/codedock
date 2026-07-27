@@ -5,7 +5,7 @@ import (
 	"os"
 	"text/tabwriter"
 
-	"codedock.run/codedock/internal/models"
+	"codedock.run/codedock/pkg/types"
 	"github.com/spf13/cobra"
 )
 
@@ -55,7 +55,7 @@ var domainsAddCmd = &cobra.Command{
 		pathPrefix, _ := cmd.Flags().GetString("prefix")
 
 		client := getClient()
-		req := &models.DomainConfig{
+		req := &types.DomainConfig{
 			DomainName: domainName,
 			ServiceID:  serviceID,
 			RedirectTo: redirectTo,

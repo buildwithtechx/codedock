@@ -5,7 +5,7 @@ import (
 	"os"
 	"text/tabwriter"
 
-	"codedock.run/codedock/internal/models"
+	"codedock.run/codedock/pkg/types"
 	"github.com/spf13/cobra"
 )
 
@@ -56,7 +56,7 @@ var appsCreateCmd = &cobra.Command{
 		}
 
 		client := getClient()
-		app := &models.AppService{
+		app := &types.AppService{
 			ProjectID:     projectID,
 			EnvironmentID: envID,
 			Name:          name,

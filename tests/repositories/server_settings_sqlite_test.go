@@ -1,10 +1,11 @@
 package repositories_test
 
 import (
-	"codedock.run/codedock/internal/repositories"
 	"context"
 	"database/sql"
 	"testing"
+
+	"codedock.run/codedock/internal/repositories"
 
 	_ "modernc.org/sqlite"
 )

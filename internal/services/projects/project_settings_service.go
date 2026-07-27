@@ -1,0 +1,73 @@
+package projects
+
+import (
+	"context"
+	"crypto/rand"
+	"encoding/hex"
+	"errors"
+	"fmt"
+	"time"
+
+	"github.com/google/uuid"
+
+	"codedock.run/codedock/internal/models"
+	"codedock.run/codedock/internal/repositories"
+)
+
+type ProjectSettingsService struct {
+	repo     repositories.ProjectSettingsRepository
+	userRepo repositories.UserRepository
+}
+
+func NewProjectSettingsService(r repositories.ProjectSettingsRepository, ur repositories.UserRepository, authService any) *ProjectSettingsService {
+	return &ProjectSettingsService{
+		repo:     r,
+		userRepo: ur,
+	}
+}
+
+func (s *ProjectSettingsService) CreateToken(ctx context.Context, t *models.ProjectToken) (*models.ProjectToken, string, error) {
+	if t == nil || t.ProjectID == "" || t.Name == "" {
+		return nil, "", errors.New("valid token with projectId and name required")
+	}
+	if t.ID == "" {
+		t.ID = uuid.New().String()
+	}
+	t.CreatedAt = time.Now().UTC()
+
+	randomBytes := make([]byte, 32)
+	if _, err := rand.Read(randomBytes); err != nil {
+		return nil, "", fmt.Errorf("generate token bytes: %w", err)
+	}
+	rawSecret := hex.EncodeToString(randomBytes)
+	fullToken := fmt.Sprintf("vsl_tok_%s", rawSecret)
+	t.TokenPrefix = fullToken[:16]
+
+	err := s.repo.CreateToken(ctx, t, fullToken)
+	if err != nil {
+		return nil, "", err
+	}
+	return t, fullToken, nil
+}
+
+func (s *ProjectSettingsService) GetTokenByHash(ctx context.Context, tokenHash string) (*models.ProjectToken, error) {
+	return s.repo.GetTokenByHash(ctx, tokenHash)
+}
+
+func (s *ProjectSettingsService) UpdateTokenLastUsed(ctx context.Context, id string) error {
+	return s.repo.UpdateTokenLastUsed(ctx, id)
+}
+
+func (s *ProjectSettingsService) ListTokens(ctx context.Context, projectID string) ([]*models.ProjectToken, error) {
+	if projectID == "" {
+		return nil, errors.New("projectId required")
+	}
+	return s.repo.ListTokensByProject(ctx, projectID)
+}
+
+func (s *ProjectSettingsService) DeleteToken(ctx context.Context, id, projectID string) error {
+	if id == "" || projectID == "" {
+		return errors.New("id and projectId required")
+	}
+	return s.repo.DeleteToken(ctx, id, projectID)
+}

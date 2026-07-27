@@ -21,8 +21,6 @@ cat << 'EOF' > "$TEST_DIR/package.json"
 EOF
 
 echo "📦 Building with Railpack..."
-# Replace ghcr.io/codedock/railpack with the actual local build if needed
-# We assume the image is available locally or can be pulled
 docker run --rm -v "$TEST_DIR:/workspace" -v /var/run/docker.sock:/var/run/docker.sock \
   ghcr.io/codedock/railpack:latest build -t "codedock-$APP_NAME" /workspace || {
     echo "⚠️  Railpack build failed or image unavailable. Skipping execution."

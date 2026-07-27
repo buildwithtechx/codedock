@@ -2,10 +2,11 @@ package telemetry
 
 import (
 	"log"
-	"os"
 	"sync"
 
 	"github.com/posthog/posthog-go"
+
+	"codedock.run/codedock/internal/config"
 )
 
 var (
@@ -17,18 +18,14 @@ func Init() {
 	mu.Lock()
 	defer mu.Unlock()
 
-	apiKey := os.Getenv("POSTHOG_API_KEY")
+	cfg := config.Get()
+	apiKey := cfg.Telemetry.PosthogKey
 	if apiKey == "" {
-		return // telemetry disabled
-	}
-
-	host := os.Getenv("POSTHOG_HOST")
-	if host == "" {
-		host = "https://us.i.posthog.com"
+		return
 	}
 
 	c, err := posthog.NewWithConfig(apiKey, posthog.Config{
-		Endpoint: host,
+		Endpoint: cfg.Telemetry.PosthogHost,
 	})
 	if err != nil {
 		log.Printf("failed to initialize telemetry: %v", err)

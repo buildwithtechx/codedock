@@ -4,10 +4,12 @@ import (
 	"os"
 	"path/filepath"
 
-	"codedock.run/codedock/apps/dashboard"
+	"github.com/labstack/echo/v4"
+
+	"codedock.run/codedock/dashboard"
+	"codedock.run/codedock/internal/config"
 	"codedock.run/codedock/internal/models"
 	"codedock.run/codedock/internal/utils"
-	"github.com/labstack/echo/v4"
 )
 
 func (s *Server) registerRoutes() {
@@ -21,13 +23,18 @@ func (s *Server) registerRoutes() {
 	s.registerUserRoutes(apiGroup, authGroup)
 	s.registerProjectRoutes(apiGroup, authGroup)
 	s.registerOrganizationRoutes(authGroup)
-	s.registerServerRoutes(authGroup)
+	s.registerServerRoutes(apiGroup, authGroup)
 	s.registerDatabaseRoutes(authGroup)
 	s.registerAppRoutes(apiGroup, authGroup)
 	s.registerDeploymentRoutes(authGroup)
 	s.registerBackupRoutes(authGroup)
 	s.registerSettingsRoutes(apiGroup, authGroup)
 	s.registerMiscRoutes(apiGroup, authGroup)
+	s.registerBillingRoutes(apiGroup, authGroup)
+
+	s.router.GET("/healthz", func(c echo.Context) error {
+		return c.JSON(200, map[string]string{"status": "ok"})
+	})
 
 	s.setupSPAFallback()
 }
@@ -80,6 +87,8 @@ func (s *Server) registerAuthRoutes(apiGroup, authGroup *echo.Group) {
 	apiGroup.POST("/auth/refresh", s.authHandler.Refresh)
 	apiGroup.POST("/auth/forgot-password", s.authHandler.ForgotPassword, s.authRateLimiter.Middleware)
 	apiGroup.POST("/auth/reset-password", s.authHandler.ResetPassword, s.authRateLimiter.Middleware)
+	apiGroup.POST("/auth/email/resend", s.authHandler.ResendVerificationEmail, s.authRateLimiter.Middleware)
+	apiGroup.POST("/auth/email/verify", s.authHandler.VerifyEmail, s.authRateLimiter.Middleware)
 	apiGroup.POST("/auth/logout", s.authHandler.Logout)
 	authGroup.GET("/auth/me", s.userHandler.GetProfile)
 
@@ -147,20 +156,21 @@ func (s *Server) registerProjectRoutes(apiGroup, authGroup *echo.Group) {
 
 }
 
-func (s *Server) registerServerRoutes(authGroup *echo.Group) {
+func (s *Server) registerServerRoutes(apiGroup, authGroup *echo.Group) {
 	authGroup.GET("/servers", s.serverHandler.List, s.authGuard.RequireScope("server:read"))
 	authGroup.POST("/servers", s.serverHandler.Create, s.authGuard.RequireScope("server:write"))
+	apiGroup.GET("/ws/servers/:serverId/metrics", s.serverMetricsWSHandler.Handle)
 }
 
 func (s *Server) registerOrganizationRoutes(authGroup *echo.Group) {
 	authGroup.GET("/organizations", s.orgHandler.List)
 	authGroup.POST("/organizations", s.orgHandler.Create)
-	authGroup.GET("/organizations/:id", s.orgHandler.Get)
-	authGroup.DELETE("/organizations/:id", s.orgHandler.Delete)
-	authGroup.GET("/organizations/:id/members", s.orgHandler.ListMembers)
-	authGroup.POST("/organizations/:id/members", s.orgHandler.InviteMember)
-	authGroup.PUT("/organizations/:id/members/:userId", s.orgHandler.UpdateMember)
-	authGroup.DELETE("/organizations/:id/members/:memberId", s.orgHandler.RemoveMember)
+	authGroup.GET("/organizations/:id", s.orgHandler.Get, s.authGuard.RequireOrgRole(models.MemberPermissionMember))
+	authGroup.DELETE("/organizations/:id", s.orgHandler.Delete, s.authGuard.RequireOrgRole(models.MemberPermissionOwner))
+	authGroup.GET("/organizations/:id/members", s.orgHandler.ListMembers, s.authGuard.RequireOrgRole(models.MemberPermissionMember))
+	authGroup.POST("/organizations/:id/members", s.orgHandler.InviteMember, s.authGuard.RequireOrgRole(models.MemberPermissionAdmin))
+	authGroup.PUT("/organizations/:id/members/:userId", s.orgHandler.UpdateMember, s.authGuard.RequireOrgRole(models.MemberPermissionAdmin))
+	authGroup.DELETE("/organizations/:id/members/:memberId", s.orgHandler.RemoveMember, s.authGuard.RequireOrgRole(models.MemberPermissionAdmin))
 }
 
 func (s *Server) registerDatabaseRoutes(authGroup *echo.Group) {
@@ -217,6 +227,8 @@ func (s *Server) registerAppRoutes(apiGroup, authGroup *echo.Group) {
 
 	authGroup.GET("/services/:serviceId/serverless/code", s.serverlessHandler.GetCode, serviceAuth)
 	authGroup.POST("/services/:serviceId/serverless/code", s.serverlessHandler.SaveCode, serviceAuthAdmin)
+
+	apiGroup.GET("/services/:serviceId/logs", s.serviceLogsWSHandler.Handle)
 }
 
 func (s *Server) registerDeploymentRoutes(authGroup *echo.Group) {
@@ -245,23 +257,23 @@ func (s *Server) registerBackupRoutes(authGroup *echo.Group) {
 	authGroup.GET("/backups/:id/records", s.backupHandler.ListRecords)
 	authGroup.GET("/backups/:id/records/:recordId/download", s.backupHandler.DownloadRecord)
 	authGroup.DELETE("/backups/:id/records/:recordId", s.backupHandler.DeleteRecord)
-	authGroup.GET("/s3-destinations", s.backupHandler.ListS3Destinations)
-	authGroup.POST("/s3-destinations", s.backupHandler.CreateS3Destination)
-	authGroup.DELETE("/s3-destinations/:id", s.backupHandler.DeleteS3Destination)
+	authGroup.GET("/s3-destinations", s.backupHandler.ListS3Destinations, s.authGuard.RequireRole("admin"))
+	authGroup.POST("/s3-destinations", s.backupHandler.CreateS3Destination, s.authGuard.RequireRole("admin"))
+	authGroup.DELETE("/s3-destinations/:id", s.backupHandler.DeleteS3Destination, s.authGuard.RequireRole("admin"))
 }
 
 func (s *Server) registerSettingsRoutes(apiGroup, authGroup *echo.Group) {
 	authGroup.GET("/settings", s.settingsHandler.GetSettings)
 	apiGroup.PUT("/settings", s.settingsHandler.UpdateSettings, s.authGuard.RequireRole("admin"))
 	authGroup.GET("/ai", s.aiSettingsHandler.GetAISettings)
-	authGroup.POST("/ai/diagnose", s.aiSettingsHandler.DiagnoseLogs)
+	authGroup.POST("/ai/diagnose", s.aiSettingsHandler.DiagnoseLogs, s.aiRateLimiter.Middleware)
 	apiGroup.PUT("/ai", s.aiSettingsHandler.UpdateAISettings, s.authGuard.RequireRole("admin"))
 	authGroup.GET("/notifications", s.notifSettingsHandler.GetNotificationSettings)
 	apiGroup.PUT("/notifications", s.notifSettingsHandler.UpdateNotificationSettings, s.authGuard.RequireRole("admin"))
 	authGroup.GET("/settings/updates/status", s.updaterHandler.GetUpdateStatus)
 	apiGroup.POST("/settings/updates/check", s.updaterHandler.CheckUpdate, s.authGuard.RequireRole("admin"))
 	apiGroup.POST("/settings/updates/deploy", s.updaterHandler.DeployUpdate, s.authGuard.RequireRole("admin"))
-	authGroup.GET("/settings/oauth/providers", s.oauthHandler.ListProviders)
+	apiGroup.GET("/settings/oauth/providers", s.oauthHandler.ListProviders, s.authGuard.RequireRole("admin"))
 	apiGroup.PUT("/settings/oauth/providers", s.oauthHandler.SaveProvider, s.authGuard.RequireRole("admin"))
 
 	apiGroup.POST("/settings/git_apps/github/manifest-callback", s.gitAppsHandler.ExchangeGithubManifestCode, s.authGuard.RequireRole("admin"))
@@ -279,10 +291,10 @@ func (s *Server) registerMiscRoutes(apiGroup, authGroup *echo.Group) {
 	authGroup.GET("/examples", s.exampleHandler.List)
 	authGroup.GET("/one-click", s.oneClickHandler.List)
 	authGroup.POST("/one-click/deploy", s.oneClickHandler.Deploy)
-	authGroup.POST("/dns", s.dnsHandler.Create)
-	authGroup.GET("/dns", s.dnsHandler.List)
-	authGroup.PUT("/dns/:id", s.dnsHandler.Update)
-	authGroup.DELETE("/dns/:id", s.dnsHandler.Delete)
+	authGroup.POST("/dns", s.dnsHandler.Create, s.authGuard.RequireRole("admin"))
+	authGroup.GET("/dns", s.dnsHandler.List, s.authGuard.RequireRole("admin"))
+	authGroup.PUT("/dns/:id", s.dnsHandler.Update, s.authGuard.RequireRole("admin"))
+	authGroup.DELETE("/dns/:id", s.dnsHandler.Delete, s.authGuard.RequireRole("admin"))
 	authGroup.GET("/scheduled-tasks", s.scheduledTaskHandler.ListProjectScheduledTasks)
 	authGroup.POST("/scheduled-tasks", s.scheduledTaskHandler.Create)
 	authGroup.GET("/scheduled-tasks/:id", s.scheduledTaskHandler.Get)
@@ -297,7 +309,7 @@ func (s *Server) registerMiscRoutes(apiGroup, authGroup *echo.Group) {
 	authGroup.GET("/canvas/projects", s.canvasHandler.ListCanvasSummaries)
 	authGroup.GET("/projects/:id/summary", s.canvasHandler.GetCanvasSummary)
 	authGroup.GET("/environments/:id/canvas", s.canvasHandler.GetEnvironmentCanvas)
-	authGroup.GET("/audit-logs", s.auditLogHandler.List)
+	authGroup.GET("/audit-logs", s.auditLogHandler.List, s.authGuard.RequireRole("admin"))
 	authGroup.GET("/mcp/sse", s.HandleMCPSSE)
 	authGroup.POST("/mcp/messages", s.HandleMCPMessage)
 	apiGroup.GET("/ws/terminal/:id", s.terminalHandler.HandleWebSocket)
@@ -305,8 +317,15 @@ func (s *Server) registerMiscRoutes(apiGroup, authGroup *echo.Group) {
 	apiGroup.GET("/ws/worker", s.workerWSHandler.Connect)
 }
 
+func (s *Server) registerBillingRoutes(apiGroup, authGroup *echo.Group) {
+	apiGroup.POST("/billing/webhook", s.billingHandler.Webhook)
+
+	authGroup.GET("/billing/config", s.billingHandler.GetConfig)
+	authGroup.POST("/billing/checkout", s.billingHandler.CreateCheckoutSession)
+}
+
 func (s *Server) setupSPAFallback() {
-	staticDir := os.Getenv("CODEDOCK_STATIC_DIR")
+	staticDir := config.Get().Server.StaticDir
 
 	if staticDir != "" {
 		if stat, err := os.Stat(staticDir); err == nil && stat.IsDir() {

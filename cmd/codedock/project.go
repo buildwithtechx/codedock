@@ -5,7 +5,7 @@ import (
 	"os"
 	"text/tabwriter"
 
-	"codedock.run/codedock/internal/models"
+	"codedock.run/codedock/pkg/types"
 	"github.com/spf13/cobra"
 )
 
@@ -48,7 +48,7 @@ var projectCreateCmd = &cobra.Command{
 		}
 
 		client := getClient()
-		req := &models.CreateProjectRequest{
+		req := &types.CreateProjectRequest{
 			Name:        name,
 			Description: desc,
 		}
