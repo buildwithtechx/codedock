@@ -1,0 +1,30 @@
+name: autofix.ci
+
+on:
+  push:
+    branches: [main, canary]
+  pull_request:
+    branches: [main, canary]
+
+jobs:
+  format:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+
+      - name: Setup Go
+        uses: actions/setup-go@v5
+        with:
+          go-version: "1.25"
+
+      - name: Format Go code
+        run: gofmt -w .
+
+      - name: Setup BiomeJS
+        uses: biomejs/setup-biome@v2
+
+      - name: Run Biome formatter on Dashboard
+        run: cd dashboard && biome format --write .
+
+      - uses: autofix-ci/action@635ffb0c9798bd160680f18fd73371e355b85f27 # v1.3.2

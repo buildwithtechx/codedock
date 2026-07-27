@@ -33,3 +33,7 @@ node_modules/
 data/
 tmp/
 *.tsbuildinfo
+
+# Ignore deploy workflow for now
+.github/workflows/deploy.yml
+

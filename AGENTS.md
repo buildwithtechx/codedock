@@ -11,7 +11,7 @@
 ## Workflow
 
 - **Do not run build or test commands after every change.** Just make the code change. If something breaks, the user will say so.
-- Run `npm run format:fix` (`biome check --write .`) for TS/JS/JSON and `go fmt ./...` for Go before committing or finishing a session. NEVER run `prettier` (`npx prettier`) — Biome is our strict formatter.
+- Run `make format` (`go fmt ./...` and `cd dashboard && npm run format:fix`) before committing or finishing a session. NEVER run `prettier` (`npx prettier`) — Biome is our strict formatter.
 - Prefer `read`/`grep`/`glob` tools over `bash` for file exploration.
 - When making edits, read the file first, then use `edit` for targeted changes.
 
@@ -23,7 +23,6 @@
 | Backend              | Go (`cmd`, `internal/`)                                                      |
 | State (dashboard)    | Zustand, TanStack Query, Zod validation                                      |
 | Styling (dashboard)  | `tailwind-merge` + `clsx` + `class-variance-authority` for class composition |
-| Workspace            | npm workspace (`dashboard/`)                                                 |
 
 ## Conventions
 
@@ -63,9 +62,10 @@
 ## Dashboard
 
 ```sh
-npm run dev        # starts at http://localhost:3000
-npm run build      # output → dashboard/dist/
-npm run generate-routes  # regenerate route tree after adding routes
+make dev                 # starts backend + dashboard concurrently (http://localhost:3000)
+make build               # builds dashboard/dist and Go binary bin/codedockd
+make format              # runs go fmt ./... and dashboard Biome formatter
+cd dashboard && npm run generate-routes  # regenerate TanStack route tree
 ```
 
 **Conventions:**
