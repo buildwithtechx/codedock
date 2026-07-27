@@ -12,11 +12,29 @@ import (
 )
 
 type OrganizationService struct {
-	orgRepo repositories.OrganizationRepository
+	orgRepo  repositories.OrganizationRepository
+	userRepo repositories.UserRepository
 }
 
-func NewOrganizationService(orgRepo repositories.OrganizationRepository) *OrganizationService {
-	return &OrganizationService{orgRepo: orgRepo}
+func NewOrganizationService(orgRepo repositories.OrganizationRepository, userRepo repositories.UserRepository) *OrganizationService {
+	return &OrganizationService{orgRepo: orgRepo, userRepo: userRepo}
+}
+
+func (s *OrganizationService) isRequesterOwnerOrAdmin(ctx context.Context, orgID, requesterUserID string) bool {
+	if requesterUserID == "" {
+		return false
+	}
+	requester, err := s.orgRepo.GetMember(ctx, orgID, requesterUserID)
+	if err == nil && requester != nil {
+		return requester.Permission == models.MemberPermissionOwner
+	}
+	if s.userRepo != nil {
+		u, err := s.userRepo.GetUserByID(ctx, requesterUserID)
+		if err == nil && u != nil && u.Role == "admin" {
+			return true
+		}
+	}
+	return false
 }
 
 func (s *OrganizationService) CreateOrganization(ctx context.Context, userID, name string) (*models.Organization, error) {
@@ -66,8 +84,7 @@ func (s *OrganizationService) InviteMember(ctx context.Context, requesterUserID,
 		return nil, errors.New("email is required")
 	}
 	if permission == models.MemberPermissionOwner {
-		requester, err := s.orgRepo.GetMember(ctx, orgID, requesterUserID)
-		if err != nil || requester == nil || requester.Permission != models.MemberPermissionOwner {
+		if !s.isRequesterOwnerOrAdmin(ctx, orgID, requesterUserID) {
 			return nil, errors.New("only organization owners can invite new owners")
 		}
 	}
@@ -96,26 +113,61 @@ func (s *OrganizationService) ListMembers(ctx context.Context, orgID string) ([]
 }
 
 func (s *OrganizationService) RemoveMember(ctx context.Context, memberID string) error {
+	if memberID == "" {
+		return errors.New("member id is required")
+	}
+	orgMembers, err := s.orgRepo.ListMembers(ctx, "")
+	var target *models.OrganizationMember
+	if err == nil {
+		for _, m := range orgMembers {
+			if m.ID == memberID {
+				target = m
+				break
+			}
+		}
+	}
+	if target != nil && target.Permission == models.MemberPermissionOwner {
+		membersInOrg, err := s.orgRepo.ListMembers(ctx, target.OrganizationID)
+		if err == nil {
+			ownerCount := 0
+			for _, m := range membersInOrg {
+				if m.Permission == models.MemberPermissionOwner {
+					ownerCount++
+				}
+			}
+			if ownerCount <= 1 {
+				return errors.New("cannot remove the last owner of an organization")
+			}
+		}
+	}
 	return s.orgRepo.RemoveMember(ctx, memberID)
 }
 
 func (s *OrganizationService) UpdateMemberPermission(ctx context.Context, requesterUserID, orgID, targetUserID string, permission models.MemberPermission) error {
-	requester, err := s.orgRepo.GetMember(ctx, orgID, requesterUserID)
-	if err != nil || requester == nil {
-		return errors.New("requester membership not found")
-	}
+	isOwnerOrAdmin := s.isRequesterOwnerOrAdmin(ctx, orgID, requesterUserID)
 
 	targetMember, err := s.orgRepo.GetMember(ctx, orgID, targetUserID)
 	if err != nil || targetMember == nil {
 		return errors.New("target member not found")
 	}
 
-	if (permission == models.MemberPermissionOwner || targetMember.Permission == models.MemberPermissionOwner) && requester.Permission != models.MemberPermissionOwner {
+	if (permission == models.MemberPermissionOwner || targetMember.Permission == models.MemberPermissionOwner) && !isOwnerOrAdmin {
 		return errors.New("only organization owners can manage owner permissions")
 	}
 
 	if targetMember.Permission == models.MemberPermissionOwner && permission != models.MemberPermissionOwner {
-		return errors.New("cannot demote owner")
+		membersInOrg, err := s.orgRepo.ListMembers(ctx, orgID)
+		if err == nil {
+			ownerCount := 0
+			for _, m := range membersInOrg {
+				if m.Permission == models.MemberPermissionOwner {
+					ownerCount++
+				}
+			}
+			if ownerCount <= 1 {
+				return errors.New("cannot demote the last owner of an organization")
+			}
+		}
 	}
 
 	targetMember.Permission = permission

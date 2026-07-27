@@ -123,10 +123,15 @@ func (s *PRPreviewService) DestroyPRPreview(ctx context.Context, appID string, p
 	if err != nil {
 		return err
 	}
-	app, _ := s.appService.GetAppService(ctx, appID)
+	app, err := s.appService.GetAppService(ctx, appID)
+	if err != nil {
+		slog.Warn("Failed to get app service during PR preview destruction", "appID", appID, "err", err)
+	}
 	for _, p := range previews {
 		if app != nil {
-			_ = s.deployer.StopAppService(ctx, app)
+			previewApp := *app
+			previewApp.ID = p.ID
+			_ = s.deployer.StopAppService(ctx, &previewApp)
 		}
 		sourceDir := filepath.Join(utils.GetDataDir(), "builds", "pr-previews", p.ID)
 		_ = os.RemoveAll(sourceDir)

@@ -41,12 +41,25 @@ func (d *Deployer) getEnvironmentVariables(app *models.AppService, logWriter io.
 		envVarsMap = make(map[string]string)
 	}
 
+	if d.EnvProvider != nil {
+		providerVars, err := d.EnvProvider(app.ProjectID)
+		if err == nil {
+			for k, v := range providerVars {
+				if _, exists := envVarsMap[k]; !exists {
+					envVarsMap[k] = v
+				}
+			}
+		}
+	}
+
 	appVars, err := d.store.ListServiceVariables(app.ID)
 	if err == nil {
 		for _, v := range appVars {
 			envVarsMap[v.Key] = v.Value
 		}
 	}
+
+	envVarsMap = build.InterpolateEnvVars(envVarsMap, nil)
 
 	return envVarsMap, nil
 }
@@ -93,6 +106,12 @@ func (d *Deployer) waitForHealthyContainer(ctx context.Context, containerName st
 			continue
 		}
 
+		if healthCheckPath == "" {
+			if inspect.State.Running && i >= 1 {
+				return true
+			}
+		}
+
 		checkPath := healthCheckPath
 		if checkPath == "" {
 			checkPath = "/"
@@ -114,21 +133,10 @@ func (d *Deployer) waitForHealthyContainer(ctx context.Context, containerName st
 		resp, err := client.Get(targetURL)
 		if err == nil {
 			resp.Body.Close()
-			if resp.StatusCode >= 200 && resp.StatusCode < 500 {
+			if resp.StatusCode >= 200 && resp.StatusCode < 400 {
 				return true
 			}
 		}
 	}
 	return false
-}
-
-func parseBuildStrategy(engine models.BuildEngine) build.BuildStrategy {
-	switch engine {
-	case models.BuildEngineNixpacks:
-		return build.StrategyNixpacks
-	case models.BuildEngineBuildpacks:
-		return build.StrategyBuildpacks
-	default:
-		return build.StrategyDockerfile
-	}
 }

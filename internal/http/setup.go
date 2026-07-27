@@ -150,7 +150,7 @@ func NewServer(db *sql.DB, v *utils.Vault, deployer *deploy.Deployer, traefikMan
 
 	scheduledTaskService := systemservices.NewScheduledTaskService(scheduledTaskRepo, cronManager)
 	canvasService := projectservices.NewCanvasService(canvasRepo)
-	orgService := authservices.NewOrganizationService(orgRepo)
+	orgService := authservices.NewOrganizationService(orgRepo, userRepo)
 	gitService := deploymentservices.NewGitService(gitRepo)
 	statsMonitor := observability.NewStatsMonitor(dockerClient)
 	deploymentService := deploymentservices.NewDeploymentService(deployRepo, appRepo, projectRepo, deployer, gitService, statsMonitor, volumeRepo, workerHub)

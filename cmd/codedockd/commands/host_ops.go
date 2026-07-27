@@ -51,7 +51,11 @@ func runRestore(args []string) {
 	dataDir := filepath.Clean(config.Get().Server.DataDir)
 	baseName := filepath.Base(dataDir)
 
-	conn, err := net.DialTimeout("tcp", fmt.Sprintf("127.0.0.1:%d", config.Get().Server.Port), 500*time.Millisecond)
+	host := config.Get().Server.Host
+	if host == "" || host == "0.0.0.0" || host == "::" {
+		host = "127.0.0.1"
+	}
+	conn, err := net.DialTimeout("tcp", fmt.Sprintf("%s:%d", host, config.Get().Server.Port), 500*time.Millisecond)
 	if err == nil {
 		conn.Close()
 		exitError("Codedock daemon is currently running. Please stop the daemon before running restore.")

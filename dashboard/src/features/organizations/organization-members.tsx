@@ -82,14 +82,18 @@ export function OrganizationMembers({ organizationId }: { organizationId: string
                 </TableCell>
               </TableRow>
             ) : (
-              members?.map((member) => (
-                <MemberRow
-                  key={member.id}
-                  member={member}
-                  organizationId={organizationId}
-                  isCurrentUserOwner={isCurrentUserOwner}
-                />
-              ))
+              (() => {
+                const ownerCount = members?.filter((m) => m.permission === 'owner').length || 0;
+                return members?.map((member) => (
+                  <MemberRow
+                    key={member.id}
+                    member={member}
+                    organizationId={organizationId}
+                    isCurrentUserOwner={isCurrentUserOwner}
+                    ownerCount={ownerCount}
+                  />
+                ));
+              })()
             )}
           </TableBody>
         </Table>
@@ -109,10 +113,12 @@ function MemberRow({
   member,
   organizationId,
   isCurrentUserOwner,
+  ownerCount,
 }: {
   member: OrganizationMember;
   organizationId: string;
   isCurrentUserOwner: boolean;
+  ownerCount: number;
 }) {
   const { mutateAsync: updateMember, isPending: isUpdating } =
     useUpdateOrganizationMember(organizationId);
@@ -176,7 +182,9 @@ function MemberRow({
           variant="ghost"
           size="icon"
           onClick={handleRemove}
-          disabled={isPending || (member.permission === 'owner' && !isCurrentUserOwner)}
+          disabled={
+            isPending || (member.permission === 'owner' && (ownerCount <= 1 || !isCurrentUserOwner))
+          }
           className="text-destructive hover:bg-destructive/10 hover:text-destructive"
         >
           {isRemoving ? (

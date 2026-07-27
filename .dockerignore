@@ -6,5 +6,4 @@ dashboard/dist/
 dist/
 data/
 tmp/
-*.md
 **/*.md

@@ -86,9 +86,10 @@ func (d *Deployer) DeployAppService(ctx context.Context, app *models.AppService,
 	imageTag := fmt.Sprintf("codedock-app-%s:%s", app.ID, uuid.NewString()[:8])
 	if app.ImageRef != "" {
 		imageTag = app.ImageRef
+		var pullOpts image.PullOptions
 		if app.RegistryID != nil && *app.RegistryID != "" {
 			reg, err := d.store.GetRegistry(*app.RegistryID)
-			if err == nil && reg != nil && d.containerManager != nil && d.containerManager.dockerClient != nil {
+			if err == nil && reg != nil {
 				authConfig := registry.AuthConfig{
 					Username:      reg.Username,
 					Password:      reg.PasswordToken,
@@ -96,13 +97,15 @@ func (d *Deployer) DeployAppService(ctx context.Context, app *models.AppService,
 				}
 				encodedJSON, err := json.Marshal(authConfig)
 				if err == nil {
-					authStr := base64.URLEncoding.EncodeToString(encodedJSON)
-					out, err := d.containerManager.dockerClient.ImagePull(ctx, imageTag, image.PullOptions{RegistryAuth: authStr})
-					if err == nil {
-						io.Copy(io.Discard, out)
-						out.Close()
-					}
+					pullOpts.RegistryAuth = base64.URLEncoding.EncodeToString(encodedJSON)
 				}
+			}
+		}
+		if d.containerManager != nil && d.containerManager.dockerClient != nil {
+			out, err := d.containerManager.dockerClient.ImagePull(ctx, imageTag, pullOpts)
+			if err == nil {
+				io.Copy(io.Discard, out)
+				out.Close()
 			}
 		}
 	} else {
@@ -135,6 +138,7 @@ func (d *Deployer) DeployAppService(ctx context.Context, app *models.AppService,
 
 	primaryContainerName := utils.NormalizeContainerName(app.ID)
 	logDrains, _ := d.store.ListLogDrainsByService(app.ID)
+	app.InternalPort = internalPort
 
 	for i := 0; i < replicas; i++ {
 		containerName := primaryContainerName
@@ -175,6 +179,10 @@ func (d *Deployer) DeployAppService(ctx context.Context, app *models.AppService,
 		}
 	}
 
+	if replicas > 1 {
+		_ = d.containerManager.StopAndRemove(ctx, primaryContainerName)
+	}
+
 	var excludeNames []string
 	for i := 0; i < replicas; i++ {
 		if replicas == 1 {
@@ -195,8 +203,12 @@ func (d *Deployer) StopAppService(ctx context.Context, app *models.AppService) e
 	}
 
 	containerName := utils.NormalizeContainerName(app.ID)
-	if err := d.containerManager.StopAndRemove(ctx, containerName); err != nil {
-		return err
+	_ = d.containerManager.StopAndRemove(ctx, containerName)
+	if app.Replicas > 1 {
+		for i := 1; i <= app.Replicas; i++ {
+			replicaName := fmt.Sprintf("%s-%d", containerName, i)
+			_ = d.containerManager.StopAndRemove(ctx, replicaName)
+		}
 	}
 
 	app.Status = models.AppServiceStatusStopped
@@ -229,12 +241,29 @@ func (d *Deployer) InspectServiceContainer(ctx context.Context, app *models.AppS
 func (d *Deployer) ExecuteRollingUpdate(ctx context.Context, app *models.AppService, newImageTag string, logWriter io.Writer) error {
 	replicas := app.Replicas
 	if replicas <= 1 {
-		_, err := d.DeployAppService(ctx, app, "", logWriter)
+		appCopy := *app
+		if newImageTag != "" {
+			appCopy.ImageRef = newImageTag
+		}
+		_, err := d.DeployAppService(ctx, &appCopy, "", logWriter)
 		return err
 	}
 
 	primaryName := utils.NormalizeContainerName(app.ID)
 	logDrains, _ := d.store.ListLogDrainsByService(app.ID)
+
+	internalPort := app.InternalPort
+	if internalPort <= 0 {
+		internalPort = defaultAppPort()
+	}
+	memoryLimit := app.MemoryLimit
+	if memoryLimit <= 0 {
+		memoryLimit = defaultMemoryMB()
+	}
+	cpuRequest := app.CPULimit
+	if cpuRequest <= 0 {
+		cpuRequest = defaultCPURequest()
+	}
 
 	for i := 0; i < replicas; i++ {
 		containerName := fmt.Sprintf("%s-%d", primaryName, i+1)
@@ -253,12 +282,12 @@ func (d *Deployer) ExecuteRollingUpdate(ctx context.Context, app *models.AppServ
 			ImageTag:        newImageTag,
 			ServiceID:       app.ID,
 			Domain:          app.Domain,
-			InternalPort:    app.InternalPort,
+			InternalPort:    internalPort,
 			RuntimeMode:     app.RuntimeMode,
 			Envs:            envSlice,
 			Cmd:             strings.Fields(app.StartCommand),
-			MemoryLimitMB:   app.MemoryLimit,
-			CPURequest:      app.CPULimit,
+			MemoryLimitMB:   memoryLimit,
+			CPURequest:      cpuRequest,
 			HealthCheckPath: app.HealthCheckPath,
 			Volumes:         app.Volumes,
 			MaintenanceMode: app.MaintenanceMode,
@@ -297,7 +326,12 @@ func (d *Deployer) ExecuteOneOffTask(ctx context.Context, app *models.AppService
 
 	imageTag := app.ImageRef
 	if imageTag == "" {
-		imageTag = fmt.Sprintf("codedock-app-%s:latest", app.ID)
+		primaryName := utils.NormalizeContainerName(app.ID)
+		if inspect, err := d.containerManager.Inspect(ctx, primaryName); err == nil && inspect.Config != nil {
+			imageTag = inspect.Config.Image
+		} else {
+			imageTag = fmt.Sprintf("codedock-app-%s:latest", app.ID)
+		}
 	}
 
 	runOpts := ContainerRunOptions{
@@ -323,21 +357,40 @@ func (d *Deployer) ExecuteOneOffTask(ctx context.Context, app *models.AppService
 		_ = d.containerManager.StreamLogs(ctx, cid, logWriter)
 	}
 
+	statusCh, errCh := d.containerManager.dockerClient.ContainerWait(ctx, cid, container.WaitConditionNotRunning)
+	select {
+	case err := <-errCh:
+		if err != nil {
+			return fmt.Errorf("error waiting for task container: %w", err)
+		}
+	case <-statusCh:
+	}
+
 	return nil
 }
 
 func (d *Deployer) RestartAppService(ctx context.Context, app *models.AppService) error {
 	containerName := utils.NormalizeContainerName(app.ID)
-	inspect, err := d.containerManager.Inspect(ctx, containerName)
-	if err != nil {
-		if errdefs.IsNotFound(err) {
-			return utils.NewNotFoundError("Container", containerName)
+	replicas := app.Replicas
+	if replicas <= 1 {
+		inspect, err := d.containerManager.Inspect(ctx, containerName)
+		if err != nil {
+			if errdefs.IsNotFound(err) {
+				return utils.NewNotFoundError("Container", containerName)
+			}
+			return fmt.Errorf("failed to inspect container for restart: %w", err)
 		}
-		return fmt.Errorf("failed to inspect container for restart: %w", err)
-	}
-
-	if err := d.containerManager.dockerClient.ContainerRestart(ctx, inspect.ID, container.StopOptions{}); err != nil {
-		return fmt.Errorf("failed to restart container %s: %w", containerName, err)
+		if err := d.containerManager.dockerClient.ContainerRestart(ctx, inspect.ID, container.StopOptions{}); err != nil {
+			return fmt.Errorf("failed to restart container %s: %w", containerName, err)
+		}
+	} else {
+		for i := 1; i <= replicas; i++ {
+			repName := fmt.Sprintf("%s-%d", containerName, i)
+			inspect, err := d.containerManager.Inspect(ctx, repName)
+			if err == nil {
+				_ = d.containerManager.dockerClient.ContainerRestart(ctx, inspect.ID, container.StopOptions{})
+			}
+		}
 	}
 
 	app.Status = models.AppServiceStatusRunning
