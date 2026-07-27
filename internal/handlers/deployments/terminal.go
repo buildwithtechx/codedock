@@ -40,11 +40,16 @@ type tokenValidator interface {
 	ValidateToken(token string) (jwt.MapClaims, error)
 }
 
+type userStatusProvider interface {
+	GetUserByID(ctx context.Context, id string) (*models.User, error)
+}
+
 type TerminalHandler struct {
 	dockerClient   *client.Client
 	tokenService   tokenValidator
 	appService     *projectservices.AppService
 	projectService *projectservices.ProjectService
+	userRepo       userStatusProvider
 	normalizeName  func(id string) string
 }
 
@@ -53,12 +58,14 @@ func NewTerminalHandler(
 	tokenService tokenValidator,
 	appService *projectservices.AppService,
 	projectService *projectservices.ProjectService,
+	userRepo userStatusProvider,
 ) *TerminalHandler {
 	return &TerminalHandler{
 		dockerClient:   dockerClient,
 		tokenService:   tokenService,
 		appService:     appService,
 		projectService: projectService,
+		userRepo:       userRepo,
 		normalizeName:  utils.NormalizeContainerName,
 	}
 }
@@ -78,6 +85,13 @@ func (h *TerminalHandler) HandleWebSocket(c echo.Context) error {
 			return utils.Error(c, http.StatusUnauthorized, "invalid authentication token for terminal access")
 		}
 		claimsMap = cm
+		userID, _ := claimsMap["sub"].(string)
+		if userID != "" && h.userRepo != nil {
+			u, err := h.userRepo.GetUserByID(c.Request().Context(), userID)
+			if err != nil || u == nil || !u.IsActive {
+				return utils.Error(c, http.StatusUnauthorized, "user account not found or deactivated")
+			}
+		}
 	}
 	id := c.Param("id")
 	if id == "" {

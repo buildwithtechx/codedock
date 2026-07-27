@@ -3,10 +3,9 @@ import { useAuthStore } from '#/stores/auth-store';
 let activeRefreshPromise: Promise<string | null> | null = null;
 
 export function getCookie(name: string): string | null {
-  const value = `; ${document.cookie}`;
-  const parts = value.split(`; ${name}=`);
-  if (parts.length === 2) return parts.pop()?.split(';').shift() ?? null;
-  return null;
+  if (typeof document === 'undefined') return null;
+  const match = document.cookie.match(new RegExp(`(?:^|;\\s*)${name}=([^;]*)`));
+  return match ? decodeURIComponent(match[1]) : null;
 }
 
 export function getAuthHeaders(): Record<string, string> {

@@ -7,6 +7,7 @@ import (
 	"log/slog"
 	"net/http"
 	"slices"
+	"strings"
 	"time"
 
 	"github.com/docker/docker/client"
@@ -75,6 +76,17 @@ func NewServer(db *sql.DB, v *utils.Vault, deployer *deploy.Deployer, traefikMan
 		TokenLookup:  "header:X-CSRF-Token",
 		CookieName:   "csrf_token",
 		CookieMaxAge: 86400,
+		Skipper: func(c echo.Context) bool {
+			path := c.Path()
+			if strings.HasPrefix(path, "/api/v1/auth/signin") ||
+				strings.HasPrefix(path, "/api/v1/auth/signup") ||
+				strings.HasPrefix(path, "/api/v1/auth/refresh") ||
+				strings.HasPrefix(path, "/api/v1/auth/oauth") {
+				_, err := c.Cookie("csrf_token")
+				return err != nil
+			}
+			return false
+		},
 	}))
 
 	environmentRepo := repositories.NewEnvironmentRepo(db)
@@ -185,7 +197,7 @@ func NewServer(db *sql.DB, v *utils.Vault, deployer *deploy.Deployer, traefikMan
 	databaseHandler := databases.NewDatabaseHandler(databaseService, projectService, auditService)
 	scheduledTaskHandler := system.NewScheduledTaskHandler(scheduledTaskService, appService, projectService)
 	canvasHandler := projects.NewCanvasHandler(canvasService, projectService)
-	terminalHandler := deployments.NewTerminalHandler(dockerClient, tokenService, appService, projectService)
+	terminalHandler := deployments.NewTerminalHandler(dockerClient, tokenService, appService, projectService, userRepo)
 	projectHandler := projects.NewProjectHandler(projectService, projectSettingsService)
 	orgHandler := auth.NewOrganizationHandler(orgService)
 	environmentHandler := projects.NewEnvironmentHandler(environmentService, projectService)

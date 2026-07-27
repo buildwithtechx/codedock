@@ -19,19 +19,24 @@ export function DatabaseConnectionCard({ database }: Props) {
     toast.success(`${label} copied to clipboard`);
   };
 
-  const getConnectionUrl = () => {
+  const getFormattedUrl = (includeMasking: boolean) => {
     const { engine, username, password, internalDns, port, databaseName } = database;
     let scheme = engine;
     if (engine === 'postgresql') scheme = 'postgres';
     if (engine === 'mongodb') scheme = 'mongodb';
     if (engine === 'redis' || engine === 'dragonfly' || engine === 'keydb') scheme = 'redis';
 
-    // Simplistic connection string builder
+    const pwdSegment = password
+      ? includeMasking && !showPassword
+        ? '••••••••'
+        : password
+      : '<password>';
+
     if (engine === 'redis' || engine === 'dragonfly' || engine === 'keydb') {
-      return `${scheme}://${password ? `:${password}@` : ''}${internalDns}:${port}`;
+      return `${scheme}://${password ? `${pwdSegment}@` : ''}${internalDns}:${port}`;
     }
 
-    return `${scheme}://${username}:${password}@${internalDns}:${port}/${databaseName}`;
+    return `${scheme}://${username}:${pwdSegment}@${internalDns}:${port}/${databaseName}`;
   };
 
   return (
@@ -47,18 +52,20 @@ export function DatabaseConnectionCard({ database }: Props) {
           <Label>Connection URL</Label>
           <div className="flex space-x-2">
             <Input
-              type={showPassword ? 'text' : 'password'}
-              value={getConnectionUrl()}
+              type="text"
+              value={getFormattedUrl(true)}
               readOnly
               className="bg-muted/50 font-mono text-sm"
             />
-            <Button variant="outline" size="icon" onClick={() => setShowPassword(!showPassword)}>
-              {showPassword ? <EyeOff className="h-4 w-4" /> : <Eye className="h-4 w-4" />}
-            </Button>
+            {database.password && (
+              <Button variant="outline" size="icon" onClick={() => setShowPassword(!showPassword)}>
+                {showPassword ? <EyeOff className="h-4 w-4" /> : <Eye className="h-4 w-4" />}
+              </Button>
+            )}
             <Button
               variant="outline"
               size="icon"
-              onClick={() => copyToClipboard(getConnectionUrl(), 'Connection URL')}
+              onClick={() => copyToClipboard(getFormattedUrl(false), 'Connection URL')}
             >
               <Copy className="h-4 w-4" />
             </Button>
@@ -116,7 +123,7 @@ export function DatabaseConnectionCard({ database }: Props) {
                   ? showPassword
                     ? database.password
                     : '••••••••'
-                  : 'Configured via Environment Variable'}
+                  : 'Encrypted / Managed via App Env'}
               </span>
               {database.password ? (
                 <Button
