@@ -177,6 +177,7 @@ func (s *Server) registerDatabaseRoutes(authGroup *echo.Group) {
 	authGroup.POST("/databases/:id/start", s.dbHandler.StartDatabase, s.authGuard.RequireScope("database:manage"))
 	authGroup.POST("/databases/:id/stop", s.dbHandler.StopDatabase, s.authGuard.RequireScope("database:manage"))
 	authGroup.POST("/databases/:id/restart", s.dbHandler.RestartDatabase, s.authGuard.RequireScope("database:manage"))
+	authGroup.POST("/databases/:id/credentials/reveal", s.dbHandler.RevealCredentials, s.authGuard.RequireScope("database:manage"))
 	authGroup.POST("/databases/:id/query", s.dbHandler.QueryDatabase, s.authGuard.RequireScope("database:manage"))
 	authGroup.POST("/databases/:id/import", s.dbHandler.ImportData, s.authGuard.RequireScope("database:manage"))
 

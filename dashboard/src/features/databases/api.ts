@@ -38,6 +38,17 @@ export const databasesService = {
     }
   },
 
+  revealCredentials: async (id: string): Promise<{ password?: string }> => {
+    try {
+      const res = await apiClient.post<BaseResponse<{ password?: string }>>(
+        `/databases/${id}/credentials/reveal`
+      );
+      return res.data || {};
+    } catch (error) {
+      throw handleApiError(error);
+    }
+  },
+
   createDatabase: async (payload: CreateDatabaseRequest): Promise<CreateDatabaseResponse> => {
     try {
       return await apiClient.post<CreateDatabaseResponse>('/databases', payload);

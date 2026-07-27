@@ -1,11 +1,11 @@
-import { Copy, Eye, EyeOff } from 'lucide-react';
+import { Copy, Eye, EyeOff, Loader2 } from 'lucide-react';
 import { useState } from 'react';
 import { toast } from 'sonner';
 import { Button } from '#/components/ui/button';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '#/components/ui/card';
 import { Input } from '#/components/ui/input';
 import { Label } from '#/components/ui/label';
-import type { Database } from '#/features/databases';
+import { type Database, databasesService } from '#/features/databases';
 
 interface Props {
   database: Database;
@@ -13,27 +13,68 @@ interface Props {
 
 export function DatabaseConnectionCard({ database }: Props) {
   const [showPassword, setShowPassword] = useState(false);
+  const [revealedPassword, setRevealedPassword] = useState<string | null>(
+    database.password || null
+  );
+  const [isRevealing, setIsRevealing] = useState(false);
 
-  const copyToClipboard = (text: string, label: string) => {
-    navigator.clipboard.writeText(text);
+  const handleRevealPassword = async (): Promise<string | null> => {
+    if (revealedPassword) {
+      return revealedPassword;
+    }
+    try {
+      setIsRevealing(true);
+      const res = await databasesService.revealCredentials(database.id);
+      if (res.password) {
+        setRevealedPassword(res.password);
+        return res.password;
+      }
+      return null;
+    } catch (_error) {
+      toast.error('Failed to reveal credentials');
+      return null;
+    } finally {
+      setIsRevealing(false);
+    }
+  };
+
+  const toggleShowPassword = async () => {
+    if (!showPassword && !revealedPassword) {
+      const pwd = await handleRevealPassword();
+      if (pwd) setShowPassword(true);
+    } else {
+      setShowPassword(!showPassword);
+    }
+  };
+
+  const copyToClipboard = async (text: string, label: string) => {
+    let copyText = text;
+    if (copyText.includes('<password>') || label === 'Password') {
+      const pwd = await handleRevealPassword();
+      if (pwd) {
+        copyText = copyText.replace('<password>', pwd);
+      }
+    }
+    navigator.clipboard.writeText(copyText);
     toast.success(`${label} copied to clipboard`);
   };
 
   const getFormattedUrl = (includeMasking: boolean) => {
-    const { engine, username, password, internalDns, port, databaseName } = database;
+    const { engine, username, internalDns, port, databaseName } = database;
     let scheme = engine;
     if (engine === 'postgresql') scheme = 'postgres';
     if (engine === 'mongodb') scheme = 'mongodb';
     if (engine === 'redis' || engine === 'dragonfly' || engine === 'keydb') scheme = 'redis';
 
-    const pwdSegment = password
+    const activePassword = revealedPassword;
+    const pwdSegment = activePassword
       ? includeMasking && !showPassword
         ? '••••••••'
-        : password
+        : activePassword
       : '<password>';
 
     if (engine === 'redis' || engine === 'dragonfly' || engine === 'keydb') {
-      return `${scheme}://${password ? `${pwdSegment}@` : ''}${internalDns}:${port}`;
+      return `${scheme}://${activePassword ? `${pwdSegment}@` : ''}${internalDns}:${port}`;
     }
 
     return `${scheme}://${username}:${pwdSegment}@${internalDns}:${port}/${databaseName}`;
@@ -57,15 +98,26 @@ export function DatabaseConnectionCard({ database }: Props) {
               readOnly
               className="bg-muted/50 font-mono text-sm"
             />
-            {database.password && (
-              <Button variant="outline" size="icon" onClick={() => setShowPassword(!showPassword)}>
-                {showPassword ? <EyeOff className="h-4 w-4" /> : <Eye className="h-4 w-4" />}
-              </Button>
-            )}
+            <Button
+              variant="outline"
+              size="icon"
+              disabled={isRevealing}
+              onClick={toggleShowPassword}
+              title={showPassword ? 'Hide Password' : 'Reveal Password'}
+            >
+              {isRevealing ? (
+                <Loader2 className="h-4 w-4 animate-spin" />
+              ) : showPassword ? (
+                <EyeOff className="h-4 w-4" />
+              ) : (
+                <Eye className="h-4 w-4" />
+              )}
+            </Button>
             <Button
               variant="outline"
               size="icon"
               onClick={() => copyToClipboard(getFormattedUrl(false), 'Connection URL')}
+              title="Copy Connection URL"
             >
               <Copy className="h-4 w-4" />
             </Button>
@@ -119,22 +171,25 @@ export function DatabaseConnectionCard({ database }: Props) {
             <Label className="text-muted-foreground text-xs">Password</Label>
             <div className="flex items-center space-x-2">
               <span className="flex-1 font-mono text-muted-foreground text-sm italic">
-                {database.password
+                {revealedPassword
                   ? showPassword
-                    ? database.password
+                    ? revealedPassword
                     : '••••••••'
-                  : 'Encrypted / Managed via App Env'}
+                  : '•••••••• (Click Eye to Reveal)'}
               </span>
-              {database.password ? (
-                <Button
-                  variant="ghost"
-                  size="icon"
-                  className="h-6 w-6"
-                  onClick={() => copyToClipboard(database.password || '', 'Password')}
-                >
-                  <Copy className="h-3 w-3" />
-                </Button>
-              ) : null}
+              <Button
+                variant="ghost"
+                size="icon"
+                className="h-6 w-6"
+                disabled={isRevealing}
+                onClick={async () => {
+                  const pwd = await handleRevealPassword();
+                  if (pwd) copyToClipboard(pwd, 'Password');
+                }}
+                title="Copy Password"
+              >
+                <Copy className="h-3 w-3" />
+              </Button>
             </div>
           </div>
           <div className="space-y-1">

@@ -258,3 +258,34 @@ func (h *DatabaseHandler) QueryDatabase(c echo.Context) error {
 	}
 	return utils.Success(c, "Operation successful", res)
 }
+
+func (h *DatabaseHandler) RevealCredentials(c echo.Context) error {
+	id := c.Param("id")
+	if id == "" {
+		return utils.Error(c, http.StatusBadRequest, "missing database id parameter")
+	}
+	db, err := h.databaseService.GetDatabase(c.Request().Context(), id)
+	if err != nil || db == nil {
+		return utils.Error(c, http.StatusNotFound, "database not found")
+	}
+	if err := h.verifyProjectOwnership(c, db.ProjectID); err != nil {
+		return err
+	}
+	if h.auditService != nil {
+		user := middleware.GetUserClaimsFromContext(c.Request().Context())
+		userID := ""
+		if user != nil {
+			userID = user.UserID
+		}
+		h.auditService.LogAction(c.Request().Context(), authservices.AuditActionOpts{
+			UserID:    userID,
+			Action:    "database.credentials_reveal",
+			Resource:  id,
+			IPAddress: c.RealIP(),
+			Details:   map[string]any{"database_id": id},
+		})
+	}
+	return utils.Success(c, "Credentials retrieved successfully", map[string]string{
+		"password": db.Password,
+	})
+}
