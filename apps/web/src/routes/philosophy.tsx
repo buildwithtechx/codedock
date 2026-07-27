@@ -1,6 +1,6 @@
 import { createFileRoute } from "@tanstack/react-router";
 import { CheckCircle, Cloud } from "lucide-react";
-import { GithubIcon } from "../components/github-icon";
+import { GithubIcon } from "../components/icons/github-icon";
 import { createMeta } from "../lib/seo";
 
 export const Route = createFileRoute("/philosophy")({

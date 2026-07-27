@@ -1,7 +1,7 @@
 import { Link } from "@tanstack/react-router";
-import { DiscordIcon } from "./discord-icon";
-import { GithubIcon } from "./github-icon";
-import { XIcon } from "./x-icon";
+import { DiscordIcon } from "../icons/discord-icon";
+import { GithubIcon } from "../icons/github-icon";
+import { XIcon } from "../icons/x-icon";
 
 export function Footer() {
   return (

@@ -1,8 +1,8 @@
 import { Link } from "@tanstack/react-router";
 import { BookOpen, Clock, DollarSign, Lightbulb, Menu, X } from "lucide-react";
 import { useState } from "react";
-import { DiscordIcon } from "./discord-icon";
-import { GithubIcon } from "./github-icon";
+import { DiscordIcon } from "../icons/discord-icon";
+import { GithubIcon } from "../icons/github-icon";
 
 export function Header() {
   const [isOpen, setIsOpen] = useState(false);

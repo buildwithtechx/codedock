@@ -27,6 +27,23 @@ export function Hero() {
     navigator.clipboard.writeText("curl -fsSL https://get.codedock.run | sh");
     setCopied(true);
     setTimeout(() => setCopied(false), 2000);
+    if (
+      typeof window !== "undefined" &&
+      (
+        window as {
+          posthog?: { capture: (event: string, props?: Record<string, unknown>) => void };
+        }
+      ).posthog
+    ) {
+      (
+        window as {
+          posthog?: { capture: (event: string, props?: Record<string, unknown>) => void };
+        }
+      ).posthog?.capture("install_command_copied", {
+        source: "hero_section",
+        command: "curl -fsSL https://get.codedock.run | sh",
+      });
+    }
   };
 
   return (
