@@ -2,5 +2,5 @@ package dashboard
 
 import "embed"
 
-//go:embed all:dist
+//go:embed dist
 var DistFS embed.FS

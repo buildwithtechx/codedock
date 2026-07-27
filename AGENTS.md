@@ -20,19 +20,17 @@
 | Layer                | Tech                                                                         |
 | -------------------- | ---------------------------------------------------------------------------- |
 | Frontend (dashboard) | React 19, TanStack Router, TanStack Query, Radix UI, Tailwind CSS v4, Vite   |
-| Marketing (web)      | Astro 7, Tailwind CSS v4                                                     |
-| Docs                 | Astro 7, Starlight                                                           |
 | Backend              | Go (`cmd`, `internal/`)                                                      |
 | State (dashboard)    | Zustand, TanStack Query, Zod validation                                      |
 | Styling (dashboard)  | `tailwind-merge` + `clsx` + `class-variance-authority` for class composition |
-| Monorepo             | npm workspaces (`apps/dashboard/`, `apps/web/`, `apps/docs/`)                               |
+| Workspace            | npm workspace (`dashboard/`)                                                 |
 
 ## Conventions
 
-- **Dashboard routes** live in `apps/dashboard/src/routes/` following TanStack Router file conventions. Generated route tree is in `routeTree.gen.ts` — do not edit by hand.
-- **Dashboard components** go in `apps/dashboard/src/components/`, grouped by domain (e.g. `projects/`, `databases/`, `ui/`).
-- **Hooks** go in `apps/dashboard/src/hooks/`.
-- **Lib/utils** go in `apps/dashboard/src/lib/`.
+- **Dashboard routes** live in `dashboard/src/routes/` following TanStack Router file conventions. Generated route tree is in `routeTree.gen.ts` — do not edit by hand.
+- **Dashboard components** go in `dashboard/src/components/`, grouped by domain (e.g. `projects/`, `databases/`, `ui/`).
+- **Hooks** go in `dashboard/src/hooks/`.
+- **Lib/utils** go in `dashboard/src/lib/`.
 - **Marketing pages** live in `apps/web/src/pages/`, components in `apps/web/src/components/`.
 - Use Tailwind CSS v4 `@theme` directives for design tokens; avoid custom CSS where Tailwind utilities suffice.
 - **State Management:** Use standard Zustand (`create`) for global UI state. No wrappers, shortcuts, or legacy APIs.
@@ -66,30 +64,13 @@
 
 ```sh
 npm run dev        # starts at http://localhost:3000
-npm run build      # output → apps/dashboard/dist/
+npm run build      # output → dashboard/dist/
 npm run generate-routes  # regenerate route tree after adding routes
 ```
 
 **Conventions:**
 
-- Routes live in `apps/dashboard/src/routes/` — TanStack Router file conventions.
+- Routes live in `dashboard/src/routes/` — TanStack Router file conventions.
 - Add shadcn/Radix UI components via `npx shadcn@latest add button`.
-- Components go in `src/components/ui/`. Prefer existing Radix over building from scratch.
+- Components go in `dashboard/src/components/ui/`. Prefer existing Radix over building from scratch.
 
-## Web (Marketing)
-
-```sh
-astro dev --background   # use background mode
-astro dev stop|status|logs
-```
-
-Pure Astro + Tailwind CSS v4 — no React/Vue/Svelte islands.
-
-## Docs
-
-```sh
-npm run dev   # starts at http://localhost:4322
-npm run build # output → apps/docs/dist/
-```
-
-Add pages via `.md` files in `src/content/apps/docs/`. Starlight uses file-based routing.

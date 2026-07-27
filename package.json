@@ -5,21 +5,14 @@
   "description": "Self-hosted PaaS — turn any bare-metal VPS into your own private Vercel & Railway.",
   "license": "Codedock Source-Available License",
   "workspaces": [
-    "apps/*"
+    "dashboard"
   ],
   "scripts": {
-    "dev:dashboard": "npm --workspace=dashboard run dev",
-    "dev:web": "npm --workspace=web run dev",
-    "dev:docs": "npm --workspace=docs run dev",
-    "build:dashboard": "npm --workspace=dashboard run build",
-    "build:web": "npm --workspace=web run build",
-    "build:all": "npm run build:dashboard && npm run build:web",
-    "build:docs": "npm --workspace=docs run build",
-    "deploy:web": "npm --workspace=web run deploy",
-    "deploy:docs": "npm --workspace=docs run deploy",
-    "deploy:all": "npm run deploy:web && npm run deploy:docs",
-    "test:dashboard": "npm --workspace=dashboard run test",
-    "typecheck": "npm --workspace=dashboard run generate-routes && tsc -b apps/dashboard",
+    "dev": "npm --workspace=dashboard run dev",
+    "build": "npm --workspace=dashboard run build",
+    "generate-routes": "npm --workspace=dashboard run generate-routes",
+    "test": "npm --workspace=dashboard run test",
+    "typecheck": "npm --workspace=dashboard run generate-routes && tsc -b dashboard",
     "format": "biome check .",
     "format:fix": "biome check --write .",
     "lint": "biome check . && gofmt -l ."
