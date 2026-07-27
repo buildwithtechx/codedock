@@ -1,6 +1,8 @@
 module codedock.run/codedock
 
-go 1.25.11
+go 1.26.0
+
+toolchain go1.26.5
 
 require (
 	github.com/containerd/errdefs v1.0.0
