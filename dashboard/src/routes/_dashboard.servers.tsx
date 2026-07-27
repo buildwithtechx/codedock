@@ -15,7 +15,7 @@ import {
 import { Input } from '#/components/ui/input';
 import { Progress } from '#/components/ui/progress';
 import { useCreateServer, useListServers } from '#/hooks/use-servers';
-import type { Server } from '#/interfaces/server';
+import { parseServerMetrics, type Server } from '#/interfaces/server';
 
 export const Route = createFileRoute('/_dashboard/servers')({
   component: ServersPage,
@@ -94,7 +94,7 @@ function formatBytes(bytes: number) {
 
 function ServerCard({ server }: { server: Server }) {
   const statusColor = server.status === 'online' ? 'bg-green-500' : 'bg-yellow-500';
-  const m = server.metrics;
+  const m = parseServerMetrics(server.metrics);
 
   const memPercent =
     m && m.memory_limit_bytes > 0 ? (m.memory_usage_bytes / m.memory_limit_bytes) * 100 : 0;

@@ -1,7 +1,10 @@
 import { CreditCard, Loader2 } from 'lucide-react';
+import { useEffect } from 'react';
 import { Button } from '#/components/ui/button';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '#/components/ui/card';
+import { env } from '#/env';
 import { useBillingConfig, useCreateCheckoutSession } from '#/hooks/use-billing';
+import { refreshAuthSession } from '#/lib/auth-refresh';
 import { useAuthStore } from '#/stores/auth-store';
 
 export function BillingSection() {
@@ -9,12 +12,22 @@ export function BillingSection() {
   const { data: config, isLoading } = useBillingConfig();
   const { mutateAsync: createCheckoutSession, isPending } = useCreateCheckoutSession();
 
+  useEffect(() => {
+    if (typeof window !== 'undefined' && window.location.search.includes('billing=success')) {
+      refreshAuthSession(env.VITE_API_URL).then(() => {
+        const url = new URL(window.location.href);
+        url.searchParams.delete('billing');
+        window.history.replaceState({}, '', url.toString());
+      });
+    }
+  }, []);
+
   const handleUpgrade = async (priceId: string) => {
     try {
       const { url } = await createCheckoutSession({
         priceId,
-        successUrl: `${window.location.href}?billing=success`,
-        cancelUrl: `${window.location.href}?billing=canceled`,
+        successUrl: `${window.location.origin}${window.location.pathname}?billing=success`,
+        cancelUrl: `${window.location.origin}${window.location.pathname}?billing=canceled`,
       });
       window.location.href = url;
     } catch (e) {

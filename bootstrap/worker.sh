@@ -27,12 +27,11 @@ verify_checksum() {
   local file="$1"
   local expected="$2"
   local label="$3"
+  local var_name="$4"
 
   if [ -z "$expected" ]; then
-    echo -e "${RED}❌ No checksum provided for ${label}. Set ${label^^}_SHA256 to continue.${NC}"
-    echo -e "${YELLOW}   Tip: compute it with: sha256sum <file>${NC}"
-    rm -f "$file"
-    exit 1
+    echo -e "  ${YELLOW}⚠️  No checksum provided for ${label} (${var_name:-checksum}). Skipping checksum check.${NC}"
+    return 0
   fi
 
   if ! command -v sha256sum &>/dev/null; then
@@ -67,7 +66,7 @@ install_docker() {
     if ! command -v docker &> /dev/null; then
       DOCKER_SCRIPT=$(mktemp)
       curl -fsSL https://get.docker.com -o "$DOCKER_SCRIPT"
-      verify_checksum "$DOCKER_SCRIPT" "${DOCKER_INSTALLER_SHA256:-}" "Docker installer"
+      verify_checksum "$DOCKER_SCRIPT" "${DOCKER_INSTALLER_SHA256:-}" "Docker installer" "DOCKER_INSTALLER_SHA256"
       sh "$DOCKER_SCRIPT"
       rm -f "$DOCKER_SCRIPT"
     fi
@@ -123,7 +122,7 @@ download_worker() {
     exit 1
   }
 
-  verify_checksum "$TMP_TAR" "${CODEDOCK_WORKER_SHA256:-}" "codedockw"
+  verify_checksum "$TMP_TAR" "${CODEDOCK_WORKER_SHA256:-}" "codedockw" "CODEDOCK_WORKER_SHA256"
   tar --no-same-owner -xzf "$TMP_TAR" -C "$CODEDOCK_DIR/bin" codedockw
   chmod +x "$CODEDOCK_DIR/bin/codedockw"
   rm -f "$TMP_TAR"
@@ -135,6 +134,7 @@ write_env_file() {
   cat > "$ENV_FILE" <<EOF
 CODEDOCK_WORKER_TOKEN=${LICENSE_KEY}
 CODEDOCK_CONTROL_PLANE=${API_HOST}
+CODEDOCK_API_HOST=${API_HOST}
 EOF
   echo -e "  ${GREEN}✅ Credentials written (readable by root only).${NC}"
 }

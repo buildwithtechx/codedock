@@ -64,9 +64,12 @@ func InitDataDir() (string, *sql.DB, *utils.Vault) {
 	if dataDir == "" {
 		dataDir = "data"
 	}
-	if err := os.MkdirAll(dataDir, 0o755); err != nil {
+	if err := os.MkdirAll(dataDir, 0o700); err != nil {
 		slog.Error("failed to create data directory", "err", err)
 		os.Exit(1)
+	}
+	if err := os.Chmod(dataDir, 0o700); err != nil {
+		slog.Warn("failed to enforce 0700 permissions on data directory", "err", err)
 	}
 	vlt, err := utils.NewVault(dataDir)
 	if err != nil {

@@ -108,7 +108,7 @@ function MemberRow({
 
   const handlePermissionChange = async (newPermission: string) => {
     try {
-      await updateMember({ memberId: member.id, payload: { permission: newPermission } });
+      await updateMember({ memberId: member.userId!, payload: { permission: newPermission } });
       toast.success('Permission updated');
     } catch (err: any) {
       toast.error(err.message || 'Failed to update permission');
@@ -140,9 +140,9 @@ function MemberRow({
             <SelectValue />
           </SelectTrigger>
           <SelectContent>
-            <SelectItem value="Admin">Admin</SelectItem>
-            <SelectItem value="Member">Member</SelectItem>
-            <SelectItem value="Viewer">Viewer</SelectItem>
+            <SelectItem value="owner">Owner</SelectItem>
+            <SelectItem value="admin">Admin</SelectItem>
+            <SelectItem value="member">Member</SelectItem>
           </SelectContent>
         </Select>
       </TableCell>
@@ -186,7 +186,7 @@ function InviteMemberModal({
   onOpenChange: (open: boolean) => void;
 }) {
   const [email, setEmail] = useState('');
-  const [permission, setPermission] = useState('Member');
+  const [permission, setPermission] = useState('member');
   const { mutateAsync: inviteMember, isPending } = useInviteOrganizationMember(organizationId);
 
   const handleSubmit = async (e: React.FormEvent) => {
@@ -197,7 +197,7 @@ function InviteMemberModal({
       toast.success('Member invited successfully');
       onOpenChange(false);
       setEmail('');
-      setPermission('Member');
+      setPermission('member');
     } catch (err: any) {
       toast.error(err.message || 'Failed to invite member');
     }
@@ -234,9 +234,9 @@ function InviteMemberModal({
                   <SelectValue />
                 </SelectTrigger>
                 <SelectContent>
-                  <SelectItem value="Admin">Admin</SelectItem>
-                  <SelectItem value="Member">Member</SelectItem>
-                  <SelectItem value="Viewer">Viewer</SelectItem>
+                  <SelectItem value="owner">Owner</SelectItem>
+                  <SelectItem value="admin">Admin</SelectItem>
+                  <SelectItem value="member">Member</SelectItem>
                 </SelectContent>
               </Select>
             </div>

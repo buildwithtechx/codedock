@@ -48,6 +48,12 @@ func runRestore(args []string) {
 		exitError("Backup file not found: %s", backupFile)
 	}
 
+	dataDir := os.Getenv("CODEDOCK_DATA_DIR")
+	if dataDir == "" {
+		dataDir = "/codedock/data"
+	}
+	baseName := filepath.Base(dataDir)
+
 	fmt.Println("🔍 Validating backup archive...")
 
 	cmdList := exec.Command("tar", "-tzf", backupFile)
@@ -61,8 +67,12 @@ func runRestore(args []string) {
 		if line == "" {
 			continue
 		}
+		clean := filepath.Clean(line)
 		if strings.Contains(line, "..") || strings.HasPrefix(line, "/") {
 			exitError("Archive validation failed: path traversal detected (%s)", line)
+		}
+		if clean != baseName && !strings.HasPrefix(clean, baseName+"/") {
+			exitError("Archive validation failed: entry outside data directory (%s)", line)
 		}
 	}
 
@@ -82,19 +92,36 @@ func runRestore(args []string) {
 		}
 	}
 
-	dataDir := os.Getenv("CODEDOCK_DATA_DIR")
-	if dataDir == "" {
-		dataDir = "/codedock/data"
+	stagingDir, err := os.MkdirTemp(filepath.Dir(dataDir), "restore-staging-*")
+	if err != nil {
+		exitError("Failed to create staging directory: %v", err)
 	}
-	parentDir := filepath.Dir(dataDir)
+	defer os.RemoveAll(stagingDir)
 
-	fmt.Println("⏳ Extracting backup...")
-	cmdExtract := exec.Command("tar", "--no-same-owner", "-xzf", backupFile, "-C", parentDir)
+	fmt.Println("⏳ Extracting backup to staging area...")
+	cmdExtract := exec.Command("tar", "--no-same-owner", "-xzf", backupFile, "-C", stagingDir)
 	cmdExtract.Stdout = os.Stdout
 	cmdExtract.Stderr = os.Stderr
 	if err := cmdExtract.Run(); err != nil {
-		exitError("Restore failed: %v", err)
+		exitError("Restore extraction failed: %v", err)
 	}
+
+	stagedDataDir := filepath.Join(stagingDir, baseName)
+	if _, err := os.Stat(stagedDataDir); err != nil {
+		exitError("Restore failed: missing %s in archive", baseName)
+	}
+
+	backupOldDir := dataDir + ".bak-" + time.Now().Format("20060102150405")
+	if err := os.Rename(dataDir, backupOldDir); err != nil && !os.IsNotExist(err) {
+		exitError("Failed to backup existing data directory: %v", err)
+	}
+
+	if err := os.Rename(stagedDataDir, dataDir); err != nil {
+		_ = os.Rename(backupOldDir, dataDir)
+		exitError("Failed to replace data directory: %v", err)
+	}
+
+	_ = os.RemoveAll(backupOldDir)
 
 	fmt.Println("✅ Restore completed successfully!")
 	fmt.Println("🔄 Please restart Codedock to apply changes.")

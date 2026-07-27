@@ -73,7 +73,8 @@ docker-build:
 
 docker-up:
 	@echo "🐳 Starting Codedock via Docker..."
-	docker run -d --name codedock-control-plane --restart unless-stopped -p 8080:8080 -p 80:80 -p 443:443 -v codedock_data:/codedock/data -v /var/run/docker.sock:/var/run/docker.sock:ro --network codedock-network ghcr.io/buildwithtechx/codedock:dev
+	docker network create codedock-network 2>/dev/null || true
+	docker run -d --name codedock-control-plane --restart unless-stopped -p 8080:8080 -p 80:80 -p 443:443 -v codedock_data:/codedock/data -e CODEDOCK_DATA_DIR=/codedock/data -v /var/run/docker.sock:/var/run/docker.sock:ro --network codedock-network ghcr.io/buildwithtechx/codedock:dev
 
 docker-down:
 	@echo "🐳 Stopping Codedock Docker stack..."

@@ -239,9 +239,7 @@ export const systemService = {
 
   importSystem: async (payload: FormData): Promise<void> => {
     try {
-      await apiClient.post('/system/import', payload, {
-        headers: { 'Content-Type': 'multipart/form-data' },
-      });
+      await apiClient.post('/system/import', payload);
     } catch (error) {
       throw handleApiError(error);
     }

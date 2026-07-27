@@ -57,7 +57,7 @@ function DashboardIndex() {
           <Loader2 className="h-8 w-8 animate-spin text-muted-foreground" />
         </div>
       ) : projects.length === 0 ? (
-        <div className="flex h-64 flex-col items-center justify-center rounded-xl border border border-dashed bg-card/40">
+        <div className="flex h-64 flex-col items-center justify-center rounded-xl border border-border border-dashed bg-card/40">
           <div className="flex h-12 w-12 items-center justify-center rounded-xl border border-primary/20 bg-primary/10">
             <LayoutGrid className="h-5 w-5 text-primary" />
           </div>
@@ -72,7 +72,7 @@ function DashboardIndex() {
         </div>
       ) : (
         <div className="space-y-6">
-          <div className="border/20 flex items-center justify-between border-b pb-4">
+          <div className="flex items-center justify-between border-border/20 border-b pb-4">
             <div className="flex items-center gap-4 text-sm">
               <div className="flex items-center gap-2 font-medium">
                 <LayoutGrid className="h-4 w-4 text-muted-foreground" />

@@ -170,7 +170,7 @@ export const OAuthProvidersList = () => {
       {PROVIDERS.map((provider) => {
         const state = form[provider.id] ?? {};
         return (
-          <div key={provider.id} className="border/50 rounded-xl border bg-card/40 p-6">
+          <div key={provider.id} className="rounded-xl border border-border/50 bg-card/40 p-6">
             <div className="mb-5 flex items-center justify-between">
               <span className="font-semibold text-sm">{provider.name}</span>
               <div className="flex items-center gap-2.5">

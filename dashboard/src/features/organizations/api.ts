@@ -1,4 +1,3 @@
-import type { BaseResponse } from '#/interfaces/base';
 import { apiClient } from '#/lib/api-client';
 import { handleApiError } from '#/lib/error';
 import type {
@@ -12,16 +11,14 @@ import type {
 export const orgService = {
   list: async (): Promise<Organization[]> => {
     try {
-      const res = await apiClient.get<BaseResponse<Organization[]>>('/organizations');
-      return res.data;
+      return await apiClient.get<Organization[]>('/organizations');
     } catch (err) {
       throw handleApiError(err);
     }
   },
   create: async (payload: CreateOrganizationRequest): Promise<Organization> => {
     try {
-      const res = await apiClient.post<BaseResponse<Organization>>('/organizations', payload);
-      return res.data;
+      return await apiClient.post<Organization>('/organizations', payload);
     } catch (err) {
       throw handleApiError(err);
     }
@@ -35,18 +32,19 @@ export const orgService = {
   },
   get: async (id: string): Promise<Organization> => {
     try {
-      const res = await apiClient.get<BaseResponse<Organization>>(`/organizations/${id}`);
-      return res.data as Organization;
+      return await apiClient.get<Organization>(`/organizations/${id}`);
     } catch (err) {
       throw handleApiError(err);
     }
   },
   listMembers: async (id: string): Promise<OrganizationMember[]> => {
     try {
-      const res = await apiClient.get<BaseResponse<OrganizationMember[]>>(
+      const res = await apiClient.get<OrganizationMember[] | { data: OrganizationMember[] }>(
         `/organizations/${id}/members`
       );
-      return res.data || [];
+      if (Array.isArray(res)) return res;
+      if (res && 'data' in res && Array.isArray(res.data)) return res.data;
+      return [];
     } catch (err) {
       throw handleApiError(err);
     }
@@ -56,11 +54,7 @@ export const orgService = {
     payload: InviteOrganizationMemberRequest
   ): Promise<OrganizationMember> => {
     try {
-      const res = await apiClient.post<BaseResponse<OrganizationMember>>(
-        `/organizations/${id}/members`,
-        payload
-      );
-      return res.data as OrganizationMember;
+      return await apiClient.post<OrganizationMember>(`/organizations/${id}/members`, payload);
     } catch (err) {
       throw handleApiError(err);
     }
@@ -68,14 +62,15 @@ export const orgService = {
   updateMember: async (
     orgId: string,
     memberId: string,
-    payload: UpdateOrganizationMemberRequest
+    payload: UpdateOrganizationMemberRequest,
+    userId?: string
   ): Promise<OrganizationMember> => {
     try {
-      const res = await apiClient.put<BaseResponse<OrganizationMember>>(
-        `/organizations/${orgId}/members/${memberId}`,
+      const targetId = userId || memberId;
+      return await apiClient.put<OrganizationMember>(
+        `/organizations/${orgId}/members/${targetId}`,
         payload
       );
-      return res.data as OrganizationMember;
     } catch (err) {
       throw handleApiError(err);
     }

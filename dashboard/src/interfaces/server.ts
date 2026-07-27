@@ -14,9 +14,25 @@ export interface Server {
   status: string;
   workerToken: string;
   lastSeenAt: string;
-  metrics: ServerMetrics | null;
+  metrics: ServerMetrics | string | null;
   createdAt: string;
   updatedAt: string;
+}
+
+export function parseServerMetrics(
+  metrics: ServerMetrics | string | null | undefined
+): ServerMetrics | null {
+  if (!metrics) return null;
+  if (typeof metrics === 'object') return metrics;
+  if (typeof metrics === 'string') {
+    try {
+      const decoded = metrics.startsWith('{') ? metrics : atob(metrics);
+      return JSON.parse(decoded) as ServerMetrics;
+    } catch {
+      return null;
+    }
+  }
+  return null;
 }
 
 export interface CreateServerRequest {

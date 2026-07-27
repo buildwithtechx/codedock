@@ -13,6 +13,7 @@ import {
 import { Input } from '#/components/ui/input';
 import { Label } from '#/components/ui/label';
 import { useCreateApp } from '#/hooks/use-apps';
+import { useTrigger as useTriggerDeployment } from '#/hooks/use-deployments';
 import { useListByProject as useListEnvironments } from '#/hooks/use-environments';
 
 const schema = z.object({
@@ -49,6 +50,7 @@ export function CreateDockerImageModal({ isOpen, onOpenChange, projectId }: Prop
   });
 
   const createApp = useCreateApp();
+  const triggerDeployment = useTriggerDeployment();
 
   const onSubmit = (data: FormData) => {
     if (!environmentId) {
@@ -63,7 +65,6 @@ export function CreateDockerImageModal({ isOpen, onOpenChange, projectId }: Prop
           projectId,
           name: data.name,
           imageRef: data.imageRef,
-          // Fallbacks for required fields not used for direct docker images
           repositoryUrl: '',
           branch: '',
           rootDirectory: '/',
@@ -80,9 +81,26 @@ export function CreateDockerImageModal({ isOpen, onOpenChange, projectId }: Prop
         },
       },
       {
-        onSuccess: () => {
-          toast.success('App created successfully');
-          onOpenChange(false);
+        onSuccess: (res) => {
+          const app = (res as { data?: { id: string } })?.data || res;
+          if (app && 'id' in app && typeof app.id === 'string') {
+            triggerDeployment.mutate(
+              { serviceId: app.id },
+              {
+                onSuccess: () => {
+                  toast.success('App created and deployment triggered successfully');
+                  onOpenChange(false);
+                },
+                onError: () => {
+                  toast.success('App created successfully (deploy container manually)');
+                  onOpenChange(false);
+                },
+              }
+            );
+          } else {
+            toast.success('App created successfully');
+            onOpenChange(false);
+          }
         },
         onError: (err: Error) => {
           toast.error(err.message || 'Failed to create app');

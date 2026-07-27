@@ -24,9 +24,11 @@ export interface ServiceWebhook {
 }
 
 export const projectsService = {
-  listProjects: async (): Promise<ListProjectsResponse> => {
+  listProjects: async (organizationId?: string): Promise<ListProjectsResponse> => {
     try {
-      const url = '/projects';
+      const url = organizationId
+        ? `/projects?organizationId=${encodeURIComponent(organizationId)}`
+        : '/projects';
       return await apiClient.get<ListProjectsResponse>(url);
     } catch (error) {
       throw handleApiError(error);
@@ -67,10 +69,14 @@ export const projectsService = {
 
   setVars: async (
     id: string,
-    payload: { variables: Record<string, string> }
+    payload: Record<string, string> | { variables: Record<string, string> }
   ): Promise<BaseResponse<void>> => {
     try {
-      return await apiClient.put<BaseResponse<void>>(`/projects/${id}/env`, payload);
+      const body =
+        'variables' in payload && typeof payload.variables === 'object' && payload.variables
+          ? payload.variables
+          : payload;
+      return await apiClient.put<BaseResponse<void>>(`/projects/${id}/env`, body);
     } catch (error) {
       throw handleApiError(error);
     }

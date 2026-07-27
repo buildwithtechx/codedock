@@ -29,15 +29,12 @@ export async function refreshAuthSession(apiBaseUrl: string): Promise<string | n
 
   activeRefreshPromise = (async () => {
     const authState = useAuthStore.getState();
-    if (!authState.refreshToken) {
-      return null;
-    }
 
     try {
       const res = await fetch(`${apiBaseUrl}/auth/refresh`, {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ refreshToken: authState.refreshToken }),
+        body: JSON.stringify({ refreshToken: authState.refreshToken || '' }),
         credentials: 'include',
       });
 

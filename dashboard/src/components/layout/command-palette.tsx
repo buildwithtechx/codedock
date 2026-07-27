@@ -179,7 +179,7 @@ export function CommandPalette({ open, onOpenChange }: CommandPaletteProps) {
                     key={item.to}
                     value={`${item.label} ${item.description}`}
                     onSelect={() => navigateTo(item.to)}
-                    className="flex cursor-pointer items-center gap-3 rounded-lg border border-transparent px-3 py-3 text-foreground text-sm data-[selected=true]:border data-[selected=true]:bg-muted/70"
+                    className="flex cursor-pointer items-center gap-3 rounded-lg border border-transparent px-3 py-3 text-foreground text-sm data-[selected=true]:border-border data-[selected=true]:bg-muted/70"
                   >
                     <div className="flex size-9 items-center justify-center rounded-md border bg-background">
                       <item.icon className="size-4 text-muted-foreground" />
@@ -205,7 +205,7 @@ export function CommandPalette({ open, onOpenChange }: CommandPaletteProps) {
                     key={item.label}
                     value={`${item.label} ${item.description}`}
                     onSelect={() => queueAction(item.label)}
-                    className="flex cursor-pointer items-center gap-3 rounded-lg border border-transparent px-3 py-3 text-foreground text-sm data-[selected=true]:border data-[selected=true]:bg-muted/70"
+                    className="flex cursor-pointer items-center gap-3 rounded-lg border border-transparent px-3 py-3 text-foreground text-sm data-[selected=true]:border-border data-[selected=true]:bg-muted/70"
                   >
                     <div className="flex size-9 items-center justify-center rounded-md border bg-background">
                       <item.icon className="size-4 text-muted-foreground" />
@@ -231,7 +231,7 @@ export function CommandPalette({ open, onOpenChange }: CommandPaletteProps) {
                     key={label}
                     value={label}
                     onSelect={() => queueAction(label)}
-                    className="flex cursor-pointer items-center gap-3 rounded-lg border border-transparent px-3 py-3 text-foreground text-sm data-[selected=true]:border data-[selected=true]:bg-muted/70"
+                    className="flex cursor-pointer items-center gap-3 rounded-lg border border-transparent px-3 py-3 text-foreground text-sm data-[selected=true]:border-border data-[selected=true]:bg-muted/70"
                   >
                     <div className="flex size-9 items-center justify-center rounded-md border bg-background">
                       <Plus className="size-4 text-muted-foreground" />
