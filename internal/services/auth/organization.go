@@ -125,7 +125,7 @@ func (s *OrganizationService) RemoveMember(ctx context.Context, memberID string)
 		if err == nil {
 			activeOwnerCount := 0
 			for _, m := range membersInOrg {
-				if m.Permission == models.MemberPermissionOwner && (m.UserID != "" || m.Status == models.MemberStatusAccepted) {
+				if m.Permission == models.MemberPermissionOwner && m.UserID != "" && m.Status == models.MemberStatusAccepted {
 					activeOwnerCount++
 				}
 			}
@@ -154,7 +154,7 @@ func (s *OrganizationService) UpdateMemberPermission(ctx context.Context, reques
 		if err == nil {
 			activeOwnerCount := 0
 			for _, m := range membersInOrg {
-				if m.Permission == models.MemberPermissionOwner && (m.UserID != "" || m.Status == models.MemberStatusAccepted) {
+				if m.Permission == models.MemberPermissionOwner && m.UserID != "" && m.Status == models.MemberStatusAccepted {
 					activeOwnerCount++
 				}
 			}

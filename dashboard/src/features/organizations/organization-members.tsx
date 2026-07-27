@@ -85,7 +85,10 @@ export function OrganizationMembers({ organizationId }: { organizationId: string
               (() => {
                 const ownerCount =
                   members?.filter(
-                    (m) => m.permission === 'owner' && (m.userId || m.status === 'active')
+                    (m) =>
+                      m.permission === 'owner' &&
+                      Boolean(m.userId) &&
+                      (m.status === 'active' || m.status === 'accepted')
                   ).length || 0;
                 return members?.map((member) => (
                   <MemberRow

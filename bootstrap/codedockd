@@ -22,7 +22,7 @@ show_help() {
   echo "  status                   Show daemon health & containers"
   echo "  restart                  Restart Codedock daemon"
   echo "  logs                    Tail daemon logs"
-  echo "  update [version]         Upgrade to a specific version"
+  echo "  update [version]         Upgrade to latest or specific version"
   echo "  downgrade <version>      Downgrade to a specific version"
   echo "  backup                   Create manual database backup"
   echo "  uninstall                Remove Codedock daemon"
@@ -60,7 +60,12 @@ case "${1:-help}" in
     echo -e "  ${BOLD}Data dir:${NC}   $CODEDOCK_DIR/data"
     echo ""
     echo -e "${BOLD}  Active Containers:${NC}"
-    docker ps --filter network=codedock-network --format '  {{.Names}} ({{.Image}}, {{.Status}})' 2>/dev/null || echo "    None"
+    CONTAINERS=$(docker ps --filter network=codedock-network --format '  {{.Names}} ({{.Image}}, {{.Status}})' 2>/dev/null)
+    if [ -n "$CONTAINERS" ]; then
+      echo "$CONTAINERS"
+    else
+      echo "    None"
+    fi
     ;;
   update)
     TARGET_VERSION="${2:-latest}"
@@ -112,6 +117,13 @@ case "${1:-help}" in
     echo -e "${GREEN}✅ Downgraded to ${TARGET_VERSION}.${NC}"
     ;;
   uninstall)
+    echo -e "${RED}⚠️  WARNING: This removes the Codedock daemon.${NC}"
+    echo -n "Type 'uninstall' to confirm: "
+    read -r CONFIRM
+    if [ "$CONFIRM" != "uninstall" ]; then
+      echo "Cancelled."
+      exit 0
+    fi
     echo -e "${BOLD}🛑 Stopping Codedock daemon...${NC}"
     docker stop "$CONTAINER_NAME" 2>/dev/null || true
     docker rm "$CONTAINER_NAME" 2>/dev/null || true

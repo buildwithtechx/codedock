@@ -1,15 +1,27 @@
 #!/usr/bin/env bash
 set -eo pipefail
 
-SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
-if [ -f "$SCRIPT_DIR/base.sh" ]; then
-  source "$SCRIPT_DIR/base.sh"
-elif [ -f "/codedock/bootstrap/base.sh" ]; then
+if [ -n "${BASH_SOURCE[0]:-}" ] && [ -f "${BASH_SOURCE[0]}" ] && [ "${BASH_SOURCE[0]}" != "-" ]; then
+  SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
+  if [ -f "$SCRIPT_DIR/base.sh" ]; then
+    source "$SCRIPT_DIR/base.sh"
+  fi
+fi
+
+if [ -z "${BOLD:-}" ] && [ -f "/codedock/bootstrap/base.sh" ]; then
   source "/codedock/bootstrap/base.sh"
-else
+fi
+
+if [ -z "${BOLD:-}" ]; then
   BOLD="\033[1m"; DIM="\033[2m"; GREEN="\033[0;32m"; YELLOW="\033[0;33m"; RED="\033[0;31m"; NC="\033[0m"
   ensure_root() { [ "$EUID" -eq 0 ] || { echo -e "${RED}❌ Run as root.${NC}"; exit 1; }; }
-  ensure_docker() { command -v docker &>/dev/null || apt-get update -qq && apt-get install -y -qq docker.io 2>/dev/null || true; }
+  ensure_docker() {
+    if ! command -v docker &>/dev/null; then
+      if command -v apt-get &>/dev/null; then apt-get update -qq && apt-get install -y -qq docker.io 2>/dev/null || true; fi
+      if ! command -v docker &>/dev/null; then curl -fsSL https://get.docker.com | sh; fi
+      systemctl enable --now docker 2>/dev/null || true
+    fi
+  }
   setup_systemd_service() { [ -d /etc/systemd/system ] && echo "$2" > "/etc/systemd/system/$1.service" && systemctl daemon-reload && systemctl enable --now "$1.service"; }
 fi
 
@@ -107,6 +119,8 @@ echo -e "${BOLD}🔧 Creating Docker network...${NC}"
 docker network create codedock-network 2>/dev/null || true
 
 echo -e "${BOLD}🚀 Starting Codedock...${NC}"
+docker stop codedock-control-plane 2>/dev/null || true
+docker rm codedock-control-plane 2>/dev/null || true
 docker run -d \
   --name codedock-control-plane \
   --restart unless-stopped \
@@ -132,6 +146,7 @@ for i in $(seq 1 30); do
   sleep 2
 done
 
+docker stop codedock-control-plane 2>/dev/null || true
 setup_systemd_service "codedock" "[Unit]
 Description=Codedock – Self-hosted PaaS
 After=docker.service

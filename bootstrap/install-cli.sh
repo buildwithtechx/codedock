@@ -1,12 +1,18 @@
 #!/usr/bin/env bash
 set -eo pipefail
 
-SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
-if [ -f "$SCRIPT_DIR/base.sh" ]; then
-  source "$SCRIPT_DIR/base.sh"
-elif [ -f "/codedock/bootstrap/base.sh" ]; then
+if [ -n "${BASH_SOURCE[0]:-}" ] && [ -f "${BASH_SOURCE[0]}" ] && [ "${BASH_SOURCE[0]}" != "-" ]; then
+  SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
+  if [ -f "$SCRIPT_DIR/base.sh" ]; then
+    source "$SCRIPT_DIR/base.sh"
+  fi
+fi
+
+if [ -z "${BOLD:-}" ] && [ -f "/codedock/bootstrap/base.sh" ]; then
   source "/codedock/bootstrap/base.sh"
-else
+fi
+
+if [ -z "${BOLD:-}" ]; then
   BOLD="\033[1m"; DIM="\033[2m"; GREEN="\033[0;32m"; YELLOW="\033[0;33m"; RED="\033[0;31m"; NC="\033[0m"
   detect_platform() { echo "$(uname -s | tr '[:upper:]' '[:lower:]')_$(uname -m | sed 's/x86_64/amd64/;s/aarch64/arm64/')"; }
 fi
@@ -14,6 +20,28 @@ fi
 REPO="buildwithtechx/codedock"
 BINARY="codedock"
 INSTALL_DIR="/usr/local/bin"
+
+install_via_go() {
+  if command -v go &>/dev/null; then
+    echo -e "${YELLOW}⚙️  Installing via 'go install'...${NC}"
+    go install "codedock.run/codedock/cmd/codedock@latest"
+    GOBIN="$(go env GOPATH)/bin"
+    if [ -f "$GOBIN/codedock" ]; then
+      if [ -w "$INSTALL_DIR" ] || [ "$(id -u)" -eq 0 ]; then
+        cp "$GOBIN/codedock" "$INSTALL_DIR/$BINARY"
+        echo -e "${GREEN}✅ Installed → $INSTALL_DIR/$BINARY${NC}"
+      else
+        LOCAL_BIN="$HOME/.local/bin"
+        mkdir -p "$LOCAL_BIN"
+        cp "$GOBIN/codedock" "$LOCAL_BIN/$BINARY"
+        echo -e "${GREEN}✅ Installed → $LOCAL_BIN/$BINARY${NC}"
+        echo -e "   Ensure $LOCAL_BIN or $(go env GOPATH)/bin is in your PATH."
+      fi
+    fi
+    return 0
+  fi
+  return 1
+}
 
 echo -e "${BOLD}🛰️  codedock CLI Installer${NC}"
 echo "━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━"
@@ -28,13 +56,11 @@ if [ -z "$TARGET_VERSION" ]; then
 fi
 
 if [ -z "$TARGET_VERSION" ]; then
-  if command -v go &>/dev/null; then
-    echo -e "${YELLOW}⚙️  Installing via 'go install'...${NC}"
-    go install "codedock.run/codedock/cmd/codedock@latest"
-    exit 0
-  fi
-  echo -e "${RED}❌ Could not fetch latest release. Install Go or set CODEDOCK_VERSION.${NC}"
-  exit 1
+  install_via_go || {
+    echo -e "${RED}❌ Could not fetch latest release. Install Go or set CODEDOCK_VERSION.${NC}"
+    exit 1
+  }
+  exit 0
 fi
 
 echo -e "  Version:   ${TARGET_VERSION}"
@@ -47,13 +73,11 @@ trap 'rm -rf "$TMP_DIR"' EXIT
 echo -e "${BOLD}⬇️  Downloading codedock ${TARGET_VERSION} (${PLATFORM})...${NC}"
 
 if ! curl -fsSL "$DOWNLOAD_URL" -o "$TMP_DIR/codedock.tar.gz" 2>/dev/null; then
-  if command -v go &>/dev/null; then
-    echo -e "${YELLOW}⚙️  Pre-built binary unavailable. Fallback to 'go install'...${NC}"
-    go install "codedock.run/codedock/cmd/codedock@latest"
-    exit 0
-  fi
-  echo -e "${RED}❌ Download failed. Install Go and run: go install codedock.run/codedock/cmd/codedock@latest${NC}"
-  exit 1
+  install_via_go || {
+    echo -e "${RED}❌ Download failed. Install Go and run: go install codedock.run/codedock/cmd/codedock@latest${NC}"
+    exit 1
+  }
+  exit 0
 fi
 
 tar -xzf "$TMP_DIR/codedock.tar.gz" -C "$TMP_DIR"

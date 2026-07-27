@@ -52,9 +52,21 @@ ensure_docker() {
     fi
     systemctl enable --now docker 2>/dev/null || true
   fi
+
   if ! docker info &> /dev/null; then
-    sleep 3
+    echo -e "${YELLOW}⏳ Waiting for Docker daemon to start...${NC}"
+    systemctl start docker 2>/dev/null || true
+    for _ in $(seq 1 10); do
+      if docker info &> /dev/null; then break; fi
+      sleep 1
+    done
   fi
+
+  if ! docker info &> /dev/null; then
+    echo -e "${RED}❌ Docker daemon is not running or unreachable.${NC}"
+    exit 1
+  fi
+
   echo -e "${GREEN}✅ Docker ready${NC}"
 }
 
