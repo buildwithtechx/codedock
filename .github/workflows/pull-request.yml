@@ -1,0 +1,32 @@
+name: Pull Request
+
+on:
+  pull_request:
+    branches: [main, canary]
+
+permissions:
+  contents: read
+
+jobs:
+  pr-check:
+    runs-on: ubuntu-latest
+    strategy:
+      matrix:
+        job: [build-web, build-docs]
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 22
+
+      - name: Install dependencies
+        run: npm ci
+
+      - name: Build Web
+        if: matrix.job == 'build-web'
+        run: npm run build:web
+
+      - name: Build Docs
+        if: matrix.job == 'build-docs'
+        run: npm run build:docs

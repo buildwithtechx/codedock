@@ -1,0 +1,45 @@
+name: Bug Report
+description: Create a bug report for Codedock website or documentation
+labels: ["needs-triage🔍"]
+body:
+  - type: markdown
+    attributes:
+      value: |
+        Before opening a new issue, please search existing website issues or documentation pages.
+  - type: textarea
+    attributes:
+      label: Description & Steps to Reproduce
+      description: A detailed description of the bug or broken link/styling issue.
+      placeholder: |
+        1. Go to https://docs.codedock.run/getting-started/installation
+        2. Click on link X
+        3. 404 page is shown or layout breaks
+    validations:
+      required: true
+  - type: textarea
+    attributes:
+      label: Expected Behavior
+      description: What did you expect to happen instead?
+      placeholder: "Expected page X to render cleanly without layout overflow"
+    validations:
+      required: true
+  - type: dropdown
+    attributes:
+      label: Affected Area
+      options:
+        - "Marketing Website (apps/web)"
+        - "Documentation Portal (apps/docs)"
+        - "Comparison Pages"
+        - "Templates Catalog"
+        - "Other"
+    validations:
+      required: true
+  - type: dropdown
+    attributes:
+      label: Will you send a PR to fix it?
+      options:
+        - "Yes"
+        - "No"
+        - "Maybe, need help"
+    validations:
+      required: true

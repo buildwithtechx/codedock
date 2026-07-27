@@ -1,0 +1,5 @@
+blank_issues_enabled: false
+contact_links:
+  - name: Questions & Documentation Feedback
+    url: https://github.com/buildwithtechx/codedock-website/discussions
+    about: Ask questions or discuss website and documentation improvements.

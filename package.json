@@ -1,0 +1,25 @@
+{
+  "name": "codedock-website",
+  "private": true,
+  "version": "1.0.0",
+  "description": "Codedock Marketing Website & Documentation Monorepo",
+  "license": "MIT",
+  "workspaces": [
+    "apps/*"
+  ],
+  "scripts": {
+    "dev:web": "npm --workspace=web run dev",
+    "dev:docs": "npm --workspace=docs run dev",
+    "build:web": "npm --workspace=web run build",
+    "build:docs": "npm --workspace=docs run build",
+    "build:all": "npm run build:web && npm run build:docs",
+    "deploy:web": "npm --workspace=web run deploy",
+    "deploy:docs": "npm --workspace=docs run deploy",
+    "deploy:all": "npm run deploy:web && npm run deploy:docs",
+    "format": "biome check .",
+    "format:fix": "biome check --write ."
+  },
+  "devDependencies": {
+    "@biomejs/biome": "^2.5.4"
+  }
+}

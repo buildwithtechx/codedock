@@ -1,0 +1,27 @@
+name: Feature Request / Content Request
+description: Suggest a new page, guide, template, or visual improvement for website or docs
+labels: ["enhancement"]
+body:
+  - type: textarea
+    attributes:
+      label: Feature / Guide Request Summary
+      description: A clear description of the new page, guide, or layout improvement requested.
+      placeholder: |
+        Please add a tutorial for deploying X to apps/docs
+    validations:
+      required: true
+  - type: textarea
+    attributes:
+      label: Proposed Content / Design
+      description: Details about the content, sections, or layout proposed.
+    validations:
+      required: true
+  - type: dropdown
+    attributes:
+      label: Will you send a PR to implement it?
+      options:
+        - "Yes"
+        - "No"
+        - "Maybe, need help"
+    validations:
+      required: true
