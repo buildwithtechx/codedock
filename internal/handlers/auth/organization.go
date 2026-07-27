@@ -79,6 +79,10 @@ func (h *OrganizationHandler) ListMembers(c echo.Context) error {
 }
 
 func (h *OrganizationHandler) InviteMember(c echo.Context) error {
+	userClaims, ok := c.Get("user").(*models.UserClaims)
+	if !ok {
+		return utils.Error(c, http.StatusUnauthorized, "unauthorized")
+	}
 	orgID := c.Param("id")
 	var req struct {
 		Email      string                  `json:"email"`
@@ -87,7 +91,7 @@ func (h *OrganizationHandler) InviteMember(c echo.Context) error {
 	if err := c.Bind(&req); err != nil {
 		return utils.Error(c, http.StatusBadRequest, "invalid request")
 	}
-	member, err := h.orgService.InviteMember(c.Request().Context(), orgID, req.Email, req.Permission)
+	member, err := h.orgService.InviteMember(c.Request().Context(), userClaims.UserID, orgID, req.Email, req.Permission)
 	if err != nil {
 		return utils.Error(c, http.StatusInternalServerError, err.Error())
 	}
@@ -95,6 +99,10 @@ func (h *OrganizationHandler) InviteMember(c echo.Context) error {
 }
 
 func (h *OrganizationHandler) UpdateMember(c echo.Context) error {
+	userClaims, ok := c.Get("user").(*models.UserClaims)
+	if !ok {
+		return utils.Error(c, http.StatusUnauthorized, "unauthorized")
+	}
 	orgID := c.Param("id")
 	userID := c.Param("userId")
 	var req struct {
@@ -103,7 +111,7 @@ func (h *OrganizationHandler) UpdateMember(c echo.Context) error {
 	if err := c.Bind(&req); err != nil {
 		return utils.Error(c, http.StatusBadRequest, "invalid request")
 	}
-	if err := h.orgService.UpdateMemberPermission(c.Request().Context(), orgID, userID, req.Permission); err != nil {
+	if err := h.orgService.UpdateMemberPermission(c.Request().Context(), userClaims.UserID, orgID, userID, req.Permission); err != nil {
 		return utils.Error(c, http.StatusInternalServerError, err.Error())
 	}
 	return c.NoContent(http.StatusNoContent)

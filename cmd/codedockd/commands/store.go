@@ -70,7 +70,8 @@ func InitDataDir() (string, *sql.DB, *utils.Vault) {
 		os.Exit(1)
 	}
 	if err := os.Chmod(dataDir, 0o700); err != nil {
-		slog.Warn("failed to enforce 0700 permissions on data directory", "err", err)
+		slog.Error("failed to enforce 0700 permissions on data directory", "err", err)
+		os.Exit(1)
 	}
 	vlt, err := utils.NewVault(dataDir)
 	if err != nil {

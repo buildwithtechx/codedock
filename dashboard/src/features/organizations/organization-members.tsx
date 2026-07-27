@@ -33,10 +33,15 @@ import {
   useRemoveOrganizationMember,
   useUpdateOrganizationMember,
 } from '#/features/organizations';
+import { useAuthStore } from '#/stores/auth-store';
 
 export function OrganizationMembers({ organizationId }: { organizationId: string }) {
   const { data: members, isLoading } = useListOrganizationMembers(organizationId);
   const [inviteOpen, setInviteOpen] = useState(false);
+  const user = useAuthStore((s) => s.user);
+
+  const currentUserMember = members?.find((m) => m.userId === user?.id || m.email === user?.email);
+  const isCurrentUserOwner = currentUserMember?.permission === 'owner';
 
   return (
     <div className="space-y-4">
@@ -78,7 +83,12 @@ export function OrganizationMembers({ organizationId }: { organizationId: string
               </TableRow>
             ) : (
               members?.map((member) => (
-                <MemberRow key={member.id} member={member} organizationId={organizationId} />
+                <MemberRow
+                  key={member.id}
+                  member={member}
+                  organizationId={organizationId}
+                  isCurrentUserOwner={isCurrentUserOwner}
+                />
               ))
             )}
           </TableBody>
@@ -89,6 +99,7 @@ export function OrganizationMembers({ organizationId }: { organizationId: string
         organizationId={organizationId}
         open={inviteOpen}
         onOpenChange={setInviteOpen}
+        isCurrentUserOwner={isCurrentUserOwner}
       />
     </div>
   );
@@ -97,9 +108,11 @@ export function OrganizationMembers({ organizationId }: { organizationId: string
 function MemberRow({
   member,
   organizationId,
+  isCurrentUserOwner,
 }: {
   member: OrganizationMember;
   organizationId: string;
+  isCurrentUserOwner: boolean;
 }) {
   const { mutateAsync: updateMember, isPending: isUpdating } =
     useUpdateOrganizationMember(organizationId);
@@ -126,6 +139,7 @@ function MemberRow({
   };
 
   const isPending = isUpdating || isRemoving;
+  const canEditRole = isCurrentUserOwner && member.permission !== 'owner';
 
   return (
     <TableRow>
@@ -134,13 +148,13 @@ function MemberRow({
         <Select
           defaultValue={member.permission}
           onValueChange={handlePermissionChange}
-          disabled={isPending}
+          disabled={isPending || !canEditRole}
         >
           <SelectTrigger className="h-8 w-35">
             <SelectValue />
           </SelectTrigger>
           <SelectContent>
-            <SelectItem value="owner">Owner</SelectItem>
+            {isCurrentUserOwner && <SelectItem value="owner">Owner</SelectItem>}
             <SelectItem value="admin">Admin</SelectItem>
             <SelectItem value="member">Member</SelectItem>
           </SelectContent>
@@ -162,7 +176,7 @@ function MemberRow({
           variant="ghost"
           size="icon"
           onClick={handleRemove}
-          disabled={isPending}
+          disabled={isPending || (member.permission === 'owner' && !isCurrentUserOwner)}
           className="text-destructive hover:bg-destructive/10 hover:text-destructive"
         >
           {isRemoving ? (
@@ -180,10 +194,12 @@ function InviteMemberModal({
   organizationId,
   open,
   onOpenChange,
+  isCurrentUserOwner,
 }: {
   organizationId: string;
   open: boolean;
   onOpenChange: (open: boolean) => void;
+  isCurrentUserOwner: boolean;
 }) {
   const [email, setEmail] = useState('');
   const [permission, setPermission] = useState('member');
@@ -234,7 +250,7 @@ function InviteMemberModal({
                   <SelectValue />
                 </SelectTrigger>
                 <SelectContent>
-                  <SelectItem value="owner">Owner</SelectItem>
+                  {isCurrentUserOwner && <SelectItem value="owner">Owner</SelectItem>}
                   <SelectItem value="admin">Admin</SelectItem>
                   <SelectItem value="member">Member</SelectItem>
                 </SelectContent>

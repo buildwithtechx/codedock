@@ -2,6 +2,7 @@ package commands
 
 import (
 	"fmt"
+	"net"
 	"os"
 	"os/exec"
 	"path/filepath"
@@ -13,8 +14,8 @@ import (
 )
 
 func runBackup() {
-	dataDir := config.Get().Server.DataDir
-	if dataDir == "" {
+	dataDir := filepath.Clean(config.Get().Server.DataDir)
+	if dataDir == "." || dataDir == "" {
 		dataDir = "/codedock/data"
 	}
 
@@ -50,11 +51,17 @@ func runRestore(args []string) {
 		exitError("Backup file not found: %s", backupFile)
 	}
 
-	dataDir := config.Get().Server.DataDir
-	if dataDir == "" {
+	dataDir := filepath.Clean(config.Get().Server.DataDir)
+	if dataDir == "." || dataDir == "" {
 		dataDir = "/codedock/data"
 	}
 	baseName := filepath.Base(dataDir)
+
+	conn, err := net.DialTimeout("tcp", fmt.Sprintf("127.0.0.1:%d", config.Get().Server.Port), 500*time.Millisecond)
+	if err == nil {
+		conn.Close()
+		exitError("Codedock daemon is currently running. Please stop the daemon before running restore.")
+	}
 
 	fmt.Println("🔍 Validating backup archive...")
 
@@ -109,11 +116,16 @@ func runRestore(args []string) {
 	}
 
 	stagedDataDir := filepath.Join(stagingDir, baseName)
-	if _, err := os.Stat(stagedDataDir); err != nil {
-		exitError("Restore failed: missing %s in archive", baseName)
+	stagedInfo, err := os.Lstat(stagedDataDir)
+	if err != nil || !stagedInfo.IsDir() || stagedInfo.Mode()&os.ModeSymlink != 0 {
+		exitError("Restore failed: %s in archive must be a real directory", baseName)
 	}
 
-	backupOldDir := dataDir + ".bak-" + time.Now().Format("20060102150405")
+	absDataDir, _ := filepath.Abs(dataDir)
+	absBackupFile, _ := filepath.Abs(backupFile)
+	isInsideDataDir := strings.HasPrefix(absBackupFile, absDataDir+string(os.PathSeparator))
+
+	backupOldDir := absDataDir + ".bak-" + time.Now().Format("20060102150405")
 	if err := os.Rename(dataDir, backupOldDir); err != nil && !os.IsNotExist(err) {
 		exitError("Failed to backup existing data directory: %v", err)
 	}
@@ -121,6 +133,16 @@ func runRestore(args []string) {
 	if err := os.Rename(stagedDataDir, dataDir); err != nil {
 		_ = os.Rename(backupOldDir, dataDir)
 		exitError("Failed to replace data directory: %v", err)
+	}
+
+	if isInsideDataDir {
+		rel, err := filepath.Rel(absDataDir, absBackupFile)
+		if err == nil {
+			oldBackupPath := filepath.Join(backupOldDir, rel)
+			newBackupPath := filepath.Join(dataDir, rel)
+			_ = os.MkdirAll(filepath.Dir(newBackupPath), 0755)
+			_ = os.Rename(oldBackupPath, newBackupPath)
+		}
 	}
 
 	_ = os.RemoveAll(backupOldDir)

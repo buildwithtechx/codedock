@@ -13,13 +13,26 @@ export function BillingSection() {
   const { mutateAsync: createCheckoutSession, isPending } = useCreateCheckoutSession();
 
   useEffect(() => {
-    if (typeof window !== 'undefined' && window.location.search.includes('billing=success')) {
-      refreshAuthSession(env.VITE_API_URL).then(() => {
+    if (typeof window === 'undefined' || !window.location.search.includes('billing=success')) {
+      return;
+    }
+
+    let attempts = 0;
+    const maxAttempts = 6;
+    const interval = setInterval(async () => {
+      attempts++;
+      await refreshAuthSession(env.VITE_API_URL);
+      const currentUser = useAuthStore.getState().user;
+
+      if (currentUser?.planType === 'pro' || attempts >= maxAttempts) {
+        clearInterval(interval);
         const url = new URL(window.location.href);
         url.searchParams.delete('billing');
         window.history.replaceState({}, '', url.toString());
-      });
-    }
+      }
+    }, 1500);
+
+    return () => clearInterval(interval);
   }, []);
 
   const handleUpgrade = async (priceId: string) => {

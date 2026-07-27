@@ -146,8 +146,8 @@ export function CreateDockerImageModal({ isOpen, onOpenChange, projectId }: Prop
             <Button variant="outline" type="button" onClick={() => onOpenChange(false)}>
               Cancel
             </Button>
-            <Button type="submit" disabled={createApp.isPending}>
-              {createApp.isPending ? 'Deploying…' : 'Deploy Image'}
+            <Button type="submit" disabled={createApp.isPending || triggerDeployment.isPending}>
+              {createApp.isPending || triggerDeployment.isPending ? 'Deploying…' : 'Deploy Image'}
             </Button>
           </div>
         </form>

@@ -61,9 +61,15 @@ func (s *OrganizationService) DeleteOrganization(ctx context.Context, id string)
 	return s.orgRepo.Delete(ctx, id)
 }
 
-func (s *OrganizationService) InviteMember(ctx context.Context, orgID, email string, permission models.MemberPermission) (*models.OrganizationMember, error) {
+func (s *OrganizationService) InviteMember(ctx context.Context, requesterUserID, orgID, email string, permission models.MemberPermission) (*models.OrganizationMember, error) {
 	if email == "" {
 		return nil, errors.New("email is required")
+	}
+	if permission == models.MemberPermissionOwner {
+		requester, err := s.orgRepo.GetMember(ctx, orgID, requesterUserID)
+		if err != nil || requester == nil || requester.Permission != models.MemberPermissionOwner {
+			return nil, errors.New("only organization owners can invite new owners")
+		}
 	}
 	existing, _ := s.orgRepo.GetMemberByEmail(ctx, orgID, email)
 	if existing != nil {
@@ -93,14 +99,25 @@ func (s *OrganizationService) RemoveMember(ctx context.Context, memberID string)
 	return s.orgRepo.RemoveMember(ctx, memberID)
 }
 
-func (s *OrganizationService) UpdateMemberPermission(ctx context.Context, orgID, userID string, permission models.MemberPermission) error {
-	member, err := s.orgRepo.GetMember(ctx, orgID, userID)
-	if err != nil || member == nil {
-		return errors.New("member not found")
+func (s *OrganizationService) UpdateMemberPermission(ctx context.Context, requesterUserID, orgID, targetUserID string, permission models.MemberPermission) error {
+	requester, err := s.orgRepo.GetMember(ctx, orgID, requesterUserID)
+	if err != nil || requester == nil {
+		return errors.New("requester membership not found")
 	}
-	if member.Permission == models.MemberPermissionOwner && permission != models.MemberPermissionOwner {
-		return errors.New("cannot change permission of owner")
+
+	targetMember, err := s.orgRepo.GetMember(ctx, orgID, targetUserID)
+	if err != nil || targetMember == nil {
+		return errors.New("target member not found")
 	}
-	member.Permission = permission
-	return s.orgRepo.UpdateMember(ctx, member)
+
+	if (permission == models.MemberPermissionOwner || targetMember.Permission == models.MemberPermissionOwner) && requester.Permission != models.MemberPermissionOwner {
+		return errors.New("only organization owners can manage owner permissions")
+	}
+
+	if targetMember.Permission == models.MemberPermissionOwner && permission != models.MemberPermissionOwner {
+		return errors.New("cannot demote owner")
+	}
+
+	targetMember.Permission = permission
+	return s.orgRepo.UpdateMember(ctx, targetMember)
 }
