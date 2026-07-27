@@ -82,7 +82,7 @@ func Load() *types.Config {
 		},
 		Telemetry: types.TelemetryConfig{
 			PosthogKey:  getEnv("POSTHOG_API_KEY", ""),
-			PosthogHost: getEnv("POSTHOG_HOST", "https://us.i.posthog.com"),
+			PosthogHost: getEnv("POSTHOG_HOST", ""),
 			Salt:        getEnv("POSTHOG_DISTINCT_ID_SALT", ""),
 		},
 		Cloud: types.CloudConfig{
