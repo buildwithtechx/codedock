@@ -59,7 +59,11 @@ func (d *Deployer) getEnvironmentVariables(app *models.AppService, logWriter io.
 		}
 	}
 
-	envVarsMap = build.InterpolateEnvVars(envVarsMap, nil)
+	var registry map[string]map[string]string
+	if d.EnvInterpolator != nil {
+		registry, _ = d.EnvInterpolator(app.ProjectID)
+	}
+	envVarsMap = build.InterpolateEnvVars(envVarsMap, registry)
 
 	return envVarsMap, nil
 }
@@ -104,12 +108,6 @@ func (d *Deployer) waitForHealthyContainer(ctx context.Context, containerName st
 		inspect, err := d.containerManager.Inspect(ctx, containerName)
 		if err != nil || !inspect.State.Running {
 			continue
-		}
-
-		if healthCheckPath == "" {
-			if inspect.State.Running && i >= 1 {
-				return true
-			}
 		}
 
 		checkPath := healthCheckPath

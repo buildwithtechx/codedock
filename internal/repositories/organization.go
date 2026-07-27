@@ -19,6 +19,7 @@ type OrganizationRepository interface {
 
 	AddMember(ctx context.Context, member *models.OrganizationMember) error
 	GetMember(ctx context.Context, orgID, userID string) (*models.OrganizationMember, error)
+	GetMemberByID(ctx context.Context, id string) (*models.OrganizationMember, error)
 	GetMemberByEmail(ctx context.Context, orgID, email string) (*models.OrganizationMember, error)
 	ListMembers(ctx context.Context, orgID string) ([]*models.OrganizationMember, error)
 	UpdateMember(ctx context.Context, member *models.OrganizationMember) error
@@ -132,6 +133,16 @@ func (r *organizationRepository) UpdateMember(ctx context.Context, member *model
 	`
 	_, err := r.db.NamedExecContext(ctx, query, member)
 	return err
+}
+
+func (r *organizationRepository) GetMemberByID(ctx context.Context, id string) (*models.OrganizationMember, error) {
+	query := `SELECT * FROM organization_members WHERE id = ?`
+	var member models.OrganizationMember
+	err := r.db.GetContext(ctx, &member, query, id)
+	if err == sql.ErrNoRows {
+		return nil, nil
+	}
+	return &member, err
 }
 
 func (r *organizationRepository) RemoveMember(ctx context.Context, id string) error {

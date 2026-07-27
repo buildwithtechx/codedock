@@ -25,8 +25,8 @@ func (s *OrganizationService) isRequesterOwnerOrAdmin(ctx context.Context, orgID
 		return false
 	}
 	requester, err := s.orgRepo.GetMember(ctx, orgID, requesterUserID)
-	if err == nil && requester != nil {
-		return requester.Permission == models.MemberPermissionOwner
+	if err == nil && requester != nil && requester.Permission == models.MemberPermissionOwner {
+		return true
 	}
 	if s.userRepo != nil {
 		u, err := s.userRepo.GetUserByID(ctx, requesterUserID)
@@ -116,26 +116,20 @@ func (s *OrganizationService) RemoveMember(ctx context.Context, memberID string)
 	if memberID == "" {
 		return errors.New("member id is required")
 	}
-	orgMembers, err := s.orgRepo.ListMembers(ctx, "")
-	var target *models.OrganizationMember
-	if err == nil {
-		for _, m := range orgMembers {
-			if m.ID == memberID {
-				target = m
-				break
-			}
-		}
+	target, err := s.orgRepo.GetMemberByID(ctx, memberID)
+	if err != nil {
+		return err
 	}
 	if target != nil && target.Permission == models.MemberPermissionOwner {
 		membersInOrg, err := s.orgRepo.ListMembers(ctx, target.OrganizationID)
 		if err == nil {
-			ownerCount := 0
+			activeOwnerCount := 0
 			for _, m := range membersInOrg {
-				if m.Permission == models.MemberPermissionOwner {
-					ownerCount++
+				if m.Permission == models.MemberPermissionOwner && (m.UserID != "" || m.Status == models.MemberStatusAccepted) {
+					activeOwnerCount++
 				}
 			}
-			if ownerCount <= 1 {
+			if activeOwnerCount <= 1 {
 				return errors.New("cannot remove the last owner of an organization")
 			}
 		}
@@ -158,13 +152,13 @@ func (s *OrganizationService) UpdateMemberPermission(ctx context.Context, reques
 	if targetMember.Permission == models.MemberPermissionOwner && permission != models.MemberPermissionOwner {
 		membersInOrg, err := s.orgRepo.ListMembers(ctx, orgID)
 		if err == nil {
-			ownerCount := 0
+			activeOwnerCount := 0
 			for _, m := range membersInOrg {
-				if m.Permission == models.MemberPermissionOwner {
-					ownerCount++
+				if m.Permission == models.MemberPermissionOwner && (m.UserID != "" || m.Status == models.MemberStatusAccepted) {
+					activeOwnerCount++
 				}
 			}
-			if ownerCount <= 1 {
+			if activeOwnerCount <= 1 {
 				return errors.New("cannot demote the last owner of an organization")
 			}
 		}

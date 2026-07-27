@@ -83,7 +83,10 @@ export function OrganizationMembers({ organizationId }: { organizationId: string
               </TableRow>
             ) : (
               (() => {
-                const ownerCount = members?.filter((m) => m.permission === 'owner').length || 0;
+                const ownerCount =
+                  members?.filter(
+                    (m) => m.permission === 'owner' && (m.userId || m.status === 'active')
+                  ).length || 0;
                 return members?.map((member) => (
                   <MemberRow
                     key={member.id}

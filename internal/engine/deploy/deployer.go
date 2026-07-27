@@ -203,12 +203,20 @@ func (d *Deployer) StopAppService(ctx context.Context, app *models.AppService) e
 	}
 
 	containerName := utils.NormalizeContainerName(app.ID)
-	_ = d.containerManager.StopAndRemove(ctx, containerName)
-	if app.Replicas > 1 {
+	var stopErr error
+	if app.Replicas <= 1 {
+		stopErr = d.containerManager.StopAndRemove(ctx, containerName)
+	} else {
 		for i := 1; i <= app.Replicas; i++ {
 			replicaName := fmt.Sprintf("%s-%d", containerName, i)
-			_ = d.containerManager.StopAndRemove(ctx, replicaName)
+			if err := d.containerManager.StopAndRemove(ctx, replicaName); err != nil && stopErr == nil {
+				stopErr = err
+			}
 		}
+		_ = d.containerManager.StopAndRemove(ctx, containerName)
+	}
+	if stopErr != nil {
+		return fmt.Errorf("failed stopping app service: %w", stopErr)
 	}
 
 	app.Status = models.AppServiceStatusStopped
@@ -329,7 +337,14 @@ func (d *Deployer) ExecuteOneOffTask(ctx context.Context, app *models.AppService
 		primaryName := utils.NormalizeContainerName(app.ID)
 		if inspect, err := d.containerManager.Inspect(ctx, primaryName); err == nil && inspect.Config != nil {
 			imageTag = inspect.Config.Image
-		} else {
+		} else if inspect, err := d.containerManager.Inspect(ctx, fmt.Sprintf("%s-1", primaryName)); err == nil && inspect.Config != nil {
+			imageTag = inspect.Config.Image
+		} else if app.ContainerID != "" {
+			if inspect, err := d.containerManager.Inspect(ctx, app.ContainerID); err == nil && inspect.Config != nil {
+				imageTag = inspect.Config.Image
+			}
+		}
+		if imageTag == "" {
 			imageTag = fmt.Sprintf("codedock-app-%s:latest", app.ID)
 		}
 	}
@@ -384,12 +399,20 @@ func (d *Deployer) RestartAppService(ctx context.Context, app *models.AppService
 			return fmt.Errorf("failed to restart container %s: %w", containerName, err)
 		}
 	} else {
+		var restartErrs []string
 		for i := 1; i <= replicas; i++ {
 			repName := fmt.Sprintf("%s-%d", containerName, i)
 			inspect, err := d.containerManager.Inspect(ctx, repName)
-			if err == nil {
-				_ = d.containerManager.dockerClient.ContainerRestart(ctx, inspect.ID, container.StopOptions{})
+			if err != nil {
+				restartErrs = append(restartErrs, fmt.Sprintf("%s: %v", repName, err))
+				continue
 			}
+			if err := d.containerManager.dockerClient.ContainerRestart(ctx, inspect.ID, container.StopOptions{}); err != nil {
+				restartErrs = append(restartErrs, fmt.Sprintf("%s: %v", repName, err))
+			}
+		}
+		if len(restartErrs) > 0 {
+			return fmt.Errorf("failed restarting replicas: %s", strings.Join(restartErrs, "; "))
 		}
 	}
 
