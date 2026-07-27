@@ -77,11 +77,12 @@ func NewServer(db *sql.DB, v *utils.Vault, deployer *deploy.Deployer, traefikMan
 		CookieName:   "csrf_token",
 		CookieMaxAge: 86400,
 		Skipper: func(c echo.Context) bool {
-			path := c.Path()
-			if strings.HasPrefix(path, "/api/v1/auth/signin") ||
-				strings.HasPrefix(path, "/api/v1/auth/signup") ||
-				strings.HasPrefix(path, "/api/v1/auth/refresh") ||
-				strings.HasPrefix(path, "/api/v1/auth/oauth") {
+			path := c.Request().URL.Path
+			if strings.HasPrefix(path, "/api/auth/signin") ||
+				strings.HasPrefix(path, "/api/auth/signup") ||
+				strings.HasPrefix(path, "/api/auth/refresh") ||
+				strings.HasPrefix(path, "/api/auth/oauth") ||
+				strings.HasPrefix(path, "/api/v1/auth/") {
 				_, err := c.Cookie("csrf_token")
 				return err != nil
 			}
@@ -242,7 +243,7 @@ func NewServer(db *sql.DB, v *utils.Vault, deployer *deploy.Deployer, traefikMan
 
 	serverService := systemservices.NewServerService(serverRepo, userRepo)
 	serverHandler := system.NewServerHandler(serverService)
-	workerWSHandler := system.NewWorkerWSHandler(workerHub, serverRepo)
+	workerWSHandler := system.NewWorkerWSHandler(workerHub, serverRepo, userRepo)
 	serverMetricsWSHandler := system.NewServerMetricsWSHandler(tokenService, serverService, userRepo)
 	serviceLogsWSHandler := system.NewServiceLogsWSHandler(tokenService, appService, projectService, userRepo)
 

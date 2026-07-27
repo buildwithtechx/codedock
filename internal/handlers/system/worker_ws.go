@@ -17,13 +17,15 @@ import (
 type WorkerWSHandler struct {
 	hub        *engine.WorkerHub
 	serverRepo repositories.ServerRepository
+	userRepo   userStatusProvider
 	upgrader   websocket.Upgrader
 }
 
-func NewWorkerWSHandler(hub *engine.WorkerHub, serverRepo repositories.ServerRepository) *WorkerWSHandler {
+func NewWorkerWSHandler(hub *engine.WorkerHub, serverRepo repositories.ServerRepository, userRepo userStatusProvider) *WorkerWSHandler {
 	return &WorkerWSHandler{
 		hub:        hub,
 		serverRepo: serverRepo,
+		userRepo:   userRepo,
 		upgrader: websocket.Upgrader{
 			CheckOrigin: func(r *http.Request) bool {
 				origin := r.Header.Get("Origin")
@@ -59,6 +61,17 @@ func (h *WorkerWSHandler) Connect(c echo.Context) error {
 	server, err := h.serverRepo.GetByToken(c.Request().Context(), token)
 	if err != nil || server == nil {
 		return c.JSON(http.StatusUnauthorized, map[string]string{"error": "invalid token"})
+	}
+
+	if server.Status == "revoked" || server.Status == "disabled" || server.Status == "inactive" {
+		return c.JSON(http.StatusUnauthorized, map[string]string{"error": "worker token revoked or server disabled"})
+	}
+
+	if server.UserID != "" && h.userRepo != nil {
+		u, err := h.userRepo.GetUserByID(c.Request().Context(), server.UserID)
+		if err != nil || u == nil || !u.IsActive {
+			return c.JSON(http.StatusUnauthorized, map[string]string{"error": "user account not found or deactivated"})
+		}
 	}
 
 	ws, err := h.upgrader.Upgrade(c.Response(), c.Request(), nil)
