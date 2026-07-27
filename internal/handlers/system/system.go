@@ -30,7 +30,7 @@ func (h *SystemHandler) GetStats(c echo.Context) error {
 func (h *SystemHandler) Restart(c echo.Context) error {
 	go func() {
 		if _, err := exec.LookPath("docker"); err == nil {
-			exec.Command("docker", "compose", "-f", "/codedock/docker-compose.yml", "restart", "codedock").Start()
+			exec.Command("docker", "restart", "codedock-control-plane").Start()
 		} else {
 			if p, err := os.FindProcess(os.Getpid()); err == nil {
 				_ = p.Signal(syscall.SIGTERM)

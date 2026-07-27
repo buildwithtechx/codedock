@@ -117,12 +117,14 @@ func (bm *BackupManager) UnregisterBackup(backupConfigID string) {
 }
 
 func (bm *BackupManager) failBackupRecord(recID, errStr string) (*models.BackupRecord, error) {
-	_ = bm.store.UpdateBackupRecord(models.UpdateBackupRecordOpts{
+	if err := bm.store.UpdateBackupRecord(models.UpdateBackupRecordOpts{
 		ID:          recID,
 		Status:      models.BackupRecordStatusFailed,
 		Logs:        fmt.Sprintf("Failed: %s\n", errStr),
 		CompletedAt: time.Now().UTC().Format(time.RFC3339),
-	})
+	}); err != nil {
+		slog.Warn("failed to update backup record", "error", err)
+	}
 	return nil, errors.New(errStr)
 }
 
@@ -220,7 +222,7 @@ type FinalizeBackupOpts struct {
 func (bm *BackupManager) finalizeBackupRecord(opts FinalizeBackupOpts) (*models.BackupRecord, error) {
 	nowStr := time.Now().UTC().Format(time.RFC3339)
 	finalLogs := opts.Record.Logs + opts.ExecLogs + "\nBackup run completed successfully."
-	_ = bm.store.UpdateBackupRecord(models.UpdateBackupRecordOpts{
+	if err := bm.store.UpdateBackupRecord(models.UpdateBackupRecordOpts{
 		ID:            opts.Record.ID,
 		Status:        models.BackupRecordStatusCompleted,
 		FilePath:      opts.FilePath,
@@ -228,7 +230,9 @@ func (bm *BackupManager) finalizeBackupRecord(opts FinalizeBackupOpts) (*models.
 		Logs:          finalLogs,
 		FileSizeBytes: opts.SizeBytes,
 		CompletedAt:   nowStr,
-	})
+	}); err != nil {
+		slog.Warn("failed to update backup record", "error", err)
+	}
 
 	opts.Record.Status = models.BackupRecordStatusCompleted
 	opts.Record.FilePath = opts.FilePath

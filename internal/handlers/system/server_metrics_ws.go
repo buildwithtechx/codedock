@@ -1,9 +1,10 @@
 package system
 
 import (
-	"codedock.run/codedock/internal/handlers/utils"
 	"log/slog"
 	"net/http"
+
+	handlerutils "codedock.run/codedock/internal/handlers/utils"
 
 	"codedock.run/codedock/internal/engine/observability"
 	"codedock.run/codedock/internal/http/middleware"

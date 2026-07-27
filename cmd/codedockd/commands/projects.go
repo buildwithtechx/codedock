@@ -3,6 +3,7 @@ package commands
 import (
 	"context"
 	"fmt"
+	"os"
 	"time"
 
 	"github.com/google/uuid"
@@ -215,7 +216,9 @@ func runEnvVars(args []string) {
 			}
 		}
 		for k, v := range existing {
-			_ = envRepo.SetVar(context.Background(), projectID, k, v)
+			if err := envRepo.SetVar(context.Background(), projectID, k, v); err != nil {
+				fmt.Fprintf(os.Stderr, "Warning: failed to set %s: %v\n", k, err)
+			}
 		}
 
 	default:

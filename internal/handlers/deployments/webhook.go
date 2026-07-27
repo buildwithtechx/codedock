@@ -8,6 +8,7 @@ import (
 	"encoding/json"
 	"fmt"
 	"io"
+	"log/slog"
 	"net/http"
 
 	"time"
@@ -83,7 +84,12 @@ func (h *WebhookHandler) deployServiceAsync(appSvc *models.AppService) {
 			CreatedAt:     time.Now().UTC(),
 			UpdatedAt:     time.Now().UTC(),
 		}
-		dep, _ = h.deploymentService.CreateDeployment(ctx, dep)
+		var err error
+		dep, err = h.deploymentService.CreateDeployment(ctx, dep)
+		if err != nil {
+			slog.Error("failed to create deployment from webhook", "error", err)
+			return
+		}
 		h.deploymentService.ExecuteDeploymentAsync(dep)
 	}()
 }

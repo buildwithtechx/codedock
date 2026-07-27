@@ -22,7 +22,6 @@ func NewTokenService() (*TokenService, error) {
 	}
 	refreshSecret := os.Getenv("CODEDOCK_REFRESH_SECRET")
 	if refreshSecret == "" {
-		// Fallback to JWT secret if not provided for backward compatibility
 		refreshSecret = secret
 	}
 	return &TokenService{

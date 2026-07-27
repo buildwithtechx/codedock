@@ -1,8 +1,9 @@
 package system
 
 import (
-	systemservices "codedock.run/codedock/internal/services/system"
 	"net/http"
+
+	systemservices "codedock.run/codedock/internal/services/system"
 
 	"github.com/labstack/echo/v4"
 

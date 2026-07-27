@@ -14,20 +14,17 @@ import (
 )
 
 func (d *WorkerDaemon) processDeployment(ctx context.Context, payload models.WorkerDeployAppPayload) error {
-	// Initialize Docker client
 	dockerClient, err := client.NewClientWithOpts(client.FromEnv, client.WithAPIVersionNegotiation())
 	if err != nil {
 		return fmt.Errorf("failed to create docker client: %w", err)
 	}
 
-	// Create workspace
 	workspace := filepath.Join(os.TempDir(), "codedockw", payload.AppID)
 	_ = os.RemoveAll(workspace)
 	if err := os.MkdirAll(workspace, 0755); err != nil {
 		return err
 	}
 
-	// Clone repository
 	if payload.GitRepoURL != "" {
 		cloneURL := payload.GitRepoURL
 		if payload.GitAuthToken != "" {
@@ -46,7 +43,6 @@ func (d *WorkerDaemon) processDeployment(ctx context.Context, payload models.Wor
 		}
 	}
 
-	// Initialize Deployer
 	store := NewWorkerLocalStore(payload)
 	deployer := engine.NewDeployer(dockerClient, store)
 

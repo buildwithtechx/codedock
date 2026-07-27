@@ -1,12 +1,13 @@
 package deployments
 
 import (
-	"codedock.run/codedock/internal/handlers/utils"
 	"context"
 	"io"
 	"net/http"
 	"strings"
 	"time"
+
+	handlerutils "codedock.run/codedock/internal/handlers/utils"
 
 	"github.com/docker/docker/api/types/container"
 	"github.com/docker/docker/client"

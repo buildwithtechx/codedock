@@ -8,14 +8,12 @@ import (
 	"time"
 )
 
-// Client is the Codedock API client.
 type Client struct {
 	BaseURL    string
 	Token      string
 	HTTPClient *nethttp.Client
 }
 
-// NewClient creates a new API client.
 func NewClient(baseURL, token string) *Client {
 	return &Client{
 		BaseURL: baseURL,
@@ -26,7 +24,6 @@ func NewClient(baseURL, token string) *Client {
 	}
 }
 
-// sendRequest is a helper for making HTTP requests to the Codedock API.
 func (c *Client) sendRequest(method, endpoint string, payload any) (*nethttp.Response, error) {
 	var reqBytes []byte
 	var err error
@@ -51,7 +48,6 @@ func (c *Client) sendRequest(method, endpoint string, payload any) (*nethttp.Res
 	return c.HTTPClient.Do(req)
 }
 
-// Ping checks if the Codedock server is reachable and the token is valid.
 func (c *Client) Ping() error {
 	resp, err := c.sendRequest("GET", "/system/health", nil)
 	if err != nil {

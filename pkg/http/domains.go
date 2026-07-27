@@ -9,7 +9,6 @@ import (
 	"codedock.run/codedock/pkg/types"
 )
 
-// ListDomains retrieves the domains for a service.
 func (c *Client) ListDomains(serviceID string) ([]*types.DomainConfig, error) {
 	resp, err := c.sendRequest("GET", fmt.Sprintf("/services/%s/domains", serviceID), nil)
 	if err != nil {
@@ -32,7 +31,6 @@ func (c *Client) ListDomains(serviceID string) ([]*types.DomainConfig, error) {
 	return result.Data, nil
 }
 
-// AddDomain adds a new domain to a service.
 func (c *Client) AddDomain(serviceID string, req *types.DomainConfig) (*types.DomainConfig, error) {
 	resp, err := c.sendRequest("POST", fmt.Sprintf("/services/%s/domains", serviceID), req)
 	if err != nil {
@@ -55,7 +53,6 @@ func (c *Client) AddDomain(serviceID string, req *types.DomainConfig) (*types.Do
 	return result.Data, nil
 }
 
-// RemoveDomain removes a domain.
 func (c *Client) RemoveDomain(domainID string) error {
 	resp, err := c.sendRequest("DELETE", fmt.Sprintf("/domains/%s", domainID), nil)
 	if err != nil {

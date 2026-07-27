@@ -1,10 +1,11 @@
 package repositories
 
 import (
-	"codedock.run/codedock/internal/models"
 	"context"
 	"database/sql"
 	"fmt"
+
+	"codedock.run/codedock/internal/models"
 )
 
 type ServerRepository interface {

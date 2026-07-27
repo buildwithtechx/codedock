@@ -1,8 +1,9 @@
 package deployments
 
 import (
-	"codedock.run/codedock/internal/handlers/utils"
 	"net/http"
+
+	handlerutils "codedock.run/codedock/internal/handlers/utils"
 
 	"github.com/labstack/echo/v4"
 

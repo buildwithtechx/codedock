@@ -9,6 +9,7 @@ import (
 
 	"encoding/base64"
 	"encoding/json"
+
 	"github.com/docker/docker/api/types/image"
 	"github.com/docker/docker/api/types/registry"
 

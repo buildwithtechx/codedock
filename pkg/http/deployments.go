@@ -9,7 +9,6 @@ import (
 	"codedock.run/codedock/pkg/types"
 )
 
-// TriggerDeployment triggers a new manual deployment for an app service.
 func (c *Client) TriggerDeployment(serviceID string) (*types.Deployment, error) {
 	resp, err := c.sendRequest("POST", fmt.Sprintf("/services/%s/deploy", serviceID), nil)
 	if err != nil {
@@ -32,7 +31,6 @@ func (c *Client) TriggerDeployment(serviceID string) (*types.Deployment, error) 
 	return result.Data, nil
 }
 
-// GetDeploymentStatus checks the status of a specific deployment.
 func (c *Client) GetDeploymentStatus(deploymentID string) (*types.Deployment, error) {
 	resp, err := c.sendRequest("GET", fmt.Sprintf("/deployments/%s", deploymentID), nil)
 	if err != nil {
@@ -55,7 +53,6 @@ func (c *Client) GetDeploymentStatus(deploymentID string) (*types.Deployment, er
 	return result.Data, nil
 }
 
-// ListDeployments gets all deployments for a service.
 func (c *Client) ListDeployments(serviceID string) ([]types.Deployment, error) {
 	resp, err := c.sendRequest("GET", fmt.Sprintf("/services/%s/deployments", serviceID), nil)
 	if err != nil {
@@ -78,7 +75,6 @@ func (c *Client) ListDeployments(serviceID string) ([]types.Deployment, error) {
 	return result.Data, nil
 }
 
-// GetDeploymentLogs fetches build/run logs for a specific deployment.
 func (c *Client) GetDeploymentLogs(deploymentID string) (string, error) {
 	resp, err := c.sendRequest("GET", fmt.Sprintf("/deployments/%s/logs", deploymentID), nil)
 	if err != nil {
@@ -101,7 +97,6 @@ func (c *Client) GetDeploymentLogs(deploymentID string) (string, error) {
 	return result.Data, nil
 }
 
-// GetServiceMetrics fetches performance metrics for a service.
 func (c *Client) GetServiceMetrics(serviceID string) ([]types.ServiceMetric, error) {
 	resp, err := c.sendRequest("GET", fmt.Sprintf("/services/%s/metrics", serviceID), nil)
 	if err != nil {

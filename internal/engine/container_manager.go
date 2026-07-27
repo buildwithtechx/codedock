@@ -55,7 +55,11 @@ func (c *ContainerManager) CreateAndStart(ctx context.Context, opts ContainerRun
 		opts.Cmd = []string{"/bin/sh", "-c", "echo '<html><head><title>Under Maintenance</title><style>body{font-family:sans-serif;display:flex;align-items:center;justify-content:center;height:100vh;background:#000;color:#fff;text-align:center;} h1{font-size:2rem;margin-bottom:0.5rem;} p{color:#888;}</style></head><body><div><h1>Under Maintenance</h1><p>This service is temporarily down for maintenance.</p><p>Please check back shortly.</p></div></body></html>' > /usr/share/nginx/html/index.html && nginx -g 'daemon off;'"}
 		opts.InternalPort = 80
 		opts.HealthCheckPath = "/"
-		containerPort, _ = nat.NewPort("tcp", "80")
+		var err error
+		containerPort, err = nat.NewPort("tcp", "80")
+		if err != nil {
+			return "", fmt.Errorf("invalid default port definition: %w", err)
+		}
 	}
 
 	config := &container.Config{

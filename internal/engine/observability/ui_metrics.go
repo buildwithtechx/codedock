@@ -1,8 +1,9 @@
 package observability
 
 import (
-	"github.com/gorilla/websocket"
 	"sync"
+
+	"github.com/gorilla/websocket"
 )
 
 type UIMetricsHub struct {
@@ -35,7 +36,6 @@ func (h *UIMetricsHub) Broadcast(serverID string, metrics []byte) {
 	h.mu.RLock()
 	defer h.mu.RUnlock()
 	for conn := range h.clients[serverID] {
-		// Non-blocking write or fire-and-forget
 		go conn.WriteMessage(websocket.TextMessage, metrics)
 	}
 }

@@ -2,6 +2,7 @@ package databases
 
 import (
 	"context"
+	"log/slog"
 	"net/http"
 
 	"github.com/labstack/echo/v4"
@@ -214,7 +215,9 @@ func (h *DatabaseHandler) ImportData(c echo.Context) error {
 		return utils.Error(c, http.StatusBadRequest, "invalid payload")
 	}
 	go func() {
-		_ = h.databaseService.ImportData(context.Background(), id, req.SourceURL)
+		if err := h.databaseService.ImportData(context.Background(), id, req.SourceURL); err != nil {
+			slog.Error("failed to import data", "error", err)
+		}
 	}()
 	return utils.Success(c, "Import started", nil)
 }

@@ -4,6 +4,7 @@ import (
 	"context"
 	"fmt"
 	"io"
+	"log/slog"
 	"strings"
 	"time"
 
@@ -75,7 +76,9 @@ func (d *DatabaseDeployer) SpinUp(ctx context.Context, dbConfig *models.Database
 		return "", fmt.Errorf("failed to start database container: %w", err)
 	}
 	internalDNS := fmt.Sprintf("%s:%d", containerName, dbConfig.Port)
-	_ = d.store.UpdateDatabaseStatus(dbConfig.ID, models.DatabaseStatusRunning, created.ID)
+	if err := d.store.UpdateDatabaseStatus(dbConfig.ID, models.DatabaseStatusRunning, created.ID); err != nil {
+		slog.Warn("failed to update database status", "error", err)
+	}
 	dbConfig.ContainerID = created.ID
 	dbConfig.Status = models.DatabaseStatusRunning
 	dbConfig.InternalDNS = internalDNS

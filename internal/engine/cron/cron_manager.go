@@ -128,7 +128,9 @@ func (cm *CronManager) ExecuteScheduledTask(ctx context.Context, scheduledTaskID
 	if err != nil || !inspectResp.State.Running {
 		errMsg := fmt.Sprintf("cannot run scheduledTask: service container %s (%s) is stopped or not found", app.Name, containerName)
 		now := time.Now()
-		_ = cm.store.UpdateScheduledTaskStatusAndOutput(scheduledTaskID, models.ScheduledTaskStatusError, &now, errMsg)
+		if updateErr := cm.store.UpdateScheduledTaskStatusAndOutput(scheduledTaskID, models.ScheduledTaskStatusError, &now, errMsg); updateErr != nil {
+			slog.Warn("failed to update scheduled task status", "error", updateErr)
+		}
 		return errMsg, errors.New(errMsg)
 	}
 	execConfig := container.ExecOptions{
@@ -139,13 +141,17 @@ func (cm *CronManager) ExecuteScheduledTask(ctx context.Context, scheduledTaskID
 	execCreateResp, err := cm.dockerClient.ContainerExecCreate(ctx, inspectResp.ID, execConfig)
 	if err != nil {
 		now := time.Now()
-		_ = cm.store.UpdateScheduledTaskStatusAndOutput(scheduledTaskID, models.ScheduledTaskStatusError, &now, err.Error())
+		if updateErr := cm.store.UpdateScheduledTaskStatusAndOutput(scheduledTaskID, models.ScheduledTaskStatusError, &now, err.Error()); updateErr != nil {
+			slog.Warn("failed to update scheduled task status", "error", updateErr)
+		}
 		return "", fmt.Errorf("failed to create container exec for scheduledTask %s: %w", j.Name, err)
 	}
 	attachResp, err := cm.dockerClient.ContainerExecAttach(ctx, execCreateResp.ID, container.ExecAttachOptions{})
 	if err != nil {
 		now := time.Now()
-		_ = cm.store.UpdateScheduledTaskStatusAndOutput(scheduledTaskID, models.ScheduledTaskStatusError, &now, err.Error())
+		if updateErr := cm.store.UpdateScheduledTaskStatusAndOutput(scheduledTaskID, models.ScheduledTaskStatusError, &now, err.Error()); updateErr != nil {
+			slog.Warn("failed to update scheduled task status", "error", updateErr)
+		}
 		return "", fmt.Errorf("failed to attach to container exec for scheduledTask %s: %w", j.Name, err)
 	}
 	defer attachResp.Close()
@@ -161,7 +167,9 @@ func (cm *CronManager) ExecuteScheduledTask(ctx context.Context, scheduledTaskID
 		output += stderrBuf.String()
 	}
 	now := time.Now()
-	_ = cm.store.UpdateScheduledTaskStatusAndOutput(scheduledTaskID, models.ScheduledTaskStatusActive, &now, output)
+	if updateErr := cm.store.UpdateScheduledTaskStatusAndOutput(scheduledTaskID, models.ScheduledTaskStatusActive, &now, output); updateErr != nil {
+		slog.Warn("failed to update scheduled task status", "error", updateErr)
+	}
 	return output, nil
 }
 

@@ -9,7 +9,6 @@ import (
 	"codedock.run/codedock/pkg/types"
 )
 
-// ListEnvironments returns all environments for a given project ID.
 func (c *Client) ListEnvironments(projectID string) ([]*types.EnvironmentConfig, error) {
 	resp, err := c.sendRequest("GET", fmt.Sprintf("/projects/%s/environments", projectID), nil)
 	if err != nil {
@@ -32,7 +31,6 @@ func (c *Client) ListEnvironments(projectID string) ([]*types.EnvironmentConfig,
 	return result.Data, nil
 }
 
-// CreateEnvironment creates a new environment for a project.
 func (c *Client) CreateEnvironment(projectID string, req *types.EnvironmentConfig) (*types.EnvironmentConfig, error) {
 	resp, err := c.sendRequest("POST", fmt.Sprintf("/projects/%s/environments", projectID), req)
 	if err != nil {
@@ -55,7 +53,6 @@ func (c *Client) CreateEnvironment(projectID string, req *types.EnvironmentConfi
 	return result.Data, nil
 }
 
-// DeleteEnvironment deletes an environment by its ID.
 func (c *Client) DeleteEnvironment(id string) error {
 	resp, err := c.sendRequest("DELETE", fmt.Sprintf("/environments/%s", id), nil)
 	if err != nil {

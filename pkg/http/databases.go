@@ -9,7 +9,6 @@ import (
 	"codedock.run/codedock/pkg/types"
 )
 
-// ListDatabases returns all databases.
 func (c *Client) ListDatabases(projectID string) ([]*types.Database, error) {
 	url := "/databases"
 	if projectID != "" {
@@ -36,7 +35,6 @@ func (c *Client) ListDatabases(projectID string) ([]*types.Database, error) {
 	return result.Data, nil
 }
 
-// GetDatabase retrieves a single database by its ID.
 func (c *Client) GetDatabase(id string) (*types.Database, error) {
 	resp, err := c.sendRequest("GET", fmt.Sprintf("/databases/%s", id), nil)
 	if err != nil {
@@ -59,7 +57,6 @@ func (c *Client) GetDatabase(id string) (*types.Database, error) {
 	return result.Data, nil
 }
 
-// CreateDatabase creates a new database.
 func (c *Client) CreateDatabase(req *types.CreateDatabaseRequest) (*types.Database, error) {
 	resp, err := c.sendRequest("POST", "/databases", req)
 	if err != nil {
@@ -82,7 +79,6 @@ func (c *Client) CreateDatabase(req *types.CreateDatabaseRequest) (*types.Databa
 	return result.Data, nil
 }
 
-// DeleteDatabase deletes a database by its ID.
 func (c *Client) DeleteDatabase(id string) error {
 	resp, err := c.sendRequest("DELETE", fmt.Sprintf("/databases/%s", id), nil)
 	if err != nil {
@@ -98,7 +94,6 @@ func (c *Client) DeleteDatabase(id string) error {
 	return nil
 }
 
-// ImportDatabase triggers a data import from a source URL into the database.
 func (c *Client) ImportDatabase(id string, req *types.ImportDatabaseRequest) error {
 	resp, err := c.sendRequest("POST", fmt.Sprintf("/databases/%s/import", id), req)
 	if err != nil {

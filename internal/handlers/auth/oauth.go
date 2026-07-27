@@ -1,12 +1,13 @@
 package auth
 
 import (
-	"codedock.run/codedock/internal/handlers/utils"
 	"crypto/rand"
 	"encoding/hex"
 	"errors"
 	"net/http"
 	"strings"
+
+	handlerutils "codedock.run/codedock/internal/handlers/utils"
 
 	"github.com/labstack/echo/v4"
 

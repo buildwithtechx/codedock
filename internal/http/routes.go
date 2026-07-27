@@ -316,10 +316,8 @@ func (s *Server) registerMiscRoutes(apiGroup, authGroup *echo.Group) {
 }
 
 func (s *Server) registerBillingRoutes(apiGroup, authGroup *echo.Group) {
-	// Webhooks don't require auth
 	apiGroup.POST("/billing/webhook", s.billingHandler.Webhook)
 
-	// Protected billing routes
 	authGroup.GET("/billing/config", s.billingHandler.GetConfig)
 	authGroup.POST("/billing/checkout", s.billingHandler.CreateCheckoutSession)
 }

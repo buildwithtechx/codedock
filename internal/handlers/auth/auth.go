@@ -1,9 +1,10 @@
 package auth
 
 import (
-	"codedock.run/codedock/internal/handlers/utils"
 	"net/http"
 	"strings"
+
+	handlerutils "codedock.run/codedock/internal/handlers/utils"
 
 	"github.com/labstack/echo/v4"
 
@@ -132,7 +133,9 @@ type RefreshRequest struct {
 
 func (h *AuthHandler) Refresh(c echo.Context) error {
 	var payload RefreshRequest
-	_ = c.Bind(&payload)
+	if err := c.Bind(&payload); err != nil {
+		return utils.Error(c, http.StatusBadRequest, "invalid request body")
+	}
 	if payload.RefreshToken == "" {
 		if cookie, err := c.Cookie("codedock_refresh_token"); err == nil {
 			payload.RefreshToken = strings.TrimSpace(cookie.Value)

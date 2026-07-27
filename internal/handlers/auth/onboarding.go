@@ -1,10 +1,11 @@
 package auth
 
 import (
-	"codedock.run/codedock/internal/handlers/utils"
 	"fmt"
 	"net/http"
 	"os"
+
+	handlerutils "codedock.run/codedock/internal/handlers/utils"
 
 	"github.com/labstack/echo/v4"
 

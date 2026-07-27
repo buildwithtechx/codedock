@@ -9,7 +9,6 @@ import (
 	"codedock.run/codedock/pkg/types"
 )
 
-// ListProjects returns all projects accessible by the authenticated user.
 func (c *Client) ListProjects() ([]*types.ProjectConfig, error) {
 	resp, err := c.sendRequest("GET", "/projects", nil)
 	if err != nil {
@@ -32,7 +31,6 @@ func (c *Client) ListProjects() ([]*types.ProjectConfig, error) {
 	return result.Data, nil
 }
 
-// CreateProject creates a new project.
 func (c *Client) CreateProject(req *types.CreateProjectRequest) (*types.ProjectConfig, error) {
 	resp, err := c.sendRequest("POST", "/projects", req)
 	if err != nil {
@@ -55,7 +53,6 @@ func (c *Client) CreateProject(req *types.CreateProjectRequest) (*types.ProjectC
 	return result.Data, nil
 }
 
-// GetProject retrieves a single project by its ID.
 func (c *Client) GetProject(id string) (*types.ProjectConfig, error) {
 	resp, err := c.sendRequest("GET", fmt.Sprintf("/projects/%s", id), nil)
 	if err != nil {
@@ -78,7 +75,6 @@ func (c *Client) GetProject(id string) (*types.ProjectConfig, error) {
 	return result.Data, nil
 }
 
-// DeleteProject deletes a project by its ID.
 func (c *Client) DeleteProject(id string) error {
 	resp, err := c.sendRequest("DELETE", fmt.Sprintf("/projects/%s", id), nil)
 	if err != nil {

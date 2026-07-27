@@ -1,10 +1,11 @@
 package databases
 
 import (
-	authservices "codedock.run/codedock/internal/services/auth"
-	databaseservices "codedock.run/codedock/internal/services/databases"
 	"net/http"
 	"strconv"
+
+	authservices "codedock.run/codedock/internal/services/auth"
+	databaseservices "codedock.run/codedock/internal/services/databases"
 
 	"github.com/labstack/echo/v4"
 

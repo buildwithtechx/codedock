@@ -1,6 +1,7 @@
 package projects
 
 import (
+	"log/slog"
 	"net/http"
 
 	"github.com/labstack/echo/v4"
@@ -92,10 +93,12 @@ func (h *AppHandler) Create(c echo.Context) error {
 	}
 
 	domainName := utils.GenerateAppDomain(req.Name, "", "")
-	_, _ = h.envService.CreateDomain(c.Request().Context(), &models.DomainConfig{
+	if _, err := h.envService.CreateDomain(c.Request().Context(), &models.DomainConfig{
 		ServiceID:  created.ID,
 		DomainName: domainName,
-	})
+	}); err != nil {
+		slog.Warn("failed to create default domain", "error", err)
+	}
 
 	user := middleware.GetUserClaimsFromContext(c.Request().Context())
 	distinctID := "anonymous"
@@ -235,9 +238,13 @@ func (h *AppHandler) Delete(c echo.Context) error {
 		return err
 	}
 
-	_ = h.deployer.StopAppService(c.Request().Context(), id)
+	if err := h.deployer.StopAppService(c.Request().Context(), id); err != nil {
+		slog.Warn("failed to stop app service", "error", err)
+	}
 	if existing.ContainerID != "" {
-		_ = h.deployer.StopAppService(c.Request().Context(), id)
+		if err := h.deployer.StopAppService(c.Request().Context(), id); err != nil {
+			slog.Warn("failed to stop container", "error", err)
+		}
 	}
 
 	if err := h.appService.DeleteAppService(c.Request().Context(), id); err != nil {

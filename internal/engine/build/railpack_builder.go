@@ -9,7 +9,6 @@ import (
 	"os/exec"
 	"path/filepath"
 	"strings"
-	"text/template"
 
 	"github.com/docker/docker/client"
 )
@@ -213,8 +212,6 @@ func (r *RailpackBuilder) synthesizeDockerfile(stack string, opts BuildOptions) 
 
 func applyDockerfileOverrides(dockerfile string, o dockerfileOverrides) string {
 	lines := strings.Split(dockerfile, "\n")
-	tmplFuncs := template.FuncMap{}
-	_ = tmplFuncs
 
 	var out []string
 	for _, line := range lines {
