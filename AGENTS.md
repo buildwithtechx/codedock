@@ -17,18 +17,18 @@
 
 ## Stack
 
-| Layer           | Tech                                       |
-| --------------- | ------------------------------------------ |
-| Marketing (web) | Astro 7, Tailwind CSS v4                   |
-| Docs            | Astro 7, Starlight                         |
-| Styling         | Tailwind CSS v4 `@theme` directives        |
-| Monorepo        | npm workspaces (`apps/web/`, `apps/docs/`) |
-| Formatter       | Biome (`@biomejs/biome`)                   |
+| Layer           | Tech                                                     |
+| --------------- | -------------------------------------------------------- |
+| Marketing (web) | Vite 8, TanStack React Router, React 19, Tailwind CSS v4 |
+| Docs            | Astro 7, Starlight                                       |
+| Styling         | Tailwind CSS v4 `@theme` directives                      |
+| Monorepo        | npm workspaces (`apps/web/`, `apps/docs/`)               |
+| Formatter       | Biome (`@biomejs/biome`)                                 |
 
 ## Conventions
 
-- **Marketing pages** live in `apps/web/src/pages/`, components in `apps/web/src/components/`.
-- **Pure Astro + Tailwind CSS v4** — NO React/Vue/Svelte islands on marketing pages.
+- **Marketing pages** live in `apps/web/src/routes/`, components in `apps/web/src/components/`.
+- **Vite + TanStack React Router + React 19 + Tailwind CSS v4** for marketing site (`apps/web`).
 - **Docs pages** live in `apps/docs/src/content/docs/` as `.md` or `.mdx` files following Starlight file-based routing.
 - **Sidebar config** lives in `apps/docs/astro.config.mjs`. All sidebar groups MUST have `collapsed: false` so categories stay permanently open.
 - Use Tailwind CSS v4 `@theme` directives for design tokens; avoid custom CSS where Tailwind utilities suffice.

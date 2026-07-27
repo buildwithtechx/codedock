@@ -9,7 +9,8 @@
       "apps/docs/src/**",
       "!**/dist",
       "!**/node_modules",
-      "!**/.astro"
+      "!**/.astro",
+      "!**/routeTree.gen.ts"
     ]
   },
   "assist": {

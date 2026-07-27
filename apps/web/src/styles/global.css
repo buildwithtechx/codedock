@@ -17,3 +17,30 @@
   --color-foreground: #fafafa;
   --color-muted-foreground: #a1a1aa;
 }
+
+@keyframes logo-marquee {
+  from {
+    transform: translateX(0);
+  }
+  to {
+    transform: translateX(-33.333%);
+  }
+}
+
+.logo-track {
+  animation: logo-marquee 50s linear infinite;
+}
+
+.logo-track.reverse {
+  animation-direction: reverse;
+}
+
+.logo-marquee:hover .logo-track {
+  animation-play-state: paused;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .logo-track {
+    animation: none;
+  }
+}
