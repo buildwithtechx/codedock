@@ -73,7 +73,7 @@ func TestSecurityCSRFProtection(t *testing.T) {
 }
 
 func TestDeactivatedUserAuthenticationBlocking(t *testing.T) {
-	_, db, _, _ := setupTestApp(t)
+	server, db, _, _ := setupTestApp(t)
 	defer db.Close()
 
 	userRepo := repositories.NewUserRepo(db)
@@ -100,19 +100,14 @@ func TestDeactivatedUserAuthenticationBlocking(t *testing.T) {
 		t.Fatalf("failed to generate token: %v", err)
 	}
 
-	claims, err := tokenService.ValidateToken(tokenStr)
-	if err != nil {
-		t.Fatalf("expected JWT signature validation to succeed, got error: %v", err)
-	}
+	req := httptest.NewRequest("GET", "/api/projects", nil)
+	req.Header.Set("Authorization", "Bearer "+tokenStr)
+	rec := httptest.NewRecorder()
 
-	userID := claims["sub"].(string)
-	dbUser, err := userRepo.GetUserByID(ctx, userID)
-	if err != nil {
-		t.Fatalf("failed to query user: %v", err)
-	}
+	server.ServeHTTP(rec, req)
 
-	if dbUser.IsActive {
-		t.Fatalf("expected user to be inactive")
+	if rec.Code != http.StatusUnauthorized && rec.Code != http.StatusForbidden {
+		t.Fatalf("expected deactivated user token request to be rejected with 401/403, got %d: %s", rec.Code, rec.Body.String())
 	}
 }
 

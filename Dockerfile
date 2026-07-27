@@ -6,9 +6,9 @@ RUN npm ci
 
 COPY dashboard/ ./dashboard/
 COPY vite.config.ts tsconfig.json ./
-RUN npm run build
+RUN npm run build:dashboard
 
-FROM golang:1.25-alpine AS daemon-builder
+FROM golang:1.26-alpine AS daemon-builder
 WORKDIR /src
 
 RUN apk add --no-cache git ca-certificates tzdata

@@ -25,7 +25,7 @@ type BackupConfig struct {
 	Name            string             `json:"name" db:"name"`
 	Description     string             `json:"description" db:"description"`
 	DbUser          string             `json:"dbUser" db:"db_user"`
-	DbPassword      string             `json:"dbPassword" db:"db_password"`
+	DbPassword      string             `json:"-" db:"db_password"`
 	BackupEnabled   bool               `json:"backupEnabled" db:"backup_enabled"`
 	S3Enabled       bool               `json:"s3Enabled" db:"s3_enabled"`
 	DisableLocal    bool               `json:"disableLocal" db:"disable_local"`
@@ -45,7 +45,7 @@ type BackupRecord struct {
 	BackupConfigID string             `json:"backupConfigId" db:"backup_config_id"`
 	DatabaseID     string             `json:"databaseId,omitempty" db:"database_id"`
 	Status         BackupRecordStatus `json:"status" db:"status"`
-	FilePath       string             `json:"filePath" db:"file_path"`
+	FilePath       string             `json:"-" db:"file_path"`
 	FileSizeBytes  int64              `json:"fileSizeBytes" db:"file_size_bytes"`
 	S3URL          string             `json:"s3Url,omitempty" db:"s3_url"`
 	Logs           string             `json:"logs" db:"logs"`
@@ -56,7 +56,7 @@ type BackupRecord struct {
 type UpdateBackupRecordOpts struct {
 	ID            string             `json:"id"`
 	Status        BackupRecordStatus `json:"status"`
-	FilePath      string             `json:"file_path"`
+	FilePath      string             `json:"-"`
 	S3URL         string             `json:"s3_url"`
 	Logs          string             `json:"logs"`
 	FileSizeBytes int64              `json:"file_size_bytes"`
@@ -72,6 +72,6 @@ type S3Destination struct {
 	Bucket          string `json:"bucket" db:"bucket"`
 	Region          string `json:"region" db:"region"`
 	AccessKeyID     string `json:"accessKeyId" db:"access_key_id"`
-	SecretAccessKey string `json:"secretAccessKey" db:"secret_access_key"`
+	SecretAccessKey string `json:"-" db:"secret_access_key"`
 	CreatedAt       string `json:"createdAt" db:"created_at"`
 }

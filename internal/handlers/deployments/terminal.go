@@ -85,8 +85,15 @@ func (h *TerminalHandler) HandleWebSocket(c echo.Context) error {
 			return utils.Error(c, http.StatusUnauthorized, "invalid authentication token for terminal access")
 		}
 		claimsMap = cm
-		userID, _ := claimsMap["sub"].(string)
-		if userID != "" && h.userRepo != nil {
+		sub, ok := claimsMap["sub"].(string)
+		if !ok || strings.TrimSpace(sub) == "" {
+			sub, ok = claimsMap["Subject"].(string)
+		}
+		if !ok || strings.TrimSpace(sub) == "" {
+			return utils.Error(c, http.StatusUnauthorized, "invalid or missing subject claim in token")
+		}
+		userID := strings.TrimSpace(sub)
+		if h.userRepo != nil {
 			u, err := h.userRepo.GetUserByID(c.Request().Context(), userID)
 			if err != nil || u == nil || !u.IsActive {
 				return utils.Error(c, http.StatusUnauthorized, "user account not found or deactivated")
@@ -101,7 +108,11 @@ func (h *TerminalHandler) HandleWebSocket(c echo.Context) error {
 	if h.appService != nil {
 		if svc, err := h.appService.GetAppService(c.Request().Context(), id); err == nil && svc != nil {
 			if h.projectService != nil && claimsMap != nil {
-				userID, _ := claimsMap["sub"].(string)
+				sub, _ := claimsMap["sub"].(string)
+				if strings.TrimSpace(sub) == "" {
+					sub, _ = claimsMap["Subject"].(string)
+				}
+				userID := strings.TrimSpace(sub)
 				role, _ := claimsMap["role"].(string)
 				if role != "admin" {
 					if !h.projectService.HasPermission(c.Request().Context(), svc.ProjectID, userID, models.UserRole(role), "") {

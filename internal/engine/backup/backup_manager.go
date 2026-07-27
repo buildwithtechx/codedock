@@ -87,7 +87,7 @@ func (bm *BackupManager) registerBackupLocked(cfg *models.BackupConfig) error {
 		bm.cronEngine.Remove(entryID)
 		delete(bm.entries, cfg.ID)
 	}
-	if cfg.Status != "active" {
+	if cfg.Status != "active" || !cfg.BackupEnabled {
 		return nil
 	}
 	schedule := strings.TrimSpace(cfg.Schedule)
@@ -139,6 +139,9 @@ func (bm *BackupManager) TriggerBackup(ctx context.Context, backupConfigID strin
 	cfg, err := bm.store.GetBackupConfig(backupConfigID)
 	if err != nil || cfg == nil {
 		return nil, fmt.Errorf("backup config %s not found: %w", backupConfigID, err)
+	}
+	if !cfg.BackupEnabled {
+		return nil, fmt.Errorf("backup execution disabled for config %s", backupConfigID)
 	}
 
 	rec := &models.BackupRecord{
@@ -196,8 +199,13 @@ func (bm *BackupManager) TriggerBackup(ctx context.Context, backupConfigID strin
 	}
 
 	s3URL := ""
-	if cfg.S3DestinationID != "" {
+	if cfg.S3Enabled && cfg.S3DestinationID != "" {
 		s3URL, execLogs = bm.handleS3Upload(ctx, cfg, fileName, dumpBytes, execLogs)
+	}
+
+	if cfg.DisableLocal {
+		_ = os.Remove(filePath)
+		filePath = ""
 	}
 
 	bm.enforceRetentionPolicy(cfg)

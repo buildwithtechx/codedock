@@ -4,6 +4,7 @@ import (
 	"context"
 	"database/sql"
 	"errors"
+	"fmt"
 	"time"
 
 	"codedock.run/codedock/internal/models"
@@ -27,7 +28,7 @@ func (r *BackupRepo) CreateRecord(ctx context.Context, rec *models.BackupRecord)
 		VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?)`,
 		rec.ID, rec.BackupConfigID, rec.DatabaseID, rec.Status, rec.FilePath, rec.FileSizeBytes, rec.S3URL, rec.Logs, rec.StartedAt, rec.CompletedAt)
 	if err != nil {
-		return err
+		return fmt.Errorf("failed to create backup record: %w", err)
 	}
 	return nil
 }
@@ -39,7 +40,7 @@ func (r *BackupRepo) ListRecordsByConfig(ctx context.Context, backupConfigID str
 	err := r.db.SelectContext(ctx, &list, `SELECT id, backup_config_id, COALESCE(database_id, '') as database_id, status, COALESCE(file_path, '') as file_path, file_size_bytes, COALESCE(s3_url, '') as s3_url, COALESCE(logs, '') as logs, started_at, COALESCE(completed_at, '') as completed_at
 		FROM backup_records WHERE backup_config_id = ? ORDER BY started_at DESC`, backupConfigID)
 	if err != nil {
-		return nil, err
+		return nil, fmt.Errorf("failed to list backup records: %w", err)
 	}
 	if list == nil {
 		list = make([]*models.BackupRecord, 0)

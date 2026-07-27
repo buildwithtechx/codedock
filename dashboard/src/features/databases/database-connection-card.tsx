@@ -51,12 +51,24 @@ export function DatabaseConnectionCard({ database }: Props) {
     let copyText = text;
     if (copyText.includes('<password>') || label === 'Password') {
       const pwd = await handleRevealPassword();
-      if (pwd) {
+      if (!pwd) {
+        return;
+      }
+      if (label === 'Password') {
+        copyText = pwd;
+      } else {
         copyText = copyText.replace('<password>', pwd);
       }
     }
-    navigator.clipboard.writeText(copyText);
-    toast.success(`${label} copied to clipboard`);
+    if (copyText.includes('<password>')) {
+      return;
+    }
+    try {
+      await navigator.clipboard.writeText(copyText);
+      toast.success(`${label} copied to clipboard`);
+    } catch (_error) {
+      toast.error('Failed to copy to clipboard');
+    }
   };
 
   const getFormattedUrl = (includeMasking: boolean) => {
@@ -73,8 +85,9 @@ export function DatabaseConnectionCard({ database }: Props) {
         : activePassword
       : '<password>';
 
+    const hasPassword = activePassword === null || activePassword.length > 0;
     if (engine === 'redis' || engine === 'dragonfly' || engine === 'keydb') {
-      return `${scheme}://${activePassword ? `${pwdSegment}@` : ''}${internalDns}:${port}`;
+      return `${scheme}://${hasPassword ? `${pwdSegment}@` : ''}${internalDns}:${port}`;
     }
 
     return `${scheme}://${username}:${pwdSegment}@${internalDns}:${port}/${databaseName}`;
@@ -182,10 +195,7 @@ export function DatabaseConnectionCard({ database }: Props) {
                 size="icon"
                 className="h-6 w-6"
                 disabled={isRevealing}
-                onClick={async () => {
-                  const pwd = await handleRevealPassword();
-                  if (pwd) copyToClipboard(pwd, 'Password');
-                }}
+                onClick={() => copyToClipboard(revealedPassword || '', 'Password')}
                 title="Copy Password"
               >
                 <Copy className="h-3 w-3" />

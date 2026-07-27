@@ -84,7 +84,7 @@ npm run build
 ./bin/codedockd
 ```
 
-**Requirements:** Go 1.22+, Node.js 22+, and Docker.
+**Requirements:** Go 1.26+, Node.js 22+, and Docker.
 
 ## 📚 Documentation
 

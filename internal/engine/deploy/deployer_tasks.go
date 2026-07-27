@@ -53,9 +53,17 @@ func (d *Deployer) ExecuteRollingUpdate(ctx context.Context, app *models.AppServ
 			envSlice = append(envSlice, fmt.Sprintf("%s=%s", k, v))
 		}
 
+		effectiveImageTag := newImageTag
+		if effectiveImageTag == "" {
+			effectiveImageTag = app.ImageRef
+		}
+		if effectiveImageTag == "" {
+			effectiveImageTag = fmt.Sprintf("codedock-app-%s:latest", app.ID)
+		}
+
 		runOpts := ContainerRunOptions{
 			Name:            containerName,
-			ImageTag:        newImageTag,
+			ImageTag:        effectiveImageTag,
 			ServiceID:       app.ID,
 			Domain:          app.Domain,
 			InternalPort:    internalPort,
@@ -75,7 +83,9 @@ func (d *Deployer) ExecuteRollingUpdate(ctx context.Context, app *models.AppServ
 			return fmt.Errorf("rolling update failed on replica %d: %w", i+1, err)
 		}
 
-		if err := d.verifyHealthCheck(ctx, app, containerName, logWriter); err != nil {
+		appCopy := *app
+		appCopy.InternalPort = internalPort
+		if err := d.verifyHealthCheck(ctx, &appCopy, containerName, logWriter); err != nil {
 			return fmt.Errorf("health check failed on replica %d during rolling update: %w", i+1, err)
 		}
 
@@ -146,7 +156,10 @@ func (d *Deployer) ExecuteOneOffTask(ctx context.Context, app *models.AppService
 		if err != nil {
 			return fmt.Errorf("error waiting for task container: %w", err)
 		}
-	case <-statusCh:
+	case status := <-statusCh:
+		if status.StatusCode != 0 {
+			return fmt.Errorf("task container exited with non-zero code %d", status.StatusCode)
+		}
 	}
 
 	return nil
