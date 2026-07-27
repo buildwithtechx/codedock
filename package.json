@@ -13,7 +13,7 @@
     "dev:dryrun": "DEPLOY_DRY_RUN=true npm run dev",
     "dev:daemon": "go run github.com/air-verse/air@latest -c .air.toml",
     "dev:dashboard": "vite dev --port 3000",
-    "generate-routes": "tsr generate",
+    "generate-routes": "cd dashboard && ../node_modules/.bin/tsr generate",
     "build": "npm run build:dashboard && npm run build:daemon",
     "build:daemon": "go build -ldflags \"-s -w\" -o bin/codedockd ./cmd/codedockd",
     "build:dashboard": "vite build",

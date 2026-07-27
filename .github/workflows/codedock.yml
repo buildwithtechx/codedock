@@ -29,11 +29,10 @@ jobs:
           go-version: "1.25"
 
       - name: Install dependencies & build dashboard
-        working-directory: dashboard
         run: |
           npm ci
           npm run generate-routes
-          npm run build
+          npm run build:dashboard
 
       - name: Build and Package Binaries
         env:
