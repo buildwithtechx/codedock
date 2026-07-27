@@ -5,14 +5,10 @@ echo "🧪 Codedock — End-to-End Script Tests"
 echo "━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━"
 
 echo "🐳 Spinning up isolated test environment..."
-# Running Docker in Docker (dind)
 docker run -d --name codedock-e2e-test --privileged docker:dind
-
-# Give dind time to start
 sleep 5
 
 echo "📥 Testing install.sh..."
-# We test a mocked install script or run commands that simulate install.sh
 docker exec codedock-e2e-test sh -c 'apk add curl bash && echo "Simulating install.sh..."'
 
 echo "📥 Testing upgrade.sh..."

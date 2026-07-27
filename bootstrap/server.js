@@ -4,7 +4,7 @@ const path = require('node:path');
 const crypto = require('node:crypto');
 
 const PORT = process.env.PORT || 80;
-const SCRIPTS = new Set(['/install.sh', '/upgrade.sh', '/cli']);
+const SCRIPTS = new Set(['/install.sh', '/upgrade.sh', '/cli', '/base.sh', '/worker.sh']);
 const POSTHOG_KEY = process.env.POSTHOG_API_KEY;
 const POSTHOG_HOST = process.env.POSTHOG_HOST || 'https://us.i.posthog.com';
 
