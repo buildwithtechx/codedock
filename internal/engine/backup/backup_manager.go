@@ -203,7 +203,7 @@ func (bm *BackupManager) TriggerBackup(ctx context.Context, backupConfigID strin
 		s3URL, execLogs = bm.handleS3Upload(ctx, cfg, fileName, dumpBytes, execLogs)
 	}
 
-	if cfg.DisableLocal {
+	if cfg.DisableLocal && s3URL != "" {
 		_ = os.Remove(filePath)
 		filePath = ""
 	}

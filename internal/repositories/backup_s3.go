@@ -98,9 +98,10 @@ func (r *S3DestinationRepo) ListS3Destinations(ctx context.Context) ([]*models.S
 		for _, dest := range list {
 			if dest.SecretAccessKey != "" {
 				dec, err := r.vault.Decrypt(dest.SecretAccessKey)
-				if err == nil {
-					dest.SecretAccessKey = dec
+				if err != nil {
+					return nil, fmt.Errorf("failed to decrypt secret access key for destination %s: %w", dest.ID, err)
 				}
+				dest.SecretAccessKey = dec
 			}
 		}
 	}
@@ -121,9 +122,10 @@ func (r *S3DestinationRepo) GetS3Destination(ctx context.Context, id string) (*m
 	}
 	if dest.SecretAccessKey != "" && r.vault != nil {
 		dec, err := r.vault.Decrypt(dest.SecretAccessKey)
-		if err == nil {
-			dest.SecretAccessKey = dec
+		if err != nil {
+			return nil, fmt.Errorf("failed to decrypt secret access key for destination %s: %w", id, err)
 		}
+		dest.SecretAccessKey = dec
 	}
 	return &dest, nil
 }

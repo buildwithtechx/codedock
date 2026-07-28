@@ -32,6 +32,23 @@ func (h *BackupHandler) CreateS3Destination(c echo.Context) error {
 	return utils.Created(c, "Created successfully", dest)
 }
 
+func (h *BackupHandler) UpdateS3Destination(c echo.Context) error {
+	id := c.Param("id")
+	if id == "" {
+		return utils.Error(c, http.StatusBadRequest, "missing id")
+	}
+	var dest models.S3Destination
+	if err := c.Bind(&dest); err != nil {
+		return utils.Error(c, http.StatusBadRequest, "invalid payload")
+	}
+	dest.ID = id
+	if err := h.backupService.UpdateS3Destination(c.Request().Context(), &dest); err != nil {
+		return utils.Error(c, http.StatusInternalServerError, err.Error())
+	}
+	redactS3Destination(&dest)
+	return utils.Success(c, "Updated successfully", dest)
+}
+
 func redactS3Destination(destination *models.S3Destination) {
 	if destination != nil {
 		destination.SecretAccessKey = "********"

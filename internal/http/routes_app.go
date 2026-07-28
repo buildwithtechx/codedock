@@ -76,6 +76,7 @@ func (s *Server) registerBackupRoutes(authGroup *echo.Group) {
 	authGroup.DELETE("/backups/:id/records/:recordId", s.backupHandler.DeleteRecord)
 	authGroup.GET("/s3-destinations", s.backupHandler.ListS3Destinations, s.authGuard.RequireRole("admin"))
 	authGroup.POST("/s3-destinations", s.backupHandler.CreateS3Destination, s.authGuard.RequireRole("admin"))
+	authGroup.PUT("/s3-destinations/:id", s.backupHandler.UpdateS3Destination, s.authGuard.RequireRole("admin"))
 	authGroup.DELETE("/s3-destinations/:id", s.backupHandler.DeleteS3Destination, s.authGuard.RequireRole("admin"))
 }
 

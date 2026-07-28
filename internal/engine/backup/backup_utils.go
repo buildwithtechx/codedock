@@ -5,6 +5,7 @@ import (
 	"fmt"
 	"os"
 	"sort"
+	"strings"
 	"time"
 
 	"codedock.run/codedock/internal/models"
@@ -67,7 +68,11 @@ func (bm *BackupManager) enforceRetentionPolicy(cfg *models.BackupConfig) {
 	}
 
 	if cfg.MaxStorageGB > 0 {
-		maxBytes := int64(cfg.MaxStorageGB) * 1024 * 1024 * 1024
+		maxGB := cfg.MaxStorageGB
+		if maxGB > 8500000000 {
+			maxGB = 8500000000
+		}
+		maxBytes := int64(maxGB) * 1024 * 1024 * 1024
 		var currentBytes int64
 		for _, rec := range validRecords {
 			if _, expired := toExpire[rec.ID]; expired {
@@ -84,6 +89,15 @@ func (bm *BackupManager) enforceRetentionPolicy(cfg *models.BackupConfig) {
 	for _, rec := range toExpire {
 		if rec.FilePath != "" {
 			_ = os.Remove(rec.FilePath)
+		}
+		if rec.S3URL != "" && cfg.S3DestinationID != "" {
+			if dest, err := bm.store.GetS3Destination(cfg.S3DestinationID); err == nil && dest != nil {
+				prefix := fmt.Sprintf("s3://%s/", dest.Bucket)
+				key := strings.TrimPrefix(rec.S3URL, prefix)
+				if resp, err := signedS3Request(context.Background(), dest, "DELETE", key, nil, ""); err == nil {
+					resp.Body.Close()
+				}
+			}
 		}
 		_ = bm.store.UpdateBackupRecord(models.UpdateBackupRecordOpts{
 			ID:          rec.ID,
