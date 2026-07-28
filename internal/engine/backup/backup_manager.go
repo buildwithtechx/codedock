@@ -209,16 +209,19 @@ func (bm *BackupManager) TriggerBackup(ctx context.Context, backupConfigID strin
 		var s3Err error
 		s3URL, execLogs, s3Err = bm.handleS3Upload(ctx, cfg, fileName, dumpBytes, execLogs)
 		if s3Err != nil {
-			_ = bm.store.UpdateBackupRecord(models.UpdateBackupRecordOpts{
+			if err := bm.store.UpdateBackupRecord(models.UpdateBackupRecordOpts{
 				ID:            rec.ID,
 				Status:        models.BackupRecordStatusFailed,
 				FilePath:      filePath,
 				FileSizeBytes: sizeBytes,
 				Logs:          execLogs + fmt.Sprintf("Failed: %s\n", s3Err.Error()),
 				CompletedAt:   time.Now().UTC().Format(time.RFC3339),
-			})
+			}); err != nil {
+				slog.Warn("failed to update backup record on s3 upload failure", "error", err)
+			}
 			return nil, s3Err
 		}
+
 	}
 
 	if cfg.DisableLocal && s3URL != "" {

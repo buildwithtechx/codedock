@@ -31,6 +31,7 @@ func runMigrations(db *sql.DB, fsys fs.FS) error {
 	if err != nil {
 		return err
 	}
+
 	files, err := schemaFiles(fsys)
 	if err != nil {
 		return err

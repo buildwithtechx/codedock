@@ -10,7 +10,6 @@ import (
 	"net/http/cookiejar"
 	"net/http/httptest"
 	"net/url"
-	"os"
 	"path/filepath"
 	"testing"
 
@@ -49,11 +48,7 @@ func newE2EHarness(t *testing.T) *e2eHarness {
 	}
 
 	jwtSecret := "super-secure-e2e-test-jwt-secret-32-chars-minimum!"
-	prevSecret := os.Getenv("CODEDOCK_JWT_SECRET")
-	os.Setenv("CODEDOCK_JWT_SECRET", jwtSecret)
-	t.Cleanup(func() {
-		os.Setenv("CODEDOCK_JWT_SECRET", prevSecret)
-	})
+	t.Setenv("CODEDOCK_JWT_SECRET", jwtSecret)
 
 	dockerClient, err := client.NewClientWithOpts(client.FromEnv, client.WithAPIVersionNegotiation())
 	if err != nil {

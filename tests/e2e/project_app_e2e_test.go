@@ -14,8 +14,11 @@ func TestE2EProjectAndServiceLifecycle(t *testing.T) {
 		"password": "Password123!",
 		"name":     "Project Owner",
 	}, nil)
-	if signupErr != nil || (signupRes.StatusCode != http.StatusOK && signupRes.StatusCode != http.StatusCreated) {
-		t.Fatalf("expected signup to succeed, got status %d, err %v", signupRes.StatusCode, signupErr)
+	if signupErr != nil {
+		t.Fatalf("expected signup to succeed, got err %v", signupErr)
+	}
+	if signupRes.StatusCode != http.StatusOK && signupRes.StatusCode != http.StatusCreated {
+		t.Fatalf("expected signup to succeed, got status %d", signupRes.StatusCode)
 	}
 
 	projectReq := map[string]string{
