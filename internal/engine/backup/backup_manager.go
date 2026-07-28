@@ -117,10 +117,15 @@ func (bm *BackupManager) UnregisterBackup(backupConfigID string) {
 }
 
 func (bm *BackupManager) failBackupRecord(recID, errStr string) (*models.BackupRecord, error) {
+	return bm.failBackupWithLogs(recID, "", errStr)
+}
+
+func (bm *BackupManager) failBackupWithLogs(recID, priorLogs, errStr string) (*models.BackupRecord, error) {
+	logs := priorLogs + fmt.Sprintf("Failed: %s\n", errStr)
 	if err := bm.store.UpdateBackupRecord(models.UpdateBackupRecordOpts{
 		ID:          recID,
 		Status:      models.BackupRecordStatusFailed,
-		Logs:        fmt.Sprintf("Failed: %s\n", errStr),
+		Logs:        logs,
 		CompletedAt: time.Now().UTC().Format(time.RFC3339),
 	}); err != nil {
 		slog.Warn("failed to update backup record", "error", err)
@@ -204,7 +209,15 @@ func (bm *BackupManager) TriggerBackup(ctx context.Context, backupConfigID strin
 		var s3Err error
 		s3URL, execLogs, s3Err = bm.handleS3Upload(ctx, cfg, fileName, dumpBytes, execLogs)
 		if s3Err != nil {
-			return bm.failBackupRecord(rec.ID, s3Err.Error())
+			_ = bm.store.UpdateBackupRecord(models.UpdateBackupRecordOpts{
+				ID:            rec.ID,
+				Status:        models.BackupRecordStatusFailed,
+				FilePath:      filePath,
+				FileSizeBytes: sizeBytes,
+				Logs:          execLogs + fmt.Sprintf("Failed: %s\n", s3Err.Error()),
+				CompletedAt:   time.Now().UTC().Format(time.RFC3339),
+			})
+			return nil, s3Err
 		}
 	}
 

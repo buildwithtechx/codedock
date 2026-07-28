@@ -62,13 +62,16 @@ func TestE2ESignInAndDeactivatedUserBlocking(t *testing.T) {
 		"password": "Password123!",
 		"name":     "Test User",
 	}
-	h.post("/api/auth/signup", signupPayload, nil)
+	res, body, err := h.post("/api/auth/signup", signupPayload, nil)
+	if err != nil || (res.StatusCode != http.StatusOK && res.StatusCode != http.StatusCreated) {
+		t.Fatalf("expected signup to succeed, got status %d, body %v, err %v", res.StatusCode, body, err)
+	}
 
 	signinPayload := map[string]string{
 		"email":    "user@codedock.local",
 		"password": "Password123!",
 	}
-	res, body, err := h.post("/api/auth/signin", signinPayload, nil)
+	res, body, err = h.post("/api/auth/signin", signinPayload, nil)
 	if err != nil || res.StatusCode != http.StatusOK {
 		t.Fatalf("expected signin to succeed, got status %d, body %v", res.StatusCode, body)
 	}

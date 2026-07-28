@@ -1,6 +1,8 @@
 package backups
 
 import (
+	"database/sql"
+	"errors"
 	"net/http"
 
 	"github.com/labstack/echo/v4"
@@ -9,18 +11,7 @@ import (
 	"codedock.run/codedock/internal/utils"
 )
 
-type CreateS3DestinationRequest struct {
-	Name            string `json:"name"`
-	Description     string `json:"description"`
-	Provider        string `json:"provider"`
-	Endpoint        string `json:"endpoint"`
-	Bucket          string `json:"bucket"`
-	Region          string `json:"region"`
-	AccessKeyID     string `json:"accessKeyId"`
-	SecretAccessKey string `json:"secretAccessKey"`
-}
-
-type UpdateS3DestinationRequest struct {
+type S3DestinationPayload struct {
 	Name            string `json:"name"`
 	Description     string `json:"description"`
 	Provider        string `json:"provider"`
@@ -43,7 +34,7 @@ func (h *BackupHandler) ListS3Destinations(c echo.Context) error {
 }
 
 func (h *BackupHandler) CreateS3Destination(c echo.Context) error {
-	var req CreateS3DestinationRequest
+	var req S3DestinationPayload
 	if err := c.Bind(&req); err != nil {
 		return utils.Error(c, http.StatusBadRequest, "invalid payload")
 	}
@@ -69,7 +60,7 @@ func (h *BackupHandler) UpdateS3Destination(c echo.Context) error {
 	if id == "" {
 		return utils.Error(c, http.StatusBadRequest, "missing id")
 	}
-	var req UpdateS3DestinationRequest
+	var req S3DestinationPayload
 	if err := c.Bind(&req); err != nil {
 		return utils.Error(c, http.StatusBadRequest, "invalid payload")
 	}
@@ -85,6 +76,9 @@ func (h *BackupHandler) UpdateS3Destination(c echo.Context) error {
 		SecretAccessKey: req.SecretAccessKey,
 	}
 	if err := h.backupService.UpdateS3Destination(c.Request().Context(), &dest); err != nil {
+		if utils.IsNotFound(err) || errors.Is(err, sql.ErrNoRows) {
+			return utils.Error(c, http.StatusNotFound, "s3 destination not found")
+		}
 		return utils.Error(c, http.StatusInternalServerError, err.Error())
 	}
 	redactS3Destination(&dest)

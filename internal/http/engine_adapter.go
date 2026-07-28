@@ -121,6 +121,9 @@ func (a *engineAdapter) UpdateBackupRecord(opts models.UpdateBackupRecordOpts) e
 	rec.Status = opts.Status
 	rec.FilePath = opts.FilePath
 	rec.S3URL = opts.S3URL
+	if opts.S3DestinationID != "" {
+		rec.S3DestinationID = opts.S3DestinationID
+	}
 	rec.Logs = opts.Logs
 	rec.FileSizeBytes = opts.FileSizeBytes
 	rec.CompletedAt = opts.CompletedAt

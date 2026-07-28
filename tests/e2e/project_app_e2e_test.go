@@ -9,16 +9,18 @@ func TestE2EProjectAndServiceLifecycle(t *testing.T) {
 	h := newE2EHarness(t)
 	defer h.Close()
 
-	h.post("/api/auth/signup", map[string]string{
+	signupRes, _, signupErr := h.post("/api/auth/signup", map[string]string{
 		"email":    "owner_project@codedock.local",
 		"password": "Password123!",
 		"name":     "Project Owner",
 	}, nil)
+	if signupErr != nil || (signupRes.StatusCode != http.StatusOK && signupRes.StatusCode != http.StatusCreated) {
+		t.Fatalf("expected signup to succeed, got status %d, err %v", signupRes.StatusCode, signupErr)
+	}
 
 	projectReq := map[string]string{
-		"name":           "E2E Test Project",
-		"description":    "Integration test project",
-		"organizationId": "none",
+		"name":        "E2E Test Project",
+		"description": "Integration test project",
 	}
 
 	res, body, err := h.post("/api/projects", projectReq, nil)
@@ -93,8 +95,8 @@ func TestE2EProjectAndServiceLifecycle(t *testing.T) {
 	}
 
 	res, body, err = h.put("/api/services/invalid-service-id/variables/"+varID, varUpdate, nil)
-	if res.StatusCode != http.StatusBadRequest && res.StatusCode != http.StatusNotFound {
-		t.Fatalf("expected mismatched serviceId path validation to reject with 400/404, got %d", res.StatusCode)
+	if err != nil || (res.StatusCode != http.StatusBadRequest && res.StatusCode != http.StatusNotFound) {
+		t.Fatalf("expected mismatched serviceId path validation to reject with 400/404, got status %d, err %v", res.StatusCode, err)
 	}
 
 	res, body, err = h.delete("/api/services/"+serviceID+"/variables/"+varID, nil)

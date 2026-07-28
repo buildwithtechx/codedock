@@ -113,16 +113,18 @@ func (s *BackupService) UpdateS3Destination(ctx context.Context, dest *models.S3
 	if dest == nil || dest.ID == "" {
 		return errors.New("valid s3 destination with id required")
 	}
+	if dest.Bucket == "" {
+		return errors.New("bucket is required")
+	}
 	if dest.SecretAccessKey == "" || dest.SecretAccessKey == "********" {
 		existing, err := s.s3Repo.GetS3Destination(ctx, dest.ID)
 		if err != nil {
 			return fmt.Errorf("failed to fetch existing destination: %w", err)
 		}
 		dest.SecretAccessKey = existing.SecretAccessKey
-	} else {
-		if err := backup.EnsureS3Bucket(ctx, dest); err != nil {
-			return fmt.Errorf("failed to verify or create bucket: %w", err)
-		}
+	}
+	if err := backup.EnsureS3Bucket(ctx, dest); err != nil {
+		return fmt.Errorf("failed to verify or create bucket: %w", err)
 	}
 	return s.s3Repo.UpdateS3Destination(ctx, dest)
 }

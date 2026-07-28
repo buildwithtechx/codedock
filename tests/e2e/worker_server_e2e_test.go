@@ -10,18 +10,21 @@ func TestE2EWorkerServerAndS3DestinationManagement(t *testing.T) {
 	h := newE2EHarness(t)
 	defer h.Close()
 
-	h.post("/api/auth/signup", map[string]string{
+	res, body, err := h.post("/api/auth/signup", map[string]string{
 		"email":    "sys_admin@codedock.local",
 		"password": "Password123!",
 		"name":     "Sys Admin",
 	}, nil)
+	if err != nil || (res.StatusCode != http.StatusOK && res.StatusCode != http.StatusCreated) {
+		t.Fatalf("expected signup to succeed, got status %d, body %v, err %v", res.StatusCode, body, err)
+	}
 
 	serverReq := map[string]string{
 		"name":      "worker-us-east-1",
 		"ipAddress": "192.168.1.100",
 	}
 
-	res, body, err := h.post("/api/servers", serverReq, nil)
+	res, body, err = h.post("/api/servers", serverReq, nil)
 	if err != nil || (res.StatusCode != http.StatusOK && res.StatusCode != http.StatusCreated) {
 		t.Fatalf("expected create server node to succeed, got status %d, body %v", res.StatusCode, body)
 	}

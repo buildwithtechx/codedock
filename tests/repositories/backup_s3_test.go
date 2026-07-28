@@ -13,13 +13,13 @@ import (
 	_ "modernc.org/sqlite"
 )
 
-type mockFailingVault struct{}
+type mockFailDecryptVault struct{}
 
-func (mockFailingVault) Encrypt(plaintext string) (string, error) {
+func (mockFailDecryptVault) Encrypt(plaintext string) (string, error) {
 	return "enc:" + plaintext, nil
 }
 
-func (mockFailingVault) Decrypt(ciphertext string) (string, error) {
+func (mockFailDecryptVault) Decrypt(ciphertext string) (string, error) {
 	if strings.HasPrefix(ciphertext, "corrupt:") {
 		return "", errors.New("decryption error: invalid ciphertext")
 	}
@@ -37,7 +37,7 @@ func TestS3DestinationRepoUpdateAndVaultDecryption(t *testing.T) {
 		t.Fatalf("run migrations: %v", err)
 	}
 
-	repo := repositories.NewS3DestinationRepo(db, mockFailingVault{})
+	repo := repositories.NewS3DestinationRepo(db, mockFailDecryptVault{})
 
 	dest := &models.S3Destination{
 		Name:            "s3-test",
@@ -74,6 +74,20 @@ func TestS3DestinationRepoUpdateAndVaultDecryption(t *testing.T) {
 	}
 	if updated.SecretAccessKey != "newsecret" {
 		t.Fatalf("expected decrypted secret 'newsecret', got '%s'", updated.SecretAccessKey)
+	}
+
+	list, err := repo.ListS3Destinations(context.Background())
+	if err != nil {
+		t.Fatalf("failed to list s3 destinations: %v", err)
+	}
+	if len(list) != 1 {
+		t.Fatalf("expected 1 destination, got %d", len(list))
+	}
+	if list[0].Name != "s3-test-updated" {
+		t.Fatalf("expected name 's3-test-updated', got '%s'", list[0].Name)
+	}
+	if list[0].SecretAccessKey != "newsecret" {
+		t.Fatalf("expected decrypted secret 'newsecret', got '%s'", list[0].SecretAccessKey)
 	}
 
 	_, err = db.Exec("UPDATE s3_destinations SET secret_access_key = ? WHERE id = ?", "corrupt:data", dest.ID)

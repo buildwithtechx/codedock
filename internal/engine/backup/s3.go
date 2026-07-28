@@ -15,6 +15,8 @@ import (
 	"codedock.run/codedock/internal/models"
 )
 
+var s3HTTPClient = &http.Client{Timeout: 30 * time.Second}
+
 type S3Error struct {
 	Status  int
 	Code    string
@@ -91,8 +93,6 @@ func EnsureS3Bucket(ctx context.Context, dest *models.S3Destination) error {
 	resp.Body.Close()
 	return nil
 }
-
-var s3HTTPClient = &http.Client{Timeout: 30 * time.Second}
 
 func signedS3Request(ctx context.Context, dest *models.S3Destination, method, key string, body []byte, contentType string) (*http.Response, error) {
 	if body == nil {

@@ -11,7 +11,6 @@ import (
 	"time"
 
 	"codedock.run/codedock/internal/models"
-	"codedock.run/codedock/internal/utils"
 )
 
 type mockS3Transport struct {
@@ -26,10 +25,6 @@ func (m *mockS3Transport) RoundTrip(req *http.Request) (*http.Response, error) {
 		StatusCode: http.StatusOK,
 		Body:       io.NopCloser(strings.NewReader("")),
 	}, nil
-}
-
-func init() {
-	s3HTTPClient.Transport = &mockS3Transport{}
 }
 
 type mockStore struct {
@@ -133,14 +128,16 @@ func TestMaxStorageGBOverflow(t *testing.T) {
 
 func TestDisableLocalGuard(t *testing.T) {
 	store := newMockStore()
+	tmpData := t.TempDir()
+	prev := os.Getenv("CODEDOCK_DATA_DIR")
+	os.Setenv("CODEDOCK_DATA_DIR", tmpData)
+	defer os.Setenv("CODEDOCK_DATA_DIR", prev)
+
 	dir := t.TempDir()
 	bm := NewBackupManager(nil, store, dir)
 
-	dataDir := utils.GetDataDir()
-	_ = os.MkdirAll(dataDir, 0o755)
-	dbFile := filepath.Join(dataDir, "codedock.db")
+	dbFile := filepath.Join(tmpData, "codedock.db")
 	_ = os.WriteFile(dbFile, []byte("test db content"), 0o600)
-	defer os.Remove(dbFile)
 
 	cfg := &models.BackupConfig{
 		ID:            "cfg-disable-local",
@@ -197,6 +194,10 @@ func TestEnforceRetentionPolicyS3Cleanup(t *testing.T) {
 		StartedAt:       oldTime,
 	}
 	store.records[rec.ID] = rec
+
+	origTransport := s3HTTPClient.Transport
+	s3HTTPClient.Transport = &mockS3Transport{}
+	defer func() { s3HTTPClient.Transport = origTransport }()
 
 	bm.enforceRetentionPolicy(cfg)
 

@@ -14,11 +14,14 @@ func TestE2ESystemAndServiceSettings(t *testing.T) {
 		t.Fatalf("expected GET /api/system/public to succeed, got status %d", res.StatusCode)
 	}
 
-	h.post("/api/auth/signup", map[string]string{
+	res, body, err = h.post("/api/auth/signup", map[string]string{
 		"email":    "sys_settings_admin@codedock.local",
 		"password": "Password123!",
 		"name":     "Settings Admin",
 	}, nil)
+	if err != nil || (res.StatusCode != http.StatusOK && res.StatusCode != http.StatusCreated) {
+		t.Fatalf("expected signup to succeed, got status %d, body %v, err %v", res.StatusCode, body, err)
+	}
 
 	res, body, err = h.get("/api/system/stats", nil)
 	if err != nil || res.StatusCode != http.StatusOK {

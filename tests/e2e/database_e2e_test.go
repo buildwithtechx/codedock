@@ -9,18 +9,20 @@ func TestE2EDatabaseProvisioningAndCredentialsReveal(t *testing.T) {
 	h := newE2EHarness(t)
 	defer h.Close()
 
-	h.post("/api/auth/signup", map[string]string{
+	signupRes, _, signupErr := h.post("/api/auth/signup", map[string]string{
 		"email":    "db_owner@codedock.local",
 		"password": "Password123!",
 		"name":     "Database Owner",
 	}, nil)
+	if signupErr != nil || (signupRes.StatusCode != http.StatusOK && signupRes.StatusCode != http.StatusCreated) {
+		t.Fatalf("expected signup to succeed, got status %d, err %v", signupRes.StatusCode, signupErr)
+	}
 
-	projRes, projBody, _ := h.post("/api/projects", map[string]string{
-		"name":           "DB E2E Project",
-		"organizationId": "none",
+	projRes, projBody, err := h.post("/api/projects", map[string]string{
+		"name": "DB E2E Project",
 	}, nil)
-	if projRes.StatusCode != http.StatusOK && projRes.StatusCode != http.StatusCreated {
-		t.Fatalf("failed to create test project for database")
+	if err != nil || (projRes.StatusCode != http.StatusOK && projRes.StatusCode != http.StatusCreated) {
+		t.Fatalf("failed to create test project for database: %v", err)
 	}
 
 	projData, _ := projBody["data"].(map[string]any)

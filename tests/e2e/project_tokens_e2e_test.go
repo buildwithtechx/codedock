@@ -9,13 +9,16 @@ func TestE2EProjectTokensAndSharedEnvs(t *testing.T) {
 	h := newE2EHarness(t)
 	defer h.Close()
 
-	h.post("/api/auth/signup", map[string]string{
+	res, body, err := h.post("/api/auth/signup", map[string]string{
 		"email":    "proj_admin@codedock.local",
 		"password": "Password123!",
 		"name":     "Project Admin",
 	}, nil)
+	if err != nil || (res.StatusCode != http.StatusOK && res.StatusCode != http.StatusCreated) {
+		t.Fatalf("expected signup to succeed, got status %d, body %v, err %v", res.StatusCode, body, err)
+	}
 
-	res, body, err := h.post("/api/projects", map[string]string{
+	res, body, err = h.post("/api/projects", map[string]string{
 		"name":        "E2E Shared Project",
 		"description": "Project for testing shared envs and API tokens",
 	}, nil)
