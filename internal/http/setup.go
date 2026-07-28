@@ -75,6 +75,7 @@ func NewServer(db *sql.DB, v *utils.Vault, deployer *deploy.Deployer, traefikMan
 		TokenLength:  32,
 		TokenLookup:  "header:X-CSRF-Token",
 		CookieName:   "csrf_token",
+		CookiePath:   "/",
 		CookieMaxAge: 86400,
 		Skipper: func(c echo.Context) bool {
 			path := c.Request().URL.Path

@@ -45,7 +45,7 @@ func (r *ServiceVarRepo) Create(_ context.Context, v *models.Variable) error {
 
 	_, err := r.db.Exec(`INSERT INTO service_vars (id, service_id, environment_id, key, value, is_secret, created_at, updated_at)
 		VALUES (?, ?, ?, ?, ?, ?, ?, ?)
-		ON CONFLICT(service_id, key, environment_id) DO UPDATE SET value = excluded.value, is_secret = excluded.is_secret, updated_at = excluded.updated_at`,
+		ON CONFLICT(service_id, key) DO UPDATE SET value = excluded.value, is_secret = excluded.is_secret, updated_at = excluded.updated_at`,
 		v.ID, v.ServiceID, v.EnvironmentID, v.Key, v.Value, v.IsSecret, v.CreatedAt, v.UpdatedAt)
 	return err
 }
