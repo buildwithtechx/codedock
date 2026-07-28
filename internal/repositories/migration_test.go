@@ -29,7 +29,9 @@ func TestMigrationFreshDatabase(t *testing.T) {
 		t.Fatalf("unexpected error: %v", err)
 	}
 	var count int
-	db.QueryRow("SELECT COUNT(*) FROM schema_migrations").Scan(&count)
+	if err := db.QueryRow("SELECT COUNT(*) FROM schema_migrations").Scan(&count); err != nil {
+		t.Fatalf("failed to scan migration count: %v", err)
+	}
 	if count != 2 {
 		t.Fatalf("expected 2 applied migrations, got %d", count)
 	}
@@ -47,7 +49,9 @@ func TestMigrationIdempotent(t *testing.T) {
 		t.Fatalf("second run failed: %v", err)
 	}
 	var count int
-	db.QueryRow("SELECT COUNT(*) FROM schema_migrations").Scan(&count)
+	if err := db.QueryRow("SELECT COUNT(*) FROM schema_migrations").Scan(&count); err != nil {
+		t.Fatalf("failed to scan migration count: %v", err)
+	}
 	if count != 1 {
 		t.Fatalf("expected 1 record after two runs, got %d", count)
 	}
@@ -74,12 +78,16 @@ func TestMigrationFailedRollback(t *testing.T) {
 		t.Fatal("expected migration to fail on bad SQL")
 	}
 	var count int
-	db.QueryRow("SELECT COUNT(*) FROM schema_migrations").Scan(&count)
+	if err := db.QueryRow("SELECT COUNT(*) FROM schema_migrations").Scan(&count); err != nil {
+		t.Fatalf("failed to scan migration count: %v", err)
+	}
 	if count != 1 {
 		t.Fatalf("expected only 001 to be recorded, got %d", count)
 	}
 	var exists int
-	db.QueryRow("SELECT COUNT(*) FROM sqlite_master WHERE type='table' AND name='users'").Scan(&exists)
+	if err := db.QueryRow("SELECT COUNT(*) FROM sqlite_master WHERE type='table' AND name='users'").Scan(&exists); err != nil {
+		t.Fatalf("failed to check users table existence: %v", err)
+	}
 	if exists != 1 {
 		t.Fatal("expected users table from 001 to still exist after 002 rollback")
 	}
@@ -116,7 +124,9 @@ func TestMigrationSQLOnlyFiles(t *testing.T) {
 		t.Fatalf("unexpected error: %v", err)
 	}
 	var count int
-	db.QueryRow("SELECT COUNT(*) FROM schema_migrations").Scan(&count)
+	if err := db.QueryRow("SELECT COUNT(*) FROM schema_migrations").Scan(&count); err != nil {
+		t.Fatalf("failed to scan migration count: %v", err)
+	}
 	if count != 1 {
 		t.Fatalf("expected only .sql files to be applied, got %d migrations", count)
 	}

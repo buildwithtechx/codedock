@@ -16,8 +16,14 @@ func TestHashPasswordAndCheck(t *testing.T) {
 }
 
 func TestHashPasswordIsUnique(t *testing.T) {
-	h1, _ := HashPassword("same-password")
-	h2, _ := HashPassword("same-password")
+	h1, err := HashPassword("same-password")
+	if err != nil {
+		t.Fatalf("first HashPassword failed: %v", err)
+	}
+	h2, err := HashPassword("same-password")
+	if err != nil {
+		t.Fatalf("second HashPassword failed: %v", err)
+	}
 	if h1 == h2 {
 		t.Fatal("expected two hashes of the same password to differ (random salt)")
 	}
