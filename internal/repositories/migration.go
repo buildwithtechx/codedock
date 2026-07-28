@@ -1,9 +1,12 @@
 package repositories
 
 import (
+	"crypto/sha256"
 	"database/sql"
 	"embed"
+	"encoding/hex"
 	"fmt"
+	"io/fs"
 	"log/slog"
 	"sort"
 	"strings"
@@ -13,145 +16,117 @@ import (
 var schemaFS embed.FS
 
 func RunMigrations(db *sql.DB) error {
-	files, err := listSchemaFiles()
+	sub, err := fs.Sub(schemaFS, "schema")
+	if err != nil {
+		return fmt.Errorf("failed to sub schema fs: %w", err)
+	}
+	return runMigrations(db, sub)
+}
+
+func runMigrations(db *sql.DB, fsys fs.FS) error {
+	if err := createMigrationsTable(db); err != nil {
+		return err
+	}
+	applied, err := loadApplied(db)
 	if err != nil {
 		return err
 	}
 
-	if err := ensureMigrationsTable(db); err != nil {
-		return err
-	}
-
-	applied, err := loadAppliedMigrations(db)
+	files, err := schemaFiles(fsys)
 	if err != nil {
 		return err
 	}
-
 	for _, file := range files {
-		if applied[file] {
+		content, err := fs.ReadFile(fsys, file)
+		if err != nil {
+			return fmt.Errorf("failed to read migration %s: %w", file, err)
+		}
+		sum := fileChecksum(content)
+		if storedSum, done := applied[file]; done {
+			if storedSum != sum {
+				return fmt.Errorf("migration %s was modified after being applied (checksum mismatch)", file)
+			}
 			continue
 		}
-
-		content, err := schemaFS.ReadFile("schema/" + file)
-		if err != nil {
-			return fmt.Errorf("failed to read schema file %s: %w", file, err)
+		if err := applyMigration(db, file, content, sum); err != nil {
+			return err
 		}
-
-		tx, err := db.Begin()
-		if err != nil {
-			return fmt.Errorf("failed to begin transaction for %s: %w", file, err)
-		}
-
-		if _, err := tx.Exec(string(content)); err != nil {
-			tx.Rollback()
-			return fmt.Errorf("migration failed for %s: %w", file, err)
-		}
-
-		if _, err := tx.Exec("INSERT INTO schema_migrations (filename) VALUES (?)", file); err != nil {
-			tx.Rollback()
-			return fmt.Errorf("failed to record migration %s: %w", file, err)
-		}
-
-		if err := tx.Commit(); err != nil {
-			return fmt.Errorf("failed to commit migration %s: %w", file, err)
-		}
-
-		slog.Info("applied migration", "file", file)
 	}
-
 	slog.Info("schema migrations up to date")
 	return nil
 }
 
-func listSchemaFiles() ([]string, error) {
-	entries, err := schemaFS.ReadDir("schema")
+func applyMigration(db *sql.DB, file string, content []byte, sum string) error {
+	tx, err := db.Begin()
 	if err != nil {
-		return nil, fmt.Errorf("failed to read embedded schema directory: %w", err)
+		return fmt.Errorf("failed to begin transaction for %s: %w", file, err)
 	}
-
-	var files []string
-	for _, entry := range entries {
-		if !entry.IsDir() {
-			files = append(files, entry.Name())
+	rollback := func(cause error) error {
+		if rbErr := tx.Rollback(); rbErr != nil {
+			return fmt.Errorf("%w (rollback: %v)", cause, rbErr)
 		}
+		return cause
 	}
-	sort.Strings(files)
-	return files, nil
+	if _, err := tx.Exec(string(content)); err != nil {
+		return rollback(fmt.Errorf("migration failed for %s: %w", file, err))
+	}
+	if _, err := tx.Exec("INSERT INTO schema_migrations (filename, checksum) VALUES (?, ?)", file, sum); err != nil {
+		return rollback(fmt.Errorf("failed to record migration %s: %w", file, err))
+	}
+	if err := tx.Commit(); err != nil {
+		return fmt.Errorf("failed to commit migration %s: %w", file, err)
+	}
+	slog.Info("applied migration", "file", file)
+	return nil
 }
 
-func ensureMigrationsTable(db *sql.DB) error {
+func createMigrationsTable(db *sql.DB) error {
 	_, err := db.Exec(`
 		CREATE TABLE IF NOT EXISTS schema_migrations (
-			filename TEXT PRIMARY KEY,
+			filename   TEXT PRIMARY KEY,
+			checksum   TEXT NOT NULL DEFAULT '',
 			applied_at TEXT DEFAULT CURRENT_TIMESTAMP
 		)
 	`)
 	if err != nil {
 		return fmt.Errorf("failed to create schema_migrations table: %w", err)
 	}
-
-	var count int
-	if err := db.QueryRow("SELECT COUNT(*) FROM schema_migrations").Scan(&count); err != nil {
-		return fmt.Errorf("failed to count applied migrations: %w", err)
-	}
-
-	if count > 0 {
-		return nil
-	}
-
-	var serverSettingsExists bool
-	if err := db.QueryRow("SELECT COUNT(*) > 0 FROM sqlite_master WHERE type = 'table' AND name = 'server_settings'").Scan(&serverSettingsExists); err != nil {
-		return fmt.Errorf("failed to check existing schema: %w", err)
-	}
-
-	if !serverSettingsExists {
-		return nil
-	}
-
-	files, err := listSchemaFiles()
-	if err != nil {
-		return err
-	}
-
-	var baselineFiles []string
-	for _, f := range files {
-		if strings.HasPrefix(f, "001_") || strings.HasPrefix(f, "002_") {
-			baselineFiles = append(baselineFiles, f)
-		}
-	}
-
-	if len(baselineFiles) > 0 {
-		var placeholders []string
-		var args []any
-		for _, file := range baselineFiles {
-			placeholders = append(placeholders, "(?)")
-			args = append(args, file)
-		}
-		query := fmt.Sprintf("INSERT INTO schema_migrations (filename) VALUES %s", strings.Join(placeholders, ", "))
-		if _, err := db.Exec(query, args...); err != nil {
-			return fmt.Errorf("failed to seed migrations: %w", err)
-		}
-	}
-
-	slog.Info("seeded schema_migrations for existing database")
 	return nil
 }
 
-func loadAppliedMigrations(db *sql.DB) (map[string]bool, error) {
-	rows, err := db.Query("SELECT filename FROM schema_migrations")
+func loadApplied(db *sql.DB) (map[string]string, error) {
+	rows, err := db.Query("SELECT filename, checksum FROM schema_migrations")
 	if err != nil {
 		return nil, fmt.Errorf("failed to load applied migrations: %w", err)
 	}
 	defer rows.Close()
-
-	applied := make(map[string]bool)
+	applied := make(map[string]string)
 	for rows.Next() {
-		var filename string
-		if err := rows.Scan(&filename); err != nil {
+		var name, sum string
+		if err := rows.Scan(&name, &sum); err != nil {
 			return nil, fmt.Errorf("failed to scan migration row: %w", err)
 		}
-		applied[filename] = true
+		applied[name] = sum
 	}
-
 	return applied, rows.Err()
+}
+
+func schemaFiles(fsys fs.FS) ([]string, error) {
+	entries, err := fs.ReadDir(fsys, ".")
+	if err != nil {
+		return nil, fmt.Errorf("failed to read schema directory: %w", err)
+	}
+	var files []string
+	for _, e := range entries {
+		if !e.IsDir() && strings.HasSuffix(e.Name(), ".sql") {
+			files = append(files, e.Name())
+		}
+	}
+	sort.Strings(files)
+	return files, nil
+}
+
+func fileChecksum(content []byte) string {
+	sum := sha256.Sum256(content)
+	return hex.EncodeToString(sum[:])
 }

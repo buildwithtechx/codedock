@@ -3,7 +3,7 @@ tmp_dir = "tmp"
 
 [build]
   cmd = "go build -o ./tmp/main ./cmd/codedockd"
-  bin = "./tmp/main"
+  entrypoint = ["./tmp/main"]
   full_bin = ""
   include_ext = ["go", "tpl", "tmpl", "html"]
   exclude_dir = ["dashboard", "web", "docs", "data", "tmp", "node_modules"]

@@ -17,11 +17,7 @@ function RegisterPage() {
   const { data: setupStatus, isLoading } = useGetSetupStatus();
   const registrationEnabled = publicSettings?.data?.registrationEnabled ?? true;
 
-  if (!isLoading && setupStatus?.data?.setupRequired) {
-    return <Navigate to="/onboarding" replace />;
-  }
-
-  if (!isLoading && !registrationEnabled) {
+  if (!isLoading && !registrationEnabled && !setupStatus?.data?.setupRequired) {
     return <Navigate to="/signin" replace />;
   }
 
@@ -40,7 +36,7 @@ function RegisterPage() {
           </div>
         </div>
 
-        <OAuthButtons />
+        {!setupStatus?.data?.setupRequired && <OAuthButtons />}
         <RegisterForm />
 
         <p className="mt-5 text-center text-muted-foreground text-sm">

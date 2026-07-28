@@ -1,15 +1,14 @@
-# Stage 1: Build the Dashboard GUI (TanStack + Vite)
 FROM node:22-alpine AS dashboard-builder
-WORKDIR /app/dashboard
+WORKDIR /app
 
-COPY dashboard/package*.json ./
+COPY package*.json ./
 RUN npm ci
 
-COPY dashboard/ ./
-RUN npm run build
+COPY dashboard/ ./dashboard/
+COPY vite.config.ts tsconfig.json ./
+RUN npm run build:dashboard
 
-# Stage 2: Build the Go daemon binary (`codedockd`)
-FROM golang:1.25-alpine AS daemon-builder
+FROM golang:1.26-alpine AS daemon-builder
 WORKDIR /src
 
 RUN apk add --no-cache git ca-certificates tzdata
@@ -23,7 +22,6 @@ COPY --from=dashboard-builder /app/dashboard/dist ./dashboard/dist
 ARG VERSION=dev
 RUN CGO_ENABLED=0 GOOS=linux go build -a -installsuffix cgo -ldflags="-w -s -X main.codedockVersion=${VERSION}" -o /codedockd ./cmd/codedockd
 
-# Stage 3: Minimal Production Runtime
 FROM alpine:3.21 AS production
 WORKDIR /var/www/codedock
 

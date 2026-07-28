@@ -170,18 +170,21 @@ func (s *OAuthService) HandleCallback(ctx context.Context, providerName, code st
 		return "", "", nil, err
 	}
 	if u == nil {
+		role := models.UserRoleMember
+		if count, err := s.userRepo.CountUsers(ctx); err == nil && count == 0 {
+			role = models.UserRoleOwner
+		}
 		u = &models.User{
 			ID:           uuid.New().String(),
 			Email:        email,
 			PasswordHash: "oauth-login-no-password",
-			Role:         "member",
+			Role:         role,
 			CreatedAt:    time.Now(),
 			UpdatedAt:    time.Now(),
 		}
 		if err := s.userRepo.CreateUser(ctx, u); err != nil {
 			return "", "", nil, errors.New("failed to create user account from oauth: " + err.Error())
 		}
-
 	}
 	token, err := s.tokenService.GenerateToken(u)
 	if err != nil {

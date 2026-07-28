@@ -8,11 +8,11 @@ if [ -n "${BASH_SOURCE[0]:-}" ] && [ -f "${BASH_SOURCE[0]}" ] && [ "${BASH_SOURC
   fi
 fi
 
-if [ -z "${BOLD:-}" ] && [ -f "/codedock/bootstrap/base.sh" ]; then
+if ! declare -f ensure_root &>/dev/null && [ -f "/codedock/bootstrap/base.sh" ]; then
   source "/codedock/bootstrap/base.sh"
 fi
 
-if [ -z "${BOLD:-}" ]; then
+if ! declare -f ensure_root &>/dev/null; then
   BOLD="\033[1m"; DIM="\033[2m"; GREEN="\033[0;32m"; YELLOW="\033[0;33m"; RED="\033[0;31m"; NC="\033[0m"
   ensure_root() { [ "$EUID" -eq 0 ] || { echo -e "${RED}❌ Run as root.${NC}"; exit 1; }; }
   ensure_docker() {
@@ -146,8 +146,9 @@ for i in $(seq 1 30); do
   sleep 2
 done
 
-docker stop codedock-control-plane 2>/dev/null || true
-setup_systemd_service "codedock" "[Unit]
+if command -v systemctl &>/dev/null && [ -d /etc/systemd/system ]; then
+  docker stop codedock-control-plane 2>/dev/null || true
+  setup_systemd_service "codedock" "[Unit]
 Description=Codedock – Self-hosted PaaS
 After=docker.service
 Requires=docker.service
@@ -161,6 +162,7 @@ ExecStop=/usr/bin/docker stop codedock-control-plane
 
 [Install]
 WantedBy=multi-user.target"
+fi
 
 echo ""
 echo "━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━"

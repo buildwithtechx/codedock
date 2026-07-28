@@ -85,7 +85,7 @@ func saveAppHandler[T any](save saveFunc[T]) echo.HandlerFunc {
 		if err := save(c.Request().Context(), &app); err != nil {
 			return utils.Error(c, http.StatusInternalServerError, err.Error())
 		}
-		return utils.Success(c, "Operation successful", app)
+		return utils.Success(c, "Operation successful", redactApp(&app))
 	}
 }
 
@@ -115,7 +115,7 @@ func (h *GitAppsHandler) ExchangeGithubManifestCode(c echo.Context) error {
 		return utils.Error(c, http.StatusInternalServerError, err.Error())
 	}
 
-	return utils.Success(c, "Operation successful", app)
+	return utils.Success(c, "Operation successful", redactApp(app))
 }
 
 func (h *GitAppsHandler) ListGithubApps(c echo.Context) error {

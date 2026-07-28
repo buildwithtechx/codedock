@@ -1,6 +1,8 @@
 package utils
 
 import (
+	"database/sql"
+	"errors"
 	"fmt"
 )
 
@@ -84,6 +86,14 @@ func (e *NotFoundError) Error() string {
 
 func NewNotFoundError(resource, id string) *NotFoundError {
 	return &NotFoundError{Resource: resource, ID: id}
+}
+
+func IsNotFound(err error) bool {
+	if err == nil {
+		return false
+	}
+	var nf *NotFoundError
+	return errors.As(err, &nf) || errors.Is(err, sql.ErrNoRows)
 }
 
 type EngineError struct {

@@ -65,7 +65,7 @@
 make dev                 # starts backend + dashboard concurrently (http://localhost:3000)
 make build               # builds dashboard/dist and Go binary bin/codedockd
 make format              # runs go fmt ./... and dashboard Biome formatter
-cd dashboard && npm run generate-routes  # regenerate TanStack route tree
+npm run generate-routes  # regenerate TanStack route tree
 ```
 
 **Conventions:**

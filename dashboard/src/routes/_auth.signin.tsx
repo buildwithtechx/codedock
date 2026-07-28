@@ -18,7 +18,7 @@ function LoginPage() {
   const registrationEnabled = publicSettings?.data?.registrationEnabled ?? true;
 
   if (!isLoading && setupStatus?.data?.setupRequired) {
-    return <Navigate to="/onboarding" replace />;
+    return <Navigate to="/signup" replace />;
   }
 
   return (

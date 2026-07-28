@@ -84,7 +84,7 @@ func (g *AuthGuard) verifyProjectRole(c echo.Context, minPermission models.Membe
 		return utils.Error(c, http.StatusUnauthorized, "unauthorized")
 	}
 
-	if userClaims.Role == "admin" {
+	if userClaims.Role == models.UserRoleAdmin || userClaims.Role == models.UserRoleOwner {
 		return nil
 	}
 

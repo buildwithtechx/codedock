@@ -1,6 +1,7 @@
 package system
 
 import (
+	"context"
 	"log/slog"
 	"net/http"
 	"strings"
@@ -21,14 +22,19 @@ type tokenValidator interface {
 	ValidateToken(token string) (jwt.MapClaims, error)
 }
 
+type userStatusProvider interface {
+	GetUserByID(ctx context.Context, id string) (*models.User, error)
+}
+
 type ServiceLogsWSHandler struct {
 	upgrader       websocket.Upgrader
 	tokenService   tokenValidator
 	appService     *projectservices.AppService
 	projectService *projectservices.ProjectService
+	userRepo       userStatusProvider
 }
 
-func NewServiceLogsWSHandler(ts tokenValidator, as *projectservices.AppService, ps *projectservices.ProjectService) *ServiceLogsWSHandler {
+func NewServiceLogsWSHandler(ts tokenValidator, as *projectservices.AppService, ps *projectservices.ProjectService, ur userStatusProvider) *ServiceLogsWSHandler {
 	return &ServiceLogsWSHandler{
 		upgrader: websocket.Upgrader{
 			CheckOrigin: func(r *http.Request) bool {
@@ -45,6 +51,7 @@ func NewServiceLogsWSHandler(ts tokenValidator, as *projectservices.AppService, 
 		tokenService:   ts,
 		appService:     as,
 		projectService: ps,
+		userRepo:       ur,
 	}
 }
 
@@ -69,6 +76,14 @@ func (h *ServiceLogsWSHandler) Handle(c echo.Context) error {
 			return utils.Error(c, http.StatusUnauthorized, "invalid authentication token")
 		}
 		claimsMap = cm
+
+		userID, _ := claimsMap["sub"].(string)
+		if userID != "" && h.userRepo != nil {
+			u, err := h.userRepo.GetUserByID(c.Request().Context(), userID)
+			if err != nil || u == nil || !u.IsActive {
+				return utils.Error(c, http.StatusUnauthorized, "user account not found or deactivated")
+			}
+		}
 	}
 
 	if h.appService != nil {

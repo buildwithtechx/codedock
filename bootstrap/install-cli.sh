@@ -8,11 +8,11 @@ if [ -n "${BASH_SOURCE[0]:-}" ] && [ -f "${BASH_SOURCE[0]}" ] && [ "${BASH_SOURC
   fi
 fi
 
-if [ -z "${BOLD:-}" ] && [ -f "/codedock/bootstrap/base.sh" ]; then
+if ! declare -f detect_platform &>/dev/null && [ -f "/codedock/bootstrap/base.sh" ]; then
   source "/codedock/bootstrap/base.sh"
 fi
 
-if [ -z "${BOLD:-}" ]; then
+if ! declare -f detect_platform &>/dev/null; then
   BOLD="\033[1m"; DIM="\033[2m"; GREEN="\033[0;32m"; YELLOW="\033[0;33m"; RED="\033[0;31m"; NC="\033[0m"
   detect_platform() { echo "$(uname -s | tr '[:upper:]' '[:lower:]')_$(uname -m | sed 's/x86_64/amd64/;s/aarch64/arm64/')"; }
 fi
@@ -25,18 +25,25 @@ install_via_go() {
   if command -v go &>/dev/null; then
     echo -e "${YELLOW}⚙️  Installing via 'go install'...${NC}"
     go install "codedock.run/codedock/cmd/codedock@latest"
-    GOBIN="$(go env GOPATH)/bin"
-    if [ -f "$GOBIN/codedock" ]; then
-      if [ -w "$INSTALL_DIR" ] || [ "$(id -u)" -eq 0 ]; then
-        cp "$GOBIN/codedock" "$INSTALL_DIR/$BINARY"
-        echo -e "${GREEN}✅ Installed → $INSTALL_DIR/$BINARY${NC}"
-      else
-        LOCAL_BIN="$HOME/.local/bin"
-        mkdir -p "$LOCAL_BIN"
-        cp "$GOBIN/codedock" "$LOCAL_BIN/$BINARY"
-        echo -e "${GREEN}✅ Installed → $LOCAL_BIN/$BINARY${NC}"
-        echo -e "   Ensure $LOCAL_BIN or $(go env GOPATH)/bin is in your PATH."
-      fi
+    local gobin
+    gobin="$(go env GOBIN)"
+    if [ -z "$gobin" ]; then
+      gobin="$(go env GOPATH)/bin"
+    fi
+    local src_bin="$gobin/codedock"
+    if [ ! -f "$src_bin" ]; then
+      echo -e "${RED}❌ 'go install' executed but binary was not found at $src_bin.${NC}"
+      return 1
+    fi
+    if [ -w "$INSTALL_DIR" ] || [ "$(id -u)" -eq 0 ]; then
+      cp "$src_bin" "$INSTALL_DIR/$BINARY"
+      echo -e "${GREEN}✅ Installed → $INSTALL_DIR/$BINARY${NC}"
+    else
+      LOCAL_BIN="$HOME/.local/bin"
+      mkdir -p "$LOCAL_BIN"
+      cp "$src_bin" "$LOCAL_BIN/$BINARY"
+      echo -e "${GREEN}✅ Installed → $LOCAL_BIN/$BINARY${NC}"
+      echo -e "   Ensure $LOCAL_BIN or $gobin is in your PATH."
     fi
     return 0
   fi

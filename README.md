@@ -65,27 +65,26 @@ cd codedock
 cp .env.example .env
 
 # 3. Run locally
-You can run the Go daemon and the frontend dashboard concurrently using the provided Makefiles.
+You can run the Go daemon and the frontend dashboard concurrently using NPM:
 
-To run the daemon normally + frontend:
 ```bash
-make dev
-````
+npm run dev
+```
 
 To run the daemon in dry-run mode (skips Docker actions) + frontend:
 
 ```bash
-make dev-dryrun
+npm run dev:dryrun
 ```
 
-Alternatively, you can manually build the dashboard and run the daemon:
+Alternatively, you can build all binaries and the dashboard:
 
 ```bash
-cd dashboard && npm install && npm run build && cd ..
-go run ./cmd/codedockd
+npm run build
+./bin/codedockd
 ```
 
-**Requirements:** Go 1.22+, Node.js 22+, and Docker.
+**Requirements:** Go 1.26+, Node.js 22+, and Docker.
 
 ## 📚 Documentation
 

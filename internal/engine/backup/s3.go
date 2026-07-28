@@ -15,6 +15,8 @@ import (
 	"codedock.run/codedock/internal/models"
 )
 
+var s3HTTPClient = &http.Client{Timeout: 30 * time.Second}
+
 type S3Error struct {
 	Status  int
 	Code    string
@@ -145,8 +147,7 @@ func signedS3Request(ctx context.Context, dest *models.S3Destination, method, ke
 	authHeader := fmt.Sprintf("AWS4-HMAC-SHA256 Credential=%s/%s, SignedHeaders=%s, Signature=%s", dest.AccessKeyID, scope, signedHeaders, signature)
 	req.Header.Set("Authorization", authHeader)
 
-	client := &http.Client{Timeout: 30 * time.Second}
-	resp, err := client.Do(req)
+	resp, err := s3HTTPClient.Do(req)
 	if err != nil {
 		return nil, err
 	}

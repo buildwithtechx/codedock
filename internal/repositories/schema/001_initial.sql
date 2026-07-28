@@ -299,6 +299,7 @@ CREATE TABLE IF NOT EXISTS backup_records (
 			id TEXT PRIMARY KEY,
 			backup_config_id TEXT NOT NULL,
 			database_id TEXT,
+			s3_destination_id TEXT,
 			status TEXT DEFAULT 'running',
 			file_path TEXT,
 			file_size_bytes INTEGER DEFAULT 0,
@@ -506,8 +507,8 @@ CREATE TABLE IF NOT EXISTS notification_settings (
     notification_alerts BOOLEAN DEFAULT FALSE,
     created_at DATETIME DEFAULT CURRENT_TIMESTAMP,
     updated_at DATETIME DEFAULT CURRENT_TIMESTAMP,
-			server_id TEXT REFERENCES servers(id) ON DELETE SET NULL,
-			organization_id TEXT REFERENCES organizations(id) ON DELETE CASCADE
+	server_id TEXT REFERENCES servers(id) ON DELETE SET NULL,
+	organization_id TEXT REFERENCES organizations(id) ON DELETE CASCADE
 );
 
 CREATE INDEX IF NOT EXISTS idx_dns_records_domain_name ON dns_records(domain_name);

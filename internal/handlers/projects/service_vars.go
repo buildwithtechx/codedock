@@ -70,6 +70,16 @@ func (h *ServiceVarHandler) Update(c echo.Context) error {
 	if err := c.Bind(&req); err != nil {
 		return utils.Error(c, http.StatusBadRequest, "invalid payload")
 	}
+	if req.ServiceID != "" && req.ServiceID != serviceID {
+		return utils.Error(c, http.StatusBadRequest, "service ID mismatch")
+	}
+	existing, err := h.appService.GetVariable(c.Request().Context(), id)
+	if err != nil || existing == nil {
+		return utils.Error(c, http.StatusNotFound, "variable not found")
+	}
+	if existing.ServiceID != serviceID {
+		return utils.Error(c, http.StatusBadRequest, "service ID mismatch")
+	}
 	req.ID = id
 	req.ServiceID = serviceID
 	if err := h.appService.UpdateVariable(c.Request().Context(), &req); err != nil {
@@ -93,6 +103,13 @@ func (h *ServiceVarHandler) Update(c echo.Context) error {
 func (h *ServiceVarHandler) Delete(c echo.Context) error {
 	serviceID := c.Param("serviceId")
 	id := c.Param("id")
+	existing, err := h.appService.GetVariable(c.Request().Context(), id)
+	if err != nil || existing == nil {
+		return utils.Error(c, http.StatusNotFound, "variable not found")
+	}
+	if existing.ServiceID != serviceID {
+		return utils.Error(c, http.StatusBadRequest, "service ID mismatch")
+	}
 	if err := h.appService.DeleteVariable(c.Request().Context(), id); err != nil {
 		return utils.Error(c, http.StatusInternalServerError, err.Error())
 	}

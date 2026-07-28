@@ -20,9 +20,10 @@ type ServerMetricsWSHandler struct {
 	upgrader      websocket.Upgrader
 	tokenService  *authservices.TokenService
 	serverService systemservices.ServerService
+	userRepo      userStatusProvider
 }
 
-func NewServerMetricsWSHandler(ts *authservices.TokenService, ss systemservices.ServerService) *ServerMetricsWSHandler {
+func NewServerMetricsWSHandler(ts *authservices.TokenService, ss systemservices.ServerService, ur userStatusProvider) *ServerMetricsWSHandler {
 	return &ServerMetricsWSHandler{
 		upgrader: websocket.Upgrader{
 			CheckOrigin: func(r *http.Request) bool {
@@ -38,6 +39,7 @@ func NewServerMetricsWSHandler(ts *authservices.TokenService, ss systemservices.
 		},
 		tokenService:  ts,
 		serverService: ss,
+		userRepo:      ur,
 	}
 }
 
@@ -62,6 +64,13 @@ func (h *ServerMetricsWSHandler) Handle(c echo.Context) error {
 		}
 
 		userID, _ := claimsMap["sub"].(string)
+		if userID != "" && h.userRepo != nil {
+			u, err := h.userRepo.GetUserByID(c.Request().Context(), userID)
+			if err != nil || u == nil || !u.IsActive {
+				return utils.Error(c, http.StatusUnauthorized, "user account not found or deactivated")
+			}
+		}
+
 		role, _ := claimsMap["role"].(string)
 
 		if role != string(models.UserRoleAdmin) && role != string(models.UserRoleOwner) {

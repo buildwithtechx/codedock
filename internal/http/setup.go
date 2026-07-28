@@ -7,6 +7,7 @@ import (
 	"log/slog"
 	"net/http"
 	"slices"
+	"strings"
 	"time"
 
 	"github.com/docker/docker/client"
@@ -74,7 +75,20 @@ func NewServer(db *sql.DB, v *utils.Vault, deployer *deploy.Deployer, traefikMan
 		TokenLength:  32,
 		TokenLookup:  "header:X-CSRF-Token",
 		CookieName:   "csrf_token",
+		CookiePath:   "/",
 		CookieMaxAge: 86400,
+		Skipper: func(c echo.Context) bool {
+			path := c.Request().URL.Path
+			if strings.HasPrefix(path, "/api/auth/signin") ||
+				strings.HasPrefix(path, "/api/auth/signup") ||
+				strings.HasPrefix(path, "/api/auth/refresh") ||
+				strings.HasPrefix(path, "/api/auth/oauth") ||
+				strings.HasPrefix(path, "/api/v1/auth/") {
+				_, err := c.Cookie("csrf_token")
+				return err != nil
+			}
+			return false
+		},
 	}))
 
 	environmentRepo := repositories.NewEnvironmentRepo(db)
@@ -88,7 +102,7 @@ func NewServer(db *sql.DB, v *utils.Vault, deployer *deploy.Deployer, traefikMan
 	envVarRepo := repositories.NewEnvRepo(db, v)
 	scheduledTaskRepo := repositories.NewScheduledTaskRepo(db)
 	backupRepo := repositories.NewBackupRepo(db, v)
-	s3DestinationRepo := repositories.NewS3DestinationRepo(db)
+	s3DestinationRepo := repositories.NewS3DestinationRepo(db, v)
 	serverlessRepository := repositories.NewServerlessRepository(db)
 	projectSettingsRepo := repositories.NewProjectSettingsRepo(db)
 	userRepo := repositories.NewUserRepo(db)
@@ -185,7 +199,7 @@ func NewServer(db *sql.DB, v *utils.Vault, deployer *deploy.Deployer, traefikMan
 	databaseHandler := databases.NewDatabaseHandler(databaseService, projectService, auditService)
 	scheduledTaskHandler := system.NewScheduledTaskHandler(scheduledTaskService, appService, projectService)
 	canvasHandler := projects.NewCanvasHandler(canvasService, projectService)
-	terminalHandler := deployments.NewTerminalHandler(dockerClient, tokenService, appService, projectService)
+	terminalHandler := deployments.NewTerminalHandler(dockerClient, tokenService, appService, projectService, userRepo)
 	projectHandler := projects.NewProjectHandler(projectService, projectSettingsService)
 	orgHandler := auth.NewOrganizationHandler(orgService)
 	environmentHandler := projects.NewEnvironmentHandler(environmentService, projectService)
@@ -219,8 +233,7 @@ func NewServer(db *sql.DB, v *utils.Vault, deployer *deploy.Deployer, traefikMan
 	systemHandler := system.NewSystemHandler(systemService)
 	migrationService := systemservices.NewMigrationService(dbRepo, dataDir)
 	migrationHandler := system.NewMigrationHandler(migrationService)
-	onboardingService := authservices.NewOnboardingService(userService, authService, settingsService, gitAppsService, backupService)
-	onboardingHandler := auth.NewOnboardingHandler(userService, onboardingService)
+	onboardingHandler := auth.NewOnboardingHandler(userService)
 	dnsHandler := system.NewDNSHandler(dnsService)
 	metricsHandler := system.NewMetricsHandler(metricsService)
 	logHandler := system.NewLogHandler(logService)
@@ -230,9 +243,9 @@ func NewServer(db *sql.DB, v *utils.Vault, deployer *deploy.Deployer, traefikMan
 
 	serverService := systemservices.NewServerService(serverRepo, userRepo)
 	serverHandler := system.NewServerHandler(serverService)
-	workerWSHandler := system.NewWorkerWSHandler(workerHub, serverRepo)
-	serverMetricsWSHandler := system.NewServerMetricsWSHandler(tokenService, serverService)
-	serviceLogsWSHandler := system.NewServiceLogsWSHandler(tokenService, appService, projectService)
+	workerWSHandler := system.NewWorkerWSHandler(workerHub, serverRepo, userRepo)
+	serverMetricsWSHandler := system.NewServerMetricsWSHandler(tokenService, serverService, userRepo)
+	serviceLogsWSHandler := system.NewServiceLogsWSHandler(tokenService, appService, projectService, userRepo)
 
 	registryRepo := repositories.NewRegistryRepository(db)
 	registryService := deploymentservices.NewRegistryService(registryRepo)

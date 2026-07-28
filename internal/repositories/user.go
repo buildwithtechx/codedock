@@ -56,8 +56,8 @@ func (r *UserRepo) CreateUser(ctx context.Context, u *models.User) error {
 	u.UpdatedAt = now
 	r.mu.Lock()
 	defer r.mu.Unlock()
-	_, err := r.db.ExecContext(ctx, `INSERT INTO users (id, email, name, password_hash, role, email_verified, plan_type, stripe_customer_id, stripe_subscription_id, stripe_price_id, created_at, updated_at)
-		VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)`, u.ID, u.Email, u.Name, u.PasswordHash, u.Role, u.EmailVerified, u.PlanType, u.StripeCustomerID, u.StripeSubscriptionID, u.StripePriceID, u.CreatedAt, u.UpdatedAt)
+	_, err := r.db.ExecContext(ctx, `INSERT INTO users (id, email, name, password_hash, role, is_active, email_verified, plan_type, stripe_customer_id, stripe_subscription_id, stripe_price_id, created_at, updated_at)
+		VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)`, u.ID, u.Email, u.Name, u.PasswordHash, u.Role, u.IsActive, u.EmailVerified, u.PlanType, u.StripeCustomerID, u.StripeSubscriptionID, u.StripePriceID, u.CreatedAt, u.UpdatedAt)
 	return err
 }
 
@@ -65,7 +65,7 @@ func (r *UserRepo) GetUserByEmail(ctx context.Context, email string) (*models.Us
 	r.mu.Lock()
 	defer r.mu.Unlock()
 	var u models.User
-	err := r.db.GetContext(ctx, &u, `SELECT id, email, name, password_hash, role, email_verified, plan_type, stripe_customer_id, stripe_subscription_id, stripe_price_id, created_at, updated_at, last_login
+	err := r.db.GetContext(ctx, &u, `SELECT id, email, name, password_hash, role, is_active, email_verified, plan_type, stripe_customer_id, stripe_subscription_id, stripe_price_id, created_at, updated_at, last_login
 		FROM users WHERE email = ?`, email)
 	if errors.Is(err, sql.ErrNoRows) {
 		return nil, utils.NewNotFoundError("User", email)
@@ -80,7 +80,7 @@ func (r *UserRepo) GetUserByStripeCustomerID(ctx context.Context, stripeCustomer
 	r.mu.Lock()
 	defer r.mu.Unlock()
 	var u models.User
-	err := r.db.GetContext(ctx, &u, `SELECT id, email, name, password_hash, role, email_verified, plan_type, stripe_customer_id, stripe_subscription_id, stripe_price_id, created_at, updated_at, last_login
+	err := r.db.GetContext(ctx, &u, `SELECT id, email, name, password_hash, role, is_active, email_verified, plan_type, stripe_customer_id, stripe_subscription_id, stripe_price_id, created_at, updated_at, last_login
 		FROM users WHERE stripe_customer_id = ?`, stripeCustomerID)
 	if errors.Is(err, sql.ErrNoRows) {
 		return nil, utils.NewNotFoundError("User by StripeCustomerID", stripeCustomerID)
@@ -95,7 +95,7 @@ func (r *UserRepo) GetUserByID(ctx context.Context, id string) (*models.User, er
 	r.mu.Lock()
 	defer r.mu.Unlock()
 	var u models.User
-	err := r.db.GetContext(ctx, &u, `SELECT id, email, name, password_hash, role, email_verified, plan_type, stripe_customer_id, stripe_subscription_id, stripe_price_id, created_at, updated_at, last_login
+	err := r.db.GetContext(ctx, &u, `SELECT id, email, name, password_hash, role, is_active, email_verified, plan_type, stripe_customer_id, stripe_subscription_id, stripe_price_id, created_at, updated_at, last_login
 		FROM users WHERE id = ?`, id)
 	if errors.Is(err, sql.ErrNoRows) {
 		return nil, utils.NewNotFoundError("User", id)
@@ -118,7 +118,7 @@ func (r *UserRepo) ListUsers(ctx context.Context, limit, offset int) ([]models.U
 	var users []models.User
 	err := r.db.SelectContext(ctx, &users, `
 		SELECT
-			id, email, name, password_hash, role, email_verified, plan_type, stripe_customer_id, stripe_subscription_id, stripe_price_id, created_at, updated_at, last_login,
+			id, email, name, password_hash, role, is_active, email_verified, plan_type, stripe_customer_id, stripe_subscription_id, stripe_price_id, created_at, updated_at, last_login,
 			(SELECT COUNT(*) FROM project_members WHERE user_id = users.id) AS projects_count,
 			(SELECT COUNT(*) FROM app_services WHERE project_id IN (SELECT project_id FROM project_members WHERE user_id = users.id) AND status = 'running') AS services_count,
 			(SELECT COUNT(*) FROM personal_access_tokens WHERE user_id = users.id) AS api_keys_count
@@ -138,8 +138,8 @@ func (r *UserRepo) UpdateUser(ctx context.Context, u *models.User) error {
 	u.UpdatedAt = time.Now()
 	r.mu.Lock()
 	defer r.mu.Unlock()
-	_, err := r.db.ExecContext(ctx, `UPDATE users SET email = ?, name = ?, password_hash = ?, role = ?, email_verified = ?, plan_type = ?, stripe_customer_id = ?, stripe_subscription_id = ?, stripe_price_id = ?, last_login = ?, updated_at = ? WHERE id = ?`,
-		u.Email, u.Name, u.PasswordHash, u.Role, u.EmailVerified, u.PlanType, u.StripeCustomerID, u.StripeSubscriptionID, u.StripePriceID, u.LastLogin, u.UpdatedAt, u.ID)
+	_, err := r.db.ExecContext(ctx, `UPDATE users SET email = ?, name = ?, password_hash = ?, role = ?, is_active = ?, email_verified = ?, plan_type = ?, stripe_customer_id = ?, stripe_subscription_id = ?, stripe_price_id = ?, last_login = ?, updated_at = ? WHERE id = ?`,
+		u.Email, u.Name, u.PasswordHash, u.Role, u.IsActive, u.EmailVerified, u.PlanType, u.StripeCustomerID, u.StripeSubscriptionID, u.StripePriceID, u.LastLogin, u.UpdatedAt, u.ID)
 	return err
 }
 

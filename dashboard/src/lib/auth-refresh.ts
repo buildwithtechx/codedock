@@ -3,10 +3,14 @@ import { useAuthStore } from '#/stores/auth-store';
 let activeRefreshPromise: Promise<string | null> | null = null;
 
 export function getCookie(name: string): string | null {
-  const value = `; ${document.cookie}`;
-  const parts = value.split(`; ${name}=`);
-  if (parts.length === 2) return parts.pop()?.split(';').shift() ?? null;
-  return null;
+  if (typeof document === 'undefined') return null;
+  const match = document.cookie.match(new RegExp(`(?:^|;\\s*)${name}=([^;]*)`));
+  if (!match) return null;
+  try {
+    return decodeURIComponent(match[1]);
+  } catch {
+    return null;
+  }
 }
 
 export function getAuthHeaders(): Record<string, string> {
@@ -31,9 +35,13 @@ export async function refreshAuthSession(apiBaseUrl: string): Promise<string | n
     const authState = useAuthStore.getState();
 
     try {
+      const headers: Record<string, string> = {
+        'Content-Type': 'application/json',
+        ...getAuthHeaders(),
+      };
       const res = await fetch(`${apiBaseUrl}/auth/refresh`, {
         method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
+        headers,
         body: JSON.stringify({ refreshToken: authState.refreshToken || '' }),
         credentials: 'include',
       });
@@ -66,9 +74,7 @@ export function handleAuthFailure(): void {
     path.startsWith('/signin') ||
     path.startsWith('/signup') ||
     path.startsWith('/forgot-password') ||
-    path.startsWith('/reset-password') ||
-    path.startsWith('/onboarding') ||
-    path.startsWith('/setup');
+    path.startsWith('/reset-password');
 
   if (!isAuthPage) {
     window.location.href = '/signin';
