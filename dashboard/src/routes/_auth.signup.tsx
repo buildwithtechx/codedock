@@ -36,7 +36,7 @@ function RegisterPage() {
           </div>
         </div>
 
-        <OAuthButtons />
+        {!setupStatus?.data?.setupRequired && <OAuthButtons />}
         <RegisterForm />
 
         <p className="mt-5 text-center text-muted-foreground text-sm">

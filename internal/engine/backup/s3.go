@@ -92,6 +92,8 @@ func EnsureS3Bucket(ctx context.Context, dest *models.S3Destination) error {
 	return nil
 }
 
+var s3HTTPClient = &http.Client{Timeout: 30 * time.Second}
+
 func signedS3Request(ctx context.Context, dest *models.S3Destination, method, key string, body []byte, contentType string) (*http.Response, error) {
 	if body == nil {
 		body = []byte{}
@@ -145,8 +147,7 @@ func signedS3Request(ctx context.Context, dest *models.S3Destination, method, ke
 	authHeader := fmt.Sprintf("AWS4-HMAC-SHA256 Credential=%s/%s, SignedHeaders=%s, Signature=%s", dest.AccessKeyID, scope, signedHeaders, signature)
 	req.Header.Set("Authorization", authHeader)
 
-	client := &http.Client{Timeout: 30 * time.Second}
-	resp, err := client.Do(req)
+	resp, err := s3HTTPClient.Do(req)
 	if err != nil {
 		return nil, err
 	}

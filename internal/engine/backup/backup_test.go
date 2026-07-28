@@ -2,14 +2,35 @@ package backup
 
 import (
 	"context"
+	"io"
+	"net/http"
 	"os"
 	"path/filepath"
+	"strings"
 	"testing"
 	"time"
 
 	"codedock.run/codedock/internal/models"
 	"codedock.run/codedock/internal/utils"
 )
+
+type mockS3Transport struct {
+	roundTripFunc func(req *http.Request) (*http.Response, error)
+}
+
+func (m *mockS3Transport) RoundTrip(req *http.Request) (*http.Response, error) {
+	if m.roundTripFunc != nil {
+		return m.roundTripFunc(req)
+	}
+	return &http.Response{
+		StatusCode: http.StatusOK,
+		Body:       io.NopCloser(strings.NewReader("")),
+	}, nil
+}
+
+func init() {
+	s3HTTPClient.Transport = &mockS3Transport{}
+}
 
 type mockStore struct {
 	records map[string]*models.BackupRecord
@@ -167,12 +188,13 @@ func TestEnforceRetentionPolicyS3Cleanup(t *testing.T) {
 	_ = os.WriteFile(dummyFile, []byte("data"), 0o600)
 
 	rec := &models.BackupRecord{
-		ID:             "rec-old",
-		BackupConfigID: cfg.ID,
-		Status:         models.BackupRecordStatusCompleted,
-		FilePath:       dummyFile,
-		S3URL:          "s3://mybucket/backup_old.db",
-		StartedAt:      oldTime,
+		ID:              "rec-old",
+		BackupConfigID:  cfg.ID,
+		S3DestinationID: "dest-1",
+		Status:          models.BackupRecordStatusCompleted,
+		FilePath:        dummyFile,
+		S3URL:           "s3://mybucket/backup_old.db",
+		StartedAt:       oldTime,
 	}
 	store.records[rec.ID] = rec
 
@@ -183,5 +205,60 @@ func TestEnforceRetentionPolicyS3Cleanup(t *testing.T) {
 	}
 	if _, err := os.Stat(dummyFile); !os.IsNotExist(err) {
 		t.Fatalf("expected local file to be removed")
+	}
+}
+
+func TestEnforceRetentionPolicyS3DeleteError(t *testing.T) {
+	store := newMockStore()
+	dir := t.TempDir()
+	bm := NewBackupManager(nil, store, dir)
+
+	s3HTTPClient.Transport = &mockS3Transport{
+		roundTripFunc: func(req *http.Request) (*http.Response, error) {
+			return &http.Response{
+				StatusCode: http.StatusInternalServerError,
+				Body:       io.NopCloser(strings.NewReader("S3 Delete Error")),
+			}, nil
+		},
+	}
+	defer func() {
+		s3HTTPClient.Transport = &mockS3Transport{}
+	}()
+
+	cfg := &models.BackupConfig{
+		ID:              "cfg-retention-err",
+		RetentionDays:   1,
+		S3DestinationID: "dest-1",
+	}
+
+	dest := &models.S3Destination{
+		ID:              "dest-1",
+		Bucket:          "mybucket",
+		Endpoint:        "s3.amazonaws.com",
+		AccessKeyID:     "key",
+		SecretAccessKey: "secret",
+	}
+	store.s3dests[dest.ID] = dest
+
+	oldTime := time.Now().Add(-48 * time.Hour).Format(time.RFC3339)
+	dummyFile := filepath.Join(dir, "old_backup_err.db")
+	_ = os.WriteFile(dummyFile, []byte("data"), 0o600)
+	defer os.Remove(dummyFile)
+
+	rec := &models.BackupRecord{
+		ID:              "rec-old-err",
+		BackupConfigID:  cfg.ID,
+		S3DestinationID: "dest-1",
+		Status:          models.BackupRecordStatusCompleted,
+		FilePath:        dummyFile,
+		S3URL:           "s3://mybucket/backup_old_err.db",
+		StartedAt:       oldTime,
+	}
+	store.records[rec.ID] = rec
+
+	bm.enforceRetentionPolicy(cfg)
+
+	if rec.Status == models.BackupRecordStatusExpired {
+		t.Fatalf("expected record to not be expired when S3 DELETE fails")
 	}
 }

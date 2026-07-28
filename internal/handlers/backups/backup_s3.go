@@ -9,6 +9,28 @@ import (
 	"codedock.run/codedock/internal/utils"
 )
 
+type CreateS3DestinationRequest struct {
+	Name            string `json:"name"`
+	Description     string `json:"description"`
+	Provider        string `json:"provider"`
+	Endpoint        string `json:"endpoint"`
+	Bucket          string `json:"bucket"`
+	Region          string `json:"region"`
+	AccessKeyID     string `json:"accessKeyId"`
+	SecretAccessKey string `json:"secretAccessKey"`
+}
+
+type UpdateS3DestinationRequest struct {
+	Name            string `json:"name"`
+	Description     string `json:"description"`
+	Provider        string `json:"provider"`
+	Endpoint        string `json:"endpoint"`
+	Bucket          string `json:"bucket"`
+	Region          string `json:"region"`
+	AccessKeyID     string `json:"accessKeyId"`
+	SecretAccessKey string `json:"secretAccessKey"`
+}
+
 func (h *BackupHandler) ListS3Destinations(c echo.Context) error {
 	list, err := h.backupService.ListS3Destinations(c.Request().Context())
 	if err != nil {
@@ -21,9 +43,19 @@ func (h *BackupHandler) ListS3Destinations(c echo.Context) error {
 }
 
 func (h *BackupHandler) CreateS3Destination(c echo.Context) error {
-	var dest models.S3Destination
-	if err := c.Bind(&dest); err != nil {
+	var req CreateS3DestinationRequest
+	if err := c.Bind(&req); err != nil {
 		return utils.Error(c, http.StatusBadRequest, "invalid payload")
+	}
+	dest := models.S3Destination{
+		Name:            req.Name,
+		Description:     req.Description,
+		Provider:        req.Provider,
+		Endpoint:        req.Endpoint,
+		Bucket:          req.Bucket,
+		Region:          req.Region,
+		AccessKeyID:     req.AccessKeyID,
+		SecretAccessKey: req.SecretAccessKey,
 	}
 	if err := h.backupService.CreateS3Destination(c.Request().Context(), &dest); err != nil {
 		return utils.Error(c, http.StatusInternalServerError, err.Error())
@@ -37,11 +69,21 @@ func (h *BackupHandler) UpdateS3Destination(c echo.Context) error {
 	if id == "" {
 		return utils.Error(c, http.StatusBadRequest, "missing id")
 	}
-	var dest models.S3Destination
-	if err := c.Bind(&dest); err != nil {
+	var req UpdateS3DestinationRequest
+	if err := c.Bind(&req); err != nil {
 		return utils.Error(c, http.StatusBadRequest, "invalid payload")
 	}
-	dest.ID = id
+	dest := models.S3Destination{
+		ID:              id,
+		Name:            req.Name,
+		Description:     req.Description,
+		Provider:        req.Provider,
+		Endpoint:        req.Endpoint,
+		Bucket:          req.Bucket,
+		Region:          req.Region,
+		AccessKeyID:     req.AccessKeyID,
+		SecretAccessKey: req.SecretAccessKey,
+	}
 	if err := h.backupService.UpdateS3Destination(c.Request().Context(), &dest); err != nil {
 		return utils.Error(c, http.StatusInternalServerError, err.Error())
 	}

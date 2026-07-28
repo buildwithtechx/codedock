@@ -24,9 +24,9 @@ func (r *BackupRepo) CreateRecord(ctx context.Context, rec *models.BackupRecord)
 	}
 	r.mu.Lock()
 	defer r.mu.Unlock()
-	_, err := r.db.ExecContext(ctx, `INSERT INTO backup_records (id, backup_config_id, database_id, status, file_path, file_size_bytes, s3_url, logs, started_at, completed_at)
-		VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?)`,
-		rec.ID, rec.BackupConfigID, rec.DatabaseID, rec.Status, rec.FilePath, rec.FileSizeBytes, rec.S3URL, rec.Logs, rec.StartedAt, rec.CompletedAt)
+	_, err := r.db.ExecContext(ctx, `INSERT INTO backup_records (id, backup_config_id, database_id, s3_destination_id, status, file_path, file_size_bytes, s3_url, logs, started_at, completed_at)
+		VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)`,
+		rec.ID, rec.BackupConfigID, rec.DatabaseID, rec.S3DestinationID, rec.Status, rec.FilePath, rec.FileSizeBytes, rec.S3URL, rec.Logs, rec.StartedAt, rec.CompletedAt)
 	if err != nil {
 		return fmt.Errorf("failed to create backup record: %w", err)
 	}
@@ -37,7 +37,7 @@ func (r *BackupRepo) ListRecordsByConfig(ctx context.Context, backupConfigID str
 	r.mu.Lock()
 	defer r.mu.Unlock()
 	var list []*models.BackupRecord
-	err := r.db.SelectContext(ctx, &list, `SELECT id, backup_config_id, COALESCE(database_id, '') as database_id, status, COALESCE(file_path, '') as file_path, file_size_bytes, COALESCE(s3_url, '') as s3_url, COALESCE(logs, '') as logs, started_at, COALESCE(completed_at, '') as completed_at
+	err := r.db.SelectContext(ctx, &list, `SELECT id, backup_config_id, COALESCE(database_id, '') as database_id, COALESCE(s3_destination_id, '') as s3_destination_id, status, COALESCE(file_path, '') as file_path, file_size_bytes, COALESCE(s3_url, '') as s3_url, COALESCE(logs, '') as logs, started_at, COALESCE(completed_at, '') as completed_at
 		FROM backup_records WHERE backup_config_id = ? ORDER BY started_at DESC`, backupConfigID)
 	if err != nil {
 		return nil, fmt.Errorf("failed to list backup records: %w", err)
@@ -51,7 +51,7 @@ func (r *BackupRepo) ListRecordsByConfig(ctx context.Context, backupConfigID str
 func (r *BackupRepo) GetRecordByID(ctx context.Context, id string) (*models.BackupRecord, error) {
 	var rec models.BackupRecord
 	err := r.db.GetContext(ctx, &rec, `
-		SELECT id, backup_config_id, COALESCE(database_id, '') as database_id, status, COALESCE(file_path, '') as file_path, file_size_bytes, COALESCE(s3_url, '') as s3_url, COALESCE(logs, '') as logs, started_at, COALESCE(completed_at, '') as completed_at
+		SELECT id, backup_config_id, COALESCE(database_id, '') as database_id, COALESCE(s3_destination_id, '') as s3_destination_id, status, COALESCE(file_path, '') as file_path, file_size_bytes, COALESCE(s3_url, '') as s3_url, COALESCE(logs, '') as logs, started_at, COALESCE(completed_at, '') as completed_at
 		FROM backup_records WHERE id = ?`, id)
 	if err != nil {
 		if errors.Is(err, sql.ErrNoRows) {
@@ -67,9 +67,9 @@ func (r *BackupRepo) UpdateRecord(ctx context.Context, rec *models.BackupRecord)
 	defer r.mu.Unlock()
 	res, err := r.db.ExecContext(ctx, `
 		UPDATE backup_records
-		SET status = ?, file_path = ?, s3_url = ?, logs = ?, file_size_bytes = ?, completed_at = ?
+		SET status = ?, file_path = ?, s3_url = ?, s3_destination_id = ?, logs = ?, file_size_bytes = ?, completed_at = ?
 		WHERE id = ?`,
-		rec.Status, rec.FilePath, rec.S3URL, rec.Logs, rec.FileSizeBytes, rec.CompletedAt, rec.ID)
+		rec.Status, rec.FilePath, rec.S3URL, rec.S3DestinationID, rec.Logs, rec.FileSizeBytes, rec.CompletedAt, rec.ID)
 	if err != nil {
 		return err
 	}

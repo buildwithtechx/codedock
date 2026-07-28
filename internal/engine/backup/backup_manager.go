@@ -145,11 +145,12 @@ func (bm *BackupManager) TriggerBackup(ctx context.Context, backupConfigID strin
 	}
 
 	rec := &models.BackupRecord{
-		ID:             uuid.New().String(),
-		BackupConfigID: cfg.ID,
-		DatabaseID:     cfg.DatabaseID,
-		Status:         models.BackupRecordStatusRunning,
-		Logs:           fmt.Sprintf("Initiating automated backup '%s' at %s...\n", cfg.Name, time.Now().UTC().Format(time.RFC3339)),
+		ID:              uuid.New().String(),
+		BackupConfigID:  cfg.ID,
+		DatabaseID:      cfg.DatabaseID,
+		S3DestinationID: cfg.S3DestinationID,
+		Status:          models.BackupRecordStatusRunning,
+		Logs:            fmt.Sprintf("Initiating automated backup '%s' at %s...\n", cfg.Name, time.Now().UTC().Format(time.RFC3339)),
 	}
 	if err := bm.store.CreateBackupRecord(rec); err != nil {
 		return nil, fmt.Errorf("failed to create backup record: %w", err)
@@ -199,8 +200,12 @@ func (bm *BackupManager) TriggerBackup(ctx context.Context, backupConfigID strin
 	}
 
 	s3URL := ""
-	if cfg.S3Enabled && cfg.S3DestinationID != "" {
-		s3URL, execLogs = bm.handleS3Upload(ctx, cfg, fileName, dumpBytes, execLogs)
+	if cfg.S3Enabled {
+		var s3Err error
+		s3URL, execLogs, s3Err = bm.handleS3Upload(ctx, cfg, fileName, dumpBytes, execLogs)
+		if s3Err != nil {
+			return bm.failBackupRecord(rec.ID, s3Err.Error())
+		}
 	}
 
 	if cfg.DisableLocal && s3URL != "" {

@@ -70,6 +70,7 @@ func (r *BackupRepo) EnsureTables() error {
 			database_id TEXT,
 			service_id TEXT,
 			volume_name TEXT,
+			s3_destination_id TEXT,
 			status TEXT DEFAULT 'running',
 			file_path TEXT,
 			file_size_bytes INTEGER DEFAULT 0,

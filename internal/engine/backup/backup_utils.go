@@ -3,6 +3,7 @@ package backup
 import (
 	"context"
 	"fmt"
+	"log/slog"
 	"os"
 	"sort"
 	"strings"
@@ -87,17 +88,29 @@ func (bm *BackupManager) enforceRetentionPolicy(cfg *models.BackupConfig) {
 	}
 
 	for _, rec := range toExpire {
-		if rec.FilePath != "" {
-			_ = os.Remove(rec.FilePath)
-		}
-		if rec.S3URL != "" && cfg.S3DestinationID != "" {
-			if dest, err := bm.store.GetS3Destination(cfg.S3DestinationID); err == nil && dest != nil {
+		if rec.S3URL != "" {
+			destID := rec.S3DestinationID
+			if destID == "" {
+				destID = cfg.S3DestinationID
+			}
+			if destID != "" {
+				dest, err := bm.store.GetS3Destination(destID)
+				if err != nil || dest == nil {
+					slog.Error("failed to resolve s3 destination for retention policy enforcement", "dest_id", destID, "error", err)
+					continue
+				}
 				prefix := fmt.Sprintf("s3://%s/", dest.Bucket)
 				key := strings.TrimPrefix(rec.S3URL, prefix)
-				if resp, err := signedS3Request(context.Background(), dest, "DELETE", key, nil, ""); err == nil {
-					resp.Body.Close()
+				resp, err := signedS3Request(context.Background(), dest, "DELETE", key, nil, "")
+				if err != nil {
+					slog.Error("failed to delete s3 object during retention policy enforcement", "s3_url", rec.S3URL, "error", err)
+					continue
 				}
+				resp.Body.Close()
 			}
+		}
+		if rec.FilePath != "" {
+			_ = os.Remove(rec.FilePath)
 		}
 		_ = bm.store.UpdateBackupRecord(models.UpdateBackupRecordOpts{
 			ID:          rec.ID,
