@@ -178,7 +178,7 @@ func (h *e2eHarness) doRequest(method, urlPath string, payload any, headers map[
 		_ = json.Unmarshal(respBody, &respMap)
 	}
 
-	if respMap != nil {
+	if respMap != nil && (urlPath == "/api/auth/signup" || urlPath == "/api/auth/signin") {
 		if data, ok := respMap["data"].(map[string]any); ok {
 			if token, ok := data["token"].(string); ok && token != "" {
 				h.authToken = token

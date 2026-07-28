@@ -251,7 +251,7 @@ func (r *AppServiceRepo) ListLogDrainsByService(ctx context.Context, serviceID s
 	r.mu.RLock()
 	defer r.mu.RUnlock()
 	rows, err := r.db.QueryContext(ctx,
-		`SELECT id, service_id, project_id, drain_type, endpoint_url, auth_token, created_at, updated_at
+		`SELECT id, service_id, project_id, drain_type, endpoint_url, COALESCE(auth_token, '') AS auth_token, created_at, updated_at
 		 FROM log_drains WHERE service_id = ? ORDER BY created_at DESC`, serviceID)
 	if err != nil {
 		return nil, fmt.Errorf("list log drains: %w", err)
@@ -260,8 +260,17 @@ func (r *AppServiceRepo) ListLogDrainsByService(ctx context.Context, serviceID s
 	var out []*models.LogDrain
 	for rows.Next() {
 		var d models.LogDrain
-		if err := rows.Scan(&d.ID, &d.ServiceID, &d.ProjectID, &d.DrainType, &d.EndpointURL, &d.AuthToken, &d.CreatedAt, &d.UpdatedAt); err != nil {
+		var createdAtStr, updatedAtStr string
+		if err := rows.Scan(&d.ID, &d.ServiceID, &d.ProjectID, &d.DrainType, &d.EndpointURL, &d.AuthToken, &createdAtStr, &updatedAtStr); err != nil {
 			return nil, fmt.Errorf("scan log drain: %w", err)
+		}
+		d.CreatedAt, _ = time.Parse(time.RFC3339, createdAtStr)
+		if d.CreatedAt.IsZero() {
+			d.CreatedAt, _ = time.Parse("2006-01-02 15:04:05", createdAtStr)
+		}
+		d.UpdatedAt, _ = time.Parse(time.RFC3339, updatedAtStr)
+		if d.UpdatedAt.IsZero() {
+			d.UpdatedAt, _ = time.Parse("2006-01-02 15:04:05", updatedAtStr)
 		}
 		out = append(out, &d)
 	}
