@@ -74,9 +74,7 @@ export function handleAuthFailure(): void {
     path.startsWith('/signin') ||
     path.startsWith('/signup') ||
     path.startsWith('/forgot-password') ||
-    path.startsWith('/reset-password') ||
-    path.startsWith('/onboarding') ||
-    path.startsWith('/setup');
+    path.startsWith('/reset-password');
 
   if (!isAuthPage) {
     window.location.href = '/signin';
