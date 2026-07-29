@@ -5,14 +5,10 @@ import viteReact, { reactCompilerPreset } from '@vitejs/plugin-react';
 import { defineConfig } from 'vite';
 
 export default defineConfig({
-  root: './dashboard',
   resolve: { tsconfigPaths: true },
   plugins: [
     tailwindcss(),
-    tanstackRouter({
-      routesDirectory: './src/routes',
-      generatedRouteTree: './src/routeTree.gen.ts',
-    }),
+    tanstackRouter(),
     viteReact(),
     babel({ presets: [reactCompilerPreset()] }),
   ],

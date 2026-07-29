@@ -4,7 +4,7 @@ import (
 	"os"
 	"path/filepath"
 
-	"codedock.run/codedock/dashboard"
+	"codedock.run/codedock/apps/dashboard"
 	"codedock.run/codedock/internal/config"
 	"codedock.run/codedock/internal/models"
 	"github.com/labstack/echo/v4"

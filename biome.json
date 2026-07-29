@@ -74,10 +74,14 @@
   },
   "files": {
     "includes": [
-      "dashboard/**",
+      "apps/dashboard/src/**",
+      "apps/desktop/src/**",
       "!**/.tanstack",
       "!**/*.gen.ts",
       "!**/routeTree.gen.ts",
+      "!**/dist",
+      "!**/out",
+      "!**/src-tauri/target",
       "!**/data",
       "!**/bootstrap",
       "!**/*.astro",
