@@ -1,10 +1,8 @@
 package http
 
 import (
-	"context"
-	"fmt"
-
 	"codedock.run/codedock/internal/services/databases"
+	"codedock.run/codedock/internal/services/deployments"
 	"codedock.run/codedock/internal/services/projects"
 	"codedock.run/codedock/internal/version"
 	"github.com/mark3labs/mcp-go/mcp"
@@ -12,19 +10,21 @@ import (
 )
 
 type Bridge struct {
-	server         *server.MCPServer
-	projectService *projects.ProjectService
-	appService     *projects.AppService
-	dbService      *databases.DatabaseService
+	server            *server.MCPServer
+	projectService    *projects.ProjectService
+	appService        *projects.AppService
+	dbService         *databases.DatabaseService
+	deploymentService *deployments.DeploymentService
 }
 
-func NewBridge(ps *projects.ProjectService, as *projects.AppService, db *databases.DatabaseService) *Bridge {
+func NewBridge(ps *projects.ProjectService, as *projects.AppService, db *databases.DatabaseService, ds *deployments.DeploymentService) *Bridge {
 	mcpServer := server.NewMCPServer("codedock-mcp", version.Version, server.WithResourceCapabilities(true, true), server.WithPromptCapabilities(true))
 	b := &Bridge{
-		server:         mcpServer,
-		projectService: ps,
-		appService:     as,
-		dbService:      db,
+		server:            mcpServer,
+		projectService:    ps,
+		appService:        as,
+		dbService:         db,
+		deploymentService: ds,
 	}
 	b.registerTools()
 	return b
@@ -43,6 +43,54 @@ func (b *Bridge) registerTools() {
 	)
 
 	b.server.AddTool(
+		mcp.NewTool("get_project",
+			mcp.WithDescription("Get detailed information about a project by ID."),
+			mcp.WithString("project_id", mcp.Required(), mcp.Description("The ID of the project")),
+		),
+		b.handleGetProject,
+	)
+
+	b.server.AddTool(
+		mcp.NewTool("list_apps",
+			mcp.WithDescription("List all application services for a project or all projects."),
+			mcp.WithString("project_id", mcp.Description("Optional project ID filter")),
+		),
+		b.handleListApps,
+	)
+
+	b.server.AddTool(
+		mcp.NewTool("get_app",
+			mcp.WithDescription("Get detailed service configuration for an application."),
+			mcp.WithString("service_id", mcp.Required(), mcp.Description("The ID of the application service")),
+		),
+		b.handleGetApp,
+	)
+
+	b.server.AddTool(
+		mcp.NewTool("redeploy_app",
+			mcp.WithDescription("Trigger a redeploy for an application service."),
+			mcp.WithString("service_id", mcp.Required(), mcp.Description("The ID of the service to redeploy")),
+		),
+		b.handleRedeployApp,
+	)
+
+	b.server.AddTool(
+		mcp.NewTool("restart_app",
+			mcp.WithDescription("Restart an application service container."),
+			mcp.WithString("service_id", mcp.Required(), mcp.Description("The ID of the service to restart")),
+		),
+		b.handleRestartApp,
+	)
+
+	b.server.AddTool(
+		mcp.NewTool("stop_app",
+			mcp.WithDescription("Stop an application service container."),
+			mcp.WithString("service_id", mcp.Required(), mcp.Description("The ID of the service to stop")),
+		),
+		b.handleStopApp,
+	)
+
+	b.server.AddTool(
 		mcp.NewTool("list_databases",
 			mcp.WithDescription("List all managed databases registered in this Codedock instance."),
 		),
@@ -50,46 +98,25 @@ func (b *Bridge) registerTools() {
 	)
 
 	b.server.AddTool(
+		mcp.NewTool("get_database",
+			mcp.WithDescription("Get connection and health details for a database by ID."),
+			mcp.WithString("database_id", mcp.Required(), mcp.Description("The ID of the database")),
+		),
+		b.handleGetDatabase,
+	)
+
+	b.server.AddTool(
+		mcp.NewTool("list_deployments",
+			mcp.WithDescription("List deployment history for an application service."),
+			mcp.WithString("service_id", mcp.Required(), mcp.Description("The ID of the application service")),
+		),
+		b.handleListDeployments,
+	)
+
+	b.server.AddTool(
 		mcp.NewTool("get_system_status",
-			mcp.WithDescription("Check basic operational and health metrics of the Codedock platform."),
+			mcp.WithDescription("Check operational status and metrics of the Codedock platform."),
 		),
 		b.handleGetSystemStatus,
 	)
-}
-
-func (b *Bridge) handleListProjects(ctx context.Context, request mcp.CallToolRequest) (*mcp.CallToolResult, error) {
-	projects, _, err := b.projectService.ListProjects(ctx, 100, 0)
-	if err != nil {
-		return mcp.NewToolResultError(err.Error()), nil
-	}
-
-	res := "Codedock Projects:\n"
-	for _, p := range projects {
-		res += fmt.Sprintf("- ID: %s | Name: %s\n", p.ID, p.Name)
-	}
-	if len(projects) == 0 {
-		res = "No projects found."
-	}
-	return mcp.NewToolResultText(res), nil
-}
-
-func (b *Bridge) handleListDatabases(ctx context.Context, request mcp.CallToolRequest) (*mcp.CallToolResult, error) {
-	dbs, err := b.dbService.ListDatabases(ctx)
-	if err != nil {
-		return mcp.NewToolResultError(err.Error()), nil
-	}
-
-	res := "Codedock Databases:\n"
-	for _, d := range dbs {
-		res += fmt.Sprintf("- ID: %s | Name: %s | Engine: %s | Status: %s\n", d.ID, d.Name, d.Engine, d.Status)
-	}
-	if len(dbs) == 0 {
-		res = "No databases found."
-	}
-	return mcp.NewToolResultText(res), nil
-}
-
-func (b *Bridge) handleGetSystemStatus(ctx context.Context, request mcp.CallToolRequest) (*mcp.CallToolResult, error) {
-	res := fmt.Sprintf("Codedock Status: OK\nEngine: Active\nVersion: %s", version.Version)
-	return mcp.NewToolResultText(res), nil
 }

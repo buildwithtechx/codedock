@@ -191,7 +191,7 @@ func NewServer(db *sql.DB, v *utils.Vault, deployer *deploy.Deployer, traefikMan
 	updaterService := systemservices.NewUpdaterService(settingsRepo)
 	updaterService.Start(context.Background())
 
-	bridge := NewBridge(projectService, appService, databaseService)
+	bridge := NewBridge(projectService, appService, databaseService, deploymentService)
 
 	authGuard := middleware.NewAuthGuard(tokenService, settingsService, projectSettingsService, orgRepo, projectRepo, userRepo)
 
