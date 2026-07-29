@@ -12,8 +12,8 @@
     "typecheck": "tsc --noEmit"
   },
   "devDependencies": {
-    "@tauri-apps/cli": "^2.1.0",
-    "@types/node": "^22.13.0",
+    "@tauri-apps/cli": "^2.11.4",
+    "@types/node": "^26.1.2",
     "typescript": "^7.0.2"
   }
 }

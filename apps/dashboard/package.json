@@ -3,7 +3,7 @@
   "private": true,
   "version": "0.1.0",
   "description": "Codedock control panel GUI — React 19, TanStack Router, Tailwind CSS v4",
-  "license": "Codedock Source-Available License",
+  "license": "Apache-2.0",
   "type": "module",
   "imports": {
     "#/*": "./src/*"
@@ -19,7 +19,7 @@
     "test": "vitest run"
   },
   "dependencies": {
-    "@ai-sdk/react": "^4.0.40",
+    "@ai-sdk/react": "^4.0.44",
     "@hookform/resolvers": "^5.5.7",
     "@monaco-editor/react": "^4.7.0",
     "@posthog/react": "^1.10.3",
@@ -41,7 +41,7 @@
     "input-otp": "^1.4.2",
     "lucide-react": "^1.27.0",
     "next-themes": "^0.4.6",
-    "posthog-js": "^1.407.3",
+    "posthog-js": "^1.407.5",
     "qrcode": "^1.5.4",
     "radix-ui": "^1.6.7",
     "react": "^19.2.8",
@@ -56,19 +56,19 @@
     "zustand": "^5.0.14"
   },
   "devDependencies": {
-    "@biomejs/biome": "^2.5.5",
+    "@biomejs/biome": "^2.5.6",
     "@rolldown/plugin-babel": "^0.2.3",
     "@tailwindcss/typography": "^0.5.20",
     "@tanstack/router-cli": "^1.167.21",
     "@testing-library/dom": "^10.4.1",
     "@testing-library/react": "^16.3.2",
-    "@types/node": "^26.1.1",
+    "@types/node": "^26.1.2",
     "@types/qrcode": "^1.5.6",
     "@types/react": "^19.2.17",
     "@types/react-dom": "^19.2.3",
     "@vitejs/plugin-react": "^6.0.4",
     "babel-plugin-react-compiler": "^1.0.0",
-    "jsdom": "^30.0.0",
+    "jsdom": "^30.0.1",
     "typescript": "^7.0.2",
     "vite": "^8.1.5",
     "vitest": "^4.1.10"

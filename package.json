@@ -3,7 +3,7 @@
   "private": true,
   "version": "0.1.0",
   "description": "Codedock self-hosted PaaS control plane & monorepo",
-  "license": "Codedock Source-Available License",
+  "license": "Apache-2.0",
   "type": "module",
   "workspaces": [
     "apps/*"
@@ -30,7 +30,7 @@
     "clean": "rm -rf bin codedockd apps/dashboard/dist"
   },
   "devDependencies": {
-    "@biomejs/biome": "^2.5.5",
+    "@biomejs/biome": "^2.5.6",
     "concurrently": "^10.0.4"
   }
 }

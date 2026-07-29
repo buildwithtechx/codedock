@@ -107,16 +107,14 @@ Two terminals needed — daemon + dashboard.
 ### Terminal 1: Go Daemon
 
 ```bash
-go run ./cmd
+go run ./cmd/codedockd
 # API at http://localhost:8080
 ```
 
 ### Terminal 2: Dashboard
 
 ```bash
-cd apps/dashboard
-npm install
-npm run dev
+npm run dev:dashboard
 # UI at http://localhost:3000 with HMR
 ```
 
