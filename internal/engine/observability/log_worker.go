@@ -104,7 +104,7 @@ func (w *LogWorker) tailContainerLogs(ctx context.Context, containerID, serviceI
 		ShowStdout: true,
 		ShowStderr: true,
 		Follow:     true,
-		Tail:       "0", // Only new logs
+		Tail:       "0",
 	})
 	if err != nil {
 		slog.Warn("failed to start container log stream", "container", containerID, "err", err)
