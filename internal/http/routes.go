@@ -161,6 +161,8 @@ func (s *Server) registerProjectRoutes(apiGroup, authGroup *echo.Group) {
 func (s *Server) registerServerRoutes(apiGroup, authGroup *echo.Group) {
 	authGroup.GET("/servers", s.serverHandler.List, s.authGuard.RequireScope("server:read"))
 	authGroup.POST("/servers", s.serverHandler.Create, s.authGuard.RequireScope("server:write"))
+	authGroup.POST("/servers/test-ssh", s.serverHandler.TestSSH, s.authGuard.RequireScope("server:write"))
+	authGroup.DELETE("/servers/:id", s.serverHandler.Delete, s.authGuard.RequireScope("server:write"))
 	apiGroup.GET("/ws/servers/:serverId/metrics", s.serverMetricsWSHandler.Handle)
 }
 
