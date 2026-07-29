@@ -23,6 +23,7 @@ type deployArgs struct {
 	gitURL      string
 	imageRef    string
 	archivePath string
+	dirName     string
 	projectID   string
 	branch      string
 	rootDir     string
@@ -33,7 +34,7 @@ func runDeploy(args []string) {
 	dArgs := parseDeployArgs(args)
 
 	if dArgs.gitURL == "" && dArgs.imageRef == "" && dArgs.archivePath == "" {
-		exitError("Usage: codedockd deploy <git-url> | --template <t> | --image <img> | --archive <file>")
+		exitError("Usage: codedockd deploy <dir|.> | <git-url> | --template <t> | --image <img> | --archive <file>")
 	}
 
 	count := 0
@@ -59,7 +60,7 @@ func runDeploy(args []string) {
 	projectRepo := repositories.NewProjectRepo(db, envRepo)
 	settingsRepo := repositories.NewSettingsRepo(db)
 
-	appName := resolveAppName(dArgs.gitURL, dArgs.imageRef)
+	appName := resolveAppName(dArgs.gitURL, dArgs.imageRef, dArgs.dirName)
 
 	dArgs.projectID = selectOrCreateProject(projectRepo, dArgs.projectID)
 	envID := setupEnvironment(envRepo, dArgs.projectID)
@@ -124,7 +125,16 @@ func parseDeployArgs(args []string) deployArgs {
 				i++
 			}
 		default:
-			if strings.HasPrefix(args[i], "http") || strings.HasPrefix(args[i], "git@") {
+			if fi, err := os.Stat(args[i]); err == nil && fi.IsDir() {
+				absDir, err := filepath.Abs(args[i])
+				if err == nil {
+					tmpArchive := filepath.Join(os.TempDir(), fmt.Sprintf("codedock-deploy-%s.tar.gz", uuid.New().String()[:8]))
+					if err := utils.CreateTarGzArchive(absDir, tmpArchive); err == nil {
+						d.archivePath = tmpArchive
+						d.dirName = filepath.Base(absDir)
+					}
+				}
+			} else if strings.HasPrefix(args[i], "http") || strings.HasPrefix(args[i], "git@") {
 				d.gitURL = args[i]
 			} else if strings.Contains(args[i], ":") || strings.Contains(args[i], "/") {
 				d.imageRef = args[i]
@@ -134,7 +144,10 @@ func parseDeployArgs(args []string) deployArgs {
 	return d
 }
 
-func resolveAppName(gitURL, imageRef string) string {
+func resolveAppName(gitURL, imageRef, dirName string) string {
+	if dirName != "" {
+		return dirName
+	}
 	appName := extractRepoName(gitURL)
 	if appName == "app" && imageRef != "" {
 		appName = imageRef

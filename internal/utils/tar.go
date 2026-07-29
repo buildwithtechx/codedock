@@ -3,10 +3,12 @@ package utils
 import (
 	"archive/tar"
 	"bytes"
+	"compress/gzip"
 	"fmt"
 	"io"
 	"os"
 	"path/filepath"
+	"strings"
 )
 
 func CreateTarContext(sourceDir string) (io.Reader, error) {
@@ -23,6 +25,12 @@ func CreateTarContext(sourceDir string) (io.Reader, error) {
 		if relPath == "." {
 			return nil
 		}
+		if shouldIgnoreFile(relPath) {
+			if info.IsDir() {
+				return filepath.SkipDir
+			}
+			return nil
+		}
 		return addFileToTar(tw, path, info, relPath)
 	})
 	if err != nil {
@@ -32,6 +40,51 @@ func CreateTarContext(sourceDir string) (io.Reader, error) {
 		return nil, fmt.Errorf("failed to close tar writer: %w", err)
 	}
 	return &buf, nil
+}
+
+func CreateTarGzArchive(sourceDir, targetTarGzPath string) error {
+	outFile, err := os.Create(targetTarGzPath)
+	if err != nil {
+		return fmt.Errorf("failed to create target archive: %w", err)
+	}
+	defer outFile.Close()
+
+	gw := gzip.NewWriter(outFile)
+	defer gw.Close()
+
+	tw := tar.NewWriter(gw)
+	defer tw.Close()
+
+	return filepath.Walk(sourceDir, func(path string, info os.FileInfo, err error) error {
+		if err != nil {
+			return err
+		}
+		relPath, err := filepath.Rel(sourceDir, path)
+		if err != nil {
+			return fmt.Errorf("failed to determine relative path for %s: %w", path, err)
+		}
+		if relPath == "." {
+			return nil
+		}
+		if shouldIgnoreFile(relPath) {
+			if info.IsDir() {
+				return filepath.SkipDir
+			}
+			return nil
+		}
+		return addFileToTar(tw, path, info, relPath)
+	})
+}
+
+func shouldIgnoreFile(relPath string) bool {
+	parts := strings.Split(filepath.ToSlash(relPath), "/")
+	for _, p := range parts {
+		switch p {
+		case ".git", "node_modules", ".next", "dist", "build", ".cache", ".env", ".DS_Store":
+			return true
+		}
+	}
+	return false
 }
 
 func addFileToTar(tw *tar.Writer, path string, info os.FileInfo, relPath string) error {
