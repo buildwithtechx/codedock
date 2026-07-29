@@ -103,6 +103,10 @@ func (s *Server) registerSystemRoutes(apiGroup, authGroup *echo.Group) {
 	apiGroup.POST("/system/maintenance/cleanup", s.systemHandler.Cleanup, s.authGuard.RequireRole("admin"))
 	apiGroup.POST("/system/export", s.migrationHandler.Export, s.authGuard.RequireRole("admin"))
 	apiGroup.POST("/system/import", s.migrationHandler.Import, s.authGuard.RequireRole("admin"))
+	apiGroup.POST("/system/takeover/scan", s.takeoverHandler.Scan, s.authGuard.RequireRole("admin"))
+	apiGroup.POST("/system/takeover/adopt", s.takeoverHandler.Adopt, s.authGuard.RequireRole("admin"))
+	authGroup.GET("/system/takeover/runs", s.takeoverHandler.ListRuns, s.authGuard.RequireRole("admin"))
+	authGroup.GET("/system/takeover/runs/:id", s.takeoverHandler.GetRun, s.authGuard.RequireRole("admin"))
 }
 
 func (s *Server) registerUserRoutes(apiGroup, authGroup *echo.Group) {
@@ -148,6 +152,10 @@ func (s *Server) registerProjectRoutes(apiGroup, authGroup *echo.Group) {
 	authGroup.POST("/projects/:projectId/registries", s.registryHandler.Create, projectAuthAdmin)
 	authGroup.DELETE("/projects/:projectId/registries/:id", s.registryHandler.Delete, projectAuthAdmin)
 
+	authGroup.GET("/services/:serviceId/route-rules", s.routeRuleHandler.List, projectAuth)
+	authGroup.POST("/services/:serviceId/route-rules", s.routeRuleHandler.Create, projectAuthAdmin)
+	authGroup.PATCH("/services/:serviceId/route-rules/:ruleId", s.routeRuleHandler.Update, projectAuthAdmin)
+	authGroup.DELETE("/services/:serviceId/route-rules/:ruleId", s.routeRuleHandler.Delete, projectAuthAdmin)
 }
 
 func (s *Server) registerServerRoutes(apiGroup, authGroup *echo.Group) {

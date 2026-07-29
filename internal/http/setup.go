@@ -254,6 +254,15 @@ func NewServer(db *sql.DB, v *utils.Vault, deployer *deploy.Deployer, traefikMan
 	billingService := systemservices.NewBillingService(userRepo)
 	billingHandler := system.NewBillingHandler(billingService)
 
+	takeoverRepo := repositories.NewTakeoverRepository(db)
+	takeoverScanner := systemservices.NewTakeoverScanner()
+	takeoverAdopter := systemservices.NewTakeoverAdopter(projectRepo, appRepo)
+	takeoverHandler := system.NewTakeoverHandler(takeoverScanner, takeoverAdopter, takeoverRepo)
+
+	routeRuleRepo := repositories.NewRouteRuleRepository(db)
+	routeRuleService := systemservices.NewRouteRuleService(routeRuleRepo)
+	routeRuleHandler := projects.NewRouteRuleHandler(routeRuleService, appRepo)
+
 	authLimiter := middleware.NewRateLimiter(10, time.Minute)
 	otpLimiter := middleware.NewRateLimiter(5, time.Minute)
 	aiLimiter := middleware.NewRateLimiter(5, time.Minute)
@@ -317,6 +326,8 @@ func NewServer(db *sql.DB, v *utils.Vault, deployer *deploy.Deployer, traefikMan
 		billingHandler:         billingHandler,
 		serverMetricsWSHandler: serverMetricsWSHandler,
 		serviceLogsWSHandler:   serviceLogsWSHandler,
+		takeoverHandler:        takeoverHandler,
+		routeRuleHandler:       routeRuleHandler,
 	}
 
 	if srv.deployer != nil {
@@ -325,6 +336,13 @@ func NewServer(db *sql.DB, v *utils.Vault, deployer *deploy.Deployer, traefikMan
 		}
 		srv.deployer.EnvInterpolator = func(projectID string) (map[string]map[string]string, error) {
 			return srv.serviceLinker.GetNamespacedVariables(context.Background(), projectID)
+		}
+		srv.deployer.RouteRuleFetcher = func(ctx context.Context, serviceID, serviceName string) (map[string]string, error) {
+			rules, err := routeRuleRepo.ListByService(ctx, serviceID)
+			if err != nil {
+				return nil, err
+			}
+			return networking.BuildMiddlewareLabels(serviceName, rules), nil
 		}
 	}
 

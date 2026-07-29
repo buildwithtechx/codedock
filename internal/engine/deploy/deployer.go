@@ -24,6 +24,7 @@ type Deployer struct {
 	store            DeployerStore
 	EnvProvider      func(projectID string) (map[string]string, error)
 	EnvInterpolator  func(projectID string) (map[string]map[string]string, error)
+	RouteRuleFetcher func(ctx context.Context, serviceID, serviceName string) (map[string]string, error)
 }
 
 func NewDeployer(dockerClient *client.Client, s DeployerStore) *Deployer {
@@ -144,6 +145,13 @@ func (d *Deployer) DeployAppService(ctx context.Context, app *models.AppService,
 			containerName = fmt.Sprintf("%s-%d", primaryContainerName, i+1)
 		}
 
+		extraLabels := map[string]string{}
+		if d.RouteRuleFetcher != nil {
+			if ml, err := d.RouteRuleFetcher(ctx, app.ID, app.Name); err == nil {
+				extraLabels = ml
+			}
+		}
+
 		runOpts := ContainerRunOptions{
 			Name:            containerName,
 			ImageTag:        imageTag,
@@ -159,6 +167,7 @@ func (d *Deployer) DeployAppService(ctx context.Context, app *models.AppService,
 			Volumes:         app.Volumes,
 			MaintenanceMode: app.MaintenanceMode,
 			LogDrains:       logDrains,
+			ExtraLabels:     extraLabels,
 		}
 
 		containerID, err := d.containerManager.CreateAndStart(ctx, runOpts)

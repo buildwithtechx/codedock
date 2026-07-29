@@ -83,6 +83,8 @@ type Server struct {
 	billingHandler         *system.BillingHandler
 	serverMetricsWSHandler *system.ServerMetricsWSHandler
 	serviceLogsWSHandler   *system.ServiceLogsWSHandler
+	takeoverHandler        *system.TakeoverHandler
+	routeRuleHandler       *projects.RouteRuleHandler
 }
 
 func (s *Server) ServeHTTP(w http.ResponseWriter, r *http.Request) {

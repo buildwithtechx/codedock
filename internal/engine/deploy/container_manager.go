@@ -41,6 +41,7 @@ type ContainerRunOptions struct {
 	Volumes         []models.ServiceVolume
 	MaintenanceMode bool
 	LogDrains       []*models.LogDrain
+	ExtraLabels     map[string]string
 }
 
 func (c *ContainerManager) CreateAndStart(ctx context.Context, opts ContainerRunOptions) (string, error) {
@@ -73,7 +74,7 @@ func (c *ContainerManager) CreateAndStart(ctx context.Context, opts ContainerRun
 	if opts.RuntimeMode != models.RuntimeModeWorker {
 		config.ExposedPorts = nat.PortSet{containerPort: struct{}{}}
 		if opts.ServiceID != "" && opts.Domain != "" {
-			config.Labels = c.buildTraefikLabels(opts.ServiceID, opts.Domain, opts.InternalPort, opts.HealthCheckPath)
+			config.Labels = c.buildTraefikLabels(opts.ServiceID, opts.Domain, opts.InternalPort, opts.HealthCheckPath, opts.ExtraLabels)
 		}
 	}
 
@@ -114,7 +115,7 @@ func (c *ContainerManager) CreateAndStart(ctx context.Context, opts ContainerRun
 	return resp.ID, nil
 }
 
-func (c *ContainerManager) buildTraefikLabels(serviceID, domain string, internalPort int, healthCheckPath string) map[string]string {
+func (c *ContainerManager) buildTraefikLabels(serviceID, domain string, internalPort int, healthCheckPath string, extra map[string]string) map[string]string {
 	labels := map[string]string{
 		"traefik.enable": "true",
 		fmt.Sprintf("traefik.http.routers.%s.rule", serviceID):                      fmt.Sprintf("Host(`%s`)", domain),
@@ -126,6 +127,9 @@ func (c *ContainerManager) buildTraefikLabels(serviceID, domain string, internal
 		labels[fmt.Sprintf("traefik.http.services.%s.loadbalancer.healthcheck.path", serviceID)] = healthCheckPath
 		labels[fmt.Sprintf("traefik.http.services.%s.loadbalancer.healthcheck.interval", serviceID)] = "5s"
 		labels[fmt.Sprintf("traefik.http.services.%s.loadbalancer.healthcheck.timeout", serviceID)] = "2s"
+	}
+	for k, v := range extra {
+		labels[k] = v
 	}
 	return labels
 }
