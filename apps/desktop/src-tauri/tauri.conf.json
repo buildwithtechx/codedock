@@ -4,18 +4,21 @@
   "version": "0.1.0",
   "identifier": "run.codedock.desktop",
   "build": {
-    "beforeDevCommand": "npm run dev:dashboard",
+    "beforeDevCommand": "npm run dev --workspace=apps/dashboard",
     "devUrl": "http://localhost:3000",
-    "beforeBuildCommand": "npm run build:dashboard",
+    "beforeBuildCommand": "npm run build --workspace=apps/dashboard",
     "frontendDist": "../../dashboard/dist"
   },
   "app": {
     "windows": [
       {
-        "title": "Codedock",
-        "width": 1280,
-        "height": 800,
+        "title": "Codedock Control Center",
+        "width": 1366,
+        "height": 868,
+        "minWidth": 1024,
+        "minHeight": 700,
         "resizable": true,
+        "center": true,
         "fullscreen": false
       }
     ],

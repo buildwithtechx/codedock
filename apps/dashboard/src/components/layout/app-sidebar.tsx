@@ -17,6 +17,7 @@ import {
   Wrench,
   X,
 } from 'lucide-react';
+import { ServerConnectionSwitcher } from '../server-connection-switcher';
 import { NavItem, type NavItemProps } from './nav-item';
 import { UserMenu } from './user-menu';
 
@@ -175,6 +176,11 @@ export function AppSidebar({ collapsed, onToggle, mobileOpen, onMobileClose }: A
           ))}
         </div>
 
+        {!navCollapsed && (
+          <div className="border-sidebar-border/30 border-t px-2 py-1.5">
+            <ServerConnectionSwitcher />
+          </div>
+        )}
         <UserMenu collapsed={navCollapsed} />
       </aside>
     </>

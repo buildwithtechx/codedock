@@ -4,6 +4,7 @@ import { toast } from 'sonner';
 import { Button } from '#/components/ui/button';
 import { Input } from '#/components/ui/input';
 import { Row, Section } from '#/components/ui/section';
+import { ServerTakeoverDialog } from '#/features/servers/components/server-takeover-dialog';
 import { useExportSystem } from '#/features/settings';
 
 export function MigrationSettings() {
@@ -49,12 +50,13 @@ export function MigrationSettings() {
               <ArrowRightLeft className="h-6 w-6" />
             </div>
             <div>
-              <h1 className="font-bold text-xl">Migration</h1>
+              <h1 className="font-bold text-xl">Migration & Server Takeover</h1>
               <p className="text-muted-foreground text-sm">
-                Export an encrypted bundle of your instance for migration or backup.
+                Export an encrypted bundle or takeover external Dokploy, Coolify, and Dokku servers.
               </p>
             </div>
           </div>
+          <ServerTakeoverDialog />
         </div>
 
         <div className="flex items-start gap-3 rounded-xl border border-blue-500/20 bg-blue-500/10 p-4">

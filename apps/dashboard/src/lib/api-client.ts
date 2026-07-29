@@ -2,7 +2,25 @@ import { toast } from 'sonner';
 import { env } from '#/env';
 import { getAuthHeaders, handleAuthFailure, refreshAuthSession } from '#/lib/auth-refresh';
 
-const API_BASE_URL = env.VITE_API_URL;
+export function getApiBaseUrl(): string {
+  if (typeof window !== 'undefined') {
+    const customUrl = localStorage.getItem('codedock_server_url');
+    if (customUrl) {
+      return customUrl.replace(/\/+$/, '');
+    }
+  }
+  return env.VITE_API_URL || '';
+}
+
+export function setApiBaseUrl(url: string): void {
+  if (typeof window !== 'undefined') {
+    if (!url) {
+      localStorage.removeItem('codedock_server_url');
+    } else {
+      localStorage.setItem('codedock_server_url', url.replace(/\/+$/, ''));
+    }
+  }
+}
 
 export class ApiError extends Error {
   public status: number;
@@ -40,7 +58,8 @@ async function prepareHeaders(options?: RequestInit, body?: unknown): Promise<He
 
 export const apiClient = {
   async fetch<T>(endpoint: string, options: RequestInit = {}): Promise<T> {
-    const url = `${API_BASE_URL}${endpoint}`;
+    const baseUrl = getApiBaseUrl();
+    const url = `${baseUrl}${endpoint}`;
     const headers = await prepareHeaders(options, options.body);
 
     const response = await fetch(url, {
@@ -50,7 +69,7 @@ export const apiClient = {
     });
 
     if (response.status === 401) {
-      const newToken = await refreshAuthSession(API_BASE_URL);
+      const newToken = await refreshAuthSession(baseUrl);
       if (newToken) {
         headers.set('Authorization', `Bearer ${newToken}`);
         const retryResponse = await fetch(url, {
@@ -85,7 +104,8 @@ export const apiClient = {
   },
 
   async getBlob(endpoint: string, options?: RequestInit): Promise<Blob> {
-    const url = `${API_BASE_URL}${endpoint}`;
+    const baseUrl = getApiBaseUrl();
+    const url = `${baseUrl}${endpoint}`;
     const headers = await prepareHeaders(options);
     const response = await fetch(url, {
       ...options,
@@ -95,7 +115,7 @@ export const apiClient = {
     });
 
     if (response.status === 401) {
-      const newToken = await refreshAuthSession(API_BASE_URL);
+      const newToken = await refreshAuthSession(baseUrl);
       if (newToken) {
         headers.set('Authorization', `Bearer ${newToken}`);
         const retryResponse = await fetch(url, {
@@ -119,7 +139,8 @@ export const apiClient = {
   },
 
   async postBlob(endpoint: string, body?: unknown, options?: RequestInit): Promise<Blob> {
-    const url = `${API_BASE_URL}${endpoint}`;
+    const baseUrl = getApiBaseUrl();
+    const url = `${baseUrl}${endpoint}`;
     const headers = await prepareHeaders(options, body);
     const response = await fetch(url, {
       ...options,
@@ -130,7 +151,7 @@ export const apiClient = {
     });
 
     if (response.status === 401) {
-      const newToken = await refreshAuthSession(API_BASE_URL);
+      const newToken = await refreshAuthSession(baseUrl);
       if (newToken) {
         headers.set('Authorization', `Bearer ${newToken}`);
         const retryResponse = await fetch(url, {

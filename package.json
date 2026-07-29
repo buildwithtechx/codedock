@@ -17,6 +17,8 @@
     "build": "npm run build:dashboard && npm run build:daemon",
     "build:daemon": "go build -ldflags \"-s -w\" -o bin/codedockd ./cmd/codedockd",
     "build:dashboard": "npm run build --workspace=@codedock/dashboard",
+    "dev:desktop": "npm run dev --workspace=@codedock/desktop",
+    "build:desktop": "npm run build --workspace=@codedock/desktop",
     "preview": "npm run preview --workspace=@codedock/dashboard",
     "check": "go fmt ./... && go vet ./... && npm run format",
     "fmt": "go fmt ./... && npm run format:fix",
