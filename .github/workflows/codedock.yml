@@ -9,8 +9,8 @@ permissions:
   contents: write # Needed to create GitHub Releases
 
 jobs:
-  release:
-    name: Build & Release
+  release-server-cli:
+    name: Build & Release Server & CLI
     runs-on: ubuntu-latest
     steps:
       - name: Checkout code
@@ -40,36 +40,15 @@ jobs:
         run: |
           mkdir -p dist
 
-          # ---------------------------------------------------------
           # 1. Build the server daemon (codedockd)
-          # Server only runs on Linux, so we only build for Linux
-          # ---------------------------------------------------------
           for GOARCH in amd64 arm64; do
             echo "Building codedockd for linux/$GOARCH..."
             GOOS=linux GOARCH=$GOARCH go build -ldflags="-s -w -X main.codedockVersion=$VERSION" -o dist/codedockd_linux_$GOARCH ./cmd/codedockd
-
-            # Compress
             tar -czf dist/codedockd_linux_$GOARCH.tar.gz -C dist codedockd_linux_$GOARCH
             rm dist/codedockd_linux_$GOARCH
           done
 
-          # ---------------------------------------------------------
-          # 2. Build the worker daemon (codedockw)
-          # Worker only runs on Linux
-          # ---------------------------------------------------------
-          for GOARCH in amd64 arm64; do
-            echo "Building codedockw for linux/$GOARCH..."
-            GOOS=linux GOARCH=$GOARCH go build -ldflags="-s -w" -o dist/codedockw_linux_$GOARCH ./cmd/codedockw
-
-            # Compress
-            tar -czf dist/codedockw_linux_$GOARCH.tar.gz -C dist codedockw_linux_$GOARCH
-            rm dist/codedockw_linux_$GOARCH
-          done
-
-          # ---------------------------------------------------------
-          # 3. Build the remote client CLI (codedock)
-          # Client runs on laptops, so we build for Mac, Linux, Windows
-          # ---------------------------------------------------------
+          # 2. Build the remote client CLI (codedock)
           # macOS
           for GOARCH in amd64 arm64; do
             echo "Building codedock for darwin/$GOARCH..."
@@ -101,3 +80,43 @@ jobs:
           generate_release_notes: true
           draft: false
           prerelease: false
+
+  release-desktop:
+    name: Build Desktop (${{ matrix.platform }})
+    runs-on: ${{ matrix.platform }}
+    strategy:
+      fail-fast: false
+      matrix:
+        platform: [ubuntu-latest, macos-latest, windows-latest]
+
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+
+      - name: Setup Node
+        uses: actions/setup-node@v4
+        with:
+          node-version: 22
+
+      - name: Install Rust stable
+        uses: dtolnay/rust-toolchain@stable
+
+      - name: Install WebKit & RPM build dependencies (Linux for Debian/Ubuntu/Fedora)
+        if: matrix.platform == 'ubuntu-latest'
+        run: |
+          sudo apt-get update
+          sudo apt-get install -y libwebkit2gtk-4.1-dev libappindicator3-dev librsvg2-dev patchelf rpm
+
+      - name: Install dependencies & Build Dashboard
+        run: |
+          npm ci
+          npm run build:dashboard
+
+      - name: Build Tauri Desktop App
+        uses: tauri-apps/tauri-action@v0
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        with:
+          projectPath: ./apps/desktop
+          tagName: ${{ github.ref_name }}
+          releaseName: "Codedock Desktop ${{ github.ref_name }}"
