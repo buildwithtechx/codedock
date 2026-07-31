@@ -15,8 +15,8 @@ import (
 	"github.com/google/uuid"
 
 	"codedock.run/codedock/internal/config"
-	"codedock.run/codedock/internal/engine"
 	"codedock.run/codedock/internal/engine/deploy"
+	"codedock.run/codedock/internal/engine/ssh"
 	"codedock.run/codedock/internal/models"
 	"codedock.run/codedock/internal/repositories"
 	"codedock.run/codedock/internal/services/projects"
@@ -28,7 +28,7 @@ type PRPreviewService struct {
 	appService  *projects.AppService
 	gitService  *GitService
 	deployer    *deploy.Deployer
-	workerHub   *engine.WorkerHub
+	sshManager  *ssh.SSHManager
 	projectRepo repositories.ProjectRepository
 }
 
@@ -37,7 +37,7 @@ func NewPRPreviewService(
 	appService *projects.AppService,
 	gitService *GitService,
 	deployer *deploy.Deployer,
-	workerHub *engine.WorkerHub,
+	sshManager *ssh.SSHManager,
 	projectRepo repositories.ProjectRepository,
 ) *PRPreviewService {
 	return &PRPreviewService{
@@ -45,7 +45,7 @@ func NewPRPreviewService(
 		appService:  appService,
 		gitService:  gitService,
 		deployer:    deployer,
-		workerHub:   workerHub,
+		sshManager:  sshManager,
 		projectRepo: projectRepo,
 	}
 }

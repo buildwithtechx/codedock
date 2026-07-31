@@ -71,7 +71,7 @@ func getPostgresSchemas(db *models.Database) ([]models.TableSchema, error) {
 			Name:       cName,
 			Type:       cType,
 			IsNullable: cNullable == "YES",
-			IsPrimary:  false, // Keeping it simple for v1
+			IsPrimary:  false,
 		})
 	}
 

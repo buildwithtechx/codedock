@@ -2,10 +2,10 @@ FROM node:22-alpine AS dashboard-builder
 WORKDIR /app
 
 COPY package*.json ./
+COPY apps/dashboard/package*.json ./apps/dashboard/
 RUN npm ci
 
-COPY dashboard/ ./dashboard/
-COPY vite.config.ts tsconfig.json ./
+COPY apps/ ./apps/
 RUN npm run build:dashboard
 
 FROM golang:1.26-alpine AS daemon-builder
@@ -17,7 +17,7 @@ COPY go.mod go.sum ./
 RUN go mod download
 
 COPY . .
-COPY --from=dashboard-builder /app/dashboard/dist ./dashboard/dist
+COPY --from=dashboard-builder /app/apps/dashboard/dist ./apps/dashboard/dist
 
 ARG VERSION=dev
 RUN CGO_ENABLED=0 GOOS=linux go build -a -installsuffix cgo -ldflags="-w -s -X main.codedockVersion=${VERSION}" -o /codedockd ./cmd/codedockd

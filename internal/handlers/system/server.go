@@ -20,9 +20,22 @@ func NewServerHandler(serverService systemservices.ServerService) *ServerHandler
 	}
 }
 
-type CreateServerRequest struct {
-	Name      string `json:"name"`
-	IPAddress string `json:"ipAddress"`
+func (h *ServerHandler) TestSSH(c echo.Context) error {
+	userClaims, ok := c.Get("user").(*models.UserClaims)
+	if !ok || userClaims == nil {
+		return utils.Error(c, http.StatusUnauthorized, "unauthorized")
+	}
+
+	var req models.TestSSHRequest
+	if err := c.Bind(&req); err != nil {
+		return utils.Error(c, http.StatusBadRequest, "invalid request payload")
+	}
+
+	if err := h.serverService.TestSSH(c.Request().Context(), req); err != nil {
+		return utils.Error(c, http.StatusBadRequest, err.Error())
+	}
+
+	return utils.Success(c, "SSH connection successful", nil)
 }
 
 func (h *ServerHandler) Create(c echo.Context) error {
@@ -31,7 +44,7 @@ func (h *ServerHandler) Create(c echo.Context) error {
 		return utils.Error(c, http.StatusUnauthorized, "unauthorized")
 	}
 
-	var req CreateServerRequest
+	var req models.CreateServerRequest
 	if err := c.Bind(&req); err != nil {
 		return utils.Error(c, http.StatusBadRequest, "invalid request payload")
 	}
@@ -40,7 +53,7 @@ func (h *ServerHandler) Create(c echo.Context) error {
 		return utils.Error(c, http.StatusBadRequest, "server name is required")
 	}
 
-	server, err := h.serverService.CreateServer(c.Request().Context(), userClaims.UserID, req.Name, req.IPAddress)
+	server, err := h.serverService.CreateServer(c.Request().Context(), userClaims.UserID, req)
 	if err != nil {
 		return utils.Error(c, http.StatusInternalServerError, err.Error())
 	}
@@ -61,7 +74,29 @@ func (h *ServerHandler) List(c echo.Context) error {
 
 	for _, s := range servers {
 		s.WorkerToken = "********"
+		s.SSHPassword = "********"
+		if s.SSHKey != "" {
+			s.SSHKey = "********"
+		}
 	}
 
 	return utils.Success(c, "Operation successful", servers)
+}
+
+func (h *ServerHandler) Delete(c echo.Context) error {
+	userClaims, ok := c.Get("user").(*models.UserClaims)
+	if !ok || userClaims == nil {
+		return utils.Error(c, http.StatusUnauthorized, "unauthorized")
+	}
+
+	id := c.Param("id")
+	if id == "" {
+		return utils.Error(c, http.StatusBadRequest, "server id required")
+	}
+
+	if err := h.serverService.DeleteServer(c.Request().Context(), id, userClaims.UserID); err != nil {
+		return utils.Error(c, http.StatusInternalServerError, err.Error())
+	}
+
+	return utils.Success(c, "Server deleted", nil)
 }

@@ -14,7 +14,7 @@ type emailOTPData struct {
 }
 
 var (
-	emailOTPs = make(map[string]emailOTPData) // userID -> data
+	emailOTPs = make(map[string]emailOTPData)
 	otpMutex  sync.Mutex
 )
 

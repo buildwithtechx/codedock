@@ -1,0 +1,22 @@
+{
+  "name": "@codedock/desktop",
+  "productName": "Codedock",
+  "version": "0.1.0",
+  "private": true,
+  "description": "Codedock Control Center Desktop App (Tauri 2.0)",
+  "author": "TechX",
+  "type": "module",
+  "scripts": {
+    "dev": "tauri dev",
+    "build": "tauri build",
+    "typecheck": "tsc --noEmit"
+  },
+  "dependencies": {
+    "@tauri-apps/api": "^2.11.1"
+  },
+  "devDependencies": {
+    "@tauri-apps/cli": "^2.11.4",
+    "@types/node": "^26.1.2",
+    "typescript": "^7.0.2"
+  }
+}

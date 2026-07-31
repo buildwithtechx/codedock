@@ -60,7 +60,6 @@ func TestSecurityCSRFProtection(t *testing.T) {
 		"name":     "CSRF Tester",
 	})
 
-	// Request without CSRF token cookie & header
 	req := httptest.NewRequest(http.MethodPost, "/api/auth/signup", bytes.NewReader(body))
 	req.Header.Set("Content-Type", "application/json")
 	rec := httptest.NewRecorder()
@@ -134,7 +133,6 @@ func TestWorkerTokenAuthenticationAndRevocation(t *testing.T) {
 		t.Fatalf("failed to authenticate active worker by token: %v", err)
 	}
 
-	// Deactivate/revoke worker node by deleting
 	if err := serverRepo.Delete(ctx, srv.ID); err != nil {
 		t.Fatalf("failed to delete/revoke server node: %v", err)
 	}

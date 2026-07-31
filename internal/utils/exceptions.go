@@ -31,7 +31,7 @@ func NewDeploymentError(message string, err error) *DeploymentError {
 
 type RateLimitError struct {
 	Message    string
-	RetryAfter int // in seconds
+	RetryAfter int
 }
 
 func (e *RateLimitError) Error() string {

@@ -4,10 +4,19 @@ import (
 	"encoding/json"
 	"fmt"
 	"io"
+	"mime/multipart"
 	nethttp "net/http"
+	"os"
+	"path/filepath"
 
 	"codedock.run/codedock/pkg/types"
 )
+
+type ArchiveDeployResult struct {
+	ContainerID string `json:"containerId"`
+	AppID       string `json:"appId"`
+	AppName     string `json:"appName"`
+}
 
 func (c *Client) TriggerDeployment(serviceID string) (*types.Deployment, error) {
 	resp, err := c.sendRequest("POST", fmt.Sprintf("/services/%s/deploy", serviceID), nil)
@@ -29,6 +38,69 @@ func (c *Client) TriggerDeployment(serviceID string) (*types.Deployment, error) 
 	}
 
 	return result.Data, nil
+}
+
+func (c *Client) DeployArchive(projectID, appName, archivePath string) (*ArchiveDeployResult, error) {
+	file, err := os.Open(archivePath)
+	if err != nil {
+		return nil, fmt.Errorf("failed opening archive: %w", err)
+	}
+
+	pr, pw := io.Pipe()
+	writer := multipart.NewWriter(pw)
+
+	req, err := nethttp.NewRequest("POST", c.BaseURL+"/api/deploy/archive", pr)
+	if err != nil {
+		pr.CloseWithError(err)
+		pw.CloseWithError(err)
+		file.Close()
+		return nil, err
+	}
+	req.Header.Set("Content-Type", writer.FormDataContentType())
+	if c.Token != "" {
+		req.Header.Set("Authorization", "Bearer "+c.Token)
+	}
+
+	go func() {
+		defer file.Close()
+		defer pw.Close()
+
+		_ = writer.WriteField("projectId", projectID)
+		if appName != "" {
+			_ = writer.WriteField("name", appName)
+		}
+
+		part, err := writer.CreateFormFile("file", filepath.Base(archivePath))
+		if err != nil {
+			pw.CloseWithError(fmt.Errorf("failed creating form file: %w", err))
+			return
+		}
+		if _, err := io.Copy(part, file); err != nil {
+			pw.CloseWithError(fmt.Errorf("failed copying archive content: %w", err))
+			return
+		}
+		writer.Close()
+	}()
+
+	resp, err := c.HTTPClient.Do(req)
+	if err != nil {
+		return nil, fmt.Errorf("archive deploy request failed: %w", err)
+	}
+	defer resp.Body.Close()
+
+	if resp.StatusCode != nethttp.StatusOK && resp.StatusCode != nethttp.StatusCreated {
+		respBytes, _ := io.ReadAll(resp.Body)
+		return nil, fmt.Errorf("deploy archive failed (status %d): %s", resp.StatusCode, string(respBytes))
+	}
+
+	var res struct {
+		Data *ArchiveDeployResult `json:"data"`
+	}
+	if err := json.NewDecoder(resp.Body).Decode(&res); err != nil {
+		return nil, err
+	}
+
+	return res.Data, nil
 }
 
 func (c *Client) GetDeploymentStatus(deploymentID string) (*types.Deployment, error) {

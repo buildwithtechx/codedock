@@ -28,12 +28,13 @@ func NewServerRepository(db *sql.DB) ServerRepository {
 
 func (r *sqliteServerRepository) Create(ctx context.Context, server *models.Server) error {
 	query := `
-		INSERT INTO servers (id, user_id, name, ip_address, status, worker_token, last_seen_at, metrics, created_at, updated_at)
-		VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
+		INSERT INTO servers (id, user_id, name, ip_address, ssh_host, ssh_port, ssh_user, ssh_key, ssh_password, status, worker_token, last_seen_at, metrics, created_at, updated_at)
+		VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
 	`
 	_, err := r.db.ExecContext(ctx, query,
-		server.ID, server.UserID, server.Name, server.IPAddress, server.Status,
-		server.WorkerToken, server.LastSeenAt, server.Metrics, server.CreatedAt, server.UpdatedAt,
+		server.ID, server.UserID, server.Name, server.IPAddress,
+		server.SSHHost, server.SSHPort, server.SSHUser, server.SSHKey, server.SSHPassword,
+		server.Status, server.WorkerToken, server.LastSeenAt, server.Metrics, server.CreatedAt, server.UpdatedAt,
 	)
 	if err != nil {
 		return fmt.Errorf("failed to create server: %w", err)
@@ -42,19 +43,19 @@ func (r *sqliteServerRepository) Create(ctx context.Context, server *models.Serv
 }
 
 func (r *sqliteServerRepository) GetByID(ctx context.Context, id string) (*models.Server, error) {
-	query := `SELECT id, user_id, name, ip_address, status, worker_token, last_seen_at, metrics, created_at, updated_at FROM servers WHERE id = ?`
+	query := `SELECT id, user_id, name, ip_address, COALESCE(ssh_host, ''), COALESCE(ssh_port, 22), COALESCE(ssh_user, 'root'), COALESCE(ssh_key, ''), COALESCE(ssh_password, ''), status, worker_token, last_seen_at, metrics, created_at, updated_at FROM servers WHERE id = ?`
 	row := r.db.QueryRowContext(ctx, query, id)
 	return r.scanRow(row)
 }
 
 func (r *sqliteServerRepository) GetByToken(ctx context.Context, token string) (*models.Server, error) {
-	query := `SELECT id, user_id, name, ip_address, status, worker_token, last_seen_at, metrics, created_at, updated_at FROM servers WHERE worker_token = ?`
+	query := `SELECT id, user_id, name, ip_address, COALESCE(ssh_host, ''), COALESCE(ssh_port, 22), COALESCE(ssh_user, 'root'), COALESCE(ssh_key, ''), COALESCE(ssh_password, ''), status, worker_token, last_seen_at, metrics, created_at, updated_at FROM servers WHERE worker_token = ?`
 	row := r.db.QueryRowContext(ctx, query, token)
 	return r.scanRow(row)
 }
 
 func (r *sqliteServerRepository) ListByUser(ctx context.Context, userID string) ([]*models.Server, error) {
-	query := `SELECT id, user_id, name, ip_address, status, worker_token, last_seen_at, metrics, created_at, updated_at FROM servers WHERE user_id = ? ORDER BY created_at DESC`
+	query := `SELECT id, user_id, name, ip_address, COALESCE(ssh_host, ''), COALESCE(ssh_port, 22), COALESCE(ssh_user, 'root'), COALESCE(ssh_key, ''), COALESCE(ssh_password, ''), status, worker_token, last_seen_at, metrics, created_at, updated_at FROM servers WHERE user_id = ? ORDER BY created_at DESC`
 	rows, err := r.db.QueryContext(ctx, query, userID)
 	if err != nil {
 		return nil, fmt.Errorf("failed to list servers: %w", err)
@@ -92,10 +93,10 @@ func (r *sqliteServerRepository) UpdateMetrics(ctx context.Context, id string, m
 
 func (r *sqliteServerRepository) scanRow(row *sql.Row) (*models.Server, error) {
 	var s models.Server
-	err := row.Scan(&s.ID, &s.UserID, &s.Name, &s.IPAddress, &s.Status, &s.WorkerToken, &s.LastSeenAt, &s.Metrics, &s.CreatedAt, &s.UpdatedAt)
+	err := row.Scan(&s.ID, &s.UserID, &s.Name, &s.IPAddress, &s.SSHHost, &s.SSHPort, &s.SSHUser, &s.SSHKey, &s.SSHPassword, &s.Status, &s.WorkerToken, &s.LastSeenAt, &s.Metrics, &s.CreatedAt, &s.UpdatedAt)
 	if err != nil {
 		if err == sql.ErrNoRows {
-			return nil, nil // Or return a specific ErrNotFound
+			return nil, nil
 		}
 		return nil, fmt.Errorf("failed to scan server: %w", err)
 	}
@@ -104,7 +105,7 @@ func (r *sqliteServerRepository) scanRow(row *sql.Row) (*models.Server, error) {
 
 func (r *sqliteServerRepository) scanRows(rows *sql.Rows) (*models.Server, error) {
 	var s models.Server
-	err := rows.Scan(&s.ID, &s.UserID, &s.Name, &s.IPAddress, &s.Status, &s.WorkerToken, &s.LastSeenAt, &s.Metrics, &s.CreatedAt, &s.UpdatedAt)
+	err := rows.Scan(&s.ID, &s.UserID, &s.Name, &s.IPAddress, &s.SSHHost, &s.SSHPort, &s.SSHUser, &s.SSHKey, &s.SSHPassword, &s.Status, &s.WorkerToken, &s.LastSeenAt, &s.Metrics, &s.CreatedAt, &s.UpdatedAt)
 	if err != nil {
 		return nil, fmt.Errorf("failed to scan server: %w", err)
 	}

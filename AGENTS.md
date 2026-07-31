@@ -11,7 +11,7 @@
 ## Workflow
 
 - **Do not run build or test commands after every change.** Just make the code change. If something breaks, the user will say so.
-- Run `make format` (`go fmt ./...` and `cd dashboard && npm run format:fix`) before committing or finishing a session. NEVER run `prettier` (`npx prettier`) — Biome is our strict formatter.
+- Run `npm run fmt` (`go fmt ./...` and `npm run format:fix`) before committing or finishing a session. NEVER run `prettier` (`npx prettier`) — Biome is our strict formatter.
 - Prefer `read`/`grep`/`glob` tools over `bash` for file exploration.
 - When making edits, read the file first, then use `edit` for targeted changes.
 
@@ -20,22 +20,23 @@
 | Layer                | Tech                                                                         |
 | -------------------- | ---------------------------------------------------------------------------- |
 | Frontend (dashboard) | React 19, TanStack Router, TanStack Query, Radix UI, Tailwind CSS v4, Vite   |
+| Desktop (app)        | Tauri 2.0 (Rust native wrapper for `apps/dashboard/dist`)                    |
 | Backend              | Go (`cmd`, `internal/`)                                                      |
 | State (dashboard)    | Zustand, TanStack Query, Zod validation                                      |
 | Styling (dashboard)  | `tailwind-merge` + `clsx` + `class-variance-authority` for class composition |
 
 ## Conventions
 
-- **Dashboard routes** live in `dashboard/src/routes/` following TanStack Router file conventions. Generated route tree is in `routeTree.gen.ts` — do not edit by hand.
-- **Dashboard components** go in `dashboard/src/components/`, grouped by domain (e.g. `projects/`, `databases/`, `ui/`).
-- **Hooks** go in `dashboard/src/hooks/`.
-- **Lib/utils** go in `dashboard/src/lib/`.
-- **Marketing pages** live in `apps/web/src/pages/`, components in `apps/web/src/components/`.
+- **Dashboard routes** live in `apps/dashboard/src/routes/` following TanStack Router file conventions. Generated route tree is in `routeTree.gen.ts` — do not edit by hand.
+- **Dashboard components** go in `apps/dashboard/src/components/`, grouped by domain (e.g. `projects/`, `databases/`, `ui/`).
+- **Hooks** go in `apps/dashboard/src/hooks/`.
+- **Lib/utils** go in `apps/dashboard/src/lib/`.
+- **Desktop App** lives in `apps/desktop/` (Tauri 2.0 Rust app shell).
 - Use Tailwind CSS v4 `@theme` directives for design tokens; avoid custom CSS where Tailwind utilities suffice.
 - **State Management:** Use standard Zustand (`create`) for global UI state. No wrappers, shortcuts, or legacy APIs.
 - **Data Tables:** Use `@tanstack/react-table` for data grid components.
 - **Telemetry:** Use `posthog-js` and `@posthog/react`. Integrations go in `apps/dashboard/src/integrations/`.
-- **Format strictly with Biome** (`npm run format:fix` / `biome check --write .`) and `go fmt ./...`. NEVER use Prettier (`npx prettier`).
+- **Format strictly with Biome** (`npm run format:fix` / `biome check --write apps`) and `go fmt ./...`. NEVER use Prettier (`npx prettier`).
 
 ## Go Conventions & Architecture
 
@@ -59,17 +60,17 @@
 - Avoid `init()` functions. Use explicit constructor functions instead.
 - **Testing:** Unit tests stay co-located with their source files (`service_test.go`). New domain packages must include tests for their service/handler logic.
 
-## Dashboard
+## Apps & Workspaces
 
 ```sh
-make dev                 # starts backend + dashboard concurrently (http://localhost:3000)
-make build               # builds dashboard/dist and Go binary bin/codedockd
-make format              # runs go fmt ./... and dashboard Biome formatter
+npm run dev              # starts backend daemon + dashboard dev server concurrently (http://localhost:3000)
+npm run build            # builds apps/dashboard/dist and Go binary bin/codedockd
+npm run fmt              # runs go fmt ./... and root Biome formatter
 npm run generate-routes  # regenerate TanStack route tree
 ```
 
 **Conventions:**
 
-- Routes live in `dashboard/src/routes/` — TanStack Router file conventions.
+- Routes live in `apps/dashboard/src/routes/` — TanStack Router file conventions.
 - Add shadcn/Radix UI components via `npx shadcn@latest add button`.
-- Components go in `dashboard/src/components/ui/`. Prefer existing Radix over building from scratch.
+- Components go in `apps/dashboard/src/components/ui/`. Prefer existing Radix over building from scratch.

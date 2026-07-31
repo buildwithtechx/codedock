@@ -4,7 +4,7 @@ import (
 	"os"
 	"path/filepath"
 
-	"codedock.run/codedock/dashboard"
+	"codedock.run/codedock/apps/dashboard"
 	"codedock.run/codedock/internal/config"
 	"codedock.run/codedock/internal/models"
 	"github.com/labstack/echo/v4"
@@ -132,7 +132,6 @@ func (s *Server) registerMiscRoutes(apiGroup, authGroup *echo.Group) {
 	authGroup.POST("/mcp/messages", s.HandleMCPMessage)
 	apiGroup.GET("/ws/terminal/:id", s.terminalHandler.HandleWebSocket)
 	apiGroup.GET("/ws/services/:id/terminal", s.terminalHandler.HandleWebSocket)
-	apiGroup.GET("/ws/worker", s.workerWSHandler.Connect)
 }
 
 func (s *Server) registerBillingRoutes(apiGroup, authGroup *echo.Group) {

@@ -99,7 +99,6 @@ func TestCreateAppService(t *testing.T) {
 
 	ctx := context.Background()
 
-	// Invalid input
 	_, err := svc.CreateAppService(ctx, nil)
 	if err == nil {
 		t.Fatal("expected error on nil app service")
@@ -114,7 +113,6 @@ func TestCreateAppService(t *testing.T) {
 		t.Fatal("expected ID to be generated")
 	}
 
-	// Verify it was stored
 	stored, err := repo.GetByID(ctx, created.ID)
 	if err != nil {
 		t.Fatalf("unexpected error fetching stored app: %v", err)

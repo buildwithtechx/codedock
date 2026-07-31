@@ -46,7 +46,7 @@ func StartLogDrains(ctx context.Context, dockerClient *client.Client, containerI
 				break
 			}
 			count := binary.BigEndian.Uint32(hdr[4:])
-			if count > 1024*1024 { // max 1MB per line
+			if count > 1024*1024 {
 				break
 			}
 			dat := make([]byte, count)

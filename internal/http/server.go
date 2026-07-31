@@ -12,6 +12,7 @@ import (
 	"codedock.run/codedock/internal/engine/cron"
 	"codedock.run/codedock/internal/engine/deploy"
 	"codedock.run/codedock/internal/engine/networking"
+	"codedock.run/codedock/internal/engine/ssh"
 	"codedock.run/codedock/internal/handlers/auth"
 	"codedock.run/codedock/internal/handlers/backups"
 	"codedock.run/codedock/internal/handlers/databases"
@@ -33,6 +34,7 @@ type Server struct {
 	deployer               *deploy.Deployer
 	traefikManager         *networking.TraefikManager
 	dockerClient           *client.Client
+	sshManager             *ssh.SSHManager
 	tokenService           *authservices.TokenService
 	authGuard              *middleware.AuthGuard
 	cronManager            *cron.CronManager
@@ -78,11 +80,12 @@ type Server struct {
 	auditLogHandler        *auth.AuditLogHandler
 	exampleHandler         *system.ExampleHandler
 	serverHandler          *system.ServerHandler
-	workerWSHandler        *system.WorkerWSHandler
 	registryHandler        *deployments.RegistryHandler
 	billingHandler         *system.BillingHandler
 	serverMetricsWSHandler *system.ServerMetricsWSHandler
 	serviceLogsWSHandler   *system.ServiceLogsWSHandler
+	takeoverHandler        *system.TakeoverHandler
+	routeRuleHandler       *projects.RouteRuleHandler
 }
 
 func (s *Server) ServeHTTP(w http.ResponseWriter, r *http.Request) {

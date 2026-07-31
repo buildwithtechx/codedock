@@ -103,6 +103,10 @@ func (s *Server) registerSystemRoutes(apiGroup, authGroup *echo.Group) {
 	apiGroup.POST("/system/maintenance/cleanup", s.systemHandler.Cleanup, s.authGuard.RequireRole("admin"))
 	apiGroup.POST("/system/export", s.migrationHandler.Export, s.authGuard.RequireRole("admin"))
 	apiGroup.POST("/system/import", s.migrationHandler.Import, s.authGuard.RequireRole("admin"))
+	apiGroup.POST("/system/takeover/scan", s.takeoverHandler.Scan, s.authGuard.RequireRole("admin"))
+	apiGroup.POST("/system/takeover/adopt", s.takeoverHandler.Adopt, s.authGuard.RequireRole("admin"))
+	authGroup.GET("/system/takeover/runs", s.takeoverHandler.ListRuns, s.authGuard.RequireRole("admin"))
+	authGroup.GET("/system/takeover/runs/:id", s.takeoverHandler.GetRun, s.authGuard.RequireRole("admin"))
 }
 
 func (s *Server) registerUserRoutes(apiGroup, authGroup *echo.Group) {
@@ -148,11 +152,17 @@ func (s *Server) registerProjectRoutes(apiGroup, authGroup *echo.Group) {
 	authGroup.POST("/projects/:projectId/registries", s.registryHandler.Create, projectAuthAdmin)
 	authGroup.DELETE("/projects/:projectId/registries/:id", s.registryHandler.Delete, projectAuthAdmin)
 
+	authGroup.GET("/services/:serviceId/route-rules", s.routeRuleHandler.List, s.RequireServiceRole(""))
+	authGroup.POST("/services/:serviceId/route-rules", s.routeRuleHandler.Create, s.RequireServiceRole(models.MemberPermissionAdmin))
+	authGroup.PATCH("/services/:serviceId/route-rules/:ruleId", s.routeRuleHandler.Update, s.RequireServiceRole(models.MemberPermissionAdmin))
+	authGroup.DELETE("/services/:serviceId/route-rules/:ruleId", s.routeRuleHandler.Delete, s.RequireServiceRole(models.MemberPermissionAdmin))
 }
 
 func (s *Server) registerServerRoutes(apiGroup, authGroup *echo.Group) {
 	authGroup.GET("/servers", s.serverHandler.List, s.authGuard.RequireScope("server:read"))
 	authGroup.POST("/servers", s.serverHandler.Create, s.authGuard.RequireScope("server:write"))
+	authGroup.POST("/servers/test-ssh", s.serverHandler.TestSSH, s.authGuard.RequireScope("server:write"))
+	authGroup.DELETE("/servers/:id", s.serverHandler.Delete, s.authGuard.RequireScope("server:write"))
 	apiGroup.GET("/ws/servers/:serverId/metrics", s.serverMetricsWSHandler.Handle)
 }
 

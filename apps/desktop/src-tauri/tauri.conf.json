@@ -1,0 +1,40 @@
+{
+  "$schema": "https://raw.githubusercontent.com/tauri-apps/tauri/dev/crates/tauri-config-schema/schema.json",
+  "productName": "Codedock",
+  "version": "0.1.0",
+  "identifier": "run.codedock.desktop",
+  "build": {
+    "beforeDevCommand": "npm run dev --workspace=apps/dashboard",
+    "devUrl": "http://localhost:3000",
+    "beforeBuildCommand": "npm run build --workspace=apps/dashboard",
+    "frontendDist": "../../dashboard/dist"
+  },
+  "app": {
+    "windows": [
+      {
+        "title": "Codedock Control Center",
+        "width": 1366,
+        "height": 868,
+        "minWidth": 1024,
+        "minHeight": 700,
+        "resizable": true,
+        "center": true,
+        "fullscreen": false
+      }
+    ],
+    "security": {
+      "csp": "default-src 'self'; script-src 'self'; style-src 'self' 'unsafe-inline'; connect-src 'self' http://localhost:* ws://localhost:*"
+    }
+  },
+  "bundle": {
+    "active": true,
+    "targets": "all",
+    "icon": [
+      "icons/32x32.png",
+      "icons/128x128.png",
+      "icons/128x128@2x.png",
+      "icons/icon.icns",
+      "icons/icon.ico"
+    ]
+  }
+}

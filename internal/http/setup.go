@@ -16,13 +16,13 @@ import (
 
 	"codedock.run/codedock/internal/config"
 	"codedock.run/codedock/internal/core"
-	"codedock.run/codedock/internal/engine"
 	"codedock.run/codedock/internal/engine/backup"
 	"codedock.run/codedock/internal/engine/compose"
 	"codedock.run/codedock/internal/engine/cron"
 	"codedock.run/codedock/internal/engine/deploy"
 	"codedock.run/codedock/internal/engine/networking"
 	"codedock.run/codedock/internal/engine/observability"
+	"codedock.run/codedock/internal/engine/ssh"
 	"codedock.run/codedock/internal/handlers/auth"
 	"codedock.run/codedock/internal/handlers/backups"
 	"codedock.run/codedock/internal/handlers/databases"
@@ -160,14 +160,14 @@ func NewServer(db *sql.DB, v *utils.Vault, deployer *deploy.Deployer, traefikMan
 	deploymentListeners.Register()
 
 	serverRepo := repositories.NewServerRepository(db)
-	workerHub := engine.NewWorkerHub(serverRepo)
+	sshManager := ssh.NewSSHManager(serverRepo)
 
 	scheduledTaskService := systemservices.NewScheduledTaskService(scheduledTaskRepo, cronManager)
 	canvasService := projectservices.NewCanvasService(canvasRepo)
 	orgService := authservices.NewOrganizationService(orgRepo, userRepo)
 	gitService := deploymentservices.NewGitService(gitRepo)
 	statsMonitor := observability.NewStatsMonitor(dockerClient)
-	deploymentService := deploymentservices.NewDeploymentService(deployRepo, appRepo, projectRepo, deployer, gitService, statsMonitor, volumeRepo, workerHub)
+	deploymentService := deploymentservices.NewDeploymentService(deployRepo, appRepo, projectRepo, deployer, gitService, statsMonitor, volumeRepo, sshManager)
 	aiAnalysisService := projectservices.NewAIAnalysisService(deployRepo, appRepo, aiRepo)
 
 	autoscaler := deploy.NewAutoscalerWorker(appRepo, statsMonitor, deploymentService)
@@ -176,7 +176,7 @@ func NewServer(db *sql.DB, v *utils.Vault, deployer *deploy.Deployer, traefikMan
 	backupService := backupservices.NewBackupService(backupRepo, s3DestinationRepo, backupManager)
 	userService := authservices.NewUserService(userRepo)
 	oAuthService := authservices.NewOAuthService(oauthRepo, userRepo, tokenService)
-	prPreviewService := deploymentservices.NewPRPreviewService(prPreviewRepository, appService, gitService, deployer, workerHub, projectRepo)
+	prPreviewService := deploymentservices.NewPRPreviewService(prPreviewRepository, appService, gitService, deployer, sshManager, projectRepo)
 	dnsProviderService := systemservices.NewDNSProviderService(settingsRepo)
 	environmentService := projectservices.NewEnvironmentService(environmentRepo, domainRepo, envVarRepo, dnsProviderService)
 	notificationService := systemservices.NewNotificationService(dispatcherService)
@@ -191,7 +191,7 @@ func NewServer(db *sql.DB, v *utils.Vault, deployer *deploy.Deployer, traefikMan
 	updaterService := systemservices.NewUpdaterService(settingsRepo)
 	updaterService.Start(context.Background())
 
-	bridge := NewBridge(projectService, appService, databaseService)
+	bridge := NewBridge(projectService, appService, databaseService, deploymentService)
 
 	authGuard := middleware.NewAuthGuard(tokenService, settingsService, projectSettingsService, orgRepo, projectRepo, userRepo)
 
@@ -241,9 +241,8 @@ func NewServer(db *sql.DB, v *utils.Vault, deployer *deploy.Deployer, traefikMan
 	exampleService := systemservices.NewExampleService()
 	exampleHandler := system.NewExampleHandler(exampleService)
 
-	serverService := systemservices.NewServerService(serverRepo, userRepo)
+	serverService := systemservices.NewServerService(serverRepo, userRepo, sshManager)
 	serverHandler := system.NewServerHandler(serverService)
-	workerWSHandler := system.NewWorkerWSHandler(workerHub, serverRepo, userRepo)
 	serverMetricsWSHandler := system.NewServerMetricsWSHandler(tokenService, serverService, userRepo)
 	serviceLogsWSHandler := system.NewServiceLogsWSHandler(tokenService, appService, projectService, userRepo)
 
@@ -253,6 +252,15 @@ func NewServer(db *sql.DB, v *utils.Vault, deployer *deploy.Deployer, traefikMan
 
 	billingService := systemservices.NewBillingService(userRepo)
 	billingHandler := system.NewBillingHandler(billingService)
+
+	takeoverRepo := repositories.NewTakeoverRepository(db)
+	takeoverScanner := systemservices.NewTakeoverScanner()
+	takeoverAdopter := systemservices.NewTakeoverAdopter(projectRepo, appRepo)
+	takeoverHandler := system.NewTakeoverHandler(takeoverScanner, takeoverAdopter, takeoverRepo)
+
+	routeRuleRepo := repositories.NewRouteRuleRepository(db)
+	routeRuleService := systemservices.NewRouteRuleService(routeRuleRepo)
+	routeRuleHandler := projects.NewRouteRuleHandler(routeRuleService, appRepo)
 
 	authLimiter := middleware.NewRateLimiter(10, time.Minute)
 	otpLimiter := middleware.NewRateLimiter(5, time.Minute)
@@ -312,11 +320,13 @@ func NewServer(db *sql.DB, v *utils.Vault, deployer *deploy.Deployer, traefikMan
 		auditLogHandler:        auditLogHandler,
 		exampleHandler:         exampleHandler,
 		serverHandler:          serverHandler,
-		workerWSHandler:        workerWSHandler,
+		sshManager:             sshManager,
 		registryHandler:        registryHandler,
 		billingHandler:         billingHandler,
 		serverMetricsWSHandler: serverMetricsWSHandler,
 		serviceLogsWSHandler:   serviceLogsWSHandler,
+		takeoverHandler:        takeoverHandler,
+		routeRuleHandler:       routeRuleHandler,
 	}
 
 	if srv.deployer != nil {
@@ -325,6 +335,13 @@ func NewServer(db *sql.DB, v *utils.Vault, deployer *deploy.Deployer, traefikMan
 		}
 		srv.deployer.EnvInterpolator = func(projectID string) (map[string]map[string]string, error) {
 			return srv.serviceLinker.GetNamespacedVariables(context.Background(), projectID)
+		}
+		srv.deployer.RouteRuleFetcher = func(ctx context.Context, serviceID, serviceName string) (map[string]string, error) {
+			rules, err := routeRuleRepo.ListByService(ctx, serviceID)
+			if err != nil {
+				return nil, err
+			}
+			return networking.BuildMiddlewareLabels(serviceName, rules), nil
 		}
 	}
 

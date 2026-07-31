@@ -58,7 +58,7 @@ func (h *MigrationHandler) Import(c echo.Context) error {
 	}
 	defer src.Close()
 
-	const maxBundleUploadBytes = 500 * 1024 * 1024 // 500 MB
+	const maxBundleUploadBytes = 500 * 1024 * 1024
 	bundleData, err := io.ReadAll(io.LimitReader(src, maxBundleUploadBytes+1))
 	if err != nil {
 		return utils.Error(c, http.StatusInternalServerError, "failed to read bundle data")

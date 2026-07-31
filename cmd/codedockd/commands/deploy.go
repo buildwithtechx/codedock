@@ -23,6 +23,7 @@ type deployArgs struct {
 	gitURL      string
 	imageRef    string
 	archivePath string
+	dirName     string
 	projectID   string
 	branch      string
 	rootDir     string
@@ -33,7 +34,7 @@ func runDeploy(args []string) {
 	dArgs := parseDeployArgs(args)
 
 	if dArgs.gitURL == "" && dArgs.imageRef == "" && dArgs.archivePath == "" {
-		exitError("Usage: codedockd deploy <git-url> | --template <t> | --image <img> | --archive <file>")
+		exitError("Usage: codedockd deploy <dir|.> | <git-url> | --template <t> | --image <img> | --archive <file>")
 	}
 
 	count := 0
@@ -44,6 +45,10 @@ func runDeploy(args []string) {
 	}
 	if count > 1 {
 		exitError("Specify only one: Git URL, --image, or --archive")
+	}
+
+	if strings.HasPrefix(filepath.Base(dArgs.archivePath), "codedock-deploy-") {
+		defer os.Remove(dArgs.archivePath)
 	}
 
 	dataDir, db, vlt := InitDataDir()
@@ -59,7 +64,7 @@ func runDeploy(args []string) {
 	projectRepo := repositories.NewProjectRepo(db, envRepo)
 	settingsRepo := repositories.NewSettingsRepo(db)
 
-	appName := resolveAppName(dArgs.gitURL, dArgs.imageRef)
+	appName := resolveAppName(dArgs.gitURL, dArgs.imageRef, dArgs.dirName)
 
 	dArgs.projectID = selectOrCreateProject(projectRepo, dArgs.projectID)
 	envID := setupEnvironment(envRepo, dArgs.projectID)
@@ -124,7 +129,19 @@ func parseDeployArgs(args []string) deployArgs {
 				i++
 			}
 		default:
-			if strings.HasPrefix(args[i], "http") || strings.HasPrefix(args[i], "git@") {
+			if fi, err := os.Stat(args[i]); err == nil && fi.IsDir() {
+				absDir, err := filepath.Abs(args[i])
+				if err != nil {
+					exitError("Failed to get absolute directory: %v", err)
+				}
+				tmpArchive := filepath.Join(os.TempDir(), fmt.Sprintf("codedock-deploy-%s.tar.gz", uuid.New().String()[:8]))
+				if err := utils.CreateTarGzArchive(absDir, tmpArchive); err != nil {
+					os.Remove(tmpArchive)
+					exitError("Failed to create archive: %v", err)
+				}
+				d.archivePath = tmpArchive
+				d.dirName = filepath.Base(absDir)
+			} else if strings.HasPrefix(args[i], "http") || strings.HasPrefix(args[i], "git@") {
 				d.gitURL = args[i]
 			} else if strings.Contains(args[i], ":") || strings.Contains(args[i], "/") {
 				d.imageRef = args[i]
@@ -134,7 +151,10 @@ func parseDeployArgs(args []string) deployArgs {
 	return d
 }
 
-func resolveAppName(gitURL, imageRef string) string {
+func resolveAppName(gitURL, imageRef, dirName string) string {
+	if dirName != "" {
+		return dirName
+	}
 	appName := extractRepoName(gitURL)
 	if appName == "app" && imageRef != "" {
 		appName = imageRef
@@ -304,37 +324,4 @@ func performDeployment(deployer *deploy.Deployer, dockerClient *client.Client, s
 	}
 
 	fmt.Printf("   App: %s (%s)\n", svc.Name, svc.ID[:8])
-}
-
-func printDeploymentURL(settingsRepo *repositories.SettingsRepo, appName string) {
-	wildcard := ""
-	settings, err := settingsRepo.GetServerSettings(context.Background())
-	if err == nil {
-		wildcard = settings.DefaultWildcardDomain
-	}
-	if wildcard == "" {
-		wildcard = os.Getenv("CODEDOCK_DOMAIN")
-	}
-
-	if wildcard != "" {
-		cleanName := utils.SanitizeDomainName(appName)
-		base := strings.TrimPrefix(wildcard, "*.")
-		if strings.HasPrefix(base, "http") {
-			base = strings.TrimPrefix(base, "https://")
-			base = strings.TrimPrefix(base, "http://")
-		}
-		fmt.Printf("   URL: https://%s.%s\n", cleanName, base)
-	} else {
-		hostIP := os.Getenv("CODEDOCK_HOST_IP")
-		if hostIP == "" {
-			hostIP = "127.0.0.1"
-		}
-		cleanName := utils.SanitizeDomainName(appName)
-		cleanIP := strings.ReplaceAll(hostIP, ".", "-")
-		magicDomain := os.Getenv("CODEDOCK_MAGIC_DOMAIN")
-		if magicDomain == "" {
-			magicDomain = "sslip.io"
-		}
-		fmt.Printf("   URL: http://%s.%s.%s\n", cleanName, cleanIP, magicDomain)
-	}
 }

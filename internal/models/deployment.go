@@ -209,7 +209,7 @@ type ScheduledTask struct {
 	Name       string    `json:"name" db:"name"`
 	Schedule   string    `json:"schedule" db:"schedule"`
 	Command    string    `json:"command" db:"command"`
-	Status     string    `json:"status" db:"status"` // active, paused
+	Status     string    `json:"status" db:"status"`
 	LastRunAt  time.Time `json:"lastRunAt" db:"last_run_at"`
 	LastOutput string    `json:"lastOutput" db:"last_output"`
 	CreatedAt  time.Time `json:"createdAt" db:"created_at"`

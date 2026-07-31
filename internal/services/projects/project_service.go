@@ -130,7 +130,7 @@ func (s *ProjectService) HasPermission(ctx context.Context, projectID, userID st
 		return false
 	}
 	if project.OrganizationID == "" {
-		return false // No organization means no access unless admin
+		return false
 	}
 
 	member, err := s.orgRepo.GetMember(ctx, project.OrganizationID, userID)

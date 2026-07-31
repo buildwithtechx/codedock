@@ -25,8 +25,6 @@ func Execute(ver string, startServerFunc func(), runMCPFunc func()) {
 		runConfig()
 	case "deploy":
 		runDeploy(os.Args[2:])
-	case "worker":
-		runWorker()
 	case "restart":
 		runRestart()
 	case "mcp":

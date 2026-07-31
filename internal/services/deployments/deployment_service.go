@@ -12,9 +12,9 @@ import (
 
 	"github.com/google/uuid"
 
-	"codedock.run/codedock/internal/engine"
 	"codedock.run/codedock/internal/engine/deploy"
 	"codedock.run/codedock/internal/engine/observability"
+	"codedock.run/codedock/internal/engine/ssh"
 	"codedock.run/codedock/internal/models"
 	"codedock.run/codedock/internal/repositories"
 )
@@ -27,7 +27,7 @@ type DeploymentService struct {
 	gitService   *GitService
 	statsMonitor *observability.StatsMonitor
 	volumeRepo   repositories.ServiceVolumeRepository
-	workerHub    *engine.WorkerHub
+	sshManager   *ssh.SSHManager
 }
 
 func NewDeploymentService(
@@ -38,7 +38,7 @@ func NewDeploymentService(
 	gs *GitService,
 	sm *observability.StatsMonitor,
 	vr repositories.ServiceVolumeRepository,
-	wh *engine.WorkerHub,
+	smgr *ssh.SSHManager,
 ) *DeploymentService {
 	return &DeploymentService{
 		repo:         r,
@@ -48,7 +48,7 @@ func NewDeploymentService(
 		gitService:   gs,
 		statsMonitor: sm,
 		volumeRepo:   vr,
-		workerHub:    wh,
+		sshManager:   smgr,
 	}
 }
 

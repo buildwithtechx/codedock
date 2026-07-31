@@ -15,12 +15,35 @@ type Server struct {
 	UserID      string       `json:"userId" db:"user_id"`
 	Name        string       `json:"name" db:"name"`
 	IPAddress   string       `json:"ipAddress" db:"ip_address"`
+	SSHHost     string       `json:"sshHost" db:"ssh_host"`
+	SSHPort     int          `json:"sshPort" db:"ssh_port"`
+	SSHUser     string       `json:"sshUser" db:"ssh_user"`
+	SSHKey      string       `json:"sshKey,omitempty" db:"ssh_key"`
+	SSHPassword string       `json:"sshPassword,omitempty" db:"ssh_password"`
 	Status      ServerStatus `json:"status" db:"status"`
-	WorkerToken string       `json:"workerToken" db:"worker_token"`
-	LastSeenAt  *time.Time   `json:"lastSeenAt" db:"last_seen_at"`
+	WorkerToken string       `json:"workerToken,omitempty" db:"worker_token"`
+	LastSeenAt  *time.Time   `json:"lastSeenAt,omitempty" db:"last_seen_at"`
 
 	Metrics []byte `json:"metrics,omitempty" db:"metrics"`
 
 	CreatedAt time.Time `json:"createdAt" db:"created_at"`
 	UpdatedAt time.Time `json:"updatedAt" db:"updated_at"`
+}
+
+type CreateServerRequest struct {
+	Name        string `json:"name"`
+	IPAddress   string `json:"ipAddress"`
+	SSHHost     string `json:"sshHost"`
+	SSHPort     int    `json:"sshPort"`
+	SSHUser     string `json:"sshUser"`
+	SSHKey      string `json:"sshKey"`
+	SSHPassword string `json:"sshPassword"`
+}
+
+type TestSSHRequest struct {
+	SSHHost     string `json:"sshHost"`
+	SSHPort     int    `json:"sshPort"`
+	SSHUser     string `json:"sshUser"`
+	SSHKey      string `json:"sshKey"`
+	SSHPassword string `json:"sshPassword"`
 }
