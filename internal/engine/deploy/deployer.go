@@ -139,22 +139,22 @@ func (d *Deployer) DeployAppService(ctx context.Context, app *models.AppService,
 	logDrains, _ := d.store.ListLogDrainsByService(app.ID)
 	app.InternalPort = internalPort
 
+	extraLabels := map[string]string{}
+	if d.RouteRuleFetcher != nil {
+		if ml, err := d.RouteRuleFetcher(ctx, app.ID, app.Name); err != nil {
+			if logWriter != nil {
+				fmt.Fprintf(logWriter, "Failed to fetch route rules: %v\n", err)
+			}
+			return "", fmt.Errorf("failed to fetch route rules: %w", err)
+		} else {
+			extraLabels = ml
+		}
+	}
+
 	for i := 0; i < replicas; i++ {
 		containerName := primaryContainerName
 		if replicas > 1 {
 			containerName = fmt.Sprintf("%s-%d", primaryContainerName, i+1)
-		}
-
-		extraLabels := map[string]string{}
-		if d.RouteRuleFetcher != nil {
-			if ml, err := d.RouteRuleFetcher(ctx, app.ID, app.Name); err == nil {
-				extraLabels = ml
-			} else {
-				if logWriter != nil {
-					fmt.Fprintf(logWriter, "Failed to fetch route rules: %v\n", err)
-				}
-				return "", fmt.Errorf("failed to fetch route rules: %w", err)
-			}
 		}
 
 		runOpts := ContainerRunOptions{

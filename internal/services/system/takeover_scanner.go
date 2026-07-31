@@ -4,7 +4,6 @@ import (
 	"context"
 	"encoding/json"
 	"fmt"
-	"log"
 	"net"
 	"strings"
 	"time"
@@ -145,20 +144,15 @@ func dialSSH(ctx context.Context, addr, user, privateKey, fingerprint string) (*
 		return nil, fmt.Errorf("parse private key: %w", err)
 	}
 
-	var hostKeyCallback ssh.HostKeyCallback
-	if fingerprint != "" {
-		hostKeyCallback = func(hostname string, remote net.Addr, key ssh.PublicKey) error {
-			fp := ssh.FingerprintSHA256(key)
-			if fp != fingerprint {
-				return fmt.Errorf("host key fingerprint mismatch: expected %s, got %s", fingerprint, fp)
-			}
-			return nil
+	if fingerprint == "" {
+		return nil, fmt.Errorf("ssh host fingerprint is required; obtain it via a trusted enrollment step")
+	}
+	hostKeyCallback := func(hostname string, remote net.Addr, key ssh.PublicKey) error {
+		fp := ssh.FingerprintSHA256(key)
+		if fp != fingerprint {
+			return fmt.Errorf("host key fingerprint mismatch: expected %s, got %s", fingerprint, fp)
 		}
-	} else {
-		hostKeyCallback = func(hostname string, remote net.Addr, key ssh.PublicKey) error {
-			log.Printf("WARNING: accepting unknown host key for %s", addr)
-			return nil
-		}
+		return nil
 	}
 
 	cfg := &ssh.ClientConfig{

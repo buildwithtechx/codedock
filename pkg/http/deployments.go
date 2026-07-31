@@ -49,6 +49,18 @@ func (c *Client) DeployArchive(projectID, appName, archivePath string) (*Archive
 	pr, pw := io.Pipe()
 	writer := multipart.NewWriter(pw)
 
+	req, err := nethttp.NewRequest("POST", c.BaseURL+"/api/deploy/archive", pr)
+	if err != nil {
+		pr.CloseWithError(err)
+		pw.CloseWithError(err)
+		file.Close()
+		return nil, err
+	}
+	req.Header.Set("Content-Type", writer.FormDataContentType())
+	if c.Token != "" {
+		req.Header.Set("Authorization", "Bearer "+c.Token)
+	}
+
 	go func() {
 		defer file.Close()
 		defer pw.Close()
@@ -69,15 +81,6 @@ func (c *Client) DeployArchive(projectID, appName, archivePath string) (*Archive
 		}
 		writer.Close()
 	}()
-
-	req, err := nethttp.NewRequest("POST", c.BaseURL+"/api/deploy/archive", pr)
-	if err != nil {
-		return nil, err
-	}
-	req.Header.Set("Content-Type", writer.FormDataContentType())
-	if c.Token != "" {
-		req.Header.Set("Authorization", "Bearer "+c.Token)
-	}
 
 	resp, err := c.HTTPClient.Do(req)
 	if err != nil {

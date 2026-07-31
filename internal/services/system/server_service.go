@@ -147,6 +147,9 @@ func (s *serverService) DeleteServer(ctx context.Context, id, userID string) err
 	if err != nil {
 		return err
 	}
+	if server == nil {
+		return fmt.Errorf("server not found")
+	}
 	if server.UserID != userID {
 		return fmt.Errorf("unauthorized to delete server")
 	}
