@@ -149,6 +149,11 @@ func (d *Deployer) DeployAppService(ctx context.Context, app *models.AppService,
 		if d.RouteRuleFetcher != nil {
 			if ml, err := d.RouteRuleFetcher(ctx, app.ID, app.Name); err == nil {
 				extraLabels = ml
+			} else {
+				if logWriter != nil {
+					fmt.Fprintf(logWriter, "Failed to fetch route rules: %v\n", err)
+				}
+				return "", fmt.Errorf("failed to fetch route rules: %w", err)
 			}
 		}
 

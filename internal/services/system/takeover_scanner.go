@@ -4,6 +4,7 @@ import (
 	"context"
 	"encoding/json"
 	"fmt"
+	"log"
 	"net"
 	"strings"
 	"time"
@@ -47,11 +48,13 @@ type dockerInspectResult struct {
 }
 
 func (s *TakeoverScanner) Scan(ctx context.Context, req models.TakeoverScanRequest) (*models.DiscoveredStack, error) {
-	host := req.Host
-	if !strings.Contains(host, ":") {
-		host = host + ":22"
+	host, port, err := net.SplitHostPort(req.Host)
+	if err != nil {
+		host = req.Host
+		port = "22"
 	}
-	client, err := dialSSH(ctx, host, req.SSHUser, req.SSHKey)
+	addr := net.JoinHostPort(host, port)
+	client, err := dialSSH(ctx, addr, req.SSHUser, req.SSHKey, req.SSHFingerprint)
 	if err != nil {
 		return nil, fmt.Errorf("ssh connect: %w", err)
 	}
@@ -136,15 +139,32 @@ func (s *TakeoverScanner) Scan(ctx context.Context, req models.TakeoverScanReque
 	}, nil
 }
 
-func dialSSH(ctx context.Context, addr, user, privateKey string) (*ssh.Client, error) {
+func dialSSH(ctx context.Context, addr, user, privateKey, fingerprint string) (*ssh.Client, error) {
 	signer, err := ssh.ParsePrivateKey([]byte(privateKey))
 	if err != nil {
 		return nil, fmt.Errorf("parse private key: %w", err)
 	}
+
+	var hostKeyCallback ssh.HostKeyCallback
+	if fingerprint != "" {
+		hostKeyCallback = func(hostname string, remote net.Addr, key ssh.PublicKey) error {
+			fp := ssh.FingerprintSHA256(key)
+			if fp != fingerprint {
+				return fmt.Errorf("host key fingerprint mismatch: expected %s, got %s", fingerprint, fp)
+			}
+			return nil
+		}
+	} else {
+		hostKeyCallback = func(hostname string, remote net.Addr, key ssh.PublicKey) error {
+			log.Printf("WARNING: accepting unknown host key for %s", addr)
+			return nil
+		}
+	}
+
 	cfg := &ssh.ClientConfig{
 		User:            user,
 		Auth:            []ssh.AuthMethod{ssh.PublicKeys(signer)},
-		HostKeyCallback: ssh.InsecureIgnoreHostKey(),
+		HostKeyCallback: hostKeyCallback,
 		Timeout:         15 * time.Second,
 	}
 	d := net.Dialer{}
@@ -152,9 +172,19 @@ func dialSSH(ctx context.Context, addr, user, privateKey string) (*ssh.Client, e
 	if err != nil {
 		return nil, fmt.Errorf("dial: %w", err)
 	}
+
+	handshakeDone := make(chan struct{})
+	go func() {
+		select {
+		case <-ctx.Done():
+			conn.Close()
+		case <-handshakeDone:
+		}
+	}()
+
 	sshConn, chans, reqs, err := ssh.NewClientConn(conn, addr, cfg)
+	close(handshakeDone)
 	if err != nil {
-		conn.Close()
 		return nil, fmt.Errorf("ssh handshake: %w", err)
 	}
 	return ssh.NewClient(sshConn, chans, reqs), nil

@@ -1,7 +1,6 @@
 package http
 
 import (
-	"bytes"
 	"encoding/json"
 	"fmt"
 	"io"
@@ -46,25 +45,32 @@ func (c *Client) DeployArchive(projectID, appName, archivePath string) (*Archive
 	if err != nil {
 		return nil, fmt.Errorf("failed opening archive: %w", err)
 	}
-	defer file.Close()
 
-	body := &bytes.Buffer{}
-	writer := multipart.NewWriter(body)
-	_ = writer.WriteField("projectId", projectID)
-	if appName != "" {
-		_ = writer.WriteField("name", appName)
-	}
+	pr, pw := io.Pipe()
+	writer := multipart.NewWriter(pw)
 
-	part, err := writer.CreateFormFile("file", filepath.Base(archivePath))
-	if err != nil {
-		return nil, fmt.Errorf("failed creating form file: %w", err)
-	}
-	if _, err := io.Copy(part, file); err != nil {
-		return nil, fmt.Errorf("failed copying archive content: %w", err)
-	}
-	writer.Close()
+	go func() {
+		defer file.Close()
+		defer pw.Close()
 
-	req, err := nethttp.NewRequest("POST", c.BaseURL+"/api/deploy/archive", body)
+		_ = writer.WriteField("projectId", projectID)
+		if appName != "" {
+			_ = writer.WriteField("name", appName)
+		}
+
+		part, err := writer.CreateFormFile("file", filepath.Base(archivePath))
+		if err != nil {
+			pw.CloseWithError(fmt.Errorf("failed creating form file: %w", err))
+			return
+		}
+		if _, err := io.Copy(part, file); err != nil {
+			pw.CloseWithError(fmt.Errorf("failed copying archive content: %w", err))
+			return
+		}
+		writer.Close()
+	}()
+
+	req, err := nethttp.NewRequest("POST", c.BaseURL+"/api/deploy/archive", pr)
 	if err != nil {
 		return nil, err
 	}

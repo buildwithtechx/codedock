@@ -83,6 +83,7 @@ jobs:
 
   release-desktop:
     name: Build Desktop (${{ matrix.platform }})
+    needs: release-server-cli
     runs-on: ${{ matrix.platform }}
     strategy:
       fail-fast: false

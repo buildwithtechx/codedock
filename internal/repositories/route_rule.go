@@ -4,6 +4,7 @@ import (
 	"context"
 	"database/sql"
 	"fmt"
+	"strings"
 	"time"
 
 	"github.com/google/uuid"
@@ -69,25 +70,39 @@ func (r *sqliteRouteRuleRepository) ListByService(ctx context.Context, serviceID
 		}
 		rules = append(rules, rule)
 	}
+	if err := rows.Err(); err != nil {
+		return nil, fmt.Errorf("route rules iteration: %w", err)
+	}
 	return rules, nil
 }
 
 func (r *sqliteRouteRuleRepository) Update(ctx context.Context, id string, name *string, enabled *bool, specJSON *string) error {
 	now := time.Now().UTC()
+	updates := []string{"updated_at = ?"}
+	args := []any{now}
+
 	if name != nil {
-		if _, err := r.db.ExecContext(ctx, `UPDATE route_rules SET name = ?, updated_at = ? WHERE id = ?`, *name, now, id); err != nil {
-			return err
-		}
+		updates = append(updates, "name = ?")
+		args = append(args, *name)
 	}
 	if enabled != nil {
-		if _, err := r.db.ExecContext(ctx, `UPDATE route_rules SET enabled = ?, updated_at = ? WHERE id = ?`, boolToInt(*enabled), now, id); err != nil {
-			return err
-		}
+		updates = append(updates, "enabled = ?")
+		args = append(args, boolToInt(*enabled))
 	}
 	if specJSON != nil {
-		if _, err := r.db.ExecContext(ctx, `UPDATE route_rules SET spec_json = ?, updated_at = ? WHERE id = ?`, *specJSON, now, id); err != nil {
-			return err
-		}
+		updates = append(updates, "spec_json = ?")
+		args = append(args, *specJSON)
+	}
+
+	if len(updates) == 1 {
+		return nil
+	}
+
+	args = append(args, id)
+	query := fmt.Sprintf("UPDATE route_rules SET %s WHERE id = ?", strings.Join(updates, ", "))
+	_, err := r.db.ExecContext(ctx, query, args...)
+	if err != nil {
+		return fmt.Errorf("update route rule: %w", err)
 	}
 	return nil
 }

@@ -43,19 +43,16 @@ func CreateTarContext(sourceDir string) (io.Reader, error) {
 }
 
 func CreateTarGzArchive(sourceDir, targetTarGzPath string) error {
-	outFile, err := os.Create(targetTarGzPath)
+	outFile, err := os.OpenFile(targetTarGzPath, os.O_CREATE|os.O_WRONLY|os.O_TRUNC, 0600)
 	if err != nil {
 		return fmt.Errorf("failed to create target archive: %w", err)
 	}
 	defer outFile.Close()
 
 	gw := gzip.NewWriter(outFile)
-	defer gw.Close()
-
 	tw := tar.NewWriter(gw)
-	defer tw.Close()
 
-	return filepath.Walk(sourceDir, func(path string, info os.FileInfo, err error) error {
+	err = filepath.Walk(sourceDir, func(path string, info os.FileInfo, err error) error {
 		if err != nil {
 			return err
 		}
@@ -74,13 +71,26 @@ func CreateTarGzArchive(sourceDir, targetTarGzPath string) error {
 		}
 		return addFileToTar(tw, path, info, relPath)
 	})
+	if err != nil {
+		return err
+	}
+	if err := tw.Close(); err != nil {
+		return fmt.Errorf("failed to close tar writer: %w", err)
+	}
+	if err := gw.Close(); err != nil {
+		return fmt.Errorf("failed to close gzip writer: %w", err)
+	}
+	return nil
 }
 
 func shouldIgnoreFile(relPath string) bool {
 	parts := strings.Split(filepath.ToSlash(relPath), "/")
 	for _, p := range parts {
 		switch p {
-		case ".git", "node_modules", ".next", "dist", "build", ".cache", ".env", ".DS_Store":
+		case ".git", "node_modules", ".next", "dist", "build", ".cache", ".DS_Store":
+			return true
+		}
+		if p == ".env" || strings.HasPrefix(p, ".env.") {
 			return true
 		}
 	}

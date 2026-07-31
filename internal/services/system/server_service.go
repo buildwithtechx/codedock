@@ -19,7 +19,7 @@ type ServerService interface {
 	TestSSH(ctx context.Context, req models.TestSSHRequest) error
 	ListServersByUser(ctx context.Context, userID string) ([]*models.Server, error)
 	GetServer(ctx context.Context, id string) (*models.Server, error)
-	DeleteServer(ctx context.Context, id string) error
+	DeleteServer(ctx context.Context, id, userID string) error
 }
 
 type serverService struct {
@@ -43,6 +43,10 @@ func generateWorkerToken() string {
 }
 
 func (s *serverService) TestSSH(ctx context.Context, req models.TestSSHRequest) error {
+	if s.sshManager == nil {
+		return fmt.Errorf("ssh manager is not initialized")
+	}
+
 	host := req.SSHHost
 	if host == "" {
 		return fmt.Errorf("sshHost is required")
@@ -105,7 +109,7 @@ func (s *serverService) CreateServer(ctx context.Context, userID string, req mod
 		SSHUser:     sshUser,
 		SSHKey:      req.SSHKey,
 		SSHPassword: req.SSHPassword,
-		Status:      models.ServerStatusOnline,
+		Status:      models.ServerStatusOffline,
 		WorkerToken: generateWorkerToken(),
 		CreatedAt:   now,
 		UpdatedAt:   now,
@@ -118,8 +122,8 @@ func (s *serverService) CreateServer(ctx context.Context, userID string, req mod
 			User:     server.SSHUser,
 			Key:      server.SSHKey,
 			Password: server.SSHPassword,
-		}); err != nil {
-			server.Status = models.ServerStatusOffline
+		}); err == nil {
+			server.Status = models.ServerStatusOnline
 		}
 	}
 
@@ -138,7 +142,15 @@ func (s *serverService) GetServer(ctx context.Context, id string) (*models.Serve
 	return s.serverRepo.GetByID(ctx, id)
 }
 
-func (s *serverService) DeleteServer(ctx context.Context, id string) error {
+func (s *serverService) DeleteServer(ctx context.Context, id, userID string) error {
+	server, err := s.serverRepo.GetByID(ctx, id)
+	if err != nil {
+		return err
+	}
+	if server.UserID != userID {
+		return fmt.Errorf("unauthorized to delete server")
+	}
+
 	if s.sshManager != nil {
 		s.sshManager.RemoveClient(id)
 	}

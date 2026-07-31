@@ -55,7 +55,11 @@ func runLocalDirectoryDeploy(targetDir string) {
 	projectID := deployProjectID
 	if projectID == "" {
 		projects, err := client.ListProjects()
-		if err == nil && len(projects) > 0 {
+		if err != nil {
+			fmt.Printf("❌ Failed to list projects: %v\n", err)
+			os.Exit(1)
+		}
+		if len(projects) > 0 {
 			projectID = projects[0].ID
 		} else {
 			p, err := client.CreateProject(&types.CreateProjectRequest{

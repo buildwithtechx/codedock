@@ -12,25 +12,32 @@ import (
 	"codedock.run/codedock/internal/repositories"
 )
 
+type clientEntry struct {
+	client *Client
+	refs   int
+	closed bool
+}
+
 type SSHManager struct {
-	mu         sync.RWMutex
-	clients    map[string]*Client
+	mu         sync.Mutex
+	clients    map[string]*clientEntry
 	serverRepo repositories.ServerRepository
 }
 
 func NewSSHManager(repo repositories.ServerRepository) *SSHManager {
 	return &SSHManager{
-		clients:    make(map[string]*Client),
+		clients:    make(map[string]*clientEntry),
 		serverRepo: repo,
 	}
 }
 
-func (m *SSHManager) GetClient(server *models.Server) (*Client, error) {
+func (m *SSHManager) GetClient(server *models.Server) (*Client, func(), error) {
 	m.mu.Lock()
 	defer m.mu.Unlock()
 
-	if client, ok := m.clients[server.ID]; ok {
-		return client, nil
+	if entry, ok := m.clients[server.ID]; ok && !entry.closed {
+		entry.refs++
+		return entry.client, func() { m.releaseClient(server.ID) }, nil
 	}
 
 	host := server.SSHHost
@@ -46,20 +53,42 @@ func (m *SSHManager) GetClient(server *models.Server) (*Client, error) {
 		Password: server.SSHPassword,
 	})
 	if err != nil {
-		return nil, fmt.Errorf("failed creating ssh client for server %s: %w", server.ID, err)
+		return nil, nil, fmt.Errorf("failed creating ssh client for server %s: %w", server.ID, err)
 	}
 
-	m.clients[server.ID] = client
-	return client, nil
+	m.clients[server.ID] = &clientEntry{
+		client: client,
+		refs:   1,
+	}
+	return client, func() { m.releaseClient(server.ID) }, nil
 }
 
-func (m *SSHManager) GetDockerClient(ctx context.Context, server *models.Server) (*dockerclient.Client, error) {
-	client, err := m.GetClient(server)
+func (m *SSHManager) releaseClient(serverID string) {
+	m.mu.Lock()
+	defer m.mu.Unlock()
+
+	if entry, ok := m.clients[serverID]; ok {
+		entry.refs--
+		if entry.closed && entry.refs == 0 {
+			_ = entry.client.Close()
+			delete(m.clients, serverID)
+		}
+	}
+}
+
+func (m *SSHManager) GetDockerClient(ctx context.Context, server *models.Server) (*dockerclient.Client, func(), error) {
+	client, release, err := m.GetClient(server)
 	if err != nil {
-		return nil, err
+		return nil, nil, err
 	}
 
-	return client.DockerClient(ctx)
+	dc, err := client.DockerClient(ctx)
+	if err != nil {
+		release()
+		return nil, nil, err
+	}
+
+	return dc, release, nil
 }
 
 func (m *SSHManager) TestConnection(ctx context.Context, cfg Config) error {
@@ -82,11 +111,12 @@ func (m *SSHManager) TestConnection(ctx context.Context, cfg Config) error {
 }
 
 func (m *SSHManager) RefreshServerStatus(ctx context.Context, server *models.Server) error {
-	client, err := m.GetClient(server)
+	client, release, err := m.GetClient(server)
 	if err != nil {
 		_ = m.serverRepo.UpdateStatus(ctx, server.ID, models.ServerStatusOffline)
 		return err
 	}
+	defer release()
 
 	metrics, err := client.CollectMetrics(ctx)
 	if err != nil {
@@ -106,9 +136,12 @@ func (m *SSHManager) RemoveClient(serverID string) {
 	m.mu.Lock()
 	defer m.mu.Unlock()
 
-	if client, ok := m.clients[serverID]; ok {
-		_ = client.Close()
-		delete(m.clients, serverID)
+	if entry, ok := m.clients[serverID]; ok {
+		entry.closed = true
+		if entry.refs == 0 {
+			_ = entry.client.Close()
+			delete(m.clients, serverID)
+		}
 	}
 }
 

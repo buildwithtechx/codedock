@@ -95,6 +95,9 @@ func (r *sqliteTakeoverRepository) ListByUser(ctx context.Context, userID string
 		}
 		runs = append(runs, run)
 	}
+	if err := rows.Err(); err != nil {
+		return nil, fmt.Errorf("takeover runs iteration: %w", err)
+	}
 	return runs, nil
 }
 

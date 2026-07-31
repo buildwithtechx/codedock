@@ -152,10 +152,10 @@ func (s *Server) registerProjectRoutes(apiGroup, authGroup *echo.Group) {
 	authGroup.POST("/projects/:projectId/registries", s.registryHandler.Create, projectAuthAdmin)
 	authGroup.DELETE("/projects/:projectId/registries/:id", s.registryHandler.Delete, projectAuthAdmin)
 
-	authGroup.GET("/services/:serviceId/route-rules", s.routeRuleHandler.List, projectAuth)
-	authGroup.POST("/services/:serviceId/route-rules", s.routeRuleHandler.Create, projectAuthAdmin)
-	authGroup.PATCH("/services/:serviceId/route-rules/:ruleId", s.routeRuleHandler.Update, projectAuthAdmin)
-	authGroup.DELETE("/services/:serviceId/route-rules/:ruleId", s.routeRuleHandler.Delete, projectAuthAdmin)
+	authGroup.GET("/services/:serviceId/route-rules", s.routeRuleHandler.List, s.RequireServiceRole(""))
+	authGroup.POST("/services/:serviceId/route-rules", s.routeRuleHandler.Create, s.RequireServiceRole(models.MemberPermissionAdmin))
+	authGroup.PATCH("/services/:serviceId/route-rules/:ruleId", s.routeRuleHandler.Update, s.RequireServiceRole(models.MemberPermissionAdmin))
+	authGroup.DELETE("/services/:serviceId/route-rules/:ruleId", s.routeRuleHandler.Delete, s.RequireServiceRole(models.MemberPermissionAdmin))
 }
 
 func (s *Server) registerServerRoutes(apiGroup, authGroup *echo.Group) {

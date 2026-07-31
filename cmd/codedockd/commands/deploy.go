@@ -47,6 +47,10 @@ func runDeploy(args []string) {
 		exitError("Specify only one: Git URL, --image, or --archive")
 	}
 
+	if strings.HasPrefix(filepath.Base(dArgs.archivePath), "codedock-deploy-") {
+		defer os.Remove(dArgs.archivePath)
+	}
+
 	dataDir, db, vlt := InitDataDir()
 	defer db.Close()
 
@@ -127,13 +131,16 @@ func parseDeployArgs(args []string) deployArgs {
 		default:
 			if fi, err := os.Stat(args[i]); err == nil && fi.IsDir() {
 				absDir, err := filepath.Abs(args[i])
-				if err == nil {
-					tmpArchive := filepath.Join(os.TempDir(), fmt.Sprintf("codedock-deploy-%s.tar.gz", uuid.New().String()[:8]))
-					if err := utils.CreateTarGzArchive(absDir, tmpArchive); err == nil {
-						d.archivePath = tmpArchive
-						d.dirName = filepath.Base(absDir)
-					}
+				if err != nil {
+					exitError("Failed to get absolute directory: %v", err)
 				}
+				tmpArchive := filepath.Join(os.TempDir(), fmt.Sprintf("codedock-deploy-%s.tar.gz", uuid.New().String()[:8]))
+				if err := utils.CreateTarGzArchive(absDir, tmpArchive); err != nil {
+					os.Remove(tmpArchive)
+					exitError("Failed to create archive: %v", err)
+				}
+				d.archivePath = tmpArchive
+				d.dirName = filepath.Base(absDir)
 			} else if strings.HasPrefix(args[i], "http") || strings.HasPrefix(args[i], "git@") {
 				d.gitURL = args[i]
 			} else if strings.Contains(args[i], ":") || strings.Contains(args[i], "/") {

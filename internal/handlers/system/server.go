@@ -94,7 +94,7 @@ func (h *ServerHandler) Delete(c echo.Context) error {
 		return utils.Error(c, http.StatusBadRequest, "server id required")
 	}
 
-	if err := h.serverService.DeleteServer(c.Request().Context(), id); err != nil {
+	if err := h.serverService.DeleteServer(c.Request().Context(), id, userClaims.UserID); err != nil {
 		return utils.Error(c, http.StatusInternalServerError, err.Error())
 	}
 

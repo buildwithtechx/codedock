@@ -64,7 +64,7 @@ func (a *TakeoverAdopter) Adopt(ctx context.Context, req models.TakeoverAdoptReq
 			UpdatedAt:    now,
 		}
 		if err := a.appRepo.Create(ctx, svc); err != nil {
-			continue
+			return nil, fmt.Errorf("create app service %s: %w", svcName, err)
 		}
 	}
 

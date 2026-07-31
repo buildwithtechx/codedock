@@ -66,7 +66,9 @@ func (h *TakeoverHandler) Scan(c echo.Context) error {
 	}
 
 	stackJSON, _ := json.Marshal(stack)
-	_ = h.repo.UpdateDiscovered(c.Request().Context(), run.ID, string(stackJSON))
+	if err := h.repo.UpdateDiscovered(c.Request().Context(), run.ID, string(stackJSON)); err != nil {
+		return utils.Error(c, http.StatusInternalServerError, "failed to save discovered stack: "+err.Error())
+	}
 
 	return utils.Success(c, "Scan complete", map[string]interface{}{
 		"runId": run.ID,
@@ -112,7 +114,9 @@ func (h *TakeoverHandler) Adopt(c echo.Context) error {
 		return utils.Error(c, http.StatusInternalServerError, "adopt failed: "+err.Error())
 	}
 
-	_ = h.repo.UpdateAdopted(c.Request().Context(), run.ID, projectIDs)
+	if err := h.repo.UpdateAdopted(c.Request().Context(), run.ID, projectIDs); err != nil {
+		return utils.Error(c, http.StatusInternalServerError, "failed to record adopted projects: "+err.Error())
+	}
 
 	return utils.Success(c, "Services adopted successfully", map[string]interface{}{
 		"projectIds": projectIDs,

@@ -116,20 +116,20 @@ func (c *ContainerManager) CreateAndStart(ctx context.Context, opts ContainerRun
 }
 
 func (c *ContainerManager) buildTraefikLabels(serviceID, domain string, internalPort int, healthCheckPath string, extra map[string]string) map[string]string {
-	labels := map[string]string{
-		"traefik.enable": "true",
-		fmt.Sprintf("traefik.http.routers.%s.rule", serviceID):                      fmt.Sprintf("Host(`%s`)", domain),
-		fmt.Sprintf("traefik.http.routers.%s.tls", serviceID):                       "true",
-		fmt.Sprintf("traefik.http.routers.%s.tls.certresolver", serviceID):          "letsencrypt",
-		fmt.Sprintf("traefik.http.services.%s.loadbalancer.server.port", serviceID): fmt.Sprintf("%d", internalPort),
+	labels := map[string]string{}
+	for k, v := range extra {
+		labels[k] = v
 	}
+	labels["traefik.enable"] = "true"
+	labels[fmt.Sprintf("traefik.http.routers.%s.rule", serviceID)] = fmt.Sprintf("Host(`%s`)", domain)
+	labels[fmt.Sprintf("traefik.http.routers.%s.tls", serviceID)] = "true"
+	labels[fmt.Sprintf("traefik.http.routers.%s.tls.certresolver", serviceID)] = "letsencrypt"
+	labels[fmt.Sprintf("traefik.http.services.%s.loadbalancer.server.port", serviceID)] = fmt.Sprintf("%d", internalPort)
+
 	if healthCheckPath != "" {
 		labels[fmt.Sprintf("traefik.http.services.%s.loadbalancer.healthcheck.path", serviceID)] = healthCheckPath
 		labels[fmt.Sprintf("traefik.http.services.%s.loadbalancer.healthcheck.interval", serviceID)] = "5s"
 		labels[fmt.Sprintf("traefik.http.services.%s.loadbalancer.healthcheck.timeout", serviceID)] = "2s"
-	}
-	for k, v := range extra {
-		labels[k] = v
 	}
 	return labels
 }

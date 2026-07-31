@@ -20,20 +20,20 @@ func printDeploymentURL(settingsRepo *repositories.SettingsRepo, appName string)
 		wildcard = os.Getenv("CODEDOCK_DOMAIN")
 	}
 
+	cleanName := utils.SanitizeDomainName(appName)
 	if wildcard != "" {
-		cleanName := utils.SanitizeDomainName(appName)
-		base := strings.TrimPrefix(wildcard, "*.")
+		base := wildcard
 		if strings.HasPrefix(base, "http") {
 			base = strings.TrimPrefix(base, "https://")
 			base = strings.TrimPrefix(base, "http://")
 		}
+		base = strings.TrimPrefix(base, "*.")
 		fmt.Printf("   URL: https://%s.%s\n", cleanName, base)
 	} else {
 		hostIP := os.Getenv("CODEDOCK_HOST_IP")
 		if hostIP == "" {
 			hostIP = "127.0.0.1"
 		}
-		cleanName := utils.SanitizeDomainName(appName)
 		cleanIP := strings.ReplaceAll(hostIP, ".", "-")
 		magicDomain := os.Getenv("CODEDOCK_MAGIC_DOMAIN")
 		if magicDomain == "" {

@@ -120,7 +120,9 @@ func (b *Bridge) handleRestartApp(ctx context.Context, request mcp.CallToolReque
 	}
 
 	app.Status = "restarting"
-	_ = b.appService.UpdateAppService(ctx, app)
+	if err := b.appService.UpdateAppService(ctx, app); err != nil {
+		return mcp.NewToolResultError(fmt.Sprintf("failed to update status: %v", err)), nil
+	}
 
 	return mcp.NewToolResultText(fmt.Sprintf("Service %s (%s) restart signal sent", app.Name, serviceID)), nil
 }

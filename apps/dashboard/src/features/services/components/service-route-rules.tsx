@@ -57,14 +57,24 @@ export function ServiceRouteRules({ serviceId }: { serviceId: string }) {
     mutationFn: async () => {
       let spec: Record<string, unknown> = {};
       if (ruleType === 'rate_limit') {
+        const avg = Number.parseInt(rateLimitAvg, 10);
+        const bst = Number.parseInt(rateLimitBurst, 10);
+        if (Number.isNaN(avg) || avg <= 0 || Number.isNaN(bst) || bst <= 0) {
+          throw new Error('Rate limit average and burst must be positive integers');
+        }
         spec = {
-          average: Number.parseInt(rateLimitAvg, 10),
-          burst: Number.parseInt(rateLimitBurst, 10),
+          average: avg,
+          burst: bst,
         };
       } else if (ruleType === 'ip_allowlist') {
-        spec = { ips: ipList.split(',').map((s) => s.trim()) };
+        spec = {
+          cidrs: ipList
+            .split(',')
+            .map((s) => s.trim())
+            .filter(Boolean),
+        };
       } else if (ruleType === 'headers') {
-        spec = { customRequestHeaders: { [headerKey]: headerVal } };
+        spec = { set: { [headerKey]: headerVal }, remove: [] };
       }
 
       return apiClient.post(`/services/${serviceId}/route-rules`, {
@@ -148,11 +158,18 @@ export function ServiceRouteRules({ serviceId }: { serviceId: string }) {
                 <div className="grid grid-cols-2 gap-4">
                   <div className="grid gap-2">
                     <Label>Average Req/sec</Label>
-                    <Input value={rateLimitAvg} onChange={(e) => setRateLimitAvg(e.target.value)} />
+                    <Input
+                      type="number"
+                      min="1"
+                      value={rateLimitAvg}
+                      onChange={(e) => setRateLimitAvg(e.target.value)}
+                    />
                   </div>
                   <div className="grid gap-2">
                     <Label>Burst</Label>
                     <Input
+                      type="number"
+                      min="1"
                       value={rateLimitBurst}
                       onChange={(e) => setRateLimitBurst(e.target.value)}
                     />

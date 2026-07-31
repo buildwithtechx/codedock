@@ -14,6 +14,7 @@ import {
 } from '#/components/ui/dialog';
 import { Input } from '#/components/ui/input';
 import { Label } from '#/components/ui/label';
+import { Textarea } from '#/components/ui/textarea';
 import { apiClient } from '#/lib/api-client';
 
 interface DiscoveredContainer {
@@ -41,11 +42,15 @@ export function ServerTakeoverDialog() {
 
   const scanMutation = useMutation({
     mutationFn: async () => {
+      const parsedPort = Number.parseInt(port, 10);
+      if (Number.isNaN(parsedPort) || parsedPort < 1 || parsedPort > 65535) {
+        throw new Error('Invalid SSH port. Must be between 1 and 65535');
+      }
       const res = await apiClient.post<{
         data: { runId: string; containers: DiscoveredContainer[] };
       }>('/system/takeover/scan', {
         host,
-        port: Number.parseInt(port, 10),
+        port: parsedPort,
         user,
         key,
         password,
@@ -75,6 +80,8 @@ export function ServerTakeoverDialog() {
     onSuccess: () => {
       toast.success('Successfully adopted server stacks!');
       setOpen(false);
+      setKey('');
+      setPassword('');
       setStep('credentials');
       queryClient.invalidateQueries({ queryKey: ['projects'] });
     },
@@ -90,7 +97,16 @@ export function ServerTakeoverDialog() {
   };
 
   return (
-    <Dialog open={open} onOpenChange={setOpen}>
+    <Dialog
+      open={open}
+      onOpenChange={(isOpen) => {
+        setOpen(isOpen);
+        if (!isOpen) {
+          setKey('');
+          setPassword('');
+        }
+      }}
+    >
       <DialogTrigger asChild>
         <Button variant="outline" className="gap-2 border-border/50">
           <Download className="h-4 w-4 text-blue-400" />
@@ -130,10 +146,11 @@ export function ServerTakeoverDialog() {
             </div>
             <div className="grid gap-2">
               <Label>SSH Private Key (Optional)</Label>
-              <Input
+              <Textarea
                 value={key}
                 onChange={(e) => setKey(e.target.value)}
                 placeholder="-----BEGIN OPENSSH PRIVATE KEY-----"
+                rows={5}
               />
             </div>
             <div className="grid gap-2">

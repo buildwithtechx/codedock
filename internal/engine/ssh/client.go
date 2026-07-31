@@ -17,11 +17,12 @@ import (
 )
 
 type Config struct {
-	Host     string
-	Port     int
-	User     string
-	Key      string
-	Password string
+	Host        string
+	Port        int
+	User        string
+	Key         string
+	Password    string
+	Fingerprint string
 }
 
 type Client struct {
@@ -54,10 +55,19 @@ func NewClient(cfg Config) (*Client, error) {
 	}
 
 	sshConfig := &ssh.ClientConfig{
-		User:            cfg.User,
-		Auth:            authMethods,
-		HostKeyCallback: ssh.InsecureIgnoreHostKey(),
-		Timeout:         10 * time.Second,
+		User: cfg.User,
+		Auth: authMethods,
+		HostKeyCallback: func(hostname string, remote net.Addr, key ssh.PublicKey) error {
+			if cfg.Fingerprint == "" {
+				return nil
+			}
+			fingerprint := ssh.FingerprintSHA256(key)
+			if fingerprint != cfg.Fingerprint {
+				return fmt.Errorf("host key fingerprint mismatch: expected %q, got %q", cfg.Fingerprint, fingerprint)
+			}
+			return nil
+		},
+		Timeout: 10 * time.Second,
 	}
 
 	addr := net.JoinHostPort(cfg.Host, strconv.Itoa(cfg.Port))
@@ -84,14 +94,29 @@ func (c *Client) RunCommand(ctx context.Context, cmd string) (string, error) {
 	if err != nil {
 		return "", fmt.Errorf("failed to create ssh session: %w", err)
 	}
-	defer sess.Close()
 
-	out, err := sess.CombinedOutput(cmd)
-	if err != nil {
-		return "", fmt.Errorf("ssh command execution failed: %w: %s", err, string(out))
+	errCh := make(chan error, 1)
+	outCh := make(chan string, 1)
+
+	go func() {
+		defer sess.Close()
+		out, err := sess.CombinedOutput(cmd)
+		if err != nil {
+			errCh <- fmt.Errorf("ssh command execution failed: %w: %s", err, string(out))
+			return
+		}
+		outCh <- string(out)
+	}()
+
+	select {
+	case <-ctx.Done():
+		sess.Close()
+		return "", ctx.Err()
+	case err := <-errCh:
+		return "", err
+	case out := <-outCh:
+		return out, nil
 	}
-
-	return string(out), nil
 }
 
 func (c *Client) DockerClient(ctx context.Context) (*dockerclient.Client, error) {
@@ -134,10 +159,14 @@ echo "{\"cpu\":${cpu:-0},\"mem\":\"${mem}\",\"disk\":\"${disk}\"}"
 	}
 
 	var memUsed, memTotal uint64
-	fmt.Sscanf(raw.Mem, "%d %d", &memUsed, &memTotal)
+	if n, err := fmt.Sscanf(raw.Mem, "%d %d", &memUsed, &memTotal); err != nil || n != 2 {
+		return nil, fmt.Errorf("failed to parse memory metrics: %w (scanned %d)", err, n)
+	}
 
 	var diskUsed, diskTotal uint64
-	fmt.Sscanf(raw.Disk, "%d %d", &diskUsed, &diskTotal)
+	if n, err := fmt.Sscanf(raw.Disk, "%d %d", &diskUsed, &diskTotal); err != nil || n != 2 {
+		return nil, fmt.Errorf("failed to parse disk metrics: %w (scanned %d)", err, n)
+	}
 
 	payload := models.WorkerMetricsPayload{
 		CPUUsagePercentage: raw.CPU,

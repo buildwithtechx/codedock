@@ -53,10 +53,11 @@ type DiscoveredStack struct {
 }
 
 type TakeoverScanRequest struct {
-	Host     string           `json:"host"`
-	SSHUser  string           `json:"sshUser"`
-	SSHKey   string           `json:"sshKey"`
-	Platform TakeoverPlatform `json:"platform"`
+	Host           string           `json:"host"`
+	SSHUser        string           `json:"sshUser"`
+	SSHKey         string           `json:"sshKey"`
+	SSHFingerprint string           `json:"sshFingerprint,omitempty"`
+	Platform       TakeoverPlatform `json:"platform"`
 }
 
 type TakeoverAdoptRequest struct {
