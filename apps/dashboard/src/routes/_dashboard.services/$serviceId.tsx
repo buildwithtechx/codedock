@@ -21,6 +21,10 @@ import {
 import { Button } from '#/components/ui/button';
 import { ServiceIcon } from '#/components/ui/service-icon';
 import { useGetDatabase } from '#/features/databases';
+import {
+  ServiceContextSidebar,
+  type ServiceContextTab,
+} from '#/features/services/service-context-sidebar';
 import { useGetApp } from '#/hooks/use-apps';
 
 export const Route = createFileRoute('/_dashboard/services/$serviceId')({
@@ -70,33 +74,31 @@ function ServiceLayoutRoute() {
     { name: 'Danger Zone', href: `/services/${serviceId}/danger`, icon: AlertTriangle },
   ];
 
-  const tabs = app ? appTabs : dbTabs;
+  const tabs: ServiceContextTab[] = app ? appTabs : dbTabs;
   const resourceName = app?.name || db?.name || 'Service';
   const projectId = app?.projectId || db?.projectId;
 
   return (
-    <div className="flex min-h-screen flex-col">
-      <div className="border-b bg-card">
-        <div className="px-6 py-4">
-          <div className="flex items-center gap-4">
-            <Button variant="ghost" size="icon" asChild className="h-8 w-8">
-              <Link to="/projects/$projectId" params={{ projectId: projectId as string }}>
-                <ArrowLeft className="h-4 w-4" />
-              </Link>
-            </Button>
-            {app?.icon && app.icon !== 'git' && (
-              <ServiceIcon icon={app.icon} className="h-10 w-10 rounded-lg border" />
-            )}
-            <div>
-              <h1 className="font-bold text-xl">{resourceName}</h1>
-              <p className="text-muted-foreground text-sm">
-                {app ? 'Application Service' : 'Database'}
-              </p>
-            </div>
-          </div>
+    <div className="space-y-6">
+      <header className="flex items-center gap-3">
+        <Button variant="ghost" size="icon" asChild className="h-8 w-8 shrink-0">
+          <Link to="/projects/$projectId" params={{ projectId: projectId as string }}>
+            <ArrowLeft className="h-4 w-4" />
+          </Link>
+        </Button>
+        {app?.icon && app.icon !== 'git' && (
+          <ServiceIcon icon={app.icon} className="h-10 w-10 rounded-xl border border-border" />
+        )}
+        <div className="min-w-0">
+          <p className="text-muted-foreground text-sm">
+            {app ? 'Application service' : 'Database'}
+          </p>
+          <h1 className="truncate font-semibold text-2xl tracking-tight">{resourceName}</h1>
         </div>
+      </header>
 
-        <div className="flex space-x-1 overflow-x-auto px-6">
+      <div className="lg:hidden">
+        <div className="flex gap-1 overflow-x-auto rounded-xl border border-border/80 bg-card p-1.5">
           {tabs.map((tab) => {
             const isActive = tab.exact
               ? location.pathname === tab.href || location.pathname === `${tab.href}/`
@@ -105,10 +107,10 @@ function ServiceLayoutRoute() {
               <Link
                 key={tab.name}
                 to={tab.href}
-                className={`flex items-center gap-2 whitespace-nowrap border-b-2 px-4 py-3 font-medium text-sm transition-colors ${
+                className={`flex shrink-0 items-center gap-2 whitespace-nowrap rounded-lg px-3 py-2 font-medium text-sm transition-colors ${
                   isActive
-                    ? 'border-primary text-primary'
-                    : 'border-transparent text-muted-foreground hover:border-muted hover:text-foreground'
+                    ? 'bg-primary/12 text-foreground'
+                    : 'text-muted-foreground hover:bg-muted hover:text-foreground'
                 }`}
               >
                 <tab.icon className="h-4 w-4" />
@@ -119,9 +121,17 @@ function ServiceLayoutRoute() {
         </div>
       </div>
 
-      <div className="flex-1 p-6">
-        <div className="mx-auto max-w-6xl">
+      <div className="grid min-w-0 gap-6 lg:grid-cols-[minmax(0,1fr)_18rem]">
+        <div className="min-w-0">
           <Outlet />
+        </div>
+        <div className="hidden lg:block">
+          <ServiceContextSidebar
+            name={resourceName}
+            type={app ? 'Application service' : 'Database'}
+            status={app?.status || db?.status}
+            tabs={tabs}
+          />
         </div>
       </div>
     </div>

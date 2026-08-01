@@ -49,8 +49,8 @@ export function OrganizationSwitcher({ collapsed }: { collapsed: boolean }) {
       <DropdownMenuTrigger asChild>
         <button
           type="button"
-          className={`group flex w-full items-center rounded-lg text-left transition-colors hover:bg-sidebar-accent/70 ${
-            collapsed ? 'justify-center p-2' : 'gap-2.5 px-2 py-2.5'
+          className={`group flex w-full items-center rounded-lg text-left transition-colors hover:bg-sidebar-accent ${
+            collapsed ? 'justify-center p-2' : 'gap-2.5 px-2 py-2'
           }`}
           aria-label={`Switch organization. Current organization: ${selected.name}`}
         >
@@ -64,7 +64,7 @@ export function OrganizationSwitcher({ collapsed }: { collapsed: boolean }) {
                   {selected.name}
                 </p>
                 <p className="mt-0.5 text-[10px] text-sidebar-foreground/45 uppercase tracking-[0.14em]">
-                  Active organization
+                  Organization
                 </p>
               </div>
               <ChevronsUpDown className="h-4 w-4 shrink-0 text-sidebar-foreground/40 transition-colors group-hover:text-sidebar-foreground/70" />
@@ -75,6 +75,7 @@ export function OrganizationSwitcher({ collapsed }: { collapsed: boolean }) {
       <DropdownMenuContent
         className="!w-72 max-w-[calc(100vw-2rem)] rounded-xl border border-border/70 bg-popover p-1.5 shadow-xl"
         align="start"
+        side="top"
         collisionPadding={16}
       >
         <DropdownMenuLabel className="px-2.5 pt-1.5 pb-2 font-medium text-[10px] uppercase tracking-[0.14em]">

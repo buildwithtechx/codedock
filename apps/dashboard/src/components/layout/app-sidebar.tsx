@@ -1,28 +1,21 @@
 import {
-  Bot,
-  Building,
   Cloud,
-  Code,
-  Download,
   FolderKanban,
   HardDrive,
   Key,
   LayoutDashboard,
-  Network,
-  PanelLeft,
-  RefreshCw,
+  Moon,
+  PanelLeftClose,
+  PanelLeftOpen,
   Rocket,
-  ScrollText,
-  Server,
   Settings,
   Sparkles,
-  Users,
-  Wrench,
+  Sun,
   X,
 } from 'lucide-react';
+import { useTheme } from 'next-themes';
 import { useState } from 'react';
 import { CreateProjectModal } from '#/features/projects/create-project-modal';
-import { ServerConnectionSwitcher } from '../server-connection-switcher';
 import { NavItem, type NavItemProps } from './nav-item';
 import { OrganizationSwitcher } from './organization-switcher';
 import { UserMenu } from './user-menu';
@@ -34,7 +27,7 @@ type NavGroup = {
 
 const navGroups: NavGroup[] = [
   {
-    title: 'Workspace',
+    title: 'Main',
     items: [
       { title: 'Home', url: '/', icon: LayoutDashboard, exact: true },
       { title: 'Projects', url: '/projects', icon: FolderKanban },
@@ -43,40 +36,18 @@ const navGroups: NavGroup[] = [
     ],
   },
   {
-    title: 'Infrastructure',
+    title: 'Settings',
     items: [
-      { title: 'Servers', url: '/servers', icon: Server },
-      { title: 'Storage', url: '/s3-destinations', icon: HardDrive },
-      { title: 'Domains & DNS', url: '/dns', icon: Network },
-    ],
-  },
-  {
-    title: 'Connect',
-    items: [
-      { title: 'Sources', url: '/sources', icon: Code },
-      { title: 'Automation', url: '/ai', icon: Bot },
-    ],
-  },
-  {
-    title: 'Administration',
-    items: [
-      { title: 'Organizations', url: '/organizations', icon: Building },
-      { title: 'Members', url: '/users', icon: Users },
+      {
+        title: 'Backups',
+        url: '/settings',
+        search: { tab: 'backups' },
+        icon: HardDrive,
+        exact: true,
+      },
       { title: 'API Access', url: '/api-access', icon: Key },
       { title: 'Settings', url: '/settings', icon: Settings, exact: true },
-      { title: 'Maintenance', url: '/maintenance', icon: Wrench },
-      { title: 'Updates', url: '/updates', icon: RefreshCw },
-      { title: 'Migration', url: '/migrations', icon: Download },
     ],
-  },
-];
-
-const bottomNav = [
-  {
-    title: 'Docs',
-    url: 'https://docs.codedock.com',
-    icon: ScrollText,
-    external: true,
   },
 ];
 
@@ -90,6 +61,9 @@ interface AppSidebarProps {
 export function AppSidebar({ collapsed, onToggle, mobileOpen, onMobileClose }: AppSidebarProps) {
   const navCollapsed = collapsed && !mobileOpen;
   const [createProjectOpen, setCreateProjectOpen] = useState(false);
+  const { resolvedTheme, setTheme } = useTheme();
+
+  const toggleTheme = () => setTheme(resolvedTheme === 'dark' ? 'light' : 'dark');
 
   return (
     <>
@@ -104,7 +78,7 @@ export function AppSidebar({ collapsed, onToggle, mobileOpen, onMobileClose }: A
 
       <aside
         className={`fixed inset-y-3 left-3 z-40 flex flex-col overflow-hidden rounded-2xl border border-sidebar-border/70 bg-sidebar shadow-2xl shadow-black/15 transition-all duration-300 md:z-20 ${
-          collapsed ? 'md:w-16' : 'md:w-68'
+          collapsed ? 'md:w-[72px]' : 'md:w-[260px]'
         } ${mobileOpen ? 'w-[min(19rem,calc(100vw-1.5rem))] translate-x-0' : 'w-[min(19rem,calc(100vw-1.5rem))] -translate-x-[calc(100%+1rem)] md:translate-x-0'}`}
       >
         <div className="flex items-center justify-between px-3 pt-3 pb-2 md:hidden">
@@ -124,44 +98,52 @@ export function AppSidebar({ collapsed, onToggle, mobileOpen, onMobileClose }: A
         </div>
 
         <div className="hidden md:block">
-          <div className={collapsed ? 'px-2 py-3' : 'px-3 py-3'}>
-            <div className={`flex items-center ${collapsed ? 'justify-center' : 'gap-2.5 py-2'}`}>
-              <div className="flex h-7 w-7 shrink-0 items-center justify-center rounded-lg bg-primary/12 text-primary">
-                <Cloud className="h-4 w-4" />
-              </div>
-              {!collapsed && (
-                <>
+          <div className={collapsed ? 'px-2 py-3' : 'px-5 py-5'}>
+            <div
+              className={`flex ${collapsed ? 'flex-col items-center gap-2' : 'items-center justify-between gap-2.5 py-2'}`}
+            >
+              <div className="flex min-w-0 items-center gap-2.5">
+                <div className="flex h-7 w-7 shrink-0 items-center justify-center rounded-lg bg-primary/12 text-primary">
+                  <Cloud className="h-4 w-4" />
+                </div>
+                {!collapsed && (
                   <span className="flex-1 truncate font-medium text-sidebar-foreground text-sm">
                     Codedock
                   </span>
-                  <span className="rounded-md bg-sidebar-accent px-1.5 py-0.5 font-medium text-[10px] text-muted-foreground">
-                    v0.1
-                  </span>
-                  <button
-                    type="button"
-                    onClick={onToggle}
-                    className="flex h-7 w-7 shrink-0 items-center justify-center rounded-lg text-muted-foreground transition-all duration-150 hover:bg-sidebar-accent hover:text-sidebar-foreground"
-                  >
-                    <PanelLeft className="h-4 w-4" />
-                  </button>
-                </>
-              )}
+                )}
+              </div>
+              <div className={`flex items-center ${collapsed ? 'flex-col gap-1' : 'gap-1'}`}>
+                <button
+                  type="button"
+                  onClick={toggleTheme}
+                  className="flex h-8 w-8 items-center justify-center rounded-lg text-muted-foreground transition-colors hover:bg-sidebar-accent hover:text-sidebar-foreground"
+                  aria-label="Toggle theme"
+                >
+                  {resolvedTheme === 'dark' ? (
+                    <Sun className="h-4 w-4" />
+                  ) : (
+                    <Moon className="h-4 w-4" />
+                  )}
+                </button>
+                <button
+                  type="button"
+                  onClick={onToggle}
+                  className="flex h-8 w-8 items-center justify-center rounded-lg text-muted-foreground transition-colors hover:bg-sidebar-accent hover:text-sidebar-foreground"
+                  aria-label={collapsed ? 'Expand sidebar' : 'Collapse sidebar'}
+                >
+                  {collapsed ? (
+                    <PanelLeftOpen className="h-4 w-4" />
+                  ) : (
+                    <PanelLeftClose className="h-4 w-4" />
+                  )}
+                </button>
+              </div>
             </div>
           </div>
-
-          {collapsed && (
-            <button
-              type="button"
-              onClick={onToggle}
-              className="absolute top-3 right-0 z-30 hidden h-7 w-7 translate-x-1/2 items-center justify-center rounded-lg border border-sidebar-border bg-card text-muted-foreground shadow-md transition-all duration-300 hover:bg-sidebar-accent hover:text-sidebar-foreground active:scale-[0.95] md:flex"
-            >
-              <PanelLeft className="h-4 w-4" />
-            </button>
-          )}
+          <div className="mx-1 h-px bg-sidebar-border/60" />
         </div>
 
-        <nav className="flex flex-1 flex-col gap-5 overflow-y-auto px-3 pt-2 pb-3">
-          <OrganizationSwitcher collapsed={navCollapsed} />
+        <nav className="flex flex-1 flex-col gap-5 overflow-y-auto px-3 pt-3 pb-12">
           {navGroups.map((group, i) => (
             <div key={i} className="flex flex-col gap-0.5">
               {!navCollapsed && group.title && (
@@ -176,33 +158,31 @@ export function AppSidebar({ collapsed, onToggle, mobileOpen, onMobileClose }: A
           ))}
         </nav>
 
-        {!navCollapsed && (
-          <div className="px-3 pb-3">
-            <button
-              type="button"
-              onClick={() => setCreateProjectOpen(true)}
-              className="flex h-10 w-full items-center justify-center gap-2 rounded-lg bg-primary font-semibold text-primary-foreground text-sm transition-colors hover:bg-primary-hover"
-            >
-              <FolderKanban className="h-4 w-4" />
-              New project
-            </button>
-          </div>
-        )}
-
-        <div
-          className={`mt-auto flex flex-col gap-0.5 ${navCollapsed ? 'px-1 py-1' : 'px-3 py-2'}`}
-        >
-          {bottomNav.map((item) => (
-            <NavItem key={item.url} item={item} collapsed={navCollapsed} />
-          ))}
+        <div className="px-3 pb-2">
+          <button
+            type="button"
+            onClick={() => setCreateProjectOpen(true)}
+            className={`flex w-full items-center justify-center gap-2 rounded-xl bg-primary font-semibold text-primary-foreground text-sm transition-colors hover:bg-primary-hover ${
+              navCollapsed ? 'h-10 px-0' : 'h-10 px-3'
+            }`}
+            aria-label="New project"
+            title={navCollapsed ? 'New project' : undefined}
+          >
+            <FolderKanban className="h-4 w-4" />
+            {!navCollapsed && 'New project'}
+          </button>
         </div>
 
-        {!navCollapsed && (
-          <div className="border-sidebar-border/30 border-t px-2 py-1.5">
-            <ServerConnectionSwitcher />
-          </div>
-        )}
-        <UserMenu collapsed={navCollapsed} />
+        <div className={`mt-auto px-3 pt-1 pb-3 ${navCollapsed ? 'px-2' : ''}`}>
+          <div className="mx-2 mb-3 h-px bg-sidebar-border/60" />
+          {!navCollapsed && (
+            <p className="mb-2 px-2 font-medium text-[10px] text-sidebar-foreground/35 uppercase tracking-[0.14em]">
+              Workspace
+            </p>
+          )}
+          <OrganizationSwitcher collapsed={navCollapsed} />
+          <UserMenu collapsed={navCollapsed} />
+        </div>
         <CreateProjectModal open={createProjectOpen} onOpenChange={setCreateProjectOpen} />
       </aside>
     </>

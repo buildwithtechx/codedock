@@ -6,6 +6,7 @@ export type NavItemProps = {
   title: string;
   url: string;
   icon: React.ComponentType<{ className?: string }>;
+  search?: Record<string, string>;
   external?: boolean;
   badge?: string;
 };
@@ -21,13 +22,18 @@ export function NavItem({
 }) {
   const routerState = useRouterState();
   const pathname = routerState.location.pathname;
+  const currentSearch = routerState.location.search as Record<string, string | undefined>;
+  const searchMatches = item.search
+    ? Object.entries(item.search).every(([key, value]) => currentSearch[key] === value)
+    : !(item.url === '/settings' && currentSearch.tab);
   const isActive = exact
-    ? pathname === item.url
+    ? pathname === item.url && searchMatches
     : pathname.startsWith(item.url) && item.url !== '/';
 
   return (
     <Link
       to={item.url as never}
+      search={item.search as never}
       className={`group relative flex items-center rounded-lg font-medium text-sm transition-colors ${
         collapsed ? 'justify-center px-0 py-2.5' : 'gap-3 px-2.5 py-2.25'
       } ${

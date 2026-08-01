@@ -49,10 +49,20 @@ export function HomeProjectList({
         </div>
       ) : projects.length === 0 ? (
         <div className="flex min-h-70 flex-col items-center justify-center px-6 py-10 text-center">
-          <div className="flex h-12 w-12 items-center justify-center rounded-2xl bg-primary/10 text-primary">
-            <FolderKanban className="h-5 w-5" />
+          <div className="grid grid-cols-[auto_2rem_auto_2rem_auto] items-center text-primary">
+            <div className="flex h-11 w-11 items-center justify-center rounded-xl bg-primary/12">
+              <FolderKanban className="h-4 w-4" />
+            </div>
+            <div className="h-px bg-primary/35" />
+            <div className="flex h-11 w-11 items-center justify-center rounded-xl border border-primary/30 bg-card">
+              <span className="h-3 w-3 rounded-sm border-2 border-primary" />
+            </div>
+            <div className="h-px bg-primary/35" />
+            <div className="flex h-11 w-11 items-center justify-center rounded-xl bg-primary text-primary-foreground">
+              <Plus className="h-4 w-4" />
+            </div>
           </div>
-          <h3 className="mt-4 font-semibold text-base">Start with a project</h3>
+          <h3 className="mt-5 font-semibold text-base">Start building your workspace</h3>
           <p className="mt-1 max-w-xs text-muted-foreground text-sm">
             Projects keep environments, applications, domains, and deployments together.
           </p>

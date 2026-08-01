@@ -55,7 +55,7 @@ export function AppLayout({ children }: { children: React.ReactNode }) {
         onMobileClose={() => setMobileMenuOpen(false)}
       />
       <div
-        className={`relative flex min-h-screen flex-1 flex-col ${sidebarCollapsed ? 'md:pl-20' : 'md:pl-76'}`}
+        className={`relative flex min-h-screen flex-1 flex-col ${sidebarCollapsed ? 'md:pl-24' : 'md:pl-[296px]'}`}
       >
         <div className="flex h-14 items-center px-4 md:hidden">
           <button

@@ -38,6 +38,7 @@ import { Route as DashboardUpdatesRouteImport } from './routes/_dashboard.update
 import { Route as DashboardUsersRouteImport } from './routes/_dashboard.users'
 import { Route as DashboardOrganizationsOrganizationIdRouteImport } from './routes/_dashboard.organizations.$organizationId'
 import { Route as DashboardProjectsIndexRouteImport } from './routes/_dashboard.projects.index'
+import { Route as DashboardProjectsProjectIdRouteImport } from './routes/_dashboard.projects/$projectId'
 import { Route as DashboardServersServerIdRouteImport } from './routes/_dashboard.servers.$serverId'
 import { Route as DashboardServicesServiceIdRouteImport } from './routes/_dashboard.services/$serviceId'
 import { Route as DashboardProjectsProjectIdIndexRouteImport } from './routes/_dashboard.projects/$projectId.index'
@@ -206,6 +207,12 @@ const DashboardProjectsIndexRoute = DashboardProjectsIndexRouteImport.update({
   path: '/',
   getParentRoute: () => DashboardProjectsRoute,
 } as any)
+const DashboardProjectsProjectIdRoute =
+  DashboardProjectsProjectIdRouteImport.update({
+    id: '/$projectId',
+    path: '/$projectId',
+    getParentRoute: () => DashboardProjectsRoute,
+  } as any)
 const DashboardServersServerIdRoute =
   DashboardServersServerIdRouteImport.update({
     id: '/$serverId',
@@ -220,39 +227,39 @@ const DashboardServicesServiceIdRoute =
   } as any)
 const DashboardProjectsProjectIdIndexRoute =
   DashboardProjectsProjectIdIndexRouteImport.update({
-    id: '/$projectId/',
-    path: '/$projectId/',
-    getParentRoute: () => DashboardProjectsRoute,
+    id: '/',
+    path: '/',
+    getParentRoute: () => DashboardProjectsProjectIdRoute,
   } as any)
 const DashboardProjectsProjectIdCanvasRoute =
   DashboardProjectsProjectIdCanvasRouteImport.update({
-    id: '/$projectId/canvas',
-    path: '/$projectId/canvas',
-    getParentRoute: () => DashboardProjectsRoute,
+    id: '/canvas',
+    path: '/canvas',
+    getParentRoute: () => DashboardProjectsProjectIdRoute,
   } as any)
 const DashboardProjectsProjectIdComposeRoute =
   DashboardProjectsProjectIdComposeRouteImport.update({
-    id: '/$projectId/compose',
-    path: '/$projectId/compose',
-    getParentRoute: () => DashboardProjectsRoute,
+    id: '/compose',
+    path: '/compose',
+    getParentRoute: () => DashboardProjectsProjectIdRoute,
   } as any)
 const DashboardProjectsProjectIdNewRoute =
   DashboardProjectsProjectIdNewRouteImport.update({
-    id: '/$projectId/new',
-    path: '/$projectId/new',
-    getParentRoute: () => DashboardProjectsRoute,
+    id: '/new',
+    path: '/new',
+    getParentRoute: () => DashboardProjectsProjectIdRoute,
   } as any)
 const DashboardProjectsProjectIdScheduledTasksRoute =
   DashboardProjectsProjectIdScheduledTasksRouteImport.update({
-    id: '/$projectId/scheduled-tasks',
-    path: '/$projectId/scheduled-tasks',
-    getParentRoute: () => DashboardProjectsRoute,
+    id: '/scheduled-tasks',
+    path: '/scheduled-tasks',
+    getParentRoute: () => DashboardProjectsProjectIdRoute,
   } as any)
 const DashboardProjectsProjectIdSettingsRoute =
   DashboardProjectsProjectIdSettingsRouteImport.update({
-    id: '/$projectId/settings',
-    path: '/$projectId/settings',
-    getParentRoute: () => DashboardProjectsRoute,
+    id: '/settings',
+    path: '/settings',
+    getParentRoute: () => DashboardProjectsProjectIdRoute,
   } as any)
 const DashboardServicesServiceIdIndexRoute =
   DashboardServicesServiceIdIndexRouteImport.update({
@@ -372,6 +379,7 @@ export interface FileRoutesByFullPath {
   '/updates': typeof DashboardUpdatesRoute
   '/users': typeof DashboardUsersRoute
   '/organizations/$organizationId': typeof DashboardOrganizationsOrganizationIdRoute
+  '/projects/$projectId': typeof DashboardProjectsProjectIdRouteWithChildren
   '/servers/$serverId': typeof DashboardServersServerIdRoute
   '/services/$serviceId': typeof DashboardServicesServiceIdRouteWithChildren
   '/projects/': typeof DashboardProjectsIndexRoute
@@ -477,6 +485,7 @@ export interface FileRoutesById {
   '/_dashboard/users': typeof DashboardUsersRoute
   '/_dashboard/': typeof DashboardIndexRoute
   '/_dashboard/organizations/$organizationId': typeof DashboardOrganizationsOrganizationIdRoute
+  '/_dashboard/projects/$projectId': typeof DashboardProjectsProjectIdRouteWithChildren
   '/_dashboard/servers/$serverId': typeof DashboardServersServerIdRoute
   '/_dashboard/services/$serviceId': typeof DashboardServicesServiceIdRouteWithChildren
   '/_dashboard/projects/': typeof DashboardProjectsIndexRoute
@@ -531,6 +540,7 @@ export interface FileRouteTypes {
     | '/updates'
     | '/users'
     | '/organizations/$organizationId'
+    | '/projects/$projectId'
     | '/servers/$serverId'
     | '/services/$serviceId'
     | '/projects/'
@@ -635,6 +645,7 @@ export interface FileRouteTypes {
     | '/_dashboard/users'
     | '/_dashboard/'
     | '/_dashboard/organizations/$organizationId'
+    | '/_dashboard/projects/$projectId'
     | '/_dashboard/servers/$serverId'
     | '/_dashboard/services/$serviceId'
     | '/_dashboard/projects/'
@@ -872,6 +883,13 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof DashboardProjectsIndexRouteImport
       parentRoute: typeof DashboardProjectsRoute
     }
+    '/_dashboard/projects/$projectId': {
+      id: '/_dashboard/projects/$projectId'
+      path: '/$projectId'
+      fullPath: '/projects/$projectId'
+      preLoaderRoute: typeof DashboardProjectsProjectIdRouteImport
+      parentRoute: typeof DashboardProjectsRoute
+    }
     '/_dashboard/servers/$serverId': {
       id: '/_dashboard/servers/$serverId'
       path: '/$serverId'
@@ -888,45 +906,45 @@ declare module '@tanstack/react-router' {
     }
     '/_dashboard/projects/$projectId/': {
       id: '/_dashboard/projects/$projectId/'
-      path: '/$projectId'
+      path: '/'
       fullPath: '/projects/$projectId/'
       preLoaderRoute: typeof DashboardProjectsProjectIdIndexRouteImport
-      parentRoute: typeof DashboardProjectsRoute
+      parentRoute: typeof DashboardProjectsProjectIdRoute
     }
     '/_dashboard/projects/$projectId/canvas': {
       id: '/_dashboard/projects/$projectId/canvas'
-      path: '/$projectId/canvas'
+      path: '/canvas'
       fullPath: '/projects/$projectId/canvas'
       preLoaderRoute: typeof DashboardProjectsProjectIdCanvasRouteImport
-      parentRoute: typeof DashboardProjectsRoute
+      parentRoute: typeof DashboardProjectsProjectIdRoute
     }
     '/_dashboard/projects/$projectId/compose': {
       id: '/_dashboard/projects/$projectId/compose'
-      path: '/$projectId/compose'
+      path: '/compose'
       fullPath: '/projects/$projectId/compose'
       preLoaderRoute: typeof DashboardProjectsProjectIdComposeRouteImport
-      parentRoute: typeof DashboardProjectsRoute
+      parentRoute: typeof DashboardProjectsProjectIdRoute
     }
     '/_dashboard/projects/$projectId/new': {
       id: '/_dashboard/projects/$projectId/new'
-      path: '/$projectId/new'
+      path: '/new'
       fullPath: '/projects/$projectId/new'
       preLoaderRoute: typeof DashboardProjectsProjectIdNewRouteImport
-      parentRoute: typeof DashboardProjectsRoute
+      parentRoute: typeof DashboardProjectsProjectIdRoute
     }
     '/_dashboard/projects/$projectId/scheduled-tasks': {
       id: '/_dashboard/projects/$projectId/scheduled-tasks'
-      path: '/$projectId/scheduled-tasks'
+      path: '/scheduled-tasks'
       fullPath: '/projects/$projectId/scheduled-tasks'
       preLoaderRoute: typeof DashboardProjectsProjectIdScheduledTasksRouteImport
-      parentRoute: typeof DashboardProjectsRoute
+      parentRoute: typeof DashboardProjectsProjectIdRoute
     }
     '/_dashboard/projects/$projectId/settings': {
       id: '/_dashboard/projects/$projectId/settings'
-      path: '/$projectId/settings'
+      path: '/settings'
       fullPath: '/projects/$projectId/settings'
       preLoaderRoute: typeof DashboardProjectsProjectIdSettingsRouteImport
-      parentRoute: typeof DashboardProjectsRoute
+      parentRoute: typeof DashboardProjectsProjectIdRoute
     }
     '/_dashboard/services/$serviceId/': {
       id: '/_dashboard/services/$serviceId/'
@@ -1069,8 +1087,7 @@ const DashboardOrganizationsRouteWithChildren =
     DashboardOrganizationsRouteChildren,
   )
 
-interface DashboardProjectsRouteChildren {
-  DashboardProjectsIndexRoute: typeof DashboardProjectsIndexRoute
+interface DashboardProjectsProjectIdRouteChildren {
   DashboardProjectsProjectIdCanvasRoute: typeof DashboardProjectsProjectIdCanvasRoute
   DashboardProjectsProjectIdComposeRoute: typeof DashboardProjectsProjectIdComposeRoute
   DashboardProjectsProjectIdNewRoute: typeof DashboardProjectsProjectIdNewRoute
@@ -1079,17 +1096,33 @@ interface DashboardProjectsRouteChildren {
   DashboardProjectsProjectIdIndexRoute: typeof DashboardProjectsProjectIdIndexRoute
 }
 
+const DashboardProjectsProjectIdRouteChildren: DashboardProjectsProjectIdRouteChildren =
+  {
+    DashboardProjectsProjectIdCanvasRoute:
+      DashboardProjectsProjectIdCanvasRoute,
+    DashboardProjectsProjectIdComposeRoute:
+      DashboardProjectsProjectIdComposeRoute,
+    DashboardProjectsProjectIdNewRoute: DashboardProjectsProjectIdNewRoute,
+    DashboardProjectsProjectIdScheduledTasksRoute:
+      DashboardProjectsProjectIdScheduledTasksRoute,
+    DashboardProjectsProjectIdSettingsRoute:
+      DashboardProjectsProjectIdSettingsRoute,
+    DashboardProjectsProjectIdIndexRoute: DashboardProjectsProjectIdIndexRoute,
+  }
+
+const DashboardProjectsProjectIdRouteWithChildren =
+  DashboardProjectsProjectIdRoute._addFileChildren(
+    DashboardProjectsProjectIdRouteChildren,
+  )
+
+interface DashboardProjectsRouteChildren {
+  DashboardProjectsProjectIdRoute: typeof DashboardProjectsProjectIdRouteWithChildren
+  DashboardProjectsIndexRoute: typeof DashboardProjectsIndexRoute
+}
+
 const DashboardProjectsRouteChildren: DashboardProjectsRouteChildren = {
+  DashboardProjectsProjectIdRoute: DashboardProjectsProjectIdRouteWithChildren,
   DashboardProjectsIndexRoute: DashboardProjectsIndexRoute,
-  DashboardProjectsProjectIdCanvasRoute: DashboardProjectsProjectIdCanvasRoute,
-  DashboardProjectsProjectIdComposeRoute:
-    DashboardProjectsProjectIdComposeRoute,
-  DashboardProjectsProjectIdNewRoute: DashboardProjectsProjectIdNewRoute,
-  DashboardProjectsProjectIdScheduledTasksRoute:
-    DashboardProjectsProjectIdScheduledTasksRoute,
-  DashboardProjectsProjectIdSettingsRoute:
-    DashboardProjectsProjectIdSettingsRoute,
-  DashboardProjectsProjectIdIndexRoute: DashboardProjectsProjectIdIndexRoute,
 }
 
 const DashboardProjectsRouteWithChildren =
