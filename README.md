@@ -61,10 +61,13 @@ Want to contribute or hack on Codedock locally?
 git clone https://github.com/buildwithtechx/codedock.git
 cd codedock
 
-# 2. Setup your environment
+# 2. Setup the daemon environment
 cp .env.example .env
 
-# 3. Run locally
+# 3. Setup the dashboard environment
+cp apps/dashboard/.env.example apps/dashboard/.env
+
+# 4. Run locally
 You can run the Go daemon and the frontend dashboard concurrently using NPM:
 
 ```bash
