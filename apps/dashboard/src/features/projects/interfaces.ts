@@ -1,9 +1,5 @@
 import type { Database } from '#/features/databases';
-import type {
-  DNSProvisionStatus,
-  DNSVerificationStatus,
-  DomainBase,
-} from '#/features/dns/contracts';
+import type { DNSVerificationStatus, DomainBase } from '#/features/dns/contracts';
 import type { AppService } from '#/features/services';
 import type { BaseResponse, PaginatedData } from '#/interfaces/base';
 
