@@ -19,21 +19,30 @@ type ServerRepository interface {
 }
 
 type sqliteServerRepository struct {
-	db *sql.DB
+	db    *sql.DB
+	vault Vault
 }
 
-func NewServerRepository(db *sql.DB) ServerRepository {
-	return &sqliteServerRepository{db: db}
+func NewServerRepository(db *sql.DB, vault Vault) ServerRepository {
+	return &sqliteServerRepository{db: db, vault: vault}
 }
 
 func (r *sqliteServerRepository) Create(ctx context.Context, server *models.Server) error {
+	sshKey, err := r.encryptSecret(server.SSHKey)
+	if err != nil {
+		return fmt.Errorf("failed to encrypt SSH key: %w", err)
+	}
+	sshPassword, err := r.encryptSecret(server.SSHPassword)
+	if err != nil {
+		return fmt.Errorf("failed to encrypt SSH password: %w", err)
+	}
 	query := `
 		INSERT INTO servers (id, user_id, name, ip_address, ssh_host, ssh_port, ssh_user, ssh_key, ssh_password, status, worker_token, last_seen_at, metrics, created_at, updated_at)
 		VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
 	`
-	_, err := r.db.ExecContext(ctx, query,
+	_, err = r.db.ExecContext(ctx, query,
 		server.ID, server.UserID, server.Name, server.IPAddress,
-		server.SSHHost, server.SSHPort, server.SSHUser, server.SSHKey, server.SSHPassword,
+		server.SSHHost, server.SSHPort, server.SSHUser, sshKey, sshPassword,
 		server.Status, server.WorkerToken, server.LastSeenAt, server.Metrics, server.CreatedAt, server.UpdatedAt,
 	)
 	if err != nil {
@@ -100,6 +109,9 @@ func (r *sqliteServerRepository) scanRow(row *sql.Row) (*models.Server, error) {
 		}
 		return nil, fmt.Errorf("failed to scan server: %w", err)
 	}
+	if err := r.decryptSecrets(&s); err != nil {
+		return nil, err
+	}
 	return &s, nil
 }
 
@@ -109,7 +121,41 @@ func (r *sqliteServerRepository) scanRows(rows *sql.Rows) (*models.Server, error
 	if err != nil {
 		return nil, fmt.Errorf("failed to scan server: %w", err)
 	}
+	if err := r.decryptSecrets(&s); err != nil {
+		return nil, err
+	}
 	return &s, nil
+}
+
+func (r *sqliteServerRepository) encryptSecret(value string) (string, error) {
+	if value == "" || r.vault == nil {
+		return value, nil
+	}
+	if _, err := r.vault.Decrypt(value); err == nil {
+		return value, nil
+	}
+	return r.vault.Encrypt(value)
+}
+
+func (r *sqliteServerRepository) decryptSecrets(server *models.Server) error {
+	if r.vault == nil {
+		return nil
+	}
+	if server.SSHKey != "" {
+		value, err := r.vault.Decrypt(server.SSHKey)
+		if err != nil {
+			return fmt.Errorf("failed to decrypt SSH key: %w", err)
+		}
+		server.SSHKey = value
+	}
+	if server.SSHPassword != "" {
+		value, err := r.vault.Decrypt(server.SSHPassword)
+		if err != nil {
+			return fmt.Errorf("failed to decrypt SSH password: %w", err)
+		}
+		server.SSHPassword = value
+	}
+	return nil
 }
 
 func (r *sqliteServerRepository) Delete(ctx context.Context, id string) error {

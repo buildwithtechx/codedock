@@ -3,6 +3,7 @@ package system
 import (
 	"context"
 	"fmt"
+	"log/slog"
 
 	"codedock.run/codedock/internal/models"
 	"codedock.run/codedock/internal/repositories"
@@ -34,8 +35,13 @@ func (s *DNSService) CreateRecord(ctx context.Context, req *models.CreateDNSReco
 		return nil, err
 	}
 
-	if record.RecordType == "A" && record.RecordName != "" {
-		_ = s.providerSvc.ProvisionARecord(ctx, fmt.Sprintf("%s.%s", record.RecordName, record.DomainName))
+	if record.RecordType == "A" && record.RecordName != "" && s.providerSvc != nil {
+		if _, _, err := s.providerSvc.ProvisionARecord(ctx, fmt.Sprintf("%s.%s", record.RecordName, record.DomainName)); err != nil {
+			if deleteErr := s.repo.Delete(ctx, record.ID); deleteErr != nil {
+				slog.Error("failed to roll back DNS record after provisioning failure", "record_id", record.ID, "error", deleteErr)
+			}
+			return nil, fmt.Errorf("provision A record: %w", err)
+		}
 	}
 
 	return record, nil

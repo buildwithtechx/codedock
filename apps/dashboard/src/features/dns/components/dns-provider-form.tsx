@@ -195,13 +195,8 @@ export function DnsProviderForm({
                 type="password"
                 placeholder="Spaceship API secret"
                 value={formData.spaceshipApiSecret}
-                onChange={(e) =>
-                  setFormData({
-                    ...formData,
-                    spaceshipApiSecret: e.target.value,
-                  })
-                }
-                className="border/50 h-12 rounded-xl bg-background/80 px-4 font-medium placeholder:text-muted-foreground/40"
+                onChange={(e) => setFormData({ ...formData, spaceshipApiSecret: e.target.value })}
+                className="border/50 h-12 rounded-xl bg-background/80 px-4 font-medium"
               />
             </div>
           </div>

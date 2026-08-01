@@ -21,15 +21,20 @@ type SettingsRepository interface {
 }
 
 type SettingsRepo struct {
-	db *sqlx.DB
-	mu sync.Mutex
+	db    *sqlx.DB
+	vault Vault
+	mu    sync.Mutex
 }
 
-func NewSettingsRepo(db *sql.DB) *SettingsRepo {
-	return &SettingsRepo{db: sqlx.NewDb(db, "sqlite")}
+func NewSettingsRepo(db *sql.DB, vaults ...Vault) *SettingsRepo {
+	var vault Vault
+	if len(vaults) > 0 {
+		vault = vaults[0]
+	}
+	return &SettingsRepo{db: sqlx.NewDb(db, "sqlite"), vault: vault}
 }
 
-const serverSettingsColumns = `id, traefik_wildcard_ip, registration_enabled, registration_domain_allowlist, custom_dns_resolvers, dns_validation_enabled, ip_allowlist, mcp_server_enabled, default_wildcard_domain, panel_domain, site_name, public_ipv4, public_ipv6, show_sponsorship_popup, disable_two_step_confirmation, cloudflare_api_token, namecheap_api_user, namecheap_api_key, namecheap_client_ip, spaceship_api_key, update_check_cron, auto_update_enabled, concurrent_builds, deployment_timeout, server_timezone, docker_cleanup_cron, disk_usage_threshold, disk_usage_cron, current_version, latest_version, last_update_check, updated_at`
+const serverSettingsColumns = `id, traefik_wildcard_ip, registration_enabled, registration_domain_allowlist, custom_dns_resolvers, dns_validation_enabled, ip_allowlist, mcp_server_enabled, default_wildcard_domain, panel_domain, site_name, public_ipv4, public_ipv6, show_sponsorship_popup, disable_two_step_confirmation, cloudflare_api_token, namecheap_api_user, namecheap_api_key, namecheap_client_ip, spaceship_api_key, spaceship_api_secret, update_check_cron, auto_update_enabled, concurrent_builds, deployment_timeout, server_timezone, docker_cleanup_cron, disk_usage_threshold, disk_usage_cron, current_version, latest_version, last_update_check, updated_at`
 
 func serverSettingsPlaceholders() string {
 	columns := strings.Split(serverSettingsColumns, ",")
@@ -45,20 +50,65 @@ func scanServerSettings(scanner interface{ Scan(dest ...any) error }, cfg *model
 		&cfg.ID, &cfg.TraefikWildcardIP,
 		&cfg.RegistrationEnabled, &cfg.RegistrationDomainAllowlist, &cfg.CustomDNSResolvers, &cfg.DNSValidationEnabled, &cfg.IPAllowlist, &cfg.MCPServerEnabled, &cfg.DefaultWildcardDomain, &cfg.PanelDomain,
 		&cfg.SiteName, &cfg.PublicIPv4, &cfg.PublicIPv6, &cfg.ShowSponsorshipPopup, &cfg.DisableTwoStepConfirmation,
-		&cfg.CloudflareAPIToken, &cfg.NamecheapAPIUser, &cfg.NamecheapAPIKey, &cfg.NamecheapClientIP, &cfg.SpaceshipAPIKey,
+		&cfg.CloudflareAPIToken, &cfg.NamecheapAPIUser, &cfg.NamecheapAPIKey, &cfg.NamecheapClientIP, &cfg.SpaceshipAPIKey, &cfg.SpaceshipAPISecret,
 		&cfg.UpdateCheckCron, &cfg.AutoUpdateEnabled,
 		&cfg.ConcurrentBuilds, &cfg.DeploymentTimeout, &cfg.ServerTimezone, &cfg.DockerCleanupCron, &cfg.DiskUsageThreshold, &cfg.DiskUsageCron,
 		&cfg.CurrentVersion, &cfg.LatestVersion, &cfg.LastUpdateCheck, &cfg.UpdatedAt,
 	)
 }
 
-func serverSettingsArgs(cfg *models.ServerSettings) []any {
+func (r *SettingsRepo) serverSettingsArgs(cfg *models.ServerSettings) ([]any, error) {
+	cloudflareToken, err := r.encryptCredential(cfg.CloudflareAPIToken)
+	if err != nil {
+		return nil, fmt.Errorf("encrypt Cloudflare API token: %w", err)
+	}
+	namecheapKey, err := r.encryptCredential(cfg.NamecheapAPIKey)
+	if err != nil {
+		return nil, fmt.Errorf("encrypt Namecheap API key: %w", err)
+	}
+	spaceshipKey, err := r.encryptCredential(cfg.SpaceshipAPIKey)
+	if err != nil {
+		return nil, fmt.Errorf("encrypt Spaceship API key: %w", err)
+	}
+	spaceshipSecret, err := r.encryptCredential(cfg.SpaceshipAPISecret)
+	if err != nil {
+		return nil, fmt.Errorf("encrypt Spaceship API secret: %w", err)
+	}
+
 	return []any{
 		cfg.ID, cfg.TraefikWildcardIP,
 		cfg.RegistrationEnabled, cfg.RegistrationDomainAllowlist, cfg.CustomDNSResolvers, cfg.DNSValidationEnabled, cfg.IPAllowlist, cfg.MCPServerEnabled, cfg.DefaultWildcardDomain, cfg.PanelDomain,
 		cfg.SiteName, cfg.PublicIPv4, cfg.PublicIPv6, cfg.ShowSponsorshipPopup, cfg.DisableTwoStepConfirmation,
-		cfg.CloudflareAPIToken, cfg.NamecheapAPIUser, cfg.NamecheapAPIKey, cfg.NamecheapClientIP, cfg.SpaceshipAPIKey,
+		cloudflareToken, cfg.NamecheapAPIUser, namecheapKey, cfg.NamecheapClientIP, spaceshipKey, spaceshipSecret,
 		cfg.UpdateCheckCron, cfg.AutoUpdateEnabled, cfg.ConcurrentBuilds, cfg.DeploymentTimeout, cfg.ServerTimezone, cfg.DockerCleanupCron, cfg.DiskUsageThreshold, cfg.DiskUsageCron, cfg.CurrentVersion, cfg.LatestVersion, cfg.LastUpdateCheck, cfg.UpdatedAt,
+	}, nil
+}
+
+func (r *SettingsRepo) encryptCredential(value string) (string, error) {
+	if value == "" || r.vault == nil {
+		return value, nil
+	}
+	if _, err := r.vault.Decrypt(value); err == nil {
+		return value, nil
+	}
+	return r.vault.Encrypt(value)
+}
+
+func (r *SettingsRepo) decryptCredentials(cfg *models.ServerSettings) {
+	if r.vault == nil {
+		return
+	}
+	if value, err := r.vault.Decrypt(cfg.CloudflareAPIToken); err == nil {
+		cfg.CloudflareAPIToken = value
+	}
+	if value, err := r.vault.Decrypt(cfg.NamecheapAPIKey); err == nil {
+		cfg.NamecheapAPIKey = value
+	}
+	if value, err := r.vault.Decrypt(cfg.SpaceshipAPIKey); err == nil {
+		cfg.SpaceshipAPIKey = value
+	}
+	if value, err := r.vault.Decrypt(cfg.SpaceshipAPISecret); err == nil {
+		cfg.SpaceshipAPISecret = value
 	}
 }
 
@@ -82,12 +132,17 @@ func (r *SettingsRepo) GetServerSettings(ctx context.Context) (*models.ServerSet
 			ShowSponsorshipPopup: true,
 		}
 		query := fmt.Sprintf(`INSERT INTO server_settings (%s) VALUES (%s)`, serverSettingsColumns, serverSettingsPlaceholders())
-		_, _ = r.db.ExecContext(ctx, query, serverSettingsArgs(defaultSettings)...)
+		args, argsErr := r.serverSettingsArgs(defaultSettings)
+		if argsErr != nil {
+			return nil, argsErr
+		}
+		_, _ = r.db.ExecContext(ctx, query, args...)
 		return defaultSettings, nil
 	}
 	if err != nil {
 		return nil, fmt.Errorf("failed to get server settings: %w", err)
 	}
+	r.decryptCredentials(&cfg)
 	return &cfg, nil
 }
 
@@ -119,7 +174,8 @@ func (r *SettingsRepo) UpdateServerSettings(ctx context.Context, cfg *models.Ser
 	          namecheap_api_user = excluded.namecheap_api_user,
 	          namecheap_api_key = excluded.namecheap_api_key,
 	          namecheap_client_ip = excluded.namecheap_client_ip,
-	          spaceship_api_key = excluded.spaceship_api_key,
+		      spaceship_api_key = excluded.spaceship_api_key,
+		      spaceship_api_secret = excluded.spaceship_api_secret,
 	          update_check_cron = excluded.update_check_cron,
 	          auto_update_enabled = excluded.auto_update_enabled,
 	          concurrent_builds = excluded.concurrent_builds,
@@ -132,7 +188,11 @@ func (r *SettingsRepo) UpdateServerSettings(ctx context.Context, cfg *models.Ser
 	          latest_version = excluded.latest_version,
 	          last_update_check = excluded.last_update_check,
 	          updated_at = excluded.updated_at`, serverSettingsColumns, serverSettingsPlaceholders())
-	_, err := r.db.ExecContext(ctx, query, serverSettingsArgs(cfg)...)
+	args, err := r.serverSettingsArgs(cfg)
+	if err != nil {
+		return err
+	}
+	_, err = r.db.ExecContext(ctx, query, args...)
 	if err != nil {
 		return fmt.Errorf("failed to update server settings: %w", err)
 	}

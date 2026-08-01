@@ -27,6 +27,8 @@ type DNSRepo struct {
 	mu sync.Mutex
 }
 
+const dnsRecordColumns = `id, domain_name, record_type, record_name, record_value, ttl, created_at, updated_at`
+
 func NewDNSRepo(db *sql.DB) *DNSRepo {
 	return &DNSRepo{db: sqlx.NewDb(db, "sqlite")}
 }
@@ -57,7 +59,7 @@ func (r *DNSRepo) GetByID(_ context.Context, id string) (*models.DNSRecord, erro
 	defer r.mu.Unlock()
 
 	var record models.DNSRecord
-	err := r.db.Get(&record, `SELECT * FROM dns_records WHERE id = ?`, id)
+	err := r.db.Get(&record, `SELECT `+dnsRecordColumns+` FROM dns_records WHERE id = ?`, id)
 	if errors.Is(err, sql.ErrNoRows) {
 		return nil, utils.NewNotFoundError("DNSRecord", id)
 	}
@@ -71,9 +73,9 @@ func (r *DNSRepo) ListByDomain(_ context.Context, domainName string) ([]*models.
 	var list []*models.DNSRecord
 	var err error
 	if domainName == "" {
-		err = r.db.Select(&list, `SELECT * FROM dns_records ORDER BY created_at ASC`)
+		err = r.db.Select(&list, `SELECT `+dnsRecordColumns+` FROM dns_records ORDER BY created_at ASC`)
 	} else {
-		err = r.db.Select(&list, `SELECT * FROM dns_records WHERE domain_name = ? ORDER BY created_at ASC`, domainName)
+		err = r.db.Select(&list, `SELECT `+dnsRecordColumns+` FROM dns_records WHERE domain_name = ? ORDER BY created_at ASC`, domainName)
 	}
 	if err != nil {
 		return nil, err

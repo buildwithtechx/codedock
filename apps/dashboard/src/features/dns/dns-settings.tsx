@@ -22,9 +22,9 @@ export const DnsSettings = () => {
     namecheapApiKey: '',
     namecheapClientIp: '',
     spaceshipApiKey: '',
+    spaceshipApiSecret: '',
     cloudflareEmail: '',
     cloudflareZoneId: '',
-    spaceshipApiSecret: '',
   });
 
   useEffect(() => {
@@ -36,6 +36,7 @@ export const DnsSettings = () => {
         namecheapApiKey: data.data.namecheapApiKey || '',
         namecheapClientIp: data.data.namecheapClientIp || '',
         spaceshipApiKey: data.data.spaceshipApiKey || '',
+        spaceshipApiSecret: data.data.spaceshipApiSecret || '',
       }));
     }
   }, [data?.data]);

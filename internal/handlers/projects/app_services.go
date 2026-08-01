@@ -3,6 +3,8 @@ package projects
 import (
 	"log/slog"
 	"net/http"
+	"net/url"
+	"strings"
 
 	"github.com/labstack/echo/v4"
 
@@ -92,10 +94,18 @@ func (h *AppHandler) Create(c echo.Context) error {
 		return utils.Error(c, http.StatusInternalServerError, err.Error())
 	}
 
-	domainName := utils.GenerateAppDomain(req.Name, "", "")
+	generatedDomain := utils.GenerateAppDomain(req.Name, "", "")
+	parsedDomain, parseErr := url.Parse(generatedDomain)
+	if parseErr != nil || parsedDomain.Hostname() == "" {
+		slog.Warn("failed to parse generated app domain", "domain", generatedDomain)
+		generatedDomain = strings.TrimPrefix(strings.TrimPrefix(generatedDomain, "https://"), "http://")
+		generatedDomain = strings.Split(generatedDomain, "/")[0]
+	} else {
+		generatedDomain = parsedDomain.Hostname()
+	}
 	if _, err := h.envService.CreateDomain(c.Request().Context(), &models.DomainConfig{
 		ServiceID:  created.ID,
-		DomainName: domainName,
+		DomainName: generatedDomain,
 	}); err != nil {
 		slog.Warn("failed to create default domain", "error", err)
 	}

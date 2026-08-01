@@ -1,3 +1,10 @@
+export type {
+  DNSProvisionStatus,
+  DNSVerificationStatus,
+  DomainBase,
+  DomainVerifyResult,
+} from './contracts';
+
 export interface DNSRecord {
   id: string;
   domainName: string;
@@ -22,17 +29,4 @@ export interface UpdateDNSRecordRequest {
   recordName: string;
   recordValue: string;
   ttl?: number;
-}
-
-export interface Domain {
-  id: string;
-  projectId: string;
-  domainName: string;
-  sslStatus: string;
-  createdAt: string;
-}
-
-export interface CreateDomainRequest {
-  projectId: string;
-  domainName: string;
 }

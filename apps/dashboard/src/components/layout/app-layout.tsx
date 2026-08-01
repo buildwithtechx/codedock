@@ -4,6 +4,7 @@ import { AlertCircle, Menu, X } from 'lucide-react';
 import type * as React from 'react';
 import { useEffect, useState } from 'react';
 import { toast } from 'sonner';
+import { OrganizationOnboarding } from '#/features/organizations';
 import { apiClient } from '#/lib/api-client';
 import { useAuthStore } from '#/stores/auth-store';
 import { Button } from '@/components/ui/button';
@@ -93,6 +94,7 @@ export function AppLayout({ children }: { children: React.ReactNode }) {
         </main>
       </div>
       <CommandPalette open={commandOpen} onOpenChange={setCommandOpen} />
+      <OrganizationOnboarding />
     </div>
   );
 }

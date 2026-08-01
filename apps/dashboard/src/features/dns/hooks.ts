@@ -40,6 +40,13 @@ export const useDeleteDNS = () => {
   });
 };
 
+export const useListAllDomains = () => {
+  return useQuery({
+    queryKey: ['domains', 'all'],
+    queryFn: () => domainsService.listAll(),
+  });
+};
+
 export const useListByService = (serviceId: string) => {
   return useQuery({
     queryKey: ['domains', 'listByService', serviceId].filter(Boolean),
@@ -70,5 +77,12 @@ export const useDeleteDomain = () => {
   });
 };
 
+export const useVerifyDomain = () => {
+  return useMutation({
+    mutationFn: (domainId: string) => domainsService.verifyDomain(domainId),
+  });
+};
+
 export const useCreate = useCreateDomain;
 export const useDelete = useDeleteDomain;
+export const useVerify = useVerifyDomain;

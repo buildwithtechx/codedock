@@ -89,6 +89,7 @@ git remote add upstream https://github.com/buildwithtechx/codedock.git
 
 ```bash
 cp .env.example .env
+cp apps/dashboard/.env.example apps/dashboard/.env
 ```
 
 | Variable           | Default          | Description                    |

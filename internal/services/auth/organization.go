@@ -3,12 +3,14 @@ package auth
 import (
 	"context"
 	"errors"
+	"strings"
 	"time"
 
 	"github.com/google/uuid"
 
 	"codedock.run/codedock/internal/models"
 	"codedock.run/codedock/internal/repositories"
+	"codedock.run/codedock/internal/utils"
 )
 
 type OrganizationService struct {
@@ -38,8 +40,12 @@ func (s *OrganizationService) isRequesterOwnerOrAdmin(ctx context.Context, orgID
 }
 
 func (s *OrganizationService) CreateOrganization(ctx context.Context, userID, name string) (*models.Organization, error) {
+	if userID == "" {
+		return nil, errors.New("user id is required")
+	}
+	name = strings.TrimSpace(name)
 	if name == "" {
-		return nil, errors.New("organization name is required")
+		name = utils.GenerateRandomName()
 	}
 	org := &models.Organization{
 		ID:        uuid.New().String(),
@@ -61,6 +67,7 @@ func (s *OrganizationService) CreateOrganization(ctx context.Context, userID, na
 		AcceptedAt:     time.Now(),
 	}
 	if err := s.orgRepo.AddMember(ctx, owner); err != nil {
+		_ = s.orgRepo.Delete(ctx, org.ID)
 		return nil, err
 	}
 

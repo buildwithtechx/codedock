@@ -87,6 +87,7 @@ export interface ServerSettings {
   namecheapApiKey?: string;
   namecheapClientIp?: string;
   spaceshipApiKey?: string;
+  spaceshipApiSecret?: string;
   updatedAt: string;
 }
 

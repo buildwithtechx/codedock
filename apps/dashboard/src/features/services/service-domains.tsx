@@ -1,72 +1,178 @@
+import { Loader2, RefreshCw, Trash2 } from 'lucide-react';
 import { useState } from 'react';
+import { toast } from 'sonner';
 import { Button } from '#/components/ui/button';
 import { Card, CardContent, CardHeader, CardTitle } from '#/components/ui/card';
 import { Input } from '#/components/ui/input';
 import { Label } from '#/components/ui/label';
 import { useCreate, useDelete, useListByService } from '#/features/dns';
+import { useDomainVerification } from '#/features/dns/domain-verification';
+import { useGetSettings } from '#/features/settings';
+import { useAuthStore } from '#/stores/auth-store';
+import { DnsGuidanceBanner } from './dns-guidance-banner';
+import { DnsStatusBadge } from './dns-status-badge';
 
 export function ServiceDomains({ serviceId }: { serviceId: string }) {
+  const userRole = useAuthStore((state) => state.user?.role);
+  const canManageProviderDomains = userRole === 'admin' || String(userRole) === 'owner';
   const { data: domainsRes, isLoading } = useListByService(serviceId);
+  const {
+    data: settingsRes,
+    isLoading: isLoadingSettings,
+    error: settingsError,
+  } = useGetSettings();
   const createDomain = useCreate();
   const deleteDomain = useDelete();
+  const { verificationResults, verifyingMap, verifyOne } = useDomainVerification();
 
   const [newDomain, setNewDomain] = useState('');
+
+  const settings = settingsRes?.data;
+  const serverIp = settings?.publicIpv4 || '';
+  const hasDnsProvider = Boolean(
+    settings?.cloudflareApiToken ||
+      (settings?.namecheapApiUser && settings?.namecheapApiKey) ||
+      (settings?.spaceshipApiKey && settings?.spaceshipApiSecret)
+  );
+
+  const domains = domainsRes?.data || [];
+
+  const showGuidanceBanner =
+    !isLoadingSettings &&
+    !settingsError &&
+    (!hasDnsProvider ||
+      domains.some(
+        (d) =>
+          !d.dnsProvisionStatus ||
+          d.dnsProvisionStatus === 'pending' ||
+          d.dnsProvisionStatus === 'failed'
+      ));
 
   const handleCreate = () => {
     if (!newDomain.trim()) return;
     createDomain.mutate(
       { serviceId, payload: { domainName: newDomain } },
-      { onSuccess: () => setNewDomain('') }
+      {
+        onSuccess: () => {
+          setNewDomain('');
+          toast.success('Domain added successfully');
+        },
+        onError: (err) => {
+          toast.error(err.message || 'Failed to add domain');
+        },
+      }
     );
   };
 
-  const domains = domainsRes?.data || [];
+  const handleVerify = async (domainId: string) => {
+    await verifyOne(domainId);
+  };
 
   return (
-    <Card>
-      <CardHeader>
-        <CardTitle>Domains</CardTitle>
+    <Card className="divide-y divide-border/50">
+      <CardHeader className="flex flex-row items-center justify-between pb-3">
+        <CardTitle className="text-lg">Domains</CardTitle>
       </CardHeader>
-      <CardContent className="flex flex-col gap-4">
+      <CardContent className="space-y-4 pt-4">
+        {showGuidanceBanner && (
+          <DnsGuidanceBanner serverIp={serverIp} hasDnsProvider={hasDnsProvider} />
+        )}
+
         {isLoading ? (
-          <div>Loading domains...</div>
+          <div className="flex items-center justify-center py-6 text-muted-foreground text-sm">
+            <Loader2 className="mr-2 h-4 w-4 animate-spin" /> Loading domains...
+          </div>
         ) : domains.length === 0 ? (
-          <p className="text-gray-500 text-sm">No domains configured.</p>
+          <p className="py-4 text-center text-muted-foreground text-sm">
+            No custom domains configured for this service.
+          </p>
         ) : (
-          <ul className="space-y-2">
-            {domains.map((domain) => (
-              <li key={domain.id} className="flex items-center justify-between rounded border p-2">
-                <div>
-                  <div className="font-semibold">{domain.domainName}</div>
-                  <div className="text-gray-500 text-xs">Status: {domain.sslCertStatus}</div>
-                </div>
-                <Button
-                  variant="destructive"
-                  size="sm"
-                  onClick={() => deleteDomain.mutate({ id: domain.id })}
-                  disabled={deleteDomain.isPending}
+          <ul className="space-y-3">
+            {domains.map((domain) => {
+              const result = verificationResults[domain.id];
+              const isVerifying = verifyingMap[domain.id];
+
+              return (
+                <li
+                  key={domain.id}
+                  className="flex flex-col gap-2 rounded-xl border border-border/60 bg-card/50 p-3 sm:flex-row sm:items-center sm:justify-between"
                 >
-                  Remove
-                </Button>
-              </li>
-            ))}
+                  <div className="space-y-1">
+                    <div className="flex items-center gap-2">
+                      <span className="font-semibold text-sm">{domain.domainName}</span>
+                      <DnsStatusBadge status={domain.dnsProvisionStatus} />
+                    </div>
+                    <div className="flex flex-wrap items-center gap-3 text-xs">
+                      <span className="text-muted-foreground">
+                        SSL: {domain.sslCertStatus || 'pending'}
+                      </span>
+                      {result && (
+                        <span
+                          className={`font-medium ${
+                            result.status === 'resolves_to_server'
+                              ? 'text-emerald-600 dark:text-emerald-400'
+                              : result.status === 'resolves_to_different_ip'
+                                ? 'text-amber-600 dark:text-amber-400'
+                                : 'text-destructive'
+                          }`}
+                        >
+                          {result.message}
+                        </span>
+                      )}
+                    </div>
+                  </div>
+
+                  <div className="flex items-center gap-2 pt-2 sm:pt-0">
+                    <Button
+                      variant="outline"
+                      size="sm"
+                      onClick={() => handleVerify(domain.id)}
+                      disabled={isVerifying}
+                      className="h-8 gap-1.5 text-xs"
+                    >
+                      {isVerifying ? (
+                        <Loader2 className="h-3.5 w-3.5 animate-spin" />
+                      ) : (
+                        <RefreshCw className="h-3.5 w-3.5" />
+                      )}
+                      Verify DNS
+                    </Button>
+                    <Button
+                      variant="ghost"
+                      size="icon"
+                      className="h-8 w-8 text-destructive hover:bg-destructive/10 hover:text-destructive"
+                      onClick={() => deleteDomain.mutate({ id: domain.id })}
+                      disabled={deleteDomain.isPending}
+                      aria-label={`Delete domain ${domain.domainName}`}
+                    >
+                      <Trash2 className="h-4 w-4" />
+                    </Button>
+                  </div>
+                </li>
+              );
+            })}
           </ul>
         )}
 
-        <div className="mt-4 flex flex-col gap-2 border-t pt-4">
-          <Label htmlFor="new-domain">Add New Domain</Label>
-          <div className="flex gap-2">
-            <Input
-              id="new-domain"
-              placeholder="example.com"
-              value={newDomain}
-              onChange={(e) => setNewDomain(e.target.value)}
-            />
-            <Button onClick={handleCreate} disabled={createDomain.isPending}>
-              Add
-            </Button>
+        {canManageProviderDomains && (
+          <div className="mt-4 flex flex-col gap-2 border-t pt-4">
+            <Label htmlFor="new-domain" className="font-medium text-xs">
+              Add New Domain
+            </Label>
+            <div className="flex gap-2">
+              <Input
+                id="new-domain"
+                placeholder="subdomain.example.com"
+                value={newDomain}
+                onChange={(e) => setNewDomain(e.target.value)}
+                className="font-mono text-sm"
+              />
+              <Button onClick={handleCreate} disabled={createDomain.isPending || !newDomain.trim()}>
+                Add Domain
+              </Button>
+            </div>
           </div>
-        </div>
+        )}
       </CardContent>
     </Card>
   );

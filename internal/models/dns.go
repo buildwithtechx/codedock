@@ -9,6 +9,19 @@ import (
 type Domain = types.Domain
 type DomainConfig = types.DomainConfig
 
+type CreateDomainRequest struct {
+	DomainName string `json:"domainName"`
+	RedirectTo string `json:"redirectTo,omitempty"`
+	PathPrefix string `json:"pathPrefix,omitempty"`
+}
+type DomainVerifyResult = types.DomainVerifyResult
+
+const (
+	DNSProvisionStatusPending = types.DNSProvisionStatusPending
+	DNSProvisionStatusSuccess = types.DNSProvisionStatusSuccess
+	DNSProvisionStatusFailed  = types.DNSProvisionStatusFailed
+)
+
 type DNSRecord struct {
 	ID          string    `json:"id" db:"id"`
 	DomainName  string    `json:"domainName" db:"domain_name"`

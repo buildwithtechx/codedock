@@ -21,6 +21,7 @@ type ServerSettings struct {
 	NamecheapAPIKey             string `json:"namecheapApiKey,omitempty"`
 	NamecheapClientIP           string `json:"namecheapClientIp,omitempty"`
 	SpaceshipAPIKey             string `json:"spaceshipApiKey,omitempty"`
+	SpaceshipAPISecret          string `json:"spaceshipApiSecret,omitempty"`
 	UpdateCheckCron             string `json:"updateCheckCron"`
 	AutoUpdateEnabled           bool   `json:"autoUpdateEnabled"`
 	TelemetryEnabled            bool   `json:"telemetryEnabled"`

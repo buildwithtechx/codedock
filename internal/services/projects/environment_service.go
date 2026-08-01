@@ -3,23 +3,79 @@ package projects
 import (
 	"context"
 	"errors"
+	"fmt"
+	"log/slog"
+	"strings"
+	"sync"
+	"sync/atomic"
 	"time"
 
 	"github.com/google/uuid"
+	"golang.org/x/net/publicsuffix"
 
 	"codedock.run/codedock/internal/models"
 	"codedock.run/codedock/internal/repositories"
-	"codedock.run/codedock/internal/services/system"
+	"codedock.run/codedock/internal/utils"
 )
 
-type EnvironmentService struct {
-	envRepo    repositories.EnvironmentRepository
-	domainRepo repositories.DomainRepository
-	varRepo    repositories.EnvRepository
-	dnsService *system.DNSProviderService
+type domainRepository interface {
+	ListByService(ctx context.Context, serviceID string) ([]models.DomainConfig, error)
+	ListAll(ctx context.Context) ([]models.DomainConfig, error)
+	GetByID(ctx context.Context, id string) (*models.DomainConfig, error)
+	Create(ctx context.Context, d *models.DomainConfig) error
+	UpdateDNSProvisionStatus(ctx context.Context, id string, status string, provider string, provisionedIP string) error
+	Delete(ctx context.Context, id string) error
 }
 
-func NewEnvironmentService(er repositories.EnvironmentRepository, dr repositories.DomainRepository, vr repositories.EnvRepository, dnsService *system.DNSProviderService) *EnvironmentService {
+type domainDNSService interface {
+	ProvisionARecord(ctx context.Context, domain string) (string, string, error)
+	DeprovisionARecord(ctx context.Context, domain, provider, value string) error
+}
+
+func canonicalDomainName(domain string) (string, error) {
+	canonical := strings.ToLower(strings.TrimSuffix(strings.TrimSpace(domain), "."))
+	if canonical == "" || strings.ContainsAny(canonical, " /\\") {
+		return "", utils.NewValidationError("invalid domain name")
+	}
+	if len(canonical) > 253 {
+		return "", utils.NewValidationError("invalid domain name: exceeds 253 characters")
+	}
+	for _, label := range strings.Split(canonical, ".") {
+		if len(label) == 0 || len(label) > 63 || label[0] == '-' || label[len(label)-1] == '-' {
+			return "", utils.NewValidationError("invalid domain name: invalid label")
+		}
+		for _, char := range label {
+			if (char < 'a' || char > 'z') && (char < '0' || char > '9') && char != '-' {
+				return "", utils.NewValidationError("invalid domain name: invalid label")
+			}
+		}
+	}
+	if _, err := publicsuffix.EffectiveTLDPlusOne(canonical); err != nil {
+		return "", utils.NewValidationError(fmt.Sprintf("invalid domain name: %v", err))
+	}
+	return canonical, nil
+}
+
+type domainLockEntry struct {
+	locked chan struct{}
+	refs   atomic.Int32
+}
+
+type domainProvisionOperation struct {
+	cancel context.CancelFunc
+}
+
+type EnvironmentService struct {
+	envRepo       repositories.EnvironmentRepository
+	domainRepo    domainRepository
+	varRepo       repositories.EnvRepository
+	dnsService    domainDNSService
+	domainLocks   sync.Map
+	domainLocksMu sync.Mutex
+	provisionOps  sync.Map
+}
+
+func NewEnvironmentService(er repositories.EnvironmentRepository, dr domainRepository, vr repositories.EnvRepository, dnsService domainDNSService) *EnvironmentService {
 	return &EnvironmentService{
 		envRepo:    er,
 		domainRepo: dr,
@@ -70,6 +126,11 @@ func (s *EnvironmentService) CreateDomain(ctx context.Context, d *models.DomainC
 	if d == nil || d.ServiceID == "" || d.DomainName == "" {
 		return nil, errors.New("valid domain with serviceId and domainName required")
 	}
+	canonicalDomain, err := canonicalDomainName(d.DomainName)
+	if err != nil {
+		return nil, err
+	}
+	d.DomainName = canonicalDomain
 	if d.ID == "" {
 		d.ID = uuid.New().String()
 	}
@@ -77,17 +138,98 @@ func (s *EnvironmentService) CreateDomain(ctx context.Context, d *models.DomainC
 	if d.CreatedAt.IsZero() {
 		d.CreatedAt = now
 	}
+	d.DNSProvisionStatus = models.DNSProvisionStatusPending
+	d.DNSProvider = ""
+	d.DNSProvisionedIP = ""
 	if err := s.domainRepo.Create(ctx, d); err != nil {
 		return nil, err
 	}
 
 	if s.dnsService != nil {
-		go func() {
-			_ = s.dnsService.ProvisionARecord(context.Background(), d.DomainName)
-		}()
+		domainID := d.ID
+		domainName := d.DomainName
+		provisionCtx, cancel := context.WithTimeout(context.Background(), 30*time.Second)
+		op := &domainProvisionOperation{cancel: cancel}
+		s.provisionOps.Store(domainName, op)
+		go func(domainID, domainName string) {
+			defer cancel()
+			defer s.provisionOps.CompareAndDelete(domainName, op)
+
+			unlock, err := s.lockDomain(provisionCtx, domainName)
+			if err != nil {
+				statusCtx, statusCancel := context.WithTimeout(context.Background(), 5*time.Second)
+				statusErr := s.updateDNSProvisionStatus(statusCtx, domainID, models.DNSProvisionStatusFailed, "", "")
+				statusCancel()
+				if statusErr != nil {
+					slog.Error("failed to mark DNS provisioning lock timeout", "domain_id", domainID, "error", statusErr)
+				}
+				return
+			}
+			defer unlock()
+
+			var current *models.DomainConfig
+			var readErr error
+			for attempt := 0; attempt < 3; attempt++ {
+				current, readErr = s.domainRepo.GetByID(provisionCtx, domainID)
+				if readErr == nil {
+					break
+				}
+				if !waitForDomainRetry(provisionCtx, attempt) {
+					break
+				}
+			}
+			if readErr != nil {
+				statusCtx, statusCancel := context.WithTimeout(context.Background(), 5*time.Second)
+				statusErr := s.updateDNSProvisionStatus(statusCtx, domainID, models.DNSProvisionStatusFailed, "", "")
+				statusCancel()
+				if statusErr != nil {
+					slog.Error("failed to mark DNS provisioning read failure", "domain_id", domainID, "error", statusErr)
+				}
+				return
+			}
+			if current == nil || current.DomainName != domainName {
+				return
+			}
+
+			provider, provisionedIP, err := s.dnsService.ProvisionARecord(provisionCtx, domainName)
+			status := models.DNSProvisionStatusSuccess
+			if err != nil {
+				status = models.DNSProvisionStatusFailed
+				provider = ""
+				provisionedIP = ""
+			}
+			statusCtx, statusCancel := context.WithTimeout(context.Background(), 5*time.Second)
+			statusErr := s.updateDNSProvisionStatus(statusCtx, domainID, status, provider, provisionedIP)
+			statusCancel()
+			if statusErr != nil {
+				retryCtx, retryCancel := context.WithTimeout(context.Background(), 30*time.Second)
+				retryErr := s.updateDNSProvisionStatus(retryCtx, domainID, status, provider, provisionedIP)
+				retryCancel()
+				if retryErr != nil {
+					slog.Error("failed to persist DNS provisioning status", "domain_id", domainID, "error", retryErr)
+					cleanupCtx, cleanupCancel := context.WithTimeout(context.Background(), 30*time.Second)
+					cleanupErr := s.dnsService.DeprovisionARecord(cleanupCtx, domainName, provider, provisionedIP)
+					cleanupCancel()
+					if cleanupErr != nil {
+						slog.Error("failed to compensate DNS provisioning", "domain_id", domainID, "error", cleanupErr)
+					}
+				}
+			}
+		}(domainID, domainName)
 	}
 
 	return d, nil
+}
+
+func waitForDomainRetry(ctx context.Context, attempt int) bool {
+	timer := time.NewTimer(time.Duration(attempt+1) * 200 * time.Millisecond)
+	defer timer.Stop()
+	select {
+	case <-ctx.Done():
+		return false
+	case <-timer.C:
+		return true
+	}
 }
 
 func (s *EnvironmentService) ListDomainsByService(ctx context.Context, serviceID string) ([]models.DomainConfig, error) {
@@ -112,7 +254,46 @@ func (s *EnvironmentService) DeleteDomain(ctx context.Context, id string) error 
 	if id == "" {
 		return errors.New("id required")
 	}
-	return s.domainRepo.Delete(ctx, id)
+	deleteCtx, deleteCancel := context.WithTimeout(context.Background(), 35*time.Second)
+	defer deleteCancel()
+	domain, err := s.domainRepo.GetByID(deleteCtx, id)
+	if err != nil {
+		return err
+	}
+	if domain == nil {
+		return nil
+	}
+
+	if operation, ok := s.provisionOps.Load(domain.DomainName); ok {
+		operation.(*domainProvisionOperation).cancel()
+	}
+
+	unlock, err := s.lockDomain(deleteCtx, domain.DomainName)
+	if err != nil {
+		return err
+	}
+	defer unlock()
+	domain, err = s.domainRepo.GetByID(deleteCtx, id)
+	if err != nil {
+		return err
+	}
+	if domain == nil {
+		return nil
+	}
+
+	if s.dnsService != nil && domain.DNSProvisionStatus == models.DNSProvisionStatusSuccess {
+		err := s.dnsService.DeprovisionARecord(deleteCtx, domain.DomainName, domain.DNSProvider, domain.DNSProvisionedIP)
+		if err != nil {
+			return fmt.Errorf("deprovision domain DNS record: %w", err)
+		}
+	}
+
+	dbCtx, dbCancel := context.WithTimeout(context.Background(), 5*time.Second)
+	defer dbCancel()
+	if err := s.domainRepo.Delete(dbCtx, id); err != nil {
+		return err
+	}
+	return nil
 }
 
 func (s *EnvironmentService) GetVars(ctx context.Context, projectID string) (map[string]string, error) {
@@ -127,4 +308,64 @@ func (s *EnvironmentService) SetVar(ctx context.Context, projectID, key, value s
 		return errors.New("project id and key required")
 	}
 	return s.varRepo.SetVar(ctx, projectID, key, value)
+}
+
+func (s *EnvironmentService) lockDomain(ctx context.Context, domainName string) (func(), error) {
+	if domainName == "" {
+		return func() {}, nil
+	}
+
+	s.domainLocksMu.Lock()
+	lock, loaded := s.domainLocks.Load(domainName)
+	if !loaded {
+		lock = &domainLockEntry{locked: make(chan struct{}, 1)}
+		s.domainLocks.Store(domainName, lock)
+	}
+	entry := lock.(*domainLockEntry)
+	entry.refs.Add(1)
+	s.domainLocksMu.Unlock()
+
+	select {
+	case entry.locked <- struct{}{}:
+	case <-ctx.Done():
+		s.releaseDomainLock(domainName, entry)
+		return nil, ctx.Err()
+	}
+
+	return func() {
+		<-entry.locked
+		s.releaseDomainLock(domainName, entry)
+	}, nil
+}
+
+func (s *EnvironmentService) releaseDomainLock(domainName string, entry *domainLockEntry) {
+	s.domainLocksMu.Lock()
+	defer s.domainLocksMu.Unlock()
+	if entry.refs.Add(-1) == 0 {
+		s.domainLocks.CompareAndDelete(domainName, entry)
+	}
+}
+
+func (s *EnvironmentService) updateDNSProvisionStatus(ctx context.Context, domainID, status, provider, provisionedIP string) error {
+	var err error
+	for attempt := 0; attempt < 3; attempt++ {
+		err = s.domainRepo.UpdateDNSProvisionStatus(ctx, domainID, status, provider, provisionedIP)
+		if err == nil {
+			return nil
+		}
+		if ctx.Err() != nil {
+			return ctx.Err()
+		}
+		if attempt == 2 {
+			break
+		}
+		timer := time.NewTimer(time.Duration(attempt+1) * 200 * time.Millisecond)
+		select {
+		case <-ctx.Done():
+			timer.Stop()
+			return ctx.Err()
+		case <-timer.C:
+		}
+	}
+	return err
 }

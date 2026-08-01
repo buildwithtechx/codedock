@@ -1,10 +1,17 @@
 import type { Database } from '#/features/databases';
+import type { DomainBase } from '#/features/dns/contracts';
 import type { AppService } from '#/features/services';
 import type { BaseResponse, PaginatedData } from '#/interfaces/base';
 
+export type {
+  DNSProvisionStatus,
+  DNSVerificationStatus,
+  DomainBase,
+  DomainVerifyResult,
+} from '#/features/dns/contracts';
+
 export type MemberPermission = 'admin' | 'member' | 'viewer';
 export type MemberStatus = 'pending' | 'accepted';
-export type SSLCertStatus = 'pending' | 'issued' | 'failed';
 
 export interface ProjectConfig {
   id: string;
@@ -23,15 +30,9 @@ export interface EnvironmentConfig {
   updatedAt: string;
 }
 
-export interface DomainConfig {
-  id: string;
-  projectId: string;
-  domainName: string;
+export interface DomainConfig extends DomainBase {
   redirectTo?: string;
-  sslCertStatus: SSLCertStatus;
-  pathPrefix: string;
-  createdAt: string;
-  updatedAt: string;
+  pathPrefix?: string;
 }
 
 export interface ServerlessFunctionCode {

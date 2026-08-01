@@ -403,6 +403,7 @@ CREATE TABLE IF NOT EXISTS oauth_providers (
 			redirect_uri TEXT DEFAULT '',
 			base_url TEXT DEFAULT '',
 			tenant TEXT DEFAULT '',
+			created_at DATETIME DEFAULT CURRENT_TIMESTAMP,
 			updated_at DATETIME DEFAULT CURRENT_TIMESTAMP,
 			server_id TEXT REFERENCES servers(id) ON DELETE SET NULL,
 			organization_id TEXT REFERENCES organizations(id) ON DELETE CASCADE

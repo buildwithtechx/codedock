@@ -18,8 +18,8 @@ type Server struct {
 	SSHHost     string       `json:"sshHost" db:"ssh_host"`
 	SSHPort     int          `json:"sshPort" db:"ssh_port"`
 	SSHUser     string       `json:"sshUser" db:"ssh_user"`
-	SSHKey      string       `json:"sshKey,omitempty" db:"ssh_key"`
-	SSHPassword string       `json:"sshPassword,omitempty" db:"ssh_password"`
+	SSHKey      string       `json:"-" db:"ssh_key"`
+	SSHPassword string       `json:"-" db:"ssh_password"`
 	Status      ServerStatus `json:"status" db:"status"`
 	WorkerToken string       `json:"workerToken,omitempty" db:"worker_token"`
 	LastSeenAt  *time.Time   `json:"lastSeenAt,omitempty" db:"last_seen_at"`
