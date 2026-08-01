@@ -3,6 +3,7 @@ package system
 import (
 	"context"
 	"fmt"
+	"log/slog"
 
 	"codedock.run/codedock/internal/models"
 	"codedock.run/codedock/internal/repositories"
@@ -34,12 +35,9 @@ func (s *DNSService) CreateRecord(ctx context.Context, req *models.CreateDNSReco
 		return nil, err
 	}
 
-	if record.RecordType == "A" && record.RecordName != "" {
+	if record.RecordType == "A" && record.RecordName != "" && s.providerSvc != nil {
 		if _, _, err := s.providerSvc.ProvisionARecord(ctx, fmt.Sprintf("%s.%s", record.RecordName, record.DomainName)); err != nil {
-			if cleanupErr := s.repo.Delete(ctx, record.ID); cleanupErr != nil {
-				return nil, fmt.Errorf("failed to provision A record: %w; cleanup failed: %v", err, cleanupErr)
-			}
-			return nil, fmt.Errorf("failed to provision A record: %w", err)
+			slog.Error("failed to provision A record", "domain", record.DomainName, "error", err)
 		}
 	}
 

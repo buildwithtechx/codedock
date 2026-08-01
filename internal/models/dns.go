@@ -15,13 +15,6 @@ const (
 	DNSProvisionStatusPending = types.DNSProvisionStatusPending
 	DNSProvisionStatusSuccess = types.DNSProvisionStatusSuccess
 	DNSProvisionStatusFailed  = types.DNSProvisionStatusFailed
-	DNSProvisionStatusManual  = types.DNSProvisionStatusManual
-)
-
-const (
-	RecordTypeA     = types.RecordTypeA
-	RecordTypeCNAME = types.RecordTypeCNAME
-	RecordTypeTXT   = types.RecordTypeTXT
 )
 
 type DNSRecord struct {

@@ -23,39 +23,7 @@ func (s *Service) provisionCloudflare(ctx context.Context, token, domain, record
 		return err
 	}
 	if exists && len(matchingIDs) > 0 {
-		// check if exact match exists
-		exactExists, _, err := checkCloudflareRecordExists(ctx, client, token, zoneID, domain, recordType, value)
-		if err != nil {
-			return err
-		}
-		if exactExists {
-			return nil
-		}
-
-		// Update existing record
-		payload := map[string]any{
-			"type":    recordType,
-			"name":    domain,
-			"content": value,
-			"proxied": false,
-		}
-		b, _ := json.Marshal(payload)
-		req, err := http.NewRequestWithContext(ctx, http.MethodPut, "https://api.cloudflare.com/client/v4/zones/"+url.PathEscape(zoneID)+"/dns_records/"+url.PathEscape(matchingIDs[0]), bytes.NewBuffer(b))
-		if err != nil {
-			return err
-		}
-		req.Header.Set("Authorization", "Bearer "+token)
-		req.Header.Set("Content-Type", "application/json")
-
-		resp, err := client.Do(req)
-		if err != nil {
-			return err
-		}
-		defer resp.Body.Close()
-		if resp.StatusCode >= 400 {
-			return fmt.Errorf("cloudflare returned status %d", resp.StatusCode)
-		}
-		return nil
+		return fmt.Errorf("cloudflare record conflict for %s: existing %s record is not owned by codedock", domain, recordType)
 	}
 
 	payload := map[string]any{

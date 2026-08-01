@@ -108,9 +108,17 @@ export function DnsAuditPage() {
         </Card>
       </div>
 
-      <div className="flex flex-wrap gap-x-2 gap-y-2 border-border/60 border-b">
+      <div
+        role="tablist"
+        aria-label="DNS audit views"
+        className="flex flex-wrap gap-x-2 gap-y-2 border-border/60 border-b"
+      >
         <button
           type="button"
+          id="dns-audit-tab"
+          role="tab"
+          aria-selected={activeTab === 'audit'}
+          aria-controls="dns-audit-panel"
           onClick={() => showTab('audit')}
           className={`flex items-center gap-2 border-b-2 px-4 py-2.5 font-medium text-sm transition-colors ${
             activeTab === 'audit'
@@ -123,6 +131,10 @@ export function DnsAuditPage() {
         </button>
         <button
           type="button"
+          id="dns-providers-tab"
+          role="tab"
+          aria-selected={activeTab === 'providers'}
+          aria-controls="dns-providers-panel"
           onClick={() => showTab('providers')}
           className={`flex items-center gap-2 border-b-2 px-4 py-2.5 font-medium text-sm transition-colors ${
             activeTab === 'providers'
@@ -135,6 +147,10 @@ export function DnsAuditPage() {
         </button>
         <button
           type="button"
+          id="dns-global-tab"
+          role="tab"
+          aria-selected={activeTab === 'global'}
+          aria-controls="dns-global-panel"
           onClick={() => showTab('global')}
           className={`flex items-center gap-2 border-b-2 px-4 py-2.5 font-medium text-sm transition-colors ${
             activeTab === 'global'
@@ -147,7 +163,12 @@ export function DnsAuditPage() {
         </button>
       </div>
 
-      <section className={activeTab === 'audit' ? 'block' : 'hidden'}>
+      <section
+        id="dns-audit-panel"
+        role="tabpanel"
+        aria-labelledby="dns-audit-tab"
+        className={activeTab === 'audit' ? 'block' : 'hidden'}
+      >
         {isError ? (
           <div className="rounded-2xl border border-destructive/30 bg-destructive/5 p-8 text-center text-destructive text-sm">
             Unable to load the domain audit. Try again later.
@@ -157,11 +178,21 @@ export function DnsAuditPage() {
         )}
       </section>
 
-      <section className={activeTab === 'providers' ? 'block' : 'hidden'}>
+      <section
+        id="dns-providers-panel"
+        role="tabpanel"
+        aria-labelledby="dns-providers-tab"
+        className={activeTab === 'providers' ? 'block' : 'hidden'}
+      >
         {mountedTabs.has('providers') && <DnsSettings />}
       </section>
 
-      <section className={activeTab === 'global' ? 'block' : 'hidden'}>
+      <section
+        id="dns-global-panel"
+        role="tabpanel"
+        aria-labelledby="dns-global-tab"
+        className={activeTab === 'global' ? 'block' : 'hidden'}
+      >
         {mountedTabs.has('global') && <DomainsPage />}
       </section>
     </div>

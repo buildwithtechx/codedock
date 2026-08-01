@@ -33,7 +33,7 @@ func (s *Service) ProvisionARecord(ctx context.Context, domain string) (string, 
 
 func (s *Service) DeprovisionARecord(ctx context.Context, domain, provider, value string) error {
 	if value == "" {
-		return fmt.Errorf("provisioned A record value is missing")
+		return s.DeprovisionRecord(ctx, domain, "A", "", provider)
 	}
 	return s.DeprovisionRecord(ctx, domain, "A", value, provider)
 }
@@ -47,25 +47,35 @@ func (s *Service) ProvisionRecord(ctx context.Context, domain, recordType, value
 		return "", fmt.Errorf("server settings not configured")
 	}
 
+	var lastErr error
 	if cfg.CloudflareAPIToken != "" {
 		if err := s.provisionCloudflare(ctx, cfg.CloudflareAPIToken, domain, recordType, value); err == nil {
 			return dnsProviderCloudflare, nil
+		} else {
+			lastErr = fmt.Errorf("cloudflare: %w", err)
 		}
 	}
 
 	if cfg.NamecheapAPIKey != "" && cfg.NamecheapAPIUser != "" {
 		if err := s.provisionNamecheap(ctx, cfg, domain, recordType, value); err == nil {
 			return dnsProviderNamecheap, nil
+		} else {
+			lastErr = fmt.Errorf("namecheap: %w", err)
 		}
 	}
 
 	if cfg.SpaceshipAPIKey != "" {
 		if err := s.provisionSpaceship(ctx, cfg.SpaceshipAPIKey, domain, recordType, value); err == nil {
 			return dnsProviderSpaceship, nil
+		} else {
+			lastErr = fmt.Errorf("spaceship: %w", err)
 		}
 	}
 
-	return "", fmt.Errorf("failed to provision dns record for %s", domain)
+	if lastErr != nil {
+		return "", fmt.Errorf("failed to provision dns record for %s: %w", domain, lastErr)
+	}
+	return "", fmt.Errorf("failed to provision dns record for %s: no provider credentials configured", domain)
 }
 
 func (s *Service) DeprovisionRecord(ctx context.Context, domain, recordType, value, provider string) error {

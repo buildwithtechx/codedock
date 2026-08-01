@@ -127,23 +127,21 @@ func (s *Service) provisionNamecheap(ctx context.Context, cfg *models.ServerSett
 	if err != nil {
 		return err
 	}
-	if namecheapRecordExists(body, subDomain, recordType, value) {
-		return nil
+	hosts, err := parseNamecheapHosts(body)
+	if err != nil {
+		return err
 	}
-
-	addQ := url.Values{}
-	addQ.Set("ApiUser", cfg.NamecheapAPIUser)
-	addQ.Set("ApiKey", cfg.NamecheapAPIKey)
-	addQ.Set("UserName", cfg.NamecheapAPIUser)
-	addQ.Set("Command", "namecheap.domains.dns.addHost")
-	addQ.Set("ClientIp", cfg.NamecheapClientIP)
-	addQ.Set("SLD", sld)
-	addQ.Set("TLD", tld)
-	addQ.Set("HostName1", subDomain)
-	addQ.Set("RecordType1", recordType)
-	addQ.Set("Address1", value)
-
-	req, _ := http.NewRequestWithContext(ctx, http.MethodGet, "https://api.namecheap.com/xml.response?"+addQ.Encode(), nil)
+	for _, host := range hosts {
+		if host.Name == subDomain && host.Type == recordType {
+			return fmt.Errorf("namecheap record conflict for %s", domain)
+		}
+	}
+	hosts = append(hosts, namecheapHost{Name: subDomain, Type: recordType, Address: value})
+	setQ := buildNamecheapSetHostsQuery([]string{sld, tld}, cfg, hosts)
+	req, err := http.NewRequestWithContext(ctx, http.MethodGet, "https://api.namecheap.com/xml.response?"+setQ.Encode(), nil)
+	if err != nil {
+		return err
+	}
 	resp, err := client.Do(req)
 	if err != nil {
 		return err

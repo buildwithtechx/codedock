@@ -105,6 +105,10 @@ func (h *DomainHandler) Create(c echo.Context) error {
 	if !h.hasAccess(c, serviceID) {
 		return utils.Error(c, http.StatusForbidden, "insufficient permissions")
 	}
+	claims, ok := c.Get("user").(*models.UserClaims)
+	if !ok || claims == nil || (claims.Role != models.UserRoleAdmin && claims.Role != models.UserRoleOwner) {
+		return utils.Error(c, http.StatusForbidden, "DNS provider-backed domains require administrator access")
+	}
 
 	var req models.CreateDomainRequest
 	if err := c.Bind(&req); err != nil {

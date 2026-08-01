@@ -3,11 +3,15 @@ package projects
 import (
 	"context"
 	"errors"
+	"fmt"
+	"log/slog"
+	"strings"
 	"sync"
 	"sync/atomic"
 	"time"
 
 	"github.com/google/uuid"
+	"golang.org/x/net/publicsuffix"
 
 	"codedock.run/codedock/internal/models"
 	"codedock.run/codedock/internal/repositories"
@@ -25,6 +29,17 @@ type domainRepository interface {
 type domainDNSService interface {
 	ProvisionARecord(ctx context.Context, domain string) (string, string, error)
 	DeprovisionARecord(ctx context.Context, domain, provider, value string) error
+}
+
+func canonicalDomainName(domain string) (string, error) {
+	canonical := strings.ToLower(strings.TrimSuffix(strings.TrimSpace(domain), "."))
+	if canonical == "" || strings.ContainsAny(canonical, " /\\") {
+		return "", fmt.Errorf("invalid domain name")
+	}
+	if _, err := publicsuffix.EffectiveTLDPlusOne(canonical); err != nil {
+		return "", fmt.Errorf("invalid domain name: %w", err)
+	}
+	return canonical, nil
 }
 
 type domainLockEntry struct {
@@ -92,15 +107,17 @@ func (s *EnvironmentService) CreateDomain(ctx context.Context, d *models.DomainC
 	if d == nil || d.ServiceID == "" || d.DomainName == "" {
 		return nil, errors.New("valid domain with serviceId and domainName required")
 	}
+	canonicalDomain, err := canonicalDomainName(d.DomainName)
+	if err != nil {
+		return nil, err
+	}
+	d.DomainName = canonicalDomain
 	if d.ID == "" {
 		d.ID = uuid.New().String()
 	}
 	now := time.Now()
 	if d.CreatedAt.IsZero() {
 		d.CreatedAt = now
-	}
-	if d.DNSProvisionStatus == "" {
-		d.DNSProvisionStatus = models.DNSProvisionStatusPending
 	}
 	d.DNSProvisionStatus = models.DNSProvisionStatusPending
 	d.DNSProvider = ""
@@ -135,9 +152,15 @@ func (s *EnvironmentService) CreateDomain(ctx context.Context, d *models.DomainC
 				provisionedIP = ""
 			}
 			statusCtx, statusCancel := context.WithTimeout(context.Background(), 5*time.Second)
-			defer statusCancel()
-			if err := s.updateDNSProvisionStatus(statusCtx, domainID, status, provider, provisionedIP); err != nil {
-				return
+			statusErr := s.updateDNSProvisionStatus(statusCtx, domainID, status, provider, provisionedIP)
+			statusCancel()
+			if statusErr != nil {
+				retryCtx, retryCancel := context.WithTimeout(context.Background(), 30*time.Second)
+				retryErr := s.updateDNSProvisionStatus(retryCtx, domainID, status, provider, provisionedIP)
+				retryCancel()
+				if retryErr != nil {
+					slog.Error("failed to persist DNS provisioning status", "domain_id", domainID, "error", retryErr)
+				}
 			}
 		}(domainID, domainName)
 	}
@@ -190,7 +213,7 @@ func (s *EnvironmentService) DeleteDomain(ctx context.Context, id string) error 
 
 	if s.dnsService != nil && (domain.DNSProvisionStatus == models.DNSProvisionStatusSuccess || domain.DNSProvisionStatus == "provisioned") {
 		if err := s.dnsService.DeprovisionARecord(ctx, domain.DomainName, domain.DNSProvider, domain.DNSProvisionedIP); err != nil {
-			return err
+			slog.Error("failed to deprovision domain DNS record", "domain_id", id, "domain", domain.DomainName, "error", err)
 		}
 	}
 

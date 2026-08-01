@@ -1,5 +1,5 @@
 import { Check, Copy, Info } from 'lucide-react';
-import { useRef, useState } from 'react';
+import { useEffect, useRef, useState } from 'react';
 import { toast } from 'sonner';
 import { Button } from '#/components/ui/button';
 
@@ -12,10 +12,19 @@ export function DnsGuidanceBanner({ serverIp, hasDnsProvider }: DnsGuidanceBanne
   const [copied, setCopied] = useState(false);
   const timeoutRef = useRef<NodeJS.Timeout>(null);
 
+  useEffect(() => {
+    return () => {
+      if (timeoutRef.current) {
+        clearTimeout(timeoutRef.current);
+      }
+    };
+  }, []);
+
   const handleCopy = async () => {
     if (!serverIp) return;
 
     const copyToClipboardFallback = (text: string) => {
+      const previouslyFocused = document.activeElement as HTMLElement | null;
       const textArea = document.createElement('textarea');
       textArea.value = text;
       textArea.style.position = 'fixed';
@@ -28,6 +37,9 @@ export function DnsGuidanceBanner({ serverIp, hasDnsProvider }: DnsGuidanceBanne
         if (!successful) throw new Error('Fallback copy failed');
       } finally {
         document.body.removeChild(textArea);
+        if (previouslyFocused?.isConnected) {
+          previouslyFocused.focus();
+        }
       }
     };
 

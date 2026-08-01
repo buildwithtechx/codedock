@@ -6,13 +6,6 @@ const (
 	DNSProvisionStatusPending = "pending"
 	DNSProvisionStatusSuccess = "success"
 	DNSProvisionStatusFailed  = "failed"
-	DNSProvisionStatusManual  = "manual"
-)
-
-const (
-	RecordTypeA     = "A"
-	RecordTypeCNAME = "CNAME"
-	RecordTypeTXT   = "TXT"
 )
 
 type Domain struct {

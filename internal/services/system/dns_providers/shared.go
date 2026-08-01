@@ -51,40 +51,52 @@ func splitNamecheapDomain(domain string) (string, string, error) {
 }
 
 func checkCloudflareRecordExists(ctx context.Context, client *http.Client, token, zoneID, domain, recordType, value string) (bool, []string, error) {
-	u := fmt.Sprintf("https://api.cloudflare.com/client/v4/zones/%s/dns_records?name=%s&type=%s", zoneID, url.QueryEscape(domain), url.QueryEscape(recordType))
-	req, _ := http.NewRequestWithContext(ctx, http.MethodGet, u, nil)
-	req.Header.Set("Authorization", "Bearer "+token)
-	resp, err := client.Do(req)
-	if err != nil {
-		return false, nil, err
-	}
-	defer resp.Body.Close()
-	if resp.StatusCode >= 400 {
-		return false, nil, fmt.Errorf("cloudflare returned status %d", resp.StatusCode)
-	}
-
-	var res struct {
-		Result []struct {
-			ID      string `json:"id"`
-			Name    string `json:"name"`
-			Type    string `json:"type"`
-			Content string `json:"content"`
-		} `json:"result"`
-	}
-	if err := json.NewDecoder(resp.Body).Decode(&res); err != nil {
-		return false, nil, err
-	}
-
-	matchingIDs := make([]string, 0, len(res.Result))
-	exists := false
-	for _, rec := range res.Result {
-		if value != "" && rec.Content != value {
-			continue
+	matchingIDs := make([]string, 0)
+	for page := 1; ; page++ {
+		query := url.Values{}
+		query.Set("name", domain)
+		query.Set("type", recordType)
+		query.Set("per_page", "100")
+		query.Set("page", fmt.Sprintf("%d", page))
+		u := fmt.Sprintf("https://api.cloudflare.com/client/v4/zones/%s/dns_records?%s", url.PathEscape(zoneID), query.Encode())
+		req, err := http.NewRequestWithContext(ctx, http.MethodGet, u, nil)
+		if err != nil {
+			return false, nil, err
 		}
-		matchingIDs = append(matchingIDs, rec.ID)
-		exists = true
+		req.Header.Set("Authorization", "Bearer "+token)
+		resp, err := client.Do(req)
+		if err != nil {
+			return false, nil, err
+		}
+		if resp.StatusCode >= 400 {
+			resp.Body.Close()
+			return false, nil, fmt.Errorf("cloudflare returned status %d", resp.StatusCode)
+		}
+		var res struct {
+			Result []struct {
+				ID      string `json:"id"`
+				Content string `json:"content"`
+			} `json:"result"`
+			ResultInfo struct {
+				Page       int `json:"page"`
+				TotalPages int `json:"total_pages"`
+			} `json:"result_info"`
+		}
+		decodeErr := json.NewDecoder(resp.Body).Decode(&res)
+		resp.Body.Close()
+		if decodeErr != nil {
+			return false, nil, decodeErr
+		}
+		for _, rec := range res.Result {
+			if value == "" || rec.Content == value {
+				matchingIDs = append(matchingIDs, rec.ID)
+			}
+		}
+		if res.ResultInfo.TotalPages <= page || len(res.Result) == 0 {
+			break
+		}
 	}
-	return exists, matchingIDs, nil
+	return len(matchingIDs) > 0, matchingIDs, nil
 }
 
 type namecheapHost struct {
