@@ -187,16 +187,19 @@ func (s *Service) deprovisionNamecheap(ctx context.Context, cfg *models.ServerSe
 	}
 
 	remaining := make([]namecheapHost, 0, len(hosts))
-	matched := false
+	matchCount := 0
 	for _, host := range hosts {
 		if host.Name == subDomain && host.Type == recordType && (value == "" || host.Address == value) {
-			matched = true
+			matchCount++
 			continue
 		}
 		remaining = append(remaining, host)
 	}
-	if !matched {
+	if matchCount == 0 {
 		return nil
+	}
+	if matchCount > 1 {
+		return fmt.Errorf("namecheap found multiple matching %s records for %s; refusing to delete unmanaged records", recordType, domain)
 	}
 	if len(remaining) == 0 {
 		return s.setNamecheapDefaultDNS(ctx, client, cfg, sld, tld)

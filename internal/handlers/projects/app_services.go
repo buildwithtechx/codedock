@@ -103,7 +103,7 @@ func (h *AppHandler) Create(c echo.Context) error {
 	} else {
 		generatedDomain = parsedDomain.Hostname()
 	}
-	if _, err := h.envService.CreateDomain(c.Request().Context(), &models.DomainConfig{
+	if _, err := h.envService.CreateGeneratedDomain(c.Request().Context(), &models.DomainConfig{
 		ServiceID:  created.ID,
 		DomainName: generatedDomain,
 	}); err != nil {

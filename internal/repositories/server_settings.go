@@ -136,7 +136,9 @@ func (r *SettingsRepo) GetServerSettings(ctx context.Context) (*models.ServerSet
 		if argsErr != nil {
 			return nil, argsErr
 		}
-		_, _ = r.db.ExecContext(ctx, query, args...)
+		if _, err := r.db.ExecContext(ctx, query, args...); err != nil {
+			return nil, fmt.Errorf("create default server settings: %w", err)
+		}
 		return defaultSettings, nil
 	}
 	if err != nil {

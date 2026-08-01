@@ -54,6 +54,12 @@ func (r *UserRepo) CreateUser(ctx context.Context, u *models.User) error {
 	now := time.Now()
 	u.CreatedAt = now
 	u.UpdatedAt = now
+	if u.PlanType == "" {
+		u.PlanType = "free"
+	}
+	if !u.IsActive {
+		u.IsActive = true
+	}
 	r.mu.Lock()
 	defer r.mu.Unlock()
 	_, err := r.db.ExecContext(ctx, `INSERT INTO users (id, email, name, password_hash, role, is_active, email_verified, plan_type, stripe_customer_id, stripe_subscription_id, stripe_price_id, created_at, updated_at)

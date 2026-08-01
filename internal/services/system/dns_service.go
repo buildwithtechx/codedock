@@ -36,7 +36,11 @@ func (s *DNSService) CreateRecord(ctx context.Context, req *models.CreateDNSReco
 	}
 
 	if record.RecordType == "A" && record.RecordName != "" && s.providerSvc != nil {
-		if _, _, err := s.providerSvc.ProvisionARecord(ctx, fmt.Sprintf("%s.%s", record.RecordName, record.DomainName)); err != nil {
+		domain := record.DomainName
+		if record.RecordName != "@" {
+			domain = fmt.Sprintf("%s.%s", record.RecordName, record.DomainName)
+		}
+		if _, err := s.providerSvc.ProvisionRecord(ctx, domain, record.RecordType, record.RecordValue); err != nil {
 			if deleteErr := s.repo.Delete(ctx, record.ID); deleteErr != nil {
 				slog.Error("failed to roll back DNS record after provisioning failure", "record_id", record.ID, "error", deleteErr)
 			}

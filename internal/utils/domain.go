@@ -53,9 +53,21 @@ func parseHost(url string) string {
 }
 
 func SanitizeDomainName(name string) string {
-	clean := strings.ToLower(strings.ReplaceAll(strings.TrimSpace(name), " ", "-"))
+	var builder strings.Builder
+	for _, character := range strings.ToLower(strings.TrimSpace(name)) {
+		if (character >= 'a' && character <= 'z') || (character >= '0' && character <= '9') || character == '-' {
+			builder.WriteRune(character)
+		} else if character == ' ' {
+			builder.WriteByte('-')
+		}
+	}
+	clean := builder.String()
 	if len(clean) > 32 {
 		clean = clean[:32]
 	}
-	return strings.Trim(clean, "-")
+	clean = strings.Trim(clean, "-")
+	if clean == "" {
+		return "app"
+	}
+	return clean
 }
