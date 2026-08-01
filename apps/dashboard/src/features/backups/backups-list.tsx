@@ -1,7 +1,7 @@
+import { Link } from '@tanstack/react-router';
 import { Calendar, Check, Database, Play, Trash2 } from 'lucide-react';
 import { useEffect, useState } from 'react';
 import { toast } from 'sonner';
-
 import { Button } from '#/components/ui/button';
 import { Input } from '#/components/ui/input';
 import { Row, Section } from '#/components/ui/section';
@@ -143,6 +143,11 @@ export function BackupsList() {
         </div>
 
         <div className="flex shrink-0 items-center gap-3">
+          <Link to="/s3-destinations">
+            <Button variant="outline" size="sm">
+              Storage destinations
+            </Button>
+          </Link>
           <Button
             variant="outline"
             size="sm"

@@ -1,12 +1,10 @@
+import { Link } from '@tanstack/react-router';
 import { FolderKanban, Loader2, Plus } from 'lucide-react';
-import { useState } from 'react';
 import { Button } from '#/components/ui/button';
-import { CreateProjectModal } from '#/features/projects/create-project-modal';
 import { ProjectCard } from '#/features/projects/project-card';
 import { useListCanvasSummaries } from '#/hooks/use-canvas';
 
 export function ProjectDirectory() {
-  const [createProjectOpen, setCreateProjectOpen] = useState(false);
   const { data, isLoading } = useListCanvasSummaries();
   const projects = data?.data || [];
 
@@ -14,19 +12,17 @@ export function ProjectDirectory() {
     <div className="space-y-6">
       <header className="flex flex-col justify-between gap-4 sm:flex-row sm:items-end">
         <div>
-          <p className="font-medium text-muted-foreground text-sm">Workspace inventory</p>
-          <h1 className="mt-1 font-semibold text-2xl tracking-tight">Projects</h1>
+          <h1 className="font-semibold text-2xl tracking-tight">Projects</h1>
           <p className="mt-1 text-muted-foreground text-sm">
             Projects group the services and environments your team runs.
           </p>
         </div>
-        <Button
-          className="gap-2 self-start sm:self-auto"
-          onClick={() => setCreateProjectOpen(true)}
-        >
-          <Plus className="h-4 w-4" />
-          New project
-        </Button>
+        <Link to="/projects/new" className="self-start sm:self-auto">
+          <Button className="gap-2">
+            <Plus className="h-4 w-4" />
+            New project
+          </Button>
+        </Link>
       </header>
 
       {isLoading ? (
@@ -42,10 +38,12 @@ export function ProjectDirectory() {
           <p className="mt-1 max-w-sm text-muted-foreground text-sm">
             Create a project to organize the services you want Codedock to run.
           </p>
-          <Button className="mt-5 gap-2" onClick={() => setCreateProjectOpen(true)}>
-            <Plus className="h-4 w-4" />
-            Create project
-          </Button>
+          <Link to="/projects/new" className="mt-5">
+            <Button className="gap-2">
+              <Plus className="h-4 w-4" />
+              Create project
+            </Button>
+          </Link>
         </div>
       ) : (
         <div className="grid gap-4 md:grid-cols-2 xl:grid-cols-3">
@@ -54,8 +52,6 @@ export function ProjectDirectory() {
           ))}
         </div>
       )}
-
-      <CreateProjectModal open={createProjectOpen} onOpenChange={setCreateProjectOpen} />
     </div>
   );
 }

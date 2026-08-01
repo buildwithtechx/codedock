@@ -1,0 +1,99 @@
+import { Link } from '@tanstack/react-router';
+import { ArrowLeft, ArrowRight, Box, FolderKanban, Plus } from 'lucide-react';
+import { Button } from '#/components/ui/button';
+import { useListCanvasSummaries } from '#/hooks/use-canvas';
+
+export function AppCreationPage() {
+  const { data, isLoading } = useListCanvasSummaries();
+  const projects = data?.data || [];
+
+  return (
+    <div className="grid min-w-0 gap-6 xl:grid-cols-[minmax(0,1fr)_21.25rem]">
+      <main className="min-w-0">
+        <Link
+          to="/apps"
+          className="inline-flex items-center gap-2 text-muted-foreground text-sm transition-colors hover:text-foreground"
+        >
+          <ArrowLeft className="h-4 w-4" />
+          Apps
+        </Link>
+        <header className="mt-6">
+          <p className="font-medium text-muted-foreground text-sm">New application</p>
+          <h1 className="mt-1 font-semibold text-2xl tracking-tight">Choose a project</h1>
+          <p className="mt-1 max-w-2xl text-muted-foreground text-sm">
+            Applications are deployed inside a project so they share environments, domains, and
+            access rules.
+          </p>
+        </header>
+
+        {isLoading ? (
+          <div className="mt-8 grid gap-3 md:grid-cols-2">
+            {[0, 1, 2, 3].map((index) => (
+              <div
+                key={index}
+                className="h-30 animate-pulse rounded-2xl border border-border bg-card"
+              />
+            ))}
+          </div>
+        ) : projects.length === 0 ? (
+          <section className="mt-8 flex min-h-75 flex-col items-center justify-center rounded-2xl border border-border border-dashed bg-card px-6 text-center">
+            <div className="flex h-11 w-11 items-center justify-center rounded-xl bg-primary/12 text-primary">
+              <FolderKanban className="h-5 w-5" />
+            </div>
+            <h2 className="mt-4 font-semibold">Create a project first</h2>
+            <p className="mt-1 max-w-sm text-muted-foreground text-sm">
+              A project gives the application a place for its services, environment, and deployment
+              target.
+            </p>
+            <Link to="/projects/new" className="mt-5">
+              <Button className="gap-2">
+                <Plus className="h-4 w-4" />
+                Create project
+              </Button>
+            </Link>
+          </section>
+        ) : (
+          <section className="mt-8 grid gap-3 md:grid-cols-2">
+            {projects.map((project) => (
+              <Link
+                key={project.id}
+                to="/projects/$projectId/new"
+                params={{ projectId: project.id }}
+                className="group rounded-2xl border border-border bg-card p-5 shadow-sm transition-colors hover:border-primary/45 hover:bg-primary/4"
+              >
+                <div className="flex items-start gap-3">
+                  <div className="flex h-10 w-10 shrink-0 items-center justify-center rounded-xl bg-muted text-muted-foreground transition-colors group-hover:bg-primary/12 group-hover:text-primary">
+                    <Box className="h-4 w-4" />
+                  </div>
+                  <div className="min-w-0 flex-1">
+                    <h2 className="truncate font-semibold text-sm">{project.name}</h2>
+                    <p className="mt-1 line-clamp-2 text-muted-foreground text-xs leading-5">
+                      {project.description || 'No description yet'}
+                    </p>
+                  </div>
+                  <ArrowRight className="h-4 w-4 shrink-0 text-muted-foreground transition-colors group-hover:text-primary" />
+                </div>
+                <div className="mt-4 flex items-center gap-4 border-border/70 border-t pt-3 text-muted-foreground text-xs">
+                  <span>{project.totalServices} services</span>
+                  <span>{project.defaultEnvironment?.name || 'No environment'}</span>
+                </div>
+              </Link>
+            ))}
+          </section>
+        )}
+      </main>
+
+      <aside className="hidden xl:sticky xl:top-6 xl:block xl:self-start">
+        <section className="rounded-2xl border border-border bg-card p-5 shadow-sm">
+          <div className="flex items-center gap-2">
+            <Box className="h-4 w-4 text-primary" />
+            <h2 className="font-semibold text-sm">Application setup</h2>
+          </div>
+          <p className="mt-3 text-muted-foreground text-sm leading-6">
+            The next screen lets you deploy from Git, Docker, a database template, or Compose.
+          </p>
+        </section>
+      </aside>
+    </div>
+  );
+}

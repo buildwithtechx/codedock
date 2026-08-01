@@ -1,21 +1,7 @@
-import {
-  Cloud,
-  FolderKanban,
-  HardDrive,
-  Key,
-  LayoutDashboard,
-  Moon,
-  PanelLeftClose,
-  PanelLeftOpen,
-  Rocket,
-  Settings,
-  Sparkles,
-  Sun,
-  X,
-} from 'lucide-react';
+import { Link } from '@tanstack/react-router';
+import { FolderKanban, Moon, PanelLeftClose, PanelLeftOpen, Sun, X } from 'lucide-react';
 import { useTheme } from 'next-themes';
-import { useState } from 'react';
-import { CreateProjectModal } from '#/features/projects/create-project-modal';
+import { platformNavigation, primaryNavigation } from './dashboard-navigation';
 import { NavItem, type NavItemProps } from './nav-item';
 import { OrganizationSwitcher } from './organization-switcher';
 
@@ -27,25 +13,21 @@ type NavGroup = {
 const navGroups: NavGroup[] = [
   {
     title: 'Main',
-    items: [
-      { title: 'Home', url: '/', icon: LayoutDashboard, exact: true },
-      { title: 'Projects', url: '/projects', icon: FolderKanban },
-      { title: 'Apps', url: '/apps', icon: Sparkles },
-      { title: 'Deployments', url: '/deployments', icon: Rocket },
-    ],
+    items: primaryNavigation.map(({ title, to, icon, exact }) => ({
+      title,
+      url: to,
+      icon,
+      exact,
+    })),
   },
   {
     title: 'Settings',
-    items: [
-      {
-        title: 'Backups',
-        url: '/backups',
-        icon: HardDrive,
-        exact: true,
-      },
-      { title: 'API Access', url: '/api-access', icon: Key },
-      { title: 'Settings', url: '/settings', icon: Settings, exact: true },
-    ],
+    items: platformNavigation.map(({ title, to, icon, exact }) => ({
+      title,
+      url: to,
+      icon,
+      exact,
+    })),
   },
 ];
 
@@ -58,7 +40,6 @@ interface AppSidebarProps {
 
 export function AppSidebar({ collapsed, onToggle, mobileOpen, onMobileClose }: AppSidebarProps) {
   const navCollapsed = collapsed && !mobileOpen;
-  const [createProjectOpen, setCreateProjectOpen] = useState(false);
   const { resolvedTheme, setTheme } = useTheme();
 
   const toggleTheme = () => setTheme(resolvedTheme === 'dark' ? 'light' : 'dark');
@@ -81,9 +62,7 @@ export function AppSidebar({ collapsed, onToggle, mobileOpen, onMobileClose }: A
       >
         <div className="flex items-center justify-between px-3 pt-3 pb-2 md:hidden">
           <div className="flex items-center gap-2.5 py-2">
-            <div className="flex h-7 w-7 shrink-0 items-center justify-center rounded-lg bg-primary/12 text-primary">
-              <Cloud className="h-4 w-4" />
-            </div>
+            <img src="/apple-touch-icon.png" alt="" className="h-7 w-7 shrink-0 rounded-lg" />
             <span className="truncate font-medium text-sidebar-foreground text-sm">Codedock</span>
           </div>
           <button
@@ -101,9 +80,7 @@ export function AppSidebar({ collapsed, onToggle, mobileOpen, onMobileClose }: A
               className={`flex ${collapsed ? 'flex-col items-center gap-2' : 'items-center justify-between gap-2.5 py-2'}`}
             >
               <div className="flex min-w-0 items-center gap-2.5">
-                <div className="flex h-7 w-7 shrink-0 items-center justify-center rounded-lg bg-primary/12 text-primary">
-                  <Cloud className="h-4 w-4" />
-                </div>
+                <img src="/apple-touch-icon.png" alt="" className="h-7 w-7 shrink-0 rounded-lg" />
                 {!collapsed && (
                   <span className="flex-1 truncate font-medium text-sidebar-foreground text-sm">
                     Codedock
@@ -157,9 +134,8 @@ export function AppSidebar({ collapsed, onToggle, mobileOpen, onMobileClose }: A
         </nav>
 
         <div className="px-3 pb-2">
-          <button
-            type="button"
-            onClick={() => setCreateProjectOpen(true)}
+          <Link
+            to="/projects/new"
             className={`flex w-full items-center justify-center gap-2 rounded-xl bg-primary font-semibold text-primary-foreground text-sm transition-colors hover:bg-primary-hover ${
               navCollapsed ? 'h-10 px-0' : 'h-10 px-3'
             }`}
@@ -168,7 +144,7 @@ export function AppSidebar({ collapsed, onToggle, mobileOpen, onMobileClose }: A
           >
             <FolderKanban className="h-4 w-4" />
             {!navCollapsed && 'New project'}
-          </button>
+          </Link>
         </div>
 
         <div className={`mt-auto px-3 pt-1 pb-3 ${navCollapsed ? 'px-2' : ''}`}>
@@ -180,7 +156,6 @@ export function AppSidebar({ collapsed, onToggle, mobileOpen, onMobileClose }: A
           )}
           <OrganizationSwitcher collapsed={navCollapsed} />
         </div>
-        <CreateProjectModal open={createProjectOpen} onOpenChange={setCreateProjectOpen} />
       </aside>
     </>
   );

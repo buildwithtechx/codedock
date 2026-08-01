@@ -1,7 +1,17 @@
-import { useNavigate, useRouterState } from '@tanstack/react-router';
-import { Bell, Lock, Settings as SettingsIcon } from 'lucide-react';
+import { Link, useNavigate, useRouterState } from '@tanstack/react-router';
+import {
+  ArrowRightLeft,
+  Bell,
+  Brain,
+  CloudCog,
+  Download,
+  Lock,
+  Settings as SettingsIcon,
+  Wrench,
+} from 'lucide-react';
 import { NotificationsSettings } from '#/features/notifications/notifications-settings';
 import { OAuthProvidersList } from '#/features/users/oauth-providers-list';
+import { useAuthStore } from '#/stores/auth-store';
 import { GeneralSettings } from './general-settings';
 
 type TabId = 'general' | 'notifications' | 'oauth';
@@ -22,8 +32,17 @@ const TABS: Tab[] = [
   { id: 'oauth', label: 'OAuth', icon: <Lock className="h-4 w-4" /> },
 ];
 
+const instanceTools = [
+  { label: 'AI', to: '/ai', icon: Brain },
+  { label: 'Sources', to: '/sources', icon: CloudCog },
+  { label: 'Maintenance', to: '/maintenance', icon: Wrench },
+  { label: 'Updates', to: '/updates', icon: Download },
+  { label: 'Migration', to: '/migrations', icon: ArrowRightLeft },
+];
+
 export const SettingsLayout = () => {
   const navigate = useNavigate();
+  const user = useAuthStore((state) => state.user);
   const search = useRouterState({ select: (state) => state.location.search as { tab?: TabId } });
   const activeId = TABS.some((tab) => tab.id === search.tab) ? (search.tab as TabId) : 'general';
   const setActiveId = (tab: TabId) => {
@@ -41,6 +60,13 @@ export const SettingsLayout = () => {
 
   return (
     <div className="space-y-5">
+      <header className="space-y-1">
+        <h1 className="font-medium text-2xl tracking-tight">Settings</h1>
+        <p className="text-muted-foreground text-sm">
+          Manage instance behavior, connections, and notifications.
+        </p>
+      </header>
+
       <div className="flex gap-1 overflow-x-auto xl:hidden">
         {TABS.map((tab) => {
           const isActive = tab.id === activeId;
@@ -64,8 +90,21 @@ export const SettingsLayout = () => {
 
       <div className="grid min-w-0 gap-6 xl:grid-cols-[minmax(0,1fr)_17rem]">
         <section className="min-w-0">{content}</section>
-        <aside className="hidden xl:block">
-          <div className="sticky top-8 rounded-2xl border border-border/80 bg-card p-2 shadow-sm">
+        <aside className="hidden xl:sticky xl:top-6 xl:block xl:self-start">
+          <section className="mb-3 rounded-2xl border border-border/80 bg-card p-4 shadow-sm">
+            <div className="flex items-center gap-3">
+              <div className="flex h-8 w-8 items-center justify-center rounded-lg bg-primary/12 text-primary">
+                <SettingsIcon className="h-4 w-4" />
+              </div>
+              <div className="min-w-0">
+                <p className="font-semibold text-sm">Settings</p>
+                <p className="truncate text-muted-foreground text-xs">
+                  {user?.email || 'Instance owner'}
+                </p>
+              </div>
+            </div>
+          </section>
+          <div className="rounded-2xl border border-border/80 bg-card p-2 shadow-sm">
             <div className="space-y-1">
               {TABS.map((tab) => {
                 const isActive = tab.id === activeId;
@@ -85,6 +124,19 @@ export const SettingsLayout = () => {
                   </button>
                 );
               })}
+            </div>
+            <div className="my-2 h-px bg-border/70" />
+            <div className="space-y-1">
+              {instanceTools.map((tool) => (
+                <Link
+                  key={tool.to}
+                  to={tool.to}
+                  className="flex items-center gap-3 rounded-xl px-3 py-2.5 font-medium text-muted-foreground text-sm transition-colors hover:bg-muted/60 hover:text-foreground"
+                >
+                  <tool.icon className="h-4 w-4" />
+                  {tool.label}
+                </Link>
+              ))}
             </div>
           </div>
         </aside>

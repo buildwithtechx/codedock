@@ -1,109 +1,39 @@
 import { useNavigate } from '@tanstack/react-router';
 import { Command } from 'cmdk';
-import {
-  Bell,
-  CornerDownLeft,
-  FileClock,
-  FileCog,
-  FolderKanban,
-  Globe2,
-  LayoutDashboard,
-  LayoutTemplate,
-  Plus,
-  RefreshCw,
-  RotateCw,
-  Search,
-  Settings,
-  Terminal,
-  Users,
-} from 'lucide-react';
+import { CornerDownLeft, FolderKanban, Plus, Search, Server, Sparkles } from 'lucide-react';
 import { useEffect } from 'react';
-import { toast } from 'sonner';
 import { Dialog, DialogContent, DialogDescription, DialogTitle } from '#/components/ui/dialog';
+import { commandNavigation } from './dashboard-navigation';
 
 interface CommandPaletteProps {
   open: boolean;
   onOpenChange: (open: boolean) => void;
 }
 
-const navigationItems = [
+const creationItems = [
   {
-    label: 'Dashboard',
-    description: 'Instance overview',
-    to: '/',
-    icon: LayoutDashboard,
-  },
-  {
-    label: 'Projects',
-    description: 'Services and environments',
-    to: '/projects',
+    title: 'New project',
+    description: 'Create a project workspace',
+    to: '/projects/new',
     icon: FolderKanban,
   },
   {
-    label: 'Teams',
-    description: 'Access and ownership',
-    to: '/teams',
-    icon: Users,
+    title: 'New app',
+    description: 'Choose a project for a new app',
+    to: '/apps/new',
+    icon: Sparkles,
   },
   {
-    label: 'Templates',
-    description: 'Starter workloads',
-    to: '/templates',
-    icon: LayoutTemplate,
+    title: 'Add server',
+    description: 'Register a deployment target',
+    to: '/servers/new',
+    icon: Server,
   },
   {
-    label: 'Notifications',
-    description: 'Event channels',
-    to: '/notifications',
-    icon: Bell,
-  },
-  {
-    label: 'Audit logs',
-    description: 'Security activity',
-    to: '/audit-logs',
-    icon: FileClock,
-  },
-  {
-    label: 'Terminal',
-    description: 'Host session',
-    to: '/terminal',
-    icon: Terminal,
-  },
-  {
-    label: 'Settings',
-    description: 'Instance administration',
-    to: '/settings',
-    icon: Settings,
-  },
-];
-
-const creationItems = ['New project', 'New service', 'New database', 'New notification channel'];
-
-const operationItems = [
-  {
-    label: 'Deploy latest',
-    description: 'Redeploy the selected service',
-    icon: RefreshCw,
-  },
-  {
-    label: 'Open live logs',
-    description: 'Stream service logs',
-    icon: Terminal,
-  },
-  {
-    label: 'Restart service',
-    description: 'Recycle the runtime process',
-    icon: RotateCw,
-  },
-  {
-    label: 'Add domain',
-    description: 'Attach a public hostname',
-    icon: Globe2,
-  },
-  {
-    label: 'Edit variables',
-    description: 'Update environment secrets',
-    icon: FileCog,
+    title: 'Add backup destination',
+    description: 'Connect compatible object storage',
+    to: '/s3-destinations',
+    icon: Plus,
   },
 ];
 
@@ -131,13 +61,6 @@ export function CommandPalette({ open, onOpenChange }: CommandPaletteProps) {
 
   const navigateTo = (to: string) => {
     navigate({ to: to as never });
-    onOpenChange(false);
-  };
-
-  const queueAction = (label: string) => {
-    toast.info(`${label} queued`, {
-      description: 'This workflow will be available from the command palette.',
-    });
     onOpenChange(false);
   };
 
@@ -174,10 +97,10 @@ export function CommandPalette({ open, onOpenChange }: CommandPaletteProps) {
               className="px-1 py-2 text-muted-foreground text-xs **:[[cmdk-group-heading]]:px-2 **:[[cmdk-group-heading]]:pb-2"
             >
               <div className="grid gap-1 md:grid-cols-2">
-                {navigationItems.map((item) => (
+                {commandNavigation.map((item) => (
                   <Command.Item
                     key={item.to}
-                    value={`${item.label} ${item.description}`}
+                    value={`${item.title} ${item.description}`}
                     onSelect={() => navigateTo(item.to)}
                     className="flex cursor-pointer items-center gap-3 rounded-lg border border-transparent px-3 py-3 text-foreground text-sm data-[selected=true]:border-border data-[selected=true]:bg-muted/70"
                   >
@@ -185,33 +108,7 @@ export function CommandPalette({ open, onOpenChange }: CommandPaletteProps) {
                       <item.icon className="size-4 text-muted-foreground" />
                     </div>
                     <div className="min-w-0 flex-1">
-                      <p className="font-medium">{item.label}</p>
-                      <p className="truncate text-muted-foreground text-xs">{item.description}</p>
-                    </div>
-                  </Command.Item>
-                ))}
-              </div>
-            </Command.Group>
-
-            <Command.Separator className="my-2 h-px bg-border" />
-
-            <Command.Group
-              heading="Operate"
-              className="px-1 py-2 text-muted-foreground text-xs **:[[cmdk-group-heading]]:px-2 **:[[cmdk-group-heading]]:pb-2"
-            >
-              <div className="grid gap-1 md:grid-cols-2">
-                {operationItems.map((item) => (
-                  <Command.Item
-                    key={item.label}
-                    value={`${item.label} ${item.description}`}
-                    onSelect={() => queueAction(item.label)}
-                    className="flex cursor-pointer items-center gap-3 rounded-lg border border-transparent px-3 py-3 text-foreground text-sm data-[selected=true]:border-border data-[selected=true]:bg-muted/70"
-                  >
-                    <div className="flex size-9 items-center justify-center rounded-md border bg-background">
-                      <item.icon className="size-4 text-muted-foreground" />
-                    </div>
-                    <div className="min-w-0 flex-1">
-                      <p className="font-medium">{item.label}</p>
+                      <p className="font-medium">{item.title}</p>
                       <p className="truncate text-muted-foreground text-xs">{item.description}</p>
                     </div>
                   </Command.Item>
@@ -226,19 +123,19 @@ export function CommandPalette({ open, onOpenChange }: CommandPaletteProps) {
               className="px-1 py-2 text-muted-foreground text-xs **:[[cmdk-group-heading]]:px-2 **:[[cmdk-group-heading]]:pb-2"
             >
               <div className="grid gap-1 md:grid-cols-2">
-                {creationItems.map((label) => (
+                {creationItems.map((item) => (
                   <Command.Item
-                    key={label}
-                    value={label}
-                    onSelect={() => queueAction(label)}
+                    key={item.to}
+                    value={`${item.title} ${item.description}`}
+                    onSelect={() => navigateTo(item.to)}
                     className="flex cursor-pointer items-center gap-3 rounded-lg border border-transparent px-3 py-3 text-foreground text-sm data-[selected=true]:border-border data-[selected=true]:bg-muted/70"
                   >
                     <div className="flex size-9 items-center justify-center rounded-md border bg-background">
-                      <Plus className="size-4 text-muted-foreground" />
+                      <item.icon className="size-4 text-muted-foreground" />
                     </div>
                     <div className="min-w-0 flex-1">
-                      <p className="font-medium">{label}</p>
-                      <p className="truncate text-muted-foreground text-xs">Start a new workflow</p>
+                      <p className="font-medium">{item.title}</p>
+                      <p className="truncate text-muted-foreground text-xs">{item.description}</p>
                     </div>
                   </Command.Item>
                 ))}

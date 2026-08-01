@@ -1,5 +1,4 @@
-import { useState } from 'react';
-import { CreateProjectModal } from '#/features/projects/create-project-modal';
+import { useNavigate } from '@tanstack/react-router';
 import { useListCanvasSummaries } from '#/hooks/use-canvas';
 import { useAuthStore } from '#/stores/auth-store';
 import { HomeNextStep } from './home-next-step';
@@ -8,7 +7,7 @@ import { HomeRuntimeSummary } from './home-runtime-summary';
 import { HomeShortcuts } from './home-shortcuts';
 
 export function HomeOverview() {
-  const [createProjectOpen, setCreateProjectOpen] = useState(false);
+  const navigate = useNavigate();
   const { user } = useAuthStore();
   const { data, isLoading } = useListCanvasSummaries();
   const projects = data?.data || [];
@@ -31,19 +30,18 @@ export function HomeOverview() {
         <HomeProjectList
           projects={projects}
           isLoading={isLoading}
-          onCreateProject={() => setCreateProjectOpen(true)}
+          onCreateProject={() => void navigate({ to: '/projects/new' })}
         />
-        <div className="space-y-4">
+        <aside className="space-y-4 xl:sticky xl:top-6 xl:self-start">
           <HomeRuntimeSummary projects={projects} isLoading={isLoading} />
           <HomeNextStep
-            onCreateProject={() => setCreateProjectOpen(true)}
+            onCreateProject={() => void navigate({ to: '/projects/new' })}
             projectCount={projects.length}
           />
-        </div>
+        </aside>
       </div>
 
       <HomeShortcuts />
-      <CreateProjectModal open={createProjectOpen} onOpenChange={setCreateProjectOpen} />
     </div>
   );
 }

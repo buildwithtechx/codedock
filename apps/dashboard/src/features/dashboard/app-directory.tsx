@@ -19,13 +19,12 @@ export function AppDirectory() {
     <div className="space-y-6">
       <header className="flex flex-col justify-between gap-4 sm:flex-row sm:items-end">
         <div>
-          <p className="font-medium text-muted-foreground text-sm">Running workloads</p>
-          <h1 className="mt-1 font-semibold text-2xl tracking-tight">Apps</h1>
+          <h1 className="font-semibold text-2xl tracking-tight">Apps</h1>
           <p className="mt-1 text-muted-foreground text-sm">
             Every application deployed in the active organization.
           </p>
         </div>
-        <Link to="/projects" className="self-start sm:self-auto">
+        <Link to="/apps/new" className="self-start sm:self-auto">
           <Button className="gap-2">
             <Plus className="h-4 w-4" />
             New app
@@ -52,10 +51,10 @@ export function AppDirectory() {
           </div>
           <h2 className="mt-4 font-semibold text-lg">No apps deployed</h2>
           <p className="mt-1 max-w-sm text-muted-foreground text-sm">
-            Choose a project, then add an application to start a deployment.
+            Choose a project and add an application to start a deployment.
           </p>
-          <Link to="/projects" className="mt-5">
-            <Button>Browse projects</Button>
+          <Link to="/apps/new" className="mt-5">
+            <Button>Choose a project</Button>
           </Link>
         </div>
       ) : (

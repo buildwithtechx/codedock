@@ -1,4 +1,3 @@
-import { Globe } from 'lucide-react';
 import { useEffect, useState } from 'react';
 import { toast } from 'sonner';
 import { Skeleton } from '#/components/ui/skeleton';
@@ -77,18 +76,12 @@ export const DnsSettings = () => {
 
   return (
     <div className="space-y-6">
-      <div className="mb-5 flex items-center justify-between">
-        <div className="flex items-center gap-3">
-          <div className="flex h-12 w-12 shrink-0 items-center justify-center rounded-lg border border-primary/20 bg-primary/10 text-primary">
-            <Globe className="h-6 w-6" />
-          </div>
-          <div>
-            <h1 className="font-bold text-xl">API credentials</h1>
-            <p className="text-muted-foreground text-sm">
-              Codedock manages your domains using various DNS providers. You can add your API
-              credentials here.
-            </p>
-          </div>
+      <div className="mb-5 flex items-center justify-between gap-4">
+        <div>
+          <h2 className="font-semibold text-lg">Provider credentials</h2>
+          <p className="mt-1 text-muted-foreground text-sm">
+            Connect the DNS provider Codedock should use for managed domain records.
+          </p>
         </div>
         <div className="flex shrink-0 flex-col items-end gap-4">
           <div className="flex items-center gap-3">
@@ -114,8 +107,8 @@ export const DnsSettings = () => {
               onClick={() => setActiveProvider(p.id)}
               className={`group relative w-full cursor-pointer rounded-2xl border p-6 text-left transition-all duration-200 ${
                 isActive
-                  ? 'border-primary/50 bg-card/40 shadow-sm'
-                  : 'border/50 hover:border/80 bg-background/50 hover:bg-card/40'
+                  ? 'border-primary/50 bg-card shadow-sm'
+                  : 'border-border bg-card hover:border-primary/30'
               }`}
             >
               <div className="flex items-start justify-between">
@@ -149,7 +142,7 @@ export const DnsSettings = () => {
         })}
       </div>
 
-      <div className="border/50 mt-4 space-y-10 rounded-2xl border bg-card/40 p-6">
+      <div className="mt-4 space-y-10 rounded-2xl border border-border bg-card p-6">
         <div className="flex items-center gap-4">
           <div className="border/50 flex h-14 w-14 items-center justify-center rounded-2xl border bg-background/50">
             <img

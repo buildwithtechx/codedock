@@ -59,7 +59,7 @@ export function S3DestinationsList() {
       </div>
 
       {list.length === 0 ? (
-        <div className="border/50 flex flex-col items-center justify-center rounded-xl border bg-card/40 py-12 text-center">
+        <div className="flex flex-col items-center justify-center rounded-xl border border-border border-dashed bg-card py-12 text-center">
           <Database className="mb-3 h-10 w-10 text-muted-foreground/40" />
           <h3 className="font-medium text-base">No S3 Destinations Configured</h3>
           <p className="mt-1 max-w-sm text-muted-foreground text-sm">
@@ -71,7 +71,7 @@ export function S3DestinationsList() {
           {list.map((dest) => (
             <div
               key={dest.id}
-              className="border/50 relative flex flex-col justify-between rounded-xl border bg-card/40 p-5 transition-colors hover:border-primary/30"
+              className="relative flex flex-col justify-between rounded-xl border border-border bg-card p-5 transition-colors hover:border-primary/30"
             >
               <div>
                 <div className="flex items-start justify-between">

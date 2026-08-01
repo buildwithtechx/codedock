@@ -66,7 +66,7 @@ export function DnsAuditPage() {
             <Network className="h-6 w-6" />
           </div>
           <div>
-            <h1 className="font-bold text-xl tracking-tight">DNS & Domain Audit</h1>
+            <h1 className="font-bold text-xl tracking-tight">Domains & DNS</h1>
             <p className="text-muted-foreground text-sm">
               Overview and audit of all configured domains across your services, DNS provision
               status, and live verification.
@@ -76,7 +76,7 @@ export function DnsAuditPage() {
       </div>
 
       <div className="grid grid-cols-1 gap-4 sm:grid-cols-3">
-        <Card className="border-border/60 bg-card/40">
+        <Card className="border-border/60 bg-card">
           <CardContent className="flex items-center gap-4 p-4">
             <div className="flex h-10 w-10 shrink-0 items-center justify-center rounded-lg bg-primary/10 text-primary">
               <Globe className="h-5 w-5" />
@@ -92,7 +92,7 @@ export function DnsAuditPage() {
           </CardContent>
         </Card>
 
-        <Card className="border-border/60 bg-card/40">
+        <Card className="border-border/60 bg-card">
           <CardContent className="flex items-center gap-4 p-4">
             <div className="flex h-10 w-10 shrink-0 items-center justify-center rounded-lg bg-emerald-500/10 text-emerald-500">
               <CheckCircle2 className="h-5 w-5" />
@@ -108,7 +108,7 @@ export function DnsAuditPage() {
           </CardContent>
         </Card>
 
-        <Card className="border-border/60 bg-card/40">
+        <Card className="border-border/60 bg-card">
           <CardContent className="flex items-center gap-4 p-4">
             <div className="flex h-10 w-10 shrink-0 items-center justify-center rounded-lg bg-amber-500/10 text-amber-500">
               <HelpCircle className="h-5 w-5" />
