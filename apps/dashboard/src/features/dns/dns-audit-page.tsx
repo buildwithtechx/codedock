@@ -9,6 +9,9 @@ import { useListAllDomains } from './hooks';
 export function DnsAuditPage() {
   const { data: domainsRes, isLoading } = useListAllDomains();
   const [activeTab, setActiveTab] = useState<'audit' | 'providers' | 'global'>('audit');
+  const [mountedTabs, setMountedTabs] = useState<Set<'audit' | 'providers' | 'global'>>(
+    () => new Set(['audit'])
+  );
 
   const domains = domainsRes?.data || [];
 
@@ -21,8 +24,22 @@ export function DnsAuditPage() {
     (d) =>
       (d.dnsProvisionStatus || '').toLowerCase() === 'manual' ||
       (d.dnsProvisionStatus || '').toLowerCase() === 'pending' ||
+      (d.dnsProvisionStatus || '').toLowerCase() === 'failed' ||
       !d.dnsProvisionStatus
   ).length;
+
+  const showTab = (tab: 'audit' | 'providers' | 'global') => {
+    setActiveTab(tab);
+    setMountedTabs((prev) => {
+      if (prev.has(tab)) {
+        return prev;
+      }
+
+      const next = new Set(prev);
+      next.add(tab);
+      return next;
+    });
+  };
 
   return (
     <div className="space-y-6 pb-12">
@@ -85,10 +102,10 @@ export function DnsAuditPage() {
         </Card>
       </div>
 
-      <div className="flex border-border/60 border-b">
+      <div className="flex flex-wrap gap-x-2 gap-y-2 border-border/60 border-b">
         <button
           type="button"
-          onClick={() => setActiveTab('audit')}
+          onClick={() => showTab('audit')}
           className={`flex items-center gap-2 border-b-2 px-4 py-2.5 font-medium text-sm transition-colors ${
             activeTab === 'audit'
               ? 'border-primary text-primary'
@@ -100,7 +117,7 @@ export function DnsAuditPage() {
         </button>
         <button
           type="button"
-          onClick={() => setActiveTab('providers')}
+          onClick={() => showTab('providers')}
           className={`flex items-center gap-2 border-b-2 px-4 py-2.5 font-medium text-sm transition-colors ${
             activeTab === 'providers'
               ? 'border-primary text-primary'
@@ -112,7 +129,7 @@ export function DnsAuditPage() {
         </button>
         <button
           type="button"
-          onClick={() => setActiveTab('global')}
+          onClick={() => showTab('global')}
           className={`flex items-center gap-2 border-b-2 px-4 py-2.5 font-medium text-sm transition-colors ${
             activeTab === 'global'
               ? 'border-primary text-primary'
@@ -124,17 +141,23 @@ export function DnsAuditPage() {
         </button>
       </div>
 
-      <section hidden={activeTab !== 'audit'}>
-        <DomainAuditTable domains={domains} isLoading={isLoading} />
-      </section>
+      {mountedTabs.has('audit') && activeTab === 'audit' && (
+        <section>
+          <DomainAuditTable domains={domains} isLoading={isLoading} />
+        </section>
+      )}
 
-      <section hidden={activeTab !== 'providers'}>
-        <DnsSettings />
-      </section>
+      {mountedTabs.has('providers') && activeTab === 'providers' && (
+        <section>
+          <DnsSettings />
+        </section>
+      )}
 
-      <section hidden={activeTab !== 'global'}>
-        <DomainsPage />
-      </section>
+      {mountedTabs.has('global') && activeTab === 'global' && (
+        <section>
+          <DomainsPage />
+        </section>
+      )}
     </div>
   );
 }

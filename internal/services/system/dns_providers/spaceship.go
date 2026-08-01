@@ -5,28 +5,53 @@ import (
 	"context"
 	"encoding/json"
 	"fmt"
+	"io"
 	"net/http"
 )
 
+type spaceshipRecord struct {
+	ID      string `json:"id"`
+	Name    string `json:"name"`
+	Type    string `json:"type"`
+	Address string `json:"address"`
+}
+
+func fetchSpaceshipRecords(ctx context.Context, client *http.Client, key string) ([]spaceshipRecord, error) {
+	req, _ := http.NewRequestWithContext(ctx, http.MethodGet, "https://spaceship.dev/api/v1/dns", nil)
+	req.Header.Set("X-Api-Key", key)
+	resp, err := client.Do(req)
+	if err != nil {
+		return nil, err
+	}
+	defer resp.Body.Close()
+	if resp.StatusCode >= 400 {
+		body, _ := io.ReadAll(resp.Body)
+		if len(body) > 0 {
+			return nil, fmt.Errorf("spaceship returned status %d: %s", resp.StatusCode, string(body))
+		}
+		return nil, fmt.Errorf("spaceship returned status %d", resp.StatusCode)
+	}
+
+	records := make([]spaceshipRecord, 0)
+	if err := json.NewDecoder(resp.Body).Decode(&records); err != nil {
+		return nil, err
+	}
+	return records, nil
+}
+
+func spaceshipRecordExists(records []spaceshipRecord, domain, recordType, value string) bool {
+	for _, record := range records {
+		if record.Name == domain && record.Type == recordType && (value == "" || record.Address == value) {
+			return true
+		}
+	}
+	return false
+}
+
 func (s *Service) provisionSpaceship(ctx context.Context, key, domain, recordType, value string) error {
 	client := newProviderHTTPClient()
-	reqGet, _ := http.NewRequestWithContext(ctx, http.MethodGet, "https://spaceship.dev/api/v1/dns", nil)
-	reqGet.Header.Set("X-Api-Key", key)
-	if respGet, err := client.Do(reqGet); err == nil {
-		var records []struct {
-			Name    string `json:"name"`
-			Type    string `json:"type"`
-			Address string `json:"address"`
-		}
-		if json.NewDecoder(respGet.Body).Decode(&records) == nil {
-			for _, r := range records {
-				if r.Name == domain && r.Type == recordType && (value == "" || r.Address == value) {
-					respGet.Body.Close()
-					return nil
-				}
-			}
-		}
-		respGet.Body.Close()
+	if records, err := fetchSpaceshipRecords(ctx, client, key); err == nil && spaceshipRecordExists(records, domain, recordType, value) {
+		return nil
 	}
 
 	payload := map[string]any{
@@ -44,37 +69,34 @@ func (s *Service) provisionSpaceship(ctx context.Context, key, domain, recordTyp
 		return err
 	}
 	defer resp.Body.Close()
+	if resp.StatusCode >= 400 {
+		return fmt.Errorf("spaceship returned status %d", resp.StatusCode)
+	}
 	return nil
 }
 
 func (s *Service) deprovisionSpaceship(ctx context.Context, key, domain, recordType, value string) error {
 	client := newProviderHTTPClient()
-	reqGet, _ := http.NewRequestWithContext(ctx, http.MethodGet, "https://spaceship.dev/api/v1/dns", nil)
-	reqGet.Header.Set("X-Api-Key", key)
-	respGet, err := client.Do(reqGet)
+	records, err := fetchSpaceshipRecords(ctx, client, key)
 	if err != nil {
 		return err
 	}
 
-	var records []struct {
-		ID      string `json:"id"`
-		Name    string `json:"name"`
-		Type    string `json:"type"`
-		Address string `json:"address"`
-	}
-	_ = json.NewDecoder(respGet.Body).Decode(&records)
-	respGet.Body.Close()
-
-	for _, r := range records {
-		if r.Name == domain && r.Type == recordType && (value == "" || r.Address == value) {
+	for _, record := range records {
+		if record.Name == domain && record.Type == recordType && (value == "" || record.Address == value) {
 			targetURL := "https://spaceship.dev/api/v1/dns"
-			if r.ID != "" {
-				targetURL = fmt.Sprintf("%s/%s", targetURL, r.ID)
+			if record.ID != "" {
+				targetURL = fmt.Sprintf("%s/%s", targetURL, record.ID)
 			}
 			reqDel, _ := http.NewRequestWithContext(ctx, http.MethodDelete, targetURL, nil)
 			reqDel.Header.Set("X-Api-Key", key)
-			if respDel, err := client.Do(reqDel); err == nil {
-				respDel.Body.Close()
+			respDel, err := client.Do(reqDel)
+			if err != nil {
+				return err
+			}
+			respDel.Body.Close()
+			if respDel.StatusCode >= 400 {
+				return fmt.Errorf("spaceship returned status %d", respDel.StatusCode)
 			}
 		}
 	}

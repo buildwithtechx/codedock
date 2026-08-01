@@ -5,8 +5,6 @@ export type {
   DomainVerifyResult,
 } from './contracts';
 
-import type { DomainBase } from './contracts';
-
 export interface DNSRecord {
   id: string;
   domainName: string;
@@ -31,16 +29,4 @@ export interface UpdateDNSRecordRequest {
   recordName: string;
   recordValue: string;
   ttl?: number;
-}
-
-export interface Domain extends DomainBase {
-  sslStatus?: string;
-}
-
-export type DomainConfig = Domain;
-
-export interface CreateDomainRequest {
-  projectId?: string;
-  serviceId?: string;
-  domainName: string;
 }

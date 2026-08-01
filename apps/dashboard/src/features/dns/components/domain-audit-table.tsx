@@ -10,8 +10,9 @@ import {
   SelectTrigger,
   SelectValue,
 } from '#/components/ui/select';
-import type { DomainConfig, DomainVerifyResult } from '#/features/dns';
-import { useDeleteDomain, useVerifyDomain } from '#/features/dns/hooks';
+import { useDomainVerification } from '#/features/dns/domain-verification';
+import { useDeleteDomain } from '#/features/dns/hooks';
+import type { DomainConfig } from '#/features/projects';
 import { DnsStatusBadge } from '#/features/services/dns-status-badge';
 
 interface DomainAuditTableProps {
@@ -21,64 +22,25 @@ interface DomainAuditTableProps {
 
 export function DomainAuditTable({ domains, isLoading }: DomainAuditTableProps) {
   const deleteDomain = useDeleteDomain();
-  const verifyDomain = useVerifyDomain();
+  const { verificationResults, verifyingMap, isVerifyingAll, verifyAll, verifyOne } =
+    useDomainVerification();
 
   const [search, setSearch] = useState('');
   const [statusFilter, setStatusFilter] = useState<string>('all');
-  const [verifyingMap, setVerifyingMap] = useState<Record<string, boolean>>({});
-  const [verificationResults, setVerificationResults] = useState<
-    Record<string, DomainVerifyResult>
-  >({});
-  const [isVerifyingAll, setIsVerifyingAll] = useState(false);
 
   const handleVerifyOne = async (domainId: string) => {
-    setVerifyingMap((prev) => ({ ...prev, [domainId]: true }));
-    try {
-      const res = await verifyDomain.mutateAsync(domainId);
-      if (res.data) {
-        setVerificationResults((prev) => ({ ...prev, [domainId]: res.data }));
-        if (res.data.status === 'resolves_to_server') {
-          toast.success(res.data.message);
-        } else if (res.data.status === 'resolves_to_different_ip') {
-          toast.warning(res.data.message);
-        } else {
-          toast.error(res.data.message);
-        }
-      }
-    } catch {
-      toast.error('Verification failed');
-    } finally {
-      setVerifyingMap((prev) => ({ ...prev, [domainId]: false }));
-    }
+    await verifyOne(domainId);
   };
 
   const handleVerifyAll = async () => {
     if (domains.length === 0) return;
-    setIsVerifyingAll(true);
-    let verifiedCount = 0;
-    let failedCount = 0;
-
-    for (const d of domains) {
-      setVerifyingMap((prev) => ({ ...prev, [d.id]: true }));
-      try {
-        const res = await verifyDomain.mutateAsync(d.id);
-        if (res.data) {
-          setVerificationResults((prev) => ({ ...prev, [d.id]: res.data }));
-          if (res.data.verified) verifiedCount++;
-        }
-      } catch {
-        failedCount++;
-      } finally {
-        setVerifyingMap((prev) => ({ ...prev, [d.id]: false }));
-      }
-    }
-    setIsVerifyingAll(false);
+    const { verifiedCount, failedCount, totalCount } = await verifyAll(domains);
     if (failedCount > 0) {
       toast.warning(
-        `Completed verification: ${verifiedCount}/${domains.length} domains resolving, ${failedCount} failed`
+        `Completed verification: ${verifiedCount}/${totalCount} domains resolving, ${failedCount} failed`
       );
     } else {
-      toast.success(`Completed verification: ${verifiedCount}/${domains.length} domains resolving`);
+      toast.success(`Completed verification: ${verifiedCount}/${totalCount} domains resolving`);
     }
   };
 

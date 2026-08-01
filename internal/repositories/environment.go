@@ -22,15 +22,6 @@ type EnvironmentRepository interface {
 	Delete(ctx context.Context, id string) error
 }
 
-type DomainRepository interface {
-	ListByService(ctx context.Context, serviceID string) ([]models.DomainConfig, error)
-	ListAll(ctx context.Context) ([]models.DomainConfig, error)
-	GetByID(ctx context.Context, id string) (*models.DomainConfig, error)
-	Create(ctx context.Context, d *models.DomainConfig) error
-	UpdateDNSProvisionStatus(ctx context.Context, id string, status string, provider string) error
-	Delete(ctx context.Context, id string) error
-}
-
 type EnvironmentRepo struct {
 	mu sync.RWMutex
 	db *sqlx.DB
@@ -143,15 +134,15 @@ func (r *DomainRepo) Create(_ context.Context, d *models.DomainConfig) error {
 	return err
 }
 
-func (r *DomainRepo) UpdateDNSProvisionStatus(_ context.Context, id string, status string, provider string) error {
+func (r *DomainRepo) UpdateDNSProvisionStatus(ctx context.Context, id string, status string, provider string) error {
 	if provider != "" {
-		_, err := r.db.Exec(`UPDATE domains SET dns_provision_status = ?, dns_provider = ?, updated_at = ? WHERE id = ?`, status, provider, time.Now(), id)
+		_, err := r.db.ExecContext(ctx, `UPDATE domains SET dns_provision_status = ?, dns_provider = ?, updated_at = ? WHERE id = ?`, status, provider, time.Now(), id)
 		if err != nil {
 			return fmt.Errorf("failed to update domain dns status: %w", err)
 		}
 		return nil
 	}
-	_, err := r.db.Exec(`UPDATE domains SET dns_provision_status = ?, updated_at = ? WHERE id = ?`, status, time.Now(), id)
+	_, err := r.db.ExecContext(ctx, `UPDATE domains SET dns_provision_status = ?, updated_at = ? WHERE id = ?`, status, time.Now(), id)
 	if err != nil {
 		return fmt.Errorf("failed to update domain dns status: %w", err)
 	}

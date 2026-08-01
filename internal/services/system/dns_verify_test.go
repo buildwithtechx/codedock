@@ -22,19 +22,40 @@ func TestVerifyDomain_Localhost(t *testing.T) {
 		t.Fatal("expected localhost to resolve to at least one IP")
 	}
 
-	verified, resolvedIP, err := VerifyDomain(context.Background(), "localhost", ips[0].String())
+	_, resolvedIP, err := VerifyDomain(context.Background(), "localhost", ips[0].String())
 	if err != nil {
 		t.Fatalf("unexpected error: %v", err)
 	}
 	if resolvedIP == "" {
 		t.Errorf("expected non-empty resolvedIP for localhost")
 	}
-	if !verified {
-		t.Errorf("expected verified to be true for localhost mapping")
-	}
 
 	ip := net.ParseIP(resolvedIP)
 	if ip == nil || !ip.IsLoopback() {
 		t.Errorf("expected localhost to resolve to a loopback IP, got %q", resolvedIP)
+	}
+}
+
+func TestEvaluateResolvedIPs_AllMatch(t *testing.T) {
+	ips := []net.IP{net.ParseIP("127.0.0.1"), net.ParseIP("127.0.0.1")}
+
+	verified, resolvedIP := evaluateResolvedIPs(ips, "127.0.0.1")
+	if !verified {
+		t.Fatalf("expected verified to be true")
+	}
+	if resolvedIP != "127.0.0.1" {
+		t.Fatalf("expected resolvedIP to match expected IP, got %q", resolvedIP)
+	}
+}
+
+func TestEvaluateResolvedIPs_MixedRecords(t *testing.T) {
+	ips := []net.IP{net.ParseIP("127.0.0.1"), net.ParseIP("::1")}
+
+	verified, resolvedIP := evaluateResolvedIPs(ips, "127.0.0.1")
+	if verified {
+		t.Fatalf("expected verified to be false for mixed records")
+	}
+	if resolvedIP != "::1" {
+		t.Fatalf("expected resolvedIP to report the mismatching address, got %q", resolvedIP)
 	}
 }

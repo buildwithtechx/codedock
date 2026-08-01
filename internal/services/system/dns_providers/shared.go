@@ -12,6 +12,8 @@ import (
 	"strings"
 	"time"
 
+	"golang.org/x/net/publicsuffix"
+
 	"codedock.run/codedock/internal/models"
 )
 
@@ -26,11 +28,25 @@ func newProviderHTTPClient() *http.Client {
 }
 
 func getRootDomain(domain string) string {
+	rootDomain, err := publicsuffix.EffectiveTLDPlusOne(domain)
+	if err == nil {
+		return rootDomain
+	}
+
 	parts := strings.Split(domain, ".")
 	if len(parts) < 2 {
 		return domain
 	}
 	return parts[len(parts)-2] + "." + parts[len(parts)-1]
+}
+
+func splitNamecheapDomain(domain string) (string, string, error) {
+	rootDomain := getRootDomain(domain)
+	parts := strings.SplitN(rootDomain, ".", 2)
+	if len(parts) != 2 {
+		return "", "", fmt.Errorf("invalid root domain for namecheap")
+	}
+	return parts[0], parts[1], nil
 }
 
 func checkCloudflareRecordExists(ctx context.Context, client *http.Client, token, zoneID, domain, recordType, value string) (bool, []string, error) {
@@ -42,6 +58,9 @@ func checkCloudflareRecordExists(ctx context.Context, client *http.Client, token
 		return false, nil, err
 	}
 	defer resp.Body.Close()
+	if resp.StatusCode >= 400 {
+		return false, nil, fmt.Errorf("cloudflare returned status %d", resp.StatusCode)
+	}
 
 	var res struct {
 		Result []struct {

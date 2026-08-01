@@ -4,6 +4,7 @@ import (
 	"context"
 	"errors"
 	"sync"
+	"sync/atomic"
 	"time"
 
 	"github.com/google/uuid"
@@ -13,15 +14,29 @@ import (
 	"codedock.run/codedock/internal/services/system"
 )
 
+type domainRepository interface {
+	ListByService(ctx context.Context, serviceID string) ([]models.DomainConfig, error)
+	ListAll(ctx context.Context) ([]models.DomainConfig, error)
+	GetByID(ctx context.Context, id string) (*models.DomainConfig, error)
+	Create(ctx context.Context, d *models.DomainConfig) error
+	UpdateDNSProvisionStatus(ctx context.Context, id string, status string, provider string) error
+	Delete(ctx context.Context, id string) error
+}
+
+type domainLockEntry struct {
+	mutex sync.Mutex
+	refs  atomic.Int32
+}
+
 type EnvironmentService struct {
 	envRepo     repositories.EnvironmentRepository
-	domainRepo  repositories.DomainRepository
+	domainRepo  domainRepository
 	varRepo     repositories.EnvRepository
 	dnsService  *system.DNSProviderService
 	domainLocks sync.Map
 }
 
-func NewEnvironmentService(er repositories.EnvironmentRepository, dr repositories.DomainRepository, vr repositories.EnvRepository, dnsService *system.DNSProviderService) *EnvironmentService {
+func NewEnvironmentService(er repositories.EnvironmentRepository, dr domainRepository, vr repositories.EnvRepository, dnsService *system.DNSProviderService) *EnvironmentService {
 	return &EnvironmentService{
 		envRepo:    er,
 		domainRepo: dr,
@@ -107,7 +122,7 @@ func (s *EnvironmentService) CreateDomain(ctx context.Context, d *models.DomainC
 				status = models.DNSProvisionStatusFailed
 				provider = ""
 			}
-			_ = s.domainRepo.UpdateDNSProvisionStatus(provisionCtx, domainID, status, provider)
+			_ = s.updateDNSProvisionStatus(provisionCtx, domainID, status, provider)
 		}(domainID, domainName)
 	}
 
@@ -147,15 +162,14 @@ func (s *EnvironmentService) DeleteDomain(ctx context.Context, id string) error 
 	unlock := s.lockDomain(domain.DomainName)
 	defer unlock()
 
-	err = s.domainRepo.Delete(ctx, id)
-	if err != nil {
-		return err
-	}
-
 	if s.dnsService != nil {
 		if err := s.dnsService.DeprovisionARecord(ctx, domain.DomainName, domain.DNSProvider); err != nil {
 			return err
 		}
+	}
+
+	if err := s.domainRepo.Delete(ctx, id); err != nil {
+		return err
 	}
 	return nil
 }
@@ -179,8 +193,29 @@ func (s *EnvironmentService) lockDomain(domainName string) func() {
 		return func() {}
 	}
 
-	lock, _ := s.domainLocks.LoadOrStore(domainName, &sync.Mutex{})
-	mu := lock.(*sync.Mutex)
-	mu.Lock()
-	return mu.Unlock
+	lock, _ := s.domainLocks.LoadOrStore(domainName, &domainLockEntry{})
+	entry := lock.(*domainLockEntry)
+	entry.refs.Add(1)
+	entry.mutex.Lock()
+	return func() {
+		entry.mutex.Unlock()
+		if entry.refs.Add(-1) == 0 {
+			s.domainLocks.CompareAndDelete(domainName, entry)
+		}
+	}
+}
+
+func (s *EnvironmentService) updateDNSProvisionStatus(ctx context.Context, domainID, status, provider string) error {
+	var err error
+	for attempt := 0; attempt < 3; attempt++ {
+		err = s.domainRepo.UpdateDNSProvisionStatus(ctx, domainID, status, provider)
+		if err == nil {
+			return nil
+		}
+		if ctx.Err() != nil {
+			return ctx.Err()
+		}
+		time.Sleep(time.Duration(attempt+1) * 200 * time.Millisecond)
+	}
+	return err
 }

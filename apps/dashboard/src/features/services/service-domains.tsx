@@ -5,13 +5,8 @@ import { Button } from '#/components/ui/button';
 import { Card, CardContent, CardHeader, CardTitle } from '#/components/ui/card';
 import { Input } from '#/components/ui/input';
 import { Label } from '#/components/ui/label';
-import {
-  type DomainVerifyResult,
-  useCreate,
-  useDelete,
-  useListByService,
-  useVerifyDomain,
-} from '#/features/dns';
+import { useCreate, useDelete, useListByService } from '#/features/dns';
+import { useDomainVerification } from '#/features/dns/domain-verification';
 import { useGetSettings } from '#/features/settings';
 import { DnsGuidanceBanner } from './dns-guidance-banner';
 import { DnsStatusBadge } from './dns-status-badge';
@@ -21,18 +16,16 @@ export function ServiceDomains({ serviceId }: { serviceId: string }) {
   const { data: settingsRes } = useGetSettings();
   const createDomain = useCreate();
   const deleteDomain = useDelete();
-  const verifyDomain = useVerifyDomain();
+  const { verificationResults, verifyingMap, verifyOne } = useDomainVerification();
 
   const [newDomain, setNewDomain] = useState('');
-  const [verifyingMap, setVerifyingMap] = useState<Record<string, boolean>>({});
-  const [verificationResults, setVerificationResults] = useState<
-    Record<string, DomainVerifyResult>
-  >({});
 
   const settings = settingsRes?.data;
   const serverIp = settings?.publicIpv4 || '';
   const hasDnsProvider = Boolean(
-    settings?.cloudflareApiToken || settings?.namecheapApiKey || settings?.spaceshipApiKey
+    settings?.cloudflareApiToken ||
+      (settings?.namecheapApiUser && settings?.namecheapApiKey) ||
+      settings?.spaceshipApiKey
   );
 
   const domains = domainsRes?.data || [];
@@ -43,7 +36,8 @@ export function ServiceDomains({ serviceId }: { serviceId: string }) {
       (d) =>
         !d.dnsProvisionStatus ||
         d.dnsProvisionStatus === 'manual' ||
-        d.dnsProvisionStatus === 'pending'
+        d.dnsProvisionStatus === 'pending' ||
+        d.dnsProvisionStatus === 'failed'
     );
 
   const handleCreate = () => {
@@ -63,26 +57,7 @@ export function ServiceDomains({ serviceId }: { serviceId: string }) {
   };
 
   const handleVerify = async (domainId: string) => {
-    setVerifyingMap((prev) => ({ ...prev, [domainId]: true }));
-    try {
-      const res = await verifyDomain.mutateAsync(domainId);
-      const data = res.data;
-      if (data) {
-        setVerificationResults((prev) => ({ ...prev, [domainId]: data }));
-        if (data.status === 'resolves_to_server') {
-          toast.success(data.message || '✅ Resolves to server IP');
-        } else if (data.status === 'resolves_to_different_ip') {
-          toast.warning(data.message || '⚠️ Resolving to different IP');
-        } else {
-          toast.error(data.message || '❌ Unresolved');
-        }
-      }
-    } catch (err: unknown) {
-      const errorMsg = err instanceof Error ? err.message : 'Verification failed';
-      toast.error(errorMsg);
-    } finally {
-      setVerifyingMap((prev) => ({ ...prev, [domainId]: false }));
-    }
+    await verifyOne(domainId);
   };
 
   return (

@@ -62,8 +62,14 @@ func (h *DomainHandler) ListAll(c echo.Context) error {
 	}
 	if userClaims.Role != models.UserRoleAdmin && userClaims.Role != models.UserRoleOwner {
 		filtered := make([]models.DomainConfig, 0, len(domains))
+		accessCache := make(map[string]bool)
 		for _, domain := range domains {
-			if h.hasAccess(c, domain.ServiceID) {
+			allowed, ok := accessCache[domain.ServiceID]
+			if !ok {
+				allowed = h.hasAccess(c, domain.ServiceID)
+				accessCache[domain.ServiceID] = allowed
+			}
+			if allowed {
 				filtered = append(filtered, domain)
 			}
 		}
