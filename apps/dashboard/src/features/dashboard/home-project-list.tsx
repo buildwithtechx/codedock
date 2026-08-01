@@ -48,7 +48,7 @@ export function HomeProjectList({
           ))}
         </div>
       ) : projects.length === 0 ? (
-        <div className="flex min-h-70 flex-col items-center justify-center px-6 py-10 text-center">
+        <div className="flex min-h-[25rem] flex-col items-center justify-center px-6 py-10 text-center">
           <div className="grid grid-cols-[auto_2rem_auto_2rem_auto] items-center text-primary">
             <div className="flex h-11 w-11 items-center justify-center rounded-xl bg-primary/12">
               <FolderKanban className="h-4 w-4" />

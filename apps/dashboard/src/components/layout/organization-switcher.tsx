@@ -1,5 +1,5 @@
 import { useNavigate } from '@tanstack/react-router';
-import { ArrowUpRight, Building2, Check, ChevronsUpDown } from 'lucide-react';
+import { ArrowUpRight, Building2, Check, ChevronsUpDown, LogOut, UserRound } from 'lucide-react';
 import { useEffect } from 'react';
 import {
   DropdownMenu,
@@ -9,7 +9,9 @@ import {
   DropdownMenuSeparator,
   DropdownMenuTrigger,
 } from '#/components/ui/dropdown-menu';
+import { useLogout } from '#/features/auth';
 import { useListOrganizations } from '#/features/organizations';
+import { useAuthStore } from '#/stores/auth-store';
 import { useOrganizationStore } from '#/stores/organization-store';
 
 const organizationInitials = (name: string) =>
@@ -26,6 +28,8 @@ export function OrganizationSwitcher({ collapsed }: { collapsed: boolean }) {
   const { data: organizations = [], isLoading } = useListOrganizations();
   const activeOrganizationId = useOrganizationStore((state) => state.activeOrganizationId);
   const setActiveOrganizationId = useOrganizationStore((state) => state.setActiveOrganizationId);
+  const user = useAuthStore((state) => state.user);
+  const { mutate: logout, isPending: isLoggingOut } = useLogout();
   const activeOrganization = organizations.find((org) => org.id === activeOrganizationId);
 
   useEffect(() => {
@@ -102,6 +106,27 @@ export function OrganizationSwitcher({ collapsed }: { collapsed: boolean }) {
           <Building2 className="h-4 w-4" />
           <span className="flex-1">Manage organizations</span>
           <ArrowUpRight className="h-3.5 w-3.5" />
+        </DropdownMenuItem>
+        <DropdownMenuSeparator />
+        <div className="flex min-h-12 items-center gap-2.5 rounded-lg px-2.5 py-2">
+          <div className="flex h-7 w-7 shrink-0 items-center justify-center rounded-full bg-muted font-semibold text-[10px] text-muted-foreground">
+            {user?.name?.[0]?.toUpperCase() || <UserRound className="h-3.5 w-3.5" />}
+          </div>
+          <div className="min-w-0 flex-1">
+            <p className="truncate font-medium text-sm">{user?.name || 'Account'}</p>
+            <p className="truncate text-muted-foreground text-xs">
+              {user?.email || 'Account settings'}
+            </p>
+          </div>
+        </div>
+        <DropdownMenuItem
+          disabled={isLoggingOut}
+          onSelect={() => logout()}
+          variant="destructive"
+          className="min-h-10 gap-2.5 rounded-lg px-2.5 py-2"
+        >
+          <LogOut className="h-4 w-4" />
+          Sign out
         </DropdownMenuItem>
       </DropdownMenuContent>
     </DropdownMenu>

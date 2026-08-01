@@ -18,7 +18,6 @@ import { useState } from 'react';
 import { CreateProjectModal } from '#/features/projects/create-project-modal';
 import { NavItem, type NavItemProps } from './nav-item';
 import { OrganizationSwitcher } from './organization-switcher';
-import { UserMenu } from './user-menu';
 
 type NavGroup = {
   title?: string;
@@ -40,8 +39,7 @@ const navGroups: NavGroup[] = [
     items: [
       {
         title: 'Backups',
-        url: '/settings',
-        search: { tab: 'backups' },
+        url: '/backups',
         icon: HardDrive,
         exact: true,
       },
@@ -140,14 +138,14 @@ export function AppSidebar({ collapsed, onToggle, mobileOpen, onMobileClose }: A
               </div>
             </div>
           </div>
-          <div className="mx-1 h-px bg-sidebar-border/60" />
+          <div className="mx-3 h-px bg-sidebar-border" />
         </div>
 
         <nav className="flex flex-1 flex-col gap-5 overflow-y-auto px-3 pt-3 pb-12">
           {navGroups.map((group, i) => (
             <div key={i} className="flex flex-col gap-0.5">
               {!navCollapsed && group.title && (
-                <h4 className="px-2 pb-1.5 font-medium text-[10px] text-sidebar-foreground/35 uppercase tracking-[0.14em]">
+                <h4 className="px-2 pb-1.5 font-medium text-[10px] text-sidebar-foreground/50 uppercase tracking-[0.14em]">
                   {group.title}
                 </h4>
               )}
@@ -176,12 +174,11 @@ export function AppSidebar({ collapsed, onToggle, mobileOpen, onMobileClose }: A
         <div className={`mt-auto px-3 pt-1 pb-3 ${navCollapsed ? 'px-2' : ''}`}>
           <div className="mx-2 mb-3 h-px bg-sidebar-border/60" />
           {!navCollapsed && (
-            <p className="mb-2 px-2 font-medium text-[10px] text-sidebar-foreground/35 uppercase tracking-[0.14em]">
+            <p className="mb-2 px-2 font-medium text-[10px] text-sidebar-foreground/50 uppercase tracking-[0.14em]">
               Workspace
             </p>
           )}
           <OrganizationSwitcher collapsed={navCollapsed} />
-          <UserMenu collapsed={navCollapsed} />
         </div>
         <CreateProjectModal open={createProjectOpen} onOpenChange={setCreateProjectOpen} />
       </aside>

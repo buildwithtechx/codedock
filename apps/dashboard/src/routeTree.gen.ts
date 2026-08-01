@@ -22,6 +22,7 @@ import { Route as DashboardAiRouteImport } from './routes/_dashboard.ai'
 import { Route as DashboardApiAccessRouteImport } from './routes/_dashboard.api-access'
 import { Route as DashboardAppsRouteImport } from './routes/_dashboard.apps'
 import { Route as DashboardAuditLogsRouteImport } from './routes/_dashboard.audit-logs'
+import { Route as DashboardBackupsRouteImport } from './routes/_dashboard.backups'
 import { Route as DashboardDeploymentsRouteImport } from './routes/_dashboard.deployments'
 import { Route as DashboardDnsRouteImport } from './routes/_dashboard.dns'
 import { Route as DashboardMaintenanceRouteImport } from './routes/_dashboard.maintenance'
@@ -124,6 +125,11 @@ const DashboardAppsRoute = DashboardAppsRouteImport.update({
 const DashboardAuditLogsRoute = DashboardAuditLogsRouteImport.update({
   id: '/audit-logs',
   path: '/audit-logs',
+  getParentRoute: () => DashboardRoute,
+} as any)
+const DashboardBackupsRoute = DashboardBackupsRouteImport.update({
+  id: '/backups',
+  path: '/backups',
   getParentRoute: () => DashboardRoute,
 } as any)
 const DashboardDeploymentsRoute = DashboardDeploymentsRouteImport.update({
@@ -364,6 +370,7 @@ export interface FileRoutesByFullPath {
   '/api-access': typeof DashboardApiAccessRoute
   '/apps': typeof DashboardAppsRoute
   '/audit-logs': typeof DashboardAuditLogsRoute
+  '/backups': typeof DashboardBackupsRoute
   '/deployments': typeof DashboardDeploymentsRoute
   '/dns': typeof DashboardDnsRoute
   '/maintenance': typeof DashboardMaintenanceRoute
@@ -417,6 +424,7 @@ export interface FileRoutesByTo {
   '/api-access': typeof DashboardApiAccessRoute
   '/apps': typeof DashboardAppsRoute
   '/audit-logs': typeof DashboardAuditLogsRoute
+  '/backups': typeof DashboardBackupsRoute
   '/deployments': typeof DashboardDeploymentsRoute
   '/dns': typeof DashboardDnsRoute
   '/maintenance': typeof DashboardMaintenanceRoute
@@ -469,6 +477,7 @@ export interface FileRoutesById {
   '/_dashboard/api-access': typeof DashboardApiAccessRoute
   '/_dashboard/apps': typeof DashboardAppsRoute
   '/_dashboard/audit-logs': typeof DashboardAuditLogsRoute
+  '/_dashboard/backups': typeof DashboardBackupsRoute
   '/_dashboard/deployments': typeof DashboardDeploymentsRoute
   '/_dashboard/dns': typeof DashboardDnsRoute
   '/_dashboard/maintenance': typeof DashboardMaintenanceRoute
@@ -525,6 +534,7 @@ export interface FileRouteTypes {
     | '/api-access'
     | '/apps'
     | '/audit-logs'
+    | '/backups'
     | '/deployments'
     | '/dns'
     | '/maintenance'
@@ -578,6 +588,7 @@ export interface FileRouteTypes {
     | '/api-access'
     | '/apps'
     | '/audit-logs'
+    | '/backups'
     | '/deployments'
     | '/dns'
     | '/maintenance'
@@ -629,6 +640,7 @@ export interface FileRouteTypes {
     | '/_dashboard/api-access'
     | '/_dashboard/apps'
     | '/_dashboard/audit-logs'
+    | '/_dashboard/backups'
     | '/_dashboard/deployments'
     | '/_dashboard/dns'
     | '/_dashboard/maintenance'
@@ -769,6 +781,13 @@ declare module '@tanstack/react-router' {
       path: '/audit-logs'
       fullPath: '/audit-logs'
       preLoaderRoute: typeof DashboardAuditLogsRouteImport
+      parentRoute: typeof DashboardRoute
+    }
+    '/_dashboard/backups': {
+      id: '/_dashboard/backups'
+      path: '/backups'
+      fullPath: '/backups'
+      preLoaderRoute: typeof DashboardBackupsRouteImport
       parentRoute: typeof DashboardRoute
     }
     '/_dashboard/deployments': {
@@ -1199,6 +1218,7 @@ interface DashboardRouteChildren {
   DashboardApiAccessRoute: typeof DashboardApiAccessRoute
   DashboardAppsRoute: typeof DashboardAppsRoute
   DashboardAuditLogsRoute: typeof DashboardAuditLogsRoute
+  DashboardBackupsRoute: typeof DashboardBackupsRoute
   DashboardDeploymentsRoute: typeof DashboardDeploymentsRoute
   DashboardDnsRoute: typeof DashboardDnsRoute
   DashboardMaintenanceRoute: typeof DashboardMaintenanceRoute
@@ -1222,6 +1242,7 @@ const DashboardRouteChildren: DashboardRouteChildren = {
   DashboardApiAccessRoute: DashboardApiAccessRoute,
   DashboardAppsRoute: DashboardAppsRoute,
   DashboardAuditLogsRoute: DashboardAuditLogsRoute,
+  DashboardBackupsRoute: DashboardBackupsRoute,
   DashboardDeploymentsRoute: DashboardDeploymentsRoute,
   DashboardDnsRoute: DashboardDnsRoute,
   DashboardMaintenanceRoute: DashboardMaintenanceRoute,

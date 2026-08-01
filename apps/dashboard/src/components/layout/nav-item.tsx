@@ -39,7 +39,7 @@ export function NavItem({
       } ${
         isActive
           ? 'bg-primary/12 text-sidebar-foreground'
-          : 'text-sidebar-foreground/55 hover:bg-sidebar-accent hover:text-sidebar-foreground'
+          : 'text-sidebar-foreground/70 hover:bg-sidebar-accent hover:text-sidebar-foreground'
       }`}
       target={item.external ? '_blank' : undefined}
       rel={item.external ? 'noopener noreferrer' : undefined}
