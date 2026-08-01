@@ -1,6 +1,7 @@
 import { createFileRoute, Link } from '@tanstack/react-router';
 import { AlertCircle } from 'lucide-react';
 import { Button } from '#/components/ui/button';
+import { AuthPageFrame } from '#/features/auth';
 import { ForgotPasswordForm } from '#/features/auth/forgot-password-form';
 import { useGetPublicSettings } from '#/features/settings';
 import { useSystemStore } from '#/stores/system-store';
@@ -18,49 +19,31 @@ function ForgotPasswordPage() {
   const emailEnabled = data?.data?.emailEnabled;
 
   return (
-    <div className="fade-in slide-in-from-bottom-4 animate-in space-y-6 duration-700">
-      <div className="relative rounded-2xl border border-border/80 bg-card/70 p-5 shadow-2xl shadow-black/10 backdrop-blur-xl sm:p-6 dark:shadow-black/40">
-        <div className="mb-4 flex items-center gap-3">
-          <div className="flex h-9 w-9 shrink-0 items-center justify-center rounded-lg bg-linear-to-br from-primary via-purple-600 to-violet-600 shadow-md shadow-primary/25">
-            <span className="font-bold text-base text-white tracking-tighter">V</span>
+    <AuthPageFrame
+      eyebrow="Account recovery"
+      title="Recover your account."
+      description="Enter your email and we will send a reset link if the account exists."
+    >
+      {!isLoading && emailEnabled === false ? (
+        <div className="border-primary border-l-2 py-1 pl-5">
+          <div className="flex items-center gap-3">
+            <AlertCircle className="h-5 w-5 text-[#b42318]" />
+            <p className="font-bold text-foreground text-sm">Email not configured</p>
           </div>
-          <div>
-            <p className="text-muted-foreground/70 text-xs uppercase tracking-wider">
-              CODEDOCK ACCESS
-            </p>
-            <p className="font-semibold text-foreground text-lg tracking-tight">Reset password</p>
-          </div>
+          <p className="mt-3 text-muted-foreground text-sm leading-6">
+            Your team has not enabled email. Contact an administrator to restore access.
+          </p>
+          <Button
+            asChild
+            variant="outline"
+            className="mt-5 rounded-lg border-border bg-background text-foreground hover:bg-muted"
+          >
+            <Link to="/signin">Back to sign in</Link>
+          </Button>
         </div>
-
-        {!isLoading && emailEnabled === false ? (
-          <div className="flex flex-col items-center gap-4 py-5 text-center">
-            <div className="flex h-12 w-12 items-center justify-center rounded-full bg-destructive/10">
-              <AlertCircle className="h-6 w-6 text-destructive" />
-            </div>
-            <div className="space-y-1">
-              <p className="font-semibold text-base text-foreground tracking-tight">
-                Email not configured
-              </p>
-              <p className="text-muted-foreground text-sm">
-                Your team is yet to set or enable email. Please contact your administrator.
-              </p>
-            </div>
-            <Button asChild variant="outline" className="mt-2">
-              <Link to="/signin">Back to sign in</Link>
-            </Button>
-          </div>
-        ) : (
-          <ForgotPasswordForm />
-        )}
-      </div>
-
-      <div className="text-center">
-        <div className="inline-flex items-center gap-2 text-[10px] text-muted-foreground/60 uppercase tracking-[2px]">
-          <div className="h-px w-8 bg-border" />
-          SECURE ACCESS
-          <div className="h-px w-8 bg-border" />
-        </div>
-      </div>
-    </div>
+      ) : (
+        <ForgotPasswordForm />
+      )}
+    </AuthPageFrame>
   );
 }

@@ -3,9 +3,9 @@ import { createFileRoute, useNavigate, useSearch } from '@tanstack/react-router'
 import { CheckCircle, Loader2, XCircle } from 'lucide-react';
 import { useEffect, useState } from 'react';
 import { toast } from 'sonner';
+import { AuthPageFrame } from '#/features/auth';
 import { apiClient } from '#/lib/api-client';
 import { Button } from '@/components/ui/button';
-import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 
 export const Route = createFileRoute('/_auth/verify-email')({
   component: VerifyEmailPage,
@@ -45,51 +45,68 @@ function VerifyEmailPage() {
 
   if (!token) {
     return (
-      <Card className="mx-auto w-full max-w-md">
-        <CardHeader className="text-center">
-          <CardTitle className="text-2xl">Missing Token</CardTitle>
-          <CardDescription>No verification token provided.</CardDescription>
-        </CardHeader>
-        <CardContent className="flex justify-center">
-          <Button onClick={() => navigate({ to: '/' })}>Return Home</Button>
-        </CardContent>
-      </Card>
+      <AuthPageFrame
+        eyebrow="Email verification"
+        title="This link is incomplete."
+        description="No verification token was provided. Return home and request a new verification email."
+      >
+        <Button
+          onClick={() => navigate({ to: '/' })}
+          className="rounded-lg bg-primary text-primary-foreground hover:bg-primary-hover"
+        >
+          Return home
+        </Button>
+      </AuthPageFrame>
     );
   }
 
   return (
-    <Card className="mx-auto w-full max-w-md">
-      <CardHeader className="text-center">
-        <CardTitle className="text-2xl">Email Verification</CardTitle>
-        <CardDescription>
-          {status === 'loading' && 'Verifying your email address...'}
-          {status === 'success' && 'Your email has been verified!'}
-          {status === 'error' && 'Verification failed'}
-        </CardDescription>
-      </CardHeader>
-      <CardContent className="flex flex-col items-center justify-center space-y-4">
+    <AuthPageFrame
+      eyebrow="Email verification"
+      title={
+        status === 'success'
+          ? 'You are verified.'
+          : status === 'error'
+            ? 'Verification failed.'
+            : 'Verifying your email.'
+      }
+      description={
+        status === 'success'
+          ? 'Your account is ready. Taking you to the dashboard now.'
+          : status === 'error'
+            ? 'The link may be invalid or expired.'
+            : 'Confirming this email address for your Codedock account.'
+      }
+    >
+      <div className="flex flex-col items-start gap-4">
         {status === 'loading' && (
-          <div className="flex flex-col items-center justify-center py-6">
-            <Loader2 className="mb-4 h-12 w-12 animate-spin text-primary" />
-            <p className="text-muted-foreground text-sm">Please wait while we verify your email.</p>
+          <div className="flex items-center gap-3 text-muted-foreground text-sm">
+            <Loader2 className="h-5 w-5 animate-spin text-primary" />
+            Please wait while we verify your email.
           </div>
         )}
         {status === 'success' && (
-          <div className="flex flex-col items-center justify-center py-6">
-            <CheckCircle className="mb-4 h-12 w-12 text-green-500" />
-            <p className="text-muted-foreground text-sm">Redirecting you to the dashboard...</p>
+          <div className="flex items-center gap-3 text-muted-foreground text-sm">
+            <CheckCircle className="h-5 w-5 text-[#3b6e32]" />
+            Redirecting you to the dashboard.
           </div>
         )}
         {status === 'error' && (
-          <div className="flex flex-col items-center justify-center py-6">
-            <XCircle className="mb-4 h-12 w-12 text-destructive" />
-            <p className="mb-4 text-center font-medium text-destructive text-sm">{errorMessage}</p>
-            <Button onClick={() => navigate({ to: '/' })} variant="outline">
+          <div className="border-[#b42318] border-l-2 pl-4">
+            <div className="flex items-center gap-3">
+              <XCircle className="h-5 w-5 text-[#b42318]" />
+              <p className="font-medium text-[#b42318] text-sm">{errorMessage}</p>
+            </div>
+            <Button
+              onClick={() => navigate({ to: '/' })}
+              variant="outline"
+              className="mt-5 rounded-lg border-border bg-background text-foreground hover:bg-muted"
+            >
               Return Home
             </Button>
           </div>
         )}
-      </CardContent>
-    </Card>
+      </div>
+    </AuthPageFrame>
   );
 }

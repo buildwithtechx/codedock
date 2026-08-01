@@ -16,26 +16,26 @@ export const OAuthButtons = () => {
 
   return (
     <>
-      <div className="mb-5 space-y-2">
+      <div className="space-y-2">
         {enabledProviders.map((provider) => (
           <Button
             key={provider}
             variant="outline"
             type="button"
             onClick={() => handleOAuthLogin(provider)}
-            className="border/80 h-10 w-full rounded-xl font-medium text-sm capitalize transition-all hover:border-primary/30 hover:bg-muted/50"
+            className="w-full capitalize"
           >
             Continue with {provider}
           </Button>
         ))}
       </div>
 
-      <div className="relative mb-5">
+      <div className="relative">
         <div className="absolute inset-0 flex items-center">
-          <div className="h-px w-full bg-linear-to-r from-transparent via-border to-transparent" />
+          <div className="h-px w-full bg-border" />
         </div>
         <div className="relative flex justify-center">
-          <span className="bg-card/80 px-3 text-muted-foreground text-xs uppercase tracking-widest">
+          <span className="bg-background px-3 text-[10px] text-muted-foreground uppercase tracking-[0.16em]">
             or
           </span>
         </div>

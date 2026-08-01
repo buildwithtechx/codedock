@@ -58,17 +58,15 @@ export const LoginForm = () => {
 
   if (pendingCredentials) {
     return (
-      <form onSubmit={totpForm.handleSubmit(onTOTPSubmit)} className="space-y-4">
-        <div className="space-y-1 text-center">
-          <p className="font-semibold text-foreground text-sm">Two-Factor Authentication</p>
+      <form onSubmit={totpForm.handleSubmit(onTOTPSubmit)} className="space-y-5">
+        <div className="space-y-1">
+          <p className="font-medium text-foreground text-sm">Two-factor authentication</p>
           <p className="text-muted-foreground text-xs">
             Enter the 6-digit code from your authenticator app.
           </p>
         </div>
         <div className="space-y-1.5">
-          <Label htmlFor="totpCode" className="font-medium text-foreground/90 text-sm">
-            Verification Code
-          </Label>
+          <Label htmlFor="totpCode">Verification Code</Label>
           <div className="group relative">
             <div className="absolute top-1/2 left-3.5 -translate-y-1/2 text-muted-foreground transition-colors group-focus-within:text-primary">
               <KeyRound className="h-4 w-4" />
@@ -80,7 +78,7 @@ export const LoginForm = () => {
               autoComplete="one-time-code"
               placeholder="000000"
               maxLength={8}
-              className="h-11 rounded-xl border bg-background/80 pl-10 text-center text-sm tracking-widest transition-all duration-300 focus:border-primary/50 focus:ring-2 focus:ring-primary/20"
+              className="pl-10 text-center tracking-[0.28em]"
               {...totpForm.register('totpCode')}
             />
           </div>
@@ -95,14 +93,14 @@ export const LoginForm = () => {
             type="button"
             variant="outline"
             onClick={() => setPendingCredentials(null)}
-            className="h-11 flex-1 rounded-xl text-sm"
+            className="flex-1"
           >
             Back
           </Button>
           <Button
             type="submit"
             disabled={isPending}
-            className="h-11 flex-1 rounded-xl bg-linear-to-r from-primary to-purple-600 font-semibold text-sm shadow-lg shadow-primary/30 transition-all duration-200 hover:brightness-110 active:scale-[0.985]"
+            className="flex-1"
           >
             {isPending ? 'Verifying...' : 'Verify'}
           </Button>
@@ -112,11 +110,9 @@ export const LoginForm = () => {
   }
 
   return (
-    <form onSubmit={loginForm.handleSubmit(onLoginSubmit)} className="space-y-4">
+    <form onSubmit={loginForm.handleSubmit(onLoginSubmit)} className="space-y-5">
       <div className="space-y-1.5">
-        <Label htmlFor="email" className="font-medium text-foreground/90 text-sm">
-          Email
-        </Label>
+        <Label htmlFor="email">Email</Label>
         <div className="group relative">
           <div className="absolute top-1/2 left-3.5 -translate-y-1/2 text-muted-foreground transition-colors group-focus-within:text-primary">
             <Mail className="h-4 w-4" />
@@ -125,7 +121,7 @@ export const LoginForm = () => {
             id="email"
             type="email"
             placeholder="name@example.com"
-            className="h-11 rounded-xl border bg-background/80 pl-10 text-sm transition-all duration-300 focus:border-primary/50 focus:ring-2 focus:ring-primary/20"
+            className="pl-10"
             {...loginForm.register('email')}
           />
         </div>
@@ -138,12 +134,10 @@ export const LoginForm = () => {
 
       <div className="space-y-1.5">
         <div className="flex items-center justify-between">
-          <Label htmlFor="password" className="font-medium text-foreground/90 text-sm">
-            Password
-          </Label>
+          <Label htmlFor="password">Password</Label>
           <Link
             to="/forgot-password"
-            className="text-primary text-sm transition-colors hover:text-primary-hover"
+            className="text-primary text-sm underline-offset-4 hover:underline"
           >
             Forgot password?
           </Link>
@@ -155,13 +149,13 @@ export const LoginForm = () => {
           <Input
             id="password"
             type={showPassword ? 'text' : 'password'}
-            className="h-11 rounded-xl border bg-background/80 pr-10 pl-10 text-sm transition-all duration-300 focus:border-primary/50 focus:ring-2 focus:ring-primary/20"
+            className="pr-10 pl-10"
             {...loginForm.register('password')}
           />
           <button
             type="button"
             onClick={() => setShowPassword(!showPassword)}
-            className="absolute top-1/2 right-3.5 -translate-y-1/2 text-muted-foreground transition-colors hover:text-foreground"
+            className="absolute top-1/2 right-3.5 -translate-y-1/2 text-muted-foreground transition-colors hover:text-primary"
           >
             {showPassword ? <EyeOff className="h-4 w-4" /> : <Eye className="h-4 w-4" />}
           </button>
@@ -176,7 +170,7 @@ export const LoginForm = () => {
       <Button
         type="submit"
         disabled={isPending}
-        className="h-11 w-full rounded-xl bg-linear-to-r from-primary to-purple-600 font-semibold text-sm shadow-lg shadow-primary/30 transition-all duration-200 hover:brightness-110 active:scale-[0.985]"
+        className="w-full"
       >
         {isPending ? 'Signing in...' : 'Sign In'}
       </Button>

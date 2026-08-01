@@ -1,6 +1,5 @@
 import { createFileRoute, Link, Navigate } from '@tanstack/react-router';
-import { LoginForm } from '#/features/auth/login-form';
-import { OAuthButtons } from '#/features/auth/o-auth-buttons';
+import { AuthPageFrame, LoginForm, OAuthButtons } from '#/features/auth';
 import { useGetPublicSettings, useGetSetupStatus } from '#/features/settings';
 import { useSystemStore } from '#/stores/system-store';
 
@@ -22,43 +21,27 @@ function LoginPage() {
   }
 
   return (
-    <div className="fade-in slide-in-from-bottom-4 animate-in space-y-6 duration-700">
-      <div className="border/80 relative rounded-2xl border bg-card/70 p-5 shadow-2xl shadow-black/10 backdrop-blur-xl sm:p-6 dark:shadow-black/40">
-        <div className="mb-4 flex items-center gap-3">
-          <div className="flex h-9 w-9 shrink-0 items-center justify-center rounded-lg bg-linear-to-br from-primary via-purple-600 to-violet-600 shadow-md shadow-primary/25">
-            <span className="font-bold text-base text-white tracking-tighter">V</span>
-          </div>
-          <div>
-            <p className="text-muted-foreground/70 text-xs uppercase tracking-wider">
-              CODEDOCK ACCESS
-            </p>
-            <p className="font-semibold text-foreground text-lg tracking-tight">Sign in</p>
-          </div>
-        </div>
-
+    <AuthPageFrame
+      eyebrow="Account access"
+      title="Pick up where you left off."
+      description="Sign in to manage your services, releases, and servers."
+    >
+      <div className="space-y-6">
         <OAuthButtons />
         <LoginForm />
 
         {registrationEnabled && (
-          <p className="mt-5 text-center text-muted-foreground text-sm">
+          <p className="border-border border-t pt-5 text-muted-foreground text-sm">
             Don't have an account?{' '}
             <Link
               to="/signup"
-              className="font-medium text-primary underline-offset-4 transition-colors hover:text-primary-hover hover:underline"
+              className="font-bold text-primary underline decoration-primary/35 underline-offset-4"
             >
               Create one
             </Link>
           </p>
         )}
       </div>
-
-      <div className="text-center">
-        <div className="inline-flex items-center gap-2 text-[10px] text-muted-foreground/60 uppercase tracking-[2px]">
-          <div className="h-px w-8 bg-border" />
-          SECURE ACCESS
-          <div className="h-px w-8 bg-border" />
-        </div>
-      </div>
-    </div>
+    </AuthPageFrame>
   );
 }
