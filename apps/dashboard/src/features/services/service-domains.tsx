@@ -13,7 +13,11 @@ import { DnsStatusBadge } from './dns-status-badge';
 
 export function ServiceDomains({ serviceId }: { serviceId: string }) {
   const { data: domainsRes, isLoading } = useListByService(serviceId);
-  const { data: settingsRes } = useGetSettings();
+  const {
+    data: settingsRes,
+    isLoading: isLoadingSettings,
+    error: settingsError,
+  } = useGetSettings();
   const createDomain = useCreate();
   const deleteDomain = useDelete();
   const { verificationResults, verifyingMap, verifyOne } = useDomainVerification();
@@ -31,14 +35,16 @@ export function ServiceDomains({ serviceId }: { serviceId: string }) {
   const domains = domainsRes?.data || [];
 
   const showGuidanceBanner =
-    !hasDnsProvider ||
-    domains.some(
-      (d) =>
-        !d.dnsProvisionStatus ||
-        d.dnsProvisionStatus === 'manual' ||
-        d.dnsProvisionStatus === 'pending' ||
-        d.dnsProvisionStatus === 'failed'
-    );
+    !isLoadingSettings &&
+    !settingsError &&
+    (!hasDnsProvider ||
+      domains.some(
+        (d) =>
+          !d.dnsProvisionStatus ||
+          d.dnsProvisionStatus === 'manual' ||
+          d.dnsProvisionStatus === 'pending' ||
+          d.dnsProvisionStatus === 'failed'
+      ));
 
   const handleCreate = () => {
     if (!newDomain.trim()) return;

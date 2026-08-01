@@ -2,6 +2,7 @@ package projects
 
 import (
 	"net/http"
+	"strconv"
 
 	"github.com/labstack/echo/v4"
 
@@ -75,6 +76,25 @@ func (h *DomainHandler) ListAll(c echo.Context) error {
 		}
 		domains = filtered
 	}
+
+	page := 1
+	pageSize := 100
+	if p, err := strconv.Atoi(c.QueryParam("page")); err == nil && p > 0 {
+		page = p
+	}
+	if ps, err := strconv.Atoi(c.QueryParam("pageSize")); err == nil && ps > 0 {
+		pageSize = ps
+	}
+	start := (page - 1) * pageSize
+	if start > len(domains) {
+		start = len(domains)
+	}
+	end := start + pageSize
+	if end > len(domains) {
+		end = len(domains)
+	}
+	domains = domains[start:end]
+
 	return utils.Success(c, "Operation successful", domains)
 }
 
@@ -147,7 +167,10 @@ func (h *DomainHandler) Verify(c echo.Context) error {
 	}
 
 	domain, err := h.envService.GetDomain(c.Request().Context(), id)
-	if err != nil || domain == nil {
+	if err != nil {
+		return utils.Error(c, http.StatusInternalServerError, err.Error())
+	}
+	if domain == nil {
 		return utils.Error(c, http.StatusNotFound, "domain not found")
 	}
 	if !h.hasAccess(c, domain.ServiceID) {
@@ -156,7 +179,11 @@ func (h *DomainHandler) Verify(c echo.Context) error {
 
 	serverIP := ""
 	if h.settingsRepo != nil {
-		if cfg, _ := h.settingsRepo.GetServerSettings(c.Request().Context()); cfg != nil {
+		cfg, err := h.settingsRepo.GetServerSettings(c.Request().Context())
+		if err != nil {
+			return utils.Error(c, http.StatusInternalServerError, "failed to get server settings: "+err.Error())
+		}
+		if cfg != nil {
 			serverIP = cfg.PublicIPv4
 		}
 	}

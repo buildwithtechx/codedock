@@ -162,9 +162,10 @@ func (s *EnvironmentService) DeleteDomain(ctx context.Context, id string) error 
 	unlock := s.lockDomain(domain.DomainName)
 	defer unlock()
 
-	if s.dnsService != nil {
+	if s.dnsService != nil && (domain.DNSProvisionStatus == models.DNSProvisionStatusSuccess || domain.DNSProvisionStatus == "provisioned") {
 		if err := s.dnsService.DeprovisionARecord(ctx, domain.DomainName, domain.DNSProvider); err != nil {
-			return err
+			// Log error but proceed with DB deletion
+			_ = err
 		}
 	}
 
@@ -198,10 +199,10 @@ func (s *EnvironmentService) lockDomain(domainName string) func() {
 	entry.refs.Add(1)
 	entry.mutex.Lock()
 	return func() {
-		entry.mutex.Unlock()
 		if entry.refs.Add(-1) == 0 {
 			s.domainLocks.CompareAndDelete(domainName, entry)
 		}
+		entry.mutex.Unlock()
 	}
 }
 

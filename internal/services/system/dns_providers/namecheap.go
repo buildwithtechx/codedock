@@ -2,14 +2,48 @@ package dnsproviders
 
 import (
 	"context"
+	"encoding/xml"
 	"fmt"
 	"io"
 	"net/http"
 	"net/url"
 	"strings"
+	"sync"
 
 	"codedock.run/codedock/internal/models"
 )
+
+type namecheapApiResponse struct {
+	Status string `xml:"Status,attr"`
+	Errors struct {
+		Errors []struct {
+			Message string `xml:",chardata"`
+		} `xml:"Error"`
+	} `xml:"Errors"`
+}
+
+func validateNamecheapResponse(body []byte) error {
+	var res namecheapApiResponse
+	if err := xml.Unmarshal(body, &res); err != nil {
+		return err
+	}
+	status := strings.ToUpper(strings.TrimSpace(res.Status))
+	if status == "OK" || status == "SUCCESS" {
+		return nil
+	}
+
+	messages := make([]string, 0, len(res.Errors.Errors))
+	for _, err := range res.Errors.Errors {
+		msg := strings.TrimSpace(err.Message)
+		if msg != "" {
+			messages = append(messages, msg)
+		}
+	}
+	if len(messages) == 0 {
+		return fmt.Errorf("namecheap api error")
+	}
+	return fmt.Errorf("namecheap api error: %s", strings.Join(messages, "; "))
+}
 
 func fetchNamecheapHosts(ctx context.Context, client *http.Client, cfg *models.ServerSettings, sld, tld string) ([]byte, error) {
 	u := "https://api.namecheap.com/xml.response"
@@ -35,11 +69,26 @@ func fetchNamecheapHosts(ctx context.Context, client *http.Client, cfg *models.S
 	if resp.StatusCode >= 400 {
 		return nil, fmt.Errorf("namecheap returned status %d", resp.StatusCode)
 	}
+	if err := validateNamecheapResponse(body); err != nil {
+		return nil, err
+	}
 	return body, nil
+}
+
+var namecheapLocks sync.Map
+
+func lockNamecheap(domain string) func() {
+	lock, _ := namecheapLocks.LoadOrStore(domain, &sync.Mutex{})
+	m := lock.(*sync.Mutex)
+	m.Lock()
+	return func() { m.Unlock() }
 }
 
 func (s *Service) provisionNamecheap(ctx context.Context, cfg *models.ServerSettings, domain, recordType, value string) error {
 	rootDomain := getRootDomain(domain)
+	unlock := lockNamecheap(rootDomain)
+	defer unlock()
+
 	subDomain := strings.TrimSuffix(domain, "."+rootDomain)
 	if subDomain == domain {
 		subDomain = "@"
@@ -72,14 +121,24 @@ func (s *Service) provisionNamecheap(ctx context.Context, cfg *models.ServerSett
 		return err
 	}
 	defer resp.Body.Close()
+	body, err := io.ReadAll(resp.Body)
+	if err != nil {
+		return err
+	}
 	if resp.StatusCode >= 400 {
 		return fmt.Errorf("namecheap returned status %d", resp.StatusCode)
+	}
+	if err := validateNamecheapResponse(body); err != nil {
+		return err
 	}
 	return nil
 }
 
 func (s *Service) deprovisionNamecheap(ctx context.Context, cfg *models.ServerSettings, domain, recordType, value string) error {
 	rootDomain := getRootDomain(domain)
+	unlock := lockNamecheap(rootDomain)
+	defer unlock()
+
 	subDomain := strings.TrimSuffix(domain, "."+rootDomain)
 	if subDomain == domain {
 		subDomain = "@"
@@ -114,8 +173,15 @@ func (s *Service) deprovisionNamecheap(ctx context.Context, cfg *models.ServerSe
 		return err
 	}
 	defer resp.Body.Close()
+	body, err = io.ReadAll(resp.Body)
+	if err != nil {
+		return err
+	}
 	if resp.StatusCode >= 400 {
 		return fmt.Errorf("namecheap returned status %d", resp.StatusCode)
+	}
+	if err := validateNamecheapResponse(body); err != nil {
+		return err
 	}
 	return nil
 }

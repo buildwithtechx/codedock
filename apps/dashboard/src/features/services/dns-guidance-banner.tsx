@@ -1,5 +1,6 @@
 import { Check, Copy, Info } from 'lucide-react';
-import { useState } from 'react';
+import { useRef, useState } from 'react';
+import { toast } from 'sonner';
 import { Button } from '#/components/ui/button';
 
 interface DnsGuidanceBannerProps {
@@ -9,16 +10,41 @@ interface DnsGuidanceBannerProps {
 
 export function DnsGuidanceBanner({ serverIp, hasDnsProvider }: DnsGuidanceBannerProps) {
   const [copied, setCopied] = useState(false);
+  const timeoutRef = useRef<NodeJS.Timeout>(null);
 
   const handleCopy = async () => {
     if (!serverIp) return;
 
+    const copyToClipboardFallback = (text: string) => {
+      const textArea = document.createElement('textarea');
+      textArea.value = text;
+      textArea.style.position = 'fixed';
+      textArea.style.left = '-9999px';
+      document.body.appendChild(textArea);
+      textArea.focus();
+      textArea.select();
+      try {
+        const successful = document.execCommand('copy');
+        if (!successful) throw new Error('Fallback copy failed');
+      } finally {
+        document.body.removeChild(textArea);
+      }
+    };
+
     try {
-      await navigator.clipboard.writeText(serverIp);
+      if (navigator.clipboard && window.isSecureContext) {
+        await navigator.clipboard.writeText(serverIp);
+      } else {
+        copyToClipboardFallback(serverIp);
+      }
       setCopied(true);
-      setTimeout(() => setCopied(false), 2000);
+      if (timeoutRef.current) {
+        clearTimeout(timeoutRef.current);
+      }
+      timeoutRef.current = setTimeout(() => setCopied(false), 2000);
     } catch {
       setCopied(false);
+      toast.error('Failed to copy to clipboard');
     }
   };
 
@@ -71,7 +97,7 @@ export function DnsGuidanceBanner({ serverIp, hasDnsProvider }: DnsGuidanceBanne
                     size="icon"
                     className="h-5 w-5"
                     onClick={handleCopy}
-                    aria-label="Copy server IP to clipboard"
+                    aria-label={copied ? 'Server IP copied' : 'Copy server IP to clipboard'}
                   >
                     {copied ? (
                       <Check className="h-3 w-3 text-emerald-500" />

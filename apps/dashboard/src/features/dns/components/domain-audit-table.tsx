@@ -111,8 +111,8 @@ export function DomainAuditTable({ domains, isLoading }: DomainAuditTableProps) 
           No domains found matching criteria.
         </div>
       ) : (
-        <div className="overflow-hidden rounded-2xl border border-border/60 bg-card/40">
-          <table className="w-full text-left text-sm">
+        <div className="overflow-x-auto rounded-2xl border border-border/60 bg-card/40">
+          <table className="w-full min-w-[760px] whitespace-nowrap text-left text-sm">
             <thead className="border-b bg-muted/40 font-semibold text-muted-foreground text-xs uppercase tracking-wider">
               <tr>
                 <th className="px-4 py-3">Domain</th>

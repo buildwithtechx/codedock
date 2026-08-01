@@ -39,7 +39,11 @@ func (s *Service) DeprovisionARecord(ctx context.Context, domain, provider strin
 		return fmt.Errorf("server settings not configured")
 	}
 	targetIP := cfg.PublicIPv4
-	return s.DeprovisionRecord(ctx, domain, "A", targetIP, provider)
+	if targetIP == "" {
+		return fmt.Errorf("PublicIPv4 is not set in server settings")
+	}
+	// Deprovision of an A record should match by name/type, pass empty value
+	return s.DeprovisionRecord(ctx, domain, "A", "", provider)
 }
 
 func (s *Service) ProvisionRecord(ctx context.Context, domain, recordType, value string) (string, error) {
@@ -88,16 +92,19 @@ func (s *Service) DeprovisionRecord(ctx context.Context, domain, recordType, val
 	switch provider {
 	case dnsProviderCloudflare:
 		if cfg.CloudflareAPIToken == "" {
+			fmt.Println("Warning: Cloudflare API token missing during deprovision")
 			return nil
 		}
 		return s.deprovisionCloudflare(ctx, cfg.CloudflareAPIToken, domain, recordType, value)
 	case dnsProviderNamecheap:
 		if cfg.NamecheapAPIKey == "" || cfg.NamecheapAPIUser == "" {
+			fmt.Println("Warning: Namecheap API credentials missing during deprovision")
 			return nil
 		}
 		return s.deprovisionNamecheap(ctx, cfg, domain, recordType, value)
 	case dnsProviderSpaceship:
 		if cfg.SpaceshipAPIKey == "" {
+			fmt.Println("Warning: Spaceship API key missing during deprovision")
 			return nil
 		}
 		return s.deprovisionSpaceship(ctx, cfg.SpaceshipAPIKey, domain, recordType, value)

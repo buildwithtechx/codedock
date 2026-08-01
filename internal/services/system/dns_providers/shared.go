@@ -50,7 +50,7 @@ func splitNamecheapDomain(domain string) (string, string, error) {
 }
 
 func checkCloudflareRecordExists(ctx context.Context, client *http.Client, token, zoneID, domain, recordType, value string) (bool, []string, error) {
-	u := fmt.Sprintf("https://api.cloudflare.com/client/v4/zones/%s/dns_records?name=%s&type=%s", zoneID, domain, recordType)
+	u := fmt.Sprintf("https://api.cloudflare.com/client/v4/zones/%s/dns_records?name=%s&type=%s", zoneID, url.QueryEscape(domain), url.QueryEscape(recordType))
 	req, _ := http.NewRequestWithContext(ctx, http.MethodGet, u, nil)
 	req.Header.Set("Authorization", "Bearer "+token)
 	resp, err := client.Do(req)

@@ -8,7 +8,7 @@ import { DnsProviderForm } from './components/dns-provider-form';
 const providers = [
   { id: 'cloudflare', name: 'Cloudflare', sub: 'API KEY / TOKEN + ZONE' },
   { id: 'namecheap', name: 'Namecheap', sub: 'API USER + KEY' },
-  { id: 'spaceship', name: 'Spaceship', sub: 'API KEY + SECRET' },
+  { id: 'spaceship', name: 'Spaceship', sub: 'API KEY' },
 ];
 
 export const DnsSettings = () => {
@@ -24,7 +24,6 @@ export const DnsSettings = () => {
     spaceshipApiKey: '',
     cloudflareEmail: '',
     cloudflareZoneId: '',
-    spaceshipApiSecret: '',
   });
 
   useEffect(() => {
@@ -53,7 +52,6 @@ export const DnsSettings = () => {
         payload.namecheapClientIp = formData.namecheapClientIp;
       } else if (provider === 'spaceship') {
         payload.spaceshipApiKey = formData.spaceshipApiKey;
-        payload.spaceshipApiSecret = formData.spaceshipApiSecret;
       }
 
       await updateSettings({ payload });

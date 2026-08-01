@@ -49,8 +49,15 @@ func spaceshipRecordExists(records []spaceshipRecord, domain, recordType, value 
 }
 
 func (s *Service) provisionSpaceship(ctx context.Context, key, domain, recordType, value string) error {
+	if key == "" {
+		return fmt.Errorf("spaceship api key not provided")
+	}
 	client := newProviderHTTPClient()
-	if records, err := fetchSpaceshipRecords(ctx, client, key); err == nil && spaceshipRecordExists(records, domain, recordType, value) {
+	records, err := fetchSpaceshipRecords(ctx, client, key)
+	if err != nil {
+		return err
+	}
+	if spaceshipRecordExists(records, domain, recordType, value) {
 		return nil
 	}
 
@@ -76,6 +83,9 @@ func (s *Service) provisionSpaceship(ctx context.Context, key, domain, recordTyp
 }
 
 func (s *Service) deprovisionSpaceship(ctx context.Context, key, domain, recordType, value string) error {
+	if key == "" {
+		return fmt.Errorf("spaceship api key not provided")
+	}
 	client := newProviderHTTPClient()
 	records, err := fetchSpaceshipRecords(ctx, client, key)
 	if err != nil {

@@ -59,7 +59,7 @@ export function DnsAuditPage() {
       </div>
 
       <div className="grid grid-cols-1 gap-4 sm:grid-cols-3">
-        <Card className="border/60 bg-card/40">
+        <Card className="border-border/60 bg-card/40">
           <CardContent className="flex items-center gap-4 p-4">
             <div className="flex h-10 w-10 shrink-0 items-center justify-center rounded-lg bg-primary/10 text-primary">
               <Globe className="h-5 w-5" />
@@ -73,7 +73,7 @@ export function DnsAuditPage() {
           </CardContent>
         </Card>
 
-        <Card className="border/60 bg-card/40">
+        <Card className="border-border/60 bg-card/40">
           <CardContent className="flex items-center gap-4 p-4">
             <div className="flex h-10 w-10 shrink-0 items-center justify-center rounded-lg bg-emerald-500/10 text-emerald-500">
               <CheckCircle2 className="h-5 w-5" />
@@ -87,7 +87,7 @@ export function DnsAuditPage() {
           </CardContent>
         </Card>
 
-        <Card className="border/60 bg-card/40">
+        <Card className="border-border/60 bg-card/40">
           <CardContent className="flex items-center gap-4 p-4">
             <div className="flex h-10 w-10 shrink-0 items-center justify-center rounded-lg bg-amber-500/10 text-amber-500">
               <HelpCircle className="h-5 w-5" />
@@ -141,23 +141,17 @@ export function DnsAuditPage() {
         </button>
       </div>
 
-      {mountedTabs.has('audit') && activeTab === 'audit' && (
-        <section>
-          <DomainAuditTable domains={domains} isLoading={isLoading} />
-        </section>
-      )}
+      <section className={activeTab === 'audit' ? 'block' : 'hidden'}>
+        {mountedTabs.has('audit') && <DomainAuditTable domains={domains} isLoading={isLoading} />}
+      </section>
 
-      {mountedTabs.has('providers') && activeTab === 'providers' && (
-        <section>
-          <DnsSettings />
-        </section>
-      )}
+      <section className={activeTab === 'providers' ? 'block' : 'hidden'}>
+        {mountedTabs.has('providers') && <DnsSettings />}
+      </section>
 
-      {mountedTabs.has('global') && activeTab === 'global' && (
-        <section>
-          <DomainsPage />
-        </section>
-      )}
+      <section className={activeTab === 'global' ? 'block' : 'hidden'}>
+        {mountedTabs.has('global') && <DomainsPage />}
+      </section>
     </div>
   );
 }
