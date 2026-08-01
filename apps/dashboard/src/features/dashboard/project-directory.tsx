@@ -1,5 +1,6 @@
 import { Link } from '@tanstack/react-router';
 import { FolderKanban, Loader2, Plus } from 'lucide-react';
+import { PageHeader } from '#/components/layout/page-header';
 import { Button } from '#/components/ui/button';
 import { ProjectCard } from '#/features/projects/project-card';
 import { useListCanvasSummaries } from '#/hooks/use-canvas';
@@ -10,20 +11,18 @@ export function ProjectDirectory() {
 
   return (
     <div className="space-y-6">
-      <header className="flex flex-col justify-between gap-4 sm:flex-row sm:items-end">
-        <div>
-          <h1 className="font-semibold text-2xl tracking-tight">Projects</h1>
-          <p className="mt-1 text-muted-foreground text-sm">
-            Projects group the services and environments your team runs.
-          </p>
-        </div>
-        <Link to="/projects/new" className="self-start sm:self-auto">
-          <Button className="gap-2">
-            <Plus className="h-4 w-4" />
-            New project
-          </Button>
-        </Link>
-      </header>
+      <PageHeader
+        title="Projects"
+        description="Projects group the services and environments your team runs."
+        action={
+          <Link to="/projects/new">
+            <Button className="gap-2">
+              <Plus className="h-4 w-4" />
+              New project
+            </Button>
+          </Link>
+        }
+      />
 
       {isLoading ? (
         <div className="flex min-h-80 items-center justify-center rounded-2xl border border-border/80 bg-card">

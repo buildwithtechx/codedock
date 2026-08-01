@@ -1,5 +1,6 @@
 import { CheckCircle2, Globe, HelpCircle, Network, ShieldCheck } from 'lucide-react';
 import { type KeyboardEvent, useState } from 'react';
+import { PageHeader } from '#/components/layout/page-header';
 import { Card, CardContent } from '#/components/ui/card';
 import { DomainAuditTable } from './components/domain-audit-table';
 import { DnsSettings } from './dns-settings';
@@ -60,20 +61,10 @@ export function DnsAuditPage() {
 
   return (
     <div className="space-y-6 pb-12">
-      <div className="flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between">
-        <div className="flex items-center gap-3">
-          <div className="flex h-12 w-12 shrink-0 items-center justify-center rounded-xl border border-primary/20 bg-primary/10 text-primary">
-            <Network className="h-6 w-6" />
-          </div>
-          <div>
-            <h1 className="font-bold text-xl tracking-tight">Domains & DNS</h1>
-            <p className="text-muted-foreground text-sm">
-              Overview and audit of all configured domains across your services, DNS provision
-              status, and live verification.
-            </p>
-          </div>
-        </div>
-      </div>
+      <PageHeader
+        title="Domains & DNS"
+        description="Audit configured domains, DNS provisioning, and live verification across services."
+      />
 
       <div className="grid grid-cols-1 gap-4 sm:grid-cols-3">
         <Card className="border-border/60 bg-card">

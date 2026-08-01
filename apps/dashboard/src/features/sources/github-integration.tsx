@@ -25,7 +25,6 @@ export function GithubIntegration() {
   const [editingApp, setEditingApp] = useState<GithubApp | null>(null);
   const [deletingApp, setDeletingApp] = useState<string | null>(null);
 
-  // Form state
   const [accessToken, setAccessToken] = useState('');
   const [webhookSecret, setWebhookSecret] = useState('');
   const [appId, setAppId] = useState('');
@@ -167,7 +166,7 @@ export function GithubIntegration() {
             <GithubIcon className="h-6 w-6" />
           </div>
           <div>
-            <h1 className="font-bold text-xl">Connected GitHub Apps</h1>
+            <h2 className="font-semibold text-lg">Connected GitHub Apps</h2>
             <p className="text-muted-foreground text-sm">
               Connect GitHub Apps to automatically deploy pushed commits.
             </p>
@@ -188,7 +187,7 @@ export function GithubIntegration() {
       {apps.length > 0 ? (
         <div className="grid grid-cols-1 gap-4">
           {apps.map((app) => (
-            <div key={app.id} className="rounded-xl border border bg-card p-6">
+            <div key={app.id} className="rounded-xl border border-border/80 bg-card p-6 shadow-sm">
               <div className="flex items-start justify-between">
                 <div className="flex items-start gap-4">
                   <div className="flex h-12 w-12 shrink-0 items-center justify-center rounded-lg border border-primary/20 bg-primary/10 text-primary">
@@ -212,7 +211,7 @@ export function GithubIntegration() {
                   <Button
                     variant="outline"
                     size="icon"
-                    className="border/50 h-10 w-10 bg-transparent hover:bg-card"
+                    className="h-10 w-10 border-border bg-background hover:bg-muted"
                     onClick={() => {
                       setEditingApp(app);
                       setIsEditing(true);

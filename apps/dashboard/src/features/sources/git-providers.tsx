@@ -30,7 +30,6 @@ export function GitProviders() {
   const [isConnecting, setIsConnecting] = useState<string | null>(null);
   const [isDisconnecting, setIsDisconnecting] = useState<string | null>(null);
 
-  // Form state
   const [accessToken, setAccessToken] = useState('');
   const [accountName, setAccountName] = useState('');
 
@@ -83,7 +82,7 @@ export function GitProviders() {
             <Link className="h-6 w-6" />
           </div>
           <div>
-            <h1 className="font-bold text-xl">Personal Git Providers</h1>
+            <h2 className="font-semibold text-lg">Personal Git Providers</h2>
             <p className="text-muted-foreground text-sm">
               Connect your personal accounts using Access Tokens.
             </p>
@@ -99,7 +98,7 @@ export function GitProviders() {
           return (
             <div
               key={provider.id}
-              className="flex flex-col justify-between rounded-xl border border bg-card p-6"
+              className="flex flex-col justify-between rounded-xl border border-border/80 bg-card p-6 shadow-sm"
             >
               <div className="flex items-start gap-4">
                 <div className="flex h-12 w-12 shrink-0 items-center justify-center rounded-lg bg-background p-2">
@@ -125,7 +124,7 @@ export function GitProviders() {
                 {isConnected ? (
                   <Button
                     variant="outline"
-                    className="border/50 bg-transparent text-destructive hover:bg-destructive/10 hover:text-destructive"
+                    className="border-destructive/40 bg-background text-destructive hover:bg-destructive/10 hover:text-destructive"
                     onClick={() => setIsDisconnecting(provider.id)}
                   >
                     Disconnect
@@ -133,7 +132,7 @@ export function GitProviders() {
                 ) : (
                   <Button
                     variant="outline"
-                    className="border/50 bg-transparent hover:bg-card"
+                    className="border-border bg-background hover:bg-muted"
                     onClick={() => {
                       setAccessToken('');
                       setAccountName('');

@@ -9,6 +9,8 @@ import {
   Settings as SettingsIcon,
   Wrench,
 } from 'lucide-react';
+import { PageFrame } from '#/components/layout/page-frame';
+import { PageHeader } from '#/components/layout/page-header';
 import { NotificationsSettings } from '#/features/notifications/notifications-settings';
 import { OAuthProvidersList } from '#/features/users/oauth-providers-list';
 import { useAuthStore } from '#/stores/auth-store';
@@ -60,12 +62,10 @@ export const SettingsLayout = () => {
 
   return (
     <div className="space-y-5">
-      <header className="space-y-1">
-        <h1 className="font-medium text-2xl tracking-tight">Settings</h1>
-        <p className="text-muted-foreground text-sm">
-          Manage instance behavior, connections, and notifications.
-        </p>
-      </header>
+      <PageHeader
+        title="Settings"
+        description="Manage instance behavior, connections, and notifications."
+      />
 
       <div className="flex gap-1 overflow-x-auto xl:hidden">
         {TABS.map((tab) => {
@@ -88,59 +88,75 @@ export const SettingsLayout = () => {
         })}
       </div>
 
-      <div className="grid min-w-0 gap-6 xl:grid-cols-[minmax(0,1fr)_17rem]">
-        <section className="min-w-0">{content}</section>
-        <aside className="hidden xl:sticky xl:top-6 xl:block xl:self-start">
-          <section className="mb-3 rounded-2xl border border-border/80 bg-card p-4 shadow-sm">
-            <div className="flex items-center gap-3">
-              <div className="flex h-8 w-8 items-center justify-center rounded-lg bg-primary/12 text-primary">
-                <SettingsIcon className="h-4 w-4" />
+      <nav aria-label="Instance tools" className="flex gap-1 overflow-x-auto xl:hidden">
+        {instanceTools.map((tool) => (
+          <Link
+            key={tool.to}
+            to={tool.to}
+            className="flex shrink-0 items-center gap-2 rounded-lg border border-border/80 bg-card px-3 py-2 text-muted-foreground text-sm transition-colors hover:bg-muted hover:text-foreground"
+          >
+            <tool.icon className="h-4 w-4" />
+            {tool.label}
+          </Link>
+        ))}
+      </nav>
+
+      <PageFrame
+        rail={
+          <div>
+            <section className="mb-3 rounded-2xl border border-border/80 bg-card p-4 shadow-sm">
+              <div className="flex items-center gap-3">
+                <div className="flex h-8 w-8 items-center justify-center rounded-lg bg-primary/12 text-primary">
+                  <SettingsIcon className="h-4 w-4" />
+                </div>
+                <div className="min-w-0">
+                  <p className="font-semibold text-sm">Settings</p>
+                  <p className="truncate text-muted-foreground text-xs">
+                    {user?.email || 'Instance owner'}
+                  </p>
+                </div>
               </div>
-              <div className="min-w-0">
-                <p className="font-semibold text-sm">Settings</p>
-                <p className="truncate text-muted-foreground text-xs">
-                  {user?.email || 'Instance owner'}
-                </p>
+            </section>
+            <div className="rounded-2xl border border-border/80 bg-card p-2 shadow-sm">
+              <div className="space-y-1">
+                {TABS.map((tab) => {
+                  const isActive = tab.id === activeId;
+                  return (
+                    <button
+                      key={tab.id}
+                      onClick={() => setActiveId(tab.id)}
+                      type="button"
+                      className={`flex w-full items-center gap-3 rounded-xl px-3 py-2.5 text-left font-medium text-sm transition-colors ${
+                        isActive
+                          ? 'bg-primary/12 text-foreground'
+                          : 'text-muted-foreground hover:bg-muted/60 hover:text-foreground'
+                      }`}
+                    >
+                      {tab.icon}
+                      {tab.label}
+                    </button>
+                  );
+                })}
               </div>
-            </div>
-          </section>
-          <div className="rounded-2xl border border-border/80 bg-card p-2 shadow-sm">
-            <div className="space-y-1">
-              {TABS.map((tab) => {
-                const isActive = tab.id === activeId;
-                return (
-                  <button
-                    key={tab.id}
-                    onClick={() => setActiveId(tab.id)}
-                    type="button"
-                    className={`flex w-full items-center gap-3 rounded-xl px-3 py-2.5 text-left font-medium text-sm transition-colors ${
-                      isActive
-                        ? 'bg-primary/12 text-foreground'
-                        : 'text-muted-foreground hover:bg-muted/60 hover:text-foreground'
-                    }`}
+              <div className="my-2 h-px bg-border/70" />
+              <div className="space-y-1">
+                {instanceTools.map((tool) => (
+                  <Link
+                    key={tool.to}
+                    to={tool.to}
+                    className="flex items-center gap-3 rounded-xl px-3 py-2.5 font-medium text-muted-foreground text-sm transition-colors hover:bg-muted/60 hover:text-foreground"
                   >
-                    {tab.icon}
-                    {tab.label}
-                  </button>
-                );
-              })}
-            </div>
-            <div className="my-2 h-px bg-border/70" />
-            <div className="space-y-1">
-              {instanceTools.map((tool) => (
-                <Link
-                  key={tool.to}
-                  to={tool.to}
-                  className="flex items-center gap-3 rounded-xl px-3 py-2.5 font-medium text-muted-foreground text-sm transition-colors hover:bg-muted/60 hover:text-foreground"
-                >
-                  <tool.icon className="h-4 w-4" />
-                  {tool.label}
-                </Link>
-              ))}
+                    <tool.icon className="h-4 w-4" />
+                    {tool.label}
+                  </Link>
+                ))}
+              </div>
             </div>
           </div>
-        </aside>
-      </div>
+        }
+      >
+        {content}
+      </PageFrame>
     </div>
   );
 };

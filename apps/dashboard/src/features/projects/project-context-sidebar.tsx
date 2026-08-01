@@ -11,23 +11,27 @@ import {
 } from 'lucide-react';
 import { useGetCanvasSummary } from '#/hooks/use-canvas';
 
-const navigation = [
-  { label: 'Overview', suffix: '', icon: LayoutDashboard, exact: true },
-  { label: 'Canvas', suffix: '/canvas', icon: Grid3X3 },
-  { label: 'Add resource', suffix: '/new', icon: Plus },
-  { label: 'Compose', suffix: '/compose', icon: Workflow },
-  { label: 'Scheduled tasks', suffix: '/scheduled-tasks', icon: CalendarDays },
-  { label: 'Project settings', suffix: '/settings', icon: Settings2 },
-];
+export const getProjectContextNavigation = (projectId: string) => {
+  const basePath = `/projects/${projectId}`;
+
+  return [
+    { title: 'Overview', to: basePath, icon: LayoutDashboard, exact: true },
+    { title: 'Canvas', to: `${basePath}/canvas`, icon: Grid3X3 },
+    { title: 'Add resource', to: `${basePath}/new`, icon: Plus },
+    { title: 'Compose', to: `${basePath}/compose`, icon: Workflow },
+    { title: 'Scheduled tasks', to: `${basePath}/scheduled-tasks`, icon: CalendarDays },
+    { title: 'Project settings', to: `${basePath}/settings`, icon: Settings2 },
+  ];
+};
 
 export function ProjectContextSidebar({ projectId }: { projectId: string }) {
   const location = useLocation();
   const { data } = useGetCanvasSummary(projectId);
   const project = data?.data;
-  const basePath = `/projects/${projectId}`;
+  const navigation = getProjectContextNavigation(projectId);
 
   return (
-    <aside className="sticky top-8 space-y-3">
+    <div className="space-y-3">
       <section className="rounded-2xl border border-border/80 bg-card p-4 shadow-sm">
         <div className="flex items-start gap-3">
           <div className="flex h-9 w-9 shrink-0 items-center justify-center rounded-xl bg-primary/12 text-primary">
@@ -59,15 +63,14 @@ export function ProjectContextSidebar({ projectId }: { projectId: string }) {
         aria-label="Project sections"
       >
         {navigation.map((item) => {
-          const href = `${basePath}${item.suffix}`;
           const active = item.exact
-            ? location.pathname === href || location.pathname === `${href}/`
-            : location.pathname.startsWith(href);
+            ? location.pathname === item.to || location.pathname === `${item.to}/`
+            : location.pathname.startsWith(item.to);
 
           return (
             <Link
-              key={item.label}
-              to={href}
+              key={item.title}
+              to={item.to}
               className={`flex items-center gap-3 rounded-xl px-3 py-2.5 font-medium text-sm transition-colors ${
                 active
                   ? 'bg-primary/12 text-foreground'
@@ -75,12 +78,12 @@ export function ProjectContextSidebar({ projectId }: { projectId: string }) {
               }`}
             >
               <item.icon className={`h-4 w-4 ${active ? 'text-primary' : ''}`} />
-              <span className="flex-1">{item.label}</span>
+              <span className="flex-1">{item.title}</span>
               {active && <ChevronRight className="h-3.5 w-3.5 text-primary" />}
             </Link>
           );
         })}
       </nav>
-    </aside>
+    </div>
   );
 }

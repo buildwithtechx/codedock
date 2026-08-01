@@ -1,6 +1,7 @@
 import { createFileRoute } from '@tanstack/react-router';
 import { Calendar, Loader2 } from 'lucide-react';
 import { useState } from 'react';
+import { PageHeader } from '#/components/layout/page-header';
 import { Card, CardContent, CardHeader, CardTitle } from '#/components/ui/card';
 import {
   Select,
@@ -35,21 +36,11 @@ function ScheduledTasksPage() {
 
   return (
     <div className="space-y-6">
-      <div className="mb-5 flex items-center justify-between">
-        <div className="flex items-center gap-3">
-          <div className="flex h-12 w-12 shrink-0 items-center justify-center rounded-lg border border-primary/20 bg-primary/10 text-primary">
-            <Calendar className="h-6 w-6" />
-          </div>
-          <div>
-            <h1 className="font-bold text-xl">Scheduled Tasks</h1>
-            <p className="text-muted-foreground text-sm">Manage and monitor scheduled tasks.</p>
-          </div>
-        </div>
-      </div>
+      <PageHeader title="Scheduled tasks" description="Manage and monitor scheduled work." />
 
-      <Card>
-        <CardHeader className="flex flex-row items-center justify-between space-y-0">
-          <CardTitle>All Scheduled Tasks</CardTitle>
+      <Card className="border-border/80 bg-card shadow-sm">
+        <CardHeader className="flex flex-row items-center justify-between space-y-0 border-border/70 border-b">
+          <CardTitle>All scheduled tasks</CardTitle>
           <div className="w-50">
             <Select value={selectedProjectId} onValueChange={setSelectedProjectId}>
               <SelectTrigger>

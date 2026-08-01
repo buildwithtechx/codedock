@@ -1,4 +1,5 @@
 import { createFileRoute } from '@tanstack/react-router';
+import { PageHeader } from '#/components/layout/page-header';
 import { GithubIntegration, GitProviders } from '#/features/sources';
 
 export const Route = createFileRoute('/_dashboard/sources')({
@@ -8,9 +9,12 @@ export const Route = createFileRoute('/_dashboard/sources')({
     };
   },
   component: () => (
-    <div className="space-y-12 pb-12">
+    <div className="space-y-8 pb-12">
+      <PageHeader
+        title="Sources"
+        description="Connect source control providers and deployment applications for your organization."
+      />
       <GithubIntegration />
-      <div className="h-px w-full bg-border/50" />
       <GitProviders />
     </div>
   ),

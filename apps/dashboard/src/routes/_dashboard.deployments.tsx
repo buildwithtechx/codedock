@@ -1,6 +1,8 @@
 import { createFileRoute, Link } from '@tanstack/react-router';
 import { Activity, Box, FolderKanban, Loader2, Rocket } from 'lucide-react';
 import { useState } from 'react';
+import { PageFrame } from '#/components/layout/page-frame';
+import { PageHeader } from '#/components/layout/page-header';
 import { Button } from '#/components/ui/button';
 import {
   Select,
@@ -42,15 +44,54 @@ function DeploymentsPage() {
 
   return (
     <div className="space-y-6">
-      <header>
-        <h1 className="font-semibold text-2xl tracking-tight">Deployments</h1>
-        <p className="mt-1 text-muted-foreground text-sm">
-          Inspect release history across applications in the active organization.
-        </p>
-      </header>
+      <PageHeader
+        title="Deployments"
+        description="Inspect release history across applications in the active organization."
+      />
 
-      <div className="grid min-w-0 gap-6 xl:grid-cols-[minmax(0,1fr)_18rem]">
-        <section className="min-w-0 space-y-4">
+      <PageFrame
+        rail={
+          <section className="rounded-2xl border border-border/80 bg-card p-5 shadow-sm">
+            <div className="flex items-center gap-2">
+              <Activity className="h-4 w-4 text-primary" />
+              <h2 className="font-semibold text-sm">Release overview</h2>
+            </div>
+            <div className="mt-5 space-y-4 text-sm">
+              <div className="flex items-center justify-between">
+                <span className="flex items-center gap-2 text-muted-foreground">
+                  <FolderKanban className="h-4 w-4" />
+                  Projects
+                </span>
+                <span className="font-semibold">{isLoadingProjects ? '-' : projects.length}</span>
+              </div>
+              <div className="flex items-center justify-between">
+                <span className="flex items-center gap-2 text-muted-foreground">
+                  <Box className="h-4 w-4" />
+                  Apps
+                </span>
+                <span className="font-semibold">{selectedProjectId ? apps.length : '-'}</span>
+              </div>
+              <div className="flex items-center justify-between">
+                <span className="flex items-center gap-2 text-muted-foreground">
+                  <Rocket className="h-4 w-4" />
+                  Selected
+                </span>
+                <span className="font-semibold">
+                  {selectedServiceId ? deployments.length : '-'}
+                </span>
+              </div>
+            </div>
+            <div className="mt-5 border-border/70 border-t pt-4">
+              <Link to="/apps/new">
+                <Button variant="outline" className="w-full">
+                  Add an app
+                </Button>
+              </Link>
+            </div>
+          </section>
+        }
+      >
+        <div className="space-y-4">
           <div className="flex flex-col gap-3 rounded-2xl border border-border/80 bg-card p-4 sm:flex-row sm:items-center">
             <Select
               value={selectedProjectId}
@@ -150,49 +191,8 @@ function DeploymentsPage() {
               </Table>
             )}
           </section>
-        </section>
-
-        <aside className="hidden xl:sticky xl:top-6 xl:block xl:self-start">
-          <section className="rounded-2xl border border-border/80 bg-card p-5 shadow-sm">
-            <div className="flex items-center gap-2">
-              <Activity className="h-4 w-4 text-primary" />
-              <h2 className="font-semibold text-sm">Release overview</h2>
-            </div>
-            <div className="mt-5 space-y-4 text-sm">
-              <div className="flex items-center justify-between">
-                <span className="flex items-center gap-2 text-muted-foreground">
-                  <FolderKanban className="h-4 w-4" />
-                  Projects
-                </span>
-                <span className="font-semibold">{isLoadingProjects ? '-' : projects.length}</span>
-              </div>
-              <div className="flex items-center justify-between">
-                <span className="flex items-center gap-2 text-muted-foreground">
-                  <Box className="h-4 w-4" />
-                  Apps
-                </span>
-                <span className="font-semibold">{selectedProjectId ? apps.length : '-'}</span>
-              </div>
-              <div className="flex items-center justify-between">
-                <span className="flex items-center gap-2 text-muted-foreground">
-                  <Rocket className="h-4 w-4" />
-                  Selected
-                </span>
-                <span className="font-semibold">
-                  {selectedServiceId ? deployments.length : '-'}
-                </span>
-              </div>
-            </div>
-            <div className="mt-5 border-border/70 border-t pt-4">
-              <Link to="/apps/new">
-                <Button variant="outline" className="w-full">
-                  Add an app
-                </Button>
-              </Link>
-            </div>
-          </section>
-        </aside>
-      </div>
+        </div>
+      </PageFrame>
     </div>
   );
 }

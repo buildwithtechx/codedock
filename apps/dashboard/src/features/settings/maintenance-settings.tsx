@@ -1,6 +1,7 @@
-import { Activity, AlertTriangle, HardDrive, RefreshCw, Trash2 } from 'lucide-react';
+import { AlertTriangle, HardDrive, RefreshCw, Trash2 } from 'lucide-react';
 import { useState } from 'react';
 import { toast } from 'sonner';
+import { PageHeader } from '#/components/layout/page-header';
 import { Badge } from '#/components/ui/badge';
 import { Button } from '#/components/ui/button';
 import { useCleanupSystem, useGetSystemStats, useRestartSystem } from '#/features/settings';
@@ -62,44 +63,36 @@ export const MaintenancePage = () => {
 
   return (
     <div className="space-y-6">
-      <div className="mb-5 flex items-center justify-between">
-        <div className="flex items-center gap-3">
-          <div className="flex h-12 w-12 shrink-0 items-center justify-center rounded-lg border border-primary/20 bg-primary/10 text-primary">
-            <Activity className="h-6 w-6" />
-          </div>
-          <div>
-            <h1 className="font-bold text-xl">Host health and cleanup</h1>
-            <p className="text-muted-foreground text-sm">
-              Manage unused resources, dangling images, and system caches to reclaim space.
-            </p>
-          </div>
-        </div>
-
-        <div className="flex shrink-0 flex-col items-end gap-4">
-          {Number(reclaimableGb) > 3 ? (
-            <Badge
+      <PageHeader
+        title="Maintenance"
+        description="Manage unused resources, dangling images, and system caches to reclaim space."
+        action={
+          <div className="flex shrink-0 items-center gap-3">
+            {Number(reclaimableGb) > 3 ? (
+              <Badge
+                variant="outline"
+                className="border-destructive/50 bg-destructive/10 px-3 py-1 font-bold text-[10px] text-destructive uppercase tracking-widest"
+              >
+                ATTENTION
+              </Badge>
+            ) : (
+              <Badge
+                variant="outline"
+                className="border-primary/50 bg-primary/10 px-3 py-1 font-bold text-[10px] text-primary uppercase tracking-widest"
+              >
+                0 ISSUES
+              </Badge>
+            )}
+            <Button
               variant="outline"
-              className="border-destructive/50 bg-destructive/10 px-3 py-1 font-bold text-[10px] text-destructive uppercase tracking-widest"
+              onClick={() => refetch()}
+              className="flex h-11 items-center gap-2 rounded-xl border-border bg-background px-6 font-semibold text-foreground text-xs uppercase tracking-widest hover:bg-muted"
             >
-              ATTENTION
-            </Badge>
-          ) : (
-            <Badge
-              variant="outline"
-              className="border-primary/50 bg-primary/10 px-3 py-1 font-bold text-[10px] text-primary uppercase tracking-widest"
-            >
-              0 ISSUES
-            </Badge>
-          )}
-          <Button
-            variant="outline"
-            onClick={() => refetch()}
-            className="border/50 flex h-11 items-center gap-2 rounded-xl bg-background/50 px-6 font-semibold text-foreground text-xs uppercase tracking-widest hover:bg-background"
-          >
-            <RefreshCw className="h-4 w-4" /> REFRESH
-          </Button>
-        </div>
-      </div>
+              <RefreshCw className="h-4 w-4" /> REFRESH
+            </Button>
+          </div>
+        }
+      />
 
       {stats?.docker?.reclaimableGb && stats.docker.reclaimableGb > 3 ? (
         <div className="flex w-full items-center gap-3 rounded-lg border border-destructive/30 bg-destructive/10 p-4 font-medium text-destructive text-sm">
@@ -108,7 +101,7 @@ export const MaintenancePage = () => {
       ) : null}
 
       <div className="grid grid-cols-1 gap-6 md:grid-cols-3">
-        <div className="border/50 flex flex-col justify-between space-y-6 rounded-2xl border bg-card/40 p-6">
+        <div className="flex flex-col justify-between space-y-6 rounded-2xl border border-border/80 bg-card p-6 shadow-sm">
           <div className="flex items-center justify-between">
             <p className="font-bold text-[10px] text-muted-foreground uppercase tracking-[0.15em]">
               ROOT DISK FREE
@@ -126,7 +119,7 @@ export const MaintenancePage = () => {
           </div>
         </div>
 
-        <div className="border/50 flex flex-col justify-between space-y-6 rounded-2xl border bg-card/40 p-6">
+        <div className="flex flex-col justify-between space-y-6 rounded-2xl border border-border/80 bg-card p-6 shadow-sm">
           <div className="flex items-center justify-between">
             <p className="w-32 font-bold text-[10px] text-muted-foreground uppercase tracking-[0.15em]">
               DOCKER CLEANUP CANDIDATES
@@ -144,7 +137,7 @@ export const MaintenancePage = () => {
           </div>
         </div>
 
-        <div className="border/50 flex flex-col justify-between space-y-6 rounded-2xl border bg-card/40 p-6">
+        <div className="flex flex-col justify-between space-y-6 rounded-2xl border border-border/80 bg-card p-6 shadow-sm">
           <div className="flex items-center justify-between">
             <p className="font-bold text-[10px] text-muted-foreground uppercase tracking-[0.15em]">
               BUILD ARTIFACTS
@@ -162,7 +155,7 @@ export const MaintenancePage = () => {
       </div>
 
       <div className="grid grid-cols-1 gap-6 md:grid-cols-3">
-        <div className="border/50 flex h-32 flex-col rounded-2xl border bg-card/40 p-6">
+        <div className="flex h-32 flex-col rounded-2xl border border-border/80 bg-card p-6 shadow-sm">
           <p className="mb-4 font-bold text-[10px] text-muted-foreground uppercase tracking-[0.15em]">
             DISK TREND
           </p>
@@ -176,7 +169,7 @@ export const MaintenancePage = () => {
             ))}
           </div>
         </div>
-        <div className="border/50 flex h-32 flex-col rounded-2xl border bg-card/40 p-6">
+        <div className="flex h-32 flex-col rounded-2xl border border-border/80 bg-card p-6 shadow-sm">
           <p className="mb-4 font-bold text-[10px] text-muted-foreground uppercase tracking-[0.15em]">
             DOCKER RECLAIMABLE TREND
           </p>
@@ -190,7 +183,7 @@ export const MaintenancePage = () => {
             ))}
           </div>
         </div>
-        <div className="border/50 flex h-32 flex-col rounded-2xl border bg-card/40 p-6">
+        <div className="flex h-32 flex-col rounded-2xl border border-border/80 bg-card p-6 shadow-sm">
           <p className="mb-4 font-bold text-[10px] text-muted-foreground uppercase tracking-[0.15em]">
             BUILD ARTIFACT TREND
           </p>
@@ -205,7 +198,7 @@ export const MaintenancePage = () => {
       <div className="grid grid-cols-1 gap-6 lg:grid-cols-3">
         <DockerStorageCard stats={stats} />
 
-        <div className="border/50 flex flex-col space-y-6 rounded-2xl border bg-card/40 p-6 lg:col-span-1">
+        <div className="flex flex-col space-y-6 rounded-2xl border border-border/80 bg-card p-6 shadow-sm lg:col-span-1">
           <div className="flex items-center gap-4">
             <div className="flex h-12 w-12 items-center justify-center rounded-lg border border-primary/20 bg-primary/10 text-primary">
               <HardDrive className="h-5 w-5" />
@@ -218,7 +211,7 @@ export const MaintenancePage = () => {
             </div>
           </div>
 
-          <div className="border/50 divide-y divide-border/50 rounded-xl border text-sm">
+          <div className="divide-y divide-border/70 rounded-xl border border-border/80 text-sm">
             <div className="flex justify-between bg-background/30 p-4">
               <span className="text-muted-foreground">Top Docker candidate</span>
               <span className="font-mono">

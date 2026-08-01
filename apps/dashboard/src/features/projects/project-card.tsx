@@ -17,7 +17,6 @@ const GithubIcon = ({ className }: { className?: string }) => (
   </svg>
 );
 
-// Basic mapping of icons based on string value
 const IconMap: Record<string, React.ReactNode> = {
   github: <GithubIcon className="h-5 w-5" />,
   postgres: <Database className="h-5 w-5 text-blue-500" />,
@@ -63,9 +62,9 @@ export const ProjectCard = ({ project }: { project: CanvasSummary }) => {
           </div>
         </div>
 
-        <div className="border/50 mt-4 flex-1 border-t pt-4">
+        <div className="mt-4 flex-1 border-border/70 border-t pt-4">
           {project.totalServices === 0 ? (
-            <div className="border/50 flex h-18 items-center justify-center rounded-xl border border-dashed bg-background/30">
+            <div className="flex h-18 items-center justify-center rounded-xl border border-border/70 border-dashed bg-background">
               <span className="font-mono text-[10px] text-muted-foreground uppercase tracking-widest">
                 No services attached
               </span>
@@ -79,13 +78,13 @@ export const ProjectCard = ({ project }: { project: CanvasSummary }) => {
                 {project.serviceIcons?.slice(0, 5).map((icon, i) => (
                   <div
                     key={i}
-                    className="border/50 flex h-10 w-10 items-center justify-center rounded-lg border bg-background/50 shadow-sm transition-colors group-hover:border-primary/30"
+                    className="flex h-10 w-10 items-center justify-center rounded-lg border border-border/70 bg-background shadow-sm transition-colors group-hover:border-primary/30"
                   >
                     {getIcon(icon)}
                   </div>
                 ))}
                 {project.totalServices > 5 && (
-                  <div className="border/50 flex h-10 w-10 items-center justify-center rounded-lg border bg-background/50 font-mono text-[10px] text-muted-foreground shadow-sm">
+                  <div className="flex h-10 w-10 items-center justify-center rounded-lg border border-border/70 bg-background font-mono text-[10px] text-muted-foreground shadow-sm">
                     +{project.totalServices - 5}
                   </div>
                 )}

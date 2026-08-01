@@ -8,7 +8,7 @@ export type SectionProps = {
 };
 
 export const Section = ({ icon, title, action, children }: SectionProps) => (
-  <div className="border/50 rounded-xl border bg-card/40 p-6">
+  <div className="rounded-xl border border-border bg-card p-6">
     <div className="mb-4 flex items-center justify-between">
       <div className="flex items-center gap-3">
         <div className="flex h-8 w-8 shrink-0 items-center justify-center rounded-lg bg-primary/10 text-primary">

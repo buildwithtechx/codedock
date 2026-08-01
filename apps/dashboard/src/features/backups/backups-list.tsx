@@ -2,6 +2,7 @@ import { Link } from '@tanstack/react-router';
 import { Calendar, Check, Database, Play, Trash2 } from 'lucide-react';
 import { useEffect, useState } from 'react';
 import { toast } from 'sonner';
+import { PageHeader } from '#/components/layout/page-header';
 import { Button } from '#/components/ui/button';
 import { Input } from '#/components/ui/input';
 import { Row, Section } from '#/components/ui/section';
@@ -134,39 +135,36 @@ export function BackupsList() {
 
   return (
     <div className="space-y-6 pb-12">
-      <div className="mb-5 flex items-center justify-between">
-        <div>
-          <h1 className="font-bold text-xl">System Backups</h1>
-          <p className="text-muted-foreground text-sm">
-            Backup configuration for the Codedock instance database.
-          </p>
-        </div>
-
-        <div className="flex shrink-0 items-center gap-3">
-          <Link to="/s3-destinations">
-            <Button variant="outline" size="sm">
-              Storage destinations
+      <PageHeader
+        title="Backups"
+        description="Configure retention, scheduling, and storage for the Codedock instance database."
+        action={
+          <div className="flex flex-wrap items-center gap-2">
+            <Link to="/s3-destinations">
+              <Button variant="outline" size="sm">
+                Storage destinations
+              </Button>
+            </Link>
+            <Button
+              variant="outline"
+              size="sm"
+              onClick={handleTrigger}
+              disabled={triggerBackup.isPending || !config}
+            >
+              <Play className="mr-2 h-4 w-4" />
+              {triggerBackup.isPending ? 'Triggering...' : 'Backup now'}
             </Button>
-          </Link>
-          <Button
-            variant="outline"
-            size="sm"
-            onClick={handleTrigger}
-            disabled={triggerBackup.isPending || !config}
-          >
-            <Play className="mr-2 h-4 w-4" />
-            {triggerBackup.isPending ? 'Triggering...' : 'Backup Now'}
-          </Button>
-          <Button
-            size="sm"
-            onClick={handleSave}
-            disabled={createBackup.isPending || deleteBackup.isPending}
-          >
-            <Check className="mr-2 h-4 w-4" />
-            {createBackup.isPending || deleteBackup.isPending ? 'Saving...' : 'Save Changes'}
-          </Button>
-        </div>
-      </div>
+            <Button
+              size="sm"
+              onClick={handleSave}
+              disabled={createBackup.isPending || deleteBackup.isPending}
+            >
+              <Check className="mr-2 h-4 w-4" />
+              {createBackup.isPending || deleteBackup.isPending ? 'Saving...' : 'Save changes'}
+            </Button>
+          </div>
+        }
+      />
 
       <Section icon={<Database className="h-4 w-4" />} title="Database Configuration">
         <Row label="UUID" description="The unique identifier for this backup configuration.">

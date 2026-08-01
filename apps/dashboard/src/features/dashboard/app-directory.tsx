@@ -1,5 +1,6 @@
 import { Link } from '@tanstack/react-router';
 import { ArrowUpRight, Box, CircleAlert, Loader2, Plus } from 'lucide-react';
+import { PageHeader } from '#/components/layout/page-header';
 import { Button } from '#/components/ui/button';
 import { useListAppsByOrganization } from '#/hooks/use-apps';
 
@@ -17,20 +18,18 @@ export function AppDirectory() {
 
   return (
     <div className="space-y-6">
-      <header className="flex flex-col justify-between gap-4 sm:flex-row sm:items-end">
-        <div>
-          <h1 className="font-semibold text-2xl tracking-tight">Apps</h1>
-          <p className="mt-1 text-muted-foreground text-sm">
-            Every application deployed in the active organization.
-          </p>
-        </div>
-        <Link to="/apps/new" className="self-start sm:self-auto">
-          <Button className="gap-2">
-            <Plus className="h-4 w-4" />
-            New app
-          </Button>
-        </Link>
-      </header>
+      <PageHeader
+        title="Apps"
+        description="Every application deployed in the active organization."
+        action={
+          <Link to="/apps/new">
+            <Button className="gap-2">
+              <Plus className="h-4 w-4" />
+              New app
+            </Button>
+          </Link>
+        }
+      />
 
       {isLoading ? (
         <div className="flex min-h-80 items-center justify-center rounded-2xl border border-border/80 bg-card">

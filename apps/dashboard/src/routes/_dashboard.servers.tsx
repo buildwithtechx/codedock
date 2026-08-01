@@ -1,5 +1,6 @@
 import { createFileRoute, Link } from '@tanstack/react-router';
 import { AlertCircle, Cpu, HardDrive, Loader2, MemoryStick, Plus, ServerIcon } from 'lucide-react';
+import { PageHeader } from '#/components/layout/page-header';
 import { Button } from '#/components/ui/button';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '#/components/ui/card';
 import { Progress } from '#/components/ui/progress';
@@ -15,26 +16,18 @@ function ServersPage() {
 
   return (
     <div className="space-y-6">
-      <div className="flex items-center justify-between">
-        <div className="flex items-center gap-3">
-          <div className="flex h-12 w-12 shrink-0 items-center justify-center rounded-lg border border-primary/20 bg-primary/10 text-primary">
-            <ServerIcon className="h-6 w-6" />
-          </div>
-          <div>
-            <h1 className="font-bold text-xl">Servers</h1>
-            <p className="text-muted-foreground text-sm">
-              Manage your distributed fleet of worker servers.
-            </p>
-          </div>
-        </div>
-
-        <Link to="/servers/new">
-          <Button className="gap-2">
-            <Plus className="h-4 w-4" />
-            New server
-          </Button>
-        </Link>
-      </div>
+      <PageHeader
+        title="Servers"
+        description="Manage your distributed fleet of worker servers."
+        action={
+          <Link to="/servers/new">
+            <Button className="gap-2">
+              <Plus className="h-4 w-4" />
+              New server
+            </Button>
+          </Link>
+        }
+      />
 
       {isLoading ? (
         <div className="flex justify-center p-12">
@@ -43,9 +36,9 @@ function ServersPage() {
       ) : isError ? (
         <div className="flex h-64 flex-col items-center justify-center rounded-xl border border-destructive/30 bg-card p-6 text-center">
           <AlertCircle className="mb-4 h-8 w-8 text-destructive" />
-          <h3 className="font-bold text-foreground text-lg tracking-tight">
+          <h2 className="font-bold text-foreground text-lg tracking-tight">
             Could not load servers
-          </h3>
+          </h2>
           <p className="mt-1 text-muted-foreground text-sm">Check your connection and try again.</p>
           <Button className="mt-6" variant="outline" onClick={() => void refetch()}>
             Try again
@@ -54,7 +47,7 @@ function ServersPage() {
       ) : servers?.length === 0 ? (
         <div className="flex h-64 flex-col items-center justify-center rounded-xl border border-dashed bg-card">
           <ServerIcon className="mb-4 h-8 w-8 text-muted-foreground" />
-          <h3 className="font-bold text-foreground text-lg tracking-tight">No servers yet</h3>
+          <h2 className="font-bold text-foreground text-lg tracking-tight">No servers yet</h2>
           <p className="mt-1 text-center text-muted-foreground text-sm">
             Add a server to start deploying your applications globally.
           </p>

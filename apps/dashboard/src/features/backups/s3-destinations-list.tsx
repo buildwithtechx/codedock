@@ -1,6 +1,7 @@
 import { Database, MoreVertical, Plus, Trash } from 'lucide-react';
 import { useState } from 'react';
 import { toast } from 'sonner';
+import { PageHeader } from '#/components/layout/page-header';
 import { Button } from '#/components/ui/button';
 import {
   DropdownMenu,
@@ -33,30 +34,22 @@ export function S3DestinationsList() {
 
   return (
     <div className="space-y-6">
-      <div className="mb-5 flex items-center justify-between">
-        <div className="flex items-center gap-3">
-          <div className="flex h-12 w-12 shrink-0 items-center justify-center rounded-lg border border-primary/20 bg-primary/10 text-primary">
-            <Database className="h-6 w-6" />
-          </div>
-          <div>
-            <h1 className="font-bold text-xl">S3 Destinations</h1>
-            <p className="text-muted-foreground text-sm">
-              Manage your S3 compatible storage connections. Store credentials in Codedock to use
-              them as database backup targets.
-            </p>
-          </div>
-        </div>
-        <CreateS3DestinationDialog
-          isOpen={isOpen}
-          setIsOpen={setIsOpen}
-          trigger={
-            <Button className="gap-2">
-              <Plus className="h-4 w-4" />
-              NEW DESTINATION
-            </Button>
-          }
-        />
-      </div>
+      <PageHeader
+        title="Storage destinations"
+        description="Manage compatible object storage used for offsite backups."
+        action={
+          <CreateS3DestinationDialog
+            isOpen={isOpen}
+            setIsOpen={setIsOpen}
+            trigger={
+              <Button className="gap-2">
+                <Plus className="h-4 w-4" />
+                Add destination
+              </Button>
+            }
+          />
+        }
+      />
 
       {list.length === 0 ? (
         <div className="flex flex-col items-center justify-center rounded-xl border border-border border-dashed bg-card py-12 text-center">

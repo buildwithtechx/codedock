@@ -36,7 +36,7 @@ export function BackupExecutionsList({
             records.map((record) => (
               <div
                 key={record.id}
-                className="border/50 flex flex-col gap-3 rounded-lg border bg-background/50 p-4"
+                className="flex flex-col gap-3 rounded-lg border border-border/70 bg-background p-4"
               >
                 <Badge
                   variant="outline"

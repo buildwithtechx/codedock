@@ -1,5 +1,6 @@
 import { createFileRoute } from '@tanstack/react-router';
 import { Loader2, Shield } from 'lucide-react';
+import { PageHeader } from '#/components/layout/page-header';
 import { Card, CardContent, CardHeader, CardTitle } from '#/components/ui/card';
 import {
   Table,
@@ -21,23 +22,14 @@ function AuditLogsPage() {
 
   return (
     <div className="space-y-6">
-      <div className="mb-5 flex items-center justify-between">
-        <div className="flex items-center gap-3">
-          <div className="flex h-12 w-12 shrink-0 items-center justify-center rounded-lg border border-primary/20 bg-primary/10 text-primary">
-            <Shield className="h-6 w-6" />
-          </div>
-          <div>
-            <h1 className="font-bold text-xl">Audit Logs</h1>
-            <p className="text-muted-foreground text-sm">
-              View security events and actions taken on the platform.
-            </p>
-          </div>
-        </div>
-      </div>
+      <PageHeader
+        title="Audit logs"
+        description="Review security events and actions taken across the platform."
+      />
 
-      <Card>
-        <CardHeader>
-          <CardTitle>Recent Activity</CardTitle>
+      <Card className="border-border/80 bg-card shadow-sm">
+        <CardHeader className="border-border/70 border-b">
+          <CardTitle>Recent activity</CardTitle>
         </CardHeader>
         <CardContent>
           {isLoading ? (
