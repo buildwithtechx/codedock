@@ -56,6 +56,7 @@ export function DomainAuditTable({ domains, isLoading }: DomainAuditTableProps) 
     if (domains.length === 0) return;
     setIsVerifyingAll(true);
     let verifiedCount = 0;
+    let failedCount = 0;
 
     for (const d of domains) {
       setVerifyingMap((prev) => ({ ...prev, [d.id]: true }));
@@ -66,20 +67,28 @@ export function DomainAuditTable({ domains, isLoading }: DomainAuditTableProps) 
           if (res.data.verified) verifiedCount++;
         }
       } catch {
-        // ignore individual errors in bulk verification
+        failedCount++;
       } finally {
         setVerifyingMap((prev) => ({ ...prev, [d.id]: false }));
       }
     }
     setIsVerifyingAll(false);
-    toast.success(`Completed verification: ${verifiedCount}/${domains.length} domains resolving`);
+    if (failedCount > 0) {
+      toast.warning(
+        `Completed verification: ${verifiedCount}/${domains.length} domains resolving, ${failedCount} failed`
+      );
+    } else {
+      toast.success(`Completed verification: ${verifiedCount}/${domains.length} domains resolving`);
+    }
   };
 
   const filteredDomains = domains.filter((d) => {
     const matchesSearch = d.domainName.toLowerCase().includes(search.toLowerCase());
     const matchesStatus =
       statusFilter === 'all' ||
-      (d.dnsProvisionStatus || 'pending').toLowerCase() === statusFilter.toLowerCase();
+      (d.dnsProvisionStatus || 'pending').toLowerCase() === statusFilter.toLowerCase() ||
+      (statusFilter === 'provisioned' &&
+        (d.dnsProvisionStatus || 'pending').toLowerCase() === 'success');
     return matchesSearch && matchesStatus;
   });
 
@@ -192,7 +201,7 @@ export function DomainAuditTable({ domains, isLoading }: DomainAuditTableProps) 
                           variant="ghost"
                           size="sm"
                           onClick={() => handleVerifyOne(domain.id)}
-                          disabled={isVerifying}
+                          disabled={isVerifying || isVerifyingAll}
                           className="h-8 gap-1 text-xs"
                         >
                           {isVerifying ? (
@@ -208,6 +217,7 @@ export function DomainAuditTable({ domains, isLoading }: DomainAuditTableProps) 
                           onClick={() => deleteDomain.mutate({ id: domain.id })}
                           disabled={deleteDomain.isPending}
                           className="h-8 w-8 text-destructive hover:bg-destructive/10 hover:text-destructive"
+                          aria-label={`Delete domain ${domain.domainName}`}
                         >
                           <Trash2 className="h-4 w-4" />
                         </Button>

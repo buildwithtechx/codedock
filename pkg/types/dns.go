@@ -25,6 +25,7 @@ type Domain struct {
 	SSLStatus           string    `json:"sslStatus" db:"ssl_status"`
 	SSLCertStatus       string    `json:"sslCertStatus,omitempty" db:"ssl_cert_status"`
 	DNSProvisionStatus  string    `json:"dnsProvisionStatus,omitempty" db:"dns_provision_status"`
+	DNSProvider         string    `json:"dnsProvider,omitempty" db:"dns_provider"`
 	DNSVerificationCode string    `json:"dnsVerificationCode,omitempty" db:"dns_verification_code"`
 	Verified            bool      `json:"verified" db:"verified"`
 	CreatedAt           time.Time `json:"createdAt" db:"created_at"`

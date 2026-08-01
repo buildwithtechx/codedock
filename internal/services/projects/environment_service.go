@@ -3,6 +3,7 @@ package projects
 import (
 	"context"
 	"errors"
+	"sync"
 	"time"
 
 	"github.com/google/uuid"
@@ -13,10 +14,11 @@ import (
 )
 
 type EnvironmentService struct {
-	envRepo    repositories.EnvironmentRepository
-	domainRepo repositories.DomainRepository
-	varRepo    repositories.EnvRepository
-	dnsService *system.DNSProviderService
+	envRepo     repositories.EnvironmentRepository
+	domainRepo  repositories.DomainRepository
+	varRepo     repositories.EnvRepository
+	dnsService  *system.DNSProviderService
+	domainLocks sync.Map
 }
 
 func NewEnvironmentService(er repositories.EnvironmentRepository, dr repositories.DomainRepository, vr repositories.EnvRepository, dnsService *system.DNSProviderService) *EnvironmentService {
@@ -85,14 +87,28 @@ func (s *EnvironmentService) CreateDomain(ctx context.Context, d *models.DomainC
 	}
 
 	if s.dnsService != nil {
-		go func() {
-			err := s.dnsService.ProvisionARecord(context.Background(), d.DomainName)
+		domainID := d.ID
+		domainName := d.DomainName
+		go func(domainID, domainName string) {
+			provisionCtx, cancel := context.WithTimeout(context.Background(), 30*time.Second)
+			defer cancel()
+
+			unlock := s.lockDomain(domainName)
+			defer unlock()
+
+			current, err := s.domainRepo.GetByID(provisionCtx, domainID)
+			if err != nil || current == nil || current.DomainName != domainName {
+				return
+			}
+
+			provider, err := s.dnsService.ProvisionARecord(provisionCtx, domainName)
 			status := models.DNSProvisionStatusSuccess
 			if err != nil {
 				status = models.DNSProvisionStatusFailed
+				provider = ""
 			}
-			_ = s.domainRepo.UpdateDNSProvisionStatus(context.Background(), d.ID, status)
-		}()
+			_ = s.domainRepo.UpdateDNSProvisionStatus(provisionCtx, domainID, status, provider)
+		}(domainID, domainName)
 	}
 
 	return d, nil
@@ -120,14 +136,28 @@ func (s *EnvironmentService) DeleteDomain(ctx context.Context, id string) error 
 	if id == "" {
 		return errors.New("id required")
 	}
-	domain, _ := s.domainRepo.GetByID(ctx, id)
-	err := s.domainRepo.Delete(ctx, id)
-	if err == nil && domain != nil && s.dnsService != nil {
-		go func() {
-			_ = s.dnsService.DeprovisionARecord(context.Background(), domain.DomainName)
-		}()
+	domain, err := s.domainRepo.GetByID(ctx, id)
+	if err != nil {
+		return err
 	}
-	return err
+	if domain == nil {
+		return nil
+	}
+
+	unlock := s.lockDomain(domain.DomainName)
+	defer unlock()
+
+	err = s.domainRepo.Delete(ctx, id)
+	if err != nil {
+		return err
+	}
+
+	if s.dnsService != nil {
+		if err := s.dnsService.DeprovisionARecord(ctx, domain.DomainName, domain.DNSProvider); err != nil {
+			return err
+		}
+	}
+	return nil
 }
 
 func (s *EnvironmentService) GetVars(ctx context.Context, projectID string) (map[string]string, error) {
@@ -142,4 +172,15 @@ func (s *EnvironmentService) SetVar(ctx context.Context, projectID, key, value s
 		return errors.New("project id and key required")
 	}
 	return s.varRepo.SetVar(ctx, projectID, key, value)
+}
+
+func (s *EnvironmentService) lockDomain(domainName string) func() {
+	if domainName == "" {
+		return func() {}
+	}
+
+	lock, _ := s.domainLocks.LoadOrStore(domainName, &sync.Mutex{})
+	mu := lock.(*sync.Mutex)
+	mu.Lock()
+	return mu.Unlock
 }

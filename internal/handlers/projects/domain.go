@@ -60,6 +60,15 @@ func (h *DomainHandler) ListAll(c echo.Context) error {
 	if err != nil {
 		return utils.Error(c, http.StatusInternalServerError, err.Error())
 	}
+	if userClaims.Role != models.UserRoleAdmin && userClaims.Role != models.UserRoleOwner {
+		filtered := make([]models.DomainConfig, 0, len(domains))
+		for _, domain := range domains {
+			if h.hasAccess(c, domain.ServiceID) {
+				filtered = append(filtered, domain)
+			}
+		}
+		domains = filtered
+	}
 	return utils.Success(c, "Operation successful", domains)
 }
 
@@ -144,6 +153,9 @@ func (h *DomainHandler) Verify(c echo.Context) error {
 		if cfg, _ := h.settingsRepo.GetServerSettings(c.Request().Context()); cfg != nil {
 			serverIP = cfg.PublicIPv4
 		}
+	}
+	if serverIP == "" {
+		return utils.Error(c, http.StatusInternalServerError, "server IP is not configured")
 	}
 
 	verified, resolvedIP, err := systemservices.VerifyDomain(c.Request().Context(), domain.DomainName, serverIP)

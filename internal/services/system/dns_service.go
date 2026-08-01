@@ -35,7 +35,7 @@ func (s *DNSService) CreateRecord(ctx context.Context, req *models.CreateDNSReco
 	}
 
 	if record.RecordType == "A" && record.RecordName != "" {
-		_ = s.providerSvc.ProvisionARecord(ctx, fmt.Sprintf("%s.%s", record.RecordName, record.DomainName))
+		_, _ = s.providerSvc.ProvisionARecord(ctx, fmt.Sprintf("%s.%s", record.RecordName, record.DomainName))
 	}
 
 	return record, nil
@@ -73,8 +73,4 @@ func (s *DNSService) UpdateRecord(ctx context.Context, id string, req *models.Up
 
 func (s *DNSService) DeleteRecord(ctx context.Context, id string) error {
 	return s.repo.Delete(ctx, id)
-}
-
-func (s *DNSService) VerifyDomain(ctx context.Context, domainName, expectedIP string) (bool, string, error) {
-	return VerifyDomain(ctx, domainName, expectedIP)
 }

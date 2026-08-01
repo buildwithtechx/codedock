@@ -1,3 +1,12 @@
+export type {
+  DNSProvisionStatus,
+  DNSVerificationStatus,
+  DomainBase,
+  DomainVerifyResult,
+} from './contracts';
+
+import type { DomainBase } from './contracts';
+
 export interface DNSRecord {
   id: string;
   domainName: string;
@@ -24,32 +33,8 @@ export interface UpdateDNSRecordRequest {
   ttl?: number;
 }
 
-export type DNSProvisionStatus = 'provisioned' | 'failed' | 'pending' | 'manual';
-export type DNSVerificationStatus =
-  | 'resolves_to_server'
-  | 'resolves_to_different_ip'
-  | 'unresolved';
-
-export interface DomainVerifyResult {
-  domainId: string;
-  domainName: string;
-  verified: boolean;
-  status: DNSVerificationStatus;
-  resolvedIps?: string[];
-  serverIp?: string;
-  message: string;
-}
-
-export interface Domain {
-  id: string;
-  projectId?: string;
-  serviceId?: string;
-  domainName: string;
+export interface Domain extends DomainBase {
   sslStatus?: string;
-  sslCertStatus?: string;
-  dnsProvisionStatus?: DNSProvisionStatus;
-  verified?: boolean;
-  createdAt: string;
 }
 
 export type DomainConfig = Domain;

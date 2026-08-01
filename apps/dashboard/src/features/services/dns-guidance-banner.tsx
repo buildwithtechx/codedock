@@ -10,11 +10,16 @@ interface DnsGuidanceBannerProps {
 export function DnsGuidanceBanner({ serverIp, hasDnsProvider }: DnsGuidanceBannerProps) {
   const [copied, setCopied] = useState(false);
 
-  const handleCopy = () => {
+  const handleCopy = async () => {
     if (!serverIp) return;
-    navigator.clipboard.writeText(serverIp);
-    setCopied(true);
-    setTimeout(() => setCopied(false), 2000);
+
+    try {
+      await navigator.clipboard.writeText(serverIp);
+      setCopied(true);
+      setTimeout(() => setCopied(false), 2000);
+    } catch {
+      setCopied(false);
+    }
   };
 
   return (
@@ -66,6 +71,7 @@ export function DnsGuidanceBanner({ serverIp, hasDnsProvider }: DnsGuidanceBanne
                     size="icon"
                     className="h-5 w-5"
                     onClick={handleCopy}
+                    aria-label="Copy server IP to clipboard"
                   >
                     {copied ? (
                       <Check className="h-3 w-3 text-emerald-500" />

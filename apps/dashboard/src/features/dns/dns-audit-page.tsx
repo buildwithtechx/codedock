@@ -13,9 +13,10 @@ export function DnsAuditPage() {
   const domains = domainsRes?.data || [];
 
   const totalCount = domains.length;
-  const provisionedCount = domains.filter(
-    (d) => (d.dnsProvisionStatus || '').toLowerCase() === 'provisioned'
-  ).length;
+  const provisionedCount = domains.filter((d) => {
+    const status = (d.dnsProvisionStatus || '').toLowerCase();
+    return status === 'provisioned' || status === 'success';
+  }).length;
   const manualCount = domains.filter(
     (d) =>
       (d.dnsProvisionStatus || '').toLowerCase() === 'manual' ||
@@ -123,11 +124,17 @@ export function DnsAuditPage() {
         </button>
       </div>
 
-      {activeTab === 'audit' && <DomainAuditTable domains={domains} isLoading={isLoading} />}
+      <section hidden={activeTab !== 'audit'}>
+        <DomainAuditTable domains={domains} isLoading={isLoading} />
+      </section>
 
-      {activeTab === 'providers' && <DnsSettings />}
+      <section hidden={activeTab !== 'providers'}>
+        <DnsSettings />
+      </section>
 
-      {activeTab === 'global' && <DomainsPage />}
+      <section hidden={activeTab !== 'global'}>
+        <DomainsPage />
+      </section>
     </div>
   );
 }

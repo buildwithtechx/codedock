@@ -2,6 +2,7 @@ package system
 
 import (
 	"context"
+	"errors"
 	"fmt"
 	"net"
 )
@@ -14,6 +15,10 @@ func VerifyDomain(ctx context.Context, domainName, expectedIP string) (bool, str
 	resolver := &net.Resolver{}
 	ips, err := resolver.LookupIP(ctx, "ip", domainName)
 	if err != nil {
+		var dnsErr *net.DNSError
+		if errors.As(err, &dnsErr) && dnsErr.IsNotFound {
+			return false, "", nil
+		}
 		return false, "", fmt.Errorf("failed to lookup IP for domain %s: %w", domainName, err)
 	}
 
@@ -23,7 +28,7 @@ func VerifyDomain(ctx context.Context, domainName, expectedIP string) (bool, str
 
 	resolvedIP := ips[0].String()
 	if expectedIP == "" {
-		return true, resolvedIP, nil
+		return false, resolvedIP, nil
 	}
 
 	for _, ip := range ips {

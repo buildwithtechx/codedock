@@ -1,10 +1,21 @@
 import type { Database } from '#/features/databases';
+import type {
+  DNSProvisionStatus,
+  DNSVerificationStatus,
+  DomainBase,
+} from '#/features/dns/contracts';
 import type { AppService } from '#/features/services';
 import type { BaseResponse, PaginatedData } from '#/interfaces/base';
 
+export type {
+  DNSProvisionStatus,
+  DNSVerificationStatus,
+  DomainBase,
+  DomainVerifyResult,
+} from '#/features/dns/contracts';
+
 export type MemberPermission = 'admin' | 'member' | 'viewer';
 export type MemberStatus = 'pending' | 'accepted';
-export type SSLCertStatus = 'pending' | 'issued' | 'failed';
 
 export interface ProjectConfig {
   id: string;
@@ -23,35 +34,10 @@ export interface EnvironmentConfig {
   updatedAt: string;
 }
 
-export type DNSProvisionStatus = 'provisioned' | 'failed' | 'pending' | 'manual';
-export type DNSVerificationStatus =
-  | 'resolves_to_server'
-  | 'resolves_to_different_ip'
-  | 'unresolved';
-
-export interface DomainConfig {
-  id: string;
-  serviceId?: string;
-  projectId?: string;
-  domainName: string;
+export interface DomainConfig extends DomainBase {
   redirectTo?: string;
-  sslCertStatus?: SSLCertStatus;
   pathPrefix?: string;
-  dnsProvisionStatus?: DNSProvisionStatus;
-  verified?: boolean;
   verificationStatus?: DNSVerificationStatus;
-  createdAt: string;
-  updatedAt: string;
-}
-
-export interface DomainVerifyResult {
-  domainId: string;
-  domainName: string;
-  verified: boolean;
-  status: DNSVerificationStatus;
-  resolvedIps?: string[];
-  serverIp?: string;
-  message: string;
 }
 
 export interface ServerlessFunctionCode {

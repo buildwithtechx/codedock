@@ -27,7 +27,7 @@ type DomainRepository interface {
 	ListAll(ctx context.Context) ([]models.DomainConfig, error)
 	GetByID(ctx context.Context, id string) (*models.DomainConfig, error)
 	Create(ctx context.Context, d *models.DomainConfig) error
-	UpdateDNSProvisionStatus(ctx context.Context, id string, status string) error
+	UpdateDNSProvisionStatus(ctx context.Context, id string, status string, provider string) error
 	Delete(ctx context.Context, id string) error
 }
 
@@ -104,7 +104,7 @@ func NewDomainRepo(db *sql.DB) *DomainRepo {
 
 func (r *DomainRepo) ListByService(ctx context.Context, serviceID string) ([]models.DomainConfig, error) {
 	var domains []models.DomainConfig
-	err := r.db.Select(&domains, `SELECT id, service_id, domain_name, redirect_to, ssl_cert_status, path_prefix, COALESCE(dns_provision_status, 'pending') AS dns_provision_status, created_at, updated_at FROM domains WHERE service_id = ? ORDER BY domain_name ASC`, serviceID)
+	err := r.db.Select(&domains, `SELECT id, service_id, domain_name, redirect_to, ssl_cert_status, path_prefix, COALESCE(dns_provision_status, 'pending') AS dns_provision_status, COALESCE(dns_provider, '') AS dns_provider, created_at, updated_at FROM domains WHERE service_id = ? ORDER BY domain_name ASC`, serviceID)
 	if err != nil {
 		return nil, err
 	}
@@ -116,7 +116,7 @@ func (r *DomainRepo) ListByService(ctx context.Context, serviceID string) ([]mod
 
 func (r *DomainRepo) ListAll(ctx context.Context) ([]models.DomainConfig, error) {
 	var domains []models.DomainConfig
-	err := r.db.Select(&domains, `SELECT id, service_id, domain_name, redirect_to, ssl_cert_status, path_prefix, COALESCE(dns_provision_status, 'pending') AS dns_provision_status, created_at, updated_at FROM domains ORDER BY domain_name ASC`)
+	err := r.db.Select(&domains, `SELECT id, service_id, domain_name, redirect_to, ssl_cert_status, path_prefix, COALESCE(dns_provision_status, 'pending') AS dns_provision_status, COALESCE(dns_provider, '') AS dns_provider, created_at, updated_at FROM domains ORDER BY domain_name ASC`)
 	if err != nil {
 		return nil, err
 	}
@@ -137,15 +137,25 @@ func (r *DomainRepo) Create(_ context.Context, d *models.DomainConfig) error {
 	d.CreatedAt = now
 	d.UpdatedAt = now
 	_, err := r.db.Exec(
-		`INSERT INTO domains (id, service_id, domain_name, redirect_to, ssl_cert_status, path_prefix, dns_provision_status, created_at, updated_at) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?)`,
-		d.ID, d.ServiceID, d.DomainName, d.RedirectTo, d.SSLCertStatus, d.PathPrefix, d.DNSProvisionStatus, d.CreatedAt, d.UpdatedAt,
+		`INSERT INTO domains (id, service_id, domain_name, redirect_to, ssl_cert_status, path_prefix, dns_provision_status, dns_provider, created_at, updated_at) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?)`,
+		d.ID, d.ServiceID, d.DomainName, d.RedirectTo, d.SSLCertStatus, d.PathPrefix, d.DNSProvisionStatus, d.DNSProvider, d.CreatedAt, d.UpdatedAt,
 	)
 	return err
 }
 
-func (r *DomainRepo) UpdateDNSProvisionStatus(_ context.Context, id string, status string) error {
+func (r *DomainRepo) UpdateDNSProvisionStatus(_ context.Context, id string, status string, provider string) error {
+	if provider != "" {
+		_, err := r.db.Exec(`UPDATE domains SET dns_provision_status = ?, dns_provider = ?, updated_at = ? WHERE id = ?`, status, provider, time.Now(), id)
+		if err != nil {
+			return fmt.Errorf("failed to update domain dns status: %w", err)
+		}
+		return nil
+	}
 	_, err := r.db.Exec(`UPDATE domains SET dns_provision_status = ?, updated_at = ? WHERE id = ?`, status, time.Now(), id)
-	return err
+	if err != nil {
+		return fmt.Errorf("failed to update domain dns status: %w", err)
+	}
+	return nil
 }
 
 func (r *DomainRepo) Delete(_ context.Context, id string) error {
@@ -155,7 +165,7 @@ func (r *DomainRepo) Delete(_ context.Context, id string) error {
 
 func (r *DomainRepo) GetByID(_ context.Context, id string) (*models.DomainConfig, error) {
 	var domain models.DomainConfig
-	err := r.db.Get(&domain, `SELECT id, service_id, domain_name, redirect_to, ssl_cert_status, path_prefix, COALESCE(dns_provision_status, 'pending') AS dns_provision_status, created_at, updated_at FROM domains WHERE id = ?`, id)
+	err := r.db.Get(&domain, `SELECT id, service_id, domain_name, redirect_to, ssl_cert_status, path_prefix, COALESCE(dns_provision_status, 'pending') AS dns_provision_status, COALESCE(dns_provider, '') AS dns_provider, created_at, updated_at FROM domains WHERE id = ?`, id)
 	if err != nil {
 		if err == sql.ErrNoRows {
 			return nil, nil

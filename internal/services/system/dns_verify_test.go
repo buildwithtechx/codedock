@@ -2,6 +2,7 @@ package system
 
 import (
 	"context"
+	"net"
 	"testing"
 )
 
@@ -13,14 +14,27 @@ func TestVerifyDomain_EmptyDomain(t *testing.T) {
 }
 
 func TestVerifyDomain_Localhost(t *testing.T) {
-	verified, resolvedIP, err := VerifyDomain(context.Background(), "localhost", "127.0.0.1")
+	ips, err := net.DefaultResolver.LookupIP(context.Background(), "ip", "localhost")
+	if err != nil {
+		t.Fatalf("unexpected lookup error: %v", err)
+	}
+	if len(ips) == 0 {
+		t.Fatal("expected localhost to resolve to at least one IP")
+	}
+
+	verified, resolvedIP, err := VerifyDomain(context.Background(), "localhost", ips[0].String())
 	if err != nil {
 		t.Fatalf("unexpected error: %v", err)
 	}
 	if resolvedIP == "" {
 		t.Errorf("expected non-empty resolvedIP for localhost")
 	}
-	if !verified && (resolvedIP == "127.0.0.1" || resolvedIP == "::1") {
+	if !verified {
 		t.Errorf("expected verified to be true for localhost mapping")
+	}
+
+	ip := net.ParseIP(resolvedIP)
+	if ip == nil || !ip.IsLoopback() {
+		t.Errorf("expected localhost to resolve to a loopback IP, got %q", resolvedIP)
 	}
 }

@@ -24,7 +24,7 @@ export function ServiceDomains({ serviceId }: { serviceId: string }) {
   const verifyDomain = useVerifyDomain();
 
   const [newDomain, setNewDomain] = useState('');
-  const [verifyingId, setVerifyingId] = useState<string | null>(null);
+  const [verifyingMap, setVerifyingMap] = useState<Record<string, boolean>>({});
   const [verificationResults, setVerificationResults] = useState<
     Record<string, DomainVerifyResult>
   >({});
@@ -63,7 +63,7 @@ export function ServiceDomains({ serviceId }: { serviceId: string }) {
   };
 
   const handleVerify = async (domainId: string) => {
-    setVerifyingId(domainId);
+    setVerifyingMap((prev) => ({ ...prev, [domainId]: true }));
     try {
       const res = await verifyDomain.mutateAsync(domainId);
       const data = res.data;
@@ -81,7 +81,7 @@ export function ServiceDomains({ serviceId }: { serviceId: string }) {
       const errorMsg = err instanceof Error ? err.message : 'Verification failed';
       toast.error(errorMsg);
     } finally {
-      setVerifyingId(null);
+      setVerifyingMap((prev) => ({ ...prev, [domainId]: false }));
     }
   };
 
@@ -107,7 +107,7 @@ export function ServiceDomains({ serviceId }: { serviceId: string }) {
           <ul className="space-y-3">
             {domains.map((domain) => {
               const result = verificationResults[domain.id];
-              const isVerifying = verifyingId === domain.id;
+              const isVerifying = verifyingMap[domain.id];
 
               return (
                 <li
@@ -160,6 +160,7 @@ export function ServiceDomains({ serviceId }: { serviceId: string }) {
                       className="h-8 w-8 text-destructive hover:bg-destructive/10 hover:text-destructive"
                       onClick={() => deleteDomain.mutate({ id: domain.id })}
                       disabled={deleteDomain.isPending}
+                      aria-label={`Delete domain ${domain.domainName}`}
                     >
                       <Trash2 className="h-4 w-4" />
                     </Button>
