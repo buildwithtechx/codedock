@@ -1,0 +1,61 @@
+import { FolderKanban, Loader2, Plus } from 'lucide-react';
+import { useState } from 'react';
+import { Button } from '#/components/ui/button';
+import { CreateProjectModal } from '#/features/projects/create-project-modal';
+import { ProjectCard } from '#/features/projects/project-card';
+import { useListCanvasSummaries } from '#/hooks/use-canvas';
+
+export function ProjectDirectory() {
+  const [createProjectOpen, setCreateProjectOpen] = useState(false);
+  const { data, isLoading } = useListCanvasSummaries();
+  const projects = data?.data || [];
+
+  return (
+    <div className="space-y-6">
+      <header className="flex flex-col justify-between gap-4 sm:flex-row sm:items-end">
+        <div>
+          <p className="font-medium text-muted-foreground text-sm">Workspace inventory</p>
+          <h1 className="mt-1 font-semibold text-2xl tracking-tight">Projects</h1>
+          <p className="mt-1 text-muted-foreground text-sm">
+            Projects group the services and environments your team runs.
+          </p>
+        </div>
+        <Button
+          className="gap-2 self-start sm:self-auto"
+          onClick={() => setCreateProjectOpen(true)}
+        >
+          <Plus className="h-4 w-4" />
+          New project
+        </Button>
+      </header>
+
+      {isLoading ? (
+        <div className="flex min-h-80 items-center justify-center rounded-2xl border border-border/80 bg-card">
+          <Loader2 className="h-5 w-5 animate-spin text-muted-foreground" />
+        </div>
+      ) : projects.length === 0 ? (
+        <div className="flex min-h-80 flex-col items-center justify-center rounded-2xl border border-border border-dashed bg-card px-6 text-center">
+          <div className="flex h-12 w-12 items-center justify-center rounded-2xl bg-primary/10 text-primary">
+            <FolderKanban className="h-5 w-5" />
+          </div>
+          <h2 className="mt-4 font-semibold text-lg">No projects in this organization</h2>
+          <p className="mt-1 max-w-sm text-muted-foreground text-sm">
+            Create a project to organize the services you want Codedock to run.
+          </p>
+          <Button className="mt-5 gap-2" onClick={() => setCreateProjectOpen(true)}>
+            <Plus className="h-4 w-4" />
+            Create project
+          </Button>
+        </div>
+      ) : (
+        <div className="grid gap-4 md:grid-cols-2 xl:grid-cols-3">
+          {projects.map((project) => (
+            <ProjectCard key={project.id} project={project} />
+          ))}
+        </div>
+      )}
+
+      <CreateProjectModal open={createProjectOpen} onOpenChange={setCreateProjectOpen} />
+    </div>
+  );
+}

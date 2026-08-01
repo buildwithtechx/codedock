@@ -9,7 +9,6 @@ import { apiClient } from '#/lib/api-client';
 import { useAuthStore } from '#/stores/auth-store';
 import { Button } from '@/components/ui/button';
 import { AppSidebar } from './app-sidebar';
-import { BackgroundPattern } from './background-pattern';
 import { CommandPalette } from './command-palette';
 
 export function AppLayout({ children }: { children: React.ReactNode }) {
@@ -48,8 +47,7 @@ export function AppLayout({ children }: { children: React.ReactNode }) {
   };
 
   return (
-    <div className="relative flex min-h-screen bg-background">
-      <BackgroundPattern />
+    <div className="relative min-h-screen bg-background md:p-3">
       <AppSidebar
         collapsed={sidebarCollapsed}
         onToggle={() => setSidebarCollapsed((p) => !p)}
@@ -57,7 +55,7 @@ export function AppLayout({ children }: { children: React.ReactNode }) {
         onMobileClose={() => setMobileMenuOpen(false)}
       />
       <div
-        className={`relative flex flex-1 flex-col ${sidebarCollapsed ? 'md:pl-16' : 'md:pl-64'}`}
+        className={`relative flex min-h-screen flex-1 flex-col ${sidebarCollapsed ? 'md:pl-20' : 'md:pl-76'}`}
       >
         <div className="flex h-14 items-center px-4 md:hidden">
           <button
@@ -68,8 +66,8 @@ export function AppLayout({ children }: { children: React.ReactNode }) {
             {mobileMenuOpen ? <X className="h-4 w-4" /> : <Menu className="h-4 w-4" />}
           </button>
         </div>
-        <main className="dashboard-content flex-1 overflow-auto p-4 md:p-8 md:pt-12">
-          <div key={pathname} className="page-transition mx-auto w-full max-w-7xl">
+        <main className="dashboard-content flex-1 overflow-auto px-4 py-6 md:px-8 md:py-8">
+          <div key={pathname} className="page-transition mx-auto w-full max-w-[90rem]">
             {user && user.emailVerified === false && (
               <div className="mb-6 flex flex-col items-center justify-between gap-4 rounded-lg border border-warning/50 bg-warning/20 p-4 sm:flex-row">
                 <div className="flex items-center gap-3">

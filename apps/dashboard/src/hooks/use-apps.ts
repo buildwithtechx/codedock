@@ -1,5 +1,16 @@
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
 import { appsService } from '#/services/apps';
+import { useOrganizationStore } from '#/stores/organization-store';
+
+export const useListAppsByOrganization = () => {
+  const activeOrganizationId = useOrganizationStore((state) => state.activeOrganizationId);
+
+  return useQuery({
+    queryKey: ['apps', 'listByOrganization', activeOrganizationId],
+    queryFn: () => appsService.listByOrganization(activeOrganizationId as string),
+    enabled: Boolean(activeOrganizationId),
+  });
+};
 
 export const useListByProject = (projectId: string) => {
   return useQuery({

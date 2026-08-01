@@ -15,6 +15,16 @@ import { apiClient } from '#/lib/api-client';
 import { handleApiError } from '#/lib/error';
 
 export const appsService = {
+  listByOrganization: async (organizationId: string): Promise<ListAppsResponse> => {
+    try {
+      return await apiClient.get<ListAppsResponse>(
+        `/apps?organizationId=${encodeURIComponent(organizationId)}`
+      );
+    } catch (error) {
+      throw handleApiError(error);
+    }
+  },
+
   listByProject: async (projectId: string): Promise<ListAppsResponse> => {
     try {
       return await apiClient.get<ListAppsResponse>(`/projects/${projectId}/apps`);

@@ -21,6 +21,7 @@ type AppServiceRepository interface {
 	GetByID(ctx context.Context, id string) (*models.AppService, error)
 	ListByEnvironment(ctx context.Context, environmentID string) ([]*models.AppService, error)
 	ListByProject(ctx context.Context, projectID string) ([]*models.AppService, error)
+	ListByOrganization(ctx context.Context, organizationID string) ([]*models.AppService, error)
 	ListAll(ctx context.Context) ([]*models.AppService, error)
 	Update(ctx context.Context, svc *models.AppService) error
 	Delete(ctx context.Context, id string) error
@@ -113,6 +114,24 @@ func (r *AppServiceRepo) ListByProject(ctx context.Context, projectID string) ([
 	)
 	if err != nil {
 		return nil, fmt.Errorf("failed to list app services by project: %w", err)
+	}
+	if list == nil {
+		list = make([]*models.AppService, 0)
+	}
+	return list, nil
+}
+
+func (r *AppServiceRepo) ListByOrganization(ctx context.Context, organizationID string) ([]*models.AppService, error) {
+	r.mu.RLock()
+	defer r.mu.RUnlock()
+	var list []*models.AppService
+	err := r.db.SelectContext(ctx, &list,
+		`SELECT app_services.id, app_services.project_id, app_services.environment_id, app_services.name, app_services.repository_url, COALESCE(app_services.image_ref,'') AS image_ref, app_services.branch, app_services.root_directory, COALESCE(app_services.icon,'git') AS icon, app_services.runtime_mode, COALESCE(app_services.install_command,'') AS install_command, app_services.build_command, app_services.start_command, app_services.dockerfile_path, app_services.build_engine, app_services.internal_port, app_services.domain, COALESCE(app_services.static_output,'') AS static_output, app_services.health_check_path, app_services.container_id, app_services.status, app_services.replicas, COALESCE(app_services.cpu_limit, 0) AS cpu_limit, COALESCE(app_services.memory_limit, 0) AS memory_limit, COALESCE(app_services.deploy_token,'') AS deploy_token, COALESCE(app_services.enable_pr_previews, 0) AS enable_pr_previews, COALESCE(app_services.maintenance_mode, 0) AS maintenance_mode, app_services.registry_id, app_services.created_at, app_services.updated_at
+		FROM app_services JOIN projects ON projects.id = app_services.project_id
+		WHERE projects.organization_id = ? ORDER BY app_services.created_at DESC`, organizationID,
+	)
+	if err != nil {
+		return nil, fmt.Errorf("failed to list app services by organization: %w", err)
 	}
 	if list == nil {
 		list = make([]*models.AppService, 0)

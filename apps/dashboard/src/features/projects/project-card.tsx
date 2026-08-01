@@ -38,7 +38,7 @@ export const ProjectCard = ({ project }: { project: CanvasSummary }) => {
       params={{ projectId: project.id }}
       className="group block h-full"
     >
-      <div className="border/50 flex h-full flex-col rounded-2xl border bg-card/40 p-5 transition-colors hover:border-primary/50 hover:bg-card/80">
+      <div className="flex h-full flex-col rounded-2xl border border-border/80 bg-card p-5 shadow-sm transition-colors hover:border-primary/45 hover:bg-primary/3">
         <div className="flex items-start justify-between">
           <div>
             <h3 className="font-bold text-foreground text-lg transition-colors group-hover:text-primary">

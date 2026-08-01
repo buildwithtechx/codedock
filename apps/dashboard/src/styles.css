@@ -40,11 +40,11 @@
 }
 
 .dark {
-  --background: #0a0a0f;
+  --background: #0d0e12;
   --foreground: #fafafa;
-  --card: #13131a;
+  --card: #15161d;
   --card-foreground: #fafafa;
-  --popover: #13131a;
+  --popover: #191a22;
   --popover-foreground: #fafafa;
   --primary: #7c3aed;
   --primary-foreground: #ffffff;
@@ -53,7 +53,7 @@
   --secondary: #27272a;
   --secondary-foreground: #fafafa;
   --secondary-hover: #3f3f46;
-  --muted: #1e1e24;
+  --muted: #20212a;
   --muted-foreground: #a1a1aa;
   --accent: #7c3aed;
   --accent-foreground: #fafafa;
@@ -61,16 +61,16 @@
   --destructive-foreground: #ffffff;
   --success: #22c55e;
   --warning: #f59e0b;
-  --border: #27272a;
-  --input: #27272a;
+  --border: #2a2b35;
+  --input: #30313c;
   --ring: #7c3aed;
-  --sidebar: #0a0a0f;
+  --sidebar: #121319;
   --sidebar-foreground: #fafafa;
   --sidebar-primary: #7c3aed;
   --sidebar-primary-foreground: #ffffff;
-  --sidebar-accent: #13131a;
+  --sidebar-accent: #20212a;
   --sidebar-accent-foreground: #fafafa;
-  --sidebar-border: #27272a;
+  --sidebar-border: #292a34;
   --sidebar-ring: #7c3aed;
 }
 
@@ -151,13 +151,6 @@ body {
 }
 
 @layer utilities {
-  .dashboard-content .bg-card\/20,
-  .dashboard-content .bg-card\/30,
-  .dashboard-content .bg-card\/40,
-  .dashboard-content .bg-card\/50 {
-    background-color: var(--card);
-  }
-
   .page-transition {
     animation: page-enter 160ms ease-out both;
   }
@@ -181,10 +174,6 @@ body {
 }
 
 @layer utilities {
-  .nav-active-glow {
-    box-shadow: 0 0 15px -3px rgb(109 40 217 / 0.3);
-  }
-
   .auth-page-enter {
     animation: auth-page-enter 360ms cubic-bezier(0.16, 1, 0.3, 1) both;
   }
