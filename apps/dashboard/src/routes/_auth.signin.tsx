@@ -35,7 +35,7 @@ function LoginPage() {
             Don't have an account?{' '}
             <Link
               to="/signup"
-              className="font-bold text-primary underline decoration-primary/35 underline-offset-4"
+              className="font-medium text-primary underline-offset-4 hover:underline"
             >
               Create one
             </Link>

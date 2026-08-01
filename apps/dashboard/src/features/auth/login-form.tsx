@@ -78,7 +78,7 @@ export const LoginForm = () => {
               autoComplete="one-time-code"
               placeholder="000000"
               maxLength={8}
-              className="pl-10 text-center tracking-[0.28em]"
+              className="h-12 pl-10 text-center tracking-[0.28em]"
               {...totpForm.register('totpCode')}
             />
           </div>
@@ -93,15 +93,11 @@ export const LoginForm = () => {
             type="button"
             variant="outline"
             onClick={() => setPendingCredentials(null)}
-            className="flex-1"
+            className="h-12 flex-1"
           >
             Back
           </Button>
-          <Button
-            type="submit"
-            disabled={isPending}
-            className="flex-1"
-          >
+          <Button type="submit" disabled={isPending} className="h-12 flex-1">
             {isPending ? 'Verifying...' : 'Verify'}
           </Button>
         </div>
@@ -121,7 +117,7 @@ export const LoginForm = () => {
             id="email"
             type="email"
             placeholder="name@example.com"
-            className="pl-10"
+            className="h-12 pl-10"
             {...loginForm.register('email')}
           />
         </div>
@@ -149,7 +145,7 @@ export const LoginForm = () => {
           <Input
             id="password"
             type={showPassword ? 'text' : 'password'}
-            className="pr-10 pl-10"
+            className="h-12 pr-10 pl-10"
             {...loginForm.register('password')}
           />
           <button
@@ -167,11 +163,7 @@ export const LoginForm = () => {
         )}
       </div>
 
-      <Button
-        type="submit"
-        disabled={isPending}
-        className="w-full"
-      >
+      <Button type="submit" disabled={isPending} className="h-12 w-full">
         {isPending ? 'Signing in...' : 'Sign In'}
       </Button>
     </form>

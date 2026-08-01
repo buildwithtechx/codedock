@@ -23,7 +23,7 @@ export const OAuthButtons = () => {
             variant="outline"
             type="button"
             onClick={() => handleOAuthLogin(provider)}
-            className="w-full capitalize"
+            className="h-12 w-full capitalize"
           >
             Continue with {provider}
           </Button>

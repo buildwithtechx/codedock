@@ -1,6 +1,7 @@
 package system
 
 import (
+	"context"
 	"fmt"
 	"io"
 	"net/http"
@@ -13,11 +14,16 @@ import (
 )
 
 type MigrationHandler struct {
-	service *systemservices.MigrationService
+	service     *systemservices.MigrationService
+	userCounter interface {
+		CountUsers(context.Context) (int, error)
+	}
 }
 
-func NewMigrationHandler(s *systemservices.MigrationService) *MigrationHandler {
-	return &MigrationHandler{service: s}
+func NewMigrationHandler(s *systemservices.MigrationService, userCounter interface {
+	CountUsers(context.Context) (int, error)
+}) *MigrationHandler {
+	return &MigrationHandler{service: s, userCounter: userCounter}
 }
 
 func (h *MigrationHandler) Export(c echo.Context) error {
@@ -42,6 +48,21 @@ func (h *MigrationHandler) Export(c echo.Context) error {
 }
 
 func (h *MigrationHandler) Import(c echo.Context) error {
+	return h.importBundle(c)
+}
+
+func (h *MigrationHandler) ImportDuringSetup(c echo.Context) error {
+	count, err := h.userCounter.CountUsers(c.Request().Context())
+	if err != nil {
+		return utils.Error(c, http.StatusInternalServerError, "failed to check user count")
+	}
+	if count != 0 {
+		return utils.Error(c, http.StatusForbidden, "setup import is only available before the first account is created")
+	}
+	return h.importBundle(c)
+}
+
+func (h *MigrationHandler) importBundle(c echo.Context) error {
 	passphrase := c.FormValue("passphrase")
 	if passphrase == "" {
 		return utils.Error(c, http.StatusBadRequest, "passphrase form value is required")

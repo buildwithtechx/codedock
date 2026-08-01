@@ -50,12 +50,7 @@ function VerifyEmailPage() {
         title="This link is incomplete."
         description="No verification token was provided. Return home and request a new verification email."
       >
-        <Button
-          onClick={() => navigate({ to: '/' })}
-          className="rounded-lg bg-primary text-primary-foreground hover:bg-primary-hover"
-        >
-          Return home
-        </Button>
+        <Button onClick={() => navigate({ to: '/' })}>Return home</Button>
       </AuthPageFrame>
     );
   }
@@ -97,11 +92,7 @@ function VerifyEmailPage() {
               <XCircle className="h-5 w-5 text-[#b42318]" />
               <p className="font-medium text-[#b42318] text-sm">{errorMessage}</p>
             </div>
-            <Button
-              onClick={() => navigate({ to: '/' })}
-              variant="outline"
-              className="mt-5 rounded-lg border-border bg-background text-foreground hover:bg-muted"
-            >
+            <Button onClick={() => navigate({ to: '/' })} variant="outline" className="mt-5">
               Return Home
             </Button>
           </div>

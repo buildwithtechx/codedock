@@ -32,9 +32,7 @@ export const ResetPasswordForm = ({ token }: ResetPasswordFormProps) => {
   return (
     <form onSubmit={handleSubmit} className="space-y-5">
       <div className="space-y-1.5">
-        <Label htmlFor="new-password" className="font-bold text-foreground text-sm">
-          New Password
-        </Label>
+        <Label htmlFor="new-password">New Password</Label>
         <div className="group relative">
           <div className="absolute top-1/2 left-3.5 -translate-y-1/2 text-muted-foreground transition-colors group-focus-within:text-primary">
             <Lock className="h-4 w-4" />
@@ -43,7 +41,7 @@ export const ResetPasswordForm = ({ token }: ResetPasswordFormProps) => {
             id="new-password"
             type="password"
             placeholder="Enter new password"
-            className="h-12 rounded-lg border-border bg-background pl-10 text-sm shadow-none transition-colors placeholder:text-muted-foreground focus-visible:border-primary/50 focus-visible:ring-2 focus-visible:ring-primary/20"
+            className="h-12 pl-10"
             value={newPassword}
             onChange={(e) => {
               setNewPassword(e.target.value);
@@ -56,9 +54,7 @@ export const ResetPasswordForm = ({ token }: ResetPasswordFormProps) => {
       </div>
 
       <div className="space-y-1.5">
-        <Label htmlFor="confirm-password" className="font-bold text-foreground text-sm">
-          Confirm Password
-        </Label>
+        <Label htmlFor="confirm-password">Confirm Password</Label>
         <div className="group relative">
           <div className="absolute top-1/2 left-3.5 -translate-y-1/2 text-muted-foreground transition-colors group-focus-within:text-primary">
             <Lock className="h-4 w-4" />
@@ -67,7 +63,7 @@ export const ResetPasswordForm = ({ token }: ResetPasswordFormProps) => {
             id="confirm-password"
             type="password"
             placeholder="Confirm new password"
-            className="h-12 rounded-lg border-border bg-background pl-10 text-sm shadow-none transition-colors placeholder:text-muted-foreground focus-visible:border-primary/50 focus-visible:ring-2 focus-visible:ring-primary/20"
+            className="h-12 pl-10"
             value={confirmPassword}
             onChange={(e) => {
               setConfirmPassword(e.target.value);
@@ -88,7 +84,7 @@ export const ResetPasswordForm = ({ token }: ResetPasswordFormProps) => {
       <Button
         type="submit"
         disabled={isPending || !newPassword || !confirmPassword}
-        className="h-12 w-full rounded-lg bg-primary font-bold text-primary-foreground text-sm shadow-none hover:bg-primary-hover"
+        className="h-12 w-full"
       >
         {isPending ? 'Resetting...' : 'Reset Password'}
       </Button>

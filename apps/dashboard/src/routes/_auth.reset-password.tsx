@@ -30,7 +30,7 @@ function ResetPasswordPage() {
         <button
           type="button"
           onClick={() => navigate({ to: '/signin' })}
-          className="border-primary border-b pb-1 font-bold text-primary text-sm"
+          className="text-primary text-sm underline-offset-4 hover:underline"
         >
           Return to sign in
         </button>

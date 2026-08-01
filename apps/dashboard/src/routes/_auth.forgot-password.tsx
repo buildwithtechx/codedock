@@ -28,16 +28,12 @@ function ForgotPasswordPage() {
         <div className="border-primary border-l-2 py-1 pl-5">
           <div className="flex items-center gap-3">
             <AlertCircle className="h-5 w-5 text-[#b42318]" />
-            <p className="font-bold text-foreground text-sm">Email not configured</p>
+            <p className="font-medium text-foreground text-sm">Email not configured</p>
           </div>
           <p className="mt-3 text-muted-foreground text-sm leading-6">
             Your team has not enabled email. Contact an administrator to restore access.
           </p>
-          <Button
-            asChild
-            variant="outline"
-            className="mt-5 rounded-lg border-border bg-background text-foreground hover:bg-muted"
-          >
+          <Button asChild variant="outline" className="mt-5">
             <Link to="/signin">Back to sign in</Link>
           </Button>
         </div>

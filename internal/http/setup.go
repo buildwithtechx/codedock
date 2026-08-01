@@ -232,7 +232,7 @@ func NewServer(db *sql.DB, v *utils.Vault, deployer *deploy.Deployer, traefikMan
 	systemService := systemservices.NewSystemService()
 	systemHandler := system.NewSystemHandler(systemService)
 	migrationService := systemservices.NewMigrationService(dbRepo, dataDir)
-	migrationHandler := system.NewMigrationHandler(migrationService)
+	migrationHandler := system.NewMigrationHandler(migrationService, userService)
 	onboardingHandler := auth.NewOnboardingHandler(userService)
 	dnsHandler := system.NewDNSHandler(dnsService)
 	metricsHandler := system.NewMetricsHandler(metricsService)
