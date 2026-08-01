@@ -36,6 +36,19 @@ func canonicalDomainName(domain string) (string, error) {
 	if canonical == "" || strings.ContainsAny(canonical, " /\\") {
 		return "", fmt.Errorf("invalid domain name")
 	}
+	if len(canonical) > 253 {
+		return "", fmt.Errorf("invalid domain name: exceeds 253 characters")
+	}
+	for _, label := range strings.Split(canonical, ".") {
+		if len(label) == 0 || len(label) > 63 || label[0] == '-' || label[len(label)-1] == '-' {
+			return "", fmt.Errorf("invalid domain name: invalid label")
+		}
+		for _, char := range label {
+			if (char < 'a' || char > 'z') && (char < '0' || char > '9') && char != '-' {
+				return "", fmt.Errorf("invalid domain name: invalid label")
+			}
+		}
+	}
 	if _, err := publicsuffix.EffectiveTLDPlusOne(canonical); err != nil {
 		return "", fmt.Errorf("invalid domain name: %w", err)
 	}
@@ -139,8 +152,27 @@ func (s *EnvironmentService) CreateDomain(ctx context.Context, d *models.DomainC
 			}
 			defer unlock()
 
-			current, err := s.domainRepo.GetByID(provisionCtx, domainID)
-			if err != nil || current == nil || current.DomainName != domainName {
+			var current *models.DomainConfig
+			var readErr error
+			for attempt := 0; attempt < 3; attempt++ {
+				current, readErr = s.domainRepo.GetByID(provisionCtx, domainID)
+				if readErr == nil {
+					break
+				}
+				if !waitForDomainRetry(provisionCtx, attempt) {
+					break
+				}
+			}
+			if readErr != nil {
+				statusCtx, statusCancel := context.WithTimeout(context.Background(), 5*time.Second)
+				statusErr := s.updateDNSProvisionStatus(statusCtx, domainID, models.DNSProvisionStatusFailed, "", "")
+				statusCancel()
+				if statusErr != nil {
+					slog.Error("failed to mark DNS provisioning read failure", "domain_id", domainID, "error", statusErr)
+				}
+				return
+			}
+			if current == nil || current.DomainName != domainName {
 				return
 			}
 
@@ -160,12 +192,29 @@ func (s *EnvironmentService) CreateDomain(ctx context.Context, d *models.DomainC
 				retryCancel()
 				if retryErr != nil {
 					slog.Error("failed to persist DNS provisioning status", "domain_id", domainID, "error", retryErr)
+					cleanupCtx, cleanupCancel := context.WithTimeout(context.Background(), 30*time.Second)
+					cleanupErr := s.dnsService.DeprovisionARecord(cleanupCtx, domainName, provider, provisionedIP)
+					cleanupCancel()
+					if cleanupErr != nil {
+						slog.Error("failed to compensate DNS provisioning", "domain_id", domainID, "error", cleanupErr)
+					}
 				}
 			}
 		}(domainID, domainName)
 	}
 
 	return d, nil
+}
+
+func waitForDomainRetry(ctx context.Context, attempt int) bool {
+	timer := time.NewTimer(time.Duration(attempt+1) * 200 * time.Millisecond)
+	defer timer.Stop()
+	select {
+	case <-ctx.Done():
+		return false
+	case <-timer.C:
+		return true
+	}
 }
 
 func (s *EnvironmentService) ListDomainsByService(ctx context.Context, serviceID string) ([]models.DomainConfig, error) {
@@ -211,9 +260,9 @@ func (s *EnvironmentService) DeleteDomain(ctx context.Context, id string) error 
 		return nil
 	}
 
-	if s.dnsService != nil && (domain.DNSProvisionStatus == models.DNSProvisionStatusSuccess || domain.DNSProvisionStatus == "provisioned") {
+	if s.dnsService != nil && domain.DNSProvisionStatus == models.DNSProvisionStatusSuccess {
 		if err := s.dnsService.DeprovisionARecord(ctx, domain.DomainName, domain.DNSProvider, domain.DNSProvisionedIP); err != nil {
-			slog.Error("failed to deprovision domain DNS record", "domain_id", id, "domain", domain.DomainName, "error", err)
+			return fmt.Errorf("deprovision domain DNS record: %w", err)
 		}
 	}
 

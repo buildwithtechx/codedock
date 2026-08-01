@@ -8,10 +8,13 @@ import { Label } from '#/components/ui/label';
 import { useCreate, useDelete, useListByService } from '#/features/dns';
 import { useDomainVerification } from '#/features/dns/domain-verification';
 import { useGetSettings } from '#/features/settings';
+import { useAuthStore } from '#/stores/auth-store';
 import { DnsGuidanceBanner } from './dns-guidance-banner';
 import { DnsStatusBadge } from './dns-status-badge';
 
 export function ServiceDomains({ serviceId }: { serviceId: string }) {
+  const userRole = useAuthStore((state) => state.user?.role);
+  const canManageProviderDomains = userRole === 'admin' || String(userRole) === 'owner';
   const { data: domainsRes, isLoading } = useListByService(serviceId);
   const {
     data: settingsRes,
@@ -29,7 +32,7 @@ export function ServiceDomains({ serviceId }: { serviceId: string }) {
   const hasDnsProvider = Boolean(
     settings?.cloudflareApiToken ||
       (settings?.namecheapApiUser && settings?.namecheapApiKey) ||
-      settings?.spaceshipApiKey
+      (settings?.spaceshipApiKey && settings?.spaceshipApiSecret)
   );
 
   const domains = domainsRes?.data || [];
@@ -152,23 +155,25 @@ export function ServiceDomains({ serviceId }: { serviceId: string }) {
           </ul>
         )}
 
-        <div className="mt-4 flex flex-col gap-2 border-t pt-4">
-          <Label htmlFor="new-domain" className="font-medium text-xs">
-            Add New Domain
-          </Label>
-          <div className="flex gap-2">
-            <Input
-              id="new-domain"
-              placeholder="subdomain.example.com"
-              value={newDomain}
-              onChange={(e) => setNewDomain(e.target.value)}
-              className="font-mono text-sm"
-            />
-            <Button onClick={handleCreate} disabled={createDomain.isPending || !newDomain.trim()}>
-              Add Domain
-            </Button>
+        {canManageProviderDomains && (
+          <div className="mt-4 flex flex-col gap-2 border-t pt-4">
+            <Label htmlFor="new-domain" className="font-medium text-xs">
+              Add New Domain
+            </Label>
+            <div className="flex gap-2">
+              <Input
+                id="new-domain"
+                placeholder="subdomain.example.com"
+                value={newDomain}
+                onChange={(e) => setNewDomain(e.target.value)}
+                className="font-mono text-sm"
+              />
+              <Button onClick={handleCreate} disabled={createDomain.isPending || !newDomain.trim()}>
+                Add Domain
+              </Button>
+            </div>
           </div>
-        </div>
+        )}
       </CardContent>
     </Card>
   );

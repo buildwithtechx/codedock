@@ -61,15 +61,13 @@ func (h *DomainHandler) ListAll(c echo.Context) error {
 		return utils.Error(c, http.StatusInternalServerError, err.Error())
 	}
 	if userClaims.Role != models.UserRoleAdmin && userClaims.Role != models.UserRoleOwner {
+		accessibleServices, err := h.projectService.AccessibleServiceIDs(c.Request().Context(), userClaims.UserID, userClaims.Role)
+		if err != nil {
+			return utils.Error(c, http.StatusInternalServerError, err.Error())
+		}
 		filtered := make([]models.DomainConfig, 0, len(domains))
-		accessCache := make(map[string]bool)
 		for _, domain := range domains {
-			allowed, ok := accessCache[domain.ServiceID]
-			if !ok {
-				allowed = h.hasAccess(c, domain.ServiceID)
-				accessCache[domain.ServiceID] = allowed
-			}
-			if allowed {
+			if _, allowed := accessibleServices[domain.ServiceID]; allowed {
 				filtered = append(filtered, domain)
 			}
 		}

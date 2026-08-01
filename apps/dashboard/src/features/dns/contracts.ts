@@ -1,4 +1,4 @@
-export type DNSProvisionStatus = 'provisioned' | 'success' | 'failed' | 'pending' | 'manual';
+export type DNSProvisionStatus = 'provisioned' | 'failed' | 'pending' | 'manual';
 
 export type DNSVerificationStatus =
   | 'resolves_to_server'

@@ -33,7 +33,7 @@ func (s *Service) ProvisionARecord(ctx context.Context, domain string) (string, 
 
 func (s *Service) DeprovisionARecord(ctx context.Context, domain, provider, value string) error {
 	if value == "" {
-		return s.DeprovisionRecord(ctx, domain, "A", "", provider)
+		return fmt.Errorf("provisioned A record value is missing")
 	}
 	return s.DeprovisionRecord(ctx, domain, "A", value, provider)
 }
@@ -64,8 +64,8 @@ func (s *Service) ProvisionRecord(ctx context.Context, domain, recordType, value
 		}
 	}
 
-	if cfg.SpaceshipAPIKey != "" {
-		if err := s.provisionSpaceship(ctx, cfg.SpaceshipAPIKey, domain, recordType, value); err == nil {
+	if cfg.SpaceshipAPIKey != "" && cfg.SpaceshipAPISecret != "" {
+		if err := s.provisionSpaceship(ctx, cfg.SpaceshipAPIKey, cfg.SpaceshipAPISecret, domain, recordType, value); err == nil {
 			return dnsProviderSpaceship, nil
 		} else {
 			lastErr = fmt.Errorf("spaceship: %w", err)
@@ -106,7 +106,10 @@ func (s *Service) DeprovisionRecord(ctx context.Context, domain, recordType, val
 		if cfg.SpaceshipAPIKey == "" {
 			return fmt.Errorf("spaceship credentials missing during deprovision")
 		}
-		return s.deprovisionSpaceship(ctx, cfg.SpaceshipAPIKey, domain, recordType, value)
+		if cfg.SpaceshipAPISecret == "" {
+			return fmt.Errorf("spaceship API secret missing during deprovision")
+		}
+		return s.deprovisionSpaceship(ctx, cfg.SpaceshipAPIKey, cfg.SpaceshipAPISecret, domain, recordType, value)
 	}
 
 	return fmt.Errorf("dns provider not found for %s", domain)

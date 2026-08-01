@@ -1,5 +1,5 @@
 import { CheckCircle2, Globe, HelpCircle, Network, ShieldCheck } from 'lucide-react';
-import { useState } from 'react';
+import { type KeyboardEvent, useState } from 'react';
 import { Card, CardContent } from '#/components/ui/card';
 import { DomainAuditTable } from './components/domain-audit-table';
 import { DnsSettings } from './dns-settings';
@@ -13,12 +13,14 @@ export function DnsAuditPage() {
     () => new Set(['audit'])
   );
 
+  const tabs = ['audit', 'providers', 'global'] as const;
+
   const domains = domainsRes?.data || [];
 
   const totalCount = domains.length;
   const provisionedCount = domains.filter((d) => {
     const status = (d.dnsProvisionStatus || '').toLowerCase();
-    return status === 'provisioned' || status === 'success';
+    return status === 'provisioned';
   }).length;
   const manualCount = domains.filter(
     (d) =>
@@ -39,6 +41,19 @@ export function DnsAuditPage() {
       next.add(tab);
       return next;
     });
+  };
+
+  const handleTabKeyDown = (event: KeyboardEvent<HTMLButtonElement>) => {
+    const current = tabs.indexOf(activeTab);
+    let next = current;
+    if (event.key === 'ArrowRight') next = (current + 1) % tabs.length;
+    if (event.key === 'ArrowLeft') next = (current - 1 + tabs.length) % tabs.length;
+    if (event.key === 'Home') next = 0;
+    if (event.key === 'End') next = tabs.length - 1;
+    if (next === current) return;
+    event.preventDefault();
+    showTab(tabs[next]);
+    document.getElementById(`dns-${tabs[next]}-tab`)?.focus();
   };
 
   return (
@@ -119,6 +134,8 @@ export function DnsAuditPage() {
           role="tab"
           aria-selected={activeTab === 'audit'}
           aria-controls="dns-audit-panel"
+          tabIndex={activeTab === 'audit' ? 0 : -1}
+          onKeyDown={handleTabKeyDown}
           onClick={() => showTab('audit')}
           className={`flex items-center gap-2 border-b-2 px-4 py-2.5 font-medium text-sm transition-colors ${
             activeTab === 'audit'
@@ -135,6 +152,8 @@ export function DnsAuditPage() {
           role="tab"
           aria-selected={activeTab === 'providers'}
           aria-controls="dns-providers-panel"
+          tabIndex={activeTab === 'providers' ? 0 : -1}
+          onKeyDown={handleTabKeyDown}
           onClick={() => showTab('providers')}
           className={`flex items-center gap-2 border-b-2 px-4 py-2.5 font-medium text-sm transition-colors ${
             activeTab === 'providers'
@@ -151,6 +170,8 @@ export function DnsAuditPage() {
           role="tab"
           aria-selected={activeTab === 'global'}
           aria-controls="dns-global-panel"
+          tabIndex={activeTab === 'global' ? 0 : -1}
+          onKeyDown={handleTabKeyDown}
           onClick={() => showTab('global')}
           className={`flex items-center gap-2 border-b-2 px-4 py-2.5 font-medium text-sm transition-colors ${
             activeTab === 'global'

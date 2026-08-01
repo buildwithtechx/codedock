@@ -22,6 +22,7 @@ export const DnsSettings = () => {
     namecheapApiKey: '',
     namecheapClientIp: '',
     spaceshipApiKey: '',
+    spaceshipApiSecret: '',
     cloudflareEmail: '',
     cloudflareZoneId: '',
   });
@@ -35,6 +36,7 @@ export const DnsSettings = () => {
         namecheapApiKey: data.data.namecheapApiKey || '',
         namecheapClientIp: data.data.namecheapClientIp || '',
         spaceshipApiKey: data.data.spaceshipApiKey || '',
+        spaceshipApiSecret: data.data.spaceshipApiSecret || '',
       }));
     }
   }, [data?.data]);
@@ -52,6 +54,7 @@ export const DnsSettings = () => {
         payload.namecheapClientIp = formData.namecheapClientIp;
       } else if (provider === 'spaceship') {
         payload.spaceshipApiKey = formData.spaceshipApiKey;
+        payload.spaceshipApiSecret = formData.spaceshipApiSecret;
       }
 
       await updateSettings({ payload });

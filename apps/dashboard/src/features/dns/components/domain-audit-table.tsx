@@ -27,6 +27,7 @@ export function DomainAuditTable({ domains, isLoading }: DomainAuditTableProps) 
 
   const [search, setSearch] = useState('');
   const [statusFilter, setStatusFilter] = useState<string>('all');
+  const hasActiveVerification = Object.values(verifyingMap).some(Boolean);
 
   const handleVerifyOne = async (domainId: string) => {
     await verifyOne(domainId);
@@ -50,7 +51,7 @@ export function DomainAuditTable({ domains, isLoading }: DomainAuditTableProps) 
       statusFilter === 'all' ||
       (d.dnsProvisionStatus || 'pending').toLowerCase() === statusFilter.toLowerCase() ||
       (statusFilter === 'provisioned' &&
-        (d.dnsProvisionStatus || 'pending').toLowerCase() === 'success');
+        (d.dnsProvisionStatus || 'pending').toLowerCase() === 'provisioned');
     return matchesSearch && matchesStatus;
   });
 
@@ -93,7 +94,7 @@ export function DomainAuditTable({ domains, isLoading }: DomainAuditTableProps) 
           variant="outline"
           size="sm"
           onClick={handleVerifyAll}
-          disabled={isVerifyingAll || domains.length === 0}
+          disabled={isVerifyingAll || hasActiveVerification || domains.length === 0}
           className="h-9 gap-2 font-medium text-xs"
         >
           {isVerifyingAll ? (

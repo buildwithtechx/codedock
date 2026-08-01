@@ -45,7 +45,11 @@ export function DnsGuidanceBanner({ serverIp, hasDnsProvider }: DnsGuidanceBanne
 
     try {
       if (navigator.clipboard && window.isSecureContext) {
-        await navigator.clipboard.writeText(serverIp);
+        try {
+          await navigator.clipboard.writeText(serverIp);
+        } catch {
+          copyToClipboardFallback(serverIp);
+        }
       } else {
         copyToClipboardFallback(serverIp);
       }

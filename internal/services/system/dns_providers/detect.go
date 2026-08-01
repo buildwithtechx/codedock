@@ -36,9 +36,9 @@ func (s *Service) detectProvider(ctx context.Context, cfg *models.ServerSettings
 		}
 	}
 
-	if cfg.SpaceshipAPIKey != "" {
+	if cfg.SpaceshipAPIKey != "" && cfg.SpaceshipAPISecret != "" {
 		client := newProviderHTTPClient()
-		if records, err := fetchSpaceshipRecords(ctx, client, cfg.SpaceshipAPIKey); err == nil && spaceshipRecordExists(records, domain, recordType, value) {
+		if records, err := fetchSpaceshipRecords(ctx, client, cfg.SpaceshipAPIKey, cfg.SpaceshipAPISecret, domain); err == nil && spaceshipRecordExists(records, domain, recordType, value) {
 			return dnsProviderSpaceship
 		}
 	}

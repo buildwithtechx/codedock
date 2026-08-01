@@ -187,11 +187,19 @@ func (s *Service) deprovisionNamecheap(ctx context.Context, cfg *models.ServerSe
 	}
 
 	remaining := make([]namecheapHost, 0, len(hosts))
+	matched := false
 	for _, host := range hosts {
 		if host.Name == subDomain && host.Type == recordType && (value == "" || host.Address == value) {
+			matched = true
 			continue
 		}
 		remaining = append(remaining, host)
+	}
+	if !matched {
+		return nil
+	}
+	if len(remaining) == 0 {
+		return fmt.Errorf("namecheap cannot replace the final DNS host record with an empty set")
 	}
 
 	req, _ := http.NewRequestWithContext(ctx, http.MethodGet, "https://api.namecheap.com/xml.response?"+buildNamecheapSetHostsQuery([]string{sld, tld}, cfg, remaining).Encode(), nil)

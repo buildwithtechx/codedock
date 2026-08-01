@@ -4,7 +4,7 @@ import "time"
 
 const (
 	DNSProvisionStatusPending = "pending"
-	DNSProvisionStatusSuccess = "success"
+	DNSProvisionStatusSuccess = "provisioned"
 	DNSProvisionStatusFailed  = "failed"
 )
 

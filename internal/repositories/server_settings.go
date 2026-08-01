@@ -29,7 +29,7 @@ func NewSettingsRepo(db *sql.DB) *SettingsRepo {
 	return &SettingsRepo{db: sqlx.NewDb(db, "sqlite")}
 }
 
-const serverSettingsColumns = `id, traefik_wildcard_ip, registration_enabled, registration_domain_allowlist, custom_dns_resolvers, dns_validation_enabled, ip_allowlist, mcp_server_enabled, default_wildcard_domain, panel_domain, site_name, public_ipv4, public_ipv6, show_sponsorship_popup, disable_two_step_confirmation, cloudflare_api_token, namecheap_api_user, namecheap_api_key, namecheap_client_ip, spaceship_api_key, update_check_cron, auto_update_enabled, concurrent_builds, deployment_timeout, server_timezone, docker_cleanup_cron, disk_usage_threshold, disk_usage_cron, current_version, latest_version, last_update_check, updated_at`
+const serverSettingsColumns = `id, traefik_wildcard_ip, registration_enabled, registration_domain_allowlist, custom_dns_resolvers, dns_validation_enabled, ip_allowlist, mcp_server_enabled, default_wildcard_domain, panel_domain, site_name, public_ipv4, public_ipv6, show_sponsorship_popup, disable_two_step_confirmation, cloudflare_api_token, namecheap_api_user, namecheap_api_key, namecheap_client_ip, spaceship_api_key, spaceship_api_secret, update_check_cron, auto_update_enabled, concurrent_builds, deployment_timeout, server_timezone, docker_cleanup_cron, disk_usage_threshold, disk_usage_cron, current_version, latest_version, last_update_check, updated_at`
 
 func serverSettingsPlaceholders() string {
 	columns := strings.Split(serverSettingsColumns, ",")
@@ -45,7 +45,7 @@ func scanServerSettings(scanner interface{ Scan(dest ...any) error }, cfg *model
 		&cfg.ID, &cfg.TraefikWildcardIP,
 		&cfg.RegistrationEnabled, &cfg.RegistrationDomainAllowlist, &cfg.CustomDNSResolvers, &cfg.DNSValidationEnabled, &cfg.IPAllowlist, &cfg.MCPServerEnabled, &cfg.DefaultWildcardDomain, &cfg.PanelDomain,
 		&cfg.SiteName, &cfg.PublicIPv4, &cfg.PublicIPv6, &cfg.ShowSponsorshipPopup, &cfg.DisableTwoStepConfirmation,
-		&cfg.CloudflareAPIToken, &cfg.NamecheapAPIUser, &cfg.NamecheapAPIKey, &cfg.NamecheapClientIP, &cfg.SpaceshipAPIKey,
+		&cfg.CloudflareAPIToken, &cfg.NamecheapAPIUser, &cfg.NamecheapAPIKey, &cfg.NamecheapClientIP, &cfg.SpaceshipAPIKey, &cfg.SpaceshipAPISecret,
 		&cfg.UpdateCheckCron, &cfg.AutoUpdateEnabled,
 		&cfg.ConcurrentBuilds, &cfg.DeploymentTimeout, &cfg.ServerTimezone, &cfg.DockerCleanupCron, &cfg.DiskUsageThreshold, &cfg.DiskUsageCron,
 		&cfg.CurrentVersion, &cfg.LatestVersion, &cfg.LastUpdateCheck, &cfg.UpdatedAt,
@@ -57,7 +57,7 @@ func serverSettingsArgs(cfg *models.ServerSettings) []any {
 		cfg.ID, cfg.TraefikWildcardIP,
 		cfg.RegistrationEnabled, cfg.RegistrationDomainAllowlist, cfg.CustomDNSResolvers, cfg.DNSValidationEnabled, cfg.IPAllowlist, cfg.MCPServerEnabled, cfg.DefaultWildcardDomain, cfg.PanelDomain,
 		cfg.SiteName, cfg.PublicIPv4, cfg.PublicIPv6, cfg.ShowSponsorshipPopup, cfg.DisableTwoStepConfirmation,
-		cfg.CloudflareAPIToken, cfg.NamecheapAPIUser, cfg.NamecheapAPIKey, cfg.NamecheapClientIP, cfg.SpaceshipAPIKey,
+		cfg.CloudflareAPIToken, cfg.NamecheapAPIUser, cfg.NamecheapAPIKey, cfg.NamecheapClientIP, cfg.SpaceshipAPIKey, cfg.SpaceshipAPISecret,
 		cfg.UpdateCheckCron, cfg.AutoUpdateEnabled, cfg.ConcurrentBuilds, cfg.DeploymentTimeout, cfg.ServerTimezone, cfg.DockerCleanupCron, cfg.DiskUsageThreshold, cfg.DiskUsageCron, cfg.CurrentVersion, cfg.LatestVersion, cfg.LastUpdateCheck, cfg.UpdatedAt,
 	}
 }
@@ -119,7 +119,8 @@ func (r *SettingsRepo) UpdateServerSettings(ctx context.Context, cfg *models.Ser
 	          namecheap_api_user = excluded.namecheap_api_user,
 	          namecheap_api_key = excluded.namecheap_api_key,
 	          namecheap_client_ip = excluded.namecheap_client_ip,
-	          spaceship_api_key = excluded.spaceship_api_key,
+		      spaceship_api_key = excluded.spaceship_api_key,
+		      spaceship_api_secret = excluded.spaceship_api_secret,
 	          update_check_cron = excluded.update_check_cron,
 	          auto_update_enabled = excluded.auto_update_enabled,
 	          concurrent_builds = excluded.concurrent_builds,

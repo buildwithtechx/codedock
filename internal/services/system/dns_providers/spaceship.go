@@ -7,18 +7,25 @@ import (
 	"fmt"
 	"io"
 	"net/http"
+	"net/url"
 )
 
 type spaceshipRecord struct {
-	ID      string `json:"id"`
 	Name    string `json:"name"`
 	Type    string `json:"type"`
 	Address string `json:"address"`
+	TTL     int    `json:"ttl"`
 }
 
-func fetchSpaceshipRecords(ctx context.Context, client *http.Client, key string) ([]spaceshipRecord, error) {
-	req, _ := http.NewRequestWithContext(ctx, http.MethodGet, "https://spaceship.dev/api/v1/dns", nil)
-	req.Header.Set("X-Api-Key", key)
+func fetchSpaceshipRecords(ctx context.Context, client *http.Client, key, secret, domain string) ([]spaceshipRecord, error) {
+	rootDomain := getRootDomain(domain)
+	query := url.Values{"take": {"500"}, "skip": {"0"}}
+	req, err := http.NewRequestWithContext(ctx, http.MethodGet, "https://spaceship.dev/api/v1/dns/records/"+url.PathEscape(rootDomain)+"?"+query.Encode(), nil)
+	if err != nil {
+		return nil, err
+	}
+	req.Header.Set("X-API-Key", key)
+	req.Header.Set("X-API-Secret", secret)
 	resp, err := client.Do(req)
 	if err != nil {
 		return nil, err
@@ -32,11 +39,20 @@ func fetchSpaceshipRecords(ctx context.Context, client *http.Client, key string)
 		return nil, fmt.Errorf("spaceship returned status %d", resp.StatusCode)
 	}
 
-	records := make([]spaceshipRecord, 0)
-	if err := json.NewDecoder(resp.Body).Decode(&records); err != nil {
+	var response struct {
+		Items []spaceshipRecord `json:"items"`
+	}
+	if err := json.NewDecoder(resp.Body).Decode(&response); err != nil {
 		return nil, err
 	}
-	return records, nil
+	for i := range response.Items {
+		if response.Items[i].Name == "@" {
+			response.Items[i].Name = rootDomain
+		} else {
+			response.Items[i].Name += "." + rootDomain
+		}
+	}
+	return response.Items, nil
 }
 
 func spaceshipRecordExists(records []spaceshipRecord, domain, recordType, value string) bool {
@@ -48,12 +64,12 @@ func spaceshipRecordExists(records []spaceshipRecord, domain, recordType, value 
 	return false
 }
 
-func (s *Service) provisionSpaceship(ctx context.Context, key, domain, recordType, value string) error {
-	if key == "" {
-		return fmt.Errorf("spaceship api key not provided")
+func (s *Service) provisionSpaceship(ctx context.Context, key, secret, domain, recordType, value string) error {
+	if key == "" || secret == "" {
+		return fmt.Errorf("spaceship api key and secret are required")
 	}
 	client := newProviderHTTPClient()
-	records, err := fetchSpaceshipRecords(ctx, client, key)
+	records, err := fetchSpaceshipRecords(ctx, client, key, secret, domain)
 	if err != nil {
 		return err
 	}
@@ -61,14 +77,25 @@ func (s *Service) provisionSpaceship(ctx context.Context, key, domain, recordTyp
 		return nil
 	}
 
-	payload := map[string]any{
-		"type":    recordType,
-		"name":    domain,
-		"address": value,
+	rootDomain := getRootDomain(domain)
+	recordName := "@"
+	if domain != rootDomain {
+		recordName = domain[:len(domain)-len(rootDomain)-1]
 	}
+	items := make([]spaceshipRecord, 0, len(records)+1)
+	for _, record := range records {
+		record.Name = relativeSpaceshipName(record.Name, rootDomain)
+		items = append(items, record)
+	}
+	items = append(items, spaceshipRecord{Type: recordType, Name: recordName, Address: value, TTL: 3600})
+	payload := map[string]any{"force": false, "items": items}
 	b, _ := json.Marshal(payload)
-	req, _ := http.NewRequestWithContext(ctx, http.MethodPost, "https://spaceship.dev/api/v1/dns", bytes.NewBuffer(b))
-	req.Header.Set("X-Api-Key", key)
+	req, err := http.NewRequestWithContext(ctx, http.MethodPut, "https://spaceship.dev/api/v1/dns/records/"+url.PathEscape(rootDomain), bytes.NewBuffer(b))
+	if err != nil {
+		return err
+	}
+	req.Header.Set("X-API-Key", key)
+	req.Header.Set("X-API-Secret", secret)
 	req.Header.Set("Content-Type", "application/json")
 
 	resp, err := client.Do(req)
@@ -82,33 +109,49 @@ func (s *Service) provisionSpaceship(ctx context.Context, key, domain, recordTyp
 	return nil
 }
 
-func (s *Service) deprovisionSpaceship(ctx context.Context, key, domain, recordType, value string) error {
-	if key == "" {
-		return fmt.Errorf("spaceship api key not provided")
+func (s *Service) deprovisionSpaceship(ctx context.Context, key, secret, domain, recordType, value string) error {
+	if key == "" || secret == "" {
+		return fmt.Errorf("spaceship api key and secret are required")
 	}
 	client := newProviderHTTPClient()
-	records, err := fetchSpaceshipRecords(ctx, client, key)
+	records, err := fetchSpaceshipRecords(ctx, client, key, secret, domain)
 	if err != nil {
 		return err
 	}
 
+	deletions := make([]spaceshipRecord, 0)
 	for _, record := range records {
 		if record.Name == domain && record.Type == recordType && (value == "" || record.Address == value) {
-			targetURL := "https://spaceship.dev/api/v1/dns"
-			if record.ID != "" {
-				targetURL = fmt.Sprintf("%s/%s", targetURL, record.ID)
-			}
-			reqDel, _ := http.NewRequestWithContext(ctx, http.MethodDelete, targetURL, nil)
-			reqDel.Header.Set("X-Api-Key", key)
-			respDel, err := client.Do(reqDel)
-			if err != nil {
-				return err
-			}
-			respDel.Body.Close()
-			if respDel.StatusCode >= 400 {
-				return fmt.Errorf("spaceship returned status %d", respDel.StatusCode)
-			}
+			record.Name = relativeSpaceshipName(record.Name, getRootDomain(domain))
+			deletions = append(deletions, record)
 		}
 	}
+	if len(deletions) == 0 {
+		return nil
+	}
+	b, _ := json.Marshal(deletions)
+	rootDomain := getRootDomain(domain)
+	reqDel, err := http.NewRequestWithContext(ctx, http.MethodDelete, "https://spaceship.dev/api/v1/dns/records/"+url.PathEscape(rootDomain), bytes.NewBuffer(b))
+	if err != nil {
+		return err
+	}
+	reqDel.Header.Set("X-API-Key", key)
+	reqDel.Header.Set("X-API-Secret", secret)
+	reqDel.Header.Set("Content-Type", "application/json")
+	respDel, err := client.Do(reqDel)
+	if err != nil {
+		return err
+	}
+	defer respDel.Body.Close()
+	if respDel.StatusCode >= 400 {
+		return fmt.Errorf("spaceship returned status %d", respDel.StatusCode)
+	}
 	return nil
+}
+
+func relativeSpaceshipName(name, rootDomain string) string {
+	if name == rootDomain {
+		return "@"
+	}
+	return name[:len(name)-len(rootDomain)-1]
 }

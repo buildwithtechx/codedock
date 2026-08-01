@@ -161,7 +161,7 @@ export function DnsProviderForm({
 
       {activeProvider === 'spaceship' && (
         <div className="fade-in-50 animate-in space-y-6 duration-300">
-          <div className="grid grid-cols-1 gap-6">
+          <div className="grid grid-cols-1 gap-6 md:grid-cols-2">
             <div className="space-y-3">
               <Label
                 htmlFor="ss-api-key"
@@ -180,6 +180,22 @@ export function DnsProviderForm({
                     spaceshipApiKey: e.target.value,
                   })
                 }
+                className="border/50 h-12 rounded-xl bg-background/80 px-4 font-medium"
+              />
+            </div>
+            <div className="space-y-3">
+              <Label
+                htmlFor="ss-api-secret"
+                className="font-bold text-[10px] text-muted-foreground/90 uppercase tracking-[0.15em]"
+              >
+                API SECRET
+              </Label>
+              <Input
+                id="ss-api-secret"
+                type="password"
+                placeholder="Spaceship API secret"
+                value={formData.spaceshipApiSecret}
+                onChange={(e) => setFormData({ ...formData, spaceshipApiSecret: e.target.value })}
                 className="border/50 h-12 rounded-xl bg-background/80 px-4 font-medium"
               />
             </div>

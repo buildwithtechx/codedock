@@ -150,6 +150,29 @@ func (s *ProjectService) HasPermission(ctx context.Context, projectID, userID st
 	}
 }
 
+func (s *ProjectService) AccessibleServiceIDs(ctx context.Context, userID string, userRole models.UserRole) (map[string]struct{}, error) {
+	services, err := s.appRepo.ListAll(ctx)
+	if err != nil {
+		return nil, err
+	}
+	accessibleProjects := make(map[string]bool)
+	accessibleServices := make(map[string]struct{})
+	for _, service := range services {
+		if service == nil || service.ProjectID == "" {
+			continue
+		}
+		allowed, ok := accessibleProjects[service.ProjectID]
+		if !ok {
+			allowed = s.HasPermission(ctx, service.ProjectID, userID, userRole, "")
+			accessibleProjects[service.ProjectID] = allowed
+		}
+		if allowed {
+			accessibleServices[service.ID] = struct{}{}
+		}
+	}
+	return accessibleServices, nil
+}
+
 func (s *ProjectService) HasOrgPermission(ctx context.Context, orgID, userID string, userRole models.UserRole, minPermission models.MemberPermission) bool {
 	if userRole == models.UserRoleOwner || userRole == models.UserRoleAdmin {
 		return true

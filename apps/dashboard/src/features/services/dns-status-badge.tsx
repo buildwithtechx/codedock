@@ -10,7 +10,6 @@ export function DnsStatusBadge({ status = 'pending' }: DnsStatusBadgeProps) {
 
   switch (normalizedStatus) {
     case 'provisioned':
-    case 'success':
       return (
         <span className="inline-flex items-center gap-1 rounded-full border border-emerald-500/20 bg-emerald-500/10 px-2 py-0.5 font-medium text-emerald-600 text-xs dark:text-emerald-400">
           <CheckCircle2 className="h-3 w-3" />
