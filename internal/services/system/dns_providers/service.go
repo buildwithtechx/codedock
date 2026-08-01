@@ -3,16 +3,29 @@ package dnsproviders
 import (
 	"context"
 	"fmt"
+	"net/http"
 
 	"codedock.run/codedock/internal/repositories"
 )
 
 type Service struct {
-	settingsRepo repositories.SettingsRepository
+	settingsRepo  repositories.SettingsRepository
+	newHTTPClient func() *http.Client
 }
 
 func New(repo repositories.SettingsRepository) *Service {
-	return &Service{settingsRepo: repo}
+	return &Service{settingsRepo: repo, newHTTPClient: newProviderHTTPClient}
+}
+
+func NewWithHTTPClient(repo repositories.SettingsRepository, newHTTPClient func() *http.Client) *Service {
+	return &Service{settingsRepo: repo, newHTTPClient: newHTTPClient}
+}
+
+func (s *Service) httpClient() *http.Client {
+	if s.newHTTPClient == nil {
+		return newProviderHTTPClient()
+	}
+	return s.newHTTPClient()
 }
 
 func (s *Service) ProvisionARecord(ctx context.Context, domain string) (string, string, error) {

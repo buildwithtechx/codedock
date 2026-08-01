@@ -12,7 +12,7 @@ CREATE TABLE IF NOT EXISTS refresh_token_revocations (
 	 token_hash TEXT UNIQUE NOT NULL,
 	 user_id TEXT NOT NULL REFERENCES users(id) ON DELETE CASCADE,
 	 expires_at DATETIME NOT NULL,
-	 revoked_at DATETIME DEFAULT CURRENT_TIMESTAMP
+	 revoked_at DATETIME DEFAULT NULL
 );
 
 CREATE INDEX IF NOT EXISTS idx_refresh_token_revocations_token_hash ON refresh_token_revocations (token_hash);

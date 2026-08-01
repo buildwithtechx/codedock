@@ -11,7 +11,7 @@ func (s *Service) detectProvider(ctx context.Context, cfg *models.ServerSettings
 	domain = strings.ToLower(strings.TrimSuffix(strings.TrimSpace(domain), "."))
 	if cfg.CloudflareAPIToken != "" {
 		rootDomain := getRootDomain(domain)
-		client := newProviderHTTPClient()
+		client := s.httpClient()
 		zoneID, err := s.getCloudflareZoneID(ctx, client, cfg.CloudflareAPIToken, rootDomain)
 		if err == nil {
 			if exists, _, err := checkCloudflareRecordExists(ctx, client, cfg.CloudflareAPIToken, zoneID, domain, recordType, value); err == nil && exists {
@@ -28,7 +28,7 @@ func (s *Service) detectProvider(ctx context.Context, cfg *models.ServerSettings
 		}
 		sld, tld, err := splitNamecheapDomain(domain)
 		if err == nil {
-			client := newProviderHTTPClient()
+			client := s.httpClient()
 			body, err := fetchNamecheapHosts(ctx, client, cfg, sld, tld)
 			if err == nil && namecheapRecordExists(body, subDomain, recordType, value) {
 				return dnsProviderNamecheap
@@ -37,7 +37,7 @@ func (s *Service) detectProvider(ctx context.Context, cfg *models.ServerSettings
 	}
 
 	if cfg.SpaceshipAPIKey != "" && cfg.SpaceshipAPISecret != "" {
-		client := newProviderHTTPClient()
+		client := s.httpClient()
 		if records, err := fetchSpaceshipRecords(ctx, client, cfg.SpaceshipAPIKey, cfg.SpaceshipAPISecret, domain); err == nil && spaceshipRecordExists(records, domain, recordType, value) {
 			return dnsProviderSpaceship
 		}

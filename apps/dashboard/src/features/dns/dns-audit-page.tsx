@@ -24,7 +24,6 @@ export function DnsAuditPage() {
   }).length;
   const manualCount = domains.filter(
     (d) =>
-      (d.dnsProvisionStatus || '').toLowerCase() === 'manual' ||
       (d.dnsProvisionStatus || '').toLowerCase() === 'pending' ||
       (d.dnsProvisionStatus || '').toLowerCase() === 'failed' ||
       !d.dnsProvisionStatus
@@ -50,8 +49,8 @@ export function DnsAuditPage() {
     if (event.key === 'ArrowLeft') next = (current - 1 + tabs.length) % tabs.length;
     if (event.key === 'Home') next = 0;
     if (event.key === 'End') next = tabs.length - 1;
-    if (next === current) return;
     event.preventDefault();
+    if (next === current) return;
     showTab(tabs[next]);
     document.getElementById(`dns-${tabs[next]}-tab`)?.focus();
   };
@@ -113,7 +112,7 @@ export function DnsAuditPage() {
             </div>
             <div>
               <p className="font-medium text-muted-foreground text-xs uppercase tracking-wider">
-                Manual / Pending Setup
+                Manual / Pending / Failed Setup
               </p>
               <h3 className="mt-0.5 font-bold text-2xl">
                 {isLoading || isError ? '...' : manualCount}

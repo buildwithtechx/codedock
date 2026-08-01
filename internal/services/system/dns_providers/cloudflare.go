@@ -11,7 +11,7 @@ import (
 
 func (s *Service) provisionCloudflare(ctx context.Context, token, domain, recordType, value string) error {
 	rootDomain := getRootDomain(domain)
-	client := newProviderHTTPClient()
+	client := s.httpClient()
 
 	zoneID, err := s.getCloudflareZoneID(ctx, client, token, rootDomain)
 	if err != nil {
@@ -53,7 +53,7 @@ func (s *Service) provisionCloudflare(ctx context.Context, token, domain, record
 
 func (s *Service) deprovisionCloudflare(ctx context.Context, token, domain, recordType, value string) error {
 	rootDomain := getRootDomain(domain)
-	client := newProviderHTTPClient()
+	client := s.httpClient()
 
 	zoneID, err := s.getCloudflareZoneID(ctx, client, token, rootDomain)
 	if err != nil {
@@ -63,6 +63,9 @@ func (s *Service) deprovisionCloudflare(ctx context.Context, token, domain, reco
 	_, recordIDs, err := checkCloudflareRecordExists(ctx, client, token, zoneID, domain, recordType, value)
 	if err != nil {
 		return err
+	}
+	if len(recordIDs) > 1 {
+		return fmt.Errorf("cloudflare found multiple matching %s records for %s; refusing to delete unmanaged records", recordType, domain)
 	}
 
 	var lastErr error

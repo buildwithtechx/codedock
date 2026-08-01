@@ -29,10 +29,10 @@ func TestEvaluateResolvedIPs_MixedRecords(t *testing.T) {
 	ips := []net.IP{net.ParseIP("127.0.0.1"), net.ParseIP("::1")}
 
 	verified, resolvedIP := evaluateResolvedIPs(ips, "127.0.0.1")
-	if verified {
-		t.Fatalf("expected verified to be false for mixed records")
+	if !verified {
+		t.Fatalf("expected verification to succeed when the expected address is present")
 	}
-	if resolvedIP != "::1" {
-		t.Fatalf("expected resolvedIP to report the mismatching address, got %q", resolvedIP)
+	if resolvedIP != "127.0.0.1" {
+		t.Fatalf("expected resolvedIP to report the matching address, got %q", resolvedIP)
 	}
 }

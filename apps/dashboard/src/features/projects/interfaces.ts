@@ -1,5 +1,5 @@
 import type { Database } from '#/features/databases';
-import type { DNSVerificationStatus, DomainBase } from '#/features/dns/contracts';
+import type { DomainBase } from '#/features/dns/contracts';
 import type { AppService } from '#/features/services';
 import type { BaseResponse, PaginatedData } from '#/interfaces/base';
 
@@ -33,7 +33,6 @@ export interface EnvironmentConfig {
 export interface DomainConfig extends DomainBase {
   redirectTo?: string;
   pathPrefix?: string;
-  verificationStatus?: DNSVerificationStatus;
 }
 
 export interface ServerlessFunctionCode {

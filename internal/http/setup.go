@@ -159,7 +159,7 @@ func NewServer(db *sql.DB, v *utils.Vault, deployer *deploy.Deployer, traefikMan
 	deploymentListeners := core.NewDeploymentListeners(dispatcherService, appRepo)
 	deploymentListeners.Register()
 
-	serverRepo := repositories.NewServerRepository(db)
+	serverRepo := repositories.NewServerRepository(db, v)
 	sshManager := ssh.NewSSHManager(serverRepo)
 
 	scheduledTaskService := systemservices.NewScheduledTaskService(scheduledTaskRepo, cronManager)

@@ -16,13 +16,17 @@ func evaluateResolvedIPs(ips []net.IP, expectedIP string) (bool, string) {
 		return false, ips[0].String()
 	}
 
+	expected := net.ParseIP(expectedIP)
+	if expected == nil {
+		return false, ips[0].String()
+	}
 	for _, ip := range ips {
-		if ip.String() != expectedIP {
-			return false, ip.String()
+		if ip.Equal(expected) {
+			return true, ip.String()
 		}
 	}
 
-	return true, expectedIP
+	return false, ips[0].String()
 }
 
 func VerifyDomain(ctx context.Context, domainName, expectedIP string) (bool, string, error) {
@@ -31,7 +35,15 @@ func VerifyDomain(ctx context.Context, domainName, expectedIP string) (bool, str
 	}
 
 	resolver := &net.Resolver{}
-	ips, err := resolver.LookupIP(ctx, "ip", domainName)
+	network := "ip"
+	if expected := net.ParseIP(expectedIP); expected != nil {
+		if expected.To4() != nil {
+			network = "ip4"
+		} else {
+			network = "ip6"
+		}
+	}
+	ips, err := resolver.LookupIP(ctx, network, domainName)
 	if err != nil {
 		var dnsErr *net.DNSError
 		if errors.As(err, &dnsErr) && dnsErr.IsNotFound {

@@ -23,13 +23,6 @@ export function DnsStatusBadge({ status = 'pending' }: DnsStatusBadgeProps) {
           Failed
         </span>
       );
-    case 'manual':
-      return (
-        <span className="inline-flex items-center gap-1 rounded-full border border-blue-500/20 bg-blue-500/10 px-2 py-0.5 font-medium text-blue-600 text-xs dark:text-blue-400">
-          <HelpCircle className="h-3 w-3" />
-          Manual
-        </span>
-      );
     case 'pending':
       return (
         <span className="inline-flex items-center gap-1 rounded-full border border-amber-500/20 bg-amber-500/10 px-2 py-0.5 font-medium text-amber-600 text-xs dark:text-amber-400">

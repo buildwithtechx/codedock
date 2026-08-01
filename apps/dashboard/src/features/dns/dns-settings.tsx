@@ -8,7 +8,7 @@ import { DnsProviderForm } from './components/dns-provider-form';
 const providers = [
   { id: 'cloudflare', name: 'Cloudflare', sub: 'API KEY / TOKEN + ZONE' },
   { id: 'namecheap', name: 'Namecheap', sub: 'API USER + KEY' },
-  { id: 'spaceship', name: 'Spaceship', sub: 'API KEY' },
+  { id: 'spaceship', name: 'Spaceship', sub: 'API KEY + SECRET' },
 ];
 
 export const DnsSettings = () => {

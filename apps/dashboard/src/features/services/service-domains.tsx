@@ -44,7 +44,6 @@ export function ServiceDomains({ serviceId }: { serviceId: string }) {
       domains.some(
         (d) =>
           !d.dnsProvisionStatus ||
-          d.dnsProvisionStatus === 'manual' ||
           d.dnsProvisionStatus === 'pending' ||
           d.dnsProvisionStatus === 'failed'
       ));

@@ -122,7 +122,7 @@ func (s *Service) provisionNamecheap(ctx context.Context, cfg *models.ServerSett
 		return err
 	}
 
-	client := newProviderHTTPClient()
+	client := s.httpClient()
 	body, err := fetchNamecheapHosts(ctx, client, cfg, sld, tld)
 	if err != nil {
 		return err

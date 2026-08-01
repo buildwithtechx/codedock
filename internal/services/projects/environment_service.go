@@ -148,6 +148,12 @@ func (s *EnvironmentService) CreateDomain(ctx context.Context, d *models.DomainC
 
 			unlock, err := s.lockDomain(provisionCtx, domainName)
 			if err != nil {
+				statusCtx, statusCancel := context.WithTimeout(context.Background(), 5*time.Second)
+				statusErr := s.updateDNSProvisionStatus(statusCtx, domainID, models.DNSProvisionStatusFailed, "", "")
+				statusCancel()
+				if statusErr != nil {
+					slog.Error("failed to mark DNS provisioning lock timeout", "domain_id", domainID, "error", statusErr)
+				}
 				return
 			}
 			defer unlock()
@@ -261,12 +267,17 @@ func (s *EnvironmentService) DeleteDomain(ctx context.Context, id string) error 
 	}
 
 	if s.dnsService != nil && domain.DNSProvisionStatus == models.DNSProvisionStatusSuccess {
-		if err := s.dnsService.DeprovisionARecord(ctx, domain.DomainName, domain.DNSProvider, domain.DNSProvisionedIP); err != nil {
+		cleanupCtx, cleanupCancel := context.WithTimeout(context.Background(), 30*time.Second)
+		err := s.dnsService.DeprovisionARecord(cleanupCtx, domain.DomainName, domain.DNSProvider, domain.DNSProvisionedIP)
+		cleanupCancel()
+		if err != nil {
 			return fmt.Errorf("deprovision domain DNS record: %w", err)
 		}
 	}
 
-	if err := s.domainRepo.Delete(ctx, id); err != nil {
+	deleteCtx, deleteCancel := context.WithTimeout(context.Background(), 5*time.Second)
+	defer deleteCancel()
+	if err := s.domainRepo.Delete(deleteCtx, id); err != nil {
 		return err
 	}
 	return nil

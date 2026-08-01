@@ -83,7 +83,6 @@ export function DomainAuditTable({ domains, isLoading }: DomainAuditTableProps) 
             <SelectContent>
               <SelectItem value="all">All Statuses</SelectItem>
               <SelectItem value="provisioned">Provisioned</SelectItem>
-              <SelectItem value="manual">Manual</SelectItem>
               <SelectItem value="pending">Pending</SelectItem>
               <SelectItem value="failed">Failed</SelectItem>
             </SelectContent>

@@ -114,7 +114,7 @@ func TestWorkerTokenAuthenticationAndRevocation(t *testing.T) {
 	_, db, _, _ := setupTestApp(t)
 	defer db.Close()
 
-	serverRepo := repositories.NewServerRepository(db)
+	serverRepo := repositories.NewServerRepository(db, nil)
 	ctx := context.Background()
 
 	srv := &models.Server{

@@ -33,6 +33,9 @@ func maskSettingsSecrets(s *models.ServerSettings) {
 	if s.SpaceshipAPIKey != "" {
 		s.SpaceshipAPIKey = "********"
 	}
+	if s.SpaceshipAPISecret != "" {
+		s.SpaceshipAPISecret = "********"
+	}
 }
 
 func (h *SettingsHandler) GetSettings(c echo.Context) error {
@@ -77,6 +80,7 @@ func (h *SettingsHandler) UpdateSettings(c echo.Context) error {
 	realCloudflare := existing.CloudflareAPIToken
 	realNamecheap := existing.NamecheapAPIKey
 	realSpaceship := existing.SpaceshipAPIKey
+	realSpaceshipSecret := existing.SpaceshipAPISecret
 
 	if err := c.Bind(existing); err != nil {
 		return utils.Error(c, http.StatusBadRequest, "invalid payload")
@@ -90,6 +94,9 @@ func (h *SettingsHandler) UpdateSettings(c echo.Context) error {
 	}
 	if existing.SpaceshipAPIKey == "********" {
 		existing.SpaceshipAPIKey = realSpaceship
+	}
+	if existing.SpaceshipAPISecret == "********" {
+		existing.SpaceshipAPISecret = realSpaceshipSecret
 	}
 
 	if err := h.settingsService.UpdateSettings(c.Request().Context(), existing); err != nil {

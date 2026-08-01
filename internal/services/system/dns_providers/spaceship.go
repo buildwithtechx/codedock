@@ -68,13 +68,15 @@ func (s *Service) provisionSpaceship(ctx context.Context, key, secret, domain, r
 	if key == "" || secret == "" {
 		return fmt.Errorf("spaceship api key and secret are required")
 	}
-	client := newProviderHTTPClient()
+	client := s.httpClient()
 	records, err := fetchSpaceshipRecords(ctx, client, key, secret, domain)
 	if err != nil {
 		return err
 	}
-	if spaceshipRecordExists(records, domain, recordType, value) {
-		return nil
+	for _, record := range records {
+		if record.Name == domain && record.Type == recordType {
+			return fmt.Errorf("spaceship record conflict for %s: existing %s record is not owned by codedock", domain, recordType)
+		}
 	}
 
 	rootDomain := getRootDomain(domain)
@@ -113,7 +115,7 @@ func (s *Service) deprovisionSpaceship(ctx context.Context, key, secret, domain,
 	if key == "" || secret == "" {
 		return fmt.Errorf("spaceship api key and secret are required")
 	}
-	client := newProviderHTTPClient()
+	client := s.httpClient()
 	records, err := fetchSpaceshipRecords(ctx, client, key, secret, domain)
 	if err != nil {
 		return err
