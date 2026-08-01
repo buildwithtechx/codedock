@@ -1,4 +1,4 @@
-package system
+package dnsproviders
 
 import (
 	"bytes"
@@ -8,7 +8,7 @@ import (
 	"net/http"
 )
 
-func (s *DNSProviderService) provisionSpaceship(ctx context.Context, key, domain, recordType, value string) error {
+func (s *Service) provisionSpaceship(ctx context.Context, key, domain, recordType, value string) error {
 	client := newProviderHTTPClient()
 	reqGet, _ := http.NewRequestWithContext(ctx, http.MethodGet, "https://spaceship.dev/api/v1/dns", nil)
 	reqGet.Header.Set("X-Api-Key", key)
@@ -47,7 +47,7 @@ func (s *DNSProviderService) provisionSpaceship(ctx context.Context, key, domain
 	return nil
 }
 
-func (s *DNSProviderService) deprovisionSpaceship(ctx context.Context, key, domain, recordType, value string) error {
+func (s *Service) deprovisionSpaceship(ctx context.Context, key, domain, recordType, value string) error {
 	client := newProviderHTTPClient()
 	reqGet, _ := http.NewRequestWithContext(ctx, http.MethodGet, "https://spaceship.dev/api/v1/dns", nil)
 	reqGet.Header.Set("X-Api-Key", key)

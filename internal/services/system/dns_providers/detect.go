@@ -1,4 +1,4 @@
-package system
+package dnsproviders
 
 import (
 	"context"
@@ -11,7 +11,7 @@ import (
 	"codedock.run/codedock/internal/models"
 )
 
-func (s *DNSProviderService) detectProvider(ctx context.Context, cfg *models.ServerSettings, domain, recordType, value string) string {
+func (s *Service) detectProvider(ctx context.Context, cfg *models.ServerSettings, domain, recordType, value string) string {
 	if cfg.CloudflareAPIToken != "" {
 		rootDomain := getRootDomain(domain)
 		client := newProviderHTTPClient()

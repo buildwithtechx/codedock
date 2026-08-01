@@ -1,4 +1,4 @@
-package system
+package dnsproviders
 
 import (
 	"context"
@@ -11,7 +11,7 @@ import (
 	"codedock.run/codedock/internal/models"
 )
 
-func (s *DNSProviderService) provisionNamecheap(ctx context.Context, cfg *models.ServerSettings, domain, recordType, value string) error {
+func (s *Service) provisionNamecheap(ctx context.Context, cfg *models.ServerSettings, domain, recordType, value string) error {
 	rootDomain := getRootDomain(domain)
 	subDomain := strings.TrimSuffix(domain, "."+rootDomain)
 	if subDomain == domain {
@@ -63,7 +63,7 @@ func (s *DNSProviderService) provisionNamecheap(ctx context.Context, cfg *models
 	return nil
 }
 
-func (s *DNSProviderService) deprovisionNamecheap(ctx context.Context, cfg *models.ServerSettings, domain, recordType, value string) error {
+func (s *Service) deprovisionNamecheap(ctx context.Context, cfg *models.ServerSettings, domain, recordType, value string) error {
 	rootDomain := getRootDomain(domain)
 	subDomain := strings.TrimSuffix(domain, "."+rootDomain)
 	if subDomain == domain {

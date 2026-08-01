@@ -1,4 +1,4 @@
-package system
+package dnsproviders
 
 import (
 	"bytes"
@@ -8,7 +8,7 @@ import (
 	"net/http"
 )
 
-func (s *DNSProviderService) provisionCloudflare(ctx context.Context, token, domain, recordType, value string) error {
+func (s *Service) provisionCloudflare(ctx context.Context, token, domain, recordType, value string) error {
 	rootDomain := getRootDomain(domain)
 	client := newProviderHTTPClient()
 
@@ -44,7 +44,7 @@ func (s *DNSProviderService) provisionCloudflare(ctx context.Context, token, dom
 	return nil
 }
 
-func (s *DNSProviderService) deprovisionCloudflare(ctx context.Context, token, domain, recordType, value string) error {
+func (s *Service) deprovisionCloudflare(ctx context.Context, token, domain, recordType, value string) error {
 	rootDomain := getRootDomain(domain)
 	client := newProviderHTTPClient()
 
@@ -69,7 +69,7 @@ func (s *DNSProviderService) deprovisionCloudflare(ctx context.Context, token, d
 	return nil
 }
 
-func (s *DNSProviderService) getCloudflareZoneID(ctx context.Context, client *http.Client, token, rootDomain string) (string, error) {
+func (s *Service) getCloudflareZoneID(ctx context.Context, client *http.Client, token, rootDomain string) (string, error) {
 	req, _ := http.NewRequestWithContext(ctx, http.MethodGet, "https://api.cloudflare.com/client/v4/zones?name="+rootDomain, nil)
 	req.Header.Set("Authorization", "Bearer "+token)
 	resp, err := client.Do(req)
