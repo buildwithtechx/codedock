@@ -1,5 +1,5 @@
 import { FolderKanban } from 'lucide-react';
-import { useState } from 'react';
+import { useEffect, useState } from 'react';
 import { toast } from 'sonner';
 import { Button } from '#/components/ui/button';
 import {
@@ -21,6 +21,7 @@ import {
 import { useListOrganizations } from '#/features/organizations';
 import { useCreateProject } from '#/features/projects';
 import { useListServers } from '#/hooks/use-servers';
+import { useOrganizationStore } from '#/stores/organization-store';
 
 export function CreateProjectModal({
   open,
@@ -33,11 +34,18 @@ export function CreateProjectModal({
   const [description, setDescription] = useState('');
   const [serverId, setServerId] = useState('');
   const [organizationId, setOrganizationId] = useState('');
+  const activeOrganizationId = useOrganizationStore((state) => state.activeOrganizationId);
 
   const { data: servers } = useListServers();
   const { data: orgs } = useListOrganizations();
 
   const { mutateAsync: createProject, isPending } = useCreateProject();
+
+  useEffect(() => {
+    if (open && activeOrganizationId) {
+      setOrganizationId(activeOrganizationId);
+    }
+  }, [activeOrganizationId, open]);
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();

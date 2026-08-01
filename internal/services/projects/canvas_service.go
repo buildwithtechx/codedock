@@ -16,8 +16,8 @@ func NewCanvasService(r repositories.CanvasRepository) *CanvasService {
 	return &CanvasService{repo: r}
 }
 
-func (s *CanvasService) ListSummaries(ctx context.Context) ([]models.CanvasSummary, error) {
-	return s.repo.ListCanvasSummaries(ctx)
+func (s *CanvasService) ListSummaries(ctx context.Context, organizationID string) ([]models.CanvasSummary, error) {
+	return s.repo.ListCanvasSummaries(ctx, organizationID)
 }
 
 func (s *CanvasService) GetSummary(ctx context.Context, id string) (*models.CanvasSummary, error) {

@@ -12,7 +12,7 @@ import (
 )
 
 type CanvasRepository interface {
-	ListCanvasSummaries(ctx context.Context) ([]models.CanvasSummary, error)
+	ListCanvasSummaries(ctx context.Context, organizationID string) ([]models.CanvasSummary, error)
 	GetCanvasSummary(ctx context.Context, id string) (*models.CanvasSummary, error)
 	GetEnvironmentCanvas(ctx context.Context, id string) (*models.EnvironmentCanvas, error)
 }
@@ -27,10 +27,10 @@ func NewCanvasRepo(db *sql.DB, envRepo EnvironmentRepository) *CanvasRepo {
 	return &CanvasRepo{db: sqlx.NewDb(db, "sqlite"), environments: envRepo}
 }
 
-func (r *CanvasRepo) ListCanvasSummaries(ctx context.Context) ([]models.CanvasSummary, error) {
+func (r *CanvasRepo) ListCanvasSummaries(ctx context.Context, organizationID string) ([]models.CanvasSummary, error) {
 	r.mu.Lock()
 	defer r.mu.Unlock()
-	projects, err := r.listAllProjects()
+	projects, err := r.listAllProjects(ctx, organizationID)
 	if err != nil {
 		return nil, err
 	}

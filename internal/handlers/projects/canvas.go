@@ -22,7 +22,13 @@ func NewCanvasHandler(s *projectservices.CanvasService, ps *projectservices.Proj
 
 func (h *CanvasHandler) ListCanvasSummaries(c echo.Context) error {
 	user := middleware.GetUserClaimsFromContext(c.Request().Context())
-	summaries, err := h.canvasService.ListSummaries(c.Request().Context())
+	organizationID := c.QueryParam("organizationId")
+	if organizationID != "" && user != nil && h.projectService != nil {
+		if !h.projectService.HasOrgPermission(c.Request().Context(), organizationID, user.UserID, models.UserRole(user.Role), "") {
+			return utils.Error(c, http.StatusForbidden, "insufficient permissions for this organization")
+		}
+	}
+	summaries, err := h.canvasService.ListSummaries(c.Request().Context(), organizationID)
 	if err != nil {
 		return utils.Error(c, http.StatusInternalServerError, err.Error())
 	}

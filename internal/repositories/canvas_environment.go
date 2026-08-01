@@ -43,9 +43,16 @@ type projectRow struct {
 	UpdatedAt   time.Time `db:"updated_at"`
 }
 
-func (r *CanvasRepo) listAllProjects() ([]projectRow, error) {
+func (r *CanvasRepo) listAllProjects(ctx context.Context, organizationID string) ([]projectRow, error) {
 	var projects []projectRow
-	err := r.db.Select(&projects, `SELECT id, name, COALESCE(description,'') as description, created_at, updated_at FROM projects ORDER BY created_at DESC`)
+	query := `SELECT id, name, COALESCE(description,'') as description, created_at, updated_at FROM projects`
+	args := make([]any, 0, 1)
+	if organizationID != "" {
+		query += ` WHERE organization_id = ?`
+		args = append(args, organizationID)
+	}
+	query += ` ORDER BY created_at DESC`
+	err := r.db.SelectContext(ctx, &projects, query, args...)
 	if err != nil {
 		return nil, err
 	}

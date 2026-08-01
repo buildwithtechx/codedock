@@ -1,10 +1,13 @@
 import { useQuery } from '@tanstack/react-query';
 import { canvasService } from '#/services/canvas';
+import { useOrganizationStore } from '#/stores/organization-store';
 
 export const useListCanvasSummaries = () => {
+  const activeOrganizationId = useOrganizationStore((state) => state.activeOrganizationId);
+
   return useQuery({
-    queryKey: ['canvas', 'listCanvasSummaries'].filter(Boolean),
-    queryFn: () => canvasService.listCanvasSummaries(),
+    queryKey: ['canvas', 'listCanvasSummaries', activeOrganizationId],
+    queryFn: () => canvasService.listCanvasSummaries(activeOrganizationId),
   });
 };
 

@@ -18,6 +18,7 @@ import {
 } from 'lucide-react';
 import { ServerConnectionSwitcher } from '../server-connection-switcher';
 import { NavItem, type NavItemProps } from './nav-item';
+import { OrganizationSwitcher } from './organization-switcher';
 import { UserMenu } from './user-menu';
 
 type NavGroup = {
@@ -152,6 +153,7 @@ export function AppSidebar({ collapsed, onToggle, mobileOpen, onMobileClose }: A
         </div>
 
         <nav className="flex flex-1 flex-col gap-5 overflow-y-auto px-2 pt-3 pb-3">
+          <OrganizationSwitcher collapsed={navCollapsed} />
           {navGroups.map((group, i) => (
             <div key={i} className="flex flex-col gap-0.5">
               {!navCollapsed && group.title && (
