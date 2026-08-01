@@ -9,6 +9,19 @@ import (
 type Domain = types.Domain
 type DomainConfig = types.DomainConfig
 
+const (
+	DNSProvisionStatusPending = types.DNSProvisionStatusPending
+	DNSProvisionStatusSuccess = types.DNSProvisionStatusSuccess
+	DNSProvisionStatusFailed  = types.DNSProvisionStatusFailed
+	DNSProvisionStatusManual  = types.DNSProvisionStatusManual
+)
+
+const (
+	RecordTypeA     = types.RecordTypeA
+	RecordTypeCNAME = types.RecordTypeCNAME
+	RecordTypeTXT   = types.RecordTypeTXT
+)
+
 type DNSRecord struct {
 	ID          string    `json:"id" db:"id"`
 	DomainName  string    `json:"domainName" db:"domain_name"`

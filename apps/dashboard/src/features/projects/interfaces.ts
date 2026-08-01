@@ -23,15 +23,35 @@ export interface EnvironmentConfig {
   updatedAt: string;
 }
 
+export type DNSProvisionStatus = 'provisioned' | 'failed' | 'pending' | 'manual';
+export type DNSVerificationStatus =
+  | 'resolves_to_server'
+  | 'resolves_to_different_ip'
+  | 'unresolved';
+
 export interface DomainConfig {
   id: string;
-  projectId: string;
+  serviceId?: string;
+  projectId?: string;
   domainName: string;
   redirectTo?: string;
-  sslCertStatus: SSLCertStatus;
-  pathPrefix: string;
+  sslCertStatus?: SSLCertStatus;
+  pathPrefix?: string;
+  dnsProvisionStatus?: DNSProvisionStatus;
+  verified?: boolean;
+  verificationStatus?: DNSVerificationStatus;
   createdAt: string;
   updatedAt: string;
+}
+
+export interface DomainVerifyResult {
+  domainId: string;
+  domainName: string;
+  verified: boolean;
+  status: DNSVerificationStatus;
+  resolvedIps?: string[];
+  serverIp?: string;
+  message: string;
 }
 
 export interface ServerlessFunctionCode {

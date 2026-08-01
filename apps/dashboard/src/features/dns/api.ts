@@ -2,7 +2,12 @@ import type { DomainConfig } from '#/features/projects';
 import type { BaseResponse } from '#/interfaces/base';
 import { apiClient } from '#/lib/api-client';
 import { handleApiError } from '#/lib/error';
-import type { CreateDNSRecordRequest, DNSRecord, UpdateDNSRecordRequest } from './interfaces';
+import type {
+  CreateDNSRecordRequest,
+  DNSRecord,
+  DomainVerifyResult,
+  UpdateDNSRecordRequest,
+} from './interfaces';
 
 export const dnsService = {
   list: async (): Promise<BaseResponse<DNSRecord[]>> => {
@@ -39,6 +44,14 @@ export const dnsService = {
 };
 
 export const domainsService = {
+  listAll: async (): Promise<BaseResponse<DomainConfig[]>> => {
+    try {
+      return await apiClient.get<BaseResponse<DomainConfig[]>>(`/domains`);
+    } catch (error) {
+      throw handleApiError(error);
+    }
+  },
+
   listByService: async (serviceId: string): Promise<BaseResponse<DomainConfig[]>> => {
     try {
       return await apiClient.get<BaseResponse<DomainConfig[]>>(`/services/${serviceId}/domains`);
@@ -64,6 +77,14 @@ export const domainsService = {
   delete: async (id: string): Promise<void> => {
     try {
       await apiClient.delete(`/domains/${id}`);
+    } catch (error) {
+      throw handleApiError(error);
+    }
+  },
+
+  verifyDomain: async (domainId: string): Promise<BaseResponse<DomainVerifyResult>> => {
+    try {
+      return await apiClient.post<BaseResponse<DomainVerifyResult>>(`/domains/${domainId}/verify`);
     } catch (error) {
       throw handleApiError(error);
     }

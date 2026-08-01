@@ -24,15 +24,36 @@ export interface UpdateDNSRecordRequest {
   ttl?: number;
 }
 
+export type DNSProvisionStatus = 'provisioned' | 'failed' | 'pending' | 'manual';
+export type DNSVerificationStatus =
+  | 'resolves_to_server'
+  | 'resolves_to_different_ip'
+  | 'unresolved';
+
+export interface DomainVerifyResult {
+  domainId: string;
+  domainName: string;
+  verified: boolean;
+  status: DNSVerificationStatus;
+  resolvedIps?: string[];
+  serverIp?: string;
+  message: string;
+}
+
 export interface Domain {
   id: string;
-  projectId: string;
+  projectId?: string;
+  serviceId?: string;
   domainName: string;
-  sslStatus: string;
+  sslStatus?: string;
+  sslCertStatus?: string;
+  dnsProvisionStatus?: DNSProvisionStatus;
+  verified?: boolean;
   createdAt: string;
 }
 
 export interface CreateDomainRequest {
-  projectId: string;
+  projectId?: string;
+  serviceId?: string;
   domainName: string;
 }

@@ -77,13 +77,21 @@ func (s *EnvironmentService) CreateDomain(ctx context.Context, d *models.DomainC
 	if d.CreatedAt.IsZero() {
 		d.CreatedAt = now
 	}
+	if d.DNSProvisionStatus == "" {
+		d.DNSProvisionStatus = models.DNSProvisionStatusPending
+	}
 	if err := s.domainRepo.Create(ctx, d); err != nil {
 		return nil, err
 	}
 
 	if s.dnsService != nil {
 		go func() {
-			_ = s.dnsService.ProvisionARecord(context.Background(), d.DomainName)
+			err := s.dnsService.ProvisionARecord(context.Background(), d.DomainName)
+			status := models.DNSProvisionStatusSuccess
+			if err != nil {
+				status = models.DNSProvisionStatusFailed
+			}
+			_ = s.domainRepo.UpdateDNSProvisionStatus(context.Background(), d.ID, status)
 		}()
 	}
 
@@ -112,7 +120,14 @@ func (s *EnvironmentService) DeleteDomain(ctx context.Context, id string) error 
 	if id == "" {
 		return errors.New("id required")
 	}
-	return s.domainRepo.Delete(ctx, id)
+	domain, _ := s.domainRepo.GetByID(ctx, id)
+	err := s.domainRepo.Delete(ctx, id)
+	if err == nil && domain != nil && s.dnsService != nil {
+		go func() {
+			_ = s.dnsService.DeprovisionARecord(context.Background(), domain.DomainName)
+		}()
+	}
+	return err
 }
 
 func (s *EnvironmentService) GetVars(ctx context.Context, projectID string) (map[string]string, error) {

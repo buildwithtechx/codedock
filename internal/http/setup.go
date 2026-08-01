@@ -217,7 +217,7 @@ func NewServer(db *sql.DB, v *utils.Vault, deployer *deploy.Deployer, traefikMan
 	gitHandler := deployments.NewGitHandler(gitService)
 	webhookHandler := deployments.NewWebhookHandler(gitService, projectService, appService, deploymentService, prPreviewService, gitAppsService)
 
-	domainHandler := projects.NewDomainHandler(environmentService, appService, projectService)
+	domainHandler := projects.NewDomainHandler(environmentService, appService, projectService, settingsRepo)
 	projectEnvHandler := projects.NewProjectEnvHandler(environmentService)
 	notificationHandler := system.NewNotificationHandler(notificationService)
 	gitAppsHandler := deployments.NewGitAppsHandler(gitAppsService)

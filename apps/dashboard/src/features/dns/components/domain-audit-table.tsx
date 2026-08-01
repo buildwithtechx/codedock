@@ -1,0 +1,225 @@
+import { CheckCircle2, Globe, Loader2, RefreshCw, Search, Trash2 } from 'lucide-react';
+import { useState } from 'react';
+import { toast } from 'sonner';
+import { Button } from '#/components/ui/button';
+import { Input } from '#/components/ui/input';
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from '#/components/ui/select';
+import type { DomainConfig, DomainVerifyResult } from '#/features/dns';
+import { useDeleteDomain, useVerifyDomain } from '#/features/dns/hooks';
+import { DnsStatusBadge } from '#/features/services/dns-status-badge';
+
+interface DomainAuditTableProps {
+  domains: DomainConfig[];
+  isLoading: boolean;
+}
+
+export function DomainAuditTable({ domains, isLoading }: DomainAuditTableProps) {
+  const deleteDomain = useDeleteDomain();
+  const verifyDomain = useVerifyDomain();
+
+  const [search, setSearch] = useState('');
+  const [statusFilter, setStatusFilter] = useState<string>('all');
+  const [verifyingMap, setVerifyingMap] = useState<Record<string, boolean>>({});
+  const [verificationResults, setVerificationResults] = useState<
+    Record<string, DomainVerifyResult>
+  >({});
+  const [isVerifyingAll, setIsVerifyingAll] = useState(false);
+
+  const handleVerifyOne = async (domainId: string) => {
+    setVerifyingMap((prev) => ({ ...prev, [domainId]: true }));
+    try {
+      const res = await verifyDomain.mutateAsync(domainId);
+      if (res.data) {
+        setVerificationResults((prev) => ({ ...prev, [domainId]: res.data }));
+        if (res.data.status === 'resolves_to_server') {
+          toast.success(res.data.message);
+        } else if (res.data.status === 'resolves_to_different_ip') {
+          toast.warning(res.data.message);
+        } else {
+          toast.error(res.data.message);
+        }
+      }
+    } catch {
+      toast.error('Verification failed');
+    } finally {
+      setVerifyingMap((prev) => ({ ...prev, [domainId]: false }));
+    }
+  };
+
+  const handleVerifyAll = async () => {
+    if (domains.length === 0) return;
+    setIsVerifyingAll(true);
+    let verifiedCount = 0;
+
+    for (const d of domains) {
+      setVerifyingMap((prev) => ({ ...prev, [d.id]: true }));
+      try {
+        const res = await verifyDomain.mutateAsync(d.id);
+        if (res.data) {
+          setVerificationResults((prev) => ({ ...prev, [d.id]: res.data }));
+          if (res.data.verified) verifiedCount++;
+        }
+      } catch {
+        // ignore individual errors in bulk verification
+      } finally {
+        setVerifyingMap((prev) => ({ ...prev, [d.id]: false }));
+      }
+    }
+    setIsVerifyingAll(false);
+    toast.success(`Completed verification: ${verifiedCount}/${domains.length} domains resolving`);
+  };
+
+  const filteredDomains = domains.filter((d) => {
+    const matchesSearch = d.domainName.toLowerCase().includes(search.toLowerCase());
+    const matchesStatus =
+      statusFilter === 'all' ||
+      (d.dnsProvisionStatus || 'pending').toLowerCase() === statusFilter.toLowerCase();
+    return matchesSearch && matchesStatus;
+  });
+
+  if (isLoading) {
+    return (
+      <div className="flex items-center justify-center py-12 text-muted-foreground">
+        <Loader2 className="mr-2 h-5 w-5 animate-spin" /> Loading configured domains...
+      </div>
+    );
+  }
+
+  return (
+    <div className="space-y-4">
+      <div className="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
+        <div className="flex flex-1 items-center gap-3">
+          <div className="relative max-w-sm flex-1">
+            <Search className="absolute top-2.5 left-2.5 h-4 w-4 text-muted-foreground" />
+            <Input
+              placeholder="Search domain..."
+              value={search}
+              onChange={(e) => setSearch(e.target.value)}
+              className="pl-9 text-sm"
+            />
+          </div>
+          <Select value={statusFilter} onValueChange={setStatusFilter}>
+            <SelectTrigger className="w-36 text-xs">
+              <SelectValue placeholder="All Statuses" />
+            </SelectTrigger>
+            <SelectContent>
+              <SelectItem value="all">All Statuses</SelectItem>
+              <SelectItem value="provisioned">Provisioned</SelectItem>
+              <SelectItem value="manual">Manual</SelectItem>
+              <SelectItem value="pending">Pending</SelectItem>
+              <SelectItem value="failed">Failed</SelectItem>
+            </SelectContent>
+          </Select>
+        </div>
+
+        <Button
+          variant="outline"
+          size="sm"
+          onClick={handleVerifyAll}
+          disabled={isVerifyingAll || domains.length === 0}
+          className="h-9 gap-2 font-medium text-xs"
+        >
+          {isVerifyingAll ? (
+            <Loader2 className="h-4 w-4 animate-spin" />
+          ) : (
+            <RefreshCw className="h-4 w-4" />
+          )}
+          Verify All Domains
+        </Button>
+      </div>
+
+      {filteredDomains.length === 0 ? (
+        <div className="rounded-2xl border border-dashed p-8 text-center text-muted-foreground text-sm">
+          <Globe className="mx-auto mb-2 h-8 w-8 opacity-40" />
+          No domains found matching criteria.
+        </div>
+      ) : (
+        <div className="overflow-hidden rounded-2xl border border-border/60 bg-card/40">
+          <table className="w-full text-left text-sm">
+            <thead className="border-b bg-muted/40 font-semibold text-muted-foreground text-xs uppercase tracking-wider">
+              <tr>
+                <th className="px-4 py-3">Domain</th>
+                <th className="px-4 py-3">Service</th>
+                <th className="px-4 py-3">Provision Status</th>
+                <th className="px-4 py-3">DNS Verification</th>
+                <th className="px-4 py-3 text-right">Actions</th>
+              </tr>
+            </thead>
+            <tbody className="divide-y divide-border/40">
+              {filteredDomains.map((domain) => {
+                const result = verificationResults[domain.id];
+                const isVerifying = verifyingMap[domain.id];
+
+                return (
+                  <tr key={domain.id} className="transition-colors hover:bg-card/60">
+                    <td className="px-4 py-3.5 font-medium font-mono">{domain.domainName}</td>
+                    <td className="px-4 py-3.5 text-muted-foreground text-xs">
+                      {domain.serviceId ? (
+                        <span className="font-mono text-xs">{domain.serviceId.slice(0, 8)}...</span>
+                      ) : (
+                        '—'
+                      )}
+                    </td>
+                    <td className="px-4 py-3.5">
+                      <DnsStatusBadge status={domain.dnsProvisionStatus} />
+                    </td>
+                    <td className="px-4 py-3.5 text-xs">
+                      {result ? (
+                        <span
+                          className={`font-medium ${
+                            result.status === 'resolves_to_server'
+                              ? 'text-emerald-600 dark:text-emerald-400'
+                              : result.status === 'resolves_to_different_ip'
+                                ? 'text-amber-600 dark:text-amber-400'
+                                : 'text-destructive'
+                          }`}
+                        >
+                          {result.message}
+                        </span>
+                      ) : (
+                        <span className="text-muted-foreground">Not verified</span>
+                      )}
+                    </td>
+                    <td className="px-4 py-3.5 text-right">
+                      <div className="flex items-center justify-end gap-2">
+                        <Button
+                          variant="ghost"
+                          size="sm"
+                          onClick={() => handleVerifyOne(domain.id)}
+                          disabled={isVerifying}
+                          className="h-8 gap-1 text-xs"
+                        >
+                          {isVerifying ? (
+                            <Loader2 className="h-3.5 w-3.5 animate-spin" />
+                          ) : (
+                            <CheckCircle2 className="h-3.5 w-3.5" />
+                          )}
+                          Verify
+                        </Button>
+                        <Button
+                          variant="ghost"
+                          size="icon"
+                          onClick={() => deleteDomain.mutate({ id: domain.id })}
+                          disabled={deleteDomain.isPending}
+                          className="h-8 w-8 text-destructive hover:bg-destructive/10 hover:text-destructive"
+                        >
+                          <Trash2 className="h-4 w-4" />
+                        </Button>
+                      </div>
+                    </td>
+                  </tr>
+                );
+              })}
+            </tbody>
+          </table>
+        </div>
+      )}
+    </div>
+  );
+}
