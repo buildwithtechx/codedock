@@ -151,6 +151,13 @@ body {
 }
 
 @layer utilities {
+  .dashboard-content .bg-card\/20,
+  .dashboard-content .bg-card\/30,
+  .dashboard-content .bg-card\/40,
+  .dashboard-content .bg-card\/50 {
+    background-color: var(--card);
+  }
+
   .page-transition {
     animation: page-enter 160ms ease-out both;
   }

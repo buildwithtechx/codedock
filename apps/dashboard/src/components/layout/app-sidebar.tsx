@@ -4,7 +4,6 @@ import {
   Cloud,
   Code,
   Download,
-  Globe,
   Key,
   LayoutDashboard,
   Network,
@@ -40,7 +39,7 @@ const navGroups: NavGroup[] = [
     title: 'Resources',
     items: [
       { title: 'S3/R2 Destinations', url: '/s3-destinations', icon: Cloud },
-      { title: 'Domains', url: '/domains', icon: Globe },
+      { title: 'Domains & DNS', url: '/dns', icon: Network },
     ],
   },
   {
@@ -54,7 +53,6 @@ const navGroups: NavGroup[] = [
     title: 'System & Settings',
     items: [
       { title: 'API Access', url: '/api-access', icon: Key },
-      { title: 'DNS', url: '/dns', icon: Network },
       { title: 'Migration', url: '/migrations', icon: Download },
       { title: 'Maintenance', url: '/maintenance', icon: Wrench },
       { title: 'Updates', url: '/updates', icon: RefreshCw },

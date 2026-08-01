@@ -23,7 +23,6 @@ import { Route as DashboardApiAccessRouteImport } from './routes/_dashboard.api-
 import { Route as DashboardAuditLogsRouteImport } from './routes/_dashboard.audit-logs'
 import { Route as DashboardDeploymentsRouteImport } from './routes/_dashboard.deployments'
 import { Route as DashboardDnsRouteImport } from './routes/_dashboard.dns'
-import { Route as DashboardDomainsRouteImport } from './routes/_dashboard.domains'
 import { Route as DashboardMaintenanceRouteImport } from './routes/_dashboard.maintenance'
 import { Route as DashboardMigrationsRouteImport } from './routes/_dashboard.migrations'
 import { Route as DashboardOrganizationsRouteImport } from './routes/_dashboard.organizations'
@@ -126,11 +125,6 @@ const DashboardDeploymentsRoute = DashboardDeploymentsRouteImport.update({
 const DashboardDnsRoute = DashboardDnsRouteImport.update({
   id: '/dns',
   path: '/dns',
-  getParentRoute: () => DashboardRoute,
-} as any)
-const DashboardDomainsRoute = DashboardDomainsRouteImport.update({
-  id: '/domains',
-  path: '/domains',
   getParentRoute: () => DashboardRoute,
 } as any)
 const DashboardMaintenanceRoute = DashboardMaintenanceRouteImport.update({
@@ -346,7 +340,6 @@ export interface FileRoutesByFullPath {
   '/audit-logs': typeof DashboardAuditLogsRoute
   '/deployments': typeof DashboardDeploymentsRoute
   '/dns': typeof DashboardDnsRoute
-  '/domains': typeof DashboardDomainsRoute
   '/maintenance': typeof DashboardMaintenanceRoute
   '/migrations': typeof DashboardMigrationsRoute
   '/organizations': typeof DashboardOrganizationsRouteWithChildren
@@ -396,7 +389,6 @@ export interface FileRoutesByTo {
   '/audit-logs': typeof DashboardAuditLogsRoute
   '/deployments': typeof DashboardDeploymentsRoute
   '/dns': typeof DashboardDnsRoute
-  '/domains': typeof DashboardDomainsRoute
   '/maintenance': typeof DashboardMaintenanceRoute
   '/migrations': typeof DashboardMigrationsRoute
   '/organizations': typeof DashboardOrganizationsRouteWithChildren
@@ -447,7 +439,6 @@ export interface FileRoutesById {
   '/_dashboard/audit-logs': typeof DashboardAuditLogsRoute
   '/_dashboard/deployments': typeof DashboardDeploymentsRoute
   '/_dashboard/dns': typeof DashboardDnsRoute
-  '/_dashboard/domains': typeof DashboardDomainsRoute
   '/_dashboard/maintenance': typeof DashboardMaintenanceRoute
   '/_dashboard/migrations': typeof DashboardMigrationsRoute
   '/_dashboard/organizations': typeof DashboardOrganizationsRouteWithChildren
@@ -500,7 +491,6 @@ export interface FileRouteTypes {
     | '/audit-logs'
     | '/deployments'
     | '/dns'
-    | '/domains'
     | '/maintenance'
     | '/migrations'
     | '/organizations'
@@ -550,7 +540,6 @@ export interface FileRouteTypes {
     | '/audit-logs'
     | '/deployments'
     | '/dns'
-    | '/domains'
     | '/maintenance'
     | '/migrations'
     | '/organizations'
@@ -600,7 +589,6 @@ export interface FileRouteTypes {
     | '/_dashboard/audit-logs'
     | '/_dashboard/deployments'
     | '/_dashboard/dns'
-    | '/_dashboard/domains'
     | '/_dashboard/maintenance'
     | '/_dashboard/migrations'
     | '/_dashboard/organizations'
@@ -743,13 +731,6 @@ declare module '@tanstack/react-router' {
       path: '/dns'
       fullPath: '/dns'
       preLoaderRoute: typeof DashboardDnsRouteImport
-      parentRoute: typeof DashboardRoute
-    }
-    '/_dashboard/domains': {
-      id: '/_dashboard/domains'
-      path: '/domains'
-      fullPath: '/domains'
-      preLoaderRoute: typeof DashboardDomainsRouteImport
       parentRoute: typeof DashboardRoute
     }
     '/_dashboard/maintenance': {
@@ -1105,7 +1086,6 @@ interface DashboardRouteChildren {
   DashboardAuditLogsRoute: typeof DashboardAuditLogsRoute
   DashboardDeploymentsRoute: typeof DashboardDeploymentsRoute
   DashboardDnsRoute: typeof DashboardDnsRoute
-  DashboardDomainsRoute: typeof DashboardDomainsRoute
   DashboardMaintenanceRoute: typeof DashboardMaintenanceRoute
   DashboardMigrationsRoute: typeof DashboardMigrationsRoute
   DashboardOrganizationsRoute: typeof DashboardOrganizationsRouteWithChildren
@@ -1133,7 +1113,6 @@ const DashboardRouteChildren: DashboardRouteChildren = {
   DashboardAuditLogsRoute: DashboardAuditLogsRoute,
   DashboardDeploymentsRoute: DashboardDeploymentsRoute,
   DashboardDnsRoute: DashboardDnsRoute,
-  DashboardDomainsRoute: DashboardDomainsRoute,
   DashboardMaintenanceRoute: DashboardMaintenanceRoute,
   DashboardMigrationsRoute: DashboardMigrationsRoute,
   DashboardOrganizationsRoute: DashboardOrganizationsRouteWithChildren,

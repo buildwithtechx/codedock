@@ -123,11 +123,13 @@ export function CreateProjectModal({
                 </SelectTrigger>
                 <SelectContent>
                   <SelectItem value="local">Local (Default)</SelectItem>
-                  {servers?.map((server) => (
-                    <SelectItem key={server.id} value={server.id}>
-                      {server.name} ({server.ipAddress})
-                    </SelectItem>
-                  ))}
+                  {servers
+                    ?.filter((server) => !server.isControlPlane)
+                    .map((server) => (
+                      <SelectItem key={server.id} value={server.id}>
+                        {server.name} ({server.ipAddress})
+                      </SelectItem>
+                    ))}
                 </SelectContent>
               </Select>
             </div>

@@ -9,10 +9,13 @@ import (
 
 	"github.com/google/uuid"
 
+	"codedock.run/codedock/internal/config"
 	"codedock.run/codedock/internal/engine/ssh"
 	"codedock.run/codedock/internal/models"
 	"codedock.run/codedock/internal/repositories"
 )
+
+const controlPlaneServerID = "codedock-control-plane"
 
 type ServerService interface {
 	CreateServer(ctx context.Context, userID string, req models.CreateServerRequest) (*models.Server, error)
@@ -135,7 +138,15 @@ func (s *serverService) CreateServer(ctx context.Context, userID string, req mod
 }
 
 func (s *serverService) ListServersByUser(ctx context.Context, userID string) ([]*models.Server, error) {
-	return s.serverRepo.ListByUser(ctx, userID)
+	servers, err := s.serverRepo.ListByUser(ctx, userID)
+	if err != nil {
+		return nil, err
+	}
+	user, err := s.userRepo.GetUserByID(ctx, userID)
+	if err != nil || user == nil || (user.Role != models.UserRoleOwner && user.Role != models.UserRoleAdmin) {
+		return servers, nil
+	}
+	return append([]*models.Server{s.controlPlaneServer(userID)}, servers...), nil
 }
 
 func (s *serverService) GetServer(ctx context.Context, id string) (*models.Server, error) {
@@ -143,6 +154,9 @@ func (s *serverService) GetServer(ctx context.Context, id string) (*models.Serve
 }
 
 func (s *serverService) DeleteServer(ctx context.Context, id, userID string) error {
+	if id == controlPlaneServerID {
+		return fmt.Errorf("the Codedock control plane cannot be deleted")
+	}
 	server, err := s.serverRepo.GetByID(ctx, id)
 	if err != nil {
 		return err
@@ -158,4 +172,21 @@ func (s *serverService) DeleteServer(ctx context.Context, id, userID string) err
 		s.sshManager.RemoveClient(id)
 	}
 	return s.serverRepo.Delete(ctx, id)
+}
+
+func (s *serverService) controlPlaneServer(userID string) *models.Server {
+	ipAddress := config.Get().Server.HostIP
+	if ipAddress == "" {
+		ipAddress = "127.0.0.1"
+	}
+	return &models.Server{
+		ID:             controlPlaneServerID,
+		UserID:         userID,
+		Name:           "Codedock Control Plane",
+		IPAddress:      ipAddress,
+		Status:         models.ServerStatusOnline,
+		IsControlPlane: true,
+		CreatedAt:      time.Now().UTC(),
+		UpdatedAt:      time.Now().UTC(),
+	}
 }

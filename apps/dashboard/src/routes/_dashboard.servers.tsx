@@ -1,5 +1,5 @@
 import { createFileRoute, Link } from '@tanstack/react-router';
-import { Cpu, HardDrive, Loader2, MemoryStick, Plus, ServerIcon } from 'lucide-react';
+import { AlertCircle, Cpu, HardDrive, Loader2, MemoryStick, Plus, ServerIcon } from 'lucide-react';
 import { useState } from 'react';
 import { toast } from 'sonner';
 import { Button } from '#/components/ui/button';
@@ -22,7 +22,7 @@ export const Route = createFileRoute('/_dashboard/servers')({
 });
 
 function ServersPage() {
-  const { data: servers, isLoading } = useListServers();
+  const { data: servers, isLoading, isError, refetch } = useListServers();
   const [createOpen, setCreateOpen] = useState(false);
   const [newServer, setNewServer] = useState<Server | null>(null);
 
@@ -50,6 +50,17 @@ function ServersPage() {
       {isLoading ? (
         <div className="flex justify-center p-12">
           <Loader2 className="h-8 w-8 animate-spin text-muted-foreground" />
+        </div>
+      ) : isError ? (
+        <div className="flex h-64 flex-col items-center justify-center rounded-xl border border-destructive/30 bg-card p-6 text-center">
+          <AlertCircle className="mb-4 h-8 w-8 text-destructive" />
+          <h3 className="font-bold text-foreground text-lg tracking-tight">
+            Could not load servers
+          </h3>
+          <p className="mt-1 text-muted-foreground text-sm">Check your connection and try again.</p>
+          <Button className="mt-6" variant="outline" onClick={() => void refetch()}>
+            Try again
+          </Button>
         </div>
       ) : servers?.length === 0 ? (
         <div className="flex h-64 flex-col items-center justify-center rounded-xl border border border-dashed bg-card/40">
@@ -112,7 +123,9 @@ function ServerCard({ server }: { server: Server }) {
             </div>
             <div>
               <CardTitle className="font-semibold text-base">{server.name}</CardTitle>
-              <CardDescription className="text-xs">{server.ipAddress}</CardDescription>
+              <CardDescription className="text-xs">
+                {server.isControlPlane ? 'Local deployment runtime' : server.ipAddress}
+              </CardDescription>
             </div>
           </div>
           <div className="flex items-center gap-2 rounded-full border bg-background px-3 py-1 shadow-sm">
