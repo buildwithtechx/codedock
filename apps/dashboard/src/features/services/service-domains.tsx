@@ -30,7 +30,7 @@ export function ServiceDomains({ serviceId }: { serviceId: string }) {
   >({});
 
   const settings = settingsRes?.data;
-  const serverIp = settings?.publicIPv4 || '';
+  const serverIp = settings?.publicIpv4 || '';
   const hasDnsProvider = Boolean(
     settings?.cloudflareApiToken || settings?.namecheapApiKey || settings?.spaceshipApiKey
   );

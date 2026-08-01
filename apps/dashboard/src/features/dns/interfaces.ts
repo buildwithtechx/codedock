@@ -52,6 +52,8 @@ export interface Domain {
   createdAt: string;
 }
 
+export type DomainConfig = Domain;
+
 export interface CreateDomainRequest {
   projectId?: string;
   serviceId?: string;
