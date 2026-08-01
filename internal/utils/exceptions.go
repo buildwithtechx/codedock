@@ -77,6 +77,23 @@ type NotFoundError struct {
 	ID       string
 }
 
+type ValidationError struct {
+	Message string
+}
+
+func (e *ValidationError) Error() string {
+	return e.Message
+}
+
+func NewValidationError(message string) *ValidationError {
+	return &ValidationError{Message: message}
+}
+
+func IsValidation(err error) bool {
+	var validationErr *ValidationError
+	return errors.As(err, &validationErr)
+}
+
 func (e *NotFoundError) Error() string {
 	if e.ID != "" {
 		return fmt.Sprintf("%s not found: %s", e.Resource, e.ID)

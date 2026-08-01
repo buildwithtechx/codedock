@@ -8,6 +8,7 @@ import (
 	"io"
 	"net/http"
 	"net/url"
+	"sync"
 )
 
 type spaceshipRecord struct {
@@ -15,6 +16,33 @@ type spaceshipRecord struct {
 	Type    string `json:"type"`
 	Address string `json:"address"`
 	TTL     int    `json:"ttl"`
+}
+
+var spaceshipZoneLocks = struct {
+	sync.Mutex
+	entries map[string]*namecheapLock
+}{entries: make(map[string]*namecheapLock)}
+
+func lockSpaceshipZone(domain string) func() {
+	spaceshipZoneLocks.Lock()
+	lock := spaceshipZoneLocks.entries[domain]
+	if lock == nil {
+		lock = &namecheapLock{}
+		spaceshipZoneLocks.entries[domain] = lock
+	}
+	lock.refs++
+	spaceshipZoneLocks.Unlock()
+
+	lock.mutex.Lock()
+	return func() {
+		lock.mutex.Unlock()
+		spaceshipZoneLocks.Lock()
+		lock.refs--
+		if lock.refs == 0 {
+			delete(spaceshipZoneLocks.entries, domain)
+		}
+		spaceshipZoneLocks.Unlock()
+	}
 }
 
 func fetchSpaceshipRecords(ctx context.Context, client *http.Client, key, secret, domain string) ([]spaceshipRecord, error) {
@@ -68,6 +96,9 @@ func (s *Service) provisionSpaceship(ctx context.Context, key, secret, domain, r
 	if key == "" || secret == "" {
 		return fmt.Errorf("spaceship api key and secret are required")
 	}
+	rootDomain := getRootDomain(domain)
+	unlock := lockSpaceshipZone(rootDomain)
+	defer unlock()
 	client := s.httpClient()
 	records, err := fetchSpaceshipRecords(ctx, client, key, secret, domain)
 	if err != nil {
@@ -79,7 +110,6 @@ func (s *Service) provisionSpaceship(ctx context.Context, key, secret, domain, r
 		}
 	}
 
-	rootDomain := getRootDomain(domain)
 	recordName := "@"
 	if domain != rootDomain {
 		recordName = domain[:len(domain)-len(rootDomain)-1]
@@ -115,6 +145,9 @@ func (s *Service) deprovisionSpaceship(ctx context.Context, key, secret, domain,
 	if key == "" || secret == "" {
 		return fmt.Errorf("spaceship api key and secret are required")
 	}
+	rootDomain := getRootDomain(domain)
+	unlock := lockSpaceshipZone(rootDomain)
+	defer unlock()
 	client := s.httpClient()
 	records, err := fetchSpaceshipRecords(ctx, client, key, secret, domain)
 	if err != nil {
@@ -132,7 +165,6 @@ func (s *Service) deprovisionSpaceship(ctx context.Context, key, secret, domain,
 		return nil
 	}
 	b, _ := json.Marshal(deletions)
-	rootDomain := getRootDomain(domain)
 	reqDel, err := http.NewRequestWithContext(ctx, http.MethodDelete, "https://spaceship.dev/api/v1/dns/records/"+url.PathEscape(rootDomain), bytes.NewBuffer(b))
 	if err != nil {
 		return err

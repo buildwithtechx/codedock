@@ -8,7 +8,12 @@ import (
 
 type Domain = types.Domain
 type DomainConfig = types.DomainConfig
-type CreateDomainRequest = types.CreateDomainRequest
+
+type CreateDomainRequest struct {
+	DomainName string `json:"domainName"`
+	RedirectTo string `json:"redirectTo,omitempty"`
+	PathPrefix string `json:"pathPrefix,omitempty"`
+}
 type DomainVerifyResult = types.DomainVerifyResult
 
 const (

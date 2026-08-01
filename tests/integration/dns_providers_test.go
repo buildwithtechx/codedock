@@ -8,6 +8,7 @@ import (
 	"net/http/httptest"
 	"net/url"
 	"strings"
+	"sync"
 	"testing"
 
 	"codedock.run/codedock/internal/models"
@@ -64,6 +65,7 @@ func newIPv4TestServer(handler http.Handler) *httptest.Server {
 func TestCloudflareProvisionAndDeprovision(t *testing.T) {
 	deleted := false
 	created := false
+	var stateMu sync.Mutex
 	server := newIPv4TestServer(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
 		switch {
 		case r.Method == http.MethodGet && r.URL.Path == "/client/v4/zones":
@@ -73,10 +75,14 @@ func TestCloudflareProvisionAndDeprovision(t *testing.T) {
 			w.Header().Set("Content-Type", "application/json")
 			_, _ = w.Write([]byte(`{"result":[{"id":"record-id","content":"192.0.2.10"}],"result_info":{"page":1,"total_pages":1}}`))
 		case r.Method == http.MethodPost && strings.HasSuffix(r.URL.Path, "/dns_records"):
+			stateMu.Lock()
 			created = true
+			stateMu.Unlock()
 			w.WriteHeader(http.StatusCreated)
 		case r.Method == http.MethodDelete && strings.Contains(r.URL.Path, "/dns_records/"):
+			stateMu.Lock()
 			deleted = true
+			stateMu.Unlock()
 			w.WriteHeader(http.StatusOK)
 		default:
 			http.NotFound(w, r)
@@ -94,16 +100,21 @@ func TestCloudflareProvisionAndDeprovision(t *testing.T) {
 	if err := deprovisionService.DeprovisionRecord(context.Background(), "app.example.com", "A", "192.0.2.10", "cloudflare"); err != nil {
 		t.Fatalf("deprovision Cloudflare record: %v", err)
 	}
-	if created {
+	stateMu.Lock()
+	createdResult, deletedResult := created, deleted
+	stateMu.Unlock()
+	if createdResult {
 		t.Fatal("Cloudflare created a record despite an existing record")
 	}
-	if !deleted {
+	if !deletedResult {
 		t.Fatal("Cloudflare did not delete the matching record")
 	}
 }
 
 func TestNamecheapProvisionAndDeprovision(t *testing.T) {
 	setHostsCalls := 0
+	retained := false
+	var stateMu sync.Mutex
 	server := newIPv4TestServer(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
 		command := r.URL.Query().Get("Command")
 		w.Header().Set("Content-Type", "application/xml")
@@ -112,9 +123,13 @@ func TestNamecheapProvisionAndDeprovision(t *testing.T) {
 			return
 		}
 		if command == "namecheap.domains.dns.setHosts" {
+			stateMu.Lock()
 			setHostsCalls++
+			stateMu.Unlock()
 			if r.URL.Query().Get("HostName1") == "app" {
-				t.Fatalf("Namecheap deprovision request retained the managed host")
+				stateMu.Lock()
+				retained = true
+				stateMu.Unlock()
 			}
 			_, _ = w.Write([]byte(`<ApiResponse Status="OK"><CommandResponse/></ApiResponse>`))
 			return
@@ -131,8 +146,14 @@ func TestNamecheapProvisionAndDeprovision(t *testing.T) {
 	if err := service.DeprovisionRecord(context.Background(), "app.example.com", "A", "192.0.2.10", "namecheap"); err != nil {
 		t.Fatalf("deprovision Namecheap record: %v", err)
 	}
-	if setHostsCalls != 1 {
-		t.Fatalf("expected one Namecheap setHosts call, got %d", setHostsCalls)
+	stateMu.Lock()
+	setHostsResult, retainedResult := setHostsCalls, retained
+	stateMu.Unlock()
+	if retainedResult {
+		t.Fatal("Namecheap deprovision request retained the managed host")
+	}
+	if setHostsResult != 1 {
+		t.Fatalf("expected one Namecheap setHosts call, got %d", setHostsResult)
 	}
 }
 
@@ -140,6 +161,8 @@ func TestSpaceshipProvisionAndDeprovision(t *testing.T) {
 	putCalled := false
 	deleteCalled := false
 	recordPresent := false
+	invalidPayload := false
+	var stateMu sync.Mutex
 	server := newIPv4TestServer(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
 		if r.URL.Path != "/api/v1/dns/records/example.com" {
 			http.NotFound(w, r)
@@ -151,7 +174,10 @@ func TestSpaceshipProvisionAndDeprovision(t *testing.T) {
 		}
 		switch r.Method {
 		case http.MethodGet:
-			if recordPresent {
+			stateMu.Lock()
+			present := recordPresent
+			stateMu.Unlock()
+			if present {
 				_, _ = w.Write([]byte(`{"items":[{"name":"app","type":"A","address":"192.0.2.30","ttl":3600}]}`))
 			} else {
 				_, _ = w.Write([]byte(`{"items":[]}`))
@@ -161,15 +187,22 @@ func TestSpaceshipProvisionAndDeprovision(t *testing.T) {
 				Items []map[string]any `json:"items"`
 			}
 			if err := json.NewDecoder(r.Body).Decode(&payload); err != nil || len(payload.Items) != 1 {
+				stateMu.Lock()
+				invalidPayload = true
+				stateMu.Unlock()
 				http.Error(w, "invalid payload", http.StatusBadRequest)
 				return
 			}
+			stateMu.Lock()
 			putCalled = true
 			recordPresent = true
+			stateMu.Unlock()
 			w.WriteHeader(http.StatusNoContent)
 		case http.MethodDelete:
+			stateMu.Lock()
 			deleteCalled = true
 			recordPresent = false
+			stateMu.Unlock()
 			w.WriteHeader(http.StatusNoContent)
 		default:
 			http.NotFound(w, r)
@@ -185,10 +218,16 @@ func TestSpaceshipProvisionAndDeprovision(t *testing.T) {
 	if err := service.DeprovisionRecord(context.Background(), "app.example.com", "A", "192.0.2.30", "spaceship"); err != nil {
 		t.Fatalf("deprovision Spaceship record: %v", err)
 	}
-	if !putCalled {
+	stateMu.Lock()
+	putResult, deleteResult, invalidResult := putCalled, deleteCalled, invalidPayload
+	stateMu.Unlock()
+	if invalidResult {
+		t.Fatal("Spaceship received an invalid record update payload")
+	}
+	if !putResult {
 		t.Fatal("Spaceship did not receive the PUT record update")
 	}
-	if !deleteCalled {
+	if !deleteResult {
 		t.Fatal("Spaceship did not receive the record deletion request")
 	}
 }

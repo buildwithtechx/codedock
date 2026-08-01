@@ -96,7 +96,7 @@ func NewServer(db *sql.DB, v *utils.Vault, deployer *deploy.Deployer, traefikMan
 	appRepo := repositories.NewAppServiceRepo(db)
 	serviceVarRepo := repositories.NewServiceVarRepo(db)
 	dbRepo := repositories.NewDatabaseRepo(db, v)
-	settingsRepo := repositories.NewSettingsRepo(db)
+	settingsRepo := repositories.NewSettingsRepo(db, v)
 	notifRepo := repositories.NewNotificationSettingsRepo(db)
 	aiRepo := repositories.NewAISettingsRepo(db)
 	envVarRepo := repositories.NewEnvRepo(db, v)
@@ -253,7 +253,7 @@ func NewServer(db *sql.DB, v *utils.Vault, deployer *deploy.Deployer, traefikMan
 	billingService := systemservices.NewBillingService(userRepo)
 	billingHandler := system.NewBillingHandler(billingService)
 
-	takeoverRepo := repositories.NewTakeoverRepository(db)
+	takeoverRepo := repositories.NewTakeoverRepository(db, v)
 	takeoverScanner := systemservices.NewTakeoverScanner()
 	takeoverAdopter := systemservices.NewTakeoverAdopter(projectRepo, appRepo)
 	takeoverHandler := system.NewTakeoverHandler(takeoverScanner, takeoverAdopter, takeoverRepo)

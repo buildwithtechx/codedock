@@ -10,8 +10,8 @@ import (
 )
 
 func runConfig() {
-	_, db, _ := InitDataDir()
-	repo := repositories.NewSettingsRepo(db)
+	_, db, vault := InitDataDir()
+	repo := repositories.NewSettingsRepo(db, vault)
 	notifRepo := repositories.NewNotificationSettingsRepo(db)
 	settings, err := repo.GetServerSettings(context.Background())
 	if err != nil {

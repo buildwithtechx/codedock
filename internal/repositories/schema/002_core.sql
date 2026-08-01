@@ -15,7 +15,6 @@ CREATE TABLE IF NOT EXISTS refresh_token_revocations (
 	 revoked_at DATETIME DEFAULT NULL
 );
 
-CREATE INDEX IF NOT EXISTS idx_refresh_token_revocations_token_hash ON refresh_token_revocations (token_hash);
 CREATE INDEX IF NOT EXISTS idx_refresh_token_revocations_user_id ON refresh_token_revocations (user_id);
 
 CREATE TABLE IF NOT EXISTS takeover_runs (

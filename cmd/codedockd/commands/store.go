@@ -25,7 +25,7 @@ func NewDBDeployerStore(db *sql.DB, vlt *utils.Vault) *DBDeployerStore {
 }
 
 func (a *DBDeployerStore) GetServerSettings() (*models.ServerSettings, error) {
-	return repositories.NewSettingsRepo(a.DB).GetServerSettings(context.Background())
+	return repositories.NewSettingsRepo(a.DB, a.Vault).GetServerSettings(context.Background())
 }
 
 func (a *DBDeployerStore) ListAppServicesByProject(projectID string) ([]*models.AppService, error) {

@@ -5,6 +5,7 @@ import (
 	"errors"
 	"fmt"
 	"net"
+	"time"
 )
 
 func evaluateResolvedIPs(ips []net.IP, expectedIP string) (bool, string) {
@@ -34,6 +35,8 @@ func VerifyDomain(ctx context.Context, domainName, expectedIP string) (bool, str
 		return false, "", fmt.Errorf("domainName is required")
 	}
 
+	lookupCtx, cancel := context.WithTimeout(ctx, 5*time.Second)
+	defer cancel()
 	resolver := &net.Resolver{}
 	network := "ip"
 	if expected := net.ParseIP(expectedIP); expected != nil {
@@ -43,7 +46,7 @@ func VerifyDomain(ctx context.Context, domainName, expectedIP string) (bool, str
 			network = "ip6"
 		}
 	}
-	ips, err := resolver.LookupIP(ctx, network, domainName)
+	ips, err := resolver.LookupIP(lookupCtx, network, domainName)
 	if err != nil {
 		var dnsErr *net.DNSError
 		if errors.As(err, &dnsErr) && dnsErr.IsNotFound {

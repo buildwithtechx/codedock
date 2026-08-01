@@ -3,6 +3,7 @@ package dnsproviders
 import (
 	"context"
 	"strings"
+	"time"
 
 	"codedock.run/codedock/internal/models"
 )
@@ -10,14 +11,17 @@ import (
 func (s *Service) detectProvider(ctx context.Context, cfg *models.ServerSettings, domain, recordType, value string) string {
 	domain = strings.ToLower(strings.TrimSuffix(strings.TrimSpace(domain), "."))
 	if cfg.CloudflareAPIToken != "" {
+		probeCtx, cancel := context.WithTimeout(ctx, 5*time.Second)
 		rootDomain := getRootDomain(domain)
 		client := s.httpClient()
-		zoneID, err := s.getCloudflareZoneID(ctx, client, cfg.CloudflareAPIToken, rootDomain)
+		zoneID, err := s.getCloudflareZoneID(probeCtx, client, cfg.CloudflareAPIToken, rootDomain)
 		if err == nil {
-			if exists, _, err := checkCloudflareRecordExists(ctx, client, cfg.CloudflareAPIToken, zoneID, domain, recordType, value); err == nil && exists {
+			if exists, _, err := checkCloudflareRecordExists(probeCtx, client, cfg.CloudflareAPIToken, zoneID, domain, recordType, value); err == nil && exists {
+				cancel()
 				return dnsProviderCloudflare
 			}
 		}
+		cancel()
 	}
 
 	if cfg.NamecheapAPIKey != "" && cfg.NamecheapAPIUser != "" {
@@ -28,8 +32,10 @@ func (s *Service) detectProvider(ctx context.Context, cfg *models.ServerSettings
 		}
 		sld, tld, err := splitNamecheapDomain(domain)
 		if err == nil {
+			probeCtx, cancel := context.WithTimeout(ctx, 5*time.Second)
 			client := s.httpClient()
-			body, err := fetchNamecheapHosts(ctx, client, cfg, sld, tld)
+			body, err := fetchNamecheapHosts(probeCtx, client, cfg, sld, tld)
+			cancel()
 			if err == nil && namecheapRecordExists(body, subDomain, recordType, value) {
 				return dnsProviderNamecheap
 			}
@@ -37,10 +43,13 @@ func (s *Service) detectProvider(ctx context.Context, cfg *models.ServerSettings
 	}
 
 	if cfg.SpaceshipAPIKey != "" && cfg.SpaceshipAPISecret != "" {
+		probeCtx, cancel := context.WithTimeout(ctx, 5*time.Second)
 		client := s.httpClient()
-		if records, err := fetchSpaceshipRecords(ctx, client, cfg.SpaceshipAPIKey, cfg.SpaceshipAPISecret, domain); err == nil && spaceshipRecordExists(records, domain, recordType, value) {
+		if records, err := fetchSpaceshipRecords(probeCtx, client, cfg.SpaceshipAPIKey, cfg.SpaceshipAPISecret, domain); err == nil && spaceshipRecordExists(records, domain, recordType, value) {
+			cancel()
 			return dnsProviderSpaceship
 		}
+		cancel()
 	}
 
 	return ""

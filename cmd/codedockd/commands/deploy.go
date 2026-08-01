@@ -62,7 +62,7 @@ func runDeploy(args []string) {
 	envRepo := repositories.NewEnvironmentRepo(db)
 	appRepo := repositories.NewAppServiceRepo(db)
 	projectRepo := repositories.NewProjectRepo(db, envRepo)
-	settingsRepo := repositories.NewSettingsRepo(db)
+	settingsRepo := repositories.NewSettingsRepo(db, vlt)
 
 	appName := resolveAppName(dArgs.gitURL, dArgs.imageRef, dArgs.dirName)
 

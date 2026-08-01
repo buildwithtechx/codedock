@@ -15,6 +15,7 @@ import (
 
 	"codedock.run/codedock/internal/models"
 	"codedock.run/codedock/internal/repositories"
+	"codedock.run/codedock/internal/utils"
 )
 
 type domainRepository interface {
@@ -34,23 +35,23 @@ type domainDNSService interface {
 func canonicalDomainName(domain string) (string, error) {
 	canonical := strings.ToLower(strings.TrimSuffix(strings.TrimSpace(domain), "."))
 	if canonical == "" || strings.ContainsAny(canonical, " /\\") {
-		return "", fmt.Errorf("invalid domain name")
+		return "", utils.NewValidationError("invalid domain name")
 	}
 	if len(canonical) > 253 {
-		return "", fmt.Errorf("invalid domain name: exceeds 253 characters")
+		return "", utils.NewValidationError("invalid domain name: exceeds 253 characters")
 	}
 	for _, label := range strings.Split(canonical, ".") {
 		if len(label) == 0 || len(label) > 63 || label[0] == '-' || label[len(label)-1] == '-' {
-			return "", fmt.Errorf("invalid domain name: invalid label")
+			return "", utils.NewValidationError("invalid domain name: invalid label")
 		}
 		for _, char := range label {
 			if (char < 'a' || char > 'z') && (char < '0' || char > '9') && char != '-' {
-				return "", fmt.Errorf("invalid domain name: invalid label")
+				return "", utils.NewValidationError("invalid domain name: invalid label")
 			}
 		}
 	}
 	if _, err := publicsuffix.EffectiveTLDPlusOne(canonical); err != nil {
-		return "", fmt.Errorf("invalid domain name: %w", err)
+		return "", utils.NewValidationError(fmt.Sprintf("invalid domain name: %v", err))
 	}
 	return canonical, nil
 }
@@ -60,6 +61,10 @@ type domainLockEntry struct {
 	refs   atomic.Int32
 }
 
+type domainProvisionOperation struct {
+	cancel context.CancelFunc
+}
+
 type EnvironmentService struct {
 	envRepo       repositories.EnvironmentRepository
 	domainRepo    domainRepository
@@ -67,6 +72,7 @@ type EnvironmentService struct {
 	dnsService    domainDNSService
 	domainLocks   sync.Map
 	domainLocksMu sync.Mutex
+	provisionOps  sync.Map
 }
 
 func NewEnvironmentService(er repositories.EnvironmentRepository, dr domainRepository, vr repositories.EnvRepository, dnsService domainDNSService) *EnvironmentService {
@@ -142,9 +148,12 @@ func (s *EnvironmentService) CreateDomain(ctx context.Context, d *models.DomainC
 	if s.dnsService != nil {
 		domainID := d.ID
 		domainName := d.DomainName
+		provisionCtx, cancel := context.WithTimeout(context.Background(), 30*time.Second)
+		op := &domainProvisionOperation{cancel: cancel}
+		s.provisionOps.Store(domainName, op)
 		go func(domainID, domainName string) {
-			provisionCtx, cancel := context.WithTimeout(context.Background(), 30*time.Second)
 			defer cancel()
+			defer s.provisionOps.CompareAndDelete(domainName, op)
 
 			unlock, err := s.lockDomain(provisionCtx, domainName)
 			if err != nil {
@@ -245,7 +254,9 @@ func (s *EnvironmentService) DeleteDomain(ctx context.Context, id string) error 
 	if id == "" {
 		return errors.New("id required")
 	}
-	domain, err := s.domainRepo.GetByID(ctx, id)
+	deleteCtx, deleteCancel := context.WithTimeout(context.Background(), 35*time.Second)
+	defer deleteCancel()
+	domain, err := s.domainRepo.GetByID(deleteCtx, id)
 	if err != nil {
 		return err
 	}
@@ -253,12 +264,16 @@ func (s *EnvironmentService) DeleteDomain(ctx context.Context, id string) error 
 		return nil
 	}
 
-	unlock, err := s.lockDomain(ctx, domain.DomainName)
+	if operation, ok := s.provisionOps.Load(domain.DomainName); ok {
+		operation.(*domainProvisionOperation).cancel()
+	}
+
+	unlock, err := s.lockDomain(deleteCtx, domain.DomainName)
 	if err != nil {
 		return err
 	}
 	defer unlock()
-	domain, err = s.domainRepo.GetByID(ctx, id)
+	domain, err = s.domainRepo.GetByID(deleteCtx, id)
 	if err != nil {
 		return err
 	}
@@ -267,17 +282,15 @@ func (s *EnvironmentService) DeleteDomain(ctx context.Context, id string) error 
 	}
 
 	if s.dnsService != nil && domain.DNSProvisionStatus == models.DNSProvisionStatusSuccess {
-		cleanupCtx, cleanupCancel := context.WithTimeout(context.Background(), 30*time.Second)
-		err := s.dnsService.DeprovisionARecord(cleanupCtx, domain.DomainName, domain.DNSProvider, domain.DNSProvisionedIP)
-		cleanupCancel()
+		err := s.dnsService.DeprovisionARecord(deleteCtx, domain.DomainName, domain.DNSProvider, domain.DNSProvisionedIP)
 		if err != nil {
 			return fmt.Errorf("deprovision domain DNS record: %w", err)
 		}
 	}
 
-	deleteCtx, deleteCancel := context.WithTimeout(context.Background(), 5*time.Second)
-	defer deleteCancel()
-	if err := s.domainRepo.Delete(deleteCtx, id); err != nil {
+	dbCtx, dbCancel := context.WithTimeout(context.Background(), 5*time.Second)
+	defer dbCancel()
+	if err := s.domainRepo.Delete(dbCtx, id); err != nil {
 		return err
 	}
 	return nil

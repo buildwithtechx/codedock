@@ -43,6 +43,9 @@ export function DnsAuditPage() {
   };
 
   const handleTabKeyDown = (event: KeyboardEvent<HTMLButtonElement>) => {
+    if (!['ArrowRight', 'ArrowLeft', 'Home', 'End'].includes(event.key)) {
+      return;
+    }
     const current = tabs.indexOf(activeTab);
     let next = current;
     if (event.key === 'ArrowRight') next = (current + 1) % tabs.length;

@@ -40,7 +40,7 @@ func TestDNSProviderSettingsRoundTrip(t *testing.T) {
 	if err != nil {
 		t.Fatalf("reload settings: %v", err)
 	}
-	if updated.CloudflareAPIToken != "cloudflare-token" || updated.NamecheapAPIKey != "namecheap-key" || updated.SpaceshipAPISecret != "spaceship-secret" {
+	if updated.CloudflareAPIToken != "cloudflare-token" || updated.NamecheapAPIUser != "namecheap-user" || updated.NamecheapAPIKey != "namecheap-key" || updated.SpaceshipAPIKey != "spaceship-key" || updated.SpaceshipAPISecret != "spaceship-secret" {
 		t.Fatalf("provider credentials did not round-trip: %+v", updated)
 	}
 }

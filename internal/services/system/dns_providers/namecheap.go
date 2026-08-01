@@ -199,7 +199,7 @@ func (s *Service) deprovisionNamecheap(ctx context.Context, cfg *models.ServerSe
 		return nil
 	}
 	if len(remaining) == 0 {
-		return fmt.Errorf("namecheap cannot replace the final DNS host record with an empty set")
+		return s.setNamecheapDefaultDNS(ctx, client, cfg, sld, tld)
 	}
 
 	req, _ := http.NewRequestWithContext(ctx, http.MethodGet, "https://api.namecheap.com/xml.response?"+buildNamecheapSetHostsQuery([]string{sld, tld}, cfg, remaining).Encode(), nil)
@@ -219,4 +219,32 @@ func (s *Service) deprovisionNamecheap(ctx context.Context, cfg *models.ServerSe
 		return err
 	}
 	return nil
+}
+
+func (s *Service) setNamecheapDefaultDNS(ctx context.Context, client *http.Client, cfg *models.ServerSettings, sld, tld string) error {
+	query := url.Values{}
+	query.Set("ApiUser", cfg.NamecheapAPIUser)
+	query.Set("ApiKey", cfg.NamecheapAPIKey)
+	query.Set("UserName", cfg.NamecheapAPIUser)
+	query.Set("Command", "namecheap.domains.dns.setDefault")
+	query.Set("ClientIp", cfg.NamecheapClientIP)
+	query.Set("SLD", sld)
+	query.Set("TLD", tld)
+	req, err := http.NewRequestWithContext(ctx, http.MethodGet, "https://api.namecheap.com/xml.response?"+query.Encode(), nil)
+	if err != nil {
+		return err
+	}
+	resp, err := client.Do(req)
+	if err != nil {
+		return err
+	}
+	defer resp.Body.Close()
+	body, err := io.ReadAll(resp.Body)
+	if err != nil {
+		return err
+	}
+	if resp.StatusCode >= 400 {
+		return fmt.Errorf("namecheap returned status %d", resp.StatusCode)
+	}
+	return validateNamecheapResponse(body)
 }

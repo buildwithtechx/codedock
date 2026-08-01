@@ -22,11 +22,36 @@ type TakeoverRepository interface {
 }
 
 type sqliteTakeoverRepository struct {
-	db *sql.DB
+	db    *sql.DB
+	vault Vault
 }
 
-func NewTakeoverRepository(db *sql.DB) TakeoverRepository {
-	return &sqliteTakeoverRepository{db: db}
+func NewTakeoverRepository(db *sql.DB, vaults ...Vault) TakeoverRepository {
+	var vault Vault
+	if len(vaults) > 0 {
+		vault = vaults[0]
+	}
+	return &sqliteTakeoverRepository{db: db, vault: vault}
+}
+
+func (r *sqliteTakeoverRepository) encryptDiscovered(value string) (string, error) {
+	if value == "" || r.vault == nil {
+		return value, nil
+	}
+	if _, err := r.vault.Decrypt(value); err == nil {
+		return value, nil
+	}
+	return r.vault.Encrypt(value)
+}
+
+func (r *sqliteTakeoverRepository) decryptDiscovered(value string) string {
+	if value == "" || r.vault == nil {
+		return value
+	}
+	if decrypted, err := r.vault.Decrypt(value); err == nil {
+		return decrypted
+	}
+	return value
 }
 
 func (r *sqliteTakeoverRepository) Create(ctx context.Context, run *models.TakeoverRun) error {
@@ -36,11 +61,15 @@ func (r *sqliteTakeoverRepository) Create(ctx context.Context, run *models.Takeo
 	now := time.Now().UTC()
 	run.CreatedAt = now
 	run.UpdatedAt = now
-	_, err := r.db.ExecContext(ctx, `
+	discoveredJSON, err := r.encryptDiscovered(run.DiscoveredJSON)
+	if err != nil {
+		return fmt.Errorf("encrypt discovered stack: %w", err)
+	}
+	_, err = r.db.ExecContext(ctx, `
 		INSERT INTO takeover_runs (id, user_id, source_host, source_platform, status, discovered_json, adopted_project_ids, error, created_at, updated_at)
 		VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?)`,
 		run.ID, run.UserID, run.SourceHost, run.SourcePlatform, run.Status,
-		run.DiscoveredJSON, run.AdoptedProjectIDs, run.Error, run.CreatedAt, run.UpdatedAt,
+		discoveredJSON, run.AdoptedProjectIDs, run.Error, run.CreatedAt, run.UpdatedAt,
 	)
 	if err != nil {
 		return fmt.Errorf("create takeover run: %w", err)
@@ -64,9 +93,13 @@ func (r *sqliteTakeoverRepository) UpdateStatus(ctx context.Context, id string, 
 }
 
 func (r *sqliteTakeoverRepository) UpdateDiscovered(ctx context.Context, id string, discoveredJSON string) error {
-	_, err := r.db.ExecContext(ctx,
+	encrypted, err := r.encryptDiscovered(discoveredJSON)
+	if err != nil {
+		return fmt.Errorf("encrypt discovered stack: %w", err)
+	}
+	_, err = r.db.ExecContext(ctx,
 		`UPDATE takeover_runs SET discovered_json = ?, status = ?, updated_at = ? WHERE id = ?`,
-		discoveredJSON, models.TakeoverStatusScanned, time.Now().UTC(), id,
+		encrypted, models.TakeoverStatusScanned, time.Now().UTC(), id,
 	)
 	return err
 }
@@ -115,5 +148,6 @@ func (r *sqliteTakeoverRepository) scan(s scannable) (*models.TakeoverRun, error
 	if err != nil {
 		return nil, fmt.Errorf("scan takeover run: %w", err)
 	}
+	run.DiscoveredJSON = r.decryptDiscovered(run.DiscoveredJSON)
 	return &run, nil
 }

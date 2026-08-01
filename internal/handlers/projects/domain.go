@@ -123,6 +123,9 @@ func (h *DomainHandler) Create(c echo.Context) error {
 	}
 	created, err := h.envService.CreateDomain(c.Request().Context(), &d)
 	if err != nil {
+		if utils.IsValidation(err) {
+			return utils.Error(c, http.StatusBadRequest, err.Error())
+		}
 		return utils.Error(c, http.StatusInternalServerError, err.Error())
 	}
 	return utils.Created(c, "Created successfully", created)
