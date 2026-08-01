@@ -28,6 +28,7 @@ func newProviderHTTPClient() *http.Client {
 }
 
 func getRootDomain(domain string) string {
+	domain = strings.ToLower(strings.TrimSuffix(strings.TrimSpace(domain), "."))
 	rootDomain, err := publicsuffix.EffectiveTLDPlusOne(domain)
 	if err == nil {
 		return rootDomain
@@ -139,7 +140,7 @@ func namecheapRecordExists(body []byte, subDomain, recordType, value string) boo
 		return false
 	}
 	for _, host := range hosts {
-		if host.Name == subDomain && host.Type == recordType && host.Address == value {
+		if host.Name == subDomain && host.Type == recordType && (value == "" || host.Address == value) {
 			return true
 		}
 	}

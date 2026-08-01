@@ -15,12 +15,12 @@ func NewDNSProviderService(repo repositories.SettingsRepository) *DNSProviderSer
 	return &DNSProviderService{providers: dnsproviders.New(repo)}
 }
 
-func (s *DNSProviderService) ProvisionARecord(ctx context.Context, domain string) (string, error) {
+func (s *DNSProviderService) ProvisionARecord(ctx context.Context, domain string) (string, string, error) {
 	return s.providers.ProvisionARecord(ctx, domain)
 }
 
-func (s *DNSProviderService) DeprovisionARecord(ctx context.Context, domain, provider string) error {
-	return s.providers.DeprovisionARecord(ctx, domain, provider)
+func (s *DNSProviderService) DeprovisionARecord(ctx context.Context, domain, provider, value string) error {
+	return s.providers.DeprovisionARecord(ctx, domain, provider, value)
 }
 
 func (s *DNSProviderService) ProvisionRecord(ctx context.Context, domain, recordType, value string) (string, error) {

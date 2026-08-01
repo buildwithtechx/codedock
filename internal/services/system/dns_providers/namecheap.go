@@ -22,6 +22,11 @@ type namecheapApiResponse struct {
 	} `xml:"Errors"`
 }
 
+type namecheapLock struct {
+	mutex sync.Mutex
+	refs  int
+}
+
 func validateNamecheapResponse(body []byte) error {
 	var res namecheapApiResponse
 	if err := xml.Unmarshal(body, &res); err != nil {
@@ -75,13 +80,31 @@ func fetchNamecheapHosts(ctx context.Context, client *http.Client, cfg *models.S
 	return body, nil
 }
 
-var namecheapLocks sync.Map
+var namecheapLocks = struct {
+	sync.Mutex
+	entries map[string]*namecheapLock
+}{entries: make(map[string]*namecheapLock)}
 
 func lockNamecheap(domain string) func() {
-	lock, _ := namecheapLocks.LoadOrStore(domain, &sync.Mutex{})
-	m := lock.(*sync.Mutex)
-	m.Lock()
-	return func() { m.Unlock() }
+	namecheapLocks.Lock()
+	lock := namecheapLocks.entries[domain]
+	if lock == nil {
+		lock = &namecheapLock{}
+		namecheapLocks.entries[domain] = lock
+	}
+	lock.refs++
+	namecheapLocks.Unlock()
+
+	lock.mutex.Lock()
+	return func() {
+		lock.mutex.Unlock()
+		namecheapLocks.Lock()
+		lock.refs--
+		if lock.refs == 0 {
+			delete(namecheapLocks.entries, domain)
+		}
+		namecheapLocks.Unlock()
+	}
 }
 
 func (s *Service) provisionNamecheap(ctx context.Context, cfg *models.ServerSettings, domain, recordType, value string) error {
@@ -89,17 +112,22 @@ func (s *Service) provisionNamecheap(ctx context.Context, cfg *models.ServerSett
 	unlock := lockNamecheap(rootDomain)
 	defer unlock()
 
-	subDomain := strings.TrimSuffix(domain, "."+rootDomain)
-	if subDomain == domain {
+	normalizedDomain := strings.ToLower(strings.TrimSuffix(strings.TrimSpace(domain), "."))
+	subDomain := strings.TrimSuffix(normalizedDomain, "."+rootDomain)
+	if subDomain == normalizedDomain {
 		subDomain = "@"
 	}
-	sld, tld, err := splitNamecheapDomain(domain)
+	sld, tld, err := splitNamecheapDomain(normalizedDomain)
 	if err != nil {
 		return err
 	}
 
 	client := newProviderHTTPClient()
-	if body, err := fetchNamecheapHosts(ctx, client, cfg, sld, tld); err == nil && namecheapRecordExists(body, subDomain, recordType, value) {
+	body, err := fetchNamecheapHosts(ctx, client, cfg, sld, tld)
+	if err != nil {
+		return err
+	}
+	if namecheapRecordExists(body, subDomain, recordType, value) {
 		return nil
 	}
 
@@ -121,7 +149,7 @@ func (s *Service) provisionNamecheap(ctx context.Context, cfg *models.ServerSett
 		return err
 	}
 	defer resp.Body.Close()
-	body, err := io.ReadAll(resp.Body)
+	body, err = io.ReadAll(resp.Body)
 	if err != nil {
 		return err
 	}
@@ -135,15 +163,16 @@ func (s *Service) provisionNamecheap(ctx context.Context, cfg *models.ServerSett
 }
 
 func (s *Service) deprovisionNamecheap(ctx context.Context, cfg *models.ServerSettings, domain, recordType, value string) error {
-	rootDomain := getRootDomain(domain)
+	normalizedDomain := strings.ToLower(strings.TrimSuffix(strings.TrimSpace(domain), "."))
+	rootDomain := getRootDomain(normalizedDomain)
 	unlock := lockNamecheap(rootDomain)
 	defer unlock()
 
-	subDomain := strings.TrimSuffix(domain, "."+rootDomain)
-	if subDomain == domain {
+	subDomain := strings.TrimSuffix(normalizedDomain, "."+rootDomain)
+	if subDomain == normalizedDomain {
 		subDomain = "@"
 	}
-	sld, tld, err := splitNamecheapDomain(domain)
+	sld, tld, err := splitNamecheapDomain(normalizedDomain)
 	if err != nil {
 		return err
 	}

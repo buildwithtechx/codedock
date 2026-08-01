@@ -35,8 +35,10 @@ func (s *DNSService) CreateRecord(ctx context.Context, req *models.CreateDNSReco
 	}
 
 	if record.RecordType == "A" && record.RecordName != "" {
-		if _, err := s.providerSvc.ProvisionARecord(ctx, fmt.Sprintf("%s.%s", record.RecordName, record.DomainName)); err != nil {
-			fmt.Printf("failed to provision A record: %v\n", err)
+		if _, _, err := s.providerSvc.ProvisionARecord(ctx, fmt.Sprintf("%s.%s", record.RecordName, record.DomainName)); err != nil {
+			if cleanupErr := s.repo.Delete(ctx, record.ID); cleanupErr != nil {
+				return nil, fmt.Errorf("failed to provision A record: %w; cleanup failed: %v", err, cleanupErr)
+			}
 			return nil, fmt.Errorf("failed to provision A record: %w", err)
 		}
 	}

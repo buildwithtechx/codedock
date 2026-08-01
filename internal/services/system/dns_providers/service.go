@@ -15,35 +15,27 @@ func New(repo repositories.SettingsRepository) *Service {
 	return &Service{settingsRepo: repo}
 }
 
-func (s *Service) ProvisionARecord(ctx context.Context, domain string) (string, error) {
+func (s *Service) ProvisionARecord(ctx context.Context, domain string) (string, string, error) {
 	cfg, err := s.settingsRepo.GetServerSettings(ctx)
 	if err != nil {
-		return "", err
+		return "", "", err
 	}
 	if cfg == nil {
-		return "", fmt.Errorf("server settings not configured")
+		return "", "", fmt.Errorf("server settings not configured")
 	}
 	targetIP := cfg.PublicIPv4
 	if targetIP == "" {
-		return "", fmt.Errorf("PublicIPv4 is not set in server settings")
+		return "", "", fmt.Errorf("PublicIPv4 is not set in server settings")
 	}
-	return s.ProvisionRecord(ctx, domain, "A", targetIP)
+	provider, err := s.ProvisionRecord(ctx, domain, "A", targetIP)
+	return provider, targetIP, err
 }
 
-func (s *Service) DeprovisionARecord(ctx context.Context, domain, provider string) error {
-	cfg, err := s.settingsRepo.GetServerSettings(ctx)
-	if err != nil {
-		return err
+func (s *Service) DeprovisionARecord(ctx context.Context, domain, provider, value string) error {
+	if value == "" {
+		return fmt.Errorf("provisioned A record value is missing")
 	}
-	if cfg == nil {
-		return fmt.Errorf("server settings not configured")
-	}
-	targetIP := cfg.PublicIPv4
-	if targetIP == "" {
-		return fmt.Errorf("PublicIPv4 is not set in server settings")
-	}
-	// Deprovision of an A record should match by name/type, pass empty value
-	return s.DeprovisionRecord(ctx, domain, "A", "", provider)
+	return s.DeprovisionRecord(ctx, domain, "A", value, provider)
 }
 
 func (s *Service) ProvisionRecord(ctx context.Context, domain, recordType, value string) (string, error) {
@@ -92,23 +84,20 @@ func (s *Service) DeprovisionRecord(ctx context.Context, domain, recordType, val
 	switch provider {
 	case dnsProviderCloudflare:
 		if cfg.CloudflareAPIToken == "" {
-			fmt.Println("Warning: Cloudflare API token missing during deprovision")
-			return nil
+			return fmt.Errorf("cloudflare credentials missing during deprovision")
 		}
 		return s.deprovisionCloudflare(ctx, cfg.CloudflareAPIToken, domain, recordType, value)
 	case dnsProviderNamecheap:
 		if cfg.NamecheapAPIKey == "" || cfg.NamecheapAPIUser == "" {
-			fmt.Println("Warning: Namecheap API credentials missing during deprovision")
-			return nil
+			return fmt.Errorf("namecheap credentials missing during deprovision")
 		}
 		return s.deprovisionNamecheap(ctx, cfg, domain, recordType, value)
 	case dnsProviderSpaceship:
 		if cfg.SpaceshipAPIKey == "" {
-			fmt.Println("Warning: Spaceship API key missing during deprovision")
-			return nil
+			return fmt.Errorf("spaceship credentials missing during deprovision")
 		}
 		return s.deprovisionSpaceship(ctx, cfg.SpaceshipAPIKey, domain, recordType, value)
 	}
 
-	return nil
+	return fmt.Errorf("dns provider not found for %s", domain)
 }

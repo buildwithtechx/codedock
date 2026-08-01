@@ -11,7 +11,6 @@ import (
 
 	"codedock.run/codedock/internal/models"
 	"codedock.run/codedock/internal/repositories"
-	"codedock.run/codedock/internal/services/system"
 )
 
 type domainRepository interface {
@@ -19,24 +18,30 @@ type domainRepository interface {
 	ListAll(ctx context.Context) ([]models.DomainConfig, error)
 	GetByID(ctx context.Context, id string) (*models.DomainConfig, error)
 	Create(ctx context.Context, d *models.DomainConfig) error
-	UpdateDNSProvisionStatus(ctx context.Context, id string, status string, provider string) error
+	UpdateDNSProvisionStatus(ctx context.Context, id string, status string, provider string, provisionedIP string) error
 	Delete(ctx context.Context, id string) error
 }
 
+type domainDNSService interface {
+	ProvisionARecord(ctx context.Context, domain string) (string, string, error)
+	DeprovisionARecord(ctx context.Context, domain, provider, value string) error
+}
+
 type domainLockEntry struct {
-	mutex sync.Mutex
-	refs  atomic.Int32
+	locked chan struct{}
+	refs   atomic.Int32
 }
 
 type EnvironmentService struct {
-	envRepo     repositories.EnvironmentRepository
-	domainRepo  domainRepository
-	varRepo     repositories.EnvRepository
-	dnsService  *system.DNSProviderService
-	domainLocks sync.Map
+	envRepo       repositories.EnvironmentRepository
+	domainRepo    domainRepository
+	varRepo       repositories.EnvRepository
+	dnsService    domainDNSService
+	domainLocks   sync.Map
+	domainLocksMu sync.Mutex
 }
 
-func NewEnvironmentService(er repositories.EnvironmentRepository, dr domainRepository, vr repositories.EnvRepository, dnsService *system.DNSProviderService) *EnvironmentService {
+func NewEnvironmentService(er repositories.EnvironmentRepository, dr domainRepository, vr repositories.EnvRepository, dnsService domainDNSService) *EnvironmentService {
 	return &EnvironmentService{
 		envRepo:    er,
 		domainRepo: dr,
@@ -97,6 +102,9 @@ func (s *EnvironmentService) CreateDomain(ctx context.Context, d *models.DomainC
 	if d.DNSProvisionStatus == "" {
 		d.DNSProvisionStatus = models.DNSProvisionStatusPending
 	}
+	d.DNSProvisionStatus = models.DNSProvisionStatusPending
+	d.DNSProvider = ""
+	d.DNSProvisionedIP = ""
 	if err := s.domainRepo.Create(ctx, d); err != nil {
 		return nil, err
 	}
@@ -108,7 +116,10 @@ func (s *EnvironmentService) CreateDomain(ctx context.Context, d *models.DomainC
 			provisionCtx, cancel := context.WithTimeout(context.Background(), 30*time.Second)
 			defer cancel()
 
-			unlock := s.lockDomain(domainName)
+			unlock, err := s.lockDomain(provisionCtx, domainName)
+			if err != nil {
+				return
+			}
 			defer unlock()
 
 			current, err := s.domainRepo.GetByID(provisionCtx, domainID)
@@ -116,13 +127,18 @@ func (s *EnvironmentService) CreateDomain(ctx context.Context, d *models.DomainC
 				return
 			}
 
-			provider, err := s.dnsService.ProvisionARecord(provisionCtx, domainName)
+			provider, provisionedIP, err := s.dnsService.ProvisionARecord(provisionCtx, domainName)
 			status := models.DNSProvisionStatusSuccess
 			if err != nil {
 				status = models.DNSProvisionStatusFailed
 				provider = ""
+				provisionedIP = ""
 			}
-			_ = s.updateDNSProvisionStatus(provisionCtx, domainID, status, provider)
+			statusCtx, statusCancel := context.WithTimeout(context.Background(), 5*time.Second)
+			defer statusCancel()
+			if err := s.updateDNSProvisionStatus(statusCtx, domainID, status, provider, provisionedIP); err != nil {
+				return
+			}
 		}(domainID, domainName)
 	}
 
@@ -159,13 +175,22 @@ func (s *EnvironmentService) DeleteDomain(ctx context.Context, id string) error 
 		return nil
 	}
 
-	unlock := s.lockDomain(domain.DomainName)
+	unlock, err := s.lockDomain(ctx, domain.DomainName)
+	if err != nil {
+		return err
+	}
 	defer unlock()
+	domain, err = s.domainRepo.GetByID(ctx, id)
+	if err != nil {
+		return err
+	}
+	if domain == nil {
+		return nil
+	}
 
 	if s.dnsService != nil && (domain.DNSProvisionStatus == models.DNSProvisionStatusSuccess || domain.DNSProvisionStatus == "provisioned") {
-		if err := s.dnsService.DeprovisionARecord(ctx, domain.DomainName, domain.DNSProvider); err != nil {
-			// Log error but proceed with DB deletion
-			_ = err
+		if err := s.dnsService.DeprovisionARecord(ctx, domain.DomainName, domain.DNSProvider, domain.DNSProvisionedIP); err != nil {
+			return err
 		}
 	}
 
@@ -189,34 +214,62 @@ func (s *EnvironmentService) SetVar(ctx context.Context, projectID, key, value s
 	return s.varRepo.SetVar(ctx, projectID, key, value)
 }
 
-func (s *EnvironmentService) lockDomain(domainName string) func() {
+func (s *EnvironmentService) lockDomain(ctx context.Context, domainName string) (func(), error) {
 	if domainName == "" {
-		return func() {}
+		return func() {}, nil
 	}
 
-	lock, _ := s.domainLocks.LoadOrStore(domainName, &domainLockEntry{})
+	s.domainLocksMu.Lock()
+	lock, loaded := s.domainLocks.Load(domainName)
+	if !loaded {
+		lock = &domainLockEntry{locked: make(chan struct{}, 1)}
+		s.domainLocks.Store(domainName, lock)
+	}
 	entry := lock.(*domainLockEntry)
 	entry.refs.Add(1)
-	entry.mutex.Lock()
+	s.domainLocksMu.Unlock()
+
+	select {
+	case entry.locked <- struct{}{}:
+	case <-ctx.Done():
+		s.releaseDomainLock(domainName, entry)
+		return nil, ctx.Err()
+	}
+
 	return func() {
-		if entry.refs.Add(-1) == 0 {
-			s.domainLocks.CompareAndDelete(domainName, entry)
-		}
-		entry.mutex.Unlock()
+		<-entry.locked
+		s.releaseDomainLock(domainName, entry)
+	}, nil
+}
+
+func (s *EnvironmentService) releaseDomainLock(domainName string, entry *domainLockEntry) {
+	s.domainLocksMu.Lock()
+	defer s.domainLocksMu.Unlock()
+	if entry.refs.Add(-1) == 0 {
+		s.domainLocks.CompareAndDelete(domainName, entry)
 	}
 }
 
-func (s *EnvironmentService) updateDNSProvisionStatus(ctx context.Context, domainID, status, provider string) error {
+func (s *EnvironmentService) updateDNSProvisionStatus(ctx context.Context, domainID, status, provider, provisionedIP string) error {
 	var err error
 	for attempt := 0; attempt < 3; attempt++ {
-		err = s.domainRepo.UpdateDNSProvisionStatus(ctx, domainID, status, provider)
+		err = s.domainRepo.UpdateDNSProvisionStatus(ctx, domainID, status, provider, provisionedIP)
 		if err == nil {
 			return nil
 		}
 		if ctx.Err() != nil {
 			return ctx.Err()
 		}
-		time.Sleep(time.Duration(attempt+1) * 200 * time.Millisecond)
+		if attempt == 2 {
+			break
+		}
+		timer := time.NewTimer(time.Duration(attempt+1) * 200 * time.Millisecond)
+		select {
+		case <-ctx.Done():
+			timer.Stop()
+			return ctx.Err()
+		case <-timer.C:
+		}
 	}
 	return err
 }

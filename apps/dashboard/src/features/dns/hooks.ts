@@ -78,8 +78,12 @@ export const useDeleteDomain = () => {
 };
 
 export const useVerifyDomain = () => {
+  const queryClient = useQueryClient();
   return useMutation({
     mutationFn: (domainId: string) => domainsService.verifyDomain(domainId),
+    onSuccess: async () => {
+      await queryClient.invalidateQueries({ queryKey: ['domains'] });
+    },
   });
 };
 

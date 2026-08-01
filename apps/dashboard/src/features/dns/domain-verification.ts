@@ -67,6 +67,7 @@ export function useDomainVerification() {
       return { verifiedCount: 0, failedCount: 0, totalCount: 0 };
     }
 
+    const workerCount = Math.max(1, Math.min(concurrency, domains.length));
     setIsVerifyingAll(true);
     let verifiedCount = 0;
     let failedCount = 0;
@@ -96,9 +97,7 @@ export function useDomainVerification() {
     };
 
     try {
-      await Promise.all(
-        Array.from({ length: Math.min(concurrency, domains.length) }, () => worker())
-      );
+      await Promise.all(Array.from({ length: workerCount }, () => worker()));
       return {
         verifiedCount,
         failedCount,

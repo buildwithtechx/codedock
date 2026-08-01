@@ -8,6 +8,7 @@ import (
 )
 
 func (s *Service) detectProvider(ctx context.Context, cfg *models.ServerSettings, domain, recordType, value string) string {
+	domain = strings.ToLower(strings.TrimSuffix(strings.TrimSpace(domain), "."))
 	if cfg.CloudflareAPIToken != "" {
 		rootDomain := getRootDomain(domain)
 		client := newProviderHTTPClient()

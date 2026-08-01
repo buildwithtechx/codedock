@@ -176,7 +176,16 @@ export function DomainAuditTable({ domains, isLoading }: DomainAuditTableProps) 
                         <Button
                           variant="ghost"
                           size="icon"
-                          onClick={() => deleteDomain.mutate({ id: domain.id })}
+                          onClick={() => {
+                            if (!window.confirm(`Delete domain ${domain.domainName}?`)) return;
+                            deleteDomain.mutate(
+                              { id: domain.id },
+                              {
+                                onSuccess: () => toast.success('Domain deleted successfully'),
+                                onError: () => toast.error('Failed to delete domain'),
+                              }
+                            );
+                          }}
                           disabled={deleteDomain.isPending}
                           className="h-8 w-8 text-destructive hover:bg-destructive/10 hover:text-destructive"
                           aria-label={`Delete domain ${domain.domainName}`}

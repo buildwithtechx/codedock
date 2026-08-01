@@ -8,6 +8,8 @@ import (
 
 type Domain = types.Domain
 type DomainConfig = types.DomainConfig
+type CreateDomainRequest = types.CreateDomainRequest
+type DomainVerifyResult = types.DomainVerifyResult
 
 const (
 	DNSProvisionStatusPending = types.DNSProvisionStatusPending

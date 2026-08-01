@@ -7,7 +7,7 @@ import { DomainsPage } from './domains-page';
 import { useListAllDomains } from './hooks';
 
 export function DnsAuditPage() {
-  const { data: domainsRes, isLoading } = useListAllDomains();
+  const { data: domainsRes, isLoading, isError } = useListAllDomains();
   const [activeTab, setActiveTab] = useState<'audit' | 'providers' | 'global'>('audit');
   const [mountedTabs, setMountedTabs] = useState<Set<'audit' | 'providers' | 'global'>>(
     () => new Set(['audit'])
@@ -68,7 +68,9 @@ export function DnsAuditPage() {
               <p className="font-medium text-muted-foreground text-xs uppercase tracking-wider">
                 Total Domains
               </p>
-              <h3 className="mt-0.5 font-bold text-2xl">{isLoading ? '...' : totalCount}</h3>
+              <h3 className="mt-0.5 font-bold text-2xl">
+                {isLoading || isError ? '...' : totalCount}
+              </h3>
             </div>
           </CardContent>
         </Card>
@@ -82,7 +84,9 @@ export function DnsAuditPage() {
               <p className="font-medium text-muted-foreground text-xs uppercase tracking-wider">
                 Auto-Provisioned
               </p>
-              <h3 className="mt-0.5 font-bold text-2xl">{isLoading ? '...' : provisionedCount}</h3>
+              <h3 className="mt-0.5 font-bold text-2xl">
+                {isLoading || isError ? '...' : provisionedCount}
+              </h3>
             </div>
           </CardContent>
         </Card>
@@ -96,7 +100,9 @@ export function DnsAuditPage() {
               <p className="font-medium text-muted-foreground text-xs uppercase tracking-wider">
                 Manual / Pending Setup
               </p>
-              <h3 className="mt-0.5 font-bold text-2xl">{isLoading ? '...' : manualCount}</h3>
+              <h3 className="mt-0.5 font-bold text-2xl">
+                {isLoading || isError ? '...' : manualCount}
+              </h3>
             </div>
           </CardContent>
         </Card>
@@ -142,7 +148,13 @@ export function DnsAuditPage() {
       </div>
 
       <section className={activeTab === 'audit' ? 'block' : 'hidden'}>
-        {mountedTabs.has('audit') && <DomainAuditTable domains={domains} isLoading={isLoading} />}
+        {isError ? (
+          <div className="rounded-2xl border border-destructive/30 bg-destructive/5 p-8 text-center text-destructive text-sm">
+            Unable to load the domain audit. Try again later.
+          </div>
+        ) : (
+          mountedTabs.has('audit') && <DomainAuditTable domains={domains} isLoading={isLoading} />
+        )}
       </section>
 
       <section className={activeTab === 'providers' ? 'block' : 'hidden'}>

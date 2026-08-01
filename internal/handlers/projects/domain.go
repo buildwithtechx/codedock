@@ -2,7 +2,6 @@ package projects
 
 import (
 	"net/http"
-	"strconv"
 
 	"github.com/labstack/echo/v4"
 
@@ -77,24 +76,6 @@ func (h *DomainHandler) ListAll(c echo.Context) error {
 		domains = filtered
 	}
 
-	page := 1
-	pageSize := 100
-	if p, err := strconv.Atoi(c.QueryParam("page")); err == nil && p > 0 {
-		page = p
-	}
-	if ps, err := strconv.Atoi(c.QueryParam("pageSize")); err == nil && ps > 0 {
-		pageSize = ps
-	}
-	start := (page - 1) * pageSize
-	if start > len(domains) {
-		start = len(domains)
-	}
-	end := start + pageSize
-	if end > len(domains) {
-		end = len(domains)
-	}
-	domains = domains[start:end]
-
 	return utils.Success(c, "Operation successful", domains)
 }
 
@@ -125,13 +106,18 @@ func (h *DomainHandler) Create(c echo.Context) error {
 		return utils.Error(c, http.StatusForbidden, "insufficient permissions")
 	}
 
-	var d models.DomainConfig
-	if err := c.Bind(&d); err != nil {
+	var req models.CreateDomainRequest
+	if err := c.Bind(&req); err != nil {
 		return utils.Error(c, http.StatusBadRequest, "invalid payload")
 	}
-	d.ServiceID = serviceID
-	if d.DomainName == "" {
+	if req.DomainName == "" {
 		return utils.Error(c, http.StatusBadRequest, "domainName is required")
+	}
+	d := models.DomainConfig{
+		ServiceID:  serviceID,
+		DomainName: req.DomainName,
+		RedirectTo: req.RedirectTo,
+		PathPrefix: req.PathPrefix,
 	}
 	created, err := h.envService.CreateDomain(c.Request().Context(), &d)
 	if err != nil {
@@ -147,7 +133,13 @@ func (h *DomainHandler) Delete(c echo.Context) error {
 	}
 
 	domain, err := h.envService.GetDomain(c.Request().Context(), id)
-	if err != nil || domain == nil {
+	if err != nil {
+		if !utils.IsNotFound(err) {
+			return utils.Error(c, http.StatusInternalServerError, err.Error())
+		}
+		return utils.Error(c, http.StatusNotFound, "domain not found")
+	}
+	if domain == nil {
 		return utils.Error(c, http.StatusNotFound, "domain not found")
 	}
 	if !h.hasAccess(c, domain.ServiceID) {
@@ -168,6 +160,9 @@ func (h *DomainHandler) Verify(c echo.Context) error {
 
 	domain, err := h.envService.GetDomain(c.Request().Context(), id)
 	if err != nil {
+		if utils.IsNotFound(err) {
+			return utils.Error(c, http.StatusNotFound, "domain not found")
+		}
 		return utils.Error(c, http.StatusInternalServerError, err.Error())
 	}
 	if domain == nil {
@@ -188,7 +183,13 @@ func (h *DomainHandler) Verify(c echo.Context) error {
 		}
 	}
 	if serverIP == "" {
-		return utils.Error(c, http.StatusInternalServerError, "server IP is not configured")
+		return utils.Success(c, "Server IP is not configured", models.DomainVerifyResult{
+			DomainID:   domain.ID,
+			DomainName: domain.DomainName,
+			Verified:   false,
+			Status:     "server_ip_not_configured",
+			Message:    "Server IP is not configured",
+		})
 	}
 
 	verified, resolvedIP, err := systemservices.VerifyDomain(c.Request().Context(), domain.DomainName, serverIP)
@@ -208,14 +209,14 @@ func (h *DomainHandler) Verify(c echo.Context) error {
 		}
 	}
 
-	res := map[string]any{
-		"domainId":   domain.ID,
-		"domainName": domain.DomainName,
-		"verified":   verified,
-		"status":     status,
-		"resolvedIp": resolvedIP,
-		"serverIp":   serverIP,
-		"message":    message,
+	res := models.DomainVerifyResult{
+		DomainID:   domain.ID,
+		DomainName: domain.DomainName,
+		Verified:   verified,
+		Status:     status,
+		ResolvedIP: resolvedIP,
+		ServerIP:   serverIP,
+		Message:    message,
 	}
 
 	return utils.Success(c, message, res)

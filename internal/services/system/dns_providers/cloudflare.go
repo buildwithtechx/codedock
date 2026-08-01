@@ -6,6 +6,7 @@ import (
 	"encoding/json"
 	"fmt"
 	"net/http"
+	"net/url"
 )
 
 func (s *Service) provisionCloudflare(ctx context.Context, token, domain, recordType, value string) error {
@@ -23,7 +24,10 @@ func (s *Service) provisionCloudflare(ctx context.Context, token, domain, record
 	}
 	if exists && len(matchingIDs) > 0 {
 		// check if exact match exists
-		exactExists, _, _ := checkCloudflareRecordExists(ctx, client, token, zoneID, domain, recordType, value)
+		exactExists, _, err := checkCloudflareRecordExists(ctx, client, token, zoneID, domain, recordType, value)
+		if err != nil {
+			return err
+		}
 		if exactExists {
 			return nil
 		}
@@ -36,7 +40,10 @@ func (s *Service) provisionCloudflare(ctx context.Context, token, domain, record
 			"proxied": false,
 		}
 		b, _ := json.Marshal(payload)
-		req, _ := http.NewRequestWithContext(ctx, http.MethodPut, "https://api.cloudflare.com/client/v4/zones/"+zoneID+"/dns_records/"+matchingIDs[0], bytes.NewBuffer(b))
+		req, err := http.NewRequestWithContext(ctx, http.MethodPut, "https://api.cloudflare.com/client/v4/zones/"+url.PathEscape(zoneID)+"/dns_records/"+url.PathEscape(matchingIDs[0]), bytes.NewBuffer(b))
+		if err != nil {
+			return err
+		}
 		req.Header.Set("Authorization", "Bearer "+token)
 		req.Header.Set("Content-Type", "application/json")
 
@@ -58,7 +65,10 @@ func (s *Service) provisionCloudflare(ctx context.Context, token, domain, record
 		"proxied": false,
 	}
 	b, _ := json.Marshal(payload)
-	req, _ := http.NewRequestWithContext(ctx, http.MethodPost, "https://api.cloudflare.com/client/v4/zones/"+zoneID+"/dns_records", bytes.NewBuffer(b))
+	req, err := http.NewRequestWithContext(ctx, http.MethodPost, "https://api.cloudflare.com/client/v4/zones/"+url.PathEscape(zoneID)+"/dns_records", bytes.NewBuffer(b))
+	if err != nil {
+		return err
+	}
 	req.Header.Set("Authorization", "Bearer "+token)
 	req.Header.Set("Content-Type", "application/json")
 
@@ -89,7 +99,11 @@ func (s *Service) deprovisionCloudflare(ctx context.Context, token, domain, reco
 
 	var lastErr error
 	for _, recID := range recordIDs {
-		req, _ := http.NewRequestWithContext(ctx, http.MethodDelete, "https://api.cloudflare.com/client/v4/zones/"+zoneID+"/dns_records/"+recID, nil)
+		req, err := http.NewRequestWithContext(ctx, http.MethodDelete, "https://api.cloudflare.com/client/v4/zones/"+url.PathEscape(zoneID)+"/dns_records/"+url.PathEscape(recID), nil)
+		if err != nil {
+			lastErr = err
+			continue
+		}
 		req.Header.Set("Authorization", "Bearer "+token)
 		resp, err := client.Do(req)
 		if err != nil {
@@ -105,13 +119,21 @@ func (s *Service) deprovisionCloudflare(ctx context.Context, token, domain, reco
 }
 
 func (s *Service) getCloudflareZoneID(ctx context.Context, client *http.Client, token, rootDomain string) (string, error) {
-	req, _ := http.NewRequestWithContext(ctx, http.MethodGet, "https://api.cloudflare.com/client/v4/zones?name="+rootDomain, nil)
+	query := url.Values{}
+	query.Set("name", rootDomain)
+	req, err := http.NewRequestWithContext(ctx, http.MethodGet, "https://api.cloudflare.com/client/v4/zones?"+query.Encode(), nil)
+	if err != nil {
+		return "", err
+	}
 	req.Header.Set("Authorization", "Bearer "+token)
 	resp, err := client.Do(req)
 	if err != nil {
 		return "", err
 	}
 	defer resp.Body.Close()
+	if resp.StatusCode >= 400 {
+		return "", fmt.Errorf("cloudflare returned status %d", resp.StatusCode)
+	}
 
 	var zoneRes struct {
 		Result []struct {
