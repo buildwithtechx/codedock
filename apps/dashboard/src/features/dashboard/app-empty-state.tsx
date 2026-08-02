@@ -55,7 +55,9 @@ export function AppEmptyState() {
               </span>
               <span className="min-w-0 flex-1">
                 <span className="block font-medium text-sm">{label}</span>
-                <span className="mt-0.5 block truncate text-muted-foreground text-xs">{detail}</span>
+                <span className="mt-0.5 block truncate text-muted-foreground text-xs">
+                  {detail}
+                </span>
               </span>
               <ArrowRight className="h-4 w-4 text-muted-foreground transition-colors group-hover:text-primary" />
             </Link>

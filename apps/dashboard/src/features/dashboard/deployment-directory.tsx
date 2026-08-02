@@ -1,9 +1,8 @@
 import { Link } from '@tanstack/react-router';
-import { Activity, CheckCircle2, CircleX, Rocket, Search } from 'lucide-react';
+import { Activity, ArrowRight, CheckCircle2, CircleX, Rocket, Search, Zap } from 'lucide-react';
 import { useDeferredValue, useState } from 'react';
 import { PageFrame } from '#/components/layout/page-frame';
 import { PageHeader } from '#/components/layout/page-header';
-import { Button } from '#/components/ui/button';
 import { Input } from '#/components/ui/input';
 import { QueryErrorState } from '#/components/ui/query-error-state';
 import {
@@ -27,11 +26,10 @@ import { useListByOrganization } from '#/hooks/use-deployments';
 import { DeploymentEmptyState } from './deployment-empty-state';
 
 const statusOptions = [
-  ['all', 'All statuses'],
-  ['ACTIVE', 'Active'],
+  ['all', 'All'],
   ['READY', 'Ready'],
+  ['ACTIVE', 'Active'],
   ['BUILDING', 'Building'],
-  ['PENDING', 'Pending'],
   ['FAILED', 'Failed'],
 ] as const;
 
@@ -76,19 +74,13 @@ export function DeploymentDirectory() {
         description={
           isLoading
             ? 'Loading release activity...'
-            : `${deployments.length} release${deployments.length === 1 ? '' : 's'} across this organization`
-        }
-        action={
-          <Link to="/apps/new">
-            <Button className="gap-2">
-              <Rocket className="h-4 w-4" />
-              Deploy app
-            </Button>
-          </Link>
+            : `${deployments.length} total across ${projects.length} project${
+                projects.length === 1 ? '' : 's'
+              }`
         }
       />
       <PageFrame rail={<DeploymentSummary deployments={deployments} isLoading={isLoading} />}>
-        <div className="space-y-5">
+        <div className="space-y-4">
           <DeploymentFilters
             projectId={projectId}
             projects={projects}
@@ -144,18 +136,18 @@ function DeploymentFilters({
   onStatusChange: (value: string) => void;
 }) {
   return (
-    <div className="flex flex-col gap-3 lg:flex-row">
-      <div className="relative flex-1">
+    <div className="flex flex-col gap-3 sm:flex-row sm:flex-wrap sm:items-center">
+      <div className="relative w-full sm:min-w-55 sm:flex-1">
         <Search className="pointer-events-none absolute top-1/2 left-3.5 h-4 w-4 -translate-y-1/2 text-muted-foreground" />
         <Input
           value={search}
           onChange={(event) => onSearchChange(event.target.value)}
           placeholder="Search app, project, branch, or commit"
-          className="pl-10"
+          className="h-10 bg-card pl-10"
         />
       </div>
       <Select value={projectId} onValueChange={onProjectChange}>
-        <SelectTrigger className="w-full lg:w-52">
+        <SelectTrigger className="h-10 w-full bg-card sm:w-44">
           <SelectValue placeholder="All projects" />
         </SelectTrigger>
         <SelectContent>
@@ -167,18 +159,22 @@ function DeploymentFilters({
           ))}
         </SelectContent>
       </Select>
-      <Select value={status} onValueChange={onStatusChange}>
-        <SelectTrigger className="w-full lg:w-44">
-          <SelectValue placeholder="All statuses" />
-        </SelectTrigger>
-        <SelectContent>
-          {statusOptions.map(([value, label]) => (
-            <SelectItem key={value} value={value}>
-              {label}
-            </SelectItem>
-          ))}
-        </SelectContent>
-      </Select>
+      <div className="inline-flex max-w-full flex-wrap items-center gap-1 rounded-xl bg-muted/45 p-1">
+        {statusOptions.map(([value, label]) => (
+          <button
+            key={value}
+            type="button"
+            onClick={() => onStatusChange(value)}
+            className={`inline-flex h-8 items-center rounded-lg px-3 font-medium text-xs transition-colors ${
+              status === value
+                ? 'bg-card text-foreground shadow-sm'
+                : 'text-muted-foreground hover:bg-background/70 hover:text-foreground'
+            }`}
+          >
+            {label}
+          </button>
+        ))}
+      </div>
     </div>
   );
 }
@@ -207,30 +203,66 @@ function DeploymentSummary({
       icon: CheckCircle2,
       tone: 'text-emerald-500 bg-emerald-500/12',
     },
-    { label: 'In progress', value: active, icon: Activity, tone: 'text-amber-500 bg-amber-500/12' },
     { label: 'Failed', value: failed, icon: CircleX, tone: 'text-rose-500 bg-rose-500/12' },
   ];
 
   return (
-    <aside className="rounded-2xl bg-card p-5">
-      <div className="flex items-center gap-2">
-        <Activity className="h-4 w-4 text-muted-foreground" />
-        <h2 className="font-semibold text-sm">Release overview</h2>
-      </div>
-      <div className="mt-5 space-y-3.5">
-        {items.map((item) => (
-          <div key={item.label} className="flex items-center justify-between">
-            <span className="flex items-center gap-2.5 text-muted-foreground text-sm">
-              <span className={`flex h-8 w-8 items-center justify-center rounded-lg ${item.tone}`}>
-                <item.icon className="h-4 w-4" />
+    <div className="space-y-4">
+      <aside className="rounded-2xl bg-card p-5">
+        <div className="flex items-center gap-2">
+          <Activity className="h-4 w-4 text-muted-foreground" />
+          <h2 className="font-semibold text-sm">Overview</h2>
+        </div>
+        <div className="mt-5 space-y-3.5">
+          {items.map((item) => (
+            <div key={item.label} className="flex items-center justify-between">
+              <span className="flex items-center gap-2.5 text-muted-foreground text-sm">
+                <span
+                  className={`flex h-8 w-8 items-center justify-center rounded-lg ${item.tone}`}
+                >
+                  <item.icon className="h-4 w-4" />
+                </span>
+                {item.label}
               </span>
-              {item.label}
-            </span>
-            <span className="font-semibold">{isLoading ? '–' : item.value}</span>
-          </div>
-        ))}
+              <span className="font-semibold">{isLoading ? '–' : item.value}</span>
+            </div>
+          ))}
+          {active > 0 && (
+            <div className="flex items-center justify-between">
+              <span className="flex items-center gap-2.5 text-muted-foreground text-sm">
+                <span className="flex h-8 w-8 items-center justify-center rounded-lg bg-amber-500/12 text-amber-500">
+                  <Activity className="h-4 w-4" />
+                </span>
+                In progress
+              </span>
+              <span className="font-semibold">{isLoading ? '–' : active}</span>
+            </div>
+          )}
+        </div>
+      </aside>
+      <DeploymentGetStarted />
+    </div>
+  );
+}
+
+function DeploymentGetStarted() {
+  return (
+    <section className="rounded-2xl border border-primary/10 bg-gradient-to-br from-primary/10 via-primary/5 to-transparent p-5">
+      <div className="flex items-center gap-2">
+        <Zap className="h-4 w-4 text-primary" />
+        <h2 className="font-semibold text-sm">Get started</h2>
       </div>
-    </aside>
+      <p className="mt-3 text-muted-foreground text-sm leading-6">
+        Connect a repository or choose a template to create the first deployment.
+      </p>
+      <Link
+        to="/projects/new"
+        className="mt-4 inline-flex items-center gap-1.5 font-medium text-sm transition-colors hover:text-primary"
+      >
+        Create project
+        <ArrowRight className="h-3.5 w-3.5" />
+      </Link>
+    </section>
   );
 }
 

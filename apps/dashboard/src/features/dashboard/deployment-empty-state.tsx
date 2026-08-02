@@ -1,5 +1,5 @@
 import { Link } from '@tanstack/react-router';
-import { GitBranch, Plus, Rocket, SearchX } from 'lucide-react';
+import { LayoutTemplate, Plus, Rocket, SearchX } from 'lucide-react';
 import { Button } from '#/components/ui/button';
 
 export function DeploymentEmptyState({
@@ -62,10 +62,10 @@ export function DeploymentEmptyState({
             Deploy app
           </Button>
         </Link>
-        <Link to="/projects">
+        <Link to="/projects/new" search={{ template: 'one-click' }}>
           <Button variant="secondary" className="gap-2 px-5">
-            <GitBranch className="h-4 w-4" />
-            Browse projects
+            <LayoutTemplate className="h-4 w-4" />
+            Browse templates
           </Button>
         </Link>
       </div>
