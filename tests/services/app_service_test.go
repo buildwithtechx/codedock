@@ -41,6 +41,9 @@ func (m *mockAppRepo) ListByProject(ctx context.Context, projectID string) ([]*m
 	}
 	return list, nil
 }
+func (m *mockAppRepo) ListByOrganization(ctx context.Context, organizationID string) ([]*models.AppService, error) {
+	return m.ListAll(ctx)
+}
 func (m *mockAppRepo) ListAll(ctx context.Context) ([]*models.AppService, error) {
 	var list []*models.AppService
 	for _, a := range m.apps {

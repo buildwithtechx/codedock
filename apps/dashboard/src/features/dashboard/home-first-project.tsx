@@ -40,14 +40,12 @@ export function HomeFirstProject({ onCreateProject }: { onCreateProject: () => v
             <Plus className="h-4 w-4" />
             Create project
           </Button>
-          <Link
-            to="/projects/new"
-            search={{ template: 'one-click' }}
-            className="inline-flex h-9 items-center justify-center rounded-xl bg-muted px-4 font-medium text-sm transition-colors hover:bg-secondary"
-          >
-            <LayoutTemplate className="mr-2 h-4 w-4" />
-            Browse templates
-          </Link>
+          <Button asChild variant="secondary" className="px-5">
+            <Link to="/projects/new" search={{ template: 'one-click' }}>
+              <LayoutTemplate className="h-4 w-4" />
+              Browse templates
+            </Link>
+          </Button>
         </div>
       </div>
     </section>

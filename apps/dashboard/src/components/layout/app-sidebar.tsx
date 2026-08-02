@@ -1,6 +1,7 @@
 import { Link } from '@tanstack/react-router';
 import { FolderKanban, Moon, PanelLeftClose, PanelLeftOpen, Sun, X } from 'lucide-react';
 import { useTheme } from 'next-themes';
+import { Button } from '#/components/ui/button';
 import {
   infrastructureNavigation,
   primaryNavigation,
@@ -147,17 +148,16 @@ export function AppSidebar({ collapsed, onToggle, mobileOpen, onMobileClose }: A
         </nav>
 
         <div className="px-3 pb-2">
-          <Link
-            to="/projects/new"
-            className={`flex w-full items-center justify-center gap-2 rounded-xl bg-primary font-semibold text-primary-foreground text-sm transition-colors hover:bg-primary-hover ${
-              navCollapsed ? 'h-10 px-0' : 'h-10 px-3'
-            }`}
-            aria-label="New project"
-            title={navCollapsed ? 'New project' : undefined}
-          >
-            <FolderKanban className="h-4 w-4" />
-            {!navCollapsed && 'New project'}
-          </Link>
+          <Button asChild className={`w-full font-semibold ${navCollapsed ? 'px-0' : 'px-3'}`}>
+            <Link
+              to="/projects/new"
+              aria-label="New project"
+              title={navCollapsed ? 'New project' : undefined}
+            >
+              <FolderKanban className="h-4 w-4" />
+              {!navCollapsed && 'New project'}
+            </Link>
+          </Button>
         </div>
 
         <div className={`mt-auto px-3 pt-1 pb-3 ${navCollapsed ? 'px-2' : ''}`}>
