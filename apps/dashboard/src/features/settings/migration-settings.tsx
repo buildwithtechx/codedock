@@ -1,7 +1,6 @@
 import { ArrowRightLeft, Download, Info, Loader2 } from 'lucide-react';
 import { useState } from 'react';
 import { toast } from 'sonner';
-import { PageHeader } from '#/components/layout/page-header';
 import { Button } from '#/components/ui/button';
 import { Input } from '#/components/ui/input';
 import { Row, Section } from '#/components/ui/section';
@@ -45,11 +44,9 @@ export function MigrationSettings() {
   return (
     <form onSubmit={handleExport}>
       <div className="space-y-6 pb-12">
-        <PageHeader
-          title="Migration"
-          description="Export an encrypted bundle or takeover external Dokploy, Coolify, and Dokku servers."
-          action={<ServerTakeoverDialog />}
-        />
+        <div className="flex justify-end">
+          <ServerTakeoverDialog />
+        </div>
 
         <div className="flex items-start gap-3 rounded-xl border border-blue-500/20 bg-blue-500/10 p-4">
           <div className="mt-0.5 rounded-full bg-blue-500/20 p-1">

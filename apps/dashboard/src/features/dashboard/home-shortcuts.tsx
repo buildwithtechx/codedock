@@ -5,7 +5,8 @@ const shortcuts = [
   {
     title: 'Connect source',
     description: 'Link Git providers and registries.',
-    to: '/sources',
+    to: '/settings',
+    search: { tab: 'sources' },
     icon: GitBranch,
   },
   {
@@ -35,6 +36,7 @@ export function HomeShortcuts() {
         <Link
           key={shortcut.to}
           to={shortcut.to}
+          search={shortcut.search as never}
           className="group rounded-xl border border-border/80 bg-card p-4 shadow-sm transition-colors hover:border-primary/35 hover:bg-primary/4"
         >
           <div className="flex items-start justify-between">

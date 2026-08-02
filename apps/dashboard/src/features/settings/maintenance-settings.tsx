@@ -1,7 +1,6 @@
 import { AlertTriangle, HardDrive, RefreshCw, Trash2 } from 'lucide-react';
 import { useState } from 'react';
 import { toast } from 'sonner';
-import { PageHeader } from '#/components/layout/page-header';
 import { Badge } from '#/components/ui/badge';
 import { Button } from '#/components/ui/button';
 import { useCleanupSystem, useGetSystemStats, useRestartSystem } from '#/features/settings';
@@ -63,36 +62,32 @@ export const MaintenancePage = () => {
 
   return (
     <div className="space-y-6">
-      <PageHeader
-        title="Maintenance"
-        description="Manage unused resources, dangling images, and system caches to reclaim space."
-        action={
-          <div className="flex shrink-0 items-center gap-3">
-            {Number(reclaimableGb) > 3 ? (
-              <Badge
-                variant="outline"
-                className="border-destructive/50 bg-destructive/10 px-3 py-1 font-bold text-[10px] text-destructive uppercase tracking-widest"
-              >
-                ATTENTION
-              </Badge>
-            ) : (
-              <Badge
-                variant="outline"
-                className="border-primary/50 bg-primary/10 px-3 py-1 font-bold text-[10px] text-primary uppercase tracking-widest"
-              >
-                0 ISSUES
-              </Badge>
-            )}
-            <Button
+      <div className="flex justify-end">
+        <div className="flex shrink-0 items-center gap-3">
+          {Number(reclaimableGb) > 3 ? (
+            <Badge
               variant="outline"
-              onClick={() => refetch()}
-              className="flex h-11 items-center gap-2 rounded-xl border-border bg-background px-6 font-semibold text-foreground text-xs uppercase tracking-widest hover:bg-muted"
+              className="border-destructive/50 bg-destructive/10 px-3 py-1 font-bold text-[10px] text-destructive uppercase tracking-widest"
             >
-              <RefreshCw className="h-4 w-4" /> REFRESH
-            </Button>
-          </div>
-        }
-      />
+              ATTENTION
+            </Badge>
+          ) : (
+            <Badge
+              variant="outline"
+              className="border-primary/50 bg-primary/10 px-3 py-1 font-bold text-[10px] text-primary uppercase tracking-widest"
+            >
+              0 ISSUES
+            </Badge>
+          )}
+          <Button
+            variant="outline"
+            onClick={() => refetch()}
+            className="flex h-11 items-center gap-2 rounded-xl border-border bg-background px-6 font-semibold text-foreground text-xs uppercase tracking-widest hover:bg-muted"
+          >
+            <RefreshCw className="h-4 w-4" /> REFRESH
+          </Button>
+        </div>
+      </div>
 
       {stats?.docker?.reclaimableGb && stats.docker.reclaimableGb > 3 ? (
         <div className="flex w-full items-center gap-3 rounded-lg border border-destructive/30 bg-destructive/10 p-4 font-medium text-destructive text-sm">

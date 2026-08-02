@@ -20,6 +20,7 @@ export type DashboardNavigationItem = {
   description: string;
   to: string;
   icon: LucideIcon;
+  search?: Record<string, string>;
   exact?: boolean;
 };
 
@@ -51,7 +52,19 @@ export const primaryNavigation: DashboardNavigationItem[] = [
   },
 ];
 
-export const platformNavigation: DashboardNavigationItem[] = [
+export const infrastructureNavigation: DashboardNavigationItem[] = [
+  {
+    title: 'Servers',
+    description: 'Deployment targets and runtime capacity',
+    to: '/servers',
+    icon: Server,
+  },
+  {
+    title: 'Domains & DNS',
+    description: 'Domain audit and provider setup',
+    to: '/dns',
+    icon: Globe2,
+  },
   {
     title: 'Backups',
     description: 'Backup destinations and restores',
@@ -59,6 +72,9 @@ export const platformNavigation: DashboardNavigationItem[] = [
     icon: HardDrive,
     exact: true,
   },
+];
+
+export const systemNavigation: DashboardNavigationItem[] = [
   {
     title: 'API Access',
     description: 'Personal access tokens',
@@ -78,20 +94,9 @@ export const contextualNavigation: DashboardNavigationItem[] = [
   {
     title: 'Sources',
     description: 'Git providers and registries',
-    to: '/sources',
+    to: '/settings',
     icon: CloudCog,
-  },
-  {
-    title: 'Servers',
-    description: 'Deployment targets',
-    to: '/servers',
-    icon: Server,
-  },
-  {
-    title: 'Domains and DNS',
-    description: 'Domain audit and provider setup',
-    to: '/dns',
-    icon: Globe2,
+    search: { tab: 'sources' },
   },
   {
     title: 'Schedules',
@@ -115,6 +120,7 @@ export const contextualNavigation: DashboardNavigationItem[] = [
 
 export const commandNavigation = [
   ...primaryNavigation,
-  ...platformNavigation,
+  ...infrastructureNavigation,
+  ...systemNavigation,
   ...contextualNavigation,
 ];

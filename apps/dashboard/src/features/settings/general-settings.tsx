@@ -57,14 +57,22 @@ const Row = ({ label, description, children }: RowProps) => (
   </div>
 );
 
-type SectionProps = { icon: React.ReactNode; title: string; children: React.ReactNode };
-const Section = ({ icon, title, children }: SectionProps) => (
+type SectionProps = {
+  icon: React.ReactNode;
+  title: string;
+  action: React.ReactNode;
+  children: React.ReactNode;
+};
+const Section = ({ icon, title, action, children }: SectionProps) => (
   <div className="rounded-xl border border-border bg-card p-6">
-    <div className="mb-4 flex items-center gap-3">
-      <div className="flex h-8 w-8 items-center justify-center rounded-lg bg-primary/10 text-primary">
-        {icon}
+    <div className="mb-4 flex items-center justify-between gap-4">
+      <div className="flex items-center gap-3">
+        <div className="flex h-8 w-8 items-center justify-center rounded-lg bg-primary/10 text-primary">
+          {icon}
+        </div>
+        <span className="font-semibold text-sm">{title}</span>
       </div>
-      <span className="font-semibold text-sm">{title}</span>
+      {action}
     </div>
     {children}
   </div>
@@ -75,6 +83,7 @@ export const GeneralSettings = () => {
   const { mutateAsync: updateSettings, isPending } = useUpdateSettings();
 
   const [form, setForm] = useState<GeneralFields>(EMPTY);
+  const [savingSection, setSavingSection] = useState<string | null>(null);
 
   useEffect(() => {
     if (data?.data) {
@@ -102,14 +111,26 @@ export const GeneralSettings = () => {
   const set = <K extends keyof GeneralFields>(k: K, v: GeneralFields[K]) =>
     setForm((f) => ({ ...f, [k]: v }));
 
-  const handleSave = async () => {
+  const handleSave = async (section: string, fields: (keyof GeneralFields)[]) => {
+    setSavingSection(section);
     try {
-      await updateSettings({ payload: form });
-      toast.success('Settings saved');
+      await updateSettings({
+        payload: Object.fromEntries(fields.map((field) => [field, form[field]])),
+      });
+      toast.success(`${section} settings saved`);
     } catch {
-      toast.error('Failed to save settings');
+      toast.error(`Failed to save ${section.toLowerCase()} settings`);
+    } finally {
+      setSavingSection(null);
     }
   };
+
+  const saveAction = (section: string, fields: (keyof GeneralFields)[]) => (
+    <Button size="sm" onClick={() => handleSave(section, fields)} disabled={isPending}>
+      <Check className="mr-2 h-4 w-4" />
+      {savingSection === section ? 'Saving...' : 'Save'}
+    </Button>
+  );
 
   if (isLoading) {
     return (
@@ -123,20 +144,15 @@ export const GeneralSettings = () => {
 
   return (
     <div className="space-y-6">
-      <div className="flex items-center justify-between">
-        <div>
-          <h2 className="font-semibold text-lg">General</h2>
-          <p className="text-muted-foreground text-sm">
-            Core instance configuration and network settings.
-          </p>
-        </div>
-        <Button onClick={handleSave} disabled={isPending}>
-          <Check className="mr-2 h-4 w-4" />
-          {isPending ? 'Saving…' : 'Save Changes'}
-        </Button>
-      </div>
-
-      <Section icon={<Globe className="h-4 w-4" />} title="Instance Identity">
+      <Section
+        icon={<Globe className="h-4 w-4" />}
+        title="Instance Identity"
+        action={saveAction('Instance identity', [
+          'siteName',
+          'dashboardDomain',
+          'defaultWildcardDomain',
+        ])}
+      >
         <Row label="Site Name" description="Displayed in the browser tab and emails.">
           <Input
             value={form.siteName ?? ''}
@@ -169,7 +185,16 @@ export const GeneralSettings = () => {
         </Row>
       </Section>
 
-      <Section icon={<Info className="h-4 w-4" />} title="Network">
+      <Section
+        icon={<Info className="h-4 w-4" />}
+        title="Network"
+        action={saveAction('Network', [
+          'publicIpv4',
+          'publicIpv6',
+          'traefikWildcardIp',
+          'ipAllowlist',
+        ])}
+      >
         <Row label="Public IPv4" description="Server's public IPv4 address for DNS A records.">
           <Input
             value={form.publicIpv4 ?? ''}
@@ -207,7 +232,16 @@ export const GeneralSettings = () => {
         </Row>
       </Section>
 
-      <Section icon={<Lock className="h-4 w-4" />} title="Access & Security">
+      <Section
+        icon={<Lock className="h-4 w-4" />}
+        title="Access & Security"
+        action={saveAction('Access & security', [
+          'registrationEnabled',
+          'registrationDomainAllowlist',
+          'disableTwoStepConfirmation',
+          'mcpServerEnabled',
+        ])}
+      >
         <Row
           label="Open Registration"
           description="Allow new users to register without an invitation."
@@ -248,7 +282,11 @@ export const GeneralSettings = () => {
         </Row>
       </Section>
 
-      <Section icon={<Cpu className="h-4 w-4" />} title="Build & Deployment">
+      <Section
+        icon={<Cpu className="h-4 w-4" />}
+        title="Build & Deployment"
+        action={saveAction('Build & deployment', ['concurrentBuilds', 'deploymentTimeout'])}
+      >
         <Row label="Concurrent Builds" description="Max number of parallel build jobs.">
           <Input
             type="number"
@@ -273,7 +311,11 @@ export const GeneralSettings = () => {
         </Row>
       </Section>
 
-      <Section icon={<Clock className="h-4 w-4" />} title="System">
+      <Section
+        icon={<Clock className="h-4 w-4" />}
+        title="System"
+        action={saveAction('System', ['serverTimezone', 'telemetryEnabled'])}
+      >
         <Row label="Server Timezone" description="Timezone used for cron jobs and logs.">
           <Input
             value={form.serverTimezone ?? ''}

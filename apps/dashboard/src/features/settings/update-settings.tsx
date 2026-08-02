@@ -1,6 +1,5 @@
 import { CheckCircle, Download, RefreshCw } from 'lucide-react';
 import { toast } from 'sonner';
-import { PageHeader } from '#/components/layout/page-header';
 import { Badge } from '#/components/ui/badge';
 import { Button } from '#/components/ui/button';
 import { Skeleton } from '#/components/ui/skeleton';
@@ -35,31 +34,27 @@ export const UpdatesPage = () => {
 
   return (
     <div className="space-y-6">
-      <PageHeader
-        title="Updates"
-        description="Compare this install with official Codedock releases and update the daemon when ready."
-        action={
-          <div className="flex shrink-0 items-center gap-3">
-            {!isLoading && (
-              <Badge
-                variant="outline"
-                className={`rounded-md border border-primary/50 bg-primary/10 px-3 py-1 font-bold text-[10px] text-primary uppercase tracking-[0.15em]`}
-              >
-                {hasUpdate ? 'UPDATE AVAILABLE' : 'UP TO DATE'}
-              </Badge>
-            )}
-            <Button
+      <div className="flex justify-end">
+        <div className="flex shrink-0 items-center gap-3">
+          {!isLoading && (
+            <Badge
               variant="outline"
-              onClick={handleCheck}
-              disabled={checking || deploying}
-              className="flex h-11 items-center gap-2 rounded-xl border-border bg-background px-6 font-semibold text-foreground text-xs uppercase tracking-widest hover:bg-muted"
+              className={`rounded-md border border-primary/50 bg-primary/10 px-3 py-1 font-bold text-[10px] text-primary uppercase tracking-[0.15em]`}
             >
-              <RefreshCw className={`h-4 w-4 ${checking ? 'animate-spin' : ''}`} />
-              {checking ? 'CHECKING...' : 'CHECK UPDATES'}
-            </Button>
-          </div>
-        }
-      />
+              {hasUpdate ? 'UPDATE AVAILABLE' : 'UP TO DATE'}
+            </Badge>
+          )}
+          <Button
+            variant="outline"
+            onClick={handleCheck}
+            disabled={checking || deploying}
+            className="flex h-11 items-center gap-2 rounded-xl border-border bg-background px-6 font-semibold text-foreground text-xs uppercase tracking-widest hover:bg-muted"
+          >
+            <RefreshCw className={`h-4 w-4 ${checking ? 'animate-spin' : ''}`} />
+            {checking ? 'CHECKING...' : 'CHECK UPDATES'}
+          </Button>
+        </div>
+      </div>
 
       <div className="grid grid-cols-1 gap-6 md:grid-cols-3">
         <div className="flex flex-col justify-center space-y-2 rounded-2xl border border-border/80 bg-card p-6 shadow-sm">

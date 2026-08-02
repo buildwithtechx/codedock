@@ -66,8 +66,8 @@ export function AppLayout({ children }: { children: React.ReactNode }) {
             {mobileMenuOpen ? <X className="h-4 w-4" /> : <Menu className="h-4 w-4" />}
           </button>
         </div>
-        <main className="dashboard-content flex-1 overflow-auto px-4 py-6 md:px-8 md:py-8">
-          <div key={pathname} className="page-transition mx-auto w-full max-w-[90rem]">
+        <main className="dashboard-content flex-1 overflow-auto px-4 py-6 md:px-6 md:py-8 xl:px-10">
+          <div key={pathname} className="page-transition w-full">
             {user && user.emailVerified === false && (
               <div className="mb-6 flex flex-col items-center justify-between gap-4 rounded-lg border border-warning/50 bg-warning/20 p-4 sm:flex-row">
                 <div className="flex items-center gap-3">

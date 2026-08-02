@@ -9,7 +9,9 @@ export type NotificationSectionProps = {
   provider: string;
   enabled: boolean;
   onToggle: (v: boolean) => void;
+  onSave: () => void;
   onTest: () => void;
+  saving: boolean;
   testing: boolean;
   children: React.ReactNode;
 };
@@ -20,11 +22,13 @@ export const NotificationSection = ({
   provider: _provider,
   enabled,
   onToggle,
+  onSave,
   onTest,
+  saving,
   testing,
   children,
 }: NotificationSectionProps) => (
-  <div className="rounded-xl border border-border/50 bg-card/40 p-6">
+  <div className="rounded-xl border border-border/80 bg-card p-6 shadow-sm">
     <div className="mb-4 flex items-center justify-between">
       <div className="flex items-center gap-3">
         <div className="flex h-9 w-9 items-center justify-center rounded-lg bg-primary/10 text-primary">
@@ -33,6 +37,9 @@ export const NotificationSection = ({
         <span className="font-semibold text-sm">{title}</span>
       </div>
       <div className="flex items-center gap-3">
+        <Button size="sm" disabled={saving} onClick={onSave}>
+          {saving ? 'Saving...' : 'Save'}
+        </Button>
         <Button
           size="sm"
           variant="outline"

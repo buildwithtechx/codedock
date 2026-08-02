@@ -33,7 +33,9 @@ export type NotifSettingsForm = {
 type Props = {
   form: NotifSettingsForm;
   set: (k: keyof NotifSettingsForm, v: unknown) => void;
+  handleSave: (provider: string) => void;
   handleTest: (provider: string) => void;
+  savingProvider: string | null;
   testingProvider: string | null;
   testing: boolean;
 };
@@ -41,7 +43,9 @@ type Props = {
 export const NotificationChannelsList = ({
   form,
   set,
+  handleSave,
   handleTest,
+  savingProvider,
   testingProvider,
   testing,
 }: Props) => {
@@ -53,7 +57,9 @@ export const NotificationChannelsList = ({
         provider="discord"
         enabled={form.discordEnabled ?? false}
         onToggle={(v) => set('discordEnabled', v)}
+        onSave={() => handleSave('discord')}
         onTest={() => handleTest('discord')}
+        saving={savingProvider === 'discord'}
         testing={testingProvider === 'discord' && testing}
       >
         <div className="space-y-2">
@@ -80,7 +86,9 @@ export const NotificationChannelsList = ({
         provider="slack"
         enabled={form.slackEnabled ?? false}
         onToggle={(v) => set('slackEnabled', v)}
+        onSave={() => handleSave('slack')}
         onTest={() => handleTest('slack')}
+        saving={savingProvider === 'slack'}
         testing={testingProvider === 'slack' && testing}
       >
         <div className="space-y-2">
@@ -100,7 +108,9 @@ export const NotificationChannelsList = ({
         provider="telegram"
         enabled={form.telegramEnabled ?? false}
         onToggle={(v) => set('telegramEnabled', v)}
+        onSave={() => handleSave('telegram')}
         onTest={() => handleTest('telegram')}
+        saving={savingProvider === 'telegram'}
         testing={testingProvider === 'telegram' && testing}
       >
         <div className="grid grid-cols-2 gap-4">
@@ -132,7 +142,9 @@ export const NotificationChannelsList = ({
         provider="smtp"
         enabled={form.smtpEnabled ?? false}
         onToggle={(v) => set('smtpEnabled', v)}
+        onSave={() => handleSave('smtp')}
         onTest={() => handleTest('smtp')}
+        saving={savingProvider === 'smtp'}
         testing={testingProvider === 'smtp' && testing}
       >
         <div className="grid grid-cols-2 gap-4">
@@ -201,7 +213,9 @@ export const NotificationChannelsList = ({
         provider="resend"
         enabled={form.resendEnabled ?? false}
         onToggle={(v) => set('resendEnabled', v)}
+        onSave={() => handleSave('resend')}
         onTest={() => handleTest('resend')}
+        saving={savingProvider === 'resend'}
         testing={testingProvider === 'resend' && testing}
       >
         <div className="space-y-2">
@@ -222,7 +236,9 @@ export const NotificationChannelsList = ({
         provider="pushover"
         enabled={form.pushoverEnabled ?? false}
         onToggle={(v) => set('pushoverEnabled', v)}
+        onSave={() => handleSave('pushover')}
         onTest={() => handleTest('pushover')}
+        saving={savingProvider === 'pushover'}
         testing={testingProvider === 'pushover' && testing}
       >
         <div className="grid grid-cols-2 gap-4">
@@ -254,7 +270,9 @@ export const NotificationChannelsList = ({
         provider="webhook"
         enabled={form.genericWebhookEnabled ?? false}
         onToggle={(v) => set('genericWebhookEnabled', v)}
+        onSave={() => handleSave('webhook')}
         onTest={() => handleTest('webhook')}
+        saving={savingProvider === 'webhook'}
         testing={testingProvider === 'webhook' && testing}
       >
         <div className="space-y-2">

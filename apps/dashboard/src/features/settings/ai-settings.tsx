@@ -1,6 +1,5 @@
 import { Check, ChevronDown, Star } from 'lucide-react';
 import React, { useState } from 'react';
-import { PageHeader } from '#/components/layout/page-header';
 import {
   DropdownMenu,
   DropdownMenuContent,
@@ -107,15 +106,11 @@ export function AISettings() {
 
   return (
     <div className="space-y-6">
-      <PageHeader
-        title="AI"
-        description="Configure built-in models and providers for this Codedock instance."
-        action={
-          <p className="font-bold text-[10px] text-muted-foreground uppercase tracking-widest">
-            Default <span className="text-foreground">{defaultProvider}</span>
-          </p>
-        }
-      />
+      <div className="flex justify-end">
+        <p className="font-bold text-[10px] text-muted-foreground uppercase tracking-widest">
+          Default <span className="text-foreground">{defaultProvider}</span>
+        </p>
+      </div>
 
       <div className="grid grid-cols-1 gap-6 md:grid-cols-3">
         {PROVIDERS.map((provider) => {

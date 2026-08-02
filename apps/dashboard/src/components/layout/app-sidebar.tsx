@@ -1,7 +1,11 @@
 import { Link } from '@tanstack/react-router';
 import { FolderKanban, Moon, PanelLeftClose, PanelLeftOpen, Sun, X } from 'lucide-react';
 import { useTheme } from 'next-themes';
-import { platformNavigation, primaryNavigation } from './dashboard-navigation';
+import {
+  infrastructureNavigation,
+  primaryNavigation,
+  systemNavigation,
+} from './dashboard-navigation';
 import { NavItem, type NavItemProps } from './nav-item';
 import { OrganizationSwitcher } from './organization-switcher';
 
@@ -21,8 +25,17 @@ const navGroups: NavGroup[] = [
     })),
   },
   {
-    title: 'Settings',
-    items: platformNavigation.map(({ title, to, icon, exact }) => ({
+    title: 'Infrastructure',
+    items: infrastructureNavigation.map(({ title, to, icon, exact }) => ({
+      title,
+      url: to,
+      icon,
+      exact,
+    })),
+  },
+  {
+    title: 'System',
+    items: systemNavigation.map(({ title, to, icon, exact }) => ({
       title,
       url: to,
       icon,

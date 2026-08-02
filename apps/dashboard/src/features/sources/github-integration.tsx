@@ -1,4 +1,4 @@
-import { useNavigate } from '@tanstack/react-router';
+import { useNavigate, useRouterState } from '@tanstack/react-router';
 import { Edit, Plus, Trash } from 'lucide-react';
 import { useEffect, useState } from 'react';
 import { toast } from 'sonner';
@@ -10,7 +10,6 @@ import {
   useGetGitApps,
   useSaveGitApp,
 } from '#/features/settings';
-import { Route } from '#/routes/_dashboard.sources';
 import { GithubAppDialogs, GithubIcon } from './github-app-dialogs';
 
 export function GithubIntegration() {
@@ -33,7 +32,7 @@ export function GithubIntegration() {
   const [privateKey, setPrivateKey] = useState('');
 
   const navigate = useNavigate();
-  const search = Route.useSearch();
+  const search = useRouterState({ select: (state) => state.location.search as { code?: string } });
 
   useEffect(() => {
     const code = search.code;
@@ -42,13 +41,13 @@ export function GithubIntegration() {
         { code },
         {
           onSuccess: () => {
-            navigate({ to: '/sources', replace: true });
+            navigate({ to: '/settings', search: { tab: 'sources' } as never, replace: true });
             toast.success('GitHub App connected successfully!');
             setIsEditing(false);
             setEditingApp(null);
           },
           onError: (err) => {
-            navigate({ to: '/sources', replace: true });
+            navigate({ to: '/settings', search: { tab: 'sources' } as never, replace: true });
             toast.error(err.message || 'Failed to connect GitHub App');
           },
         }
@@ -130,7 +129,7 @@ export function GithubIntegration() {
           const baseManifest = {
             name: `codedock-${Math.random().toString(36).substring(7)}`,
             url: window.location.origin,
-            redirect_url: `${window.location.origin}/dashboard/sources`,
+            redirect_url: `${window.location.origin}/settings?tab=sources`,
             public: false,
             default_permissions: {
               contents: 'read',

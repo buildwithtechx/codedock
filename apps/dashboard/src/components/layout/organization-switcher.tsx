@@ -1,5 +1,5 @@
 import { useNavigate } from '@tanstack/react-router';
-import { ArrowUpRight, Building2, Check, ChevronsUpDown, LogOut, UserRound } from 'lucide-react';
+import { Building2, Check, ChevronsUpDown, LogOut, UserRound } from 'lucide-react';
 import { useEffect } from 'react';
 import {
   DropdownMenu,
@@ -98,15 +98,6 @@ export function OrganizationSwitcher({ collapsed }: { collapsed: boolean }) {
             {organization.id === selected.id && <Check className="h-4 w-4 text-primary" />}
           </DropdownMenuItem>
         ))}
-        <DropdownMenuSeparator />
-        <DropdownMenuItem
-          onSelect={() => void navigate({ to: '/organizations' })}
-          className="min-h-10 gap-2.5 rounded-lg px-2.5 py-2 text-muted-foreground"
-        >
-          <Building2 className="h-4 w-4" />
-          <span className="flex-1">Manage organizations</span>
-          <ArrowUpRight className="h-3.5 w-3.5" />
-        </DropdownMenuItem>
         <DropdownMenuSeparator />
         <div className="flex min-h-12 items-center gap-2.5 rounded-lg px-2.5 py-2">
           <div className="flex h-7 w-7 shrink-0 items-center justify-center rounded-full bg-muted font-semibold text-[10px] text-muted-foreground">

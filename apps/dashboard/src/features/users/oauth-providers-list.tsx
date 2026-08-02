@@ -115,25 +115,24 @@ export const OAuthProvidersList = () => {
     setForm((f) => ({ ...f, [providerId]: { ...f[providerId], [key]: value } }));
   };
 
-  const handleSaveAll = async () => {
-    setSaving('all');
+  const handleSaveProvider = async (provider: ProviderConfig) => {
+    setSaving(provider.id);
     try {
-      await Promise.all(
-        PROVIDERS.map((p) => {
-          const s = form[p.id] as SaveOAuthProviderRequest;
-          const payload = {
-            ...s,
-            redirectUri: `${window.location.origin}/api/auth/oauth/${p.id}/callback`,
-            clientSecret: s.clientSecret === '********' ? undefined : s.clientSecret,
-            enabled:
-              !s.clientId || (!s.clientSecret && s.clientSecret !== '********') ? false : s.enabled,
-          };
-          return save({ payload });
-        })
-      );
-      toast.success('OAuth providers saved');
+      const state = form[provider.id] as SaveOAuthProviderRequest;
+      await save({
+        payload: {
+          ...state,
+          redirectUri: `${window.location.origin}/api/auth/oauth/${provider.id}/callback`,
+          clientSecret: state.clientSecret === '********' ? undefined : state.clientSecret,
+          enabled:
+            !state.clientId || (!state.clientSecret && state.clientSecret !== '********')
+              ? false
+              : state.enabled,
+        },
+      });
+      toast.success(`${provider.name} OAuth settings saved`);
     } catch {
-      toast.error('Failed to save OAuth providers');
+      toast.error(`Failed to save ${provider.name} OAuth settings`);
     } finally {
       setSaving(null);
     }
@@ -151,26 +150,20 @@ export const OAuthProvidersList = () => {
 
   return (
     <div className="space-y-6">
-      <div className="flex items-center justify-between">
-        <div>
-          <h2 className="font-semibold text-lg">OAuth Providers</h2>
-          <p className="text-muted-foreground text-sm">
-            Enable OAuth login for users. The redirect URI is{' '}
-            <code className="rounded bg-muted px-1.5 py-0.5 font-mono text-xs">
-              {window.location.origin}/api/auth/oauth/[provider]/callback
-            </code>
-          </p>
-        </div>
-        <Button onClick={handleSaveAll} disabled={saving === 'all' || isPending}>
-          <Check className="mr-2 h-4 w-4" />
-          {saving === 'all' ? 'Saving…' : 'Save Changes'}
-        </Button>
-      </div>
+      <p className="text-muted-foreground text-sm">
+        The redirect URI is{' '}
+        <code className="rounded bg-muted px-1.5 py-0.5 font-mono text-xs">
+          {window.location.origin}/api/auth/oauth/[provider]/callback
+        </code>
+      </p>
 
       {PROVIDERS.map((provider) => {
         const state = form[provider.id] ?? {};
         return (
-          <div key={provider.id} className="rounded-xl border border-border/50 bg-card/40 p-6">
+          <div
+            key={provider.id}
+            className="rounded-xl border border-border/80 bg-card p-6 shadow-sm"
+          >
             <div className="mb-5 flex items-center justify-between">
               <span className="font-semibold text-sm">{provider.name}</span>
               <div className="flex items-center gap-2.5">
@@ -197,6 +190,12 @@ export const OAuthProvidersList = () => {
                   />
                 </div>
               ))}
+            </div>
+            <div className="mt-5 flex justify-end">
+              <Button size="sm" onClick={() => handleSaveProvider(provider)} disabled={isPending}>
+                <Check className="mr-2 h-4 w-4" />
+                {saving === provider.id ? 'Saving...' : `Save ${provider.name}`}
+              </Button>
             </div>
           </div>
         );

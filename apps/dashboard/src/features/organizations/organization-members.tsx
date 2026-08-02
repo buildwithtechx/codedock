@@ -47,9 +47,9 @@ export function OrganizationMembers({ organizationId }: { organizationId: string
     <div className="space-y-4">
       <div className="flex items-center justify-between">
         <div>
-          <h3 className="font-semibold text-lg">Organization Members</h3>
+          <h3 className="font-semibold text-lg">Team Members</h3>
           <p className="text-muted-foreground text-sm">
-            Manage who has access to this organization and its projects.
+            Manage who has access to this workspace and its projects.
           </p>
         </div>
         <Button onClick={() => setInviteOpen(true)} size="sm">
