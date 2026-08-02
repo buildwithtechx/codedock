@@ -4,9 +4,11 @@ import type { CanvasSummary } from '#/features/projects';
 export function HomeRuntimeSummary({
   projects,
   isLoading,
+  isUnavailable = false,
 }: {
   projects: CanvasSummary[];
   isLoading: boolean;
+  isUnavailable?: boolean;
 }) {
   const totalServices = projects.reduce((total, project) => total + project.totalServices, 0);
   const onlineServices = projects.reduce((total, project) => total + project.onlineServices, 0);
@@ -43,7 +45,9 @@ export function HomeRuntimeSummary({
               </div>
               <span className="text-muted-foreground text-sm">{item.label}</span>
             </div>
-            <span className="font-semibold text-base">{isLoading ? '–' : item.value}</span>
+            <span className="font-semibold text-base">
+              {isLoading || isUnavailable ? '–' : item.value}
+            </span>
           </div>
         ))}
       </div>
@@ -53,7 +57,9 @@ export function HomeRuntimeSummary({
             <CheckCircle2 className="h-4 w-4 text-emerald-500" />
             Service health
           </span>
-          <span className="font-semibold text-emerald-500">{isLoading ? '–' : `${health}%`}</span>
+          <span className="font-semibold text-emerald-500">
+            {isLoading || isUnavailable ? '–' : `${health}%`}
+          </span>
         </div>
       </div>
     </aside>

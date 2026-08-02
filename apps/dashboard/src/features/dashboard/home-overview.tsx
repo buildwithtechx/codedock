@@ -1,6 +1,7 @@
 import { useNavigate } from '@tanstack/react-router';
 import { PageFrame } from '#/components/layout/page-frame';
 import { PageHeader } from '#/components/layout/page-header';
+import { QueryErrorState } from '#/components/ui/query-error-state';
 import { useListCanvasSummaries } from '#/hooks/use-canvas';
 import { useAuthStore } from '#/stores/auth-store';
 import { HomeNextStep } from './home-next-step';
@@ -11,7 +12,7 @@ import { HomeShortcuts } from './home-shortcuts';
 export function HomeOverview() {
   const navigate = useNavigate();
   const { user } = useAuthStore();
-  const { data, isLoading } = useListCanvasSummaries();
+  const { data, isLoading, isError, refetch } = useListCanvasSummaries();
   const projects = data?.data || [];
   const firstName = user?.name?.trim().split(/\s+/)[0] || 'there';
   const hour = new Date().getHours();
@@ -26,21 +27,33 @@ export function HomeOverview() {
       <PageFrame
         rail={
           <div className="space-y-4">
-            <HomeRuntimeSummary projects={projects} isLoading={isLoading} />
-            <HomeNextStep
-              onCreateProject={() => void navigate({ to: '/projects/new' })}
-              projectCount={projects.length}
-            />
+            <HomeRuntimeSummary projects={projects} isLoading={isLoading} isUnavailable={isError} />
+            {!isError && (
+              <HomeNextStep
+                onCreateProject={() => void navigate({ to: '/projects/new' })}
+                projectCount={projects.length}
+              />
+            )}
           </div>
         }
       >
         <div className="space-y-6">
-          <HomeProjectList
-            projects={projects}
-            isLoading={isLoading}
-            onCreateProject={() => void navigate({ to: '/projects/new' })}
-          />
-          <HomeShortcuts />
+          {isError ? (
+            <QueryErrorState
+              title="Workspace overview is unavailable"
+              description="Codedock could not load the active workspace."
+              onRetry={() => void refetch()}
+            />
+          ) : (
+            <>
+              <HomeProjectList
+                projects={projects}
+                isLoading={isLoading}
+                onCreateProject={() => void navigate({ to: '/projects/new' })}
+              />
+              <HomeShortcuts />
+            </>
+          )}
         </div>
       </PageFrame>
     </div>

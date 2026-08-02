@@ -1,7 +1,6 @@
 import type { LucideIcon } from 'lucide-react';
 import {
   CalendarDays,
-  ClipboardList,
   CloudCog,
   FolderKanban,
   Globe2,
@@ -103,12 +102,6 @@ export const contextualNavigation: DashboardNavigationItem[] = [
     description: 'Recurring tasks and service jobs',
     to: '/scheduled-tasks',
     icon: CalendarDays,
-  },
-  {
-    title: 'Audit log',
-    description: 'Security and account activity',
-    to: '/audit-logs',
-    icon: ClipboardList,
   },
   {
     title: 'Profile',

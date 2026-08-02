@@ -42,23 +42,27 @@ export function OrganizationMembers({ organizationId }: { organizationId: string
 
   const currentUserMember = members?.find((m) => m.userId === user?.id || m.email === user?.email);
   const isCurrentUserOwner = currentUserMember?.permission === 'owner';
+  const canManageTeam =
+    currentUserMember?.permission === 'owner' || currentUserMember?.permission === 'admin';
 
   return (
     <div className="space-y-4">
-      <div className="flex items-center justify-between">
+      <div className="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
         <div>
-          <h3 className="font-semibold text-lg">Team Members</h3>
+          <h3 className="font-semibold text-lg">Members</h3>
           <p className="text-muted-foreground text-sm">
             Manage who has access to this workspace and its projects.
           </p>
         </div>
-        <Button onClick={() => setInviteOpen(true)} size="sm">
-          <Plus className="mr-2 h-4 w-4" />
-          Invite Member
-        </Button>
+        {canManageTeam && (
+          <Button onClick={() => setInviteOpen(true)} size="sm">
+            <Plus className="mr-2 h-4 w-4" />
+            Invite Member
+          </Button>
+        )}
       </div>
 
-      <div className="rounded-md border">
+      <div className="overflow-x-auto rounded-md border">
         <Table>
           <TableHeader>
             <TableRow>
@@ -96,6 +100,7 @@ export function OrganizationMembers({ organizationId }: { organizationId: string
                     member={member}
                     organizationId={organizationId}
                     isCurrentUserOwner={isCurrentUserOwner}
+                    canManageTeam={canManageTeam}
                     ownerCount={ownerCount}
                   />
                 ));
@@ -119,11 +124,13 @@ function MemberRow({
   member,
   organizationId,
   isCurrentUserOwner,
+  canManageTeam,
   ownerCount,
 }: {
   member: OrganizationMember;
   organizationId: string;
   isCurrentUserOwner: boolean;
+  canManageTeam: boolean;
   ownerCount: number;
 }) {
   const { mutateAsync: updateMember, isPending: isUpdating } =
@@ -151,7 +158,7 @@ function MemberRow({
   };
 
   const isPending = isUpdating || isRemoving;
-  const canEditRole = isCurrentUserOwner && member.permission !== 'owner';
+  const canEditRole = isCurrentUserOwner && member.permission !== 'owner' && Boolean(member.userId);
 
   return (
     <TableRow>
@@ -189,9 +196,12 @@ function MemberRow({
           size="icon"
           onClick={handleRemove}
           disabled={
-            isPending || (member.permission === 'owner' && (ownerCount <= 1 || !isCurrentUserOwner))
+            isPending ||
+            !canManageTeam ||
+            (member.permission === 'owner' && (ownerCount <= 1 || !isCurrentUserOwner))
           }
           className="text-destructive hover:bg-destructive/10 hover:text-destructive"
+          aria-label={`Remove ${member.email} from the workspace`}
         >
           {isRemoving ? (
             <Loader2 className="h-4 w-4 animate-spin" />

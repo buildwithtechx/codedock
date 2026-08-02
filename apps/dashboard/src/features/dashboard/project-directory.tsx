@@ -2,11 +2,12 @@ import { Link } from '@tanstack/react-router';
 import { FolderKanban, Loader2, Plus } from 'lucide-react';
 import { PageHeader } from '#/components/layout/page-header';
 import { Button } from '#/components/ui/button';
+import { QueryErrorState } from '#/components/ui/query-error-state';
 import { ProjectCard } from '#/features/projects/project-card';
 import { useListCanvasSummaries } from '#/hooks/use-canvas';
 
 export function ProjectDirectory() {
-  const { data, isLoading } = useListCanvasSummaries();
+  const { data, isLoading, isError, refetch } = useListCanvasSummaries();
   const projects = data?.data || [];
 
   return (
@@ -28,6 +29,12 @@ export function ProjectDirectory() {
         <div className="flex min-h-80 items-center justify-center rounded-2xl border border-border/80 bg-card">
           <Loader2 className="h-5 w-5 animate-spin text-muted-foreground" />
         </div>
+      ) : isError ? (
+        <QueryErrorState
+          title="Projects are unavailable"
+          description="Codedock could not load projects for the active workspace."
+          onRetry={() => void refetch()}
+        />
       ) : projects.length === 0 ? (
         <div className="flex min-h-80 flex-col items-center justify-center rounded-2xl border border-border border-dashed bg-card px-6 text-center">
           <div className="flex h-12 w-12 items-center justify-center rounded-2xl bg-primary/10 text-primary">

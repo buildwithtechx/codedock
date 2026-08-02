@@ -4,6 +4,7 @@ import { useState } from 'react';
 import { PageFrame } from '#/components/layout/page-frame';
 import { PageHeader } from '#/components/layout/page-header';
 import { Button } from '#/components/ui/button';
+import { QueryErrorState } from '#/components/ui/query-error-state';
 import {
   Select,
   SelectContent,
@@ -31,14 +32,28 @@ function DeploymentsPage() {
   const [selectedProjectId, setSelectedProjectId] = useState<string>('');
   const [selectedServiceId, setSelectedServiceId] = useState<string>('');
 
-  const { data: projectsResponse, isLoading: isLoadingProjects } = useListProjects();
+  const {
+    data: projectsResponse,
+    isLoading: isLoadingProjects,
+    isError: isProjectsError,
+    refetch: refetchProjects,
+  } = useListProjects();
   const projects = projectsResponse?.data?.records || [];
 
-  const { data: appsResponse, isLoading: isLoadingApps } = useListByProject(selectedProjectId);
+  const {
+    data: appsResponse,
+    isLoading: isLoadingApps,
+    isError: isAppsError,
+    refetch: refetchApps,
+  } = useListByProject(selectedProjectId);
   const apps = appsResponse?.data || [];
 
-  const { data: deploymentsResponse, isLoading: isLoadingDeployments } =
-    useListByService(selectedServiceId);
+  const {
+    data: deploymentsResponse,
+    isLoading: isLoadingDeployments,
+    isError: isDeploymentsError,
+    refetch: refetchDeployments,
+  } = useListByService(selectedServiceId);
   const deploymentsPaginated = deploymentsResponse?.data;
   const deployments = deploymentsPaginated?.records || [];
 
@@ -92,105 +107,131 @@ function DeploymentsPage() {
         }
       >
         <div className="space-y-4">
-          <div className="flex flex-col gap-3 rounded-2xl border border-border/80 bg-card p-4 sm:flex-row sm:items-center">
-            <Select
-              value={selectedProjectId}
-              onValueChange={(val) => {
-                setSelectedProjectId(val);
-                setSelectedServiceId('');
-              }}
-            >
-              <SelectTrigger className="w-full sm:w-52">
-                <SelectValue placeholder="Select Project" />
-              </SelectTrigger>
-              <SelectContent>
-                {projects.map((project: any) => (
-                  <SelectItem key={project.id} value={project.id}>
-                    {project.name}
-                  </SelectItem>
-                ))}
-              </SelectContent>
-            </Select>
+          {isProjectsError ? (
+            <QueryErrorState
+              title="Deployments are unavailable"
+              description="Codedock could not load projects for the active workspace."
+              onRetry={() => void refetchProjects()}
+            />
+          ) : (
+            <>
+              <div className="flex flex-col gap-3 rounded-2xl border border-border/80 bg-card p-4 sm:flex-row sm:items-center">
+                <Select
+                  value={selectedProjectId}
+                  onValueChange={(val) => {
+                    setSelectedProjectId(val);
+                    setSelectedServiceId('');
+                  }}
+                >
+                  <SelectTrigger className="w-full sm:w-52">
+                    <SelectValue placeholder="Select Project" />
+                  </SelectTrigger>
+                  <SelectContent>
+                    {projects.map((project: any) => (
+                      <SelectItem key={project.id} value={project.id}>
+                        {project.name}
+                      </SelectItem>
+                    ))}
+                  </SelectContent>
+                </Select>
 
-            <Select
-              value={selectedServiceId}
-              onValueChange={setSelectedServiceId}
-              disabled={!selectedProjectId || apps.length === 0}
-            >
-              <SelectTrigger className="w-full sm:w-52">
-                <SelectValue placeholder="Select App" />
-              </SelectTrigger>
-              <SelectContent>
-                {apps.map((app: any) => (
-                  <SelectItem key={app.id} value={app.id}>
-                    {app.name}
-                  </SelectItem>
-                ))}
-              </SelectContent>
-            </Select>
-          </div>
-          <section className="overflow-hidden rounded-2xl border border-border/80 bg-card shadow-sm">
-            <div className="flex items-center justify-between border-border/70 border-b px-5 py-4">
-              <div className="flex items-center gap-3">
-                <div className="flex h-9 w-9 items-center justify-center rounded-xl bg-primary/12 text-primary">
-                  <Rocket className="h-4 w-4" />
-                </div>
-                <div>
-                  <h2 className="font-semibold text-sm">Release history</h2>
-                  <p className="text-muted-foreground text-xs">
-                    {selectedServiceId ? `${deployments.length} deployments` : 'Select an app'}
-                  </p>
-                </div>
+                <Select
+                  value={selectedServiceId}
+                  onValueChange={setSelectedServiceId}
+                  disabled={!selectedProjectId || apps.length === 0}
+                >
+                  <SelectTrigger className="w-full sm:w-52">
+                    <SelectValue placeholder="Select App" />
+                  </SelectTrigger>
+                  <SelectContent>
+                    {apps.map((app: any) => (
+                      <SelectItem key={app.id} value={app.id}>
+                        {app.name}
+                      </SelectItem>
+                    ))}
+                  </SelectContent>
+                </Select>
               </div>
-            </div>
-            {isLoadingProjects || isLoadingApps || isLoadingDeployments ? (
-              <div className="flex justify-center p-12">
-                <Loader2 className="h-8 w-8 animate-spin text-muted-foreground" />
-              </div>
-            ) : !selectedServiceId ? (
-              <div className="flex min-h-80 flex-col items-center justify-center px-6 text-center">
-                <Rocket className="h-8 w-8 text-primary/35" />
-                <h3 className="mt-4 font-semibold">Choose an app to inspect releases</h3>
-                <p className="mt-1 max-w-sm text-muted-foreground text-sm">
-                  Select a project, then an app, to view build status, commits, and deployment
-                  activity.
-                </p>
-              </div>
-            ) : deployments.length === 0 ? (
-              <div className="flex min-h-80 flex-col items-center justify-center px-6 text-center">
-                <Activity className="h-8 w-8 text-muted-foreground/45" />
-                <h3 className="mt-4 font-semibold">No deployments for this app</h3>
-                <p className="mt-1 max-w-sm text-muted-foreground text-sm">
-                  A deployment will appear here after the app is built or redeployed.
-                </p>
-              </div>
-            ) : (
-              <Table>
-                <TableHeader>
-                  <TableRow>
-                    <TableHead>Status</TableHead>
-                    <TableHead>Branch</TableHead>
-                    <TableHead>Commit</TableHead>
-                    <TableHead>Trigger</TableHead>
-                    <TableHead>Created</TableHead>
-                  </TableRow>
-                </TableHeader>
-                <TableBody>
-                  {deployments.map((deployment: any) => (
-                    <TableRow key={deployment.id}>
-                      <TableCell className="font-medium">{deployment.status}</TableCell>
-                      <TableCell>{deployment.branch || '-'}</TableCell>
-                      <TableCell className="max-w-25 truncate font-mono text-xs">
-                        {deployment.commitHash ? deployment.commitHash.substring(0, 7) : '-'}
-                      </TableCell>
-                      <TableCell>{deployment.trigger || '-'}</TableCell>
-                      <TableCell>{new Date(deployment.createdAt).toLocaleString()}</TableCell>
-                    </TableRow>
-                  ))}
-                </TableBody>
-              </Table>
-            )}
-          </section>
+              {isAppsError ? (
+                <QueryErrorState
+                  title="Apps are unavailable"
+                  description="Codedock could not load the selected project's apps."
+                  onRetry={() => void refetchApps()}
+                />
+              ) : isDeploymentsError ? (
+                <QueryErrorState
+                  title="Deployment history is unavailable"
+                  description="Codedock could not load deployments for the selected app."
+                  onRetry={() => void refetchDeployments()}
+                />
+              ) : (
+                <section className="overflow-hidden rounded-2xl border border-border/80 bg-card shadow-sm">
+                  <div className="flex items-center justify-between border-border/70 border-b px-5 py-4">
+                    <div className="flex items-center gap-3">
+                      <div className="flex h-9 w-9 items-center justify-center rounded-xl bg-primary/12 text-primary">
+                        <Rocket className="h-4 w-4" />
+                      </div>
+                      <div>
+                        <h2 className="font-semibold text-sm">Release history</h2>
+                        <p className="text-muted-foreground text-xs">
+                          {selectedServiceId
+                            ? `${deployments.length} deployments`
+                            : 'Select an app'}
+                        </p>
+                      </div>
+                    </div>
+                  </div>
+                  {isLoadingProjects || isLoadingApps || isLoadingDeployments ? (
+                    <div className="flex justify-center p-12">
+                      <Loader2 className="h-8 w-8 animate-spin text-muted-foreground" />
+                    </div>
+                  ) : !selectedServiceId ? (
+                    <div className="flex min-h-80 flex-col items-center justify-center px-6 text-center">
+                      <Rocket className="h-8 w-8 text-primary/35" />
+                      <h3 className="mt-4 font-semibold">Choose an app to inspect releases</h3>
+                      <p className="mt-1 max-w-sm text-muted-foreground text-sm">
+                        Select a project, then an app, to view build status, commits, and deployment
+                        activity.
+                      </p>
+                    </div>
+                  ) : deployments.length === 0 ? (
+                    <div className="flex min-h-80 flex-col items-center justify-center px-6 text-center">
+                      <Activity className="h-8 w-8 text-muted-foreground/45" />
+                      <h3 className="mt-4 font-semibold">No deployments for this app</h3>
+                      <p className="mt-1 max-w-sm text-muted-foreground text-sm">
+                        A deployment will appear here after the app is built or redeployed.
+                      </p>
+                    </div>
+                  ) : (
+                    <Table>
+                      <TableHeader>
+                        <TableRow>
+                          <TableHead>Status</TableHead>
+                          <TableHead>Branch</TableHead>
+                          <TableHead>Commit</TableHead>
+                          <TableHead>Trigger</TableHead>
+                          <TableHead>Created</TableHead>
+                        </TableRow>
+                      </TableHeader>
+                      <TableBody>
+                        {deployments.map((deployment: any) => (
+                          <TableRow key={deployment.id}>
+                            <TableCell className="font-medium">{deployment.status}</TableCell>
+                            <TableCell>{deployment.branch || '-'}</TableCell>
+                            <TableCell className="max-w-25 truncate font-mono text-xs">
+                              {deployment.commitHash ? deployment.commitHash.substring(0, 7) : '-'}
+                            </TableCell>
+                            <TableCell>{deployment.trigger || '-'}</TableCell>
+                            <TableCell>{new Date(deployment.createdAt).toLocaleString()}</TableCell>
+                          </TableRow>
+                        ))}
+                      </TableBody>
+                    </Table>
+                  )}
+                </section>
+              )}
+            </>
+          )}
         </div>
       </PageFrame>
     </div>

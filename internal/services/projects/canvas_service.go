@@ -17,6 +17,9 @@ func NewCanvasService(r repositories.CanvasRepository) *CanvasService {
 }
 
 func (s *CanvasService) ListSummaries(ctx context.Context, organizationID string) ([]models.CanvasSummary, error) {
+	if organizationID == "" {
+		return nil, errors.New("organization id required")
+	}
 	return s.repo.ListCanvasSummaries(ctx, organizationID)
 }
 

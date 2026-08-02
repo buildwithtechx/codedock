@@ -68,7 +68,7 @@ export function OrganizationSwitcher({ collapsed }: { collapsed: boolean }) {
                   {selected.name}
                 </p>
                 <p className="mt-0.5 text-[10px] text-sidebar-foreground/45 uppercase tracking-[0.14em]">
-                  Organization
+                  Workspace
                 </p>
               </div>
               <ChevronsUpDown className="h-4 w-4 shrink-0 text-sidebar-foreground/40 transition-colors group-hover:text-sidebar-foreground/70" />
@@ -83,7 +83,7 @@ export function OrganizationSwitcher({ collapsed }: { collapsed: boolean }) {
         collisionPadding={16}
       >
         <DropdownMenuLabel className="px-2.5 pt-1.5 pb-2 font-medium text-[10px] uppercase tracking-[0.14em]">
-          Organizations
+          Switch workspace
         </DropdownMenuLabel>
         {organizations.map((organization) => (
           <DropdownMenuItem

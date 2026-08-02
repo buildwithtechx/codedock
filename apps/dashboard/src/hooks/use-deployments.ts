@@ -5,6 +5,7 @@ export const useListByService = (serviceId: string) => {
   return useQuery({
     queryKey: ['deployments', 'listByService', serviceId].filter(Boolean),
     queryFn: () => deploymentsService.listByService(serviceId),
+    enabled: Boolean(serviceId),
   });
 };
 

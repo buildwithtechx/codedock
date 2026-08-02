@@ -16,6 +16,7 @@ export const useListByProject = (projectId: string) => {
   return useQuery({
     queryKey: ['apps', 'listByProject', projectId].filter(Boolean),
     queryFn: () => appsService.listByProject(projectId),
+    enabled: Boolean(projectId),
   });
 };
 
@@ -23,6 +24,7 @@ export const useListByEnvironment = (environmentId: string) => {
   return useQuery({
     queryKey: ['apps', 'listByEnvironment', environmentId].filter(Boolean),
     queryFn: () => appsService.listByEnvironment(environmentId),
+    enabled: Boolean(environmentId),
   });
 };
 

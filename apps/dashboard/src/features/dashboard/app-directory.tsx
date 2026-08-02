@@ -1,7 +1,8 @@
 import { Link } from '@tanstack/react-router';
-import { ArrowUpRight, Box, CircleAlert, Loader2, Plus } from 'lucide-react';
+import { ArrowUpRight, Box, Loader2, Plus } from 'lucide-react';
 import { PageHeader } from '#/components/layout/page-header';
 import { Button } from '#/components/ui/button';
+import { QueryErrorState } from '#/components/ui/query-error-state';
 import { useListAppsByOrganization } from '#/hooks/use-apps';
 
 const statusClasses = {
@@ -13,7 +14,7 @@ const statusClasses = {
 };
 
 export function AppDirectory() {
-  const { data, isLoading, isError } = useListAppsByOrganization();
+  const { data, isLoading, isError, refetch } = useListAppsByOrganization();
   const apps = data?.data || [];
 
   return (
@@ -36,13 +37,11 @@ export function AppDirectory() {
           <Loader2 className="h-5 w-5 animate-spin text-muted-foreground" />
         </div>
       ) : isError ? (
-        <div className="flex min-h-80 flex-col items-center justify-center rounded-2xl border border-border/80 bg-card px-6 text-center">
-          <CircleAlert className="h-6 w-6 text-destructive" />
-          <h2 className="mt-3 font-semibold">Apps are unavailable</h2>
-          <p className="mt-1 text-muted-foreground text-sm">
-            Refresh the page or check your organization access.
-          </p>
-        </div>
+        <QueryErrorState
+          title="Apps are unavailable"
+          description="Codedock could not load apps for the active workspace."
+          onRetry={() => void refetch()}
+        />
       ) : apps.length === 0 ? (
         <div className="flex min-h-80 flex-col items-center justify-center rounded-2xl border border-border border-dashed bg-card px-6 text-center">
           <div className="flex h-12 w-12 items-center justify-center rounded-2xl bg-primary/10 text-primary">
