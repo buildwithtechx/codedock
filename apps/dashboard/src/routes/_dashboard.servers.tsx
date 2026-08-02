@@ -20,7 +20,11 @@ function ServersPage() {
     <div className="space-y-6">
       <PageHeader
         title="Servers"
-        description="Manage your distributed fleet of worker servers."
+        description={
+          isLoading
+            ? 'Loading infrastructure...'
+            : `${servers?.length ?? 0} connected server${servers?.length === 1 ? '' : 's'}`
+        }
         action={
           <Link to="/servers/new">
             <Button className="gap-2">

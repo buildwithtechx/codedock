@@ -1,11 +1,18 @@
 import { Link } from '@tanstack/react-router';
-import { ArrowRight, FolderPlus, Plus } from 'lucide-react';
+import { ArrowRight, Boxes, FolderPlus, GitBranch, Globe2, Plus, Rocket } from 'lucide-react';
 import { Button } from '#/components/ui/button';
+
+const projectCapabilities = [
+  { title: 'Git-driven', detail: 'Connect source control', icon: GitBranch },
+  { title: 'Applications', detail: 'Group runtime services', icon: Boxes },
+  { title: 'Release history', detail: 'Track every deployment', icon: Rocket },
+  { title: 'Domains', detail: 'Manage DNS and routing', icon: Globe2 },
+];
 
 export function ProjectEmptyState() {
   return (
-    <section className="flex min-h-[30rem] items-center justify-center py-10 text-center">
-      <div className="max-w-lg">
+    <section className="flex min-h-[34rem] items-center justify-center py-12 text-center">
+      <div className="w-full max-w-3xl">
         <div className="relative mx-auto h-32 w-56" aria-hidden="true">
           <span className="absolute top-8 left-7 h-16 w-24 rounded-2xl bg-card" />
           <span className="absolute top-3 left-16 h-18 w-28 rounded-2xl border border-border/70 bg-card" />
@@ -29,6 +36,22 @@ export function ProjectEmptyState() {
             <ArrowRight className="h-4 w-4" />
           </Button>
         </Link>
+        <div className="mt-11">
+          <p className="mb-4 font-medium text-[10px] text-muted-foreground uppercase tracking-[0.16em]">
+            A project keeps the work together
+          </p>
+          <div className="grid gap-3 text-left sm:grid-cols-4">
+            {projectCapabilities.map(({ title, detail, icon: Icon }) => (
+              <div key={title} className="rounded-2xl bg-card p-4">
+                <span className="flex h-8 w-8 items-center justify-center rounded-lg bg-muted text-muted-foreground">
+                  <Icon className="h-4 w-4" />
+                </span>
+                <p className="mt-4 font-semibold text-sm">{title}</p>
+                <p className="mt-1 text-muted-foreground text-xs leading-5">{detail}</p>
+              </div>
+            ))}
+          </div>
+        </div>
       </div>
     </section>
   );

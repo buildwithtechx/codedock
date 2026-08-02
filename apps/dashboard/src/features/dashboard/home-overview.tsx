@@ -4,6 +4,8 @@ import { PageHeader } from '#/components/layout/page-header';
 import { QueryErrorState } from '#/components/ui/query-error-state';
 import { useListCanvasSummaries } from '#/hooks/use-canvas';
 import { useAuthStore } from '#/stores/auth-store';
+import { HomeAppInventory } from './home-app-inventory';
+import { HomeNextStep } from './home-next-step';
 import { HomeProjectList } from './home-project-list';
 import { HomeRuntimeSummary } from './home-runtime-summary';
 import { HomeShortcuts } from './home-shortcuts';
@@ -27,6 +29,8 @@ export function HomeOverview() {
         rail={
           <div className="space-y-4">
             <HomeRuntimeSummary projects={projects} isLoading={isLoading} isUnavailable={isError} />
+            <HomeNextStep hasProjects={projects.length > 0} />
+            <HomeAppInventory projects={projects} isLoading={isLoading} />
           </div>
         }
       >
@@ -44,7 +48,7 @@ export function HomeOverview() {
                 isLoading={isLoading}
                 onCreateProject={() => void navigate({ to: '/projects/new' })}
               />
-              {projects.length > 0 && <HomeShortcuts />}
+              <HomeShortcuts />
             </>
           )}
         </div>

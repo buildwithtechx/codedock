@@ -15,7 +15,11 @@ export function ProjectDirectory() {
     <div className="space-y-6">
       <PageHeader
         title="Projects"
-        description="Projects group the services and environments your team runs."
+        description={
+          isLoading
+            ? 'Loading projects...'
+            : `${projects.length} project${projects.length === 1 ? '' : 's'}`
+        }
         action={
           <Link to="/projects/new">
             <Button className="gap-2">

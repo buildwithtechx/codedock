@@ -1,6 +1,7 @@
-import { createFileRoute } from '@tanstack/react-router';
-import { UsersPage } from '#/features/users/users-page';
+import { createFileRoute, redirect } from '@tanstack/react-router';
 
 export const Route = createFileRoute('/_dashboard/users')({
-  component: UsersPage,
+  beforeLoad: () => {
+    throw redirect({ to: '/settings', search: { tab: 'team' } as never });
+  },
 });

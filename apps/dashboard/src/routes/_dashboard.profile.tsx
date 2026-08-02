@@ -1,5 +1,5 @@
 import { createFileRoute } from '@tanstack/react-router';
-import { User } from 'lucide-react';
+import { PageHeader } from '#/components/layout/page-header';
 import { BillingSection } from '#/features/profile/billing-section';
 import { Security2FASetup } from '#/features/profile/security-2fa-setup';
 import {
@@ -15,19 +15,10 @@ export const Route = createFileRoute('/_dashboard/profile')({
 function ProfilePage() {
   return (
     <div className="space-y-6">
-      <div className="mb-5 flex items-center justify-between">
-        <div className="flex items-center gap-3">
-          <div className="flex h-12 w-12 shrink-0 items-center justify-center rounded-lg border border-primary/20 bg-primary/10 text-primary">
-            <User className="h-6 w-6" />
-          </div>
-          <div>
-            <h1 className="font-bold text-xl">Profile & Security</h1>
-            <p className="text-muted-foreground text-sm">
-              Manage your personal profile and security preferences.
-            </p>
-          </div>
-        </div>
-      </div>
+      <PageHeader
+        title="Profile & security"
+        description="Manage your personal profile and security preferences."
+      />
 
       <div className="grid gap-6">
         <ProfileNameForm />

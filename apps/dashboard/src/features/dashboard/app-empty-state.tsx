@@ -1,11 +1,13 @@
 import { Link } from '@tanstack/react-router';
-import { Box, Database, Plus, Workflow } from 'lucide-react';
+import { ArrowRight, Box, Database, GitBranch, Plus, Server, Workflow } from 'lucide-react';
 import { Button } from '#/components/ui/button';
 
 const appCapabilities = [
-  { label: 'Web service', icon: Box },
-  { label: 'Database', icon: Database },
-  { label: 'Worker', icon: Workflow },
+  { label: 'Web service', detail: 'Build and deploy an application', icon: Box },
+  { label: 'Background worker', detail: 'Run asynchronous workloads', icon: Workflow },
+  { label: 'Database', detail: 'Provision application data', icon: Database },
+  { label: 'Docker image', detail: 'Deploy a ready-made container', icon: Server },
+  { label: 'Git repository', detail: 'Build from a source branch', icon: GitBranch },
 ];
 
 export function AppEmptyState() {
@@ -41,17 +43,37 @@ export function AppEmptyState() {
         </Link>
       </div>
       <div className="mx-auto mt-10 grid max-w-2xl gap-3 sm:grid-cols-3">
-        {appCapabilities.map(({ label, icon: Icon }) => (
-          <div
+        {appCapabilities.map(({ label, detail, icon: Icon }) => (
+          <Link
             key={label}
-            className="flex items-center gap-3 rounded-xl bg-card px-4 py-3.5 text-left"
+            to="/apps/new"
+            className="group flex items-center gap-3 rounded-xl bg-card px-4 py-3.5 text-left transition-colors hover:bg-muted/60"
           >
             <span className="flex h-9 w-9 items-center justify-center rounded-lg bg-muted/70 text-muted-foreground">
               <Icon className="h-4 w-4" />
             </span>
-            <p className="font-medium text-sm">{label}</p>
-          </div>
+            <span className="min-w-0 flex-1">
+              <span className="block font-medium text-sm">{label}</span>
+              <span className="mt-0.5 block truncate text-muted-foreground text-xs">{detail}</span>
+            </span>
+            <ArrowRight className="h-4 w-4 text-muted-foreground transition-colors group-hover:text-primary" />
+          </Link>
         ))}
+        <Link
+          to="/apps/new"
+          className="group flex items-center gap-3 rounded-xl border border-border/80 border-dashed bg-card/60 px-4 py-3.5 text-left transition-colors hover:bg-card"
+        >
+          <span className="flex h-9 w-9 items-center justify-center rounded-lg bg-muted/70 text-muted-foreground">
+            <Plus className="h-4 w-4" />
+          </span>
+          <span className="min-w-0 flex-1">
+            <span className="block font-medium text-sm">Explore deployment options</span>
+            <span className="mt-0.5 block truncate text-muted-foreground text-xs">
+              Choose a project to continue
+            </span>
+          </span>
+          <ArrowRight className="h-4 w-4 text-muted-foreground transition-colors group-hover:text-primary" />
+        </Link>
       </div>
     </section>
   );

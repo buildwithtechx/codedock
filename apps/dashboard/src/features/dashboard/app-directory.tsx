@@ -22,14 +22,20 @@ export function AppDirectory() {
     <div className="space-y-6">
       <PageHeader
         title="Apps"
-        description="Every application deployed in the active organization."
+        description={
+          isLoading
+            ? 'Loading applications...'
+            : `${apps.length} application${apps.length === 1 ? '' : 's'} deployed`
+        }
         action={
-          <Link to="/apps/new">
-            <Button className="gap-2">
-              <Plus className="h-4 w-4" />
-              New app
-            </Button>
-          </Link>
+          apps.length > 0 ? (
+            <Link to="/apps/new">
+              <Button className="gap-2">
+                <Plus className="h-4 w-4" />
+                New app
+              </Button>
+            </Link>
+          ) : undefined
         }
       />
 

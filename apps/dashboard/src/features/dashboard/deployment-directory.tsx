@@ -73,7 +73,11 @@ export function DeploymentDirectory() {
     <div className="space-y-6">
       <PageHeader
         title="Deployments"
-        description="Release activity across applications in the active organization."
+        description={
+          isLoading
+            ? 'Loading release activity...'
+            : `${deployments.length} release${deployments.length === 1 ? '' : 's'} across this organization`
+        }
         action={
           <Link to="/apps/new">
             <Button className="gap-2">

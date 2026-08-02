@@ -12,10 +12,6 @@ export function HomeProjectList({
   isLoading: boolean;
   onCreateProject: () => void;
 }) {
-  if (!isLoading && projects.length === 0) {
-    return <HomeFirstProject onCreateProject={onCreateProject} />;
-  }
-
   return (
     <section className="overflow-hidden rounded-2xl bg-card">
       <div className="flex items-center justify-between border-border/70 border-b px-5 py-4">
@@ -51,6 +47,8 @@ export function HomeProjectList({
             </div>
           ))}
         </div>
+      ) : projects.length === 0 ? (
+        <HomeFirstProject onCreateProject={onCreateProject} />
       ) : (
         <div className="divide-y divide-border/70">
           {projects.slice(0, 5).map((project) => (

@@ -32,7 +32,7 @@ export function ProjectContextSidebar({ projectId }: { projectId: string }) {
 
   return (
     <div className="space-y-3">
-      <section className="rounded-2xl border border-border/80 bg-card p-4 shadow-sm">
+      <section className="rounded-2xl bg-card p-4">
         <div className="flex items-start gap-3">
           <div className="flex h-9 w-9 shrink-0 items-center justify-center rounded-xl bg-primary/12 text-primary">
             <FolderKanban className="h-4 w-4" />
@@ -58,10 +58,7 @@ export function ProjectContextSidebar({ projectId }: { projectId: string }) {
         </div>
       </section>
 
-      <nav
-        className="rounded-2xl border border-border/80 bg-card p-2 shadow-sm"
-        aria-label="Project sections"
-      >
+      <nav className="rounded-2xl bg-card p-2" aria-label="Project sections">
         {navigation.map((item) => {
           const active = item.exact
             ? location.pathname === item.to || location.pathname === `${item.to}/`

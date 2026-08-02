@@ -64,7 +64,7 @@ type SectionProps = {
   children: React.ReactNode;
 };
 const Section = ({ icon, title, action, children }: SectionProps) => (
-  <div className="rounded-xl border border-border bg-card p-6">
+  <div className="rounded-2xl bg-card p-6">
     <div className="mb-4 flex items-center justify-between gap-4">
       <div className="flex items-center gap-3">
         <div className="flex h-8 w-8 items-center justify-center rounded-lg bg-primary/10 text-primary">
