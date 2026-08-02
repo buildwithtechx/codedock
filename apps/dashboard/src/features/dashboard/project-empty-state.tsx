@@ -1,5 +1,14 @@
 import { Link } from '@tanstack/react-router';
-import { ArrowRight, Boxes, FolderPlus, GitBranch, Globe2, Plus, Rocket } from 'lucide-react';
+import {
+  ArrowRight,
+  Boxes,
+  FolderPlus,
+  GitBranch,
+  Globe2,
+  LayoutTemplate,
+  Plus,
+  Rocket,
+} from 'lucide-react';
 import { Button } from '#/components/ui/button';
 
 const projectCapabilities = [
@@ -29,13 +38,21 @@ export function ProjectEmptyState() {
           Bring together the services, environments, and deployment activity that belong to one
           product.
         </p>
-        <Link to="/projects/new">
-          <Button className="mt-6 gap-2 px-5">
-            <Plus className="h-4 w-4" />
-            New project
-            <ArrowRight className="h-4 w-4" />
-          </Button>
-        </Link>
+        <div className="mt-6 flex flex-col items-center justify-center gap-2 sm:flex-row">
+          <Link to="/projects/new">
+            <Button className="gap-2 px-5">
+              <Plus className="h-4 w-4" />
+              New project
+              <ArrowRight className="h-4 w-4" />
+            </Button>
+          </Link>
+          <Link to="/projects/new" search={{ template: 'one-click' }}>
+            <Button variant="secondary" className="gap-2 px-5">
+              <LayoutTemplate className="h-4 w-4" />
+              Browse templates
+            </Button>
+          </Link>
+        </div>
         <div className="mt-11">
           <p className="mb-4 font-medium text-[10px] text-muted-foreground uppercase tracking-[0.16em]">
             A project keeps the work together

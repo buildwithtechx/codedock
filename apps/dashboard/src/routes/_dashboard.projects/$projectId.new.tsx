@@ -2,6 +2,7 @@ import { createFileRoute, useNavigate } from '@tanstack/react-router';
 import { Code2, Container, Database, GitBranch, LayoutTemplate, Loader2 } from 'lucide-react';
 import { useState } from 'react';
 import { toast } from 'sonner';
+import { z } from 'zod';
 import { Button } from '#/components/ui/button';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '#/components/ui/card';
 import { QueryErrorState } from '#/components/ui/query-error-state';
@@ -17,10 +18,14 @@ import {
 
 export const Route = createFileRoute('/_dashboard/projects/$projectId/new')({
   component: NewResourcePage,
+  validateSearch: z.object({
+    tab: z.enum(['resources', 'one-click', 'examples']).optional(),
+  }),
 });
 
 function NewResourcePage() {
   const { projectId } = Route.useParams();
+  const search = Route.useSearch();
   const navigate = useNavigate();
   const [dbModalOpen, setDbModalOpen] = useState(false);
   const [gitModalOpen, setGitModalOpen] = useState(false);
@@ -73,7 +78,7 @@ function NewResourcePage() {
         </div>
       </div>
 
-      <Tabs defaultValue="resources" className="w-full">
+      <Tabs defaultValue={search.tab || 'resources'} className="w-full">
         <TabsList className="mb-6 grid w-full max-w-150 grid-cols-3">
           <TabsTrigger value="resources">Resources</TabsTrigger>
           <TabsTrigger value="one-click">One-Click Apps</TabsTrigger>

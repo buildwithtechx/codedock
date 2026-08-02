@@ -1,5 +1,5 @@
 import { Link } from '@tanstack/react-router';
-import { Database, GitBranch, Globe2, Plus, Rocket } from 'lucide-react';
+import { Database, GitBranch, Globe2, LayoutTemplate, Plus, Rocket } from 'lucide-react';
 import { Button } from '#/components/ui/button';
 
 export function HomeFirstProject({ onCreateProject }: { onCreateProject: () => void }) {
@@ -41,11 +41,12 @@ export function HomeFirstProject({ onCreateProject }: { onCreateProject: () => v
             Create project
           </Button>
           <Link
-            to="/settings"
-            search={{ tab: 'sources' }}
+            to="/projects/new"
+            search={{ template: 'one-click' }}
             className="inline-flex h-9 items-center justify-center rounded-xl bg-muted px-4 font-medium text-sm transition-colors hover:bg-secondary"
           >
-            Connect a source
+            <LayoutTemplate className="mr-2 h-4 w-4" />
+            Browse templates
           </Link>
         </div>
       </div>

@@ -1,4 +1,4 @@
-import { Link, useNavigate } from '@tanstack/react-router';
+import { Link, useNavigate, useSearch } from '@tanstack/react-router';
 import { ArrowLeft, FolderKanban, Server } from 'lucide-react';
 import { useEffect, useState } from 'react';
 import { toast } from 'sonner';
@@ -19,6 +19,7 @@ import { useOrganizationStore } from '#/stores/organization-store';
 
 export function ProjectCreationPage() {
   const navigate = useNavigate();
+  const search = useSearch({ from: '/_dashboard/projects/new' });
   const activeOrganizationId = useOrganizationStore((state) => state.activeOrganizationId);
   const [name, setName] = useState('');
   const [description, setDescription] = useState('');
@@ -47,7 +48,11 @@ export function ProjectCreationPage() {
         },
       });
       toast.success('Project created');
-      await navigate({ to: '/projects/$projectId', params: { projectId: response.data.id } });
+      await navigate({
+        to: search.template ? '/projects/$projectId/new' : '/projects/$projectId',
+        params: { projectId: response.data.id },
+        search: search.template ? { tab: search.template } : undefined,
+      });
     } catch {
       toast.error('Failed to create project');
     }
@@ -64,10 +69,16 @@ export function ProjectCreationPage() {
           Projects
         </Link>
         <header className="mt-6">
-          <p className="font-medium text-muted-foreground text-sm">New workspace</p>
-          <h1 className="mt-1 font-semibold text-2xl tracking-tight">Create a project</h1>
+          <p className="font-medium text-muted-foreground text-sm">
+            {search.template ? 'Template setup' : 'New workspace'}
+          </p>
+          <h1 className="mt-1 font-semibold text-2xl tracking-tight">
+            {search.template ? 'Create a project for a template' : 'Create a project'}
+          </h1>
           <p className="mt-1 max-w-2xl text-muted-foreground text-sm">
-            Start with a project, then choose its services, sources, and deployment setup.
+            {search.template
+              ? 'Name the project first. Codedock will then open the template catalogue.'
+              : 'Start with a project, then choose its services, sources, and deployment setup.'}
           </p>
         </header>
 
