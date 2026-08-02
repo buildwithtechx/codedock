@@ -3,7 +3,6 @@ import { Activity, Box, Database, Folder, Plus, Server } from 'lucide-react';
 import { Button } from '#/components/ui/button';
 import { QueryErrorState } from '#/components/ui/query-error-state';
 import { ServiceIcon } from '#/components/ui/service-icon';
-import { WorkspaceEmptyState } from '#/components/ui/workspace-empty-state';
 import { useGetProject } from '#/features/projects';
 import { useGetCanvasSummary, useGetEnvironmentCanvas } from '#/hooks/use-canvas';
 
@@ -134,10 +133,10 @@ function ProjectOverviewComponent() {
   const totalResources = apps.length + dbs.length;
 
   return (
-    <div className="flex flex-col gap-8 p-6">
+    <div className="flex flex-col gap-8">
       <div className="flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between">
         <div>
-          <h1 className="font-bold text-3xl tracking-tight">
+          <h1 className="font-medium text-2xl text-foreground/90 tracking-[-0.02em]">
             {project?.name || 'Project Overview'}
           </h1>
           <div className="mt-2 flex items-center gap-3 text-muted-foreground text-sm">
@@ -160,14 +159,12 @@ function ProjectOverviewComponent() {
           <Button
             variant="outline"
             size="lg"
-            className="shadow-sm"
             onClick={() => navigate({ to: '/projects/$projectId/settings', params: { projectId } })}
           >
             Settings
           </Button>
           <Button
             size="lg"
-            className="shadow-sm"
             onClick={() => navigate({ to: '/projects/$projectId/new', params: { projectId } })}
           >
             <Plus className="mr-2 h-5 w-5" />
@@ -182,20 +179,25 @@ function ProjectOverviewComponent() {
         </div>
 
         {totalResources === 0 ? (
-          <WorkspaceEmptyState
-            className="min-h-80"
-            icon={Box}
-            title="Deploy the first resource"
-            description="Add an application, database, image, or Compose service to begin building this project."
-            action={
-              <Button
-                onClick={() => navigate({ to: '/projects/$projectId/new', params: { projectId } })}
-              >
-                <Plus className="mr-2 h-4 w-4" />
-                Add resource
-              </Button>
-            }
-          />
+          <section className="flex min-h-80 flex-col items-center justify-center px-6 py-10 text-center">
+            <span className="flex h-14 w-14 items-center justify-center rounded-2xl bg-card text-muted-foreground">
+              <Box className="h-6 w-6" />
+            </span>
+            <h3 className="mt-5 font-medium text-foreground/90 text-xl">
+              Deploy the first resource
+            </h3>
+            <p className="mt-2 max-w-sm text-muted-foreground/75 text-sm leading-6">
+              Add an application, database, image, or Compose service to begin building this
+              project.
+            </p>
+            <Button
+              className="mt-6"
+              onClick={() => navigate({ to: '/projects/$projectId/new', params: { projectId } })}
+            >
+              <Plus className="mr-2 h-4 w-4" />
+              Add resource
+            </Button>
+          </section>
         ) : (
           <div className="grid grid-cols-1 gap-4 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4">
             {apps.map((app: any) => (

@@ -1,7 +1,6 @@
 import { createFileRoute } from '@tanstack/react-router';
 import { Activity, Grid3X3 } from 'lucide-react';
 import { QueryErrorState } from '#/components/ui/query-error-state';
-import { WorkspaceEmptyState } from '#/components/ui/workspace-empty-state';
 import { EnvironmentCanvas } from '#/features/canvas/environment-canvas';
 import { useGetCanvasSummary, useGetEnvironmentCanvas } from '#/hooks/use-canvas';
 
@@ -51,18 +50,24 @@ function CanvasRouteComponent() {
 
   if (!envRes?.data) {
     return (
-      <WorkspaceEmptyState
-        icon={Grid3X3}
-        title="No environment canvas yet"
-        description="Create an environment or add project resources to see the deployment topology here."
-      />
+      <section className="flex min-h-[28rem] flex-col items-center justify-center px-6 text-center">
+        <span className="flex h-14 w-14 items-center justify-center rounded-2xl bg-card text-muted-foreground">
+          <Grid3X3 className="h-6 w-6" />
+        </span>
+        <h1 className="mt-5 font-medium text-foreground/90 text-xl">No environment canvas yet</h1>
+        <p className="mt-2 max-w-sm text-muted-foreground/75 text-sm leading-6">
+          Create an environment or add project resources to see the deployment topology here.
+        </p>
+      </section>
     );
   }
 
   return (
-    <div className="flex h-full flex-col gap-4 p-4">
-      <h1 className="font-bold text-2xl">Environment Canvas</h1>
-      <div className="flex-1 overflow-hidden rounded-2xl border border-border bg-card shadow-sm">
+    <div className="flex h-full flex-col gap-4">
+      <h1 className="font-medium text-2xl text-foreground/90 tracking-[-0.02em]">
+        Environment Canvas
+      </h1>
+      <div className="flex-1 overflow-hidden rounded-2xl bg-card">
         <EnvironmentCanvas envData={envRes.data} />
       </div>
     </div>

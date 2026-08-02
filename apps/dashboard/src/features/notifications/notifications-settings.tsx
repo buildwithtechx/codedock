@@ -137,7 +137,7 @@ export const NotificationsSettings = () => {
 
   return (
     <div className="space-y-6">
-      <section className="flex flex-col gap-4 rounded-xl border border-border/80 bg-card p-5 shadow-sm sm:flex-row sm:items-center sm:justify-between">
+      <section className="flex flex-col gap-4 rounded-2xl bg-card p-5 sm:flex-row sm:items-center sm:justify-between">
         <div>
           <h3 className="font-semibold text-sm">Alert behavior</h3>
           <p className="mt-1 text-muted-foreground text-sm">

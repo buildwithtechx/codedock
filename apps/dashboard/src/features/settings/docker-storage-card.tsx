@@ -7,7 +7,7 @@ type Props = {
 
 export const DockerStorageCard = ({ stats }: Props) => {
   return (
-    <div className="overflow-hidden rounded-2xl border border-border/80 bg-card shadow-sm lg:col-span-2">
+    <div className="overflow-hidden rounded-2xl bg-card lg:col-span-2">
       <div className="flex items-center justify-between border-border/70 border-b p-6">
         <h3 className="font-bold text-xl">Docker storage</h3>
         <Badge

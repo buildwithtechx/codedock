@@ -37,7 +37,7 @@ export function HomeShortcuts() {
           key={shortcut.to}
           to={shortcut.to}
           search={shortcut.search as never}
-          className="group rounded-xl border border-border/80 bg-card p-4 shadow-sm transition-colors hover:border-primary/35 hover:bg-primary/4"
+          className="group rounded-xl bg-card p-4 transition-colors hover:bg-muted/60"
         >
           <div className="flex items-start justify-between">
             <div className="flex h-8 w-8 items-center justify-center rounded-lg bg-muted text-muted-foreground transition-colors group-hover:bg-primary/12 group-hover:text-primary">

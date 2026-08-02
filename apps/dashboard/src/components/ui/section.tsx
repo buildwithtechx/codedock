@@ -8,7 +8,7 @@ export type SectionProps = {
 };
 
 export const Section = ({ icon, title, action, children }: SectionProps) => (
-  <div className="rounded-xl border border-border bg-card p-6">
+  <section className="rounded-2xl bg-card p-6">
     <div className="mb-4 flex items-center justify-between">
       <div className="flex items-center gap-3">
         <div className="flex h-8 w-8 shrink-0 items-center justify-center rounded-lg bg-primary/10 text-primary">
@@ -19,7 +19,7 @@ export const Section = ({ icon, title, action, children }: SectionProps) => (
       {action && <div className="flex shrink-0">{action}</div>}
     </div>
     <div className="divide-y divide-border/50">{children}</div>
-  </div>
+  </section>
 );
 
 export type RowProps = { label: string; description?: string; children: React.ReactNode };

@@ -15,7 +15,7 @@ export function PageFrame({ children, rail, className, mainClassName }: PageFram
   }
 
   return (
-    <div className={cn('grid min-w-0 gap-6 xl:grid-cols-[minmax(0,1fr)_17.5rem]', className)}>
+    <div className={cn('grid min-w-0 gap-6 lg:grid-cols-[minmax(0,1fr)_20rem]', className)}>
       <section className={cn('min-w-0', mainClassName)}>{children}</section>
       <ContextRail>{rail}</ContextRail>
     </div>

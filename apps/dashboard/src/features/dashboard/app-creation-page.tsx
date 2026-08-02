@@ -1,9 +1,8 @@
 import { Link } from '@tanstack/react-router';
-import { ArrowLeft, ArrowRight, Box, FolderKanban, Plus } from 'lucide-react';
-import { Button } from '#/components/ui/button';
+import { ArrowLeft, ArrowRight, Box } from 'lucide-react';
 import { QueryErrorState } from '#/components/ui/query-error-state';
-import { WorkspaceEmptyState } from '#/components/ui/workspace-empty-state';
 import { useListCanvasSummaries } from '#/hooks/use-canvas';
+import { ProjectEmptyState } from './project-empty-state';
 
 export function AppCreationPage() {
   const { data, isLoading, isError, refetch } = useListCanvasSummaries();
@@ -45,20 +44,7 @@ export function AppCreationPage() {
             onRetry={() => void refetch()}
           />
         ) : projects.length === 0 ? (
-          <WorkspaceEmptyState
-            className="mt-8"
-            icon={FolderKanban}
-            title="Create a project first"
-            description="A project gives this application a place for its services, environment, and deployment target."
-            action={
-              <Link to="/projects/new">
-                <Button className="gap-2">
-                  <Plus className="h-4 w-4" />
-                  Create project
-                </Button>
-              </Link>
-            }
-          />
+          <ProjectEmptyState />
         ) : (
           <section className="mt-8 grid gap-3 md:grid-cols-2">
             {projects.map((project) => (
@@ -66,7 +52,7 @@ export function AppCreationPage() {
                 key={project.id}
                 to="/projects/$projectId/new"
                 params={{ projectId: project.id }}
-                className="group rounded-2xl border border-border bg-card p-5 shadow-sm transition-colors hover:border-primary/45 hover:bg-primary/4"
+                className="group rounded-2xl bg-card p-5 transition-colors hover:bg-muted/60"
               >
                 <div className="flex items-start gap-3">
                   <div className="flex h-10 w-10 shrink-0 items-center justify-center rounded-xl bg-muted text-muted-foreground transition-colors group-hover:bg-primary/12 group-hover:text-primary">
@@ -91,7 +77,7 @@ export function AppCreationPage() {
       </main>
 
       <aside className="hidden xl:sticky xl:top-6 xl:block xl:self-start">
-        <section className="rounded-2xl border border-border bg-card p-5 shadow-sm">
+        <section className="rounded-2xl bg-card p-5">
           <div className="flex items-center gap-2">
             <Box className="h-4 w-4 text-primary" />
             <h2 className="font-semibold text-sm">Application setup</h2>

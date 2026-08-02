@@ -125,7 +125,7 @@ export function AISettings() {
             <button
               type="button"
               key={provider.id}
-              className="relative flex flex-col justify-between space-y-4 rounded-xl border border-border/80 bg-card p-6 text-left shadow-sm transition-colors hover:border-primary/40"
+              className="relative flex flex-col justify-between space-y-4 rounded-xl bg-card p-6 text-left transition-colors hover:bg-muted/60"
               onClick={() => {
                 if (!isEditing) setEditingId(provider.id);
               }}

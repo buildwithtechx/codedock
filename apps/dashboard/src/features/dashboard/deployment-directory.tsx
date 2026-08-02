@@ -21,10 +21,10 @@ import {
   TableHeader,
   TableRow,
 } from '#/components/ui/table';
-import { WorkspaceEmptyState } from '#/components/ui/workspace-empty-state';
 import { useListProjects } from '#/features/projects';
 import type { OrganizationDeployment } from '#/features/services';
 import { useListByOrganization } from '#/hooks/use-deployments';
+import { DeploymentEmptyState } from './deployment-empty-state';
 
 const statusOptions = [
   ['all', 'All statuses'],
@@ -105,35 +105,13 @@ export function DeploymentDirectory() {
               <Activity className="h-5 w-5 animate-pulse text-muted-foreground" />
             </div>
           ) : deployments.length === 0 ? (
-            <WorkspaceEmptyState
-              icon={hasFilters ? Search : Rocket}
-              title={hasFilters ? 'No releases match these filters' : 'No deployments yet'}
-              description={
-                hasFilters
-                  ? 'Change or clear a filter to look across a different set of releases.'
-                  : 'Deploy an app and its build, release status, and commit details will appear here.'
-              }
-              action={
-                hasFilters ? (
-                  <Button
-                    variant="outline"
-                    onClick={() => {
-                      setProjectId('all');
-                      setStatus('all');
-                      setSearch('');
-                    }}
-                  >
-                    Clear filters
-                  </Button>
-                ) : (
-                  <Link to="/apps/new">
-                    <Button className="gap-2">
-                      <Rocket className="h-4 w-4" />
-                      Deploy app
-                    </Button>
-                  </Link>
-                )
-              }
+            <DeploymentEmptyState
+              hasFilters={hasFilters}
+              onClear={() => {
+                setProjectId('all');
+                setStatus('all');
+                setSearch('');
+              }}
             />
           ) : (
             <DeploymentTable deployments={deployments} />
@@ -230,7 +208,7 @@ function DeploymentSummary({
   ];
 
   return (
-    <aside className="rounded-2xl border border-border/80 bg-card p-5 shadow-sm">
+    <aside className="rounded-2xl bg-card p-5">
       <div className="flex items-center gap-2">
         <Activity className="h-4 w-4 text-muted-foreground" />
         <h2 className="font-semibold text-sm">Release overview</h2>
@@ -254,7 +232,7 @@ function DeploymentSummary({
 
 function DeploymentTable({ deployments }: { deployments: OrganizationDeployment[] }) {
   return (
-    <section className="overflow-x-auto rounded-2xl border border-border/80 bg-card shadow-sm">
+    <section className="overflow-x-auto rounded-2xl bg-card">
       <Table>
         <TableHeader>
           <TableRow>

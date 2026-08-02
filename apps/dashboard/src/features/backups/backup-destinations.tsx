@@ -1,4 +1,4 @@
-import { Database, MoreVertical, Trash } from 'lucide-react';
+import { ArrowRight, Database, MoreVertical, Plus, Trash } from 'lucide-react';
 import { toast } from 'sonner';
 import { Button } from '#/components/ui/button';
 import {
@@ -8,7 +8,6 @@ import {
   DropdownMenuTrigger,
 } from '#/components/ui/dropdown-menu';
 import { QueryErrorState } from '#/components/ui/query-error-state';
-import { WorkspaceEmptyState } from '#/components/ui/workspace-empty-state';
 import { useDeleteS3Destination, useListS3Destinations } from '#/features/backups';
 
 type BackupDestinationsProps = {
@@ -47,18 +46,36 @@ export function BackupDestinations({ onAddDestination }: BackupDestinationsProps
   return (
     <div>
       {list.length === 0 ? (
-        <WorkspaceEmptyState
-          icon={Database}
-          title="Add a storage destination"
-          description="Connect S3-compatible storage to keep instance backups off the server."
-          action={<Button onClick={onAddDestination}>Add destination</Button>}
-        />
+        <section className="flex min-h-[26rem] items-center justify-center px-6 py-12 text-center">
+          <div className="max-w-md">
+            <div className="relative mx-auto h-28 w-52" aria-hidden="true">
+              <span className="absolute top-4 left-11 h-17 w-26 rounded-2xl bg-card" />
+              <span className="absolute top-1 left-17 flex h-17 w-26 items-center justify-center rounded-2xl bg-muted text-muted-foreground">
+                <Database className="h-6 w-6" />
+              </span>
+              <span className="absolute top-10 right-5 flex h-10 w-10 items-center justify-center rounded-xl border border-primary/45 border-dashed bg-primary/8 text-primary">
+                <Plus className="h-4 w-4" />
+              </span>
+              <span className="absolute top-1/2 right-14 w-10 border-border border-t border-dashed" />
+            </div>
+            <h2 className="mt-4 font-medium text-foreground/90 text-xl tracking-[-0.02em]">
+              Add a storage destination
+            </h2>
+            <p className="mt-2 text-muted-foreground/75 text-sm leading-6">
+              Connect S3-compatible storage to keep instance backups outside this server.
+            </p>
+            <Button className="mt-6 gap-2" onClick={onAddDestination}>
+              Add destination
+              <ArrowRight className="h-4 w-4" />
+            </Button>
+          </div>
+        </section>
       ) : (
         <div className="grid grid-cols-1 gap-4 md:grid-cols-2 xl:grid-cols-3">
           {list.map((dest) => (
             <div
               key={dest.id}
-              className="relative flex flex-col justify-between rounded-xl border border-border bg-card p-5 transition-colors hover:border-primary/30"
+              className="relative flex flex-col justify-between rounded-xl bg-card p-5 transition-colors hover:bg-muted/60"
             >
               <div>
                 <div className="flex items-start justify-between">

@@ -1,8 +1,7 @@
 import { Link } from '@tanstack/react-router';
-import { ArrowUpRight, FolderKanban, Plus } from 'lucide-react';
-import { Button } from '#/components/ui/button';
-import { WorkspaceEmptyState } from '#/components/ui/workspace-empty-state';
+import { ArrowUpRight, FolderKanban } from 'lucide-react';
 import type { CanvasSummary } from '#/features/projects';
+import { HomeFirstProject } from './home-first-project';
 
 export function HomeProjectList({
   projects,
@@ -14,23 +13,11 @@ export function HomeProjectList({
   onCreateProject: () => void;
 }) {
   if (!isLoading && projects.length === 0) {
-    return (
-      <WorkspaceEmptyState
-        icon={FolderKanban}
-        title="Build your first workspace"
-        description="Start with a project, then bring in the applications, environments, and domains your team operates."
-        action={
-          <Button className="gap-2" onClick={onCreateProject}>
-            <Plus className="h-4 w-4" />
-            Create project
-          </Button>
-        }
-      />
-    );
+    return <HomeFirstProject onCreateProject={onCreateProject} />;
   }
 
   return (
-    <section className="overflow-hidden rounded-2xl border border-border/80 bg-card shadow-sm">
+    <section className="overflow-hidden rounded-2xl bg-card">
       <div className="flex items-center justify-between border-border/70 border-b px-5 py-4">
         <div className="flex items-center gap-3">
           <div className="flex h-9 w-9 items-center justify-center rounded-xl bg-primary/12 text-primary">

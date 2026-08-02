@@ -5,7 +5,7 @@ import { Button } from '#/components/ui/button';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '#/components/ui/card';
 import { Progress } from '#/components/ui/progress';
 import { QueryErrorState } from '#/components/ui/query-error-state';
-import { WorkspaceEmptyState } from '#/components/ui/workspace-empty-state';
+import { ServerEmptyState } from '#/features/servers/server-empty-state';
 import { useListServers } from '#/hooks/use-servers';
 import { parseServerMetrics, type Server } from '#/interfaces/server';
 
@@ -42,19 +42,7 @@ function ServersPage() {
           onRetry={() => void refetch()}
         />
       ) : servers?.length === 0 ? (
-        <WorkspaceEmptyState
-          icon={ServerIcon}
-          title="Add your first server"
-          description="Connect a runtime so Codedock can build, deploy, and observe applications on your infrastructure."
-          action={
-            <Link to="/servers/new">
-              <Button className="gap-2">
-                <Plus className="h-4 w-4" />
-                Add server
-              </Button>
-            </Link>
-          }
-        />
+        <ServerEmptyState />
       ) : (
         <div className="grid grid-cols-1 gap-6 md:grid-cols-2 lg:grid-cols-3">
           {servers?.map((server) => (

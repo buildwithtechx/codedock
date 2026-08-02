@@ -3,8 +3,8 @@ import { ArrowUpRight, Box, Loader2, Plus } from 'lucide-react';
 import { PageHeader } from '#/components/layout/page-header';
 import { Button } from '#/components/ui/button';
 import { QueryErrorState } from '#/components/ui/query-error-state';
-import { WorkspaceEmptyState } from '#/components/ui/workspace-empty-state';
 import { useListAppsByOrganization } from '#/hooks/use-apps';
+import { AppEmptyState } from './app-empty-state';
 
 const statusClasses = {
   running: 'bg-emerald-500',
@@ -44,19 +44,7 @@ export function AppDirectory() {
           onRetry={() => void refetch()}
         />
       ) : apps.length === 0 ? (
-        <WorkspaceEmptyState
-          icon={Box}
-          title="Deploy your first app"
-          description="Connect a project to a runtime and Codedock will keep its releases, domain, and health in one place."
-          action={
-            <Link to="/apps/new">
-              <Button className="gap-2">
-                <Plus className="h-4 w-4" />
-                Add app
-              </Button>
-            </Link>
-          }
-        />
+        <AppEmptyState />
       ) : (
         <div className="grid gap-3 lg:grid-cols-2 xl:grid-cols-3">
           {apps.map((app) => (
@@ -64,7 +52,7 @@ export function AppDirectory() {
               key={app.id}
               to="/services/$serviceId"
               params={{ serviceId: app.id }}
-              className="group rounded-xl border border-border/80 bg-card p-4 shadow-sm transition-colors hover:border-primary/35 hover:bg-primary/4"
+              className="group rounded-xl bg-card p-4 transition-colors hover:bg-muted/60"
             >
               <div className="flex items-start gap-3">
                 <div className="flex h-10 w-10 shrink-0 items-center justify-center rounded-xl bg-muted text-muted-foreground transition-colors group-hover:bg-primary/12 group-hover:text-primary">

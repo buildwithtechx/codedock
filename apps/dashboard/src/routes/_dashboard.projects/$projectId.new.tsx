@@ -6,7 +6,6 @@ import { Button } from '#/components/ui/button';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '#/components/ui/card';
 import { QueryErrorState } from '#/components/ui/query-error-state';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '#/components/ui/tabs';
-import { WorkspaceEmptyState } from '#/components/ui/workspace-empty-state';
 import { CreateDatabaseModal } from '#/features/databases/create-database-modal';
 import { CreateDockerImageModal } from '#/features/sources/create-docker-image-modal';
 import { CreateGitAppModal } from '#/features/sources/create-git-app-modal';
@@ -59,7 +58,7 @@ function NewResourcePage() {
   };
 
   return (
-    <div className="space-y-6 p-4">
+    <div className="space-y-6">
       <div className="mb-5 flex items-center justify-between">
         <div className="flex items-center gap-3">
           <div className="flex h-12 w-12 shrink-0 items-center justify-center rounded-lg border border-primary/20 bg-primary/10 text-primary">
@@ -162,12 +161,18 @@ function NewResourcePage() {
               onRetry={() => void refetchOneClick()}
             />
           ) : templates.length === 0 ? (
-            <WorkspaceEmptyState
-              className="min-h-80"
-              icon={LayoutTemplate}
-              title="No one-click templates yet"
-              description="Compatible application templates will appear here when they are available on this instance."
-            />
+            <section className="flex min-h-80 flex-col items-center justify-center px-6 text-center">
+              <span className="flex h-13 w-13 items-center justify-center rounded-2xl bg-card text-muted-foreground">
+                <LayoutTemplate className="h-5 w-5" />
+              </span>
+              <h2 className="mt-5 font-medium text-foreground/90 text-lg">
+                No one-click templates yet
+              </h2>
+              <p className="mt-2 max-w-sm text-muted-foreground/75 text-sm leading-6">
+                Compatible application templates will appear here when they are available on this
+                instance.
+              </p>
+            </section>
           ) : (
             <div className="grid grid-cols-1 gap-6 md:grid-cols-2 lg:grid-cols-3">
               {templates.map((template) => (
@@ -208,12 +213,17 @@ function NewResourcePage() {
               onRetry={() => void refetchExamples()}
             />
           ) : examples.length === 0 ? (
-            <WorkspaceEmptyState
-              className="min-h-80"
-              icon={Code2}
-              title="No example projects yet"
-              description="Example projects will appear here when a catalogue is configured for this instance."
-            />
+            <section className="flex min-h-80 flex-col items-center justify-center px-6 text-center">
+              <span className="flex h-13 w-13 items-center justify-center rounded-2xl bg-card text-muted-foreground">
+                <Code2 className="h-5 w-5" />
+              </span>
+              <h2 className="mt-5 font-medium text-foreground/90 text-lg">
+                No example projects yet
+              </h2>
+              <p className="mt-2 max-w-sm text-muted-foreground/75 text-sm leading-6">
+                Example projects will appear here when a catalogue is configured for this instance.
+              </p>
+            </section>
           ) : (
             <div className="grid grid-cols-1 gap-6 md:grid-cols-2 lg:grid-cols-3">
               {examples.map((example) => (

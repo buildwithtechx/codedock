@@ -31,7 +31,7 @@ export function HomeRuntimeSummary({
   ];
 
   return (
-    <aside className="rounded-2xl border border-border/80 bg-card p-5 shadow-sm">
+    <aside className="rounded-2xl bg-card p-5">
       <div className="flex items-center gap-2">
         <Activity className="h-4 w-4 text-muted-foreground" />
         <h2 className="font-semibold text-sm">Runtime pulse</h2>

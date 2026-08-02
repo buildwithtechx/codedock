@@ -11,7 +11,7 @@ function SettingsRouteComponent() {
   const { projectId } = Route.useParams();
 
   return (
-    <div className="mx-auto flex w-full max-w-5xl flex-col gap-6 p-4">
+    <div className="mx-auto flex w-full max-w-5xl flex-col gap-6">
       <h1 className="font-bold text-2xl">Project Settings</h1>
 
       <div className="grid grid-cols-1 gap-8">

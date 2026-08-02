@@ -40,7 +40,7 @@
 }
 
 .dark {
-  --background: #090a0f;
+  --background: #08090d;
   --foreground: #f8f8fc;
   --card: #11131a;
   --card-foreground: #f8f8fc;
@@ -61,8 +61,8 @@
   --destructive-foreground: #ffffff;
   --success: #22c55e;
   --warning: #f59e0b;
-  --border: #292c37;
-  --input: #282b36;
+  --border: #262935;
+  --input: #242733;
   --ring: #8b5cf6;
   --sidebar: #101218;
   --sidebar-foreground: #f8f8fc;

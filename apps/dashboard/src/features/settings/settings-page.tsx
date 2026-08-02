@@ -160,7 +160,7 @@ export const SettingsLayout = () => {
       <PageFrame
         rail={
           <div>
-            <section className="mb-3 rounded-2xl border border-border/80 bg-card p-4 shadow-sm">
+            <section className="mb-3 rounded-2xl bg-card p-4">
               <div className="flex items-center gap-3">
                 <div className="flex h-8 w-8 items-center justify-center rounded-lg bg-primary/12 text-primary">
                   <SettingsIcon className="h-4 w-4" />
@@ -173,7 +173,7 @@ export const SettingsLayout = () => {
                 </div>
               </div>
             </section>
-            <div className="rounded-2xl border border-border/80 bg-card p-2 shadow-sm">
+            <div className="rounded-2xl bg-card p-2">
               <div className="space-y-1">
                 {TABS.map((tab) => {
                   const isActive = tab.id === activeId;
