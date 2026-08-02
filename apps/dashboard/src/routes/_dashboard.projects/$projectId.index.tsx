@@ -1,7 +1,9 @@
 import { createFileRoute, Link, useNavigate } from '@tanstack/react-router';
 import { Activity, Box, Database, Folder, Plus, Server } from 'lucide-react';
 import { Button } from '#/components/ui/button';
+import { QueryErrorState } from '#/components/ui/query-error-state';
 import { ServiceIcon } from '#/components/ui/service-icon';
+import { WorkspaceEmptyState } from '#/components/ui/workspace-empty-state';
 import { useGetProject } from '#/features/projects';
 import { useGetCanvasSummary, useGetEnvironmentCanvas } from '#/hooks/use-canvas';
 
@@ -76,11 +78,26 @@ function StatusBadge({ status }: { status: string }) {
 function ProjectOverviewComponent() {
   const { projectId } = Route.useParams();
   const navigate = useNavigate();
-  const { data: projectRes, isLoading: projectLoading } = useGetProject(projectId);
-  const { data: summaryRes, isLoading: summaryLoading } = useGetCanvasSummary(projectId);
+  const {
+    data: projectRes,
+    isLoading: projectLoading,
+    isError: projectError,
+    refetch: refetchProject,
+  } = useGetProject(projectId);
+  const {
+    data: summaryRes,
+    isLoading: summaryLoading,
+    isError: summaryError,
+    refetch: refetchSummary,
+  } = useGetCanvasSummary(projectId);
 
   const envId = summaryRes?.data?.defaultEnvironment?.id;
-  const { data: envRes, isLoading: envLoading } = useGetEnvironmentCanvas(envId || '');
+  const {
+    data: envRes,
+    isLoading: envLoading,
+    isError: environmentError,
+    refetch: refetchEnvironment,
+  } = useGetEnvironmentCanvas(envId || '');
 
   if (projectLoading || summaryLoading || (envId && envLoading)) {
     return (
@@ -90,6 +107,22 @@ function ProjectOverviewComponent() {
           <p className="text-muted-foreground">Loading project workspace...</p>
         </div>
       </div>
+    );
+  }
+
+  if (projectError || summaryError || (envId && environmentError)) {
+    return (
+      <QueryErrorState
+        title="Project data is unavailable"
+        description="Codedock could not load this project's resources and environment."
+        onRetry={() => {
+          void refetchProject();
+          void refetchSummary();
+          if (envId) {
+            void refetchEnvironment();
+          }
+        }}
+      />
     );
   }
 
@@ -149,19 +182,20 @@ function ProjectOverviewComponent() {
         </div>
 
         {totalResources === 0 ? (
-          <div className="flex h-64 flex-col items-center justify-center rounded-2xl border border-dashed bg-card/30">
-            <Box className="mb-4 h-12 w-12 text-muted-foreground/50" />
-            <h3 className="font-semibold text-lg">No resources yet</h3>
-            <p className="mt-1 mb-6 max-w-md text-center text-muted-foreground text-sm">
-              This project is empty. Deploy a new application, database, or service to get started.
-            </p>
-            <Button
-              onClick={() => navigate({ to: '/projects/$projectId/new', params: { projectId } })}
-            >
-              <Plus className="mr-2 h-4 w-4" />
-              Deploy First Resource
-            </Button>
-          </div>
+          <WorkspaceEmptyState
+            className="min-h-80"
+            icon={Box}
+            title="Deploy the first resource"
+            description="Add an application, database, image, or Compose service to begin building this project."
+            action={
+              <Button
+                onClick={() => navigate({ to: '/projects/$projectId/new', params: { projectId } })}
+              >
+                <Plus className="mr-2 h-4 w-4" />
+                Add resource
+              </Button>
+            }
+          />
         ) : (
           <div className="grid grid-cols-1 gap-4 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4">
             {apps.map((app: any) => (

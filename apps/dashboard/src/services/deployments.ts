@@ -4,6 +4,8 @@ import type {
   GetDiagnosticsResponse,
   GetServiceMetricsResponse,
   ListDeploymentsResponse,
+  ListOrganizationDeploymentsParams,
+  ListOrganizationDeploymentsResponse,
   ListPRPreviewsResponse,
   RollbackDeploymentResponse,
   TriggerDeploymentRequest,
@@ -13,6 +15,24 @@ import { apiClient } from '#/lib/api-client';
 import { handleApiError } from '#/lib/error';
 
 export const deploymentsService = {
+  listByOrganization: async (
+    organizationId: string,
+    params: ListOrganizationDeploymentsParams = {}
+  ): Promise<ListOrganizationDeploymentsResponse> => {
+    try {
+      const query = new URLSearchParams({ organizationId });
+      if (params.projectId) query.set('projectId', params.projectId);
+      if (params.serviceId) query.set('serviceId', params.serviceId);
+      if (params.status) query.set('status', params.status);
+      if (params.search) query.set('search', params.search);
+      if (params.page) query.set('page', String(params.page));
+      if (params.limit) query.set('limit', String(params.limit));
+      return await apiClient.get<ListOrganizationDeploymentsResponse>(`/deployments?${query}`);
+    } catch (error) {
+      throw handleApiError(error);
+    }
+  },
+
   listByService: async (serviceId: string): Promise<ListDeploymentsResponse> => {
     try {
       return await apiClient.get<ListDeploymentsResponse>(`/services/${serviceId}/deployments`);

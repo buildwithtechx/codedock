@@ -3,6 +3,7 @@ import { ArrowUpRight, Box, Loader2, Plus } from 'lucide-react';
 import { PageHeader } from '#/components/layout/page-header';
 import { Button } from '#/components/ui/button';
 import { QueryErrorState } from '#/components/ui/query-error-state';
+import { WorkspaceEmptyState } from '#/components/ui/workspace-empty-state';
 import { useListAppsByOrganization } from '#/hooks/use-apps';
 
 const statusClasses = {
@@ -33,7 +34,7 @@ export function AppDirectory() {
       />
 
       {isLoading ? (
-        <div className="flex min-h-80 items-center justify-center rounded-2xl border border-border/80 bg-card">
+        <div className="flex min-h-[25rem] items-center justify-center">
           <Loader2 className="h-5 w-5 animate-spin text-muted-foreground" />
         </div>
       ) : isError ? (
@@ -43,18 +44,19 @@ export function AppDirectory() {
           onRetry={() => void refetch()}
         />
       ) : apps.length === 0 ? (
-        <div className="flex min-h-80 flex-col items-center justify-center rounded-2xl border border-border border-dashed bg-card px-6 text-center">
-          <div className="flex h-12 w-12 items-center justify-center rounded-2xl bg-primary/10 text-primary">
-            <Box className="h-5 w-5" />
-          </div>
-          <h2 className="mt-4 font-semibold text-lg">No apps deployed</h2>
-          <p className="mt-1 max-w-sm text-muted-foreground text-sm">
-            Choose a project and add an application to start a deployment.
-          </p>
-          <Link to="/apps/new" className="mt-5">
-            <Button>Choose a project</Button>
-          </Link>
-        </div>
+        <WorkspaceEmptyState
+          icon={Box}
+          title="Deploy your first app"
+          description="Connect a project to a runtime and Codedock will keep its releases, domain, and health in one place."
+          action={
+            <Link to="/apps/new">
+              <Button className="gap-2">
+                <Plus className="h-4 w-4" />
+                Add app
+              </Button>
+            </Link>
+          }
+        />
       ) : (
         <div className="grid gap-3 lg:grid-cols-2 xl:grid-cols-3">
           {apps.map((app) => (

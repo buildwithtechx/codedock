@@ -5,6 +5,7 @@ import (
 	"database/sql"
 	"errors"
 	"fmt"
+	"strings"
 	"sync"
 	"time"
 
@@ -19,6 +20,7 @@ type DeploymentRepository interface {
 	Create(ctx context.Context, d *models.Deployment) error
 	GetByID(ctx context.Context, id string) (*models.Deployment, error)
 	ListByService(ctx context.Context, serviceID string, limit, offset int) ([]*models.Deployment, int, error)
+	ListByOrganization(ctx context.Context, filter models.DeploymentListFilter) ([]models.DeploymentListItem, int, error)
 	Update(ctx context.Context, d *models.Deployment) error
 	UpdateStatus(ctx context.Context, id string, status models.DeploymentStatus, buildLogs, containerID string) error
 }
@@ -87,6 +89,53 @@ func (r *DeploymentRepo) ListByService(ctx context.Context, serviceID string, li
 		deps = make([]*models.Deployment, 0)
 	}
 	return deps, total, nil
+}
+
+func (r *DeploymentRepo) ListByOrganization(ctx context.Context, filter models.DeploymentListFilter) ([]models.DeploymentListItem, int, error) {
+	search := strings.TrimSpace(filter.Search)
+	searchPattern := "%" + search + "%"
+	where := `
+		FROM deployments d
+		INNER JOIN projects p ON p.id = d.project_id
+		LEFT JOIN app_services s ON s.id = d.service_id
+		WHERE p.organization_id = ?
+			AND (? = '' OR d.project_id = ?)
+			AND (? = '' OR d.service_id = ?)
+			AND (? = '' OR lower(d.status) = lower(?))
+			AND (
+				? = '' OR s.name LIKE ? COLLATE NOCASE OR p.name LIKE ? COLLATE NOCASE
+				OR d.branch LIKE ? COLLATE NOCASE OR d.commit_hash LIKE ? COLLATE NOCASE
+			)`
+	args := []any{
+		filter.OrganizationID,
+		filter.ProjectID,
+		filter.ProjectID,
+		filter.ServiceID,
+		filter.ServiceID,
+		filter.Status,
+		filter.Status,
+		search,
+		searchPattern,
+		searchPattern,
+		searchPattern,
+		searchPattern,
+	}
+
+	var total int
+	if err := r.db.GetContext(ctx, &total, "SELECT COUNT(*) "+where, args...); err != nil {
+		return nil, 0, fmt.Errorf("count organization deployments: %w", err)
+	}
+
+	deployments := make([]models.DeploymentListItem, 0)
+	query := `SELECT d.id, d.service_id, COALESCE(s.name, '' ) AS service_name, d.environment_id,
+		d.project_id, p.name AS project_name, d.status, d.commit_hash, d.commit_message,
+		d.branch, d.trigger, d.build_logs, d.container_id, d.created_at, d.updated_at, d.finished_at ` + where + `
+		ORDER BY d.created_at DESC LIMIT ? OFFSET ?`
+	args = append(args, filter.Limit, filter.Offset)
+	if err := r.db.SelectContext(ctx, &deployments, query, args...); err != nil {
+		return nil, 0, fmt.Errorf("list organization deployments: %w", err)
+	}
+	return deployments, total, nil
 }
 
 func (r *DeploymentRepo) Update(_ context.Context, d *models.Deployment) error {

@@ -2,13 +2,14 @@ import { CheckCircle2, Globe, HelpCircle, Network, ShieldCheck } from 'lucide-re
 import { type KeyboardEvent, useState } from 'react';
 import { PageHeader } from '#/components/layout/page-header';
 import { Card, CardContent } from '#/components/ui/card';
+import { QueryErrorState } from '#/components/ui/query-error-state';
 import { DomainAuditTable } from './components/domain-audit-table';
 import { DnsSettings } from './dns-settings';
 import { DomainsPage } from './domains-page';
 import { useListAllDomains } from './hooks';
 
 export function DnsAuditPage() {
-  const { data: domainsRes, isLoading, isError } = useListAllDomains();
+  const { data: domainsRes, isLoading, isError, refetch } = useListAllDomains();
   const [activeTab, setActiveTab] = useState<'audit' | 'providers' | 'global'>('audit');
   const [mountedTabs, setMountedTabs] = useState<Set<'audit' | 'providers' | 'global'>>(
     () => new Set(['audit'])
@@ -184,9 +185,11 @@ export function DnsAuditPage() {
         className={activeTab === 'audit' ? 'block' : 'hidden'}
       >
         {isError ? (
-          <div className="rounded-2xl border border-destructive/30 bg-destructive/5 p-8 text-center text-destructive text-sm">
-            Unable to load the domain audit. Try again later.
-          </div>
+          <QueryErrorState
+            title="Domain audit is unavailable"
+            description="Codedock could not load domains for the active workspace."
+            onRetry={() => void refetch()}
+          />
         ) : (
           mountedTabs.has('audit') && <DomainAuditTable domains={domains} isLoading={isLoading} />
         )}

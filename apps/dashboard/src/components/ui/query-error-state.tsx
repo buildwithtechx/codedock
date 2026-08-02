@@ -1,4 +1,5 @@
 import { CircleAlert, RefreshCw } from 'lucide-react';
+import { cn } from '#/lib/utils';
 import { Button } from './button';
 
 type QueryErrorStateProps = {
@@ -10,18 +11,21 @@ type QueryErrorStateProps = {
 
 export function QueryErrorState({ title, description, onRetry, className }: QueryErrorStateProps) {
   return (
-    <div
-      className={`flex min-h-80 flex-col items-center justify-center rounded-2xl border border-destructive/30 bg-card px-6 text-center ${className ?? ''}`}
+    <section
+      className={cn(
+        'flex min-h-[25rem] flex-col items-center justify-center px-6 py-12 text-center',
+        className
+      )}
     >
-      <div className="flex h-11 w-11 items-center justify-center rounded-xl bg-destructive/10 text-destructive">
-        <CircleAlert className="h-5 w-5" />
+      <div className="relative flex h-14 w-14 items-center justify-center rounded-2xl border border-destructive/25 bg-destructive/10 text-destructive shadow-[0_0_0_9px_color-mix(in_oklch,var(--destructive)_8%,transparent)]">
+        <CircleAlert className="h-6 w-6" />
       </div>
-      <h2 className="mt-4 font-semibold text-lg">{title}</h2>
-      <p className="mt-1 max-w-sm text-muted-foreground text-sm">{description}</p>
-      <Button variant="outline" className="mt-5 gap-2" onClick={onRetry}>
+      <h2 className="mt-5 font-semibold text-xl tracking-tight">{title}</h2>
+      <p className="mt-2 max-w-sm text-muted-foreground text-sm leading-6">{description}</p>
+      <Button variant="outline" className="mt-6 gap-2" onClick={onRetry}>
         <RefreshCw className="h-4 w-4" />
         Try again
       </Button>
-    </div>
+    </section>
   );
 }

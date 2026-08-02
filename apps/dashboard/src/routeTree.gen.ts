@@ -27,7 +27,6 @@ import { Route as DashboardDnsRouteImport } from './routes/_dashboard.dns'
 import { Route as DashboardOrganizationsRouteImport } from './routes/_dashboard.organizations'
 import { Route as DashboardProfileRouteImport } from './routes/_dashboard.profile'
 import { Route as DashboardProjectsRouteImport } from './routes/_dashboard.projects'
-import { Route as DashboardS3DestinationsRouteImport } from './routes/_dashboard.s3-destinations'
 import { Route as DashboardScheduledTasksRouteImport } from './routes/_dashboard.scheduled-tasks'
 import { Route as DashboardServersRouteImport } from './routes/_dashboard.servers'
 import { Route as DashboardSettingsRouteImport } from './routes/_dashboard.settings'
@@ -148,11 +147,6 @@ const DashboardProfileRoute = DashboardProfileRouteImport.update({
 const DashboardProjectsRoute = DashboardProjectsRouteImport.update({
   id: '/projects',
   path: '/projects',
-  getParentRoute: () => DashboardRoute,
-} as any)
-const DashboardS3DestinationsRoute = DashboardS3DestinationsRouteImport.update({
-  id: '/s3-destinations',
-  path: '/s3-destinations',
   getParentRoute: () => DashboardRoute,
 } as any)
 const DashboardScheduledTasksRoute = DashboardScheduledTasksRouteImport.update({
@@ -363,7 +357,6 @@ export interface FileRoutesByFullPath {
   '/organizations': typeof DashboardOrganizationsRouteWithChildren
   '/profile': typeof DashboardProfileRoute
   '/projects': typeof DashboardProjectsRouteWithChildren
-  '/s3-destinations': typeof DashboardS3DestinationsRoute
   '/scheduled-tasks': typeof DashboardScheduledTasksRoute
   '/servers': typeof DashboardServersRouteWithChildren
   '/settings': typeof DashboardSettingsRoute
@@ -414,7 +407,6 @@ export interface FileRoutesByTo {
   '/dns': typeof DashboardDnsRoute
   '/organizations': typeof DashboardOrganizationsRouteWithChildren
   '/profile': typeof DashboardProfileRoute
-  '/s3-destinations': typeof DashboardS3DestinationsRoute
   '/scheduled-tasks': typeof DashboardScheduledTasksRoute
   '/servers': typeof DashboardServersRouteWithChildren
   '/settings': typeof DashboardSettingsRoute
@@ -466,7 +458,6 @@ export interface FileRoutesById {
   '/_dashboard/organizations': typeof DashboardOrganizationsRouteWithChildren
   '/_dashboard/profile': typeof DashboardProfileRoute
   '/_dashboard/projects': typeof DashboardProjectsRouteWithChildren
-  '/_dashboard/s3-destinations': typeof DashboardS3DestinationsRoute
   '/_dashboard/scheduled-tasks': typeof DashboardScheduledTasksRoute
   '/_dashboard/servers': typeof DashboardServersRouteWithChildren
   '/_dashboard/settings': typeof DashboardSettingsRoute
@@ -521,7 +512,6 @@ export interface FileRouteTypes {
     | '/organizations'
     | '/profile'
     | '/projects'
-    | '/s3-destinations'
     | '/scheduled-tasks'
     | '/servers'
     | '/settings'
@@ -572,7 +562,6 @@ export interface FileRouteTypes {
     | '/dns'
     | '/organizations'
     | '/profile'
-    | '/s3-destinations'
     | '/scheduled-tasks'
     | '/servers'
     | '/settings'
@@ -623,7 +612,6 @@ export interface FileRouteTypes {
     | '/_dashboard/organizations'
     | '/_dashboard/profile'
     | '/_dashboard/projects'
-    | '/_dashboard/s3-destinations'
     | '/_dashboard/scheduled-tasks'
     | '/_dashboard/servers'
     | '/_dashboard/settings'
@@ -792,13 +780,6 @@ declare module '@tanstack/react-router' {
       path: '/projects'
       fullPath: '/projects'
       preLoaderRoute: typeof DashboardProjectsRouteImport
-      parentRoute: typeof DashboardRoute
-    }
-    '/_dashboard/s3-destinations': {
-      id: '/_dashboard/s3-destinations'
-      path: '/s3-destinations'
-      fullPath: '/s3-destinations'
-      preLoaderRoute: typeof DashboardS3DestinationsRouteImport
       parentRoute: typeof DashboardRoute
     }
     '/_dashboard/scheduled-tasks': {
@@ -1201,7 +1182,6 @@ interface DashboardRouteChildren {
   DashboardOrganizationsRoute: typeof DashboardOrganizationsRouteWithChildren
   DashboardProfileRoute: typeof DashboardProfileRoute
   DashboardProjectsRoute: typeof DashboardProjectsRouteWithChildren
-  DashboardS3DestinationsRoute: typeof DashboardS3DestinationsRoute
   DashboardScheduledTasksRoute: typeof DashboardScheduledTasksRoute
   DashboardServersRoute: typeof DashboardServersRouteWithChildren
   DashboardSettingsRoute: typeof DashboardSettingsRoute
@@ -1220,7 +1200,6 @@ const DashboardRouteChildren: DashboardRouteChildren = {
   DashboardOrganizationsRoute: DashboardOrganizationsRouteWithChildren,
   DashboardProfileRoute: DashboardProfileRoute,
   DashboardProjectsRoute: DashboardProjectsRouteWithChildren,
-  DashboardS3DestinationsRoute: DashboardS3DestinationsRoute,
   DashboardScheduledTasksRoute: DashboardScheduledTasksRoute,
   DashboardServersRoute: DashboardServersRouteWithChildren,
   DashboardSettingsRoute: DashboardSettingsRoute,

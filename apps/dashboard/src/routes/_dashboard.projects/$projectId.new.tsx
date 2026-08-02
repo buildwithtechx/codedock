@@ -1,13 +1,20 @@
 import { createFileRoute, useNavigate } from '@tanstack/react-router';
 import { Code2, Container, Database, GitBranch, LayoutTemplate, Loader2 } from 'lucide-react';
 import { useState } from 'react';
+import { toast } from 'sonner';
 import { Button } from '#/components/ui/button';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '#/components/ui/card';
+import { QueryErrorState } from '#/components/ui/query-error-state';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '#/components/ui/tabs';
+import { WorkspaceEmptyState } from '#/components/ui/workspace-empty-state';
 import { CreateDatabaseModal } from '#/features/databases/create-database-modal';
 import { CreateDockerImageModal } from '#/features/sources/create-docker-image-modal';
 import { CreateGitAppModal } from '#/features/sources/create-git-app-modal';
-import { useListExampleApps, useListOneClickApps } from '#/hooks/use-templates';
+import {
+  useDeployOneClickApp,
+  useListExampleApps,
+  useListOneClickApps,
+} from '#/hooks/use-templates';
 
 export const Route = createFileRoute('/_dashboard/projects/$projectId/new')({
   component: NewResourcePage,
@@ -20,11 +27,36 @@ function NewResourcePage() {
   const [gitModalOpen, setGitModalOpen] = useState(false);
   const [dockerModalOpen, setDockerModalOpen] = useState(false);
 
-  const { data: oneClickResponse, isLoading: oneClickLoading } = useListOneClickApps();
-  const { data: examplesResponse, isLoading: examplesLoading } = useListExampleApps();
+  const {
+    data: oneClickResponse,
+    isLoading: oneClickLoading,
+    isError: oneClickError,
+    refetch: refetchOneClick,
+  } = useListOneClickApps();
+  const {
+    data: examplesResponse,
+    isLoading: examplesLoading,
+    isError: examplesError,
+    refetch: refetchExamples,
+  } = useListExampleApps();
+  const deployOneClick = useDeployOneClickApp();
+  const [deployingTemplateId, setDeployingTemplateId] = useState<string | null>(null);
 
   const templates = Array.isArray(oneClickResponse) ? oneClickResponse : [];
   const examples = Array.isArray(examplesResponse) ? examplesResponse : [];
+
+  const handleDeployOneClick = async (appId: string, name: string) => {
+    setDeployingTemplateId(appId);
+    try {
+      const response = await deployOneClick.mutateAsync({ appId, projectId, name });
+      toast.success(response.message || `${name} deployed`);
+      await navigate({ to: '/projects/$projectId', params: { projectId } });
+    } catch {
+      toast.error(`Failed to deploy ${name}`);
+    } finally {
+      setDeployingTemplateId(null);
+    }
+  };
 
   return (
     <div className="space-y-6 p-4">
@@ -123,18 +155,19 @@ function NewResourcePage() {
             <div className="flex justify-center p-12">
               <Loader2 className="h-8 w-8 animate-spin text-muted-foreground" />
             </div>
+          ) : oneClickError ? (
+            <QueryErrorState
+              title="Templates are unavailable"
+              description="Codedock could not load the one-click application catalogue."
+              onRetry={() => void refetchOneClick()}
+            />
           ) : templates.length === 0 ? (
-            <div className="flex h-64 flex-col items-center justify-center rounded-xl border border border-dashed bg-card/40">
-              <div className="flex h-12 w-12 items-center justify-center rounded-xl border border-primary/20 bg-primary/10">
-                <LayoutTemplate className="h-5 w-5 text-primary" />
-              </div>
-              <h3 className="mt-4 font-bold text-foreground text-lg tracking-tight">
-                No templates
-              </h3>
-              <p className="mt-1 max-w-sm text-center text-muted-foreground text-sm">
-                There are no one-click templates available at this time.
-              </p>
-            </div>
+            <WorkspaceEmptyState
+              className="min-h-80"
+              icon={LayoutTemplate}
+              title="No one-click templates yet"
+              description="Compatible application templates will appear here when they are available on this instance."
+            />
           ) : (
             <div className="grid grid-cols-1 gap-6 md:grid-cols-2 lg:grid-cols-3">
               {templates.map((template) => (
@@ -149,7 +182,13 @@ function NewResourcePage() {
                     <CardDescription>{template.description}</CardDescription>
                   </CardHeader>
                   <CardContent>
-                    <Button className="w-full">Deploy</Button>
+                    <Button
+                      className="w-full"
+                      onClick={() => handleDeployOneClick(template.id, template.name)}
+                      disabled={deployOneClick.isPending}
+                    >
+                      {deployingTemplateId === template.id ? 'Deploying...' : 'Deploy'}
+                    </Button>
                   </CardContent>
                 </Card>
               ))}
@@ -162,16 +201,19 @@ function NewResourcePage() {
             <div className="flex justify-center p-12">
               <Loader2 className="h-8 w-8 animate-spin text-muted-foreground" />
             </div>
+          ) : examplesError ? (
+            <QueryErrorState
+              title="Examples are unavailable"
+              description="Codedock could not load the example project catalogue."
+              onRetry={() => void refetchExamples()}
+            />
           ) : examples.length === 0 ? (
-            <div className="flex h-64 flex-col items-center justify-center rounded-xl border border border-dashed bg-card/40">
-              <div className="flex h-12 w-12 items-center justify-center rounded-xl border border-primary/20 bg-primary/10">
-                <Code2 className="h-5 w-5 text-primary" />
-              </div>
-              <h3 className="mt-4 font-bold text-foreground text-lg tracking-tight">No examples</h3>
-              <p className="mt-1 max-w-sm text-center text-muted-foreground text-sm">
-                Could not load examples from TechX/codedock-examples.
-              </p>
-            </div>
+            <WorkspaceEmptyState
+              className="min-h-80"
+              icon={Code2}
+              title="No example projects yet"
+              description="Example projects will appear here when a catalogue is configured for this instance."
+            />
           ) : (
             <div className="grid grid-cols-1 gap-6 md:grid-cols-2 lg:grid-cols-3">
               {examples.map((example) => (

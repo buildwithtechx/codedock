@@ -3,6 +3,7 @@ import { FolderKanban, Loader2, Plus } from 'lucide-react';
 import { PageHeader } from '#/components/layout/page-header';
 import { Button } from '#/components/ui/button';
 import { QueryErrorState } from '#/components/ui/query-error-state';
+import { WorkspaceEmptyState } from '#/components/ui/workspace-empty-state';
 import { ProjectCard } from '#/features/projects/project-card';
 import { useListCanvasSummaries } from '#/hooks/use-canvas';
 
@@ -26,7 +27,7 @@ export function ProjectDirectory() {
       />
 
       {isLoading ? (
-        <div className="flex min-h-80 items-center justify-center rounded-2xl border border-border/80 bg-card">
+        <div className="flex min-h-[25rem] items-center justify-center">
           <Loader2 className="h-5 w-5 animate-spin text-muted-foreground" />
         </div>
       ) : isError ? (
@@ -36,21 +37,19 @@ export function ProjectDirectory() {
           onRetry={() => void refetch()}
         />
       ) : projects.length === 0 ? (
-        <div className="flex min-h-80 flex-col items-center justify-center rounded-2xl border border-border border-dashed bg-card px-6 text-center">
-          <div className="flex h-12 w-12 items-center justify-center rounded-2xl bg-primary/10 text-primary">
-            <FolderKanban className="h-5 w-5" />
-          </div>
-          <h2 className="mt-4 font-semibold text-lg">No projects in this organization</h2>
-          <p className="mt-1 max-w-sm text-muted-foreground text-sm">
-            Create a project to organize the services you want Codedock to run.
-          </p>
-          <Link to="/projects/new" className="mt-5">
-            <Button className="gap-2">
-              <Plus className="h-4 w-4" />
-              Create project
-            </Button>
-          </Link>
-        </div>
+        <WorkspaceEmptyState
+          icon={FolderKanban}
+          title="Start with a project"
+          description="Projects keep the applications, environments, and releases your workspace runs together."
+          action={
+            <Link to="/projects/new">
+              <Button className="gap-2">
+                <Plus className="h-4 w-4" />
+                Create project
+              </Button>
+            </Link>
+          }
+        />
       ) : (
         <div className="grid gap-4 md:grid-cols-2 xl:grid-cols-3">
           {projects.map((project) => (

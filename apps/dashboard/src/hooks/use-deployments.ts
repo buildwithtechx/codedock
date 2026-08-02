@@ -1,5 +1,17 @@
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
+import type { ListOrganizationDeploymentsParams } from '#/features/services';
 import { deploymentsService } from '#/services/deployments';
+import { useOrganizationStore } from '#/stores/organization-store';
+
+export const useListByOrganization = (params: ListOrganizationDeploymentsParams = {}) => {
+  const activeOrganizationId = useOrganizationStore((state) => state.activeOrganizationId);
+
+  return useQuery({
+    queryKey: ['deployments', 'listByOrganization', activeOrganizationId, params],
+    queryFn: () => deploymentsService.listByOrganization(activeOrganizationId as string, params),
+    enabled: Boolean(activeOrganizationId),
+  });
+};
 
 export const useListByService = (serviceId: string) => {
   return useQuery({

@@ -19,6 +19,35 @@ type Deployment struct {
 	FinishedAt    *time.Time       `json:"finishedAt,omitempty" db:"finished_at"`
 }
 
+type DeploymentListFilter struct {
+	OrganizationID string `json:"organizationId"`
+	ProjectID      string `json:"projectId,omitempty"`
+	ServiceID      string `json:"serviceId,omitempty"`
+	Status         string `json:"status,omitempty"`
+	Search         string `json:"search,omitempty"`
+	Limit          int    `json:"limit"`
+	Offset         int    `json:"offset"`
+}
+
+type DeploymentListItem struct {
+	ID            string           `json:"id" db:"id"`
+	ServiceID     string           `json:"serviceId" db:"service_id"`
+	ServiceName   string           `json:"serviceName" db:"service_name"`
+	EnvironmentID string           `json:"environmentId" db:"environment_id"`
+	ProjectID     string           `json:"projectId" db:"project_id"`
+	ProjectName   string           `json:"projectName" db:"project_name"`
+	Status        DeploymentStatus `json:"status" db:"status"`
+	Branch        string           `json:"branch,omitempty" db:"branch"`
+	CommitHash    string           `json:"commitHash,omitempty" db:"commit_hash"`
+	CommitMessage string           `json:"commitMessage,omitempty" db:"commit_message"`
+	Trigger       string           `json:"trigger,omitempty" db:"trigger"`
+	BuildLogs     string           `json:"buildLogs,omitempty" db:"build_logs"`
+	ContainerID   string           `json:"containerId,omitempty" db:"container_id"`
+	CreatedAt     time.Time        `json:"createdAt" db:"created_at"`
+	UpdatedAt     time.Time        `json:"updatedAt" db:"updated_at"`
+	FinishedAt    *time.Time       `json:"finishedAt,omitempty" db:"finished_at"`
+}
+
 type ServiceMetric struct {
 	Timestamp  string  `json:"timestamp"`
 	CPUPercent float64 `json:"cpuPercent"`

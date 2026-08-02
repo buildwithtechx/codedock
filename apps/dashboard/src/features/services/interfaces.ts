@@ -78,6 +78,20 @@ export interface Deployment {
   finishedAt?: string;
 }
 
+export interface OrganizationDeployment extends Deployment {
+  projectName: string;
+  serviceName: string;
+}
+
+export interface ListOrganizationDeploymentsParams {
+  projectId?: string;
+  serviceId?: string;
+  status?: string;
+  search?: string;
+  page?: number;
+  limit?: number;
+}
+
 export interface ServiceMetric {
   timestamp: string;
   cpuPercent: number;
@@ -214,6 +228,9 @@ export type CreateAppResponse = BaseResponse<AppService>;
 export type UpdateAppResponse = BaseResponse<AppService>;
 
 export type ListDeploymentsResponse = BaseResponse<PaginatedData<Deployment>>;
+export type ListOrganizationDeploymentsResponse = BaseResponse<
+  PaginatedData<OrganizationDeployment>
+>;
 export type TriggerDeploymentResponse = BaseResponse<Deployment>;
 export type RollbackDeploymentResponse = BaseResponse<Deployment>;
 export type GetDeploymentLogsResponse = BaseResponse<string>;

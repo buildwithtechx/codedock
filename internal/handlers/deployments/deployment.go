@@ -115,6 +115,46 @@ func (h *DeploymentHandler) ListServiceDeployments(c echo.Context) error {
 	return utils.Paginated(c, "Deployments retrieved", deps, total, page, limit)
 }
 
+func (h *DeploymentHandler) ListOrganizationDeployments(c echo.Context) error {
+	organizationID := c.QueryParam("organizationId")
+	if organizationID == "" {
+		return utils.Error(c, http.StatusBadRequest, "organizationId is required")
+	}
+	user := middleware.GetUserClaimsFromContext(c.Request().Context())
+	if user == nil {
+		return utils.Error(c, http.StatusUnauthorized, "unauthorized")
+	}
+	if !h.projectService.HasOrgPermission(c.Request().Context(), organizationID, user.UserID, models.UserRole(user.Role), "") {
+		return utils.Error(c, http.StatusForbidden, "insufficient permissions for this organization")
+	}
+
+	page, _ := strconv.Atoi(c.QueryParam("page"))
+	if page < 1 {
+		page = 1
+	}
+	limit, _ := strconv.Atoi(c.QueryParam("limit"))
+	if limit < 1 {
+		limit = 25
+	}
+	if limit > 100 {
+		limit = 100
+	}
+	filter := models.DeploymentListFilter{
+		OrganizationID: organizationID,
+		ProjectID:      c.QueryParam("projectId"),
+		ServiceID:      c.QueryParam("serviceId"),
+		Status:         c.QueryParam("status"),
+		Search:         c.QueryParam("search"),
+		Limit:          limit,
+		Offset:         (page - 1) * limit,
+	}
+	deployments, total, err := h.deploymentService.ListByOrganization(c.Request().Context(), filter)
+	if err != nil {
+		return utils.Error(c, http.StatusInternalServerError, err.Error())
+	}
+	return utils.Paginated(c, "Deployments retrieved", deployments, total, page, limit)
+}
+
 func (h *DeploymentHandler) Trigger(c echo.Context) error {
 	serviceID := c.Param("serviceId")
 	if serviceID == "" {

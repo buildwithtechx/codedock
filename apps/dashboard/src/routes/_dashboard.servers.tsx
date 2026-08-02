@@ -1,9 +1,11 @@
 import { createFileRoute, Link } from '@tanstack/react-router';
-import { AlertCircle, Cpu, HardDrive, Loader2, MemoryStick, Plus, ServerIcon } from 'lucide-react';
+import { Cpu, HardDrive, Loader2, MemoryStick, Plus, ServerIcon } from 'lucide-react';
 import { PageHeader } from '#/components/layout/page-header';
 import { Button } from '#/components/ui/button';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '#/components/ui/card';
 import { Progress } from '#/components/ui/progress';
+import { QueryErrorState } from '#/components/ui/query-error-state';
+import { WorkspaceEmptyState } from '#/components/ui/workspace-empty-state';
 import { useListServers } from '#/hooks/use-servers';
 import { parseServerMetrics, type Server } from '#/interfaces/server';
 
@@ -34,30 +36,25 @@ function ServersPage() {
           <Loader2 className="h-8 w-8 animate-spin text-muted-foreground" />
         </div>
       ) : isError ? (
-        <div className="flex h-64 flex-col items-center justify-center rounded-xl border border-destructive/30 bg-card p-6 text-center">
-          <AlertCircle className="mb-4 h-8 w-8 text-destructive" />
-          <h2 className="font-bold text-foreground text-lg tracking-tight">
-            Could not load servers
-          </h2>
-          <p className="mt-1 text-muted-foreground text-sm">Check your connection and try again.</p>
-          <Button className="mt-6" variant="outline" onClick={() => void refetch()}>
-            Try again
-          </Button>
-        </div>
+        <QueryErrorState
+          title="Servers are unavailable"
+          description="Codedock could not load the current runtime fleet."
+          onRetry={() => void refetch()}
+        />
       ) : servers?.length === 0 ? (
-        <div className="flex h-64 flex-col items-center justify-center rounded-xl border border-dashed bg-card">
-          <ServerIcon className="mb-4 h-8 w-8 text-muted-foreground" />
-          <h2 className="font-bold text-foreground text-lg tracking-tight">No servers yet</h2>
-          <p className="mt-1 text-center text-muted-foreground text-sm">
-            Add a server to start deploying your applications globally.
-          </p>
-          <Link to="/servers/new" className="mt-6">
-            <Button className="gap-2">
-              <Plus className="h-4 w-4" />
-              Add server
-            </Button>
-          </Link>
-        </div>
+        <WorkspaceEmptyState
+          icon={ServerIcon}
+          title="Add your first server"
+          description="Connect a runtime so Codedock can build, deploy, and observe applications on your infrastructure."
+          action={
+            <Link to="/servers/new">
+              <Button className="gap-2">
+                <Plus className="h-4 w-4" />
+                Add server
+              </Button>
+            </Link>
+          }
+        />
       ) : (
         <div className="grid grid-cols-1 gap-6 md:grid-cols-2 lg:grid-cols-3">
           {servers?.map((server) => (

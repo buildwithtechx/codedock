@@ -32,7 +32,7 @@ const creationItems = [
   {
     title: 'Add backup destination',
     description: 'Connect compatible object storage',
-    to: '/s3-destinations',
+    to: '/backups',
     icon: Plus,
   },
 ];

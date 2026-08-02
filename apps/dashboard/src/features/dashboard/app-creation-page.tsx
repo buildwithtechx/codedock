@@ -1,10 +1,12 @@
 import { Link } from '@tanstack/react-router';
 import { ArrowLeft, ArrowRight, Box, FolderKanban, Plus } from 'lucide-react';
 import { Button } from '#/components/ui/button';
+import { QueryErrorState } from '#/components/ui/query-error-state';
+import { WorkspaceEmptyState } from '#/components/ui/workspace-empty-state';
 import { useListCanvasSummaries } from '#/hooks/use-canvas';
 
 export function AppCreationPage() {
-  const { data, isLoading } = useListCanvasSummaries();
+  const { data, isLoading, isError, refetch } = useListCanvasSummaries();
   const projects = data?.data || [];
 
   return (
@@ -35,23 +37,28 @@ export function AppCreationPage() {
               />
             ))}
           </div>
+        ) : isError ? (
+          <QueryErrorState
+            className="mt-8"
+            title="Projects are unavailable"
+            description="Codedock could not load projects for the active workspace."
+            onRetry={() => void refetch()}
+          />
         ) : projects.length === 0 ? (
-          <section className="mt-8 flex min-h-75 flex-col items-center justify-center rounded-2xl border border-border border-dashed bg-card px-6 text-center">
-            <div className="flex h-11 w-11 items-center justify-center rounded-xl bg-primary/12 text-primary">
-              <FolderKanban className="h-5 w-5" />
-            </div>
-            <h2 className="mt-4 font-semibold">Create a project first</h2>
-            <p className="mt-1 max-w-sm text-muted-foreground text-sm">
-              A project gives the application a place for its services, environment, and deployment
-              target.
-            </p>
-            <Link to="/projects/new" className="mt-5">
-              <Button className="gap-2">
-                <Plus className="h-4 w-4" />
-                Create project
-              </Button>
-            </Link>
-          </section>
+          <WorkspaceEmptyState
+            className="mt-8"
+            icon={FolderKanban}
+            title="Create a project first"
+            description="A project gives this application a place for its services, environment, and deployment target."
+            action={
+              <Link to="/projects/new">
+                <Button className="gap-2">
+                  <Plus className="h-4 w-4" />
+                  Create project
+                </Button>
+              </Link>
+            }
+          />
         ) : (
           <section className="mt-8 grid gap-3 md:grid-cols-2">
             {projects.map((project) => (

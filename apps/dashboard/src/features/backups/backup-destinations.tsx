@@ -1,7 +1,5 @@
-import { Database, MoreVertical, Plus, Trash } from 'lucide-react';
-import { useState } from 'react';
+import { Database, MoreVertical, Trash } from 'lucide-react';
 import { toast } from 'sonner';
-import { PageHeader } from '#/components/layout/page-header';
 import { Button } from '#/components/ui/button';
 import {
   DropdownMenu,
@@ -9,12 +7,16 @@ import {
   DropdownMenuItem,
   DropdownMenuTrigger,
 } from '#/components/ui/dropdown-menu';
+import { QueryErrorState } from '#/components/ui/query-error-state';
+import { WorkspaceEmptyState } from '#/components/ui/workspace-empty-state';
 import { useDeleteS3Destination, useListS3Destinations } from '#/features/backups';
-import { CreateS3DestinationDialog } from './create-s3-destination-dialog';
 
-export function S3DestinationsList() {
-  const [isOpen, setIsOpen] = useState(false);
-  const { data: s3Destinations, isLoading } = useListS3Destinations();
+type BackupDestinationsProps = {
+  onAddDestination: () => void;
+};
+
+export function BackupDestinations({ onAddDestination }: BackupDestinationsProps) {
+  const { data: s3Destinations, isLoading, isError, refetch } = useListS3Destinations();
   const deleteS3Dest = useDeleteS3Destination();
 
   const handleDelete = async (id: string) => {
@@ -27,40 +29,32 @@ export function S3DestinationsList() {
   };
 
   if (isLoading) {
-    return <div className="p-6">Loading configuration...</div>;
+    return <div className="min-h-100 animate-pulse" />;
+  }
+
+  if (isError) {
+    return (
+      <QueryErrorState
+        title="Storage destinations are unavailable"
+        description="Codedock could not load the configured backup storage."
+        onRetry={() => refetch()}
+      />
+    );
   }
 
   const list = s3Destinations?.data || [];
 
   return (
-    <div className="space-y-6">
-      <PageHeader
-        title="Storage destinations"
-        description="Manage compatible object storage used for offsite backups."
-        action={
-          <CreateS3DestinationDialog
-            isOpen={isOpen}
-            setIsOpen={setIsOpen}
-            trigger={
-              <Button className="gap-2">
-                <Plus className="h-4 w-4" />
-                Add destination
-              </Button>
-            }
-          />
-        }
-      />
-
+    <div>
       {list.length === 0 ? (
-        <div className="flex flex-col items-center justify-center rounded-xl border border-border border-dashed bg-card py-12 text-center">
-          <Database className="mb-3 h-10 w-10 text-muted-foreground/40" />
-          <h3 className="font-medium text-base">No S3 Destinations Configured</h3>
-          <p className="mt-1 max-w-sm text-muted-foreground text-sm">
-            Add your AWS S3, Cloudflare R2, or compatible object storage to enable offsite backups.
-          </p>
-        </div>
+        <WorkspaceEmptyState
+          icon={Database}
+          title="Add a storage destination"
+          description="Connect S3-compatible storage to keep instance backups off the server."
+          action={<Button onClick={onAddDestination}>Add destination</Button>}
+        />
       ) : (
-        <div className="grid grid-cols-1 gap-4 md:grid-cols-2 lg:grid-cols-3">
+        <div className="grid grid-cols-1 gap-4 md:grid-cols-2 xl:grid-cols-3">
           {list.map((dest) => (
             <div
               key={dest.id}
@@ -69,7 +63,7 @@ export function S3DestinationsList() {
               <div>
                 <div className="flex items-start justify-between">
                   <div>
-                    <h3 className="font-semibold text-base">{dest.name}</h3>
+                    <h2 className="font-semibold text-base">{dest.name}</h2>
                     {dest.description && (
                       <p className="mt-0.5 text-muted-foreground text-xs">{dest.description}</p>
                     )}
@@ -92,26 +86,26 @@ export function S3DestinationsList() {
                   </DropdownMenu>
                 </div>
 
-                <div className="mt-4 space-y-2 font-mono text-xs">
+                <dl className="mt-4 space-y-2 font-mono text-xs">
                   <div className="flex justify-between border-border/40 border-b pb-1">
-                    <span className="text-muted-foreground">Provider:</span>
-                    <span className="font-medium uppercase">{dest.provider}</span>
+                    <dt className="text-muted-foreground">Provider</dt>
+                    <dd className="font-medium uppercase">{dest.provider}</dd>
                   </div>
                   <div className="flex justify-between border-border/40 border-b pb-1">
-                    <span className="text-muted-foreground">Bucket:</span>
-                    <span className="truncate pl-2 text-foreground">{dest.bucket}</span>
+                    <dt className="text-muted-foreground">Bucket</dt>
+                    <dd className="truncate pl-2 text-foreground">{dest.bucket}</dd>
                   </div>
                   <div className="flex justify-between border-border/40 border-b pb-1">
-                    <span className="text-muted-foreground">Region:</span>
-                    <span className="text-foreground">{dest.region || 'auto'}</span>
+                    <dt className="text-muted-foreground">Region</dt>
+                    <dd className="text-foreground">{dest.region || 'auto'}</dd>
                   </div>
                   <div className="flex justify-between">
-                    <span className="text-muted-foreground">Endpoint:</span>
-                    <span className="max-w-50 truncate pl-2 text-foreground" title={dest.endpoint}>
+                    <dt className="text-muted-foreground">Endpoint</dt>
+                    <dd className="max-w-50 truncate pl-2 text-foreground" title={dest.endpoint}>
                       {dest.endpoint}
-                    </span>
+                    </dd>
                   </div>
-                </div>
+                </dl>
               </div>
             </div>
           ))}
