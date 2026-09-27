@@ -76,6 +76,8 @@
     "includes": [
       "apps/dashboard/src/**",
       "apps/desktop/src/**",
+      "apps/web/src/**",
+      "apps/docs/src/**",
       "!**/.tanstack",
       "!**/*.gen.ts",
       "!**/routeTree.gen.ts",
