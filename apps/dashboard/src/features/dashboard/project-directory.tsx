@@ -21,12 +21,12 @@ export function ProjectDirectory() {
             : `${projects.length} project${projects.length === 1 ? '' : 's'}`
         }
         action={
-          <Link to="/projects/new">
-            <Button className="gap-2">
+          <Button asChild className="gap-2">
+            <Link to="/projects/new">
               <Plus className="h-4 w-4" />
               New project
-            </Button>
-          </Link>
+            </Link>
+          </Button>
         }
       />
 

@@ -61,6 +61,9 @@ func (a *AuthService) Register(ctx context.Context, name, email, password, origi
 	if email == "" || password == "" || name == "" {
 		return nil, "", "", errors.New("name, email and password are required")
 	}
+	repositories.FirstUserSetupLock.Lock()
+	defer repositories.FirstUserSetupLock.Unlock()
+
 	_, total, _ := a.userRepo.ListUsers(ctx, 1, 0)
 	isInitial := total == 0
 	cfg, _ := a.settingsRepo.GetServerSettings(ctx)

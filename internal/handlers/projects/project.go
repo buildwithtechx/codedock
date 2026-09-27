@@ -38,6 +38,14 @@ func (h *ProjectHandler) ListProjects(c echo.Context) error {
 		return utils.Error(c, http.StatusBadRequest, "organizationId is required")
 	}
 
+	user := middleware.GetUserClaimsFromContext(c.Request().Context())
+	if user == nil {
+		return utils.Error(c, http.StatusUnauthorized, "unauthorized")
+	}
+	if !h.projectService.HasOrgPermission(c.Request().Context(), orgID, user.UserID, user.Role, "") {
+		return utils.Error(c, http.StatusForbidden, "insufficient permissions for this organization")
+	}
+
 	projects, total, err := h.projectService.ListProjectsByOrganization(c.Request().Context(), orgID, limit, offset)
 	if err != nil {
 		return utils.Error(c, http.StatusInternalServerError, err.Error())

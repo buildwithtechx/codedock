@@ -47,7 +47,12 @@ export function OrganizationOnboarding() {
   };
 
   return (
-    <Dialog open={open} onOpenChange={setOpen}>
+    <Dialog
+      open={open}
+      onOpenChange={(nextOpen) => {
+        if (!nextOpen) void handleUseSuggestedName();
+      }}
+    >
       <DialogContent showCloseButton={false}>
         <DialogHeader>
           <div className="mb-2 flex h-11 w-11 items-center justify-center rounded-xl border border-primary/20 bg-primary/10 text-primary">

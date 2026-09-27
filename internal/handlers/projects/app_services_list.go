@@ -25,5 +25,10 @@ func (h *AppHandler) ListByOrganization(c echo.Context) error {
 	if err != nil {
 		return utils.Error(c, http.StatusInternalServerError, err.Error())
 	}
+	for _, app := range apps {
+		if app != nil {
+			app.DeployToken = ""
+		}
+	}
 	return utils.Success(c, "Operation successful", apps)
 }

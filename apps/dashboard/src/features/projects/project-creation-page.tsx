@@ -32,19 +32,26 @@ export function ProjectCreationPage() {
   useEffect(() => {
     if (activeOrganizationId) {
       setOrganizationId(activeOrganizationId);
+    } else if (organizations.length > 0 && !organizationId) {
+      setOrganizationId(organizations[0].id);
     }
-  }, [activeOrganizationId]);
+  }, [activeOrganizationId, organizations, organizationId]);
 
   const handleSubmit = async (event: React.FormEvent) => {
     event.preventDefault();
+
+    if (!organizationId) {
+      toast.error('An active organization is required to create a project');
+      return;
+    }
 
     try {
       const response = await createProject({
         payload: {
           name,
           description,
+          organizationId,
           ...(serverId !== 'local' ? { serverId } : {}),
-          ...(organizationId ? { organizationId } : {}),
         },
       });
       toast.success('Project created');
@@ -153,12 +160,10 @@ export function ProjectCreationPage() {
           </section>
 
           <div className="flex items-center justify-between gap-3">
-            <Link to="/projects">
-              <Button type="button" variant="ghost">
-                Cancel
-              </Button>
-            </Link>
-            <Button type="submit" disabled={isPending}>
+            <Button asChild type="button" variant="ghost">
+              <Link to="/projects">Cancel</Link>
+            </Button>
+            <Button type="submit" disabled={isPending || !name.trim() || !organizationId}>
               {isPending ? 'Creating project...' : 'Create project'}
             </Button>
           </div>

@@ -33,6 +33,7 @@ const creationItems = [
     title: 'Add backup destination',
     description: 'Connect compatible object storage',
     to: '/backups',
+    search: { tab: 'destinations', add: 'true' },
     icon: Plus,
   },
 ];
@@ -127,7 +128,7 @@ export function CommandPalette({ open, onOpenChange }: CommandPaletteProps) {
                   <Command.Item
                     key={item.to}
                     value={`${item.title} ${item.description}`}
-                    onSelect={() => navigateTo(item.to)}
+                    onSelect={() => navigateTo(item.to, item.search)}
                     className="flex cursor-pointer items-center gap-3 rounded-lg border border-transparent px-3 py-3 text-foreground text-sm data-[selected=true]:border-border data-[selected=true]:bg-muted/70"
                   >
                     <div className="flex size-9 items-center justify-center rounded-md border bg-background">

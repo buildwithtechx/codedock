@@ -107,6 +107,7 @@ func (a *AuthService) InviteUser(ctx context.Context, email string, role models.
 		Name:         strings.Split(email, "@")[0],
 		PasswordHash: "INVITED_NO_LOGIN_ALLOWED_MUST_RESET",
 		Role:         role,
+		IsActive:     true,
 		CreatedAt:    time.Now(),
 		UpdatedAt:    time.Now(),
 	}

@@ -97,6 +97,9 @@ func (h *BackupHandler) DeleteS3Destination(c echo.Context) error {
 		return utils.Error(c, http.StatusBadRequest, "missing id")
 	}
 	if err := h.backupService.DeleteS3Destination(c.Request().Context(), id); err != nil {
+		if utils.IsValidation(err) {
+			return utils.Error(c, http.StatusConflict, err.Error())
+		}
 		return utils.Error(c, http.StatusInternalServerError, err.Error())
 	}
 	return c.NoContent(http.StatusNoContent)

@@ -1,5 +1,5 @@
 import { Check } from 'lucide-react';
-import { useEffect, useState } from 'react';
+import { useEffect, useRef, useState } from 'react';
 import { toast } from 'sonner';
 import { Button } from '#/components/ui/button';
 import { Skeleton } from '#/components/ui/skeleton';
@@ -65,10 +65,13 @@ export const NotificationsSettings = () => {
   const [testingProvider, setTestingProvider] = useState<string | null>(null);
   const [savingProvider, setSavingProvider] = useState<string | null>(null);
 
+  const isInitialized = useRef(false);
+  const dirtyFieldsRef = useRef<Set<keyof NotifSettingsForm>>(new Set());
+
   useEffect(() => {
     if (data?.data) {
       const s = data.data as Record<string, unknown>;
-      setForm({
+      const serverValues: NotifSettingsForm = {
         discordWebhookUrl: (s.discordWebhookUrl as string) ?? '',
         discordPingEnabled: (s.discordPingEnabled as boolean) ?? false,
         discordEnabled: (s.discordEnabled as boolean) ?? false,
@@ -92,11 +95,28 @@ export const NotificationsSettings = () => {
         genericWebhookUrl: (s.genericWebhookUrl as string) ?? '',
         genericWebhookEnabled: (s.genericWebhookEnabled as boolean) ?? false,
         notificationAlerts: (s.notificationAlerts as boolean) ?? true,
+      };
+
+      setForm((prev) => {
+        if (!isInitialized.current) {
+          isInitialized.current = true;
+          return serverValues;
+        }
+        const updated = { ...prev };
+        for (const key of Object.keys(serverValues) as Array<keyof NotifSettingsForm>) {
+          if (!dirtyFieldsRef.current.has(key)) {
+            (updated as Record<keyof NotifSettingsForm, unknown>)[key] = serverValues[key];
+          }
+        }
+        return updated;
       });
     }
   }, [data]);
 
-  const set = (k: keyof NotifSettingsForm, v: unknown) => setForm((f) => ({ ...f, [k]: v }));
+  const set = (k: keyof NotifSettingsForm, v: unknown) => {
+    dirtyFieldsRef.current.add(k);
+    setForm((f) => ({ ...f, [k]: v }));
+  };
 
   const handleSave = async (provider: string) => {
     const fields = notificationFields[provider];
@@ -105,6 +125,9 @@ export const NotificationsSettings = () => {
     setSavingProvider(provider);
     try {
       await update(Object.fromEntries(fields.map((field) => [field, form[field]])));
+      for (const field of fields) {
+        dirtyFieldsRef.current.delete(field);
+      }
       toast.success(`${provider === 'alerts' ? 'Alert behavior' : provider} settings saved`);
     } catch {
       toast.error(`Failed to save ${provider} settings`);
@@ -124,6 +147,8 @@ export const NotificationsSettings = () => {
       setTestingProvider(null);
     }
   };
+
+  const isSavingAny = isPending || Boolean(savingProvider);
 
   if (isLoading) {
     return (
@@ -149,7 +174,7 @@ export const NotificationsSettings = () => {
             checked={form.notificationAlerts}
             onCheckedChange={(v: boolean) => set('notificationAlerts', v)}
           />
-          <Button size="sm" onClick={() => handleSave('alerts')} disabled={isPending}>
+          <Button size="sm" onClick={() => handleSave('alerts')} disabled={isSavingAny}>
             <Check className="mr-2 h-4 w-4" />
             {savingProvider === 'alerts' ? 'Saving...' : 'Save'}
           </Button>
@@ -164,6 +189,7 @@ export const NotificationsSettings = () => {
         savingProvider={savingProvider}
         testingProvider={testingProvider}
         testing={testing}
+        disabled={isSavingAny}
       />
     </div>
   );

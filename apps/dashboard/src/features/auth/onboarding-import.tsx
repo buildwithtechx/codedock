@@ -15,7 +15,7 @@ import { Label } from '#/components/ui/label';
 import { useGetSetupStatus } from '#/features/settings';
 import { apiClient } from '#/lib/api-client';
 
-export function OnboardingImport() {
+export function OnboardingImport({ triggerClassName }: { triggerClassName?: string } = {}) {
   const { data: setupStatus } = useGetSetupStatus();
   const [open, setOpen] = useState(false);
   const [passphrase, setPassphrase] = useState('');
@@ -51,7 +51,10 @@ export function OnboardingImport() {
       <DialogTrigger asChild>
         <button
           type="button"
-          className="group flex w-fit items-center gap-2 rounded-lg px-1 py-2 font-semibold text-white text-xs uppercase tracking-[0.12em] transition-colors hover:bg-white/10 hover:text-[#d8c7ff]"
+          className={
+            triggerClassName ||
+            'group flex w-fit items-center gap-2 rounded-lg px-1 py-2 font-semibold text-white text-xs uppercase tracking-[0.12em] transition-colors hover:bg-white/10 hover:text-[#d8c7ff]'
+          }
         >
           <FileUp className="size-4" />
           Import existing Codedock

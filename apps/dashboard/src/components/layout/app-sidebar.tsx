@@ -2,6 +2,7 @@ import { Link } from '@tanstack/react-router';
 import { FolderKanban, Moon, PanelLeftClose, PanelLeftOpen, Sun, X } from 'lucide-react';
 import { useTheme } from 'next-themes';
 import { Button } from '#/components/ui/button';
+import { ServerConnectionSwitcher } from '../server-connection-switcher';
 import {
   infrastructureNavigation,
   primaryNavigation,
@@ -168,6 +169,9 @@ export function AppSidebar({ collapsed, onToggle, mobileOpen, onMobileClose }: A
             </p>
           )}
           <OrganizationSwitcher collapsed={navCollapsed} />
+          <div className="mt-2">
+            <ServerConnectionSwitcher collapsed={navCollapsed} />
+          </div>
         </div>
       </aside>
     </>

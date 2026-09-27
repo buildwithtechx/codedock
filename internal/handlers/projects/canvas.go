@@ -63,6 +63,9 @@ func (h *CanvasHandler) GetCanvasSummary(c echo.Context) error {
 	}
 	summary, err := h.canvasService.GetSummary(c.Request().Context(), id)
 	if err != nil {
+		if utils.IsNotFound(err) {
+			return utils.Error(c, http.StatusNotFound, "canvas summary not found")
+		}
 		return utils.Error(c, http.StatusInternalServerError, err.Error())
 	}
 	if summary == nil {
@@ -78,6 +81,9 @@ func (h *CanvasHandler) GetEnvironmentCanvas(c echo.Context) error {
 	}
 	canvas, err := h.canvasService.GetEnvironmentCanvas(c.Request().Context(), id)
 	if err != nil {
+		if utils.IsNotFound(err) {
+			return utils.Error(c, http.StatusNotFound, "environment canvas not found")
+		}
 		return utils.Error(c, http.StatusInternalServerError, err.Error())
 	}
 	if canvas == nil {

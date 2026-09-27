@@ -1,3 +1,4 @@
+import { useSearch } from '@tanstack/react-router';
 import { Calendar, Check, Database, Loader2, Play, Plus, Trash2 } from 'lucide-react';
 import { useEffect, useState } from 'react';
 import { toast } from 'sonner';
@@ -23,8 +24,19 @@ import { BackupExecutionsList } from './backup-executions-list';
 import { CreateS3DestinationDialog } from './create-s3-destination-dialog';
 
 export function BackupsList() {
-  const [activeTab, setActiveTab] = useState('configuration');
-  const [isDestinationDialogOpen, setIsDestinationDialogOpen] = useState(false);
+  const search = useSearch({ strict: false }) as { tab?: string; add?: string } | undefined;
+  const [activeTab, setActiveTab] = useState(search?.tab || 'configuration');
+  const [isDestinationDialogOpen, setIsDestinationDialogOpen] = useState(search?.add === 'true');
+
+  useEffect(() => {
+    if (search?.tab) {
+      setActiveTab(search.tab);
+    }
+    if (search?.add === 'true') {
+      setIsDestinationDialogOpen(true);
+    }
+  }, [search?.tab, search?.add]);
+
   const { data: configsData, isLoading, isError, refetch } = useList();
   const configs = configsData?.data || [];
   const config = configs[0];
@@ -166,7 +178,7 @@ export function BackupsList() {
                 <Button
                   size="sm"
                   onClick={handleSave}
-                  disabled={createBackup.isPending || deleteBackup.isPending}
+                  disabled={isLoading || createBackup.isPending || deleteBackup.isPending}
                 >
                   <Check className="mr-2 h-4 w-4" />
                   {createBackup.isPending || deleteBackup.isPending ? 'Saving...' : 'Save changes'}

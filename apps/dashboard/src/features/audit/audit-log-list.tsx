@@ -1,5 +1,6 @@
 import { Loader2, Shield } from 'lucide-react';
 import { Card, CardContent, CardHeader, CardTitle } from '#/components/ui/card';
+import { QueryErrorState } from '#/components/ui/query-error-state';
 import {
   Table,
   TableBody,
@@ -11,7 +12,7 @@ import {
 import { useAuditLogs } from '#/hooks/use-audit-logs';
 
 export function AuditLogList() {
-  const { data: response, isLoading } = useAuditLogs();
+  const { data: response, isLoading, isError, refetch } = useAuditLogs();
   const logs = response?.data || [];
 
   return (
@@ -23,6 +24,14 @@ export function AuditLogList() {
         {isLoading ? (
           <div className="flex justify-center p-12">
             <Loader2 className="h-8 w-8 animate-spin text-muted-foreground" />
+          </div>
+        ) : isError ? (
+          <div className="py-6">
+            <QueryErrorState
+              title="Audit logs are unavailable"
+              description="Codedock could not load activity logs for your workspace."
+              onRetry={() => void refetch()}
+            />
           </div>
         ) : logs.length === 0 ? (
           <div className="flex flex-col items-center justify-center p-12 text-center text-muted-foreground">

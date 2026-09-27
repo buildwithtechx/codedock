@@ -87,10 +87,10 @@ function VerifyEmailPage() {
           </div>
         )}
         {status === 'error' && (
-          <div className="border-[#b42318] border-l-2 pl-4">
+          <div className="border-destructive border-l-2 pl-4">
             <div className="flex items-center gap-3">
-              <XCircle className="h-5 w-5 text-[#b42318]" />
-              <p className="font-medium text-[#b42318] text-sm">{errorMessage}</p>
+              <XCircle className="h-5 w-5 text-destructive" />
+              <p className="font-medium text-destructive text-sm">{errorMessage}</p>
             </div>
             <Button onClick={() => navigate({ to: '/' })} variant="outline" className="mt-5">
               Return Home

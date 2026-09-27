@@ -3,6 +3,7 @@ import { Activity, ArrowRight, CheckCircle2, CircleX, Rocket, Search, Zap } from
 import { useDeferredValue, useState } from 'react';
 import { PageFrame } from '#/components/layout/page-frame';
 import { PageHeader } from '#/components/layout/page-header';
+import { Button } from '#/components/ui/button';
 import { Input } from '#/components/ui/input';
 import { QueryErrorState } from '#/components/ui/query-error-state';
 import {
@@ -54,17 +55,23 @@ export function DeploymentDirectory() {
   const [projectId, setProjectId] = useState('all');
   const [status, setStatus] = useState('all');
   const [search, setSearch] = useState('');
+  const [page, setPage] = useState(1);
+  const pageSize = 20;
   const deferredSearch = useDeferredValue(search);
   const filters = {
     projectId: projectId === 'all' ? undefined : projectId,
     status: status === 'all' ? undefined : status,
     search: deferredSearch.trim() || undefined,
-    limit: 50,
+    page,
+    limit: pageSize,
   };
   const { data: deploymentsResponse, isLoading, isError, refetch } = useListByOrganization(filters);
-  const { data: projectsResponse } = useListProjects();
+  const { data: projectsResponse } = useListProjects({ limit: 100 });
   const deployments = deploymentsResponse?.data?.records || [];
+  const totalDeployments = deploymentsResponse?.data?.total ?? deployments.length;
   const projects = projectsResponse?.data?.records || [];
+  const totalProjects = projectsResponse?.data?.total ?? projects.length;
+  const totalPages = Math.ceil(totalDeployments / pageSize);
   const hasFilters = projectId !== 'all' || status !== 'all' || search.trim() !== '';
 
   return (
@@ -74,8 +81,8 @@ export function DeploymentDirectory() {
         description={
           isLoading
             ? 'Loading release activity...'
-            : `${deployments.length} total across ${projects.length} project${
-                projects.length === 1 ? '' : 's'
+            : `${totalDeployments} total across ${totalProjects} project${
+                totalProjects === 1 ? '' : 's'
               }`
         }
       />
@@ -86,9 +93,18 @@ export function DeploymentDirectory() {
             projects={projects}
             search={search}
             status={status}
-            onProjectChange={setProjectId}
-            onSearchChange={setSearch}
-            onStatusChange={setStatus}
+            onProjectChange={(val) => {
+              setProjectId(val);
+              setPage(1);
+            }}
+            onSearchChange={(val) => {
+              setSearch(val);
+              setPage(1);
+            }}
+            onStatusChange={(val) => {
+              setStatus(val);
+              setPage(1);
+            }}
           />
           {isError ? (
             <QueryErrorState
@@ -107,10 +123,42 @@ export function DeploymentDirectory() {
                 setProjectId('all');
                 setStatus('all');
                 setSearch('');
+                setPage(1);
               }}
             />
           ) : (
-            <DeploymentTable deployments={deployments} />
+            <>
+              <DeploymentTable deployments={deployments} />
+              {totalPages > 1 && (
+                <div className="flex items-center justify-between border-border/40 border-t pt-4">
+                  <p className="text-muted-foreground text-sm">
+                    Showing {(page - 1) * pageSize + 1} to{' '}
+                    {Math.min(page * pageSize, totalDeployments)} of {totalDeployments}
+                  </p>
+                  <div className="flex items-center gap-2">
+                    <Button
+                      variant="outline"
+                      size="sm"
+                      onClick={() => setPage((p) => Math.max(1, p - 1))}
+                      disabled={page <= 1}
+                    >
+                      Previous
+                    </Button>
+                    <span className="text-muted-foreground text-sm">
+                      Page {page} of {totalPages}
+                    </span>
+                    <Button
+                      variant="outline"
+                      size="sm"
+                      onClick={() => setPage((p) => Math.min(totalPages, p + 1))}
+                      disabled={page >= totalPages}
+                    >
+                      Next
+                    </Button>
+                  </div>
+                </div>
+              )}
+            </>
           )}
         </div>
       </PageFrame>

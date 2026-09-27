@@ -41,7 +41,6 @@ type DeploymentListItem struct {
 	CommitHash    string           `json:"commitHash,omitempty" db:"commit_hash"`
 	CommitMessage string           `json:"commitMessage,omitempty" db:"commit_message"`
 	Trigger       string           `json:"trigger,omitempty" db:"trigger"`
-	BuildLogs     string           `json:"buildLogs,omitempty" db:"build_logs"`
 	ContainerID   string           `json:"containerId,omitempty" db:"container_id"`
 	CreatedAt     time.Time        `json:"createdAt" db:"created_at"`
 	UpdatedAt     time.Time        `json:"updatedAt" db:"updated_at"`

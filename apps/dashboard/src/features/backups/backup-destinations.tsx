@@ -8,7 +8,7 @@ import {
   DropdownMenuTrigger,
 } from '#/components/ui/dropdown-menu';
 import { QueryErrorState } from '#/components/ui/query-error-state';
-import { useDeleteS3Destination, useListS3Destinations } from '#/features/backups';
+import { useDeleteS3Destination, useList, useListS3Destinations } from '#/features/backups';
 
 type BackupDestinationsProps = {
   onAddDestination: () => void;
@@ -16,14 +16,29 @@ type BackupDestinationsProps = {
 
 export function BackupDestinations({ onAddDestination }: BackupDestinationsProps) {
   const { data: s3Destinations, isLoading, isError, refetch } = useListS3Destinations();
+  const { data: backupConfigs } = useList();
   const deleteS3Dest = useDeleteS3Destination();
 
-  const handleDelete = async (id: string) => {
+  const handleDelete = async (id: string, name: string) => {
+    const isReferenced = backupConfigs?.data?.some((c) => c.s3DestinationId === id);
+    if (isReferenced) {
+      toast.error(`Cannot delete "${name}": it is currently referenced by a backup configuration.`);
+      return;
+    }
+
+    if (
+      !window.confirm(
+        `Are you sure you want to delete storage destination "${name}"? This action cannot be undone.`
+      )
+    ) {
+      return;
+    }
+
     try {
       await deleteS3Dest.mutateAsync({ id, projectId: 'global' });
       toast.success('S3 destination deleted successfully');
-    } catch {
-      toast.error('Failed to delete S3 destination');
+    } catch (error) {
+      toast.error(error instanceof Error ? error.message : 'Failed to delete S3 destination');
     }
   };
 
@@ -87,14 +102,19 @@ export function BackupDestinations({ onAddDestination }: BackupDestinationsProps
                   </div>
                   <DropdownMenu>
                     <DropdownMenuTrigger asChild>
-                      <Button variant="ghost" size="icon" className="h-8 w-8 text-muted-foreground">
+                      <Button
+                        variant="ghost"
+                        size="icon"
+                        aria-label={`Options for ${dest.name}`}
+                        className="h-8 w-8 text-muted-foreground"
+                      >
                         <MoreVertical className="h-4 w-4" />
                       </Button>
                     </DropdownMenuTrigger>
                     <DropdownMenuContent align="end">
                       <DropdownMenuItem
                         className="text-destructive focus:text-destructive"
-                        onClick={() => handleDelete(dest.id)}
+                        onClick={() => handleDelete(dest.id, dest.name)}
                       >
                         <Trash className="mr-2 h-4 w-4" />
                         Delete

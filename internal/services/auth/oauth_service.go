@@ -170,20 +170,30 @@ func (s *OAuthService) HandleCallback(ctx context.Context, providerName, code st
 		return "", "", nil, err
 	}
 	if u == nil {
-		role := models.UserRoleMember
-		if count, err := s.userRepo.CountUsers(ctx); err == nil && count == 0 {
-			role = models.UserRoleOwner
+		repositories.FirstUserSetupLock.Lock()
+		u, err = s.userRepo.GetUserByEmail(ctx, email)
+		if err == nil && u == nil {
+			role := models.UserRoleMember
+			if count, err := s.userRepo.CountUsers(ctx); err == nil && count == 0 {
+				role = models.UserRoleOwner
+			}
+			u = &models.User{
+				ID:           uuid.New().String(),
+				Email:        email,
+				PasswordHash: "oauth-login-no-password",
+				Role:         role,
+				IsActive:     true,
+				CreatedAt:    time.Now(),
+				UpdatedAt:    time.Now(),
+			}
+			if err := s.userRepo.CreateUser(ctx, u); err != nil {
+				repositories.FirstUserSetupLock.Unlock()
+				return "", "", nil, errors.New("failed to create user account from oauth: " + err.Error())
+			}
 		}
-		u = &models.User{
-			ID:           uuid.New().String(),
-			Email:        email,
-			PasswordHash: "oauth-login-no-password",
-			Role:         role,
-			CreatedAt:    time.Now(),
-			UpdatedAt:    time.Now(),
-		}
-		if err := s.userRepo.CreateUser(ctx, u); err != nil {
-			return "", "", nil, errors.New("failed to create user account from oauth: " + err.Error())
+		repositories.FirstUserSetupLock.Unlock()
+		if err != nil && u == nil {
+			return "", "", nil, err
 		}
 	}
 	token, err := s.tokenService.GenerateToken(u)

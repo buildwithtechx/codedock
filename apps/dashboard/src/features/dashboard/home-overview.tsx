@@ -27,11 +27,17 @@ export function HomeOverview() {
       />
       <PageFrame
         rail={
-          <div className="space-y-4">
-            <HomeRuntimeSummary projects={projects} isLoading={isLoading} isUnavailable={isError} />
-            <HomeNextStep hasProjects={projects.length > 0} />
-            <HomeAppInventory projects={projects} isLoading={isLoading} />
-          </div>
+          isError ? undefined : (
+            <div className="space-y-4">
+              <HomeRuntimeSummary
+                projects={projects}
+                isLoading={isLoading}
+                isUnavailable={isError}
+              />
+              <HomeNextStep hasProjects={projects.length > 0} />
+              <HomeAppInventory projects={projects} isLoading={isLoading} />
+            </div>
+          )
         }
       >
         <div className="space-y-6">

@@ -4,7 +4,6 @@ import (
 	"context"
 	"database/sql"
 	"errors"
-	"fmt"
 	"time"
 
 	"codedock.run/codedock/internal/models"
@@ -17,7 +16,7 @@ func (r *CanvasRepo) GetEnvironmentCanvas(ctx context.Context, environmentID str
 	var env models.EnvironmentConfig
 	err := r.db.GetContext(ctx, &env, `SELECT id, project_id, name, is_default, created_at, updated_at FROM environments WHERE id = ?`, environmentID)
 	if err == sql.ErrNoRows {
-		return nil, fmt.Errorf("environment not found: %s", environmentID)
+		return nil, utils.NewNotFoundError("Environment", environmentID)
 	}
 	if err != nil {
 		return nil, err

@@ -27,7 +27,7 @@ export function ServerCreationPage() {
   };
 
   const command = server
-    ? `curl -sL https://get.codedock.dev | bash -s -- --key ${server.workerToken}`
+    ? `curl -fsSL https://get.codedock.run/worker.sh | bash -s -- --key ${server.workerToken}`
     : '';
 
   const copyCommand = async () => {

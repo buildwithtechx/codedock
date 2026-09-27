@@ -70,3 +70,17 @@ func (rl *RateLimiter) Middleware(next echo.HandlerFunc) echo.HandlerFunc {
 		return next(c)
 	}
 }
+
+func (rl *RateLimiter) Allow(key string) bool {
+	rl.mu.Lock()
+	defer rl.mu.Unlock()
+	now := time.Now()
+	v, exists := rl.visitors[key]
+	if !exists || v.lastSeen.Add(rl.window).Before(now) {
+		rl.visitors[key] = &visitor{count: 1, lastSeen: now}
+		return true
+	}
+	v.count++
+	v.lastSeen = now
+	return v.count <= rl.limit
+}

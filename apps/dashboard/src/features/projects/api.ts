@@ -24,11 +24,17 @@ export interface ServiceWebhook {
 }
 
 export const projectsService = {
-  listProjects: async (organizationId?: string): Promise<ListProjectsResponse> => {
+  listProjects: async (
+    organizationId?: string,
+    params?: { page?: number; limit?: number }
+  ): Promise<ListProjectsResponse> => {
     try {
-      const url = organizationId
-        ? `/projects?organizationId=${encodeURIComponent(organizationId)}`
-        : '/projects';
+      const searchParams = new URLSearchParams();
+      if (organizationId) searchParams.set('organizationId', organizationId);
+      if (params?.page) searchParams.set('page', String(params.page));
+      if (params?.limit) searchParams.set('limit', String(params.limit));
+      const query = searchParams.toString();
+      const url = query ? `/projects?${query}` : '/projects';
       return await apiClient.get<ListProjectsResponse>(url);
     } catch (error) {
       throw handleApiError(error);

@@ -11,6 +11,7 @@ import (
 	"codedock.run/codedock/internal/engine/backup"
 	"codedock.run/codedock/internal/models"
 	"codedock.run/codedock/internal/repositories"
+	"codedock.run/codedock/internal/utils"
 )
 
 type BackupService struct {
@@ -136,6 +137,14 @@ func (s *BackupService) ListS3Destinations(ctx context.Context) ([]*models.S3Des
 func (s *BackupService) DeleteS3Destination(ctx context.Context, id string) error {
 	if id == "" {
 		return errors.New("id required")
+	}
+	configs, err := s.backupRepo.ListConfigs(ctx)
+	if err == nil {
+		for _, cfg := range configs {
+			if cfg.S3DestinationID == id {
+				return utils.NewValidationError("cannot delete storage destination: it is currently referenced by backup configuration " + cfg.Name)
+			}
+		}
 	}
 	return s.s3Repo.DeleteS3Destination(ctx, id)
 }

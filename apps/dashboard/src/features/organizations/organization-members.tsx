@@ -43,7 +43,9 @@ export function OrganizationMembers({ organizationId }: { organizationId: string
   const currentUserMember = members?.find((m) => m.userId === user?.id || m.email === user?.email);
   const isCurrentUserOwner = currentUserMember?.permission === 'owner';
   const canManageTeam =
-    currentUserMember?.permission === 'owner' || currentUserMember?.permission === 'admin';
+    user?.role === 'admin' ||
+    currentUserMember?.permission === 'owner' ||
+    currentUserMember?.permission === 'admin';
 
   return (
     <div className="space-y-4">

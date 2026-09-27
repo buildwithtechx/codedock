@@ -37,6 +37,8 @@ type UserRepo struct {
 	mu sync.Mutex
 }
 
+var FirstUserSetupLock sync.Mutex
+
 func NewUserRepo(db *sql.DB) *UserRepo {
 	return &UserRepo{db: sqlx.NewDb(db, "sqlite")}
 }
@@ -56,9 +58,6 @@ func (r *UserRepo) CreateUser(ctx context.Context, u *models.User) error {
 	u.UpdatedAt = now
 	if u.PlanType == "" {
 		u.PlanType = "free"
-	}
-	if !u.IsActive {
-		u.IsActive = true
 	}
 	r.mu.Lock()
 	defer r.mu.Unlock()

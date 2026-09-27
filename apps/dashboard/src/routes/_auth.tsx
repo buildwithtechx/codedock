@@ -57,7 +57,7 @@ function AuthLayout() {
           <div className="relative mt-10 flex max-w-sm items-center gap-3">
             <span className="h-px flex-1 bg-white/25" />
             <span className="size-2 rounded-full bg-[#d8c7ff] shadow-[0_0_18px_rgba(216,199,255,0.9)]" />
-            <span className="h-px flex-[2] bg-white/15" />
+            <span className="h-px flex-2 bg-white/15" />
           </div>
         </div>
 
@@ -67,9 +67,12 @@ function AuthLayout() {
       </section>
 
       <section className="flex min-h-dvh flex-col px-5 py-6 sm:px-10 sm:py-9 lg:px-14 xl:px-20">
-        <div className="flex items-center gap-3 lg:hidden">
-          <img src="/apple-touch-icon.png" alt="" className="size-7 rounded-md" />
-          <p className="font-bold tracking-[-0.04em]">{siteName}</p>
+        <div className="flex items-center justify-between gap-3 lg:hidden">
+          <div className="flex items-center gap-3">
+            <img src="/apple-touch-icon.png" alt="" className="size-7 rounded-md" />
+            <p className="font-bold tracking-[-0.04em]">{siteName}</p>
+          </div>
+          <OnboardingImport triggerClassName="group flex w-fit items-center gap-1.5 rounded-lg border border-border/60 bg-muted/40 px-2.5 py-1.5 font-medium text-muted-foreground text-xs transition-colors hover:bg-muted hover:text-foreground" />
         </div>
         <div className="flex flex-1 items-center justify-center py-12 lg:py-16">
           <Outlet />

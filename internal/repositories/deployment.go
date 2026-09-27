@@ -129,7 +129,7 @@ func (r *DeploymentRepo) ListByOrganization(ctx context.Context, filter models.D
 	deployments := make([]models.DeploymentListItem, 0)
 	query := `SELECT d.id, d.service_id, COALESCE(s.name, '' ) AS service_name, d.environment_id,
 		d.project_id, p.name AS project_name, d.status, d.commit_hash, d.commit_message,
-		d.branch, d.trigger, d.build_logs, d.container_id, d.created_at, d.updated_at, d.finished_at ` + where + `
+		d.branch, d.trigger, d.container_id, d.created_at, d.updated_at, d.finished_at ` + where + `
 		ORDER BY d.created_at DESC LIMIT ? OFFSET ?`
 	args = append(args, filter.Limit, filter.Offset)
 	if err := r.db.SelectContext(ctx, &deployments, query, args...); err != nil {

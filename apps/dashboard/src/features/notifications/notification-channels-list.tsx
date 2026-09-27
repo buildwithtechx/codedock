@@ -38,6 +38,7 @@ type Props = {
   savingProvider: string | null;
   testingProvider: string | null;
   testing: boolean;
+  disabled?: boolean;
 };
 
 export const NotificationChannelsList = ({
@@ -48,7 +49,10 @@ export const NotificationChannelsList = ({
   savingProvider,
   testingProvider,
   testing,
+  disabled = false,
 }: Props) => {
+  const isAnySaving = disabled || Boolean(savingProvider);
+
   return (
     <>
       <NotificationSection
@@ -60,6 +64,7 @@ export const NotificationChannelsList = ({
         onSave={() => handleSave('discord')}
         onTest={() => handleTest('discord')}
         saving={savingProvider === 'discord'}
+        disabled={isAnySaving}
         testing={testingProvider === 'discord' && testing}
       >
         <div className="space-y-2">
@@ -89,6 +94,7 @@ export const NotificationChannelsList = ({
         onSave={() => handleSave('slack')}
         onTest={() => handleTest('slack')}
         saving={savingProvider === 'slack'}
+        disabled={isAnySaving}
         testing={testingProvider === 'slack' && testing}
       >
         <div className="space-y-2">
@@ -111,6 +117,7 @@ export const NotificationChannelsList = ({
         onSave={() => handleSave('telegram')}
         onTest={() => handleTest('telegram')}
         saving={savingProvider === 'telegram'}
+        disabled={isAnySaving}
         testing={testingProvider === 'telegram' && testing}
       >
         <div className="grid grid-cols-2 gap-4">
@@ -145,6 +152,7 @@ export const NotificationChannelsList = ({
         onSave={() => handleSave('smtp')}
         onTest={() => handleTest('smtp')}
         saving={savingProvider === 'smtp'}
+        disabled={isAnySaving}
         testing={testingProvider === 'smtp' && testing}
       >
         <div className="grid grid-cols-2 gap-4">
@@ -216,6 +224,7 @@ export const NotificationChannelsList = ({
         onSave={() => handleSave('resend')}
         onTest={() => handleTest('resend')}
         saving={savingProvider === 'resend'}
+        disabled={isAnySaving}
         testing={testingProvider === 'resend' && testing}
       >
         <div className="space-y-2">
@@ -239,6 +248,7 @@ export const NotificationChannelsList = ({
         onSave={() => handleSave('pushover')}
         onTest={() => handleTest('pushover')}
         saving={savingProvider === 'pushover'}
+        disabled={isAnySaving}
         testing={testingProvider === 'pushover' && testing}
       >
         <div className="grid grid-cols-2 gap-4">
@@ -273,6 +283,7 @@ export const NotificationChannelsList = ({
         onSave={() => handleSave('webhook')}
         onTest={() => handleTest('webhook')}
         saving={savingProvider === 'webhook'}
+        disabled={isAnySaving}
         testing={testingProvider === 'webhook' && testing}
       >
         <div className="space-y-2">
