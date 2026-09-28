@@ -18,6 +18,7 @@ func (s *Server) registerAppRoutes(apiGroup, authGroup *echo.Group) {
 	authGroup.GET("/environments/:id/apps", s.appServiceHandler.ListByEnvironment)
 	authGroup.POST("/environments/:id/apps", s.appServiceHandler.Create)
 	authGroup.DELETE("/environments/:id", s.environmentHandler.Delete)
+	authGroup.GET("/apps", s.appServiceHandler.ListByOrganization)
 	authGroup.GET("/apps/:id", s.appServiceHandler.Get, serviceAuth)
 	authGroup.PUT("/apps/:id", s.appServiceHandler.Update, serviceAuthAdmin)
 	authGroup.DELETE("/apps/:id", s.appServiceHandler.Delete, serviceAuthOwner)
@@ -52,6 +53,7 @@ func (s *Server) registerDeploymentRoutes(authGroup *echo.Group) {
 	serviceAuthAdmin := s.RequireServiceRole(models.MemberPermissionAdmin)
 	serviceAuth := s.RequireServiceRole("")
 
+	authGroup.GET("/deployments", s.deploymentHandler.ListOrganizationDeployments)
 	authGroup.GET("/services/:serviceId/deployments", s.deploymentHandler.ListServiceDeployments, serviceAuth)
 	authGroup.GET("/services/:serviceId/previews", s.deploymentHandler.ListPRPreviews, serviceAuth)
 	authGroup.POST("/services/:serviceId/deploy", s.deploymentHandler.Trigger, serviceAuthAdmin)

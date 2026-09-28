@@ -3,11 +3,13 @@ package system
 import (
 	"bytes"
 	"context"
+	"database/sql"
 	"encoding/json"
 	"fmt"
 	"os"
 	"os/exec"
 	"path/filepath"
+	"strings"
 	"time"
 
 	"codedock.run/codedock/internal/engine/networking"
@@ -25,12 +27,13 @@ type BundleManifest struct {
 }
 
 type MigrationService struct {
+	db      *sql.DB
 	dbRepo  repositories.DatabaseRepository
 	dataDir string
 }
 
-func NewMigrationService(dbRepo repositories.DatabaseRepository, dataDir string) *MigrationService {
-	return &MigrationService{dbRepo: dbRepo, dataDir: dataDir}
+func NewMigrationService(db *sql.DB, dbRepo repositories.DatabaseRepository, dataDir string) *MigrationService {
+	return &MigrationService{db: db, dbRepo: dbRepo, dataDir: dataDir}
 }
 
 func (s *MigrationService) Export(ctx context.Context, passphrase string) ([]byte, error) {
@@ -104,7 +107,7 @@ func (s *MigrationService) Import(ctx context.Context, bundleData []byte, passph
 	}
 
 	if sqlData, ok := files["codedock.db.sql"]; ok {
-		if err := s.restoreSQLite(sqlData); err != nil {
+		if err := s.restoreSQLite(ctx, sqlData); err != nil {
 			return nil, fmt.Errorf("sqlite restore failed: %w", err)
 		}
 	}
@@ -148,7 +151,40 @@ func (s *MigrationService) dumpSQLite() ([]byte, error) {
 	return out, nil
 }
 
-func (s *MigrationService) restoreSQLite(sqlData []byte) error {
+func (s *MigrationService) restoreSQLite(ctx context.Context, sqlData []byte) error {
+	if s.db != nil {
+		if _, err := s.db.ExecContext(ctx, "PRAGMA foreign_keys = OFF;"); err != nil {
+			return fmt.Errorf("disable foreign keys: %w", err)
+		}
+
+		rows, err := s.db.QueryContext(ctx, `SELECT type, name FROM sqlite_master WHERE type IN ('table', 'view', 'trigger', 'index') AND name NOT LIKE 'sqlite_%'`)
+		if err != nil {
+			return fmt.Errorf("list sqlite objects: %w", err)
+		}
+		var drops []string
+		for rows.Next() {
+			var objType, objName string
+			if err := rows.Scan(&objType, &objName); err == nil {
+				drops = append(drops, fmt.Sprintf("DROP %s IF EXISTS \"%s\";", strings.ToUpper(objType), objName))
+			}
+		}
+		rows.Close()
+
+		for _, dropStmt := range drops {
+			_, _ = s.db.ExecContext(ctx, dropStmt)
+		}
+
+		if _, err := s.db.ExecContext(ctx, string(sqlData)); err != nil {
+			return fmt.Errorf("execute restore script: %w", err)
+		}
+
+		if _, err := s.db.ExecContext(ctx, "PRAGMA foreign_keys = ON;"); err != nil {
+			return fmt.Errorf("enable foreign keys: %w", err)
+		}
+
+		return nil
+	}
+
 	dbPath := filepath.Join(s.dataDir, "codedock.db")
 	backupPath := dbPath + ".bak"
 	_ = os.Rename(dbPath, backupPath)

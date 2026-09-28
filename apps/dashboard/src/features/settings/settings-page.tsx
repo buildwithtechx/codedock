@@ -1,13 +1,47 @@
-import { Bell, Database, Lock, Settings as SettingsIcon } from 'lucide-react';
-import { useState } from 'react';
-import { BackupsList } from '#/features/backups/backups-list';
+import { useNavigate, useRouterState } from '@tanstack/react-router';
+import {
+  ArrowRightLeft,
+  Bell,
+  Brain,
+  ClipboardList,
+  CloudCog,
+  Download,
+  Lock,
+  Settings as SettingsIcon,
+  UsersRound,
+  Wrench,
+} from 'lucide-react';
+import { PageFrame } from '#/components/layout/page-frame';
+import { PageHeader } from '#/components/layout/page-header';
+import { AuditLogList } from '#/features/audit/audit-log-list';
 import { NotificationsSettings } from '#/features/notifications/notifications-settings';
+import { GithubIntegration, GitProviders } from '#/features/sources';
 import { OAuthProvidersList } from '#/features/users/oauth-providers-list';
+import { useAuthStore } from '#/stores/auth-store';
+import { AISettings } from './ai-settings';
 import { GeneralSettings } from './general-settings';
+import { MaintenancePage } from './maintenance-settings';
+import { MigrationSettings } from './migration-settings';
+import { TeamSettings } from './team-settings';
+import { UpdatesPage } from './update-settings';
 
-type TabId = 'general' | 'notifications' | 'oauth' | 'backups';
+type TabId =
+  | 'general'
+  | 'notifications'
+  | 'oauth'
+  | 'team'
+  | 'audit'
+  | 'ai'
+  | 'sources'
+  | 'maintenance'
+  | 'updates'
+  | 'migration';
 
-type Tab = { id: TabId; label: string; icon: React.ReactNode };
+type Tab = {
+  id: TabId;
+  label: string;
+  icon: React.ReactNode;
+};
 
 const TABS: Tab[] = [
   {
@@ -20,57 +54,153 @@ const TABS: Tab[] = [
     label: 'Notifications',
     icon: <Bell className="h-4 w-4" />,
   },
-  { id: 'oauth', label: 'OAuth', icon: <Lock className="h-4 w-4" /> },
-  { id: 'backups', label: 'Backups', icon: <Database className="h-4 w-4" /> },
+  {
+    id: 'oauth',
+    label: 'OAuth',
+    icon: <Lock className="h-4 w-4" />,
+  },
+  {
+    id: 'team',
+    label: 'Team',
+    icon: <UsersRound className="h-4 w-4" />,
+  },
+  {
+    id: 'audit',
+    label: 'Audit log',
+    icon: <ClipboardList className="h-4 w-4" />,
+  },
+  {
+    id: 'ai',
+    label: 'AI',
+    icon: <Brain className="h-4 w-4" />,
+  },
+  {
+    id: 'sources',
+    label: 'Sources',
+    icon: <CloudCog className="h-4 w-4" />,
+  },
+  {
+    id: 'maintenance',
+    label: 'Maintenance',
+    icon: <Wrench className="h-4 w-4" />,
+  },
+  {
+    id: 'updates',
+    label: 'Updates',
+    icon: <Download className="h-4 w-4" />,
+  },
+  {
+    id: 'migration',
+    label: 'Migration',
+    icon: <ArrowRightLeft className="h-4 w-4" />,
+  },
 ];
 
 export const SettingsLayout = () => {
-  const [activeId, setActiveId] = useState<TabId>('general');
+  const navigate = useNavigate();
+  const user = useAuthStore((state) => state.user);
+  const search = useRouterState({
+    select: (state) => state.location.search as { tab?: TabId; code?: string },
+  });
+  const activeId = TABS.some((tab) => tab.id === search.tab) ? (search.tab as TabId) : 'general';
+  const setActiveId = (tab: TabId) => {
+    void navigate({
+      to: '/settings',
+      search: tab === 'general' ? {} : ({ tab } as never),
+      replace: true,
+    });
+  };
 
+  const content = {
+    general: <GeneralSettings />,
+    notifications: <NotificationsSettings />,
+    oauth: <OAuthProvidersList />,
+    team: <TeamSettings />,
+    audit: <AuditLogList />,
+    ai: <AISettings />,
+    sources: (
+      <div className="space-y-8 pb-12">
+        <GithubIntegration />
+        <GitProviders />
+      </div>
+    ),
+    maintenance: <MaintenancePage />,
+    updates: <UpdatesPage />,
+    migration: <MigrationSettings />,
+  }[activeId];
   return (
-    <div className="flex min-h-full flex-col">
-      <div className="border-border/50 border-b bg-background/50 px-6 pt-6 backdrop-blur-sm">
-        <div className="mb-5 flex items-center gap-3">
-          <div className="flex h-12 w-12 shrink-0 items-center justify-center rounded-lg border border-primary/20 bg-primary/10 text-primary">
-            <SettingsIcon className="h-6 w-6" />
-          </div>
+    <div className="space-y-5">
+      <PageHeader
+        title="Settings"
+        description="Manage instance behavior, connections, and notifications."
+      />
+
+      <div className="flex gap-1 overflow-x-auto xl:hidden">
+        {TABS.map((tab) => {
+          const isActive = tab.id === activeId;
+          return (
+            <button
+              key={tab.id}
+              onClick={() => setActiveId(tab.id)}
+              type="button"
+              aria-current={isActive ? 'page' : undefined}
+              className={`flex shrink-0 items-center gap-2 rounded-lg px-3 py-2 text-sm transition-colors ${
+                isActive
+                  ? 'bg-primary/12 font-medium text-foreground'
+                  : 'text-muted-foreground hover:bg-muted hover:text-foreground'
+              }`}
+            >
+              {tab.icon}
+              {tab.label}
+            </button>
+          );
+        })}
+      </div>
+
+      <PageFrame
+        rail={
           <div>
-            <h1 className="font-bold text-xl">Instance Settings</h1>
-            <p className="text-muted-foreground text-sm">
-              Manage your Codedock server configuration
-            </p>
+            <section className="mb-3 rounded-2xl bg-card p-4">
+              <div className="flex items-center gap-3">
+                <div className="flex h-8 w-8 items-center justify-center rounded-lg bg-primary/12 text-primary">
+                  <SettingsIcon className="h-4 w-4" />
+                </div>
+                <div className="min-w-0">
+                  <p className="font-semibold text-sm">Settings</p>
+                  <p className="truncate text-muted-foreground text-xs">
+                    {user?.email || 'Instance owner'}
+                  </p>
+                </div>
+              </div>
+            </section>
+            <div className="rounded-2xl bg-card p-2">
+              <div className="space-y-1">
+                {TABS.map((tab) => {
+                  const isActive = tab.id === activeId;
+                  return (
+                    <button
+                      key={tab.id}
+                      onClick={() => setActiveId(tab.id)}
+                      type="button"
+                      aria-current={isActive ? 'page' : undefined}
+                      className={`flex w-full items-center gap-3 rounded-xl px-3 py-2.5 text-left font-medium text-sm transition-colors ${
+                        isActive
+                          ? 'bg-primary/12 text-foreground'
+                          : 'text-muted-foreground hover:bg-muted/60 hover:text-foreground'
+                      }`}
+                    >
+                      {tab.icon}
+                      {tab.label}
+                    </button>
+                  );
+                })}
+              </div>
+            </div>
           </div>
-        </div>
-
-        <nav className="flex gap-1 overflow-x-auto">
-          {TABS.map((t) => {
-            const isActive = t.id === activeId;
-            return (
-              <button
-                key={t.id}
-                onClick={() => setActiveId(t.id)}
-                type="button"
-                className={[
-                  'flex shrink-0 items-center gap-2 rounded-t-lg border border-b-0 px-4 py-2.5 text-sm transition-colors',
-                  isActive
-                    ? 'border-border/50 bg-card font-medium text-foreground'
-                    : 'border-transparent text-muted-foreground hover:text-foreground',
-                ].join(' ')}
-              >
-                {t.icon}
-                {t.label}
-              </button>
-            );
-          })}
-        </nav>
-      </div>
-
-      <div className="flex-1 p-6">
-        {activeId === 'general' && <GeneralSettings />}
-        {activeId === 'notifications' && <NotificationsSettings />}
-        {activeId === 'oauth' && <OAuthProvidersList />}
-        {activeId === 'backups' && <BackupsList />}
-      </div>
+        }
+      >
+        {content}
+      </PageFrame>
     </div>
   );
 };

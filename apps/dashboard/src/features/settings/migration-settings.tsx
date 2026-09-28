@@ -44,18 +44,7 @@ export function MigrationSettings() {
   return (
     <form onSubmit={handleExport}>
       <div className="space-y-6 pb-12">
-        <div className="mb-5 flex items-center justify-between">
-          <div className="flex items-center gap-3">
-            <div className="flex h-12 w-12 shrink-0 items-center justify-center rounded-lg border border-primary/20 bg-primary/10 text-primary">
-              <ArrowRightLeft className="h-6 w-6" />
-            </div>
-            <div>
-              <h1 className="font-bold text-xl">Migration & Server Takeover</h1>
-              <p className="text-muted-foreground text-sm">
-                Export an encrypted bundle or takeover external Dokploy, Coolify, and Dokku servers.
-              </p>
-            </div>
-          </div>
+        <div className="flex justify-end">
           <ServerTakeoverDialog />
         </div>
 

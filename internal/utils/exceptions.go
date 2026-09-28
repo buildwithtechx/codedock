@@ -78,7 +78,7 @@ type NotFoundError struct {
 }
 
 type ValidationError struct {
-	Message string
+	Message string `json:"message"`
 }
 
 func (e *ValidationError) Error() string {

@@ -15,7 +15,7 @@ type SectionProps = {
 };
 
 const Section = ({ icon, title, action, children }: SectionProps) => (
-  <div className="border/50 rounded-xl border bg-card/40 p-6">
+  <div className="rounded-xl border border-border bg-card p-6">
     <div className="mb-4 flex items-center justify-between">
       <div className="flex items-center gap-3">
         <div className="flex h-8 w-8 shrink-0 items-center justify-center rounded-lg bg-primary/10 text-primary">
@@ -83,17 +83,12 @@ export const DomainsPage = () => {
 
   return (
     <div className="space-y-6 pb-12">
-      <div className="mb-5 flex items-center justify-between">
-        <div className="flex items-center gap-3">
-          <div className="flex h-12 w-12 shrink-0 items-center justify-center rounded-lg border border-primary/20 bg-primary/10 text-primary">
-            <Globe className="h-6 w-6" />
-          </div>
-          <div>
-            <h1 className="font-bold text-xl">Domains</h1>
-            <p className="text-muted-foreground text-sm">
-              Configure the dashboard domain and wildcard root domain for deployed services.
-            </p>
-          </div>
+      <div className="mb-5 flex items-center justify-between gap-4">
+        <div>
+          <h2 className="font-semibold text-lg">Default domains</h2>
+          <p className="mt-1 text-muted-foreground text-sm">
+            Configure the dashboard domain and wildcard root for deployed services.
+          </p>
         </div>
 
         <div className="flex shrink-0 items-center gap-3">

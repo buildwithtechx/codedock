@@ -9,7 +9,7 @@ function ComposeRouteComponent() {
   const { projectId } = Route.useParams();
 
   return (
-    <div className="flex flex-col gap-4 p-4">
+    <div className="flex flex-col gap-4">
       <h1 className="font-bold text-2xl">Docker Compose</h1>
       <ComposeDeployForm projectId={projectId} />
     </div>

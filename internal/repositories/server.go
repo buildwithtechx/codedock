@@ -143,17 +143,15 @@ func (r *sqliteServerRepository) decryptSecrets(server *models.Server) error {
 	}
 	if server.SSHKey != "" {
 		value, err := r.vault.Decrypt(server.SSHKey)
-		if err != nil {
-			return fmt.Errorf("failed to decrypt SSH key: %w", err)
+		if err == nil {
+			server.SSHKey = value
 		}
-		server.SSHKey = value
 	}
 	if server.SSHPassword != "" {
 		value, err := r.vault.Decrypt(server.SSHPassword)
-		if err != nil {
-			return fmt.Errorf("failed to decrypt SSH password: %w", err)
+		if err == nil {
+			server.SSHPassword = value
 		}
-		server.SSHPassword = value
 	}
 	return nil
 }

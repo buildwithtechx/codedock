@@ -1,3 +1,4 @@
+import { useQueryClient } from '@tanstack/react-query';
 import { useState } from 'react';
 import { toast } from 'sonner';
 import { useVerifyDomain } from './hooks';
@@ -22,6 +23,7 @@ function toastForVerificationResult(result: DomainVerifyResult) {
 }
 
 export function useDomainVerification() {
+  const queryClient = useQueryClient();
   const verifyDomain = useVerifyDomain();
   const [verifyingMap, setVerifyingMap] = useState<Record<string, boolean>>({});
   const [verificationResults, setVerificationResults] = useState<
@@ -53,7 +55,9 @@ export function useDomainVerification() {
     setVerifyingMap((prev) => ({ ...prev, [domainId]: true }));
 
     try {
-      return await runVerification(domainId, true);
+      const result = await runVerification(domainId, true);
+      await queryClient.invalidateQueries({ queryKey: ['domains'] });
+      return result;
     } catch {
       toast.error('Verification failed');
       return undefined;
@@ -98,6 +102,7 @@ export function useDomainVerification() {
 
     try {
       await Promise.all(Array.from({ length: workerCount }, () => worker()));
+      await queryClient.invalidateQueries({ queryKey: ['domains'] });
       return {
         verifiedCount,
         failedCount,

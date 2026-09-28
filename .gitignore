@@ -29,6 +29,8 @@ node_modules/
 
 # Astro generated types
 .astro/
+.vinxi/
+.nitro/
 
 data/
 tmp/

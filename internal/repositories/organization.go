@@ -12,6 +12,7 @@ import (
 
 type OrganizationRepository interface {
 	Create(ctx context.Context, org *models.Organization) error
+	CreateWithOwner(ctx context.Context, org *models.Organization, owner *models.OrganizationMember) error
 	GetByID(ctx context.Context, id string) (*models.Organization, error)
 	ListByUser(ctx context.Context, userID string) ([]*models.Organization, error)
 	Update(ctx context.Context, org *models.Organization) error
@@ -45,6 +46,27 @@ func (r *organizationRepository) Create(ctx context.Context, org *models.Organiz
 	`
 	_, err := r.db.NamedExecContext(ctx, query, org)
 	return err
+}
+
+func (r *organizationRepository) CreateWithOwner(ctx context.Context, org *models.Organization, owner *models.OrganizationMember) error {
+	tx, err := r.db.BeginTxx(ctx, nil)
+	if err != nil {
+		return err
+	}
+	defer tx.Rollback()
+	if _, err := tx.NamedExecContext(ctx, `
+		INSERT INTO organizations (id, name, created_at, updated_at)
+		VALUES (:id, :name, :created_at, :updated_at)
+	`, org); err != nil {
+		return err
+	}
+	if _, err := tx.NamedExecContext(ctx, `
+		INSERT INTO organization_members (id, organization_id, user_id, email, permission, status, invited_at, accepted_at)
+		VALUES (:id, :organization_id, :user_id, :email, :permission, :status, :invited_at, :accepted_at)
+	`, owner); err != nil {
+		return err
+	}
+	return tx.Commit()
 }
 
 func (r *organizationRepository) GetByID(ctx context.Context, id string) (*models.Organization, error) {

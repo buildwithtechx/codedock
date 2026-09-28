@@ -87,6 +87,13 @@ func (s *DeploymentService) ListByService(ctx context.Context, serviceID string,
 	return s.repo.ListByService(ctx, serviceID, limit, offset)
 }
 
+func (s *DeploymentService) ListByOrganization(ctx context.Context, filter models.DeploymentListFilter) ([]models.DeploymentListItem, int, error) {
+	if filter.OrganizationID == "" {
+		return nil, 0, errors.New("organization id required")
+	}
+	return s.repo.ListByOrganization(ctx, filter)
+}
+
 func (s *DeploymentService) UpdateDeployment(ctx context.Context, d *models.Deployment) error {
 	if d == nil || d.ID == "" {
 		return errors.New("valid deployment required for update")

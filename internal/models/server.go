@@ -11,18 +11,19 @@ const (
 )
 
 type Server struct {
-	ID          string       `json:"id" db:"id"`
-	UserID      string       `json:"userId" db:"user_id"`
-	Name        string       `json:"name" db:"name"`
-	IPAddress   string       `json:"ipAddress" db:"ip_address"`
-	SSHHost     string       `json:"sshHost" db:"ssh_host"`
-	SSHPort     int          `json:"sshPort" db:"ssh_port"`
-	SSHUser     string       `json:"sshUser" db:"ssh_user"`
-	SSHKey      string       `json:"-" db:"ssh_key"`
-	SSHPassword string       `json:"-" db:"ssh_password"`
-	Status      ServerStatus `json:"status" db:"status"`
-	WorkerToken string       `json:"workerToken,omitempty" db:"worker_token"`
-	LastSeenAt  *time.Time   `json:"lastSeenAt,omitempty" db:"last_seen_at"`
+	ID             string       `json:"id" db:"id"`
+	UserID         string       `json:"userId" db:"user_id"`
+	Name           string       `json:"name" db:"name"`
+	IPAddress      string       `json:"ipAddress" db:"ip_address"`
+	SSHHost        string       `json:"sshHost" db:"ssh_host"`
+	SSHPort        int          `json:"sshPort" db:"ssh_port"`
+	SSHUser        string       `json:"sshUser" db:"ssh_user"`
+	SSHKey         string       `json:"-" db:"ssh_key"`
+	SSHPassword    string       `json:"-" db:"ssh_password"`
+	IsControlPlane bool         `json:"isControlPlane" db:"-"`
+	Status         ServerStatus `json:"status" db:"status"`
+	WorkerToken    string       `json:"workerToken,omitempty" db:"worker_token"`
+	LastSeenAt     *time.Time   `json:"lastSeenAt,omitempty" db:"last_seen_at"`
 
 	Metrics []byte `json:"metrics,omitempty" db:"metrics"`
 

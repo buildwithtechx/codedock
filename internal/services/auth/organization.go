@@ -53,10 +53,6 @@ func (s *OrganizationService) CreateOrganization(ctx context.Context, userID, na
 		CreatedAt: time.Now(),
 		UpdatedAt: time.Now(),
 	}
-	if err := s.orgRepo.Create(ctx, org); err != nil {
-		return nil, err
-	}
-
 	owner := &models.OrganizationMember{
 		ID:             uuid.New().String(),
 		OrganizationID: org.ID,
@@ -66,8 +62,7 @@ func (s *OrganizationService) CreateOrganization(ctx context.Context, userID, na
 		InvitedAt:      time.Now(),
 		AcceptedAt:     time.Now(),
 	}
-	if err := s.orgRepo.AddMember(ctx, owner); err != nil {
-		_ = s.orgRepo.Delete(ctx, org.ID)
+	if err := s.orgRepo.CreateWithOwner(ctx, org, owner); err != nil {
 		return nil, err
 	}
 

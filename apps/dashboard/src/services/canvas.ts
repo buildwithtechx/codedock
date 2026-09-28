@@ -4,9 +4,12 @@ import { apiClient } from '#/lib/api-client';
 import { handleApiError } from '#/lib/error';
 
 export const canvasService = {
-  listCanvasSummaries: async (): Promise<BaseResponse<CanvasSummary[]>> => {
+  listCanvasSummaries: async (
+    organizationId?: string | null
+  ): Promise<BaseResponse<CanvasSummary[]>> => {
     try {
-      return await apiClient.get<BaseResponse<CanvasSummary[]>>('/canvas/projects');
+      const query = organizationId ? `?organizationId=${encodeURIComponent(organizationId)}` : '';
+      return await apiClient.get<BaseResponse<CanvasSummary[]>>(`/canvas/projects${query}`);
     } catch (error) {
       throw handleApiError(error);
     }

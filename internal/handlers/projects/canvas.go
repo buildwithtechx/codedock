@@ -22,7 +22,16 @@ func NewCanvasHandler(s *projectservices.CanvasService, ps *projectservices.Proj
 
 func (h *CanvasHandler) ListCanvasSummaries(c echo.Context) error {
 	user := middleware.GetUserClaimsFromContext(c.Request().Context())
-	summaries, err := h.canvasService.ListSummaries(c.Request().Context())
+	organizationID := c.QueryParam("organizationId")
+	if organizationID == "" {
+		return utils.Error(c, http.StatusBadRequest, "organizationId is required")
+	}
+	if user != nil && h.projectService != nil {
+		if !h.projectService.HasOrgPermission(c.Request().Context(), organizationID, user.UserID, models.UserRole(user.Role), "") {
+			return utils.Error(c, http.StatusForbidden, "insufficient permissions for this organization")
+		}
+	}
+	summaries, err := h.canvasService.ListSummaries(c.Request().Context(), organizationID)
 	if err != nil {
 		return utils.Error(c, http.StatusInternalServerError, err.Error())
 	}
@@ -53,7 +62,13 @@ func (h *CanvasHandler) GetCanvasSummary(c echo.Context) error {
 		}
 	}
 	summary, err := h.canvasService.GetSummary(c.Request().Context(), id)
-	if err != nil || summary == nil {
+	if err != nil {
+		if utils.IsNotFound(err) {
+			return utils.Error(c, http.StatusNotFound, "canvas summary not found")
+		}
+		return utils.Error(c, http.StatusInternalServerError, err.Error())
+	}
+	if summary == nil {
 		return utils.Error(c, http.StatusNotFound, "canvas summary not found")
 	}
 	return utils.Success(c, "Operation successful", summary)
@@ -65,7 +80,13 @@ func (h *CanvasHandler) GetEnvironmentCanvas(c echo.Context) error {
 		return utils.Error(c, http.StatusBadRequest, "missing id parameter")
 	}
 	canvas, err := h.canvasService.GetEnvironmentCanvas(c.Request().Context(), id)
-	if err != nil || canvas == nil {
+	if err != nil {
+		if utils.IsNotFound(err) {
+			return utils.Error(c, http.StatusNotFound, "environment canvas not found")
+		}
+		return utils.Error(c, http.StatusInternalServerError, err.Error())
+	}
+	if canvas == nil {
 		return utils.Error(c, http.StatusNotFound, "environment canvas not found")
 	}
 	user := middleware.GetUserClaimsFromContext(c.Request().Context())

@@ -18,16 +18,16 @@ export const ForgotPasswordForm = () => {
 
   if (isSuccess) {
     return (
-      <div className="space-y-4 text-center">
-        <div className="mx-auto flex h-12 w-12 items-center justify-center rounded-full bg-primary/10">
-          <Mail className="h-6 w-6 text-primary" />
+      <div className="space-y-4">
+        <div className="flex size-11 items-center justify-center rounded-lg bg-primary-soft text-primary">
+          <Mail className="h-5 w-5" />
         </div>
-        <p className="font-medium text-foreground text-lg tracking-tight">Check your email</p>
-        <p className="text-muted-foreground text-sm">
+        <p className="font-bold text-2xl text-foreground tracking-[-0.04em]">Check your email.</p>
+        <p className="text-muted-foreground text-sm leading-6">
           If an account with that email exists, we've sent you instructions to reset your password.
         </p>
         <div className="mt-6">
-          <Link to="/signin" className="font-medium text-primary text-sm hover:underline">
+          <Link to="/signin" className="text-primary text-sm underline-offset-4 hover:underline">
             Back to sign in
           </Link>
         </div>
@@ -37,11 +37,9 @@ export const ForgotPasswordForm = () => {
 
   return (
     <>
-      <form onSubmit={handleSubmit} className="space-y-4">
+      <form onSubmit={handleSubmit} className="space-y-5">
         <div className="space-y-1.5">
-          <Label htmlFor="email" className="font-medium text-foreground/90 text-sm">
-            Email
-          </Label>
+          <Label htmlFor="email">Email</Label>
           <div className="group relative">
             <div className="absolute top-1/2 left-3.5 -translate-y-1/2 text-muted-foreground transition-colors group-focus-within:text-primary">
               <Mail className="h-4 w-4" />
@@ -50,7 +48,7 @@ export const ForgotPasswordForm = () => {
               id="email"
               type="email"
               placeholder="name@example.com"
-              className="h-11 rounded-xl border bg-background/80 pl-10 text-sm transition-all duration-300 focus:border-primary/50 focus:ring-2 focus:ring-primary/20"
+              className="h-12 pl-10"
               value={email}
               onChange={(e) => setEmail(e.target.value)}
               required
@@ -59,21 +57,14 @@ export const ForgotPasswordForm = () => {
           </div>
         </div>
 
-        <Button
-          type="submit"
-          disabled={isPending || !email}
-          className="h-11 w-full rounded-xl bg-linear-to-r from-primary to-purple-600 font-semibold text-sm shadow-lg shadow-primary/30 transition-all duration-200 hover:brightness-110 active:scale-[0.985]"
-        >
+        <Button type="submit" disabled={isPending || !email} className="h-12 w-full">
           {isPending ? 'Sending...' : 'Send Reset Link'}
         </Button>
       </form>
 
-      <div className="mt-6 text-center text-sm">
-        <span className="text-muted-foreground">Remember your password? </span>
-        <Link
-          to="/signin"
-          className="font-medium text-primary underline-offset-4 transition-colors hover:text-primary-hover hover:underline"
-        >
+      <div className="mt-6 border-border border-t pt-5 text-muted-foreground text-sm">
+        <span>Remember your password? </span>
+        <Link to="/signin" className="text-primary underline-offset-4 hover:underline">
           Sign in
         </Link>
       </div>

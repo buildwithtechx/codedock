@@ -123,6 +123,14 @@ func (s *EnvironmentService) DeleteEnvironment(ctx context.Context, id string) e
 }
 
 func (s *EnvironmentService) CreateDomain(ctx context.Context, d *models.DomainConfig) (*models.DomainConfig, error) {
+	return s.createDomain(ctx, d, true)
+}
+
+func (s *EnvironmentService) CreateGeneratedDomain(ctx context.Context, d *models.DomainConfig) (*models.DomainConfig, error) {
+	return s.createDomain(ctx, d, false)
+}
+
+func (s *EnvironmentService) createDomain(ctx context.Context, d *models.DomainConfig, provisionDNS bool) (*models.DomainConfig, error) {
 	if d == nil || d.ServiceID == "" || d.DomainName == "" {
 		return nil, errors.New("valid domain with serviceId and domainName required")
 	}
@@ -145,7 +153,7 @@ func (s *EnvironmentService) CreateDomain(ctx context.Context, d *models.DomainC
 		return nil, err
 	}
 
-	if s.dnsService != nil {
+	if provisionDNS && s.dnsService != nil {
 		domainID := d.ID
 		domainName := d.DomainName
 		provisionCtx, cancel := context.WithTimeout(context.Background(), 30*time.Second)

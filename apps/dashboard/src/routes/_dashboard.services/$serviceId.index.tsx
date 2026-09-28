@@ -40,7 +40,7 @@ function ServiceIndexRoute() {
     return (
       <div className="space-y-6">
         <div className="flex items-center justify-between">
-          <h1 className="font-bold text-2xl">Database: {db.name}</h1>
+          <h1 className="font-semibold text-2xl tracking-tight">Database configuration</h1>
           <Button onClick={() => setImportModalOpen(true)}>Import Data</Button>
         </div>
         <DatabaseImportModal
@@ -69,7 +69,7 @@ function ServiceIndexRoute() {
   if (app) {
     return (
       <div className="space-y-6">
-        <h1 className="font-bold text-2xl">Service: {app.name}</h1>
+        <h1 className="font-semibold text-2xl tracking-tight">Service configuration</h1>
         <RuntimeModeCard serviceId={app.id} />
         <HealthcheckCard serviceId={app.id} />
         <MaintenanceModeCard serviceId={app.id} />

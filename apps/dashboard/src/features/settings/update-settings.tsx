@@ -34,21 +34,8 @@ export const UpdatesPage = () => {
 
   return (
     <div className="space-y-6">
-      <div className="mb-5 flex items-center justify-between">
-        <div className="flex items-center gap-3">
-          <div className="flex h-12 w-12 shrink-0 items-center justify-center rounded-lg border border-primary/20 bg-primary/10 text-primary">
-            <RefreshCw className="h-6 w-6" />
-          </div>
-          <div>
-            <h1 className="font-bold text-xl">Codedock release channel</h1>
-            <p className="text-muted-foreground text-sm">
-              Compare this install with the official Codedock releases, review changelogs, and
-              update the daemon when you are ready.
-            </p>
-          </div>
-        </div>
-
-        <div className="flex shrink-0 flex-col items-end gap-4">
+      <div className="flex justify-end">
+        <div className="flex shrink-0 items-center gap-3">
           {!isLoading && (
             <Badge
               variant="outline"
@@ -61,7 +48,7 @@ export const UpdatesPage = () => {
             variant="outline"
             onClick={handleCheck}
             disabled={checking || deploying}
-            className="border/50 flex h-11 items-center gap-2 rounded-xl bg-background/50 px-6 font-semibold text-foreground text-xs uppercase tracking-widest hover:bg-background"
+            className="flex h-11 items-center gap-2 rounded-xl border-border bg-background px-6 font-semibold text-foreground text-xs uppercase tracking-widest hover:bg-muted"
           >
             <RefreshCw className={`h-4 w-4 ${checking ? 'animate-spin' : ''}`} />
             {checking ? 'CHECKING...' : 'CHECK UPDATES'}
@@ -70,13 +57,13 @@ export const UpdatesPage = () => {
       </div>
 
       <div className="grid grid-cols-1 gap-6 md:grid-cols-3">
-        <div className="border/50 flex flex-col justify-center space-y-2 rounded-2xl border bg-card/40 p-6">
+        <div className="flex flex-col justify-center space-y-2 rounded-2xl border border-border/80 bg-card p-6 shadow-sm">
           <p className="font-bold text-[10px] text-muted-foreground uppercase tracking-[0.15em]">
             REPOSITORY
           </p>
           <p className="font-mono text-sm">buildwithtechx/codedock</p>
         </div>
-        <div className="border/50 flex flex-col justify-center space-y-2 rounded-2xl border bg-card/40 p-6">
+        <div className="flex flex-col justify-center space-y-2 rounded-2xl border border-border/80 bg-card p-6 shadow-sm">
           <p className="font-bold text-[10px] text-muted-foreground uppercase tracking-[0.15em]">
             INSTALLED
           </p>
@@ -84,7 +71,7 @@ export const UpdatesPage = () => {
             {isLoading ? <Skeleton className="h-5 w-20" /> : info?.currentVersion || 'unknown'}
           </p>
         </div>
-        <div className="border/50 flex flex-col justify-center space-y-2 rounded-2xl border bg-card/40 p-6">
+        <div className="flex flex-col justify-center space-y-2 rounded-2xl border border-border/80 bg-card p-6 shadow-sm">
           <p className="font-bold text-[10px] text-muted-foreground uppercase tracking-[0.15em]">
             GITHUB LATEST
           </p>
@@ -95,7 +82,7 @@ export const UpdatesPage = () => {
       </div>
 
       {!isLoading && (
-        <div className="border/50 flex flex-col items-center justify-center space-y-6 rounded-2xl border bg-card/40 px-6 py-12 text-center">
+        <div className="flex flex-col items-center justify-center space-y-6 rounded-2xl border border-border/80 bg-card px-6 py-12 text-center shadow-sm">
           <div
             className={`flex h-16 w-16 items-center justify-center rounded-2xl border border-primary/20 bg-primary/10 text-primary`}
           >
@@ -126,11 +113,11 @@ export const UpdatesPage = () => {
       )}
 
       {info?.releaseNotes && hasUpdate && (
-        <div className="border/50 space-y-4 rounded-2xl border bg-card/40 p-8">
+        <div className="space-y-4 rounded-2xl border border-border/80 bg-card p-8 shadow-sm">
           <h3 className="font-bold text-[10px] text-muted-foreground uppercase tracking-[0.15em]">
             Release Notes
           </h3>
-          <pre className="border/50 overflow-x-auto whitespace-pre-wrap rounded-xl border bg-background/50 p-6 font-mono text-muted-foreground text-xs leading-relaxed">
+          <pre className="overflow-x-auto whitespace-pre-wrap rounded-xl border border-border bg-background p-6 font-mono text-muted-foreground text-xs leading-relaxed">
             {info.releaseNotes}
           </pre>
         </div>

@@ -11,6 +11,7 @@ export interface Server {
   userId: string;
   name: string;
   ipAddress: string;
+  isControlPlane?: boolean;
   status: string;
   workerToken: string;
   lastSeenAt: string;

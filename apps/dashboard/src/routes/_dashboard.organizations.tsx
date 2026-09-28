@@ -14,6 +14,7 @@ import {
 } from '#/components/ui/dialog';
 import { Input } from '#/components/ui/input';
 import {
+  type Organization,
   useCreateOrganization,
   useDeleteOrganization,
   useListOrganizations,
@@ -51,7 +52,7 @@ function OrganizationsPage() {
           <Loader2 className="h-8 w-8 animate-spin text-muted-foreground" />
         </div>
       ) : orgs?.length === 0 ? (
-        <div className="flex h-64 flex-col items-center justify-center rounded-xl border border border-dashed bg-card/40">
+        <div className="flex h-64 flex-col items-center justify-center rounded-xl border border-dashed bg-card/40">
           <Building className="mb-4 h-8 w-8 text-muted-foreground" />
           <h3 className="font-bold text-foreground text-lg tracking-tight">No organizations yet</h3>
           <p className="mt-1 text-center text-muted-foreground text-sm">
@@ -75,18 +76,18 @@ function OrganizationsPage() {
   );
 }
 
-function OrganizationCard({ org }: { org: any }) {
+function OrganizationCard({ org }: { org: Organization }) {
   const { mutateAsync: deleteOrg, isPending } = useDeleteOrganization();
 
   const handleDelete = async (e: React.MouseEvent) => {
     e.preventDefault();
     e.stopPropagation();
-    if (!confirm('Are you sure you want to delete this organization?')) return;
+    if (!window.confirm('Are you sure you want to delete this organization?')) return;
     try {
       await deleteOrg(org.id);
       toast.success('Organization deleted');
-    } catch (err: any) {
-      toast.error(err.message || 'Failed to delete organization');
+    } catch (err: unknown) {
+      toast.error(err instanceof Error ? err.message : 'Failed to delete organization');
     }
   };
 
@@ -102,7 +103,13 @@ function OrganizationCard({ org }: { org: any }) {
             Created at {new Date(org.createdAt).toLocaleDateString()}
           </CardDescription>
           <div className="mt-4 flex justify-end">
-            <Button variant="destructive" size="sm" onClick={handleDelete} disabled={isPending}>
+            <Button
+              variant="destructive"
+              size="sm"
+              onClick={handleDelete}
+              disabled={isPending}
+              aria-label={`Delete organization ${org.name}`}
+            >
               {isPending ? (
                 <Loader2 className="h-4 w-4 animate-spin" />
               ) : (
@@ -128,14 +135,14 @@ function CreateOrganizationModal({
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
-    if (!name) return;
+    if (!name.trim()) return;
     try {
-      await createOrg({ name });
+      await createOrg({ name: name.trim() });
       toast.success('Organization created');
       onOpenChange(false);
       setName('');
-    } catch (err: any) {
-      toast.error(err.message || 'Failed to create organization');
+    } catch (err: unknown) {
+      toast.error(err instanceof Error ? err.message : 'Failed to create organization');
     }
   };
 
@@ -172,7 +179,7 @@ function CreateOrganizationModal({
             >
               Cancel
             </Button>
-            <Button type="submit" disabled={!name || isPending}>
+            <Button type="submit" disabled={!name.trim() || isPending}>
               {isPending && <Loader2 className="mr-2 h-4 w-4 animate-spin" />}
               Create
             </Button>

@@ -100,7 +100,10 @@ export const useCreateS3Destination = () => {
     mutationFn: (payload: { payload: Parameters<typeof backupsService.createS3Destination>[0] }) =>
       backupsService.createS3Destination(payload.payload),
     onSuccess: async () => {
-      await queryClient.invalidateQueries({ queryKey: ['backups'] });
+      await Promise.all([
+        queryClient.invalidateQueries({ queryKey: ['backups'] }),
+        queryClient.invalidateQueries({ queryKey: ['s3-destinations'] }),
+      ]);
     },
   });
 };
@@ -111,7 +114,10 @@ export const useDeleteS3Destination = () => {
     mutationFn: (payload: { id: string; projectId: string }) =>
       backupsService.deleteS3Destination(payload.id),
     onSuccess: async () => {
-      await queryClient.invalidateQueries({ queryKey: ['backups'] });
+      await Promise.all([
+        queryClient.invalidateQueries({ queryKey: ['backups'] }),
+        queryClient.invalidateQueries({ queryKey: ['s3-destinations'] }),
+      ]);
     },
   });
 };

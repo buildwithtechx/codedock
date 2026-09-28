@@ -1,6 +1,7 @@
 import { createFileRoute, Link, useNavigate } from '@tanstack/react-router';
 import { Activity, Box, Database, Folder, Plus, Server } from 'lucide-react';
 import { Button } from '#/components/ui/button';
+import { QueryErrorState } from '#/components/ui/query-error-state';
 import { ServiceIcon } from '#/components/ui/service-icon';
 import { useGetProject } from '#/features/projects';
 import { useGetCanvasSummary, useGetEnvironmentCanvas } from '#/hooks/use-canvas';
@@ -76,11 +77,26 @@ function StatusBadge({ status }: { status: string }) {
 function ProjectOverviewComponent() {
   const { projectId } = Route.useParams();
   const navigate = useNavigate();
-  const { data: projectRes, isLoading: projectLoading } = useGetProject(projectId);
-  const { data: summaryRes, isLoading: summaryLoading } = useGetCanvasSummary(projectId);
+  const {
+    data: projectRes,
+    isLoading: projectLoading,
+    isError: projectError,
+    refetch: refetchProject,
+  } = useGetProject(projectId);
+  const {
+    data: summaryRes,
+    isLoading: summaryLoading,
+    isError: summaryError,
+    refetch: refetchSummary,
+  } = useGetCanvasSummary(projectId);
 
   const envId = summaryRes?.data?.defaultEnvironment?.id;
-  const { data: envRes, isLoading: envLoading } = useGetEnvironmentCanvas(envId || '');
+  const {
+    data: envRes,
+    isLoading: envLoading,
+    isError: environmentError,
+    refetch: refetchEnvironment,
+  } = useGetEnvironmentCanvas(envId || '');
 
   if (projectLoading || summaryLoading || (envId && envLoading)) {
     return (
@@ -93,6 +109,22 @@ function ProjectOverviewComponent() {
     );
   }
 
+  if (projectError || summaryError || (envId && environmentError)) {
+    return (
+      <QueryErrorState
+        title="Project data is unavailable"
+        description="Codedock could not load this project's resources and environment."
+        onRetry={() => {
+          void refetchProject();
+          void refetchSummary();
+          if (envId) {
+            void refetchEnvironment();
+          }
+        }}
+      />
+    );
+  }
+
   const project = projectRes?.data;
   const envData = envRes?.data;
   const apps = envData?.apps || [];
@@ -101,10 +133,10 @@ function ProjectOverviewComponent() {
   const totalResources = apps.length + dbs.length;
 
   return (
-    <div className="flex flex-col gap-8 p-6">
+    <div className="flex flex-col gap-8">
       <div className="flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between">
         <div>
-          <h1 className="font-bold text-3xl tracking-tight">
+          <h1 className="font-medium text-2xl text-foreground/90 tracking-[-0.02em]">
             {project?.name || 'Project Overview'}
           </h1>
           <div className="mt-2 flex items-center gap-3 text-muted-foreground text-sm">
@@ -127,14 +159,12 @@ function ProjectOverviewComponent() {
           <Button
             variant="outline"
             size="lg"
-            className="shadow-sm"
             onClick={() => navigate({ to: '/projects/$projectId/settings', params: { projectId } })}
           >
             Settings
           </Button>
           <Button
             size="lg"
-            className="shadow-sm"
             onClick={() => navigate({ to: '/projects/$projectId/new', params: { projectId } })}
           >
             <Plus className="mr-2 h-5 w-5" />
@@ -149,19 +179,25 @@ function ProjectOverviewComponent() {
         </div>
 
         {totalResources === 0 ? (
-          <div className="flex h-64 flex-col items-center justify-center rounded-2xl border border-dashed bg-card/30">
-            <Box className="mb-4 h-12 w-12 text-muted-foreground/50" />
-            <h3 className="font-semibold text-lg">No resources yet</h3>
-            <p className="mt-1 mb-6 max-w-md text-center text-muted-foreground text-sm">
-              This project is empty. Deploy a new application, database, or service to get started.
+          <section className="flex min-h-80 flex-col items-center justify-center px-6 py-10 text-center">
+            <span className="flex h-14 w-14 items-center justify-center rounded-2xl bg-card text-muted-foreground">
+              <Box className="h-6 w-6" />
+            </span>
+            <h3 className="mt-5 font-medium text-foreground/90 text-xl">
+              Deploy the first resource
+            </h3>
+            <p className="mt-2 max-w-sm text-muted-foreground/75 text-sm leading-6">
+              Add an application, database, image, or Compose service to begin building this
+              project.
             </p>
             <Button
+              className="mt-6"
               onClick={() => navigate({ to: '/projects/$projectId/new', params: { projectId } })}
             >
               <Plus className="mr-2 h-4 w-4" />
-              Deploy First Resource
+              Add resource
             </Button>
-          </div>
+          </section>
         ) : (
           <div className="grid grid-cols-1 gap-4 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4">
             {apps.map((app: any) => (

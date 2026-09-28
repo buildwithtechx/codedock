@@ -1,4 +1,4 @@
-import { Brain, Check, ChevronDown, Star } from 'lucide-react';
+import { Check, ChevronDown, Star } from 'lucide-react';
 import React, { useState } from 'react';
 import {
   DropdownMenu,
@@ -106,23 +106,10 @@ export function AISettings() {
 
   return (
     <div className="space-y-6">
-      <div className="mb-5 flex items-center justify-between">
-        <div className="flex items-center gap-3">
-          <div className="flex h-12 w-12 shrink-0 items-center justify-center rounded-lg border border-primary/20 bg-primary/10 text-primary">
-            <Brain className="h-6 w-6" />
-          </div>
-          <div>
-            <h1 className="font-bold text-xl">AI</h1>
-            <p className="text-muted-foreground text-sm">
-              Configure built-in AI models and providers for your Codedock instance.
-            </p>
-          </div>
-        </div>
-        <div className="flex shrink-0 items-center gap-4">
-          <p className="font-bold text-[10px] text-muted-foreground uppercase tracking-widest">
-            DEFAULT <span className="text-foreground">{defaultProvider}</span>
-          </p>
-        </div>
+      <div className="flex justify-end">
+        <p className="font-bold text-[10px] text-muted-foreground uppercase tracking-widest">
+          Default <span className="text-foreground">{defaultProvider}</span>
+        </p>
       </div>
 
       <div className="grid grid-cols-1 gap-6 md:grid-cols-3">
@@ -138,7 +125,7 @@ export function AISettings() {
             <button
               type="button"
               key={provider.id}
-              className="border/50 relative flex flex-col justify-between space-y-4 rounded-xl border bg-card/40 p-6 text-left transition-colors hover:border"
+              className="relative flex flex-col justify-between space-y-4 rounded-xl bg-card p-6 text-left transition-colors hover:bg-muted/60"
               onClick={() => {
                 if (!isEditing) setEditingId(provider.id);
               }}
@@ -198,7 +185,7 @@ export function AISettings() {
                     e.stopPropagation();
                     handleSetDefault(isDefault ? 'none' : provider.id);
                   }}
-                  className="border/50 flex h-8 w-8 items-center justify-center rounded-md border bg-background/50 text-muted-foreground hover:text-foreground"
+                  className="flex h-8 w-8 items-center justify-center rounded-md border border-border bg-background text-muted-foreground hover:text-foreground"
                 >
                   <Star
                     className={`h-4 w-4 ${isDefault ? 'fill-foreground text-foreground' : ''}`}

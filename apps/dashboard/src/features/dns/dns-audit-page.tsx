@@ -1,13 +1,15 @@
 import { CheckCircle2, Globe, HelpCircle, Network, ShieldCheck } from 'lucide-react';
 import { type KeyboardEvent, useState } from 'react';
+import { PageHeader } from '#/components/layout/page-header';
 import { Card, CardContent } from '#/components/ui/card';
+import { QueryErrorState } from '#/components/ui/query-error-state';
 import { DomainAuditTable } from './components/domain-audit-table';
 import { DnsSettings } from './dns-settings';
 import { DomainsPage } from './domains-page';
 import { useListAllDomains } from './hooks';
 
 export function DnsAuditPage() {
-  const { data: domainsRes, isLoading, isError } = useListAllDomains();
+  const { data: domainsRes, isLoading, isError, refetch } = useListAllDomains();
   const [activeTab, setActiveTab] = useState<'audit' | 'providers' | 'global'>('audit');
   const [mountedTabs, setMountedTabs] = useState<Set<'audit' | 'providers' | 'global'>>(
     () => new Set(['audit'])
@@ -60,23 +62,13 @@ export function DnsAuditPage() {
 
   return (
     <div className="space-y-6 pb-12">
-      <div className="flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between">
-        <div className="flex items-center gap-3">
-          <div className="flex h-12 w-12 shrink-0 items-center justify-center rounded-xl border border-primary/20 bg-primary/10 text-primary">
-            <Network className="h-6 w-6" />
-          </div>
-          <div>
-            <h1 className="font-bold text-xl tracking-tight">DNS & Domain Audit</h1>
-            <p className="text-muted-foreground text-sm">
-              Overview and audit of all configured domains across your services, DNS provision
-              status, and live verification.
-            </p>
-          </div>
-        </div>
-      </div>
+      <PageHeader
+        title="Domains & DNS"
+        description="Audit configured domains, DNS provisioning, and live verification across services."
+      />
 
       <div className="grid grid-cols-1 gap-4 sm:grid-cols-3">
-        <Card className="border-border/60 bg-card/40">
+        <Card className="border-border/60 bg-card">
           <CardContent className="flex items-center gap-4 p-4">
             <div className="flex h-10 w-10 shrink-0 items-center justify-center rounded-lg bg-primary/10 text-primary">
               <Globe className="h-5 w-5" />
@@ -92,7 +84,7 @@ export function DnsAuditPage() {
           </CardContent>
         </Card>
 
-        <Card className="border-border/60 bg-card/40">
+        <Card className="border-border/60 bg-card">
           <CardContent className="flex items-center gap-4 p-4">
             <div className="flex h-10 w-10 shrink-0 items-center justify-center rounded-lg bg-emerald-500/10 text-emerald-500">
               <CheckCircle2 className="h-5 w-5" />
@@ -108,7 +100,7 @@ export function DnsAuditPage() {
           </CardContent>
         </Card>
 
-        <Card className="border-border/60 bg-card/40">
+        <Card className="border-border/60 bg-card">
           <CardContent className="flex items-center gap-4 p-4">
             <div className="flex h-10 w-10 shrink-0 items-center justify-center rounded-lg bg-amber-500/10 text-amber-500">
               <HelpCircle className="h-5 w-5" />
@@ -193,9 +185,11 @@ export function DnsAuditPage() {
         className={activeTab === 'audit' ? 'block' : 'hidden'}
       >
         {isError ? (
-          <div className="rounded-2xl border border-destructive/30 bg-destructive/5 p-8 text-center text-destructive text-sm">
-            Unable to load the domain audit. Try again later.
-          </div>
+          <QueryErrorState
+            title="Domain audit is unavailable"
+            description="Codedock could not load domains for the active workspace."
+            onRetry={() => void refetch()}
+          />
         ) : (
           mountedTabs.has('audit') && <DomainAuditTable domains={domains} isLoading={isLoading} />
         )}

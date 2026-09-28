@@ -47,7 +47,30 @@ func lockSpaceshipZone(domain string) func() {
 
 func fetchSpaceshipRecords(ctx context.Context, client *http.Client, key, secret, domain string) ([]spaceshipRecord, error) {
 	rootDomain := getRootDomain(domain)
-	query := url.Values{"take": {"500"}, "skip": {"0"}}
+	const pageSize = 500
+	allRecords := make([]spaceshipRecord, 0)
+	for skip := 0; ; skip += pageSize {
+		records, err := fetchSpaceshipRecordPage(ctx, client, key, secret, rootDomain, skip, pageSize)
+		if err != nil {
+			return nil, err
+		}
+		allRecords = append(allRecords, records...)
+		if len(records) < pageSize {
+			break
+		}
+	}
+	for i := range allRecords {
+		if allRecords[i].Name == "@" {
+			allRecords[i].Name = rootDomain
+		} else {
+			allRecords[i].Name += "." + rootDomain
+		}
+	}
+	return allRecords, nil
+}
+
+func fetchSpaceshipRecordPage(ctx context.Context, client *http.Client, key, secret, rootDomain string, skip, take int) ([]spaceshipRecord, error) {
+	query := url.Values{"take": {fmt.Sprintf("%d", take)}, "skip": {fmt.Sprintf("%d", skip)}}
 	req, err := http.NewRequestWithContext(ctx, http.MethodGet, "https://spaceship.dev/api/v1/dns/records/"+url.PathEscape(rootDomain)+"?"+query.Encode(), nil)
 	if err != nil {
 		return nil, err
@@ -72,13 +95,6 @@ func fetchSpaceshipRecords(ctx context.Context, client *http.Client, key, secret
 	}
 	if err := json.NewDecoder(resp.Body).Decode(&response); err != nil {
 		return nil, err
-	}
-	for i := range response.Items {
-		if response.Items[i].Name == "@" {
-			response.Items[i].Name = rootDomain
-		} else {
-			response.Items[i].Name += "." + rootDomain
-		}
 	}
 	return response.Items, nil
 }
@@ -163,6 +179,9 @@ func (s *Service) deprovisionSpaceship(ctx context.Context, key, secret, domain,
 	}
 	if len(deletions) == 0 {
 		return nil
+	}
+	if len(deletions) > 1 {
+		return fmt.Errorf("spaceship found multiple matching %s records for %s; refusing to delete unmanaged records", recordType, domain)
 	}
 	b, _ := json.Marshal(deletions)
 	reqDel, err := http.NewRequestWithContext(ctx, http.MethodDelete, "https://spaceship.dev/api/v1/dns/records/"+url.PathEscape(rootDomain), bytes.NewBuffer(b))

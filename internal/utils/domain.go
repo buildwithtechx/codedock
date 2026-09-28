@@ -2,6 +2,7 @@ package utils
 
 import (
 	"fmt"
+	"hash/fnv"
 	"strings"
 
 	"codedock.run/codedock/internal/config"
@@ -53,9 +54,45 @@ func parseHost(url string) string {
 }
 
 func SanitizeDomainName(name string) string {
-	clean := strings.ToLower(strings.ReplaceAll(strings.TrimSpace(name), " ", "-"))
-	if len(clean) > 32 {
-		clean = clean[:32]
+	raw := strings.ToLower(strings.TrimSpace(name))
+	var builder strings.Builder
+	altered := false
+	for _, character := range raw {
+		if (character >= 'a' && character <= 'z') || (character >= '0' && character <= '9') || character == '-' {
+			builder.WriteRune(character)
+		} else if character == ' ' || character == '_' {
+			builder.WriteByte('-')
+			altered = true
+		} else {
+			altered = true
+		}
 	}
-	return strings.Trim(clean, "-")
+	clean := strings.Trim(builder.String(), "-")
+	for strings.Contains(clean, "--") {
+		clean = strings.ReplaceAll(clean, "--", "-")
+	}
+
+	if altered || clean != raw {
+		h := fnv.New32a()
+		h.Write([]byte(raw))
+		hashSuffix := fmt.Sprintf("%08x", h.Sum32())[:6]
+		if len(clean) > 25 {
+			clean = clean[:25]
+		}
+		clean = strings.Trim(clean, "-")
+		if clean == "" {
+			clean = fmt.Sprintf("app-%s", hashSuffix)
+		} else {
+			clean = fmt.Sprintf("%s-%s", clean, hashSuffix)
+		}
+	} else {
+		if len(clean) > 32 {
+			clean = clean[:32]
+		}
+		clean = strings.Trim(clean, "-")
+		if clean == "" {
+			return "app"
+		}
+	}
+	return clean
 }
