@@ -63,6 +63,17 @@ export const deploymentsService = {
     }
   },
 
+  triggerProject: async (projectId: string, environmentId?: string): Promise<void> => {
+    try {
+      const url = environmentId
+        ? `/projects/${projectId}/deploy?environmentId=${encodeURIComponent(environmentId)}`
+        : `/projects/${projectId}/deploy`;
+      await apiClient.post(url);
+    } catch (error) {
+      throw handleApiError(error);
+    }
+  },
+
   rollback: async (deploymentId: string): Promise<RollbackDeploymentResponse> => {
     try {
       return await apiClient.post<RollbackDeploymentResponse>(
