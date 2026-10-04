@@ -94,7 +94,7 @@ export function serializeDotenv(rows: ReadonlyArray<EnvEntry>): string {
       keys.add(key);
       const trailingBackslashes = value.match(/\\+$/)?.[0].length ?? 0;
       let encoded: string;
-      if (value === value.trim() && !/[\r\n#$]/.test(value) && !/^["'`]/.test(value)) {
+      if (value === value.trim() && !/[\s#$]/.test(value) && !/^["'`]/.test(value)) {
         encoded = value;
       } else if (!value.includes("'") && !value.includes('\r') && trailingBackslashes % 2 === 0) {
         encoded = `'${value}'`;

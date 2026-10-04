@@ -130,7 +130,7 @@ func (r *BackupRepo) CreateConfig(ctx context.Context, cfg *models.BackupConfig)
 	defer r.mu.Unlock()
 	_, err := r.db.ExecContext(ctx, `INSERT INTO backup_configs (id, database_id, service_id, volume_name, s3_destination_id, name, description, db_user, db_password, backup_enabled, s3_enabled, disable_local, schedule, timezone, timeout, retention_days, max_backups, max_storage_gb, status, created_at, updated_at)
 		VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)`,
-		cfg.ID, cfg.DatabaseID, cfg.ServiceID, cfg.VolumeName, cfg.S3DestinationID, cfg.Name, cfg.Description, cfg.DbUser, cfg.DbPassword, cfg.BackupEnabled, cfg.S3Enabled, cfg.DisableLocal, cfg.Schedule, cfg.Timezone, cfg.Timeout, cfg.RetentionDays, cfg.MaxBackups, cfg.MaxStorageGB, cfg.Status, cfg.CreatedAt, cfg.UpdatedAt)
+		cfg.ID, nullableID(cfg.DatabaseID), nullableID(cfg.ServiceID), cfg.VolumeName, nullableID(cfg.S3DestinationID), cfg.Name, cfg.Description, cfg.DbUser, cfg.DbPassword, cfg.BackupEnabled, cfg.S3Enabled, cfg.DisableLocal, cfg.Schedule, cfg.Timezone, cfg.Timeout, cfg.RetentionDays, cfg.MaxBackups, cfg.MaxStorageGB, cfg.Status, cfg.CreatedAt, cfg.UpdatedAt)
 	if err != nil {
 		return fmt.Errorf("failed to create backup config: %w", err)
 	}
@@ -176,7 +176,7 @@ func (r *BackupRepo) UpdateConfig(ctx context.Context, cfg *models.BackupConfig)
 
 	if cfg.DbPassword == "********" || cfg.DbPassword == "" {
 		res, err := r.db.ExecContext(ctx, `UPDATE backup_configs SET database_id=?, service_id=?, volume_name=?, s3_destination_id=?, name=?, description=?, db_user=?, backup_enabled=?, s3_enabled=?, disable_local=?, schedule=?, timezone=?, timeout=?, retention_days=?, max_backups=?, max_storage_gb=?, updated_at=? WHERE id=?`,
-			cfg.DatabaseID, cfg.ServiceID, cfg.VolumeName, cfg.S3DestinationID, cfg.Name, cfg.Description, cfg.DbUser, cfg.BackupEnabled, cfg.S3Enabled, cfg.DisableLocal, cfg.Schedule, cfg.Timezone, cfg.Timeout, cfg.RetentionDays, cfg.MaxBackups, cfg.MaxStorageGB, cfg.UpdatedAt, cfg.ID)
+			nullableID(cfg.DatabaseID), nullableID(cfg.ServiceID), cfg.VolumeName, nullableID(cfg.S3DestinationID), cfg.Name, cfg.Description, cfg.DbUser, cfg.BackupEnabled, cfg.S3Enabled, cfg.DisableLocal, cfg.Schedule, cfg.Timezone, cfg.Timeout, cfg.RetentionDays, cfg.MaxBackups, cfg.MaxStorageGB, cfg.UpdatedAt, cfg.ID)
 		if err != nil {
 			return err
 		}
@@ -191,7 +191,7 @@ func (r *BackupRepo) UpdateConfig(ctx context.Context, cfg *models.BackupConfig)
 	}
 
 	res, err := r.db.ExecContext(ctx, `UPDATE backup_configs SET database_id=?, service_id=?, volume_name=?, s3_destination_id=?, name=?, description=?, db_user=?, db_password=?, backup_enabled=?, s3_enabled=?, disable_local=?, schedule=?, timezone=?, timeout=?, retention_days=?, max_backups=?, max_storage_gb=?, updated_at=? WHERE id=?`,
-		cfg.DatabaseID, cfg.ServiceID, cfg.VolumeName, cfg.S3DestinationID, cfg.Name, cfg.Description, cfg.DbUser, cfg.DbPassword, cfg.BackupEnabled, cfg.S3Enabled, cfg.DisableLocal, cfg.Schedule, cfg.Timezone, cfg.Timeout, cfg.RetentionDays, cfg.MaxBackups, cfg.MaxStorageGB, cfg.UpdatedAt, cfg.ID)
+		nullableID(cfg.DatabaseID), nullableID(cfg.ServiceID), cfg.VolumeName, nullableID(cfg.S3DestinationID), cfg.Name, cfg.Description, cfg.DbUser, cfg.DbPassword, cfg.BackupEnabled, cfg.S3Enabled, cfg.DisableLocal, cfg.Schedule, cfg.Timezone, cfg.Timeout, cfg.RetentionDays, cfg.MaxBackups, cfg.MaxStorageGB, cfg.UpdatedAt, cfg.ID)
 	if err != nil {
 		return err
 	}
@@ -269,4 +269,11 @@ func (r *BackupRepo) DeleteConfig(ctx context.Context, id string) error {
 		return utils.NewNotFoundError("BackupConfig", id)
 	}
 	return nil
+}
+
+func nullableID(id string) any {
+	if id == "" {
+		return nil
+	}
+	return id
 }

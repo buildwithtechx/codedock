@@ -22,6 +22,9 @@ func configureEchoMiddleware(e *echo.Echo) {
 			return nil
 		},
 	}))
+	e.Use(echomiddleware.Rewrite(map[string]string{
+		"/api/v1/*": "/api/$1",
+	}))
 	e.Use(echomiddleware.Recover())
 	e.Use(echomiddleware.GzipWithConfig(echomiddleware.GzipConfig{
 		Level: 5,

@@ -100,6 +100,10 @@ func (h *e2eHarness) put(urlPath string, payload any, headers map[string]string)
 	return h.doRequest("PUT", urlPath, payload, headers)
 }
 
+func (h *e2eHarness) patch(urlPath string, payload any, headers map[string]string) (*http.Response, map[string]any, error) {
+	return h.doRequest("PATCH", urlPath, payload, headers)
+}
+
 func (h *e2eHarness) delete(urlPath string, headers map[string]string) (*http.Response, map[string]any, error) {
 	return h.doRequest("DELETE", urlPath, nil, headers)
 }
@@ -162,7 +166,7 @@ func (h *e2eHarness) doRequest(method, urlPath string, payload any, headers map[
 		req.Header.Set(k, v)
 	}
 
-	if method == "POST" || method == "PUT" || method == "DELETE" {
+	if method == "POST" || method == "PUT" || method == "DELETE" || method == "PATCH" {
 		if req.Header.Get("X-CSRF-Token") == "" {
 			if csrfVal := h.getCSRFToken(req.URL); csrfVal != "" {
 				req.Header.Set("X-CSRF-Token", csrfVal)

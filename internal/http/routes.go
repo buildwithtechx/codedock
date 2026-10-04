@@ -144,6 +144,7 @@ func (s *Server) registerProjectRoutes(apiGroup, authGroup *echo.Group) {
 
 	authGroup.GET("/projects/:id/env", s.projectEnvHandler.GetVars, projectAuth, s.authGuard.RequireScope("env:read"))
 	authGroup.PUT("/projects/:id/env", s.projectEnvHandler.SetVars, projectAuthAdmin, s.authGuard.RequireScope("env:write"))
+	authGroup.POST("/projects/:id/env", s.projectEnvHandler.SetVars, projectAuthAdmin, s.authGuard.RequireScope("env:write"))
 	authGroup.POST("/projects/:id/environments", s.environmentHandler.Create, projectAuthAdmin)
 	authGroup.GET("/projects/:id/environments", s.environmentHandler.ListByProject, projectAuth)
 	authGroup.GET("/projects/:id/apps", s.appServiceHandler.ListByProject, projectAuth)

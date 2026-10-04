@@ -23,6 +23,10 @@ CREATE TABLE IF NOT EXISTS users (
     totp_secret TEXT DEFAULT '',
     recovery_codes TEXT DEFAULT '',
     oauth_provider TEXT DEFAULT '',
+    plan_type TEXT DEFAULT 'hobby',
+    stripe_customer_id TEXT DEFAULT '',
+    stripe_subscription_id TEXT DEFAULT '',
+    stripe_price_id TEXT DEFAULT '',
     last_login DATETIME,
     created_at DATETIME DEFAULT CURRENT_TIMESTAMP,
     updated_at DATETIME DEFAULT CURRENT_TIMESTAMP
@@ -34,6 +38,7 @@ CREATE TABLE IF NOT EXISTS organization_members (
     user_id TEXT REFERENCES users(id) ON DELETE CASCADE,
     email TEXT NOT NULL DEFAULT '',
     role TEXT NOT NULL DEFAULT 'member',
+    permission TEXT NOT NULL DEFAULT 'member',
     status TEXT NOT NULL DEFAULT 'active',
     invited_at DATETIME DEFAULT CURRENT_TIMESTAMP,
     accepted_at DATETIME,
@@ -159,22 +164,25 @@ CREATE TABLE IF NOT EXISTS projects (
 CREATE INDEX IF NOT EXISTS idx_projects_app ON projects(app_id);
 CREATE INDEX IF NOT EXISTS idx_projects_org ON projects(organization_id);
 
-CREATE TABLE IF NOT EXISTS services (
+CREATE TABLE IF NOT EXISTS app_services (
     id TEXT PRIMARY KEY,
     project_id TEXT NOT NULL REFERENCES projects(id) ON DELETE CASCADE,
     environment_id TEXT DEFAULT '',
     kind TEXT NOT NULL DEFAULT 'compose',
     name TEXT NOT NULL,
-    icon TEXT DEFAULT 'box',
+    icon TEXT DEFAULT 'git',
     image TEXT DEFAULT '',
+    image_ref TEXT DEFAULT '',
     build TEXT DEFAULT '',
     dockerfile TEXT DEFAULT '',
+    dockerfile_path TEXT DEFAULT '',
     repository_url TEXT DEFAULT '',
     branch TEXT DEFAULT 'main',
     root_directory TEXT DEFAULT '/',
     runtime_mode TEXT DEFAULT 'web',
     install_command TEXT DEFAULT '',
     build_command TEXT DEFAULT '',
+    start_command TEXT DEFAULT '',
     build_engine TEXT DEFAULT 'railpack',
     command TEXT DEFAULT '',
     static_output TEXT DEFAULT '',
@@ -211,14 +219,15 @@ CREATE TABLE IF NOT EXISTS services (
     UNIQUE(project_id, name)
 );
 
-CREATE VIEW IF NOT EXISTS app_services AS SELECT * FROM services;
+CREATE VIEW IF NOT EXISTS services AS SELECT * FROM app_services;
 
-CREATE INDEX IF NOT EXISTS idx_services_project ON services(project_id);
+CREATE INDEX IF NOT EXISTS idx_services_project ON app_services(project_id);
+CREATE INDEX IF NOT EXISTS idx_services_env ON app_services(environment_id);
 
 CREATE TABLE IF NOT EXISTS env_vars (
     id TEXT PRIMARY KEY,
     project_id TEXT NOT NULL REFERENCES projects(id) ON DELETE CASCADE,
-    service_id TEXT REFERENCES services(id) ON DELETE CASCADE,
+    service_id TEXT REFERENCES app_services(id) ON DELETE CASCADE,
     environment_id TEXT DEFAULT '',
     key TEXT NOT NULL,
     encrypted_value TEXT NOT NULL,
@@ -236,7 +245,7 @@ CREATE TABLE IF NOT EXISTS deployments (
     id TEXT PRIMARY KEY,
     project_id TEXT NOT NULL REFERENCES projects(id) ON DELETE CASCADE,
     organization_id TEXT NOT NULL REFERENCES organizations(id) ON DELETE CASCADE,
-    service_id TEXT REFERENCES services(id) ON DELETE SET NULL,
+    service_id TEXT REFERENCES app_services(id) ON DELETE SET NULL,
     branch TEXT NOT NULL DEFAULT 'main',
     commit_hash TEXT DEFAULT '',
     commit_message TEXT DEFAULT '',
@@ -261,7 +270,7 @@ CREATE INDEX IF NOT EXISTS idx_deployments_service ON deployments(service_id);
 CREATE TABLE IF NOT EXISTS service_deployments (
     id TEXT PRIMARY KEY,
     deployment_id TEXT NOT NULL REFERENCES deployments(id) ON DELETE CASCADE,
-    service_id TEXT NOT NULL REFERENCES services(id) ON DELETE CASCADE,
+    service_id TEXT NOT NULL REFERENCES app_services(id) ON DELETE CASCADE,
     image_ref TEXT DEFAULT '',
     container_id TEXT DEFAULT '',
     status TEXT NOT NULL DEFAULT 'queued',
@@ -277,8 +286,10 @@ CREATE TABLE IF NOT EXISTS domains (
     id TEXT PRIMARY KEY,
     owner_type TEXT NOT NULL DEFAULT 'project',
     project_id TEXT REFERENCES projects(id) ON DELETE CASCADE,
-    service_id TEXT REFERENCES services(id) ON DELETE CASCADE,
+    service_id TEXT REFERENCES app_services(id) ON DELETE CASCADE,
     hostname TEXT NOT NULL UNIQUE,
+    domain_name TEXT NOT NULL DEFAULT '',
+    dns_provision_status TEXT DEFAULT 'pending',
     target_port INTEGER DEFAULT 80,
     target_path TEXT DEFAULT '/',
     domain_type TEXT DEFAULT 'custom',
@@ -303,7 +314,7 @@ CREATE INDEX IF NOT EXISTS idx_domains_service ON domains(service_id);
 
 CREATE TABLE IF NOT EXISTS route_rules (
     id TEXT PRIMARY KEY,
-    service_id TEXT NOT NULL REFERENCES services(id) ON DELETE CASCADE,
+    service_id TEXT NOT NULL REFERENCES app_services(id) ON DELETE CASCADE,
     name TEXT NOT NULL,
     enabled INTEGER NOT NULL DEFAULT 1,
     rule_type TEXT NOT NULL,
@@ -344,11 +355,14 @@ CREATE INDEX IF NOT EXISTS idx_cluster_db_project ON cluster_databases(project_i
 
 CREATE TABLE IF NOT EXISTS backup_configs (
     id TEXT PRIMARY KEY,
-    database_id TEXT REFERENCES cluster_databases(id) ON DELETE SET NULL,
-    service_id TEXT REFERENCES services(id) ON DELETE SET NULL,
+    database_id TEXT REFERENCES databases(id) ON DELETE SET NULL,
+    service_id TEXT REFERENCES app_services(id) ON DELETE SET NULL,
+    volume_name TEXT DEFAULT '',
     s3_destination_id TEXT REFERENCES s3_destinations(id) ON DELETE SET NULL,
     name TEXT NOT NULL,
     description TEXT DEFAULT '',
+    db_user TEXT DEFAULT '',
+    db_password TEXT DEFAULT '',
     backup_enabled BOOLEAN DEFAULT 1,
     s3_enabled BOOLEAN DEFAULT 0,
     disable_local BOOLEAN DEFAULT 0,
@@ -357,6 +371,7 @@ CREATE TABLE IF NOT EXISTS backup_configs (
     timeout INTEGER DEFAULT 3600,
     retention_days INTEGER DEFAULT 7,
     max_backups INTEGER DEFAULT 0,
+    max_storage_gb REAL DEFAULT 0,
     status TEXT DEFAULT 'active',
     created_at DATETIME DEFAULT CURRENT_TIMESTAMP,
     updated_at DATETIME DEFAULT CURRENT_TIMESTAMP
@@ -395,7 +410,7 @@ CREATE INDEX IF NOT EXISTS idx_backup_records_config ON backup_records(backup_co
 CREATE TABLE IF NOT EXISTS scheduled_tasks (
     id TEXT PRIMARY KEY,
     project_id TEXT REFERENCES projects(id) ON DELETE CASCADE,
-    service_id TEXT REFERENCES services(id) ON DELETE CASCADE,
+    service_id TEXT REFERENCES app_services(id) ON DELETE CASCADE,
     name TEXT NOT NULL,
     schedule TEXT NOT NULL,
     command TEXT NOT NULL,
@@ -411,7 +426,7 @@ CREATE INDEX IF NOT EXISTS idx_scheduled_tasks_project ON scheduled_tasks(projec
 CREATE TABLE IF NOT EXISTS service_incidents (
     id TEXT PRIMARY KEY,
     project_id TEXT NOT NULL REFERENCES projects(id) ON DELETE CASCADE,
-    service_id TEXT REFERENCES services(id) ON DELETE CASCADE,
+    service_id TEXT REFERENCES app_services(id) ON DELETE CASCADE,
     kind TEXT NOT NULL,
     severity TEXT NOT NULL DEFAULT 'warning',
     summary TEXT NOT NULL,
@@ -611,7 +626,7 @@ CREATE TABLE IF NOT EXISTS takeover_runs (
 
 CREATE TABLE IF NOT EXISTS serverless_functions_code (
     id TEXT PRIMARY KEY,
-    service_id TEXT NOT NULL REFERENCES services(id) ON DELETE CASCADE,
+    service_id TEXT NOT NULL REFERENCES app_services(id) ON DELETE CASCADE,
     runtime TEXT NOT NULL,
     code_content TEXT NOT NULL,
     created_at DATETIME DEFAULT CURRENT_TIMESTAMP,
@@ -621,7 +636,7 @@ CREATE TABLE IF NOT EXISTS serverless_functions_code (
 
 CREATE TABLE IF NOT EXISTS pr_previews (
     id TEXT PRIMARY KEY,
-    service_id TEXT REFERENCES services(id) ON DELETE CASCADE,
+    service_id TEXT REFERENCES app_services(id) ON DELETE CASCADE,
     project_id TEXT REFERENCES projects(id) ON DELETE CASCADE,
     pr_number INTEGER,
     branch TEXT,
@@ -636,7 +651,7 @@ CREATE TABLE IF NOT EXISTS pr_previews (
 CREATE TABLE IF NOT EXISTS log_drains (
     id TEXT PRIMARY KEY,
     project_id TEXT NOT NULL DEFAULT '',
-    service_id TEXT NOT NULL REFERENCES services(id) ON DELETE CASCADE,
+    service_id TEXT NOT NULL REFERENCES app_services(id) ON DELETE CASCADE,
     drain_type TEXT NOT NULL,
     endpoint_url TEXT NOT NULL,
     auth_token TEXT,
@@ -698,7 +713,7 @@ CREATE INDEX IF NOT EXISTS idx_databases_project ON databases(project_id);
 
 CREATE TABLE IF NOT EXISTS service_volumes (
     id TEXT PRIMARY KEY,
-    service_id TEXT NOT NULL REFERENCES services(id) ON DELETE CASCADE,
+    service_id TEXT NOT NULL REFERENCES app_services(id) ON DELETE CASCADE,
     host_path TEXT NOT NULL,
     container_path TEXT NOT NULL,
     created_at DATETIME NOT NULL DEFAULT CURRENT_TIMESTAMP
@@ -708,7 +723,7 @@ CREATE INDEX IF NOT EXISTS idx_service_volumes_service ON service_volumes(servic
 
 CREATE TABLE IF NOT EXISTS service_webhooks (
     id TEXT PRIMARY KEY,
-    service_id TEXT NOT NULL REFERENCES services(id) ON DELETE CASCADE,
+    service_id TEXT NOT NULL REFERENCES app_services(id) ON DELETE CASCADE,
     url TEXT NOT NULL,
     event_types TEXT DEFAULT '',
     include_pr_environments BOOLEAN DEFAULT 0,
