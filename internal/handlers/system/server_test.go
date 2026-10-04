@@ -32,6 +32,10 @@ func (s testServerService) GetServer(context.Context, string) (*models.Server, e
 	return nil, nil
 }
 
+func (s testServerService) UpdateServer(context.Context, string, string, models.UpdateServerRequest) (*models.Server, error) {
+	return nil, nil
+}
+
 func (s testServerService) DeleteServer(context.Context, string, string) error {
 	return nil
 }
