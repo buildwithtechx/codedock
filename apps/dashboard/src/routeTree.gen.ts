@@ -20,10 +20,13 @@ import { Route as AuthVerifyEmailRouteImport } from './routes/_auth.verify-email
 import { Route as DashboardIndexRouteImport } from './routes/_dashboard.index'
 import { Route as DashboardApiAccessRouteImport } from './routes/_dashboard.api-access'
 import { Route as DashboardAppsRouteImport } from './routes/_dashboard.apps'
+import { Route as DashboardAuditRouteImport } from './routes/_dashboard.audit'
 import { Route as DashboardAuditLogsRouteImport } from './routes/_dashboard.audit-logs'
 import { Route as DashboardBackupsRouteImport } from './routes/_dashboard.backups'
 import { Route as DashboardDeploymentsRouteImport } from './routes/_dashboard.deployments'
 import { Route as DashboardDnsRouteImport } from './routes/_dashboard.dns'
+import { Route as DashboardJobsRouteImport } from './routes/_dashboard.jobs'
+import { Route as DashboardMonitoringRouteImport } from './routes/_dashboard.monitoring'
 import { Route as DashboardOrganizationsRouteImport } from './routes/_dashboard.organizations'
 import { Route as DashboardProfileRouteImport } from './routes/_dashboard.profile'
 import { Route as DashboardProjectsRouteImport } from './routes/_dashboard.projects'
@@ -114,6 +117,11 @@ const DashboardAppsRoute = DashboardAppsRouteImport.update({
   path: '/apps',
   getParentRoute: () => DashboardRoute,
 } as any)
+const DashboardAuditRoute = DashboardAuditRouteImport.update({
+  id: '/audit',
+  path: '/audit',
+  getParentRoute: () => DashboardRoute,
+} as any)
 const DashboardAuditLogsRoute = DashboardAuditLogsRouteImport.update({
   id: '/audit-logs',
   path: '/audit-logs',
@@ -132,6 +140,16 @@ const DashboardDeploymentsRoute = DashboardDeploymentsRouteImport.update({
 const DashboardDnsRoute = DashboardDnsRouteImport.update({
   id: '/dns',
   path: '/dns',
+  getParentRoute: () => DashboardRoute,
+} as any)
+const DashboardJobsRoute = DashboardJobsRouteImport.update({
+  id: '/jobs',
+  path: '/jobs',
+  getParentRoute: () => DashboardRoute,
+} as any)
+const DashboardMonitoringRoute = DashboardMonitoringRouteImport.update({
+  id: '/monitoring',
+  path: '/monitoring',
   getParentRoute: () => DashboardRoute,
 } as any)
 const DashboardOrganizationsRoute = DashboardOrganizationsRouteImport.update({
@@ -350,10 +368,13 @@ export interface FileRoutesByFullPath {
   '/verify-email': typeof AuthVerifyEmailRoute
   '/api-access': typeof DashboardApiAccessRoute
   '/apps': typeof DashboardAppsRouteWithChildren
+  '/audit': typeof DashboardAuditRoute
   '/audit-logs': typeof DashboardAuditLogsRoute
   '/backups': typeof DashboardBackupsRoute
   '/deployments': typeof DashboardDeploymentsRoute
   '/dns': typeof DashboardDnsRoute
+  '/jobs': typeof DashboardJobsRoute
+  '/monitoring': typeof DashboardMonitoringRoute
   '/organizations': typeof DashboardOrganizationsRouteWithChildren
   '/profile': typeof DashboardProfileRoute
   '/projects': typeof DashboardProjectsRouteWithChildren
@@ -401,10 +422,13 @@ export interface FileRoutesByTo {
   '/verify-email': typeof AuthVerifyEmailRoute
   '/api-access': typeof DashboardApiAccessRoute
   '/apps': typeof DashboardAppsRouteWithChildren
+  '/audit': typeof DashboardAuditRoute
   '/audit-logs': typeof DashboardAuditLogsRoute
   '/backups': typeof DashboardBackupsRoute
   '/deployments': typeof DashboardDeploymentsRoute
   '/dns': typeof DashboardDnsRoute
+  '/jobs': typeof DashboardJobsRoute
+  '/monitoring': typeof DashboardMonitoringRoute
   '/organizations': typeof DashboardOrganizationsRouteWithChildren
   '/profile': typeof DashboardProfileRoute
   '/scheduled-tasks': typeof DashboardScheduledTasksRoute
@@ -451,10 +475,13 @@ export interface FileRoutesById {
   '/_auth/verify-email': typeof AuthVerifyEmailRoute
   '/_dashboard/api-access': typeof DashboardApiAccessRoute
   '/_dashboard/apps': typeof DashboardAppsRouteWithChildren
+  '/_dashboard/audit': typeof DashboardAuditRoute
   '/_dashboard/audit-logs': typeof DashboardAuditLogsRoute
   '/_dashboard/backups': typeof DashboardBackupsRoute
   '/_dashboard/deployments': typeof DashboardDeploymentsRoute
   '/_dashboard/dns': typeof DashboardDnsRoute
+  '/_dashboard/jobs': typeof DashboardJobsRoute
+  '/_dashboard/monitoring': typeof DashboardMonitoringRoute
   '/_dashboard/organizations': typeof DashboardOrganizationsRouteWithChildren
   '/_dashboard/profile': typeof DashboardProfileRoute
   '/_dashboard/projects': typeof DashboardProjectsRouteWithChildren
@@ -505,10 +532,13 @@ export interface FileRouteTypes {
     | '/verify-email'
     | '/api-access'
     | '/apps'
+    | '/audit'
     | '/audit-logs'
     | '/backups'
     | '/deployments'
     | '/dns'
+    | '/jobs'
+    | '/monitoring'
     | '/organizations'
     | '/profile'
     | '/projects'
@@ -556,10 +586,13 @@ export interface FileRouteTypes {
     | '/verify-email'
     | '/api-access'
     | '/apps'
+    | '/audit'
     | '/audit-logs'
     | '/backups'
     | '/deployments'
     | '/dns'
+    | '/jobs'
+    | '/monitoring'
     | '/organizations'
     | '/profile'
     | '/scheduled-tasks'
@@ -605,10 +638,13 @@ export interface FileRouteTypes {
     | '/_auth/verify-email'
     | '/_dashboard/api-access'
     | '/_dashboard/apps'
+    | '/_dashboard/audit'
     | '/_dashboard/audit-logs'
     | '/_dashboard/backups'
     | '/_dashboard/deployments'
     | '/_dashboard/dns'
+    | '/_dashboard/jobs'
+    | '/_dashboard/monitoring'
     | '/_dashboard/organizations'
     | '/_dashboard/profile'
     | '/_dashboard/projects'
@@ -733,6 +769,13 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof DashboardAppsRouteImport
       parentRoute: typeof DashboardRoute
     }
+    '/_dashboard/audit': {
+      id: '/_dashboard/audit'
+      path: '/audit'
+      fullPath: '/audit'
+      preLoaderRoute: typeof DashboardAuditRouteImport
+      parentRoute: typeof DashboardRoute
+    }
     '/_dashboard/audit-logs': {
       id: '/_dashboard/audit-logs'
       path: '/audit-logs'
@@ -759,6 +802,20 @@ declare module '@tanstack/react-router' {
       path: '/dns'
       fullPath: '/dns'
       preLoaderRoute: typeof DashboardDnsRouteImport
+      parentRoute: typeof DashboardRoute
+    }
+    '/_dashboard/jobs': {
+      id: '/_dashboard/jobs'
+      path: '/jobs'
+      fullPath: '/jobs'
+      preLoaderRoute: typeof DashboardJobsRouteImport
+      parentRoute: typeof DashboardRoute
+    }
+    '/_dashboard/monitoring': {
+      id: '/_dashboard/monitoring'
+      path: '/monitoring'
+      fullPath: '/monitoring'
+      preLoaderRoute: typeof DashboardMonitoringRouteImport
       parentRoute: typeof DashboardRoute
     }
     '/_dashboard/organizations': {
@@ -1175,10 +1232,13 @@ const DashboardServicesServiceIdRouteWithChildren =
 interface DashboardRouteChildren {
   DashboardApiAccessRoute: typeof DashboardApiAccessRoute
   DashboardAppsRoute: typeof DashboardAppsRouteWithChildren
+  DashboardAuditRoute: typeof DashboardAuditRoute
   DashboardAuditLogsRoute: typeof DashboardAuditLogsRoute
   DashboardBackupsRoute: typeof DashboardBackupsRoute
   DashboardDeploymentsRoute: typeof DashboardDeploymentsRoute
   DashboardDnsRoute: typeof DashboardDnsRoute
+  DashboardJobsRoute: typeof DashboardJobsRoute
+  DashboardMonitoringRoute: typeof DashboardMonitoringRoute
   DashboardOrganizationsRoute: typeof DashboardOrganizationsRouteWithChildren
   DashboardProfileRoute: typeof DashboardProfileRoute
   DashboardProjectsRoute: typeof DashboardProjectsRouteWithChildren
@@ -1193,10 +1253,13 @@ interface DashboardRouteChildren {
 const DashboardRouteChildren: DashboardRouteChildren = {
   DashboardApiAccessRoute: DashboardApiAccessRoute,
   DashboardAppsRoute: DashboardAppsRouteWithChildren,
+  DashboardAuditRoute: DashboardAuditRoute,
   DashboardAuditLogsRoute: DashboardAuditLogsRoute,
   DashboardBackupsRoute: DashboardBackupsRoute,
   DashboardDeploymentsRoute: DashboardDeploymentsRoute,
   DashboardDnsRoute: DashboardDnsRoute,
+  DashboardJobsRoute: DashboardJobsRoute,
+  DashboardMonitoringRoute: DashboardMonitoringRoute,
   DashboardOrganizationsRoute: DashboardOrganizationsRouteWithChildren,
   DashboardProfileRoute: DashboardProfileRoute,
   DashboardProjectsRoute: DashboardProjectsRouteWithChildren,

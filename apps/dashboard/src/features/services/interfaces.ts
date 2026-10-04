@@ -59,6 +59,8 @@ export interface AppService {
   maintenanceMode: boolean;
   icon?: string;
   deployToken?: string;
+  appId?: string;
+  replicas?: number;
 }
 
 export interface Deployment {
@@ -71,6 +73,8 @@ export interface Deployment {
   commitHash?: string;
   commitMessage?: string;
   trigger?: string;
+  version?: number;
+  commitShaBefore?: string;
   buildLogs?: string;
   containerId?: string;
   createdAt: string;

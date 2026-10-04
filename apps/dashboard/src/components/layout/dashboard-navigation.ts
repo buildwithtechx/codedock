@@ -1,5 +1,6 @@
 import type { LucideIcon } from 'lucide-react';
 import {
+  Activity,
   ClipboardList,
   Clock,
   CloudCog,
@@ -43,6 +44,12 @@ export const primaryNavigation: DashboardNavigationItem[] = [
     to: '/deployments',
     icon: Rocket,
   },
+  {
+    title: 'Monitoring',
+    description: 'Health, system issues and metrics',
+    to: '/monitoring',
+    icon: Activity,
+  },
 ];
 
 export const infrastructureNavigation: DashboardNavigationItem[] = [
@@ -59,9 +66,9 @@ export const infrastructureNavigation: DashboardNavigationItem[] = [
     icon: Globe2,
   },
   {
-    title: 'Scheduled Tasks',
+    title: 'Jobs',
     description: 'Cron schedules and job runs',
-    to: '/scheduled-tasks',
+    to: '/jobs',
     icon: Clock,
   },
 ];
@@ -77,7 +84,7 @@ export const systemNavigation: DashboardNavigationItem[] = [
   {
     title: 'Audit Logs',
     description: 'Security and operational events',
-    to: '/audit-logs',
+    to: '/audit',
     icon: ClipboardList,
   },
   {

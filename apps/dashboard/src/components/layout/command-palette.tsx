@@ -18,9 +18,9 @@ const creationItems = [
     icon: FolderKanban,
   },
   {
-    title: 'New app',
-    description: 'Choose a project for a new app',
-    to: '/apps/new',
+    title: 'New app or project',
+    description: 'Create a project or deploy an app template',
+    to: '/projects/new',
     icon: Sparkles,
   },
   {

@@ -14,9 +14,14 @@ func getDiskStats() models.DiskStats {
 	kernel32 := syscall.NewLazyDLL("kernel32.dll")
 	getDiskFreeSpaceEx := kernel32.NewProc("GetDiskFreeSpaceExW")
 
+	pPath, err := syscall.UTF16PtrFromString("C:\\")
+	if err != nil {
+		return models.DiskStats{}
+	}
+
 	var freeBytesAvailable, totalNumberOfBytes, totalNumberOfFreeBytes int64
 	r, _, _ := getDiskFreeSpaceEx.Call(
-		uintptr(unsafe.Pointer(syscall.StringToUTF16Ptr("C:\\"))),
+		uintptr(unsafe.Pointer(pPath)),
 		uintptr(unsafe.Pointer(&freeBytesAvailable)),
 		uintptr(unsafe.Pointer(&totalNumberOfBytes)),
 		uintptr(unsafe.Pointer(&totalNumberOfFreeBytes)),

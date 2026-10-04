@@ -23,8 +23,9 @@ export function ProjectDeploymentsTab({ projectId }: ProjectDeploymentsTabProps)
   });
   const rollbackMutation = useRollback();
 
-  const deployments = depsRes?.data || [];
-  const pagination = depsRes?.pagination;
+  const deployments = depsRes?.data?.records || [];
+  const total = depsRes?.data?.total ?? 0;
+  const totalPages = depsRes?.data?.totalPages ?? 1;
 
   const handleRollback = async (deploymentId: string) => {
     try {
@@ -59,7 +60,7 @@ export function ProjectDeploymentsTab({ projectId }: ProjectDeploymentsTabProps)
     <div className="space-y-4">
       <div className="flex items-center justify-between">
         <h3 className="font-semibold text-foreground/90 text-sm">
-          Deployment Activity ({pagination?.total ?? deployments.length})
+          Deployment Activity ({total})
         </h3>
         <Button variant="ghost" size="sm" onClick={() => refetch()} className="h-8 gap-1.5 text-xs">
           <RotateCw className="h-3 w-3" />
@@ -162,10 +163,10 @@ export function ProjectDeploymentsTab({ projectId }: ProjectDeploymentsTabProps)
         })}
       </div>
 
-      {pagination && pagination.pages > 1 && (
+      {totalPages > 1 && (
         <div className="flex items-center justify-between pt-2 text-muted-foreground text-xs">
           <span>
-            Page {page} of {pagination.pages}
+            Page {page} of {totalPages}
           </span>
           <div className="flex gap-2">
             <Button
@@ -179,7 +180,7 @@ export function ProjectDeploymentsTab({ projectId }: ProjectDeploymentsTabProps)
             <Button
               variant="outline"
               size="sm"
-              disabled={page >= pagination.pages}
+              disabled={page >= totalPages}
               onClick={() => setPage((p) => p + 1)}
             >
               Next
