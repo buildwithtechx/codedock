@@ -78,7 +78,7 @@
       "apps/desktop/src/**",
       "apps/web/src/**",
       "apps/docs/src/**",
-      "apps/cli/src/**",
+      "packages/cli/src/**",
       "!**/.tanstack",
       "!**/*.gen.ts",
       "!**/routeTree.gen.ts",
