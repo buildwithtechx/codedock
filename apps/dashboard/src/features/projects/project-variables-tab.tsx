@@ -1,26 +1,37 @@
-import { Eye, EyeOff, Plus, Save, Trash2 } from 'lucide-react';
+import { Copy, Download, Eye, EyeOff, FileText, Plus, Save, Trash2 } from 'lucide-react';
 import { useState } from 'react';
+import { toast } from 'sonner';
 import { Button } from '#/components/ui/button';
 import { Card } from '#/components/ui/card';
 import { Input } from '#/components/ui/input';
 import { useGetVars, useSetVars } from '#/features/projects';
+import { EnvBulkModal } from '#/features/projects/env-bulk-modal';
+import { type EnvEntry, serializeDotenv } from '#/lib/dotenv';
 
 interface ProjectVariablesTabProps {
   projectId: string;
+}
+
+interface VarEntry {
+  key: string;
+  value: string;
+  show?: boolean;
 }
 
 export function ProjectVariablesTab({ projectId }: ProjectVariablesTabProps) {
   const { data: varsRes, isLoading, refetch } = useGetVars(projectId);
   const setVarsMutation = useSetVars();
 
-  const [entries, setEntries] = useState<Array<{ key: string; value: string; show?: boolean }>>([]);
+  const [entries, setEntries] = useState<VarEntry[]>([]);
   const [initialized, setInitialized] = useState(false);
   const [newKey, setNewKey] = useState('');
   const [newValue, setNewValue] = useState('');
+  const [bulkOpen, setBulkOpen] = useState(false);
+  const [allRevealed, setAllRevealed] = useState(false);
 
   if (varsRes?.data && !initialized && !isLoading) {
     const rawVars = varsRes.data || {};
-    const parsed = Object.entries(rawVars).map(([key, value]) => ({
+    const parsed: VarEntry[] = Object.entries(rawVars).map(([key, value]) => ({
       key,
       value: String(value),
       show: false,
@@ -29,7 +40,7 @@ export function ProjectVariablesTab({ projectId }: ProjectVariablesTabProps) {
     setInitialized(true);
   }
 
-  const handleSave = async (updated: Array<{ key: string; value: string }>) => {
+  const handleSave = async (updated: VarEntry[]) => {
     const variables: Record<string, string> = {};
     for (const item of updated) {
       if (item.key.trim()) {
@@ -41,9 +52,10 @@ export function ProjectVariablesTab({ projectId }: ProjectVariablesTabProps) {
         id: projectId,
         payload: { variables },
       });
+      toast.success('Environment variables saved');
       refetch();
-    } catch {
-      // Handled
+    } catch (err) {
+      toast.error(err instanceof Error ? err.message : 'Failed to save variables');
     }
   };
 
@@ -62,25 +74,105 @@ export function ProjectVariablesTab({ projectId }: ProjectVariablesTabProps) {
     void handleSave(updated);
   };
 
+  const handleBulkImport = (imported: EnvEntry[]) => {
+    const existingMap = new Map(entries.map((e) => [e.key, e.value]));
+    for (const item of imported) {
+      existingMap.set(item.key, item.value);
+    }
+    const merged: VarEntry[] = Array.from(existingMap.entries()).map(([key, value]) => ({
+      key,
+      value,
+      show: false,
+    }));
+    setEntries(merged);
+    void handleSave(merged);
+  };
+
+  const handleToggleRevealAll = () => {
+    const next = !allRevealed;
+    setAllRevealed(next);
+    setEntries(entries.map((e) => ({ ...e, show: next })));
+  };
+
+  const handleCopyDotenv = async () => {
+    const text = serializeDotenv(entries);
+    await navigator.clipboard.writeText(text);
+    toast.success('.env copied to clipboard');
+  };
+
+  const handleDownloadDotenv = () => {
+    const text = serializeDotenv(entries);
+    const blob = new Blob([text], { type: 'text/plain' });
+    const url = URL.createObjectURL(blob);
+    const a = document.createElement('a');
+    a.href = url;
+    a.download = '.env';
+    a.click();
+    URL.revokeObjectURL(url);
+    toast.success('.env file downloaded');
+  };
+
   return (
     <div className="space-y-4">
-      <div className="flex items-center justify-between">
+      <div className="flex flex-wrap items-center justify-between gap-3">
         <div>
           <h3 className="font-semibold text-foreground/90 text-sm">
             Project Environment Variables
           </h3>
           <p className="mt-0.5 text-muted-foreground text-xs">
-            Variables configured here are inherited by all workloads and services within this
-            project.
+            Variables configured here are inherited by all services within this project.
           </p>
+        </div>
+
+        <div className="flex flex-wrap items-center gap-2">
+          {entries.length > 0 && (
+            <>
+              <Button
+                variant="outline"
+                size="sm"
+                className="h-8 gap-1 text-xs"
+                onClick={handleToggleRevealAll}
+              >
+                {allRevealed ? <EyeOff className="h-3.5 w-3.5" /> : <Eye className="h-3.5 w-3.5" />}
+                {allRevealed ? 'Hide values' : 'Show values'}
+              </Button>
+              <Button
+                variant="outline"
+                size="sm"
+                className="h-8 gap-1 text-xs"
+                onClick={handleCopyDotenv}
+              >
+                <Copy className="h-3.5 w-3.5" />
+                Copy
+              </Button>
+              <Button
+                variant="outline"
+                size="sm"
+                className="h-8 gap-1 text-xs"
+                onClick={handleDownloadDotenv}
+              >
+                <Download className="h-3.5 w-3.5" />
+                Download
+              </Button>
+            </>
+          )}
+          <Button
+            variant="outline"
+            size="sm"
+            className="h-8 gap-1 text-xs"
+            onClick={() => setBulkOpen(true)}
+          >
+            <FileText className="h-3.5 w-3.5" />
+            Bulk Import
+          </Button>
         </div>
       </div>
 
       <Card className="space-y-4 p-4">
         <div className="space-y-2.5">
           {entries.length === 0 ? (
-            <p className="py-2 text-center text-muted-foreground text-xs">
-              No project environment variables configured yet.
+            <p className="py-6 text-center text-muted-foreground text-xs">
+              No project environment variables configured yet. Click Bulk Import or add one below.
             </p>
           ) : (
             entries.map((item, index) => (
@@ -166,6 +258,12 @@ export function ProjectVariablesTab({ projectId }: ProjectVariablesTabProps) {
           </div>
         )}
       </Card>
+
+      <EnvBulkModal
+        isOpen={bulkOpen}
+        onClose={() => setBulkOpen(false)}
+        onImport={handleBulkImport}
+      />
     </div>
   );
 }

@@ -10,6 +10,7 @@ import (
 
 type ServerRepository interface {
 	Create(ctx context.Context, server *models.Server) error
+	Update(ctx context.Context, server *models.Server) error
 	GetByID(ctx context.Context, id string) (*models.Server, error)
 	GetByToken(ctx context.Context, token string) (*models.Server, error)
 	ListByUser(ctx context.Context, userID string) ([]*models.Server, error)
@@ -32,17 +33,27 @@ func (r *sqliteServerRepository) Create(ctx context.Context, server *models.Serv
 	if err != nil {
 		return fmt.Errorf("failed to encrypt SSH key: %w", err)
 	}
+	sshPrivateKey, err := r.encryptSecret(server.SSHPrivateKey)
+	if err != nil {
+		return fmt.Errorf("failed to encrypt SSH private key: %w", err)
+	}
 	sshPassword, err := r.encryptSecret(server.SSHPassword)
 	if err != nil {
 		return fmt.Errorf("failed to encrypt SSH password: %w", err)
 	}
 	query := `
-		INSERT INTO servers (id, user_id, name, ip_address, ssh_host, ssh_port, ssh_user, ssh_key, ssh_password, status, worker_token, last_seen_at, metrics, created_at, updated_at)
-		VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
+		INSERT INTO servers (
+			id, user_id, name, ip_address, is_local,
+			ssh_host, ssh_port, ssh_user, ssh_auth_method,
+			ssh_key, ssh_private_key, ssh_password, ssh_transport, ssh_jump_host,
+			status, worker_token, last_seen_at, metrics, created_at, updated_at
+		)
+		VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
 	`
 	_, err = r.db.ExecContext(ctx, query,
-		server.ID, server.UserID, server.Name, server.IPAddress,
-		server.SSHHost, server.SSHPort, server.SSHUser, sshKey, sshPassword,
+		server.ID, server.UserID, server.Name, server.IPAddress, server.IsLocal,
+		server.SSHHost, server.SSHPort, server.SSHUser, server.SSHAuthMethod,
+		sshKey, sshPrivateKey, sshPassword, server.SSHTransport, server.SSHJumpHost,
 		server.Status, server.WorkerToken, server.LastSeenAt, server.Metrics, server.CreatedAt, server.UpdatedAt,
 	)
 	if err != nil {
@@ -51,20 +62,71 @@ func (r *sqliteServerRepository) Create(ctx context.Context, server *models.Serv
 	return nil
 }
 
+func (r *sqliteServerRepository) Update(ctx context.Context, server *models.Server) error {
+	sshKey, err := r.encryptSecret(server.SSHKey)
+	if err != nil {
+		return fmt.Errorf("failed to encrypt SSH key: %w", err)
+	}
+	sshPrivateKey, err := r.encryptSecret(server.SSHPrivateKey)
+	if err != nil {
+		return fmt.Errorf("failed to encrypt SSH private key: %w", err)
+	}
+	sshPassword, err := r.encryptSecret(server.SSHPassword)
+	if err != nil {
+		return fmt.Errorf("failed to encrypt SSH password: %w", err)
+	}
+	query := `
+		UPDATE servers SET
+			name = ?,
+			ip_address = ?,
+			is_local = ?,
+			ssh_host = ?,
+			ssh_port = ?,
+			ssh_user = ?,
+			ssh_auth_method = ?,
+			ssh_key = ?,
+			ssh_private_key = ?,
+			ssh_password = ?,
+			ssh_transport = ?,
+			ssh_jump_host = ?,
+			status = ?,
+			updated_at = ?
+		WHERE id = ?
+	`
+	_, err = r.db.ExecContext(ctx, query,
+		server.Name, server.IPAddress, server.IsLocal,
+		server.SSHHost, server.SSHPort, server.SSHUser, server.SSHAuthMethod,
+		sshKey, sshPrivateKey, sshPassword, server.SSHTransport, server.SSHJumpHost,
+		server.Status, server.UpdatedAt, server.ID,
+	)
+	if err != nil {
+		return fmt.Errorf("failed to update server: %w", err)
+	}
+	return nil
+}
+
+const serverSelectColumns = `
+	id, user_id, name, ip_address, COALESCE(is_local, 0),
+	COALESCE(ssh_host, ''), COALESCE(ssh_port, 22), COALESCE(ssh_user, 'root'),
+	COALESCE(ssh_auth_method, 'key'), COALESCE(ssh_key, ''), COALESCE(ssh_private_key, ''),
+	COALESCE(ssh_password, ''), COALESCE(ssh_transport, 'direct'), COALESCE(ssh_jump_host, ''),
+	status, worker_token, last_seen_at, metrics, created_at, updated_at
+`
+
 func (r *sqliteServerRepository) GetByID(ctx context.Context, id string) (*models.Server, error) {
-	query := `SELECT id, user_id, name, ip_address, COALESCE(ssh_host, ''), COALESCE(ssh_port, 22), COALESCE(ssh_user, 'root'), COALESCE(ssh_key, ''), COALESCE(ssh_password, ''), status, worker_token, last_seen_at, metrics, created_at, updated_at FROM servers WHERE id = ?`
+	query := fmt.Sprintf(`SELECT %s FROM servers WHERE id = ?`, serverSelectColumns)
 	row := r.db.QueryRowContext(ctx, query, id)
 	return r.scanRow(row)
 }
 
 func (r *sqliteServerRepository) GetByToken(ctx context.Context, token string) (*models.Server, error) {
-	query := `SELECT id, user_id, name, ip_address, COALESCE(ssh_host, ''), COALESCE(ssh_port, 22), COALESCE(ssh_user, 'root'), COALESCE(ssh_key, ''), COALESCE(ssh_password, ''), status, worker_token, last_seen_at, metrics, created_at, updated_at FROM servers WHERE worker_token = ?`
+	query := fmt.Sprintf(`SELECT %s FROM servers WHERE worker_token = ?`, serverSelectColumns)
 	row := r.db.QueryRowContext(ctx, query, token)
 	return r.scanRow(row)
 }
 
 func (r *sqliteServerRepository) ListByUser(ctx context.Context, userID string) ([]*models.Server, error) {
-	query := `SELECT id, user_id, name, ip_address, COALESCE(ssh_host, ''), COALESCE(ssh_port, 22), COALESCE(ssh_user, 'root'), COALESCE(ssh_key, ''), COALESCE(ssh_password, ''), status, worker_token, last_seen_at, metrics, created_at, updated_at FROM servers WHERE user_id = ? ORDER BY created_at DESC`
+	query := fmt.Sprintf(`SELECT %s FROM servers WHERE user_id = ? ORDER BY created_at DESC`, serverSelectColumns)
 	rows, err := r.db.QueryContext(ctx, query, userID)
 	if err != nil {
 		return nil, fmt.Errorf("failed to list servers: %w", err)
@@ -102,7 +164,12 @@ func (r *sqliteServerRepository) UpdateMetrics(ctx context.Context, id string, m
 
 func (r *sqliteServerRepository) scanRow(row *sql.Row) (*models.Server, error) {
 	var s models.Server
-	err := row.Scan(&s.ID, &s.UserID, &s.Name, &s.IPAddress, &s.SSHHost, &s.SSHPort, &s.SSHUser, &s.SSHKey, &s.SSHPassword, &s.Status, &s.WorkerToken, &s.LastSeenAt, &s.Metrics, &s.CreatedAt, &s.UpdatedAt)
+	err := row.Scan(
+		&s.ID, &s.UserID, &s.Name, &s.IPAddress, &s.IsLocal,
+		&s.SSHHost, &s.SSHPort, &s.SSHUser, &s.SSHAuthMethod,
+		&s.SSHKey, &s.SSHPrivateKey, &s.SSHPassword, &s.SSHTransport, &s.SSHJumpHost,
+		&s.Status, &s.WorkerToken, &s.LastSeenAt, &s.Metrics, &s.CreatedAt, &s.UpdatedAt,
+	)
 	if err != nil {
 		if err == sql.ErrNoRows {
 			return nil, nil
@@ -117,7 +184,12 @@ func (r *sqliteServerRepository) scanRow(row *sql.Row) (*models.Server, error) {
 
 func (r *sqliteServerRepository) scanRows(rows *sql.Rows) (*models.Server, error) {
 	var s models.Server
-	err := rows.Scan(&s.ID, &s.UserID, &s.Name, &s.IPAddress, &s.SSHHost, &s.SSHPort, &s.SSHUser, &s.SSHKey, &s.SSHPassword, &s.Status, &s.WorkerToken, &s.LastSeenAt, &s.Metrics, &s.CreatedAt, &s.UpdatedAt)
+	err := rows.Scan(
+		&s.ID, &s.UserID, &s.Name, &s.IPAddress, &s.IsLocal,
+		&s.SSHHost, &s.SSHPort, &s.SSHUser, &s.SSHAuthMethod,
+		&s.SSHKey, &s.SSHPrivateKey, &s.SSHPassword, &s.SSHTransport, &s.SSHJumpHost,
+		&s.Status, &s.WorkerToken, &s.LastSeenAt, &s.Metrics, &s.CreatedAt, &s.UpdatedAt,
+	)
 	if err != nil {
 		return nil, fmt.Errorf("failed to scan server: %w", err)
 	}
@@ -142,14 +214,17 @@ func (r *sqliteServerRepository) decryptSecrets(server *models.Server) error {
 		return nil
 	}
 	if server.SSHKey != "" {
-		value, err := r.vault.Decrypt(server.SSHKey)
-		if err == nil {
+		if value, err := r.vault.Decrypt(server.SSHKey); err == nil {
 			server.SSHKey = value
 		}
 	}
+	if server.SSHPrivateKey != "" {
+		if value, err := r.vault.Decrypt(server.SSHPrivateKey); err == nil {
+			server.SSHPrivateKey = value
+		}
+	}
 	if server.SSHPassword != "" {
-		value, err := r.vault.Decrypt(server.SSHPassword)
-		if err == nil {
+		if value, err := r.vault.Decrypt(server.SSHPassword); err == nil {
 			server.SSHPassword = value
 		}
 	}

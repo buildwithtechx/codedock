@@ -52,10 +52,26 @@ type CreateServerRequest struct {
 	SSHJumpHost   string `json:"sshJumpHost,omitempty"`
 }
 
+type UpdateServerRequest struct {
+	Name          *string `json:"name,omitempty"`
+	IPAddress     *string `json:"ipAddress,omitempty"`
+	IsLocal       *bool   `json:"isLocal,omitempty"`
+	SSHHost       *string `json:"sshHost,omitempty"`
+	SSHPort       *int    `json:"sshPort,omitempty"`
+	SSHUser       *string `json:"sshUser,omitempty"`
+	SSHAuthMethod *string `json:"sshAuthMethod,omitempty"`
+	SSHKey        *string `json:"sshKey,omitempty"`
+	SSHPrivateKey *string `json:"sshPrivateKey,omitempty"`
+	SSHPassword   *string `json:"sshPassword,omitempty"`
+	SSHTransport  *string `json:"sshTransport,omitempty"`
+	SSHJumpHost   *string `json:"sshJumpHost,omitempty"`
+}
+
 type TestSSHRequest struct {
-	SSHHost     string `json:"sshHost"`
-	SSHPort     int    `json:"sshPort"`
-	SSHUser     string `json:"sshUser"`
-	SSHKey      string `json:"sshKey"`
-	SSHPassword string `json:"sshPassword"`
+	SSHHost       string `json:"sshHost"`
+	SSHPort       int    `json:"sshPort"`
+	SSHUser       string `json:"sshUser"`
+	SSHKey        string `json:"sshKey"`
+	SSHPrivateKey string `json:"sshPrivateKey,omitempty"`
+	SSHPassword   string `json:"sshPassword"`
 }

@@ -11,6 +11,8 @@ export interface DomainBase {
   serviceId?: string;
   projectId?: string;
   domainName: string;
+  redirectTo?: string;
+  pathPrefix?: string;
   sslCertStatus?: string;
   dnsProvisionStatus?: DNSProvisionStatus;
   dnsProvider?: string;

@@ -58,7 +58,56 @@ func (h *ServerHandler) Create(c echo.Context) error {
 		return utils.Error(c, http.StatusInternalServerError, err.Error())
 	}
 
+	h.redactCredentials(server)
 	return utils.Success(c, "Server created", server)
+}
+
+func (h *ServerHandler) Get(c echo.Context) error {
+	userClaims, ok := c.Get("user").(*models.UserClaims)
+	if !ok || userClaims == nil {
+		return utils.Error(c, http.StatusUnauthorized, "unauthorized")
+	}
+
+	id := c.Param("id")
+	if id == "" {
+		return utils.Error(c, http.StatusBadRequest, "server id required")
+	}
+
+	server, err := h.serverService.GetServer(c.Request().Context(), id)
+	if err != nil {
+		return utils.Error(c, http.StatusInternalServerError, err.Error())
+	}
+	if server == nil {
+		return utils.Error(c, http.StatusNotFound, "server not found")
+	}
+
+	h.redactCredentials(server)
+	return utils.Success(c, "Server retrieved", server)
+}
+
+func (h *ServerHandler) Update(c echo.Context) error {
+	userClaims, ok := c.Get("user").(*models.UserClaims)
+	if !ok || userClaims == nil {
+		return utils.Error(c, http.StatusUnauthorized, "unauthorized")
+	}
+
+	id := c.Param("id")
+	if id == "" {
+		return utils.Error(c, http.StatusBadRequest, "server id required")
+	}
+
+	var req models.UpdateServerRequest
+	if err := c.Bind(&req); err != nil {
+		return utils.Error(c, http.StatusBadRequest, "invalid request payload")
+	}
+
+	server, err := h.serverService.UpdateServer(c.Request().Context(), id, userClaims.UserID, req)
+	if err != nil {
+		return utils.Error(c, http.StatusInternalServerError, err.Error())
+	}
+
+	h.redactCredentials(server)
+	return utils.Success(c, "Server updated", server)
 }
 
 func (h *ServerHandler) List(c echo.Context) error {
@@ -73,11 +122,7 @@ func (h *ServerHandler) List(c echo.Context) error {
 	}
 
 	for _, s := range servers {
-		s.WorkerToken = "********"
-		s.SSHPassword = "********"
-		if s.SSHKey != "" {
-			s.SSHKey = "********"
-		}
+		h.redactCredentials(s)
 	}
 
 	return utils.Success(c, "Operation successful", servers)
@@ -99,4 +144,16 @@ func (h *ServerHandler) Delete(c echo.Context) error {
 	}
 
 	return utils.Success(c, "Server deleted", nil)
+}
+
+func (h *ServerHandler) redactCredentials(s *models.Server) {
+	if s == nil {
+		return
+	}
+	s.WorkerToken = "********"
+	s.SSHPassword = "********"
+	s.SSHPrivateKey = "********"
+	if s.SSHKey != "" {
+		s.SSHKey = "********"
+	}
 }

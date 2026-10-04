@@ -19,6 +19,7 @@ const controlPlaneServerID = "codedock-control-plane"
 
 type ServerService interface {
 	CreateServer(ctx context.Context, userID string, req models.CreateServerRequest) (*models.Server, error)
+	UpdateServer(ctx context.Context, id, userID string, req models.UpdateServerRequest) (*models.Server, error)
 	TestSSH(ctx context.Context, req models.TestSSHRequest) error
 	ListServersByUser(ctx context.Context, userID string) ([]*models.Server, error)
 	GetServer(ctx context.Context, id string) (*models.Server, error)
@@ -62,12 +63,16 @@ func (s *serverService) TestSSH(ctx context.Context, req models.TestSSHRequest) 
 	if user == "" {
 		user = "root"
 	}
+	key := req.SSHKey
+	if key == "" && req.SSHPrivateKey != "" {
+		key = req.SSHPrivateKey
+	}
 
 	return s.sshManager.TestConnection(ctx, ssh.Config{
 		Host:     host,
 		Port:     port,
 		User:     user,
-		Key:      req.SSHKey,
+		Key:      key,
 		Password: req.SSHPassword,
 	})
 }
@@ -88,10 +93,36 @@ func (s *serverService) CreateServer(ctx context.Context, userID string, req mod
 		}
 	}
 
-	sshHost := req.SSHHost
-	if sshHost == "" {
-		sshHost = req.IPAddress
+	key := req.SSHKey
+	if key == "" && req.SSHPrivateKey != "" {
+		key = req.SSHPrivateKey
 	}
+
+	sshAuthMethod := req.SSHAuthMethod
+	if sshAuthMethod == "" {
+		if req.SSHPassword != "" {
+			sshAuthMethod = "password"
+		} else {
+			sshAuthMethod = "key"
+		}
+	}
+
+	sshTransport := req.SSHTransport
+	if sshTransport == "" {
+		sshTransport = "direct"
+	}
+
+	ipAddress := req.IPAddress
+	sshHost := req.SSHHost
+	if req.IsLocal {
+		if ipAddress == "" {
+			ipAddress = "127.0.0.1"
+		}
+		sshHost = ipAddress
+	} else if sshHost == "" {
+		sshHost = ipAddress
+	}
+
 	sshPort := req.SSHPort
 	if sshPort <= 0 {
 		sshPort = 22
@@ -102,23 +133,33 @@ func (s *serverService) CreateServer(ctx context.Context, userID string, req mod
 	}
 
 	now := time.Now().UTC()
-	server := &models.Server{
-		ID:          uuid.New().String(),
-		UserID:      userID,
-		Name:        req.Name,
-		IPAddress:   req.IPAddress,
-		SSHHost:     sshHost,
-		SSHPort:     sshPort,
-		SSHUser:     sshUser,
-		SSHKey:      req.SSHKey,
-		SSHPassword: req.SSHPassword,
-		Status:      models.ServerStatusOffline,
-		WorkerToken: generateWorkerToken(),
-		CreatedAt:   now,
-		UpdatedAt:   now,
+	status := models.ServerStatusOffline
+	if req.IsLocal {
+		status = models.ServerStatusOnline
 	}
 
-	if s.sshManager != nil {
+	server := &models.Server{
+		ID:            uuid.New().String(),
+		UserID:        userID,
+		Name:          req.Name,
+		IPAddress:     ipAddress,
+		IsLocal:       req.IsLocal,
+		SSHHost:       sshHost,
+		SSHPort:       sshPort,
+		SSHUser:       sshUser,
+		SSHAuthMethod: sshAuthMethod,
+		SSHKey:        key,
+		SSHPrivateKey: key,
+		SSHPassword:   req.SSHPassword,
+		SSHTransport:  sshTransport,
+		SSHJumpHost:   req.SSHJumpHost,
+		Status:        status,
+		WorkerToken:   generateWorkerToken(),
+		CreatedAt:     now,
+		UpdatedAt:     now,
+	}
+
+	if !req.IsLocal && s.sshManager != nil {
 		if err := s.sshManager.TestConnection(ctx, ssh.Config{
 			Host:     server.SSHHost,
 			Port:     server.SSHPort,
@@ -132,6 +173,71 @@ func (s *serverService) CreateServer(ctx context.Context, userID string, req mod
 
 	if err := s.serverRepo.Create(ctx, server); err != nil {
 		return nil, fmt.Errorf("failed to create server: %w", err)
+	}
+
+	return server, nil
+}
+
+func (s *serverService) UpdateServer(ctx context.Context, id, userID string, req models.UpdateServerRequest) (*models.Server, error) {
+	if id == controlPlaneServerID {
+		return nil, fmt.Errorf("the Codedock control plane cannot be modified")
+	}
+
+	server, err := s.serverRepo.GetByID(ctx, id)
+	if err != nil {
+		return nil, err
+	}
+	if server == nil {
+		return nil, fmt.Errorf("server not found")
+	}
+	if server.UserID != userID {
+		return nil, fmt.Errorf("unauthorized to update server")
+	}
+
+	if req.Name != nil && *req.Name != "" {
+		server.Name = *req.Name
+	}
+	if req.IPAddress != nil {
+		server.IPAddress = *req.IPAddress
+	}
+	if req.IsLocal != nil {
+		server.IsLocal = *req.IsLocal
+	}
+	if req.SSHHost != nil {
+		server.SSHHost = *req.SSHHost
+	}
+	if req.SSHPort != nil && *req.SSHPort > 0 {
+		server.SSHPort = *req.SSHPort
+	}
+	if req.SSHUser != nil && *req.SSHUser != "" {
+		server.SSHUser = *req.SSHUser
+	}
+	if req.SSHAuthMethod != nil {
+		server.SSHAuthMethod = *req.SSHAuthMethod
+	}
+	if req.SSHKey != nil {
+		server.SSHKey = *req.SSHKey
+	}
+	if req.SSHPrivateKey != nil {
+		server.SSHPrivateKey = *req.SSHPrivateKey
+		if server.SSHKey == "" {
+			server.SSHKey = *req.SSHPrivateKey
+		}
+	}
+	if req.SSHPassword != nil {
+		server.SSHPassword = *req.SSHPassword
+	}
+	if req.SSHTransport != nil {
+		server.SSHTransport = *req.SSHTransport
+	}
+	if req.SSHJumpHost != nil {
+		server.SSHJumpHost = *req.SSHJumpHost
+	}
+
+	server.UpdatedAt = time.Now().UTC()
+
+	if err := s.serverRepo.Update(ctx, server); err != nil {
+		return nil, fmt.Errorf("failed to update server: %w", err)
 	}
 
 	return server, nil
