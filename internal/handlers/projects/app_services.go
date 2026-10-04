@@ -127,38 +127,6 @@ func (h *AppHandler) Create(c echo.Context) error {
 
 	return utils.Created(c, "Created successfully", created)
 }
-
-func (h *AppHandler) ListByEnvironment(c echo.Context) error {
-	envID := c.Param("id")
-	apps, err := h.appService.ListByEnvironment(c.Request().Context(), envID)
-	if err != nil {
-		return utils.Error(c, http.StatusInternalServerError, err.Error())
-	}
-	user := middleware.GetUserClaimsFromContext(c.Request().Context())
-	if user != nil && user.Role != "admin" {
-		var filtered []*models.AppService
-		for _, app := range apps {
-			if h.projectService.IsMemberOrOwner(c.Request().Context(), app.ProjectID, user.UserID, user.Role) {
-				filtered = append(filtered, app)
-			}
-		}
-		return utils.Success(c, "Operation successful", filtered)
-	}
-	return utils.Success(c, "Operation successful", apps)
-}
-
-func (h *AppHandler) ListByProject(c echo.Context) error {
-	projectID := c.Param("id")
-	if err := h.verifyProjectOwnership(c, projectID); err != nil {
-		return err
-	}
-	apps, err := h.appService.ListByProject(c.Request().Context(), projectID)
-	if err != nil {
-		return utils.Error(c, http.StatusInternalServerError, err.Error())
-	}
-	return utils.Success(c, "Operation successful", apps)
-}
-
 func (h *AppHandler) Get(c echo.Context) error {
 	id := c.Param("id")
 	svc, err := h.appService.GetAppService(c.Request().Context(), id)

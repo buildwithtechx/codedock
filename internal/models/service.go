@@ -5,6 +5,8 @@ import "time"
 type Service struct {
 	ID                  string    `json:"id" db:"id"`
 	ProjectID           string    `json:"projectId" db:"project_id"`
+	AppID               string    `json:"appId,omitempty" db:"app_id"`
+	EnvironmentID       string    `json:"environmentId,omitempty" db:"environment_id"`
 	Kind                string    `json:"kind" db:"kind"`
 	Name                string    `json:"name" db:"name"`
 	Icon                string    `json:"icon" db:"icon"`
@@ -56,6 +58,8 @@ type ServiceDeployment struct {
 
 type CreateServiceRequest struct {
 	ProjectID        string   `json:"projectId"`
+	AppID            string   `json:"appId,omitempty"`
+	EnvironmentID    string   `json:"environmentId,omitempty"`
 	Kind             string   `json:"kind,omitempty"`
 	Name             string   `json:"name"`
 	Icon             string   `json:"icon,omitempty"`
@@ -78,6 +82,8 @@ type CreateServiceRequest struct {
 }
 
 type UpdateServiceRequest struct {
+	AppID            string   `json:"appId,omitempty"`
+	EnvironmentID    string   `json:"environmentId,omitempty"`
 	Name             string   `json:"name,omitempty"`
 	Icon             string   `json:"icon,omitempty"`
 	Image            string   `json:"image,omitempty"`

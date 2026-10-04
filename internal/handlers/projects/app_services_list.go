@@ -2,10 +2,12 @@ package projects
 
 import (
 	"net/http"
+	"strings"
 
 	"github.com/labstack/echo/v4"
 
 	"codedock.run/codedock/internal/http/middleware"
+	"codedock.run/codedock/internal/models"
 	"codedock.run/codedock/internal/utils"
 )
 
@@ -30,5 +32,83 @@ func (h *AppHandler) ListByOrganization(c echo.Context) error {
 			app.DeployToken = ""
 		}
 	}
+	return utils.Success(c, "Operation successful", apps)
+}
+
+func (h *AppHandler) ListByEnvironment(c echo.Context) error {
+	envID := c.Param("id")
+	apps, err := h.appService.ListByEnvironment(c.Request().Context(), envID)
+	if err != nil {
+		return utils.Error(c, http.StatusInternalServerError, err.Error())
+	}
+	user := middleware.GetUserClaimsFromContext(c.Request().Context())
+	if user != nil && user.Role != "admin" {
+		var filtered []*models.AppService
+		for _, app := range apps {
+			if h.projectService.IsMemberOrOwner(c.Request().Context(), app.ProjectID, user.UserID, user.Role) {
+				filtered = append(filtered, app)
+			}
+		}
+		return utils.Success(c, "Operation successful", filtered)
+	}
+	return utils.Success(c, "Operation successful", apps)
+}
+
+func (h *AppHandler) ListByProject(c echo.Context) error {
+	projectID := c.Param("id")
+	if projectID == "" {
+		projectID = c.Param("projectId")
+	}
+	if err := h.verifyProjectOwnership(c, projectID); err != nil {
+		return err
+	}
+	apps, err := h.appService.ListByProject(c.Request().Context(), projectID)
+	if err != nil {
+		return utils.Error(c, http.StatusInternalServerError, err.Error())
+	}
+
+	targetEnv := c.QueryParam("environmentId")
+	if targetEnv == "" {
+		targetEnv = c.QueryParam("environment_id")
+	}
+	envName := c.QueryParam("env")
+	if envName == "" {
+		envName = c.QueryParam("environment")
+	}
+
+	if targetEnv == "" && envName != "" && h.envService != nil {
+		envs, _ := h.envService.ListByProject(c.Request().Context(), projectID)
+		for _, e := range envs {
+			if strings.EqualFold(e.Name, envName) {
+				targetEnv = e.ID
+				break
+			}
+		}
+	}
+
+	if targetEnv != "" {
+		var filtered []*models.AppService
+		for _, app := range apps {
+			if app.EnvironmentID == targetEnv {
+				filtered = append(filtered, app)
+			}
+		}
+		apps = filtered
+	}
+
+	appID := c.QueryParam("appId")
+	if appID == "" {
+		appID = c.QueryParam("app_id")
+	}
+	if appID != "" {
+		var filtered []*models.AppService
+		for _, app := range apps {
+			if app.AppID == appID {
+				filtered = append(filtered, app)
+			}
+		}
+		apps = filtered
+	}
+
 	return utils.Success(c, "Operation successful", apps)
 }

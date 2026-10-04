@@ -129,6 +129,7 @@ const (
 type AppService struct {
 	ID               string           `json:"id" db:"id"`
 	ProjectID        string           `json:"projectId" db:"project_id"`
+	AppID            string           `json:"appId,omitempty" db:"app_id"`
 	EnvironmentID    string           `json:"environmentId" db:"environment_id"`
 	Name             string           `json:"name" db:"name"`
 	RepositoryURL    string           `json:"repositoryUrl" db:"repository_url"`
@@ -171,6 +172,8 @@ type ServiceVolume struct {
 
 type CreateAppServiceRequest struct {
 	ProjectID        string      `json:"projectId"`
+	AppID            string      `json:"appId,omitempty"`
+	EnvironmentID    string      `json:"environmentId,omitempty"`
 	Name             string      `json:"name"`
 	RepositoryURL    string      `json:"repositoryUrl"`
 	ImageRef         string      `json:"imageRef,omitempty"`
@@ -192,6 +195,7 @@ type CreateAppServiceRequest struct {
 }
 
 type UpdateAppServiceRequest struct {
+	AppID           string      `json:"appId,omitempty"`
 	Name            string      `json:"name"`
 	RepositoryURL   string      `json:"repositoryUrl"`
 	Branch          string      `json:"branch"`

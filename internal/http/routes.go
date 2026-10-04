@@ -147,6 +147,15 @@ func (s *Server) registerProjectRoutes(apiGroup, authGroup *echo.Group) {
 	authGroup.POST("/projects/:id/environments", s.environmentHandler.Create, projectAuthAdmin)
 	authGroup.GET("/projects/:id/environments", s.environmentHandler.ListByProject, projectAuth)
 	authGroup.GET("/projects/:id/apps", s.appServiceHandler.ListByProject, projectAuth)
+	authGroup.GET("/projects/:id/services", s.appServiceHandler.ListByProject, projectAuth)
+	authGroup.GET("/projects/:id/deployments", s.deploymentHandler.ListProjectDeployments, projectAuth)
+	authGroup.POST("/projects/:id/deploy", s.deploymentHandler.TriggerProject, projectAuthAdmin)
+
+	authGroup.GET("/project-apps", s.projectAppHandler.List)
+	authGroup.POST("/project-apps", s.projectAppHandler.Create)
+	authGroup.GET("/project-apps/:id", s.projectAppHandler.Get)
+	authGroup.PUT("/project-apps/:id", s.projectAppHandler.Update)
+	authGroup.DELETE("/project-apps/:id", s.projectAppHandler.Delete)
 
 	authGroup.GET("/projects/:projectId/tokens", s.projectSettingsHandler.ListTokens, projectAuthAdmin, s.authGuard.RequireScope("env:read"))
 	authGroup.POST("/projects/:projectId/tokens", s.projectSettingsHandler.CreateToken, projectAuthAdmin, s.authGuard.RequireScope("env:write"))

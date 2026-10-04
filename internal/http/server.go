@@ -61,6 +61,7 @@ type Server struct {
 	gitHandler             *deployments.GitHandler
 	webhookHandler         *deployments.WebhookHandler
 	projectHandler         *projects.ProjectHandler
+	projectAppHandler      *projects.ProjectAppHandler
 	orgHandler             *auth.OrganizationHandler
 	environmentHandler     *projects.EnvironmentHandler
 	domainHandler          *projects.DomainHandler
