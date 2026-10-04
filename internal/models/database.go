@@ -1,6 +1,8 @@
 package models
 
 import (
+	"time"
+
 	"codedock.run/codedock/pkg/types"
 )
 
@@ -72,4 +74,30 @@ type TableRowPayload map[string]any
 type ImportDatabaseRequest struct {
 	SQL       string `json:"sql,omitempty"`
 	SourceURL string `json:"sourceUrl,omitempty"`
+}
+
+type ClusterDatabase struct {
+	ID              string    `json:"id" db:"id"`
+	OrganizationID  string    `json:"organizationId" db:"organization_id"`
+	ProjectID       string    `json:"projectId" db:"project_id"`
+	ServerID        string    `json:"serverId,omitempty" db:"server_id"`
+	Name            string    `json:"name" db:"name"`
+	Engine          string    `json:"engine" db:"engine"`
+	Version         string    `json:"version" db:"version"`
+	Status          string    `json:"status" db:"status"`
+	Intent          string    `json:"intent" db:"intent"`
+	Port            int       `json:"port" db:"port"`
+	Username        string    `json:"username" db:"username"`
+	DatabaseName    string    `json:"databaseName" db:"database_name"`
+	SecretEncrypted string    `json:"-" db:"secret_encrypted"`
+	EnvKey          string    `json:"envKey,omitempty" db:"env_key"`
+	ContainerID     string    `json:"containerId,omitempty" db:"container_id"`
+	InternalDNS     string    `json:"internalDns,omitempty" db:"internal_dns"`
+	ExternalDNS     string    `json:"externalDns,omitempty" db:"external_dns"`
+	ProgressJSON    string    `json:"progress,omitempty" db:"progress_json"`
+	BackupRequestID string    `json:"backupRequestId,omitempty" db:"backup_request_id"`
+	CPULimit        float64   `json:"cpuLimit,omitempty" db:"cpu_limit"`
+	MemoryLimit     int       `json:"memoryLimit,omitempty" db:"memory_limit"`
+	CreatedAt       time.Time `json:"createdAt" db:"created_at"`
+	UpdatedAt       time.Time `json:"updatedAt" db:"updated_at"`
 }

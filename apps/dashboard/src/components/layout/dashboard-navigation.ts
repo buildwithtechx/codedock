@@ -1,6 +1,7 @@
 import type { LucideIcon } from 'lucide-react';
 import {
-  CalendarDays,
+  ClipboardList,
+  Clock,
   CloudCog,
   FolderKanban,
   Globe2,
@@ -10,7 +11,6 @@ import {
   Rocket,
   Server,
   Settings,
-  Sparkles,
   UserRound,
 } from 'lucide-react';
 
@@ -33,15 +33,9 @@ export const primaryNavigation: DashboardNavigationItem[] = [
   },
   {
     title: 'Projects',
-    description: 'Services and environments',
+    description: 'Workloads and environments',
     to: '/projects',
     icon: FolderKanban,
-  },
-  {
-    title: 'Apps',
-    description: 'Deployed application workloads',
-    to: '/apps',
-    icon: Sparkles,
   },
   {
     title: 'Deployments',
@@ -60,10 +54,19 @@ export const infrastructureNavigation: DashboardNavigationItem[] = [
   },
   {
     title: 'Domains & DNS',
-    description: 'Domain audit and provider setup',
+    description: 'Domain routing and SSL verification',
     to: '/dns',
     icon: Globe2,
   },
+  {
+    title: 'Scheduled Tasks',
+    description: 'Cron schedules and job runs',
+    to: '/scheduled-tasks',
+    icon: Clock,
+  },
+];
+
+export const systemNavigation: DashboardNavigationItem[] = [
   {
     title: 'Backups',
     description: 'Backup destinations and restores',
@@ -71,9 +74,12 @@ export const infrastructureNavigation: DashboardNavigationItem[] = [
     icon: HardDrive,
     exact: true,
   },
-];
-
-export const systemNavigation: DashboardNavigationItem[] = [
+  {
+    title: 'Audit Logs',
+    description: 'Security and operational events',
+    to: '/audit-logs',
+    icon: ClipboardList,
+  },
   {
     title: 'API Access',
     description: 'Personal access tokens',
@@ -82,7 +88,7 @@ export const systemNavigation: DashboardNavigationItem[] = [
   },
   {
     title: 'Settings',
-    description: 'Instance configuration',
+    description: 'Instance and workspace configuration',
     to: '/settings',
     icon: Settings,
     exact: true,
@@ -98,22 +104,16 @@ export const contextualNavigation: DashboardNavigationItem[] = [
     search: { tab: 'sources' },
   },
   {
-    title: 'Schedules',
-    description: 'Recurring tasks and service jobs',
-    to: '/scheduled-tasks',
-    icon: CalendarDays,
-  },
-  {
-    title: 'Profile',
-    description: 'Personal profile and security',
-    to: '/profile',
+    title: 'Team',
+    description: 'Members and permissions',
+    to: '/settings',
     icon: UserRound,
+    search: { tab: 'team' },
   },
 ];
 
-export const commandNavigation = [
+export const commandNavigation: DashboardNavigationItem[] = [
   ...primaryNavigation,
   ...infrastructureNavigation,
   ...systemNavigation,
-  ...contextualNavigation,
 ];

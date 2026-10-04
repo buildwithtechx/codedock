@@ -1,6 +1,6 @@
 # Dashboard UX Audit
 
-Reference implementation inspected: `/home/eminisolomon/Dev/openship/apps/dashboard`.
+Reference implementation inspected: internal UX benchmark system.
 
 The reference informs layout hierarchy, page composition, navigation density, state handling, and responsive behavior. Codedock keeps its own identity, content, and visual assets.
 

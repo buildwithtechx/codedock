@@ -3,6 +3,7 @@ package repositories
 import (
 	"context"
 	"database/sql"
+	"strings"
 	"time"
 
 	"github.com/google/uuid"
@@ -10,6 +11,18 @@ import (
 
 	"codedock.run/codedock/internal/models"
 )
+
+const projectSelectFields = `
+	id, COALESCE(app_id, '') AS app_id, COALESCE(organization_id, '') AS organization_id,
+	COALESCE(server_id, '') AS server_id, name, COALESCE(slug, '') AS slug,
+	COALESCE(description,'') AS description, COALESCE(environment_name, 'Production') AS environment_name,
+	COALESCE(environment_slug, 'production') AS environment_slug, COALESCE(environment_type, 'production') AS environment_type,
+	COALESCE(is_app, 0) AS is_app, COALESCE(app_template_id, '') AS app_template_id,
+	COALESCE(local_path, '') AS local_path, COALESCE(git_provider, 'github') AS git_provider,
+	COALESCE(git_owner, '') AS git_owner, COALESCE(git_repo, '') AS git_repo,
+	COALESCE(git_branch, 'main') AS git_branch, COALESCE(git_url, '') AS git_url,
+	COALESCE(status, 'ready') AS status, created_at, updated_at
+`
 
 type ProjectRepository interface {
 	ListByOrganization(ctx context.Context, organizationID string, limit, offset int) ([]models.ProjectConfig, int, error)
@@ -44,12 +57,12 @@ func (r *ProjectRepo) ListByOrganization(_ context.Context, organizationID strin
 		if err = r.db.Get(&total, `SELECT COUNT(*) FROM projects WHERE organization_id IS NULL`); err != nil {
 			return nil, 0, err
 		}
-		err = r.db.Select(&projects, `SELECT id, COALESCE(organization_id, '') AS organization_id, name, COALESCE(server_id, '') AS server_id, COALESCE(description,'') AS description, created_at, updated_at FROM projects WHERE organization_id IS NULL ORDER BY created_at DESC LIMIT ? OFFSET ?`, limit, offset)
+		err = r.db.Select(&projects, `SELECT `+projectSelectFields+` FROM projects WHERE organization_id IS NULL ORDER BY created_at DESC LIMIT ? OFFSET ?`, limit, offset)
 	} else {
 		if err = r.db.Get(&total, `SELECT COUNT(*) FROM projects WHERE organization_id = ?`, organizationID); err != nil {
 			return nil, 0, err
 		}
-		err = r.db.Select(&projects, `SELECT id, COALESCE(organization_id, '') AS organization_id, name, COALESCE(server_id, '') AS server_id, COALESCE(description,'') AS description, created_at, updated_at FROM projects WHERE organization_id = ? ORDER BY created_at DESC LIMIT ? OFFSET ?`, organizationID, limit, offset)
+		err = r.db.Select(&projects, `SELECT `+projectSelectFields+` FROM projects WHERE organization_id = ? ORDER BY created_at DESC LIMIT ? OFFSET ?`, organizationID, limit, offset)
 	}
 
 	if err != nil {
@@ -69,7 +82,7 @@ func (r *ProjectRepo) ListAll(_ context.Context, limit, offset int) ([]models.Pr
 	if err = r.db.Get(&total, `SELECT COUNT(*) FROM projects`); err != nil {
 		return nil, 0, err
 	}
-	err = r.db.Select(&projects, `SELECT id, COALESCE(organization_id, '') AS organization_id, name, COALESCE(server_id, '') AS server_id, COALESCE(description,'') AS description, created_at, updated_at FROM projects ORDER BY created_at DESC LIMIT ? OFFSET ?`, limit, offset)
+	err = r.db.Select(&projects, `SELECT `+projectSelectFields+` FROM projects ORDER BY created_at DESC LIMIT ? OFFSET ?`, limit, offset)
 
 	if err != nil {
 		return nil, 0, err
@@ -93,7 +106,7 @@ func (r *ProjectRepo) CountByUser(ctx context.Context, userID string) (int, erro
 
 func (r *ProjectRepo) Get(_ context.Context, id string) (*models.ProjectConfig, error) {
 	var p models.ProjectConfig
-	err := r.db.Get(&p, `SELECT id, COALESCE(organization_id, '') AS organization_id, name, COALESCE(server_id, '') AS server_id, COALESCE(description,'') AS description, created_at, updated_at FROM projects WHERE id = ?`, id)
+	err := r.db.Get(&p, `SELECT `+projectSelectFields+` FROM projects WHERE id = ?`, id)
 	if err == sql.ErrNoRows {
 		return nil, nil
 	}
@@ -107,9 +120,9 @@ func (r *ProjectRepo) GetByOrganization(_ context.Context, id, organizationID st
 	var p models.ProjectConfig
 	var err error
 	if organizationID == "none" {
-		err = r.db.Get(&p, `SELECT id, COALESCE(organization_id, '') AS organization_id, name, COALESCE(server_id, '') AS server_id, COALESCE(description,'') AS description, created_at, updated_at FROM projects WHERE id = ? AND organization_id IS NULL`, id)
+		err = r.db.Get(&p, `SELECT `+projectSelectFields+` FROM projects WHERE id = ? AND organization_id IS NULL`, id)
 	} else {
-		err = r.db.Get(&p, `SELECT id, COALESCE(organization_id, '') AS organization_id, name, COALESCE(server_id, '') AS server_id, COALESCE(description,'') AS description, created_at, updated_at FROM projects WHERE id = ? AND organization_id = ?`, id, organizationID)
+		err = r.db.Get(&p, `SELECT `+projectSelectFields+` FROM projects WHERE id = ? AND organization_id = ?`, id, organizationID)
 	}
 	if err == sql.ErrNoRows {
 		return nil, nil
@@ -124,9 +137,35 @@ func (r *ProjectRepo) Create(ctx context.Context, p *models.ProjectConfig) error
 	if p.ID == "" {
 		p.ID = uuid.NewString()
 	}
+	if p.AppID == "" {
+		p.AppID = p.ID
+	}
+	if p.Slug == "" {
+		p.Slug = strings.ToLower(strings.ReplaceAll(p.Name, " ", "-"))
+	}
+	if p.EnvironmentName == "" {
+		p.EnvironmentName = "Production"
+	}
+	if p.EnvironmentSlug == "" {
+		p.EnvironmentSlug = "production"
+	}
+	if p.EnvironmentType == "" {
+		p.EnvironmentType = "production"
+	}
+	if p.Status == "" {
+		p.Status = "ready"
+	}
+	if p.GitProvider == "" {
+		p.GitProvider = "github"
+	}
+	if p.GitBranch == "" {
+		p.GitBranch = "main"
+	}
+
 	now := time.Now().UTC()
 	p.CreatedAt = now
 	p.UpdatedAt = now
+
 	var serverID any
 	if p.ServerID != "" {
 		serverID = p.ServerID
@@ -135,9 +174,24 @@ func (r *ProjectRepo) Create(ctx context.Context, p *models.ProjectConfig) error
 	if p.OrganizationID != "" {
 		orgID = p.OrganizationID
 	}
+
+	_, _ = r.db.Exec(
+		`INSERT OR IGNORE INTO project_apps (id, organization_id, name, slug, git_provider, git_owner, git_repo, git_url, created_at, updated_at)
+		 VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?)`,
+		p.AppID, orgID, p.Name, p.Slug, p.GitProvider, p.GitOwner, p.GitRepo, p.GitURL, p.CreatedAt, p.UpdatedAt,
+	)
+
 	_, err := r.db.Exec(
-		`INSERT INTO projects (id, organization_id, server_id, name, description, created_at, updated_at) VALUES (?, ?, ?, ?, ?, ?, ?)`,
-		p.ID, orgID, serverID, p.Name, p.Description, p.CreatedAt, p.UpdatedAt,
+		`INSERT INTO projects (
+			id, app_id, organization_id, server_id, name, slug, description,
+			environment_name, environment_slug, environment_type, is_app, app_template_id,
+			local_path, git_provider, git_owner, git_repo, git_branch, git_url,
+			status, created_at, updated_at
+		) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)`,
+		p.ID, p.AppID, orgID, serverID, p.Name, p.Slug, p.Description,
+		p.EnvironmentName, p.EnvironmentSlug, p.EnvironmentType, p.IsApp, p.AppTemplateID,
+		p.LocalPath, p.GitProvider, p.GitOwner, p.GitRepo, p.GitBranch, p.GitURL,
+		p.Status, p.CreatedAt, p.UpdatedAt,
 	)
 	if err != nil {
 		return err
@@ -194,7 +248,7 @@ func (r *EnvRepo) SetVar(_ context.Context, projectID, key, plaintextValue strin
 	_, err = r.db.Exec(
 		`INSERT INTO env_vars (id, project_id, key, encrypted_value, created_at, updated_at)
 		 VALUES (?, ?, ?, ?, ?, ?)
-		 ON CONFLICT(project_id, key) DO UPDATE SET encrypted_value = excluded.encrypted_value, updated_at = excluded.updated_at`,
+		 ON CONFLICT(project_id, service_id, key) DO UPDATE SET encrypted_value = excluded.encrypted_value, updated_at = excluded.updated_at`,
 		uuid.NewString(), projectID, key, encrypted, now, now,
 	)
 	return err

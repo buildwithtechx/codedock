@@ -69,13 +69,23 @@ func (s *ProjectService) CreateProjectFromRequest(ctx context.Context, req *mode
 		serverID = ""
 	}
 	p := &models.ProjectConfig{
-		ID:             id,
-		OrganizationID: orgID,
-		ServerID:       serverID,
-		Name:           req.Name,
-		Description:    req.Description,
-		CreatedAt:      time.Now(),
-		UpdatedAt:      time.Now(),
+		ID:              id,
+		AppID:           req.AppID,
+		OrganizationID:  orgID,
+		ServerID:        serverID,
+		Name:            req.Name,
+		Description:     req.Description,
+		EnvironmentName: req.EnvironmentName,
+		EnvironmentType: req.EnvironmentType,
+		GitProvider:     req.GitProvider,
+		GitOwner:        req.GitOwner,
+		GitRepo:         req.GitRepo,
+		GitBranch:       req.GitBranch,
+		GitURL:          req.GitURL,
+		IsApp:           req.IsApp,
+		AppTemplateID:   req.AppTemplateID,
+		CreatedAt:       time.Now(),
+		UpdatedAt:       time.Now(),
 	}
 	if err := s.projectRepo.Create(ctx, p); err != nil {
 		return nil, fmt.Errorf("failed to create project: %w", err)
@@ -100,13 +110,23 @@ func (s *ProjectService) CreateProjectWithMemberFromRequest(ctx context.Context,
 		serverID = ""
 	}
 	p := &models.ProjectConfig{
-		ID:             id,
-		OrganizationID: orgID,
-		ServerID:       serverID,
-		Name:           req.Name,
-		Description:    req.Description,
-		CreatedAt:      time.Now(),
-		UpdatedAt:      time.Now(),
+		ID:              id,
+		AppID:           req.AppID,
+		OrganizationID:  orgID,
+		ServerID:        serverID,
+		Name:            req.Name,
+		Description:     req.Description,
+		EnvironmentName: req.EnvironmentName,
+		EnvironmentType: req.EnvironmentType,
+		GitProvider:     req.GitProvider,
+		GitOwner:        req.GitOwner,
+		GitRepo:         req.GitRepo,
+		GitBranch:       req.GitBranch,
+		GitURL:          req.GitURL,
+		IsApp:           req.IsApp,
+		AppTemplateID:   req.AppTemplateID,
+		CreatedAt:       time.Now(),
+		UpdatedAt:       time.Now(),
 	}
 	if err := s.projectRepo.Create(ctx, p); err != nil {
 		return nil, fmt.Errorf("failed to create project: %w", err)
