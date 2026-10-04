@@ -1,4 +1,4 @@
-import { Database, Eye, EyeOff, Info } from 'lucide-react';
+import { Database, Eye, EyeOff, Info, Loader2, RefreshCw } from 'lucide-react';
 import { useState } from 'react';
 import { toast } from 'sonner';
 import { Button } from '#/components/ui/button';
@@ -19,7 +19,7 @@ import {
   SelectTrigger,
   SelectValue,
 } from '#/components/ui/select';
-import { useCreateS3Destination } from '#/features/backups';
+import { useCreateS3Destination, useVerifyS3Draft } from '#/features/backups';
 
 type Props = {
   isOpen: boolean;
@@ -37,8 +37,37 @@ export function CreateS3DestinationDialog({ isOpen, setIsOpen, trigger }: Props)
   const [accessKeyId, setAccessKeyId] = useState('');
   const [secretAccessKey, setSecretAccessKey] = useState('');
   const [showSecret, setShowSecret] = useState(false);
+  const [isTesting, setIsTesting] = useState(false);
 
   const createS3Dest = useCreateS3Destination();
+  const verifyDraft = useVerifyS3Draft();
+
+  const handleTestConnection = async () => {
+    if (!bucket || !endpoint || !accessKeyId || !secretAccessKey) {
+      toast.error('Please enter bucket, endpoint, and access keys first');
+      return;
+    }
+    setIsTesting(true);
+    try {
+      const res = await verifyDraft.mutateAsync({
+        provider,
+        endpoint,
+        bucket,
+        region,
+        accessKeyId,
+        secretAccessKey,
+      });
+      if (res.data?.ok) {
+        toast.success('Connection verified! S3 bucket is reachable.');
+      } else {
+        toast.error(`Verification failed: ${res.data?.reason || 'Could not connect'}`);
+      }
+    } catch (err) {
+      toast.error(err instanceof Error ? err.message : 'Verification failed');
+    } finally {
+      setIsTesting(false);
+    }
+  };
 
   const handleProviderChange = (value: string) => {
     setProvider(value);
@@ -238,15 +267,30 @@ export function CreateS3DestinationDialog({ isOpen, setIsOpen, trigger }: Props)
             <span>Credentials are safely encrypted before being saved into your database.</span>
           </div>
 
-          <div className="flex justify-end gap-3 pt-2">
-            <DialogClose asChild>
-              <Button type="button" variant="outline">
-                Cancel
-              </Button>
-            </DialogClose>
-            <Button type="submit" disabled={createS3Dest.isPending}>
-              {createS3Dest.isPending ? 'Saving…' : 'Save S3 Destination'}
+          <div className="flex items-center justify-between gap-3 pt-2">
+            <Button
+              type="button"
+              variant="outline"
+              onClick={handleTestConnection}
+              disabled={isTesting}
+            >
+              {isTesting ? (
+                <Loader2 className="mr-1.5 h-3.5 w-3.5 animate-spin" />
+              ) : (
+                <RefreshCw className="mr-1.5 h-3.5 w-3.5" />
+              )}
+              Test connection
             </Button>
+            <div className="flex gap-2">
+              <DialogClose asChild>
+                <Button type="button" variant="outline">
+                  Cancel
+                </Button>
+              </DialogClose>
+              <Button type="submit" disabled={createS3Dest.isPending}>
+                {createS3Dest.isPending ? 'Saving…' : 'Save S3 Destination'}
+              </Button>
+            </div>
           </div>
         </form>
       </DialogContent>

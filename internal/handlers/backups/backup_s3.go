@@ -104,3 +104,35 @@ func (h *BackupHandler) DeleteS3Destination(c echo.Context) error {
 	}
 	return c.NoContent(http.StatusNoContent)
 }
+
+func (h *BackupHandler) VerifyS3Destination(c echo.Context) error {
+	id := c.Param("id")
+	if id == "" {
+		return utils.Error(c, http.StatusBadRequest, "missing id")
+	}
+	if err := h.backupService.VerifyS3Destination(c.Request().Context(), id); err != nil {
+		return utils.Success(c, "Verification failed", map[string]any{"ok": false, "reason": err.Error()})
+	}
+	return utils.Success(c, "Verification succeeded", map[string]any{"ok": true})
+}
+
+func (h *BackupHandler) VerifyS3Draft(c echo.Context) error {
+	var req S3DestinationPayload
+	if err := c.Bind(&req); err != nil {
+		return utils.Error(c, http.StatusBadRequest, "invalid payload")
+	}
+	dest := models.S3Destination{
+		Name:            req.Name,
+		Description:     req.Description,
+		Provider:        req.Provider,
+		Endpoint:        req.Endpoint,
+		Bucket:          req.Bucket,
+		Region:          req.Region,
+		AccessKeyID:     req.AccessKeyID,
+		SecretAccessKey: req.SecretAccessKey,
+	}
+	if err := h.backupService.VerifyS3Draft(c.Request().Context(), &dest); err != nil {
+		return utils.Success(c, "Verification failed", map[string]any{"ok": false, "reason": err.Error()})
+	}
+	return utils.Success(c, "Verification succeeded", map[string]any{"ok": true})
+}

@@ -85,7 +85,7 @@ export function MonitoringPage() {
           onRetry={() => void refetchStats()}
         />
       ) : isLoadingStats ? (
-        <div className="flex min-h-[18rem] items-center justify-center">
+        <div className="flex min-h-72 items-center justify-center">
           <Loader2 className="h-6 w-6 animate-spin text-muted-foreground" />
         </div>
       ) : (
@@ -129,7 +129,7 @@ export function MonitoringPage() {
               <CardContent>
                 <div className="font-bold text-2xl">{memPercent}%</div>
                 <p className="mt-1 text-muted-foreground text-xs">
-                  {stats?.memory ? `${stats.memory.usedMB} / ${stats.memory.totalMB} MB` : 'N/A'}
+                  {stats?.memory ? `${stats.memory.usedMb} / ${stats.memory.totalMb} MB` : 'N/A'}
                 </p>
                 <Progress value={memPercent} className="mt-3 h-1.5" />
               </CardContent>
@@ -145,7 +145,7 @@ export function MonitoringPage() {
               <CardContent>
                 <div className="font-bold text-2xl">{diskPercent}%</div>
                 <p className="mt-1 text-muted-foreground text-xs">
-                  {stats?.disk ? `${stats.disk.usedGB} / ${stats.disk.totalGB} GB` : 'N/A'}
+                  {stats?.disk ? `${stats.disk.usedGb} / ${stats.disk.totalGb} GB` : 'N/A'}
                 </p>
                 <Progress value={diskPercent} className="mt-3 h-1.5" />
               </CardContent>
@@ -159,7 +159,7 @@ export function MonitoringPage() {
                 <Server className="h-4 w-4 text-emerald-500" />
               </CardHeader>
               <CardContent>
-                <div className="flex items-center gap-1.5 font-bold text-emerald-500 text-2xl">
+                <div className="flex items-center gap-1.5 font-bold text-2xl text-emerald-500">
                   <CheckCircle2 className="h-5 w-5" />
                   <span>Healthy</span>
                 </div>
@@ -213,7 +213,7 @@ export function MonitoringPage() {
                   <div className="rounded-xl border border-border/70 p-3.5">
                     <p className="text-muted-foreground text-xs">Reclaimable Cache</p>
                     <p className="mt-1 font-semibold text-lg">
-                      {stats?.docker?.reclaimableGB ? `${stats.docker.reclaimableGB} GB` : '0 GB'}
+                      {stats?.docker?.reclaimableGb ? `${stats.docker.reclaimableGb} GB` : '0 GB'}
                     </p>
                     <p className="text-muted-foreground text-xs">Build cache & unattached</p>
                   </div>

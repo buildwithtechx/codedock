@@ -48,6 +48,24 @@ func (r *BackupRepo) ListRecordsByConfig(ctx context.Context, backupConfigID str
 	return list, nil
 }
 
+func (r *BackupRepo) ListAllRecords(ctx context.Context, limit int) ([]*models.BackupRecord, error) {
+	r.mu.Lock()
+	defer r.mu.Unlock()
+	if limit <= 0 || limit > 100 {
+		limit = 50
+	}
+	var list []*models.BackupRecord
+	err := r.db.SelectContext(ctx, &list, `SELECT id, backup_config_id, COALESCE(database_id, '') as database_id, COALESCE(s3_destination_id, '') as s3_destination_id, status, COALESCE(file_path, '') as file_path, file_size_bytes, COALESCE(s3_url, '') as s3_url, COALESCE(logs, '') as logs, started_at, COALESCE(completed_at, '') as completed_at
+		FROM backup_records ORDER BY started_at DESC LIMIT ?`, limit)
+	if err != nil {
+		return nil, fmt.Errorf("failed to list all backup records: %w", err)
+	}
+	if list == nil {
+		list = make([]*models.BackupRecord, 0)
+	}
+	return list, nil
+}
+
 func (r *BackupRepo) GetRecordByID(ctx context.Context, id string) (*models.BackupRecord, error) {
 	var rec models.BackupRecord
 	err := r.db.GetContext(ctx, &rec, `

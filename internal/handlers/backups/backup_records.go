@@ -4,11 +4,27 @@ import (
 	"errors"
 	"net/http"
 	"path/filepath"
+	"strconv"
 
 	"github.com/labstack/echo/v4"
 
 	"codedock.run/codedock/internal/utils"
 )
+
+func (h *BackupHandler) ListAllRecords(c echo.Context) error {
+	limitStr := c.QueryParam("limit")
+	limit := 50
+	if limitStr != "" {
+		if l, err := strconv.Atoi(limitStr); err == nil && l > 0 {
+			limit = l
+		}
+	}
+	recs, err := h.backupService.ListAllRecords(c.Request().Context(), limit)
+	if err != nil {
+		return utils.Error(c, http.StatusInternalServerError, err.Error())
+	}
+	return utils.Success(c, "Operation successful", recs)
+}
 
 func (h *BackupHandler) ListRecords(c echo.Context) error {
 	id := c.Param("id")

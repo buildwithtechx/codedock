@@ -149,6 +149,28 @@ func (s *BackupService) DeleteS3Destination(ctx context.Context, id string) erro
 	return s.s3Repo.DeleteS3Destination(ctx, id)
 }
 
+func (s *BackupService) GetS3Destination(ctx context.Context, id string) (*models.S3Destination, error) {
+	if id == "" {
+		return nil, errors.New("id required")
+	}
+	return s.s3Repo.GetS3Destination(ctx, id)
+}
+
+func (s *BackupService) VerifyS3Destination(ctx context.Context, id string) error {
+	dest, err := s.s3Repo.GetS3Destination(ctx, id)
+	if err != nil {
+		return fmt.Errorf("destination not found: %w", err)
+	}
+	return backup.EnsureS3Bucket(ctx, dest)
+}
+
+func (s *BackupService) VerifyS3Draft(ctx context.Context, dest *models.S3Destination) error {
+	if dest == nil || dest.Bucket == "" {
+		return errors.New("bucket is required")
+	}
+	return backup.EnsureS3Bucket(ctx, dest)
+}
+
 func (s *BackupService) TriggerBackup(ctx context.Context, configID string) (*models.BackupRecord, error) {
 	if s.manager == nil {
 		return nil, errors.New("backup manager not available")
@@ -161,6 +183,10 @@ func (s *BackupService) ListRecordsByConfig(ctx context.Context, configID string
 		return nil, errors.New("config id required")
 	}
 	return s.backupRepo.ListRecordsByConfig(ctx, configID)
+}
+
+func (s *BackupService) ListAllRecords(ctx context.Context, limit int) ([]*models.BackupRecord, error) {
+	return s.backupRepo.ListAllRecords(ctx, limit)
 }
 
 func (s *BackupService) GetRecord(ctx context.Context, recordID string) (*models.BackupRecord, error) {

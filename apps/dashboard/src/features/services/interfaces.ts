@@ -122,6 +122,7 @@ export interface Variable {
 
 export interface Job {
   id: string;
+  projectId?: string;
   serviceId: string;
   name: string;
   schedule: string;

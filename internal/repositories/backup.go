@@ -25,6 +25,7 @@ type BackupRepository interface {
 	CreateRecord(ctx context.Context, rec *models.BackupRecord) error
 	GetRecordByID(ctx context.Context, id string) (*models.BackupRecord, error)
 	ListRecordsByConfig(ctx context.Context, backupConfigID string) ([]*models.BackupRecord, error)
+	ListAllRecords(ctx context.Context, limit int) ([]*models.BackupRecord, error)
 	UpdateRecord(ctx context.Context, rec *models.BackupRecord) error
 	DeleteRecord(ctx context.Context, id string) error
 }

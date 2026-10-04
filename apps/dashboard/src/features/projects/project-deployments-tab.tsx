@@ -31,9 +31,7 @@ export function ProjectDeploymentsTab({ projectId }: ProjectDeploymentsTabProps)
     try {
       await rollbackMutation.mutateAsync({ deploymentId });
       refetch();
-    } catch {
-      // Handled
-    }
+    } catch {}
   };
 
   if (isLoading) {
@@ -59,9 +57,7 @@ export function ProjectDeploymentsTab({ projectId }: ProjectDeploymentsTabProps)
   return (
     <div className="space-y-4">
       <div className="flex items-center justify-between">
-        <h3 className="font-semibold text-foreground/90 text-sm">
-          Deployment Activity ({total})
-        </h3>
+        <h3 className="font-semibold text-foreground/90 text-sm">Deployment Activity ({total})</h3>
         <Button variant="ghost" size="sm" onClick={() => refetch()} className="h-8 gap-1.5 text-xs">
           <RotateCw className="h-3 w-3" />
           Refresh

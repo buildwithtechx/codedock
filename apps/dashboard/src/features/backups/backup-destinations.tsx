@@ -1,14 +1,23 @@
-import { ArrowRight, Database, MoreVertical, Plus, Trash } from 'lucide-react';
+import {
+  AlertTriangle,
+  CheckCircle2,
+  HardDrive,
+  Loader2,
+  Plus,
+  RefreshCw,
+  Trash2,
+} from 'lucide-react';
+import { useState } from 'react';
 import { toast } from 'sonner';
 import { Button } from '#/components/ui/button';
-import {
-  DropdownMenu,
-  DropdownMenuContent,
-  DropdownMenuItem,
-  DropdownMenuTrigger,
-} from '#/components/ui/dropdown-menu';
+import { Card, CardContent } from '#/components/ui/card';
 import { QueryErrorState } from '#/components/ui/query-error-state';
-import { useDeleteS3Destination, useList, useListS3Destinations } from '#/features/backups';
+import {
+  useDeleteS3Destination,
+  useList,
+  useListS3Destinations,
+  useVerifyS3Destination,
+} from '#/features/backups';
 
 type BackupDestinationsProps = {
   onAddDestination: () => void;
@@ -18,11 +27,35 @@ export function BackupDestinations({ onAddDestination }: BackupDestinationsProps
   const { data: s3Destinations, isLoading, isError, refetch } = useListS3Destinations();
   const { data: backupConfigs } = useList();
   const deleteS3Dest = useDeleteS3Destination();
+  const verifyS3Dest = useVerifyS3Destination();
+
+  const [verifyingIds, setVerifyingIds] = useState<Record<string, 'loading' | 'success' | 'error'>>(
+    {}
+  );
+
+  const list = s3Destinations?.data || [];
+
+  const handleVerify = async (id: string, name: string) => {
+    setVerifyingIds((prev) => ({ ...prev, [id]: 'loading' }));
+    try {
+      const res = await verifyS3Dest.mutateAsync(id);
+      if (res.data?.ok) {
+        setVerifyingIds((prev) => ({ ...prev, [id]: 'success' }));
+        toast.success(`Storage "${name}" verified successfully`);
+      } else {
+        setVerifyingIds((prev) => ({ ...prev, [id]: 'error' }));
+        toast.error(`Verification failed: ${res.data?.reason || 'Could not connect to S3'}`);
+      }
+    } catch (err) {
+      setVerifyingIds((prev) => ({ ...prev, [id]: 'error' }));
+      toast.error(err instanceof Error ? err.message : 'Verification failed');
+    }
+  };
 
   const handleDelete = async (id: string, name: string) => {
     const isReferenced = backupConfigs?.data?.some((c) => c.s3DestinationId === id);
     if (isReferenced) {
-      toast.error(`Cannot delete "${name}": it is currently referenced by a backup configuration.`);
+      toast.error(`Cannot delete "${name}": it is currently referenced by a backup policy.`);
       return;
     }
 
@@ -36,118 +69,182 @@ export function BackupDestinations({ onAddDestination }: BackupDestinationsProps
 
     try {
       await deleteS3Dest.mutateAsync({ id, projectId: 'global' });
-      toast.success('S3 destination deleted successfully');
+      toast.success('Storage destination deleted');
     } catch (error) {
-      toast.error(error instanceof Error ? error.message : 'Failed to delete S3 destination');
+      toast.error(error instanceof Error ? error.message : 'Failed to delete storage destination');
     }
   };
 
+  const getProviderLogo = (provider: string) => {
+    const p = provider.toLowerCase();
+    if (p.includes('r2') || p.includes('cloudflare')) {
+      return '/dns-providers/cloudflare.svg';
+    }
+    if (p.includes('aws') || p.includes('s3') || p.includes('amazon')) {
+      return '/provider-logos/aws.svg';
+    }
+    if (p.includes('gcp') || p.includes('google')) {
+      return '/provider-logos/gcp.svg';
+    }
+    if (p.includes('digitalocean') || p.includes('spaces')) {
+      return '/provider-logos/digitalocean.svg';
+    }
+    return null;
+  };
+
   if (isLoading) {
-    return <div className="min-h-100 animate-pulse" />;
+    return (
+      <div className="flex min-h-[16rem] items-center justify-center">
+        <Loader2 className="h-6 w-6 animate-spin text-muted-foreground" />
+      </div>
+    );
   }
 
   if (isError) {
     return (
       <QueryErrorState
         title="Storage destinations are unavailable"
-        description="Codedock could not load the configured backup storage."
-        onRetry={() => refetch()}
+        description="Could not load configured backup storage destinations."
+        onRetry={() => void refetch()}
       />
     );
   }
 
-  const list = s3Destinations?.data || [];
-
   return (
-    <div>
+    <section className="space-y-4">
+      <div className="flex items-center justify-between">
+        <div>
+          <h2 className="font-semibold text-base text-foreground">Storage destinations</h2>
+          <p className="mt-0.5 text-muted-foreground text-xs">
+            S3-compatible object storage targets for automated snapshots.
+          </p>
+        </div>
+        <Button size="sm" onClick={onAddDestination} className="gap-1.5">
+          <Plus className="h-4 w-4" />
+          Add destination
+        </Button>
+      </div>
+
       {list.length === 0 ? (
-        <section className="flex min-h-[26rem] items-center justify-center px-6 py-12 text-center">
-          <div className="max-w-md">
-            <div className="relative mx-auto h-28 w-52" aria-hidden="true">
-              <span className="absolute top-4 left-11 h-17 w-26 rounded-2xl bg-card" />
-              <span className="absolute top-1 left-17 flex h-17 w-26 items-center justify-center rounded-2xl bg-muted text-muted-foreground">
-                <Database className="h-6 w-6" />
-              </span>
-              <span className="absolute top-10 right-5 flex h-10 w-10 items-center justify-center rounded-xl border border-primary/45 border-dashed bg-primary/8 text-primary">
-                <Plus className="h-4 w-4" />
-              </span>
-              <span className="absolute top-1/2 right-14 w-10 border-border border-t border-dashed" />
+        <Card className="border-border/60 bg-card">
+          <CardContent className="flex flex-col items-center justify-center py-12 text-center">
+            <div className="flex h-12 w-12 items-center justify-center rounded-2xl bg-muted text-muted-foreground">
+              <HardDrive className="h-6 w-6" />
             </div>
-            <h2 className="mt-4 font-medium text-foreground/90 text-xl tracking-[-0.02em]">
-              Add a storage destination
-            </h2>
-            <p className="mt-2 text-muted-foreground/75 text-sm leading-6">
-              Connect S3-compatible storage to keep instance backups outside this server.
+            <h3 className="mt-4 font-semibold text-base text-foreground">
+              No storage destinations
+            </h3>
+            <p className="mt-1 max-w-sm text-muted-foreground text-xs leading-5">
+              Connect Cloudflare R2, AWS S3, MinIO, or DigitalOcean Spaces to store snapshots
+              off-server.
             </p>
-            <Button className="mt-6 gap-2" onClick={onAddDestination}>
-              Add destination
-              <ArrowRight className="h-4 w-4" />
+            <Button size="sm" className="mt-5 gap-1.5" onClick={onAddDestination}>
+              <Plus className="h-4 w-4" />
+              Connect first destination
             </Button>
-          </div>
-        </section>
+          </CardContent>
+        </Card>
       ) : (
-        <div className="grid grid-cols-1 gap-4 md:grid-cols-2 xl:grid-cols-3">
-          {list.map((dest) => (
-            <div
-              key={dest.id}
-              className="relative flex flex-col justify-between rounded-xl bg-card p-5 transition-colors hover:bg-muted/60"
-            >
-              <div>
-                <div className="flex items-start justify-between">
-                  <div>
-                    <h2 className="font-semibold text-base">{dest.name}</h2>
-                    {dest.description && (
-                      <p className="mt-0.5 text-muted-foreground text-xs">{dest.description}</p>
-                    )}
+        <div className="grid gap-4 sm:grid-cols-2">
+          {list.map((dest) => {
+            const logo = getProviderLogo(dest.provider);
+            const verifyState = verifyingIds[dest.id];
+
+            return (
+              <div
+                key={dest.id}
+                className="flex flex-col justify-between rounded-2xl border border-border/60 bg-card p-5 shadow-sm transition-colors hover:border-border"
+              >
+                <div>
+                  <div className="flex items-start justify-between gap-3">
+                    <div className="flex items-center gap-3">
+                      <div className="flex h-10 w-10 shrink-0 items-center justify-center rounded-xl border border-border/60 bg-muted/60">
+                        {logo ? (
+                          <img src={logo} alt={dest.provider} className="h-5 w-5 object-contain" />
+                        ) : (
+                          <HardDrive className="h-5 w-5 text-muted-foreground" />
+                        )}
+                      </div>
+                      <div>
+                        <h3 className="font-semibold text-foreground text-sm">{dest.name}</h3>
+                        <p className="font-mono text-muted-foreground text-xs uppercase">
+                          {dest.provider}
+                        </p>
+                      </div>
+                    </div>
+
+                    <div className="flex items-center gap-1">
+                      {verifyState === 'success' && (
+                        <span className="flex items-center gap-1 rounded-full bg-emerald-500/10 px-2 py-0.5 font-medium text-emerald-500 text-xs">
+                          <CheckCircle2 className="h-3 w-3" /> Verified
+                        </span>
+                      )}
+                      {verifyState === 'error' && (
+                        <span className="flex items-center gap-1 rounded-full bg-rose-500/10 px-2 py-0.5 font-medium text-rose-500 text-xs">
+                          <AlertTriangle className="h-3 w-3" /> Failed
+                        </span>
+                      )}
+                    </div>
                   </div>
-                  <DropdownMenu>
-                    <DropdownMenuTrigger asChild>
-                      <Button
-                        variant="ghost"
-                        size="icon"
-                        aria-label={`Options for ${dest.name}`}
-                        className="h-8 w-8 text-muted-foreground"
+
+                  {dest.description && (
+                    <p className="mt-3 text-muted-foreground text-xs leading-5">
+                      {dest.description}
+                    </p>
+                  )}
+
+                  <dl className="mt-4 space-y-1.5 border-border/40 border-t pt-3 font-mono text-xs">
+                    <div className="flex justify-between">
+                      <dt className="text-muted-foreground">Bucket</dt>
+                      <dd className="font-medium text-foreground">{dest.bucket}</dd>
+                    </div>
+                    <div className="flex justify-between">
+                      <dt className="text-muted-foreground">Region</dt>
+                      <dd className="text-muted-foreground">{dest.region || 'auto'}</dd>
+                    </div>
+                    <div className="flex justify-between">
+                      <dt className="text-muted-foreground">Endpoint</dt>
+                      <dd
+                        className="max-w-[14rem] truncate text-muted-foreground"
+                        title={dest.endpoint}
                       >
-                        <MoreVertical className="h-4 w-4" />
-                      </Button>
-                    </DropdownMenuTrigger>
-                    <DropdownMenuContent align="end">
-                      <DropdownMenuItem
-                        className="text-destructive focus:text-destructive"
-                        onClick={() => handleDelete(dest.id, dest.name)}
-                      >
-                        <Trash className="mr-2 h-4 w-4" />
-                        Delete
-                      </DropdownMenuItem>
-                    </DropdownMenuContent>
-                  </DropdownMenu>
+                        {dest.endpoint}
+                      </dd>
+                    </div>
+                  </dl>
                 </div>
 
-                <dl className="mt-4 space-y-2 font-mono text-xs">
-                  <div className="flex justify-between border-border/40 border-b pb-1">
-                    <dt className="text-muted-foreground">Provider</dt>
-                    <dd className="font-medium uppercase">{dest.provider}</dd>
-                  </div>
-                  <div className="flex justify-between border-border/40 border-b pb-1">
-                    <dt className="text-muted-foreground">Bucket</dt>
-                    <dd className="truncate pl-2 text-foreground">{dest.bucket}</dd>
-                  </div>
-                  <div className="flex justify-between border-border/40 border-b pb-1">
-                    <dt className="text-muted-foreground">Region</dt>
-                    <dd className="text-foreground">{dest.region || 'auto'}</dd>
-                  </div>
-                  <div className="flex justify-between">
-                    <dt className="text-muted-foreground">Endpoint</dt>
-                    <dd className="max-w-50 truncate pl-2 text-foreground" title={dest.endpoint}>
-                      {dest.endpoint}
-                    </dd>
-                  </div>
-                </dl>
+                <div className="mt-5 flex items-center justify-between border-border/40 border-t pt-3">
+                  <Button
+                    variant="outline"
+                    size="sm"
+                    className="h-8 text-xs"
+                    onClick={() => handleVerify(dest.id, dest.name)}
+                    disabled={verifyState === 'loading'}
+                  >
+                    {verifyState === 'loading' ? (
+                      <Loader2 className="mr-1.5 h-3.5 w-3.5 animate-spin" />
+                    ) : (
+                      <RefreshCw className="mr-1.5 h-3.5 w-3.5" />
+                    )}
+                    Test connection
+                  </Button>
+
+                  <Button
+                    variant="ghost"
+                    size="sm"
+                    className="h-8 text-destructive hover:bg-destructive/10 hover:text-destructive"
+                    onClick={() => handleDelete(dest.id, dest.name)}
+                  >
+                    <Trash2 className="mr-1 h-3.5 w-3.5" />
+                    Delete
+                  </Button>
+                </div>
               </div>
-            </div>
-          ))}
+            );
+          })}
         </div>
       )}
-    </div>
+    </section>
   );
 }

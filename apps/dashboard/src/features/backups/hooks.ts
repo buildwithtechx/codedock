@@ -108,6 +108,27 @@ export const useCreateS3Destination = () => {
   });
 };
 
+export const useListAllRecords = (limit = 50) => {
+  return useQuery({
+    queryKey: ['backup-records', limit],
+    queryFn: () => backupsService.listAllRecords(limit),
+    refetchInterval: 15_000,
+  });
+};
+
+export const useVerifyS3Destination = () => {
+  return useMutation({
+    mutationFn: (id: string) => backupsService.verifyS3Destination(id),
+  });
+};
+
+export const useVerifyS3Draft = () => {
+  return useMutation({
+    mutationFn: (payload: Parameters<typeof backupsService.verifyS3Draft>[0]) =>
+      backupsService.verifyS3Draft(payload),
+  });
+};
+
 export const useDeleteS3Destination = () => {
   const queryClient = useQueryClient();
   return useMutation({

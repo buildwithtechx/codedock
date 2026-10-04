@@ -84,6 +84,14 @@ export const backupsService = {
     }
   },
 
+  listAllRecords: async (limit = 50): Promise<ListBackupRecordsResponse> => {
+    try {
+      return await apiClient.get<ListBackupRecordsResponse>(`/backup-records?limit=${limit}`);
+    } catch (error) {
+      throw handleApiError(error);
+    }
+  },
+
   listS3Destinations: async (): Promise<ListS3DestinationsResponse> => {
     try {
       return await apiClient.get<ListS3DestinationsResponse>(`/s3-destinations`);
@@ -97,6 +105,29 @@ export const backupsService = {
   ): Promise<CreateS3DestinationResponse> => {
     try {
       return await apiClient.post<CreateS3DestinationResponse>('/s3-destinations', payload);
+    } catch (error) {
+      throw handleApiError(error);
+    }
+  },
+
+  verifyS3Destination: async (id: string): Promise<{ data: { ok: boolean; reason?: string } }> => {
+    try {
+      return await apiClient.post<{ data: { ok: boolean; reason?: string } }>(
+        `/s3-destinations/${id}/verify`
+      );
+    } catch (error) {
+      throw handleApiError(error);
+    }
+  },
+
+  verifyS3Draft: async (
+    payload: Partial<CreateS3DestinationRequest>
+  ): Promise<{ data: { ok: boolean; reason?: string } }> => {
+    try {
+      return await apiClient.post<{ data: { ok: boolean; reason?: string } }>(
+        '/s3-destinations/verify',
+        payload
+      );
     } catch (error) {
       throw handleApiError(error);
     }
