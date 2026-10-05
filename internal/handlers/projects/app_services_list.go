@@ -42,7 +42,7 @@ func (h *AppHandler) ListByEnvironment(c echo.Context) error {
 		return utils.Error(c, http.StatusInternalServerError, err.Error())
 	}
 	user := middleware.GetUserClaimsFromContext(c.Request().Context())
-	if user != nil && user.Role != "admin" {
+	if user != nil && user.Role != models.UserRoleAdmin && user.Role != models.UserRoleOwner {
 		var filtered []*models.AppService
 		for _, app := range apps {
 			if h.projectService.IsMemberOrOwner(c.Request().Context(), app.ProjectID, user.UserID, user.Role) {

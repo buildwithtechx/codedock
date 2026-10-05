@@ -43,7 +43,7 @@ func (h *OneClickHandler) Deploy(c echo.Context) error {
 	if user == nil {
 		return utils.Error(c, http.StatusUnauthorized, "unauthorized")
 	}
-	if user.Role != "admin" {
+	if user.Role != models.UserRoleAdmin && user.Role != models.UserRoleOwner {
 		if !h.projectService.HasPermission(c.Request().Context(), req.ProjectID, user.UserID, models.UserRole(user.Role), "") {
 			return utils.Error(c, http.StatusForbidden, "insufficient permissions for this project")
 		}

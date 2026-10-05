@@ -49,7 +49,7 @@ func (s *Server) RequireServiceRole(minPermission models.MemberPermission) echo.
 			if userClaims == nil {
 				return utils.Error(c, 401, "unauthorized")
 			}
-			if userClaims.Role == "admin" {
+			if userClaims.Role == models.UserRoleAdmin || userClaims.Role == models.UserRoleOwner {
 				return next(c)
 			}
 

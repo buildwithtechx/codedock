@@ -123,7 +123,7 @@ func (h *ProjectHandler) GetProject(c echo.Context) error {
 		return utils.Error(c, http.StatusNotFound, "project not found")
 	}
 	user := middleware.GetUserClaimsFromContext(c.Request().Context())
-	if user != nil && user.Role != "admin" {
+	if user != nil && user.Role != models.UserRoleAdmin && user.Role != models.UserRoleOwner {
 	}
 	return utils.Success(c, "Operation successful", p)
 }
@@ -138,7 +138,7 @@ func (h *ProjectHandler) DeleteProject(c echo.Context) error {
 		return utils.Error(c, http.StatusNotFound, "project not found")
 	}
 	user := middleware.GetUserClaimsFromContext(c.Request().Context())
-	if user != nil && user.Role != "admin" {
+	if user != nil && user.Role != models.UserRoleAdmin && user.Role != models.UserRoleOwner {
 	}
 	if err := h.projectService.DeleteProject(c.Request().Context(), id); err != nil {
 		return utils.Error(c, http.StatusInternalServerError, err.Error())

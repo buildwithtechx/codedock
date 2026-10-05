@@ -38,7 +38,7 @@ func (h *CanvasHandler) ListCanvasSummaries(c echo.Context) error {
 	if summaries == nil {
 		summaries = make([]models.CanvasSummary, 0)
 	}
-	if user != nil && user.Role != "admin" && h.projectService != nil {
+	if user != nil && user.Role != models.UserRoleAdmin && user.Role != models.UserRoleOwner && h.projectService != nil {
 		filtered := make([]models.CanvasSummary, 0, len(summaries))
 		for _, s := range summaries {
 			if h.projectService.HasPermission(c.Request().Context(), s.ID, user.UserID, models.UserRole(user.Role), "") {
@@ -56,7 +56,7 @@ func (h *CanvasHandler) GetCanvasSummary(c echo.Context) error {
 		return utils.Error(c, http.StatusBadRequest, "missing id parameter")
 	}
 	user := middleware.GetUserClaimsFromContext(c.Request().Context())
-	if user != nil && user.Role != "admin" && h.projectService != nil {
+	if user != nil && user.Role != models.UserRoleAdmin && user.Role != models.UserRoleOwner && h.projectService != nil {
 		if !h.projectService.HasPermission(c.Request().Context(), id, user.UserID, models.UserRole(user.Role), "") {
 			return utils.Error(c, http.StatusForbidden, "insufficient permissions for this canvas summary")
 		}
@@ -90,7 +90,7 @@ func (h *CanvasHandler) GetEnvironmentCanvas(c echo.Context) error {
 		return utils.Error(c, http.StatusNotFound, "environment canvas not found")
 	}
 	user := middleware.GetUserClaimsFromContext(c.Request().Context())
-	if user != nil && user.Role != "admin" && h.projectService != nil && canvas.Environment != nil {
+	if user != nil && user.Role != models.UserRoleAdmin && user.Role != models.UserRoleOwner && h.projectService != nil && canvas.Environment != nil {
 		if !h.projectService.HasPermission(c.Request().Context(), canvas.Environment.ProjectID, user.UserID, models.UserRole(user.Role), "") {
 			return utils.Error(c, http.StatusForbidden, "insufficient permissions for this environment canvas")
 		}
