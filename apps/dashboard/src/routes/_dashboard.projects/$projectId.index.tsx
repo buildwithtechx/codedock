@@ -86,7 +86,19 @@ function ProjectOverviewComponent() {
     );
   }
 
-  if (envsError || environments.length === 0) {
+  if (projectError) {
+    return (
+      <QueryErrorState
+        title="Project data is unavailable"
+        description="Could not load this project workspace."
+        onRetry={() => {
+          void refetchProject();
+        }}
+      />
+    );
+  }
+
+  if (envsError) {
     return (
       <QueryErrorState
         title="Environments are unavailable"
@@ -98,15 +110,15 @@ function ProjectOverviewComponent() {
     );
   }
 
-  if (projectError) {
+  if (environments.length === 0) {
     return (
-      <QueryErrorState
-        title="Project data is unavailable"
-        description="Could not load this project workspace."
-        onRetry={() => {
-          void refetchProject();
-        }}
-      />
+      <div className="space-y-4 p-6">
+        <h2 className="font-semibold">Create an environment</h2>
+        <p className="text-muted-foreground text-sm">
+          This project needs an environment before services can be deployed.
+        </p>
+        <EnvironmentSwitcher projectId={projectId} onSelectEnvironment={setSelectedEnvId} />
+      </div>
     );
   }
 
@@ -174,7 +186,7 @@ function ProjectOverviewComponent() {
         </TabsList>
 
         <TabsContent value="services" className="space-y-4">
-          <ProjectDatabaseInventory projectId={projectId} />
+          <ProjectDatabaseInventory projectId={projectId} environmentId={activeEnvId as string} />
           {appsLoading ? (
             <div className="flex h-40 items-center justify-center">
               <Activity className="h-6 w-6 animate-pulse text-primary" />

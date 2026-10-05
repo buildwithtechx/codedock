@@ -75,6 +75,9 @@ func (h *ServerHandler) Get(c echo.Context) error {
 
 	server, err := h.serverService.GetServer(c.Request().Context(), id, userClaims.UserID)
 	if err != nil {
+		if utils.IsForbidden(err) {
+			return utils.Error(c, http.StatusForbidden, err.Error())
+		}
 		return utils.Error(c, http.StatusInternalServerError, err.Error())
 	}
 	if server == nil {

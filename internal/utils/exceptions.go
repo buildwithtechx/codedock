@@ -135,3 +135,11 @@ func NewEngineError(operation string, err error) *EngineError {
 		Err:       err,
 	}
 }
+
+type ForbiddenError struct {
+	Message string `json:"message"`
+}
+
+func (e *ForbiddenError) Error() string                { return e.Message }
+func NewForbiddenError(message string) *ForbiddenError { return &ForbiddenError{Message: message} }
+func IsForbidden(err error) bool                       { var forbidden *ForbiddenError; return errors.As(err, &forbidden) }

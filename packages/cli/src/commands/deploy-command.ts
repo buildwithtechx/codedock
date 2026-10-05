@@ -24,6 +24,10 @@ export async function deployCommand(
   const target = args[0] || '.';
   const client = new ApiClient(ctx);
   try {
+    if (options.branch)
+      throw new Error(
+        'Deploy uses the configured service branch. Change that branch before deploying.'
+      );
     if (existsSync(target) && statSync(target).isDirectory()) {
       let projectId = options.project;
       if (!projectId) {
@@ -47,7 +51,7 @@ export async function deployCommand(
     }
     const result = await client.post<DeploymentRecord>(
       `/api/services/${encodeURIComponent(target)}/deploy`,
-      { branch: options.branch || 'main' }
+      {}
     );
     if (!result.data?.id) throw new Error('Server did not return a deployment');
     printSuccess(`Deployment started (ID: ${result.data.id})`);

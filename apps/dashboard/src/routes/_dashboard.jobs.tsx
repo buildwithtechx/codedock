@@ -47,8 +47,11 @@ export function JobsPage() {
     })),
   });
   const isLoadingTasks = taskQueries.some((query) => query.isLoading);
+  const failedQueries = taskQueries.flatMap((query, index) =>
+    query.isError ? [{ query, project: visibleProjects[index] }] : []
+  );
   const tasks = taskQueries.flatMap((query) => query.data?.data || []);
-  if (projectsError || taskQueries.some((query) => query.isError)) {
+  if (projectsError) {
     return (
       <QueryErrorState
         title="Jobs are unavailable"
@@ -91,7 +94,30 @@ export function JobsPage() {
           </div>
         </CardHeader>
         <CardContent>
-          {isLoadingProjects || isLoadingTasks ? (
+          {failedQueries.length > 0 && (
+            <div role="alert" className="mb-4 rounded-lg border p-3 text-sm">
+              <p>
+                Could not load jobs for{' '}
+                {failedQueries.map(({ project }) => project.name).join(', ')}.
+              </p>
+              <button
+                type="button"
+                className="mt-2 underline"
+                onClick={() => {
+                  for (const { query } of failedQueries) void query.refetch();
+                }}
+              >
+                Retry failed projects
+              </button>
+            </div>
+          )}
+          {isLoadingTasks && tasks.length > 0 && (
+            <p role="status" className="mb-3 text-muted-foreground text-sm">
+              Loading more jobs...
+            </p>
+          )}
+          {isLoadingProjects ||
+          (isLoadingTasks && tasks.length === 0 && failedQueries.length === 0) ? (
             <div className="flex justify-center p-12">
               <Loader2 className="h-8 w-8 animate-spin text-muted-foreground" />
             </div>

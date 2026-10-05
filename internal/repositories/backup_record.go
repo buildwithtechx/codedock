@@ -10,6 +10,7 @@ import (
 	"codedock.run/codedock/internal/models"
 	"codedock.run/codedock/internal/utils"
 	"github.com/google/uuid"
+	"github.com/jmoiron/sqlx"
 )
 
 func (r *BackupRepo) CreateRecord(ctx context.Context, rec *models.BackupRecord) error {
@@ -121,4 +122,24 @@ func (r *BackupRepo) DeleteRecord(ctx context.Context, id string) error {
 	defer r.mu.Unlock()
 	_, err := r.db.ExecContext(ctx, "DELETE FROM backup_records WHERE id=?", id)
 	return err
+}
+
+func (r *BackupRepo) ListRecordsByConfigs(ctx context.Context, configIDs []string, limit int) ([]*models.BackupRecord, error) {
+	list := make([]*models.BackupRecord, 0)
+	if len(configIDs) == 0 {
+		return list, nil
+	}
+	if limit <= 0 || limit > 100 {
+		limit = 50
+	}
+	query, args, err := sqlx.In(`SELECT id, backup_config_id, COALESCE(database_id, '') AS database_id, COALESCE(s3_destination_id, '') AS s3_destination_id, status, COALESCE(file_path, '') AS file_path, file_size_bytes, COALESCE(s3_url, '') AS s3_url, COALESCE(logs, '') AS logs, started_at, COALESCE(completed_at, '') AS completed_at FROM backup_records WHERE backup_config_id IN (?) ORDER BY started_at DESC LIMIT ?`, configIDs, limit)
+	if err != nil {
+		return nil, fmt.Errorf("prepare scoped backup query: %w", err)
+	}
+	r.mu.Lock()
+	defer r.mu.Unlock()
+	if err := r.db.SelectContext(ctx, &list, query, args...); err != nil {
+		return nil, fmt.Errorf("list accessible backup records: %w", err)
+	}
+	return list, nil
 }

@@ -3,7 +3,13 @@ import { Database as DatabaseIcon } from 'lucide-react';
 import { QueryErrorState } from '#/components/ui/query-error-state';
 import { useGetDatabases } from '#/features/databases/hooks';
 
-export function ProjectDatabaseInventory({ projectId }: { projectId: string }) {
+export function ProjectDatabaseInventory({
+  projectId,
+  environmentId,
+}: {
+  projectId: string;
+  environmentId: string;
+}) {
   const { data, isLoading, isError, refetch } = useGetDatabases(projectId);
   if (isLoading) return <p className="text-muted-foreground text-sm">Loading databases...</p>;
   if (isError)
@@ -16,7 +22,9 @@ export function ProjectDatabaseInventory({ projectId }: { projectId: string }) {
         }}
       />
     );
-  const databases = data?.data || [];
+  const databases = (data?.data || []).filter(
+    (database) => !database.environmentId || database.environmentId === environmentId
+  );
   if (databases.length === 0) return null;
   return (
     <section className="space-y-3">
@@ -33,7 +41,7 @@ export function ProjectDatabaseInventory({ projectId }: { projectId: string }) {
             <div>
               <p className="font-medium">{database.name}</p>
               <p className="text-muted-foreground text-xs">
-                {database.engine} ? {database.status}
+                {database.engine} {'\u00b7'} {database.status}
               </p>
             </div>
           </Link>

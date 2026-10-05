@@ -1,6 +1,7 @@
 package e2e_test
 
 import (
+	"net"
 	"net/http"
 	"net/http/httptest"
 	"testing"
@@ -19,10 +20,23 @@ func TestE2EWorkerServerAndS3DestinationManagement(t *testing.T) {
 		t.Fatalf("expected signup to succeed, got status %d, body %v, err %v", res.StatusCode, body, err)
 	}
 
-	serverReq := map[string]string{
+	listener, listenErr := net.Listen("tcp", "127.0.0.1:0")
+	if listenErr != nil {
+		t.Fatal(listenErr)
+	}
+	defer listener.Close()
+	go func() {
+		connection, err := listener.Accept()
+		if err == nil {
+			connection.Close()
+		}
+	}()
+	port := listener.Addr().(*net.TCPAddr).Port
+	serverReq := map[string]any{
 		"name":        "worker-us-east-1",
 		"ipAddress":   "192.168.1.100",
 		"sshHost":     "127.0.0.1",
+		"sshPort":     port,
 		"sshPassword": "test-worker-password",
 	}
 

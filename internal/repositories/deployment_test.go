@@ -67,6 +67,9 @@ func TestDeploymentRepositoryCreateAndRead(t *testing.T) {
 			if err != nil {
 				t.Fatalf("list service deployments: %v", err)
 			}
+			if serviceID == "" && (total != 0 || len(deployments) != 0) {
+				t.Fatalf("unassigned deployments leaked into service listing: %d %+v", total, deployments)
+			}
 			if serviceID != "" && (total != 1 || len(deployments) != 1 || deployments[0].EnvironmentID != expectedEnvironment || deployments[0].OrganizationID != "org-one") {
 				t.Fatalf("unexpected service deployments: total=%d rows=%+v", total, deployments)
 			}

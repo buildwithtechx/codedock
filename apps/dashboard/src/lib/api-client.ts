@@ -1,7 +1,7 @@
 import { toast } from 'sonner';
 import { env } from '#/env';
 import { getAuthHeaders, handleAuthFailure, refreshAuthSession } from '#/lib/auth-refresh';
-import { prepareCsrfHeaders } from '#/lib/csrf';
+import { clearCsrfToken, prepareCsrfHeaders } from '#/lib/csrf';
 
 export function getApiBaseUrl(): string {
   if (typeof window !== 'undefined') {
@@ -16,8 +16,10 @@ export function getApiBaseUrl(): string {
 export function setApiBaseUrl(url: string): void {
   if (typeof window !== 'undefined') {
     if (!url) {
+      clearCsrfToken(getApiBaseUrl());
       localStorage.removeItem('codedock_server_url');
     } else {
+      clearCsrfToken(getApiBaseUrl());
       localStorage.setItem('codedock_server_url', url.replace(/\/+$/, ''));
     }
   }

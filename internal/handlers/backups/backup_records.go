@@ -20,21 +20,38 @@ func (h *BackupHandler) ListAllRecords(c echo.Context) error {
 			limit = l
 		}
 	}
-	recs, err := h.backupService.ListAllRecords(c.Request().Context(), limit)
-	if err != nil {
-		return utils.Error(c, http.StatusInternalServerError, err.Error())
+	user, ok := c.Get("user").(*models.UserClaims)
+	if !ok || user == nil {
+		return utils.Error(c, http.StatusUnauthorized, "unauthorized")
 	}
-	filtered := make([]*models.BackupRecord, 0, len(recs))
-	for _, record := range recs {
-		cfg, err := h.backupService.GetConfig(c.Request().Context(), record.BackupConfigID)
-		if err != nil {
+	var records []*models.BackupRecord
+	var err error
+	if user.Role == models.UserRoleAdmin || user.Role == models.UserRoleOwner {
+		records, err = h.backupService.ListAllRecords(c.Request().Context(), limit)
+	} else {
+		configs, configErr := h.backupService.ListConfigs(c.Request().Context())
+		if configErr != nil {
 			return utils.Error(c, http.StatusInternalServerError, "failed to check backup access")
 		}
-		if cfg != nil && h.hasAccess(c, cfg.DatabaseID, cfg.ServiceID) {
-			filtered = append(filtered, record)
+		access := make(map[string]bool)
+		ids := make([]string, 0, len(configs))
+		for _, cfg := range configs {
+			key := cfg.DatabaseID + ":" + cfg.ServiceID
+			allowed, found := access[key]
+			if !found {
+				allowed = h.hasAccess(c, cfg.DatabaseID, cfg.ServiceID)
+				access[key] = allowed
+			}
+			if allowed {
+				ids = append(ids, cfg.ID)
+			}
 		}
+		records, err = h.backupService.ListRecordsByConfigs(c.Request().Context(), ids, limit)
 	}
-	return utils.Success(c, "Operation successful", filtered)
+	if err != nil {
+		return utils.Error(c, http.StatusInternalServerError, "failed to list backup records")
+	}
+	return utils.Success(c, "Operation successful", records)
 }
 
 func (h *BackupHandler) ListRecords(c echo.Context) error {

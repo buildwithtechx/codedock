@@ -3,6 +3,7 @@ package system
 import (
 	"codedock.run/codedock/internal/config"
 	"codedock.run/codedock/internal/models"
+	"codedock.run/codedock/internal/utils"
 	"context"
 	"fmt"
 	"time"
@@ -14,7 +15,13 @@ func (s *serverService) ListServersByUser(ctx context.Context, userID string) ([
 		return nil, err
 	}
 	user, err := s.userRepo.GetUserByID(ctx, userID)
-	if err != nil || user == nil || (user.Role != models.UserRoleOwner && user.Role != models.UserRoleAdmin) {
+	if err != nil {
+		return nil, fmt.Errorf("load server user: %w", err)
+	}
+	if user == nil {
+		return nil, utils.NewNotFoundError("User", userID)
+	}
+	if user.Role != models.UserRoleOwner && user.Role != models.UserRoleAdmin {
 		return servers, nil
 	}
 	return append([]*models.Server{s.controlPlaneServer(userID)}, servers...), nil
@@ -26,8 +33,8 @@ func (s *serverService) GetServer(ctx context.Context, id, userID string) (*mode
 		if err != nil {
 			return nil, fmt.Errorf("load server user: %w", err)
 		}
-		if user.Role != models.UserRoleOwner && user.Role != models.UserRoleAdmin {
-			return nil, fmt.Errorf("server access denied")
+		if user == nil || (user.Role != models.UserRoleOwner && user.Role != models.UserRoleAdmin) {
+			return nil, utils.NewForbiddenError("server access denied")
 		}
 		return s.controlPlaneServer(userID), nil
 	}
@@ -36,7 +43,7 @@ func (s *serverService) GetServer(ctx context.Context, id, userID string) (*mode
 		return nil, err
 	}
 	if server != nil && server.UserID != userID && !(server.IsLocal && server.UserID == "system") {
-		return nil, fmt.Errorf("server access denied")
+		return nil, utils.NewForbiddenError("server access denied")
 	}
 	return server, nil
 }

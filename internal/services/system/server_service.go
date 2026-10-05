@@ -218,10 +218,12 @@ func (s *serverService) UpdateServer(ctx context.Context, id, userID string, req
 		server.SSHHost = *req.SSHHost
 	}
 	if req.SSHPort != nil {
-		if *req.SSHPort < 1 || *req.SSHPort > 65535 {
+		if *req.SSHPort < 0 || *req.SSHPort > 65535 {
 			return nil, fmt.Errorf("SSH port must be between 1 and 65535")
 		}
-		server.SSHPort = *req.SSHPort
+		if *req.SSHPort != 0 {
+			server.SSHPort = *req.SSHPort
+		}
 	}
 	if req.SSHUser != nil && *req.SSHUser != "" {
 		server.SSHUser = *req.SSHUser
@@ -234,7 +236,9 @@ func (s *serverService) UpdateServer(ctx context.Context, id, userID string, req
 	}
 	if req.SSHPrivateKey != nil {
 		server.SSHPrivateKey = *req.SSHPrivateKey
-		server.SSHKey = *req.SSHPrivateKey
+		if req.SSHKey == nil {
+			server.SSHKey = *req.SSHPrivateKey
+		}
 	}
 	if req.SSHPassword != nil {
 		server.SSHPassword = *req.SSHPassword

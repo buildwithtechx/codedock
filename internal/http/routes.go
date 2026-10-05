@@ -77,9 +77,7 @@ func (s *Server) RequireServiceRole(minPermission models.MemberPermission) echo.
 }
 
 func (s *Server) registerAuthRoutes(apiGroup, authGroup *echo.Group) {
-	apiGroup.GET("/auth/csrf", func(c echo.Context) error {
-		return c.JSON(200, map[string]interface{}{"token": c.Get("csrf")})
-	})
+	apiGroup.GET("/auth/csrf", bootstrapCSRF)
 	apiGroup.POST("/auth/signup", s.authHandler.Register, s.authRateLimiter.Middleware)
 	apiGroup.POST("/auth/signin", s.authHandler.Login, s.authRateLimiter.Middleware)
 	apiGroup.POST("/auth/refresh", s.authHandler.Refresh)

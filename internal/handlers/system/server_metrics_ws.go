@@ -81,7 +81,7 @@ func (h *ServerMetricsWSHandler) Handle(c echo.Context) error {
 			if err != nil || server == nil {
 				return utils.Error(c, http.StatusNotFound, "server not found")
 			}
-			if server.UserID != userID {
+			if server.UserID != userID && !(server.IsLocal && server.UserID == "system") {
 				return utils.Error(c, http.StatusForbidden, "insufficient permissions")
 			}
 		}

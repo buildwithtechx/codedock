@@ -32,7 +32,14 @@ export async function appsCommand(
           client.get<ServiceRecord[]>(`/api/projects/${project.id}/services`)
         )
       );
-      const apps = results.flatMap((result) => result.data || []);
+      const apps = results
+        .flatMap((result) => result.data || [])
+        .map((record) => {
+          const { deployToken: _deployToken, ...service } = record as ServiceRecord & {
+            deployToken?: string;
+          };
+          return service;
+        });
       if (ctx.json) {
         printJson(apps);
         return;

@@ -1,6 +1,7 @@
 package http
 
 import (
+	"fmt"
 	"log/slog"
 	"net/http"
 	"slices"
@@ -49,6 +50,9 @@ func configureEchoMiddleware(e *echo.Echo) {
 		CookieName:   "csrf_token",
 		CookiePath:   "/",
 		CookieMaxAge: 86400,
+		ErrorHandler: func(err error, c echo.Context) error {
+			return echo.NewHTTPError(http.StatusForbidden, "invalid or missing CSRF token").SetInternal(fmt.Errorf("validate CSRF request: %w", err))
+		},
 		Skipper: func(c echo.Context) bool {
 			path := strings.TrimPrefix(c.Request().URL.Path, "/api/v1/")
 			path = strings.TrimPrefix(path, "/api/")

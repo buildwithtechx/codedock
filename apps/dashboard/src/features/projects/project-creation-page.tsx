@@ -147,7 +147,7 @@ export function ProjectCreationPage() {
                   <SelectContent>
                     <SelectItem value="local">Local control plane</SelectItem>
                     {servers
-                      .filter((server) => !server.isControlPlane)
+                      .filter((server) => !server.isControlPlane && server.id !== 'local')
                       .map((server) => (
                         <SelectItem key={server.id} value={server.id}>
                           {server.name} ({server.ipAddress})

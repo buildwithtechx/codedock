@@ -15,6 +15,10 @@ export function loadConfig(): CliConfig {
   }
   try {
     chmodSync(configPath, 0o600);
+  } catch (error) {
+    throw new Error(`Could not secure saved CLI configuration at ${configPath}`, { cause: error });
+  }
+  try {
     const raw = readFileSync(configPath, 'utf8');
     return JSON.parse(raw) as CliConfig;
   } catch {

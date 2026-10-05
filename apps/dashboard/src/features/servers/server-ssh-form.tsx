@@ -15,6 +15,7 @@ import { Button } from '#/components/ui/button';
 import { Input } from '#/components/ui/input';
 import { Label } from '#/components/ui/label';
 import { ServerSshAdvancedFields } from '#/features/servers/server-ssh-advanced-fields';
+import { readSshPrivateKey, validateSshConnection } from '#/features/servers/server-ssh-validation';
 import { useCreateServer, useTestSSH } from '#/hooks/use-servers';
 import type { Server } from '#/interfaces/server';
 
@@ -44,34 +45,35 @@ export function ServerSshForm({ onSuccess, onCancel }: ServerSshFormProps) {
     event.target.value = '';
     if (!file) return;
 
-    if (file.size > 64 * 1024) {
-      toast.error('Key file exceeds maximum size of 64KB');
-      return;
-    }
-
     try {
-      const text = await file.text();
-      if (!text.includes('PRIVATE KEY-----')) {
-        toast.error('Select an SSH private key file');
-        return;
-      }
-      setSshPrivateKey(text);
+      setSshPrivateKey(await readSshPrivateKey(file));
       toast.success(`Imported ${file.name}`);
-    } catch {
-      toast.error('Failed to read private key file');
+    } catch (error) {
+      toast.error(error instanceof Error ? error.message : 'Failed to read private key file');
     }
   };
+
   const handleTestConnection = async () => {
     if (!sshHost.trim()) {
       toast.error('Host IP address is required');
       return;
     }
 
+    const validationError = validateSshConnection(
+      sshAuthMethod,
+      sshPrivateKey,
+      sshPassword,
+      sshPort
+    );
+    if (validationError) {
+      toast.error(validationError);
+      return;
+    }
     setTestResult(null);
     try {
       const result = await testSSH({
         sshHost: sshHost.trim(),
-        sshPort: Number.parseInt(sshPort, 10) || 22,
+        sshPort: Number(sshPort),
         sshUser: sshUser.trim() || 'root',
         sshKey: sshAuthMethod === 'key' ? sshPrivateKey : undefined,
         sshPassword: sshAuthMethod === 'password' ? sshPassword : undefined,
@@ -99,16 +101,14 @@ export function ServerSshForm({ onSuccess, onCancel }: ServerSshFormProps) {
       return;
     }
 
-    if (
-      (sshAuthMethod === 'key' && !sshPrivateKey.trim()) ||
-      (sshAuthMethod === 'password' && !sshPassword)
-    ) {
-      toast.error('Provide the selected SSH credential');
-      return;
-    }
-    const port = Number(sshPort);
-    if (!Number.isInteger(port) || port < 1 || port > 65535) {
-      toast.error('SSH port must be between 1 and 65535');
+    const validationError = validateSshConnection(
+      sshAuthMethod,
+      sshPrivateKey,
+      sshPassword,
+      sshPort
+    );
+    if (validationError) {
+      toast.error(validationError);
       return;
     }
     try {
@@ -116,7 +116,7 @@ export function ServerSshForm({ onSuccess, onCancel }: ServerSshFormProps) {
         name: name.trim(),
         ipAddress: sshHost.trim(),
         sshHost: sshHost.trim(),
-        sshPort: Number.parseInt(sshPort, 10) || 22,
+        sshPort: Number(sshPort),
         sshUser: sshUser.trim() || 'root',
         sshAuthMethod,
         sshPrivateKey: sshAuthMethod === 'key' ? sshPrivateKey : undefined,
@@ -241,7 +241,6 @@ export function ServerSshForm({ onSuccess, onCancel }: ServerSshFormProps) {
                 ref={fileInputRef}
                 type="file"
                 className="hidden"
-                accept=".pem,.key,id_rsa,id_ed25519"
                 onChange={handleFileUpload}
               />
             </div>

@@ -255,3 +255,7 @@ func setScheduleStatus(cfg *models.BackupConfig) {
 		cfg.Status = models.BackupConfigStatusActive
 	}
 }
+
+func (s *BackupService) ListRecordsByConfigs(ctx context.Context, configIDs []string, limit int) ([]*models.BackupRecord, error) {
+	return s.backupRepo.ListRecordsByConfigs(ctx, configIDs, limit)
+}

@@ -28,6 +28,7 @@ type BackupRepository interface {
 	ListRecordsByConfig(ctx context.Context, backupConfigID string) ([]*models.BackupRecord, error)
 	ListRecordsByDatabase(ctx context.Context, databaseID string) ([]*models.BackupRecord, error)
 	ListAllRecords(ctx context.Context, limit int) ([]*models.BackupRecord, error)
+	ListRecordsByConfigs(ctx context.Context, configIDs []string, limit int) ([]*models.BackupRecord, error)
 	UpdateRecord(ctx context.Context, rec *models.BackupRecord) error
 	DeleteRecord(ctx context.Context, id string) error
 }
@@ -185,8 +186,8 @@ func (r *BackupRepo) UpdateConfig(ctx context.Context, cfg *models.BackupConfig)
 	defer r.mu.Unlock()
 
 	if cfg.DbPassword == "********" || cfg.DbPassword == "" {
-		res, err := r.db.ExecContext(ctx, `UPDATE backup_configs SET database_id=?, service_id=?, volume_name=?, s3_destination_id=?, name=?, description=?, db_user=?, backup_enabled=?, s3_enabled=?, disable_local=?, schedule=?, timezone=?, timeout=?, retention_days=?, max_backups=?, max_storage_gb=?, updated_at=? WHERE id=?`,
-			nullableID(cfg.DatabaseID), nullableID(cfg.ServiceID), cfg.VolumeName, nullableID(cfg.S3DestinationID), cfg.Name, cfg.Description, cfg.DbUser, cfg.BackupEnabled, cfg.S3Enabled, cfg.DisableLocal, cfg.Schedule, cfg.Timezone, cfg.Timeout, cfg.RetentionDays, cfg.MaxBackups, cfg.MaxStorageGB, cfg.UpdatedAt, cfg.ID)
+		res, err := r.db.ExecContext(ctx, `UPDATE backup_configs SET database_id=?, service_id=?, volume_name=?, s3_destination_id=?, name=?, description=?, db_user=?, backup_enabled=?, s3_enabled=?, disable_local=?, schedule=?, timezone=?, timeout=?, retention_days=?, max_backups=?, max_storage_gb=?, status=?, updated_at=? WHERE id=?`,
+			nullableID(cfg.DatabaseID), nullableID(cfg.ServiceID), cfg.VolumeName, nullableID(cfg.S3DestinationID), cfg.Name, cfg.Description, cfg.DbUser, cfg.BackupEnabled, cfg.S3Enabled, cfg.DisableLocal, cfg.Schedule, cfg.Timezone, cfg.Timeout, cfg.RetentionDays, cfg.MaxBackups, cfg.MaxStorageGB, cfg.Status, cfg.UpdatedAt, cfg.ID)
 		if err != nil {
 			return err
 		}
@@ -200,8 +201,8 @@ func (r *BackupRepo) UpdateConfig(ctx context.Context, cfg *models.BackupConfig)
 		return nil
 	}
 
-	res, err := r.db.ExecContext(ctx, `UPDATE backup_configs SET database_id=?, service_id=?, volume_name=?, s3_destination_id=?, name=?, description=?, db_user=?, db_password=?, backup_enabled=?, s3_enabled=?, disable_local=?, schedule=?, timezone=?, timeout=?, retention_days=?, max_backups=?, max_storage_gb=?, updated_at=? WHERE id=?`,
-		nullableID(cfg.DatabaseID), nullableID(cfg.ServiceID), cfg.VolumeName, nullableID(cfg.S3DestinationID), cfg.Name, cfg.Description, cfg.DbUser, cfg.DbPassword, cfg.BackupEnabled, cfg.S3Enabled, cfg.DisableLocal, cfg.Schedule, cfg.Timezone, cfg.Timeout, cfg.RetentionDays, cfg.MaxBackups, cfg.MaxStorageGB, cfg.UpdatedAt, cfg.ID)
+	res, err := r.db.ExecContext(ctx, `UPDATE backup_configs SET database_id=?, service_id=?, volume_name=?, s3_destination_id=?, name=?, description=?, db_user=?, db_password=?, backup_enabled=?, s3_enabled=?, disable_local=?, schedule=?, timezone=?, timeout=?, retention_days=?, max_backups=?, max_storage_gb=?, status=?, updated_at=? WHERE id=?`,
+		nullableID(cfg.DatabaseID), nullableID(cfg.ServiceID), cfg.VolumeName, nullableID(cfg.S3DestinationID), cfg.Name, cfg.Description, cfg.DbUser, cfg.DbPassword, cfg.BackupEnabled, cfg.S3Enabled, cfg.DisableLocal, cfg.Schedule, cfg.Timezone, cfg.Timeout, cfg.RetentionDays, cfg.MaxBackups, cfg.MaxStorageGB, cfg.Status, cfg.UpdatedAt, cfg.ID)
 	if err != nil {
 		return err
 	}

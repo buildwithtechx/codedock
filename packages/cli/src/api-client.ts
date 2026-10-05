@@ -4,6 +4,7 @@ export class ApiClient {
   private readonly baseUrl: string;
   private readonly token?: string;
   private csrfToken?: string;
+  private csrfPromise?: Promise<string>;
 
   constructor(ctx: CliContext) {
     this.baseUrl = ctx.serverUrl.replace(/\/+$/, '');
@@ -13,13 +14,14 @@ export class ApiClient {
   private async request<T>(
     method: string,
     endpoint: string,
-    body?: unknown
+    body?: unknown,
+    contentType?: string
   ): Promise<ApiResponse<T>> {
     const cleanEndpoint = endpoint.startsWith('/') ? endpoint : `/${endpoint}`;
     const url = `${this.baseUrl}${cleanEndpoint}`;
 
     const headers: Record<string, string> = {
-      'Content-Type': 'application/json',
+      'Content-Type': contentType || 'application/json',
       Accept: 'application/json',
     };
 
@@ -32,28 +34,29 @@ export class ApiClient {
       headers,
     };
 
-    if (body instanceof FormData) {
+    if (body instanceof ReadableStream) {
+      init.body = body;
+      Object.assign(init, { duplex: 'half' });
+    } else if (body instanceof FormData) {
       delete headers['Content-Type'];
       init.body = body;
     } else if (body !== undefined) {
       init.body = JSON.stringify(body);
     }
-    const authRequest = /\/auth\/(signin|signup|refresh)$/.test(cleanEndpoint);
-    if (method !== 'GET' && method !== 'HEAD' && (!this.token || authRequest)) {
-      const csrfResponse = await fetch(`${this.baseUrl}/api/auth/csrf`);
-      if (!csrfResponse.ok) throw new Error('Failed to initialize CSRF protection');
-      const csrf = (await csrfResponse.json()) as { token: string };
-      this.csrfToken = csrf.token;
-      headers['X-CSRF-Token'] = this.csrfToken;
-      headers.Cookie = `csrf_token=${this.csrfToken}`;
-    }
-
+    const authRequest = /\/auth\//.test(cleanEndpoint);
     let res: Response;
     try {
+      if (method !== 'GET' && method !== 'HEAD' && (!this.token || authRequest)) {
+        const token = await this.getCsrfToken();
+        headers['X-CSRF-Token'] = token;
+        headers.Cookie = `csrf_token=${token}`;
+      }
       res = await fetch(url, init);
     } catch (err: unknown) {
       const msg = err instanceof Error ? err.message : String(err);
-      throw new Error(`Failed to connect to Codedock server at ${this.baseUrl}: ${msg}`);
+      throw new Error(`Failed to connect to Codedock server at ${this.baseUrl}: ${msg}`, {
+        cause: err,
+      });
     }
 
     const text = await res.text();
@@ -72,6 +75,33 @@ export class ApiClient {
     }
 
     return Array.isArray(data) ? { data: data as T } : data;
+  }
+
+  private async getCsrfToken(): Promise<string> {
+    if (this.csrfToken) return this.csrfToken;
+    if (this.csrfPromise) return this.csrfPromise;
+    this.csrfPromise = (async () => {
+      try {
+        const response = await fetch(`${this.baseUrl}/api/auth/csrf`);
+        if (!response.ok) throw new Error('Failed to initialize CSRF protection');
+        const data = (await response.json()) as { token?: string };
+        if (!data.token || data.token === '_echo_csrf_using_sec_fetch_site_')
+          throw new Error('Server did not return a CSRF token');
+        this.csrfToken = data.token;
+        return data.token;
+      } finally {
+        this.csrfPromise = undefined;
+      }
+    })();
+    return this.csrfPromise;
+  }
+
+  async postStream<T>(
+    endpoint: string,
+    body: ReadableStream<Uint8Array>,
+    contentType: string
+  ): Promise<ApiResponse<T>> {
+    return this.request<T>('POST', endpoint, body, contentType);
   }
 
   async get<T>(endpoint: string): Promise<ApiResponse<T>> {
