@@ -1,267 +1,42 @@
 ---
 title: Projects API
-description: Project API endpoints, request payloads, and response examples.
+description: Current project and environment routes and request fields.
 ---
 
-Project endpoints manage Codedock project groups. Services live inside projects.
+Requests require authentication and permission on the relevant organization or project.
 
-All examples assume:
+## List projects
 
-```bash
-export CODEDOCK_URL="https://pilot.example.com"
-export CODEDOCK_API_KEY="ap_..."
+`GET /api/projects?organizationId=ORG_ID&page=1&limit=10` requires `organizationId`. The paginated response contains `data.records`, `total`, `page` and `totalPages`.
+
+```sh
+curl "$CODEDOCK_URL/api/projects?organizationId=$ORGANIZATION_ID"   -H "Authorization: Bearer $CODEDOCK_TOKEN"
 ```
 
-## List Projects
+## Create a project
 
-```txt
-GET /api/projects
-```
-
-Required access: `read`
-
-Project scope: returns all visible projects for the key.
-
-Example:
-
-```bash
-curl "$CODEDOCK_URL/api/projects" \
-  -H "Authorization: Bearer $CODEDOCK_API_KEY"
-```
-
-Response:
+`POST /api/projects` accepts the project request, including `name`, optional `description`, `organizationId`, `serverId`, `environmentName` and `environmentType`. Other source-related fields are defined in the current [project DTO](https://github.com/buildwithtechx/codedock/blob/main/pkg/types/project.go).
 
 ```json
-{
-  "projects": [
-    {
-      "id": "project_123",
-      "name": "Acme",
-      "slug": "acme",
-      "description": "Production services",
-      "status": "active",
-      "serviceCount": 2,
-      "lastUpdatedAt": "2026-06-10T08:40:00.000Z",
-      "services": [
-        {
-          "id": "svc_web",
-          "projectId": "project_123",
-          "name": "Web",
-          "slug": "web",
-          "repoFullName": "acme/web",
-          "repoUrl": "https://github.com/acme/web",
-          "dockerImage": null,
-          "branch": "main",
-          "rootDir": null,
-          "hasGithubToken": false,
-          "installCommand": null,
-          "buildCommand": null,
-          "startCommand": null,
-          "staticOutput": null,
-          "runtimeMode": "web",
-          "internalPort": 3000,
-          "hostPort": 41001,
-          "databasePublicEnabled": false,
-          "databasePublicHostname": null,
-          "postgresLogicalReplicationEnabled": false,
-          "status": "active",
-          "reachable": false,
-          "localUrl": "",
-          "primaryUrl": "",
-          "preferredDomain": null,
-          "framework": null,
-          "lastDeployedAt": "2026-06-10T08:35:00.000Z",
-          "createdAt": "2026-06-10T08:30:00.000Z",
-          "updatedAt": "2026-06-10T08:35:00.000Z"
-        }
-      ]
-    }
-  ]
-}
+{"name":"My API","description":"Application stack","organizationId":"ORG_ID"}
 ```
 
-## Create Project
+If omitted for an authenticated user, the organization can be resolved to their default organization. Account limits can affect creation.
 
-```txt
-POST /api/projects
-```
+## Project operations
 
-Required access: `write`
+| Method | Path | Requirement |
+| --- | --- | --- |
+| GET | `/api/projects/:id` | Project access |
+| DELETE | `/api/projects/:id` | Project owner |
+| GET | `/api/projects/:id/environments` | Project access |
+| POST | `/api/projects/:id/environments` | Project administrator |
+| GET | `/api/projects/:id/apps` | Project access |
+| GET | `/api/projects/:id/services` | Alias for app listing |
+| GET | `/api/projects/:id/deployments` | Project access |
+| POST | `/api/projects/:id/deploy` | Project administrator |
+| GET | `/api/projects/:id/summary` | Canvas summary |
 
-Project scope: requires an all-project key. Selected-project keys cannot create projects.
+Environment creation fields are defined by the [environment handler](https://github.com/buildwithtechx/codedock/blob/main/internal/handlers/projects/environment.go). Delete an environment with `DELETE /api/environments/:id` after reviewing its resources.
 
-Payload:
-
-```json
-{
-  "name": "Acme",
-  "description": "Production services"
-}
-```
-
-Example:
-
-```bash
-curl -X POST "$CODEDOCK_URL/api/projects" \
-  -H "Authorization: Bearer $CODEDOCK_API_KEY" \
-  -H "Content-Type: application/json" \
-  -d '{"name":"Acme","description":"Production services"}'
-```
-
-Response:
-
-```json
-{
-  "project": {
-    "id": "project_123",
-    "name": "Acme",
-    "slug": "acme",
-    "description": "Production services",
-    "status": "idle",
-    "serviceCount": 0,
-    "lastUpdatedAt": "2026-06-10T08:40:00.000Z",
-    "services": []
-  }
-}
-```
-
-## Get Project
-
-```txt
-GET /api/projects/:projectSlug
-```
-
-Required access: `read`
-
-Project scope: project must be visible to the key.
-
-Example:
-
-```bash
-curl "$CODEDOCK_URL/api/projects/acme" \
-  -H "Authorization: Bearer $CODEDOCK_API_KEY"
-```
-
-Response:
-
-```json
-{
-  "project": {
-    "id": "project_123",
-    "name": "Acme",
-    "slug": "acme",
-    "description": "Production services",
-    "status": "active",
-    "serviceCount": 2,
-    "lastUpdatedAt": "2026-06-10T08:40:00.000Z",
-    "services": []
-  }
-}
-```
-
-## Update Project
-
-```txt
-PATCH /api/projects/:projectId
-```
-
-Required access: `write`
-
-Project scope: project must be visible to the key.
-
-Payload:
-
-```json
-{
-  "name": "Acme Production",
-  "description": "Customer-facing services"
-}
-```
-
-Example:
-
-```bash
-curl -X PATCH "$CODEDOCK_URL/api/projects/project_123" \
-  -H "Authorization: Bearer $CODEDOCK_API_KEY" \
-  -H "Content-Type: application/json" \
-  -d '{"name":"Acme Production","description":"Customer-facing services"}'
-```
-
-Response:
-
-```json
-{
-  "project": {
-    "id": "project_123",
-    "name": "Acme Production",
-    "slug": "acme",
-    "description": "Customer-facing services",
-    "status": "active",
-    "serviceCount": 2,
-    "lastUpdatedAt": "2026-06-10T08:45:00.000Z",
-    "services": []
-  }
-}
-```
-
-## Delete Project
-
-```txt
-DELETE /api/projects/:projectId
-```
-
-Required access: `write`
-
-Project scope: project must be visible to the key.
-
-Deleting a project removes its services, domains, environment variables, deployments, and deployment logs.
-
-Example:
-
-```bash
-curl -X DELETE "$CODEDOCK_URL/api/projects/project_123" \
-  -H "Authorization: Bearer $CODEDOCK_API_KEY"
-```
-
-Response:
-
-```json
-{
-  "ok": true,
-  "traefik": {
-    "ok": true,
-    "detail": "Traefik reloaded"
-  }
-}
-```
-
-## Database Variable Suggestions
-
-```txt
-GET /api/projects/:projectId/database-variable-suggestions
-```
-
-Required access: `read`
-
-Project scope: project must be visible to the key.
-
-Example:
-
-```bash
-curl "$CODEDOCK_URL/api/projects/project_123/database-variable-suggestions" \
-  -H "Authorization: Bearer $CODEDOCK_API_KEY"
-```
-
-Response:
-
-```json
-{
-  "suggestions": [
-    {
-      "key": "POSTGRES_URL",
-      "value": "${postgres-db.POSTGRES_URL}",
-      "label": "PostgreSQL private URL"
-    }
-  ]
-}
-```
+See [service creation](/reference/api-services/) and [variables](/reference/api-environment-and-domains/).

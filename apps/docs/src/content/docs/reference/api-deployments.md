@@ -1,254 +1,37 @@
 ---
 title: Deployments API
-description: Deployment API endpoints, payloads, log responses, and stream behavior.
+description: Trigger deployments and inspect their history, logs and metrics.
 ---
 
-Deployment endpoints queue, inspect, abort, and stream deployment work.
+## Trigger a service
 
-All examples assume:
+`POST /api/services/:serviceId/deploy` triggers deployment for a service. It requires administrator access to the project. Read the response and deployment history to track completion; accepting the request is not a completed rollout.
 
-```bash
-export CODEDOCK_URL="https://pilot.example.com"
-export CODEDOCK_API_KEY="ap_..."
+```sh
+curl -X POST "$CODEDOCK_URL/api/services/$SERVICE_ID/deploy"   -H "Authorization: Bearer $CODEDOCK_TOKEN"
 ```
 
-## Create Deployment
+`POST /api/projects/:id/deploy` triggers the project's deployment workflow and requires project administrator access.
 
-```txt
-POST /api/services/:serviceId/deployments
-```
+## Inspect operations
 
-Required access: `write`
+| Method | Path | Purpose |
+| --- | --- | --- |
+| GET | `/api/services/:serviceId/deployments` | Service deployment history |
+| GET | `/api/services/:serviceId/previews` | Pull-request previews |
+| GET | `/api/projects/:id/deployments` | Project history |
+| GET | `/api/deployments?organizationId=ORG_ID` | Organization history; organization ID required |
+| GET | `/api/deployments/:id/logs` | Deployment logs; logs-read scope |
+| GET | `/api/deployments/:id/explain` | Failure explanation |
+| POST | `/api/deployments/:id/rollback` | Rollback workflow |
+| GET | `/api/services/:serviceId/metrics` | Current service metrics |
+| GET | `/api/services/:serviceId/metrics/historical` | Historical metrics |
+| GET | `/api/services/:serviceId/logs/historical` | Historical runtime logs |
 
-Project scope: service project must be visible to the key.
+Live service logs use the WebSocket handler at `GET /api/services/:serviceId/logs`. They are not an SSE JSON list. WebSocket authentication and access checks occur in the handler.
 
-Example:
+## Archives
 
-```bash
-curl -X POST "$CODEDOCK_URL/api/services/svc_web/deployments" \
-  -H "Authorization: Bearer $CODEDOCK_API_KEY"
-```
+`POST /api/deploy/archive` accepts a multipart archive workflow. Use the supported tar archive format and fields in the [archive handler](https://github.com/buildwithtechx/codedock/blob/main/internal/handlers/deployments/archive.go); do not assume ZIP uploads are accepted.
 
-Response:
-
-```json
-{
-  "deployment": {
-    "id": "dep_123",
-    "serviceId": "svc_web",
-    "commitSha": null,
-    "status": "queued",
-    "trigger": "manual",
-    "imageTag": null,
-    "containerName": null,
-    "startedAt": null,
-    "finishedAt": null,
-    "createdAt": "2026-06-10T08:45:00.000Z"
-  }
-}
-```
-
-## List Service Deployments
-
-```txt
-GET /api/services/:serviceId/deployments
-```
-
-Required access: `read`
-
-Project scope: service project must be visible to the key.
-
-Example:
-
-```bash
-curl "$CODEDOCK_URL/api/services/svc_web/deployments" \
-  -H "Authorization: Bearer $CODEDOCK_API_KEY"
-```
-
-Response:
-
-```json
-{
-  "deployments": [
-    {
-      "id": "dep_123",
-      "serviceId": "svc_web",
-      "commitSha": "abc1234",
-      "status": "running",
-      "trigger": "manual",
-      "imageTag": "codedock-svc_web-dep_123",
-      "containerName": "codedock-svc_web-stable",
-      "startedAt": "2026-06-10T08:45:00.000Z",
-      "finishedAt": "2026-06-10T08:46:00.000Z",
-      "createdAt": "2026-06-10T08:45:00.000Z"
-    }
-  ]
-}
-```
-
-## Abort Deployment
-
-```txt
-POST /api/deployments/:deploymentId/abort
-```
-
-Required access: `write`
-
-Project scope: deployment service project must be visible to the key.
-
-Example:
-
-```bash
-curl -X POST "$CODEDOCK_URL/api/deployments/dep_123/abort" \
-  -H "Authorization: Bearer $CODEDOCK_API_KEY"
-```
-
-Response:
-
-```json
-{
-  "accepted": true
-}
-```
-
-If the deployment cannot be aborted, Codedock returns `409`.
-
-## Deployment Logs
-
-```txt
-GET /api/deployments/:deploymentId/logs
-```
-
-Required access: `read`
-
-Project scope: deployment service project must be visible to the key.
-
-Example:
-
-```bash
-curl "$CODEDOCK_URL/api/deployments/dep_123/logs" \
-  -H "Authorization: Bearer $CODEDOCK_API_KEY"
-```
-
-Response:
-
-```json
-{
-  "logs": [
-    {
-      "id": 1,
-      "deploymentId": "dep_123",
-      "line": "Cloning repository acme/web",
-      "stream": "stdout",
-      "createdAt": "2026-06-10T08:45:03.000Z"
-    },
-    {
-      "id": 2,
-      "deploymentId": "dep_123",
-      "line": "Build completed",
-      "stream": "stdout",
-      "createdAt": "2026-06-10T08:45:55.000Z"
-    }
-  ]
-}
-```
-
-## Deployment Log Stream
-
-```txt
-GET /api/deployments/:deploymentId/stream
-```
-
-Required access: `read`
-
-Project scope: deployment service project must be visible to the key.
-
-This endpoint returns Server-Sent Events.
-
-Example:
-
-```bash
-curl -N "$CODEDOCK_URL/api/deployments/dep_123/stream" \
-  -H "Authorization: Bearer $CODEDOCK_API_KEY"
-```
-
-Events:
-
-```txt
-event: snapshot
-data: [{"id":1,"deploymentId":"dep_123","line":"Cloning repository acme/web","stream":"stdout","createdAt":"2026-06-10T08:45:03.000Z"}]
-
-event: log
-data: {"id":2,"deploymentId":"dep_123","line":"Build completed","stream":"stdout","createdAt":"2026-06-10T08:45:55.000Z"}
-
-event: ping
-data: {"t":1781081155000}
-```
-
-## Runtime Log Stream
-
-```txt
-GET /api/services/:serviceId/runtime-logs/stream
-```
-
-Required access: `read`
-
-Project scope: service project must be visible to the key.
-
-This endpoint streams logs from the running container.
-
-Example:
-
-```bash
-curl -N "$CODEDOCK_URL/api/services/svc_web/runtime-logs/stream" \
-  -H "Authorization: Bearer $CODEDOCK_API_KEY"
-```
-
-Events:
-
-```txt
-event: snapshot
-data: [{"id":1,"line":"Server listening on port 3000","stream":"stdout","createdAt":"2026-06-10T08:47:00.000Z"}]
-
-event: log
-data: {"id":2,"line":"GET /health 200","stream":"stdout","createdAt":"2026-06-10T08:47:10.000Z"}
-
-event: status
-data: {"ok":true,"closed":true}
-```
-
-## Explain Failure
-
-```txt
-POST /api/deployments/:deploymentId/explain-failure
-```
-
-Required access: `write`
-
-Project scope: deployment service project must be visible to the key.
-
-This endpoint uses the configured AI provider to explain a failed deployment.
-
-Payload:
-
-```json
-{
-  "providerId": "openai",
-  "model": "gpt-5-mini"
-}
-```
-
-Response:
-
-```json
-{
-  "explanation": {
-    "summary": "The deployment built successfully, but the service did not answer on the configured port.",
-    "likelyCause": "The app is listening on port 8080 while the service is configured for port 3000.",
-    "suggestedFix": "Update the service internal port to 8080 or change the app to listen on 3000.",
-    "commands": [
-      "npm start"
-    ]
-  }
-}
-```
+Review the [deployment handler](https://github.com/buildwithtechx/codedock/blob/main/internal/handlers/deployments/deployment.go) for query parameters and response models. See [build strategies](/deployments/build-strategies/) for the execution paths.

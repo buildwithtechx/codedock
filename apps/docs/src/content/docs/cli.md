@@ -1,269 +1,108 @@
 ---
 title: CLI Reference
-description: Command-line interface reference for Codedock — covering both the server daemon (codedockd) and the remote client (codedock).
+description: Separate the remote client, daemon commands and installer host wrapper.
 ---
 
-Codedock ships two CLI tools with distinct responsibilities.
+The repository has two remote clients named `codedock`: a Go binary in `cmd/codedock` and the npm client in `packages/cli`. Their commands and configuration differ. `codedockd` is the server daemon. The Linux installer also supplies a host management wrapper. Their command syntax and configuration are different.
 
-| Tool        | Runs on            | Connects to              |
-| ----------- | ------------------ | ------------------------ |
-| `codedockd` | Your VPS / server  | SQLite + Docker directly |
-| `codedock`  | Your local machine | `codedockd` over HTTP    |
+## npm client: packages/cli
 
----
-
-## `codedockd` — Server Daemon CLI
-
-The `codedockd` binary is the Codedock server process. It runs on your VPS and exposes the HTTP API that the dashboard and the `codedock` remote CLI consume. It also doubles as a management CLI for direct server-side operations without needing the dashboard.
-
-### Server Commands
-
-#### `serve`
-
-Starts the Codedock daemon. This is the default command when no subcommand is provided.
+This section describes the npm client, not the Go binary. Use the client built from `packages/cli` from your workstation or CI runner. It connects to the daemon over HTTP. From the repository, build it with `npm run build:cli` and run `node packages/cli/dist/bin.js --help`.
 
 ```sh
-codedockd serve
+node packages/cli/dist/bin.js login --server https://pilot.example.com --email owner@example.com
+node packages/cli/dist/bin.js whoami
+node packages/cli/dist/bin.js projects list
+node packages/cli/dist/bin.js env set PROJECT_ID NODE_ENV=production
+node packages/cli/dist/bin.js status SERVICE_ID
 ```
 
-#### `setup`
+Login prompts for the password. Do not pass `--password`; that option is rejected. A token can be supplied with `--token`. Global options include `--server`, `--token`, `--json`, `--help` and `--version`. `CODEDOCK_SERVER_URL` and `CODEDOCK_TOKEN` can supply connection settings.
 
-Runs the interactive setup wizard to initialise the database and create the initial admin account.
+| Command | Subcommands / argument |
+| --- | --- |
+| `login` | Authenticate interactively or with a token |
+| `logout` | Remove saved authentication |
+| `whoami`, `me` | Current user |
+| `status` | Service ID |
+| `servers` | `list`, `create`, `delete` |
+| `projects` | `list`, `create`, `delete` |
+| `apps` | `list`, `create`, `delete`, `logs`, `deployments` |
+| `env` | `list`, `get`, `set` |
+| `db` | `list`, `create`, `backup` |
+| `deploy` | Local path or existing service ID |
+| `version` | Client version |
 
-```sh
-codedockd setup
-```
+Read `codedock --help` for options. Creation commands use flags specific to the resource. For example, remote database creation accepts `--project`, `--type`, `--name` and `--server-id`.
 
-#### `reset-password`
+## Go client: cmd/codedock
 
-Resets the password for the admin account. Useful if you lose access to the dashboard.
-
-```sh
-codedockd reset-password
-```
-
-#### `config`
-
-View or update global server configuration variables.
-
-```sh
-codedockd config
-```
-
-#### `restart`
-
-Gracefully restarts the Codedock daemon via Docker Compose.
-
-```sh
-codedockd restart
-```
-
-#### `mcp`
-
-Runs the Model Context Protocol (MCP) server over standard I/O for AI assistant integrations.
-
-```sh
-codedockd mcp
-```
-
-#### `version`
-
-Prints the current daemon version.
-
-```sh
-codedockd version
-```
-
-### Deployment Commands
-
-#### `deploy`
-
-Deploy an application directly from the server terminal.
-
-```sh
-# From a Git repository
-codedockd deploy https://github.com/your/repo.git
-
-# From a template (e.g. go-fiber, nextjs)
-codedockd deploy --template nextjs
-
-# From a Docker image
-codedockd deploy --image nginx:latest --port 80
-
-# From a Docker Compose file
-codedockd deploy --compose ./docker-compose.yml
-```
-
-### Resource Management Commands
-
-All resource commands use a `<resource>:<action>` syntax and interact with the database directly — no HTTP, no auth required.
-
-#### Projects
-
-```sh
-codedockd project:list                        # List all projects
-codedockd project:show <id>                   # Show project details
-codedockd project:create <name>               # Create a project
-codedockd project:destroy <id>                # Delete a project
-```
-
-#### Applications
-
-```sh
-codedockd apps:list                           # List all apps across all projects
-codedockd apps:show <id>                      # Show app details and env vars
-codedockd apps:create <name> --project <id>   # Create an app
-codedockd apps:destroy <id>                   # Delete an app
-```
-
-#### Databases
-
-```sh
-codedockd db:list                             # List all databases
-codedockd db:show <id>                        # Show database details and connection string
-codedockd db:create <name> <engine> --project <id>  # Create a database
-codedockd db:destroy <id>                     # Delete a database
-```
-
-Supported engines: `postgres`, `mysql`, `mariadb`, `redis`, `mongodb`, `clickhouse`, `kafka`, `rabbitmq`, `nats`.
-
-#### Environment Variables
-
-```sh
-codedockd env:list --project <id>             # List all env vars for a project
-codedockd env:set KEY=VALUE --project <id>    # Set one or more env vars
-codedockd env:unset KEY --project <id>        # Remove an env var
-```
-
-#### Deployments & Logs
-
-```sh
-codedockd deployment:list --service <id>      # List deployment history for a service
-codedockd deployment:show <id>                # Show deployment details
-codedockd deployment:logs <id>                # Print build logs for a deployment
-```
-
-#### Custom Domains
-
-```sh
-codedockd domain:list --project <id>          # List custom domains for a project
-codedockd domain:add <hostname> --project <id> # Add a custom domain
-codedockd domain:remove <id>                  # Remove a custom domain
-```
-
----
-
-## `codedock` — Remote CLI
-
-The `codedock` binary runs on your **local machine** and communicates with your self-hosted `codedockd` server over HTTP. This is what you install and use day-to-day from your laptop.
-
-### Installation
-
-```sh
-curl -fsSL https://get.codedock.run/cli | bash
-```
-
-Or if you have Go installed:
-
-```sh
-go install codedock.run/codedock/cmd/codedock@latest
-```
-
-Or download a pre-built binary from the [releases page](https://github.com/buildwithtechx/codedock/releases).
-
-### Authentication
-
-Before running any command, authenticate against your self-hosted server.
-
-#### `login`
-
-Prompts for your server URL, email, and password. Saves a token to `~/.codedock/config.json`.
+The compiled Go client is also named `codedock`. Its login prompts for the server URL, email and password and saves its configuration. It does not implement the npm client's global `--server`, `--token` or `--json` flags or environment-variable overrides.
 
 ```sh
 codedock login
-```
-
-#### `logout`
-
-Clears your saved credentials.
-
-```sh
-codedock logout
-```
-
-#### `me`
-
-Shows the currently authenticated user.
-
-```sh
 codedock me
+codedock projects create --name "My API"
+codedock environments list --project PROJECT_ID
+codedock apps secrets set PORT=3000 --project PROJECT_ID
+codedock db create --project PROJECT_ID --environment ENVIRONMENT_ID --name primary --engine postgres
 ```
 
-### Projects
+| Command | Registered subcommands / argument |
+| --- | --- |
+| `login`, `logout`, `me` | Account and saved client configuration |
+| `status` | Service ID |
+| `projects` | `list`, `create`, `destroy` |
+| `environments`, `env` | `list`, `create`, `destroy`; the `env` alias manages environments, not variables |
+| `apps` | `list`, `create`, `destroy`, plus `secrets`, `domains`, `deployments`, `logs` and `status` |
+| `apps secrets` | `list`, `set`; project variable operations |
+| `db` | `list`, `create`, `destroy`, `import`, `backups` |
+| `db backups` | `list`, `create`, `trigger`, `history` |
+| `compose` | `analyze`, `deploy` |
+| `deploy` | Local path or existing service ID |
+| `version` | Binary version |
+
+Use `codedock COMMAND --help` from this binary for resource flags. There is no `whoami` or `servers` command in this Go client. The `delete` and `db backup` spellings in the npm client do not apply here. See [Compose import](/deployments/compose/) before using the Go client's Compose commands.
+
+## Daemon binary: codedockd
+
+The daemon binary starts the server with no command or with `serve`. It also provides direct server-side management using the configured data directory and Docker access.
+
+| Command | Purpose |
+| --- | --- |
+| `serve` | Start the server |
+| `setup` | Interactive setup |
+| `reset-password` | Reset administrator credentials |
+| `config` | Configuration workflow |
+| `deploy` | Git URL, `--image`, `--template` or `--archive` workflow |
+| `restart` | Restart the control-plane container |
+| `backup` | Create a control-plane data archive |
+| `restore FILE` | Restore a control-plane archive |
+| `diagnostics` | Server diagnostics |
+| `mcp` | MCP stdio integration |
+| `version` | Binary version |
+
+Direct resource commands use a colon, not the remote client's space-separated syntax:
 
 ```sh
-codedock project list                         # List all projects
-codedock project create <name>                # Create a project
-codedock project destroy <id>                 # Delete a project
+codedockd project:list
+codedockd project:show PROJECT_ID
+codedockd apps:list
+codedockd db:list
+codedockd env:list --project PROJECT_ID
+codedockd deployment:list --service SERVICE_ID
+codedockd deployment:logs DEPLOYMENT_ID
+codedockd domain:list --project PROJECT_ID
 ```
 
-### Environments
+Project, app and database families also provide `create` and `destroy`; variable commands provide `set` and `unset`; domains provide `add` and `remove`. These local operations use host privileges and are not authenticated remote API calls. Run them only against the intended installation and data directory.
 
-```sh
-codedock env list --project <id>             # List environments for a project
-codedock env create <name> --project <id>    # Create an environment
-codedock env destroy <id>                    # Delete an environment
-```
+## Linux installer wrapper
 
-### Applications
+The installer's `codedockd` host wrapper manages the installed Docker service and forwards supported daemon operations. It adds installation lifecycle commands such as `status`, `logs`, `update`, `downgrade` and `uninstall`. Use its help output for the options on your installed version.
 
-```sh
-codedock apps list --environment <id>        # List apps in an environment
-codedock apps create                         # Create an app (interactive flags)
-codedock apps destroy <id>                   # Delete an app
-```
+Do not assume host lifecycle commands are subcommands of a downloaded raw daemon binary. See [installation](/getting-started/installation/) for the supported path.
 
-#### Secrets (Environment Variables)
+## Recovery
 
-```sh
-codedock apps secrets list --project <id>             # List env vars
-codedock apps secrets set KEY=VALUE --project <id>    # Set one or more env vars
-```
-
-#### Custom Domains
-
-```sh
-codedock apps domains list --project <id>             # List custom domains
-codedock apps domains add --domain <host> --project <id>  # Add a domain
-codedock apps domains remove <id>                     # Remove a domain
-```
-
-#### Deployments & Logs
-
-```sh
-codedock apps deployments list --service <id>         # List deployment history
-codedock apps logs <deployment-id>                    # View build logs
-```
-
-### Databases
-
-```sh
-codedock db list --project <id>              # List databases
-codedock db create                           # Provision a database (interactive flags)
-codedock db destroy <id>                     # Delete a database
-```
-
-#### Backups
-
-```sh
-codedock db backups list --project <id>      # List backup configurations
-codedock db backups create                   # Create a backup config
-codedock db backups trigger <id>             # Trigger a manual backup
-codedock db backups history <id>             # View backup history
-```
-
-### Trigger a Deployment
-
-```sh
-codedock deploy <service-id>                 # Trigger a remote deployment for a service
-```
+Daemon data archives preserve control-plane state and keys. They are separate from per-database or volume backups. Review the target before restoring or deleting resources, and verify application data after recovery.

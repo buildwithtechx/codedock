@@ -3,35 +3,24 @@ title: Service Types
 description: Deploy source code, Docker images, Compose stacks, static sites, workers, and serverless functions.
 ---
 
-import { Steps } from '@astrojs/starlight/components';
-
 Codedock supports a variety of service types to accommodate any application architecture. 
 
 ## Source Services
 
-Source services are built directly from your code using Railpack or a standard Dockerfile.
+Source services use a configured Dockerfile or an automatic builder. The Railpack selection currently runs through Nixpacks; see [build strategies](/deployments/build-strategies/) for the exact paths.
 
 ### Source Options
 
 - **GitHub repository**: Browse repositories available to the connected GitHub App, choose a branch, and select a root directory.
 - **Git URL**: Enter an HTTPS or SSH Git URL manually, then provide the branch and root directory.
 
-Use GitHub repositories when you want push-triggered deployments. Use direct Git URLs when the repository is public or uses SSH. Codedock supports custom install, build, and start command overrides for source services if auto-detection (Railpack) is insufficient.
+Use GitHub repositories when you want push-triggered deployments. Use direct Git URLs when the repository is public or uses SSH. Codedock supports custom install, build, and start command overrides for source services when automatic detection needs adjustment.
 
-## Docker Compose Support
+## Docker Compose Import
 
-Codedock supports natively deploying applications defined via standard `docker-compose.yml` files.
+Compose analysis and import convert definitions into Codedock resources. The parser does not carry environment files, variables, volumes, ports or dependency rules into the created resources. Configure those explicitly before deployment.
 
-```bash
-codedockd deploy --compose ./docker-compose.yml
-```
-
-When Codedock detects a `docker-compose.yml` file, it parses the file:
-<Steps>
-1. **Services:** Iterates over the `services` block and registers each as an individual App Service.
-2. **Environment Variables:** Values in `environment` or `env_file` are imported as Codedock Secrets.
-3. **Ports & Volumes:** Port mappings are honored and dynamically wired to Traefik. Volumes are mounted as persistent directories.
-</Steps>
+See [Compose import and its limitations](/deployments/compose/). The import endpoint is not a complete `docker compose up` workflow.
 
 ## Docker Image Services
 

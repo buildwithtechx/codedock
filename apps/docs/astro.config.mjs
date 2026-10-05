@@ -20,12 +20,6 @@ export default defineConfig({
             { label: "Browser Onboarding", slug: "getting-started/onboarding" },
             { label: "Quick Start Guide", slug: "getting-started/quick-start" },
             { label: "Deploy Your First App", slug: "tutorial" },
-          ],
-        },
-        {
-          label: "Core Concepts",
-          collapsed: false,
-          items: [
             { label: "Architecture", slug: "core-concepts/architecture" },
             { label: "Projects & Environments", slug: "projects/overview" },
             { label: "Project Settings", slug: "projects/settings" },
@@ -36,6 +30,8 @@ export default defineConfig({
           collapsed: false,
           items: [
             { label: "Build Strategies", slug: "deployments/build-strategies" },
+            { label: "Docker Compose Import", slug: "deployments/compose" },
+            { label: "AI Workloads", slug: "deployments/ai-workloads" },
             { label: "Templates & Examples", slug: "deployments/templates" },
             { label: "CI/CD & Git Webhooks", slug: "deployments/ci-cd" },
             { label: "Service Types", slug: "deployments/service-types" },
@@ -95,6 +91,14 @@ export default defineConfig({
           ],
         },
         {
+          label: "Fleet Management",
+          collapsed: false,
+          items: [
+            { label: "Worker Servers", slug: "fleet-management/servers" },
+            { label: "Canvas Topology", slug: "fleet-management/canvas" },
+          ],
+        },
+        {
           label: "Security & Operations",
           collapsed: false,
           items: [
@@ -116,7 +120,8 @@ export default defineConfig({
           items: [
             { label: "System Configuration", slug: "configuration" },
             { label: "CLI Reference", slug: "cli" },
-            { label: "Full REST API Reference", slug: "api" },
+            { label: "REST API Overview", slug: "api" },
+            { label: "API Endpoint Catalogue", slug: "reference/api-endpoints" },
             { label: "System Settings API", slug: "reference/system-settings" },
             { label: "API Authentication Access", slug: "reference/api-access" },
             { label: "API Projects Reference", slug: "reference/api-projects" },

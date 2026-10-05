@@ -33,7 +33,7 @@
     "fmt": "go fmt ./... && npm run format:fix",
     "format": "biome check apps packages",
     "format:fix": "biome check --write apps packages",
-    "typecheck": "npm run typecheck --workspace=@codedock/dashboard && npm run typecheck:packages",
+    "typecheck": "npm run typecheck --workspace=@codedock/dashboard && npm run typecheck:packages && npm run typecheck --workspace=@codedock/web",
     "typecheck:packages": "npm run build:types --workspace packages/cli && npm run typecheck --workspace packages/cli",
     "test": "go test ./... && npm run test --workspace=@codedock/dashboard && npm run test --workspace=packages/cli",
     "docker:build": "docker build -t ghcr.io/buildwithtechx/codedock:dev .",

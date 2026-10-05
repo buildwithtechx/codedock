@@ -3,7 +3,7 @@
   "type": "module",
   "version": "0.1.0",
   "description": "Codedock documentation site — Astro 7 + Starlight.",
-  "license": "MIT",
+  "license": "Apache-2.0",
   "scripts": {
     "dev": "astro dev --port 4322",
     "build": "astro build",

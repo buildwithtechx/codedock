@@ -45,3 +45,17 @@ jobs:
         with:
           go-version-file: go.mod
       - run: npm run test
+
+  websites:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 24
+          cache: npm
+      - run: npm ci
+      - run: npm run typecheck --workspace=@codedock/web
+      - run: npm run test --workspace=@codedock/web
+      - run: npm run build:web
+      - run: npm run build:docs

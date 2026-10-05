@@ -1,54 +1,38 @@
-import { Star } from 'lucide-react';
+import { SiteLink } from '../../components/site-link';
 
+const workflows = [
+  {
+    title: 'Your own projects',
+    body: 'Keep an API, database and background services together on a Linux server you control.',
+    href: '/solutions/self-hosted',
+  },
+  {
+    title: 'Client work',
+    body: 'Organize client stacks into projects and environments, with roles and deployment histories for your team.',
+    href: '/solutions/agencies',
+  },
+  {
+    title: 'A growing fleet',
+    body: 'Connect additional servers through SSH and choose where your services run.',
+    href: '/solutions/enterprise',
+  },
+] as const;
 export function SocialProof() {
-  const testimonials = [
-    {
-      text: `"Migrated 15 Heroku apps to a $20 Hetzner instance using Codedock. The zero-config Traefik routing is actual magic."`,
-      author: 'JD',
-      role: 'Full-stack Developer',
-    },
-    {
-      text: `"Finally, a PaaS alternative that doesn't feel like maintaining Kubernetes. The Yamux tunnel setup is incredibly secure."`,
-      author: 'AS',
-      role: 'DevOps Engineer',
-    },
-    {
-      text: `"The Canvas view makes onboarding junior devs so easy. They can see exactly how the Redis cache connects to the API."`,
-      author: 'MR',
-      role: 'CTO @ Startup',
-    },
-  ];
-
   return (
-    <section className="border-border border-b py-20">
-      <div className="mx-auto max-w-7xl px-6 text-center">
-        <p className="mb-8 font-semibold text-primary text-sm uppercase tracking-widest">
-          Trusted by developers moving off PaaS
-        </p>
-
-        <div className="mx-auto grid max-w-5xl grid-cols-1 gap-6 text-left md:grid-cols-3">
-          {testimonials.map((t) => (
-            <div
-              key={t.author}
-              className="rounded-xl border border-border bg-background/80 p-6 shadow-sm backdrop-blur-md"
+    <section className="border-border border-y py-20">
+      <div className="mx-auto max-w-7xl px-6">
+        <h2 className="font-bold text-3xl">Start with the way you work.</h2>
+        <div className="mt-8 grid gap-6 md:grid-cols-3">
+          {workflows.map((item) => (
+            <SiteLink
+              key={item.title}
+              href={item.href}
+              className="rounded-xl border border-border bg-card/60 p-6 hover:border-primary/50"
             >
-              <div className="mb-4 flex items-center gap-2">
-                <div className="flex text-yellow-400">
-                  <Star className="size-4 fill-current" />
-                  <Star className="size-4 fill-current" />
-                  <Star className="size-4 fill-current" />
-                  <Star className="size-4 fill-current" />
-                  <Star className="size-4 fill-current" />
-                </div>
-              </div>
-              <p className="mb-6 text-muted-foreground text-sm">{t.text}</p>
-              <div className="flex items-center gap-3">
-                <div className="flex size-8 items-center justify-center rounded-full border border-border bg-surface font-bold text-foreground text-xs">
-                  {t.author}
-                </div>
-                <div className="text-muted-foreground text-xs">{t.role}</div>
-              </div>
-            </div>
+              <h3 className="font-semibold text-lg">{item.title}</h3>
+              <p className="mt-3 text-muted-foreground text-sm leading-relaxed">{item.body}</p>
+              <span className="mt-5 block text-primary text-sm">Explore the workflow →</span>
+            </SiteLink>
           ))}
         </div>
       </div>
