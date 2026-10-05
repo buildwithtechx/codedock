@@ -53,6 +53,8 @@ export class ApiClient {
       }
       res = await fetch(url, init);
     } catch (err: unknown) {
+      if (body instanceof ReadableStream && err instanceof Error && err.cause instanceof Error)
+        throw err.cause;
       const msg = err instanceof Error ? err.message : String(err);
       throw new Error(`Failed to connect to Codedock server at ${this.baseUrl}: ${msg}`, {
         cause: err,

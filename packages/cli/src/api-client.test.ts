@@ -27,3 +27,20 @@ describe('CSRF requests', () => {
     );
   });
 });
+
+it('preserves archive stream errors reported by fetch', async () => {
+  const archiveError = new Error('Deployment archive exceeds the 500 MB limit');
+  vi.stubGlobal(
+    'fetch',
+    vi.fn().mockRejectedValue(new TypeError('fetch failed', { cause: archiveError }))
+  );
+  const client = new ApiClient({
+    config: {},
+    serverUrl: 'http://localhost:8080',
+    token: 'test',
+    json: false,
+  });
+  await expect(
+    client.postStream('/api/deploy/archive', new ReadableStream(), 'application/gzip')
+  ).rejects.toBe(archiveError);
+});

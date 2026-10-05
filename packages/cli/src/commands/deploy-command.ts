@@ -24,11 +24,12 @@ export async function deployCommand(
   const target = args[0] || '.';
   const client = new ApiClient(ctx);
   try {
-    if (options.branch)
+    const directory = existsSync(target) && statSync(target).isDirectory();
+    if (options.branch && !directory)
       throw new Error(
         'Deploy uses the configured service branch. Change that branch before deploying.'
       );
-    if (existsSync(target) && statSync(target).isDirectory()) {
+    if (directory) {
       let projectId = options.project;
       if (!projectId) {
         const projects = await listProjects(client);
