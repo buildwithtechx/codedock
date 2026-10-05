@@ -1,6 +1,7 @@
 package config
 
 import (
+	"encoding/hex"
 	"os"
 	"path/filepath"
 	"runtime"
@@ -17,7 +18,8 @@ func TestSelfHostedSecretsSurviveRestart(t *testing.T) {
 	}
 	secrets := []string{first.Security.JWTSecret, first.Security.RefreshSecret, first.Telemetry.Salt}
 	for _, secret := range secrets {
-		if len(secret) != 64 {
+		decoded, err := hex.DecodeString(secret)
+		if err != nil || len(decoded) != 32 {
 			t.Fatal("expected a 256-bit secret")
 		}
 	}
@@ -92,5 +94,28 @@ func TestCloudDoesNotGenerateSelfHostedSecrets(t *testing.T) {
 	}
 	if _, err := os.Stat(filepath.Join(dataDir, "self-hosted.json")); !os.IsNotExist(err) {
 		t.Fatal("cloud created self-hosted configuration")
+	}
+}
+
+func TestSelfHostedOptionsCanBeCleared(t *testing.T) {
+	cfg := &types.Config{Server: types.ServerConfig{DataDir: t.TempDir()}}
+	if err := PrepareSelfHosted(cfg); err != nil {
+		t.Fatal(err)
+	}
+	if err := SaveSelfHostedOptions(cfg, "apps.example.com", "owner@example.com"); err != nil {
+		t.Fatal(err)
+	}
+	if err := SaveSelfHostedOptions(cfg, "", ""); err != nil {
+		t.Fatal(err)
+	}
+	restarted := &types.Config{Server: types.ServerConfig{DataDir: cfg.Server.DataDir}}
+	if err := PrepareSelfHosted(restarted); err != nil {
+		t.Fatal(err)
+	}
+	if restarted.Domains.WildcardDomain != "" || restarted.Security.TLSEmail != "" {
+		t.Fatal("cleared routing options restored on restart")
+	}
+	if restarted.Security.JWTSecret != cfg.Security.JWTSecret {
+		t.Fatal("clearing options changed the auth secret")
 	}
 }

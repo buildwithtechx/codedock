@@ -42,20 +42,25 @@ func runSetup() {
 	domain := strings.TrimPrefix(strings.TrimSpace(promptOptional("Optional domain for apps (e.g. apps.yourdomain.com; Enter to use automatic DNS): ")), "*.")
 	tlsEmail := ""
 	if domain != "" {
-		if strings.ContainsAny(domain, "/: \t") || !strings.Contains(domain, ".") {
-			exitError("Enter a domain name without a scheme, port, or path")
+		if err := validateSetupDomain(domain); err != nil {
+			exitError("Invalid app domain: %v", err)
 		}
 		tlsEmail = strings.TrimSpace(promptOptional(fmt.Sprintf("Certificate email [%s]: ", email)))
 		if tlsEmail == "" {
 			tlsEmail = email
 		}
-		if _, err := mail.ParseAddress(tlsEmail); err != nil {
+		address, err := mail.ParseAddress(tlsEmail)
+		if err != nil {
 			exitError("Invalid certificate email: %v", err)
 		}
-		if err := saveSetupOptions(db, vault, domain, tlsEmail); err != nil {
-			exitError("Save setup settings: %v", err)
-		}
+		tlsEmail = address.Address
 		fmt.Printf("Domain saved. Point *.%s at your server and restart Codedock to enable HTTPS.\n", domain)
+	}
+	if err := saveSetupOptions(db, vault, domain, tlsEmail); err != nil {
+		exitError("Save setup settings: %v", err)
+	}
+	if domain == "" {
+		fmt.Println("Automatic DNS selected. Restart Codedock to apply routing settings.")
 	}
 	fmt.Printf("Dashboard: http://localhost:%d\n", config.Get().Server.Port)
 	fmt.Println("Optional email and OAuth providers can be configured in dashboard settings.")
@@ -64,9 +69,11 @@ func runSetup() {
 func createSetupOwner(repo *repositories.UserRepo) string {
 	fmt.Println("Create your instance owner account.")
 	email := prompt("Email: ")
-	if _, err := mail.ParseAddress(email); err != nil {
+	address, err := mail.ParseAddress(email)
+	if err != nil {
 		exitError("Invalid email: %v", err)
 	}
+	email = address.Address
 	name := strings.TrimSpace(prompt("Name: "))
 	if name == "" {
 		exitError("Name is required")
@@ -109,4 +116,21 @@ func saveSetupOptions(db *sql.DB, vault *utils.Vault, domain, tlsEmail string) e
 func exitError(format string, args ...any) {
 	fmt.Fprintf(os.Stderr, format+"\n", args...)
 	os.Exit(1)
+}
+
+func validateSetupDomain(domain string) error {
+	if len(domain) > 253 || !strings.Contains(domain, ".") {
+		return fmt.Errorf("use a fully qualified domain name")
+	}
+	for _, label := range strings.Split(domain, ".") {
+		if len(label) == 0 || len(label) > 63 || label[0] == '-' || label[len(label)-1] == '-' {
+			return fmt.Errorf("invalid DNS label")
+		}
+		for _, character := range label {
+			if !(character >= 'a' && character <= 'z' || character >= 'A' && character <= 'Z' || character >= '0' && character <= '9' || character == '-') {
+				return fmt.Errorf("only letters, digits, and hyphens are allowed")
+			}
+		}
+	}
+	return nil
 }

@@ -63,12 +63,8 @@ func SaveSelfHostedOptions(cfg *types.Config, domain, tlsEmail string) error {
 	if err != nil {
 		return err
 	}
-	if domain != "" {
-		stored.WildcardDomain = domain
-	}
-	if tlsEmail != "" {
-		stored.TLSEmail = tlsEmail
-	}
+	stored.WildcardDomain = domain
+	stored.TLSEmail = tlsEmail
 	return writeSelfHostedConfig(cfg.Server.DataDir, stored)
 }
 

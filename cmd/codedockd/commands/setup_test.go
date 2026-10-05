@@ -61,3 +61,16 @@ func TestFirstRunWithoutEnvironmentAndSavedSetup(t *testing.T) {
 		t.Fatal("certificate email was not restored")
 	}
 }
+
+func TestSetupRejectsMalformedDomainNames(t *testing.T) {
+	for _, domain := range []string{"a..b.com", "-apps.example.com", "apps-.example.com", "apps_example.com", "apps.example.com?", "apps.example.com#", "owner@apps.example.com", "localhost"} {
+		if err := validateSetupDomain(domain); err == nil {
+			t.Errorf("accepted malformed domain: %s", domain)
+		}
+	}
+	for _, domain := range []string{"apps.example.com", "my-apps.example.com", "EXAMPLE.COM"} {
+		if err := validateSetupDomain(domain); err != nil {
+			t.Errorf("rejected %s: %v", domain, err)
+		}
+	}
+}
