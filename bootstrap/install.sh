@@ -27,6 +27,10 @@ fi
 
 RELEASE=${CODEDOCK_VERSION:-latest}
 CODEDOCK_DIR=${CODEDOCK_DIR:-/codedock}
+case "$CODEDOCK_DIR" in
+  /*) ;;
+  *) echo "CODEDOCK_DIR must be an absolute path (for example, /codedock)." >&2; exit 1 ;;
+esac
 REPO_URL="https://raw.githubusercontent.com/buildwithtechx/codedock/main"
 CTL_URL="$REPO_URL/bootstrap/codedockd"
 CTL_SHA256="${CODEDOCK_CTL_SHA256:-}"
