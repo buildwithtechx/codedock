@@ -1,59 +1,32 @@
 ---
 title: Data Browser
-description: Browse, query, insert, edit, and delete database records from Codedock.
+description: Inspect relational tables and make small, explicit data changes.
 ---
 
-The database data browser gives operational access inside the service page. It is meant for inspection, small edits, and recovery work, not bulk analytics.
+Open a running database's detail page and its data browser. The current backend implements schema and table access for PostgreSQL, MySQL and MariaDB. PostgreSQL schema discovery lists tables in the `public` schema.
 
-## Supported Views
+MongoDB collection browsing, a Redis key editor and ClickHouse table browsing are not implemented by these generic endpoints. Use an engine-specific client where the browser is unsupported.
 
-| Engine | Browse | Edit | SQL console |
-| --- | --- | --- | --- |
-| PostgreSQL | Tables | Yes | Yes |
-| TimescaleDB | Tables | Yes | Yes |
-| MySQL | Tables | Yes | Yes |
-| Redis | Keys | Yes | No |
-| MongoDB | Collections | Yes | No |
-| ClickHouse | Tables | Read-only | Yes |
+## Read records
 
-Codedock hides TimescaleDB internal schemas from table lists.
+Choose a table and use pagination to inspect a bounded selection of rows. The API accepts `limit` and `offset`; omitted or non-positive limits default to 100. Generic filter expressions are not accepted by this endpoint.
 
-## Filters and Pagination
+```sh
+curl "$CODEDOCK_URL/api/databases/$DATABASE_ID/data/accounts?limit=25&offset=0"   -H "Authorization: Bearer $CODEDOCK_TOKEN"
+```
 
-Table browsing supports filters such as:
+## Edit records
 
-- equals
-- not equals
-- contains
-- starts with
-- ends with
-- is empty
-- is not empty
-- greater than
-- less than
+Inserts accept a JSON object of column values. Updates accept `keys` to identify the existing row and `data` for changed values. Deletes accept a key-value object. Use stable unique keys and verify the affected record before making another change. Do not assume schema discovery reliably identifies primary keys.
 
-Row queries are paginated. Codedock caps page size to keep browser actions bounded.
+```json
+{"keys":{"id":42},"data":{"display_name":"Updated name"}}
+```
 
-## Editing Rows
+Writes use the configured database credentials and can affect live application data. Make a recovery copy before migration or bulk changes. Use your migration tooling for repeatable schema changes.
 
-PostgreSQL, TimescaleDB, MySQL, Redis, and MongoDB support inserts and edits from the UI. Relational row updates and deletes require enough key data to target the row safely.
+## Connection requirements
 
-Redis uses a dedicated key browser instead of the generic table grid. You can add keys, add items, edit string values, edit hash fields, edit list items, edit set members, edit sorted set members and scores, delete keys or items, and change TTL. Unsupported Redis types show a preview message instead of an editor.
+The current browser connects from the control plane to `localhost` using the database's configured port. A database running only on a remote worker or without a reachable local port cannot be queried through this path. Use a client with the appropriate secure network connection instead.
 
-ClickHouse browsing is read-only in Codedock's current UI.
-
-## SQL Console
-
-The SQL console is available for PostgreSQL-family services, MySQL, and ClickHouse.
-
-For PostgreSQL-family engines, `SELECT` and `WITH` queries return rows. Other SQL runs and returns command output.
-
-For MySQL, Codedock parses tabular output from the `mysql` client.
-
-For ClickHouse, read queries return JSON rows. If the query does not include a `FORMAT`, Codedock adds `FORMAT JSONEachRow`.
-
-## Runtime Notices
-
-If the database service is not deployed, failed, or still deploying, the browser shows a runtime notice instead of a misleading empty table list.
-
-Deploy the database service first, then return to the Data or SQL tab.
+Check database state, port, credentials and host reachability if schema loading fails. See [SQL Studio](/databases/sql-studio/) and [database API](/reference/api-databases/).

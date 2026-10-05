@@ -1,14 +1,32 @@
 ---
 title: SQL Studio
-description: In-browser SQL query editor for your databases.
+description: Execute queries against compatible database engines.
 ---
 
-Codedock includes an in-browser SQL query editor for PostgreSQL, MySQL, and MariaDB databases. This allows you to explore data, run migrations, or debug issues without needing to connect an external database client.
+Open the database detail page and select the query editor. PostgreSQL, MySQL and MariaDB use the SQL query path. Redis accepts commands through the query endpoint; MongoDB and ClickHouse are unsupported by this implementation.
 
-## Using SQL Studio
+## Execute a query
 
-1. Open your database detail page in the dashboard.
-2. Click **SQL Studio**.
-3. Write and execute queries directly in the browser.
+Start with a bounded read:
 
-The studio safely proxies connections through the Codedock control plane, meaning you do not need to expose your database to the public internet to run queries.
+```sql
+SELECT id, display_name FROM accounts ORDER BY id LIMIT 25;
+```
+
+`POST /api/databases/:id/query` accepts `{ "query": "..." }` and returns column names, rows and query result information inside the standard response envelope.
+
+```sh
+curl "$CODEDOCK_URL/api/databases/$DATABASE_ID/query"   -H "Authorization: Bearer $CODEDOCK_TOKEN"   -H "Content-Type: application/json"   -d '{"query":"SELECT 1 AS healthy"}'
+```
+
+Queries run with the configured database credentials. This endpoint is not a read-only sandbox; writes and schema changes can execute. Back up data before destructive changes, and use migration tooling for changes that must be repeatable.
+
+## Reachability
+
+The query service currently connects to `localhost` at the database's configured port. Remote-only databases require an external client or separately configured reachability. A running container alone does not establish that SQL Studio can reach it.
+
+## Redis commands
+
+The Redis query path splits the command on whitespace. It is suitable for simple commands such as `PING`, but does not implement a complete Redis CLI quoting parser. Use a dedicated Redis client for binary values or complex arguments.
+
+See [data browser](/databases/data-browser/) and [backups](/storage-and-backups/database-backups/).

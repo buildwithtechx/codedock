@@ -1,49 +1,27 @@
 ---
-title: R2 Storage
-description: Connect Cloudflare R2 so database backups can upload off the server.
+title: Cloudflare R2 Destinations
+description: Connect an R2 bucket through the S3-compatible backup destination workflow.
 ---
 
-Codedock can upload database backups to Cloudflare R2. R2 is configured once in System Settings, then selected per database service.
+Create an R2 bucket and credentials with access to the required object operations. Use the S3 API endpoint for your account, not the public object URL.
 
-## Required Values
+## Destination settings
 
-Open System Settings, choose Storage, and enter:
+| Setting | Value |
+| --- | --- |
+| Endpoint | `https://ACCOUNT_ID.r2.cloudflarestorage.com` |
+| Bucket | The existing R2 bucket name |
+| Region | `auto` |
+| Access key ID | R2 S3 access key ID |
+| Secret access key | Matching R2 S3 secret |
+| Path prefix | Optional backup object prefix |
 
-- Cloudflare account ID.
-- Bucket name.
-- R2 access key ID.
-- R2 secret access key.
+Add the destination in backup settings and use the verify action. A successful check is useful, but a complete upload, download and restore test is the recovery check that matters.
 
-The default bucket name shown in the UI is `codedock-backups`.
+## Enable uploads
 
-## Create or Verify Bucket
+Choose this destination in a backup configuration and enable S3 uploads. Decide whether to keep a local copy. Remote-only records require the destination credentials and bucket to remain available for download or restore.
 
-The R2 form includes `Create or verify bucket`. When enabled, Codedock checks whether the bucket exists and creates it if R2 returns not found.
+Changing or deleting a destination can make existing remote records inaccessible. Preserve the bucket, object keys and authorized credentials as part of your recovery plan.
 
-R2 credential errors are surfaced with specific guidance for account ID, access key ID, secret access key, bucket access, and token permissions.
-
-## What Codedock Stores
-
-Database backup uploads use keys like:
-
-```txt
-database-backups/{projectId}/{serviceSlug}/{filename}
-```
-
-Codedock stores only the public R2 status in the UI: account ID, bucket, endpoint, access key suffix, and timestamps. The secret access key is encrypted in system settings.
-
-## Backup Destinations
-
-Once R2 is connected, database backup settings can use:
-
-- `disk`: keep the backup only on the server.
-- `r2`: upload to R2 and remove the local backup file.
-- `disk+r2`: keep the local file and upload a copy to R2.
-
-When R2 is not connected, disk is the only available destination.
-
-## Disconnecting R2
-
-Disconnecting R2 removes the stored R2 connection and disables future R2 uploads. Existing backup records stay in Codedock.
-
-If a backup exists only in R2 and you disconnect R2, Codedock will not be able to download or restore that backup until R2 is reconnected with access to the same bucket and object.
+See [database backups](/storage-and-backups/database-backups/) and [restore and download](/storage-and-backups/restore-and-download/).

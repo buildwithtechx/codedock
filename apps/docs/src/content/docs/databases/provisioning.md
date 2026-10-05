@@ -1,82 +1,47 @@
 ---
 title: Database Provisioning
-description: Managed database engines with one-click provisioning and connection string injection.
+description: Create supported database resources and verify runtime and operational capabilities.
 ---
 
-Spin up managed databases directly from the Codedock dashboard. Each database runs in its own Docker container with persistent volumes, automatic health checks, and daily backups.
+Database resources belong to a project and can be associated with an environment. Their containers require Docker and persistent storage on the selected host.
 
-## Supported Engines
+## Engine identifiers
 
-### Relational
+The current database model defines these engine IDs:
 
-| Engine      | Version   | Default Port |
-| ----------- | --------- | ------------ |
-| PostgreSQL  | 16-alpine | 5432         |
-| TimescaleDB | latest    | 5432         |
-| MySQL       | 8.0       | 3306         |
-| MariaDB     | 11        | 3306         |
-| ClickHouse  | latest    | 9000         |
+| Engine | Identifier | Conventional port |
+| --- | --- | --- |
+| PostgreSQL | `postgres` | 5432 |
+| MySQL | `mysql` | 3306 |
+| MariaDB | `mariadb` | 3306 |
+| Redis | `redis` | 6379 |
+| MongoDB | `mongodb` | 27017 |
+| ClickHouse | `clickhouse` | 9000 |
 
-### NoSQL
+Select a version compatible with the deployed image. An engine identifier is not a guarantee that every runtime template, browser or backup feature is available on your installation. Verify startup and the operational tools you require.
 
-| Engine    | Version  | Default Port |
-| --------- | -------- | ------------ |
-| MongoDB   | 7.0      | 27017        |
-| Redis     | 7-alpine | 6379         |
-| Dragonfly | latest   | 6379         |
-| KeyDB     | latest   | 6379         |
+Other software can be deployed as application containers with explicit configuration; it is not automatically a built-in managed database engine.
 
-### Message Brokers
+## Create a database
 
-| Engine   | Version  | Default Port |
-| -------- | -------- | ------------ |
-| Kafka    | latest   | 9092         |
-| RabbitMQ | 4-alpine | 5672         |
-| NATS     | 2-alpine | 4222         |
+1. Choose the intended project and environment.
+2. Create a database resource with a name, engine and version.
+3. Set its database name and required credentials.
+4. Review port and persistent storage settings.
+5. Start the resource and check its status and logs.
 
-### One-Click Deployers
+The API uses `POST /api/databases`. See [database API fields](/reference/api-databases/).
 
-| Service   | Purpose                          | Port |
-| --------- | -------------------------------- | ---- |
-| NocoDB    | Open-source Airtable alternative | 8080 |
-| Plausible | Web analytics                    | 8000 |
-| WordPress | CMS                              | 80   |
-| Gitea     | Self-hosted Git service          | 3000 |
+## Connect an application
 
-## Creating a Database
+Copy the connection values from the database resource into the application's variables. Use a hostname and port reachable from that application, and keep credentials in secret settings. Do not assume creation injects the correct connection string into every service.
 
-1. Navigate to **Databases** in the sidebar.
-2. Click **New Database**.
-3. Select an engine from the list.
-4. Optionally set a custom name and port.
-5. Click **Create**.
+A localhost address refers to the current container or process host. A Docker-internal hostname requires shared network access. Remote worker placement needs explicit cross-host connectivity.
 
-Codedock provisions the container, creates a default database and user, and mounts a persistent volume at `/var/lib/data`.
+## Operational support
 
-## Connection Strings
+The relational browser and SQL query paths currently support PostgreSQL, MySQL and MariaDB over a control-plane-local connection. Redis has a command query path. MongoDB and ClickHouse require appropriate external clients for unsupported browsing and querying operations.
 
-Once created, the connection string is automatically injected into every service in the same project:
+Backups are configured separately and depend on compatible engine template metadata. Daily backups are not enabled automatically just by creating a database. Configure and test the workflow you need.
 
-```
-DATABASE_URL=postgresql://codedock:<password>@<service-name>:5432/codedock
-TIMESCALE_URL=postgresql://codedock:<password>@<service-name>:5432/codedock
-REDIS_URL=redis://<service-name>:6379
-MONGO_URL=mongodb://codedock:<password>@<service-name>:27017/codedock
-```
-
-You can also find the connection details on the database's detail page in the dashboard.
-
-## Managing Databases
-
-### Start / Stop
-
-Databases can be started and stopped from the dashboard. Stopping a database frees resources while preserving the volume data.
-
-### Configuration
-
-Each database has sensible defaults:
-
-- **Port**: Assigned from the engine's default port range
-- **Username**: `codedock`
-- **Database name**: `codedock`
-- **Data volume**: Persisted at `<data-dir>/databases/<id>/`
+See [data browser](/databases/data-browser/), [SQL Studio](/databases/sql-studio/) and [backup configuration](/storage-and-backups/database-backups/).

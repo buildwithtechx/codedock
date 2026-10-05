@@ -1,73 +1,43 @@
 ---
 title: Database Backups
-description: Configure manual and automatic database backups to disk, R2, or both.
+description: Configure backup schedules, S3 destinations and recovery checks.
 ---
 
-Database backups are configured per database service from the Backups tab.
+A backup configuration selects a database or service volume, a schedule and retention settings. Availability of database dumps depends on the installed engine template's backup command metadata. Do not assume every provisioned engine has a working backup and restore path.
 
-## Supported Engines
+## Configure a destination
 
-| Engine | Backup tool | Format |
-| --- | --- | --- |
-| PostgreSQL | `pg_dump -Fc` | `pg_dump custom` |
-| TimescaleDB | `pg_dump -Fc` | `pg_dump custom` |
-| MySQL | `mysqldump` | SQL |
-| MongoDB | `mongodump --archive --gzip` | gzip archive |
-| Redis | `redis-cli --rdb` | RDB |
+An administrator can add an S3-compatible destination with a name, provider, endpoint, bucket, region, optional path prefix and access credentials. Use a pre-created bucket and verify access from the control plane. R2 and MinIO use this same destination workflow.
 
-ClickHouse backups are not available yet.
+Destination creation is separate from provisioning an object-storage server. The credentials need permissions for the upload, download and deletion operations used by your backup lifecycle.
 
-## Backup Destinations
+## Create a backup configuration
 
-Codedock creates a local backup file first. Then it follows the selected destination:
+Select the target database or volume. Set `backupEnabled`, a cron `schedule`, `timezone`, timeout and retention settings. To upload off-server, enable `s3Enabled` and choose `s3DestinationId`. Keep local copies unless you intentionally enable `disableLocal` and have verified the remote recovery path.
 
-- `disk`: keep the local file.
-- `r2`: upload to R2, then remove the local file.
-- `disk+r2`: keep the local file and upload a copy to R2.
+| Field | Purpose |
+| --- | --- |
+| `schedule` | Cron expression, for example `0 2 * * *` |
+| `timezone` | Time zone for the schedule, for example `UTC` |
+| `timeout` | Execution timeout |
+| `retentionDays` | Retention window |
+| `maxBackups` | Maximum retained record count |
+| `maxStorageGb` | Storage limit in the create configuration payload |
 
-If `disk+r2` is selected and the R2 upload fails after the local backup exists, Codedock marks the backup succeeded on disk and records the R2 error.
+The scheduler uses the configured cron expression. Daily, weekly and monthly presets are not separate fixed retention guarantees.
 
-If `r2` is selected and upload fails, the backup fails.
+## Test before scheduling
 
-## Local Disk Backups
+1. Create a configuration with the intended target and destination.
+2. Trigger a manual backup.
+3. Wait for a completed record and inspect its logs and file size.
+4. Download the record and test restoration in a safe environment.
+5. Enable the schedule and check that later runs complete.
 
-Disk backups live under:
+A template without compatible dump metadata returns an unsupported-engine error. Volume archives are filesystem copies and do not guarantee application-level consistency for a live database.
 
-```txt
-DATA_DIR/backups/{serviceId}
-```
+## Recovery scope
 
-The filename includes timestamp, service slug, engine, and backup ID.
+Database backups and volume archives do not replace a backup of Codedock's SQLite state and vault key. Preserve the control-plane data directory and generated self-hosted settings securely; encrypted credentials depend on those keys.
 
-Local disk backups are fast and easy to restore, but they are still on the same server. Use R2 or `disk+r2` when you need off-server recovery.
-
-## Automatic Schedules
-
-Automatic backups are off by default for database services unless you enable schedules during onboarding. Daily, weekly, and monthly schedules can be toggled individually per database service from the Backups tab.
-
-Codedock runs:
-
-| Trigger | Interval | Retention |
-| --- | ---: | ---: |
-| Daily | 24 hours | 6 days |
-| Weekly | 7 days | 31 days |
-| Monthly | 30 days | 90 days |
-
-The scheduler starts after the control plane has been running for about 60 seconds, then checks hourly.
-
-## Manual Backups
-
-Click `Create backup` from the database Backups tab to create a manual backup immediately. Manual backups use the selected destination unless you choose a specific destination for that run.
-
-Use manual backups:
-
-- Before imports.
-- Before application migrations.
-- Before database redeploys.
-- Before deleting old services or volumes.
-
-## Backup Records
-
-Each backup records engine, status, trigger, storage target, format, local path, R2 key, size, checksum, error, and timestamps.
-
-Checksums are used when restoring or validating bundle database dumps.
+See [restore and download](/storage-and-backups/restore-and-download/), [R2](/storage-and-backups/r2-storage/) and [MinIO](/storage-and-backups/minio-storage/).
