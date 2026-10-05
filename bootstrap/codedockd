@@ -1,7 +1,7 @@
 #!/usr/bin/env bash
 set -eo pipefail
 
-CODEDOCK_DIR=${CODEDOCK_DIR:-/codedock}
+CODEDOCK_DIR=${CODEDOCK_DIR:-$(dirname "$(readlink -f "${BASH_SOURCE[0]}")")}
 CONTAINER_NAME="codedock-control-plane"
 BOLD="\033[1m"
 DIM="\033[2m"
@@ -72,6 +72,10 @@ case "${1:-help}" in
     fi
     ;;
   update)
+    if [ ! -r "$CODEDOCK_DIR/.env" ]; then
+      echo "Missing configuration: $CODEDOCK_DIR/.env. Set CODEDOCK_DIR to your installation directory." >&2
+      exit 1
+    fi
     TARGET_VERSION="${2:-latest}"
     if [ "$TARGET_VERSION" = "latest" ]; then
       TARGET_VERSION=$(curl -fsS "https://api.github.com/repos/buildwithtechx/codedock/releases/latest" 2>/dev/null | grep '"tag_name"' | head -1 | cut -d'"' -f4 || echo "latest")
@@ -98,6 +102,10 @@ case "${1:-help}" in
     echo -e "${GREEN}✅ Codedock updated to ${TARGET_VERSION}.${NC}"
     ;;
   downgrade)
+    if [ ! -r "$CODEDOCK_DIR/.env" ]; then
+      echo "Missing configuration: $CODEDOCK_DIR/.env. Set CODEDOCK_DIR to your installation directory." >&2
+      exit 1
+    fi
     if [ -z "$2" ]; then
       echo -e "${RED}❌ Usage: codedockctl downgrade <version>${NC}"
       exit 1

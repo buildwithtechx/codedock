@@ -2,10 +2,16 @@ FROM node:22-alpine AS dashboard-builder
 WORKDIR /app
 
 COPY package*.json ./
+COPY apps/dashboard/package.json ./apps/dashboard/
+COPY apps/desktop/package.json ./apps/desktop/
+COPY apps/docs/package.json ./apps/docs/
+COPY apps/web/package.json ./apps/web/
+COPY packages/cli/package.json ./packages/cli/
+RUN npm ci
+
 COPY apps/ ./apps/
 COPY packages/ ./packages/
 COPY tsconfig.base.json ./
-RUN npm ci
 
 RUN npm run build:dashboard
 

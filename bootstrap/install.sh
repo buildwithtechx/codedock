@@ -59,8 +59,11 @@ for PORT in 80 443 8080; do
   fi
 done
 
-SERVER_IP=${CODEDOCK_HOST_IP:-$(curl -4fsS --connect-timeout 5 --max-time 10 https://ifconfig.me 2>/dev/null || hostname -I | awk '{print $1}')}
-SERVER_IP=${SERVER_IP:-127.0.0.1}
+SERVER_IP=${CODEDOCK_HOST_IP:-$(curl -4fsS --connect-timeout 5 --max-time 10 https://ifconfig.me 2>/dev/null || true)}
+if [ -z "$SERVER_IP" ]; then
+  echo "Could not detect the public server IP. Rerun with CODEDOCK_HOST_IP set to your reachable server address." >&2
+  exit 1
+fi
 echo -e "  ${GREEN}✅ Server IP: ${SERVER_IP}${NC}"
 echo ""
 
@@ -165,7 +168,7 @@ Requires=docker.service
 [Service]
 Restart=always
 RestartSec=10
-WorkingDirectory=/codedock
+WorkingDirectory=$CODEDOCK_DIR
 ExecStart=/usr/bin/docker start -a codedock-control-plane
 ExecStop=/usr/bin/docker stop codedock-control-plane
 
