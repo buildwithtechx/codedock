@@ -18,7 +18,7 @@ func isEmailEnabled(cfg *models.NotificationSettings) bool {
 		return true
 	}
 	appCfg := config.Get()
-	return appCfg.SMTP.Host != "" || appCfg.Resend.APIKey != ""
+	return (appCfg.SMTP.Host != "" && appCfg.SMTP.From != "") || appCfg.Resend.APIKey != ""
 }
 
 func (a *AuthService) ForgotPassword(ctx context.Context, email string, originUrl string) error {

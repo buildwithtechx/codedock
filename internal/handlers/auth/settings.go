@@ -65,7 +65,7 @@ func (h *SettingsHandler) GetPublicSettings(c echo.Context) error {
 	publicSettings := map[string]any{
 		"registrationEnabled": s.RegistrationEnabled,
 		"siteName":            s.SiteName,
-		"emailEnabled":        notif.SMTPEnabled || notif.ResendEnabled || cfg.SMTP.Host != "" || cfg.Resend.APIKey != "",
+		"emailEnabled":        notif.SMTPEnabled || notif.ResendEnabled || (cfg.SMTP.Host != "" && cfg.SMTP.From != "") || cfg.Resend.APIKey != "",
 		"cloudMode":           cfg.Cloud.Enabled,
 	}
 	return utils.Success(c, "Operation successful", publicSettings)
