@@ -77,7 +77,7 @@ func seedDeployment(
 	if _, err := db.Exec(`INSERT INTO app_services (id, project_id, environment_id, name, created_at, updated_at) VALUES (?, ?, ?, ?, ?, ?)`, serviceID, projectID, "environment-"+projectID, serviceName, createdAt, createdAt); err != nil {
 		t.Fatalf("create service: %v", err)
 	}
-	if _, err := db.Exec(`INSERT INTO deployments (id, service_id, environment_id, project_id, status, commit_hash, branch, created_at, updated_at) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?)`, deploymentID, serviceID, "environment-"+projectID, projectID, status, commitHash, branch, createdAt, createdAt); err != nil {
+	if _, err := db.Exec(`INSERT INTO deployments (id, service_id, organization_id, project_id, status, commit_hash, branch, created_at, updated_at) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?)`, deploymentID, serviceID, organizationID, projectID, status, commitHash, branch, createdAt, createdAt); err != nil {
 		t.Fatalf("create deployment: %v", err)
 	}
 }
