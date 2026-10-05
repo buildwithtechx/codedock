@@ -6,6 +6,7 @@ import (
 	"codedock.run/codedock/internal/utils"
 	"context"
 	"fmt"
+	"strings"
 	"time"
 )
 
@@ -13,6 +14,9 @@ func (s *serverService) ListServersByUser(ctx context.Context, userID string) ([
 	servers, err := s.serverRepo.ListByUser(ctx, userID)
 	if err != nil {
 		return nil, err
+	}
+	if strings.HasPrefix(userID, "api-token-") {
+		return servers, nil
 	}
 	user, err := s.userRepo.GetUserByID(ctx, userID)
 	if err != nil {

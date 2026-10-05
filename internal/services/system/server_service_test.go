@@ -84,3 +84,28 @@ func TestWorkerLimitsOnlyApplyInCloudMode(t *testing.T) {
 		})
 	}
 }
+
+func TestListServersByAPITokenDoesNotLoadSyntheticUser(t *testing.T) {
+	db, err := sql.Open("sqlite", ":memory:?_pragma=foreign_keys(ON)")
+	if err != nil {
+		t.Fatal(err)
+	}
+	defer func() {
+		if err := db.Close(); err != nil {
+			t.Error(err)
+		}
+	}()
+	if err := repositories.RunMigrations(db); err != nil {
+		t.Fatal(err)
+	}
+	service := NewServerService(repositories.NewServerRepository(db, nil), repositories.NewUserRepo(db), nil)
+	servers, err := service.ListServersByUser(context.Background(), "api-token-test")
+	if err != nil {
+		t.Fatal(err)
+	}
+	for _, server := range servers {
+		if server.IsControlPlane {
+			t.Fatal("API token received owner control plane")
+		}
+	}
+}

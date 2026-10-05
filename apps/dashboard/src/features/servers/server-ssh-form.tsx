@@ -54,6 +54,7 @@ export function ServerSshForm({ onSuccess, onCancel }: ServerSshFormProps) {
   };
 
   const handleTestConnection = async () => {
+    setTestResult(null);
     if (!sshHost.trim()) {
       toast.error('Host IP address is required');
       return;
@@ -69,7 +70,6 @@ export function ServerSshForm({ onSuccess, onCancel }: ServerSshFormProps) {
       toast.error(validationError);
       return;
     }
-    setTestResult(null);
     try {
       const result = await testSSH({
         sshHost: sshHost.trim(),
