@@ -32,7 +32,35 @@ it('preserves archive stream errors reported by fetch', async () => {
   const archiveError = new Error('Deployment archive exceeds the 500 MB limit');
   vi.stubGlobal(
     'fetch',
-    vi.fn().mockRejectedValue(new TypeError('fetch failed', { cause: archiveError }))
+    vi.fn().mockImplementation(async (_url: string, init: RequestInit) => {
+      const reader = (init.body as ReadableStream).getReader();
+      try {
+        await reader.read();
+      } catch (cause) {
+        throw new TypeError('fetch failed', { cause });
+      }
+    })
+  );
+  const source = new ReadableStream<Uint8Array>({
+    pull(controller) {
+      controller.error(archiveError);
+    },
+  });
+  const client = new ApiClient({
+    config: {},
+    serverUrl: 'http://localhost:8080',
+    token: 'test',
+    json: false,
+  });
+  await expect(client.postStream('/api/deploy/archive', source, 'application/gzip')).rejects.toBe(
+    archiveError
+  );
+});
+
+it('preserves server context for streaming transport errors', async () => {
+  vi.stubGlobal(
+    'fetch',
+    vi.fn().mockRejectedValue(new TypeError('fetch failed', { cause: new Error('ECONNREFUSED') }))
   );
   const client = new ApiClient({
     config: {},
@@ -42,5 +70,5 @@ it('preserves archive stream errors reported by fetch', async () => {
   });
   await expect(
     client.postStream('/api/deploy/archive', new ReadableStream(), 'application/gzip')
-  ).rejects.toBe(archiveError);
+  ).rejects.toThrow('Failed to connect to Codedock server at http://localhost:8080');
 });

@@ -1,3 +1,4 @@
+import { watchUploadStream } from './stream-upload.js';
 import type { ApiResponse, CliContext } from './types.js';
 
 export class ApiClient {
@@ -34,8 +35,11 @@ export class ApiClient {
       headers,
     };
 
+    let streamError: unknown;
     if (body instanceof ReadableStream) {
-      init.body = body;
+      init.body = watchUploadStream(body, (error) => {
+        streamError = error;
+      });
       Object.assign(init, { duplex: 'half' });
     } else if (body instanceof FormData) {
       delete headers['Content-Type'];
@@ -53,8 +57,7 @@ export class ApiClient {
       }
       res = await fetch(url, init);
     } catch (err: unknown) {
-      if (body instanceof ReadableStream && err instanceof Error && err.cause instanceof Error)
-        throw err.cause;
+      if (streamError !== undefined) throw streamError;
       const msg = err instanceof Error ? err.message : String(err);
       throw new Error(`Failed to connect to Codedock server at ${this.baseUrl}: ${msg}`, {
         cause: err,
