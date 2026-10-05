@@ -29,10 +29,12 @@ Traefik enables its Let's Encrypt resolver when a TLS email is configured. The c
 Certificate issuance needs all of these:
 
 - The hostname resolves to the correct public host.
-- Ports 80 and 443 are reachable from the internet.
+- Port 80 is reachable from the internet for the HTTP-01 challenge.
 - Traefik owns those listening ports and is running.
 - A TLS email and matching resolver are configured.
 - The hostname is eligible for a publicly trusted certificate.
+
+Port 443 must be reachable to serve HTTPS after issuance; it is separate from the port-80 HTTP-01 validation requirement.
 
 HTTP-01 does not issue wildcard certificates. A wildcard DNS record can support individual hostnames, but that is different from a wildcard TLS certificate. Localhost and private-only names do not receive public Let's Encrypt certificates through this path.
 

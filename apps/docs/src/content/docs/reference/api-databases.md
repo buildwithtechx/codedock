@@ -7,7 +7,7 @@ description: Current provisioning, query, data and backup routes.
 
 `POST /api/databases` accepts `projectId`, optional `environmentId`, `name`, `engine`, `version`, `databaseName`, `username`, `password` and optional port and volume settings.
 
-Engine IDs are `postgres`, `mysql`, `mariadb`, `redis`, `mongodb` and `clickhouse`. Provisioning support does not imply browser, query or backup support for every engine.
+The model constants include `postgres`, `mysql`, `mariadb`, `redis`, `mongodb` and `clickhouse`. The provisioning UI also offers template IDs listed in [database provisioning](/databases/provisioning/). Provisioning support does not imply browser, query or backup support for every engine. Supply `port: 3306` explicitly for MariaDB and `port: 9000` for ClickHouse; the current omitted-port fallback is 5432 for engines outside the specific PostgreSQL, MySQL, Redis and MongoDB cases.
 
 ```json
 {"projectId":"PROJECT_ID","name":"primary","engine":"postgres","version":"16","databaseName":"app","username":"app","password":"YOUR_GENERATED_PASSWORD"}

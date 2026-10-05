@@ -29,7 +29,7 @@ Routes live in `apps/web/src/routes`; shared pages and content live in `apps/web
 - [x] Traefik routing, DNS, TLS email and HTTP-01 certificate requirements.
 - [x] Direct SSH worker setup and unsupported tunnel transports.
 - [x] Remote CLI, daemon CLI and installer wrapper command distinctions.
-- [x] Current API authentication, core request examples and a catalogue of 210 registered API routes.
+- [x] Current API authentication, core request examples and a catalogue of registered API routes.
 - [ ] Exhaustive REST request/response schemas or a maintained OpenAPI specification for every endpoint. The catalogue is a route inventory, not that contract.
 
 ## Separate implementation follow-ups

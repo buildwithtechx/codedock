@@ -3,7 +3,7 @@ title: Build Strategies
 description: Choose Dockerfile, automatic Nixpacks builds or Cloud Native Buildpacks.
 ---
 
-Choose a build engine in application settings. A prebuilt image avoids a source build; pin its tag or digest for reproducibility.
+Choose a build engine in application settings. A prebuilt image avoids a source build; pin its image digest for reproducibility. Version tags are useful labels but can be moved.
 
 | Selection | Current execution path |
 | --- | --- |

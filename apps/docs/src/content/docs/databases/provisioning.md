@@ -18,6 +18,10 @@ The current database model defines these engine IDs:
 | MongoDB | `mongodb` | 27017 |
 | ClickHouse | `clickhouse` | 9000 |
 
+The provisioning UI also offers these template identifiers: `timescaledb`, `dragonfly`, `keydb`, `kafka`, `rabbitmq` and `nats`. These selectable template IDs are separate from the model constants listed above. Their query, browser and backup capabilities differ from those of the core engines.
+
+For MariaDB and ClickHouse API creation, explicitly set ports 3306 and 9000 respectively; the current fallback for omitted ports does not select those engine defaults.
+
 Select a version compatible with the deployed image. An engine identifier is not a guarantee that every runtime template, browser or backup feature is available on your installation. Verify startup and the operational tools you require.
 
 Other software can be deployed as application containers with explicit configuration; it is not automatically a built-in managed database engine.
@@ -28,7 +32,7 @@ Other software can be deployed as application containers with explicit configura
 2. Create a database resource with a name, engine and version.
 3. Set its database name and required credentials.
 4. Review port and persistent storage settings.
-5. Start the resource and check its status and logs.
+5. Check its status and logs; creation can start the container immediately.
 
 The API uses `POST /api/databases`. See [database API fields](/reference/api-databases/).
 

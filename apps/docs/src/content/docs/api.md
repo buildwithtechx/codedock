@@ -7,7 +7,7 @@ The daemon exposes `/api/*`. Examples use the unversioned path; `/api/v1/*` is r
 
 ## Authentication
 
-Use a valid login access token or a supported project token in `Authorization: Bearer TOKEN`. Project tokens are created through project settings and start with `vsl_tok_`. Scope and project-role checks vary by endpoint; a token does not grant administrator access.
+Use a valid login access token or a supported project token in `Authorization: Bearer TOKEN`. Project tokens are created through project settings and start with `vsl_tok_`. Scope and project-role checks vary by endpoint; project tokens do not grant administrator access. A login JWT retains the authenticated account role, including administrator or owner privileges where applicable.
 
 ```sh
 export CODEDOCK_URL="https://pilot.example.com"

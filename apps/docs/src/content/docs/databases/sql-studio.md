@@ -13,7 +13,7 @@ Start with a bounded read:
 SELECT id, display_name FROM accounts ORDER BY id LIMIT 25;
 ```
 
-`POST /api/databases/:id/query` accepts `{ "query": "..." }` and returns column names, rows and query result information inside the standard response envelope.
+`POST /api/databases/:id/query` accepts `{ "query": "..." }` and returns query information inside the standard response envelope. Relational reads return columns and rows; command results vary, and Redis returns its command value in `result`.
 
 ```sh
 curl "$CODEDOCK_URL/api/databases/$DATABASE_ID/query"   -H "Authorization: Bearer $CODEDOCK_TOKEN"   -H "Content-Type: application/json"   -d '{"query":"SELECT 1 AS healthy"}'

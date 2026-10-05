@@ -7,15 +7,15 @@ Inspect completed backup records before restoring. Confirm the target, engine, f
 
 ## Download
 
-`GET /api/backups/:configId/records/:recordId/download` streams the record. The server uses an available local file or downloads the stored object through its S3 destination. Missing files, inaccessible buckets or changed credentials prevent recovery.
+`GET /api/backups/:configId/records/:recordId/download` streams the record. This handler serves the recorded local file only. It does not download a remote S3 object as a fallback; remote-only records cannot be downloaded through this endpoint. Retrieve remote objects using an authorized S3 client, or keep a local copy when browser download is required.
 
 ## Restore
 
 `POST /api/backups/:recordId/restore` restores a specific record. The same route also accepts a configuration ID and selects a completed record; use an explicit record ID when the recovery point matters.
 
-The restore operation requires administrative access to the target project. Engine restore support depends on the installed template metadata and compatible database image. Test recovery before an incident.
+The restore operation requires administrative access to the target project and a database-backed record. The current restore engine rejects volume-only configurations; recover those archives manually using an appropriate filesystem workflow. Database restore can read a local file or fetch its S3 object with the configured destination credentials. Engine restore support depends on the installed template metadata and compatible database image. Test recovery before an incident.
 
-1. Verify the database or volume you are about to overwrite.
+1. Verify the database you are about to overwrite.
 2. Make a fresh recovery copy where possible.
 3. Pause application writes and plan for interruption.
 4. Restore the selected completed record.

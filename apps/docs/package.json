@@ -2,7 +2,7 @@
   "name": "@codedock/docs",
   "type": "module",
   "version": "0.1.0",
-  "description": "Codedock documentation site \u00e2\u20ac\u201d Astro 7 + Starlight.",
+  "description": "Codedock documentation site — Astro 7 + Starlight.",
   "license": "Apache-2.0",
   "scripts": {
     "dev": "astro dev --port 4322",

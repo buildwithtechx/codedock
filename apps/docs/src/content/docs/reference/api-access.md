@@ -3,7 +3,7 @@ title: API Access
 description: Use login and project tokens supported by the current request guard.
 ---
 
-Use `Authorization: Bearer TOKEN` with a valid JWT access token or a `vsl_tok_` project token. Project tokens are managed in project settings through `/api/projects/:projectId/tokens` and apply to their project.
+Use `Authorization: Bearer TOKEN` with a valid JWT access token or a `vsl_tok_` project token. Project tokens are managed in project settings through `/api/projects/:projectId/tokens`. Project binding is enforced on routes with project or service authorization checks; it is not a universal boundary. Scope-only routes, such as server management with `server:write`, can authorize instance-wide operations without checking the token project. Grant only the scopes needed for the intended endpoints.
 
 The request guard checks authentication, account state, configured IP restrictions, role and route-specific scopes. Project tokens cannot perform administrator or owner-only operations. Read the relevant endpoint's requirements before using a token in automation.
 

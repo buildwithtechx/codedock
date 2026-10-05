@@ -11,6 +11,7 @@ Read [API conventions](/api/) first. Paths use `:parameter` placeholders. Linked
 
 | Method | Path | Route access | Handler wiring |
 | --- | --- | --- | --- |
+| GET | `/api/auth/csrf` | CSRF bootstrap; no login required | [`bootstrapCSRF`](https://github.com/buildwithtechx/codedock/blob/main/internal/http/routes.go) |
 | POST | `/api/auth/signup` | Handler / middleware | [`authHandler.Register`](https://github.com/buildwithtechx/codedock/blob/main/internal/http/routes.go) |
 | POST | `/api/auth/signin` | Handler / middleware | [`authHandler.Login`](https://github.com/buildwithtechx/codedock/blob/main/internal/http/routes.go) |
 | POST | `/api/auth/refresh` | Handler / middleware | [`authHandler.Refresh`](https://github.com/buildwithtechx/codedock/blob/main/internal/http/routes.go) |
@@ -35,22 +36,22 @@ Read [API conventions](/api/) first. Paths use `:parameter` placeholders. Linked
 | GET | `/api/system/setup-status` | Handler / middleware | [`onboardingHandler.SetupStatus`](https://github.com/buildwithtechx/codedock/blob/main/internal/http/routes.go) |
 | POST | `/api/system/setup/import` | Handler / middleware | [`migrationHandler.ImportDuringSetup`](https://github.com/buildwithtechx/codedock/blob/main/internal/http/routes.go) |
 | GET | `/api/system/stats` | Authenticated | [`systemHandler.GetStats`](https://github.com/buildwithtechx/codedock/blob/main/internal/http/routes.go) |
-| POST | `/api/system/restart` | Handler / middleware; admin | [`systemHandler.Restart`](https://github.com/buildwithtechx/codedock/blob/main/internal/http/routes.go) |
-| POST | `/api/system/maintenance/cleanup` | Handler / middleware; admin | [`systemHandler.Cleanup`](https://github.com/buildwithtechx/codedock/blob/main/internal/http/routes.go) |
-| POST | `/api/system/export` | Handler / middleware; admin | [`migrationHandler.Export`](https://github.com/buildwithtechx/codedock/blob/main/internal/http/routes.go) |
-| POST | `/api/system/import` | Handler / middleware; admin | [`migrationHandler.Import`](https://github.com/buildwithtechx/codedock/blob/main/internal/http/routes.go) |
-| POST | `/api/system/takeover/scan` | Handler / middleware; admin | [`takeoverHandler.Scan`](https://github.com/buildwithtechx/codedock/blob/main/internal/http/routes.go) |
-| POST | `/api/system/takeover/adopt` | Handler / middleware; admin | [`takeoverHandler.Adopt`](https://github.com/buildwithtechx/codedock/blob/main/internal/http/routes.go) |
-| GET | `/api/system/takeover/runs` | Authenticated; admin | [`takeoverHandler.ListRuns`](https://github.com/buildwithtechx/codedock/blob/main/internal/http/routes.go) |
-| GET | `/api/system/takeover/runs/:id` | Authenticated; admin | [`takeoverHandler.GetRun`](https://github.com/buildwithtechx/codedock/blob/main/internal/http/routes.go) |
+| POST | `/api/system/restart` | Handler / middleware; instance admin | [`systemHandler.Restart`](https://github.com/buildwithtechx/codedock/blob/main/internal/http/routes.go) |
+| POST | `/api/system/maintenance/cleanup` | Handler / middleware; instance admin | [`systemHandler.Cleanup`](https://github.com/buildwithtechx/codedock/blob/main/internal/http/routes.go) |
+| POST | `/api/system/export` | Handler / middleware; instance admin | [`migrationHandler.Export`](https://github.com/buildwithtechx/codedock/blob/main/internal/http/routes.go) |
+| POST | `/api/system/import` | Handler / middleware; instance admin | [`migrationHandler.Import`](https://github.com/buildwithtechx/codedock/blob/main/internal/http/routes.go) |
+| POST | `/api/system/takeover/scan` | Handler / middleware; instance admin | [`takeoverHandler.Scan`](https://github.com/buildwithtechx/codedock/blob/main/internal/http/routes.go) |
+| POST | `/api/system/takeover/adopt` | Handler / middleware; instance admin | [`takeoverHandler.Adopt`](https://github.com/buildwithtechx/codedock/blob/main/internal/http/routes.go) |
+| GET | `/api/system/takeover/runs` | Authenticated; instance admin | [`takeoverHandler.ListRuns`](https://github.com/buildwithtechx/codedock/blob/main/internal/http/routes.go) |
+| GET | `/api/system/takeover/runs/:id` | Authenticated; instance admin | [`takeoverHandler.GetRun`](https://github.com/buildwithtechx/codedock/blob/main/internal/http/routes.go) |
 
 ## User
 
 | Method | Path | Route access | Handler wiring |
 | --- | --- | --- | --- |
-| GET | `/api/users` | Authenticated; admin | [`userHandler.ListUsers`](https://github.com/buildwithtechx/codedock/blob/main/internal/http/routes.go) |
-| POST | `/api/users/invite` | Authenticated; admin | [`authHandler.AdminInviteUser`](https://github.com/buildwithtechx/codedock/blob/main/internal/http/routes.go) |
-| DELETE | `/api/users/:id` | Authenticated; admin | [`userHandler.DeleteUser`](https://github.com/buildwithtechx/codedock/blob/main/internal/http/routes.go) |
+| GET | `/api/users` | Authenticated; instance admin | [`userHandler.ListUsers`](https://github.com/buildwithtechx/codedock/blob/main/internal/http/routes.go) |
+| POST | `/api/users/invite` | Authenticated; instance admin | [`authHandler.AdminInviteUser`](https://github.com/buildwithtechx/codedock/blob/main/internal/http/routes.go) |
+| DELETE | `/api/users/:id` | Authenticated; instance admin | [`userHandler.DeleteUser`](https://github.com/buildwithtechx/codedock/blob/main/internal/http/routes.go) |
 | GET | `/api/profile` | Authenticated | [`userHandler.GetProfile`](https://github.com/buildwithtechx/codedock/blob/main/internal/http/routes.go) |
 | PUT | `/api/profile` | Authenticated | [`userHandler.UpdateProfile`](https://github.com/buildwithtechx/codedock/blob/main/internal/http/routes.go) |
 | POST | `/api/profile/email/request` | Authenticated | [`userHandler.RequestEmailChange`](https://github.com/buildwithtechx/codedock/blob/main/internal/http/routes.go) |
@@ -66,38 +67,38 @@ Read [API conventions](/api/) first. Paths use `:parameter` placeholders. Linked
 | --- | --- | --- | --- |
 | GET | `/api/projects` | Authenticated | [`projectHandler.ListProjects`](https://github.com/buildwithtechx/codedock/blob/main/internal/http/routes.go) |
 | POST | `/api/projects` | Authenticated | [`projectHandler.CreateProject`](https://github.com/buildwithtechx/codedock/blob/main/internal/http/routes.go) |
-| GET | `/api/projects/:id` | Authenticated | [`projectHandler.GetProject`](https://github.com/buildwithtechx/codedock/blob/main/internal/http/routes.go) |
-| DELETE | `/api/projects/:id` | Authenticated; project/service owner | [`projectHandler.DeleteProject`](https://github.com/buildwithtechx/codedock/blob/main/internal/http/routes.go) |
+| GET | `/api/projects/:id` | Authenticated; project access | [`projectHandler.GetProject`](https://github.com/buildwithtechx/codedock/blob/main/internal/http/routes.go) |
+| DELETE | `/api/projects/:id` | Authenticated; project owner | [`projectHandler.DeleteProject`](https://github.com/buildwithtechx/codedock/blob/main/internal/http/routes.go) |
 | GET | `/api/domains` | Authenticated | [`domainHandler.ListAll`](https://github.com/buildwithtechx/codedock/blob/main/internal/http/routes.go) |
 | GET | `/api/services/:id/domains` | Authenticated | [`domainHandler.ListByService`](https://github.com/buildwithtechx/codedock/blob/main/internal/http/routes.go) |
 | POST | `/api/services/:id/domains` | Authenticated | [`domainHandler.Create`](https://github.com/buildwithtechx/codedock/blob/main/internal/http/routes.go) |
 | DELETE | `/api/domains/:id` | Authenticated | [`domainHandler.Delete`](https://github.com/buildwithtechx/codedock/blob/main/internal/http/routes.go) |
 | POST | `/api/domains/:id/verify` | Authenticated | [`domainHandler.Verify`](https://github.com/buildwithtechx/codedock/blob/main/internal/http/routes.go) |
 | GET | `/api/domains/:id/verify` | Authenticated | [`domainHandler.Verify`](https://github.com/buildwithtechx/codedock/blob/main/internal/http/routes.go) |
-| GET | `/api/projects/:id/env` | Authenticated; env:read | [`projectEnvHandler.GetVars`](https://github.com/buildwithtechx/codedock/blob/main/internal/http/routes.go) |
-| PUT | `/api/projects/:id/env` | Authenticated; env:write; project/service admin | [`projectEnvHandler.SetVars`](https://github.com/buildwithtechx/codedock/blob/main/internal/http/routes.go) |
-| POST | `/api/projects/:id/env` | Authenticated; env:write; project/service admin | [`projectEnvHandler.SetVars`](https://github.com/buildwithtechx/codedock/blob/main/internal/http/routes.go) |
-| POST | `/api/projects/:id/environments` | Authenticated; project/service admin | [`environmentHandler.Create`](https://github.com/buildwithtechx/codedock/blob/main/internal/http/routes.go) |
-| GET | `/api/projects/:id/environments` | Authenticated | [`environmentHandler.ListByProject`](https://github.com/buildwithtechx/codedock/blob/main/internal/http/routes.go) |
-| GET | `/api/projects/:id/apps` | Authenticated | [`appServiceHandler.ListByProject`](https://github.com/buildwithtechx/codedock/blob/main/internal/http/routes.go) |
-| GET | `/api/projects/:id/services` | Authenticated | [`appServiceHandler.ListByProject`](https://github.com/buildwithtechx/codedock/blob/main/internal/http/routes.go) |
-| GET | `/api/projects/:id/deployments` | Authenticated | [`deploymentHandler.ListProjectDeployments`](https://github.com/buildwithtechx/codedock/blob/main/internal/http/routes.go) |
-| POST | `/api/projects/:id/deploy` | Authenticated; project/service admin | [`deploymentHandler.TriggerProject`](https://github.com/buildwithtechx/codedock/blob/main/internal/http/routes.go) |
+| GET | `/api/projects/:id/env` | Authenticated; project access; env:read | [`projectEnvHandler.GetVars`](https://github.com/buildwithtechx/codedock/blob/main/internal/http/routes.go) |
+| PUT | `/api/projects/:id/env` | Authenticated; project administrator; env:write | [`projectEnvHandler.SetVars`](https://github.com/buildwithtechx/codedock/blob/main/internal/http/routes.go) |
+| POST | `/api/projects/:id/env` | Authenticated; project administrator; env:write | [`projectEnvHandler.SetVars`](https://github.com/buildwithtechx/codedock/blob/main/internal/http/routes.go) |
+| POST | `/api/projects/:id/environments` | Authenticated; project administrator | [`environmentHandler.Create`](https://github.com/buildwithtechx/codedock/blob/main/internal/http/routes.go) |
+| GET | `/api/projects/:id/environments` | Authenticated; project access | [`environmentHandler.ListByProject`](https://github.com/buildwithtechx/codedock/blob/main/internal/http/routes.go) |
+| GET | `/api/projects/:id/apps` | Authenticated; project access | [`appServiceHandler.ListByProject`](https://github.com/buildwithtechx/codedock/blob/main/internal/http/routes.go) |
+| GET | `/api/projects/:id/services` | Authenticated; project access | [`appServiceHandler.ListByProject`](https://github.com/buildwithtechx/codedock/blob/main/internal/http/routes.go) |
+| GET | `/api/projects/:id/deployments` | Authenticated; project access | [`deploymentHandler.ListProjectDeployments`](https://github.com/buildwithtechx/codedock/blob/main/internal/http/routes.go) |
+| POST | `/api/projects/:id/deploy` | Authenticated; project administrator | [`deploymentHandler.TriggerProject`](https://github.com/buildwithtechx/codedock/blob/main/internal/http/routes.go) |
 | GET | `/api/project-apps` | Authenticated | [`projectAppHandler.List`](https://github.com/buildwithtechx/codedock/blob/main/internal/http/routes.go) |
 | POST | `/api/project-apps` | Authenticated | [`projectAppHandler.Create`](https://github.com/buildwithtechx/codedock/blob/main/internal/http/routes.go) |
 | GET | `/api/project-apps/:id` | Authenticated | [`projectAppHandler.Get`](https://github.com/buildwithtechx/codedock/blob/main/internal/http/routes.go) |
 | PUT | `/api/project-apps/:id` | Authenticated | [`projectAppHandler.Update`](https://github.com/buildwithtechx/codedock/blob/main/internal/http/routes.go) |
 | DELETE | `/api/project-apps/:id` | Authenticated | [`projectAppHandler.Delete`](https://github.com/buildwithtechx/codedock/blob/main/internal/http/routes.go) |
-| GET | `/api/projects/:projectId/tokens` | Authenticated; env:read; project/service admin | [`projectSettingsHandler.ListTokens`](https://github.com/buildwithtechx/codedock/blob/main/internal/http/routes.go) |
-| POST | `/api/projects/:projectId/tokens` | Authenticated; env:write; project/service admin | [`projectSettingsHandler.CreateToken`](https://github.com/buildwithtechx/codedock/blob/main/internal/http/routes.go) |
-| DELETE | `/api/projects/:projectId/tokens/:id` | Authenticated; env:write; project/service admin | [`projectSettingsHandler.DeleteToken`](https://github.com/buildwithtechx/codedock/blob/main/internal/http/routes.go) |
-| GET | `/api/projects/:projectId/registries` | Authenticated; project/service admin | [`registryHandler.List`](https://github.com/buildwithtechx/codedock/blob/main/internal/http/routes.go) |
-| POST | `/api/projects/:projectId/registries` | Authenticated; project/service admin | [`registryHandler.Create`](https://github.com/buildwithtechx/codedock/blob/main/internal/http/routes.go) |
-| DELETE | `/api/projects/:projectId/registries/:id` | Authenticated; project/service admin | [`registryHandler.Delete`](https://github.com/buildwithtechx/codedock/blob/main/internal/http/routes.go) |
-| GET | `/api/services/:serviceId/route-rules` | Authenticated | [`routeRuleHandler.List`](https://github.com/buildwithtechx/codedock/blob/main/internal/http/routes.go) |
-| POST | `/api/services/:serviceId/route-rules` | Authenticated; project/service admin | [`routeRuleHandler.Create`](https://github.com/buildwithtechx/codedock/blob/main/internal/http/routes.go) |
-| PATCH | `/api/services/:serviceId/route-rules/:ruleId` | Authenticated; project/service admin | [`routeRuleHandler.Update`](https://github.com/buildwithtechx/codedock/blob/main/internal/http/routes.go) |
-| DELETE | `/api/services/:serviceId/route-rules/:ruleId` | Authenticated; project/service admin | [`routeRuleHandler.Delete`](https://github.com/buildwithtechx/codedock/blob/main/internal/http/routes.go) |
+| GET | `/api/projects/:projectId/tokens` | Authenticated; project administrator; env:read | [`projectSettingsHandler.ListTokens`](https://github.com/buildwithtechx/codedock/blob/main/internal/http/routes.go) |
+| POST | `/api/projects/:projectId/tokens` | Authenticated; project administrator; env:write | [`projectSettingsHandler.CreateToken`](https://github.com/buildwithtechx/codedock/blob/main/internal/http/routes.go) |
+| DELETE | `/api/projects/:projectId/tokens/:id` | Authenticated; project administrator; env:write | [`projectSettingsHandler.DeleteToken`](https://github.com/buildwithtechx/codedock/blob/main/internal/http/routes.go) |
+| GET | `/api/projects/:projectId/registries` | Authenticated; project administrator | [`registryHandler.List`](https://github.com/buildwithtechx/codedock/blob/main/internal/http/routes.go) |
+| POST | `/api/projects/:projectId/registries` | Authenticated; project administrator | [`registryHandler.Create`](https://github.com/buildwithtechx/codedock/blob/main/internal/http/routes.go) |
+| DELETE | `/api/projects/:projectId/registries/:id` | Authenticated; project administrator | [`registryHandler.Delete`](https://github.com/buildwithtechx/codedock/blob/main/internal/http/routes.go) |
+| GET | `/api/services/:serviceId/route-rules` | Authenticated; project/service access | [`routeRuleHandler.List`](https://github.com/buildwithtechx/codedock/blob/main/internal/http/routes.go) |
+| POST | `/api/services/:serviceId/route-rules` | Authenticated; project/service administrator | [`routeRuleHandler.Create`](https://github.com/buildwithtechx/codedock/blob/main/internal/http/routes.go) |
+| PATCH | `/api/services/:serviceId/route-rules/:ruleId` | Authenticated; project/service administrator | [`routeRuleHandler.Update`](https://github.com/buildwithtechx/codedock/blob/main/internal/http/routes.go) |
+| DELETE | `/api/services/:serviceId/route-rules/:ruleId` | Authenticated; project/service administrator | [`routeRuleHandler.Delete`](https://github.com/buildwithtechx/codedock/blob/main/internal/http/routes.go) |
 
 ## Server
 
@@ -117,12 +118,12 @@ Read [API conventions](/api/) first. Paths use `:parameter` placeholders. Linked
 | --- | --- | --- | --- |
 | GET | `/api/organizations` | Authenticated | [`orgHandler.List`](https://github.com/buildwithtechx/codedock/blob/main/internal/http/routes.go) |
 | POST | `/api/organizations` | Authenticated | [`orgHandler.Create`](https://github.com/buildwithtechx/codedock/blob/main/internal/http/routes.go) |
-| GET | `/api/organizations/:id` | Authenticated | [`orgHandler.Get`](https://github.com/buildwithtechx/codedock/blob/main/internal/http/routes.go) |
-| DELETE | `/api/organizations/:id` | Authenticated; project/service owner | [`orgHandler.Delete`](https://github.com/buildwithtechx/codedock/blob/main/internal/http/routes.go) |
-| GET | `/api/organizations/:id/members` | Authenticated | [`orgHandler.ListMembers`](https://github.com/buildwithtechx/codedock/blob/main/internal/http/routes.go) |
-| POST | `/api/organizations/:id/members` | Authenticated; project/service admin | [`orgHandler.InviteMember`](https://github.com/buildwithtechx/codedock/blob/main/internal/http/routes.go) |
-| PUT | `/api/organizations/:id/members/:userId` | Authenticated; project/service admin | [`orgHandler.UpdateMember`](https://github.com/buildwithtechx/codedock/blob/main/internal/http/routes.go) |
-| DELETE | `/api/organizations/:id/members/:memberId` | Authenticated; project/service admin | [`orgHandler.RemoveMember`](https://github.com/buildwithtechx/codedock/blob/main/internal/http/routes.go) |
+| GET | `/api/organizations/:id` | Authenticated; organization member | [`orgHandler.Get`](https://github.com/buildwithtechx/codedock/blob/main/internal/http/routes.go) |
+| DELETE | `/api/organizations/:id` | Authenticated; organization owner | [`orgHandler.Delete`](https://github.com/buildwithtechx/codedock/blob/main/internal/http/routes.go) |
+| GET | `/api/organizations/:id/members` | Authenticated; organization member | [`orgHandler.ListMembers`](https://github.com/buildwithtechx/codedock/blob/main/internal/http/routes.go) |
+| POST | `/api/organizations/:id/members` | Authenticated; organization admin | [`orgHandler.InviteMember`](https://github.com/buildwithtechx/codedock/blob/main/internal/http/routes.go) |
+| PUT | `/api/organizations/:id/members/:userId` | Authenticated; organization admin | [`orgHandler.UpdateMember`](https://github.com/buildwithtechx/codedock/blob/main/internal/http/routes.go) |
+| DELETE | `/api/organizations/:id/members/:memberId` | Authenticated; organization admin | [`orgHandler.RemoveMember`](https://github.com/buildwithtechx/codedock/blob/main/internal/http/routes.go) |
 
 ## Database
 
@@ -155,28 +156,28 @@ Read [API conventions](/api/) first. Paths use `:parameter` placeholders. Linked
 | POST | `/api/environments/:id/apps` | Authenticated | [`appServiceHandler.Create`](https://github.com/buildwithtechx/codedock/blob/main/internal/http/routes_app.go) |
 | DELETE | `/api/environments/:id` | Authenticated | [`environmentHandler.Delete`](https://github.com/buildwithtechx/codedock/blob/main/internal/http/routes_app.go) |
 | GET | `/api/apps` | Authenticated | [`appServiceHandler.ListByOrganization`](https://github.com/buildwithtechx/codedock/blob/main/internal/http/routes_app.go) |
-| GET | `/api/apps/:id` | Authenticated | [`appServiceHandler.Get`](https://github.com/buildwithtechx/codedock/blob/main/internal/http/routes_app.go) |
-| PUT | `/api/apps/:id` | Authenticated; project/service admin | [`appServiceHandler.Update`](https://github.com/buildwithtechx/codedock/blob/main/internal/http/routes_app.go) |
+| GET | `/api/apps/:id` | Authenticated; project/service access | [`appServiceHandler.Get`](https://github.com/buildwithtechx/codedock/blob/main/internal/http/routes_app.go) |
+| PUT | `/api/apps/:id` | Authenticated; project/service administrator | [`appServiceHandler.Update`](https://github.com/buildwithtechx/codedock/blob/main/internal/http/routes_app.go) |
 | DELETE | `/api/apps/:id` | Authenticated; project/service owner | [`appServiceHandler.Delete`](https://github.com/buildwithtechx/codedock/blob/main/internal/http/routes_app.go) |
-| POST | `/api/apps/:id/stop` | Authenticated; project/service admin | [`appServiceHandler.StopService`](https://github.com/buildwithtechx/codedock/blob/main/internal/http/routes_app.go) |
-| POST | `/api/apps/:id/redeploy` | Authenticated; project/service admin | [`appServiceHandler.RedeployService`](https://github.com/buildwithtechx/codedock/blob/main/internal/http/routes_app.go) |
-| POST | `/api/apps/:id/restart` | Authenticated; project/service admin | [`appServiceHandler.RestartService`](https://github.com/buildwithtechx/codedock/blob/main/internal/http/routes_app.go) |
-| GET | `/api/apps/:id/webhooks` | Authenticated | [`appServiceHandler.ListWebhooks`](https://github.com/buildwithtechx/codedock/blob/main/internal/http/routes_app.go) |
-| POST | `/api/apps/:id/webhooks` | Authenticated; project/service admin | [`appServiceHandler.CreateWebhook`](https://github.com/buildwithtechx/codedock/blob/main/internal/http/routes_app.go) |
-| DELETE | `/api/apps/:id/webhooks/:webhookId` | Authenticated; project/service admin | [`appServiceHandler.DeleteWebhook`](https://github.com/buildwithtechx/codedock/blob/main/internal/http/routes_app.go) |
-| GET | `/api/apps/:id/volumes` | Authenticated | [`appServiceHandler.ListVolumes`](https://github.com/buildwithtechx/codedock/blob/main/internal/http/routes_app.go) |
-| POST | `/api/apps/:id/volumes` | Authenticated; project/service admin | [`appServiceHandler.CreateVolume`](https://github.com/buildwithtechx/codedock/blob/main/internal/http/routes_app.go) |
-| DELETE | `/api/apps/:id/volumes/:volumeId` | Authenticated; project/service admin | [`appServiceHandler.DeleteVolume`](https://github.com/buildwithtechx/codedock/blob/main/internal/http/routes_app.go) |
-| GET | `/api/apps/:id/log-drains` | Authenticated | [`appServiceHandler.ListLogDrains`](https://github.com/buildwithtechx/codedock/blob/main/internal/http/routes_app.go) |
-| POST | `/api/apps/:id/log-drains` | Authenticated; project/service admin | [`appServiceHandler.CreateLogDrain`](https://github.com/buildwithtechx/codedock/blob/main/internal/http/routes_app.go) |
-| DELETE | `/api/apps/:id/log-drains/:drainId` | Authenticated; project/service admin | [`appServiceHandler.DeleteLogDrain`](https://github.com/buildwithtechx/codedock/blob/main/internal/http/routes_app.go) |
-| GET | `/api/services/:serviceId/variables` | Authenticated | [`serviceVarHandler.List`](https://github.com/buildwithtechx/codedock/blob/main/internal/http/routes_app.go) |
-| GET | `/api/services/:serviceId/env-suggestions` | Authenticated | [`serviceVarHandler.Suggest`](https://github.com/buildwithtechx/codedock/blob/main/internal/http/routes_app.go) |
-| POST | `/api/services/:serviceId/variables` | Authenticated; project/service admin | [`serviceVarHandler.Create`](https://github.com/buildwithtechx/codedock/blob/main/internal/http/routes_app.go) |
-| PUT | `/api/services/:serviceId/variables/:id` | Authenticated; project/service admin | [`serviceVarHandler.Update`](https://github.com/buildwithtechx/codedock/blob/main/internal/http/routes_app.go) |
-| DELETE | `/api/services/:serviceId/variables/:id` | Authenticated; project/service admin | [`serviceVarHandler.Delete`](https://github.com/buildwithtechx/codedock/blob/main/internal/http/routes_app.go) |
-| GET | `/api/services/:serviceId/serverless/code` | Authenticated | [`serverlessHandler.GetCode`](https://github.com/buildwithtechx/codedock/blob/main/internal/http/routes_app.go) |
-| POST | `/api/services/:serviceId/serverless/code` | Authenticated; project/service admin | [`serverlessHandler.SaveCode`](https://github.com/buildwithtechx/codedock/blob/main/internal/http/routes_app.go) |
+| POST | `/api/apps/:id/stop` | Authenticated; project/service administrator | [`appServiceHandler.StopService`](https://github.com/buildwithtechx/codedock/blob/main/internal/http/routes_app.go) |
+| POST | `/api/apps/:id/redeploy` | Authenticated; project/service administrator | [`appServiceHandler.RedeployService`](https://github.com/buildwithtechx/codedock/blob/main/internal/http/routes_app.go) |
+| POST | `/api/apps/:id/restart` | Authenticated; project/service administrator | [`appServiceHandler.RestartService`](https://github.com/buildwithtechx/codedock/blob/main/internal/http/routes_app.go) |
+| GET | `/api/apps/:id/webhooks` | Authenticated; project/service access | [`appServiceHandler.ListWebhooks`](https://github.com/buildwithtechx/codedock/blob/main/internal/http/routes_app.go) |
+| POST | `/api/apps/:id/webhooks` | Authenticated; project/service administrator | [`appServiceHandler.CreateWebhook`](https://github.com/buildwithtechx/codedock/blob/main/internal/http/routes_app.go) |
+| DELETE | `/api/apps/:id/webhooks/:webhookId` | Authenticated; project/service administrator | [`appServiceHandler.DeleteWebhook`](https://github.com/buildwithtechx/codedock/blob/main/internal/http/routes_app.go) |
+| GET | `/api/apps/:id/volumes` | Authenticated; project/service access | [`appServiceHandler.ListVolumes`](https://github.com/buildwithtechx/codedock/blob/main/internal/http/routes_app.go) |
+| POST | `/api/apps/:id/volumes` | Authenticated; project/service administrator | [`appServiceHandler.CreateVolume`](https://github.com/buildwithtechx/codedock/blob/main/internal/http/routes_app.go) |
+| DELETE | `/api/apps/:id/volumes/:volumeId` | Authenticated; project/service administrator | [`appServiceHandler.DeleteVolume`](https://github.com/buildwithtechx/codedock/blob/main/internal/http/routes_app.go) |
+| GET | `/api/apps/:id/log-drains` | Authenticated; project/service access | [`appServiceHandler.ListLogDrains`](https://github.com/buildwithtechx/codedock/blob/main/internal/http/routes_app.go) |
+| POST | `/api/apps/:id/log-drains` | Authenticated; project/service administrator | [`appServiceHandler.CreateLogDrain`](https://github.com/buildwithtechx/codedock/blob/main/internal/http/routes_app.go) |
+| DELETE | `/api/apps/:id/log-drains/:drainId` | Authenticated; project/service administrator | [`appServiceHandler.DeleteLogDrain`](https://github.com/buildwithtechx/codedock/blob/main/internal/http/routes_app.go) |
+| GET | `/api/services/:serviceId/variables` | Authenticated; project/service access | [`serviceVarHandler.List`](https://github.com/buildwithtechx/codedock/blob/main/internal/http/routes_app.go) |
+| GET | `/api/services/:serviceId/env-suggestions` | Authenticated; project/service access | [`serviceVarHandler.Suggest`](https://github.com/buildwithtechx/codedock/blob/main/internal/http/routes_app.go) |
+| POST | `/api/services/:serviceId/variables` | Authenticated; project/service administrator | [`serviceVarHandler.Create`](https://github.com/buildwithtechx/codedock/blob/main/internal/http/routes_app.go) |
+| PUT | `/api/services/:serviceId/variables/:id` | Authenticated; project/service administrator | [`serviceVarHandler.Update`](https://github.com/buildwithtechx/codedock/blob/main/internal/http/routes_app.go) |
+| DELETE | `/api/services/:serviceId/variables/:id` | Authenticated; project/service administrator | [`serviceVarHandler.Delete`](https://github.com/buildwithtechx/codedock/blob/main/internal/http/routes_app.go) |
+| GET | `/api/services/:serviceId/serverless/code` | Authenticated; project/service access | [`serverlessHandler.GetCode`](https://github.com/buildwithtechx/codedock/blob/main/internal/http/routes_app.go) |
+| POST | `/api/services/:serviceId/serverless/code` | Authenticated; project/service administrator | [`serverlessHandler.SaveCode`](https://github.com/buildwithtechx/codedock/blob/main/internal/http/routes_app.go) |
 | GET | `/api/services/:serviceId/logs` | Handler / middleware | [`serviceLogsWSHandler.Handle`](https://github.com/buildwithtechx/codedock/blob/main/internal/http/routes_app.go) |
 
 ## Deployment
@@ -184,15 +185,15 @@ Read [API conventions](/api/) first. Paths use `:parameter` placeholders. Linked
 | Method | Path | Route access | Handler wiring |
 | --- | --- | --- | --- |
 | GET | `/api/deployments` | Authenticated | [`deploymentHandler.ListOrganizationDeployments`](https://github.com/buildwithtechx/codedock/blob/main/internal/http/routes_app.go) |
-| GET | `/api/services/:serviceId/deployments` | Authenticated | [`deploymentHandler.ListServiceDeployments`](https://github.com/buildwithtechx/codedock/blob/main/internal/http/routes_app.go) |
-| GET | `/api/services/:serviceId/previews` | Authenticated | [`deploymentHandler.ListPRPreviews`](https://github.com/buildwithtechx/codedock/blob/main/internal/http/routes_app.go) |
-| POST | `/api/services/:serviceId/deploy` | Authenticated; project/service admin | [`deploymentHandler.Trigger`](https://github.com/buildwithtechx/codedock/blob/main/internal/http/routes_app.go) |
+| GET | `/api/services/:serviceId/deployments` | Authenticated; project/service access | [`deploymentHandler.ListServiceDeployments`](https://github.com/buildwithtechx/codedock/blob/main/internal/http/routes_app.go) |
+| GET | `/api/services/:serviceId/previews` | Authenticated; project/service access | [`deploymentHandler.ListPRPreviews`](https://github.com/buildwithtechx/codedock/blob/main/internal/http/routes_app.go) |
+| POST | `/api/services/:serviceId/deploy` | Authenticated; project/service administrator | [`deploymentHandler.Trigger`](https://github.com/buildwithtechx/codedock/blob/main/internal/http/routes_app.go) |
 | POST | `/api/deployments/:id/rollback` | Authenticated | [`deploymentHandler.Rollback`](https://github.com/buildwithtechx/codedock/blob/main/internal/http/routes_app.go) |
 | GET | `/api/deployments/:id/logs` | Authenticated; logs:read | [`deploymentHandler.GetLogs`](https://github.com/buildwithtechx/codedock/blob/main/internal/http/routes_app.go) |
 | GET | `/api/deployments/:id/explain` | Authenticated | [`deploymentHandler.ExplainFailure`](https://github.com/buildwithtechx/codedock/blob/main/internal/http/routes_app.go) |
-| GET | `/api/services/:serviceId/metrics` | Authenticated | [`deploymentHandler.GetMetrics`](https://github.com/buildwithtechx/codedock/blob/main/internal/http/routes_app.go) |
-| GET | `/api/services/:serviceId/metrics/historical` | Authenticated | [`metricsHandler.GetHistoricalMetrics`](https://github.com/buildwithtechx/codedock/blob/main/internal/http/routes_app.go) |
-| GET | `/api/services/:serviceId/logs/historical` | Authenticated | [`logHandler.GetHistoricalLogs`](https://github.com/buildwithtechx/codedock/blob/main/internal/http/routes_app.go) |
+| GET | `/api/services/:serviceId/metrics` | Authenticated; project/service access | [`deploymentHandler.GetMetrics`](https://github.com/buildwithtechx/codedock/blob/main/internal/http/routes_app.go) |
+| GET | `/api/services/:serviceId/metrics/historical` | Authenticated; project/service access | [`metricsHandler.GetHistoricalMetrics`](https://github.com/buildwithtechx/codedock/blob/main/internal/http/routes_app.go) |
+| GET | `/api/services/:serviceId/logs/historical` | Authenticated; project/service access | [`logHandler.GetHistoricalLogs`](https://github.com/buildwithtechx/codedock/blob/main/internal/http/routes_app.go) |
 
 ## Backup
 
@@ -209,36 +210,36 @@ Read [API conventions](/api/) first. Paths use `:parameter` placeholders. Linked
 | GET | `/api/backups/:id/records/:recordId/download` | Authenticated | [`backupHandler.DownloadRecord`](https://github.com/buildwithtechx/codedock/blob/main/internal/http/routes_app.go) |
 | DELETE | `/api/backups/:id/records/:recordId` | Authenticated | [`backupHandler.DeleteRecord`](https://github.com/buildwithtechx/codedock/blob/main/internal/http/routes_app.go) |
 | GET | `/api/backup-records` | Authenticated | [`backupHandler.ListAllRecords`](https://github.com/buildwithtechx/codedock/blob/main/internal/http/routes_app.go) |
-| GET | `/api/s3-destinations` | Authenticated; admin | [`backupHandler.ListS3Destinations`](https://github.com/buildwithtechx/codedock/blob/main/internal/http/routes_app.go) |
-| POST | `/api/s3-destinations` | Authenticated; admin | [`backupHandler.CreateS3Destination`](https://github.com/buildwithtechx/codedock/blob/main/internal/http/routes_app.go) |
-| POST | `/api/s3-destinations/verify` | Authenticated; admin | [`backupHandler.VerifyS3Draft`](https://github.com/buildwithtechx/codedock/blob/main/internal/http/routes_app.go) |
-| PUT | `/api/s3-destinations/:id` | Authenticated; admin | [`backupHandler.UpdateS3Destination`](https://github.com/buildwithtechx/codedock/blob/main/internal/http/routes_app.go) |
-| POST | `/api/s3-destinations/:id/verify` | Authenticated; admin | [`backupHandler.VerifyS3Destination`](https://github.com/buildwithtechx/codedock/blob/main/internal/http/routes_app.go) |
-| POST | `/api/s3-destinations/:id/default` | Authenticated; admin | [`backupHandler.SetDefaultS3Destination`](https://github.com/buildwithtechx/codedock/blob/main/internal/http/routes_app.go) |
-| DELETE | `/api/s3-destinations/:id` | Authenticated; admin | [`backupHandler.DeleteS3Destination`](https://github.com/buildwithtechx/codedock/blob/main/internal/http/routes_app.go) |
+| GET | `/api/s3-destinations` | Authenticated; instance admin | [`backupHandler.ListS3Destinations`](https://github.com/buildwithtechx/codedock/blob/main/internal/http/routes_app.go) |
+| POST | `/api/s3-destinations` | Authenticated; instance admin | [`backupHandler.CreateS3Destination`](https://github.com/buildwithtechx/codedock/blob/main/internal/http/routes_app.go) |
+| POST | `/api/s3-destinations/verify` | Authenticated; instance admin | [`backupHandler.VerifyS3Draft`](https://github.com/buildwithtechx/codedock/blob/main/internal/http/routes_app.go) |
+| PUT | `/api/s3-destinations/:id` | Authenticated; instance admin | [`backupHandler.UpdateS3Destination`](https://github.com/buildwithtechx/codedock/blob/main/internal/http/routes_app.go) |
+| POST | `/api/s3-destinations/:id/verify` | Authenticated; instance admin | [`backupHandler.VerifyS3Destination`](https://github.com/buildwithtechx/codedock/blob/main/internal/http/routes_app.go) |
+| POST | `/api/s3-destinations/:id/default` | Authenticated; instance admin | [`backupHandler.SetDefaultS3Destination`](https://github.com/buildwithtechx/codedock/blob/main/internal/http/routes_app.go) |
+| DELETE | `/api/s3-destinations/:id` | Authenticated; instance admin | [`backupHandler.DeleteS3Destination`](https://github.com/buildwithtechx/codedock/blob/main/internal/http/routes_app.go) |
 
 ## Settings
 
 | Method | Path | Route access | Handler wiring |
 | --- | --- | --- | --- |
 | GET | `/api/settings` | Authenticated | [`settingsHandler.GetSettings`](https://github.com/buildwithtechx/codedock/blob/main/internal/http/routes_app.go) |
-| PUT | `/api/settings` | Handler / middleware; admin | [`settingsHandler.UpdateSettings`](https://github.com/buildwithtechx/codedock/blob/main/internal/http/routes_app.go) |
+| PUT | `/api/settings` | Handler / middleware; instance admin | [`settingsHandler.UpdateSettings`](https://github.com/buildwithtechx/codedock/blob/main/internal/http/routes_app.go) |
 | GET | `/api/ai` | Authenticated | [`aiSettingsHandler.GetAISettings`](https://github.com/buildwithtechx/codedock/blob/main/internal/http/routes_app.go) |
 | POST | `/api/ai/diagnose` | Authenticated | [`aiSettingsHandler.DiagnoseLogs`](https://github.com/buildwithtechx/codedock/blob/main/internal/http/routes_app.go) |
-| PUT | `/api/ai` | Handler / middleware; admin | [`aiSettingsHandler.UpdateAISettings`](https://github.com/buildwithtechx/codedock/blob/main/internal/http/routes_app.go) |
+| PUT | `/api/ai` | Handler / middleware; instance admin | [`aiSettingsHandler.UpdateAISettings`](https://github.com/buildwithtechx/codedock/blob/main/internal/http/routes_app.go) |
 | GET | `/api/notifications` | Authenticated | [`notifSettingsHandler.GetNotificationSettings`](https://github.com/buildwithtechx/codedock/blob/main/internal/http/routes_app.go) |
-| PUT | `/api/notifications` | Handler / middleware; admin | [`notifSettingsHandler.UpdateNotificationSettings`](https://github.com/buildwithtechx/codedock/blob/main/internal/http/routes_app.go) |
+| PUT | `/api/notifications` | Handler / middleware; instance admin | [`notifSettingsHandler.UpdateNotificationSettings`](https://github.com/buildwithtechx/codedock/blob/main/internal/http/routes_app.go) |
 | GET | `/api/settings/updates/status` | Authenticated | [`updaterHandler.GetUpdateStatus`](https://github.com/buildwithtechx/codedock/blob/main/internal/http/routes_app.go) |
-| POST | `/api/settings/updates/check` | Handler / middleware; admin | [`updaterHandler.CheckUpdate`](https://github.com/buildwithtechx/codedock/blob/main/internal/http/routes_app.go) |
-| POST | `/api/settings/updates/deploy` | Handler / middleware; admin | [`updaterHandler.DeployUpdate`](https://github.com/buildwithtechx/codedock/blob/main/internal/http/routes_app.go) |
-| GET | `/api/settings/oauth/providers` | Handler / middleware; admin | [`oauthHandler.ListProviders`](https://github.com/buildwithtechx/codedock/blob/main/internal/http/routes_app.go) |
-| PUT | `/api/settings/oauth/providers` | Handler / middleware; admin | [`oauthHandler.SaveProvider`](https://github.com/buildwithtechx/codedock/blob/main/internal/http/routes_app.go) |
-| POST | `/api/settings/git_apps/github/manifest-callback` | Handler / middleware; admin | [`gitAppsHandler.ExchangeGithubManifestCode`](https://github.com/buildwithtechx/codedock/blob/main/internal/http/routes_app.go) |
+| POST | `/api/settings/updates/check` | Handler / middleware; instance admin | [`updaterHandler.CheckUpdate`](https://github.com/buildwithtechx/codedock/blob/main/internal/http/routes_app.go) |
+| POST | `/api/settings/updates/deploy` | Handler / middleware; instance admin | [`updaterHandler.DeployUpdate`](https://github.com/buildwithtechx/codedock/blob/main/internal/http/routes_app.go) |
+| GET | `/api/settings/oauth/providers` | Handler / middleware; instance admin | [`oauthHandler.ListProviders`](https://github.com/buildwithtechx/codedock/blob/main/internal/http/routes_app.go) |
+| PUT | `/api/settings/oauth/providers` | Handler / middleware; instance admin | [`oauthHandler.SaveProvider`](https://github.com/buildwithtechx/codedock/blob/main/internal/http/routes_app.go) |
+| POST | `/api/settings/git_apps/github/manifest-callback` | Handler / middleware; instance admin | [`gitAppsHandler.ExchangeGithubManifestCode`](https://github.com/buildwithtechx/codedock/blob/main/internal/http/routes_app.go) |
 | GET | `/api/settings/git_apps/github` | Authenticated | [`gitAppsHandler.ListGithubApps`](https://github.com/buildwithtechx/codedock/blob/main/internal/http/routes_app.go) |
 | GET | `/api/settings/git_apps/github/:id` | Authenticated | [`gitAppsHandler.GetGithubApp`](https://github.com/buildwithtechx/codedock/blob/main/internal/http/routes_app.go) |
-| PUT | `/api/settings/git_apps/github` | Handler / middleware; admin | [`gitAppsHandler.SaveGithubApp`](https://github.com/buildwithtechx/codedock/blob/main/internal/http/routes_app.go) |
-| DELETE | `/api/settings/git_apps/github/:id` | Handler / middleware; admin | [`gitAppsHandler.DeleteGithubApp`](https://github.com/buildwithtechx/codedock/blob/main/internal/http/routes_app.go) |
-| POST | `/api/settings/notifications/test` | Handler / middleware; admin | [`notificationHandler.TestNotification`](https://github.com/buildwithtechx/codedock/blob/main/internal/http/routes_app.go) |
+| PUT | `/api/settings/git_apps/github` | Handler / middleware; instance admin | [`gitAppsHandler.SaveGithubApp`](https://github.com/buildwithtechx/codedock/blob/main/internal/http/routes_app.go) |
+| DELETE | `/api/settings/git_apps/github/:id` | Handler / middleware; instance admin | [`gitAppsHandler.DeleteGithubApp`](https://github.com/buildwithtechx/codedock/blob/main/internal/http/routes_app.go) |
+| POST | `/api/settings/notifications/test` | Handler / middleware; instance admin | [`notificationHandler.TestNotification`](https://github.com/buildwithtechx/codedock/blob/main/internal/http/routes_app.go) |
 
 ## Misc
 
@@ -250,10 +251,10 @@ Read [API conventions](/api/) first. Paths use `:parameter` placeholders. Linked
 | GET | `/api/examples` | Authenticated | [`exampleHandler.List`](https://github.com/buildwithtechx/codedock/blob/main/internal/http/routes_app.go) |
 | GET | `/api/one-click` | Authenticated | [`oneClickHandler.List`](https://github.com/buildwithtechx/codedock/blob/main/internal/http/routes_app.go) |
 | POST | `/api/one-click/deploy` | Authenticated | [`oneClickHandler.Deploy`](https://github.com/buildwithtechx/codedock/blob/main/internal/http/routes_app.go) |
-| POST | `/api/dns` | Authenticated; admin | [`dnsHandler.Create`](https://github.com/buildwithtechx/codedock/blob/main/internal/http/routes_app.go) |
-| GET | `/api/dns` | Authenticated; admin | [`dnsHandler.List`](https://github.com/buildwithtechx/codedock/blob/main/internal/http/routes_app.go) |
-| PUT | `/api/dns/:id` | Authenticated; admin | [`dnsHandler.Update`](https://github.com/buildwithtechx/codedock/blob/main/internal/http/routes_app.go) |
-| DELETE | `/api/dns/:id` | Authenticated; admin | [`dnsHandler.Delete`](https://github.com/buildwithtechx/codedock/blob/main/internal/http/routes_app.go) |
+| POST | `/api/dns` | Authenticated; instance admin | [`dnsHandler.Create`](https://github.com/buildwithtechx/codedock/blob/main/internal/http/routes_app.go) |
+| GET | `/api/dns` | Authenticated; instance admin | [`dnsHandler.List`](https://github.com/buildwithtechx/codedock/blob/main/internal/http/routes_app.go) |
+| PUT | `/api/dns/:id` | Authenticated; instance admin | [`dnsHandler.Update`](https://github.com/buildwithtechx/codedock/blob/main/internal/http/routes_app.go) |
+| DELETE | `/api/dns/:id` | Authenticated; instance admin | [`dnsHandler.Delete`](https://github.com/buildwithtechx/codedock/blob/main/internal/http/routes_app.go) |
 | GET | `/api/scheduled-tasks` | Authenticated | [`scheduledTaskHandler.ListProjectScheduledTasks`](https://github.com/buildwithtechx/codedock/blob/main/internal/http/routes_app.go) |
 | POST | `/api/scheduled-tasks` | Authenticated | [`scheduledTaskHandler.Create`](https://github.com/buildwithtechx/codedock/blob/main/internal/http/routes_app.go) |
 | GET | `/api/scheduled-tasks/:id` | Authenticated | [`scheduledTaskHandler.Get`](https://github.com/buildwithtechx/codedock/blob/main/internal/http/routes_app.go) |
@@ -268,7 +269,7 @@ Read [API conventions](/api/) first. Paths use `:parameter` placeholders. Linked
 | GET | `/api/canvas/projects` | Authenticated | [`canvasHandler.ListCanvasSummaries`](https://github.com/buildwithtechx/codedock/blob/main/internal/http/routes_app.go) |
 | GET | `/api/projects/:id/summary` | Authenticated | [`canvasHandler.GetCanvasSummary`](https://github.com/buildwithtechx/codedock/blob/main/internal/http/routes_app.go) |
 | GET | `/api/environments/:id/canvas` | Authenticated | [`canvasHandler.GetEnvironmentCanvas`](https://github.com/buildwithtechx/codedock/blob/main/internal/http/routes_app.go) |
-| GET | `/api/audit-logs` | Authenticated; admin | [`auditLogHandler.List`](https://github.com/buildwithtechx/codedock/blob/main/internal/http/routes_app.go) |
+| GET | `/api/audit-logs` | Authenticated; instance admin | [`auditLogHandler.List`](https://github.com/buildwithtechx/codedock/blob/main/internal/http/routes_app.go) |
 | GET | `/api/mcp/sse` | Authenticated | [`HandleMCPSSE`](https://github.com/buildwithtechx/codedock/blob/main/internal/http/routes_app.go) |
 | POST | `/api/mcp/messages` | Authenticated | [`HandleMCPMessage`](https://github.com/buildwithtechx/codedock/blob/main/internal/http/routes_app.go) |
 | GET | `/api/ws/terminal/:id` | Handler / middleware | [`terminalHandler.HandleWebSocket`](https://github.com/buildwithtechx/codedock/blob/main/internal/http/routes_app.go) |
@@ -284,4 +285,4 @@ Read [API conventions](/api/) first. Paths use `:parameter` placeholders. Linked
 
 ## Outside the API prefix
 
-`GET /healthz` returns health status. OAuth callbacks and static assets are registered separately from this catalogue. Billing routes return `404` when cloud mode is disabled.
+`GET /healthz` returns health status. Static assets and the dashboard fallback are registered outside this catalogue. The API-prefixed OAuth callbacks are included in the Auth section. Billing routes return `404` when cloud mode is disabled.

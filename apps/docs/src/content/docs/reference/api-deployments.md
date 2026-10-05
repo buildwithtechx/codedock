@@ -11,7 +11,7 @@ description: Trigger deployments and inspect their history, logs and metrics.
 curl -X POST "$CODEDOCK_URL/api/services/$SERVICE_ID/deploy"   -H "Authorization: Bearer $CODEDOCK_TOKEN"
 ```
 
-`POST /api/projects/:id/deploy` triggers the project's deployment workflow.
+`POST /api/projects/:id/deploy` triggers the project's deployment workflow and requires project administrator access.
 
 ## Inspect operations
 
@@ -20,7 +20,7 @@ curl -X POST "$CODEDOCK_URL/api/services/$SERVICE_ID/deploy"   -H "Authorization
 | GET | `/api/services/:serviceId/deployments` | Service deployment history |
 | GET | `/api/services/:serviceId/previews` | Pull-request previews |
 | GET | `/api/projects/:id/deployments` | Project history |
-| GET | `/api/deployments` | Organization history |
+| GET | `/api/deployments?organizationId=ORG_ID` | Organization history; organization ID required |
 | GET | `/api/deployments/:id/logs` | Deployment logs; logs-read scope |
 | GET | `/api/deployments/:id/explain` | Failure explanation |
 | POST | `/api/deployments/:id/rollback` | Rollback workflow |

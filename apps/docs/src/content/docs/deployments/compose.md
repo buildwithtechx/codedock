@@ -23,7 +23,7 @@ The parser identifies database engines from image names and otherwise creates an
 curl "$CODEDOCK_URL/api/compose/deploy"   -H "Authorization: Bearer $CODEDOCK_TOKEN"   -F "projectId=$PROJECT_ID" -F "file=@compose.yaml"
 ```
 
-The endpoint creates resources and returns a count. It does not preserve the entire Compose runtime configuration. Review the resources before deploying. Import is not atomic: if a later creation fails, earlier resources can already exist. Check for duplicates before retrying.
+The endpoint creates resources and returns a count. Database creation can start containers immediately during import. Review the Analyze response before calling Deploy; import is not a deferred preview. It does not preserve the entire Compose runtime configuration. Import is not atomic: if a later creation fails, earlier resources can already exist. Check for duplicates before retrying.
 
 ## Environment and override rules
 

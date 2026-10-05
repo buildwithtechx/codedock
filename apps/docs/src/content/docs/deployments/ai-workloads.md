@@ -21,6 +21,6 @@ Use a PostgreSQL image containing the extension, then enable it with your migrat
 
 ## Codedock AI settings
 
-AI provider settings used by Codedock for diagnostic assistance are separate from the AI containers you deploy. Configure the provider URL, model and credentials in settings only if you want that integration. Installing a model service does not automatically connect it as Codedock's AI provider.
+AI provider settings used by Codedock for diagnostic assistance are separate from the AI containers you deploy. Choose a supported provider and configure its model and API key in settings only if you want that integration. Installing a model service does not automatically connect it as Codedock's AI provider.
 
 See [templates and recipes](/deployments/templates/) and [build strategies](/deployments/build-strategies/).

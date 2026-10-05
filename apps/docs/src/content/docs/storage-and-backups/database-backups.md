@@ -7,18 +7,18 @@ A backup configuration selects a database or service volume, a schedule and rete
 
 ## Configure a destination
 
-An administrator can add an S3-compatible destination with a name, provider, endpoint, bucket, region, optional path prefix and access credentials. Use a pre-created bucket and verify access from the control plane. R2 and MinIO use this same destination workflow.
+An administrator can add an S3-compatible destination with a name, provider, endpoint, bucket, region and access credentials. Use a pre-created bucket and verify access from the control plane. R2 and MinIO use this same destination workflow.
 
 Destination creation is separate from provisioning an object-storage server. The credentials need permissions for the upload, download and deletion operations used by your backup lifecycle.
 
 ## Create a backup configuration
 
-Select the target database or volume. Set `backupEnabled`, a cron `schedule`, `timezone`, timeout and retention settings. To upload off-server, enable `s3Enabled` and choose `s3DestinationId`. Keep local copies unless you intentionally enable `disableLocal` and have verified the remote recovery path.
+Select the target database or volume. Set `backupEnabled`, a cron `schedule`, timeout and retention settings. The stored `timezone` field is not currently applied by the scheduler; expressions run in the control plane default time zone unless they explicitly specify a supported cron time zone. To upload off-server, enable `s3Enabled` and choose `s3DestinationId`. Keep local copies unless you intentionally enable `disableLocal` and have verified the remote recovery path.
 
 | Field | Purpose |
 | --- | --- |
 | `schedule` | Cron expression, for example `0 2 * * *` |
-| `timezone` | Time zone for the schedule, for example `UTC` |
+| `timezone` | Stored setting; currently ignored by scheduling |
 | `timeout` | Execution timeout |
 | `retentionDays` | Retention window |
 | `maxBackups` | Maximum retained record count |
@@ -34,7 +34,7 @@ The scheduler uses the configured cron expression. Daily, weekly and monthly pre
 4. Download the record and test restoration in a safe environment.
 5. Enable the schedule and check that later runs complete.
 
-A template without compatible dump metadata returns an unsupported-engine error. Volume archives are filesystem copies and do not guarantee application-level consistency for a live database.
+A missing engine template returns an unsupported-engine error. A present template without dump metadata instead falls back to a generic placeholder command; a completed record from that fallback is not evidence of a usable data backup. Its restore fallback expects a tar archive, which the placeholder does not produce. Use compatible dump and restore metadata and verify recovered data. Volume archives are filesystem copies and do not guarantee application-level consistency for a live database.
 
 ## Recovery scope
 
