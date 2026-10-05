@@ -22,7 +22,7 @@ export async function loginCommand(
 
   const token = options.token;
 
-  const rl = createInterface({
+  let rl = createInterface({
     input: process.stdin,
     output: process.stdout,
   });
@@ -57,9 +57,9 @@ export async function loginCommand(
       throw new Error('Email is required');
     }
 
-    rl.pause();
+    rl.close();
     const password = await readPassword();
-    rl.resume();
+    rl = createInterface({ input: process.stdin, output: process.stdout });
     if (!password) {
       throw new Error('Password is required');
     }

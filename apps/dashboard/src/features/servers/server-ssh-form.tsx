@@ -35,13 +35,10 @@ export function ServerSshForm({ onSuccess, onCancel }: ServerSshFormProps) {
   const [sshJumpHost, setSshJumpHost] = useState('');
   const [sshTransport, setSshTransport] = useState<'direct' | 'cloudflare'>('direct');
   const [showAdvanced, setShowAdvanced] = useState(false);
-
   const [testResult, setTestResult] = useState<{ ok: boolean; message: string } | null>(null);
-
   const fileInputRef = useRef<HTMLInputElement>(null);
   const { mutateAsync: testSSH, isPending: isTesting } = useTestSSH();
   const { mutateAsync: createServer, isPending: isCreating } = useCreateServer();
-
   const handleFileUpload = async (event: React.ChangeEvent<HTMLInputElement>) => {
     const file = event.target.files?.[0];
     event.target.value = '';
@@ -64,7 +61,6 @@ export function ServerSshForm({ onSuccess, onCancel }: ServerSshFormProps) {
       toast.error('Failed to read private key file');
     }
   };
-
   const handleTestConnection = async () => {
     if (!sshHost.trim()) {
       toast.error('Host IP address is required');
@@ -92,7 +88,6 @@ export function ServerSshForm({ onSuccess, onCancel }: ServerSshFormProps) {
       toast.error(msg);
     }
   };
-
   const handleSubmit = async (event: React.FormEvent) => {
     event.preventDefault();
     if (!name.trim()) {

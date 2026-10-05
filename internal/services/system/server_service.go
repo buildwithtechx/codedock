@@ -9,7 +9,6 @@ import (
 
 	"github.com/google/uuid"
 
-	"codedock.run/codedock/internal/config"
 	"codedock.run/codedock/internal/engine/ssh"
 	"codedock.run/codedock/internal/models"
 	"codedock.run/codedock/internal/repositories"
@@ -81,7 +80,7 @@ func (s *serverService) TestSSH(ctx context.Context, req models.TestSSHRequest) 
 }
 
 func (s *serverService) CreateServer(ctx context.Context, userID string, req models.CreateServerRequest) (*models.Server, error) {
-	if err := validateServerConnection(req.IsLocal, req.SSHPort, req.SSHTransport, req.SSHJumpHost, req.SSHKey+req.SSHPrivateKey, req.SSHPassword); err != nil {
+	if err := validateServerConnection(req.IsLocal, req.SSHPort, req.SSHTransport, req.SSHJumpHost, serverPrivateKey(req.SSHKey, req.SSHPrivateKey), req.SSHPassword); err != nil {
 		return nil, err
 	}
 	u, err := s.userRepo.GetUserByID(ctx, userID)
@@ -94,7 +93,13 @@ func (s *serverService) CreateServer(ctx context.Context, userID string, req mod
 		if err != nil {
 			return nil, fmt.Errorf("failed to check server limit: %w", err)
 		}
-		if len(servers) >= 1 {
+		ownedServers := 0
+		for _, server := range servers {
+			if server.UserID == userID {
+				ownedServers++
+			}
+		}
+		if ownedServers >= 1 {
 			return nil, fmt.Errorf("hobby plan is limited to 1 server. please upgrade to pro")
 		}
 	}
@@ -213,6 +218,9 @@ func (s *serverService) UpdateServer(ctx context.Context, id, userID string, req
 		server.SSHHost = *req.SSHHost
 	}
 	if req.SSHPort != nil {
+		if *req.SSHPort < 1 || *req.SSHPort > 65535 {
+			return nil, fmt.Errorf("SSH port must be between 1 and 65535")
+		}
 		server.SSHPort = *req.SSHPort
 	}
 	if req.SSHUser != nil && *req.SSHUser != "" {
@@ -238,7 +246,7 @@ func (s *serverService) UpdateServer(ctx context.Context, id, userID string, req
 		server.SSHJumpHost = *req.SSHJumpHost
 	}
 
-	if err := validateServerConnection(server.IsLocal, server.SSHPort, server.SSHTransport, server.SSHJumpHost, server.SSHKey+server.SSHPrivateKey, server.SSHPassword); err != nil {
+	if err := validateServerConnection(server.IsLocal, server.SSHPort, server.SSHTransport, server.SSHJumpHost, serverPrivateKey(server.SSHKey, server.SSHPrivateKey), server.SSHPassword); err != nil {
 		return nil, err
 	}
 	server.UpdatedAt = time.Now().UTC()
@@ -251,75 +259,4 @@ func (s *serverService) UpdateServer(ctx context.Context, id, userID string, req
 		s.sshManager.RemoveClient(id)
 	}
 	return server, nil
-}
-
-func (s *serverService) ListServersByUser(ctx context.Context, userID string) ([]*models.Server, error) {
-	servers, err := s.serverRepo.ListByUser(ctx, userID)
-	if err != nil {
-		return nil, err
-	}
-	user, err := s.userRepo.GetUserByID(ctx, userID)
-	if err != nil || user == nil || (user.Role != models.UserRoleOwner && user.Role != models.UserRoleAdmin) {
-		return servers, nil
-	}
-	return append([]*models.Server{s.controlPlaneServer(userID)}, servers...), nil
-}
-
-func (s *serverService) GetServer(ctx context.Context, id, userID string) (*models.Server, error) {
-	if id == controlPlaneServerID {
-		user, err := s.userRepo.GetUserByID(ctx, userID)
-		if err != nil {
-			return nil, fmt.Errorf("load server user: %w", err)
-		}
-		if user.Role != models.UserRoleOwner && user.Role != models.UserRoleAdmin {
-			return nil, fmt.Errorf("server access denied")
-		}
-		return s.controlPlaneServer(userID), nil
-	}
-	server, err := s.serverRepo.GetByID(ctx, id)
-	if err != nil {
-		return nil, err
-	}
-	if server != nil && server.UserID != userID && !(server.IsLocal && server.UserID == "system") {
-		return nil, fmt.Errorf("server access denied")
-	}
-	return server, nil
-}
-
-func (s *serverService) DeleteServer(ctx context.Context, id, userID string) error {
-	if id == controlPlaneServerID {
-		return fmt.Errorf("the Codedock control plane cannot be deleted")
-	}
-	server, err := s.serverRepo.GetByID(ctx, id)
-	if err != nil {
-		return err
-	}
-	if server == nil {
-		return fmt.Errorf("server not found")
-	}
-	if server.UserID != userID {
-		return fmt.Errorf("unauthorized to delete server")
-	}
-
-	if s.sshManager != nil {
-		s.sshManager.RemoveClient(id)
-	}
-	return s.serverRepo.Delete(ctx, id)
-}
-
-func (s *serverService) controlPlaneServer(userID string) *models.Server {
-	ipAddress := config.Get().Server.HostIP
-	if ipAddress == "" {
-		ipAddress = "127.0.0.1"
-	}
-	return &models.Server{
-		ID:             controlPlaneServerID,
-		UserID:         userID,
-		Name:           "Codedock Control Plane",
-		IPAddress:      ipAddress,
-		Status:         models.ServerStatusOnline,
-		IsControlPlane: true,
-		CreatedAt:      time.Now().UTC(),
-		UpdatedAt:      time.Now().UTC(),
-	}
 }

@@ -6,6 +6,7 @@ export async function readPassword(): Promise<string> {
     throw new Error(
       'Interactive login requires a terminal. Use an API token for noninteractive login.'
     );
+  const wasRaw = process.stdin.isRaw;
   process.stdout.write('Password: ');
   const output = new Writable({
     write(_chunk, _encoding, callback) {
@@ -20,6 +21,7 @@ export async function readPassword(): Promise<string> {
     });
   } finally {
     prompt.close();
+    process.stdin.setRawMode(wasRaw);
     output.end();
     process.stdout.write('\n');
   }

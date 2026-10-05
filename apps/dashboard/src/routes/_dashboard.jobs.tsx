@@ -20,7 +20,7 @@ import {
   TableHeader,
   TableRow,
 } from '#/components/ui/table';
-import { useListProjects } from '#/features/projects';
+import { useListAllProjects } from '#/features/projects';
 import { scheduledTasksService } from '#/services/scheduled-tasks';
 
 export const Route = createFileRoute('/_dashboard/jobs')({
@@ -34,8 +34,8 @@ export function JobsPage() {
     isLoading: isLoadingProjects,
     isError: projectsError,
     refetch: refetchProjects,
-  } = useListProjects();
-  const projects = projectsResponse?.data?.records || [];
+  } = useListAllProjects();
+  const projects = projectsResponse || [];
   const visibleProjects =
     selectedProjectId === 'all'
       ? projects

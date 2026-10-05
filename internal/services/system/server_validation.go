@@ -28,3 +28,10 @@ func validateServerConnection(local bool, port int, transport, jumpHost, key, pa
 	}
 	return nil
 }
+
+func serverPrivateKey(key, privateKey string) string {
+	if key != "" {
+		return key
+	}
+	return privateKey
+}

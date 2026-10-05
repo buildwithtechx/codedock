@@ -1,6 +1,7 @@
 import { toast } from 'sonner';
 import { env } from '#/env';
 import { getAuthHeaders, handleAuthFailure, refreshAuthSession } from '#/lib/auth-refresh';
+import { prepareCsrfHeaders } from '#/lib/csrf';
 
 export function getApiBaseUrl(): string {
   if (typeof window !== 'undefined') {
@@ -61,6 +62,7 @@ export const apiClient = {
     const baseUrl = getApiBaseUrl();
     const url = `${baseUrl}${endpoint}`;
     const headers = await prepareHeaders(options, options.body);
+    await prepareCsrfHeaders(baseUrl, endpoint, options.method || 'GET', headers);
 
     const response = await fetch(url, {
       ...options,
@@ -142,6 +144,7 @@ export const apiClient = {
     const baseUrl = getApiBaseUrl();
     const url = `${baseUrl}${endpoint}`;
     const headers = await prepareHeaders(options, body);
+    await prepareCsrfHeaders(baseUrl, endpoint, 'POST', headers);
     const response = await fetch(url, {
       ...options,
       method: 'POST',

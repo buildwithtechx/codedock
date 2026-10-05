@@ -199,6 +199,12 @@ func (h *BackupHandler) TriggerDatabaseBackup(c echo.Context) error {
 		return utils.Error(c, http.StatusForbidden, "insufficient admin permissions")
 	}
 	cfg, err := h.backupService.GetConfigByDatabaseID(c.Request().Context(), id)
+	if err != nil {
+		var notFound *utils.NotFoundError
+		if !errors.As(err, &notFound) {
+			return utils.Error(c, http.StatusInternalServerError, "failed to load backup configuration")
+		}
+	}
 	if err != nil || cfg == nil {
 		db, dbErr := h.dbService.GetDatabase(c.Request().Context(), id)
 		if dbErr != nil || db == nil {

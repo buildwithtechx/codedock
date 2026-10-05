@@ -48,7 +48,7 @@ func TestE2EServerLifecycle(t *testing.T) {
 		"sshPort":       2222,
 		"sshUser":       "deploy",
 		"sshAuthMethod": "key",
-		"sshKey":        "ssh-ed25519 AAAAC3NzaC1lZDI1NTE5AAAAI...",
+		"sshKey":        testSSHPrivateKey(t),
 	}
 
 	res, body, err = h.post("/api/servers", remoteServerReq, nil)

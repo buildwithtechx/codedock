@@ -46,6 +46,7 @@ func (s *BackupService) CreateConfig(ctx context.Context, cfg *models.BackupConf
 	}
 	cfg.CreatedAt = time.Now().UTC().Format(time.RFC3339)
 	cfg.UpdatedAt = cfg.CreatedAt
+	setScheduleStatus(cfg)
 	if err := s.backupRepo.CreateConfig(ctx, cfg); err != nil {
 		return err
 	}
@@ -67,6 +68,7 @@ func (s *BackupService) UpdateConfig(ctx context.Context, cfg *models.BackupConf
 	if err := backup.ValidateSchedule(cfg.Schedule); err != nil {
 		return err
 	}
+	setScheduleStatus(cfg)
 	cfg.UpdatedAt = time.Now().UTC().Format(time.RFC3339)
 	if err := s.backupRepo.UpdateConfig(ctx, cfg); err != nil {
 		return err
@@ -244,4 +246,12 @@ func (s *BackupService) RestoreBackup(ctx context.Context, recordID string) erro
 		return errors.New("backup manager not available")
 	}
 	return s.manager.RestoreBackup(ctx, recordID)
+}
+
+func setScheduleStatus(cfg *models.BackupConfig) {
+	if cfg.Schedule == "manual" {
+		cfg.Status = models.BackupConfigStatusInactive
+	} else {
+		cfg.Status = models.BackupConfigStatusActive
+	}
 }

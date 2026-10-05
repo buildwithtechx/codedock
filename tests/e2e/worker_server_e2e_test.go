@@ -20,8 +20,10 @@ func TestE2EWorkerServerAndS3DestinationManagement(t *testing.T) {
 	}
 
 	serverReq := map[string]string{
-		"name":      "worker-us-east-1",
-		"ipAddress": "192.168.1.100",
+		"name":        "worker-us-east-1",
+		"ipAddress":   "192.168.1.100",
+		"sshHost":     "127.0.0.1",
+		"sshPassword": "test-worker-password",
 	}
 
 	res, body, err = h.post("/api/servers", serverReq, nil)

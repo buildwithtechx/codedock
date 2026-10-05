@@ -50,16 +50,9 @@ func configureEchoMiddleware(e *echo.Echo) {
 		CookiePath:   "/",
 		CookieMaxAge: 86400,
 		Skipper: func(c echo.Context) bool {
-			path := c.Request().URL.Path
-			if strings.HasPrefix(path, "/api/auth/signin") ||
-				strings.HasPrefix(path, "/api/auth/signup") ||
-				strings.HasPrefix(path, "/api/auth/refresh") ||
-				strings.HasPrefix(path, "/api/auth/oauth") ||
-				strings.HasPrefix(path, "/api/v1/auth/") {
-				_, err := c.Cookie("csrf_token")
-				return err != nil
-			}
-			return false
+			path := strings.TrimPrefix(c.Request().URL.Path, "/api/v1/")
+			path = strings.TrimPrefix(path, "/api/")
+			return !strings.HasPrefix(path, "auth/") && strings.HasPrefix(c.Request().Header.Get("Authorization"), "Bearer ")
 		},
 	}))
 }

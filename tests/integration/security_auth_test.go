@@ -60,14 +60,33 @@ func TestSecurityCSRFProtection(t *testing.T) {
 		"name":     "CSRF Tester",
 	})
 
+	for _, path := range []string{"/api/auth/signup", "/api/auth/signin", "/api/auth/refresh", "/api/v1/auth/signup"} {
+		req := httptest.NewRequest(http.MethodPost, path, bytes.NewReader(body))
+		req.Header.Set("Content-Type", "application/json")
+		rec := httptest.NewRecorder()
+		server.ServeHTTP(rec, req)
+		if rec.Code != http.StatusBadRequest && rec.Code != http.StatusForbidden {
+			t.Fatalf("expected %s without CSRF token to be rejected, got %d: %s", path, rec.Code, rec.Body.String())
+		}
+	}
+	bootstrap := httptest.NewRecorder()
+	server.ServeHTTP(bootstrap, httptest.NewRequest(http.MethodGet, "/api/auth/csrf", nil))
+	var token struct {
+		Token string `json:"token"`
+	}
+	if err := json.Unmarshal(bootstrap.Body.Bytes(), &token); err != nil || token.Token == "" {
+		t.Fatalf("expected bootstrap token, got %s: %v", bootstrap.Body.String(), err)
+	}
 	req := httptest.NewRequest(http.MethodPost, "/api/auth/signup", bytes.NewReader(body))
 	req.Header.Set("Content-Type", "application/json")
+	req.Header.Set("X-CSRF-Token", token.Token)
+	for _, cookie := range bootstrap.Result().Cookies() {
+		req.AddCookie(cookie)
+	}
 	rec := httptest.NewRecorder()
-
 	server.ServeHTTP(rec, req)
-
 	if rec.Code != http.StatusOK && rec.Code != http.StatusCreated {
-		t.Fatalf("expected initial signup to succeed under CSRF skipper, got %d: %s", rec.Code, rec.Body.String())
+		t.Fatalf("expected signup with CSRF token to succeed, got %d: %s", rec.Code, rec.Body.String())
 	}
 }
 
