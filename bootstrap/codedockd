@@ -32,7 +32,11 @@ show_help() {
 
 case "${1:-help}" in
   setup|reset-password|config|deploy|apps:*|db:*)
-    docker exec -i "$CONTAINER_NAME" codedockd "$@"
+    if [ -t 0 ] && [ -t 1 ]; then
+      docker exec -it "$CONTAINER_NAME" codedockd "$@"
+    else
+      docker exec -i "$CONTAINER_NAME" codedockd "$@"
+    fi
     ;;
   version)
     docker exec -i "$CONTAINER_NAME" codedockd version
@@ -83,9 +87,10 @@ case "${1:-help}" in
     docker run -d \
       --name "$CONTAINER_NAME" \
       --restart unless-stopped \
-      -p 8080:8080 -p 80:80 -p 443:443 \
+      -p 8080:8080 \
       --env-file "$CODEDOCK_DIR/.env" \
       -e CODEDOCK_DATA_DIR=/codedock/data \
+      -e CODEDOCK_CLOUD_MODE=false \
       -v codedock_data:/codedock/data \
       -v "${DOCKER_SOCKET_PATH:-/var/run/docker.sock}":/var/run/docker.sock:ro \
       --network codedock-network \
@@ -107,9 +112,10 @@ case "${1:-help}" in
     docker run -d \
       --name "$CONTAINER_NAME" \
       --restart unless-stopped \
-      -p 8080:8080 -p 80:80 -p 443:443 \
+      -p 8080:8080 \
       --env-file "$CODEDOCK_DIR/.env" \
       -e CODEDOCK_DATA_DIR=/codedock/data \
+      -e CODEDOCK_CLOUD_MODE=false \
       -v codedock_data:/codedock/data \
       -v "${DOCKER_SOCKET_PATH:-/var/run/docker.sock}":/var/run/docker.sock:ro \
       --network codedock-network \

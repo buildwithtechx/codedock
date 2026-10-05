@@ -1,6 +1,7 @@
 package http
 
 import (
+	"net/http"
 	"os"
 	"path/filepath"
 
@@ -141,6 +142,14 @@ func (s *Server) registerMiscRoutes(apiGroup, authGroup *echo.Group) {
 }
 
 func (s *Server) registerBillingRoutes(apiGroup, authGroup *echo.Group) {
+	if !config.Get().Cloud.Enabled {
+		unavailable := func(c echo.Context) error {
+			return echo.NewHTTPError(http.StatusNotFound, "billing is unavailable on self-hosted instances")
+		}
+		apiGroup.Any("/billing", unavailable)
+		apiGroup.Any("/billing/*", unavailable)
+		return
+	}
 	apiGroup.POST("/billing/webhook", s.billingHandler.Webhook)
 
 	authGroup.GET("/billing/config", s.billingHandler.GetConfig)

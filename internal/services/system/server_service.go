@@ -9,6 +9,7 @@ import (
 
 	"github.com/google/uuid"
 
+	"codedock.run/codedock/internal/config"
 	"codedock.run/codedock/internal/engine/ssh"
 	"codedock.run/codedock/internal/models"
 	"codedock.run/codedock/internal/repositories"
@@ -88,7 +89,7 @@ func (s *serverService) CreateServer(ctx context.Context, userID string, req mod
 		return nil, fmt.Errorf("failed to get user: %w", err)
 	}
 
-	if u.PlanType != "pro" {
+	if config.Get().Cloud.Enabled && u.PlanType != "pro" {
 		servers, err := s.serverRepo.ListByUser(ctx, userID)
 		if err != nil {
 			return nil, fmt.Errorf("failed to check server limit: %w", err)

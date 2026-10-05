@@ -17,7 +17,7 @@ export function BottomCta() {
         <div className="flex flex-col items-center justify-center gap-4 sm:flex-row">
           <div className="flex w-full items-center gap-2 rounded-lg border border-border bg-background/80 px-5 py-3.5 font-mono text-sm shadow-xl backdrop-blur-md sm:w-auto">
             <span className="shrink-0 font-bold text-primary">$</span>
-            <code className="text-foreground">curl -fsSL https://get.codedock.run | sh</code>
+            <code className="text-foreground">curl -fsSL https://get.codedock.run | bash</code>
           </div>
           <a
             href="https://app.codedock.run"

@@ -7,12 +7,14 @@ import {
   ProfileNameForm,
   ProfilePasswordForm,
 } from '#/features/profile/user-profile-form';
+import { useGetPublicSettings } from '#/features/settings';
 
 export const Route = createFileRoute('/_dashboard/profile')({
   component: ProfilePage,
 });
 
 function ProfilePage() {
+  const { data: publicSettings } = useGetPublicSettings();
   return (
     <div className="space-y-6">
       <PageHeader
@@ -25,7 +27,7 @@ function ProfilePage() {
         <ProfileEmailForm />
         <ProfilePasswordForm />
         <Security2FASetup />
-        <BillingSection />
+        {publicSettings?.data?.cloudMode && <BillingSection />}
       </div>
     </div>
   );

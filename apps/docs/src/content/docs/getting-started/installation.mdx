@@ -11,14 +11,18 @@ Codedock turns any bare-metal VPS into your own private Platform-as-a-Service in
 
 <Tabs>
   <TabItem label="curl" icon="seti:shell">
-    ```sh curl -fsSL https://get.codedock.run | sh ```
+    ```sh
+curl -fsSL https://get.codedock.run | bash
+```
   </TabItem>
   <TabItem label="wget" icon="seti:shell">
-    ```sh wget -qO- https://get.codedock.run | sh ```
+    ```sh
+wget -qO- https://get.codedock.run | bash
+```
   </TabItem>
 </Tabs>
 
-This installs the `codedockd` daemon, pulls the required Docker images, and starts the dashboard at `http://<your-ip>:8080`.
+This installs the `codedockd` daemon, pulls the required Docker images, and starts the dashboard at `http://<your-ip>:8080`. No environment file needs to be created or edited. The installer detects your server IP and generates authentication secrets automatically. Direct binary and Docker installations generate and retain missing secrets in the persistent data directory.
 
 <Aside type="tip" title="Prerequisites">
 
@@ -37,7 +41,7 @@ After the install script completes, you'll see:
 ✅ Codedock vlatest installed successfully!
   📍 Dashboard:    http://203.0.113.42:8080
   🛠️  Server CLI:  codedockd --help
-  💻 Remote CLI:   curl -fsSL https://get.codedock.run/cli | sh
+  💻 Remote CLI:   curl -fsSL https://get.codedock.run/cli | bash
 ```
 
 ### Create Your Account
@@ -46,13 +50,14 @@ You have two ways to create the admin account:
 
 <Tabs>
   <TabItem label="Via Dashboard" icon="laptop">
-  Open `http://<your-server-ip>:8080` in your browser. The first user to register becomes the **instance admin**.
+  Open `http://<your-server-ip>:8080` in your browser. The first user to register becomes the **instance owner**. Only your name, email, and password are required.
   </TabItem>
   <TabItem label="Via Terminal" icon="terminal">
   Run the setup wizard directly from your server (no browser needed):
   ```sh
   codedockd setup
   ```
+  The wizard creates the instance owner and optionally asks for an app domain and certificate email. Settings are saved in the persistent data directory. Email and OAuth integrations can be configured later in the dashboard.
   </TabItem>
 </Tabs>
 
@@ -76,7 +81,7 @@ codedockd downgrade v0.1.0  # Downgrade to a specific version
 Install on your **local machine** to manage your server from anywhere:
 
 ```sh
-curl -fsSL https://get.codedock.run/cli | sh
+curl -fsSL https://get.codedock.run/cli | bash
 codedock login    # Connect to your server
 codedock project list
 codedock deploy <service-id>
@@ -89,8 +94,10 @@ Without a domain, Codedock assigns a magic DNS subdomain (like `sslip.io` or `tr
 <Steps>
 
 1. Go to **Settings → Server Settings**.
-2. Set your wildcard domain (e.g. `*.codedock.example.com`).
-3. Point an `A` record or `CNAME` to your server.
-4. Traefik provisions Let's Encrypt SSL certificates automatically.
+2. Set your wildcard domain (e.g. `codedock.example.com`).
+3. Point a wildcard DNS record (`*.codedock.example.com`) to your server.
+4. Run `codedockd setup` to save your domain and certificate email, then `codedockd restart` to apply HTTPS.
 
 </Steps>
+
+Self-hosted installations do not require Stripe credentials. Cloud billing is available only when the operator enables cloud mode.

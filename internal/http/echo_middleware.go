@@ -56,6 +56,9 @@ func configureEchoMiddleware(e *echo.Echo) {
 		Skipper: func(c echo.Context) bool {
 			path := strings.TrimPrefix(c.Request().URL.Path, "/api/v1/")
 			path = strings.TrimPrefix(path, "/api/")
+			if path == "billing/webhook" && c.Request().Method == http.MethodPost && config.Get().Cloud.Enabled {
+				return true
+			}
 			return !strings.HasPrefix(path, "auth/") && strings.HasPrefix(c.Request().Header.Get("Authorization"), "Bearer ")
 		},
 	}))

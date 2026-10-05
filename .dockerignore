@@ -7,3 +7,12 @@ dist/
 data/
 tmp/
 **/*.md
+
+.env
+.env.*
+**/.env
+**/.env.*
+**/self-hosted.json
+**/.vault_key
+**/codedock.db*
+**/dist/

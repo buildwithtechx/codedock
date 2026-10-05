@@ -12,7 +12,7 @@ Access server settings from **Settings → Server Settings** in the dashboard. O
 ### Traefik Reverse Proxy
 
 - **Wildcard Domain**: Set the base domain for all services (e.g. `codedock.example.com`).
-- **Let's Encrypt Email**: Email for SSL certificate notifications.
+- **Let's Encrypt Email**: Save your certificate email with `codedockd setup`.
 - **HTTP to HTTPS Redirect**: Auto-redirect all HTTP traffic to HTTPS.
 - **Custom Port Bindings**: Map service ports to custom host ports.
 
@@ -29,12 +29,14 @@ Access server settings from **Settings → Server Settings** in the dashboard. O
 
 ## Environment Variables
 
-Set at the server level via `.env`:
+Self-hosted installations work without setting environment variables. Authentication secrets are generated once and stored in `self-hosted.json` inside the persistent data directory. Keep this file with your database and vault key when moving or backing up an installation. Use `codedockd setup` for an optional domain and certificate email, and dashboard settings for email and OAuth.
+
+Environment variables are optional operator overrides:
 
 ```sh
 PORT=8080
 CODEDOCK_DATA_DIR=data
-CODEDOCK_STATIC_DIR=dashboard/dist
+CODEDOCK_STATIC_DIR=apps/dashboard/dist
 CODEDOCK_TLS_EMAIL=admin@example.com
 CODEDOCK_MAGIC_DOMAIN=traefik.me # Magic DNS domain (options: sslip.io, traefik.me, nip.io)
 ```
@@ -135,5 +137,9 @@ Codedock checks for updates automatically. To manage updates:
 Updates can also be triggered manually via the CLI:
 
 ```sh
-curl -fsSL https://get.codedock.run | sh
+curl -fsSL https://get.codedock.run | bash
 ```
+
+## Cloud Mode
+
+`CODEDOCK_CLOUD_MODE` defaults to `false`. Set it to `true` only for the managed cloud control plane. Cloud operators supply authentication secrets, platform email and OAuth credentials, and `STRIPE_*` billing credentials. Self-hosted installations hide subscription billing and reject billing API requests.

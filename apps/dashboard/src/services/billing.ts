@@ -13,15 +13,13 @@ export interface BillingConfig {
 
 export const billingService = {
   getConfig: async (): Promise<BillingConfig> => {
-    const res = await apiClient.get<any>('/billing/config');
-    return res.data;
+    return await apiClient.get<BillingConfig>('/billing/config');
   },
   createCheckoutSession: async (payload: {
     priceId: string;
     successUrl: string;
     cancelUrl: string;
-  }): Promise<any> => {
-    const res = await apiClient.post<any>('/billing/checkout', payload);
-    return res.data;
+  }): Promise<{ url: string }> => {
+    return await apiClient.post<{ url: string }>('/billing/checkout', payload);
   },
 };

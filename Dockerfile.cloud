@@ -1,15 +1,15 @@
-# Stage 1: Build the Dashboard GUI (TanStack + Vite)
 FROM node:22-alpine AS dashboard-builder
-WORKDIR /app/dashboard
+WORKDIR /app
 
-COPY dashboard/package*.json ./
+COPY package*.json ./
+COPY apps/ ./apps/
+COPY packages/ ./packages/
+COPY tsconfig.base.json ./
 RUN npm ci
 
-COPY dashboard/ ./
-RUN npm run build
+RUN npm run build:dashboard
 
-# Stage 2: Build the Go daemon binary (`codedockd`)
-FROM golang:1.25-alpine AS daemon-builder
+FROM golang:1.26-alpine AS daemon-builder
 WORKDIR /src
 
 RUN apk add --no-cache git ca-certificates tzdata
@@ -18,26 +18,25 @@ COPY go.mod go.sum ./
 RUN go mod download
 
 COPY . .
-COPY --from=dashboard-builder /app/dashboard/dist ./dashboard/dist
+COPY --from=dashboard-builder /app/apps/dashboard/dist ./apps/dashboard/dist
 
 ARG VERSION=dev
 RUN CGO_ENABLED=0 GOOS=linux go build -a -installsuffix cgo -ldflags="-w -s -X main.codedockVersion=${VERSION}" -o /codedockd ./cmd/codedockd
 
-# Stage 3: Minimal Cloud Control Plane Runtime
 FROM alpine:3.21 AS production
-WORKDIR /var/www/codedock
+WORKDIR /codedock
 
-RUN apk add --no-cache ca-certificates tzdata docker-cli curl
+RUN apk add --no-cache ca-certificates tzdata docker-cli git openssh-client curl
 
 COPY --from=daemon-builder /codedockd /usr/local/bin/codedockd
-RUN mkdir -p /var/www/codedock/data
+RUN mkdir -p /codedock/data
 
 ENV PORT=8080 \
-    CODEDOCK_DATA_DIR=/var/www/codedock/data \
+    CODEDOCK_DATA_DIR=/codedock/data \
     CODEDOCK_CLOUD_MODE=true
 
-EXPOSE 8080 80 443
+EXPOSE 8080
 
-VOLUME ["/var/www/codedock/data"]
+VOLUME ["/codedock/data"]
 
 ENTRYPOINT ["codedockd"]

@@ -160,7 +160,7 @@ The `codedock` binary runs on your **local machine** and communicates with your 
 ### Installation
 
 ```sh
-curl -fsSL https://get.codedock.run/cli | sh
+curl -fsSL https://get.codedock.run/cli | bash
 ```
 
 Or if you have Go installed:

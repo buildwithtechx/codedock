@@ -2,10 +2,11 @@ FROM node:22-alpine AS dashboard-builder
 WORKDIR /app
 
 COPY package*.json ./
-COPY apps/dashboard/package*.json ./apps/dashboard/
+COPY apps/ ./apps/
+COPY packages/ ./packages/
+COPY tsconfig.base.json ./
 RUN npm ci
 
-COPY apps/ ./apps/
 RUN npm run build:dashboard
 
 FROM golang:1.26-alpine AS daemon-builder
@@ -23,18 +24,19 @@ ARG VERSION=dev
 RUN CGO_ENABLED=0 GOOS=linux go build -a -installsuffix cgo -ldflags="-w -s -X main.codedockVersion=${VERSION}" -o /codedockd ./cmd/codedockd
 
 FROM alpine:3.21 AS production
-WORKDIR /var/www/codedock
+WORKDIR /codedock
 
 RUN apk add --no-cache ca-certificates tzdata docker-cli git openssh-client curl
 
 COPY --from=daemon-builder /codedockd /usr/local/bin/codedockd
-RUN mkdir -p /var/www/codedock/data
+RUN mkdir -p /codedock/data
 
 ENV PORT=8080 \
-    CODEDOCK_DATA_DIR=/var/www/codedock/data
+    CODEDOCK_DATA_DIR=/codedock/data \
+    CODEDOCK_CLOUD_MODE=false
 
-EXPOSE 8080 80 443
+EXPOSE 8080
 
-VOLUME ["/var/www/codedock/data"]
+VOLUME ["/codedock/data"]
 
 ENTRYPOINT ["codedockd"]

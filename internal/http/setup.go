@@ -9,6 +9,7 @@ import (
 	"github.com/docker/docker/client"
 	"github.com/labstack/echo/v4"
 
+	"codedock.run/codedock/internal/config"
 	"codedock.run/codedock/internal/core"
 	"codedock.run/codedock/internal/engine/backup"
 	"codedock.run/codedock/internal/engine/compose"
@@ -202,8 +203,11 @@ func NewServer(db *sql.DB, v *utils.Vault, deployer *deploy.Deployer, traefikMan
 	registryService := deploymentservices.NewRegistryService(registryRepo)
 	registryHandler := deployments.NewRegistryHandler(registryService)
 
-	billingService := systemservices.NewBillingService(userRepo)
-	billingHandler := system.NewBillingHandler(billingService)
+	var billingHandler *system.BillingHandler
+	if config.Get().Cloud.Enabled {
+		billingService := systemservices.NewBillingService(userRepo)
+		billingHandler = system.NewBillingHandler(billingService)
+	}
 
 	takeoverRepo := repositories.NewTakeoverRepository(db, v)
 	takeoverScanner := systemservices.NewTakeoverScanner()

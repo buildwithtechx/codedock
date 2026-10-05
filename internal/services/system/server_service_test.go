@@ -5,6 +5,7 @@ import (
 	"database/sql"
 	"testing"
 
+	"codedock.run/codedock/internal/config"
 	"codedock.run/codedock/internal/models"
 	"codedock.run/codedock/internal/repositories"
 
@@ -32,5 +33,54 @@ func TestListServersByUserIncludesControlPlaneForOwner(t *testing.T) {
 	}
 	if len(servers) != 1 || !servers[0].IsControlPlane || servers[0].ID != controlPlaneServerID {
 		t.Fatalf("expected control plane server, got %#v", servers)
+	}
+}
+
+func TestWorkerLimitsOnlyApplyInCloudMode(t *testing.T) {
+	cfg := config.Get()
+	previous := cfg.Cloud.Enabled
+	t.Cleanup(func() { cfg.Cloud.Enabled = previous })
+	for _, check := range []struct {
+		name    string
+		cloud   bool
+		plan    string
+		allowed bool
+	}{
+		{"self-hosted", false, "free", true},
+		{"cloud hobby", true, "free", false},
+		{"cloud pro", true, "pro", true},
+	} {
+		t.Run(check.name, func(t *testing.T) {
+			cfg.Cloud.Enabled = check.cloud
+			db, err := sql.Open("sqlite", ":memory:?_pragma=foreign_keys(ON)")
+			if err != nil {
+				t.Fatal(err)
+			}
+			defer func() {
+				if err := db.Close(); err != nil {
+					t.Error(err)
+				}
+			}()
+			if err := repositories.RunMigrations(db); err != nil {
+				t.Fatal(err)
+			}
+			users := repositories.NewUserRepo(db)
+			user := &models.User{ID: "owner", Email: "owner@example.com", Role: models.UserRoleOwner, IsActive: true, PlanType: check.plan}
+			if err := users.CreateUser(context.Background(), user); err != nil {
+				t.Fatal(err)
+			}
+			service := NewServerService(repositories.NewServerRepository(db, nil), users, nil)
+			request := models.CreateServerRequest{Name: "worker", SSHHost: "192.0.2.1", SSHPassword: "test-password"}
+			if _, err := service.CreateServer(context.Background(), user.ID, request); err != nil {
+				t.Fatal(err)
+			}
+			_, err = service.CreateServer(context.Background(), user.ID, request)
+			if check.allowed && err != nil {
+				t.Fatalf("worker creation should be allowed: %v", err)
+			}
+			if !check.allowed && err == nil {
+				t.Fatal("cloud hobby worker limit was bypassed")
+			}
+		})
 	}
 }

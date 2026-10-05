@@ -18,9 +18,6 @@ func isEmailEnabled(cfg *models.NotificationSettings) bool {
 		return true
 	}
 	appCfg := config.Get()
-	if appCfg.Cloud.Enabled {
-		return true
-	}
 	return appCfg.SMTP.Host != "" || appCfg.Resend.APIKey != ""
 }
 
