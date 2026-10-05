@@ -14,7 +14,8 @@ export async function bootstrapCsrf(apiBaseUrl: string): Promise<string> {
     new URL(apiBaseUrl, window.location.href).hostname === window.location.hostname
   ) {
     const token = document.cookie.match(/(?:^|;\s*)csrf_token=([^;]*)/)?.[1];
-    if (token) return decodeURIComponent(token);
+    const decoded = decodeCsrfCookie(token);
+    if (decoded) return decoded;
   }
   if (cached?.token && cached.expiresAt > Date.now()) return cached.token;
   const entry: CsrfEntry = { expiresAt: 0 };
@@ -49,5 +50,15 @@ export async function prepareCsrfHeaders(
   if (['GET', 'HEAD', 'OPTIONS'].includes(method.toUpperCase())) return;
   if (!headers.has('Authorization') || endpoint.startsWith('/auth/')) {
     headers.set('X-CSRF-Token', await bootstrapCsrf(baseUrl));
+  }
+}
+
+function decodeCsrfCookie(token?: string): string | undefined {
+  if (!token) return undefined;
+  try {
+    const decoded = decodeURIComponent(token);
+    return decoded && decoded !== '_echo_csrf_using_sec_fetch_site_' ? decoded : undefined;
+  } catch {
+    return undefined;
   }
 }

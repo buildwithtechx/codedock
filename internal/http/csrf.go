@@ -5,6 +5,9 @@ import (
 	"encoding/hex"
 	"fmt"
 	"net/http"
+	"strings"
+
+	"codedock.run/codedock/internal/config"
 
 	"github.com/labstack/echo/v4"
 	echomiddleware "github.com/labstack/echo/v4/middleware"
@@ -14,6 +17,9 @@ func bootstrapCSRF(c echo.Context) error {
 	token := ""
 	if cookie, err := c.Cookie("csrf_token"); err == nil {
 		token = cookie.Value
+	}
+	if token == echomiddleware.CSRFUsingSecFetchSite {
+		token = ""
 	}
 	if token == "" {
 		if generated, ok := c.Get("csrf").(string); ok && generated != echomiddleware.CSRFUsingSecFetchSite {
@@ -27,7 +33,7 @@ func bootstrapCSRF(c echo.Context) error {
 		}
 		token = hex.EncodeToString(random)
 	}
-	secure := c.Scheme() == "https"
+	secure := c.IsTLS() || strings.HasPrefix(config.Get().Server.APIHost, "https://")
 	sameSite := http.SameSiteLaxMode
 	if secure {
 		sameSite = http.SameSiteNoneMode

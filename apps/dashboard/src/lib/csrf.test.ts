@@ -29,3 +29,17 @@ describe('CSRF bootstrap', () => {
     expect(await bootstrapCsrf(base)).toBe('token');
   });
 });
+
+it.each(['_echo_csrf_using_sec_fetch_site_', '%invalid', ''])(
+  'bootstraps instead of returning an invalid cookie %s',
+  async (cookie) => {
+    vi.stubGlobal('window', { location: { href: base, hostname: 'remote.example.com' } });
+    vi.stubGlobal('document', { cookie: `csrf_token=${cookie}` });
+    const fetchMock = vi
+      .fn()
+      .mockResolvedValue({ ok: true, json: async () => ({ token: 'fresh' }) });
+    vi.stubGlobal('fetch', fetchMock);
+    expect(await bootstrapCsrf(base)).toBe('fresh');
+    expect(fetchMock).toHaveBeenCalledOnce();
+  }
+);
