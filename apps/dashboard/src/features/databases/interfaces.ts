@@ -18,6 +18,7 @@ export type DatabaseEngine =
 export interface Database {
   id: string;
   projectId: string;
+  environmentId?: string;
   name: string;
   engine: DatabaseEngine;
   version: string;
@@ -37,6 +38,7 @@ export interface Database {
 
 export interface CreateDatabaseRequest {
   projectId: string;
+  environmentId?: string;
   name: string;
   engine: DatabaseEngine;
   version?: string;

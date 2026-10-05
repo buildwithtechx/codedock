@@ -6,7 +6,8 @@
   "license": "Apache-2.0",
   "type": "module",
   "workspaces": [
-    "apps/*"
+    "apps/*",
+    "packages/*"
   ],
   "scripts": {
     "dev": "concurrently -k -n \"daemon,dashboard\" -c \"blue,magenta\" \"npm run dev:daemon\" \"npm run dev:dashboard\"",
@@ -14,7 +15,9 @@
     "dev:daemon": "go run github.com/air-verse/air@latest -c .air.toml",
     "dev:dashboard": "npm run dev --workspace=@codedock/dashboard",
     "generate-routes": "npm run generate-routes --workspace=@codedock/dashboard",
-    "build": "npm run build:dashboard && npm run build:daemon",
+    "build": "npm run build:dashboard && npm run build:packages && npm run build:daemon",
+    "build:packages": "npm run build --workspace packages/cli",
+    "build:cli": "npm run build:packages",
     "build:daemon": "go build -ldflags \"-s -w\" -o bin/codedockd ./cmd/codedockd",
     "build:dashboard": "npm run build --workspace=@codedock/dashboard",
     "dev:desktop": "npm run dev --workspace=@codedock/desktop",
@@ -28,17 +31,19 @@
     "preview": "npm run preview --workspace=@codedock/dashboard",
     "check": "go fmt ./... && go vet ./... && npm run format",
     "fmt": "go fmt ./... && npm run format:fix",
-    "format": "biome check apps",
-    "format:fix": "biome check --write apps",
-    "typecheck": "npm run typecheck --workspace=@codedock/dashboard",
-    "test": "go test ./... -v && npm run test --workspace=@codedock/dashboard",
+    "format": "biome check apps packages",
+    "format:fix": "biome check --write apps packages",
+    "typecheck": "npm run typecheck --workspace=@codedock/dashboard && npm run typecheck:packages",
+    "typecheck:packages": "npm run build:types --workspace packages/cli && npm run typecheck --workspace packages/cli",
+    "test": "go test ./... && npm run test --workspace=@codedock/dashboard && npm run test --workspace=packages/cli",
     "docker:build": "docker build -t ghcr.io/buildwithtechx/codedock:dev .",
-    "docker:up": "docker network create codedock-network 2>/dev/null || true && docker run -d --name codedock-control-plane --restart unless-stopped -p 8080:8080 -p 80:80 -p 443:443 -v codedock_data:/codedock/data -e CODEDOCK_DATA_DIR=/codedock/data -v /var/run/docker.sock:/var/run/docker.sock:ro --network codedock-network ghcr.io/buildwithtechx/codedock:dev",
+    "docker:up": "docker network create codedock-network 2>/dev/null || true && docker run -d --name codedock-control-plane --restart unless-stopped -p 8080:8080 -v codedock_data:/codedock/data -e CODEDOCK_DATA_DIR=/codedock/data -v /var/run/docker.sock:/var/run/docker.sock:ro --network codedock-network ghcr.io/buildwithtechx/codedock:dev",
     "docker:down": "docker stop codedock-control-plane && docker rm codedock-control-plane",
     "clean": "rm -rf bin codedockd apps/dashboard/dist"
   },
   "devDependencies": {
-    "@biomejs/biome": "^2.5.6",
-    "concurrently": "^10.0.4"
+    "@biomejs/biome": "^2.5.15",
+    "concurrently": "^10.0.5",
+    "tsup": "^8.5.1"
   }
 }

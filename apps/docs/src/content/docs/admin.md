@@ -61,7 +61,7 @@ codedockd version            # Show version
 For remote management from your local machine, install the `codedock` client:
 
 ```sh
-curl -fsSL https://get.codedock.run/cli | sh
+curl -fsSL https://get.codedock.run/cli | bash
 codedock login    # Connect to your server
 ```
 

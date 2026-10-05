@@ -35,6 +35,19 @@ export const useTrigger = () => {
   });
 };
 
+export const useTriggerProject = () => {
+  const queryClient = useQueryClient();
+  return useMutation({
+    mutationFn: (payload: { projectId: string; environmentId?: string }) =>
+      deploymentsService.triggerProject(payload.projectId, payload.environmentId),
+    onSuccess: async () => {
+      await queryClient.invalidateQueries({ queryKey: ['deployments'] });
+      await queryClient.invalidateQueries({ queryKey: ['apps'] });
+      await queryClient.invalidateQueries({ queryKey: ['canvas'] });
+    },
+  });
+};
+
 export const useRollback = () => {
   const queryClient = useQueryClient();
   return useMutation({

@@ -25,8 +25,12 @@ if ! declare -f ensure_root &>/dev/null; then
   setup_systemd_service() { [ -d /etc/systemd/system ] && echo "$2" > "/etc/systemd/system/$1.service" && systemctl daemon-reload && systemctl enable --now "$1.service"; }
 fi
 
-RELEASE=${CODEDOCK_VERSION:-1.0.0}
-CODEDOCK_DIR=/codedock
+RELEASE=${CODEDOCK_VERSION:-latest}
+CODEDOCK_DIR=${CODEDOCK_DIR:-/codedock}
+case "$CODEDOCK_DIR" in
+  /*) ;;
+  *) echo "CODEDOCK_DIR must be an absolute path (for example, /codedock)." >&2; exit 1 ;;
+esac
 REPO_URL="https://raw.githubusercontent.com/buildwithtechx/codedock/main"
 CTL_URL="$REPO_URL/bootstrap/codedockd"
 CTL_SHA256="${CODEDOCK_CTL_SHA256:-}"
@@ -52,14 +56,18 @@ fi
 
 echo -e "${BOLD}🔌 Port check${NC}"
 for PORT in 80 443 8080; do
-  if ss -tlnp "sport = :$PORT" 2>/dev/null | grep -q .; then
+  if ss -Htlnp "sport = :$PORT" 2>/dev/null | grep -q .; then
     echo -e "  ${YELLOW}⚠️  Port $PORT is already in use. Codedock needs it.${NC}"
   else
     echo -e "  ${GREEN}✅ Port $PORT available${NC}"
   fi
 done
 
-SERVER_IP=$(curl -4fsS ifconfig.me 2>/dev/null || echo "your-server-ip")
+SERVER_IP=${CODEDOCK_HOST_IP:-$(curl -4fsS --connect-timeout 5 --max-time 10 https://ifconfig.me 2>/dev/null || true)}
+if [ -z "$SERVER_IP" ]; then
+  echo "Could not detect the public server IP. Rerun with CODEDOCK_HOST_IP set to your reachable server address." >&2
+  exit 1
+fi
 echo -e "  ${GREEN}✅ Server IP: ${SERVER_IP}${NC}"
 echo ""
 
@@ -85,22 +93,25 @@ ln -sf "$CODEDOCK_DIR/codedockd" /usr/local/bin/codedockctl
 
 if [ ! -f "$CODEDOCK_DIR/.env" ]; then
   echo -e "${BOLD}🔑 Generating .env file...${NC}"
-  JWT_SECRET=$(head -c 32 /dev/urandom | base64 | tr -dc 'a-zA-Z0-9' | head -c 32)
-  REFRESH_SECRET=$(head -c 32 /dev/urandom | base64 | tr -dc 'a-zA-Z0-9' | head -c 32)
+  JWT_SECRET=$(od -An -N32 -tx1 /dev/urandom | tr -d ' \n')
+  REFRESH_SECRET=$(od -An -N32 -tx1 /dev/urandom | tr -d ' \n')
 
   install -m 0600 /dev/null "$CODEDOCK_DIR/.env"
   cat > "$CODEDOCK_DIR/.env" <<ENV
 PORT=8080
 HOST=0.0.0.0
 CODEDOCK_DATA_DIR=/codedock/data
-CODEDOCK_HOST_IP="${SERVER_IP}"
-CODEDOCK_JWT_SECRET="${JWT_SECRET}"
-CODEDOCK_REFRESH_SECRET="${REFRESH_SECRET}"
-CODEDOCK_TLS_EMAIL=""
-CODEDOCK_WILDCARD_DOMAIN=""
-CODEDOCK_MAGIC_DOMAIN="sslip.io"
+CODEDOCK_CLOUD_MODE=false
+CODEDOCK_HOST_IP=${SERVER_IP}
+CODEDOCK_JWT_SECRET=${JWT_SECRET}
+CODEDOCK_REFRESH_SECRET=${REFRESH_SECRET}
+CODEDOCK_TLS_EMAIL=
+CODEDOCK_WILDCARD_DOMAIN=
+CODEDOCK_MAGIC_DOMAIN=sslip.io
 DOCKER_SOCKET_PATH=/var/run/docker.sock
-CODEDOCK_DASHBOARD_URL="http://${SERVER_IP}:8080"
+CODEDOCK_DASHBOARD_URL=http://${SERVER_IP}:8080
+CODEDOCK_SERVER_URL=http://${SERVER_IP}:8080
+CODEDOCK_API_HOST=http://${SERVER_IP}:8080
 CODEDOCK_RUNTIME_NETWORK=codedock-network
 DEPLOY_HOST_PORT_START=4100
 DEPLOY_HOST_PORT_END=4999
@@ -125,10 +136,9 @@ docker run -d \
   --name codedock-control-plane \
   --restart unless-stopped \
   -p 8080:8080 \
-  -p 80:80 \
-  -p 443:443 \
   --env-file "$CODEDOCK_DIR/.env" \
   -e CODEDOCK_DATA_DIR=/codedock/data \
+  -e CODEDOCK_CLOUD_MODE=false \
   -v codedock_data:/codedock/data \
   -v "${DOCKER_SOCKET_PATH:-/var/run/docker.sock}":/var/run/docker.sock:ro \
   --network codedock-network \
@@ -138,13 +148,19 @@ docker run -d \
   ghcr.io/buildwithtechx/codedock:"${RELEASE}"
 
 echo -e "${BOLD}⏳ Waiting for Codedock health check...${NC}"
+HEALTHY=false
 for i in $(seq 1 30); do
   if curl -sfS "http://localhost:8080/healthz" > /dev/null 2>&1; then
     echo -e "${GREEN}✅ Codedock is healthy.${NC}"
+    HEALTHY=true
     break
   fi
   sleep 2
 done
+if [ "$HEALTHY" != true ]; then
+  echo "Codedock failed its health check. Inspect: docker logs codedock-control-plane" >&2
+  exit 1
+fi
 
 if command -v systemctl &>/dev/null && [ -d /etc/systemd/system ]; then
   docker stop codedock-control-plane 2>/dev/null || true
@@ -156,7 +172,7 @@ Requires=docker.service
 [Service]
 Restart=always
 RestartSec=10
-WorkingDirectory=/codedock
+WorkingDirectory=$CODEDOCK_DIR
 ExecStart=/usr/bin/docker start -a codedock-control-plane
 ExecStop=/usr/bin/docker stop codedock-control-plane
 

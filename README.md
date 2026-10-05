@@ -11,7 +11,7 @@ Codedock is a lightweight, open-source Platform-as-a-Service (PaaS) designed to 
 Install Codedock on any fresh Linux server (Ubuntu/Debian recommended):
 
 ```bash
-curl -fsSL https://get.codedock.run | sh
+curl -fsSL https://get.codedock.run | bash
 ```
 
 Once installed, your dashboard will be available at `http://your-server-ip:8080`.

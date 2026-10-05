@@ -77,11 +77,11 @@ func (h *ServerMetricsWSHandler) Handle(c echo.Context) error {
 			if h.serverService == nil {
 				return utils.Error(c, http.StatusInternalServerError, "server service not configured")
 			}
-			server, err := h.serverService.GetServer(c.Request().Context(), serverID)
+			server, err := h.serverService.GetServer(c.Request().Context(), serverID, userID)
 			if err != nil || server == nil {
 				return utils.Error(c, http.StatusNotFound, "server not found")
 			}
-			if server.UserID != userID {
+			if server.UserID != userID && !(server.IsLocal && server.UserID == "system") {
 				return utils.Error(c, http.StatusForbidden, "insufficient permissions")
 			}
 		}

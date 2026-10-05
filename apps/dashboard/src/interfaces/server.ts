@@ -11,10 +11,17 @@ export interface Server {
   userId: string;
   name: string;
   ipAddress: string;
+  isLocal?: boolean;
+  sshHost?: string;
+  sshPort?: number;
+  sshUser?: string;
+  sshAuthMethod?: 'key' | 'password' | 'agent';
+  sshTransport?: 'direct' | 'cloudflare';
+  sshJumpHost?: string;
   isControlPlane?: boolean;
   status: string;
-  workerToken: string;
-  lastSeenAt: string;
+  workerToken?: string;
+  lastSeenAt?: string;
   metrics: ServerMetrics | string | null;
   createdAt: string;
   updatedAt: string;
@@ -38,5 +45,39 @@ export function parseServerMetrics(
 
 export interface CreateServerRequest {
   name: string;
-  ipAddress: string;
+  ipAddress?: string;
+  isLocal?: boolean;
+  sshHost?: string;
+  sshPort?: number;
+  sshUser?: string;
+  sshAuthMethod?: 'key' | 'password' | 'agent';
+  sshKey?: string;
+  sshPrivateKey?: string;
+  sshPassword?: string;
+  sshTransport?: 'direct' | 'cloudflare';
+  sshJumpHost?: string;
+}
+
+export interface UpdateServerRequest {
+  name?: string;
+  ipAddress?: string;
+  isLocal?: boolean;
+  sshHost?: string;
+  sshPort?: number;
+  sshUser?: string;
+  sshAuthMethod?: 'key' | 'password' | 'agent';
+  sshKey?: string;
+  sshPrivateKey?: string;
+  sshPassword?: string;
+  sshTransport?: 'direct' | 'cloudflare';
+  sshJumpHost?: string;
+}
+
+export interface TestSSHRequest {
+  sshHost: string;
+  sshPort?: number;
+  sshUser?: string;
+  sshKey?: string;
+  sshPrivateKey?: string;
+  sshPassword?: string;
 }

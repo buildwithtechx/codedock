@@ -6,6 +6,7 @@ import (
 
 	"github.com/labstack/echo/v4"
 
+	"codedock.run/codedock/internal/config"
 	"codedock.run/codedock/internal/models"
 	"codedock.run/codedock/internal/utils"
 
@@ -60,10 +61,12 @@ func (h *SettingsHandler) GetPublicSettings(c echo.Context) error {
 		return utils.Error(c, http.StatusInternalServerError, err.Error())
 	}
 
+	cfg := config.Get()
 	publicSettings := map[string]any{
 		"registrationEnabled": s.RegistrationEnabled,
 		"siteName":            s.SiteName,
-		"emailEnabled":        notif.SMTPEnabled || notif.ResendEnabled,
+		"emailEnabled":        notif.SMTPEnabled || notif.ResendEnabled || (cfg.SMTP.Host != "" && cfg.SMTP.From != "") || cfg.Resend.APIKey != "",
+		"cloudMode":           cfg.Cloud.Enabled,
 	}
 	return utils.Success(c, "Operation successful", publicSettings)
 }

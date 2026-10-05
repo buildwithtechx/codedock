@@ -28,7 +28,11 @@ func (s testServerService) ListServersByUser(context.Context, string) ([]*models
 	return s.servers, nil
 }
 
-func (s testServerService) GetServer(context.Context, string) (*models.Server, error) {
+func (s testServerService) GetServer(context.Context, string, string) (*models.Server, error) {
+	return nil, nil
+}
+
+func (s testServerService) UpdateServer(context.Context, string, string, models.UpdateServerRequest) (*models.Server, error) {
 	return nil, nil
 }
 

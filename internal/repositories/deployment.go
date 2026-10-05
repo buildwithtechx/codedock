@@ -34,7 +34,7 @@ func NewDeploymentRepo(db *sql.DB) *DeploymentRepo {
 	return &DeploymentRepo{db: sqlx.NewDb(db, "sqlite")}
 }
 
-func (r *DeploymentRepo) Create(_ context.Context, d *models.Deployment) error {
+func (r *DeploymentRepo) Create(ctx context.Context, d *models.Deployment) error {
 	r.mu.Lock()
 	defer r.mu.Unlock()
 	if d.ID == "" {
@@ -46,11 +46,14 @@ func (r *DeploymentRepo) Create(_ context.Context, d *models.Deployment) error {
 	if d.Status == "" {
 		d.Status = "BUILDING"
 	}
-	_, err := r.db.Exec(`INSERT INTO deployments (
-		id, service_id, environment_id, project_id, status, commit_hash,
+	if err := r.db.GetContext(ctx, &d.OrganizationID, `SELECT organization_id FROM projects WHERE id = ?`, d.ProjectID); err != nil {
+		return fmt.Errorf("resolve deployment organization: %w", err)
+	}
+	_, err := r.db.ExecContext(ctx, `INSERT INTO deployments (
+		id, service_id, organization_id, project_id, status, commit_hash,
 		commit_message, branch, trigger, build_logs, container_id, created_at, updated_at, finished_at
-	) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)`,
-		d.ID, d.ServiceID, d.EnvironmentID, d.ProjectID, d.Status, d.CommitHash,
+	) VALUES (?, NULLIF(?, ''), ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)`,
+		d.ID, d.ServiceID, d.OrganizationID, d.ProjectID, d.Status, d.CommitHash,
 		d.CommitMessage, d.Branch, d.Trigger, d.BuildLogs, d.ContainerID, d.CreatedAt, d.UpdatedAt, d.FinishedAt)
 	if err != nil {
 		return fmt.Errorf("failed to create deployment: %w", err)
@@ -60,9 +63,10 @@ func (r *DeploymentRepo) Create(_ context.Context, d *models.Deployment) error {
 
 func (r *DeploymentRepo) GetByID(ctx context.Context, id string) (*models.Deployment, error) {
 	var d models.Deployment
-	err := r.db.GetContext(ctx, &d, `SELECT id, service_id, environment_id, project_id, status, commit_hash,
-		commit_message, branch, trigger, build_logs, container_id, created_at, updated_at, finished_at
-		FROM deployments WHERE id = ?`, id)
+	err := r.db.GetContext(ctx, &d, `SELECT d.id, COALESCE(d.service_id, '') AS service_id, d.organization_id,
+		COALESCE(s.environment_id, '') AS environment_id, d.project_id, d.status, d.commit_hash,
+		d.commit_message, d.branch, d.trigger, d.build_logs, d.container_id, d.created_at, d.updated_at, d.finished_at
+		FROM deployments d LEFT JOIN app_services s ON s.id = d.service_id WHERE d.id = ?`, id)
 	if errors.Is(err, sql.ErrNoRows) {
 		return nil, utils.NewNotFoundError("Deployment", id)
 	}
@@ -79,9 +83,11 @@ func (r *DeploymentRepo) ListByService(ctx context.Context, serviceID string, li
 	}
 
 	var deps []*models.Deployment
-	err := r.db.SelectContext(ctx, &deps, `SELECT id, service_id, environment_id, project_id, status, commit_hash,
-		commit_message, branch, trigger, build_logs, container_id, created_at, updated_at, finished_at
-		FROM deployments WHERE service_id = ? ORDER BY created_at DESC LIMIT ? OFFSET ?`, serviceID, limit, offset)
+	err := r.db.SelectContext(ctx, &deps, `SELECT d.id, COALESCE(d.service_id, '') AS service_id, d.organization_id,
+		COALESCE(s.environment_id, '') AS environment_id, d.project_id, d.status, d.commit_hash,
+		d.commit_message, d.branch, d.trigger, d.build_logs, d.container_id, d.created_at, d.updated_at, d.finished_at
+		FROM deployments d LEFT JOIN app_services s ON s.id = d.service_id
+		WHERE d.service_id = ? ORDER BY d.created_at DESC LIMIT ? OFFSET ?`, serviceID, limit, offset)
 	if err != nil {
 		return nil, 0, fmt.Errorf("failed to query service deployments: %w", err)
 	}
@@ -127,7 +133,8 @@ func (r *DeploymentRepo) ListByOrganization(ctx context.Context, filter models.D
 	}
 
 	deployments := make([]models.DeploymentListItem, 0)
-	query := `SELECT d.id, d.service_id, COALESCE(s.name, '' ) AS service_name, d.environment_id,
+	query := `SELECT d.id, COALESCE(d.service_id, '') AS service_id, COALESCE(s.name, '') AS service_name,
+		COALESCE(s.environment_id, '') AS environment_id,
 		d.project_id, p.name AS project_name, d.status, d.commit_hash, d.commit_message,
 		d.branch, d.trigger, d.container_id, d.created_at, d.updated_at, d.finished_at ` + where + `
 		ORDER BY d.created_at DESC LIMIT ? OFFSET ?`

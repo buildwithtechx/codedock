@@ -1,153 +1,161 @@
 import { Link, useNavigate } from '@tanstack/react-router';
-import { ArrowLeft, Check, Copy, ServerIcon } from 'lucide-react';
+import { ArrowLeft, CheckCircle2, Cpu, HardDrive, ServerIcon, ShieldCheck } from 'lucide-react';
 import { useState } from 'react';
 import { toast } from 'sonner';
 import { Button } from '#/components/ui/button';
+import { Card } from '#/components/ui/card';
 import { Input } from '#/components/ui/input';
+import { Label } from '#/components/ui/label';
+import { ServerSshForm } from '#/features/servers/server-ssh-form';
 import { useCreateServer } from '#/hooks/use-servers';
 import type { Server } from '#/interfaces/server';
 
 export function ServerCreationPage() {
   const navigate = useNavigate();
-  const [name, setName] = useState('');
-  const [ipAddress, setIPAddress] = useState('');
-  const [server, setServer] = useState<Server | null>(null);
-  const { mutateAsync: createServer, isPending } = useCreateServer();
+  const [mode, setMode] = useState<'remote' | 'local'>('remote');
+  const [localName, setLocalName] = useState('Local Daemon Node');
+  const { mutateAsync: createServer, isPending: isCreatingLocal } = useCreateServer();
 
-  const handleSubmit = async (event: React.FormEvent) => {
-    event.preventDefault();
+  const handleSuccess = (server: Server) => {
+    navigate({ to: '/servers/$serverId', params: { serverId: server.id } });
+  };
 
+  const handleConnectLocal = async () => {
     try {
-      const created = await createServer({ name, ipAddress });
-      setServer(created);
-      toast.success('Server created');
-    } catch (error) {
-      toast.error(error instanceof Error ? error.message : 'Failed to create server');
+      const server = await createServer({
+        name: localName.trim() || 'Local Daemon Node',
+        isLocal: true,
+        ipAddress: '127.0.0.1',
+      });
+      toast.success('Local Docker node registered');
+      handleSuccess(server);
+    } catch (err) {
+      toast.error(err instanceof Error ? err.message : 'Failed to register local node');
     }
   };
 
-  const command = server
-    ? `curl -fsSL https://get.codedock.run/worker.sh | bash -s -- --key ${server.workerToken}`
-    : '';
-
-  const copyCommand = async () => {
-    await navigator.clipboard.writeText(command);
-    toast.success('Install command copied');
-  };
-
   return (
-    <div className="grid min-w-0 gap-6 xl:grid-cols-[minmax(0,1fr)_21.25rem]">
+    <div className="grid min-w-0 gap-8 xl:grid-cols-[minmax(0,1fr)_20rem]">
       <main className="min-w-0">
         <Link
           to="/servers"
-          className="inline-flex items-center gap-2 text-muted-foreground text-sm transition-colors hover:text-foreground"
+          className="inline-flex items-center gap-2 text-muted-foreground text-xs transition-colors hover:text-foreground"
         >
-          <ArrowLeft className="h-4 w-4" />
+          <ArrowLeft className="h-3.5 w-3.5" />
           Servers
         </Link>
-        <header className="mt-6">
-          <p className="font-medium text-muted-foreground text-sm">Deployment target</p>
-          <h1 className="mt-1 font-semibold text-2xl tracking-tight">Add a server</h1>
-          <p className="mt-1 max-w-2xl text-muted-foreground text-sm">
-            Register a worker, then install the Codedock agent using a one-time connection command.
+        <header className="mt-4">
+          <p className="font-medium text-muted-foreground text-xs uppercase tracking-wider">
+            Infrastructure
+          </p>
+          <h1 className="mt-1 font-semibold text-2xl tracking-tight">Add a Server</h1>
+          <p className="mt-1 text-muted-foreground text-xs">
+            Connect an external host over SSH or connect the local Docker engine node.
           </p>
         </header>
 
-        {server ? (
-          <section className="mt-8 max-w-3xl rounded-2xl border border-border bg-card p-6 shadow-sm">
-            <div className="flex items-center gap-3">
-              <div className="flex h-9 w-9 items-center justify-center rounded-xl bg-emerald-500/12 text-emerald-500">
-                <Check className="h-4 w-4" />
-              </div>
-              <div>
-                <h2 className="font-semibold text-sm">Connect {server.name}</h2>
-                <p className="text-muted-foreground text-xs">
-                  Run this command on the server to complete registration.
-                </p>
-              </div>
-            </div>
-            <div className="mt-6 break-all rounded-xl border border-border bg-background p-4 font-mono text-sm">
-              {command}
-            </div>
-            <div className="mt-5 flex flex-wrap gap-3">
-              <Button onClick={() => void copyCommand()} className="gap-2">
-                <Copy className="h-4 w-4" />
-                Copy install command
-              </Button>
-              <Button
-                variant="outline"
-                onClick={() =>
-                  void navigate({ to: '/servers/$serverId', params: { serverId: server.id } })
-                }
-              >
-                View server
-              </Button>
-            </div>
-          </section>
-        ) : (
-          <form
-            onSubmit={handleSubmit}
-            className="mt-8 max-w-3xl rounded-2xl border border-border bg-card p-6 shadow-sm"
+        <div className="mt-6 flex items-center gap-2">
+          <button
+            type="button"
+            onClick={() => setMode('remote')}
+            className={`flex items-center gap-2 rounded-xl border px-4 py-2.5 font-medium text-xs transition-colors ${
+              mode === 'remote'
+                ? 'border-primary bg-primary/10 text-primary'
+                : 'border-border/80 bg-card text-muted-foreground hover:bg-muted/40 hover:text-foreground'
+            }`}
           >
-            <div className="flex items-center gap-3">
-              <div className="flex h-9 w-9 items-center justify-center rounded-xl bg-primary/12 text-primary">
-                <ServerIcon className="h-4 w-4" />
+            <ServerIcon className="h-4 w-4" />
+            Remote SSH Server
+          </button>
+          <button
+            type="button"
+            onClick={() => setMode('local')}
+            className={`flex items-center gap-2 rounded-xl border px-4 py-2.5 font-medium text-xs transition-colors ${
+              mode === 'local'
+                ? 'border-primary bg-primary/10 text-primary'
+                : 'border-border/80 bg-card text-muted-foreground hover:bg-muted/40 hover:text-foreground'
+            }`}
+          >
+            <Cpu className="h-4 w-4" />
+            Local Docker Node
+          </button>
+        </div>
+
+        <Card className="mt-6 p-6">
+          {mode === 'remote' ? (
+            <ServerSshForm
+              onSuccess={handleSuccess}
+              onCancel={() => navigate({ to: '/servers' })}
+            />
+          ) : (
+            <div className="space-y-5">
+              <div className="flex items-start gap-3 rounded-xl border border-primary/20 bg-primary/5 p-4">
+                <CheckCircle2 className="mt-0.5 h-4 w-4 shrink-0 text-primary" />
+                <div className="text-xs">
+                  <p className="font-semibold text-foreground">Zero-Config Local Daemon</p>
+                  <p className="mt-0.5 text-muted-foreground leading-relaxed">
+                    Connects directly to the local Docker socket on this system. Ideal for local
+                    development, single-node installations, and edge workstations.
+                  </p>
+                </div>
               </div>
-              <div>
-                <h2 className="font-semibold text-sm">Server details</h2>
-                <p className="text-muted-foreground text-xs">Use the server's reachable address.</p>
-              </div>
-            </div>
-            <div className="mt-6 grid gap-5 sm:grid-cols-2">
-              <div className="space-y-2">
-                <label htmlFor="server-name" className="font-medium text-sm">
-                  Name
-                </label>
+
+              <div className="space-y-1.5">
+                <Label htmlFor="local-node-name" className="text-xs">
+                  Node Name
+                </Label>
                 <Input
-                  id="server-name"
-                  value={name}
-                  onChange={(event) => setName(event.target.value)}
-                  placeholder="EU production node"
-                  required
+                  id="local-node-name"
+                  value={localName}
+                  onChange={(e) => setLocalName(e.target.value)}
+                  placeholder="Local Daemon Node"
                 />
               </div>
-              <div className="space-y-2">
-                <label htmlFor="server-address" className="font-medium text-sm">
-                  IP address
-                </label>
-                <Input
-                  id="server-address"
-                  value={ipAddress}
-                  onChange={(event) => setIPAddress(event.target.value)}
-                  placeholder="198.51.100.1"
-                  required
-                />
-              </div>
-            </div>
-            <div className="mt-6 flex justify-end gap-3">
-              <Link to="/servers">
-                <Button type="button" variant="ghost">
+
+              <div className="flex items-center justify-between border-border/60 border-t pt-4">
+                <Button
+                  type="button"
+                  variant="ghost"
+                  onClick={() => navigate({ to: '/servers' })}
+                  className="text-xs"
+                >
                   Cancel
                 </Button>
-              </Link>
-              <Button type="submit" disabled={isPending}>
-                {isPending ? 'Creating server...' : 'Create server'}
-              </Button>
+                <Button
+                  type="button"
+                  onClick={handleConnectLocal}
+                  disabled={isCreatingLocal}
+                  className="text-xs"
+                >
+                  {isCreatingLocal ? 'Connecting...' : 'Connect Local Node'}
+                </Button>
+              </div>
             </div>
-          </form>
-        )}
+          )}
+        </Card>
       </main>
 
       <aside className="hidden xl:sticky xl:top-6 xl:block xl:self-start">
-        <section className="rounded-2xl border border-border bg-card p-5 shadow-sm">
+        <section className="space-y-4 rounded-2xl border border-border bg-card p-5">
           <div className="flex items-center gap-2">
-            <ServerIcon className="h-4 w-4 text-primary" />
-            <h2 className="font-semibold text-sm">Server onboarding</h2>
+            <ShieldCheck className="h-4 w-4 text-primary" />
+            <h2 className="font-semibold text-sm">Security & Provisioning</h2>
           </div>
-          <p className="mt-3 text-muted-foreground text-sm leading-6">
-            Keep the install command private. It authorizes the worker to report health and receive
-            deployment work.
+          <p className="text-muted-foreground text-xs leading-relaxed">
+            All SSH credentials and private keys are encrypted at rest with hardware or AES vault
+            encryption. They are only utilized during container lifecycle operations and telemetry.
           </p>
+
+          <div className="space-y-2 border-border/60 border-t pt-3">
+            <div className="flex items-center gap-2 text-muted-foreground text-xs">
+              <HardDrive className="h-3.5 w-3.5 text-primary" />
+              <span>Direct Docker Engine management</span>
+            </div>
+            <div className="flex items-center gap-2 text-muted-foreground text-xs">
+              <ServerIcon className="h-3.5 w-3.5 text-primary" />
+              <span>Real-time CPU & memory telemetry</span>
+            </div>
+          </div>
         </section>
       </aside>
     </div>

@@ -4,11 +4,55 @@ import (
 	"errors"
 	"net/http"
 	"path/filepath"
+	"strconv"
 
 	"github.com/labstack/echo/v4"
 
+	"codedock.run/codedock/internal/models"
 	"codedock.run/codedock/internal/utils"
 )
+
+func (h *BackupHandler) ListAllRecords(c echo.Context) error {
+	limitStr := c.QueryParam("limit")
+	limit := 50
+	if limitStr != "" {
+		if l, err := strconv.Atoi(limitStr); err == nil && l > 0 {
+			limit = l
+		}
+	}
+	user, ok := c.Get("user").(*models.UserClaims)
+	if !ok || user == nil {
+		return utils.Error(c, http.StatusUnauthorized, "unauthorized")
+	}
+	var records []*models.BackupRecord
+	var err error
+	if user.Role == models.UserRoleAdmin || user.Role == models.UserRoleOwner {
+		records, err = h.backupService.ListAllRecords(c.Request().Context(), limit)
+	} else {
+		configs, configErr := h.backupService.ListConfigs(c.Request().Context())
+		if configErr != nil {
+			return utils.Error(c, http.StatusInternalServerError, "failed to check backup access")
+		}
+		access := make(map[string]bool)
+		ids := make([]string, 0, len(configs))
+		for _, cfg := range configs {
+			key := cfg.DatabaseID + ":" + cfg.ServiceID
+			allowed, found := access[key]
+			if !found {
+				allowed = h.hasAccess(c, cfg.DatabaseID, cfg.ServiceID)
+				access[key] = allowed
+			}
+			if allowed {
+				ids = append(ids, cfg.ID)
+			}
+		}
+		records, err = h.backupService.ListRecordsByConfigs(c.Request().Context(), ids, limit)
+	}
+	if err != nil {
+		return utils.Error(c, http.StatusInternalServerError, "failed to list backup records")
+	}
+	return utils.Success(c, "Operation successful", records)
+}
 
 func (h *BackupHandler) ListRecords(c echo.Context) error {
 	id := c.Param("id")
@@ -109,25 +153,29 @@ func (h *BackupHandler) Restore(c echo.Context) error {
 		return utils.Error(c, http.StatusBadRequest, "missing record id parameter")
 	}
 
-	rec, err := h.backupService.GetRecord(c.Request().Context(), id)
-	if err != nil {
-		var notFound *utils.NotFoundError
-		if !errors.As(err, &notFound) {
-			return utils.Error(c, http.StatusInternalServerError, "failed to get backup record: "+err.Error())
+	var rec *models.BackupRecord
+	var cfg *models.BackupConfig
+
+	directRec, err := h.backupService.GetRecord(c.Request().Context(), id)
+	if err == nil && directRec != nil {
+		rec = directRec
+		cfg, _ = h.backupService.GetConfig(c.Request().Context(), rec.BackupConfigID)
+	} else {
+		directCfg, cfgErr := h.backupService.GetConfig(c.Request().Context(), id)
+		if cfgErr == nil && directCfg != nil {
+			cfg = directCfg
+			records, _ := h.backupService.ListRecordsByConfig(c.Request().Context(), id)
+			for _, r := range records {
+				if r.Status == models.BackupRecordStatusCompleted {
+					rec = r
+					break
+				}
+			}
 		}
-		return utils.Error(c, http.StatusNotFound, "backup record not found")
-	}
-	if rec == nil {
-		return utils.Error(c, http.StatusNotFound, "backup record not found")
 	}
 
-	cfg, err := h.backupService.GetConfig(c.Request().Context(), rec.BackupConfigID)
-	if err != nil {
-		var notFound *utils.NotFoundError
-		if !errors.As(err, &notFound) {
-			return utils.Error(c, http.StatusInternalServerError, "failed to get backup config: "+err.Error())
-		}
-		return utils.Error(c, http.StatusNotFound, "backup config not found")
+	if rec == nil {
+		return utils.Error(c, http.StatusNotFound, "backup record not found")
 	}
 	if cfg == nil {
 		return utils.Error(c, http.StatusNotFound, "backup config not found")
@@ -137,9 +185,73 @@ func (h *BackupHandler) Restore(c echo.Context) error {
 		return utils.Error(c, http.StatusForbidden, "insufficient admin permissions to restore this backup")
 	}
 
-	err = h.backupService.RestoreBackup(c.Request().Context(), id)
+	err = h.backupService.RestoreBackup(c.Request().Context(), rec.ID)
 	if err != nil {
 		return utils.Error(c, http.StatusInternalServerError, err.Error())
 	}
 	return utils.Success(c, "Backup successfully restored", nil)
+}
+
+func (h *BackupHandler) ListRecordsByDatabase(c echo.Context) error {
+	id := c.Param("id")
+	if id == "" {
+		return utils.Error(c, http.StatusBadRequest, "missing database id")
+	}
+	if !h.hasAccess(c, id, "") {
+		return utils.Error(c, http.StatusForbidden, "insufficient permissions")
+	}
+	records, err := h.backupService.ListRecordsByDatabase(c.Request().Context(), id)
+	if err != nil {
+		return utils.Error(c, http.StatusInternalServerError, err.Error())
+	}
+	return utils.Success(c, "Operation successful", records)
+}
+
+func (h *BackupHandler) TriggerDatabaseBackup(c echo.Context) error {
+	id := c.Param("id")
+	if id == "" {
+		return utils.Error(c, http.StatusBadRequest, "missing database id")
+	}
+	if !h.hasAdminAccess(c, id, "") {
+		return utils.Error(c, http.StatusForbidden, "insufficient admin permissions")
+	}
+	cfg, err := h.backupService.GetConfigByDatabaseID(c.Request().Context(), id)
+	if err != nil {
+		var notFound *utils.NotFoundError
+		if !errors.As(err, &notFound) {
+			return utils.Error(c, http.StatusInternalServerError, "failed to load backup configuration")
+		}
+	}
+	if err != nil || cfg == nil {
+		db, dbErr := h.dbService.GetDatabase(c.Request().Context(), id)
+		if dbErr != nil || db == nil {
+			return utils.Error(c, http.StatusNotFound, "database not found")
+		}
+		newCfg := models.BackupConfig{
+			DatabaseID:    id,
+			Name:          db.Name + "-backup",
+			Description:   "Manual snapshots for " + db.Name,
+			BackupEnabled: true,
+			Schedule:      "manual",
+			RetentionDays: 7,
+			Status:        models.BackupConfigStatusInactive,
+		}
+		destinations, _ := h.backupService.ListS3Destinations(c.Request().Context())
+		for _, d := range destinations {
+			if d.IsDefault {
+				newCfg.S3DestinationID = d.ID
+				newCfg.S3Enabled = true
+				break
+			}
+		}
+		if err := h.backupService.CreateConfig(c.Request().Context(), &newCfg); err != nil {
+			return utils.Error(c, http.StatusInternalServerError, "failed to create backup configuration: "+err.Error())
+		}
+		cfg = &newCfg
+	}
+	rec, err := h.backupService.TriggerBackup(c.Request().Context(), cfg.ID)
+	if err != nil {
+		return utils.Error(c, http.StatusInternalServerError, err.Error())
+	}
+	return utils.Success(c, "Backup triggered successfully", rec)
 }

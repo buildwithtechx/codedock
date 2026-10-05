@@ -124,8 +124,8 @@ func (r *UserRepo) ListUsers(ctx context.Context, limit, offset int) ([]models.U
 	err := r.db.SelectContext(ctx, &users, `
 		SELECT
 			id, email, name, password_hash, role, is_active, email_verified, plan_type, stripe_customer_id, stripe_subscription_id, stripe_price_id, created_at, updated_at, last_login,
-			(SELECT COUNT(*) FROM project_members WHERE user_id = users.id) AS projects_count,
-			(SELECT COUNT(*) FROM app_services WHERE project_id IN (SELECT project_id FROM project_members WHERE user_id = users.id) AND status = 'running') AS services_count,
+			(SELECT COUNT(*) FROM projects WHERE organization_id IN (SELECT organization_id FROM organization_members WHERE user_id = users.id)) AS projects_count,
+			(SELECT COUNT(*) FROM app_services WHERE project_id IN (SELECT id FROM projects WHERE organization_id IN (SELECT organization_id FROM organization_members WHERE user_id = users.id)) AND status = 'running') AS services_count,
 			(SELECT COUNT(*) FROM personal_access_tokens WHERE user_id = users.id) AS api_keys_count
 		FROM users
 		ORDER BY created_at ASC

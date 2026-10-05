@@ -1,4 +1,4 @@
-import { Database, Eye, EyeOff, Info } from 'lucide-react';
+import { Database, Eye, EyeOff, Info, Loader2, RefreshCw } from 'lucide-react';
 import { useState } from 'react';
 import { toast } from 'sonner';
 import { Button } from '#/components/ui/button';
@@ -19,7 +19,7 @@ import {
   SelectTrigger,
   SelectValue,
 } from '#/components/ui/select';
-import { useCreateS3Destination } from '#/features/backups';
+import { useCreateS3Destination, useVerifyS3Draft } from '#/features/backups';
 
 type Props = {
   isOpen: boolean;
@@ -34,11 +34,42 @@ export function CreateS3DestinationDialog({ isOpen, setIsOpen, trigger }: Props)
   const [endpoint, setEndpoint] = useState('');
   const [bucket, setBucket] = useState('');
   const [region, setRegion] = useState('us-east-1');
+  const [pathPrefix, setPathPrefix] = useState('');
+  const [isDefault, setIsDefault] = useState(false);
   const [accessKeyId, setAccessKeyId] = useState('');
   const [secretAccessKey, setSecretAccessKey] = useState('');
   const [showSecret, setShowSecret] = useState(false);
+  const [isTesting, setIsTesting] = useState(false);
 
   const createS3Dest = useCreateS3Destination();
+  const verifyDraft = useVerifyS3Draft();
+
+  const handleTestConnection = async () => {
+    if (!bucket || !endpoint || !accessKeyId || !secretAccessKey) {
+      toast.error('Please enter bucket, endpoint, and access keys first');
+      return;
+    }
+    setIsTesting(true);
+    try {
+      const res = await verifyDraft.mutateAsync({
+        provider,
+        endpoint,
+        bucket,
+        region,
+        accessKeyId,
+        secretAccessKey,
+      });
+      if (res.data?.ok) {
+        toast.success('Connection verified! S3 bucket is reachable.');
+      } else {
+        toast.error(`Verification failed: ${res.data?.reason || 'Could not connect'}`);
+      }
+    } catch (err) {
+      toast.error(err instanceof Error ? err.message : 'Verification failed');
+    } finally {
+      setIsTesting(false);
+    }
+  };
 
   const handleProviderChange = (value: string) => {
     setProvider(value);
@@ -66,6 +97,8 @@ export function CreateS3DestinationDialog({ isOpen, setIsOpen, trigger }: Props)
           endpoint,
           bucket,
           region,
+          pathPrefix,
+          isDefault,
           accessKeyId,
           secretAccessKey,
         },
@@ -78,6 +111,8 @@ export function CreateS3DestinationDialog({ isOpen, setIsOpen, trigger }: Props)
       setEndpoint('');
       setBucket('');
       setRegion('us-east-1');
+      setPathPrefix('');
+      setIsDefault(false);
       setAccessKeyId('');
       setSecretAccessKey('');
     } catch {
@@ -182,16 +217,42 @@ export function CreateS3DestinationDialog({ isOpen, setIsOpen, trigger }: Props)
             </div>
           </div>
 
-          <div className="space-y-1">
-            <Label className="font-semibold text-foreground text-xs uppercase tracking-wider">
-              Region
-            </Label>
-            <Input
-              placeholder="us-east-1 or auto"
-              value={region}
-              onChange={(e) => setRegion(e.target.value)}
-              className="border/50 h-10 rounded-lg bg-background/50 font-mono text-sm focus:border-primary focus:ring-0"
+          <div className="grid grid-cols-2 gap-4">
+            <div className="space-y-1">
+              <Label className="font-semibold text-foreground text-xs uppercase tracking-wider">
+                Region
+              </Label>
+              <Input
+                placeholder="us-east-1 or auto"
+                value={region}
+                onChange={(e) => setRegion(e.target.value)}
+                className="border/50 h-10 rounded-lg bg-background/50 font-mono text-sm focus:border-primary focus:ring-0"
+              />
+            </div>
+            <div className="space-y-1">
+              <Label className="font-semibold text-foreground text-xs uppercase tracking-wider">
+                Path Prefix
+              </Label>
+              <Input
+                placeholder="backups/production"
+                value={pathPrefix}
+                onChange={(e) => setPathPrefix(e.target.value)}
+                className="border/50 h-10 rounded-lg bg-background/50 font-mono text-sm focus:border-primary focus:ring-0"
+              />
+            </div>
+          </div>
+
+          <div className="flex items-center gap-2">
+            <input
+              type="checkbox"
+              id="isDefault"
+              checked={isDefault}
+              onChange={(e) => setIsDefault(e.target.checked)}
+              className="h-4 w-4 rounded border-border accent-primary"
             />
+            <Label htmlFor="isDefault" className="cursor-pointer text-muted-foreground text-xs">
+              Set as default storage destination for all new backups
+            </Label>
           </div>
 
           <div className="grid grid-cols-2 gap-4">
@@ -238,15 +299,30 @@ export function CreateS3DestinationDialog({ isOpen, setIsOpen, trigger }: Props)
             <span>Credentials are safely encrypted before being saved into your database.</span>
           </div>
 
-          <div className="flex justify-end gap-3 pt-2">
-            <DialogClose asChild>
-              <Button type="button" variant="outline">
-                Cancel
-              </Button>
-            </DialogClose>
-            <Button type="submit" disabled={createS3Dest.isPending}>
-              {createS3Dest.isPending ? 'Saving…' : 'Save S3 Destination'}
+          <div className="flex items-center justify-between gap-3 pt-2">
+            <Button
+              type="button"
+              variant="outline"
+              onClick={handleTestConnection}
+              disabled={isTesting}
+            >
+              {isTesting ? (
+                <Loader2 className="mr-1.5 h-3.5 w-3.5 animate-spin" />
+              ) : (
+                <RefreshCw className="mr-1.5 h-3.5 w-3.5" />
+              )}
+              Test connection
             </Button>
+            <div className="flex gap-2">
+              <DialogClose asChild>
+                <Button type="button" variant="outline">
+                  Cancel
+                </Button>
+              </DialogClose>
+              <Button type="submit" disabled={createS3Dest.isPending}>
+                {createS3Dest.isPending ? 'Saving…' : 'Save S3 Destination'}
+              </Button>
+            </div>
           </div>
         </form>
       </DialogContent>

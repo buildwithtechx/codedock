@@ -70,6 +70,10 @@ func InitDataDir() (string, *sql.DB, *utils.Vault) {
 		slog.Error("failed to enforce 0700 permissions on data directory", "err", err)
 		os.Exit(1)
 	}
+	if err := config.PrepareSelfHosted(config.Get()); err != nil {
+		slog.Error("failed to prepare self-hosted configuration", "err", err)
+		os.Exit(1)
+	}
 	vlt, err := utils.NewVault(dataDir)
 	if err != nil {
 		slog.Error("failed to initialize secrets vault", "err", err)

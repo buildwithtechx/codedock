@@ -4,6 +4,15 @@ import { apiClient } from '#/lib/api-client';
 import { handleApiError } from '#/lib/error';
 
 export const scheduledTasksService = {
+  listByProject: async (projectId: string): Promise<BaseResponse<Job[]>> => {
+    try {
+      return await apiClient.get<BaseResponse<Job[]>>(
+        `/scheduled-tasks?projectId=${encodeURIComponent(projectId)}`
+      );
+    } catch (error) {
+      throw handleApiError(error);
+    }
+  },
   listScheduledTasks: async (serviceId: string): Promise<BaseResponse<Job[]>> => {
     try {
       return await apiClient.get<BaseResponse<Job[]>>(`/scheduled-tasks?serviceId=${serviceId}`);

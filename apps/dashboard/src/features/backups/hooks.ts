@@ -108,6 +108,27 @@ export const useCreateS3Destination = () => {
   });
 };
 
+export const useListAllRecords = (limit = 50) => {
+  return useQuery({
+    queryKey: ['backup-records', limit],
+    queryFn: () => backupsService.listAllRecords(limit),
+    refetchInterval: 15_000,
+  });
+};
+
+export const useVerifyS3Destination = () => {
+  return useMutation({
+    mutationFn: (id: string) => backupsService.verifyS3Destination(id),
+  });
+};
+
+export const useVerifyS3Draft = () => {
+  return useMutation({
+    mutationFn: (payload: Parameters<typeof backupsService.verifyS3Draft>[0]) =>
+      backupsService.verifyS3Draft(payload),
+  });
+};
+
 export const useDeleteS3Destination = () => {
   const queryClient = useQueryClient();
   return useMutation({
@@ -117,6 +138,29 @@ export const useDeleteS3Destination = () => {
       await Promise.all([
         queryClient.invalidateQueries({ queryKey: ['backups'] }),
         queryClient.invalidateQueries({ queryKey: ['s3-destinations'] }),
+      ]);
+    },
+  });
+};
+
+export const useSetDefaultS3Destination = () => {
+  const queryClient = useQueryClient();
+  return useMutation({
+    mutationFn: (id: string) => backupsService.setDefaultS3Destination(id),
+    onSuccess: async () => {
+      await queryClient.invalidateQueries({ queryKey: ['s3-destinations'] });
+    },
+  });
+};
+
+export const useTriggerDatabaseBackup = () => {
+  const queryClient = useQueryClient();
+  return useMutation({
+    mutationFn: (databaseId: string) => backupsService.triggerDatabaseBackup(databaseId),
+    onSuccess: async () => {
+      await Promise.all([
+        queryClient.invalidateQueries({ queryKey: ['backups'] }),
+        queryClient.invalidateQueries({ queryKey: ['backup-records'] }),
       ]);
     },
   });

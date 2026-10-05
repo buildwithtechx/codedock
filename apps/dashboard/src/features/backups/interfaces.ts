@@ -51,6 +51,10 @@ export interface S3Destination {
   endpoint: string;
   bucket: string;
   region: string;
+  pathPrefix?: string;
+  isDefault?: boolean;
+  lastVerifiedAt?: string;
+  lastVerifyError?: string;
   accessKeyId: string;
   secretAccessKey: string;
   createdAt: string;
@@ -85,8 +89,15 @@ export interface CreateS3DestinationRequest {
   endpoint: string;
   bucket: string;
   region: string;
+  pathPrefix?: string;
+  isDefault?: boolean;
   accessKeyId: string;
   secretAccessKey: string;
+}
+
+export interface VerifyS3Response {
+  ok: boolean;
+  reason?: string;
 }
 
 export type ListBackupsResponse = BaseResponse<BackupConfig[]>;
@@ -95,3 +106,4 @@ export type CreateBackupResponse = BaseResponse<BackupConfig>;
 export type ListBackupRecordsResponse = BaseResponse<BackupRecord[]>;
 export type ListS3DestinationsResponse = BaseResponse<S3Destination[]>;
 export type CreateS3DestinationResponse = BaseResponse<S3Destination>;
+export type VerifyS3DestinationResponse = BaseResponse<VerifyS3Response>;

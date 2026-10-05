@@ -56,7 +56,7 @@ export function DeploymentEmptyState({
         Deploy an app and its build status, release history, and commit details will appear here.
       </p>
       <div className="mt-7 flex flex-col items-center justify-center gap-2 sm:flex-row">
-        <Link to="/apps/new">
+        <Link to="/projects/new">
           <Button className="gap-2 px-5">
             <Plus className="h-4 w-4" />
             Deploy app

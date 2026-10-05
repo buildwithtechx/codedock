@@ -4,15 +4,10 @@ import (
 	"context"
 	"database/sql"
 	"fmt"
-	"log/slog"
-	"net/http"
-	"slices"
-	"strings"
 	"time"
 
 	"github.com/docker/docker/client"
 	"github.com/labstack/echo/v4"
-	echomiddleware "github.com/labstack/echo/v4/middleware"
 
 	"codedock.run/codedock/internal/config"
 	"codedock.run/codedock/internal/core"
@@ -44,55 +39,11 @@ import (
 func NewServer(db *sql.DB, v *utils.Vault, deployer *deploy.Deployer, traefikManager *networking.TraefikManager, dockerClient *client.Client, dataDir string) (*Server, error) {
 
 	e := echo.New()
-	e.Use(echomiddleware.RequestLoggerWithConfig(echomiddleware.RequestLoggerConfig{
-		LogStatus: true,
-		LogURI:    true,
-		LogMethod: true,
-		LogValuesFunc: func(c echo.Context, v echomiddleware.RequestLoggerValues) error {
-			slog.Info("request", "method", v.Method, "uri", v.URI, "status", v.Status)
-			return nil
-		},
-	}))
-	e.Use(echomiddleware.Recover())
-	e.Use(echomiddleware.GzipWithConfig(echomiddleware.GzipConfig{
-		Level: 5,
-	}))
-
-	allowOrigins := []string{"http://localhost:3000", "http://localhost:8080"}
-	if dashboardURL := config.Get().Server.DashboardURL; dashboardURL != "" && !slices.Contains(allowOrigins, dashboardURL) {
-		allowOrigins = append(allowOrigins, dashboardURL)
-	}
-
-	e.Use(echomiddleware.CORSWithConfig(echomiddleware.CORSConfig{
-		AllowOrigins:     allowOrigins,
-		AllowMethods:     []string{http.MethodGet, http.MethodPost, http.MethodPut, http.MethodDelete},
-		AllowHeaders:     []string{"Authorization", "Content-Type", "X-CSRF-Token"},
-		ExposeHeaders:    []string{"Content-Length"},
-		AllowCredentials: true,
-		MaxAge:           300,
-	}))
-	e.Use(echomiddleware.CSRFWithConfig(echomiddleware.CSRFConfig{
-		TokenLength:  32,
-		TokenLookup:  "header:X-CSRF-Token",
-		CookieName:   "csrf_token",
-		CookiePath:   "/",
-		CookieMaxAge: 86400,
-		Skipper: func(c echo.Context) bool {
-			path := c.Request().URL.Path
-			if strings.HasPrefix(path, "/api/auth/signin") ||
-				strings.HasPrefix(path, "/api/auth/signup") ||
-				strings.HasPrefix(path, "/api/auth/refresh") ||
-				strings.HasPrefix(path, "/api/auth/oauth") ||
-				strings.HasPrefix(path, "/api/v1/auth/") {
-				_, err := c.Cookie("csrf_token")
-				return err != nil
-			}
-			return false
-		},
-	}))
+	configureEchoMiddleware(e)
 
 	environmentRepo := repositories.NewEnvironmentRepo(db)
 	projectRepo := repositories.NewProjectRepo(db, environmentRepo)
+	projectAppRepo := repositories.NewProjectAppRepo(db)
 	appRepo := repositories.NewAppServiceRepo(db)
 	serviceVarRepo := repositories.NewServiceVarRepo(db)
 	dbRepo := repositories.NewDatabaseRepo(db, v)
@@ -138,6 +89,7 @@ func NewServer(db *sql.DB, v *utils.Vault, deployer *deploy.Deployer, traefikMan
 	_ = backupManager.Start()
 
 	projectService := projectservices.NewProjectService(projectRepo, environmentRepo, appRepo, serviceVarRepo, settingsRepo, orgRepo)
+	projectAppService := projectservices.NewProjectAppService(projectAppRepo)
 	appService := projectservices.NewAppService(appRepo, serviceVarRepo, volumeRepo)
 	databaseService := databaseservices.NewDatabaseService(dbRepo, databaseDeployer)
 	tokenService, err := authservices.NewTokenService()
@@ -201,6 +153,7 @@ func NewServer(db *sql.DB, v *utils.Vault, deployer *deploy.Deployer, traefikMan
 	canvasHandler := projects.NewCanvasHandler(canvasService, projectService)
 	terminalHandler := deployments.NewTerminalHandler(dockerClient, tokenService, appService, projectService, userRepo)
 	projectHandler := projects.NewProjectHandler(projectService, projectSettingsService)
+	projectAppHandler := projects.NewProjectAppHandler(projectAppService, projectService)
 	orgHandler := auth.NewOrganizationHandler(orgService)
 	environmentHandler := projects.NewEnvironmentHandler(environmentService, projectService)
 	deploymentHandler := deployments.NewDeploymentHandler(deploymentService, appService, auditService, aiAnalysisService, prPreviewService, projectService)
@@ -250,8 +203,11 @@ func NewServer(db *sql.DB, v *utils.Vault, deployer *deploy.Deployer, traefikMan
 	registryService := deploymentservices.NewRegistryService(registryRepo)
 	registryHandler := deployments.NewRegistryHandler(registryService)
 
-	billingService := systemservices.NewBillingService(userRepo)
-	billingHandler := system.NewBillingHandler(billingService)
+	var billingHandler *system.BillingHandler
+	if config.Get().Cloud.Enabled {
+		billingService := systemservices.NewBillingService(userRepo)
+		billingHandler = system.NewBillingHandler(billingService)
+	}
 
 	takeoverRepo := repositories.NewTakeoverRepository(db, v)
 	takeoverScanner := systemservices.NewTakeoverScanner()
@@ -301,6 +257,7 @@ func NewServer(db *sql.DB, v *utils.Vault, deployer *deploy.Deployer, traefikMan
 		gitHandler:             gitHandler,
 		webhookHandler:         webhookHandler,
 		projectHandler:         projectHandler,
+		projectAppHandler:      projectAppHandler,
 		orgHandler:             orgHandler,
 		environmentHandler:     environmentHandler,
 		domainHandler:          domainHandler,

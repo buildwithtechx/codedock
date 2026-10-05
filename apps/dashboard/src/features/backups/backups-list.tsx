@@ -1,31 +1,26 @@
 import { useSearch } from '@tanstack/react-router';
-import { Calendar, Check, Database, Loader2, Play, Plus, Trash2 } from 'lucide-react';
+import { Clock, HardDrive, History, Plus, RefreshCw } from 'lucide-react';
 import { useEffect, useState } from 'react';
 import { toast } from 'sonner';
 import { PageHeader } from '#/components/layout/page-header';
 import { Button } from '#/components/ui/button';
-import { Input } from '#/components/ui/input';
-import { QueryErrorState } from '#/components/ui/query-error-state';
-import { Row, Section } from '#/components/ui/section';
-import { Switch } from '#/components/ui/switch';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '#/components/ui/tabs';
 import {
-  useCreate,
-  useDelete,
   useDeleteRecord,
   useList,
-  useListRecords,
+  useListAllRecords,
+  useListS3Destinations,
   useRestore,
-  useTrigger,
-  useUpdate,
 } from '#/features/backups';
+import { BackupDestinationHistory } from './backup-destination-history';
 import { BackupDestinations } from './backup-destinations';
-import { BackupExecutionsList } from './backup-executions-list';
+import { BackupPolicies } from './backup-policies';
+import { BackupStorageSummary } from './backup-storage-summary';
 import { CreateS3DestinationDialog } from './create-s3-destination-dialog';
 
 export function BackupsList() {
   const search = useSearch({ strict: false }) as { tab?: string; add?: string } | undefined;
-  const [activeTab, setActiveTab] = useState(search?.tab || 'configuration');
+  const [activeTab, setActiveTab] = useState(search?.tab || 'history');
   const [isDestinationDialogOpen, setIsDestinationDialogOpen] = useState(search?.add === 'true');
 
   useEffect(() => {
@@ -37,282 +32,127 @@ export function BackupsList() {
     }
   }, [search?.tab, search?.add]);
 
-  const { data: configsData, isLoading, isError, refetch } = useList();
+  const { data: configsData, isLoading: isLoadingConfigs, refetch: refetchConfigs } = useList();
   const configs = configsData?.data || [];
-  const config = configs[0];
 
-  const createBackup = useCreate();
-  const updateBackup = useUpdate();
-  const triggerBackup = useTrigger();
-  const deleteBackup = useDelete();
-  const deleteRecord = useDeleteRecord();
-  const restoreBackup = useRestore();
-
-  const { data: recordsData, isLoading: isLoadingRecords } = useListRecords(config?.id || '');
+  const {
+    data: recordsData,
+    isLoading: isLoadingRecords,
+    refetch: refetchRecords,
+  } = useListAllRecords(50);
   const records = recordsData?.data || [];
 
-  const [name, setName] = useState('codedock-db');
-  const [description, setDescription] = useState('Codedock database');
-  const [dbUser, setDbUser] = useState('codedock');
-  const [dbPassword, setDbPassword] = useState('********');
-  const [backupEnabled, setBackupEnabled] = useState(true);
-  const [s3Enabled, setS3Enabled] = useState(false);
-  const [disableLocal, setDisableLocal] = useState(false);
-  const [schedule, setSchedule] = useState('0 0 * * *');
-  const [timezone, setTimezone] = useState('UTC');
-  const [timeout, setTimeoutVal] = useState('3600');
-  const [retentionDays, setRetentionDays] = useState('7');
-  const [maxBackups, setMaxBackups] = useState('0');
-  const [maxStorage, setMaxStorage] = useState('0');
+  const { data: s3Data, refetch: refetchS3 } = useListS3Destinations();
+  const destinations = s3Data?.data || [];
 
-  useEffect(() => {
-    if (config) {
-      setName(config.name);
-      setDescription(config.description);
-      setDbUser(config.dbUser);
-      if (config.dbPassword) setDbPassword(config.dbPassword);
-      setBackupEnabled(config.backupEnabled);
-      setS3Enabled(config.s3Enabled);
-      setDisableLocal(config.disableLocal);
-      setSchedule(config.schedule);
-      setTimezone(config.timezone);
-      setTimeoutVal(config.timeout.toString());
-      setRetentionDays(config.retentionDays.toString());
-      setMaxBackups(config.maxBackups.toString());
-      setMaxStorage(config.maxStorageGb.toString());
-    }
-  }, [config]);
+  const restoreMutation = useRestore();
+  const deleteRecordMutation = useDeleteRecord();
 
-  const handleSave = async (e?: React.FormEvent) => {
-    e?.preventDefault();
-    try {
-      const payload = {
-        projectId: 'global',
-        name,
-        description,
-        dbUser,
-        dbPassword: dbPassword === '********' ? '' : dbPassword,
-        backupEnabled,
-        s3Enabled,
-        disableLocal,
-        schedule,
-        timezone,
-        timeout: parseInt(timeout, 10),
-        retentionDays: parseInt(retentionDays, 10),
-        maxBackups: parseInt(maxBackups, 10),
-        maxStorageGb: parseInt(maxStorage, 10),
-      };
-
-      if (config) {
-        await updateBackup.mutateAsync({ id: config.id, payload });
-      } else {
-        await createBackup.mutateAsync({ payload });
-      }
-      toast.success('Backup configuration saved');
-    } catch {
-      toast.error('Failed to save backup configuration');
-    }
+  const handleRefreshAll = async () => {
+    await Promise.all([refetchConfigs(), refetchRecords(), refetchS3()]);
+    toast.success('Backup records and storage updated');
   };
 
-  const handleTrigger = async () => {
-    if (!config) {
-      toast.error('Please save the configuration first');
-      return;
-    }
-    try {
-      await triggerBackup.mutateAsync({ id: config.id });
-      toast.success('Backup triggered successfully');
-    } catch {
-      toast.error('Failed to trigger backup');
-    }
+  const handleRestoreRecord = async (recordId: string) => {
+    const record = records.find((r) => r.id === recordId);
+    if (!record) return;
+    await restoreMutation.mutateAsync({ id: record.id });
   };
 
-  const handleRestore = async (recordId: string) => {
-    if (
-      !confirm(
-        'Are you sure you want to restore this backup? This will overwrite the current database and cannot be undone.'
-      )
-    ) {
-      return;
-    }
+  const handleDeleteRecord = async (configId: string, recordId: string) => {
+    if (!window.confirm('Are you sure you want to delete this snapshot?')) return;
     try {
-      toast.info('Restoring backup... this may take a moment.');
-      await restoreBackup.mutateAsync({ id: recordId });
-      toast.success('Backup restored successfully');
-    } catch (err: unknown) {
-      toast.error(
-        (err as Record<string, any>)?.response?.data?.error || 'Failed to restore backup'
-      );
+      await deleteRecordMutation.mutateAsync({ id: configId, recordId });
+      toast.success('Snapshot deleted');
+      void refetchRecords();
+    } catch {
+      toast.error('Failed to delete snapshot');
     }
   };
 
   return (
-    <div className="space-y-6 pb-12">
-      <PageHeader
-        title="Backups"
-        description="Configure retention, scheduling, and storage for the Codedock instance database."
-        action={
-          <div className="flex flex-wrap items-center gap-2">
-            {activeTab === 'destinations' ? (
-              <CreateS3DestinationDialog
-                isOpen={isDestinationDialogOpen}
-                setIsOpen={setIsDestinationDialogOpen}
-                trigger={
-                  <Button size="sm">
-                    <Plus className="mr-2 h-4 w-4" />
-                    Add destination
-                  </Button>
-                }
-              />
-            ) : (
-              <>
-                <Button
-                  variant="outline"
-                  size="sm"
-                  onClick={handleTrigger}
-                  disabled={triggerBackup.isPending || !config}
-                >
-                  <Play className="mr-2 h-4 w-4" />
-                  {triggerBackup.isPending ? 'Triggering...' : 'Backup now'}
-                </Button>
-                <Button
-                  size="sm"
-                  onClick={handleSave}
-                  disabled={isLoading || createBackup.isPending || deleteBackup.isPending}
-                >
-                  <Check className="mr-2 h-4 w-4" />
-                  {createBackup.isPending || deleteBackup.isPending ? 'Saving...' : 'Save changes'}
-                </Button>
-              </>
-            )}
-          </div>
-        }
-      />
-
-      {isLoading ? (
-        <div className="flex min-h-[25rem] items-center justify-center">
-          <Loader2 className="h-5 w-5 animate-spin text-muted-foreground" />
-        </div>
-      ) : isError ? (
-        <QueryErrorState
-          title="Backup settings are unavailable"
-          description="Codedock could not load the instance backup configuration."
-          onRetry={() => void refetch()}
+    <div className="space-y-6">
+      <div className="flex flex-wrap items-center justify-between gap-4">
+        <PageHeader
+          title="Backups"
+          description="Manage S3 storage destinations, automated snapshot schedules, and disaster recovery."
         />
-      ) : (
-        <Tabs value={activeTab} onValueChange={setActiveTab}>
-          <TabsList variant="line" aria-label="Backup settings">
-            <TabsTrigger value="configuration">Configuration</TabsTrigger>
-            <TabsTrigger value="destinations">Storage destinations</TabsTrigger>
-          </TabsList>
+        <div className="flex items-center gap-2">
+          <Button
+            variant="outline"
+            size="sm"
+            onClick={handleRefreshAll}
+            className="gap-1.5"
+            title="Refresh backups and storage"
+          >
+            <RefreshCw className="h-4 w-4" />
+            Refresh
+          </Button>
+          <CreateS3DestinationDialog
+            isOpen={isDestinationDialogOpen}
+            setIsOpen={setIsDestinationDialogOpen}
+            trigger={
+              <Button size="sm" className="gap-1.5">
+                <Plus className="h-4 w-4" />
+                Add destination
+              </Button>
+            }
+          />
+        </div>
+      </div>
 
-          <TabsContent value="configuration" className="mt-6 space-y-6">
-            <Section icon={<Database className="h-4 w-4" />} title="Database Configuration">
-              <Row label="UUID" description="The unique identifier for this backup configuration.">
-                <Input disabled value={config?.id || 'Not configured yet (Save to generate)'} />
-              </Row>
-              <Row label="Name" description="A friendly name for this configuration.">
-                <Input value={name} onChange={(e) => setName(e.target.value)} />
-              </Row>
-              <Row label="Description" description="Optional description of the database.">
-                <Input value={description} onChange={(e) => setDescription(e.target.value)} />
-              </Row>
-              <Row
-                label="Database User"
-                description="The username used to connect to the database."
-              >
-                <Input value={dbUser} onChange={(e) => setDbUser(e.target.value)} />
-              </Row>
-              <Row label="Database Password" description="The password for the database user.">
-                <Input
-                  type="password"
-                  value={dbPassword}
-                  onChange={(e) => setDbPassword(e.target.value)}
-                />
-              </Row>
-            </Section>
+      <div className="grid items-start gap-6 xl:grid-cols-[minmax(0,1fr)_320px]">
+        <div className="min-w-0 space-y-6">
+          <Tabs value={activeTab} onValueChange={setActiveTab}>
+            <TabsList className="grid w-full grid-cols-3">
+              <TabsTrigger value="history" className="gap-1.5 text-xs sm:text-sm">
+                <History className="h-4 w-4" />
+                <span>Snapshots</span>
+                <span className="ml-1 rounded-full bg-muted px-1.5 py-0.2 font-mono text-[10px]">
+                  {records.length}
+                </span>
+              </TabsTrigger>
+              <TabsTrigger value="destinations" className="gap-1.5 text-xs sm:text-sm">
+                <HardDrive className="h-4 w-4" />
+                <span>Destinations</span>
+                <span className="ml-1 rounded-full bg-muted px-1.5 py-0.2 font-mono text-[10px]">
+                  {destinations.length}
+                </span>
+              </TabsTrigger>
+              <TabsTrigger value="policies" className="gap-1.5 text-xs sm:text-sm">
+                <Clock className="h-4 w-4" />
+                <span>Policies</span>
+                <span className="ml-1 rounded-full bg-muted px-1.5 py-0.2 font-mono text-[10px]">
+                  {configs.length}
+                </span>
+              </TabsTrigger>
+            </TabsList>
 
-            <Section icon={<Calendar className="h-4 w-4" />} title="Scheduled Backup">
-              <Row
-                label="Backup Enabled"
-                description="Enable or disable scheduled backups globally."
-              >
-                <div className="flex items-center gap-2">
-                  <Switch checked={backupEnabled} onCheckedChange={setBackupEnabled} />
-                </div>
-              </Row>
-              <Row
-                label="S3 Enabled"
-                description="Upload backups to the configured S3 destination."
-              >
-                <div className="flex items-center gap-2">
-                  <Switch checked={s3Enabled} onCheckedChange={setS3Enabled} />
-                </div>
-              </Row>
-              <Row
-                label="Disable Local Backup"
-                description="Do not store backups on the local disk."
-              >
-                <div className="flex items-center gap-2">
-                  <Switch checked={disableLocal} onCheckedChange={setDisableLocal} />
-                </div>
-              </Row>
-              <Row label="Frequency" description="Cron expression for the backup schedule.">
-                <Input value={schedule} onChange={(e) => setSchedule(e.target.value)} />
-              </Row>
-              <Row label="Timezone" description="The timezone used for the cron expression.">
-                <Input value={timezone} onChange={(e) => setTimezone(e.target.value)} disabled />
-              </Row>
-              <Row label="Timeout (seconds)" description="Maximum execution time before failing.">
-                <Input value={timeout} onChange={(e) => setTimeoutVal(e.target.value)} disabled />
-              </Row>
-            </Section>
+            <TabsContent value="history" className="mt-4">
+              <BackupDestinationHistory
+                records={records}
+                isLoading={isLoadingRecords}
+                onRestore={handleRestoreRecord}
+                onDeleteRecord={handleDeleteRecord}
+                restorePending={restoreMutation.isPending}
+                deletePending={deleteRecordMutation.isPending}
+              />
+            </TabsContent>
 
-            <Section icon={<Trash2 className="h-4 w-4" />} title="Retention Settings">
-              <div className="py-4 pb-6">
-                <ul className="list-disc space-y-1 pl-5 text-muted-foreground text-sm">
-                  <li>Setting a value to 0 means unlimited retention.</li>
-                  <li>
-                    The retention rules work independently - whichever limit is reached first will
-                    trigger cleanup.
-                  </li>
-                </ul>
-              </div>
-              <Row label="Number of backups to keep">
-                <Input
-                  value={maxBackups}
-                  onChange={(e) => setMaxBackups(e.target.value)}
-                  disabled
-                />
-              </Row>
-              <Row label="Days to keep backups">
-                <Input value={retentionDays} onChange={(e) => setRetentionDays(e.target.value)} />
-              </Row>
-              <Row label="Maximum storage (GB)">
-                <Input
-                  value={maxStorage}
-                  onChange={(e) => setMaxStorage(e.target.value)}
-                  disabled
-                />
-              </Row>
-            </Section>
+            <TabsContent value="destinations" className="mt-4">
+              <BackupDestinations onAddDestination={() => setIsDestinationDialogOpen(true)} />
+            </TabsContent>
 
-            <BackupExecutionsList
-              records={records}
-              configId={config?.id || ''}
-              isLoadingRecords={isLoadingRecords}
-              handleRestore={handleRestore}
-              restorePending={restoreBackup.isPending}
-              onDeleteRecord={(cfgId, recId) => deleteRecord.mutate({ id: cfgId, recordId: recId })}
-              deletePending={deleteRecord.isPending}
-            />
-          </TabsContent>
+            <TabsContent value="policies" className="mt-4">
+              <BackupPolicies configs={configs} isLoading={isLoadingConfigs} />
+            </TabsContent>
+          </Tabs>
+        </div>
 
-          <TabsContent value="destinations" className="mt-6">
-            <BackupDestinations onAddDestination={() => setIsDestinationDialogOpen(true)} />
-          </TabsContent>
-        </Tabs>
-      )}
+        <aside className="space-y-6 xl:sticky xl:top-6">
+          <BackupStorageSummary records={records} destinations={destinations} configs={configs} />
+        </aside>
+      </div>
     </div>
   );
 }

@@ -1,6 +1,7 @@
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
 import { useOrganizationStore } from '#/stores/organization-store';
 import { projectSettingsService, projectsService } from './api';
+import type { ProjectConfig } from './interfaces';
 
 export const useListProjects = (params?: { page?: number; limit?: number }) => {
   const activeOrganizationId = useOrganizationStore((state) => state.activeOrganizationId);
@@ -150,6 +151,29 @@ export const useRemoveMember = () => {
       projectSettingsService.removeMember(payload.projectId, payload.memberId),
     onSuccess: async () => {
       await queryClient.invalidateQueries({ queryKey: ['projectSettings'] });
+    },
+  });
+};
+
+export const useListAllProjects = () => {
+  const organizationId = useOrganizationStore((state) => state.activeOrganizationId);
+  return useQuery({
+    queryKey: ['projects', 'all', organizationId],
+    enabled: Boolean(organizationId),
+    queryFn: async () => {
+      const projects: ProjectConfig[] = [];
+      let page = 1;
+      let totalPages = 1;
+      do {
+        const response = await projectsService.listProjects(organizationId as string, {
+          page,
+          limit: 100,
+        });
+        projects.push(...response.data.records);
+        totalPages = response.data.totalPages;
+        page++;
+      } while (page <= totalPages);
+      return projects;
     },
   });
 };

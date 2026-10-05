@@ -52,7 +52,7 @@ func (h *DatabaseHandler) ListDatabases(c echo.Context) error {
 		databases = []*models.Database{}
 	}
 	user := middleware.GetUserClaimsFromContext(c.Request().Context())
-	if user != nil && user.Role != "admin" {
+	if user != nil && user.Role != models.UserRoleAdmin && user.Role != models.UserRoleOwner {
 		var filtered []*models.Database
 		for _, db := range databases {
 			if h.projectService.IsMemberOrOwner(c.Request().Context(), db.ProjectID, user.UserID, user.Role) {

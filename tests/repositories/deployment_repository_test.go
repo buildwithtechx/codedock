@@ -67,13 +67,17 @@ func seedDeployment(
 	if _, err := db.Exec(`INSERT OR IGNORE INTO organizations (id, name) VALUES (?, ?)`, organizationID, organizationID); err != nil {
 		t.Fatalf("create organization: %v", err)
 	}
-	if _, err := db.Exec(`INSERT INTO projects (id, name, organization_id) VALUES (?, ?, ?)`, projectID, projectName, organizationID); err != nil {
+	appID := "app-" + projectID
+	if _, err := db.Exec(`INSERT OR IGNORE INTO project_apps (id, organization_id, name, slug) VALUES (?, ?, ?, ?)`, appID, organizationID, projectName, projectName); err != nil {
+		t.Fatalf("create project_app: %v", err)
+	}
+	if _, err := db.Exec(`INSERT INTO projects (id, app_id, slug, name, organization_id) VALUES (?, ?, ?, ?, ?)`, projectID, appID, projectName, projectName, organizationID); err != nil {
 		t.Fatalf("create project: %v", err)
 	}
 	if _, err := db.Exec(`INSERT INTO app_services (id, project_id, environment_id, name, created_at, updated_at) VALUES (?, ?, ?, ?, ?, ?)`, serviceID, projectID, "environment-"+projectID, serviceName, createdAt, createdAt); err != nil {
 		t.Fatalf("create service: %v", err)
 	}
-	if _, err := db.Exec(`INSERT INTO deployments (id, service_id, environment_id, project_id, status, commit_hash, branch, created_at, updated_at) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?)`, deploymentID, serviceID, "environment-"+projectID, projectID, status, commitHash, branch, createdAt, createdAt); err != nil {
+	if _, err := db.Exec(`INSERT INTO deployments (id, service_id, organization_id, project_id, status, commit_hash, branch, created_at, updated_at) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?)`, deploymentID, serviceID, organizationID, projectID, status, commitHash, branch, createdAt, createdAt); err != nil {
 		t.Fatalf("create deployment: %v", err)
 	}
 }

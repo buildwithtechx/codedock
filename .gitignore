@@ -39,3 +39,6 @@ tmp/
 # Ignore deploy workflow for now
 .github/workflows/deploy.yml
 
+
+**/self-hosted.json
+**/.vault_key

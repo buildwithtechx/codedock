@@ -128,8 +128,8 @@ func (r *DomainRepo) Create(ctx context.Context, d *models.DomainConfig) error {
 	d.CreatedAt = now
 	d.UpdatedAt = now
 	_, err := r.db.ExecContext(ctx,
-		`INSERT INTO domains (id, service_id, domain_name, redirect_to, ssl_cert_status, path_prefix, dns_provision_status, dns_provider, dns_provisioned_ip, created_at, updated_at) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)`,
-		d.ID, d.ServiceID, d.DomainName, d.RedirectTo, d.SSLCertStatus, d.PathPrefix, d.DNSProvisionStatus, d.DNSProvider, d.DNSProvisionedIP, d.CreatedAt, d.UpdatedAt,
+		`INSERT INTO domains (id, service_id, hostname, domain_name, redirect_to, ssl_cert_status, path_prefix, dns_provision_status, dns_provider, dns_provisioned_ip, created_at, updated_at) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)`,
+		d.ID, d.ServiceID, d.DomainName, d.DomainName, d.RedirectTo, d.SSLCertStatus, d.PathPrefix, d.DNSProvisionStatus, d.DNSProvider, d.DNSProvisionedIP, d.CreatedAt, d.UpdatedAt,
 	)
 	return err
 }

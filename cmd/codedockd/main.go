@@ -40,6 +40,11 @@ func startServer() {
 	dataDir, db, vlt := commands.InitDataDir()
 	defer db.Close()
 
+	_, _ = db.Exec(`
+		INSERT OR IGNORE INTO servers (id, user_id, name, ip_address, status, is_local, ssh_transport, created_at, updated_at)
+		VALUES ('local', 'system', 'Local Host', '127.0.0.1', 'online', 1, 'direct', CURRENT_TIMESTAMP, CURRENT_TIMESTAMP)
+	`)
+
 	telemetry.Init()
 	defer telemetry.Close()
 	telemetry.Track("system", "daemon_start", map[string]any{

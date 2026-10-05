@@ -39,7 +39,7 @@ func (h *ArchiveHandler) DeployArchive(c echo.Context) error {
 	if projectID == "" {
 		return utils.Error(c, http.StatusBadRequest, "projectId is required")
 	}
-	if user.Role != "admin" {
+	if user.Role != models.UserRoleAdmin && user.Role != models.UserRoleOwner {
 		if !h.projectService.HasPermission(c.Request().Context(), projectID, user.UserID, models.UserRole(user.Role), "") {
 			return utils.Error(c, http.StatusForbidden, "insufficient permissions for this project")
 		}

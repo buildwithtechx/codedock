@@ -68,6 +68,14 @@ func (h *ProjectHandler) CreateProject(c echo.Context) error {
 
 	userClaims, ok := c.Get("user").(*models.UserClaims)
 	if ok && userClaims != nil {
+		if req.OrganizationID == "" {
+			organization, err := h.projectService.GetOrCreateDefaultOrganization(c.Request().Context(), userClaims.UserID)
+			if err != nil {
+				return utils.Error(c, http.StatusInternalServerError, err.Error())
+			}
+			req.OrganizationID = organization.ID
+		}
+
 		if req.OrganizationID != "" {
 			if !h.projectService.HasOrgPermission(c.Request().Context(), req.OrganizationID, userClaims.UserID, userClaims.Role, "") {
 				return utils.Error(c, http.StatusForbidden, "you do not have permission to create a project in this organization")
@@ -115,7 +123,7 @@ func (h *ProjectHandler) GetProject(c echo.Context) error {
 		return utils.Error(c, http.StatusNotFound, "project not found")
 	}
 	user := middleware.GetUserClaimsFromContext(c.Request().Context())
-	if user != nil && user.Role != "admin" {
+	if user != nil && user.Role != models.UserRoleAdmin && user.Role != models.UserRoleOwner {
 	}
 	return utils.Success(c, "Operation successful", p)
 }
@@ -130,7 +138,7 @@ func (h *ProjectHandler) DeleteProject(c echo.Context) error {
 		return utils.Error(c, http.StatusNotFound, "project not found")
 	}
 	user := middleware.GetUserClaimsFromContext(c.Request().Context())
-	if user != nil && user.Role != "admin" {
+	if user != nil && user.Role != models.UserRoleAdmin && user.Role != models.UserRoleOwner {
 	}
 	if err := h.projectService.DeleteProject(c.Request().Context(), id); err != nil {
 		return utils.Error(c, http.StatusInternalServerError, err.Error())

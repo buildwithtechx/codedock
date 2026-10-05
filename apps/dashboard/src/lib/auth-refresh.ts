@@ -1,3 +1,4 @@
+import { bootstrapCsrf } from '#/lib/csrf';
 import { useAuthStore } from '#/stores/auth-store';
 
 let activeRefreshPromise: Promise<string | null> | null = null;
@@ -38,6 +39,7 @@ export async function refreshAuthSession(apiBaseUrl: string): Promise<string | n
       const headers: Record<string, string> = {
         'Content-Type': 'application/json',
         ...getAuthHeaders(),
+        'X-CSRF-Token': await bootstrapCsrf(apiBaseUrl),
       };
       const res = await fetch(`${apiBaseUrl}/auth/refresh`, {
         method: 'POST',

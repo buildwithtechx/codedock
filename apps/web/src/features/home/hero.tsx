@@ -24,7 +24,7 @@ export function Hero() {
   ];
 
   const handleCopy = () => {
-    navigator.clipboard.writeText('curl -fsSL https://get.codedock.run | sh');
+    navigator.clipboard.writeText('curl -fsSL https://get.codedock.run | bash');
     setCopied(true);
     setTimeout(() => setCopied(false), 2000);
     if (
@@ -41,7 +41,7 @@ export function Hero() {
         }
       ).posthog?.capture('install_command_copied', {
         source: 'hero_section',
-        command: 'curl -fsSL https://get.codedock.run | sh',
+        command: 'curl -fsSL https://get.codedock.run | bash',
       });
     }
   };
@@ -67,7 +67,7 @@ export function Hero() {
         <div className="mx-auto mt-10 flex max-w-lg items-center gap-2 rounded-lg border border-border bg-background/80 px-4 py-3 font-mono text-sm backdrop-blur-md">
           <span className="shrink-0 font-bold text-primary">$</span>
           <code className="flex-1 truncate text-left text-[0.8rem] text-foreground">
-            curl -fsSL https://get.codedock.run | sh
+            curl -fsSL https://get.codedock.run | bash
           </code>
           <button
             type="button"

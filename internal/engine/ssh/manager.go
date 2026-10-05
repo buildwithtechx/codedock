@@ -37,7 +37,7 @@ func (m *SSHManager) GetClient(server *models.Server) (*Client, func(), error) {
 
 	if entry, ok := m.clients[server.ID]; ok && !entry.closed {
 		entry.refs++
-		return entry.client, func() { m.releaseClient(server.ID) }, nil
+		return entry.client, func() { m.releaseClient(entry) }, nil
 	}
 
 	host := server.SSHHost
@@ -56,23 +56,20 @@ func (m *SSHManager) GetClient(server *models.Server) (*Client, func(), error) {
 		return nil, nil, fmt.Errorf("failed creating ssh client for server %s: %w", server.ID, err)
 	}
 
-	m.clients[server.ID] = &clientEntry{
+	entry := &clientEntry{
 		client: client,
 		refs:   1,
 	}
-	return client, func() { m.releaseClient(server.ID) }, nil
+	m.clients[server.ID] = entry
+	return client, func() { m.releaseClient(entry) }, nil
 }
 
-func (m *SSHManager) releaseClient(serverID string) {
+func (m *SSHManager) releaseClient(entry *clientEntry) {
 	m.mu.Lock()
 	defer m.mu.Unlock()
-
-	if entry, ok := m.clients[serverID]; ok {
-		entry.refs--
-		if entry.closed && entry.refs == 0 {
-			_ = entry.client.Close()
-			delete(m.clients, serverID)
-		}
+	entry.refs--
+	if entry.closed && entry.refs == 0 {
+		_ = entry.client.Close()
 	}
 }
 
@@ -138,9 +135,9 @@ func (m *SSHManager) RemoveClient(serverID string) {
 
 	if entry, ok := m.clients[serverID]; ok {
 		entry.closed = true
+		delete(m.clients, serverID)
 		if entry.refs == 0 {
 			_ = entry.client.Close()
-			delete(m.clients, serverID)
 		}
 	}
 }

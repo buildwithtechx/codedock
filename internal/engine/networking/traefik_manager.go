@@ -5,6 +5,7 @@ import (
 	"fmt"
 	"io"
 	"log/slog"
+	"strings"
 	"time"
 
 	"github.com/containerd/errdefs"
@@ -37,7 +38,7 @@ func (m *TraefikManager) EnsureTraefikRunning(ctx context.Context) error {
 		return fmt.Errorf("failed to ensure network: %w", err)
 	}
 
-	_, err := m.dockerClient.ContainerInspect(ctx, TraefikContainerName)
+	existing, err := m.dockerClient.ContainerInspect(ctx, TraefikContainerName)
 	if err != nil {
 		if errdefs.IsNotFound(err) {
 			if err := m.createTraefikContainer(ctx); err != nil {
@@ -45,6 +46,20 @@ func (m *TraefikManager) EnsureTraefikRunning(ctx context.Context) error {
 			}
 		} else {
 			return err
+		}
+	}
+
+	if err == nil && existing.Config != nil && traefikCertificateEmail(existing.Config.Cmd) != m.tlsEmail {
+		if existing.State != nil && existing.State.Running {
+			if err := m.dockerClient.ContainerStop(ctx, TraefikContainerName, container.StopOptions{}); err != nil {
+				return fmt.Errorf("stop proxy to apply certificate settings: %w", err)
+			}
+		}
+		if err := m.dockerClient.ContainerRemove(ctx, TraefikContainerName, container.RemoveOptions{}); err != nil {
+			return fmt.Errorf("replace proxy configuration: %w", err)
+		}
+		if err := m.createTraefikContainer(ctx); err != nil {
+			return fmt.Errorf("apply proxy certificate settings: %w", err)
 		}
 	}
 
@@ -204,4 +219,13 @@ func (m *TraefikManager) buildPortBindings() nat.PortMap {
 		"443/udp":  []nat.PortBinding{{HostIP: "0.0.0.0", HostPort: httpsPort}},
 		"8080/tcp": []nat.PortBinding{{HostIP: "127.0.0.1", HostPort: apiPort}},
 	}
+}
+
+func traefikCertificateEmail(args []string) string {
+	for _, arg := range args {
+		if value, found := strings.CutPrefix(arg, "--certificatesresolvers.letsencrypt.acme.email="); found {
+			return value
+		}
+	}
+	return ""
 }

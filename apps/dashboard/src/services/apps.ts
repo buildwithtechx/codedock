@@ -25,9 +25,12 @@ export const appsService = {
     }
   },
 
-  listByProject: async (projectId: string): Promise<ListAppsResponse> => {
+  listByProject: async (projectId: string, environmentId?: string): Promise<ListAppsResponse> => {
     try {
-      return await apiClient.get<ListAppsResponse>(`/projects/${projectId}/apps`);
+      const url = environmentId
+        ? `/projects/${projectId}/apps?environmentId=${encodeURIComponent(environmentId)}`
+        : `/projects/${projectId}/apps`;
+      return await apiClient.get<ListAppsResponse>(url);
     } catch (error) {
       throw handleApiError(error);
     }

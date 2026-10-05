@@ -183,7 +183,7 @@ func (g *AuthGuard) verifyOrgRole(c echo.Context, minPermission models.MemberPer
 		return utils.Error(c, http.StatusUnauthorized, "unauthorized")
 	}
 
-	if userClaims.Role == "admin" {
+	if userClaims.Role == models.UserRoleAdmin || userClaims.Role == models.UserRoleOwner {
 		return nil
 	}
 

@@ -41,8 +41,12 @@ func (s *BackupService) CreateConfig(ctx context.Context, cfg *models.BackupConf
 	if cfg.Timeout == 0 {
 		cfg.Timeout = 3600
 	}
+	if err := backup.ValidateSchedule(cfg.Schedule); err != nil {
+		return err
+	}
 	cfg.CreatedAt = time.Now().UTC().Format(time.RFC3339)
 	cfg.UpdatedAt = cfg.CreatedAt
+	setScheduleStatus(cfg)
 	if err := s.backupRepo.CreateConfig(ctx, cfg); err != nil {
 		return err
 	}
@@ -61,6 +65,10 @@ func (s *BackupService) UpdateConfig(ctx context.Context, cfg *models.BackupConf
 	if cfg.Timeout == 0 {
 		cfg.Timeout = 3600
 	}
+	if err := backup.ValidateSchedule(cfg.Schedule); err != nil {
+		return err
+	}
+	setScheduleStatus(cfg)
 	cfg.UpdatedAt = time.Now().UTC().Format(time.RFC3339)
 	if err := s.backupRepo.UpdateConfig(ctx, cfg); err != nil {
 		return err
@@ -149,6 +157,55 @@ func (s *BackupService) DeleteS3Destination(ctx context.Context, id string) erro
 	return s.s3Repo.DeleteS3Destination(ctx, id)
 }
 
+func (s *BackupService) GetS3Destination(ctx context.Context, id string) (*models.S3Destination, error) {
+	if id == "" {
+		return nil, errors.New("id required")
+	}
+	return s.s3Repo.GetS3Destination(ctx, id)
+}
+
+func (s *BackupService) VerifyS3Destination(ctx context.Context, id string) error {
+	dest, err := s.s3Repo.GetS3Destination(ctx, id)
+	if err != nil {
+		return fmt.Errorf("destination not found: %w", err)
+	}
+	verErr := backup.CheckS3Bucket(ctx, dest)
+	if verErr != nil {
+		_ = s.s3Repo.RecordVerificationResult(ctx, id, false, verErr.Error())
+		return verErr
+	}
+	_ = s.s3Repo.RecordVerificationResult(ctx, id, true, "")
+	return nil
+}
+
+func (s *BackupService) SetDefaultDestination(ctx context.Context, id string) error {
+	if id == "" {
+		return errors.New("id required")
+	}
+	return s.s3Repo.SetDefaultDestination(ctx, id)
+}
+
+func (s *BackupService) GetConfigByDatabaseID(ctx context.Context, dbID string) (*models.BackupConfig, error) {
+	if dbID == "" {
+		return nil, errors.New("database id required")
+	}
+	return s.backupRepo.GetConfigByDatabaseID(ctx, dbID)
+}
+
+func (s *BackupService) ListRecordsByDatabase(ctx context.Context, dbID string) ([]*models.BackupRecord, error) {
+	if dbID == "" {
+		return nil, errors.New("database id required")
+	}
+	return s.backupRepo.ListRecordsByDatabase(ctx, dbID)
+}
+
+func (s *BackupService) VerifyS3Draft(ctx context.Context, dest *models.S3Destination) error {
+	if dest == nil || dest.Bucket == "" {
+		return errors.New("bucket is required")
+	}
+	return backup.CheckS3Bucket(ctx, dest)
+}
+
 func (s *BackupService) TriggerBackup(ctx context.Context, configID string) (*models.BackupRecord, error) {
 	if s.manager == nil {
 		return nil, errors.New("backup manager not available")
@@ -161,6 +218,10 @@ func (s *BackupService) ListRecordsByConfig(ctx context.Context, configID string
 		return nil, errors.New("config id required")
 	}
 	return s.backupRepo.ListRecordsByConfig(ctx, configID)
+}
+
+func (s *BackupService) ListAllRecords(ctx context.Context, limit int) ([]*models.BackupRecord, error) {
+	return s.backupRepo.ListAllRecords(ctx, limit)
 }
 
 func (s *BackupService) GetRecord(ctx context.Context, recordID string) (*models.BackupRecord, error) {
@@ -185,4 +246,16 @@ func (s *BackupService) RestoreBackup(ctx context.Context, recordID string) erro
 		return errors.New("backup manager not available")
 	}
 	return s.manager.RestoreBackup(ctx, recordID)
+}
+
+func setScheduleStatus(cfg *models.BackupConfig) {
+	if cfg.Schedule == "manual" {
+		cfg.Status = models.BackupConfigStatusInactive
+	} else {
+		cfg.Status = models.BackupConfigStatusActive
+	}
+}
+
+func (s *BackupService) ListRecordsByConfigs(ctx context.Context, configIDs []string, limit int) ([]*models.BackupRecord, error) {
+	return s.backupRepo.ListRecordsByConfigs(ctx, configIDs, limit)
 }

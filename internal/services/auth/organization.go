@@ -32,7 +32,7 @@ func (s *OrganizationService) isRequesterOwnerOrAdmin(ctx context.Context, orgID
 	}
 	if s.userRepo != nil {
 		u, err := s.userRepo.GetUserByID(ctx, requesterUserID)
-		if err == nil && u != nil && u.Role == "admin" {
+		if err == nil && u != nil && (u.Role == models.UserRoleAdmin || u.Role == models.UserRoleOwner) {
 			return true
 		}
 	}

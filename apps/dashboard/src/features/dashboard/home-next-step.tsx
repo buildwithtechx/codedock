@@ -6,8 +6,8 @@ export function HomeNextStep({ hasProjects }: { hasProjects: boolean }) {
   const description = hasProjects
     ? 'Add an application or review the latest deployment activity.'
     : 'Create a project before adding applications and environments.';
-  const href = hasProjects ? '/apps/new' : '/projects/new';
-  const action = hasProjects ? 'Deploy an app' : 'Create project';
+  const href = hasProjects ? '/projects' : '/projects/new';
+  const action = hasProjects ? 'Deploy app or project' : 'Create project';
 
   return (
     <section className="rounded-2xl bg-card p-5">

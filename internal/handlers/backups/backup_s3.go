@@ -18,6 +18,8 @@ type S3DestinationPayload struct {
 	Endpoint        string `json:"endpoint"`
 	Bucket          string `json:"bucket"`
 	Region          string `json:"region"`
+	PathPrefix      string `json:"pathPrefix"`
+	IsDefault       *bool  `json:"isDefault"`
 	AccessKeyID     string `json:"accessKeyId"`
 	SecretAccessKey string `json:"secretAccessKey"`
 }
@@ -38,6 +40,10 @@ func (h *BackupHandler) CreateS3Destination(c echo.Context) error {
 	if err := c.Bind(&req); err != nil {
 		return utils.Error(c, http.StatusBadRequest, "invalid payload")
 	}
+	isDef := false
+	if req.IsDefault != nil {
+		isDef = *req.IsDefault
+	}
 	dest := models.S3Destination{
 		Name:            req.Name,
 		Description:     req.Description,
@@ -45,6 +51,8 @@ func (h *BackupHandler) CreateS3Destination(c echo.Context) error {
 		Endpoint:        req.Endpoint,
 		Bucket:          req.Bucket,
 		Region:          req.Region,
+		PathPrefix:      req.PathPrefix,
+		IsDefault:       isDef,
 		AccessKeyID:     req.AccessKeyID,
 		SecretAccessKey: req.SecretAccessKey,
 	}
@@ -64,6 +72,10 @@ func (h *BackupHandler) UpdateS3Destination(c echo.Context) error {
 	if err := c.Bind(&req); err != nil {
 		return utils.Error(c, http.StatusBadRequest, "invalid payload")
 	}
+	isDef := false
+	if req.IsDefault != nil {
+		isDef = *req.IsDefault
+	}
 	dest := models.S3Destination{
 		ID:              id,
 		Name:            req.Name,
@@ -72,6 +84,8 @@ func (h *BackupHandler) UpdateS3Destination(c echo.Context) error {
 		Endpoint:        req.Endpoint,
 		Bucket:          req.Bucket,
 		Region:          req.Region,
+		PathPrefix:      req.PathPrefix,
+		IsDefault:       isDef,
 		AccessKeyID:     req.AccessKeyID,
 		SecretAccessKey: req.SecretAccessKey,
 	}
@@ -83,6 +97,20 @@ func (h *BackupHandler) UpdateS3Destination(c echo.Context) error {
 	}
 	redactS3Destination(&dest)
 	return utils.Success(c, "Updated successfully", dest)
+}
+
+func (h *BackupHandler) SetDefaultS3Destination(c echo.Context) error {
+	id := c.Param("id")
+	if id == "" {
+		return utils.Error(c, http.StatusBadRequest, "missing id")
+	}
+	if err := h.backupService.SetDefaultDestination(c.Request().Context(), id); err != nil {
+		if utils.IsNotFound(err) {
+			return utils.Error(c, http.StatusNotFound, "s3 destination not found")
+		}
+		return utils.Error(c, http.StatusInternalServerError, err.Error())
+	}
+	return utils.Success(c, "Default destination set successfully", map[string]any{"ok": true})
 }
 
 func redactS3Destination(destination *models.S3Destination) {
@@ -103,4 +131,36 @@ func (h *BackupHandler) DeleteS3Destination(c echo.Context) error {
 		return utils.Error(c, http.StatusInternalServerError, err.Error())
 	}
 	return c.NoContent(http.StatusNoContent)
+}
+
+func (h *BackupHandler) VerifyS3Destination(c echo.Context) error {
+	id := c.Param("id")
+	if id == "" {
+		return utils.Error(c, http.StatusBadRequest, "missing id")
+	}
+	if err := h.backupService.VerifyS3Destination(c.Request().Context(), id); err != nil {
+		return utils.Success(c, "Verification failed", map[string]any{"ok": false, "reason": err.Error()})
+	}
+	return utils.Success(c, "Verification succeeded", map[string]any{"ok": true})
+}
+
+func (h *BackupHandler) VerifyS3Draft(c echo.Context) error {
+	var req S3DestinationPayload
+	if err := c.Bind(&req); err != nil {
+		return utils.Error(c, http.StatusBadRequest, "invalid payload")
+	}
+	dest := models.S3Destination{
+		Name:            req.Name,
+		Description:     req.Description,
+		Provider:        req.Provider,
+		Endpoint:        req.Endpoint,
+		Bucket:          req.Bucket,
+		Region:          req.Region,
+		AccessKeyID:     req.AccessKeyID,
+		SecretAccessKey: req.SecretAccessKey,
+	}
+	if err := h.backupService.VerifyS3Draft(c.Request().Context(), &dest); err != nil {
+		return utils.Success(c, "Verification failed", map[string]any{"ok": false, "reason": err.Error()})
+	}
+	return utils.Success(c, "Verification succeeded", map[string]any{"ok": true})
 }

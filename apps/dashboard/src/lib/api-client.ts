@@ -1,6 +1,7 @@
 import { toast } from 'sonner';
 import { env } from '#/env';
 import { getAuthHeaders, handleAuthFailure, refreshAuthSession } from '#/lib/auth-refresh';
+import { clearCsrfToken, prepareCsrfHeaders } from '#/lib/csrf';
 
 export function getApiBaseUrl(): string {
   if (typeof window !== 'undefined') {
@@ -15,8 +16,10 @@ export function getApiBaseUrl(): string {
 export function setApiBaseUrl(url: string): void {
   if (typeof window !== 'undefined') {
     if (!url) {
+      clearCsrfToken(getApiBaseUrl());
       localStorage.removeItem('codedock_server_url');
     } else {
+      clearCsrfToken(getApiBaseUrl());
       localStorage.setItem('codedock_server_url', url.replace(/\/+$/, ''));
     }
   }
@@ -61,6 +64,7 @@ export const apiClient = {
     const baseUrl = getApiBaseUrl();
     const url = `${baseUrl}${endpoint}`;
     const headers = await prepareHeaders(options, options.body);
+    await prepareCsrfHeaders(baseUrl, endpoint, options.method || 'GET', headers);
 
     const response = await fetch(url, {
       ...options,
@@ -142,6 +146,7 @@ export const apiClient = {
     const baseUrl = getApiBaseUrl();
     const url = `${baseUrl}${endpoint}`;
     const headers = await prepareHeaders(options, body);
+    await prepareCsrfHeaders(baseUrl, endpoint, 'POST', headers);
     const response = await fetch(url, {
       ...options,
       method: 'POST',
@@ -187,6 +192,14 @@ export const apiClient = {
     return this.fetch<T>(endpoint, {
       ...options,
       method: 'PUT',
+      body: body instanceof FormData ? body : JSON.stringify(body),
+    });
+  },
+
+  patch<T>(endpoint: string, body?: unknown, options?: RequestInit) {
+    return this.fetch<T>(endpoint, {
+      ...options,
+      method: 'PATCH',
       body: body instanceof FormData ? body : JSON.stringify(body),
     });
   },

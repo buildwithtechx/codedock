@@ -49,7 +49,7 @@ func (s *Server) RequireServiceRole(minPermission models.MemberPermission) echo.
 			if userClaims == nil {
 				return utils.Error(c, 401, "unauthorized")
 			}
-			if userClaims.Role == "admin" {
+			if userClaims.Role == models.UserRoleAdmin || userClaims.Role == models.UserRoleOwner {
 				return next(c)
 			}
 
@@ -77,6 +77,7 @@ func (s *Server) RequireServiceRole(minPermission models.MemberPermission) echo.
 }
 
 func (s *Server) registerAuthRoutes(apiGroup, authGroup *echo.Group) {
+	apiGroup.GET("/auth/csrf", bootstrapCSRF)
 	apiGroup.POST("/auth/signup", s.authHandler.Register, s.authRateLimiter.Middleware)
 	apiGroup.POST("/auth/signin", s.authHandler.Login, s.authRateLimiter.Middleware)
 	apiGroup.POST("/auth/refresh", s.authHandler.Refresh)
@@ -144,9 +145,19 @@ func (s *Server) registerProjectRoutes(apiGroup, authGroup *echo.Group) {
 
 	authGroup.GET("/projects/:id/env", s.projectEnvHandler.GetVars, projectAuth, s.authGuard.RequireScope("env:read"))
 	authGroup.PUT("/projects/:id/env", s.projectEnvHandler.SetVars, projectAuthAdmin, s.authGuard.RequireScope("env:write"))
+	authGroup.POST("/projects/:id/env", s.projectEnvHandler.SetVars, projectAuthAdmin, s.authGuard.RequireScope("env:write"))
 	authGroup.POST("/projects/:id/environments", s.environmentHandler.Create, projectAuthAdmin)
 	authGroup.GET("/projects/:id/environments", s.environmentHandler.ListByProject, projectAuth)
 	authGroup.GET("/projects/:id/apps", s.appServiceHandler.ListByProject, projectAuth)
+	authGroup.GET("/projects/:id/services", s.appServiceHandler.ListByProject, projectAuth)
+	authGroup.GET("/projects/:id/deployments", s.deploymentHandler.ListProjectDeployments, projectAuth)
+	authGroup.POST("/projects/:id/deploy", s.deploymentHandler.TriggerProject, projectAuthAdmin)
+
+	authGroup.GET("/project-apps", s.projectAppHandler.List)
+	authGroup.POST("/project-apps", s.projectAppHandler.Create)
+	authGroup.GET("/project-apps/:id", s.projectAppHandler.Get)
+	authGroup.PUT("/project-apps/:id", s.projectAppHandler.Update)
+	authGroup.DELETE("/project-apps/:id", s.projectAppHandler.Delete)
 
 	authGroup.GET("/projects/:projectId/tokens", s.projectSettingsHandler.ListTokens, projectAuthAdmin, s.authGuard.RequireScope("env:read"))
 	authGroup.POST("/projects/:projectId/tokens", s.projectSettingsHandler.CreateToken, projectAuthAdmin, s.authGuard.RequireScope("env:write"))
@@ -164,7 +175,9 @@ func (s *Server) registerProjectRoutes(apiGroup, authGroup *echo.Group) {
 
 func (s *Server) registerServerRoutes(apiGroup, authGroup *echo.Group) {
 	authGroup.GET("/servers", s.serverHandler.List, s.authGuard.RequireScope("server:read"))
+	authGroup.GET("/servers/:id", s.serverHandler.Get, s.authGuard.RequireScope("server:read"))
 	authGroup.POST("/servers", s.serverHandler.Create, s.authGuard.RequireScope("server:write"))
+	authGroup.PATCH("/servers/:id", s.serverHandler.Update, s.authGuard.RequireScope("server:write"))
 	authGroup.POST("/servers/test-ssh", s.serverHandler.TestSSH, s.authGuard.RequireScope("server:write"))
 	authGroup.DELETE("/servers/:id", s.serverHandler.Delete, s.authGuard.RequireScope("server:write"))
 	apiGroup.GET("/ws/servers/:serverId/metrics", s.serverMetricsWSHandler.Handle)
@@ -199,4 +212,6 @@ func (s *Server) registerDatabaseRoutes(authGroup *echo.Group) {
 	authGroup.POST("/databases/:id/data/:table", s.dbHandler.InsertTableRow, s.authGuard.RequireScope("database:manage"))
 	authGroup.PUT("/databases/:id/data/:table", s.dbHandler.UpdateTableRow, s.authGuard.RequireScope("database:manage"))
 	authGroup.DELETE("/databases/:id/data/:table", s.dbHandler.DeleteTableRow, s.authGuard.RequireScope("database:manage"))
+	authGroup.GET("/databases/:id/backups", s.backupHandler.ListRecordsByDatabase, s.authGuard.RequireScope("database:manage"))
+	authGroup.POST("/databases/:id/backups", s.backupHandler.TriggerDatabaseBackup, s.authGuard.RequireScope("database:manage"))
 }

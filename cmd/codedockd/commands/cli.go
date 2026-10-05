@@ -109,20 +109,6 @@ func printHelp() {
 	os.Exit(1)
 }
 
-func prompt(msg string) string {
-	fmt.Print(msg)
-	var input string
-	fmt.Scanln(&input)
-	return input
-}
-
-func promptOptional(msg string) string {
-	fmt.Print(msg)
-	var input string
-	fmt.Scanln(&input)
-	return input
-}
-
 func runRestart() {
 	fmt.Println("🔄 Restarting Codedock daemon...")
 	cmd := exec.Command("docker", "restart", "codedock-control-plane")
@@ -142,12 +128,4 @@ func parseUint(s string) (int, error) {
 		v = v*10 + int(c-'0')
 	}
 	return v, nil
-}
-
-func promptPassword(msg string) string {
-	fmt.Print(msg)
-	var input string
-	fmt.Scanln(&input)
-	fmt.Println()
-	return input
 }
