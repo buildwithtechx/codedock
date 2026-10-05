@@ -3,7 +3,7 @@ import { useEffect, useRef, useState } from 'react';
 import { trackInstallCopy } from '../lib/analytics';
 import { installCommand } from '../lib/product-links';
 
-export function InstallCommand({ source = 'install_command' }: { source?: string }) {
+export function InstallCommand({ source }: { source: string }) {
   const [status, setStatus] = useState<'idle' | 'copied' | 'failed'>('idle');
   const timer = useRef<ReturnType<typeof setTimeout> | undefined>(undefined);
   useEffect(() => () => clearTimeout(timer.current), []);

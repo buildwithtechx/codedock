@@ -1,7 +1,8 @@
+import type { SiteHref } from '../components/site-link';
 import { productLinks } from './product-links';
 export interface NavigationItem {
   label: string;
-  href: string;
+  href: SiteHref;
   description: string;
 }
 export const navigationGroups: { label: string; items: NavigationItem[] }[] = [
@@ -81,7 +82,7 @@ export const navigationGroups: { label: string; items: NavigationItem[] }[] = [
     ],
   },
 ];
-export const footerGroups = [
+export const footerGroups: { label: string; items: { label: string; href: SiteHref }[] }[] = [
   { label: 'Product', items: navigationGroups[0].items },
   {
     label: 'Enterprise',

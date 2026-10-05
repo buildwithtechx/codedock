@@ -35,7 +35,7 @@ export function DetailPage({ content }: { content: PageContent }) {
           Get started
         </SiteLink>
         <SiteLink
-          href={productLinks.docs + content.docsPath}
+          href={`${productLinks.docs}${content.docsPath}`}
           className="flex items-center gap-2 text-sm hover:text-primary"
         >
           {content.docsLabel}
@@ -80,9 +80,9 @@ export function DetailPage({ content }: { content: PageContent }) {
         </div>
         <div className="flex flex-col justify-center">
           <h3 className="mb-4 font-semibold">Start on your server.</h3>
-          <InstallCommand />
+          <InstallCommand source="recipe_detail" />
           <SiteLink
-            href={productLinks.docs + content.docsPath}
+            href={`${productLinks.docs}${content.docsPath}`}
             className="mt-4 flex items-center gap-2 font-semibold text-primary text-sm"
           >
             Open the complete guide

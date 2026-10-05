@@ -65,7 +65,7 @@ export function TemplateCatalog() {
         {visible.map((recipe) => (
           <SiteLink
             key={recipe.id}
-            href={productLinks.docs + recipe.docsPath}
+            href={`${productLinks.docs}${recipe.docsPath}`}
             className="group flex flex-col rounded-2xl border border-border bg-card/70 p-6 transition-colors hover:border-primary/50"
           >
             <div className="mb-6 flex items-center justify-between">

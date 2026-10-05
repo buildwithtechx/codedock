@@ -46,7 +46,7 @@ const features = [
     body: 'Manage recurring jobs, domains, notification settings and service operations alongside your applications.',
     href: '/features/monitoring',
   },
-];
+] as const;
 export function Features() {
   return (
     <section id="features" className="mx-auto max-w-7xl px-6 py-24">

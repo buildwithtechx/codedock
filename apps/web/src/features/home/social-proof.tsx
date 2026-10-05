@@ -16,7 +16,7 @@ const workflows = [
     body: 'Connect additional servers through SSH and choose where your services run.',
     href: '/solutions/enterprise',
   },
-];
+] as const;
 export function SocialProof() {
   return (
     <section className="border-border border-y py-20">

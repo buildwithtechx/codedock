@@ -37,7 +37,7 @@ function PricingPage() {
             <li>Logs, metrics and backup configuration</li>
             <li>No Stripe or email provider required for initial setup</li>
           </ul>
-          <InstallCommand />
+          <InstallCommand source="pricing_page" />
           <SiteLink href={productLinks.installation} className="mt-6 inline-block text-primary">
             Installation guide →
           </SiteLink>

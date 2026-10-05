@@ -12,7 +12,7 @@ export function BottomCta() {
           installer handles the initial configuration.
         </p>
         <div className="mx-auto mt-8 max-w-xl">
-          <InstallCommand />
+          <InstallCommand source="bottom_cta" />
         </div>
         <SiteLink
           href={productLinks.installation}

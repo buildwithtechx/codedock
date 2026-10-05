@@ -54,7 +54,7 @@ codedock db create --project PROJECT_ID --environment ENVIRONMENT_ID --name prim
 | `status` | Service ID |
 | `projects` | `list`, `create`, `destroy` |
 | `environments`, `env` | `list`, `create`, `destroy`; the `env` alias manages environments, not variables |
-| `apps` | `list`, `create`, `destroy`, plus `secrets`, `domains`, `deployments` and `logs` |
+| `apps` | `list`, `create`, `destroy`, plus `secrets`, `domains`, `deployments`, `logs` and `status` |
 | `apps secrets` | `list`, `set`; project variable operations |
 | `db` | `list`, `create`, `destroy`, `import`, `backups` |
 | `db backups` | `list`, `create`, `trigger`, `history` |
