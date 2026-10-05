@@ -1,167 +1,39 @@
 import { createFileRoute } from '@tanstack/react-router';
-import { createMeta } from '../lib/seo';
-
+import { productLinks } from '../lib/product-links';
+import { pageHead } from '../lib/seo';
 export const Route = createFileRoute('/changelog')({
-  component: ChangelogComponent,
-  head: () => ({
-    meta: createMeta({
-      title: 'Changelog — Codedock',
-      description: "What's new in Codedock. Every release, every improvement, every fix.",
-    }),
-  }),
+  component: ChangelogPage,
+  head: () =>
+    pageHead(
+      '/changelog',
+      'Development updates',
+      'Follow Codedock development, release notes and source changes in the public repository.'
+    ),
 });
-
-function ChangelogComponent() {
-  const entries = [
-    {
-      version: 'v0.4.0',
-      date: 'July 2026',
-      badge: 'Latest',
-      badgeColor: 'bg-primary/20 text-primary border border-primary/30',
-      changes: [
-        {
-          type: 'feat',
-          text: 'Fleet & agents handshake via Yamux over WebSockets',
-        },
-        { type: 'feat', text: 'Usage metering aggregation and billing alerts' },
-        {
-          type: 'feat',
-          text: 'Agent telemetry reporting loop (container hours, deployments)',
-        },
-        {
-          type: 'refactor',
-          text: 'Removed Google Wire — manual constructor injection throughout',
-        },
-        {
-          type: 'refactor',
-          text: 'Extracted dependency wiring to setup.go in both codedock and codedock-cloud',
-        },
-        {
-          type: 'fix',
-          text: 'Deprecated echoMiddleware.Logger replaced with RequestLoggerWithConfig',
-        },
-      ],
-    },
-    {
-      version: 'v0.3.0',
-      date: 'June 2026',
-      badge: null,
-      badgeColor: '',
-      changes: [
-        {
-          type: 'feat',
-          text: 'Notifications module with email (Resend) and webhook channels',
-        },
-        {
-          type: 'feat',
-          text: 'SSO / SAML handler with env-based configuration',
-        },
-        {
-          type: 'feat',
-          text: 'Codedock Cloud metering handler with repo-authenticated usage reporting',
-        },
-        {
-          type: 'feat',
-          text: 'Admin and internal staff routing split from public feature routes',
-        },
-        {
-          type: 'fix',
-          text: 'service/notifications renamed to avoid double-nesting',
-        },
-      ],
-    },
-    {
-      version: 'v0.2.0',
-      date: 'May 2026',
-      badge: null,
-      badgeColor: '',
-      changes: [
-        { type: 'feat', text: 'Pull request preview environments' },
-        {
-          type: 'feat',
-          text: 'MCP bridge — expose deployments to AI tools via Model Context Protocol',
-        },
-        { type: 'feat', text: 'OAuth 2.0 integrations (GitHub, GitLab)' },
-        { type: 'feat', text: 'Canvas feature for visual project layout' },
-        { type: 'feat', text: 'Serverless function deployments' },
-      ],
-    },
-    {
-      version: 'v0.1.0',
-      date: 'April 2026',
-      badge: null,
-      badgeColor: '',
-      changes: [
-        {
-          type: 'feat',
-          text: 'Initial release — single-binary Codedock daemon',
-        },
-        { type: 'feat', text: 'Docker-based app and database deployments' },
-        {
-          type: 'feat',
-          text: 'Traefik reverse proxy integration with automatic SSL',
-        },
-        { type: 'feat', text: 'Encrypted secrets vault' },
-        { type: 'feat', text: 'Git webhook push-to-deploy' },
-        { type: 'feat', text: 'Real-time browser terminal' },
-      ],
-    },
-  ];
-
-  const typeStyle: Record<string, string> = {
-    feat: 'bg-primary/10 text-primary',
-    fix: 'bg-yellow-500/10 text-yellow-400',
-    refactor: 'bg-blue-500/10 text-blue-400',
-    break: 'bg-red-500/10 text-red-400',
-  };
-
+function ChangelogPage() {
   return (
-    <section className="mx-auto max-w-3xl px-4 py-20">
-      <div className="mb-14">
-        <div className="mb-5 inline-flex items-center gap-2 rounded-full border border-border bg-surface px-3 py-1 font-medium text-muted-foreground text-xs">
-          Release notes
-        </div>
-        <h1 className="mb-3 font-extrabold text-4xl text-foreground">Changelog</h1>
-        <p className="text-muted-foreground">
-          Every update to Codedock and Codedock Cloud, in reverse chronological order.
-        </p>
-      </div>
-
-      <div className="relative mb-16 rounded-xl border border-border bg-background/80 p-6 backdrop-blur-md md:p-10">
-        <div className="absolute top-10 bottom-10 left-6 ml-0.75 w-px bg-border md:left-10" />
-
-        <div className="space-y-14 md:pl-8">
-          {entries.map((entry) => (
-            <div key={entry.version} className="relative">
-              <div className="absolute top-1.5 -left-14 size-2 rounded-full bg-primary ring-4 ring-background md:-left-16" />
-
-              <div className="mb-4 flex flex-wrap items-center gap-3">
-                <h2 className="font-extrabold text-foreground text-xl">{entry.version}</h2>
-                {entry.badge && (
-                  <span
-                    className={`rounded-full px-2 py-0.5 font-semibold text-xs ${entry.badgeColor}`}
-                  >
-                    {entry.badge}
-                  </span>
-                )}
-                <span className="text-muted-foreground text-sm">{entry.date}</span>
-              </div>
-
-              <ul className="space-y-2.5">
-                {entry.changes.map((c) => (
-                  <li key={c.text} className="flex items-start gap-3 text-muted-foreground text-sm">
-                    <span
-                      className={`mt-0.5 shrink-0 rounded px-1.5 py-0.5 font-bold font-mono text-xs ${typeStyle[c.type] ?? 'bg-surface text-muted-foreground'}`}
-                    >
-                      {c.type}
-                    </span>
-                    {c.text}
-                  </li>
-                ))}
-              </ul>
-            </div>
-          ))}
-        </div>
+    <section className="mx-auto max-w-3xl px-6 py-24">
+      <p className="font-semibold text-primary text-sm">DEVELOPMENT UPDATES</p>
+      <h1 className="mt-4 font-bold text-4xl">Follow what is changing.</h1>
+      <p className="mt-6 text-lg text-muted-foreground">
+        Published releases and their notes live in the GitHub repository. The highlights below
+        describe development changes, rather than a versioned release.
+      </p>
+      <article className="mt-10 rounded-2xl border border-border bg-card p-8">
+        <h2 className="font-semibold text-2xl">Self-hosted setup and configuration</h2>
+        <ul className="mt-5 list-inside list-disc space-y-3 text-muted-foreground">
+          <li>Generate and persist the initial self-hosted secrets automatically.</li>
+          <li>Create the first owner account through browser onboarding.</li>
+          <li>Separate optional cloud billing, email and OAuth integrations from local setup.</li>
+          <li>Improve deployment persistence and configuration validation.</li>
+        </ul>
+        <a href={`${productLinks.github}/pull/25`} className="mt-6 inline-block text-primary">
+          Read the merged changes →
+        </a>
+      </article>
+      <div className="mt-8 flex flex-wrap gap-6 text-primary">
+        <a href={`${productLinks.github}/releases`}>Published releases ?</a>
+        <a href={`${productLinks.github}/commits/main/`}>Development history ?</a>
       </div>
     </section>
   );

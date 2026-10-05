@@ -1,158 +1,67 @@
-import { Check, Cloud, Copy, Server } from 'lucide-react';
-import { useState } from 'react';
+import { ArrowRight, Cloud } from 'lucide-react';
+import { DiscordIcon } from '../../components/icons/discord-icon';
+import { GithubIcon } from '../../components/icons/github-icon';
+import { InstallCommand } from '../../components/install-command';
+import { productLinks } from '../../lib/product-links';
+import { ControlPlanePreview } from './control-plane-preview';
 
 export function Hero() {
-  const [copied, setCopied] = useState(false);
-
-  const serverRows = [
-    { k: 'HOST', v: 'prod-eu-1.acme.com' },
-    { k: 'AGENT', v: 'v0.5.1' },
-    { k: 'PROXY', v: 'traefik v3.1' },
-    { k: 'NETWORK', v: 'codedock-network' },
-    { k: 'TUNNEL', v: 'yamux / active', accent: true },
-  ];
-
-  const capabilities = [
-    'apps',
-    'databases',
-    'cron-jobs',
-    'backups → S3',
-    'domains + SSL',
-    'env secrets',
-    'canvas view',
-    'log tailing',
-  ];
-
-  const handleCopy = () => {
-    navigator.clipboard.writeText('curl -fsSL https://get.codedock.run | bash');
-    setCopied(true);
-    setTimeout(() => setCopied(false), 2000);
-    if (
-      typeof window !== 'undefined' &&
-      (
-        window as {
-          posthog?: { capture: (event: string, props?: Record<string, unknown>) => void };
-        }
-      ).posthog
-    ) {
-      (
-        window as {
-          posthog?: { capture: (event: string, props?: Record<string, unknown>) => void };
-        }
-      ).posthog?.capture('install_command_copied', {
-        source: 'hero_section',
-        command: 'curl -fsSL https://get.codedock.run | bash',
-      });
-    }
-  };
-
   return (
-    <section className="relative isolate overflow-hidden py-24 lg:py-32">
-      <div className="relative mx-auto max-w-4xl px-6 text-center">
-        <div className="mb-8 inline-flex items-center gap-2 rounded-full border border-border bg-background/80 px-3 py-1 font-medium text-muted-foreground text-xs backdrop-blur-md">
-          <span className="size-1.5 animate-pulse rounded-full bg-primary" />
-          Open source &amp; free forever
-        </div>
-
-        <h1 className="text-balance font-extrabold text-4xl text-foreground leading-tight tracking-tight sm:text-5xl sm:leading-none lg:text-6xl">
-          The open-source Heroku & Vercel alternative<span className="text-primary">.</span>
-        </h1>
-
-        <p className="mx-auto mt-6 max-w-2xl text-base text-muted-foreground leading-relaxed md:text-lg">
-          Imagine having the ease of a cloud but with your own servers. Codedock is a sub-30MB
-          daemon that turns any Linux server into a full deployment platform—with zero vendor
-          lock-in.
-        </p>
-
-        <div className="mx-auto mt-10 flex max-w-lg items-center gap-2 rounded-lg border border-border bg-background/80 px-4 py-3 font-mono text-sm backdrop-blur-md">
-          <span className="shrink-0 font-bold text-primary">$</span>
-          <code className="flex-1 truncate text-left text-[0.8rem] text-foreground">
-            curl -fsSL https://get.codedock.run | bash
-          </code>
-          <button
-            type="button"
-            onClick={handleCopy}
-            aria-label="Copy install command"
-            className="shrink-0 rounded p-1.5 text-muted-foreground transition-colors hover:bg-border hover:text-foreground"
-          >
-            {copied ? <Check className="size-3.5 text-green-400" /> : <Copy className="size-3.5" />}
-          </button>
-        </div>
-
-        <div className="mt-6 flex flex-row items-start justify-center gap-3 sm:gap-4">
-          <div className="flex flex-col items-center">
+    <section className="relative isolate overflow-hidden px-6 pt-18 pb-20 lg:pt-24 lg:pb-28">
+      <div
+        aria-hidden="true"
+        className="pointer-events-none absolute inset-0 -z-10 bg-[radial-gradient(ellipse_at_70%_20%,rgba(124,58,237,0.18),transparent_60%)]"
+      />
+      <div className="mx-auto grid max-w-7xl items-center gap-14 lg:grid-cols-[1.05fr_1fr] lg:gap-16">
+        <div>
+          <p className="mb-6 inline-flex items-center gap-2 rounded-full border border-primary/25 bg-primary/5 px-3 py-1.5 font-medium text-primary text-xs">
+            <span className="size-1.5 rounded-full bg-primary" />
+            Open source. Built for your servers.
+          </p>
+          <h1 className="max-w-2xl text-balance font-extrabold text-5xl leading-[1.08] tracking-[-0.045em] sm:text-6xl xl:text-7xl">
+            Ship fast.
+            <br />
+            Own your <span className="text-primary">infrastructure.</span>
+          </h1>
+          <p className="mt-6 max-w-xl text-pretty text-base text-muted-foreground leading-relaxed sm:text-lg">
+            Deploy applications, databases, and background workers on your own Linux server. One
+            workspace for your builds, data, logs, and backups.
+          </p>
+          <div className="mt-8 flex flex-wrap items-center gap-3">
             <a
-              href="https://app.codedock.run"
-              className="flex items-center justify-center gap-2 whitespace-nowrap rounded-lg border border-border bg-background/80 px-6 py-3.5 font-semibold text-foreground text-sm backdrop-blur-md transition-colors hover:bg-border sm:px-10"
+              href={productLinks.installation}
+              className="inline-flex items-center gap-2 rounded-xl bg-primary px-5 py-3 font-semibold text-sm text-white shadow-lg shadow-primary/20 hover:bg-primary/90"
             >
-              <Cloud className="size-4 text-primary" />
-              Cloud
+              Start self-hosting
+              <ArrowRight className="size-4" />
             </a>
-            <p className="mt-2 text-center font-bold text-[10px] text-primary sm:text-xs">
-              1,200+{' '}
-              <span className="block font-normal text-muted-foreground sm:inline">
-                servers online
-              </span>
-            </p>
-          </div>
-          <div className="flex flex-col items-center">
             <a
-              href="https://docs.codedock.run/self-host"
-              target="_blank"
-              rel="noreferrer"
-              className="flex items-center justify-center gap-2 whitespace-nowrap rounded-lg border border-border bg-background/80 px-6 py-3.5 font-semibold text-foreground text-sm backdrop-blur-md transition-colors hover:bg-border sm:px-10"
+              href={productLinks.cloud}
+              className="inline-flex items-center gap-2 rounded-xl border border-border px-5 py-3 font-semibold text-sm hover:bg-muted"
             >
-              <Server className="size-4 text-primary" />
-              Self-hosted
+              <Cloud className="size-4" />
+              Explore Cloud
             </a>
-            <p className="mt-2 text-center font-bold text-[10px] text-primary sm:text-xs">
-              &lt;30MB{' '}
-              <span className="block font-normal text-muted-foreground sm:inline">
-                single binary
-              </span>
-            </p>
+          </div>
+          <div className="mt-7">
+            <InstallCommand />
+          </div>
+          <div className="mt-4 flex flex-wrap items-center gap-5 text-muted-foreground text-xs">
+            <a href={productLinks.github} className="flex items-center gap-2 hover:text-foreground">
+              <GithubIcon className="size-4" />
+              View the source
+            </a>
+            <a
+              href={productLinks.discord}
+              className="flex items-center gap-2 hover:text-foreground"
+            >
+              <DiscordIcon className="size-4" />
+              Join the community
+            </a>
+            <span>Apache-2.0 licence</span>
           </div>
         </div>
-
-        <div className="relative z-10 mt-12 overflow-hidden rounded-xl border border-border bg-background/80 text-left font-mono text-xs shadow-2xl backdrop-blur-md">
-          <div className="flex items-center justify-between border-border border-b bg-background/40 px-4 py-3">
-            <span className="font-bold text-[10px] text-muted-foreground uppercase tracking-widest">
-              codedock daemon
-            </span>
-            <span className="flex items-center gap-1.5 font-semibold text-[10px] text-green-400">
-              <span className="size-1.5 animate-pulse rounded-full bg-green-400" />
-              CONNECTED
-            </span>
-          </div>
-          <div className="grid grid-cols-1 divide-y divide-border sm:grid-cols-2 sm:divide-x sm:divide-y-0">
-            <div className="space-y-2.5 px-5 py-4">
-              {serverRows.map((r) => (
-                <div key={r.k} className="flex items-center gap-3 text-[0.71rem]">
-                  <span className="w-20 shrink-0 text-muted-foreground">{r.k}</span>
-                  <span className={r.accent ? 'font-semibold text-primary' : 'text-foreground'}>
-                    {r.v}
-                  </span>
-                </div>
-              ))}
-            </div>
-            <div className="px-5 py-4">
-              <div className="mb-3 font-bold text-[9px] text-muted-foreground uppercase tracking-widest">
-                Capabilities on this node
-              </div>
-              <div className="grid grid-cols-2 gap-x-4 gap-y-2">
-                {capabilities.map((cap) => (
-                  <div
-                    key={cap}
-                    className="flex items-center gap-2 text-[0.68rem] text-muted-foreground"
-                  >
-                    <span className="size-1.5 shrink-0 rounded-full bg-primary/70" />
-                    {cap}
-                  </div>
-                ))}
-              </div>
-            </div>
-          </div>
-        </div>
+        <ControlPlanePreview />
       </div>
     </section>
   );

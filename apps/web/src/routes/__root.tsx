@@ -39,23 +39,31 @@ function RootDocument({ children }: { children: ReactNode }) {
         <ThemeProvider defaultTheme="dark">
           <TooltipProvider>
             <div className="pointer-events-none fixed inset-0 -z-10 bg-[radial-gradient(#6d28d9_1.5px,transparent_1.5px)] bg-size-[40px_40px] opacity-30" />
+            <a
+              href="#main-content"
+              className="sr-only focus:not-sr-only focus:absolute focus:z-50 focus:rounded-lg focus:bg-primary focus:p-4 focus:text-white"
+            >
+              Skip to content
+            </a>
             <Header />
-            <main>{children}</main>
+            <main id="main-content">{children}</main>
             <Footer />
             <Toaster richColors closeButton />
           </TooltipProvider>
 
-          <TanStackDevtools
-            config={{
-              position: 'bottom-right',
-            }}
-            plugins={[
-              {
-                name: 'Tanstack Router',
-                render: <TanStackRouterDevtoolsPanel />,
-              },
-            ]}
-          />
+          {import.meta.env.DEV && (
+            <TanStackDevtools
+              config={{
+                position: 'bottom-right',
+              }}
+              plugins={[
+                {
+                  name: 'Tanstack Router',
+                  render: <TanStackRouterDevtoolsPanel />,
+                },
+              ]}
+            />
+          )}
         </ThemeProvider>
         <Scripts />
       </body>

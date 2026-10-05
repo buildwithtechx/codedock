@@ -13,6 +13,22 @@ import { Route as IndexRouteImport } from './routes/index'
 import { Route as ChangelogRouteImport } from './routes/changelog'
 import { Route as PhilosophyRouteImport } from './routes/philosophy'
 import { Route as PricingRouteImport } from './routes/pricing'
+import { Route as TemplatesRouteImport } from './routes/templates'
+import { Route as FeaturesAiDeploymentRouteImport } from './routes/features.ai-deployment'
+import { Route as FeaturesApplicationDeploymentRouteImport } from './routes/features.application-deployment'
+import { Route as FeaturesDatabasesRouteImport } from './routes/features.databases'
+import { Route as FeaturesMonitoringRouteImport } from './routes/features.monitoring'
+import { Route as SolutionsAgenciesRouteImport } from './routes/solutions.agencies'
+import { Route as SolutionsEnterpriseRouteImport } from './routes/solutions.enterprise'
+import { Route as SolutionsSelfHostedRouteImport } from './routes/solutions.self-hosted'
+import { Route as VsIndexRouteImport } from './routes/vs.index'
+import { Route as VsCaproverRouteImport } from './routes/vs.caprover'
+import { Route as VsCoolifyRouteImport } from './routes/vs.coolify'
+import { Route as VsDokkuRouteImport } from './routes/vs.dokku'
+import { Route as VsDokployRouteImport } from './routes/vs.dokploy'
+import { Route as VsPortainerRouteImport } from './routes/vs.portainer'
+import { Route as VsRenderRouteImport } from './routes/vs.render'
+import { Route as VsVercelRouteImport } from './routes/vs.vercel'
 
 const IndexRoute = IndexRouteImport.update({
   id: '/',
@@ -34,18 +50,131 @@ const PricingRoute = PricingRouteImport.update({
   path: '/pricing',
   getParentRoute: () => rootRouteImport,
 } as any)
+const TemplatesRoute = TemplatesRouteImport.update({
+  id: '/templates',
+  path: '/templates',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const FeaturesAiDeploymentRoute = FeaturesAiDeploymentRouteImport.update({
+  id: '/features/ai-deployment',
+  path: '/features/ai-deployment',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const FeaturesApplicationDeploymentRoute =
+  FeaturesApplicationDeploymentRouteImport.update({
+    id: '/features/application-deployment',
+    path: '/features/application-deployment',
+    getParentRoute: () => rootRouteImport,
+  } as any)
+const FeaturesDatabasesRoute = FeaturesDatabasesRouteImport.update({
+  id: '/features/databases',
+  path: '/features/databases',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const FeaturesMonitoringRoute = FeaturesMonitoringRouteImport.update({
+  id: '/features/monitoring',
+  path: '/features/monitoring',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const SolutionsAgenciesRoute = SolutionsAgenciesRouteImport.update({
+  id: '/solutions/agencies',
+  path: '/solutions/agencies',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const SolutionsEnterpriseRoute = SolutionsEnterpriseRouteImport.update({
+  id: '/solutions/enterprise',
+  path: '/solutions/enterprise',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const SolutionsSelfHostedRoute = SolutionsSelfHostedRouteImport.update({
+  id: '/solutions/self-hosted',
+  path: '/solutions/self-hosted',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const VsIndexRoute = VsIndexRouteImport.update({
+  id: '/vs/',
+  path: '/vs/',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const VsCaproverRoute = VsCaproverRouteImport.update({
+  id: '/vs/caprover',
+  path: '/vs/caprover',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const VsCoolifyRoute = VsCoolifyRouteImport.update({
+  id: '/vs/coolify',
+  path: '/vs/coolify',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const VsDokkuRoute = VsDokkuRouteImport.update({
+  id: '/vs/dokku',
+  path: '/vs/dokku',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const VsDokployRoute = VsDokployRouteImport.update({
+  id: '/vs/dokploy',
+  path: '/vs/dokploy',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const VsPortainerRoute = VsPortainerRouteImport.update({
+  id: '/vs/portainer',
+  path: '/vs/portainer',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const VsRenderRoute = VsRenderRouteImport.update({
+  id: '/vs/render',
+  path: '/vs/render',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const VsVercelRoute = VsVercelRouteImport.update({
+  id: '/vs/vercel',
+  path: '/vs/vercel',
+  getParentRoute: () => rootRouteImport,
+} as any)
 
 export interface FileRoutesByFullPath {
   '/': typeof IndexRoute
   '/changelog': typeof ChangelogRoute
   '/philosophy': typeof PhilosophyRoute
   '/pricing': typeof PricingRoute
+  '/templates': typeof TemplatesRoute
+  '/features/ai-deployment': typeof FeaturesAiDeploymentRoute
+  '/features/application-deployment': typeof FeaturesApplicationDeploymentRoute
+  '/features/databases': typeof FeaturesDatabasesRoute
+  '/features/monitoring': typeof FeaturesMonitoringRoute
+  '/solutions/agencies': typeof SolutionsAgenciesRoute
+  '/solutions/enterprise': typeof SolutionsEnterpriseRoute
+  '/solutions/self-hosted': typeof SolutionsSelfHostedRoute
+  '/vs/caprover': typeof VsCaproverRoute
+  '/vs/coolify': typeof VsCoolifyRoute
+  '/vs/dokku': typeof VsDokkuRoute
+  '/vs/dokploy': typeof VsDokployRoute
+  '/vs/portainer': typeof VsPortainerRoute
+  '/vs/render': typeof VsRenderRoute
+  '/vs/vercel': typeof VsVercelRoute
+  '/vs/': typeof VsIndexRoute
 }
 export interface FileRoutesByTo {
   '/': typeof IndexRoute
   '/changelog': typeof ChangelogRoute
   '/philosophy': typeof PhilosophyRoute
   '/pricing': typeof PricingRoute
+  '/templates': typeof TemplatesRoute
+  '/features/ai-deployment': typeof FeaturesAiDeploymentRoute
+  '/features/application-deployment': typeof FeaturesApplicationDeploymentRoute
+  '/features/databases': typeof FeaturesDatabasesRoute
+  '/features/monitoring': typeof FeaturesMonitoringRoute
+  '/solutions/agencies': typeof SolutionsAgenciesRoute
+  '/solutions/enterprise': typeof SolutionsEnterpriseRoute
+  '/solutions/self-hosted': typeof SolutionsSelfHostedRoute
+  '/vs/caprover': typeof VsCaproverRoute
+  '/vs/coolify': typeof VsCoolifyRoute
+  '/vs/dokku': typeof VsDokkuRoute
+  '/vs/dokploy': typeof VsDokployRoute
+  '/vs/portainer': typeof VsPortainerRoute
+  '/vs/render': typeof VsRenderRoute
+  '/vs/vercel': typeof VsVercelRoute
+  '/vs': typeof VsIndexRoute
 }
 export interface FileRoutesById {
   __root__: typeof rootRouteImport
@@ -53,13 +182,90 @@ export interface FileRoutesById {
   '/changelog': typeof ChangelogRoute
   '/philosophy': typeof PhilosophyRoute
   '/pricing': typeof PricingRoute
+  '/templates': typeof TemplatesRoute
+  '/features/ai-deployment': typeof FeaturesAiDeploymentRoute
+  '/features/application-deployment': typeof FeaturesApplicationDeploymentRoute
+  '/features/databases': typeof FeaturesDatabasesRoute
+  '/features/monitoring': typeof FeaturesMonitoringRoute
+  '/solutions/agencies': typeof SolutionsAgenciesRoute
+  '/solutions/enterprise': typeof SolutionsEnterpriseRoute
+  '/solutions/self-hosted': typeof SolutionsSelfHostedRoute
+  '/vs/caprover': typeof VsCaproverRoute
+  '/vs/coolify': typeof VsCoolifyRoute
+  '/vs/dokku': typeof VsDokkuRoute
+  '/vs/dokploy': typeof VsDokployRoute
+  '/vs/portainer': typeof VsPortainerRoute
+  '/vs/render': typeof VsRenderRoute
+  '/vs/vercel': typeof VsVercelRoute
+  '/vs/': typeof VsIndexRoute
 }
 export interface FileRouteTypes {
   fileRoutesByFullPath: FileRoutesByFullPath
-  fullPaths: '/' | '/changelog' | '/philosophy' | '/pricing'
+  fullPaths:
+    | '/'
+    | '/changelog'
+    | '/philosophy'
+    | '/pricing'
+    | '/templates'
+    | '/features/ai-deployment'
+    | '/features/application-deployment'
+    | '/features/databases'
+    | '/features/monitoring'
+    | '/solutions/agencies'
+    | '/solutions/enterprise'
+    | '/solutions/self-hosted'
+    | '/vs/caprover'
+    | '/vs/coolify'
+    | '/vs/dokku'
+    | '/vs/dokploy'
+    | '/vs/portainer'
+    | '/vs/render'
+    | '/vs/vercel'
+    | '/vs/'
   fileRoutesByTo: FileRoutesByTo
-  to: '/' | '/changelog' | '/philosophy' | '/pricing'
-  id: '__root__' | '/' | '/changelog' | '/philosophy' | '/pricing'
+  to:
+    | '/'
+    | '/changelog'
+    | '/philosophy'
+    | '/pricing'
+    | '/templates'
+    | '/features/ai-deployment'
+    | '/features/application-deployment'
+    | '/features/databases'
+    | '/features/monitoring'
+    | '/solutions/agencies'
+    | '/solutions/enterprise'
+    | '/solutions/self-hosted'
+    | '/vs/caprover'
+    | '/vs/coolify'
+    | '/vs/dokku'
+    | '/vs/dokploy'
+    | '/vs/portainer'
+    | '/vs/render'
+    | '/vs/vercel'
+    | '/vs'
+  id:
+    | '__root__'
+    | '/'
+    | '/changelog'
+    | '/philosophy'
+    | '/pricing'
+    | '/templates'
+    | '/features/ai-deployment'
+    | '/features/application-deployment'
+    | '/features/databases'
+    | '/features/monitoring'
+    | '/solutions/agencies'
+    | '/solutions/enterprise'
+    | '/solutions/self-hosted'
+    | '/vs/caprover'
+    | '/vs/coolify'
+    | '/vs/dokku'
+    | '/vs/dokploy'
+    | '/vs/portainer'
+    | '/vs/render'
+    | '/vs/vercel'
+    | '/vs/'
   fileRoutesById: FileRoutesById
 }
 export interface RootRouteChildren {
@@ -67,6 +273,22 @@ export interface RootRouteChildren {
   ChangelogRoute: typeof ChangelogRoute
   PhilosophyRoute: typeof PhilosophyRoute
   PricingRoute: typeof PricingRoute
+  TemplatesRoute: typeof TemplatesRoute
+  FeaturesAiDeploymentRoute: typeof FeaturesAiDeploymentRoute
+  FeaturesApplicationDeploymentRoute: typeof FeaturesApplicationDeploymentRoute
+  FeaturesDatabasesRoute: typeof FeaturesDatabasesRoute
+  FeaturesMonitoringRoute: typeof FeaturesMonitoringRoute
+  SolutionsAgenciesRoute: typeof SolutionsAgenciesRoute
+  SolutionsEnterpriseRoute: typeof SolutionsEnterpriseRoute
+  SolutionsSelfHostedRoute: typeof SolutionsSelfHostedRoute
+  VsCaproverRoute: typeof VsCaproverRoute
+  VsCoolifyRoute: typeof VsCoolifyRoute
+  VsDokkuRoute: typeof VsDokkuRoute
+  VsDokployRoute: typeof VsDokployRoute
+  VsPortainerRoute: typeof VsPortainerRoute
+  VsRenderRoute: typeof VsRenderRoute
+  VsVercelRoute: typeof VsVercelRoute
+  VsIndexRoute: typeof VsIndexRoute
 }
 
 declare module '@tanstack/react-router' {
@@ -99,6 +321,118 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof PricingRouteImport
       parentRoute: typeof rootRouteImport
     }
+    '/templates': {
+      id: '/templates'
+      path: '/templates'
+      fullPath: '/templates'
+      preLoaderRoute: typeof TemplatesRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/features/ai-deployment': {
+      id: '/features/ai-deployment'
+      path: '/features/ai-deployment'
+      fullPath: '/features/ai-deployment'
+      preLoaderRoute: typeof FeaturesAiDeploymentRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/features/application-deployment': {
+      id: '/features/application-deployment'
+      path: '/features/application-deployment'
+      fullPath: '/features/application-deployment'
+      preLoaderRoute: typeof FeaturesApplicationDeploymentRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/features/databases': {
+      id: '/features/databases'
+      path: '/features/databases'
+      fullPath: '/features/databases'
+      preLoaderRoute: typeof FeaturesDatabasesRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/features/monitoring': {
+      id: '/features/monitoring'
+      path: '/features/monitoring'
+      fullPath: '/features/monitoring'
+      preLoaderRoute: typeof FeaturesMonitoringRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/solutions/agencies': {
+      id: '/solutions/agencies'
+      path: '/solutions/agencies'
+      fullPath: '/solutions/agencies'
+      preLoaderRoute: typeof SolutionsAgenciesRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/solutions/enterprise': {
+      id: '/solutions/enterprise'
+      path: '/solutions/enterprise'
+      fullPath: '/solutions/enterprise'
+      preLoaderRoute: typeof SolutionsEnterpriseRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/solutions/self-hosted': {
+      id: '/solutions/self-hosted'
+      path: '/solutions/self-hosted'
+      fullPath: '/solutions/self-hosted'
+      preLoaderRoute: typeof SolutionsSelfHostedRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/vs/': {
+      id: '/vs/'
+      path: '/vs'
+      fullPath: '/vs/'
+      preLoaderRoute: typeof VsIndexRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/vs/caprover': {
+      id: '/vs/caprover'
+      path: '/vs/caprover'
+      fullPath: '/vs/caprover'
+      preLoaderRoute: typeof VsCaproverRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/vs/coolify': {
+      id: '/vs/coolify'
+      path: '/vs/coolify'
+      fullPath: '/vs/coolify'
+      preLoaderRoute: typeof VsCoolifyRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/vs/dokku': {
+      id: '/vs/dokku'
+      path: '/vs/dokku'
+      fullPath: '/vs/dokku'
+      preLoaderRoute: typeof VsDokkuRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/vs/dokploy': {
+      id: '/vs/dokploy'
+      path: '/vs/dokploy'
+      fullPath: '/vs/dokploy'
+      preLoaderRoute: typeof VsDokployRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/vs/portainer': {
+      id: '/vs/portainer'
+      path: '/vs/portainer'
+      fullPath: '/vs/portainer'
+      preLoaderRoute: typeof VsPortainerRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/vs/render': {
+      id: '/vs/render'
+      path: '/vs/render'
+      fullPath: '/vs/render'
+      preLoaderRoute: typeof VsRenderRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/vs/vercel': {
+      id: '/vs/vercel'
+      path: '/vs/vercel'
+      fullPath: '/vs/vercel'
+      preLoaderRoute: typeof VsVercelRouteImport
+      parentRoute: typeof rootRouteImport
+    }
   }
 }
 
@@ -107,6 +441,22 @@ const rootRouteChildren: RootRouteChildren = {
   ChangelogRoute: ChangelogRoute,
   PhilosophyRoute: PhilosophyRoute,
   PricingRoute: PricingRoute,
+  TemplatesRoute: TemplatesRoute,
+  FeaturesAiDeploymentRoute: FeaturesAiDeploymentRoute,
+  FeaturesApplicationDeploymentRoute: FeaturesApplicationDeploymentRoute,
+  FeaturesDatabasesRoute: FeaturesDatabasesRoute,
+  FeaturesMonitoringRoute: FeaturesMonitoringRoute,
+  SolutionsAgenciesRoute: SolutionsAgenciesRoute,
+  SolutionsEnterpriseRoute: SolutionsEnterpriseRoute,
+  SolutionsSelfHostedRoute: SolutionsSelfHostedRoute,
+  VsCaproverRoute: VsCaproverRoute,
+  VsCoolifyRoute: VsCoolifyRoute,
+  VsDokkuRoute: VsDokkuRoute,
+  VsDokployRoute: VsDokployRoute,
+  VsPortainerRoute: VsPortainerRoute,
+  VsRenderRoute: VsRenderRoute,
+  VsVercelRoute: VsVercelRoute,
+  VsIndexRoute: VsIndexRoute,
 }
 export const routeTree = rootRouteImport
   ._addFileChildren(rootRouteChildren)
