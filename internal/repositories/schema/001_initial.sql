@@ -386,6 +386,10 @@ CREATE TABLE IF NOT EXISTS s3_destinations (
     endpoint TEXT NOT NULL,
     bucket TEXT NOT NULL,
     region TEXT NOT NULL,
+    path_prefix TEXT DEFAULT '',
+    is_default BOOLEAN NOT NULL DEFAULT 0,
+    last_verified_at DATETIME,
+    last_verify_error TEXT DEFAULT '',
     access_key_id TEXT NOT NULL,
     secret_access_key TEXT NOT NULL,
     created_at DATETIME DEFAULT CURRENT_TIMESTAMP

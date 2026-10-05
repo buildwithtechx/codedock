@@ -5,6 +5,7 @@ import {
   Loader2,
   Plus,
   RefreshCw,
+  Star,
   Trash2,
 } from 'lucide-react';
 import { useState } from 'react';
@@ -16,6 +17,7 @@ import {
   useDeleteS3Destination,
   useList,
   useListS3Destinations,
+  useSetDefaultS3Destination,
   useVerifyS3Destination,
 } from '#/features/backups';
 
@@ -28,6 +30,7 @@ export function BackupDestinations({ onAddDestination }: BackupDestinationsProps
   const { data: backupConfigs } = useList();
   const deleteS3Dest = useDeleteS3Destination();
   const verifyS3Dest = useVerifyS3Destination();
+  const setDefaultDest = useSetDefaultS3Destination();
 
   const [verifyingIds, setVerifyingIds] = useState<Record<string, 'loading' | 'success' | 'error'>>(
     {}
@@ -49,6 +52,15 @@ export function BackupDestinations({ onAddDestination }: BackupDestinationsProps
     } catch (err) {
       setVerifyingIds((prev) => ({ ...prev, [id]: 'error' }));
       toast.error(err instanceof Error ? err.message : 'Verification failed');
+    }
+  };
+
+  const handleSetDefault = async (id: string, name: string) => {
+    try {
+      await setDefaultDest.mutateAsync(id);
+      toast.success(`"${name}" is now the default storage destination`);
+    } catch (error) {
+      toast.error(error instanceof Error ? error.message : 'Failed to set default destination');
     }
   };
 
@@ -149,6 +161,11 @@ export function BackupDestinations({ onAddDestination }: BackupDestinationsProps
           {list.map((dest) => {
             const logo = getProviderLogo(dest.provider);
             const verifyState = verifyingIds[dest.id];
+            const isVerified =
+              verifyState === 'success' ||
+              (!verifyState && Boolean(dest.lastVerifiedAt) && !dest.lastVerifyError);
+            const isFailed =
+              verifyState === 'error' || (!verifyState && Boolean(dest.lastVerifyError));
 
             return (
               <div
@@ -173,14 +190,29 @@ export function BackupDestinations({ onAddDestination }: BackupDestinationsProps
                       </div>
                     </div>
 
-                    <div className="flex items-center gap-1">
-                      {verifyState === 'success' && (
-                        <span className="flex items-center gap-1 rounded-full bg-emerald-500/10 px-2 py-0.5 font-medium text-emerald-500 text-xs">
+                    <div className="flex items-center gap-1.5">
+                      {dest.isDefault && (
+                        <span className="flex items-center gap-1 rounded-full bg-amber-500/10 px-2 py-0.5 font-medium text-amber-500 text-xs">
+                          <Star className="h-3 w-3 fill-amber-500" /> Default
+                        </span>
+                      )}
+                      {isVerified && (
+                        <span
+                          className="flex items-center gap-1 rounded-full bg-emerald-500/10 px-2 py-0.5 font-medium text-emerald-500 text-xs"
+                          title={
+                            dest.lastVerifiedAt
+                              ? `Verified ${new Date(dest.lastVerifiedAt).toLocaleString()}`
+                              : 'Verified'
+                          }
+                        >
                           <CheckCircle2 className="h-3 w-3" /> Verified
                         </span>
                       )}
-                      {verifyState === 'error' && (
-                        <span className="flex items-center gap-1 rounded-full bg-rose-500/10 px-2 py-0.5 font-medium text-rose-500 text-xs">
+                      {isFailed && (
+                        <span
+                          className="flex items-center gap-1 rounded-full bg-rose-500/10 px-2 py-0.5 font-medium text-rose-500 text-xs"
+                          title={dest.lastVerifyError || 'Verification failed'}
+                        >
                           <AlertTriangle className="h-3 w-3" /> Failed
                         </span>
                       )}
@@ -198,6 +230,12 @@ export function BackupDestinations({ onAddDestination }: BackupDestinationsProps
                       <dt className="text-muted-foreground">Bucket</dt>
                       <dd className="font-medium text-foreground">{dest.bucket}</dd>
                     </div>
+                    {dest.pathPrefix && (
+                      <div className="flex justify-between">
+                        <dt className="text-muted-foreground">Prefix</dt>
+                        <dd className="font-medium text-foreground">{dest.pathPrefix}</dd>
+                      </div>
+                    )}
                     <div className="flex justify-between">
                       <dt className="text-muted-foreground">Region</dt>
                       <dd className="text-muted-foreground">{dest.region || 'auto'}</dd>
@@ -215,20 +253,35 @@ export function BackupDestinations({ onAddDestination }: BackupDestinationsProps
                 </div>
 
                 <div className="mt-5 flex items-center justify-between border-border/40 border-t pt-3">
-                  <Button
-                    variant="outline"
-                    size="sm"
-                    className="h-8 text-xs"
-                    onClick={() => handleVerify(dest.id, dest.name)}
-                    disabled={verifyState === 'loading'}
-                  >
-                    {verifyState === 'loading' ? (
-                      <Loader2 className="mr-1.5 h-3.5 w-3.5 animate-spin" />
-                    ) : (
-                      <RefreshCw className="mr-1.5 h-3.5 w-3.5" />
+                  <div className="flex items-center gap-2">
+                    <Button
+                      variant="outline"
+                      size="sm"
+                      className="h-8 text-xs"
+                      onClick={() => handleVerify(dest.id, dest.name)}
+                      disabled={verifyState === 'loading'}
+                    >
+                      {verifyState === 'loading' ? (
+                        <Loader2 className="mr-1.5 h-3.5 w-3.5 animate-spin" />
+                      ) : (
+                        <RefreshCw className="mr-1.5 h-3.5 w-3.5" />
+                      )}
+                      Test connection
+                    </Button>
+                    {!dest.isDefault && (
+                      <Button
+                        variant="ghost"
+                        size="sm"
+                        className="h-8 text-xs"
+                        onClick={() => handleSetDefault(dest.id, dest.name)}
+                        disabled={setDefaultDest.isPending}
+                        title="Set as default destination"
+                      >
+                        <Star className="mr-1.5 h-3.5 w-3.5" />
+                        Set default
+                      </Button>
                     )}
-                    Test connection
-                  </Button>
+                  </div>
 
                   <Button
                     variant="ghost"

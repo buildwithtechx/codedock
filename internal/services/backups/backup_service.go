@@ -161,7 +161,34 @@ func (s *BackupService) VerifyS3Destination(ctx context.Context, id string) erro
 	if err != nil {
 		return fmt.Errorf("destination not found: %w", err)
 	}
-	return backup.EnsureS3Bucket(ctx, dest)
+	verErr := backup.EnsureS3Bucket(ctx, dest)
+	if verErr != nil {
+		_ = s.s3Repo.RecordVerificationResult(ctx, id, false, verErr.Error())
+		return verErr
+	}
+	_ = s.s3Repo.RecordVerificationResult(ctx, id, true, "")
+	return nil
+}
+
+func (s *BackupService) SetDefaultDestination(ctx context.Context, id string) error {
+	if id == "" {
+		return errors.New("id required")
+	}
+	return s.s3Repo.SetDefaultDestination(ctx, id)
+}
+
+func (s *BackupService) GetConfigByDatabaseID(ctx context.Context, dbID string) (*models.BackupConfig, error) {
+	if dbID == "" {
+		return nil, errors.New("database id required")
+	}
+	return s.backupRepo.GetConfigByDatabaseID(ctx, dbID)
+}
+
+func (s *BackupService) ListRecordsByDatabase(ctx context.Context, dbID string) ([]*models.BackupRecord, error) {
+	if dbID == "" {
+		return nil, errors.New("database id required")
+	}
+	return s.backupRepo.ListRecordsByDatabase(ctx, dbID)
 }
 
 func (s *BackupService) VerifyS3Draft(ctx context.Context, dest *models.S3Destination) error {

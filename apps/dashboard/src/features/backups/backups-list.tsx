@@ -56,7 +56,7 @@ export function BackupsList() {
   const handleRestoreRecord = async (recordId: string) => {
     const record = records.find((r) => r.id === recordId);
     if (!record) return;
-    await restoreMutation.mutateAsync({ id: record.backupConfigId });
+    await restoreMutation.mutateAsync({ id: record.id });
   };
 
   const handleDeleteRecord = async (configId: string, recordId: string) => {

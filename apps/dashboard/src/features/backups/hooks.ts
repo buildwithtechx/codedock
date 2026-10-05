@@ -142,3 +142,26 @@ export const useDeleteS3Destination = () => {
     },
   });
 };
+
+export const useSetDefaultS3Destination = () => {
+  const queryClient = useQueryClient();
+  return useMutation({
+    mutationFn: (id: string) => backupsService.setDefaultS3Destination(id),
+    onSuccess: async () => {
+      await queryClient.invalidateQueries({ queryKey: ['s3-destinations'] });
+    },
+  });
+};
+
+export const useTriggerDatabaseBackup = () => {
+  const queryClient = useQueryClient();
+  return useMutation({
+    mutationFn: (databaseId: string) => backupsService.triggerDatabaseBackup(databaseId),
+    onSuccess: async () => {
+      await Promise.all([
+        queryClient.invalidateQueries({ queryKey: ['backups'] }),
+        queryClient.invalidateQueries({ queryKey: ['backup-records'] }),
+      ]);
+    },
+  });
+};

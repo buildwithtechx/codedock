@@ -66,14 +66,18 @@ type UpdateBackupRecordOpts struct {
 }
 
 type S3Destination struct {
-	ID              string `json:"id" db:"id"`
-	Name            string `json:"name" db:"name"`
-	Description     string `json:"description" db:"description"`
-	Provider        string `json:"provider" db:"provider"`
-	Endpoint        string `json:"endpoint" db:"endpoint"`
-	Bucket          string `json:"bucket" db:"bucket"`
-	Region          string `json:"region" db:"region"`
-	AccessKeyID     string `json:"accessKeyId" db:"access_key_id"`
-	SecretAccessKey string `json:"-" db:"secret_access_key"`
-	CreatedAt       string `json:"createdAt" db:"created_at"`
+	ID              string  `json:"id" db:"id"`
+	Name            string  `json:"name" db:"name"`
+	Description     string  `json:"description" db:"description"`
+	Provider        string  `json:"provider" db:"provider"`
+	Endpoint        string  `json:"endpoint" db:"endpoint"`
+	Bucket          string  `json:"bucket" db:"bucket"`
+	Region          string  `json:"region" db:"region"`
+	PathPrefix      string  `json:"pathPrefix" db:"path_prefix"`
+	IsDefault       bool    `json:"isDefault" db:"is_default"`
+	LastVerifiedAt  *string `json:"lastVerifiedAt,omitempty" db:"last_verified_at"`
+	LastVerifyError string  `json:"lastVerifyError,omitempty" db:"last_verify_error"`
+	AccessKeyID     string  `json:"accessKeyId" db:"access_key_id"`
+	SecretAccessKey string  `json:"-" db:"secret_access_key"`
+	CreatedAt       string  `json:"createdAt" db:"created_at"`
 }

@@ -34,6 +34,8 @@ export function CreateS3DestinationDialog({ isOpen, setIsOpen, trigger }: Props)
   const [endpoint, setEndpoint] = useState('');
   const [bucket, setBucket] = useState('');
   const [region, setRegion] = useState('us-east-1');
+  const [pathPrefix, setPathPrefix] = useState('');
+  const [isDefault, setIsDefault] = useState(false);
   const [accessKeyId, setAccessKeyId] = useState('');
   const [secretAccessKey, setSecretAccessKey] = useState('');
   const [showSecret, setShowSecret] = useState(false);
@@ -95,6 +97,8 @@ export function CreateS3DestinationDialog({ isOpen, setIsOpen, trigger }: Props)
           endpoint,
           bucket,
           region,
+          pathPrefix,
+          isDefault,
           accessKeyId,
           secretAccessKey,
         },
@@ -107,6 +111,8 @@ export function CreateS3DestinationDialog({ isOpen, setIsOpen, trigger }: Props)
       setEndpoint('');
       setBucket('');
       setRegion('us-east-1');
+      setPathPrefix('');
+      setIsDefault(false);
       setAccessKeyId('');
       setSecretAccessKey('');
     } catch {
@@ -211,16 +217,42 @@ export function CreateS3DestinationDialog({ isOpen, setIsOpen, trigger }: Props)
             </div>
           </div>
 
-          <div className="space-y-1">
-            <Label className="font-semibold text-foreground text-xs uppercase tracking-wider">
-              Region
-            </Label>
-            <Input
-              placeholder="us-east-1 or auto"
-              value={region}
-              onChange={(e) => setRegion(e.target.value)}
-              className="border/50 h-10 rounded-lg bg-background/50 font-mono text-sm focus:border-primary focus:ring-0"
+          <div className="grid grid-cols-2 gap-4">
+            <div className="space-y-1">
+              <Label className="font-semibold text-foreground text-xs uppercase tracking-wider">
+                Region
+              </Label>
+              <Input
+                placeholder="us-east-1 or auto"
+                value={region}
+                onChange={(e) => setRegion(e.target.value)}
+                className="border/50 h-10 rounded-lg bg-background/50 font-mono text-sm focus:border-primary focus:ring-0"
+              />
+            </div>
+            <div className="space-y-1">
+              <Label className="font-semibold text-foreground text-xs uppercase tracking-wider">
+                Path Prefix
+              </Label>
+              <Input
+                placeholder="backups/production"
+                value={pathPrefix}
+                onChange={(e) => setPathPrefix(e.target.value)}
+                className="border/50 h-10 rounded-lg bg-background/50 font-mono text-sm focus:border-primary focus:ring-0"
+              />
+            </div>
+          </div>
+
+          <div className="flex items-center gap-2">
+            <input
+              type="checkbox"
+              id="isDefault"
+              checked={isDefault}
+              onChange={(e) => setIsDefault(e.target.checked)}
+              className="h-4 w-4 rounded border-border accent-primary"
             />
+            <Label htmlFor="isDefault" className="cursor-pointer text-muted-foreground text-xs">
+              Set as default storage destination for all new backups
+            </Label>
           </div>
 
           <div className="grid grid-cols-2 gap-4">

@@ -140,4 +140,20 @@ export const backupsService = {
       throw handleApiError(error);
     }
   },
+
+  setDefaultS3Destination: async (id: string): Promise<void> => {
+    try {
+      await apiClient.post(`/s3-destinations/${id}/default`);
+    } catch (error) {
+      throw handleApiError(error);
+    }
+  },
+
+  triggerDatabaseBackup: async (databaseId: string): Promise<void> => {
+    try {
+      await apiClient.post(`/databases/${databaseId}/backups`);
+    } catch (error) {
+      throw handleApiError(error);
+    }
+  },
 };

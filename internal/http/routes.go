@@ -211,4 +211,6 @@ func (s *Server) registerDatabaseRoutes(authGroup *echo.Group) {
 	authGroup.POST("/databases/:id/data/:table", s.dbHandler.InsertTableRow, s.authGuard.RequireScope("database:manage"))
 	authGroup.PUT("/databases/:id/data/:table", s.dbHandler.UpdateTableRow, s.authGuard.RequireScope("database:manage"))
 	authGroup.DELETE("/databases/:id/data/:table", s.dbHandler.DeleteTableRow, s.authGuard.RequireScope("database:manage"))
+	authGroup.GET("/databases/:id/backups", s.backupHandler.ListRecordsByDatabase, s.authGuard.RequireScope("database:manage"))
+	authGroup.POST("/databases/:id/backups", s.backupHandler.TriggerDatabaseBackup, s.authGuard.RequireScope("database:manage"))
 }
