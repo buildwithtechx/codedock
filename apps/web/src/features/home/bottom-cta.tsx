@@ -1,4 +1,5 @@
 import { InstallCommand } from '../../components/install-command';
+import { SiteLink } from '../../components/site-link';
 import { productLinks } from '../../lib/product-links';
 export function BottomCta() {
   return (
@@ -13,9 +14,12 @@ export function BottomCta() {
         <div className="mx-auto mt-8 max-w-xl">
           <InstallCommand />
         </div>
-        <a href={productLinks.installation} className="mt-6 inline-block font-medium text-primary">
+        <SiteLink
+          href={productLinks.installation}
+          className="mt-6 inline-block font-medium text-primary"
+        >
           Read the installation guide →
-        </a>
+        </SiteLink>
       </div>
     </section>
   );

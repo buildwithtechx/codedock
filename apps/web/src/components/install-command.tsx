@@ -1,8 +1,9 @@
 import { Check, Copy } from 'lucide-react';
 import { useEffect, useRef, useState } from 'react';
+import { trackInstallCopy } from '../lib/analytics';
 import { installCommand } from '../lib/product-links';
 
-export function InstallCommand() {
+export function InstallCommand({ source = 'install_command' }: { source?: string }) {
   const [status, setStatus] = useState<'idle' | 'copied' | 'failed'>('idle');
   const timer = useRef<ReturnType<typeof setTimeout> | undefined>(undefined);
   useEffect(() => () => clearTimeout(timer.current), []);
@@ -11,6 +12,7 @@ export function InstallCommand() {
     try {
       await navigator.clipboard.writeText(installCommand);
       setStatus('copied');
+      trackInstallCopy(source, installCommand);
     } catch {
       setStatus('failed');
     }

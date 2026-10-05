@@ -59,7 +59,7 @@ export const infrastructureComparisons = {
       },
       {
         criterion: 'Deployment options',
-        codedock: 'Source builds, images, and Compose import',
+        codedock: 'Source builds, images, and partial Compose conversion',
         alternative: 'Git, Docker images, and Docker Compose',
       },
       {
@@ -101,7 +101,8 @@ export const infrastructureComparisons = {
       },
       {
         criterion: 'Compose',
-        codedock: 'Import definitions into project resources',
+        codedock:
+          'Convert selected fields into project resources; configure networking, variables, and storage separately',
         alternative: 'Create and manage Docker stacks',
       },
       {

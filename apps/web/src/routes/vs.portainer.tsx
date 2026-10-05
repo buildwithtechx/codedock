@@ -5,7 +5,7 @@ import { pageHead } from '../lib/seo';
 
 const content = comparisons.portainer;
 export const Route = createFileRoute('/vs/portainer')({
-  head: () => pageHead('/vs/portainer', `Codedock vs ${content.name}`, content.description),
+  head: () => pageHead('/vs/portainer', `vs ${content.name}`, content.description),
   component: Page,
 });
 function Page() {

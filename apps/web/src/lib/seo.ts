@@ -59,12 +59,12 @@ export const globalLinks = [
 ];
 
 export function pageLinks(canonicalPath: string) {
-  return [{ rel: 'canonical', href: `${SITE_URL}${canonicalPath}` }];
+  return [{ rel: 'canonical', href: new URL(canonicalPath, SITE_URL).href }];
 }
 
 export function pageHead(path: string, title: string, description: string) {
   return {
-    meta: createMeta({ title, description, url: `${SITE_URL}${path}` }),
+    meta: createMeta({ title, description, url: new URL(path, SITE_URL).href }),
     links: pageLinks(path),
   };
 }

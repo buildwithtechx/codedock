@@ -5,7 +5,7 @@ import { pageHead } from '../lib/seo';
 
 const content = comparisons.render;
 export const Route = createFileRoute('/vs/render')({
-  head: () => pageHead('/vs/render', `Codedock vs ${content.name}`, content.description),
+  head: () => pageHead('/vs/render', `vs ${content.name}`, content.description),
   component: Page,
 });
 function Page() {

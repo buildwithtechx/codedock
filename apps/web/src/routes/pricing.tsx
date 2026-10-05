@@ -1,5 +1,6 @@
 import { createFileRoute } from '@tanstack/react-router';
 import { InstallCommand } from '../components/install-command';
+import { SiteLink } from '../components/site-link';
 import { productLinks } from '../lib/product-links';
 import { pageHead } from '../lib/seo';
 export const Route = createFileRoute('/pricing')({
@@ -37,9 +38,9 @@ function PricingPage() {
             <li>No Stripe or email provider required for initial setup</li>
           </ul>
           <InstallCommand />
-          <a href={productLinks.installation} className="mt-6 inline-block text-primary">
+          <SiteLink href={productLinks.installation} className="mt-6 inline-block text-primary">
             Installation guide →
-          </a>
+          </SiteLink>
         </article>
         <article className="rounded-2xl border border-primary/40 bg-primary/5 p-8">
           <h2 className="font-semibold text-2xl">Codedock Cloud</h2>
@@ -52,12 +53,12 @@ function PricingPage() {
             Cloud billing and account configuration are separate from self-hosted installation.
             Connecting a worker server still requires SSH access and compatible infrastructure.
           </p>
-          <a
+          <SiteLink
             href={productLinks.cloud}
             className="mt-8 inline-block rounded-lg bg-primary px-6 py-3 font-semibold text-white"
           >
             Open Codedock Cloud →
-          </a>
+          </SiteLink>
         </article>
       </div>
       <p className="mt-8 text-muted-foreground text-sm">

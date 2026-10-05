@@ -7,6 +7,7 @@ import {
   Shield,
   Timer,
 } from 'lucide-react';
+import { SiteLink } from '../../components/site-link';
 
 const features = [
   {
@@ -59,7 +60,7 @@ export function Features() {
       </p>
       <div className="mt-12 grid gap-6 md:grid-cols-2 lg:grid-cols-3">
         {features.map(({ icon: Icon, title, body, href }) => (
-          <a
+          <SiteLink
             key={title}
             href={href}
             className="group rounded-2xl border border-border bg-card/70 p-7 transition-colors hover:border-primary/50"
@@ -70,7 +71,7 @@ export function Features() {
               <ArrowUpRight className="size-4 text-muted-foreground" aria-hidden="true" />
             </h3>
             <p className="mt-3 text-muted-foreground text-sm leading-relaxed">{body}</p>
-          </a>
+          </SiteLink>
         ))}
       </div>
     </section>

@@ -5,7 +5,7 @@ import { pageHead } from '../lib/seo';
 
 const content = comparisons.vercel;
 export const Route = createFileRoute('/vs/vercel')({
-  head: () => pageHead('/vs/vercel', `Codedock vs ${content.name}`, content.description),
+  head: () => pageHead('/vs/vercel', `vs ${content.name}`, content.description),
   component: Page,
 });
 function Page() {

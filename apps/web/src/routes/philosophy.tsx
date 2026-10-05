@@ -1,4 +1,5 @@
 import { createFileRoute } from '@tanstack/react-router';
+import { SiteLink } from '../components/site-link';
 import { productLinks } from '../lib/product-links';
 import { pageHead } from '../lib/seo';
 
@@ -49,8 +50,10 @@ function PhilosophyPage() {
         ))}
       </div>
       <div className="mt-10 flex flex-wrap gap-5 text-primary">
-        <a href={productLinks.github}>Explore the source ?</a>
-        <a href={`${productLinks.github}/blob/main/LICENSE`}>Read the Apache-2.0 licence ?</a>
+        <SiteLink href={productLinks.github}>Explore the source →</SiteLink>
+        <SiteLink href={`${productLinks.github}/blob/main/LICENSE`}>
+          Read the Apache-2.0 licence →
+        </SiteLink>
       </div>
     </section>
   );

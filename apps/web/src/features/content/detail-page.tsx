@@ -1,5 +1,6 @@
 import { ArrowRight, Check, Layers } from 'lucide-react';
 import { InstallCommand } from '../../components/install-command';
+import { SiteLink } from '../../components/site-link';
 import { productLinks } from '../../lib/product-links';
 import type { PageContent } from './page-content';
 
@@ -27,19 +28,19 @@ export function DetailPage({ content }: { content: PageContent }) {
         ))}
       </div>
       <div className="mt-9 flex flex-wrap items-center gap-4">
-        <a
+        <SiteLink
           href={productLinks.installation}
           className="rounded-xl bg-primary px-5 py-3 font-semibold text-sm text-white hover:bg-primary/90"
         >
           Get started
-        </a>
-        <a
+        </SiteLink>
+        <SiteLink
           href={productLinks.docs + content.docsPath}
           className="flex items-center gap-2 text-sm hover:text-primary"
         >
           {content.docsLabel}
           <ArrowRight className="size-4" />
-        </a>
+        </SiteLink>
       </div>
       <div className="mt-16 grid gap-5 lg:grid-cols-3">
         {content.sections.map((section, index) => (
@@ -80,13 +81,13 @@ export function DetailPage({ content }: { content: PageContent }) {
         <div className="flex flex-col justify-center">
           <h3 className="mb-4 font-semibold">Start on your server.</h3>
           <InstallCommand />
-          <a
+          <SiteLink
             href={productLinks.docs + content.docsPath}
             className="mt-4 flex items-center gap-2 font-semibold text-primary text-sm"
           >
             Open the complete guide
             <ArrowRight className="size-4" />
-          </a>
+          </SiteLink>
         </div>
       </section>
     </div>

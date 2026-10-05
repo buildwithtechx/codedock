@@ -2,6 +2,7 @@ import { ArrowRight, Cloud } from 'lucide-react';
 import { DiscordIcon } from '../../components/icons/discord-icon';
 import { GithubIcon } from '../../components/icons/github-icon';
 import { InstallCommand } from '../../components/install-command';
+import { SiteLink } from '../../components/site-link';
 import { productLinks } from '../../lib/product-links';
 import { ControlPlanePreview } from './control-plane-preview';
 
@@ -18,7 +19,7 @@ export function Hero() {
             <span className="size-1.5 rounded-full bg-primary" />
             Open source. Built for your servers.
           </p>
-          <h1 className="max-w-2xl text-balance font-extrabold text-5xl leading-[1.08] tracking-[-0.045em] sm:text-6xl xl:text-7xl">
+          <h1 className="max-w-2xl text-balance font-extrabold text-4xl leading-[1.08] tracking-[-0.045em] [overflow-wrap:anywhere] sm:text-6xl xl:text-7xl">
             Ship fast.
             <br />
             Own your <span className="text-primary">infrastructure.</span>
@@ -28,36 +29,39 @@ export function Hero() {
             workspace for your builds, data, logs, and backups.
           </p>
           <div className="mt-8 flex flex-wrap items-center gap-3">
-            <a
+            <SiteLink
               href={productLinks.installation}
               className="inline-flex items-center gap-2 rounded-xl bg-primary px-5 py-3 font-semibold text-sm text-white shadow-lg shadow-primary/20 hover:bg-primary/90"
             >
               Start self-hosting
               <ArrowRight className="size-4" />
-            </a>
-            <a
+            </SiteLink>
+            <SiteLink
               href={productLinks.cloud}
               className="inline-flex items-center gap-2 rounded-xl border border-border px-5 py-3 font-semibold text-sm hover:bg-muted"
             >
               <Cloud className="size-4" />
               Explore Cloud
-            </a>
+            </SiteLink>
           </div>
           <div className="mt-7">
-            <InstallCommand />
+            <InstallCommand source="hero_section" />
           </div>
           <div className="mt-4 flex flex-wrap items-center gap-5 text-muted-foreground text-xs">
-            <a href={productLinks.github} className="flex items-center gap-2 hover:text-foreground">
+            <SiteLink
+              href={productLinks.github}
+              className="flex items-center gap-2 hover:text-foreground"
+            >
               <GithubIcon className="size-4" />
               View the source
-            </a>
-            <a
+            </SiteLink>
+            <SiteLink
               href={productLinks.discord}
               className="flex items-center gap-2 hover:text-foreground"
             >
               <DiscordIcon className="size-4" />
               Join the community
-            </a>
+            </SiteLink>
             <span>Apache-2.0 licence</span>
           </div>
         </div>

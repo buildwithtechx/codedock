@@ -1,13 +1,14 @@
 import { ArrowRight, ExternalLink } from 'lucide-react';
+import { SiteLink } from '../../components/site-link';
 import { productLinks } from '../../lib/product-links';
 import type { ComparisonContent } from './comparison-content';
 
 export function ComparisonPage({ content }: { content: ComparisonContent }) {
   return (
     <div className="mx-auto max-w-6xl px-6 py-16 sm:py-24">
-      <a href="/vs" className="text-muted-foreground text-sm hover:text-primary">
+      <SiteLink href="/vs" className="text-muted-foreground text-sm hover:text-primary">
         Back to all comparisons
-      </a>
+      </SiteLink>
       <p className="mt-9 font-semibold text-primary text-xs uppercase tracking-widest">
         Codedock vs. {content.name}
       </p>
@@ -56,13 +57,13 @@ export function ComparisonPage({ content }: { content: ComparisonContent }) {
           <p className="mt-4 text-muted-foreground text-sm leading-relaxed">
             {content.codedockFit}
           </p>
-          <a
+          <SiteLink
             href={productLinks.installation}
             className="mt-6 inline-flex items-center gap-2 font-semibold text-primary text-sm"
           >
             Start self-hosting
             <ArrowRight className="size-4" />
-          </a>
+          </SiteLink>
         </section>
         <section className="rounded-2xl border border-border bg-card/70 p-7">
           <h2 className="font-bold text-xl">When {content.name} fits</h2>
@@ -82,7 +83,7 @@ export function ComparisonPage({ content }: { content: ComparisonContent }) {
         <ul className="mt-4 flex flex-wrap gap-4">
           {content.sources.map((source) => (
             <li key={source.href}>
-              <a
+              <SiteLink
                 href={source.href}
                 target="_blank"
                 rel="noreferrer"
@@ -90,13 +91,13 @@ export function ComparisonPage({ content }: { content: ComparisonContent }) {
               >
                 {source.title}
                 <ExternalLink className="size-3" />
-              </a>
+              </SiteLink>
             </li>
           ))}
           <li>
-            <a href={productLinks.docs} className="text-primary text-xs hover:underline">
+            <SiteLink href={productLinks.docs} className="text-primary text-xs hover:underline">
               Codedock documentation
-            </a>
+            </SiteLink>
           </li>
         </ul>
       </section>

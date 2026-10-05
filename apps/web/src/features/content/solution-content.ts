@@ -58,7 +58,7 @@ export const solutionContent = {
         points: [
           'Owner, admin, and member workflows',
           'Organization membership and project access',
-          'API tokens with scoped permissions',
+          'Project API tokens with scoped permissions',
         ],
       },
       {

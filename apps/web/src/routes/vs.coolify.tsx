@@ -5,7 +5,7 @@ import { pageHead } from '../lib/seo';
 
 const content = comparisons.coolify;
 export const Route = createFileRoute('/vs/coolify')({
-  head: () => pageHead('/vs/coolify', `Codedock vs ${content.name}`, content.description),
+  head: () => pageHead('/vs/coolify', `vs ${content.name}`, content.description),
   component: Page,
 });
 function Page() {

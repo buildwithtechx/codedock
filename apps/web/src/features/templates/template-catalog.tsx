@@ -1,5 +1,6 @@
 import { ArrowUpRight, Boxes, Search } from 'lucide-react';
 import { useState } from 'react';
+import { SiteLink } from '../../components/site-link';
 import { productLinks } from '../../lib/product-links';
 import { templateRecipes } from './template-recipes';
 
@@ -10,7 +11,7 @@ export function TemplateCatalog() {
   const visible = templateRecipes.filter(
     (recipe) =>
       (category === 'All' || category === recipe.category) &&
-      `${recipe.name} ${recipe.description} ${recipe.category}`
+      `${recipe.name} ${recipe.description} ${recipe.category} ${recipe.workflow}`
         .toLowerCase()
         .includes(search.toLowerCase().trim())
   );
@@ -31,7 +32,7 @@ export function TemplateCatalog() {
         configuration; they are not automatic one-click installs.
       </p>
       <div className="mt-10 flex flex-col gap-5">
-        <label className="flex max-w-md items-center gap-3 rounded-xl border border-border bg-card/70 px-4 py-3">
+        <label className="flex max-w-md items-center gap-3 rounded-xl border border-border bg-card/70 px-4 py-3 focus-within:border-primary focus-within:ring-2 focus-within:ring-primary/30">
           <Search aria-hidden="true" className="size-4 text-muted-foreground" />
           <span className="sr-only">Search template recipes</span>
           <input
@@ -62,7 +63,7 @@ export function TemplateCatalog() {
       </p>
       <div className="mt-5 grid gap-5 sm:grid-cols-2 lg:grid-cols-3">
         {visible.map((recipe) => (
-          <a
+          <SiteLink
             key={recipe.id}
             href={productLinks.docs + recipe.docsPath}
             className="group flex flex-col rounded-2xl border border-border bg-card/70 p-6 transition-colors hover:border-primary/50"
@@ -84,7 +85,7 @@ export function TemplateCatalog() {
               Open setup guide
               <ArrowUpRight className="size-3.5" />
             </span>
-          </a>
+          </SiteLink>
         ))}
       </div>
       {visible.length === 0 && (

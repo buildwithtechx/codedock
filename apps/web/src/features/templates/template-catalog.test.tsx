@@ -24,4 +24,10 @@ describe('template discovery', () => {
     );
     expect(screen.queryByRole('heading', { name: 'PostgreSQL' })).toBeNull();
   });
+  it('finds recipes by their deployment workflow', () => {
+    render(<TemplateCatalog />);
+    fireEvent.change(screen.getByRole('searchbox'), { target: { value: 'Compose' } });
+    expect(screen.getByRole('heading', { name: 'Supabase' })).toBeTruthy();
+    expect(screen.queryByRole('heading', { name: 'Redis' })).toBeNull();
+  });
 });

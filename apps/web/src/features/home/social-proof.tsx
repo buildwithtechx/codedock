@@ -1,3 +1,5 @@
+import { SiteLink } from '../../components/site-link';
+
 const workflows = [
   {
     title: 'Your own projects',
@@ -22,15 +24,15 @@ export function SocialProof() {
         <h2 className="font-bold text-3xl">Start with the way you work.</h2>
         <div className="mt-8 grid gap-6 md:grid-cols-3">
           {workflows.map((item) => (
-            <a
+            <SiteLink
               key={item.title}
               href={item.href}
               className="rounded-xl border border-border bg-card/60 p-6 hover:border-primary/50"
             >
               <h3 className="font-semibold text-lg">{item.title}</h3>
               <p className="mt-3 text-muted-foreground text-sm leading-relaxed">{item.body}</p>
-              <span className="mt-5 block text-primary text-sm">Explore the workflow ?</span>
-            </a>
+              <span className="mt-5 block text-primary text-sm">Explore the workflow →</span>
+            </SiteLink>
           ))}
         </div>
       </div>

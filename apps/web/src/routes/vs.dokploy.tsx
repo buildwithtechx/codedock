@@ -5,7 +5,7 @@ import { pageHead } from '../lib/seo';
 
 const content = comparisons.dokploy;
 export const Route = createFileRoute('/vs/dokploy')({
-  head: () => pageHead('/vs/dokploy', `Codedock vs ${content.name}`, content.description),
+  head: () => pageHead('/vs/dokploy', `vs ${content.name}`, content.description),
   component: Page,
 });
 function Page() {

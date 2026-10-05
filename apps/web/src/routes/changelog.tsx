@@ -1,4 +1,5 @@
 import { createFileRoute } from '@tanstack/react-router';
+import { SiteLink } from '../components/site-link';
 import { productLinks } from '../lib/product-links';
 import { pageHead } from '../lib/seo';
 export const Route = createFileRoute('/changelog')({
@@ -27,13 +28,16 @@ function ChangelogPage() {
           <li>Separate optional cloud billing, email and OAuth integrations from local setup.</li>
           <li>Improve deployment persistence and configuration validation.</li>
         </ul>
-        <a href={`${productLinks.github}/pull/25`} className="mt-6 inline-block text-primary">
+        <SiteLink
+          href={`${productLinks.github}/pull/25`}
+          className="mt-6 inline-block text-primary"
+        >
           Read the merged changes →
-        </a>
+        </SiteLink>
       </article>
       <div className="mt-8 flex flex-wrap gap-6 text-primary">
-        <a href={`${productLinks.github}/releases`}>Published releases ?</a>
-        <a href={`${productLinks.github}/commits/main/`}>Development history ?</a>
+        <SiteLink href={`${productLinks.github}/releases`}>Published releases →</SiteLink>
+        <SiteLink href={`${productLinks.github}/commits/main/`}>Development history →</SiteLink>
       </div>
     </section>
   );

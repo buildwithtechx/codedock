@@ -1,11 +1,14 @@
 import { Menu, X } from 'lucide-react';
 import { Dialog } from 'radix-ui';
+import { useState } from 'react';
 import { navigationGroups } from '../../lib/navigation';
 import { productLinks } from '../../lib/product-links';
+import { SiteLink } from '../site-link';
 
 export function MobileNavigation() {
+  const [open, setOpen] = useState(false);
   return (
-    <Dialog.Root>
+    <Dialog.Root open={open} onOpenChange={setOpen}>
       <Dialog.Trigger asChild>
         <button
           type="button"
@@ -41,31 +44,32 @@ export function MobileNavigation() {
                 </h2>
                 <div className="space-y-1">
                   {group.items.map((item) => (
-                    <Dialog.Close key={item.href} asChild>
-                      <a
-                        href={item.href}
-                        className="block rounded-lg px-3 py-2 text-sm hover:bg-muted"
-                      >
-                        {item.label}
-                      </a>
-                    </Dialog.Close>
+                    <SiteLink
+                      key={item.href}
+                      href={item.href}
+                      onClick={() => setOpen(false)}
+                      className="block rounded-lg px-3 py-2 text-sm hover:bg-muted"
+                    >
+                      {item.label}
+                    </SiteLink>
                   ))}
                 </div>
               </div>
             ))}
-            <Dialog.Close asChild>
-              <a href="/pricing" className="block rounded-lg px-3 py-2 text-sm hover:bg-muted">
-                Pricing
-              </a>
-            </Dialog.Close>
-            <Dialog.Close asChild>
-              <a
-                href={productLinks.cloud}
-                className="block rounded-xl bg-primary px-4 py-3 text-center font-semibold text-sm text-white"
-              >
-                Open Cloud
-              </a>
-            </Dialog.Close>
+            <SiteLink
+              href="/pricing"
+              onClick={() => setOpen(false)}
+              className="block rounded-lg px-3 py-2 text-sm hover:bg-muted"
+            >
+              Pricing
+            </SiteLink>
+            <SiteLink
+              href={productLinks.cloud}
+              onClick={() => setOpen(false)}
+              className="block rounded-xl bg-primary px-4 py-3 text-center font-semibold text-sm text-white"
+            >
+              Open Cloud
+            </SiteLink>
           </nav>
         </Dialog.Content>
       </Dialog.Portal>

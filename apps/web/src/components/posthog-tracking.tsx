@@ -6,6 +6,7 @@ declare global {
     __codedock_posthog_initialized?: boolean;
     posthog?: {
       init: (key: string, config: Record<string, unknown>) => void;
+      capture?: (event: string, properties?: Record<string, unknown>) => void;
     };
   }
 }

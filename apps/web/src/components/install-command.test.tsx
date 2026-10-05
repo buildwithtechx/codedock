@@ -6,6 +6,7 @@ import { InstallCommand } from './install-command';
 afterEach(() => {
   cleanup();
   vi.unstubAllGlobals();
+  delete window.posthog;
 });
 describe('install command clipboard', () => {
   it('copies the exact installer command and announces completion', async () => {
@@ -28,5 +29,18 @@ describe('install command clipboard', () => {
       ).toBeTruthy()
     );
     expect(screen.getByText(installCommand)).toBeTruthy();
+  });
+  it('preserves the hero install conversion event after a successful copy', async () => {
+    const capture = vi.fn();
+    window.posthog = { init: vi.fn(), capture };
+    vi.stubGlobal('navigator', { clipboard: { writeText: vi.fn().mockResolvedValue(undefined) } });
+    render(<InstallCommand source="hero_section" />);
+    fireEvent.click(screen.getByRole('button', { name: 'Copy install command' }));
+    await waitFor(() =>
+      expect(capture).toHaveBeenCalledWith('install_command_copied', {
+        source: 'hero_section',
+        command: installCommand,
+      })
+    );
   });
 });

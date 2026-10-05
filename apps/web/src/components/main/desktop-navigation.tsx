@@ -1,6 +1,7 @@
 import { ChevronDown } from 'lucide-react';
 import { NavigationMenu } from 'radix-ui';
 import { navigationGroups } from '../../lib/navigation';
+import { SiteLink } from '../site-link';
 
 export function DesktopNavigation() {
   return (
@@ -12,11 +13,11 @@ export function DesktopNavigation() {
               {group.label}
               <ChevronDown className="size-3.5 transition-transform group-data-[state=open]:rotate-180" />
             </NavigationMenu.Trigger>
-            <NavigationMenu.Content className="absolute top-full left-0 mt-3 w-[min(36rem,80vw)] rounded-2xl border border-border bg-card p-3 shadow-2xl">
+            <NavigationMenu.Content className="w-[min(36rem,80vw)] p-3">
               <div className="grid gap-1 sm:grid-cols-2">
                 {group.items.map((item) => (
                   <NavigationMenu.Link key={item.href} asChild>
-                    <a
+                    <SiteLink
                       href={item.href}
                       className="rounded-xl p-4 transition-colors hover:bg-muted focus-visible:outline-2 focus-visible:outline-primary"
                     >
@@ -24,7 +25,7 @@ export function DesktopNavigation() {
                       <span className="mt-1 block text-muted-foreground text-xs leading-relaxed">
                         {item.description}
                       </span>
-                    </a>
+                    </SiteLink>
                   </NavigationMenu.Link>
                 ))}
               </div>
@@ -33,15 +34,16 @@ export function DesktopNavigation() {
         ))}
         <NavigationMenu.Item>
           <NavigationMenu.Link asChild>
-            <a
+            <SiteLink
               href="/pricing"
               className="rounded-lg px-3 py-2 text-muted-foreground text-sm hover:text-foreground"
             >
               Pricing
-            </a>
+            </SiteLink>
           </NavigationMenu.Link>
         </NavigationMenu.Item>
       </NavigationMenu.List>
+      <NavigationMenu.Viewport className="absolute top-full left-0 mt-3 h-[var(--radix-navigation-menu-viewport-height)] w-[var(--radix-navigation-menu-viewport-width)] overflow-hidden rounded-2xl border border-border bg-card shadow-2xl" />
     </NavigationMenu.Root>
   );
 }

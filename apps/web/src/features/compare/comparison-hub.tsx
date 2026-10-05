@@ -1,4 +1,5 @@
 import { ArrowUpRight } from 'lucide-react';
+import { SiteLink } from '../../components/site-link';
 import { comparisons } from './comparisons';
 
 export function ComparisonHub() {
@@ -14,7 +15,7 @@ export function ComparisonHub() {
       </p>
       <div className="mt-12 grid gap-5 sm:grid-cols-2 lg:grid-cols-3">
         {Object.entries(comparisons).map(([id, item]) => (
-          <a
+          <SiteLink
             key={id}
             href={`/vs/${id}`}
             className="group rounded-2xl border border-border bg-card/70 p-7 transition-colors hover:border-primary/50 hover:bg-primary/5"
@@ -28,7 +29,7 @@ export function ComparisonHub() {
             <h2 className="font-bold text-xl">Codedock vs. {item.name}</h2>
             <p className="mt-3 text-muted-foreground text-sm leading-relaxed">{item.tagline}</p>
             <p className="mt-6 font-semibold text-primary text-xs">Explore the comparison →</p>
-          </a>
+          </SiteLink>
         ))}
       </div>
     </div>
