@@ -16,7 +16,7 @@ export async function statusCommand(ctx: CliContext, args: string[]): Promise<vo
 
   const client = new ApiClient(ctx);
   try {
-    const serviceRes = await client.get<ServiceRecord>(`/api/services/${serviceId}`);
+    const serviceRes = await client.get<ServiceRecord>(`/api/apps/${serviceId}`);
     const service = serviceRes.data;
     if (!service) {
       throw new Error(`Service ${serviceId} not found`);

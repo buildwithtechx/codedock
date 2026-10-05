@@ -1,8 +1,10 @@
+import { useQueries } from '@tanstack/react-query';
 import { createFileRoute } from '@tanstack/react-router';
 import { Calendar, Clock, Loader2 } from 'lucide-react';
-import { useMemo, useState } from 'react';
+import { useState } from 'react';
 import { PageHeader } from '#/components/layout/page-header';
 import { Card, CardContent, CardHeader, CardTitle } from '#/components/ui/card';
+import { QueryErrorState } from '#/components/ui/query-error-state';
 import {
   Select,
   SelectContent,
@@ -19,26 +21,45 @@ import {
   TableRow,
 } from '#/components/ui/table';
 import { useListProjects } from '#/features/projects';
-import { useListScheduledTasks } from '#/hooks/use-scheduled-tasks';
+import { scheduledTasksService } from '#/services/scheduled-tasks';
 
 export const Route = createFileRoute('/_dashboard/jobs')({
   component: JobsPage,
 });
 
 export function JobsPage() {
-  const [selectedProjectId, setSelectedProjectId] = useState<string>('');
-
-  const { data: projectsResponse, isLoading: isLoadingProjects } = useListProjects();
-  const projects = useMemo(() => projectsResponse?.data?.records || [], [projectsResponse]);
-
-  const { data: tasksResponse, isLoading: isLoadingTasks } = useListScheduledTasks('');
-  const tasks = useMemo(() => {
-    const rawTasks = tasksResponse?.data || [];
-    if (!selectedProjectId) {
-      return rawTasks;
-    }
-    return rawTasks.filter((t) => t.projectId === selectedProjectId);
-  }, [tasksResponse, selectedProjectId]);
+  const [selectedProjectId, setSelectedProjectId] = useState('all');
+  const {
+    data: projectsResponse,
+    isLoading: isLoadingProjects,
+    isError: projectsError,
+    refetch: refetchProjects,
+  } = useListProjects();
+  const projects = projectsResponse?.data?.records || [];
+  const visibleProjects =
+    selectedProjectId === 'all'
+      ? projects
+      : projects.filter((project) => project.id === selectedProjectId);
+  const taskQueries = useQueries({
+    queries: visibleProjects.map((project) => ({
+      queryKey: ['scheduled-tasks', 'project', project.id],
+      queryFn: () => scheduledTasksService.listByProject(project.id),
+    })),
+  });
+  const isLoadingTasks = taskQueries.some((query) => query.isLoading);
+  const tasks = taskQueries.flatMap((query) => query.data?.data || []);
+  if (projectsError || taskQueries.some((query) => query.isError)) {
+    return (
+      <QueryErrorState
+        title="Jobs are unavailable"
+        description="Could not load scheduled tasks."
+        onRetry={() => {
+          void refetchProjects();
+          for (const query of taskQueries) void query.refetch();
+        }}
+      />
+    );
+  }
 
   return (
     <div className="space-y-6">
@@ -59,7 +80,7 @@ export function JobsPage() {
                 <SelectValue placeholder="All Projects" />
               </SelectTrigger>
               <SelectContent>
-                <SelectItem value="">All Projects</SelectItem>
+                <SelectItem value="all">All Projects</SelectItem>
                 {projects.map((project: { id: string; name: string }) => (
                   <SelectItem key={project.id} value={project.id}>
                     {project.name}

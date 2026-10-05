@@ -1,7 +1,9 @@
 import { existsSync, statSync } from 'node:fs';
 import { resolve } from 'node:path';
 import { ApiClient } from '../api-client.js';
+import { uploadDirectory } from '../archive-upload.js';
 import { printError, printInfo, printSuccess } from '../output-format.js';
+import { listProjects } from '../project-list.js';
 import type { CliContext, DeploymentRecord, ProjectRecord } from '../types.js';
 
 interface DeployOptions {
@@ -14,66 +16,43 @@ export async function deployCommand(
   args: string[],
   options: DeployOptions
 ): Promise<void> {
-  const target = args[0] || '.';
-
   if (!ctx.token) {
     printError('Not logged in. Please run "codedock login" first.');
-    process.exit(1);
-  }
-
-  const client = new ApiClient(ctx);
-
-  if (existsSync(target) && statSync(target).isDirectory()) {
-    const absPath = resolve(target);
-    printInfo(`Deploying project from directory: ${absPath}`);
-
-    let projectId = options.project;
-    if (!projectId) {
-      try {
-        const projRes = await client.get<ProjectRecord[]>('/api/projects');
-        const projects = projRes.data || [];
-        if (projects.length > 0) {
-          projectId = projects[0].id;
-        } else {
-          const createRes = await client.post<ProjectRecord>('/api/projects', {
-            name: 'default-app',
-            description: 'Created via Codedock CLI deploy',
-          });
-          projectId = createRes.data?.id;
-        }
-      } catch (err: unknown) {
-        const msg = err instanceof Error ? err.message : String(err);
-        printError(`Failed to resolve or create project for deploy: ${msg}`);
-        process.exit(1);
-      }
-    }
-
-    try {
-      const deployRes = await client.post<DeploymentRecord>(`/api/projects/${projectId}/deploy`, {
-        branch: options.branch || 'main',
-      });
-      printSuccess(`Deployment triggered successfully (ID: ${deployRes.data?.id || 'queued'})`);
-      printInfo(`Monitor status with: codedock status ${projectId}`);
-    } catch (err: unknown) {
-      const msg = err instanceof Error ? err.message : String(err);
-      printError(`Deployment failed: ${msg}`);
-      process.exit(1);
-    }
+    process.exitCode = 1;
     return;
   }
-
-  printInfo(`Triggering deployment for service ID: ${target}`);
+  const target = args[0] || '.';
+  const client = new ApiClient(ctx);
   try {
-    const deployRes = await client.post<DeploymentRecord>('/api/deployments', {
-      serviceId: target,
-      branch: options.branch || 'main',
-    });
-    printSuccess(
-      `Deployment triggered successfully for service ${target} (ID: ${deployRes.data?.id})`
+    if (existsSync(target) && statSync(target).isDirectory()) {
+      let projectId = options.project;
+      if (!projectId) {
+        const projects = await listProjects(client);
+        if (projects.length > 1) throw new Error('Choose a target project with --project <id>');
+        projectId = projects[0]?.id;
+        if (!projectId)
+          projectId = (
+            await client.post<ProjectRecord>('/api/projects', {
+              name: 'default-app',
+              description: 'Created via Codedock CLI deploy',
+            })
+          ).data?.id;
+      }
+      if (!projectId) throw new Error('Could not resolve a target project');
+      printInfo(`Packaging and uploading ${resolve(target)}`);
+      const result = await uploadDirectory(client, resolve(target), projectId);
+      printSuccess(`Deployed ${result.appName} (ID: ${result.appId})`);
+      printInfo(`Monitor status with: codedock status ${result.appId}`);
+      return;
+    }
+    const result = await client.post<DeploymentRecord>(
+      `/api/services/${encodeURIComponent(target)}/deploy`,
+      { branch: options.branch || 'main' }
     );
-  } catch (err: unknown) {
-    const msg = err instanceof Error ? err.message : String(err);
-    printError(`Failed to trigger deployment: ${msg}`);
-    process.exit(1);
+    if (!result.data?.id) throw new Error('Server did not return a deployment');
+    printSuccess(`Deployment started (ID: ${result.data.id})`);
+  } catch (err) {
+    printError(err instanceof Error ? err.message : 'Deployment failed');
+    process.exitCode = 1;
   }
 }

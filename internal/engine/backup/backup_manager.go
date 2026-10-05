@@ -87,7 +87,7 @@ func (bm *BackupManager) registerBackupLocked(cfg *models.BackupConfig) error {
 		bm.cronEngine.Remove(entryID)
 		delete(bm.entries, cfg.ID)
 	}
-	if cfg.Status != "active" || !cfg.BackupEnabled {
+	if cfg.Status != "active" || !cfg.BackupEnabled || strings.TrimSpace(cfg.Schedule) == "manual" {
 		return nil
 	}
 	schedule := strings.TrimSpace(cfg.Schedule)

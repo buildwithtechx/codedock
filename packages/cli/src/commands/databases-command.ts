@@ -6,6 +6,7 @@ interface DatabaseOptions {
   name?: string;
   type?: string;
   server?: string;
+  project?: string;
 }
 
 export async function databasesCommand(
@@ -37,7 +38,7 @@ export async function databasesCommand(
       const rows = databases.map((d) => [
         d.id.slice(0, 8),
         d.name,
-        d.type,
+        d.engine,
         d.status || 'running',
         d.createdAt || '-',
       ]);
@@ -53,14 +54,17 @@ export async function databasesCommand(
   if (subAction === 'create') {
     const name = options.name || args[1];
     const type = options.type || 'postgres';
-    if (!name) {
-      printError('Usage: codedock db create <name> --type <postgres|mysql|redis|mongodb>');
+    if (!name || !options.project) {
+      printError(
+        'Usage: codedock db create <name> --project <id> --type <postgres|mysql|redis|mongodb>'
+      );
       process.exit(1);
     }
     try {
       const res = await client.post<DatabaseRecord>('/api/databases', {
         name,
-        type,
+        engine: type,
+        projectId: options.project,
         serverId: options.server,
       });
       printSuccess(
@@ -81,7 +85,7 @@ export async function databasesCommand(
       process.exit(1);
     }
     try {
-      await client.post(`/api/databases/${dbId}/backup`);
+      await client.post(`/api/databases/${dbId}/backups`);
       printSuccess(`Backup triggered successfully for database ${dbId}`);
     } catch (err: unknown) {
       const msg = err instanceof Error ? err.message : String(err);

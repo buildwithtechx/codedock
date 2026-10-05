@@ -10,6 +10,7 @@ import {
   Terminal,
 } from 'lucide-react';
 import { useState } from 'react';
+import { toast } from 'sonner';
 import { Badge } from '#/components/ui/badge';
 import { Button } from '#/components/ui/button';
 import {
@@ -46,8 +47,8 @@ export function ServiceDetailDrawer({
       if (action === 'redeploy') await appsService.redeployApp(service.id);
       if (action === 'stop') await appsService.stopApp(service.id);
       onRefresh?.();
-    } catch {
-      // Error handled
+    } catch (err) {
+      toast.error(err instanceof Error ? err.message : `Failed to ${action} service`);
     } finally {
       setActionLoading(false);
     }
@@ -113,7 +114,7 @@ export function ServiceDetailDrawer({
               </Button>
             )}
             <Button size="sm" variant="secondary" className="h-8 gap-1.5 text-xs" asChild>
-              <Link to="/services/$serviceId" params={{ serviceId: service.id }}>
+              <Link to="/services/$serviceId/terminal" params={{ serviceId: service.id }}>
                 <Terminal className="h-3.5 w-3.5" />
                 Logs & Terminal
               </Link>

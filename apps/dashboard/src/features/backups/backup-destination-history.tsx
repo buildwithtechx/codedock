@@ -26,6 +26,7 @@ import {
   TableHeader,
   TableRow,
 } from '#/components/ui/table';
+import { getApiBaseUrl } from '#/lib/api-client';
 import type { BackupRecord } from './interfaces';
 
 type BackupDestinationHistoryProps = {
@@ -182,7 +183,7 @@ export function BackupDestinationHistory({
                           ) : record.filePath ? (
                             <Button variant="ghost" size="icon" className="h-7 w-7" asChild>
                               <a
-                                href={`${import.meta.env.VITE_API_URL || ''}/backups/${record.backupConfigId}/records/${record.id}/download`}
+                                href={`${getApiBaseUrl()}/backups/${record.backupConfigId}/records/${record.id}/download`}
                                 target="_blank"
                                 rel="noreferrer"
                                 title="Download local archive"

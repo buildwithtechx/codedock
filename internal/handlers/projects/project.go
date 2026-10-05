@@ -3,7 +3,6 @@ package projects
 import (
 	"net/http"
 	"strconv"
-	"time"
 
 	"github.com/labstack/echo/v4"
 
@@ -13,7 +12,6 @@ import (
 	"codedock.run/codedock/internal/models"
 	projectservices "codedock.run/codedock/internal/services/projects"
 	"codedock.run/codedock/internal/telemetry"
-	"github.com/google/uuid"
 )
 
 type ProjectHandler struct {
@@ -71,30 +69,11 @@ func (h *ProjectHandler) CreateProject(c echo.Context) error {
 	userClaims, ok := c.Get("user").(*models.UserClaims)
 	if ok && userClaims != nil {
 		if req.OrganizationID == "" {
-			if orgs, err := h.projectService.ListOrganizationsByUser(c.Request().Context(), userClaims.UserID); err == nil && len(orgs) > 0 {
-				req.OrganizationID = orgs[0].ID
-			} else {
-				now := time.Now()
-				defaultOrg := &models.Organization{
-					ID:        uuid.NewString(),
-					Name:      "Default Workspace",
-					CreatedAt: now,
-					UpdatedAt: now,
-				}
-				member := &models.OrganizationMember{
-					ID:             uuid.NewString(),
-					OrganizationID: defaultOrg.ID,
-					UserID:         userClaims.UserID,
-					Permission:     models.MemberPermissionOwner,
-					Status:         models.MemberStatusAccepted,
-					InvitedAt:      now,
-					AcceptedAt:     now,
-				}
-				if err := h.projectService.CreateOrganizationWithOwner(c.Request().Context(), defaultOrg, member); err != nil {
-					return utils.Error(c, http.StatusInternalServerError, "failed to provision default organization: "+err.Error())
-				}
-				req.OrganizationID = defaultOrg.ID
+			organization, err := h.projectService.GetOrCreateDefaultOrganization(c.Request().Context(), userClaims.UserID)
+			if err != nil {
+				return utils.Error(c, http.StatusInternalServerError, err.Error())
 			}
+			req.OrganizationID = organization.ID
 		}
 
 		if req.OrganizationID != "" {

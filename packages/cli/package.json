@@ -13,7 +13,6 @@
   "description": "Command line interface for Codedock self-hosted PaaS",
   "license": "Apache-2.0",
   "files": [
-    "bin",
     "dist"
   ],
   "engines": {
@@ -22,7 +21,7 @@
   "main": "./dist/index.js",
   "types": "./dist/index.d.ts",
   "bin": {
-    "codedock": "./bin/codedock.js"
+    "codedock": "./dist/bin.js"
   },
   "exports": {
     ".": {

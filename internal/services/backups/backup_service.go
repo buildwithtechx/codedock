@@ -41,6 +41,9 @@ func (s *BackupService) CreateConfig(ctx context.Context, cfg *models.BackupConf
 	if cfg.Timeout == 0 {
 		cfg.Timeout = 3600
 	}
+	if err := backup.ValidateSchedule(cfg.Schedule); err != nil {
+		return err
+	}
 	cfg.CreatedAt = time.Now().UTC().Format(time.RFC3339)
 	cfg.UpdatedAt = cfg.CreatedAt
 	if err := s.backupRepo.CreateConfig(ctx, cfg); err != nil {
@@ -60,6 +63,9 @@ func (s *BackupService) UpdateConfig(ctx context.Context, cfg *models.BackupConf
 	}
 	if cfg.Timeout == 0 {
 		cfg.Timeout = 3600
+	}
+	if err := backup.ValidateSchedule(cfg.Schedule); err != nil {
+		return err
 	}
 	cfg.UpdatedAt = time.Now().UTC().Format(time.RFC3339)
 	if err := s.backupRepo.UpdateConfig(ctx, cfg); err != nil {
@@ -161,7 +167,7 @@ func (s *BackupService) VerifyS3Destination(ctx context.Context, id string) erro
 	if err != nil {
 		return fmt.Errorf("destination not found: %w", err)
 	}
-	verErr := backup.EnsureS3Bucket(ctx, dest)
+	verErr := backup.CheckS3Bucket(ctx, dest)
 	if verErr != nil {
 		_ = s.s3Repo.RecordVerificationResult(ctx, id, false, verErr.Error())
 		return verErr
@@ -195,7 +201,7 @@ func (s *BackupService) VerifyS3Draft(ctx context.Context, dest *models.S3Destin
 	if dest == nil || dest.Bucket == "" {
 		return errors.New("bucket is required")
 	}
-	return backup.EnsureS3Bucket(ctx, dest)
+	return backup.CheckS3Bucket(ctx, dest)
 }
 
 func (s *BackupService) TriggerBackup(ctx context.Context, configID string) (*models.BackupRecord, error) {

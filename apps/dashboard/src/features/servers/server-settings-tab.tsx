@@ -30,6 +30,11 @@ export function ServerSettingsTab({ server }: ServerSettingsTabProps) {
       toast.error('Server name cannot be empty');
       return;
     }
+    const port = Number(sshPort);
+    if (!Number.isInteger(port) || port < 1 || port > 65535) {
+      toast.error('SSH port must be between 1 and 65535');
+      return;
+    }
     try {
       await updateServer({
         id: server.id,
@@ -96,6 +101,8 @@ export function ServerSettingsTab({ server }: ServerSettingsTabProps) {
                 </Label>
                 <Input
                   id="edit-srv-port"
+                  min={1}
+                  max={65535}
                   type="number"
                   value={sshPort}
                   onChange={(e) => setSshPort(e.target.value)}

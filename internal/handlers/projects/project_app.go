@@ -31,6 +31,9 @@ func (h *ProjectAppHandler) List(c echo.Context) error {
 		return utils.Error(c, http.StatusBadRequest, "organizationId is required")
 	}
 
+	if err := h.requireOrganization(c, orgID, ""); err != nil {
+		return err
+	}
 	apps, err := h.appService.ListByOrganization(c.Request().Context(), orgID)
 	if err != nil {
 		return utils.Error(c, http.StatusInternalServerError, err.Error())
@@ -54,6 +57,9 @@ func (h *ProjectAppHandler) Create(c echo.Context) error {
 		return utils.Error(c, http.StatusBadRequest, "organizationId is required")
 	}
 
+	if err := h.requireOrganization(c, orgID, models.MemberPermissionAdmin); err != nil {
+		return err
+	}
 	app := &models.ProjectApp{
 		OrganizationID: orgID,
 		Name:           req.Name,
@@ -85,6 +91,9 @@ func (h *ProjectAppHandler) Get(c echo.Context) error {
 	if err != nil || app == nil {
 		return utils.Error(c, http.StatusNotFound, "project app not found")
 	}
+	if err := h.requireOrganization(c, app.OrganizationID, ""); err != nil {
+		return err
+	}
 	return utils.Success(c, "Operation successful", app)
 }
 
@@ -107,6 +116,9 @@ func (h *ProjectAppHandler) Update(c echo.Context) error {
 		return utils.Error(c, http.StatusNotFound, "project app not found")
 	}
 
+	if err := h.requireOrganization(c, app.OrganizationID, models.MemberPermissionAdmin); err != nil {
+		return err
+	}
 	if req.Name != "" {
 		app.Name = req.Name
 	}
@@ -144,8 +156,26 @@ func (h *ProjectAppHandler) Delete(c echo.Context) error {
 		return utils.Error(c, http.StatusBadRequest, "missing app id")
 	}
 
+	app, err := h.appService.GetByID(c.Request().Context(), id)
+	if err != nil || app == nil {
+		return utils.Error(c, http.StatusNotFound, "project app not found")
+	}
+	if err := h.requireOrganization(c, app.OrganizationID, models.MemberPermissionAdmin); err != nil {
+		return err
+	}
 	if err := h.appService.Delete(c.Request().Context(), id); err != nil {
 		return utils.Error(c, http.StatusInternalServerError, err.Error())
 	}
 	return utils.Success(c, "Deleted successfully", map[string]string{"status": "deleted"})
+}
+
+func (h *ProjectAppHandler) requireOrganization(c echo.Context, organizationID string, permission models.MemberPermission) error {
+	user, ok := c.Get("user").(*models.UserClaims)
+	if !ok || user == nil {
+		return utils.Error(c, http.StatusUnauthorized, "unauthorized")
+	}
+	if !h.projectService.HasOrgPermission(c.Request().Context(), organizationID, user.UserID, user.Role, permission) {
+		return utils.Error(c, http.StatusForbidden, "insufficient organization permissions")
+	}
+	return nil
 }

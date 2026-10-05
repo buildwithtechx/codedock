@@ -24,7 +24,17 @@ func (h *BackupHandler) ListAllRecords(c echo.Context) error {
 	if err != nil {
 		return utils.Error(c, http.StatusInternalServerError, err.Error())
 	}
-	return utils.Success(c, "Operation successful", recs)
+	filtered := make([]*models.BackupRecord, 0, len(recs))
+	for _, record := range recs {
+		cfg, err := h.backupService.GetConfig(c.Request().Context(), record.BackupConfigID)
+		if err != nil {
+			return utils.Error(c, http.StatusInternalServerError, "failed to check backup access")
+		}
+		if cfg != nil && h.hasAccess(c, cfg.DatabaseID, cfg.ServiceID) {
+			filtered = append(filtered, record)
+		}
+	}
+	return utils.Success(c, "Operation successful", filtered)
 }
 
 func (h *BackupHandler) ListRecords(c echo.Context) error {
@@ -170,6 +180,9 @@ func (h *BackupHandler) ListRecordsByDatabase(c echo.Context) error {
 	if id == "" {
 		return utils.Error(c, http.StatusBadRequest, "missing database id")
 	}
+	if !h.hasAccess(c, id, "") {
+		return utils.Error(c, http.StatusForbidden, "insufficient permissions")
+	}
 	records, err := h.backupService.ListRecordsByDatabase(c.Request().Context(), id)
 	if err != nil {
 		return utils.Error(c, http.StatusInternalServerError, err.Error())
@@ -182,6 +195,9 @@ func (h *BackupHandler) TriggerDatabaseBackup(c echo.Context) error {
 	if id == "" {
 		return utils.Error(c, http.StatusBadRequest, "missing database id")
 	}
+	if !h.hasAdminAccess(c, id, "") {
+		return utils.Error(c, http.StatusForbidden, "insufficient admin permissions")
+	}
 	cfg, err := h.backupService.GetConfigByDatabaseID(c.Request().Context(), id)
 	if err != nil || cfg == nil {
 		db, dbErr := h.dbService.GetDatabase(c.Request().Context(), id)
@@ -191,11 +207,11 @@ func (h *BackupHandler) TriggerDatabaseBackup(c echo.Context) error {
 		newCfg := models.BackupConfig{
 			DatabaseID:    id,
 			Name:          db.Name + "-backup",
-			Description:   "Automated backups for " + db.Name,
+			Description:   "Manual snapshots for " + db.Name,
 			BackupEnabled: true,
-			Schedule:      "0 2 * * *",
+			Schedule:      "manual",
 			RetentionDays: 7,
-			Status:        models.BackupConfigStatusActive,
+			Status:        models.BackupConfigStatusInactive,
 		}
 		destinations, _ := h.backupService.ListS3Destinations(c.Request().Context())
 		for _, d := range destinations {

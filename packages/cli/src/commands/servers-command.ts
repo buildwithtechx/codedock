@@ -40,7 +40,7 @@ export async function serversCommand(
       const rows = servers.map((s) => [
         s.id.slice(0, 8),
         s.name,
-        s.ip || '127.0.0.1',
+        s.ipAddress || '127.0.0.1',
         s.isLocal ? 'Local Docker' : 'Remote SSH',
         s.status || 'active',
         s.dockerVersion || 'Docker Engine',
@@ -65,9 +65,9 @@ export async function serversCommand(
     try {
       const payload = {
         name,
-        ip: options.ip || '127.0.0.1',
-        port: options.port ? Number(options.port) : 22,
-        user: options.user || 'root',
+        ipAddress: options.ip || '127.0.0.1',
+        sshPort: options.port ? Number(options.port) : 22,
+        sshUser: options.user || 'root',
         sshKey: options.key || '',
         isLocal: options.isLocal ?? false,
       };

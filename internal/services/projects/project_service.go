@@ -4,6 +4,7 @@ import (
 	"context"
 	"errors"
 	"fmt"
+	"sync"
 	"time"
 
 	"github.com/google/uuid"
@@ -14,12 +15,13 @@ import (
 )
 
 type ProjectService struct {
-	projectRepo    repositories.ProjectRepository
-	envRepo        repositories.EnvironmentRepository
-	appRepo        repositories.AppServiceRepository
-	serviceVarRepo repositories.ServiceVarRepository
-	settingsRepo   repositories.SettingsRepository
-	orgRepo        repositories.OrganizationRepository
+	defaultOrganizationMu sync.Mutex
+	projectRepo           repositories.ProjectRepository
+	envRepo               repositories.EnvironmentRepository
+	appRepo               repositories.AppServiceRepository
+	serviceVarRepo        repositories.ServiceVarRepository
+	settingsRepo          repositories.SettingsRepository
+	orgRepo               repositories.OrganizationRepository
 }
 
 func NewProjectService(pr repositories.ProjectRepository, er repositories.EnvironmentRepository, ar repositories.AppServiceRepository, svr repositories.ServiceVarRepository, sr repositories.SettingsRepository, orgRepo repositories.OrganizationRepository) *ProjectService {

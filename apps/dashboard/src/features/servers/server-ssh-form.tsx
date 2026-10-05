@@ -54,6 +54,10 @@ export function ServerSshForm({ onSuccess, onCancel }: ServerSshFormProps) {
 
     try {
       const text = await file.text();
+      if (!text.includes('PRIVATE KEY-----')) {
+        toast.error('Select an SSH private key file');
+        return;
+      }
       setSshPrivateKey(text);
       toast.success(`Imported ${file.name}`);
     } catch {
@@ -100,6 +104,18 @@ export function ServerSshForm({ onSuccess, onCancel }: ServerSshFormProps) {
       return;
     }
 
+    if (
+      (sshAuthMethod === 'key' && !sshPrivateKey.trim()) ||
+      (sshAuthMethod === 'password' && !sshPassword)
+    ) {
+      toast.error('Provide the selected SSH credential');
+      return;
+    }
+    const port = Number(sshPort);
+    if (!Number.isInteger(port) || port < 1 || port > 65535) {
+      toast.error('SSH port must be between 1 and 65535');
+      return;
+    }
     try {
       const server = await createServer({
         name: name.trim(),
@@ -158,6 +174,8 @@ export function ServerSshForm({ onSuccess, onCancel }: ServerSshFormProps) {
             <Input
               id="srv-port"
               type="number"
+              min={1}
+              max={65535}
               value={sshPort}
               onChange={(e) => setSshPort(e.target.value)}
               placeholder="22"
@@ -228,7 +246,7 @@ export function ServerSshForm({ onSuccess, onCancel }: ServerSshFormProps) {
                 ref={fileInputRef}
                 type="file"
                 className="hidden"
-                accept=".pem,.key,.pub,id_rsa,id_ed25519"
+                accept=".pem,.key,id_rsa,id_ed25519"
                 onChange={handleFileUpload}
               />
             </div>

@@ -73,7 +73,7 @@ func (h *ServerHandler) Get(c echo.Context) error {
 		return utils.Error(c, http.StatusBadRequest, "server id required")
 	}
 
-	server, err := h.serverService.GetServer(c.Request().Context(), id)
+	server, err := h.serverService.GetServer(c.Request().Context(), id, userClaims.UserID)
 	if err != nil {
 		return utils.Error(c, http.StatusInternalServerError, err.Error())
 	}

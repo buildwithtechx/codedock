@@ -94,13 +94,18 @@ func (h *DeploymentHandler) ListProjectDeployments(c echo.Context) error {
 		limit = 100
 	}
 
+	project, err := h.projectService.GetProject(c.Request().Context(), projectID)
+	if err != nil || project == nil {
+		return utils.Error(c, http.StatusNotFound, "project not found")
+	}
 	filter := models.DeploymentListFilter{
-		ProjectID: projectID,
-		ServiceID: c.QueryParam("serviceId"),
-		Status:    c.QueryParam("status"),
-		Search:    c.QueryParam("search"),
-		Limit:     limit,
-		Offset:    (page - 1) * limit,
+		OrganizationID: project.OrganizationID,
+		ProjectID:      projectID,
+		ServiceID:      c.QueryParam("serviceId"),
+		Status:         c.QueryParam("status"),
+		Search:         c.QueryParam("search"),
+		Limit:          limit,
+		Offset:         (page - 1) * limit,
 	}
 
 	deps, total, err := h.deploymentService.ListByOrganization(c.Request().Context(), filter)

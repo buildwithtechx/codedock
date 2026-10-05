@@ -145,7 +145,7 @@ export function BackupPolicies({ configs, isLoading }: BackupPoliciesProps) {
                         size="sm"
                         className="h-7 text-xs"
                         onClick={() => handleTrigger(config.id, config.name)}
-                        disabled={triggeringId === config.id}
+                        disabled={triggeringId !== null}
                       >
                         {triggeringId === config.id ? (
                           <Loader2 className="mr-1 h-3 w-3 animate-spin" />

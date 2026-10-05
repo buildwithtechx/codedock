@@ -1,5 +1,6 @@
 import { ApiClient } from '../api-client.js';
 import { printError, printJson, printSuccess, printTable } from '../output-format.js';
+import { listProjects } from '../project-list.js';
 import type { CliContext, DeploymentRecord, ServiceRecord } from '../types.js';
 
 interface AppOptions {
@@ -25,11 +26,13 @@ export async function appsCommand(
 
   if (subAction === 'list') {
     try {
-      const endpoint = options.project
-        ? `/api/projects/${options.project}/services`
-        : '/api/services';
-      const res = await client.get<ServiceRecord[]>(endpoint);
-      const apps = res.data || [];
+      const projects = options.project ? [{ id: options.project }] : await listProjects(client);
+      const results = await Promise.all(
+        projects.map((project) =>
+          client.get<ServiceRecord[]>(`/api/projects/${project.id}/services`)
+        )
+      );
+      const apps = results.flatMap((result) => result.data || []);
       if (ctx.json) {
         printJson(apps);
         return;
@@ -56,14 +59,19 @@ export async function appsCommand(
 
   if (subAction === 'create') {
     const name = options.name || args[1];
-    if (!name) {
+    if (!name || !options.project) {
       printError(
-        'Usage: codedock apps create <name> [--project <id>] [--repo <url>] [--branch <branch>]'
+        'Usage: codedock apps create <name> --project <id> [--repo <url>] [--branch <branch>]'
       );
       process.exit(1);
     }
     try {
-      const res = await client.post<ServiceRecord>('/api/services', {
+      const environments =
+        (await client.get<{ id: string }[]>(`/api/projects/${options.project}/environments`))
+          .data || [];
+      const environment = environments[0];
+      if (!environment) throw new Error('Project has no environment');
+      const res = await client.post<ServiceRecord>(`/api/environments/${environment.id}/apps`, {
         name,
         projectId: options.project,
         repositoryUrl: options.repo,
@@ -85,7 +93,7 @@ export async function appsCommand(
       process.exit(1);
     }
     try {
-      await client.del(`/api/services/${appId}`);
+      await client.del(`/api/apps/${appId}`);
       printSuccess(`App ${appId} deleted successfully`);
     } catch (err: unknown) {
       const msg = err instanceof Error ? err.message : String(err);

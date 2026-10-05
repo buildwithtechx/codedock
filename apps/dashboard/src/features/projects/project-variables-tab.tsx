@@ -24,12 +24,22 @@ export function ProjectVariablesTab({ projectId }: ProjectVariablesTabProps) {
 
   const [entries, setEntries] = useState<VarEntry[]>([]);
   const [initialized, setInitialized] = useState(false);
+  const [editorProjectId, setEditorProjectId] = useState(projectId);
   const [newKey, setNewKey] = useState('');
   const [newValue, setNewValue] = useState('');
   const [bulkOpen, setBulkOpen] = useState(false);
   const [allRevealed, setAllRevealed] = useState(false);
+  if (editorProjectId !== projectId) {
+    setEditorProjectId(projectId);
+    setInitialized(false);
+    setEntries([]);
+    setNewKey('');
+    setNewValue('');
+    setBulkOpen(false);
+    setAllRevealed(false);
+  }
 
-  if (varsRes?.data && !initialized && !isLoading) {
+  if (editorProjectId === projectId && varsRes?.data && !initialized && !isLoading) {
     const rawVars = varsRes.data || {};
     const parsed: VarEntry[] = Object.entries(rawVars).map(([key, value]) => ({
       key,

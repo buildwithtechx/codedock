@@ -28,7 +28,7 @@ export interface UserProfile {
 export interface ServerRecord {
   id: string;
   name: string;
-  ip: string;
+  ipAddress: string;
   port?: number;
   user?: string;
   isLocal: boolean;
@@ -70,7 +70,7 @@ export interface DeploymentRecord {
 export interface DatabaseRecord {
   id: string;
   name: string;
-  type: string;
+  engine: string;
   status: string;
   serverId?: string;
   createdAt: string;

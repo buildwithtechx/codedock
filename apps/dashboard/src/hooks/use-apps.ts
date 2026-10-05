@@ -12,11 +12,11 @@ export const useListAppsByOrganization = () => {
   });
 };
 
-export const useListByProject = (projectId: string, environmentId?: string) => {
+export const useListByProject = (projectId: string, environmentId?: string, enabled = true) => {
   return useQuery({
     queryKey: ['apps', 'listByProject', projectId, environmentId].filter(Boolean),
     queryFn: () => appsService.listByProject(projectId, environmentId),
-    enabled: Boolean(projectId),
+    enabled: Boolean(projectId) && enabled,
   });
 };
 

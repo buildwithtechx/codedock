@@ -99,6 +99,9 @@ function parseCliArgs(rawArgs: string[]): {
 
 export async function executeCli(rawArgs: string[]): Promise<void> {
   const { command, positional, options } = parseCliArgs(rawArgs);
+  if (options.password !== undefined) {
+    throw new Error('Use the interactive password prompt or an API token to log in');
+  }
   const cfg = loadConfig();
 
   const serverUrl =
@@ -134,7 +137,6 @@ export async function executeCli(rawArgs: string[]): Promise<void> {
       await loginCommand(ctx, positional, {
         server: typeof options.server === 'string' ? options.server : undefined,
         email: typeof options.email === 'string' ? options.email : undefined,
-        password: typeof options.password === 'string' ? options.password : undefined,
         token: typeof options.token === 'string' ? options.token : undefined,
         totp: typeof options.totp === 'string' ? options.totp : undefined,
       });
@@ -170,6 +172,7 @@ export async function executeCli(rawArgs: string[]): Promise<void> {
       await projectsCommand(ctx, positional, {
         name: typeof options.name === 'string' ? options.name : undefined,
         description: typeof options.description === 'string' ? options.description : undefined,
+        organization: typeof options.organization === 'string' ? options.organization : undefined,
       });
       break;
 
@@ -195,7 +198,8 @@ export async function executeCli(rawArgs: string[]): Promise<void> {
       await databasesCommand(ctx, positional, {
         name: typeof options.name === 'string' ? options.name : undefined,
         type: typeof options.type === 'string' ? options.type : undefined,
-        server: typeof options.server === 'string' ? options.server : undefined,
+        server: typeof options['server-id'] === 'string' ? options['server-id'] : undefined,
+        project: typeof options.project === 'string' ? options.project : undefined,
       });
       break;
 

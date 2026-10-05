@@ -3,6 +3,7 @@ import type { ApiResponse, CliContext } from './types.js';
 export class ApiClient {
   private readonly baseUrl: string;
   private readonly token?: string;
+  private csrfToken?: string;
 
   constructor(ctx: CliContext) {
     this.baseUrl = ctx.serverUrl.replace(/\/+$/, '');
@@ -31,8 +32,20 @@ export class ApiClient {
       headers,
     };
 
-    if (body !== undefined) {
+    if (body instanceof FormData) {
+      delete headers['Content-Type'];
+      init.body = body;
+    } else if (body !== undefined) {
       init.body = JSON.stringify(body);
+    }
+    const authRequest = /\/auth\/(signin|signup|refresh)$/.test(cleanEndpoint);
+    if (method !== 'GET' && method !== 'HEAD' && (!this.token || authRequest)) {
+      const csrfResponse = await fetch(`${this.baseUrl}/api/auth/csrf`);
+      if (!csrfResponse.ok) throw new Error('Failed to initialize CSRF protection');
+      const csrf = (await csrfResponse.json()) as { token: string };
+      this.csrfToken = csrf.token;
+      headers['X-CSRF-Token'] = this.csrfToken;
+      headers.Cookie = `csrf_token=${this.csrfToken}`;
     }
 
     let res: Response;
@@ -58,7 +71,7 @@ export class ApiClient {
       throw new Error(errorMsg);
     }
 
-    return data;
+    return Array.isArray(data) ? { data: data as T } : data;
   }
 
   async get<T>(endpoint: string): Promise<ApiResponse<T>> {

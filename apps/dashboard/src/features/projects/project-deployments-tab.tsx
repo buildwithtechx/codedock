@@ -67,7 +67,11 @@ export function ProjectDeploymentsTab({ projectId }: ProjectDeploymentsTabProps)
       <div className="divide-y divide-border/60 overflow-hidden rounded-xl border border-border/70 bg-card">
         {deployments.map((dep) => {
           const status = dep.status?.toLowerCase();
-          const isSuccess = status === 'ready' || status === 'success' || status === 'running';
+          const isSuccess =
+            status === 'active' ||
+            status === 'ready' ||
+            status === 'success' ||
+            status === 'running';
           const isFailed = status === 'failed' || status === 'error';
           const isPending = status === 'building' || status === 'deploying' || status === 'pending';
 

@@ -93,13 +93,27 @@ func (r *S3DestinationRepo) UpdateS3Destination(ctx context.Context, dest *model
 func (r *S3DestinationRepo) SetDefaultDestination(ctx context.Context, id string) error {
 	r.mu.Lock()
 	defer r.mu.Unlock()
-	res, err := r.db.ExecContext(ctx, `UPDATE s3_destinations SET is_default = CASE WHEN id = ? THEN 1 ELSE 0 END`, id)
+	tx, err := r.db.BeginTxx(ctx, nil)
 	if err != nil {
-		return fmt.Errorf("failed to set default s3 destination: %w", err)
+		return fmt.Errorf("begin default destination update: %w", err)
 	}
-	affected, _ := res.RowsAffected()
+	defer tx.Rollback()
+	res, err := tx.ExecContext(ctx, `UPDATE s3_destinations SET is_default = 1 WHERE id = ?`, id)
+	if err != nil {
+		return fmt.Errorf("set default destination: %w", err)
+	}
+	affected, err := res.RowsAffected()
+	if err != nil {
+		return fmt.Errorf("check default destination update: %w", err)
+	}
 	if affected == 0 {
 		return utils.NewNotFoundError("S3Destination", id)
+	}
+	if _, err := tx.ExecContext(ctx, `UPDATE s3_destinations SET is_default = 0 WHERE id != ?`, id); err != nil {
+		return fmt.Errorf("clear previous default destination: %w", err)
+	}
+	if err := tx.Commit(); err != nil {
+		return fmt.Errorf("commit default destination update: %w", err)
 	}
 	return nil
 }

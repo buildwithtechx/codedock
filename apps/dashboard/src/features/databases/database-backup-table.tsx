@@ -20,6 +20,7 @@ import {
   TableRow,
 } from '#/components/ui/table';
 import type { BackupRecord } from '#/features/backups/interfaces';
+import { getApiBaseUrl } from '#/lib/api-client';
 import { formatBytes } from '#/lib/utils';
 
 type DatabaseBackupTableProps = {
@@ -148,7 +149,7 @@ export function DatabaseBackupTable({
                         ) : record.filePath ? (
                           <Button variant="ghost" size="icon" className="h-7 w-7" asChild>
                             <a
-                              href={`${import.meta.env.VITE_API_URL || ''}/backups/${record.backupConfigId}/records/${record.id}/download`}
+                              href={`${getApiBaseUrl()}/backups/${record.backupConfigId}/records/${record.id}/download`}
                               target="_blank"
                               rel="noreferrer"
                               title="Download archive"

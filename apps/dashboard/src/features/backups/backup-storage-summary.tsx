@@ -29,7 +29,7 @@ export function BackupStorageSummary({
   const failedCount = records.filter((r) => r.status === 'failed').length;
 
   const latestRecord = [...records]
-    .filter((r) => r.completedAt)
+    .filter((r) => r.status === 'completed' && r.completedAt)
     .sort((a, b) => new Date(b.completedAt).getTime() - new Date(a.completedAt).getTime())[0];
 
   const formatBytes = (bytes: number): string => {

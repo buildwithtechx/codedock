@@ -25,7 +25,7 @@ jobs:
       - run: npm ci
       - run: npm run build:dashboard
       - run: go vet ./...
-      - run: go test -race ./internal/... ./tests/e2e
+      - run: go test -race ./...
 
   typescript:
     runs-on: ubuntu-latest

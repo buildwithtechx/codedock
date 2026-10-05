@@ -1,9 +1,8 @@
-import { Check, Copy, Cpu, RefreshCw, ServerIcon, Shield } from 'lucide-react';
+import { Check, Copy, Cpu, ServerIcon, Shield } from 'lucide-react';
 import { useState } from 'react';
 import { toast } from 'sonner';
 import { Button } from '#/components/ui/button';
 import { Card } from '#/components/ui/card';
-import { useTestSSH } from '#/hooks/use-servers';
 import type { Server } from '#/interfaces/server';
 
 interface ServerConnectionCardProps {
@@ -13,35 +12,13 @@ interface ServerConnectionCardProps {
 
 export function ServerConnectionCard({ server, onRefresh }: ServerConnectionCardProps) {
   const [copied, setCopied] = useState(false);
-  const { mutateAsync: testSSH, isPending: isTesting } = useTestSSH();
 
   const copyToken = async () => {
-    if (!server.workerToken) return;
+    if (!server.workerToken || /^\*+$/.test(server.workerToken)) return;
     await navigator.clipboard.writeText(server.workerToken);
     setCopied(true);
     toast.success('Worker token copied to clipboard');
     setTimeout(() => setCopied(false), 2000);
-  };
-
-  const handleTestConnection = async () => {
-    if (server.isLocal) {
-      toast.success('Local Docker socket is active');
-      return;
-    }
-    try {
-      const res = await testSSH({
-        sshHost: server.sshHost || server.ipAddress,
-        sshPort: server.sshPort || 22,
-        sshUser: server.sshUser || 'root',
-      });
-      if (res.success) {
-        toast.success('SSH connection verified successfully');
-      } else {
-        toast.error(`SSH check failed: ${res.message}`);
-      }
-    } catch (err) {
-      toast.error(err instanceof Error ? err.message : 'SSH connection failed');
-    }
   };
 
   return (
@@ -58,18 +35,6 @@ export function ServerConnectionCard({ server, onRefresh }: ServerConnectionCard
         </div>
 
         <div className="flex items-center gap-2">
-          {!server.isLocal && (
-            <Button
-              variant="outline"
-              size="sm"
-              onClick={handleTestConnection}
-              disabled={isTesting}
-              className="h-8 gap-1.5 text-xs"
-            >
-              <RefreshCw className={`h-3.5 w-3.5 ${isTesting ? 'animate-spin' : ''}`} />
-              Test Connection
-            </Button>
-          )}
           {onRefresh && (
             <Button variant="ghost" size="sm" onClick={onRefresh} className="h-8 text-xs">
               Refresh
@@ -103,7 +68,7 @@ export function ServerConnectionCard({ server, onRefresh }: ServerConnectionCard
         </div>
       </div>
 
-      {server.workerToken && (
+      {server.workerToken && !/^\*+$/.test(server.workerToken) && (
         <div className="mt-4 flex items-center justify-between rounded-xl border border-border/70 bg-muted/20 px-3.5 py-2.5">
           <div className="flex items-center gap-2">
             <Shield className="h-3.5 w-3.5 text-muted-foreground" />

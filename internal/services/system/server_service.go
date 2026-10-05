@@ -22,7 +22,7 @@ type ServerService interface {
 	UpdateServer(ctx context.Context, id, userID string, req models.UpdateServerRequest) (*models.Server, error)
 	TestSSH(ctx context.Context, req models.TestSSHRequest) error
 	ListServersByUser(ctx context.Context, userID string) ([]*models.Server, error)
-	GetServer(ctx context.Context, id string) (*models.Server, error)
+	GetServer(ctx context.Context, id, userID string) (*models.Server, error)
 	DeleteServer(ctx context.Context, id, userID string) error
 }
 
@@ -55,6 +55,9 @@ func (s *serverService) TestSSH(ctx context.Context, req models.TestSSHRequest) 
 	if host == "" {
 		return fmt.Errorf("sshHost is required")
 	}
+	if req.SSHPort < 0 || req.SSHPort > 65535 {
+		return fmt.Errorf("SSH port must be between 1 and 65535")
+	}
 	port := req.SSHPort
 	if port <= 0 {
 		port = 22
@@ -78,6 +81,9 @@ func (s *serverService) TestSSH(ctx context.Context, req models.TestSSHRequest) 
 }
 
 func (s *serverService) CreateServer(ctx context.Context, userID string, req models.CreateServerRequest) (*models.Server, error) {
+	if err := validateServerConnection(req.IsLocal, req.SSHPort, req.SSHTransport, req.SSHJumpHost, req.SSHKey+req.SSHPrivateKey, req.SSHPassword); err != nil {
+		return nil, err
+	}
 	u, err := s.userRepo.GetUserByID(ctx, userID)
 	if err != nil {
 		return nil, fmt.Errorf("failed to get user: %w", err)
@@ -206,7 +212,7 @@ func (s *serverService) UpdateServer(ctx context.Context, id, userID string, req
 	if req.SSHHost != nil {
 		server.SSHHost = *req.SSHHost
 	}
-	if req.SSHPort != nil && *req.SSHPort > 0 {
+	if req.SSHPort != nil {
 		server.SSHPort = *req.SSHPort
 	}
 	if req.SSHUser != nil && *req.SSHUser != "" {
@@ -220,9 +226,7 @@ func (s *serverService) UpdateServer(ctx context.Context, id, userID string, req
 	}
 	if req.SSHPrivateKey != nil {
 		server.SSHPrivateKey = *req.SSHPrivateKey
-		if server.SSHKey == "" {
-			server.SSHKey = *req.SSHPrivateKey
-		}
+		server.SSHKey = *req.SSHPrivateKey
 	}
 	if req.SSHPassword != nil {
 		server.SSHPassword = *req.SSHPassword
@@ -234,12 +238,18 @@ func (s *serverService) UpdateServer(ctx context.Context, id, userID string, req
 		server.SSHJumpHost = *req.SSHJumpHost
 	}
 
+	if err := validateServerConnection(server.IsLocal, server.SSHPort, server.SSHTransport, server.SSHJumpHost, server.SSHKey+server.SSHPrivateKey, server.SSHPassword); err != nil {
+		return nil, err
+	}
 	server.UpdatedAt = time.Now().UTC()
 
 	if err := s.serverRepo.Update(ctx, server); err != nil {
 		return nil, fmt.Errorf("failed to update server: %w", err)
 	}
 
+	if s.sshManager != nil {
+		s.sshManager.RemoveClient(id)
+	}
 	return server, nil
 }
 
@@ -255,8 +265,25 @@ func (s *serverService) ListServersByUser(ctx context.Context, userID string) ([
 	return append([]*models.Server{s.controlPlaneServer(userID)}, servers...), nil
 }
 
-func (s *serverService) GetServer(ctx context.Context, id string) (*models.Server, error) {
-	return s.serverRepo.GetByID(ctx, id)
+func (s *serverService) GetServer(ctx context.Context, id, userID string) (*models.Server, error) {
+	if id == controlPlaneServerID {
+		user, err := s.userRepo.GetUserByID(ctx, userID)
+		if err != nil {
+			return nil, fmt.Errorf("load server user: %w", err)
+		}
+		if user.Role != models.UserRoleOwner && user.Role != models.UserRoleAdmin {
+			return nil, fmt.Errorf("server access denied")
+		}
+		return s.controlPlaneServer(userID), nil
+	}
+	server, err := s.serverRepo.GetByID(ctx, id)
+	if err != nil {
+		return nil, err
+	}
+	if server != nil && server.UserID != userID && !(server.IsLocal && server.UserID == "system") {
+		return nil, fmt.Errorf("server access denied")
+	}
+	return server, nil
 }
 
 func (s *serverService) DeleteServer(ctx context.Context, id, userID string) error {

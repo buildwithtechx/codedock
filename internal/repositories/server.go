@@ -126,7 +126,7 @@ func (r *sqliteServerRepository) GetByToken(ctx context.Context, token string) (
 }
 
 func (r *sqliteServerRepository) ListByUser(ctx context.Context, userID string) ([]*models.Server, error) {
-	query := fmt.Sprintf(`SELECT %s FROM servers WHERE user_id = ? ORDER BY created_at DESC`, serverSelectColumns)
+	query := fmt.Sprintf(`SELECT %s FROM servers WHERE user_id = ? OR (user_id = 'system' AND is_local = 1) ORDER BY created_at DESC`, serverSelectColumns)
 	rows, err := r.db.QueryContext(ctx, query, userID)
 	if err != nil {
 		return nil, fmt.Errorf("failed to list servers: %w", err)

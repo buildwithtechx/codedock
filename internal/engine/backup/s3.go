@@ -160,3 +160,14 @@ func signedS3Request(ctx context.Context, dest *models.S3Destination, method, ke
 
 	return resp, nil
 }
+
+func CheckS3Bucket(ctx context.Context, dest *models.S3Destination) error {
+	response, err := signedS3Request(ctx, dest, http.MethodHead, "", nil, "")
+	if err != nil {
+		return fmt.Errorf("check bucket access: %w", err)
+	}
+	if err := response.Body.Close(); err != nil {
+		return fmt.Errorf("close bucket response: %w", err)
+	}
+	return nil
+}

@@ -1,6 +1,7 @@
 import { createFileRoute, useNavigate } from '@tanstack/react-router';
 import { Activity, Box, Folder, Plus, Rocket, Server, Settings } from 'lucide-react';
 import { useState } from 'react';
+import { toast } from 'sonner';
 import { Button } from '#/components/ui/button';
 import { QueryErrorState } from '#/components/ui/query-error-state';
 import { ServiceIcon } from '#/components/ui/service-icon';
@@ -12,6 +13,8 @@ import {
   ServiceDetailDrawer,
   useGetProject,
 } from '#/features/projects';
+import { ProjectDatabaseInventory } from '#/features/projects/project-database-inventory';
+import { StatusBadge } from '#/features/projects/service-status-badge';
 import type { AppService } from '#/features/services';
 import { useListByProject as useListAppsByProject } from '#/hooks/use-apps';
 import { useTriggerProject } from '#/hooks/use-deployments';
@@ -20,32 +23,6 @@ import { useListByProject as useListEnvironments } from '#/hooks/use-environment
 export const Route = createFileRoute('/_dashboard/projects/$projectId/')({
   component: ProjectOverviewComponent,
 });
-
-function StatusBadge({ status }: { status: string }) {
-  const s = (status || '').toLowerCase();
-  let color = 'bg-gray-500/10 text-gray-500 border-gray-500/20';
-  let dot = 'bg-gray-500';
-
-  if (s === 'running' || s === 'online' || s === 'healthy') {
-    color = 'bg-emerald-500/10 text-emerald-500 border-emerald-500/20';
-    dot = 'bg-emerald-500 shadow-[0_0_8px_rgba(16,185,129,0.4)]';
-  } else if (s === 'failed' || s === 'error' || s === 'stopped') {
-    color = 'bg-red-500/10 text-red-500 border-red-500/20';
-    dot = 'bg-red-500';
-  } else if (s === 'deploying' || s === 'pending' || s === 'building') {
-    color = 'bg-amber-500/10 text-amber-500 border-amber-500/20';
-    dot = 'bg-amber-500 animate-pulse';
-  }
-
-  return (
-    <div
-      className={`flex items-center gap-1.5 rounded-full border px-2.5 py-0.5 font-medium text-xs ${color}`}
-    >
-      <div className={`h-1.5 w-1.5 rounded-full ${dot}`} />
-      <span className="capitalize">{status || 'Unknown'}</span>
-    </div>
-  );
-}
 
 function ProjectOverviewComponent() {
   const { projectId } = Route.useParams();
@@ -57,17 +34,23 @@ function ProjectOverviewComponent() {
     isError: projectError,
     refetch: refetchProject,
   } = useGetProject(projectId);
-  const { data: envsRes, isLoading: envsLoading } = useListEnvironments(projectId);
+  const {
+    data: envsRes,
+    isLoading: envsLoading,
+    isError: envsError,
+    refetch: refetchEnvironments,
+  } = useListEnvironments(projectId);
 
   const environments = envsRes?.data || [];
   const [selectedEnvId, setSelectedEnvId] = useState<string | undefined>(undefined);
-  const activeEnvId = selectedEnvId || environments[0]?.id;
+  const activeEnvId =
+    environments.find((environment) => environment.id === selectedEnvId)?.id || environments[0]?.id;
 
   const {
     data: appsRes,
     isLoading: appsLoading,
     refetch: refetchApps,
-  } = useListAppsByProject(projectId, activeEnvId);
+  } = useListAppsByProject(projectId, activeEnvId, Boolean(activeEnvId) && !envsError);
 
   const [selectedService, setSelectedService] = useState<AppService | null>(null);
   const [drawerOpen, setDrawerOpen] = useState(false);
@@ -75,14 +58,15 @@ function ProjectOverviewComponent() {
   const triggerProjectMutation = useTriggerProject();
 
   const handleDeployAll = async () => {
+    if (!activeEnvId || envsError) return;
     try {
       await triggerProjectMutation.mutateAsync({
         projectId,
         environmentId: activeEnvId,
       });
       refetchApps();
-    } catch {
-      // Handled
+    } catch (err) {
+      toast.error(err instanceof Error ? err.message : 'Failed to deploy project');
     }
   };
 
@@ -99,6 +83,18 @@ function ProjectOverviewComponent() {
           <p className="text-muted-foreground text-sm">Loading project workspace...</p>
         </div>
       </div>
+    );
+  }
+
+  if (envsError || environments.length === 0) {
+    return (
+      <QueryErrorState
+        title="Environments are unavailable"
+        description="Select a valid project environment before deploying."
+        onRetry={() => {
+          void refetchEnvironments();
+        }}
+      />
     );
   }
 
@@ -142,7 +138,9 @@ function ProjectOverviewComponent() {
             variant="outline"
             size="sm"
             onClick={handleDeployAll}
-            disabled={triggerProjectMutation.isPending || services.length === 0}
+            disabled={
+              !activeEnvId || envsError || triggerProjectMutation.isPending || services.length === 0
+            }
             className="h-9 gap-1.5 text-xs"
           >
             <Rocket className="h-3.5 w-3.5 text-primary" />
@@ -176,6 +174,7 @@ function ProjectOverviewComponent() {
         </TabsList>
 
         <TabsContent value="services" className="space-y-4">
+          <ProjectDatabaseInventory projectId={projectId} />
           {appsLoading ? (
             <div className="flex h-40 items-center justify-center">
               <Activity className="h-6 w-6 animate-pulse text-primary" />
@@ -251,7 +250,7 @@ function ProjectOverviewComponent() {
         </TabsContent>
 
         <TabsContent value="variables">
-          <ProjectVariablesTab projectId={projectId} />
+          <ProjectVariablesTab key={projectId} projectId={projectId} />
         </TabsContent>
       </Tabs>
 

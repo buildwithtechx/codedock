@@ -1,4 +1,4 @@
-import { existsSync, mkdirSync, readFileSync, rmSync, writeFileSync } from 'node:fs';
+import { chmodSync, existsSync, mkdirSync, readFileSync, rmSync, writeFileSync } from 'node:fs';
 import { homedir } from 'node:os';
 import { dirname, join } from 'node:path';
 import type { CliConfig } from './types.js';
@@ -14,6 +14,7 @@ export function loadConfig(): CliConfig {
     return {};
   }
   try {
+    chmodSync(configPath, 0o600);
     const raw = readFileSync(configPath, 'utf8');
     return JSON.parse(raw) as CliConfig;
   } catch {
@@ -25,9 +26,10 @@ export function saveConfig(cfg: CliConfig): void {
   const configPath = getConfigPath();
   const dir = dirname(configPath);
   if (!existsSync(dir)) {
-    mkdirSync(dir, { recursive: true });
+    mkdirSync(dir, { recursive: true, mode: 0o700 });
   }
-  writeFileSync(configPath, JSON.stringify(cfg, null, 2), 'utf8');
+  writeFileSync(configPath, JSON.stringify(cfg, null, 2), { encoding: 'utf8', mode: 0o600 });
+  chmodSync(configPath, 0o600);
 }
 
 export function clearConfig(): void {

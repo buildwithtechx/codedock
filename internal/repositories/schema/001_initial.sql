@@ -781,3 +781,5 @@ CREATE TABLE IF NOT EXISTS dns_records (
 );
 
 CREATE INDEX IF NOT EXISTS idx_dns_records_domain ON dns_records(domain_name);
+
+CREATE UNIQUE INDEX IF NOT EXISTS idx_env_vars_project_key ON env_vars(project_id, key) WHERE service_id IS NULL;

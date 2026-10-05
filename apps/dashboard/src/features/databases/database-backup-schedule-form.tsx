@@ -48,9 +48,11 @@ export function DatabaseBackupScheduleForm({
         <form onSubmit={onSave} className="space-y-4">
           <div className="grid gap-4 sm:grid-cols-3">
             <div className="space-y-1.5">
-              <Label className="text-xs">Storage Target</Label>
+              <Label htmlFor="backup-storage-target" className="text-xs">
+                Storage Target
+              </Label>
               <Select value={s3DestinationId} onValueChange={setS3DestinationId}>
-                <SelectTrigger className="h-9 text-xs">
+                <SelectTrigger id="backup-storage-target" className="h-9 text-xs">
                   <SelectValue placeholder="Select target" />
                 </SelectTrigger>
                 <SelectContent>
@@ -65,9 +67,11 @@ export function DatabaseBackupScheduleForm({
             </div>
 
             <div className="space-y-1.5">
-              <Label className="text-xs">Schedule Frequency</Label>
+              <Label htmlFor="backup-frequency" className="text-xs">
+                Schedule Frequency
+              </Label>
               <Select value={schedule} onValueChange={setSchedule}>
-                <SelectTrigger className="h-9 text-xs">
+                <SelectTrigger id="backup-frequency" className="h-9 text-xs">
                   <SelectValue placeholder="Select schedule" />
                 </SelectTrigger>
                 <SelectContent>
@@ -81,8 +85,11 @@ export function DatabaseBackupScheduleForm({
             </div>
 
             <div className="space-y-1.5">
-              <Label className="text-xs">Retention Window (Days)</Label>
+              <Label htmlFor="backup-retention" className="text-xs">
+                Retention Window (Days)
+              </Label>
               <Input
+                id="backup-retention"
                 type="number"
                 min="1"
                 max="365"

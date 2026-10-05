@@ -225,27 +225,11 @@ function ServerDetailsPage() {
       )}
 
       {activeTab === 'terminal' && (
-        <Card className="flex h-96 flex-col overflow-hidden rounded-xl border border-border bg-black font-mono text-green-400 text-xs">
-          <div className="flex items-center justify-between border-border/40 border-b bg-zinc-900/80 px-4 py-2 text-zinc-400">
-            <span>
-              ssh {server.sshUser || 'root'}@{server.sshHost || server.ipAddress}
-            </span>
-            <span className="text-[11px] text-zinc-500">Interactive Shell Session</span>
-          </div>
-          <div className="flex-1 space-y-2 overflow-y-auto p-4 text-zinc-300">
-            <p className="text-zinc-500">
-              Connected to {server.name} ({server.ipAddress})
-            </p>
-            <p className="text-emerald-400">
-              codedock-agent: worker runtime active, health probe ok
-            </p>
-            <div className="flex items-center gap-2 pt-2">
-              <span className="text-emerald-500">
-                {server.sshUser || 'root'}@{server.name}:~$
-              </span>
-              <span className="animate-pulse">_</span>
-            </div>
-          </div>
+        <Card className="p-6">
+          <h3 className="font-semibold text-sm">Server terminal unavailable</h3>
+          <p className="mt-2 text-muted-foreground text-sm">
+            An interactive server shell is not connected. Use your SSH client to access this node.
+          </p>
         </Card>
       )}
 

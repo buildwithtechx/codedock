@@ -1,10 +1,12 @@
 import { ApiClient } from '../api-client.js';
 import { printError, printJson, printSuccess, printTable } from '../output-format.js';
+import { listProjects } from '../project-list.js';
 import type { CliContext, ProjectRecord } from '../types.js';
 
 interface ProjectOptions {
   name?: string;
   description?: string;
+  organization?: string;
 }
 
 export async function projectsCommand(
@@ -23,8 +25,7 @@ export async function projectsCommand(
 
   if (subAction === 'list') {
     try {
-      const res = await client.get<ProjectRecord[]>('/api/projects');
-      const projects = res.data || [];
+      const projects = await listProjects(client, options.organization);
       if (ctx.json) {
         printJson(projects);
         return;
@@ -57,6 +58,7 @@ export async function projectsCommand(
     try {
       const res = await client.post<ProjectRecord>('/api/projects', {
         name,
+        organizationId: options.organization,
         description: options.description || '',
       });
       printSuccess(

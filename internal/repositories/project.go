@@ -147,7 +147,7 @@ func (r *ProjectRepo) Create(ctx context.Context, p *models.ProjectConfig) error
 		p.EnvironmentName = "Production"
 	}
 	if p.EnvironmentSlug == "" {
-		p.EnvironmentSlug = "production"
+		p.EnvironmentSlug = strings.ToLower(strings.ReplaceAll(strings.TrimSpace(p.EnvironmentName), " ", "-"))
 	}
 	if p.EnvironmentType == "" {
 		p.EnvironmentType = "production"
@@ -248,7 +248,7 @@ func (r *EnvRepo) SetVar(_ context.Context, projectID, key, plaintextValue strin
 	_, err = r.db.Exec(
 		`INSERT INTO env_vars (id, project_id, key, encrypted_value, created_at, updated_at)
 		 VALUES (?, ?, ?, ?, ?, ?)
-		 ON CONFLICT(project_id, service_id, key) DO UPDATE SET encrypted_value = excluded.encrypted_value, updated_at = excluded.updated_at`,
+		 ON CONFLICT(project_id, key) WHERE service_id IS NULL DO UPDATE SET encrypted_value = excluded.encrypted_value, updated_at = excluded.updated_at`,
 		uuid.NewString(), projectID, key, encrypted, now, now,
 	)
 	return err

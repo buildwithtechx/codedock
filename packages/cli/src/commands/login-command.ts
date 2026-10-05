@@ -2,12 +2,12 @@ import { createInterface } from 'node:readline/promises';
 import { ApiClient } from '../api-client.js';
 import { saveConfig } from '../config-store.js';
 import { printError, printInfo, printSuccess } from '../output-format.js';
+import { readPassword } from '../password-prompt.js';
 import type { CliContext, UserProfile } from '../types.js';
 
 interface LoginOptions {
   server?: string;
   email?: string;
-  password?: string;
   token?: string;
   totp?: string;
 }
@@ -19,7 +19,7 @@ export async function loginCommand(
 ): Promise<void> {
   let serverUrl = options.server || ctx.serverUrl;
   let email = options.email;
-  let password = options.password;
+
   const token = options.token;
 
   const rl = createInterface({
@@ -57,10 +57,9 @@ export async function loginCommand(
       throw new Error('Email is required');
     }
 
-    if (!password) {
-      password = await rl.question('Password: ');
-    }
-    password = password.trim();
+    rl.pause();
+    const password = await readPassword();
+    rl.resume();
     if (!password) {
       throw new Error('Password is required');
     }
@@ -104,7 +103,7 @@ export async function loginCommand(
   } catch (err: unknown) {
     const msg = err instanceof Error ? err.message : String(err);
     printError(`Login failed: ${msg}`);
-    process.exit(1);
+    process.exitCode = 1;
   } finally {
     rl.close();
   }
