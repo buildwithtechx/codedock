@@ -50,8 +50,10 @@ func (m *TraefikManager) EnsureTraefikRunning(ctx context.Context) error {
 	}
 
 	if err == nil && existing.Config != nil && traefikCertificateEmail(existing.Config.Cmd) != m.tlsEmail {
-		if err := m.dockerClient.ContainerStop(ctx, TraefikContainerName, container.StopOptions{}); err != nil {
-			return fmt.Errorf("stop proxy to apply certificate settings: %w", err)
+		if existing.State != nil && existing.State.Running {
+			if err := m.dockerClient.ContainerStop(ctx, TraefikContainerName, container.StopOptions{}); err != nil {
+				return fmt.Errorf("stop proxy to apply certificate settings: %w", err)
+			}
 		}
 		if err := m.dockerClient.ContainerRemove(ctx, TraefikContainerName, container.RemoveOptions{}); err != nil {
 			return fmt.Errorf("replace proxy configuration: %w", err)

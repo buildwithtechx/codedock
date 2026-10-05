@@ -15,8 +15,17 @@ import (
 )
 
 func TestProxyAppliesCertificateSettingsOnRestart(t *testing.T) {
-	for _, existingEmail := range []string{"", "owner@example.com"} {
-		t.Run(existingEmail, func(t *testing.T) {
+	for _, check := range []struct {
+		name, email string
+		running     bool
+	}{
+		{"running proxy needs certificates", "", true},
+		{"stopped proxy needs certificates", "", false},
+		{"running proxy has certificates", "owner@example.com", true},
+		{"stopped proxy has certificates", "owner@example.com", false},
+	} {
+		t.Run(check.name, func(t *testing.T) {
+			existingEmail := check.email
 			var mu sync.Mutex
 			var actions []string
 			record := func(action string) { mu.Lock(); defer mu.Unlock(); actions = append(actions, action) }
@@ -33,11 +42,15 @@ func TestProxyAppliesCertificateSettingsOnRestart(t *testing.T) {
 					if existingEmail != "" {
 						args = append(args, "--certificatesresolvers.letsencrypt.acme.email="+existingEmail)
 					}
-					if err := json.NewEncoder(w).Encode(map[string]any{"Id": "proxy", "Config": map[string]any{"Cmd": args}}); err != nil {
+					if err := json.NewEncoder(w).Encode(map[string]any{"Id": "proxy", "Config": map[string]any{"Cmd": args}, "State": map[string]any{"Running": check.running}}); err != nil {
 						t.Error(err)
 					}
 				case path == "/containers/codedock-traefik/stop":
 					record("stop")
+					if !check.running {
+						w.WriteHeader(http.StatusNotModified)
+						return
+					}
 					w.WriteHeader(204)
 				case path == "/containers/codedock-traefik" && r.Method == http.MethodDelete:
 					record("remove")
@@ -82,7 +95,10 @@ func TestProxyAppliesCertificateSettingsOnRestart(t *testing.T) {
 			}
 			expected := []string{"start"}
 			if existingEmail == "" {
-				expected = []string{"stop", "remove", "create", "start"}
+				expected = []string{"remove", "create", "start"}
+				if check.running {
+					expected = append([]string{"stop"}, expected...)
+				}
 			}
 			mu.Lock()
 			defer mu.Unlock()
