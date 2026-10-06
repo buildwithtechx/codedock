@@ -15,6 +15,7 @@ import {
 } from '#/features/projects';
 import { ProjectDatabaseInventory } from '#/features/projects/project-database-inventory';
 import { StatusBadge } from '#/features/projects/service-status-badge';
+import { ProjectClusters } from '#/features/servers/project-clusters';
 import type { AppService } from '#/features/services';
 import { useListByProject as useListAppsByProject } from '#/hooks/use-apps';
 import { useTriggerProject } from '#/hooks/use-deployments';
@@ -183,8 +184,12 @@ function ProjectOverviewComponent() {
           <TabsTrigger value="services">Services ({services.length})</TabsTrigger>
           <TabsTrigger value="deployments">Deployments</TabsTrigger>
           <TabsTrigger value="variables">Variables</TabsTrigger>
+          <TabsTrigger value="clusters">Clusters</TabsTrigger>
         </TabsList>
 
+        <TabsContent value="clusters">
+          <ProjectClusters projectId={projectId} />
+        </TabsContent>
         <TabsContent value="services" className="space-y-4">
           <ProjectDatabaseInventory projectId={projectId} environmentId={activeEnvId as string} />
           {appsLoading ? (

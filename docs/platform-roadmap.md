@@ -65,7 +65,7 @@ Implementation details and current target boundaries: [Application, Compose and 
 
 ## Phase 6: Cluster and runtime orchestration
 
-- [ ] Reviewed private-network and K3s preparation, installation, join and removal operations.
+- [x] Reviewed private-network and K3s preparation, installation, join and removal operations.
 - [ ] Kubernetes runtime adapter with deploy, logs, exec, metrics and lifecycle support.
 - [ ] Application placement, instance counts, readiness, routing and persistent storage.
 - [ ] Desired/observed reconciliation, upgrade recovery and conflicting-operation locks.
@@ -78,11 +78,13 @@ Implementation details and current target boundaries: [Application, Compose and 
 
 - [ ] Policies target projects/services and select producer, destination, schedule and retention.
 - [ ] Durable runs provide live progress, logs, cancellation and archive verification.
-- [ ] Protected records survive retention until their protection expires or is removed.
-- [ ] Restore prepare identifies archive, engine, target and destructive effects without applying them.
-- [ ] Apply requires an expiring confirmation bound to the reviewed target and archive.
-- [ ] In-place and new-target restore modes report interruption and final verification.
+- [x] Protected records survive retention until their protection expires or is removed.
+- [x] Restore prepare identifies archive, engine, target and destructive effects without applying them.
+- [x] Apply requires an expiring confirmation bound to the reviewed target and archive.
+- [x] In-place and new-target restore modes report interruption and final verification.
 - [ ] Pre-deployment policies wait for verified backups before deployment proceeds.
+
+Current backup and cluster implementation boundaries, including scheduled-run cancellation, deployment coverage and live-target validation: [Backup recovery and cluster setup](platform-recovery.md).
 
 ## Additional product scope
 

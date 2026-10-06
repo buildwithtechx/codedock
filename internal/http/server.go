@@ -26,6 +26,7 @@ import (
 )
 
 type Server struct {
+	clusterHandler         *system.ClusterHandler
 	operationHandler       *system.OperationHandler
 	router                 *echo.Echo
 	mcpBridge              *Bridge

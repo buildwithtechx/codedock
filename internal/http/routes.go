@@ -23,6 +23,7 @@ func (s *Server) registerRoutes() {
 	s.registerAppRoutes(apiGroup, authGroup)
 	s.registerDeploymentRoutes(authGroup)
 	s.registerBackupRoutes(authGroup)
+	s.registerClusterRoutes(authGroup)
 	s.registerSettingsRoutes(apiGroup, authGroup)
 	s.registerMiscRoutes(apiGroup, authGroup)
 	s.registerBillingRoutes(apiGroup, authGroup)
