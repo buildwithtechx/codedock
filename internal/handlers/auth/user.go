@@ -218,10 +218,7 @@ func (h *UserHandler) CreatePAT(c echo.Context) error {
 	if err != nil {
 		return utils.Error(c, http.StatusInternalServerError, err.Error())
 	}
-	return utils.Created(c, "Token created successfully", map[string]any{
-		"token": rawToken,
-		"pat":   pat,
-	})
+	return utils.Created(c, "Token created successfully", models.CreatePATResponse{Token: pat, Plain: rawToken})
 }
 
 func (h *UserHandler) ListPATs(c echo.Context) error {

@@ -1,6 +1,7 @@
 package models
 
 import (
+	"encoding/json"
 	"time"
 
 	"codedock.run/codedock/pkg/types"
@@ -25,16 +26,16 @@ type UserClaims struct {
 }
 
 type PersonalAccessToken struct {
-	ID              string    `json:"id" db:"id"`
-	UserID          string    `json:"userId" db:"user_id"`
-	Name            string    `json:"name" db:"name"`
-	TokenHash       string    `json:"-" db:"token_hash"`
-	Prefix          string    `json:"prefix" db:"prefix"`
-	AccessLevel     string    `json:"accessLevel" db:"access_level"`
-	ProjectScope    string    `json:"projectScope" db:"project_scope"`
-	AllowedProjects *string   `json:"allowedProjects" db:"allowed_projects"`
-	ExpiresAt       time.Time `json:"expiresAt" db:"expires_at"`
-	CreatedAt       time.Time `json:"createdAt" db:"created_at"`
+	ID              string     `json:"id" db:"id"`
+	UserID          string     `json:"userId" db:"user_id"`
+	Name            string     `json:"name" db:"name"`
+	TokenHash       string     `json:"-" db:"token_hash"`
+	Prefix          string     `json:"prefix" db:"prefix"`
+	AccessLevel     string     `json:"accessLevel" db:"access_level"`
+	ProjectScope    string     `json:"projectScope" db:"project_scope"`
+	AllowedProjects *string    `json:"allowedProjects" db:"allowed_projects"`
+	ExpiresAt       *time.Time `json:"expiresAt,omitempty" db:"expires_at"`
+	CreatedAt       time.Time  `json:"createdAt" db:"created_at"`
 }
 
 type UpdateProfileRequest struct {
@@ -53,4 +54,18 @@ type CreatePATRequest struct {
 type CreatePATResponse struct {
 	Token *PersonalAccessToken `json:"token"`
 	Plain string               `json:"plain"`
+}
+
+func (p PersonalAccessToken) MarshalJSON() ([]byte, error) {
+	type tokenAlias PersonalAccessToken
+	var projects []string
+	if p.AllowedProjects != nil {
+		if err := json.Unmarshal([]byte(*p.AllowedProjects), &projects); err != nil {
+			return nil, err
+		}
+	}
+	return json.Marshal(struct {
+		tokenAlias
+		AllowedProjects []string `json:"allowedProjects"`
+	}{tokenAlias: tokenAlias(p), AllowedProjects: projects})
 }

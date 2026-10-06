@@ -12,7 +12,6 @@ import (
 	"codedock.run/codedock/internal/models"
 	"codedock.run/codedock/internal/repositories"
 	"codedock.run/codedock/internal/services/auth"
-	"codedock.run/codedock/internal/utils"
 )
 
 type contextKey string
@@ -37,6 +36,8 @@ type UserStatusProvider interface {
 }
 
 type AuthGuard struct {
+	PersonalTokens     PersonalTokenProvider
+	PersonalResources  PersonalResourceProvider
 	TokenService       *auth.TokenService
 	Settings           SettingsProvider
 	ProjectTokens      ProjectTokenProvider
@@ -55,35 +56,35 @@ func (g *AuthGuard) checkIPAllowlist(c echo.Context) error {
 	}
 	settings, err := g.Settings.GetSettings(c.Request().Context())
 	if err != nil {
-		return utils.Error(c, http.StatusInternalServerError, "failed to load server security policy")
+		return echo.NewHTTPError(http.StatusInternalServerError, "failed to load server security policy")
 	}
 	if settings == nil || strings.TrimSpace(settings.IPAllowlist) == "" {
 		return nil
 	}
 	clientIP := c.RealIP()
 	if !IsIPAllowed(clientIP, settings.IPAllowlist) {
-		return utils.Error(c, http.StatusForbidden, fmt.Sprintf("access denied from IP address %s by server allowlist policy", clientIP))
+		return echo.NewHTTPError(http.StatusForbidden, fmt.Sprintf("access denied from IP address %s by server allowlist policy", clientIP))
 	}
 	return nil
 }
 
 func (g *AuthGuard) validateAPIToken(c echo.Context, tokenStr string, denyAPITokens bool) (*models.UserClaims, error) {
 	if denyAPITokens {
-		return nil, utils.Error(c, http.StatusForbidden, "API tokens cannot access role-restricted endpoints")
+		return nil, echo.NewHTTPError(http.StatusForbidden, "API tokens cannot access role-restricted endpoints")
 	}
 	if g.ProjectTokens == nil {
-		return nil, utils.Error(c, http.StatusUnauthorized, "API tokens not supported")
+		return nil, echo.NewHTTPError(http.StatusUnauthorized, "API tokens not supported")
 	}
 	pt, err := g.ProjectTokens.GetTokenByHash(c.Request().Context(), tokenStr)
 	if err != nil {
-		return nil, utils.Error(c, http.StatusUnauthorized, "invalid or revoked API token")
+		return nil, echo.NewHTTPError(http.StatusUnauthorized, "invalid or revoked API token")
 	}
 	if pt.ExpiresAt != nil && pt.ExpiresAt.Before(time.Now()) {
-		return nil, utils.Error(c, http.StatusUnauthorized, "API token has expired")
+		return nil, echo.NewHTTPError(http.StatusUnauthorized, "API token has expired")
 	}
 	if len(pt.IPAllowlist) > 0 {
 		if !IsIPAllowed(c.RealIP(), strings.Join(pt.IPAllowlist, ",")) {
-			return nil, utils.Error(c, http.StatusForbidden, "IP address not allowed for this API token")
+			return nil, echo.NewHTTPError(http.StatusForbidden, "IP address not allowed for this API token")
 		}
 	}
 	_ = g.ProjectTokens.UpdateTokenLastUsed(c.Request().Context(), pt.ID)
@@ -102,14 +103,14 @@ func (g *AuthGuard) validateAPIToken(c echo.Context, tokenStr string, denyAPITok
 func (g *AuthGuard) validateJWT(c echo.Context, tokenStr string) (*models.UserClaims, error) {
 	claimsMap, err := g.TokenService.ValidateToken(tokenStr)
 	if err != nil {
-		return nil, utils.Error(c, http.StatusUnauthorized, "invalid authentication token: "+err.Error())
+		return nil, echo.NewHTTPError(http.StatusUnauthorized, "invalid authentication token: "+err.Error())
 	}
 
 	userID := fmt.Sprintf("%v", claimsMap["sub"])
 	if g.UserStatusProvider != nil && userID != "" {
 		u, err := g.UserStatusProvider.GetUserByID(c.Request().Context(), userID)
 		if err != nil || u == nil || !u.IsActive {
-			return nil, utils.Error(c, http.StatusUnauthorized, "user account not found or deactivated")
+			return nil, echo.NewHTTPError(http.StatusUnauthorized, "user account not found or deactivated")
 		}
 	}
 
@@ -128,9 +129,12 @@ func (g *AuthGuard) baseAuth(c echo.Context, denyAPITokens bool) (*models.UserCl
 	}
 	tokenStr := ExtractTokenFromRequest(c)
 	if tokenStr == "" {
-		return nil, utils.Error(c, http.StatusUnauthorized, "missing authentication token")
+		return nil, echo.NewHTTPError(http.StatusUnauthorized, "missing authentication token")
 	}
 
+	if strings.HasPrefix(tokenStr, "vpt_") {
+		return g.validatePersonalToken(c, tokenStr, denyAPITokens)
+	}
 	if strings.HasPrefix(tokenStr, "vsl_tok_") {
 		return g.validateAPIToken(c, tokenStr, denyAPITokens)
 	}

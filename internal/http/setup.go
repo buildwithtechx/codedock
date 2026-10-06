@@ -146,6 +146,8 @@ func NewServer(db *sql.DB, v *utils.Vault, deployer *deploy.Deployer, traefikMan
 	bridge := NewBridge(projectService, appService, databaseService, deploymentService)
 
 	authGuard := middleware.NewAuthGuard(tokenService, settingsService, projectSettingsService, orgRepo, projectRepo, userRepo)
+	authGuard.PersonalTokens = userRepo
+	authGuard.PersonalResources = repositories.NewPersonalTokenResources(db)
 
 	appHandler := projects.NewAppHandler(appService, projectService, deployer, deploymentService, environmentService)
 	databaseHandler := databases.NewDatabaseHandler(databaseService, projectService, auditService)
