@@ -17,6 +17,7 @@ import { BackupDestinations } from './backup-destinations';
 import { BackupPolicies } from './backup-policies';
 import { BackupStorageSummary } from './backup-storage-summary';
 import { CreateS3DestinationDialog } from './create-s3-destination-dialog';
+import { VolumeRestoreDialog } from './volume-restore-dialog';
 
 export function BackupsList() {
   const search = useSearch({ strict: false }) as { tab?: string; add?: string } | undefined;
@@ -45,6 +46,7 @@ export function BackupsList() {
   const { data: s3Data, refetch: refetchS3 } = useListS3Destinations();
   const destinations = s3Data?.data || [];
 
+  const [volumeRecordId, setVolumeRecordId] = useState<string | null>(null);
   const restoreMutation = useRestore();
   const deleteRecordMutation = useDeleteRecord();
 
@@ -56,6 +58,11 @@ export function BackupsList() {
   const handleRestoreRecord = async (recordId: string) => {
     const record = records.find((r) => r.id === recordId);
     if (!record) return;
+    const config = configs.find((candidate) => candidate.id === record.backupConfigId);
+    if (config?.volumeName) {
+      setVolumeRecordId(record.id);
+      return;
+    }
     await restoreMutation.mutateAsync({ id: record.id });
   };
 
@@ -72,6 +79,7 @@ export function BackupsList() {
 
   return (
     <div className="space-y-6">
+      <VolumeRestoreDialog recordId={volumeRecordId} onClose={() => setVolumeRecordId(null)} />
       <div className="flex flex-wrap items-center justify-between gap-4">
         <PageHeader
           title="Backups"
