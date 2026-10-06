@@ -43,6 +43,7 @@ type Server struct {
 	projectService         *projectservices.ProjectService
 	appService             *projectservices.AppService
 	appServiceHandler      *projects.AppHandler
+	autoscalingHandler     *projects.AutoscalingHandler
 	dbHandler              *databases.DatabaseHandler
 	scheduledTaskHandler   *system.ScheduledTaskHandler
 	canvasHandler          *projects.CanvasHandler

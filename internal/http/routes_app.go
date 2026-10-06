@@ -63,6 +63,8 @@ func (s *Server) registerDeploymentRoutes(authGroup *echo.Group) {
 	authGroup.GET("/deployments/:id/explain", s.deploymentHandler.ExplainFailure)
 	authGroup.GET("/services/:serviceId/metrics", s.deploymentHandler.GetMetrics, serviceAuth)
 	authGroup.GET("/services/:serviceId/metrics/historical", s.metricsHandler.GetHistoricalMetrics, serviceAuth)
+	authGroup.GET("/services/:serviceId/autoscaling", s.autoscalingHandler.Get, s.RequireServiceRole(""))
+	authGroup.PUT("/services/:serviceId/autoscaling", s.autoscalingHandler.Save, s.RequireServiceRole(models.MemberPermissionAdmin))
 	authGroup.GET("/services/:serviceId/logs/historical", s.logHandler.GetHistoricalLogs, serviceAuth)
 }
 

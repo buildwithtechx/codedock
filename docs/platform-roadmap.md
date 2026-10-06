@@ -13,11 +13,11 @@ Each phase ships in focused commits and pull requests. Run Biome and Go formatti
 - [x] S3 uploads apply destination prefixes while old stored object keys remain usable.
 - [x] Missing runtimes, unsupported engine commands, failed exits and persistence failures report failure.
 - [x] Remote-only archives can be downloaded with the same authorization as local records.
-- [ ] Supported volume restores have explicit target validation and interruption controls.
-- [ ] Personal API tokens authenticate consistently with the token management UI.
+- [x] Supported volume restores have explicit target validation and interruption controls.
+- [x] Personal API tokens authenticate consistently with the token management UI.
 - [x] Empty health states and partial Compose imports use accurate wording.
 - [x] Resource creation cards support keyboard activation.
-- [ ] Autoscaling has explicit enablement, limits and observable decisions.
+- [x] Autoscaling has explicit enablement, limits and observable decisions.
 
 ## Phase 2: Integrated application deployment
 

@@ -122,7 +122,10 @@ func NewServer(db *sql.DB, v *utils.Vault, deployer *deploy.Deployer, traefikMan
 	deploymentService := deploymentservices.NewDeploymentService(deployRepo, appRepo, projectRepo, deployer, gitService, statsMonitor, volumeRepo, sshManager)
 	aiAnalysisService := projectservices.NewAIAnalysisService(deployRepo, appRepo, aiRepo)
 
-	autoscaler := deploy.NewAutoscalerWorker(appRepo, statsMonitor, deploymentService)
+	autoscalingRepo := repositories.NewAutoscalingRepo(db)
+	autoscalingService := projectservices.NewAutoscalingService(autoscalingRepo, appRepo, projectRepo)
+	autoscalingHandler := projects.NewAutoscalingHandler(autoscalingService)
+	autoscaler := deploy.NewAutoscalerWorker(appRepo, statsMonitor, deploymentService, autoscalingRepo)
 	autoscaler.Start()
 
 	backupService := backupservices.NewBackupService(backupRepo, s3DestinationRepo, backupManager)
@@ -240,6 +243,7 @@ func NewServer(db *sql.DB, v *utils.Vault, deployer *deploy.Deployer, traefikMan
 		dispatcherService:      dispatcherService,
 		projectService:         projectService,
 		appService:             appService,
+		autoscalingHandler:     autoscalingHandler,
 		appServiceHandler:      appHandler,
 		dbHandler:              databaseHandler,
 		scheduledTaskHandler:   scheduledTaskHandler,

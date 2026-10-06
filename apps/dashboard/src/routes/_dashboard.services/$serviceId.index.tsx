@@ -12,6 +12,7 @@ import { RedisKeyBrowser } from '#/features/databases/redis-key-browser';
 import { HealthcheckCard } from '#/features/services/healthcheck-card';
 import { MaintenanceModeCard } from '#/features/services/maintenance-mode-card';
 import { RuntimeModeCard } from '#/features/services/runtime-mode-card';
+import { ServiceAutoscaling } from '#/features/services/service-autoscaling';
 import { useGetApp } from '#/hooks/use-apps';
 
 export const Route = createFileRoute('/_dashboard/services/$serviceId/')({
@@ -70,6 +71,7 @@ function ServiceIndexRoute() {
     return (
       <div className="space-y-6">
         <h1 className="font-semibold text-2xl tracking-tight">Service configuration</h1>
+        <ServiceAutoscaling key={serviceId} serviceId={serviceId} />
         <RuntimeModeCard serviceId={app.id} />
         <HealthcheckCard serviceId={app.id} />
         <MaintenanceModeCard serviceId={app.id} />
