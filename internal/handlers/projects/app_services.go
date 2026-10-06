@@ -1,11 +1,9 @@
 package projects
 
 import (
-	"log/slog"
 	"net/http"
-	"net/url"
-	"strings"
 
+	"github.com/google/uuid"
 	"github.com/labstack/echo/v4"
 
 	"codedock.run/codedock/internal/utils"
@@ -39,23 +37,23 @@ func NewAppHandler(s *projectservices.AppService, ps *projectservices.ProjectSer
 func (h *AppHandler) verifyProjectOwnership(c echo.Context, projectID string) error {
 	user := middleware.GetUserClaimsFromContext(c.Request().Context())
 	if user == nil {
-		return utils.Error(c, http.StatusUnauthorized, "unauthorized")
+		return echo.NewHTTPError(http.StatusUnauthorized, "unauthorized")
 	}
 
 	if user.Role == "api" {
 		tokenProjectID, ok := c.Get("project_id").(string)
 		if ok && tokenProjectID != projectID {
-			return utils.Error(c, http.StatusForbidden, "token does not have access to this project")
+			return echo.NewHTTPError(http.StatusForbidden, "token does not have access to this project")
 		}
 	}
 
 	project, err := h.projectService.GetProject(c.Request().Context(), projectID)
 	if err != nil || project == nil {
-		return utils.Error(c, http.StatusNotFound, "project not found")
+		return echo.NewHTTPError(http.StatusNotFound, "project not found")
 	}
 
 	if !h.projectService.IsMemberOrOwner(c.Request().Context(), projectID, user.UserID, user.Role) {
-		return utils.Error(c, http.StatusForbidden, "access denied")
+		return echo.NewHTTPError(http.StatusForbidden, "access denied")
 	}
 	return nil
 }
@@ -75,6 +73,25 @@ func (h *AppHandler) Create(c echo.Context) error {
 	if err := h.verifyProjectOwnership(c, req.ProjectID); err != nil {
 		return err
 	}
+	userClaims := middleware.GetUserClaimsFromContext(c.Request().Context())
+	if userClaims == nil || !h.projectService.HasPermission(c.Request().Context(), req.ProjectID, userClaims.UserID, models.UserRole(userClaims.Role), models.MemberPermissionAdmin) {
+		return utils.Error(c, http.StatusForbidden, "project admin access required")
+	}
+	if req.InternalPort < 0 || req.InternalPort > 65535 {
+		return utils.Error(c, http.StatusBadRequest, "invalid internal port")
+	}
+	if req.ImageRef != "" && req.RepositoryURL != "" {
+		return utils.Error(c, http.StatusBadRequest, "choose exactly one repository or image")
+	}
+	if req.CPULimit < 0 || req.MemoryLimit < 0 {
+		return utils.Error(c, http.StatusBadRequest, "resource limits cannot be negative")
+	}
+	if req.RuntimeMode == "docker" {
+		req.RuntimeMode = models.RuntimeModeWeb
+	}
+	if req.RuntimeMode != "" && req.RuntimeMode != models.RuntimeModeWeb && req.RuntimeMode != models.RuntimeModeWorker {
+		return utils.Error(c, http.StatusBadRequest, "unsupported runtime")
+	}
 	env, err := h.envService.GetEnvironment(c.Request().Context(), envID)
 	if err != nil || env == nil {
 		return utils.Error(c, http.StatusNotFound, "environment not found")
@@ -83,31 +100,30 @@ func (h *AppHandler) Create(c echo.Context) error {
 		return utils.Error(c, http.StatusBadRequest, "environment does not belong to specified project")
 	}
 	req.EnvironmentID = envID
+	if req.ID != "" {
+		if _, err := uuid.Parse(req.ID); err != nil {
+			return utils.Error(c, http.StatusBadRequest, "application ID must be a UUID")
+		}
+	}
+	req.GitUserID = userClaims.UserID
 	if req.InternalPort == 0 {
 		req.InternalPort = 3000
 	}
 	if req.RuntimeMode == "" {
 		req.RuntimeMode = models.RuntimeModeWeb
 	}
-	created, err := h.appService.CreateAppService(c.Request().Context(), &req)
+	if err := h.prepareApplicationDomain(c.Request().Context(), &req); err != nil {
+		return utils.Error(c, http.StatusBadRequest, err.Error())
+	}
+	created, err := h.appService.CreateApplicationSetup(c.Request().Context(), &req)
 	if err != nil {
 		return utils.Error(c, http.StatusInternalServerError, err.Error())
 	}
 
-	generatedDomain := utils.GenerateAppDomain(req.Name, "", "")
-	parsedDomain, parseErr := url.Parse(generatedDomain)
-	if parseErr != nil || parsedDomain.Hostname() == "" {
-		slog.Warn("failed to parse generated app domain", "domain", generatedDomain)
-		generatedDomain = strings.TrimPrefix(strings.TrimPrefix(generatedDomain, "https://"), "http://")
-		generatedDomain = strings.Split(generatedDomain, "/")[0]
-	} else {
-		generatedDomain = parsedDomain.Hostname()
-	}
-	if _, err := h.envService.CreateGeneratedDomain(c.Request().Context(), &models.DomainConfig{
-		ServiceID:  created.ID,
-		DomainName: generatedDomain,
-	}); err != nil {
-		slog.Warn("failed to create default domain", "error", err)
+	if created.RuntimeMode == models.RuntimeModeWeb {
+		if err := h.ensureApplicationDomain(c.Request().Context(), created); err != nil {
+			return utils.Error(c, http.StatusInternalServerError, err.Error())
+		}
 	}
 
 	user := middleware.GetUserClaimsFromContext(c.Request().Context())
@@ -141,6 +157,11 @@ func (h *AppHandler) Get(c echo.Context) error {
 
 func (h *AppHandler) Update(c echo.Context) error {
 	id := c.Param("id")
+	release, err := h.guardAppOperation(c, id)
+	if err != nil {
+		return err
+	}
+	defer release()
 	existing, err := h.appService.GetAppService(c.Request().Context(), id)
 	if err != nil || existing == nil {
 		return utils.Error(c, http.StatusNotFound, "app service not found")
@@ -179,6 +200,10 @@ func (h *AppHandler) Update(c echo.Context) error {
 	existing.ProjectID = targetProjectID
 	existing.EnvironmentID = targetEnvID
 	existing.RepositoryURL = req.RepositoryURL
+	userClaims := middleware.GetUserClaimsFromContext(c.Request().Context())
+	if userClaims != nil {
+		existing.GitUserID = userClaims.UserID
+	}
 	existing.Branch = req.Branch
 	existing.RootDirectory = req.RootDirectory
 	existing.BuildCommand = req.BuildCommand
@@ -208,6 +233,11 @@ func (h *AppHandler) Update(c echo.Context) error {
 
 func (h *AppHandler) Delete(c echo.Context) error {
 	id := c.Param("id")
+	release, err := h.guardAppOperation(c, id)
+	if err != nil {
+		return err
+	}
+	defer release()
 	existing, err := h.appService.GetAppService(c.Request().Context(), id)
 	if err != nil || existing == nil {
 		return utils.Error(c, http.StatusNotFound, "app service not found")
@@ -216,8 +246,11 @@ func (h *AppHandler) Delete(c echo.Context) error {
 		return err
 	}
 
+	if h.deployer == nil {
+		return utils.Error(c, http.StatusServiceUnavailable, "runtime unavailable")
+	}
 	if err := h.deployer.StopAppService(c.Request().Context(), existing); err != nil {
-		slog.Warn("failed to stop app service", "error", err)
+		return utils.Error(c, http.StatusConflict, err.Error())
 	}
 
 	if err := h.appService.DeleteAppService(c.Request().Context(), id); err != nil {

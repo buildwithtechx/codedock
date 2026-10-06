@@ -39,23 +39,23 @@ func NewDeploymentHandler(ds *deploymentservices.DeploymentService, as *projects
 func (h *DeploymentHandler) verifyProjectOwnership(c echo.Context, projectID string) error {
 	user := middleware.GetUserClaimsFromContext(c.Request().Context())
 	if user == nil {
-		return utils.Error(c, http.StatusUnauthorized, "unauthorized")
+		return echo.NewHTTPError(http.StatusUnauthorized, "unauthorized")
 	}
 
 	if user.Role == "api" {
 		tokenProjectID, ok := c.Get("project_id").(string)
 		if ok && tokenProjectID != projectID {
-			return utils.Error(c, http.StatusForbidden, "token does not have access to this project")
+			return echo.NewHTTPError(http.StatusForbidden, "token does not have access to this project")
 		}
 	}
 
 	project, err := h.projectService.GetProject(c.Request().Context(), projectID)
 	if err != nil || project == nil {
-		return utils.Error(c, http.StatusNotFound, "project not found")
+		return echo.NewHTTPError(http.StatusNotFound, "project not found")
 	}
 
 	if !h.projectService.IsMemberOrOwner(c.Request().Context(), projectID, user.UserID, user.Role) {
-		return utils.Error(c, http.StatusForbidden, "access denied")
+		return echo.NewHTTPError(http.StatusForbidden, "access denied")
 	}
 	return nil
 }
@@ -63,23 +63,23 @@ func (h *DeploymentHandler) verifyProjectOwnership(c echo.Context, projectID str
 func (h *DeploymentHandler) verifyProjectAdmin(c echo.Context, projectID string) error {
 	user := middleware.GetUserClaimsFromContext(c.Request().Context())
 	if user == nil {
-		return utils.Error(c, http.StatusUnauthorized, "unauthorized")
+		return echo.NewHTTPError(http.StatusUnauthorized, "unauthorized")
 	}
 
 	if user.Role == "api" {
 		tokenProjectID, ok := c.Get("project_id").(string)
 		if ok && tokenProjectID != projectID {
-			return utils.Error(c, http.StatusForbidden, "token does not have access to this project")
+			return echo.NewHTTPError(http.StatusForbidden, "token does not have access to this project")
 		}
 	}
 
 	project, err := h.projectService.GetProject(c.Request().Context(), projectID)
 	if err != nil || project == nil {
-		return utils.Error(c, http.StatusNotFound, "project not found")
+		return echo.NewHTTPError(http.StatusNotFound, "project not found")
 	}
 
 	if !h.projectService.HasPermission(c.Request().Context(), projectID, user.UserID, models.UserRole(user.Role), models.MemberPermissionAdmin) {
-		return utils.Error(c, http.StatusForbidden, "admin access required")
+		return echo.NewHTTPError(http.StatusForbidden, "admin access required")
 	}
 	return nil
 }

@@ -4,6 +4,7 @@ import (
 	"context"
 	"database/sql"
 	"errors"
+	"fmt"
 	"time"
 
 	"codedock.run/codedock/internal/models"
@@ -21,17 +22,27 @@ func (r *CanvasRepo) GetEnvironmentCanvas(ctx context.Context, environmentID str
 	if err != nil {
 		return nil, err
 	}
-	apps, _ := r.listAppServicesByEnvironment(ctx, environmentID)
-	dbs, _ := r.listDatabasesByEnvironment(ctx, environmentID)
+	apps, err := r.listAppServicesByEnvironment(ctx, environmentID)
+	if err != nil {
+		return nil, fmt.Errorf("load canvas applications: %w", err)
+	}
+	dbs, err := r.listDatabasesByEnvironment(ctx, environmentID)
+	if err != nil {
+		return nil, fmt.Errorf("load canvas databases: %w", err)
+	}
 	var dbsPtrs []*models.Database
 	for i := range dbs {
 		dbsPtrs = append(dbsPtrs, &dbs[i])
 	}
-	return &models.EnvironmentCanvas{
+	canvas := &models.EnvironmentCanvas{
 		Environment: &env,
 		Apps:        apps,
 		Databases:   dbsPtrs,
-	}, nil
+	}
+	if err := r.projectTopology(ctx, canvas); err != nil {
+		return nil, fmt.Errorf("project topology: %w", err)
+	}
+	return canvas, nil
 }
 
 type projectRow struct {

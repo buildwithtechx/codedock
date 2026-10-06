@@ -102,6 +102,8 @@ type CanvasEdge struct {
 	ID     string `json:"id"`
 	Source string `json:"source"`
 	Target string `json:"target"`
+	Kind   string `json:"kind"`
+	Label  string `json:"label"`
 }
 
 type EnvironmentCanvas struct {
@@ -112,4 +114,5 @@ type EnvironmentCanvas struct {
 	Databases   []*Database        `json:"databases"`
 	Nodes       []CanvasNode       `json:"nodes"`
 	Edges       []CanvasEdge       `json:"edges"`
+	Revision    string             `json:"revision"`
 }

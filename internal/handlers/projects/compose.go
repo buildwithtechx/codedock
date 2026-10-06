@@ -7,7 +7,6 @@ import (
 
 	"github.com/labstack/echo/v4"
 
-	"codedock.run/codedock/internal/http/middleware"
 	"codedock.run/codedock/internal/models"
 	"codedock.run/codedock/internal/repositories"
 	databaseservices "codedock.run/codedock/internal/services/databases"
@@ -48,60 +47,11 @@ type ComposeAnalyzeRequest struct {
 }
 
 func (h *ComposeHandler) Analyze(c echo.Context) error {
-	var req ComposeAnalyzeRequest
-	if err := c.Bind(&req); err != nil {
-		return utils.Error(c, http.StatusBadRequest, "invalid request")
-	}
-
-	if req.ComposeContent == "" {
-		return utils.Error(c, http.StatusBadRequest, "compose content is required")
-	}
-
-	result, err := h.composeParser.Parse([]byte(req.ComposeContent), req.ProjectID)
-	if err != nil {
-		return utils.Error(c, http.StatusBadRequest, "failed to parse docker-compose: "+err.Error())
-	}
-
-	return utils.Success(c, "Compose analyzed", result)
+	return utils.Error(c, http.StatusGone, "Use the project-scoped stack review API; legacy analysis discards runtime fields.")
 }
 
 func (h *ComposeHandler) Deploy(c echo.Context) error {
-	user := middleware.GetUserClaimsFromContext(c.Request().Context())
-	if user == nil {
-		return utils.Error(c, http.StatusUnauthorized, "unauthorized")
-	}
-
-	projectID := c.FormValue("projectId")
-	if projectID == "" {
-		projectID = c.FormValue("project_id")
-	}
-	if projectID == "" {
-		return utils.Error(c, http.StatusBadRequest, "projectId parameter is required")
-	}
-	if user.Role != models.UserRoleAdmin && user.Role != models.UserRoleOwner {
-		if !h.projectService.HasPermission(c.Request().Context(), projectID, user.UserID, models.UserRole(user.Role), "") {
-			return utils.Error(c, http.StatusForbidden, "insufficient permissions for this project")
-		}
-	}
-
-	composeBytes, err := h.readUploadedFile(c)
-	if err != nil {
-		return utils.Error(c, http.StatusBadRequest, err.Error())
-	}
-
-	result, err := h.composeParser.Parse(composeBytes, projectID)
-	if err != nil {
-		return utils.Error(c, http.StatusBadRequest, "compose deploy failed: "+err.Error())
-	}
-
-	createdCount, err := h.provisionComposeResources(c.Request().Context(), result)
-	if err != nil {
-		return utils.Error(c, http.StatusInternalServerError, err.Error())
-	}
-
-	return utils.Success(c, "Compose file deployed", map[string]any{
-		"count": createdCount,
-	})
+	return utils.Error(c, http.StatusGone, "Legacy partial Compose import has been replaced. Open the project's Compose page to review and save a complete stack before deployment.")
 }
 
 func (h *ComposeHandler) readUploadedFile(c echo.Context) ([]byte, error) {

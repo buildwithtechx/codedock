@@ -127,6 +127,7 @@ const (
 )
 
 type AppService struct {
+	GitUserID        string           `json:"-" db:"git_user_id"`
 	ID               string           `json:"id" db:"id"`
 	ProjectID        string           `json:"projectId" db:"project_id"`
 	AppID            string           `json:"appId,omitempty" db:"app_id"`
@@ -218,15 +219,16 @@ type UpdateAppServiceRequest struct {
 }
 
 type Variable struct {
-	ID            string    `json:"id" db:"id"`
-	ServiceID     string    `json:"serviceId" db:"service_id"`
-	ProjectID     string    `json:"projectId" db:"project_id"`
-	EnvironmentID string    `json:"environmentId" db:"environment_id"`
-	Key           string    `json:"key" db:"key"`
-	Value         string    `json:"value" db:"value"`
-	IsSecret      bool      `json:"isSecret" db:"is_secret"`
-	CreatedAt     time.Time `json:"createdAt" db:"created_at"`
-	UpdatedAt     time.Time `json:"updatedAt" db:"updated_at"`
+	ExpectedTopologyRevision string    `json:"expectedTopologyRevision,omitempty" db:"-"`
+	ID                       string    `json:"id" db:"id"`
+	ServiceID                string    `json:"serviceId" db:"service_id"`
+	ProjectID                string    `json:"projectId" db:"project_id"`
+	EnvironmentID            string    `json:"environmentId" db:"environment_id"`
+	Key                      string    `json:"key" db:"key"`
+	Value                    string    `json:"value" db:"value"`
+	IsSecret                 bool      `json:"isSecret" db:"is_secret"`
+	CreatedAt                time.Time `json:"createdAt" db:"created_at"`
+	UpdatedAt                time.Time `json:"updatedAt" db:"updated_at"`
 }
 
 type CreateServiceVarRequest struct {

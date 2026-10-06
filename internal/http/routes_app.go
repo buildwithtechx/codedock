@@ -12,6 +12,7 @@ import (
 )
 
 func (s *Server) registerAppRoutes(apiGroup, authGroup *echo.Group) {
+	authGroup.POST("/projects/:id/repository-inspection", s.gitHandler.InspectRepository, s.RequireProjectRole(models.MemberPermissionAdmin))
 	serviceAuthAdmin := s.RequireServiceRole(models.MemberPermissionAdmin)
 	serviceAuthOwner := s.RequireServiceRole(models.MemberPermissionOwner)
 	serviceAuth := s.RequireServiceRole("")
@@ -59,6 +60,7 @@ func (s *Server) registerDeploymentRoutes(authGroup *echo.Group) {
 	authGroup.GET("/services/:serviceId/previews", s.deploymentHandler.ListPRPreviews, serviceAuth)
 	authGroup.POST("/services/:serviceId/deploy", s.deploymentHandler.Trigger, serviceAuthAdmin)
 	authGroup.POST("/deployments/:id/rollback", s.deploymentHandler.Rollback)
+	authGroup.POST("/deployments/:id/cancel", s.deploymentHandler.Cancel)
 	authGroup.GET("/deployments/:id/logs", s.deploymentHandler.GetLogs, s.authGuard.RequireScope("logs:read"))
 	authGroup.GET("/deployments/:id/explain", s.deploymentHandler.ExplainFailure)
 	authGroup.GET("/services/:serviceId/metrics", s.deploymentHandler.GetMetrics, serviceAuth)
@@ -115,6 +117,14 @@ func (s *Server) registerSettingsRoutes(apiGroup, authGroup *echo.Group) {
 }
 
 func (s *Server) registerMiscRoutes(apiGroup, authGroup *echo.Group) {
+	authGroup.GET("/projects/:id/stacks", s.composeStackHandler.List)
+	authGroup.GET("/projects/:id/stacks/:stackId/config", s.composeStackHandler.Config, s.authGuard.RequireScope("env:read"))
+	authGroup.POST("/projects/:id/stacks/review", s.composeStackHandler.Review)
+	authGroup.POST("/projects/:id/stacks", s.composeStackHandler.Save)
+	authGroup.POST("/projects/:id/stacks/:stackId/deploy", s.composeStackHandler.Deploy)
+	authGroup.POST("/projects/:id/stacks/:stackId/cancel", s.composeStackHandler.Cancel)
+	authGroup.PUT("/environments/:id/canvas", s.canvasHandler.ApplyTopology)
+	authGroup.GET("/environments/:id/canvas/observe", s.canvasHandler.ObserveResource, s.authGuard.RequireScope("logs:read"))
 	authGroup.POST("/compose/deploy", s.composeHandler.Deploy)
 	authGroup.POST("/compose/analyze", s.composeHandler.Analyze)
 	authGroup.POST("/deploy/archive", s.archiveHandler.DeployArchive)

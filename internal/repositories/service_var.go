@@ -31,7 +31,7 @@ func NewServiceVarRepo(db *sql.DB) *ServiceVarRepo {
 	return &ServiceVarRepo{db: sqlx.NewDb(db, "sqlite")}
 }
 
-func (r *ServiceVarRepo) Create(_ context.Context, v *models.Variable) error {
+func (r *ServiceVarRepo) Create(ctx context.Context, v *models.Variable) error {
 	r.mu.Lock()
 	defer r.mu.Unlock()
 	if v.ID == "" {
@@ -43,6 +43,9 @@ func (r *ServiceVarRepo) Create(_ context.Context, v *models.Variable) error {
 	}
 	v.UpdatedAt = now
 
+	if v.ExpectedTopologyRevision != "" {
+		return r.createReviewedVariable(ctx, v)
+	}
 	_, err := r.db.Exec(`INSERT INTO service_vars (id, service_id, environment_id, key, value, is_secret, created_at, updated_at)
 		VALUES (?, ?, ?, ?, ?, ?, ?, ?)
 		ON CONFLICT(service_id, key) DO UPDATE SET value = excluded.value, is_secret = excluded.is_secret, updated_at = excluded.updated_at`,

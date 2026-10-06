@@ -46,6 +46,9 @@ func (h *ServiceVarHandler) Create(c echo.Context) error {
 	req.EnvironmentID = svc.EnvironmentID
 	created, err := h.appService.CreateVariable(c.Request().Context(), &req)
 	if err != nil {
+		if req.ExpectedTopologyRevision != "" {
+			return utils.Error(c, http.StatusConflict, err.Error())
+		}
 		return utils.Error(c, http.StatusInternalServerError, err.Error())
 	}
 

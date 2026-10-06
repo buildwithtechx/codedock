@@ -18,6 +18,7 @@ type CanvasRepository interface {
 }
 
 type CanvasRepo struct {
+	vault        Vault
 	db           *sqlx.DB
 	mu           sync.Mutex
 	environments EnvironmentRepository

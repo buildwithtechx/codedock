@@ -10,6 +10,8 @@ import (
 
 type ServiceLinker struct {
 	databases repositories.DatabaseRepository
+	apps      repositories.AppServiceRepository
+	variables repositories.ServiceVarRepository
 }
 
 func NewServiceLinker(dbRepo repositories.DatabaseRepository) *ServiceLinker {

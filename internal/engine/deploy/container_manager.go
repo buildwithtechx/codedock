@@ -5,6 +5,7 @@ import (
 	"fmt"
 	"io"
 	"strings"
+	"time"
 
 	"github.com/containerd/errdefs"
 	"github.com/docker/docker/api/types"
@@ -28,6 +29,7 @@ func NewContainerManager(dockerClient *client.Client, st ContainerManagerStore) 
 }
 
 type ContainerRunOptions struct {
+	NetworkName     string `json:"networkName,omitempty"`
 	Name            string
 	ImageTag        string
 	ServiceID       string
@@ -51,6 +53,10 @@ func (c *ContainerManager) CreateAndStart(ctx context.Context, opts ContainerRun
 		return "", err
 	}
 	defer release()
+	return c.createAndStart(ctx, opts)
+}
+
+func (c *ContainerManager) createAndStart(ctx context.Context, opts ContainerRunOptions) (string, error) {
 	containerPort, err := nat.NewPort("tcp", fmt.Sprintf("%d", opts.InternalPort))
 	if err != nil {
 		return "", fmt.Errorf("invalid port definition: %w", err)
@@ -69,10 +75,15 @@ func (c *ContainerManager) CreateAndStart(ctx context.Context, opts ContainerRun
 	}
 
 	config := &container.Config{
-		Image: opts.ImageTag,
-		Env:   opts.Envs,
-		Cmd:   opts.Cmd,
+		Image:  opts.ImageTag,
+		Env:    opts.Envs,
+		Cmd:    opts.Cmd,
+		Labels: map[string]string{},
 	}
+	for key, value := range opts.ExtraLabels {
+		config.Labels[key] = value
+	}
+	config.Labels["codedock.service_id"] = opts.ServiceID
 
 	if opts.HealthCheckPath != "" {
 	}
@@ -84,6 +95,7 @@ func (c *ContainerManager) CreateAndStart(ctx context.Context, opts ContainerRun
 		}
 	}
 
+	config.Labels["codedock.service_id"] = opts.ServiceID
 	var binds []string
 	if len(opts.Volumes) > 0 {
 		for _, v := range opts.Volumes {
@@ -94,23 +106,32 @@ func (c *ContainerManager) CreateAndStart(ctx context.Context, opts ContainerRun
 		}
 	}
 
+	networkName := opts.NetworkName
+	if networkName == "" {
+		networkName = utils.GetRuntimeNetwork()
+	}
 	hostConfig := &container.HostConfig{
 		RestartPolicy: container.RestartPolicy{Name: "always"},
 		Resources: container.Resources{
 			Memory:   utils.MegaBytesToBytes(opts.MemoryLimitMB),
 			NanoCPUs: utils.CPURequestToNanoCPUs(opts.CPURequest),
 		},
-		NetworkMode: container.NetworkMode(utils.GetRuntimeNetwork()),
+		NetworkMode: container.NetworkMode(networkName),
 		DNS:         c.getCustomDNSResolvers(),
 		Binds:       binds,
 	}
 
-	_ = c.StopAndRemove(ctx, opts.Name)
 	resp, err := c.dockerClient.ContainerCreate(ctx, config, hostConfig, nil, nil, opts.Name)
 	if err != nil {
 		return "", fmt.Errorf("docker container create failed: %w", err)
 	}
 	if err := c.dockerClient.ContainerStart(ctx, resp.ID, container.StartOptions{}); err != nil {
+		cleanupCtx, cancel := context.WithTimeout(context.Background(), 10*time.Second)
+		defer cancel()
+		cleanupErr := c.dockerClient.ContainerRemove(cleanupCtx, resp.ID, container.RemoveOptions{Force: true})
+		if cleanupErr != nil {
+			return "", fmt.Errorf("start container: %w; cleanup: %v", err, cleanupErr)
+		}
 		return "", fmt.Errorf("docker container start failed: %w", err)
 	}
 

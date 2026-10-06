@@ -32,16 +32,27 @@ func ApplyCustomDNS(hostCfg *container.HostConfig, customDNS string) {
 	}
 }
 
-func (d *Deployer) getEnvironmentVariables(app *models.AppService, logWriter io.Writer) (map[string]string, error) {
+func (d *Deployer) getEnvironmentVariables(ctx context.Context, app *models.AppService, logWriter io.Writer) (map[string]string, error) {
 	envVarsMap, err := d.store.GetEnvVars(app.ProjectID)
-	if err != nil && logWriter != nil {
-		fmt.Fprintf(logWriter, "⚠️ [Deployer] Warning: could not load shared project environment variables: %v\n", err)
+	if err != nil {
+		return nil, fmt.Errorf("load shared project variables: %w", err)
 	}
+
 	if envVarsMap == nil {
 		envVarsMap = make(map[string]string)
 	}
 
-	if d.EnvProvider != nil {
+	if d.ScopedEnvProvider != nil {
+		providerVars, err := d.ScopedEnvProvider(ctx, app.ProjectID, app.EnvironmentID)
+		if err != nil {
+			return nil, err
+		}
+		for key, value := range providerVars {
+			if _, exists := envVarsMap[key]; !exists {
+				envVarsMap[key] = value
+			}
+		}
+	} else if d.EnvProvider != nil {
 		providerVars, err := d.EnvProvider(app.ProjectID)
 		if err == nil {
 			for k, v := range providerVars {
@@ -53,19 +64,26 @@ func (d *Deployer) getEnvironmentVariables(app *models.AppService, logWriter io.
 	}
 
 	appVars, err := d.store.ListServiceVariables(app.ID)
-	if err == nil {
+	if err != nil {
+		return nil, fmt.Errorf("load application variables: %w", err)
+	}
+	{
 		for _, v := range appVars {
 			envVarsMap[v.Key] = v.Value
 		}
 	}
 
 	var registry map[string]map[string]string
-	if d.EnvInterpolator != nil {
+	if d.ScopedEnvInterpolator != nil {
+		var err error
+		registry, err = d.ScopedEnvInterpolator(ctx, app.ProjectID, app.EnvironmentID)
+		if err != nil {
+			return nil, err
+		}
+	} else if d.EnvInterpolator != nil {
 		registry, _ = d.EnvInterpolator(app.ProjectID)
 	}
-	envVarsMap = build.InterpolateEnvVars(envVarsMap, registry)
-
-	return envVarsMap, nil
+	return build.InterpolateEnvVarsStrict(envVarsMap, registry)
 }
 
 func defaultAppPort() int {
@@ -104,7 +122,11 @@ func (d *Deployer) waitForHealthyContainer(ctx context.Context, containerName st
 		maxRetries = timeout / 2
 	}
 	for i := 0; i < maxRetries; i++ {
-		time.Sleep(2 * time.Second)
+		select {
+		case <-ctx.Done():
+			return false
+		case <-time.After(2 * time.Second):
+		}
 		inspect, err := d.containerManager.Inspect(ctx, containerName)
 		if err != nil || !inspect.State.Running {
 			continue
@@ -128,7 +150,11 @@ func (d *Deployer) waitForHealthyContainer(ctx context.Context, containerName st
 		}
 		targetURL := fmt.Sprintf("http://%s:%d%s", containerIP, internalPort, checkPath)
 		client := http.Client{Timeout: 2 * time.Second}
-		resp, err := client.Get(targetURL)
+		request, err := http.NewRequestWithContext(ctx, http.MethodGet, targetURL, nil)
+		if err != nil {
+			return false
+		}
+		resp, err := client.Do(request)
 		if err == nil {
 			resp.Body.Close()
 			if resp.StatusCode >= 200 && resp.StatusCode < 400 {

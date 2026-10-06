@@ -43,6 +43,7 @@ func NewPersonalTokenResources(db *sql.DB) *PersonalTokenResources {
 
 func (r *PersonalTokenResources) ProjectForResource(ctx context.Context, kind, id string) (string, error) {
 	queries := map[string]string{
+		"stacks":          `SELECT project_id FROM compose_stacks WHERE id=?`,
 		"projects":        `SELECT id FROM projects WHERE id = ?`,
 		"apps":            `SELECT project_id FROM app_services WHERE id = ?`,
 		"services":        `SELECT project_id FROM app_services WHERE id = ?`,

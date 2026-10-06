@@ -4,6 +4,7 @@ import (
 	"context"
 	"database/sql"
 	"fmt"
+	"path/filepath"
 	"time"
 
 	"github.com/docker/docker/client"
@@ -40,6 +41,17 @@ func NewServer(db *sql.DB, v *utils.Vault, deployer *deploy.Deployer, traefikMan
 
 	e := echo.New()
 	configureEchoMiddleware(e)
+	if deployer != nil {
+		if err := deployer.SetRolloutDirectory(filepath.Join(dataDir, "rollouts")); err != nil {
+			return nil, err
+		}
+		recoveryCtx, cancel := context.WithTimeout(context.Background(), 60*time.Second)
+		err := deployer.RecoverRollouts(recoveryCtx)
+		cancel()
+		if err != nil {
+			return nil, fmt.Errorf("recover interrupted rollout: %w", err)
+		}
+	}
 
 	environmentRepo := repositories.NewEnvironmentRepo(db)
 	projectRepo := repositories.NewProjectRepo(db, environmentRepo)
@@ -58,7 +70,11 @@ func NewServer(db *sql.DB, v *utils.Vault, deployer *deploy.Deployer, traefikMan
 	projectSettingsRepo := repositories.NewProjectSettingsRepo(db)
 	userRepo := repositories.NewUserRepo(db)
 	canvasRepo := repositories.NewCanvasRepo(db, environmentRepo)
+	canvasRepo.SetVault(v)
 	deployRepo := repositories.NewDeploymentRepo(db)
+	if err := deployRepo.RecoverInterrupted(context.Background()); err != nil {
+		return nil, fmt.Errorf("recover deployments: %w", err)
+	}
 	oauthRepo := repositories.NewOAuthRepo(db)
 	gitRepo := repositories.NewGitRepo(db, v)
 	prPreviewRepository := repositories.NewPRPreviewRepository(db)
@@ -106,6 +122,7 @@ func NewServer(db *sql.DB, v *utils.Vault, deployer *deploy.Deployer, traefikMan
 	notifSettingsService := systemservices.NewNotificationSettingsService(notifRepo)
 	aiSettingsService := projectservices.NewAISettingsService(aiRepo)
 	serviceLinker := projectservices.NewServiceLinker(dbRepo)
+	serviceLinker.SetApplications(appRepo, serviceVarRepo)
 	mailerService, err := notifications.NewMailerService(notifSettingsService)
 	if err != nil {
 		return nil, fmt.Errorf("mailer service: %w", err)
@@ -122,6 +139,7 @@ func NewServer(db *sql.DB, v *utils.Vault, deployer *deploy.Deployer, traefikMan
 
 	scheduledTaskService := systemservices.NewScheduledTaskService(scheduledTaskRepo, cronManager)
 	canvasService := projectservices.NewCanvasService(canvasRepo)
+	canvasService.SetRuntime(observability.NewCanvasRuntime(dockerClient))
 	orgService := authservices.NewOrganizationService(orgRepo, userRepo)
 	gitService := deploymentservices.NewGitService(gitRepo)
 	statsMonitor := observability.NewStatsMonitor(dockerClient)
@@ -186,6 +204,11 @@ func NewServer(db *sql.DB, v *utils.Vault, deployer *deploy.Deployer, traefikMan
 	notificationHandler := system.NewNotificationHandler(notificationService)
 	gitAppsHandler := deployments.NewGitAppsHandler(gitAppsService)
 	tmplMgr, _ := compose.NewTemplateManager()
+	stackService := projectservices.NewComposeStackService(repositories.NewComposeStackRepo(db, v), compose.NewStackRuntime(dockerClient))
+	if err := stackService.Recover(context.Background()); err != nil {
+		return nil, fmt.Errorf("recover compose stacks: %w", err)
+	}
+	composeStackHandler := projects.NewComposeStackHandler(stackService, projectService, environmentService)
 	composeParserService := projectservices.NewComposeParserService()
 	composeHandler := projects.NewComposeHandler(projectService, appService, databaseService, environmentRepo, appRepo, composeParserService)
 	oneClickService := projectservices.NewOneClickService(tmplMgr, databaseDeployer, environmentRepo, dbRepo)
@@ -279,6 +302,7 @@ func NewServer(db *sql.DB, v *utils.Vault, deployer *deploy.Deployer, traefikMan
 		serverlessHandler:      serverlessHandler,
 		systemHandler:          systemHandler,
 		composeHandler:         composeHandler,
+		composeStackHandler:    composeStackHandler,
 		oneClickHandler:        oneClickHandler,
 		archiveHandler:         archiveHandler,
 		migrationHandler:       migrationHandler,
@@ -298,21 +322,7 @@ func NewServer(db *sql.DB, v *utils.Vault, deployer *deploy.Deployer, traefikMan
 		routeRuleHandler:       routeRuleHandler,
 	}
 
-	if srv.deployer != nil {
-		srv.deployer.EnvProvider = func(projectID string) (map[string]string, error) {
-			return srv.serviceLinker.GetLinkedEnvironmentVariables(context.Background(), projectID)
-		}
-		srv.deployer.EnvInterpolator = func(projectID string) (map[string]map[string]string, error) {
-			return srv.serviceLinker.GetNamespacedVariables(context.Background(), projectID)
-		}
-		srv.deployer.RouteRuleFetcher = func(ctx context.Context, serviceID, serviceName string) (map[string]string, error) {
-			rules, err := routeRuleRepo.ListByService(ctx, serviceID)
-			if err != nil {
-				return nil, err
-			}
-			return networking.BuildMiddlewareLabels(serviceName, rules), nil
-		}
-	}
+	configureDeploymentBindings(srv, routeRuleRepo)
 
 	srv.registerRoutes()
 	return srv, nil

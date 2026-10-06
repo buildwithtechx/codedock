@@ -152,11 +152,18 @@ func (s *GitService) SyncCodebase(ctx context.Context, app *models.AppService, t
 		return errors.New("invalid branch name")
 	}
 
-	cleanURL, token := s.getAuthTokenIfAvailable(ctx, repoURL)
-	var gitConfigArgs []string
+	cleanURL, token := s.getAuthTokenIfAvailable(ctx, repoURL, app.GitUserID)
+	gitConfigArgs := []string{"-c", "http.followRedirects=false", "-c", "protocol.file.allow=never"}
 	if token != "" {
-		authHeader := fmt.Sprintf("Authorization: Basic %s", base64.StdEncoding.EncodeToString([]byte("x-access-token:"+token)))
-		gitConfigArgs = []string{"-c", fmt.Sprintf("http.extraheader=%s", authHeader)}
+		username := "x-access-token"
+		if strings.Contains(cleanURL, "https://gitlab.com/") {
+			username = "oauth2"
+		}
+		if strings.Contains(cleanURL, "https://bitbucket.org/") {
+			username = "x-token-auth"
+		}
+		authHeader := fmt.Sprintf("Authorization: Basic %s", base64.StdEncoding.EncodeToString([]byte(username+":"+token)))
+		gitConfigArgs = append(gitConfigArgs, "-c", fmt.Sprintf("http.extraheader=%s", authHeader))
 	}
 
 	if logWriter != nil {
@@ -214,7 +221,7 @@ func (s *GitService) SyncCodebase(ctx context.Context, app *models.AppService, t
 	return nil
 }
 
-func (s *GitService) getAuthTokenIfAvailable(ctx context.Context, repoURL string) (string, string) {
+func (s *GitService) getAuthTokenIfAvailable(ctx context.Context, repoURL, userID string) (string, string) {
 	u, err := url.Parse(repoURL)
 	if err != nil {
 		return repoURL, ""
@@ -224,13 +231,11 @@ func (s *GitService) getAuthTokenIfAvailable(ctx context.Context, repoURL string
 	if u.Scheme != "https" {
 		return cleanURL, ""
 	}
-	var provider string
-	if strings.Contains(u.Host, "github.com") {
-		provider = "github"
-	} else {
+	provider := map[string]string{"github.com": "github", "gitlab.com": "gitlab", "bitbucket.org": "bitbucket"}[strings.ToLower(u.Host)]
+	if provider == "" || userID == "" {
 		return cleanURL, ""
 	}
-	gp, err := s.repo.GetAnyProviderByType(ctx, provider)
+	gp, err := s.repo.GetProvider(ctx, userID, provider)
 	if err != nil || gp == nil || gp.AccessToken == "" {
 		return cleanURL, ""
 	}

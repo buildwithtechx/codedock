@@ -159,7 +159,7 @@ func (r *DeploymentRepo) UpdateStatus(_ context.Context, id string, status model
 	r.mu.Lock()
 	defer r.mu.Unlock()
 	now := time.Now().UTC()
-	if status == models.DeploymentStatusActive || status == models.DeploymentStatusFailed || status == models.DeploymentStatusRemoved || status == models.DeploymentStatusSlept {
+	if status == models.DeploymentStatusReady || status == models.DeploymentStatus("CANCELLED") || status == models.DeploymentStatusActive || status == models.DeploymentStatusFailed || status == models.DeploymentStatusRemoved || status == models.DeploymentStatusSlept {
 		_, err := r.db.Exec(`UPDATE deployments SET status = ?, build_logs = ?, container_id = ?, updated_at = ?, finished_at = ? WHERE id = ?`,
 			status, buildLogs, containerID, now, now, id)
 		return err

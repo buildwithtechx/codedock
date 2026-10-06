@@ -71,7 +71,7 @@ func (r *AutoscalingRepo) Observe(ctx context.Context, p *models.AutoscalingPoli
 }
 
 func (r *AutoscalingRepo) SetReplicas(ctx context.Context, p *models.AutoscalingPolicy, from, to int) (bool, error) {
-	result, err := r.db.ExecContext(ctx, `UPDATE app_services SET replicas=?,updated_at=? WHERE id=? AND CASE WHEN replicas<1 THEN 1 ELSE replicas END=? AND status='running' AND EXISTS(SELECT 1 FROM projects WHERE projects.id=app_services.project_id AND COALESCE(server_id,'')='') AND EXISTS(SELECT 1 FROM autoscaling_policies WHERE service_id=app_services.id AND enabled=1 AND updated_at=?) AND NOT EXISTS(SELECT 1 FROM deployments WHERE service_id=app_services.id AND status IN ('pending','CLONING','PULLING','BUILDING'))`, to, time.Now().UTC(), p.ServiceID, from, p.UpdatedAt)
+	result, err := r.db.ExecContext(ctx, `UPDATE app_services SET replicas=?,updated_at=? WHERE id=? AND CASE WHEN replicas<1 THEN 1 ELSE replicas END=? AND status='running' AND EXISTS(SELECT 1 FROM projects WHERE projects.id=app_services.project_id AND COALESCE(server_id,'')='') AND EXISTS(SELECT 1 FROM autoscaling_policies WHERE service_id=app_services.id AND enabled=1 AND updated_at=?) AND NOT EXISTS(SELECT 1 FROM deployments WHERE service_id=app_services.id AND status IN ('pending','PREPARING','CLONING','PULLING','BUILDING','STARTING','READINESS','ROUTING'))`, to, time.Now().UTC(), p.ServiceID, from, p.UpdatedAt)
 	if err != nil {
 		return false, fmt.Errorf("reserve autoscaling replicas: %w", err)
 	}

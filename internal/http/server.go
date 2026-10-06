@@ -72,6 +72,7 @@ type Server struct {
 	serverlessHandler      *projects.ServerlessHandler
 	systemHandler          *system.SystemHandler
 	composeHandler         *projects.ComposeHandler
+	composeStackHandler    *projects.ComposeStackHandler
 	oneClickHandler        *projects.OneClickHandler
 	archiveHandler         *deployments.ArchiveHandler
 	migrationHandler       *system.MigrationHandler

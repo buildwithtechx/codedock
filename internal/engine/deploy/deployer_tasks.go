@@ -47,7 +47,10 @@ func (d *Deployer) ExecuteRollingUpdate(ctx context.Context, app *models.AppServ
 			fmt.Fprintf(logWriter, "🔄 [Deployer] Rolling update: replacing replica %d/%d (%s)...\n", i+1, replicas, containerName)
 		}
 
-		envVarsMap, _ := d.getEnvironmentVariables(app, logWriter)
+		envVarsMap, err := d.getEnvironmentVariables(ctx, app, logWriter)
+		if err != nil {
+			return err
+		}
 		var envSlice []string
 		for k, v := range envVarsMap {
 			envSlice = append(envSlice, fmt.Sprintf("%s=%s", k, v))
@@ -104,7 +107,10 @@ func (d *Deployer) ExecuteOneOffTask(ctx context.Context, app *models.AppService
 		fmt.Fprintf(logWriter, "🏃 [Deployer] Running one-off task in container %s: %s\n", containerName, command)
 	}
 
-	envVarsMap, _ := d.getEnvironmentVariables(app, logWriter)
+	envVarsMap, err := d.getEnvironmentVariables(ctx, app, logWriter)
+	if err != nil {
+		return err
+	}
 	var envSlice []string
 	for k, v := range envVarsMap {
 		envSlice = append(envSlice, fmt.Sprintf("%s=%s", k, v))

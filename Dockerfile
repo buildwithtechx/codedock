@@ -32,7 +32,7 @@ RUN CGO_ENABLED=0 GOOS=linux go build -a -installsuffix cgo -ldflags="-w -s -X m
 FROM alpine:3.21 AS production
 WORKDIR /codedock
 
-RUN apk add --no-cache ca-certificates tzdata docker-cli git openssh-client curl
+RUN apk add --no-cache ca-certificates tzdata docker-cli docker-cli-compose git openssh-client curl
 
 COPY --from=daemon-builder /codedockd /usr/local/bin/codedockd
 RUN mkdir -p /codedock/data

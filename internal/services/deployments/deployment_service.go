@@ -3,11 +3,11 @@ package deployments
 import (
 	"context"
 	"errors"
-	"fmt"
 	"io"
 	"os"
 	"path/filepath"
 	"strings"
+	"sync"
 	"time"
 
 	"github.com/google/uuid"
@@ -28,6 +28,8 @@ type DeploymentService struct {
 	statsMonitor *observability.StatsMonitor
 	volumeRepo   repositories.ServiceVolumeRepository
 	sshManager   *ssh.SSHManager
+	operationMu  sync.Mutex
+	operations   map[string]context.CancelFunc
 }
 
 func NewDeploymentService(
@@ -49,6 +51,7 @@ func NewDeploymentService(
 		statsMonitor: sm,
 		volumeRepo:   vr,
 		sshManager:   smgr,
+		operations:   make(map[string]context.CancelFunc),
 	}
 }
 
@@ -114,70 +117,6 @@ func (s *DeploymentService) UpdateStatus(ctx context.Context, opts DeployStatusO
 		return errors.New("deployment id required")
 	}
 	return s.repo.UpdateStatus(ctx, opts.ID, opts.Status, opts.BuildLogs, opts.ContainerID)
-}
-
-func (s *DeploymentService) ExecuteDeploymentAsync(d *models.Deployment) {
-	go func() {
-		bgCtx := context.Background()
-		if s.deployer == nil || s.appRepo == nil || s.gitService == nil {
-			_ = s.UpdateStatus(bgCtx, DeployStatusOpts{ID: d.ID, Status: models.DeploymentStatusFailed, BuildLogs: "Deployment dependencies missing\n", ContainerID: ""})
-			return
-		}
-
-		app, err := s.appRepo.GetByID(bgCtx, d.ServiceID)
-		if err != nil {
-			_ = s.UpdateStatus(bgCtx, DeployStatusOpts{ID: d.ID, Status: models.DeploymentStatusFailed, BuildLogs: fmt.Sprintf("Failed to get app service: %v\n", err), ContainerID: ""})
-			return
-		}
-
-		volumes, err := s.volumeRepo.ListByService(bgCtx, app.ID)
-		if err == nil {
-			app.Volumes = volumes
-		}
-
-		if app.ImageRef != "" {
-			d.Status = models.DeploymentStatusPulling
-			_ = s.repo.Update(bgCtx, d)
-
-			containerID, err := s.deployer.DeployAppService(bgCtx, app, "", nil)
-			if err != nil {
-				_ = s.UpdateStatus(bgCtx, DeployStatusOpts{ID: d.ID, Status: models.DeploymentStatusFailed, BuildLogs: fmt.Sprintf("Image deploy failed: %v\n", err), ContainerID: ""})
-				return
-			}
-
-			_ = s.UpdateStatus(bgCtx, DeployStatusOpts{ID: d.ID, Status: models.DeploymentStatusReady, BuildLogs: "Deployment succeeded.\n", ContainerID: containerID})
-			app.ContainerID = containerID
-			_ = s.appRepo.Update(bgCtx, app)
-			return
-		}
-
-		sourceDir := fmt.Sprintf("data/builds/%s/%s", app.ID, d.ID)
-
-		d.Status = models.DeploymentStatusCloning
-		_ = s.repo.Update(bgCtx, d)
-
-		if err := s.gitService.CloneOrPullAppRepository(bgCtx, app, sourceDir, nil); err != nil {
-			_ = s.UpdateStatus(bgCtx, DeployStatusOpts{ID: d.ID, Status: models.DeploymentStatusFailed, BuildLogs: fmt.Sprintf("Git clone failed: %v\n", err), ContainerID: ""})
-			return
-		}
-
-		app.Icon = detectAppIcon(sourceDir)
-		_ = s.appRepo.Update(bgCtx, app)
-
-		d.Status = models.DeploymentStatusBuilding
-		_ = s.repo.Update(bgCtx, d)
-
-		containerID, err := s.deployer.DeployAppService(bgCtx, app, sourceDir, nil)
-		if err != nil {
-			_ = s.UpdateStatus(bgCtx, DeployStatusOpts{ID: d.ID, Status: models.DeploymentStatusFailed, BuildLogs: fmt.Sprintf("Deployment failed: %v\n", err), ContainerID: ""})
-			return
-		}
-
-		_ = s.UpdateStatus(bgCtx, DeployStatusOpts{ID: d.ID, Status: models.DeploymentStatusReady, BuildLogs: "Deployment succeeded.\n", ContainerID: containerID})
-
-		app.ContainerID = containerID
-		_ = s.appRepo.Update(bgCtx, app)
-	}()
 }
 
 func (s *DeploymentService) DeployAppService(ctx context.Context, appID, sourceDir string, logWriter io.Writer) (string, error) {
