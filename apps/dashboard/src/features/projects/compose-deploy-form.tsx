@@ -41,7 +41,9 @@ services:
       { projectId, composeContent: composeText },
       {
         onSuccess: () => {
-          toast.success('Compose stack deployed successfully!');
+          toast.success(
+            'Compose resources imported. Review configuration before deploying applications.'
+          );
           setAnalysisResult(null);
         },
         onError: (err: any) => {
@@ -56,7 +58,10 @@ services:
       <Card className="flex h-[70vh] flex-col">
         <CardHeader>
           <CardTitle>Docker Compose</CardTitle>
-          <CardDescription>Paste your docker-compose.yml here</CardDescription>
+          <CardDescription>
+            Convert selected Compose fields into project resources. Configure variables, ports and
+            storage separately.
+          </CardDescription>
         </CardHeader>
         <CardContent className="flex min-h-0 flex-1 flex-col p-0 pb-4">
           <div className="w-full flex-1 border-y">
@@ -65,7 +70,10 @@ services:
               defaultLanguage="yaml"
               theme="vs-dark"
               value={composeText}
-              onChange={(value) => setComposeText(value || '')}
+              onChange={(value) => {
+                setComposeText(value || '');
+                setAnalysisResult(null);
+              }}
               options={{
                 minimap: { enabled: false },
                 fontSize: 14,
@@ -88,7 +96,7 @@ services:
               disabled={deployMutation.isPending || !composeText.trim() || !analysisResult}
             >
               <Play className="mr-2 h-4 w-4" />
-              {deployMutation.isPending ? 'Deploying...' : 'Deploy'}
+              {deployMutation.isPending ? 'Importing...' : 'Import resources'}
             </Button>
           </div>
         </CardContent>

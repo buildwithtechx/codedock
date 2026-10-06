@@ -87,8 +87,9 @@ function NewResourcePage() {
 
         <TabsContent value="resources" className="space-y-4">
           <div className="grid grid-cols-1 gap-6 md:grid-cols-2 lg:grid-cols-3">
-            <Card
-              className="cursor-pointer transition-colors hover:border-primary/50"
+            <button
+              type="button"
+              className="rounded-xl border border-border bg-card text-left transition-colors hover:border-primary/50 focus-visible:outline-2 focus-visible:outline-primary"
               onClick={() => setGitModalOpen(true)}
             >
               <CardHeader>
@@ -100,10 +101,11 @@ function NewResourcePage() {
                   Deploy source code from a public or private Git repository.
                 </CardDescription>
               </CardHeader>
-            </Card>
+            </button>
 
-            <Card
-              className="cursor-pointer transition-colors hover:border-primary/50"
+            <button
+              type="button"
+              className="rounded-xl border border-border bg-card text-left transition-colors hover:border-primary/50 focus-visible:outline-2 focus-visible:outline-primary"
               onClick={() => setDbModalOpen(true)}
             >
               <CardHeader>
@@ -115,10 +117,11 @@ function NewResourcePage() {
                   Provision a PostgreSQL, MySQL, Redis, or other database.
                 </CardDescription>
               </CardHeader>
-            </Card>
+            </button>
 
-            <Card
-              className="cursor-pointer transition-colors hover:border-primary/50"
+            <button
+              type="button"
+              className="rounded-xl border border-border bg-card text-left transition-colors hover:border-primary/50 focus-visible:outline-2 focus-visible:outline-primary"
               onClick={() => setDockerModalOpen(true)}
             >
               <CardHeader>
@@ -130,10 +133,11 @@ function NewResourcePage() {
                   Deploy a pre-built Docker image from any public or private registry.
                 </CardDescription>
               </CardHeader>
-            </Card>
+            </button>
 
-            <Card
-              className="cursor-pointer transition-colors hover:border-primary/50"
+            <button
+              type="button"
+              className="rounded-xl border border-border bg-card text-left transition-colors hover:border-primary/50 focus-visible:outline-2 focus-visible:outline-primary"
               onClick={() =>
                 navigate({
                   to: '/projects/$projectId/compose',
@@ -147,10 +151,10 @@ function NewResourcePage() {
                   Docker Compose
                 </CardTitle>
                 <CardDescription>
-                  Deploy multiple services defined in a docker-compose.yml file.
+                  Import selected Compose fields as resources, then review configuration.
                 </CardDescription>
               </CardHeader>
-            </Card>
+            </button>
           </div>
         </TabsContent>
 

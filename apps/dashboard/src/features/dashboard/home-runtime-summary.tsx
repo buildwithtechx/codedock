@@ -12,7 +12,7 @@ export function HomeRuntimeSummary({
 }) {
   const totalServices = projects.reduce((total, project) => total + project.totalServices, 0);
   const onlineServices = projects.reduce((total, project) => total + project.onlineServices, 0);
-  const health = totalServices === 0 ? 100 : Math.round((onlineServices / totalServices) * 100);
+  const health = totalServices === 0 ? null : Math.round((onlineServices / totalServices) * 100);
 
   const items = [
     {
@@ -58,7 +58,7 @@ export function HomeRuntimeSummary({
             Service health
           </span>
           <span className="font-semibold text-emerald-500">
-            {isLoading || isUnavailable ? '–' : `${health}%`}
+            {isLoading || isUnavailable ? '–' : health === null ? 'No services yet' : `${health}%`}
           </span>
         </div>
       </div>
