@@ -139,9 +139,9 @@ func (r *BackupRepo) CreateConfig(ctx context.Context, cfg *models.BackupConfig)
 	}
 	r.mu.Lock()
 	defer r.mu.Unlock()
-	_, err := r.db.ExecContext(ctx, `INSERT INTO backup_configs (pre_deployment,id, database_id, service_id, volume_name, s3_destination_id, name, description, db_user, db_password, backup_enabled, s3_enabled, disable_local, schedule, timezone, timeout, retention_days, max_backups, max_storage_gb, status, created_at, updated_at)
-		VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)`,
-		cfg.PreDeployment, cfg.ID, nullableID(cfg.DatabaseID), nullableID(cfg.ServiceID), cfg.VolumeName, nullableID(cfg.S3DestinationID), cfg.Name, cfg.Description, cfg.DbUser, cfg.DbPassword, cfg.BackupEnabled, cfg.S3Enabled, cfg.DisableLocal, cfg.Schedule, cfg.Timezone, cfg.Timeout, cfg.RetentionDays, cfg.MaxBackups, cfg.MaxStorageGB, cfg.Status, cfg.CreatedAt, cfg.UpdatedAt)
+	_, err := r.db.ExecContext(ctx, `INSERT INTO backup_configs (owner_id,project_id,pre_deployment,id, database_id, service_id, volume_name, s3_destination_id, name, description, db_user, db_password, backup_enabled, s3_enabled, disable_local, schedule, timezone, timeout, retention_days, max_backups, max_storage_gb, status, created_at, updated_at)
+		VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)`,
+		cfg.OwnerID, cfg.ProjectID, cfg.PreDeployment, cfg.ID, nullableID(cfg.DatabaseID), nullableID(cfg.ServiceID), cfg.VolumeName, nullableID(cfg.S3DestinationID), cfg.Name, cfg.Description, cfg.DbUser, cfg.DbPassword, cfg.BackupEnabled, cfg.S3Enabled, cfg.DisableLocal, cfg.Schedule, cfg.Timezone, cfg.Timeout, cfg.RetentionDays, cfg.MaxBackups, cfg.MaxStorageGB, cfg.Status, cfg.CreatedAt, cfg.UpdatedAt)
 	if err != nil {
 		return fmt.Errorf("failed to create backup config: %w", err)
 	}
@@ -153,7 +153,7 @@ func (r *BackupRepo) GetConfigByID(ctx context.Context, id string) (*models.Back
 	r.mu.Lock()
 	defer r.mu.Unlock()
 	var cfg models.BackupConfig
-	err := r.db.GetContext(ctx, &cfg, `SELECT id, COALESCE(database_id, '') as database_id, COALESCE(service_id, '') as service_id, COALESCE(volume_name, '') as volume_name, COALESCE(s3_destination_id, '') as s3_destination_id, name, COALESCE(description, '') as description, COALESCE(db_user, '') as db_user, COALESCE(db_password, '') as db_password, backup_enabled, s3_enabled, disable_local, schedule, COALESCE(timezone, 'UTC') as timezone, timeout, retention_days, max_backups, max_storage_gb, status, created_at, updated_at, pre_deployment
+	err := r.db.GetContext(ctx, &cfg, `SELECT id, COALESCE(database_id, '') as database_id, COALESCE(service_id, '') as service_id, COALESCE(volume_name, '') as volume_name, COALESCE(s3_destination_id, '') as s3_destination_id, name, COALESCE(description, '') as description, COALESCE(db_user, '') as db_user, COALESCE(db_password, '') as db_password, backup_enabled, s3_enabled, disable_local, schedule, COALESCE(timezone, 'UTC') as timezone, timeout, retention_days, max_backups, max_storage_gb, status, created_at, updated_at, pre_deployment, owner_id, project_id
 		FROM backup_configs WHERE id = ?`, id)
 	if errors.Is(err, sql.ErrNoRows) {
 		return nil, utils.NewNotFoundError("Config", id)
@@ -186,8 +186,8 @@ func (r *BackupRepo) UpdateConfig(ctx context.Context, cfg *models.BackupConfig)
 	defer r.mu.Unlock()
 
 	if cfg.DbPassword == "********" || cfg.DbPassword == "" {
-		res, err := r.db.ExecContext(ctx, `UPDATE backup_configs SET pre_deployment=?, database_id=?, service_id=?, volume_name=?, s3_destination_id=?, name=?, description=?, db_user=?, backup_enabled=?, s3_enabled=?, disable_local=?, schedule=?, timezone=?, timeout=?, retention_days=?, max_backups=?, max_storage_gb=?, status=?, updated_at=? WHERE id=?`,
-			cfg.PreDeployment, nullableID(cfg.DatabaseID), nullableID(cfg.ServiceID), cfg.VolumeName, nullableID(cfg.S3DestinationID), cfg.Name, cfg.Description, cfg.DbUser, cfg.BackupEnabled, cfg.S3Enabled, cfg.DisableLocal, cfg.Schedule, cfg.Timezone, cfg.Timeout, cfg.RetentionDays, cfg.MaxBackups, cfg.MaxStorageGB, cfg.Status, cfg.UpdatedAt, cfg.ID)
+		res, err := r.db.ExecContext(ctx, `UPDATE backup_configs SET owner_id=?,project_id=?,pre_deployment=?, database_id=?, service_id=?, volume_name=?, s3_destination_id=?, name=?, description=?, db_user=?, backup_enabled=?, s3_enabled=?, disable_local=?, schedule=?, timezone=?, timeout=?, retention_days=?, max_backups=?, max_storage_gb=?, status=?, updated_at=? WHERE id=?`,
+			cfg.OwnerID, cfg.ProjectID, cfg.PreDeployment, nullableID(cfg.DatabaseID), nullableID(cfg.ServiceID), cfg.VolumeName, nullableID(cfg.S3DestinationID), cfg.Name, cfg.Description, cfg.DbUser, cfg.BackupEnabled, cfg.S3Enabled, cfg.DisableLocal, cfg.Schedule, cfg.Timezone, cfg.Timeout, cfg.RetentionDays, cfg.MaxBackups, cfg.MaxStorageGB, cfg.Status, cfg.UpdatedAt, cfg.ID)
 		if err != nil {
 			return err
 		}
@@ -201,8 +201,8 @@ func (r *BackupRepo) UpdateConfig(ctx context.Context, cfg *models.BackupConfig)
 		return nil
 	}
 
-	res, err := r.db.ExecContext(ctx, `UPDATE backup_configs SET pre_deployment=?, database_id=?, service_id=?, volume_name=?, s3_destination_id=?, name=?, description=?, db_user=?, db_password=?, backup_enabled=?, s3_enabled=?, disable_local=?, schedule=?, timezone=?, timeout=?, retention_days=?, max_backups=?, max_storage_gb=?, status=?, updated_at=? WHERE id=?`,
-		cfg.PreDeployment, nullableID(cfg.DatabaseID), nullableID(cfg.ServiceID), cfg.VolumeName, nullableID(cfg.S3DestinationID), cfg.Name, cfg.Description, cfg.DbUser, cfg.DbPassword, cfg.BackupEnabled, cfg.S3Enabled, cfg.DisableLocal, cfg.Schedule, cfg.Timezone, cfg.Timeout, cfg.RetentionDays, cfg.MaxBackups, cfg.MaxStorageGB, cfg.Status, cfg.UpdatedAt, cfg.ID)
+	res, err := r.db.ExecContext(ctx, `UPDATE backup_configs SET owner_id=?,project_id=?,pre_deployment=?, database_id=?, service_id=?, volume_name=?, s3_destination_id=?, name=?, description=?, db_user=?, db_password=?, backup_enabled=?, s3_enabled=?, disable_local=?, schedule=?, timezone=?, timeout=?, retention_days=?, max_backups=?, max_storage_gb=?, status=?, updated_at=? WHERE id=?`,
+		cfg.OwnerID, cfg.ProjectID, cfg.PreDeployment, nullableID(cfg.DatabaseID), nullableID(cfg.ServiceID), cfg.VolumeName, nullableID(cfg.S3DestinationID), cfg.Name, cfg.Description, cfg.DbUser, cfg.DbPassword, cfg.BackupEnabled, cfg.S3Enabled, cfg.DisableLocal, cfg.Schedule, cfg.Timezone, cfg.Timeout, cfg.RetentionDays, cfg.MaxBackups, cfg.MaxStorageGB, cfg.Status, cfg.UpdatedAt, cfg.ID)
 	if err != nil {
 		return err
 	}
@@ -220,7 +220,7 @@ func (r *BackupRepo) ListConfigs(ctx context.Context) ([]*models.BackupConfig, e
 	r.mu.Lock()
 	defer r.mu.Unlock()
 	var list []*models.BackupConfig
-	err := r.db.SelectContext(ctx, &list, `SELECT id, COALESCE(database_id, '') as database_id, COALESCE(service_id, '') as service_id, COALESCE(volume_name, '') as volume_name, COALESCE(s3_destination_id, '') as s3_destination_id, name, COALESCE(description, '') as description, COALESCE(db_user, '') as db_user, COALESCE(db_password, '') as db_password, backup_enabled, s3_enabled, disable_local, schedule, COALESCE(timezone, 'UTC') as timezone, timeout, retention_days, max_backups, max_storage_gb, status, created_at, updated_at, pre_deployment
+	err := r.db.SelectContext(ctx, &list, `SELECT id, COALESCE(database_id, '') as database_id, COALESCE(service_id, '') as service_id, COALESCE(volume_name, '') as volume_name, COALESCE(s3_destination_id, '') as s3_destination_id, name, COALESCE(description, '') as description, COALESCE(db_user, '') as db_user, COALESCE(db_password, '') as db_password, backup_enabled, s3_enabled, disable_local, schedule, COALESCE(timezone, 'UTC') as timezone, timeout, retention_days, max_backups, max_storage_gb, status, created_at, updated_at, pre_deployment, owner_id, project_id
 		FROM backup_configs ORDER BY created_at DESC`)
 	if err != nil {
 		return nil, fmt.Errorf("failed to list backup configs: %w", err)
@@ -246,7 +246,7 @@ func (r *BackupRepo) ListAllActiveConfigs(ctx context.Context) ([]*models.Backup
 	r.mu.Lock()
 	defer r.mu.Unlock()
 	var list []*models.BackupConfig
-	err := r.db.SelectContext(ctx, &list, `SELECT id, COALESCE(database_id, '') as database_id, COALESCE(service_id, '') as service_id, COALESCE(volume_name, '') as volume_name, COALESCE(s3_destination_id, '') as s3_destination_id, name, COALESCE(description, '') as description, COALESCE(db_user, '') as db_user, COALESCE(db_password, '') as db_password, backup_enabled, s3_enabled, disable_local, schedule, COALESCE(timezone, 'UTC') as timezone, timeout, retention_days, max_backups, max_storage_gb, status, created_at, updated_at, pre_deployment
+	err := r.db.SelectContext(ctx, &list, `SELECT id, COALESCE(database_id, '') as database_id, COALESCE(service_id, '') as service_id, COALESCE(volume_name, '') as volume_name, COALESCE(s3_destination_id, '') as s3_destination_id, name, COALESCE(description, '') as description, COALESCE(db_user, '') as db_user, COALESCE(db_password, '') as db_password, backup_enabled, s3_enabled, disable_local, schedule, COALESCE(timezone, 'UTC') as timezone, timeout, retention_days, max_backups, max_storage_gb, status, created_at, updated_at, pre_deployment, owner_id, project_id
 		FROM backup_configs WHERE status = 'active'`)
 	if err != nil {
 		return nil, fmt.Errorf("failed to list active backup configs: %w", err)
@@ -272,7 +272,7 @@ func (r *BackupRepo) GetConfigByDatabaseID(ctx context.Context, dbID string) (*m
 	r.mu.Lock()
 	defer r.mu.Unlock()
 	var cfg models.BackupConfig
-	err := r.db.GetContext(ctx, &cfg, `SELECT id, COALESCE(database_id, '') as database_id, COALESCE(service_id, '') as service_id, COALESCE(volume_name, '') as volume_name, COALESCE(s3_destination_id, '') as s3_destination_id, name, COALESCE(description, '') as description, COALESCE(db_user, '') as db_user, COALESCE(db_password, '') as db_password, backup_enabled, s3_enabled, disable_local, schedule, COALESCE(timezone, 'UTC') as timezone, timeout, retention_days, max_backups, max_storage_gb, status, created_at, updated_at, pre_deployment
+	err := r.db.GetContext(ctx, &cfg, `SELECT id, COALESCE(database_id, '') as database_id, COALESCE(service_id, '') as service_id, COALESCE(volume_name, '') as volume_name, COALESCE(s3_destination_id, '') as s3_destination_id, name, COALESCE(description, '') as description, COALESCE(db_user, '') as db_user, COALESCE(db_password, '') as db_password, backup_enabled, s3_enabled, disable_local, schedule, COALESCE(timezone, 'UTC') as timezone, timeout, retention_days, max_backups, max_storage_gb, status, created_at, updated_at, pre_deployment, owner_id, project_id
 		FROM backup_configs WHERE database_id = ? ORDER BY created_at DESC LIMIT 1`, dbID)
 	if errors.Is(err, sql.ErrNoRows) {
 		return nil, utils.NewNotFoundError("Config", dbID)

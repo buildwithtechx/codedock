@@ -160,6 +160,7 @@ func NewServer(db *sql.DB, v *utils.Vault, deployer *deploy.Deployer, traefikMan
 		return nil, fmt.Errorf("recover backup records: %w", err)
 	}
 	backupService.SetOperations(operationService)
+	configureScheduledBackupAuthorization(backupService, userRepo, projectService)
 	deploymentService.BeforeDeployment = backupService.BeforeDeployment
 	if err := backupManager.Start(); err != nil {
 		return nil, fmt.Errorf("start backup scheduling: %w", err)

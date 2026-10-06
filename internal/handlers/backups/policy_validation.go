@@ -1,12 +1,28 @@
 package backups
 
 import (
+	"codedock.run/codedock/internal/http/middleware"
 	"codedock.run/codedock/internal/models"
 	"github.com/labstack/echo/v4"
 	"net/http"
+	"strings"
 )
 
 func (h *BackupHandler) validatePolicy(c echo.Context, cfg *models.BackupConfig) error {
+	user := middleware.GetUserClaimsFromContext(c.Request().Context())
+	if user == nil {
+		return echo.NewHTTPError(http.StatusUnauthorized)
+	}
+	project, err := h.backupProject(c, cfg)
+	if err != nil {
+		return err
+	}
+	cfg.OwnerID = user.UserID
+	cfg.ProjectID = project
+	if strings.TrimSpace(cfg.Name) == "" {
+		return echo.NewHTTPError(http.StatusBadRequest, "backup policy name is required")
+	}
+
 	if cfg.PreDeployment && cfg.ServiceID == "" {
 		return echo.NewHTTPError(http.StatusBadRequest, "pre-deployment policy requires an application service")
 	}

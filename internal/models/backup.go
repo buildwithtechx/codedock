@@ -17,6 +17,8 @@ const (
 )
 
 type BackupConfig struct {
+	OwnerID         string             `json:"-" db:"owner_id"`
+	ProjectID       string             `json:"projectId" db:"project_id"`
 	PreDeployment   bool               `json:"preDeployment" db:"pre_deployment"`
 	ID              string             `json:"id" db:"id"`
 	DatabaseID      string             `json:"databaseId,omitempty" db:"database_id"`

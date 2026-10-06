@@ -33,6 +33,7 @@ type Store interface {
 }
 
 type BackupManager struct {
+	scheduledRunner  func(context.Context, string) error
 	dockerClient     *client.Client
 	store            Store
 	cronEngine       *cron.Cron
@@ -115,7 +116,16 @@ func (bm *BackupManager) registerBackupLocked(cfg *models.BackupConfig) error {
 	bm.entries[cfg.ID] = bm.cronEngine.Schedule(schedule, cron.FuncJob(func() {
 		ctx, cancel := context.WithTimeout(context.Background(), timeout)
 		defer cancel()
-		if _, err := bm.TriggerBackup(ctx, cfgID); err != nil {
+		bm.mu.Lock()
+		runner := bm.scheduledRunner
+		bm.mu.Unlock()
+		var runErr error
+		if runner != nil {
+			runErr = runner(ctx, cfgID)
+		} else {
+			_, runErr = bm.TriggerBackup(ctx, cfgID)
+		}
+		if err := runErr; err != nil {
 			slog.Error("scheduled backup failed", "backup_id", cfgID, "error", err)
 		}
 	}))
@@ -282,4 +292,10 @@ func (bm *BackupManager) TriggerBackup(ctx context.Context, backupConfigID strin
 	}
 	bm.enforceRetentionPolicy(cfg)
 	return completed, nil
+}
+
+func (bm *BackupManager) SetScheduledRunner(runner func(context.Context, string) error) {
+	bm.mu.Lock()
+	defer bm.mu.Unlock()
+	bm.scheduledRunner = runner
 }

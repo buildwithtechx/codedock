@@ -12,6 +12,8 @@ func (r *BackupRepo) ensureRecoveryColumns() error {
 		{"backup_records", "sha256", "TEXT NOT NULL DEFAULT ''"},
 		{"backup_records", "verified_at", "TEXT NOT NULL DEFAULT ''"},
 		{"backup_configs", "pre_deployment", "INTEGER NOT NULL DEFAULT 0"},
+		{"backup_configs", "owner_id", "TEXT NOT NULL DEFAULT ''"},
+		{"backup_configs", "project_id", "TEXT NOT NULL DEFAULT ''"},
 	} {
 		rows, err := r.db.Query("PRAGMA table_info(" + column.table + ")")
 		if err != nil {

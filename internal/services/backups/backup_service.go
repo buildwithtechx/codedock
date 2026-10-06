@@ -16,10 +16,11 @@ import (
 )
 
 type BackupService struct {
-	operations *operations.Service
-	backupRepo repositories.BackupRepository
-	s3Repo     repositories.S3DestinationRepository
-	manager    *backup.BackupManager
+	RunAuthorization func(context.Context, string, string) error
+	operations       *operations.Service
+	backupRepo       repositories.BackupRepository
+	s3Repo           repositories.S3DestinationRepository
+	manager          *backup.BackupManager
 }
 
 func NewBackupService(br repositories.BackupRepository, sr repositories.S3DestinationRepository, m *backup.BackupManager) *BackupService {

@@ -9,7 +9,12 @@ import (
 	"fmt"
 )
 
-func (s *BackupService) SetOperations(service *operations.Service) { s.operations = service }
+func (s *BackupService) SetOperations(service *operations.Service) {
+	s.operations = service
+	if s.manager != nil {
+		s.manager.SetScheduledRunner(s.StartScheduledRun)
+	}
+}
 func (s *BackupService) ProtectRecord(ctx context.Context, id string, until int64) error {
 	store, ok := s.backupRepo.(interface {
 		ProtectRecord(context.Context, string, int64) error
@@ -74,7 +79,14 @@ func (s *BackupService) StartRun(ctx context.Context, user, project, id string) 
 	if err != nil {
 		return nil, err
 	}
-	if err := s.operations.Apply(ctx, reviewed.Operation.ID, user, reviewed.Confirmation, cfg.UpdatedAt, func(ctx context.Context, _ *models.Operation, progress func(string, string) error) error {
+	if err := s.operations.Apply(ctx, reviewed.Operation.ID, user, reviewed.Confirmation, cfg.UpdatedAt, func(ctx context.Context, op *models.Operation, progress func(string, string) error) error {
+		latest, err := s.backupRepo.GetConfigByID(ctx, id)
+		if err != nil {
+			return err
+		}
+		if latest.UpdatedAt != op.Snapshot {
+			return fmt.Errorf("backup policy changed before execution")
+		}
 		record, err := s.manager.TriggerBackup(backup.WithProgress(ctx, progress), id)
 		if err != nil {
 			return err
