@@ -141,10 +141,12 @@ func (a *AutoscalerWorker) checkAndScale(ctx context.Context) {
 		}
 		created, err := a.deploymentService.CreateDeployment(ctx, &models.Deployment{ServiceID: app.ID, ProjectID: app.ProjectID, EnvironmentID: app.EnvironmentID, Status: models.DeploymentStatusPending, Branch: app.Branch, Trigger: "Auto-Scaler", CommitMessage: fmt.Sprintf("Autoscale %d to %d replicas: %s (CPU %.2f%%)", current, target, reason, health.CPUUsagePercentage)})
 		if err != nil || created == nil {
-			if rollbackErr := a.policies.RollbackReplicas(ctx, app.ID, target, current); rollbackErr != nil {
+			recovery, cancel := context.WithTimeout(context.Background(), 10*time.Second)
+			if rollbackErr := a.policies.RollbackReplicas(recovery, app.ID, target, current); rollbackErr != nil {
 				slog.Error("rollback autoscaling replicas", "service_id", app.ID, "error", rollbackErr)
 			}
-			a.observe(ctx, p, health.CPUUsagePercentage, fmt.Sprintf("deployment creation failed: %v", err), false)
+			a.observe(recovery, p, health.CPUUsagePercentage, fmt.Sprintf("deployment creation failed: %v", err), false)
+			cancel()
 			continue
 		}
 		a.observe(ctx, p, health.CPUUsagePercentage, fmt.Sprintf("requested %d to %d replicas via deployment %s: %s", current, target, created.ID, reason), true)

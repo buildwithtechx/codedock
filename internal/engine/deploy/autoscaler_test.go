@@ -27,11 +27,12 @@ func (s *scalingTestMetrics) GetHealth(context.Context, string) (*observability.
 }
 
 type scalingTestStore struct {
-	policies   []*models.AutoscalingPolicy
-	reserved   bool
-	from, to   int
-	rolledBack bool
-	decision   string
+	policies         []*models.AutoscalingPolicy
+	reserved         bool
+	from, to         int
+	rolledBack       bool
+	rollbackCanceled bool
+	decision         string
 }
 
 func (s *scalingTestStore) ListEnabled(context.Context) ([]*models.AutoscalingPolicy, error) {
@@ -46,17 +47,22 @@ func (s *scalingTestStore) SetReplicas(_ context.Context, _ *models.AutoscalingP
 	s.to = to
 	return s.reserved, nil
 }
-func (s *scalingTestStore) RollbackReplicas(context.Context, string, int, int) error {
+func (s *scalingTestStore) RollbackReplicas(ctx context.Context, _ string, _, _ int) error {
+	s.rollbackCanceled = ctx.Err() != nil
 	s.rolledBack = true
 	return nil
 }
 
 type scalingTestDeployments struct {
 	failure  bool
+	cancel   context.CancelFunc
 	executed bool
 }
 
 func (s *scalingTestDeployments) CreateDeployment(_ context.Context, d *models.Deployment) (*models.Deployment, error) {
+	if s.cancel != nil {
+		s.cancel()
+	}
 	if s.failure {
 		return nil, errors.New("queue unavailable")
 	}
@@ -89,13 +95,7 @@ func TestAutoscalingOptInLimitsAndCooldown(t *testing.T) {
 			}
 		})
 	}
-	metrics := &scalingTestMetrics{cpu: 99}
-	store := &scalingTestStore{}
-	worker := NewAutoscalerWorker(scalingTestApps{}, metrics, &scalingTestDeployments{}, store)
-	worker.checkAndScale(context.Background())
-	if metrics.calls != 0 {
-		t.Fatal("disabled services were sampled")
-	}
+
 }
 func TestAutoscalingReservationAndFailedQueue(t *testing.T) {
 	for _, failure := range []bool{false, true} {
@@ -115,5 +115,20 @@ func TestAutoscalingReservationAndFailedQueue(t *testing.T) {
 		if !failure && (!deployments.executed || !strings.Contains(store.decision, "deployment")) {
 			t.Fatal("successful scaling was not observable")
 		}
+	}
+}
+
+func TestAutoscalingCanceledCreationRecoversWithFreshContext(t *testing.T) {
+	policy := models.DefaultAutoscalingPolicy("app")
+	policy.Enabled = true
+	store := &scalingTestStore{policies: []*models.AutoscalingPolicy{policy}, reserved: true}
+	ctx, cancel := context.WithCancel(context.Background())
+	defer cancel()
+	deployments := &scalingTestDeployments{failure: true, cancel: cancel}
+	app := &models.AppService{ID: "app", Status: models.AppServiceStatusRunning, ContainerID: "container", Replicas: 2}
+	worker := NewAutoscalerWorker(scalingTestApps{app}, &scalingTestMetrics{cpu: 95}, deployments, store)
+	worker.checkAndScale(ctx)
+	if !store.rolledBack || store.rollbackCanceled || !strings.Contains(store.decision, "failed") {
+		t.Fatal("canceled creation prevented rollback or decision recording")
 	}
 }

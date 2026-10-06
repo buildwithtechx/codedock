@@ -1,6 +1,7 @@
 package models
 
 type AutoscalingPolicy struct {
+	Supported       bool    `json:"supported"`
 	ServiceID       string  `json:"serviceId"`
 	Enabled         bool    `json:"enabled"`
 	MinReplicas     int     `json:"minReplicas"`

@@ -29,7 +29,10 @@ func (h *AutoscalingHandler) Save(c echo.Context) error {
 	}
 	p.ServiceID = c.Param("serviceId")
 	if err := h.service.Save(c.Request().Context(), &p); err != nil {
-		return utils.Error(c, http.StatusBadRequest, err.Error())
+		if utils.IsValidation(err) {
+			return utils.Error(c, http.StatusBadRequest, err.Error())
+		}
+		return utils.Error(c, http.StatusInternalServerError, "failed to save autoscaling policy")
 	}
 	saved, err := h.service.Get(c.Request().Context(), p.ServiceID)
 	if err != nil {

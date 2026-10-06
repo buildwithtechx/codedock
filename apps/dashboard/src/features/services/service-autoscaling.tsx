@@ -9,6 +9,7 @@ import { Switch } from '#/components/ui/switch';
 import { apiClient } from '#/lib/api-client';
 
 type ScalingPolicy = {
+  supported: boolean;
   serviceId: string;
   enabled: boolean;
   minReplicas: number;
@@ -68,11 +69,17 @@ export function ServiceAutoscaling({ serviceId }: { serviceId: string }) {
         )}
         {policy && (
           <>
+            {!policy.supported && (
+              <p role="status">
+                Autoscaling is unavailable for this target. Choose a local Docker target to enable
+                it.
+              </p>
+            )}
             <div className="flex items-center gap-3">
               <Switch
                 id="autoscaling-enabled"
                 checked={policy.enabled}
-                disabled={save.isPending}
+                disabled={save.isPending || (!policy.supported && !policy.enabled)}
                 onCheckedChange={(enabled) => setDraft({ ...policy, enabled })}
               />
               <Label htmlFor="autoscaling-enabled">Enable autoscaling</Label>
