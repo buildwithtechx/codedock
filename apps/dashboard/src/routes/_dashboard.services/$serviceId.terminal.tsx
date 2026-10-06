@@ -1,6 +1,6 @@
 import { createFileRoute } from '@tanstack/react-router';
 import { Loader2 } from 'lucide-react';
-import { WebTerminal } from '#/features/services/web-terminal';
+import { RuntimeTerminal } from '#/features/services/runtime-terminal';
 import { useGetApp } from '#/hooks/use-apps';
 
 export const Route = createFileRoute('/_dashboard/services/$serviceId/terminal')({
@@ -28,7 +28,7 @@ function ServiceTerminalRoute() {
   return (
     <div className="space-y-6">
       <h1 className="font-bold text-2xl">Terminal</h1>
-      <WebTerminal serviceId={app.id} />
+      <RuntimeTerminal serviceId={app.id} />
     </div>
   );
 }

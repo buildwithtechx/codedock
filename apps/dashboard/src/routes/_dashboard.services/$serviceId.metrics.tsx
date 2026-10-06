@@ -1,5 +1,5 @@
 import { createFileRoute } from '@tanstack/react-router';
-import { ServiceMetricsPage } from '#/features/services/service-metrics';
+import { RuntimeMetrics } from '#/features/services/runtime-metrics';
 
 export const Route = createFileRoute('/_dashboard/services/$serviceId/metrics')({
   component: ServiceMetricsRoute,
@@ -7,5 +7,5 @@ export const Route = createFileRoute('/_dashboard/services/$serviceId/metrics')(
 
 function ServiceMetricsRoute() {
   const { serviceId } = Route.useParams();
-  return <ServiceMetricsPage serviceId={serviceId} />;
+  return <RuntimeMetrics serviceId={serviceId} />;
 }

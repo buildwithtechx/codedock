@@ -9,7 +9,15 @@ import (
 	"time"
 )
 
-type CanvasRuntime struct{ docker *client.Client }
+type ClusterObservations interface {
+	Handles(context.Context, string) (bool, error)
+	Observe(context.Context, string) (*models.WorkloadObservation, error)
+	Logs(context.Context, string) (string, error)
+}
+type CanvasRuntime struct {
+	docker  *client.Client
+	Cluster ClusterObservations
+}
 
 func NewCanvasRuntime(docker *client.Client) *CanvasRuntime { return &CanvasRuntime{docker: docker} }
 
@@ -43,7 +51,26 @@ func (r *CanvasRuntime) Observe(ctx context.Context, canvas *models.EnvironmentC
 		}
 		for _, app := range canvas.Apps {
 			if node.ID == "app-"+app.ID {
-				node.Data["status"] = status(app.ContainerID)
+				observedStatus := status(app.ContainerID)
+				if r.Cluster != nil {
+					handles, err := r.Cluster.Handles(ctx, app.ID)
+					if err != nil {
+						observedStatus = "runtime unavailable"
+					} else if handles {
+						observed, err := r.Cluster.Observe(ctx, app.ID)
+						if err != nil {
+							observedStatus = "runtime unavailable"
+							node.Data["runtimeError"] = err.Error()
+						} else {
+							observedStatus = observed.Status
+							node.Data["runtimeKind"] = "kubernetes"
+							node.Data["availableReplicas"] = observed.Available
+							node.Data["desiredReplicas"] = observed.Desired
+						}
+					}
+				}
+				node.Data["status"] = observedStatus
+				node.Data["label"] = app.Name + " / " + observedStatus
 			}
 		}
 		for _, database := range canvas.Databases {

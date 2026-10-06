@@ -12,6 +12,28 @@ import (
 )
 
 func (r *CanvasRuntime) Read(ctx context.Context, canvas *models.EnvironmentCanvas, nodeID string) (*models.RuntimeObservation, error) {
+	if r.Cluster != nil {
+		for _, app := range canvas.Apps {
+			if nodeID != "app-"+app.ID {
+				continue
+			}
+			handles, err := r.Cluster.Handles(ctx, app.ID)
+			if err != nil {
+				return nil, err
+			}
+			if handles {
+				observed, err := r.Cluster.Observe(ctx, app.ID)
+				if err != nil {
+					return nil, err
+				}
+				logs, err := r.Cluster.Logs(ctx, app.ID)
+				if err != nil {
+					return nil, err
+				}
+				return &models.RuntimeObservation{Logs: logs, Metrics: map[string]any{"runtimeKind": "kubernetes", "status": observed.Status, "desiredReplicas": observed.Desired, "availableReplicas": observed.Available, "metricsAvailable": observed.MetricsAvailable, "metricsError": observed.MetricsError, "pods": observed.Pods}}, nil
+			}
+		}
+	}
 	if r.docker == nil {
 		return nil, fmt.Errorf("runtime unavailable")
 	}

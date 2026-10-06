@@ -23,8 +23,8 @@ export function ProjectClusters({ projectId }: { projectId: string }) {
         <Button onClick={() => setSelected({ action: 'install' })}>Prepare cluster</Button>
       </div>
       <p className="text-muted-foreground text-sm">
-        Instance administrators can prepare and manage K3s infrastructure here. Application
-        deployments currently continue to use their configured Docker destination.
+        Instance administrators can manage K3s infrastructure here. Select a ready cluster from an
+        application's build settings to deploy it with cluster placement and persistent storage.
       </p>
       {clusters.isLoading && <p role="status">Loading clusters…</p>}
       {clusters.error && <p role="alert">{clusters.error.message}</p>}

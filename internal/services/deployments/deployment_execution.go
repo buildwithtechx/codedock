@@ -89,7 +89,15 @@ func (s *DeploymentService) executeDeployment(ctx context.Context, d *models.Dep
 	if err != nil {
 		return "", fmt.Errorf("load service: %w", err)
 	}
-	if s.projectRepo != nil {
+	clusterTarget := false
+	if s.Runtime != nil {
+		var err error
+		clusterTarget, err = s.Runtime.Handles(ctx, app.ID)
+		if err != nil {
+			return "", err
+		}
+	}
+	if s.projectRepo != nil && !clusterTarget {
 		project, err := s.projectRepo.Get(ctx, app.ProjectID)
 		if err != nil {
 			return "", err
@@ -119,7 +127,7 @@ func (s *DeploymentService) executeDeployment(ctx context.Context, d *models.Dep
 		}
 		for _, source := range sources {
 			for {
-				err := s.deployer.DependencyReady(ctx, source)
+				err := s.dependencyReady(ctx, source)
 				if err == nil {
 					break
 				}
@@ -157,7 +165,7 @@ func (s *DeploymentService) executeDeployment(ctx context.Context, d *models.Dep
 	} else if err := writer.phaseChanged("PULLING"); err != nil {
 		return "", err
 	}
-	return s.deployer.DeployAppService(ctx, app, sourceDir, writer)
+	return s.deployTarget(ctx, app, sourceDir, writer)
 }
 
 type deploymentLogWriter struct {

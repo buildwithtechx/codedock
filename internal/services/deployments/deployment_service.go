@@ -21,6 +21,7 @@ import (
 )
 
 type DeploymentService struct {
+	Runtime          TargetRuntime
 	BeforeDeployment func(context.Context, string) error
 	repo             repositories.DeploymentRepository
 	appRepo          repositories.AppServiceRepository
@@ -140,15 +141,41 @@ func (s *DeploymentService) DeployAppService(ctx context.Context, appID, sourceD
 			return "", fmt.Errorf("pre-deployment backup: %w", err)
 		}
 	}
-	containerID, err := s.deployer.DeployAppService(ctx, app, sourceDir, logWriter)
+	containerID, err := s.deployTarget(ctx, app, sourceDir, logWriter)
 	if err == nil && containerID != "" {
 		app.ContainerID = containerID
-		_ = s.appRepo.Update(ctx, app)
+		if updateErr := s.appRepo.Update(ctx, app); updateErr != nil {
+			return "", fmt.Errorf("save deployed application: %w", updateErr)
+		}
 	}
 	return containerID, err
 }
 
 func (s *DeploymentService) GetMetrics(ctx context.Context, appID string) (*observability.ContainerHealth, error) {
+	if s.Runtime != nil {
+		handles, err := s.Runtime.Handles(ctx, appID)
+		if err != nil {
+			return nil, err
+		}
+		if handles {
+			observed, err := s.Runtime.Observe(ctx, appID)
+			if err != nil {
+				return nil, err
+			}
+			if observed.Desired > 0 && !observed.MetricsAvailable {
+				return nil, fmt.Errorf("cluster metrics unavailable: %s", observed.MetricsError)
+			}
+			health := &observability.ContainerHealth{Status: observability.ContainerHealthStatusStopped}
+			if observed.Available > 0 {
+				health.Status = observability.ContainerHealthStatusRunning
+			}
+			for _, pod := range observed.Pods {
+				health.CPUUsagePercentage += pod.CPU * 100
+				health.MemoryUsageBytes += pod.MemoryBytes
+			}
+			return health, nil
+		}
+	}
 	app, err := s.appRepo.GetByID(ctx, appID)
 	if err != nil {
 		return nil, err

@@ -13,10 +13,12 @@ import (
 	"codedock.run/codedock/internal/models"
 	deploymentservices "codedock.run/codedock/internal/services/deployments"
 	projectservices "codedock.run/codedock/internal/services/projects"
+	"codedock.run/codedock/internal/services/runtimes"
 	"codedock.run/codedock/internal/telemetry"
 )
 
 type AppHandler struct {
+	Runtime           *runtimes.Service
 	appService        *projectservices.AppService
 	projectService    *projectservices.ProjectService
 	deployer          *deploy.Deployer
@@ -249,7 +251,7 @@ func (h *AppHandler) Delete(c echo.Context) error {
 	if h.deployer == nil {
 		return utils.Error(c, http.StatusServiceUnavailable, "runtime unavailable")
 	}
-	if err := h.deployer.StopAppService(c.Request().Context(), existing); err != nil {
+	if err := h.deploymentService.RemoveAppService(c.Request().Context(), existing); err != nil {
 		return utils.Error(c, http.StatusConflict, err.Error())
 	}
 
@@ -268,7 +270,7 @@ func (h *AppHandler) StopService(c echo.Context) error {
 	if err := h.verifyProjectOwnership(c, existing.ProjectID); err != nil {
 		return err
 	}
-	if err := h.deployer.StopAppService(c.Request().Context(), existing); err != nil {
+	if err := h.deploymentService.StopAppService(c.Request().Context(), existing); err != nil {
 		return utils.Error(c, http.StatusInternalServerError, err.Error())
 	}
 	existing.Status = models.AppServiceStatusStopped
@@ -313,7 +315,7 @@ func (h *AppHandler) RestartService(c echo.Context) error {
 	if err := h.verifyProjectOwnership(c, existing.ProjectID); err != nil {
 		return err
 	}
-	if err := h.deployer.RestartAppService(c.Request().Context(), existing); err != nil {
+	if err := h.deploymentService.RestartAppService(c.Request().Context(), existing); err != nil {
 		return utils.Error(c, http.StatusInternalServerError, err.Error())
 	}
 	existing.Status = models.AppServiceStatusRunning

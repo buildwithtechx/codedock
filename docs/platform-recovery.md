@@ -30,7 +30,11 @@ Only clusters bearing the matching Codedock ownership marker can be changed or u
 
 Administrators must restrict network access according to the [K3s requirements](https://docs.k3s.io/installation/requirements). Preflight verifies address assignment; it does not configure firewall rules or prove connectivity between every node. Release installation follows the [official K3s installation workflow](https://docs.k3s.io/quick-start).
 
-This batch manages cluster infrastructure. Application placement, Kubernetes workload deploy/logs/exec/metrics, database operators and bare-runtime supervision remain separate unfinished adapters. Existing application deployment still uses its configured Docker destination. No Hetzner servers are provisioned and no new environment variables are required.
+Applications can select a ready project cluster from build settings through an expiring reviewed operation. Normal Git/image and archive deployments then use that destination. Git builds publish unique image tags to a project registry before applying cluster resources. Deployment manifests include owned namespaces, secret-backed environment variables, node placement, replicas, readiness, Services/Ingress and explicit persistent claims. Workers do not require an HTTP listener. Multiple replicas with storage require ReadWriteMany claims.
+
+Cluster workloads support observed pod state, live metrics when the metrics API is available, logs, command execution, stop and restart. Dependency readiness and canvas observations dispatch to the selected runtime. Encrypted recovery journals preserve previous resources before mutation; startup and failed-rollout recovery restore configuration while retaining persistent data. Missing metrics remain an explicit error. Existing claim class, access modes and capacity cannot change as part of an application rollout.
+
+Database operators, replicated Redis and bare-runtime supervision remain unfinished. No Hetzner servers are provisioned and no new environment variables are required.
 
 ## Verification
 
