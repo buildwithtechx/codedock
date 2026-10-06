@@ -16,7 +16,13 @@ services:
     ports:
       - "80:80"`);
 
-  const [analysisResult, setAnalysisResult] = useState<ComposeAnalyzeResponse | null>(null);
+  const [analysis, setAnalysis] = useState<{
+    source: string;
+    projectId: string;
+    result: ComposeAnalyzeResponse;
+  } | null>(null);
+  const analysisResult =
+    analysis?.source === composeText && analysis.projectId === projectId ? analysis.result : null;
 
   const analyzeMutation = useAnalyzeCompose();
   const deployMutation = useDeployCompose();
@@ -26,7 +32,7 @@ services:
       { projectId, composeContent: composeText },
       {
         onSuccess: (data) => {
-          setAnalysisResult(data);
+          setAnalysis({ source: composeText, projectId, result: data });
           toast.success('Compose file analyzed successfully!');
         },
         onError: (err: any) => {
@@ -44,7 +50,7 @@ services:
           toast.success(
             'Compose resources imported. Review configuration before deploying applications.'
           );
-          setAnalysisResult(null);
+          setAnalysis(null);
         },
         onError: (err: any) => {
           toast.error(err.response?.data?.message || 'Failed to deploy compose stack');
@@ -72,7 +78,7 @@ services:
               value={composeText}
               onChange={(value) => {
                 setComposeText(value || '');
-                setAnalysisResult(null);
+                setAnalysis(null);
               }}
               options={{
                 minimap: { enabled: false },

@@ -6,21 +6,21 @@ import (
 	"time"
 )
 
-func (bm *BackupManager) waitExecSuccess(ctx context.Context, execID string) error {
+func (bm *BackupManager) waitExecSuccess(ctx context.Context, execID, operation string) error {
 	for {
 		result, err := bm.dockerClient.ContainerExecInspect(ctx, execID)
 		if err != nil {
-			return fmt.Errorf("inspect backup command result: %w", err)
+			return fmt.Errorf("inspect %s command result: %w", operation, err)
 		}
 		if !result.Running {
 			if result.ExitCode != 0 {
-				return fmt.Errorf("backup command exited with status %d", result.ExitCode)
+				return fmt.Errorf("%s command exited with status %d", operation, result.ExitCode)
 			}
 			return nil
 		}
 		select {
 		case <-ctx.Done():
-			return fmt.Errorf("wait for backup command: %w", ctx.Err())
+			return fmt.Errorf("wait for %s command: %w", operation, ctx.Err())
 		case <-time.After(100 * time.Millisecond):
 		}
 	}

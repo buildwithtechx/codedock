@@ -89,7 +89,7 @@ function NewResourcePage() {
           <div className="grid grid-cols-1 gap-6 md:grid-cols-2 lg:grid-cols-3">
             <button
               type="button"
-              className="rounded-xl border border-border bg-card text-left transition-colors hover:border-primary/50 focus-visible:outline-2 focus-visible:outline-primary"
+              className="flex flex-col gap-6 rounded-2xl border border-border bg-card py-6 text-left text-card-foreground transition-colors hover:border-primary/50 focus-visible:outline-2 focus-visible:outline-primary"
               onClick={() => setGitModalOpen(true)}
             >
               <CardHeader>
@@ -105,7 +105,7 @@ function NewResourcePage() {
 
             <button
               type="button"
-              className="rounded-xl border border-border bg-card text-left transition-colors hover:border-primary/50 focus-visible:outline-2 focus-visible:outline-primary"
+              className="flex flex-col gap-6 rounded-2xl border border-border bg-card py-6 text-left text-card-foreground transition-colors hover:border-primary/50 focus-visible:outline-2 focus-visible:outline-primary"
               onClick={() => setDbModalOpen(true)}
             >
               <CardHeader>
@@ -121,7 +121,7 @@ function NewResourcePage() {
 
             <button
               type="button"
-              className="rounded-xl border border-border bg-card text-left transition-colors hover:border-primary/50 focus-visible:outline-2 focus-visible:outline-primary"
+              className="flex flex-col gap-6 rounded-2xl border border-border bg-card py-6 text-left text-card-foreground transition-colors hover:border-primary/50 focus-visible:outline-2 focus-visible:outline-primary"
               onClick={() => setDockerModalOpen(true)}
             >
               <CardHeader>
@@ -137,7 +137,7 @@ function NewResourcePage() {
 
             <button
               type="button"
-              className="rounded-xl border border-border bg-card text-left transition-colors hover:border-primary/50 focus-visible:outline-2 focus-visible:outline-primary"
+              className="flex flex-col gap-6 rounded-2xl border border-border bg-card py-6 text-left text-card-foreground transition-colors hover:border-primary/50 focus-visible:outline-2 focus-visible:outline-primary"
               onClick={() =>
                 navigate({
                   to: '/projects/$projectId/compose',

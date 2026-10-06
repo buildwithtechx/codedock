@@ -144,17 +144,21 @@ func (bm *BackupManager) executeRestore(ctx context.Context, containerName strin
 	}()
 
 	var stdoutBuf, stderrBuf bytes.Buffer
-	if _, err := stdcopy.StdCopy(&stdoutBuf, &stderrBuf, attachResp.Reader); err != nil {
-		return fmt.Errorf("read restore stream: %w", err)
+	_, readErr := stdcopy.StdCopy(&stdoutBuf, &stderrBuf, attachResp.Reader)
+	attachResp.Close()
+	if readErr != nil {
+		return fmt.Errorf("read restore stream: %w; stderr: %s", readErr, strings.TrimSpace(stderrBuf.String()))
+	}
+	if err := bm.waitExecSuccess(ctx, execCreateResp.ID, "restore"); err != nil {
+		return fmt.Errorf("%w; stderr: %s", err, strings.TrimSpace(stderrBuf.String()))
 	}
 	select {
 	case err := <-writeDone:
 		if err != nil {
-			return fmt.Errorf("send restore archive: %w", err)
+			return fmt.Errorf("send restore archive: %w; stderr: %s", err, strings.TrimSpace(stderrBuf.String()))
 		}
 	case <-ctx.Done():
 		return ctx.Err()
 	}
-
-	return bm.waitExecSuccess(ctx, execCreateResp.ID)
+	return nil
 }

@@ -13,7 +13,7 @@ Destination creation is separate from provisioning an object-storage server. The
 
 ## Create a backup configuration
 
-Select the target database or volume. Set `backupEnabled`, a cron `schedule`, timeout and retention settings. Set `timezone` to an IANA location such as `Africa/Lagos`; the scheduler applies it to five-field, six-field and descriptor schedules. Without a configured zone, the control plane time zone applies. An inline `CRON_TZ` or `TZ` must match the configured zone when both are supplied. To upload off-server, enable `s3Enabled` and choose `s3DestinationId`. Keep local copies unless you intentionally enable `disableLocal` and have verified the remote recovery path.
+Select the target database or volume. Set `backupEnabled`, a cron `schedule`, timeout and retention settings. Set `timezone` to an IANA location such as `Africa/Lagos`; the scheduler applies it to five-field, six-field and descriptor schedules. Without a configured zone or an inline `CRON_TZ` or `TZ`, the control plane time zone applies. An inline `CRON_TZ` or `TZ` must match the configured zone when both are supplied. To upload off-server, enable `s3Enabled` and choose `s3DestinationId`. Keep local copies unless you intentionally enable `disableLocal` and have verified the remote recovery path.
 
 | Field | Purpose |
 | --- | --- |

@@ -23,7 +23,7 @@ func (bm *BackupManager) uploadToS3(ctx context.Context, dest *models.S3Destinat
 		return "", err
 	}
 	if err := resp.Body.Close(); err != nil {
-		return "", fmt.Errorf("close upload response: %w", err)
+		slog.Warn("close upload response", "error", err)
 	}
 	return fmt.Sprintf("s3://%s/%s", dest.Bucket, key), nil
 }

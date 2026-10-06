@@ -70,9 +70,9 @@ func TestScheduleTimezoneAndInvalidReplacement(t *testing.T) {
 }
 
 func TestUploadUsesDestinationPrefix(t *testing.T) {
-	var requestPath string
+	requestPaths := make(chan string, 1)
 	server := httptest.NewServer(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
-		requestPath = r.URL.Path
+		requestPaths <- r.URL.Path
 		if r.Method != http.MethodPut {
 			t.Errorf("unexpected method %s", r.Method)
 		}
@@ -85,6 +85,7 @@ func TestUploadUsesDestinationPrefix(t *testing.T) {
 	if err != nil {
 		t.Fatal(err)
 	}
+	requestPath := <-requestPaths
 	if requestPath != "/archives/team/database backups/backup.sql" {
 		t.Fatalf("wrong object path: %s", requestPath)
 	}
@@ -150,7 +151,7 @@ func TestCommandCompletionUsesExitStatus(t *testing.T) {
 			}
 			defer dockerClient.Close()
 			manager := NewBackupManager(dockerClient, nil, t.TempDir())
-			err = manager.waitExecSuccess(context.Background(), "command")
+			err = manager.waitExecSuccess(context.Background(), "command", "backup")
 			if (err != nil) != (exitCode != 0) {
 				t.Fatalf("exit %d returned %v", exitCode, err)
 			}

@@ -13,9 +13,9 @@ import (
 )
 
 func TestArchiveDownloadUsesRecordedDestinationAndKey(t *testing.T) {
-	var requested string
+	requests := make(chan string, 1)
 	server := httptest.NewServer(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
-		requested = r.URL.Path
+		requests <- r.URL.Path
 		if _, err := w.Write([]byte("original archive")); err != nil {
 			t.Error(err)
 		}
@@ -37,6 +37,7 @@ func TestArchiveDownloadUsesRecordedDestinationAndKey(t *testing.T) {
 	if err := reader.Close(); err != nil {
 		t.Fatal(err)
 	}
+	requested := <-requests
 	if string(data) != "original archive" || name != "backup.sql" || requested != "/archives/old-prefix/backup.sql" {
 		t.Fatalf("wrong archive: %s %s %s", data, name, requested)
 	}

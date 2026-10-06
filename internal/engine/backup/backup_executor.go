@@ -151,8 +151,8 @@ func (bm *BackupManager) executeDump(ctx context.Context, containerName string, 
 		return nil, stderrBuf.String(), fmt.Errorf("read backup stream: %w", err)
 	}
 
-	if err := bm.waitExecSuccess(ctx, execCreateResp.ID); err != nil {
-		return nil, stderrBuf.String(), err
+	if err := bm.waitExecSuccess(ctx, execCreateResp.ID, "backup"); err != nil {
+		return nil, stderrBuf.String(), fmt.Errorf("%w; stderr: %s", err, strings.TrimSpace(stderrBuf.String()))
 	}
 	if stdoutBuf.Len() == 0 {
 		return nil, stderrBuf.String(), errors.New("backup command produced an empty archive")
