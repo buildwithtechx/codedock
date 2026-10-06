@@ -1,0 +1,90 @@
+# Openship backend and UI/UX parity audit
+
+Audited on 2026-10-06. Openship remote main was refreshed to `b7e69090804e0c342b2f7222e3c30577e3066d11`; its checked-out main remains `3d33f5d3`. The original roadmap compared `16730d39`. Codedock implementation baseline is `97ac530` on `feat/platform-batch`.
+
+## Finding
+
+Codedock has materially improved its application, Compose, topology, backup and runtime workflows. It has not reached exhaustive Openship parity, and passing typechecks/unit tests does not establish equal operational reliability or superior UI/UX. The earlier statement that Phase 6 and 7 were complete described a narrower scope than Openship's implementation. This audit makes the remaining differences explicit in the roadmap.
+
+This was a source and workflow audit: route contracts, service dispatch, resource manifests, persistence, dashboard components and desktop entry points. Openship was inspected using `git show origin/main:<path>`, not its older checked-out files. No live cloud purchase, installation, network failure, database failover or rendered browser comparison was performed. Test files were inspected as coverage evidence, not rerun for Openship. Product quality and pixel-level usability remain unverified.
+
+## Coverage matrix
+
+| Area | Openship backend and UI | Codedock implementation | Remaining difference |
+| --- | --- | --- | --- |
+| Application setup | Repository/session configuration, destination/runtime choices, routing and resource controls in deployment flow | Editable repository detection, Git/image setup, variables, web/worker mode, domain and review; stable creation IDs | Actual Docker/SSH/cluster/native selection is still split from initial setup. The Git/image form does not express a native executable source. |
+| Native execution | Bare runtime clones/builds locally or remotely, prepares language toolchains and static output, promotes releases through a supervisor | Verified HTTPS executable, pinned SSH identity, systemd, private data directory, generated environment, logs/exec and release rollback | Source-built Node/Python/etc., static hosting and managed HTTP routing. Existing Git deployment still performs its checkout before artifact activation. |
+| Compose | Service-selected builds/deployment, inline and repository source planners, config mounts, routes and connected/managed runtimes | Resolved encrypted stack, dependency/health execution, image preparation, owned volumes/networks and per-service results | Local Docker only; private repository build credentials, broader file/mount support, service-selected updates and integrated service routing. Rejected fields are explicit, but rejection is not feature parity. |
+| Project topology | App instances, cluster databases, file volumes, placement and reviewed connections share an inspector/review workflow | Persisted dependency/binding edits, environment canvas, app/database details and runtime observations | Cluster databases are stored separately and absent from the canvas and variable linker. Their credentials currently require manual application configuration. Pod observations are lists rather than an instance graph. |
+| Managed cloud | Server lifecycle, paid capacity/tier admission, checkout recovery, account inventory reconciliation and support center | Cloud/self-hosted distinction, Stripe subscriptions and plan enforcement | Entire Hetzner provisioning phase remains open. Subscription plumbing is not managed compute. Latest upstream inventory/support/checkout improvements need explicit scope decisions. |
+| Cluster setup | Private networking integration, owned firewall checks, multi-control quorum where eligible and cross-node DNS/service verification | Reviewed private-address/interface/fingerprint inputs, one K3s control server plus agents, version/node checks, upgrade journals and forward recovery | Automatic private-network preparation, control-plane quorum, firewall/connectivity validation and disposable data-plane probes. Transport runs root kubectl over SSH rather than upstream's pooled verified API connection. |
+| Application orchestration | Immutable image release deployment, stable routing, watched rollouts and retained-release lifecycle | Registry-published source images, Deployment/Service/Ingress/PVC resources, placement, readiness, metrics, journals and desired-state reconciliation | Image digest pinning, project ingress isolation, live watches/log streams, rendered resource controls and full retained-image rollback verification. Codedock's explicit minute-based drift reconciliation is delivered but not proof of stronger HA. |
+| PostgreSQL | Operator-backed replicas, synchronous durability, role/volume observations, app-namespace connection tests, settings and retention/deletion | Reviewed CNPG/Barman installation; one or three instances; generated credentials; S3 WAL/daily/manual backup and new-target timed recovery | Explicit synchronous durability, app bindings, authenticated network checks, settings/resize, lifecycle/deletion, Docker dump import and upgraded-copy workflow. Ready instance counts alone are a narrower health check. |
+| Redis | Operator-backed standalone or sharded Redis Cluster, native failover, S3 snapshots and new-target restore/import | StatefulSet standalone or fixed primary plus two replicas; passwords, AOF, synchronization probes and reviewed reapply against retained disks | Redis Cluster sharding/failover, operator lifecycle and independent archive backup/restore. AOF restart recovery is not restoration of a saved backup. |
+| Shared files/storage | Longhorn setup, replicated/shared volumes, snapshot schedules, new-volume restore and owned deletion | Application PVC declarations, explicit storage class and RWX validation for multiple replicas | Shared storage installer, storage health/capacity, file-volume inventory, independent snapshots and recovery/deletion UI. Declaring a class does not install its provisioner. |
+| Ordinary backups | Policy batches/inheritance, local/S3/SFTP, file/custom producers, quiescing and incremental block reuse | Authorized database/named-volume policies, local/S3, schedules, protected records, cancellable durable runs, verified archives and deployment gates | Multi-service batches, inheritance, SFTP, incremental storage, quiescing, file/custom producers and remote/native ordinary restores. Cluster PostgreSQL uses a separate operator backup path. |
+| Recovery/rollback | Reviewed data restore plus separate retained deployment releases; import and connection cutover workflows | Target-bound expiring confirmation, strict archive validation, local Docker data restore, native release rollback and Kubernetes resource rollback | Prepared/active restore archive pinning through retention, remote restore transport and true retained-image deployment rollback. The existing deployment rollback endpoint queues deployment metadata rather than proving restoration of an immutable image/configuration. |
+| Remote Docker operations | Connected targets use runtime adapters for deployment and operational reads | SSH Docker deployment and stop/restart/remove dispatch exist | Ordinary Docker metrics, canvas and WebSocket terminal still use the local client. Verify log/dependency dispatch too before calling SSH operational UX complete. |
+| Scaling | Reviewed instance settings and database-specific replication/shards | Docker autoscaling has opt-in, limits, cooldown and decisions; Kubernetes has manual replicas/reconciliation | Autoscaling eligibility checks project server binding but not the selected runtime; its worker reads local Docker metrics. Cluster/native automatic scaling is not delivered. |
+| Migration | Discovery/adoption, service selection, transfer, cutover, partial resume and rollback | Discovery/adoption foundations and instance bundle export/import | End-to-end service-selected move/copy/cutover/rollback. Bundle export/import is not migration parity. Adoption and import failure reporting need hardening. |
+| Operational attention/analytics | Request/latency/path/geography analytics, saved runtime history and issue-specific remediation | System/resource metrics, threshold warnings and notifications | HTTP traffic collection and rollups, durable actionable issue feed and remediation/recovery states. PostHog product telemetry is a separate function. |
+| Desktop | Packaged local services, persistent connection/session setup, readiness/startup recovery and verified signed updates | Tauri dashboard wrapper | Bundled daemon lifecycle, reconnect/recovery and desktop update handling. Backend updater alone does not supply desktop lifecycle. |
+| Catalogue | App specifications, destination choices and install-time storage/secrets/network workflows | Compose template catalogue and one-click creation/deployment foundations | App-by-app validation and multi-service install semantics. Catalogue entry counts do not establish deployability. |
+| API/automation | Shared contracts and broad HTTP/native SDK/MCP surface | Go DTOs, TypeScript interfaces, CLI and a smaller MCP bridge | Exhaustive maintained request/response schemas and operation parity across clients; new cluster/database operations are not automatically covered by existing CLI/MCP tools. |
+| Localization/mail | Locale/RTL surfaces and optional mail/webmail operations | No equivalent completed roadmap scope | Remain separate unchecked work; do not mix them into a completed runtime phase. |
+
+## Backend evidence
+
+Openship sources at the pinned audit revision:
+
+- [Native build/runtime](https://github.com/oblien/openship/blob/b7e69090804e0c342b2f7222e3c30577e3066d11/packages/adapters/src/runtime/bare.ts): source clone/build strategies, stack output and supervisor integration.
+- [Cluster databases](https://github.com/oblien/openship/blob/b7e69090804e0c342b2f7222e3c30577e3066d11/packages/adapters/src/cluster/database.ts): RedisCluster resources, PostgreSQL synchronous settings, network policy and observed roles/volumes. [Database contracts/workflow](https://github.com/oblien/openship/blob/b7e69090804e0c342b2f7222e3c30577e3066d11/packages/core/src/cluster-database.ts) cover import and recovery identities.
+- [Shared storage](https://github.com/oblien/openship/blob/b7e69090804e0c342b2f7222e3c30577e3066d11/packages/adapters/src/cluster/storage.ts) and [volume backup adapter](https://github.com/oblien/openship/blob/b7e69090804e0c342b2f7222e3c30577e3066d11/packages/adapters/src/cluster/volume-backups.ts).
+- [Migration routes](https://github.com/oblien/openship/blob/b7e69090804e0c342b2f7222e3c30577e3066d11/apps/api/src/modules/migration/migration.routes.ts) expose separate discovery, adoption, preview, copy/move, cutover, cancel and partial-resume actions.
+- [Analytics routes](https://github.com/oblien/openship/blob/b7e69090804e0c342b2f7222e3c30577e3066d11/apps/api/src/modules/analytics/analytics.routes.ts), [backup routes](https://github.com/oblien/openship/blob/b7e69090804e0c342b2f7222e3c30577e3066d11/apps/api/src/modules/backups/backup.routes.ts) and [desktop services](https://github.com/oblien/openship/blob/b7e69090804e0c342b2f7222e3c30577e3066d11/apps/desktop/src/main/services.ts).
+
+Codedock implementation anchors:
+
+- [Setup modal](../apps/dashboard/src/features/sources/application-setup-modal.tsx) and [runtime settings](../apps/dashboard/src/features/services/runtime-settings.tsx) demonstrate the split destination flow.
+- [Compose target guard](../internal/handlers/projects/compose_stack.go), [native validation](../internal/engine/bare/runtime.go) and [native activation](../internal/engine/bare/scripts.go) define actual supported targets.
+- [Cluster database manifests](../internal/engine/kubernetes/data_postgres.go), [Redis StatefulSet](../internal/engine/kubernetes/data_redis.go), [readiness check](../internal/engine/kubernetes/data_apply.go) and [database routes](../internal/http/cluster_setup.go) show delivered behavior and missing lifecycle/binding actions.
+- [Canvas persistence](../internal/repositories/canvas.go), [variable linker](../internal/services/projects/service_linker.go), [local Docker terminal](../internal/handlers/deployments/terminal.go), [metrics dispatch](../internal/services/deployments/deployment_service.go) and [autoscaling eligibility](../internal/services/projects/autoscaling.go) expose the remaining integration boundaries.
+- [Migration bundle handling](../internal/services/system/migration_service.go), [adoption](../internal/services/system/takeover_adopter.go), [catalogue deployment](../internal/services/projects/oneclick_service.go) and [desktop entry point](../apps/desktop/src-tauri/src/main.rs).
+
+## UI/UX findings
+
+Openship places runtime selection in the deployment flow, describes runtime choices as user outcomes and keeps orchestration details expandable. Its [runtime picker](https://github.com/oblien/openship/blob/b7e69090804e0c342b2f7222e3c30577e3066d11/apps/dashboard/src/app/(dashboard)/(deployment)/deploy/%5Bslug%5D/components/ServerRuntimePicker.tsx) recommends a mode using known destination capacity. Codedock exposes more raw versions, image references, private addresses and JSON than needed for a routine setup. Those controls should remain available as advanced details with validated defaults.
+
+Openship's [topology](https://github.com/oblien/openship/tree/b7e69090804e0c342b2f7222e3c30577e3066d11/apps/dashboard/src/components/topology) combines database creation, connection, backups, import and file volumes. Codedock spreads these across creation, build settings, the Clusters tab and backup pages. The reviewed operation pattern is useful, but users need a connected task flow and clear next actions after save, deployment, recovery and interruption.
+
+Codedock's canvas inspector displays raw metric JSON and backend field names. Cluster exec requires a JSON argument array and is a command runner, not an interactive terminal. Cluster logs are periodic snapshots, not a reconnecting live stream. Mobile layout, keyboard flow, contrast, focus handling and interruption recovery need rendered browser checks before claiming a UI/UX improvement over Openship.
+
+## Improvements actually delivered in Codedock
+
+These are improvements over Codedock's original baseline, not claims that Openship lacks the same safeguards:
+
+- Deployment creation retries reuse stable identity; review preserves editable detection results and setup drafts.
+- Compose runtime fields are preserved or explicitly rejected instead of silently discarded; image preparation precedes activation and partial activation stays visible.
+- Graph edits now persist with revision/ownership/cycle checks; layout dragging remains local.
+- Required project backups gate application/archive/Compose activation; SSH Docker capture selects the project engine.
+- Schedules use durable cancellable operations and revalidate the saved owner. Snapshot capture includes committed SQLite WAL data.
+- Runtime/upgrade journals and last-successful manifests are encrypted; failures retain recovery state and persistent data.
+- Native artifact activation validates checksums, runs as a dedicated user and preserves the previous release for rollback.
+
+One concrete difference: Codedock exposes cancellation for policy capture runs through its generic operation workflow. The audited Openship backup route table exposes restore cancellation but no equivalent capture-run cancellation route. This is a specific API distinction, not evidence that all Codedock backup behavior is stronger. Openship's old PENDING documents were not treated as authoritative for current behavior.
+
+## Corrections made during this audit
+
+Native terminal/metrics/build-settings panels now use the native runtime observation/log/exec endpoint instead of opening Docker controls. The shared status panel uses native-specific log/command labels. Canvas observations retain the reported runtime kind instead of labelling all non-Docker resources Kubernetes. Setup text now describes SSH Docker and the separate destination step accurately. The roadmap separates originally delivered scope from missing parity and integration work.
+
+## Completion order
+
+1. Correct target dispatch/eligibility, expose cluster database bindings/lifecycle in topology and unify first-deployment destination selection.
+2. Close database durability/network validation and Redis archive/failover gaps; make shared-storage and native source workflows explicit.
+3. Complete managed Hetzner lifecycle, migration, operational analytics, desktop and validated catalogue scope.
+4. Exercise disposable Docker/SSH/K3s targets through interruption, restart, archive restore, failover and ownership conflicts; run browser workflows on desktop/mobile and reconnect paths.
+5. Add maintained client contracts and operation coverage; then run the authorized PR CI/Cubic cycle. No PR is created by this audit.
+
+## Audit validation
+
+The corrections passed root typecheck, required Go/Biome formatting and focused project/runtime Go regressions. The observability package compiled and has no existing tests. The previous implementation baseline passed the full Go suite. CI/Cubic and live/browser checks remain pending; no parity claim is based solely on those earlier passing tests.

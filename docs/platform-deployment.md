@@ -20,7 +20,7 @@ Select an environment to view applications, databases, stack services, domains, 
 
 Database variable bindings use stable resource IDs and replace the selected application variable on apply. They take effect on its next deployment. The reviewed environment revision prevents applying a binding against changed configuration. Dragging nodes only changes the local layout.
 
-These setup and stack execution paths currently require local Docker projects. SSH, managed Hetzner and cluster destinations need their corresponding runtime adapters; choosing an unsupported target produces an explicit error.
+Application setup inherits the project Docker destination; SSH Docker application deployments are supported. Kubernetes and native destinations are configured separately in application build settings after creation. Compose stack execution still requires local Docker. Managed Hetzner provisioning remains unimplemented.
 
 ## Verification
 
