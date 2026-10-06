@@ -1,7 +1,6 @@
 package backups
 
 import (
-	"codedock.run/codedock/internal/models"
 	"codedock.run/codedock/internal/utils"
 	"github.com/labstack/echo/v4"
 	"net/http"
@@ -42,18 +41,7 @@ func (h *BackupHandler) VolumeRestoreTarget(c echo.Context) error {
 }
 
 func (h *BackupHandler) RestoreVolume(c echo.Context) error {
-	id, err := h.authorizeVolumeRestore(c)
-	if err != nil {
-		return err
-	}
-	var req models.VolumeRestoreRequest
-	if err := c.Bind(&req); err != nil || !req.ConfirmOverwrite || req.VolumeName == "" {
-		return utils.Error(c, http.StatusBadRequest, "confirm overwrite and supply the exact volume name")
-	}
-	if err := h.backupService.RestoreVolume(c.Request().Context(), id, req.VolumeName); err != nil {
-		return utils.Error(c, http.StatusConflict, err.Error())
-	}
-	return utils.Success(c, "Volume restore completed", nil)
+	return echo.NewHTTPError(http.StatusGone, "Use the reviewed restore prepare/apply workflow")
 }
 
 func (h *BackupHandler) CancelVolumeRestore(c echo.Context) error {

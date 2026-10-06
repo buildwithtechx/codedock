@@ -71,6 +71,13 @@ func (s *Server) registerDeploymentRoutes(authGroup *echo.Group) {
 }
 
 func (s *Server) registerBackupRoutes(authGroup *echo.Group) {
+	authGroup.GET("/operations", s.operationHandler.List, s.authGuard.RequireScope("backup:read"))
+	authGroup.GET("/operations/:operationId", s.operationHandler.Get, s.authGuard.RequireScope("backup:read"))
+	authGroup.POST("/operations/:operationId/cancel", s.operationHandler.Cancel, s.authGuard.RequireScope("backup:write"))
+	authGroup.POST("/backups/:id/runs", s.backupHandler.StartRun, s.authGuard.RequireScope("backup:write"))
+	authGroup.POST("/backup-records/:recordId/restore/review", s.backupHandler.PrepareRestore, s.authGuard.RequireScope("backup:write"))
+	authGroup.POST("/backup-operations/:operationId/apply", s.backupHandler.ApplyRestore, s.authGuard.RequireScope("backup:write"))
+	authGroup.PUT("/backup-records/:recordId/protection", s.backupHandler.ProtectRecord, s.authGuard.RequireScope("backup:write"))
 	authGroup.GET("/backups", s.backupHandler.List)
 	authGroup.POST("/backups", s.backupHandler.Create)
 	authGroup.GET("/backups/:id", s.backupHandler.Get)

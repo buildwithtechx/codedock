@@ -105,6 +105,11 @@ func (s *DeploymentService) executeDeployment(ctx context.Context, d *models.Dep
 		}
 		app.Volumes = volumes
 	}
+	if s.BeforeDeployment != nil {
+		if err := s.BeforeDeployment(ctx, app.ID); err != nil {
+			return "", fmt.Errorf("pre-deployment backup: %w", err)
+		}
+	}
 	if dependencies, ok := s.appRepo.(interface {
 		DeploymentDependencies(context.Context, *models.AppService) ([]string, error)
 	}); ok {

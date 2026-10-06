@@ -3,6 +3,7 @@ package deployments
 import (
 	"context"
 	"errors"
+	"fmt"
 	"io"
 	"os"
 	"path/filepath"
@@ -20,16 +21,17 @@ import (
 )
 
 type DeploymentService struct {
-	repo         repositories.DeploymentRepository
-	appRepo      repositories.AppServiceRepository
-	projectRepo  repositories.ProjectRepository
-	deployer     *deploy.Deployer
-	gitService   *GitService
-	statsMonitor *observability.StatsMonitor
-	volumeRepo   repositories.ServiceVolumeRepository
-	sshManager   *ssh.SSHManager
-	operationMu  sync.Mutex
-	operations   map[string]context.CancelFunc
+	BeforeDeployment func(context.Context, string) error
+	repo             repositories.DeploymentRepository
+	appRepo          repositories.AppServiceRepository
+	projectRepo      repositories.ProjectRepository
+	deployer         *deploy.Deployer
+	gitService       *GitService
+	statsMonitor     *observability.StatsMonitor
+	volumeRepo       repositories.ServiceVolumeRepository
+	sshManager       *ssh.SSHManager
+	operationMu      sync.Mutex
+	operations       map[string]context.CancelFunc
 }
 
 func NewDeploymentService(
@@ -123,9 +125,20 @@ func (s *DeploymentService) DeployAppService(ctx context.Context, appID, sourceD
 	if s.deployer == nil || s.appRepo == nil {
 		return "", errors.New("deployer or app repo not available")
 	}
+	operation, release, err := s.deployer.BeginServiceOperation(ctx, appID)
+	if err != nil {
+		return "", err
+	}
+	defer release()
+	ctx = operation
 	app, err := s.appRepo.GetByID(ctx, appID)
 	if err != nil {
 		return "", err
+	}
+	if s.BeforeDeployment != nil {
+		if err := s.BeforeDeployment(ctx, app.ID); err != nil {
+			return "", fmt.Errorf("pre-deployment backup: %w", err)
+		}
 	}
 	containerID, err := s.deployer.DeployAppService(ctx, app, sourceDir, logWriter)
 	if err == nil && containerID != "" {

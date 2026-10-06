@@ -137,6 +137,20 @@ export function BackupPolicies({ configs, isLoading }: BackupPoliciesProps) {
                       onCheckedChange={() => handleToggleEnabled(config)}
                       aria-label="Toggle policy"
                     />
+                    <label className="mt-2 flex gap-2 text-xs">
+                      <input
+                        type="checkbox"
+                        checked={config.preDeployment ?? false}
+                        disabled={!config.serviceId || updateBackup.isPending}
+                        onChange={(event) =>
+                          updateBackup.mutate({
+                            id: config.id,
+                            payload: { ...config, preDeployment: event.target.checked },
+                          })
+                        }
+                      />
+                      Require verified backup before deployment
+                    </label>
                   </TableCell>
                   <TableCell className="text-right">
                     <div className="flex items-center justify-end gap-1.5">

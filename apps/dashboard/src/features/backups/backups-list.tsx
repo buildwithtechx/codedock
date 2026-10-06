@@ -10,14 +10,14 @@ import {
   useList,
   useListAllRecords,
   useListS3Destinations,
-  useRestore,
 } from '#/features/backups';
 import { BackupDestinationHistory } from './backup-destination-history';
 import { BackupDestinations } from './backup-destinations';
+import { BackupOperationHistory } from './backup-operation-history';
 import { BackupPolicies } from './backup-policies';
 import { BackupStorageSummary } from './backup-storage-summary';
 import { CreateS3DestinationDialog } from './create-s3-destination-dialog';
-import { VolumeRestoreDialog } from './volume-restore-dialog';
+import { ReviewedRestoreDialog } from './reviewed-restore-dialog';
 
 export function BackupsList() {
   const search = useSearch({ strict: false }) as { tab?: string; add?: string } | undefined;
@@ -47,7 +47,6 @@ export function BackupsList() {
   const destinations = s3Data?.data || [];
 
   const [volumeRecordId, setVolumeRecordId] = useState<string | null>(null);
-  const restoreMutation = useRestore();
   const deleteRecordMutation = useDeleteRecord();
 
   const handleRefreshAll = async () => {
@@ -61,12 +60,8 @@ export function BackupsList() {
     const available = configsData?.data ?? (await refetchConfigs()).data?.data;
     const config = available?.find((candidate) => candidate.id === record.backupConfigId);
     if (!config) throw new Error('Could not load the snapshot backup configuration');
-    if (config?.volumeName) {
-      setVolumeRecordId(record.id);
-      return 'confirmation' as const;
-    }
-    await restoreMutation.mutateAsync({ id: record.id });
-    return 'completed' as const;
+    setVolumeRecordId(record.id);
+    return 'confirmation' as const;
   };
 
   const handleDeleteRecord = async (configId: string, recordId: string) => {
@@ -82,7 +77,24 @@ export function BackupsList() {
 
   return (
     <div className="space-y-6">
-      <VolumeRestoreDialog recordId={volumeRecordId} onClose={() => setVolumeRecordId(null)} />
+      <BackupOperationHistory />
+      {volumeRecordId && (
+        <ReviewedRestoreDialog
+          key={volumeRecordId}
+          recordId={volumeRecordId}
+          sourceDatabaseId={records.find((record) => record.id === volumeRecordId)?.databaseId}
+          onClose={() => {
+            setVolumeRecordId(null);
+            void refetchRecords();
+          }}
+          allowDatabaseTarget={
+            !configsData?.data?.find(
+              (cfg) =>
+                cfg.id === records.find((record) => record.id === volumeRecordId)?.backupConfigId
+            )?.volumeName
+          }
+        />
+      )}
       <div className="flex flex-wrap items-center justify-between gap-4">
         <PageHeader
           title="Backups"
@@ -145,7 +157,7 @@ export function BackupsList() {
                 isLoading={isLoadingRecords}
                 onRestore={handleRestoreRecord}
                 onDeleteRecord={handleDeleteRecord}
-                restorePending={restoreMutation.isPending || isLoadingConfigs}
+                restorePending={isLoadingConfigs}
                 deletePending={deleteRecordMutation.isPending}
               />
             </TabsContent>

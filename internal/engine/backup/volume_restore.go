@@ -106,6 +106,10 @@ func (bm *BackupManager) CancelVolumeRestore(recordID string) bool {
 }
 
 func (bm *BackupManager) RestoreVolume(ctx context.Context, recordID, confirmedVolume string) error {
+	return bm.restoreVolume(ctx, recordID, confirmedVolume, "")
+}
+
+func (bm *BackupManager) restoreVolume(ctx context.Context, recordID, confirmedVolume, checksum string) error {
 	target, err := bm.ValidateVolumeRestore(ctx, recordID)
 	if err != nil {
 		return err
@@ -147,6 +151,12 @@ func (bm *BackupManager) RestoreVolume(ctx context.Context, recordID, confirmedV
 	if err != nil {
 		return err
 	}
+	if checksum != "" {
+		archive, err = verifiedVolumeArchive(ctx, archive, checksum)
+		if err != nil {
+			return err
+		}
+	}
 	defer func() {
 		if err := archive.Close(); err != nil {
 			slog.Warn("close volume restore archive", "error", err)
@@ -187,9 +197,13 @@ func (bm *BackupManager) RestoreVolume(ctx context.Context, recordID, confirmedV
 			return fmt.Errorf("close volume restore image pull: %w", closeErr)
 		}
 	}
+	command := []string{"timeout", strconv.Itoa(target.TimeoutSeconds), "tar", "-xzf", "-", "-C", "/restore"}
+	if checksum != "" {
+		command = []string{"sh", "-c", `test -z "$(find /restore -type l -print -quit)" && exec timeout "$1" tar -xzf - -C /restore`, "restore", strconv.Itoa(target.TimeoutSeconds)}
+	}
 	result, err := bm.dockerClient.ContainerCreate(ctx, &container.Config{
 		Image: "alpine", OpenStdin: true, StdinOnce: true, AttachStdin: true, AttachStdout: true, AttachStderr: true,
-		Cmd: []string{"timeout", strconv.Itoa(target.TimeoutSeconds), "tar", "-xzf", "-", "-C", "/restore"},
+		Cmd: command,
 	}, &container.HostConfig{NetworkMode: "none", Mounts: []mount.Mount{{Type: mount.TypeVolume, Source: target.VolumeName, Target: "/restore"}}}, nil, nil, "")
 	if err != nil {
 		return fmt.Errorf("create volume restore helper: %w", err)

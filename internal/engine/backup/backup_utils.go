@@ -4,7 +4,6 @@ import (
 	"context"
 	"fmt"
 	"log/slog"
-	"os"
 	"sort"
 	"strings"
 	"time"
@@ -36,7 +35,7 @@ func (bm *BackupManager) enforceRetentionPolicy(cfg *models.BackupConfig) {
 
 	var activeRecords []*models.BackupRecord
 	for _, rec := range records {
-		if rec.Status == models.BackupRecordStatusCompleted {
+		if rec.Status == models.BackupRecordStatusCompleted && rec.ProtectedUntil <= time.Now().Unix() {
 			activeRecords = append(activeRecords, rec)
 		}
 	}
@@ -95,37 +94,8 @@ func (bm *BackupManager) enforceRetentionPolicy(cfg *models.BackupConfig) {
 	}
 
 	for _, rec := range toExpire {
-		if rec.S3URL != "" {
-			destID := rec.S3DestinationID
-			if destID == "" {
-				destID = cfg.S3DestinationID
-			}
-			if destID != "" {
-				dest, err := bm.store.GetS3Destination(destID)
-				if err != nil || dest == nil {
-					slog.Error("failed to resolve s3 destination for retention policy enforcement", "dest_id", destID, "error", err)
-					continue
-				}
-				prefix := fmt.Sprintf("s3://%s/", dest.Bucket)
-				key := strings.TrimPrefix(rec.S3URL, prefix)
-				resp, err := signedS3Request(context.Background(), dest, "DELETE", key, nil, "")
-				if err != nil {
-					slog.Error("failed to delete s3 object during retention policy enforcement", "s3_url", rec.S3URL, "error", err)
-					continue
-				}
-				resp.Body.Close()
-			}
+		if err := bm.expireRecord(cfg, rec); err != nil {
+			slog.Error("expire backup record", "record", rec.ID, "error", err)
 		}
-		if rec.FilePath != "" {
-			_ = os.Remove(rec.FilePath)
-		}
-		_ = bm.store.UpdateBackupRecord(models.UpdateBackupRecordOpts{
-			ID:          rec.ID,
-			Status:      models.BackupRecordStatusExpired,
-			FilePath:    "",
-			S3URL:       rec.S3URL,
-			Logs:        rec.Logs + "\nFile pruned by retention policy.",
-			CompletedAt: time.Now().UTC().Format(time.RFC3339),
-		})
 	}
 }

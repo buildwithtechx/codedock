@@ -26,6 +26,7 @@ import (
 )
 
 type Server struct {
+	operationHandler       *system.OperationHandler
 	router                 *echo.Echo
 	mcpBridge              *Bridge
 	authRateLimiter        *middleware.RateLimiter

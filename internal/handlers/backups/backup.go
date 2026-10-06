@@ -11,10 +11,12 @@ import (
 	"codedock.run/codedock/internal/models"
 	backupservices "codedock.run/codedock/internal/services/backups"
 	databaseservices "codedock.run/codedock/internal/services/databases"
+	"codedock.run/codedock/internal/services/operations"
 	projectservices "codedock.run/codedock/internal/services/projects"
 )
 
 type BackupHandler struct {
+	operations     *operations.Service
 	backupService  *backupservices.BackupService
 	appService     *projectservices.AppService
 	dbService      *databaseservices.DatabaseService
@@ -112,6 +114,9 @@ func (h *BackupHandler) Create(c echo.Context) error {
 		return utils.Error(c, http.StatusForbidden, "insufficient admin permissions to create backup for this resource")
 	}
 
+	if err := h.validatePolicy(c, &cfg); err != nil {
+		return err
+	}
 	if err := h.backupService.CreateConfig(c.Request().Context(), &cfg); err != nil {
 		return utils.Error(c, http.StatusInternalServerError, err.Error())
 	}
@@ -136,6 +141,7 @@ func (h *BackupHandler) Update(c echo.Context) error {
 	}
 
 	var req struct {
+		PreDeployment   *bool  `json:"preDeployment"`
 		Name            string `json:"name"`
 		Description     string `json:"description"`
 		DbUser          string `json:"dbUser"`
@@ -189,10 +195,13 @@ func (h *BackupHandler) Update(c echo.Context) error {
 	if req.S3DestinationID != "" {
 		existing.S3DestinationID = req.S3DestinationID
 	}
-	if req.DatabaseID != "" {
-		existing.DatabaseID = req.DatabaseID
+	if req.DatabaseID != "" && req.DatabaseID != existing.DatabaseID {
+		return utils.Error(c, http.StatusBadRequest, "backup producer is immutable; create a separate policy")
 	}
 
+	if req.PreDeployment != nil {
+		existing.PreDeployment = *req.PreDeployment
+	}
 	if req.BackupEnabled != nil {
 		existing.BackupEnabled = *req.BackupEnabled
 	}
@@ -203,6 +212,9 @@ func (h *BackupHandler) Update(c echo.Context) error {
 		existing.DisableLocal = *req.DisableLocal
 	}
 
+	if err := h.validatePolicy(c, existing); err != nil {
+		return err
+	}
 	if err := h.backupService.UpdateConfig(c.Request().Context(), existing); err != nil {
 		return utils.Error(c, http.StatusInternalServerError, err.Error())
 	}

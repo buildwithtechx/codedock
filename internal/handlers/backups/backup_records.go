@@ -159,48 +159,7 @@ func (h *BackupHandler) DeleteRecord(c echo.Context) error {
 }
 
 func (h *BackupHandler) Restore(c echo.Context) error {
-	id := c.Param("id")
-	if id == "" {
-		return utils.Error(c, http.StatusBadRequest, "missing record id parameter")
-	}
-
-	var rec *models.BackupRecord
-	var cfg *models.BackupConfig
-
-	directRec, err := h.backupService.GetRecord(c.Request().Context(), id)
-	if err == nil && directRec != nil {
-		rec = directRec
-		cfg, _ = h.backupService.GetConfig(c.Request().Context(), rec.BackupConfigID)
-	} else {
-		directCfg, cfgErr := h.backupService.GetConfig(c.Request().Context(), id)
-		if cfgErr == nil && directCfg != nil {
-			cfg = directCfg
-			records, _ := h.backupService.ListRecordsByConfig(c.Request().Context(), id)
-			for _, r := range records {
-				if r.Status == models.BackupRecordStatusCompleted {
-					rec = r
-					break
-				}
-			}
-		}
-	}
-
-	if rec == nil {
-		return utils.Error(c, http.StatusNotFound, "backup record not found")
-	}
-	if cfg == nil {
-		return utils.Error(c, http.StatusNotFound, "backup config not found")
-	}
-
-	if !h.hasAdminAccess(c, cfg.DatabaseID, cfg.ServiceID) {
-		return utils.Error(c, http.StatusForbidden, "insufficient admin permissions to restore this backup")
-	}
-
-	err = h.backupService.RestoreBackup(c.Request().Context(), rec.ID)
-	if err != nil {
-		return utils.Error(c, http.StatusInternalServerError, err.Error())
-	}
-	return utils.Success(c, "Backup successfully restored", nil)
+	return echo.NewHTTPError(http.StatusGone, "Use the reviewed restore prepare/apply workflow")
 }
 
 func (h *BackupHandler) ListRecordsByDatabase(c echo.Context) error {

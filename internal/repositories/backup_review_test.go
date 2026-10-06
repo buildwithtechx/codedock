@@ -88,7 +88,7 @@ func TestBackupListingExcludesDeletedConfigsBeforeLimit(t *testing.T) {
 		if id == "deleted" {
 			startedAt = "2026-01-01T00:00:00Z"
 		}
-		if err := repo.CreateRecord(ctx, &models.BackupRecord{ID: id, BackupConfigID: id, StartedAt: startedAt}); err != nil {
+		if err := repo.CreateRecord(ctx, &models.BackupRecord{ID: id, BackupConfigID: id, StartedAt: startedAt, Status: models.BackupRecordStatusCompleted}); err != nil {
 			t.Fatal(err)
 		}
 	}

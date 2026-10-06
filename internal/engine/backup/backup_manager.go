@@ -2,6 +2,8 @@ package backup
 
 import (
 	"context"
+	"crypto/sha256"
+	"encoding/hex"
 	"errors"
 	"fmt"
 	"log/slog"
@@ -146,11 +148,16 @@ func (bm *BackupManager) failBackupWithLogs(recID, priorLogs, errStr string) (*m
 	return nil, errors.New(errStr)
 }
 
-func (bm *BackupManager) DeleteBackupRecord(ctx context.Context, recordID string) {
-	rec, err := bm.store.GetBackupRecord(recordID)
-	if err == nil && rec != nil && rec.FilePath != "" {
-		_ = os.Remove(rec.FilePath)
+func (bm *BackupManager) DeleteBackupRecord(ctx context.Context, recordID string) error {
+	record, err := bm.store.GetBackupRecord(recordID)
+	if err != nil {
+		return err
 	}
+	cfg, err := bm.store.GetBackupConfig(record.BackupConfigID)
+	if err != nil {
+		return err
+	}
+	return bm.removeArchive(ctx, cfg, record)
 }
 
 func (bm *BackupManager) TriggerBackup(ctx context.Context, backupConfigID string) (*models.BackupRecord, error) {
@@ -174,6 +181,15 @@ func (bm *BackupManager) TriggerBackup(ctx context.Context, backupConfigID strin
 		return nil, fmt.Errorf("failed to create backup record: %w", err)
 	}
 
+	timeout := cfg.Timeout
+	if timeout <= 0 {
+		timeout = 3600
+	}
+	ctx, cancel := context.WithTimeout(ctx, time.Duration(timeout)*time.Second)
+	defer cancel()
+	if err := backupProgress(ctx, "PRODUCING", "Creating backup record "+rec.ID); err != nil {
+		return bm.failBackupRecord(rec.ID, err.Error())
+	}
 	var dumpBytes []byte
 	var execLogs string
 	var fileExt string
@@ -205,7 +221,16 @@ func (bm *BackupManager) TriggerBackup(ctx context.Context, backupConfigID strin
 		}
 	}
 
-	fileName := fmt.Sprintf("backup_%s_%s%s", cfg.ID, time.Now().UTC().Format("20060102_150405"), fileExt)
+	if err := backupProgress(ctx, "VERIFYING", "Checking produced archive"); err != nil {
+		return bm.failBackupRecord(rec.ID, err.Error())
+	}
+	if len(dumpBytes) == 0 {
+		return bm.failBackupRecord(rec.ID, "backup producer returned an empty archive")
+	}
+	digest := sha256.Sum256(dumpBytes)
+	rec.SHA256 = hex.EncodeToString(digest[:])
+	rec.VerifiedAt = time.Now().UTC().Format(time.RFC3339)
+	fileName := fmt.Sprintf("backup_%s_%s%s", cfg.ID, time.Now().UTC().Format("20060102_150405")+"_"+rec.ID, fileExt)
 	filePath := filepath.Join(bm.backupDir, fileName)
 
 	if err := os.WriteFile(filePath, dumpBytes, 0o600); err != nil {
@@ -219,6 +244,9 @@ func (bm *BackupManager) TriggerBackup(ctx context.Context, backupConfigID strin
 
 	s3URL := ""
 	if cfg.S3Enabled {
+		if err := backupProgress(ctx, "UPLOADING", "Uploading verified archive"); err != nil {
+			return bm.failBackupRecord(rec.ID, err.Error())
+		}
 		var s3Err error
 		s3URL, execLogs, s3Err = bm.handleS3Upload(ctx, cfg, fileName, dumpBytes, execLogs)
 		if s3Err != nil {
@@ -242,45 +270,16 @@ func (bm *BackupManager) TriggerBackup(ctx context.Context, backupConfigID strin
 		filePath = ""
 	}
 
-	bm.enforceRetentionPolicy(cfg)
-
-	return bm.finalizeBackupRecord(FinalizeBackupOpts{
+	completed, err := bm.finalizeBackupRecord(FinalizeBackupOpts{
 		Record:    rec,
 		FilePath:  filePath,
 		S3URL:     s3URL,
 		ExecLogs:  execLogs,
 		SizeBytes: sizeBytes,
 	})
-}
-
-type FinalizeBackupOpts struct {
-	Record    *models.BackupRecord
-	FilePath  string
-	S3URL     string
-	ExecLogs  string
-	SizeBytes int64
-}
-
-func (bm *BackupManager) finalizeBackupRecord(opts FinalizeBackupOpts) (*models.BackupRecord, error) {
-	nowStr := time.Now().UTC().Format(time.RFC3339)
-	finalLogs := opts.Record.Logs + opts.ExecLogs + "\nBackup run completed successfully."
-	if err := bm.store.UpdateBackupRecord(models.UpdateBackupRecordOpts{
-		ID:            opts.Record.ID,
-		Status:        models.BackupRecordStatusCompleted,
-		FilePath:      opts.FilePath,
-		S3URL:         opts.S3URL,
-		Logs:          finalLogs,
-		FileSizeBytes: opts.SizeBytes,
-		CompletedAt:   nowStr,
-	}); err != nil {
-		return nil, fmt.Errorf("persist completed backup record: %w", err)
+	if err != nil {
+		return nil, err
 	}
-
-	opts.Record.Status = models.BackupRecordStatusCompleted
-	opts.Record.FilePath = opts.FilePath
-	opts.Record.FileSizeBytes = opts.SizeBytes
-	opts.Record.S3URL = opts.S3URL
-	opts.Record.Logs = finalLogs
-	opts.Record.CompletedAt = nowStr
-	return opts.Record, nil
+	bm.enforceRetentionPolicy(cfg)
+	return completed, nil
 }

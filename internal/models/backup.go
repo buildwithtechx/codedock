@@ -17,6 +17,7 @@ const (
 )
 
 type BackupConfig struct {
+	PreDeployment   bool               `json:"preDeployment" db:"pre_deployment"`
 	ID              string             `json:"id" db:"id"`
 	DatabaseID      string             `json:"databaseId,omitempty" db:"database_id"`
 	ServiceID       string             `json:"serviceId,omitempty" db:"service_id"`
@@ -41,6 +42,9 @@ type BackupConfig struct {
 }
 
 type BackupRecord struct {
+	ProtectedUntil  int64              `json:"protectedUntil" db:"protected_until"`
+	SHA256          string             `json:"sha256" db:"sha256"`
+	VerifiedAt      string             `json:"verifiedAt" db:"verified_at"`
 	ID              string             `json:"id" db:"id"`
 	BackupConfigID  string             `json:"backupConfigId" db:"backup_config_id"`
 	DatabaseID      string             `json:"databaseId,omitempty" db:"database_id"`
@@ -55,6 +59,8 @@ type BackupRecord struct {
 }
 
 type UpdateBackupRecordOpts struct {
+	SHA256          string             `json:"sha256"`
+	VerifiedAt      string             `json:"verifiedAt"`
 	ID              string             `json:"id"`
 	Status          BackupRecordStatus `json:"status"`
 	FilePath        string             `json:"-"`

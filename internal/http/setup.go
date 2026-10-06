@@ -32,6 +32,7 @@ import (
 	backupservices "codedock.run/codedock/internal/services/backups"
 	databaseservices "codedock.run/codedock/internal/services/databases"
 	deploymentservices "codedock.run/codedock/internal/services/deployments"
+	"codedock.run/codedock/internal/services/operations"
 	projectservices "codedock.run/codedock/internal/services/projects"
 	systemservices "codedock.run/codedock/internal/services/system"
 	"codedock.run/codedock/internal/utils"
@@ -108,7 +109,6 @@ func NewServer(db *sql.DB, v *utils.Vault, deployer *deploy.Deployer, traefikMan
 
 	backupManager := backup.NewBackupManager(dockerClient, httpEngineAdapter, "")
 	backupManager.SetVolumeOperations(volumeOperations)
-	_ = backupManager.Start()
 
 	projectService := projectservices.NewProjectService(projectRepo, environmentRepo, appRepo, serviceVarRepo, settingsRepo, orgRepo)
 	projectAppService := projectservices.NewProjectAppService(projectAppRepo)
@@ -150,9 +150,21 @@ func NewServer(db *sql.DB, v *utils.Vault, deployer *deploy.Deployer, traefikMan
 	autoscalingService := projectservices.NewAutoscalingService(autoscalingRepo, appRepo, projectRepo)
 	autoscalingHandler := projects.NewAutoscalingHandler(autoscalingService)
 	autoscaler := deploy.NewAutoscalerWorker(appRepo, statsMonitor, deploymentService, autoscalingRepo)
-	autoscaler.Start()
 
+	operationService := operations.NewService(repositories.NewOperationRepo(db, v))
+	if err := operationService.Recover(context.Background()); err != nil {
+		return nil, fmt.Errorf("recover operations: %w", err)
+	}
 	backupService := backupservices.NewBackupService(backupRepo, s3DestinationRepo, backupManager)
+	if err := backupRepo.RecoverRecords(context.Background()); err != nil {
+		return nil, fmt.Errorf("recover backup records: %w", err)
+	}
+	backupService.SetOperations(operationService)
+	deploymentService.BeforeDeployment = backupService.BeforeDeployment
+	if err := backupManager.Start(); err != nil {
+		return nil, fmt.Errorf("start backup scheduling: %w", err)
+	}
+	autoscaler.Start()
 	userService := authservices.NewUserService(userRepo)
 	oAuthService := authservices.NewOAuthService(oauthRepo, userRepo, tokenService)
 	prPreviewService := deploymentservices.NewPRPreviewService(prPreviewRepository, appService, gitService, deployer, sshManager, projectRepo)
@@ -189,6 +201,7 @@ func NewServer(db *sql.DB, v *utils.Vault, deployer *deploy.Deployer, traefikMan
 	serviceVarHandler := projects.NewServiceVarHandler(appService, auditService, envSuggestionService)
 	projectSettingsHandler := projects.NewProjectSettingsHandler(projectSettingsService)
 	backupHandler := backups.NewBackupHandler(backupService, appService, databaseService, projectService)
+	backupHandler.SetOperations(operationService)
 	settingsHandler := auth.NewSettingsHandler(settingsService, notifSettingsService)
 	notifSettingsHandler := system.NewNotificationSettingsHandler(notifSettingsService)
 	aiSettingsHandler := system.NewAISettingsHandler(aiSettingsService)
@@ -257,6 +270,7 @@ func NewServer(db *sql.DB, v *utils.Vault, deployer *deploy.Deployer, traefikMan
 	aiLimiter := middleware.NewRateLimiter(5, time.Minute)
 
 	srv := &Server{
+		operationHandler:       system.NewOperationHandler(operationService),
 		router:                 e,
 		mcpBridge:              bridge,
 		authRateLimiter:        authLimiter,

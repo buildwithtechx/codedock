@@ -118,6 +118,10 @@ func (a *engineAdapter) UpdateBackupRecord(opts models.UpdateBackupRecordOpts) e
 	if err != nil {
 		return err
 	}
+	if opts.SHA256 != "" {
+		rec.SHA256 = opts.SHA256
+		rec.VerifiedAt = opts.VerifiedAt
+	}
 	rec.Status = opts.Status
 	rec.FilePath = opts.FilePath
 	rec.S3URL = opts.S3URL

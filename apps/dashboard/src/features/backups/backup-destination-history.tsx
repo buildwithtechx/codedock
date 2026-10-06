@@ -27,6 +27,7 @@ import {
   TableRow,
 } from '#/components/ui/table';
 import { getApiBaseUrl } from '#/lib/api-client';
+import { BackupRecordProtection } from './backup-record-protection';
 import type { BackupRecord } from './interfaces';
 
 type BackupDestinationHistoryProps = {
@@ -157,6 +158,12 @@ export function BackupDestinationHistory({
                       </TableCell>
                       <TableCell className="text-right">
                         <div className="flex items-center justify-end gap-1.5">
+                          {isCompleted && (
+                            <BackupRecordProtection
+                              recordId={record.id}
+                              until={record.protectedUntil}
+                            />
+                          )}
                           <Button
                             variant="ghost"
                             size="sm"
@@ -198,7 +205,9 @@ export function BackupDestinationHistory({
                             size="icon"
                             className="h-7 w-7 text-destructive hover:bg-destructive/10 hover:text-destructive"
                             onClick={() => onDeleteRecord(record.backupConfigId, record.id)}
-                            disabled={deletePending}
+                            disabled={
+                              deletePending || (record.protectedUntil ?? 0) * 1000 > Date.now()
+                            }
                             title="Delete snapshot"
                           >
                             <Trash2 className="h-3.5 w-3.5" />

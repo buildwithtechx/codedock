@@ -54,15 +54,7 @@ export const backupsService = {
 
   trigger: async (id: string): Promise<void> => {
     try {
-      await apiClient.post(`/backups/${id}/trigger`);
-    } catch (error) {
-      throw handleApiError(error);
-    }
-  },
-
-  restore: async (id: string): Promise<void> => {
-    try {
-      await apiClient.post(`/backups/${id}/restore`);
+      await apiClient.post(`/backups/${id}/runs`);
     } catch (error) {
       throw handleApiError(error);
     }

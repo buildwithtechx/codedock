@@ -12,7 +12,6 @@ import (
 	"github.com/docker/docker/pkg/stdcopy"
 
 	"codedock.run/codedock/internal/models"
-	"codedock.run/codedock/internal/utils"
 
 	"codedock.run/codedock/internal/engine/compose"
 )
@@ -64,7 +63,7 @@ func (bm *BackupManager) buildRestoreCommand(cfg *models.BackupConfig) (string, 
 		if err != nil || db == nil {
 			return "", nil, fmt.Errorf("target database %s not found", cfg.DatabaseID)
 		}
-		containerName := utils.NormalizeContainerName(db.ID)
+		containerName := databaseContainerIdentity(db)
 		tmplMgr, err := compose.NewTemplateManager()
 		if err != nil {
 			return "", nil, fmt.Errorf("failed to init template manager: %v", err)

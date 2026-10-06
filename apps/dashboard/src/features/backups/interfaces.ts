@@ -1,9 +1,10 @@
 import type { BaseResponse } from '#/interfaces/base';
 
 export type BackupConfigStatus = 'active' | 'inactive';
-export type BackupRecordStatus = 'running' | 'completed' | 'failed';
+export type BackupRecordStatus = 'running' | 'completed' | 'failed' | 'expiring' | 'expired';
 
 export interface BackupConfig {
+  preDeployment?: boolean;
   id: string;
   projectId: string;
   databaseId?: string;
@@ -29,6 +30,9 @@ export interface BackupConfig {
 }
 
 export interface BackupRecord {
+  protectedUntil?: number;
+  sha256?: string;
+  verifiedAt?: string;
   id: string;
   backupConfigId: string;
   projectId: string;
@@ -61,6 +65,7 @@ export interface S3Destination {
 }
 
 export interface CreateBackupConfigRequest {
+  preDeployment?: boolean;
   projectId: string;
   name: string;
   description: string;

@@ -69,16 +69,6 @@ export const useDeleteRecord = () => {
   });
 };
 
-export const useRestore = () => {
-  const queryClient = useQueryClient();
-  return useMutation({
-    mutationFn: (payload: { id: string }) => backupsService.restore(payload.id),
-    onSuccess: async () => {
-      await queryClient.invalidateQueries({ queryKey: ['backups'] });
-    },
-  });
-};
-
 export const useListRecords = (id: string) => {
   return useQuery({
     queryKey: ['backups', 'listRecords', id].filter(Boolean),
