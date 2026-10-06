@@ -5,7 +5,7 @@ Managed cloud provider: Hetzner. Existing projects and self-hosted installations
 
 ## Delivery workflow
 
-Phases 2, 3 and 4 ship together in focused commits and one pull request, with one combined CI and Cubic review cycle. Later phases can follow the same batching approach when their runtime adapters are ready. Run Biome and Go formatting, relevant regression checks, CI and Cubic review before considering a phase complete. Merge only when authorized. No feature is complete merely because its settings form or API route exists. Runtime changes require target validation, permission checks, durable progress, cancellation and recovery.
+Phases 2, 3 and 4 ship together in focused commits and one pull request, with one combined CI and Cubic review cycle. Later phases can follow the same batching approach when their runtime adapters are ready. Run Biome and Go formatting and relevant regression checks before committing. The current batch uses incremental commits and pushes without creating a PR; CI and Cubic review remain pending until a PR is authorized. Merge only when authorized. No feature is complete merely because its settings form or API route exists. Runtime changes require target validation, permission checks, durable progress, cancellation and recovery.
 
 ## Phase 1: Reliability foundation
 
@@ -66,9 +66,10 @@ Implementation details and current target boundaries: [Application, Compose and 
 ## Phase 6: Cluster and runtime orchestration
 
 - [x] Reviewed private-network and K3s preparation, installation, join and removal operations.
-- [ ] Kubernetes runtime adapter with deploy, logs, exec, metrics and lifecycle support.
-- [ ] Application placement, instance counts, readiness, routing and persistent storage.
-- [ ] Desired/observed reconciliation, upgrade recovery and conflicting-operation locks.
+- [x] Kubernetes runtime adapter with deploy, logs, exec, metrics and lifecycle support.
+- [x] Application placement, instance counts, readiness, routing and persistent storage.
+- [x] Observed workload/pod state, conflicting-operation locks and encrypted deployment journals with failed-rollout/startup recovery.
+- [ ] Automatic desired/observed reconciliation and cluster-upgrade recovery.
 - [ ] PostgreSQL operator setup, replication, credentials, S3 backup and restore into a new database.
 - [ ] Redis standalone/replicated modes with engine-specific validation and recovery.
 - [ ] Docker replicas are distinct from multi-server scheduling and database replication.
@@ -76,13 +77,17 @@ Implementation details and current target boundaries: [Application, Compose and 
 
 ## Phase 7: Backup policy and recovery UX
 
-- [ ] Policies target projects/services and select producer, destination, schedule and retention.
-- [ ] Durable runs provide live progress, logs, cancellation and archive verification.
+- [x] Policies target authorized projects/services and select supported database/named-volume producers, local/S3 destinations, schedule and retention.
+- [x] Manual backup runs provide durable progress, logs, cancellation and archive verification.
+- [ ] Scheduled runs use the same durable, cancellable operation workflow and revalidate the policy owner.
 - [x] Protected records survive retention until their protection expires or is removed.
 - [x] Restore prepare identifies archive, engine, target and destructive effects without applying them.
 - [x] Apply requires an expiring confirmation bound to the reviewed target and archive.
 - [x] In-place and new-target restore modes report interruption and final verification.
-- [ ] Pre-deployment policies wait for verified backups before deployment proceeds.
+- [x] Application and archive deployments wait for required verified backups before proceeding.
+- [ ] Compose stack activation and SSH worker deployments share the required-backup hook.
+
+Committed runtime implementation: `cf41607`. The newly checked runtime items passed the full Go suite, focused lifecycle/removal checks, root typecheck and formatting. Live K3s installation and recovery exercises remain outstanding. Scheduled-run changes are in progress and are not counted as completed here.
 
 Current backup and cluster implementation boundaries, including scheduled-run cancellation, deployment coverage and live-target validation: [Backup recovery and cluster setup](platform-recovery.md).
 
