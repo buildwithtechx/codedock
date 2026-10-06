@@ -53,6 +53,8 @@ func TestPersonalTokensEnforcePolicyAndOwnerStatus(t *testing.T) {
 		{name: "nested resource outside scope", method: "GET", path: "/api/projects/:projectId/apps/:id", id: "other", specific: true, want: 403},
 		{name: "project token escalation", method: "POST", path: "/api/projects/:projectId/tokens", specific: true, want: 403},
 		{name: "nested body outside scope", method: "PUT", path: "/api/apps/:id", id: "app", specific: true, body: `{"settings":{"targetProjectId":"other"}}`, want: 403},
+		{name: "XML scope bypass denied", method: "PUT", path: "/api/apps/:id", id: "app", specific: true, contentType: "application/xml", body: `<AppService><ProjectID>other</ProjectID></AppService>`, want: 415},
+		{name: "form scope bypass denied", method: "PUT", path: "/api/apps/:id", id: "app", specific: true, contentType: "application/x-www-form-urlencoded", body: "projectId=other", want: 415},
 		{name: "mixed case JSON scope", method: "PUT", path: "/api/apps/:id", id: "app", specific: true, contentType: "Application/JSON; charset=utf-8", body: `{"projectId":"other"}`, want: 403},
 		{name: "snake case query scope", method: "POST", path: "/api/projects/:projectId/deploy", specific: true, query: "?environment_id=other", want: 403},
 		{name: "move outside scope", method: "PUT", path: "/api/apps/:id", id: "app", specific: true, body: `{"projectId":"other"}`, want: 403},

@@ -127,11 +127,14 @@ func (g *AuthGuard) authorizePersonalRequest(c echo.Context) error {
 		}
 	}
 	mediaType, _, _ := mime.ParseMediaType(strings.ToLower(c.Request().Header.Get("Content-Type")))
-	if c.Request().Body != nil && mediaType == "application/json" {
+	if c.Request().Body != nil {
 		body, err := io.ReadAll(io.LimitReader(c.Request().Body, 1024*1024+1))
 		c.Request().Body = io.NopCloser(bytes.NewReader(body))
 		if err != nil || len(body) > 1024*1024 {
 			return echo.NewHTTPError(http.StatusBadRequest, "invalid scoped token request body")
+		}
+		if len(body) > 0 && mediaType != "application/json" {
+			return echo.NewHTTPError(http.StatusUnsupportedMediaType, "specific-project personal tokens require JSON request bodies")
 		}
 		var refs any
 		if len(body) > 0 && json.Unmarshal(body, &refs) != nil {
