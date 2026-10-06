@@ -17,9 +17,12 @@ func (s autoscalingTestPolicies) Save(context.Context, *models.AutoscalingPolicy
 	return s.failure
 }
 
-type autoscalingTestApps struct{}
+type autoscalingTestApps struct{ failure error }
 
-func (autoscalingTestApps) GetByID(context.Context, string) (*models.AppService, error) {
+func (s autoscalingTestApps) GetByID(context.Context, string) (*models.AppService, error) {
+	if s.failure != nil {
+		return nil, s.failure
+	}
 	return &models.AppService{ID: "app", ProjectID: "project"}, nil
 }
 
@@ -56,5 +59,15 @@ func TestAutoscalingSupportAndValidationErrors(t *testing.T) {
 	p.MinReplicas = 0
 	if err := service.Save(context.Background(), p); !utils.IsValidation(err) {
 		t.Fatal("invalid limits classified as storage failure")
+	}
+}
+
+func TestAutoscalingPreservesMissingService(t *testing.T) {
+	service := NewAutoscalingService(autoscalingTestPolicies{}, autoscalingTestApps{utils.NewNotFoundError("Service", "app")}, autoscalingTestProjects{})
+	if _, err := service.Get(context.Background(), "app"); !utils.IsNotFound(err) {
+		t.Fatal("missing service lost not-found classification")
+	}
+	if err := service.Save(context.Background(), models.DefaultAutoscalingPolicy("app")); !utils.IsNotFound(err) {
+		t.Fatal("missing service save lost not-found classification")
 	}
 }

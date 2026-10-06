@@ -18,6 +18,9 @@ func NewAutoscalingHandler(service *projectservices.AutoscalingService) *Autosca
 func (h *AutoscalingHandler) Get(c echo.Context) error {
 	p, err := h.service.Get(c.Request().Context(), c.Param("serviceId"))
 	if err != nil {
+		if utils.IsNotFound(err) {
+			return utils.Error(c, http.StatusNotFound, "service not found")
+		}
 		return utils.Error(c, http.StatusInternalServerError, "failed to load autoscaling policy")
 	}
 	return utils.Success(c, "Autoscaling policy", p)
@@ -29,6 +32,9 @@ func (h *AutoscalingHandler) Save(c echo.Context) error {
 	}
 	p.ServiceID = c.Param("serviceId")
 	if err := h.service.Save(c.Request().Context(), &p); err != nil {
+		if utils.IsNotFound(err) {
+			return utils.Error(c, http.StatusNotFound, "service not found")
+		}
 		if utils.IsValidation(err) {
 			return utils.Error(c, http.StatusBadRequest, err.Error())
 		}

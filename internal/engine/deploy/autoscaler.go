@@ -145,8 +145,10 @@ func (a *AutoscalerWorker) checkAndScale(ctx context.Context) {
 			if rollbackErr := a.policies.RollbackReplicas(recovery, app.ID, target, current); rollbackErr != nil {
 				slog.Error("rollback autoscaling replicas", "service_id", app.ID, "error", rollbackErr)
 			}
-			a.observe(recovery, p, health.CPUUsagePercentage, fmt.Sprintf("deployment creation failed: %v", err), false)
 			cancel()
+			observation, cancelObservation := context.WithTimeout(context.Background(), 10*time.Second)
+			a.observe(observation, p, health.CPUUsagePercentage, fmt.Sprintf("deployment creation failed: %v", err), false)
+			cancelObservation()
 			continue
 		}
 		a.observe(ctx, p, health.CPUUsagePercentage, fmt.Sprintf("requested %d to %d replicas via deployment %s: %s", current, target, created.ID, reason), true)
