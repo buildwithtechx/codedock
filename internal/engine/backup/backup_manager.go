@@ -31,15 +31,16 @@ type Store interface {
 }
 
 type BackupManager struct {
-	dockerClient   *client.Client
-	store          Store
-	cronEngine     *cron.Cron
-	entries        map[string]cron.EntryID
-	backupDir      string
-	mu             sync.Mutex
-	restoreMu      sync.Mutex
-	restores       map[string]context.CancelFunc
-	restoreVolumes map[string]string
+	dockerClient     *client.Client
+	store            Store
+	cronEngine       *cron.Cron
+	entries          map[string]cron.EntryID
+	backupDir        string
+	mu               sync.Mutex
+	restoreMu        sync.Mutex
+	restores         map[string]context.CancelFunc
+	restoreVolumes   map[string]string
+	volumeOperations VolumeOperations
 }
 
 func NewBackupManager(dockerClient *client.Client, s Store, backupDir string) *BackupManager {

@@ -57,13 +57,16 @@ export function BackupsList() {
 
   const handleRestoreRecord = async (recordId: string) => {
     const record = records.find((r) => r.id === recordId);
-    if (!record) return;
-    const config = configs.find((candidate) => candidate.id === record.backupConfigId);
+    if (!record) throw new Error('Snapshot is no longer available');
+    const available = configsData?.data ?? (await refetchConfigs()).data?.data;
+    const config = available?.find((candidate) => candidate.id === record.backupConfigId);
+    if (!config) throw new Error('Could not load the snapshot backup configuration');
     if (config?.volumeName) {
       setVolumeRecordId(record.id);
-      return;
+      return 'confirmation' as const;
     }
     await restoreMutation.mutateAsync({ id: record.id });
+    return 'completed' as const;
   };
 
   const handleDeleteRecord = async (configId: string, recordId: string) => {
@@ -142,7 +145,7 @@ export function BackupsList() {
                 isLoading={isLoadingRecords}
                 onRestore={handleRestoreRecord}
                 onDeleteRecord={handleDeleteRecord}
-                restorePending={restoreMutation.isPending}
+                restorePending={restoreMutation.isPending || isLoadingConfigs}
                 deletePending={deleteRecordMutation.isPending}
               />
             </TabsContent>

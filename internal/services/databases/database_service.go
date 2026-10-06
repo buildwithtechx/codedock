@@ -131,7 +131,9 @@ func (s *DatabaseService) DeleteDatabase(ctx context.Context, id string) error {
 		return errors.New("id is required")
 	}
 	if s.deployer != nil {
-		_ = s.deployer.Stop(ctx, id)
+		if err := s.deployer.Remove(ctx, id); err != nil {
+			return err
+		}
 	}
 	return s.repo.Delete(ctx, id)
 }
@@ -171,7 +173,9 @@ func (s *DatabaseService) StopDatabase(ctx context.Context, id string) error {
 		return errors.New("database not found")
 	}
 	if s.deployer != nil {
-		_ = s.deployer.Stop(ctx, id)
+		if err := s.deployer.Stop(ctx, id); err != nil {
+			return err
+		}
 	}
 	db.Status = models.DatabaseStatusStopped
 	db.UpdatedAt = time.Now()

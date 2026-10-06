@@ -3,9 +3,11 @@ package backup
 import (
 	"codedock.run/codedock/internal/models"
 	"context"
+	"encoding/json"
 	"errors"
 	"fmt"
 	"github.com/docker/docker/api/types/container"
+	"github.com/docker/docker/api/types/image"
 	"github.com/docker/docker/api/types/mount"
 	"github.com/docker/docker/client"
 	"io"
@@ -13,6 +15,10 @@ import (
 	"strconv"
 	"time"
 )
+
+type VolumeOperations interface{ AcquireVolume(string) (func(), error) }
+
+func (bm *BackupManager) SetVolumeOperations(volumes VolumeOperations) { bm.volumeOperations = volumes }
 
 type VolumeRestoreOwner interface {
 	VolumeRestoreOwner(context.Context, *models.BackupConfig) (string, error)
@@ -103,6 +109,13 @@ func (bm *BackupManager) RestoreVolume(ctx context.Context, recordID, confirmedV
 	if target.VolumeName != confirmedVolume {
 		return errors.New("confirmation must match the target volume name")
 	}
+	if bm.volumeOperations != nil {
+		release, err := bm.volumeOperations.AcquireVolume(target.VolumeName)
+		if err != nil {
+			return err
+		}
+		defer release()
+	}
 	ctx, cancel := context.WithTimeout(ctx, time.Duration(target.TimeoutSeconds)*time.Second)
 	defer cancel()
 	bm.restoreMu.Lock()
@@ -128,6 +141,41 @@ func (bm *BackupManager) RestoreVolume(ctx context.Context, recordID, confirmedV
 			slog.Warn("close volume restore archive", "error", err)
 		}
 	}()
+	if _, _, err := bm.dockerClient.ImageInspectWithRaw(ctx, "alpine"); err != nil {
+		if !client.IsErrNotFound(err) {
+			return fmt.Errorf("inspect volume restore image: %w", err)
+		}
+		pull, err := bm.dockerClient.ImagePull(ctx, "alpine", image.PullOptions{})
+		if err != nil {
+			return fmt.Errorf("pull volume restore image: %w", err)
+		}
+		decoder := json.NewDecoder(pull)
+		var copyErr error
+		for {
+			var progress struct {
+				Error string `json:"error"`
+			}
+			err := decoder.Decode(&progress)
+			if errors.Is(err, io.EOF) {
+				break
+			}
+			if err != nil {
+				copyErr = err
+				break
+			}
+			if progress.Error != "" {
+				copyErr = errors.New(progress.Error)
+				break
+			}
+		}
+		closeErr := pull.Close()
+		if copyErr != nil {
+			return fmt.Errorf("read volume restore image pull: %w", copyErr)
+		}
+		if closeErr != nil {
+			return fmt.Errorf("close volume restore image pull: %w", closeErr)
+		}
+	}
 	result, err := bm.dockerClient.ContainerCreate(ctx, &container.Config{
 		Image: "alpine", OpenStdin: true, StdinOnce: true, AttachStdin: true, AttachStdout: true, AttachStderr: true,
 		Cmd: []string{"timeout", strconv.Itoa(target.TimeoutSeconds), "tar", "-xzf", "-", "-C", "/restore"},

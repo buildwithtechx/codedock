@@ -30,7 +30,10 @@ func (a *engineAdapter) VolumeRestoreOwner(ctx context.Context, cfg *models.Back
 		}
 
 		projectID = db.ProjectID
-		containerID = utils.NormalizeContainerName(db.ID)
+		containerID = db.ContainerID
+		if containerID == "" {
+			containerID = utils.NormalizeContainerName("codedock-db-" + db.Name)
+		}
 		if cfg.VolumeName != "codedock-db-data-"+db.ID {
 			return "", errors.New("volume is not the database data volume")
 		}

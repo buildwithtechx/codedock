@@ -71,7 +71,9 @@ func NewServer(db *sql.DB, v *utils.Vault, deployer *deploy.Deployer, traefikMan
 	refreshTokenRepo := repositories.NewRefreshTokenRepo(db)
 
 	httpEngineAdapter := newEngineAdapter(settingsRepo, appRepo, envVarRepo, dbRepo, projectRepo, scheduledTaskRepo, backupRepo, s3DestinationRepo, serviceVarRepo, serverlessRepository)
+	volumeOperations := deploy.NewVolumeGate()
 	databaseDeployer := deploy.NewDatabaseDeployer(dockerClient, httpEngineAdapter)
+	databaseDeployer.SetVolumeOperations(volumeOperations)
 
 	cronManager := cron.NewCronManager(dockerClient, httpEngineAdapter)
 
@@ -86,6 +88,7 @@ func NewServer(db *sql.DB, v *utils.Vault, deployer *deploy.Deployer, traefikMan
 	_ = cronManager.Start()
 
 	backupManager := backup.NewBackupManager(dockerClient, httpEngineAdapter, "")
+	backupManager.SetVolumeOperations(volumeOperations)
 	_ = backupManager.Start()
 
 	projectService := projectservices.NewProjectService(projectRepo, environmentRepo, appRepo, serviceVarRepo, settingsRepo, orgRepo)

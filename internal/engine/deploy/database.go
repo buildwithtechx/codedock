@@ -22,6 +22,7 @@ import (
 type DatabaseDeployer struct {
 	dockerClient *client.Client
 	store        DatabaseDeployerStore
+	volumes      VolumeOperations
 }
 
 func NewDatabaseDeployer(dockerClient *client.Client, s DatabaseDeployerStore) *DatabaseDeployer {
@@ -40,6 +41,11 @@ func (d *DatabaseDeployer) SpinUp(ctx context.Context, dbConfig *models.Database
 		return fmt.Sprintf("codedock-db-%s-dryrun", dbConfig.Name), nil
 	}
 
+	release, err := d.acquireVolume(dbConfig.ID)
+	if err != nil {
+		return "", err
+	}
+	defer release()
 	containerName := utils.NormalizeContainerName(fmt.Sprintf("codedock-db-%s", dbConfig.Name))
 	_ = d.dockerClient.ContainerRemove(ctx, containerName, container.RemoveOptions{Force: true})
 
@@ -220,9 +226,19 @@ func (d *DatabaseDeployer) Stop(ctx context.Context, dbID string) error {
 	if err != nil || dbConfig == nil {
 		return utils.NewNotFoundError("Database", dbID)
 	}
+	release, err := d.acquireVolume(dbConfig.ID)
+	if err != nil {
+		return err
+	}
+	defer release()
 	containerName := utils.NormalizeContainerName(fmt.Sprintf("codedock-db-%s", dbConfig.Name))
-	_ = d.dockerClient.ContainerRemove(ctx, containerName, container.RemoveOptions{Force: true})
-	return d.store.UpdateDatabaseStatus(dbID, models.DatabaseStatusStopped, "")
+	if dbConfig.ContainerID != "" {
+		containerName = dbConfig.ContainerID
+	}
+	if err := d.dockerClient.ContainerStop(ctx, containerName, container.StopOptions{}); err != nil && !client.IsErrNotFound(err) {
+		return fmt.Errorf("stop database container: %w", err)
+	}
+	return d.store.UpdateDatabaseStatus(dbID, models.DatabaseStatusStopped, dbConfig.ContainerID)
 }
 
 func (d *DatabaseDeployer) ImportData(ctx context.Context, dbConfig *models.Database, sourceURL string) error {
@@ -233,6 +249,11 @@ func (d *DatabaseDeployer) ImportData(ctx context.Context, dbConfig *models.Data
 		return nil
 	}
 
+	release, err := d.acquireVolume(dbConfig.ID)
+	if err != nil {
+		return err
+	}
+	defer release()
 	containerName := utils.NormalizeContainerName(fmt.Sprintf("codedock-db-%s", dbConfig.Name))
 
 	switch strings.ToLower(string(dbConfig.Engine)) {

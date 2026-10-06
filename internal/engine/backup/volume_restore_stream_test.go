@@ -22,6 +22,11 @@ func TestVolumeRestoreStreamsArchiveAndRemovesHelper(t *testing.T) {
 	server := httptest.NewServer(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
 		w.Header().Set("Content-Type", "application/json")
 		switch {
+		case strings.HasSuffix(r.URL.Path, "/images/alpine/json"):
+			w.WriteHeader(404)
+			fmt.Fprint(w, `{"message":"missing image"}`)
+		case strings.HasSuffix(r.URL.Path, "/images/create"):
+			fmt.Fprint(w, `{"status":"pulled"}`)
 		case strings.HasSuffix(r.URL.Path, "/volumes/owned"):
 			fmt.Fprint(w, `{"Name":"owned","CreatedAt":"original"}`)
 		case strings.HasSuffix(r.URL.Path, "/containers/owner/json"):

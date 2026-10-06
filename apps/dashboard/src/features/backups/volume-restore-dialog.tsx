@@ -10,7 +10,7 @@ import {
 } from '#/components/ui/dialog';
 import { Input } from '#/components/ui/input';
 import { Label } from '#/components/ui/label';
-import { apiClient } from '#/lib/api-client';
+import { ApiError, apiClient } from '#/lib/api-client';
 
 export function VolumeRestoreDialog({
   recordId,
@@ -70,12 +70,14 @@ export function VolumeRestoreDialog({
     }
   };
   const interrupt = async () => {
-    if (!recordId) return;
+    if (!recordId || !controller.current) return;
+    const request = controller.current;
+    request.abort();
     try {
       await apiClient.delete(`/backup-records/${recordId}/volume-restore`);
       controller.current?.abort();
     } catch (err) {
-      setError((err as Error).message);
+      if (!(err instanceof ApiError && err.status === 409)) setError((err as Error).message);
     }
   };
   return (

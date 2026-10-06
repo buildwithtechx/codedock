@@ -10,10 +10,16 @@ import (
 func (h *BackupHandler) authorizeVolumeRestore(c echo.Context) (string, error) {
 	id := c.Param("recordId")
 	record, err := h.backupService.GetRecord(c.Request().Context(), id)
+	if err != nil && !utils.IsNotFound(err) {
+		return "", echo.NewHTTPError(http.StatusInternalServerError, "failed to load backup record")
+	}
 	if err != nil || record == nil {
 		return "", echo.NewHTTPError(http.StatusNotFound, "backup record not found")
 	}
 	cfg, err := h.backupService.GetConfig(c.Request().Context(), record.BackupConfigID)
+	if err != nil && !utils.IsNotFound(err) {
+		return "", echo.NewHTTPError(http.StatusInternalServerError, "failed to load backup configuration")
+	}
 	if err != nil || cfg == nil {
 		return "", echo.NewHTTPError(http.StatusNotFound, "backup configuration not found")
 	}

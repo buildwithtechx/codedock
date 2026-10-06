@@ -32,7 +32,7 @@ import type { BackupRecord } from './interfaces';
 type BackupDestinationHistoryProps = {
   records: BackupRecord[];
   isLoading: boolean;
-  onRestore: (recordId: string) => Promise<void>;
+  onRestore: (recordId: string) => Promise<'confirmation' | 'completed'>;
   onDeleteRecord: (configId: string, recordId: string) => Promise<void>;
   restorePending: boolean;
   deletePending: boolean;
@@ -72,9 +72,9 @@ export function BackupDestinationHistory({
   const handleConfirmRestore = async () => {
     if (!selectedRecordForRestore) return;
     try {
-      await onRestore(selectedRecordForRestore.id);
+      const result = await onRestore(selectedRecordForRestore.id);
       setSelectedRecordForRestore(null);
-      toast.success('Database restore triggered successfully');
+      if (result === 'completed') toast.success('Database restore completed');
     } catch {
       toast.error('Failed to trigger restore');
     }
