@@ -1,10 +1,12 @@
 package http
 
 import (
+	"codedock.run/codedock/internal/engine/bare"
 	"codedock.run/codedock/internal/engine/kubernetes"
 	"codedock.run/codedock/internal/engine/observability"
 	"codedock.run/codedock/internal/handlers/system"
 	"codedock.run/codedock/internal/repositories"
+	"codedock.run/codedock/internal/services/clusterdata"
 	"codedock.run/codedock/internal/services/clusters"
 	"codedock.run/codedock/internal/services/deployments"
 	"codedock.run/codedock/internal/services/operations"
@@ -30,7 +32,13 @@ func configureClusters(server *Server, db *sql.DB, vault *utils.Vault, projects 
 		return fmt.Errorf("recover cluster upgrades: %w", err)
 	}
 	server.clusterHandler = system.NewClusterHandler(service, operations)
+	dataService := clusterdata.NewService(repositories.NewClusterDataRepo(db, vault), repository, repositories.NewEnvironmentRepo(db), repositories.NewS3DestinationRepo(db, vault), runner, operations, gate, &http.Client{Timeout: time.Minute})
+	if err := dataService.Recover(context.Background()); err != nil {
+		return fmt.Errorf("recover cluster databases: %w", err)
+	}
+	server.clusterDataHandler = system.NewClusterDataHandler(dataService, operations)
 	runtime := runtimes.NewService(repositories.NewRuntimeRepo(db, vault), apps, repository, servers, kubernetes.NewWorkloadRuntime(runner), server.deployer, operations, gate)
+	runtime.SetBare(bare.NewRuntime(runner), projects)
 	if err := runtime.Recover(context.Background()); err != nil {
 		return fmt.Errorf("recover Kubernetes application rollouts: %w", err)
 	}
@@ -47,6 +55,13 @@ func configureClusters(server *Server, db *sql.DB, vault *utils.Vault, projects 
 
 func (s *Server) registerClusterRoutes(group *echo.Group) {
 	admin := s.authGuard.RequireRole("admin")
+	group.GET("/projects/:id/clusters/:clusterId/databases", s.clusterDataHandler.List, admin)
+	group.POST("/projects/:id/clusters/:clusterId/databases/review", s.clusterDataHandler.Review, admin)
+	group.GET("/projects/:id/clusters/:clusterId/databases/:databaseId/credentials", s.clusterDataHandler.Credentials, admin, s.authGuard.RequireScope("database:manage"))
+	group.GET("/projects/:id/clusters/:clusterId/databases/:databaseId/backups", s.clusterDataHandler.Backups, admin)
+	group.POST("/cluster-data-operations/:operationId/apply", s.clusterDataHandler.Apply, admin)
+	group.GET("/cluster-data-operations/:operationId", s.clusterDataHandler.Operation, admin)
+	group.POST("/cluster-data-operations/:operationId/cancel", s.clusterDataHandler.Cancel, admin)
 	group.GET("/projects/:id/clusters", s.clusterHandler.List, admin)
 	group.POST("/projects/:id/clusters/review", s.clusterHandler.Review, admin)
 	group.POST("/cluster-operations/:operationId/apply", s.clusterHandler.Apply, admin)

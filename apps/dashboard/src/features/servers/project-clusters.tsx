@@ -3,6 +3,7 @@ import { useState } from 'react';
 import { Button } from '#/components/ui/button';
 import type { BaseResponse } from '#/interfaces/base';
 import { apiClient } from '#/lib/api-client';
+import { ClusterDatabasePanel } from './cluster-database-panel';
 import { ClusterReviewDialog } from './cluster-review-dialog';
 import type { Cluster } from './cluster-types';
 
@@ -37,6 +38,9 @@ export function ProjectClusters({ projectId }: { projectId: string }) {
             <span>{cluster.status}</span>
           </div>
           <p className="text-sm">{cluster.nodes.length} nodes · one control plane</p>
+          {cluster.status === 'READY' && (
+            <ClusterDatabasePanel projectId={projectId} cluster={cluster} />
+          )}
           {cluster.error && (
             <p role="alert" className="text-destructive">
               {cluster.error}

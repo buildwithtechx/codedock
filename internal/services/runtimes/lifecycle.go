@@ -4,6 +4,7 @@ import (
 	"codedock.run/codedock/internal/models"
 	"context"
 	"fmt"
+	"strings"
 )
 
 func (s *Service) target(ctx context.Context, id string) (*models.AppService, *models.Cluster, error) {
@@ -22,6 +23,16 @@ func (s *Service) target(ctx context.Context, id string) (*models.AppService, *m
 	return app, cluster, err
 }
 func (s *Service) Observe(ctx context.Context, id string) (*models.WorkloadObservation, error) {
+	nativeApp, nativeRuntime, nativeErr := s.nativeTarget(ctx, id)
+	if nativeErr != nil {
+		return nil, nativeErr
+	}
+	if nativeApp != nil {
+		if !strings.HasPrefix(nativeApp.ContainerID, "bare:") {
+			return &models.WorkloadObservation{Kind: "bare", Status: "NOT_DEPLOYED", Pods: []models.RuntimePod{}}, nil
+		}
+		return s.native.Observe(ctx, nativeApp, nativeRuntime.Target)
+	}
 	app, cluster, err := s.target(ctx, id)
 	if err != nil {
 		return nil, err
@@ -29,6 +40,13 @@ func (s *Service) Observe(ctx context.Context, id string) (*models.WorkloadObser
 	return s.engine.Observe(ctx, cluster.Nodes[0], app)
 }
 func (s *Service) Logs(ctx context.Context, id string) (string, error) {
+	nativeApp, nativeRuntime, nativeErr := s.nativeTarget(ctx, id)
+	if nativeErr != nil {
+		return "", nativeErr
+	}
+	if nativeApp != nil {
+		return s.native.Logs(ctx, nativeApp, nativeRuntime.Target)
+	}
 	app, cluster, err := s.target(ctx, id)
 	if err != nil {
 		return "", err
@@ -36,6 +54,13 @@ func (s *Service) Logs(ctx context.Context, id string) (string, error) {
 	return s.engine.Logs(ctx, cluster.Nodes[0], app)
 }
 func (s *Service) Exec(ctx context.Context, id string, request models.RuntimeExecRequest) (string, error) {
+	nativeApp, nativeRuntime, nativeErr := s.nativeTarget(ctx, id)
+	if nativeErr != nil {
+		return "", nativeErr
+	}
+	if nativeApp != nil {
+		return s.native.Exec(ctx, nativeApp, nativeRuntime.Target, request)
+	}
 	app, cluster, err := s.target(ctx, id)
 	if err != nil {
 		return "", err
@@ -49,6 +74,13 @@ func (s *Service) Lifecycle(ctx context.Context, id, action string, replicas int
 	}
 	defer release()
 	ctx = operation
+	nativeApp, nativeRuntime, nativeErr := s.nativeTarget(ctx, id)
+	if nativeErr != nil {
+		return nativeErr
+	}
+	if nativeApp != nil {
+		return s.nativeLifecycle(ctx, nativeApp, nativeRuntime, action)
+	}
 	app, cluster, err := s.target(ctx, id)
 	if err != nil {
 		return err
@@ -96,6 +128,13 @@ func (s *Service) Remove(ctx context.Context, id string) error {
 	}
 	defer release()
 	ctx = operation
+	nativeApp, nativeRuntime, nativeErr := s.nativeTarget(ctx, id)
+	if nativeErr != nil {
+		return nativeErr
+	}
+	if nativeApp != nil {
+		return s.nativeLifecycle(ctx, nativeApp, nativeRuntime, "remove")
+	}
 	app, cluster, err := s.target(ctx, id)
 	if err != nil {
 		return err

@@ -70,10 +70,10 @@ Implementation details and current target boundaries: [Application, Compose and 
 - [x] Application placement, instance counts, readiness, routing and persistent storage.
 - [x] Observed workload/pod state, conflicting-operation locks and encrypted deployment journals with failed-rollout/startup recovery.
 - [x] Automatic desired/observed reconciliation and cluster-upgrade recovery.
-- [ ] PostgreSQL operator setup, replication, credentials, S3 backup and restore into a new database.
-- [ ] Redis standalone/replicated modes with engine-specific validation and recovery.
+- [x] PostgreSQL operator setup, replication, credentials, S3 backup and restore into a new database.
+- [x] Redis standalone/replicated modes with engine-specific validation and recovery.
 - [x] Docker replicas are distinct from multi-server scheduling and database replication.
-- [ ] Bare runtime support is a separate target capability with service supervision and rollback.
+- [x] Bare runtime support is a separate target capability with service supervision and rollback.
 
 ## Phase 7: Backup policy and recovery UX
 
@@ -87,7 +87,7 @@ Implementation details and current target boundaries: [Application, Compose and 
 - [x] Application and archive deployments wait for required verified backups before proceeding.
 - [x] Compose stack activation and SSH Docker deployments share the required-backup hook.
 
-Committed runtime implementation: `cf41607`. The newly checked runtime items passed the full Go suite, focused lifecycle/removal checks, root typecheck and formatting. Live K3s installation and recovery exercises remain outstanding. Scheduled runs, project backup gates for Compose/SSH Docker, consistent SQLite snapshots, desired-workload reconciliation and upgrade journals are implemented. Operators and bare runtime remain in progress.
+Phase 6 and 7 implementation is complete in this branch. Full Go tests, root typecheck and formatting passed. PostgreSQL operator installation, replicated databases, reviewed S3 recovery, Redis AOF recovery and supervised native releases are wired through the dashboard and API. These checks cover repository behavior and mocked runtime commands; live K3s, operator and native-server installation/recovery exercises still require disposable targets. Redis replication uses a fixed primary, without Sentinel failover. Native targets execute verified standalone artifacts on a single SSH server.
 
 Current backup and cluster implementation boundaries, including scheduled-run cancellation, deployment coverage and live-target validation: [Backup recovery and cluster setup](platform-recovery.md).
 

@@ -1,6 +1,7 @@
 package runtimes
 
 import (
+	"codedock.run/codedock/internal/engine/bare"
 	"codedock.run/codedock/internal/engine/kubernetes"
 	"codedock.run/codedock/internal/models"
 	"context"
@@ -8,6 +9,7 @@ import (
 	"encoding/hex"
 	"encoding/json"
 	"fmt"
+	"strings"
 )
 
 func (s *Service) snapshot(ctx context.Context, id string) (string, error) {
@@ -46,12 +48,12 @@ func (s *Service) validateTarget(ctx context.Context, app *models.AppService, re
 			return fmt.Errorf("existing Docker containers must be stopped before changing destination")
 		}
 	}
-	if existing.Target.Kind == "kubernetes" && existing.Revision > 0 {
+	if (existing.Target.Kind == "kubernetes" || (existing.Target.Kind == "bare" && strings.HasPrefix(app.ContainerID, "bare:"))) && existing.Revision > 0 && app.ContainerID != "" {
 		observation, err := s.Observe(ctx, app.ID)
 		if err != nil {
 			return err
 		}
-		if observation.Desired > 0 {
+		if observation.Desired > 0 || observation.Available > 0 {
 			return fmt.Errorf("stop the existing cluster workload before changing its configuration")
 		}
 	}
@@ -59,6 +61,16 @@ func (s *Service) validateTarget(ctx context.Context, app *models.AppService, re
 	case "docker":
 		if request.Target.ClusterID != "" || len(request.Target.Volumes) > 0 || len(request.Target.NodeIDs) > 0 {
 			return fmt.Errorf("Docker destinations cannot contain cluster settings")
+		}
+	case "bare":
+		if err := bare.Validate(app, request.Target); err != nil {
+			return err
+		}
+		if err := s.validateBare(ctx, app, request.Target); err != nil {
+			return err
+		}
+		if err := s.native.Preflight(ctx, app, request.Target); err != nil {
+			return err
 		}
 	case "kubernetes":
 		if _, err := s.cluster(ctx, app, request.Target); err != nil {

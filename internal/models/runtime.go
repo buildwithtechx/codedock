@@ -8,6 +8,9 @@ type RuntimeVolume struct {
 	Shared       bool   `json:"shared"`
 }
 type RuntimeTarget struct {
+	BareReleaseURL  string          `json:"bareReleaseUrl,omitempty"`
+	BareSHA256      string          `json:"bareSha256,omitempty"`
+	BareCommand     []string        `json:"bareCommand"`
 	Kind            string          `json:"kind"`
 	ClusterID       string          `json:"clusterId,omitempty"`
 	NodeIDs         []string        `json:"nodeIds"`
@@ -76,4 +79,9 @@ type DesiredRuntime struct {
 	Revision int                `json:"revision"`
 	Workload KubernetesWorkload `json:"workload"`
 	Manifest string             `json:"manifest"`
+}
+
+type NativeJournal struct {
+	ReleaseID   string     `json:"releaseId"`
+	PreviousApp AppService `json:"previousApp"`
 }

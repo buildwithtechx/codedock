@@ -6,6 +6,7 @@ import { Label } from '#/components/ui/label';
 import type { Cluster } from '#/features/servers/cluster-types';
 import type { BaseResponse } from '#/interfaces/base';
 import { apiClient } from '#/lib/api-client';
+import { BareRuntimeFields } from './bare-runtime-fields';
 import { RuntimeStatus } from './runtime-status';
 import type { RuntimeReview, RuntimeTarget, ServiceRuntime } from './runtime-types';
 import { RuntimeVolumeFields } from './runtime-volume-fields';
@@ -107,12 +108,15 @@ export function RuntimeSettings({
             clusterId: undefined,
             nodeIds: [],
             volumes: [],
+            bareCommand: ['./app'],
           })
         }
       >
         <option value="docker">Docker destination</option>
         <option value="kubernetes">Kubernetes cluster</option>
+        <option value="bare">Bare systemd service</option>
       </select>
+      {target.kind === 'bare' && <BareRuntimeFields target={target} update={update} />}
       {target.kind === 'kubernetes' && (
         <>
           <Label htmlFor="runtime-cluster">Ready cluster</Label>

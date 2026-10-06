@@ -116,3 +116,12 @@ func (r *ClusterRunner) Kubectl(ctx context.Context, node models.ClusterNode, ar
 	}
 	return client.RunWithInput(ctx, client.RootCommand("k3s kubectl "+strings.Join(quoted, " ")), strings.NewReader(input))
 }
+
+func (r *ClusterRunner) Host(ctx context.Context, node models.ClusterNode, script string) (string, error) {
+	client, err := r.client(ctx, node)
+	if err != nil {
+		return "", err
+	}
+	defer closeClient(client)
+	return client.RunWithInput(ctx, client.RootCommand("sh -s"), strings.NewReader(script))
+}

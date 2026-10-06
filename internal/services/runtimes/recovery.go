@@ -33,6 +33,33 @@ func (s *Service) Recover(ctx context.Context) error {
 		if err != nil {
 			return err
 		}
+		if runtime.Target.Kind == "bare" {
+			if err := s.validateBare(ctx, app, runtime.Target); err != nil {
+				if err := s.store.Observe(ctx, id, "RECOVERY_REQUIRED", err.Error(), false); err != nil {
+					return err
+				}
+				continue
+			}
+			release, err := s.gate.AcquireVolume("server:" + runtime.Target.BareNode.ServerID)
+			if err != nil {
+				return err
+			}
+			recovery, cancel := context.WithTimeout(ctx, 6*time.Minute)
+			err = s.native.Recover(recovery, app, runtime.Target)
+			if err == nil {
+				err = s.restoreNativeApp(recovery, app, runtime)
+			}
+			cancel()
+			release()
+			status, message := "INTERRUPTED", "Native activation interrupted; previous release recovered"
+			if err != nil {
+				status, message = "RECOVERY_REQUIRED", err.Error()
+			}
+			if err := s.store.Observe(ctx, id, status, message, err == nil); err != nil {
+				return err
+			}
+			continue
+		}
 		cluster, err := s.clusters.Get(ctx, runtime.Target.ClusterID)
 		if err != nil || len(cluster.Nodes) == 0 {
 			if err := s.store.Observe(ctx, id, "RECOVERY_REQUIRED", "Cluster unavailable during recovery", false); err != nil {

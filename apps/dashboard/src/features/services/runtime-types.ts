@@ -6,7 +6,11 @@ export type RuntimeVolume = {
   shared: boolean;
 };
 export type RuntimeTarget = {
-  kind: 'docker' | 'kubernetes';
+  kind: 'docker' | 'kubernetes' | 'bare';
+  bareNode?: import('../servers/cluster-types').ClusterNode;
+  bareReleaseUrl?: string;
+  bareSha256?: string;
+  bareCommand?: string[];
   clusterId?: string;
   nodeIds: string[];
   imageRepository?: string;

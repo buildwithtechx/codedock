@@ -1,6 +1,7 @@
 package runtimes
 
 import (
+	"codedock.run/codedock/internal/engine/bare"
 	"codedock.run/codedock/internal/engine/deploy"
 	"codedock.run/codedock/internal/engine/kubernetes"
 	"codedock.run/codedock/internal/models"
@@ -30,6 +31,8 @@ type Servers interface {
 }
 type Gate interface{ AcquireVolume(string) (func(), error) }
 type Service struct {
+	native     *bare.Runtime
+	projects   NativeProjects
 	store      Store
 	apps       Apps
 	clusters   Clusters
@@ -41,7 +44,7 @@ type Service struct {
 }
 
 func NewService(store Store, apps Apps, clusters Clusters, servers Servers, engine *kubernetes.WorkloadRuntime, builder *deploy.Deployer, operations *operations.Service, gate Gate) *Service {
-	return &Service{store, apps, clusters, servers, engine, builder, operations, gate}
+	return &Service{store: store, apps: apps, clusters: clusters, servers: servers, engine: engine, builder: builder, operations: operations, gate: gate}
 }
 func (s *Service) Get(ctx context.Context, id string) (*models.ServiceRuntime, error) {
 	return s.store.Get(ctx, id)
@@ -51,7 +54,7 @@ func (s *Service) Handles(ctx context.Context, id string) (bool, error) {
 	if err != nil {
 		return false, err
 	}
-	return target.Target.Kind == "kubernetes", nil
+	return target.Target.Kind == "kubernetes" || target.Target.Kind == "bare", nil
 }
 func (s *Service) cluster(ctx context.Context, app *models.AppService, target models.RuntimeTarget) (*models.Cluster, error) {
 	cluster, err := s.clusters.Get(ctx, target.ClusterID)
@@ -110,6 +113,9 @@ func (s *Service) Deploy(ctx context.Context, app *models.AppService, source str
 	target, err := s.store.Get(ctx, app.ID)
 	if err != nil {
 		return "", err
+	}
+	if target.Target.Kind == "bare" {
+		return s.deployBare(ctx, app, target, logs)
 	}
 	cluster, err := s.cluster(ctx, app, target.Target)
 	if err != nil {

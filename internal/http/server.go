@@ -26,6 +26,7 @@ import (
 )
 
 type Server struct {
+	clusterDataHandler     *system.ClusterDataHandler
 	clusterHandler         *system.ClusterHandler
 	operationHandler       *system.OperationHandler
 	router                 *echo.Echo
