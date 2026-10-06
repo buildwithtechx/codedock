@@ -5,7 +5,7 @@ Managed cloud provider: Hetzner. Existing projects and self-hosted installations
 
 ## Delivery workflow
 
-Each phase ships in focused commits and pull requests. Run Biome and Go formatting, relevant regression checks, CI and Cubic review before considering a phase complete. Merge only when authorized. No feature is complete merely because its settings form or API route exists. Runtime changes require target validation, permission checks, durable progress, cancellation and recovery.
+Phases 2, 3 and 4 ship together in focused commits and one pull request, with one combined CI and Cubic review cycle. Later phases can follow the same batching approach when their runtime adapters are ready. Run Biome and Go formatting, relevant regression checks, CI and Cubic review before considering a phase complete. Merge only when authorized. No feature is complete merely because its settings form or API route exists. Runtime changes require target validation, permission checks, durable progress, cancellation and recovery.
 
 ## Phase 1: Reliability foundation
 
@@ -19,36 +19,38 @@ Each phase ships in focused commits and pull requests. Run Biome and Go formatti
 - [x] Resource creation cards support keyboard activation.
 - [x] Autoscaling has explicit enablement, limits and observable decisions.
 
+Implementation details and current target boundaries: [Application, Compose and topology workflows](platform-deployment.md).
+
 ## Phase 2: Integrated application deployment
 
-- [ ] One setup flow for Git and images, with project and environment selection.
-- [ ] Repository inspection detects framework, package manager, commands, port and output defaults.
-- [ ] Users can edit every detected value and see detection failures without losing work.
-- [ ] Configure variables, runtime, target and domain in the same flow.
-- [ ] Review the exact payload and effects before creating or deploying resources.
-- [ ] Live progress separates preparation, build, start, readiness and routing.
-- [ ] Retries reconcile existing resources; cancellation preserves the previous deployment.
-- [ ] Shared setup supports later Compose, cluster and cloud destinations.
+- [x] One setup flow for Git and images, with project and environment selection.
+- [x] Repository inspection detects framework, package manager, commands, port and output defaults.
+- [x] Users can edit every detected value and see detection failures without losing work.
+- [x] Configure variables, runtime, target and domain in the same flow.
+- [x] Review the exact payload and effects before creating or deploying resources.
+- [x] Live progress separates preparation, build, start, readiness and routing.
+- [x] Retries reconcile existing resources; cancellation preserves the previous deployment.
+- [x] Shared setup supports later Compose, cluster and cloud destinations.
 
 ## Phase 3: Complete Compose execution
 
-- [ ] Preserve service environment, interpolation, build context, commands, ports, volumes, networks, health checks and dependencies.
-- [ ] Unsupported fields are rejected or surfaced before import; no silent discarding.
-- [ ] A saved stack groups its services and deployment configuration.
-- [ ] Validate dependency cycles, ports, paths, secrets and target capabilities before apply.
-- [ ] Coordinate builds and dependency-aware startup with per-service results.
-- [ ] Keep existing workloads on failed builds; report partial activation explicitly.
-- [ ] Retrying or redeploying reuses owned resources and preserves data.
+- [x] Preserve service environment, interpolation, build context, commands, ports, volumes, networks, health checks and dependencies.
+- [x] Unsupported fields are rejected or surfaced before import; no silent discarding.
+- [x] A saved stack groups its services and deployment configuration.
+- [x] Validate dependency cycles, ports, paths, secrets and target capabilities before apply.
+- [x] Coordinate builds and dependency-aware startup with per-service results.
+- [x] Keep existing workloads on failed builds; report partial activation explicitly.
+- [x] Retrying or redeploying reuses owned resources and preserves data.
 
 ## Phase 4: Operational topology
 
-- [ ] Environment selection and graph projection from saved services, domains and bindings.
-- [ ] Node selection opens service/database details, logs, metrics and lifecycle controls.
-- [ ] Edges distinguish dependencies, variable bindings and routing.
-- [ ] Connection edits validate cycles and permissions and persist through existing APIs.
-- [ ] Pending changes have review/apply, conflict detection and safe retry.
-- [ ] Runtime failures remain visible instead of becoming empty healthy states.
-- [ ] Dragging and local layout changes never mutate infrastructure.
+- [x] Environment selection and graph projection from saved services, domains and bindings.
+- [x] Node selection opens service/database details, logs, metrics and lifecycle controls.
+- [x] Edges distinguish dependencies, variable bindings and routing.
+- [x] Connection edits validate cycles and permissions and persist through existing APIs.
+- [x] Pending changes have review/apply, conflict detection and safe retry.
+- [x] Runtime failures remain visible instead of becoming empty healthy states.
+- [x] Dragging and local layout changes never mutate infrastructure.
 
 ## Phase 5: Hetzner cloud
 

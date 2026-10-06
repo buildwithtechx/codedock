@@ -61,6 +61,9 @@ export interface CanvasSummary {
 }
 
 export interface EnvironmentCanvas {
+  revision: string;
+  nodes: import('@xyflow/react').Node[];
+  edges: import('../canvas/topology-types').TopologyEdge[];
   environment: EnvironmentConfig;
   apps: AppService[];
   databases: Database[];

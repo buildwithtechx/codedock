@@ -1,8 +1,10 @@
 import { createFileRoute } from '@tanstack/react-router';
 import { Activity, Grid3X3 } from 'lucide-react';
+import { useState } from 'react';
 import { QueryErrorState } from '#/components/ui/query-error-state';
 import { EnvironmentCanvas } from '#/features/canvas/environment-canvas';
 import { useGetCanvasSummary, useGetEnvironmentCanvas } from '#/hooks/use-canvas';
+import { useListByProject } from '#/hooks/use-environments';
 
 export const Route = createFileRoute('/_dashboard/projects/$projectId/canvas')({
   component: CanvasRouteComponent,
@@ -10,6 +12,8 @@ export const Route = createFileRoute('/_dashboard/projects/$projectId/canvas')({
 
 function CanvasRouteComponent() {
   const { projectId } = Route.useParams();
+  const [selectedEnvironment, setEnvironment] = useState('');
+  const environments = useListByProject(projectId);
   const {
     data: summaryRes,
     isLoading: summaryLoading,
@@ -17,7 +21,9 @@ function CanvasRouteComponent() {
     refetch: refetchSummary,
   } = useGetCanvasSummary(projectId);
 
-  const envId = summaryRes?.data?.defaultEnvironment?.id;
+  const envId =
+    environments.data?.data?.find((environment) => environment.id === selectedEnvironment)?.id ??
+    summaryRes?.data?.defaultEnvironment?.id;
   const {
     data: envRes,
     isLoading: envLoading,
@@ -67,8 +73,20 @@ function CanvasRouteComponent() {
       <h1 className="font-medium text-2xl text-foreground/90 tracking-[-0.02em]">
         Environment Canvas
       </h1>
+      <select
+        aria-label="Environment"
+        className="w-fit rounded-md border bg-background p-2"
+        value={envId ?? ''}
+        onChange={(event) => setEnvironment(event.target.value)}
+      >
+        {environments.data?.data?.map((environment) => (
+          <option key={environment.id} value={environment.id}>
+            {environment.name}
+          </option>
+        ))}
+      </select>
       <div className="flex-1 overflow-hidden rounded-2xl bg-card">
-        <EnvironmentCanvas envData={envRes.data} />
+        <EnvironmentCanvas key={envId} envData={envRes.data} />
       </div>
     </div>
   );

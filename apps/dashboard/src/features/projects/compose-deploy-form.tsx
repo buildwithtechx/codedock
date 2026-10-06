@@ -1,203 +1,270 @@
-import Editor from '@monaco-editor/react';
-import { Database, Play, Search, Server } from 'lucide-react';
-import { useState } from 'react';
-import { toast } from 'sonner';
-
+import { useMutation, useQuery } from '@tanstack/react-query';
+import { useRef, useState } from 'react';
 import { Button } from '#/components/ui/button';
-import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '#/components/ui/card';
-import { useAnalyzeCompose, useDeployCompose } from '#/hooks/use-compose';
-import type { ComposeAnalyzeResponse } from '#/services/compose';
+import { Input } from '#/components/ui/input';
+import { Label } from '#/components/ui/label';
+import { useListByProject } from '#/hooks/use-environments';
+import type { BaseResponse } from '#/interfaces/base';
+import { apiClient } from '#/lib/api-client';
+import { parseSetupVariables } from '../sources/application-setup-types';
+import { ComposeStackCard } from './compose-stack-card';
+import type { ComposeStack, ComposeStackReview } from './compose-stack-types';
 
 export function ComposeDeployForm({ projectId }: { projectId: string }) {
-  const [composeText, setComposeText] = useState(`version: '3'
-services:
-  web:
-    image: nginx
-    ports:
-      - "80:80"`);
-
-  const [analysis, setAnalysis] = useState<{
-    source: string;
-    projectId: string;
-    result: ComposeAnalyzeResponse;
-  } | null>(null);
-  const analysisResult =
-    analysis?.source === composeText && analysis.projectId === projectId ? analysis.result : null;
-
-  const analyzeMutation = useAnalyzeCompose();
-  const deployMutation = useDeployCompose();
-
-  const handleAnalyze = () => {
-    analyzeMutation.mutate(
-      { projectId, composeContent: composeText },
-      {
-        onSuccess: (data) => {
-          setAnalysis({ source: composeText, projectId, result: data });
-          toast.success('Compose file analyzed successfully!');
-        },
-        onError: (err: any) => {
-          toast.error(err.response?.data?.message || 'Failed to analyze compose file');
-        },
+  const [id, setId] = useState<string>(() => crypto.randomUUID());
+  const [revision, setRevision] = useState(0);
+  const [repositoryUrl, setRepositoryUrl] = useState('');
+  const [branch, setBranch] = useState('main');
+  const [rootDirectory, setRootDirectory] = useState('/');
+  const [name, setName] = useState('application-stack');
+  const [environment, setEnvironment] = useState('');
+  const [content, setContent] = useState(
+    'services:\n  web:\n    image: nginx:alpine\n    ports:\n      - "8080:80"\n'
+  );
+  const [variables, setVariables] = useState('');
+  const [review, setReview] = useState<{ source: string; result: ComposeStackReview }>();
+  const [error, setError] = useState('');
+  const sequence = useRef(0);
+  const environments = useListByProject(projectId);
+  const environmentId =
+    environments.data?.data?.find((item) => item.id === environment)?.id ??
+    environments.data?.data?.find((item) => item.isDefault)?.id ??
+    environments.data?.data?.[0]?.id ??
+    '';
+  const stacks = useQuery({
+    queryKey: ['compose-stacks', projectId],
+    queryFn: () => apiClient.get<BaseResponse<ComposeStack[]>>(`/projects/${projectId}/stacks`),
+    refetchInterval: 5000,
+  });
+  const source = JSON.stringify({
+    projectId,
+    id,
+    environmentId,
+    name,
+    content,
+    variables,
+    revision,
+    repositoryUrl,
+    branch,
+    rootDirectory,
+  });
+  const currentReview = review?.source === source ? review.result : undefined;
+  const request = () => ({
+    id,
+    environmentId,
+    name,
+    content,
+    repositoryUrl,
+    branch,
+    rootDirectory,
+    variables: Object.fromEntries(
+      parseSetupVariables(variables).map((item) => [item.key, item.value])
+    ),
+    revision,
+  });
+  const inspect = useMutation({
+    mutationFn: async () => {
+      if (!environmentId) throw new Error('Select an environment.');
+      const current = ++sequence.current;
+      const result = await apiClient.post<BaseResponse<ComposeStackReview>>(
+        `/projects/${projectId}/stacks/review`,
+        request()
+      );
+      if (sequence.current === current) setReview({ source, result: result.data });
+    },
+    onError: (err: Error) => setError(err.message),
+  });
+  const save = useMutation({
+    mutationFn: async (deploy: boolean) => {
+      if (!currentReview) throw new Error('Review this exact configuration before saving.');
+      const result = await apiClient.post<BaseResponse<ComposeStack>>(
+        `/projects/${projectId}/stacks`,
+        { ...request(), digest: currentReview.digest }
+      );
+      setReview(undefined);
+      setRevision(result.data.revision);
+      await stacks.refetch();
+      if (deploy) {
+        await apiClient.post(`/projects/${projectId}/stacks/${result.data.id}/deploy`);
+        await stacks.refetch();
       }
-    );
+    },
+    onError: (err: Error) => setError(err.message),
+  });
+  const change = (setter: (value: string) => void, value: string) => {
+    sequence.current++;
+    setter(value);
+    setReview(undefined);
+    setError('');
   };
-
-  const handleDeploy = () => {
-    deployMutation.mutate(
-      { projectId, composeContent: composeText },
-      {
-        onSuccess: () => {
-          toast.success(
-            'Compose resources imported. Review configuration before deploying applications.'
-          );
-          setAnalysis(null);
-        },
-        onError: (err: any) => {
-          toast.error(err.response?.data?.message || 'Failed to deploy compose stack');
-        },
-      }
-    );
-  };
-
   return (
-    <div className="grid grid-cols-1 gap-6 lg:grid-cols-2">
-      <Card className="flex h-[70vh] flex-col">
-        <CardHeader>
-          <CardTitle>Docker Compose</CardTitle>
-          <CardDescription>
-            Convert selected Compose fields into project resources. Configure variables, ports and
-            storage separately.
-          </CardDescription>
-        </CardHeader>
-        <CardContent className="flex min-h-0 flex-1 flex-col p-0 pb-4">
-          <div className="w-full flex-1 border-y">
-            <Editor
-              height="100%"
-              defaultLanguage="yaml"
-              theme="vs-dark"
-              value={composeText}
-              onChange={(value) => {
-                setComposeText(value || '');
-                setAnalysis(null);
-              }}
-              options={{
-                minimap: { enabled: false },
-                fontSize: 14,
-                lineNumbers: 'on',
-                scrollBeyondLastLine: false,
-              }}
+    <div className="grid gap-6 lg:grid-cols-2">
+      <section className="space-y-4 rounded-xl border p-5">
+        <h2 className="font-semibold text-lg">Deploy a Compose stack</h2>
+        <Button
+          variant="outline"
+          size="sm"
+          onClick={() => {
+            sequence.current++;
+            setId(crypto.randomUUID());
+            setRevision(0);
+            setName('application-stack');
+            setReview(undefined);
+            setError('');
+            save.reset();
+            inspect.reset();
+          }}
+        >
+          New stack
+        </Button>
+        <p className="text-muted-foreground text-sm">
+          Review the resolved configuration before saving. Services, variables, ports, named
+          volumes, networks, health checks and dependencies run through Docker Compose. Unsupported
+          fields are rejected. Set a Git repository to resolve relative build contexts. Host bind
+          mounts, file secrets and external resources are rejected before apply.
+        </p>
+        <fieldset disabled={save.isPending || save.isSuccess} className="space-y-4">
+          <div className="space-y-2">
+            <Label htmlFor="stack-name">Stack name</Label>
+            <Input
+              id="stack-name"
+              value={name}
+              onChange={(event) => change(setName, event.target.value)}
             />
           </div>
-          <div className="flex justify-end gap-2 p-4 pb-0">
-            <Button
-              variant="outline"
-              onClick={handleAnalyze}
-              disabled={analyzeMutation.isPending || !composeText.trim()}
+          <div className="space-y-2">
+            <Label htmlFor="stack-environment">Environment</Label>
+            <select
+              id="stack-environment"
+              className="w-full rounded-md border bg-background p-2"
+              value={environmentId}
+              onChange={(event) => change(setEnvironment, event.target.value)}
             >
-              <Search className="mr-2 h-4 w-4" />
-              {analyzeMutation.isPending ? 'Analyzing...' : 'Analyze'}
-            </Button>
-            <Button
-              onClick={handleDeploy}
-              disabled={deployMutation.isPending || !composeText.trim() || !analysisResult}
-            >
-              <Play className="mr-2 h-4 w-4" />
-              {deployMutation.isPending ? 'Importing...' : 'Import resources'}
-            </Button>
+              <option disabled value="">
+                Select environment
+              </option>
+              {environments.data?.data?.map((item) => (
+                <option key={item.id} value={item.id}>
+                  {item.name}
+                </option>
+              ))}
+            </select>
           </div>
-        </CardContent>
-      </Card>
-
-      <Card className="h-[70vh] overflow-y-auto bg-muted/30">
-        <CardHeader>
-          <CardTitle>Preview</CardTitle>
-          <CardDescription>
-            {analysisResult
-              ? 'These resources will be created in your project'
-              : 'Click Analyze to preview the resources that will be created'}
-          </CardDescription>
-        </CardHeader>
-        <CardContent>
-          {!analysisResult && !analyzeMutation.isPending && (
-            <div className="flex h-32 items-center justify-center rounded-lg border border-dashed text-muted-foreground">
-              No preview available
+          <div className="space-y-2">
+            <Label htmlFor="stack-repository">
+              Git repository for relative build contexts (optional)
+            </Label>
+            <Input
+              id="stack-repository"
+              value={repositoryUrl}
+              onChange={(event) => change(setRepositoryUrl, event.target.value)}
+            />
+            <Label htmlFor="stack-branch">Branch or full commit SHA</Label>
+            <Input
+              id="stack-branch"
+              value={branch}
+              onChange={(event) => change(setBranch, event.target.value)}
+            />
+            <Label htmlFor="stack-root">Compose directory in repository</Label>
+            <Input
+              id="stack-root"
+              value={rootDirectory}
+              onChange={(event) => change(setRootDirectory, event.target.value)}
+            />
+          </div>
+          <div className="space-y-2">
+            <Label htmlFor="stack-content">Compose configuration</Label>
+            <textarea
+              id="stack-content"
+              className="min-h-80 w-full rounded-md border bg-background p-3 font-mono text-sm"
+              value={content}
+              onChange={(event) => change(setContent, event.target.value)}
+              spellCheck={false}
+            />
+          </div>
+          <div className="space-y-2">
+            <Label htmlFor="stack-variables">Interpolation variables (KEY=value)</Label>
+            <textarea
+              id="stack-variables"
+              className="min-h-20 w-full rounded-md border bg-background p-3 font-mono text-sm"
+              value={variables}
+              onChange={(event) => change(setVariables, event.target.value)}
+              spellCheck={false}
+            />
+          </div>
+          <Button
+            variant="outline"
+            disabled={inspect.isPending || !content.trim()}
+            onClick={() => inspect.mutate()}
+          >
+            {inspect.isPending ? 'Validating?' : 'Validate and review'}
+          </Button>
+        </fieldset>
+        {error && (
+          <p role="alert" className="text-destructive text-sm">
+            {error}
+          </p>
+        )}
+        {currentReview && (
+          <div className="space-y-3">
+            <h3 className="font-medium">Deployment review</h3>
+            <ul className="list-disc space-y-1 pl-5 text-sm">
+              {currentReview.effects.map((effect) => (
+                <li key={effect}>{effect}</li>
+              ))}
+            </ul>
+            <pre className="max-h-72 overflow-auto rounded-md bg-muted p-3 text-xs">
+              {currentReview.config}
+            </pre>
+            <div className="flex gap-2">
+              <Button
+                variant="outline"
+                disabled={save.isPending}
+                onClick={() => save.mutate(false)}
+              >
+                Save stack
+              </Button>
+              <Button disabled={save.isPending} onClick={() => save.mutate(true)}>
+                Save and deploy
+              </Button>
             </div>
-          )}
-
-          {analyzeMutation.isPending && (
-            <div className="flex h-32 animate-pulse items-center justify-center rounded-lg border border-dashed text-muted-foreground">
-              Analyzing resources...
-            </div>
-          )}
-
-          {analysisResult && (
-            <div className="flex flex-col gap-6">
-              {analysisResult.appServices?.length > 0 && (
-                <div className="flex flex-col gap-3">
-                  <h3 className="flex items-center gap-2 font-semibold">
-                    <Server className="h-4 w-4" />
-                    App Services ({analysisResult.appServices.length})
-                  </h3>
-                  {analysisResult.appServices.map((svc: any, idx: number) => (
-                    <div key={idx} className="rounded-lg border bg-background p-4 shadow-sm">
-                      <div className="font-medium text-lg">{svc.name}</div>
-                      <div className="mt-1 grid grid-cols-2 gap-2 text-muted-foreground text-sm">
-                        <div>
-                          <span className="font-medium text-foreground">Image:</span>{' '}
-                          {svc.imageRef || 'Will be built'}
-                        </div>
-                        <div>
-                          <span className="font-medium text-foreground">Runtime:</span>{' '}
-                          {svc.runtimeMode}
-                        </div>
-                        {svc.buildEngine && (
-                          <div>
-                            <span className="font-medium text-foreground">Build Engine:</span>{' '}
-                            {svc.buildEngine}
-                          </div>
-                        )}
-                      </div>
-                    </div>
-                  ))}
-                </div>
-              )}
-
-              {analysisResult.databases?.length > 0 && (
-                <div className="flex flex-col gap-3">
-                  <h3 className="flex items-center gap-2 font-semibold">
-                    <Database className="h-4 w-4" />
-                    Databases ({analysisResult.databases.length})
-                  </h3>
-                  {analysisResult.databases.map((db: any, idx: number) => (
-                    <div key={idx} className="rounded-lg border bg-background p-4 shadow-sm">
-                      <div className="font-medium text-lg capitalize">{db.name}</div>
-                      <div className="mt-1 grid grid-cols-2 gap-2 text-muted-foreground text-sm">
-                        <div>
-                          <span className="font-medium text-foreground">Engine:</span> {db.engine}
-                        </div>
-                        <div>
-                          <span className="font-medium text-foreground">Version:</span> {db.version}
-                        </div>
-                        <div>
-                          <span className="font-medium text-foreground">Port:</span> {db.port}
-                        </div>
-                      </div>
-                    </div>
-                  ))}
-                </div>
-              )}
-
-              {analysisResult.appServices?.length === 0 &&
-                analysisResult.databases?.length === 0 && (
-                  <div className="rounded-lg border border-yellow-200 bg-yellow-50 p-4 text-sm text-yellow-600 dark:border-yellow-900 dark:bg-yellow-950/20 dark:text-yellow-400">
-                    No recognizable services found. Codedock looks for valid image names or build
-                    directives to generate AppServices and Databases.
-                  </div>
-                )}
-            </div>
-          )}
-        </CardContent>
-      </Card>
+          </div>
+        )}
+      </section>
+      <section className="space-y-4">
+        <h2 className="font-semibold text-lg">Saved stacks</h2>
+        {stacks.isError && (
+          <p role="alert" className="text-destructive">
+            Saved stacks unavailable.{' '}
+            <Button onClick={() => stacks.refetch()} variant="outline">
+              Retry
+            </Button>
+          </p>
+        )}
+        {stacks.data?.data?.map((stack) => (
+          <ComposeStackCard
+            key={stack.id}
+            stack={stack}
+            onEdit={(saved, config) => {
+              sequence.current++;
+              setId(saved.id);
+              setRevision(saved.revision);
+              setName(saved.name);
+              setEnvironment(saved.environmentId);
+              setContent(config);
+              setRepositoryUrl('');
+              setVariables('');
+              setReview(undefined);
+              setError('');
+              save.reset();
+              inspect.reset();
+            }}
+            onRefresh={() => {
+              void stacks.refetch();
+            }}
+          />
+        ))}
+      </section>
     </div>
   );
 }
