@@ -216,12 +216,12 @@ func (h *UserHandler) CreatePAT(c echo.Context) error {
 	}
 	pat, rawToken, err := h.userService.CreatePAT(c.Request().Context(), userID, payload.Name, payload.AccessLevel, payload.ProjectScope, payload.AllowedProjects, payload.ExpiresAt)
 	if err != nil {
-		return utils.Error(c, http.StatusInternalServerError, err.Error())
+		if utils.IsValidation(err) {
+			return utils.Error(c, http.StatusBadRequest, err.Error())
+		}
+		return utils.Error(c, http.StatusInternalServerError, "failed to create personal token")
 	}
-	return utils.Created(c, "Token created successfully", map[string]any{
-		"token": rawToken,
-		"pat":   pat,
-	})
+	return utils.Created(c, "Token created successfully", models.CreatePATResponse{Token: pat, Plain: rawToken})
 }
 
 func (h *UserHandler) ListPATs(c echo.Context) error {

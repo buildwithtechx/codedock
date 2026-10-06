@@ -156,13 +156,14 @@ func (r *UserRepo) CreatePAT(ctx context.Context, pat *models.PersonalAccessToke
 	if pat.CreatedAt.IsZero() {
 		pat.CreatedAt = now
 	}
-	if pat.ExpiresAt.IsZero() {
-		pat.ExpiresAt = now.Add(365 * 24 * time.Hour)
+	var expiresAt any
+	if pat.ExpiresAt != nil {
+		expiresAt = pat.ExpiresAt.UTC().Format(time.RFC3339)
 	}
 	r.mu.Lock()
 	defer r.mu.Unlock()
 	_, err := r.db.ExecContext(ctx, `INSERT INTO personal_access_tokens (id, user_id, name, token_hash, prefix, access_level, project_scope, allowed_projects, expires_at, created_at) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?)`,
-		pat.ID, pat.UserID, pat.Name, pat.TokenHash, pat.Prefix, pat.AccessLevel, pat.ProjectScope, pat.AllowedProjects, pat.ExpiresAt.Format(time.RFC3339), pat.CreatedAt.Format(time.RFC3339))
+		pat.ID, pat.UserID, pat.Name, pat.TokenHash, pat.Prefix, pat.AccessLevel, pat.ProjectScope, pat.AllowedProjects, expiresAt, pat.CreatedAt.Format(time.RFC3339))
 	if err != nil {
 		return fmt.Errorf("failed to create personal access token: %w", err)
 	}
@@ -190,11 +191,11 @@ func (r *UserRepo) ListPATs(ctx context.Context, userID string) ([]*models.Perso
 		}
 
 		cat, _ := time.Parse(time.RFC3339, createdAt)
-		var eat time.Time
+		var eat *time.Time
 		if expiresAt != nil {
 			parsed, err := time.Parse(time.RFC3339, *expiresAt)
 			if err == nil {
-				eat = parsed
+				eat = &parsed
 			}
 		}
 

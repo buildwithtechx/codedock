@@ -63,6 +63,8 @@ func (s *Server) registerDeploymentRoutes(authGroup *echo.Group) {
 	authGroup.GET("/deployments/:id/explain", s.deploymentHandler.ExplainFailure)
 	authGroup.GET("/services/:serviceId/metrics", s.deploymentHandler.GetMetrics, serviceAuth)
 	authGroup.GET("/services/:serviceId/metrics/historical", s.metricsHandler.GetHistoricalMetrics, serviceAuth)
+	authGroup.GET("/services/:serviceId/autoscaling", s.autoscalingHandler.Get, s.RequireServiceRole(""))
+	authGroup.PUT("/services/:serviceId/autoscaling", s.autoscalingHandler.Save, s.RequireServiceRole(models.MemberPermissionAdmin))
 	authGroup.GET("/services/:serviceId/logs/historical", s.logHandler.GetHistoricalLogs, serviceAuth)
 }
 
@@ -78,6 +80,9 @@ func (s *Server) registerBackupRoutes(authGroup *echo.Group) {
 	authGroup.GET("/backups/:id/records/:recordId/download", s.backupHandler.DownloadRecord)
 	authGroup.DELETE("/backups/:id/records/:recordId", s.backupHandler.DeleteRecord)
 	authGroup.GET("/backup-records", s.backupHandler.ListAllRecords)
+	authGroup.GET("/backup-records/:recordId/volume-restore", s.backupHandler.VolumeRestoreTarget)
+	authGroup.POST("/backup-records/:recordId/volume-restore", s.backupHandler.RestoreVolume)
+	authGroup.DELETE("/backup-records/:recordId/volume-restore", s.backupHandler.CancelVolumeRestore)
 	authGroup.GET("/s3-destinations", s.backupHandler.ListS3Destinations, s.authGuard.RequireRole("admin"))
 	authGroup.POST("/s3-destinations", s.backupHandler.CreateS3Destination, s.authGuard.RequireRole("admin"))
 	authGroup.POST("/s3-destinations/verify", s.backupHandler.VerifyS3Draft, s.authGuard.RequireRole("admin"))

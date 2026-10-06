@@ -20,6 +20,7 @@ import (
 type ContainerManager struct {
 	dockerClient *client.Client
 	store        ContainerManagerStore
+	volumes      VolumeOperations
 }
 
 func NewContainerManager(dockerClient *client.Client, st ContainerManagerStore) *ContainerManager {
@@ -45,6 +46,11 @@ type ContainerRunOptions struct {
 }
 
 func (c *ContainerManager) CreateAndStart(ctx context.Context, opts ContainerRunOptions) (string, error) {
+	release, err := c.acquireService(opts.ServiceID)
+	if err != nil {
+		return "", err
+	}
+	defer release()
 	containerPort, err := nat.NewPort("tcp", fmt.Sprintf("%d", opts.InternalPort))
 	if err != nil {
 		return "", fmt.Errorf("invalid port definition: %w", err)

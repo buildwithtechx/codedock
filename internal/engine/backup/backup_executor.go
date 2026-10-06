@@ -5,9 +5,7 @@ import (
 	"context"
 	"errors"
 	"fmt"
-	"io"
 	"strings"
-	"time"
 
 	"github.com/docker/docker/api/types/container"
 	"github.com/docker/docker/pkg/stdcopy"
@@ -20,10 +18,16 @@ import (
 
 func (bm *BackupManager) executeVolumeBackup(ctx context.Context, volumeName string) ([]byte, string, error) {
 	if bm.dockerClient == nil {
-		dumpBytes := []byte(fmt.Sprintf("-- Simulated volume backup dump for %s at %s --\n", volumeName, time.Now().UTC().Format(time.RFC3339)))
-		return dumpBytes, "Docker client nil: simulated successful local dump.\n", nil
+		return nil, "", errors.New("volume backup requires a Docker client")
 	}
 
+	if bm.volumeOperations != nil {
+		release, err := bm.volumeOperations.AcquireVolume(volumeName)
+		if err != nil {
+			return nil, "", err
+		}
+		defer release()
+	}
 	execCmd := []string{"tar", "-czf", "-", "-C", "/volume_data", "."}
 
 	resp, err := bm.dockerClient.ContainerCreate(ctx, &container.Config{
@@ -49,6 +53,8 @@ func (bm *BackupManager) executeVolumeBackup(ctx context.Context, volumeName str
 		return nil, "", fmt.Errorf("failed to attach to backup container: %w", err)
 	}
 	defer attachResp.Close()
+	stopCancellation := context.AfterFunc(ctx, attachResp.Close)
+	defer stopCancellation()
 
 	if err := bm.dockerClient.ContainerStart(ctx, resp.ID, container.StartOptions{}); err != nil {
 		return nil, "", fmt.Errorf("failed to start backup container: %w", err)
@@ -56,7 +62,7 @@ func (bm *BackupManager) executeVolumeBackup(ctx context.Context, volumeName str
 
 	var stdoutBuf, stderrBuf bytes.Buffer
 	if _, err := stdcopy.StdCopy(&stdoutBuf, &stderrBuf, attachResp.Reader); err != nil {
-		_, _ = io.Copy(&stdoutBuf, attachResp.Reader)
+		return nil, stderrBuf.String(), fmt.Errorf("read backup stream: %w", err)
 	}
 
 	statusCh, errCh := bm.dockerClient.ContainerWait(ctx, resp.ID, container.WaitConditionNotRunning)
@@ -109,7 +115,7 @@ func (bm *BackupManager) buildDumpCommand(cfg *models.BackupConfig) (string, []s
 			}
 			return containerName, dumpCmd, tmplService.XCodedock.Backup.FileExtension, nil
 		}
-		return containerName, []string{"sh", "-c", "echo 'Generic volume snapshot'"}, ".tar.gz", nil
+		return "", nil, "", fmt.Errorf("database engine %s has no backup command", db.Engine)
 	}
 
 	return "", nil, "", errors.New("backup config requires databaseId")
@@ -117,12 +123,14 @@ func (bm *BackupManager) buildDumpCommand(cfg *models.BackupConfig) (string, []s
 
 func (bm *BackupManager) executeDump(ctx context.Context, containerName string, dumpCmd []string, backupName string) ([]byte, string, error) {
 	if bm.dockerClient == nil {
-		dumpBytes := []byte(fmt.Sprintf("-- Simulated backup dump for %s at %s --\n", backupName, time.Now().UTC().Format(time.RFC3339)))
-		return dumpBytes, "Docker client nil: simulated successful local dump.\n", nil
+		return nil, "", errors.New("database backup requires a Docker client")
 	}
 
 	inspectResp, err := bm.dockerClient.ContainerInspect(ctx, containerName)
-	if err != nil || !inspectResp.State.Running {
+	if err != nil {
+		return nil, "", fmt.Errorf("inspect backup container: %w", err)
+	}
+	if inspectResp.State == nil || !inspectResp.State.Running {
 		return nil, "", fmt.Errorf("cannot backup: container %s is stopped or not running", containerName)
 	}
 
@@ -142,12 +150,20 @@ func (bm *BackupManager) executeDump(ctx context.Context, containerName string, 
 		return nil, "", fmt.Errorf("docker exec attach failed: %v", err)
 	}
 	defer attachResp.Close()
+	stopCancellation := context.AfterFunc(ctx, attachResp.Close)
+	defer stopCancellation()
 
 	var stdoutBuf, stderrBuf bytes.Buffer
 	if _, err := stdcopy.StdCopy(&stdoutBuf, &stderrBuf, attachResp.Reader); err != nil {
-		_, _ = io.Copy(&stdoutBuf, attachResp.Reader)
+		return nil, stderrBuf.String(), fmt.Errorf("read backup stream: %w", err)
 	}
 
+	if err := bm.waitExecSuccess(ctx, execCreateResp.ID, "backup"); err != nil {
+		return nil, stderrBuf.String(), fmt.Errorf("%w; stderr: %s", err, strings.TrimSpace(stderrBuf.String()))
+	}
+	if stdoutBuf.Len() == 0 {
+		return nil, stderrBuf.String(), errors.New("backup command produced an empty archive")
+	}
 	return stdoutBuf.Bytes(), stderrBuf.String(), nil
 }
 

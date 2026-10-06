@@ -14,9 +14,11 @@ Create an R2 bucket and credentials with access to the required object operation
 | Region | `auto` |
 | Access key ID | R2 S3 access key ID |
 | Secret access key | Matching R2 S3 secret |
-| Path prefix | Stored but not currently applied to upload object keys |
+| Path prefix | Optional object-key folder, applied to new uploads |
 
-Uploads currently use the generated backup filename at the bucket root. Use a dedicated bucket if you require separation; setting a path prefix does not provide it.
+Use a dedicated bucket for backups. A path prefix is an object naming convention, not an access-isolation boundary; bucket policies and credentials control access.
+
+New uploads use the configured prefix followed by the generated backup filename. Existing records keep their stored object keys for restore and retention.
 
 Add the destination in backup settings and use the verify action. A successful check is useful, but a complete upload, download and restore test is the recovery check that matters.
 

@@ -16,7 +16,13 @@ services:
     ports:
       - "80:80"`);
 
-  const [analysisResult, setAnalysisResult] = useState<ComposeAnalyzeResponse | null>(null);
+  const [analysis, setAnalysis] = useState<{
+    source: string;
+    projectId: string;
+    result: ComposeAnalyzeResponse;
+  } | null>(null);
+  const analysisResult =
+    analysis?.source === composeText && analysis.projectId === projectId ? analysis.result : null;
 
   const analyzeMutation = useAnalyzeCompose();
   const deployMutation = useDeployCompose();
@@ -26,7 +32,7 @@ services:
       { projectId, composeContent: composeText },
       {
         onSuccess: (data) => {
-          setAnalysisResult(data);
+          setAnalysis({ source: composeText, projectId, result: data });
           toast.success('Compose file analyzed successfully!');
         },
         onError: (err: any) => {
@@ -41,8 +47,10 @@ services:
       { projectId, composeContent: composeText },
       {
         onSuccess: () => {
-          toast.success('Compose stack deployed successfully!');
-          setAnalysisResult(null);
+          toast.success(
+            'Compose resources imported. Review configuration before deploying applications.'
+          );
+          setAnalysis(null);
         },
         onError: (err: any) => {
           toast.error(err.response?.data?.message || 'Failed to deploy compose stack');
@@ -56,7 +64,10 @@ services:
       <Card className="flex h-[70vh] flex-col">
         <CardHeader>
           <CardTitle>Docker Compose</CardTitle>
-          <CardDescription>Paste your docker-compose.yml here</CardDescription>
+          <CardDescription>
+            Convert selected Compose fields into project resources. Configure variables, ports and
+            storage separately.
+          </CardDescription>
         </CardHeader>
         <CardContent className="flex min-h-0 flex-1 flex-col p-0 pb-4">
           <div className="w-full flex-1 border-y">
@@ -65,7 +76,10 @@ services:
               defaultLanguage="yaml"
               theme="vs-dark"
               value={composeText}
-              onChange={(value) => setComposeText(value || '')}
+              onChange={(value) => {
+                setComposeText(value || '');
+                setAnalysis(null);
+              }}
               options={{
                 minimap: { enabled: false },
                 fontSize: 14,
@@ -88,7 +102,7 @@ services:
               disabled={deployMutation.isPending || !composeText.trim() || !analysisResult}
             >
               <Play className="mr-2 h-4 w-4" />
-              {deployMutation.isPending ? 'Deploying...' : 'Deploy'}
+              {deployMutation.isPending ? 'Importing...' : 'Import resources'}
             </Button>
           </div>
         </CardContent>

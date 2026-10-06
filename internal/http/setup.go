@@ -71,7 +71,12 @@ func NewServer(db *sql.DB, v *utils.Vault, deployer *deploy.Deployer, traefikMan
 	refreshTokenRepo := repositories.NewRefreshTokenRepo(db)
 
 	httpEngineAdapter := newEngineAdapter(settingsRepo, appRepo, envVarRepo, dbRepo, projectRepo, scheduledTaskRepo, backupRepo, s3DestinationRepo, serviceVarRepo, serverlessRepository)
+	volumeOperations := deploy.NewVolumeGate()
+	if deployer != nil {
+		deployer.SetVolumeOperations(volumeOperations)
+	}
 	databaseDeployer := deploy.NewDatabaseDeployer(dockerClient, httpEngineAdapter)
+	databaseDeployer.SetVolumeOperations(volumeOperations)
 
 	cronManager := cron.NewCronManager(dockerClient, httpEngineAdapter)
 
@@ -86,6 +91,7 @@ func NewServer(db *sql.DB, v *utils.Vault, deployer *deploy.Deployer, traefikMan
 	_ = cronManager.Start()
 
 	backupManager := backup.NewBackupManager(dockerClient, httpEngineAdapter, "")
+	backupManager.SetVolumeOperations(volumeOperations)
 	_ = backupManager.Start()
 
 	projectService := projectservices.NewProjectService(projectRepo, environmentRepo, appRepo, serviceVarRepo, settingsRepo, orgRepo)
@@ -122,7 +128,10 @@ func NewServer(db *sql.DB, v *utils.Vault, deployer *deploy.Deployer, traefikMan
 	deploymentService := deploymentservices.NewDeploymentService(deployRepo, appRepo, projectRepo, deployer, gitService, statsMonitor, volumeRepo, sshManager)
 	aiAnalysisService := projectservices.NewAIAnalysisService(deployRepo, appRepo, aiRepo)
 
-	autoscaler := deploy.NewAutoscalerWorker(appRepo, statsMonitor, deploymentService)
+	autoscalingRepo := repositories.NewAutoscalingRepo(db)
+	autoscalingService := projectservices.NewAutoscalingService(autoscalingRepo, appRepo, projectRepo)
+	autoscalingHandler := projects.NewAutoscalingHandler(autoscalingService)
+	autoscaler := deploy.NewAutoscalerWorker(appRepo, statsMonitor, deploymentService, autoscalingRepo)
 	autoscaler.Start()
 
 	backupService := backupservices.NewBackupService(backupRepo, s3DestinationRepo, backupManager)
@@ -146,6 +155,8 @@ func NewServer(db *sql.DB, v *utils.Vault, deployer *deploy.Deployer, traefikMan
 	bridge := NewBridge(projectService, appService, databaseService, deploymentService)
 
 	authGuard := middleware.NewAuthGuard(tokenService, settingsService, projectSettingsService, orgRepo, projectRepo, userRepo)
+	authGuard.PersonalTokens = userRepo
+	authGuard.PersonalResources = repositories.NewPersonalTokenResources(db)
 
 	appHandler := projects.NewAppHandler(appService, projectService, deployer, deploymentService, environmentService)
 	databaseHandler := databases.NewDatabaseHandler(databaseService, projectService, auditService)
@@ -238,6 +249,7 @@ func NewServer(db *sql.DB, v *utils.Vault, deployer *deploy.Deployer, traefikMan
 		dispatcherService:      dispatcherService,
 		projectService:         projectService,
 		appService:             appService,
+		autoscalingHandler:     autoscalingHandler,
 		appServiceHandler:      appHandler,
 		dbHandler:              databaseHandler,
 		scheduledTaskHandler:   scheduledTaskHandler,

@@ -23,7 +23,7 @@ In backup destination settings, provide:
 | Bucket | The existing backup bucket |
 | Region | The region configured for your instance |
 | Access key and secret | Credentials authorized for backup objects |
-| Path prefix | Stored but not currently applied to upload object keys |
+| Path prefix | Optional object-key folder, applied to new uploads |
 
 Verify the destination, select it in a backup configuration, enable S3 uploads and trigger a test. Download and restore a record before relying on it.
 

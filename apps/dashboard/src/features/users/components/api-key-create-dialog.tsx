@@ -13,6 +13,7 @@ import { Input } from '#/components/ui/input';
 import { Label } from '#/components/ui/label';
 import { useCreateToken } from '#/features/profile';
 import type { CreatePATRequest } from '#/features/users';
+import { useListCanvasSummaries } from '#/hooks/use-canvas';
 
 interface ApiKeyCreateDialogProps {
   open: boolean;
@@ -22,6 +23,9 @@ interface ApiKeyCreateDialogProps {
 
 export function ApiKeyCreateDialog({ open, onOpenChange, onSuccess }: ApiKeyCreateDialogProps) {
   const createToken = useCreateToken();
+  const projectsQuery = useListCanvasSummaries();
+  const projects = projectsQuery.data?.data ?? [];
+  const [allowedProjects, setAllowedProjects] = useState<string[]>([]);
 
   const [name, setName] = useState('');
   const [accessLevel, setAccessLevel] = useState<'read' | 'read_write'>('read');
@@ -34,7 +38,7 @@ export function ApiKeyCreateDialog({ open, onOpenChange, onSuccess }: ApiKeyCrea
       return;
     }
 
-    if (projectScope === 'specific') {
+    if (projectScope === 'specific' && allowedProjects.length === 0) {
       toast.error('Select at least one project or choose "All projects"');
       return;
     }
@@ -43,7 +47,7 @@ export function ApiKeyCreateDialog({ open, onOpenChange, onSuccess }: ApiKeyCrea
       name,
       accessLevel,
       projectScope,
-      allowedProjects: [],
+      allowedProjects: projectScope === 'specific' ? allowedProjects : [],
     };
     if (expirationDays !== null) {
       const date = new Date();
@@ -59,6 +63,7 @@ export function ApiKeyCreateDialog({ open, onOpenChange, onSuccess }: ApiKeyCrea
           setName('');
           setAccessLevel('read');
           setProjectScope('all');
+          setAllowedProjects([]);
           setExpirationDays(30);
         },
         onError: (err) => {
@@ -163,6 +168,35 @@ export function ApiKeyCreateDialog({ open, onOpenChange, onSuccess }: ApiKeyCrea
             </div>
           </div>
 
+          {projectScope === 'specific' && (
+            <div className="max-h-40 space-y-2 overflow-y-auto rounded-lg border p-3">
+              {projectsQuery.isLoading && <p>Loading projects...</p>}
+              {projectsQuery.isError && (
+                <div className="space-y-2">
+                  <p>Could not load projects.</p>
+                  <Button type="button" variant="outline" onClick={() => projectsQuery.refetch()}>
+                    Retry projects
+                  </Button>
+                </div>
+              )}
+              {projects.map((project) => (
+                <label key={project.id} className="flex items-center gap-2 text-sm">
+                  <input
+                    type="checkbox"
+                    checked={allowedProjects.includes(project.id)}
+                    onChange={(event) =>
+                      setAllowedProjects((current) =>
+                        event.target.checked
+                          ? [...current, project.id]
+                          : current.filter((id) => id !== project.id)
+                      )
+                    }
+                  />
+                  {project.name}
+                </label>
+              ))}
+            </div>
+          )}
           <div className="space-y-2.5">
             <Label className="font-mono font-semibold text-[10px] text-muted-foreground uppercase tracking-[0.2em]">
               EXPIRATION

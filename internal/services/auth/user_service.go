@@ -6,6 +6,8 @@ import (
 	"encoding/hex"
 	"encoding/json"
 	"errors"
+	"fmt"
+	"strings"
 	"time"
 
 	"crypto/sha256"
@@ -97,7 +99,7 @@ func (s *UserService) UpdateUser(ctx context.Context, u *models.User) error {
 
 func (s *UserService) CreatePAT(ctx context.Context, userID, name string, accessLevel string, projectScope string, allowedProjects []string, expiresAt *time.Time) (*models.PersonalAccessToken, string, error) {
 	if userID == "" || name == "" {
-		return nil, "", errors.New("userId and name are required")
+		return nil, "", utils.NewValidationError("userId and name are required")
 	}
 	if accessLevel == "" {
 		accessLevel = "read_write"
@@ -105,8 +107,27 @@ func (s *UserService) CreatePAT(ctx context.Context, userID, name string, access
 	if projectScope == "" {
 		projectScope = "all"
 	}
+	if accessLevel != "read" && accessLevel != "read_write" {
+		return nil, "", utils.NewValidationError("access level must be read or read_write")
+	}
+	if projectScope != "all" && projectScope != "specific" {
+		return nil, "", utils.NewValidationError("project scope must be all or specific")
+	}
+	if projectScope == "specific" && len(allowedProjects) == 0 {
+		return nil, "", utils.NewValidationError("specific project scope requires allowed projects")
+	}
+	for _, id := range allowedProjects {
+		if strings.TrimSpace(id) == "" || strings.TrimSpace(id) != id {
+			return nil, "", utils.NewValidationError("allowed project id must be nonempty and have no surrounding whitespace")
+		}
+	}
+	if expiresAt != nil && !expiresAt.After(time.Now()) {
+		return nil, "", utils.NewValidationError("expiry must be in the future")
+	}
 	bytes := make([]byte, 32)
-	rand.Read(bytes)
+	if _, err := rand.Read(bytes); err != nil {
+		return nil, "", fmt.Errorf("generate personal token: %w", err)
+	}
 	rawToken := "vpt_" + hex.EncodeToString(bytes)
 
 	hasher := sha256.New()
@@ -133,7 +154,7 @@ func (s *UserService) CreatePAT(ctx context.Context, userID, name string, access
 		CreatedAt:       time.Now(),
 	}
 	if expiresAt != nil {
-		pat.ExpiresAt = *expiresAt
+		pat.ExpiresAt = expiresAt
 	}
 	if err := s.userRepo.CreatePAT(ctx, pat); err != nil {
 		return nil, "", err

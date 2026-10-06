@@ -13,12 +13,12 @@ Destination creation is separate from provisioning an object-storage server. The
 
 ## Create a backup configuration
 
-Select the target database or volume. Set `backupEnabled`, a cron `schedule`, timeout and retention settings. The stored `timezone` field is not currently applied by the scheduler; expressions run in the control plane default time zone unless they explicitly specify a supported cron time zone. To upload off-server, enable `s3Enabled` and choose `s3DestinationId`. Keep local copies unless you intentionally enable `disableLocal` and have verified the remote recovery path.
+Select the target database or volume. Set `backupEnabled`, a cron `schedule`, timeout and retention settings. Set `timezone` to an IANA location such as `Africa/Lagos`; the scheduler applies it to five-field, six-field and descriptor schedules. Without a configured zone or an inline `CRON_TZ` or `TZ`, the control plane time zone applies. An inline `CRON_TZ` or `TZ` must match the configured zone when both are supplied. To upload off-server, enable `s3Enabled` and choose `s3DestinationId`. Keep local copies unless you intentionally enable `disableLocal` and have verified the remote recovery path.
 
 | Field | Purpose |
 | --- | --- |
 | `schedule` | Cron expression, for example `0 2 * * *` |
-| `timezone` | Stored setting; currently ignored by scheduling |
+| `timezone` | IANA time zone applied to scheduling |
 | `timeout` | Execution timeout |
 | `retentionDays` | Retention window |
 | `maxBackups` | Maximum retained record count |
@@ -34,7 +34,7 @@ The scheduler uses the configured cron expression. Daily, weekly and monthly pre
 4. Download the record and test restoration in a safe environment.
 5. Enable the schedule and check that later runs complete.
 
-A missing engine template returns an unsupported-engine error. A present template without dump metadata instead falls back to a generic placeholder command; a completed record from that fallback is not evidence of a usable data backup. Its restore fallback expects a tar archive, which the placeholder does not produce. Use compatible dump and restore metadata and verify recovered data. Volume archives are filesystem copies and do not guarantee application-level consistency for a live database.
+A missing engine template or missing dump/restore command metadata returns an error. Database and volume backups require a connected Docker client. Failed commands cannot produce a successful database backup or restore. Use compatible dump and restore metadata and verify recovered data. Volume archives are filesystem copies and do not guarantee application-level consistency for a live database.
 
 ## Recovery scope
 
