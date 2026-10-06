@@ -7,7 +7,7 @@ Inspect completed backup records before restoring. Confirm the target, engine, f
 
 ## Download
 
-`GET /api/backups/:configId/records/:recordId/download` streams the record. This handler serves the recorded local file only. It does not download a remote S3 object as a fallback; remote-only records cannot be downloaded through this endpoint. Retrieve remote objects using an authorized S3 client, or keep a local copy when browser download is required.
+`GET /api/backups/:configId/records/:recordId/download` streams the record. The handler serves the recorded local file when present, or streams the stored S3 object when the local archive is absent. Remote-only records use their recorded destination and object key. The same project administrator authorization applies to both paths.
 
 ## Restore
 

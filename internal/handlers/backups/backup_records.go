@@ -2,8 +2,8 @@ package backups
 
 import (
 	"errors"
+	"mime"
 	"net/http"
-	"path/filepath"
 	"strconv"
 
 	"github.com/labstack/echo/v4"
@@ -105,10 +105,21 @@ func (h *BackupHandler) DownloadRecord(c echo.Context) error {
 		return utils.Error(c, http.StatusNotFound, "record not found")
 	}
 
-	if rec.FilePath == "" {
-		return utils.Error(c, http.StatusNotFound, "local backup file not available")
+	archive, filename, err := h.backupService.OpenArchive(c.Request().Context(), recordID)
+	if err != nil {
+		var notFound *utils.NotFoundError
+		if errors.As(err, &notFound) {
+			return utils.Error(c, http.StatusNotFound, "backup archive not found")
+		}
+		return utils.Error(c, http.StatusBadGateway, "backup archive is unavailable")
 	}
-	return c.Attachment(rec.FilePath, filepath.Base(rec.FilePath))
+	defer func() {
+		if err := archive.Close(); err != nil {
+			c.Logger().Warnf("close backup archive: %v", err)
+		}
+	}()
+	c.Response().Header().Set("Content-Disposition", mime.FormatMediaType("attachment", map[string]string{"filename": filename}))
+	return c.Stream(http.StatusOK, "application/octet-stream", archive)
 }
 
 func (h *BackupHandler) DeleteRecord(c echo.Context) error {

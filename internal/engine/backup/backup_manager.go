@@ -83,27 +83,34 @@ func (bm *BackupManager) RegisterBackup(cfg *models.BackupConfig) error {
 }
 
 func (bm *BackupManager) registerBackupLocked(cfg *models.BackupConfig) error {
+	active := cfg.Status == models.BackupConfigStatusActive && cfg.BackupEnabled && strings.TrimSpace(cfg.Schedule) != "manual"
+	var schedule cron.Schedule
+	if active {
+		var err error
+		schedule, err = ParseSchedule(cfg.Schedule, cfg.Timezone)
+		if err != nil {
+			return fmt.Errorf("schedule backup %s: %w", cfg.Name, err)
+		}
+	}
 	if entryID, exists := bm.entries[cfg.ID]; exists {
 		bm.cronEngine.Remove(entryID)
 		delete(bm.entries, cfg.ID)
 	}
-	if cfg.Status != "active" || !cfg.BackupEnabled || strings.TrimSpace(cfg.Schedule) == "manual" {
+	if !active {
 		return nil
 	}
-	schedule := strings.TrimSpace(cfg.Schedule)
-	if len(strings.Fields(schedule)) == 5 && !strings.HasPrefix(schedule, "@") {
-		schedule = "0 " + schedule
-	}
 	cfgID := cfg.ID
-	entryID, err := bm.cronEngine.AddFunc(schedule, func() {
-		ctx, cancel := context.WithTimeout(context.Background(), 30*time.Minute)
-		defer cancel()
-		_, _ = bm.TriggerBackup(ctx, cfgID)
-	})
-	if err != nil {
-		return fmt.Errorf("invalid cron schedule '%s' for backup %s: %w", cfg.Schedule, cfg.Name, err)
+	timeout := time.Duration(cfg.Timeout) * time.Second
+	if timeout <= 0 {
+		timeout = 30 * time.Minute
 	}
-	bm.entries[cfg.ID] = entryID
+	bm.entries[cfg.ID] = bm.cronEngine.Schedule(schedule, cron.FuncJob(func() {
+		ctx, cancel := context.WithTimeout(context.Background(), timeout)
+		defer cancel()
+		if _, err := bm.TriggerBackup(ctx, cfgID); err != nil {
+			slog.Error("scheduled backup failed", "backup_id", cfgID, "error", err)
+		}
+	}))
 	return nil
 }
 
@@ -260,7 +267,7 @@ func (bm *BackupManager) finalizeBackupRecord(opts FinalizeBackupOpts) (*models.
 		FileSizeBytes: opts.SizeBytes,
 		CompletedAt:   nowStr,
 	}); err != nil {
-		slog.Warn("failed to update backup record", "error", err)
+		return nil, fmt.Errorf("persist completed backup record: %w", err)
 	}
 
 	opts.Record.Status = models.BackupRecordStatusCompleted

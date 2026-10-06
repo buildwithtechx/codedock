@@ -6,7 +6,6 @@ import (
 	"errors"
 	"fmt"
 	"io"
-	"os"
 	"strings"
 
 	"github.com/docker/docker/api/types/container"
@@ -32,41 +31,28 @@ func (bm *BackupManager) RestoreBackup(ctx context.Context, recordID string) err
 		return fmt.Errorf("backup config not found: %w", err)
 	}
 
-	var data []byte
-	var fetchErr error
-	if rec.FilePath != "" {
-		data, fetchErr = os.ReadFile(rec.FilePath)
-	}
-
-	if (rec.FilePath == "" || fetchErr != nil) && rec.S3URL != "" && cfg.S3DestinationID != "" {
-		dest, err := bm.store.GetS3Destination(cfg.S3DestinationID)
-		if err != nil || dest == nil {
-			return fmt.Errorf("failed to retrieve S3 destination for restore: %w", err)
-		}
-
-		prefix := fmt.Sprintf("s3://%s/", dest.Bucket)
-		key := strings.TrimPrefix(rec.S3URL, prefix)
-
-		resp, err := signedS3Request(ctx, dest, "GET", key, nil, "")
-		if err != nil {
-			return fmt.Errorf("failed to download backup from S3: %w", err)
-		}
-		defer resp.Body.Close()
-
-		data, err = io.ReadAll(resp.Body)
-		if err != nil {
-			return fmt.Errorf("failed to read downloaded S3 backup: %w", err)
-		}
-	} else if len(data) == 0 {
-		if fetchErr != nil {
-			return fmt.Errorf("failed to read local backup file: %w", fetchErr)
-		}
-		return errors.New("no file path or S3 URL available for restore")
-	}
-
 	containerName, restoreCmd, err := bm.buildRestoreCommand(cfg)
 	if err != nil {
 		return fmt.Errorf("failed to build restore command: %w", err)
+	}
+
+	if bm.dockerClient == nil {
+		return errors.New("database restore requires a Docker client")
+	}
+	archive, _, err := bm.OpenBackupArchive(ctx, recordID)
+	if err != nil {
+		return fmt.Errorf("open restore archive: %w", err)
+	}
+	data, readErr := io.ReadAll(archive)
+	closeErr := archive.Close()
+	if readErr != nil {
+		return fmt.Errorf("read restore archive: %w", readErr)
+	}
+	if closeErr != nil {
+		return fmt.Errorf("close restore archive: %w", closeErr)
+	}
+	if len(data) == 0 {
+		return errors.New("restore archive is empty")
 	}
 
 	return bm.executeRestore(ctx, containerName, restoreCmd, data)
@@ -107,7 +93,7 @@ func (bm *BackupManager) buildRestoreCommand(cfg *models.BackupConfig) (string, 
 			}
 			return containerName, cmd, nil
 		}
-		return containerName, []string{"tar", "-xzf", "-", "-C", "/data"}, nil
+		return "", nil, fmt.Errorf("database engine %s has no restore command", db.Engine)
 
 	}
 
@@ -116,11 +102,14 @@ func (bm *BackupManager) buildRestoreCommand(cfg *models.BackupConfig) (string, 
 
 func (bm *BackupManager) executeRestore(ctx context.Context, containerName string, restoreCmd []string, data []byte) error {
 	if bm.dockerClient == nil {
-		return nil
+		return errors.New("database restore requires a Docker client")
 	}
 
 	inspectResp, err := bm.dockerClient.ContainerInspect(ctx, containerName)
-	if err != nil || !inspectResp.State.Running {
+	if err != nil {
+		return fmt.Errorf("inspect restore container: %w", err)
+	}
+	if inspectResp.State == nil || !inspectResp.State.Running {
 		return fmt.Errorf("cannot restore: container %s is stopped or not running", containerName)
 	}
 
@@ -141,19 +130,31 @@ func (bm *BackupManager) executeRestore(ctx context.Context, containerName strin
 		return fmt.Errorf("docker exec attach failed: %v", err)
 	}
 	defer attachResp.Close()
+	stopCancellation := context.AfterFunc(ctx, attachResp.Close)
+	defer stopCancellation()
 
+	writeDone := make(chan error, 1)
 	go func() {
-		_, _ = io.Copy(attachResp.Conn, bytes.NewReader(data))
-		attachResp.CloseWrite()
+		if _, err := io.Copy(attachResp.Conn, bytes.NewReader(data)); err != nil {
+			attachResp.Close()
+			writeDone <- fmt.Errorf("write restore archive: %w", err)
+			return
+		}
+		writeDone <- attachResp.CloseWrite()
 	}()
 
 	var stdoutBuf, stderrBuf bytes.Buffer
 	if _, err := stdcopy.StdCopy(&stdoutBuf, &stderrBuf, attachResp.Reader); err != nil {
-		_, _ = io.Copy(&stdoutBuf, attachResp.Reader)
+		return fmt.Errorf("read restore stream: %w", err)
+	}
+	select {
+	case err := <-writeDone:
+		if err != nil {
+			return fmt.Errorf("send restore archive: %w", err)
+		}
+	case <-ctx.Done():
+		return ctx.Err()
 	}
 
-	if stderrBuf.Len() > 0 {
-		return fmt.Errorf("restore error: %s", stderrBuf.String())
-	}
-	return nil
+	return bm.waitExecSuccess(ctx, execCreateResp.ID)
 }

@@ -13,12 +13,19 @@ import (
 )
 
 func (bm *BackupManager) uploadToS3(ctx context.Context, dest *models.S3Destination, fileName string, data []byte) (string, error) {
-	resp, err := signedS3Request(ctx, dest, "PUT", fileName, data, "application/octet-stream")
+	key := strings.Trim(dest.PathPrefix, "/")
+	if key != "" {
+		key += "/"
+	}
+	key += fileName
+	resp, err := signedS3Request(ctx, dest, "PUT", key, data, "application/octet-stream")
 	if err != nil {
 		return "", err
 	}
-	resp.Body.Close()
-	return fmt.Sprintf("s3://%s/%s", dest.Bucket, fileName), nil
+	if err := resp.Body.Close(); err != nil {
+		return "", fmt.Errorf("close upload response: %w", err)
+	}
+	return fmt.Sprintf("s3://%s/%s", dest.Bucket, key), nil
 }
 
 func (bm *BackupManager) enforceRetentionPolicy(cfg *models.BackupConfig) {

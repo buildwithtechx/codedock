@@ -41,7 +41,7 @@ func (s *BackupService) CreateConfig(ctx context.Context, cfg *models.BackupConf
 	if cfg.Timeout == 0 {
 		cfg.Timeout = 3600
 	}
-	if err := backup.ValidateSchedule(cfg.Schedule); err != nil {
+	if _, err := backup.ParseSchedule(cfg.Schedule, cfg.Timezone); err != nil {
 		return err
 	}
 	cfg.CreatedAt = time.Now().UTC().Format(time.RFC3339)
@@ -65,7 +65,7 @@ func (s *BackupService) UpdateConfig(ctx context.Context, cfg *models.BackupConf
 	if cfg.Timeout == 0 {
 		cfg.Timeout = 3600
 	}
-	if err := backup.ValidateSchedule(cfg.Schedule); err != nil {
+	if _, err := backup.ParseSchedule(cfg.Schedule, cfg.Timezone); err != nil {
 		return err
 	}
 	setScheduleStatus(cfg)
