@@ -15,18 +15,18 @@ func (d *DatabaseDeployer) Stop(ctx context.Context, id string) error {
 		return err
 	}
 	defer release()
-	if utils.IsDryRun() {
-		return nil
-	}
-	if d.dockerClient == nil {
-		return fmt.Errorf("Docker is unavailable")
-	}
 	db, err := d.store.GetDatabase(id)
 	if err != nil {
 		return fmt.Errorf("load database before stopping: %w", err)
 	}
 	if db == nil {
 		return utils.NewNotFoundError("Database", id)
+	}
+	if utils.IsDryRun() {
+		return d.store.UpdateDatabaseStatus(id, models.DatabaseStatusStopped, db.ContainerID)
+	}
+	if d.dockerClient == nil {
+		return fmt.Errorf("Docker is unavailable")
 	}
 	name := db.ContainerID
 	if name == "" {
