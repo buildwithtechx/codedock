@@ -37,15 +37,26 @@ func (d *DatabaseDeployer) SpinUp(ctx context.Context, dbConfig *models.Database
 		return "", fmt.Errorf("docker daemon connection is not available")
 	}
 
-	if utils.IsDryRun() {
-		return fmt.Sprintf("codedock-db-%s-dryrun", dbConfig.Name), nil
-	}
-
 	release, err := d.acquireVolume(dbConfig.ID)
 	if err != nil {
 		return "", err
 	}
 	defer release()
+	if utils.IsDryRun() {
+		return fmt.Sprintf("codedock-db-%s-dryrun", dbConfig.Name), nil
+	}
+
+	if d.store != nil {
+		fresh, err := d.store.GetDatabase(dbConfig.ID)
+		if err != nil {
+			return "", fmt.Errorf("reload database before startup: %w", err)
+		}
+		if fresh == nil {
+			return "", utils.NewNotFoundError("Database", dbConfig.ID)
+		}
+		*dbConfig = *fresh
+	}
+
 	containerName := utils.NormalizeContainerName(fmt.Sprintf("codedock-db-%s", dbConfig.Name))
 	_ = d.dockerClient.ContainerRemove(ctx, containerName, container.RemoveOptions{Force: true})
 
@@ -191,7 +202,7 @@ func (d *DatabaseDeployer) createContainerSettings(dbConfig *models.Database, co
 	}
 
 	hostCfg := &container.HostConfig{
-		RestartPolicy: container.RestartPolicy{Name: "always"},
+		RestartPolicy: container.RestartPolicy{Name: "unless-stopped"},
 		Resources: container.Resources{
 			Memory:   utils.MegaBytesToBytes(memMB),
 			NanoCPUs: utils.CPURequestToNanoCPUs(cpuReq),
@@ -215,45 +226,19 @@ func (d *DatabaseDeployer) createContainerSettings(dbConfig *models.Database, co
 	return containerCfg, hostCfg, netCfg
 }
 
-func (d *DatabaseDeployer) Stop(ctx context.Context, dbID string) error {
-	if d.dockerClient == nil {
-		return fmt.Errorf("docker daemon connection is not available")
-	}
-	if utils.IsDryRun() {
-		return nil
-	}
-	dbConfig, err := d.store.GetDatabase(dbID)
-	if err != nil || dbConfig == nil {
-		return utils.NewNotFoundError("Database", dbID)
-	}
-	release, err := d.acquireVolume(dbConfig.ID)
-	if err != nil {
-		return err
-	}
-	defer release()
-	containerName := utils.NormalizeContainerName(fmt.Sprintf("codedock-db-%s", dbConfig.Name))
-	if dbConfig.ContainerID != "" {
-		containerName = dbConfig.ContainerID
-	}
-	if err := d.dockerClient.ContainerStop(ctx, containerName, container.StopOptions{}); err != nil && !client.IsErrNotFound(err) {
-		return fmt.Errorf("stop database container: %w", err)
-	}
-	return d.store.UpdateDatabaseStatus(dbID, models.DatabaseStatusStopped, dbConfig.ContainerID)
-}
-
 func (d *DatabaseDeployer) ImportData(ctx context.Context, dbConfig *models.Database, sourceURL string) error {
 	if d.dockerClient == nil {
 		return fmt.Errorf("docker daemon connection is not available")
 	}
-	if utils.IsDryRun() {
-		return nil
-	}
-
 	release, err := d.acquireVolume(dbConfig.ID)
 	if err != nil {
 		return err
 	}
 	defer release()
+	if utils.IsDryRun() {
+		return nil
+	}
+
 	containerName := utils.NormalizeContainerName(fmt.Sprintf("codedock-db-%s", dbConfig.Name))
 
 	switch strings.ToLower(string(dbConfig.Engine)) {

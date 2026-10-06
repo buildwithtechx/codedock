@@ -30,3 +30,13 @@ func (d *DatabaseDeployer) acquireVolume(id string) (func(), error) {
 	return d.volumes.AcquireVolume("codedock-db-data-" + id)
 }
 func (d *DatabaseDeployer) SetVolumeOperations(volumes VolumeOperations) { d.volumes = volumes }
+
+func (d *Deployer) SetVolumeOperations(volumes VolumeOperations) {
+	d.containerManager.volumes = volumes
+}
+func (c *ContainerManager) acquireService(id string) (func(), error) {
+	if c.volumes == nil || id == "" {
+		return func() {}, nil
+	}
+	return c.volumes.AcquireVolume("service:" + id)
+}

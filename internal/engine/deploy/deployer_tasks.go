@@ -166,6 +166,11 @@ func (d *Deployer) ExecuteOneOffTask(ctx context.Context, app *models.AppService
 }
 
 func (d *Deployer) RestartAppService(ctx context.Context, app *models.AppService) error {
+	release, err := d.containerManager.acquireService(app.ID)
+	if err != nil {
+		return err
+	}
+	defer release()
 	containerName := utils.NormalizeContainerName(app.ID)
 	replicas := app.Replicas
 	if replicas <= 1 {

@@ -9,7 +9,7 @@ import (
 )
 
 func TestVolumeGateFencesDatabaseStartup(t *testing.T) {
-	t.Setenv("CODEDOCK_DRY_RUN", "false")
+	t.Setenv("DEPLOY_DRY_RUN", "false")
 	gate := NewVolumeGate()
 	release, err := gate.AcquireVolume("codedock-db-data-db")
 	if err != nil {
@@ -41,4 +41,43 @@ func TestVolumeGateFencesDatabaseStartup(t *testing.T) {
 		t.Fatal(err)
 	}
 	next()
+}
+
+func TestVolumeGateFencesServiceStartsAndRestarts(t *testing.T) {
+	gate := NewVolumeGate()
+	release, err := gate.AcquireVolume("service:app")
+	if err != nil {
+		t.Fatal(err)
+	}
+	defer release()
+	manager := NewContainerManager(nil, nil)
+	manager.volumes = gate
+	if _, err := manager.CreateAndStart(context.Background(), ContainerRunOptions{ServiceID: "app"}); err == nil || !strings.Contains(err.Error(), "busy") {
+		t.Fatalf("service startup escaped restore fence: %v", err)
+	}
+	deployer := &Deployer{containerManager: manager}
+	if err := deployer.RestartAppService(context.Background(), &models.AppService{ID: "app"}); err == nil || !strings.Contains(err.Error(), "busy") {
+		t.Fatalf("service restart escaped restore fence: %v", err)
+	}
+}
+func TestDatabaseDeletionRejectsRestoreConflict(t *testing.T) {
+	t.Setenv("DEPLOY_DRY_RUN", "true")
+	gate := NewVolumeGate()
+	cli, err := client.NewClientWithOpts(client.WithHost("http://127.0.0.1:1"), client.WithVersion("1.47"))
+	if err != nil {
+		t.Fatal(err)
+	}
+	defer cli.Close()
+	deployer := NewDatabaseDeployer(cli, nil)
+	deployer.SetVolumeOperations(gate)
+	release, err := gate.AcquireVolume("codedock-db-data-db")
+	if err != nil {
+		t.Fatal(err)
+	}
+	defer release()
+	deleted := false
+	err = deployer.Remove(context.Background(), "db", func() error { deleted = true; return nil })
+	if err == nil || deleted {
+		t.Fatal("database deletion escaped restore fence")
+	}
 }

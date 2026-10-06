@@ -88,7 +88,11 @@ func (bm *BackupManager) ValidateVolumeRestore(ctx context.Context, recordID str
 	if timeout > 86400 {
 		timeout = 86400
 	}
-	return &models.VolumeRestoreTarget{RecordID: recordID, VolumeName: cfg.VolumeName, ContainerID: containerID, VolumeCreatedAt: volume.CreatedAt, TimeoutSeconds: timeout}, nil
+	ownerOperation := ""
+	if cfg.ServiceID != "" {
+		ownerOperation = "service:" + cfg.ServiceID
+	}
+	return &models.VolumeRestoreTarget{OwnerOperation: ownerOperation, RecordID: recordID, VolumeName: cfg.VolumeName, ContainerID: containerID, VolumeCreatedAt: volume.CreatedAt, TimeoutSeconds: timeout}, nil
 }
 
 func (bm *BackupManager) CancelVolumeRestore(recordID string) bool {
@@ -115,6 +119,13 @@ func (bm *BackupManager) RestoreVolume(ctx context.Context, recordID, confirmedV
 			return err
 		}
 		defer release()
+		if target.OwnerOperation != "" {
+			releaseOwner, err := bm.volumeOperations.AcquireVolume(target.OwnerOperation)
+			if err != nil {
+				return err
+			}
+			defer releaseOwner()
+		}
 	}
 	ctx, cancel := context.WithTimeout(ctx, time.Duration(target.TimeoutSeconds)*time.Second)
 	defer cancel()
@@ -209,7 +220,7 @@ func (bm *BackupManager) RestoreVolume(ctx context.Context, recordID, confirmedV
 	if err != nil {
 		return fmt.Errorf("revalidate volume restore target: %w", err)
 	}
-	if validated.VolumeName != target.VolumeName || validated.VolumeCreatedAt != target.VolumeCreatedAt {
+	if validated.VolumeName != target.VolumeName || validated.VolumeCreatedAt != target.VolumeCreatedAt || validated.ContainerID != target.ContainerID || validated.OwnerOperation != target.OwnerOperation {
 		return errors.New("volume restore target changed before startup")
 	}
 	if err := bm.dockerClient.ContainerStart(ctx, result.ID, container.StartOptions{}); err != nil {

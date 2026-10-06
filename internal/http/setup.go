@@ -72,6 +72,9 @@ func NewServer(db *sql.DB, v *utils.Vault, deployer *deploy.Deployer, traefikMan
 
 	httpEngineAdapter := newEngineAdapter(settingsRepo, appRepo, envVarRepo, dbRepo, projectRepo, scheduledTaskRepo, backupRepo, s3DestinationRepo, serviceVarRepo, serverlessRepository)
 	volumeOperations := deploy.NewVolumeGate()
+	if deployer != nil {
+		deployer.SetVolumeOperations(volumeOperations)
+	}
 	databaseDeployer := deploy.NewDatabaseDeployer(dockerClient, httpEngineAdapter)
 	databaseDeployer.SetVolumeOperations(volumeOperations)
 

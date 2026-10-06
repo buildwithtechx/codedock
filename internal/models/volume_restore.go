@@ -3,6 +3,7 @@ package models
 type VolumeRestoreTarget struct {
 	RecordID        string `json:"recordId"`
 	VolumeName      string `json:"volumeName"`
+	OwnerOperation  string `json:"-"`
 	ContainerID     string `json:"-"`
 	VolumeCreatedAt string `json:"-"`
 	TimeoutSeconds  int    `json:"timeoutSeconds"`

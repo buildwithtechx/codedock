@@ -1,6 +1,7 @@
 package backup
 
 import (
+	"codedock.run/codedock/internal/engine/deploy"
 	"codedock.run/codedock/internal/models"
 	"context"
 	"fmt"
@@ -16,6 +17,7 @@ import (
 )
 
 func TestVolumeRestoreStreamsArchiveAndRemovesHelper(t *testing.T) {
+	gate := deploy.NewVolumeGate()
 	archiveReceived := make(chan string, 1)
 	inputDone := make(chan struct{})
 	removed := make(chan struct{}, 2)
@@ -57,6 +59,12 @@ func TestVolumeRestoreStreamsArchiveAndRemovesHelper(t *testing.T) {
 			archiveReceived <- string(data)
 			close(inputDone)
 		case strings.HasSuffix(r.URL.Path, "/containers/helper/start"):
+			for _, key := range []string{"owned", "service:service"} {
+				if release, err := gate.AcquireVolume(key); err == nil {
+					release()
+					t.Errorf("restore did not fence %s", key)
+				}
+			}
 			w.WriteHeader(http.StatusNoContent)
 		case strings.HasSuffix(r.URL.Path, "/containers/helper/wait"):
 			select {
@@ -87,6 +95,7 @@ func TestVolumeRestoreStreamsArchiveAndRemovesHelper(t *testing.T) {
 	store.configs["config"] = &models.BackupConfig{ID: "config", ServiceID: "service", VolumeName: "owned", Timeout: 5}
 	store.records["record"] = &models.BackupRecord{ID: "record", BackupConfigID: "config", Status: models.BackupRecordStatusCompleted, FilePath: filename}
 	manager := NewBackupManager(dockerClient, store, t.TempDir())
+	manager.SetVolumeOperations(gate)
 	ctx, cancel := context.WithTimeout(context.Background(), 10*time.Second)
 	defer cancel()
 	if err := manager.RestoreVolume(ctx, "record", "owned"); err != nil {
@@ -100,7 +109,33 @@ func TestVolumeRestoreStreamsArchiveAndRemovesHelper(t *testing.T) {
 	default:
 		t.Fatal("restore helper was not removed")
 	}
+	for _, key := range []string{"owned", "service:service"} {
+		release, err := gate.AcquireVolume(key)
+		if err != nil {
+			t.Fatal(err)
+		}
+		release()
+	}
 	if manager.CancelVolumeRestore("record") {
 		t.Fatal("completed restore remained active")
+	}
+}
+
+func TestVolumeBackupCannotReadDuringRestore(t *testing.T) {
+	gate := deploy.NewVolumeGate()
+	release, err := gate.AcquireVolume("owned")
+	if err != nil {
+		t.Fatal(err)
+	}
+	defer release()
+	cli, err := client.NewClientWithOpts(client.WithHost("http://127.0.0.1:1"), client.WithVersion("1.47"))
+	if err != nil {
+		t.Fatal(err)
+	}
+	defer cli.Close()
+	manager := NewBackupManager(cli, newMockStore(), t.TempDir())
+	manager.SetVolumeOperations(gate)
+	if _, _, err := manager.executeVolumeBackup(context.Background(), "owned"); err == nil || !strings.Contains(err.Error(), "busy") {
+		t.Fatalf("backup escaped restore fence: %v", err)
 	}
 }

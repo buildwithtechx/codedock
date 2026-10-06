@@ -21,6 +21,13 @@ func (bm *BackupManager) executeVolumeBackup(ctx context.Context, volumeName str
 		return nil, "", errors.New("volume backup requires a Docker client")
 	}
 
+	if bm.volumeOperations != nil {
+		release, err := bm.volumeOperations.AcquireVolume(volumeName)
+		if err != nil {
+			return nil, "", err
+		}
+		defer release()
+	}
 	execCmd := []string{"tar", "-czf", "-", "-C", "/volume_data", "."}
 
 	resp, err := bm.dockerClient.ContainerCreate(ctx, &container.Config{
