@@ -9,6 +9,12 @@ import (
 )
 
 func (a *engineAdapter) VolumeRestoreOwner(ctx context.Context, cfg *models.BackupConfig) (string, error) {
+	return a.volumeOwner(ctx, cfg, false)
+}
+func (a *engineAdapter) VolumeBackupOwner(ctx context.Context, cfg *models.BackupConfig) (string, error) {
+	return a.volumeOwner(ctx, cfg, true)
+}
+func (a *engineAdapter) volumeOwner(ctx context.Context, cfg *models.BackupConfig, allowRemote bool) (string, error) {
 	var projectID, containerID string
 	if cfg.ServiceID != "" && cfg.DatabaseID != "" {
 		return "", errors.New("volume backup must have exactly one owner")
@@ -44,7 +50,7 @@ func (a *engineAdapter) VolumeRestoreOwner(ctx context.Context, cfg *models.Back
 	if err != nil {
 		return "", fmt.Errorf("load volume project: %w", err)
 	}
-	if project.ServerID != "" {
+	if project.ServerID != "" && !allowRemote {
 		return "", errors.New("volume restore supports local Docker targets only")
 	}
 	return containerID, nil

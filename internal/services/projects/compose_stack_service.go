@@ -34,10 +34,11 @@ type ComposeStackRuntime interface {
 }
 
 type ComposeStackService struct {
-	store   ComposeStackStore
-	runtime ComposeStackRuntime
-	mu      sync.Mutex
-	running map[string]context.CancelFunc
+	BeforeDeployment func(context.Context, string, string) error
+	store            ComposeStackStore
+	runtime          ComposeStackRuntime
+	mu               sync.Mutex
+	running          map[string]context.CancelFunc
 }
 
 func NewComposeStackService(store ComposeStackStore, runtime ComposeStackRuntime) *ComposeStackService {
@@ -121,7 +122,16 @@ func (s *ComposeStackService) Deploy(ctx context.Context, project, id string) er
 	go func() {
 		defer cancel()
 		defer func() { s.mu.Lock(); delete(s.running, id); s.mu.Unlock() }()
-		err := s.runtime.Apply(operation, stack, func(phase string) error { return s.store.Observe(operation, id, phase, "", "[]") })
+		var err error
+		if s.BeforeDeployment != nil {
+			err = s.store.Observe(operation, id, "BACKING_UP", "", "[]")
+			if err == nil {
+				err = s.BeforeDeployment(operation, stack.ProjectID, "")
+			}
+		}
+		if err == nil {
+			err = s.runtime.Apply(operation, stack, func(phase string) error { return s.store.Observe(operation, id, phase, "", "[]") })
+		}
 		status, message := "READY", ""
 		if err != nil {
 			status, message = "FAILED", err.Error()

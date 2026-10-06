@@ -14,7 +14,7 @@ export function ProjectClusters({ projectId }: { projectId: string }) {
   });
   const [selected, setSelected] = useState<{
     cluster?: Cluster;
-    action: 'install' | 'join' | 'upgrade' | 'remove';
+    action: 'install' | 'join' | 'upgrade' | 'remove' | 'recover';
   }>();
   return (
     <div className="space-y-4">
@@ -43,8 +43,12 @@ export function ProjectClusters({ projectId }: { projectId: string }) {
             </p>
           )}
           <div className="flex flex-wrap gap-2">
-            {(['install', 'join', 'upgrade', 'remove'] as const)
-              .filter((action) => action !== 'install' || cluster.status !== 'READY')
+            {(['install', 'join', 'upgrade', 'remove', 'recover'] as const)
+              .filter((action) =>
+                action === 'recover'
+                  ? ['FAILED', 'INTERRUPTED', 'RECOVERY_REQUIRED'].includes(cluster.status)
+                  : action !== 'install' || cluster.status !== 'READY'
+              )
               .map((action) => (
                 <Button
                   key={action}

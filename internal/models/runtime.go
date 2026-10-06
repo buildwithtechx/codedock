@@ -71,3 +71,9 @@ type KubernetesWorkload struct {
 	Variables map[string]string `json:"variables"`
 	Registry  *Registry         `json:"registry,omitempty"`
 }
+
+type DesiredRuntime struct {
+	Revision int                `json:"revision"`
+	Workload KubernetesWorkload `json:"workload"`
+	Manifest string             `json:"manifest"`
+}

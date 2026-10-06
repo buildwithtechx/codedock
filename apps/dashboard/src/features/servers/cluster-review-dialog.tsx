@@ -23,7 +23,7 @@ export function ClusterReviewDialog({
 }: {
   projectId: string;
   cluster?: Cluster;
-  action: 'install' | 'join' | 'upgrade' | 'remove';
+  action: 'install' | 'join' | 'upgrade' | 'remove' | 'recover';
   onClose: () => void;
 }) {
   const client = useQueryClient();

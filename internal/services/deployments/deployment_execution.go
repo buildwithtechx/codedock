@@ -89,23 +89,7 @@ func (s *DeploymentService) executeDeployment(ctx context.Context, d *models.Dep
 	if err != nil {
 		return "", fmt.Errorf("load service: %w", err)
 	}
-	clusterTarget := false
-	if s.Runtime != nil {
-		var err error
-		clusterTarget, err = s.Runtime.Handles(ctx, app.ID)
-		if err != nil {
-			return "", err
-		}
-	}
-	if s.projectRepo != nil && !clusterTarget {
-		project, err := s.projectRepo.Get(ctx, app.ProjectID)
-		if err != nil {
-			return "", err
-		}
-		if project.ServerID != "" {
-			return "", fmt.Errorf("this deployment pipeline supports local Docker targets; SSH deployment must use its worker")
-		}
-	}
+
 	if s.volumeRepo != nil {
 		volumes, err := s.volumeRepo.ListByService(ctx, app.ID)
 		if err != nil {
@@ -113,7 +97,11 @@ func (s *DeploymentService) executeDeployment(ctx context.Context, d *models.Dep
 		}
 		app.Volumes = volumes
 	}
-	if s.BeforeDeployment != nil {
+	if s.BeforeProjectDeployment != nil {
+		if err := s.BeforeProjectDeployment(ctx, app.ProjectID, app.ID); err != nil {
+			return "", fmt.Errorf("pre-deployment backup: %w", err)
+		}
+	} else if s.BeforeDeployment != nil {
 		if err := s.BeforeDeployment(ctx, app.ID); err != nil {
 			return "", fmt.Errorf("pre-deployment backup: %w", err)
 		}

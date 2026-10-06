@@ -82,6 +82,11 @@ export function RuntimeSettings({
     <section className="space-y-4 rounded-lg border p-5">
       <h2 className="font-semibold">Deployment destination</h2>
       <p className="text-muted-foreground text-sm">
+        Docker replicas run on one Docker host. Kubernetes replicas are scheduled across the
+        selected cluster nodes. Neither setting creates database replication; configure database
+        replication separately.
+      </p>
+      <p className="text-muted-foreground text-sm">
         Stop an existing workload before changing its destination. Persistent data stays at its
         current destination until you migrate it.
       </p>

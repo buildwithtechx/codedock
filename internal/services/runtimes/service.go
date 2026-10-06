@@ -164,8 +164,12 @@ func (s *Service) Deploy(ctx context.Context, app *models.AppService, source str
 	if err := s.apps.Update(ctx, app); err != nil {
 		return "", s.recoverFailure(app, node, journal, err)
 	}
-	if err := s.store.Observe(ctx, app.ID, "READY", "", true); err != nil {
-		return "", err
+	desiredStore, ok := s.store.(DesiredStore)
+	if !ok {
+		return "", s.recoverFailure(app, node, journal, fmt.Errorf("desired workload storage unavailable"))
+	}
+	if err := desiredStore.CommitDesired(ctx, app.ID, target.Revision, &models.DesiredRuntime{Revision: target.Revision, Workload: *workload, Manifest: manifest}); err != nil {
+		return "", s.recoverFailure(app, node, journal, err)
 	}
 	return app.ContainerID, nil
 }

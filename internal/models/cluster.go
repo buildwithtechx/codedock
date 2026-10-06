@@ -25,6 +25,8 @@ type ClusterReviewRequest struct {
 	Action  string  `json:"action"`
 }
 type ClusterPlan struct {
+	OperationID     string  `json:"operationId"`
+	PreviousVersion string  `json:"previousVersion"`
 	ExistingNodes   int     `json:"existingNodes"`
 	Cluster         Cluster `json:"cluster"`
 	Action          string  `json:"action"`

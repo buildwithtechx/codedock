@@ -24,10 +24,12 @@ func applyPodMetrics(observation *models.WorkloadObservation, raw string) error 
 		return fmt.Errorf("decode pod metrics: %w", err)
 	}
 	for i := range observation.Pods {
+		found := false
 		for _, pod := range response.Items {
 			if pod.Metadata.Name != observation.Pods[i].Name {
 				continue
 			}
+			found = len(pod.Containers) > 0
 			for _, container := range pod.Containers {
 				cpu, err := metricQuantity(container.Usage["cpu"])
 				if err != nil {
@@ -40,6 +42,9 @@ func applyPodMetrics(observation *models.WorkloadObservation, raw string) error 
 				observation.Pods[i].CPU += cpu
 				observation.Pods[i].MemoryBytes += int64(memory)
 			}
+		}
+		if !found && observation.Pods[i].Ready {
+			return fmt.Errorf("metrics missing for ready pod %s", observation.Pods[i].Name)
 		}
 	}
 	return nil

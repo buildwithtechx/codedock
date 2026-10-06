@@ -33,6 +33,7 @@ type Store interface {
 }
 
 type BackupManager struct {
+	dockerTarget     DockerTarget
 	scheduledRunner  func(context.Context, string) error
 	dockerClient     *client.Client
 	store            Store
@@ -179,6 +180,14 @@ func (bm *BackupManager) TriggerBackup(ctx context.Context, backupConfigID strin
 		return nil, fmt.Errorf("backup execution disabled for config %s", backupConfigID)
 	}
 
+	producer, release, err := bm.producer(ctx, cfg)
+	if err != nil {
+		return nil, err
+	}
+	defer release()
+	if producer != bm {
+		return producer.TriggerBackup(ctx, backupConfigID)
+	}
 	rec := &models.BackupRecord{
 		ID:              uuid.New().String(),
 		BackupConfigID:  cfg.ID,
@@ -205,16 +214,24 @@ func (bm *BackupManager) TriggerBackup(ctx context.Context, backupConfigID strin
 	var fileExt string
 
 	if cfg.VolumeName != "" {
+		if err := bm.validateVolumeProducer(ctx, cfg); err != nil {
+			return bm.failBackupRecord(rec.ID, err.Error())
+		}
 		dumpBytes, execLogs, err = bm.executeVolumeBackup(ctx, cfg.VolumeName)
 		if err != nil {
 			return bm.failBackupRecord(rec.ID, err.Error())
 		}
 		fileExt = ".tar.gz"
 	} else if cfg.DatabaseID == "global" || cfg.DatabaseID == "" {
-		dbPath := filepath.Join(utils.GetDataDir(), "codedock.db")
-		content, err := os.ReadFile(dbPath)
+		snapshotter, ok := bm.store.(interface {
+			ControlPlaneSnapshot(context.Context) ([]byte, error)
+		})
+		if !ok {
+			return bm.failBackupRecord(rec.ID, "consistent control-plane snapshots unavailable")
+		}
+		content, err := snapshotter.ControlPlaneSnapshot(ctx)
 		if err != nil {
-			return bm.failBackupRecord(rec.ID, fmt.Sprintf("failed to read global db: %v", err))
+			return bm.failBackupRecord(rec.ID, err.Error())
 		}
 		dumpBytes = content
 		fileExt = ".db"

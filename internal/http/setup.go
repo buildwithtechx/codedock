@@ -159,8 +159,11 @@ func NewServer(db *sql.DB, v *utils.Vault, deployer *deploy.Deployer, traefikMan
 	if err := backupRepo.RecoverRecords(context.Background()); err != nil {
 		return nil, fmt.Errorf("recover backup records: %w", err)
 	}
+	configureRemoteBackups(backupManager, projectRepo, serverRepo, sshManager)
 	backupService.SetOperations(operationService)
 	configureScheduledBackupAuthorization(backupService, userRepo, projectService)
+	deploymentService.SetRemoteTargets(serverRepo, volumeOperations)
+	deploymentService.BeforeProjectDeployment = backupService.BeforeProjectDeployment
 	deploymentService.BeforeDeployment = backupService.BeforeDeployment
 	if err := backupManager.Start(); err != nil {
 		return nil, fmt.Errorf("start backup scheduling: %w", err)
@@ -219,6 +222,7 @@ func NewServer(db *sql.DB, v *utils.Vault, deployer *deploy.Deployer, traefikMan
 	gitAppsHandler := deployments.NewGitAppsHandler(gitAppsService)
 	tmplMgr, _ := compose.NewTemplateManager()
 	stackService := projectservices.NewComposeStackService(repositories.NewComposeStackRepo(db, v), compose.NewStackRuntime(dockerClient))
+	stackService.BeforeDeployment = backupService.BeforeProjectDeployment
 	if err := stackService.Recover(context.Background()); err != nil {
 		return nil, fmt.Errorf("recover compose stacks: %w", err)
 	}

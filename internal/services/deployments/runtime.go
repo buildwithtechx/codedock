@@ -25,7 +25,12 @@ func (s *DeploymentService) deployTarget(ctx context.Context, app *models.AppSer
 			return s.Runtime.Deploy(ctx, app, source, logs)
 		}
 	}
-	return s.deployer.DeployAppService(ctx, app, source, logs)
+	runtime, release, err := s.dockerTarget(ctx, app)
+	if err != nil {
+		return "", err
+	}
+	defer release()
+	return runtime.DeployAppService(ctx, app, source, logs)
 }
 func (s *DeploymentService) StopAppService(ctx context.Context, app *models.AppService) error {
 	if s.Runtime != nil {
@@ -37,7 +42,12 @@ func (s *DeploymentService) StopAppService(ctx context.Context, app *models.AppS
 			return s.Runtime.Lifecycle(ctx, app.ID, "stop", 0)
 		}
 	}
-	return s.deployer.StopAppService(ctx, app)
+	runtime, release, err := s.dockerTarget(ctx, app)
+	if err != nil {
+		return err
+	}
+	defer release()
+	return runtime.StopAppService(ctx, app)
 }
 func (s *DeploymentService) RestartAppService(ctx context.Context, app *models.AppService) error {
 	if s.Runtime != nil {
@@ -49,7 +59,12 @@ func (s *DeploymentService) RestartAppService(ctx context.Context, app *models.A
 			return s.Runtime.Lifecycle(ctx, app.ID, "restart", 0)
 		}
 	}
-	return s.deployer.RestartAppService(ctx, app)
+	runtime, release, err := s.dockerTarget(ctx, app)
+	if err != nil {
+		return err
+	}
+	defer release()
+	return runtime.RestartAppService(ctx, app)
 }
 
 func (s *DeploymentService) dependencyReady(ctx context.Context, source string) error {
@@ -88,5 +103,10 @@ func (s *DeploymentService) RemoveAppService(ctx context.Context, app *models.Ap
 			return remover.Remove(ctx, app.ID)
 		}
 	}
-	return s.deployer.StopAppService(ctx, app)
+	runtime, release, err := s.dockerTarget(ctx, app)
+	if err != nil {
+		return err
+	}
+	defer release()
+	return runtime.StopAppService(ctx, app)
 }

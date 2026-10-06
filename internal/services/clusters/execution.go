@@ -70,6 +70,19 @@ func (s *Service) Apply(ctx context.Context, user, id, confirmation string) erro
 		if clusterSnapshot(latest) != op.Snapshot {
 			return fmt.Errorf("cluster changed before execution; prepare another review")
 		}
+		if plan.Action == "recover" {
+			if err := s.resumeUpgrade(ctx, &plan); err != nil {
+				return err
+			}
+			store, ok := s.store.(UpgradeStore)
+			if !ok {
+				return fmt.Errorf("upgrade journal storage unavailable")
+			}
+			if err := store.FinishUpgrade(ctx, current.ID, plan.Cluster.Version, "READY", ""); err != nil {
+				return err
+			}
+			return progress("RECOVERED", "Cluster reached the reviewed release")
+		}
 		if err := s.store.Observe(ctx, current.ID, "APPLYING", ""); err != nil {
 			return err
 		}
@@ -86,6 +99,17 @@ func (s *Service) Apply(ctx context.Context, user, id, confirmation string) erro
 			for i := range order {
 				order[i] = len(order) - 1 - i
 			}
+		}
+		if plan.Action == "upgrade" {
+			store, ok := s.store.(UpgradeStore)
+			if !ok {
+				return fmt.Errorf("upgrade recovery storage unavailable")
+			}
+			plan.OperationID = op.ID
+			if err := store.BeginUpgrade(ctx, &plan); err != nil {
+				return err
+			}
+			defer func() { runErr = s.finishUpgrade(&plan, runErr) }()
 		}
 		for _, i := range order {
 			node := current.Nodes[i]
@@ -108,6 +132,11 @@ func (s *Service) Apply(ctx context.Context, user, id, confirmation string) erro
 			}
 			if err := s.runner.Script(ctx, node, op.ID, script); err != nil {
 				return fmt.Errorf("node %s operation failed: %w", node.ServerID, err)
+			}
+			if plan.Action == "upgrade" {
+				if err := s.waitRelease(ctx, current, node); err != nil {
+					return err
+				}
 			}
 		}
 		if plan.Action == "remove" {

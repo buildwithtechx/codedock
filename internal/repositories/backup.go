@@ -172,7 +172,7 @@ func (r *BackupRepo) GetConfigByID(ctx context.Context, id string) (*models.Back
 }
 
 func (r *BackupRepo) UpdateConfig(ctx context.Context, cfg *models.BackupConfig) error {
-	cfg.UpdatedAt = time.Now().UTC().Format(time.RFC3339)
+	cfg.UpdatedAt = time.Now().UTC().Format(time.RFC3339Nano)
 
 	if cfg.DbPassword != "" && cfg.DbPassword != "********" && r.vault != nil {
 		enc, err := r.vault.Encrypt(cfg.DbPassword)

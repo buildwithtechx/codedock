@@ -21,18 +21,21 @@ import (
 )
 
 type DeploymentService struct {
-	Runtime          TargetRuntime
-	BeforeDeployment func(context.Context, string) error
-	repo             repositories.DeploymentRepository
-	appRepo          repositories.AppServiceRepository
-	projectRepo      repositories.ProjectRepository
-	deployer         *deploy.Deployer
-	gitService       *GitService
-	statsMonitor     *observability.StatsMonitor
-	volumeRepo       repositories.ServiceVolumeRepository
-	sshManager       *ssh.SSHManager
-	operationMu      sync.Mutex
-	operations       map[string]context.CancelFunc
+	Servers                 repositories.ServerRepository
+	HostGate                deploy.VolumeOperations
+	BeforeProjectDeployment func(context.Context, string, string) error
+	Runtime                 TargetRuntime
+	BeforeDeployment        func(context.Context, string) error
+	repo                    repositories.DeploymentRepository
+	appRepo                 repositories.AppServiceRepository
+	projectRepo             repositories.ProjectRepository
+	deployer                *deploy.Deployer
+	gitService              *GitService
+	statsMonitor            *observability.StatsMonitor
+	volumeRepo              repositories.ServiceVolumeRepository
+	sshManager              *ssh.SSHManager
+	operationMu             sync.Mutex
+	operations              map[string]context.CancelFunc
 }
 
 func NewDeploymentService(
@@ -136,7 +139,11 @@ func (s *DeploymentService) DeployAppService(ctx context.Context, appID, sourceD
 	if err != nil {
 		return "", err
 	}
-	if s.BeforeDeployment != nil {
+	if s.BeforeProjectDeployment != nil {
+		if err := s.BeforeProjectDeployment(ctx, app.ProjectID, app.ID); err != nil {
+			return "", fmt.Errorf("pre-deployment backup: %w", err)
+		}
+	} else if s.BeforeDeployment != nil {
 		if err := s.BeforeDeployment(ctx, app.ID); err != nil {
 			return "", fmt.Errorf("pre-deployment backup: %w", err)
 		}

@@ -84,6 +84,11 @@ func (s *BackupService) StartRun(ctx context.Context, user, project, id string) 
 		if err != nil {
 			return err
 		}
+		if s.RunAuthorization != nil {
+			if err := s.RunAuthorization(ctx, user, project); err != nil {
+				return fmt.Errorf("backup authorization changed: %w", err)
+			}
+		}
 		if latest.UpdatedAt != op.Snapshot {
 			return fmt.Errorf("backup policy changed before execution")
 		}
@@ -101,12 +106,18 @@ func (s *BackupService) StartRun(ctx context.Context, user, project, id string) 
 	return s.operations.Get(ctx, reviewed.Operation.ID)
 }
 func (s *BackupService) BeforeDeployment(ctx context.Context, serviceID string) error {
+	return s.beforeDeployment(ctx, "", serviceID)
+}
+func (s *BackupService) BeforeProjectDeployment(ctx context.Context, projectID, serviceID string) error {
+	return s.beforeDeployment(ctx, projectID, serviceID)
+}
+func (s *BackupService) beforeDeployment(ctx context.Context, projectID, serviceID string) error {
 	configs, err := s.backupRepo.ListConfigs(ctx)
 	if err != nil {
 		return err
 	}
 	for _, cfg := range configs {
-		if !cfg.PreDeployment || cfg.ServiceID != serviceID {
+		if !cfg.PreDeployment || !deploymentPolicyMatches(cfg, projectID, serviceID) {
 			continue
 		}
 		if !cfg.BackupEnabled {

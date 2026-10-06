@@ -69,25 +69,25 @@ Implementation details and current target boundaries: [Application, Compose and 
 - [x] Kubernetes runtime adapter with deploy, logs, exec, metrics and lifecycle support.
 - [x] Application placement, instance counts, readiness, routing and persistent storage.
 - [x] Observed workload/pod state, conflicting-operation locks and encrypted deployment journals with failed-rollout/startup recovery.
-- [ ] Automatic desired/observed reconciliation and cluster-upgrade recovery.
+- [x] Automatic desired/observed reconciliation and cluster-upgrade recovery.
 - [ ] PostgreSQL operator setup, replication, credentials, S3 backup and restore into a new database.
 - [ ] Redis standalone/replicated modes with engine-specific validation and recovery.
-- [ ] Docker replicas are distinct from multi-server scheduling and database replication.
+- [x] Docker replicas are distinct from multi-server scheduling and database replication.
 - [ ] Bare runtime support is a separate target capability with service supervision and rollback.
 
 ## Phase 7: Backup policy and recovery UX
 
 - [x] Policies target authorized projects/services and select supported database/named-volume producers, local/S3 destinations, schedule and retention.
 - [x] Manual backup runs provide durable progress, logs, cancellation and archive verification.
-- [ ] Scheduled runs use the same durable, cancellable operation workflow and revalidate the policy owner.
+- [x] Scheduled runs use the same durable, cancellable operation workflow and revalidate the policy owner.
 - [x] Protected records survive retention until their protection expires or is removed.
 - [x] Restore prepare identifies archive, engine, target and destructive effects without applying them.
 - [x] Apply requires an expiring confirmation bound to the reviewed target and archive.
 - [x] In-place and new-target restore modes report interruption and final verification.
 - [x] Application and archive deployments wait for required verified backups before proceeding.
-- [ ] Compose stack activation and SSH worker deployments share the required-backup hook.
+- [x] Compose stack activation and SSH Docker deployments share the required-backup hook.
 
-Committed runtime implementation: `cf41607`. The newly checked runtime items passed the full Go suite, focused lifecycle/removal checks, root typecheck and formatting. Live K3s installation and recovery exercises remain outstanding. Scheduled-run changes are in progress and are not counted as completed here.
+Committed runtime implementation: `cf41607`. The newly checked runtime items passed the full Go suite, focused lifecycle/removal checks, root typecheck and formatting. Live K3s installation and recovery exercises remain outstanding. Scheduled runs, project backup gates for Compose/SSH Docker, consistent SQLite snapshots, desired-workload reconciliation and upgrade journals are implemented. Operators and bare runtime remain in progress.
 
 Current backup and cluster implementation boundaries, including scheduled-run cancellation, deployment coverage and live-target validation: [Backup recovery and cluster setup](platform-recovery.md).
 

@@ -62,3 +62,53 @@ func TestRuntimeRecoveryJournalEncryptionAndRevisionConflicts(t *testing.T) {
 		t.Fatal("stale revision accepted")
 	}
 }
+
+func TestDesiredWorkloadCommitIsAtomicAndEncrypted(t *testing.T) {
+	db := openTestDB(t)
+	if err := RunMigrations(db); err != nil {
+		t.Fatal(err)
+	}
+	for _, query := range []string{`INSERT INTO organizations(id,name) VALUES('org','Org')`, `INSERT INTO project_apps(id,organization_id,name,slug) VALUES('app','org','App','app')`, `INSERT INTO projects(id,app_id,organization_id,name,slug) VALUES('project','app','org','Project','project')`, `INSERT INTO app_services(id,project_id,name) VALUES('service','project','Service')`} {
+		if _, err := db.Exec(query); err != nil {
+			t.Fatal(err)
+		}
+	}
+	vault, err := utils.NewVault(t.TempDir())
+	if err != nil {
+		t.Fatal(err)
+	}
+	repo := NewRuntimeRepo(db, vault)
+	ctx := context.Background()
+	if err := repo.Save(ctx, &models.ServiceRuntime{ServiceID: "service", ProjectID: "project", Target: models.RuntimeTarget{Kind: "kubernetes"}}, 0); err != nil {
+		t.Fatal(err)
+	}
+	if err := repo.Begin(ctx, "service", 1, "journal"); err != nil {
+		t.Fatal(err)
+	}
+	desired := &models.DesiredRuntime{Revision: 1, Manifest: "private-registry-credentials"}
+	if err := repo.CommitDesired(ctx, "service", 2, desired); err == nil {
+		t.Fatal("stale desired state committed")
+	}
+	pending, err := repo.Pending(ctx)
+	if err != nil || len(pending) != 1 {
+		t.Fatal("stale commit lost recovery journal", err)
+	}
+	if err := repo.CommitDesired(ctx, "service", 1, desired); err != nil {
+		t.Fatal(err)
+	}
+	var encrypted string
+	if err := db.QueryRow(`SELECT encrypted_workload FROM runtime_desired WHERE service_id='service'`).Scan(&encrypted); err != nil {
+		t.Fatal(err)
+	}
+	if strings.Contains(encrypted, desired.Manifest) {
+		t.Fatal("desired secrets stored in plaintext")
+	}
+	loaded, err := repo.Desired(ctx, "service")
+	if err != nil || loaded.Manifest != desired.Manifest {
+		t.Fatal("desired state cannot reload", err)
+	}
+	pending, err = repo.Pending(ctx)
+	if err != nil || len(pending) != 0 {
+		t.Fatal("committed journal retained", err)
+	}
+}

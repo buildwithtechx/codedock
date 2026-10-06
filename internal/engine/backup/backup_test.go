@@ -41,6 +41,10 @@ func newMockStore() *mockStore {
 	}
 }
 
+func (m *mockStore) ControlPlaneSnapshot(context.Context) ([]byte, error) {
+	return []byte("snapshot fixture"), nil
+}
+
 func (m *mockStore) ListAllActiveBackupConfigs() ([]*models.BackupConfig, error) {
 	var list []*models.BackupConfig
 	for _, c := range m.configs {

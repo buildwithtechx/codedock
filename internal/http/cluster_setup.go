@@ -26,11 +26,17 @@ func configureClusters(server *Server, db *sql.DB, vault *utils.Vault, projects 
 	}
 	runner := kubernetes.NewClusterRunner(servers)
 	service := clusters.NewService(repository, projects, servers, runner, operations, gate, &http.Client{Timeout: time.Minute})
+	if err := service.RecoverUpgrades(context.Background()); err != nil {
+		return fmt.Errorf("recover cluster upgrades: %w", err)
+	}
 	server.clusterHandler = system.NewClusterHandler(service, operations)
 	runtime := runtimes.NewService(repositories.NewRuntimeRepo(db, vault), apps, repository, servers, kubernetes.NewWorkloadRuntime(runner), server.deployer, operations, gate)
 	if err := runtime.Recover(context.Background()); err != nil {
 		return fmt.Errorf("recover Kubernetes application rollouts: %w", err)
 	}
+	reconcileCtx, cancelReconciliation := context.WithCancel(context.Background())
+	server.router.Server.RegisterOnShutdown(cancelReconciliation)
+	go runtime.RunReconciler(reconcileCtx)
 	deployments.Runtime = runtime
 	server.appServiceHandler.Runtime = runtime
 	canvasRuntime := observability.NewCanvasRuntime(server.dockerClient)

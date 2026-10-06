@@ -141,7 +141,7 @@ export function BackupPolicies({ configs, isLoading }: BackupPoliciesProps) {
                       <input
                         type="checkbox"
                         checked={config.preDeployment ?? false}
-                        disabled={!config.serviceId || updateBackup.isPending}
+                        disabled={!config.projectId || updateBackup.isPending}
                         onChange={(event) =>
                           updateBackup.mutate({
                             id: config.id,

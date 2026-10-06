@@ -23,8 +23,8 @@ func (h *BackupHandler) validatePolicy(c echo.Context, cfg *models.BackupConfig)
 		return echo.NewHTTPError(http.StatusBadRequest, "backup policy name is required")
 	}
 
-	if cfg.PreDeployment && cfg.ServiceID == "" {
-		return echo.NewHTTPError(http.StatusBadRequest, "pre-deployment policy requires an application service")
+	if cfg.PreDeployment && cfg.ProjectID == "" {
+		return echo.NewHTTPError(http.StatusBadRequest, "pre-deployment policy requires a project resource")
 	}
 	if cfg.Timeout < 0 || cfg.Timeout > 86400 || cfg.RetentionDays < 0 || cfg.MaxBackups < 0 || cfg.MaxStorageGB < 0 {
 		return echo.NewHTTPError(http.StatusBadRequest, "invalid backup timeout or retention limits")

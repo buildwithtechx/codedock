@@ -55,6 +55,9 @@ func (s *Service) List(ctx context.Context, project string) ([]models.Cluster, e
 	return s.store.List(ctx, project)
 }
 func (s *Service) Review(ctx context.Context, user, projectID string, request models.ClusterReviewRequest) (*models.OperationReview, error) {
+	if request.Action == "recover" {
+		return s.reviewUpgradeRecovery(ctx, user, projectID, request.Cluster.ID)
+	}
 	project, err := s.projects.Get(ctx, projectID)
 	if err != nil {
 		return nil, err
@@ -79,6 +82,7 @@ func (s *Service) Review(ctx context.Context, user, projectID string, request mo
 	if err := s.validateNodes(ctx, user, &cluster); err != nil {
 		return nil, err
 	}
+	previousVersion := ""
 	previous := cluster.Revision
 	existingNodes := 0
 	if previous == 0 {
@@ -101,6 +105,7 @@ func (s *Service) Review(ctx context.Context, user, projectID string, request mo
 		if stored.ProjectID != projectID || stored.Revision != previous {
 			return nil, fmt.Errorf("cluster changed; reload before reviewing")
 		}
+		previousVersion = stored.Version
 		if stored.Status == "READY" {
 			existingNodes = len(stored.Nodes)
 		}
@@ -127,7 +132,7 @@ func (s *Service) Review(ctx context.Context, user, projectID string, request mo
 			return nil, err
 		}
 	}
-	plan := models.ClusterPlan{Cluster: *saved, Action: request.Action, ExistingNodes: existingNodes}
+	plan := models.ClusterPlan{PreviousVersion: previousVersion, Cluster: *saved, Action: request.Action, ExistingNodes: existingNodes}
 	if request.Action != "remove" {
 		installer, err := s.downloadInstaller(ctx)
 		if err != nil {

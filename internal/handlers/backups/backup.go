@@ -148,10 +148,10 @@ func (h *BackupHandler) Update(c echo.Context) error {
 		DbPassword      string `json:"dbPassword"`
 		Schedule        string `json:"schedule"`
 		Timezone        string `json:"timezone"`
-		Timeout         int    `json:"timeout"`
-		RetentionDays   int    `json:"retentionDays"`
-		MaxBackups      int    `json:"maxBackups"`
-		MaxStorageGB    int    `json:"maxStorageGB"`
+		Timeout         *int   `json:"timeout"`
+		RetentionDays   *int   `json:"retentionDays"`
+		MaxBackups      *int   `json:"maxBackups"`
+		MaxStorageGB    *int   `json:"maxStorageGB"`
 		S3DestinationID string `json:"s3DestinationId"`
 		DatabaseID      string `json:"databaseId"`
 		BackupEnabled   *bool  `json:"backupEnabled"`
@@ -180,17 +180,17 @@ func (h *BackupHandler) Update(c echo.Context) error {
 	if req.Timezone != "" {
 		existing.Timezone = req.Timezone
 	}
-	if req.Timeout != 0 {
-		existing.Timeout = req.Timeout
+	if req.Timeout != nil {
+		existing.Timeout = *req.Timeout
 	}
-	if req.RetentionDays != 0 {
-		existing.RetentionDays = req.RetentionDays
+	if req.RetentionDays != nil {
+		existing.RetentionDays = *req.RetentionDays
 	}
-	if req.MaxBackups != 0 {
-		existing.MaxBackups = req.MaxBackups
+	if req.MaxBackups != nil {
+		existing.MaxBackups = *req.MaxBackups
 	}
-	if req.MaxStorageGB != 0 {
-		existing.MaxStorageGB = req.MaxStorageGB
+	if req.MaxStorageGB != nil {
+		existing.MaxStorageGB = *req.MaxStorageGB
 	}
 	if req.S3DestinationID != "" {
 		existing.S3DestinationID = req.S3DestinationID

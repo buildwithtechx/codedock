@@ -96,3 +96,25 @@ func TestStackReportsFailedBuildAndCancelledOperations(t *testing.T) {
 		}
 	}
 }
+
+func TestStackBackupFailurePreventsRuntimeActivation(t *testing.T) {
+	store := &stackTestStore{stack: &models.ComposeStack{ID: "stack", ProjectID: "project", Revision: 1}, finished: make(chan string, 1)}
+	service := NewComposeStackService(store, &stackTestRuntime{cancel: true})
+	service.BeforeDeployment = func(ctx context.Context, project, service string) error {
+		if project != "project" || service != "" {
+			t.Error("incorrect backup scope")
+		}
+		return fmt.Errorf("required backup failed")
+	}
+	if err := service.Deploy(context.Background(), "project", "stack"); err != nil {
+		t.Fatal(err)
+	}
+	select {
+	case status := <-store.finished:
+		if status != "FAILED" {
+			t.Fatal(status)
+		}
+	case <-time.After(2 * time.Second):
+		t.Fatal("runtime activated despite failed backup")
+	}
+}

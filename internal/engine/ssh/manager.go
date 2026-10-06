@@ -45,11 +45,15 @@ func (m *SSHManager) GetClient(server *models.Server) (*Client, func(), error) {
 		host = server.IPAddress
 	}
 
+	key := server.SSHPrivateKey
+	if key == "" {
+		key = server.SSHKey
+	}
 	client, err := NewClient(Config{
 		Host:     host,
 		Port:     server.SSHPort,
 		User:     server.SSHUser,
-		Key:      server.SSHKey,
+		Key:      key,
 		Password: server.SSHPassword,
 	})
 	if err != nil {
