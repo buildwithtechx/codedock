@@ -21,7 +21,9 @@ export function VolumeRestoreDialog({
 }) {
   const [target, setTarget] = useState<{ volumeName: string; timeoutSeconds: number } | null>(null);
   const [confirmation, setConfirmation] = useState('');
-  const [pending, setPending] = useState(false);
+  const [restoring, setPending] = useState(false);
+  const [interrupting, setInterrupting] = useState(false);
+  const pending = restoring || interrupting;
   const [error, setError] = useState('');
   const controller = useRef<AbortController | null>(null);
   useEffect(() => {
@@ -45,7 +47,7 @@ export function VolumeRestoreDialog({
   }, [recordId]);
   useEffect(() => () => controller.current?.abort(), []);
   const restore = async () => {
-    if (!recordId || !target) return;
+    if (!recordId || !target || pending) return;
     const request = new AbortController();
     controller.current = request;
     setPending(true);
@@ -70,14 +72,17 @@ export function VolumeRestoreDialog({
     }
   };
   const interrupt = async () => {
-    if (!recordId || !controller.current) return;
+    if (!recordId || !controller.current || interrupting) return;
+    setInterrupting(true);
     const request = controller.current;
     request.abort();
     try {
       await apiClient.delete(`/backup-records/${recordId}/volume-restore`);
-      controller.current?.abort();
+      request.abort();
     } catch (err) {
       if (!(err instanceof ApiError && err.status === 409)) setError((err as Error).message);
+    } finally {
+      setInterrupting(false);
     }
   };
   return (
@@ -117,7 +122,11 @@ export function VolumeRestoreDialog({
               onChange={(event) => setConfirmation(event.target.value)}
             />
             <div className="flex justify-end gap-2">
-              <Button variant="outline" onClick={pending ? interrupt : onClose}>
+              <Button
+                variant="outline"
+                disabled={interrupting}
+                onClick={pending ? interrupt : onClose}
+              >
                 {pending ? 'Interrupt restore' : 'Cancel'}
               </Button>
               <Button

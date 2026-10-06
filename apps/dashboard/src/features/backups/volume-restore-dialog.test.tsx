@@ -1,4 +1,4 @@
-import { fireEvent, render, screen, waitFor } from '@testing-library/react';
+import { act, fireEvent, render, screen, waitFor } from '@testing-library/react';
 import { describe, expect, it, vi } from 'vitest';
 import { VolumeRestoreDialog } from './volume-restore-dialog';
 
@@ -27,7 +27,13 @@ describe('VolumeRestoreDialog', () => {
           signal?.addEventListener('abort', () => reject(new Error('aborted')));
         })
     );
-    mocks.delete.mockResolvedValue({});
+    let finishDelete: (value: object) => void = () => {};
+    mocks.delete.mockImplementation(
+      () =>
+        new Promise((resolve) => {
+          finishDelete = resolve;
+        })
+    );
     render(<VolumeRestoreDialog recordId="record" onClose={vi.fn()} />);
     await screen.findByText(/Target:/);
     fireEvent.change(screen.getByLabelText('Type the volume name to confirm overwrite'), {
@@ -39,6 +45,19 @@ describe('VolumeRestoreDialog', () => {
     expect(signal?.aborted).toBe(true);
     await screen.findByRole('alert');
     expect(mocks.success).not.toHaveBeenCalled();
+    expect(
+      (screen.getByRole('button', { name: 'Restoring...' }) as HTMLButtonElement).disabled
+    ).toBe(true);
+    expect(
+      (screen.getByRole('button', { name: 'Interrupt restore' }) as HTMLButtonElement).disabled
+    ).toBe(true);
+    await act(async () => finishDelete({}));
+    await waitFor(() =>
+      expect(
+        (screen.getByRole('button', { name: 'Restore volume' }) as HTMLButtonElement).disabled
+      ).toBe(false)
+    );
+    expect(mocks.post).toHaveBeenCalledTimes(1);
     expect(mocks.delete).toHaveBeenCalledWith('/backup-records/record/volume-restore');
   });
 });
