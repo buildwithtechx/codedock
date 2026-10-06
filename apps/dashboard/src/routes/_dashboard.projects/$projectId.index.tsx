@@ -246,7 +246,7 @@ function ProjectOverviewComponent() {
                       {svc.internalPort ? `:${svc.internalPort}` : 'No Port'}
                     </span>
                     {svc.domain && (
-                      <span className="max-w-[120px] truncate text-[11px] text-primary">
+                      <span className="max-w-30 truncate text-[11px] text-primary">
                         {svc.domain}
                       </span>
                     )}

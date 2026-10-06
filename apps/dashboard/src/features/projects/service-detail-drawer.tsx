@@ -173,7 +173,7 @@ export function ServiceDetailDrawer({
               {service.containerId && (
                 <div className="flex items-center justify-between">
                   <span className="text-muted-foreground">Container ID</span>
-                  <span className="max-w-[180px] truncate font-medium font-mono">
+                  <span className="max-w-45 truncate font-medium font-mono">
                     {service.containerId.slice(0, 12)}
                   </span>
                 </div>

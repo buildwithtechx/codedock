@@ -149,6 +149,7 @@ export interface PRPreview {
 }
 
 export interface CreateAppServiceRequest {
+  id?: string;
   projectId: string;
   name: string;
   repositoryUrl: string;
