@@ -81,10 +81,9 @@ export function ApplicationSetupModal(props: ApplicationSetupProps) {
               </div>
               <p className="text-muted-foreground text-sm">
                 Target:{' '}
-                {setup.project.data?.data.serverId
-                  ? 'SSH server (requires its worker setup)'
-                  : 'Local Docker'}
-                . Future cloud and cluster targets use this project destination.
+                {setup.project.data?.data.serverId ? 'Project SSH Docker server' : 'Local Docker'}.
+                Choose a cluster or native destination in the application build settings after
+                saving.
               </p>
               {!setup.review && (
                 <>

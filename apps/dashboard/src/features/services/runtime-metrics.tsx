@@ -11,7 +11,7 @@ export function RuntimeMetrics({ serviceId }: { serviceId: string }) {
   });
   if (runtime.error) return <p role="alert">{runtime.error.message}</p>;
   if (!runtime.data) return <p role="status">Loading deployment destination?</p>;
-  return runtime.data.data.target.kind === 'kubernetes' ? (
+  return runtime.data.data.target.kind !== 'docker' ? (
     <RuntimeStatus serviceId={serviceId} />
   ) : (
     <ServiceMetricsPage serviceId={serviceId} />

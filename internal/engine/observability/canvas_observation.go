@@ -30,7 +30,7 @@ func (r *CanvasRuntime) Read(ctx context.Context, canvas *models.EnvironmentCanv
 				if err != nil {
 					return nil, err
 				}
-				return &models.RuntimeObservation{Logs: logs, Metrics: map[string]any{"runtimeKind": "kubernetes", "status": observed.Status, "desiredReplicas": observed.Desired, "availableReplicas": observed.Available, "metricsAvailable": observed.MetricsAvailable, "metricsError": observed.MetricsError, "pods": observed.Pods}}, nil
+				return &models.RuntimeObservation{Logs: logs, Metrics: map[string]any{"runtimeKind": observed.Kind, "status": observed.Status, "desiredReplicas": observed.Desired, "availableReplicas": observed.Available, "metricsAvailable": observed.MetricsAvailable, "metricsError": observed.MetricsError, "pods": observed.Pods}}, nil
 			}
 		}
 	}

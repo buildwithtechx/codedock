@@ -63,7 +63,7 @@ func (r *CanvasRuntime) Observe(ctx context.Context, canvas *models.EnvironmentC
 							node.Data["runtimeError"] = err.Error()
 						} else {
 							observedStatus = observed.Status
-							node.Data["runtimeKind"] = "kubernetes"
+							node.Data["runtimeKind"] = observed.Kind
 							node.Data["availableReplicas"] = observed.Available
 							node.Data["desiredReplicas"] = observed.Desired
 						}

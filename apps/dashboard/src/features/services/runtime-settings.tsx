@@ -209,7 +209,9 @@ export function RuntimeSettings({
           </Button>
         </div>
       )}
-      {runtime.data?.data.target.kind === 'kubernetes' && <RuntimeStatus serviceId={serviceId} />}
+      {runtime.data && runtime.data.data.target.kind !== 'docker' && (
+        <RuntimeStatus serviceId={serviceId} />
+      )}
     </section>
   );
 }

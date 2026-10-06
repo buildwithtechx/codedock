@@ -32,9 +32,10 @@ export function RuntimeStatus({ serviceId }: { serviceId: string }) {
     },
   });
   const observed = status.data?.data;
+  const native = observed?.kind === 'bare';
   return (
     <div className="space-y-3 border-t pt-4">
-      <h3 className="font-medium">Observed cluster workload</h3>
+      <h3 className="font-medium">Observed workload</h3>
       {status.error && <p role="alert">{status.error.message}</p>}
       {observed && (
         <>
@@ -59,7 +60,7 @@ export function RuntimeStatus({ serviceId }: { serviceId: string }) {
         </>
       )}
       <Button variant="outline" onClick={() => setShowLogs(!showLogs)}>
-        {showLogs ? 'Hide logs' : 'Show pod logs'}
+        {showLogs ? 'Hide logs' : native ? 'Show service logs' : 'Show pod logs'}
       </Button>
       {logs.error && <p role="alert">{logs.error.message}</p>}
       {showLogs && (
@@ -72,7 +73,7 @@ export function RuntimeStatus({ serviceId }: { serviceId: string }) {
         onChange={(event) => setCommand(event.target.value)}
       />
       <Button variant="outline" disabled={exec.isPending || !command} onClick={() => exec.mutate()}>
-        Run in a ready pod
+        {native ? 'Run as service user' : 'Run in a ready pod'}
       </Button>
       {exec.error && <p role="alert">{exec.error.message}</p>}
       {exec.data && (
