@@ -39,9 +39,9 @@ func (s *personalTestStore) ProjectForResource(_ context.Context, kind, id strin
 
 func TestPersonalTokensEnforcePolicyAndOwnerStatus(t *testing.T) {
 	for _, test := range []struct {
-		name, method, path, id, body               string
-		read, specific, expired, revoked, inactive bool
-		want                                       int
+		name, method, path, id, body, contentType, query string
+		read, specific, expired, revoked, inactive       bool
+		want                                             int
 	}{
 		{name: "read authenticates", method: "GET", path: "/api/apps/:id", id: "app", read: true, want: 200},
 		{name: "read denies write", method: "PUT", path: "/api/apps/:id", id: "app", read: true, want: 403},
@@ -53,6 +53,8 @@ func TestPersonalTokensEnforcePolicyAndOwnerStatus(t *testing.T) {
 		{name: "nested resource outside scope", method: "GET", path: "/api/projects/:projectId/apps/:id", id: "other", specific: true, want: 403},
 		{name: "project token escalation", method: "POST", path: "/api/projects/:projectId/tokens", specific: true, want: 403},
 		{name: "nested body outside scope", method: "PUT", path: "/api/apps/:id", id: "app", specific: true, body: `{"settings":{"targetProjectId":"other"}}`, want: 403},
+		{name: "mixed case JSON scope", method: "PUT", path: "/api/apps/:id", id: "app", specific: true, contentType: "Application/JSON; charset=utf-8", body: `{"projectId":"other"}`, want: 403},
+		{name: "snake case query scope", method: "POST", path: "/api/projects/:projectId/deploy", specific: true, query: "?environment_id=other", want: 403},
 		{name: "move outside scope", method: "PUT", path: "/api/apps/:id", id: "app", specific: true, body: `{"projectId":"other"}`, want: 403},
 		{name: "token escalation", method: "POST", path: "/api/profile/tokens", want: 403},
 		{name: "expiry", method: "GET", path: "/api/apps/:id", id: "app", expired: true, want: 401},
@@ -88,9 +90,13 @@ func TestPersonalTokensEnforcePolicyAndOwnerStatus(t *testing.T) {
 			}, guard.RequireAuth())
 			url := strings.Replace(test.path, ":id", test.id, 1)
 			url = strings.ReplaceAll(url, ":projectId", "allowed")
-			req := httptest.NewRequest(test.method, url, strings.NewReader(test.body))
+			req := httptest.NewRequest(test.method, url+test.query, strings.NewReader(test.body))
 			req.Header.Set("Authorization", "Bearer vpt_secret")
-			req.Header.Set("Content-Type", "application/json")
+			contentType := test.contentType
+			if contentType == "" {
+				contentType = "application/json"
+			}
+			req.Header.Set("Content-Type", contentType)
 			rec := httptest.NewRecorder()
 			e.ServeHTTP(rec, req)
 			if rec.Code != test.want {

@@ -99,7 +99,7 @@ func (s *UserService) UpdateUser(ctx context.Context, u *models.User) error {
 
 func (s *UserService) CreatePAT(ctx context.Context, userID, name string, accessLevel string, projectScope string, allowedProjects []string, expiresAt *time.Time) (*models.PersonalAccessToken, string, error) {
 	if userID == "" || name == "" {
-		return nil, "", errors.New("userId and name are required")
+		return nil, "", utils.NewValidationError("userId and name are required")
 	}
 	if accessLevel == "" {
 		accessLevel = "read_write"
@@ -108,21 +108,21 @@ func (s *UserService) CreatePAT(ctx context.Context, userID, name string, access
 		projectScope = "all"
 	}
 	if accessLevel != "read" && accessLevel != "read_write" {
-		return nil, "", errors.New("access level must be read or read_write")
+		return nil, "", utils.NewValidationError("access level must be read or read_write")
 	}
 	if projectScope != "all" && projectScope != "specific" {
-		return nil, "", errors.New("project scope must be all or specific")
+		return nil, "", utils.NewValidationError("project scope must be all or specific")
 	}
 	if projectScope == "specific" && len(allowedProjects) == 0 {
-		return nil, "", errors.New("specific project scope requires allowed projects")
+		return nil, "", utils.NewValidationError("specific project scope requires allowed projects")
 	}
 	for _, id := range allowedProjects {
-		if strings.TrimSpace(id) == "" {
-			return nil, "", errors.New("allowed project id cannot be empty")
+		if strings.TrimSpace(id) == "" || strings.TrimSpace(id) != id {
+			return nil, "", utils.NewValidationError("allowed project id must be nonempty and have no surrounding whitespace")
 		}
 	}
 	if expiresAt != nil && !expiresAt.After(time.Now()) {
-		return nil, "", errors.New("expiry must be in the future")
+		return nil, "", utils.NewValidationError("expiry must be in the future")
 	}
 	bytes := make([]byte, 32)
 	if _, err := rand.Read(bytes); err != nil {

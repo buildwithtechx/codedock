@@ -45,13 +45,21 @@ func TestE2EUserProfileAndPATs(t *testing.T) {
 		t.Fatalf("expected create PAT to succeed, got status %d, body %v", res.StatusCode, body)
 	}
 	patData, _ := body["data"].(map[string]any)
-	rawToken, _ := patData["token"].(string)
-	patInner, _ := patData["pat"].(map[string]any)
+	rawToken, _ := patData["plain"].(string)
+	patInner, _ := patData["token"].(map[string]any)
 	patID, _ := patInner["id"].(string)
 	if patID == "" || rawToken == "" {
 		t.Fatalf("expected valid PAT id and raw token, got id=%q token=%q", patID, rawToken)
 	}
 
+	res, _, err = h.get("/api/auth/me", map[string]string{"Authorization": "Bearer " + rawToken})
+	if err != nil || res.StatusCode != http.StatusOK {
+		t.Fatal("personal token could not authenticate")
+	}
+	res, _, err = h.post("/api/profile/tokens", map[string]string{"name": "Invalid", "accessLevel": "admin"}, nil)
+	if err != nil || res.StatusCode != http.StatusBadRequest {
+		t.Fatal("invalid token policy was not a client error")
+	}
 	res, body, err = h.get("/api/profile/tokens", nil)
 	if err != nil || res.StatusCode != http.StatusOK {
 		t.Fatalf("expected GET /api/profile/tokens to succeed, got status %d", res.StatusCode)
@@ -64,5 +72,9 @@ func TestE2EUserProfileAndPATs(t *testing.T) {
 	res, body, err = h.delete("/api/profile/tokens/"+patID, nil)
 	if err != nil || res.StatusCode != http.StatusOK {
 		t.Fatalf("expected delete PAT to succeed, got status %d", res.StatusCode)
+	}
+	res, _, err = h.get("/api/auth/me", map[string]string{"Authorization": "Bearer " + rawToken})
+	if err != nil || res.StatusCode != http.StatusUnauthorized {
+		t.Fatal("revoked personal token authenticated")
 	}
 }

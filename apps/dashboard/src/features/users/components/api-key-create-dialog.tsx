@@ -172,7 +172,12 @@ export function ApiKeyCreateDialog({ open, onOpenChange, onSuccess }: ApiKeyCrea
             <div className="max-h-40 space-y-2 overflow-y-auto rounded-lg border p-3">
               {projectsQuery.isLoading && <p>Loading projects...</p>}
               {projectsQuery.isError && (
-                <p>Could not load projects. Retry by reopening this dialog.</p>
+                <div className="space-y-2">
+                  <p>Could not load projects.</p>
+                  <Button type="button" variant="outline" onClick={() => projectsQuery.refetch()}>
+                    Retry projects
+                  </Button>
+                </div>
               )}
               {projects.map((project) => (
                 <label key={project.id} className="flex items-center gap-2 text-sm">

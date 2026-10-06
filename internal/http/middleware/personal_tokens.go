@@ -7,6 +7,7 @@ import (
 	"encoding/hex"
 	"encoding/json"
 	"io"
+	"mime"
 	"net/http"
 	"strings"
 	"time"
@@ -125,7 +126,8 @@ func (g *AuthGuard) authorizePersonalRequest(c echo.Context) error {
 			}
 		}
 	}
-	if c.Request().Body != nil && strings.Contains(c.Request().Header.Get("Content-Type"), "application/json") {
+	mediaType, _, _ := mime.ParseMediaType(strings.ToLower(c.Request().Header.Get("Content-Type")))
+	if c.Request().Body != nil && mediaType == "application/json" {
 		body, err := io.ReadAll(io.LimitReader(c.Request().Body, 1024*1024+1))
 		c.Request().Body = io.NopCloser(bytes.NewReader(body))
 		if err != nil || len(body) > 1024*1024 {
@@ -145,7 +147,7 @@ func (g *AuthGuard) authorizePersonalRequest(c echo.Context) error {
 
 func personalReferenceKind(key string) string {
 	for suffix, kind := range map[string]string{"projectid": "projects", "environmentid": "environments", "serviceid": "services", "databaseid": "databases"} {
-		if strings.HasSuffix(strings.ToLower(key), suffix) {
+		if strings.HasSuffix(strings.ReplaceAll(strings.ToLower(key), "_", ""), suffix) {
 			return kind
 		}
 	}

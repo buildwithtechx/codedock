@@ -62,7 +62,7 @@ func TestPersonalTokenCreationRejectsInvalidPolicy(t *testing.T) {
 		projects      []string
 		expires       *time.Time
 	}{
-		{access: "admin", scope: "all"}, {access: "read", scope: "unknown"}, {access: "read", scope: "specific"}, {access: "read", scope: "specific", projects: []string{""}}, {access: "read", scope: "all", expires: &expired},
+		{access: "read", scope: "specific", projects: []string{" project "}}, {access: "admin", scope: "all"}, {access: "read", scope: "unknown"}, {access: "read", scope: "specific"}, {access: "read", scope: "specific", projects: []string{""}}, {access: "read", scope: "all", expires: &expired},
 	} {
 		store := &tokenCreationStore{}
 		service := NewUserService(store)
