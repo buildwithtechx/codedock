@@ -1,9 +1,9 @@
 # Platform implementation roadmap
 
-Baseline: Codedock main 1c03759, compared with Openship main 16730d39 on 2026-10-06.
-Managed cloud provider: Hetzner. Existing projects and self-hosted installations remain supported.
+Baseline: Codedock main 1c03759, originally compared with Openship main 16730d39 on 2026-10-06.
+Managed cloud provider: Hetzner. Existing projects and self-hosted installations remain supported. Upstream managed cloud is SaaS relay with Oblien quota/billing, not Hetzner; Hetzner remains separate Codedock scope rather than upstream parity.
 
-Parity audit refreshed against Openship main `b7e69090` and Codedock `97ac530` on 2026-10-06: [Backend and UI/UX comparison](openship-parity-audit.md). Checked items describe their stated scope, not exhaustive Openship parity or live infrastructure certification.
+Parity audit refreshed against Openship main `93cdaebd` and Codedock `852d374` on 2026-10-07: [Backend and UI/UX comparison](openship-parity-audit.md). Checked items describe their stated scope, not exhaustive Openship parity or live infrastructure certification.
 
 ## Delivery workflow
 
@@ -103,7 +103,7 @@ Implementation details and current target boundaries: [Application, Compose and 
 - [x] Application and archive deployments wait for required verified backups before proceeding.
 - [x] Compose stack activation and SSH Docker deployments share the required-backup hook.
 
-The originally scoped Phase 6 and 7 items are implemented within the boundaries below; the renewed comparison found additional parity work and integration gaps. Full Go tests, root typecheck and formatting passed. PostgreSQL operator installation, replicated databases, reviewed S3 recovery, Redis AOF recovery and supervised native releases are wired through the dashboard and API. These checks cover repository behavior and mocked runtime commands; live K3s, operator and native-server installation/recovery exercises still require disposable targets. Redis replication uses a fixed primary, without Sentinel failover. Native targets execute verified standalone artifacts on a single SSH server.
+The originally scoped Phase 6 and 7 items are implemented within the boundaries below; the renewed comparison found additional parity work and integration gaps. Full Go tests, root typecheck and formatting passed, including SSH Docker operational dispatch with container-ownership checks and runtime-aware autoscaling eligibility. PostgreSQL operator installation, replicated databases, reviewed S3 recovery, Redis AOF recovery and supervised native releases are wired through the dashboard and API. These checks cover repository behavior and mocked runtime commands; live K3s, operator and native-server installation/recovery exercises still require disposable targets. Redis replication uses a fixed primary, without Sentinel failover. Native targets execute verified standalone artifacts on a single SSH server.
 
 ### Remaining backup parity
 
@@ -116,7 +116,7 @@ Current backup and cluster implementation boundaries, including scheduled-run ca
 
 ## Additional product scope
 
-- [ ] Migration discovery, adoption, service-selected copy, cutover and rollback.
+- [ ] Migration full lifecycle: migration-only sources, scan/stream, secret reveal, adopt/reimport, preview, move/copy, cutover, cancel, resume and target cleanup. Current bundle export/import plus adoption foundations are not parity.
 - [ ] HTTP traffic analytics and actionable operational attention feed.
 - [ ] Desktop control-plane lifecycle, connection recovery and update handling.
 - [ ] Expanded validated app catalogue and install-time secret/storage/networking setup.
