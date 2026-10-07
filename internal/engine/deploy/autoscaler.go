@@ -116,6 +116,15 @@ func (a *AutoscalerWorker) checkAndScale(ctx context.Context) {
 			a.observe(ctx, p, 0, "service is not running", false)
 			continue
 		}
+		if eligibility, ok := a.deploymentService.(interface {
+			ScalingEligible(context.Context, string) (bool, error)
+		}); ok {
+			supported, err := eligibility.ScalingEligible(ctx, app.ID)
+			if err != nil || !supported {
+				a.observe(ctx, p, 0, "selected runtime does not support Docker autoscaling", false)
+				continue
+			}
+		}
 		health, err := a.statsMonitor.GetHealth(ctx, app.ContainerID)
 		if err != nil || health == nil {
 			a.observe(ctx, p, 0, "CPU metrics unavailable", false)

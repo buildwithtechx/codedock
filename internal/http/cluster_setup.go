@@ -49,6 +49,7 @@ func configureClusters(server *Server, db *sql.DB, vault *utils.Vault, projects 
 	server.appServiceHandler.Runtime = runtime
 	canvasRuntime := observability.NewCanvasRuntime(server.dockerClient)
 	canvasRuntime.Cluster = runtime
+	canvasRuntime.Targets = deployments
 	canvas.SetRuntime(canvasRuntime)
 	return nil
 }

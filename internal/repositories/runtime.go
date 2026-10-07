@@ -23,7 +23,7 @@ func (r *RuntimeRepo) Get(ctx context.Context, id string) (*models.ServiceRuntim
 	var runtime models.ServiceRuntime
 	err := r.db.GetContext(ctx, &runtime, `SELECT * FROM service_runtimes WHERE service_id=?`, id)
 	if errors.Is(err, sql.ErrNoRows) {
-		return &models.ServiceRuntime{ServiceID: id, Target: models.RuntimeTarget{Kind: "docker"}, Status: "CONFIGURED"}, nil
+		return &models.ServiceRuntime{ServiceID: id, RuntimeKind: "docker", Target: models.RuntimeTarget{Kind: "docker"}, Status: "CONFIGURED"}, nil
 	}
 	if err != nil {
 		return nil, fmt.Errorf("load runtime target: %w", err)
@@ -45,6 +45,12 @@ func (r *RuntimeRepo) Get(ctx context.Context, id string) (*models.ServiceRuntim
 	return &runtime, nil
 }
 func (r *RuntimeRepo) Save(ctx context.Context, runtime *models.ServiceRuntime, revision int) error {
+	if runtime.Target.Kind == "" {
+		runtime.Target.Kind = "docker"
+	}
+	if runtime.Target.Kind != "docker" && runtime.Target.Kind != "kubernetes" && runtime.Target.Kind != "bare" {
+		return fmt.Errorf("unsupported runtime destination")
+	}
 	config, err := json.Marshal(runtime.Target)
 	if err != nil {
 		return err
@@ -55,13 +61,13 @@ func (r *RuntimeRepo) Save(ctx context.Context, runtime *models.ServiceRuntime, 
 	}
 	now := time.Now().UTC().Format(time.RFC3339Nano)
 	if revision == 0 {
-		_, err := r.db.ExecContext(ctx, `INSERT INTO service_runtimes(service_id,project_id,encrypted_config,updated_at) VALUES(?,?,?,?)`, runtime.ServiceID, runtime.ProjectID, encrypted, now)
+		_, err := r.db.ExecContext(ctx, `INSERT INTO service_runtimes(service_id,project_id,encrypted_config,updated_at,runtime_kind) VALUES(?,?,?,?,?)`, runtime.ServiceID, runtime.ProjectID, encrypted, now, runtime.Target.Kind)
 		if err != nil {
 			return fmt.Errorf("runtime target already configured or invalid: %w", err)
 		}
 		return nil
 	}
-	result, err := r.db.ExecContext(ctx, `UPDATE service_runtimes SET encrypted_config=?,revision=revision+1,status='CONFIGURED',error='',updated_at=? WHERE service_id=? AND project_id=? AND revision=? AND status NOT IN ('DEPLOYING','RECOVERING') AND encrypted_journal=''`, encrypted, now, runtime.ServiceID, runtime.ProjectID, revision)
+	result, err := r.db.ExecContext(ctx, `UPDATE service_runtimes SET encrypted_config=?,runtime_kind=?,revision=revision+1,status='CONFIGURED',error='',updated_at=? WHERE service_id=? AND project_id=? AND revision=? AND status NOT IN ('DEPLOYING','RECOVERING') AND encrypted_journal=''`, encrypted, runtime.Target.Kind, now, runtime.ServiceID, runtime.ProjectID, revision)
 	if err != nil {
 		return err
 	}

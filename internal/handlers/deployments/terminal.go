@@ -44,7 +44,11 @@ type userStatusProvider interface {
 	GetUserByID(ctx context.Context, id string) (*models.User, error)
 }
 
+type TerminalDockerTargets interface {
+	DockerForService(context.Context, string) (*client.Client, func(), error)
+}
 type TerminalHandler struct {
+	Targets        TerminalDockerTargets
 	dockerClient   *client.Client
 	tokenService   tokenValidator
 	appService     *projectservices.AppService
@@ -135,14 +139,27 @@ func (h *TerminalHandler) HandleWebSocket(c echo.Context) error {
 		AttachStdout: true,
 		AttachStderr: true,
 	}
-	if h.dockerClient == nil {
+	target := h.dockerClient
+	if h.Targets != nil {
+		resolved, release, err := h.Targets.DockerForService(c.Request().Context(), id)
+		if err != nil {
+			return utils.Error(c, http.StatusConflict, err.Error())
+		}
+		defer release()
+		target = resolved
+	}
+	if target == nil {
 		return utils.Error(c, http.StatusInternalServerError, "docker client unavailable")
 	}
-	resp, err := h.dockerClient.ContainerExecCreate(context.Background(), containerName, execConfig)
+	owned, inspectErr := target.ContainerInspect(c.Request().Context(), containerName)
+	if inspectErr != nil || owned.Config == nil || owned.Config.Labels["codedock.service_id"] != id {
+		return utils.Error(c, http.StatusConflict, "terminal container ownership changed")
+	}
+	resp, err := target.ContainerExecCreate(c.Request().Context(), containerName, execConfig)
 	if err != nil {
 		return utils.Error(c, http.StatusInternalServerError, "failed to create exec instance: "+err.Error())
 	}
-	hijackedResp, err := h.dockerClient.ContainerExecAttach(context.Background(), resp.ID, container.ExecAttachOptions{Tty: true})
+	hijackedResp, err := target.ContainerExecAttach(c.Request().Context(), resp.ID, container.ExecAttachOptions{Tty: true})
 	if err != nil {
 		return utils.Error(c, http.StatusInternalServerError, "failed to attach to exec instance: "+err.Error())
 	}

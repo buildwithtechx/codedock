@@ -12,6 +12,9 @@ import (
 )
 
 func (r *CanvasRuntime) Read(ctx context.Context, canvas *models.EnvironmentCanvas, nodeID string) (*models.RuntimeObservation, error) {
+	if canvas == nil {
+		return nil, fmt.Errorf("canvas unavailable")
+	}
 	if r.Cluster != nil {
 		for _, app := range canvas.Apps {
 			if nodeID != "app-"+app.ID {
@@ -34,7 +37,12 @@ func (r *CanvasRuntime) Read(ctx context.Context, canvas *models.EnvironmentCanv
 			}
 		}
 	}
-	if r.docker == nil {
+	docker, release, err := r.canvasDocker(ctx, canvas)
+	if err != nil {
+		return nil, err
+	}
+	defer release()
+	if docker == nil {
 		return nil, fmt.Errorf("runtime unavailable")
 	}
 	containerID := ""
@@ -64,16 +72,16 @@ func (r *CanvasRuntime) Read(ctx context.Context, canvas *models.EnvironmentCanv
 	}
 	ctx, cancel := context.WithTimeout(ctx, 5*time.Second)
 	defer cancel()
-	health, err := NewStatsMonitor(r.docker).GetHealth(ctx, containerID)
+	health, err := NewStatsMonitor(docker).GetHealth(ctx, containerID)
 	if err != nil {
 		return nil, err
 	}
-	stream, err := r.docker.ContainerLogs(ctx, containerID, container.LogsOptions{ShowStdout: true, ShowStderr: true, Tail: "100", Timestamps: true})
+	stream, err := docker.ContainerLogs(ctx, containerID, container.LogsOptions{ShowStdout: true, ShowStderr: true, Tail: "100", Timestamps: true})
 	if err != nil {
 		return nil, fmt.Errorf("read runtime logs: %w", err)
 	}
 	defer stream.Close()
-	inspected, err := r.docker.ContainerInspect(ctx, containerID)
+	inspected, err := docker.ContainerInspect(ctx, containerID)
 	if err != nil {
 		return nil, err
 	}

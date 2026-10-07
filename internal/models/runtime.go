@@ -20,15 +20,16 @@ type RuntimeTarget struct {
 	BareNode        ClusterNode     `json:"bareNode,omitempty"`
 }
 type ServiceRuntime struct {
-	ServiceID string        `json:"serviceId" db:"service_id"`
-	ProjectID string        `json:"projectId" db:"project_id"`
-	Target    RuntimeTarget `json:"target" db:"-"`
-	Revision  int           `json:"revision" db:"revision"`
-	Status    string        `json:"status" db:"status"`
-	Error     string        `json:"error" db:"error"`
-	Journal   string        `json:"-" db:"encrypted_journal"`
-	Config    string        `json:"-" db:"encrypted_config"`
-	UpdatedAt string        `json:"updatedAt" db:"updated_at"`
+	RuntimeKind string        `json:"-" db:"runtime_kind"`
+	ServiceID   string        `json:"serviceId" db:"service_id"`
+	ProjectID   string        `json:"projectId" db:"project_id"`
+	Target      RuntimeTarget `json:"target" db:"-"`
+	Revision    int           `json:"revision" db:"revision"`
+	Status      string        `json:"status" db:"status"`
+	Error       string        `json:"error" db:"error"`
+	Journal     string        `json:"-" db:"encrypted_journal"`
+	Config      string        `json:"-" db:"encrypted_config"`
+	UpdatedAt   string        `json:"updatedAt" db:"updated_at"`
 }
 type RuntimeReviewRequest struct {
 	Target   RuntimeTarget `json:"target"`

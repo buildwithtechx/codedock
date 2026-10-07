@@ -18,7 +18,11 @@ type AutoscalingApps interface {
 type AutoscalingProjects interface {
 	Get(context.Context, string) (*models.ProjectConfig, error)
 }
+type AutoscalingRuntimes interface {
+	Get(context.Context, string) (*models.ServiceRuntime, error)
+}
 type AutoscalingService struct {
+	runtimes AutoscalingRuntimes
 	policies AutoscalingPolicies
 	apps     AutoscalingApps
 	projects AutoscalingProjects
@@ -41,6 +45,13 @@ func (s *AutoscalingService) Get(ctx context.Context, id string) (*models.Autosc
 		return nil, fmt.Errorf("load autoscaling target: %w", err)
 	}
 	p.Supported = project.ServerID == ""
+	if s.runtimes != nil {
+		runtime, err := s.runtimes.Get(ctx, id)
+		if err != nil {
+			return nil, err
+		}
+		p.Supported = p.Supported && runtime.Target.Kind == "docker" && runtime.Journal == ""
+	}
 	return p, nil
 }
 func ValidateAutoscaling(p *models.AutoscalingPolicy) error {
@@ -67,8 +78,18 @@ func (s *AutoscalingService) Save(ctx context.Context, p *models.AutoscalingPoli
 	if err != nil {
 		return fmt.Errorf("load autoscaling target: %w", err)
 	}
-	if p.Enabled && project.ServerID != "" {
+	supported := project.ServerID == ""
+	if s.runtimes != nil {
+		runtime, err := s.runtimes.Get(ctx, p.ServiceID)
+		if err != nil {
+			return err
+		}
+		supported = supported && runtime.Target.Kind == "docker" && runtime.Journal == ""
+	}
+	if p.Enabled && !supported {
 		return utils.NewValidationError("autoscaling currently supports local Docker targets only")
 	}
 	return s.policies.Save(ctx, p)
 }
+
+func (s *AutoscalingService) SetRuntimes(r AutoscalingRuntimes) { s.runtimes = r }

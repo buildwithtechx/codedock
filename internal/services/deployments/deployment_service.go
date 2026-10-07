@@ -11,6 +11,7 @@ import (
 	"sync"
 	"time"
 
+	"github.com/docker/docker/client"
 	"github.com/google/uuid"
 
 	"codedock.run/codedock/internal/engine/deploy"
@@ -21,6 +22,9 @@ import (
 )
 
 type DeploymentService struct {
+	LocalDocker             *client.Client
+	Databases               repositories.DatabaseRepository
+	RuntimeKinds            dockerRuntimeStore
 	Servers                 repositories.ServerRepository
 	HostGate                deploy.VolumeOperations
 	BeforeProjectDeployment func(context.Context, string, string) error
@@ -193,7 +197,12 @@ func (s *DeploymentService) GetMetrics(ctx context.Context, appID string) (*obse
 	if s.statsMonitor == nil {
 		return nil, errors.New("stats monitor not available")
 	}
-	return s.statsMonitor.GetHealth(ctx, app.ContainerID)
+	target, release, err := s.DockerForService(ctx, appID)
+	if err != nil {
+		return nil, err
+	}
+	defer release()
+	return observability.NewStatsMonitor(target).GetHealth(ctx, app.ContainerID)
 }
 
 func detectAppIcon(sourceDir string) string {

@@ -144,10 +144,18 @@ func NewServer(db *sql.DB, v *utils.Vault, deployer *deploy.Deployer, traefikMan
 	gitService := deploymentservices.NewGitService(gitRepo)
 	statsMonitor := observability.NewStatsMonitor(dockerClient)
 	deploymentService := deploymentservices.NewDeploymentService(deployRepo, appRepo, projectRepo, deployer, gitService, statsMonitor, volumeRepo, sshManager)
+	deploymentService.LocalDocker = dockerClient
+	deploymentService.Databases = dbRepo
 	aiAnalysisService := projectservices.NewAIAnalysisService(deployRepo, appRepo, aiRepo)
 
+	runtimeRepository := repositories.NewRuntimeRepo(db, v)
+	if err := runtimeRepository.SyncKinds(context.Background()); err != nil {
+		return nil, fmt.Errorf("recover runtime kinds: %w", err)
+	}
+	deploymentService.RuntimeKinds = runtimeRepository
 	autoscalingRepo := repositories.NewAutoscalingRepo(db)
 	autoscalingService := projectservices.NewAutoscalingService(autoscalingRepo, appRepo, projectRepo)
+	autoscalingService.SetRuntimes(runtimeRepository)
 	autoscalingHandler := projects.NewAutoscalingHandler(autoscalingService)
 	autoscaler := deploy.NewAutoscalerWorker(appRepo, statsMonitor, deploymentService, autoscalingRepo)
 
@@ -197,6 +205,7 @@ func NewServer(db *sql.DB, v *utils.Vault, deployer *deploy.Deployer, traefikMan
 	scheduledTaskHandler := system.NewScheduledTaskHandler(scheduledTaskService, appService, projectService)
 	canvasHandler := projects.NewCanvasHandler(canvasService, projectService)
 	terminalHandler := deployments.NewTerminalHandler(dockerClient, tokenService, appService, projectService, userRepo)
+	terminalHandler.Targets = deploymentService
 	projectHandler := projects.NewProjectHandler(projectService, projectSettingsService)
 	projectAppHandler := projects.NewProjectAppHandler(projectAppService, projectService)
 	orgHandler := auth.NewOrganizationHandler(orgService)
@@ -250,6 +259,7 @@ func NewServer(db *sql.DB, v *utils.Vault, deployer *deploy.Deployer, traefikMan
 	serverHandler := system.NewServerHandler(serverService)
 	serverMetricsWSHandler := system.NewServerMetricsWSHandler(tokenService, serverService, userRepo)
 	serviceLogsWSHandler := system.NewServiceLogsWSHandler(tokenService, appService, projectService, userRepo)
+	serviceLogsWSHandler.Streams = deploymentService
 
 	registryRepo := repositories.NewRegistryRepository(db)
 	registryService := deploymentservices.NewRegistryService(registryRepo)

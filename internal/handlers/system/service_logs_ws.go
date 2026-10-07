@@ -5,10 +5,10 @@ import (
 	"log/slog"
 	"net/http"
 	"strings"
+	"time"
 
 	handlerutils "codedock.run/codedock/internal/handlers/utils"
 
-	"codedock.run/codedock/internal/engine/observability"
 	"codedock.run/codedock/internal/http/middleware"
 	"codedock.run/codedock/internal/models"
 	projectservices "codedock.run/codedock/internal/services/projects"
@@ -16,6 +16,7 @@ import (
 	"github.com/golang-jwt/jwt/v5"
 	"github.com/gorilla/websocket"
 	"github.com/labstack/echo/v4"
+	"io"
 )
 
 type tokenValidator interface {
@@ -26,7 +27,11 @@ type userStatusProvider interface {
 	GetUserByID(ctx context.Context, id string) (*models.User, error)
 }
 
+type ServiceLogStreams interface {
+	StreamServiceLogs(context.Context, string, io.Writer) error
+}
 type ServiceLogsWSHandler struct {
+	Streams        ServiceLogStreams
 	upgrader       websocket.Upgrader
 	tokenService   tokenValidator
 	appService     *projectservices.AppService
@@ -116,16 +121,35 @@ func (h *ServiceLogsWSHandler) Handle(c echo.Context) error {
 		return err
 	}
 
-	observability.GlobalUILogStreamHub.AddClient(serviceID, ws)
-	defer observability.GlobalUILogStreamHub.RemoveClient(serviceID, ws)
 	defer ws.Close()
-
-	for {
-		_, _, err := ws.ReadMessage()
-		if err != nil {
-			break
+	ctx, cancel := context.WithCancel(c.Request().Context())
+	defer cancel()
+	go func() {
+		for {
+			if _, _, err := ws.ReadMessage(); err != nil {
+				cancel()
+				return
+			}
 		}
+	}()
+	if h.Streams == nil {
+		_ = ws.WriteMessage(websocket.TextMessage, []byte("Log stream unavailable"))
+		return nil
 	}
-
+	if err := h.Streams.StreamServiceLogs(ctx, serviceID, serviceLogWriter{ws}); err != nil && ctx.Err() == nil {
+		_ = ws.WriteMessage(websocket.TextMessage, []byte("Log stream failed: "+err.Error()))
+	}
 	return nil
+}
+
+type serviceLogWriter struct{ ws *websocket.Conn }
+
+func (w serviceLogWriter) Write(data []byte) (int, error) {
+	if err := w.ws.SetWriteDeadline(time.Now().Add(15 * time.Second)); err != nil {
+		return 0, err
+	}
+	if err := w.ws.WriteMessage(websocket.TextMessage, data); err != nil {
+		return 0, err
+	}
+	return len(data), nil
 }

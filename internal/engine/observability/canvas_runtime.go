@@ -14,7 +14,11 @@ type ClusterObservations interface {
 	Observe(context.Context, string) (*models.WorkloadObservation, error)
 	Logs(context.Context, string) (string, error)
 }
+type CanvasDockerTargets interface {
+	DockerForProject(context.Context, string) (*client.Client, func(), error)
+}
 type CanvasRuntime struct {
+	Targets CanvasDockerTargets
 	docker  *client.Client
 	Cluster ClusterObservations
 }
@@ -22,16 +26,21 @@ type CanvasRuntime struct {
 func NewCanvasRuntime(docker *client.Client) *CanvasRuntime { return &CanvasRuntime{docker: docker} }
 
 func (r *CanvasRuntime) Observe(ctx context.Context, canvas *models.EnvironmentCanvas) {
+	if canvas == nil {
+		return
+	}
 	ctx, cancel := context.WithTimeout(ctx, 5*time.Second)
 	defer cancel()
+	docker, release, targetErr := r.canvasDocker(ctx, canvas)
+	defer release()
 	status := func(id string) string {
 		if id == "" {
 			return "not deployed"
 		}
-		if r.docker == nil {
+		if targetErr != nil || docker == nil {
 			return "runtime unavailable"
 		}
-		inspected, err := r.docker.ContainerInspect(ctx, id)
+		inspected, err := docker.ContainerInspect(ctx, id)
 		if errdefs.IsNotFound(err) {
 			return "container missing"
 		}
@@ -79,4 +88,18 @@ func (r *CanvasRuntime) Observe(ctx context.Context, canvas *models.EnvironmentC
 			}
 		}
 	}
+}
+
+func (r *CanvasRuntime) canvasDocker(ctx context.Context, canvas *models.EnvironmentCanvas) (*client.Client, func(), error) {
+	if r.Targets == nil {
+		return r.docker, func() {}, nil
+	}
+	if canvas == nil || canvas.Environment == nil || canvas.Environment.ProjectID == "" {
+		return nil, func() {}, fmt.Errorf("canvas project identity unavailable")
+	}
+	target, release, err := r.Targets.DockerForProject(ctx, canvas.Environment.ProjectID)
+	if err != nil {
+		return nil, func() {}, err
+	}
+	return target, release, nil
 }

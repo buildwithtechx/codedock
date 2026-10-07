@@ -84,7 +84,7 @@ func (s *DeploymentService) dependencyReady(ctx context.Context, source string) 
 			return nil
 		}
 	}
-	return s.deployer.DependencyReady(ctx, source)
+	return s.dockerDependencyReady(ctx, source)
 }
 
 func (s *DeploymentService) RemoveAppService(ctx context.Context, app *models.AppService) error {
