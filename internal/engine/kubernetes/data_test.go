@@ -9,13 +9,18 @@ import (
 )
 
 func dataFixture() *models.ClusterDataPlan {
-	return &models.ClusterDataPlan{Record: models.ClusterData{ID: "aaaaaaaa-aaaa-4aaa-8aaa-aaaaaaaaaaaa", ProjectID: "bbbbbbbb-bbbb-4bbb-8bbb-bbbbbbbbbbbb", Spec: models.ClusterDataSpec{ID: "aaaaaaaa-aaaa-4aaa-8aaa-aaaaaaaaaaaa", EnvironmentID: "cccccccc-cccc-4ccc-8ccc-cccccccccccc", Name: "database", Engine: "postgres", Image: "ghcr.io/cloudnative-pg/postgresql:17.6", Instances: 3, StorageGiB: 10}}, Password: "generated"}
+	return &models.ClusterDataPlan{Record: models.ClusterData{ID: "aaaaaaaa-aaaa-4aaa-8aaa-aaaaaaaaaaaa", ProjectID: "bbbbbbbb-bbbb-4bbb-8bbb-bbbbbbbbbbbb", Spec: models.ClusterDataSpec{ID: "aaaaaaaa-aaaa-4aaa-8aaa-aaaaaaaaaaaa", EnvironmentID: "cccccccc-cccc-4ccc-8ccc-cccccccccccc", Name: "database", Engine: "postgres", Image: "ghcr.io/cloudnative-pg/postgresql:17.6", Instances: 3, StorageGiB: 10, Synchronous: true}}, Password: "generated"}
 }
 func TestDataModesRequireDistinctNodesAndExactImages(t *testing.T) {
 	plan := dataFixture()
 	if err := ValidateDataSpec(plan.Record.Spec, 3); err != nil {
 		t.Fatal(err)
 	}
+	plan.Record.Spec.Synchronous = false
+	if err := ValidateDataSpec(plan.Record.Spec, 3); err == nil {
+		t.Fatal("replicated PostgreSQL accepted without synchronous durability")
+	}
+	plan.Record.Spec.Synchronous = true
 	if err := ValidateDataSpec(plan.Record.Spec, 2); err == nil {
 		t.Fatal("replication accepted without enough nodes")
 	}

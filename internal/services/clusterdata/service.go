@@ -71,7 +71,16 @@ func (s *Service) List(ctx context.Context, project, cluster string) ([]models.C
 		if err := s.engine.DataObserved(observation, target.Nodes[0], &records[index]); err != nil {
 			records[index].Status = "DEGRADED"
 			records[index].Error = fmt.Sprintf("Observed database state: %v", err)
+			continue
 		}
+		roles, volumes, err := s.engine.DataInspect(observation, target.Nodes[0], &records[index])
+		if err != nil {
+			records[index].Status = "DEGRADED"
+			records[index].Error = fmt.Sprintf("Observed database roles: %v", err)
+			continue
+		}
+		records[index].ObservedRoles = roles
+		records[index].ObservedVolumes = volumes
 	}
 	return records, nil
 }
@@ -116,4 +125,21 @@ func (s *Service) Backups(ctx context.Context, project, clusterID, id string) ([
 		return nil, fmt.Errorf("Redis uses persistent AOF recovery")
 	}
 	return s.engine.DataBackups(ctx, cluster.Nodes[0], &plan.Record)
+}
+
+func (s *Service) VerifyConnection(ctx context.Context, project, clusterID, id string) error {
+	plan, err := s.owned(ctx, project, clusterID, id)
+	if err != nil {
+		return err
+	}
+	if plan.Record.Status != "READY" {
+		return fmt.Errorf("database is not ready")
+	}
+	cluster, err := s.cluster(ctx, project, clusterID)
+	if err != nil {
+		return err
+	}
+	check, cancel := context.WithTimeout(ctx, 30*time.Second)
+	defer cancel()
+	return s.engine.DataConnectionCheck(check, cluster.Nodes[0], &plan.Record, plan.Password)
 }

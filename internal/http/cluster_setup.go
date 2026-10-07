@@ -61,6 +61,7 @@ func (s *Server) registerClusterRoutes(group *echo.Group) {
 	group.POST("/projects/:id/clusters/:clusterId/databases/review", s.clusterDataHandler.Review, admin)
 	group.GET("/projects/:id/clusters/:clusterId/databases/:databaseId/credentials", s.clusterDataHandler.Credentials, admin, s.authGuard.RequireScope("database:manage"))
 	group.GET("/projects/:id/clusters/:clusterId/databases/:databaseId/backups", s.clusterDataHandler.Backups, admin)
+	group.POST("/projects/:id/clusters/:clusterId/databases/:databaseId/verify", s.clusterDataHandler.Verify, admin)
 	group.POST("/projects/:id/clusters/:clusterId/databases/bindings/review", s.clusterDataHandler.ReviewBinding, admin)
 	group.POST("/projects/:id/clusters/:clusterId/databases/bindings/apply", s.clusterDataHandler.ApplyBinding, admin)
 	group.POST("/projects/:id/clusters/:clusterId/databases/lifecycle/review", s.clusterDataHandler.ReviewLifecycle, admin)

@@ -34,6 +34,9 @@ func ValidateDataSpec(spec models.ClusterDataSpec, nodes int) error {
 		if !regexp.MustCompile(`^ghcr\.io/cloudnative-pg/postgresql:[0-9]+\.[0-9]+[-a-zA-Z0-9.]*$`).MatchString(spec.Image) {
 			return fmt.Errorf("select an exact CloudNativePG PostgreSQL image tag")
 		}
+		if spec.Instances == 3 && !spec.Synchronous {
+			return fmt.Errorf("three PostgreSQL instances require synchronous durability")
+		}
 	case "redis":
 		if !regexp.MustCompile(`^redis:[0-9]+\.[0-9]+\.[0-9]+[-a-zA-Z0-9.]*$`).MatchString(spec.Image) {
 			return fmt.Errorf("select an exact Redis image tag")

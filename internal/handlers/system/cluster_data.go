@@ -105,3 +105,10 @@ func (h *ClusterDataHandler) Backups(c echo.Context) error {
 	}
 	return utils.Success(c, "PostgreSQL base backups", result)
 }
+
+func (h *ClusterDataHandler) Verify(c echo.Context) error {
+	if err := h.service.VerifyConnection(c.Request().Context(), c.Param("id"), c.Param("clusterId"), c.Param("databaseId")); err != nil {
+		return echo.NewHTTPError(http.StatusConflict, err.Error())
+	}
+	return utils.Success(c, "Database connection verified with stored credentials", nil)
+}

@@ -15,6 +15,9 @@ func postgresObjects(plan *models.ClusterDataPlan, metadata func(string) map[str
 	}
 	settings := map[string]any{"instances": spec.Instances, "imageName": spec.Image, "storage": storage, "enableSuperuserAccess": false, "bootstrap": map[string]any{"initdb": map[string]any{"database": "app", "owner": "app", "secret": map[string]string{"name": name + "-auth"}}}, "affinity": map[string]any{"enablePodAntiAffinity": true, "podAntiAffinityType": "required", "topologyKey": "kubernetes.io/hostname"}}
 	settings["inheritedMetadata"] = map[string]any{"labels": metadata(name)["labels"]}
+	if spec.Synchronous {
+		settings["postgresql"] = map[string]any{"parameters": map[string]string{"synchronous_commit": "remote_apply", "synchronous_standby_names": "ANY 1 (*)"}}
+	}
 	extra := []map[string]any{}
 	objectStore := func(suffix string, dest *models.S3Destination, serverName string) {
 		credentials := name + suffix + "-credentials"
