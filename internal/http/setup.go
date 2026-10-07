@@ -72,6 +72,7 @@ func NewServer(db *sql.DB, v *utils.Vault, deployer *deploy.Deployer, traefikMan
 	userRepo := repositories.NewUserRepo(db)
 	canvasRepo := repositories.NewCanvasRepo(db, environmentRepo)
 	canvasRepo.SetVault(v)
+	canvasRepo.SetClusterData(repositories.NewClusterDataRepo(db, v))
 	deployRepo := repositories.NewDeploymentRepo(db)
 	if err := deployRepo.RecoverInterrupted(context.Background()); err != nil {
 		return nil, fmt.Errorf("recover deployments: %w", err)
@@ -123,6 +124,7 @@ func NewServer(db *sql.DB, v *utils.Vault, deployer *deploy.Deployer, traefikMan
 	aiSettingsService := projectservices.NewAISettingsService(aiRepo)
 	serviceLinker := projectservices.NewServiceLinker(dbRepo)
 	serviceLinker.SetApplications(appRepo, serviceVarRepo)
+	serviceLinker.SetClusterData(repositories.NewClusterDataRepo(db, v))
 	mailerService, err := notifications.NewMailerService(notifSettingsService)
 	if err != nil {
 		return nil, fmt.Errorf("mailer service: %w", err)

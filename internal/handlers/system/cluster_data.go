@@ -3,6 +3,7 @@ package system
 import (
 	"codedock.run/codedock/internal/http/middleware"
 	"codedock.run/codedock/internal/models"
+	"codedock.run/codedock/internal/repositories"
 	"codedock.run/codedock/internal/services/clusterdata"
 	"codedock.run/codedock/internal/services/operations"
 	"codedock.run/codedock/internal/utils"
@@ -13,10 +14,17 @@ import (
 type ClusterDataHandler struct {
 	service    *clusterdata.Service
 	operations *operations.Service
+	apps       repositories.AppServiceRepository
+	vars       repositories.ServiceVarRepository
 }
 
 func NewClusterDataHandler(service *clusterdata.Service, operations *operations.Service) *ClusterDataHandler {
-	return &ClusterDataHandler{service, operations}
+	return &ClusterDataHandler{service: service, operations: operations}
+}
+
+func (h *ClusterDataHandler) SetBindings(apps repositories.AppServiceRepository, vars repositories.ServiceVarRepository) {
+	h.apps = apps
+	h.vars = vars
 }
 func (h *ClusterDataHandler) List(c echo.Context) error {
 	result, err := h.service.List(c.Request().Context(), c.Param("id"), c.Param("clusterId"))

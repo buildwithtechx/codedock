@@ -107,12 +107,13 @@ type CanvasEdge struct {
 }
 
 type EnvironmentCanvas struct {
-	ID          string             `json:"id"`
-	Name        string             `json:"name"`
-	Environment *EnvironmentConfig `json:"environment"`
-	Apps        []*AppService      `json:"apps"`
-	Databases   []*Database        `json:"databases"`
-	Nodes       []CanvasNode       `json:"nodes"`
-	Edges       []CanvasEdge       `json:"edges"`
-	Revision    string             `json:"revision"`
+	ID               string             `json:"id"`
+	Name             string             `json:"name"`
+	Environment      *EnvironmentConfig `json:"environment"`
+	Apps             []*AppService      `json:"apps"`
+	Databases        []*Database        `json:"databases"`
+	ClusterDatabases []ClusterData      `json:"clusterDatabases"`
+	Nodes            []CanvasNode       `json:"nodes"`
+	Edges            []CanvasEdge       `json:"edges"`
+	Revision         string             `json:"revision"`
 }

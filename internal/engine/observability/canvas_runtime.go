@@ -87,6 +87,15 @@ func (r *CanvasRuntime) Observe(ctx context.Context, canvas *models.EnvironmentC
 				node.Data["status"] = status(database.ContainerID)
 			}
 		}
+		for _, record := range canvas.ClusterDatabases {
+			if node.ID == "clusterdb-"+record.ID {
+				node.Data["status"] = record.Status
+				if record.Error != "" {
+					node.Data["runtimeError"] = record.Error
+				}
+				node.Data["label"] = record.Spec.Name + " / " + record.Status
+			}
+		}
 	}
 }
 

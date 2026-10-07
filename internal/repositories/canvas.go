@@ -22,11 +22,18 @@ type CanvasRepo struct {
 	db           *sqlx.DB
 	mu           sync.Mutex
 	environments EnvironmentRepository
+	clusterData  ClusterDataLister
+}
+
+type ClusterDataLister interface {
+	ListByProject(ctx context.Context, project string) ([]models.ClusterData, error)
 }
 
 func NewCanvasRepo(db *sql.DB, envRepo EnvironmentRepository) *CanvasRepo {
 	return &CanvasRepo{db: sqlx.NewDb(db, "sqlite"), environments: envRepo}
 }
+
+func (r *CanvasRepo) SetClusterData(lister ClusterDataLister) { r.clusterData = lister }
 
 func (r *CanvasRepo) ListCanvasSummaries(ctx context.Context, organizationID string) ([]models.CanvasSummary, error) {
 	r.mu.Lock()

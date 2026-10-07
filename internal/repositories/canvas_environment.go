@@ -34,10 +34,24 @@ func (r *CanvasRepo) GetEnvironmentCanvas(ctx context.Context, environmentID str
 	for i := range dbs {
 		dbsPtrs = append(dbsPtrs, &dbs[i])
 	}
+	clusterDatabases := []models.ClusterData{}
+	if r.clusterData != nil {
+		all, err := r.clusterData.ListByProject(ctx, env.ProjectID)
+		if err != nil {
+			return nil, fmt.Errorf("load canvas cluster databases: %w", err)
+		}
+		for _, record := range all {
+			if record.Spec.EnvironmentID != "" && record.Spec.EnvironmentID != environmentID {
+				continue
+			}
+			clusterDatabases = append(clusterDatabases, record)
+		}
+	}
 	canvas := &models.EnvironmentCanvas{
-		Environment: &env,
-		Apps:        apps,
-		Databases:   dbsPtrs,
+		Environment:      &env,
+		Apps:             apps,
+		Databases:        dbsPtrs,
+		ClusterDatabases: clusterDatabases,
 	}
 	if err := r.projectTopology(ctx, canvas); err != nil {
 		return nil, fmt.Errorf("project topology: %w", err)

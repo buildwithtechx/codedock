@@ -21,10 +21,11 @@ func topologyRevision(ctx context.Context, reader topologyReader, environment st
 	err := reader.SelectContext(ctx, &values, `SELECT value FROM (
  SELECT 'app:'||id||':'||updated_at||':'||COALESCE(domain,'') AS value FROM app_services WHERE environment_id=?
  UNION ALL SELECT 'db:'||id||':'||updated_at FROM databases WHERE environment_id=?
+ UNION ALL SELECT 'clusterdb:'||id||':'||updated_at||':'||status FROM cluster_databases WHERE id IN (SELECT id FROM cluster_databases WHERE project_id=(SELECT project_id FROM environments WHERE id=?))
  UNION ALL SELECT 'var:'||v.id||':'||v.key||':'||v.value FROM service_vars v JOIN app_services a ON a.id=v.service_id WHERE a.environment_id=?
  UNION ALL SELECT 'domain:'||d.id||':'||d.hostname||':'||COALESCE(d.service_id,'') FROM domains d JOIN app_services a ON a.id=d.service_id WHERE a.environment_id=?
  UNION ALL SELECT 'dep:'||source||':'||target FROM topology_dependencies WHERE environment_id=?
- ) ORDER BY value`, environment, environment, environment, environment, environment)
+ ) ORDER BY value`, environment, environment, environment, environment, environment, environment)
 	if err != nil {
 		return "", err
 	}
@@ -53,6 +54,13 @@ func (r *CanvasRepo) projectTopology(ctx context.Context, canvas *models.Environ
 		names[database.ID] = id
 		names[strings.ToLower(strings.ReplaceAll(database.Name, "_", "-"))] = id
 		canvas.Nodes = append(canvas.Nodes, models.CanvasNode{ID: id, Type: "database", Data: map[string]any{"name": database.Name, "status": database.Status, "engine": database.Engine, "databaseId": database.ID}, Pos: models.CanvasPosition{X: 100 + float64(i)*240, Y: 240}})
+	}
+	for i, record := range canvas.ClusterDatabases {
+		id := "clusterdb-" + record.ID
+		names[record.Spec.Name] = id
+		names[record.ID] = id
+		names[strings.ToLower(strings.ReplaceAll(record.Spec.Name, "_", "-"))] = id
+		canvas.Nodes = append(canvas.Nodes, models.CanvasNode{ID: id, Type: "clusterDatabase", Data: map[string]any{"name": record.Spec.Name, "status": record.Status, "engine": record.Spec.Engine, "clusterDatabaseId": record.ID, "clusterId": record.ClusterID}, Pos: models.CanvasPosition{X: 100 + float64(i)*240, Y: 380}})
 	}
 	var dependencies []struct {
 		Source string `db:"source"`
@@ -116,7 +124,7 @@ func (r *CanvasRepo) ApplyTopology(ctx context.Context, environment string, requ
 		return fmt.Errorf("topology changed since review; reload before applying")
 	}
 	nodes := []string{}
-	if err := tx.SelectContext(ctx, &nodes, `SELECT 'app-'||id FROM app_services WHERE environment_id=? UNION ALL SELECT 'db-'||id FROM databases WHERE environment_id=?`, environment, environment); err != nil {
+	if err := tx.SelectContext(ctx, &nodes, `SELECT 'app-'||id FROM app_services WHERE environment_id=? UNION ALL SELECT 'db-'||id FROM databases WHERE environment_id=? UNION ALL SELECT 'clusterdb-'||cd.id FROM cluster_databases cd JOIN environments e ON e.project_id=cd.project_id WHERE e.id=?`, environment, environment, environment); err != nil {
 		return err
 	}
 	valid := map[string]bool{}

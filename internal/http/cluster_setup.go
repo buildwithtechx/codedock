@@ -37,6 +37,7 @@ func configureClusters(server *Server, db *sql.DB, vault *utils.Vault, projects 
 		return fmt.Errorf("recover cluster databases: %w", err)
 	}
 	server.clusterDataHandler = system.NewClusterDataHandler(dataService, operations)
+	server.clusterDataHandler.SetBindings(apps, repositories.NewServiceVarRepo(db))
 	runtime := runtimes.NewService(repositories.NewRuntimeRepo(db, vault), apps, repository, servers, kubernetes.NewWorkloadRuntime(runner), server.deployer, operations, gate)
 	runtime.SetBare(bare.NewRuntime(runner), projects)
 	if err := runtime.Recover(context.Background()); err != nil {
@@ -60,6 +61,10 @@ func (s *Server) registerClusterRoutes(group *echo.Group) {
 	group.POST("/projects/:id/clusters/:clusterId/databases/review", s.clusterDataHandler.Review, admin)
 	group.GET("/projects/:id/clusters/:clusterId/databases/:databaseId/credentials", s.clusterDataHandler.Credentials, admin, s.authGuard.RequireScope("database:manage"))
 	group.GET("/projects/:id/clusters/:clusterId/databases/:databaseId/backups", s.clusterDataHandler.Backups, admin)
+	group.POST("/projects/:id/clusters/:clusterId/databases/bindings/review", s.clusterDataHandler.ReviewBinding, admin)
+	group.POST("/projects/:id/clusters/:clusterId/databases/bindings/apply", s.clusterDataHandler.ApplyBinding, admin)
+	group.POST("/projects/:id/clusters/:clusterId/databases/lifecycle/review", s.clusterDataHandler.ReviewLifecycle, admin)
+	group.POST("/projects/:id/clusters/:clusterId/databases/lifecycle/apply", s.clusterDataHandler.ApplyLifecycle, admin)
 	group.POST("/cluster-data-operations/:operationId/apply", s.clusterDataHandler.Apply, admin)
 	group.GET("/cluster-data-operations/:operationId", s.clusterDataHandler.Operation, admin)
 	group.POST("/cluster-data-operations/:operationId/cancel", s.clusterDataHandler.Cancel, admin)

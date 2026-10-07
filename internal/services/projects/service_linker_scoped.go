@@ -43,6 +43,29 @@ func (sl *ServiceLinker) GetNamespacedVariablesForEnvironment(ctx context.Contex
 			}
 		}
 	}
+	if sl.clusterDB != nil {
+		records, err := sl.clusterDB.ListByProject(ctx, project)
+		if err != nil {
+			return nil, err
+		}
+		for _, record := range records {
+			if record.Spec.EnvironmentID != "" && record.Spec.EnvironmentID != environment {
+				continue
+			}
+			if record.Status != "READY" {
+				continue
+			}
+			plan, err := sl.clusterDB.Get(ctx, record.ID)
+			if err != nil {
+				return nil, err
+			}
+			vars := buildClusterEnvVars(plan)
+			registry["clusterdb-"+record.ID] = vars
+			if err := insert(record.Spec.Name, vars); err != nil {
+				return nil, err
+			}
+		}
+	}
 	if sl.apps != nil && sl.variables != nil {
 		apps, err := sl.apps.ListByEnvironment(ctx, environment)
 		if err != nil {
@@ -85,6 +108,29 @@ func (sl *ServiceLinker) GetLinkedVariablesForEnvironment(ctx context.Context, p
 		for key, value := range buildDatabaseEnvVars(database) {
 			if _, duplicate := values[key]; !duplicate {
 				values[key] = value
+			}
+		}
+	}
+	if sl.clusterDB != nil {
+		records, err := sl.clusterDB.ListByProject(ctx, project)
+		if err != nil {
+			return nil, err
+		}
+		for _, record := range records {
+			if record.Spec.EnvironmentID != "" && record.Spec.EnvironmentID != environment {
+				continue
+			}
+			if record.Status != "READY" {
+				continue
+			}
+			plan, err := sl.clusterDB.Get(ctx, record.ID)
+			if err != nil {
+				return nil, err
+			}
+			for key, value := range buildClusterEnvVars(plan) {
+				if _, duplicate := values[key]; !duplicate {
+					values[key] = value
+				}
 			}
 		}
 	}

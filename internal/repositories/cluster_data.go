@@ -76,8 +76,39 @@ func (r *ClusterDataRepo) List(ctx context.Context, cluster string) ([]models.Cl
 	}
 	return result, nil
 }
+
+func (r *ClusterDataRepo) ListByProject(ctx context.Context, project string) ([]models.ClusterData, error) {
+	ids := []string{}
+	if err := r.db.SelectContext(ctx, &ids, `SELECT id FROM cluster_databases WHERE project_id=? ORDER BY updated_at DESC`, project); err != nil {
+		return nil, err
+	}
+	result := []models.ClusterData{}
+	for _, id := range ids {
+		plan, err := r.Get(ctx, id)
+		if err != nil {
+			return nil, err
+		}
+		result = append(result, plan.Record)
+	}
+	return result, nil
+}
 func (r *ClusterDataRepo) Observe(ctx context.Context, id, status, message string) error {
 	result, err := r.db.ExecContext(ctx, `UPDATE cluster_databases SET status=?,error=?,updated_at=? WHERE id=?`, status, message, time.Now().UTC().Format(time.RFC3339Nano), id)
+	if err != nil {
+		return err
+	}
+	count, err := result.RowsAffected()
+	if err != nil {
+		return err
+	}
+	if count != 1 {
+		return fmt.Errorf("cluster database disappeared")
+	}
+	return nil
+}
+
+func (r *ClusterDataRepo) Delete(ctx context.Context, id string) error {
+	result, err := r.db.ExecContext(ctx, `DELETE FROM cluster_databases WHERE id=?`, id)
 	if err != nil {
 		return err
 	}
