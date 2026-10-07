@@ -29,6 +29,7 @@ type Destinations interface {
 type Gate interface{ AcquireVolume(string) (func(), error) }
 type Service struct {
 	store        Store
+	snapshots    RedisSnapshotStore
 	clusters     Clusters
 	environments Environments
 	destinations Destinations
@@ -40,8 +41,10 @@ type Service struct {
 }
 
 func NewService(store Store, clusters Clusters, environments Environments, destinations Destinations, commands kubernetes.Commands, operations *operations.Service, gate Gate, http *http.Client) *Service {
-	return &Service{store, clusters, environments, destinations, kubernetes.NewWorkloadRuntime(commands), commands, operations, gate, http}
+	return &Service{store: store, clusters: clusters, environments: environments, destinations: destinations, engine: kubernetes.NewWorkloadRuntime(commands), commands: commands, operations: operations, gate: gate, http: http}
 }
+
+func (s *Service) SetSnapshots(store RedisSnapshotStore) { s.snapshots = store }
 func (s *Service) Recover(ctx context.Context) error { return s.store.Recover(ctx) }
 func (s *Service) cluster(ctx context.Context, project, id string) (*models.Cluster, error) {
 	cluster, err := s.clusters.Get(ctx, id)

@@ -82,7 +82,7 @@ Implementation details and current target boundaries: [Application, Compose and 
 
 - [x] Cluster databases appear in topology and support reviewed application bindings and connection replacement.
 - [x] Cluster database settings, stop/retain, exact-name deletion and owned PVC cleanup.
-- [ ] PostgreSQL synchronous durability, observed roles/volumes and authenticated application-namespace connection verification.
+- [x] PostgreSQL synchronous durability, observed roles/volumes and authenticated application-namespace connection verification.
 - [ ] Redis operator-backed sharding/failover, S3 snapshots and separate-target data restore; current fixed-primary replicas and AOF restart recovery are narrower.
 - [ ] Shared storage provisioning, file-volume lifecycle, external snapshots and separate-volume restore.
 - [ ] Multi-control-plane quorum, private-network preparation/firewall checks and cross-node DNS/service probes.

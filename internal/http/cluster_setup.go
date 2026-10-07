@@ -33,6 +33,7 @@ func configureClusters(server *Server, db *sql.DB, vault *utils.Vault, projects 
 	}
 	server.clusterHandler = system.NewClusterHandler(service, operations)
 	dataService := clusterdata.NewService(repositories.NewClusterDataRepo(db, vault), repository, repositories.NewEnvironmentRepo(db), repositories.NewS3DestinationRepo(db, vault), runner, operations, gate, &http.Client{Timeout: time.Minute})
+	dataService.SetSnapshots(repositories.NewRedisSnapshotRepo(db))
 	if err := dataService.Recover(context.Background()); err != nil {
 		return fmt.Errorf("recover cluster databases: %w", err)
 	}
@@ -62,6 +63,13 @@ func (s *Server) registerClusterRoutes(group *echo.Group) {
 	group.GET("/projects/:id/clusters/:clusterId/databases/:databaseId/credentials", s.clusterDataHandler.Credentials, admin, s.authGuard.RequireScope("database:manage"))
 	group.GET("/projects/:id/clusters/:clusterId/databases/:databaseId/backups", s.clusterDataHandler.Backups, admin)
 	group.POST("/projects/:id/clusters/:clusterId/databases/:databaseId/verify", s.clusterDataHandler.Verify, admin)
+	group.POST("/projects/:id/clusters/:clusterId/databases/:databaseId/snapshots/review", s.clusterDataHandler.ReviewRedisSnapshot, admin)
+	group.POST("/projects/:id/clusters/:clusterId/databases/:databaseId/snapshots/apply", s.clusterDataHandler.ApplyRedisSnapshot, admin)
+	group.GET("/projects/:id/clusters/:clusterId/databases/:databaseId/snapshots", s.clusterDataHandler.ListRedisSnapshots, admin)
+	group.POST("/projects/:id/clusters/:clusterId/databases/:databaseId/restores/review", s.clusterDataHandler.ReviewRedisRestore, admin)
+	group.POST("/projects/:id/clusters/:clusterId/databases/:databaseId/restores/apply", s.clusterDataHandler.ApplyRedisRestore, admin)
+	group.POST("/projects/:id/clusters/:clusterId/databases/:databaseId/failover/review", s.clusterDataHandler.ReviewRedisFailover, admin)
+	group.POST("/projects/:id/clusters/:clusterId/databases/:databaseId/failover/apply", s.clusterDataHandler.ApplyRedisFailover, admin)
 	group.POST("/projects/:id/clusters/:clusterId/databases/bindings/review", s.clusterDataHandler.ReviewBinding, admin)
 	group.POST("/projects/:id/clusters/:clusterId/databases/bindings/apply", s.clusterDataHandler.ApplyBinding, admin)
 	group.POST("/projects/:id/clusters/:clusterId/databases/lifecycle/review", s.clusterDataHandler.ReviewLifecycle, admin)
