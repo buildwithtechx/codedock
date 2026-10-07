@@ -84,7 +84,7 @@ Implementation details and current target boundaries: [Application, Compose and 
 - [x] Cluster database settings, stop/retain, exact-name deletion and owned PVC cleanup.
 - [x] PostgreSQL synchronous durability, observed roles/volumes and authenticated application-namespace connection verification.
 - [ ] Redis operator-backed sharding/failover, S3 snapshots and separate-target data restore; current fixed-primary replicas and AOF restart recovery are narrower.
-- [ ] Shared storage provisioning, file-volume lifecycle, external snapshots and separate-volume restore.
+- [x] Shared storage provisioning, file-volume lifecycle, external snapshots and separate-volume restore.
 - [ ] Multi-control-plane quorum, private-network preparation/firewall checks and cross-node DNS/service probes.
 - [ ] Native source builds, stack/toolchain setup and managed HTTP routing; current native targets require standalone artifacts.
 - [x] SSH Docker logs, metrics, terminal, dependencies and canvas dispatch through the remote engine consistently.

@@ -81,6 +81,8 @@ func (s *Server) registerClusterRoutes(group *echo.Group) {
 	group.GET("/projects/:id/clusters/:clusterId/storage", s.clusterHandler.Storage, admin)
 	group.GET("/projects/:id/clusters/:clusterId/storage/health", s.clusterHandler.StorageHealth, admin)
 	group.GET("/projects/:id/clusters/:clusterId/preflight", s.clusterHandler.Preflight, admin)
+	group.POST("/projects/:id/clusters/:clusterId/storage/review", s.clusterHandler.ReviewStorage, admin)
+	group.POST("/cluster-storage-operations/:operationId/apply", s.clusterHandler.ApplyStorage, admin)
 	group.POST("/projects/:id/clusters/review", s.clusterHandler.Review, admin)
 	group.POST("/cluster-operations/:operationId/apply", s.clusterHandler.Apply, admin)
 	group.GET("/cluster-operations/:operationId", s.clusterHandler.GetOperation, admin)
