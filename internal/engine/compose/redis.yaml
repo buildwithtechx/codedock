@@ -1,4 +1,4 @@
-version: "3.8"
+﻿version: "3.8"
 services:
   redis:
     image: redis:7-alpine
@@ -14,3 +14,5 @@ services:
       - ${db.password}
     volumes:
       - redis-data:/data
+volumes:
+  redis-data:

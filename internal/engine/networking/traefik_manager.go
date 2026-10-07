@@ -28,6 +28,18 @@ const (
 type TraefikManager struct {
 	dockerClient *client.Client
 	tlsEmail     string
+	logDir       string
+}
+
+func (m *TraefikManager) SetLogDir(dir string) {
+	m.logDir = dir
+}
+
+func (m *TraefikManager) AccessLogPath() string {
+	if m.logDir == "" {
+		return ""
+	}
+	return m.logDir + "/access.json"
 }
 
 func NewTraefikManager(cli *client.Client, tlsEmail string) *TraefikManager {
@@ -179,6 +191,9 @@ func (m *TraefikManager) buildTraefikCmdArgs() []string {
 	if dockerHost := config.Get().Traefik.DockerHost; dockerHost != "" {
 		cmdArgs = append(cmdArgs, "--providers.docker.endpoint="+dockerHost)
 	}
+	if m.logDir != "" {
+		cmdArgs = append(cmdArgs, "--accesslog=true", "--accesslog.format=json", "--accesslog.filepath=/var/log/traefik/access.json")
+	}
 	return cmdArgs
 }
 
@@ -205,12 +220,19 @@ func (m *TraefikManager) buildTraefikMounts() []mount.Mount {
 }
 
 func (m *TraefikManager) buildTraefikDataMounts() []mount.Mount {
-	mounts := make([]mount.Mount, 0, 1)
+	mounts := make([]mount.Mount, 0, 2)
 	if m.tlsEmail != "" {
 		mounts = append(mounts, mount.Mount{
 			Type:   mount.TypeVolume,
 			Source: "codedock-traefik-acme",
 			Target: "/letsencrypt",
+		})
+	}
+	if m.logDir != "" {
+		mounts = append(mounts, mount.Mount{
+			Type:   mount.TypeBind,
+			Source: m.logDir,
+			Target: "/var/log/traefik",
 		})
 	}
 	return mounts

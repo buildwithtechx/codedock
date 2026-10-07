@@ -241,7 +241,10 @@ func NewServer(db *sql.DB, v *utils.Vault, deployer *deploy.Deployer, traefikMan
 	projectEnvHandler := projects.NewProjectEnvHandler(environmentService)
 	notificationHandler := system.NewNotificationHandler(notificationService)
 	gitAppsHandler := deployments.NewGitAppsHandler(gitAppsService)
-	tmplMgr, _ := compose.NewTemplateManager()
+	tmplMgr, err := compose.NewTemplateManager()
+	if err != nil {
+		return nil, fmt.Errorf("load catalogue templates: %w", err)
+	}
 	stackService := projectservices.NewComposeStackService(repositories.NewComposeStackRepo(db, v), compose.NewStackRuntime(dockerClient))
 	stackService.BeforeDeployment = backupService.BeforeProjectDeployment
 	if err := stackService.Recover(context.Background()); err != nil {
@@ -250,7 +253,7 @@ func NewServer(db *sql.DB, v *utils.Vault, deployer *deploy.Deployer, traefikMan
 	composeStackHandler := projects.NewComposeStackHandler(stackService, projectService, environmentService)
 	composeParserService := projectservices.NewComposeParserService()
 	composeHandler := projects.NewComposeHandler(projectService, appService, databaseService, environmentRepo, appRepo, composeParserService)
-	oneClickService := projectservices.NewOneClickService(tmplMgr, databaseDeployer, environmentRepo, dbRepo)
+	oneClickService := projectservices.NewOneClickService(tmplMgr, stackService, environmentRepo)
 	oneClickHandler := projects.NewOneClickHandler(oneClickService, projectService)
 	archiveService := deploymentservices.NewArchiveService(appService, deploymentService)
 	archiveHandler := deployments.NewArchiveHandler(archiveService, projectService)
@@ -366,6 +369,10 @@ func NewServer(db *sql.DB, v *utils.Vault, deployer *deploy.Deployer, traefikMan
 	if err := configureManaged(srv, db, v, serverRepo, userRepo, orgRepo, sshManager, operationService); err != nil {
 		return nil, err
 	}
+	if err := configureMigration(srv, db, v, projectRepo, appService, appRepo, environmentRepo, serverRepo, userRepo, orgRepo, gitService, composeParserService, deploymentService, sshManager, runtimeRepository); err != nil {
+		return nil, err
+	}
+	configureAnalytics(srv, db, v, traefikManager, deployRepo, projectRepo, appRepo, domainRepo, userRepo, orgRepo, metricsService, statsMonitor, deploymentService, backupService, srv.migrationService)
 	if err := configureClusters(srv, db, v, projectRepo, serverRepo, operationService, volumeOperations, appRepo, deploymentService, canvasService, backupManager); err != nil {
 		return nil, err
 	}

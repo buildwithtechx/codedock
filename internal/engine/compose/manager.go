@@ -23,11 +23,19 @@ func NewTemplateManager() (*TemplateManager, error) {
 		templates: make(map[string]ComposeTemplate),
 	}
 
-	err := fs.WalkDir(templateFiles, ".", mgr.walkDir)
-	if err != nil {
-		fmt.Printf("warning: template manager WalkDir error: %v\n", err)
+	if err := fs.WalkDir(templateFiles, ".", mgr.walkDir); err != nil {
+		return nil, fmt.Errorf("load catalogue templates: %w", err)
 	}
 
+	failures := []string{}
+	for id, tmpl := range mgr.templates {
+		if err := ValidateTemplate(id, tmpl); err != nil {
+			failures = append(failures, err.Error())
+		}
+	}
+	if len(failures) > 0 {
+		return nil, fmt.Errorf("invalid catalogue templates: %s", strings.Join(failures, "; "))
+	}
 	return mgr, nil
 }
 
@@ -46,8 +54,7 @@ func (m *TemplateManager) walkDir(path string, d fs.DirEntry, err error) error {
 
 	var tmpl ComposeTemplate
 	if err := yaml.Unmarshal(data, &tmpl); err != nil {
-		fmt.Printf("warning: failed to parse template %s: %v\n", path, err)
-		return nil
+		return fmt.Errorf("failed to parse template %s: %w", path, err)
 	}
 
 	id := strings.TrimSuffix(d.Name(), ".yaml")

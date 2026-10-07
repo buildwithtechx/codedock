@@ -7,6 +7,7 @@ import (
 	"net/http"
 	"os"
 	"os/signal"
+	"path/filepath"
 	"runtime"
 	"syscall"
 	"time"
@@ -59,6 +60,12 @@ func startServer() {
 	}
 
 	traefikMgr := networking.NewTraefikManager(dockerClient, config.Get().Security.TLSEmail)
+	traefikLogDir := filepath.Join(dataDir, "traefik-logs")
+	if err := os.MkdirAll(traefikLogDir, 0o755); err != nil {
+		slog.Warn("failed to prepare Traefik log dir", "err", err)
+	} else {
+		traefikMgr.SetLogDir(traefikLogDir)
+	}
 	if err := traefikMgr.EnsureTraefikRunning(context.Background()); err != nil {
 		slog.Warn("failed to start Traefik proxy", "err", err)
 	}

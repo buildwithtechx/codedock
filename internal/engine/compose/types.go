@@ -22,9 +22,18 @@ type CodedockMetadata struct {
 	IsOneClick       bool                     `yaml:"is_one_click,omitempty"`
 	Name             string                   `yaml:"name,omitempty"`
 	Description      string                   `yaml:"description,omitempty"`
+	Category         string                   `yaml:"category,omitempty"`
+	Icon             string                   `yaml:"icon,omitempty"`
 	ConnectionString string                   `yaml:"connection_string,omitempty"`
+	Secrets          []CodedockSecretSpec     `yaml:"secrets,omitempty"`
 	Backup           *CodedockBackupMetadata  `yaml:"backup,omitempty"`
 	Restore          *CodedockRestoreMetadata `yaml:"restore,omitempty"`
+}
+
+type CodedockSecretSpec struct {
+	Var    string `yaml:"var"`
+	Label  string `yaml:"label,omitempty"`
+	Length int    `yaml:"length,omitempty"`
 }
 
 type CodedockBackupMetadata struct {

@@ -1,4 +1,4 @@
-# Openship backend and UI/UX parity audit
+﻿# Openship backend and UI/UX parity audit
 
 Audited on 2026-10-07. Openship remote main was refreshed to `93cdaebd9bec866eba36d103c873d7adc11b074d` (previous audit pinned `b7e69090804e0c342b2f7222e3c30577e3066d11`); its checked-out main remains `3d33f5d3`. The original roadmap compared `16730d39`. Codedock implementation baseline is `852d374` on `feat/platform-batch`.
 

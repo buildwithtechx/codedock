@@ -2,6 +2,8 @@ x-codedock:
   is_one_click: true
   name: Supabase Studio
   description: Open-source Firebase alternative
+  category: developer-tools
+  icon: supabase-studio
 services:
   studio:
     image: supabase/studio

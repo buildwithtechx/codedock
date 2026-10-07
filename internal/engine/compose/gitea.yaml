@@ -2,9 +2,15 @@ x-codedock:
   is_one_click: true
   name: Gitea
   description: Self-hosted Git service
+  category: developer-tools
+  icon: gitea
 services:
   gitea:
     image: gitea/gitea
     restart: always
     ports:
       - "3000"
+    volumes:
+      - gitea-data:/data
+volumes:
+  gitea-data:

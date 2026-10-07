@@ -20,6 +20,8 @@ func (s *Server) registerRoutes() {
 	s.registerOrganizationRoutes(authGroup)
 	s.registerServerRoutes(apiGroup, authGroup)
 	s.registerManagedRoutes(authGroup)
+	s.registerMigrationRoutes(authGroup)
+	s.registerAnalyticsRoutes(authGroup)
 	s.registerDatabaseRoutes(authGroup)
 	s.registerAppRoutes(apiGroup, authGroup)
 	s.registerDeploymentRoutes(authGroup)

@@ -12,6 +12,7 @@
   "app": {
     "windows": [
       {
+        "label": "main",
         "title": "Codedock Control Center",
         "width": 1366,
         "height": 868,
@@ -36,5 +37,18 @@
       "icons/icon.icns",
       "icons/icon.ico"
     ]
+  },
+  "plugins": {
+    "updater": {
+      "active": true,
+      "endpoints": ["https://github.com/buildwithtechx/codedock/releases/latest/download/latest.json"],
+      "pubkey": "",
+      "windows": {
+        "installMode": "passive"
+      }
+    },
+    "store": {
+      "storePath": "connection.json"
+    }
   }
 }

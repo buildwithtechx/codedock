@@ -2,9 +2,21 @@ x-codedock:
   is_one_click: true
   name: Vaultwarden
   description: Lightweight Bitwarden-compatible password manager
+  category: security
+  icon: vaultwarden
+  secrets:
+    - var: ADMIN_TOKEN
+      label: Admin panel token
+      length: 24
 services:
   vaultwarden:
     image: vaultwarden/server
     restart: always
     ports:
       - "80"
+    environment:
+      - ADMIN_TOKEN=${secret:ADMIN_TOKEN}
+    volumes:
+      - vaultwarden-data:/data
+volumes:
+  vaultwarden-data:

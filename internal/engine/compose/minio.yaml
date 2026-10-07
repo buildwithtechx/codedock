@@ -2,14 +2,31 @@ x-codedock:
   is_one_click: true
   name: MinIO
   description: S3-compatible object storage
+  category: storage
+  icon: minio
+  secrets:
+    - var: MINIO_ROOT_USER
+      label: Root username
+      length: 12
+    - var: MINIO_ROOT_PASSWORD
+      label: Root password
+      length: 24
 services:
   minio:
     image: minio/minio
     restart: always
     ports:
       - "9000"
+      - "9001"
+    environment:
+      - MINIO_ROOT_USER=${secret:MINIO_ROOT_USER}
+      - MINIO_ROOT_PASSWORD=${secret:MINIO_ROOT_PASSWORD}
     command:
       - server
       - /data
       - --console-address
       - ":9001"
+    volumes:
+      - minio-data:/data
+volumes:
+  minio-data:

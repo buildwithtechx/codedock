@@ -22,6 +22,7 @@ import (
 	"codedock.run/codedock/internal/http/middleware"
 	"codedock.run/codedock/internal/models"
 	authservices "codedock.run/codedock/internal/services/auth"
+	"codedock.run/codedock/internal/services/migrations"
 	projectservices "codedock.run/codedock/internal/services/projects"
 )
 
@@ -87,6 +88,10 @@ type Server struct {
 	exampleHandler         *system.ExampleHandler
 	serverHandler          *system.ServerHandler
 	managedHandler         *system.ManagedHandler
+	migrationLifecycleHandler *system.MigrationLifecycleHandler
+	migrationService       *migrations.Service
+	analyticsHandler       *system.AnalyticsHandler
+	attentionHandler       *system.AttentionHandler
 	registryHandler        *deployments.RegistryHandler
 	billingHandler         *system.BillingHandler
 	serverMetricsWSHandler *system.ServerMetricsWSHandler

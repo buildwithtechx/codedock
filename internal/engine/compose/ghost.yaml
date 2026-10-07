@@ -2,6 +2,8 @@ x-codedock:
   is_one_click: true
   name: Ghost
   description: Professional publishing platform
+  category: cms
+  icon: ghost
 services:
   ghost:
     image: ghost:5-alpine
@@ -10,3 +12,7 @@ services:
       - "2368"
     environment:
       - NODE_ENV=production
+    volumes:
+      - ghost-data:/var/lib/ghost/content
+volumes:
+  ghost-data:

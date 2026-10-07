@@ -2,16 +2,36 @@ x-codedock:
   is_one_click: true
   name: Nextcloud
   description: Self-hosted cloud storage & collaboration
+  category: storage
+  icon: nextcloud
+  secrets:
+    - var: POSTGRES_PASSWORD
+      label: Database password
+      length: 24
 services:
   nextcloud:
     image: nextcloud
     restart: always
     ports:
       - "80"
+    environment:
+      - POSTGRES_HOST=db
+      - POSTGRES_DB=nextcloud
+      - POSTGRES_USER=nextcloud
+      - POSTGRES_PASSWORD=${secret:POSTGRES_PASSWORD}
+    volumes:
+      - nextcloud-data:/var/www/html
+    depends_on:
+      - db
   db:
     image: postgres:16-alpine
     restart: always
     environment:
       - POSTGRES_DB=nextcloud
       - POSTGRES_USER=nextcloud
-      - POSTGRES_PASSWORD=nextcloud
+      - POSTGRES_PASSWORD=${secret:POSTGRES_PASSWORD}
+    volumes:
+      - nextcloud-db:/var/lib/postgresql/data
+volumes:
+  nextcloud-data:
+  nextcloud-db:

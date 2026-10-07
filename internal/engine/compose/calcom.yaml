@@ -2,6 +2,8 @@ x-codedock:
   is_one_click: true
   name: Cal.com
   description: Open-source scheduling platform
+  category: productivity
+  icon: calcom
 services:
   calcom:
     image: calcom/cal.com

@@ -1,0 +1,31 @@
+x-codedock:
+  is_one_click: true
+  name: Umami
+  description: Simple privacy-focused web analytics
+  category: analytics
+  icon: umami
+  secrets:
+    - var: DB_PASSWORD
+      label: Database password
+      length: 24
+services:
+  umami:
+    image: ghcr.io/umami-software/umami:postgresql-latest
+    restart: always
+    ports:
+      - "3000"
+    environment:
+      - DATABASE_URL=postgresql://umami:${secret:DB_PASSWORD}@db:5432/umami
+    depends_on:
+      - db
+  db:
+    image: postgres:16-alpine
+    restart: always
+    environment:
+      - POSTGRES_DB=umami
+      - POSTGRES_USER=umami
+      - POSTGRES_PASSWORD=${secret:DB_PASSWORD}
+    volumes:
+      - umami-db:/var/lib/postgresql/data
+volumes:
+  umami-db:

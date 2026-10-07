@@ -2,14 +2,35 @@ x-codedock:
   is_one_click: true
   name: Plausible
   description: Privacy-friendly web analytics
+  category: analytics
+  icon: plausible
+  secrets:
+    - var: SECRET_KEY_BASE
+      label: Secret key base
+      length: 48
+    - var: DB_PASSWORD
+      label: Database password
+      length: 24
 services:
   plausible:
     image: plausible/analytics
     restart: always
     ports:
       - "8000"
+    environment:
+      - SECRET_KEY_BASE=${secret:SECRET_KEY_BASE}
+      - DATABASE_URL=postgres://plausible:${secret:DB_PASSWORD}@db:5432/plausible
+      - BASE_URL=http://localhost:8000
+    depends_on:
+      - db
   db:
     image: postgres:16-alpine
     restart: always
     environment:
       - POSTGRES_DB=plausible
+      - POSTGRES_USER=plausible
+      - POSTGRES_PASSWORD=${secret:DB_PASSWORD}
+    volumes:
+      - plausible-db:/var/lib/postgresql/data
+volumes:
+  plausible-db:

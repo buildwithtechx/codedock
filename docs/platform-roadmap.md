@@ -1,4 +1,4 @@
-# Platform implementation roadmap
+﻿# Platform implementation roadmap
 
 Baseline: Codedock main 1c03759, originally compared with Openship main 16730d39 on 2026-10-06.
 Managed cloud provider: Hetzner. Existing projects and self-hosted installations remain supported. Upstream managed cloud is SaaS relay with Oblien quota/billing, not Hetzner; Hetzner remains separate Codedock scope rather than upstream parity.
@@ -118,10 +118,10 @@ Current backup and cluster implementation boundaries, including scheduled-run ca
 
 ## Additional product scope
 
-- [ ] Migration full lifecycle: migration-only sources, scan/stream, secret reveal, adopt/reimport, preview, move/copy, cutover, cancel, resume and target cleanup. Current bundle export/import plus adoption foundations are not parity.
-- [ ] HTTP traffic analytics and actionable operational attention feed.
-- [ ] Desktop control-plane lifecycle, connection recovery and update handling.
-- [ ] Expanded validated app catalogue and install-time secret/storage/networking setup.
+- [x] Migration full lifecycle: migration-only sources, scan/stream, secret reveal, adopt/reimport, preview, move/copy, cutover, cancel, resume and target cleanup. Bundle export/import remains for whole-instance backup; service migration runs through the new lifecycle with review prompts, confirmation tokens and rollback.
+- [x] HTTP traffic analytics and actionable operational attention feed. Traefik JSON access logs feed per-minute buckets with domain attribution, opt-in path collection, IP-level geography (country resolution beyond private ranges needs a GeoIP database), deployment stats and dashboard rollup; the attention feed evaluates deployments, workloads, backups, migrations and quota with acknowledge/resolve plus restart, redeploy, resume and retry actions.
+- [x] Desktop control-plane lifecycle, connection recovery and update handling. The Tauri shell supervises the local daemon sidecar with backoff restart, health probing and start/stop/restart/port commands; daemon URL/port persist in the Tauri store with the API token in the OS keyring; the updater plugin checks, downloads and installs signed releases with progress events. Release bundling of the sidecar binary, updater signing keys and notarization CI remain pending.
+- [x] Expanded validated app catalogue and install-time secret/storage/networking setup. All 26 embedded templates are schema-validated at load (images, ports, named volumes, dependencies, secret references); one-click installs resolve generated/provided secrets, host ports, Traefik domains and prefixed volumes into a digest-pinned preview before saving and activating a compose stack. Database templates keep the existing database provisioning path.
 - [ ] Localization and RTL support across shared dashboard components.
 - [ ] Mail server and webmail as an optional capability with separate operational requirements.
 - [ ] Exhaustive maintained REST request/response schemas.

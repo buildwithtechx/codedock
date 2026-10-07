@@ -2,6 +2,9 @@ import type { OneClickApp } from '#/features/databases';
 import type {
   ArchiveDeployResponse,
   ComposeDeployResponse,
+  InstallAppInput,
+  InstallPreview,
+  OneClickAppDetails,
   OneClickDeployRequest,
   OneClickDeployResponse,
 } from '#/interfaces/templates';
@@ -25,6 +28,24 @@ export const templatesService = {
       const response = await apiClient.get<{
         data: { id: string; name: string; description: string; repo: string; icon?: string }[];
       }>('/examples');
+      return response.data;
+    } catch (error) {
+      throw handleApiError(error);
+    }
+  },
+
+  getOneClickApp: async (appId: string): Promise<OneClickAppDetails> => {
+    try {
+      const response = await apiClient.get<{ data: OneClickAppDetails }>(`/one-click/${appId}`);
+      return response.data;
+    } catch (error) {
+      throw handleApiError(error);
+    }
+  },
+
+  reviewOneClickInstall: async (payload: InstallAppInput): Promise<InstallPreview> => {
+    try {
+      const response = await apiClient.post<{ data: InstallPreview }>('/one-click/review', payload);
       return response.data;
     } catch (error) {
       throw handleApiError(error);

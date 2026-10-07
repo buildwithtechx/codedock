@@ -31,6 +31,7 @@ type ProjectRepository interface {
 	GetByOrganization(ctx context.Context, id, organizationID string) (*models.ProjectConfig, error)
 	CountByUser(ctx context.Context, userID string) (int, error)
 	Create(ctx context.Context, p *models.ProjectConfig) error
+	SetServer(ctx context.Context, projectID, serverID string) error
 	Delete(ctx context.Context, id string) error
 }
 
@@ -202,6 +203,15 @@ func (r *ProjectRepo) Create(ctx context.Context, p *models.ProjectConfig) error
 		IsDefault: true,
 	}
 	return r.environments.Create(ctx, defaultEnv)
+}
+
+func (r *ProjectRepo) SetServer(ctx context.Context, projectID, serverID string) error {
+	var value any
+	if serverID != "" {
+		value = serverID
+	}
+	_, err := r.db.ExecContext(ctx, `UPDATE projects SET server_id = ?, updated_at = CURRENT_TIMESTAMP WHERE id = ?`, value, projectID)
+	return err
 }
 
 func (r *ProjectRepo) Delete(_ context.Context, id string) error {
