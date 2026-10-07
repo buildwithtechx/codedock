@@ -363,6 +363,9 @@ func NewServer(db *sql.DB, v *utils.Vault, deployer *deploy.Deployer, traefikMan
 		routeRuleHandler:       routeRuleHandler,
 	}
 
+	if err := configureManaged(srv, db, v, serverRepo, userRepo, orgRepo, sshManager, operationService); err != nil {
+		return nil, err
+	}
 	if err := configureClusters(srv, db, v, projectRepo, serverRepo, operationService, volumeOperations, appRepo, deploymentService, canvasService, backupManager); err != nil {
 		return nil, err
 	}

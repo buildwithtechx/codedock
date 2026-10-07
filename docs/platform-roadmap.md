@@ -57,14 +57,16 @@ Implementation details and current target boundaries: [Application, Compose and 
 
 ## Phase 5: Hetzner cloud
 
-- [ ] Provider interface and Hetzner client wired through injected services.
-- [ ] Account/organization-owned server provisioning with encrypted provider credentials.
-- [ ] Region, machine type, disk, IP, capacity and quota validation.
-- [ ] Idempotent provision, bootstrap, ready, failed, retry and delete operations.
-- [ ] Managed servers participate in the same setup and runtime flows as SSH targets.
-- [ ] Resource tiers, capacity admission, reservation and resize reconciliation.
-- [ ] Billing links paid entitlement to provisioned capacity without affecting self-hosted mode.
-- [ ] Explicit confirmation for billable provisioning; no paid infrastructure created by development checks.
+- [x] Provider interface and Hetzner client wired through injected services.
+- [x] Account/organization-owned server provisioning with encrypted provider credentials.
+- [x] Region, machine type, disk, IP, capacity and quota validation.
+- [x] Idempotent provision, bootstrap, ready, failed, retry and delete operations.
+- [x] Managed servers participate in the same setup and runtime flows as SSH targets.
+- [x] Resource tiers, capacity admission, reservation and resize reconciliation.
+- [x] Billing links paid entitlement to provisioned capacity without affecting self-hosted mode.
+- [x] Explicit confirmation for billable provisioning; no paid infrastructure created by development checks.
+
+Phase 5 is implemented within these boundaries: provisioning, resize and delete run through expiring-confirmation operations with durable progress, cancellation and retry; provider credentials are organization-owned and encrypted; quotas gate admission; cloud mode requires a pro subscription for paid capacity while self-hosted mode is unaffected. Managed servers land as ordinary SSH server rows, so existing Docker/SSH deployment, metrics, logs and terminal flows apply. Unit coverage uses a fake provider and in-memory database; live Hetzner provisioning, cloud-init Docker bootstrap, resize power-cycling and SSH reachability still require a disposable account and have not been exercised. Dashboard API contracts are in place; a managed-server setup wizard remains follow-up work.
 
 ## Phase 6: Cluster and runtime orchestration
 

@@ -66,6 +66,9 @@ func (s *serverService) DeleteServer(ctx context.Context, id, userID string) err
 	if server.UserID != userID {
 		return fmt.Errorf("unauthorized to delete server")
 	}
+	if server.Provider != "" {
+		return fmt.Errorf("managed servers must be deleted through the reviewed managed lifecycle")
+	}
 
 	if s.sshManager != nil {
 		s.sshManager.RemoveClient(id)

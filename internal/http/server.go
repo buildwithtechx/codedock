@@ -86,6 +86,7 @@ type Server struct {
 	auditLogHandler        *auth.AuditLogHandler
 	exampleHandler         *system.ExampleHandler
 	serverHandler          *system.ServerHandler
+	managedHandler         *system.ManagedHandler
 	registryHandler        *deployments.RegistryHandler
 	billingHandler         *system.BillingHandler
 	serverMetricsWSHandler *system.ServerMetricsWSHandler

@@ -28,6 +28,10 @@ type Server struct {
 	SSHJumpHost    string       `json:"sshJumpHost,omitempty" db:"ssh_jump_host"`
 	IsControlPlane bool         `json:"isControlPlane" db:"-"`
 	Status         ServerStatus `json:"status" db:"status"`
+	Provider       string       `json:"provider,omitempty" db:"provider"`
+	ExternalID     string       `json:"externalId,omitempty" db:"external_id"`
+	Region         string       `json:"region,omitempty" db:"region"`
+	ServerType     string       `json:"serverType,omitempty" db:"server_type"`
 	WorkerToken    string       `json:"workerToken,omitempty" db:"worker_token"`
 	LastSeenAt     *time.Time   `json:"lastSeenAt,omitempty" db:"last_seen_at"`
 

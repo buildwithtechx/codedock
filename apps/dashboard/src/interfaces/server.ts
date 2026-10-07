@@ -19,6 +19,10 @@ export interface Server {
   sshTransport?: 'direct' | 'cloudflare';
   sshJumpHost?: string;
   isControlPlane?: boolean;
+  provider?: string;
+  externalId?: string;
+  region?: string;
+  serverType?: string;
   status: string;
   workerToken?: string;
   lastSeenAt?: string;
