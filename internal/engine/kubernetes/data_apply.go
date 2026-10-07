@@ -95,41 +95,76 @@ func matchingDataOwner(existing, desired map[string]any) error {
 }
 func (r *WorkloadRuntime) DataReady(ctx context.Context, node models.ClusterNode, record *models.ClusterData) error {
 	namespace, name := DataIdentity(record.Spec)
-	args := []string{"-n", namespace, "rollout", "status", "statefulset/" + name, "--timeout=600s"}
 	if record.Spec.Engine == "postgres" {
 		resource := "cluster.postgresql.cnpg.io"
-		args = []string{"-n", namespace, "wait", "--for=condition=Ready", resource + "/" + name, "--timeout=900s"}
+		args := []string{"-n", namespace, "wait", "--for=condition=Ready", resource + "/" + name, "--timeout=900s"}
+		if _, err := r.commands.Kubectl(ctx, node, args, ""); err != nil {
+			return err
+		}
+		return r.DataObserved(ctx, node, record)
 	}
-	if _, err := r.commands.Kubectl(ctx, node, args, ""); err != nil {
-		return err
+	shards := record.Spec.Shards
+	if shards < 2 {
+		shards = 1
+	}
+	for shard := 0; shard < shards; shard++ {
+		target := name
+		if record.Spec.Shards > 1 {
+			target = fmt.Sprintf("%s-s%d", name, shard)
+		}
+		if _, err := r.commands.Kubectl(ctx, node, []string{"-n", namespace, "rollout", "status", "statefulset/" + target, "--timeout=600s"}, ""); err != nil {
+			return err
+		}
 	}
 	return r.DataObserved(ctx, node, record)
 }
 func (r *WorkloadRuntime) DataObserved(ctx context.Context, node models.ClusterNode, record *models.ClusterData) error {
 	namespace, name := DataIdentity(record.Spec)
-	resource := "statefulset.apps"
 	if record.Spec.Engine == "postgres" {
-		resource = "cluster.postgresql.cnpg.io"
+		resource := "cluster.postgresql.cnpg.io"
+		raw, err := r.commands.Kubectl(ctx, node, []string{"-n", namespace, "get", resource, name, "-o", "json"}, "")
+		if err != nil {
+			return err
+		}
+		var object map[string]any
+		if err := json.Unmarshal([]byte(raw), &object); err != nil {
+			return err
+		}
+		desired := map[string]any{"metadata": map[string]any{"name": name, "labels": map[string]any{"codedock.run/project": record.ProjectID, "codedock.run/database": record.ID}}}
+		if err := matchingDataOwner(object, desired); err != nil {
+			return err
+		}
+		status, _ := object["status"].(map[string]any)
+		if ready := int(number(status["readyInstances"])); ready != record.Spec.Instances {
+			return fmt.Errorf("database has %d/%d ready instances", ready, record.Spec.Instances)
+		}
+		return nil
 	}
-	raw, err := r.commands.Kubectl(ctx, node, []string{"-n", namespace, "get", resource, name, "-o", "json"}, "")
-	if err != nil {
-		return err
+	shards := record.Spec.Shards
+	if shards < 2 {
+		shards = 1
 	}
-	var object map[string]any
-	if err := json.Unmarshal([]byte(raw), &object); err != nil {
-		return err
-	}
-	desired := map[string]any{"metadata": map[string]any{"name": name, "labels": map[string]any{"codedock.run/project": record.ProjectID, "codedock.run/database": record.ID}}}
-	if err := matchingDataOwner(object, desired); err != nil {
-		return err
-	}
-	status, _ := object["status"].(map[string]any)
-	ready := int(number(status["readyReplicas"]))
-	if record.Spec.Engine == "postgres" {
-		ready = int(number(status["readyInstances"]))
-	}
-	if ready != record.Spec.Instances {
-		return fmt.Errorf("database has %d/%d ready instances", ready, record.Spec.Instances)
+	for shard := 0; shard < shards; shard++ {
+		target := name
+		if record.Spec.Shards > 1 {
+			target = fmt.Sprintf("%s-s%d", name, shard)
+		}
+		raw, err := r.commands.Kubectl(ctx, node, []string{"-n", namespace, "get", "statefulset.apps", target, "-o", "json"}, "")
+		if err != nil {
+			return err
+		}
+		var object map[string]any
+		if err := json.Unmarshal([]byte(raw), &object); err != nil {
+			return err
+		}
+		desired := map[string]any{"metadata": map[string]any{"name": target, "labels": map[string]any{"codedock.run/project": record.ProjectID, "codedock.run/database": record.ID}}}
+		if err := matchingDataOwner(object, desired); err != nil {
+			return err
+		}
+		status, _ := object["status"].(map[string]any)
+		if ready := int(number(status["readyReplicas"])); ready != record.Spec.Instances {
+			return fmt.Errorf("shard %d has %d/%d ready instances", shard, ready, record.Spec.Instances)
+		}
 	}
 	return nil
 }

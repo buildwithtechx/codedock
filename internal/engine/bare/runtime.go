@@ -34,12 +34,41 @@ func Validate(app *models.AppService, target models.RuntimeTarget) error {
 	if err := ValidateIdentity(app, target); err != nil {
 		return err
 	}
-	parsed, err := url.Parse(target.BareReleaseURL)
-	if err != nil || parsed.Scheme != "https" || parsed.Host == "" || parsed.User != nil || parsed.Fragment != "" {
-		return fmt.Errorf("bare release requires an HTTPS artifact URL without credentials or fragment")
+	source := target.BareRepoURL != ""
+	artifact := target.BareReleaseURL != ""
+	if source == artifact {
+		return fmt.Errorf("bare releases need either a Git source or an HTTPS artifact URL")
 	}
-	if !regexp.MustCompile(`^[a-fA-F0-9]{64}$`).MatchString(target.BareSHA256) {
-		return fmt.Errorf("bare release requires its SHA256 checksum")
+	if artifact {
+		parsed, err := url.Parse(target.BareReleaseURL)
+		if err != nil || parsed.Scheme != "https" || parsed.Host == "" || parsed.User != nil || parsed.Fragment != "" {
+			return fmt.Errorf("bare release requires an HTTPS artifact URL without credentials or fragment")
+		}
+		if !regexp.MustCompile(`^[a-fA-F0-9]{64}$`).MatchString(target.BareSHA256) {
+			return fmt.Errorf("bare release requires its SHA256 checksum")
+		}
+	}
+	if source {
+		parsed, err := url.Parse(target.BareRepoURL)
+		if err != nil || (parsed.Scheme != "https" && parsed.Scheme != "ssh") || parsed.Host == "" || parsed.User != nil && parsed.Scheme == "https" || parsed.Fragment != "" {
+			return fmt.Errorf("bare source requires an HTTPS or SSH Git URL without fragment")
+		}
+		if target.BareBranch != "" && (len(target.BareBranch) > 128 || strings.ContainsAny(target.BareBranch, "\r\n\"'\\`$")) {
+			return fmt.Errorf("invalid native source branch")
+		}
+		switch target.BareToolchain {
+		case "go", "node", "python", "static":
+		default:
+			return fmt.Errorf("select a native toolchain: go, node, python or static")
+		}
+		for _, command := range []string{target.BareInstallCommand, target.BareBuildCommand} {
+			if len(command) > 4096 || strings.ContainsRune(command, 0) {
+				return fmt.Errorf("invalid native build command")
+			}
+		}
+		if target.BareOutput != "" && (len(target.BareOutput) > 256 || strings.Contains(target.BareOutput, "..") || strings.HasPrefix(target.BareOutput, "/")) {
+			return fmt.Errorf("invalid native build output path")
+		}
 	}
 	if len(target.BareCommand) == 0 || len(target.BareCommand) > 32 || target.BareCommand[0] != "./app" {
 		return fmt.Errorf("bare releases execute ./app followed by up to thirty-one arguments")
@@ -52,8 +81,8 @@ func Validate(app *models.AppService, target models.RuntimeTarget) error {
 	if app.Replicas > 1 || len(target.Volumes) > 0 || len(app.Volumes) > 0 || target.ClusterID != "" || len(target.NodeIDs) > 0 {
 		return fmt.Errorf("bare runtime supports one supervised process and its private data directory; Docker volumes and cluster placement are unavailable")
 	}
-	if app.Domain != "" {
-		return fmt.Errorf("bare runtime uses its native port; clear the managed HTTP domain before selecting it")
+	if app.Domain != "" && !regexp.MustCompile(`^[a-z0-9]([a-z0-9.-]{0,251}[a-z0-9])?$`).MatchString(strings.ToLower(app.Domain)) {
+		return fmt.Errorf("invalid managed HTTP domain")
 	}
 	if app.RuntimeMode != models.RuntimeModeWorker && (app.InternalPort < 1024 || app.InternalPort > 65535) {
 		return fmt.Errorf("bare HTTP services need an unprivileged port from 1024 to 65535")

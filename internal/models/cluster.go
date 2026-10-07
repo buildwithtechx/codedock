@@ -12,6 +12,7 @@ type Cluster struct {
 	OrganizationID string        `json:"organizationId" db:"organization_id"`
 	Name           string        `json:"name" db:"name"`
 	Version        string        `json:"version" db:"version"`
+	Controls       int           `json:"controls" db:"controls"`
 	Nodes          []ClusterNode `json:"nodes" db:"-"`
 	NodesJSON      string        `json:"-" db:"nodes_json"`
 	JoinToken      string        `json:"-" db:"encrypted_token"`

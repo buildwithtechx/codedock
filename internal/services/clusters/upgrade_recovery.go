@@ -79,7 +79,13 @@ func (s *Service) resumeUpgrade(ctx context.Context, plan *models.ClusterPlan) e
 		if err := s.runner.Preflight(ctx, node, cluster.ID, i == 0); err != nil {
 			return err
 		}
-		if err := s.runner.Script(ctx, node, "recover-"+cluster.ID, installationScript(&cluster, node, i == 0, plan.Installer)); err != nil {
+		role := "agent"
+		if i == 0 {
+			role = "leader"
+		} else if i < cluster.Controls {
+			role = "control"
+		}
+		if err := s.runner.Script(ctx, node, "recover-"+cluster.ID, installationScript(&cluster, node, role, plan.Installer)); err != nil {
 			return fmt.Errorf("resume node %s release: %w", node.ServerID, err)
 		}
 		if err := s.waitRelease(ctx, &cluster, node); err != nil {

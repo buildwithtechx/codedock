@@ -39,5 +39,19 @@ func (s *Service) NetworkPreflight(ctx context.Context, project, id string) (*ku
 		return nil, fmt.Errorf("select a cluster in this project")
 	}
 	runtime := kubernetes.NewWorkloadRuntime(s.runner)
-	return runtime.NetworkPreflight(ctx, cluster.Nodes[0])
+	preflight, err := runtime.NetworkPreflight(ctx, cluster.Nodes[0])
+	if err != nil {
+		return nil, err
+	}
+	peers := make([]string, 0, len(cluster.Nodes))
+	for _, node := range cluster.Nodes {
+		peers = append(peers, node.PrivateIP)
+	}
+	reached, err := runtime.CrossNodeProbe(ctx, cluster.Nodes[0], peers)
+	if err != nil {
+		return nil, err
+	}
+	preflight.CrossNode = reached
+	preflight.Checks = append(preflight.Checks, fmt.Sprintf("disposable probe reached %d peers and cluster DNS", len(reached)))
+	return preflight, nil
 }

@@ -98,3 +98,45 @@ func TestDatabaseObservationRejectsMissingReadyInstances(t *testing.T) {
 		t.Fatal("foreign or incomplete runtime appeared healthy")
 	}
 }
+func TestRedisShardingBuildsPerShardStatefulSets(t *testing.T) {
+	plan := dataFixture()
+	plan.Record.Spec.Engine = "redis"
+	plan.Record.Spec.Image = "redis:7.4.2"
+	plan.Record.Spec.Instances = 1
+	plan.Record.Spec.Shards = 3
+	plan.Record.Spec.Synchronous = false
+	if err := ValidateDataSpec(plan.Record.Spec, 3); err != nil {
+		t.Fatal(err)
+	}
+	manifest, err := DataManifest(plan, nil, nil, "")
+	if err != nil {
+		t.Fatal(err)
+	}
+	var list struct {
+		Items []map[string]any `json:"items"`
+	}
+	if err := json.Unmarshal([]byte(manifest), &list); err != nil {
+		t.Fatal(err)
+	}
+	statefuls, jobs := 0, 0
+	for _, item := range list.Items {
+		if item["kind"] == "StatefulSet" {
+			statefuls++
+		}
+		if item["kind"] == "Job" {
+			jobs++
+		}
+	}
+	if statefuls != 3 || jobs != 1 {
+		t.Fatal("sharded Redis did not declare per-shard state and bootstrap")
+	}
+	plan.Record.Spec.Shards = 9
+	if err := ValidateDataSpec(plan.Record.Spec, 9); err == nil {
+		t.Fatal("excessive Redis shards accepted")
+	}
+	plan.Record.Spec.Shards = 0
+	plan.Record.Spec.Engine = "postgres"
+	if err := ValidateDataSpec(plan.Record.Spec, 3); err == nil {
+		t.Fatal("PostgreSQL sharding accepted")
+	}
+}

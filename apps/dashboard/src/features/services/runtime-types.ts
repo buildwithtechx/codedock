@@ -11,6 +11,13 @@ export type RuntimeTarget = {
   bareReleaseUrl?: string;
   bareSha256?: string;
   bareCommand?: string[];
+  bareRepoUrl?: string;
+  bareBranch?: string;
+  bareToolchain?: 'go' | 'node' | 'python' | 'static';
+  bareInstallCommand?: string;
+  bareBuildCommand?: string;
+  bareOutput?: string;
+  bareStaticDir?: string;
   clusterId?: string;
   nodeIds: string[];
   imageRepository?: string;

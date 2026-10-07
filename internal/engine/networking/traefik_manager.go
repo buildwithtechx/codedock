@@ -22,6 +22,7 @@ import (
 const (
 	TraefikContainerName = "codedock-traefik"
 	CodedockNetworkName  = "codedock-network"
+	DynamicDir           = "/etc/codedock/traefik-dynamic"
 )
 
 type TraefikManager struct {
@@ -49,17 +50,17 @@ func (m *TraefikManager) EnsureTraefikRunning(ctx context.Context) error {
 		}
 	}
 
-	if err == nil && existing.Config != nil && traefikCertificateEmail(existing.Config.Cmd) != m.tlsEmail {
+	if err == nil && existing.Config != nil && !equalStrings(existing.Config.Cmd, m.buildTraefikCmdArgs()) {
 		if existing.State != nil && existing.State.Running {
 			if err := m.dockerClient.ContainerStop(ctx, TraefikContainerName, container.StopOptions{}); err != nil {
-				return fmt.Errorf("stop proxy to apply certificate settings: %w", err)
+				return fmt.Errorf("stop proxy to apply configuration: %w", err)
 			}
 		}
 		if err := m.dockerClient.ContainerRemove(ctx, TraefikContainerName, container.RemoveOptions{}); err != nil {
 			return fmt.Errorf("replace proxy configuration: %w", err)
 		}
 		if err := m.createTraefikContainer(ctx); err != nil {
-			return fmt.Errorf("apply proxy certificate settings: %w", err)
+			return fmt.Errorf("apply proxy configuration: %w", err)
 		}
 	}
 
@@ -157,6 +158,8 @@ func (m *TraefikManager) buildTraefikCmdArgs() []string {
 		"--providers.docker=true",
 		"--providers.docker.exposedbydefault=false",
 		"--providers.docker.network=codedock-network",
+		"--providers.file.directory=/dynamic",
+		"--providers.file.watch=true",
 		"--entrypoints.web.address=:80",
 		"--entrypoints.websecure.address=:443",
 		"--api.insecure=true",
@@ -191,6 +194,11 @@ func (m *TraefikManager) buildTraefikMounts() []mount.Mount {
 			Source:   sockPath,
 			Target:   "/var/run/docker.sock",
 			ReadOnly: true,
+		},
+		{
+			Type:   mount.TypeBind,
+			Source: DynamicDir,
+			Target: "/dynamic",
 		},
 	}
 	return append(mounts, m.buildTraefikDataMounts()...)
@@ -228,4 +236,16 @@ func traefikCertificateEmail(args []string) string {
 		}
 	}
 	return ""
+}
+
+func equalStrings(left, right []string) bool {
+	if len(left) != len(right) {
+		return false
+	}
+	for i := range left {
+		if left[i] != right[i] {
+			return false
+		}
+	}
+	return true
 }

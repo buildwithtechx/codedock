@@ -40,6 +40,7 @@ func configureClusters(server *Server, db *sql.DB, vault *utils.Vault, projects 
 	server.clusterDataHandler = system.NewClusterDataHandler(dataService, operations)
 	server.clusterDataHandler.SetBindings(apps, repositories.NewServiceVarRepo(db))
 	runtime := runtimes.NewService(repositories.NewRuntimeRepo(db, vault), apps, repository, servers, kubernetes.NewWorkloadRuntime(runner), server.deployer, operations, gate)
+	runtime.SetStreamer(runner)
 	runtime.SetBare(bare.NewRuntime(runner), projects)
 	if err := runtime.Recover(context.Background()); err != nil {
 		return fmt.Errorf("recover Kubernetes application rollouts: %w", err)

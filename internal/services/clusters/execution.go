@@ -117,7 +117,13 @@ func (s *Service) Apply(ctx context.Context, user, id, confirmation string) erro
 				continue
 			}
 			phase := "INSTALLING"
-			if i > 0 {
+			role := "agent"
+			if i == 0 {
+				role = "leader"
+			} else if i < current.Controls {
+				role = "control"
+				phase = "JOINING"
+			} else if i > 0 {
 				phase = "JOINING"
 			}
 			if plan.Action == "remove" {
@@ -126,7 +132,7 @@ func (s *Service) Apply(ctx context.Context, user, id, confirmation string) erro
 			if err := progress(phase, "Processing node "+node.ServerID); err != nil {
 				return err
 			}
-			script := installationScript(current, node, i == 0, plan.Installer)
+			script := installationScript(current, node, role, plan.Installer)
 			if plan.Action == "remove" {
 				script = removalScript(current.ID, i == 0)
 			}
@@ -148,6 +154,14 @@ func (s *Service) Apply(ctx context.Context, user, id, confirmation string) erro
 		for _, node := range current.Nodes {
 			name := "codedock-" + node.ServerID
 			if _, err := s.runner.Kubectl(ctx, current.Nodes[0], []string{"wait", "--for=condition=Ready", "node/" + name, "--timeout=180s"}, ""); err != nil {
+				return err
+			}
+		}
+		if err := progress("VERIFYING", "Verifying forwarding, ports and cross-node connectivity"); err != nil {
+			return err
+		}
+		for i, node := range current.Nodes {
+			if err := s.runner.VerifyPorts(ctx, node, i < current.Controls); err != nil {
 				return err
 			}
 		}
@@ -176,19 +190,26 @@ func (s *Service) acquireTargets(cluster *models.Cluster) ([]func(), error) {
 	}
 	return releases, nil
 }
-func installationScript(cluster *models.Cluster, node models.ClusterNode, leader bool, installer string) string {
-	role := "agent"
+func installationScript(cluster *models.Cluster, node models.ClusterNode, role string, installer string) string {
 	extra := ""
-	if leader {
+	execution := ""
+	server := ""
+	switch role {
+	case "leader":
+		role = "server"
+		extra = " --advertise-address " + node.PrivateIP + " --bind-address " + node.PrivateIP + " --tls-san " + node.PrivateIP + " --cluster-init"
+		execution = role + " --node-name codedock-" + node.ServerID + " --node-ip " + node.PrivateIP + " --flannel-iface " + node.Interface + " --node-label codedock.run/cluster=" + cluster.ID + extra
+	case "control":
 		role = "server"
 		extra = " --advertise-address " + node.PrivateIP + " --bind-address " + node.PrivateIP + " --tls-san " + node.PrivateIP
-	}
-	execution := role + " --node-name codedock-" + node.ServerID + " --node-ip " + node.PrivateIP + " --flannel-iface " + node.Interface + " --node-label codedock.run/cluster=" + cluster.ID + extra
-	server := ""
-	if !leader {
+		execution = role + " --node-name codedock-" + node.ServerID + " --node-ip " + node.PrivateIP + " --flannel-iface " + node.Interface + " --node-label codedock.run/cluster=" + cluster.ID + extra
+		server = "K3S_URL=" + ssh.ShellQuote("https://"+cluster.Nodes[0].PrivateIP+":6443") + " "
+	default:
+		role = "agent"
+		execution = role + " --node-name codedock-" + node.ServerID + " --node-ip " + node.PrivateIP + " --flannel-iface " + node.Interface + " --node-label codedock.run/cluster=" + cluster.ID + extra
 		server = "K3S_URL=" + ssh.ShellQuote("https://"+cluster.Nodes[0].PrivateIP+":6443") + " "
 	}
-	return "set -eu\n" + "umask 077\nprintf %s " + ssh.ShellQuote(cluster.ID) + " > /etc/codedock-cluster\n" + "installer=$(mktemp)\ntrap 'rm -f \"$installer\"' EXIT\nprintf %s " + ssh.ShellQuote(installer) + " > \"$installer\"\n" + server + "INSTALL_K3S_VERSION=" + ssh.ShellQuote(cluster.Version) + " INSTALL_K3S_EXEC=" + ssh.ShellQuote(execution) + " K3S_TOKEN=" + ssh.ShellQuote(cluster.JoinToken) + " sh \"$installer\"\n"
+	return "set -eu\n" + "umask 077\nsysctl -w net.ipv4.ip_forward=1 >/dev/null\nprintf %s " + ssh.ShellQuote(cluster.ID) + " > /etc/codedock-cluster\n" + "installer=$(mktemp)\ntrap 'rm -f \"$installer\"' EXIT\nprintf %s " + ssh.ShellQuote(installer) + " > \"$installer\"\n" + server + "INSTALL_K3S_VERSION=" + ssh.ShellQuote(cluster.Version) + " INSTALL_K3S_EXEC=" + ssh.ShellQuote(execution) + " K3S_TOKEN=" + ssh.ShellQuote(cluster.JoinToken) + " sh \"$installer\"\n"
 }
 func removalScript(clusterID string, leader bool) string {
 	command := "/usr/local/bin/k3s-agent-uninstall.sh"

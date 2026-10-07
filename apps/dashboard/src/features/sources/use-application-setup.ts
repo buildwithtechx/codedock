@@ -137,10 +137,15 @@ export function useApplicationSetup(props: ApplicationSetupProps) {
       throw new Error('Select a ready cluster for the Kubernetes destination.');
     if (destination.kind === 'bare') {
       if (!destination.bareNode.serverId.trim()) throw new Error('Select a native server.');
-      if (!destination.bareReleaseUrl.startsWith('https://'))
-        throw new Error('Native artifact URL must use https.');
-      if (!/^[0-9a-f]{64}$/i.test(destination.bareSha256.trim()))
-        throw new Error('Native artifact SHA256 must be 64 hex characters.');
+      if (destination.bareRepoUrl.trim()) {
+        if (!/^https:\/\//.test(destination.bareRepoUrl.trim()) && !/^ssh:\/\//.test(destination.bareRepoUrl.trim()) && !destination.bareRepoUrl.includes('@'))
+          throw new Error('Native repository must use https, ssh or scp-like syntax.');
+      } else {
+        if (!destination.bareReleaseUrl.startsWith('https://'))
+          throw new Error('Native artifact URL must use https.');
+        if (!/^[0-9a-f]{64}$/i.test(destination.bareSha256.trim()))
+          throw new Error('Native artifact SHA256 must be 64 hex characters.');
+      }
     }
     parseSetupVariables(variables);
   };

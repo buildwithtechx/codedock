@@ -7,6 +7,7 @@ type ClusterDataSpec struct {
 	Engine          string `json:"engine"`
 	Image           string `json:"image"`
 	Instances       int    `json:"instances"`
+	Shards          int    `json:"shards"`
 	StorageGiB      int    `json:"storageGiB"`
 	StorageClass    string `json:"storageClass"`
 	S3DestinationID string `json:"s3DestinationId"`

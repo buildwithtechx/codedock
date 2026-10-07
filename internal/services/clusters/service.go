@@ -33,6 +33,8 @@ type Runner interface {
 	Preflight(context.Context, models.ClusterNode, string, bool) error
 	Script(context.Context, models.ClusterNode, string, string) error
 	Kubectl(context.Context, models.ClusterNode, []string, string) (string, error)
+	Host(context.Context, models.ClusterNode, string) (string, error)
+	VerifyPorts(context.Context, models.ClusterNode, bool) error
 }
 type Gate interface{ AcquireVolume(string) (func(), error) }
 type Service struct {
@@ -79,6 +81,15 @@ func (s *Service) Review(ctx context.Context, user, projectID string, request mo
 		return nil, fmt.Errorf("cluster needs a name and one to thirty-two nodes")
 	}
 	cluster.ProjectID, cluster.OrganizationID = projectID, project.OrganizationID
+	if cluster.Controls != 1 && cluster.Controls != 3 {
+		if cluster.Controls != 0 {
+			return nil, fmt.Errorf("select one or three control-plane servers")
+		}
+		cluster.Controls = 1
+	}
+	if cluster.Controls == 3 && len(cluster.Nodes) < 3 {
+		return nil, fmt.Errorf("three control-plane servers require three nodes")
+	}
 	if err := s.validateNodes(ctx, user, &cluster); err != nil {
 		return nil, err
 	}
@@ -146,7 +157,7 @@ func (s *Service) Review(ctx context.Context, user, projectID string, request mo
 	if err != nil {
 		return nil, err
 	}
-	effects := fmt.Sprintf("%s K3s %s on %d verified private-network nodes with one control-plane server (no control-plane failover). Install or update system services and routing/storage components. Keep private API 6443 and VXLAN 8472 restricted to these nodes. Interruptions can leave partial installation; inspect and prepare a retry. Installer SHA256: %s.", request.Action, saved.Version, len(saved.Nodes), plan.InstallerSHA256)
+	effects := fmt.Sprintf("%s K3s %s on %d verified private-network nodes with %d control-plane server(s) and embedded etcd quorum. Install or update system services and routing/storage components. Keep private API 6443 and VXLAN 8472 restricted to these nodes. Interruptions can leave partial installation; inspect and prepare a retry. Installer SHA256: %s.", request.Action, saved.Version, len(saved.Nodes), saved.Controls, plan.InstallerSHA256)
 	if request.Action == "remove" {
 		effects = "Uninstall this owned K3s cluster from every saved node. Cluster workloads and local cluster storage may be destroyed; external backups remain separate."
 	}
@@ -181,6 +192,12 @@ func preserveExistingNodes(previous, next *models.Cluster, action string) error 
 			return fmt.Errorf("existing node identities and private network settings are immutable")
 		}
 	}
+	if previous.Controls != 0 && next.Controls != 0 && previous.Controls != next.Controls {
+		return fmt.Errorf("control-plane quorum cannot change without a reviewed cluster removal")
+	}
+	if next.Controls == 0 {
+		next.Controls = previous.Controls
+	}
 	if action == "upgrade" {
 		var oldMinor, oldPatch, oldBuild, newMinor, newPatch, newBuild int
 		if _, err := fmt.Sscanf(previous.Version, "v1.%d.%d+k3s%d", &oldMinor, &oldPatch, &oldBuild); err != nil {
@@ -202,7 +219,7 @@ func preserveExistingNodes(previous, next *models.Cluster, action string) error 
 	return nil
 }
 func clusterSnapshot(cluster *models.Cluster) string {
-	data := []byte(fmt.Sprintf("%s|%d|%s", cluster.ID, cluster.Revision, cluster.Version))
+	data := []byte(fmt.Sprintf("%s|%d|%s|%d", cluster.ID, cluster.Revision, cluster.Version, cluster.Controls))
 	for _, node := range cluster.Nodes {
 		data = append(data, []byte(fmt.Sprintf("|%s|%s|%s|%s", node.ServerID, node.PrivateIP, node.Interface, node.Fingerprint))...)
 	}

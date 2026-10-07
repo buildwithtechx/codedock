@@ -38,6 +38,7 @@ type Service struct {
 	clusters   Clusters
 	servers    Servers
 	engine     *kubernetes.WorkloadRuntime
+	streamer   kubernetes.Streamer
 	builder    *deploy.Deployer
 	operations *operations.Service
 	gate       Gate
@@ -46,6 +47,8 @@ type Service struct {
 func NewService(store Store, apps Apps, clusters Clusters, servers Servers, engine *kubernetes.WorkloadRuntime, builder *deploy.Deployer, operations *operations.Service, gate Gate) *Service {
 	return &Service{store: store, apps: apps, clusters: clusters, servers: servers, engine: engine, builder: builder, operations: operations, gate: gate}
 }
+
+func (s *Service) SetStreamer(streamer kubernetes.Streamer) { s.streamer = streamer }
 func (s *Service) Get(ctx context.Context, id string) (*models.ServiceRuntime, error) {
 	return s.store.Get(ctx, id)
 }

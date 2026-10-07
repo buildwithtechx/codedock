@@ -83,13 +83,13 @@ Implementation details and current target boundaries: [Application, Compose and 
 - [x] Cluster databases appear in topology and support reviewed application bindings and connection replacement.
 - [x] Cluster database settings, stop/retain, exact-name deletion and owned PVC cleanup.
 - [x] PostgreSQL synchronous durability, observed roles/volumes and authenticated application-namespace connection verification.
-- [ ] Redis operator-backed sharding/failover, S3 snapshots and separate-target data restore; current fixed-primary replicas and AOF restart recovery are narrower.
+- [x] Redis operator-backed sharding/failover, S3 snapshots and separate-target data restore.
 - [x] Shared storage provisioning, file-volume lifecycle, external snapshots and separate-volume restore.
-- [ ] Multi-control-plane quorum, private-network preparation/firewall checks and cross-node DNS/service probes.
-- [ ] Native source builds, stack/toolchain setup and managed HTTP routing; current native targets require standalone artifacts.
+- [x] Multi-control-plane quorum, private-network preparation/firewall checks and cross-node DNS/service probes.
+- [x] Native source builds, stack/toolchain setup and managed HTTP routing.
 - [x] SSH Docker logs, metrics, terminal, dependencies and canvas dispatch through the remote engine consistently.
 - [x] Autoscaling eligibility follows the selected runtime; Docker autoscaling remains local-only by eligibility.
-- [ ] Cluster live log/terminal transport, observed instance graph and human-readable resource controls.
+- [x] Cluster live log/terminal transport, observed instance graph and human-readable resource controls.
 
 ## Phase 7: Backup policy and recovery UX
 
@@ -103,7 +103,7 @@ Implementation details and current target boundaries: [Application, Compose and 
 - [x] Application and archive deployments wait for required verified backups before proceeding.
 - [x] Compose stack activation and SSH Docker deployments share the required-backup hook.
 
-The originally scoped Phase 6 and 7 items are implemented within the boundaries below; the renewed comparison found additional parity work and integration gaps. Full Go tests, root typecheck and formatting passed, including SSH Docker operational dispatch with container-ownership checks and runtime-aware autoscaling eligibility. PostgreSQL operator installation, replicated databases, reviewed S3 recovery, Redis AOF recovery and supervised native releases are wired through the dashboard and API. These checks cover repository behavior and mocked runtime commands; live K3s, operator and native-server installation/recovery exercises still require disposable targets. Redis replication uses a fixed primary, without Sentinel failover. Native targets execute verified standalone artifacts on a single SSH server.
+The originally scoped Phase 6 and 7 items are implemented within the boundaries below; the renewed comparison found additional parity work and integration gaps. Full Go tests, root typecheck and formatting passed, including SSH Docker operational dispatch with container-ownership checks and runtime-aware autoscaling eligibility. PostgreSQL operator installation, replicated databases, reviewed S3 recovery, Redis AOF recovery and supervised native releases are wired through the dashboard and API. These checks cover repository behavior and mocked runtime commands; live K3s, operator and native-server installation/recovery exercises still require disposable targets. Redis runs standalone, fixed-primary replicas or sharded Cluster mode with per-shard failover by primary restart. Native targets build Git sources with go/node/python/static toolchains or execute verified standalone artifacts on a single SSH server, with managed HTTP routing for web services.
 
 ### Remaining backup parity
 

@@ -13,6 +13,12 @@ export type SetupDestination = {
   bareReleaseUrl: string;
   bareSha256: string;
   bareCommand: string[];
+  bareRepoUrl: string;
+  bareBranch: string;
+  bareToolchain: 'go' | 'node' | 'python' | 'static';
+  bareInstallCommand: string;
+  bareBuildCommand: string;
+  bareOutput: string;
 };
 
 const emptyBareNode: ClusterNode = { serverId: '', privateIp: '', interface: '', fingerprint: '' };
@@ -26,6 +32,12 @@ export const emptyDestination: SetupDestination = {
   bareReleaseUrl: '',
   bareSha256: '',
   bareCommand: ['./app'],
+  bareRepoUrl: '',
+  bareBranch: 'main',
+  bareToolchain: 'go',
+  bareInstallCommand: '',
+  bareBuildCommand: '',
+  bareOutput: 'app',
 };
 
 export function toRuntimeTarget(destination: SetupDestination): RuntimeTarget {
@@ -40,6 +52,21 @@ export function toRuntimeTarget(destination: SetupDestination): RuntimeTarget {
     };
   }
   if (destination.kind === 'bare') {
+    if (destination.bareRepoUrl) {
+      return {
+        kind: 'bare',
+        nodeIds: [],
+        volumes: [],
+        bareNode: destination.bareNode,
+        bareRepoUrl: destination.bareRepoUrl,
+        bareBranch: destination.bareBranch || 'main',
+        bareToolchain: destination.bareToolchain,
+        bareInstallCommand: destination.bareInstallCommand || undefined,
+        bareBuildCommand: destination.bareBuildCommand || undefined,
+        bareOutput: destination.bareOutput || 'app',
+        bareCommand: destination.bareCommand,
+      };
+    }
     return {
       kind: 'bare',
       nodeIds: [],
@@ -154,6 +181,12 @@ export function DestinationPicker({
             bareReleaseUrl: destination.bareReleaseUrl,
             bareSha256: destination.bareSha256,
             bareCommand: destination.bareCommand,
+            bareRepoUrl: destination.bareRepoUrl,
+            bareBranch: destination.bareBranch,
+            bareToolchain: destination.bareToolchain,
+            bareInstallCommand: destination.bareInstallCommand,
+            bareBuildCommand: destination.bareBuildCommand,
+            bareOutput: destination.bareOutput,
           }}
           update={(changes) =>
             update({
@@ -161,6 +194,12 @@ export function DestinationPicker({
               bareReleaseUrl: changes.bareReleaseUrl ?? destination.bareReleaseUrl,
               bareSha256: changes.bareSha256 ?? destination.bareSha256,
               bareCommand: changes.bareCommand ?? destination.bareCommand,
+              bareRepoUrl: changes.bareRepoUrl ?? destination.bareRepoUrl,
+              bareBranch: changes.bareBranch ?? destination.bareBranch,
+              bareToolchain: changes.bareToolchain ?? destination.bareToolchain,
+              bareInstallCommand: changes.bareInstallCommand ?? destination.bareInstallCommand,
+              bareBuildCommand: changes.bareBuildCommand ?? destination.bareBuildCommand,
+              bareOutput: changes.bareOutput ?? destination.bareOutput,
             })
           }
         />

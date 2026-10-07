@@ -7,6 +7,7 @@ import (
 	"encoding/base64"
 	"fmt"
 	"github.com/google/uuid"
+	"io"
 	"log/slog"
 	"net"
 	"regexp"
@@ -117,6 +118,32 @@ func (r *ClusterRunner) Kubectl(ctx context.Context, node models.ClusterNode, ar
 	return client.RunWithInput(ctx, client.RootCommand("k3s kubectl "+strings.Join(quoted, " ")), strings.NewReader(input))
 }
 
+func (r *ClusterRunner) StreamKubectl(ctx context.Context, node models.ClusterNode, args []string, output io.Writer) error {
+	client, err := r.client(ctx, node)
+	if err != nil {
+		return err
+	}
+	defer closeClient(client)
+	quoted := make([]string, len(args))
+	for i, arg := range args {
+		quoted[i] = ssh.ShellQuote(arg)
+	}
+	return client.Stream(ctx, client.RootCommand("k3s kubectl "+strings.Join(quoted, " ")), nil, output)
+}
+
+func (r *ClusterRunner) StreamKubectlPTY(ctx context.Context, node models.ClusterNode, args []string, input io.Reader, output io.Writer) error {
+	client, err := r.client(ctx, node)
+	if err != nil {
+		return err
+	}
+	defer closeClient(client)
+	quoted := make([]string, len(args))
+	for i, arg := range args {
+		quoted[i] = ssh.ShellQuote(arg)
+	}
+	return client.StreamPTY(ctx, client.RootCommand("k3s kubectl "+strings.Join(quoted, " ")), input, output)
+}
+
 func (r *ClusterRunner) Host(ctx context.Context, node models.ClusterNode, script string) (string, error) {
 	client, err := r.client(ctx, node)
 	if err != nil {
@@ -124,4 +151,28 @@ func (r *ClusterRunner) Host(ctx context.Context, node models.ClusterNode, scrip
 	}
 	defer closeClient(client)
 	return client.RunWithInput(ctx, client.RootCommand("sh -s"), strings.NewReader(script))
+}
+
+func (r *ClusterRunner) VerifyPorts(ctx context.Context, node models.ClusterNode, control bool) error {
+	ports := "8472 10250"
+	if control {
+		ports = "6443 8472 10250"
+	}
+	script := `set -eu
+test "$(cat /proc/sys/net/ipv4/ip_forward)" = 1
+for port in ` + ports + `; do
+  if command -v ss >/dev/null; then ss -ltn | grep -q ":$port " || exit 1
+  elif command -v netstat >/dev/null; then netstat -ltn | grep -q ":$port " || exit 1
+  else exit 1; fi
+done
+`
+	client, err := r.client(ctx, node)
+	if err != nil {
+		return err
+	}
+	defer closeClient(client)
+	if _, err := client.RunWithInput(ctx, client.RootCommand("sh -s"), strings.NewReader(script)); err != nil {
+		return fmt.Errorf("node %s failed port and forwarding verification", node.ServerID)
+	}
+	return nil
 }

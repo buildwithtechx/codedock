@@ -36,6 +36,20 @@ func TestNativeValidationRejectsUnverifiedArtifactsAndUnsupportedScaling(t *test
 	if err := Validate(app, target); err == nil {
 		t.Fatal("native process advertised cluster scaling")
 	}
+	app.Replicas = 1
+	target.BareRepoURL = "https://github.com/example/app.git"
+	if err := Validate(app, target); err == nil {
+		t.Fatal("simultaneous source and artifact accepted")
+	}
+	target.BareReleaseURL, target.BareSHA256 = "", ""
+	target.BareToolchain = "go"
+	if err := Validate(app, target); err != nil {
+		t.Fatal("valid source build rejected", err)
+	}
+	target.BareToolchain = "docker"
+	if err := Validate(app, target); err == nil {
+		t.Fatal("unsupported toolchain accepted")
+	}
 }
 
 type nativeRunner struct{ calls int }

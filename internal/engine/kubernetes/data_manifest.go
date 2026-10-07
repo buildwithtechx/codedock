@@ -20,6 +20,15 @@ func ValidateDataSpec(spec models.ClusterDataSpec, nodes int) error {
 	if spec.Instances != 1 && spec.Instances != 3 {
 		return fmt.Errorf("select standalone or three database instances")
 	}
+	if spec.Shards < 0 || spec.Shards > 8 {
+		return fmt.Errorf("select zero to eight Redis shards")
+	}
+	if spec.Shards > 1 && spec.Engine != "redis" {
+		return fmt.Errorf("sharding supports Redis Cluster databases")
+	}
+	if spec.Shards > 1 && spec.Shards*spec.Instances > 24 {
+		return fmt.Errorf("sharded Redis supports twenty-four total pods")
+	}
 	if nodes < spec.Instances {
 		return fmt.Errorf("replicated databases require three distinct cluster nodes")
 	}

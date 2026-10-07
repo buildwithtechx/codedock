@@ -48,11 +48,11 @@ func (r *Runtime) Lifecycle(ctx context.Context, app *models.AppService, target 
 	script += "test ! -e \"$base/pending\"\n"
 	switch action {
 	case "stop":
-		script += "systemctl stop \"$unit\"\n"
+		script += "systemctl stop \"$unit\"\nrm -f " + ssh.ShellQuote(routingFile(app)) + "\n"
 	case "restart":
 		script += "systemctl restart \"$unit\"\n" + readinessScript(app)
 	case "remove":
-		script += "systemctl disable --now \"$unit\"\nrm -f \"/etc/systemd/system/$unit.service\"\nsystemctl daemon-reload\n"
+		script += "systemctl disable --now \"$unit\"\nrm -f \"/etc/systemd/system/$unit.service\"\nrm -f " + ssh.ShellQuote(routingFile(app)) + "\nsystemctl daemon-reload\n"
 	default:
 		return fmt.Errorf("native runtime supports stop, restart and remove; it has one supervised process")
 	}

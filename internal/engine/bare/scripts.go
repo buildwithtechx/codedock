@@ -44,10 +44,18 @@ func DeploymentScript(app *models.AppService, target models.RuntimeTarget, varia
 		launch += "export " + key + "=" + ssh.ShellQuote(value) + "\n"
 	}
 	args := []string{}
-	for _, arg := range target.BareCommand {
-		args = append(args, ssh.ShellQuote(arg))
+	if target.BareToolchain == "static" {
+		staticDir := target.BareStaticDir
+		if staticDir == "" {
+			staticDir = "app"
+		}
+		launch += "exec python3 -m http.server " + fmt.Sprint(app.InternalPort) + " --directory " + ssh.ShellQuote(staticDir) + "\n"
+	} else {
+		for _, arg := range target.BareCommand {
+			args = append(args, ssh.ShellQuote(arg))
+		}
+		launch += "exec " + strings.Join(args, " ") + "\n"
 	}
-	launch += "exec " + strings.Join(args, " ") + "\n"
 	config := "[Unit]\nDescription=Codedock application\nAfter=network-online.target\nStartLimitIntervalSec=60\nStartLimitBurst=3\n[Service]\nType=simple\nUser=" + user + "\nGroup=" + user + "\nWorkingDirectory=" + base + "/current\nExecStart=/bin/sh " + base + "/current/launch.sh\nRestart=on-failure\nRestartSec=3\nNoNewPrivileges=true\nPrivateTmp=true\nProtectSystem=strict\nProtectHome=true\nReadWritePaths=" + base + "/data\n[Install]\nWantedBy=multi-user.target\n"
 	if app.MemoryLimit > 0 {
 		config += fmt.Sprintf("[Service]\nMemoryMax=%dM\n", app.MemoryLimit)
@@ -76,9 +84,15 @@ mkdir -p "$base/releases/$release" "$base/data"
 chown root:"$user" "$base/releases"
 chown "$user":"$user" "$base/data"
 chmod 750 "$base/releases" "$base/data"
-curl --proto '=https' --proto-redir '=https' --fail --location --max-time 180 --max-filesize 536870912 --output "$base/releases/$release/app" -- ` + ssh.ShellQuote(target.BareReleaseURL) + `
+`
+	if target.BareRepoURL != "" {
+		script += sourceBuildStage(target)
+	} else {
+		script += `curl --proto '=https' --proto-redir '=https' --fail --location --max-time 180 --max-filesize 536870912 --output "$base/releases/$release/app" -- ` + ssh.ShellQuote(target.BareReleaseURL) + `
 printf '%s  %s\n' ` + ssh.ShellQuote(strings.ToLower(target.BareSHA256)) + ` "$base/releases/$release/app" | sha256sum -c - >/dev/null
-printf %s ` + ssh.ShellQuote(launch) + ` > "$base/releases/$release/launch.sh"
+`
+	}
+	script += `printf %s ` + ssh.ShellQuote(launch) + ` > "$base/releases/$release/launch.sh"
 printf %s ` + ssh.ShellQuote(config) + ` > "$base/releases/$release/unit"
 chown -R root:"$user" "$base/releases/$release"
 chmod 750 "$base/releases/$release"
@@ -95,6 +109,7 @@ systemctl reset-failed "$unit" || true
 systemctl enable "$unit" >/dev/null
 systemctl restart "$unit"
 `
+	script += routingStage(app)
 	script += readinessScript(app)
 	return script, nil
 }
