@@ -20,6 +20,8 @@ type BackupService struct {
 	operations       *operations.Service
 	backupRepo       repositories.BackupRepository
 	s3Repo           repositories.S3DestinationRepository
+	batches          BatchStore
+	sftp             SFTPStore
 	manager          *backup.BackupManager
 }
 

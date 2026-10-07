@@ -65,9 +65,28 @@ func NewDeploymentService(
 	}
 }
 
+func (s *DeploymentService) GetService(ctx context.Context, id string) (*models.AppService, error) {
+	if s.appRepo == nil {
+		return nil, errors.New("app repo not available")
+	}
+	return s.appRepo.GetByID(ctx, id)
+}
+
+func (s *DeploymentService) UpdateService(ctx context.Context, app *models.AppService) error {
+	if s.appRepo == nil {
+		return errors.New("app repo not available")
+	}
+	return s.appRepo.Update(ctx, app)
+}
+
 func (s *DeploymentService) CreateDeployment(ctx context.Context, d *models.Deployment) (*models.Deployment, error) {
 	if d == nil || d.ServiceID == "" {
 		return nil, errors.New("valid deployment with serviceId required")
+	}
+	if d.ImageRef == "" && s.appRepo != nil {
+		if app, err := s.appRepo.GetByID(ctx, d.ServiceID); err == nil && app != nil {
+			d.ImageRef = app.ImageRef
+		}
 	}
 	if d.ID == "" {
 		d.ID = uuid.New().String()

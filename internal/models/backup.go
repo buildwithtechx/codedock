@@ -17,44 +17,56 @@ const (
 )
 
 type BackupConfig struct {
-	OwnerID         string             `json:"-" db:"owner_id"`
-	ProjectID       string             `json:"projectId" db:"project_id"`
-	PreDeployment   bool               `json:"preDeployment" db:"pre_deployment"`
-	ID              string             `json:"id" db:"id"`
-	DatabaseID      string             `json:"databaseId,omitempty" db:"database_id"`
-	ServiceID       string             `json:"serviceId,omitempty" db:"service_id"`
-	VolumeName      string             `json:"volumeName,omitempty" db:"volume_name"`
-	S3DestinationID string             `json:"s3DestinationId,omitempty" db:"s3_destination_id"`
-	Name            string             `json:"name" db:"name"`
-	Description     string             `json:"description" db:"description"`
-	DbUser          string             `json:"dbUser" db:"db_user"`
-	DbPassword      string             `json:"-" db:"db_password"`
-	BackupEnabled   bool               `json:"backupEnabled" db:"backup_enabled"`
-	S3Enabled       bool               `json:"s3Enabled" db:"s3_enabled"`
-	DisableLocal    bool               `json:"disableLocal" db:"disable_local"`
-	Schedule        string             `json:"schedule" db:"schedule"`
-	Timezone        string             `json:"timezone" db:"timezone"`
-	Timeout         int                `json:"timeout" db:"timeout"`
-	RetentionDays   int                `json:"retentionDays" db:"retention_days"`
-	MaxBackups      int                `json:"maxBackups" db:"max_backups"`
-	MaxStorageGB    int                `json:"maxStorageGb" db:"max_storage_gb"`
-	Status          BackupConfigStatus `json:"status" db:"status"`
-	CreatedAt       string             `json:"createdAt" db:"created_at"`
-	UpdatedAt       string             `json:"updatedAt" db:"updated_at"`
+	OwnerID              string             `json:"-" db:"owner_id"`
+	ProjectID            string             `json:"projectId" db:"project_id"`
+	PreDeployment        bool               `json:"preDeployment" db:"pre_deployment"`
+	ID                   string             `json:"id" db:"id"`
+	DatabaseID           string             `json:"databaseId,omitempty" db:"database_id"`
+	ServiceID            string             `json:"serviceId,omitempty" db:"service_id"`
+	VolumeName           string             `json:"volumeName,omitempty" db:"volume_name"`
+	S3DestinationID      string             `json:"s3DestinationId,omitempty" db:"s3_destination_id"`
+	SFTPDestinationID    string             `json:"sftpDestinationId,omitempty" db:"sftp_destination_id"`
+	ParentBatchID        string             `json:"parentBatchId,omitempty" db:"parent_batch_id"`
+	Name                 string             `json:"name" db:"name"`
+	Description          string             `json:"description" db:"description"`
+	DbUser               string             `json:"dbUser" db:"db_user"`
+	DbPassword           string             `json:"-" db:"db_password"`
+	BackupEnabled        bool               `json:"backupEnabled" db:"backup_enabled"`
+	S3Enabled            bool               `json:"s3Enabled" db:"s3_enabled"`
+	SFTPEnabled          bool               `json:"sftpEnabled" db:"sftp_enabled"`
+	Incremental          bool               `json:"incremental" db:"incremental"`
+	DisableLocal         bool               `json:"disableLocal" db:"disable_local"`
+	QuiesceCommand       string             `json:"quiesceCommand,omitempty" db:"quiesce_command"`
+	UnquiesceCommand     string             `json:"unquiesceCommand,omitempty" db:"unquiesce_command"`
+	CustomBackupCommand  string             `json:"customBackupCommand,omitempty" db:"custom_backup_command"`
+	CustomRestoreCommand string             `json:"customRestoreCommand,omitempty" db:"custom_restore_command"`
+	FileSourcePath       string             `json:"fileSourcePath,omitempty" db:"file_source_path"`
+	Schedule             string             `json:"schedule" db:"schedule"`
+	Timezone             string             `json:"timezone" db:"timezone"`
+	Timeout              int                `json:"timeout" db:"timeout"`
+	RetentionDays        int                `json:"retentionDays" db:"retention_days"`
+	MaxBackups           int                `json:"maxBackups" db:"max_backups"`
+	MaxStorageGB         int                `json:"maxStorageGb" db:"max_storage_gb"`
+	Status               BackupConfigStatus `json:"status" db:"status"`
+	CreatedAt            string             `json:"createdAt" db:"created_at"`
+	UpdatedAt            string             `json:"updatedAt" db:"updated_at"`
 }
 
 type BackupRecord struct {
 	ProtectedUntil  int64              `json:"protectedUntil" db:"protected_until"`
+	ParentRecordID  string             `json:"parentRecordId,omitempty" db:"parent_record_id"`
 	SHA256          string             `json:"sha256" db:"sha256"`
 	VerifiedAt      string             `json:"verifiedAt" db:"verified_at"`
 	ID              string             `json:"id" db:"id"`
 	BackupConfigID  string             `json:"backupConfigId" db:"backup_config_id"`
 	DatabaseID      string             `json:"databaseId,omitempty" db:"database_id"`
 	S3DestinationID string             `json:"s3DestinationId,omitempty" db:"s3_destination_id"`
+	SFTPDestinationID string           `json:"sftpDestinationId,omitempty" db:"sftp_destination_id"`
 	Status          BackupRecordStatus `json:"status" db:"status"`
 	FilePath        string             `json:"-" db:"file_path"`
 	FileSizeBytes   int64              `json:"fileSizeBytes" db:"file_size_bytes"`
 	S3URL           string             `json:"s3Url,omitempty" db:"s3_url"`
+	SFTPURL         string             `json:"sftpUrl,omitempty" db:"sftp_url"`
 	Logs            string             `json:"logs" db:"logs"`
 	StartedAt       string             `json:"startedAt" db:"started_at"`
 	CompletedAt     string             `json:"completedAt" db:"completed_at"`
@@ -67,10 +79,43 @@ type UpdateBackupRecordOpts struct {
 	Status          BackupRecordStatus `json:"status"`
 	FilePath        string             `json:"-"`
 	S3URL           string             `json:"s3_url"`
+	SFTPURL         string             `json:"sftp_url"`
+	ParentRecordID  string             `json:"parent_record_id"`
 	S3DestinationID string             `json:"s3_destination_id"`
+	SFTPDestinationID string           `json:"sftp_destination_id"`
 	Logs            string             `json:"logs"`
 	FileSizeBytes   int64              `json:"file_size_bytes"`
 	CompletedAt     string             `json:"completed_at"`
+}
+
+type SFTPDestination struct {
+	ID              string  `json:"id" db:"id"`
+	OrganizationID  string  `json:"organizationId,omitempty" db:"organization_id"`
+	ProjectID       string  `json:"projectId,omitempty" db:"project_id"`
+	Name            string  `json:"name" db:"name"`
+	Description     string  `json:"description" db:"description"`
+	Host            string  `json:"host" db:"host"`
+	Port            int     `json:"port" db:"port"`
+	Username        string  `json:"username" db:"username"`
+	Password        string  `json:"-" db:"password"`
+	PrivateKey      string  `json:"-" db:"private_key"`
+	PathPrefix      string  `json:"pathPrefix" db:"path_prefix"`
+	LastVerifiedAt  *string `json:"lastVerifiedAt,omitempty" db:"last_verified_at"`
+	LastVerifyError string  `json:"lastVerifyError,omitempty" db:"last_verify_error"`
+	CreatedAt       string  `json:"createdAt" db:"created_at"`
+}
+
+type BackupPolicyBatch struct {
+	ID          string `json:"id" db:"id"`
+	ProjectID   string `json:"projectId" db:"project_id"`
+	Name        string `json:"name" db:"name"`
+	Description string `json:"description" db:"description"`
+	Schedule    string `json:"schedule" db:"schedule"`
+	Timezone    string `json:"timezone" db:"timezone"`
+	Timeout     int    `json:"timeout" db:"timeout"`
+	Status      string `json:"status" db:"status"`
+	CreatedAt   string `json:"createdAt" db:"created_at"`
+	UpdatedAt   string `json:"updatedAt" db:"updated_at"`
 }
 
 type S3Destination struct {

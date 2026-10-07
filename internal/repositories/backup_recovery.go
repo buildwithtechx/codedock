@@ -67,6 +67,13 @@ func (r *BackupRepo) ProtectRecord(ctx context.Context, id string, until int64) 
 	return nil
 }
 
+func (r *BackupRepo) ClearRestoreProtection(ctx context.Context, id string, before int64) error {
+	r.mu.Lock()
+	defer r.mu.Unlock()
+	_, err := r.db.ExecContext(ctx, `UPDATE backup_records SET protected_until=0 WHERE id=? AND protected_until<=?`, id, before)
+	return err
+}
+
 func (r *BackupRepo) ClaimRecordExpiry(ctx context.Context, id string) (bool, error) {
 	r.mu.Lock()
 	defer r.mu.Unlock()

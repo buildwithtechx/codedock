@@ -29,11 +29,44 @@ func (h *BackupHandler) validatePolicy(c echo.Context, cfg *models.BackupConfig)
 	if cfg.Timeout < 0 || cfg.Timeout > 86400 || cfg.RetentionDays < 0 || cfg.MaxBackups < 0 || cfg.MaxStorageGB < 0 {
 		return echo.NewHTTPError(http.StatusBadRequest, "invalid backup timeout or retention limits")
 	}
-	if cfg.DisableLocal && !cfg.S3Enabled {
+	if cfg.DisableLocal && !cfg.S3Enabled && !cfg.SFTPEnabled {
 		return echo.NewHTTPError(http.StatusBadRequest, "remote-only backups require an enabled storage destination")
 	}
 	if cfg.S3Enabled && cfg.S3DestinationID == "" {
 		return echo.NewHTTPError(http.StatusBadRequest, "select a storage destination")
+	}
+	if cfg.SFTPEnabled && cfg.SFTPDestinationID == "" {
+		return echo.NewHTTPError(http.StatusBadRequest, "select an SFTP destination")
+	}
+	if cfg.Incremental && cfg.VolumeName == "" {
+		return echo.NewHTTPError(http.StatusBadRequest, "incremental backups require a named volume producer")
+	}
+	if (cfg.QuiesceCommand != "" || cfg.UnquiesceCommand != "") && cfg.ServiceID == "" && cfg.DatabaseID == "" {
+		return echo.NewHTTPError(http.StatusBadRequest, "quiesce commands require a service or database producer")
+	}
+	if cfg.FileSourcePath != "" {
+		if cfg.DatabaseID != "" || cfg.VolumeName != "" || cfg.CustomBackupCommand != "" {
+			return echo.NewHTTPError(http.StatusBadRequest, "select one backup producer")
+		}
+		if len(cfg.FileSourcePath) > 512 || strings.Contains(cfg.FileSourcePath, "..") {
+			return echo.NewHTTPError(http.StatusBadRequest, "invalid file source path")
+		}
+		return nil
+	}
+	if cfg.CustomBackupCommand != "" {
+		if cfg.ServiceID == "" {
+			return echo.NewHTTPError(http.StatusBadRequest, "custom producers require a service container")
+		}
+		if !h.hasAdminAccess(c, "", cfg.ServiceID) {
+			return echo.NewHTTPError(http.StatusForbidden, "backup service permission required")
+		}
+		return nil
+	}
+	if cfg.ParentBatchID != "" && cfg.ServiceID != "" && cfg.DatabaseID == "" && cfg.VolumeName == "" {
+		if !h.hasAdminAccess(c, "", cfg.ServiceID) {
+			return echo.NewHTTPError(http.StatusForbidden, "backup service permission required")
+		}
+		return nil
 	}
 	if cfg.ServiceID == "" {
 		return nil

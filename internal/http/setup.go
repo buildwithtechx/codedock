@@ -89,6 +89,7 @@ func NewServer(db *sql.DB, v *utils.Vault, deployer *deploy.Deployer, traefikMan
 	refreshTokenRepo := repositories.NewRefreshTokenRepo(db)
 
 	httpEngineAdapter := newEngineAdapter(settingsRepo, appRepo, envVarRepo, dbRepo, projectRepo, scheduledTaskRepo, backupRepo, s3DestinationRepo, serviceVarRepo, serverlessRepository)
+	httpEngineAdapter.sftpRepo = repositories.NewSFTPDestinationRepo(db)
 	volumeOperations := deploy.NewVolumeGate()
 	if deployer != nil {
 		deployer.SetVolumeOperations(volumeOperations)
@@ -166,6 +167,15 @@ func NewServer(db *sql.DB, v *utils.Vault, deployer *deploy.Deployer, traefikMan
 		return nil, fmt.Errorf("recover operations: %w", err)
 	}
 	backupService := backupservices.NewBackupService(backupRepo, s3DestinationRepo, backupManager)
+	backupService.SetBatches(repositories.NewPolicyBatchRepo(db))
+	backupService.SetSFTP(repositories.NewSFTPDestinationRepo(db))
+	backupManager.SetServiceRuntime(func(ctx context.Context, serviceID string) (string, error) {
+		runtime, err := runtimeRepository.Get(ctx, serviceID)
+		if err != nil {
+			return "", err
+		}
+		return runtime.Target.Kind, nil
+	})
 	if err := backupRepo.RecoverRecords(context.Background()); err != nil {
 		return nil, fmt.Errorf("recover backup records: %w", err)
 	}
@@ -353,7 +363,7 @@ func NewServer(db *sql.DB, v *utils.Vault, deployer *deploy.Deployer, traefikMan
 		routeRuleHandler:       routeRuleHandler,
 	}
 
-	if err := configureClusters(srv, db, v, projectRepo, serverRepo, operationService, volumeOperations, appRepo, deploymentService, canvasService); err != nil {
+	if err := configureClusters(srv, db, v, projectRepo, serverRepo, operationService, volumeOperations, appRepo, deploymentService, canvasService, backupManager); err != nil {
 		return nil, err
 	}
 	configureDeploymentBindings(srv, routeRuleRepo)

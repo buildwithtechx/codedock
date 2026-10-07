@@ -111,6 +111,13 @@ func (s *Server) registerBackupRoutes(authGroup *echo.Group) {
 	authGroup.POST("/s3-destinations/:id/verify", s.backupHandler.VerifyS3Destination, s.authGuard.RequireRole("admin"))
 	authGroup.POST("/s3-destinations/:id/default", s.backupHandler.SetDefaultS3Destination, s.authGuard.RequireRole("admin"))
 	authGroup.DELETE("/s3-destinations/:id", s.backupHandler.DeleteS3Destination, s.authGuard.RequireRole("admin"))
+	authGroup.GET("/sftp-destinations", s.backupHandler.ListSFTPDestinations, s.authGuard.RequireRole("admin"))
+	authGroup.POST("/sftp-destinations", s.backupHandler.CreateSFTPDestination, s.authGuard.RequireRole("admin"))
+	authGroup.POST("/sftp-destinations/:id/verify", s.backupHandler.VerifySFTPDestination, s.authGuard.RequireRole("admin"))
+	authGroup.DELETE("/sftp-destinations/:id", s.backupHandler.DeleteSFTPDestination, s.authGuard.RequireRole("admin"))
+	authGroup.GET("/projects/:id/policy-batches", s.backupHandler.ListBatches, s.authGuard.RequireRole("admin"))
+	authGroup.POST("/projects/:id/policy-batches", s.backupHandler.CreateBatch, s.authGuard.RequireRole("admin"))
+	authGroup.POST("/policy-batches/:batchId/trigger", s.backupHandler.TriggerBatch, s.authGuard.RequireRole("admin"))
 }
 
 func (s *Server) registerSettingsRoutes(apiGroup, authGroup *echo.Group) {

@@ -116,6 +116,10 @@ func (s *BackupService) beforeDeployment(ctx context.Context, projectID, service
 	if err != nil {
 		return err
 	}
+	configs, err = s.expandInheritedPolicies(ctx, configs)
+	if err != nil {
+		return err
+	}
 	for _, cfg := range configs {
 		if !cfg.PreDeployment || !deploymentPolicyMatches(cfg, projectID, serviceID) {
 			continue

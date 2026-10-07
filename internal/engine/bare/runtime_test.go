@@ -4,6 +4,7 @@ import (
 	"codedock.run/codedock/internal/models"
 	"context"
 	"encoding/base64"
+	"io"
 	"os"
 	"os/exec"
 	"path/filepath"
@@ -56,6 +57,9 @@ type nativeRunner struct{ calls int }
 
 func (r *nativeRunner) Script(context.Context, models.ClusterNode, string, string) error {
 	r.calls++
+	return nil
+}
+func (r *nativeRunner) StreamHost(context.Context, models.ClusterNode, string, io.Reader, io.Writer) error {
 	return nil
 }
 func (r *nativeRunner) Host(context.Context, models.ClusterNode, string) (string, error) {

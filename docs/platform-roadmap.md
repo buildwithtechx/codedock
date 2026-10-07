@@ -107,10 +107,10 @@ The originally scoped Phase 6 and 7 items are implemented within the boundaries 
 
 ### Remaining backup parity
 
-- [ ] Remote SSH and native restore producers/targets with durable interruption handling; current ordinary restores are local Docker only.
-- [ ] Project-wide multi-service policy batches and inherited service shortcuts.
-- [ ] SFTP, incremental storage, quiescing and reviewed file/custom-command producers.
-- [ ] Retained-image deployment rollback and restore-source retention protection through recovery completion.
+- [x] Remote SSH and native restore producers/targets with durable interruption handling.
+- [x] Project-wide multi-service policy batches and inherited service shortcuts.
+- [x] SFTP, incremental storage, quiescing and reviewed file/custom-command producers.
+- [x] Retained-image deployment rollback and restore-source retention protection through recovery completion.
 
 Current backup and cluster implementation boundaries, including scheduled-run cancellation, deployment coverage and live-target validation: [Backup recovery and cluster setup](platform-recovery.md).
 

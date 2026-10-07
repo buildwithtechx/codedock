@@ -9,6 +9,7 @@ import (
 	"path/filepath"
 	"strings"
 
+	"codedock.run/codedock/internal/models"
 	"codedock.run/codedock/internal/utils"
 )
 
@@ -29,10 +30,49 @@ func (bm *BackupManager) OpenBackupArchive(ctx context.Context, recordID string)
 			return nil, "", fmt.Errorf("open local backup archive: %w", err)
 		}
 	}
-	if rec.S3URL == "" {
+	if rec.S3URL == "" && rec.SFTPURL == "" {
 		return nil, "", utils.NewNotFoundError("Backup archive", recordID)
 	}
-	destinationID := rec.S3DestinationID
+	if rec.S3URL != "" {
+		destinationID := rec.S3DestinationID
+		if destinationID == "" {
+			cfg, err := bm.store.GetBackupConfig(rec.BackupConfigID)
+			if err != nil {
+				return nil, "", fmt.Errorf("load backup configuration: %w", err)
+			}
+			if cfg == nil {
+				return nil, "", utils.NewNotFoundError("Backup configuration", rec.BackupConfigID)
+			}
+			destinationID = cfg.S3DestinationID
+		}
+		dest, err := bm.store.GetS3Destination(destinationID)
+		if err != nil {
+			return nil, "", fmt.Errorf("load backup destination: %w", err)
+		}
+		if dest == nil {
+			return nil, "", utils.NewNotFoundError("Backup destination", destinationID)
+		}
+		prefix := "s3://" + dest.Bucket + "/"
+		if !strings.HasPrefix(rec.S3URL, prefix) {
+			return nil, "", fmt.Errorf("backup archive does not belong to its destination bucket")
+		}
+		key := strings.TrimPrefix(rec.S3URL, prefix)
+		if key == "" {
+			return nil, "", fmt.Errorf("backup archive object key is empty")
+		}
+		response, err := signedS3Request(ctx, dest, "GET", key, nil, "")
+		if err != nil {
+			return nil, "", fmt.Errorf("download backup archive: %w", err)
+		}
+		return response.Body, path.Base(key), nil
+	}
+	getter, ok := bm.store.(interface {
+		GetSFTPDestination(string) (*models.SFTPDestination, error)
+	})
+	if !ok {
+		return nil, "", fmt.Errorf("SFTP destination lookup unavailable")
+	}
+	destinationID := rec.SFTPDestinationID
 	if destinationID == "" {
 		cfg, err := bm.store.GetBackupConfig(rec.BackupConfigID)
 		if err != nil {
@@ -41,26 +81,23 @@ func (bm *BackupManager) OpenBackupArchive(ctx context.Context, recordID string)
 		if cfg == nil {
 			return nil, "", utils.NewNotFoundError("Backup configuration", rec.BackupConfigID)
 		}
-		destinationID = cfg.S3DestinationID
+		destinationID = cfg.SFTPDestinationID
 	}
-	dest, err := bm.store.GetS3Destination(destinationID)
-	if err != nil {
+	dest, err := getter.GetSFTPDestination(destinationID)
+	if err != nil || dest == nil {
 		return nil, "", fmt.Errorf("load backup destination: %w", err)
 	}
-	if dest == nil {
-		return nil, "", utils.NewNotFoundError("Backup destination", destinationID)
+	prefix := "sftp://" + dest.Host + "/"
+	if !strings.HasPrefix(rec.SFTPURL, prefix) {
+		return nil, "", fmt.Errorf("backup archive does not belong to its destination host")
 	}
-	prefix := "s3://" + dest.Bucket + "/"
-	if !strings.HasPrefix(rec.S3URL, prefix) {
-		return nil, "", fmt.Errorf("backup archive does not belong to its destination bucket")
-	}
-	key := strings.TrimPrefix(rec.S3URL, prefix)
+	key := strings.TrimPrefix(rec.SFTPURL, prefix)
 	if key == "" {
 		return nil, "", fmt.Errorf("backup archive object key is empty")
 	}
-	response, err := signedS3Request(ctx, dest, "GET", key, nil, "")
+	stream, err := sftpGet(ctx, dest, key)
 	if err != nil {
 		return nil, "", fmt.Errorf("download backup archive: %w", err)
 	}
-	return response.Body, path.Base(key), nil
+	return stream, path.Base(key), nil
 }

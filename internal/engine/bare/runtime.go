@@ -6,6 +6,7 @@ import (
 	"context"
 	"fmt"
 	"github.com/google/uuid"
+	"io"
 	"net/url"
 	"regexp"
 	"strings"
@@ -14,6 +15,7 @@ import (
 type Runner interface {
 	Script(context.Context, models.ClusterNode, string, string) error
 	Host(context.Context, models.ClusterNode, string) (string, error)
+	StreamHost(ctx context.Context, node models.ClusterNode, script string, input io.Reader, output io.Writer) error
 }
 type Runtime struct{ runner Runner }
 

@@ -51,10 +51,10 @@ func (r *DeploymentRepo) Create(ctx context.Context, d *models.Deployment) error
 	}
 	_, err := r.db.ExecContext(ctx, `INSERT INTO deployments (
 		id, service_id, organization_id, project_id, status, commit_hash,
-		commit_message, branch, trigger, build_logs, container_id, created_at, updated_at, finished_at
-	) VALUES (?, NULLIF(?, ''), ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)`,
+		commit_message, branch, image_ref, trigger, build_logs, container_id, created_at, updated_at, finished_at
+	) VALUES (?, NULLIF(?, ''), ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)`,
 		d.ID, d.ServiceID, d.OrganizationID, d.ProjectID, d.Status, d.CommitHash,
-		d.CommitMessage, d.Branch, d.Trigger, d.BuildLogs, d.ContainerID, d.CreatedAt, d.UpdatedAt, d.FinishedAt)
+		d.CommitMessage, d.Branch, d.ImageRef, d.Trigger, d.BuildLogs, d.ContainerID, d.CreatedAt, d.UpdatedAt, d.FinishedAt)
 	if err != nil {
 		return fmt.Errorf("failed to create deployment: %w", err)
 	}
@@ -65,7 +65,7 @@ func (r *DeploymentRepo) GetByID(ctx context.Context, id string) (*models.Deploy
 	var d models.Deployment
 	err := r.db.GetContext(ctx, &d, `SELECT d.id, COALESCE(d.service_id, '') AS service_id, d.organization_id,
 		COALESCE(s.environment_id, '') AS environment_id, d.project_id, d.status, d.commit_hash,
-		d.commit_message, d.branch, d.trigger, d.build_logs, d.container_id, d.created_at, d.updated_at, d.finished_at
+		d.commit_message, d.branch, d.trigger, COALESCE(d.image_ref, '') AS image_ref, d.build_logs, d.container_id, d.created_at, d.updated_at, d.finished_at
 		FROM deployments d LEFT JOIN app_services s ON s.id = d.service_id WHERE d.id = ?`, id)
 	if errors.Is(err, sql.ErrNoRows) {
 		return nil, utils.NewNotFoundError("Deployment", id)
@@ -85,7 +85,7 @@ func (r *DeploymentRepo) ListByService(ctx context.Context, serviceID string, li
 	var deps []*models.Deployment
 	err := r.db.SelectContext(ctx, &deps, `SELECT d.id, COALESCE(d.service_id, '') AS service_id, d.organization_id,
 		COALESCE(s.environment_id, '') AS environment_id, d.project_id, d.status, d.commit_hash,
-		d.commit_message, d.branch, d.trigger, d.build_logs, d.container_id, d.created_at, d.updated_at, d.finished_at
+		d.commit_message, d.branch, d.trigger, COALESCE(d.image_ref, '') AS image_ref, d.build_logs, d.container_id, d.created_at, d.updated_at, d.finished_at
 		FROM deployments d LEFT JOIN app_services s ON s.id = d.service_id
 		WHERE d.service_id = ? ORDER BY d.created_at DESC LIMIT ? OFFSET ?`, serviceID, limit, offset)
 	if err != nil {
@@ -150,8 +150,8 @@ func (r *DeploymentRepo) Update(_ context.Context, d *models.Deployment) error {
 	defer r.mu.Unlock()
 	d.UpdatedAt = time.Now().UTC()
 	_, err := r.db.Exec(`UPDATE deployments SET status = ?, commit_hash = ?, commit_message = ?,
-		branch = ?, trigger = ?, build_logs = ?, container_id = ?, updated_at = ?, finished_at = ? WHERE id = ?`,
-		d.Status, d.CommitHash, d.CommitMessage, d.Branch, d.Trigger, d.BuildLogs, d.ContainerID, d.UpdatedAt, d.FinishedAt, d.ID)
+		branch = ?, image_ref = ?, trigger = ?, build_logs = ?, container_id = ?, updated_at = ?, finished_at = ? WHERE id = ?`,
+		d.Status, d.CommitHash, d.CommitMessage, d.Branch, d.ImageRef, d.Trigger, d.BuildLogs, d.ContainerID, d.UpdatedAt, d.FinishedAt, d.ID)
 	return err
 }
 

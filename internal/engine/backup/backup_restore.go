@@ -58,6 +58,13 @@ func (bm *BackupManager) RestoreBackup(ctx context.Context, recordID string) err
 }
 
 func (bm *BackupManager) buildRestoreCommand(cfg *models.BackupConfig) (string, []string, error) {
+	if strings.TrimSpace(cfg.CustomRestoreCommand) != "" {
+		containerName, err := bm.serviceContainer(context.Background(), cfg.ServiceID)
+		if err != nil {
+			return "", nil, err
+		}
+		return containerName, splitShellCommand(cfg.CustomRestoreCommand), nil
+	}
 	if cfg.DatabaseID != "" {
 		db, err := bm.store.GetDatabase(cfg.DatabaseID)
 		if err != nil || db == nil {

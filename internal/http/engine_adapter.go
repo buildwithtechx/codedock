@@ -2,6 +2,7 @@ package http
 
 import (
 	"context"
+	"fmt"
 	"time"
 
 	"codedock.run/codedock/internal/models"
@@ -17,6 +18,7 @@ type engineAdapter struct {
 	scheduledTaskRepo repositories.ScheduledTaskRepository
 	backupRepo        repositories.BackupRepository
 	s3Repo            repositories.S3DestinationRepository
+	sftpRepo          *repositories.SFTPDestinationRepo
 	serviceVarRepo    repositories.ServiceVarRepository
 	serverlessRepo    repositories.ServerlessRepository
 }
@@ -125,8 +127,13 @@ func (a *engineAdapter) UpdateBackupRecord(opts models.UpdateBackupRecordOpts) e
 	rec.Status = opts.Status
 	rec.FilePath = opts.FilePath
 	rec.S3URL = opts.S3URL
+	rec.SFTPURL = opts.SFTPURL
+	rec.ParentRecordID = opts.ParentRecordID
 	if opts.S3DestinationID != "" {
 		rec.S3DestinationID = opts.S3DestinationID
+	}
+	if opts.SFTPDestinationID != "" {
+		rec.SFTPDestinationID = opts.SFTPDestinationID
 	}
 	rec.Logs = opts.Logs
 	rec.FileSizeBytes = opts.FileSizeBytes
@@ -140,6 +147,13 @@ func (a *engineAdapter) GetBackupRecord(id string) (*models.BackupRecord, error)
 
 func (a *engineAdapter) GetS3Destination(id string) (*models.S3Destination, error) {
 	return a.s3Repo.GetS3Destination(context.Background(), id)
+}
+
+func (a *engineAdapter) GetSFTPDestination(id string) (*models.SFTPDestination, error) {
+	if a.sftpRepo == nil {
+		return nil, fmt.Errorf("sftp storage unavailable")
+	}
+	return a.sftpRepo.Get(context.Background(), id)
 }
 
 func (a *engineAdapter) ListBackupRecords(backupConfigID string) ([]*models.BackupRecord, error) {

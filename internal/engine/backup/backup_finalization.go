@@ -17,6 +17,8 @@ func (bm *BackupManager) finalizeBackupRecord(opts FinalizeBackupOpts) (*models.
 		SHA256: opts.Record.SHA256, VerifiedAt: opts.Record.VerifiedAt,
 		FilePath:      opts.FilePath,
 		S3URL:         opts.S3URL,
+		SFTPURL:       opts.SFTPURL,
+		ParentRecordID: opts.ParentRecordID,
 		Logs:          finalLogs,
 		FileSizeBytes: opts.SizeBytes,
 		CompletedAt:   nowStr,
@@ -28,6 +30,8 @@ func (bm *BackupManager) finalizeBackupRecord(opts FinalizeBackupOpts) (*models.
 	opts.Record.FilePath = opts.FilePath
 	opts.Record.FileSizeBytes = opts.SizeBytes
 	opts.Record.S3URL = opts.S3URL
+	opts.Record.SFTPURL = opts.SFTPURL
+	opts.Record.ParentRecordID = opts.ParentRecordID
 	opts.Record.Logs = finalLogs
 	opts.Record.CompletedAt = nowStr
 	return opts.Record, nil

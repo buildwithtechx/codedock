@@ -215,8 +215,17 @@ func (h *DeploymentHandler) Rollback(c echo.Context) error {
 		CommitHash:    targetDep.CommitHash,
 		CommitMessage: "Rollback to " + targetDep.ID,
 		Branch:        targetDep.Branch,
+		ImageRef:      targetDep.ImageRef,
 		Trigger:       "Rollback",
 		BuildLogs:     "Rolling back to deployment " + targetDep.ID + "...\n",
+	}
+	if targetDep.ImageRef != "" && targetDep.ServiceID != "" {
+		if app, err := h.deploymentService.GetService(c.Request().Context(), targetDep.ServiceID); err == nil && app != nil {
+			app.ImageRef = targetDep.ImageRef
+			if updateErr := h.deploymentService.UpdateService(c.Request().Context(), app); updateErr != nil {
+				return utils.Error(c, http.StatusInternalServerError, updateErr.Error())
+			}
+		}
 	}
 	created, err := h.deploymentService.CreateDeployment(c.Request().Context(), newDep)
 	if err != nil {

@@ -153,6 +153,15 @@ func (r *ClusterRunner) Host(ctx context.Context, node models.ClusterNode, scrip
 	return client.RunWithInput(ctx, client.RootCommand("sh -s"), strings.NewReader(script))
 }
 
+func (r *ClusterRunner) StreamHost(ctx context.Context, node models.ClusterNode, script string, input io.Reader, output io.Writer) error {
+	client, err := r.client(ctx, node)
+	if err != nil {
+		return err
+	}
+	defer closeClient(client)
+	return client.Stream(ctx, client.RootCommand("sh -c "+ssh.ShellQuote(script)), input, output)
+}
+
 func (r *ClusterRunner) VerifyPorts(ctx context.Context, node models.ClusterNode, control bool) error {
 	ports := "8472 10250"
 	if control {

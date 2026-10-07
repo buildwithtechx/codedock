@@ -1,6 +1,7 @@
 package http
 
 import (
+	"codedock.run/codedock/internal/engine/backup"
 	"codedock.run/codedock/internal/engine/bare"
 	"codedock.run/codedock/internal/engine/kubernetes"
 	"codedock.run/codedock/internal/engine/observability"
@@ -21,7 +22,7 @@ import (
 	"time"
 )
 
-func configureClusters(server *Server, db *sql.DB, vault *utils.Vault, projects *repositories.ProjectRepo, servers repositories.ServerRepository, operations *operations.Service, gate clusters.Gate, apps repositories.AppServiceRepository, deployments *deployments.DeploymentService, canvas *projectservices.CanvasService) error {
+func configureClusters(server *Server, db *sql.DB, vault *utils.Vault, projects *repositories.ProjectRepo, servers repositories.ServerRepository, operations *operations.Service, gate clusters.Gate, apps repositories.AppServiceRepository, deployments *deployments.DeploymentService, canvas *projectservices.CanvasService, backups *backup.BackupManager) error {
 	repository := repositories.NewClusterRepo(db, vault)
 	if err := repository.Recover(context.Background()); err != nil {
 		return fmt.Errorf("recover cluster operations: %w", err)
@@ -49,6 +50,7 @@ func configureClusters(server *Server, db *sql.DB, vault *utils.Vault, projects 
 	server.router.Server.RegisterOnShutdown(cancelReconciliation)
 	go runtime.RunReconciler(reconcileCtx)
 	deployments.Runtime = runtime
+	backups.SetNativeData(runtime.BackupNativeData, runtime.RestoreNativeData)
 	server.appServiceHandler.Runtime = runtime
 	canvasRuntime := observability.NewCanvasRuntime(server.dockerClient)
 	canvasRuntime.Cluster = runtime
