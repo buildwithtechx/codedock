@@ -29,7 +29,7 @@ Implementation details and current target boundaries: [Application, Compose and 
 - [x] Repository inspection detects framework, package manager, commands, port and output defaults.
 - [x] Users can edit every detected value and see detection failures without losing work.
 - [x] Configure variables, web/worker mode and domain in the application setup flow.
-- [ ] Select Docker/SSH, cluster or native destination before the first deployment within that same flow.
+- [x] Select Docker/SSH, cluster or native destination before the first deployment within that same flow.
 - [x] Review the exact payload and effects before creating or deploying resources.
 - [x] Live progress separates preparation, build, start, readiness and routing.
 - [x] Retries reconcile existing resources; cancellation preserves the previous deployment.
@@ -80,8 +80,8 @@ Implementation details and current target boundaries: [Application, Compose and 
 
 ### Remaining cluster/runtime parity and integration
 
-- [ ] Cluster databases appear in topology and support reviewed application bindings and connection replacement.
-- [ ] Cluster database settings, stop/retain, exact-name deletion and owned PVC cleanup.
+- [x] Cluster databases appear in topology and support reviewed application bindings and connection replacement.
+- [x] Cluster database settings, stop/retain, exact-name deletion and owned PVC cleanup.
 - [ ] PostgreSQL synchronous durability, observed roles/volumes and authenticated application-namespace connection verification.
 - [ ] Redis operator-backed sharding/failover, S3 snapshots and separate-target data restore; current fixed-primary replicas and AOF restart recovery are narrower.
 - [ ] Shared storage provisioning, file-volume lifecycle, external snapshots and separate-volume restore.
