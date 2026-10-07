@@ -1,6 +1,8 @@
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
 import { useRef, useState } from 'react';
+import type { Cluster } from '#/features/servers/cluster-types';
 import type { CreateAppServiceRequest } from '#/features/services';
+import type { RuntimeReview, RuntimeTarget } from '#/features/services/runtime-types';
 import { useListByProject } from '#/hooks/use-environments';
 import type { BaseResponse } from '#/interfaces/base';
 import { apiClient } from '#/lib/api-client';
@@ -15,6 +17,12 @@ import {
   type RepositoryInspection,
   setupDefaults,
 } from './application-setup-types';
+import {
+  describeDestination,
+  emptyDestination,
+  type SetupDestination,
+  toRuntimeTarget,
+} from './destination-picker';
 
 export function useApplicationSetup(props: ApplicationSetupProps) {
   const client = useQueryClient();
@@ -28,6 +36,7 @@ export function useApplicationSetup(props: ApplicationSetupProps) {
   const [error, setError] = useState('');
   const [detection, setDetection] = useState<RepositoryInspection>();
   const [deploymentId, setDeploymentId] = useState('');
+  const [destination, setDestination] = useState<SetupDestination>(emptyDestination);
   const created = useRef('');
   const creationId = useRef(crypto.randomUUID());
   const savedVariables = useRef(new Set<string>());
@@ -47,6 +56,21 @@ export function useApplicationSetup(props: ApplicationSetupProps) {
     queryKey: ['setup-target', projectId],
     queryFn: () => apiClient.get<BaseResponse<{ serverId?: string }>>(`/projects/${projectId}`),
     enabled: !!projectId && props.isOpen,
+  });
+  const serverId = project.data?.data.serverId ?? '';
+  const clusters = useQuery({
+    queryKey: ['setup-clusters', projectId],
+    queryFn: () =>
+      apiClient.get<BaseResponse<Cluster[]>>(`/projects/${projectId}/runtime-clusters`),
+    enabled: !!projectId && props.isOpen && destination.kind === 'kubernetes',
+  });
+  const registries = useQuery({
+    queryKey: ['setup-registries', projectId],
+    queryFn: () =>
+      apiClient.get<BaseResponse<{ id: string; registryUrl: string }[]>>(
+        `/projects/${projectId}/registries`
+      ),
+    enabled: !!projectId && props.isOpen && destination.kind === 'kubernetes',
   });
   const payload = {
     ...draft,
@@ -109,10 +133,15 @@ export function useApplicationSetup(props: ApplicationSetupProps) {
       throw new Error('CPU and memory limits must be non-negative numbers.');
     if (project.isError || !project.data)
       throw new Error('Deployment target could not be verified.');
-    if (project.data.data.serverId)
-      throw new Error(
-        'This setup requires a local Docker project. SSH worker setup is not supported here yet.'
-      );
+    if (destination.kind === 'kubernetes' && !destination.clusterId)
+      throw new Error('Select a ready cluster for the Kubernetes destination.');
+    if (destination.kind === 'bare') {
+      if (!destination.bareNode.serverId.trim()) throw new Error('Select a native server.');
+      if (!destination.bareReleaseUrl.startsWith('https://'))
+        throw new Error('Native artifact URL must use https.');
+      if (!/^[0-9a-f]{64}$/i.test(destination.bareSha256.trim()))
+        throw new Error('Native artifact SHA256 must be 64 hex characters.');
+    }
     parseSetupVariables(variables);
   };
   const apply = useMutation({
@@ -121,6 +150,17 @@ export function useApplicationSetup(props: ApplicationSetupProps) {
       if (!created.current) {
         const app = await appsService.createApp(environmentId, payload);
         created.current = app.data.id;
+      }
+      const target: RuntimeTarget = toRuntimeTarget(destination);
+      if (target.kind !== 'docker') {
+        const review = await apiClient.post<BaseResponse<RuntimeReview>>(
+          `/apps/${created.current}/runtime/review`,
+          { target, revision: 0 }
+        );
+        await apiClient.post(`/apps/${created.current}/runtime/apply`, {
+          operationId: review.data.operation.id,
+          confirmation: review.data.confirmation,
+        });
       }
       for (const variable of parseSetupVariables(variables)) {
         if (savedVariables.current.has(variable.key)) continue;
@@ -145,6 +185,12 @@ export function useApplicationSetup(props: ApplicationSetupProps) {
     projects,
     environments,
     project,
+    serverId,
+    clusters,
+    registries,
+    destination,
+    destinationSummary: describeDestination(destination, serverId),
+    runtimeTarget: toRuntimeTarget(destination),
     source,
     draft,
     variables,
@@ -170,6 +216,11 @@ export function useApplicationSetup(props: ApplicationSetupProps) {
       requestSequence.current++;
       setProjectId(id);
       setEnvironment('');
+      setReview(false);
+    },
+    setDestination: (next: SetupDestination) => {
+      requestSequence.current++;
+      setDestination(next);
       setReview(false);
     },
     setEnvironment: (id: string) => {

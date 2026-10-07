@@ -10,6 +10,7 @@ import { Label } from '#/components/ui/label';
 import { ApplicationSetupFields } from './application-setup-fields';
 import { type ApplicationSetupProps, parseSetupVariables } from './application-setup-types';
 import { DeploymentProgress } from './deployment-progress';
+import { DestinationPicker } from './destination-picker';
 import { RepositorySelector } from './repository-selector';
 import { useApplicationSetup } from './use-application-setup';
 
@@ -80,11 +81,16 @@ export function ApplicationSetupModal(props: ApplicationSetupProps) {
                 </div>
               </div>
               <p className="text-muted-foreground text-sm">
-                Target:{' '}
-                {setup.project.data?.data.serverId ? 'Project SSH Docker server' : 'Local Docker'}.
-                Choose a cluster or native destination in the application build settings after
-                saving.
+                Target: {setup.destinationSummary}. Docker uses the project server binding; cluster
+                and native destinations are applied before the first deployment.
               </p>
+              <DestinationPicker
+                destination={setup.destination}
+                serverId={setup.serverId}
+                clusters={setup.clusters.data?.data ?? []}
+                registries={setup.registries.data?.data ?? []}
+                onChange={setup.setDestination}
+              />
               {!setup.review && (
                 <>
                   {setup.source === 'git' && (
@@ -132,7 +138,11 @@ export function ApplicationSetupModal(props: ApplicationSetupProps) {
                 </p>
                 <pre className="max-h-72 overflow-auto rounded-md bg-muted p-3 text-xs">
                   {JSON.stringify(
-                    { application: setup.payload, variables: parseSetupVariables(setup.variables) },
+                    {
+                      application: setup.payload,
+                      destination: setup.runtimeTarget,
+                      variables: parseSetupVariables(setup.variables),
+                    },
                     null,
                     2
                   )}
