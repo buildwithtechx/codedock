@@ -10,10 +10,7 @@ import (
 )
 
 func TestClusterDatabaseSecretsAreEncryptedAndHiddenFromListing(t *testing.T) {
-	db := openTestDB(t)
-	if err := RunMigrations(db); err != nil {
-		t.Fatal(err)
-	}
+	db := openPGTestDB(t)
 	for _, query := range []string{`INSERT INTO organizations(id,name) VALUES('org','Org')`, `INSERT INTO project_apps(id,organization_id,name,slug) VALUES('app','org','App','app')`, `INSERT INTO projects(id,app_id,organization_id,name,slug) VALUES('project','app','org','Project','project')`, `INSERT INTO clusters(id,project_id,organization_id,name,version,nodes_json,encrypted_token,updated_at) VALUES('cluster','project','org','Cluster','v1.34.1+k3s1','[]','','now')`} {
 		if _, err := db.Exec(query); err != nil {
 			t.Fatal(err)

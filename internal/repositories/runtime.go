@@ -17,11 +17,11 @@ type RuntimeRepo struct {
 }
 
 func NewRuntimeRepo(db *sql.DB, vault Vault) *RuntimeRepo {
-	return &RuntimeRepo{sqlx.NewDb(db, "sqlite"), vault}
+	return &RuntimeRepo{sqlx.NewDb(db, "pgx"), vault}
 }
 func (r *RuntimeRepo) Get(ctx context.Context, id string) (*models.ServiceRuntime, error) {
 	var runtime models.ServiceRuntime
-	err := r.db.GetContext(ctx, &runtime, `SELECT * FROM service_runtimes WHERE service_id=?`, id)
+	err := r.db.GetContext(ctx, &runtime, `SELECT * FROM service_runtimes WHERE service_id=$1`, id)
 	if errors.Is(err, sql.ErrNoRows) {
 		return &models.ServiceRuntime{ServiceID: id, RuntimeKind: "docker", Target: models.RuntimeTarget{Kind: "docker"}, Status: "CONFIGURED"}, nil
 	}
@@ -61,13 +61,13 @@ func (r *RuntimeRepo) Save(ctx context.Context, runtime *models.ServiceRuntime, 
 	}
 	now := time.Now().UTC().Format(time.RFC3339Nano)
 	if revision == 0 {
-		_, err := r.db.ExecContext(ctx, `INSERT INTO service_runtimes(service_id,project_id,encrypted_config,updated_at,runtime_kind) VALUES(?,?,?,?,?)`, runtime.ServiceID, runtime.ProjectID, encrypted, now, runtime.Target.Kind)
+		_, err := r.db.ExecContext(ctx, `INSERT INTO service_runtimes(service_id,project_id,encrypted_config,updated_at,runtime_kind) VALUES($1,$2,$3,$4,$5)`, runtime.ServiceID, runtime.ProjectID, encrypted, now, runtime.Target.Kind)
 		if err != nil {
 			return fmt.Errorf("runtime target already configured or invalid: %w", err)
 		}
 		return nil
 	}
-	result, err := r.db.ExecContext(ctx, `UPDATE service_runtimes SET encrypted_config=?,runtime_kind=?,revision=revision+1,status='CONFIGURED',error='',updated_at=? WHERE service_id=? AND project_id=? AND revision=? AND status NOT IN ('DEPLOYING','RECOVERING') AND encrypted_journal=''`, encrypted, runtime.Target.Kind, now, runtime.ServiceID, runtime.ProjectID, revision)
+	result, err := r.db.ExecContext(ctx, `UPDATE service_runtimes SET encrypted_config=$1,runtime_kind=$2,revision=revision+1,status='CONFIGURED',error='',updated_at=$3 WHERE service_id=$4 AND project_id=$5 AND revision=$6 AND status NOT IN ('DEPLOYING','RECOVERING') AND encrypted_journal=''`, encrypted, runtime.Target.Kind, now, runtime.ServiceID, runtime.ProjectID, revision)
 	if err != nil {
 		return err
 	}
@@ -85,7 +85,7 @@ func (r *RuntimeRepo) Begin(ctx context.Context, id string, revision int, journa
 	if err != nil {
 		return err
 	}
-	result, err := r.db.ExecContext(ctx, `UPDATE service_runtimes SET status='DEPLOYING',encrypted_journal=?,error='',updated_at=? WHERE service_id=? AND revision=? AND encrypted_journal='' AND status NOT IN ('DEPLOYING','RECOVERING')`, encrypted, time.Now().UTC().Format(time.RFC3339Nano), id, revision)
+	result, err := r.db.ExecContext(ctx, `UPDATE service_runtimes SET status='DEPLOYING',encrypted_journal=$1,error='',updated_at=$2 WHERE service_id=$3 AND revision=$4 AND encrypted_journal='' AND status NOT IN ('DEPLOYING','RECOVERING')`, encrypted, time.Now().UTC().Format(time.RFC3339Nano), id, revision)
 	if err != nil {
 		return err
 	}
@@ -99,7 +99,7 @@ func (r *RuntimeRepo) Begin(ctx context.Context, id string, revision int, journa
 	return nil
 }
 func (r *RuntimeRepo) Observe(ctx context.Context, id, status, message string, clearJournal bool) error {
-	result, err := r.db.ExecContext(ctx, `UPDATE service_runtimes SET status=?,error=?,encrypted_journal=CASE WHEN ? THEN '' ELSE encrypted_journal END,updated_at=? WHERE service_id=?`, status, message, clearJournal, time.Now().UTC().Format(time.RFC3339Nano), id)
+	result, err := r.db.ExecContext(ctx, `UPDATE service_runtimes SET status=$1,error=$2,encrypted_journal=CASE WHEN $3 THEN '' ELSE encrypted_journal END,updated_at=$4 WHERE service_id=$5`, status, message, clearJournal, time.Now().UTC().Format(time.RFC3339Nano), id)
 	if err != nil {
 		return err
 	}

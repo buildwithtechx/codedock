@@ -11,10 +11,7 @@ import (
 )
 
 func TestOperationsEncryptReviewsAndRejectConflicts(t *testing.T) {
-	db := openTestDB(t)
-	if err := RunMigrations(db); err != nil {
-		t.Fatal(err)
-	}
+	db := openPGTestDB(t)
 	vault, err := utils.NewVault(t.TempDir())
 	if err != nil {
 		t.Fatal(err)
@@ -27,7 +24,7 @@ func TestOperationsEncryptReviewsAndRejectConflicts(t *testing.T) {
 		t.Fatal(err)
 	}
 	var encrypted string
-	if err := db.QueryRow(`SELECT encrypted_payload FROM operations WHERE id=?`, review.Operation.ID).Scan(&encrypted); err != nil {
+	if err := db.QueryRow(`SELECT encrypted_payload FROM operations WHERE id=$1`, review.Operation.ID).Scan(&encrypted); err != nil {
 		t.Fatal(err)
 	}
 	if strings.Contains(encrypted, "fixture-secret") {
@@ -64,7 +61,7 @@ func TestOperationsEncryptReviewsAndRejectConflicts(t *testing.T) {
 	if err != nil {
 		t.Fatal(err)
 	}
-	if _, err := db.Exec(`UPDATE operations SET expires_at=? WHERE id=?`, time.Now().Add(-time.Minute).Unix(), expired.Operation.ID); err != nil {
+	if _, err := db.Exec(`UPDATE operations SET expires_at=$1 WHERE id=$2`, time.Now().Add(-time.Minute).Unix(), expired.Operation.ID); err != nil {
 		t.Fatal(err)
 	}
 	if err := service.Apply(ctx, expired.Operation.ID, "owner", expired.Confirmation, "version-1", runner); err == nil {

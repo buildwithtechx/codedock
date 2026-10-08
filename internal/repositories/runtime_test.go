@@ -9,10 +9,7 @@ import (
 )
 
 func TestRuntimeRecoveryJournalEncryptionAndRevisionConflicts(t *testing.T) {
-	db := openTestDB(t)
-	if err := RunMigrations(db); err != nil {
-		t.Fatal(err)
-	}
+	db := openPGTestDB(t)
 	for _, query := range []string{`INSERT INTO organizations(id,name) VALUES('org','Org')`, `INSERT INTO project_apps(id,organization_id,name,slug) VALUES('app','org','App','app')`, `INSERT INTO projects(id,app_id,organization_id,name,slug) VALUES('project','app','org','Project','project')`, `INSERT INTO app_services(id,project_id,name) VALUES('service','project','Service')`} {
 		if _, err := db.Exec(query); err != nil {
 			t.Fatal(err)
@@ -64,10 +61,7 @@ func TestRuntimeRecoveryJournalEncryptionAndRevisionConflicts(t *testing.T) {
 }
 
 func TestDesiredWorkloadCommitIsAtomicAndEncrypted(t *testing.T) {
-	db := openTestDB(t)
-	if err := RunMigrations(db); err != nil {
-		t.Fatal(err)
-	}
+	db := openPGTestDB(t)
 	for _, query := range []string{`INSERT INTO organizations(id,name) VALUES('org','Org')`, `INSERT INTO project_apps(id,organization_id,name,slug) VALUES('app','org','App','app')`, `INSERT INTO projects(id,app_id,organization_id,name,slug) VALUES('project','app','org','Project','project')`, `INSERT INTO app_services(id,project_id,name) VALUES('service','project','Service')`} {
 		if _, err := db.Exec(query); err != nil {
 			t.Fatal(err)
@@ -110,5 +104,57 @@ func TestDesiredWorkloadCommitIsAtomicAndEncrypted(t *testing.T) {
 	pending, err = repo.Pending(ctx)
 	if err != nil || len(pending) != 0 {
 		t.Fatal("committed journal retained", err)
+	}
+}
+
+func TestRuntimeDesiredIDsAndSyncKinds(t *testing.T) {
+	db := openPGTestDB(t)
+	for _, query := range []string{`INSERT INTO organizations(id,name) VALUES('org','Org')`, `INSERT INTO project_apps(id,organization_id,name,slug) VALUES('app','org','App','app')`, `INSERT INTO projects(id,app_id,organization_id,name,slug) VALUES('project','app','org','Project','project')`, `INSERT INTO app_services(id,project_id,name) VALUES('service-one','project','One')`, `INSERT INTO app_services(id,project_id,name) VALUES('service-two','project','Two')`} {
+		if _, err := db.Exec(query); err != nil {
+			t.Fatal(err)
+		}
+	}
+	vault, err := utils.NewVault(t.TempDir())
+	if err != nil {
+		t.Fatal(err)
+	}
+	repo := NewRuntimeRepo(db, vault)
+	ctx := context.Background()
+	if err := repo.Save(ctx, &models.ServiceRuntime{ServiceID: "service-one", ProjectID: "project", Target: models.RuntimeTarget{Kind: "docker"}}, 0); err != nil {
+		t.Fatal(err)
+	}
+	if err := repo.Save(ctx, &models.ServiceRuntime{ServiceID: "service-two", ProjectID: "project", Target: models.RuntimeTarget{Kind: "kubernetes"}}, 0); err != nil {
+		t.Fatal(err)
+	}
+	ids, err := repo.DesiredIDs(ctx)
+	if err != nil {
+		t.Fatal(err)
+	}
+	if len(ids) != 0 {
+		t.Fatal("desired ids listed before any commit", ids)
+	}
+	if err := repo.Begin(ctx, "service-one", 1, "journal"); err != nil {
+		t.Fatal(err)
+	}
+	if err := repo.CommitDesired(ctx, "service-one", 1, &models.DesiredRuntime{Revision: 1, Manifest: "manifest"}); err != nil {
+		t.Fatal(err)
+	}
+	ids, err = repo.DesiredIDs(ctx)
+	if err != nil || len(ids) != 1 || ids[0] != "service-one" {
+		t.Fatal("committed desired workload missing", ids, err)
+	}
+	if _, err := db.Exec(`UPDATE service_runtimes SET runtime_kind='bare' WHERE service_id='service-two'`); err != nil {
+		t.Fatal(err)
+	}
+	if err := repo.SyncKinds(ctx); err != nil {
+		t.Fatal(err)
+	}
+	loaded, err := repo.Get(ctx, "service-two")
+	if err != nil || loaded.RuntimeKind != "kubernetes" {
+		t.Fatal("stale runtime kind was not repaired", err)
+	}
+	untouched, err := repo.Get(ctx, "service-one")
+	if err != nil || untouched.RuntimeKind != "docker" {
+		t.Fatal("matching runtime kind was rewritten", err)
 	}
 }

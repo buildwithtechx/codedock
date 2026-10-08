@@ -27,7 +27,7 @@ type GitAppRepo struct {
 }
 
 func NewGitAppRepo(db *sql.DB, vault Vault) *GitAppRepo {
-	return &GitAppRepo{db: sqlx.NewDb(db, "sqlite"), vault: vault}
+	return &GitAppRepo{db: sqlx.NewDb(db, "pgx"), vault: vault}
 }
 
 func saveApp(ctx context.Context, db *sqlx.DB, tableName string, columns []string, values []any) error {
@@ -37,8 +37,8 @@ func saveApp(ctx context.Context, db *sqlx.DB, tableName string, columns []strin
 	placeholders := make([]string, len(columns))
 	updates := make([]string, len(columns))
 	for i, col := range columns {
-		placeholders[i] = "?"
-		if col != "id" && col != "created_at" {
+		placeholders[i] = fmt.Sprintf("$%d", i+1)
+		if col != "id" && col != "created_at" && col != "updated_at" {
 			updates[i] = fmt.Sprintf("%s=excluded.%s", col, col)
 		}
 	}
@@ -66,7 +66,7 @@ func deleteApp(ctx context.Context, db *sqlx.DB, tableName, id string) error {
 	if tableName != "github_apps" {
 		return errors.New("invalid table name")
 	}
-	_, err := db.ExecContext(ctx, fmt.Sprintf("DELETE FROM %s WHERE id = ?", tableName), id)
+	_, err := db.ExecContext(ctx, fmt.Sprintf("DELETE FROM %s WHERE id = $1", tableName), id)
 	return err
 }
 
@@ -94,7 +94,7 @@ func (r *GitAppRepo) ListGithubApps(ctx context.Context) ([]models.GithubApp, er
 }
 
 func (r *GitAppRepo) GetGithubApp(ctx context.Context, id string) (*models.GithubApp, error) {
-	query := `SELECT id, name, app_id, installation_id, client_id, client_secret, webhook_secret, private_key, is_public, created_at, updated_at FROM github_apps WHERE id = ?`
+	query := `SELECT id, name, app_id, installation_id, client_id, client_secret, webhook_secret, private_key, is_public, created_at, updated_at FROM github_apps WHERE id = $1`
 	var a models.GithubApp
 	if err := r.db.GetContext(ctx, &a, query, id); err != nil {
 		if errors.Is(err, sql.ErrNoRows) {

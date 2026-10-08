@@ -132,16 +132,9 @@ func TestMaxStorageGBOverflow(t *testing.T) {
 
 func TestDisableLocalGuard(t *testing.T) {
 	store := newMockStore()
-	tmpData := t.TempDir()
-	prev := os.Getenv("CODEDOCK_DATA_DIR")
-	os.Setenv("CODEDOCK_DATA_DIR", tmpData)
-	defer os.Setenv("CODEDOCK_DATA_DIR", prev)
 
 	dir := t.TempDir()
 	bm := NewBackupManager(nil, store, dir)
-
-	dbFile := filepath.Join(tmpData, "codedock.db")
-	_ = os.WriteFile(dbFile, []byte("test db content"), 0o600)
 
 	cfg := &models.BackupConfig{
 		ID:            "cfg-disable-local",

@@ -14,8 +14,7 @@ import (
 	"codedock.run/codedock/internal/models"
 	"codedock.run/codedock/internal/repositories"
 	projectservices "codedock.run/codedock/internal/services/projects"
-
-	_ "modernc.org/sqlite"
+	"codedock.run/codedock/internal/testdb"
 )
 
 type migrationTestVault struct{}
@@ -191,12 +190,7 @@ const fakePs = `{"ID":"abc123def456","Names":"web","Image":"nginx:1.25","State":
 
 func setupMigrationTest(t *testing.T) *migrationTestEnv {
 	t.Helper()
-	db, err := sql.Open("sqlite", ":memory:?_pragma=foreign_keys(ON)")
-	if err != nil {
-		t.Fatalf("open database: %v", err)
-	}
-	db.SetMaxOpenConns(1)
-	t.Cleanup(func() { db.Close() })
+	db := testdb.Open(t)
 	if err := repositories.RunMigrations(db); err != nil {
 		t.Fatalf("run migrations: %v", err)
 	}

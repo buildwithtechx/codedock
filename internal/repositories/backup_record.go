@@ -26,8 +26,8 @@ func (r *BackupRepo) CreateRecord(ctx context.Context, rec *models.BackupRecord)
 	r.mu.Lock()
 	defer r.mu.Unlock()
 	_, err := r.db.ExecContext(ctx, `INSERT INTO backup_records (id, backup_config_id, database_id, s3_destination_id, sftp_destination_id, parent_record_id, status, file_path, file_size_bytes, s3_url, sftp_url, logs, started_at, completed_at)
-		VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)`,
-		rec.ID, rec.BackupConfigID, rec.DatabaseID, rec.S3DestinationID, rec.SFTPDestinationID, rec.ParentRecordID, rec.Status, rec.FilePath, rec.FileSizeBytes, rec.S3URL, rec.SFTPURL, rec.Logs, rec.StartedAt, rec.CompletedAt)
+		VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10, $11, $12, $13, $14)`,
+		rec.ID, rec.BackupConfigID, rec.DatabaseID, rec.S3DestinationID, rec.SFTPDestinationID, rec.ParentRecordID, rec.Status, rec.FilePath, rec.FileSizeBytes, rec.S3URL, rec.SFTPURL, rec.Logs, rec.StartedAt, nullIfEmpty(rec.CompletedAt))
 	if err != nil {
 		return fmt.Errorf("failed to create backup record: %w", err)
 	}
@@ -38,8 +38,8 @@ func (r *BackupRepo) ListRecordsByConfig(ctx context.Context, backupConfigID str
 	r.mu.Lock()
 	defer r.mu.Unlock()
 	var list []*models.BackupRecord
-	err := r.db.SelectContext(ctx, &list, `SELECT id, backup_config_id, COALESCE(database_id, '') as database_id, COALESCE(s3_destination_id, '') as s3_destination_id, COALESCE(sftp_destination_id, '') as sftp_destination_id, COALESCE(parent_record_id, '') as parent_record_id, status, COALESCE(file_path, '') as file_path, file_size_bytes, COALESCE(s3_url, '') as s3_url, COALESCE(sftp_url, '') as sftp_url, COALESCE(logs, '') as logs, started_at, COALESCE(completed_at, '') as completed_at, protected_until, sha256, verified_at
-		FROM backup_records WHERE backup_config_id = ? ORDER BY started_at DESC`, backupConfigID)
+	err := r.db.SelectContext(ctx, &list, `SELECT id, backup_config_id, COALESCE(database_id, '') as database_id, COALESCE(s3_destination_id, '') as s3_destination_id, COALESCE(sftp_destination_id, '') as sftp_destination_id, COALESCE(parent_record_id, '') as parent_record_id, status, COALESCE(file_path, '') as file_path, file_size_bytes, COALESCE(s3_url, '') as s3_url, COALESCE(sftp_url, '') as sftp_url, COALESCE(logs, '') as logs, started_at, COALESCE(completed_at::text, '') as completed_at, protected_until, sha256, verified_at
+		FROM backup_records WHERE backup_config_id = $1 ORDER BY started_at DESC`, backupConfigID)
 	if err != nil {
 		return nil, fmt.Errorf("failed to list backup records: %w", err)
 	}
@@ -53,8 +53,8 @@ func (r *BackupRepo) ListRecordsByDatabase(ctx context.Context, databaseID strin
 	r.mu.Lock()
 	defer r.mu.Unlock()
 	var list []*models.BackupRecord
-	err := r.db.SelectContext(ctx, &list, `SELECT id, backup_config_id, COALESCE(database_id, '') as database_id, COALESCE(s3_destination_id, '') as s3_destination_id, COALESCE(sftp_destination_id, '') as sftp_destination_id, COALESCE(parent_record_id, '') as parent_record_id, status, COALESCE(file_path, '') as file_path, file_size_bytes, COALESCE(s3_url, '') as s3_url, COALESCE(sftp_url, '') as sftp_url, COALESCE(logs, '') as logs, started_at, COALESCE(completed_at, '') as completed_at, protected_until, sha256, verified_at
-		FROM backup_records WHERE database_id = ? ORDER BY started_at DESC`, databaseID)
+	err := r.db.SelectContext(ctx, &list, `SELECT id, backup_config_id, COALESCE(database_id, '') as database_id, COALESCE(s3_destination_id, '') as s3_destination_id, COALESCE(sftp_destination_id, '') as sftp_destination_id, COALESCE(parent_record_id, '') as parent_record_id, status, COALESCE(file_path, '') as file_path, file_size_bytes, COALESCE(s3_url, '') as s3_url, COALESCE(sftp_url, '') as sftp_url, COALESCE(logs, '') as logs, started_at, COALESCE(completed_at::text, '') as completed_at, protected_until, sha256, verified_at
+		FROM backup_records WHERE database_id = $1 ORDER BY started_at DESC`, databaseID)
 	if err != nil {
 		return nil, fmt.Errorf("failed to list backup records by database: %w", err)
 	}
@@ -71,8 +71,8 @@ func (r *BackupRepo) ListAllRecords(ctx context.Context, limit int) ([]*models.B
 		limit = 50
 	}
 	var list []*models.BackupRecord
-	err := r.db.SelectContext(ctx, &list, `SELECT id, backup_config_id, COALESCE(database_id, '') as database_id, COALESCE(s3_destination_id, '') as s3_destination_id, COALESCE(sftp_destination_id, '') as sftp_destination_id, COALESCE(parent_record_id, '') as parent_record_id, status, COALESCE(file_path, '') as file_path, file_size_bytes, COALESCE(s3_url, '') as s3_url, COALESCE(sftp_url, '') as sftp_url, COALESCE(logs, '') as logs, started_at, COALESCE(completed_at, '') as completed_at, protected_until, sha256, verified_at
-		FROM backup_records WHERE EXISTS (SELECT 1 FROM backup_configs WHERE backup_configs.id = backup_records.backup_config_id) ORDER BY started_at DESC LIMIT ?`, limit)
+	err := r.db.SelectContext(ctx, &list, `SELECT id, backup_config_id, COALESCE(database_id, '') as database_id, COALESCE(s3_destination_id, '') as s3_destination_id, COALESCE(sftp_destination_id, '') as sftp_destination_id, COALESCE(parent_record_id, '') as parent_record_id, status, COALESCE(file_path, '') as file_path, file_size_bytes, COALESCE(s3_url, '') as s3_url, COALESCE(sftp_url, '') as sftp_url, COALESCE(logs, '') as logs, started_at, COALESCE(completed_at::text, '') as completed_at, protected_until, sha256, verified_at
+		FROM backup_records WHERE EXISTS (SELECT 1 FROM backup_configs WHERE backup_configs.id = backup_records.backup_config_id) ORDER BY started_at DESC LIMIT $1`, limit)
 	if err != nil {
 		return nil, fmt.Errorf("failed to list all backup records: %w", err)
 	}
@@ -85,8 +85,8 @@ func (r *BackupRepo) ListAllRecords(ctx context.Context, limit int) ([]*models.B
 func (r *BackupRepo) GetRecordByID(ctx context.Context, id string) (*models.BackupRecord, error) {
 	var rec models.BackupRecord
 	err := r.db.GetContext(ctx, &rec, `
-		SELECT id, backup_config_id, COALESCE(database_id, '') as database_id, COALESCE(s3_destination_id, '') as s3_destination_id, COALESCE(sftp_destination_id, '') as sftp_destination_id, COALESCE(parent_record_id, '') as parent_record_id, status, COALESCE(file_path, '') as file_path, file_size_bytes, COALESCE(s3_url, '') as s3_url, COALESCE(sftp_url, '') as sftp_url, COALESCE(logs, '') as logs, started_at, COALESCE(completed_at, '') as completed_at, protected_until, sha256, verified_at
-		FROM backup_records WHERE id = ?`, id)
+		SELECT id, backup_config_id, COALESCE(database_id, '') as database_id, COALESCE(s3_destination_id, '') as s3_destination_id, COALESCE(sftp_destination_id, '') as sftp_destination_id, COALESCE(parent_record_id, '') as parent_record_id, status, COALESCE(file_path, '') as file_path, file_size_bytes, COALESCE(s3_url, '') as s3_url, COALESCE(sftp_url, '') as sftp_url, COALESCE(logs, '') as logs, started_at, COALESCE(completed_at::text, '') as completed_at, protected_until, sha256, verified_at
+		FROM backup_records WHERE id = $1`, id)
 	if err != nil {
 		if errors.Is(err, sql.ErrNoRows) {
 			return nil, utils.NewNotFoundError("Record", id)
@@ -101,9 +101,9 @@ func (r *BackupRepo) UpdateRecord(ctx context.Context, rec *models.BackupRecord)
 	defer r.mu.Unlock()
 	res, err := r.db.ExecContext(ctx, `
 		UPDATE backup_records
-		SET sha256 = ?, verified_at = ?, status = ?, file_path = ?, s3_url = ?, sftp_url = ?, s3_destination_id = ?, sftp_destination_id = ?, parent_record_id = ?, logs = ?, file_size_bytes = ?, completed_at = ?
-		WHERE id = ? AND (status!='expiring' OR ? IN ('expired','failed'))`,
-		rec.SHA256, rec.VerifiedAt, rec.Status, rec.FilePath, rec.S3URL, rec.SFTPURL, rec.S3DestinationID, rec.SFTPDestinationID, rec.ParentRecordID, rec.Logs, rec.FileSizeBytes, rec.CompletedAt, rec.ID, rec.Status)
+		SET sha256 = $1, verified_at = $2, status = $3, file_path = $4, s3_url = $5, sftp_url = $6, s3_destination_id = $7, sftp_destination_id = $8, parent_record_id = $9, logs = $10, file_size_bytes = $11, completed_at = $12
+		WHERE id = $13 AND (status!='expiring' OR $14 IN ('expired','failed'))`,
+		rec.SHA256, rec.VerifiedAt, rec.Status, rec.FilePath, rec.S3URL, rec.SFTPURL, rec.S3DestinationID, rec.SFTPDestinationID, rec.ParentRecordID, rec.Logs, rec.FileSizeBytes, nullIfEmpty(rec.CompletedAt), rec.ID, rec.Status)
 	if err != nil {
 		return err
 	}
@@ -117,10 +117,17 @@ func (r *BackupRepo) UpdateRecord(ctx context.Context, rec *models.BackupRecord)
 	return nil
 }
 
+func nullIfEmpty(value string) any {
+	if value == "" {
+		return nil
+	}
+	return value
+}
+
 func (r *BackupRepo) DeleteRecord(ctx context.Context, id string) error {
 	r.mu.Lock()
 	defer r.mu.Unlock()
-	result, err := r.db.ExecContext(ctx, "DELETE FROM backup_records WHERE id=? AND protected_until<=? AND status NOT IN ('running','completed')", id, time.Now().Unix())
+	result, err := r.db.ExecContext(ctx, "DELETE FROM backup_records WHERE id=$1 AND protected_until<=$2 AND status NOT IN ('running','completed')", id, time.Now().Unix())
 	if err != nil {
 		return err
 	}
@@ -142,10 +149,11 @@ func (r *BackupRepo) ListRecordsByConfigs(ctx context.Context, configIDs []strin
 	if limit <= 0 || limit > 100 {
 		limit = 50
 	}
-	query, args, err := sqlx.In(`SELECT id, backup_config_id, COALESCE(database_id, '') AS database_id, COALESCE(s3_destination_id, '') AS s3_destination_id, COALESCE(sftp_destination_id, '') AS sftp_destination_id, COALESCE(parent_record_id, '') AS parent_record_id, status, COALESCE(file_path, '') AS file_path, file_size_bytes, COALESCE(s3_url, '') AS s3_url, COALESCE(sftp_url, '') AS sftp_url, COALESCE(logs, '') AS logs, started_at, COALESCE(completed_at, '') AS completed_at, protected_until, sha256, verified_at FROM backup_records WHERE backup_config_id IN (?) ORDER BY started_at DESC LIMIT ?`, configIDs, limit)
+	query, args, err := sqlx.In(`SELECT id, backup_config_id, COALESCE(database_id, '') AS database_id, COALESCE(s3_destination_id, '') AS s3_destination_id, COALESCE(sftp_destination_id, '') AS sftp_destination_id, COALESCE(parent_record_id, '') AS parent_record_id, status, COALESCE(file_path, '') AS file_path, file_size_bytes, COALESCE(s3_url, '') AS s3_url, COALESCE(sftp_url, '') AS sftp_url, COALESCE(logs, '') AS logs, started_at, COALESCE(completed_at::text, '') AS completed_at, protected_until, sha256, verified_at FROM backup_records WHERE backup_config_id IN (?) ORDER BY started_at DESC LIMIT ?`, configIDs, limit)
 	if err != nil {
 		return nil, fmt.Errorf("prepare scoped backup query: %w", err)
 	}
+	query = r.db.Rebind(query)
 	r.mu.Lock()
 	defer r.mu.Unlock()
 	if err := r.db.SelectContext(ctx, &list, query, args...); err != nil {

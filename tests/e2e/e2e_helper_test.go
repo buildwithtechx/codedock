@@ -10,14 +10,13 @@ import (
 	"net/http/cookiejar"
 	"net/http/httptest"
 	"net/url"
-	"path/filepath"
 	"testing"
 
 	"github.com/docker/docker/client"
-	_ "modernc.org/sqlite"
 
 	codedockhttp "codedock.run/codedock/internal/http"
 	"codedock.run/codedock/internal/repositories"
+	"codedock.run/codedock/internal/testdb"
 	"codedock.run/codedock/internal/utils"
 )
 
@@ -37,11 +36,7 @@ func newE2EHarness(t *testing.T) *e2eHarness {
 		t.Fatalf("failed to create vault: %v", err)
 	}
 
-	dbPath := filepath.Join(dataDir, "codedock_e2e.db")
-	db, err := sql.Open("sqlite", dbPath+"?_pragma=journal_mode(WAL)&_pragma=busy_timeout(5000)&_pragma=foreign_keys(ON)")
-	if err != nil {
-		t.Fatalf("failed to open sqlite database: %v", err)
-	}
+	db := testdb.Open(t)
 
 	if err := repositories.RunMigrations(db); err != nil {
 		t.Fatalf("failed to run migrations: %v", err)

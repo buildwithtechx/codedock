@@ -1,34 +1,17 @@
-package repositories_test
+package repositories
 
 import (
 	"codedock.run/codedock/internal/models"
-	"codedock.run/codedock/internal/repositories"
 	"context"
-	"database/sql"
 	"fmt"
-	_ "modernc.org/sqlite"
 	"testing"
 )
-
-func reviewBackupDatabase(t *testing.T) *sql.DB {
-	t.Helper()
-	db, err := sql.Open("sqlite", ":memory:?_pragma=foreign_keys(ON)")
-	if err != nil {
-		t.Fatal(err)
-	}
-	db.SetMaxOpenConns(1)
-	t.Cleanup(func() { db.Close() })
-	if err := repositories.RunMigrations(db); err != nil {
-		t.Fatal(err)
-	}
-	return db
-}
 
 func TestBackupScheduleStatusPersistsOnUpdate(t *testing.T) {
 	for _, password := range []string{"", "secret"} {
 		t.Run("password="+password, func(t *testing.T) {
-			db := reviewBackupDatabase(t)
-			repo := repositories.NewBackupRepo(db, nil)
+			db := openPGTestDB(t)
+			repo := NewBackupRepo(db, nil)
 			ctx := context.Background()
 			cfg := &models.BackupConfig{Name: "manual", Schedule: "manual", BackupEnabled: true, Status: models.BackupConfigStatusInactive}
 			if err := repo.CreateConfig(ctx, cfg); err != nil {
@@ -40,7 +23,7 @@ func TestBackupScheduleStatusPersistsOnUpdate(t *testing.T) {
 			if err := repo.UpdateConfig(ctx, cfg); err != nil {
 				t.Fatal(err)
 			}
-			restarted := repositories.NewBackupRepo(db, nil)
+			restarted := NewBackupRepo(db, nil)
 			configs, err := restarted.ListAllActiveConfigs(ctx)
 			if err != nil || len(configs) != 1 || configs[0].ID != cfg.ID || configs[0].Schedule != cfg.Schedule {
 				t.Fatalf("schedule lost after reload: %+v %v", configs, err)
@@ -50,8 +33,8 @@ func TestBackupScheduleStatusPersistsOnUpdate(t *testing.T) {
 }
 
 func TestBackupAccessScopePrecedesLimit(t *testing.T) {
-	db := reviewBackupDatabase(t)
-	repo := repositories.NewBackupRepo(db, nil)
+	db := openPGTestDB(t)
+	repo := NewBackupRepo(db, nil)
 	ctx := context.Background()
 	for _, id := range []string{"allowed", "other"} {
 		if err := repo.CreateConfig(ctx, &models.BackupConfig{ID: id, Name: id, Schedule: "manual"}); err != nil {
@@ -77,8 +60,8 @@ func TestBackupAccessScopePrecedesLimit(t *testing.T) {
 }
 
 func TestBackupListingExcludesDeletedConfigsBeforeLimit(t *testing.T) {
-	db := reviewBackupDatabase(t)
-	repo := repositories.NewBackupRepo(db, nil)
+	db := openPGTestDB(t)
+	repo := NewBackupRepo(db, nil)
 	ctx := context.Background()
 	for _, id := range []string{"retained", "deleted"} {
 		if err := repo.CreateConfig(ctx, &models.BackupConfig{ID: id, Name: id, Schedule: "manual"}); err != nil {
@@ -92,9 +75,12 @@ func TestBackupListingExcludesDeletedConfigsBeforeLimit(t *testing.T) {
 			t.Fatal(err)
 		}
 	}
-	if _, err := db.Exec("PRAGMA foreign_keys=OFF"); err != nil {
+	if _, err := db.Exec("ALTER TABLE backup_records DISABLE TRIGGER ALL"); err != nil {
 		t.Fatal(err)
 	}
+	t.Cleanup(func() {
+		_, _ = db.Exec("ALTER TABLE backup_records ENABLE TRIGGER ALL")
+	})
 	if err := repo.DeleteConfig(ctx, "deleted"); err != nil {
 		t.Fatal(err)
 	}

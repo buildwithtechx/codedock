@@ -28,7 +28,7 @@ type GitRepo struct {
 }
 
 func NewGitRepo(db *sql.DB, vault Vault) *GitRepo {
-	return &GitRepo{db: sqlx.NewDb(db, "sqlite"), vault: vault}
+	return &GitRepo{db: sqlx.NewDb(db, "pgx"), vault: vault}
 }
 
 func (r *GitRepo) SaveProvider(ctx context.Context, gp *models.GitProviderConfig) error {
@@ -44,7 +44,7 @@ func (r *GitRepo) SaveProvider(ctx context.Context, gp *models.GitProviderConfig
 	}
 	_, err = r.db.ExecContext(ctx,
 		`INSERT INTO user_git_providers (id, user_id, provider, encrypted_access_token, account_name, created_at, updated_at)
-		VALUES (?, ?, ?, ?, ?, ?, ?)
+		VALUES ($1, $2, $3, $4, $5, $6, $7)
 		ON CONFLICT(user_id, provider) DO UPDATE SET encrypted_access_token = excluded.encrypted_access_token, account_name = excluded.account_name, updated_at = excluded.updated_at`,
 		gp.ID, gp.UserID, gp.Provider, encryptedToken, gp.AccountName, gp.CreatedAt, gp.UpdatedAt,
 	)
@@ -57,7 +57,7 @@ func (r *GitRepo) GetProvider(ctx context.Context, userID, provider string) (*mo
 	}
 	var gp models.GitProviderConfig
 	err := r.db.GetContext(ctx, &gp, `SELECT id, user_id, provider, encrypted_access_token, account_name, created_at, updated_at
-		FROM user_git_providers WHERE user_id = ? AND provider = ?`, userID, provider)
+		FROM user_git_providers WHERE user_id = $1 AND provider = $2`, userID, provider)
 	if err != nil {
 		if errors.Is(err, sql.ErrNoRows) {
 			return nil, nil
@@ -75,7 +75,7 @@ func (r *GitRepo) GetProvider(ctx context.Context, userID, provider string) (*mo
 func (r *GitRepo) GetAnyProviderByType(ctx context.Context, provider string) (*models.GitProviderConfig, error) {
 	var gp models.GitProviderConfig
 	err := r.db.GetContext(ctx, &gp, `SELECT id, user_id, provider, encrypted_access_token, account_name, created_at, updated_at
-		FROM user_git_providers WHERE provider = ? LIMIT 1`, provider)
+		FROM user_git_providers WHERE provider = $1 LIMIT 1`, provider)
 	if err != nil {
 		if errors.Is(err, sql.ErrNoRows) {
 			return nil, utils.NewNotFoundError("AnyProvider", provider)
@@ -93,7 +93,7 @@ func (r *GitRepo) GetAnyProviderByType(ctx context.Context, provider string) (*m
 func (r *GitRepo) ListProvidersByUser(ctx context.Context, userID string) ([]*models.GitProviderConfig, error) {
 	var list []*models.GitProviderConfig
 	err := r.db.SelectContext(ctx, &list, `SELECT id, user_id, provider, encrypted_access_token, account_name, created_at, updated_at
-		FROM user_git_providers WHERE user_id = ?`, userID)
+		FROM user_git_providers WHERE user_id = $1`, userID)
 	if err != nil {
 		return nil, err
 	}
@@ -108,6 +108,6 @@ func (r *GitRepo) ListProvidersByUser(ctx context.Context, userID string) ([]*mo
 }
 
 func (r *GitRepo) DeleteProvider(ctx context.Context, userID, provider string) error {
-	_, err := r.db.ExecContext(ctx, `DELETE FROM user_git_providers WHERE user_id = ? AND provider = ?`, userID, provider)
+	_, err := r.db.ExecContext(ctx, `DELETE FROM user_git_providers WHERE user_id = $1 AND provider = $2`, userID, provider)
 	return err
 }

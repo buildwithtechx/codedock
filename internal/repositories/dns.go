@@ -30,7 +30,7 @@ type DNSRepo struct {
 const dnsRecordColumns = `id, domain_name, record_type, record_name, record_value, ttl, created_at, updated_at`
 
 func NewDNSRepo(db *sql.DB) *DNSRepo {
-	return &DNSRepo{db: sqlx.NewDb(db, "sqlite")}
+	return &DNSRepo{db: sqlx.NewDb(db, "pgx")}
 }
 
 func (r *DNSRepo) Create(ctx context.Context, record *models.DNSRecord) error {
@@ -49,7 +49,7 @@ func (r *DNSRepo) Create(ctx context.Context, record *models.DNSRecord) error {
 
 	_, err := r.db.ExecContext(ctx, `INSERT INTO dns_records (
 		id, domain_name, record_type, record_name, record_value, ttl, created_at, updated_at
-	) VALUES (?, ?, ?, ?, ?, ?, ?, ?)`,
+	) VALUES ($1, $2, $3, $4, $5, $6, $7, $8)`,
 		record.ID, record.DomainName, record.RecordType, record.RecordName, record.RecordValue, record.TTL, record.CreatedAt, record.UpdatedAt)
 	return err
 }
@@ -59,7 +59,7 @@ func (r *DNSRepo) GetByID(ctx context.Context, id string) (*models.DNSRecord, er
 	defer r.mu.Unlock()
 
 	var record models.DNSRecord
-	err := r.db.GetContext(ctx, &record, `SELECT `+dnsRecordColumns+` FROM dns_records WHERE id = ?`, id)
+	err := r.db.GetContext(ctx, &record, `SELECT `+dnsRecordColumns+` FROM dns_records WHERE id = $1`, id)
 	if errors.Is(err, sql.ErrNoRows) {
 		return nil, utils.NewNotFoundError("DNSRecord", id)
 	}
@@ -75,7 +75,7 @@ func (r *DNSRepo) ListByDomain(ctx context.Context, domainName string) ([]*model
 	if domainName == "" {
 		err = r.db.SelectContext(ctx, &list, `SELECT `+dnsRecordColumns+` FROM dns_records ORDER BY created_at ASC`)
 	} else {
-		err = r.db.SelectContext(ctx, &list, `SELECT `+dnsRecordColumns+` FROM dns_records WHERE domain_name = ? ORDER BY created_at ASC`, domainName)
+		err = r.db.SelectContext(ctx, &list, `SELECT `+dnsRecordColumns+` FROM dns_records WHERE domain_name = $1 ORDER BY created_at ASC`, domainName)
 	}
 	if err != nil {
 		return nil, err
@@ -91,7 +91,7 @@ func (r *DNSRepo) Update(ctx context.Context, record *models.DNSRecord) error {
 	defer r.mu.Unlock()
 
 	record.UpdatedAt = time.Now()
-	_, err := r.db.ExecContext(ctx, `UPDATE dns_records SET record_type = ?, record_name = ?, record_value = ?, ttl = ?, updated_at = ? WHERE id = ?`,
+	_, err := r.db.ExecContext(ctx, `UPDATE dns_records SET record_type = $1, record_name = $2, record_value = $3, ttl = $4, updated_at = $5 WHERE id = $6`,
 		record.RecordType, record.RecordName, record.RecordValue, record.TTL, record.UpdatedAt, record.ID)
 	return err
 }
@@ -100,6 +100,6 @@ func (r *DNSRepo) Delete(ctx context.Context, id string) error {
 	r.mu.Lock()
 	defer r.mu.Unlock()
 
-	_, err := r.db.ExecContext(ctx, `DELETE FROM dns_records WHERE id = ?`, id)
+	_, err := r.db.ExecContext(ctx, `DELETE FROM dns_records WHERE id = $1`, id)
 	return err
 }

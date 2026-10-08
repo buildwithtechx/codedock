@@ -1,22 +1,20 @@
 package projects
 
 import (
+	"codedock.run/codedock/internal/models"
 	"codedock.run/codedock/internal/repositories"
+	"codedock.run/codedock/internal/testdb"
 	"context"
-	"database/sql"
-	_ "modernc.org/sqlite"
 	"sync"
 	"testing"
 )
 
 func TestConcurrentDefaultOrganizationProvisioning(t *testing.T) {
-	db, err := sql.Open("sqlite", ":memory:")
-	if err != nil {
+	db := testdb.Open(t)
+	if err := repositories.RunMigrations(db); err != nil {
 		t.Fatal(err)
 	}
-	defer db.Close()
-	db.SetMaxOpenConns(1)
-	if err := repositories.RunMigrations(db); err != nil {
+	if err := repositories.NewUserRepo(db).CreateUser(context.Background(), &models.User{ID: "user", Email: "user@example.com", Role: models.UserRoleMember, IsActive: true}); err != nil {
 		t.Fatal(err)
 	}
 	service := NewProjectService(nil, nil, nil, nil, nil, repositories.NewOrganizationRepository(db))

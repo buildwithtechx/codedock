@@ -6,8 +6,6 @@ import (
 	"testing"
 
 	"codedock.run/codedock/internal/models"
-
-	_ "modernc.org/sqlite"
 )
 
 type managedTestVault struct{}
@@ -24,10 +22,7 @@ func (managedTestVault) Decrypt(ciphertext string) (string, error) {
 }
 
 func TestManagedCredentialEncryptedAtRest(t *testing.T) {
-	db := openTestDB(t)
-	if err := RunMigrations(db); err != nil {
-		t.Fatalf("run migrations: %v", err)
-	}
+	db := openPGTestDB(t)
 	ctx := context.Background()
 	orgRepo := NewOrganizationRepository(db)
 	if err := orgRepo.Create(ctx, &models.Organization{ID: "org-1", Name: "Acme"}); err != nil {
@@ -39,7 +34,7 @@ func TestManagedCredentialEncryptedAtRest(t *testing.T) {
 		t.Fatalf("create credential: %v", err)
 	}
 	var stored string
-	if err := db.QueryRowContext(ctx, `SELECT encrypted_token FROM managed_providers WHERE id = ?`, "cred-1").Scan(&stored); err != nil {
+	if err := db.QueryRowContext(ctx, `SELECT encrypted_token FROM managed_providers WHERE id = $1`, "cred-1").Scan(&stored); err != nil {
 		t.Fatalf("read stored token: %v", err)
 	}
 	if stored == "" || stored == "hetzner-secret" {
@@ -62,10 +57,7 @@ func TestManagedCredentialEncryptedAtRest(t *testing.T) {
 }
 
 func TestManagedCredentialDeleteBlockedWhileLinked(t *testing.T) {
-	db := openTestDB(t)
-	if err := RunMigrations(db); err != nil {
-		t.Fatalf("run migrations: %v", err)
-	}
+	db := openPGTestDB(t)
 	ctx := context.Background()
 	orgRepo := NewOrganizationRepository(db)
 	if err := orgRepo.Create(ctx, &models.Organization{ID: "org-1", Name: "Acme"}); err != nil {
@@ -101,10 +93,7 @@ func TestManagedCredentialDeleteBlockedWhileLinked(t *testing.T) {
 }
 
 func TestManagedQuotaDefaultsAndUpdate(t *testing.T) {
-	db := openTestDB(t)
-	if err := RunMigrations(db); err != nil {
-		t.Fatalf("run migrations: %v", err)
-	}
+	db := openPGTestDB(t)
 	ctx := context.Background()
 	orgRepo := NewOrganizationRepository(db)
 	if err := orgRepo.Create(ctx, &models.Organization{ID: "org-9", Name: "Quota"}); err != nil {

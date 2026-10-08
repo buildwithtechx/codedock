@@ -6,8 +6,6 @@ import (
 	"testing"
 
 	"codedock.run/codedock/internal/models"
-
-	_ "modernc.org/sqlite"
 )
 
 type migrationTestVault struct{}
@@ -24,10 +22,7 @@ func (migrationTestVault) Decrypt(ciphertext string) (string, error) {
 }
 
 func TestMigrationSourceEncryptedAtRest(t *testing.T) {
-	db := openTestDB(t)
-	if err := RunMigrations(db); err != nil {
-		t.Fatalf("run migrations: %v", err)
-	}
+	db := openPGTestDB(t)
 	ctx := context.Background()
 	orgRepo := NewOrganizationRepository(db)
 	if err := orgRepo.Create(ctx, &models.Organization{ID: "org-1", Name: "Acme"}); err != nil {
@@ -39,7 +34,7 @@ func TestMigrationSourceEncryptedAtRest(t *testing.T) {
 		t.Fatalf("create source: %v", err)
 	}
 	var stored string
-	if err := db.QueryRowContext(ctx, `SELECT ssh_key FROM migration_sources WHERE id = ?`, "src-1").Scan(&stored); err != nil {
+	if err := db.QueryRowContext(ctx, `SELECT ssh_key FROM migration_sources WHERE id = $1`, "src-1").Scan(&stored); err != nil {
 		t.Fatalf("read stored key: %v", err)
 	}
 	if stored == "" || stored == "private-key" {
@@ -62,10 +57,7 @@ func TestMigrationSourceEncryptedAtRest(t *testing.T) {
 }
 
 func TestMigrationRunLifecycleGuards(t *testing.T) {
-	db := openTestDB(t)
-	if err := RunMigrations(db); err != nil {
-		t.Fatalf("run migrations: %v", err)
-	}
+	db := openPGTestDB(t)
 	ctx := context.Background()
 	orgRepo := NewOrganizationRepository(db)
 	if err := orgRepo.Create(ctx, &models.Organization{ID: "org-1", Name: "Acme"}); err != nil {

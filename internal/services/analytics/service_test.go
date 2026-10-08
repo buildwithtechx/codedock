@@ -2,24 +2,17 @@ package analytics
 
 import (
 	"context"
-	"database/sql"
 	"testing"
 	"time"
 
 	"codedock.run/codedock/internal/models"
 	"codedock.run/codedock/internal/repositories"
-
-	_ "modernc.org/sqlite"
+	"codedock.run/codedock/internal/testdb"
 )
 
 func setupAnalyticsTest(t *testing.T) (*Service, *repositories.DeploymentRepo, *repositories.EnvironmentRepo, string, string) {
 	t.Helper()
-	db, err := sql.Open("sqlite", ":memory:?_pragma=foreign_keys(ON)")
-	if err != nil {
-		t.Fatalf("open database: %v", err)
-	}
-	db.SetMaxOpenConns(1)
-	t.Cleanup(func() { db.Close() })
+	db := testdb.Open(t)
 	if err := repositories.RunMigrations(db); err != nil {
 		t.Fatalf("run migrations: %v", err)
 	}

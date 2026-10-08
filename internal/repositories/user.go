@@ -40,7 +40,7 @@ type UserRepo struct {
 var FirstUserSetupLock sync.Mutex
 
 func NewUserRepo(db *sql.DB) *UserRepo {
-	return &UserRepo{db: sqlx.NewDb(db, "sqlite")}
+	return &UserRepo{db: sqlx.NewDb(db, "pgx")}
 }
 
 func (r *UserRepo) CountUsers(ctx context.Context) (int, error) {
@@ -62,7 +62,7 @@ func (r *UserRepo) CreateUser(ctx context.Context, u *models.User) error {
 	r.mu.Lock()
 	defer r.mu.Unlock()
 	_, err := r.db.ExecContext(ctx, `INSERT INTO users (id, email, name, password_hash, role, is_active, email_verified, plan_type, stripe_customer_id, stripe_subscription_id, stripe_price_id, created_at, updated_at)
-		VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)`, u.ID, u.Email, u.Name, u.PasswordHash, u.Role, u.IsActive, u.EmailVerified, u.PlanType, u.StripeCustomerID, u.StripeSubscriptionID, u.StripePriceID, u.CreatedAt, u.UpdatedAt)
+		VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10, $11, $12, $13)`, u.ID, u.Email, u.Name, u.PasswordHash, u.Role, u.IsActive, u.EmailVerified, u.PlanType, u.StripeCustomerID, u.StripeSubscriptionID, u.StripePriceID, u.CreatedAt, u.UpdatedAt)
 	return err
 }
 
@@ -71,7 +71,7 @@ func (r *UserRepo) GetUserByEmail(ctx context.Context, email string) (*models.Us
 	defer r.mu.Unlock()
 	var u models.User
 	err := r.db.GetContext(ctx, &u, `SELECT id, email, name, password_hash, role, is_active, email_verified, plan_type, stripe_customer_id, stripe_subscription_id, stripe_price_id, created_at, updated_at, last_login
-		FROM users WHERE email = ?`, email)
+		FROM users WHERE email = $1`, email)
 	if errors.Is(err, sql.ErrNoRows) {
 		return nil, utils.NewNotFoundError("User", email)
 	}
@@ -86,7 +86,7 @@ func (r *UserRepo) GetUserByStripeCustomerID(ctx context.Context, stripeCustomer
 	defer r.mu.Unlock()
 	var u models.User
 	err := r.db.GetContext(ctx, &u, `SELECT id, email, name, password_hash, role, is_active, email_verified, plan_type, stripe_customer_id, stripe_subscription_id, stripe_price_id, created_at, updated_at, last_login
-		FROM users WHERE stripe_customer_id = ?`, stripeCustomerID)
+		FROM users WHERE stripe_customer_id = $1`, stripeCustomerID)
 	if errors.Is(err, sql.ErrNoRows) {
 		return nil, utils.NewNotFoundError("User by StripeCustomerID", stripeCustomerID)
 	}
@@ -101,7 +101,7 @@ func (r *UserRepo) GetUserByID(ctx context.Context, id string) (*models.User, er
 	defer r.mu.Unlock()
 	var u models.User
 	err := r.db.GetContext(ctx, &u, `SELECT id, email, name, password_hash, role, is_active, email_verified, plan_type, stripe_customer_id, stripe_subscription_id, stripe_price_id, created_at, updated_at, last_login
-		FROM users WHERE id = ?`, id)
+		FROM users WHERE id = $1`, id)
 	if errors.Is(err, sql.ErrNoRows) {
 		return nil, utils.NewNotFoundError("User", id)
 	}
@@ -129,7 +129,7 @@ func (r *UserRepo) ListUsers(ctx context.Context, limit, offset int) ([]models.U
 			(SELECT COUNT(*) FROM personal_access_tokens WHERE user_id = users.id) AS api_keys_count
 		FROM users
 		ORDER BY created_at ASC
-		LIMIT ? OFFSET ?`, limit, offset)
+		LIMIT $1 OFFSET $2`, limit, offset)
 	if err != nil {
 		return nil, 0, err
 	}
@@ -143,7 +143,7 @@ func (r *UserRepo) UpdateUser(ctx context.Context, u *models.User) error {
 	u.UpdatedAt = time.Now()
 	r.mu.Lock()
 	defer r.mu.Unlock()
-	_, err := r.db.ExecContext(ctx, `UPDATE users SET email = ?, name = ?, password_hash = ?, role = ?, is_active = ?, email_verified = ?, plan_type = ?, stripe_customer_id = ?, stripe_subscription_id = ?, stripe_price_id = ?, last_login = ?, updated_at = ? WHERE id = ?`,
+	_, err := r.db.ExecContext(ctx, `UPDATE users SET email = $1, name = $2, password_hash = $3, role = $4, is_active = $5, email_verified = $6, plan_type = $7, stripe_customer_id = $8, stripe_subscription_id = $9, stripe_price_id = $10, last_login = $11, updated_at = $12 WHERE id = $13`,
 		u.Email, u.Name, u.PasswordHash, u.Role, u.IsActive, u.EmailVerified, u.PlanType, u.StripeCustomerID, u.StripeSubscriptionID, u.StripePriceID, u.LastLogin, u.UpdatedAt, u.ID)
 	return err
 }
@@ -158,12 +158,12 @@ func (r *UserRepo) CreatePAT(ctx context.Context, pat *models.PersonalAccessToke
 	}
 	var expiresAt any
 	if pat.ExpiresAt != nil {
-		expiresAt = pat.ExpiresAt.UTC().Format(time.RFC3339)
+		expiresAt = *pat.ExpiresAt
 	}
 	r.mu.Lock()
 	defer r.mu.Unlock()
-	_, err := r.db.ExecContext(ctx, `INSERT INTO personal_access_tokens (id, user_id, name, token_hash, prefix, access_level, project_scope, allowed_projects, expires_at, created_at) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?)`,
-		pat.ID, pat.UserID, pat.Name, pat.TokenHash, pat.Prefix, pat.AccessLevel, pat.ProjectScope, pat.AllowedProjects, expiresAt, pat.CreatedAt.Format(time.RFC3339))
+	_, err := r.db.ExecContext(ctx, `INSERT INTO personal_access_tokens (id, user_id, name, token_hash, prefix, access_level, project_scope, allowed_projects, expires_at, created_at) VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10)`,
+		pat.ID, pat.UserID, pat.Name, pat.TokenHash, pat.Prefix, pat.AccessLevel, pat.ProjectScope, pat.AllowedProjects, expiresAt, pat.CreatedAt)
 	if err != nil {
 		return fmt.Errorf("failed to create personal access token: %w", err)
 	}
@@ -174,7 +174,7 @@ func (r *UserRepo) ListPATs(ctx context.Context, userID string) ([]*models.Perso
 	r.mu.Lock()
 	defer r.mu.Unlock()
 
-	rows, err := r.db.QueryContext(ctx, `SELECT id, user_id, name, prefix, access_level, project_scope, allowed_projects, expires_at, created_at FROM personal_access_tokens WHERE user_id = ? ORDER BY created_at DESC`, userID)
+	rows, err := r.db.QueryContext(ctx, `SELECT id, user_id, name, prefix, access_level, project_scope, allowed_projects, expires_at, created_at FROM personal_access_tokens WHERE user_id = $1 ORDER BY created_at DESC`, userID)
 	if err != nil {
 		return nil, fmt.Errorf("failed to list personal access tokens: %w", err)
 	}
@@ -183,20 +183,13 @@ func (r *UserRepo) ListPATs(ctx context.Context, userID string) ([]*models.Perso
 	var list []*models.PersonalAccessToken
 	for rows.Next() {
 		var (
-			id, uid, name, prefix, accessLevel, projectScope, createdAt string
-			allowedProjects, expiresAt                                  *string
+			id, uid, name, prefix, accessLevel, projectScope string
+			allowedProjects                                  *string
+			expiresAt                                        *time.Time
+			createdAt                                        time.Time
 		)
 		if err := rows.Scan(&id, &uid, &name, &prefix, &accessLevel, &projectScope, &allowedProjects, &expiresAt, &createdAt); err != nil {
 			return nil, fmt.Errorf("failed to scan pat: %w", err)
-		}
-
-		cat, _ := time.Parse(time.RFC3339, createdAt)
-		var eat *time.Time
-		if expiresAt != nil {
-			parsed, err := time.Parse(time.RFC3339, *expiresAt)
-			if err == nil {
-				eat = &parsed
-			}
 		}
 
 		list = append(list, &models.PersonalAccessToken{
@@ -207,8 +200,8 @@ func (r *UserRepo) ListPATs(ctx context.Context, userID string) ([]*models.Perso
 			AccessLevel:     accessLevel,
 			ProjectScope:    projectScope,
 			AllowedProjects: allowedProjects,
-			ExpiresAt:       eat,
-			CreatedAt:       cat,
+			ExpiresAt:       expiresAt,
+			CreatedAt:       createdAt,
 		})
 	}
 
@@ -222,7 +215,7 @@ func (r *UserRepo) ListPATs(ctx context.Context, userID string) ([]*models.Perso
 func (r *UserRepo) DeletePAT(ctx context.Context, id, userID string) error {
 	r.mu.Lock()
 	defer r.mu.Unlock()
-	res, err := r.db.ExecContext(ctx, `DELETE FROM personal_access_tokens WHERE id = ? AND user_id = ?`, id, userID)
+	res, err := r.db.ExecContext(ctx, `DELETE FROM personal_access_tokens WHERE id = $1 AND user_id = $2`, id, userID)
 	if err != nil {
 		return fmt.Errorf("failed to delete personal access token: %w", err)
 	}
@@ -236,7 +229,7 @@ func (r *UserRepo) DeletePAT(ctx context.Context, id, userID string) error {
 func (r *UserRepo) DeleteUser(ctx context.Context, id string) error {
 	r.mu.Lock()
 	defer r.mu.Unlock()
-	res, err := r.db.ExecContext(ctx, `DELETE FROM users WHERE id = ?`, id)
+	res, err := r.db.ExecContext(ctx, `DELETE FROM users WHERE id = $1`, id)
 	if err != nil {
 		return fmt.Errorf("delete user: %w", err)
 	}
@@ -250,7 +243,7 @@ func (r *UserRepo) DeleteUser(ctx context.Context, id string) error {
 func (r *UserRepo) GetUserTOTPSecret(ctx context.Context, userID string) (string, []string, error) {
 	var secret string
 	var recovery string
-	err := r.db.QueryRowContext(ctx, `SELECT COALESCE(totp_secret, ''), COALESCE(recovery_codes, '') FROM users WHERE id = ?`, userID).Scan(&secret, &recovery)
+	err := r.db.QueryRowContext(ctx, `SELECT COALESCE(totp_secret, ''), COALESCE(recovery_codes, '') FROM users WHERE id = $1`, userID).Scan(&secret, &recovery)
 	if err != nil {
 		return "", nil, fmt.Errorf("failed to get totp secret: %w", err)
 	}

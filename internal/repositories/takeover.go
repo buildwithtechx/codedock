@@ -21,7 +21,7 @@ type TakeoverRepository interface {
 	ListByUser(ctx context.Context, userID string) ([]*models.TakeoverRun, error)
 }
 
-type sqliteTakeoverRepository struct {
+type postgresTakeoverRepository struct {
 	db    *sql.DB
 	vault Vault
 }
@@ -31,10 +31,10 @@ func NewTakeoverRepository(db *sql.DB, vaults ...Vault) TakeoverRepository {
 	if len(vaults) > 0 {
 		vault = vaults[0]
 	}
-	return &sqliteTakeoverRepository{db: db, vault: vault}
+	return &postgresTakeoverRepository{db: db, vault: vault}
 }
 
-func (r *sqliteTakeoverRepository) encryptDiscovered(value string) (string, error) {
+func (r *postgresTakeoverRepository) encryptDiscovered(value string) (string, error) {
 	if value == "" || r.vault == nil {
 		return value, nil
 	}
@@ -44,7 +44,7 @@ func (r *sqliteTakeoverRepository) encryptDiscovered(value string) (string, erro
 	return r.vault.Encrypt(value)
 }
 
-func (r *sqliteTakeoverRepository) decryptDiscovered(value string) string {
+func (r *postgresTakeoverRepository) decryptDiscovered(value string) string {
 	if value == "" || r.vault == nil {
 		return value
 	}
@@ -54,7 +54,7 @@ func (r *sqliteTakeoverRepository) decryptDiscovered(value string) string {
 	return value
 }
 
-func (r *sqliteTakeoverRepository) Create(ctx context.Context, run *models.TakeoverRun) error {
+func (r *postgresTakeoverRepository) Create(ctx context.Context, run *models.TakeoverRun) error {
 	if run.ID == "" {
 		run.ID = uuid.NewString()
 	}
@@ -67,7 +67,7 @@ func (r *sqliteTakeoverRepository) Create(ctx context.Context, run *models.Takeo
 	}
 	_, err = r.db.ExecContext(ctx, `
 		INSERT INTO takeover_runs (id, user_id, source_host, source_platform, status, discovered_json, adopted_project_ids, error, created_at, updated_at)
-		VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?)`,
+		VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10)`,
 		run.ID, run.UserID, run.SourceHost, run.SourcePlatform, run.Status,
 		discoveredJSON, run.AdoptedProjectIDs, run.Error, run.CreatedAt, run.UpdatedAt,
 	)
@@ -77,45 +77,45 @@ func (r *sqliteTakeoverRepository) Create(ctx context.Context, run *models.Takeo
 	return nil
 }
 
-func (r *sqliteTakeoverRepository) GetByID(ctx context.Context, id string) (*models.TakeoverRun, error) {
+func (r *postgresTakeoverRepository) GetByID(ctx context.Context, id string) (*models.TakeoverRun, error) {
 	row := r.db.QueryRowContext(ctx, `
 		SELECT id, user_id, source_host, source_platform, status, discovered_json, adopted_project_ids, error, created_at, updated_at
-		FROM takeover_runs WHERE id = ?`, id)
+		FROM takeover_runs WHERE id = $1`, id)
 	return r.scan(row)
 }
 
-func (r *sqliteTakeoverRepository) UpdateStatus(ctx context.Context, id string, status models.TakeoverStatus, errMsg string) error {
+func (r *postgresTakeoverRepository) UpdateStatus(ctx context.Context, id string, status models.TakeoverStatus, errMsg string) error {
 	_, err := r.db.ExecContext(ctx,
-		`UPDATE takeover_runs SET status = ?, error = ?, updated_at = ? WHERE id = ?`,
+		`UPDATE takeover_runs SET status = $1, error = $2, updated_at = $3 WHERE id = $4`,
 		status, errMsg, time.Now().UTC(), id,
 	)
 	return err
 }
 
-func (r *sqliteTakeoverRepository) UpdateDiscovered(ctx context.Context, id string, discoveredJSON string) error {
+func (r *postgresTakeoverRepository) UpdateDiscovered(ctx context.Context, id string, discoveredJSON string) error {
 	encrypted, err := r.encryptDiscovered(discoveredJSON)
 	if err != nil {
 		return fmt.Errorf("encrypt discovered stack: %w", err)
 	}
 	_, err = r.db.ExecContext(ctx,
-		`UPDATE takeover_runs SET discovered_json = ?, status = ?, updated_at = ? WHERE id = ?`,
+		`UPDATE takeover_runs SET discovered_json = $1, status = $2, updated_at = $3 WHERE id = $4`,
 		encrypted, models.TakeoverStatusScanned, time.Now().UTC(), id,
 	)
 	return err
 }
 
-func (r *sqliteTakeoverRepository) UpdateAdopted(ctx context.Context, id string, projectIDs []string) error {
+func (r *postgresTakeoverRepository) UpdateAdopted(ctx context.Context, id string, projectIDs []string) error {
 	_, err := r.db.ExecContext(ctx,
-		`UPDATE takeover_runs SET adopted_project_ids = ?, status = ?, updated_at = ? WHERE id = ?`,
+		`UPDATE takeover_runs SET adopted_project_ids = $1, status = $2, updated_at = $3 WHERE id = $4`,
 		strings.Join(projectIDs, ","), models.TakeoverStatusDone, time.Now().UTC(), id,
 	)
 	return err
 }
 
-func (r *sqliteTakeoverRepository) ListByUser(ctx context.Context, userID string) ([]*models.TakeoverRun, error) {
+func (r *postgresTakeoverRepository) ListByUser(ctx context.Context, userID string) ([]*models.TakeoverRun, error) {
 	rows, err := r.db.QueryContext(ctx, `
 		SELECT id, user_id, source_host, source_platform, status, discovered_json, adopted_project_ids, error, created_at, updated_at
-		FROM takeover_runs WHERE user_id = ? ORDER BY created_at DESC LIMIT 50`, userID)
+		FROM takeover_runs WHERE user_id = $1 ORDER BY created_at DESC LIMIT 50`, userID)
 	if err != nil {
 		return nil, fmt.Errorf("list takeover runs: %w", err)
 	}
@@ -138,7 +138,7 @@ type scannable interface {
 	Scan(dest ...any) error
 }
 
-func (r *sqliteTakeoverRepository) scan(s scannable) (*models.TakeoverRun, error) {
+func (r *postgresTakeoverRepository) scan(s scannable) (*models.TakeoverRun, error) {
 	var run models.TakeoverRun
 	err := s.Scan(
 		&run.ID, &run.UserID, &run.SourceHost, &run.SourcePlatform,

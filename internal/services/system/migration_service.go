@@ -6,13 +6,11 @@ import (
 	"database/sql"
 	"encoding/json"
 	"fmt"
-	"os"
 	"os/exec"
-	"path/filepath"
-	"strings"
 	"time"
 
 	"codedock.run/codedock/internal/engine/networking"
+	"codedock.run/codedock/internal/engine/systemdb"
 	"codedock.run/codedock/internal/models"
 	"codedock.run/codedock/internal/repositories"
 )
@@ -20,30 +18,31 @@ import (
 const bundleManifestVersion = "1"
 
 type BundleManifest struct {
-	Version   string    `json:"version"`
-	CreatedAt time.Time `json:"createdAt"`
-	Databases []string  `json:"databases"`
-	HasSQLite bool      `json:"hasSqlite"`
+	Version     string    `json:"version"`
+	CreatedAt   time.Time `json:"createdAt"`
+	Databases   []string  `json:"databases"`
+	HasSystemDB bool      `json:"hasSystemDb"`
 }
 
 type MigrationService struct {
-	db      *sql.DB
-	dbRepo  repositories.DatabaseRepository
-	dataDir string
+	db          *sql.DB
+	dbRepo      repositories.DatabaseRepository
+	dataDir     string
+	databaseURL string
 }
 
-func NewMigrationService(db *sql.DB, dbRepo repositories.DatabaseRepository, dataDir string) *MigrationService {
-	return &MigrationService{db: db, dbRepo: dbRepo, dataDir: dataDir}
+func NewMigrationService(db *sql.DB, dbRepo repositories.DatabaseRepository, dataDir, databaseURL string) *MigrationService {
+	return &MigrationService{db: db, dbRepo: dbRepo, dataDir: dataDir, databaseURL: databaseURL}
 }
 
 func (s *MigrationService) Export(ctx context.Context, passphrase string) ([]byte, error) {
 	files := make(map[string][]byte)
 
-	sqliteData, err := s.dumpSQLite()
+	systemData, err := s.dumpSystemDB(ctx)
 	if err != nil {
-		return nil, fmt.Errorf("sqlite dump failed: %w", err)
+		return nil, fmt.Errorf("system database dump failed: %w", err)
 	}
-	files["codedock.db.sql"] = sqliteData
+	files["systemdb.sql"] = systemData
 
 	dbs, err := s.dbRepo.List(ctx)
 	if err != nil {
@@ -51,9 +50,9 @@ func (s *MigrationService) Export(ctx context.Context, passphrase string) ([]byt
 	}
 
 	manifest := BundleManifest{
-		Version:   bundleManifestVersion,
-		CreatedAt: time.Now().UTC(),
-		HasSQLite: true,
+		Version:     bundleManifestVersion,
+		CreatedAt:   time.Now().UTC(),
+		HasSystemDB: true,
 	}
 
 	for _, db := range dbs {
@@ -106,9 +105,9 @@ func (s *MigrationService) Import(ctx context.Context, bundleData []byte, passph
 		return nil, fmt.Errorf("failed to parse manifest: %w", err)
 	}
 
-	if sqlData, ok := files["codedock.db.sql"]; ok {
-		if err := s.restoreSQLite(ctx, sqlData); err != nil {
-			return nil, fmt.Errorf("sqlite restore failed: %w", err)
+	if sqlData, ok := files["systemdb.sql"]; ok {
+		if err := s.restoreSystemDB(ctx, sqlData); err != nil {
+			return nil, fmt.Errorf("system database restore failed: %w", err)
 		}
 	}
 
@@ -135,75 +134,35 @@ func (s *MigrationService) Import(ctx context.Context, bundleData []byte, passph
 	return &manifest, nil
 }
 
-func (s *MigrationService) dumpSQLite() ([]byte, error) {
-	dbPath := filepath.Join(s.dataDir, "codedock.db")
-	if _, err := os.Stat(dbPath); os.IsNotExist(err) {
-		return nil, fmt.Errorf("sqlite db not found at %s", dbPath)
-	}
-	out, err := exec.Command("sqlite3", dbPath, ".dump").Output()
-	if err != nil {
-		data, readErr := os.ReadFile(dbPath)
-		if readErr != nil {
-			return nil, fmt.Errorf("sqlite3 dump failed and file read failed: %w", err)
+func (s *MigrationService) dumpSystemDB(ctx context.Context) ([]byte, error) {
+	if s.databaseURL == "" {
+		password, err := systemdb.ReadPassword(s.dataDir)
+		if err != nil {
+			return nil, err
 		}
-		return data, nil
+		return systemdb.DumpContainer(ctx, systemdb.ContainerName, systemdb.DBUser, systemdb.DBName, password)
 	}
-	return out, nil
+	return systemdb.DumpURL(ctx, s.databaseURL)
 }
 
-func (s *MigrationService) restoreSQLite(ctx context.Context, sqlData []byte) error {
-	if s.db != nil {
-		if _, err := s.db.ExecContext(ctx, "PRAGMA foreign_keys = OFF;"); err != nil {
-			return fmt.Errorf("disable foreign keys: %w", err)
-		}
-
-		rows, err := s.db.QueryContext(ctx, `SELECT type, name FROM sqlite_master WHERE type IN ('table', 'view', 'trigger', 'index') AND name NOT LIKE 'sqlite_%'`)
+func (s *MigrationService) restoreSystemDB(ctx context.Context, sqlData []byte) error {
+	if s.db == nil {
+		return fmt.Errorf("system database handle is required for restore")
+	}
+	if _, err := s.db.ExecContext(ctx, `DROP SCHEMA public CASCADE`); err != nil {
+		return fmt.Errorf("drop schema for restore: %w", err)
+	}
+	if _, err := s.db.ExecContext(ctx, `CREATE SCHEMA public`); err != nil {
+		return fmt.Errorf("recreate schema for restore: %w", err)
+	}
+	if s.databaseURL == "" {
+		password, err := systemdb.ReadPassword(s.dataDir)
 		if err != nil {
-			return fmt.Errorf("list sqlite objects: %w", err)
+			return err
 		}
-		var drops []string
-		for rows.Next() {
-			var objType, objName string
-			if err := rows.Scan(&objType, &objName); err == nil {
-				drops = append(drops, fmt.Sprintf("DROP %s IF EXISTS \"%s\";", strings.ToUpper(objType), objName))
-			}
-		}
-		rows.Close()
-
-		for _, dropStmt := range drops {
-			_, _ = s.db.ExecContext(ctx, dropStmt)
-		}
-
-		if _, err := s.db.ExecContext(ctx, string(sqlData)); err != nil {
-			return fmt.Errorf("execute restore script: %w", err)
-		}
-
-		if _, err := s.db.ExecContext(ctx, "PRAGMA foreign_keys = ON;"); err != nil {
-			return fmt.Errorf("enable foreign keys: %w", err)
-		}
-
-		return nil
+		return systemdb.RestoreContainer(ctx, systemdb.ContainerName, systemdb.DBUser, systemdb.DBName, password, sqlData)
 	}
-
-	dbPath := filepath.Join(s.dataDir, "codedock.db")
-	backupPath := dbPath + ".bak"
-	_ = os.Rename(dbPath, backupPath)
-
-	tmpSQL := dbPath + ".import.sql"
-	if err := os.WriteFile(tmpSQL, sqlData, 0600); err != nil {
-		_ = os.Rename(backupPath, dbPath)
-		return err
-	}
-	defer os.Remove(tmpSQL)
-
-	cmd := exec.Command("sqlite3", dbPath)
-	cmd.Stdin = bytes.NewReader(sqlData)
-	if err := cmd.Run(); err != nil {
-		_ = os.Rename(backupPath, dbPath)
-		return fmt.Errorf("sqlite3 restore failed: %w", err)
-	}
-	_ = os.Remove(backupPath)
-	return nil
+	return systemdb.RestoreURL(ctx, s.databaseURL, sqlData)
 }
 
 func (s *MigrationService) dumpDatabase(_ context.Context, db *models.Database) ([]byte, error) {

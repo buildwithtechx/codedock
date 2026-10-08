@@ -1,15 +1,14 @@
 # Postgres Pivot
 
-Goal: run the Codedock control plane on Postgres everywhere. Self-hosted provisions an embedded Postgres container automatically; cloud and HA point `CODEDOCK_DATABASE_URL` at external Postgres. There is one dialect and one schema. SQLite survives only as transitional scaffolding for not-yet-ported repository tests, plus the one-shot legacy importer.
+Goal: run the Codedock control plane on Postgres everywhere. Self-hosted provisions an embedded Postgres container automatically; cloud and HA point `CODEDOCK_DATABASE_URL` at external Postgres. There is one dialect and one schema. All SQLite code and dependencies are deleted; there is no legacy support.
 
 ## Decisions
 
 - Plain Postgres 16 through `pgx/v5/stdlib` over `database/sql`.
-- `schema/*.sql` is canonical Postgres DDL. `schema/sqlite/*.sql` is transitional and gets deleted when the last repository test ports.
-- Repositories write `$n` placeholders directly. The `Rebind`/`DriverName` helpers and the driver parameter on the migration runner are transitional scaffolding and get deleted with the SQLite schema.
+- `schema/*.sql` is canonical Postgres DDL.
+- Repositories write `$n` placeholders directly through `sqlx.NewDb(db, "pgx")`. There is no `Rebind` helper and no driver parameter on the migration runner.
 - `CODEDOCK_DATABASE_URL` unset means self-hosted: the daemon supervises a pinned `codedock-postgres` container (bind-mounted data under `dataDir/postgres`, 0600 password file, `unless-stopped`, health-gated boot). Set means use that Postgres.
 - The supervisor never removes or recreates the container. Image upgrades are an explicit future operation, never automatic.
-- A legacy `dataDir/codedock.db` is imported once into a fresh migrated Postgres, then renamed to `codedock.db.imported`. Import refuses a non-empty target. Nothing is ever deleted.
 - `CODEDOCK_TEST_PG_URL` activates Postgres-backed tests; unset means skip. CI runs a `go-postgres` job with a real Postgres 16 service covering repositories, systemdb and daemon commands.
 
 ## Query porting pattern
@@ -32,16 +31,13 @@ No `LastInsertId` in daemon code. IDs are strings, so no sequence handling. The 
 
 `schema/*.sql` was translated from the SQLite originals by six mechanical rules, verified by reverse-translation identity: `DATETIME` to `TIMESTAMPTZ`, `REAL` to `DOUBLE PRECISION`, `BOOLEAN DEFAULT 0/1` to `DEFAULT FALSE/TRUE`, `trigger` quoted, `is_active=1` to `is_active=TRUE`, plus three structural fixes Postgres requires: forward foreign keys in `001` moved to trailing `ALTER TABLE ... ADD FOREIGN KEY` statements, and `CREATE VIEW IF NOT EXISTS services` became `CREATE OR REPLACE VIEW services`.
 
-## Test strategy during the port
+## Test strategy
 
-- Ported tests open their own database (`CREATE DATABASE`, migrate, drop on cleanup) so parallel packages never share state. See `setupTestDatabaseURL` in `cmd/codedockd/commands/setup_test.go`.
-- Unported repository tests keep `:memory:` SQLite plus `RunMigrationsDialect(db, DriverSQLite)` and stay green.
-- Env-gated suites: migration runner, SQLite importer, supervisor lifecycle (needs Docker), daemon boot.
+- Every Postgres-backed test opens its own database (`CREATE DATABASE`, migrate, drop on cleanup) via `internal/testdb.Open` so parallel packages never share state.
+- Env-gated suites: migration runner, supervisor lifecycle (needs Docker), daemon boot. All skip cleanly when `CODEDOCK_TEST_PG_URL` is unset.
 
 ## Remaining work
 
-- Port repositories domain by domain with Postgres-backed tests (58 files). Suggested order: auth, users, projects, app services, deployments, environments, databases, backups, then the rest.
-- Delete scaffolding when the last port lands: `schema/sqlite/`, `dialect.go`, the driver parameter, `modernc.org/sqlite` from non-test code (the importer keeps it until then).
 - Move single-node assumptions behind Postgres: cron mutex to advisory-lock leadership, backup/operations-reaper/attention-reconcile/update loops multi-node review.
 - Migrate file-local shared state (`self-hosted.json`, backup staging) into Postgres or object storage; document what stays node-local.
 - Per-service images, compose stack, Patroni guidance, HA runbook for hosted cells.

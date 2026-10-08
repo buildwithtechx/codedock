@@ -27,7 +27,7 @@ type OAuthRepo struct {
 }
 
 func NewOAuthRepo(db *sql.DB) *OAuthRepo {
-	return &OAuthRepo{db: sqlx.NewDb(db, "sqlite")}
+	return &OAuthRepo{db: sqlx.NewDb(db, "pgx")}
 }
 
 func (r *OAuthRepo) ListProviders(ctx context.Context) ([]models.OAuthProviderConfig, error) {
@@ -44,7 +44,7 @@ func (r *OAuthRepo) ListProviders(ctx context.Context) ([]models.OAuthProviderCo
 }
 
 func (r *OAuthRepo) GetProvider(ctx context.Context, idOrName string) (*models.OAuthProviderConfig, error) {
-	query := `SELECT id, provider_name, enabled, COALESCE(client_id, '') AS client_id, COALESCE(client_secret, '') AS client_secret, COALESCE(redirect_uri, '') AS redirect_uri, COALESCE(base_url, '') AS base_url, COALESCE(tenant, '') AS tenant, created_at, updated_at FROM oauth_providers WHERE id = ? OR provider_name = ?`
+	query := `SELECT id, provider_name, enabled, COALESCE(client_id, '') AS client_id, COALESCE(client_secret, '') AS client_secret, COALESCE(redirect_uri, '') AS redirect_uri, COALESCE(base_url, '') AS base_url, COALESCE(tenant, '') AS tenant, created_at, updated_at FROM oauth_providers WHERE id = $1 OR provider_name = $2`
 	var p models.OAuthProviderConfig
 	err := r.db.GetContext(ctx, &p, query, idOrName, idOrName)
 	if err != nil {
@@ -64,7 +64,7 @@ func (r *OAuthRepo) SaveProvider(ctx context.Context, p *models.OAuthProviderCon
 	p.UpdatedAt = now
 	query := `INSERT INTO oauth_providers (
 		id, provider_name, enabled, client_id, client_secret, redirect_uri, base_url, tenant, created_at, updated_at
-	) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
+	) VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10)
 	ON CONFLICT(id) DO UPDATE SET
 		provider_name = excluded.provider_name,
 		enabled = excluded.enabled,
@@ -84,7 +84,7 @@ func (r *OAuthRepo) SaveProvider(ctx context.Context, p *models.OAuthProviderCon
 func (r *OAuthRepo) GetUserTOTPSecret(ctx context.Context, userID string) (string, []string, error) {
 	var secret string
 	var recovery string
-	err := r.db.QueryRowContext(ctx, `SELECT COALESCE(totp_secret, ''), COALESCE(recovery_codes, '') FROM users WHERE id = ?`, userID).Scan(&secret, &recovery)
+	err := r.db.QueryRowContext(ctx, `SELECT COALESCE(totp_secret, ''), COALESCE(recovery_codes, '') FROM users WHERE id = $1`, userID).Scan(&secret, &recovery)
 	if err != nil {
 		return "", nil, fmt.Errorf("failed to get totp secret: %w", err)
 	}
@@ -101,7 +101,7 @@ func (r *OAuthRepo) GetUserTOTPSecret(ctx context.Context, userID string) (strin
 
 func (r *OAuthRepo) UpdateUserTOTP(ctx context.Context, userID string, enabled bool, secret string, recoveryCodes []string) error {
 	recoveryStr := strings.Join(recoveryCodes, ",")
-	_, err := r.db.ExecContext(ctx, `UPDATE users SET totp_enabled = ?, totp_secret = ?, recovery_codes = ?, updated_at = CURRENT_TIMESTAMP WHERE id = ?`, enabled, secret, recoveryStr, userID)
+	_, err := r.db.ExecContext(ctx, `UPDATE users SET totp_enabled = $1, totp_secret = $2, recovery_codes = $3, updated_at = CURRENT_TIMESTAMP WHERE id = $4`, enabled, secret, recoveryStr, userID)
 	if err != nil {
 		return fmt.Errorf("failed to update user totp: %w", err)
 	}

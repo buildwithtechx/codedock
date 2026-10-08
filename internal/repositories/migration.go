@@ -12,30 +12,19 @@ import (
 	"strings"
 )
 
-//go:embed schema/*.sql schema/sqlite/*.sql
+//go:embed schema/*.sql
 var schemaFS embed.FS
 
 func RunMigrations(db *sql.DB) error {
-	return RunMigrationsDialect(db, DriverSQLite)
-}
-
-func RunMigrationsDialect(db *sql.DB, driver string) error {
-	if driver != DriverSQLite && driver != DriverPostgres {
-		return fmt.Errorf("unknown database driver %q", driver)
-	}
-	dir := "schema/sqlite"
-	if driver == DriverPostgres {
-		dir = "schema"
-	}
-	sub, err := fs.Sub(schemaFS, dir)
+	sub, err := fs.Sub(schemaFS, "schema")
 	if err != nil {
 		return fmt.Errorf("failed to sub schema fs: %w", err)
 	}
-	return runMigrations(db, sub, driver)
+	return runMigrations(db, sub)
 }
 
-func runMigrations(db *sql.DB, fsys fs.FS, driver string) error {
-	if err := createMigrationsTable(db, driver); err != nil {
+func runMigrations(db *sql.DB, fsys fs.FS) error {
+	if err := createMigrationsTable(db); err != nil {
 		return err
 	}
 	applied, err := loadApplied(db)
@@ -59,7 +48,7 @@ func runMigrations(db *sql.DB, fsys fs.FS, driver string) error {
 			}
 			continue
 		}
-		if err := applyMigration(db, file, string(content), sum, driver); err != nil {
+		if err := applyMigration(db, file, string(content), sum); err != nil {
 			return err
 		}
 	}
@@ -67,7 +56,7 @@ func runMigrations(db *sql.DB, fsys fs.FS, driver string) error {
 	return nil
 }
 
-func applyMigration(db *sql.DB, file, content, sum, driver string) error {
+func applyMigration(db *sql.DB, file, content, sum string) error {
 	tx, err := db.Begin()
 	if err != nil {
 		return fmt.Errorf("failed to begin transaction for %s: %w", file, err)
@@ -78,11 +67,7 @@ func applyMigration(db *sql.DB, file, content, sum, driver string) error {
 		}
 		return cause
 	}
-	statements := []string{content}
-	if driver == DriverPostgres {
-		statements = splitStatements(content)
-	}
-	for _, stmt := range statements {
+	for _, stmt := range splitStatements(content) {
 		if strings.TrimSpace(stmt) == "" {
 			continue
 		}
@@ -90,8 +75,7 @@ func applyMigration(db *sql.DB, file, content, sum, driver string) error {
 			return rollback(fmt.Errorf("migration failed for %s: %w", file, err))
 		}
 	}
-	record := Rebind(driver, "INSERT INTO schema_migrations (filename, checksum) VALUES (?, ?)")
-	if _, err := tx.Exec(record, file, sum); err != nil {
+	if _, err := tx.Exec("INSERT INTO schema_migrations (filename, checksum) VALUES ($1, $2)", file, sum); err != nil {
 		return rollback(fmt.Errorf("failed to record migration %s: %w", file, err))
 	}
 	if err := tx.Commit(); err != nil {
@@ -101,16 +85,12 @@ func applyMigration(db *sql.DB, file, content, sum, driver string) error {
 	return nil
 }
 
-func createMigrationsTable(db *sql.DB, driver string) error {
-	appliedAt := "TEXT DEFAULT CURRENT_TIMESTAMP"
-	if driver == DriverPostgres {
-		appliedAt = "TIMESTAMPTZ DEFAULT CURRENT_TIMESTAMP"
-	}
+func createMigrationsTable(db *sql.DB) error {
 	_, err := db.Exec(`
 		CREATE TABLE IF NOT EXISTS schema_migrations (
 			filename   TEXT PRIMARY KEY,
 			checksum   TEXT NOT NULL DEFAULT '',
-			applied_at ` + appliedAt + `
+			applied_at TIMESTAMPTZ DEFAULT CURRENT_TIMESTAMP
 		)
 	`)
 	if err != nil {

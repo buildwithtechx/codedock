@@ -2,7 +2,6 @@ package attention
 
 import (
 	"context"
-	"database/sql"
 	"fmt"
 	"io"
 	"testing"
@@ -13,8 +12,7 @@ import (
 	"codedock.run/codedock/internal/repositories"
 	"codedock.run/codedock/internal/services/migrations"
 	projectservices "codedock.run/codedock/internal/services/projects"
-
-	_ "modernc.org/sqlite"
+	"codedock.run/codedock/internal/testdb"
 )
 
 type fakeHealth struct {
@@ -72,12 +70,7 @@ func (errRunner) RunPipe(ctx context.Context, cmd string, stdin io.Reader, stdou
 
 func setupAttentionTest(t *testing.T) (*Service, *fakeHealth, *fakeBackups, *fakeWorkloads, *repositories.DeploymentRepo, *repositories.AppServiceRepo, repositories.MigrationRepository, repositories.ManagedRepository, repositories.ServerRepository, string) {
 	t.Helper()
-	db, err := sql.Open("sqlite", ":memory:?_pragma=foreign_keys(ON)")
-	if err != nil {
-		t.Fatalf("open database: %v", err)
-	}
-	db.SetMaxOpenConns(1)
-	t.Cleanup(func() { db.Close() })
+	db := testdb.Open(t)
 	if err := repositories.RunMigrations(db); err != nil {
 		t.Fatalf("run migrations: %v", err)
 	}

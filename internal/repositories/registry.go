@@ -17,15 +17,15 @@ type RegistryRepository interface {
 	Delete(ctx context.Context, id string) error
 }
 
-type sqliteRegistryRepository struct {
+type postgresRegistryRepository struct {
 	db *sqlx.DB
 }
 
 func NewRegistryRepository(db *sql.DB) RegistryRepository {
-	return &sqliteRegistryRepository{db: sqlx.NewDb(db, "sqlite")}
+	return &postgresRegistryRepository{db: sqlx.NewDb(db, "pgx")}
 }
 
-func (r *sqliteRegistryRepository) Create(ctx context.Context, registry *models.Registry) error {
+func (r *postgresRegistryRepository) Create(ctx context.Context, registry *models.Registry) error {
 	if registry.ID == "" {
 		registry.ID = uuid.NewString()
 	}
@@ -35,7 +35,7 @@ func (r *sqliteRegistryRepository) Create(ctx context.Context, registry *models.
 
 	query := `
 		INSERT INTO registries (id, project_id, name, registry_url, username, password_token, created_at, updated_at)
-		VALUES (?, ?, ?, ?, ?, ?, ?, ?)
+		VALUES ($1, $2, $3, $4, $5, $6, $7, $8)
 	`
 	_, err := r.db.ExecContext(ctx, query,
 		registry.ID, registry.ProjectID, registry.Name, registry.RegistryURL,
@@ -43,9 +43,9 @@ func (r *sqliteRegistryRepository) Create(ctx context.Context, registry *models.
 	return err
 }
 
-func (r *sqliteRegistryRepository) ListByProject(ctx context.Context, projectID string) ([]*models.Registry, error) {
+func (r *postgresRegistryRepository) ListByProject(ctx context.Context, projectID string) ([]*models.Registry, error) {
 	var registries []*models.Registry
-	query := `SELECT id, project_id, name, registry_url, username, password_token, created_at, updated_at FROM registries WHERE project_id = ? ORDER BY created_at DESC`
+	query := `SELECT id, project_id, name, registry_url, username, password_token, created_at, updated_at FROM registries WHERE project_id = $1 ORDER BY created_at DESC`
 	err := r.db.SelectContext(ctx, &registries, query, projectID)
 	if err != nil {
 		return nil, err
@@ -56,9 +56,9 @@ func (r *sqliteRegistryRepository) ListByProject(ctx context.Context, projectID 
 	return registries, nil
 }
 
-func (r *sqliteRegistryRepository) Get(ctx context.Context, id string) (*models.Registry, error) {
+func (r *postgresRegistryRepository) Get(ctx context.Context, id string) (*models.Registry, error) {
 	var registry models.Registry
-	query := `SELECT id, project_id, name, registry_url, username, password_token, created_at, updated_at FROM registries WHERE id = ?`
+	query := `SELECT id, project_id, name, registry_url, username, password_token, created_at, updated_at FROM registries WHERE id = $1`
 	err := r.db.GetContext(ctx, &registry, query, id)
 	if err == sql.ErrNoRows {
 		return nil, nil
@@ -66,8 +66,8 @@ func (r *sqliteRegistryRepository) Get(ctx context.Context, id string) (*models.
 	return &registry, err
 }
 
-func (r *sqliteRegistryRepository) Delete(ctx context.Context, id string) error {
-	query := `DELETE FROM registries WHERE id = ?`
+func (r *postgresRegistryRepository) Delete(ctx context.Context, id string) error {
+	query := `DELETE FROM registries WHERE id = $1`
 	_, err := r.db.ExecContext(ctx, query, id)
 	return err
 }

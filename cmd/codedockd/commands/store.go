@@ -5,8 +5,6 @@ import (
 	"database/sql"
 	"log/slog"
 	"os"
-	"path/filepath"
-	"strconv"
 
 	"github.com/docker/docker/client"
 
@@ -100,42 +98,9 @@ func InitDataDir() (string, *sql.DB, *utils.Vault) {
 		slog.Error("failed to open database", "err", err)
 		os.Exit(1)
 	}
-	if err := repositories.RunMigrationsDialect(db, repositories.DriverPostgres); err != nil {
+	if err := repositories.RunMigrations(db); err != nil {
 		slog.Error("failed to run database migrations", "err", err)
 		os.Exit(1)
 	}
-	importLegacySQLite(db, dataDir)
 	return dataDir, db, vlt
-}
-
-func importLegacySQLite(db *sql.DB, dataDir string) {
-	legacy := filepath.Join(dataDir, "codedock.db")
-	if _, err := os.Stat(legacy); os.IsNotExist(err) {
-		return
-	}
-	empty, err := systemdb.TargetEmpty(context.Background(), db)
-	if err != nil {
-		slog.Error("failed to check database emptiness", "err", err)
-		os.Exit(1)
-	}
-	if !empty {
-		slog.Info("legacy sqlite database present but postgres is already populated, skipping import", "path", legacy)
-		return
-	}
-	if err := systemdb.ImportFromSQLite(context.Background(), db, legacy); err != nil {
-		slog.Error("failed to import legacy sqlite database", "err", err, "hint", "move the file aside to boot with an empty database")
-		os.Exit(1)
-	}
-	archived := legacy + ".imported"
-	for i := 2; ; i++ {
-		if _, err := os.Stat(archived); os.IsNotExist(err) {
-			break
-		}
-		archived = legacy + ".imported-" + strconv.Itoa(i)
-	}
-	if err := os.Rename(legacy, archived); err != nil {
-		slog.Error("failed to archive legacy sqlite database", "err", err)
-		os.Exit(1)
-	}
-	slog.Info("archived legacy sqlite database", "path", archived)
 }

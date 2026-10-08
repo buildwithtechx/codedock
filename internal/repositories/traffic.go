@@ -20,12 +20,12 @@ type TrafficRepository interface {
 	DeleteBefore(ctx context.Context, cutoff string) error
 }
 
-type sqliteTrafficRepository struct {
+type postgresTrafficRepository struct {
 	db *sql.DB
 }
 
 func NewTrafficRepository(db *sql.DB) TrafficRepository {
-	return &sqliteTrafficRepository{db: db}
+	return &postgresTrafficRepository{db: db}
 }
 
 func bucketKey(sample models.TrafficSample) string {
@@ -44,7 +44,7 @@ func dayKey(sample models.TrafficSample) string {
 	return parsed.UTC().Format("2006-01-02")
 }
 
-func (r *sqliteTrafficRepository) RecordBatch(ctx context.Context, samples []models.TrafficSample) error {
+func (r *postgresTrafficRepository) RecordBatch(ctx context.Context, samples []models.TrafficSample) error {
 	if len(samples) == 0 {
 		return nil
 	}
@@ -56,18 +56,18 @@ func (r *sqliteTrafficRepository) RecordBatch(ctx context.Context, samples []mod
 	for _, sample := range samples {
 		if _, err := tx.ExecContext(ctx, `
 			INSERT INTO traffic_buckets (bucket_minute, project_id, domain, path, status, requests, bytes, duration_ms)
-			VALUES (?, ?, ?, ?, ?, 1, ?, ?)
+			VALUES ($1, $2, $3, $4, $5, 1, $6, $7)
 			ON CONFLICT(bucket_minute, project_id, domain, path, status)
-			DO UPDATE SET requests = requests + 1, bytes = bytes + excluded.bytes, duration_ms = duration_ms + excluded.duration_ms
+			DO UPDATE SET requests = traffic_buckets.requests + 1, bytes = traffic_buckets.bytes + excluded.bytes, duration_ms = traffic_buckets.duration_ms + excluded.duration_ms
 		`, bucketKey(sample), sample.ProjectID, sample.Domain, sample.Path, sample.Status, sample.Bytes, sample.DurationMs); err != nil {
 			return fmt.Errorf("record traffic bucket: %w", err)
 		}
 		if sample.ClientIP != "" {
 			if _, err := tx.ExecContext(ctx, `
 				INSERT INTO traffic_visitors (day, project_id, ip, country, requests, bytes)
-				VALUES (?, ?, ?, '', 1, ?)
+				VALUES ($1, $2, $3, '', 1, $4)
 				ON CONFLICT(day, project_id, ip)
-				DO UPDATE SET requests = requests + 1, bytes = bytes + excluded.bytes
+				DO UPDATE SET requests = traffic_visitors.requests + 1, bytes = traffic_visitors.bytes + excluded.bytes
 			`, dayKey(sample), sample.ProjectID, sample.ClientIP, sample.Bytes); err != nil {
 				return fmt.Errorf("record traffic visitor: %w", err)
 			}
@@ -76,7 +76,7 @@ func (r *sqliteTrafficRepository) RecordBatch(ctx context.Context, samples []mod
 	return tx.Commit()
 }
 
-func (r *sqliteTrafficRepository) Summary(ctx context.Context, projectID, domain, from, to string) (*models.AnalyticsSummary, error) {
+func (r *postgresTrafficRepository) Summary(ctx context.Context, projectID, domain, from, to string) (*models.AnalyticsSummary, error) {
 	clause, args := trafficRange(projectID, domain, from, to)
 	var summary models.AnalyticsSummary
 	summary.ProjectID, summary.From, summary.To = projectID, from, to
@@ -98,7 +98,7 @@ func (r *sqliteTrafficRepository) Summary(ctx context.Context, projectID, domain
 	return &summary, nil
 }
 
-func (r *sqliteTrafficRepository) Overview(ctx context.Context, projectID, domain, from, to, stepMinutes string) (*models.AnalyticsOverview, error) {
+func (r *postgresTrafficRepository) Overview(ctx context.Context, projectID, domain, from, to, stepMinutes string) (*models.AnalyticsOverview, error) {
 	clause, args := trafficRange(projectID, domain, from, to)
 	overview := &models.AnalyticsOverview{ProjectID: projectID, From: from, To: to}
 	seriesRows, err := r.db.QueryContext(ctx, `
@@ -153,11 +153,11 @@ func (r *sqliteTrafficRepository) Overview(ctx context.Context, projectID, domai
 	return overview, nil
 }
 
-func (r *sqliteTrafficRepository) Geo(ctx context.Context, projectID, from, to string) (*models.AnalyticsGeo, error) {
+func (r *postgresTrafficRepository) Geo(ctx context.Context, projectID, from, to string) (*models.AnalyticsGeo, error) {
 	geo := &models.AnalyticsGeo{ProjectID: projectID, From: from, To: to}
 	rows, err := r.db.QueryContext(ctx, `
 		SELECT COALESCE(NULLIF(country,''),'unknown'), SUM(requests), COUNT(DISTINCT ip), SUM(bytes)
-		FROM traffic_visitors WHERE project_id = ? AND day >= ? AND day <= ?
+		FROM traffic_visitors WHERE project_id = $1 AND day >= $2 AND day <= $3
 		GROUP BY 1 ORDER BY 2 DESC LIMIT 50
 	`, projectID, dayBound(from), dayBound(to))
 	if err != nil {
@@ -174,9 +174,9 @@ func (r *sqliteTrafficRepository) Geo(ctx context.Context, projectID, from, to s
 	return geo, nil
 }
 
-func (r *sqliteTrafficRepository) PathsEnabled(ctx context.Context, projectID string) (bool, error) {
+func (r *postgresTrafficRepository) PathsEnabled(ctx context.Context, projectID string) (bool, error) {
 	var enabled int
-	err := r.db.QueryRowContext(ctx, `SELECT enabled FROM traffic_paths WHERE project_id = ?`, projectID).Scan(&enabled)
+	err := r.db.QueryRowContext(ctx, `SELECT enabled FROM traffic_paths WHERE project_id = $1`, projectID).Scan(&enabled)
 	if err == sql.ErrNoRows {
 		return false, nil
 	}
@@ -186,13 +186,13 @@ func (r *sqliteTrafficRepository) PathsEnabled(ctx context.Context, projectID st
 	return enabled != 0, nil
 }
 
-func (r *sqliteTrafficRepository) SetPathsEnabled(ctx context.Context, projectID string, enabled bool) error {
+func (r *postgresTrafficRepository) SetPathsEnabled(ctx context.Context, projectID string, enabled bool) error {
 	value := 0
 	if enabled {
 		value = 1
 	}
 	_, err := r.db.ExecContext(ctx, `
-		INSERT INTO traffic_paths (project_id, enabled, updated_at) VALUES (?, ?, CURRENT_TIMESTAMP)
+		INSERT INTO traffic_paths (project_id, enabled, updated_at) VALUES ($1, $2, CURRENT_TIMESTAMP)
 		ON CONFLICT(project_id) DO UPDATE SET enabled = excluded.enabled, updated_at = CURRENT_TIMESTAMP
 	`, projectID, value)
 	if err != nil {
@@ -201,37 +201,37 @@ func (r *sqliteTrafficRepository) SetPathsEnabled(ctx context.Context, projectID
 	return nil
 }
 
-func (r *sqliteTrafficRepository) RetentionCutoff(days int) string {
+func (r *postgresTrafficRepository) RetentionCutoff(days int) string {
 	return time.Now().UTC().AddDate(0, 0, -days).Format("2006-01-02T15:04")
 }
 
-func (r *sqliteTrafficRepository) DeleteBefore(ctx context.Context, cutoff string) error {
-	if _, err := r.db.ExecContext(ctx, `DELETE FROM traffic_buckets WHERE bucket_minute < ?`, cutoff); err != nil {
+func (r *postgresTrafficRepository) DeleteBefore(ctx context.Context, cutoff string) error {
+	if _, err := r.db.ExecContext(ctx, `DELETE FROM traffic_buckets WHERE bucket_minute < $1`, cutoff); err != nil {
 		return fmt.Errorf("retire traffic buckets: %w", err)
 	}
 	day := cutoff
 	if len(cutoff) >= 10 {
 		day = cutoff[:10]
 	}
-	if _, err := r.db.ExecContext(ctx, `DELETE FROM traffic_visitors WHERE day < ?`, day); err != nil {
+	if _, err := r.db.ExecContext(ctx, `DELETE FROM traffic_visitors WHERE day < $1`, day); err != nil {
 		return fmt.Errorf("retire traffic visitors: %w", err)
 	}
 	return nil
 }
 
 func trafficRange(projectID, domain, from, to string) (string, []any) {
-	clause := `WHERE project_id = ?`
+	clause := `WHERE project_id = $1`
 	args := []any{projectID}
 	if domain != "" {
-		clause += ` AND domain = ?`
+		clause += fmt.Sprintf(` AND domain = $%d`, len(args)+1)
 		args = append(args, domain)
 	}
 	if from != "" {
-		clause += ` AND bucket_minute >= ?`
+		clause += fmt.Sprintf(` AND bucket_minute >= $%d`, len(args)+1)
 		args = append(args, from)
 	}
 	if to != "" {
-		clause += ` AND bucket_minute <= ?`
+		clause += fmt.Sprintf(` AND bucket_minute <= $%d`, len(args)+1)
 		args = append(args, to)
 	}
 	return clause, args

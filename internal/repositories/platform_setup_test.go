@@ -9,10 +9,7 @@ import (
 )
 
 func TestStackEncryptionRevisionAndRestartRecovery(t *testing.T) {
-	db := openTestDB(t)
-	if err := RunMigrations(db); err != nil {
-		t.Fatal(err)
-	}
+	db := openPGTestDB(t)
 	for _, query := range []string{
 		`INSERT INTO organizations(id,name) VALUES('org','Org')`,
 		`INSERT INTO project_apps(id,organization_id,name,slug) VALUES('application','org','Application','application')`,
@@ -69,10 +66,7 @@ func TestStackEncryptionRevisionAndRestartRecovery(t *testing.T) {
 }
 
 func TestTopologyRejectsStaleCrossEnvironmentAndCyclicEdits(t *testing.T) {
-	db := openTestDB(t)
-	if err := RunMigrations(db); err != nil {
-		t.Fatal(err)
-	}
+	db := openPGTestDB(t)
 	for _, query := range []string{
 		`INSERT INTO organizations(id,name) VALUES('org','Org')`,
 		`INSERT INTO project_apps(id,organization_id,name,slug) VALUES('application','org','Application','application')`,

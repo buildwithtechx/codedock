@@ -37,7 +37,7 @@ func TestE2EServerLifecycle(t *testing.T) {
 		t.Fatalf("expected isLocal to be true, got %v", localData["isLocal"])
 	}
 
-	if _, err := h.db.Exec("UPDATE users SET plan_type = 'pro' WHERE email = ?", "server_admin@codedock.local"); err != nil {
+	if _, err := h.db.Exec("UPDATE users SET plan_type = 'pro' WHERE email = $1", "server_admin@codedock.local"); err != nil {
 		t.Fatalf("failed to update user plan: %v", err)
 	}
 

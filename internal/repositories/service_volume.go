@@ -22,7 +22,7 @@ type serviceVolumeRepo struct {
 const serviceVolumeColumns = `id, service_id, host_path, container_path, created_at`
 
 func NewServiceVolumeRepo(db *sql.DB) ServiceVolumeRepository {
-	return &serviceVolumeRepo{db: sqlx.NewDb(db, "sqlite")}
+	return &serviceVolumeRepo{db: sqlx.NewDb(db, "pgx")}
 }
 
 func (r *serviceVolumeRepo) Create(ctx context.Context, volume *models.ServiceVolume) error {
@@ -36,20 +36,20 @@ func (r *serviceVolumeRepo) Create(ctx context.Context, volume *models.ServiceVo
 
 func (r *serviceVolumeRepo) GetByID(ctx context.Context, id string) (*models.ServiceVolume, error) {
 	var volume models.ServiceVolume
-	query := `SELECT ` + serviceVolumeColumns + ` FROM service_volumes WHERE id = ?`
+	query := `SELECT ` + serviceVolumeColumns + ` FROM service_volumes WHERE id = $1`
 	err := r.db.GetContext(ctx, &volume, query, id)
 	return &volume, err
 }
 
 func (r *serviceVolumeRepo) ListByService(ctx context.Context, serviceID string) ([]models.ServiceVolume, error) {
 	var volumes []models.ServiceVolume
-	query := `SELECT ` + serviceVolumeColumns + ` FROM service_volumes WHERE service_id = ? ORDER BY created_at DESC`
+	query := `SELECT ` + serviceVolumeColumns + ` FROM service_volumes WHERE service_id = $1 ORDER BY created_at DESC`
 	err := r.db.SelectContext(ctx, &volumes, query, serviceID)
 	return volumes, err
 }
 
 func (r *serviceVolumeRepo) Delete(ctx context.Context, id string) error {
-	query := `DELETE FROM service_volumes WHERE id = ?`
+	query := `DELETE FROM service_volumes WHERE id = $1`
 	_, err := r.db.ExecContext(ctx, query, id)
 	return err
 }

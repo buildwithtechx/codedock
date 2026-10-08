@@ -28,7 +28,7 @@ type ProjectAppRepo struct {
 }
 
 func NewProjectAppRepo(db *sql.DB) *ProjectAppRepo {
-	return &ProjectAppRepo{db: sqlx.NewDb(db, "sqlite")}
+	return &ProjectAppRepo{db: sqlx.NewDb(db, "pgx")}
 }
 
 func (r *ProjectAppRepo) ListByOrganization(ctx context.Context, organizationID string) ([]*models.ProjectApp, error) {
@@ -37,7 +37,7 @@ func (r *ProjectAppRepo) ListByOrganization(ctx context.Context, organizationID 
 		SELECT id, organization_id, name, slug, git_provider, git_owner, git_repo, git_url,
 		       installation_id, favicon, favicon_checked_at, deleted_at, created_at, updated_at
 		FROM project_apps
-		WHERE organization_id = ? AND deleted_at IS NULL
+		WHERE organization_id = $1 AND deleted_at IS NULL
 		ORDER BY created_at DESC
 	`
 	err := r.db.SelectContext(ctx, &list, query, organizationID)
@@ -56,7 +56,7 @@ func (r *ProjectAppRepo) GetByID(ctx context.Context, id string) (*models.Projec
 		SELECT id, organization_id, name, slug, git_provider, git_owner, git_repo, git_url,
 		       installation_id, favicon, favicon_checked_at, deleted_at, created_at, updated_at
 		FROM project_apps
-		WHERE id = ? AND deleted_at IS NULL
+		WHERE id = $1 AND deleted_at IS NULL
 	`
 	err := r.db.GetContext(ctx, &app, query, id)
 	if errors.Is(err, sql.ErrNoRows) {
@@ -74,7 +74,7 @@ func (r *ProjectAppRepo) GetBySlug(ctx context.Context, organizationID, slug str
 		SELECT id, organization_id, name, slug, git_provider, git_owner, git_repo, git_url,
 		       installation_id, favicon, favicon_checked_at, deleted_at, created_at, updated_at
 		FROM project_apps
-		WHERE organization_id = ? AND slug = ? AND deleted_at IS NULL
+		WHERE organization_id = $1 AND slug = $2 AND deleted_at IS NULL
 	`
 	err := r.db.GetContext(ctx, &app, query, organizationID, slug)
 	if errors.Is(err, sql.ErrNoRows) {
@@ -101,7 +101,7 @@ func (r *ProjectAppRepo) Create(ctx context.Context, app *models.ProjectApp) err
 		INSERT INTO project_apps (
 			id, organization_id, name, slug, git_provider, git_owner, git_repo, git_url,
 			installation_id, favicon, created_at, updated_at
-		) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
+		) VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10, $11, $12)
 	`
 	_, err := r.db.ExecContext(ctx, query,
 		app.ID, app.OrganizationID, app.Name, app.Slug, app.GitProvider, app.GitOwner, app.GitRepo, app.GitURL,
@@ -117,9 +117,9 @@ func (r *ProjectAppRepo) Update(ctx context.Context, app *models.ProjectApp) err
 	app.UpdatedAt = time.Now().UTC()
 	query := `
 		UPDATE project_apps SET
-			name = ?, slug = ?, favicon = ?, git_provider = ?, git_owner = ?, git_repo = ?, git_url = ?,
-			installation_id = ?, updated_at = ?
-		WHERE id = ?
+			name = $1, slug = $2, favicon = $3, git_provider = $4, git_owner = $5, git_repo = $6, git_url = $7,
+			installation_id = $8, updated_at = $9
+		WHERE id = $10
 	`
 	_, err := r.db.ExecContext(ctx, query,
 		app.Name, app.Slug, app.Favicon, app.GitProvider, app.GitOwner, app.GitRepo, app.GitURL,
@@ -133,7 +133,7 @@ func (r *ProjectAppRepo) Update(ctx context.Context, app *models.ProjectApp) err
 
 func (r *ProjectAppRepo) Delete(ctx context.Context, id string) error {
 	now := time.Now().UTC()
-	query := `UPDATE project_apps SET deleted_at = ?, updated_at = ? WHERE id = ?`
+	query := `UPDATE project_apps SET deleted_at = $1, updated_at = $2 WHERE id = $3`
 	_, err := r.db.ExecContext(ctx, query, now, now, id)
 	if err != nil {
 		return fmt.Errorf("failed to delete project app: %w", err)

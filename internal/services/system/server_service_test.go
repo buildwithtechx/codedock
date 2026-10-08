@@ -2,22 +2,16 @@ package system
 
 import (
 	"context"
-	"database/sql"
 	"testing"
 
 	"codedock.run/codedock/internal/config"
 	"codedock.run/codedock/internal/models"
 	"codedock.run/codedock/internal/repositories"
-
-	_ "modernc.org/sqlite"
+	"codedock.run/codedock/internal/testdb"
 )
 
 func TestListServersByUserIncludesControlPlaneForOwner(t *testing.T) {
-	db, err := sql.Open("sqlite", ":memory:?_pragma=foreign_keys(ON)")
-	if err != nil {
-		t.Fatalf("open database: %v", err)
-	}
-	defer db.Close()
+	db := testdb.Open(t)
 	if err := repositories.RunMigrations(db); err != nil {
 		t.Fatalf("run migrations: %v", err)
 	}
@@ -52,15 +46,7 @@ func TestWorkerLimitsOnlyApplyInCloudMode(t *testing.T) {
 	} {
 		t.Run(check.name, func(t *testing.T) {
 			cfg.Cloud.Enabled = check.cloud
-			db, err := sql.Open("sqlite", ":memory:?_pragma=foreign_keys(ON)")
-			if err != nil {
-				t.Fatal(err)
-			}
-			defer func() {
-				if err := db.Close(); err != nil {
-					t.Error(err)
-				}
-			}()
+			db := testdb.Open(t)
 			if err := repositories.RunMigrations(db); err != nil {
 				t.Fatal(err)
 			}
@@ -74,7 +60,7 @@ func TestWorkerLimitsOnlyApplyInCloudMode(t *testing.T) {
 			if _, err := service.CreateServer(context.Background(), user.ID, request); err != nil {
 				t.Fatal(err)
 			}
-			_, err = service.CreateServer(context.Background(), user.ID, request)
+			_, err := service.CreateServer(context.Background(), user.ID, request)
 			if check.allowed && err != nil {
 				t.Fatalf("worker creation should be allowed: %v", err)
 			}
@@ -86,15 +72,7 @@ func TestWorkerLimitsOnlyApplyInCloudMode(t *testing.T) {
 }
 
 func TestListServersByAPITokenDoesNotLoadSyntheticUser(t *testing.T) {
-	db, err := sql.Open("sqlite", ":memory:?_pragma=foreign_keys(ON)")
-	if err != nil {
-		t.Fatal(err)
-	}
-	defer func() {
-		if err := db.Close(); err != nil {
-			t.Error(err)
-		}
-	}()
+	db := testdb.Open(t)
 	if err := repositories.RunMigrations(db); err != nil {
 		t.Fatal(err)
 	}

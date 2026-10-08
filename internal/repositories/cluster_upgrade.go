@@ -16,7 +16,7 @@ func (r *ClusterRepo) BeginUpgrade(ctx context.Context, plan *models.ClusterPlan
 	if err != nil {
 		return err
 	}
-	_, err = r.db.ExecContext(ctx, `INSERT INTO cluster_upgrade_journals(cluster_id,encrypted_plan) VALUES(?,?)`, plan.Cluster.ID, encrypted)
+	_, err = r.db.ExecContext(ctx, `INSERT INTO cluster_upgrade_journals(cluster_id,encrypted_plan) VALUES($1,$2)`, plan.Cluster.ID, encrypted)
 	return err
 }
 func (r *ClusterRepo) PendingUpgrades(ctx context.Context) ([]models.ClusterPlan, error) {
@@ -44,7 +44,7 @@ func (r *ClusterRepo) FinishUpgrade(ctx context.Context, id, version, status, me
 		return err
 	}
 	defer tx.Rollback()
-	result, err := tx.ExecContext(ctx, `UPDATE clusters SET version=?,status=?,error=?,revision=revision+1 WHERE id=? AND EXISTS(SELECT 1 FROM cluster_upgrade_journals WHERE cluster_id=?)`, version, status, message, id, id)
+	result, err := tx.ExecContext(ctx, `UPDATE clusters SET version=$1,status=$2,error=$3,revision=revision+1 WHERE id=$4 AND EXISTS(SELECT 1 FROM cluster_upgrade_journals WHERE cluster_id=$5)`, version, status, message, id, id)
 	if err != nil {
 		return err
 	}
@@ -55,7 +55,7 @@ func (r *ClusterRepo) FinishUpgrade(ctx context.Context, id, version, status, me
 	if count != 1 {
 		return fmt.Errorf("cluster upgrade journal missing")
 	}
-	if _, err := tx.ExecContext(ctx, `DELETE FROM cluster_upgrade_journals WHERE cluster_id=?`, id); err != nil {
+	if _, err := tx.ExecContext(ctx, `DELETE FROM cluster_upgrade_journals WHERE cluster_id=$1`, id); err != nil {
 		return err
 	}
 	return tx.Commit()

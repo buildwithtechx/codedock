@@ -32,7 +32,7 @@ type S3DestinationRepo struct {
 }
 
 func NewS3DestinationRepo(db *sql.DB, v Vault) *S3DestinationRepo {
-	return &S3DestinationRepo{db: sqlx.NewDb(db, "sqlite"), vault: v}
+	return &S3DestinationRepo{db: sqlx.NewDb(db, "pgx"), vault: v}
 }
 
 func (r *S3DestinationRepo) CreateS3Destination(ctx context.Context, dest *models.S3Destination) error {
@@ -53,10 +53,10 @@ func (r *S3DestinationRepo) CreateS3Destination(ctx context.Context, dest *model
 	r.mu.Lock()
 	defer r.mu.Unlock()
 	if dest.IsDefault {
-		_, _ = r.db.ExecContext(ctx, `UPDATE s3_destinations SET is_default = 0`)
+		_, _ = r.db.ExecContext(ctx, `UPDATE s3_destinations SET is_default = FALSE`)
 	}
 	_, err := r.db.ExecContext(ctx, `INSERT INTO s3_destinations (id, name, description, provider, endpoint, bucket, region, path_prefix, is_default, last_verified_at, last_verify_error, access_key_id, secret_access_key, created_at)
-		VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)`,
+		VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10, $11, $12, $13, $14)`,
 		dest.ID, dest.Name, dest.Description, dest.Provider, dest.Endpoint, dest.Bucket, dest.Region, dest.PathPrefix, dest.IsDefault, dest.LastVerifiedAt, dest.LastVerifyError, dest.AccessKeyID, secret, dest.CreatedAt)
 	if err != nil {
 		return fmt.Errorf("failed to create s3 destination: %w", err)
@@ -76,9 +76,9 @@ func (r *S3DestinationRepo) UpdateS3Destination(ctx context.Context, dest *model
 	r.mu.Lock()
 	defer r.mu.Unlock()
 	if dest.IsDefault {
-		_, _ = r.db.ExecContext(ctx, `UPDATE s3_destinations SET is_default = 0 WHERE id != ?`, dest.ID)
+		_, _ = r.db.ExecContext(ctx, `UPDATE s3_destinations SET is_default = FALSE WHERE id != $1`, dest.ID)
 	}
-	res, err := r.db.ExecContext(ctx, `UPDATE s3_destinations SET name = ?, description = ?, provider = ?, endpoint = ?, bucket = ?, region = ?, path_prefix = ?, is_default = ?, access_key_id = ?, secret_access_key = ? WHERE id = ?`,
+	res, err := r.db.ExecContext(ctx, `UPDATE s3_destinations SET name = $1, description = $2, provider = $3, endpoint = $4, bucket = $5, region = $6, path_prefix = $7, is_default = $8, access_key_id = $9, secret_access_key = $10 WHERE id = $11`,
 		dest.Name, dest.Description, dest.Provider, dest.Endpoint, dest.Bucket, dest.Region, dest.PathPrefix, dest.IsDefault, dest.AccessKeyID, secret, dest.ID)
 	if err != nil {
 		return fmt.Errorf("failed to update s3 destination: %w", err)
@@ -98,7 +98,7 @@ func (r *S3DestinationRepo) SetDefaultDestination(ctx context.Context, id string
 		return fmt.Errorf("begin default destination update: %w", err)
 	}
 	defer tx.Rollback()
-	res, err := tx.ExecContext(ctx, `UPDATE s3_destinations SET is_default = 1 WHERE id = ?`, id)
+	res, err := tx.ExecContext(ctx, `UPDATE s3_destinations SET is_default = TRUE WHERE id = $1`, id)
 	if err != nil {
 		return fmt.Errorf("set default destination: %w", err)
 	}
@@ -109,7 +109,7 @@ func (r *S3DestinationRepo) SetDefaultDestination(ctx context.Context, id string
 	if affected == 0 {
 		return utils.NewNotFoundError("S3Destination", id)
 	}
-	if _, err := tx.ExecContext(ctx, `UPDATE s3_destinations SET is_default = 0 WHERE id != ?`, id); err != nil {
+	if _, err := tx.ExecContext(ctx, `UPDATE s3_destinations SET is_default = FALSE WHERE id != $1`, id); err != nil {
 		return fmt.Errorf("clear previous default destination: %w", err)
 	}
 	if err := tx.Commit(); err != nil {
@@ -123,10 +123,10 @@ func (r *S3DestinationRepo) RecordVerificationResult(ctx context.Context, id str
 	defer r.mu.Unlock()
 	if verified {
 		now := time.Now().UTC().Format(time.RFC3339)
-		_, err := r.db.ExecContext(ctx, `UPDATE s3_destinations SET last_verified_at = ?, last_verify_error = '' WHERE id = ?`, now, id)
+		_, err := r.db.ExecContext(ctx, `UPDATE s3_destinations SET last_verified_at = $1, last_verify_error = '' WHERE id = $2`, now, id)
 		return err
 	}
-	_, err := r.db.ExecContext(ctx, `UPDATE s3_destinations SET last_verify_error = ? WHERE id = ?`, errMsg, id)
+	_, err := r.db.ExecContext(ctx, `UPDATE s3_destinations SET last_verify_error = $1 WHERE id = $2`, errMsg, id)
 	return err
 }
 
@@ -161,7 +161,7 @@ func (r *S3DestinationRepo) GetS3Destination(ctx context.Context, id string) (*m
 	defer r.mu.Unlock()
 	var dest models.S3Destination
 	err := r.db.GetContext(ctx, &dest, `SELECT id, name, COALESCE(description, '') as description, COALESCE(provider, '') as provider, endpoint, bucket, COALESCE(region, '') as region, COALESCE(path_prefix, '') as path_prefix, is_default, last_verified_at, COALESCE(last_verify_error, '') as last_verify_error, COALESCE(access_key_id, '') as access_key_id, COALESCE(secret_access_key, '') as secret_access_key, created_at
-		FROM s3_destinations WHERE id = ?`, id)
+		FROM s3_destinations WHERE id = $1`, id)
 	if errors.Is(err, sql.ErrNoRows) {
 		return nil, utils.NewNotFoundError("S3Destination", id)
 	}
@@ -181,7 +181,7 @@ func (r *S3DestinationRepo) GetS3Destination(ctx context.Context, id string) (*m
 func (r *S3DestinationRepo) DeleteS3Destination(ctx context.Context, id string) error {
 	r.mu.Lock()
 	defer r.mu.Unlock()
-	res, err := r.db.ExecContext(ctx, "DELETE FROM s3_destinations WHERE id = ?", id)
+	res, err := r.db.ExecContext(ctx, "DELETE FROM s3_destinations WHERE id = $1", id)
 	if err != nil {
 		return fmt.Errorf("failed to delete s3 destination: %w", err)
 	}

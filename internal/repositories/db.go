@@ -13,7 +13,7 @@ type Vault interface {
 }
 
 func OpenDatabase(databaseURL string) (*sql.DB, error) {
-	db, err := sql.Open(DriverPostgres, databaseURL)
+	db, err := sql.Open("pgx", databaseURL)
 	if err != nil {
 		return nil, fmt.Errorf("failed to open Postgres database: %w", err)
 	}

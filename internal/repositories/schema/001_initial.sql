@@ -371,7 +371,7 @@ CREATE TABLE IF NOT EXISTS backup_configs (
     timeout INTEGER DEFAULT 3600,
     retention_days INTEGER DEFAULT 7,
     max_backups INTEGER DEFAULT 0,
-    max_storage_gb DOUBLE PRECISION DEFAULT 0,
+    max_storage_gb INTEGER DEFAULT 0,
     status TEXT DEFAULT 'active',
     created_at TIMESTAMPTZ DEFAULT CURRENT_TIMESTAMP,
     updated_at TIMESTAMPTZ DEFAULT CURRENT_TIMESTAMP
@@ -706,7 +706,7 @@ CREATE TABLE IF NOT EXISTS databases (
     project_id TEXT DEFAULT '',
     cpu_limit DOUBLE PRECISION DEFAULT 0,
     memory_limit INTEGER DEFAULT 0,
-    logical_replication INTEGER DEFAULT 0,
+    logical_replication BOOLEAN NOT NULL DEFAULT FALSE,
     server_id TEXT REFERENCES servers(id) ON DELETE SET NULL,
     organization_id TEXT REFERENCES organizations(id) ON DELETE CASCADE,
     created_at TIMESTAMPTZ DEFAULT CURRENT_TIMESTAMP,
@@ -743,7 +743,7 @@ CREATE TABLE IF NOT EXISTS service_vars (
     environment_id TEXT DEFAULT '',
     key TEXT NOT NULL,
     value TEXT NOT NULL,
-    is_secret INTEGER DEFAULT 0,
+    is_secret BOOLEAN NOT NULL DEFAULT FALSE,
     created_at TIMESTAMPTZ DEFAULT CURRENT_TIMESTAMP,
     updated_at TIMESTAMPTZ DEFAULT CURRENT_TIMESTAMP,
     UNIQUE(service_id, key)

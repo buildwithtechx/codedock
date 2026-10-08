@@ -1,31 +1,18 @@
 package repositories
 
 import (
-	"database/sql"
 	"strings"
 	"testing"
 	"testing/fstest"
-
-	_ "modernc.org/sqlite"
 )
 
-func openTestDB(t *testing.T) *sql.DB {
-	t.Helper()
-	db, err := sql.Open("sqlite", ":memory:?_pragma=foreign_keys(ON)")
-	if err != nil {
-		t.Fatalf("failed to open test db: %v", err)
-	}
-	t.Cleanup(func() { db.Close() })
-	return db
-}
-
 func TestMigrationFreshDatabase(t *testing.T) {
-	db := openTestDB(t)
+	db := openPGBareDB(t)
 	fsys := fstest.MapFS{
-		"001_create_users.sql": {Data: []byte("CREATE TABLE users (id TEXT PRIMARY KEY);")},
-		"002_add_email.sql":    {Data: []byte("ALTER TABLE users ADD COLUMN email TEXT;")},
+		"001_create_users.sql": {Data: []byte("CREATE TABLE mig_users (id TEXT PRIMARY KEY);")},
+		"002_add_email.sql":    {Data: []byte("ALTER TABLE mig_users ADD COLUMN email TEXT;")},
 	}
-	if err := runMigrations(db, fsys, DriverSQLite); err != nil {
+	if err := runMigrations(db, fsys); err != nil {
 		t.Fatalf("unexpected error: %v", err)
 	}
 	var count int
@@ -38,14 +25,14 @@ func TestMigrationFreshDatabase(t *testing.T) {
 }
 
 func TestMigrationIdempotent(t *testing.T) {
-	db := openTestDB(t)
+	db := openPGBareDB(t)
 	fsys := fstest.MapFS{
-		"001_create_users.sql": {Data: []byte("CREATE TABLE users (id TEXT PRIMARY KEY);")},
+		"001_create_users.sql": {Data: []byte("CREATE TABLE mig_users (id TEXT PRIMARY KEY);")},
 	}
-	if err := runMigrations(db, fsys, DriverSQLite); err != nil {
+	if err := runMigrations(db, fsys); err != nil {
 		t.Fatalf("first run failed: %v", err)
 	}
-	if err := runMigrations(db, fsys, DriverSQLite); err != nil {
+	if err := runMigrations(db, fsys); err != nil {
 		t.Fatalf("second run failed: %v", err)
 	}
 	var count int
@@ -58,23 +45,23 @@ func TestMigrationIdempotent(t *testing.T) {
 }
 
 func TestMigrationOrdering(t *testing.T) {
-	db := openTestDB(t)
+	db := openPGBareDB(t)
 	fsys := fstest.MapFS{
-		"002_add_email.sql":    {Data: []byte("ALTER TABLE users ADD COLUMN email TEXT;")},
-		"001_create_users.sql": {Data: []byte("CREATE TABLE users (id TEXT PRIMARY KEY);")},
+		"002_add_email.sql":    {Data: []byte("ALTER TABLE mig_users ADD COLUMN email TEXT;")},
+		"001_create_users.sql": {Data: []byte("CREATE TABLE mig_users (id TEXT PRIMARY KEY);")},
 	}
-	if err := runMigrations(db, fsys, DriverSQLite); err != nil {
+	if err := runMigrations(db, fsys); err != nil {
 		t.Fatalf("migrations applied out of order or failed: %v", err)
 	}
 }
 
 func TestMigrationFailedRollback(t *testing.T) {
-	db := openTestDB(t)
+	db := openPGBareDB(t)
 	fsys := fstest.MapFS{
-		"001_create_users.sql": {Data: []byte("CREATE TABLE users (id TEXT PRIMARY KEY);")},
+		"001_create_users.sql": {Data: []byte("CREATE TABLE mig_users (id TEXT PRIMARY KEY);")},
 		"002_bad.sql":          {Data: []byte("NOT VALID SQL !!!;")},
 	}
-	if err := runMigrations(db, fsys, DriverSQLite); err == nil {
+	if err := runMigrations(db, fsys); err == nil {
 		t.Fatal("expected migration to fail on bad SQL")
 	}
 	var count int
@@ -85,7 +72,7 @@ func TestMigrationFailedRollback(t *testing.T) {
 		t.Fatalf("expected only 001 to be recorded, got %d", count)
 	}
 	var exists int
-	if err := db.QueryRow("SELECT COUNT(*) FROM sqlite_master WHERE type='table' AND name='users'").Scan(&exists); err != nil {
+	if err := db.QueryRow("SELECT COUNT(*) FROM information_schema.tables WHERE table_schema = 'public' AND table_name = 'mig_users'").Scan(&exists); err != nil {
 		t.Fatalf("failed to check users table existence: %v", err)
 	}
 	if exists != 1 {
@@ -94,17 +81,17 @@ func TestMigrationFailedRollback(t *testing.T) {
 }
 
 func TestMigrationChecksumMismatch(t *testing.T) {
-	db := openTestDB(t)
+	db := openPGBareDB(t)
 	original := fstest.MapFS{
-		"001_create_users.sql": {Data: []byte("CREATE TABLE users (id TEXT PRIMARY KEY);")},
+		"001_create_users.sql": {Data: []byte("CREATE TABLE mig_users (id TEXT PRIMARY KEY);")},
 	}
-	if err := runMigrations(db, original, DriverSQLite); err != nil {
+	if err := runMigrations(db, original); err != nil {
 		t.Fatalf("initial migration failed: %v", err)
 	}
 	modified := fstest.MapFS{
-		"001_create_users.sql": {Data: []byte("CREATE TABLE users (id TEXT PRIMARY KEY, injected TEXT);")},
+		"001_create_users.sql": {Data: []byte("CREATE TABLE mig_users (id TEXT PRIMARY KEY, injected TEXT);")},
 	}
-	err := runMigrations(db, modified, DriverSQLite)
+	err := runMigrations(db, modified)
 	if err == nil {
 		t.Fatal("expected error on modified migration")
 	}
@@ -114,13 +101,13 @@ func TestMigrationChecksumMismatch(t *testing.T) {
 }
 
 func TestMigrationSQLOnlyFiles(t *testing.T) {
-	db := openTestDB(t)
+	db := openPGBareDB(t)
 	fsys := fstest.MapFS{
-		"001_create_users.sql": {Data: []byte("CREATE TABLE users (id TEXT PRIMARY KEY);")},
+		"001_create_users.sql": {Data: []byte("CREATE TABLE mig_users (id TEXT PRIMARY KEY);")},
 		"README.md":            {Data: []byte("not sql")},
 		".gitkeep":             {Data: []byte("")},
 	}
-	if err := runMigrations(db, fsys, DriverSQLite); err != nil {
+	if err := runMigrations(db, fsys); err != nil {
 		t.Fatalf("unexpected error: %v", err)
 	}
 	var count int

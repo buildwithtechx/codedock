@@ -36,7 +36,7 @@ const organizationColumns = `id, name, created_at, updated_at`
 const organizationMemberColumns = `id, organization_id, user_id, email, permission, status, invited_at, accepted_at`
 
 func NewOrganizationRepository(db *sql.DB) OrganizationRepository {
-	return &organizationRepository{db: sqlx.NewDb(db, "sqlite")}
+	return &organizationRepository{db: sqlx.NewDb(db, "pgx")}
 }
 
 func (r *organizationRepository) Create(ctx context.Context, org *models.Organization) error {
@@ -70,7 +70,7 @@ func (r *organizationRepository) CreateWithOwner(ctx context.Context, org *model
 }
 
 func (r *organizationRepository) GetByID(ctx context.Context, id string) (*models.Organization, error) {
-	query := `SELECT ` + organizationColumns + ` FROM organizations WHERE id = ?`
+	query := `SELECT ` + organizationColumns + ` FROM organizations WHERE id = $1`
 	var org models.Organization
 	err := r.db.GetContext(ctx, &org, query, id)
 	if err == sql.ErrNoRows {
@@ -83,7 +83,7 @@ func (r *organizationRepository) ListByUser(ctx context.Context, userID string) 
 	query := `
 		SELECT o.id, o.name, o.created_at, o.updated_at FROM organizations o
 		JOIN organization_members om ON o.id = om.organization_id
-		WHERE om.user_id = ?
+		WHERE om.user_id = $1
 		ORDER BY o.name ASC
 	`
 	var orgs []*models.Organization
@@ -106,7 +106,7 @@ func (r *organizationRepository) Update(ctx context.Context, org *models.Organiz
 }
 
 func (r *organizationRepository) Delete(ctx context.Context, id string) error {
-	query := `DELETE FROM organizations WHERE id = ?`
+	query := `DELETE FROM organizations WHERE id = $1`
 	_, err := r.db.ExecContext(ctx, query, id)
 	return err
 }
@@ -121,7 +121,7 @@ func (r *organizationRepository) AddMember(ctx context.Context, member *models.O
 }
 
 func (r *organizationRepository) GetMember(ctx context.Context, orgID, userID string) (*models.OrganizationMember, error) {
-	query := `SELECT ` + organizationMemberColumns + ` FROM organization_members WHERE organization_id = ? AND user_id = ?`
+	query := `SELECT ` + organizationMemberColumns + ` FROM organization_members WHERE organization_id = $1 AND user_id = $2`
 	var member models.OrganizationMember
 	err := r.db.GetContext(ctx, &member, query, orgID, userID)
 	if err == sql.ErrNoRows {
@@ -131,7 +131,7 @@ func (r *organizationRepository) GetMember(ctx context.Context, orgID, userID st
 }
 
 func (r *organizationRepository) GetMemberByEmail(ctx context.Context, orgID, email string) (*models.OrganizationMember, error) {
-	query := `SELECT ` + organizationMemberColumns + ` FROM organization_members WHERE organization_id = ? AND email = ?`
+	query := `SELECT ` + organizationMemberColumns + ` FROM organization_members WHERE organization_id = $1 AND email = $2`
 	var member models.OrganizationMember
 	err := r.db.GetContext(ctx, &member, query, orgID, email)
 	if err == sql.ErrNoRows {
@@ -141,7 +141,7 @@ func (r *organizationRepository) GetMemberByEmail(ctx context.Context, orgID, em
 }
 
 func (r *organizationRepository) ListMembers(ctx context.Context, orgID string) ([]*models.OrganizationMember, error) {
-	query := `SELECT ` + organizationMemberColumns + ` FROM organization_members WHERE organization_id = ? ORDER BY invited_at DESC`
+	query := `SELECT ` + organizationMemberColumns + ` FROM organization_members WHERE organization_id = $1 ORDER BY invited_at DESC`
 	var members []*models.OrganizationMember
 	err := r.db.SelectContext(ctx, &members, query, orgID)
 	if members == nil {
@@ -161,7 +161,7 @@ func (r *organizationRepository) UpdateMember(ctx context.Context, member *model
 }
 
 func (r *organizationRepository) GetMemberByID(ctx context.Context, id string) (*models.OrganizationMember, error) {
-	query := `SELECT ` + organizationMemberColumns + ` FROM organization_members WHERE id = ?`
+	query := `SELECT ` + organizationMemberColumns + ` FROM organization_members WHERE id = $1`
 	var member models.OrganizationMember
 	err := r.db.GetContext(ctx, &member, query, id)
 	if err == sql.ErrNoRows {
@@ -171,7 +171,7 @@ func (r *organizationRepository) GetMemberByID(ctx context.Context, id string) (
 }
 
 func (r *organizationRepository) RemoveMember(ctx context.Context, id string) error {
-	query := `DELETE FROM organization_members WHERE id = ?`
+	query := `DELETE FROM organization_members WHERE id = $1`
 	_, err := r.db.ExecContext(ctx, query, id)
 	return err
 }
@@ -179,7 +179,7 @@ func (r *organizationRepository) RemoveMember(ctx context.Context, id string) er
 func (r *organizationRepository) ListInvitesByEmail(ctx context.Context, email string) ([]*models.OrganizationMember, error) {
 	query := `
 		SELECT ` + organizationMemberColumns + ` FROM organization_members
-		WHERE email = ? AND status = ?
+		WHERE email = $1 AND status = $2
 	`
 	var members []*models.OrganizationMember
 	err := r.db.SelectContext(ctx, &members, query, email, models.MemberStatusPending)

@@ -5,6 +5,7 @@ import (
 	"database/sql"
 	"errors"
 	"fmt"
+	"strconv"
 	"strings"
 	"sync"
 	"time"
@@ -25,7 +26,7 @@ type AISettingsRepo struct {
 }
 
 func NewAISettingsRepo(db *sql.DB) *AISettingsRepo {
-	return &AISettingsRepo{db: sqlx.NewDb(db, "sqlite")}
+	return &AISettingsRepo{db: sqlx.NewDb(db, "pgx")}
 }
 
 const aiSettingsColumns = `id, default_provider, openai_key, openai_model, anthropic_key, anthropic_model, google_key, google_model, mistral_key, mistral_model, groq_key, groq_model, deepseek_key, deepseek_model, xai_key, xai_model, moonshot_key, moonshot_model, created_at, updated_at`
@@ -34,7 +35,7 @@ func aiSettingsPlaceholders() string {
 	columns := strings.Split(aiSettingsColumns, ",")
 	placeholders := make([]string, len(columns))
 	for i := range placeholders {
-		placeholders[i] = "?"
+		placeholders[i] = "$" + strconv.Itoa(i+1)
 	}
 	return strings.Join(placeholders, ", ")
 }
@@ -81,7 +82,11 @@ func (r *AISettingsRepo) UpdateAISettings(ctx context.Context, cfg *models.AISet
 	if cfg.ID == "" {
 		cfg.ID = "global"
 	}
-	cfg.UpdatedAt = time.Now().UTC().Format(time.RFC3339)
+	now := time.Now().UTC().Format(time.RFC3339)
+	if cfg.CreatedAt == "" {
+		cfg.CreatedAt = now
+	}
+	cfg.UpdatedAt = now
 	r.mu.Lock()
 	defer r.mu.Unlock()
 	query := fmt.Sprintf(`INSERT INTO ai_settings (%s)

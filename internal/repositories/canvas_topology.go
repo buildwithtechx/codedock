@@ -19,12 +19,12 @@ type topologyReader interface {
 func topologyRevision(ctx context.Context, reader topologyReader, environment string) (string, error) {
 	values := []string{}
 	err := reader.SelectContext(ctx, &values, `SELECT value FROM (
- SELECT 'app:'||id||':'||updated_at||':'||COALESCE(domain,'') AS value FROM app_services WHERE environment_id=?
- UNION ALL SELECT 'db:'||id||':'||updated_at FROM databases WHERE environment_id=?
- UNION ALL SELECT 'clusterdb:'||id||':'||updated_at||':'||status FROM cluster_databases WHERE id IN (SELECT id FROM cluster_databases WHERE project_id=(SELECT project_id FROM environments WHERE id=?))
- UNION ALL SELECT 'var:'||v.id||':'||v.key||':'||v.value FROM service_vars v JOIN app_services a ON a.id=v.service_id WHERE a.environment_id=?
- UNION ALL SELECT 'domain:'||d.id||':'||d.hostname||':'||COALESCE(d.service_id,'') FROM domains d JOIN app_services a ON a.id=d.service_id WHERE a.environment_id=?
- UNION ALL SELECT 'dep:'||source||':'||target FROM topology_dependencies WHERE environment_id=?
+ SELECT 'app:'||id||':'||updated_at||':'||COALESCE(domain,'') AS value FROM app_services WHERE environment_id=$1
+ UNION ALL SELECT 'db:'||id||':'||updated_at FROM databases WHERE environment_id=$2
+ UNION ALL SELECT 'clusterdb:'||id||':'||updated_at||':'||status FROM cluster_databases WHERE id IN (SELECT id FROM cluster_databases WHERE project_id=(SELECT project_id FROM environments WHERE id=$3))
+ UNION ALL SELECT 'var:'||v.id||':'||v.key||':'||v.value FROM service_vars v JOIN app_services a ON a.id=v.service_id WHERE a.environment_id=$4
+ UNION ALL SELECT 'domain:'||d.id||':'||d.hostname||':'||COALESCE(d.service_id,'') FROM domains d JOIN app_services a ON a.id=d.service_id WHERE a.environment_id=$5
+ UNION ALL SELECT 'dep:'||source||':'||target FROM topology_dependencies WHERE environment_id=$6
  ) ORDER BY value`, environment, environment, environment, environment, environment, environment)
 	if err != nil {
 		return "", err
@@ -66,7 +66,7 @@ func (r *CanvasRepo) projectTopology(ctx context.Context, canvas *models.Environ
 		Source string `db:"source"`
 		Target string `db:"target"`
 	}
-	if err := r.db.SelectContext(ctx, &dependencies, `SELECT source,target FROM topology_dependencies WHERE environment_id=?`, canvas.Environment.ID); err != nil {
+	if err := r.db.SelectContext(ctx, &dependencies, `SELECT source,target FROM topology_dependencies WHERE environment_id=$1`, canvas.Environment.ID); err != nil {
 		return err
 	}
 	for _, dependency := range dependencies {
@@ -78,7 +78,7 @@ func (r *CanvasRepo) projectTopology(ctx context.Context, canvas *models.Environ
 		Key       string `db:"key"`
 		Value     string `db:"value"`
 	}
-	if err := r.db.SelectContext(ctx, &variables, `SELECT v.id,v.service_id,v.key,v.value FROM service_vars v JOIN app_services a ON a.id=v.service_id WHERE a.environment_id=?`, canvas.Environment.ID); err != nil {
+	if err := r.db.SelectContext(ctx, &variables, `SELECT v.id,v.service_id,v.key,v.value FROM service_vars v JOIN app_services a ON a.id=v.service_id WHERE a.environment_id=$1`, canvas.Environment.ID); err != nil {
 		return err
 	}
 	pattern := regexp.MustCompile(`\$\{([a-zA-Z0-9_-]+)\.([a-zA-Z0-9_]+)\}`)
@@ -94,7 +94,7 @@ func (r *CanvasRepo) projectTopology(ctx context.Context, canvas *models.Environ
 		ServiceID string `db:"service_id"`
 		Hostname  string `db:"hostname"`
 	}
-	if err := r.db.SelectContext(ctx, &domains, `SELECT d.id,d.service_id,d.hostname FROM domains d JOIN app_services a ON a.id=d.service_id WHERE a.environment_id=?`, canvas.Environment.ID); err != nil {
+	if err := r.db.SelectContext(ctx, &domains, `SELECT d.id,d.service_id,d.hostname FROM domains d JOIN app_services a ON a.id=d.service_id WHERE a.environment_id=$1`, canvas.Environment.ID); err != nil {
 		return err
 	}
 	for i, domain := range domains {
@@ -124,7 +124,7 @@ func (r *CanvasRepo) ApplyTopology(ctx context.Context, environment string, requ
 		return fmt.Errorf("topology changed since review; reload before applying")
 	}
 	nodes := []string{}
-	if err := tx.SelectContext(ctx, &nodes, `SELECT 'app-'||id FROM app_services WHERE environment_id=? UNION ALL SELECT 'db-'||id FROM databases WHERE environment_id=? UNION ALL SELECT 'clusterdb-'||cd.id FROM cluster_databases cd JOIN environments e ON e.project_id=cd.project_id WHERE e.id=?`, environment, environment, environment); err != nil {
+	if err := tx.SelectContext(ctx, &nodes, `SELECT 'app-'||id FROM app_services WHERE environment_id=$1 UNION ALL SELECT 'db-'||id FROM databases WHERE environment_id=$2 UNION ALL SELECT 'clusterdb-'||cd.id FROM cluster_databases cd JOIN environments e ON e.project_id=cd.project_id WHERE e.id=$3`, environment, environment, environment); err != nil {
 		return err
 	}
 	valid := map[string]bool{}
@@ -134,11 +134,11 @@ func (r *CanvasRepo) ApplyTopology(ctx context.Context, environment string, requ
 	if err := validateDependencies(request.Dependencies, valid); err != nil {
 		return err
 	}
-	if _, err := tx.ExecContext(ctx, `DELETE FROM topology_dependencies WHERE environment_id=?`, environment); err != nil {
+	if _, err := tx.ExecContext(ctx, `DELETE FROM topology_dependencies WHERE environment_id=$1`, environment); err != nil {
 		return err
 	}
 	for _, edge := range request.Dependencies {
-		if _, err := tx.ExecContext(ctx, `INSERT INTO topology_dependencies(environment_id,source,target) VALUES(?,?,?)`, environment, edge.Source, edge.Target); err != nil {
+		if _, err := tx.ExecContext(ctx, `INSERT INTO topology_dependencies(environment_id,source,target) VALUES($1,$2,$3)`, environment, edge.Source, edge.Target); err != nil {
 			return err
 		}
 	}

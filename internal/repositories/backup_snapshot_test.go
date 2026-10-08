@@ -2,43 +2,35 @@ package repositories
 
 import (
 	"context"
-	"database/sql"
-	"os"
-	"path/filepath"
+	"errors"
 	"testing"
 )
 
-func TestControlPlaneSnapshotIncludesCommittedWALWrites(t *testing.T) {
-	path := filepath.Join(t.TempDir(), "source.db")
-	db, err := sql.Open("sqlite", path)
+func TestControlPlaneSnapshotRequiresDumper(t *testing.T) {
+	db := openPGTestDB(t)
+	_, err := NewBackupRepo(db, nil).ControlPlaneSnapshot(context.Background())
+	if err == nil {
+		t.Fatal("expected error when snapshotter is not configured")
+	}
+}
+
+func TestControlPlaneSnapshotUsesDumper(t *testing.T) {
+	db := openPGTestDB(t)
+	repo := NewBackupRepo(db, nil)
+	repo.SetSnapshotDumper(func(ctx context.Context) ([]byte, error) {
+		return []byte("dump-bytes"), nil
+	})
+	data, err := repo.ControlPlaneSnapshot(context.Background())
 	if err != nil {
-		t.Fatal(err)
+		t.Fatalf("snapshot: %v", err)
 	}
-	defer db.Close()
-	for _, query := range []string{"PRAGMA journal_mode=WAL", "PRAGMA wal_autocheckpoint=0", "CREATE TABLE sample(value TEXT)", "INSERT INTO sample VALUES('committed')"} {
-		if _, err := db.Exec(query); err != nil {
-			t.Fatal(err)
-		}
+	if string(data) != "dump-bytes" {
+		t.Fatalf("unexpected snapshot payload %q", data)
 	}
-	data, err := NewBackupRepo(db, nil).ControlPlaneSnapshot(context.Background())
-	if err != nil {
-		t.Fatal(err)
-	}
-	snapshot := filepath.Join(t.TempDir(), "snapshot.db")
-	if err := os.WriteFile(snapshot, data, 0600); err != nil {
-		t.Fatal(err)
-	}
-	restored, err := sql.Open("sqlite", snapshot)
-	if err != nil {
-		t.Fatal(err)
-	}
-	defer restored.Close()
-	var value string
-	if err := restored.QueryRow("SELECT value FROM sample").Scan(&value); err != nil || value != "committed" {
-		t.Fatal("snapshot lost WAL write", err)
-	}
-	var integrity string
-	if err := restored.QueryRow("PRAGMA quick_check").Scan(&integrity); err != nil || integrity != "ok" {
-		t.Fatal("invalid snapshot", err)
+	repo.SetSnapshotDumper(func(ctx context.Context) ([]byte, error) {
+		return nil, errors.New("dump failed")
+	})
+	if _, err := repo.ControlPlaneSnapshot(context.Background()); err == nil {
+		t.Fatal("expected dumper error to propagate")
 	}
 }

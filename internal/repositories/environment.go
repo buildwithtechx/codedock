@@ -28,14 +28,14 @@ type EnvironmentRepo struct {
 }
 
 func NewEnvironmentRepo(db *sql.DB) *EnvironmentRepo {
-	return &EnvironmentRepo{db: sqlx.NewDb(db, "sqlite")}
+	return &EnvironmentRepo{db: sqlx.NewDb(db, "pgx")}
 }
 
 func (r *EnvironmentRepo) Get(ctx context.Context, id string) (*models.EnvironmentConfig, error) {
 	r.mu.RLock()
 	defer r.mu.RUnlock()
 	var env models.EnvironmentConfig
-	err := r.db.GetContext(ctx, &env, `SELECT id, project_id, name, is_default, created_at, updated_at FROM environments WHERE id = ?`, id)
+	err := r.db.GetContext(ctx, &env, `SELECT id, project_id, name, is_default, created_at, updated_at FROM environments WHERE id = $1`, id)
 	if errors.Is(err, sql.ErrNoRows) {
 		return nil, utils.NewNotFoundError("Environment", id)
 	}
@@ -49,7 +49,7 @@ func (r *EnvironmentRepo) ListByProject(ctx context.Context, projectID string) (
 	r.mu.RLock()
 	defer r.mu.RUnlock()
 	var envs []models.EnvironmentConfig
-	err := r.db.SelectContext(ctx, &envs, `SELECT id, project_id, name, is_default, created_at, updated_at FROM environments WHERE project_id = ? ORDER BY is_default DESC, created_at ASC`, projectID)
+	err := r.db.SelectContext(ctx, &envs, `SELECT id, project_id, name, is_default, created_at, updated_at FROM environments WHERE project_id = $1 ORDER BY is_default DESC, created_at ASC`, projectID)
 	if err != nil {
 		return nil, fmt.Errorf("failed to list environments: %w", err)
 	}
@@ -69,7 +69,7 @@ func (r *EnvironmentRepo) Create(ctx context.Context, env *models.EnvironmentCon
 	env.CreatedAt = now
 	env.UpdatedAt = now
 	_, err := r.db.ExecContext(ctx,
-		`INSERT INTO environments (id, project_id, name, is_default, created_at, updated_at) VALUES (?, ?, ?, ?, ?, ?)`,
+		`INSERT INTO environments (id, project_id, name, is_default, created_at, updated_at) VALUES ($1, $2, $3, $4, $5, $6)`,
 		env.ID, env.ProjectID, env.Name, env.IsDefault, env.CreatedAt, env.UpdatedAt,
 	)
 	if err != nil {
@@ -81,7 +81,7 @@ func (r *EnvironmentRepo) Create(ctx context.Context, env *models.EnvironmentCon
 func (r *EnvironmentRepo) Delete(ctx context.Context, id string) error {
 	r.mu.Lock()
 	defer r.mu.Unlock()
-	_, err := r.db.ExecContext(ctx, `DELETE FROM environments WHERE id = ?`, id)
+	_, err := r.db.ExecContext(ctx, `DELETE FROM environments WHERE id = $1`, id)
 	return err
 }
 
@@ -90,12 +90,12 @@ type DomainRepo struct {
 }
 
 func NewDomainRepo(db *sql.DB) *DomainRepo {
-	return &DomainRepo{db: sqlx.NewDb(db, "sqlite")}
+	return &DomainRepo{db: sqlx.NewDb(db, "pgx")}
 }
 
 func (r *DomainRepo) ListByService(ctx context.Context, serviceID string) ([]models.DomainConfig, error) {
 	var domains []models.DomainConfig
-	err := r.db.SelectContext(ctx, &domains, `SELECT id, service_id, domain_name, redirect_to, ssl_cert_status, path_prefix, COALESCE(dns_provision_status, 'pending') AS dns_provision_status, COALESCE(dns_provider, '') AS dns_provider, COALESCE(dns_provisioned_ip, '') AS dns_provisioned_ip, created_at, updated_at FROM domains WHERE service_id = ? ORDER BY domain_name ASC`, serviceID)
+	err := r.db.SelectContext(ctx, &domains, `SELECT id, service_id, domain_name, redirect_to, ssl_cert_status, path_prefix, COALESCE(dns_provision_status, 'pending') AS dns_provision_status, COALESCE(dns_provider, '') AS dns_provider, COALESCE(dns_provisioned_ip, '') AS dns_provisioned_ip, created_at, updated_at FROM domains WHERE service_id = $1 ORDER BY domain_name ASC`, serviceID)
 	if err != nil {
 		return nil, err
 	}
@@ -128,14 +128,14 @@ func (r *DomainRepo) Create(ctx context.Context, d *models.DomainConfig) error {
 	d.CreatedAt = now
 	d.UpdatedAt = now
 	_, err := r.db.ExecContext(ctx,
-		`INSERT INTO domains (id, service_id, hostname, domain_name, redirect_to, ssl_cert_status, path_prefix, dns_provision_status, dns_provider, dns_provisioned_ip, created_at, updated_at) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)`,
+		`INSERT INTO domains (id, service_id, hostname, domain_name, redirect_to, ssl_cert_status, path_prefix, dns_provision_status, dns_provider, dns_provisioned_ip, created_at, updated_at) VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10, $11, $12)`,
 		d.ID, d.ServiceID, d.DomainName, d.DomainName, d.RedirectTo, d.SSLCertStatus, d.PathPrefix, d.DNSProvisionStatus, d.DNSProvider, d.DNSProvisionedIP, d.CreatedAt, d.UpdatedAt,
 	)
 	return err
 }
 
 func (r *DomainRepo) UpdateDNSProvisionStatus(ctx context.Context, id string, status string, provider string, provisionedIP string) error {
-	_, err := r.db.ExecContext(ctx, `UPDATE domains SET dns_provision_status = ?, dns_provider = ?, dns_provisioned_ip = ?, updated_at = ? WHERE id = ?`, status, provider, provisionedIP, time.Now(), id)
+	_, err := r.db.ExecContext(ctx, `UPDATE domains SET dns_provision_status = $1, dns_provider = $2, dns_provisioned_ip = $3, updated_at = $4 WHERE id = $5`, status, provider, provisionedIP, time.Now(), id)
 	if err != nil {
 		return fmt.Errorf("failed to update domain dns status: %w", err)
 	}
@@ -143,13 +143,13 @@ func (r *DomainRepo) UpdateDNSProvisionStatus(ctx context.Context, id string, st
 }
 
 func (r *DomainRepo) Delete(ctx context.Context, id string) error {
-	_, err := r.db.ExecContext(ctx, `DELETE FROM domains WHERE id = ?`, id)
+	_, err := r.db.ExecContext(ctx, `DELETE FROM domains WHERE id = $1`, id)
 	return err
 }
 
 func (r *DomainRepo) GetByID(ctx context.Context, id string) (*models.DomainConfig, error) {
 	var domain models.DomainConfig
-	err := r.db.GetContext(ctx, &domain, `SELECT id, service_id, domain_name, redirect_to, ssl_cert_status, path_prefix, COALESCE(dns_provision_status, 'pending') AS dns_provision_status, COALESCE(dns_provider, '') AS dns_provider, COALESCE(dns_provisioned_ip, '') AS dns_provisioned_ip, created_at, updated_at FROM domains WHERE id = ?`, id)
+	err := r.db.GetContext(ctx, &domain, `SELECT id, service_id, domain_name, redirect_to, ssl_cert_status, path_prefix, COALESCE(dns_provision_status, 'pending') AS dns_provision_status, COALESCE(dns_provider, '') AS dns_provider, COALESCE(dns_provisioned_ip, '') AS dns_provisioned_ip, created_at, updated_at FROM domains WHERE id = $1`, id)
 	if err != nil {
 		if err == sql.ErrNoRows {
 			return nil, nil

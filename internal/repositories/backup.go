@@ -34,139 +34,14 @@ type BackupRepository interface {
 }
 
 type BackupRepo struct {
-	db    *sqlx.DB
-	mu    sync.Mutex
-	vault Vault
+	db             *sqlx.DB
+	mu             sync.Mutex
+	vault          Vault
+	snapshotDumper func(ctx context.Context) ([]byte, error)
 }
 
 func NewBackupRepo(db *sql.DB, v Vault) *BackupRepo {
-	return &BackupRepo{db: sqlx.NewDb(db, "sqlite"), vault: v}
-}
-
-func (r *BackupRepo) EnsureTables() error {
-	queries := []string{
-		`CREATE TABLE IF NOT EXISTS backup_configs (
-			id TEXT PRIMARY KEY,
-			database_id TEXT,
-			service_id TEXT,
-			volume_name TEXT,
-			s3_destination_id TEXT,
-			sftp_destination_id TEXT,
-			parent_batch_id TEXT,
-			name TEXT NOT NULL,
-			description TEXT,
-			db_user TEXT,
-			db_password TEXT,
-			backup_enabled INTEGER DEFAULT 1,
-			s3_enabled INTEGER DEFAULT 0,
-			sftp_enabled INTEGER DEFAULT 0,
-			incremental INTEGER DEFAULT 0,
-			disable_local INTEGER DEFAULT 0,
-			quiesce_command TEXT DEFAULT '',
-			unquiesce_command TEXT DEFAULT '',
-			custom_backup_command TEXT DEFAULT '',
-			custom_restore_command TEXT DEFAULT '',
-			file_source_path TEXT DEFAULT '',
-			schedule TEXT NOT NULL,
-			timezone TEXT DEFAULT 'UTC',
-			timeout INTEGER DEFAULT 3600,
-			retention_days INTEGER DEFAULT 7,
-			max_backups INTEGER DEFAULT 0,
-			max_storage_gb INTEGER DEFAULT 0,
-			status TEXT DEFAULT 'active',
-			created_at TEXT NOT NULL,
-			updated_at TEXT NOT NULL
-		)`,
-		`CREATE TABLE IF NOT EXISTS backup_records (
-			id TEXT PRIMARY KEY,
-			backup_config_id TEXT NOT NULL,
-			database_id TEXT,
-			service_id TEXT,
-			volume_name TEXT,
-			s3_destination_id TEXT,
-			sftp_destination_id TEXT,
-			sftp_url TEXT DEFAULT '',
-			parent_record_id TEXT DEFAULT '',
-			status TEXT DEFAULT 'running',
-			file_path TEXT,
-			file_size_bytes INTEGER DEFAULT 0,
-			s3_url TEXT,
-			logs TEXT,
-			started_at TEXT NOT NULL,
-			completed_at TEXT
-		)`,
-		`CREATE TABLE IF NOT EXISTS s3_destinations (
-			id TEXT PRIMARY KEY,
-			organization_id TEXT DEFAULT '',
-			name TEXT NOT NULL,
-			description TEXT DEFAULT '',
-			provider TEXT DEFAULT 's3',
-			endpoint TEXT NOT NULL,
-			bucket TEXT NOT NULL,
-			region TEXT,
-			path_prefix TEXT DEFAULT '',
-			is_default INTEGER DEFAULT 0,
-			last_verified_at TEXT,
-			last_verify_error TEXT DEFAULT '',
-			access_key_id TEXT,
-			secret_access_key TEXT,
-			created_at TEXT NOT NULL
-		)`,
-		`CREATE TABLE IF NOT EXISTS sftp_destinations (
-			id TEXT PRIMARY KEY,
-			organization_id TEXT DEFAULT '',
-			project_id TEXT DEFAULT '',
-			name TEXT NOT NULL,
-			description TEXT DEFAULT '',
-			host TEXT NOT NULL,
-			port INTEGER DEFAULT 22,
-			username TEXT NOT NULL,
-			password TEXT DEFAULT '',
-			private_key TEXT DEFAULT '',
-			path_prefix TEXT DEFAULT '',
-			last_verified_at TEXT,
-			last_verify_error TEXT DEFAULT '',
-			created_at TEXT NOT NULL
-		)`,
-		`CREATE TABLE IF NOT EXISTS backup_policy_batches (
-			id TEXT PRIMARY KEY,
-			project_id TEXT NOT NULL,
-			name TEXT NOT NULL,
-			description TEXT DEFAULT '',
-			schedule TEXT NOT NULL,
-			timezone TEXT DEFAULT 'UTC',
-			timeout INTEGER DEFAULT 3600,
-			status TEXT DEFAULT 'active',
-			created_at TEXT NOT NULL,
-			updated_at TEXT NOT NULL
-		)`,
-	}
-	for _, q := range queries {
-		if _, err := r.db.Exec(q); err != nil {
-			return fmt.Errorf("failed to create backup table: %w", err)
-		}
-	}
-	for _, alter := range []string{
-		`ALTER TABLE backup_configs ADD COLUMN sftp_destination_id TEXT`,
-		`ALTER TABLE backup_configs ADD COLUMN parent_batch_id TEXT`,
-		`ALTER TABLE backup_configs ADD COLUMN sftp_enabled INTEGER DEFAULT 0`,
-		`ALTER TABLE backup_configs ADD COLUMN incremental INTEGER DEFAULT 0`,
-		`ALTER TABLE backup_configs ADD COLUMN quiesce_command TEXT DEFAULT ''`,
-		`ALTER TABLE backup_configs ADD COLUMN unquiesce_command TEXT DEFAULT ''`,
-		`ALTER TABLE backup_configs ADD COLUMN custom_backup_command TEXT DEFAULT ''`,
-		`ALTER TABLE backup_configs ADD COLUMN custom_restore_command TEXT DEFAULT ''`,
-		`ALTER TABLE backup_configs ADD COLUMN file_source_path TEXT DEFAULT ''`,
-		`ALTER TABLE backup_records ADD COLUMN sftp_destination_id TEXT`,
-		`ALTER TABLE backup_records ADD COLUMN sftp_url TEXT DEFAULT ''`,
-		`ALTER TABLE backup_records ADD COLUMN parent_record_id TEXT DEFAULT ''`,
-	} {
-		_, _ = r.db.Exec(alter)
-	}
-	_, _ = r.db.Exec(`ALTER TABLE s3_destinations ADD COLUMN path_prefix TEXT DEFAULT ''`)
-	_, _ = r.db.Exec(`ALTER TABLE s3_destinations ADD COLUMN is_default INTEGER DEFAULT 0`)
-	_, _ = r.db.Exec(`ALTER TABLE s3_destinations ADD COLUMN last_verified_at TEXT`)
-	_, _ = r.db.Exec(`ALTER TABLE s3_destinations ADD COLUMN last_verify_error TEXT DEFAULT ''`)
-	return r.ensureRecoveryColumns()
+	return &BackupRepo{db: sqlx.NewDb(db, "pgx"), vault: v}
 }
 
 func (r *BackupRepo) CreateConfig(ctx context.Context, cfg *models.BackupConfig) error {
@@ -196,7 +71,7 @@ func (r *BackupRepo) CreateConfig(ctx context.Context, cfg *models.BackupConfig)
 	r.mu.Lock()
 	defer r.mu.Unlock()
 	_, err := r.db.ExecContext(ctx, `INSERT INTO backup_configs (owner_id,project_id,pre_deployment,id, database_id, service_id, volume_name, s3_destination_id, sftp_destination_id, parent_batch_id, name, description, db_user, db_password, backup_enabled, s3_enabled, sftp_enabled, incremental, disable_local, quiesce_command, unquiesce_command, custom_backup_command, custom_restore_command, file_source_path, schedule, timezone, timeout, retention_days, max_backups, max_storage_gb, status, created_at, updated_at)
-		VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)`,
+		VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10, $11, $12, $13, $14, $15, $16, $17, $18, $19, $20, $21, $22, $23, $24, $25, $26, $27, $28, $29, $30, $31, $32, $33)`,
 		cfg.OwnerID, cfg.ProjectID, cfg.PreDeployment, cfg.ID, nullableID(cfg.DatabaseID), nullableID(cfg.ServiceID), cfg.VolumeName, nullableID(cfg.S3DestinationID), nullableID(cfg.SFTPDestinationID), nullableID(cfg.ParentBatchID), cfg.Name, cfg.Description, cfg.DbUser, cfg.DbPassword, cfg.BackupEnabled, cfg.S3Enabled, cfg.SFTPEnabled, cfg.Incremental, cfg.DisableLocal, cfg.QuiesceCommand, cfg.UnquiesceCommand, cfg.CustomBackupCommand, cfg.CustomRestoreCommand, cfg.FileSourcePath, cfg.Schedule, cfg.Timezone, cfg.Timeout, cfg.RetentionDays, cfg.MaxBackups, cfg.MaxStorageGB, cfg.Status, cfg.CreatedAt, cfg.UpdatedAt)
 	if err != nil {
 		return fmt.Errorf("failed to create backup config: %w", err)
@@ -210,7 +85,7 @@ func (r *BackupRepo) GetConfigByID(ctx context.Context, id string) (*models.Back
 	defer r.mu.Unlock()
 	var cfg models.BackupConfig
 	err := r.db.GetContext(ctx, &cfg, `SELECT id, COALESCE(database_id, '') as database_id, COALESCE(service_id, '') as service_id, COALESCE(volume_name, '') as volume_name, COALESCE(s3_destination_id, '') as s3_destination_id, COALESCE(sftp_destination_id, '') as sftp_destination_id, COALESCE(parent_batch_id, '') as parent_batch_id, name, COALESCE(description, '') as description, COALESCE(db_user, '') as db_user, COALESCE(db_password, '') as db_password, backup_enabled, s3_enabled, sftp_enabled, incremental, disable_local, COALESCE(quiesce_command, '') as quiesce_command, COALESCE(unquiesce_command, '') as unquiesce_command, COALESCE(custom_backup_command, '') as custom_backup_command, COALESCE(custom_restore_command, '') as custom_restore_command, COALESCE(file_source_path, '') as file_source_path, schedule, COALESCE(timezone, 'UTC') as timezone, timeout, retention_days, max_backups, max_storage_gb, status, created_at, updated_at, pre_deployment, owner_id, project_id
-		FROM backup_configs WHERE id = ?`, id)
+		FROM backup_configs WHERE id = $1`, id)
 	if errors.Is(err, sql.ErrNoRows) {
 		return nil, utils.NewNotFoundError("Config", id)
 	}
@@ -242,7 +117,7 @@ func (r *BackupRepo) UpdateConfig(ctx context.Context, cfg *models.BackupConfig)
 	defer r.mu.Unlock()
 
 	if cfg.DbPassword == "********" || cfg.DbPassword == "" {
-		res, err := r.db.ExecContext(ctx, `UPDATE backup_configs SET owner_id=?,project_id=?,pre_deployment=?, database_id=?, service_id=?, volume_name=?, s3_destination_id=?, sftp_destination_id=?, parent_batch_id=?, name=?, description=?, db_user=?, backup_enabled=?, s3_enabled=?, sftp_enabled=?, incremental=?, disable_local=?, quiesce_command=?, unquiesce_command=?, custom_backup_command=?, custom_restore_command=?, file_source_path=?, schedule=?, timezone=?, timeout=?, retention_days=?, max_backups=?, max_storage_gb=?, status=?, updated_at=? WHERE id=?`,
+		res, err := r.db.ExecContext(ctx, `UPDATE backup_configs SET owner_id=$1,project_id=$2,pre_deployment=$3, database_id=$4, service_id=$5, volume_name=$6, s3_destination_id=$7, sftp_destination_id=$8, parent_batch_id=$9, name=$10, description=$11, db_user=$12, backup_enabled=$13, s3_enabled=$14, sftp_enabled=$15, incremental=$16, disable_local=$17, quiesce_command=$18, unquiesce_command=$19, custom_backup_command=$20, custom_restore_command=$21, file_source_path=$22, schedule=$23, timezone=$24, timeout=$25, retention_days=$26, max_backups=$27, max_storage_gb=$28, status=$29, updated_at=$30 WHERE id=$31`,
 			cfg.OwnerID, cfg.ProjectID, cfg.PreDeployment, nullableID(cfg.DatabaseID), nullableID(cfg.ServiceID), cfg.VolumeName, nullableID(cfg.S3DestinationID), nullableID(cfg.SFTPDestinationID), nullableID(cfg.ParentBatchID), cfg.Name, cfg.Description, cfg.DbUser, cfg.BackupEnabled, cfg.S3Enabled, cfg.SFTPEnabled, cfg.Incremental, cfg.DisableLocal, cfg.QuiesceCommand, cfg.UnquiesceCommand, cfg.CustomBackupCommand, cfg.CustomRestoreCommand, cfg.FileSourcePath, cfg.Schedule, cfg.Timezone, cfg.Timeout, cfg.RetentionDays, cfg.MaxBackups, cfg.MaxStorageGB, cfg.Status, cfg.UpdatedAt, cfg.ID)
 		if err != nil {
 			return err
@@ -257,7 +132,7 @@ func (r *BackupRepo) UpdateConfig(ctx context.Context, cfg *models.BackupConfig)
 		return nil
 	}
 
-	res, err := r.db.ExecContext(ctx, `UPDATE backup_configs SET owner_id=?,project_id=?,pre_deployment=?, database_id=?, service_id=?, volume_name=?, s3_destination_id=?, sftp_destination_id=?, parent_batch_id=?, name=?, description=?, db_user=?, db_password=?, backup_enabled=?, s3_enabled=?, sftp_enabled=?, incremental=?, disable_local=?, quiesce_command=?, unquiesce_command=?, custom_backup_command=?, custom_restore_command=?, file_source_path=?, schedule=?, timezone=?, timeout=?, retention_days=?, max_backups=?, max_storage_gb=?, status=?, updated_at=? WHERE id=?`,
+	res, err := r.db.ExecContext(ctx, `UPDATE backup_configs SET owner_id=$1,project_id=$2,pre_deployment=$3, database_id=$4, service_id=$5, volume_name=$6, s3_destination_id=$7, sftp_destination_id=$8, parent_batch_id=$9, name=$10, description=$11, db_user=$12, db_password=$13, backup_enabled=$14, s3_enabled=$15, sftp_enabled=$16, incremental=$17, disable_local=$18, quiesce_command=$19, unquiesce_command=$20, custom_backup_command=$21, custom_restore_command=$22, file_source_path=$23, schedule=$24, timezone=$25, timeout=$26, retention_days=$27, max_backups=$28, max_storage_gb=$29, status=$30, updated_at=$31 WHERE id=$32`,
 		cfg.OwnerID, cfg.ProjectID, cfg.PreDeployment, nullableID(cfg.DatabaseID), nullableID(cfg.ServiceID), cfg.VolumeName, nullableID(cfg.S3DestinationID), nullableID(cfg.SFTPDestinationID), nullableID(cfg.ParentBatchID), cfg.Name, cfg.Description, cfg.DbUser, cfg.DbPassword, cfg.BackupEnabled, cfg.S3Enabled, cfg.SFTPEnabled, cfg.Incremental, cfg.DisableLocal, cfg.QuiesceCommand, cfg.UnquiesceCommand, cfg.CustomBackupCommand, cfg.CustomRestoreCommand, cfg.FileSourcePath, cfg.Schedule, cfg.Timezone, cfg.Timeout, cfg.RetentionDays, cfg.MaxBackups, cfg.MaxStorageGB, cfg.Status, cfg.UpdatedAt, cfg.ID)
 	if err != nil {
 		return err
@@ -329,7 +204,7 @@ func (r *BackupRepo) GetConfigByDatabaseID(ctx context.Context, dbID string) (*m
 	defer r.mu.Unlock()
 	var cfg models.BackupConfig
 	err := r.db.GetContext(ctx, &cfg, `SELECT id, COALESCE(database_id, '') as database_id, COALESCE(service_id, '') as service_id, COALESCE(volume_name, '') as volume_name, COALESCE(s3_destination_id, '') as s3_destination_id, COALESCE(sftp_destination_id, '') as sftp_destination_id, COALESCE(parent_batch_id, '') as parent_batch_id, name, COALESCE(description, '') as description, COALESCE(db_user, '') as db_user, COALESCE(db_password, '') as db_password, backup_enabled, s3_enabled, sftp_enabled, incremental, disable_local, COALESCE(quiesce_command, '') as quiesce_command, COALESCE(unquiesce_command, '') as unquiesce_command, COALESCE(custom_backup_command, '') as custom_backup_command, COALESCE(custom_restore_command, '') as custom_restore_command, COALESCE(file_source_path, '') as file_source_path, schedule, COALESCE(timezone, 'UTC') as timezone, timeout, retention_days, max_backups, max_storage_gb, status, created_at, updated_at, pre_deployment, owner_id, project_id
-		FROM backup_configs WHERE database_id = ? ORDER BY created_at DESC LIMIT 1`, dbID)
+		FROM backup_configs WHERE database_id = $1 ORDER BY created_at DESC LIMIT 1`, dbID)
 	if errors.Is(err, sql.ErrNoRows) {
 		return nil, utils.NewNotFoundError("Config", dbID)
 	}
@@ -350,13 +225,13 @@ func (r *BackupRepo) DeleteConfig(ctx context.Context, id string) error {
 	r.mu.Lock()
 	defer r.mu.Unlock()
 	var protected int
-	if err := r.db.GetContext(ctx, &protected, `SELECT COUNT(*) FROM backup_records WHERE backup_config_id=? AND (protected_until>? OR status IN ('expiring','running'))`, id, time.Now().Unix()); err != nil {
+	if err := r.db.GetContext(ctx, &protected, `SELECT COUNT(*) FROM backup_records WHERE backup_config_id=$1 AND (protected_until>$2 OR status IN ('expiring','running'))`, id, time.Now().Unix()); err != nil {
 		return err
 	}
 	if protected > 0 {
 		return fmt.Errorf("policy contains protected or active records; finish runs and remove protection before deleting")
 	}
-	res, err := r.db.ExecContext(ctx, `DELETE FROM backup_configs WHERE id = ? AND NOT EXISTS(SELECT 1 FROM backup_records WHERE backup_config_id=? AND (protected_until>? OR status IN ('expiring','running')))`, id, id, time.Now().Unix())
+	res, err := r.db.ExecContext(ctx, `DELETE FROM backup_configs WHERE id = $1 AND NOT EXISTS(SELECT 1 FROM backup_records WHERE backup_config_id=$2 AND (protected_until>$3 OR status IN ('expiring','running')))`, id, id, time.Now().Unix())
 	if err != nil {
 		return fmt.Errorf("failed to delete backup config: %w", err)
 	}

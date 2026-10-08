@@ -19,4 +19,4 @@ CREATE UNIQUE INDEX operations_active_target ON operations(target) WHERE status 
 ALTER TABLE backup_records ADD COLUMN protected_until INTEGER NOT NULL DEFAULT 0;
 ALTER TABLE backup_records ADD COLUMN sha256 TEXT NOT NULL DEFAULT '';
 ALTER TABLE backup_records ADD COLUMN verified_at TEXT NOT NULL DEFAULT '';
-ALTER TABLE backup_configs ADD COLUMN pre_deployment INTEGER NOT NULL DEFAULT 0;
+ALTER TABLE backup_configs ADD COLUMN pre_deployment BOOLEAN NOT NULL DEFAULT FALSE;

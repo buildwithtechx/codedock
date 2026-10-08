@@ -30,7 +30,7 @@ func (r *RuntimeRepo) SyncKinds(ctx context.Context) error {
 		if row.RuntimeKind == target.Kind {
 			continue
 		}
-		if _, err := r.db.ExecContext(ctx, `UPDATE service_runtimes SET runtime_kind=? WHERE service_id=? AND encrypted_config=?`, target.Kind, row.ServiceID, row.Config); err != nil {
+		if _, err := r.db.ExecContext(ctx, `UPDATE service_runtimes SET runtime_kind=$1 WHERE service_id=$2 AND encrypted_config=$3`, target.Kind, row.ServiceID, row.Config); err != nil {
 			return err
 		}
 	}

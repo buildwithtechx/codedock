@@ -30,7 +30,7 @@ type ClusterDataLister interface {
 }
 
 func NewCanvasRepo(db *sql.DB, envRepo EnvironmentRepository) *CanvasRepo {
-	return &CanvasRepo{db: sqlx.NewDb(db, "sqlite"), environments: envRepo}
+	return &CanvasRepo{db: sqlx.NewDb(db, "pgx"), environments: envRepo}
 }
 
 func (r *CanvasRepo) SetClusterData(lister ClusterDataLister) { r.clusterData = lister }

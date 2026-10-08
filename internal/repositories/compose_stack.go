@@ -15,18 +15,18 @@ type ComposeStackRepo struct {
 }
 
 func NewComposeStackRepo(db *sql.DB, vault Vault) *ComposeStackRepo {
-	return &ComposeStackRepo{db: sqlx.NewDb(db, "sqlite"), vault: vault}
+	return &ComposeStackRepo{db: sqlx.NewDb(db, "pgx"), vault: vault}
 }
 
 func (r *ComposeStackRepo) List(ctx context.Context, projectID string) ([]models.ComposeStack, error) {
 	stacks := []models.ComposeStack{}
-	err := r.db.SelectContext(ctx, &stacks, `SELECT id, project_id, environment_id, name, revision, status, error, results, updated_at FROM compose_stacks WHERE project_id = ? ORDER BY name`, projectID)
+	err := r.db.SelectContext(ctx, &stacks, `SELECT id, project_id, environment_id, name, revision, status, error, results, updated_at FROM compose_stacks WHERE project_id = $1 ORDER BY name`, projectID)
 	return stacks, err
 }
 
 func (r *ComposeStackRepo) Get(ctx context.Context, projectID, id string) (*models.ComposeStack, error) {
 	var stack models.ComposeStack
-	if err := r.db.GetContext(ctx, &stack, `SELECT * FROM compose_stacks WHERE project_id = ? AND id = ?`, projectID, id); err != nil {
+	if err := r.db.GetContext(ctx, &stack, `SELECT * FROM compose_stacks WHERE project_id = $1 AND id = $2`, projectID, id); err != nil {
 		return nil, fmt.Errorf("load stack: %w", err)
 	}
 	config, err := r.vault.Decrypt(stack.Config)
@@ -46,9 +46,9 @@ func (r *ComposeStackRepo) Save(ctx context.Context, stack *models.ComposeStack,
 	stack.Revision = previousRevision + 1
 	var result sql.Result
 	if previousRevision == 0 {
-		result, err = r.db.ExecContext(ctx, `INSERT INTO compose_stacks(id,project_id,environment_id,name,encrypted_config,revision,updated_at) VALUES(?,?,?,?,?,1,?)`, stack.ID, stack.ProjectID, stack.EnvironmentID, stack.Name, encrypted, stack.UpdatedAt)
+		result, err = r.db.ExecContext(ctx, `INSERT INTO compose_stacks(id,project_id,environment_id,name,encrypted_config,revision,updated_at) VALUES($1,$2,$3,$4,$5,1,$6)`, stack.ID, stack.ProjectID, stack.EnvironmentID, stack.Name, encrypted, stack.UpdatedAt)
 	} else {
-		result, err = r.db.ExecContext(ctx, `UPDATE compose_stacks SET name=?, encrypted_config=?, revision=revision+1, updated_at=?, status='saved', error='' WHERE id=? AND project_id=? AND environment_id=? AND revision=? AND status NOT IN ('PREPARING','BUILDING','STARTING','READINESS')`, stack.Name, encrypted, stack.UpdatedAt, stack.ID, stack.ProjectID, stack.EnvironmentID, previousRevision)
+		result, err = r.db.ExecContext(ctx, `UPDATE compose_stacks SET name=$1, encrypted_config=$2, revision=revision+1, updated_at=$3, status='saved', error='' WHERE id=$4 AND project_id=$5 AND environment_id=$6 AND revision=$7 AND status NOT IN ('PREPARING','BUILDING','STARTING','READINESS')`, stack.Name, encrypted, stack.UpdatedAt, stack.ID, stack.ProjectID, stack.EnvironmentID, previousRevision)
 	}
 	if err != nil {
 		return fmt.Errorf("save stack: %w", err)
@@ -64,7 +64,7 @@ func (r *ComposeStackRepo) Save(ctx context.Context, stack *models.ComposeStack,
 }
 
 func (r *ComposeStackRepo) Claim(ctx context.Context, projectID, id string, revision int) error {
-	result, err := r.db.ExecContext(ctx, `UPDATE compose_stacks SET status='PREPARING', error='', updated_at=? WHERE project_id=? AND id=? AND revision=? AND status NOT IN ('PREPARING','BUILDING','STARTING','READINESS')`, time.Now().UTC().Format(time.RFC3339Nano), projectID, id, revision)
+	result, err := r.db.ExecContext(ctx, `UPDATE compose_stacks SET status='PREPARING', error='', updated_at=$1 WHERE project_id=$2 AND id=$3 AND revision=$4 AND status NOT IN ('PREPARING','BUILDING','STARTING','READINESS')`, time.Now().UTC().Format(time.RFC3339Nano), projectID, id, revision)
 	if err != nil {
 		return err
 	}
@@ -79,7 +79,7 @@ func (r *ComposeStackRepo) Claim(ctx context.Context, projectID, id string, revi
 }
 
 func (r *ComposeStackRepo) Observe(ctx context.Context, id, status, message, results string) error {
-	_, err := r.db.ExecContext(ctx, `UPDATE compose_stacks SET status=?, error=?, results=?, updated_at=? WHERE id=?`, status, message, results, time.Now().UTC().Format(time.RFC3339Nano), id)
+	_, err := r.db.ExecContext(ctx, `UPDATE compose_stacks SET status=$1, error=$2, results=$3, updated_at=$4 WHERE id=$5`, status, message, results, time.Now().UTC().Format(time.RFC3339Nano), id)
 	return err
 }
 

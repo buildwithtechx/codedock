@@ -20,15 +20,15 @@ type RouteRuleRepository interface {
 	Delete(ctx context.Context, id string) error
 }
 
-type sqliteRouteRuleRepository struct {
+type postgresRouteRuleRepository struct {
 	db *sql.DB
 }
 
 func NewRouteRuleRepository(db *sql.DB) RouteRuleRepository {
-	return &sqliteRouteRuleRepository{db: db}
+	return &postgresRouteRuleRepository{db: db}
 }
 
-func (r *sqliteRouteRuleRepository) Create(ctx context.Context, rule *models.RouteRule) error {
+func (r *postgresRouteRuleRepository) Create(ctx context.Context, rule *models.RouteRule) error {
 	if rule.ID == "" {
 		rule.ID = uuid.NewString()
 	}
@@ -37,7 +37,7 @@ func (r *sqliteRouteRuleRepository) Create(ctx context.Context, rule *models.Rou
 	rule.UpdatedAt = now
 	_, err := r.db.ExecContext(ctx, `
 		INSERT INTO route_rules (id, service_id, name, enabled, rule_type, spec_json, created_at, updated_at)
-		VALUES (?, ?, ?, ?, ?, ?, ?, ?)`,
+		VALUES ($1, $2, $3, $4, $5, $6, $7, $8)`,
 		rule.ID, rule.ServiceID, rule.Name, boolToInt(rule.Enabled),
 		rule.RuleType, rule.SpecJSON, rule.CreatedAt, rule.UpdatedAt,
 	)
@@ -47,17 +47,17 @@ func (r *sqliteRouteRuleRepository) Create(ctx context.Context, rule *models.Rou
 	return nil
 }
 
-func (r *sqliteRouteRuleRepository) GetByID(ctx context.Context, id string) (*models.RouteRule, error) {
+func (r *postgresRouteRuleRepository) GetByID(ctx context.Context, id string) (*models.RouteRule, error) {
 	row := r.db.QueryRowContext(ctx, `
 		SELECT id, service_id, name, enabled, rule_type, spec_json, created_at, updated_at
-		FROM route_rules WHERE id = ?`, id)
+		FROM route_rules WHERE id = $1`, id)
 	return r.scan(row)
 }
 
-func (r *sqliteRouteRuleRepository) ListByService(ctx context.Context, serviceID string) ([]*models.RouteRule, error) {
+func (r *postgresRouteRuleRepository) ListByService(ctx context.Context, serviceID string) ([]*models.RouteRule, error) {
 	rows, err := r.db.QueryContext(ctx, `
 		SELECT id, service_id, name, enabled, rule_type, spec_json, created_at, updated_at
-		FROM route_rules WHERE service_id = ? ORDER BY created_at ASC`, serviceID)
+		FROM route_rules WHERE service_id = $1 ORDER BY created_at ASC`, serviceID)
 	if err != nil {
 		return nil, fmt.Errorf("list route rules: %w", err)
 	}
@@ -76,21 +76,21 @@ func (r *sqliteRouteRuleRepository) ListByService(ctx context.Context, serviceID
 	return rules, nil
 }
 
-func (r *sqliteRouteRuleRepository) Update(ctx context.Context, id string, name *string, enabled *bool, specJSON *string) error {
+func (r *postgresRouteRuleRepository) Update(ctx context.Context, id string, name *string, enabled *bool, specJSON *string) error {
 	now := time.Now().UTC()
-	updates := []string{"updated_at = ?"}
+	updates := []string{"updated_at = $1"}
 	args := []any{now}
 
 	if name != nil {
-		updates = append(updates, "name = ?")
+		updates = append(updates, fmt.Sprintf("name = $%d", len(args)+1))
 		args = append(args, *name)
 	}
 	if enabled != nil {
-		updates = append(updates, "enabled = ?")
+		updates = append(updates, fmt.Sprintf("enabled = $%d", len(args)+1))
 		args = append(args, boolToInt(*enabled))
 	}
 	if specJSON != nil {
-		updates = append(updates, "spec_json = ?")
+		updates = append(updates, fmt.Sprintf("spec_json = $%d", len(args)+1))
 		args = append(args, *specJSON)
 	}
 
@@ -99,7 +99,7 @@ func (r *sqliteRouteRuleRepository) Update(ctx context.Context, id string, name 
 	}
 
 	args = append(args, id)
-	query := fmt.Sprintf("UPDATE route_rules SET %s WHERE id = ?", strings.Join(updates, ", "))
+	query := fmt.Sprintf("UPDATE route_rules SET %s WHERE id = $%d", strings.Join(updates, ", "), len(args))
 	_, err := r.db.ExecContext(ctx, query, args...)
 	if err != nil {
 		return fmt.Errorf("update route rule: %w", err)
@@ -107,12 +107,12 @@ func (r *sqliteRouteRuleRepository) Update(ctx context.Context, id string, name 
 	return nil
 }
 
-func (r *sqliteRouteRuleRepository) Delete(ctx context.Context, id string) error {
-	_, err := r.db.ExecContext(ctx, `DELETE FROM route_rules WHERE id = ?`, id)
+func (r *postgresRouteRuleRepository) Delete(ctx context.Context, id string) error {
+	_, err := r.db.ExecContext(ctx, `DELETE FROM route_rules WHERE id = $1`, id)
 	return err
 }
 
-func (r *sqliteRouteRuleRepository) scan(s scannable) (*models.RouteRule, error) {
+func (r *postgresRouteRuleRepository) scan(s scannable) (*models.RouteRule, error) {
 	var rule models.RouteRule
 	var enabledInt int
 	err := s.Scan(

@@ -11,7 +11,7 @@ func (r *CanvasRepo) SetVault(vault Vault) { r.vault = vault }
 
 func (r *CanvasRepo) projectStacks(ctx context.Context, canvas *models.EnvironmentCanvas) error {
 	var stacks []models.ComposeStack
-	if err := r.db.SelectContext(ctx, &stacks, `SELECT * FROM compose_stacks WHERE environment_id=?`, canvas.Environment.ID); err != nil {
+	if err := r.db.SelectContext(ctx, &stacks, `SELECT * FROM compose_stacks WHERE environment_id=$1`, canvas.Environment.ID); err != nil {
 		return err
 	}
 	for _, stack := range stacks {

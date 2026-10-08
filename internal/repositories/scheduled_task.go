@@ -32,7 +32,7 @@ type ScheduledTaskRepo struct {
 }
 
 func NewScheduledTaskRepo(db *sql.DB) *ScheduledTaskRepo {
-	return &ScheduledTaskRepo{db: sqlx.NewDb(db, "sqlite")}
+	return &ScheduledTaskRepo{db: sqlx.NewDb(db, "pgx")}
 }
 
 func (r *ScheduledTaskRepo) Create(_ context.Context, j *models.ScheduledTask) error {
@@ -49,7 +49,7 @@ func (r *ScheduledTaskRepo) Create(_ context.Context, j *models.ScheduledTask) e
 	}
 	_, err := r.db.Exec(`INSERT INTO scheduled_tasks (
 		id, service_id, name, schedule, command, status, last_run_at, last_output, created_at, updated_at
-	) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?)`,
+	) VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10)`,
 		j.ID, j.ServiceID, j.Name, j.Schedule, j.Command, j.Status, j.LastRunAt, j.LastOutput, j.CreatedAt, j.UpdatedAt)
 	return err
 }
@@ -57,7 +57,7 @@ func (r *ScheduledTaskRepo) Create(_ context.Context, j *models.ScheduledTask) e
 func (r *ScheduledTaskRepo) GetByID(_ context.Context, id string) (*models.ScheduledTask, error) {
 	var j models.ScheduledTask
 	err := r.db.Get(&j, `SELECT id, service_id, name, schedule, command, status, last_run_at, COALESCE(last_output, '') AS last_output, created_at, updated_at
-		FROM scheduled_tasks WHERE id = ?`, id)
+		FROM scheduled_tasks WHERE id = $1`, id)
 	if errors.Is(err, sql.ErrNoRows) {
 		return nil, utils.NewNotFoundError("Entity", id)
 	}
@@ -86,7 +86,7 @@ func (r *ScheduledTaskRepo) ListByProject(_ context.Context, projectID string) (
 		err = r.db.Select(&scheduledTasks, `SELECT id, service_id, name, schedule, command, status, last_run_at, COALESCE(last_output, '') AS last_output, created_at, updated_at FROM scheduled_tasks ORDER BY created_at ASC`)
 	} else {
 		err = r.db.Select(&scheduledTasks, `SELECT st.id, st.service_id, st.name, st.schedule, st.command, st.status, st.last_run_at, COALESCE(st.last_output, '') AS last_output, st.created_at, st.updated_at
-		FROM scheduled_tasks st JOIN app_services a ON st.service_id = a.id WHERE a.project_id = ? ORDER BY st.created_at ASC`, projectID)
+		FROM scheduled_tasks st JOIN app_services a ON st.service_id = a.id WHERE a.project_id = $1 ORDER BY st.created_at ASC`, projectID)
 	}
 	if err != nil {
 		return nil, err
@@ -100,7 +100,7 @@ func (r *ScheduledTaskRepo) ListByProject(_ context.Context, projectID string) (
 func (r *ScheduledTaskRepo) ListByService(_ context.Context, serviceID string) ([]models.ScheduledTask, error) {
 	var scheduledTasks []models.ScheduledTask
 	err := r.db.Select(&scheduledTasks, `SELECT id, service_id, name, schedule, command, status, last_run_at, COALESCE(last_output, '') AS last_output, created_at, updated_at
-		FROM scheduled_tasks WHERE service_id = ? ORDER BY created_at ASC`, serviceID)
+		FROM scheduled_tasks WHERE service_id = $1 ORDER BY created_at ASC`, serviceID)
 	if err != nil {
 		return nil, err
 	}
@@ -115,14 +115,14 @@ func (r *ScheduledTaskRepo) Update(_ context.Context, j *models.ScheduledTask) e
 	defer r.mu.Unlock()
 	j.UpdatedAt = time.Now()
 	_, err := r.db.Exec(`UPDATE scheduled_tasks SET
-		service_id = ?, name = ?, schedule = ?, command = ?, status = ?, last_run_at = ?, last_output = ?, updated_at = ?
-		WHERE id = ?`,
+		service_id = $1, name = $2, schedule = $3, command = $4, status = $5, last_run_at = $6, last_output = $7, updated_at = $8
+		WHERE id = $9`,
 		j.ServiceID, j.Name, j.Schedule, j.Command, j.Status, j.LastRunAt, j.LastOutput, j.UpdatedAt, j.ID)
 	return err
 }
 
 func (r *ScheduledTaskRepo) Delete(_ context.Context, id string) error {
-	_, err := r.db.Exec(`DELETE FROM scheduled_tasks WHERE id = ?`, id)
+	_, err := r.db.Exec(`DELETE FROM scheduled_tasks WHERE id = $1`, id)
 	return err
 }
 
@@ -130,7 +130,11 @@ func (r *ScheduledTaskRepo) UpdateStatus(_ context.Context, id string, status mo
 	r.mu.Lock()
 	defer r.mu.Unlock()
 	now := time.Now()
-	_, err := r.db.Exec(`UPDATE scheduled_tasks SET status = ?, last_run_at = ?, last_output = ?, updated_at = ? WHERE id = ?`,
-		status, lastRunAt, output, now, id)
+	var lastRun any
+	if lastRunAt != nil {
+		lastRun = *lastRunAt
+	}
+	_, err := r.db.Exec(`UPDATE scheduled_tasks SET status = $1, last_run_at = $2, last_output = $3, updated_at = $4 WHERE id = $5`,
+		status, lastRun, output, now, id)
 	return err
 }

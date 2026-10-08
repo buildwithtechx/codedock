@@ -36,7 +36,7 @@ func (m *TraefikManager) SetLogDir(dir string) {
 }
 
 func (m *TraefikManager) AccessLogPath() string {
-	if m.logDir == "" {
+	if m == nil || m.logDir == "" {
 		return ""
 	}
 	return m.logDir + "/access.json"

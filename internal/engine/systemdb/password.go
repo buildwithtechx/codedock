@@ -9,6 +9,18 @@ import (
 	"strings"
 )
 
+func ReadPassword(dataDir string) (string, error) {
+	raw, err := os.ReadFile(filepath.Join(dataDir, "postgres", "password"))
+	if err != nil {
+		return "", fmt.Errorf("failed to read postgres password: %w", err)
+	}
+	password := strings.TrimSpace(string(raw))
+	if len(password) < 32 {
+		return "", fmt.Errorf("postgres password is missing or invalid")
+	}
+	return password, nil
+}
+
 func loadOrGeneratePassword(dataDir string) (string, error) {
 	dir := filepath.Join(dataDir, "postgres")
 	if err := os.MkdirAll(dir, 0o700); err != nil {

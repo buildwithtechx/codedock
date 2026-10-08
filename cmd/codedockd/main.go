@@ -15,8 +15,6 @@ import (
 	"github.com/docker/docker/client"
 	"github.com/joho/godotenv"
 
-	_ "modernc.org/sqlite"
-
 	"codedock.run/codedock/cmd/codedockd/commands"
 	"codedock.run/codedock/internal/config"
 	"codedock.run/codedock/internal/engine/deploy"

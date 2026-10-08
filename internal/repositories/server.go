@@ -19,16 +19,16 @@ type ServerRepository interface {
 	Delete(ctx context.Context, id string) error
 }
 
-type sqliteServerRepository struct {
+type postgresServerRepository struct {
 	db    *sql.DB
 	vault Vault
 }
 
 func NewServerRepository(db *sql.DB, vault Vault) ServerRepository {
-	return &sqliteServerRepository{db: db, vault: vault}
+	return &postgresServerRepository{db: db, vault: vault}
 }
 
-func (r *sqliteServerRepository) Create(ctx context.Context, server *models.Server) error {
+func (r *postgresServerRepository) Create(ctx context.Context, server *models.Server) error {
 	sshKey, err := r.encryptSecret(server.SSHKey)
 	if err != nil {
 		return fmt.Errorf("failed to encrypt SSH key: %w", err)
@@ -41,6 +41,10 @@ func (r *sqliteServerRepository) Create(ctx context.Context, server *models.Serv
 	if err != nil {
 		return fmt.Errorf("failed to encrypt SSH password: %w", err)
 	}
+	var lastSeenAt any
+	if server.LastSeenAt != nil {
+		lastSeenAt = *server.LastSeenAt
+	}
 	query := `
 		INSERT INTO servers (
 			id, user_id, name, ip_address, is_local,
@@ -48,13 +52,13 @@ func (r *sqliteServerRepository) Create(ctx context.Context, server *models.Serv
 			ssh_key, ssh_private_key, ssh_password, ssh_transport, ssh_jump_host,
 			status, provider, external_id, region, server_type, worker_token, last_seen_at, metrics, created_at, updated_at
 		)
-		VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
+		VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10, $11, $12, $13, $14, $15, $16, $17, $18, $19, $20, $21, $22, $23, $24)
 	`
 	_, err = r.db.ExecContext(ctx, query,
 		server.ID, server.UserID, server.Name, server.IPAddress, server.IsLocal,
 		server.SSHHost, server.SSHPort, server.SSHUser, server.SSHAuthMethod,
 		sshKey, sshPrivateKey, sshPassword, server.SSHTransport, server.SSHJumpHost,
-		server.Status, server.Provider, server.ExternalID, server.Region, server.ServerType, server.WorkerToken, server.LastSeenAt, server.Metrics, server.CreatedAt, server.UpdatedAt,
+		server.Status, server.Provider, server.ExternalID, server.Region, server.ServerType, server.WorkerToken, lastSeenAt, string(server.Metrics), server.CreatedAt, server.UpdatedAt,
 	)
 	if err != nil {
 		return fmt.Errorf("failed to create server: %w", err)
@@ -62,7 +66,7 @@ func (r *sqliteServerRepository) Create(ctx context.Context, server *models.Serv
 	return nil
 }
 
-func (r *sqliteServerRepository) Update(ctx context.Context, server *models.Server) error {
+func (r *postgresServerRepository) Update(ctx context.Context, server *models.Server) error {
 	sshKey, err := r.encryptSecret(server.SSHKey)
 	if err != nil {
 		return fmt.Errorf("failed to encrypt SSH key: %w", err)
@@ -77,25 +81,25 @@ func (r *sqliteServerRepository) Update(ctx context.Context, server *models.Serv
 	}
 	query := `
 		UPDATE servers SET
-			name = ?,
-			ip_address = ?,
-			is_local = ?,
-			ssh_host = ?,
-			ssh_port = ?,
-			ssh_user = ?,
-			ssh_auth_method = ?,
-			ssh_key = ?,
-			ssh_private_key = ?,
-			ssh_password = ?,
-			ssh_transport = ?,
-			ssh_jump_host = ?,
-			status = ?,
-			provider = ?,
-			external_id = ?,
-			region = ?,
-			server_type = ?,
-			updated_at = ?
-		WHERE id = ?
+			name = $1,
+			ip_address = $2,
+			is_local = $3,
+			ssh_host = $4,
+			ssh_port = $5,
+			ssh_user = $6,
+			ssh_auth_method = $7,
+			ssh_key = $8,
+			ssh_private_key = $9,
+			ssh_password = $10,
+			ssh_transport = $11,
+			ssh_jump_host = $12,
+			status = $13,
+			provider = $14,
+			external_id = $15,
+			region = $16,
+			server_type = $17,
+			updated_at = $18
+		WHERE id = $19
 	`
 	_, err = r.db.ExecContext(ctx, query,
 		server.Name, server.IPAddress, server.IsLocal,
@@ -110,7 +114,7 @@ func (r *sqliteServerRepository) Update(ctx context.Context, server *models.Serv
 }
 
 const serverSelectColumns = `
-	id, user_id, name, ip_address, COALESCE(is_local, 0),
+	id, user_id, name, ip_address, COALESCE(is_local, FALSE),
 	COALESCE(ssh_host, ''), COALESCE(ssh_port, 22), COALESCE(ssh_user, 'root'),
 	COALESCE(ssh_auth_method, 'key'), COALESCE(ssh_key, ''), COALESCE(ssh_private_key, ''),
 	COALESCE(ssh_password, ''), COALESCE(ssh_transport, 'direct'), COALESCE(ssh_jump_host, ''),
@@ -118,20 +122,20 @@ const serverSelectColumns = `
 	worker_token, last_seen_at, metrics, created_at, updated_at
 `
 
-func (r *sqliteServerRepository) GetByID(ctx context.Context, id string) (*models.Server, error) {
-	query := fmt.Sprintf(`SELECT %s FROM servers WHERE id = ?`, serverSelectColumns)
+func (r *postgresServerRepository) GetByID(ctx context.Context, id string) (*models.Server, error) {
+	query := fmt.Sprintf(`SELECT %s FROM servers WHERE id = $1`, serverSelectColumns)
 	row := r.db.QueryRowContext(ctx, query, id)
 	return r.scanRow(row)
 }
 
-func (r *sqliteServerRepository) GetByToken(ctx context.Context, token string) (*models.Server, error) {
-	query := fmt.Sprintf(`SELECT %s FROM servers WHERE worker_token = ?`, serverSelectColumns)
+func (r *postgresServerRepository) GetByToken(ctx context.Context, token string) (*models.Server, error) {
+	query := fmt.Sprintf(`SELECT %s FROM servers WHERE worker_token = $1`, serverSelectColumns)
 	row := r.db.QueryRowContext(ctx, query, token)
 	return r.scanRow(row)
 }
 
-func (r *sqliteServerRepository) ListByUser(ctx context.Context, userID string) ([]*models.Server, error) {
-	query := fmt.Sprintf(`SELECT %s FROM servers WHERE user_id = ? OR (user_id = 'system' AND is_local = 1) ORDER BY created_at DESC`, serverSelectColumns)
+func (r *postgresServerRepository) ListByUser(ctx context.Context, userID string) ([]*models.Server, error) {
+	query := fmt.Sprintf(`SELECT %s FROM servers WHERE user_id = $1 OR (user_id = 'system' AND is_local = TRUE) ORDER BY created_at DESC`, serverSelectColumns)
 	rows, err := r.db.QueryContext(ctx, query, userID)
 	if err != nil {
 		return nil, fmt.Errorf("failed to list servers: %w", err)
@@ -149,8 +153,8 @@ func (r *sqliteServerRepository) ListByUser(ctx context.Context, userID string) 
 	return servers, nil
 }
 
-func (r *sqliteServerRepository) UpdateStatus(ctx context.Context, id string, status models.ServerStatus) error {
-	query := `UPDATE servers SET status = ?, updated_at = CURRENT_TIMESTAMP WHERE id = ?`
+func (r *postgresServerRepository) UpdateStatus(ctx context.Context, id string, status models.ServerStatus) error {
+	query := `UPDATE servers SET status = $1, updated_at = CURRENT_TIMESTAMP WHERE id = $2`
 	_, err := r.db.ExecContext(ctx, query, status, id)
 	if err != nil {
 		return fmt.Errorf("failed to update server status: %w", err)
@@ -158,16 +162,16 @@ func (r *sqliteServerRepository) UpdateStatus(ctx context.Context, id string, st
 	return nil
 }
 
-func (r *sqliteServerRepository) UpdateMetrics(ctx context.Context, id string, metricsJSON []byte) error {
-	query := `UPDATE servers SET metrics = ?, last_seen_at = CURRENT_TIMESTAMP, updated_at = CURRENT_TIMESTAMP WHERE id = ?`
-	_, err := r.db.ExecContext(ctx, query, metricsJSON, id)
+func (r *postgresServerRepository) UpdateMetrics(ctx context.Context, id string, metricsJSON []byte) error {
+	query := `UPDATE servers SET metrics = $1, last_seen_at = CURRENT_TIMESTAMP, updated_at = CURRENT_TIMESTAMP WHERE id = $2`
+	_, err := r.db.ExecContext(ctx, query, string(metricsJSON), id)
 	if err != nil {
 		return fmt.Errorf("failed to update server metrics: %w", err)
 	}
 	return nil
 }
 
-func (r *sqliteServerRepository) scanRow(row *sql.Row) (*models.Server, error) {
+func (r *postgresServerRepository) scanRow(row *sql.Row) (*models.Server, error) {
 	var s models.Server
 	err := row.Scan(
 		&s.ID, &s.UserID, &s.Name, &s.IPAddress, &s.IsLocal,
@@ -188,7 +192,7 @@ func (r *sqliteServerRepository) scanRow(row *sql.Row) (*models.Server, error) {
 	return &s, nil
 }
 
-func (r *sqliteServerRepository) scanRows(rows *sql.Rows) (*models.Server, error) {
+func (r *postgresServerRepository) scanRows(rows *sql.Rows) (*models.Server, error) {
 	var s models.Server
 	err := rows.Scan(
 		&s.ID, &s.UserID, &s.Name, &s.IPAddress, &s.IsLocal,
@@ -206,7 +210,7 @@ func (r *sqliteServerRepository) scanRows(rows *sql.Rows) (*models.Server, error
 	return &s, nil
 }
 
-func (r *sqliteServerRepository) encryptSecret(value string) (string, error) {
+func (r *postgresServerRepository) encryptSecret(value string) (string, error) {
 	if value == "" || r.vault == nil {
 		return value, nil
 	}
@@ -216,7 +220,7 @@ func (r *sqliteServerRepository) encryptSecret(value string) (string, error) {
 	return r.vault.Encrypt(value)
 }
 
-func (r *sqliteServerRepository) decryptSecrets(server *models.Server) error {
+func (r *postgresServerRepository) decryptSecrets(server *models.Server) error {
 	if r.vault == nil {
 		return nil
 	}
@@ -238,8 +242,8 @@ func (r *sqliteServerRepository) decryptSecrets(server *models.Server) error {
 	return nil
 }
 
-func (r *sqliteServerRepository) Delete(ctx context.Context, id string) error {
-	query := `DELETE FROM servers WHERE id = ?`
+func (r *postgresServerRepository) Delete(ctx context.Context, id string) error {
+	query := `DELETE FROM servers WHERE id = $1`
 	_, err := r.db.ExecContext(ctx, query, id)
 	return err
 }

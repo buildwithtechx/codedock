@@ -7,10 +7,7 @@ import (
 )
 
 func TestBackupPolicyPersistsScheduledOwnerAndProject(t *testing.T) {
-	db := openTestDB(t)
-	if err := RunMigrations(db); err != nil {
-		t.Fatal(err)
-	}
+	db := openPGTestDB(t)
 	repo := NewBackupRepo(db, nil)
 	ctx := context.Background()
 	cfg := &models.BackupConfig{ID: "policy", Name: "Policy", OwnerID: "owner", ProjectID: "project", Schedule: "manual", BackupEnabled: true}

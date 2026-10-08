@@ -23,7 +23,7 @@ func TestRunMigrationsPostgres(t *testing.T) {
 	if _, err := db.ExecContext(ctx, `CREATE SCHEMA public`); err != nil {
 		t.Fatalf("create public schema: %v", err)
 	}
-	if err := RunMigrationsDialect(db, DriverPostgres); err != nil {
+	if err := RunMigrations(db); err != nil {
 		t.Fatalf("postgres migrations failed: %v", err)
 	}
 	var count int
@@ -62,7 +62,7 @@ func TestRunMigrationsPostgres(t *testing.T) {
 			t.Fatalf("expected %s.%s default %s, got %s", want.table, want.column, want.defaultValue, columnDefault)
 		}
 	}
-	if err := RunMigrationsDialect(db, DriverPostgres); err != nil {
+	if err := RunMigrations(db); err != nil {
 		t.Fatalf("second run failed: %v", err)
 	}
 	if err := db.QueryRowContext(ctx, `SELECT COUNT(*) FROM schema_migrations`).Scan(&count); err != nil {
@@ -70,12 +70,5 @@ func TestRunMigrationsPostgres(t *testing.T) {
 	}
 	if count != 16 {
 		t.Fatalf("expected 16 records after two runs, got %d", count)
-	}
-}
-
-func TestRunMigrationsUnknownDriver(t *testing.T) {
-	db := openTestDB(t)
-	if err := RunMigrationsDialect(db, "bogus"); err == nil {
-		t.Fatal("expected error for unknown driver")
 	}
 }

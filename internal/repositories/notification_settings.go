@@ -5,6 +5,7 @@ import (
 	"database/sql"
 	"errors"
 	"fmt"
+	"strconv"
 	"strings"
 	"sync"
 	"time"
@@ -25,7 +26,7 @@ type NotificationSettingsRepo struct {
 }
 
 func NewNotificationSettingsRepo(db *sql.DB) *NotificationSettingsRepo {
-	return &NotificationSettingsRepo{db: sqlx.NewDb(db, "sqlite")}
+	return &NotificationSettingsRepo{db: sqlx.NewDb(db, "pgx")}
 }
 
 const notificationSettingsColumns = `id, discord_webhook_url, discord_ping_enabled, discord_enabled, slack_webhook_url, slack_enabled, telegram_bot_token, telegram_chat_id, telegram_enabled, smtp_host, smtp_port, smtp_user, smtp_password, smtp_from_name, smtp_from_address, smtp_enabled, resend_api_key, resend_enabled, pushover_user_key, pushover_api_token, pushover_enabled, generic_webhook_url, generic_webhook_enabled, notification_alerts, created_at, updated_at`
@@ -34,7 +35,7 @@ func notificationSettingsPlaceholders() string {
 	columns := strings.Split(notificationSettingsColumns, ",")
 	placeholders := make([]string, len(columns))
 	for i := range placeholders {
-		placeholders[i] = "?"
+		placeholders[i] = "$" + strconv.Itoa(i+1)
 	}
 	return strings.Join(placeholders, ", ")
 }

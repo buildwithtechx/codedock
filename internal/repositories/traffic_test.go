@@ -5,8 +5,6 @@ import (
 	"testing"
 
 	"codedock.run/codedock/internal/models"
-
-	_ "modernc.org/sqlite"
 )
 
 func seedTrafficSamples() []models.TrafficSample {
@@ -18,10 +16,7 @@ func seedTrafficSamples() []models.TrafficSample {
 }
 
 func TestTrafficRecordAndSummary(t *testing.T) {
-	db := openTestDB(t)
-	if err := RunMigrations(db); err != nil {
-		t.Fatalf("run migrations: %v", err)
-	}
+	db := openPGTestDB(t)
 	ctx := context.Background()
 	repo := NewTrafficRepository(db)
 	if err := repo.RecordBatch(ctx, seedTrafficSamples()); err != nil {
@@ -80,10 +75,7 @@ func TestTrafficRecordAndSummary(t *testing.T) {
 }
 
 func TestAttentionIssueLifecycle(t *testing.T) {
-	db := openTestDB(t)
-	if err := RunMigrations(db); err != nil {
-		t.Fatalf("run migrations: %v", err)
-	}
+	db := openPGTestDB(t)
 	ctx := context.Background()
 	orgRepo := NewOrganizationRepository(db)
 	if err := orgRepo.Create(ctx, &models.Organization{ID: "org-1", Name: "Acme"}); err != nil {

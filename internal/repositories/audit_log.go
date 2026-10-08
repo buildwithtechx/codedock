@@ -24,7 +24,7 @@ func NewAuditLogRepo(db *sql.DB) *AuditLogRepo {
 func (r *AuditLogRepo) Create(ctx context.Context, log *models.AuditLog) error {
 	query := `
 		INSERT INTO audit_logs (id, user_id, action, resource, details, ip_address)
-		VALUES (?, ?, ?, ?, ?, ?)
+		VALUES ($1, $2, $3, $4, $5, $6)
 	`
 	_, err := r.db.ExecContext(ctx, query, log.ID, log.UserID, log.Action, log.Resource, log.Details, log.IPAddress)
 	if err != nil {
@@ -38,7 +38,7 @@ func (r *AuditLogRepo) List(ctx context.Context, limit, offset int) ([]models.Au
 		SELECT id, user_id, action, resource, details, ip_address, created_at
 		FROM audit_logs
 		ORDER BY created_at DESC
-		LIMIT ? OFFSET ?
+		LIMIT $1 OFFSET $2
 	`
 	rows, err := r.db.QueryContext(ctx, query, limit, offset)
 	if err != nil {
