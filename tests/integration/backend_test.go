@@ -13,6 +13,8 @@ import (
 )
 
 func TestCodedockBackendInitialization(t *testing.T) {
+	t.Setenv("CODEDOCK_JWT_SECRET", "testsecret")
+
 	dataDir := t.TempDir()
 	vlt, err := utils.NewVault(dataDir)
 	if err != nil {
@@ -24,8 +26,6 @@ func TestCodedockBackendInitialization(t *testing.T) {
 	if err := repositories.RunMigrations(db); err != nil {
 		t.Fatalf("failed to run migrations: %v", err)
 	}
-
-	t.Setenv("CODEDOCK_JWT_SECRET", "testsecret")
 
 	dockerClient, _ := client.NewClientWithOpts(client.FromEnv, client.WithAPIVersionNegotiation())
 

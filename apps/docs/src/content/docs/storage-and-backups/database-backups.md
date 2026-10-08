@@ -38,6 +38,6 @@ A missing engine template or missing dump/restore command metadata returns an er
 
 ## Recovery scope
 
-Database backups and volume archives do not replace a backup of Codedock's SQLite state and vault key. Preserve the control-plane data directory and generated self-hosted settings securely; encrypted credentials depend on those keys.
+Database backups and volume archives do not replace a backup of Codedock's Postgres state and vault key. Preserve the control-plane database and vault key together; encrypted credentials depend on those keys.
 
 See [restore and download](/storage-and-backups/restore-and-download/), [R2](/storage-and-backups/r2-storage/) and [MinIO](/storage-and-backups/minio-storage/).

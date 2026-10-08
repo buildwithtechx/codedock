@@ -1,19 +1,49 @@
 package config
 
 import (
+	"context"
 	"encoding/hex"
-	"os"
-	"path/filepath"
-	"runtime"
+	"errors"
 	"testing"
 
+	"codedock.run/codedock/internal/models"
 	"codedock.run/codedock/pkg/types"
 )
 
+type memorySelfHostedStore struct {
+	stored models.SelfHostedConfig
+	saves  int
+}
+
+func (s *memorySelfHostedStore) Load(context.Context) (*models.SelfHostedConfig, error) {
+	stored := s.stored
+	return &stored, nil
+}
+
+func (s *memorySelfHostedStore) Save(_ context.Context, stored *models.SelfHostedConfig) error {
+	s.stored = *stored
+	s.saves++
+	return nil
+}
+
+type failingSelfHostedStore struct {
+	saved bool
+}
+
+func (s *failingSelfHostedStore) Load(context.Context) (*models.SelfHostedConfig, error) {
+	return nil, errors.New("storage unavailable")
+}
+
+func (s *failingSelfHostedStore) Save(_ context.Context, _ *models.SelfHostedConfig) error {
+	s.saved = true
+	return nil
+}
+
 func TestSelfHostedSecretsSurviveRestart(t *testing.T) {
-	dataDir := t.TempDir()
-	first := &types.Config{Server: types.ServerConfig{DataDir: dataDir}}
-	if err := PrepareSelfHosted(first); err != nil {
+	ctx := context.Background()
+	store := &memorySelfHostedStore{}
+	first := &types.Config{}
+	if err := PrepareSelfHosted(ctx, first, store); err != nil {
 		t.Fatal(err)
 	}
 	secrets := []string{first.Security.JWTSecret, first.Security.RefreshSecret, first.Telemetry.Salt}
@@ -26,11 +56,11 @@ func TestSelfHostedSecretsSurviveRestart(t *testing.T) {
 	if secrets[0] == secrets[1] || secrets[0] == secrets[2] || secrets[1] == secrets[2] {
 		t.Fatal("secrets must be independent")
 	}
-	if err := SaveSelfHostedOptions(first, "apps.example.com", "owner@example.com"); err != nil {
+	if err := SaveSelfHostedOptions(ctx, first, store, "apps.example.com", "owner@example.com"); err != nil {
 		t.Fatal(err)
 	}
-	second := &types.Config{Server: types.ServerConfig{DataDir: dataDir}}
-	if err := PrepareSelfHosted(second); err != nil {
+	second := &types.Config{}
+	if err := PrepareSelfHosted(ctx, second, store); err != nil {
 		t.Fatal(err)
 	}
 	if first.Security.JWTSecret != second.Security.JWTSecret || first.Security.RefreshSecret != second.Security.RefreshSecret || first.Telemetry.Salt != second.Telemetry.Salt {
@@ -39,25 +69,20 @@ func TestSelfHostedSecretsSurviveRestart(t *testing.T) {
 	if second.Domains.WildcardDomain != "apps.example.com" || second.Security.TLSEmail != "owner@example.com" {
 		t.Fatal("setup options were not restored")
 	}
-	info, err := os.Stat(filepath.Join(dataDir, "self-hosted.json"))
-	if err != nil {
-		t.Fatal(err)
-	}
-	if runtime.GOOS != "windows" && info.Mode().Perm() != 0o600 {
-		t.Fatal("configuration must be private")
-	}
 }
 
 func TestSelfHostedExplicitSecretsTakePrecedence(t *testing.T) {
-	cfg := &types.Config{Server: types.ServerConfig{DataDir: t.TempDir()}, Security: types.SecurityConfig{JWTSecret: "existing-jwt", RefreshSecret: "existing-refresh"}}
-	if err := PrepareSelfHosted(cfg); err != nil {
+	ctx := context.Background()
+	store := &memorySelfHostedStore{}
+	cfg := &types.Config{Security: types.SecurityConfig{JWTSecret: "existing-jwt", RefreshSecret: "existing-refresh"}}
+	if err := PrepareSelfHosted(ctx, cfg, store); err != nil {
 		t.Fatal(err)
 	}
 	if cfg.Security.JWTSecret != "existing-jwt" || cfg.Security.RefreshSecret != "existing-refresh" {
 		t.Fatal("explicit secrets were replaced")
 	}
 	cfg.Security.JWTSecret = "override"
-	if err := PrepareSelfHosted(cfg); err != nil {
+	if err := PrepareSelfHosted(ctx, cfg, store); err != nil {
 		t.Fatal(err)
 	}
 	if cfg.Security.JWTSecret != "override" {
@@ -65,51 +90,41 @@ func TestSelfHostedExplicitSecretsTakePrecedence(t *testing.T) {
 	}
 }
 
-func TestSelfHostedCorruptConfigurationIsNotOverwritten(t *testing.T) {
-	dataDir := t.TempDir()
-	path := filepath.Join(dataDir, "self-hosted.json")
-	if err := os.WriteFile(path, []byte("invalid"), 0o600); err != nil {
-		t.Fatal(err)
+func TestSelfHostedStorageFailureIsNotOverwritten(t *testing.T) {
+	store := &failingSelfHostedStore{}
+	if err := PrepareSelfHosted(context.Background(), &types.Config{}, store); err == nil {
+		t.Fatal("storage failure must fail")
 	}
-	if err := PrepareSelfHosted(&types.Config{Server: types.ServerConfig{DataDir: dataDir}}); err == nil {
-		t.Fatal("corrupt configuration must fail")
-	}
-	data, err := os.ReadFile(path)
-	if err != nil {
-		t.Fatal(err)
-	}
-	if string(data) != "invalid" {
-		t.Fatal("corrupt configuration was replaced")
+	if store.saved {
+		t.Fatal("failed load was overwritten")
 	}
 }
 
 func TestCloudDoesNotGenerateSelfHostedSecrets(t *testing.T) {
-	dataDir := t.TempDir()
-	cfg := &types.Config{Server: types.ServerConfig{DataDir: dataDir}, Cloud: types.CloudConfig{Enabled: true}}
-	if err := PrepareSelfHosted(cfg); err != nil {
+	cfg := &types.Config{Cloud: types.CloudConfig{Enabled: true}}
+	if err := PrepareSelfHosted(context.Background(), cfg, nil); err != nil {
 		t.Fatal(err)
 	}
 	if cfg.Security.JWTSecret != "" {
 		t.Fatal("cloud credentials must be configured by the operator")
 	}
-	if _, err := os.Stat(filepath.Join(dataDir, "self-hosted.json")); !os.IsNotExist(err) {
-		t.Fatal("cloud created self-hosted configuration")
-	}
 }
 
 func TestSelfHostedOptionsCanBeCleared(t *testing.T) {
-	cfg := &types.Config{Server: types.ServerConfig{DataDir: t.TempDir()}}
-	if err := PrepareSelfHosted(cfg); err != nil {
+	ctx := context.Background()
+	store := &memorySelfHostedStore{}
+	cfg := &types.Config{}
+	if err := PrepareSelfHosted(ctx, cfg, store); err != nil {
 		t.Fatal(err)
 	}
-	if err := SaveSelfHostedOptions(cfg, "apps.example.com", "owner@example.com"); err != nil {
+	if err := SaveSelfHostedOptions(ctx, cfg, store, "apps.example.com", "owner@example.com"); err != nil {
 		t.Fatal(err)
 	}
-	if err := SaveSelfHostedOptions(cfg, "", ""); err != nil {
+	if err := SaveSelfHostedOptions(ctx, cfg, store, "", ""); err != nil {
 		t.Fatal(err)
 	}
-	restarted := &types.Config{Server: types.ServerConfig{DataDir: cfg.Server.DataDir}}
-	if err := PrepareSelfHosted(restarted); err != nil {
+	restarted := &types.Config{}
+	if err := PrepareSelfHosted(ctx, restarted, store); err != nil {
 		t.Fatal(err)
 	}
 	if restarted.Domains.WildcardDomain != "" || restarted.Security.TLSEmail != "" {

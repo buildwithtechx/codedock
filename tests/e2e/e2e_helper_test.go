@@ -30,6 +30,9 @@ type e2eHarness struct {
 }
 
 func newE2EHarness(t *testing.T) *e2eHarness {
+	jwtSecret := "super-secure-e2e-test-jwt-secret-32-chars-minimum!"
+	t.Setenv("CODEDOCK_JWT_SECRET", jwtSecret)
+
 	dataDir := t.TempDir()
 	vlt, err := utils.NewVault(dataDir)
 	if err != nil {
@@ -41,9 +44,6 @@ func newE2EHarness(t *testing.T) *e2eHarness {
 	if err := repositories.RunMigrations(db); err != nil {
 		t.Fatalf("failed to run migrations: %v", err)
 	}
-
-	jwtSecret := "super-secure-e2e-test-jwt-secret-32-chars-minimum!"
-	t.Setenv("CODEDOCK_JWT_SECRET", jwtSecret)
 
 	dockerClient, err := client.NewClientWithOpts(client.FromEnv, client.WithAPIVersionNegotiation())
 	if err != nil {

@@ -38,9 +38,10 @@ No `LastInsertId` in daemon code. IDs are strings, so no sequence handling. The 
 
 ## Remaining work
 
-- Move single-node assumptions behind Postgres: cron mutex to advisory-lock leadership, backup/operations-reaper/attention-reconcile/update loops multi-node review.
-- Migrate file-local shared state (`self-hosted.json`, backup staging) into Postgres or object storage; document what stays node-local.
-- Per-service images, compose stack, Patroni guidance, HA runbook for hosted cells.
+- Per-service images for hosted cells.
+- Production Patroni deployment beyond the single-Postgres reference cell in `compose.ha.yml` (guidance: `docs/ha-runbook.md`).
+
+Done: advisory-lock scheduler leadership with entry reconcile (`internal/engine/leadership`), multi-node review of backup/operations/autoscaling/attention/update loops, cross-node operation cancel, `self_hosted_config` table replacing `self-hosted.json`, `CODEDOCK_VAULT_KEY` for shared vault keys, reference HA compose stack and runbook.
 
 ## Running the Postgres tests
 

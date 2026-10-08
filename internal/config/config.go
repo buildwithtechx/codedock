@@ -37,6 +37,7 @@ func Load() *types.Config {
 			JWTSecret:     getEnv("CODEDOCK_JWT_SECRET", ""),
 			RefreshSecret: getEnv("CODEDOCK_REFRESH_SECRET", ""),
 			TLSEmail:      getEnv("CODEDOCK_TLS_EMAIL", ""),
+			VaultKey:      getEnv("CODEDOCK_VAULT_KEY", ""),
 		},
 		Docker: types.DockerConfig{
 			SocketPath:     getEnv("DOCKER_SOCKET_PATH", "/var/run/docker.sock"),

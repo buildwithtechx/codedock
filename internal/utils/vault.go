@@ -5,10 +5,15 @@ import (
 	"crypto/cipher"
 	"crypto/rand"
 	"encoding/base64"
+	"encoding/hex"
 	"errors"
+	"fmt"
 	"io"
 	"os"
 	"path/filepath"
+	"strings"
+
+	"codedock.run/codedock/internal/config"
 )
 
 type Vault struct {
@@ -16,6 +21,13 @@ type Vault struct {
 }
 
 func NewVault(dataDir string) (*Vault, error) {
+	if override := strings.TrimSpace(config.Get().Security.VaultKey); override != "" {
+		key, err := hex.DecodeString(override)
+		if err != nil || len(key) != 32 {
+			return nil, fmt.Errorf("invalid CODEDOCK_VAULT_KEY: want 64 hex characters")
+		}
+		return &Vault{key: key}, nil
+	}
 	keyPath := filepath.Join(dataDir, ".vault_key")
 	if keyData, err := os.ReadFile(keyPath); err == nil {
 		if len(keyData) == 32 {

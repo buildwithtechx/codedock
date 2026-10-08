@@ -19,6 +19,9 @@ import (
 )
 
 func setupTestApp(t *testing.T) (*codedockhttp.Server, *sql.DB, string, string) {
+	jwtSecret := "super-secure-integration-test-jwt-secret-32-chars!"
+	t.Setenv("CODEDOCK_JWT_SECRET", jwtSecret)
+
 	dataDir := t.TempDir()
 	vlt, err := utils.NewVault(dataDir)
 	if err != nil {
@@ -30,9 +33,6 @@ func setupTestApp(t *testing.T) (*codedockhttp.Server, *sql.DB, string, string) 
 	if err := repositories.RunMigrations(db); err != nil {
 		t.Fatalf("failed to run migrations: %v", err)
 	}
-
-	jwtSecret := "super-secure-integration-test-jwt-secret-32-chars!"
-	t.Setenv("CODEDOCK_JWT_SECRET", jwtSecret)
 
 	dockerClient, _ := client.NewClientWithOpts(client.FromEnv, client.WithAPIVersionNegotiation())
 

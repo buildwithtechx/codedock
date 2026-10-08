@@ -46,6 +46,7 @@ type SecurityConfig struct {
 	JWTSecret     string `json:"jwtSecret"`
 	RefreshSecret string `json:"refreshSecret"`
 	TLSEmail      string `json:"tlsEmail"`
+	VaultKey      string `json:"vaultKey"`
 }
 
 type DockerConfig struct {

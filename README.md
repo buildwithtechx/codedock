@@ -35,7 +35,7 @@ Codedock ships two CLI tools. See their individual READMEs for full command refe
 
 | Tool                            | Purpose                                                                | Docs                                |
 | ------------------------------- | ---------------------------------------------------------------------- | ----------------------------------- |
-| [`codedockd`](./cmd/codedockd/) | Server daemon — runs on your VPS, manages Docker & SQLite directly     | [README](./cmd/codedockd/README.md) |
+| [`codedockd`](./cmd/codedockd/) | Server daemon — runs on your VPS, manages Docker & Postgres directly    | [README](./cmd/codedockd/README.md) |
 | [`codedock`](./cmd/codedock/)   | Remote client — runs on your laptop, connects to `codedockd` over HTTP | [README](./cmd/codedock/README.md)  |
 
 **Quick example:**

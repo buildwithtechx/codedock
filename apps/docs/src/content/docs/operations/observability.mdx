@@ -76,4 +76,4 @@ You can view the audit logs directly in the Codedock Dashboard:
 
 ### Retention and Storage
 
-Audit logs are stored asynchronously in the underlying SQLite database (`audit_logs` table) to ensure they do not block or slow down standard HTTP requests. Because Codedock operates on a single-tenant architecture, all audit logs for your instance are stored locally and securely alongside your other operational data.
+Audit logs are stored asynchronously in the underlying Postgres database (`audit_logs` table) to ensure they do not block or slow down standard HTTP requests. Because Codedock operates on a single-tenant architecture, all audit logs for your instance are stored locally and securely alongside your other operational data.

@@ -10,6 +10,13 @@ YELLOW="\033[0;33m"
 RED="\033[0;31m"
 NC="\033[0m"
 
+pg_backup() {
+  local dest="$1"
+  local password
+  password=$(docker exec -i "$CONTAINER_NAME" cat /codedock/data/postgres/password)
+  docker exec -i -e PGPASSWORD="$password" codedock-postgres pg_dump -U codedock -d codedock > "$dest"
+}
+
 show_help() {
   echo -e "${BOLD}Codedock Control (codedockd / codedockctl)${NC} — CLI admin tools for Codedock"
   echo ""
@@ -82,8 +89,8 @@ case "${1:-help}" in
     fi
     echo -e "${BOLD}💾 Creating pre-update backup...${NC}"
     mkdir -p "$CODEDOCK_DIR/data/backups"
-    docker exec -i "$CONTAINER_NAME" sh -c "cp /codedock/data/codedock.db /codedock/data/backups/codedock-pre-upgrade-$(date +%Y%m%d%H%M%S).db" 2>/dev/null || true
-    
+    pg_backup "$CODEDOCK_DIR/data/backups/codedock-pre-upgrade-$(date +%Y%m%d%H%M%S).sql" 2>/dev/null || true
+
     echo -e "${BOLD}🐳 Pulling codedock:${TARGET_VERSION}...${NC}"
     docker pull "ghcr.io/buildwithtechx/codedock:${TARGET_VERSION}"
     docker stop "$CONTAINER_NAME" 2>/dev/null || true
@@ -113,7 +120,7 @@ case "${1:-help}" in
     TARGET_VERSION="$2"
     echo -e "${BOLD}💾 Creating pre-downgrade backup...${NC}"
     mkdir -p "$CODEDOCK_DIR/data/backups"
-    docker exec -i "$CONTAINER_NAME" sh -c "cp /codedock/data/codedock.db /codedock/data/backups/codedock-pre-downgrade-$(date +%Y%m%d%H%M%S).db" 2>/dev/null || true
+    pg_backup "$CODEDOCK_DIR/data/backups/codedock-pre-downgrade-$(date +%Y%m%d%H%M%S).sql" 2>/dev/null || true
     docker pull "ghcr.io/buildwithtechx/codedock:${TARGET_VERSION}"
     docker stop "$CONTAINER_NAME" 2>/dev/null || true
     docker rm "$CONTAINER_NAME" 2>/dev/null || true
@@ -151,11 +158,9 @@ case "${1:-help}" in
     echo -e "${GREEN}✅ Codedock daemon removed.${NC}"
     ;;
   backup)
-    BACKUP_FILE="$CODEDOCK_DIR/data/backups/codedock-manual-$(date +%Y%m%d%H%M%S).db"
+    BACKUP_FILE="$CODEDOCK_DIR/data/backups/codedock-manual-$(date +%Y%m%d%H%M%S).sql"
     mkdir -p "$CODEDOCK_DIR/data/backups"
-    docker exec -i "$CONTAINER_NAME" sh -c "cp /codedock/data/codedock.db /codedock/data/backups/tmp.db"
-    docker cp "$CONTAINER_NAME":/codedock/data/backups/tmp.db "$BACKUP_FILE"
-    docker exec -i "$CONTAINER_NAME" sh -c "rm /codedock/data/backups/tmp.db"
+    pg_backup "$BACKUP_FILE"
     echo -e "${GREEN}✅ Database backed up to $BACKUP_FILE${NC}"
     ;;
   help|--help|-h)

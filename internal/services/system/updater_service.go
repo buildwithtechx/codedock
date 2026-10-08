@@ -49,30 +49,32 @@ func NewUpdaterService(repo repositories.SettingsRepository) *UpdaterService {
 }
 
 func (u *UpdaterService) Start(ctx context.Context) {
+	go u.ServeElected(ctx)
+}
+
+func (u *UpdaterService) ServeElected(ctx context.Context) {
+	ticker := time.NewTicker(1 * time.Hour)
+	defer ticker.Stop()
 	go func() {
-		ticker := time.NewTicker(1 * time.Hour)
-		defer ticker.Stop()
-		go func() {
-			time.Sleep(30 * time.Second)
-			settingsCfg, err := u.repo.GetServerSettings(ctx)
-			if err == nil && strings.TrimSpace(settingsCfg.LastUpdateCheck) == "" {
-				_, _ = u.CheckForUpdates(ctx)
-			}
-		}()
-		for {
-			select {
-			case <-ctx.Done():
-				return
-			case <-u.stopCh:
-				return
-			case <-ticker.C:
-				info, err := u.CheckForUpdates(ctx)
-				if err == nil && info.HasUpdate && info.AutoUpdate {
-					_ = u.DeployUpdate(ctx)
-				}
-			}
+		time.Sleep(30 * time.Second)
+		settingsCfg, err := u.repo.GetServerSettings(ctx)
+		if err == nil && strings.TrimSpace(settingsCfg.LastUpdateCheck) == "" {
+			_, _ = u.CheckForUpdates(ctx)
 		}
 	}()
+	for {
+		select {
+		case <-ctx.Done():
+			return
+		case <-u.stopCh:
+			return
+		case <-ticker.C:
+			info, err := u.CheckForUpdates(ctx)
+			if err == nil && info.HasUpdate && info.AutoUpdate {
+				_ = u.DeployUpdate(ctx)
+			}
+		}
+	}
 }
 
 func (u *UpdaterService) Stop() {

@@ -7,6 +7,7 @@ import (
 	"crypto/sha256"
 	"crypto/subtle"
 	"encoding/hex"
+	"errors"
 	"fmt"
 	"github.com/google/uuid"
 	"log/slog"
@@ -89,6 +90,11 @@ func (s *Service) Apply(ctx context.Context, id, user, token, snapshot string, r
 			if err := execution.Err(); err != nil {
 				return err
 			}
+			current, err := s.store.Get(execution, id)
+			if err == nil && current != nil && current.Status == "CANCELLING" {
+				cancel()
+				return errors.New("operation cancelled")
+			}
 			return s.store.Observe(execution, id, "RUNNING", phase, "", log+"\n")
 		}
 		err := runSafely(execution, op, progress, run)
@@ -119,14 +125,16 @@ func (s *Service) Cancel(ctx context.Context, id, user string) error {
 	if op.UserID != user {
 		return fmt.Errorf("operation belongs to another user")
 	}
-	cancel := s.running[id]
-	if cancel == nil {
+	switch op.Status {
+	case "COMPLETED", "FAILED", "INTERRUPTED":
 		return fmt.Errorf("operation is not running")
 	}
 	if err := s.store.Observe(ctx, id, "CANCELLING", op.Phase, "", "Cancellation requested.\n"); err != nil {
 		return err
 	}
-	cancel()
+	if cancel := s.running[id]; cancel != nil {
+		cancel()
+	}
 	return nil
 }
 

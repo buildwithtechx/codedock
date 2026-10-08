@@ -1,0 +1,71 @@
+name: codedock-ha
+
+services:
+  postgres:
+    image: postgres:16-alpine
+    environment:
+      POSTGRES_USER: codedock
+      POSTGRES_PASSWORD: ${CODEDOCK_PG_PASSWORD:?set CODEDOCK_PG_PASSWORD to a URL-safe password}
+      POSTGRES_DB: codedock
+    volumes:
+      - pgdata:/var/lib/postgresql/data
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U codedock"]
+      interval: 5s
+      timeout: 3s
+      retries: 10
+    networks:
+      - backend
+
+  api:
+    build:
+      context: .
+      dockerfile: Dockerfile.cloud
+    image: codedock-cloud:local
+    depends_on:
+      postgres:
+        condition: service_healthy
+    environment:
+      PORT: 8080
+      CODEDOCK_DATA_DIR: /codedock/data
+      CODEDOCK_DATABASE_URL: postgres://codedock:${CODEDOCK_PG_PASSWORD:?set CODEDOCK_PG_PASSWORD}@postgres:5432/codedock?sslmode=disable
+      CODEDOCK_VAULT_KEY: ${CODEDOCK_VAULT_KEY:?set CODEDOCK_VAULT_KEY to 64 hex chars, identical on all replicas}
+    volumes:
+      - apidata:/codedock/data
+      - /var/run/docker.sock:/var/run/docker.sock
+    healthcheck:
+      test: ["CMD", "curl", "-f", "http://localhost:8080/healthz"]
+      interval: 10s
+      timeout: 3s
+      retries: 5
+    deploy:
+      replicas: 2
+    networks:
+      - backend
+      - edge
+    labels:
+      - traefik.enable=true
+      - traefik.http.routers.api.rule=PathPrefix(`/`)
+      - traefik.http.routers.api.entrypoints=web
+      - traefik.http.services.api.loadbalancer.server.port=8080
+
+  edge:
+    image: traefik:v3.3
+    command:
+      - --providers.docker=true
+      - --providers.docker.exposedbydefault=false
+      - --entrypoints.web.address=:80
+    ports:
+      - "8090:80"
+    volumes:
+      - /var/run/docker.sock:/var/run/docker.sock:ro
+    networks:
+      - edge
+
+volumes:
+  pgdata:
+  apidata:
+
+networks:
+  backend:
+  edge:

@@ -86,16 +86,8 @@ func NewBackupManager(dockerClient *client.Client, s Store, backupDir string) *B
 }
 
 func (bm *BackupManager) Start() error {
-	cfgs, err := bm.store.ListAllActiveBackupConfigs()
-	if err != nil {
-		return fmt.Errorf("failed to load active backup configs during start: %w", err)
-	}
-	bm.mu.Lock()
-	defer bm.mu.Unlock()
-	for _, cfg := range cfgs {
-		if err := bm.registerBackupLocked(cfg); err != nil {
-			slog.Warn("failed to schedule backup", "name", cfg.Name, "id", cfg.ID, "err", err)
-		}
+	if err := bm.Reconcile(); err != nil {
+		return err
 	}
 	bm.cronEngine.Start()
 	slog.Info("backup manager started")

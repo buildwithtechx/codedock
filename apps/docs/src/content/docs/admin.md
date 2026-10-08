@@ -79,7 +79,7 @@ For a full list of remote commands, see the [CLI Reference](/cli/).
 1. Requires you to type `downgrade` to confirm (safety gate).
 2. Creates a pre-downgrade database backup automatically.
 3. Pulls the specified version and recreates the container.
-4. If something breaks, restore from backup: `cp /codedock/data/backups/codedock-pre-downgrade-*.db /codedock/data/codedock.db`
+4. If something breaks, stop the daemon and restore from backup: `PGPASSWORD=$(docker exec codedock-control-plane cat /codedock/data/postgres/password) docker exec -i codedock-postgres psql -U codedock -d codedock < data/backups/codedock-pre-downgrade-*.sql`, then restart.
 
 ## Instance Settings
 
@@ -160,7 +160,7 @@ All persistent data is stored in the configured `CODEDOCK_DATA_DIR` (default: `d
 
 ```text
 data/
-├── codedock.db          # SQLite database
+├── postgres/           # Embedded Postgres data
 ├── .vault_key        # Encryption key (keep safe)
 ├── databases/        # Database volumes
 ├── storage/          # MinIO storage volumes

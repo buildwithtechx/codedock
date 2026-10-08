@@ -1,9 +1,9 @@
 ﻿# Platform implementation roadmap
 
-Baseline: Codedock main 1c03759, originally compared with Openship main 16730d39 on 2026-10-06.
-Managed cloud provider: Hetzner. Existing projects and self-hosted installations remain supported. Upstream managed cloud is SaaS relay with Oblien quota/billing, not Hetzner; Hetzner remains separate Codedock scope rather than upstream parity.
+Baseline: Codedock main 1c03759.
+Managed cloud provider: Hetzner. Existing projects and self-hosted installations remain supported.
 
-Parity audit refreshed against Openship main `93cdaebd` and Codedock `852d374` on 2026-10-07: [Backend and UI/UX comparison](openship-parity-audit.md). Checked items describe their stated scope, not exhaustive Openship parity or live infrastructure certification.
+Checked items describe their stated scope, not live infrastructure certification.
 
 ## Delivery workflow
 
@@ -80,7 +80,7 @@ Phase 5 is implemented within these boundaries: provisioning, resize and delete 
 - [x] Docker replicas are distinct from multi-server scheduling and database replication.
 - [x] Bare runtime support is a separate target capability with service supervision and rollback.
 
-### Remaining cluster/runtime parity and integration
+### Remaining cluster/runtime integration
 
 - [x] Cluster databases appear in topology and support reviewed application bindings and connection replacement.
 - [x] Cluster database settings, stop/retain, exact-name deletion and owned PVC cleanup.
@@ -105,9 +105,9 @@ Phase 5 is implemented within these boundaries: provisioning, resize and delete 
 - [x] Application and archive deployments wait for required verified backups before proceeding.
 - [x] Compose stack activation and SSH Docker deployments share the required-backup hook.
 
-The originally scoped Phase 6 and 7 items are implemented within the boundaries below; the renewed comparison found additional parity work and integration gaps. Full Go tests, root typecheck and formatting passed, including SSH Docker operational dispatch with container-ownership checks and runtime-aware autoscaling eligibility. PostgreSQL operator installation, replicated databases, reviewed S3 recovery, Redis AOF recovery and supervised native releases are wired through the dashboard and API. These checks cover repository behavior and mocked runtime commands; live K3s, operator and native-server installation/recovery exercises still require disposable targets. Redis runs standalone, fixed-primary replicas or sharded Cluster mode with per-shard failover by primary restart. Native targets build Git sources with go/node/python/static toolchains or execute verified standalone artifacts on a single SSH server, with managed HTTP routing for web services.
+The originally scoped Phase 6 and 7 items are implemented within the boundaries below; review found additional integration work and gaps. Full Go tests, root typecheck and formatting passed, including SSH Docker operational dispatch with container-ownership checks and runtime-aware autoscaling eligibility. PostgreSQL operator installation, replicated databases, reviewed S3 recovery, Redis AOF recovery and supervised native releases are wired through the dashboard and API. These checks cover repository behavior and mocked runtime commands; live K3s, operator and native-server installation/recovery exercises still require disposable targets. Redis runs standalone, fixed-primary replicas or sharded Cluster mode with per-shard failover by primary restart. Native targets build Git sources with go/node/python/static toolchains or execute verified standalone artifacts on a single SSH server, with managed HTTP routing for web services.
 
-### Remaining backup parity
+### Remaining backup work
 
 - [x] Remote SSH and native restore producers/targets with durable interruption handling.
 - [x] Project-wide multi-service policy batches and inherited service shortcuts.

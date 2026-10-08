@@ -16,6 +16,7 @@ import (
 	"codedock.run/codedock/internal/engine/compose"
 	"codedock.run/codedock/internal/engine/cron"
 	"codedock.run/codedock/internal/engine/deploy"
+	"codedock.run/codedock/internal/engine/leadership"
 	"codedock.run/codedock/internal/engine/networking"
 	"codedock.run/codedock/internal/engine/observability"
 	"codedock.run/codedock/internal/engine/ssh"
@@ -108,8 +109,6 @@ func NewServer(db *sql.DB, v *utils.Vault, deployer *deploy.Deployer, traefikMan
 		_ = cronManager.ScheduleDiskUsageCheck(settings.DiskUsageCron, settings.DiskUsageThreshold)
 	}
 
-	_ = cronManager.Start()
-
 	backupManager := backup.NewBackupManager(dockerClient, httpEngineAdapter, "")
 	backupManager.SetVolumeOperations(volumeOperations)
 
@@ -186,9 +185,6 @@ func NewServer(db *sql.DB, v *utils.Vault, deployer *deploy.Deployer, traefikMan
 	deploymentService.SetRemoteTargets(serverRepo, volumeOperations)
 	deploymentService.BeforeProjectDeployment = backupService.BeforeProjectDeployment
 	deploymentService.BeforeDeployment = backupService.BeforeDeployment
-	if err := backupManager.Start(); err != nil {
-		return nil, fmt.Errorf("start backup scheduling: %w", err)
-	}
 	autoscaler.Start()
 	userService := authservices.NewUserService(userRepo)
 	oAuthService := authservices.NewOAuthService(oauthRepo, userRepo, tokenService)
@@ -205,7 +201,8 @@ func NewServer(db *sql.DB, v *utils.Vault, deployer *deploy.Deployer, traefikMan
 	auditService := authservices.NewAuditService(auditRepository)
 
 	updaterService := systemservices.NewUpdaterService(settingsRepo)
-	updaterService.Start(context.Background())
+	schedulerElector := leadership.NewElector(db, "scheduled-execution")
+	go schedulerElector.Run(context.Background(), cronManager.ServeElected, backupManager.ServeElected, updaterService.ServeElected)
 
 	bridge := NewBridge(projectService, appService, databaseService, deploymentService)
 

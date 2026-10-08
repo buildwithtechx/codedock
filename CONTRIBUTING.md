@@ -95,7 +95,7 @@ cp apps/dashboard/.env.example apps/dashboard/.env
 | Variable           | Default          | Description                    |
 | ------------------ | ---------------- | ------------------------------ |
 | `PORT`             | `8080`           | Daemon HTTP port               |
-| `CODEDOCK_DATA_DIR`   | `data`           | SQLite DB + vault storage      |
+| `CODEDOCK_DATA_DIR`   | `data`           | Postgres data + vault storage  |
 | `CODEDOCK_STATIC_DIR` | `apps/dashboard/dist` | Built dashboard files          |
 | `CODEDOCK_TLS_EMAIL`  | —                | Let's Encrypt email (optional) |
 
@@ -195,7 +195,7 @@ tsc --noEmit
 - **No comments allowed.** Code must be self-explanatory.
 - JSON tags on every exported struct field.
 - Snake_case for file names, single-word package names.
-- SQLite via `modernc.org/sqlite` (CGO-free). Migrations auto-run on startup in `cmd/codedockd/main.go`.
+- Postgres via `pgx/v5/stdlib`. Set `CODEDOCK_DATABASE_URL` or the daemon provisions an embedded container. Migrations auto-run on startup in `cmd/codedockd/main.go`.
 
 ### Dashboard Conventions
 
@@ -213,7 +213,7 @@ tsc --noEmit
 
 | Problem                   | Fix                                                      |
 | ------------------------- | -------------------------------------------------------- |
-| Daemon won't start        | Delete `data/codedock.db` and restart (schema auto-creates) |
+| Daemon won't start        | Reset embedded Postgres (`docker rm -f codedock-postgres`, delete `data/postgres`) and restart (schema auto-migrates) |
 | Dashboard can't reach API | Ensure daemon runs on `:8080`                            |
 | Port conflict             | Change `PORT` in `.env`                                  |
 | Build errors after pull   | `go mod tidy` + `npm install`                            |
@@ -224,8 +224,9 @@ tsc --noEmit
 
 ```bash
 # Stop daemon (Ctrl+C), then:
-rm -f data/codedock.db data/.vault_key
-go run ./cmd
+docker rm -f codedock-postgres
+rm -rf data/postgres data/.vault_key
+go run ./cmd/codedockd
 ```
 
 Schema is recreated automatically.

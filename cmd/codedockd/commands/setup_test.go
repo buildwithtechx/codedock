@@ -89,7 +89,7 @@ func TestFirstRunWithoutEnvironmentAndSavedSetup(t *testing.T) {
 	}
 	cfg.Security.JWTSecret = ""
 	cfg.Security.RefreshSecret = ""
-	if err := config.PrepareSelfHosted(cfg); err != nil {
+	if err := config.PrepareSelfHosted(context.Background(), cfg, repositories.NewSelfHostedRepo(db)); err != nil {
 		t.Fatal(err)
 	}
 	restarted, err := authservices.NewTokenService()

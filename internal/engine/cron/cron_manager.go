@@ -31,6 +31,11 @@ type Store interface {
 	UpdateScheduledTaskStatusAndOutput(id string, status models.ScheduledTaskStatus, lastRunAt *time.Time, output string) error
 }
 
+const (
+	dockerCleanupEntryID = "docker-cleanup"
+	diskUsageEntryID     = "disk-usage"
+)
+
 type CronManager struct {
 	dockerClient *client.Client
 	store        Store
@@ -49,23 +54,63 @@ func NewCronManager(dockerClient *client.Client, s Store) *CronManager {
 }
 
 func (cm *CronManager) Start() error {
-	scheduledTasks, err := cm.store.ListScheduledTasks()
-	if err != nil {
-		return fmt.Errorf("failed to load scheduledTasks during cron manager start: %w", err)
-	}
-	cm.mu.Lock()
-	defer cm.mu.Unlock()
-	for _, j := range scheduledTasks {
-		if j.Status == "active" {
-			scheduledTaskCopy := j
-			if err := cm.registerScheduledTaskLocked(&scheduledTaskCopy); err != nil {
-				slog.Warn("failed to register cron scheduledTask", "name", scheduledTaskCopy.Name, "id", scheduledTaskCopy.ID, "err", err)
-			}
-		}
+	if err := cm.Reconcile(); err != nil {
+		return err
 	}
 	cm.cronEngine.Start()
 	slog.Info("cron manager started")
 	return nil
+}
+
+func (cm *CronManager) Reconcile() error {
+	scheduledTasks, err := cm.store.ListScheduledTasks()
+	if err != nil {
+		return fmt.Errorf("failed to load scheduledTasks during cron reconcile: %w", err)
+	}
+	cm.mu.Lock()
+	defer cm.mu.Unlock()
+	active := make(map[string]*models.ScheduledTask, len(scheduledTasks))
+	for i := range scheduledTasks {
+		if scheduledTasks[i].Status == "active" {
+			scheduledTaskCopy := scheduledTasks[i]
+			active[scheduledTasks[i].ID] = &scheduledTaskCopy
+		}
+	}
+	for _, scheduledTask := range active {
+		if err := cm.registerScheduledTaskLocked(scheduledTask); err != nil {
+			slog.Warn("failed to register cron scheduledTask", "name", scheduledTask.Name, "id", scheduledTask.ID, "err", err)
+		}
+	}
+	for id, entryID := range cm.entries {
+		if id == dockerCleanupEntryID || id == diskUsageEntryID {
+			continue
+		}
+		if _, ok := active[id]; !ok {
+			cm.cronEngine.Remove(entryID)
+			delete(cm.entries, id)
+		}
+	}
+	return nil
+}
+
+func (cm *CronManager) ServeElected(ctx context.Context) {
+	if err := cm.Reconcile(); err != nil {
+		slog.Warn("cron reconcile failed", "error", err)
+	}
+	cm.cronEngine.Start()
+	defer cm.cronEngine.Stop()
+	ticker := time.NewTicker(30 * time.Second)
+	defer ticker.Stop()
+	for {
+		select {
+		case <-ctx.Done():
+			return
+		case <-ticker.C:
+			if err := cm.Reconcile(); err != nil {
+				slog.Warn("cron reconcile failed", "error", err)
+			}
+		}
+	}
 }
 
 func (cm *CronManager) Stop() {
@@ -182,9 +227,9 @@ func (cm *CronManager) ScheduleDockerCleanup(schedule string) error {
 		cleanSchedule = "0 " + cleanSchedule
 	}
 
-	if entryID, exists := cm.entries["docker-cleanup"]; exists {
+	if entryID, exists := cm.entries[dockerCleanupEntryID]; exists {
 		cm.cronEngine.Remove(entryID)
-		delete(cm.entries, "docker-cleanup")
+		delete(cm.entries, dockerCleanupEntryID)
 	}
 
 	entryID, err := cm.cronEngine.AddFunc(cleanSchedule, func() {
@@ -195,7 +240,7 @@ func (cm *CronManager) ScheduleDockerCleanup(schedule string) error {
 	if err != nil {
 		return fmt.Errorf("invalid docker cleanup schedule '%s': %w", schedule, err)
 	}
-	cm.entries["docker-cleanup"] = entryID
+	cm.entries[dockerCleanupEntryID] = entryID
 	slog.Info("docker cleanup scheduled", "schedule", schedule)
 	return nil
 }
@@ -240,9 +285,9 @@ func (cm *CronManager) ScheduleDiskUsageCheck(schedule string, threshold int) er
 		cleanSchedule = "0 " + cleanSchedule
 	}
 
-	if entryID, exists := cm.entries["disk-usage"]; exists {
+	if entryID, exists := cm.entries[diskUsageEntryID]; exists {
 		cm.cronEngine.Remove(entryID)
-		delete(cm.entries, "disk-usage")
+		delete(cm.entries, diskUsageEntryID)
 	}
 
 	entryID, err := cm.cronEngine.AddFunc(cleanSchedule, func() {
@@ -264,6 +309,6 @@ func (cm *CronManager) ScheduleDiskUsageCheck(schedule string, threshold int) er
 	if err != nil {
 		return fmt.Errorf("invalid disk usage check schedule '%s': %w", schedule, err)
 	}
-	cm.entries["disk-usage"] = entryID
+	cm.entries[diskUsageEntryID] = entryID
 	return nil
 }

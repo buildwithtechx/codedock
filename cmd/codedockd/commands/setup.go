@@ -98,7 +98,7 @@ func createSetupOwner(repo *repositories.UserRepo) string {
 }
 
 func saveSetupOptions(db *sql.DB, vault *utils.Vault, domain, tlsEmail string) error {
-	if err := config.SaveSelfHostedOptions(config.Get(), domain, tlsEmail); err != nil {
+	if err := config.SaveSelfHostedOptions(context.Background(), config.Get(), repositories.NewSelfHostedRepo(db), domain, tlsEmail); err != nil {
 		return err
 	}
 	repo := repositories.NewSettingsRepo(db, vault)

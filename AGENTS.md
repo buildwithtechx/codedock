@@ -42,7 +42,7 @@
 
 - **Layered Monolith Architecture (`internal/`):** All Go code inside `internal/` must be organized by clean functional layers:
   - `internal/models/` — ALL domain structs, DTOs, and database entities (no circular imports).
-  - `internal/repositories/` — ALL database persistence, SQL interfaces, and SQLite implementations (`project.go`, `user.go`, `auth.go`).
+  - `internal/repositories/` — ALL database persistence, SQL interfaces, and Postgres implementations (`project.go`, `user.go`, `auth.go`).
   - `internal/services/` — ALL business logic and external integrations (`auth.go`, `git.go`, `deploy.go`).
   - `internal/handlers/` — ALL HTTP controllers and Echo route handlers (`auth.go`, `project.go`, `oauth.go`).
   - `internal/http/` — HTTP server setup, routes, CORS, and auth middleware wiring.
@@ -55,7 +55,7 @@
 - **Error handling:** always check errors; wrap with `fmt.Errorf("context: %w", err)`.
 - **No global state.** Pass dependencies via struct fields — wire up in `cmd/codedockd/main.go`.
 - **JSON tags** on every exported struct field.
-- Use `modernc.org/sqlite` (CGO-free) for SQLite. No `database/sql` driver imports for `mattn/go-sqlite3`.
+- Use `pgx/v5/stdlib` over `database/sql` for Postgres. No SQLite drivers or dialect helpers.
 - Use official `github.com/docker/docker/client` for Docker SDK. Use `gorilla/websocket` for WebSocket upgrades.
 - Avoid `init()` functions. Use explicit constructor functions instead.
 - **Testing:** Unit tests stay co-located with their source files (`service_test.go`). New domain packages must include tests for their service/handler logic.

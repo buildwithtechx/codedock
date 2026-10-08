@@ -23,13 +23,13 @@ Access server settings from **Settings → Server Settings** in the dashboard. O
 
 ### System
 
-- **Data Directory**: Location for SQLite database, vault keys, and container volumes.
+- **Data Directory**: Location for the embedded Postgres data, vault keys, and container volumes.
 - **Static Directory**: Path to the built dashboard frontend.
 - **Port**: The HTTP port for the Codedock daemon (default: `8080`).
 
 ## Environment Variables
 
-Self-hosted installations work without setting environment variables. Authentication secrets are generated once and stored in `self-hosted.json` inside the persistent data directory. Keep this file with your database and vault key when moving or backing up an installation. Use `codedockd setup` for an optional domain and certificate email, and dashboard settings for email and OAuth.
+Self-hosted installations work without setting environment variables. Authentication secrets are generated once and stored in the control-plane Postgres database. Back up the database and vault key together when moving an installation. Use `codedockd setup` for an optional domain and certificate email, and dashboard settings for email and OAuth.
 
 Environment variables are optional operator overrides:
 
