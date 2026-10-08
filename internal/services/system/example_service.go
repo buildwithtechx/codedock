@@ -11,13 +11,35 @@ import (
 )
 
 type ExampleService struct {
+	contentsURL string
+	manifestURL string
+	rawBase     string
 	cache       []models.ExampleApp
 	lastFetched time.Time
 	mu          sync.RWMutex
 }
 
+type exampleManifestEntry struct {
+	ID          string `json:"id"`
+	Name        string `json:"name"`
+	Description string `json:"description"`
+	Logo        string `json:"logo"`
+}
+
+type exampleManifest struct {
+	Templates []exampleManifestEntry `json:"templates"`
+}
+
 func NewExampleService() *ExampleService {
-	return &ExampleService{}
+	return NewExampleServiceWithURLs(
+		"https://api.github.com/repos/buildwithtechx/codedock-examples/contents",
+		"https://raw.githubusercontent.com/buildwithtechx/codedock-examples/main/templates.json",
+		"https://raw.githubusercontent.com/buildwithtechx/codedock-examples/main/",
+	)
+}
+
+func NewExampleServiceWithURLs(contentsURL, manifestURL, rawBase string) *ExampleService {
+	return &ExampleService{contentsURL: contentsURL, manifestURL: manifestURL, rawBase: rawBase}
 }
 
 func (s *ExampleService) ListExamples() ([]models.ExampleApp, error) {
@@ -30,39 +52,21 @@ func (s *ExampleService) ListExamples() ([]models.ExampleApp, error) {
 		return cached, nil
 	}
 
-	client := &http.Client{Timeout: 10 * time.Second}
-	resp, err := client.Get("https://api.github.com/repos/buildwithtechx/codedock-examples/contents")
+	contents, err := fetchExampleContents(s.contentsURL)
 	if err != nil {
 		if len(cached) > 0 {
 			return cached, nil
 		}
 		return nil, err
 	}
-	defer resp.Body.Close()
+	manifest := fetchExampleManifest(s.manifestURL)
 
-	var contents []struct {
-		Name    string `json:"name"`
-		Type    string `json:"type"`
-		HtmlUrl string `json:"html_url"`
-	}
-
-	if err := json.NewDecoder(resp.Body).Decode(&contents); err != nil {
-		if len(cached) > 0 {
-			return cached, nil
+	examples := []models.ExampleApp{}
+	for _, entry := range contents {
+		if entry.Type != "dir" || strings.HasPrefix(entry.Name, ".") {
+			continue
 		}
-		return nil, err
-	}
-
-	var examples []models.ExampleApp
-	for _, c := range contents {
-		if c.Type == "dir" && !strings.HasPrefix(c.Name, ".") {
-			examples = append(examples, models.ExampleApp{
-				ID:          c.Name,
-				Name:        formatExampleName(c.Name),
-				Description: "Deploy " + formatExampleName(c.Name) + " example app",
-				Repo:        c.HtmlUrl,
-			})
-		}
+		examples = append(examples, s.describeExample(entry, manifest))
 	}
 
 	s.mu.Lock()
@@ -71,6 +75,69 @@ func (s *ExampleService) ListExamples() ([]models.ExampleApp, error) {
 	s.mu.Unlock()
 
 	return examples, nil
+}
+
+func (s *ExampleService) describeExample(entry exampleContentEntry, manifest map[string]exampleManifestEntry) models.ExampleApp {
+	example := models.ExampleApp{
+		ID:          entry.Name,
+		Name:        formatExampleName(entry.Name),
+		Description: "Deploy " + formatExampleName(entry.Name) + " example app",
+		Repo:        entry.HtmlUrl,
+	}
+	if described, ok := manifest[entry.Name]; ok {
+		if described.Name != "" {
+			example.Name = described.Name
+		}
+		if described.Description != "" {
+			example.Description = described.Description
+		}
+		if described.Logo != "" {
+			example.Logo = s.rawBase + strings.TrimPrefix(described.Logo, "/")
+		}
+	}
+	return example
+}
+
+type exampleContentEntry struct {
+	Name    string `json:"name"`
+	Type    string `json:"type"`
+	HtmlUrl string `json:"html_url"`
+}
+
+func fetchExampleContents(url string) ([]exampleContentEntry, error) {
+	client := &http.Client{Timeout: 10 * time.Second}
+	resp, err := client.Get(url)
+	if err != nil {
+		return nil, err
+	}
+	defer resp.Body.Close()
+
+	var contents []exampleContentEntry
+	if err := json.NewDecoder(resp.Body).Decode(&contents); err != nil {
+		return nil, err
+	}
+	return contents, nil
+}
+
+func fetchExampleManifest(url string) map[string]exampleManifestEntry {
+	manifest := map[string]exampleManifestEntry{}
+	client := &http.Client{Timeout: 10 * time.Second}
+	resp, err := client.Get(url)
+	if err != nil {
+		return manifest
+	}
+	defer resp.Body.Close()
+
+	var document exampleManifest
+	if err := json.NewDecoder(resp.Body).Decode(&document); err != nil {
+		return manifest
+	}
+	for _, entry := range document.Templates {
+		if entry.ID != "" {
+			manifest[entry.ID] = entry
+		}
+	}
+	return manifest
 }
 
 func formatExampleName(name string) string {

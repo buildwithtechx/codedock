@@ -2,6 +2,7 @@ import type { OneClickApp } from '#/features/databases';
 import type {
   ArchiveDeployResponse,
   ComposeDeployResponse,
+  ExampleApp,
   InstallAppInput,
   InstallPreview,
   OneClickAppDetails,
@@ -21,13 +22,9 @@ export const templatesService = {
     }
   },
 
-  listExampleApps: async (): Promise<
-    { id: string; name: string; description: string; repo: string; icon?: string }[]
-  > => {
+  listExampleApps: async (): Promise<ExampleApp[]> => {
     try {
-      const response = await apiClient.get<{
-        data: { id: string; name: string; description: string; repo: string; icon?: string }[];
-      }>('/examples');
+      const response = await apiClient.get<{ data: ExampleApp[] }>('/examples');
       return response.data;
     } catch (error) {
       throw handleApiError(error);

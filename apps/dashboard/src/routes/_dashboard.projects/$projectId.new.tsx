@@ -20,6 +20,7 @@ import { CreateDockerImageModal } from '#/features/sources/create-docker-image-m
 import { CreateGitAppModal } from '#/features/sources/create-git-app-modal';
 import { DeployOneClickModal } from '#/features/templates/deploy-one-click-modal';
 import { useListExampleApps, useListOneClickApps } from '#/hooks/use-templates';
+import type { ExampleApp } from '#/interfaces/templates';
 
 export const Route = createFileRoute('/_dashboard/projects/$projectId/new')({
   component: NewResourcePage,
@@ -49,6 +50,7 @@ function NewResourcePage() {
     refetch: refetchExamples,
   } = useListExampleApps();
   const [deployTarget, setDeployTarget] = useState<{ appId: string; name: string } | null>(null);
+  const [exampleTarget, setExampleTarget] = useState<ExampleApp | null>(null);
 
   const templates = Array.isArray(oneClickResponse) ? oneClickResponse : [];
   const examples = Array.isArray(examplesResponse) ? examplesResponse : [];
@@ -250,18 +252,31 @@ function NewResourcePage() {
                 <Card key={example.id}>
                   <CardHeader>
                     <CardTitle className="flex items-center gap-2">
-                      <Code2 className="h-5 w-5" />
+                      {example.logo ? (
+                        <span className="flex h-6 w-6 shrink-0 items-center justify-center rounded bg-white p-0.5 dark:bg-zinc-100">
+                          <img
+                            src={example.logo}
+                            alt=""
+                            className="h-full w-full object-contain"
+                            onError={(e) => {
+                              e.currentTarget.onerror = null;
+                              e.currentTarget.src = '/app-logos/_generic.svg';
+                            }}
+                          />
+                        </span>
+                      ) : (
+                        <Code2 className="h-5 w-5" />
+                      )}
                       {example.name}
                     </CardTitle>
                     <CardDescription>{example.description}</CardDescription>
                   </CardHeader>
-                  <CardContent>
-                    <Button
-                      className="w-full"
-                      variant="outline"
-                      onClick={() => window.open(example.repo, '_blank')}
-                    >
-                      View on GitHub
+                  <CardContent className="flex gap-2">
+                    <Button className="flex-1" onClick={() => setExampleTarget(example)}>
+                      Deploy
+                    </Button>
+                    <Button variant="outline" onClick={() => window.open(example.repo, '_blank')}>
+                      GitHub
                     </Button>
                   </CardContent>
                 </Card>
@@ -280,6 +295,19 @@ function NewResourcePage() {
         isOpen={gitModalOpen}
         onOpenChange={setGitModalOpen}
         projectId={projectId}
+      />
+      <CreateGitAppModal
+        isOpen={exampleTarget !== null}
+        onOpenChange={(open) => {
+          if (!open) {
+            setExampleTarget(null);
+          }
+        }}
+        projectId={projectId}
+        initialName={exampleTarget?.id ?? ''}
+        initialRepositoryUrl="https://github.com/buildwithtechx/codedock-examples.git"
+        initialBranch="main"
+        initialRootDirectory={exampleTarget?.id ?? ''}
       />
       <CreateDockerImageModal
         isOpen={dockerModalOpen}

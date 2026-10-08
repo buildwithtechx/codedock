@@ -30,7 +30,14 @@ export function useApplicationSetup(props: ApplicationSetupProps) {
   const [projectId, setProjectId] = useState(props.projectId);
   const [selectedEnvironment, setEnvironment] = useState('');
   const [source, setSource] = useState(props.initialSource ?? 'git');
-  const [draft, setDraft] = useState<CreateAppServiceRequest>({ ...setupDefaults, projectId });
+  const [draft, setDraft] = useState<CreateAppServiceRequest>({
+    ...setupDefaults,
+    projectId,
+    ...(props.initialName ? { name: props.initialName } : {}),
+    ...(props.initialRepositoryUrl ? { repositoryUrl: props.initialRepositoryUrl } : {}),
+    ...(props.initialBranch ? { branch: props.initialBranch } : {}),
+    ...(props.initialRootDirectory ? { rootDirectory: props.initialRootDirectory } : {}),
+  });
   const [variables, setVariables] = useState('');
   const [review, setReview] = useState(false);
   const [error, setError] = useState('');
@@ -138,7 +145,11 @@ export function useApplicationSetup(props: ApplicationSetupProps) {
     if (destination.kind === 'bare') {
       if (!destination.bareNode.serverId.trim()) throw new Error('Select a native server.');
       if (destination.bareRepoUrl.trim()) {
-        if (!/^https:\/\//.test(destination.bareRepoUrl.trim()) && !/^ssh:\/\//.test(destination.bareRepoUrl.trim()) && !destination.bareRepoUrl.includes('@'))
+        if (
+          !/^https:\/\//.test(destination.bareRepoUrl.trim()) &&
+          !/^ssh:\/\//.test(destination.bareRepoUrl.trim()) &&
+          !destination.bareRepoUrl.includes('@')
+        )
           throw new Error('Native repository must use https, ssh or scp-like syntax.');
       } else {
         if (!destination.bareReleaseUrl.startsWith('https://'))

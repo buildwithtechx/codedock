@@ -62,6 +62,15 @@ export interface AppInstallResult {
   stack?: { id: string; name: string; status: string };
 }
 
+export interface ExampleApp {
+  id: string;
+  name: string;
+  description: string;
+  repo: string;
+  icon?: string;
+  logo?: string;
+}
+
 export interface OneClickDeployRequest {
   appId: string;
   projectId: string;

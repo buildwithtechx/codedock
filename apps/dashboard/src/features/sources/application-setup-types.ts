@@ -5,6 +5,10 @@ export interface ApplicationSetupProps {
   onOpenChange: (open: boolean) => void;
   projectId: string;
   initialSource?: 'git' | 'image';
+  initialName?: string;
+  initialRepositoryUrl?: string;
+  initialBranch?: string;
+  initialRootDirectory?: string;
 }
 
 export interface RepositoryInspection {

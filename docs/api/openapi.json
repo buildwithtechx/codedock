@@ -29277,6 +29277,10 @@
                             "description": "ID",
                             "type": "string"
                           },
+                          "logo": {
+                            "description": "Logo URL",
+                            "type": "string"
+                          },
                           "name": {
                             "description": "Name",
                             "type": "string"

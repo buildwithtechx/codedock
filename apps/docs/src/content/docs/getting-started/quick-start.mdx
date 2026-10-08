@@ -36,13 +36,14 @@ import { Steps, Tabs, TabItem, Aside } from '@astrojs/starlight/components';
 
 ### From a Template
 
-Deploy a ready-made starter from the [codedock-examples](https://github.com/buildwithtechx/codedock-examples) repository:
+Deploy a ready-made starter from the [codedock-examples](https://github.com/buildwithtechx/codedock-examples) repository. From the dashboard, open your project, go to **Add New Resource**, pick the **Example Projects** tab, and click **Deploy** on a template. From the CLI:
 
 ```sh
 codedockd deploy --template go-fiber
 codedockd deploy --template node-express
 codedockd deploy --template python-fastapi
-codedockd deploy --template nextjs
+codedockd deploy --template ruby-sinatra
+codedockd deploy --template php-basic
 ```
 
 This clones the template, builds it, and deploys it in one step. Browse all available templates at **[github.com/buildwithtechx/codedock-examples](https://github.com/buildwithtechx/codedock-examples)**.
