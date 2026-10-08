@@ -143,6 +143,7 @@ func (s *Server) registerSettingsRoutes(apiGroup, authGroup *echo.Group) {
 }
 
 func (s *Server) registerMiscRoutes(apiGroup, authGroup *echo.Group) {
+	authGroup.GET("/docs/openapi.json", serveOpenAPISpec)
 	authGroup.GET("/projects/:id/stacks", s.composeStackHandler.List)
 	authGroup.GET("/projects/:id/stacks/:stackId/config", s.composeStackHandler.Config, s.authGuard.RequireScope("env:read"))
 	authGroup.POST("/projects/:id/stacks/review", s.composeStackHandler.Review)

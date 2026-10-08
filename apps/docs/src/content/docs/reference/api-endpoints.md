@@ -5,7 +5,7 @@ description: Registered API methods, paths and middleware requirements.
 
 This catalogue follows the current route registrations. Access labels describe route middleware only; handlers also check resource ownership, account state, credentials or signatures. WebSockets authenticate in their own handlers. `Handler / middleware` does not mean anonymous access is allowed.
 
-Read [API conventions](/api/) first. Paths use `:parameter` placeholders. Linked definitions identify each handler; request DTOs and response behavior live in the handler and model files. This inventory is not an exhaustive OpenAPI schema.
+Read [API conventions](/api/) first. Paths use `:parameter` placeholders. Linked definitions identify each handler; request DTOs and response behavior live in the handler and model files. The exhaustive machine-readable schema is `docs/api/openapi.json` in the repository, also served at runtime as `GET /api/docs/openapi.json`; the Go suite fails when a route lacks a registry entry.
 
 ## Auth
 
