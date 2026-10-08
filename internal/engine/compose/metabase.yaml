@@ -1,0 +1,36 @@
+x-codedock:
+  is_one_click: true
+  name: Metabase
+  description: Business intelligence dashboards over your databases
+  category: analytics
+  icon: metabase
+  secrets:
+    - var: DB_PASSWORD
+      label: Database password
+      length: 24
+services:
+  metabase:
+    image: metabase/metabase
+    restart: always
+    ports:
+      - "3000"
+    environment:
+      - MB_DB_TYPE=postgres
+      - MB_DB_DBNAME=metabase
+      - MB_DB_PORT=5432
+      - MB_DB_USER=metabase
+      - MB_DB_HOST=db
+      - MB_DB_PASS=${secret:DB_PASSWORD}
+    depends_on:
+      - db
+  db:
+    image: postgres:16-alpine
+    restart: always
+    environment:
+      - POSTGRES_DB=metabase
+      - POSTGRES_USER=metabase
+      - POSTGRES_PASSWORD=${secret:DB_PASSWORD}
+    volumes:
+      - metabase-db:/var/lib/postgresql/data
+volumes:
+  metabase-db:

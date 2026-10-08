@@ -188,8 +188,18 @@ function NewResourcePage() {
                 <Card key={template.id}>
                   <CardHeader>
                     <CardTitle className="flex items-center gap-2">
-                      {(template as any).logo && (
-                        <img src={(template as any).logo} alt={template.name} className="h-6 w-6" />
+                      {template.icon && (
+                        <span className="flex h-6 w-6 shrink-0 items-center justify-center rounded bg-white p-0.5 dark:bg-zinc-100">
+                          <img
+                            src={`/app-logos/${template.icon}.svg`}
+                            alt=""
+                            className="h-full w-full object-contain"
+                            onError={(e) => {
+                              e.currentTarget.onerror = null;
+                              e.currentTarget.src = '/app-logos/_generic.svg';
+                            }}
+                          />
+                        </span>
                       )}
                       {template.name}
                     </CardTitle>

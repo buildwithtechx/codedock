@@ -8,9 +8,10 @@ Every replica must share the same control-plane database and vault key:
 
 - `CODEDOCK_DATABASE_URL` points at Postgres. Unset means single-node embedded mode and must never be relied on in HA.
 - `CODEDOCK_VAULT_KEY` is 64 hex characters, identical on all replicas. Without it each node generates its own key file and encrypted columns become unreadable across nodes.
+- `CODEDOCK_JWT_SECRET` and `CODEDOCK_REFRESH_SECRET` are required and identical on all replicas. Cells run in cloud mode, which never generates auth secrets.
 - `CODEDOCK_PG_PASSWORD` seeds the cell Postgres. Keep it URL-safe because it is interpolated into `CODEDOCK_DATABASE_URL`.
 
-JWT, refresh and telemetry secrets live in the `self_hosted_config` table and converge automatically. Explicit `CODEDOCK_JWT_SECRET`, `CODEDOCK_REFRESH_SECRET` and `CODEDOCK_WILDCARD_DOMAIN` values still take precedence when set.
+Single-node installs generate their JWT, refresh and telemetry secrets into the `self_hosted_config` table automatically. Explicit `CODEDOCK_JWT_SECRET`, `CODEDOCK_REFRESH_SECRET` and `CODEDOCK_WILDCARD_DOMAIN` values still take precedence when set.
 
 ## How leadership works
 
@@ -48,12 +49,11 @@ Failover behavior, verified live:
 
 Back up the control plane with `pg_dump` through HAProxy port 5432 on a schedule outside the cell. Restore into an empty database, then boot one API replica first so migrations settle before the others join. A managed Postgres service is an acceptable substitute for the Patroni tier; point `CODEDOCK_DATABASE_URL` at its primary endpoint.
 
+The compose files place every container on one host, which survives process and container failure but not host failure. A production Patroni cell must spread etcd and Postgres nodes across at least three hosts (or failure domains) with the same compose file and shared secrets; nothing in the configuration assumes a single machine except the default volume locality.
+
 ## Images
 
-First-party images publish to GHCR on every version tag with `latest` and multi-arch (`linux/amd64`, `linux/arm64`) builds:
-
-- `ghcr.io/buildwithtechx/codedock` (self-hosted daemon, `Dockerfile`) consumed by the bootstrap installer.
-- `ghcr.io/buildwithtechx/codedock-cloud` (`Dockerfile.cloud`) consumed by both HA compose cells via `CODEDOCK_VERSION` (default `latest`).
+One first-party image publishes to GHCR on every version tag with `latest` and multi-arch (`linux/amd64`, `linux/arm64`) builds: `ghcr.io/buildwithtechx/codedock`. The bootstrap installer and both HA compose cells consume it via `CODEDOCK_VERSION` (default `latest`); cloud mode is a runtime flag (`CODEDOCK_CLOUD_MODE=true`), not a separate image.
 
 Pin `CODEDOCK_VERSION` to a tag for production cells. The Patroni image builds locally from `docker/patroni` (stock `postgres:16` plus pinned Patroni and driver); edge and etcd use pinned stock images.
 

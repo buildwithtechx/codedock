@@ -1,15 +1,11 @@
 FROM node:22-alpine AS dashboard-builder
 WORKDIR /app
 
-COPY package*.json ./
+COPY package.json package-lock.json ./
 COPY apps/dashboard/package.json ./apps/dashboard/
-COPY apps/desktop/package.json ./apps/desktop/
-COPY apps/docs/package.json ./apps/docs/
-COPY apps/web/package.json ./apps/web/
-COPY apps/cli/package.json ./apps/cli/
-RUN npm ci
+RUN npm ci --workspace=@codedock/dashboard
 
-COPY apps/ ./apps/
+COPY apps/dashboard/ ./apps/dashboard/
 COPY tsconfig.base.json ./
 
 RUN npm run build:dashboard
@@ -22,7 +18,10 @@ RUN apk add --no-cache git ca-certificates tzdata
 COPY go.mod go.sum ./
 RUN go mod download
 
-COPY . .
+COPY cmd/ ./cmd/
+COPY internal/ ./internal/
+COPY pkg/ ./pkg/
+COPY apps/dashboard/*.go ./apps/dashboard/
 COPY --from=dashboard-builder /app/apps/dashboard/dist ./apps/dashboard/dist
 
 ARG VERSION=dev

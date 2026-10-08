@@ -1,0 +1,22 @@
+x-codedock:
+  is_one_click: true
+  name: Meilisearch
+  description: Fast instant-search engine with a REST API
+  category: search
+  icon: meilisearch
+  secrets:
+    - var: MEILI_MASTER_KEY
+      label: Master key
+      length: 32
+services:
+  meilisearch:
+    image: getmeili/meilisearch
+    restart: always
+    ports:
+      - "7700"
+    environment:
+      - MEILI_MASTER_KEY=${secret:MEILI_MASTER_KEY}
+    volumes:
+      - ms-data:/meili_data
+volumes:
+  ms-data:

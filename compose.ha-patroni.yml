@@ -151,16 +151,19 @@ services:
   api:
     build:
       context: .
-      dockerfile: Dockerfile.cloud
-    image: ghcr.io/buildwithtechx/codedock-cloud:${CODEDOCK_VERSION:-latest}
+      dockerfile: Dockerfile
+    image: ghcr.io/buildwithtechx/codedock:${CODEDOCK_VERSION:-latest}
     depends_on:
       haproxy:
         condition: service_healthy
     environment:
       PORT: 8080
       CODEDOCK_DATA_DIR: /codedock/data
+      CODEDOCK_CLOUD_MODE: "true"
       CODEDOCK_DATABASE_URL: postgres://codedock:${CODEDOCK_PG_PASSWORD:?set CODEDOCK_PG_PASSWORD}@haproxy:5432/codedock?sslmode=disable
       CODEDOCK_VAULT_KEY: ${CODEDOCK_VAULT_KEY:?set CODEDOCK_VAULT_KEY to 64 hex chars, identical on all replicas}
+      CODEDOCK_JWT_SECRET: ${CODEDOCK_JWT_SECRET:?set CODEDOCK_JWT_SECRET, identical on all replicas}
+      CODEDOCK_REFRESH_SECRET: ${CODEDOCK_REFRESH_SECRET:?set CODEDOCK_REFRESH_SECRET, identical on all replicas}
     volumes:
       - apidata:/codedock/data
       - /var/run/docker.sock:/var/run/docker.sock

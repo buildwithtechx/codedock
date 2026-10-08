@@ -1,94 +1,110 @@
-# 🛰️ Codedock
+# Codedock
 
-**Self-hosted PaaS. Turn any VPS into your own Vercel or Railway in 60 seconds.**
+**Self-hosted platform for shipping apps with built-in CI/CD.** Connect a server, push your code, and Codedock handles the build, rollout, domains, and certificates. Manage it all from the dashboard, desktop app, or CLI.
+
+[![Latest release](https://img.shields.io/github/v/release/buildwithtechx/codedock?color=0b7285)](https://github.com/buildwithtechx/codedock/releases)
+[![License](https://img.shields.io/badge/license-Apache--2.0-blue)](LICENSE)
+[![Website](https://img.shields.io/badge/website-codedock.run-0b7285)](https://codedock.run)
+
+[Quick Start](#quick-start) · [How It Works](#how-it-works) · [Interfaces](#interfaces) · [Docs](https://docs.codedock.run) · [Contributing](CONTRIBUTING.md)
 
 ---
 
-Codedock is a lightweight, open-source Platform-as-a-Service (PaaS) designed to simplify deployments. Whether you're deploying a static site, a full-stack monorepo, or a complex microservice architecture, Codedock provides a frictionless developer experience without the vendor lock-in.
+## Quick Start
 
-## 🚀 Quick Start
-
-Install Codedock on any fresh Linux server (Ubuntu/Debian recommended):
+On a fresh Linux server (Ubuntu/Debian recommended), one command installs the daemon as a container:
 
 ```bash
 curl -fsSL https://get.codedock.run | bash
 ```
 
-Once installed, your dashboard will be available at `http://your-server-ip:8080`.
+Open the dashboard at `http://your-server-ip:8080`. The installer provisions the embedded Postgres database, the Traefik edge, and all generated secrets for you.
 
-## ✨ Features
+Prefer binaries? Download `codedockd` and `codedock` from the [releases page](https://github.com/buildwithtechx/codedock/releases) and run `codedockd serve`.
 
-Codedock is built to be simple but powerful, giving you everything you need to run production workloads out of the box.
+**Ship something:**
 
-- **Deploy Anything:** Native support for Dockerfiles, Railpack, Nixpacks, and standard Buildpacks.
-- **Managed Databases:** Provision PostgreSQL, MySQL, Redis, MongoDB, and more with a single click.
-- **Smart Environment:** Database credentials (`DATABASE_URL`, `REDIS_URL`) are automatically injected into your linked applications.
-- **Zero-Downtime Deploys:** Seamless container swaps with built-in health checks and instant rollbacks.
-- **Custom Domains & SSL:** Automatic Let's Encrypt certificates managed via Traefik v3.
-- **GitOps Ready:** Connect to GitHub/GitLab for automatic deployments on push and PR preview environments.
-- **Marketplace Templates:** Instantly deploy popular frameworks (Node.js, Go, Python, Ruby, PHP) from our built-in marketplace.
-- **No Lock-in:** Codedock orchestrates standard Docker containers. If you ever remove Codedock, your apps keep running.
-
-## 💻 CLI
-
-Codedock ships two CLI tools. See their individual READMEs for full command references.
-
-| Tool                            | Purpose                                                                | Docs                                |
-| ------------------------------- | ---------------------------------------------------------------------- | ----------------------------------- |
-| [`codedockd`](./cmd/codedockd/) | Server daemon — runs on your VPS, manages Docker & Postgres directly    | [README](./cmd/codedockd/README.md) |
-| [`codedock`](./cmd/codedock/)   | Remote client — runs on your laptop, connects to `codedockd` over HTTP | [README](./cmd/codedock/README.md)  |
-
-**Quick example:**
-
-```sh
-# On your server
-codedockd serve
-codedockd deploy --template nextjs
-codedockd deploy https://github.com/user/repo.git
-
-# On your local machine
+```bash
 codedock login
 codedock project list
 codedock deploy <service-id>
 ```
 
-## 🛠️ Local Development
+## How It Works
 
-Want to contribute or hack on Codedock locally?
+Give Codedock a **Git repository**, a **local directory**, or a **compose file**. From there the pipeline runs itself:
 
-````bash
-# 1. Clone the repository
-git clone https://github.com/buildwithtechx/codedock.git
-cd codedock
+1. **Inspect.** Codedock reads your manifests, lockfiles, and Dockerfiles to pick the stack, builder, and start command. No config files needed.
+2. **Build.** Your code becomes a Docker image via Dockerfile, Railpack, Nixpacks, or Buildpacks. Each deploy is snapshotted, so a rollback restores the exact image that shipped.
+3. **Launch.** Containers start under supervision with health checks, and traffic swaps over with zero downtime.
+4. **Expose.** Traefik routes your domain to the new containers and provisions a Let's Encrypt certificate that renews itself.
+5. **Automate.** Git webhooks redeploy on push and spin up a preview environment for every pull request.
 
-# 2. Setup the daemon environment
-cp .env.example .env
+Databases, backups, TLS, and monitoring live in the same control plane as your apps.
 
-# 3. Setup the dashboard environment
-cp apps/dashboard/.env.example apps/dashboard/.env
+## Interfaces
 
-# 4. Run locally
-You can run the Go daemon and the frontend dashboard concurrently using NPM:
+- **Web dashboard** — deploy, monitor, and manage every resource from the UI the daemon serves.
+- **Desktop app** — native Tauri shell around the dashboard in `apps/desktop`.
+- **`codedockd`** — the server daemon ([README](./cmd/codedockd/README.md)).
+- **`codedock`** — the remote CLI that runs on your machine ([README](./cmd/codedock/README.md)).
+- **REST API** — versioned HTTP API with a maintained spec in `docs/api/openapi.json`.
+
+## Features
+
+| | |
+| --- | --- |
+| **CI/CD included** | Redeploy on push, per-PR previews, one-click rollbacks |
+| **Flexible builds** | Dockerfile, Railpack, Nixpacks, Buildpacks, monorepo-aware |
+| **Managed data** | Postgres, MySQL, MongoDB, Redis, workers, WebSockets, storage |
+| **One-click apps** | 35 templates with secrets, ports, domains, and volumes resolved |
+| **TLS everywhere** | Let's Encrypt issuance and renewal, wildcard domains |
+| **Backups** | Scheduled database and volume backups to S3/R2/MinIO with restore |
+| **Observability** | Streaming build logs, container metrics, HTTP traffic analytics |
+| **Growth path** | Autoscaling policies plus multi-replica HA cells |
+| **No lock-in** | Plain Docker containers you can run anywhere, with or without Codedock |
+| **Compose-native** | Bring your own compose files and run them unchanged |
+
+## Deploy Anywhere
+
+- **Any VPS** — Hetzner, DigitalOcean, and the rest
+- **Dedicated servers** — bare metal, colo, homelab
+- **Connected servers** — spread workloads across machines over SSH
+- **HA cells** — multi-replica control plane on Postgres (`compose.ha.yml`)
+
+One workflow, whatever hardware sits underneath.
+
+## Local development
+
+Requirements: Go 1.26+, Node.js 22+, Docker.
 
 ```bash
+git clone https://github.com/buildwithtechx/codedock.git
+cd codedock
+cp .env.example .env
+cp apps/dashboard/.env.example apps/dashboard/.env
 npm run dev
 ```
 
-To run the daemon in dry-run mode (skips Docker actions) + frontend:
+See [CONTRIBUTING](./CONTRIBUTING.md) for the full guide.
 
-```bash
-npm run dev:dryrun
-```
+## Status
 
-Alternatively, you can build all binaries and the dashboard:
+Pre-release and moving fast. Expect breaking changes to APIs and schema until 1.0.
 
-```bash
-npm run build
-./bin/codedockd
-```
+**Up next:** Codedock Cloud, multi-node hardening, and guided setup flows for the app catalogue.
 
-**Requirements:** Go 1.26+, Node.js 22+, and Docker.
+## Contributing
 
-## 📚 Documentation
+See [CONTRIBUTING.md](CONTRIBUTING.md).
 
-For complete guides, API references, and advanced configuration, please visit our documentation at **[docs.codedock.run](https://docs.codedock.run)**.
+## Security
+
+If you find a vulnerability, tell us privately — not through a public issue, PR, or discussion:
+
+- **Preferred:** open a private [security advisory](https://github.com/buildwithtechx/codedock/security/advisories/new)
+- Scope and handling process: [SECURITY.md](SECURITY.md)
+
+## License
+
+Apache-2.0. See [LICENSE](./LICENSE).

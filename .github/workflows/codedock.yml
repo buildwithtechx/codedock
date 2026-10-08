@@ -37,17 +37,7 @@ jobs:
             type=ref,event=tag
             type=raw,value=latest
 
-      - name: Cloud image metadata
-        id: cloud-meta
-        uses: docker/metadata-action@v5
-        with:
-          images: |
-            ghcr.io/buildwithtechx/codedock-cloud
-          tags: |
-            type=ref,event=tag
-            type=raw,value=latest
-
-      - name: Build and push self-hosted image
+      - name: Build and push image
         uses: docker/build-push-action@v6
         with:
           context: .
@@ -55,16 +45,6 @@ jobs:
           platforms: linux/amd64,linux/arm64
           push: true
           tags: ${{ steps.meta.outputs.tags }}
-          build-args: VERSION=${{ github.ref_name }}
-
-      - name: Build and push cloud image
-        uses: docker/build-push-action@v6
-        with:
-          context: .
-          file: Dockerfile.cloud
-          platforms: linux/amd64,linux/arm64
-          push: true
-          tags: ${{ steps.cloud-meta.outputs.tags }}
           build-args: VERSION=${{ github.ref_name }}
 
   release-server-cli:

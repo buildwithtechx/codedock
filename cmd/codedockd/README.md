@@ -10,12 +10,12 @@ codedockd serve          # Start the daemon (default when no subcommand is given
 
 By default it listens on `:8080`. Configure with environment variables:
 
-| Variable          | Default | Description                               |
-| ----------------- | ------- | ----------------------------------------- |
-| `PORT`            | `8080`  | HTTP port to listen on                    |
-| `HOST`            | ``      | Bind address                              |
-| `CODEDOCK_DATA_DIR`  | `data/` | Directory for embedded Postgres data and secrets vault |
-| `CODEDOCK_TLS_EMAIL` | ``      | Email for Let's Encrypt (Traefik)         |
+| Variable              | Default | Description                               |
+| -----------------     | ------- | ----------------------------------------- |
+| `PORT`                | `8080`  | HTTP port to listen on                    |
+| `HOST`                | ``      | Bind address                              |
+| `CODEDOCK_DATA_DIR`   | `data/` | Directory for embedded Postgres data and secrets vault |
+| `CODEDOCK_TLS_EMAIL`  | ``      | Email for Let's Encrypt (Traefik)         |
 
 ## Setup & Maintenance
 
