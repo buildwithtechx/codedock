@@ -27,18 +27,18 @@ jobs:
         run: npm ci
 
       - name: Build packages
-        run: npm run build:packages
+        run: npm run build:cli
 
       - name: Check package contents
         run: |
-          npm pack --dry-run --workspace packages/cli
+          npm pack --dry-run --workspace=codedock
 
       - name: Upload build artifacts
         uses: actions/upload-artifact@v4
         with:
           name: package-dist
           path: |
-            packages/*/dist/
+            apps/cli/dist/
           retention-days: 1
 
   publish:
@@ -64,7 +64,7 @@ jobs:
         uses: actions/download-artifact@v4
         with:
           name: package-dist
-          path: packages
+          path: apps/cli/dist
 
       - name: Verify trusted publishing toolchain
         run: |
@@ -75,4 +75,4 @@ jobs:
         env:
           NODE_AUTH_TOKEN: ${{ secrets.NPM_TOKEN }}
         run: |
-          npm publish --provenance --access public --workspace packages/cli
+          npm publish --provenance --access public --workspace=codedock

@@ -3,18 +3,18 @@ title: CLI Reference
 description: Separate the remote client, daemon commands and installer host wrapper.
 ---
 
-The repository has two remote clients named `codedock`: a Go binary in `cmd/codedock` and the npm client in `packages/cli`. Their commands and configuration differ. `codedockd` is the server daemon. The Linux installer also supplies a host management wrapper. Their command syntax and configuration are different.
+The repository has two remote clients named `codedock`: a Go binary in `cmd/codedock` and the npm client in `apps/cli`. Their commands and configuration differ. `codedockd` is the server daemon. The Linux installer also supplies a host management wrapper. Their command syntax and configuration are different.
 
-## npm client: packages/cli
+## npm client: apps/cli
 
-This section describes the npm client, not the Go binary. Use the client built from `packages/cli` from your workstation or CI runner. It connects to the daemon over HTTP. From the repository, build it with `npm run build:cli` and run `node packages/cli/dist/bin.js --help`.
+This section describes the npm client, not the Go binary. Use the client built from `apps/cli` from your workstation or CI runner. It connects to the daemon over HTTP. From the repository, build it with `npm run build:cli` and run `node apps/cli/dist/bin.js --help`.
 
 ```sh
-node packages/cli/dist/bin.js login --server https://pilot.example.com --email owner@example.com
-node packages/cli/dist/bin.js whoami
-node packages/cli/dist/bin.js projects list
-node packages/cli/dist/bin.js env set PROJECT_ID NODE_ENV=production
-node packages/cli/dist/bin.js status SERVICE_ID
+node apps/cli/dist/bin.js login --server https://pilot.example.com --email owner@example.com
+node apps/cli/dist/bin.js whoami
+node apps/cli/dist/bin.js projects list
+node apps/cli/dist/bin.js env set PROJECT_ID NODE_ENV=production
+node apps/cli/dist/bin.js status SERVICE_ID
 ```
 
 Login prompts for the password. Do not pass `--password`; that option is rejected. A token can be supplied with `--token`. Global options include `--server`, `--token`, `--json`, `--help` and `--version`. `CODEDOCK_SERVER_URL` and `CODEDOCK_TOKEN` can supply connection settings.

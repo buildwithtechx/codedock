@@ -6,11 +6,10 @@ COPY apps/dashboard/package.json ./apps/dashboard/
 COPY apps/desktop/package.json ./apps/desktop/
 COPY apps/docs/package.json ./apps/docs/
 COPY apps/web/package.json ./apps/web/
-COPY packages/cli/package.json ./packages/cli/
+COPY apps/cli/package.json ./apps/cli/
 RUN npm ci
 
 COPY apps/ ./apps/
-COPY packages/ ./packages/
 COPY tsconfig.base.json ./
 
 RUN npm run build:dashboard
