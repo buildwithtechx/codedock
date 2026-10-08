@@ -11,6 +11,10 @@ x-codedock:
     - var: DB_PASSWORD
       label: Database password
       length: 24
+  inputs:
+    - var: BASE_URL
+      label: Public URL
+      default: http://localhost:8000
 services:
   plausible:
     image: plausible/analytics
@@ -20,7 +24,7 @@ services:
     environment:
       - SECRET_KEY_BASE=${secret:SECRET_KEY_BASE}
       - DATABASE_URL=postgres://plausible:${secret:DB_PASSWORD}@db:5432/plausible
-      - BASE_URL=http://localhost:8000
+      - BASE_URL=${input:BASE_URL}
     depends_on:
       - db
   db:
@@ -30,6 +34,11 @@ services:
       - POSTGRES_DB=plausible
       - POSTGRES_USER=plausible
       - POSTGRES_PASSWORD=${secret:DB_PASSWORD}
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U plausible -d plausible"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
     volumes:
       - plausible-db:/var/lib/postgresql/data
 volumes:

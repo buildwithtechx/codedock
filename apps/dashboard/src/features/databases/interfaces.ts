@@ -91,5 +91,13 @@ export interface OneClickApp {
   category: string;
   dockerImage: string;
   defaultPort: number;
-  envVariables: Array<{ key: string; label: string; defaultValue?: string }>;
+  envVariables: Array<{
+    key: string;
+    label: string;
+    defaultValue?: string;
+    secret: boolean;
+    required: boolean;
+    input: boolean;
+  }>;
+  verified: boolean;
 }

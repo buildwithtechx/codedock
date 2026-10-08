@@ -48,6 +48,27 @@ func validCatalogueTemplate() ComposeTemplate {
 	}
 }
 
+func TestValidateTemplateAcceptsHealthcheckAndInputs(t *testing.T) {
+	tmpl := validCatalogueTemplate()
+	service := tmpl.Services["web"]
+	service.Healthcheck = &CatalogHealthcheck{
+		Test:        []string{"CMD-SHELL", "wget -qO- http://localhost:80/ || exit 1"},
+		Interval:    "30s",
+		Timeout:     "5s",
+		Retries:     3,
+		StartPeriod: "10s",
+	}
+	service.Environment = append(service.Environment, "APP_NAME=${input:APP_NAME}", "APP_MODE=${input:APP_MODE}")
+	tmpl.Services["web"] = service
+	tmpl.XCodedock.Inputs = []CodedockInputSpec{
+		{Var: "APP_NAME", Label: "App name", Required: true},
+		{Var: "APP_MODE", Label: "App mode", Default: "production"},
+	}
+	if err := ValidateTemplate("example", tmpl); err != nil {
+		t.Fatalf("expected valid template, got %v", err)
+	}
+}
+
 func TestValidateTemplateRejectsBrokenDocuments(t *testing.T) {
 	cases := []struct {
 		name   string
@@ -91,6 +112,35 @@ func TestValidateTemplateRejectsBrokenDocuments(t *testing.T) {
 			service.DependsOn = []string{"missing"}
 			tmpl.Services["web"] = service
 		}, "unknown dependency"},
+		{"healthcheck without test", func(tmpl *ComposeTemplate) {
+			service := tmpl.Services["web"]
+			service.Healthcheck = &CatalogHealthcheck{Interval: "30s"}
+			tmpl.Services["web"] = service
+		}, "healthcheck test is required"},
+		{"healthcheck bad duration", func(tmpl *ComposeTemplate) {
+			service := tmpl.Services["web"]
+			service.Healthcheck = &CatalogHealthcheck{Test: []string{"CMD", "true"}, Timeout: "soon"}
+			tmpl.Services["web"] = service
+		}, "must be a positive duration"},
+		{"healthcheck negative retries", func(tmpl *ComposeTemplate) {
+			service := tmpl.Services["web"]
+			service.Healthcheck = &CatalogHealthcheck{Test: []string{"CMD", "true"}, Retries: -1}
+			tmpl.Services["web"] = service
+		}, "must not be negative"},
+		{"undeclared input", func(tmpl *ComposeTemplate) {
+			service := tmpl.Services["web"]
+			service.Environment = append(service.Environment, "APP_NAME=${input:APP_NAME}")
+			tmpl.Services["web"] = service
+		}, "undeclared input"},
+		{"unused input", func(tmpl *ComposeTemplate) {
+			tmpl.XCodedock.Inputs = []CodedockInputSpec{{Var: "UNUSED"}}
+		}, "never referenced"},
+		{"required input with default", func(tmpl *ComposeTemplate) {
+			tmpl.XCodedock.Inputs = []CodedockInputSpec{{Var: "APP_NAME", Required: true, Default: "demo"}}
+			service := tmpl.Services["web"]
+			service.Environment = append(service.Environment, "APP_NAME=${input:APP_NAME}")
+			tmpl.Services["web"] = service
+		}, "must not set a default"},
 	}
 	for _, tc := range cases {
 		t.Run(tc.name, func(t *testing.T) {

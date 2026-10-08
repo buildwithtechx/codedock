@@ -5,6 +5,8 @@ type OneClickEnvVar struct {
 	Label        string `json:"label"`
 	DefaultValue string `json:"defaultValue,omitempty"`
 	Secret       bool   `json:"secret"`
+	Required     bool   `json:"required"`
+	Input        bool   `json:"input"`
 }
 
 type OneClickApp struct {
@@ -18,6 +20,7 @@ type OneClickApp struct {
 	Services     []string         `json:"services"`
 	Volumes      []string         `json:"volumes"`
 	EnvVariables []OneClickEnvVar `json:"envVariables"`
+	Verified     bool             `json:"verified"`
 }
 
 type InstallAppInput struct {

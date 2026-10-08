@@ -122,3 +122,50 @@ func TestResolveInstallPlanRejectsBadInput(t *testing.T) {
 		t.Errorf("provided secrets must not be regenerated: %v", plan.GeneratedSecrets)
 	}
 }
+
+func installInputTemplate() ComposeTemplate {
+	tmpl := installTestTemplate()
+	service := tmpl.Services["web"]
+	service.Environment = append(service.Environment, "APP_NAME=${input:APP_NAME}", "APP_MODE=${input:APP_MODE}")
+	service.Healthcheck = &CatalogHealthcheck{
+		Test:     []string{"CMD-SHELL", "wget -qO- http://localhost:80/ || exit 1"},
+		Interval: "30s",
+		Retries:  3,
+	}
+	tmpl.Services["web"] = service
+	tmpl.XCodedock.Inputs = []CodedockInputSpec{
+		{Var: "APP_NAME", Label: "App name", Required: true},
+		{Var: "APP_MODE", Label: "App mode", Default: "production"},
+	}
+	return tmpl
+}
+
+func TestResolveInstallPlanResolvesInputs(t *testing.T) {
+	plan, err := ResolveInstallPlan("example", installInputTemplate(), InstallRequest{
+		Name:        "Demo",
+		Environment: map[string]string{"APP_NAME": "Custom"},
+	}, fixedSecretGenerator("generated-secret-value"))
+	if err != nil {
+		t.Fatal(err)
+	}
+	joined := ""
+	for _, service := range plan.Services {
+		joined += strings.Join(service.Env, "\n") + "\n"
+	}
+	if !strings.Contains(joined, "APP_NAME=Custom") {
+		t.Errorf("expected provided input, got:\n%s", joined)
+	}
+	if !strings.Contains(joined, "APP_MODE=production") {
+		t.Errorf("expected defaulted input, got:\n%s", joined)
+	}
+	if !strings.Contains(plan.ComposeYAML, "healthcheck:") || !strings.Contains(plan.ComposeYAML, "wget -qO-") {
+		t.Errorf("expected healthcheck in document:\n%s", plan.ComposeYAML)
+	}
+}
+
+func TestResolveInstallPlanRejectsMissingRequiredInput(t *testing.T) {
+	_, err := ResolveInstallPlan("example", installInputTemplate(), InstallRequest{Name: "Demo"}, fixedSecretGenerator("generated-secret-value"))
+	if err == nil || !strings.Contains(err.Error(), "input APP_NAME is required") {
+		t.Fatalf("expected required input error, got %v", err)
+	}
+}

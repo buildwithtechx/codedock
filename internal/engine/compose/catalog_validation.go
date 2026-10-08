@@ -5,6 +5,7 @@ import (
 	"regexp"
 	"strconv"
 	"strings"
+	"time"
 )
 
 type CatalogPortMapping struct {
@@ -20,6 +21,7 @@ type CatalogVolumeMount struct {
 
 var catalogEnvName = regexp.MustCompile(`^[A-Za-z_][A-Za-z0-9_]*$`)
 var catalogSecretRef = regexp.MustCompile(`\$\{secret:([A-Za-z_][A-Za-z0-9_]*)\}`)
+var catalogInputRef = regexp.MustCompile(`\$\{input:([A-Za-z_][A-Za-z0-9_]*)\}`)
 
 func ValidateTemplate(id string, tmpl ComposeTemplate) error {
 	failures := []string{}
@@ -31,6 +33,7 @@ func ValidateTemplate(id string, tmpl ComposeTemplate) error {
 	}
 	failures = append(failures, validateCatalogMetadata(tmpl)...)
 	failures = append(failures, validateCatalogSecrets(tmpl)...)
+	failures = append(failures, validateCatalogInputs(tmpl)...)
 	failures = append(failures, validateCatalogDependencies(tmpl.Services)...)
 	if len(failures) == 0 {
 		return nil
@@ -62,6 +65,43 @@ func validateCatalogService(name string, service ComposeService, volumes map[str
 		if key, _, _ := strings.Cut(entry, "="); !catalogEnvName.MatchString(key) {
 			failures = append(failures, fmt.Sprintf("service %s: invalid environment entry %q", name, entry))
 		}
+	}
+	failures = append(failures, validateCatalogHealthcheck(name, service.Healthcheck)...)
+	return failures
+}
+
+func validateCatalogHealthcheck(name string, check *CatalogHealthcheck) []string {
+	if check == nil {
+		return nil
+	}
+	failures := []string{}
+	if len(check.Test) == 0 {
+		failures = append(failures, fmt.Sprintf("service %s: healthcheck test is required", name))
+	}
+	for _, entry := range check.Test {
+		if strings.TrimSpace(entry) == "" {
+			failures = append(failures, fmt.Sprintf("service %s: healthcheck test entries must not be blank", name))
+			break
+		}
+	}
+	for _, duration := range []struct {
+		label string
+		value string
+	}{
+		{"interval", check.Interval},
+		{"timeout", check.Timeout},
+		{"start_period", check.StartPeriod},
+	} {
+		if duration.value == "" {
+			continue
+		}
+		parsed, err := time.ParseDuration(duration.value)
+		if err != nil || parsed <= 0 {
+			failures = append(failures, fmt.Sprintf("service %s: healthcheck %s must be a positive duration like 30s", name, duration.label))
+		}
+	}
+	if check.Retries < 0 {
+		failures = append(failures, fmt.Sprintf("service %s: healthcheck retries must not be negative", name))
 	}
 	return failures
 }
@@ -144,6 +184,61 @@ func validateCatalogSecrets(tmpl ComposeTemplate) []string {
 		}
 	}
 	return failures
+}
+
+func validateCatalogInputs(tmpl ComposeTemplate) []string {
+	failures := []string{}
+	declared := map[string]bool{}
+	meta := catalogMetadata(tmpl)
+	if meta != nil {
+		for _, spec := range meta.Inputs {
+			if !catalogEnvName.MatchString(spec.Var) {
+				failures = append(failures, fmt.Sprintf("invalid input variable %q", spec.Var))
+				continue
+			}
+			if spec.Required && spec.Default != "" {
+				failures = append(failures, fmt.Sprintf("input %s is required and must not set a default", spec.Var))
+			}
+			declared[spec.Var] = true
+		}
+	}
+	for name, service := range tmpl.Services {
+		for _, entry := range service.Environment {
+			for _, ref := range catalogInputRef.FindAllStringSubmatch(entry, -1) {
+				if !declared[ref[1]] {
+					failures = append(failures, fmt.Sprintf("service %s: undeclared input %s", name, ref[1]))
+				}
+			}
+		}
+	}
+	if meta != nil {
+		used := map[string]bool{}
+		for _, service := range tmpl.Services {
+			for _, entry := range service.Environment {
+				for _, ref := range catalogInputRef.FindAllStringSubmatch(entry, -1) {
+					used[ref[1]] = true
+				}
+			}
+		}
+		for _, spec := range meta.Inputs {
+			if catalogEnvName.MatchString(spec.Var) && !used[spec.Var] {
+				failures = append(failures, fmt.Sprintf("input %s is never referenced", spec.Var))
+			}
+		}
+	}
+	return failures
+}
+
+func catalogMetadata(tmpl ComposeTemplate) *CodedockMetadata {
+	if tmpl.XCodedock != nil {
+		return tmpl.XCodedock
+	}
+	for _, service := range tmpl.Services {
+		if service.XCodedock != nil {
+			return service.XCodedock
+		}
+	}
+	return nil
 }
 
 func validateCatalogDependencies(services map[string]ComposeService) []string {

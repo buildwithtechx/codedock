@@ -8,6 +8,12 @@ The `codedock` binary is the remote client for your self-hosted Codedock server.
 curl -fsSL https://get.codedock.run/cli | sh
 ```
 
+Prefer npm? The Node build installs the same `codedock` command name (needs Node 18+), so install only one of the two:
+
+```sh
+npm install -g codedock
+```
+
 Or if you have Go installed:
 
 ```sh

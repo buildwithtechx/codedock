@@ -8,6 +8,10 @@ x-codedock:
     - var: ADMIN_TOKEN
       label: Admin panel token
       length: 24
+  inputs:
+    - var: DOMAIN
+      label: Public domain
+      default: https://vaultwarden.localhost
 services:
   vaultwarden:
     image: vaultwarden/server
@@ -16,6 +20,7 @@ services:
       - "80"
     environment:
       - ADMIN_TOKEN=${secret:ADMIN_TOKEN}
+      - DOMAIN=${input:DOMAIN}
     volumes:
       - vaultwarden-data:/data
 volumes:

@@ -3,6 +3,8 @@ export interface OneClickEnvVar {
   label: string;
   defaultValue?: string;
   secret: boolean;
+  required: boolean;
+  input: boolean;
 }
 
 export interface OneClickAppDetails {
@@ -16,6 +18,7 @@ export interface OneClickAppDetails {
   services: string[];
   volumes: string[];
   envVariables: OneClickEnvVar[];
+  verified: boolean;
 }
 
 export interface InstallAppInput {

@@ -1,8 +1,16 @@
 import { createFileRoute, useNavigate } from '@tanstack/react-router';
-import { Code2, Container, Database, GitBranch, LayoutTemplate, Loader2 } from 'lucide-react';
+import {
+  BadgeCheck,
+  Code2,
+  Container,
+  Database,
+  GitBranch,
+  LayoutTemplate,
+  Loader2,
+} from 'lucide-react';
 import { useState } from 'react';
-import { toast } from 'sonner';
 import { z } from 'zod';
+import { Badge } from '#/components/ui/badge';
 import { Button } from '#/components/ui/button';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '#/components/ui/card';
 import { QueryErrorState } from '#/components/ui/query-error-state';
@@ -10,11 +18,8 @@ import { Tabs, TabsContent, TabsList, TabsTrigger } from '#/components/ui/tabs';
 import { CreateDatabaseModal } from '#/features/databases/create-database-modal';
 import { CreateDockerImageModal } from '#/features/sources/create-docker-image-modal';
 import { CreateGitAppModal } from '#/features/sources/create-git-app-modal';
-import {
-  useDeployOneClickApp,
-  useListExampleApps,
-  useListOneClickApps,
-} from '#/hooks/use-templates';
+import { DeployOneClickModal } from '#/features/templates/deploy-one-click-modal';
+import { useListExampleApps, useListOneClickApps } from '#/hooks/use-templates';
 
 export const Route = createFileRoute('/_dashboard/projects/$projectId/new')({
   component: NewResourcePage,
@@ -43,23 +48,14 @@ function NewResourcePage() {
     isError: examplesError,
     refetch: refetchExamples,
   } = useListExampleApps();
-  const deployOneClick = useDeployOneClickApp();
-  const [deployingTemplateId, setDeployingTemplateId] = useState<string | null>(null);
+  const [deployTarget, setDeployTarget] = useState<{ appId: string; name: string } | null>(null);
 
   const templates = Array.isArray(oneClickResponse) ? oneClickResponse : [];
   const examples = Array.isArray(examplesResponse) ? examplesResponse : [];
 
-  const handleDeployOneClick = async (appId: string, name: string) => {
-    setDeployingTemplateId(appId);
-    try {
-      const response = await deployOneClick.mutateAsync({ appId, projectId, name });
-      toast.success(response.message || `${name} deployed`);
-      await navigate({ to: '/projects/$projectId', params: { projectId } });
-    } catch {
-      toast.error(`Failed to deploy ${name}`);
-    } finally {
-      setDeployingTemplateId(null);
-    }
+  const handleDeployed = async () => {
+    setDeployTarget(null);
+    await navigate({ to: '/projects/$projectId', params: { projectId } });
   };
 
   return (
@@ -202,16 +198,21 @@ function NewResourcePage() {
                         </span>
                       )}
                       {template.name}
+                      {template.verified && (
+                        <Badge variant="secondary" className="ml-auto">
+                          <BadgeCheck className="h-3 w-3" />
+                          Verified
+                        </Badge>
+                      )}
                     </CardTitle>
                     <CardDescription>{template.description}</CardDescription>
                   </CardHeader>
                   <CardContent>
                     <Button
                       className="w-full"
-                      onClick={() => handleDeployOneClick(template.id, template.name)}
-                      disabled={deployOneClick.isPending}
+                      onClick={() => setDeployTarget({ appId: template.id, name: template.name })}
                     >
-                      {deployingTemplateId === template.id ? 'Deploying...' : 'Deploy'}
+                      Deploy
                     </Button>
                   </CardContent>
                 </Card>
@@ -284,6 +285,18 @@ function NewResourcePage() {
         isOpen={dockerModalOpen}
         onOpenChange={setDockerModalOpen}
         projectId={projectId}
+      />
+      <DeployOneClickModal
+        isOpen={deployTarget !== null}
+        onOpenChange={(open) => {
+          if (!open) {
+            setDeployTarget(null);
+          }
+        }}
+        projectId={projectId}
+        appId={deployTarget?.appId ?? ''}
+        appName={deployTarget?.name ?? ''}
+        onDeployed={() => void handleDeployed()}
       />
     </div>
   );

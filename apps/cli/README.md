@@ -14,6 +14,8 @@ Or run directly without installation:
 npx codedock --help
 ```
 
+A Go build installs the same `codedock` command name (`curl -fsSL https://get.codedock.run/cli | sh`) - pick one, since the two builds differ in command shape.
+
 ## Quick Start
 
 ### 1. Authenticate

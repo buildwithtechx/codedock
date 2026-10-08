@@ -33921,6 +33921,10 @@
                                   "description": "Default",
                                   "type": "string"
                                 },
+                                "input": {
+                                  "description": "Human input",
+                                  "type": "boolean"
+                                },
                                 "key": {
                                   "description": "Key",
                                   "type": "string"
@@ -33928,6 +33932,10 @@
                                 "label": {
                                   "description": "Label",
                                   "type": "string"
+                                },
+                                "required": {
+                                  "description": "Required",
+                                  "type": "boolean"
                                 },
                                 "secret": {
                                   "description": "Secret",
@@ -33937,7 +33945,9 @@
                               "required": [
                                 "key",
                                 "label",
-                                "secret"
+                                "secret",
+                                "required",
+                                "input"
                               ],
                               "type": "object"
                             },
@@ -33962,6 +33972,10 @@
                               "type": "string"
                             },
                             "type": "array"
+                          },
+                          "verified": {
+                            "description": "Maintainer verified",
+                            "type": "boolean"
                           },
                           "volumes": {
                             "description": "Volumes",
@@ -34863,6 +34877,10 @@
                                 "description": "Default",
                                 "type": "string"
                               },
+                              "input": {
+                                "description": "Human input",
+                                "type": "boolean"
+                              },
                               "key": {
                                 "description": "Key",
                                 "type": "string"
@@ -34870,6 +34888,10 @@
                               "label": {
                                 "description": "Label",
                                 "type": "string"
+                              },
+                              "required": {
+                                "description": "Required",
+                                "type": "boolean"
                               },
                               "secret": {
                                 "description": "Secret",
@@ -34879,7 +34901,9 @@
                             "required": [
                               "key",
                               "label",
-                              "secret"
+                              "secret",
+                              "required",
+                              "input"
                             ],
                             "type": "object"
                           },
@@ -34904,6 +34928,10 @@
                             "type": "string"
                           },
                           "type": "array"
+                        },
+                        "verified": {
+                          "description": "Maintainer verified",
+                          "type": "boolean"
                         },
                         "volumes": {
                           "description": "Volumes",

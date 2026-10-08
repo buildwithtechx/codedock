@@ -26,6 +26,16 @@ func TestProxyAppliesCertificateSettingsOnRestart(t *testing.T) {
 	} {
 		t.Run(check.name, func(t *testing.T) {
 			existingEmail := check.email
+			desired := NewTraefikManager(nil, "owner@example.com").buildTraefikCmdArgs()
+			existing := desired
+			if existingEmail == "" {
+				existing = []string{}
+				for _, arg := range desired {
+					if !strings.HasPrefix(arg, "--certificatesresolvers.") {
+						existing = append(existing, arg)
+					}
+				}
+			}
 			var mu sync.Mutex
 			var actions []string
 			record := func(action string) { mu.Lock(); defer mu.Unlock(); actions = append(actions, action) }
@@ -38,11 +48,7 @@ func TestProxyAppliesCertificateSettingsOnRestart(t *testing.T) {
 						t.Error(err)
 					}
 				case path == "/containers/codedock-traefik/json":
-					args := []string{}
-					if existingEmail != "" {
-						args = append(args, "--certificatesresolvers.letsencrypt.acme.email="+existingEmail)
-					}
-					if err := json.NewEncoder(w).Encode(map[string]any{"Id": "proxy", "Config": map[string]any{"Cmd": args}, "State": map[string]any{"Running": check.running}}); err != nil {
+					if err := json.NewEncoder(w).Encode(map[string]any{"Id": "proxy", "Config": map[string]any{"Cmd": existing}, "State": map[string]any{"Running": check.running}}); err != nil {
 						t.Error(err)
 					}
 				case path == "/containers/codedock-traefik/stop":

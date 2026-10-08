@@ -78,6 +78,10 @@ func ResolveInstallPlan(appID string, tmpl ComposeTemplate, req InstallRequest, 
 	if err != nil {
 		return nil, err
 	}
+	inputs, err := resolveInstallInputs(catalogInputSpecs(tmpl), req.Environment)
+	if err != nil {
+		return nil, err
+	}
 	primary := catalogPrimaryService(tmpl)
 	plan := &InstallPlan{
 		AppID:            appID,
@@ -89,7 +93,7 @@ func ResolveInstallPlan(appID string, tmpl ComposeTemplate, req InstallRequest, 
 	seenHosts := map[string]string{}
 	for _, serviceName := range catalogServiceNames(tmpl) {
 		service := tmpl.Services[serviceName]
-		env, err := resolveInstallEnv(serviceName, service, secrets, req.Environment, plan.secretKeys)
+		env, err := resolveInstallEnv(serviceName, service, secrets, inputs, req.Environment, plan.secretKeys)
 		if err != nil {
 			return nil, err
 		}
@@ -174,7 +178,38 @@ func resolveInstallSecrets(specs []CodedockSecretSpec, provided map[string]strin
 	return secrets, generated, nil
 }
 
-func resolveInstallEnv(serviceName string, service ComposeService, secrets map[string]string, overrides map[string]string, secretKeys map[string]bool) ([]string, error) {
+func catalogInputSpecs(tmpl ComposeTemplate) []CodedockInputSpec {
+	if tmpl.XCodedock != nil {
+		return tmpl.XCodedock.Inputs
+	}
+	for _, service := range tmpl.Services {
+		if service.XCodedock != nil {
+			return service.XCodedock.Inputs
+		}
+	}
+	return nil
+}
+
+func resolveInstallInputs(specs []CodedockInputSpec, provided map[string]string) (map[string]string, error) {
+	inputs := map[string]string{}
+	for _, spec := range specs {
+		if value := strings.TrimSpace(provided[spec.Var]); value != "" {
+			inputs[spec.Var] = value
+			continue
+		}
+		if spec.Default != "" {
+			inputs[spec.Var] = spec.Default
+			continue
+		}
+		if spec.Required {
+			return nil, fmt.Errorf("input %s is required", spec.Var)
+		}
+		inputs[spec.Var] = ""
+	}
+	return inputs, nil
+}
+
+func resolveInstallEnv(serviceName string, service ComposeService, secrets, inputs, overrides map[string]string, secretKeys map[string]bool) ([]string, error) {
 	env := make([]string, 0, len(service.Environment)+len(overrides))
 	seen := map[string]bool{}
 	for _, entry := range service.Environment {
@@ -186,6 +221,9 @@ func resolveInstallEnv(serviceName string, service ComposeService, secrets map[s
 			name := catalogSecretRef.FindStringSubmatch(match)[1]
 			secretKeys[key] = true
 			return secrets[name]
+		})
+		resolved = catalogInputRef.ReplaceAllStringFunc(resolved, func(match string) string {
+			return inputs[catalogInputRef.FindStringSubmatch(match)[1]]
 		})
 		if override, ok := overrides[key]; ok {
 			resolved = override
@@ -325,6 +363,9 @@ func renderInstallDocument(tmpl ComposeTemplate, plan *InstallPlan, domain strin
 		if len(source.DependsOn) > 0 {
 			entry["depends_on"] = source.DependsOn
 		}
+		if source.Healthcheck != nil {
+			entry["healthcheck"] = renderInstallHealthcheck(source.Healthcheck)
+		}
 		if trimmedDomain != "" && resolved.Service == catalogPrimaryService(tmpl) {
 			entry["labels"] = installDomainLabels(plan.Name, trimmedDomain, resolved.Ports)
 		}
@@ -343,6 +384,23 @@ func renderInstallDocument(tmpl ComposeTemplate, plan *InstallPlan, domain strin
 		return "", fmt.Errorf("render install document: %w", err)
 	}
 	return string(rendered), nil
+}
+
+func renderInstallHealthcheck(check *CatalogHealthcheck) map[string]any {
+	rendered := map[string]any{"test": check.Test}
+	if check.Interval != "" {
+		rendered["interval"] = check.Interval
+	}
+	if check.Timeout != "" {
+		rendered["timeout"] = check.Timeout
+	}
+	if check.Retries > 0 {
+		rendered["retries"] = check.Retries
+	}
+	if check.StartPeriod != "" {
+		rendered["start_period"] = check.StartPeriod
+	}
+	return rendered
 }
 
 func installDomainLabels(name, domain string, ports []string) []string {

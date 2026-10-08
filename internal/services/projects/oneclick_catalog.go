@@ -24,6 +24,7 @@ func extractOneClickApp(id string, tmpl *compose.ComposeTemplate) *models.OneCli
 		Services:     catalogServiceNames(tmpl),
 		Volumes:      catalogVolumeNames(tmpl),
 		EnvVariables: catalogEnvVariables(tmpl, meta),
+		Verified:     meta.Verified,
 	}
 }
 
@@ -89,6 +90,10 @@ func catalogEnvVariables(tmpl *compose.ComposeTemplate, meta *compose.CodedockMe
 	for _, spec := range meta.Secrets {
 		secrets[spec.Var] = spec
 	}
+	inputs := map[string]compose.CodedockInputSpec{}
+	for _, spec := range meta.Inputs {
+		inputs[spec.Var] = spec
+	}
 	variables := []models.OneClickEnvVar{}
 	seen := map[string]bool{}
 	for _, serviceName := range catalogServiceNames(tmpl) {
@@ -99,10 +104,19 @@ func catalogEnvVariables(tmpl *compose.ComposeTemplate, meta *compose.CodedockMe
 			}
 			seen[key] = true
 			variable := models.OneClickEnvVar{Key: key, Label: key}
-			if ref, ok := catalogSecretReference(value); ok {
+			if ref, ok := catalogPlaceholderReference(value, "secret"); ok {
 				variable.Secret = true
 				if spec, declared := secrets[ref]; declared && spec.Label != "" {
 					variable.Label = spec.Label
+				}
+			} else if ref, ok := catalogPlaceholderReference(value, "input"); ok {
+				variable.Input = true
+				if spec, declared := inputs[ref]; declared {
+					if spec.Label != "" {
+						variable.Label = spec.Label
+					}
+					variable.DefaultValue = spec.Default
+					variable.Required = spec.Required
 				}
 			} else if !strings.Contains(value, "${") {
 				variable.DefaultValue = value
@@ -113,12 +127,13 @@ func catalogEnvVariables(tmpl *compose.ComposeTemplate, meta *compose.CodedockMe
 	return variables
 }
 
-func catalogSecretReference(value string) (string, bool) {
-	start := strings.Index(value, "${secret:")
+func catalogPlaceholderReference(value, kind string) (string, bool) {
+	prefix := "${" + kind + ":"
+	start := strings.Index(value, prefix)
 	if start < 0 {
 		return "", false
 	}
-	rest := value[start+len("${secret:"):]
+	rest := value[start+len(prefix):]
 	end := strings.Index(rest, "}")
 	if end <= 0 {
 		return "", false

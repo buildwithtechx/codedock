@@ -58,7 +58,8 @@ func oneClickAppSchema() Schema {
 		F("defaultPort", Int("Default port")),
 		F("services", Arr("Services", Str("Service"))),
 		F("volumes", Arr("Volumes", Str("Volume"))),
-		F("envVariables", Arr("Variables", Obj("Variable", RF("key", Str("Key")), RF("label", Str("Label")), F("defaultValue", Str("Default")), RF("secret", Bool("Secret"))))),
+		F("envVariables", Arr("Variables", Obj("Variable", RF("key", Str("Key")), RF("label", Str("Label")), F("defaultValue", Str("Default")), RF("secret", Bool("Secret")), RF("required", Bool("Required")), RF("input", Bool("Human input"))))),
+		F("verified", Bool("Maintainer verified")),
 	)
 }
 
