@@ -83,6 +83,8 @@ func InitDataDir() (string, *sql.DB, *utils.Vault) {
 			os.Exit(1)
 		}
 		supervisor := systemdb.NewSupervisor(dockerClient, systemdb.ContainerName, dataDir, config.Get().Postgres.Image, config.Get().Postgres.Port)
+		supervisor.SetConnectHost(config.Get().Postgres.Host)
+		supervisor.SetNetwork(config.Get().Postgres.Network)
 		databaseURL, err = supervisor.EnsureRunning(context.Background())
 		if err != nil {
 			slog.Error("failed to provision embedded database", "err", err)

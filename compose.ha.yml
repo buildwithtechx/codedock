@@ -21,7 +21,7 @@ services:
     build:
       context: .
       dockerfile: Dockerfile.cloud
-    image: codedock-cloud:local
+    image: ghcr.io/buildwithtechx/codedock-cloud:${CODEDOCK_VERSION:-latest}
     depends_on:
       postgres:
         condition: service_healthy

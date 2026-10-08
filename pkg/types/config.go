@@ -26,8 +26,10 @@ type DatabaseConfig struct {
 }
 
 type PostgresConfig struct {
-	Image string `json:"image"`
-	Port  int    `json:"port"`
+	Image   string `json:"image"`
+	Port    int    `json:"port"`
+	Host    string `json:"host"`
+	Network string `json:"network"`
 }
 
 type ServerConfig struct {

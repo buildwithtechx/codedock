@@ -115,8 +115,10 @@ func Load() *types.Config {
 			URL: getEnv("CODEDOCK_DATABASE_URL", ""),
 		},
 		Postgres: types.PostgresConfig{
-			Image: getEnv("CODEDOCK_PG_IMAGE", "postgres:16"),
-			Port:  getEnvInt("CODEDOCK_PG_PORT", 5432),
+			Image:   getEnv("CODEDOCK_PG_IMAGE", "postgres:16"),
+			Port:    getEnvInt("CODEDOCK_PG_PORT", 5432),
+			Host:    getEnv("CODEDOCK_PG_HOST", "127.0.0.1"),
+			Network: getEnv("CODEDOCK_PG_NETWORK", ""),
 		},
 	}
 }

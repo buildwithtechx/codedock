@@ -1,0 +1,207 @@
+name: codedock-ha-patroni
+
+x-etcd-common: &etcd-common
+  image: quay.io/coreos/etcd:v3.5.18
+  networks:
+    - backend
+
+services:
+  etcd-1:
+    <<: *etcd-common
+    hostname: etcd-1
+    command:
+      - /usr/local/bin/etcd
+      - --name=etcd-1
+      - --data-dir=/etcd-data
+      - --listen-client-urls=http://0.0.0.0:2379
+      - --advertise-client-urls=http://etcd-1:2379
+      - --listen-peer-urls=http://0.0.0.0:2380
+      - --initial-advertise-peer-urls=http://etcd-1:2380
+      - --initial-cluster=etcd-1=http://etcd-1:2380,etcd-2=http://etcd-2:2380,etcd-3=http://etcd-3:2380
+      - --initial-cluster-state=new
+    volumes:
+      - etcd1:/etcd-data
+
+  etcd-2:
+    <<: *etcd-common
+    hostname: etcd-2
+    command:
+      - /usr/local/bin/etcd
+      - --name=etcd-2
+      - --data-dir=/etcd-data
+      - --listen-client-urls=http://0.0.0.0:2379
+      - --advertise-client-urls=http://etcd-2:2379
+      - --listen-peer-urls=http://0.0.0.0:2380
+      - --initial-advertise-peer-urls=http://etcd-2:2380
+      - --initial-cluster=etcd-1=http://etcd-1:2380,etcd-2=http://etcd-2:2380,etcd-3=http://etcd-3:2380
+      - --initial-cluster-state=new
+    volumes:
+      - etcd2:/etcd-data
+
+  etcd-3:
+    <<: *etcd-common
+    hostname: etcd-3
+    command:
+      - /usr/local/bin/etcd
+      - --name=etcd-3
+      - --data-dir=/etcd-data
+      - --listen-client-urls=http://0.0.0.0:2379
+      - --advertise-client-urls=http://etcd-3:2379
+      - --listen-peer-urls=http://0.0.0.0:2380
+      - --initial-advertise-peer-urls=http://etcd-3:2380
+      - --initial-cluster=etcd-1=http://etcd-1:2380,etcd-2=http://etcd-2:2380,etcd-3=http://etcd-3:2380
+      - --initial-cluster-state=new
+    volumes:
+      - etcd3:/etcd-data
+
+  patroni-1:
+    build: ./docker/patroni
+    image: codedock-patroni:local
+    hostname: patroni-1
+    depends_on:
+      - etcd-1
+      - etcd-2
+      - etcd-3
+    environment:
+      PATRONI_NAME: patroni-1
+      PATRONI_RESTAPI_CONNECT_ADDRESS: patroni-1:8008
+      PATRONI_POSTGRESQL_CONNECT_ADDRESS: patroni-1:5432
+      PATRONI_POSTGRESQL_AUTHENTICATION_REPLICATION_PASSWORD: ${PATRONI_REPLICATION_PASSWORD:?set PATRONI_REPLICATION_PASSWORD}
+      PATRONI_POSTGRESQL_AUTHENTICATION_SUPERUSER_PASSWORD: ${PATRONI_SUPERUSER_PASSWORD:?set PATRONI_SUPERUSER_PASSWORD}
+      CODEDOCK_PG_PASSWORD: ${CODEDOCK_PG_PASSWORD:?set CODEDOCK_PG_PASSWORD to a URL-safe password}
+    volumes:
+      - pgdata1:/var/lib/postgresql/data
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U postgres -h 127.0.0.1"]
+      interval: 5s
+      timeout: 3s
+      retries: 10
+    networks:
+      - backend
+
+  patroni-2:
+    build: ./docker/patroni
+    image: codedock-patroni:local
+    hostname: patroni-2
+    depends_on:
+      - etcd-1
+      - etcd-2
+      - etcd-3
+    environment:
+      PATRONI_NAME: patroni-2
+      PATRONI_RESTAPI_CONNECT_ADDRESS: patroni-2:8008
+      PATRONI_POSTGRESQL_CONNECT_ADDRESS: patroni-2:5432
+      PATRONI_POSTGRESQL_AUTHENTICATION_REPLICATION_PASSWORD: ${PATRONI_REPLICATION_PASSWORD:?set PATRONI_REPLICATION_PASSWORD}
+      PATRONI_POSTGRESQL_AUTHENTICATION_SUPERUSER_PASSWORD: ${PATRONI_SUPERUSER_PASSWORD:?set PATRONI_SUPERUSER_PASSWORD}
+      CODEDOCK_PG_PASSWORD: ${CODEDOCK_PG_PASSWORD:?set CODEDOCK_PG_PASSWORD to a URL-safe password}
+    volumes:
+      - pgdata2:/var/lib/postgresql/data
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U postgres -h 127.0.0.1"]
+      interval: 5s
+      timeout: 3s
+      retries: 10
+    networks:
+      - backend
+
+  patroni-3:
+    build: ./docker/patroni
+    image: codedock-patroni:local
+    hostname: patroni-3
+    depends_on:
+      - etcd-1
+      - etcd-2
+      - etcd-3
+    environment:
+      PATRONI_NAME: patroni-3
+      PATRONI_RESTAPI_CONNECT_ADDRESS: patroni-3:8008
+      PATRONI_POSTGRESQL_CONNECT_ADDRESS: patroni-3:5432
+      PATRONI_POSTGRESQL_AUTHENTICATION_REPLICATION_PASSWORD: ${PATRONI_REPLICATION_PASSWORD:?set PATRONI_REPLICATION_PASSWORD}
+      PATRONI_POSTGRESQL_AUTHENTICATION_SUPERUSER_PASSWORD: ${PATRONI_SUPERUSER_PASSWORD:?set PATRONI_SUPERUSER_PASSWORD}
+      CODEDOCK_PG_PASSWORD: ${CODEDOCK_PG_PASSWORD:?set CODEDOCK_PG_PASSWORD to a URL-safe password}
+    volumes:
+      - pgdata3:/var/lib/postgresql/data
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U postgres -h 127.0.0.1"]
+      interval: 5s
+      timeout: 3s
+      retries: 10
+    networks:
+      - backend
+
+  haproxy:
+    image: haproxy:3.0-alpine
+    depends_on:
+      patroni-1:
+        condition: service_healthy
+      patroni-2:
+        condition: service_healthy
+      patroni-3:
+        condition: service_healthy
+    volumes:
+      - ./docker/patroni/haproxy.cfg:/usr/local/etc/haproxy/haproxy.cfg:ro
+    healthcheck:
+      test: ["CMD-SHELL", "wget -qO- http://127.0.0.1:8404/ | grep -q 'Statistics Report'"]
+      interval: 10s
+      timeout: 3s
+      retries: 5
+    networks:
+      - backend
+
+  api:
+    build:
+      context: .
+      dockerfile: Dockerfile.cloud
+    image: ghcr.io/buildwithtechx/codedock-cloud:${CODEDOCK_VERSION:-latest}
+    depends_on:
+      haproxy:
+        condition: service_healthy
+    environment:
+      PORT: 8080
+      CODEDOCK_DATA_DIR: /codedock/data
+      CODEDOCK_DATABASE_URL: postgres://codedock:${CODEDOCK_PG_PASSWORD:?set CODEDOCK_PG_PASSWORD}@haproxy:5432/codedock?sslmode=disable
+      CODEDOCK_VAULT_KEY: ${CODEDOCK_VAULT_KEY:?set CODEDOCK_VAULT_KEY to 64 hex chars, identical on all replicas}
+    volumes:
+      - apidata:/codedock/data
+      - /var/run/docker.sock:/var/run/docker.sock
+    healthcheck:
+      test: ["CMD", "curl", "-f", "http://localhost:8080/healthz"]
+      interval: 10s
+      timeout: 3s
+      retries: 5
+    deploy:
+      replicas: 2
+    networks:
+      - backend
+      - edge
+    labels:
+      - traefik.enable=true
+      - traefik.http.routers.api.rule=PathPrefix(`/`)
+      - traefik.http.routers.api.entrypoints=web
+      - traefik.http.services.api.loadbalancer.server.port=8080
+
+  edge:
+    image: traefik:v3.3
+    command:
+      - --providers.docker=true
+      - --providers.docker.exposedbydefault=false
+      - --entrypoints.web.address=:80
+    ports:
+      - "8090:80"
+    volumes:
+      - /var/run/docker.sock:/var/run/docker.sock:ro
+    networks:
+      - edge
+
+volumes:
+  etcd1:
+  etcd2:
+  etcd3:
+  pgdata1:
+  pgdata2:
+  pgdata3:
+  apidata:
+
+networks:
+  backend:
+  edge:

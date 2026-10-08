@@ -8,6 +8,7 @@ Goal: run the Codedock control plane on Postgres everywhere. Self-hosted provisi
 - `schema/*.sql` is canonical Postgres DDL.
 - Repositories write `$n` placeholders directly through `sqlx.NewDb(db, "pgx")`. There is no `Rebind` helper and no driver parameter on the migration runner.
 - `CODEDOCK_DATABASE_URL` unset means self-hosted: the daemon supervises a pinned `codedock-postgres` container (bind-mounted data under `dataDir/postgres`, 0600 password file, `unless-stopped`, health-gated boot). Set means use that Postgres.
+- The supervisor connects via `CODEDOCK_PG_HOST` (default `127.0.0.1`) and attaches the container to `CODEDOCK_PG_NETWORK` when set. Containerized installs set host `codedock-postgres` and network `codedock-network`, because `127.0.0.1` inside the daemon container is not the host.
 - The supervisor never removes or recreates the container. Image upgrades are an explicit future operation, never automatic.
 - `CODEDOCK_TEST_PG_URL` activates Postgres-backed tests; unset means skip. CI runs a `go-postgres` job with a real Postgres 16 service covering repositories, systemdb and daemon commands.
 
@@ -38,10 +39,9 @@ No `LastInsertId` in daemon code. IDs are strings, so no sequence handling. The 
 
 ## Remaining work
 
-- Per-service images for hosted cells.
-- Production Patroni deployment beyond the single-Postgres reference cell in `compose.ha.yml` (guidance: `docs/ha-runbook.md`).
+None. The platform batch is complete.
 
-Done: advisory-lock scheduler leadership with entry reconcile (`internal/engine/leadership`), multi-node review of backup/operations/autoscaling/attention/update loops, cross-node operation cancel, `self_hosted_config` table replacing `self-hosted.json`, `CODEDOCK_VAULT_KEY` for shared vault keys, reference HA compose stack and runbook.
+Done: advisory-lock scheduler leadership with entry reconcile (`internal/engine/leadership`), multi-node review of backup/operations/autoscaling/attention/update loops, cross-node operation cancel, `self_hosted_config` table replacing `self-hosted.json`, `CODEDOCK_VAULT_KEY` for shared vault keys, reference HA compose stack and runbook, GHCR image publishing on tags, production Patroni cell (`compose.ha-patroni.yml`, live failover-verified), supervisor connect-host/network support for containerized installs, bootstrap pg_dump backups and vault-key generation.
 
 ## Running the Postgres tests
 

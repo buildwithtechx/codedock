@@ -60,3 +60,17 @@ func TestDatabaseURLFormat(t *testing.T) {
 		t.Fatalf("expected %q, got %q", want, url)
 	}
 }
+
+func TestDatabaseURLHonorsConnectHost(t *testing.T) {
+	supervisor := NewSupervisor(nil, ContainerName, t.TempDir(), "postgres:16", 5432)
+	supervisor.SetConnectHost("codedock-postgres")
+	url := supervisor.databaseURL("secret")
+	want := "postgres://codedock:secret@codedock-postgres:5432/codedock?sslmode=disable"
+	if url != want {
+		t.Fatalf("expected %q, got %q", want, url)
+	}
+	supervisor.SetConnectHost("")
+	if supervisor.databaseURL("secret") != want {
+		t.Fatal("empty host override cleared the configured host")
+	}
+}

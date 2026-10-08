@@ -102,6 +102,8 @@ case "${1:-help}" in
       --env-file "$CODEDOCK_DIR/.env" \
       -e CODEDOCK_DATA_DIR=/codedock/data \
       -e CODEDOCK_CLOUD_MODE=false \
+      -e CODEDOCK_PG_HOST=codedock-postgres \
+      -e CODEDOCK_PG_NETWORK=codedock-network \
       -v codedock_data:/codedock/data \
       -v "${DOCKER_SOCKET_PATH:-/var/run/docker.sock}":/var/run/docker.sock:ro \
       --network codedock-network \
@@ -131,6 +133,8 @@ case "${1:-help}" in
       --env-file "$CODEDOCK_DIR/.env" \
       -e CODEDOCK_DATA_DIR=/codedock/data \
       -e CODEDOCK_CLOUD_MODE=false \
+      -e CODEDOCK_PG_HOST=codedock-postgres \
+      -e CODEDOCK_PG_NETWORK=codedock-network \
       -v codedock_data:/codedock/data \
       -v "${DOCKER_SOCKET_PATH:-/var/run/docker.sock}":/var/run/docker.sock:ro \
       --network codedock-network \

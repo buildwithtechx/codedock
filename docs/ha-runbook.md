@@ -31,11 +31,31 @@ Operations, autoscaling and attention need no leader. Operation apply and autosc
 
 ## Postgres failover
 
-The reference cell runs a single Postgres. For managed failover, replace the `postgres` service with a Patroni cluster or a managed Postgres service and point `CODEDOCK_DATABASE_URL` at the primary endpoint:
+The reference cell (`compose.ha.yml`) runs a single Postgres. The production cell (`compose.ha-patroni.yml`) runs etcd ×3, Patroni ×3 and HAProxy: the daemon connects through HAProxy port 5432, which routes to the current primary via Patroni REST health checks. Replication is synchronous to one standby in strict mode, so an acknowledged write survives a primary loss.
 
-- Advisory locks live on the primary. Replicas of the database do not carry them, so a database failover triggers a scheduler re-election automatically. Expect one missed schedule window at most.
-- Run one Patroni primary with synchronous replication to at least one standby before routing writes. Asynchronous standbys can lose the latest settings and operation rows.
-- Back up the control plane with `pg_dump` on a schedule outside the cell. Restore into an empty database, then boot one replica first so migrations settle before the others join.
+Boot the production cell with the same variables as the reference cell plus `PATRONI_SUPERUSER_PASSWORD` and `PATRONI_REPLICATION_PASSWORD`:
+
+```sh
+docker compose -f compose.ha-patroni.yml up -d
+```
+
+Failover behavior, verified live:
+
+- Killing the primary promotes the sync standby within 30 seconds. Writes through HAProxy resume on the new primary with no lost rows.
+- A restarted node rejoins as a streaming replica automatically via `pg_rewind`.
+- Advisory locks live on the primary and do not carry over, so a database failover triggers a scheduler re-election automatically. Expect one missed schedule window at most.
+- Check topology from any Patroni node: query `http://localhost:8008/cluster` for member roles and states.
+
+Back up the control plane with `pg_dump` through HAProxy port 5432 on a schedule outside the cell. Restore into an empty database, then boot one API replica first so migrations settle before the others join. A managed Postgres service is an acceptable substitute for the Patroni tier; point `CODEDOCK_DATABASE_URL` at its primary endpoint.
+
+## Images
+
+First-party images publish to GHCR on every version tag with `latest` and multi-arch (`linux/amd64`, `linux/arm64`) builds:
+
+- `ghcr.io/buildwithtechx/codedock` (self-hosted daemon, `Dockerfile`) consumed by the bootstrap installer.
+- `ghcr.io/buildwithtechx/codedock-cloud` (`Dockerfile.cloud`) consumed by both HA compose cells via `CODEDOCK_VERSION` (default `latest`).
+
+Pin `CODEDOCK_VERSION` to a tag for production cells. The Patroni image builds locally from `docker/patroni` (stock `postgres:16` plus pinned Patroni and driver); edge and etcd use pinned stock images.
 
 ## Operating the cell
 

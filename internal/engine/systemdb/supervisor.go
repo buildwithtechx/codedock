@@ -32,10 +32,22 @@ type Supervisor struct {
 	dataDir string
 	image   string
 	port    int
+	host    string
+	network string
 }
 
 func NewSupervisor(docker *client.Client, name, dataDir, image string, port int) *Supervisor {
-	return &Supervisor{docker: docker, name: name, dataDir: dataDir, image: image, port: port}
+	return &Supervisor{docker: docker, name: name, dataDir: dataDir, image: image, port: port, host: "127.0.0.1"}
+}
+
+func (s *Supervisor) SetConnectHost(host string) {
+	if host != "" {
+		s.host = host
+	}
+}
+
+func (s *Supervisor) SetNetwork(network string) {
+	s.network = network
 }
 
 func (s *Supervisor) EnsureRunning(ctx context.Context) (string, error) {
@@ -57,6 +69,9 @@ func (s *Supervisor) EnsureRunning(ctx context.Context) (string, error) {
 	if err := s.docker.ContainerStart(ctx, s.name, container.StartOptions{}); err != nil {
 		return "", fmt.Errorf("failed to start postgres container: %w", err)
 	}
+	if err := s.ensureNetwork(ctx); err != nil {
+		return "", err
+	}
 	databaseURL := s.databaseURL(password)
 	if err := s.waitReady(ctx, databaseURL); err != nil {
 		return "", err
@@ -65,8 +80,27 @@ func (s *Supervisor) EnsureRunning(ctx context.Context) (string, error) {
 	return databaseURL, nil
 }
 
+func (s *Supervisor) ensureNetwork(ctx context.Context) error {
+	if s.network == "" {
+		return nil
+	}
+	inspect, err := s.docker.ContainerInspect(ctx, s.name)
+	if err != nil {
+		return fmt.Errorf("failed to inspect postgres networks: %w", err)
+	}
+	for name := range inspect.NetworkSettings.Networks {
+		if name == s.network {
+			return nil
+		}
+	}
+	if err := s.docker.NetworkConnect(ctx, s.network, s.name, nil); err != nil {
+		return fmt.Errorf("failed to attach postgres to network %s: %w", s.network, err)
+	}
+	return nil
+}
+
 func (s *Supervisor) databaseURL(password string) string {
-	return "postgres://" + DBUser + ":" + password + "@127.0.0.1:" + strconv.Itoa(s.port) + "/" + DBName + "?sslmode=disable"
+	return "postgres://" + DBUser + ":" + password + "@" + s.host + ":" + strconv.Itoa(s.port) + "/" + DBName + "?sslmode=disable"
 }
 
 func (s *Supervisor) createContainer(ctx context.Context, password string) error {
@@ -90,6 +124,10 @@ func (s *Supervisor) createContainer(ctx context.Context, password string) error
 		},
 		RestartPolicy: container.RestartPolicy{Name: "unless-stopped"},
 	}
+	networking := &network.NetworkingConfig{}
+	if s.network != "" {
+		networking.EndpointsConfig = map[string]*network.EndpointSettings{s.network: {}}
+	}
 	resp, err := s.docker.ContainerCreate(ctx, &container.Config{
 		Image: s.image,
 		Env: []string{
@@ -107,7 +145,7 @@ func (s *Supervisor) createContainer(ctx context.Context, password string) error
 			Timeout:  3 * time.Second,
 			Retries:  12,
 		},
-	}, hostConfig, &network.NetworkingConfig{}, nil, s.name)
+	}, hostConfig, networking, nil, s.name)
 	if err != nil {
 		return err
 	}
