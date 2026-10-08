@@ -110,6 +110,13 @@ func Load() *types.Config {
 			WebhookSecret:  getEnv("STRIPE_WEBHOOK_SECRET", ""),
 			PriceIDPro:     getEnv("STRIPE_PRICE_ID_PRO", ""),
 		},
+		Database: types.DatabaseConfig{
+			URL: getEnv("CODEDOCK_DATABASE_URL", ""),
+		},
+		Postgres: types.PostgresConfig{
+			Image: getEnv("CODEDOCK_PG_IMAGE", "postgres:16"),
+			Port:  getEnvInt("CODEDOCK_PG_PORT", 5432),
+		},
 	}
 }
 

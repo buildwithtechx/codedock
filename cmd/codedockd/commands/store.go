@@ -6,10 +6,12 @@ import (
 	"log/slog"
 	"os"
 	"path/filepath"
+	"strconv"
 
-	_ "modernc.org/sqlite"
+	"github.com/docker/docker/client"
 
 	"codedock.run/codedock/internal/config"
+	"codedock.run/codedock/internal/engine/systemdb"
 	"codedock.run/codedock/internal/models"
 	"codedock.run/codedock/internal/repositories"
 	"codedock.run/codedock/internal/utils"
@@ -79,15 +81,61 @@ func InitDataDir() (string, *sql.DB, *utils.Vault) {
 		slog.Error("failed to initialize secrets vault", "err", err)
 		os.Exit(1)
 	}
-	dbPath := filepath.Join(dataDir, "codedock.db")
-	db, err := sql.Open("sqlite", dbPath+"?_pragma=journal_mode(WAL)&_pragma=busy_timeout(5000)&_pragma=foreign_keys(ON)")
+	databaseURL := config.Get().Database.URL
+	if databaseURL == "" {
+		dockerClient, err := client.NewClientWithOpts(client.FromEnv, client.WithAPIVersionNegotiation())
+		if err != nil {
+			slog.Error("docker is required for the embedded database", "err", err, "hint", "start docker or set CODEDOCK_DATABASE_URL")
+			os.Exit(1)
+		}
+		supervisor := systemdb.NewSupervisor(dockerClient, systemdb.ContainerName, dataDir, config.Get().Postgres.Image, config.Get().Postgres.Port)
+		databaseURL, err = supervisor.EnsureRunning(context.Background())
+		if err != nil {
+			slog.Error("failed to provision embedded database", "err", err)
+			os.Exit(1)
+		}
+	}
+	db, err := repositories.OpenDatabase(databaseURL)
 	if err != nil {
-		slog.Error("failed to open SQLite database", "err", err)
+		slog.Error("failed to open database", "err", err)
 		os.Exit(1)
 	}
-	if err := repositories.RunMigrations(db); err != nil {
+	if err := repositories.RunMigrationsDialect(db, repositories.DriverPostgres); err != nil {
 		slog.Error("failed to run database migrations", "err", err)
 		os.Exit(1)
 	}
+	importLegacySQLite(db, dataDir)
 	return dataDir, db, vlt
+}
+
+func importLegacySQLite(db *sql.DB, dataDir string) {
+	legacy := filepath.Join(dataDir, "codedock.db")
+	if _, err := os.Stat(legacy); os.IsNotExist(err) {
+		return
+	}
+	empty, err := systemdb.TargetEmpty(context.Background(), db)
+	if err != nil {
+		slog.Error("failed to check database emptiness", "err", err)
+		os.Exit(1)
+	}
+	if !empty {
+		slog.Info("legacy sqlite database present but postgres is already populated, skipping import", "path", legacy)
+		return
+	}
+	if err := systemdb.ImportFromSQLite(context.Background(), db, legacy); err != nil {
+		slog.Error("failed to import legacy sqlite database", "err", err, "hint", "move the file aside to boot with an empty database")
+		os.Exit(1)
+	}
+	archived := legacy + ".imported"
+	for i := 2; ; i++ {
+		if _, err := os.Stat(archived); os.IsNotExist(err) {
+			break
+		}
+		archived = legacy + ".imported-" + strconv.Itoa(i)
+	}
+	if err := os.Rename(legacy, archived); err != nil {
+		slog.Error("failed to archive legacy sqlite database", "err", err)
+		os.Exit(1)
+	}
+	slog.Info("archived legacy sqlite database", "path", archived)
 }

@@ -25,7 +25,7 @@ func TestMigrationFreshDatabase(t *testing.T) {
 		"001_create_users.sql": {Data: []byte("CREATE TABLE users (id TEXT PRIMARY KEY);")},
 		"002_add_email.sql":    {Data: []byte("ALTER TABLE users ADD COLUMN email TEXT;")},
 	}
-	if err := runMigrations(db, fsys); err != nil {
+	if err := runMigrations(db, fsys, DriverSQLite); err != nil {
 		t.Fatalf("unexpected error: %v", err)
 	}
 	var count int
@@ -42,10 +42,10 @@ func TestMigrationIdempotent(t *testing.T) {
 	fsys := fstest.MapFS{
 		"001_create_users.sql": {Data: []byte("CREATE TABLE users (id TEXT PRIMARY KEY);")},
 	}
-	if err := runMigrations(db, fsys); err != nil {
+	if err := runMigrations(db, fsys, DriverSQLite); err != nil {
 		t.Fatalf("first run failed: %v", err)
 	}
-	if err := runMigrations(db, fsys); err != nil {
+	if err := runMigrations(db, fsys, DriverSQLite); err != nil {
 		t.Fatalf("second run failed: %v", err)
 	}
 	var count int
@@ -63,7 +63,7 @@ func TestMigrationOrdering(t *testing.T) {
 		"002_add_email.sql":    {Data: []byte("ALTER TABLE users ADD COLUMN email TEXT;")},
 		"001_create_users.sql": {Data: []byte("CREATE TABLE users (id TEXT PRIMARY KEY);")},
 	}
-	if err := runMigrations(db, fsys); err != nil {
+	if err := runMigrations(db, fsys, DriverSQLite); err != nil {
 		t.Fatalf("migrations applied out of order or failed: %v", err)
 	}
 }
@@ -74,7 +74,7 @@ func TestMigrationFailedRollback(t *testing.T) {
 		"001_create_users.sql": {Data: []byte("CREATE TABLE users (id TEXT PRIMARY KEY);")},
 		"002_bad.sql":          {Data: []byte("NOT VALID SQL !!!;")},
 	}
-	if err := runMigrations(db, fsys); err == nil {
+	if err := runMigrations(db, fsys, DriverSQLite); err == nil {
 		t.Fatal("expected migration to fail on bad SQL")
 	}
 	var count int
@@ -98,13 +98,13 @@ func TestMigrationChecksumMismatch(t *testing.T) {
 	original := fstest.MapFS{
 		"001_create_users.sql": {Data: []byte("CREATE TABLE users (id TEXT PRIMARY KEY);")},
 	}
-	if err := runMigrations(db, original); err != nil {
+	if err := runMigrations(db, original, DriverSQLite); err != nil {
 		t.Fatalf("initial migration failed: %v", err)
 	}
 	modified := fstest.MapFS{
 		"001_create_users.sql": {Data: []byte("CREATE TABLE users (id TEXT PRIMARY KEY, injected TEXT);")},
 	}
-	err := runMigrations(db, modified)
+	err := runMigrations(db, modified, DriverSQLite)
 	if err == nil {
 		t.Fatal("expected error on modified migration")
 	}
@@ -120,7 +120,7 @@ func TestMigrationSQLOnlyFiles(t *testing.T) {
 		"README.md":            {Data: []byte("not sql")},
 		".gitkeep":             {Data: []byte("")},
 	}
-	if err := runMigrations(db, fsys); err != nil {
+	if err := runMigrations(db, fsys, DriverSQLite); err != nil {
 		t.Fatalf("unexpected error: %v", err)
 	}
 	var count int
@@ -129,5 +129,30 @@ func TestMigrationSQLOnlyFiles(t *testing.T) {
 	}
 	if count != 1 {
 		t.Fatalf("expected only .sql files to be applied, got %d migrations", count)
+	}
+}
+func TestSplitStatements(t *testing.T) {
+	cases := []struct {
+		name    string
+		content string
+		want    []string
+	}{
+		{name: "simple", content: "SELECT 1;SELECT 2;", want: []string{"SELECT 1", "SELECT 2"}},
+		{name: "quoted identifier", content: "SELECT \"we;ird\";", want: []string{"SELECT \"we;ird\""}},
+		{name: "line comment", content: "-- trailing; comment\nSELECT 1;", want: []string{"-- trailing; comment\nSELECT 1"}},
+		{name: "dollar quote", content: "SELECT $$a;b$$;SELECT 2;", want: []string{"SELECT $$a;b$$", "SELECT 2"}},
+	}
+	for _, tc := range cases {
+		t.Run(tc.name, func(t *testing.T) {
+			got := splitStatements(tc.content)
+			if len(got) != len(tc.want) {
+				t.Fatalf("expected %d statements, got %d (%q)", len(tc.want), len(got), got)
+			}
+			for i := range tc.want {
+				if strings.TrimSpace(got[i]) != tc.want[i] {
+					t.Fatalf("statement %d: expected %q, got %q", i, tc.want[i], got[i])
+				}
+			}
+		})
 	}
 }

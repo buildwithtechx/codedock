@@ -2,7 +2,12 @@ package commands
 
 import (
 	"context"
+	"database/sql"
+	"net/url"
+	"os"
 	"testing"
+
+	_ "github.com/jackc/pgx/v5/stdlib"
 
 	"codedock.run/codedock/internal/config"
 	"codedock.run/codedock/internal/models"
@@ -10,12 +15,49 @@ import (
 	authservices "codedock.run/codedock/internal/services/auth"
 )
 
+func setupTestDatabaseURL(t *testing.T) string {
+	t.Helper()
+	dsn := os.Getenv("CODEDOCK_TEST_PG_URL")
+	if dsn == "" {
+		t.Skip("CODEDOCK_TEST_PG_URL is not set")
+	}
+	parsed, err := url.Parse(dsn)
+	if err != nil {
+		t.Fatalf("parse test database url: %v", err)
+	}
+	parsed.Path = "/codedock_setup_test"
+	target := parsed.String()
+	parsed.Path = "/postgres"
+	maintenance, err := sql.Open("pgx", parsed.String())
+	if err != nil {
+		t.Fatalf("open maintenance database: %v", err)
+	}
+	defer maintenance.Close()
+	ctx := context.Background()
+	if _, err := maintenance.ExecContext(ctx, `DROP DATABASE IF EXISTS "codedock_setup_test" WITH (FORCE)`); err != nil {
+		t.Fatalf("drop setup test database: %v", err)
+	}
+	if _, err := maintenance.ExecContext(ctx, `CREATE DATABASE "codedock_setup_test"`); err != nil {
+		t.Fatalf("create setup test database: %v", err)
+	}
+	t.Cleanup(func() {
+		cleanup, err := sql.Open("pgx", parsed.String())
+		if err != nil {
+			return
+		}
+		defer cleanup.Close()
+		_, _ = cleanup.ExecContext(context.Background(), `DROP DATABASE IF EXISTS "codedock_setup_test" WITH (FORCE)`)
+	})
+	return target
+}
+
 func TestFirstRunWithoutEnvironmentAndSavedSetup(t *testing.T) {
 	cfg := config.Get()
 	previous := *cfg
 	t.Cleanup(func() { *cfg = previous })
 	cfg.Cloud.Enabled = false
 	cfg.Server.DataDir = t.TempDir()
+	cfg.Database.URL = setupTestDatabaseURL(t)
 	cfg.Security.JWTSecret = ""
 	cfg.Security.RefreshSecret = ""
 	cfg.Security.TLSEmail = ""

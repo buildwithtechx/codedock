@@ -9,8 +9,8 @@ CREATE TABLE IF NOT EXISTS migration_sources (
     ssh_key TEXT NOT NULL DEFAULT '',
     ssh_password TEXT NOT NULL DEFAULT '',
     fingerprint TEXT NOT NULL DEFAULT '',
-    created_at TIMESTAMPTZ DEFAULT CURRENT_TIMESTAMP,
-    updated_at TIMESTAMPTZ DEFAULT CURRENT_TIMESTAMP
+    created_at DATETIME DEFAULT CURRENT_TIMESTAMP,
+    updated_at DATETIME DEFAULT CURRENT_TIMESTAMP
 );
 CREATE TABLE IF NOT EXISTS migration_runs (
     id TEXT PRIMARY KEY,
@@ -30,8 +30,8 @@ CREATE TABLE IF NOT EXISTS migration_runs (
     token_hash TEXT NOT NULL DEFAULT '',
     error TEXT NOT NULL DEFAULT '',
     cancel_requested INTEGER NOT NULL DEFAULT 0,
-    created_at TIMESTAMPTZ DEFAULT CURRENT_TIMESTAMP,
-    updated_at TIMESTAMPTZ DEFAULT CURRENT_TIMESTAMP
+    created_at DATETIME DEFAULT CURRENT_TIMESTAMP,
+    updated_at DATETIME DEFAULT CURRENT_TIMESTAMP
 );
 CREATE INDEX IF NOT EXISTS idx_migration_runs_org ON migration_runs(organization_id);
 CREATE INDEX IF NOT EXISTS idx_migration_runs_source ON migration_runs(source_id);

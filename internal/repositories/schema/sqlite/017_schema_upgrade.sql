@@ -22,7 +22,7 @@ CREATE TABLE IF NOT EXISTS traffic_visitors (
 CREATE TABLE IF NOT EXISTS traffic_paths (
     project_id TEXT PRIMARY KEY,
     enabled INTEGER NOT NULL DEFAULT 0,
-    updated_at TIMESTAMPTZ DEFAULT CURRENT_TIMESTAMP
+    updated_at DATETIME DEFAULT CURRENT_TIMESTAMP
 );
 CREATE TABLE IF NOT EXISTS attention_issues (
     id TEXT PRIMARY KEY,
@@ -39,9 +39,9 @@ CREATE TABLE IF NOT EXISTS attention_issues (
     action TEXT NOT NULL DEFAULT '',
     action_params TEXT NOT NULL DEFAULT '',
     occurrences INTEGER NOT NULL DEFAULT 1,
-    first_seen TIMESTAMPTZ DEFAULT CURRENT_TIMESTAMP,
-    last_seen TIMESTAMPTZ DEFAULT CURRENT_TIMESTAMP,
-    updated_at TIMESTAMPTZ DEFAULT CURRENT_TIMESTAMP,
+    first_seen DATETIME DEFAULT CURRENT_TIMESTAMP,
+    last_seen DATETIME DEFAULT CURRENT_TIMESTAMP,
+    updated_at DATETIME DEFAULT CURRENT_TIMESTAMP,
     UNIQUE (organization_id, kind, subject)
 );
 CREATE INDEX IF NOT EXISTS idx_attention_org_status ON attention_issues(organization_id, status);

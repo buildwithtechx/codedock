@@ -3,12 +3,12 @@ CREATE TABLE IF NOT EXISTS organizations (
     name TEXT NOT NULL,
     slug TEXT UNIQUE,
     logo TEXT DEFAULT '',
-    is_team BOOLEAN DEFAULT FALSE,
+    is_team BOOLEAN DEFAULT 0,
     plan_tier TEXT DEFAULT 'free',
     stripe_customer_id TEXT,
     subscription_status TEXT DEFAULT 'active',
-    created_at TIMESTAMPTZ DEFAULT CURRENT_TIMESTAMP,
-    updated_at TIMESTAMPTZ DEFAULT CURRENT_TIMESTAMP
+    created_at DATETIME DEFAULT CURRENT_TIMESTAMP,
+    updated_at DATETIME DEFAULT CURRENT_TIMESTAMP
 );
 
 CREATE TABLE IF NOT EXISTS users (
@@ -17,9 +17,9 @@ CREATE TABLE IF NOT EXISTS users (
     name TEXT DEFAULT '',
     password_hash TEXT NOT NULL,
     role TEXT DEFAULT 'developer',
-    email_verified BOOLEAN DEFAULT FALSE,
-    is_active BOOLEAN DEFAULT TRUE,
-    totp_enabled BOOLEAN DEFAULT FALSE,
+    email_verified BOOLEAN DEFAULT 0,
+    is_active BOOLEAN DEFAULT 1,
+    totp_enabled BOOLEAN DEFAULT 0,
     totp_secret TEXT DEFAULT '',
     recovery_codes TEXT DEFAULT '',
     oauth_provider TEXT DEFAULT '',
@@ -27,9 +27,9 @@ CREATE TABLE IF NOT EXISTS users (
     stripe_customer_id TEXT DEFAULT '',
     stripe_subscription_id TEXT DEFAULT '',
     stripe_price_id TEXT DEFAULT '',
-    last_login TIMESTAMPTZ,
-    created_at TIMESTAMPTZ DEFAULT CURRENT_TIMESTAMP,
-    updated_at TIMESTAMPTZ DEFAULT CURRENT_TIMESTAMP
+    last_login DATETIME,
+    created_at DATETIME DEFAULT CURRENT_TIMESTAMP,
+    updated_at DATETIME DEFAULT CURRENT_TIMESTAMP
 );
 
 CREATE TABLE IF NOT EXISTS organization_members (
@@ -40,8 +40,8 @@ CREATE TABLE IF NOT EXISTS organization_members (
     role TEXT NOT NULL DEFAULT 'member',
     permission TEXT NOT NULL DEFAULT 'member',
     status TEXT NOT NULL DEFAULT 'active',
-    invited_at TIMESTAMPTZ DEFAULT CURRENT_TIMESTAMP,
-    accepted_at TIMESTAMPTZ,
+    invited_at DATETIME DEFAULT CURRENT_TIMESTAMP,
+    accepted_at DATETIME,
     UNIQUE(organization_id, user_id)
 );
 
@@ -55,17 +55,17 @@ CREATE TABLE IF NOT EXISTS invites (
     role TEXT DEFAULT 'developer',
     token TEXT UNIQUE NOT NULL,
     invited_by TEXT NOT NULL,
-    expires_at TIMESTAMPTZ NOT NULL,
-    accepted_at TIMESTAMPTZ,
-    created_at TIMESTAMPTZ DEFAULT CURRENT_TIMESTAMP
+    expires_at DATETIME NOT NULL,
+    accepted_at DATETIME,
+    created_at DATETIME DEFAULT CURRENT_TIMESTAMP
 );
 
 CREATE TABLE IF NOT EXISTS refresh_token_revocations (
     id TEXT PRIMARY KEY,
     token_hash TEXT UNIQUE NOT NULL,
     user_id TEXT NOT NULL REFERENCES users(id) ON DELETE CASCADE,
-    expires_at TIMESTAMPTZ NOT NULL,
-    revoked_at TIMESTAMPTZ DEFAULT NULL
+    expires_at DATETIME NOT NULL,
+    revoked_at DATETIME DEFAULT NULL
 );
 
 CREATE INDEX IF NOT EXISTS idx_refresh_token_revocations_user_id ON refresh_token_revocations (user_id);
@@ -80,9 +80,9 @@ CREATE TABLE IF NOT EXISTS personal_access_tokens (
     access_level TEXT DEFAULT 'read_write',
     project_scope TEXT DEFAULT 'all',
     allowed_projects TEXT DEFAULT '[]',
-    expires_at TIMESTAMPTZ,
-    last_used_at TIMESTAMPTZ,
-    created_at TIMESTAMPTZ DEFAULT CURRENT_TIMESTAMP
+    expires_at DATETIME,
+    last_used_at DATETIME,
+    created_at DATETIME DEFAULT CURRENT_TIMESTAMP
 );
 
 CREATE TABLE IF NOT EXISTS servers (
@@ -92,7 +92,7 @@ CREATE TABLE IF NOT EXISTS servers (
     name TEXT NOT NULL,
     ip_address TEXT NOT NULL DEFAULT '',
     status TEXT DEFAULT 'online',
-    is_local BOOLEAN NOT NULL DEFAULT FALSE,
+    is_local BOOLEAN NOT NULL DEFAULT 0,
     ssh_host TEXT DEFAULT '',
     ssh_port INTEGER DEFAULT 22,
     ssh_user TEXT DEFAULT 'root',
@@ -103,10 +103,10 @@ CREATE TABLE IF NOT EXISTS servers (
     ssh_transport TEXT NOT NULL DEFAULT 'direct',
     ssh_jump_host TEXT DEFAULT '',
     worker_token TEXT NOT NULL DEFAULT '',
-    last_seen_at TIMESTAMPTZ,
+    last_seen_at DATETIME,
     metrics TEXT DEFAULT '{}',
-    created_at TIMESTAMPTZ DEFAULT CURRENT_TIMESTAMP,
-    updated_at TIMESTAMPTZ DEFAULT CURRENT_TIMESTAMP
+    created_at DATETIME DEFAULT CURRENT_TIMESTAMP,
+    updated_at DATETIME DEFAULT CURRENT_TIMESTAMP
 );
 
 CREATE INDEX IF NOT EXISTS idx_servers_user ON servers(user_id);
@@ -123,10 +123,10 @@ CREATE TABLE IF NOT EXISTS project_apps (
     git_url TEXT DEFAULT '',
     installation_id INTEGER DEFAULT 0,
     favicon TEXT DEFAULT '',
-    favicon_checked_at TIMESTAMPTZ,
-    deleted_at TIMESTAMPTZ,
-    created_at TIMESTAMPTZ DEFAULT CURRENT_TIMESTAMP,
-    updated_at TIMESTAMPTZ DEFAULT CURRENT_TIMESTAMP,
+    favicon_checked_at DATETIME,
+    deleted_at DATETIME,
+    created_at DATETIME DEFAULT CURRENT_TIMESTAMP,
+    updated_at DATETIME DEFAULT CURRENT_TIMESTAMP,
     UNIQUE(organization_id, slug)
 );
 
@@ -143,7 +143,7 @@ CREATE TABLE IF NOT EXISTS projects (
     environment_name TEXT NOT NULL DEFAULT 'Production',
     environment_slug TEXT NOT NULL DEFAULT 'production',
     environment_type TEXT NOT NULL DEFAULT 'production',
-    is_app BOOLEAN NOT NULL DEFAULT FALSE,
+    is_app BOOLEAN NOT NULL DEFAULT 0,
     app_template_id TEXT DEFAULT '',
     local_path TEXT DEFAULT '',
     git_provider TEXT DEFAULT 'github',
@@ -152,12 +152,12 @@ CREATE TABLE IF NOT EXISTS projects (
     git_branch TEXT DEFAULT 'main',
     git_url TEXT DEFAULT '',
     clone_token_encrypted TEXT DEFAULT '',
-    clone_token_set_at TIMESTAMPTZ,
+    clone_token_set_at DATETIME,
     routing_config_json TEXT DEFAULT '{}',
     readiness_json TEXT DEFAULT '{}',
     status TEXT NOT NULL DEFAULT 'ready',
-    created_at TIMESTAMPTZ DEFAULT CURRENT_TIMESTAMP,
-    updated_at TIMESTAMPTZ DEFAULT CURRENT_TIMESTAMP,
+    created_at DATETIME DEFAULT CURRENT_TIMESTAMP,
+    updated_at DATETIME DEFAULT CURRENT_TIMESTAMP,
     UNIQUE(app_id, environment_slug)
 );
 
@@ -192,11 +192,11 @@ CREATE TABLE IF NOT EXISTS app_services (
     depends_on_json TEXT DEFAULT '[]',
     environment_json TEXT DEFAULT '{}',
     volumes_json TEXT DEFAULT '[]',
-    namespace_volumes BOOLEAN NOT NULL DEFAULT TRUE,
+    namespace_volumes BOOLEAN NOT NULL DEFAULT 1,
     command_argv_json TEXT DEFAULT '[]',
     restart TEXT DEFAULT 'unless-stopped',
     advanced_json TEXT DEFAULT '{}',
-    exposed BOOLEAN NOT NULL DEFAULT FALSE,
+    exposed BOOLEAN NOT NULL DEFAULT 0,
     exposed_port TEXT DEFAULT '',
     internal_port INTEGER DEFAULT 3000,
     domain TEXT DEFAULT '',
@@ -204,22 +204,22 @@ CREATE TABLE IF NOT EXISTS app_services (
     domain_type TEXT DEFAULT 'free',
     public_endpoints_json TEXT DEFAULT '[]',
     replicas INTEGER DEFAULT 1,
-    cpu_request DOUBLE PRECISION DEFAULT 0.5,
+    cpu_request REAL DEFAULT 0.5,
     memory_limit_mb INTEGER DEFAULT 512,
-    cpu_limit DOUBLE PRECISION DEFAULT 0,
+    cpu_limit REAL DEFAULT 0,
     memory_limit INTEGER DEFAULT 0,
     deploy_token TEXT DEFAULT '',
-    enable_pr_previews BOOLEAN DEFAULT FALSE,
-    maintenance_mode BOOLEAN DEFAULT FALSE,
-    registry_id TEXT,
+    enable_pr_previews BOOLEAN DEFAULT 0,
+    maintenance_mode BOOLEAN DEFAULT 0,
+    registry_id TEXT REFERENCES registries(id) ON DELETE SET NULL,
     status TEXT DEFAULT 'stopped',
     container_id TEXT DEFAULT '',
-    created_at TIMESTAMPTZ DEFAULT CURRENT_TIMESTAMP,
-    updated_at TIMESTAMPTZ DEFAULT CURRENT_TIMESTAMP,
+    created_at DATETIME DEFAULT CURRENT_TIMESTAMP,
+    updated_at DATETIME DEFAULT CURRENT_TIMESTAMP,
     UNIQUE(project_id, name)
 );
 
-CREATE OR REPLACE VIEW services AS SELECT * FROM app_services;
+CREATE VIEW IF NOT EXISTS services AS SELECT * FROM app_services;
 
 CREATE INDEX IF NOT EXISTS idx_services_project ON app_services(project_id);
 CREATE INDEX IF NOT EXISTS idx_services_env ON app_services(environment_id);
@@ -231,10 +231,10 @@ CREATE TABLE IF NOT EXISTS env_vars (
     environment_id TEXT DEFAULT '',
     key TEXT NOT NULL,
     encrypted_value TEXT NOT NULL,
-    is_secret BOOLEAN NOT NULL DEFAULT TRUE,
+    is_secret BOOLEAN NOT NULL DEFAULT 1,
     target TEXT DEFAULT 'production',
-    created_at TIMESTAMPTZ DEFAULT CURRENT_TIMESTAMP,
-    updated_at TIMESTAMPTZ DEFAULT CURRENT_TIMESTAMP,
+    created_at DATETIME DEFAULT CURRENT_TIMESTAMP,
+    updated_at DATETIME DEFAULT CURRENT_TIMESTAMP,
     UNIQUE(project_id, service_id, key)
 );
 
@@ -250,7 +250,7 @@ CREATE TABLE IF NOT EXISTS deployments (
     commit_hash TEXT DEFAULT '',
     commit_message TEXT DEFAULT '',
     commit_sha_before TEXT DEFAULT '',
-    "trigger" TEXT NOT NULL DEFAULT 'manual',
+    trigger TEXT NOT NULL DEFAULT 'manual',
     environment TEXT NOT NULL DEFAULT 'production',
     framework TEXT DEFAULT '',
     status TEXT NOT NULL DEFAULT 'queued',
@@ -259,9 +259,9 @@ CREATE TABLE IF NOT EXISTS deployments (
     version INTEGER NOT NULL DEFAULT 1,
     build_logs TEXT DEFAULT '',
     container_id TEXT DEFAULT '',
-    created_at TIMESTAMPTZ DEFAULT CURRENT_TIMESTAMP,
-    updated_at TIMESTAMPTZ DEFAULT CURRENT_TIMESTAMP,
-    finished_at TIMESTAMPTZ
+    created_at DATETIME DEFAULT CURRENT_TIMESTAMP,
+    updated_at DATETIME DEFAULT CURRENT_TIMESTAMP,
+    finished_at DATETIME
 );
 
 CREATE INDEX IF NOT EXISTS idx_deployments_project ON deployments(project_id);
@@ -275,8 +275,8 @@ CREATE TABLE IF NOT EXISTS service_deployments (
     container_id TEXT DEFAULT '',
     status TEXT NOT NULL DEFAULT 'queued',
     error TEXT DEFAULT '',
-    created_at TIMESTAMPTZ DEFAULT CURRENT_TIMESTAMP,
-    updated_at TIMESTAMPTZ DEFAULT CURRENT_TIMESTAMP,
+    created_at DATETIME DEFAULT CURRENT_TIMESTAMP,
+    updated_at DATETIME DEFAULT CURRENT_TIMESTAMP,
     UNIQUE(deployment_id, service_id)
 );
 
@@ -293,10 +293,10 @@ CREATE TABLE IF NOT EXISTS domains (
     target_port INTEGER DEFAULT 80,
     target_path TEXT DEFAULT '/',
     domain_type TEXT DEFAULT 'custom',
-    is_primary BOOLEAN NOT NULL DEFAULT FALSE,
+    is_primary BOOLEAN NOT NULL DEFAULT 0,
     redirect_to TEXT DEFAULT '',
     redirect_status INTEGER DEFAULT 301,
-    external_ingress BOOLEAN NOT NULL DEFAULT FALSE,
+    external_ingress BOOLEAN NOT NULL DEFAULT 0,
     ssl_cert_status TEXT DEFAULT 'pending',
     dns_verification_status TEXT DEFAULT 'pending',
     dns_provider TEXT DEFAULT '',
@@ -304,8 +304,8 @@ CREATE TABLE IF NOT EXISTS domains (
     path_prefix TEXT DEFAULT '/',
     server_id TEXT REFERENCES servers(id) ON DELETE SET NULL,
     organization_id TEXT REFERENCES organizations(id) ON DELETE CASCADE,
-    created_at TIMESTAMPTZ DEFAULT CURRENT_TIMESTAMP,
-    updated_at TIMESTAMPTZ DEFAULT CURRENT_TIMESTAMP
+    created_at DATETIME DEFAULT CURRENT_TIMESTAMP,
+    updated_at DATETIME DEFAULT CURRENT_TIMESTAMP
 );
 
 CREATE INDEX IF NOT EXISTS idx_domains_hostname ON domains(hostname);
@@ -319,8 +319,8 @@ CREATE TABLE IF NOT EXISTS route_rules (
     enabled INTEGER NOT NULL DEFAULT 1,
     rule_type TEXT NOT NULL,
     spec_json TEXT NOT NULL DEFAULT '{}',
-    created_at TIMESTAMPTZ DEFAULT CURRENT_TIMESTAMP,
-    updated_at TIMESTAMPTZ DEFAULT CURRENT_TIMESTAMP
+    created_at DATETIME DEFAULT CURRENT_TIMESTAMP,
+    updated_at DATETIME DEFAULT CURRENT_TIMESTAMP
 );
 
 CREATE INDEX IF NOT EXISTS idx_route_rules_service ON route_rules(service_id);
@@ -345,36 +345,36 @@ CREATE TABLE IF NOT EXISTS cluster_databases (
     external_dns TEXT DEFAULT '',
     progress_json TEXT DEFAULT '{"steps":[],"logs":[]}',
     backup_request_id TEXT DEFAULT '',
-    cpu_limit DOUBLE PRECISION DEFAULT 0,
+    cpu_limit REAL DEFAULT 0,
     memory_limit INTEGER DEFAULT 0,
-    created_at TIMESTAMPTZ DEFAULT CURRENT_TIMESTAMP,
-    updated_at TIMESTAMPTZ DEFAULT CURRENT_TIMESTAMP
+    created_at DATETIME DEFAULT CURRENT_TIMESTAMP,
+    updated_at DATETIME DEFAULT CURRENT_TIMESTAMP
 );
 
 CREATE INDEX IF NOT EXISTS idx_cluster_db_project ON cluster_databases(project_id);
 
 CREATE TABLE IF NOT EXISTS backup_configs (
     id TEXT PRIMARY KEY,
-    database_id TEXT,
+    database_id TEXT REFERENCES databases(id) ON DELETE SET NULL,
     service_id TEXT REFERENCES app_services(id) ON DELETE SET NULL,
     volume_name TEXT DEFAULT '',
-    s3_destination_id TEXT,
+    s3_destination_id TEXT REFERENCES s3_destinations(id) ON DELETE SET NULL,
     name TEXT NOT NULL,
     description TEXT DEFAULT '',
     db_user TEXT DEFAULT '',
     db_password TEXT DEFAULT '',
-    backup_enabled BOOLEAN DEFAULT TRUE,
-    s3_enabled BOOLEAN DEFAULT FALSE,
-    disable_local BOOLEAN DEFAULT FALSE,
+    backup_enabled BOOLEAN DEFAULT 1,
+    s3_enabled BOOLEAN DEFAULT 0,
+    disable_local BOOLEAN DEFAULT 0,
     schedule TEXT NOT NULL,
     timezone TEXT DEFAULT 'UTC',
     timeout INTEGER DEFAULT 3600,
     retention_days INTEGER DEFAULT 7,
     max_backups INTEGER DEFAULT 0,
-    max_storage_gb DOUBLE PRECISION DEFAULT 0,
+    max_storage_gb REAL DEFAULT 0,
     status TEXT DEFAULT 'active',
-    created_at TIMESTAMPTZ DEFAULT CURRENT_TIMESTAMP,
-    updated_at TIMESTAMPTZ DEFAULT CURRENT_TIMESTAMP
+    created_at DATETIME DEFAULT CURRENT_TIMESTAMP,
+    updated_at DATETIME DEFAULT CURRENT_TIMESTAMP
 );
 
 CREATE TABLE IF NOT EXISTS s3_destinations (
@@ -387,12 +387,12 @@ CREATE TABLE IF NOT EXISTS s3_destinations (
     bucket TEXT NOT NULL,
     region TEXT NOT NULL,
     path_prefix TEXT DEFAULT '',
-    is_default BOOLEAN NOT NULL DEFAULT FALSE,
-    last_verified_at TIMESTAMPTZ,
+    is_default BOOLEAN NOT NULL DEFAULT 0,
+    last_verified_at DATETIME,
     last_verify_error TEXT DEFAULT '',
     access_key_id TEXT NOT NULL,
     secret_access_key TEXT NOT NULL,
-    created_at TIMESTAMPTZ DEFAULT CURRENT_TIMESTAMP
+    created_at DATETIME DEFAULT CURRENT_TIMESTAMP
 );
 
 CREATE TABLE IF NOT EXISTS backup_records (
@@ -405,8 +405,8 @@ CREATE TABLE IF NOT EXISTS backup_records (
     file_size_bytes INTEGER DEFAULT 0,
     s3_url TEXT DEFAULT '',
     logs TEXT DEFAULT '',
-    started_at TIMESTAMPTZ,
-    completed_at TIMESTAMPTZ
+    started_at DATETIME,
+    completed_at DATETIME
 );
 
 CREATE INDEX IF NOT EXISTS idx_backup_records_config ON backup_records(backup_config_id);
@@ -419,10 +419,10 @@ CREATE TABLE IF NOT EXISTS scheduled_tasks (
     schedule TEXT NOT NULL,
     command TEXT NOT NULL,
     status TEXT DEFAULT 'active',
-    last_run_at TIMESTAMPTZ,
+    last_run_at DATETIME,
     last_output TEXT DEFAULT '',
-    created_at TIMESTAMPTZ DEFAULT CURRENT_TIMESTAMP,
-    updated_at TIMESTAMPTZ DEFAULT CURRENT_TIMESTAMP
+    created_at DATETIME DEFAULT CURRENT_TIMESTAMP,
+    updated_at DATETIME DEFAULT CURRENT_TIMESTAMP
 );
 
 CREATE INDEX IF NOT EXISTS idx_scheduled_tasks_project ON scheduled_tasks(project_id);
@@ -436,9 +436,9 @@ CREATE TABLE IF NOT EXISTS service_incidents (
     summary TEXT NOT NULL,
     detail TEXT DEFAULT '',
     status TEXT NOT NULL DEFAULT 'open',
-    resolved_at TIMESTAMPTZ,
-    created_at TIMESTAMPTZ DEFAULT CURRENT_TIMESTAMP,
-    updated_at TIMESTAMPTZ DEFAULT CURRENT_TIMESTAMP
+    resolved_at DATETIME,
+    created_at DATETIME DEFAULT CURRENT_TIMESTAMP,
+    updated_at DATETIME DEFAULT CURRENT_TIMESTAMP
 );
 
 CREATE INDEX IF NOT EXISTS idx_service_incidents_project ON service_incidents(project_id);
@@ -457,8 +457,8 @@ CREATE TABLE IF NOT EXISTS mail_servers (
     dmarc_record TEXT DEFAULT '',
     smtp_port INTEGER DEFAULT 587,
     imap_port INTEGER DEFAULT 993,
-    created_at TIMESTAMPTZ DEFAULT CURRENT_TIMESTAMP,
-    updated_at TIMESTAMPTZ DEFAULT CURRENT_TIMESTAMP
+    created_at DATETIME DEFAULT CURRENT_TIMESTAMP,
+    updated_at DATETIME DEFAULT CURRENT_TIMESTAMP
 );
 
 CREATE TABLE IF NOT EXISTS mail_inbound_rules (
@@ -468,8 +468,8 @@ CREATE TABLE IF NOT EXISTS mail_inbound_rules (
     action TEXT NOT NULL DEFAULT 'webhook',
     forward_target TEXT DEFAULT '',
     webhook_url TEXT DEFAULT '',
-    created_at TIMESTAMPTZ DEFAULT CURRENT_TIMESTAMP,
-    updated_at TIMESTAMPTZ DEFAULT CURRENT_TIMESTAMP
+    created_at DATETIME DEFAULT CURRENT_TIMESTAMP,
+    updated_at DATETIME DEFAULT CURRENT_TIMESTAMP
 );
 
 CREATE TABLE IF NOT EXISTS user_git_providers (
@@ -478,8 +478,8 @@ CREATE TABLE IF NOT EXISTS user_git_providers (
     provider TEXT NOT NULL,
     encrypted_access_token TEXT NOT NULL,
     account_name TEXT NOT NULL,
-    created_at TIMESTAMPTZ DEFAULT CURRENT_TIMESTAMP,
-    updated_at TIMESTAMPTZ DEFAULT CURRENT_TIMESTAMP,
+    created_at DATETIME DEFAULT CURRENT_TIMESTAMP,
+    updated_at DATETIME DEFAULT CURRENT_TIMESTAMP,
     UNIQUE(user_id, provider)
 );
 
@@ -493,37 +493,37 @@ CREATE TABLE IF NOT EXISTS github_apps (
     client_secret TEXT NOT NULL,
     webhook_secret TEXT NOT NULL,
     private_key TEXT NOT NULL,
-    is_public BOOLEAN DEFAULT FALSE,
-    created_at TIMESTAMPTZ DEFAULT CURRENT_TIMESTAMP,
-    updated_at TIMESTAMPTZ DEFAULT CURRENT_TIMESTAMP
+    is_public BOOLEAN DEFAULT 0,
+    created_at DATETIME DEFAULT CURRENT_TIMESTAMP,
+    updated_at DATETIME DEFAULT CURRENT_TIMESTAMP
 );
 
 CREATE TABLE IF NOT EXISTS oauth_providers (
     id TEXT PRIMARY KEY,
     organization_id TEXT REFERENCES organizations(id) ON DELETE CASCADE,
     provider_name TEXT UNIQUE NOT NULL,
-    enabled BOOLEAN DEFAULT FALSE,
+    enabled BOOLEAN DEFAULT 0,
     client_id TEXT DEFAULT '',
     client_secret TEXT DEFAULT '',
     redirect_uri TEXT DEFAULT '',
     base_url TEXT DEFAULT '',
     tenant TEXT DEFAULT '',
-    created_at TIMESTAMPTZ DEFAULT CURRENT_TIMESTAMP,
-    updated_at TIMESTAMPTZ DEFAULT CURRENT_TIMESTAMP
+    created_at DATETIME DEFAULT CURRENT_TIMESTAMP,
+    updated_at DATETIME DEFAULT CURRENT_TIMESTAMP
 );
 
 CREATE TABLE IF NOT EXISTS server_settings (
     id TEXT PRIMARY KEY,
     traefik_wildcard_ip TEXT DEFAULT '127.0.0.1',
-    registration_enabled BOOLEAN DEFAULT TRUE,
+    registration_enabled BOOLEAN DEFAULT 1,
     registration_domain_allowlist TEXT DEFAULT '',
     custom_dns_resolvers TEXT DEFAULT '',
-    dns_validation_enabled BOOLEAN DEFAULT TRUE,
+    dns_validation_enabled BOOLEAN DEFAULT 1,
     ip_allowlist TEXT DEFAULT '',
-    mcp_server_enabled BOOLEAN DEFAULT TRUE,
+    mcp_server_enabled BOOLEAN DEFAULT 1,
     default_wildcard_domain TEXT DEFAULT '',
     update_check_cron TEXT DEFAULT '0 * * * *',
-    auto_update_enabled BOOLEAN DEFAULT FALSE,
+    auto_update_enabled BOOLEAN DEFAULT 0,
     current_version TEXT DEFAULT '0.1.0',
     latest_version TEXT DEFAULT '0.1.0',
     last_update_check TEXT DEFAULT '',
@@ -531,8 +531,8 @@ CREATE TABLE IF NOT EXISTS server_settings (
     site_name TEXT DEFAULT '',
     public_ipv4 TEXT DEFAULT '',
     public_ipv6 TEXT DEFAULT '',
-    show_sponsorship_popup BOOLEAN DEFAULT TRUE,
-    disable_two_step_confirmation BOOLEAN DEFAULT FALSE,
+    show_sponsorship_popup BOOLEAN DEFAULT 1,
+    disable_two_step_confirmation BOOLEAN DEFAULT 0,
     panel_domain TEXT NOT NULL DEFAULT '',
     concurrent_builds INTEGER NOT NULL DEFAULT 2,
     deployment_timeout INTEGER NOT NULL DEFAULT 3600,
@@ -552,30 +552,30 @@ CREATE TABLE IF NOT EXISTS notification_settings (
     id TEXT PRIMARY KEY,
     organization_id TEXT REFERENCES organizations(id) ON DELETE CASCADE,
     discord_webhook_url TEXT DEFAULT '',
-    discord_ping_enabled BOOLEAN DEFAULT FALSE,
-    discord_enabled BOOLEAN DEFAULT FALSE,
+    discord_ping_enabled BOOLEAN DEFAULT 0,
+    discord_enabled BOOLEAN DEFAULT 0,
     slack_webhook_url TEXT DEFAULT '',
-    slack_enabled BOOLEAN DEFAULT FALSE,
+    slack_enabled BOOLEAN DEFAULT 0,
     telegram_bot_token TEXT DEFAULT '',
     telegram_chat_id TEXT DEFAULT '',
-    telegram_enabled BOOLEAN DEFAULT FALSE,
+    telegram_enabled BOOLEAN DEFAULT 0,
     smtp_host TEXT DEFAULT '',
     smtp_port INTEGER DEFAULT 587,
     smtp_user TEXT DEFAULT '',
     smtp_password TEXT DEFAULT '',
     smtp_from_name TEXT DEFAULT '',
     smtp_from_address TEXT DEFAULT '',
-    smtp_enabled BOOLEAN DEFAULT FALSE,
+    smtp_enabled BOOLEAN DEFAULT 0,
     resend_api_key TEXT DEFAULT '',
-    resend_enabled BOOLEAN DEFAULT FALSE,
+    resend_enabled BOOLEAN DEFAULT 0,
     pushover_user_key TEXT DEFAULT '',
     pushover_api_token TEXT DEFAULT '',
-    pushover_enabled BOOLEAN DEFAULT FALSE,
+    pushover_enabled BOOLEAN DEFAULT 0,
     generic_webhook_url TEXT DEFAULT '',
-    generic_webhook_enabled BOOLEAN DEFAULT FALSE,
-    notification_alerts BOOLEAN DEFAULT FALSE,
-    created_at TIMESTAMPTZ DEFAULT CURRENT_TIMESTAMP,
-    updated_at TIMESTAMPTZ DEFAULT CURRENT_TIMESTAMP
+    generic_webhook_enabled BOOLEAN DEFAULT 0,
+    notification_alerts BOOLEAN DEFAULT 0,
+    created_at DATETIME DEFAULT CURRENT_TIMESTAMP,
+    updated_at DATETIME DEFAULT CURRENT_TIMESTAMP
 );
 
 CREATE TABLE IF NOT EXISTS audit_logs (
@@ -586,7 +586,7 @@ CREATE TABLE IF NOT EXISTS audit_logs (
     resource TEXT NOT NULL,
     details TEXT DEFAULT '',
     ip_address TEXT DEFAULT '',
-    created_at TIMESTAMPTZ DEFAULT CURRENT_TIMESTAMP
+    created_at DATETIME DEFAULT CURRENT_TIMESTAMP
 );
 
 CREATE INDEX IF NOT EXISTS idx_audit_logs_user_created ON audit_logs(user_id, created_at DESC);
@@ -611,8 +611,8 @@ CREATE TABLE IF NOT EXISTS ai_settings (
     xai_model TEXT DEFAULT '',
     moonshot_key TEXT DEFAULT '',
     moonshot_model TEXT DEFAULT '',
-    created_at TIMESTAMPTZ DEFAULT CURRENT_TIMESTAMP,
-    updated_at TIMESTAMPTZ DEFAULT CURRENT_TIMESTAMP
+    created_at DATETIME DEFAULT CURRENT_TIMESTAMP,
+    updated_at DATETIME DEFAULT CURRENT_TIMESTAMP
 );
 
 CREATE TABLE IF NOT EXISTS takeover_runs (
@@ -624,8 +624,8 @@ CREATE TABLE IF NOT EXISTS takeover_runs (
     discovered_json TEXT NOT NULL DEFAULT '',
     adopted_project_ids TEXT NOT NULL DEFAULT '',
     error TEXT NOT NULL DEFAULT '',
-    created_at TIMESTAMPTZ DEFAULT CURRENT_TIMESTAMP,
-    updated_at TIMESTAMPTZ DEFAULT CURRENT_TIMESTAMP
+    created_at DATETIME DEFAULT CURRENT_TIMESTAMP,
+    updated_at DATETIME DEFAULT CURRENT_TIMESTAMP
 );
 
 CREATE TABLE IF NOT EXISTS serverless_functions_code (
@@ -633,8 +633,8 @@ CREATE TABLE IF NOT EXISTS serverless_functions_code (
     service_id TEXT NOT NULL REFERENCES app_services(id) ON DELETE CASCADE,
     runtime TEXT NOT NULL,
     code_content TEXT NOT NULL,
-    created_at TIMESTAMPTZ DEFAULT CURRENT_TIMESTAMP,
-    updated_at TIMESTAMPTZ DEFAULT CURRENT_TIMESTAMP,
+    created_at DATETIME DEFAULT CURRENT_TIMESTAMP,
+    updated_at DATETIME DEFAULT CURRENT_TIMESTAMP,
     UNIQUE(service_id)
 );
 
@@ -648,8 +648,8 @@ CREATE TABLE IF NOT EXISTS pr_previews (
     status TEXT,
     preview_domain TEXT,
     container_id TEXT,
-    created_at TIMESTAMPTZ DEFAULT CURRENT_TIMESTAMP,
-    updated_at TIMESTAMPTZ DEFAULT CURRENT_TIMESTAMP
+    created_at DATETIME DEFAULT CURRENT_TIMESTAMP,
+    updated_at DATETIME DEFAULT CURRENT_TIMESTAMP
 );
 
 CREATE TABLE IF NOT EXISTS log_drains (
@@ -659,8 +659,8 @@ CREATE TABLE IF NOT EXISTS log_drains (
     drain_type TEXT NOT NULL,
     endpoint_url TEXT NOT NULL,
     auth_token TEXT,
-    created_at TIMESTAMPTZ DEFAULT CURRENT_TIMESTAMP,
-    updated_at TIMESTAMPTZ DEFAULT CURRENT_TIMESTAMP
+    created_at DATETIME DEFAULT CURRENT_TIMESTAMP,
+    updated_at DATETIME DEFAULT CURRENT_TIMESTAMP
 );
 
 CREATE TABLE IF NOT EXISTS registries (
@@ -671,17 +671,17 @@ CREATE TABLE IF NOT EXISTS registries (
     registry_url TEXT NOT NULL,
     username TEXT DEFAULT '',
     password_token TEXT DEFAULT '',
-    created_at TIMESTAMPTZ DEFAULT CURRENT_TIMESTAMP,
-    updated_at TIMESTAMPTZ DEFAULT CURRENT_TIMESTAMP
+    created_at DATETIME DEFAULT CURRENT_TIMESTAMP,
+    updated_at DATETIME DEFAULT CURRENT_TIMESTAMP
 );
 
 CREATE TABLE IF NOT EXISTS environments (
     id TEXT PRIMARY KEY,
     project_id TEXT NOT NULL REFERENCES projects(id) ON DELETE CASCADE,
     name TEXT NOT NULL,
-    is_default BOOLEAN NOT NULL DEFAULT FALSE,
-    created_at TIMESTAMPTZ NOT NULL,
-    updated_at TIMESTAMPTZ NOT NULL,
+    is_default BOOLEAN NOT NULL DEFAULT 0,
+    created_at DATETIME NOT NULL,
+    updated_at DATETIME NOT NULL,
     UNIQUE(project_id, name)
 );
 
@@ -704,13 +704,13 @@ CREATE TABLE IF NOT EXISTS databases (
     custom_args TEXT DEFAULT '',
     environment_id TEXT DEFAULT '',
     project_id TEXT DEFAULT '',
-    cpu_limit DOUBLE PRECISION DEFAULT 0,
+    cpu_limit REAL DEFAULT 0,
     memory_limit INTEGER DEFAULT 0,
     logical_replication INTEGER DEFAULT 0,
     server_id TEXT REFERENCES servers(id) ON DELETE SET NULL,
     organization_id TEXT REFERENCES organizations(id) ON DELETE CASCADE,
-    created_at TIMESTAMPTZ DEFAULT CURRENT_TIMESTAMP,
-    updated_at TIMESTAMPTZ DEFAULT CURRENT_TIMESTAMP
+    created_at DATETIME DEFAULT CURRENT_TIMESTAMP,
+    updated_at DATETIME DEFAULT CURRENT_TIMESTAMP
 );
 
 CREATE INDEX IF NOT EXISTS idx_databases_project ON databases(project_id);
@@ -720,7 +720,7 @@ CREATE TABLE IF NOT EXISTS service_volumes (
     service_id TEXT NOT NULL REFERENCES app_services(id) ON DELETE CASCADE,
     host_path TEXT NOT NULL,
     container_path TEXT NOT NULL,
-    created_at TIMESTAMPTZ NOT NULL DEFAULT CURRENT_TIMESTAMP
+    created_at DATETIME NOT NULL DEFAULT CURRENT_TIMESTAMP
 );
 
 CREATE INDEX IF NOT EXISTS idx_service_volumes_service ON service_volumes(service_id);
@@ -730,9 +730,9 @@ CREATE TABLE IF NOT EXISTS service_webhooks (
     service_id TEXT NOT NULL REFERENCES app_services(id) ON DELETE CASCADE,
     url TEXT NOT NULL,
     event_types TEXT DEFAULT '',
-    include_pr_environments BOOLEAN DEFAULT FALSE,
-    created_at TIMESTAMPTZ DEFAULT CURRENT_TIMESTAMP,
-    updated_at TIMESTAMPTZ DEFAULT CURRENT_TIMESTAMP
+    include_pr_environments BOOLEAN DEFAULT 0,
+    created_at DATETIME DEFAULT CURRENT_TIMESTAMP,
+    updated_at DATETIME DEFAULT CURRENT_TIMESTAMP
 );
 
 CREATE INDEX IF NOT EXISTS idx_service_webhooks_service ON service_webhooks(service_id);
@@ -744,8 +744,8 @@ CREATE TABLE IF NOT EXISTS service_vars (
     key TEXT NOT NULL,
     value TEXT NOT NULL,
     is_secret INTEGER DEFAULT 0,
-    created_at TIMESTAMPTZ DEFAULT CURRENT_TIMESTAMP,
-    updated_at TIMESTAMPTZ DEFAULT CURRENT_TIMESTAMP,
+    created_at DATETIME DEFAULT CURRENT_TIMESTAMP,
+    updated_at DATETIME DEFAULT CURRENT_TIMESTAMP,
     UNIQUE(service_id, key)
 );
 
@@ -776,13 +776,10 @@ CREATE TABLE IF NOT EXISTS dns_records (
     ttl INTEGER DEFAULT 3600,
     server_id TEXT REFERENCES servers(id) ON DELETE SET NULL,
     organization_id TEXT REFERENCES organizations(id) ON DELETE CASCADE,
-    created_at TIMESTAMPTZ DEFAULT CURRENT_TIMESTAMP,
-    updated_at TIMESTAMPTZ DEFAULT CURRENT_TIMESTAMP
+    created_at DATETIME DEFAULT CURRENT_TIMESTAMP,
+    updated_at DATETIME DEFAULT CURRENT_TIMESTAMP
 );
 
 CREATE INDEX IF NOT EXISTS idx_dns_records_domain ON dns_records(domain_name);
 
 CREATE UNIQUE INDEX IF NOT EXISTS idx_env_vars_project_key ON env_vars(project_id, key) WHERE service_id IS NULL;
-ALTER TABLE app_services ADD FOREIGN KEY (registry_id) REFERENCES registries(id) ON DELETE SET NULL;
-ALTER TABLE backup_configs ADD FOREIGN KEY (database_id) REFERENCES databases(id) ON DELETE SET NULL;
-ALTER TABLE backup_configs ADD FOREIGN KEY (s3_destination_id) REFERENCES s3_destinations(id) ON DELETE SET NULL;

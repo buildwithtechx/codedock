@@ -5,6 +5,7 @@ import (
 	"database/sql"
 	"errors"
 	"fmt"
+	"strconv"
 	"strings"
 	"sync"
 	"time"
@@ -31,7 +32,7 @@ func NewSettingsRepo(db *sql.DB, vaults ...Vault) *SettingsRepo {
 	if len(vaults) > 0 {
 		vault = vaults[0]
 	}
-	return &SettingsRepo{db: sqlx.NewDb(db, "sqlite"), vault: vault}
+	return &SettingsRepo{db: sqlx.NewDb(db, "pgx"), vault: vault}
 }
 
 const serverSettingsColumns = `id, traefik_wildcard_ip, registration_enabled, registration_domain_allowlist, custom_dns_resolvers, dns_validation_enabled, ip_allowlist, mcp_server_enabled, default_wildcard_domain, panel_domain, site_name, public_ipv4, public_ipv6, show_sponsorship_popup, disable_two_step_confirmation, cloudflare_api_token, namecheap_api_user, namecheap_api_key, namecheap_client_ip, spaceship_api_key, spaceship_api_secret, update_check_cron, auto_update_enabled, concurrent_builds, deployment_timeout, server_timezone, docker_cleanup_cron, disk_usage_threshold, disk_usage_cron, current_version, latest_version, last_update_check, updated_at`
@@ -40,7 +41,7 @@ func serverSettingsPlaceholders() string {
 	columns := strings.Split(serverSettingsColumns, ",")
 	placeholders := make([]string, len(columns))
 	for i := range placeholders {
-		placeholders[i] = "?"
+		placeholders[i] = "$" + strconv.Itoa(i+1)
 	}
 	return strings.Join(placeholders, ", ")
 }

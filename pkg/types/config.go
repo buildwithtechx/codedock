@@ -17,6 +17,17 @@ type Config struct {
 	Resend    ResendConfig    `json:"resend"`
 	OAuth     OAuthConfig     `json:"oauth"`
 	Stripe    StripeConfig    `json:"stripe"`
+	Database  DatabaseConfig  `json:"database"`
+	Postgres  PostgresConfig  `json:"postgres"`
+}
+
+type DatabaseConfig struct {
+	URL string `json:"url"`
+}
+
+type PostgresConfig struct {
+	Image string `json:"image"`
+	Port  int    `json:"port"`
 }
 
 type ServerConfig struct {

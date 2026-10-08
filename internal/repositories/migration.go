@@ -12,19 +12,30 @@ import (
 	"strings"
 )
 
-//go:embed schema/*.sql
+//go:embed schema/*.sql schema/sqlite/*.sql
 var schemaFS embed.FS
 
 func RunMigrations(db *sql.DB) error {
-	sub, err := fs.Sub(schemaFS, "schema")
+	return RunMigrationsDialect(db, DriverSQLite)
+}
+
+func RunMigrationsDialect(db *sql.DB, driver string) error {
+	if driver != DriverSQLite && driver != DriverPostgres {
+		return fmt.Errorf("unknown database driver %q", driver)
+	}
+	dir := "schema/sqlite"
+	if driver == DriverPostgres {
+		dir = "schema"
+	}
+	sub, err := fs.Sub(schemaFS, dir)
 	if err != nil {
 		return fmt.Errorf("failed to sub schema fs: %w", err)
 	}
-	return runMigrations(db, sub)
+	return runMigrations(db, sub, driver)
 }
 
-func runMigrations(db *sql.DB, fsys fs.FS) error {
-	if err := createMigrationsTable(db); err != nil {
+func runMigrations(db *sql.DB, fsys fs.FS, driver string) error {
+	if err := createMigrationsTable(db, driver); err != nil {
 		return err
 	}
 	applied, err := loadApplied(db)
@@ -48,7 +59,7 @@ func runMigrations(db *sql.DB, fsys fs.FS) error {
 			}
 			continue
 		}
-		if err := applyMigration(db, file, content, sum); err != nil {
+		if err := applyMigration(db, file, string(content), sum, driver); err != nil {
 			return err
 		}
 	}
@@ -56,7 +67,7 @@ func runMigrations(db *sql.DB, fsys fs.FS) error {
 	return nil
 }
 
-func applyMigration(db *sql.DB, file string, content []byte, sum string) error {
+func applyMigration(db *sql.DB, file, content, sum, driver string) error {
 	tx, err := db.Begin()
 	if err != nil {
 		return fmt.Errorf("failed to begin transaction for %s: %w", file, err)
@@ -67,10 +78,20 @@ func applyMigration(db *sql.DB, file string, content []byte, sum string) error {
 		}
 		return cause
 	}
-	if _, err := tx.Exec(string(content)); err != nil {
-		return rollback(fmt.Errorf("migration failed for %s: %w", file, err))
+	statements := []string{content}
+	if driver == DriverPostgres {
+		statements = splitStatements(content)
 	}
-	if _, err := tx.Exec("INSERT INTO schema_migrations (filename, checksum) VALUES (?, ?)", file, sum); err != nil {
+	for _, stmt := range statements {
+		if strings.TrimSpace(stmt) == "" {
+			continue
+		}
+		if _, err := tx.Exec(stmt); err != nil {
+			return rollback(fmt.Errorf("migration failed for %s: %w", file, err))
+		}
+	}
+	record := Rebind(driver, "INSERT INTO schema_migrations (filename, checksum) VALUES (?, ?)")
+	if _, err := tx.Exec(record, file, sum); err != nil {
 		return rollback(fmt.Errorf("failed to record migration %s: %w", file, err))
 	}
 	if err := tx.Commit(); err != nil {
@@ -80,12 +101,16 @@ func applyMigration(db *sql.DB, file string, content []byte, sum string) error {
 	return nil
 }
 
-func createMigrationsTable(db *sql.DB) error {
+func createMigrationsTable(db *sql.DB, driver string) error {
+	appliedAt := "TEXT DEFAULT CURRENT_TIMESTAMP"
+	if driver == DriverPostgres {
+		appliedAt = "TIMESTAMPTZ DEFAULT CURRENT_TIMESTAMP"
+	}
 	_, err := db.Exec(`
 		CREATE TABLE IF NOT EXISTS schema_migrations (
 			filename   TEXT PRIMARY KEY,
 			checksum   TEXT NOT NULL DEFAULT '',
-			applied_at TEXT DEFAULT CURRENT_TIMESTAMP
+			applied_at ` + appliedAt + `
 		)
 	`)
 	if err != nil {
@@ -129,4 +154,87 @@ func schemaFiles(fsys fs.FS) ([]string, error) {
 func fileChecksum(content []byte) string {
 	sum := sha256.Sum256(content)
 	return hex.EncodeToString(sum[:])
+}
+
+func splitStatements(content string) []string {
+	var statements []string
+	var current strings.Builder
+	rest := content
+	for len(rest) > 0 {
+		switch {
+		case rest[0] == '\'':
+			taken := quotedLength(rest, '\'')
+			current.WriteString(rest[:taken])
+			rest = rest[taken:]
+		case rest[0] == '"':
+			taken := quotedLength(rest, '"')
+			current.WriteString(rest[:taken])
+			rest = rest[taken:]
+		case strings.HasPrefix(rest, "--"):
+			end := strings.IndexByte(rest, '\n')
+			if end < 0 {
+				end = len(rest)
+			}
+			current.WriteString(rest[:end])
+			rest = rest[end:]
+		case strings.HasPrefix(rest, "/*"):
+			end := strings.Index(rest, "*/")
+			if end < 0 {
+				end = len(rest)
+			} else {
+				end += 2
+			}
+			current.WriteString(rest[:end])
+			rest = rest[end:]
+		case rest[0] == '$':
+			taken := dollarQuoteLength(rest)
+			current.WriteString(rest[:taken])
+			rest = rest[taken:]
+		case rest[0] == ';':
+			statements = append(statements, current.String())
+			current.Reset()
+			rest = rest[1:]
+		default:
+			current.WriteByte(rest[0])
+			rest = rest[1:]
+		}
+	}
+	if tail := strings.TrimSpace(current.String()); tail != "" {
+		statements = append(statements, current.String())
+	}
+	return statements
+}
+
+func quotedLength(s string, quote byte) int {
+	for i := 1; i < len(s); i++ {
+		if s[i] != quote {
+			continue
+		}
+		if i+1 < len(s) && s[i+1] == quote {
+			i++
+			continue
+		}
+		return i + 1
+	}
+	return len(s)
+}
+
+func dollarQuoteLength(s string) int {
+	end := 1
+	for end < len(s) && s[end] != '$' && isDollarTagChar(s[end]) {
+		end++
+	}
+	if end >= len(s) || s[end] != '$' {
+		return 1
+	}
+	tag := s[:end+1]
+	close := strings.Index(s[end+1:], tag)
+	if close < 0 {
+		return len(s)
+	}
+	return end + 1 + close + len(tag)
+}
+
+func isDollarTagChar(c byte) bool {
+	return c == '_' || (c >= 'a' && c <= 'z') || (c >= 'A' && c <= 'Z') || (c >= '0' && c <= '9')
 }

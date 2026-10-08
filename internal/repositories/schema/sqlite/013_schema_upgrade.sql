@@ -1,7 +1,7 @@
 ALTER TABLE backup_configs ADD COLUMN sftp_destination_id TEXT;
 ALTER TABLE backup_configs ADD COLUMN parent_batch_id TEXT;
-ALTER TABLE backup_configs ADD COLUMN sftp_enabled BOOLEAN DEFAULT FALSE;
-ALTER TABLE backup_configs ADD COLUMN incremental BOOLEAN DEFAULT FALSE;
+ALTER TABLE backup_configs ADD COLUMN sftp_enabled BOOLEAN DEFAULT 0;
+ALTER TABLE backup_configs ADD COLUMN incremental BOOLEAN DEFAULT 0;
 ALTER TABLE backup_configs ADD COLUMN quiesce_command TEXT DEFAULT '';
 ALTER TABLE backup_configs ADD COLUMN unquiesce_command TEXT DEFAULT '';
 ALTER TABLE backup_configs ADD COLUMN custom_backup_command TEXT DEFAULT '';
@@ -22,9 +22,9 @@ CREATE TABLE IF NOT EXISTS sftp_destinations (
     password TEXT DEFAULT '',
     private_key TEXT DEFAULT '',
     path_prefix TEXT DEFAULT '',
-    last_verified_at TIMESTAMPTZ,
+    last_verified_at DATETIME,
     last_verify_error TEXT DEFAULT '',
-    created_at TIMESTAMPTZ DEFAULT CURRENT_TIMESTAMP
+    created_at DATETIME DEFAULT CURRENT_TIMESTAMP
 );
 CREATE TABLE IF NOT EXISTS backup_policy_batches (
     id TEXT PRIMARY KEY,
@@ -35,6 +35,6 @@ CREATE TABLE IF NOT EXISTS backup_policy_batches (
     timezone TEXT DEFAULT 'UTC',
     timeout INTEGER DEFAULT 3600,
     status TEXT DEFAULT 'active',
-    created_at TIMESTAMPTZ DEFAULT CURRENT_TIMESTAMP,
-    updated_at TIMESTAMPTZ DEFAULT CURRENT_TIMESTAMP
+    created_at DATETIME DEFAULT CURRENT_TIMESTAMP,
+    updated_at DATETIME DEFAULT CURRENT_TIMESTAMP
 );
