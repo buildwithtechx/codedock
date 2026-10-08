@@ -27,6 +27,31 @@ jobs:
       - run: go vet ./...
       - run: go test -race ./...
 
+  go-postgres:
+    runs-on: ubuntu-latest
+    services:
+      postgres:
+        image: postgres:16-alpine
+        env:
+          POSTGRES_USER: codedock
+          POSTGRES_PASSWORD: codedock
+          POSTGRES_DB: codedock_test
+        ports:
+          - 5432:5432
+        options: >-
+          --health-cmd "pg_isready -U codedock -d codedock_test"
+          --health-interval 5s
+          --health-timeout 3s
+          --health-retries 12
+    env:
+      CODEDOCK_TEST_PG_URL: postgres://codedock:codedock@localhost:5432/codedock_test?sslmode=disable
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-go@v5
+        with:
+          go-version-file: go.mod
+      - run: go test -race ./internal/repositories/...
+
   typescript:
     runs-on: ubuntu-latest
     steps:

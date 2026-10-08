@@ -22,6 +22,7 @@ func schemaTestRouter(t *testing.T) *echo.Echo {
 	previous := *cfg
 	t.Cleanup(func() { *cfg = previous })
 	cfg.Security.JWTSecret = "schema-test-secret"
+	cfg.Cloud.Enabled = true
 	tokens, err := authservices.NewTokenService()
 	if err != nil {
 		t.Fatal(err)
@@ -60,7 +61,7 @@ func TestEveryRouteHasSchema(t *testing.T) {
 	router := schemaTestRouter(t)
 	missing := []string{}
 	for _, route := range router.Routes() {
-		if route.Path == "/*" {
+		if route.Path == "/*" || route.Method == "echo_route_not_found" {
 			continue
 		}
 		if _, ok := apischema.Find(route.Method, route.Path); !ok {
