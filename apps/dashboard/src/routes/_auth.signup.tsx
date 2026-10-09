@@ -41,7 +41,7 @@ function RegisterPage() {
         {!isOnboarding && <OAuthButtons />}
         <RegisterForm />
 
-        <p className="border-border border-t pt-5 text-muted-foreground text-sm">
+        <p className="border-border border-t pt-5 text-center text-muted-foreground text-sm">
           Already have an account?{' '}
           <Link
             to="/signin"

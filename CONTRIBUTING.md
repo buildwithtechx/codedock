@@ -92,13 +92,13 @@ cp .env.example .env
 cp apps/dashboard/.env.example apps/dashboard/.env
 ```
 
-| Variable           | Default          | Description                    |
-| ------------------ | ---------------- | ------------------------------ |
-| `PORT`             | `8080`           | Daemon HTTP port               |
-| `CODEDOCK_DATA_DIR`   | `data`           | Postgres data + vault storage  |
-| `CODEDOCK_STATIC_DIR` | `apps/dashboard/dist` | Built dashboard files          |
-| `CODEDOCK_TLS_EMAIL`  | —                | Let's Encrypt email (optional) |
-| `CODEDOCK_DATABASE_URL` | — | Use your own Postgres instead of the embedded container |
+| Variable                | Default               | Description                                             |
+| ----------------------- | --------------------- | ------------------------------------------------------- |
+| `PORT`                  | `8080`                | Daemon HTTP port                                        |
+| `CODEDOCK_DATA_DIR`     | `data`                | Postgres data + vault storage                           |
+| `CODEDOCK_STATIC_DIR`   | `apps/dashboard/dist` | Built dashboard files                                   |
+| `CODEDOCK_TLS_EMAIL`    | —                     | Let's Encrypt email (optional)                          |
+| `CODEDOCK_DATABASE_URL` | —                     | Use your own Postgres instead of the embedded container |
 
 ### Use your own Postgres (optional)
 
@@ -241,12 +241,12 @@ tsc --noEmit
 
 ### Troubleshooting
 
-| Problem                   | Fix                                                      |
-| ------------------------- | -------------------------------------------------------- |
+| Problem                   | Fix                                                                                                                   |
+| ------------------------- | --------------------------------------------------------------------------------------------------------------------- |
 | Daemon won't start        | Reset embedded Postgres (`docker rm -f codedock-postgres`, delete `data/postgres`) and restart (schema auto-migrates) |
-| Dashboard can't reach API | Ensure daemon runs on `:8080`                            |
-| Port conflict             | Change `PORT` in `.env`                                  |
-| Build errors after pull   | `go mod tidy` + `npm install`                            |
+| Dashboard can't reach API | Ensure daemon runs on `:8080`                                                                                         |
+| Port conflict             | Change `PORT` in `.env`                                                                                               |
+| Build errors after pull   | `go mod tidy` + `npm install`                                                                                         |
 
 ---
 

@@ -201,7 +201,7 @@ export function AISettings() {
                     type="password"
                     placeholder="sk-..."
                     defaultValue={currentKey}
-                    className="h-10 font-mono text-sm"
+                    className="font-mono text-sm"
                     onBlur={(e) => {
                       if (e.target.value !== currentKey) {
                         handleUpdateKey(provider.keyField, e.target.value);

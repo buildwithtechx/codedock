@@ -104,7 +104,7 @@ export function ApiKeyCreateDialog({ open, onOpenChange, onSuccess }: ApiKeyCrea
               value={name}
               onChange={(e) => setName(e.target.value)}
               placeholder="Production deploys"
-              className="border/50 h-10 rounded-lg bg-background/50 px-3 text-sm"
+              className="border/50 rounded-lg bg-background/50 px-3 text-sm"
             />
           </div>
 

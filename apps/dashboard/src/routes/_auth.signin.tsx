@@ -31,7 +31,7 @@ function LoginPage() {
         <LoginForm />
 
         {registrationEnabled && (
-          <p className="border-border border-t pt-5 text-muted-foreground text-sm">
+          <p className="border-border border-t pt-5 text-center text-muted-foreground text-sm">
             Don't have an account?{' '}
             <Link
               to="/signup"

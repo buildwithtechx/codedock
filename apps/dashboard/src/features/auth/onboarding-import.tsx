@@ -124,7 +124,7 @@ export function OnboardingImport({ triggerClassName }: { triggerClassName?: stri
                     value={passphrase}
                     onChange={(event) => setPassphrase(event.target.value)}
                     placeholder="Enter the export passphrase"
-                    className="h-12 pl-10"
+                    className="pl-10"
                     required
                   />
                 </div>
@@ -133,7 +133,7 @@ export function OnboardingImport({ triggerClassName }: { triggerClassName?: stri
             <div className="mt-8">
               <Button
                 type="submit"
-                className="h-12 w-full"
+                className="w-full"
                 disabled={isImporting || !fileName || !passphrase}
               >
                 {isImporting && <Loader2 className="animate-spin" />}

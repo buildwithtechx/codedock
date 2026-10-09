@@ -41,7 +41,7 @@ export const ResetPasswordForm = ({ token }: ResetPasswordFormProps) => {
             id="new-password"
             type="password"
             placeholder="Enter new password"
-            className="h-12 pl-10"
+            className="pl-10"
             value={newPassword}
             onChange={(e) => {
               setNewPassword(e.target.value);
@@ -63,7 +63,7 @@ export const ResetPasswordForm = ({ token }: ResetPasswordFormProps) => {
             id="confirm-password"
             type="password"
             placeholder="Confirm new password"
-            className="h-12 pl-10"
+            className="pl-10"
             value={confirmPassword}
             onChange={(e) => {
               setConfirmPassword(e.target.value);
@@ -84,7 +84,7 @@ export const ResetPasswordForm = ({ token }: ResetPasswordFormProps) => {
       <Button
         type="submit"
         disabled={isPending || !newPassword || !confirmPassword}
-        className="h-12 w-full"
+        className="w-full"
       >
         {isPending ? 'Resetting...' : 'Reset Password'}
       </Button>

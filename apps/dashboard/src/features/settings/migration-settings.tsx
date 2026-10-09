@@ -89,7 +89,7 @@ export function MigrationSettings() {
               value={passphrase}
               onChange={(e) => setPassphrase(e.target.value)}
               placeholder="Enter a secure passphrase"
-              className="h-10 w-full font-mono"
+              className="w-full font-mono"
               required
             />
           </Row>
@@ -107,7 +107,7 @@ export function MigrationSettings() {
               value={confirmPassphrase}
               onChange={(e) => setConfirmPassphrase(e.target.value)}
               placeholder="Confirm your passphrase"
-              className={`h-10 w-full font-mono ${passphrasesMismatch ? 'border-destructive focus-visible:ring-destructive/20' : ''}`}
+              className={`w-full font-mono ${passphrasesMismatch ? 'border-destructive focus-visible:ring-destructive/20' : ''}`}
               required
             />
           </Row>

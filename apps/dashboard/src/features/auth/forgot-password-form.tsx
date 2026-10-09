@@ -26,7 +26,7 @@ export const ForgotPasswordForm = () => {
         <p className="text-muted-foreground text-sm leading-6">
           If an account with that email exists, we've sent you instructions to reset your password.
         </p>
-        <div className="mt-6">
+        <div className="mt-6 text-center">
           <Link to="/signin" className="text-primary text-sm underline-offset-4 hover:underline">
             Back to sign in
           </Link>
@@ -48,7 +48,7 @@ export const ForgotPasswordForm = () => {
               id="email"
               type="email"
               placeholder="name@example.com"
-              className="h-12 pl-10"
+              className="pl-10"
               value={email}
               onChange={(e) => setEmail(e.target.value)}
               required
@@ -57,12 +57,12 @@ export const ForgotPasswordForm = () => {
           </div>
         </div>
 
-        <Button type="submit" disabled={isPending || !email} className="h-12 w-full">
+        <Button type="submit" disabled={isPending || !email} className="w-full">
           {isPending ? 'Sending...' : 'Send Reset Link'}
         </Button>
       </form>
 
-      <div className="mt-6 border-border border-t pt-5 text-muted-foreground text-sm">
+      <div className="mt-6 border-border border-t pt-5 text-center text-muted-foreground text-sm">
         <span>Remember your password? </span>
         <Link to="/signin" className="text-primary underline-offset-4 hover:underline">
           Sign in

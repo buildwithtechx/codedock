@@ -191,11 +191,11 @@ function DeploymentFilters({
           value={search}
           onChange={(event) => onSearchChange(event.target.value)}
           placeholder="Search app, project, branch, or commit"
-          className="h-10 bg-card pl-10"
+          className="bg-card pl-10"
         />
       </div>
       <Select value={projectId} onValueChange={onProjectChange}>
-        <SelectTrigger className="h-10 w-full bg-card sm:w-44">
+        <SelectTrigger className="w-full bg-card sm:w-44">
           <SelectValue placeholder="All projects" />
         </SelectTrigger>
         <SelectContent>

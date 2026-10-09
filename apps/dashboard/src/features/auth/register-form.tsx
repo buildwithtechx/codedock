@@ -47,7 +47,7 @@ export const RegisterForm = () => {
             id="name"
             type="text"
             placeholder="John Doe"
-            className="h-12 pl-10"
+            className="pl-10"
             {...register('name')}
           />
         </div>
@@ -64,7 +64,7 @@ export const RegisterForm = () => {
             id="email"
             type="email"
             placeholder="name@example.com"
-            className="h-12 pl-10"
+            className="pl-10"
             {...register('email')}
           />
         </div>
@@ -81,7 +81,7 @@ export const RegisterForm = () => {
             id="password"
             type={showPassword ? 'text' : 'password'}
             placeholder="Create a password"
-            className="h-12 pr-10 pl-10"
+            className="pr-10 pl-10"
             {...register('password')}
           />
           <button
@@ -99,7 +99,7 @@ export const RegisterForm = () => {
         )}
       </div>
 
-      <Button type="submit" disabled={isPending} className="h-12 w-full">
+      <Button type="submit" disabled={isPending} className="w-full">
         {isPending ? 'Creating account...' : 'Create Account'}
       </Button>
     </form>

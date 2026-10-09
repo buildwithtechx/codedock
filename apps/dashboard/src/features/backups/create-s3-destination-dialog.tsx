@@ -155,7 +155,7 @@ export function CreateS3DestinationDialog({ isOpen, setIsOpen, trigger }: Props)
                 value={name}
                 onChange={(e) => setName(e.target.value)}
                 required
-                className="border/50 h-10 rounded-lg bg-background/50 text-sm focus:border-primary focus:ring-0"
+                className="border/50 rounded-lg bg-background/50 text-sm focus:border-primary focus:ring-0"
               />
             </div>
             <div className="space-y-1">
@@ -163,7 +163,7 @@ export function CreateS3DestinationDialog({ isOpen, setIsOpen, trigger }: Props)
                 Provider
               </Label>
               <Select value={provider} onValueChange={handleProviderChange}>
-                <SelectTrigger className="border/50 h-10 rounded-lg bg-background/50 text-sm focus:ring-0">
+                <SelectTrigger className="border/50 rounded-lg bg-background/50 text-sm focus:ring-0">
                   <SelectValue />
                 </SelectTrigger>
                 <SelectContent>
@@ -186,7 +186,7 @@ export function CreateS3DestinationDialog({ isOpen, setIsOpen, trigger }: Props)
               placeholder="Production backups bucket"
               value={description}
               onChange={(e) => setDescription(e.target.value)}
-              className="border/50 h-10 rounded-lg bg-background/50 text-sm focus:border-primary focus:ring-0"
+              className="border/50 rounded-lg bg-background/50 text-sm focus:border-primary focus:ring-0"
             />
           </div>
 
@@ -200,7 +200,7 @@ export function CreateS3DestinationDialog({ isOpen, setIsOpen, trigger }: Props)
                 value={endpoint}
                 onChange={(e) => setEndpoint(e.target.value)}
                 required
-                className="border/50 h-10 rounded-lg bg-background/50 font-mono text-sm focus:border-primary focus:ring-0"
+                className="border/50 rounded-lg bg-background/50 font-mono text-sm focus:border-primary focus:ring-0"
               />
             </div>
             <div className="space-y-1">
@@ -212,7 +212,7 @@ export function CreateS3DestinationDialog({ isOpen, setIsOpen, trigger }: Props)
                 value={bucket}
                 onChange={(e) => setBucket(e.target.value)}
                 required
-                className="border/50 h-10 rounded-lg bg-background/50 font-mono text-sm focus:border-primary focus:ring-0"
+                className="border/50 rounded-lg bg-background/50 font-mono text-sm focus:border-primary focus:ring-0"
               />
             </div>
           </div>
@@ -226,7 +226,7 @@ export function CreateS3DestinationDialog({ isOpen, setIsOpen, trigger }: Props)
                 placeholder="us-east-1 or auto"
                 value={region}
                 onChange={(e) => setRegion(e.target.value)}
-                className="border/50 h-10 rounded-lg bg-background/50 font-mono text-sm focus:border-primary focus:ring-0"
+                className="border/50 rounded-lg bg-background/50 font-mono text-sm focus:border-primary focus:ring-0"
               />
             </div>
             <div className="space-y-1">
@@ -237,7 +237,7 @@ export function CreateS3DestinationDialog({ isOpen, setIsOpen, trigger }: Props)
                 placeholder="backups/production"
                 value={pathPrefix}
                 onChange={(e) => setPathPrefix(e.target.value)}
-                className="border/50 h-10 rounded-lg bg-background/50 font-mono text-sm focus:border-primary focus:ring-0"
+                className="border/50 rounded-lg bg-background/50 font-mono text-sm focus:border-primary focus:ring-0"
               />
             </div>
           </div>
@@ -265,7 +265,7 @@ export function CreateS3DestinationDialog({ isOpen, setIsOpen, trigger }: Props)
                 value={accessKeyId}
                 onChange={(e) => setAccessKeyId(e.target.value)}
                 required
-                className="border/50 h-10 rounded-lg bg-background/50 font-mono text-sm focus:border-primary focus:ring-0"
+                className="border/50 rounded-lg bg-background/50 font-mono text-sm focus:border-primary focus:ring-0"
               />
             </div>
             <div className="space-y-1">
@@ -279,7 +279,7 @@ export function CreateS3DestinationDialog({ isOpen, setIsOpen, trigger }: Props)
                   value={secretAccessKey}
                   onChange={(e) => setSecretAccessKey(e.target.value)}
                   required
-                  className="border/50 h-10 rounded-lg bg-background/50 pr-10 font-mono text-sm focus:border-primary focus:ring-0"
+                  className="border/50 rounded-lg bg-background/50 pr-10 font-mono text-sm focus:border-primary focus:ring-0"
                 />
                 <Button
                   type="button"

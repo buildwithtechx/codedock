@@ -67,7 +67,7 @@ export function ProfileNameForm() {
             placeholder="John Doe"
             value={name}
             onChange={(e) => setName(e.target.value)}
-            className="h-10 w-full"
+            className="w-full"
           />
         </Row>
       </Section>
@@ -149,7 +149,7 @@ export function ProfileEmailForm() {
               placeholder="john@example.com"
               value={email}
               onChange={(e) => setEmail(e.target.value)}
-              className="h-10 w-full"
+              className="w-full"
             />
           </Row>
         </Section>
@@ -278,7 +278,7 @@ export function ProfilePasswordForm() {
             type="password"
             value={oldPassword}
             onChange={(e) => setOldPassword(e.target.value)}
-            className="h-10 w-full"
+            className="w-full"
             placeholder="Current Password"
           />
         </Row>
@@ -288,7 +288,7 @@ export function ProfilePasswordForm() {
             type="password"
             value={newPassword}
             onChange={(e) => setNewPassword(e.target.value)}
-            className="h-10 w-full"
+            className="w-full"
             placeholder="New Password"
           />
         </Row>

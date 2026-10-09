@@ -138,7 +138,7 @@ export function GithubAppDialogs({
                     <input type="hidden" name="manifest" value={manifestStr} />
                     <Button
                       type="submit"
-                      className="h-10 gap-2 bg-primary/20 font-bold text-primary text-xs uppercase tracking-wider hover:bg-primary/30"
+                      className="gap-2 bg-primary/20 font-bold text-primary text-xs uppercase tracking-wider hover:bg-primary/30"
                     >
                       <GithubIcon className="h-4 w-4" />
                       CONNECT WITH GITHUB
