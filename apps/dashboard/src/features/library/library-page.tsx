@@ -1,3 +1,4 @@
+import { useNavigate } from '@tanstack/react-router';
 import { Code2, FolderUp, LayoutGrid, Link2, SquareCode } from 'lucide-react';
 import { useEffect, useState } from 'react';
 import { PageHeader } from '#/components/layout/page-header';
@@ -19,6 +20,7 @@ import { UrlImport } from './url-import';
 export type LibraryTab = 'repositories' | 'folder' | 'url' | 'apps' | 'examples';
 
 export function LibraryPage({ initialTab }: { initialTab?: LibraryTab }) {
+  const navigate = useNavigate();
   const [tab, setTab] = useState<LibraryTab>(initialTab || 'repositories');
 
   useEffect(() => {
@@ -84,13 +86,12 @@ export function LibraryPage({ initialTab }: { initialTab?: LibraryTab }) {
                   connections={connections}
                   provider={provider}
                   onProviderChange={setProvider}
-                  onImport={(repo) =>
-                    setPending({
-                      repositoryUrl: repo.cloneUrl,
-                      branch: repo.defaultBranch || 'main',
-                      name: repo.name,
-                    })
-                  }
+                  onImport={(repo) => {
+                    void navigate({
+                      to: '/deploy/$slug',
+                      params: { slug: encodeURIComponent(repo.name) },
+                    });
+                  }}
                   onImportUrl={() => setTab('url')}
                 />
               )}

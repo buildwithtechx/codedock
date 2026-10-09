@@ -21,6 +21,7 @@ import { Route as DashboardIndexRouteImport } from './routes/_dashboard.index'
 import { Route as DashboardAppsRouteImport } from './routes/_dashboard.apps'
 import { Route as DashboardAuditRouteImport } from './routes/_dashboard.audit'
 import { Route as DashboardBackupsRouteImport } from './routes/_dashboard.backups'
+import { Route as DashboardDeployRouteImport } from './routes/_dashboard.deploy'
 import { Route as DashboardDeploymentsRouteImport } from './routes/_dashboard.deployments'
 import { Route as DashboardDnsRouteImport } from './routes/_dashboard.dns'
 import { Route as DashboardJobsRouteImport } from './routes/_dashboard.jobs'
@@ -36,6 +37,8 @@ import { Route as DashboardAppsIndexRouteImport } from './routes/_dashboard.apps
 import { Route as DashboardAppsNewRouteImport } from './routes/_dashboard.apps.new'
 import { Route as DashboardBackupsIndexRouteImport } from './routes/_dashboard.backups.index'
 import { Route as DashboardBackupsBackupIdRouteImport } from './routes/_dashboard.backups.$backupId'
+import { Route as DashboardDeployIndexRouteImport } from './routes/_dashboard.deploy.index'
+import { Route as DashboardDeploySlugRouteImport } from './routes/_dashboard.deploy.$slug'
 import { Route as DashboardDeploymentsIndexRouteImport } from './routes/_dashboard.deployments.index'
 import { Route as DashboardDeploymentsDeploymentIdRouteImport } from './routes/_dashboard.deployments.$deploymentId'
 import { Route as DashboardJobsIndexRouteImport } from './routes/_dashboard.jobs.index'
@@ -134,6 +137,11 @@ const DashboardBackupsRoute = DashboardBackupsRouteImport.update({
   path: '/backups',
   getParentRoute: () => DashboardRoute,
 } as any)
+const DashboardDeployRoute = DashboardDeployRouteImport.update({
+  id: '/deploy',
+  path: '/deploy',
+  getParentRoute: () => DashboardRoute,
+} as any)
 const DashboardDeploymentsRoute = DashboardDeploymentsRouteImport.update({
   id: '/deployments',
   path: '/deployments',
@@ -210,6 +218,16 @@ const DashboardBackupsBackupIdRoute =
     path: '/$backupId',
     getParentRoute: () => DashboardBackupsRoute,
   } as any)
+const DashboardDeployIndexRoute = DashboardDeployIndexRouteImport.update({
+  id: '/',
+  path: '/',
+  getParentRoute: () => DashboardDeployRoute,
+} as any)
+const DashboardDeploySlugRoute = DashboardDeploySlugRouteImport.update({
+  id: '/$slug',
+  path: '/$slug',
+  getParentRoute: () => DashboardDeployRoute,
+} as any)
 const DashboardDeploymentsIndexRoute =
   DashboardDeploymentsIndexRouteImport.update({
     id: '/',
@@ -445,6 +463,7 @@ export interface FileRoutesByFullPath {
   '/apps': typeof DashboardAppsRouteWithChildren
   '/audit': typeof DashboardAuditRoute
   '/backups': typeof DashboardBackupsRouteWithChildren
+  '/deploy': typeof DashboardDeployRouteWithChildren
   '/deployments': typeof DashboardDeploymentsRouteWithChildren
   '/dns': typeof DashboardDnsRoute
   '/jobs': typeof DashboardJobsRouteWithChildren
@@ -458,6 +477,7 @@ export interface FileRoutesByFullPath {
   '/users': typeof DashboardUsersRoute
   '/apps/new': typeof DashboardAppsNewRouteWithChildren
   '/backups/$backupId': typeof DashboardBackupsBackupIdRoute
+  '/deploy/$slug': typeof DashboardDeploySlugRoute
   '/deployments/$deploymentId': typeof DashboardDeploymentsDeploymentIdRoute
   '/jobs/$jobId': typeof DashboardJobsJobIdRouteWithChildren
   '/jobs/new': typeof DashboardJobsNewRoute
@@ -469,6 +489,7 @@ export interface FileRoutesByFullPath {
   '/services/$serviceId': typeof DashboardServicesServiceIdRouteWithChildren
   '/apps/': typeof DashboardAppsIndexRoute
   '/backups/': typeof DashboardBackupsIndexRoute
+  '/deploy/': typeof DashboardDeployIndexRoute
   '/deployments/': typeof DashboardDeploymentsIndexRoute
   '/jobs/': typeof DashboardJobsIndexRoute
   '/organizations/': typeof DashboardOrganizationsIndexRoute
@@ -516,6 +537,7 @@ export interface FileRoutesByTo {
   '/settings': typeof DashboardSettingsRoute
   '/users': typeof DashboardUsersRoute
   '/backups/$backupId': typeof DashboardBackupsBackupIdRoute
+  '/deploy/$slug': typeof DashboardDeploySlugRoute
   '/deployments/$deploymentId': typeof DashboardDeploymentsDeploymentIdRoute
   '/jobs/new': typeof DashboardJobsNewRoute
   '/organizations/$organizationId': typeof DashboardOrganizationsOrganizationIdRoute
@@ -524,6 +546,7 @@ export interface FileRoutesByTo {
   '/servers/new': typeof DashboardServersNewRoute
   '/apps': typeof DashboardAppsIndexRoute
   '/backups': typeof DashboardBackupsIndexRoute
+  '/deploy': typeof DashboardDeployIndexRoute
   '/deployments': typeof DashboardDeploymentsIndexRoute
   '/jobs': typeof DashboardJobsIndexRoute
   '/organizations': typeof DashboardOrganizationsIndexRoute
@@ -568,6 +591,7 @@ export interface FileRoutesById {
   '/_dashboard/apps': typeof DashboardAppsRouteWithChildren
   '/_dashboard/audit': typeof DashboardAuditRoute
   '/_dashboard/backups': typeof DashboardBackupsRouteWithChildren
+  '/_dashboard/deploy': typeof DashboardDeployRouteWithChildren
   '/_dashboard/deployments': typeof DashboardDeploymentsRouteWithChildren
   '/_dashboard/dns': typeof DashboardDnsRoute
   '/_dashboard/jobs': typeof DashboardJobsRouteWithChildren
@@ -582,6 +606,7 @@ export interface FileRoutesById {
   '/_dashboard/': typeof DashboardIndexRoute
   '/_dashboard/apps/new': typeof DashboardAppsNewRouteWithChildren
   '/_dashboard/backups/$backupId': typeof DashboardBackupsBackupIdRoute
+  '/_dashboard/deploy/$slug': typeof DashboardDeploySlugRoute
   '/_dashboard/deployments/$deploymentId': typeof DashboardDeploymentsDeploymentIdRoute
   '/_dashboard/jobs/$jobId': typeof DashboardJobsJobIdRouteWithChildren
   '/_dashboard/jobs/new': typeof DashboardJobsNewRoute
@@ -593,6 +618,7 @@ export interface FileRoutesById {
   '/_dashboard/services/$serviceId': typeof DashboardServicesServiceIdRouteWithChildren
   '/_dashboard/apps/': typeof DashboardAppsIndexRoute
   '/_dashboard/backups/': typeof DashboardBackupsIndexRoute
+  '/_dashboard/deploy/': typeof DashboardDeployIndexRoute
   '/_dashboard/deployments/': typeof DashboardDeploymentsIndexRoute
   '/_dashboard/jobs/': typeof DashboardJobsIndexRoute
   '/_dashboard/organizations/': typeof DashboardOrganizationsIndexRoute
@@ -637,6 +663,7 @@ export interface FileRouteTypes {
     | '/apps'
     | '/audit'
     | '/backups'
+    | '/deploy'
     | '/deployments'
     | '/dns'
     | '/jobs'
@@ -650,6 +677,7 @@ export interface FileRouteTypes {
     | '/users'
     | '/apps/new'
     | '/backups/$backupId'
+    | '/deploy/$slug'
     | '/deployments/$deploymentId'
     | '/jobs/$jobId'
     | '/jobs/new'
@@ -661,6 +689,7 @@ export interface FileRouteTypes {
     | '/services/$serviceId'
     | '/apps/'
     | '/backups/'
+    | '/deploy/'
     | '/deployments/'
     | '/jobs/'
     | '/organizations/'
@@ -708,6 +737,7 @@ export interface FileRouteTypes {
     | '/settings'
     | '/users'
     | '/backups/$backupId'
+    | '/deploy/$slug'
     | '/deployments/$deploymentId'
     | '/jobs/new'
     | '/organizations/$organizationId'
@@ -716,6 +746,7 @@ export interface FileRouteTypes {
     | '/servers/new'
     | '/apps'
     | '/backups'
+    | '/deploy'
     | '/deployments'
     | '/jobs'
     | '/organizations'
@@ -759,6 +790,7 @@ export interface FileRouteTypes {
     | '/_dashboard/apps'
     | '/_dashboard/audit'
     | '/_dashboard/backups'
+    | '/_dashboard/deploy'
     | '/_dashboard/deployments'
     | '/_dashboard/dns'
     | '/_dashboard/jobs'
@@ -773,6 +805,7 @@ export interface FileRouteTypes {
     | '/_dashboard/'
     | '/_dashboard/apps/new'
     | '/_dashboard/backups/$backupId'
+    | '/_dashboard/deploy/$slug'
     | '/_dashboard/deployments/$deploymentId'
     | '/_dashboard/jobs/$jobId'
     | '/_dashboard/jobs/new'
@@ -784,6 +817,7 @@ export interface FileRouteTypes {
     | '/_dashboard/services/$serviceId'
     | '/_dashboard/apps/'
     | '/_dashboard/backups/'
+    | '/_dashboard/deploy/'
     | '/_dashboard/deployments/'
     | '/_dashboard/jobs/'
     | '/_dashboard/organizations/'
@@ -908,6 +942,13 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof DashboardBackupsRouteImport
       parentRoute: typeof DashboardRoute
     }
+    '/_dashboard/deploy': {
+      id: '/_dashboard/deploy'
+      path: '/deploy'
+      fullPath: '/deploy'
+      preLoaderRoute: typeof DashboardDeployRouteImport
+      parentRoute: typeof DashboardRoute
+    }
     '/_dashboard/deployments': {
       id: '/_dashboard/deployments'
       path: '/deployments'
@@ -1012,6 +1053,20 @@ declare module '@tanstack/react-router' {
       fullPath: '/backups/$backupId'
       preLoaderRoute: typeof DashboardBackupsBackupIdRouteImport
       parentRoute: typeof DashboardBackupsRoute
+    }
+    '/_dashboard/deploy/': {
+      id: '/_dashboard/deploy/'
+      path: '/'
+      fullPath: '/deploy/'
+      preLoaderRoute: typeof DashboardDeployIndexRouteImport
+      parentRoute: typeof DashboardDeployRoute
+    }
+    '/_dashboard/deploy/$slug': {
+      id: '/_dashboard/deploy/$slug'
+      path: '/$slug'
+      fullPath: '/deploy/$slug'
+      preLoaderRoute: typeof DashboardDeploySlugRouteImport
+      parentRoute: typeof DashboardDeployRoute
     }
     '/_dashboard/deployments/': {
       id: '/_dashboard/deployments/'
@@ -1347,6 +1402,20 @@ const DashboardBackupsRouteChildren: DashboardBackupsRouteChildren = {
 const DashboardBackupsRouteWithChildren =
   DashboardBackupsRoute._addFileChildren(DashboardBackupsRouteChildren)
 
+interface DashboardDeployRouteChildren {
+  DashboardDeploySlugRoute: typeof DashboardDeploySlugRoute
+  DashboardDeployIndexRoute: typeof DashboardDeployIndexRoute
+}
+
+const DashboardDeployRouteChildren: DashboardDeployRouteChildren = {
+  DashboardDeploySlugRoute: DashboardDeploySlugRoute,
+  DashboardDeployIndexRoute: DashboardDeployIndexRoute,
+}
+
+const DashboardDeployRouteWithChildren = DashboardDeployRoute._addFileChildren(
+  DashboardDeployRouteChildren,
+)
+
 interface DashboardDeploymentsRouteChildren {
   DashboardDeploymentsDeploymentIdRoute: typeof DashboardDeploymentsDeploymentIdRoute
   DashboardDeploymentsIndexRoute: typeof DashboardDeploymentsIndexRoute
@@ -1523,6 +1592,7 @@ interface DashboardRouteChildren {
   DashboardAppsRoute: typeof DashboardAppsRouteWithChildren
   DashboardAuditRoute: typeof DashboardAuditRoute
   DashboardBackupsRoute: typeof DashboardBackupsRouteWithChildren
+  DashboardDeployRoute: typeof DashboardDeployRouteWithChildren
   DashboardDeploymentsRoute: typeof DashboardDeploymentsRouteWithChildren
   DashboardDnsRoute: typeof DashboardDnsRoute
   DashboardJobsRoute: typeof DashboardJobsRouteWithChildren
@@ -1542,6 +1612,7 @@ const DashboardRouteChildren: DashboardRouteChildren = {
   DashboardAppsRoute: DashboardAppsRouteWithChildren,
   DashboardAuditRoute: DashboardAuditRoute,
   DashboardBackupsRoute: DashboardBackupsRouteWithChildren,
+  DashboardDeployRoute: DashboardDeployRouteWithChildren,
   DashboardDeploymentsRoute: DashboardDeploymentsRouteWithChildren,
   DashboardDnsRoute: DashboardDnsRoute,
   DashboardJobsRoute: DashboardJobsRouteWithChildren,

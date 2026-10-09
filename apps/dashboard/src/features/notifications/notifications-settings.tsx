@@ -10,6 +10,7 @@ import {
   useUpdateNotificationSettings,
 } from '#/features/settings';
 import { NotificationChannelsList, type NotifSettingsForm } from './notification-channels-list';
+import { NotificationSubscriptionsTable } from './notification-subscriptions-table';
 
 const EMPTY: NotifSettingsForm = {
   discordWebhookUrl: '',
@@ -191,6 +192,8 @@ export const NotificationsSettings = () => {
         testing={testing}
         disabled={isSavingAny}
       />
+
+      <NotificationSubscriptionsTable />
     </div>
   );
 };
