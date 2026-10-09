@@ -16597,6 +16597,10 @@
                             "format": "int32",
                             "type": "integer"
                           },
+                          "deployTarget": {
+                            "description": "Deploy target",
+                            "type": "string"
+                          },
                           "description": {
                             "description": "Description",
                             "type": "string"
@@ -16618,6 +16622,10 @@
                             "description": "Online services",
                             "format": "int32",
                             "type": "integer"
+                          },
+                          "serverName": {
+                            "description": "Server name",
+                            "type": "string"
                           },
                           "totalServices": {
                             "description": "Total services",
@@ -67050,6 +67058,10 @@
                           "format": "int32",
                           "type": "integer"
                         },
+                        "deployTarget": {
+                          "description": "Deploy target",
+                          "type": "string"
+                        },
                         "description": {
                           "description": "Description",
                           "type": "string"
@@ -67071,6 +67083,10 @@
                           "description": "Online services",
                           "format": "int32",
                           "type": "integer"
+                        },
+                        "serverName": {
+                          "description": "Server name",
+                          "type": "string"
                         },
                         "totalServices": {
                           "description": "Total services",

@@ -20,9 +20,11 @@ export function HomeProjectList({
             <FolderKanban className="h-4 w-4" />
           </div>
           <div>
-            <h2 className="font-semibold text-sm">Active projects</h2>
+            <h2 className="font-semibold text-sm">Your projects</h2>
             <p className="text-muted-foreground text-xs">
-              {isLoading ? 'Loading workspace...' : `${projects.length} in this organization`}
+              {isLoading
+                ? 'Loading workspace...'
+                : `${projects.length} project${projects.length === 1 ? '' : 's'}`}
             </p>
           </div>
         </div>
@@ -51,7 +53,7 @@ export function HomeProjectList({
         <HomeFirstProject onCreateProject={onCreateProject} />
       ) : (
         <div className="divide-y divide-border/70">
-          {projects.slice(0, 5).map((project) => (
+          {projects.slice(0, 6).map((project) => (
             <Link
               key={project.id}
               to="/projects/$projectId"
@@ -81,6 +83,14 @@ export function HomeProjectList({
               </div>
             </Link>
           ))}
+          {projects.length > 6 && (
+            <Link
+              to="/projects"
+              className="block px-5 py-3 text-center text-muted-foreground/70 text-sm transition-colors hover:bg-muted/40 hover:text-foreground"
+            >
+              View all {projects.length} projects
+            </Link>
+          )}
         </div>
       )}
     </section>

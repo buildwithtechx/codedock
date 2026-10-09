@@ -1,16 +1,7 @@
 import { Link } from '@tanstack/react-router';
-import { BookOpen, ExternalLink, LayoutTemplate, Plus, Rocket, SearchX } from 'lucide-react';
+import { GitBranch, Plus, SearchX } from 'lucide-react';
 import { Button } from '#/components/ui/button';
-import {
-  Empty,
-  EmptyContent,
-  EmptyDescription,
-  EmptyHeader,
-  EmptyMedia,
-  EmptyTitle,
-} from '#/components/ui/empty';
-
-const DOCS_URL = 'https://docs.codedock.run';
+import { EmptyIllustration } from './empty-illustration';
 
 export function DeploymentEmptyState({
   hasFilters,
@@ -21,70 +12,46 @@ export function DeploymentEmptyState({
 }) {
   if (hasFilters) {
     return (
-      <Empty>
-        <EmptyHeader>
-          <EmptyMedia
-            variant="icon"
-            className="size-16 rounded-2xl [&_svg:not([class*='size-'])]:size-7"
-          >
-            <SearchX />
-          </EmptyMedia>
-          <EmptyTitle className="text-xl">No releases match these filters</EmptyTitle>
-          <EmptyDescription>
+      <div className="rounded-2xl border border-border/50 bg-card p-16 text-center">
+        <div className="mx-auto max-w-md">
+          <div className="mx-auto mb-4 flex h-16 w-16 items-center justify-center rounded-full border border-border/50 bg-muted/60">
+            <SearchX className="h-7 w-7 text-muted-foreground/50" />
+          </div>
+          <h3 className="mb-2 font-medium text-foreground/80 text-lg">
+            No releases match these filters
+          </h3>
+          <p className="text-muted-foreground text-sm leading-relaxed">
             Change or clear a filter to look across a different set of releases.
-          </EmptyDescription>
-        </EmptyHeader>
-        <EmptyContent className="flex-row justify-center">
-          <Button variant="outline" onClick={onClear}>
+          </p>
+          <Button variant="outline" size="sm" onClick={onClear} className="mt-6">
             Clear filters
           </Button>
-          <Button asChild variant="secondary" className="gap-2 px-5">
-            <a href={DOCS_URL} target="_blank" rel="noopener noreferrer">
-              <BookOpen className="h-4 w-4" />
-              Docs
-              <ExternalLink className="h-3.5 w-3.5 opacity-60" />
-            </a>
-          </Button>
-        </EmptyContent>
-      </Empty>
+        </div>
+      </div>
     );
   }
 
   return (
-    <Empty className="border-none py-12">
-      <EmptyHeader>
-        <EmptyMedia
-          variant="icon"
-          className="size-16 rounded-2xl [&_svg:not([class*='size-'])]:size-7"
-        >
-          <Rocket />
-        </EmptyMedia>
-        <EmptyTitle className="text-xl">No deployments yet</EmptyTitle>
-        <EmptyDescription>
-          Deploy an app and its build status, release history, and commit details will appear here.
-        </EmptyDescription>
-      </EmptyHeader>
-      <EmptyContent className="flex-row flex-wrap justify-center">
-        <Button asChild className="gap-2 px-5">
+    <div className="rounded-2xl border border-border/50 bg-card px-6 pb-10 text-center">
+      <EmptyIllustration className="relative mx-auto h-44 w-64" />
+      <h3 className="mb-2 font-medium text-foreground/80 text-lg">No deployments yet</h3>
+      <p className="mx-auto mb-8 max-w-sm text-muted-foreground text-sm leading-relaxed">
+        Deploy an app and its build status, release history, and commit details will appear here.
+      </p>
+      <div className="flex flex-col items-center justify-center gap-3 sm:flex-row">
+        <Button asChild size="lg" className="gap-2 px-6">
           <Link to="/projects/new">
             <Plus className="h-4 w-4" />
             Deploy app
           </Link>
         </Button>
-        <Button asChild variant="secondary" className="gap-2 px-5">
-          <Link to="/projects/new" search={{ template: 'one-click' }}>
-            <LayoutTemplate className="h-4 w-4" />
-            Browse templates
+        <Button asChild size="lg" variant="secondary" className="gap-2 px-6">
+          <Link to="/library">
+            <GitBranch className="h-4 w-4" />
+            Import repository
           </Link>
         </Button>
-        <Button asChild variant="secondary" className="gap-2 px-5">
-          <a href={DOCS_URL} target="_blank" rel="noopener noreferrer">
-            <BookOpen className="h-4 w-4" />
-            Docs
-            <ExternalLink className="h-3.5 w-3.5 opacity-60" />
-          </a>
-        </Button>
-      </EmptyContent>
-    </Empty>
+      </div>
+    </div>
   );
 }

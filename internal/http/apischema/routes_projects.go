@@ -34,6 +34,8 @@ func canvasSummarySchema() Schema {
 		F("databasesCount", Int("Database count")),
 		F("totalServices", Int("Total services")),
 		F("onlineServices", Int("Online services")),
+		F("deployTarget", Str("Deploy target")),
+		F("serverName", Str("Server name")),
 	)
 }
 

@@ -100,7 +100,7 @@ export function CommandPalette({ open, onOpenChange }: CommandPaletteProps) {
               <div className="grid gap-1 md:grid-cols-2">
                 {commandNavigation.map((item) => (
                   <Command.Item
-                    key={item.to}
+                    key={`${item.title}:${item.to}`}
                     value={`${item.title} ${item.description}`}
                     onSelect={() => navigateTo(item.to, item.search)}
                     className="flex cursor-pointer items-center gap-3 rounded-lg border border-transparent px-3 py-3 text-foreground text-sm data-[selected=true]:border-border data-[selected=true]:bg-muted/70"
@@ -126,7 +126,7 @@ export function CommandPalette({ open, onOpenChange }: CommandPaletteProps) {
               <div className="grid gap-1 md:grid-cols-2">
                 {creationItems.map((item) => (
                   <Command.Item
-                    key={item.to}
+                    key={`${item.title}:${item.to}`}
                     value={`${item.title} ${item.description}`}
                     onSelect={() => navigateTo(item.to, item.search)}
                     className="flex cursor-pointer items-center gap-3 rounded-lg border border-transparent px-3 py-3 text-foreground text-sm data-[selected=true]:border-border data-[selected=true]:bg-muted/70"

@@ -13,18 +13,11 @@ import {
   SelectTrigger,
   SelectValue,
 } from '#/components/ui/select';
-import {
-  Table,
-  TableBody,
-  TableCell,
-  TableHead,
-  TableHeader,
-  TableRow,
-} from '#/components/ui/table';
 import { useListProjects } from '#/features/projects';
 import type { OrganizationDeployment } from '#/features/services';
 import { useListByOrganization } from '#/hooks/use-deployments';
 import { DeploymentEmptyState } from './deployment-empty-state';
+import { DeploymentHistoryCard } from './deployment-history-card';
 
 const statusOptions = [
   ['all', 'All'],
@@ -36,20 +29,6 @@ const statusOptions = [
 
 const activeStatuses = new Set(['PENDING', 'CLONING', 'PULLING', 'BUILDING']);
 const successfulStatuses = new Set(['READY', 'ACTIVE', 'SUCCESS']);
-
-const statusTone = (status: string) => {
-  const normalized = status.toUpperCase();
-  if (successfulStatuses.has(normalized)) return 'bg-emerald-500';
-  if (normalized === 'FAILED') return 'bg-rose-500';
-  if (activeStatuses.has(normalized)) return 'bg-amber-400';
-  return 'bg-muted-foreground/50';
-};
-
-const statusLabel = (status: string) =>
-  status
-    .toLowerCase()
-    .replace(/_/g, ' ')
-    .replace(/\b\w/g, (letter) => letter.toUpperCase());
 
 export function DeploymentDirectory() {
   const [projectId, setProjectId] = useState('all');
@@ -128,7 +107,11 @@ export function DeploymentDirectory() {
             />
           ) : (
             <>
-              <DeploymentTable deployments={deployments} />
+              <div className="divide-y divide-border/50 rounded-2xl bg-card">
+                {deployments.map((deployment) => (
+                  <DeploymentHistoryCard key={deployment.id} deployment={deployment} />
+                ))}
+              </div>
               {totalPages > 1 && (
                 <div className="flex items-center justify-between border-border/40 border-t pt-4">
                   <p className="text-muted-foreground text-sm">
@@ -191,7 +174,7 @@ function DeploymentFilters({
           value={search}
           onChange={(event) => onSearchChange(event.target.value)}
           placeholder="Search app, project, branch, or commit"
-          className="bg-card pl-10"
+          className="h-10 bg-muted/60 ps-10 pe-4"
         />
       </div>
       <Select value={projectId} onValueChange={onProjectChange}>
@@ -207,21 +190,24 @@ function DeploymentFilters({
           ))}
         </SelectContent>
       </Select>
-      <div className="inline-flex max-w-full flex-wrap items-center gap-1 rounded-xl bg-muted/45 p-1">
-        {statusOptions.map(([value, label]) => (
-          <button
-            key={value}
-            type="button"
-            onClick={() => onStatusChange(value)}
-            className={`inline-flex h-8 items-center rounded-lg px-3 font-medium text-xs transition-colors ${
-              status === value
-                ? 'bg-card text-foreground shadow-sm'
-                : 'text-muted-foreground hover:bg-background/70 hover:text-foreground'
-            }`}
-          >
-            {label}
-          </button>
-        ))}
+      <div className="max-w-full shrink-0 overflow-x-auto [scrollbar-width:none] [&::-webkit-scrollbar]:hidden">
+        <div className="inline-flex items-center gap-1">
+          {statusOptions.map(([value, label]) => (
+            <button
+              key={value}
+              type="button"
+              aria-pressed={status === value}
+              onClick={() => onStatusChange(value)}
+              className={`inline-flex h-10 shrink-0 items-center whitespace-nowrap rounded-lg px-4 font-medium text-sm transition-colors ${
+                status === value
+                  ? 'bg-foreground text-background'
+                  : 'text-muted-foreground hover:bg-muted hover:text-foreground'
+              }`}
+            >
+              {label}
+            </button>
+          ))}
+        </div>
       </div>
     </div>
   );
@@ -287,84 +273,53 @@ function DeploymentSummary({
             </div>
           )}
         </div>
+        {!isLoading && deployments.length > 0 && (
+          <div className="mt-4 flex h-1.5 overflow-hidden rounded-full bg-muted/40">
+            {successful > 0 && (
+              <div
+                className="bg-emerald-500"
+                style={{ width: `${(successful / deployments.length) * 100}%` }}
+              />
+            )}
+            {failed > 0 && (
+              <div
+                className="bg-rose-500"
+                style={{ width: `${(failed / deployments.length) * 100}%` }}
+              />
+            )}
+            {active > 0 && (
+              <div
+                className="bg-amber-400"
+                style={{ width: `${(active / deployments.length) * 100}%` }}
+              />
+            )}
+          </div>
+        )}
       </aside>
-      <DeploymentGetStarted />
+      <DeploymentTip hasDeployments={deployments.length > 0} />
     </div>
   );
 }
 
-function DeploymentGetStarted() {
+function DeploymentTip({ hasDeployments }: { hasDeployments: boolean }) {
   return (
     <section className="rounded-2xl border border-primary/10 bg-gradient-to-br from-primary/10 via-primary/5 to-transparent p-5">
       <div className="flex items-center gap-2">
         <Zap className="h-4 w-4 text-primary" />
-        <h2 className="font-semibold text-sm">Get started</h2>
+        <h2 className="font-semibold text-sm">{hasDeployments ? 'Auto deploy' : 'Get started'}</h2>
       </div>
       <p className="mt-3 text-muted-foreground text-sm leading-6">
-        Connect a repository or choose a template to create the first deployment.
+        {hasDeployments
+          ? 'Push to a connected branch and Codedock builds and ships the new release automatically.'
+          : 'Connect a repository or choose a template to create the first deployment.'}
       </p>
       <Link
-        to="/projects/new"
+        to={hasDeployments ? '/projects' : '/projects/new'}
         className="mt-4 inline-flex items-center gap-1.5 font-medium text-sm transition-colors hover:text-primary"
       >
-        Create project
+        {hasDeployments ? 'View projects' : 'Create project'}
         <ArrowRight className="h-3.5 w-3.5" />
       </Link>
-    </section>
-  );
-}
-
-function DeploymentTable({ deployments }: { deployments: OrganizationDeployment[] }) {
-  return (
-    <section className="overflow-x-auto rounded-2xl bg-card">
-      <Table>
-        <TableHeader>
-          <TableRow>
-            <TableHead>Release</TableHead>
-            <TableHead>Project</TableHead>
-            <TableHead>Status</TableHead>
-            <TableHead>Branch</TableHead>
-            <TableHead>Trigger</TableHead>
-            <TableHead>Created</TableHead>
-          </TableRow>
-        </TableHeader>
-        <TableBody>
-          {deployments.map((deployment) => (
-            <TableRow key={deployment.id}>
-              <TableCell>
-                <Link
-                  to="/deployments/$deploymentId"
-                  params={{ deploymentId: deployment.id }}
-                  className="block min-w-36 rounded-lg transition-colors hover:opacity-80"
-                >
-                  <p className="font-medium text-sm hover:text-primary">
-                    {deployment.serviceName || 'Unknown app'}
-                  </p>
-                  <p className="mt-0.5 truncate font-mono text-muted-foreground text-xs">
-                    {deployment.commitHash?.slice(0, 7) || deployment.id.slice(0, 7)}
-                  </p>
-                </Link>
-              </TableCell>
-              <TableCell className="font-medium text-sm">{deployment.projectName}</TableCell>
-              <TableCell>
-                <span className="inline-flex items-center gap-2 text-sm">
-                  <span className={`h-1.5 w-1.5 rounded-full ${statusTone(deployment.status)}`} />
-                  {statusLabel(deployment.status)}
-                </span>
-              </TableCell>
-              <TableCell className="max-w-36 truncate font-mono text-xs">
-                {deployment.branch || '–'}
-              </TableCell>
-              <TableCell className="max-w-32 truncate text-sm">
-                {deployment.trigger || '–'}
-              </TableCell>
-              <TableCell className="whitespace-nowrap text-muted-foreground text-sm">
-                {new Date(deployment.createdAt).toLocaleString()}
-              </TableCell>
-            </TableRow>
-          ))}
-        </TableBody>
-      </Table>
     </section>
   );
 }

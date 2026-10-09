@@ -122,13 +122,9 @@ export function AISettings() {
           const isEditing = editingId === provider.id;
 
           return (
-            <button
-              type="button"
+            <div
               key={provider.id}
               className="relative flex flex-col justify-between space-y-4 rounded-xl bg-card p-6 text-left transition-colors hover:bg-muted/60"
-              onClick={() => {
-                if (!isEditing) setEditingId(provider.id);
-              }}
             >
               <div className="flex w-full items-start justify-between">
                 <div className="flex items-start gap-4">
@@ -217,12 +213,16 @@ export function AISettings() {
                     }}
                   />
                 ) : (
-                  <div className="flex h-8 items-center text-muted-foreground text-xs">
-                    (API key unset)
-                  </div>
+                  <button
+                    type="button"
+                    onClick={() => setEditingId(provider.id)}
+                    className="flex h-8 items-center text-muted-foreground text-xs hover:text-foreground"
+                  >
+                    (API key unset — click to add)
+                  </button>
                 )}
               </div>
-            </button>
+            </div>
           );
         })}
       </div>

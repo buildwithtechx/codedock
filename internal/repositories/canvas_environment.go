@@ -63,13 +63,14 @@ type projectRow struct {
 	ID          string    `db:"id"`
 	Name        string    `db:"name"`
 	Description string    `db:"description"`
+	ServerID    string    `db:"server_id"`
 	CreatedAt   time.Time `db:"created_at"`
 	UpdatedAt   time.Time `db:"updated_at"`
 }
 
 func (r *CanvasRepo) listAllProjects(ctx context.Context, organizationID string) ([]projectRow, error) {
 	var projects []projectRow
-	query := `SELECT id, name, COALESCE(description,'') as description, created_at, updated_at FROM projects`
+	query := `SELECT id, name, COALESCE(description,'') as description, COALESCE(server_id,'') as server_id, created_at, updated_at FROM projects`
 	args := make([]any, 0, 1)
 	if organizationID != "" {
 		query += ` WHERE organization_id = $1`
@@ -88,7 +89,7 @@ func (r *CanvasRepo) listAllProjects(ctx context.Context, organizationID string)
 
 func (r *CanvasRepo) getProject(id string) (*projectRow, error) {
 	var p projectRow
-	err := r.db.Get(&p, `SELECT id, name, COALESCE(description,'') as description, created_at, updated_at FROM projects WHERE id = $1`, id)
+	err := r.db.Get(&p, `SELECT id, name, COALESCE(description,'') as description, COALESCE(server_id,'') as server_id, created_at, updated_at FROM projects WHERE id = $1`, id)
 	if errors.Is(err, sql.ErrNoRows) {
 		return nil, utils.NewNotFoundError("CanvasEnvironment", id)
 	}

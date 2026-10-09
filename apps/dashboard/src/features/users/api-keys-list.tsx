@@ -1,5 +1,5 @@
 import { format } from 'date-fns';
-import { AlertTriangle, Check, Copy, Key, Lock, Plus, ShieldCheck, Trash2 } from 'lucide-react';
+import { Check, Copy, Key, Lock, Plus, ShieldCheck, Trash2 } from 'lucide-react';
 import { useState } from 'react';
 import { toast } from 'sonner';
 import { Badge } from '#/components/ui/badge';
@@ -21,9 +21,9 @@ import { ApiKeyDeleteDialog } from './components/api-key-delete-dialog';
 
 const EXPIRY_OPTIONS = [
   { value: 'none', days: null, label: 'No expiration' },
-  { value: '7', days: 7, label: '7 days' },
   { value: '30', days: 30, label: '30 days' },
   { value: '90', days: 90, label: '90 days' },
+  { value: '365', days: 365, label: '1 year' },
 ] as const;
 
 function formatDate(iso: string | undefined): string {
@@ -124,16 +124,14 @@ export function ApiKeysList() {
         </div>
       </div>
 
-      <div className="mb-4 rounded-xl border border-amber-500/30 bg-amber-500/10 p-4">
-        <div className="flex items-start gap-2">
-          <AlertTriangle className="mt-0.5 h-4 w-4 shrink-0 text-amber-500" />
-          <div className="text-muted-foreground text-xs leading-relaxed">
-            A token <span className="font-medium text-foreground">acts as you</span>, with full
-            access to everything you can reach. Prefer{' '}
-            <span className="font-medium text-foreground">read-only</span> tokens and{' '}
-            <span className="font-medium text-foreground">limit them to specific projects</span>{' '}
-            whenever possible.
-          </div>
+      <div className="mb-4 flex gap-2.5 rounded-xl border border-border/50 bg-muted/30 p-3">
+        <ShieldCheck className="mt-0.5 h-4 w-4 shrink-0 text-muted-foreground" />
+        <div className="text-muted-foreground text-xs leading-relaxed">
+          A token <span className="font-medium text-foreground">acts as you</span>, with full access
+          to everything you can reach. Prefer{' '}
+          <span className="font-medium text-foreground">read-only</span> tokens and{' '}
+          <span className="font-medium text-foreground">limit them to specific projects</span>{' '}
+          whenever possible.
         </div>
       </div>
 

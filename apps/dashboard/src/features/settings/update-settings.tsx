@@ -67,17 +67,17 @@ export const UpdatesPage = () => {
           <p className="font-bold text-[10px] text-muted-foreground uppercase tracking-[0.15em]">
             INSTALLED
           </p>
-          <p className="font-mono text-sm">
+          <div className="font-mono text-sm">
             {isLoading ? <Skeleton className="h-5 w-20" /> : info?.currentVersion || 'unknown'}
-          </p>
+          </div>
         </div>
         <div className="flex flex-col justify-center space-y-2 rounded-2xl border border-border/80 bg-card p-6 shadow-sm">
           <p className="font-bold text-[10px] text-muted-foreground uppercase tracking-[0.15em]">
             GITHUB LATEST
           </p>
-          <p className="font-mono text-sm">
+          <div className="font-mono text-sm">
             {isLoading ? <Skeleton className="h-5 w-20" /> : info?.latestVersion || 'unknown'}
-          </p>
+          </div>
         </div>
       </div>
 

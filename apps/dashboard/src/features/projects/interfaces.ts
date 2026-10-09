@@ -55,6 +55,8 @@ export interface CanvasSummary {
   onlineServices: number;
   totalServices: number;
   serviceIcons: string[];
+  deployTarget: 'local' | 'server';
+  serverName?: string;
   defaultEnvironment?: EnvironmentConfig;
   createdAt: string;
   updatedAt: string;

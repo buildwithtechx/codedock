@@ -54,6 +54,10 @@ func (r *CanvasRepo) ListCanvasSummaries(ctx context.Context, organizationID str
 	if err != nil {
 		return nil, fmt.Errorf("failed to list all databases: %w", err)
 	}
+	targets, err := r.serverTargets(ctx)
+	if err != nil {
+		return nil, fmt.Errorf("failed to list server targets: %w", err)
+	}
 	envsByProject := make(map[string][]*models.EnvironmentConfig)
 	for _, e := range allEnvs {
 		envsByProject[e.ProjectID] = append(envsByProject[e.ProjectID], e)
@@ -96,6 +100,7 @@ func (r *CanvasRepo) ListCanvasSummaries(ctx context.Context, organizationID str
 			DefaultEnvironment: defaultEnv,
 			ServiceIcons:       make([]string, 0),
 		}
+		summary.DeployTarget, summary.ServerName = resolveDeployTarget(project.ServerID, targets)
 		onlineCount := 0
 		for _, app := range apps {
 			if app.Status == models.AppServiceStatusRunning {
@@ -115,6 +120,41 @@ func (r *CanvasRepo) ListCanvasSummaries(ctx context.Context, organizationID str
 	return summaries, nil
 }
 
+type serverTarget struct {
+	Name    string `db:"name"`
+	IsLocal bool   `db:"is_local"`
+}
+
+func (r *CanvasRepo) serverTargets(ctx context.Context) (map[string]serverTarget, error) {
+	var rows []struct {
+		serverTarget
+		ID string `db:"id"`
+	}
+	err := r.db.SelectContext(ctx, &rows, `SELECT id, name, COALESCE(is_local, FALSE) AS is_local FROM servers`)
+	if err != nil {
+		return nil, err
+	}
+	targets := make(map[string]serverTarget, len(rows))
+	for _, row := range rows {
+		targets[row.ID] = row.serverTarget
+	}
+	return targets, nil
+}
+
+func resolveDeployTarget(serverID string, targets map[string]serverTarget) (string, string) {
+	if serverID == "" {
+		return "local", ""
+	}
+	target, ok := targets[serverID]
+	if !ok {
+		return "server", ""
+	}
+	if target.IsLocal {
+		return "local", ""
+	}
+	return "server", target.Name
+}
+
 func (r *CanvasRepo) GetCanvasSummary(ctx context.Context, id string) (*models.CanvasSummary, error) {
 	r.mu.Lock()
 	defer r.mu.Unlock()
@@ -125,6 +165,7 @@ func (r *CanvasRepo) GetCanvasSummary(ctx context.Context, id string) (*models.C
 	envs, _ := r.environments.ListByProject(ctx, id)
 	apps, _ := r.listAppServicesByProject(id)
 	dbs, _ := r.listDatabasesByProject(id)
+	targets, _ := r.serverTargets(ctx)
 	var defaultEnv *models.EnvironmentConfig
 	if len(envs) > 0 {
 		for _, e := range envs {
@@ -151,6 +192,7 @@ func (r *CanvasRepo) GetCanvasSummary(ctx context.Context, id string) (*models.C
 		DefaultEnvironment: defaultEnv,
 		ServiceIcons:       make([]string, 0),
 	}
+	summary.DeployTarget, summary.ServerName = resolveDeployTarget(project.ServerID, targets)
 	onlineCount := 0
 	for _, app := range apps {
 		if app.Status == models.AppServiceStatusRunning {
