@@ -7,8 +7,8 @@ import (
 
 	"github.com/labstack/echo/v4"
 
-	projectservices "codedock.run/codedock/internal/services/projects"
-	"codedock.run/codedock/internal/utils"
+	projectservices "codedock/internal/services/projects"
+	"codedock/internal/utils"
 )
 
 type ServerlessHandler struct {

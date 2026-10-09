@@ -4,7 +4,7 @@ import (
 	"context"
 	"fmt"
 
-	"codedock.run/codedock/internal/models"
+	"codedock/internal/models"
 )
 
 func (s *Service) CutoverRun(ctx context.Context, userID, runID string, req models.CutoverMigrationRequest) error {

@@ -12,10 +12,10 @@ import (
 
 	"errors"
 
-	"codedock.run/codedock/internal/config"
-	"codedock.run/codedock/internal/services/system"
-	"codedock.run/codedock/internal/utils"
-	"codedock.run/codedock/pkg/types"
+	"codedock/internal/config"
+	"codedock/internal/services/system"
+	"codedock/internal/utils"
+	"codedock/pkg/types"
 )
 
 type HTTPClient interface {

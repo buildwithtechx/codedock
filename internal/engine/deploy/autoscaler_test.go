@@ -1,8 +1,8 @@
 package deploy
 
 import (
-	"codedock.run/codedock/internal/engine/observability"
-	"codedock.run/codedock/internal/models"
+	"codedock/internal/engine/observability"
+	"codedock/internal/models"
 	"context"
 	"errors"
 	"strings"

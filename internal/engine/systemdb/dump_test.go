@@ -11,7 +11,7 @@ import (
 
 	_ "github.com/jackc/pgx/v5/stdlib"
 
-	"codedock.run/codedock/internal/repositories"
+	"codedock/internal/repositories"
 )
 
 func TestDumpRestoreRoundtrip(t *testing.T) {

@@ -10,7 +10,7 @@ import (
 	"testing"
 	"time"
 
-	"codedock.run/codedock/internal/models"
+	"codedock/internal/models"
 )
 
 type mockS3Transport struct {

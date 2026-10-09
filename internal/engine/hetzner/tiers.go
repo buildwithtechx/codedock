@@ -1,7 +1,7 @@
 package hetzner
 
 import (
-	"codedock.run/codedock/internal/models"
+	"codedock/internal/models"
 	"crypto/ed25519"
 	"crypto/rand"
 	"encoding/pem"

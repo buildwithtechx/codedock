@@ -9,7 +9,7 @@ import (
 	"io"
 	"log/slog"
 
-	"codedock.run/codedock/internal/models"
+	"codedock/internal/models"
 )
 
 type dockerRuntimeStore interface {

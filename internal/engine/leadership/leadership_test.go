@@ -6,7 +6,7 @@ import (
 	"testing"
 	"time"
 
-	"codedock.run/codedock/internal/testdb"
+	"codedock/internal/testdb"
 )
 
 func testConn(t *testing.T, db *sql.DB) *sql.Conn {

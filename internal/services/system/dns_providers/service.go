@@ -5,7 +5,7 @@ import (
 	"fmt"
 	"net/http"
 
-	"codedock.run/codedock/internal/repositories"
+	"codedock/internal/repositories"
 )
 
 type Service struct {

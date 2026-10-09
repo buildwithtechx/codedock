@@ -8,8 +8,8 @@ import (
 
 	dockerclient "github.com/docker/docker/client"
 
-	"codedock.run/codedock/internal/models"
-	"codedock.run/codedock/internal/repositories"
+	"codedock/internal/models"
+	"codedock/internal/repositories"
 )
 
 type clientEntry struct {

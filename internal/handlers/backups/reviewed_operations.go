@@ -1,10 +1,10 @@
 package backups
 
 import (
-	"codedock.run/codedock/internal/http/middleware"
-	"codedock.run/codedock/internal/models"
-	"codedock.run/codedock/internal/services/operations"
-	"codedock.run/codedock/internal/utils"
+	"codedock/internal/http/middleware"
+	"codedock/internal/models"
+	"codedock/internal/services/operations"
+	"codedock/internal/utils"
 	"encoding/json"
 	"github.com/labstack/echo/v4"
 	"net/http"

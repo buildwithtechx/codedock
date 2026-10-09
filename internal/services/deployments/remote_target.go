@@ -1,10 +1,10 @@
 package deployments
 
 import (
-	"codedock.run/codedock/internal/engine/deploy"
-	"codedock.run/codedock/internal/engine/networking"
-	"codedock.run/codedock/internal/models"
-	"codedock.run/codedock/internal/repositories"
+	"codedock/internal/engine/deploy"
+	"codedock/internal/engine/networking"
+	"codedock/internal/models"
+	"codedock/internal/repositories"
 	"context"
 	"fmt"
 	"github.com/containerd/errdefs"

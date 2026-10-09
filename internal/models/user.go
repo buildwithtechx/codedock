@@ -4,7 +4,7 @@ import (
 	"encoding/json"
 	"time"
 
-	"codedock.run/codedock/pkg/types"
+	"codedock/pkg/types"
 )
 
 type UserRole = types.UserRole

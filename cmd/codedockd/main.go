@@ -15,16 +15,16 @@ import (
 	"github.com/docker/docker/client"
 	"github.com/joho/godotenv"
 
-	"codedock.run/codedock/cmd/codedockd/commands"
-	"codedock.run/codedock/internal/config"
-	"codedock.run/codedock/internal/engine/deploy"
-	"codedock.run/codedock/internal/engine/networking"
-	"codedock.run/codedock/internal/engine/observability"
-	codedockhttp "codedock.run/codedock/internal/http"
-	"codedock.run/codedock/internal/services/system"
+	"codedock/cmd/codedockd/commands"
+	"codedock/internal/config"
+	"codedock/internal/engine/deploy"
+	"codedock/internal/engine/networking"
+	"codedock/internal/engine/observability"
+	codedockhttp "codedock/internal/http"
+	"codedock/internal/services/system"
 
-	"codedock.run/codedock/internal/telemetry"
-	"codedock.run/codedock/internal/version"
+	"codedock/internal/telemetry"
+	"codedock/internal/version"
 )
 
 var codedockVersion = version.Version

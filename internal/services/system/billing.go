@@ -10,9 +10,9 @@ import (
 	"github.com/stripe/stripe-go/v78/customer"
 	"github.com/stripe/stripe-go/v78/webhook"
 
-	"codedock.run/codedock/internal/config"
-	"codedock.run/codedock/internal/models"
-	"codedock.run/codedock/internal/repositories"
+	"codedock/internal/config"
+	"codedock/internal/models"
+	"codedock/internal/repositories"
 )
 
 type BillingService struct {

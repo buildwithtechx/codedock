@@ -6,12 +6,12 @@ import (
 
 	"github.com/labstack/echo/v4"
 
-	"codedock.run/codedock/internal/config"
-	"codedock.run/codedock/internal/models"
-	"codedock.run/codedock/internal/utils"
+	"codedock/internal/config"
+	"codedock/internal/models"
+	"codedock/internal/utils"
 
-	authservices "codedock.run/codedock/internal/services/auth"
-	systemservices "codedock.run/codedock/internal/services/system"
+	authservices "codedock/internal/services/auth"
+	systemservices "codedock/internal/services/system"
 )
 
 type SettingsHandler struct {

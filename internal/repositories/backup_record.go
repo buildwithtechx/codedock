@@ -7,8 +7,8 @@ import (
 	"fmt"
 	"time"
 
-	"codedock.run/codedock/internal/models"
-	"codedock.run/codedock/internal/utils"
+	"codedock/internal/models"
+	"codedock/internal/utils"
 	"github.com/google/uuid"
 	"github.com/jmoiron/sqlx"
 )

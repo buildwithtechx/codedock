@@ -3,7 +3,7 @@ package backup
 import (
 	"testing"
 
-	"codedock.run/codedock/internal/models"
+	"codedock/internal/models"
 )
 
 func TestBackupReconcileRegistersActiveConfigs(t *testing.T) {

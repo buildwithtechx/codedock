@@ -1,9 +1,9 @@
 package projects
 
 import (
-	handlerutils "codedock.run/codedock/internal/handlers/utils"
-	"codedock.run/codedock/internal/models"
-	"codedock.run/codedock/internal/utils"
+	handlerutils "codedock/internal/handlers/utils"
+	"codedock/internal/models"
+	"codedock/internal/utils"
 	"context"
 	"encoding/json"
 	"io"

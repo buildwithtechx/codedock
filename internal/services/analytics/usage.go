@@ -5,9 +5,9 @@ import (
 	"fmt"
 	"time"
 
-	"codedock.run/codedock/internal/engine/observability"
-	"codedock.run/codedock/internal/repositories"
-	systemservices "codedock.run/codedock/internal/services/system"
+	"codedock/internal/engine/observability"
+	"codedock/internal/repositories"
+	systemservices "codedock/internal/services/system"
 )
 
 type HealthChecker interface {

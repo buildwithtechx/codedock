@@ -5,8 +5,8 @@ import (
 	"strconv"
 	"time"
 
-	systemservices "codedock.run/codedock/internal/services/system"
-	"codedock.run/codedock/internal/utils"
+	systemservices "codedock/internal/services/system"
+	"codedock/internal/utils"
 	"github.com/labstack/echo/v4"
 )
 

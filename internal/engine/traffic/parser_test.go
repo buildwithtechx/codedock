@@ -7,7 +7,7 @@ import (
 	"testing"
 	"time"
 
-	"codedock.run/codedock/internal/models"
+	"codedock/internal/models"
 )
 
 func TestParseAccessLine(t *testing.T) {

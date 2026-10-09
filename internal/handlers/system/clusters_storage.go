@@ -1,9 +1,9 @@
 package system
 
 import (
-	"codedock.run/codedock/internal/http/middleware"
-	"codedock.run/codedock/internal/models"
-	"codedock.run/codedock/internal/utils"
+	"codedock/internal/http/middleware"
+	"codedock/internal/models"
+	"codedock/internal/utils"
 	"github.com/labstack/echo/v4"
 	"net/http"
 )

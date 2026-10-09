@@ -12,7 +12,7 @@ import (
 	"strings"
 	"time"
 
-	"codedock.run/codedock/internal/models"
+	"codedock/internal/models"
 )
 
 func (s *GitService) InspectRepository(ctx context.Context, userID string, request models.RepositoryInspectionRequest) (*models.RepositoryInspection, error) {

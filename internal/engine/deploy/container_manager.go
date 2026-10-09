@@ -13,9 +13,9 @@ import (
 	"github.com/docker/docker/client"
 	"github.com/docker/go-connections/nat"
 
-	"codedock.run/codedock/internal/engine/observability"
-	"codedock.run/codedock/internal/models"
-	"codedock.run/codedock/internal/utils"
+	"codedock/internal/engine/observability"
+	"codedock/internal/models"
+	"codedock/internal/utils"
 )
 
 type ContainerManager struct {

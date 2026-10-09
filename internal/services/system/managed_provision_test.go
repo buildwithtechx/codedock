@@ -5,8 +5,8 @@ import (
 	"fmt"
 	"testing"
 
-	"codedock.run/codedock/internal/models"
-	"codedock.run/codedock/internal/repositories"
+	"codedock/internal/models"
+	"codedock/internal/repositories"
 )
 
 func provisionManaged(t *testing.T, env *managedTestEnv, name string) *models.ManagedServerPlan {

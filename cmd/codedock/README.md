@@ -14,10 +14,12 @@ Prefer npm? The Node build installs the same `codedock` command name (needs Node
 npm install -g codedock
 ```
 
-Or if you have Go installed:
+Or from source if you have Go and git installed:
 
 ```sh
-go install codedock.run/codedock/cmd/codedock@latest
+git clone https://github.com/buildwithtechx/codedock.git
+cd codedock
+go install ./cmd/codedock
 ```
 
 After installing, authenticate against your server:

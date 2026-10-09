@@ -7,9 +7,9 @@ import (
 	"runtime"
 	"time"
 
-	"codedock.run/codedock/internal/config"
-	"codedock.run/codedock/internal/repositories"
-	"codedock.run/codedock/internal/telemetry"
+	"codedock/internal/config"
+	"codedock/internal/repositories"
+	"codedock/internal/telemetry"
 )
 
 func StartTelemetryReporter(db *sql.DB, version string) {

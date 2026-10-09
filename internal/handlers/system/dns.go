@@ -3,13 +3,13 @@ package system
 import (
 	"net/http"
 
-	systemservices "codedock.run/codedock/internal/services/system"
+	systemservices "codedock/internal/services/system"
 
 	"github.com/labstack/echo/v4"
 
-	"codedock.run/codedock/internal/models"
+	"codedock/internal/models"
 
-	"codedock.run/codedock/internal/utils"
+	"codedock/internal/utils"
 )
 
 type DNSHandler struct {

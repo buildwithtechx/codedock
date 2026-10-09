@@ -7,14 +7,14 @@ import (
 
 	"github.com/labstack/echo/v4"
 
-	"codedock.run/codedock/internal/engine/ssh"
-	"codedock.run/codedock/internal/handlers/system"
-	"codedock.run/codedock/internal/models"
-	"codedock.run/codedock/internal/repositories"
-	deploymentservices "codedock.run/codedock/internal/services/deployments"
-	"codedock.run/codedock/internal/services/migrations"
-	projectservices "codedock.run/codedock/internal/services/projects"
-	"codedock.run/codedock/internal/utils"
+	"codedock/internal/engine/ssh"
+	"codedock/internal/handlers/system"
+	"codedock/internal/models"
+	"codedock/internal/repositories"
+	deploymentservices "codedock/internal/services/deployments"
+	"codedock/internal/services/migrations"
+	projectservices "codedock/internal/services/projects"
+	"codedock/internal/utils"
 )
 
 func configureMigration(

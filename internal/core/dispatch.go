@@ -6,9 +6,9 @@ import (
 	"log/slog"
 	"strings"
 
-	"codedock.run/codedock/internal/models"
-	"codedock.run/codedock/internal/notifications"
-	"codedock.run/codedock/internal/repositories"
+	"codedock/internal/models"
+	"codedock/internal/notifications"
+	"codedock/internal/repositories"
 )
 
 type DispatcherService struct {

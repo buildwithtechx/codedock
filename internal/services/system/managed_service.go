@@ -11,12 +11,12 @@ import (
 
 	"github.com/google/uuid"
 
-	"codedock.run/codedock/internal/config"
-	"codedock.run/codedock/internal/engine/hetzner"
-	"codedock.run/codedock/internal/engine/ssh"
-	"codedock.run/codedock/internal/models"
-	"codedock.run/codedock/internal/repositories"
-	"codedock.run/codedock/internal/services/operations"
+	"codedock/internal/config"
+	"codedock/internal/engine/hetzner"
+	"codedock/internal/engine/ssh"
+	"codedock/internal/models"
+	"codedock/internal/repositories"
+	"codedock/internal/services/operations"
 )
 
 const (

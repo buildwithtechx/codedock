@@ -2,7 +2,7 @@ package observability
 
 import (
 	"bytes"
-	"codedock.run/codedock/internal/models"
+	"codedock/internal/models"
 	"context"
 	"fmt"
 	"github.com/docker/docker/api/types/container"

@@ -7,11 +7,11 @@ import (
 
 	"github.com/labstack/echo/v4"
 
-	"codedock.run/codedock/internal/config"
-	"codedock.run/codedock/internal/handlers/system"
-	"codedock.run/codedock/internal/http/middleware"
-	"codedock.run/codedock/internal/models"
-	authservices "codedock.run/codedock/internal/services/auth"
+	"codedock/internal/config"
+	"codedock/internal/handlers/system"
+	"codedock/internal/http/middleware"
+	"codedock/internal/models"
+	authservices "codedock/internal/services/auth"
 )
 
 func TestBillingRoutesRespectDeploymentMode(t *testing.T) {

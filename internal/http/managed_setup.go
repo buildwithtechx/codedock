@@ -7,13 +7,13 @@ import (
 
 	"github.com/labstack/echo/v4"
 
-	"codedock.run/codedock/internal/engine/ssh"
-	"codedock.run/codedock/internal/handlers/system"
-	"codedock.run/codedock/internal/models"
-	"codedock.run/codedock/internal/repositories"
-	"codedock.run/codedock/internal/services/operations"
-	systemservices "codedock.run/codedock/internal/services/system"
-	"codedock.run/codedock/internal/utils"
+	"codedock/internal/engine/ssh"
+	"codedock/internal/handlers/system"
+	"codedock/internal/models"
+	"codedock/internal/repositories"
+	"codedock/internal/services/operations"
+	systemservices "codedock/internal/services/system"
+	"codedock/internal/utils"
 )
 
 func configureManaged(server *Server, db *sql.DB, vault *utils.Vault, servers repositories.ServerRepository, users *repositories.UserRepo, orgs repositories.OrganizationRepository, sshManager *ssh.SSHManager, operationService *operations.Service) error {

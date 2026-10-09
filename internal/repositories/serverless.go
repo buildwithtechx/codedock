@@ -9,7 +9,7 @@ import (
 	"github.com/google/uuid"
 	"github.com/jmoiron/sqlx"
 
-	"codedock.run/codedock/internal/models"
+	"codedock/internal/models"
 )
 
 type ServerlessRepository interface {

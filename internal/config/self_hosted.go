@@ -7,8 +7,8 @@ import (
 	"errors"
 	"fmt"
 
-	"codedock.run/codedock/internal/models"
-	"codedock.run/codedock/pkg/types"
+	"codedock/internal/models"
+	"codedock/pkg/types"
 )
 
 type SelfHostedStore interface {

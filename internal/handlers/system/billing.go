@@ -6,9 +6,9 @@ import (
 
 	"github.com/labstack/echo/v4"
 
-	"codedock.run/codedock/internal/config"
-	"codedock.run/codedock/internal/models"
-	systemservices "codedock.run/codedock/internal/services/system"
+	"codedock/internal/config"
+	"codedock/internal/models"
+	systemservices "codedock/internal/services/system"
 )
 
 type BillingHandler struct {

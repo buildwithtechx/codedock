@@ -7,8 +7,8 @@ import (
 	"strings"
 	"syscall"
 
-	"codedock.run/codedock/pkg/config"
-	"codedock.run/codedock/pkg/http"
+	"codedock/pkg/config"
+	"codedock/pkg/http"
 	"github.com/spf13/cobra"
 	"golang.org/x/term"
 )

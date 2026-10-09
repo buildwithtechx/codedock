@@ -14,9 +14,9 @@ import (
 	"github.com/docker/docker/api/types/network"
 	"github.com/docker/docker/client"
 
-	"codedock.run/codedock/internal/engine/compose"
-	"codedock.run/codedock/internal/models"
-	"codedock.run/codedock/internal/utils"
+	"codedock/internal/engine/compose"
+	"codedock/internal/models"
+	"codedock/internal/utils"
 )
 
 type DatabaseDeployer struct {

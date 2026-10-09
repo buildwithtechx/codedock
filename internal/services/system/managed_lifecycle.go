@@ -11,8 +11,8 @@ import (
 
 	"golang.org/x/crypto/ssh"
 
-	"codedock.run/codedock/internal/engine/hetzner"
-	"codedock.run/codedock/internal/models"
+	"codedock/internal/engine/hetzner"
+	"codedock/internal/models"
 )
 
 func (s *managedService) managedServer(ctx context.Context, orgID, serverID string) (*models.Server, *models.ManagedServerLink, error) {

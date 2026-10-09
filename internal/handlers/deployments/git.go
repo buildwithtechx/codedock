@@ -3,14 +3,14 @@ package deployments
 import (
 	"net/http"
 
-	handlerutils "codedock.run/codedock/internal/handlers/utils"
+	handlerutils "codedock/internal/handlers/utils"
 
 	"github.com/labstack/echo/v4"
 
-	"codedock.run/codedock/internal/utils"
+	"codedock/internal/utils"
 
-	"codedock.run/codedock/internal/models"
-	deploymentservices "codedock.run/codedock/internal/services/deployments"
+	"codedock/internal/models"
+	deploymentservices "codedock/internal/services/deployments"
 )
 
 type GitHandler struct {

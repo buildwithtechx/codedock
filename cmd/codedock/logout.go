@@ -4,7 +4,7 @@ import (
 	"fmt"
 	"os"
 
-	"codedock.run/codedock/pkg/config"
+	"codedock/pkg/config"
 	"github.com/spf13/cobra"
 )
 

@@ -1,7 +1,7 @@
 package deployments
 
 import (
-	"codedock.run/codedock/internal/models"
+	"codedock/internal/models"
 	"context"
 	"fmt"
 	"io"

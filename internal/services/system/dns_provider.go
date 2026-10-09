@@ -3,8 +3,8 @@ package system
 import (
 	"context"
 
-	"codedock.run/codedock/internal/repositories"
-	"codedock.run/codedock/internal/services/system/dns_providers"
+	"codedock/internal/repositories"
+	"codedock/internal/services/system/dns_providers"
 )
 
 type DNSProviderService struct {

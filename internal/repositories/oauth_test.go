@@ -7,7 +7,7 @@ import (
 
 	"github.com/google/uuid"
 
-	"codedock.run/codedock/internal/models"
+	"codedock/internal/models"
 )
 
 func TestOAuthRoundtrip(t *testing.T) {

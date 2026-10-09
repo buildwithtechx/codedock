@@ -1,6 +1,6 @@
 # `pkg` — Codedock SDK
 
-This directory contains the public Go packages that power the `codedock` remote CLI. You can import them directly to build your own tooling on top of a self-hosted Codedock server — CI/CD scripts, GitHub Actions, Terraform providers, custom dashboards, etc.
+This directory contains the public Go packages that power the `codedock` remote CLI. You can import them directly to build your own tooling on top of a self-hosted Codedock server — CI/CD scripts, GitHub Actions, Terraform providers, custom dashboards, etc. The module is not published to the Go proxy, so consume it from a source checkout with a `replace` directive pointing at this repository.
 
 ## Packages
 
@@ -9,7 +9,7 @@ This directory contains the public Go packages that power the `codedock` remote 
 A typed HTTP client for the Codedock API. Handles authentication, request building, and response decoding.
 
 ```go
-import codedockhttp "codedock.run/codedock/pkg/http"
+import codedockhttp "codedock/pkg/http"
 
 client := codedockhttp.NewClient("https://your-server.com", "your-jwt-token")
 ```
@@ -103,7 +103,7 @@ metrics, err     := client.GetServiceMetrics("service-id")
 Manages saved server credentials on the local filesystem at `~/.codedock/config.json`.
 
 ```go
-import "codedock.run/codedock/pkg/config"
+import "codedock/pkg/config"
 ```
 
 #### Load saved config
@@ -138,8 +138,8 @@ package main
 import (
     "fmt"
 
-    "codedock.run/codedock/pkg/config"
-    codedockhttp "codedock.run/codedock/pkg/http"
+    "codedock/pkg/config"
+    codedockhttp "codedock/pkg/http"
 )
 
 func main() {

@@ -2,7 +2,7 @@ package kubernetes
 
 import (
 	"bytes"
-	"codedock.run/codedock/internal/models"
+	"codedock/internal/models"
 	"context"
 	"crypto/hmac"
 	"crypto/sha256"

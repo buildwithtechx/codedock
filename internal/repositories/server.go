@@ -5,7 +5,7 @@ import (
 	"database/sql"
 	"fmt"
 
-	"codedock.run/codedock/internal/models"
+	"codedock/internal/models"
 )
 
 type ServerRepository interface {

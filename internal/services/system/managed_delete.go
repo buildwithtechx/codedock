@@ -7,8 +7,8 @@ import (
 	"fmt"
 	"log/slog"
 
-	"codedock.run/codedock/internal/engine/hetzner"
-	"codedock.run/codedock/internal/models"
+	"codedock/internal/engine/hetzner"
+	"codedock/internal/models"
 )
 
 func (s *managedService) ReviewDelete(ctx context.Context, userID, orgID, serverID string) (*models.ManagedReview, error) {

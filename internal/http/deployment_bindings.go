@@ -3,8 +3,8 @@ package http
 import (
 	"context"
 
-	"codedock.run/codedock/internal/engine/networking"
-	"codedock.run/codedock/internal/repositories"
+	"codedock/internal/engine/networking"
+	"codedock/internal/repositories"
 )
 
 func configureDeploymentBindings(srv *Server, routeRuleRepo repositories.RouteRuleRepository) {

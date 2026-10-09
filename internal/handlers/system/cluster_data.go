@@ -1,12 +1,12 @@
 package system
 
 import (
-	"codedock.run/codedock/internal/http/middleware"
-	"codedock.run/codedock/internal/models"
-	"codedock.run/codedock/internal/repositories"
-	"codedock.run/codedock/internal/services/clusterdata"
-	"codedock.run/codedock/internal/services/operations"
-	"codedock.run/codedock/internal/utils"
+	"codedock/internal/http/middleware"
+	"codedock/internal/models"
+	"codedock/internal/repositories"
+	"codedock/internal/services/clusterdata"
+	"codedock/internal/services/operations"
+	"codedock/internal/utils"
 	"github.com/labstack/echo/v4"
 	"net/http"
 )

@@ -1,7 +1,7 @@
 package deploy
 
 import (
-	"codedock.run/codedock/internal/engine/build"
+	"codedock/internal/engine/build"
 	"context"
 	"github.com/docker/docker/client"
 	"github.com/google/uuid"

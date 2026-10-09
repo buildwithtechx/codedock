@@ -6,7 +6,7 @@ import (
 	"io"
 	nethttp "net/http"
 
-	"codedock.run/codedock/pkg/types"
+	"codedock/pkg/types"
 )
 
 func (c *Client) ListDomains(serviceID string) ([]*types.DomainConfig, error) {

@@ -6,7 +6,7 @@ import (
 	"io"
 	"net/http"
 
-	"codedock.run/codedock/pkg/types"
+	"codedock/pkg/types"
 )
 
 func (c *Client) Me() (*types.User, error) {

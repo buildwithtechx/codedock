@@ -10,11 +10,11 @@ import (
 	"testing"
 	"time"
 
-	"codedock.run/codedock/internal/engine/dockerprobe"
-	"codedock.run/codedock/internal/models"
-	"codedock.run/codedock/internal/repositories"
-	projectservices "codedock.run/codedock/internal/services/projects"
-	"codedock.run/codedock/internal/testdb"
+	"codedock/internal/engine/dockerprobe"
+	"codedock/internal/models"
+	"codedock/internal/repositories"
+	projectservices "codedock/internal/services/projects"
+	"codedock/internal/testdb"
 )
 
 type migrationTestVault struct{}

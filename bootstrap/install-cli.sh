@@ -22,9 +22,17 @@ BINARY="codedock"
 INSTALL_DIR="/usr/local/bin"
 
 install_via_go() {
-  if command -v go &>/dev/null; then
-    echo -e "${YELLOW}⚙️  Installing via 'go install'...${NC}"
-    go install "codedock.run/codedock/cmd/codedock@latest"
+  if command -v go &>/dev/null && command -v git &>/dev/null; then
+    echo -e "${YELLOW}⚙️  Installing from source via Go...${NC}"
+    local src_dir
+    src_dir="$(mktemp -d)"
+    if ! git clone --depth 1 "https://github.com/${REPO}.git" "$src_dir" &>/dev/null; then
+      rm -rf "$src_dir"
+      echo -e "${RED}❌ Source checkout failed.${NC}"
+      return 1
+    fi
+    (cd "$src_dir" && go install ./cmd/codedock)
+    rm -rf "$src_dir"
     local gobin
     gobin="$(go env GOBIN)"
     if [ -z "$gobin" ]; then
@@ -81,7 +89,7 @@ echo -e "${BOLD}⬇️  Downloading codedock ${TARGET_VERSION} (${PLATFORM})...$
 
 if ! curl -fsSL "$DOWNLOAD_URL" -o "$TMP_DIR/codedock.tar.gz" 2>/dev/null; then
   install_via_go || {
-    echo -e "${RED}❌ Download failed. Install Go and run: go install codedock.run/codedock/cmd/codedock@latest${NC}"
+    echo -e "${RED}❌ Download failed and source install needs Go and git.${NC}"
     exit 1
   }
   exit 0

@@ -6,10 +6,10 @@ import (
 
 	"github.com/docker/docker/client"
 
-	codedockhttp "codedock.run/codedock/internal/http"
-	"codedock.run/codedock/internal/repositories"
-	"codedock.run/codedock/internal/testdb"
-	"codedock.run/codedock/internal/utils"
+	codedockhttp "codedock/internal/http"
+	"codedock/internal/repositories"
+	"codedock/internal/testdb"
+	"codedock/internal/utils"
 )
 
 func TestCodedockBackendInitialization(t *testing.T) {

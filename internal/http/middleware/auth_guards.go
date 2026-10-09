@@ -6,7 +6,7 @@ import (
 
 	"github.com/labstack/echo/v4"
 
-	"codedock.run/codedock/internal/models"
+	"codedock/internal/models"
 )
 
 func (g *AuthGuard) RequireAuth() echo.MiddlewareFunc {

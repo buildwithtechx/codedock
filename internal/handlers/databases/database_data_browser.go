@@ -4,14 +4,14 @@ import (
 	"net/http"
 	"strconv"
 
-	authservices "codedock.run/codedock/internal/services/auth"
-	databaseservices "codedock.run/codedock/internal/services/databases"
+	authservices "codedock/internal/services/auth"
+	databaseservices "codedock/internal/services/databases"
 
 	"github.com/labstack/echo/v4"
 
-	"codedock.run/codedock/internal/http/middleware"
+	"codedock/internal/http/middleware"
 
-	"codedock.run/codedock/internal/utils"
+	"codedock/internal/utils"
 )
 
 func (h *DatabaseHandler) GetSchemas(c echo.Context) error {

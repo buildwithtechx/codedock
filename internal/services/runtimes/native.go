@@ -1,8 +1,8 @@
 package runtimes
 
 import (
-	"codedock.run/codedock/internal/engine/bare"
-	"codedock.run/codedock/internal/models"
+	"codedock/internal/engine/bare"
+	"codedock/internal/models"
 	"context"
 	"encoding/json"
 	"errors"

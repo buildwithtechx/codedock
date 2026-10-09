@@ -5,9 +5,9 @@ import (
 	"testing"
 	"time"
 
-	"codedock.run/codedock/internal/models"
-	"codedock.run/codedock/internal/repositories"
-	"codedock.run/codedock/internal/testdb"
+	"codedock/internal/models"
+	"codedock/internal/repositories"
+	"codedock/internal/testdb"
 )
 
 func setupAnalyticsTest(t *testing.T) (*Service, *repositories.DeploymentRepo, *repositories.EnvironmentRepo, string, string) {

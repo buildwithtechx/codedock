@@ -9,7 +9,7 @@ import (
 	"path/filepath"
 	"testing"
 
-	"codedock.run/codedock/internal/models"
+	"codedock/internal/models"
 )
 
 func TestArchiveDownloadUsesRecordedDestinationAndKey(t *testing.T) {

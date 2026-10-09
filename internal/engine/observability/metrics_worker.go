@@ -12,7 +12,7 @@ import (
 	"github.com/docker/docker/api/types/container"
 	"github.com/docker/docker/client"
 
-	"codedock.run/codedock/internal/engine/networking"
+	"codedock/internal/engine/networking"
 )
 
 type MetricsWorker struct {

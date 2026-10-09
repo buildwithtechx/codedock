@@ -12,7 +12,7 @@ import (
 	"strings"
 	"time"
 
-	"codedock.run/codedock/internal/models"
+	"codedock/internal/models"
 	"github.com/labstack/echo/v4"
 )
 

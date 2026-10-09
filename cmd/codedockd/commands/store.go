@@ -8,11 +8,11 @@ import (
 
 	"github.com/docker/docker/client"
 
-	"codedock.run/codedock/internal/config"
-	"codedock.run/codedock/internal/engine/systemdb"
-	"codedock.run/codedock/internal/models"
-	"codedock.run/codedock/internal/repositories"
-	"codedock.run/codedock/internal/utils"
+	"codedock/internal/config"
+	"codedock/internal/engine/systemdb"
+	"codedock/internal/models"
+	"codedock/internal/repositories"
+	"codedock/internal/utils"
 )
 
 type DBDeployerStore struct {

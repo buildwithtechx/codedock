@@ -7,12 +7,12 @@ import (
 	"strings"
 	"time"
 
-	handlerutils "codedock.run/codedock/internal/handlers/utils"
+	handlerutils "codedock/internal/handlers/utils"
 
-	"codedock.run/codedock/internal/http/middleware"
-	"codedock.run/codedock/internal/models"
-	projectservices "codedock.run/codedock/internal/services/projects"
-	"codedock.run/codedock/internal/utils"
+	"codedock/internal/http/middleware"
+	"codedock/internal/models"
+	projectservices "codedock/internal/services/projects"
+	"codedock/internal/utils"
 	"github.com/golang-jwt/jwt/v5"
 	"github.com/gorilla/websocket"
 	"github.com/labstack/echo/v4"

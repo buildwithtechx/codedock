@@ -2,7 +2,7 @@ package bare
 
 import (
 	"bytes"
-	"codedock.run/codedock/internal/models"
+	"codedock/internal/models"
 	"context"
 	"io"
 )

@@ -6,10 +6,10 @@ import (
 
 	"github.com/labstack/echo/v4"
 
-	"codedock.run/codedock/internal/models"
-	"codedock.run/codedock/internal/repositories"
-	systemservices "codedock.run/codedock/internal/services/system"
-	"codedock.run/codedock/internal/utils"
+	"codedock/internal/models"
+	"codedock/internal/repositories"
+	systemservices "codedock/internal/services/system"
+	"codedock/internal/utils"
 )
 
 type TakeoverHandler struct {

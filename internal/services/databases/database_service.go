@@ -8,10 +8,10 @@ import (
 
 	"github.com/google/uuid"
 
-	"codedock.run/codedock/internal/engine/deploy"
-	"codedock.run/codedock/internal/models"
-	"codedock.run/codedock/internal/repositories"
-	"codedock.run/codedock/internal/utils"
+	"codedock/internal/engine/deploy"
+	"codedock/internal/models"
+	"codedock/internal/repositories"
+	"codedock/internal/utils"
 )
 
 type DatabaseService struct {

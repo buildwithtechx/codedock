@@ -10,8 +10,8 @@ import (
 	"github.com/docker/docker/errdefs"
 	"github.com/google/uuid"
 
-	"codedock.run/codedock/internal/models"
-	"codedock.run/codedock/internal/utils"
+	"codedock/internal/models"
+	"codedock/internal/utils"
 )
 
 func (d *Deployer) ExecuteRollingUpdate(ctx context.Context, app *models.AppService, newImageTag string, logWriter io.Writer) error {

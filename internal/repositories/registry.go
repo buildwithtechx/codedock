@@ -5,7 +5,7 @@ import (
 	"database/sql"
 	"time"
 
-	"codedock.run/codedock/internal/models"
+	"codedock/internal/models"
 	"github.com/google/uuid"
 	"github.com/jmoiron/sqlx"
 )

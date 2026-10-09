@@ -7,9 +7,9 @@ import (
 
 	"github.com/labstack/echo/v4"
 
-	"codedock.run/codedock/internal/models"
-	"codedock.run/codedock/internal/services/migrations"
-	"codedock.run/codedock/internal/utils"
+	"codedock/internal/models"
+	"codedock/internal/services/migrations"
+	"codedock/internal/utils"
 )
 
 type MigrationLifecycleHandler struct {

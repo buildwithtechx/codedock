@@ -5,8 +5,8 @@ import (
 	"fmt"
 	"time"
 
-	"codedock.run/codedock/internal/engine/dockerprobe"
-	"codedock.run/codedock/internal/models"
+	"codedock/internal/engine/dockerprobe"
+	"codedock/internal/models"
 )
 
 func (e *pipelineExecutor) ask(ctx context.Context, prompt *models.MigrationPrompt) (promptAnswer, error) {

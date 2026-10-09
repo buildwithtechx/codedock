@@ -5,8 +5,8 @@ import (
 	"errors"
 	"fmt"
 
-	"codedock.run/codedock/internal/models"
-	"codedock.run/codedock/internal/repositories"
+	"codedock/internal/models"
+	"codedock/internal/repositories"
 )
 
 type CanvasService struct {

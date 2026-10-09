@@ -6,8 +6,8 @@ import (
 
 	"github.com/labstack/echo/v4"
 
-	"codedock.run/codedock/internal/models"
-	"codedock.run/codedock/internal/utils"
+	"codedock/internal/models"
+	"codedock/internal/utils"
 )
 
 func (h *AppHandler) ListWebhooks(c echo.Context) error {
@@ -58,10 +58,14 @@ func (h *AppHandler) CreateWebhook(c echo.Context) error {
 		return utils.Error(c, http.StatusBadRequest, err.Error())
 	}
 	req.URL = validURL
+	eventTypes, err := utils.ValidateEventTypes(req.EventTypes)
+	if err != nil {
+		return utils.Error(c, http.StatusBadRequest, err.Error())
+	}
 	webhook := models.Webhook{
 		ServiceID:             serviceID,
 		URL:                   req.URL,
-		EventTypes:            req.EventTypes,
+		EventTypes:            eventTypes,
 		IncludePREnvironments: req.IncludePREnvironments,
 	}
 	created, err := h.appService.CreateWebhook(c.Request().Context(), &webhook)

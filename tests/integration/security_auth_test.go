@@ -9,12 +9,12 @@ import (
 	"net/http/httptest"
 	"testing"
 
-	codedockhttp "codedock.run/codedock/internal/http"
-	"codedock.run/codedock/internal/models"
-	"codedock.run/codedock/internal/repositories"
-	authservices "codedock.run/codedock/internal/services/auth"
-	"codedock.run/codedock/internal/testdb"
-	"codedock.run/codedock/internal/utils"
+	codedockhttp "codedock/internal/http"
+	"codedock/internal/models"
+	"codedock/internal/repositories"
+	authservices "codedock/internal/services/auth"
+	"codedock/internal/testdb"
+	"codedock/internal/utils"
 	"github.com/docker/docker/client"
 )
 

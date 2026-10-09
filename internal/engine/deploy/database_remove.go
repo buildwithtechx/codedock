@@ -1,7 +1,7 @@
 package deploy
 
 import (
-	"codedock.run/codedock/internal/utils"
+	"codedock/internal/utils"
 	"context"
 	"fmt"
 	"github.com/docker/docker/api/types/container"

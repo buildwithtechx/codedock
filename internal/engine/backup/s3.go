@@ -12,7 +12,7 @@ import (
 	"strings"
 	"time"
 
-	"codedock.run/codedock/internal/models"
+	"codedock/internal/models"
 )
 
 var s3HTTPClient = &http.Client{Timeout: 30 * time.Second}

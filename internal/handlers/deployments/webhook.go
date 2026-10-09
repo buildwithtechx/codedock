@@ -16,11 +16,11 @@ import (
 	"github.com/google/uuid"
 	"github.com/labstack/echo/v4"
 
-	"codedock.run/codedock/internal/utils"
+	"codedock/internal/utils"
 
-	"codedock.run/codedock/internal/models"
-	deploymentservices "codedock.run/codedock/internal/services/deployments"
-	projectservices "codedock.run/codedock/internal/services/projects"
+	"codedock/internal/models"
+	deploymentservices "codedock/internal/services/deployments"
+	projectservices "codedock/internal/services/projects"
 )
 
 type WebhookHandler struct {

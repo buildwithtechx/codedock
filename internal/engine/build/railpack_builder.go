@@ -12,7 +12,7 @@ import (
 
 	"github.com/docker/docker/client"
 
-	"codedock.run/codedock/internal/config"
+	"codedock/internal/config"
 )
 
 type RailpackBuilder struct {

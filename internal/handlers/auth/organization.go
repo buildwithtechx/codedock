@@ -5,9 +5,9 @@ import (
 
 	"github.com/labstack/echo/v4"
 
-	"codedock.run/codedock/internal/models"
-	authservices "codedock.run/codedock/internal/services/auth"
-	"codedock.run/codedock/internal/utils"
+	"codedock/internal/models"
+	authservices "codedock/internal/services/auth"
+	"codedock/internal/utils"
 )
 
 type OrganizationHandler struct {

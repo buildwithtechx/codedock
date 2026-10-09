@@ -1,8 +1,8 @@
 package projects
 
 import (
-	"codedock.run/codedock/internal/repositories"
-	"codedock.run/codedock/internal/utils"
+	"codedock/internal/repositories"
+	"codedock/internal/utils"
 	"context"
 	"fmt"
 	"strings"

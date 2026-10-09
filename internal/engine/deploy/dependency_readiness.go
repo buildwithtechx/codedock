@@ -5,7 +5,7 @@ import (
 	"fmt"
 	"strings"
 
-	"codedock.run/codedock/internal/utils"
+	"codedock/internal/utils"
 	"github.com/docker/docker/api/types/container"
 	"github.com/docker/docker/api/types/filters"
 )

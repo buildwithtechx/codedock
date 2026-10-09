@@ -8,8 +8,8 @@ import (
 
 	"github.com/google/uuid"
 
-	"codedock.run/codedock/internal/engine/dockerprobe"
-	"codedock.run/codedock/internal/models"
+	"codedock/internal/engine/dockerprobe"
+	"codedock/internal/models"
 )
 
 type RuntimeKinds interface {

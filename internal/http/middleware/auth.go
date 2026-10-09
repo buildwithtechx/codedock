@@ -9,9 +9,9 @@ import (
 
 	"github.com/labstack/echo/v4"
 
-	"codedock.run/codedock/internal/models"
-	"codedock.run/codedock/internal/repositories"
-	"codedock.run/codedock/internal/services/auth"
+	"codedock/internal/models"
+	"codedock/internal/repositories"
+	"codedock/internal/services/auth"
 )
 
 type contextKey string

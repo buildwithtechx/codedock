@@ -7,8 +7,8 @@ import (
 
 	"github.com/labstack/echo/v4"
 
-	systemservices "codedock.run/codedock/internal/services/system"
-	"codedock.run/codedock/internal/utils"
+	systemservices "codedock/internal/services/system"
+	"codedock/internal/utils"
 )
 
 type SystemHandler struct {

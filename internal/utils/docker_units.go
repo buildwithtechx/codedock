@@ -4,7 +4,7 @@ import (
 	"fmt"
 	"strings"
 
-	"codedock.run/codedock/internal/config"
+	"codedock/internal/config"
 )
 
 func DefaultDBMemoryMB() int {

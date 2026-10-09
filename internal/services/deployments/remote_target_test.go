@@ -1,10 +1,10 @@
 package deployments
 
 import (
-	"codedock.run/codedock/internal/engine/deploy"
-	"codedock.run/codedock/internal/engine/ssh"
-	"codedock.run/codedock/internal/models"
-	"codedock.run/codedock/internal/repositories"
+	"codedock/internal/engine/deploy"
+	"codedock/internal/engine/ssh"
+	"codedock/internal/models"
+	"codedock/internal/repositories"
 	"context"
 	"testing"
 )

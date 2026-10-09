@@ -10,7 +10,7 @@ import (
 	"testing"
 	"time"
 
-	"codedock.run/codedock/internal/models"
+	"codedock/internal/models"
 	"github.com/docker/docker/client"
 )
 

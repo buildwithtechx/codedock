@@ -9,10 +9,10 @@ import (
 
 	_ "github.com/jackc/pgx/v5/stdlib"
 
-	"codedock.run/codedock/internal/config"
-	"codedock.run/codedock/internal/models"
-	"codedock.run/codedock/internal/repositories"
-	authservices "codedock.run/codedock/internal/services/auth"
+	"codedock/internal/config"
+	"codedock/internal/models"
+	"codedock/internal/repositories"
+	authservices "codedock/internal/services/auth"
 )
 
 func setupTestDatabaseURL(t *testing.T) string {

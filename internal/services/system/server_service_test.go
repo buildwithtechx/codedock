@@ -4,10 +4,10 @@ import (
 	"context"
 	"testing"
 
-	"codedock.run/codedock/internal/config"
-	"codedock.run/codedock/internal/models"
-	"codedock.run/codedock/internal/repositories"
-	"codedock.run/codedock/internal/testdb"
+	"codedock/internal/config"
+	"codedock/internal/models"
+	"codedock/internal/repositories"
+	"codedock/internal/testdb"
 )
 
 func TestListServersByUserIncludesControlPlaneForOwner(t *testing.T) {

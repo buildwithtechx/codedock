@@ -5,8 +5,8 @@ import (
 	"encoding/json"
 	"log/slog"
 
-	"codedock.run/codedock/internal/models"
-	"codedock.run/codedock/internal/repositories"
+	"codedock/internal/models"
+	"codedock/internal/repositories"
 	"github.com/google/uuid"
 )
 

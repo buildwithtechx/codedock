@@ -5,9 +5,9 @@ import (
 	"os"
 	"path/filepath"
 
-	"codedock.run/codedock/apps/dashboard"
-	"codedock.run/codedock/internal/config"
-	"codedock.run/codedock/internal/models"
+	"codedock/apps/dashboard"
+	"codedock/internal/config"
+	"codedock/internal/models"
 	"github.com/labstack/echo/v4"
 )
 

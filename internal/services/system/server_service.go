@@ -9,10 +9,10 @@ import (
 
 	"github.com/google/uuid"
 
-	"codedock.run/codedock/internal/config"
-	"codedock.run/codedock/internal/engine/ssh"
-	"codedock.run/codedock/internal/models"
-	"codedock.run/codedock/internal/repositories"
+	"codedock/internal/config"
+	"codedock/internal/engine/ssh"
+	"codedock/internal/models"
+	"codedock/internal/repositories"
 )
 
 const controlPlaneServerID = "codedock-control-plane"

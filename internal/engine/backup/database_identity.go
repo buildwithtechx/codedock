@@ -1,8 +1,8 @@
 package backup
 
 import (
-	"codedock.run/codedock/internal/models"
-	"codedock.run/codedock/internal/utils"
+	"codedock/internal/models"
+	"codedock/internal/utils"
 )
 
 func databaseContainerIdentity(database *models.Database) string {

@@ -6,15 +6,15 @@ import (
 	"github.com/google/uuid"
 	"github.com/labstack/echo/v4"
 
-	"codedock.run/codedock/internal/utils"
+	"codedock/internal/utils"
 
-	"codedock.run/codedock/internal/engine/deploy"
-	"codedock.run/codedock/internal/http/middleware"
-	"codedock.run/codedock/internal/models"
-	deploymentservices "codedock.run/codedock/internal/services/deployments"
-	projectservices "codedock.run/codedock/internal/services/projects"
-	"codedock.run/codedock/internal/services/runtimes"
-	"codedock.run/codedock/internal/telemetry"
+	"codedock/internal/engine/deploy"
+	"codedock/internal/http/middleware"
+	"codedock/internal/models"
+	deploymentservices "codedock/internal/services/deployments"
+	projectservices "codedock/internal/services/projects"
+	"codedock/internal/services/runtimes"
+	"codedock/internal/telemetry"
 )
 
 type AppHandler struct {

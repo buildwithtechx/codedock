@@ -3,7 +3,7 @@ package models
 import (
 	"time"
 
-	"codedock.run/codedock/pkg/types"
+	"codedock/pkg/types"
 )
 
 type ProjectConfig = types.ProjectConfig

@@ -9,11 +9,11 @@ import (
 	"sync"
 	"time"
 
-	"codedock.run/codedock/internal/utils"
+	"codedock/internal/utils"
 
 	"github.com/jmoiron/sqlx"
 
-	"codedock.run/codedock/internal/models"
+	"codedock/internal/models"
 )
 
 type ProjectSettingsRepository interface {

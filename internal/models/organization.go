@@ -1,7 +1,7 @@
 package models
 
 import (
-	"codedock.run/codedock/pkg/types"
+	"codedock/pkg/types"
 )
 
 type MemberPermission = types.MemberPermission

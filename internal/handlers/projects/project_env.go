@@ -6,9 +6,9 @@ import (
 
 	"github.com/labstack/echo/v4"
 
-	"codedock.run/codedock/internal/utils"
+	"codedock/internal/utils"
 
-	projectservices "codedock.run/codedock/internal/services/projects"
+	projectservices "codedock/internal/services/projects"
 )
 
 type ProjectEnvHandler struct {

@@ -10,7 +10,7 @@ import (
 	"github.com/labstack/echo/v4"
 	echomiddleware "github.com/labstack/echo/v4/middleware"
 
-	"codedock.run/codedock/internal/config"
+	"codedock/internal/config"
 )
 
 func configureEchoMiddleware(e *echo.Echo) {

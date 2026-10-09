@@ -6,7 +6,7 @@ import (
 	"sync"
 	"time"
 
-	"codedock.run/codedock/internal/models"
+	"codedock/internal/models"
 )
 
 type promptAnswer struct {

@@ -7,7 +7,7 @@ import (
 	"strconv"
 	"time"
 
-	"codedock.run/codedock/internal/models"
+	"codedock/internal/models"
 )
 
 const (

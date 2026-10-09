@@ -1,9 +1,9 @@
 package http
 
 import (
-	"codedock.run/codedock/internal/models"
-	"codedock.run/codedock/internal/services/backups"
-	"codedock.run/codedock/internal/services/projects"
+	"codedock/internal/models"
+	"codedock/internal/services/backups"
+	"codedock/internal/services/projects"
 	"context"
 	"fmt"
 )

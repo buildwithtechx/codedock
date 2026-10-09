@@ -3,7 +3,7 @@ package notifications
 import (
 	"fmt"
 
-	"codedock.run/codedock/internal/models"
+	"codedock/internal/models"
 )
 
 func SendTelegramNotification(botToken, chatID string, event *models.NotificationEvent) error {

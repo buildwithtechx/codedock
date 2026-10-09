@@ -7,7 +7,7 @@ import (
 	"fmt"
 	"time"
 
-	"codedock.run/codedock/internal/models"
+	"codedock/internal/models"
 )
 
 func (s *Service) Act(ctx context.Context, userID, orgID, issueID string, req models.AttentionActionRequest) (string, error) {

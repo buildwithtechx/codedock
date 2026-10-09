@@ -6,19 +6,19 @@ import (
 
 	"github.com/labstack/echo/v4"
 
-	"codedock.run/codedock/internal/engine/networking"
-	"codedock.run/codedock/internal/engine/observability"
-	"codedock.run/codedock/internal/engine/traffic"
-	"codedock.run/codedock/internal/handlers/system"
-	"codedock.run/codedock/internal/models"
-	"codedock.run/codedock/internal/repositories"
-	"codedock.run/codedock/internal/services/analytics"
-	"codedock.run/codedock/internal/services/attention"
-	backupservices "codedock.run/codedock/internal/services/backups"
-	deploymentservices "codedock.run/codedock/internal/services/deployments"
-	"codedock.run/codedock/internal/services/migrations"
-	systemservices "codedock.run/codedock/internal/services/system"
-	"codedock.run/codedock/internal/utils"
+	"codedock/internal/engine/networking"
+	"codedock/internal/engine/observability"
+	"codedock/internal/engine/traffic"
+	"codedock/internal/handlers/system"
+	"codedock/internal/models"
+	"codedock/internal/repositories"
+	"codedock/internal/services/analytics"
+	"codedock/internal/services/attention"
+	backupservices "codedock/internal/services/backups"
+	deploymentservices "codedock/internal/services/deployments"
+	"codedock/internal/services/migrations"
+	systemservices "codedock/internal/services/system"
+	"codedock/internal/utils"
 )
 
 type statsHealthAdapter struct {

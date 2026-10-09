@@ -10,8 +10,8 @@ import (
 	"github.com/docker/docker/client"
 	"golang.org/x/sync/semaphore"
 
-	"codedock.run/codedock/internal/config"
-	"codedock.run/codedock/internal/models"
+	"codedock/internal/config"
+	"codedock/internal/models"
 )
 
 type BuildStrategy string

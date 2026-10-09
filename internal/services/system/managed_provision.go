@@ -10,8 +10,8 @@ import (
 
 	"github.com/google/uuid"
 
-	"codedock.run/codedock/internal/engine/hetzner"
-	"codedock.run/codedock/internal/models"
+	"codedock/internal/engine/hetzner"
+	"codedock/internal/models"
 )
 
 func (s *managedService) ReviewProvision(ctx context.Context, userID, orgID string, req models.ReviewManagedProvisionRequest) (*models.ManagedReview, error) {

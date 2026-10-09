@@ -9,7 +9,7 @@ import (
 
 	"github.com/labstack/echo/v4"
 
-	"codedock.run/codedock/internal/models"
+	"codedock/internal/models"
 )
 
 type testServerService struct {

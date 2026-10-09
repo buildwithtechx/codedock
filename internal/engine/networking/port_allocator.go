@@ -4,8 +4,8 @@ import (
 	"fmt"
 	"net"
 
-	"codedock.run/codedock/internal/config"
-	"codedock.run/codedock/internal/utils"
+	"codedock/internal/config"
+	"codedock/internal/utils"
 )
 
 func GetAvailablePort() (int, error) {

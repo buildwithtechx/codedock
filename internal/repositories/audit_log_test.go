@@ -4,7 +4,7 @@ import (
 	"context"
 	"testing"
 
-	"codedock.run/codedock/internal/models"
+	"codedock/internal/models"
 )
 
 func TestAuditLogRoundtrip(t *testing.T) {

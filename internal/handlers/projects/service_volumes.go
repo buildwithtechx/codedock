@@ -3,8 +3,8 @@ package projects
 import (
 	"net/http"
 
-	"codedock.run/codedock/internal/models"
-	"codedock.run/codedock/internal/utils"
+	"codedock/internal/models"
+	"codedock/internal/utils"
 	"github.com/labstack/echo/v4"
 )
 

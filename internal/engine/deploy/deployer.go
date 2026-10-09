@@ -14,9 +14,9 @@ import (
 	"github.com/docker/docker/client"
 	"github.com/google/uuid"
 
-	"codedock.run/codedock/internal/engine/build"
-	"codedock.run/codedock/internal/models"
-	"codedock.run/codedock/internal/utils"
+	"codedock/internal/engine/build"
+	"codedock/internal/models"
+	"codedock/internal/utils"
 )
 
 type Deployer struct {

@@ -10,8 +10,8 @@ import (
 
 	"gopkg.in/yaml.v3"
 
-	"codedock.run/codedock/internal/engine/dockerprobe"
-	"codedock.run/codedock/internal/models"
+	"codedock/internal/engine/dockerprobe"
+	"codedock/internal/models"
 )
 
 func (s *Service) ScanSource(ctx context.Context, userID, orgID, sourceID string, progress func(step, detail string)) (*models.MaskedStack, error) {

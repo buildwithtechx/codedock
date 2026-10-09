@@ -5,7 +5,7 @@ import (
 	"os"
 	"text/tabwriter"
 
-	"codedock.run/codedock/pkg/types"
+	"codedock/pkg/types"
 	"github.com/spf13/cobra"
 )
 

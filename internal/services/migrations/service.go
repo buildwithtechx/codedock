@@ -13,12 +13,12 @@ import (
 
 	"github.com/google/uuid"
 
-	"codedock.run/codedock/internal/engine/dockerprobe"
-	enginessh "codedock.run/codedock/internal/engine/ssh"
-	"codedock.run/codedock/internal/models"
-	"codedock.run/codedock/internal/repositories"
-	deploymentservices "codedock.run/codedock/internal/services/deployments"
-	projectservices "codedock.run/codedock/internal/services/projects"
+	"codedock/internal/engine/dockerprobe"
+	enginessh "codedock/internal/engine/ssh"
+	"codedock/internal/models"
+	"codedock/internal/repositories"
+	deploymentservices "codedock/internal/services/deployments"
+	projectservices "codedock/internal/services/projects"
 )
 
 type AppDeployer interface {

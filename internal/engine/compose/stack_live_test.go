@@ -2,7 +2,7 @@ package compose
 
 import (
 	"bytes"
-	"codedock.run/codedock/internal/models"
+	"codedock/internal/models"
 	"context"
 	"github.com/docker/docker/api/types/container"
 	"github.com/docker/docker/client"

@@ -1,8 +1,8 @@
 package http
 
 import (
-	"codedock.run/codedock/internal/models"
-	"codedock.run/codedock/internal/utils"
+	"codedock/internal/models"
+	"codedock/internal/utils"
 	"context"
 	"errors"
 	"fmt"

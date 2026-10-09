@@ -1,10 +1,10 @@
 package http
 
 import (
-	"codedock.run/codedock/internal/engine/backup"
-	"codedock.run/codedock/internal/engine/ssh"
-	"codedock.run/codedock/internal/models"
-	"codedock.run/codedock/internal/repositories"
+	"codedock/internal/engine/backup"
+	"codedock/internal/engine/ssh"
+	"codedock/internal/models"
+	"codedock/internal/repositories"
 	"context"
 	"fmt"
 	"github.com/docker/docker/client"

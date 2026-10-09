@@ -5,11 +5,11 @@ import (
 
 	"github.com/labstack/echo/v4"
 
-	"codedock.run/codedock/internal/utils"
+	"codedock/internal/utils"
 
-	"codedock.run/codedock/internal/models"
-	authservices "codedock.run/codedock/internal/services/auth"
-	projectservices "codedock.run/codedock/internal/services/projects"
+	"codedock/internal/models"
+	authservices "codedock/internal/services/auth"
+	projectservices "codedock/internal/services/projects"
 )
 
 type ServiceVarHandler struct {

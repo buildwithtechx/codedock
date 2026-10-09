@@ -5,11 +5,11 @@ import (
 
 	"github.com/labstack/echo/v4"
 
-	"codedock.run/codedock/internal/utils"
+	"codedock/internal/utils"
 
-	"codedock.run/codedock/internal/models"
-	projectservices "codedock.run/codedock/internal/services/projects"
-	systemservices "codedock.run/codedock/internal/services/system"
+	"codedock/internal/models"
+	projectservices "codedock/internal/services/projects"
+	systemservices "codedock/internal/services/system"
 )
 
 type ScheduledTaskHandler struct {

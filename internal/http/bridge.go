@@ -1,10 +1,10 @@
 package http
 
 import (
-	"codedock.run/codedock/internal/services/databases"
-	"codedock.run/codedock/internal/services/deployments"
-	"codedock.run/codedock/internal/services/projects"
-	"codedock.run/codedock/internal/version"
+	"codedock/internal/services/databases"
+	"codedock/internal/services/deployments"
+	"codedock/internal/services/projects"
+	"codedock/internal/version"
 	"github.com/mark3labs/mcp-go/mcp"
 	"github.com/mark3labs/mcp-go/server"
 )

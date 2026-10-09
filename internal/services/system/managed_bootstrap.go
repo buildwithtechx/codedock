@@ -7,9 +7,9 @@ import (
 	"strings"
 	"time"
 
-	"codedock.run/codedock/internal/engine/hetzner"
-	"codedock.run/codedock/internal/engine/ssh"
-	"codedock.run/codedock/internal/models"
+	"codedock/internal/engine/hetzner"
+	"codedock/internal/engine/ssh"
+	"codedock/internal/models"
 )
 
 func serverLabelSelector(serverID string) string {

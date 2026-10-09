@@ -5,7 +5,7 @@ import (
 	"testing"
 	"time"
 
-	"codedock.run/codedock/internal/models"
+	"codedock/internal/models"
 )
 
 func TestUserRoundtrip(t *testing.T) {

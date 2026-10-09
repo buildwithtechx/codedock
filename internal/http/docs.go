@@ -5,7 +5,7 @@ import (
 
 	"github.com/labstack/echo/v4"
 
-	"codedock.run/codedock/internal/http/apischema"
+	"codedock/internal/http/apischema"
 )
 
 func serveOpenAPISpec(c echo.Context) error {

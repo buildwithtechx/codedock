@@ -11,7 +11,7 @@ import (
 	"regexp"
 	"strings"
 
-	"codedock.run/codedock/internal/models"
+	"codedock/internal/models"
 )
 
 type gitProviderFetcher interface {

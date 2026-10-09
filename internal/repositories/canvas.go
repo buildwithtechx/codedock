@@ -8,7 +8,7 @@ import (
 
 	"github.com/jmoiron/sqlx"
 
-	"codedock.run/codedock/internal/models"
+	"codedock/internal/models"
 )
 
 type CanvasRepository interface {

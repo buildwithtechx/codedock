@@ -1,8 +1,8 @@
 package clusters
 
 import (
-	"codedock.run/codedock/internal/engine/ssh"
-	"codedock.run/codedock/internal/models"
+	"codedock/internal/engine/ssh"
+	"codedock/internal/models"
 	"context"
 	"crypto/sha256"
 	"encoding/hex"

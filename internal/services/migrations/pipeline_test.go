@@ -5,7 +5,7 @@ import (
 	"fmt"
 	"testing"
 
-	"codedock.run/codedock/internal/models"
+	"codedock/internal/models"
 )
 
 func startExternal(t *testing.T, env *migrationTestEnv, mode models.MigrationMode, kill bool) *StartMigrationResult {

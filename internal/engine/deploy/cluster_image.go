@@ -1,8 +1,8 @@
 package deploy
 
 import (
-	"codedock.run/codedock/internal/engine/build"
-	"codedock.run/codedock/internal/models"
+	"codedock/internal/engine/build"
+	"codedock/internal/models"
 	"context"
 	"encoding/base64"
 	"encoding/json"

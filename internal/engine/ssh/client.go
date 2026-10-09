@@ -13,7 +13,7 @@ import (
 	dockerclient "github.com/docker/docker/client"
 	"golang.org/x/crypto/ssh"
 
-	"codedock.run/codedock/internal/models"
+	"codedock/internal/models"
 )
 
 type Config struct {

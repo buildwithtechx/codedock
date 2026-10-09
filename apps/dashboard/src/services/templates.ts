@@ -1,4 +1,3 @@
-import type { OneClickApp } from '#/features/databases';
 import type {
   ArchiveDeployResponse,
   ComposeDeployResponse,
@@ -13,9 +12,9 @@ import { apiClient } from '#/lib/api-client';
 import { handleApiError } from '#/lib/error';
 
 export const templatesService = {
-  listOneClickApps: async (): Promise<OneClickApp[]> => {
+  listOneClickApps: async (): Promise<OneClickAppDetails[]> => {
     try {
-      const response = await apiClient.get<{ data: OneClickApp[] }>('/one-click');
+      const response = await apiClient.get<{ data: OneClickAppDetails[] }>('/one-click');
       return response.data;
     } catch (error) {
       throw handleApiError(error);

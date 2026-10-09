@@ -6,13 +6,13 @@ import (
 
 	"github.com/labstack/echo/v4"
 
-	"codedock.run/codedock/internal/utils"
+	"codedock/internal/utils"
 
-	"codedock.run/codedock/internal/models"
-	backupservices "codedock.run/codedock/internal/services/backups"
-	databaseservices "codedock.run/codedock/internal/services/databases"
-	"codedock.run/codedock/internal/services/operations"
-	projectservices "codedock.run/codedock/internal/services/projects"
+	"codedock/internal/models"
+	backupservices "codedock/internal/services/backups"
+	databaseservices "codedock/internal/services/databases"
+	"codedock/internal/services/operations"
+	projectservices "codedock/internal/services/projects"
 )
 
 type BackupHandler struct {

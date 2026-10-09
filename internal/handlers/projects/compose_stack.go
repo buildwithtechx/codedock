@@ -1,10 +1,10 @@
 package projects
 
 import (
-	"codedock.run/codedock/internal/http/middleware"
-	"codedock.run/codedock/internal/models"
-	services "codedock.run/codedock/internal/services/projects"
-	"codedock.run/codedock/internal/utils"
+	"codedock/internal/http/middleware"
+	"codedock/internal/models"
+	services "codedock/internal/services/projects"
+	"codedock/internal/utils"
 	"github.com/labstack/echo/v4"
 	"net/http"
 )

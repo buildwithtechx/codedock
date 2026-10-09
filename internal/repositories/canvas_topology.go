@@ -1,7 +1,7 @@
 package repositories
 
 import (
-	"codedock.run/codedock/internal/models"
+	"codedock/internal/models"
 	"context"
 	"crypto/sha256"
 	"encoding/hex"

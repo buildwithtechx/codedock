@@ -10,7 +10,7 @@ import (
 	"os"
 	"strings"
 
-	"codedock.run/codedock/internal/models"
+	"codedock/internal/models"
 )
 
 func (s *GitService) ListRepositories(ctx context.Context, userID, provider string) ([]models.GitRepository, error) {

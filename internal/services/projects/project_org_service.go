@@ -7,7 +7,7 @@ import (
 	"github.com/google/uuid"
 	"time"
 
-	"codedock.run/codedock/internal/models"
+	"codedock/internal/models"
 )
 
 func (s *ProjectService) ListOrganizationsByUser(ctx context.Context, userID string) ([]*models.Organization, error) {

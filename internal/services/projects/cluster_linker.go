@@ -1,8 +1,8 @@
 package projects
 
 import (
-	"codedock.run/codedock/internal/engine/kubernetes"
-	"codedock.run/codedock/internal/models"
+	"codedock/internal/engine/kubernetes"
+	"codedock/internal/models"
 	"fmt"
 )
 

@@ -1,7 +1,7 @@
 package clusters
 
 import (
-	"codedock.run/codedock/internal/engine/kubernetes"
+	"codedock/internal/engine/kubernetes"
 	"context"
 	"fmt"
 )

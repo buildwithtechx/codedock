@@ -8,12 +8,12 @@ import (
 
 	"github.com/google/uuid"
 
-	"codedock.run/codedock/internal/engine/compose"
-	"codedock.run/codedock/internal/models"
-	"codedock.run/codedock/internal/repositories"
-	projectservices "codedock.run/codedock/internal/services/projects"
-	"codedock.run/codedock/internal/testdb"
-	"codedock.run/codedock/internal/utils"
+	"codedock/internal/engine/compose"
+	"codedock/internal/models"
+	"codedock/internal/repositories"
+	projectservices "codedock/internal/services/projects"
+	"codedock/internal/testdb"
+	"codedock/internal/utils"
 )
 
 type oneclickIntegrationRuntime struct {

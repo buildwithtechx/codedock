@@ -9,7 +9,7 @@ import (
 	"os"
 	"path/filepath"
 
-	"codedock.run/codedock/pkg/types"
+	"codedock/pkg/types"
 )
 
 type ArchiveDeployResult struct {

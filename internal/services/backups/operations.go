@@ -1,9 +1,9 @@
 package backups
 
 import (
-	"codedock.run/codedock/internal/engine/backup"
-	"codedock.run/codedock/internal/models"
-	"codedock.run/codedock/internal/services/operations"
+	"codedock/internal/engine/backup"
+	"codedock/internal/models"
+	"codedock/internal/services/operations"
 	"context"
 	"encoding/json"
 	"fmt"

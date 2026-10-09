@@ -1,7 +1,7 @@
 package compose
 
 import (
-	"codedock.run/codedock/internal/models"
+	"codedock/internal/models"
 	"fmt"
 	"gopkg.in/yaml.v3"
 	"net/url"

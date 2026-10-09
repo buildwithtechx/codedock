@@ -5,7 +5,7 @@ import (
 	"strconv"
 	"sync"
 
-	"codedock.run/codedock/pkg/types"
+	"codedock/pkg/types"
 )
 
 var (

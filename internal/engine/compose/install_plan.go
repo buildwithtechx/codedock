@@ -146,13 +146,8 @@ func (p *InstallPlan) Masked() *InstallPlan {
 }
 
 func catalogSecretSpecs(tmpl ComposeTemplate) []CodedockSecretSpec {
-	if tmpl.XCodedock != nil {
-		return tmpl.XCodedock.Secrets
-	}
-	for _, service := range tmpl.Services {
-		if service.XCodedock != nil {
-			return service.XCodedock.Secrets
-		}
+	if meta := catalogMetadata(tmpl); meta != nil {
+		return meta.Secrets
 	}
 	return nil
 }
@@ -179,13 +174,8 @@ func resolveInstallSecrets(specs []CodedockSecretSpec, provided map[string]strin
 }
 
 func catalogInputSpecs(tmpl ComposeTemplate) []CodedockInputSpec {
-	if tmpl.XCodedock != nil {
-		return tmpl.XCodedock.Inputs
-	}
-	for _, service := range tmpl.Services {
-		if service.XCodedock != nil {
-			return service.XCodedock.Inputs
-		}
+	if meta := catalogMetadata(tmpl); meta != nil {
+		return meta.Inputs
 	}
 	return nil
 }

@@ -5,7 +5,7 @@ import (
 	"strings"
 	"time"
 
-	"codedock.run/codedock/internal/models"
+	"codedock/internal/models"
 )
 
 func (s *Service) detectProvider(ctx context.Context, cfg *models.ServerSettings, domain, recordType, value string) string {

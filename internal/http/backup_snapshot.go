@@ -4,8 +4,8 @@ import (
 	"context"
 	"fmt"
 
-	"codedock.run/codedock/internal/config"
-	"codedock.run/codedock/internal/engine/systemdb"
+	"codedock/internal/config"
+	"codedock/internal/engine/systemdb"
 )
 
 func newSystemSnapshotDumper(dataDir string) func(ctx context.Context) ([]byte, error) {

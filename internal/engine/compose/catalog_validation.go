@@ -107,15 +107,7 @@ func validateCatalogHealthcheck(name string, check *CatalogHealthcheck) []string
 }
 
 func validateCatalogMetadata(tmpl ComposeTemplate) []string {
-	meta := tmpl.XCodedock
-	if meta == nil {
-		for _, service := range tmpl.Services {
-			if service.XCodedock != nil {
-				meta = service.XCodedock
-				break
-			}
-		}
-	}
+	meta := catalogMetadata(tmpl)
 	if meta == nil {
 		return []string{"x-codedock metadata is required"}
 	}
@@ -138,15 +130,7 @@ func validateCatalogMetadata(tmpl ComposeTemplate) []string {
 func validateCatalogSecrets(tmpl ComposeTemplate) []string {
 	failures := []string{}
 	declared := map[string]bool{}
-	meta := tmpl.XCodedock
-	if meta == nil {
-		for _, service := range tmpl.Services {
-			if service.XCodedock != nil {
-				meta = service.XCodedock
-				break
-			}
-		}
-	}
+	meta := catalogMetadata(tmpl)
 	if meta != nil {
 		for _, spec := range meta.Secrets {
 			if !catalogEnvName.MatchString(spec.Var) {

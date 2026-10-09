@@ -8,10 +8,10 @@ import (
 
 	"github.com/labstack/echo/v4"
 
-	"codedock.run/codedock/internal/config"
-	"codedock.run/codedock/internal/http/apischema"
-	"codedock.run/codedock/internal/http/middleware"
-	authservices "codedock.run/codedock/internal/services/auth"
+	"codedock/internal/config"
+	"codedock/internal/http/apischema"
+	"codedock/internal/http/middleware"
+	authservices "codedock/internal/services/auth"
 )
 
 const openAPIGoldenPath = "../../docs/api/openapi.json"

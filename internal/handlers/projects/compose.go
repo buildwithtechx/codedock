@@ -7,11 +7,11 @@ import (
 
 	"github.com/labstack/echo/v4"
 
-	"codedock.run/codedock/internal/models"
-	"codedock.run/codedock/internal/repositories"
-	databaseservices "codedock.run/codedock/internal/services/databases"
-	projectservices "codedock.run/codedock/internal/services/projects"
-	"codedock.run/codedock/internal/utils"
+	"codedock/internal/models"
+	"codedock/internal/repositories"
+	databaseservices "codedock/internal/services/databases"
+	projectservices "codedock/internal/services/projects"
+	"codedock/internal/utils"
 )
 
 type ComposeHandler struct {

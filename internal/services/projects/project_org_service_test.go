@@ -1,9 +1,9 @@
 package projects
 
 import (
-	"codedock.run/codedock/internal/models"
-	"codedock.run/codedock/internal/repositories"
-	"codedock.run/codedock/internal/testdb"
+	"codedock/internal/models"
+	"codedock/internal/repositories"
+	"codedock/internal/testdb"
 	"context"
 	"sync"
 	"testing"

@@ -4,8 +4,8 @@ import (
 	"context"
 	"testing"
 
-	"codedock.run/codedock/internal/models"
-	"codedock.run/codedock/internal/utils"
+	"codedock/internal/models"
+	"codedock/internal/utils"
 )
 
 func TestClusterUpgradeJournalRoundtrip(t *testing.T) {

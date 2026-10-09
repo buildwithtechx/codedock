@@ -14,11 +14,11 @@ import (
 	"github.com/docker/docker/client"
 	"github.com/google/uuid"
 
-	"codedock.run/codedock/internal/engine/deploy"
-	"codedock.run/codedock/internal/engine/observability"
-	"codedock.run/codedock/internal/engine/ssh"
-	"codedock.run/codedock/internal/models"
-	"codedock.run/codedock/internal/repositories"
+	"codedock/internal/engine/deploy"
+	"codedock/internal/engine/observability"
+	"codedock/internal/engine/ssh"
+	"codedock/internal/models"
+	"codedock/internal/repositories"
 )
 
 type DeploymentService struct {

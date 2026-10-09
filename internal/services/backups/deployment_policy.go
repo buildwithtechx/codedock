@@ -1,6 +1,6 @@
 package backups
 
-import "codedock.run/codedock/internal/models"
+import "codedock/internal/models"
 
 func deploymentPolicyMatches(cfg *models.BackupConfig, projectID, serviceID string) bool {
 	if cfg.ServiceID != "" {

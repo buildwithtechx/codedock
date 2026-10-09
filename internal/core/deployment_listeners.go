@@ -10,8 +10,8 @@ import (
 	"strings"
 	"time"
 
-	"codedock.run/codedock/internal/models"
-	"codedock.run/codedock/internal/repositories"
+	"codedock/internal/models"
+	"codedock/internal/repositories"
 )
 
 type DeploymentListeners struct {

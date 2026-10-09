@@ -82,22 +82,3 @@ export interface ImportDatabaseRequest {
 }
 
 export type ImportDatabaseResponse = BaseResponse<void>;
-
-export interface OneClickApp {
-  id: string;
-  name: string;
-  description: string;
-  icon: string;
-  category: string;
-  dockerImage: string;
-  defaultPort: number;
-  envVariables: Array<{
-    key: string;
-    label: string;
-    defaultValue?: string;
-    secret: boolean;
-    required: boolean;
-    input: boolean;
-  }>;
-  verified: boolean;
-}

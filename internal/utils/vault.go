@@ -13,7 +13,7 @@ import (
 	"path/filepath"
 	"strings"
 
-	"codedock.run/codedock/internal/config"
+	"codedock/internal/config"
 )
 
 type Vault struct {

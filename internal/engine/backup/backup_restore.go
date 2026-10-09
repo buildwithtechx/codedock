@@ -11,9 +11,9 @@ import (
 	"github.com/docker/docker/api/types/container"
 	"github.com/docker/docker/pkg/stdcopy"
 
-	"codedock.run/codedock/internal/models"
+	"codedock/internal/models"
 
-	"codedock.run/codedock/internal/engine/compose"
+	"codedock/internal/engine/compose"
 )
 
 func (bm *BackupManager) RestoreBackup(ctx context.Context, recordID string) error {

@@ -4,7 +4,7 @@ import (
 	"fmt"
 	"os"
 
-	codedockhttp "codedock.run/codedock/pkg/http"
+	codedockhttp "codedock/pkg/http"
 	"github.com/spf13/cobra"
 )
 

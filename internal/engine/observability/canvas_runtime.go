@@ -1,7 +1,7 @@
 package observability
 
 import (
-	"codedock.run/codedock/internal/models"
+	"codedock/internal/models"
 	"context"
 	"fmt"
 	"github.com/containerd/errdefs"

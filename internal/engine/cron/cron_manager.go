@@ -19,8 +19,8 @@ import (
 	"github.com/docker/docker/pkg/stdcopy"
 	cronv3 "github.com/robfig/cron/v3"
 
-	"codedock.run/codedock/internal/models"
-	"codedock.run/codedock/internal/utils"
+	"codedock/internal/models"
+	"codedock/internal/utils"
 )
 
 type Store interface {

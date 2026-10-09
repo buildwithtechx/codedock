@@ -6,12 +6,12 @@ import (
 
 	"github.com/labstack/echo/v4"
 
-	"codedock.run/codedock/internal/utils"
+	"codedock/internal/utils"
 
-	"codedock.run/codedock/internal/http/middleware"
-	"codedock.run/codedock/internal/models"
-	projectservices "codedock.run/codedock/internal/services/projects"
-	"codedock.run/codedock/internal/telemetry"
+	"codedock/internal/http/middleware"
+	"codedock/internal/models"
+	projectservices "codedock/internal/services/projects"
+	"codedock/internal/telemetry"
 )
 
 type ProjectHandler struct {

@@ -5,7 +5,7 @@ import (
 	"testing"
 	"time"
 
-	"codedock.run/codedock/internal/services/system"
+	"codedock/internal/services/system"
 )
 
 func TestLogService_GetHistoricalLogs_InvalidHost(t *testing.T) {

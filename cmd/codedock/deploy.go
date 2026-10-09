@@ -8,8 +8,8 @@ import (
 	"github.com/google/uuid"
 	"github.com/spf13/cobra"
 
-	"codedock.run/codedock/internal/utils"
-	"codedock.run/codedock/pkg/types"
+	"codedock/internal/utils"
+	"codedock/pkg/types"
 )
 
 var (

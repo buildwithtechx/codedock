@@ -1,8 +1,8 @@
 package backups
 
 import (
-	"codedock.run/codedock/internal/models"
-	"codedock.run/codedock/internal/repositories"
+	"codedock/internal/models"
+	"codedock/internal/repositories"
 	"context"
 	"strings"
 	"testing"

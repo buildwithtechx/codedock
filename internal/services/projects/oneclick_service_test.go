@@ -6,9 +6,9 @@ import (
 	"strings"
 	"testing"
 
-	"codedock.run/codedock/internal/engine/compose"
-	"codedock.run/codedock/internal/models"
-	"codedock.run/codedock/internal/repositories"
+	"codedock/internal/engine/compose"
+	"codedock/internal/models"
+	"codedock/internal/repositories"
 )
 
 type oneClickTestEnvRepo struct {

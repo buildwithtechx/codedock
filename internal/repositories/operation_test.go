@@ -1,9 +1,9 @@
 package repositories
 
 import (
-	"codedock.run/codedock/internal/models"
-	"codedock.run/codedock/internal/services/operations"
-	"codedock.run/codedock/internal/utils"
+	"codedock/internal/models"
+	"codedock/internal/services/operations"
+	"codedock/internal/utils"
 	"context"
 	"strings"
 	"testing"

@@ -1,7 +1,7 @@
 package runtimes
 
 import (
-	"codedock.run/codedock/internal/models"
+	"codedock/internal/models"
 	"encoding/json"
 	"testing"
 )

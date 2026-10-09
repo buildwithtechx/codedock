@@ -6,7 +6,7 @@ import (
 	"log/slog"
 	"time"
 
-	"codedock.run/codedock/internal/models"
+	"codedock/internal/models"
 )
 
 func (bm *BackupManager) Reconcile() error {

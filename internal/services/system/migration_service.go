@@ -9,10 +9,10 @@ import (
 	"os/exec"
 	"time"
 
-	"codedock.run/codedock/internal/engine/networking"
-	"codedock.run/codedock/internal/engine/systemdb"
-	"codedock.run/codedock/internal/models"
-	"codedock.run/codedock/internal/repositories"
+	"codedock/internal/engine/networking"
+	"codedock/internal/engine/systemdb"
+	"codedock/internal/models"
+	"codedock/internal/repositories"
 )
 
 const bundleManifestVersion = "1"

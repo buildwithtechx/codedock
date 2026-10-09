@@ -6,7 +6,7 @@ import (
 	"strings"
 	"testing"
 
-	"codedock.run/codedock/internal/models"
+	"codedock/internal/models"
 )
 
 type gitTestVault struct{}

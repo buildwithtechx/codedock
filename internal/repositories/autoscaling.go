@@ -7,7 +7,7 @@ import (
 	"fmt"
 	"time"
 
-	"codedock.run/codedock/internal/models"
+	"codedock/internal/models"
 )
 
 type AutoscalingRepo struct{ db *sql.DB }

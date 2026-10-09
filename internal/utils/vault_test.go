@@ -6,7 +6,7 @@ import (
 	"strings"
 	"testing"
 
-	"codedock.run/codedock/internal/config"
+	"codedock/internal/config"
 )
 
 func TestVaultKeyOverrideSkipsKeyFile(t *testing.T) {

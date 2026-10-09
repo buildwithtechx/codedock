@@ -1,9 +1,9 @@
 package runtimes
 
 import (
-	"codedock.run/codedock/internal/engine/bare"
-	"codedock.run/codedock/internal/engine/kubernetes"
-	"codedock.run/codedock/internal/models"
+	"codedock/internal/engine/bare"
+	"codedock/internal/engine/kubernetes"
+	"codedock/internal/models"
 	"context"
 	"crypto/sha256"
 	"encoding/hex"

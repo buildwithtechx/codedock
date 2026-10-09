@@ -1,7 +1,7 @@
 package kubernetes
 
 import (
-	"codedock.run/codedock/internal/models"
+	"codedock/internal/models"
 	"encoding/json"
 	"fmt"
 	"net/url"

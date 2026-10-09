@@ -1,7 +1,7 @@
 package clusterdata
 
 import (
-	"codedock.run/codedock/internal/models"
+	"codedock/internal/models"
 	"encoding/base64"
 	"encoding/json"
 	"errors"

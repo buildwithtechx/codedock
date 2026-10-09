@@ -1,9 +1,9 @@
 package clusters
 
 import (
-	"codedock.run/codedock/internal/engine/kubernetes"
-	"codedock.run/codedock/internal/models"
-	"codedock.run/codedock/internal/services/operations"
+	"codedock/internal/engine/kubernetes"
+	"codedock/internal/models"
+	"codedock/internal/services/operations"
 	"context"
 	"crypto/rand"
 	"crypto/sha256"

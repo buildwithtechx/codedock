@@ -1,8 +1,8 @@
 package http
 
 import (
-	"codedock.run/codedock/internal/http/middleware"
-	"codedock.run/codedock/internal/models"
+	"codedock/internal/http/middleware"
+	"codedock/internal/models"
 	"github.com/labstack/echo/v4"
 	"net/http"
 )
