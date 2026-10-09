@@ -10,15 +10,15 @@ const (
 type MigrationStatus string
 
 const (
-	MigrationStatusPending        MigrationStatus = "pending"
-	MigrationStatusScanning       MigrationStatus = "scanning"
-	MigrationStatusPreviewed      MigrationStatus = "previewed"
-	MigrationStatusTransferring   MigrationStatus = "transferring"
-	MigrationStatusVerifying      MigrationStatus = "verifying"
+	MigrationStatusPending         MigrationStatus = "pending"
+	MigrationStatusScanning        MigrationStatus = "scanning"
+	MigrationStatusPreviewed       MigrationStatus = "previewed"
+	MigrationStatusTransferring    MigrationStatus = "transferring"
+	MigrationStatusVerifying       MigrationStatus = "verifying"
 	MigrationStatusAwaitingCutover MigrationStatus = "awaiting_cutover"
-	MigrationStatusCompleted      MigrationStatus = "completed"
-	MigrationStatusFailed         MigrationStatus = "failed"
-	MigrationStatusCancelled      MigrationStatus = "cancelled"
+	MigrationStatusCompleted       MigrationStatus = "completed"
+	MigrationStatusFailed          MigrationStatus = "failed"
+	MigrationStatusCancelled       MigrationStatus = "cancelled"
 )
 
 type MigrationPromptKind string
@@ -29,52 +29,52 @@ const (
 )
 
 type MigrationSource struct {
-	ID            string `json:"id" db:"id"`
+	ID             string `json:"id" db:"id"`
 	OrganizationID string `json:"organizationId" db:"organization_id"`
-	Name          string `json:"name" db:"name"`
-	SSHHost       string `json:"sshHost" db:"ssh_host"`
-	SSHPort       int    `json:"sshPort" db:"ssh_port"`
-	SSHUser       string `json:"sshUser" db:"ssh_user"`
-	SSHAuthMethod string `json:"sshAuthMethod" db:"ssh_auth_method"`
-	SSHKey        string `json:"-" db:"ssh_key"`
-	SSHPassword   string `json:"-" db:"ssh_password"`
-	Fingerprint   string `json:"fingerprint" db:"fingerprint"`
-	CreatedAt     string `json:"createdAt" db:"created_at"`
-	UpdatedAt     string `json:"updatedAt" db:"updated_at"`
+	Name           string `json:"name" db:"name"`
+	SSHHost        string `json:"sshHost" db:"ssh_host"`
+	SSHPort        int    `json:"sshPort" db:"ssh_port"`
+	SSHUser        string `json:"sshUser" db:"ssh_user"`
+	SSHAuthMethod  string `json:"sshAuthMethod" db:"ssh_auth_method"`
+	SSHKey         string `json:"-" db:"ssh_key"`
+	SSHPassword    string `json:"-" db:"ssh_password"`
+	Fingerprint    string `json:"fingerprint" db:"fingerprint"`
+	CreatedAt      string `json:"createdAt" db:"created_at"`
+	UpdatedAt      string `json:"updatedAt" db:"updated_at"`
 }
 
 type MigrationRun struct {
-	ID             string          `json:"id" db:"id"`
-	OrganizationID string          `json:"organizationId" db:"organization_id"`
-	UserID         string          `json:"userId" db:"user_id"`
-	SourceID       string          `json:"sourceId,omitempty" db:"source_id"`
-	SourceKind     string          `json:"sourceKind" db:"source_kind"`
-	ProjectID      string          `json:"projectId,omitempty" db:"project_id"`
-	TargetServerID string          `json:"targetServerId,omitempty" db:"target_server_id"`
-	Mode           MigrationMode   `json:"mode" db:"mode"`
-	Status         MigrationStatus `json:"status" db:"status"`
-	Phase          string          `json:"phase" db:"phase"`
-	Selection      string          `json:"-" db:"selection"`
-	Progress       string          `json:"-" db:"progress"`
-	Logs           string          `json:"logs" db:"logs"`
-	Prompt         string          `json:"-" db:"prompt"`
-	TokenHash      string          `json:"-" db:"token_hash"`
-	Error          string          `json:"error,omitempty" db:"error"`
-	CancelRequested bool           `json:"cancelRequested" db:"cancel_requested"`
-	CreatedAt      string          `json:"createdAt" db:"created_at"`
-	UpdatedAt      string          `json:"updatedAt" db:"updated_at"`
+	ID              string          `json:"id" db:"id"`
+	OrganizationID  string          `json:"organizationId" db:"organization_id"`
+	UserID          string          `json:"userId" db:"user_id"`
+	SourceID        string          `json:"sourceId,omitempty" db:"source_id"`
+	SourceKind      string          `json:"sourceKind" db:"source_kind"`
+	ProjectID       string          `json:"projectId,omitempty" db:"project_id"`
+	TargetServerID  string          `json:"targetServerId,omitempty" db:"target_server_id"`
+	Mode            MigrationMode   `json:"mode" db:"mode"`
+	Status          MigrationStatus `json:"status" db:"status"`
+	Phase           string          `json:"phase" db:"phase"`
+	Selection       string          `json:"-" db:"selection"`
+	Progress        string          `json:"-" db:"progress"`
+	Logs            string          `json:"logs" db:"logs"`
+	Prompt          string          `json:"-" db:"prompt"`
+	TokenHash       string          `json:"-" db:"token_hash"`
+	Error           string          `json:"error,omitempty" db:"error"`
+	CancelRequested bool            `json:"cancelRequested" db:"cancel_requested"`
+	CreatedAt       string          `json:"createdAt" db:"created_at"`
+	UpdatedAt       string          `json:"updatedAt" db:"updated_at"`
 }
 
 type MigrationSelection struct {
-	ContainerIDs  []string          `json:"containerIds"`
-	Names         []string          `json:"names"`
-	Overrides     map[string]string `json:"overrides"`
-	Skips         []string          `json:"skips"`
-	Decisions     map[string]string `json:"decisions"`
-	KillOriginals bool              `json:"killOriginals"`
-	ProjectName   string            `json:"projectName"`
-	ImportEnv     bool              `json:"importEnv"`
-	SourceServerID string           `json:"sourceServerId"`
+	ContainerIDs   []string          `json:"containerIds"`
+	Names          []string          `json:"names"`
+	Overrides      map[string]string `json:"overrides"`
+	Skips          []string          `json:"skips"`
+	Decisions      map[string]string `json:"decisions"`
+	KillOriginals  bool              `json:"killOriginals"`
+	ProjectName    string            `json:"projectName"`
+	ImportEnv      bool              `json:"importEnv"`
+	SourceServerID string            `json:"sourceServerId"`
 }
 
 type MigrationPromptOption struct {
@@ -84,12 +84,12 @@ type MigrationPromptOption struct {
 }
 
 type MigrationPrompt struct {
-	ID        string               `json:"id"`
-	Kind      MigrationPromptKind  `json:"kind"`
-	Subject   string               `json:"subject"`
-	Detail    string               `json:"detail"`
+	ID        string                  `json:"id"`
+	Kind      MigrationPromptKind     `json:"kind"`
+	Subject   string                  `json:"subject"`
+	Detail    string                  `json:"detail"`
 	Options   []MigrationPromptOption `json:"options"`
-	ExpiresAt int64                `json:"expiresAt"`
+	ExpiresAt int64                   `json:"expiresAt"`
 }
 
 type MigrationServiceProgress struct {
@@ -162,35 +162,35 @@ type ReimportMigrationRequest struct {
 }
 
 type RepoComposeMigrationRequest struct {
-	RepoURL   string `json:"repoUrl"`
-	Branch    string `json:"branch"`
+	RepoURL     string `json:"repoUrl"`
+	Branch      string `json:"branch"`
 	ComposePath string `json:"composePath"`
 }
 
 type PreviewMigrationRequest struct {
-	SourceID       string                 `json:"sourceId"`
-	ProjectID      string                 `json:"projectId"`
-	ContainerIDs   []string               `json:"containerIds"`
-	TargetServerID string                 `json:"targetServerId"`
-	Mode           MigrationMode          `json:"mode"`
+	SourceID       string        `json:"sourceId"`
+	ProjectID      string        `json:"projectId"`
+	ContainerIDs   []string      `json:"containerIds"`
+	TargetServerID string        `json:"targetServerId"`
+	Mode           MigrationMode `json:"mode"`
 }
 
 type StartMigrationRequest struct {
-	SourceID       string   `json:"sourceId"`
-	ContainerIDs   []string `json:"containerIds"`
-	ProjectName    string   `json:"projectName"`
-	TargetServerID string   `json:"targetServerId"`
+	SourceID       string        `json:"sourceId"`
+	ContainerIDs   []string      `json:"containerIds"`
+	ProjectName    string        `json:"projectName"`
+	TargetServerID string        `json:"targetServerId"`
 	Mode           MigrationMode `json:"mode"`
-	ImportEnv      bool     `json:"importEnv"`
-	KillOriginals  bool     `json:"killOriginals"`
+	ImportEnv      bool          `json:"importEnv"`
+	KillOriginals  bool          `json:"killOriginals"`
 }
 
 type StartProjectMoveRequest struct {
-	ProjectID      string   `json:"projectId"`
-	ServiceIDs     []string `json:"serviceIds"`
-	TargetServerID string   `json:"targetServerId"`
+	ProjectID      string        `json:"projectId"`
+	ServiceIDs     []string      `json:"serviceIds"`
+	TargetServerID string        `json:"targetServerId"`
 	Mode           MigrationMode `json:"mode"`
-	KillOriginals  bool     `json:"killOriginals"`
+	KillOriginals  bool          `json:"killOriginals"`
 }
 
 type CutoverMigrationRequest struct {

@@ -1,14 +1,14 @@
 package models
 
 type TrafficBucket struct {
-	Minute    string `json:"minute" db:"bucket_minute"`
-	ProjectID string `json:"projectId" db:"project_id"`
-	Domain    string `json:"domain" db:"domain"`
-	Path      string `json:"path" db:"path"`
-	Status    int    `json:"status" db:"status"`
-	Requests  int    `json:"requests" db:"requests"`
-	Bytes     int64  `json:"bytes" db:"bytes"`
-	DurationMs int64 `json:"durationMs" db:"duration_ms"`
+	Minute     string `json:"minute" db:"bucket_minute"`
+	ProjectID  string `json:"projectId" db:"project_id"`
+	Domain     string `json:"domain" db:"domain"`
+	Path       string `json:"path" db:"path"`
+	Status     int    `json:"status" db:"status"`
+	Requests   int    `json:"requests" db:"requests"`
+	Bytes      int64  `json:"bytes" db:"bytes"`
+	DurationMs int64  `json:"durationMs" db:"duration_ms"`
 }
 
 type TrafficVisitor struct {
@@ -26,23 +26,23 @@ type TrafficPathsToggle struct {
 }
 
 type TrafficSample struct {
-	Time     string `json:"time"`
-	ProjectID string `json:"projectId"`
-	Domain   string `json:"domain"`
-	Path     string `json:"path"`
-	Status   int    `json:"status"`
-	Bytes    int64  `json:"bytes"`
-	DurationMs int64 `json:"durationMs"`
-	ClientIP string `json:"clientIp"`
+	Time       string `json:"time"`
+	ProjectID  string `json:"projectId"`
+	Domain     string `json:"domain"`
+	Path       string `json:"path"`
+	Status     int    `json:"status"`
+	Bytes      int64  `json:"bytes"`
+	DurationMs int64  `json:"durationMs"`
+	ClientIP   string `json:"clientIp"`
 }
 
 type AnalyticsSummary struct {
-	ProjectID   string  `json:"projectId"`
-	From        string  `json:"from"`
-	To          string  `json:"to"`
-	Requests    int     `json:"requests"`
-	Bytes       int64   `json:"bytes"`
-	ErrorRate   float64 `json:"errorRate"`
+	ProjectID     string  `json:"projectId"`
+	From          string  `json:"from"`
+	To            string  `json:"to"`
+	Requests      int     `json:"requests"`
+	Bytes         int64   `json:"bytes"`
+	ErrorRate     float64 `json:"errorRate"`
 	AvgDurationMs float64 `json:"avgDurationMs"`
 }
 
@@ -65,12 +65,12 @@ type AnalyticsTopPath struct {
 }
 
 type AnalyticsOverview struct {
-	ProjectID string                   `json:"projectId"`
-	From      string                   `json:"from"`
-	To        string                   `json:"to"`
-	Series    []AnalyticsSeriesPoint   `json:"series"`
+	ProjectID string                     `json:"projectId"`
+	From      string                     `json:"from"`
+	To        string                     `json:"to"`
+	Series    []AnalyticsSeriesPoint     `json:"series"`
 	Statuses  []AnalyticsStatusBreakdown `json:"statuses"`
-	TopPaths  []AnalyticsTopPath       `json:"topPaths"`
+	TopPaths  []AnalyticsTopPath         `json:"topPaths"`
 }
 
 type AnalyticsGeoEntry struct {
@@ -81,18 +81,18 @@ type AnalyticsGeoEntry struct {
 }
 
 type AnalyticsGeo struct {
-	ProjectID string             `json:"projectId"`
-	From      string             `json:"from"`
-	To        string             `json:"to"`
+	ProjectID string              `json:"projectId"`
+	From      string              `json:"from"`
+	To        string              `json:"to"`
 	Countries []AnalyticsGeoEntry `json:"countries"`
 }
 
 type AnalyticsDeploymentStats struct {
-	ProjectID   string  `json:"projectId"`
-	Total       int     `json:"total"`
-	Succeeded   int     `json:"succeeded"`
-	Failed      int     `json:"failed"`
-	SuccessRate float64 `json:"successRate"`
+	ProjectID          string  `json:"projectId"`
+	Total              int     `json:"total"`
+	Succeeded          int     `json:"succeeded"`
+	Failed             int     `json:"failed"`
+	SuccessRate        float64 `json:"successRate"`
 	AvgDurationSeconds float64 `json:"avgDurationSeconds"`
 }
 

@@ -206,13 +206,13 @@ func (bm *BackupManager) TriggerBackup(ctx context.Context, backupConfigID strin
 		return producer.TriggerBackup(ctx, backupConfigID)
 	}
 	rec := &models.BackupRecord{
-		ID:              uuid.New().String(),
-		BackupConfigID:  cfg.ID,
-		DatabaseID:      cfg.DatabaseID,
-		S3DestinationID: cfg.S3DestinationID,
+		ID:                uuid.New().String(),
+		BackupConfigID:    cfg.ID,
+		DatabaseID:        cfg.DatabaseID,
+		S3DestinationID:   cfg.S3DestinationID,
 		SFTPDestinationID: cfg.SFTPDestinationID,
-		Status:          models.BackupRecordStatusRunning,
-		Logs:            fmt.Sprintf("Initiating automated backup '%s' at %s...\n", cfg.Name, time.Now().UTC().Format(time.RFC3339)),
+		Status:            models.BackupRecordStatusRunning,
+		Logs:              fmt.Sprintf("Initiating automated backup '%s' at %s...\n", cfg.Name, time.Now().UTC().Format(time.RFC3339)),
 	}
 	if err := bm.store.CreateBackupRecord(rec); err != nil {
 		return nil, fmt.Errorf("failed to create backup record: %w", err)

@@ -8,23 +8,23 @@ type RuntimeVolume struct {
 	Shared       bool   `json:"shared"`
 }
 type RuntimeTarget struct {
-	BareReleaseURL   string          `json:"bareReleaseUrl,omitempty"`
-	BareSHA256       string          `json:"bareSha256,omitempty"`
-	BareCommand      []string        `json:"bareCommand"`
-	BareRepoURL      string          `json:"bareRepoUrl,omitempty"`
-	BareBranch       string          `json:"bareBranch,omitempty"`
-	BareToolchain    string          `json:"bareToolchain,omitempty"`
-	BareInstallCommand string        `json:"bareInstallCommand,omitempty"`
-	BareBuildCommand string          `json:"bareBuildCommand,omitempty"`
-	BareOutput       string          `json:"bareOutput,omitempty"`
-	BareStaticDir    string          `json:"bareStaticDir,omitempty"`
-	Kind             string          `json:"kind"`
-	ClusterID       string          `json:"clusterId,omitempty"`
-	NodeIDs         []string        `json:"nodeIds"`
-	ImageRepository string          `json:"imageRepository,omitempty"`
-	RegistryID      string          `json:"registryId,omitempty"`
-	Volumes         []RuntimeVolume `json:"volumes"`
-	BareNode        ClusterNode     `json:"bareNode,omitempty"`
+	BareReleaseURL     string          `json:"bareReleaseUrl,omitempty"`
+	BareSHA256         string          `json:"bareSha256,omitempty"`
+	BareCommand        []string        `json:"bareCommand"`
+	BareRepoURL        string          `json:"bareRepoUrl,omitempty"`
+	BareBranch         string          `json:"bareBranch,omitempty"`
+	BareToolchain      string          `json:"bareToolchain,omitempty"`
+	BareInstallCommand string          `json:"bareInstallCommand,omitempty"`
+	BareBuildCommand   string          `json:"bareBuildCommand,omitempty"`
+	BareOutput         string          `json:"bareOutput,omitempty"`
+	BareStaticDir      string          `json:"bareStaticDir,omitempty"`
+	Kind               string          `json:"kind"`
+	ClusterID          string          `json:"clusterId,omitempty"`
+	NodeIDs            []string        `json:"nodeIds"`
+	ImageRepository    string          `json:"imageRepository,omitempty"`
+	RegistryID         string          `json:"registryId,omitempty"`
+	Volumes            []RuntimeVolume `json:"volumes"`
+	BareNode           ClusterNode     `json:"bareNode,omitempty"`
 }
 type ServiceRuntime struct {
 	RuntimeKind string        `json:"-" db:"runtime_kind"`

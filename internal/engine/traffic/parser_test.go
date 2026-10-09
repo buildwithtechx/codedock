@@ -35,8 +35,8 @@ func TestParseAccessLine(t *testing.T) {
 
 func TestClassifyCountry(t *testing.T) {
 	for _, check := range []struct {
-		ip    string
-		want  string
+		ip   string
+		want string
 	}{
 		{"127.0.0.1", "local"},
 		{"10.1.2.3", "private"},

@@ -84,8 +84,8 @@ func TestRefreshPostgresPortOverwritesStored(t *testing.T) {
 func TestIsPortConflict(t *testing.T) {
 	cases := map[string]bool{
 		"failed to start postgres container: Error response from daemon: ports are not available: exposing port TCP 127.0.0.1:5432": true,
-		"Bind for 127.0.0.1:5432 failed: port is already allocated": true,
-		"listen tcp4 127.0.0.1:5432: bind: address already in use": true,
+		"Bind for 127.0.0.1:5432 failed: port is already allocated":                                                                 true,
+		"listen tcp4 127.0.0.1:5432: bind: address already in use":                                                                  true,
 		"connection refused": false,
 		"no such container":  false,
 	}

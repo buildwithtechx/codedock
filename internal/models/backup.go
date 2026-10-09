@@ -53,39 +53,39 @@ type BackupConfig struct {
 }
 
 type BackupRecord struct {
-	ProtectedUntil  int64              `json:"protectedUntil" db:"protected_until"`
-	ParentRecordID  string             `json:"parentRecordId,omitempty" db:"parent_record_id"`
-	SHA256          string             `json:"sha256" db:"sha256"`
-	VerifiedAt      string             `json:"verifiedAt" db:"verified_at"`
-	ID              string             `json:"id" db:"id"`
-	BackupConfigID  string             `json:"backupConfigId" db:"backup_config_id"`
-	DatabaseID      string             `json:"databaseId,omitempty" db:"database_id"`
-	S3DestinationID string             `json:"s3DestinationId,omitempty" db:"s3_destination_id"`
-	SFTPDestinationID string           `json:"sftpDestinationId,omitempty" db:"sftp_destination_id"`
-	Status          BackupRecordStatus `json:"status" db:"status"`
-	FilePath        string             `json:"-" db:"file_path"`
-	FileSizeBytes   int64              `json:"fileSizeBytes" db:"file_size_bytes"`
-	S3URL           string             `json:"s3Url,omitempty" db:"s3_url"`
-	SFTPURL         string             `json:"sftpUrl,omitempty" db:"sftp_url"`
-	Logs            string             `json:"logs" db:"logs"`
-	StartedAt       string             `json:"startedAt" db:"started_at"`
-	CompletedAt     string             `json:"completedAt" db:"completed_at"`
+	ProtectedUntil    int64              `json:"protectedUntil" db:"protected_until"`
+	ParentRecordID    string             `json:"parentRecordId,omitempty" db:"parent_record_id"`
+	SHA256            string             `json:"sha256" db:"sha256"`
+	VerifiedAt        string             `json:"verifiedAt" db:"verified_at"`
+	ID                string             `json:"id" db:"id"`
+	BackupConfigID    string             `json:"backupConfigId" db:"backup_config_id"`
+	DatabaseID        string             `json:"databaseId,omitempty" db:"database_id"`
+	S3DestinationID   string             `json:"s3DestinationId,omitempty" db:"s3_destination_id"`
+	SFTPDestinationID string             `json:"sftpDestinationId,omitempty" db:"sftp_destination_id"`
+	Status            BackupRecordStatus `json:"status" db:"status"`
+	FilePath          string             `json:"-" db:"file_path"`
+	FileSizeBytes     int64              `json:"fileSizeBytes" db:"file_size_bytes"`
+	S3URL             string             `json:"s3Url,omitempty" db:"s3_url"`
+	SFTPURL           string             `json:"sftpUrl,omitempty" db:"sftp_url"`
+	Logs              string             `json:"logs" db:"logs"`
+	StartedAt         string             `json:"startedAt" db:"started_at"`
+	CompletedAt       string             `json:"completedAt" db:"completed_at"`
 }
 
 type UpdateBackupRecordOpts struct {
-	SHA256          string             `json:"sha256"`
-	VerifiedAt      string             `json:"verifiedAt"`
-	ID              string             `json:"id"`
-	Status          BackupRecordStatus `json:"status"`
-	FilePath        string             `json:"-"`
-	S3URL           string             `json:"s3_url"`
-	SFTPURL         string             `json:"sftp_url"`
-	ParentRecordID  string             `json:"parent_record_id"`
-	S3DestinationID string             `json:"s3_destination_id"`
-	SFTPDestinationID string           `json:"sftp_destination_id"`
-	Logs            string             `json:"logs"`
-	FileSizeBytes   int64              `json:"file_size_bytes"`
-	CompletedAt     string             `json:"completed_at"`
+	SHA256            string             `json:"sha256"`
+	VerifiedAt        string             `json:"verifiedAt"`
+	ID                string             `json:"id"`
+	Status            BackupRecordStatus `json:"status"`
+	FilePath          string             `json:"-"`
+	S3URL             string             `json:"s3_url"`
+	SFTPURL           string             `json:"sftp_url"`
+	ParentRecordID    string             `json:"parent_record_id"`
+	S3DestinationID   string             `json:"s3_destination_id"`
+	SFTPDestinationID string             `json:"sftp_destination_id"`
+	Logs              string             `json:"logs"`
+	FileSizeBytes     int64              `json:"file_size_bytes"`
+	CompletedAt       string             `json:"completed_at"`
 }
 
 type SFTPDestination struct {

@@ -92,14 +92,14 @@ func (s *Service) RepoCompose(ctx context.Context, userID, orgID string, req mod
 			env[key] = dockerprobe.MaskedSecret
 		}
 		stack.Containers = append(stack.Containers, models.MaskedContainer{
-			Name:   name,
-			Image:  service.Image,
-			Ports:  service.Ports,
-			Env:    env,
+			Name:    name,
+			Image:   service.Image,
+			Ports:   service.Ports,
+			Env:     env,
 			EnvKeys: dockerprobe.EnvKeys(service.Environment),
 			Volumes: service.Volumes,
-			Labels: map[string]string{},
-			Status: "compose",
+			Labels:  map[string]string{},
+			Status:  "compose",
 		})
 	}
 	return stack, nil

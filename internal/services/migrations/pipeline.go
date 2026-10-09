@@ -128,7 +128,7 @@ func (s *Service) StartProjectMove(ctx context.Context, userID, orgID string, re
 	}
 	selection := models.MigrationSelection{
 		KillOriginals: req.KillOriginals, SourceServerID: project.ServerID,
-		Overrides:     map[string]string{}, Decisions: map[string]string{},
+		Overrides: map[string]string{}, Decisions: map[string]string{},
 	}
 	run := &models.MigrationRun{
 		ID:             uuid.NewString(),

@@ -26,9 +26,9 @@ type Service struct {
 	issues   repositories.AttentionRepository
 	usage    *UsageReader
 
-	attrMu   sync.Mutex
-	attrMap  map[string]string
-	attrAt   time.Time
+	attrMu  sync.Mutex
+	attrMap map[string]string
+	attrAt  time.Time
 }
 
 func NewService(

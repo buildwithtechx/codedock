@@ -23,9 +23,9 @@ type SampleStore interface {
 type AttributeFunc func(host string) (projectID string)
 
 type Collector struct {
-	path       string
-	store      SampleStore
-	attribute  AttributeFunc
+	path      string
+	store     SampleStore
+	attribute AttributeFunc
 
 	mu         sync.Mutex
 	offset     int64

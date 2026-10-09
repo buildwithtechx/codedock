@@ -203,9 +203,9 @@ func (s *Service) scanDeployments(ctx context.Context, _ string, orgID string) (
 		issues = append(issues, &models.AttentionIssue{
 			Kind: "deployment-failed", Subject: record.ServiceID,
 			ProjectID: record.ProjectID, ServiceID: record.ServiceID,
-			Severity: models.AttentionSeverityCritical,
-			Title:    fmt.Sprintf("Deployments failing for %s", record.ServiceName),
-			Detail:   fmt.Sprintf("Latest deployment %s failed at %s", record.ID, record.CreatedAt.Format(time.RFC3339)),
+			Severity:    models.AttentionSeverityCritical,
+			Title:       fmt.Sprintf("Deployments failing for %s", record.ServiceName),
+			Detail:      fmt.Sprintf("Latest deployment %s failed at %s", record.ID, record.CreatedAt.Format(time.RFC3339)),
 			Remediation: "Inspect the deployment logs, fix the build or config, then redeploy.",
 			Action:      "redeploy", ActionParams: string(params),
 		})
@@ -239,9 +239,9 @@ func (s *Service) scanWorkloads(ctx context.Context, _ string, orgID string) ([]
 			issues = append(issues, &models.AttentionIssue{
 				Kind: "service-unhealthy", Subject: service.ID,
 				ProjectID: project.ID, ServiceID: service.ID,
-				Severity: models.AttentionSeverityWarning,
-				Title:    fmt.Sprintf("%s is not running", service.Name),
-				Detail:   fmt.Sprintf("Container %s reports %s", service.ContainerID, health.Status),
+				Severity:    models.AttentionSeverityWarning,
+				Title:       fmt.Sprintf("%s is not running", service.Name),
+				Detail:      fmt.Sprintf("Container %s reports %s", service.ContainerID, health.Status),
 				Remediation: "Check service logs for crash loops, then restart the workload.",
 				Action:      "restart-service", ActionParams: string(params),
 			})
@@ -271,9 +271,9 @@ func (s *Service) scanBackups(ctx context.Context, _ string, orgID string) ([]*m
 		params, _ := json.Marshal(map[string]string{"configId": record.BackupConfigID})
 		issues = append(issues, &models.AttentionIssue{
 			Kind: "backup-failed", Subject: record.BackupConfigID,
-			Severity: models.AttentionSeverityWarning,
-			Title:    "Backup run failed",
-			Detail:   fmt.Sprintf("Backup %s failed: %s", record.BackupConfigID, record.Logs),
+			Severity:    models.AttentionSeverityWarning,
+			Title:       "Backup run failed",
+			Detail:      fmt.Sprintf("Backup %s failed: %s", record.BackupConfigID, record.Logs),
 			Remediation: "Verify the database and destination, then retry the backup.",
 			Action:      "retry-backup", ActionParams: string(params),
 		})
@@ -297,10 +297,10 @@ func (s *Service) scanMigrations(ctx context.Context, userID, orgID string) ([]*
 		params, _ := json.Marshal(map[string]string{"runId": run.ID})
 		issues = append(issues, &models.AttentionIssue{
 			Kind: "migration-failed", Subject: run.ID,
-			ProjectID: run.ProjectID,
-			Severity: models.AttentionSeverityWarning,
-			Title:    "Migration run failed",
-			Detail:   fmt.Sprintf("Run %s failed in %s: %s", run.ID, run.Phase, run.Error),
+			ProjectID:   run.ProjectID,
+			Severity:    models.AttentionSeverityWarning,
+			Title:       "Migration run failed",
+			Detail:      fmt.Sprintf("Run %s failed in %s: %s", run.ID, run.Phase, run.Error),
 			Remediation: "Review the run logs, then resume with overrides or skips.",
 			Action:      "resume-migration", ActionParams: string(params),
 		})
@@ -336,18 +336,18 @@ func (s *Service) scanQuota(ctx context.Context, _ string, orgID string) ([]*mod
 	if quota.MaxServers > 0 && float64(usedServers)/float64(quota.MaxServers) >= 0.8 {
 		issues = append(issues, &models.AttentionIssue{
 			Kind: "quota-pressure", Subject: "managed-servers",
-			Severity: models.AttentionSeverityWarning,
-			Title:    "Managed server quota nearly exhausted",
-			Detail:   fmt.Sprintf("%d of %d managed servers in use", usedServers, quota.MaxServers),
+			Severity:    models.AttentionSeverityWarning,
+			Title:       "Managed server quota nearly exhausted",
+			Detail:      fmt.Sprintf("%d of %d managed servers in use", usedServers, quota.MaxServers),
 			Remediation: "Raise the organization quota or delete unused managed servers.",
 		})
 	}
 	if quota.MaxMemoryGB > 0 && float64(usedMemory)/float64(quota.MaxMemoryGB) >= 0.8 {
 		issues = append(issues, &models.AttentionIssue{
 			Kind: "quota-pressure", Subject: "managed-memory",
-			Severity: models.AttentionSeverityWarning,
-			Title:    "Managed memory quota nearly exhausted",
-			Detail:   fmt.Sprintf("%d of %d GB in use", usedMemory, quota.MaxMemoryGB),
+			Severity:    models.AttentionSeverityWarning,
+			Title:       "Managed memory quota nearly exhausted",
+			Detail:      fmt.Sprintf("%d of %d GB in use", usedMemory, quota.MaxMemoryGB),
 			Remediation: "Raise the organization quota or downsize managed servers.",
 		})
 	}

@@ -129,7 +129,8 @@ func (bm *BackupManager) executeVolumeBackupIncremental(ctx context.Context, cfg
 	return stdoutBuf.Bytes(), stderrBuf.String(), nil
 }
 
-func (bm *BackupManager) executeFileBackup(ctx context.Context, sourcePath string) ([]byte, string, error) {	if bm.dockerClient == nil {
+func (bm *BackupManager) executeFileBackup(ctx context.Context, sourcePath string) ([]byte, string, error) {
+	if bm.dockerClient == nil {
 		return nil, "", fmt.Errorf("file backup requires a Docker client")
 	}
 	cleaned := filepath.Clean("/" + strings.Trim(sourcePath, "/"))
@@ -173,7 +174,8 @@ func (bm *BackupManager) executeFileBackup(ctx context.Context, sourcePath strin
 	return stdoutBuf.Bytes(), stderrBuf.String(), nil
 }
 
-func (bm *BackupManager) serviceContainer(ctx context.Context, serviceID string) (string, error) {	finder, ok := bm.store.(interface {
+func (bm *BackupManager) serviceContainer(ctx context.Context, serviceID string) (string, error) {
+	finder, ok := bm.store.(interface {
 		GetAppService(string) (*models.AppService, error)
 	})
 	if !ok {

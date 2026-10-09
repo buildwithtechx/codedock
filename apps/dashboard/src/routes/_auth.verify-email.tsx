@@ -3,9 +3,9 @@ import { createFileRoute, useNavigate, useSearch } from '@tanstack/react-router'
 import { CheckCircle, Loader2, XCircle } from 'lucide-react';
 import { useEffect, useState } from 'react';
 import { toast } from 'sonner';
+import { Button } from '#/components/ui/button';
 import { AuthPageFrame } from '#/features/auth';
 import { apiClient } from '#/lib/api-client';
-import { Button } from '#/components/ui/button';
 
 export const Route = createFileRoute('/_auth/verify-email')({
   component: VerifyEmailPage,

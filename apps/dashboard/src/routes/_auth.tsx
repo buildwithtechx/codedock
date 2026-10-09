@@ -42,7 +42,7 @@ function AuthLayout() {
             aria-hidden
             className="absolute top-24 left-24 size-24 rounded-full bg-brand-soft/15"
           />
-          <p className="relative font-semibold text-brand-soft text-[10px] uppercase tracking-[0.18em]">
+          <p className="relative font-semibold text-[10px] text-brand-soft uppercase tracking-[0.18em]">
             Built for your stack
           </p>
           <h2 className="relative mt-5 max-w-sm font-bold text-4xl leading-[0.98] tracking-[-0.045em] xl:text-5xl">

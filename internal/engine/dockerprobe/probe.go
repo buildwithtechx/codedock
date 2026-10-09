@@ -37,7 +37,7 @@ type InspectResult struct {
 		Labels map[string]string `json:"Labels"`
 	} `json:"Config"`
 	HostConfig struct {
-		Binds        []string         `json:"Binds"`
+		Binds        []string `json:"Binds"`
 		PortBindings map[string][]struct {
 			HostIP   string `json:"HostIp"`
 			HostPort string `json:"HostPort"`
@@ -138,13 +138,13 @@ func ProbeAll(ctx context.Context, runner Runner, progress func(step, detail str
 
 func convertInspect(res InspectResult) Container {
 	container := Container{
-		ID:     res.ID,
-		Name:   strings.TrimPrefix(res.Name, "/"),
-		Image:  res.Config.Image,
-		State:  res.State.Status,
+		ID:      res.ID,
+		Name:    strings.TrimPrefix(res.Name, "/"),
+		Image:   res.Config.Image,
+		State:   res.State.Status,
 		Running: res.State.Running && !res.State.Restarting,
-		Env:    map[string]string{},
-		Labels: res.Config.Labels,
+		Env:     map[string]string{},
+		Labels:  res.Config.Labels,
 	}
 	if container.Labels == nil {
 		container.Labels = map[string]string{}

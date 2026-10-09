@@ -9,16 +9,16 @@ import (
 )
 
 type AccessEntry struct {
-	ClientAddr         string `json:"ClientAddr"`
-	ClientHost         string `json:"ClientHost"`
-	DownstreamStatus   int    `json:"DownstreamStatus"`
-	Duration           int64  `json:"Duration"`
-	RequestHost        string `json:"RequestHost"`
-	RequestMethod      string `json:"RequestMethod"`
-	RequestPath        string `json:"RequestPath"`
-	DownstreamContentSize int64 `json:"DownstreamContentSize"`
-	OriginContentSize  int64  `json:"OriginContentSize"`
-	StartUTC           string `json:"StartUTC"`
+	ClientAddr            string `json:"ClientAddr"`
+	ClientHost            string `json:"ClientHost"`
+	DownstreamStatus      int    `json:"DownstreamStatus"`
+	Duration              int64  `json:"Duration"`
+	RequestHost           string `json:"RequestHost"`
+	RequestMethod         string `json:"RequestMethod"`
+	RequestPath           string `json:"RequestPath"`
+	DownstreamContentSize int64  `json:"DownstreamContentSize"`
+	OriginContentSize     int64  `json:"OriginContentSize"`
+	StartUTC              string `json:"StartUTC"`
 }
 
 func ParseAccessLine(line string) (AccessEntry, error) {

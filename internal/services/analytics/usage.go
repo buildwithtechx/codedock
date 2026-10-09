@@ -35,12 +35,12 @@ type ServiceUsage struct {
 }
 
 type ResourcesSummary struct {
-	ProjectID    string         `json:"projectId"`
-	Services     int            `json:"services"`
-	Running      int            `json:"running"`
-	CPUPercent   float64        `json:"cpuPercent"`
-	MemoryBytes  int64          `json:"memoryBytes"`
-	Breakdown    []ServiceUsage `json:"breakdown"`
+	ProjectID   string         `json:"projectId"`
+	Services    int            `json:"services"`
+	Running     int            `json:"running"`
+	CPUPercent  float64        `json:"cpuPercent"`
+	MemoryBytes int64          `json:"memoryBytes"`
+	Breakdown   []ServiceUsage `json:"breakdown"`
 }
 
 func (u *UsageReader) Current(ctx context.Context, projectID string) ([]ServiceUsage, error) {

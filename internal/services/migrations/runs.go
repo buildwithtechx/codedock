@@ -60,9 +60,9 @@ func (r *runRegistry) cancel(id string) {
 
 type RunDetail struct {
 	Run       *models.MigrationRun              `json:"run"`
-	Selection models.MigrationSelection       `json:"selection"`
+	Selection models.MigrationSelection         `json:"selection"`
 	Progress  []models.MigrationServiceProgress `json:"progress"`
-	Prompt    *models.MigrationPrompt         `json:"prompt"`
+	Prompt    *models.MigrationPrompt           `json:"prompt"`
 }
 
 func (s *Service) GetRun(ctx context.Context, userID, runID string) (*RunDetail, error) {

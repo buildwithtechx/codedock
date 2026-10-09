@@ -45,7 +45,7 @@ func NewService(store Store, clusters Clusters, environments Environments, desti
 }
 
 func (s *Service) SetSnapshots(store RedisSnapshotStore) { s.snapshots = store }
-func (s *Service) Recover(ctx context.Context) error { return s.store.Recover(ctx) }
+func (s *Service) Recover(ctx context.Context) error     { return s.store.Recover(ctx) }
 func (s *Service) cluster(ctx context.Context, project, id string) (*models.Cluster, error) {
 	cluster, err := s.clusters.Get(ctx, id)
 	if err != nil {

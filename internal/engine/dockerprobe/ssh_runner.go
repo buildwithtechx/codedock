@@ -70,8 +70,8 @@ func (r *SSHRunner) dial(ctx context.Context) (*ssh.Client, error) {
 	}
 	expected := r.config.Fingerprint
 	config := &ssh.ClientConfig{
-		User:            r.config.User,
-		Auth:            methods,
+		User: r.config.User,
+		Auth: methods,
 		HostKeyCallback: func(hostname string, remote net.Addr, key ssh.PublicKey) error {
 			actual := ssh.FingerprintSHA256(key)
 			if actual != expected {
