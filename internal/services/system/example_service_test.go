@@ -61,6 +61,22 @@ func TestListExamplesSurvivesBrokenManifest(t *testing.T) {
 	}
 }
 
+func TestListExamplesSkipsLogoAssetDir(t *testing.T) {
+	contents := `[{"name":"logos","type":"dir","html_url":"https://github.com/org/examples/tree/main/logos"},{"name":"node-express","type":"dir","html_url":"https://github.com/org/examples/tree/main/node-express"}]`
+	manifest := `{"templates":[{"id":"node-express","name":"Node Express","description":"Minimal Node.js API built on Express","logo":"logos/node-express.svg"}]}`
+	server := exampleStubServer(contents, manifest)
+	defer server.Close()
+
+	service := NewExampleServiceWithURLs(server.URL+"/contents", server.URL+"/manifest.json", server.URL+"/raw/")
+	examples, err := service.ListExamples()
+	if err != nil {
+		t.Fatal(err)
+	}
+	if len(examples) != 1 || examples[0].ID != "node-express" {
+		t.Fatalf("expected logo asset dir skipped, got %+v", examples)
+	}
+}
+
 func TestListExamplesFailsWithoutContentsAndCache(t *testing.T) {
 	server := exampleStubServer(`not json`, `{}`)
 	defer server.Close()

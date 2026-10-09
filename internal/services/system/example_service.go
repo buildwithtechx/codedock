@@ -60,10 +60,14 @@ func (s *ExampleService) ListExamples() ([]models.ExampleApp, error) {
 		return nil, err
 	}
 	manifest := fetchExampleManifest(s.manifestURL)
+	assets := exampleAssetDirs(manifest)
 
 	examples := []models.ExampleApp{}
 	for _, entry := range contents {
 		if entry.Type != "dir" || strings.HasPrefix(entry.Name, ".") {
+			continue
+		}
+		if assets[entry.Name] {
 			continue
 		}
 		examples = append(examples, s.describeExample(entry, manifest))
@@ -75,6 +79,16 @@ func (s *ExampleService) ListExamples() ([]models.ExampleApp, error) {
 	s.mu.Unlock()
 
 	return examples, nil
+}
+
+func exampleAssetDirs(manifest map[string]exampleManifestEntry) map[string]bool {
+	assets := map[string]bool{}
+	for _, entry := range manifest {
+		if dir, _, found := strings.Cut(entry.Logo, "/"); found && dir != "" {
+			assets[dir] = true
+		}
+	}
+	return assets
 }
 
 func (s *ExampleService) describeExample(entry exampleContentEntry, manifest map[string]exampleManifestEntry) models.ExampleApp {
