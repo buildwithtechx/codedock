@@ -1,5 +1,5 @@
 import { useNavigate } from '@tanstack/react-router';
-import { Search } from 'lucide-react';
+import { BookOpen, ExternalLink, Search } from 'lucide-react';
 import { useEffect, useMemo, useRef, useState } from 'react';
 import { PageHeader } from '#/components/layout/page-header';
 import { Button } from '#/components/ui/button';
@@ -10,6 +10,8 @@ import { CatalogCard } from './catalog-card';
 import { useAppCatalog } from './hooks';
 
 const CATEGORY_ORDER = ['database', 'backend', 'cms', 'analytics', 'automation', 'mail'];
+
+const DOCS_URL = 'https://docs.codedock.run';
 
 export function AppCatalog({
   embedded = false,
@@ -110,9 +112,20 @@ export function AppCatalog({
         </div>
       ) : filtered.length === 0 ? (
         <div className="mt-6 rounded-2xl border border-border/50 bg-card px-5 py-12 text-center text-muted-foreground text-sm">
-          {catalog.length === 0
-            ? 'No one-click apps are available on this instance yet.'
-            : 'No apps match your search.'}
+          <p>
+            {catalog.length === 0
+              ? 'No one-click apps are available on this instance yet.'
+              : 'No apps match your search.'}
+          </p>
+          {catalog.length === 0 && (
+            <Button asChild size="sm" variant="secondary" className="mt-4">
+              <a href={DOCS_URL} target="_blank" rel="noopener noreferrer">
+                <BookOpen className="size-3.5" />
+                Docs
+                <ExternalLink className="size-3 opacity-60" />
+              </a>
+            </Button>
+          )}
         </div>
       ) : (
         <div className="mt-6 grid grid-cols-1 gap-4 md:grid-cols-2 xl:grid-cols-3">

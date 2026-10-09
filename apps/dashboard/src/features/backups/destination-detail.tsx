@@ -1,8 +1,10 @@
 import { Link } from '@tanstack/react-router';
 import {
   ArrowLeft,
+  BookOpen,
   CheckCircle2,
   Cloud,
+  ExternalLink,
   HardDrive,
   Loader2,
   Lock,
@@ -43,6 +45,8 @@ import {
   useVerifyS3Destination,
   useVerifySFTPDestination,
 } from './hooks';
+
+const DOCS_URL = 'https://docs.codedock.run';
 
 export function DestinationDetail({ destinationId }: { destinationId: string }) {
   const s3Query = useListS3Destinations();
@@ -254,6 +258,13 @@ export function DestinationDetail({ destinationId }: { destinationId: string }) 
                 <p className="mt-1 text-muted-foreground text-sm">
                   Point a policy at it from the database backup settings.
                 </p>
+                <Button asChild size="sm" variant="secondary" className="mt-3">
+                  <a href={DOCS_URL} target="_blank" rel="noopener noreferrer">
+                    <BookOpen className="size-3.5" />
+                    Docs
+                    <ExternalLink className="size-3 opacity-60" />
+                  </a>
+                </Button>
               </div>
             ) : (
               <ul className="divide-y divide-border/40 border-border/40 border-t">

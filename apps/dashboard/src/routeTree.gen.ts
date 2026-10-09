@@ -18,10 +18,8 @@ import { Route as AuthSigninRouteImport } from './routes/_auth.signin'
 import { Route as AuthSignupRouteImport } from './routes/_auth.signup'
 import { Route as AuthVerifyEmailRouteImport } from './routes/_auth.verify-email'
 import { Route as DashboardIndexRouteImport } from './routes/_dashboard.index'
-import { Route as DashboardApiAccessRouteImport } from './routes/_dashboard.api-access'
 import { Route as DashboardAppsRouteImport } from './routes/_dashboard.apps'
 import { Route as DashboardAuditRouteImport } from './routes/_dashboard.audit'
-import { Route as DashboardAuditLogsRouteImport } from './routes/_dashboard.audit-logs'
 import { Route as DashboardBackupsRouteImport } from './routes/_dashboard.backups'
 import { Route as DashboardDeploymentsRouteImport } from './routes/_dashboard.deployments'
 import { Route as DashboardDnsRouteImport } from './routes/_dashboard.dns'
@@ -31,12 +29,12 @@ import { Route as DashboardMonitoringRouteImport } from './routes/_dashboard.mon
 import { Route as DashboardOrganizationsRouteImport } from './routes/_dashboard.organizations'
 import { Route as DashboardProfileRouteImport } from './routes/_dashboard.profile'
 import { Route as DashboardProjectsRouteImport } from './routes/_dashboard.projects'
-import { Route as DashboardScheduledTasksRouteImport } from './routes/_dashboard.scheduled-tasks'
 import { Route as DashboardServersRouteImport } from './routes/_dashboard.servers'
 import { Route as DashboardSettingsRouteImport } from './routes/_dashboard.settings'
 import { Route as DashboardUsersRouteImport } from './routes/_dashboard.users'
 import { Route as DashboardAppsNewRouteImport } from './routes/_dashboard.apps.new'
 import { Route as DashboardBackupsBackupIdRouteImport } from './routes/_dashboard.backups.$backupId'
+import { Route as DashboardDeploymentsDeploymentIdRouteImport } from './routes/_dashboard.deployments.$deploymentId'
 import { Route as DashboardJobsJobIdRouteImport } from './routes/_dashboard.jobs.$jobId'
 import { Route as DashboardJobsNewRouteImport } from './routes/_dashboard.jobs.new'
 import { Route as DashboardOrganizationsOrganizationIdRouteImport } from './routes/_dashboard.organizations.$organizationId'
@@ -113,11 +111,6 @@ const DashboardIndexRoute = DashboardIndexRouteImport.update({
   path: '/',
   getParentRoute: () => DashboardRoute,
 } as any)
-const DashboardApiAccessRoute = DashboardApiAccessRouteImport.update({
-  id: '/api-access',
-  path: '/api-access',
-  getParentRoute: () => DashboardRoute,
-} as any)
 const DashboardAppsRoute = DashboardAppsRouteImport.update({
   id: '/apps',
   path: '/apps',
@@ -126,11 +119,6 @@ const DashboardAppsRoute = DashboardAppsRouteImport.update({
 const DashboardAuditRoute = DashboardAuditRouteImport.update({
   id: '/audit',
   path: '/audit',
-  getParentRoute: () => DashboardRoute,
-} as any)
-const DashboardAuditLogsRoute = DashboardAuditLogsRouteImport.update({
-  id: '/audit-logs',
-  path: '/audit-logs',
   getParentRoute: () => DashboardRoute,
 } as any)
 const DashboardBackupsRoute = DashboardBackupsRouteImport.update({
@@ -178,11 +166,6 @@ const DashboardProjectsRoute = DashboardProjectsRouteImport.update({
   path: '/projects',
   getParentRoute: () => DashboardRoute,
 } as any)
-const DashboardScheduledTasksRoute = DashboardScheduledTasksRouteImport.update({
-  id: '/scheduled-tasks',
-  path: '/scheduled-tasks',
-  getParentRoute: () => DashboardRoute,
-} as any)
 const DashboardServersRoute = DashboardServersRouteImport.update({
   id: '/servers',
   path: '/servers',
@@ -208,6 +191,12 @@ const DashboardBackupsBackupIdRoute =
     id: '/$backupId',
     path: '/$backupId',
     getParentRoute: () => DashboardBackupsRoute,
+  } as any)
+const DashboardDeploymentsDeploymentIdRoute =
+  DashboardDeploymentsDeploymentIdRouteImport.update({
+    id: '/$deploymentId',
+    path: '/$deploymentId',
+    getParentRoute: () => DashboardDeploymentsRoute,
   } as any)
 const DashboardJobsJobIdRoute = DashboardJobsJobIdRouteImport.update({
   id: '/$jobId',
@@ -403,12 +392,10 @@ export interface FileRoutesByFullPath {
   '/signin': typeof AuthSigninRoute
   '/signup': typeof AuthSignupRoute
   '/verify-email': typeof AuthVerifyEmailRoute
-  '/api-access': typeof DashboardApiAccessRoute
   '/apps': typeof DashboardAppsRouteWithChildren
   '/audit': typeof DashboardAuditRoute
-  '/audit-logs': typeof DashboardAuditLogsRoute
   '/backups': typeof DashboardBackupsRouteWithChildren
-  '/deployments': typeof DashboardDeploymentsRoute
+  '/deployments': typeof DashboardDeploymentsRouteWithChildren
   '/dns': typeof DashboardDnsRoute
   '/jobs': typeof DashboardJobsRouteWithChildren
   '/library': typeof DashboardLibraryRoute
@@ -416,12 +403,12 @@ export interface FileRoutesByFullPath {
   '/organizations': typeof DashboardOrganizationsRouteWithChildren
   '/profile': typeof DashboardProfileRoute
   '/projects': typeof DashboardProjectsRouteWithChildren
-  '/scheduled-tasks': typeof DashboardScheduledTasksRoute
   '/servers': typeof DashboardServersRouteWithChildren
   '/settings': typeof DashboardSettingsRoute
   '/users': typeof DashboardUsersRoute
   '/apps/new': typeof DashboardAppsNewRouteWithChildren
   '/backups/$backupId': typeof DashboardBackupsBackupIdRoute
+  '/deployments/$deploymentId': typeof DashboardDeploymentsDeploymentIdRoute
   '/jobs/$jobId': typeof DashboardJobsJobIdRouteWithChildren
   '/jobs/new': typeof DashboardJobsNewRoute
   '/organizations/$organizationId': typeof DashboardOrganizationsOrganizationIdRoute
@@ -463,24 +450,22 @@ export interface FileRoutesByTo {
   '/signin': typeof AuthSigninRoute
   '/signup': typeof AuthSignupRoute
   '/verify-email': typeof AuthVerifyEmailRoute
-  '/api-access': typeof DashboardApiAccessRoute
   '/apps': typeof DashboardAppsRouteWithChildren
   '/audit': typeof DashboardAuditRoute
-  '/audit-logs': typeof DashboardAuditLogsRoute
   '/backups': typeof DashboardBackupsRouteWithChildren
-  '/deployments': typeof DashboardDeploymentsRoute
+  '/deployments': typeof DashboardDeploymentsRouteWithChildren
   '/dns': typeof DashboardDnsRoute
   '/jobs': typeof DashboardJobsRouteWithChildren
   '/library': typeof DashboardLibraryRoute
   '/monitoring': typeof DashboardMonitoringRoute
   '/organizations': typeof DashboardOrganizationsRouteWithChildren
   '/profile': typeof DashboardProfileRoute
-  '/scheduled-tasks': typeof DashboardScheduledTasksRoute
   '/servers': typeof DashboardServersRouteWithChildren
   '/settings': typeof DashboardSettingsRoute
   '/users': typeof DashboardUsersRoute
   '/apps/new': typeof DashboardAppsNewRouteWithChildren
   '/backups/$backupId': typeof DashboardBackupsBackupIdRoute
+  '/deployments/$deploymentId': typeof DashboardDeploymentsDeploymentIdRoute
   '/jobs/$jobId': typeof DashboardJobsJobIdRouteWithChildren
   '/jobs/new': typeof DashboardJobsNewRoute
   '/organizations/$organizationId': typeof DashboardOrganizationsOrganizationIdRoute
@@ -522,12 +507,10 @@ export interface FileRoutesById {
   '/_auth/signin': typeof AuthSigninRoute
   '/_auth/signup': typeof AuthSignupRoute
   '/_auth/verify-email': typeof AuthVerifyEmailRoute
-  '/_dashboard/api-access': typeof DashboardApiAccessRoute
   '/_dashboard/apps': typeof DashboardAppsRouteWithChildren
   '/_dashboard/audit': typeof DashboardAuditRoute
-  '/_dashboard/audit-logs': typeof DashboardAuditLogsRoute
   '/_dashboard/backups': typeof DashboardBackupsRouteWithChildren
-  '/_dashboard/deployments': typeof DashboardDeploymentsRoute
+  '/_dashboard/deployments': typeof DashboardDeploymentsRouteWithChildren
   '/_dashboard/dns': typeof DashboardDnsRoute
   '/_dashboard/jobs': typeof DashboardJobsRouteWithChildren
   '/_dashboard/library': typeof DashboardLibraryRoute
@@ -535,13 +518,13 @@ export interface FileRoutesById {
   '/_dashboard/organizations': typeof DashboardOrganizationsRouteWithChildren
   '/_dashboard/profile': typeof DashboardProfileRoute
   '/_dashboard/projects': typeof DashboardProjectsRouteWithChildren
-  '/_dashboard/scheduled-tasks': typeof DashboardScheduledTasksRoute
   '/_dashboard/servers': typeof DashboardServersRouteWithChildren
   '/_dashboard/settings': typeof DashboardSettingsRoute
   '/_dashboard/users': typeof DashboardUsersRoute
   '/_dashboard/': typeof DashboardIndexRoute
   '/_dashboard/apps/new': typeof DashboardAppsNewRouteWithChildren
   '/_dashboard/backups/$backupId': typeof DashboardBackupsBackupIdRoute
+  '/_dashboard/deployments/$deploymentId': typeof DashboardDeploymentsDeploymentIdRoute
   '/_dashboard/jobs/$jobId': typeof DashboardJobsJobIdRouteWithChildren
   '/_dashboard/jobs/new': typeof DashboardJobsNewRoute
   '/_dashboard/organizations/$organizationId': typeof DashboardOrganizationsOrganizationIdRoute
@@ -585,10 +568,8 @@ export interface FileRouteTypes {
     | '/signin'
     | '/signup'
     | '/verify-email'
-    | '/api-access'
     | '/apps'
     | '/audit'
-    | '/audit-logs'
     | '/backups'
     | '/deployments'
     | '/dns'
@@ -598,12 +579,12 @@ export interface FileRouteTypes {
     | '/organizations'
     | '/profile'
     | '/projects'
-    | '/scheduled-tasks'
     | '/servers'
     | '/settings'
     | '/users'
     | '/apps/new'
     | '/backups/$backupId'
+    | '/deployments/$deploymentId'
     | '/jobs/$jobId'
     | '/jobs/new'
     | '/organizations/$organizationId'
@@ -645,10 +626,8 @@ export interface FileRouteTypes {
     | '/signin'
     | '/signup'
     | '/verify-email'
-    | '/api-access'
     | '/apps'
     | '/audit'
-    | '/audit-logs'
     | '/backups'
     | '/deployments'
     | '/dns'
@@ -657,12 +636,12 @@ export interface FileRouteTypes {
     | '/monitoring'
     | '/organizations'
     | '/profile'
-    | '/scheduled-tasks'
     | '/servers'
     | '/settings'
     | '/users'
     | '/apps/new'
     | '/backups/$backupId'
+    | '/deployments/$deploymentId'
     | '/jobs/$jobId'
     | '/jobs/new'
     | '/organizations/$organizationId'
@@ -703,10 +682,8 @@ export interface FileRouteTypes {
     | '/_auth/signin'
     | '/_auth/signup'
     | '/_auth/verify-email'
-    | '/_dashboard/api-access'
     | '/_dashboard/apps'
     | '/_dashboard/audit'
-    | '/_dashboard/audit-logs'
     | '/_dashboard/backups'
     | '/_dashboard/deployments'
     | '/_dashboard/dns'
@@ -716,13 +693,13 @@ export interface FileRouteTypes {
     | '/_dashboard/organizations'
     | '/_dashboard/profile'
     | '/_dashboard/projects'
-    | '/_dashboard/scheduled-tasks'
     | '/_dashboard/servers'
     | '/_dashboard/settings'
     | '/_dashboard/users'
     | '/_dashboard/'
     | '/_dashboard/apps/new'
     | '/_dashboard/backups/$backupId'
+    | '/_dashboard/deployments/$deploymentId'
     | '/_dashboard/jobs/$jobId'
     | '/_dashboard/jobs/new'
     | '/_dashboard/organizations/$organizationId'
@@ -828,13 +805,6 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof DashboardIndexRouteImport
       parentRoute: typeof DashboardRoute
     }
-    '/_dashboard/api-access': {
-      id: '/_dashboard/api-access'
-      path: '/api-access'
-      fullPath: '/api-access'
-      preLoaderRoute: typeof DashboardApiAccessRouteImport
-      parentRoute: typeof DashboardRoute
-    }
     '/_dashboard/apps': {
       id: '/_dashboard/apps'
       path: '/apps'
@@ -847,13 +817,6 @@ declare module '@tanstack/react-router' {
       path: '/audit'
       fullPath: '/audit'
       preLoaderRoute: typeof DashboardAuditRouteImport
-      parentRoute: typeof DashboardRoute
-    }
-    '/_dashboard/audit-logs': {
-      id: '/_dashboard/audit-logs'
-      path: '/audit-logs'
-      fullPath: '/audit-logs'
-      preLoaderRoute: typeof DashboardAuditLogsRouteImport
       parentRoute: typeof DashboardRoute
     }
     '/_dashboard/backups': {
@@ -919,13 +882,6 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof DashboardProjectsRouteImport
       parentRoute: typeof DashboardRoute
     }
-    '/_dashboard/scheduled-tasks': {
-      id: '/_dashboard/scheduled-tasks'
-      path: '/scheduled-tasks'
-      fullPath: '/scheduled-tasks'
-      preLoaderRoute: typeof DashboardScheduledTasksRouteImport
-      parentRoute: typeof DashboardRoute
-    }
     '/_dashboard/servers': {
       id: '/_dashboard/servers'
       path: '/servers'
@@ -960,6 +916,13 @@ declare module '@tanstack/react-router' {
       fullPath: '/backups/$backupId'
       preLoaderRoute: typeof DashboardBackupsBackupIdRouteImport
       parentRoute: typeof DashboardBackupsRoute
+    }
+    '/_dashboard/deployments/$deploymentId': {
+      id: '/_dashboard/deployments/$deploymentId'
+      path: '/$deploymentId'
+      fullPath: '/deployments/$deploymentId'
+      preLoaderRoute: typeof DashboardDeploymentsDeploymentIdRouteImport
+      parentRoute: typeof DashboardDeploymentsRoute
     }
     '/_dashboard/jobs/$jobId': {
       id: '/_dashboard/jobs/$jobId'
@@ -1240,6 +1203,17 @@ const DashboardBackupsRouteChildren: DashboardBackupsRouteChildren = {
 const DashboardBackupsRouteWithChildren =
   DashboardBackupsRoute._addFileChildren(DashboardBackupsRouteChildren)
 
+interface DashboardDeploymentsRouteChildren {
+  DashboardDeploymentsDeploymentIdRoute: typeof DashboardDeploymentsDeploymentIdRoute
+}
+
+const DashboardDeploymentsRouteChildren: DashboardDeploymentsRouteChildren = {
+  DashboardDeploymentsDeploymentIdRoute: DashboardDeploymentsDeploymentIdRoute,
+}
+
+const DashboardDeploymentsRouteWithChildren =
+  DashboardDeploymentsRoute._addFileChildren(DashboardDeploymentsRouteChildren)
+
 interface DashboardJobsJobIdRouteChildren {
   DashboardJobsJobIdEditRoute: typeof DashboardJobsJobIdEditRoute
 }
@@ -1392,12 +1366,10 @@ const DashboardServicesServiceIdRouteWithChildren =
   )
 
 interface DashboardRouteChildren {
-  DashboardApiAccessRoute: typeof DashboardApiAccessRoute
   DashboardAppsRoute: typeof DashboardAppsRouteWithChildren
   DashboardAuditRoute: typeof DashboardAuditRoute
-  DashboardAuditLogsRoute: typeof DashboardAuditLogsRoute
   DashboardBackupsRoute: typeof DashboardBackupsRouteWithChildren
-  DashboardDeploymentsRoute: typeof DashboardDeploymentsRoute
+  DashboardDeploymentsRoute: typeof DashboardDeploymentsRouteWithChildren
   DashboardDnsRoute: typeof DashboardDnsRoute
   DashboardJobsRoute: typeof DashboardJobsRouteWithChildren
   DashboardLibraryRoute: typeof DashboardLibraryRoute
@@ -1405,7 +1377,6 @@ interface DashboardRouteChildren {
   DashboardOrganizationsRoute: typeof DashboardOrganizationsRouteWithChildren
   DashboardProfileRoute: typeof DashboardProfileRoute
   DashboardProjectsRoute: typeof DashboardProjectsRouteWithChildren
-  DashboardScheduledTasksRoute: typeof DashboardScheduledTasksRoute
   DashboardServersRoute: typeof DashboardServersRouteWithChildren
   DashboardSettingsRoute: typeof DashboardSettingsRoute
   DashboardUsersRoute: typeof DashboardUsersRoute
@@ -1414,12 +1385,10 @@ interface DashboardRouteChildren {
 }
 
 const DashboardRouteChildren: DashboardRouteChildren = {
-  DashboardApiAccessRoute: DashboardApiAccessRoute,
   DashboardAppsRoute: DashboardAppsRouteWithChildren,
   DashboardAuditRoute: DashboardAuditRoute,
-  DashboardAuditLogsRoute: DashboardAuditLogsRoute,
   DashboardBackupsRoute: DashboardBackupsRouteWithChildren,
-  DashboardDeploymentsRoute: DashboardDeploymentsRoute,
+  DashboardDeploymentsRoute: DashboardDeploymentsRouteWithChildren,
   DashboardDnsRoute: DashboardDnsRoute,
   DashboardJobsRoute: DashboardJobsRouteWithChildren,
   DashboardLibraryRoute: DashboardLibraryRoute,
@@ -1427,7 +1396,6 @@ const DashboardRouteChildren: DashboardRouteChildren = {
   DashboardOrganizationsRoute: DashboardOrganizationsRouteWithChildren,
   DashboardProfileRoute: DashboardProfileRoute,
   DashboardProjectsRoute: DashboardProjectsRouteWithChildren,
-  DashboardScheduledTasksRoute: DashboardScheduledTasksRoute,
   DashboardServersRoute: DashboardServersRouteWithChildren,
   DashboardSettingsRoute: DashboardSettingsRoute,
   DashboardUsersRoute: DashboardUsersRoute,

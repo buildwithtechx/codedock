@@ -99,6 +99,7 @@ func deploymentOperations() []Operation {
 		{Method: "GET", Path: "/api/deployments", Summary: "List organization deployments", Tags: []string{deployments}, Auth: AuthUser, Response: PaginatedSchema(Arr("Deployments", deploymentItemSchema())), Query: []Param{QueryParam("status", "Filter by status"), QueryParam("search", "Search text"), QueryParamInt("page", "Page"), QueryParamInt("limit", "Page size")}},
 		{Method: "GET", Path: "/api/projects/:id/deployments", Summary: "List project deployments", Tags: []string{deployments}, Auth: ProjectRole("member"), Response: PaginatedSchema(Arr("Deployments", deploymentItemSchema()))},
 		{Method: "GET", Path: "/api/services/:serviceId/deployments", Summary: "List service deployments", Tags: []string{deployments}, Auth: ServiceRole(""), Response: PaginatedSchema(Arr("Deployments", deploymentItemSchema()))},
+		{Method: "GET", Path: "/api/deployments/:id", Summary: "Get a deployment", Tags: []string{deployments}, Auth: AuthUser, Response: DeploymentSchema()},
 		{Method: "GET", Path: "/api/deployments/:id/logs", Summary: "Get deployment logs", Tags: []string{deployments}, Auth: Scope("logs:read"), Response: Map("Logs", Str("Log output"))},
 		{Method: "GET", Path: "/api/deployments/:id/explain", Summary: "Explain a deployment failure", Tags: []string{deployments}, Auth: AuthUser, Response: Any("Failure explanation")},
 		{Method: "POST", Path: "/api/deployments/:id/cancel", Summary: "Cancel a deployment", Tags: []string{deployments}, Auth: AuthUser, Code: 202, Response: EmptySchema()},

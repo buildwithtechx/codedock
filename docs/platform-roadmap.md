@@ -15,6 +15,11 @@ Later phases can ship together in focused commits and one pull request, with one
 - [ ] Mail server and webmail as an optional capability with separate operational requirements.
 - [ ] Managed-server setup wizard in the dashboard for Hetzner provisioning.
 - [ ] Codedock Cloud hosted offering on the HA control plane.
+- [ ] Cloud connection and cloud deploy flow in settings, including plan picker, checkout feedback and credit alerts.
+- [ ] Support center with ticket list, conversations and cloud-gated availability.
+- [ ] Billing and usage experience: monthly host plans plus custom configurator, prepaid pay-as-you-go with top-ups, enterprise path, usage meters and Stripe portal/checkout recovery.
+- [ ] Server cluster and network provisioning editors with preparation and operation tracking.
+- [ ] Full managed data apps: Supabase, Convex and Neon equivalents with correct backing services.
 
 ## Live-target validation backlog
 

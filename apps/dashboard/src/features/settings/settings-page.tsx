@@ -1,4 +1,4 @@
-import { Navigate, useNavigate, useRouterState } from '@tanstack/react-router';
+import { useNavigate, useRouterState } from '@tanstack/react-router';
 import {
   Bell,
   Brain,
@@ -91,23 +91,13 @@ const TABS: Tab[] = [
   },
 ];
 
-const LEGACY_TABS: Record<string, TabId> = {
-  sources: 'git',
-  updates: 'instance',
-  migration: 'instance',
-};
-
 export const SettingsLayout = () => {
   const navigate = useNavigate();
   const user = useAuthStore((state) => state.user);
   const search = useRouterState({
-    select: (state) => state.location.search as { tab?: string; code?: string },
+    select: (state) => state.location.search as { tab?: TabId; code?: string },
   });
-  if (search.tab === 'audit') {
-    return <Navigate to="/audit" replace />;
-  }
-  const resolvedTab = (search.tab && LEGACY_TABS[search.tab]) || search.tab;
-  const activeId = TABS.some((tab) => tab.id === resolvedTab) ? (resolvedTab as TabId) : 'general';
+  const activeId = TABS.some((tab) => tab.id === search.tab) ? (search.tab as TabId) : 'general';
   const setActiveId = (tab: TabId) => {
     void navigate({
       to: '/settings',

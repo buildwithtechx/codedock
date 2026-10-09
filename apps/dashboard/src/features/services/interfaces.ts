@@ -200,8 +200,6 @@ export interface TriggerDeploymentRequest {
   commitId?: string;
 }
 
-export type DiagnosticsResponse = Record<string, Record<string, unknown>>;
-
 export interface CreateServiceVarRequest {
   key: string;
   value: string;
@@ -239,9 +237,10 @@ export type ListOrganizationDeploymentsResponse = BaseResponse<
 >;
 export type TriggerDeploymentResponse = BaseResponse<Deployment>;
 export type RollbackDeploymentResponse = BaseResponse<Deployment>;
+export type GetDeploymentResponse = BaseResponse<Deployment>;
+export type CancelDeploymentResponse = BaseResponse<null>;
 export type GetDeploymentLogsResponse = BaseResponse<string>;
 export type GetServiceMetricsResponse = BaseResponse<ServiceMetric>;
-export type GetDiagnosticsResponse = BaseResponse<DiagnosticsResponse>;
 
 export type ListVariablesResponse = BaseResponse<Variable[]>;
 export type SetVariablesResponse = BaseResponse<Variable[]>;

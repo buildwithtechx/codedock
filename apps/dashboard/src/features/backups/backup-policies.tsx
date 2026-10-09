@@ -1,4 +1,13 @@
-import { Clock, Database, Loader2, Play, Shield, Trash2 } from 'lucide-react';
+import {
+  BookOpen,
+  Clock,
+  Database,
+  ExternalLink,
+  Loader2,
+  Play,
+  Shield,
+  Trash2,
+} from 'lucide-react';
 import { useState } from 'react';
 import { toast } from 'sonner';
 import { Button } from '#/components/ui/button';
@@ -14,6 +23,8 @@ import {
 } from '#/components/ui/table';
 import { useDelete, useTrigger, useUpdate } from '#/features/backups';
 import type { BackupConfig } from './interfaces';
+
+const DOCS_URL = 'https://docs.codedock.run';
 
 type BackupPoliciesProps = {
   configs: BackupConfig[];
@@ -89,6 +100,13 @@ export function BackupPolicies({ configs, isLoading }: BackupPoliciesProps) {
           <p className="mt-1 text-xs">
             Policies define automated cron schedules and retention periods for databases.
           </p>
+          <Button asChild size="sm" variant="secondary" className="mt-4">
+            <a href={DOCS_URL} target="_blank" rel="noopener noreferrer">
+              <BookOpen className="size-3.5" />
+              Docs
+              <ExternalLink className="size-3 opacity-60" />
+            </a>
+          </Button>
         </div>
       ) : (
         <div className="overflow-x-auto">

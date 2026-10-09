@@ -1,17 +1,22 @@
 import {
   ArrowRight,
+  BookOpen,
   ChevronDown,
   ChevronLeft,
   ChevronRight,
+  ExternalLink,
   Globe,
   Lock,
   Search,
 } from 'lucide-react';
+import { Button } from '#/components/ui/button';
 import { Input } from '#/components/ui/input';
 import { cn } from '#/lib/utils';
 import { useLibraryRepos } from './hooks';
 import { ProviderAccounts } from './provider-accounts';
 import type { LibraryRepo, ProviderConnection, SortBy, VisibilityFilter } from './types';
+
+const DOCS_URL = 'https://docs.codedock.run';
 
 function timeAgo(dateStr?: string): string | null {
   if (!dateStr) return null;
@@ -136,6 +141,15 @@ export function RepositoryList({
               ? 'Try a different search term or visibility filter.'
               : 'This account has no repositories visible to Codedock yet.'}
           </p>
+          {!repos.search && (
+            <Button asChild size="sm" variant="secondary" className="mt-4">
+              <a href={DOCS_URL} target="_blank" rel="noopener noreferrer">
+                <BookOpen className="size-3.5" />
+                Docs
+                <ExternalLink className="size-3 opacity-60" />
+              </a>
+            </Button>
+          )}
         </div>
       ) : (
         <>

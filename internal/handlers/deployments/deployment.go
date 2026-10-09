@@ -193,6 +193,21 @@ func (h *DeploymentHandler) Trigger(c echo.Context) error {
 	return utils.Accepted(c, "Deployment created", created)
 }
 
+func (h *DeploymentHandler) Get(c echo.Context) error {
+	id := c.Param("id")
+	if id == "" {
+		return utils.Error(c, http.StatusBadRequest, "missing id parameter")
+	}
+	dep, err := h.deploymentService.GetDeployment(c.Request().Context(), id)
+	if err != nil || dep == nil {
+		return utils.Error(c, http.StatusNotFound, "deployment not found")
+	}
+	if err := h.verifyProjectOwnership(c, dep.ProjectID); err != nil {
+		return err
+	}
+	return utils.Success(c, "Deployment retrieved", dep)
+}
+
 func (h *DeploymentHandler) Rollback(c echo.Context) error {
 	id := c.Param("id")
 	if id == "" {

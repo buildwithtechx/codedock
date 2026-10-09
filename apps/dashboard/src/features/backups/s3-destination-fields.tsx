@@ -1,9 +1,33 @@
+import { useState } from 'react';
 import { Checkbox } from '#/components/ui/checkbox';
 import { Input } from '#/components/ui/input';
 import { Label } from '#/components/ui/label';
 import { cn } from '#/lib/utils';
-import type { S3ProviderId } from './s3-providers';
+import type { S3Provider, S3ProviderId } from './s3-providers';
 import { providerById, s3Providers } from './s3-providers';
+
+export function S3ProviderMark({
+  provider,
+  className,
+}: {
+  provider: S3Provider;
+  className?: string;
+}) {
+  const [failed, setFailed] = useState(false);
+  if (!failed) {
+    return (
+      <img
+        src={provider.logo}
+        alt=""
+        aria-hidden="true"
+        onError={() => setFailed(true)}
+        className={cn('shrink-0 object-contain', className)}
+      />
+    );
+  }
+  const FallbackIcon = provider.icon;
+  return <FallbackIcon className={cn('shrink-0 text-muted-foreground', className)} />;
+}
 
 export interface S3FieldValues {
   provider: S3ProviderId;
@@ -33,7 +57,6 @@ export function S3DestinationFields({
         <span className="mb-2 block font-medium text-sm">Provider</span>
         <div className="grid grid-cols-2 gap-2 sm:grid-cols-3">
           {s3Providers.map((option) => {
-            const OptionIcon = option.icon;
             const selected = option.id === values.provider;
             return (
               <button
@@ -47,7 +70,7 @@ export function S3DestinationFields({
                     : 'border-border/50 hover:border-border hover:bg-muted/30'
                 )}
               >
-                <OptionIcon className="h-4 w-4 shrink-0 text-muted-foreground" />
+                <S3ProviderMark provider={option} className="size-5" />
                 <span className="truncate font-medium text-[13px]">{option.label}</span>
               </button>
             );

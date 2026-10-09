@@ -4,6 +4,8 @@ import { Button } from '#/components/ui/button';
 import { Dialog, DialogContent, DialogDescription, DialogTitle } from '#/components/ui/dialog';
 import { DestinationConfigureForm } from './destination-configure-form';
 import type { DestinationKind, S3Destination } from './interfaces';
+import { S3ProviderMark } from './s3-destination-fields';
+import { s3Providers } from './s3-providers';
 
 export function DestinationModal({
   open,
@@ -88,8 +90,19 @@ export function DestinationModal({
                   <span className="mt-1 block text-muted-foreground text-sm leading-relaxed">
                     Object storage with per-bucket prefixes and regions.
                   </span>
-                  <span className="mt-2 block font-medium text-muted-foreground/70 text-xs uppercase tracking-wider">
-                    R2 · S3 · B2 · MinIO
+                  <span className="mt-3 flex items-center gap-2.5">
+                    {s3Providers
+                      .filter((provider) => provider.id !== 'minio')
+                      .map((provider) => (
+                        <S3ProviderMark
+                          key={provider.id}
+                          provider={provider}
+                          className="size-4 opacity-90"
+                        />
+                      ))}
+                    <span className="font-medium text-muted-foreground/70 text-xs">
+                      R2 · S3 · B2 · MinIO
+                    </span>
                   </span>
                 </span>
               </button>

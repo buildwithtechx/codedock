@@ -1,4 +1,9 @@
+import { BookOpen, ExternalLink, Loader2, RefreshCw } from 'lucide-react';
+import { Button } from '#/components/ui/button';
 import { cn } from '#/lib/utils';
+import { useEvaluateIssues } from './hooks';
+
+const DOCS_URL = 'https://docs.codedock.run';
 
 type EmptyVariant = 'open' | 'resolved' | 'filtered';
 
@@ -17,10 +22,20 @@ const COPY: Record<EmptyVariant, { title: string; body: string }> = {
   },
 };
 
-export function EmptyIssues({ filtered, resolved }: { filtered: boolean; resolved: boolean }) {
+export function EmptyIssues({
+  filtered,
+  resolved,
+  onClearFilters,
+}: {
+  filtered: boolean;
+  resolved: boolean;
+  onClearFilters?: () => void;
+}) {
   const variant: EmptyVariant = filtered ? 'filtered' : resolved ? 'resolved' : 'open';
   const copy = COPY[variant];
   const narrow = variant === 'filtered';
+  const evaluate = useEvaluateIssues();
+  const showClear = variant === 'filtered' && onClearFilters !== undefined;
 
   return (
     <div
@@ -40,6 +55,27 @@ export function EmptyIssues({ filtered, resolved }: { filtered: boolean; resolve
       <p className="mx-auto mt-1.5 max-w-md text-[13px] text-muted-foreground/80 leading-relaxed">
         {copy.body}
       </p>
+      <div className="mt-5 flex flex-col items-center justify-center gap-3 sm:flex-row">
+        {showClear ? (
+          <Button onClick={onClearFilters}>Clear filters</Button>
+        ) : (
+          <Button onClick={() => evaluate.mutate()} disabled={evaluate.isPending}>
+            {evaluate.isPending ? (
+              <Loader2 className="size-4 animate-spin" />
+            ) : (
+              <RefreshCw className="size-4" />
+            )}
+            {evaluate.isPending ? 'Rescanning' : 'Run rescan'}
+          </Button>
+        )}
+        <Button asChild variant="secondary">
+          <a href={DOCS_URL} target="_blank" rel="noopener noreferrer">
+            <BookOpen className="size-4" />
+            Docs
+            <ExternalLink className="size-3.5 opacity-60" />
+          </a>
+        </Button>
+      </div>
     </div>
   );
 }

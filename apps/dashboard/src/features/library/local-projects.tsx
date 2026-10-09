@@ -1,7 +1,9 @@
-import { FolderOpen, Plus, Trash2 } from 'lucide-react';
+import { BookOpen, ExternalLink, FolderOpen, Plus, Trash2 } from 'lucide-react';
 import { useState } from 'react';
 import { Button } from '#/components/ui/button';
 import type { LocalImport } from './types';
+
+const DOCS_URL = 'https://docs.codedock.run';
 
 const STORAGE_KEY = 'codedock.library.local-imports';
 
@@ -74,6 +76,13 @@ export function LocalProjects({ onImportFolder }: { onImportFolder: () => void }
             Pick a folder above to pack and deploy it. Your recent imports are remembered here for
             quick reference.
           </p>
+          <Button asChild size="sm" variant="secondary" className="mt-4">
+            <a href={DOCS_URL} target="_blank" rel="noopener noreferrer">
+              <BookOpen className="size-3.5" />
+              Docs
+              <ExternalLink className="size-3 opacity-60" />
+            </a>
+          </Button>
         </div>
       ) : (
         <div className="divide-y divide-border/50">

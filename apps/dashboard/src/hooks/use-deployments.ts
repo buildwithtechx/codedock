@@ -60,6 +60,26 @@ export const useRollback = () => {
   });
 };
 
+export const useDeployment = (deploymentId: string) => {
+  return useQuery({
+    queryKey: ['deployments', 'get', deploymentId].filter(Boolean),
+    queryFn: () => deploymentsService.get(deploymentId),
+    enabled: Boolean(deploymentId),
+  });
+};
+
+export const useCancelDeployment = () => {
+  const queryClient = useQueryClient();
+  return useMutation({
+    mutationFn: (payload: { deploymentId: string }) =>
+      deploymentsService.cancel(payload.deploymentId),
+    onSuccess: async () => {
+      await queryClient.invalidateQueries({ queryKey: ['deployments'] });
+      await queryClient.invalidateQueries({ queryKey: ['canvas'] });
+    },
+  });
+};
+
 export const useGetLogs = (deploymentId: string) => {
   return useQuery({
     queryKey: ['deployments', 'getLogs', deploymentId].filter(Boolean),
@@ -72,12 +92,6 @@ export const useGetMetrics = (serviceId: string) => {
     queryKey: ['deployments', 'getMetrics', serviceId].filter(Boolean),
     queryFn: () => deploymentsService.getMetrics(serviceId),
     refetchInterval: 3000,
-  });
-};
-
-export const useDiagnostics = () => {
-  return useMutation({
-    mutationFn: (deploymentId: string) => deploymentsService.diagnostics(deploymentId),
   });
 };
 

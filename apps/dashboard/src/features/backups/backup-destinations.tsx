@@ -1,5 +1,15 @@
 import { Link } from '@tanstack/react-router';
-import { HardDrive, Loader2, MoreVertical, Pencil, RefreshCw, Star, Trash2 } from 'lucide-react';
+import {
+  BookOpen,
+  ExternalLink,
+  HardDrive,
+  Loader2,
+  MoreVertical,
+  Pencil,
+  RefreshCw,
+  Star,
+  Trash2,
+} from 'lucide-react';
 import { useMemo, useState } from 'react';
 import { toast } from 'sonner';
 import { Button } from '#/components/ui/button';
@@ -38,6 +48,8 @@ import {
   useVerifySFTPDestination,
 } from './hooks';
 import type { BackupRecord, S3Destination, SFTPDestination } from './interfaces';
+
+const DOCS_URL = 'https://docs.codedock.run';
 
 export function BackupDestinations({
   s3,
@@ -182,9 +194,18 @@ export function BackupDestinations({
               Connect R2, S3, MinIO, or an SFTP server to store snapshots off-server.
             </p>
           </div>
-          <Button size="sm" onClick={onAddDestination} className="shrink-0">
-            Connect first destination
-          </Button>
+          <div className="flex shrink-0 items-center gap-2">
+            <Button size="sm" onClick={onAddDestination}>
+              Connect first destination
+            </Button>
+            <Button asChild size="sm" variant="secondary">
+              <a href={DOCS_URL} target="_blank" rel="noopener noreferrer">
+                <BookOpen className="size-3.5" />
+                Docs
+                <ExternalLink className="size-3 opacity-60" />
+              </a>
+            </Button>
+          </div>
         </div>
       ) : (
         <ul className="divide-y divide-border/40 border-border/40 border-t">

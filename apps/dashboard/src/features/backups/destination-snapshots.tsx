@@ -1,4 +1,4 @@
-import { DatabaseBackup } from 'lucide-react';
+import { BookOpen, DatabaseBackup, ExternalLink } from 'lucide-react';
 import { useState } from 'react';
 import { Button } from '#/components/ui/button';
 import { Skeleton } from '#/components/ui/skeleton';
@@ -7,6 +7,8 @@ import { formatBytes } from './destination-display';
 import type { BackupRecord } from './interfaces';
 import { RestoreWizard } from './restore-wizard';
 import { SnapshotStatusChip } from './snapshot-table-row';
+
+const DOCS_URL = 'https://docs.codedock.run';
 
 export function DestinationSnapshots({
   snapshots,
@@ -47,6 +49,13 @@ export function DestinationSnapshots({
             <p className="mt-1 text-muted-foreground text-sm">
               Runs from policies using this destination will appear here.
             </p>
+            <Button asChild size="sm" variant="secondary" className="mt-3">
+              <a href={DOCS_URL} target="_blank" rel="noopener noreferrer">
+                <BookOpen className="size-3.5" />
+                Docs
+                <ExternalLink className="size-3 opacity-60" />
+              </a>
+            </Button>
           </div>
         </div>
       ) : (

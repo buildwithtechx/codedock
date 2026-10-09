@@ -1,7 +1,8 @@
 import type {
+  CancelDeploymentResponse,
   ExplainDeploymentResponse,
   GetDeploymentLogsResponse,
-  GetDiagnosticsResponse,
+  GetDeploymentResponse,
   GetServiceMetricsResponse,
   ListDeploymentsResponse,
   ListOrganizationDeploymentsParams,
@@ -74,6 +75,22 @@ export const deploymentsService = {
     }
   },
 
+  get: async (deploymentId: string): Promise<GetDeploymentResponse> => {
+    try {
+      return await apiClient.get<GetDeploymentResponse>(`/deployments/${deploymentId}`);
+    } catch (error) {
+      throw handleApiError(error);
+    }
+  },
+
+  cancel: async (deploymentId: string): Promise<CancelDeploymentResponse> => {
+    try {
+      return await apiClient.post<CancelDeploymentResponse>(`/deployments/${deploymentId}/cancel`);
+    } catch (error) {
+      throw handleApiError(error);
+    }
+  },
+
   rollback: async (deploymentId: string): Promise<RollbackDeploymentResponse> => {
     try {
       return await apiClient.post<RollbackDeploymentResponse>(
@@ -95,16 +112,6 @@ export const deploymentsService = {
   getMetrics: async (serviceId: string): Promise<GetServiceMetricsResponse> => {
     try {
       return await apiClient.get<GetServiceMetricsResponse>(`/services/${serviceId}/metrics`);
-    } catch (error) {
-      throw handleApiError(error);
-    }
-  },
-
-  diagnostics: async (deploymentId: string): Promise<GetDiagnosticsResponse> => {
-    try {
-      return await apiClient.post<GetDiagnosticsResponse>(
-        `/deployments/${deploymentId}/diagnostics`
-      );
     } catch (error) {
       throw handleApiError(error);
     }

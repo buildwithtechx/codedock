@@ -1,5 +1,5 @@
 import { useNavigate } from '@tanstack/react-router';
-import { KeyRound, LayoutGrid, Loader2 } from 'lucide-react';
+import { BookOpen, ExternalLink, KeyRound, LayoutGrid, Loader2 } from 'lucide-react';
 import { useState } from 'react';
 import { toast } from 'sonner';
 import { Button } from '#/components/ui/button';
@@ -7,6 +7,8 @@ import { Input } from '#/components/ui/input';
 import { Label } from '#/components/ui/label';
 import { useConnectProvider } from './hooks';
 import { GIT_PROVIDERS } from './types';
+
+const DOCS_URL = 'https://docs.codedock.run';
 
 function ConnectIllustration() {
   return (
@@ -264,6 +266,13 @@ export function ConnectPrompt({ onBrowseApps }: { onBrowseApps: () => void }) {
             onClick={() => void navigate({ to: '/settings', search: { tab: 'sources' } as never })}
           >
             Manage in settings
+          </Button>
+          <Button type="button" variant="secondary" asChild>
+            <a href={DOCS_URL} target="_blank" rel="noopener noreferrer">
+              <BookOpen className="size-4" />
+              Docs
+              <ExternalLink className="size-3.5 opacity-60" />
+            </a>
           </Button>
         </div>
       </div>

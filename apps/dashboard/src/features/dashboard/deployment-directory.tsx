@@ -332,12 +332,18 @@ function DeploymentTable({ deployments }: { deployments: OrganizationDeployment[
           {deployments.map((deployment) => (
             <TableRow key={deployment.id}>
               <TableCell>
-                <div className="min-w-36">
-                  <p className="font-medium text-sm">{deployment.serviceName || 'Unknown app'}</p>
+                <Link
+                  to="/deployments/$deploymentId"
+                  params={{ deploymentId: deployment.id }}
+                  className="block min-w-36 rounded-lg transition-colors hover:opacity-80"
+                >
+                  <p className="font-medium text-sm hover:text-primary">
+                    {deployment.serviceName || 'Unknown app'}
+                  </p>
                   <p className="mt-0.5 truncate font-mono text-muted-foreground text-xs">
                     {deployment.commitHash?.slice(0, 7) || deployment.id.slice(0, 7)}
                   </p>
-                </div>
+                </Link>
               </TableCell>
               <TableCell className="font-medium text-sm">{deployment.projectName}</TableCell>
               <TableCell>

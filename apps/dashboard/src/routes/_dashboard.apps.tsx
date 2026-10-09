@@ -1,5 +1,5 @@
 import { createFileRoute, Link } from '@tanstack/react-router';
-import { ArrowRight, Plus, Search } from 'lucide-react';
+import { ArrowRight, BookOpen, ExternalLink, Plus, Search } from 'lucide-react';
 import { useMemo, useState } from 'react';
 import { PageHeader } from '#/components/layout/page-header';
 import { Button } from '#/components/ui/button';
@@ -17,6 +17,8 @@ import {
 export const Route = createFileRoute('/_dashboard/apps')({
   component: AppsPage,
 });
+
+const DOCS_URL = 'https://docs.codedock.run';
 
 function AppsPage() {
   const installedQuery = useInstalledApps();
@@ -113,6 +115,13 @@ function AppsPage() {
               </Button>
               <Button asChild variant="outline">
                 <Link to="/library">Open library</Link>
+              </Button>
+              <Button asChild variant="secondary">
+                <a href={DOCS_URL} target="_blank" rel="noopener noreferrer">
+                  <BookOpen className="size-4" />
+                  Docs
+                  <ExternalLink className="size-3.5 opacity-60" />
+                </a>
               </Button>
             </div>
           </div>

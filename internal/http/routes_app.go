@@ -68,6 +68,7 @@ func (s *Server) registerDeploymentRoutes(authGroup *echo.Group) {
 	serviceAuth := s.RequireServiceRole("")
 
 	authGroup.GET("/deployments", s.deploymentHandler.ListOrganizationDeployments)
+	authGroup.GET("/deployments/:id", s.deploymentHandler.Get)
 	authGroup.GET("/services/:serviceId/deployments", s.deploymentHandler.ListServiceDeployments, serviceAuth)
 	authGroup.GET("/services/:serviceId/previews", s.deploymentHandler.ListPRPreviews, serviceAuth)
 	authGroup.POST("/services/:serviceId/deploy", s.deploymentHandler.Trigger, serviceAuthAdmin)

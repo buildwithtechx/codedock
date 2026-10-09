@@ -8,17 +8,33 @@ export interface S3Provider {
   mode: 'region' | 'accountId' | 'endpoint';
   regionPlaceholder: string;
   icon: typeof Cloud;
+  logo: string;
 }
 
 export const s3Providers: S3Provider[] = [
-  { id: 'aws', label: 'AWS S3', mode: 'region', regionPlaceholder: 'us-east-1', icon: Cloud },
-  { id: 'r2', label: 'Cloudflare R2', mode: 'accountId', regionPlaceholder: 'auto', icon: Cloud },
+  {
+    id: 'aws',
+    label: 'AWS S3',
+    mode: 'region',
+    regionPlaceholder: 'us-east-1',
+    icon: Cloud,
+    logo: '/provider-logos/aws.svg',
+  },
+  {
+    id: 'r2',
+    label: 'Cloudflare R2',
+    mode: 'accountId',
+    regionPlaceholder: 'auto',
+    icon: Cloud,
+    logo: '/dns-providers/cloudflare.svg',
+  },
   {
     id: 'b2',
     label: 'Backblaze B2',
     mode: 'region',
     regionPlaceholder: 'us-west-004',
     icon: HardDrive,
+    logo: '/provider-logos/backblaze.svg',
   },
   {
     id: 'wasabi',
@@ -26,14 +42,23 @@ export const s3Providers: S3Provider[] = [
     mode: 'region',
     regionPlaceholder: 'us-east-1',
     icon: Database,
+    logo: '/provider-logos/wasabi.svg',
   },
-  { id: 'do', label: 'DO Spaces', mode: 'region', regionPlaceholder: 'nyc3', icon: Cloud },
+  {
+    id: 'do',
+    label: 'DO Spaces',
+    mode: 'region',
+    regionPlaceholder: 'nyc3',
+    icon: Cloud,
+    logo: '/provider-logos/digitalocean.svg',
+  },
   {
     id: 'minio',
     label: 'MinIO / Custom',
     mode: 'endpoint',
     regionPlaceholder: 'us-east-1',
     icon: Server,
+    logo: '/app-logos/minio.svg',
   },
 ];
 

@@ -1,5 +1,7 @@
-import { CalendarClock, Plus } from 'lucide-react';
+import { BookOpen, CalendarClock, ExternalLink, Plus } from 'lucide-react';
 import { Button } from '#/components/ui/button';
+
+const DOCS_URL = 'https://docs.codedock.run';
 
 export function JobsEmptyState({ onCreate }: { onCreate: () => void }) {
   return (
@@ -91,10 +93,17 @@ export function JobsEmptyState({ onCreate }: { onCreate: () => void }) {
         run from one place.
       </p>
 
-      <div className="flex items-center justify-center">
+      <div className="flex flex-col items-center justify-center gap-3 sm:flex-row">
         <Button onClick={onCreate} size="lg" className="rounded-xl px-6">
           <Plus className="size-4" />
           Create your first job
+        </Button>
+        <Button asChild variant="secondary" size="lg" className="rounded-xl px-6">
+          <a href={DOCS_URL} target="_blank" rel="noopener noreferrer">
+            <BookOpen className="size-4" />
+            Docs
+            <ExternalLink className="size-3.5 opacity-60" />
+          </a>
         </Button>
       </div>
 

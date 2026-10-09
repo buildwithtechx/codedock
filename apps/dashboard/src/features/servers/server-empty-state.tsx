@@ -1,14 +1,18 @@
 import { Link } from '@tanstack/react-router';
 import {
   Activity,
+  BookOpen,
   Container,
   Cpu,
+  ExternalLink,
   GitBranch,
   Globe,
   Plus,
   Server as ServerIcon,
 } from 'lucide-react';
 import { Button } from '#/components/ui/button';
+
+const DOCS_URL = 'https://docs.codedock.run';
 
 const capabilities = [
   { label: 'Containers', desc: 'Docker workloads on your host', icon: Container },
@@ -112,6 +116,13 @@ export function ServerEmptyState({ onAddLocal, addingLocal }: ServerEmptyStatePr
             {addingLocal ? 'Connecting…' : 'Use this machine'}
           </Button>
         )}
+        <Button asChild size="lg" variant="secondary" className="gap-2 px-6">
+          <a href={DOCS_URL} target="_blank" rel="noopener noreferrer">
+            <BookOpen className="h-4 w-4" />
+            Docs
+            <ExternalLink className="h-3.5 w-3.5 opacity-60" />
+          </a>
+        </Button>
       </div>
 
       <div className="mx-auto max-w-2xl">
