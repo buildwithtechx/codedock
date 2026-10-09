@@ -1,6 +1,6 @@
-import { createFileRoute, Link, Navigate } from '@tanstack/react-router';
+import { createFileRoute, Link } from '@tanstack/react-router';
 import { AuthPageFrame, LoginForm, OAuthButtons } from '#/features/auth';
-import { useGetPublicSettings, useGetSetupStatus } from '#/features/settings';
+import { useGetPublicSettings } from '#/features/settings';
 import { useSystemStore } from '#/stores/system-store';
 
 export const Route = createFileRoute('/_auth/signin')({
@@ -13,12 +13,7 @@ export const Route = createFileRoute('/_auth/signin')({
 
 function LoginPage() {
   const { data: publicSettings } = useGetPublicSettings();
-  const { data: setupStatus, isLoading } = useGetSetupStatus();
   const registrationEnabled = publicSettings?.data?.registrationEnabled ?? true;
-
-  if (!isLoading && setupStatus?.data?.setupRequired) {
-    return <Navigate to="/signup" replace />;
-  }
 
   return (
     <AuthPageFrame

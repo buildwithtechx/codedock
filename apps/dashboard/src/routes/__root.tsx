@@ -1,5 +1,6 @@
 import type { QueryClient } from '@tanstack/react-query';
 import { createRootRouteWithContext, HeadContent, Outlet } from '@tanstack/react-router';
+import { BackendGate } from '#/components/backend-gate';
 import { ThemeProvider } from '#/components/theme-provider';
 import { Toaster } from '#/components/ui/sonner';
 import { TooltipProvider } from '#/components/ui/tooltip';
@@ -28,7 +29,9 @@ function RootDocument() {
       <PostHogProvider>
         <HeadContent />
         <TooltipProvider>
-          <Outlet />
+          <BackendGate>
+            <Outlet />
+          </BackendGate>
         </TooltipProvider>
         <Toaster />
       </PostHogProvider>

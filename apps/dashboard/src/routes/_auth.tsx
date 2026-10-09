@@ -1,12 +1,19 @@
-import { createFileRoute, Outlet } from '@tanstack/react-router';
+import { createFileRoute, Navigate, Outlet, useLocation } from '@tanstack/react-router';
 import { FaDiscord, FaGithub, FaXTwitter } from 'react-icons/fa6';
 import { OnboardingImport } from '#/features/auth';
+import { useGetSetupStatus } from '#/features/settings';
 import { useSystemStore } from '#/stores/system-store';
 
 export const Route = createFileRoute('/_auth')({ component: AuthLayout });
 
 function AuthLayout() {
   const siteName = useSystemStore((state) => state.siteName);
+  const { data: setupStatus, isLoading } = useGetSetupStatus();
+  const location = useLocation();
+
+  if (!isLoading && setupStatus?.data?.setupRequired && location.pathname !== '/signup') {
+    return <Navigate to="/signup" replace />;
+  }
 
   return (
     <main className="grid min-h-dvh bg-background text-foreground lg:grid-cols-[minmax(0,0.94fr)_minmax(34rem,1.06fr)]">
