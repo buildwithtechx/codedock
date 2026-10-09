@@ -1,0 +1,6 @@
+CREATE TABLE IF NOT EXISTS audit_settings (
+    organization_id TEXT PRIMARY KEY REFERENCES organizations(id) ON DELETE CASCADE,
+    enabled BOOLEAN NOT NULL DEFAULT TRUE,
+    retention_days INTEGER NOT NULL DEFAULT 90,
+    updated_at TIMESTAMPTZ DEFAULT CURRENT_TIMESTAMP
+);

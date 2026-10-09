@@ -181,6 +181,8 @@ func (s *Server) registerMiscRoutes(apiGroup, authGroup *echo.Group) {
 	authGroup.GET("/environments/:id/canvas", s.canvasHandler.GetEnvironmentCanvas)
 	authGroup.GET("/audit-logs", s.auditLogHandler.List, s.authGuard.RequireRole("admin"))
 	authGroup.GET("/audit-logs/facets", s.auditLogHandler.Facets, s.authGuard.RequireRole("admin"))
+	authGroup.GET("/audit-logs/settings", s.auditLogHandler.GetSettings, s.authGuard.RequireRole("admin"))
+	authGroup.PUT("/audit-logs/settings", s.auditLogHandler.UpdateSettings, s.authGuard.RequireRole("admin"))
 	authGroup.GET("/mcp/sse", s.HandleMCPSSE)
 	authGroup.POST("/mcp/messages", s.HandleMCPMessage)
 	apiGroup.GET("/ws/terminal/:id", s.terminalHandler.HandleWebSocket)

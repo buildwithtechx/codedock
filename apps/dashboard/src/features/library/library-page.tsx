@@ -1,9 +1,10 @@
-import { FolderUp, LayoutGrid, Link2, SquareCode } from 'lucide-react';
+import { Code2, FolderUp, LayoutGrid, Link2, SquareCode } from 'lucide-react';
 import { useState } from 'react';
 import { PageHeader } from '#/components/layout/page-header';
 import { Skeleton } from '#/components/ui/skeleton';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '#/components/ui/tabs';
 import { AppCatalog } from '#/features/apps';
+import { TemplatesGallery } from '#/features/apps/templates-gallery';
 import { CreateGitAppModal } from '#/features/sources/create-git-app-modal';
 import { ConnectPrompt } from './connect-prompt';
 import { FolderUpload } from './folder-upload';
@@ -15,7 +16,7 @@ import { RepositoryList } from './repository-list';
 import type { ImportTarget, PendingImport } from './types';
 import { UrlImport } from './url-import';
 
-type LibraryTab = 'repositories' | 'folder' | 'url' | 'apps';
+type LibraryTab = 'repositories' | 'folder' | 'url' | 'apps' | 'examples';
 
 export function LibraryPage() {
   const [tab, setTab] = useState<LibraryTab>('repositories');
@@ -34,7 +35,7 @@ export function LibraryPage() {
     <div className="space-y-6">
       <PageHeader
         title="Library"
-        description="Import code from git, a folder, or a URL — or start from a one-click app."
+        description="Import code from git, a folder, or a URL — or start from a one-click app or example."
       />
 
       <Tabs value={tab} onValueChange={(value) => setTab(value as LibraryTab)} className="w-full">
@@ -54,6 +55,10 @@ export function LibraryPage() {
           <TabsTrigger value="apps">
             <LayoutGrid className="size-4" />
             Apps
+          </TabsTrigger>
+          <TabsTrigger value="examples">
+            <Code2 className="size-4" />
+            Examples
           </TabsTrigger>
         </TabsList>
 
@@ -99,6 +104,9 @@ export function LibraryPage() {
             </TabsContent>
             <TabsContent value="apps" className="mt-0">
               <AppCatalog embedded />
+            </TabsContent>
+            <TabsContent value="examples" className="mt-0">
+              <TemplatesGallery />
             </TabsContent>
           </div>
           <LibrarySidebar connections={connections} counts={counts} />

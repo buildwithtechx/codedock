@@ -1,6 +1,6 @@
 import type { BaseResponse, PaginatedData } from '#/interfaces/base';
 
-export type RuntimeMode = 'web' | 'worker';
+export type RuntimeMode = 'web' | 'worker' | 'static';
 export type BuildEngine =
   | 'nixpacks'
   | 'dockerfile'

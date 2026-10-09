@@ -52,7 +52,7 @@ export function HomeOverview() {
               <HomeProjectList
                 projects={projects}
                 isLoading={isLoading}
-                onCreateProject={() => void navigate({ to: '/projects/new' })}
+                onCreateProject={() => void navigate({ to: '/library' })}
               />
               <HomeShortcuts />
             </>

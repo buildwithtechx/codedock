@@ -1,6 +1,7 @@
 import type { LucideIcon } from 'lucide-react';
 import {
   Activity,
+  Bot,
   ClipboardList,
   Clock,
   CloudCog,
@@ -8,6 +9,7 @@ import {
   Globe2,
   HardDrive,
   Key,
+  KeyRound,
   LayoutDashboard,
   LayoutGrid,
   Rocket,
@@ -67,6 +69,12 @@ export const infrastructureNavigation: DashboardNavigationItem[] = [
     icon: Server,
   },
   {
+    title: 'Domains & DNS',
+    description: 'Domain routing and SSL verification',
+    to: '/dns',
+    icon: Globe2,
+  },
+  {
     title: 'Jobs',
     description: 'Cron schedules and job runs',
     to: '/jobs',
@@ -97,16 +105,23 @@ export const systemNavigation: DashboardNavigationItem[] = [
   },
 ];
 
-export const hiddenNavigation: DashboardNavigationItem[] = [
-  {
-    title: 'Domains & DNS',
-    description: 'Domain routing and SSL verification',
-    to: '/dns',
-    icon: Globe2,
-  },
-];
+export const hiddenNavigation: DashboardNavigationItem[] = [];
 
 export const contextualNavigation: DashboardNavigationItem[] = [
+  {
+    title: 'Credentials',
+    description: 'DNS providers, tokens, and registry credentials',
+    to: '/settings',
+    icon: KeyRound,
+    search: { tab: 'credentials' },
+  },
+  {
+    title: 'MCP',
+    description: 'Model Context Protocol server configuration',
+    to: '/settings',
+    icon: Bot,
+    search: { tab: 'mcp' },
+  },
   {
     title: 'Git',
     description: 'Git providers and registries',

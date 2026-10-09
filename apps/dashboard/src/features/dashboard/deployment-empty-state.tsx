@@ -40,15 +40,15 @@ export function DeploymentEmptyState({
       </p>
       <div className="flex flex-col items-center justify-center gap-3 sm:flex-row">
         <Button asChild size="lg" className="gap-2 px-6">
-          <Link to="/projects/new">
+          <Link to="/library">
             <Plus className="h-4 w-4" />
-            Deploy app
+            Create deployment
           </Link>
         </Button>
         <Button asChild size="lg" variant="secondary" className="gap-2 px-6">
           <Link to="/library">
             <GitBranch className="h-4 w-4" />
-            Import repository
+            Browse templates
           </Link>
         </Button>
       </div>

@@ -70,7 +70,7 @@ export function ProjectDirectory() {
         action={
           <div className="flex items-center gap-2">
             <Button asChild className="gap-2">
-              <Link to="/projects/new">
+              <Link to="/library">
                 <Plus className="h-4 w-4" />
                 New project
               </Link>
@@ -103,9 +103,9 @@ export function ProjectDirectory() {
         <ProjectEmptyState />
       ) : (
         <div
-          className={`grid grid-cols-1 gap-x-6 gap-y-4 ${showSidebar ? 'min-[60rem]:grid-cols-[minmax(0,1fr)_340px]' : ''}`}
+          className={`grid grid-cols-1 gap-x-6 gap-y-4 ${showSidebar ? 'lg:grid-cols-[minmax(0,1fr)_340px]' : ''}`}
         >
-          <div className="flex min-w-0 items-center gap-3 min-[60rem]:col-start-1 min-[60rem]:row-start-1">
+          <div className="flex min-w-0 items-center gap-3 lg:col-start-1 lg:row-start-1">
             <div className="relative min-w-0 flex-1">
               <Search className="pointer-events-none absolute top-1/2 left-3.5 h-4 w-4 -translate-y-1/2 text-muted-foreground" />
               <Input
@@ -120,7 +120,7 @@ export function ProjectDirectory() {
             <ProjectViewToggle value={view} onChange={changeView} />
           </div>
 
-          <div className="min-w-0 min-[60rem]:col-start-1 min-[60rem]:row-start-2">
+          <div className="min-w-0 lg:col-start-1 lg:row-start-2">
             {filtered.length > 0 ? (
               view === 'grid' ? (
                 <div className="grid grid-cols-[repeat(auto-fill,minmax(min(100%,20rem),1fr))] gap-3">
@@ -158,7 +158,7 @@ export function ProjectDirectory() {
           </div>
 
           {showSidebar && (
-            <aside className="space-y-4 min-[60rem]:sticky min-[60rem]:top-6 min-[60rem]:col-start-2 min-[60rem]:row-span-2 min-[60rem]:row-start-1 min-[60rem]:self-start">
+            <aside className="space-y-4 lg:sticky lg:top-6 lg:col-start-2 lg:row-span-2 lg:row-start-1 lg:self-start">
               {showFilters && (
                 <ProjectHostingFilters options={filters} active={filter} onChange={setFilter} />
               )}

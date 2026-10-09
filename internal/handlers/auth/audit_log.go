@@ -50,3 +50,38 @@ func (h *AuditLogHandler) Facets(c echo.Context) error {
 	}
 	return utils.Success(c, "Audit facets fetched", facets)
 }
+
+func (h *AuditLogHandler) GetSettings(c echo.Context) error {
+	orgID := c.QueryParam("organizationId")
+	if orgID == "" {
+		orgID = c.Request().Header.Get("X-Organization-ID")
+	}
+	if orgID == "" {
+		orgID = "default"
+	}
+	settings, err := h.auditService.GetSettings(c.Request().Context(), orgID)
+	if err != nil {
+		return utils.Error(c, http.StatusInternalServerError, err.Error())
+	}
+	return utils.Success(c, "Audit settings fetched", settings)
+}
+
+func (h *AuditLogHandler) UpdateSettings(c echo.Context) error {
+	var req models.AuditSettings
+	if err := c.Bind(&req); err != nil {
+		return utils.Error(c, http.StatusBadRequest, "invalid request")
+	}
+	if req.OrganizationID == "" {
+		req.OrganizationID = c.QueryParam("organizationId")
+	}
+	if req.OrganizationID == "" {
+		req.OrganizationID = c.Request().Header.Get("X-Organization-ID")
+	}
+	if req.OrganizationID == "" {
+		req.OrganizationID = "default"
+	}
+	if err := h.auditService.UpdateSettings(c.Request().Context(), &req); err != nil {
+		return utils.Error(c, http.StatusInternalServerError, err.Error())
+	}
+	return utils.Success(c, "Audit settings updated", req)
+}

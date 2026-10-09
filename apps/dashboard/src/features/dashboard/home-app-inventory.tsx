@@ -19,7 +19,7 @@ export function HomeAppInventory({
           <h2 className="font-semibold text-sm">Applications</h2>
         </div>
         <Link
-          to="/projects/new"
+          to="/library"
           className="flex h-7 w-7 items-center justify-center rounded-lg text-muted-foreground transition-colors hover:bg-muted hover:text-foreground"
           aria-label="Deploy an application"
         >

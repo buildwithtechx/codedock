@@ -34,6 +34,13 @@ function toQuery(params: AuditListParams): string {
   return text ? `?${text}` : '';
 }
 
+export interface AuditSettings {
+  organizationId: string;
+  enabled: boolean;
+  retentionDays: number;
+  updatedAt?: string;
+}
+
 export const auditApi = {
   list: async (params: AuditListParams = {}): Promise<BaseResponse<AuditLogRow[]>> => {
     try {
@@ -45,6 +52,23 @@ export const auditApi = {
   facets: async (): Promise<BaseResponse<AuditFacets>> => {
     try {
       return await apiClient.get<BaseResponse<AuditFacets>>('/audit-logs/facets');
+    } catch (error) {
+      throw handleApiError(error);
+    }
+  },
+  getSettings: async (organizationId?: string): Promise<BaseResponse<AuditSettings>> => {
+    try {
+      const query = organizationId ? `?organizationId=${organizationId}` : '';
+      return await apiClient.get<BaseResponse<AuditSettings>>(`/audit-logs/settings${query}`);
+    } catch (error) {
+      throw handleApiError(error);
+    }
+  },
+  updateSettings: async (
+    settings: Partial<AuditSettings>
+  ): Promise<BaseResponse<AuditSettings>> => {
+    try {
+      return await apiClient.put<BaseResponse<AuditSettings>>('/audit-logs/settings', settings);
     } catch (error) {
       throw handleApiError(error);
     }

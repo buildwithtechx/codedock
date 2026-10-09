@@ -13,6 +13,13 @@ type AuditLog struct {
 	Category  string `json:"category"`
 }
 
+type AuditSettings struct {
+	OrganizationID string `json:"organizationId"`
+	Enabled        bool   `json:"enabled"`
+	RetentionDays  int    `json:"retentionDays"`
+	UpdatedAt      string `json:"updatedAt"`
+}
+
 type AuditCategory struct {
 	ID          string `json:"id"`
 	Label       string `json:"label"`

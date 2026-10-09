@@ -1,6 +1,7 @@
 import { useNavigate, useRouterState } from '@tanstack/react-router';
 import {
   Bell,
+  Bot,
   Brain,
   GitBranch,
   KeyRound,
@@ -19,15 +20,19 @@ import { ApiKeysList } from '#/features/users/api-keys-list';
 import { OAuthProvidersList } from '#/features/users/oauth-providers-list';
 import { useAuthStore } from '#/stores/auth-store';
 import { AISettings } from './ai-settings';
+import { CredentialsSettings } from './credentials-settings';
 import { GeneralSettings } from './general-settings';
 import { InstanceInfo } from './instance-info';
 import { MaintenancePage } from './maintenance-settings';
+import { McpSettings } from './mcp-settings';
 import { MigrationSettings } from './migration-settings';
 import { TeamSettings } from './team-settings';
 import { UpdatesPage } from './update-settings';
 
 type TabId =
   | 'general'
+  | 'credentials'
+  | 'mcp'
   | 'git'
   | 'tokens'
   | 'team'
@@ -48,6 +53,16 @@ const TABS: Tab[] = [
     id: 'general',
     label: 'General',
     icon: <SettingsIcon className="h-4 w-4" />,
+  },
+  {
+    id: 'credentials',
+    label: 'Credentials',
+    icon: <KeyRound className="h-4 w-4" />,
+  },
+  {
+    id: 'mcp',
+    label: 'MCP',
+    icon: <Bot className="h-4 w-4" />,
   },
   {
     id: 'git',
@@ -108,6 +123,8 @@ export const SettingsLayout = () => {
 
   const content = {
     general: <GeneralSettings />,
+    credentials: <CredentialsSettings />,
+    mcp: <McpSettings />,
     git: (
       <Tabs defaultValue="github-app" className="pb-12">
         <TabsList>

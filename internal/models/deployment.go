@@ -70,6 +70,7 @@ type RuntimeMode string
 const (
 	RuntimeModeWeb    RuntimeMode = "web"
 	RuntimeModeWorker RuntimeMode = "worker"
+	RuntimeModeStatic RuntimeMode = "static"
 )
 
 type DeploymentStatus string

@@ -64,6 +64,14 @@ export function DeploymentDirectory() {
                 totalProjects === 1 ? '' : 's'
               }`
         }
+        action={
+          <Button asChild className="gap-2">
+            <Link to="/library">
+              <Plus className="h-4 w-4" />
+              Deploy
+            </Link>
+          </Button>
+        }
       />
       <PageFrame rail={<DeploymentSummary deployments={deployments} isLoading={isLoading} />}>
         <div className="space-y-4">

@@ -7,6 +7,7 @@ import { Skeleton } from '#/components/ui/skeleton';
 import { Tabs, TabsList, TabsTrigger } from '#/components/ui/tabs';
 import { type AuditLogRow, auditApi } from './api';
 import { AuditDetailsDialog } from './audit-details-dialog';
+import { AuditSettingsCard } from './audit-settings-card';
 import { AuditSummaryCard } from './audit-summary-card';
 import {
   AUDIT_CATEGORIES,
@@ -269,6 +270,7 @@ export function AuditLogList() {
             total={facets?.total ?? rows.length}
             facets={facets?.categories ?? []}
           />
+          <AuditSettingsCard />
         </aside>
       </div>
 

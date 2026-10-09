@@ -61,7 +61,7 @@ export function ApplicationSetupFields({
         </div>
       ))}
       <div className="space-y-2">
-        <Label htmlFor="setup-runtime">Runtime</Label>
+        <Label htmlFor="setup-runtime">Runtime mode</Label>
         <select
           id="setup-runtime"
           className="w-full rounded-md border bg-background p-2"
@@ -70,8 +70,9 @@ export function ApplicationSetupFields({
             update('runtimeMode', event.target.value as CreateAppServiceRequest['runtimeMode'])
           }
         >
-          <option value="web">Web</option>
+          <option value="web">Web (Server)</option>
           <option value="worker">Worker</option>
+          <option value="static">Static site</option>
         </select>
       </div>
       {source === 'git' && (

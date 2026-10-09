@@ -1,6 +1,5 @@
-import { createFileRoute } from '@tanstack/react-router';
-import { DeploymentDirectory } from '#/features/dashboard/deployment-directory';
+import { createFileRoute, Outlet } from '@tanstack/react-router';
 
 export const Route = createFileRoute('/_dashboard/deployments')({
-  component: DeploymentDirectory,
+  component: Outlet,
 });

@@ -11,14 +11,14 @@ import { apiClient } from '#/lib/api-client';
 interface RuntimeModeCardProps {
   serviceId: string;
   initialData?: {
-    runtimeMode?: 'web' | 'worker';
+    runtimeMode?: 'web' | 'worker' | 'static';
     internalPort?: number;
   };
 }
 
 export function RuntimeModeCard({ serviceId, initialData }: RuntimeModeCardProps) {
   const queryClient = useQueryClient();
-  const [runtimeMode, setRuntimeMode] = useState<'web' | 'worker'>(
+  const [runtimeMode, setRuntimeMode] = useState<'web' | 'worker' | 'static'>(
     initialData?.runtimeMode || 'web'
   );
   const [internalPort, setInternalPort] = useState(initialData?.internalPort || 3000);
@@ -49,7 +49,7 @@ export function RuntimeModeCard({ serviceId, initialData }: RuntimeModeCardProps
         <CardDescription>Choose how this service behaves inside the cluster.</CardDescription>
       </CardHeader>
       <CardContent className="space-y-6">
-        <div className="grid grid-cols-1 gap-4 sm:grid-cols-2">
+        <div className="grid grid-cols-1 gap-4 sm:grid-cols-3">
           <button
             type="button"
             className={`w-full cursor-pointer rounded-lg border p-4 text-left transition-colors ${
@@ -83,6 +83,25 @@ export function RuntimeModeCard({ serviceId, initialData }: RuntimeModeCardProps
             </div>
             <p className="text-sm text-zinc-500">
               No exposed public route. Runs as a background process and monitored via uptime checks.
+            </p>
+          </button>
+
+          <button
+            type="button"
+            className={`w-full cursor-pointer rounded-lg border p-4 text-left transition-colors ${
+              runtimeMode === 'static'
+                ? 'border-zinc-900 bg-zinc-50 dark:border-zinc-100 dark:bg-zinc-900'
+                : 'border-zinc-200 hover:border-zinc-300 dark:border-zinc-800 dark:hover:border-zinc-700'
+            }`}
+            onClick={() => setRuntimeMode('static')}
+          >
+            <div className="mb-2 flex items-center justify-between">
+              <h3 className="font-semibold">Static Site</h3>
+              {runtimeMode === 'static' && <Badge variant="default">Active</Badge>}
+            </div>
+            <p className="text-sm text-zinc-500">
+              Serves pre-built HTML/CSS/JS assets from your build output directory via high-speed
+              HTTP.
             </p>
           </button>
         </div>

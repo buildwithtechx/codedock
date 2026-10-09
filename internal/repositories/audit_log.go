@@ -14,6 +14,8 @@ type AuditLogRepository interface {
 	List(ctx context.Context, limit, offset int) ([]models.AuditLog, error)
 	ListFiltered(ctx context.Context, prefixes []string, limit, offset int) ([]models.AuditLog, error)
 	Facets(ctx context.Context) (map[string]int, int, error)
+	GetSettings(ctx context.Context, orgID string) (*models.AuditSettings, error)
+	UpdateSettings(ctx context.Context, settings *models.AuditSettings) error
 }
 
 type AuditLogRepo struct {
@@ -116,4 +118,43 @@ func (r *AuditLogRepo) Facets(ctx context.Context) (map[string]int, int, error) 
 		total += count
 	}
 	return counts, total, nil
+}
+
+func (r *AuditLogRepo) GetSettings(ctx context.Context, orgID string) (*models.AuditSettings, error) {
+	query := `
+		SELECT organization_id, enabled, retention_days, updated_at
+		FROM audit_settings
+		WHERE organization_id = $1
+	`
+	var s models.AuditSettings
+	var updatedAt sql.NullTime
+	err := r.db.QueryRowContext(ctx, query, orgID).Scan(&s.OrganizationID, &s.Enabled, &s.RetentionDays, &updatedAt)
+	if err == sql.ErrNoRows {
+		return &models.AuditSettings{
+			OrganizationID: orgID,
+			Enabled:        true,
+			RetentionDays:  90,
+		}, nil
+	}
+	if err != nil {
+		return nil, fmt.Errorf("failed to get audit settings: %w", err)
+	}
+	if updatedAt.Valid {
+		s.UpdatedAt = updatedAt.Time.String()
+	}
+	return &s, nil
+}
+
+func (r *AuditLogRepo) UpdateSettings(ctx context.Context, settings *models.AuditSettings) error {
+	query := `
+		INSERT INTO audit_settings (organization_id, enabled, retention_days, updated_at)
+		VALUES ($1, $2, $3, CURRENT_TIMESTAMP)
+		ON CONFLICT (organization_id)
+		DO UPDATE SET enabled = $2, retention_days = $3, updated_at = CURRENT_TIMESTAMP
+	`
+	_, err := r.db.ExecContext(ctx, query, settings.OrganizationID, settings.Enabled, settings.RetentionDays)
+	if err != nil {
+		return fmt.Errorf("failed to update audit settings: %w", err)
+	}
+	return nil
 }

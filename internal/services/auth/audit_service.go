@@ -81,3 +81,11 @@ func (s *AuditService) Facets(ctx context.Context) (models.AuditFacets, error) {
 	}
 	return models.AuditFacets{Total: total, Categories: categories}, nil
 }
+
+func (s *AuditService) GetSettings(ctx context.Context, orgID string) (*models.AuditSettings, error) {
+	return s.repo.GetSettings(ctx, orgID)
+}
+
+func (s *AuditService) UpdateSettings(ctx context.Context, settings *models.AuditSettings) error {
+	return s.repo.UpdateSettings(ctx, settings)
+}

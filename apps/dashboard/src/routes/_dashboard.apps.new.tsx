@@ -1,15 +1,5 @@
-import { createFileRoute } from '@tanstack/react-router';
-import { z } from 'zod';
-import { NewAppTabs } from '#/features/apps';
+import { createFileRoute, Outlet } from '@tanstack/react-router';
 
 export const Route = createFileRoute('/_dashboard/apps/new')({
-  component: NewAppPage,
-  validateSearch: z.object({
-    app: z.string().optional(),
-  }),
+  component: Outlet,
 });
-
-function NewAppPage() {
-  const search = Route.useSearch();
-  return <NewAppTabs deepLinkAppId={search.app} />;
-}
