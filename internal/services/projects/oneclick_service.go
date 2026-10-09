@@ -126,7 +126,7 @@ func (s *OneClickService) installStack(ctx context.Context, input models.Install
 		EnvironmentID: envID,
 		Name:          appName,
 		Content:       plan.ComposeYAML,
-		Revision:      1,
+		Revision:      0,
 	}
 	review, err := s.stacks.Review(ctx, request)
 	if err != nil {

@@ -2,6 +2,7 @@ package projects
 
 import (
 	"context"
+	"fmt"
 	"strings"
 	"testing"
 
@@ -28,7 +29,15 @@ func (s *oneClickTestStackStore) Get(_ context.Context, _, _ string) (*models.Co
 	return s.stack, nil
 }
 
-func (s *oneClickTestStackStore) Save(_ context.Context, stack *models.ComposeStack, _ int) error {
+func (s *oneClickTestStackStore) Save(_ context.Context, stack *models.ComposeStack, previousRevision int) error {
+	if s.stack == nil || s.stack.ID != stack.ID {
+		if previousRevision != 0 {
+			return fmt.Errorf("stack changed or is deploying; reload and review again")
+		}
+	} else if previousRevision != s.stack.Revision {
+		return fmt.Errorf("stack changed or is deploying; reload and review again")
+	}
+	stack.Revision = previousRevision + 1
 	s.stack = stack
 	return nil
 }
