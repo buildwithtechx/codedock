@@ -6,7 +6,7 @@ const shortcuts = [
     title: 'Connect source',
     description: 'Link Git providers and registries.',
     to: '/settings',
-    search: { tab: 'sources' },
+    search: { tab: 'git' },
     icon: GitBranch,
   },
   {

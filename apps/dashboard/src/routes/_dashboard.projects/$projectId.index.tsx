@@ -14,6 +14,7 @@ import {
   useGetProject,
 } from '#/features/projects';
 import { ProjectDatabaseInventory } from '#/features/projects/project-database-inventory';
+import { ProjectGitTab } from '#/features/projects/project-git-tab';
 import { StatusBadge } from '#/features/projects/service-status-badge';
 import { ProjectClusters } from '#/features/servers/project-clusters';
 import type { AppService } from '#/features/services';
@@ -182,6 +183,7 @@ function ProjectOverviewComponent() {
       <Tabs defaultValue="services" className="space-y-4">
         <TabsList>
           <TabsTrigger value="services">Services ({services.length})</TabsTrigger>
+          <TabsTrigger value="git">Git</TabsTrigger>
           <TabsTrigger value="deployments">Deployments</TabsTrigger>
           <TabsTrigger value="variables">Variables</TabsTrigger>
           <TabsTrigger value="clusters">Clusters</TabsTrigger>
@@ -260,6 +262,10 @@ function ProjectOverviewComponent() {
               ))}
             </div>
           )}
+        </TabsContent>
+
+        <TabsContent value="git">
+          <ProjectGitTab projectId={projectId} environmentId={activeEnvId} />
         </TabsContent>
 
         <TabsContent value="deployments">

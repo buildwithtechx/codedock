@@ -155,3 +155,92 @@ export const useTriggerDatabaseBackup = () => {
     },
   });
 };
+
+export const useUpdateS3Destination = () => {
+  const queryClient = useQueryClient();
+  return useMutation({
+    mutationFn: (payload: {
+      id: string;
+      payload: Parameters<typeof backupsService.updateS3Destination>[1];
+    }) => backupsService.updateS3Destination(payload.id, payload.payload),
+    onSuccess: async () => {
+      await queryClient.invalidateQueries({ queryKey: ['s3-destinations'] });
+    },
+  });
+};
+
+export const useListSFTPDestinations = (projectId?: string) => {
+  return useQuery({
+    queryKey: ['sftp-destinations', projectId].filter(Boolean),
+    queryFn: () => backupsService.listSFTPDestinations(projectId),
+  });
+};
+
+export const useCreateSFTPDestination = () => {
+  const queryClient = useQueryClient();
+  return useMutation({
+    mutationFn: (payload: Parameters<typeof backupsService.createSFTPDestination>[0]) =>
+      backupsService.createSFTPDestination(payload),
+    onSuccess: async () => {
+      await queryClient.invalidateQueries({ queryKey: ['sftp-destinations'] });
+    },
+  });
+};
+
+export const useVerifySFTPDestination = () => {
+  return useMutation({
+    mutationFn: (id: string) => backupsService.verifySFTPDestination(id),
+  });
+};
+
+export const useDeleteSFTPDestination = () => {
+  const queryClient = useQueryClient();
+  return useMutation({
+    mutationFn: (id: string) => backupsService.deleteSFTPDestination(id),
+    onSuccess: async () => {
+      await queryClient.invalidateQueries({ queryKey: ['sftp-destinations'] });
+    },
+  });
+};
+
+export const usePrepareRestore = () => {
+  return useMutation({
+    mutationFn: (payload: { recordId: string; targetDatabaseId?: string }) =>
+      backupsService.prepareRestore(payload.recordId, payload.targetDatabaseId),
+  });
+};
+
+export const useRestoreOperation = (operationId: string | null, enabled = true) => {
+  return useQuery({
+    queryKey: ['operations', operationId].filter(Boolean),
+    queryFn: () => backupsService.getOperation(operationId ?? ''),
+    enabled: enabled && !!operationId,
+    refetchInterval: (query) => {
+      const status = query.state.data?.data?.status ?? '';
+      return ['RUNNING', 'CANCELLING', 'PREPARING', 'QUEUED', 'APPLYING'].includes(status)
+        ? 1500
+        : false;
+    },
+  });
+};
+
+export const useApplyRestore = () => {
+  const queryClient = useQueryClient();
+  return useMutation({
+    mutationFn: (payload: { operationId: string; confirmation: string }) =>
+      backupsService.applyRestore(payload.operationId, payload.confirmation),
+    onSettled: async () => {
+      await queryClient.invalidateQueries({ queryKey: ['operations'] });
+    },
+  });
+};
+
+export const useCancelRestore = () => {
+  const queryClient = useQueryClient();
+  return useMutation({
+    mutationFn: (operationId: string) => backupsService.cancelRestore(operationId),
+    onSettled: async () => {
+      await queryClient.invalidateQueries({ queryKey: ['operations'] });
+    },
+  });
+};

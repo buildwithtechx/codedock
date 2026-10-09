@@ -1,6 +1,5 @@
-import { createFileRoute } from '@tanstack/react-router';
-import { ApiKeysList } from '#/features/users/api-keys-list';
+import { createFileRoute, Navigate } from '@tanstack/react-router';
 
 export const Route = createFileRoute('/_dashboard/api-access')({
-  component: () => <ApiKeysList />,
+  component: () => <Navigate to="/settings" search={{ tab: 'tokens' }} replace />,
 });

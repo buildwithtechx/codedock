@@ -26,6 +26,7 @@ export const Route = createFileRoute('/_dashboard/projects/$projectId/new')({
   component: NewResourcePage,
   validateSearch: z.object({
     tab: z.enum(['resources', 'one-click', 'examples']).optional(),
+    resource: z.enum(['git', 'database', 'docker']).optional(),
   }),
 });
 
@@ -33,9 +34,9 @@ function NewResourcePage() {
   const { projectId } = Route.useParams();
   const search = Route.useSearch();
   const navigate = useNavigate();
-  const [dbModalOpen, setDbModalOpen] = useState(false);
-  const [gitModalOpen, setGitModalOpen] = useState(false);
-  const [dockerModalOpen, setDockerModalOpen] = useState(false);
+  const [dbModalOpen, setDbModalOpen] = useState(search.resource === 'database');
+  const [gitModalOpen, setGitModalOpen] = useState(search.resource === 'git');
+  const [dockerModalOpen, setDockerModalOpen] = useState(search.resource === 'docker');
 
   const {
     data: oneClickResponse,

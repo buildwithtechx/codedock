@@ -9,6 +9,7 @@ export type NavItemProps = {
   search?: Record<string, string>;
   external?: boolean;
   badge?: string;
+  count?: number | null;
 };
 
 export function NavItem({
@@ -29,13 +30,16 @@ export function NavItem({
   const isActive = exact
     ? pathname === item.url && searchMatches
     : pathname.startsWith(item.url) && item.url !== '/';
+  const showCount = item.count != null && item.count > 0;
 
   return (
     <Link
       to={item.url as never}
       search={item.search as never}
-      className={`group relative flex items-center rounded-lg font-medium text-sm transition-colors ${
-        collapsed ? 'justify-center px-0 py-2.5' : 'gap-3 px-2.5 py-2.25'
+      title={collapsed ? item.title : undefined}
+      aria-current={isActive ? 'page' : undefined}
+      className={`group relative flex items-center rounded-xl font-medium text-[15px] transition-colors ${
+        collapsed ? 'justify-center px-0 py-2.5' : 'gap-3 px-3 py-2.5'
       } ${
         isActive
           ? 'bg-primary/12 text-sidebar-foreground'
@@ -45,11 +49,11 @@ export function NavItem({
       rel={item.external ? 'noopener noreferrer' : undefined}
     >
       {!collapsed && isActive && (
-        <div className="absolute top-1/2 -left-2 h-4 w-0.5 -translate-y-1/2 rounded-r-full bg-primary" />
+        <div className="absolute top-1/2 -left-3 h-4 w-0.5 -translate-y-1/2 rounded-r-full bg-primary" />
       )}
 
       <item.icon
-        className={`h-4 w-4 shrink-0 transition-colors ${
+        className={`h-5 w-5 shrink-0 transition-colors ${
           isActive ? 'text-primary' : 'text-muted-foreground group-hover:text-sidebar-foreground'
         }`}
       />
@@ -61,6 +65,11 @@ export function NavItem({
           {item.badge && (
             <span className="rounded-full bg-primary/10 px-1.5 py-0.5 font-medium text-[9px] text-primary">
               {item.badge}
+            </span>
+          )}
+          {showCount && (
+            <span className="shrink-0 text-[13px] text-muted-foreground/60 tabular-nums">
+              {item.count}
             </span>
           )}
         </>

@@ -1,6 +1,5 @@
 import { Link } from '@tanstack/react-router';
-import { Box, Cloud, Database, Folder } from 'lucide-react';
-
+import { ArrowRight, Box, Cloud, Database, Folder, FolderKanban } from 'lucide-react';
 import type { CanvasSummary } from '#/features/projects';
 
 const GithubIcon = ({ className }: { className?: string }) => (
@@ -18,81 +17,126 @@ const GithubIcon = ({ className }: { className?: string }) => (
 );
 
 const IconMap: Record<string, React.ReactNode> = {
-  github: <GithubIcon className="h-5 w-5" />,
-  postgres: <Database className="h-5 w-5 text-blue-500" />,
-  mysql: <Database className="h-5 w-5 text-blue-400" />,
-  redis: <Database className="h-5 w-5 text-red-500" />,
-  s3: <Cloud className="h-5 w-5 text-amber-500" />,
-  local: <Folder className="h-5 w-5 text-gray-500" />,
+  github: <GithubIcon className="h-4 w-4" />,
+  postgres: <Database className="h-4 w-4 text-blue-500" />,
+  mysql: <Database className="h-4 w-4 text-blue-400" />,
+  redis: <Database className="h-4 w-4 text-red-500" />,
+  s3: <Cloud className="h-4 w-4 text-amber-500" />,
+  local: <Folder className="h-4 w-4 text-gray-500" />,
 };
 
-const getIcon = (iconName: string) => {
-  return IconMap[iconName.toLowerCase()] || <Box className="h-5 w-5 text-primary" />;
-};
+function getIcon(iconName: string) {
+  return IconMap[iconName.toLowerCase()] || <Box className="h-4 w-4 text-primary" />;
+}
+
+function formatUpdated(value: string) {
+  const parsed = new Date(value);
+  if (Number.isNaN(parsed.getTime())) return null;
+  return parsed.toLocaleDateString(undefined, { month: 'short', day: 'numeric' });
+}
 
 export const ProjectCard = ({ project }: { project: CanvasSummary }) => {
-  return (
-    <Link
-      to={`/projects/$projectId`}
-      params={{ projectId: project.id }}
-      className="group block h-full"
-    >
-      <div className="flex h-full flex-col rounded-2xl border border-border/80 bg-card p-5 shadow-sm transition-colors hover:border-primary/45 hover:bg-primary/3">
-        <div className="flex items-start justify-between">
-          <div>
-            <h3 className="font-bold text-foreground text-lg transition-colors group-hover:text-primary">
-              {project.name}
-            </h3>
-            <div className="mt-1 flex items-center gap-2 font-mono text-[10px] text-muted-foreground uppercase tracking-widest">
-              {project.defaultEnvironment ? (
-                <>
-                  <div className="h-1.5 w-1.5 rounded-full bg-emerald-500/80 shadow-[0_0_8px_rgba(16,185,129,0.4)]"></div>
-                  <span>{project.defaultEnvironment.name}</span>
-                </>
-              ) : (
-                <>
-                  <div className="h-1.5 w-1.5 rounded-full bg-zinc-500/80"></div>
-                  <span>No Environment</span>
-                </>
-              )}
-            </div>
-          </div>
-          <div className="rounded border border-primary/30 bg-primary/10 px-2 py-0.5 font-bold text-[10px] text-primary uppercase tracking-widest">
-            {project.onlineServices}/{project.totalServices} ONLINE
-          </div>
-        </div>
+  const updated = formatUpdated(project.updatedAt || project.createdAt);
+  const allOnline = project.totalServices > 0 && project.onlineServices === project.totalServices;
 
-        <div className="mt-4 flex-1 border-border/70 border-t pt-4">
-          {project.totalServices === 0 ? (
-            <div className="flex h-18 items-center justify-center rounded-xl border border-border/70 border-dashed bg-background">
-              <span className="font-mono text-[10px] text-muted-foreground uppercase tracking-widest">
-                No services attached
-              </span>
-            </div>
+  return (
+    <div className="group relative flex h-full flex-col gap-3.5 rounded-2xl border border-border/70 bg-card p-4 shadow-sm transition-colors hover:border-primary/45 hover:bg-primary/[0.03]">
+      <Link
+        to="/projects/$projectId"
+        params={{ projectId: project.id }}
+        aria-label={project.name}
+        className="absolute inset-0 z-0 rounded-2xl"
+      />
+
+      <div className="flex items-start gap-3">
+        <div className="flex h-10 w-10 shrink-0 items-center justify-center overflow-hidden rounded-xl bg-muted/60 transition-colors group-hover:bg-muted">
+          {project.serviceIcons?.[0] ? (
+            getIcon(project.serviceIcons[0])
           ) : (
-            <div className="flex flex-col gap-3">
-              <span className="font-mono font-semibold text-[10px] text-muted-foreground uppercase tracking-[0.2em]">
-                Attached Services
+            <FolderKanban className="h-5 w-5 text-muted-foreground" />
+          )}
+        </div>
+        <div className="min-w-0 flex-1 text-start">
+          <div className="flex min-w-0 items-center gap-1.5">
+            <p
+              className="min-w-0 truncate font-medium text-foreground text-sm"
+              title={project.name}
+            >
+              {project.name}
+            </p>
+            {project.totalServices > 0 && (
+              <span className="shrink-0 rounded-md bg-muted/60 px-1.5 py-0.5 font-medium font-mono text-[10px] text-muted-foreground">
+                {project.onlineServices}/{project.totalServices}
               </span>
-              <div className="flex flex-wrap gap-2">
-                {project.serviceIcons?.slice(0, 5).map((icon, i) => (
-                  <div
-                    key={i}
-                    className="flex h-10 w-10 items-center justify-center rounded-lg border border-border/70 bg-background shadow-sm transition-colors group-hover:border-primary/30"
-                  >
-                    {getIcon(icon)}
-                  </div>
-                ))}
-                {project.totalServices > 5 && (
-                  <div className="flex h-10 w-10 items-center justify-center rounded-lg border border-border/70 bg-background font-mono text-[10px] text-muted-foreground shadow-sm">
-                    +{project.totalServices - 5}
-                  </div>
-                )}
-              </div>
-            </div>
+            )}
+          </div>
+          {project.description && (
+            <p className="mt-0.5 truncate text-muted-foreground text-xs">{project.description}</p>
           )}
         </div>
       </div>
-    </Link>
+
+      <div className="flex min-w-0 flex-wrap items-center gap-x-3 gap-y-1.5 whitespace-nowrap text-muted-foreground">
+        {project.defaultEnvironment ? (
+          <span className="inline-flex min-w-0 max-w-full items-center gap-1.5 text-xs">
+            <span className="h-1.5 w-1.5 shrink-0 rounded-full bg-emerald-500/80" />
+            <span className="truncate">{project.defaultEnvironment.name}</span>
+          </span>
+        ) : (
+          <span className="inline-flex min-w-0 max-w-full items-center gap-1.5 text-xs">
+            <span className="h-1.5 w-1.5 shrink-0 rounded-full bg-zinc-500/80" />
+            <span className="truncate">No environment</span>
+          </span>
+        )}
+        <span className="inline-flex items-center rounded-md bg-secondary px-2 py-0.5 text-secondary-foreground text-xs">
+          {project.totalServices} service{project.totalServices === 1 ? '' : 's'}
+        </span>
+        {project.databasesCount > 0 && (
+          <span className="inline-flex items-center gap-1.5 text-xs">
+            <Database className="h-3.5 w-3.5 shrink-0" />
+            <span>
+              {project.databasesCount} database{project.databasesCount === 1 ? '' : 's'}
+            </span>
+          </span>
+        )}
+        {project.serviceIcons && project.serviceIcons.length > 1 && (
+          <span className="flex items-center">
+            {project.serviceIcons.slice(1, 5).map((icon, index) => (
+              <span
+                key={`${icon}-${index}`}
+                className="-ml-1 flex h-6 w-6 items-center justify-center rounded-full border border-border/70 bg-background first:ml-0"
+              >
+                {getIcon(icon)}
+              </span>
+            ))}
+            {project.serviceIcons.length > 5 && (
+              <span className="-ml-1 flex h-6 items-center rounded-full border border-border/70 bg-background px-1.5 font-mono text-[10px]">
+                +{project.serviceIcons.length - 5}
+              </span>
+            )}
+          </span>
+        )}
+      </div>
+
+      <div className="mt-auto flex items-center justify-between gap-2 pt-0.5">
+        <span
+          className={`shrink-0 whitespace-nowrap rounded-full px-2 py-0.5 font-medium text-[10px] ${
+            project.totalServices === 0
+              ? 'bg-muted text-muted-foreground'
+              : allOnline
+                ? 'bg-emerald-500/10 text-emerald-600 dark:text-emerald-400'
+                : 'bg-amber-500/10 text-amber-600 dark:text-amber-400'
+          }`}
+        >
+          {project.totalServices === 0 ? 'Empty' : allOnline ? 'All online' : 'Partial outage'}
+        </span>
+        <span className="flex min-w-0 items-center gap-2">
+          {updated && (
+            <span className="truncate text-muted-foreground text-xs">Updated {updated}</span>
+          )}
+          <ArrowRight className="h-4 w-4 shrink-0 text-muted-foreground/40 transition-colors group-hover:text-muted-foreground" />
+        </span>
+      </div>
+    </div>
   );
 };

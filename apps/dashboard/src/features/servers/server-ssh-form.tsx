@@ -17,10 +17,10 @@ import { Label } from '#/components/ui/label';
 import { ServerSshAdvancedFields } from '#/features/servers/server-ssh-advanced-fields';
 import { readSshPrivateKey, validateSshConnection } from '#/features/servers/server-ssh-validation';
 import { useCreateServer, useTestSSH } from '#/hooks/use-servers';
-import type { Server } from '#/interfaces/server';
+import type { Server, TestSSHRequest } from '#/interfaces/server';
 
 interface ServerSshFormProps {
-  onSuccess: (server: Server) => void;
+  onSuccess: (server: Server, credentials: TestSSHRequest) => void;
   onCancel: () => void;
 }
 
@@ -112,6 +112,13 @@ export function ServerSshForm({ onSuccess, onCancel }: ServerSshFormProps) {
       return;
     }
     try {
+      const credentials: TestSSHRequest = {
+        sshHost: sshHost.trim(),
+        sshPort: Number(sshPort),
+        sshUser: sshUser.trim() || 'root',
+        sshKey: sshAuthMethod === 'key' ? sshPrivateKey : undefined,
+        sshPassword: sshAuthMethod === 'password' ? sshPassword : undefined,
+      };
       const server = await createServer({
         name: name.trim(),
         ipAddress: sshHost.trim(),
@@ -126,7 +133,7 @@ export function ServerSshForm({ onSuccess, onCancel }: ServerSshFormProps) {
         isLocal: false,
       });
       toast.success('Server added successfully');
-      onSuccess(server);
+      onSuccess(server, credentials);
     } catch (err) {
       toast.error(err instanceof Error ? err.message : 'Failed to add server');
     }

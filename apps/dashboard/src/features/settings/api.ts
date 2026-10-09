@@ -44,6 +44,7 @@ export const settingsService = {
       siteName?: string;
       emailEnabled: boolean;
       cloudMode: boolean;
+      version?: string;
     }>
   > => {
     try {
@@ -53,6 +54,7 @@ export const settingsService = {
           siteName?: string;
           emailEnabled: boolean;
           cloudMode: boolean;
+          version?: string;
         }>
       >('/system/public');
     } catch (error) {

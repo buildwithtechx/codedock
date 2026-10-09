@@ -1,57 +1,139 @@
 import { Link } from '@tanstack/react-router';
-import { Activity, ArrowRight, Container, Globe2, Plus, Server } from 'lucide-react';
+import {
+  Activity,
+  Container,
+  Cpu,
+  GitBranch,
+  Globe,
+  Plus,
+  Server as ServerIcon,
+} from 'lucide-react';
 import { Button } from '#/components/ui/button';
 
-const serverCapabilities = [
-  { label: 'Runtime', detail: 'Container workloads', icon: Container },
-  { label: 'Networking', detail: 'Public application routes', icon: Globe2 },
-  { label: 'Health', detail: 'Live capacity and status', icon: Activity },
+const capabilities = [
+  { label: 'Containers', desc: 'Docker workloads on your host', icon: Container },
+  { label: 'Networking', desc: 'Public routes for your apps', icon: Globe },
+  { label: 'Monitoring', desc: 'Live CPU, memory and disk', icon: Activity },
+  { label: 'Git', desc: 'Deploy straight from a repo', icon: GitBranch },
 ];
 
-export function ServerEmptyState() {
+interface ServerEmptyStateProps {
+  onAddLocal?: () => void;
+  addingLocal?: boolean;
+}
+
+export function ServerEmptyState({ onAddLocal, addingLocal }: ServerEmptyStateProps) {
   return (
-    <section className="flex min-h-[34rem] items-center justify-center py-12 text-center">
-      <div className="w-full max-w-3xl">
-        <div className="relative mx-auto h-32 w-56" aria-hidden="true">
-          <span className="absolute top-8 left-8 h-17 w-26 rounded-2xl bg-card" />
-          <span className="absolute top-3 left-15 flex h-17 w-26 items-center justify-center rounded-2xl bg-muted text-muted-foreground">
-            <Server className="h-6 w-6" />
-          </span>
-          <span className="absolute top-10 right-6 flex h-11 w-11 items-center justify-center rounded-xl border border-primary/45 border-dashed bg-primary/8 text-primary">
-            <Plus className="h-4 w-4" />
-          </span>
-          <span className="absolute top-1/2 right-15 w-8 border-border border-t border-dashed" />
-        </div>
-        <h2 className="mt-5 font-medium text-foreground/90 text-xl tracking-[-0.02em]">
-          Add a server
-        </h2>
-        <p className="mx-auto mt-2 max-w-md text-muted-foreground/75 text-sm leading-6">
-          Connect a runtime so Codedock can build, deploy, and observe applications on your
-          infrastructure.
-        </p>
+    <div className="py-16 text-center">
+      <div className="relative mx-auto mb-8 h-44 w-64" aria-hidden="true">
+        <svg className="absolute inset-0 h-full w-full" viewBox="0 0 260 180" fill="none">
+          <rect x="62" y="56" width="112" height="84" rx="14" className="fill-muted" />
+          <rect
+            x="50"
+            y="44"
+            width="112"
+            height="84"
+            rx="14"
+            className="fill-card stroke-border"
+            strokeWidth="1"
+          />
+          <rect
+            x="38"
+            y="32"
+            width="112"
+            height="84"
+            rx="14"
+            className="fill-card stroke-border"
+            strokeWidth="1"
+          />
+          <rect x="52" y="46" width="70" height="14" rx="4" className="fill-muted" />
+          <rect x="58" y="51" width="34" height="4" rx="2" className="fill-muted-foreground/40" />
+          <circle cx="134" cy="53" r="3" className="fill-success" fillOpacity="0.8" />
+          <rect x="52" y="66" width="70" height="14" rx="4" className="fill-muted/60" />
+          <rect x="58" y="71" width="34" height="4" rx="2" className="fill-muted-foreground/25" />
+          <circle cx="134" cy="73" r="3" className="fill-muted-foreground/30" />
+          <rect x="52" y="86" width="70" height="14" rx="4" className="fill-muted/60" />
+          <rect x="58" y="91" width="24" height="4" rx="2" className="fill-muted-foreground/25" />
+          <circle cx="134" cy="93" r="3" className="fill-muted-foreground/30" />
+          <path
+            d="M150 84 Q 172 82 186 84"
+            className="stroke-muted-foreground/40"
+            strokeWidth="1.5"
+            strokeDasharray="3 3"
+          />
+          <circle cx="208" cy="84" r="22" className="fill-muted/60" />
+          <circle
+            cx="208"
+            cy="84"
+            r="15"
+            className="fill-card stroke-muted-foreground/40"
+            strokeWidth="2"
+            strokeDasharray="4 3"
+          />
+          <path
+            d="M208 77v14M201 84h14"
+            className="stroke-muted-foreground"
+            strokeWidth="2"
+            strokeLinecap="round"
+          />
+          <circle cx="24" cy="56" r="4" className="fill-muted" />
+          <circle cx="32" cy="144" r="6" className="fill-muted/70" />
+          <circle cx="238" cy="38" r="3.5" className="fill-muted" />
+          <circle cx="246" cy="130" r="4.5" className="fill-muted/70" />
+          <rect x="20" y="102" width="5" height="5" rx="1" className="fill-primary/40" />
+          <rect x="226" y="148" width="5" height="5" rx="1" className="fill-primary/30" />
+        </svg>
+      </div>
+
+      <h3 className="mb-2 font-medium text-2xl text-foreground/80 tracking-[-0.2px]">
+        No servers connected
+      </h3>
+      <p className="mx-auto mb-8 max-w-sm text-muted-foreground/70 text-sm leading-relaxed">
+        Connect a server so Codedock can deploy, run, and observe your applications on your own
+        infrastructure.
+      </p>
+
+      <div className="mb-10 flex flex-col items-center justify-center gap-3 sm:flex-row">
         <Link to="/servers/new">
-          <Button className="mt-6 gap-2 px-5">
-            Add server
-            <ArrowRight className="h-4 w-4" />
+          <Button size="lg" className="gap-2 px-6">
+            <Plus className="h-4 w-4" />
+            Add your first server
           </Button>
         </Link>
-        <div className="mt-11">
-          <p className="mb-4 font-medium text-[10px] text-muted-foreground uppercase tracking-[0.16em]">
-            Connected servers provide
-          </p>
-          <div className="grid gap-3 text-left sm:grid-cols-3">
-            {serverCapabilities.map(({ label, detail, icon: Icon }) => (
-              <div key={label} className="rounded-2xl bg-card p-4">
-                <span className="flex h-8 w-8 items-center justify-center rounded-lg bg-muted text-muted-foreground">
-                  <Icon className="h-4 w-4" />
-                </span>
-                <p className="mt-4 font-semibold text-sm">{label}</p>
-                <p className="mt-1 text-muted-foreground text-xs leading-5">{detail}</p>
-              </div>
-            ))}
-          </div>
-        </div>
+        {onAddLocal && (
+          <Button
+            size="lg"
+            variant="secondary"
+            className="gap-2 px-6"
+            onClick={onAddLocal}
+            disabled={addingLocal}
+          >
+            <Cpu className="h-4 w-4" />
+            {addingLocal ? 'Connecting…' : 'Use this machine'}
+          </Button>
+        )}
       </div>
-    </section>
+
+      <div className="mx-auto max-w-2xl">
+        <p className="mb-4 text-muted-foreground/60 text-xs uppercase tracking-wider">
+          What gets configured
+        </p>
+        <div className="grid grid-cols-2 gap-3 text-start sm:grid-cols-4">
+          {capabilities.map((feature) => (
+            <div key={feature.label} className="rounded-xl border border-border/50 bg-card p-4">
+              <div className="mb-3 flex h-8 w-8 items-center justify-center rounded-lg bg-muted">
+                <feature.icon className="h-4 w-4 text-muted-foreground" />
+              </div>
+              <p className="font-medium text-foreground text-sm">{feature.label}</p>
+              <p className="mt-0.5 text-muted-foreground text-xs">{feature.desc}</p>
+            </div>
+          ))}
+        </div>
+        <p className="mt-6 inline-flex items-center gap-1.5 text-muted-foreground/60 text-xs">
+          <ServerIcon className="h-3.5 w-3.5" />
+          Bring any host with SSH access, or start with the local Docker node.
+        </p>
+      </div>
+    </div>
   );
 }

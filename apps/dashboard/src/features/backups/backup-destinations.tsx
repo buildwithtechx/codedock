@@ -1,303 +1,335 @@
-import {
-  AlertTriangle,
-  CheckCircle2,
-  HardDrive,
-  Loader2,
-  Plus,
-  RefreshCw,
-  Star,
-  Trash2,
-} from 'lucide-react';
-import { useState } from 'react';
+import { Link } from '@tanstack/react-router';
+import { HardDrive, Loader2, MoreVertical, Pencil, RefreshCw, Star, Trash2 } from 'lucide-react';
+import { useMemo, useState } from 'react';
 import { toast } from 'sonner';
 import { Button } from '#/components/ui/button';
-import { Card, CardContent } from '#/components/ui/card';
-import { QueryErrorState } from '#/components/ui/query-error-state';
+import {
+  Dialog,
+  DialogContent,
+  DialogDescription,
+  DialogFooter,
+  DialogHeader,
+  DialogTitle,
+} from '#/components/ui/dialog';
+import {
+  DropdownMenu,
+  DropdownMenuContent,
+  DropdownMenuItem,
+  DropdownMenuSeparator,
+  DropdownMenuTrigger,
+} from '#/components/ui/dropdown-menu';
+import { Skeleton } from '#/components/ui/skeleton';
+import type { UnifiedDestination } from './destination-display';
+import {
+  DestinationKindIcon,
+  DestinationLoadError,
+  DestinationVerificationBadge,
+  formatBytes,
+  kindLabel,
+  toUnifiedS3,
+  toUnifiedSftp,
+} from './destination-display';
+import { DestinationModal } from './destination-modal';
 import {
   useDeleteS3Destination,
-  useList,
-  useListS3Destinations,
+  useDeleteSFTPDestination,
   useSetDefaultS3Destination,
   useVerifyS3Destination,
-} from '#/features/backups';
+  useVerifySFTPDestination,
+} from './hooks';
+import type { BackupRecord, S3Destination, SFTPDestination } from './interfaces';
 
-type BackupDestinationsProps = {
+export function BackupDestinations({
+  s3,
+  sftp,
+  records,
+  isLoading,
+  loadError,
+  onRetry,
+  retrying,
+  onChanged,
+  onAddDestination,
+}: {
+  s3: S3Destination[];
+  sftp: SFTPDestination[];
+  records: BackupRecord[];
+  isLoading: boolean;
+  loadError: string | null;
+  onRetry: () => void;
+  retrying: boolean;
+  onChanged: () => void;
   onAddDestination: () => void;
-};
+}) {
+  const [verifyingIds, setVerifyingIds] = useState<Set<string>>(new Set());
+  const [editing, setEditing] = useState<S3Destination | null>(null);
+  const [deleting, setDeleting] = useState<UnifiedDestination | null>(null);
+  const [deleteBusy, setDeleteBusy] = useState(false);
 
-export function BackupDestinations({ onAddDestination }: BackupDestinationsProps) {
-  const { data: s3Destinations, isLoading, isError, refetch } = useListS3Destinations();
-  const { data: backupConfigs } = useList();
-  const deleteS3Dest = useDeleteS3Destination();
-  const verifyS3Dest = useVerifyS3Destination();
-  const setDefaultDest = useSetDefaultS3Destination();
+  const verifyS3 = useVerifyS3Destination();
+  const verifySftp = useVerifySFTPDestination();
+  const setDefault = useSetDefaultS3Destination();
+  const deleteS3 = useDeleteS3Destination();
+  const deleteSftp = useDeleteSFTPDestination();
 
-  const [verifyingIds, setVerifyingIds] = useState<Record<string, 'loading' | 'success' | 'error'>>(
-    {}
+  const s3ById = useMemo(
+    () => new Map(s3.map((destination) => [destination.id, destination])),
+    [s3]
   );
+  const items = useMemo<UnifiedDestination[]>(
+    () =>
+      [...s3.map(toUnifiedS3), ...sftp.map(toUnifiedSftp)].sort((a, b) =>
+        a.name.localeCompare(b.name)
+      ),
+    [s3, sftp]
+  );
+  const statsByDestination = useMemo(() => {
+    const stats = new Map<
+      string,
+      { bytes: number; runs: number; active: number; failed: number }
+    >();
+    for (const record of records) {
+      const id = record.s3DestinationId || record.sftpDestinationId;
+      if (!id) continue;
+      const entry = stats.get(id) ?? { bytes: 0, runs: 0, active: 0, failed: 0 };
+      entry.runs += 1;
+      if (record.status === 'completed') entry.bytes += record.fileSizeBytes || 0;
+      if (record.status === 'running') entry.active += 1;
+      if (record.status === 'failed') entry.failed += 1;
+      stats.set(id, entry);
+    }
+    return stats;
+  }, [records]);
 
-  const list = s3Destinations?.data || [];
-
-  const handleVerify = async (id: string, name: string) => {
-    setVerifyingIds((prev) => ({ ...prev, [id]: 'loading' }));
+  const handleVerify = async (row: UnifiedDestination) => {
+    setVerifyingIds((previous) => new Set(previous).add(row.id));
     try {
-      const res = await verifyS3Dest.mutateAsync(id);
-      if (res.data?.ok) {
-        setVerifyingIds((prev) => ({ ...prev, [id]: 'success' }));
-        toast.success(`Storage "${name}" verified successfully`);
-      } else {
-        setVerifyingIds((prev) => ({ ...prev, [id]: 'error' }));
-        toast.error(`Verification failed: ${res.data?.reason || 'Could not connect to S3'}`);
-      }
-    } catch (err) {
-      setVerifyingIds((prev) => ({ ...prev, [id]: 'error' }));
-      toast.error(err instanceof Error ? err.message : 'Verification failed');
+      const res =
+        row.kind === 's3'
+          ? await verifyS3.mutateAsync(row.id)
+          : await verifySftp.mutateAsync(row.id);
+      if (res.data?.ok) toast.success(`"${row.name}" verified successfully`);
+      else toast.error(res.data?.reason || 'Verification failed');
+    } catch (error) {
+      toast.error(error instanceof Error ? error.message : 'Verification failed');
+    } finally {
+      setVerifyingIds((previous) => {
+        const next = new Set(previous);
+        next.delete(row.id);
+        return next;
+      });
+      onChanged();
     }
   };
 
-  const handleSetDefault = async (id: string, name: string) => {
+  const handleSetDefault = async (row: UnifiedDestination) => {
     try {
-      await setDefaultDest.mutateAsync(id);
-      toast.success(`"${name}" is now the default storage destination`);
+      await setDefault.mutateAsync(row.id);
+      toast.success(`"${row.name}" is now the default destination`);
+      onChanged();
     } catch (error) {
       toast.error(error instanceof Error ? error.message : 'Failed to set default destination');
     }
   };
 
-  const handleDelete = async (id: string, name: string) => {
-    const isReferenced = backupConfigs?.data?.some((c) => c.s3DestinationId === id);
-    if (isReferenced) {
-      toast.error(`Cannot delete "${name}": it is currently referenced by a backup policy.`);
-      return;
-    }
-
-    if (
-      !window.confirm(
-        `Are you sure you want to delete storage destination "${name}"? This action cannot be undone.`
-      )
-    ) {
-      return;
-    }
-
+  const confirmDelete = async () => {
+    if (!deleting) return;
+    setDeleteBusy(true);
     try {
-      await deleteS3Dest.mutateAsync({ id, projectId: 'global' });
-      toast.success('Storage destination deleted');
+      if (deleting.kind === 's3') {
+        await deleteS3.mutateAsync({ id: deleting.id, projectId: 'global' });
+      } else {
+        await deleteSftp.mutateAsync(deleting.id);
+      }
+      toast.success(`Destination "${deleting.name}" deleted`);
+      setDeleting(null);
+      onChanged();
     } catch (error) {
-      toast.error(error instanceof Error ? error.message : 'Failed to delete storage destination');
+      toast.error(error instanceof Error ? error.message : 'Failed to delete destination');
+    } finally {
+      setDeleteBusy(false);
     }
   };
-
-  const getProviderLogo = (provider: string) => {
-    const p = provider.toLowerCase();
-    if (p.includes('r2') || p.includes('cloudflare')) {
-      return '/dns-providers/cloudflare.svg';
-    }
-    if (p.includes('aws') || p.includes('s3') || p.includes('amazon')) {
-      return '/provider-logos/aws.svg';
-    }
-    if (p.includes('gcp') || p.includes('google')) {
-      return '/provider-logos/gcp.svg';
-    }
-    if (p.includes('digitalocean') || p.includes('spaces')) {
-      return '/provider-logos/digitalocean.svg';
-    }
-    return null;
-  };
-
-  if (isLoading) {
-    return (
-      <div className="flex min-h-[16rem] items-center justify-center">
-        <Loader2 className="h-6 w-6 animate-spin text-muted-foreground" />
-      </div>
-    );
-  }
-
-  if (isError) {
-    return (
-      <QueryErrorState
-        title="Storage destinations are unavailable"
-        description="Could not load configured backup storage destinations."
-        onRetry={() => void refetch()}
-      />
-    );
-  }
 
   return (
-    <section className="space-y-4">
-      <div className="flex items-center justify-between">
-        <div>
-          <h2 className="font-semibold text-base text-foreground">Storage destinations</h2>
-          <p className="mt-0.5 text-muted-foreground text-xs">
-            S3-compatible object storage targets for automated snapshots.
-          </p>
-        </div>
-        <Button size="sm" onClick={onAddDestination} className="gap-1.5">
-          <Plus className="h-4 w-4" />
-          Add destination
-        </Button>
+    <section aria-label="Destinations" className="rounded-2xl border border-border/50 bg-card">
+      <div className="px-5 py-4">
+        <h2 className="font-medium text-base">Destinations</h2>
+        <p className="mt-1 text-muted-foreground text-sm">
+          S3-compatible buckets and SFTP servers holding off-server snapshots.
+        </p>
       </div>
 
-      {list.length === 0 ? (
-        <Card className="border-border/60 bg-card">
-          <CardContent className="flex flex-col items-center justify-center py-12 text-center">
-            <div className="flex h-12 w-12 items-center justify-center rounded-2xl bg-muted text-muted-foreground">
-              <HardDrive className="h-6 w-6" />
-            </div>
-            <h3 className="mt-4 font-semibold text-base text-foreground">
-              No storage destinations
-            </h3>
-            <p className="mt-1 max-w-sm text-muted-foreground text-xs leading-5">
-              Connect Cloudflare R2, AWS S3, MinIO, or DigitalOcean Spaces to store snapshots
-              off-server.
-            </p>
-            <Button size="sm" className="mt-5 gap-1.5" onClick={onAddDestination}>
-              <Plus className="h-4 w-4" />
-              Connect first destination
-            </Button>
-          </CardContent>
-        </Card>
-      ) : (
-        <div className="grid gap-4 sm:grid-cols-2">
-          {list.map((dest) => {
-            const logo = getProviderLogo(dest.provider);
-            const verifyState = verifyingIds[dest.id];
-            const isVerified =
-              verifyState === 'success' ||
-              (!verifyState && Boolean(dest.lastVerifiedAt) && !dest.lastVerifyError);
-            const isFailed =
-              verifyState === 'error' || (!verifyState && Boolean(dest.lastVerifyError));
-
-            return (
-              <div
-                key={dest.id}
-                className="flex flex-col justify-between rounded-2xl border border-border/60 bg-card p-5 shadow-sm transition-colors hover:border-border"
-              >
-                <div>
-                  <div className="flex items-start justify-between gap-3">
-                    <div className="flex items-center gap-3">
-                      <div className="flex h-10 w-10 shrink-0 items-center justify-center rounded-xl border border-border/60 bg-muted/60">
-                        {logo ? (
-                          <img src={logo} alt={dest.provider} className="h-5 w-5 object-contain" />
-                        ) : (
-                          <HardDrive className="h-5 w-5 text-muted-foreground" />
-                        )}
-                      </div>
-                      <div>
-                        <h3 className="font-semibold text-foreground text-sm">{dest.name}</h3>
-                        <p className="font-mono text-muted-foreground text-xs uppercase">
-                          {dest.provider}
-                        </p>
-                      </div>
-                    </div>
-
-                    <div className="flex items-center gap-1.5">
-                      {dest.isDefault && (
-                        <span className="flex items-center gap-1 rounded-full bg-amber-500/10 px-2 py-0.5 font-medium text-amber-500 text-xs">
-                          <Star className="h-3 w-3 fill-amber-500" /> Default
-                        </span>
-                      )}
-                      {isVerified && (
-                        <span
-                          className="flex items-center gap-1 rounded-full bg-emerald-500/10 px-2 py-0.5 font-medium text-emerald-500 text-xs"
-                          title={
-                            dest.lastVerifiedAt
-                              ? `Verified ${new Date(dest.lastVerifiedAt).toLocaleString()}`
-                              : 'Verified'
-                          }
-                        >
-                          <CheckCircle2 className="h-3 w-3" /> Verified
-                        </span>
-                      )}
-                      {isFailed && (
-                        <span
-                          className="flex items-center gap-1 rounded-full bg-rose-500/10 px-2 py-0.5 font-medium text-rose-500 text-xs"
-                          title={dest.lastVerifyError || 'Verification failed'}
-                        >
-                          <AlertTriangle className="h-3 w-3" /> Failed
-                        </span>
-                      )}
-                    </div>
-                  </div>
-
-                  {dest.description && (
-                    <p className="mt-3 text-muted-foreground text-xs leading-5">
-                      {dest.description}
-                    </p>
-                  )}
-
-                  <dl className="mt-4 space-y-1.5 border-border/40 border-t pt-3 font-mono text-xs">
-                    <div className="flex justify-between">
-                      <dt className="text-muted-foreground">Bucket</dt>
-                      <dd className="font-medium text-foreground">{dest.bucket}</dd>
-                    </div>
-                    {dest.pathPrefix && (
-                      <div className="flex justify-between">
-                        <dt className="text-muted-foreground">Prefix</dt>
-                        <dd className="font-medium text-foreground">{dest.pathPrefix}</dd>
-                      </div>
-                    )}
-                    <div className="flex justify-between">
-                      <dt className="text-muted-foreground">Region</dt>
-                      <dd className="text-muted-foreground">{dest.region || 'auto'}</dd>
-                    </div>
-                    <div className="flex justify-between">
-                      <dt className="text-muted-foreground">Endpoint</dt>
-                      <dd
-                        className="max-w-[14rem] truncate text-muted-foreground"
-                        title={dest.endpoint}
-                      >
-                        {dest.endpoint}
-                      </dd>
-                    </div>
-                  </dl>
-                </div>
-
-                <div className="mt-5 flex items-center justify-between border-border/40 border-t pt-3">
-                  <div className="flex items-center gap-2">
-                    <Button
-                      variant="outline"
-                      size="sm"
-                      className="h-8 text-xs"
-                      onClick={() => handleVerify(dest.id, dest.name)}
-                      disabled={verifyState === 'loading'}
-                    >
-                      {verifyState === 'loading' ? (
-                        <Loader2 className="mr-1.5 h-3.5 w-3.5 animate-spin" />
-                      ) : (
-                        <RefreshCw className="mr-1.5 h-3.5 w-3.5" />
-                      )}
-                      Test connection
-                    </Button>
-                    {!dest.isDefault && (
-                      <Button
-                        variant="ghost"
-                        size="sm"
-                        className="h-8 text-xs"
-                        onClick={() => handleSetDefault(dest.id, dest.name)}
-                        disabled={setDefaultDest.isPending}
-                        title="Set as default destination"
-                      >
-                        <Star className="mr-1.5 h-3.5 w-3.5" />
-                        Set default
-                      </Button>
-                    )}
-                  </div>
-
-                  <Button
-                    variant="ghost"
-                    size="sm"
-                    className="h-8 text-destructive hover:bg-destructive/10 hover:text-destructive"
-                    onClick={() => handleDelete(dest.id, dest.name)}
-                  >
-                    <Trash2 className="mr-1 h-3.5 w-3.5" />
-                    Delete
-                  </Button>
-                </div>
-              </div>
-            );
-          })}
+      {loadError && (
+        <div className="px-5">
+          <DestinationLoadError message={loadError} onRetry={onRetry} busy={retrying} />
         </div>
       )}
+
+      {isLoading ? (
+        <div aria-busy="true" className="space-y-3 px-5 pb-5">
+          {[0, 1].map((row) => (
+            <Skeleton key={row} className="h-20 w-full" />
+          ))}
+        </div>
+      ) : items.length === 0 ? (
+        <div className="flex items-center gap-4 px-5 pb-6">
+          <div className="flex h-11 w-11 shrink-0 items-center justify-center rounded-xl bg-muted/50 text-muted-foreground">
+            <HardDrive className="h-5 w-5" />
+          </div>
+          <div className="min-w-0 flex-1">
+            <p className="font-medium text-sm">No storage destinations</p>
+            <p className="mt-1 text-muted-foreground text-sm">
+              Connect R2, S3, MinIO, or an SFTP server to store snapshots off-server.
+            </p>
+          </div>
+          <Button size="sm" onClick={onAddDestination} className="shrink-0">
+            Connect first destination
+          </Button>
+        </div>
+      ) : (
+        <ul className="divide-y divide-border/40 border-border/40 border-t">
+          {items.map((row) => {
+            const stats = statsByDestination.get(row.id);
+            const verifying = verifyingIds.has(row.id);
+            const s3Destination = row.kind === 's3' ? s3ById.get(row.id) : undefined;
+            return (
+              <li
+                key={`${row.kind}-${row.id}`}
+                className="group relative flex items-start gap-3 px-5 py-4 transition-colors last:rounded-b-2xl hover:bg-muted/20"
+              >
+                <Link
+                  to="/backups/$backupId"
+                  params={{ backupId: row.id }}
+                  aria-label={row.name}
+                  className="absolute inset-0 z-0 rounded-xl focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring"
+                />
+                <div className="mt-0.5 flex h-10 w-10 shrink-0 items-center justify-center rounded-xl bg-muted/50 text-muted-foreground">
+                  <DestinationKindIcon kind={row.kind} className="h-5 w-5" />
+                </div>
+                <div className="min-w-0 flex-1">
+                  <div className="flex flex-wrap items-center gap-2">
+                    <p className="truncate font-medium text-foreground text-sm">{row.name}</p>
+                    {row.isDefault && (
+                      <span className="inline-flex items-center gap-1 text-muted-foreground text-xs">
+                        <Star className="h-3 w-3" />
+                        Default
+                      </span>
+                    )}
+                    <DestinationVerificationBadge destination={row} verifying={verifying} />
+                  </div>
+                  <p className="mt-1 truncate text-muted-foreground text-xs" title={row.detail}>
+                    {kindLabel(row.kind)} · {row.detail}
+                  </p>
+                  <div className="mt-1.5 flex flex-wrap items-center gap-x-2 gap-y-1 text-muted-foreground text-xs">
+                    {stats && stats.runs > 0 ? (
+                      <>
+                        <span>
+                          {formatBytes(stats.bytes)} stored · {stats.runs} runs
+                        </span>
+                        {stats.active > 0 && (
+                          <span className="text-sky-500">· {stats.active} active</span>
+                        )}
+                        {stats.failed > 0 && (
+                          <span className="text-destructive">· {stats.failed} failed</span>
+                        )}
+                      </>
+                    ) : (
+                      <span>No runs yet</span>
+                    )}
+                  </div>
+                  {row.lastVerifyError && (
+                    <p
+                      className="mt-1 truncate text-destructive text-xs"
+                      title={row.lastVerifyError}
+                    >
+                      {row.lastVerifyError}
+                    </p>
+                  )}
+                </div>
+                <div className="relative z-10 flex shrink-0 items-center gap-1">
+                  <Button
+                    variant="ghost"
+                    size="icon"
+                    onClick={() => void handleVerify(row)}
+                    disabled={verifying}
+                    title="Verify connection"
+                    aria-label={`Verify connection: ${row.name}`}
+                  >
+                    {verifying ? (
+                      <Loader2 className="h-4 w-4 animate-spin" />
+                    ) : (
+                      <RefreshCw className="h-4 w-4" />
+                    )}
+                  </Button>
+                  <DropdownMenu>
+                    <DropdownMenuTrigger asChild>
+                      <Button variant="ghost" size="icon" aria-label={`Actions: ${row.name}`}>
+                        <MoreVertical className="h-4 w-4" />
+                      </Button>
+                    </DropdownMenuTrigger>
+                    <DropdownMenuContent align="end">
+                      {s3Destination && (
+                        <DropdownMenuItem onClick={() => setEditing(s3Destination)}>
+                          <Pencil className="h-4 w-4" />
+                          Edit
+                        </DropdownMenuItem>
+                      )}
+                      {row.kind === 's3' && !row.isDefault && (
+                        <DropdownMenuItem onClick={() => void handleSetDefault(row)}>
+                          <Star className="h-4 w-4" />
+                          Set as default
+                        </DropdownMenuItem>
+                      )}
+                      {(s3Destination || (row.kind === 's3' && !row.isDefault)) && (
+                        <DropdownMenuSeparator />
+                      )}
+                      <DropdownMenuItem variant="destructive" onClick={() => setDeleting(row)}>
+                        <Trash2 className="h-4 w-4" />
+                        Delete
+                      </DropdownMenuItem>
+                    </DropdownMenuContent>
+                  </DropdownMenu>
+                </div>
+              </li>
+            );
+          })}
+        </ul>
+      )}
+
+      <DestinationModal
+        open={editing !== null}
+        onOpenChange={(open) => !open && setEditing(null)}
+        editing={editing}
+        onSaved={onChanged}
+      />
+
+      <Dialog
+        open={deleting !== null}
+        onOpenChange={(open) => !open && !deleteBusy && setDeleting(null)}
+      >
+        <DialogContent>
+          <DialogHeader>
+            <DialogTitle>Delete "{deleting?.name}"?</DialogTitle>
+            <DialogDescription>
+              The destination is removed from Codedock. Snapshots already stored there are left
+              untouched, but policies pointing at it stop working.
+            </DialogDescription>
+          </DialogHeader>
+          <DialogFooter>
+            <Button variant="outline" onClick={() => setDeleting(null)} disabled={deleteBusy}>
+              Cancel
+            </Button>
+            <Button variant="destructive" onClick={confirmDelete} disabled={deleteBusy}>
+              {deleteBusy ? (
+                <Loader2 className="h-4 w-4 animate-spin" />
+              ) : (
+                <Trash2 className="h-4 w-4" />
+              )}
+              Delete destination
+            </Button>
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
     </section>
   );
 }

@@ -41,13 +41,13 @@ export function GithubIntegration() {
         { code },
         {
           onSuccess: () => {
-            navigate({ to: '/settings', search: { tab: 'sources' } as never, replace: true });
+            navigate({ to: '/settings', search: { tab: 'git' } as never, replace: true });
             toast.success('GitHub App connected successfully!');
             setIsEditing(false);
             setEditingApp(null);
           },
           onError: (err) => {
-            navigate({ to: '/settings', search: { tab: 'sources' } as never, replace: true });
+            navigate({ to: '/settings', search: { tab: 'git' } as never, replace: true });
             toast.error(err.message || 'Failed to connect GitHub App');
           },
         }

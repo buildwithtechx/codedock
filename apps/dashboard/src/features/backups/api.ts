@@ -5,10 +5,18 @@ import type {
   CreateBackupResponse,
   CreateS3DestinationRequest,
   CreateS3DestinationResponse,
+  CreateSFTPDestinationRequest,
+  CreateSFTPDestinationResponse,
   GetBackupResponse,
   ListBackupRecordsResponse,
   ListBackupsResponse,
   ListS3DestinationsResponse,
+  ListSFTPDestinationsResponse,
+  RestoreOperationResponse,
+  RestoreReviewResponse,
+  UpdateS3DestinationRequest,
+  UpdateS3DestinationResponse,
+  VerifySFTPDestinationResponse,
 } from './interfaces';
 
 export const backupsService = {
@@ -144,6 +152,90 @@ export const backupsService = {
   triggerDatabaseBackup: async (databaseId: string): Promise<void> => {
     try {
       await apiClient.post(`/databases/${databaseId}/backups`);
+    } catch (error) {
+      throw handleApiError(error);
+    }
+  },
+
+  updateS3Destination: async (
+    id: string,
+    payload: UpdateS3DestinationRequest
+  ): Promise<UpdateS3DestinationResponse> => {
+    try {
+      return await apiClient.put<UpdateS3DestinationResponse>(`/s3-destinations/${id}`, payload);
+    } catch (error) {
+      throw handleApiError(error);
+    }
+  },
+
+  listSFTPDestinations: async (projectId?: string): Promise<ListSFTPDestinationsResponse> => {
+    try {
+      const query = projectId ? `?projectId=${encodeURIComponent(projectId)}` : '';
+      return await apiClient.get<ListSFTPDestinationsResponse>(`/sftp-destinations${query}`);
+    } catch (error) {
+      throw handleApiError(error);
+    }
+  },
+
+  createSFTPDestination: async (
+    payload: CreateSFTPDestinationRequest
+  ): Promise<CreateSFTPDestinationResponse> => {
+    try {
+      return await apiClient.post<CreateSFTPDestinationResponse>('/sftp-destinations', payload);
+    } catch (error) {
+      throw handleApiError(error);
+    }
+  },
+
+  verifySFTPDestination: async (id: string): Promise<VerifySFTPDestinationResponse> => {
+    try {
+      return await apiClient.post<VerifySFTPDestinationResponse>(`/sftp-destinations/${id}/verify`);
+    } catch (error) {
+      throw handleApiError(error);
+    }
+  },
+
+  deleteSFTPDestination: async (id: string): Promise<void> => {
+    try {
+      await apiClient.delete(`/sftp-destinations/${id}`);
+    } catch (error) {
+      throw handleApiError(error);
+    }
+  },
+
+  prepareRestore: async (
+    recordId: string,
+    targetDatabaseId?: string
+  ): Promise<RestoreReviewResponse> => {
+    try {
+      return await apiClient.post<RestoreReviewResponse>(
+        `/backup-records/${recordId}/restore/review`,
+        { targetDatabaseId: targetDatabaseId ?? '' }
+      );
+    } catch (error) {
+      throw handleApiError(error);
+    }
+  },
+
+  getOperation: async (operationId: string): Promise<RestoreOperationResponse> => {
+    try {
+      return await apiClient.get<RestoreOperationResponse>(`/operations/${operationId}`);
+    } catch (error) {
+      throw handleApiError(error);
+    }
+  },
+
+  applyRestore: async (operationId: string, confirmation: string): Promise<void> => {
+    try {
+      await apiClient.post(`/backup-operations/${operationId}/apply`, { confirmation });
+    } catch (error) {
+      throw handleApiError(error);
+    }
+  },
+
+  cancelRestore: async (operationId: string): Promise<void> => {
+    try {
+      await apiClient.post(`/operations/${operationId}/cancel`);
     } catch (error) {
       throw handleApiError(error);
     }

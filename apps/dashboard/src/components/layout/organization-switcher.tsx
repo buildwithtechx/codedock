@@ -57,6 +57,7 @@ export function OrganizationSwitcher({ collapsed }: { collapsed: boolean }) {
             collapsed ? 'justify-center p-2' : 'gap-2.5 px-2 py-2'
           }`}
           aria-label={`Switch organization. Current organization: ${selected.name}`}
+          title={collapsed ? selected.name : undefined}
         >
           <div className="flex h-8 w-8 shrink-0 items-center justify-center rounded-lg bg-primary/15 font-semibold text-[11px] text-primary">
             {organizationInitials(selected.name) || <Building2 className="h-4 w-4" />}
@@ -67,8 +68,10 @@ export function OrganizationSwitcher({ collapsed }: { collapsed: boolean }) {
                 <p className="truncate font-medium text-sidebar-foreground text-sm">
                   {selected.name}
                 </p>
-                <p className="mt-0.5 text-[10px] text-sidebar-foreground/45 uppercase tracking-[0.14em]">
-                  Workspace
+                <p className="truncate text-muted-foreground text-xs">
+                  {organizations.length > 1
+                    ? `${organizations.length} workspaces`
+                    : (user?.email ?? 'Workspace')}
                 </p>
               </div>
               <ChevronsUpDown className="h-4 w-4 shrink-0 text-sidebar-foreground/40 transition-colors group-hover:text-sidebar-foreground/70" />
@@ -83,7 +86,7 @@ export function OrganizationSwitcher({ collapsed }: { collapsed: boolean }) {
         collisionPadding={16}
       >
         <DropdownMenuLabel className="px-2.5 pt-1.5 pb-2 font-medium text-[10px] uppercase tracking-[0.14em]">
-          Switch workspace
+          Switch organization
         </DropdownMenuLabel>
         {organizations.map((organization) => (
           <DropdownMenuItem

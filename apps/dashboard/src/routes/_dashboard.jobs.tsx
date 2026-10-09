@@ -1,34 +1,38 @@
-import { useQueries } from '@tanstack/react-query';
-import { createFileRoute } from '@tanstack/react-router';
-import { Calendar, Clock, Loader2 } from 'lucide-react';
-import { useState } from 'react';
+import { useQueries, useQueryClient } from '@tanstack/react-query';
+import { createFileRoute, Link, useNavigate } from '@tanstack/react-router';
+import { Loader2, Plus, Search } from 'lucide-react';
+import { useMemo, useState } from 'react';
 import { PageHeader } from '#/components/layout/page-header';
-import { Card, CardContent, CardHeader, CardTitle } from '#/components/ui/card';
+import { Button } from '#/components/ui/button';
 import { QueryErrorState } from '#/components/ui/query-error-state';
-import {
-  Select,
-  SelectContent,
-  SelectItem,
-  SelectTrigger,
-  SelectValue,
-} from '#/components/ui/select';
-import {
-  Table,
-  TableBody,
-  TableCell,
-  TableHead,
-  TableHeader,
-  TableRow,
-} from '#/components/ui/table';
+import { jobsApi } from '#/features/jobs/api';
+import { JobCard } from '#/features/jobs/job-card';
+import { isFailedStatus } from '#/features/jobs/job-format';
+import { JobOutputDialog } from '#/features/jobs/job-output-dialog';
+import { JobsEmptyState } from '#/features/jobs/jobs-empty-state';
+import { type JobStatusFilter, JobsOverview } from '#/features/jobs/jobs-overview';
 import { useListAllProjects } from '#/features/projects';
-import { scheduledTasksService } from '#/services/scheduled-tasks';
+import type { Job } from '#/features/services';
 
 export const Route = createFileRoute('/_dashboard/jobs')({
   component: JobsPage,
 });
 
+function matchesStatus(job: Job, filter: JobStatusFilter): boolean {
+  if (filter === 'all') return true;
+  if (filter === 'running') return job.status === 'running';
+  if (filter === 'failed') return isFailedStatus(job.status);
+  if (filter === 'scheduled') return job.status !== 'inactive';
+  return job.status === 'inactive';
+}
+
 export function JobsPage() {
-  const [selectedProjectId, setSelectedProjectId] = useState('all');
+  const queryClient = useQueryClient();
+  const navigate = useNavigate();
+  const [query, setQuery] = useState('');
+  const [statusFilter, setStatusFilter] = useState<JobStatusFilter>('all');
+  const [outputJob, setOutputJob] = useState<Job | null>(null);
+
   const {
     data: projectsResponse,
     isLoading: isLoadingProjects,
@@ -36,21 +40,49 @@ export function JobsPage() {
     refetch: refetchProjects,
   } = useListAllProjects();
   const projects = projectsResponse || [];
-  const visibleProjects =
-    selectedProjectId === 'all'
-      ? projects
-      : projects.filter((project) => project.id === selectedProjectId);
+  const projectNames = new Map(projects.map((project) => [project.id, project.name]));
+
   const taskQueries = useQueries({
-    queries: visibleProjects.map((project) => ({
+    queries: projects.map((project) => ({
       queryKey: ['scheduled-tasks', 'project', project.id],
-      queryFn: () => scheduledTasksService.listByProject(project.id),
+      queryFn: () => jobsApi.listByProject(project.id),
     })),
   });
   const isLoadingTasks = taskQueries.some((query) => query.isLoading);
   const failedQueries = taskQueries.flatMap((query, index) =>
-    query.isError ? [{ query, project: visibleProjects[index] }] : []
+    query.isError ? [{ query, project: projects[index] }] : []
   );
   const tasks = taskQueries.flatMap((query) => query.data?.data || []);
+  const loading = isLoadingProjects || (isLoadingTasks && tasks.length === 0);
+
+  const refresh = () => {
+    void queryClient.invalidateQueries({ queryKey: ['scheduled-tasks'] });
+  };
+
+  const q = query.trim().toLowerCase();
+  const visible = tasks.filter(
+    (job) => (!q || job.name.toLowerCase().includes(q)) && matchesStatus(job, statusFilter)
+  );
+  const counts: Record<JobStatusFilter, number> = {
+    all: tasks.length,
+    running: tasks.filter((job) => job.status === 'running').length,
+    failed: tasks.filter((job) => isFailedStatus(job.status)).length,
+    scheduled: tasks.filter((job) => job.status !== 'inactive').length,
+    disabled: tasks.filter((job) => job.status === 'inactive').length,
+  };
+  const showEmpty = tasks.length === 0 && statusFilter === 'all' && !q;
+
+  const grouped = useMemo(() => {
+    const map = new Map<string, Job[]>();
+    for (const job of visible) {
+      const key = job.projectId ?? '';
+      const list = map.get(key) ?? [];
+      list.push(job);
+      map.set(key, list);
+    }
+    return map;
+  }, [visible]);
+
   if (projectsError) {
     return (
       <QueryErrorState
@@ -66,36 +98,40 @@ export function JobsPage() {
 
   return (
     <div className="space-y-6">
-      <PageHeader
-        title="Jobs"
-        description="Manage and monitor scheduled tasks, cron schedules, and maintenance jobs."
-      />
+      <div className="flex flex-wrap items-center justify-between gap-4">
+        <PageHeader
+          title="Jobs"
+          description="Schedule recurring commands on your services and track every run."
+        />
+        <Button asChild>
+          <Link to="/jobs/new">
+            <Plus className="size-4" />
+            New job
+          </Link>
+        </Button>
+      </div>
 
-      <Card className="border-border/80 bg-card shadow-sm">
-        <CardHeader className="flex flex-row items-center justify-between space-y-0 border-border/70 border-b">
-          <div className="flex items-center gap-2">
-            <Clock className="h-4 w-4 text-primary" />
-            <CardTitle>Scheduled jobs & cron tasks</CardTitle>
+      {loading ? (
+        <div className="flex items-center justify-center py-20">
+          <Loader2 className="size-5 animate-spin text-muted-foreground" />
+        </div>
+      ) : showEmpty ? (
+        <JobsEmptyState onCreate={() => navigate({ to: '/jobs/new' })} />
+      ) : (
+        <>
+          <div className="relative max-w-md">
+            <Search className="pointer-events-none absolute top-1/2 left-3.5 size-4 -translate-y-1/2 text-muted-foreground" />
+            <input
+              type="text"
+              value={query}
+              onChange={(event) => setQuery(event.target.value)}
+              placeholder="Search jobs…"
+              className="w-full rounded-xl border border-border/50 bg-card py-2.5 ps-10 pe-4 text-foreground text-sm transition-all placeholder:text-muted-foreground focus:border-primary/20 focus:outline-none focus:ring-2 focus:ring-primary/20"
+            />
           </div>
-          <div className="w-52">
-            <Select value={selectedProjectId} onValueChange={setSelectedProjectId}>
-              <SelectTrigger>
-                <SelectValue placeholder="All Projects" />
-              </SelectTrigger>
-              <SelectContent>
-                <SelectItem value="all">All Projects</SelectItem>
-                {projects.map((project: { id: string; name: string }) => (
-                  <SelectItem key={project.id} value={project.id}>
-                    {project.name}
-                  </SelectItem>
-                ))}
-              </SelectContent>
-            </Select>
-          </div>
-        </CardHeader>
-        <CardContent>
+
           {failedQueries.length > 0 && (
-            <div role="alert" className="mb-4 rounded-lg border p-3 text-sm">
+            <div role="alert" className="rounded-lg border p-3 text-sm">
               <p>
                 Could not load jobs for{' '}
                 {failedQueries.map(({ project }) => project.name).join(', ')}.
@@ -111,53 +147,42 @@ export function JobsPage() {
               </button>
             </div>
           )}
-          {isLoadingTasks && tasks.length > 0 && (
-            <p role="status" className="mb-3 text-muted-foreground text-sm">
-              Loading more jobs...
-            </p>
-          )}
-          {isLoadingProjects ||
-          (isLoadingTasks && tasks.length === 0 && failedQueries.length === 0) ? (
-            <div className="flex justify-center p-12">
-              <Loader2 className="h-8 w-8 animate-spin text-muted-foreground" />
+
+          <div className="grid grid-cols-1 gap-6 lg:grid-cols-[1fr_340px]">
+            <div className="min-w-0 space-y-8">
+              {visible.length === 0 ? (
+                <div className="rounded-2xl border border-border/50 bg-card px-5 py-12 text-center text-muted-foreground text-sm">
+                  No jobs match this filter.
+                </div>
+              ) : (
+                [...grouped.entries()].map(([projectId, jobs]) => (
+                  <section key={projectId || 'unknown'} className="space-y-3">
+                    <h2 className="font-semibold text-[13px] text-muted-foreground/70 uppercase tracking-wide">
+                      {projectNames.get(projectId) ?? 'Other jobs'}
+                    </h2>
+                    <div className="space-y-3">
+                      {jobs.map((job) => (
+                        <JobCard
+                          key={job.id}
+                          job={job}
+                          onChanged={refresh}
+                          onViewOutput={setOutputJob}
+                        />
+                      ))}
+                    </div>
+                  </section>
+                ))
+              )}
             </div>
-          ) : tasks.length === 0 ? (
-            <div className="flex flex-col items-center justify-center p-12 text-center text-muted-foreground">
-              <Calendar className="mb-4 h-8 w-8 opacity-20" />
-              <p>No scheduled tasks found.</p>
+
+            <div className="space-y-4 lg:sticky lg:top-6 lg:self-start">
+              <JobsOverview counts={counts} active={statusFilter} onSelect={setStatusFilter} />
             </div>
-          ) : (
-            <Table>
-              <TableHeader>
-                <TableRow>
-                  <TableHead>Name</TableHead>
-                  <TableHead>Schedule</TableHead>
-                  <TableHead>Command</TableHead>
-                  <TableHead>Status</TableHead>
-                  <TableHead>Last Run</TableHead>
-                </TableRow>
-              </TableHeader>
-              <TableBody>
-                {tasks.map((task) => (
-                  <TableRow key={task.id}>
-                    <TableCell className="font-medium">{task.name}</TableCell>
-                    <TableCell>{task.schedule}</TableCell>
-                    <TableCell className="font-mono text-xs">{task.command}</TableCell>
-                    <TableCell>
-                      <span className="inline-flex items-center rounded-full bg-muted px-2 py-0.5 font-medium text-xs capitalize">
-                        {task.status}
-                      </span>
-                    </TableCell>
-                    <TableCell>
-                      {task.lastRunAt ? new Date(task.lastRunAt).toLocaleString() : 'Never'}
-                    </TableCell>
-                  </TableRow>
-                ))}
-              </TableBody>
-            </Table>
-          )}
-        </CardContent>
-      </Card>
+          </div>
+        </>
+      )}
+
+      <JobOutputDialog job={outputJob} onClose={() => setOutputJob(null)} />
     </div>
   );
 }

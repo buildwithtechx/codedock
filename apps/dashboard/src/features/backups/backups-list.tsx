@@ -1,181 +1,144 @@
 import { useSearch } from '@tanstack/react-router';
-import { Clock, HardDrive, History, Plus, RefreshCw } from 'lucide-react';
-import { useEffect, useState } from 'react';
+import { Plus, RefreshCw } from 'lucide-react';
+import { useEffect, useMemo, useState } from 'react';
 import { toast } from 'sonner';
-import { PageHeader } from '#/components/layout/page-header';
 import { Button } from '#/components/ui/button';
-import { Tabs, TabsContent, TabsList, TabsTrigger } from '#/components/ui/tabs';
+import { Skeleton } from '#/components/ui/skeleton';
 import {
-  useDeleteRecord,
   useList,
   useListAllRecords,
   useListS3Destinations,
+  useListSFTPDestinations,
 } from '#/features/backups';
 import { BackupDestinationHistory } from './backup-destination-history';
 import { BackupDestinations } from './backup-destinations';
 import { BackupOperationHistory } from './backup-operation-history';
 import { BackupPolicies } from './backup-policies';
 import { BackupStorageSummary } from './backup-storage-summary';
-import { CreateS3DestinationDialog } from './create-s3-destination-dialog';
-import { ReviewedRestoreDialog } from './reviewed-restore-dialog';
+import { DestinationModal } from './destination-modal';
 
 export function BackupsList() {
-  const search = useSearch({ strict: false }) as { tab?: string; add?: string } | undefined;
-  const [activeTab, setActiveTab] = useState(search?.tab || 'history');
-  const [isDestinationDialogOpen, setIsDestinationDialogOpen] = useState(search?.add === 'true');
+  const search = useSearch({ strict: false }) as { add?: string } | undefined;
+  const [isModalOpen, setIsModalOpen] = useState(search?.add === 'true');
 
   useEffect(() => {
-    if (search?.tab) {
-      setActiveTab(search.tab);
-    }
-    if (search?.add === 'true') {
-      setIsDestinationDialogOpen(true);
-    }
-  }, [search?.tab, search?.add]);
+    if (search?.add === 'true') setIsModalOpen(true);
+  }, [search?.add]);
 
-  const { data: configsData, isLoading: isLoadingConfigs, refetch: refetchConfigs } = useList();
-  const configs = configsData?.data || [];
+  const configsQuery = useList();
+  const recordsQuery = useListAllRecords(50);
+  const s3Query = useListS3Destinations();
+  const sftpQuery = useListSFTPDestinations();
 
-  const {
-    data: recordsData,
-    isLoading: isLoadingRecords,
-    refetch: refetchRecords,
-  } = useListAllRecords(50);
-  const records = recordsData?.data || [];
+  const configs = configsQuery.data?.data ?? [];
+  const records = recordsQuery.data?.data ?? [];
+  const s3 = s3Query.data?.data ?? [];
+  const sftp = sftpQuery.data?.data ?? [];
+  const loading = configsQuery.isLoading || recordsQuery.isLoading || s3Query.isLoading;
+  const refreshing =
+    configsQuery.isFetching ||
+    recordsQuery.isFetching ||
+    s3Query.isFetching ||
+    sftpQuery.isFetching;
 
-  const { data: s3Data, refetch: refetchS3 } = useListS3Destinations();
-  const destinations = s3Data?.data || [];
+  const destinationNames = useMemo(() => {
+    const names = new Map<string, string>();
+    for (const destination of s3) names.set(destination.id, destination.name);
+    for (const destination of sftp) names.set(destination.id, destination.name);
+    return names;
+  }, [s3, sftp]);
 
-  const [volumeRecordId, setVolumeRecordId] = useState<string | null>(null);
-  const deleteRecordMutation = useDeleteRecord();
-
-  const handleRefreshAll = async () => {
-    await Promise.all([refetchConfigs(), refetchRecords(), refetchS3()]);
-    toast.success('Backup records and storage updated');
+  const refreshAll = async () => {
+    await Promise.all([
+      configsQuery.refetch(),
+      recordsQuery.refetch(),
+      s3Query.refetch(),
+      sftpQuery.refetch(),
+    ]);
   };
 
-  const handleRestoreRecord = async (recordId: string) => {
-    const record = records.find((r) => r.id === recordId);
-    if (!record) throw new Error('Snapshot is no longer available');
-    const available = configsData?.data ?? (await refetchConfigs()).data?.data;
-    const config = available?.find((candidate) => candidate.id === record.backupConfigId);
-    if (!config) throw new Error('Could not load the snapshot backup configuration');
-    setVolumeRecordId(record.id);
-    return 'confirmation' as const;
-  };
-
-  const handleDeleteRecord = async (configId: string, recordId: string) => {
-    if (!window.confirm('Are you sure you want to delete this snapshot?')) return;
-    try {
-      await deleteRecordMutation.mutateAsync({ id: configId, recordId });
-      toast.success('Snapshot deleted');
-      void refetchRecords();
-    } catch {
-      toast.error('Failed to delete snapshot');
-    }
+  const handleRefresh = async () => {
+    await refreshAll();
+    toast.success('Backups refreshed');
   };
 
   return (
     <div className="space-y-6">
       <BackupOperationHistory />
-      {volumeRecordId && (
-        <ReviewedRestoreDialog
-          key={volumeRecordId}
-          recordId={volumeRecordId}
-          sourceDatabaseId={records.find((record) => record.id === volumeRecordId)?.databaseId}
-          onClose={() => {
-            setVolumeRecordId(null);
-            void refetchRecords();
-          }}
-          allowDatabaseTarget={
-            !configsData?.data?.find(
-              (cfg) =>
-                cfg.id === records.find((record) => record.id === volumeRecordId)?.backupConfigId
-            )?.volumeName
-          }
-        />
-      )}
+
       <div className="flex flex-wrap items-center justify-between gap-4">
-        <PageHeader
-          title="Backups"
-          description="Manage S3 storage destinations, automated snapshot schedules, and disaster recovery."
-        />
-        <div className="flex items-center gap-2">
+        <div>
+          <h1 className="font-medium text-2xl">Backups</h1>
+          <p className="mt-1 text-muted-foreground text-sm">
+            Snapshots, off-server destinations, and automated policies.
+          </p>
+        </div>
+        <div className="flex shrink-0 items-center gap-2">
           <Button
-            variant="outline"
-            size="sm"
-            onClick={handleRefreshAll}
-            className="gap-1.5"
-            title="Refresh backups and storage"
+            variant="ghost"
+            size="icon"
+            onClick={handleRefresh}
+            disabled={refreshing}
+            aria-label="Refresh backups"
+            title="Refresh backups"
           >
-            <RefreshCw className="h-4 w-4" />
-            Refresh
+            <RefreshCw className={`h-4 w-4 ${refreshing ? 'animate-spin' : ''}`} />
           </Button>
-          <CreateS3DestinationDialog
-            isOpen={isDestinationDialogOpen}
-            setIsOpen={setIsDestinationDialogOpen}
-            trigger={
-              <Button size="sm" className="gap-1.5">
-                <Plus className="h-4 w-4" />
-                Add destination
-              </Button>
-            }
-          />
+          <Button onClick={() => setIsModalOpen(true)}>
+            <Plus className="h-4 w-4" />
+            Add destination
+          </Button>
         </div>
       </div>
 
-      <div className="grid items-start gap-6 xl:grid-cols-[minmax(0,1fr)_320px]">
-        <div className="min-w-0 space-y-6">
-          <Tabs value={activeTab} onValueChange={setActiveTab}>
-            <TabsList className="grid w-full grid-cols-3">
-              <TabsTrigger value="history" className="gap-1.5 text-xs sm:text-sm">
-                <History className="h-4 w-4" />
-                <span>Snapshots</span>
-                <span className="ml-1 rounded-full bg-muted px-1.5 py-0.2 font-mono text-[10px]">
-                  {records.length}
-                </span>
-              </TabsTrigger>
-              <TabsTrigger value="destinations" className="gap-1.5 text-xs sm:text-sm">
-                <HardDrive className="h-4 w-4" />
-                <span>Destinations</span>
-                <span className="ml-1 rounded-full bg-muted px-1.5 py-0.2 font-mono text-[10px]">
-                  {destinations.length}
-                </span>
-              </TabsTrigger>
-              <TabsTrigger value="policies" className="gap-1.5 text-xs sm:text-sm">
-                <Clock className="h-4 w-4" />
-                <span>Policies</span>
-                <span className="ml-1 rounded-full bg-muted px-1.5 py-0.2 font-mono text-[10px]">
-                  {configs.length}
-                </span>
-              </TabsTrigger>
-            </TabsList>
-
-            <TabsContent value="history" className="mt-4">
-              <BackupDestinationHistory
-                records={records}
-                isLoading={isLoadingRecords}
-                onRestore={handleRestoreRecord}
-                onDeleteRecord={handleDeleteRecord}
-                restorePending={isLoadingConfigs}
-                deletePending={deleteRecordMutation.isPending}
-              />
-            </TabsContent>
-
-            <TabsContent value="destinations" className="mt-4">
-              <BackupDestinations onAddDestination={() => setIsDestinationDialogOpen(true)} />
-            </TabsContent>
-
-            <TabsContent value="policies" className="mt-4">
-              <BackupPolicies configs={configs} isLoading={isLoadingConfigs} />
-            </TabsContent>
-          </Tabs>
+      {loading ? (
+        <div aria-busy="true" className="grid gap-5 xl:grid-cols-[minmax(0,1fr)_300px]">
+          <Skeleton className="h-72 w-full rounded-2xl" />
+          <Skeleton className="h-52 w-full rounded-2xl" />
         </div>
+      ) : (
+        <div className="grid items-start gap-5 xl:grid-cols-[minmax(0,1fr)_300px]">
+          <div className="min-w-0 space-y-5">
+            <BackupDestinationHistory
+              records={records}
+              configs={configs}
+              destinations={destinationNames}
+              isLoading={recordsQuery.isLoading}
+              loadError={recordsQuery.isError ? 'Could not load snapshot history.' : null}
+              onRetry={() => void recordsQuery.refetch()}
+              retrying={recordsQuery.isFetching}
+              onChanged={() => void refreshAll()}
+            />
+            <BackupDestinations
+              s3={s3}
+              sftp={sftp}
+              records={records}
+              isLoading={s3Query.isLoading || sftpQuery.isLoading}
+              loadError={
+                s3Query.isError || sftpQuery.isError ? 'Could not load destinations.' : null
+              }
+              onRetry={() => {
+                void s3Query.refetch();
+                void sftpQuery.refetch();
+              }}
+              retrying={s3Query.isFetching || sftpQuery.isFetching}
+              onChanged={() => void refreshAll()}
+              onAddDestination={() => setIsModalOpen(true)}
+            />
+            <BackupPolicies configs={configs} isLoading={configsQuery.isLoading} />
+          </div>
+          <aside className="space-y-5 xl:sticky xl:top-6">
+            <BackupStorageSummary
+              records={records}
+              destinations={s3}
+              configs={configs}
+              sftpCount={sftp.length}
+            />
+          </aside>
+        </div>
+      )}
 
-        <aside className="space-y-6 xl:sticky xl:top-6">
-          <BackupStorageSummary records={records} destinations={destinations} configs={configs} />
-        </aside>
-      </div>
+      <DestinationModal open={isModalOpen} onOpenChange={setIsModalOpen} onSaved={refreshAll} />
     </div>
   );
 }

@@ -9,6 +9,7 @@ import (
 	"codedock/internal/config"
 	"codedock/internal/models"
 	"codedock/internal/utils"
+	"codedock/internal/version"
 
 	authservices "codedock/internal/services/auth"
 	systemservices "codedock/internal/services/system"
@@ -67,6 +68,7 @@ func (h *SettingsHandler) GetPublicSettings(c echo.Context) error {
 		"siteName":            s.SiteName,
 		"emailEnabled":        notif.SMTPEnabled || notif.ResendEnabled || (cfg.SMTP.Host != "" && cfg.SMTP.From != "") || cfg.Resend.APIKey != "",
 		"cloudMode":           cfg.Cloud.Enabled,
+		"version":             version.Version,
 	}
 	return utils.Success(c, "Operation successful", publicSettings)
 }

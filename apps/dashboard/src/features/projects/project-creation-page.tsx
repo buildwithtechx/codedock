@@ -1,5 +1,5 @@
 import { Link, useNavigate, useSearch } from '@tanstack/react-router';
-import { ArrowLeft, FolderKanban, Server } from 'lucide-react';
+import { ArrowLeft, ArrowRight, FolderKanban, LibraryBig, Server } from 'lucide-react';
 import { useEffect, useState } from 'react';
 import { toast } from 'sonner';
 import { ContextRail } from '#/components/layout/context-rail';
@@ -17,6 +17,14 @@ import { useListOrganizations } from '#/features/organizations';
 import { useCreateProject } from '#/features/projects';
 import { useListServers } from '#/hooks/use-servers';
 import { useOrganizationStore } from '#/stores/organization-store';
+import { DEPLOY_PATHS, type DeployPathId, deployPathById } from './project-creation-paths';
+
+type CreationTarget = DeployPathId | 'empty';
+
+const TEMPLATE_PATHS: Record<string, CreationTarget> = {
+  'one-click': 'one-click',
+  examples: 'examples',
+};
 
 export function ProjectCreationPage() {
   const navigate = useNavigate();
@@ -26,6 +34,7 @@ export function ProjectCreationPage() {
   const [description, setDescription] = useState('');
   const [serverId, setServerId] = useState('local');
   const [organizationId, setOrganizationId] = useState('');
+  const [target, setTarget] = useState<CreationTarget>('git');
   const { data: servers = [] } = useListServers();
   const { data: organizations = [] } = useListOrganizations();
   const { mutateAsync: createProject, isPending } = useCreateProject();
@@ -37,6 +46,14 @@ export function ProjectCreationPage() {
       setOrganizationId(organizations[0].id);
     }
   }, [activeOrganizationId, organizations, organizationId]);
+
+  useEffect(() => {
+    if (search.template && TEMPLATE_PATHS[search.template]) {
+      setTarget(TEMPLATE_PATHS[search.template]);
+    }
+  }, [search.template]);
+
+  const selectedPath = target === 'empty' ? null : deployPathById(target);
 
   const handleSubmit = async (event: React.FormEvent) => {
     event.preventDefault();
@@ -55,11 +72,29 @@ export function ProjectCreationPage() {
           ...(serverId !== 'local' ? { serverId } : {}),
         },
       });
+      const projectId = response.data.id;
       toast.success('Project created');
+
+      if (target === 'empty') {
+        await navigate({ to: '/projects/$projectId', params: { projectId } });
+        return;
+      }
+      if (target === 'compose') {
+        await navigate({ to: '/projects/$projectId/compose', params: { projectId } });
+        return;
+      }
+      if (target === 'one-click' || target === 'examples') {
+        await navigate({
+          to: '/projects/$projectId/new',
+          params: { projectId },
+          search: { tab: target },
+        });
+        return;
+      }
       await navigate({
-        to: search.template ? '/projects/$projectId/new' : '/projects/$projectId',
-        params: { projectId: response.data.id },
-        search: search.template ? { tab: search.template } : undefined,
+        to: '/projects/$projectId/new',
+        params: { projectId },
+        search: { tab: 'resources', resource: target },
       });
     } catch {
       toast.error('Failed to create project');
@@ -77,22 +112,18 @@ export function ProjectCreationPage() {
           Projects
         </Link>
         <header className="mt-6">
-          <p className="font-medium text-muted-foreground text-sm">
-            {search.template ? 'Template setup' : 'New workspace'}
-          </p>
-          <h1 className="mt-1 font-semibold text-2xl tracking-tight">
-            {search.template ? 'Create a project for a template' : 'Create a project'}
-          </h1>
+          <p className="font-medium text-muted-foreground text-sm">New workspace</p>
+          <h1 className="mt-1 font-semibold text-2xl tracking-tight">Create a project</h1>
           <p className="mt-1 max-w-2xl text-muted-foreground text-sm">
-            {search.template
-              ? 'Name the project first. Codedock will then open the template catalogue.'
-              : 'Start with a project, then choose its services, sources, and deployment setup.'}
+            Name the workspace first, then pick how its first service gets deployed. You can mix
+            paths later inside the project.
           </p>
         </header>
 
         <form onSubmit={handleSubmit} className="mt-8 max-w-3xl space-y-6">
           <section className="rounded-2xl border border-border bg-card p-6 shadow-sm">
             <div className="flex items-center gap-3">
+              <span className="font-semibold text-primary text-sm">01</span>
               <div className="flex h-9 w-9 items-center justify-center rounded-xl bg-primary/12 text-primary">
                 <FolderKanban className="h-4 w-4" />
               </div>
@@ -160,12 +191,82 @@ export function ProjectCreationPage() {
             </div>
           </section>
 
+          <section className="rounded-2xl border border-border bg-card p-6 shadow-sm">
+            <div className="flex items-center gap-3">
+              <span className="font-semibold text-primary text-sm">02</span>
+              <div>
+                <h2 className="font-semibold text-sm">Choose a deploy path</h2>
+                <p className="text-muted-foreground text-xs">
+                  Each path opens the right setup flow right after the project is created.
+                </p>
+              </div>
+            </div>
+
+            <div className="mt-6 grid gap-3 sm:grid-cols-2">
+              {DEPLOY_PATHS.map((path) => {
+                const active = target === path.id;
+                return (
+                  <button
+                    key={path.id}
+                    type="button"
+                    aria-pressed={active}
+                    onClick={() => setTarget(path.id)}
+                    className={`flex flex-col gap-2 rounded-xl border p-4 text-left transition-colors ${
+                      active
+                        ? 'border-primary/60 bg-primary/5 shadow-sm'
+                        : 'border-border/70 bg-background hover:border-primary/35'
+                    }`}
+                  >
+                    <span className="flex items-center gap-2">
+                      <path.icon
+                        className={`h-4 w-4 ${active ? 'text-primary' : 'text-muted-foreground'}`}
+                      />
+                      <span className="font-semibold text-sm">{path.title}</span>
+                    </span>
+                    <span className="text-muted-foreground text-xs leading-5">
+                      {path.description}
+                    </span>
+                    <span className="text-[11px] text-muted-foreground/80">{path.hint}</span>
+                  </button>
+                );
+              })}
+              <button
+                type="button"
+                aria-pressed={target === 'empty'}
+                onClick={() => setTarget('empty')}
+                className={`flex flex-col gap-2 rounded-xl border border-dashed p-4 text-left transition-colors sm:col-span-2 ${
+                  target === 'empty'
+                    ? 'border-primary/60 bg-primary/5'
+                    : 'border-border/70 bg-background hover:border-primary/35'
+                }`}
+              >
+                <span className="font-semibold text-sm">Decide later</span>
+                <span className="text-muted-foreground text-xs leading-5">
+                  Create an empty project and add services from the project overview whenever ready.
+                </span>
+              </button>
+            </div>
+
+            <a
+              href="/library"
+              className="mt-4 inline-flex items-center gap-2 text-primary text-sm hover:underline"
+            >
+              <LibraryBig className="h-4 w-4" />
+              Prefer to start from code? Browse the library first.
+            </a>
+          </section>
+
           <div className="flex items-center justify-between gap-3">
             <Button asChild type="button" variant="ghost">
               <Link to="/projects">Cancel</Link>
             </Button>
             <Button type="submit" disabled={isPending || !name.trim() || !organizationId}>
-              {isPending ? 'Creating project...' : 'Create project'}
+              {isPending
+                ? 'Creating project...'
+                : selectedPath
+                  ? `Create and add ${selectedPath.title.toLowerCase()}`
+                  : 'Create project'}
+              {!isPending && <ArrowRight className="h-4 w-4" />}
             </Button>
           </div>
         </form>
@@ -181,7 +282,9 @@ export function ProjectCreationPage() {
             <li className="flex gap-3">
               <span className="font-semibold text-primary">01</span>
               <span className="text-muted-foreground">
-                Choose an application, database, image, or compose service.
+                {selectedPath
+                  ? `Codedock opens the ${selectedPath.title.toLowerCase()} setup for this project.`
+                  : 'Codedock opens the empty project overview.'}
               </span>
             </li>
             <li className="flex gap-3">

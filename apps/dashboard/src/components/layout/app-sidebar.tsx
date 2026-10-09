@@ -1,8 +1,6 @@
 import { Link } from '@tanstack/react-router';
-import { FolderKanban, Moon, PanelLeftClose, PanelLeftOpen, Sun, X } from 'lucide-react';
+import { Moon, PanelLeftClose, PanelLeftOpen, Plus, Sun, X } from 'lucide-react';
 import { useTheme } from 'next-themes';
-import { Button } from '#/components/ui/button';
-import { ServerConnectionSwitcher } from '../server-connection-switcher';
 import {
   infrastructureNavigation,
   primaryNavigation,
@@ -10,6 +8,7 @@ import {
 } from './dashboard-navigation';
 import { NavItem, type NavItemProps } from './nav-item';
 import { OrganizationSwitcher } from './organization-switcher';
+import { useSidebarCounts } from './use-sidebar-counts';
 
 type NavGroup = {
   title?: string;
@@ -36,7 +35,7 @@ const navGroups: NavGroup[] = [
     })),
   },
   {
-    title: 'System',
+    title: 'Settings',
     items: systemNavigation.map(({ title, to, icon, exact }) => ({
       title,
       url: to,
@@ -45,6 +44,12 @@ const navGroups: NavGroup[] = [
     })),
   },
 ];
+
+const countForUrl: Record<string, keyof ReturnType<typeof useSidebarCounts>> = {
+  '/projects': 'projects',
+  '/apps': 'apps',
+  '/servers': 'servers',
+};
 
 interface AppSidebarProps {
   collapsed: boolean;
@@ -56,6 +61,7 @@ interface AppSidebarProps {
 export function AppSidebar({ collapsed, onToggle, mobileOpen, onMobileClose }: AppSidebarProps) {
   const navCollapsed = collapsed && !mobileOpen;
   const { resolvedTheme, setTheme } = useTheme();
+  const counts = useSidebarCounts();
 
   const toggleTheme = () => setTheme(resolvedTheme === 'dark' ? 'light' : 'dark');
 
@@ -90,19 +96,19 @@ export function AppSidebar({ collapsed, onToggle, mobileOpen, onMobileClose }: A
         </div>
 
         <div className="hidden md:block">
-          <div className={collapsed ? 'px-2 py-3' : 'px-5 py-5'}>
+          <div className={navCollapsed ? 'px-2 py-3' : 'px-5 py-5'}>
             <div
-              className={`flex ${collapsed ? 'flex-col items-center gap-2' : 'items-center justify-between gap-2.5 py-2'}`}
+              className={`flex ${navCollapsed ? 'flex-col items-center gap-2' : 'items-center justify-between gap-2.5 py-2'}`}
             >
               <div className="flex min-w-0 items-center gap-2.5">
                 <img src="/apple-touch-icon.png" alt="" className="h-7 w-7 shrink-0 rounded-lg" />
-                {!collapsed && (
+                {!navCollapsed && (
                   <span className="flex-1 truncate font-medium text-sidebar-foreground text-sm">
                     Codedock
                   </span>
                 )}
               </div>
-              <div className={`flex items-center ${collapsed ? 'flex-col gap-1' : 'gap-1'}`}>
+              <div className={`flex items-center ${navCollapsed ? 'flex-col gap-1' : 'gap-1'}`}>
                 <button
                   type="button"
                   onClick={toggleTheme}
@@ -133,45 +139,53 @@ export function AppSidebar({ collapsed, onToggle, mobileOpen, onMobileClose }: A
           <div className="mx-3 h-px bg-sidebar-border" />
         </div>
 
-        <nav className="flex flex-1 flex-col gap-5 overflow-y-auto px-3 pt-3 pb-3 [scrollbar-width:thin]">
-          {navGroups.map((group, i) => (
-            <div key={i} className="flex flex-col gap-0.5">
-              {!navCollapsed && group.title && (
-                <h4 className="px-2 pb-1.5 font-medium text-[10px] text-sidebar-foreground/50 uppercase tracking-[0.14em]">
-                  {group.title}
-                </h4>
-              )}
-              {group.items.map((item) => (
-                <NavItem key={item.url} item={item} exact={item.exact} collapsed={navCollapsed} />
-              ))}
-            </div>
-          ))}
-        </nav>
+        <div className="relative min-h-0 flex-1">
+          <nav className="h-full space-y-5 overflow-y-auto px-3 pt-3 pb-12 [scrollbar-width:thin]">
+            {navGroups.map((group, i) => (
+              <div key={group.title ?? i} className="flex flex-col gap-0.5">
+                {!navCollapsed && group.title && (
+                  <h4 className="px-2 pb-1.5 font-semibold text-[11px] text-sidebar-foreground/50 uppercase tracking-[0.14em]">
+                    {group.title}
+                  </h4>
+                )}
+                {navCollapsed && i > 0 && <div className="mx-2 my-3 h-px bg-sidebar-border/60" />}
+                {group.items.map((item) => {
+                  const countKey = countForUrl[item.url];
+                  return (
+                    <NavItem
+                      key={item.url}
+                      item={{ ...item, count: countKey ? counts[countKey] : null }}
+                      exact={item.exact}
+                      collapsed={navCollapsed}
+                    />
+                  );
+                })}
+              </div>
+            ))}
+          </nav>
+          <div className="pointer-events-none absolute inset-x-0 bottom-0 h-14 bg-gradient-to-t from-sidebar to-transparent" />
+        </div>
 
         <div className="px-3 pb-2">
-          <Button asChild className={`w-full font-semibold ${navCollapsed ? 'px-0' : 'px-3'}`}>
-            <Link
-              to="/projects/new"
-              aria-label="New project"
-              title={navCollapsed ? 'New project' : undefined}
-            >
-              <FolderKanban className="h-4 w-4" />
-              {!navCollapsed && 'New project'}
-            </Link>
-          </Button>
+          <Link
+            to={'/library' as never}
+            aria-label="New project"
+            title={navCollapsed ? 'New project' : undefined}
+            className={`flex items-center justify-center gap-2.5 overflow-hidden rounded-xl bg-gradient-to-r from-violet-600 to-fuchsia-600 px-3 py-2.5 font-semibold text-sm text-white transition-all hover:brightness-110 ${navCollapsed ? 'px-0' : 'px-3'}`}
+          >
+            <Plus className="h-4 w-4" />
+            {!navCollapsed && 'New project'}
+          </Link>
         </div>
 
         <div className={`mt-auto px-3 pt-1 pb-3 ${navCollapsed ? 'px-2' : ''}`}>
           <div className="mx-2 mb-3 h-px bg-sidebar-border/60" />
           {!navCollapsed && (
-            <p className="mb-2 px-2 font-medium text-[10px] text-sidebar-foreground/50 uppercase tracking-[0.14em]">
-              Workspace
+            <p className="mb-2 px-2 font-semibold text-[11px] text-sidebar-foreground/50 uppercase tracking-[0.14em]">
+              Account
             </p>
           )}
           <OrganizationSwitcher collapsed={navCollapsed} />
-          <div className="mt-2">
-            <ServerConnectionSwitcher collapsed={navCollapsed} />
-          </div>
         </div>
       </aside>
     </>

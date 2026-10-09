@@ -1,88 +1,84 @@
-import { createFileRoute, Link } from '@tanstack/react-router';
+import { createFileRoute, Link, useNavigate } from '@tanstack/react-router';
 import {
   ArrowLeft,
-  Cpu,
-  HardDrive,
+  Container,
+  EllipsisVertical,
+  LayoutGrid,
   Loader2,
-  MemoryStick,
-  ServerIcon,
+  RefreshCw,
+  Server as ServerIcon,
   Settings,
-  Terminal,
+  Shield,
+  TerminalSquare,
+  Trash2,
 } from 'lucide-react';
-import { useEffect, useMemo, useState } from 'react';
-import { Card } from '#/components/ui/card';
-import { env } from '#/env';
+import { useState } from 'react';
+import { z } from 'zod';
+import { Button } from '#/components/ui/button';
+import {
+  DropdownMenu,
+  DropdownMenuContent,
+  DropdownMenuItem,
+  DropdownMenuTrigger,
+} from '#/components/ui/dropdown-menu';
+import {
+  Empty,
+  EmptyContent,
+  EmptyDescription,
+  EmptyHeader,
+  EmptyMedia,
+  EmptyTitle,
+} from '#/components/ui/empty';
+import { Tabs, TabsContent, TabsList, TabsTrigger } from '#/components/ui/tabs';
+import { ServerComponentsTab } from '#/features/servers/server-components-tab';
+import { ServerConnectionBanner } from '#/features/servers/server-connection-banner';
 import { ServerConnectionCard } from '#/features/servers/server-connection-card';
+import { ServerDeleteDialog } from '#/features/servers/server-delete-dialog';
+import { reachabilityOf } from '#/features/servers/server-list-row';
+import { ServerOverviewTab } from '#/features/servers/server-overview-tab';
+import { ServerSecurityTab } from '#/features/servers/server-security-tab';
 import { ServerSettingsTab } from '#/features/servers/server-settings-tab';
-import { MetricChartCard } from '#/features/services/metric-chart-card';
+import { ServerTerminalTab } from '#/features/servers/server-terminal-tab';
 import { useServer } from '#/hooks/use-servers';
-import { useAuthStore } from '#/stores/auth-store';
+import type { Server } from '#/interfaces/server';
+import { cn } from '#/lib/utils';
+
+const tabs = [
+  { key: 'overview', label: 'Overview', icon: LayoutGrid },
+  { key: 'components', label: 'Components', icon: Container },
+  { key: 'security', label: 'Security', icon: Shield },
+  { key: 'terminal', label: 'Terminal', icon: TerminalSquare },
+  { key: 'settings', label: 'Settings', icon: Settings },
+] as const;
+
+type ServerTab = (typeof tabs)[number]['key'];
+
+const tabKeys = tabs.map((tab) => tab.key);
 
 export const Route = createFileRoute('/_dashboard/servers/$serverId')({
+  validateSearch: z.object({
+    tab: z.string().optional(),
+  }),
   component: ServerDetailsPage,
 });
 
-interface WSMetric {
-  time: number;
-  cpu: number;
-  memory: number;
-  disk: number;
-}
-
-type ServerTab = 'overview' | 'terminal' | 'settings';
-
 function ServerDetailsPage() {
   const { serverId } = Route.useParams();
-  const { data: server, isLoading, refetch } = useServer(serverId);
-  const [activeTab, setActiveTab] = useState<ServerTab>('overview');
+  const { tab: tabParam } = Route.useSearch();
+  const navigate = useNavigate();
+  const { data: server, isLoading, isRefetching, refetch } = useServer(serverId);
+  const [removeTarget, setRemoveTarget] = useState<Server | null>(null);
 
-  const [metrics, setMetrics] = useState<WSMetric[]>([]);
-  const [isConnected, setIsConnected] = useState(false);
-
-  useEffect(() => {
-    if (!serverId) return;
-
-    const protocol = window.location.protocol === 'https:' ? 'wss:' : 'ws:';
-    const wsHost = env.VITE_API_URL.replace(/^http(s?):\/\//, '');
-    const wsUrl = `${protocol}//${wsHost}/api/ws/servers/${serverId}/metrics`;
-
-    const token = useAuthStore.getState().token;
-    const protocols = token ? ['auth', token] : undefined;
-    const socket = new WebSocket(wsUrl, protocols);
-
-    socket.onopen = () => setIsConnected(true);
-    socket.onclose = () => setIsConnected(false);
-
-    socket.onmessage = (event) => {
-      try {
-        const data = JSON.parse(event.data);
-        const time = Date.now();
-        const cpu = data.cpu_usage_percentage || 0;
-        const memory =
-          data.memory_limit_bytes > 0
-            ? (data.memory_usage_bytes / data.memory_limit_bytes) * 100
-            : 0;
-        const disk =
-          data.disk_total_bytes > 0 ? (data.disk_usage_bytes / data.disk_total_bytes) * 100 : 0;
-
-        setMetrics((prev) => {
-          const newMetrics = [...prev, { time, cpu, memory, disk }];
-          if (newMetrics.length > 30) {
-            newMetrics.shift();
-          }
-          return newMetrics;
-        });
-      } catch (err) {
-        console.error('Failed to parse WS metrics', err);
-      }
-    };
-
-    return () => socket.close();
-  }, [serverId]);
-
-  const cpuData = useMemo(() => metrics.map((m) => ({ time: m.time, value: m.cpu })), [metrics]);
-  const memData = useMemo(() => metrics.map((m) => ({ time: m.time, value: m.memory })), [metrics]);
-  const diskData = useMemo(() => metrics.map((m) => ({ time: m.time, value: m.disk })), [metrics]);
+  const activeTab: ServerTab = tabKeys.includes(tabParam as ServerTab)
+    ? (tabParam as ServerTab)
+    : 'overview';
+  const changeTab = (value: string) =>
+    navigate({
+      to: '/servers/$serverId',
+      params: { serverId },
+      search: { tab: value },
+      replace: true,
+    });
 
   if (isLoading) {
     return (
@@ -94,146 +90,137 @@ function ServerDetailsPage() {
 
   if (!server) {
     return (
-      <div className="flex h-64 flex-col items-center justify-center rounded-xl border border-dashed bg-card/40">
-        <ServerIcon className="mb-4 h-8 w-8 text-muted-foreground" />
-        <h3 className="font-bold text-lg">Server not found</h3>
-        <Link to="/servers" className="mt-4 text-primary text-sm hover:underline">
-          Back to Servers
-        </Link>
-      </div>
+      <Empty>
+        <EmptyHeader>
+          <EmptyMedia variant="icon">
+            <ServerIcon />
+          </EmptyMedia>
+          <EmptyTitle>Server not found</EmptyTitle>
+          <EmptyDescription>
+            This server no longer exists or you don't have access to it.
+          </EmptyDescription>
+        </EmptyHeader>
+        <EmptyContent>
+          <Button asChild variant="outline">
+            <Link to="/servers">Back to Servers</Link>
+          </Button>
+        </EmptyContent>
+      </Empty>
     );
   }
 
-  const statusColor = server.status === 'online' ? 'bg-emerald-500' : 'bg-amber-500';
+  const reach = reachabilityOf(server);
+  const statusTone =
+    reach === 'online'
+      ? 'bg-success/10 text-success'
+      : reach === 'offline'
+        ? 'bg-destructive/10 text-destructive'
+        : 'bg-warning/10 text-warning';
+  const statusLabel = reach === 'online' ? 'Online' : reach === 'offline' ? 'Offline' : 'Unknown';
 
   return (
-    <div className="space-y-6">
-      <div className="flex flex-wrap items-center justify-between gap-4">
-        <div>
-          <Link
-            to="/servers"
-            className="inline-flex items-center gap-1.5 text-muted-foreground text-xs transition-colors hover:text-foreground"
+    <div>
+      <div className="mb-6 grid grid-cols-[auto_minmax(0,1fr)_auto] items-center gap-x-3 gap-y-1">
+        <Link
+          to="/servers"
+          className="flex h-8 w-8 items-center justify-center rounded-lg transition-colors hover:bg-muted"
+          aria-label="Back to servers"
+        >
+          <ArrowLeft className="h-4 w-4 text-muted-foreground" />
+        </Link>
+        <div className="min-w-0">
+          <h1 className="truncate font-medium text-2xl text-foreground/80 tracking-[-0.2px]">
+            {server.name}
+          </h1>
+        </div>
+        <div className="flex items-center gap-1.5">
+          <Button variant="secondary" size="sm" onClick={() => changeTab('settings')}>
+            <Settings className="size-4" />
+            <span className="hidden sm:inline">Edit</span>
+          </Button>
+          <Button
+            variant="ghost"
+            size="icon"
+            disabled={isRefetching}
+            aria-label="Refresh server"
+            onClick={() => void refetch()}
           >
-            <ArrowLeft className="h-3.5 w-3.5" />
-            Servers
-          </Link>
-          <div className="mt-2 flex items-center gap-3">
-            <div className="flex h-10 w-10 items-center justify-center rounded-xl border border-primary/20 bg-primary/10 text-primary">
-              <ServerIcon className="h-5 w-5" />
-            </div>
-            <div>
-              <h1 className="font-bold text-xl">{server.name}</h1>
-              <p className="font-mono text-muted-foreground text-xs">{server.ipAddress}</p>
-            </div>
-          </div>
+            <RefreshCw className={`size-4 ${isRefetching ? 'animate-spin' : ''}`} />
+          </Button>
+          {!server.isLocal && (
+            <DropdownMenu>
+              <DropdownMenuTrigger asChild>
+                <Button variant="ghost" size="icon" aria-label="Server actions">
+                  <EllipsisVertical className="size-4" />
+                </Button>
+              </DropdownMenuTrigger>
+              <DropdownMenuContent align="end">
+                <DropdownMenuItem variant="destructive" onClick={() => setRemoveTarget(server)}>
+                  <Trash2 className="size-4" />
+                  Remove server
+                </DropdownMenuItem>
+              </DropdownMenuContent>
+            </DropdownMenu>
+          )}
         </div>
-
-        <div className="flex items-center gap-3">
-          <div className="flex items-center gap-2 rounded-full border bg-background px-3 py-1 shadow-sm">
-            <div
-              className={`h-2.5 w-2.5 rounded-full ${statusColor} ${server.status === 'online' ? 'animate-pulse' : ''}`}
-            />
-            <span className="font-semibold text-xs uppercase tracking-wider">{server.status}</span>
-          </div>
-          <div className="flex items-center gap-2 rounded-full border bg-background px-3 py-1 text-xs shadow-sm">
-            <span
-              className={`h-2 w-2 rounded-full ${isConnected ? 'bg-emerald-500' : 'bg-red-500'}`}
-            />
-            <span className="text-muted-foreground">
-              {isConnected ? 'Telemetry live' : 'Telemetry disconnected'}
-            </span>
-          </div>
-        </div>
-      </div>
-
-      <div className="flex items-center gap-2 border-border/60 border-b pb-1">
-        <button
-          type="button"
-          onClick={() => setActiveTab('overview')}
-          className={`flex items-center gap-1.5 border-b-2 px-3 py-2 font-medium text-xs transition-colors ${
-            activeTab === 'overview'
-              ? 'border-primary text-foreground'
-              : 'border-transparent text-muted-foreground hover:text-foreground'
-          }`}
-        >
-          <Cpu className="h-3.5 w-3.5" />
-          Overview
-        </button>
-        <button
-          type="button"
-          onClick={() => setActiveTab('terminal')}
-          className={`flex items-center gap-1.5 border-b-2 px-3 py-2 font-medium text-xs transition-colors ${
-            activeTab === 'terminal'
-              ? 'border-primary text-foreground'
-              : 'border-transparent text-muted-foreground hover:text-foreground'
-          }`}
-        >
-          <Terminal className="h-3.5 w-3.5" />
-          Terminal
-        </button>
-        <button
-          type="button"
-          onClick={() => setActiveTab('settings')}
-          className={`flex items-center gap-1.5 border-b-2 px-3 py-2 font-medium text-xs transition-colors ${
-            activeTab === 'settings'
-              ? 'border-primary text-foreground'
-              : 'border-transparent text-muted-foreground hover:text-foreground'
-          }`}
-        >
-          <Settings className="h-3.5 w-3.5" />
-          Settings
-        </button>
-      </div>
-
-      {activeTab === 'overview' && (
-        <div className="space-y-6">
-          <ServerConnectionCard server={server} onRefresh={() => refetch()} />
-
-          <div className="grid grid-cols-1 gap-6 md:grid-cols-3">
-            <MetricChartCard
-              title="CPU Usage"
-              icon={<Cpu className="h-4 w-4" />}
-              badge="Live"
-              data={cpuData}
-              isLoading={false}
-              color="hsl(var(--chart-1))"
-              formatY={(v) => `${Math.round(v)}%`}
-              formatTooltip={(v) => `${v.toFixed(2)}%`}
-            />
-            <MetricChartCard
-              title="Memory Usage"
-              icon={<MemoryStick className="h-4 w-4" />}
-              badge="Live"
-              data={memData}
-              isLoading={false}
-              color="hsl(var(--chart-2))"
-              formatY={(v) => `${Math.round(v)}%`}
-              formatTooltip={(v) => `${v.toFixed(2)}%`}
-            />
-            <MetricChartCard
-              title="Disk Usage"
-              icon={<HardDrive className="h-4 w-4" />}
-              badge="Live"
-              data={diskData}
-              isLoading={false}
-              color="hsl(var(--chart-3))"
-              formatY={(v) => `${Math.round(v)}%`}
-              formatTooltip={(v) => `${v.toFixed(2)}%`}
-            />
-          </div>
-        </div>
-      )}
-
-      {activeTab === 'terminal' && (
-        <Card className="p-6">
-          <h3 className="font-semibold text-sm">Server terminal unavailable</h3>
-          <p className="mt-2 text-muted-foreground text-sm">
-            An interactive server shell is not connected. Use your SSH client to access this node.
+        <div className="col-span-2 col-start-2 flex min-w-0 flex-wrap items-center gap-2">
+          <p className="min-w-0 break-all font-mono text-muted-foreground text-sm">
+            {server.isLocal
+              ? 'local deployment runtime'
+              : `${server.sshUser ?? 'root'}@${server.sshHost ?? server.ipAddress}`}
           </p>
-        </Card>
-      )}
+          <span className={cn('rounded-full px-2 py-0.5 font-medium text-xs', statusTone)}>
+            {statusLabel}
+          </span>
+        </div>
+      </div>
 
-      {activeTab === 'settings' && <ServerSettingsTab server={server} />}
+      <ServerConnectionBanner
+        server={server}
+        retrying={isRefetching}
+        onRetry={() => void refetch()}
+      />
+
+      <Tabs value={activeTab} onValueChange={changeTab} className="gap-6">
+        <TabsList variant="line">
+          {tabs.map((tab) => (
+            <TabsTrigger key={tab.key} value={tab.key} className="gap-1.5">
+              <tab.icon className="size-4" />
+              {tab.label}
+            </TabsTrigger>
+          ))}
+        </TabsList>
+
+        <div className="grid grid-cols-1 items-start gap-6 xl:grid-cols-[minmax(0,1fr)_340px]">
+          <div className="min-w-0 xl:col-start-1 xl:row-start-1">
+            <TabsContent value="overview">
+              <ServerOverviewTab server={server} />
+            </TabsContent>
+            <TabsContent value="components">
+              <ServerComponentsTab />
+            </TabsContent>
+            <TabsContent value="security">
+              <ServerSecurityTab />
+            </TabsContent>
+            <TabsContent value="terminal">
+              <ServerTerminalTab server={server} />
+            </TabsContent>
+            <TabsContent value="settings">
+              <ServerSettingsTab server={server} />
+            </TabsContent>
+          </div>
+
+          <div className="space-y-4 xl:sticky xl:top-6 xl:col-start-2 xl:row-start-1 xl:self-start">
+            <ServerConnectionCard server={server} />
+          </div>
+        </div>
+      </Tabs>
+
+      <ServerDeleteDialog
+        server={removeTarget}
+        onClose={() => setRemoveTarget(null)}
+        onRemoved={() => navigate({ to: '/servers' })}
+      />
     </div>
   );
 }

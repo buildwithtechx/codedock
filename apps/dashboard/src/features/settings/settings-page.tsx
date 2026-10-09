@@ -1,12 +1,11 @@
-import { useNavigate, useRouterState } from '@tanstack/react-router';
+import { Navigate, useNavigate, useRouterState } from '@tanstack/react-router';
 import {
-  ArrowRightLeft,
   Bell,
   Brain,
-  ClipboardList,
-  CloudCog,
-  Download,
+  GitBranch,
+  KeyRound,
   Lock,
+  Server,
   Settings as SettingsIcon,
   UsersRound,
   Wrench,
@@ -14,13 +13,14 @@ import {
 import { PageFrame } from '#/components/layout/page-frame';
 import { PageHeader } from '#/components/layout/page-header';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '#/components/ui/tabs';
-import { AuditLogList } from '#/features/audit/audit-log-list';
 import { NotificationsSettings } from '#/features/notifications/notifications-settings';
 import { GithubIntegration, GitProviders } from '#/features/sources';
+import { ApiKeysList } from '#/features/users/api-keys-list';
 import { OAuthProvidersList } from '#/features/users/oauth-providers-list';
 import { useAuthStore } from '#/stores/auth-store';
 import { AISettings } from './ai-settings';
 import { GeneralSettings } from './general-settings';
+import { InstanceInfo } from './instance-info';
 import { MaintenancePage } from './maintenance-settings';
 import { MigrationSettings } from './migration-settings';
 import { TeamSettings } from './team-settings';
@@ -28,15 +28,14 @@ import { UpdatesPage } from './update-settings';
 
 type TabId =
   | 'general'
+  | 'git'
+  | 'tokens'
+  | 'team'
   | 'notifications'
   | 'oauth'
-  | 'team'
-  | 'audit'
   | 'ai'
-  | 'sources'
   | 'maintenance'
-  | 'updates'
-  | 'migration';
+  | 'instance';
 
 type Tab = {
   id: TabId;
@@ -51,6 +50,21 @@ const TABS: Tab[] = [
     icon: <SettingsIcon className="h-4 w-4" />,
   },
   {
+    id: 'git',
+    label: 'Git',
+    icon: <GitBranch className="h-4 w-4" />,
+  },
+  {
+    id: 'tokens',
+    label: 'Tokens',
+    icon: <KeyRound className="h-4 w-4" />,
+  },
+  {
+    id: 'team',
+    label: 'Team',
+    icon: <UsersRound className="h-4 w-4" />,
+  },
+  {
     id: 'notifications',
     label: 'Notifications',
     icon: <Bell className="h-4 w-4" />,
@@ -61,24 +75,9 @@ const TABS: Tab[] = [
     icon: <Lock className="h-4 w-4" />,
   },
   {
-    id: 'team',
-    label: 'Team',
-    icon: <UsersRound className="h-4 w-4" />,
-  },
-  {
-    id: 'audit',
-    label: 'Audit log',
-    icon: <ClipboardList className="h-4 w-4" />,
-  },
-  {
     id: 'ai',
     label: 'AI',
     icon: <Brain className="h-4 w-4" />,
-  },
-  {
-    id: 'sources',
-    label: 'Sources',
-    icon: <CloudCog className="h-4 w-4" />,
   },
   {
     id: 'maintenance',
@@ -86,24 +85,29 @@ const TABS: Tab[] = [
     icon: <Wrench className="h-4 w-4" />,
   },
   {
-    id: 'updates',
-    label: 'Updates',
-    icon: <Download className="h-4 w-4" />,
-  },
-  {
-    id: 'migration',
-    label: 'Migration',
-    icon: <ArrowRightLeft className="h-4 w-4" />,
+    id: 'instance',
+    label: 'Instance',
+    icon: <Server className="h-4 w-4" />,
   },
 ];
+
+const LEGACY_TABS: Record<string, TabId> = {
+  sources: 'git',
+  updates: 'instance',
+  migration: 'instance',
+};
 
 export const SettingsLayout = () => {
   const navigate = useNavigate();
   const user = useAuthStore((state) => state.user);
   const search = useRouterState({
-    select: (state) => state.location.search as { tab?: TabId; code?: string },
+    select: (state) => state.location.search as { tab?: string; code?: string },
   });
-  const activeId = TABS.some((tab) => tab.id === search.tab) ? (search.tab as TabId) : 'general';
+  if (search.tab === 'audit') {
+    return <Navigate to="/audit" replace />;
+  }
+  const resolvedTab = (search.tab && LEGACY_TABS[search.tab]) || search.tab;
+  const activeId = TABS.some((tab) => tab.id === resolvedTab) ? (resolvedTab as TabId) : 'general';
   const setActiveId = (tab: TabId) => {
     void navigate({
       to: '/settings',
@@ -114,12 +118,7 @@ export const SettingsLayout = () => {
 
   const content = {
     general: <GeneralSettings />,
-    notifications: <NotificationsSettings />,
-    oauth: <OAuthProvidersList />,
-    team: <TeamSettings />,
-    audit: <AuditLogList />,
-    ai: <AISettings />,
-    sources: (
+    git: (
       <Tabs defaultValue="github-app" className="pb-12">
         <TabsList>
           <TabsTrigger value="github-app">GitHub App</TabsTrigger>
@@ -137,9 +136,19 @@ export const SettingsLayout = () => {
         </TabsContent>
       </Tabs>
     ),
+    tokens: <ApiKeysList />,
+    team: <TeamSettings />,
+    notifications: <NotificationsSettings />,
+    oauth: <OAuthProvidersList />,
+    ai: <AISettings />,
     maintenance: <MaintenancePage />,
-    updates: <UpdatesPage />,
-    migration: <MigrationSettings />,
+    instance: (
+      <div className="space-y-6">
+        <InstanceInfo />
+        <UpdatesPage />
+        <MigrationSettings />
+      </div>
+    ),
   }[activeId];
   return (
     <div className="space-y-5">

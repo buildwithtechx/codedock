@@ -9,6 +9,7 @@ import {
   HardDrive,
   Key,
   LayoutDashboard,
+  LayoutGrid,
   Rocket,
   Server,
   Settings,
@@ -39,13 +40,19 @@ export const primaryNavigation: DashboardNavigationItem[] = [
     icon: FolderKanban,
   },
   {
+    title: 'Apps',
+    description: 'Deployed services across projects',
+    to: '/apps',
+    icon: LayoutGrid,
+  },
+  {
     title: 'Deployments',
     description: 'Release activity and status',
     to: '/deployments',
     icon: Rocket,
   },
   {
-    title: 'Monitoring',
+    title: 'Issues',
     description: 'Health, system issues and metrics',
     to: '/monitoring',
     icon: Activity,
@@ -58,12 +65,6 @@ export const infrastructureNavigation: DashboardNavigationItem[] = [
     description: 'Deployment targets and runtime capacity',
     to: '/servers',
     icon: Server,
-  },
-  {
-    title: 'Domains & DNS',
-    description: 'Domain routing and SSL verification',
-    to: '/dns',
-    icon: Globe2,
   },
   {
     title: 'Jobs',
@@ -89,26 +90,36 @@ export const systemNavigation: DashboardNavigationItem[] = [
     exact: true,
   },
   {
-    title: 'Audit Logs',
+    title: 'Audit',
     description: 'Security and operational events',
     to: '/audit',
     icon: ClipboardList,
   },
+];
+
+export const hiddenNavigation: DashboardNavigationItem[] = [
   {
-    title: 'API Access',
-    description: 'Personal access tokens',
-    to: '/api-access',
-    icon: Key,
+    title: 'Domains & DNS',
+    description: 'Domain routing and SSL verification',
+    to: '/dns',
+    icon: Globe2,
   },
 ];
 
 export const contextualNavigation: DashboardNavigationItem[] = [
   {
-    title: 'Sources',
+    title: 'Git',
     description: 'Git providers and registries',
     to: '/settings',
     icon: CloudCog,
-    search: { tab: 'sources' },
+    search: { tab: 'git' },
+  },
+  {
+    title: 'Tokens',
+    description: 'Personal access tokens',
+    to: '/settings',
+    icon: Key,
+    search: { tab: 'tokens' },
   },
   {
     title: 'Team',
@@ -123,5 +134,6 @@ export const commandNavigation: DashboardNavigationItem[] = [
   ...primaryNavigation,
   ...infrastructureNavigation,
   ...systemNavigation,
+  ...hiddenNavigation,
   ...contextualNavigation,
 ];
