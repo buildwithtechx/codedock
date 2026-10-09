@@ -4,7 +4,7 @@ import type * as React from 'react';
 export function ThemeProvider({
   children,
   attribute = 'class',
-  defaultTheme = 'dark',
+  defaultTheme = 'system',
   enableSystem = true,
   disableTransitionOnChange = true,
   ...props

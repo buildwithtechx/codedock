@@ -133,7 +133,7 @@ export function AppSidebar({ collapsed, onToggle, mobileOpen, onMobileClose }: A
           <div className="mx-3 h-px bg-sidebar-border" />
         </div>
 
-        <nav className="flex flex-1 flex-col gap-5 overflow-y-auto px-3 pt-3 pb-12">
+        <nav className="flex flex-1 flex-col gap-5 overflow-y-auto px-3 pt-3 pb-3 [scrollbar-width:thin]">
           {navGroups.map((group, i) => (
             <div key={i} className="flex flex-col gap-0.5">
               {!navCollapsed && group.title && (

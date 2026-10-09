@@ -2,6 +2,7 @@ import { Link, useNavigate, useSearch } from '@tanstack/react-router';
 import { ArrowLeft, FolderKanban, Server } from 'lucide-react';
 import { useEffect, useState } from 'react';
 import { toast } from 'sonner';
+import { ContextRail } from '#/components/layout/context-rail';
 import { Button } from '#/components/ui/button';
 import { Input } from '#/components/ui/input';
 import { Label } from '#/components/ui/label';
@@ -66,7 +67,7 @@ export function ProjectCreationPage() {
   };
 
   return (
-    <div className="grid min-w-0 gap-6 xl:grid-cols-[minmax(0,1fr)_21.25rem]">
+    <div className="grid min-w-0 gap-6 lg:grid-cols-[minmax(0,1fr)_21.25rem]">
       <main className="min-w-0">
         <Link
           to="/projects"
@@ -170,7 +171,7 @@ export function ProjectCreationPage() {
         </form>
       </main>
 
-      <aside className="hidden xl:sticky xl:top-6 xl:block xl:self-start">
+      <ContextRail>
         <section className="rounded-2xl border border-border bg-card p-5 shadow-sm">
           <div className="flex items-center gap-2">
             <Server className="h-4 w-4 text-primary" />
@@ -197,7 +198,7 @@ export function ProjectCreationPage() {
             </li>
           </ol>
         </section>
-      </aside>
+      </ContextRail>
     </div>
   );
 }

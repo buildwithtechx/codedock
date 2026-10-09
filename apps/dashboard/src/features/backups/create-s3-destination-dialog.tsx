@@ -2,6 +2,7 @@ import { Database, Eye, EyeOff, Info, Loader2, RefreshCw } from 'lucide-react';
 import { useState } from 'react';
 import { toast } from 'sonner';
 import { Button } from '#/components/ui/button';
+import { Checkbox } from '#/components/ui/checkbox';
 import {
   Dialog,
   DialogClose,
@@ -243,12 +244,10 @@ export function CreateS3DestinationDialog({ isOpen, setIsOpen, trigger }: Props)
           </div>
 
           <div className="flex items-center gap-2">
-            <input
-              type="checkbox"
+            <Checkbox
               id="isDefault"
               checked={isDefault}
-              onChange={(e) => setIsDefault(e.target.checked)}
-              className="h-4 w-4 rounded border-border accent-primary"
+              onCheckedChange={(checked) => setIsDefault(checked === true)}
             />
             <Label htmlFor="isDefault" className="cursor-pointer text-muted-foreground text-xs">
               Set as default storage destination for all new backups

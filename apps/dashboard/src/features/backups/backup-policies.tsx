@@ -2,6 +2,7 @@ import { Clock, Database, Loader2, Play, Shield, Trash2 } from 'lucide-react';
 import { useState } from 'react';
 import { toast } from 'sonner';
 import { Button } from '#/components/ui/button';
+import { Checkbox } from '#/components/ui/checkbox';
 import { Switch } from '#/components/ui/switch';
 import {
   Table,
@@ -137,17 +138,21 @@ export function BackupPolicies({ configs, isLoading }: BackupPoliciesProps) {
                       onCheckedChange={() => handleToggleEnabled(config)}
                       aria-label="Toggle policy"
                     />
-                    <label className="mt-2 flex gap-2 text-xs">
-                      <input
-                        type="checkbox"
+                    <label
+                      htmlFor={`pre-deploy-${config.id}`}
+                      className="mt-2 flex items-center gap-2 text-xs"
+                    >
+                      <Checkbox
+                        id={`pre-deploy-${config.id}`}
                         checked={config.preDeployment ?? false}
                         disabled={!config.projectId || updateBackup.isPending}
-                        onChange={(event) =>
+                        onCheckedChange={(checked) =>
                           updateBackup.mutate({
                             id: config.id,
-                            payload: { ...config, preDeployment: event.target.checked },
+                            payload: { ...config, preDeployment: checked === true },
                           })
                         }
+                        aria-label="Require verified backup before deployment"
                       />
                       Require verified backup before deployment
                     </label>

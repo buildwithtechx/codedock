@@ -8,7 +8,12 @@ type ContextRailProps = {
 
 export function ContextRail({ children, className }: ContextRailProps) {
   return (
-    <aside className={cn('hidden lg:sticky lg:top-6 lg:block lg:self-start', className)}>
+    <aside
+      className={cn(
+        'hidden max-h-[calc(100dvh-3rem)] overflow-y-auto lg:sticky lg:top-6 lg:block lg:self-start',
+        className
+      )}
+    >
       {children}
     </aside>
   );

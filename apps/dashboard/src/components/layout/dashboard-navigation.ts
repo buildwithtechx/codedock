@@ -82,6 +82,13 @@ export const systemNavigation: DashboardNavigationItem[] = [
     exact: true,
   },
   {
+    title: 'Settings',
+    description: 'Instance and workspace configuration',
+    to: '/settings',
+    icon: Settings,
+    exact: true,
+  },
+  {
     title: 'Audit Logs',
     description: 'Security and operational events',
     to: '/audit',
@@ -92,13 +99,6 @@ export const systemNavigation: DashboardNavigationItem[] = [
     description: 'Personal access tokens',
     to: '/api-access',
     icon: Key,
-  },
-  {
-    title: 'Settings',
-    description: 'Instance and workspace configuration',
-    to: '/settings',
-    icon: Settings,
-    exact: true,
   },
 ];
 
@@ -123,4 +123,5 @@ export const commandNavigation: DashboardNavigationItem[] = [
   ...primaryNavigation,
   ...infrastructureNavigation,
   ...systemNavigation,
+  ...contextualNavigation,
 ];
