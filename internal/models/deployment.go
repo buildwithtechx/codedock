@@ -237,6 +237,10 @@ type CreateServiceVarRequest struct {
 	IsSecret bool   `json:"isSecret"`
 }
 
+type VarsRequest map[string]string
+
+type SetEnvVarsRequest map[string]string
+
 type UpdateServiceVarRequest struct {
 	Key      string `json:"key"`
 	Value    string `json:"value"`

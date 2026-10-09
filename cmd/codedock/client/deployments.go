@@ -1,4 +1,4 @@
-package http
+package client
 
 import (
 	"encoding/json"
@@ -9,7 +9,7 @@ import (
 	"os"
 	"path/filepath"
 
-	"codedock/pkg/types"
+	"codedock/internal/models"
 )
 
 type ArchiveDeployResult struct {
@@ -18,7 +18,7 @@ type ArchiveDeployResult struct {
 	AppName     string `json:"appName"`
 }
 
-func (c *Client) TriggerDeployment(serviceID string) (*types.Deployment, error) {
+func (c *Client) TriggerDeployment(serviceID string) (*models.Deployment, error) {
 	resp, err := c.sendRequest("POST", fmt.Sprintf("/services/%s/deploy", serviceID), nil)
 	if err != nil {
 		return nil, err
@@ -31,7 +31,7 @@ func (c *Client) TriggerDeployment(serviceID string) (*types.Deployment, error) 
 	}
 
 	var result struct {
-		Data *types.Deployment `json:"data"`
+		Data *models.Deployment `json:"data"`
 	}
 	if err := json.NewDecoder(resp.Body).Decode(&result); err != nil {
 		return nil, err
@@ -103,29 +103,7 @@ func (c *Client) DeployArchive(projectID, appName, archivePath string) (*Archive
 	return res.Data, nil
 }
 
-func (c *Client) GetDeploymentStatus(deploymentID string) (*types.Deployment, error) {
-	resp, err := c.sendRequest("GET", fmt.Sprintf("/deployments/%s", deploymentID), nil)
-	if err != nil {
-		return nil, err
-	}
-	defer resp.Body.Close()
-
-	if resp.StatusCode != nethttp.StatusOK {
-		body, _ := io.ReadAll(resp.Body)
-		return nil, fmt.Errorf("failed to fetch deployment (status %d): %s", resp.StatusCode, string(body))
-	}
-
-	var result struct {
-		Data *types.Deployment `json:"data"`
-	}
-	if err := json.NewDecoder(resp.Body).Decode(&result); err != nil {
-		return nil, err
-	}
-
-	return result.Data, nil
-}
-
-func (c *Client) ListDeployments(serviceID string) ([]types.Deployment, error) {
+func (c *Client) ListDeployments(serviceID string) ([]models.Deployment, error) {
 	resp, err := c.sendRequest("GET", fmt.Sprintf("/services/%s/deployments", serviceID), nil)
 	if err != nil {
 		return nil, err
@@ -138,7 +116,7 @@ func (c *Client) ListDeployments(serviceID string) ([]types.Deployment, error) {
 	}
 
 	var result struct {
-		Data []types.Deployment `json:"data"`
+		Data []models.Deployment `json:"data"`
 	}
 	if err := json.NewDecoder(resp.Body).Decode(&result); err != nil {
 		return nil, err
@@ -169,7 +147,7 @@ func (c *Client) GetDeploymentLogs(deploymentID string) (string, error) {
 	return result.Data, nil
 }
 
-func (c *Client) GetServiceMetrics(serviceID string) ([]types.ServiceMetric, error) {
+func (c *Client) GetServiceMetrics(serviceID string) ([]models.ServiceMetric, error) {
 	resp, err := c.sendRequest("GET", fmt.Sprintf("/services/%s/metrics", serviceID), nil)
 	if err != nil {
 		return nil, err
@@ -182,7 +160,7 @@ func (c *Client) GetServiceMetrics(serviceID string) ([]types.ServiceMetric, err
 	}
 
 	var result struct {
-		Data []types.ServiceMetric `json:"data"`
+		Data []models.ServiceMetric `json:"data"`
 	}
 	if err := json.NewDecoder(resp.Body).Decode(&result); err != nil {
 		return nil, err

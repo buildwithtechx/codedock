@@ -1,4 +1,4 @@
-package http
+package client
 
 import (
 	"encoding/json"
@@ -6,10 +6,10 @@ import (
 	"io"
 	nethttp "net/http"
 
-	"codedock/pkg/types"
+	"codedock/internal/models"
 )
 
-func (c *Client) ListDatabases(projectID string) ([]*types.Database, error) {
+func (c *Client) ListDatabases(projectID string) ([]*models.Database, error) {
 	url := "/databases"
 	if projectID != "" {
 		url = fmt.Sprintf("/databases?projectId=%s", projectID)
@@ -26,7 +26,7 @@ func (c *Client) ListDatabases(projectID string) ([]*types.Database, error) {
 	}
 
 	var result struct {
-		Data []*types.Database `json:"data"`
+		Data []*models.Database `json:"data"`
 	}
 	if err := json.NewDecoder(resp.Body).Decode(&result); err != nil {
 		return nil, err
@@ -35,7 +35,7 @@ func (c *Client) ListDatabases(projectID string) ([]*types.Database, error) {
 	return result.Data, nil
 }
 
-func (c *Client) GetDatabase(id string) (*types.Database, error) {
+func (c *Client) GetDatabase(id string) (*models.Database, error) {
 	resp, err := c.sendRequest("GET", fmt.Sprintf("/databases/%s", id), nil)
 	if err != nil {
 		return nil, err
@@ -48,7 +48,7 @@ func (c *Client) GetDatabase(id string) (*types.Database, error) {
 	}
 
 	var result struct {
-		Data *types.Database `json:"data"`
+		Data *models.Database `json:"data"`
 	}
 	if err := json.NewDecoder(resp.Body).Decode(&result); err != nil {
 		return nil, err
@@ -57,7 +57,7 @@ func (c *Client) GetDatabase(id string) (*types.Database, error) {
 	return result.Data, nil
 }
 
-func (c *Client) CreateDatabase(req *types.CreateDatabaseRequest) (*types.Database, error) {
+func (c *Client) CreateDatabase(req *models.CreateDatabaseRequest) (*models.Database, error) {
 	resp, err := c.sendRequest("POST", "/databases", req)
 	if err != nil {
 		return nil, err
@@ -70,7 +70,7 @@ func (c *Client) CreateDatabase(req *types.CreateDatabaseRequest) (*types.Databa
 	}
 
 	var result struct {
-		Data *types.Database `json:"data"`
+		Data *models.Database `json:"data"`
 	}
 	if err := json.NewDecoder(resp.Body).Decode(&result); err != nil {
 		return nil, err
@@ -94,7 +94,7 @@ func (c *Client) DeleteDatabase(id string) error {
 	return nil
 }
 
-func (c *Client) ImportDatabase(id string, req *types.ImportDatabaseRequest) error {
+func (c *Client) ImportDatabase(id string, req *models.ImportDatabaseRequest) error {
 	resp, err := c.sendRequest("POST", fmt.Sprintf("/databases/%s/import", id), req)
 	if err != nil {
 		return err

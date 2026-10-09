@@ -18,9 +18,9 @@ export function BareRuntimeFields({
       <legend className="font-medium">Native systemd service</legend>
       <p className="text-muted-foreground text-sm">
         Deploy one executable release artifact as an isolated service user. Set one instance and
-        clear Docker volumes and cluster placement. Web services use their native port and must
-        bind 0.0.0.0 for managed HTTP routing; cluster scheduling and database replication are
-        separate capabilities. Persistent files belong in CODEDOCK_DATA_DIR.
+        clear Docker volumes and cluster placement. Web services use their native port and must bind
+        0.0.0.0 for managed HTTP routing; cluster scheduling and database replication are separate
+        capabilities. Persistent files belong in CODEDOCK_DATA_DIR.
       </p>
       <Label htmlFor="bare-source-mode">Release source</Label>
       <select

@@ -64,8 +64,6 @@ jobs:
       - run: npm run format
       - run: npm run typecheck
       - run: npm run build:dashboard
-      - run: npm run build:cli
-      - run: npm run typecheck:cli
       - uses: actions/setup-go@v5
         with:
           go-version-file: go.mod

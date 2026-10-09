@@ -2,16 +2,39 @@ package models
 
 import (
 	"time"
-
-	"codedock/pkg/types"
 )
 
-type AuthResult = types.AuthResult
-type SignupRequest = types.SignupRequest
-type SigninRequest = types.SigninRequest
-type AuthResponse = types.AuthResponse
-type TokenResponse = types.TokenResponse
-type SetupStatusResponse = types.SetupStatusResponse
+type AuthResult struct {
+	Token string `json:"token"`
+	User  *User  `json:"user"`
+}
+
+type SigninRequest struct {
+	Email    string `json:"email"`
+	Password string `json:"password"`
+}
+
+type SignupRequest struct {
+	Email    string   `json:"email"`
+	Password string   `json:"password"`
+	Role     UserRole `json:"role"`
+}
+
+type AuthResponse struct {
+	User         *User  `json:"user"`
+	Token        string `json:"token"`
+	RefreshToken string `json:"refreshToken,omitempty"`
+}
+
+type TokenResponse struct {
+	User         *User  `json:"user"`
+	Token        string `json:"token"`
+	RefreshToken string `json:"refreshToken,omitempty"`
+}
+
+type SetupStatusResponse struct {
+	IsConfigured bool `json:"isConfigured"`
+}
 
 type OAuthProviderConfig struct {
 	ID           string    `json:"id" db:"id"`

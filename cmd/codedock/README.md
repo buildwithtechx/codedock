@@ -8,7 +8,7 @@ The `codedock` binary is the remote client for your self-hosted Codedock server.
 curl -fsSL https://get.codedock.run/cli | sh
 ```
 
-Prefer npm? The Node build installs the same `codedock` command name (needs Node 18+), so install only one of the two:
+Or via npm, which installs this same prebuilt binary (needs Node 18+):
 
 ```sh
 npm install -g codedock
@@ -37,7 +37,7 @@ This prompts for your server URL, email, and password and saves credentials to `
 ```sh
 codedock login                            # Authenticate to your server
 codedock logout                           # Clear saved credentials
-codedock me                               # Show current logged-in user
+codedock me                               # Show current logged-in user (whoami works too)
 ```
 
 ### Projects
@@ -103,10 +103,19 @@ codedock db backups trigger <id>
 codedock db backups history <id>
 ```
 
+### Servers
+
+```sh
+codedock servers list                    # List servers
+codedock servers create --name <name>    # Add a server (--ip, --port, --user, --key, --is-local)
+codedock servers delete <id>             # Delete a server
+```
+
 ### Deployments
 
 ```sh
 codedock deploy <service-id>              # Trigger a remote deployment
+codedock deploy .                         # Package and deploy a local directory
 ```
 
 ## Config

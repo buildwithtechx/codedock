@@ -1,4 +1,4 @@
-package http
+package client
 
 import (
 	"encoding/json"
@@ -6,10 +6,10 @@ import (
 	"io"
 	nethttp "net/http"
 
-	"codedock/pkg/types"
+	"codedock/internal/models"
 )
 
-func (c *Client) ListServices(environmentID string) ([]*types.AppService, error) {
+func (c *Client) ListServices(environmentID string) ([]*models.AppService, error) {
 	resp, err := c.sendRequest("GET", fmt.Sprintf("/environments/%s/services", environmentID), nil)
 	if err != nil {
 		return nil, err
@@ -22,7 +22,7 @@ func (c *Client) ListServices(environmentID string) ([]*types.AppService, error)
 	}
 
 	var result struct {
-		Data []*types.AppService `json:"data"`
+		Data []*models.AppService `json:"data"`
 	}
 	if err := json.NewDecoder(resp.Body).Decode(&result); err != nil {
 		return nil, err
@@ -31,7 +31,7 @@ func (c *Client) ListServices(environmentID string) ([]*types.AppService, error)
 	return result.Data, nil
 }
 
-func (c *Client) CreateService(service *types.AppService) (*types.AppService, error) {
+func (c *Client) CreateService(service *models.AppService) (*models.AppService, error) {
 	resp, err := c.sendRequest("POST", "/services", service)
 	if err != nil {
 		return nil, err
@@ -44,7 +44,7 @@ func (c *Client) CreateService(service *types.AppService) (*types.AppService, er
 	}
 
 	var result struct {
-		Data *types.AppService `json:"data"`
+		Data *models.AppService `json:"data"`
 	}
 	if err := json.NewDecoder(resp.Body).Decode(&result); err != nil {
 		return nil, err
@@ -53,7 +53,7 @@ func (c *Client) CreateService(service *types.AppService) (*types.AppService, er
 	return result.Data, nil
 }
 
-func (c *Client) GetService(id string) (*types.AppService, error) {
+func (c *Client) GetService(id string) (*models.AppService, error) {
 	resp, err := c.sendRequest("GET", fmt.Sprintf("/services/%s", id), nil)
 	if err != nil {
 		return nil, err
@@ -66,7 +66,7 @@ func (c *Client) GetService(id string) (*types.AppService, error) {
 	}
 
 	var result struct {
-		Data *types.AppService `json:"data"`
+		Data *models.AppService `json:"data"`
 	}
 	if err := json.NewDecoder(resp.Body).Decode(&result); err != nil {
 		return nil, err

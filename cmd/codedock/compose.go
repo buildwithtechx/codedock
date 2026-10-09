@@ -4,7 +4,7 @@ import (
 	"fmt"
 	"os"
 
-	codedockhttp "codedock/pkg/http"
+	codedockclient "codedock/cmd/codedock/client"
 	"github.com/spf13/cobra"
 )
 
@@ -28,7 +28,7 @@ var composeAnalyzeCmd = &cobra.Command{
 		client := getClient()
 		projectID, _ := cmd.Flags().GetString("project")
 
-		req := &codedockhttp.ComposeAnalyzeRequest{
+		req := &codedockclient.ComposeAnalyzeRequest{
 			ProjectID:      projectID,
 			ComposeContent: string(content),
 		}

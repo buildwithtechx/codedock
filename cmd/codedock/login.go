@@ -7,8 +7,8 @@ import (
 	"strings"
 	"syscall"
 
-	"codedock/pkg/config"
-	"codedock/pkg/http"
+	"codedock/cmd/codedock/client"
+	"codedock/cmd/codedock/config"
 	"github.com/spf13/cobra"
 	"golang.org/x/term"
 )
@@ -45,7 +45,7 @@ var loginCmd = &cobra.Command{
 
 		fmt.Println("Authenticating...")
 
-		client := http.NewClient(serverURL, "")
+		client := client.NewClient(serverURL, "")
 
 		authResp, err := client.Login(email, password)
 		if err != nil && strings.Contains(err.Error(), "2FA code required") {

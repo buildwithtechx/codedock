@@ -1,4 +1,4 @@
-package http
+package client
 
 import (
 	"bytes"
@@ -46,18 +46,4 @@ func (c *Client) sendRequest(method, endpoint string, payload any) (*nethttp.Res
 	req.Header.Set("Content-Type", "application/json")
 
 	return c.HTTPClient.Do(req)
-}
-
-func (c *Client) Ping() error {
-	resp, err := c.sendRequest("GET", "/system/health", nil)
-	if err != nil {
-		return err
-	}
-	defer resp.Body.Close()
-
-	if resp.StatusCode != nethttp.StatusOK {
-		return fmt.Errorf("server returned status: %d", resp.StatusCode)
-	}
-
-	return nil
 }

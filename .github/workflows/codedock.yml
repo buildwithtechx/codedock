@@ -107,7 +107,7 @@ jobs:
           for GOARCH in amd64 arm64; do
             echo "Building codedock for windows/$GOARCH..."
             GOOS=windows GOARCH=$GOARCH go build -ldflags="-s -w -X main.version=$VERSION" -o dist/codedock.exe ./cmd/codedock
-            zip -j dist/codedock_windows_$GOARCH.zip dist/codedock.exe
+            tar -czf dist/codedock_windows_$GOARCH.tar.gz -C dist codedock.exe
             rm dist/codedock.exe
           done
 

@@ -1,4 +1,4 @@
-package http
+package client
 
 import (
 	"encoding/json"
@@ -6,7 +6,7 @@ import (
 	"io"
 	"net/http"
 
-	"codedock/pkg/types"
+	"codedock/internal/models"
 )
 
 type AuthRequest struct {
@@ -16,8 +16,8 @@ type AuthRequest struct {
 }
 
 type AuthResponse struct {
-	Token string      `json:"token"`
-	User  *types.User `json:"user"`
+	Token string       `json:"token"`
+	User  *models.User `json:"user"`
 }
 
 func (c *Client) Login(email, password string) (*AuthResponse, error) {

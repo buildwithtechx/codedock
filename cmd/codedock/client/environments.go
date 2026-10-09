@@ -1,4 +1,4 @@
-package http
+package client
 
 import (
 	"encoding/json"
@@ -6,10 +6,10 @@ import (
 	"io"
 	nethttp "net/http"
 
-	"codedock/pkg/types"
+	"codedock/internal/models"
 )
 
-func (c *Client) ListEnvironments(projectID string) ([]*types.EnvironmentConfig, error) {
+func (c *Client) ListEnvironments(projectID string) ([]*models.EnvironmentConfig, error) {
 	resp, err := c.sendRequest("GET", fmt.Sprintf("/projects/%s/environments", projectID), nil)
 	if err != nil {
 		return nil, err
@@ -22,7 +22,7 @@ func (c *Client) ListEnvironments(projectID string) ([]*types.EnvironmentConfig,
 	}
 
 	var result struct {
-		Data []*types.EnvironmentConfig `json:"data"`
+		Data []*models.EnvironmentConfig `json:"data"`
 	}
 	if err := json.NewDecoder(resp.Body).Decode(&result); err != nil {
 		return nil, err
@@ -31,7 +31,7 @@ func (c *Client) ListEnvironments(projectID string) ([]*types.EnvironmentConfig,
 	return result.Data, nil
 }
 
-func (c *Client) CreateEnvironment(projectID string, req *types.EnvironmentConfig) (*types.EnvironmentConfig, error) {
+func (c *Client) CreateEnvironment(projectID string, req *models.EnvironmentConfig) (*models.EnvironmentConfig, error) {
 	resp, err := c.sendRequest("POST", fmt.Sprintf("/projects/%s/environments", projectID), req)
 	if err != nil {
 		return nil, err
@@ -44,7 +44,7 @@ func (c *Client) CreateEnvironment(projectID string, req *types.EnvironmentConfi
 	}
 
 	var result struct {
-		Data *types.EnvironmentConfig `json:"data"`
+		Data *models.EnvironmentConfig `json:"data"`
 	}
 	if err := json.NewDecoder(resp.Body).Decode(&result); err != nil {
 		return nil, err

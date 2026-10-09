@@ -10,31 +10,22 @@
     "directory": "apps/cli"
   },
   "type": "module",
-  "description": "Command line interface for Codedock self-hosted PaaS",
+  "description": "Codedock CLI installer — downloads the prebuilt Go binary for your platform",
   "license": "Apache-2.0",
   "files": [
-    "dist"
+    "bin/codedock.js",
+    "install.js",
+    "lib.js"
   ],
   "engines": {
     "node": ">=18"
   },
-  "main": "./dist/index.js",
-  "types": "./dist/index.d.ts",
   "bin": {
-    "codedock": "./dist/bin.js"
-  },
-  "exports": {
-    ".": {
-      "types": "./dist/index.d.ts",
-      "import": "./dist/index.js"
-    }
+    "codedock": "./bin/codedock.js"
   },
   "scripts": {
-    "build": "tsup && npm run build:types",
-    "build:types": "tsc --emitDeclarationOnly --noEmit false",
-    "dev": "tsup --watch",
-    "typecheck": "tsc --noEmit",
-    "test": "vitest run --passWithNoTests"
+    "postinstall": "node ./install.js",
+    "test": "node --test lib.test.js"
   },
   "keywords": [
     "codedock",
@@ -44,11 +35,5 @@
     "deploy",
     "cli"
   ],
-  "author": "TechX",
-  "devDependencies": {
-    "@types/node": "^26.1.2",
-    "tsup": "^8.5.1",
-    "typescript": "^7.0.2",
-    "vitest": "^4.1.10"
-  }
+  "author": "TechX"
 }

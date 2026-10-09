@@ -4,11 +4,11 @@ import (
 	"fmt"
 	"os"
 
-	"codedock/pkg/config"
-	"codedock/pkg/http"
+	"codedock/cmd/codedock/client"
+	"codedock/cmd/codedock/config"
 )
 
-func getClient() *http.Client {
+func getClient() *client.Client {
 	cfg, err := config.Load()
 	if err != nil {
 		fmt.Printf("Error loading config: %v\n", err)
@@ -18,5 +18,5 @@ func getClient() *http.Client {
 		fmt.Println("Error: Not authenticated. Please run 'codedock login' first.")
 		os.Exit(1)
 	}
-	return http.NewClient(cfg.ServerURL, cfg.Token)
+	return client.NewClient(cfg.ServerURL, cfg.Token)
 }

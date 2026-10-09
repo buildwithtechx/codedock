@@ -47,7 +47,7 @@ Databases, backups, TLS, and monitoring live in the same control plane as your a
 - **Web dashboard** — deploy, monitor, and manage every resource from the UI the daemon serves.
 - **Desktop app** — native Tauri shell around the dashboard in `apps/desktop`.
 - **`codedockd`** — the server daemon ([README](./cmd/codedockd/README.md)).
-- **`codedock`** — the remote CLI that runs on your machine. Two builds share the command name, so pick one: the [Go binary](./cmd/codedock/README.md) (`curl -fsSL https://get.codedock.run/cli | sh`) or the [Node package](./apps/cli/README.md) (`npm i -g codedock`, needs Node 18+).
+- **`codedock`** — the remote CLI that runs on your machine ([README](./cmd/codedock/README.md)): `curl -fsSL https://get.codedock.run/cli | sh`, or `npm i -g codedock` for the same binary via npm.
 - **REST API** — versioned HTTP API with a maintained spec in `docs/api/openapi.json`.
 
 ## Features

@@ -1,4 +1,4 @@
-package http
+package client
 
 import (
 	"encoding/json"
@@ -6,10 +6,10 @@ import (
 	"io"
 	"net/http"
 
-	"codedock/pkg/types"
+	"codedock/internal/models"
 )
 
-func (c *Client) Me() (*types.User, error) {
+func (c *Client) Me() (*models.User, error) {
 	resp, err := c.sendRequest("GET", "/auth/me", nil)
 	if err != nil {
 		return nil, err
@@ -22,7 +22,7 @@ func (c *Client) Me() (*types.User, error) {
 	}
 
 	var result struct {
-		Data *types.User `json:"data"`
+		Data *models.User `json:"data"`
 	}
 	if err := json.NewDecoder(resp.Body).Decode(&result); err != nil {
 		return nil, err

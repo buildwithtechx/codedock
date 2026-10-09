@@ -3,41 +3,11 @@ title: CLI Reference
 description: Separate the remote client, daemon commands and installer host wrapper.
 ---
 
-The repository has two remote clients named `codedock`: a Go binary in `cmd/codedock` and the npm client in `apps/cli`. Their commands and configuration differ. `codedockd` is the server daemon. The Linux installer also supplies a host management wrapper. Their command syntax and configuration are different.
+There is one remote client named `codedock`: the Go binary in `cmd/codedock`. Install it with the install script (`curl -fsSL https://get.codedock.run/cli | sh`), via npm (`npm install -g codedock`, which ships this same binary), or from source. `codedockd` is the server daemon. The Linux installer also supplies a host management wrapper. Their command syntax and configuration are different.
 
-## npm client: apps/cli
+## Remote client: codedock
 
-This section describes the npm client, not the Go binary. Use the client built from `apps/cli` from your workstation or CI runner. It connects to the daemon over HTTP. From the repository, build it with `npm run build:cli` and run `node apps/cli/dist/bin.js --help`.
-
-```sh
-node apps/cli/dist/bin.js login --server https://pilot.example.com --email owner@example.com
-node apps/cli/dist/bin.js whoami
-node apps/cli/dist/bin.js projects list
-node apps/cli/dist/bin.js env set PROJECT_ID NODE_ENV=production
-node apps/cli/dist/bin.js status SERVICE_ID
-```
-
-Login prompts for the password. Do not pass `--password`; that option is rejected. A token can be supplied with `--token`. Global options include `--server`, `--token`, `--json`, `--help` and `--version`. `CODEDOCK_SERVER_URL` and `CODEDOCK_TOKEN` can supply connection settings.
-
-| Command | Subcommands / argument |
-| --- | --- |
-| `login` | Authenticate interactively or with a token |
-| `logout` | Remove saved authentication |
-| `whoami`, `me` | Current user |
-| `status` | Service ID |
-| `servers` | `list`, `create`, `delete` |
-| `projects` | `list`, `create`, `delete` |
-| `apps` | `list`, `create`, `delete`, `logs`, `deployments` |
-| `env` | `list`, `get`, `set` |
-| `db` | `list`, `create`, `backup` |
-| `deploy` | Local path or existing service ID |
-| `version` | Client version |
-
-Read `codedock --help` for options. Creation commands use flags specific to the resource. For example, remote database creation accepts `--project`, `--type`, `--name` and `--server-id`.
-
-## Go client: cmd/codedock
-
-The compiled Go client is also named `codedock`. Its login prompts for the server URL, email and password and saves its configuration. It does not implement the npm client's global `--server`, `--token` or `--json` flags or environment-variable overrides.
+Use the client from your workstation or CI runner. It connects to the daemon over HTTP. Login prompts for the server URL, email and password and saves its configuration to `~/.codedock/config.json`.
 
 ```sh
 codedock login
@@ -50,11 +20,12 @@ codedock db create --project PROJECT_ID --environment ENVIRONMENT_ID --name prim
 
 | Command | Registered subcommands / argument |
 | --- | --- |
-| `login`, `logout`, `me` | Account and saved client configuration |
+| `login`, `logout`, `me` | Account and saved client configuration (`whoami` aliases `me`) |
 | `status` | Service ID |
+| `servers` | `list`, `create`, `delete` |
 | `projects` | `list`, `create`, `destroy` |
 | `environments`, `env` | `list`, `create`, `destroy`; the `env` alias manages environments, not variables |
-| `apps` | `list`, `create`, `destroy`, plus `secrets`, `domains`, `deployments`, `logs` and `status` |
+| `apps` | `list`, `create`, `destroy`, plus `secrets`, `domains`, `deployments` and `logs` |
 | `apps secrets` | `list`, `set`; project variable operations |
 | `db` | `list`, `create`, `destroy`, `import`, `backups` |
 | `db backups` | `list`, `create`, `trigger`, `history` |
@@ -62,7 +33,7 @@ codedock db create --project PROJECT_ID --environment ENVIRONMENT_ID --name prim
 | `deploy` | Local path or existing service ID |
 | `version` | Binary version |
 
-Use `codedock COMMAND --help` from this binary for resource flags. There is no `whoami` or `servers` command in this Go client. The `delete` and `db backup` spellings in the npm client do not apply here. See [Compose import](/deployments/compose/) before using the Go client's Compose commands.
+Use `codedock COMMAND --help` for resource flags. See [Compose import](/deployments/compose/) before using the Compose commands.
 
 ## Daemon binary: codedockd
 

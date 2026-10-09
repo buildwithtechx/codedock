@@ -1,4 +1,4 @@
-package http
+package client
 
 import (
 	"encoding/json"
@@ -6,10 +6,10 @@ import (
 	"io"
 	nethttp "net/http"
 
-	"codedock/pkg/types"
+	"codedock/internal/models"
 )
 
-func (c *Client) ListProjects() ([]*types.ProjectConfig, error) {
+func (c *Client) ListProjects() ([]*models.ProjectConfig, error) {
 	resp, err := c.sendRequest("GET", "/projects", nil)
 	if err != nil {
 		return nil, err
@@ -22,7 +22,7 @@ func (c *Client) ListProjects() ([]*types.ProjectConfig, error) {
 	}
 
 	var result struct {
-		Data []*types.ProjectConfig `json:"data"`
+		Data []*models.ProjectConfig `json:"data"`
 	}
 	if err := json.NewDecoder(resp.Body).Decode(&result); err != nil {
 		return nil, err
@@ -31,7 +31,7 @@ func (c *Client) ListProjects() ([]*types.ProjectConfig, error) {
 	return result.Data, nil
 }
 
-func (c *Client) CreateProject(req *types.CreateProjectRequest) (*types.ProjectConfig, error) {
+func (c *Client) CreateProject(req *models.CreateProjectRequest) (*models.ProjectConfig, error) {
 	resp, err := c.sendRequest("POST", "/projects", req)
 	if err != nil {
 		return nil, err
@@ -44,7 +44,7 @@ func (c *Client) CreateProject(req *types.CreateProjectRequest) (*types.ProjectC
 	}
 
 	var result struct {
-		Data *types.ProjectConfig `json:"data"`
+		Data *models.ProjectConfig `json:"data"`
 	}
 	if err := json.NewDecoder(resp.Body).Decode(&result); err != nil {
 		return nil, err
@@ -53,7 +53,7 @@ func (c *Client) CreateProject(req *types.CreateProjectRequest) (*types.ProjectC
 	return result.Data, nil
 }
 
-func (c *Client) GetProject(id string) (*types.ProjectConfig, error) {
+func (c *Client) GetProject(id string) (*models.ProjectConfig, error) {
 	resp, err := c.sendRequest("GET", fmt.Sprintf("/projects/%s", id), nil)
 	if err != nil {
 		return nil, err
@@ -66,7 +66,7 @@ func (c *Client) GetProject(id string) (*types.ProjectConfig, error) {
 	}
 
 	var result struct {
-		Data *types.ProjectConfig `json:"data"`
+		Data *models.ProjectConfig `json:"data"`
 	}
 	if err := json.NewDecoder(resp.Body).Decode(&result); err != nil {
 		return nil, err

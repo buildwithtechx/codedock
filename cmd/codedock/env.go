@@ -5,7 +5,7 @@ import (
 	"os"
 	"text/tabwriter"
 
-	"codedock/pkg/types"
+	"codedock/internal/models"
 	"github.com/spf13/cobra"
 )
 
@@ -55,7 +55,7 @@ var envCreateCmd = &cobra.Command{
 		}
 
 		client := getClient()
-		req := &types.EnvironmentConfig{
+		req := &models.EnvironmentConfig{
 			Name:      name,
 			IsDefault: isDefault,
 		}

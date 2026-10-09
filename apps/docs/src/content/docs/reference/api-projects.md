@@ -15,7 +15,7 @@ curl "$CODEDOCK_URL/api/projects?organizationId=$ORGANIZATION_ID"   -H "Authoriz
 
 ## Create a project
 
-`POST /api/projects` accepts the project request, including `name`, optional `description`, `organizationId`, `serverId`, `environmentName` and `environmentType`. Other source-related fields are defined in the current [project DTO](https://github.com/buildwithtechx/codedock/blob/main/pkg/types/project.go).
+`POST /api/projects` accepts the project request, including `name`, optional `description`, `organizationId`, `serverId`, `environmentName` and `environmentType`. Other source-related fields are defined in the current [project DTO](https://github.com/buildwithtechx/codedock/blob/main/internal/models/project.go).
 
 ```json
 {"name":"My API","description":"Application stack","organizationId":"ORG_ID"}

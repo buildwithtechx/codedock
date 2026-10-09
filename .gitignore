@@ -42,3 +42,7 @@ tmp/
 
 **/self-hosted.json
 **/.vault_key
+
+!apps/cli/bin/
+apps/cli/bin/*
+!apps/cli/bin/codedock.js

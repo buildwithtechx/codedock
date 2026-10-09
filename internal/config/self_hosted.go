@@ -8,7 +8,6 @@ import (
 	"fmt"
 
 	"codedock/internal/models"
-	"codedock/pkg/types"
 )
 
 type SelfHostedStore interface {
@@ -16,7 +15,7 @@ type SelfHostedStore interface {
 	Save(context.Context, *models.SelfHostedConfig) error
 }
 
-func PrepareSelfHosted(ctx context.Context, cfg *types.Config, store SelfHostedStore) error {
+func PrepareSelfHosted(ctx context.Context, cfg *models.Config, store SelfHostedStore) error {
 	if cfg.Cloud.Enabled {
 		return nil
 	}
@@ -57,7 +56,7 @@ func PrepareSelfHosted(ctx context.Context, cfg *types.Config, store SelfHostedS
 	return nil
 }
 
-func SaveSelfHostedOptions(ctx context.Context, cfg *types.Config, store SelfHostedStore, domain, tlsEmail string) error {
+func SaveSelfHostedOptions(ctx context.Context, cfg *models.Config, store SelfHostedStore, domain, tlsEmail string) error {
 	if cfg.Cloud.Enabled {
 		return errors.New("self-hosted setup is unavailable in cloud mode")
 	}

@@ -14,7 +14,22 @@ fi
 
 if ! declare -f detect_platform &>/dev/null; then
   BOLD="\033[1m"; DIM="\033[2m"; GREEN="\033[0;32m"; YELLOW="\033[0;33m"; RED="\033[0;31m"; NC="\033[0m"
-  detect_platform() { echo "$(uname -s | tr '[:upper:]' '[:lower:]')_$(uname -m | sed 's/x86_64/amd64/;s/aarch64/arm64/')"; }
+  detect_platform() {
+    local os arch
+    os="$(uname -s)"
+    arch="$(uname -m)"
+    case "$os" in
+      Linux) os="linux" ;;
+      Darwin) os="darwin" ;;
+      *) echo -e "${RED}❌ Unsupported OS: $os. Install via npm (npm i -g codedock) or download a release instead.${NC}"; exit 1 ;;
+    esac
+    case "$arch" in
+      x86_64|amd64) arch="amd64" ;;
+      arm64|aarch64) arch="arm64" ;;
+      *) echo -e "${RED}❌ Unsupported architecture: $arch${NC}"; exit 1 ;;
+    esac
+    echo "${os}_${arch}"
+  }
 fi
 
 REPO="buildwithtechx/codedock"

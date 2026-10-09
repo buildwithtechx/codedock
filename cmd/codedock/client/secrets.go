@@ -1,4 +1,4 @@
-package http
+package client
 
 import (
 	"encoding/json"
@@ -6,10 +6,10 @@ import (
 	"io"
 	nethttp "net/http"
 
-	"codedock/pkg/types"
+	"codedock/internal/models"
 )
 
-func (c *Client) GetSecrets(projectID string) (types.VarsRequest, error) {
+func (c *Client) GetSecrets(projectID string) (models.VarsRequest, error) {
 	resp, err := c.sendRequest("GET", fmt.Sprintf("/projects/%s/env", projectID), nil)
 	if err != nil {
 		return nil, err
@@ -22,7 +22,7 @@ func (c *Client) GetSecrets(projectID string) (types.VarsRequest, error) {
 	}
 
 	var result struct {
-		Data types.VarsRequest `json:"data"`
+		Data models.VarsRequest `json:"data"`
 	}
 	if err := json.NewDecoder(resp.Body).Decode(&result); err != nil {
 		return nil, err
@@ -31,7 +31,7 @@ func (c *Client) GetSecrets(projectID string) (types.VarsRequest, error) {
 	return result.Data, nil
 }
 
-func (c *Client) SetSecrets(projectID string, req types.SetEnvVarsRequest) error {
+func (c *Client) SetSecrets(projectID string, req models.SetEnvVarsRequest) error {
 	resp, err := c.sendRequest("PUT", fmt.Sprintf("/projects/%s/env", projectID), req)
 	if err != nil {
 		return err

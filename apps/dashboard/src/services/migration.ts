@@ -182,10 +182,7 @@ export const migrationService = {
       throw handleApiError(err);
     }
   },
-  listRuns: async (
-    organizationId: string,
-    sourceId?: string
-  ): Promise<MigrationRun[]> => {
+  listRuns: async (organizationId: string, sourceId?: string): Promise<MigrationRun[]> => {
     try {
       const res = await apiClient.get<BaseResponse<MigrationRun[]>>(
         `/organizations/${organizationId}/migration/runs${sourceId ? `?sourceId=${sourceId}` : ''}`
