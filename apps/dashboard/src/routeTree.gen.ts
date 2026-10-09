@@ -52,6 +52,7 @@ import { Route as DashboardServersNewRouteImport } from './routes/_dashboard.ser
 import { Route as DashboardServicesServiceIdRouteImport } from './routes/_dashboard.services/$serviceId'
 import { Route as DashboardAppsNewIndexRouteImport } from './routes/_dashboard.apps.new.index'
 import { Route as DashboardAppsNewAppIdRouteImport } from './routes/_dashboard.apps.new.$appId'
+import { Route as DashboardJobsJobIdIndexRouteImport } from './routes/_dashboard.jobs.$jobId.index'
 import { Route as DashboardJobsJobIdEditRouteImport } from './routes/_dashboard.jobs.$jobId.edit'
 import { Route as DashboardProjectsProjectIdIndexRouteImport } from './routes/_dashboard.projects/$projectId.index'
 import { Route as DashboardProjectsProjectIdCanvasRouteImport } from './routes/_dashboard.projects/$projectId.canvas'
@@ -296,6 +297,11 @@ const DashboardAppsNewAppIdRoute = DashboardAppsNewAppIdRouteImport.update({
   path: '/$appId',
   getParentRoute: () => DashboardAppsNewRoute,
 } as any)
+const DashboardJobsJobIdIndexRoute = DashboardJobsJobIdIndexRouteImport.update({
+  id: '/',
+  path: '/',
+  getParentRoute: () => DashboardJobsJobIdRoute,
+} as any)
 const DashboardJobsJobIdEditRoute = DashboardJobsJobIdEditRouteImport.update({
   id: '/edit',
   path: '/edit',
@@ -490,6 +496,7 @@ export interface FileRoutesByFullPath {
   '/services/$serviceId/volumes': typeof DashboardServicesServiceIdVolumesRoute
   '/services/$serviceId/webhooks': typeof DashboardServicesServiceIdWebhooksRoute
   '/apps/new/': typeof DashboardAppsNewIndexRoute
+  '/jobs/$jobId/': typeof DashboardJobsJobIdIndexRoute
   '/projects/$projectId/': typeof DashboardProjectsProjectIdIndexRoute
   '/services/$serviceId/': typeof DashboardServicesServiceIdIndexRoute
 }
@@ -510,7 +517,6 @@ export interface FileRoutesByTo {
   '/users': typeof DashboardUsersRoute
   '/backups/$backupId': typeof DashboardBackupsBackupIdRoute
   '/deployments/$deploymentId': typeof DashboardDeploymentsDeploymentIdRoute
-  '/jobs/$jobId': typeof DashboardJobsJobIdRouteWithChildren
   '/jobs/new': typeof DashboardJobsNewRoute
   '/organizations/$organizationId': typeof DashboardOrganizationsOrganizationIdRoute
   '/projects/new': typeof DashboardProjectsNewRoute
@@ -545,6 +551,7 @@ export interface FileRoutesByTo {
   '/services/$serviceId/volumes': typeof DashboardServicesServiceIdVolumesRoute
   '/services/$serviceId/webhooks': typeof DashboardServicesServiceIdWebhooksRoute
   '/apps/new': typeof DashboardAppsNewIndexRoute
+  '/jobs/$jobId': typeof DashboardJobsJobIdIndexRoute
   '/projects/$projectId': typeof DashboardProjectsProjectIdIndexRoute
   '/services/$serviceId': typeof DashboardServicesServiceIdIndexRoute
 }
@@ -613,6 +620,7 @@ export interface FileRoutesById {
   '/_dashboard/services/$serviceId/volumes': typeof DashboardServicesServiceIdVolumesRoute
   '/_dashboard/services/$serviceId/webhooks': typeof DashboardServicesServiceIdWebhooksRoute
   '/_dashboard/apps/new/': typeof DashboardAppsNewIndexRoute
+  '/_dashboard/jobs/$jobId/': typeof DashboardJobsJobIdIndexRoute
   '/_dashboard/projects/$projectId/': typeof DashboardProjectsProjectIdIndexRoute
   '/_dashboard/services/$serviceId/': typeof DashboardServicesServiceIdIndexRoute
 }
@@ -680,6 +688,7 @@ export interface FileRouteTypes {
     | '/services/$serviceId/volumes'
     | '/services/$serviceId/webhooks'
     | '/apps/new/'
+    | '/jobs/$jobId/'
     | '/projects/$projectId/'
     | '/services/$serviceId/'
   fileRoutesByTo: FileRoutesByTo
@@ -700,7 +709,6 @@ export interface FileRouteTypes {
     | '/users'
     | '/backups/$backupId'
     | '/deployments/$deploymentId'
-    | '/jobs/$jobId'
     | '/jobs/new'
     | '/organizations/$organizationId'
     | '/projects/new'
@@ -735,6 +743,7 @@ export interface FileRouteTypes {
     | '/services/$serviceId/volumes'
     | '/services/$serviceId/webhooks'
     | '/apps/new'
+    | '/jobs/$jobId'
     | '/projects/$projectId'
     | '/services/$serviceId'
   id:
@@ -802,6 +811,7 @@ export interface FileRouteTypes {
     | '/_dashboard/services/$serviceId/volumes'
     | '/_dashboard/services/$serviceId/webhooks'
     | '/_dashboard/apps/new/'
+    | '/_dashboard/jobs/$jobId/'
     | '/_dashboard/projects/$projectId/'
     | '/_dashboard/services/$serviceId/'
   fileRoutesById: FileRoutesById
@@ -1115,6 +1125,13 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof DashboardAppsNewAppIdRouteImport
       parentRoute: typeof DashboardAppsNewRoute
     }
+    '/_dashboard/jobs/$jobId/': {
+      id: '/_dashboard/jobs/$jobId/'
+      path: '/'
+      fullPath: '/jobs/$jobId/'
+      preLoaderRoute: typeof DashboardJobsJobIdIndexRouteImport
+      parentRoute: typeof DashboardJobsJobIdRoute
+    }
     '/_dashboard/jobs/$jobId/edit': {
       id: '/_dashboard/jobs/$jobId/edit'
       path: '/edit'
@@ -1345,10 +1362,12 @@ const DashboardDeploymentsRouteWithChildren =
 
 interface DashboardJobsJobIdRouteChildren {
   DashboardJobsJobIdEditRoute: typeof DashboardJobsJobIdEditRoute
+  DashboardJobsJobIdIndexRoute: typeof DashboardJobsJobIdIndexRoute
 }
 
 const DashboardJobsJobIdRouteChildren: DashboardJobsJobIdRouteChildren = {
   DashboardJobsJobIdEditRoute: DashboardJobsJobIdEditRoute,
+  DashboardJobsJobIdIndexRoute: DashboardJobsJobIdIndexRoute,
 }
 
 const DashboardJobsJobIdRouteWithChildren =

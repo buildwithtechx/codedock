@@ -1,5 +1,5 @@
 import { Code2, FolderUp, LayoutGrid, Link2, SquareCode } from 'lucide-react';
-import { useState } from 'react';
+import { useEffect, useState } from 'react';
 import { PageHeader } from '#/components/layout/page-header';
 import { Skeleton } from '#/components/ui/skeleton';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '#/components/ui/tabs';
@@ -16,10 +16,16 @@ import { RepositoryList } from './repository-list';
 import type { ImportTarget, PendingImport } from './types';
 import { UrlImport } from './url-import';
 
-type LibraryTab = 'repositories' | 'folder' | 'url' | 'apps' | 'examples';
+export type LibraryTab = 'repositories' | 'folder' | 'url' | 'apps' | 'examples';
 
-export function LibraryPage() {
-  const [tab, setTab] = useState<LibraryTab>('repositories');
+export function LibraryPage({ initialTab }: { initialTab?: LibraryTab }) {
+  const [tab, setTab] = useState<LibraryTab>(initialTab || 'repositories');
+
+  useEffect(() => {
+    if (initialTab) {
+      setTab(initialTab);
+    }
+  }, [initialTab]);
   const [provider, setProvider] = useState('github');
   const [pending, setPending] = useState<PendingImport | null>(null);
   const [target, setTarget] = useState<ImportTarget | null>(null);

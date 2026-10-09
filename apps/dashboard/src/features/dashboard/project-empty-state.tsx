@@ -1,13 +1,13 @@
 import { Link } from '@tanstack/react-router';
-import { GitBranch, Globe, MousePointerClick, Plus, RotateCcw, Zap } from 'lucide-react';
+import { Eye, GitBranch, Globe, Plus, RotateCcw, Zap } from 'lucide-react';
 import { Button } from '#/components/ui/button';
 import { EmptyIllustration } from './empty-illustration';
 
 const highlights = [
-  { icon: Zap, title: 'Instant deploys', description: 'Push and go live' },
-  { icon: Globe, title: 'Domains & TLS', description: 'Auto certificates' },
-  { icon: MousePointerClick, title: 'Previews', description: 'Per-branch URLs' },
-  { icon: RotateCcw, title: 'Rollbacks', description: 'One-click restore' },
+  { icon: Zap, title: 'Instant deploys', description: 'Push to git and go live' },
+  { icon: Globe, title: 'Domains & TLS', description: 'Zero-config certificates' },
+  { icon: Eye, title: 'Previews', description: 'Per-branch environments' },
+  { icon: RotateCcw, title: 'Rollbacks', description: 'One-click atomic restore' },
 ];
 
 export function ProjectEmptyState() {
@@ -18,11 +18,10 @@ export function ProjectEmptyState() {
         className="mb-2 font-medium text-2xl text-foreground/80"
         style={{ letterSpacing: '-0.2px' }}
       >
-        Create your first project
+        Build and ship in seconds
       </h3>
       <p className="mx-auto mb-8 max-w-sm text-muted-foreground/70 text-sm leading-relaxed">
-        Bring together the services, environments, and deployment activity that belong to one
-        product.
+        Connect a repository, pick a template, or deploy from a URL.
       </p>
       <div className="mb-10 flex flex-col items-center justify-center gap-3 sm:flex-row">
         <Button asChild size="lg" className="gap-2 px-6">
@@ -32,7 +31,7 @@ export function ProjectEmptyState() {
           </Link>
         </Button>
         <Button asChild size="lg" variant="secondary" className="gap-2 px-6">
-          <Link to="/library">
+          <Link to="/library" search={{ tab: 'examples' }}>
             <GitBranch className="h-4 w-4" />
             Browse templates
           </Link>

@@ -247,13 +247,13 @@ export function ProjectCreationPage() {
               </button>
             </div>
 
-            <a
-              href="/library"
+            <Link
+              to="/library"
               className="mt-4 inline-flex items-center gap-2 text-primary text-sm hover:underline"
             >
               <LibraryBig className="h-4 w-4" />
               Prefer to start from code? Browse the library first.
-            </a>
+            </Link>
           </section>
 
           <div className="flex items-center justify-between gap-3">

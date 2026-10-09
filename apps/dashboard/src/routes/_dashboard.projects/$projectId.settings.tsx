@@ -15,15 +15,15 @@ function SettingsRouteComponent() {
       <h1 className="font-bold text-2xl">Project Settings</h1>
 
       <div className="grid grid-cols-1 gap-8">
-        <section className="rounded-lg border bg-white p-6 shadow-sm">
+        <section className="rounded-lg border border-border/60 bg-card p-6 shadow-sm">
           <ProjectMembers projectId={projectId} />
         </section>
 
-        <section className="rounded-lg border bg-white p-6 shadow-sm">
+        <section className="rounded-lg border border-border/60 bg-card p-6 shadow-sm">
           <ProjectRegistries projectId={projectId} />
         </section>
 
-        <section className="rounded-lg border bg-white p-6 shadow-sm">
+        <section className="rounded-lg border border-border/60 bg-card p-6 shadow-sm">
           <ProjectTokens projectId={projectId} />
         </section>
       </div>

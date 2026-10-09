@@ -46,7 +46,7 @@ export function DeploymentEmptyState({
           </Link>
         </Button>
         <Button asChild size="lg" variant="secondary" className="gap-2 px-6">
-          <Link to="/library">
+          <Link to="/library" search={{ tab: 'examples' }}>
             <GitBranch className="h-4 w-4" />
             Browse templates
           </Link>

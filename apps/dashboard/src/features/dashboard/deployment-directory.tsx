@@ -1,5 +1,14 @@
 import { Link } from '@tanstack/react-router';
-import { Activity, ArrowRight, CheckCircle2, CircleX, Rocket, Search, Zap } from 'lucide-react';
+import {
+  Activity,
+  ArrowRight,
+  CheckCircle2,
+  CircleX,
+  Plus,
+  Rocket,
+  Search,
+  Zap,
+} from 'lucide-react';
 import { useDeferredValue, useState } from 'react';
 import { PageFrame } from '#/components/layout/page-frame';
 import { PageHeader } from '#/components/layout/page-header';

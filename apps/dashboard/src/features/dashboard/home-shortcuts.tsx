@@ -1,5 +1,5 @@
 import { Link } from '@tanstack/react-router';
-import { ArrowUpRight, BookOpen, GitBranch, LayoutTemplate, Settings } from 'lucide-react';
+import { ArrowUpRight, BookOpen, Bot, GitBranch, Settings } from 'lucide-react';
 
 const shortcuts = [
   {
@@ -10,10 +10,10 @@ const shortcuts = [
     external: false,
   },
   {
-    title: 'Browse templates',
-    description: 'One-click apps and stacks.',
-    to: '/library',
-    icon: LayoutTemplate,
+    title: 'MCP deploy',
+    description: 'Deploy via AI assistant.',
+    to: '/settings?tab=mcp',
+    icon: Bot,
     external: false,
   },
   {
