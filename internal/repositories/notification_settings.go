@@ -3,6 +3,7 @@ package repositories
 import (
 	"context"
 	"database/sql"
+	"encoding/json"
 	"errors"
 	"fmt"
 	"strconv"
@@ -10,6 +11,7 @@ import (
 	"sync"
 	"time"
 
+	"github.com/google/uuid"
 	"github.com/jmoiron/sqlx"
 
 	"codedock/internal/models"
@@ -18,6 +20,10 @@ import (
 type NotificationSettingsRepository interface {
 	GetNotificationSettings(ctx context.Context) (*models.NotificationSettings, error)
 	UpdateNotificationSettings(ctx context.Context, cfg *models.NotificationSettings) error
+	ListSubscriptions(ctx context.Context, userID, orgID string) ([]models.NotificationSubscription, error)
+	UpsertSubscription(ctx context.Context, sub *models.NotificationSubscription) error
+	ListDefaults(ctx context.Context, orgID string) ([]models.NotificationDefault, error)
+	UpsertDefault(ctx context.Context, def *models.NotificationDefault) error
 }
 
 type NotificationSettingsRepo struct {
@@ -120,6 +126,132 @@ func (r *NotificationSettingsRepo) UpdateNotificationSettings(ctx context.Contex
 	_, err := r.db.ExecContext(ctx, query, notificationSettingsArgs(cfg)...)
 	if err != nil {
 		return fmt.Errorf("failed to update notification settings: %w", err)
+	}
+	return nil
+}
+
+func (r *NotificationSettingsRepo) ListSubscriptions(ctx context.Context, userID, orgID string) ([]models.NotificationSubscription, error) {
+	r.mu.Lock()
+	defer r.mu.Unlock()
+
+	query := `SELECT id, user_id, organization_id, category, channels, enabled, to_char(created_at, 'YYYY-MM-DD"T"HH24:MI:SS"Z"') as created_at, to_char(updated_at, 'YYYY-MM-DD"T"HH24:MI:SS"Z"') as updated_at
+	          FROM notification_subscriptions
+	          WHERE user_id = $1`
+	args := []any{userID}
+	if orgID != "" {
+		query += ` AND organization_id = $2`
+		args = append(args, orgID)
+	}
+	query += ` ORDER BY category ASC`
+
+	rows, err := r.db.QueryContext(ctx, query, args...)
+	if err != nil {
+		return nil, fmt.Errorf("failed to list notification subscriptions: %w", err)
+	}
+	defer rows.Close()
+
+	var subs []models.NotificationSubscription
+	for rows.Next() {
+		var sub models.NotificationSubscription
+		var channelsRaw []byte
+		if err := rows.Scan(&sub.ID, &sub.UserID, &sub.OrganizationID, &sub.Category, &channelsRaw, &sub.Enabled, &sub.CreatedAt, &sub.UpdatedAt); err != nil {
+			return nil, fmt.Errorf("failed to scan subscription: %w", err)
+		}
+		if len(channelsRaw) > 0 {
+			_ = json.Unmarshal(channelsRaw, &sub.Channels)
+		}
+		if sub.Channels == nil {
+			sub.Channels = []string{}
+		}
+		subs = append(subs, sub)
+	}
+	if subs == nil {
+		subs = []models.NotificationSubscription{}
+	}
+	return subs, nil
+}
+
+func (r *NotificationSettingsRepo) UpsertSubscription(ctx context.Context, sub *models.NotificationSubscription) error {
+	r.mu.Lock()
+	defer r.mu.Unlock()
+
+	if sub.ID == "" {
+		sub.ID = uuid.NewString()
+	}
+	channelsJSON, err := json.Marshal(sub.Channels)
+	if err != nil {
+		channelsJSON = []byte("[]")
+	}
+
+	query := `INSERT INTO notification_subscriptions (id, user_id, organization_id, category, channels, enabled, created_at, updated_at)
+	          VALUES ($1, $2, $3, $4, $5, $6, CURRENT_TIMESTAMP, CURRENT_TIMESTAMP)
+	          ON CONFLICT(user_id, organization_id, category) DO UPDATE SET
+	          channels = excluded.channels,
+	          enabled = excluded.enabled,
+	          updated_at = CURRENT_TIMESTAMP`
+
+	_, err = r.db.ExecContext(ctx, query, sub.ID, sub.UserID, sub.OrganizationID, sub.Category, channelsJSON, sub.Enabled)
+	if err != nil {
+		return fmt.Errorf("failed to upsert notification subscription: %w", err)
+	}
+	return nil
+}
+
+func (r *NotificationSettingsRepo) ListDefaults(ctx context.Context, orgID string) ([]models.NotificationDefault, error) {
+	r.mu.Lock()
+	defer r.mu.Unlock()
+
+	query := `SELECT organization_id, category, channels, enabled, to_char(updated_at, 'YYYY-MM-DD"T"HH24:MI:SS"Z"') as updated_at
+	          FROM notification_defaults
+	          WHERE organization_id = $1
+	          ORDER BY category ASC`
+
+	rows, err := r.db.QueryContext(ctx, query, orgID)
+	if err != nil {
+		return nil, fmt.Errorf("failed to list notification defaults: %w", err)
+	}
+	defer rows.Close()
+
+	var defs []models.NotificationDefault
+	for rows.Next() {
+		var def models.NotificationDefault
+		var channelsRaw []byte
+		if err := rows.Scan(&def.OrganizationID, &def.Category, &channelsRaw, &def.Enabled, &def.UpdatedAt); err != nil {
+			return nil, fmt.Errorf("failed to scan notification default: %w", err)
+		}
+		if len(channelsRaw) > 0 {
+			_ = json.Unmarshal(channelsRaw, &def.Channels)
+		}
+		if def.Channels == nil {
+			def.Channels = []string{}
+		}
+		defs = append(defs, def)
+	}
+	if defs == nil {
+		defs = []models.NotificationDefault{}
+	}
+	return defs, nil
+}
+
+func (r *NotificationSettingsRepo) UpsertDefault(ctx context.Context, def *models.NotificationDefault) error {
+	r.mu.Lock()
+	defer r.mu.Unlock()
+
+	channelsJSON, err := json.Marshal(def.Channels)
+	if err != nil {
+		channelsJSON = []byte("[]")
+	}
+
+	query := `INSERT INTO notification_defaults (organization_id, category, channels, enabled, updated_at)
+	          VALUES ($1, $2, $3, $4, CURRENT_TIMESTAMP)
+	          ON CONFLICT(organization_id, category) DO UPDATE SET
+	          channels = excluded.channels,
+	          enabled = excluded.enabled,
+	          updated_at = CURRENT_TIMESTAMP`
+
+	_, err = r.db.ExecContext(ctx, query, def.OrganizationID, def.Category, channelsJSON, def.Enabled)
+	if err != nil {
+		return fmt.Errorf("failed to upsert notification default: %w", err)
 	}
 	return nil
 }

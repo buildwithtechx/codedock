@@ -60,10 +60,15 @@ interface AppSidebarProps {
 
 export function AppSidebar({ collapsed, onToggle, mobileOpen, onMobileClose }: AppSidebarProps) {
   const navCollapsed = collapsed && !mobileOpen;
-  const { resolvedTheme, setTheme } = useTheme();
+  const { theme, resolvedTheme, setTheme } = useTheme();
   const counts = useSidebarCounts();
 
-  const toggleTheme = () => setTheme(resolvedTheme === 'dark' ? 'light' : 'dark');
+  const toggleTheme = () => {
+    if (theme === 'light') setTheme('dim');
+    else if (theme === 'dim') setTheme('dark');
+    else if (theme === 'dark') setTheme('light');
+    else setTheme(resolvedTheme === 'dark' ? 'light' : 'dim');
+  };
 
   return (
     <>
@@ -115,8 +120,10 @@ export function AppSidebar({ collapsed, onToggle, mobileOpen, onMobileClose }: A
                   className="flex h-8 w-8 items-center justify-center rounded-lg text-muted-foreground transition-colors hover:bg-sidebar-accent hover:text-sidebar-foreground"
                   aria-label="Toggle theme"
                 >
-                  {resolvedTheme === 'dark' ? (
+                  {theme === 'dark' || (theme === 'system' && resolvedTheme === 'dark') ? (
                     <Sun className="h-4 w-4" />
+                  ) : theme === 'dim' ? (
+                    <Moon className="h-4 w-4 text-primary" />
                   ) : (
                     <Moon className="h-4 w-4" />
                   )}

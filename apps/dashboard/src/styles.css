@@ -36,7 +36,8 @@
   src: url('/fonts/manrope-800.woff2') format('woff2');
 }
 
-@custom-variant dark (&:is(.dark *));
+@custom-variant dark (&:is(.dark *, .dim *));
+@custom-variant dim (&:is(.dim *));
 
 :root {
   --background: #fafafa;
@@ -106,6 +107,41 @@
   --sidebar-accent: #1d2029;
   --sidebar-accent-foreground: #f8f8fc;
   --sidebar-border: #2c2f3a;
+  --sidebar-ring: #8b5cf6;
+}
+
+.dim {
+  --background: #16181d;
+  --foreground: #f1f3f7;
+  --card: #1f232b;
+  --card-foreground: #f1f3f7;
+  --popover: #222630;
+  --popover-foreground: #f1f3f7;
+  --primary: #8b5cf6;
+  --primary-foreground: #ffffff;
+  --primary-hover: #9d74f8;
+  --primary-soft: #28243d;
+  --secondary: #262a34;
+  --secondary-foreground: #f1f3f7;
+  --secondary-hover: #313643;
+  --muted: #242832;
+  --muted-foreground: #9ca3af;
+  --accent: #8b5cf6;
+  --accent-foreground: #f1f3f7;
+  --destructive: #ef4444;
+  --destructive-foreground: #ffffff;
+  --success: #22c55e;
+  --warning: #f59e0b;
+  --border: #313642;
+  --input: #2e333e;
+  --ring: #8b5cf6;
+  --sidebar: #191c22;
+  --sidebar-foreground: #f1f3f7;
+  --sidebar-primary: #8b5cf6;
+  --sidebar-primary-foreground: #ffffff;
+  --sidebar-accent: #252932;
+  --sidebar-accent-foreground: #f1f3f7;
+  --sidebar-border: #313642;
   --sidebar-ring: #8b5cf6;
 }
 
@@ -224,5 +260,17 @@ body {
       opacity: 1;
       transform: translateY(0);
     }
+  }
+
+  .demo-mode [data-demo-blur],
+  .demo-mode .demo-blur {
+    filter: blur(5px);
+    user-select: none;
+    transition: filter 0.2s ease;
+  }
+
+  .demo-mode [data-demo-blur]:hover,
+  .demo-mode .demo-blur:hover {
+    filter: blur(0px);
   }
 }

@@ -7,6 +7,7 @@ import { Input } from '#/components/ui/input';
 import { useGetVars, useSetVars } from '#/features/projects';
 import { EnvBulkModal } from '#/features/projects/env-bulk-modal';
 import { type EnvEntry, serializeDotenv } from '#/lib/dotenv';
+import { cn } from '#/lib/utils';
 
 interface ProjectVariablesTabProps {
   projectId: string;
@@ -190,7 +191,8 @@ export function ProjectVariablesTab({ projectId }: ProjectVariablesTabProps) {
                 <Input className="w-1/3 font-mono text-xs" value={item.key} disabled />
                 <div className="relative flex-1">
                   <Input
-                    className="pr-9 font-mono text-xs"
+                    className={cn('pr-9 font-mono text-xs', item.show && 'demo-blur')}
+                    data-demo-blur={item.show ? 'true' : undefined}
                     type={item.show ? 'text' : 'password'}
                     value={item.value}
                     onChange={(e) => {

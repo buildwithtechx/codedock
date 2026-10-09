@@ -1,5 +1,6 @@
 import { Link } from '@tanstack/react-router';
 import { RotateCw, Settings, WifiOff } from 'lucide-react';
+import { BlurIp } from '#/components/ui/blur-ip';
 import { Button } from '#/components/ui/button';
 import type { Server } from '#/interfaces/server';
 import { reachabilityOf } from './server-list-row';
@@ -43,19 +44,27 @@ export function ServerConnectionBanner({ server, retrying, onRetry }: ServerConn
               : `Connection status for ${server.name} is unknown`}
           </p>
           <p className="mt-1 text-[13px] text-muted-foreground leading-relaxed">
-            {offline
-              ? `The last heartbeat from ${host} failed. Telemetry and deploys to this node are paused until it comes back.`
-              : 'This server has not reported a heartbeat yet. Telemetry appears once the node checks in.'}
+            {offline ? (
+              <>
+                The last heartbeat from <BlurIp>{host}</BlurIp> failed. Telemetry and deploys to
+                this node are paused until it comes back.
+              </>
+            ) : (
+              'This server has not reported a heartbeat yet. Telemetry appears once the node checks in.'
+            )}
           </p>
           {offline && !server.isLocal && (
             <ul className="mt-2 list-disc space-y-0.5 ps-5 text-muted-foreground/80 text-xs">
               <li>Check that the host is powered on</li>
               <li>
-                <code className="font-mono">ping {host}</code> to verify network reachability
+                <code className="font-mono">
+                  ping <BlurIp>{host}</BlurIp>
+                </code>{' '}
+                to verify network reachability
               </li>
               <li>
                 <code className="font-mono">
-                  ssh {server.sshUser ?? 'root'}@{host} -p {server.sshPort ?? 22}
+                  ssh {server.sshUser ?? 'root'}@<BlurIp>{host}</BlurIp> -p {server.sshPort ?? 22}
                 </code>{' '}
                 to verify SSH access
               </li>

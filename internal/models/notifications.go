@@ -41,3 +41,34 @@ type NotificationEvent struct {
 	ProjectID string `json:"projectId,omitempty"`
 	URL       string `json:"url,omitempty"`
 }
+
+type NotificationSubscription struct {
+	ID             string   `json:"id"`
+	UserID         string   `json:"userId"`
+	OrganizationID string   `json:"organizationId"`
+	Category       string   `json:"category"`
+	Channels       []string `json:"channels"`
+	Enabled        bool     `json:"enabled"`
+	CreatedAt      string   `json:"createdAt"`
+	UpdatedAt      string   `json:"updatedAt"`
+}
+
+type NotificationDefault struct {
+	OrganizationID string   `json:"organizationId"`
+	Category       string   `json:"category"`
+	Channels       []string `json:"channels"`
+	Enabled        bool     `json:"enabled"`
+	UpdatedAt      string   `json:"updatedAt"`
+}
+
+type UpsertSubscriptionRequest struct {
+	Category string   `json:"category"`
+	Channels []string `json:"channels"`
+	Enabled  bool     `json:"enabled"`
+}
+
+type UpsertDefaultRequest struct {
+	Category string   `json:"category"`
+	Channels []string `json:"channels"`
+	Enabled  bool     `json:"enabled"`
+}

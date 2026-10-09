@@ -1,5 +1,6 @@
 import { Globe, Hash, KeyRound, Network, Server as ServerIcon, User } from 'lucide-react';
 import type { ReactNode } from 'react';
+import { BlurIp } from '#/components/ui/blur-ip';
 import type { Server } from '#/interfaces/server';
 
 function ConnectionRow({
@@ -36,7 +37,7 @@ export function ServerConnectionCard({ server }: { server: Server }) {
       <div className="space-y-3">
         <ConnectionRow icon={<Globe className="size-4 text-muted-foreground" />} label="Host">
           <span className="max-w-[150px] truncate text-right font-medium font-mono text-foreground text-sm">
-            {server.isLocal ? 'localhost' : host}
+            {server.isLocal ? 'localhost' : <BlurIp>{host}</BlurIp>}
           </span>
         </ConnectionRow>
         {!server.isLocal && (

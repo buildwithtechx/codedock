@@ -8,6 +8,7 @@ import {
   Server as ServerIcon,
   Trash2,
 } from 'lucide-react';
+import { BlurIp } from '#/components/ui/blur-ip';
 import { Button } from '#/components/ui/button';
 import {
   DropdownMenu,
@@ -70,7 +71,7 @@ export function ServerListRow({ server, onRemove }: ServerListRowProps) {
             )}
           </p>
           <p className="mt-0.5 truncate font-mono text-muted-foreground text-xs">
-            {server.isLocal ? 'Local deployment runtime' : host}
+            {server.isLocal ? 'Local deployment runtime' : <BlurIp>{host}</BlurIp>}
           </p>
         </div>
 

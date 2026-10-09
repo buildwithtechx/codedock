@@ -1,4 +1,8 @@
-import type { TeamNotificationChannel } from '#/features/notifications';
+import type {
+  NotificationDefaultDto,
+  NotificationSubscriptionDto,
+  TeamNotificationChannel,
+} from '#/features/notifications';
 import type { BaseResponse } from '#/interfaces/base';
 import { apiClient } from '#/lib/api-client';
 import { handleApiError } from '#/lib/error';
@@ -145,6 +149,72 @@ export const settingsService = {
   deleteNotificationChannel: async (id: string): Promise<void> => {
     try {
       await apiClient.delete(`/settings/notifications/${id}`);
+    } catch (error) {
+      throw handleApiError(error);
+    }
+  },
+
+  getSubscriptions: async (
+    orgId?: string
+  ): Promise<BaseResponse<NotificationSubscriptionDto[]>> => {
+    try {
+      const query = orgId ? `?orgId=${encodeURIComponent(orgId)}` : '';
+      return await apiClient.get<BaseResponse<NotificationSubscriptionDto[]>>(
+        `/notifications/subscriptions${query}`
+      );
+    } catch (error) {
+      throw handleApiError(error);
+    }
+  },
+
+  upsertSubscription: async (payload: {
+    category: string;
+    channels: string[];
+    enabled: boolean;
+    orgId?: string;
+  }): Promise<BaseResponse<NotificationSubscriptionDto>> => {
+    try {
+      const query = payload.orgId ? `?orgId=${encodeURIComponent(payload.orgId)}` : '';
+      return await apiClient.put<BaseResponse<NotificationSubscriptionDto>>(
+        `/notifications/subscriptions${query}`,
+        {
+          category: payload.category,
+          channels: payload.channels,
+          enabled: payload.enabled,
+        }
+      );
+    } catch (error) {
+      throw handleApiError(error);
+    }
+  },
+
+  getDefaults: async (orgId?: string): Promise<BaseResponse<NotificationDefaultDto[]>> => {
+    try {
+      const query = orgId ? `?orgId=${encodeURIComponent(orgId)}` : '';
+      return await apiClient.get<BaseResponse<NotificationDefaultDto[]>>(
+        `/notifications/defaults${query}`
+      );
+    } catch (error) {
+      throw handleApiError(error);
+    }
+  },
+
+  upsertDefault: async (payload: {
+    category: string;
+    channels: string[];
+    enabled: boolean;
+    orgId?: string;
+  }): Promise<BaseResponse<NotificationDefaultDto>> => {
+    try {
+      const query = payload.orgId ? `?orgId=${encodeURIComponent(payload.orgId)}` : '';
+      return await apiClient.put<BaseResponse<NotificationDefaultDto>>(
+        `/notifications/defaults${query}`,
+        {
+          category: payload.category,
+          channels: payload.channels,
+          enabled: payload.enabled,
+        }
+      );
     } catch (error) {
       throw handleApiError(error);
     }

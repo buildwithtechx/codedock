@@ -1,6 +1,8 @@
+import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
 import { Bell, Check } from 'lucide-react';
-import { useMemo, useState } from 'react';
+import { useEffect, useMemo, useState } from 'react';
 import { Switch } from '#/components/ui/switch';
+import { settingsService } from '#/features/settings/api';
 import { ChannelMultiSelect } from './channel-multi-select';
 import { NOTIFICATION_EVENTS, NOTIFICATION_GROUPS } from './notification-events-meta';
 
@@ -11,6 +13,7 @@ type EventState = {
 };
 
 export function NotificationSubscriptionsTable() {
+  const queryClient = useQueryClient();
   const [selectedGroup, setSelectedGroup] = useState<string>('all');
   const [states, setStates] = useState<Record<string, EventState>>(() =>
     Object.fromEntries(
@@ -25,16 +28,92 @@ export function NotificationSubscriptionsTable() {
     )
   );
 
+  const { data: subsData } = useQuery({
+    queryKey: ['notification-subscriptions'],
+    queryFn: () => settingsService.getSubscriptions(),
+  });
+
+  const { data: defaultsData } = useQuery({
+    queryKey: ['notification-defaults'],
+    queryFn: () => settingsService.getDefaults(),
+  });
+
+  useEffect(() => {
+    if (!subsData?.data && !defaultsData?.data) return;
+    setStates((prev) => {
+      const next = { ...prev };
+      if (subsData?.data) {
+        for (const sub of subsData.data) {
+          if (next[sub.category]) {
+            next[sub.category] = {
+              ...next[sub.category],
+              channels: sub.channels?.length ? sub.channels : next[sub.category].channels,
+              notifyMe: sub.enabled,
+            };
+          }
+        }
+      }
+      if (defaultsData?.data) {
+        for (const def of defaultsData.data) {
+          if (next[def.category]) {
+            next[def.category] = {
+              ...next[def.category],
+              orgEnabled: def.enabled,
+            };
+          }
+        }
+      }
+      return next;
+    });
+  }, [subsData, defaultsData]);
+
+  const subMutation = useMutation({
+    mutationFn: (payload: { category: string; channels: string[]; enabled: boolean }) =>
+      settingsService.upsertSubscription(payload),
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ['notification-subscriptions'] });
+    },
+  });
+
+  const defaultMutation = useMutation({
+    mutationFn: (payload: { category: string; channels: string[]; enabled: boolean }) =>
+      settingsService.upsertDefault(payload),
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ['notification-defaults'] });
+    },
+  });
+
   const filteredEvents = useMemo(() => {
     if (selectedGroup === 'all') return NOTIFICATION_EVENTS;
     return NOTIFICATION_EVENTS.filter((e) => e.group === selectedGroup);
   }, [selectedGroup]);
 
-  const updateState = (id: string, partial: Partial<EventState>) => {
+  const handleChannelChange = (id: string, channels: string[]) => {
+    const current = states[id] || { channels: [], orgEnabled: false, notifyMe: false };
     setStates((prev) => ({
       ...prev,
-      [id]: { ...(prev[id] || { channels: [], orgEnabled: false, notifyMe: false }), ...partial },
+      [id]: { ...current, channels },
     }));
+    subMutation.mutate({ category: id, channels, enabled: current.notifyMe });
+  };
+
+  const handleOrgToggle = (id: string, orgEnabled: boolean) => {
+    const current = states[id] || { channels: [], orgEnabled: false, notifyMe: false };
+    setStates((prev) => ({
+      ...prev,
+      [id]: { ...current, orgEnabled },
+    }));
+    defaultMutation.mutate({ category: id, channels: current.channels, enabled: orgEnabled });
+  };
+
+  const handleNotifyToggle = (id: string) => {
+    const current = states[id] || { channels: [], orgEnabled: false, notifyMe: false };
+    const nextNotify = !current.notifyMe;
+    setStates((prev) => ({
+      ...prev,
+      [id]: { ...current, notifyMe: nextNotify },
+    }));
+    subMutation.mutate({ category: id, channels: current.channels, enabled: nextNotify });
   };
 
   const groupCounts = useMemo(() => {
@@ -125,14 +204,14 @@ export function NotificationSubscriptionsTable() {
                   <td className="py-3.5 pr-6 text-right">
                     <ChannelMultiSelect
                       value={state.channels}
-                      onChange={(channels) => updateState(event.id, { channels })}
+                      onChange={(channels) => handleChannelChange(event.id, channels)}
                     />
                   </td>
                   <td className="py-3.5 text-center">
                     <div className="inline-flex justify-center">
                       <Switch
                         checked={state.orgEnabled}
-                        onCheckedChange={(orgEnabled) => updateState(event.id, { orgEnabled })}
+                        onCheckedChange={(orgEnabled) => handleOrgToggle(event.id, orgEnabled)}
                         aria-label={`Organization default for ${event.title}`}
                       />
                     </div>
@@ -140,7 +219,7 @@ export function NotificationSubscriptionsTable() {
                   <td className="py-3.5 text-center">
                     <button
                       type="button"
-                      onClick={() => updateState(event.id, { notifyMe: !state.notifyMe })}
+                      onClick={() => handleNotifyToggle(event.id)}
                       className={`inline-flex size-4.5 items-center justify-center rounded border transition-colors ${
                         state.notifyMe
                           ? 'border-primary bg-primary text-primary-foreground'

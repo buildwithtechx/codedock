@@ -7,6 +7,7 @@ export function ThemeProvider({
   defaultTheme = 'system',
   enableSystem = true,
   disableTransitionOnChange = true,
+  themes = ['light', 'dim', 'dark', 'system'],
   ...props
 }: React.ComponentProps<typeof NextThemesProvider>) {
   return (
@@ -15,6 +16,7 @@ export function ThemeProvider({
       defaultTheme={defaultTheme}
       enableSystem={enableSystem}
       disableTransitionOnChange={disableTransitionOnChange}
+      themes={themes}
       {...props}
     >
       {children}

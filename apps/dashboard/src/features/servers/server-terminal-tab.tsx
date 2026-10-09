@@ -1,4 +1,5 @@
 import { TerminalSquare } from 'lucide-react';
+import { BlurIp } from '#/components/ui/blur-ip';
 import {
   Empty,
   EmptyDescription,
@@ -9,9 +10,7 @@ import {
 import type { Server } from '#/interfaces/server';
 
 export function ServerTerminalTab({ server }: { server: Server }) {
-  const endpoint = server.isLocal
-    ? 'local shell'
-    : `${server.sshUser ?? 'root'}@${server.sshHost ?? server.ipAddress}`;
+  const host = server.sshHost ?? server.ipAddress;
 
   return (
     <div className="overflow-hidden rounded-2xl bg-card">
@@ -34,8 +33,15 @@ export function ServerTerminalTab({ server }: { server: Server }) {
             </EmptyMedia>
             <EmptyTitle>Server shell unavailable</EmptyTitle>
             <EmptyDescription>
-              An interactive shell for {endpoint} is not connected yet. Use your SSH client to
-              access this node.
+              An interactive shell for{' '}
+              {server.isLocal ? (
+                'local shell'
+              ) : (
+                <>
+                  {server.sshUser ?? 'root'}@<BlurIp>{host}</BlurIp>
+                </>
+              )}{' '}
+              is not connected yet. Use your SSH client to access this node.
             </EmptyDescription>
           </EmptyHeader>
         </Empty>

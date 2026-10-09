@@ -16,3 +16,22 @@ export interface NotificationEvent {
   projectId?: string;
   url?: string;
 }
+
+export interface NotificationSubscriptionDto {
+  id: string;
+  userId: string;
+  organizationId: string;
+  category: string;
+  channels: string[];
+  enabled: boolean;
+  createdAt: string;
+  updatedAt: string;
+}
+
+export interface NotificationDefaultDto {
+  organizationId: string;
+  category: string;
+  channels: string[];
+  enabled: boolean;
+  updatedAt: string;
+}
