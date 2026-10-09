@@ -58,6 +58,11 @@ func (s *Supervisor) EnsureRunning(ctx context.Context) (string, error) {
 	if err != nil {
 		return "", err
 	}
+	port, err := resolvePostgresPort(s.dataDir, s.port)
+	if err != nil {
+		return "", err
+	}
+	s.port = port
 	if _, err := s.docker.ContainerInspect(ctx, s.name); err != nil {
 		if !errdefs.IsNotFound(err) {
 			return "", fmt.Errorf("failed to inspect postgres container: %w", err)
@@ -67,7 +72,12 @@ func (s *Supervisor) EnsureRunning(ctx context.Context) (string, error) {
 		}
 	}
 	if err := s.docker.ContainerStart(ctx, s.name, container.StartOptions{}); err != nil {
-		return "", fmt.Errorf("failed to start postgres container: %w", err)
+		if !isPortConflict(err) {
+			return "", fmt.Errorf("failed to start postgres container: %w", err)
+		}
+		if err := s.recreateOnFreePort(ctx, password); err != nil {
+			return "", err
+		}
 	}
 	if err := s.ensureNetwork(ctx); err != nil {
 		return "", err
@@ -78,6 +88,23 @@ func (s *Supervisor) EnsureRunning(ctx context.Context) (string, error) {
 	}
 	slog.Info("embedded postgres is running", "container", s.name)
 	return databaseURL, nil
+}
+
+func (s *Supervisor) recreateOnFreePort(ctx context.Context, password string) error {
+	_ = s.docker.ContainerRemove(ctx, s.name, container.RemoveOptions{Force: true})
+	port, err := refreshPostgresPort(s.dataDir, s.port+1)
+	if err != nil {
+		return err
+	}
+	s.port = port
+	if err := s.createContainer(ctx, password); err != nil {
+		return fmt.Errorf("failed to recreate postgres container: %w", err)
+	}
+	if err := s.docker.ContainerStart(ctx, s.name, container.StartOptions{}); err != nil {
+		return fmt.Errorf("failed to start postgres container: %w", err)
+	}
+	slog.Info("moved postgres to free port", "container", s.name, "port", s.port)
+	return nil
 }
 
 func (s *Supervisor) ensureNetwork(ctx context.Context) error {

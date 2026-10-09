@@ -22,10 +22,10 @@ const buttonVariants = cva(
         link: 'h-auto px-0 text-foreground underline-offset-4 hover:text-primary hover:underline',
       },
       size: {
-        default: 'h-9 px-4 py-2 has-data-[icon=inline-end]:pr-3 has-data-[icon=inline-start]:pl-3',
+        default: 'h-10 px-4 py-2 has-data-[icon=inline-end]:pr-3 has-data-[icon=inline-start]:pl-3',
         xs: "h-7 rounded-md px-2 text-xs has-data-[icon=inline-end]:pr-1.5 has-data-[icon=inline-start]:pl-1.5 [&_svg:not([class*='size-'])]:size-3",
         sm: "h-8 rounded-md px-3 text-xs has-data-[icon=inline-end]:pr-2 has-data-[icon=inline-start]:pl-2 [&_svg:not([class*='size-'])]:size-3.5",
-        lg: 'h-10 px-8 text-[15px] has-data-[icon=inline-end]:pr-4 has-data-[icon=inline-start]:pl-4',
+        lg: 'h-12 px-8 text-[15px] has-data-[icon=inline-end]:pr-4 has-data-[icon=inline-start]:pl-4',
         icon: 'size-9',
         'icon-xs': "size-7 rounded-md [&_svg:not([class*='size-'])]:size-3",
         'icon-sm': 'size-8 rounded-md',
