@@ -11,6 +11,7 @@ import (
 	"codedock/internal/engine/deploy"
 	"codedock/internal/http/middleware"
 	"codedock/internal/models"
+	authservices "codedock/internal/services/auth"
 	deploymentservices "codedock/internal/services/deployments"
 	projectservices "codedock/internal/services/projects"
 	"codedock/internal/services/runtimes"
@@ -24,15 +25,17 @@ type AppHandler struct {
 	deployer          *deploy.Deployer
 	deploymentService *deploymentservices.DeploymentService
 	envService        *projectservices.EnvironmentService
+	auditService      *authservices.AuditService
 }
 
-func NewAppHandler(s *projectservices.AppService, ps *projectservices.ProjectService, d *deploy.Deployer, ds *deploymentservices.DeploymentService, es *projectservices.EnvironmentService) *AppHandler {
+func NewAppHandler(s *projectservices.AppService, ps *projectservices.ProjectService, d *deploy.Deployer, ds *deploymentservices.DeploymentService, es *projectservices.EnvironmentService, auditService *authservices.AuditService) *AppHandler {
 	return &AppHandler{
 		appService:        s,
 		projectService:    ps,
 		deployer:          d,
 		deploymentService: ds,
 		envService:        es,
+		auditService:      auditService,
 	}
 }
 
@@ -142,6 +145,13 @@ func (h *AppHandler) Create(c echo.Context) error {
 		"name":   created.Name,
 		"type":   sourceType,
 	})
+	h.auditService.LogAction(c.Request().Context(), authservices.AuditActionOpts{
+		UserID:    utils.AuditActorID(c),
+		Action:    "app.create",
+		Resource:  created.ID,
+		IPAddress: c.RealIP(),
+		Details:   map[string]string{"name": created.Name, "project": req.ProjectID},
+	})
 
 	return utils.Created(c, "Created successfully", created)
 }
@@ -230,6 +240,12 @@ func (h *AppHandler) Update(c echo.Context) error {
 	if err := h.appService.UpdateAppService(c.Request().Context(), existing); err != nil {
 		return utils.Error(c, http.StatusInternalServerError, err.Error())
 	}
+	h.auditService.LogAction(c.Request().Context(), authservices.AuditActionOpts{
+		UserID:    utils.AuditActorID(c),
+		Action:    "app.update",
+		Resource:  id,
+		IPAddress: c.RealIP(),
+	})
 	return utils.Success(c, "Operation successful", existing)
 }
 
@@ -258,6 +274,13 @@ func (h *AppHandler) Delete(c echo.Context) error {
 	if err := h.appService.DeleteAppService(c.Request().Context(), id); err != nil {
 		return utils.Error(c, http.StatusInternalServerError, err.Error())
 	}
+	h.auditService.LogAction(c.Request().Context(), authservices.AuditActionOpts{
+		UserID:    utils.AuditActorID(c),
+		Action:    "app.delete",
+		Resource:  id,
+		IPAddress: c.RealIP(),
+		Details:   map[string]string{"name": existing.Name},
+	})
 	return c.NoContent(http.StatusNoContent)
 }
 

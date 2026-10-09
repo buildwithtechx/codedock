@@ -102,7 +102,7 @@ export function IssuesView() {
       <div className="space-y-6">
         <PageHeader
           title="Monitoring"
-          description="Failures and warnings across deployments, services, backups, and capacity."
+          description="Health, updates and activity across your projects, servers and domains."
         />
         <div className="flex flex-col items-center rounded-2xl border border-border/60 bg-card px-6 py-14 text-center">
           <span className="flex size-11 items-center justify-center rounded-2xl bg-muted text-muted-foreground">
@@ -127,7 +127,7 @@ export function IssuesView() {
     <div className="space-y-6">
       <PageHeader
         title="Monitoring"
-        description="Failures and warnings across deployments, services, backups, and capacity."
+        description="Health, updates and activity across your projects, servers and domains."
         action={
           tab !== 'health' ? (
             <Button
@@ -155,8 +155,8 @@ export function IssuesView() {
       >
         {!loading && tab === 'resolved' && (
           <p className="mb-4 rounded-xl border border-border/50 bg-muted/25 px-4 py-3 text-[12px] text-muted-foreground leading-relaxed">
-            Resolved covers issues closed here or cleared automatically when a rescan no longer
-            finds them. Sources outside this feed are not tracked as resolved.
+            History covers container and server incidents. Other checks report current state, so a
+            fixed certificate or deploy simply stops appearing here.
           </p>
         )}
 

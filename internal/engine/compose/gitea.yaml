@@ -2,7 +2,7 @@ x-codedock:
   is_one_click: true
   name: Gitea
   description: Self-hosted Git service
-  category: developer-tools
+  category: devtools
   icon: gitea
 services:
   gitea:

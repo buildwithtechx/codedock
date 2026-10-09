@@ -21,6 +21,19 @@ func auditLogSchema() Schema {
 		F("details", Str("Details")),
 		F("ipAddress", Str("Client IP")),
 		F("createdAt", Str("Creation time")),
+		F("category", Str("Derived category")),
+	)
+}
+
+func auditFacetsSchema() Schema {
+	return Obj("Audit facets",
+		RF("total", Int("Total entries")),
+		RF("categories", Arr("Categories", Obj("Category count",
+			RF("id", Str("Category ID")),
+			RF("label", Str("Category label")),
+			RF("description", Str("Category description")),
+			RF("count", Int("Entry count")),
+		))),
 	)
 }
 
@@ -57,6 +70,7 @@ func authOperations() []Operation {
 		{Method: "GET", Path: "/api/settings/oauth/providers", Summary: "List OAuth provider configs", Tags: []string{auth}, Auth: AuthAdmin, Response: Arr("Providers", oauthProviderSchema())},
 		{Method: "PUT", Path: "/api/settings/oauth/providers", Summary: "Save an OAuth provider config", Tags: []string{auth}, Auth: AuthAdmin, Request: JSON(oauthProviderSchema()), Response: oauthProviderSchema()},
 		{Method: "GET", Path: "/api/system/setup-status", Summary: "Check whether setup is required", Tags: []string{auth}, Response: Obj("Setup status", RF("setupRequired", Bool("Whether initial setup is required")))},
-		{Method: "GET", Path: "/api/audit-logs", Summary: "List audit log entries", Tags: []string{auth}, Auth: AuthAdmin, Response: Arr("Entries", auditLogSchema()), Query: []Param{QueryParamInt("limit", "Max entries"), QueryParamInt("offset", "Offset")}},
+		{Method: "GET", Path: "/api/audit-logs", Summary: "List audit log entries", Tags: []string{auth}, Auth: AuthAdmin, Response: Arr("Entries", auditLogSchema()), Query: []Param{QueryParamInt("limit", "Max entries"), QueryParamInt("offset", "Offset"), QueryParam("category", "Category ID filter")}},
+		{Method: "GET", Path: "/api/audit-logs/facets", Summary: "Count audit log entries per category", Tags: []string{auth}, Auth: AuthAdmin, Response: auditFacetsSchema()},
 	}
 }

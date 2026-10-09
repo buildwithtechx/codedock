@@ -9,6 +9,7 @@ import (
 	"codedock/internal/utils"
 
 	"codedock/internal/models"
+	authservices "codedock/internal/services/auth"
 	backupservices "codedock/internal/services/backups"
 	databaseservices "codedock/internal/services/databases"
 	"codedock/internal/services/operations"
@@ -21,14 +22,16 @@ type BackupHandler struct {
 	appService     *projectservices.AppService
 	dbService      *databaseservices.DatabaseService
 	projectService *projectservices.ProjectService
+	auditService   *authservices.AuditService
 }
 
-func NewBackupHandler(backup *backupservices.BackupService, app *projectservices.AppService, db *databaseservices.DatabaseService, proj *projectservices.ProjectService) *BackupHandler {
+func NewBackupHandler(backup *backupservices.BackupService, app *projectservices.AppService, db *databaseservices.DatabaseService, proj *projectservices.ProjectService, auditService *authservices.AuditService) *BackupHandler {
 	return &BackupHandler{
 		backupService:  backup,
 		appService:     app,
 		dbService:      db,
 		projectService: proj,
+		auditService:   auditService,
 	}
 }
 
@@ -120,6 +123,12 @@ func (h *BackupHandler) Create(c echo.Context) error {
 	if err := h.backupService.CreateConfig(c.Request().Context(), &cfg); err != nil {
 		return utils.Error(c, http.StatusInternalServerError, err.Error())
 	}
+	h.auditService.LogAction(c.Request().Context(), authservices.AuditActionOpts{
+		UserID:    utils.AuditActorID(c),
+		Action:    "backup.create",
+		Resource:  cfg.ID,
+		IPAddress: c.RealIP(),
+	})
 	cfg.DbPassword = "********"
 	return utils.Created(c, "Created successfully", cfg)
 }
@@ -261,6 +270,12 @@ func (h *BackupHandler) Delete(c echo.Context) error {
 	if err := h.backupService.DeleteConfig(c.Request().Context(), id); err != nil {
 		return utils.Error(c, http.StatusInternalServerError, err.Error())
 	}
+	h.auditService.LogAction(c.Request().Context(), authservices.AuditActionOpts{
+		UserID:    utils.AuditActorID(c),
+		Action:    "backup.delete",
+		Resource:  id,
+		IPAddress: c.RealIP(),
+	})
 	return c.NoContent(http.StatusNoContent)
 }
 
@@ -282,5 +297,11 @@ func (h *BackupHandler) Trigger(c echo.Context) error {
 	if err != nil {
 		return utils.Error(c, http.StatusInternalServerError, err.Error())
 	}
+	h.auditService.LogAction(c.Request().Context(), authservices.AuditActionOpts{
+		UserID:    utils.AuditActorID(c),
+		Action:    "backup.trigger",
+		Resource:  id,
+		IPAddress: c.RealIP(),
+	})
 	return utils.Success(c, "Operation successful", rec)
 }

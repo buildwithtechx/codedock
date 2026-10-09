@@ -2,9 +2,9 @@ import { Tabs, TabsList, TabsTrigger } from '#/components/ui/tabs';
 import type { MonitoringTab } from './interfaces';
 
 const NAV_TABS: Array<{ value: MonitoringTab; label: string }> = [
-  { value: 'open', label: 'Open' },
-  { value: 'resolved', label: 'Resolved' },
+  { value: 'open', label: 'Overview' },
   { value: 'health', label: 'Health' },
+  { value: 'resolved', label: 'History' },
 ];
 
 export function MonitoringNavigation({

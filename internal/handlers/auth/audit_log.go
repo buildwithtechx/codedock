@@ -31,7 +31,7 @@ func (h *AuditLogHandler) List(c echo.Context) error {
 		offset = 0
 	}
 
-	logs, err := h.auditService.ListLogs(c.Request().Context(), limit, offset)
+	logs, err := h.auditService.ListLogsByCategory(c.Request().Context(), c.QueryParam("category"), limit, offset)
 	if err != nil {
 		return utils.Error(c, http.StatusInternalServerError, err.Error())
 	}
@@ -41,4 +41,12 @@ func (h *AuditLogHandler) List(c echo.Context) error {
 	}
 
 	return utils.Success(c, "Audit logs fetched", logs)
+}
+
+func (h *AuditLogHandler) Facets(c echo.Context) error {
+	facets, err := h.auditService.Facets(c.Request().Context())
+	if err != nil {
+		return utils.Error(c, http.StatusInternalServerError, err.Error())
+	}
+	return utils.Success(c, "Audit facets fetched", facets)
 }

@@ -2,7 +2,7 @@ x-codedock:
   is_one_click: true
   name: NocoDB
   description: Open-source Airtable alternative
-  category: database-tools
+  category: database
   icon: nocodb
   secrets:
     - var: NC_AUTH_JWT_SECRET

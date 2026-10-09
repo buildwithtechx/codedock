@@ -47,7 +47,7 @@ export function AppLayout({ children }: { children: React.ReactNode }) {
   };
 
   return (
-    <div className="relative min-h-screen bg-background md:p-3">
+    <div className="relative flex min-h-screen flex-col bg-background md:h-screen md:overflow-hidden md:p-3">
       <AppSidebar
         collapsed={sidebarCollapsed}
         onToggle={() => setSidebarCollapsed((p) => !p)}
@@ -55,7 +55,7 @@ export function AppLayout({ children }: { children: React.ReactNode }) {
         onMobileClose={() => setMobileMenuOpen(false)}
       />
       <div
-        className={`relative flex min-h-screen flex-1 flex-col ${sidebarCollapsed ? 'md:pl-24' : 'md:pl-[284px]'}`}
+        className={`relative flex min-h-0 w-full flex-1 flex-col ${sidebarCollapsed ? 'md:pl-24' : 'md:pl-[284px]'}`}
       >
         <div className="flex h-14 items-center px-4 md:hidden">
           <button
@@ -66,7 +66,7 @@ export function AppLayout({ children }: { children: React.ReactNode }) {
             {mobileMenuOpen ? <X className="h-4 w-4" /> : <Menu className="h-4 w-4" />}
           </button>
         </div>
-        <main className="dashboard-content flex-1 overflow-auto px-4 py-6 sm:px-6 md:px-7 md:py-7 lg:px-8">
+        <main className="dashboard-content min-h-0 flex-1 overflow-y-auto overscroll-y-contain px-4 py-6 sm:px-6 md:px-7 md:py-7 lg:px-8">
           <div key={pathname} className="page-transition mx-auto w-full max-w-[1560px]">
             {user && user.emailVerified === false && (
               <div className="mb-6 flex flex-col items-center justify-between gap-4 rounded-lg border border-warning/50 bg-warning/20 p-4 sm:flex-row">

@@ -1,6 +1,6 @@
 import { useEffect, useMemo, useState } from 'react';
-import { env } from '#/env';
 import type { ServerMetrics } from '#/interfaces/server';
+import { websocketUrl } from '#/lib/websocket';
 import { useAuthStore } from '#/stores/auth-store';
 
 export interface LiveMetricPoint {
@@ -56,10 +56,8 @@ export function useServerLiveMetrics(serverId: string | undefined) {
 
   useEffect(() => {
     if (!serverId) return;
-    const protocol = window.location.protocol === 'https:' ? 'wss:' : 'ws:';
-    const wsHost = env.VITE_API_URL.replace(/^http(s?):\/\//, '');
     const socket = new WebSocket(
-      `${protocol}//${wsHost}/api/ws/servers/${serverId}/metrics`,
+      websocketUrl(`/ws/servers/${serverId}/metrics`),
       (() => {
         const token = useAuthStore.getState().token;
         return token ? ['auth', token] : undefined;

@@ -6,17 +6,20 @@ import (
 	"github.com/labstack/echo/v4"
 
 	"codedock/internal/models"
+	authservices "codedock/internal/services/auth"
 	systemservices "codedock/internal/services/system"
 	"codedock/internal/utils"
 )
 
 type ServerHandler struct {
 	serverService systemservices.ServerService
+	auditService  *authservices.AuditService
 }
 
-func NewServerHandler(serverService systemservices.ServerService) *ServerHandler {
+func NewServerHandler(serverService systemservices.ServerService, auditService *authservices.AuditService) *ServerHandler {
 	return &ServerHandler{
 		serverService: serverService,
+		auditService:  auditService,
 	}
 }
 
@@ -58,6 +61,13 @@ func (h *ServerHandler) Create(c echo.Context) error {
 		return utils.Error(c, http.StatusInternalServerError, err.Error())
 	}
 
+	h.auditService.LogAction(c.Request().Context(), authservices.AuditActionOpts{
+		UserID:    userClaims.UserID,
+		Action:    "server.create",
+		Resource:  server.ID,
+		IPAddress: c.RealIP(),
+		Details:   map[string]string{"name": req.Name},
+	})
 	h.redactCredentials(server)
 	return utils.Success(c, "Server created", server)
 }
@@ -109,6 +119,12 @@ func (h *ServerHandler) Update(c echo.Context) error {
 		return utils.Error(c, http.StatusInternalServerError, err.Error())
 	}
 
+	h.auditService.LogAction(c.Request().Context(), authservices.AuditActionOpts{
+		UserID:    userClaims.UserID,
+		Action:    "server.update",
+		Resource:  id,
+		IPAddress: c.RealIP(),
+	})
 	h.redactCredentials(server)
 	return utils.Success(c, "Server updated", server)
 }
@@ -146,6 +162,12 @@ func (h *ServerHandler) Delete(c echo.Context) error {
 		return utils.Error(c, http.StatusInternalServerError, err.Error())
 	}
 
+	h.auditService.LogAction(c.Request().Context(), authservices.AuditActionOpts{
+		UserID:    userClaims.UserID,
+		Action:    "server.delete",
+		Resource:  id,
+		IPAddress: c.RealIP(),
+	})
 	return utils.Success(c, "Server deleted", nil)
 }
 

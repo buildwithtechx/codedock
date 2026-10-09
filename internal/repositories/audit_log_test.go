@@ -45,3 +45,37 @@ func TestAuditLogRoundtrip(t *testing.T) {
 		t.Fatalf("unexpected page: %+v", page)
 	}
 }
+
+func TestAuditLogFacetsAndFilter(t *testing.T) {
+	db := openPGTestDB(t)
+	ctx := context.Background()
+	repo := NewAuditLogRepo(db)
+	seed := []*models.AuditLog{
+		{ID: "facet-1", UserID: "user-1", Action: "deployment.trigger", Resource: "svc-1"},
+		{ID: "facet-2", UserID: "user-1", Action: "deployment.rollback", Resource: "svc-1"},
+		{ID: "facet-3", UserID: "user-1", Action: "server.create", Resource: "srv-1"},
+		{ID: "facet-4", UserID: "user-1", Action: "backup.trigger", Resource: "cfg-1"},
+	}
+	for _, entry := range seed {
+		if err := repo.Create(ctx, entry); err != nil {
+			t.Fatalf("seed %s: %v", entry.ID, err)
+		}
+	}
+	counts, total, err := repo.Facets(ctx)
+	if err != nil {
+		t.Fatalf("facets: %v", err)
+	}
+	if total != len(seed) {
+		t.Fatalf("expected total %d, got %d", len(seed), total)
+	}
+	if counts["deployments"] != 2 || counts["servers"] != 1 || counts["system"] != 1 {
+		t.Fatalf("unexpected facet counts: %+v", counts)
+	}
+	filtered, err := repo.ListFiltered(ctx, models.CategoryPrefixes("deployments"), 10, 0)
+	if err != nil {
+		t.Fatalf("filtered list: %v", err)
+	}
+	if len(filtered) != 2 {
+		t.Fatalf("expected 2 deployment logs, got %d", len(filtered))
+	}
+}

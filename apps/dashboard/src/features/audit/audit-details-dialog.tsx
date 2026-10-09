@@ -6,6 +6,8 @@ import type { AuditLog } from '#/interfaces/audit';
 import {
   absoluteTime,
   actorDisplay,
+  auditCategoryOf,
+  categoryLabel,
   describeAuditAction,
   relativeTime,
   resourceDisplay,
@@ -91,6 +93,7 @@ export function AuditDetailsDialog({
 
             <section className="rounded-xl bg-card p-4">
               <DetailRow label="Who" value={actor} />
+              <DetailRow label="Category" value={categoryLabel(auditCategoryOf(event))} />
               <DetailRow label="When" value={absoluteTime(event.createdAt)} />
               <DetailRow label="IP address" value={event.ipAddress || '—'} copyable mono />
               <DetailRow label="Resource" value={resource || '—'} />

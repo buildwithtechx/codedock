@@ -80,7 +80,7 @@ export function OrganizationSwitcher({ collapsed }: { collapsed: boolean }) {
         </button>
       </DropdownMenuTrigger>
       <DropdownMenuContent
-        className="!w-72 max-w-[calc(100vw-2rem)] rounded-xl border border-border/70 bg-popover p-1.5 shadow-xl"
+        className="!w-[232px] max-w-[calc(100vw-2rem)] rounded-xl border border-border/70 bg-popover p-1.5 shadow-xl"
         align="start"
         side="top"
         collisionPadding={16}
@@ -92,7 +92,7 @@ export function OrganizationSwitcher({ collapsed }: { collapsed: boolean }) {
           <DropdownMenuItem
             key={organization.id}
             onSelect={() => switchOrganization(organization.id)}
-            className="min-h-11 gap-2.5 rounded-lg px-2.5 py-2"
+            className="gap-2.5 rounded-lg px-2.5 py-2"
           >
             <div className="flex h-7 w-7 shrink-0 items-center justify-center rounded-md bg-muted font-semibold text-[10px] text-muted-foreground">
               {organizationInitials(organization.name) || <Building2 className="h-3.5 w-3.5" />}
@@ -102,7 +102,7 @@ export function OrganizationSwitcher({ collapsed }: { collapsed: boolean }) {
           </DropdownMenuItem>
         ))}
         <DropdownMenuSeparator />
-        <div className="flex min-h-12 items-center gap-2.5 rounded-lg px-2.5 py-2">
+        <div className="flex items-center gap-2.5 rounded-lg px-2.5 py-2">
           <div className="flex h-7 w-7 shrink-0 items-center justify-center rounded-full bg-muted font-semibold text-[10px] text-muted-foreground">
             {user?.name?.[0]?.toUpperCase() || <UserRound className="h-3.5 w-3.5" />}
           </div>
@@ -117,7 +117,7 @@ export function OrganizationSwitcher({ collapsed }: { collapsed: boolean }) {
           disabled={isLoggingOut}
           onSelect={() => logout()}
           variant="destructive"
-          className="min-h-10 gap-2.5 rounded-lg px-2.5 py-2"
+          className="gap-2.5 rounded-lg px-2.5 py-2"
         >
           <LogOut className="h-4 w-4" />
           Sign out

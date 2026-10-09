@@ -1,14 +1,15 @@
 import { History } from 'lucide-react';
 import { useMemo } from 'react';
-import type { AuditLog } from '#/interfaces/audit';
-import { relativeTime } from './audit-taxonomy';
+import type { AuditCategoryFacet } from './api';
 
-export function AuditSummaryCard({ logs }: { logs: AuditLog[] }) {
-  const actors = useMemo(() => new Set(logs.map((log) => log.userId)).size, [logs]);
-  const oldest = useMemo(() => {
-    if (logs.length === 0) return null;
-    return logs.reduce((a, b) => (+new Date(a.createdAt) < +new Date(b.createdAt) ? a : b));
-  }, [logs]);
+export function AuditSummaryCard({
+  total,
+  facets,
+}: {
+  total: number;
+  facets: AuditCategoryFacet[];
+}) {
+  const top = useMemo(() => [...facets].sort((a, b) => b.count - a.count).slice(0, 5), [facets]);
 
   return (
     <div className="rounded-2xl border border-border/50 bg-card p-5">
@@ -24,16 +25,14 @@ export function AuditSummaryCard({ logs }: { logs: AuditLog[] }) {
       <div className="mt-4 space-y-2.5 border-border/40 border-t pt-4 text-sm">
         <div className="flex items-center justify-between">
           <span className="text-muted-foreground">Events</span>
-          <span className="font-medium tabular-nums">{logs.length}</span>
+          <span className="font-medium tabular-nums">{total}</span>
         </div>
-        <div className="flex items-center justify-between">
-          <span className="text-muted-foreground">Actors</span>
-          <span className="font-medium tabular-nums">{actors}</span>
-        </div>
-        <div className="flex items-center justify-between">
-          <span className="text-muted-foreground">Oldest</span>
-          <span className="font-medium">{oldest ? relativeTime(oldest.createdAt) : '—'}</span>
-        </div>
+        {top.map((entry) => (
+          <div key={entry.id} className="flex items-center justify-between">
+            <span className="text-muted-foreground">{entry.label}</span>
+            <span className="font-medium tabular-nums">{entry.count}</span>
+          </div>
+        ))}
       </div>
     </div>
   );

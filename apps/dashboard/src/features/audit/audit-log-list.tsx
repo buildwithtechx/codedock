@@ -3,25 +3,15 @@ import { Search, Shield, User } from 'lucide-react';
 import { useMemo, useState } from 'react';
 import { Input } from '#/components/ui/input';
 import { QueryErrorState } from '#/components/ui/query-error-state';
-import {
-  Select,
-  SelectContent,
-  SelectItem,
-  SelectTrigger,
-  SelectValue,
-} from '#/components/ui/select';
 import { Skeleton } from '#/components/ui/skeleton';
 import { Tabs, TabsList, TabsTrigger } from '#/components/ui/tabs';
-import type { AuditLog } from '#/interfaces/audit';
-import { auditApi } from './api';
+import { type AuditLogRow, auditApi } from './api';
 import { AuditDetailsDialog } from './audit-details-dialog';
 import { AuditSummaryCard } from './audit-summary-card';
 import {
   AUDIT_CATEGORIES,
-  type AuditCategoryId,
   absoluteTime,
   actorDisplay,
-  auditCategoryOf,
   clockTime,
   dayKey,
   describeAuditAction,
@@ -31,18 +21,6 @@ import {
 } from './audit-taxonomy';
 
 const PER_PAGE = 50;
-
-type CategoryKey = 'all' | AuditCategoryId;
-type PeriodKey = 'all' | 'today' | '7d' | '30d';
-
-function periodStart(period: PeriodKey): number | null {
-  if (period === 'all') return null;
-  const start = new Date();
-  start.setHours(0, 0, 0, 0);
-  const back = period === 'today' ? 0 : period === '7d' ? 6 : 29;
-  start.setDate(start.getDate() - back);
-  return start.getTime();
-}
 
 function dayLabel(iso: string): string {
   const key = dayKey(iso);
@@ -59,66 +37,65 @@ function dayLabel(iso: string): string {
 }
 
 export function AuditLogList() {
-  const {
-    data: response,
-    isLoading,
-    isError,
-    refetch,
-  } = useQuery({
-    queryKey: ['auditLogs'],
-    queryFn: () => auditApi.list(),
-  });
-  const [category, setCategory] = useState<CategoryKey>('all');
+  const [category, setCategory] = useState('all');
   const [search, setSearch] = useState('');
-  const [actor, setActor] = useState('all');
-  const [period, setPeriod] = useState<PeriodKey>('all');
   const [page, setPage] = useState(1);
-  const [selected, setSelected] = useState<AuditLog | null>(null);
+  const [selected, setSelected] = useState<AuditLogRow | null>(null);
 
-  const logs = useMemo(() => response?.data ?? [], [response]);
+  const facetsQuery = useQuery({
+    queryKey: ['auditLogFacets'],
+    queryFn: () => auditApi.facets(),
+  });
+  const facets = facetsQuery.data?.data ?? null;
 
-  const actors = useMemo(() => {
-    const seen = new Map<string, number>();
-    for (const log of logs) {
-      const name = actorDisplay(log);
-      seen.set(name, (seen.get(name) ?? 0) + 1);
+  const listQuery = useQuery({
+    queryKey: ['auditLogs', category, page],
+    queryFn: () =>
+      auditApi.list({
+        category: category === 'all' ? undefined : category,
+        limit: PER_PAGE,
+        offset: (page - 1) * PER_PAGE,
+      }),
+  });
+  const rows = useMemo(() => listQuery.data?.data ?? [], [listQuery.data]);
+
+  const tabDefs = useMemo(() => {
+    if (facets) {
+      return [
+        { id: 'all', label: 'All', count: facets.total },
+        ...facets.categories.map((entry) => ({
+          id: entry.id,
+          label: entry.label,
+          count: entry.count,
+        })),
+      ];
     }
-    return [...seen.entries()].sort((a, b) => b[1] - a[1]);
-  }, [logs]);
+    return [
+      { id: 'all', label: 'All', count: 0 },
+      ...AUDIT_CATEGORIES.map((entry) => ({ id: entry.id, label: entry.label, count: 0 })),
+    ];
+  }, [facets]);
 
-  const counts = useMemo(() => {
-    const map = new Map<CategoryKey, number>([['all', logs.length]]);
-    for (const log of logs) {
-      const key = auditCategoryOf(log);
-      map.set(key, (map.get(key) ?? 0) + 1);
-    }
-    return map;
-  }, [logs]);
+  const total =
+    category === 'all'
+      ? (facets?.total ?? rows.length)
+      : (facets?.categories.find((entry) => entry.id === category)?.count ?? rows.length);
 
-  const filtered = useMemo(() => {
+  const searched = useMemo(() => {
     const query = search.trim().toLowerCase();
-    const from = periodStart(period);
-    return logs
-      .filter((log) => category === 'all' || auditCategoryOf(log) === category)
-      .filter((log) => actor === 'all' || actorDisplay(log) === actor)
-      .filter((log) => from === null || new Date(log.createdAt).getTime() >= from)
-      .filter(
-        (log) =>
-          !query ||
+    const matched = query
+      ? rows.filter((log) =>
           `${log.action} ${log.resource} ${log.details} ${log.userId} ${log.ipAddress}`
             .toLowerCase()
             .includes(query)
-      )
-      .sort((a, b) => +new Date(b.createdAt) - +new Date(a.createdAt));
-  }, [logs, category, actor, period, search]);
-
-  const totalPages = Math.max(1, Math.ceil(filtered.length / PER_PAGE));
-  const safePage = Math.min(page, totalPages);
-  const pageRows = filtered.slice((safePage - 1) * PER_PAGE, safePage * PER_PAGE);
+        )
+      : rows;
+    return [...matched].sort((a, b) => +new Date(b.createdAt) - +new Date(a.createdAt));
+  }, [rows, search]);
 
   const days = useMemo(() => {
-    const groups: Array<{ key: string; label: string; rows: AuditLog[] }> = [];
-    for (const row of pageRows) {
+    const groups: Array<{ key: string; label: string; rows: AuditLogRow[] }> = [];
+    for (const row of searched) {
       const key = dayKey(row.createdAt);
       const last = groups[groups.length - 1];
       if (last && last.key === key) {
@@ -128,22 +105,23 @@ export function AuditLogList() {
       groups.push({ key, label: dayLabel(row.createdAt), rows: [row] });
     }
     return groups;
-  }, [pageRows]);
+  }, [searched]);
 
-  const filtersActive =
-    category !== 'all' || actor !== 'all' || period !== 'all' || search.trim() !== '';
+  const totalPages = Math.max(1, Math.ceil(total / PER_PAGE));
+  const filtersActive = category !== 'all' || search.trim() !== '';
 
-  const resetPage = () => setPage(1);
+  const pickCategory = (value: string) => {
+    setCategory(value);
+    setPage(1);
+  };
 
   const clearFilters = () => {
     setCategory('all');
-    setActor('all');
-    setPeriod('all');
     setSearch('');
     setPage(1);
   };
 
-  if (isLoading) {
+  if (listQuery.isLoading) {
     return (
       <div className="space-y-3">
         {Array.from({ length: 6 }).map((_, index) => (
@@ -153,32 +131,24 @@ export function AuditLogList() {
     );
   }
 
-  if (isError) {
+  if (listQuery.isError) {
     return (
       <QueryErrorState
         title="Audit logs are unavailable"
         description="Codedock could not load activity logs for your workspace."
-        onRetry={() => void refetch()}
+        onRetry={() => void listQuery.refetch()}
       />
     );
   }
 
   return (
     <div>
-      <Tabs
-        value={category}
-        onValueChange={(value) => {
-          setCategory(value as CategoryKey);
-          resetPage();
-        }}
-      >
+      <Tabs value={category} onValueChange={pickCategory}>
         <TabsList variant="line" className="flex w-full flex-wrap justify-start">
-          <TabsTrigger value="all">
-            All{counts.get('all') ? ` (${counts.get('all')})` : ''}
-          </TabsTrigger>
-          {AUDIT_CATEGORIES.filter((cat) => (counts.get(cat.id) ?? 0) > 0).map((cat) => (
-            <TabsTrigger key={cat.id} value={cat.id}>
-              {cat.label} ({counts.get(cat.id)})
+          {tabDefs.map((tab) => (
+            <TabsTrigger key={tab.id} value={tab.id}>
+              {tab.label}
+              {facets && <span className="text-muted-foreground tabular-nums">({tab.count})</span>}
             </TabsTrigger>
           ))}
         </TabsList>
@@ -186,59 +156,18 @@ export function AuditLogList() {
 
       <div className="mt-6 grid grid-cols-1 gap-6 lg:grid-cols-[1fr_320px]">
         <div className="min-w-0 space-y-6">
-          <div className="flex flex-wrap items-center gap-3">
-            <div className="relative min-w-52 flex-1">
-              <Search className="absolute top-1/2 left-3 size-4 -translate-y-1/2 text-muted-foreground" />
-              <Input
-                type="search"
-                value={search}
-                onChange={(event) => {
-                  setSearch(event.target.value);
-                  resetPage();
-                }}
-                placeholder="Search actions, resources, users…"
-                className="ps-10"
-              />
-            </div>
-            <Select
-              value={actor}
-              onValueChange={(value) => {
-                setActor(value);
-                resetPage();
-              }}
-            >
-              <SelectTrigger className="w-48">
-                <SelectValue placeholder="Anyone" />
-              </SelectTrigger>
-              <SelectContent>
-                <SelectItem value="all">Anyone</SelectItem>
-                {actors.map(([name, count]) => (
-                  <SelectItem key={name} value={name}>
-                    {name} ({count})
-                  </SelectItem>
-                ))}
-              </SelectContent>
-            </Select>
-            <Select
-              value={period}
-              onValueChange={(value) => {
-                setPeriod(value as PeriodKey);
-                resetPage();
-              }}
-            >
-              <SelectTrigger className="w-40">
-                <SelectValue placeholder="All time" />
-              </SelectTrigger>
-              <SelectContent>
-                <SelectItem value="all">All time</SelectItem>
-                <SelectItem value="today">Today</SelectItem>
-                <SelectItem value="7d">Last 7 days</SelectItem>
-                <SelectItem value="30d">Last 30 days</SelectItem>
-              </SelectContent>
-            </Select>
+          <div className="relative min-w-52 flex-1">
+            <Search className="absolute top-1/2 left-3 size-4 -translate-y-1/2 text-muted-foreground" />
+            <Input
+              type="search"
+              value={search}
+              onChange={(event) => setSearch(event.target.value)}
+              placeholder="Search actions, resources, users…"
+              className="ps-10"
+            />
           </div>
 
-          {filtered.length === 0 ? (
+          {searched.length === 0 ? (
             <div className="rounded-2xl border border-border/50 bg-card py-16 text-center">
               <Shield className="mx-auto mb-4 size-8 text-muted-foreground/30" />
               <p className="text-muted-foreground text-sm">
@@ -308,25 +237,24 @@ export function AuditLogList() {
             </div>
           )}
 
-          {filtered.length > PER_PAGE && (
+          {total > PER_PAGE && (
             <div className="flex items-center justify-between text-muted-foreground text-sm">
               <span>
-                Showing {(safePage - 1) * PER_PAGE + 1}–
-                {Math.min(safePage * PER_PAGE, filtered.length)} of {filtered.length}
+                Showing {(page - 1) * PER_PAGE + 1}–{Math.min(page * PER_PAGE, total)} of {total}
               </span>
               <div className="flex gap-2">
                 <button
                   type="button"
-                  onClick={() => setPage(Math.max(1, safePage - 1))}
-                  disabled={safePage === 1}
+                  onClick={() => setPage(Math.max(1, page - 1))}
+                  disabled={page === 1 || listQuery.isFetching}
                   className="rounded-lg border border-border/50 px-3 py-1.5 transition-colors hover:bg-muted/40 disabled:opacity-50"
                 >
                   Previous
                 </button>
                 <button
                   type="button"
-                  onClick={() => setPage(Math.min(totalPages, safePage + 1))}
-                  disabled={safePage >= totalPages}
+                  onClick={() => setPage(Math.min(totalPages, page + 1))}
+                  disabled={page >= totalPages || listQuery.isFetching}
                   className="rounded-lg border border-border/50 px-3 py-1.5 transition-colors hover:bg-muted/40 disabled:opacity-50"
                 >
                   Next
@@ -337,7 +265,10 @@ export function AuditLogList() {
         </div>
 
         <aside className="space-y-4 lg:sticky lg:top-6 lg:self-start">
-          <AuditSummaryCard logs={logs} />
+          <AuditSummaryCard
+            total={facets?.total ?? rows.length}
+            facets={facets?.categories ?? []}
+          />
         </aside>
       </div>
 

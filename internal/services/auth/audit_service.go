@@ -53,5 +53,31 @@ func (s *AuditService) LogAction(ctx context.Context, opts AuditActionOpts) {
 }
 
 func (s *AuditService) ListLogs(ctx context.Context, limit, offset int) ([]models.AuditLog, error) {
-	return s.repo.List(ctx, limit, offset)
+	return s.ListLogsByCategory(ctx, "", limit, offset)
+}
+
+func (s *AuditService) ListLogsByCategory(ctx context.Context, category string, limit, offset int) ([]models.AuditLog, error) {
+	logs, err := s.repo.ListFiltered(ctx, models.CategoryPrefixes(category), limit, offset)
+	if err != nil {
+		return nil, err
+	}
+	for i := range logs {
+		logs[i].Category = models.CategoryForAction(logs[i].Action)
+	}
+	return logs, nil
+}
+
+func (s *AuditService) Facets(ctx context.Context) (models.AuditFacets, error) {
+	counts, total, err := s.repo.Facets(ctx)
+	if err != nil {
+		return models.AuditFacets{}, err
+	}
+	categories := make([]models.AuditCategoryCount, 0, len(models.AuditCategories()))
+	for _, category := range models.AuditCategories() {
+		categories = append(categories, models.AuditCategoryCount{
+			AuditCategory: category,
+			Count:         counts[category.ID],
+		})
+	}
+	return models.AuditFacets{Total: total, Categories: categories}, nil
 }

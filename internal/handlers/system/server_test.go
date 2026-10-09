@@ -51,7 +51,7 @@ func TestServerListReturnsControlPlane(t *testing.T) {
 		Name:           "Codedock Control Plane",
 		Status:         models.ServerStatusOnline,
 		IsControlPlane: true,
-	}}})
+	}}}, nil)
 	if err := handler.List(ctx); err != nil {
 		t.Fatalf("list servers: %v", err)
 	}

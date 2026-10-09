@@ -1,162 +1,332 @@
 import { format } from 'date-fns';
-import { Calendar, Clock, FolderOpen, Key, Plus, Trash2 } from 'lucide-react';
+import { AlertTriangle, Check, Copy, Key, Lock, Plus, ShieldCheck, Trash2 } from 'lucide-react';
 import { useState } from 'react';
-import { PageHeader } from '#/components/layout/page-header';
+import { toast } from 'sonner';
+import { Badge } from '#/components/ui/badge';
 import { Button } from '#/components/ui/button';
-import { useListTokens } from '#/features/profile';
-import { ApiKeyCreateDialog } from './components/api-key-create-dialog';
+import { Checkbox } from '#/components/ui/checkbox';
+import { Input } from '#/components/ui/input';
+import { Label } from '#/components/ui/label';
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from '#/components/ui/select';
+import { useCreateToken, useListTokens } from '#/features/profile';
+import type { CreatePATRequest } from '#/features/users';
+import { useListCanvasSummaries } from '#/hooks/use-canvas';
 import { ApiKeyDeleteDialog } from './components/api-key-delete-dialog';
-import { ApiKeyNewDialog } from './components/api-key-new-dialog';
+
+const EXPIRY_OPTIONS = [
+  { value: 'none', days: null, label: 'No expiration' },
+  { value: '7', days: 7, label: '7 days' },
+  { value: '30', days: 30, label: '30 days' },
+  { value: '90', days: 90, label: '90 days' },
+] as const;
+
+function formatDate(iso: string | undefined): string {
+  if (!iso) return 'Never expires';
+  return format(new Date(iso), 'MMM d, yyyy');
+}
 
 export function ApiKeysList() {
   const { data: tokensResponse, isLoading } = useListTokens();
+  const createToken = useCreateToken();
+  const projectsQuery = useListCanvasSummaries();
+  const projects = projectsQuery.data?.data ?? [];
 
-  const [isCreateOpen, setIsCreateOpen] = useState(false);
-  const [isNewKeyOpen, setIsNewKeyOpen] = useState(false);
+  const [showForm, setShowForm] = useState(false);
+  const [name, setName] = useState('');
+  const [readOnly, setReadOnly] = useState(false);
+  const [expiryDays, setExpiryDays] = useState<number | null>(30);
+  const [projectScope, setProjectScope] = useState<'all' | 'specific'>('all');
+  const [allowedProjects, setAllowedProjects] = useState<string[]>([]);
+  const [newToken, setNewToken] = useState<string | null>(null);
+  const [copied, setCopied] = useState(false);
   const [deleteId, setDeleteId] = useState<string | null>(null);
-  const [newKeyPlain, setNewKeyPlain] = useState('');
 
-  const handleCreateSuccess = (plainKey: string) => {
-    setNewKeyPlain(plainKey);
-    setIsCreateOpen(false);
-    setIsNewKeyOpen(true);
+  const tokens = tokensResponse?.data ?? [];
+
+  const resetForm = () => {
+    setShowForm(false);
+    setName('');
+    setReadOnly(false);
+    setExpiryDays(30);
+    setProjectScope('all');
+    setAllowedProjects([]);
   };
 
-  const tokens = tokensResponse?.data || [];
+  const handleCreate = () => {
+    if (!name.trim()) {
+      toast.error('Give the token a name');
+      return;
+    }
+    if (projectScope === 'specific' && allowedProjects.length === 0) {
+      toast.error('Select at least one project or choose all projects');
+      return;
+    }
+    const payload: CreatePATRequest = {
+      name: name.trim(),
+      accessLevel: readOnly ? 'read' : 'read_write',
+      projectScope,
+      allowedProjects: projectScope === 'specific' ? allowedProjects : [],
+    };
+    if (expiryDays !== null) {
+      const date = new Date();
+      date.setDate(date.getDate() + expiryDays);
+      payload.expiresAt = date.toISOString();
+    }
+    createToken.mutate(
+      { payload },
+      {
+        onSuccess: (data) => {
+          setNewToken(data.data.plain);
+          resetForm();
+        },
+        onError: (err) => {
+          toast.error(err.message || 'Failed to create token');
+        },
+      }
+    );
+  };
+
+  const copyToken = async () => {
+    if (!newToken) return;
+    try {
+      await navigator.clipboard.writeText(newToken);
+      setCopied(true);
+      toast.success('Token copied to clipboard');
+      setTimeout(() => setCopied(false), 1500);
+    } catch {
+      toast.error('Copy failed, select the token manually');
+    }
+  };
+
+  const toggleProject = (projectId: string, checked: boolean) => {
+    setAllowedProjects((current) =>
+      checked ? [...current, projectId] : current.filter((id) => id !== projectId)
+    );
+  };
 
   return (
-    <div className="space-y-6">
-      <PageHeader
-        title="API access"
-        description={
-          isLoading
-            ? 'Loading access tokens...'
-            : `${tokens.length} API key${tokens.length === 1 ? '' : 's'}`
-        }
-        action={
-          <Button onClick={() => setIsCreateOpen(true)} className="gap-2">
-            <Plus className="h-4 w-4" />
-            Create API key
-          </Button>
-        }
-      />
-
-      <div className="grid grid-cols-1 gap-6">
-        {isLoading ? (
-          <div className="flex min-h-[24rem] items-center justify-center">
-            <span className="font-medium text-muted-foreground text-sm">
-              Loading access tokens...
-            </span>
-          </div>
-        ) : tokens.length === 0 ? (
-          <div className="flex min-h-[28rem] flex-col items-center justify-center text-center">
-            <div className="flex h-12 w-12 items-center justify-center rounded-xl bg-card text-primary">
-              <Key className="h-5 w-5 text-primary" />
-            </div>
-            <h2 className="mt-5 font-medium text-foreground/90 text-xl tracking-[-0.02em]">
-              No API keys
-            </h2>
-            <p className="mt-2 max-w-sm text-muted-foreground/75 text-sm leading-6">
-              Create an API key to access Codedock programmatically.
-            </p>
-            <Button onClick={() => setIsCreateOpen(true)} className="mt-6 gap-2">
-              <Plus className="h-4 w-4" />
-              Create API key
-            </Button>
-          </div>
-        ) : (
-          tokens.map((token) => (
-            <div key={token.id} className="rounded-2xl bg-card p-6">
-              <div className="mb-6 flex items-start justify-between">
-                <div>
-                  <div className="flex items-center gap-3">
-                    <h2 className="font-semibold text-base text-foreground">{token.name}</h2>
-                    <div className="rounded-full bg-primary/10 px-2 py-0.5 font-medium text-[10px] text-primary uppercase tracking-widest">
-                      Active
-                    </div>
-                  </div>
-                  <p className="mt-2 font-mono text-[10px] text-muted-foreground uppercase tracking-widest">
-                    {token.prefix}
-                  </p>
-                </div>
-                <Button
-                  variant="outline"
-                  onClick={() => setDeleteId(token.id)}
-                  className="h-9 w-9 bg-transparent p-0 text-muted-foreground transition-colors hover:bg-destructive/10 hover:text-destructive"
-                >
-                  <Trash2 className="h-4 w-4" />
-                </Button>
-              </div>
-
-              <div className="grid grid-cols-1 gap-4 md:grid-cols-4">
-                <div className="rounded-xl bg-muted/50 p-4">
-                  <div className="mb-3 flex items-center gap-2">
-                    <Key className="h-3 w-3 text-muted-foreground" />
-                    <span className="font-bold text-[10px] text-muted-foreground uppercase tracking-[0.15em]">
-                      ACCESS
-                    </span>
-                  </div>
-                  <div className="font-medium text-foreground/90 text-sm">
-                    {token.accessLevel === 'read_write' ? 'Read and Write' : 'Read'}
-                  </div>
-                </div>
-
-                <div className="rounded-xl bg-muted/50 p-4">
-                  <div className="mb-3 flex items-center gap-2">
-                    <FolderOpen className="h-3 w-3 text-muted-foreground" />
-                    <span className="font-bold text-[10px] text-muted-foreground uppercase tracking-[0.15em]">
-                      PROJECTS
-                    </span>
-                  </div>
-                  <div className="font-medium text-foreground/90 text-sm">
-                    {token.projectScope === 'specific' ? 'Specific projects' : 'All projects'}
-                  </div>
-                </div>
-
-                <div className="rounded-xl bg-muted/50 p-4">
-                  <div className="mb-3 flex items-center gap-2">
-                    <Calendar className="h-3 w-3 text-muted-foreground" />
-                    <span className="font-bold text-[10px] text-muted-foreground uppercase tracking-[0.15em]">
-                      EXPIRATION
-                    </span>
-                  </div>
-                  <div className="font-medium text-foreground/90 text-sm">
-                    {token.expiresAt
-                      ? `Expires ${format(new Date(token.expiresAt), 'MMM d, hh:mm a')}`
-                      : 'No expiration'}
-                  </div>
-                </div>
-
-                <div className="rounded-xl bg-muted/50 p-4">
-                  <div className="mb-3 flex items-center gap-2">
-                    <Clock className="h-3 w-3 text-muted-foreground" />
-                    <span className="font-bold text-[10px] text-muted-foreground uppercase tracking-[0.15em]">
-                      LAST USED
-                    </span>
-                  </div>
-                  <div className="font-medium text-foreground/90 text-sm">Never</div>
-                </div>
-              </div>
-            </div>
-          ))
-        )}
+    <section className="rounded-2xl bg-card p-6">
+      <div className="mb-4 flex items-center gap-3">
+        <div className="flex h-8 w-8 shrink-0 items-center justify-center rounded-lg bg-primary/10 text-primary">
+          <Key className="h-4 w-4" />
+        </div>
+        <div className="min-w-0">
+          <h2 className="font-semibold text-sm">Personal access tokens</h2>
+          <p className="text-muted-foreground text-xs">
+            Tokens authenticate with the API as your user account.
+          </p>
+        </div>
       </div>
 
-      <ApiKeyCreateDialog
-        open={isCreateOpen}
-        onOpenChange={setIsCreateOpen}
-        onSuccess={handleCreateSuccess}
-      />
-      <ApiKeyNewDialog
-        open={isNewKeyOpen}
-        onOpenChange={setIsNewKeyOpen}
-        newKeyPlain={newKeyPlain}
-        onClose={() => {
-          setNewKeyPlain('');
-          setIsNewKeyOpen(false);
-        }}
-      />
+      <div className="mb-4 rounded-xl border border-amber-500/30 bg-amber-500/10 p-4">
+        <div className="flex items-start gap-2">
+          <AlertTriangle className="mt-0.5 h-4 w-4 shrink-0 text-amber-500" />
+          <div className="text-muted-foreground text-xs leading-relaxed">
+            A token <span className="font-medium text-foreground">acts as you</span>, with full
+            access to everything you can reach. Prefer{' '}
+            <span className="font-medium text-foreground">read-only</span> tokens and{' '}
+            <span className="font-medium text-foreground">limit them to specific projects</span>{' '}
+            whenever possible.
+          </div>
+        </div>
+      </div>
+
+      {newToken && (
+        <div className="mb-4 rounded-xl border border-primary/30 bg-primary/[0.04] p-4">
+          <p className="mb-1 font-medium text-foreground text-sm">Copy your new token</p>
+          <p className="mb-3 text-muted-foreground text-xs">
+            This is the only time the full token is shown. Store it somewhere secure.
+          </p>
+          <div className="flex items-center gap-2">
+            <code className="min-w-0 flex-1 truncate rounded-lg bg-muted px-3 py-2 font-mono text-foreground text-xs">
+              {newToken}
+            </code>
+            <Button size="sm" onClick={copyToken} className="shrink-0 gap-1.5">
+              {copied ? <Check className="h-3.5 w-3.5" /> : <Copy className="h-3.5 w-3.5" />}
+              {copied ? 'Copied' : 'Copy'}
+            </Button>
+          </div>
+          <button
+            type="button"
+            onClick={() => setNewToken(null)}
+            className="mt-3 font-medium text-muted-foreground text-xs transition-colors hover:text-foreground"
+          >
+            Dismiss
+          </button>
+        </div>
+      )}
+
+      {showForm ? (
+        <div className="mb-4 space-y-3 rounded-xl border border-border/50 p-4">
+          <Input
+            value={name}
+            onChange={(e) => setName(e.target.value)}
+            placeholder="Token name, e.g. CI deploys"
+            className="bg-muted/30"
+          />
+          <div className="flex flex-wrap items-center gap-4">
+            <div className="flex select-none items-center gap-2 text-foreground text-sm">
+              <Checkbox
+                id="token-read-only"
+                checked={readOnly}
+                onCheckedChange={(v) => setReadOnly(v === true)}
+              />
+              <Label htmlFor="token-read-only" className="cursor-pointer font-normal">
+                Read-only
+              </Label>
+            </div>
+            <Select
+              value={expiryDays === null ? 'none' : String(expiryDays)}
+              onValueChange={(v) => setExpiryDays(v === 'none' ? null : Number(v))}
+            >
+              <SelectTrigger className="w-40 bg-muted/30">
+                <SelectValue placeholder="Expiration" />
+              </SelectTrigger>
+              <SelectContent>
+                {EXPIRY_OPTIONS.map((o) => (
+                  <SelectItem key={o.value} value={o.value}>
+                    {o.label}
+                  </SelectItem>
+                ))}
+              </SelectContent>
+            </Select>
+          </div>
+
+          <div className="rounded-lg border border-border/50 bg-muted/[0.04] p-3">
+            <div className="grid grid-cols-2 gap-2">
+              <button
+                type="button"
+                onClick={() => setProjectScope('all')}
+                className={`flex h-9 items-center justify-center gap-2 rounded-lg border font-medium text-xs transition-colors ${
+                  projectScope === 'all'
+                    ? 'border-primary/50 bg-primary/10 text-primary'
+                    : 'border-border/50 bg-transparent text-muted-foreground hover:bg-background/50 hover:text-foreground'
+                }`}
+              >
+                All projects
+              </button>
+              <button
+                type="button"
+                onClick={() => setProjectScope('specific')}
+                className={`flex h-9 items-center justify-center gap-2 rounded-lg border font-medium text-xs transition-colors ${
+                  projectScope === 'specific'
+                    ? 'border-primary/50 bg-primary/10 text-primary'
+                    : 'border-border/50 bg-transparent text-muted-foreground hover:bg-background/50 hover:text-foreground'
+                }`}
+              >
+                <Lock className="h-3.5 w-3.5" />
+                Specific projects
+              </button>
+            </div>
+            {projectScope === 'specific' && (
+              <div className="mt-3 max-h-40 space-y-2 overflow-y-auto rounded-lg border border-border/50 p-3">
+                {projectsQuery.isLoading && (
+                  <p className="text-muted-foreground text-sm">Loading projects...</p>
+                )}
+                {projectsQuery.isError && (
+                  <div className="space-y-2">
+                    <p className="text-sm">Could not load projects.</p>
+                    <Button
+                      type="button"
+                      variant="outline"
+                      size="sm"
+                      onClick={() => projectsQuery.refetch()}
+                    >
+                      Retry projects
+                    </Button>
+                  </div>
+                )}
+                {projects.map((project) => (
+                  <div key={project.id} className="flex items-center gap-2 text-sm">
+                    <Checkbox
+                      id={`token-project-${project.id}`}
+                      checked={allowedProjects.includes(project.id)}
+                      onCheckedChange={(v) => toggleProject(project.id, v === true)}
+                    />
+                    <Label
+                      htmlFor={`token-project-${project.id}`}
+                      className="cursor-pointer font-normal"
+                    >
+                      {project.name}
+                    </Label>
+                  </div>
+                ))}
+              </div>
+            )}
+          </div>
+
+          <div className="flex items-center gap-2">
+            <Button onClick={handleCreate} disabled={createToken.isPending} className="gap-2">
+              <Plus className="h-4 w-4" />
+              {createToken.isPending ? 'Creating...' : 'Create token'}
+            </Button>
+            <Button variant="ghost" onClick={resetForm}>
+              Cancel
+            </Button>
+          </div>
+        </div>
+      ) : (
+        <Button variant="secondary" onClick={() => setShowForm(true)} className="mb-4 gap-2">
+          <Plus className="h-4 w-4" />
+          New token
+        </Button>
+      )}
+
+      {isLoading ? (
+        <p className="py-3 text-muted-foreground text-sm">Loading tokens...</p>
+      ) : tokens.length === 0 ? (
+        <p className="py-2 text-muted-foreground text-sm">
+          No active tokens. Create one to access the API programmatically.
+        </p>
+      ) : (
+        <div className="divide-y divide-border/50">
+          {tokens.map((token) => (
+            <div key={token.id} className="flex items-center gap-3 py-3">
+              <Key className="h-4 w-4 shrink-0 text-muted-foreground" />
+              <div className="min-w-0 flex-1">
+                <div className="flex flex-wrap items-center gap-2">
+                  <p className="truncate font-medium text-foreground text-sm">{token.name}</p>
+                  {token.accessLevel === 'read' && (
+                    <Badge variant="secondary" className="gap-1 text-[10px]">
+                      <ShieldCheck className="h-3 w-3" />
+                      Read-only
+                    </Badge>
+                  )}
+                  {token.projectScope === 'specific' && (
+                    <Badge className="gap-1 bg-primary/15 text-[10px] text-primary hover:bg-primary/15">
+                      <Lock className="h-3 w-3" />
+                      Scoped
+                    </Badge>
+                  )}
+                </div>
+                <p className="mt-0.5 font-mono text-muted-foreground text-xs">
+                  {token.prefix}...{' '}
+                  <span className="font-sans">
+                    Expires {formatDate(token.expiresAt)} · Created {formatDate(token.createdAt)}
+                  </span>
+                </p>
+              </div>
+              <Button
+                variant="outline"
+                size="sm"
+                onClick={() => setDeleteId(token.id)}
+                className="shrink-0 gap-1.5 text-muted-foreground hover:border-destructive/50 hover:text-destructive"
+              >
+                <Trash2 className="h-3.5 w-3.5" />
+                Revoke
+              </Button>
+            </div>
+          ))}
+        </div>
+      )}
+
       <ApiKeyDeleteDialog deleteId={deleteId} onClose={() => setDeleteId(null)} />
-    </div>
+    </section>
   );
 }

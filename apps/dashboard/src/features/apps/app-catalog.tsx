@@ -9,7 +9,24 @@ import { Skeleton } from '#/components/ui/skeleton';
 import { CatalogCard } from './catalog-card';
 import { useAppCatalog } from './hooks';
 
-const CATEGORY_ORDER = ['database', 'backend', 'cms', 'analytics', 'automation', 'mail'];
+const CATEGORY_ORDER = [
+  'backend',
+  'database',
+  'cms',
+  'analytics',
+  'automation',
+  'devtools',
+  'monitoring',
+  'productivity',
+  'search',
+  'security',
+  'storage',
+  'mail',
+];
+
+const CATEGORY_LABELS: Record<string, string> = {
+  devtools: 'Dev tools',
+};
 
 const DOCS_URL = 'https://docs.codedock.run';
 
@@ -96,7 +113,9 @@ export function AppCatalog({
                       : 'rounded-lg px-4 py-2 font-medium text-muted-foreground text-sm transition-colors hover:bg-muted/50 hover:text-foreground'
                   }
                 >
-                  {item === 'all' ? 'All' : item.charAt(0).toUpperCase() + item.slice(1)}
+                  {item === 'all'
+                    ? 'All'
+                    : (CATEGORY_LABELS[item] ?? item.charAt(0).toUpperCase() + item.slice(1))}
                 </button>
               );
             })}

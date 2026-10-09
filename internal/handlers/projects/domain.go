@@ -7,6 +7,7 @@ import (
 
 	"codedock/internal/models"
 	"codedock/internal/repositories"
+	authservices "codedock/internal/services/auth"
 	projectservices "codedock/internal/services/projects"
 	systemservices "codedock/internal/services/system"
 	"codedock/internal/utils"
@@ -17,14 +18,16 @@ type DomainHandler struct {
 	appService     *projectservices.AppService
 	projectService *projectservices.ProjectService
 	settingsRepo   repositories.SettingsRepository
+	auditService   *authservices.AuditService
 }
 
-func NewDomainHandler(s *projectservices.EnvironmentService, app *projectservices.AppService, proj *projectservices.ProjectService, settingsRepo repositories.SettingsRepository) *DomainHandler {
+func NewDomainHandler(s *projectservices.EnvironmentService, app *projectservices.AppService, proj *projectservices.ProjectService, settingsRepo repositories.SettingsRepository, auditService *authservices.AuditService) *DomainHandler {
 	return &DomainHandler{
 		envService:     s,
 		appService:     app,
 		projectService: proj,
 		settingsRepo:   settingsRepo,
+		auditService:   auditService,
 	}
 }
 
@@ -128,6 +131,13 @@ func (h *DomainHandler) Create(c echo.Context) error {
 		}
 		return utils.Error(c, http.StatusInternalServerError, err.Error())
 	}
+	h.auditService.LogAction(c.Request().Context(), authservices.AuditActionOpts{
+		UserID:    utils.AuditActorID(c),
+		Action:    "domain.create",
+		Resource:  created.ID,
+		IPAddress: c.RealIP(),
+		Details:   map[string]string{"domain": req.DomainName},
+	})
 	return utils.Created(c, "Created successfully", created)
 }
 
@@ -154,6 +164,13 @@ func (h *DomainHandler) Delete(c echo.Context) error {
 	if err := h.envService.DeleteDomain(c.Request().Context(), id); err != nil {
 		return utils.Error(c, http.StatusInternalServerError, err.Error())
 	}
+	h.auditService.LogAction(c.Request().Context(), authservices.AuditActionOpts{
+		UserID:    utils.AuditActorID(c),
+		Action:    "domain.delete",
+		Resource:  id,
+		IPAddress: c.RealIP(),
+		Details:   map[string]string{"domain": domain.DomainName},
+	})
 	return c.NoContent(http.StatusNoContent)
 }
 

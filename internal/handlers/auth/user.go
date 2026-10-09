@@ -21,12 +21,13 @@ type Mailer interface {
 }
 
 type UserHandler struct {
-	userService *authservices.UserService
-	mailer      Mailer
+	userService  *authservices.UserService
+	mailer       Mailer
+	auditService *authservices.AuditService
 }
 
-func NewUserHandler(s *authservices.UserService, mailer Mailer) *UserHandler {
-	return &UserHandler{userService: s, mailer: mailer}
+func NewUserHandler(s *authservices.UserService, mailer Mailer, auditService *authservices.AuditService) *UserHandler {
+	return &UserHandler{userService: s, mailer: mailer, auditService: auditService}
 }
 
 type UpdateProfileRequest struct {
@@ -81,6 +82,12 @@ func (h *UserHandler) DeleteUser(c echo.Context) error {
 	if err := h.userService.DeleteUser(c.Request().Context(), id); err != nil {
 		return utils.Error(c, http.StatusInternalServerError, err.Error())
 	}
+	h.auditService.LogAction(c.Request().Context(), authservices.AuditActionOpts{
+		UserID:    utils.AuditActorID(c),
+		Action:    "user.delete",
+		Resource:  id,
+		IPAddress: c.RealIP(),
+	})
 	return utils.Success(c, "User deleted", nil)
 }
 
@@ -104,6 +111,12 @@ func (h *UserHandler) ChangePassword(c echo.Context) error {
 	if err := h.userService.ChangePassword(c.Request().Context(), userID, payload.OldPassword, payload.NewPassword); err != nil {
 		return utils.Error(c, http.StatusBadRequest, err.Error())
 	}
+	h.auditService.LogAction(c.Request().Context(), authservices.AuditActionOpts{
+		UserID:    userID,
+		Action:    "user.password",
+		Resource:  userID,
+		IPAddress: c.RealIP(),
+	})
 	return utils.Success(c, "Password changed successfully", nil)
 }
 
@@ -221,6 +234,13 @@ func (h *UserHandler) CreatePAT(c echo.Context) error {
 		}
 		return utils.Error(c, http.StatusInternalServerError, "failed to create personal token")
 	}
+	h.auditService.LogAction(c.Request().Context(), authservices.AuditActionOpts{
+		UserID:    userID,
+		Action:    "token.create",
+		Resource:  pat.ID,
+		IPAddress: c.RealIP(),
+		Details:   map[string]string{"name": payload.Name},
+	})
 	return utils.Created(c, "Token created successfully", models.CreatePATResponse{Token: pat, Plain: rawToken})
 }
 
@@ -251,5 +271,11 @@ func (h *UserHandler) DeletePAT(c echo.Context) error {
 	if err := h.userService.DeletePAT(c.Request().Context(), tokenID, userID); err != nil {
 		return utils.Error(c, http.StatusInternalServerError, err.Error())
 	}
+	h.auditService.LogAction(c.Request().Context(), authservices.AuditActionOpts{
+		UserID:    userID,
+		Action:    "token.delete",
+		Resource:  tokenID,
+		IPAddress: c.RealIP(),
+	})
 	return utils.Success(c, "Token deleted successfully", nil)
 }

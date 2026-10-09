@@ -11,11 +11,12 @@ import (
 )
 
 type OrganizationHandler struct {
-	orgService *authservices.OrganizationService
+	orgService   *authservices.OrganizationService
+	auditService *authservices.AuditService
 }
 
-func NewOrganizationHandler(orgService *authservices.OrganizationService) *OrganizationHandler {
-	return &OrganizationHandler{orgService: orgService}
+func NewOrganizationHandler(orgService *authservices.OrganizationService, auditService *authservices.AuditService) *OrganizationHandler {
+	return &OrganizationHandler{orgService: orgService, auditService: auditService}
 }
 
 func (h *OrganizationHandler) Create(c echo.Context) error {
@@ -33,6 +34,13 @@ func (h *OrganizationHandler) Create(c echo.Context) error {
 	if err != nil {
 		return utils.Error(c, http.StatusInternalServerError, err.Error())
 	}
+	h.auditService.LogAction(c.Request().Context(), authservices.AuditActionOpts{
+		UserID:    userClaims.UserID,
+		Action:    "organization.create",
+		Resource:  org.ID,
+		IPAddress: c.RealIP(),
+		Details:   map[string]string{"name": req.Name},
+	})
 	return c.JSON(http.StatusCreated, org)
 }
 
@@ -66,6 +74,12 @@ func (h *OrganizationHandler) Delete(c echo.Context) error {
 	if err := h.orgService.DeleteOrganization(c.Request().Context(), id); err != nil {
 		return utils.Error(c, http.StatusInternalServerError, err.Error())
 	}
+	h.auditService.LogAction(c.Request().Context(), authservices.AuditActionOpts{
+		UserID:    utils.AuditActorID(c),
+		Action:    "organization.delete",
+		Resource:  id,
+		IPAddress: c.RealIP(),
+	})
 	return c.NoContent(http.StatusNoContent)
 }
 
@@ -95,6 +109,13 @@ func (h *OrganizationHandler) InviteMember(c echo.Context) error {
 	if err != nil {
 		return utils.Error(c, http.StatusInternalServerError, err.Error())
 	}
+	h.auditService.LogAction(c.Request().Context(), authservices.AuditActionOpts{
+		UserID:    userClaims.UserID,
+		Action:    "member.invite",
+		Resource:  orgID,
+		IPAddress: c.RealIP(),
+		Details:   map[string]string{"email": req.Email, "permission": string(req.Permission)},
+	})
 	return c.JSON(http.StatusCreated, member)
 }
 
@@ -114,6 +135,13 @@ func (h *OrganizationHandler) UpdateMember(c echo.Context) error {
 	if err := h.orgService.UpdateMemberPermission(c.Request().Context(), userClaims.UserID, orgID, userID, req.Permission); err != nil {
 		return utils.Error(c, http.StatusInternalServerError, err.Error())
 	}
+	h.auditService.LogAction(c.Request().Context(), authservices.AuditActionOpts{
+		UserID:    userClaims.UserID,
+		Action:    "member.role",
+		Resource:  orgID,
+		IPAddress: c.RealIP(),
+		Details:   map[string]string{"member": userID, "permission": string(req.Permission)},
+	})
 	return c.NoContent(http.StatusNoContent)
 }
 
@@ -122,5 +150,12 @@ func (h *OrganizationHandler) RemoveMember(c echo.Context) error {
 	if err := h.orgService.RemoveMember(c.Request().Context(), memberID); err != nil {
 		return utils.Error(c, http.StatusInternalServerError, err.Error())
 	}
+	h.auditService.LogAction(c.Request().Context(), authservices.AuditActionOpts{
+		UserID:    utils.AuditActorID(c),
+		Action:    "member.remove",
+		Resource:  c.Param("id"),
+		IPAddress: c.RealIP(),
+		Details:   map[string]string{"member": memberID},
+	})
 	return c.NoContent(http.StatusNoContent)
 }

@@ -2,15 +2,13 @@ import type { AuditLog } from '#/interfaces/audit';
 
 export type AuditCategoryId =
   | 'deployments'
-  | 'projects'
-  | 'services'
-  | 'databases'
+  | 'apps'
   | 'domains'
-  | 'members'
-  | 'security'
-  | 'backups'
-  | 'jobs'
   | 'servers'
+  | 'members'
+  | 'agent'
+  | 'security'
+  | 'billing'
   | 'system';
 
 export type AuditTone = 'neutral' | 'info' | 'success' | 'warning' | 'danger';
@@ -18,44 +16,91 @@ export type AuditTone = 'neutral' | 'info' | 'success' | 'warning' | 'danger';
 export interface AuditCategory {
   id: AuditCategoryId;
   label: string;
+  description: string;
 }
 
 export const AUDIT_CATEGORIES: AuditCategory[] = [
-  { id: 'deployments', label: 'Deployments' },
-  { id: 'projects', label: 'Projects' },
-  { id: 'services', label: 'Services' },
-  { id: 'databases', label: 'Databases' },
-  { id: 'domains', label: 'Domains' },
-  { id: 'members', label: 'Members' },
-  { id: 'security', label: 'Security' },
-  { id: 'backups', label: 'Backups' },
-  { id: 'jobs', label: 'Jobs' },
-  { id: 'servers', label: 'Servers' },
-  { id: 'system', label: 'System' },
+  { id: 'deployments', label: 'Deployments', description: 'Builds and releases.' },
+  { id: 'apps', label: 'Apps & services', description: 'Projects, services, and runtime health.' },
+  { id: 'domains', label: 'Domains & SSL', description: 'Custom domains, DNS, and certificates.' },
+  { id: 'servers', label: 'Servers', description: 'Deployment targets and shell access.' },
+  {
+    id: 'members',
+    label: 'Members & access',
+    description: 'Who is in this workspace and what they can do.',
+  },
+  { id: 'agent', label: 'AI agents', description: 'What connected assistants did over MCP.' },
+  {
+    id: 'security',
+    label: 'Security',
+    description: 'Credentials, auth, exports, and audit recording.',
+  },
+  { id: 'billing', label: 'Billing', description: 'Subscriptions, credits, and quotas.' },
+  {
+    id: 'system',
+    label: 'System',
+    description: 'Settings, integrations, backups, and maintenance.',
+  },
 ];
+
+const CATEGORY_IDS = new Set<string>(AUDIT_CATEGORIES.map((category) => category.id));
+
+export function isAuditCategoryId(value: unknown): value is AuditCategoryId {
+  return typeof value === 'string' && CATEGORY_IDS.has(value);
+}
+
+export function categoryLabel(id: string): string {
+  return AUDIT_CATEGORIES.find((category) => category.id === id)?.label ?? 'System';
+}
 
 const CATEGORY_BY_PREFIX: Record<string, AuditCategoryId> = {
   deployment: 'deployments',
-  project: 'projects',
-  service: 'services',
-  database: 'databases',
+  deploy: 'deployments',
+  release: 'deployments',
+  build: 'deployments',
+  app: 'apps',
+  project: 'apps',
+  service: 'apps',
+  database: 'apps',
+  container: 'apps',
+  job: 'apps',
+  scheduled: 'apps',
+  cron: 'apps',
   domain: 'domains',
-  user: 'members',
+  dns: 'domains',
+  ssl: 'domains',
+  certificate: 'domains',
+  server: 'servers',
+  ssh: 'servers',
+  host: 'servers',
   member: 'members',
+  user: 'members',
   team: 'members',
   invitation: 'members',
+  invite: 'members',
+  role: 'members',
+  agent: 'agent',
+  mcp: 'agent',
+  tool: 'agent',
   auth: 'security',
   login: 'security',
   token: 'security',
   apikey: 'security',
-  backup: 'backups',
-  restore: 'backups',
-  job: 'jobs',
-  scheduled: 'jobs',
-  server: 'servers',
-  billing: 'system',
+  credential: 'security',
+  secret: 'security',
+  audit: 'security',
+  billing: 'billing',
+  subscription: 'billing',
+  invoice: 'billing',
+  credit: 'billing',
+  quota: 'billing',
+  backup: 'system',
+  restore: 'system',
   organization: 'system',
   settings: 'system',
+  notification: 'system',
+  integration: 'system',
+  webhook: 'system',
 };
 
 const VERBS: Record<string, string> = {
@@ -75,6 +120,8 @@ const VERBS: Record<string, string> = {
   login: 'signed in',
   logout: 'signed out',
   invite: 'invited',
+  join: 'joined',
+  leave: 'left',
   revoke: 'revoked',
   reveal: 'revealed credentials for',
   query: 'queried',
@@ -84,9 +131,47 @@ const VERBS: Record<string, string> = {
   setup: 'set up',
   upgrade: 'upgraded',
   scale: 'scaled',
+  verify: 'verified',
+  issue: 'issued',
+  renew: 'renewed',
+  suspend: 'suspended',
+  resume: 'resumed',
+  rotate: 'rotated',
+  sync: 'synced',
+  cancel: 'cancelled',
+  cancelled: 'cancelled',
+  fail: 'failed',
+  failed: 'failed',
+  succeed: 'succeeded',
+  succeeded: 'succeeded',
+  complete: 'completed',
+  completed: 'completed',
+  approve: 'approved',
+  transfer: 'transferred',
+  attach: 'attached',
+  detach: 'detached',
+  link: 'linked',
+  unlink: 'unlinked',
+  install: 'installed',
+  execute: 'executed',
+  run: 'ran',
+  grant: 'granted',
+  deny: 'denied',
 };
 
-const DANGER_VERBS = new Set(['delete', 'remove', 'revoke', 'rollback', 'disable']);
+const DANGER_VERBS = new Set([
+  'delete',
+  'remove',
+  'revoke',
+  'rollback',
+  'disable',
+  'fail',
+  'failed',
+  'cancel',
+  'cancelled',
+  'suspend',
+  'deny',
+]);
 const SUCCESS_VERBS = new Set([
   'create',
   'deploy',
@@ -95,8 +180,23 @@ const SUCCESS_VERBS = new Set([
   'trigger',
   'backup',
   'invite',
+  'succeed',
+  'succeeded',
+  'complete',
+  'completed',
+  'verify',
+  'approve',
+  'renew',
 ]);
-const WARNING_VERBS = new Set(['reveal', 'login', 'logout', 'rollback', 'credentials_reveal']);
+const WARNING_VERBS = new Set([
+  'reveal',
+  'login',
+  'logout',
+  'rollback',
+  'credentials_reveal',
+  'rotate',
+  'suspend',
+]);
 
 export function actionVerb(action: string): string {
   return action.split('.').pop() ?? action;
@@ -118,7 +218,12 @@ export function describeAuditAction(action: string): {
   return { label: action, action: label, tone };
 }
 
-export function auditCategoryOf(log: AuditLog): AuditCategoryId {
+export function auditCategoryOf(log: {
+  action: string;
+  resource: string;
+  category?: string;
+}): AuditCategoryId {
+  if (log.category && isAuditCategoryId(log.category)) return log.category;
   const first = (actionVerb(log.action) === log.action ? log.action : log.action.split('.')[0])
     .toLowerCase()
     .replace(/_.*$/, '');
