@@ -50,8 +50,8 @@ export function RuntimeStatus({ serviceId }: { serviceId: string }) {
                 {observed.metricsAvailable && (
                   <>
                     {' '}
-                    · {pod.cpu.toFixed(3)} CPU cores · {(pod.memoryBytes / 1024 / 1024).toFixed(1)}{' '}
-                    MiB
+                    · {(pod.cpu ?? 0).toFixed(3)} CPU cores ·{' '}
+                    {((pod.memoryBytes ?? 0) / 1024 / 1024).toFixed(1)} MiB
                   </>
                 )}
               </li>

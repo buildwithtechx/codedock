@@ -1,6 +1,7 @@
 package system
 
 import (
+	"errors"
 	"net/http"
 	"strconv"
 	"time"
@@ -57,6 +58,9 @@ func (h *LogHandler) GetHistoricalLogs(c echo.Context) error {
 	}
 	logs, err := h.logService.GetHistoricalLogs(c.Request().Context(), opts)
 	if err != nil {
+		if errors.Is(err, systemservices.ErrObservabilityDisabled) {
+			return utils.Error(c, http.StatusServiceUnavailable, err.Error())
+		}
 		return utils.Error(c, http.StatusInternalServerError, err.Error())
 	}
 

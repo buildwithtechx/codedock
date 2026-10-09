@@ -69,21 +69,25 @@ func startServer() {
 		slog.Warn("failed to start Traefik proxy", "err", err)
 	}
 
-	tsdbMgr := observability.NewTSDBManager(dockerClient)
-	if err := tsdbMgr.EnsureTSDBRunning(context.Background()); err != nil {
-		slog.Warn("failed to start TSDB", "err", err)
+	if config.Get().Observability.Enabled {
+		tsdbMgr := observability.NewTSDBManager(dockerClient)
+		if err := tsdbMgr.EnsureTSDBRunning(context.Background()); err != nil {
+			slog.Warn("failed to start TSDB", "err", err)
+		}
+
+		lokiMgr := observability.NewLokiManager(dockerClient)
+		if err := lokiMgr.EnsureLokiRunning(context.Background()); err != nil {
+			slog.Warn("failed to start Loki", "err", err)
+		}
+
+		metricsWorker := observability.NewMetricsWorker(dockerClient)
+		metricsWorker.Start()
+
+		logWorker := observability.NewLogWorker(dockerClient)
+		logWorker.Start(context.Background())
+	} else {
+		slog.Info("observability stack disabled, skipping Loki and TSDB")
 	}
-
-	lokiMgr := observability.NewLokiManager(dockerClient)
-	if err := lokiMgr.EnsureLokiRunning(context.Background()); err != nil {
-		slog.Warn("failed to start Loki", "err", err)
-	}
-
-	metricsWorker := observability.NewMetricsWorker(dockerClient)
-	metricsWorker.Start()
-
-	logWorker := observability.NewLogWorker(dockerClient)
-	logWorker.Start(context.Background())
 
 	system.StartTelemetryReporter(db, codedockVersion)
 

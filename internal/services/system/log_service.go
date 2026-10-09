@@ -3,21 +3,28 @@ package system
 import (
 	"context"
 	"encoding/json"
+	"errors"
 	"fmt"
 	"net/http"
 	"net/url"
 	"time"
+
+	"codedock/internal/config"
 )
+
+var ErrObservabilityDisabled = errors.New("observability is disabled: set CODEDOCK_OBSERVABILITY=true for historical logs and metrics")
 
 type LogService struct {
 	lokiURL    string
 	httpClient *http.Client
+	enabled    bool
 }
 
 func NewLogService() *LogService {
 	return &LogService{
 		lokiURL:    "http://127.0.0.1:3100",
 		httpClient: &http.Client{Timeout: 10 * time.Second},
+		enabled:    config.Get().Observability.Enabled,
 	}
 }
 
@@ -42,6 +49,9 @@ type HistoricalLogsOpts struct {
 }
 
 func (s *LogService) GetHistoricalLogs(ctx context.Context, opts HistoricalLogsOpts) ([]map[string]any, error) {
+	if !s.enabled {
+		return nil, ErrObservabilityDisabled
+	}
 	reqURL := s.buildLokiURL(opts)
 
 	req, err := http.NewRequestWithContext(ctx, http.MethodGet, reqURL, nil)

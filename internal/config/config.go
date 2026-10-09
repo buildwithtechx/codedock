@@ -89,6 +89,9 @@ func Load() *models.Config {
 		Cloud: models.CloudConfig{
 			Enabled: os.Getenv("CODEDOCK_CLOUD_MODE") == "true",
 		},
+		Observability: models.ObservabilityConfig{
+			Enabled: os.Getenv("CODEDOCK_OBSERVABILITY") != "false",
+		},
 		SMTP: models.SMTPConfig{
 			Host: getEnv("SMTP_HOST", ""),
 			Port: getEnvInt("SMTP_PORT", 587),
@@ -115,7 +118,7 @@ func Load() *models.Config {
 			URL: getEnv("CODEDOCK_DATABASE_URL", ""),
 		},
 		Postgres: models.PostgresConfig{
-			Image:   getEnv("CODEDOCK_PG_IMAGE", "postgres:16"),
+			Image:   getEnv("CODEDOCK_PG_IMAGE", "postgres:16-alpine"),
 			Port:    getEnvInt("CODEDOCK_PG_PORT", 5432),
 			Host:    getEnv("CODEDOCK_PG_HOST", "127.0.0.1"),
 			Network: getEnv("CODEDOCK_PG_NETWORK", ""),

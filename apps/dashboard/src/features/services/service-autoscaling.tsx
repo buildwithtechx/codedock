@@ -121,7 +121,7 @@ export function ServiceAutoscaling({ serviceId }: { serviceId: string }) {
               <p>Last decision: {query.data?.data.lastDecision || 'Not evaluated yet'}</p>
               <p>
                 Last CPU sample:{' '}
-                {query.data?.data.lastEvaluatedAt
+                {query.data?.data.lastCpu != null
                   ? `${query.data.data.lastCpu.toFixed(2)}%`
                   : 'Unavailable'}
               </p>

@@ -92,18 +92,19 @@ cp .env.example .env
 cp apps/dashboard/.env.example apps/dashboard/.env
 ```
 
-| Variable                | Default               | Description                                             |
-| ----------------------- | --------------------- | ------------------------------------------------------- |
-| `PORT`                  | `8080`                | Daemon HTTP port                                        |
-| `CODEDOCK_DATA_DIR`     | `data`                | Postgres data + vault storage                           |
-| `CODEDOCK_STATIC_DIR`   | `apps/dashboard/dist` | Built dashboard files                                   |
-| `CODEDOCK_TLS_EMAIL`    | —                     | Let's Encrypt email (optional)                          |
-| `CODEDOCK_DATABASE_URL` | —                     | Use your own Postgres instead of the embedded container |
+| Variable                 | Default               | Description                                                   |
+| ------------------------ | --------------------- | ------------------------------------------------------------- |
+| `PORT`                   | `8080`                | Daemon HTTP port                                              |
+| `CODEDOCK_DATA_DIR`      | `data`                | Postgres data + vault storage                                 |
+| `CODEDOCK_STATIC_DIR`    | `apps/dashboard/dist` | Built dashboard files                                         |
+| `CODEDOCK_TLS_EMAIL`     | —                     | Let's Encrypt email (optional)                                |
+| `CODEDOCK_DATABASE_URL`  | —                     | Use your own Postgres instead of the embedded container       |
+| `CODEDOCK_OBSERVABILITY` | true                  | Loki + VictoriaMetrics stack; false skips them on small boxes |
 
 ### Use your own Postgres (optional)
 
 Leave `CODEDOCK_DATABASE_URL` empty and the daemon provisions an embedded
-`postgres:16` container (`codedock-postgres` on `127.0.0.1:5432`, data in
+`postgres:16-alpine` container (`codedock-postgres` on `127.0.0.1:5432`, data in
 `./data/postgres`). To use a local Postgres instead:
 
 1. Create an empty database the daemon can connect to:

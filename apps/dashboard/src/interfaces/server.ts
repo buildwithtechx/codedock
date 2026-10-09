@@ -31,20 +31,34 @@ export interface Server {
   updatedAt: string;
 }
 
+function toFiniteNumber(value: unknown): number {
+  return typeof value === 'number' && Number.isFinite(value) ? value : 0;
+}
+
 export function parseServerMetrics(
   metrics: ServerMetrics | string | null | undefined
 ): ServerMetrics | null {
+  let parsed: unknown = null;
   if (!metrics) return null;
-  if (typeof metrics === 'object') return metrics;
-  if (typeof metrics === 'string') {
+  if (typeof metrics === 'object') {
+    parsed = metrics;
+  } else if (typeof metrics === 'string') {
     try {
       const decoded = metrics.startsWith('{') ? metrics : atob(metrics);
-      return JSON.parse(decoded) as ServerMetrics;
+      parsed = JSON.parse(decoded);
     } catch {
       return null;
     }
   }
-  return null;
+  if (!parsed || typeof parsed !== 'object') return null;
+  const fields = parsed as Partial<ServerMetrics>;
+  return {
+    cpu_usage_percentage: toFiniteNumber(fields.cpu_usage_percentage),
+    memory_usage_bytes: toFiniteNumber(fields.memory_usage_bytes),
+    memory_limit_bytes: toFiniteNumber(fields.memory_limit_bytes),
+    disk_usage_bytes: toFiniteNumber(fields.disk_usage_bytes),
+    disk_total_bytes: toFiniteNumber(fields.disk_total_bytes),
+  };
 }
 
 export interface CreateServerRequest {

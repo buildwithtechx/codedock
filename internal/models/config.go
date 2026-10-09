@@ -1,24 +1,29 @@
 package models
 
 type Config struct {
-	Server    ServerConfig    `json:"server"`
-	Security  SecurityConfig  `json:"security"`
-	Docker    DockerConfig    `json:"docker"`
-	Traefik   TraefikConfig   `json:"traefik"`
-	Builder   BuilderConfig   `json:"builder"`
-	Defaults  DefaultsConfig  `json:"defaults"`
-	Limits    LimitsConfig    `json:"limits"`
-	Domains   DomainsConfig   `json:"domains"`
-	Worker    WorkerConfig    `json:"worker"`
-	Updates   UpdatesConfig   `json:"updates"`
-	Telemetry TelemetryConfig `json:"telemetry"`
-	Cloud     CloudConfig     `json:"cloud"`
-	SMTP      SMTPConfig      `json:"smtp"`
-	Resend    ResendConfig    `json:"resend"`
-	OAuth     OAuthConfig     `json:"oauth"`
-	Stripe    StripeConfig    `json:"stripe"`
-	Database  DatabaseConfig  `json:"database"`
-	Postgres  PostgresConfig  `json:"postgres"`
+	Server        ServerConfig        `json:"server"`
+	Security      SecurityConfig      `json:"security"`
+	Docker        DockerConfig        `json:"docker"`
+	Traefik       TraefikConfig       `json:"traefik"`
+	Builder       BuilderConfig       `json:"builder"`
+	Defaults      DefaultsConfig      `json:"defaults"`
+	Limits        LimitsConfig        `json:"limits"`
+	Domains       DomainsConfig       `json:"domains"`
+	Worker        WorkerConfig        `json:"worker"`
+	Updates       UpdatesConfig       `json:"updates"`
+	Telemetry     TelemetryConfig     `json:"telemetry"`
+	Cloud         CloudConfig         `json:"cloud"`
+	SMTP          SMTPConfig          `json:"smtp"`
+	Resend        ResendConfig        `json:"resend"`
+	OAuth         OAuthConfig         `json:"oauth"`
+	Stripe        StripeConfig        `json:"stripe"`
+	Database      DatabaseConfig      `json:"database"`
+	Postgres      PostgresConfig      `json:"postgres"`
+	Observability ObservabilityConfig `json:"observability"`
+}
+
+type ObservabilityConfig struct {
+	Enabled bool `json:"enabled"`
 }
 
 type DatabaseConfig struct {
