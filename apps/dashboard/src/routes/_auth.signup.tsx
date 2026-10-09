@@ -30,8 +30,12 @@ function RegisterPage() {
   return (
     <AuthPageFrame
       eyebrow={isOnboarding ? 'First-time setup' : 'Create account'}
-      title={isOnboarding ? 'Set up your Codedock workspace.' : 'Create your Codedock account.'}
-      description="Create your account, then organize the services your team runs."
+      title={isOnboarding ? 'Set up your workspace.' : 'Create your account.'}
+      description={
+        isOnboarding
+          ? 'Create the first account to unlock your workspace.'
+          : 'One workspace for your projects, services, and servers.'
+      }
     >
       <div className="space-y-6">
         {!isOnboarding && <OAuthButtons />}

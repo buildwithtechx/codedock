@@ -5,7 +5,7 @@ import { useEffect, useState } from 'react';
 import { toast } from 'sonner';
 import { AuthPageFrame } from '#/features/auth';
 import { apiClient } from '#/lib/api-client';
-import { Button } from '@/components/ui/button';
+import { Button } from '#/components/ui/button';
 
 export const Route = createFileRoute('/_auth/verify-email')({
   component: VerifyEmailPage,
@@ -82,7 +82,7 @@ function VerifyEmailPage() {
         )}
         {status === 'success' && (
           <div className="flex items-center gap-3 text-muted-foreground text-sm">
-            <CheckCircle className="h-5 w-5 text-[#3b6e32]" />
+            <CheckCircle className="h-5 w-5 text-success" />
             Redirecting you to the dashboard.
           </div>
         )}

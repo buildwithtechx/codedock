@@ -98,6 +98,36 @@ cp apps/dashboard/.env.example apps/dashboard/.env
 | `CODEDOCK_DATA_DIR`   | `data`           | Postgres data + vault storage  |
 | `CODEDOCK_STATIC_DIR` | `apps/dashboard/dist` | Built dashboard files          |
 | `CODEDOCK_TLS_EMAIL`  | —                | Let's Encrypt email (optional) |
+| `CODEDOCK_DATABASE_URL` | — | Use your own Postgres instead of the embedded container |
+
+### Use your own Postgres (optional)
+
+Leave `CODEDOCK_DATABASE_URL` empty and the daemon provisions an embedded
+`postgres:16` container (`codedock-postgres` on `127.0.0.1:5432`, data in
+`./data/postgres`). To use a local Postgres instead:
+
+1. Create an empty database the daemon can connect to:
+
+```bash
+createuser codedock
+createdb -O codedock codedock
+```
+
+1. Point the daemon at it in `.env`:
+
+```bash
+CODEDOCK_DATABASE_URL=postgres://codedock:secret@127.0.0.1:5432/codedock?sslmode=disable
+```
+
+1. Start the daemon — migrations run automatically and the embedded
+container stands down (`CODEDOCK_PG_*` settings are ignored).
+
+Postgres-backed integration tests need `CODEDOCK_TEST_PG_URL` and skip
+without it:
+
+```bash
+CODEDOCK_TEST_PG_URL=postgres://codedock:secret@127.0.0.1:5432/codedock_test?sslmode=disable go test ./...
+```
 
 ---
 

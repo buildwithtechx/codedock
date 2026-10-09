@@ -62,7 +62,7 @@ export const LoginForm = () => {
         <div className="space-y-1">
           <p className="font-medium text-foreground text-sm">Two-factor authentication</p>
           <p className="text-muted-foreground text-xs">
-            Enter the 6-digit code from your authenticator app.
+            Enter the code from your authenticator app.
           </p>
         </div>
         <div className="space-y-1.5">
@@ -145,6 +145,7 @@ export const LoginForm = () => {
           <Input
             id="password"
             type={showPassword ? 'text' : 'password'}
+            placeholder="Enter your password"
             className="h-12 pr-10 pl-10"
             {...loginForm.register('password')}
           />

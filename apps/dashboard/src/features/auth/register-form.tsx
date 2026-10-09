@@ -8,24 +8,17 @@ import { Input } from '#/components/ui/input';
 import { Label } from '#/components/ui/label';
 import { useRegister } from '#/features/auth';
 
-const registerSchema = z
-  .object({
-    name: z.string().min(2, 'Name must be at least 2 characters'),
-    email: z.string().email('Please enter a valid email address'),
-    password: z.string().min(8, 'Password must be at least 8 characters long'),
-    confirmPassword: z.string(),
-  })
-  .refine((data) => data.password === data.confirmPassword, {
-    message: 'Passwords do not match',
-    path: ['confirmPassword'],
-  });
+const registerSchema = z.object({
+  name: z.string().min(2, 'Name must be at least 2 characters'),
+  email: z.string().email('Please enter a valid email address'),
+  password: z.string().min(8, 'Password must be at least 8 characters long'),
+});
 
 type RegisterSchema = z.infer<typeof registerSchema>;
 
 export const RegisterForm = () => {
   const { mutateAsync: registerUser, isPending } = useRegister();
   const [showPassword, setShowPassword] = useState(false);
-  const [showConfirmPassword, setShowConfirmPassword] = useState(false);
 
   const {
     register,
@@ -33,10 +26,10 @@ export const RegisterForm = () => {
     formState: { errors },
   } = useForm<RegisterSchema>({
     resolver: zodResolver(registerSchema),
-    defaultValues: { name: '', email: '', password: '', confirmPassword: '' },
+    defaultValues: { name: '', email: '', password: '' },
   });
 
-  const onSubmit = async ({ confirmPassword: _, ...data }: RegisterSchema) => {
+  const onSubmit = async (data: RegisterSchema) => {
     try {
       await registerUser(data);
     } catch {}
@@ -103,32 +96,6 @@ export const RegisterForm = () => {
           <p className="pl-1 text-destructive text-xs">{errors.password.message}</p>
         ) : (
           <p className="pt-1 text-muted-foreground text-xs">Must be at least 8 characters long.</p>
-        )}
-      </div>
-
-      <div className="space-y-1.5">
-        <Label htmlFor="confirm-password">Confirm Password</Label>
-        <div className="group relative">
-          <div className="absolute top-1/2 left-3.5 -translate-y-1/2 text-muted-foreground transition-colors group-focus-within:text-primary">
-            <Lock className="h-4 w-4" />
-          </div>
-          <Input
-            id="confirm-password"
-            type={showConfirmPassword ? 'text' : 'password'}
-            placeholder="Re-enter your password"
-            className="h-12 pr-10 pl-10"
-            {...register('confirmPassword')}
-          />
-          <button
-            type="button"
-            onClick={() => setShowConfirmPassword(!showConfirmPassword)}
-            className="absolute top-1/2 right-3.5 -translate-y-1/2 text-muted-foreground transition-colors hover:text-primary"
-          >
-            {showConfirmPassword ? <EyeOff className="h-4 w-4" /> : <Eye className="h-4 w-4" />}
-          </button>
-        </div>
-        {errors.confirmPassword && (
-          <p className="pl-1 text-destructive text-xs">{errors.confirmPassword.message}</p>
         )}
       </div>
 

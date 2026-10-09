@@ -53,7 +53,7 @@ export function OnboardingImport({ triggerClassName }: { triggerClassName?: stri
           type="button"
           className={
             triggerClassName ||
-            'group flex w-fit items-center gap-2 rounded-lg px-1 py-2 font-semibold text-white text-xs uppercase tracking-[0.12em] transition-colors hover:bg-white/10 hover:text-[#d8c7ff]'
+            'group flex w-fit items-center gap-2 rounded-lg px-1 py-2 font-semibold text-white text-xs uppercase tracking-[0.12em] transition-colors hover:bg-white/10 hover:text-brand-soft'
           }
         >
           <FileUp className="size-4" />

@@ -94,6 +94,8 @@
   --color-accent-foreground: var(--accent-foreground);
   --color-destructive: var(--destructive);
   --color-destructive-foreground: var(--destructive-foreground);
+  --color-success: var(--success);
+  --color-brand-soft: #d8c7ff;
   --color-border: var(--border);
   --color-input: var(--input);
   --color-ring: var(--ring);

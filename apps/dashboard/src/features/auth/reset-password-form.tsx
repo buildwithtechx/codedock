@@ -76,7 +76,7 @@ export const ResetPasswordForm = ({ token }: ResetPasswordFormProps) => {
       </div>
 
       {error && (
-        <p className="border-[#b42318] border-l-2 pl-3 font-medium text-[#b42318] text-sm">
+        <p className="border-destructive border-l-2 pl-3 font-medium text-destructive text-sm">
           {error}
         </p>
       )}

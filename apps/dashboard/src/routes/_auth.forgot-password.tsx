@@ -25,9 +25,9 @@ function ForgotPasswordPage() {
       description="Enter your email and we will send a reset link if the account exists."
     >
       {!isLoading && emailEnabled === false ? (
-        <div className="border-primary border-l-2 py-1 pl-5">
+        <div className="border-destructive border-l-2 py-1 pl-5">
           <div className="flex items-center gap-3">
-            <AlertCircle className="h-5 w-5 text-[#b42318]" />
+            <AlertCircle className="h-5 w-5 text-destructive" />
             <p className="font-medium text-foreground text-sm">Email not configured</p>
           </div>
           <p className="mt-3 text-muted-foreground text-sm leading-6">

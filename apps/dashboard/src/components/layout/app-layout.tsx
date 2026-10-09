@@ -7,7 +7,7 @@ import { toast } from 'sonner';
 import { OrganizationOnboarding } from '#/features/organizations';
 import { apiClient } from '#/lib/api-client';
 import { useAuthStore } from '#/stores/auth-store';
-import { Button } from '@/components/ui/button';
+import { Button } from '#/components/ui/button';
 import { AppSidebar } from './app-sidebar';
 import { CommandPalette } from './command-palette';
 
