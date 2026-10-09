@@ -99,6 +99,14 @@ func (s *Supervisor) ensureNetwork(ctx context.Context) error {
 	return nil
 }
 
+func postgresDataDir(dataDir string) string {
+	dataPath := filepath.Join(dataDir, "postgres", "data")
+	if abs, err := filepath.Abs(dataPath); err == nil {
+		return abs
+	}
+	return dataPath
+}
+
 func (s *Supervisor) databaseURL(password string) string {
 	return "postgres://" + DBUser + ":" + password + "@" + s.host + ":" + strconv.Itoa(s.port) + "/" + DBName + "?sslmode=disable"
 }
@@ -109,7 +117,7 @@ func (s *Supervisor) createContainer(ctx context.Context, password string) error
 		defer out.Close()
 		io.Copy(io.Discard, out)
 	}
-	dataPath := filepath.Join(s.dataDir, "postgres", "data")
+	dataPath := postgresDataDir(s.dataDir)
 	if err := os.MkdirAll(dataPath, 0o700); err != nil {
 		return fmt.Errorf("failed to create postgres data dir: %w", err)
 	}

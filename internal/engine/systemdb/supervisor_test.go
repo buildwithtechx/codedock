@@ -52,6 +52,16 @@ func TestPasswordRegeneratesWhenShort(t *testing.T) {
 	}
 }
 
+func TestPostgresDataDirIsAbsolute(t *testing.T) {
+	got := postgresDataDir("data")
+	if !filepath.IsAbs(got) {
+		t.Fatalf("expected absolute bind path, got %q", got)
+	}
+	if filepath.Base(got) != "data" || filepath.Base(filepath.Dir(got)) != "postgres" {
+		t.Fatalf("expected postgres data suffix, got %q", got)
+	}
+}
+
 func TestDatabaseURLFormat(t *testing.T) {
 	supervisor := NewSupervisor(nil, ContainerName, t.TempDir(), "postgres:16", 5433)
 	url := supervisor.databaseURL("secret")
