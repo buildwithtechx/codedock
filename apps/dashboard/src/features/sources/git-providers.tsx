@@ -1,4 +1,4 @@
-import { Check, Link, Trash } from 'lucide-react';
+import { Check, CheckCircle2, Link, Trash } from 'lucide-react';
 import { useState } from 'react';
 import { toast } from 'sonner';
 import { Button } from '#/components/ui/button';
@@ -11,6 +11,7 @@ import {
 } from '#/components/ui/dialog';
 import { Input } from '#/components/ui/input';
 import { Label } from '#/components/ui/label';
+import { SettingsSection } from '#/features/settings/settings-section';
 import { useConnect, useDisconnect, useGetStatus } from '#/hooks/use-git';
 
 const PROVIDERS = [
@@ -75,78 +76,71 @@ export function GitProviders() {
   }
 
   return (
-    <div className="space-y-6">
-      <div className="mb-5 flex items-center justify-between">
-        <div className="flex items-center gap-3">
-          <div className="flex h-12 w-12 shrink-0 items-center justify-center rounded-lg border border-primary/20 bg-primary/10 text-primary">
-            <Link className="h-6 w-6" />
-          </div>
-          <div>
-            <h2 className="font-semibold text-lg">Personal Git Providers</h2>
-            <p className="text-muted-foreground text-sm">
-              Connect your personal accounts using Access Tokens.
-            </p>
-          </div>
-        </div>
-      </div>
+    <>
+      <SettingsSection
+        icon={<Link className="size-4 text-primary" />}
+        title="Personal Git Providers"
+        description="Connect your personal accounts using Access Tokens."
+      >
+        <div className="space-y-4">
+          {PROVIDERS.map((provider) => {
+            const status = getStatus(provider.id);
+            const isConnected = !!status;
 
-      <div className="grid grid-cols-1 gap-4 md:grid-cols-2 lg:grid-cols-2">
-        {PROVIDERS.map((provider) => {
-          const status = getStatus(provider.id);
-          const isConnected = !!status;
-
-          return (
-            <div
-              key={provider.id}
-              className="flex flex-col justify-between rounded-xl border border-border/80 bg-card p-6 shadow-sm"
-            >
-              <div className="flex items-start gap-4">
-                <div className="flex h-12 w-12 shrink-0 items-center justify-center rounded-lg bg-background p-2">
-                  <img
-                    src={provider.icon}
-                    alt={provider.name}
-                    className="h-full w-full object-contain"
-                  />
-                </div>
-                <div className="space-y-1">
-                  <h2 className="font-bold text-lg tracking-tight">{provider.name}</h2>
-                  {isConnected ? (
-                    <div className="inline-block rounded border border-primary/30 bg-primary/10 px-2 py-0.5 font-semibold text-[10px] text-primary uppercase tracking-widest">
-                      CONNECTED AS {status.accountName}
+            return (
+              <div key={provider.id} className="rounded-xl border border-border/50 p-4">
+                <div className="flex items-start gap-3.5">
+                  <div className="flex h-10 w-10 shrink-0 items-center justify-center rounded-xl border border-border/50 bg-background/50">
+                    <img
+                      src={provider.icon}
+                      alt={provider.name}
+                      className="h-5 w-5 object-contain"
+                    />
+                  </div>
+                  <div className="min-w-0 flex-1">
+                    <p className="font-medium text-foreground text-sm">{provider.name}</p>
+                    <p className="mt-0.5 text-muted-foreground text-xs">Personal Access Token</p>
+                    <div className="mt-2 flex items-center">
+                      {isConnected ? (
+                        <span className="inline-flex items-center gap-1 rounded-full bg-emerald-500/10 px-2 py-0.5 font-medium text-[10px] text-emerald-600 dark:text-emerald-400">
+                          <CheckCircle2 className="size-3" /> Connected as {status.accountName}
+                        </span>
+                      ) : (
+                        <span className="inline-flex items-center gap-1 rounded-full bg-muted px-2 py-0.5 font-medium text-[10px] text-muted-foreground">
+                          Not connected
+                        </span>
+                      )}
                     </div>
+                  </div>
+                  {isConnected ? (
+                    <Button
+                      variant="outline"
+                      size="sm"
+                      className="shrink-0 gap-1 text-destructive text-xs hover:bg-destructive/10 hover:text-destructive"
+                      onClick={() => setIsDisconnecting(provider.id)}
+                    >
+                      Disconnect
+                    </Button>
                   ) : (
-                    <div className="text-muted-foreground text-sm">Not connected</div>
+                    <Button
+                      variant="outline"
+                      size="sm"
+                      className="shrink-0 gap-1 text-xs"
+                      onClick={() => {
+                        setAccessToken('');
+                        setAccountName('');
+                        setIsConnecting(provider.id);
+                      }}
+                    >
+                      Connect
+                    </Button>
                   )}
                 </div>
               </div>
-
-              <div className="mt-6 flex justify-end">
-                {isConnected ? (
-                  <Button
-                    variant="outline"
-                    className="border-destructive/40 bg-background text-destructive hover:bg-destructive/10 hover:text-destructive"
-                    onClick={() => setIsDisconnecting(provider.id)}
-                  >
-                    Disconnect
-                  </Button>
-                ) : (
-                  <Button
-                    variant="outline"
-                    className="border-border bg-background hover:bg-muted"
-                    onClick={() => {
-                      setAccessToken('');
-                      setAccountName('');
-                      setIsConnecting(provider.id);
-                    }}
-                  >
-                    Connect
-                  </Button>
-                )}
-              </div>
-            </div>
-          );
-        })}
-      </div>
+            );
+          })}
+        </div>
+      </SettingsSection>
 
       <Dialog open={!!isConnecting} onOpenChange={(open) => !open && setIsConnecting(null)}>
         <DialogContent className="border/50 gap-0 bg-card/95 p-0 backdrop-blur-xl sm:max-w-md [&>button]:hidden">
@@ -254,6 +248,6 @@ export function GitProviders() {
           </div>
         </DialogContent>
       </Dialog>
-    </div>
+    </>
   );
 }

@@ -1,6 +1,8 @@
+import { Lock } from 'lucide-react';
 import React, { useEffect, useState } from 'react';
 import { toast } from 'sonner';
 import { Skeleton } from '#/components/ui/skeleton';
+import { SettingsSection } from '#/features/settings/settings-section';
 import { useListOAuthProviders, useSaveOAuthProvider } from '#/hooks/use-oauth';
 import type { SaveOAuthProviderRequest } from '#/interfaces/oauth';
 import { OAuthProviderCard, type OAuthProviderDef } from './oauth-provider-card';
@@ -32,7 +34,7 @@ const PROVIDERS: OAuthProviderDef[] = [
   {
     id: 'google',
     name: 'Google',
-    icon: '/ai-providers/google.svg',
+    icon: '/oauth-providers/google.svg',
     fields: [
       { key: 'clientId', label: 'Client ID', placeholder: '123456789.apps.googleusercontent.com' },
       { key: 'clientSecret', label: 'Client Secret', placeholder: 'GOCSPX-...', type: 'password' },
@@ -41,6 +43,7 @@ const PROVIDERS: OAuthProviderDef[] = [
   {
     id: 'microsoft',
     name: 'Microsoft',
+    icon: '/oauth-providers/microsoft.svg',
     fields: [
       {
         key: 'clientId',
@@ -137,21 +140,11 @@ export const OAuthProvidersList = () => {
   }
 
   return (
-    <div className="space-y-6">
-      <div>
-        <h1 className="font-bold text-foreground text-xl">OAuth Authentication</h1>
-        <p className="mt-1 text-muted-foreground text-sm">
-          Configure single sign-on providers for your workspace users.
-        </p>
-        <p className="mt-2 text-muted-foreground text-xs">
-          The redirect URI is{' '}
-          <code className="rounded bg-muted px-1.5 py-0.5 font-mono text-xs">
-            {typeof window !== 'undefined' ? window.location.origin : ''}
-            /api/auth/oauth/[provider]/callback
-          </code>
-        </p>
-      </div>
-
+    <SettingsSection
+      icon={<Lock className="size-4 text-primary" />}
+      title="OAuth Authentication"
+      description="Configure single sign-on providers for your workspace users."
+    >
       <div className="space-y-4">
         {PROVIDERS.map((provider) => (
           <OAuthProviderCard
@@ -165,6 +158,6 @@ export const OAuthProvidersList = () => {
           />
         ))}
       </div>
-    </div>
+    </SettingsSection>
   );
 };

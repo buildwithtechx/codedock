@@ -4,9 +4,9 @@ import { toast } from 'sonner';
 import { Button } from '#/components/ui/button';
 import { Input } from '#/components/ui/input';
 import { Skeleton } from '#/components/ui/skeleton';
-import { Switch } from '#/components/ui/switch';
 import type { ServerSettings } from '#/features/settings';
 import { useGetSettings, useUpdateSettings } from '#/features/settings';
+import { PreferenceRow } from './preference-row';
 import { SettingsRow } from './settings-row';
 import { SettingsSection } from './settings-section';
 
@@ -106,17 +106,22 @@ export function ServerGeneralSettings() {
     );
   }
 
-  const saveAction = (sectionName: string, buttonLabel: string, keys: (keyof GeneralFields)[]) => (
-    <Button
-      size="sm"
-      variant="outline"
-      onClick={() => save(sectionName, keys)}
-      disabled={isPending && savingSection === sectionName}
-      className="gap-1.5"
-    >
-      <Check className="h-3.5 w-3.5" />
-      {savingSection === sectionName ? 'Saving...' : buttonLabel}
-    </Button>
+  const renderSaveFooter = (
+    sectionName: string,
+    buttonLabel: string,
+    keys: (keyof GeneralFields)[]
+  ) => (
+    <div className="flex justify-end border-border/40 border-t pt-4">
+      <Button
+        size="sm"
+        onClick={() => save(sectionName, keys)}
+        disabled={isPending && savingSection === sectionName}
+        className="gap-1.5"
+      >
+        <Check className="h-3.5 w-3.5" />
+        {savingSection === sectionName ? 'Saving...' : buttonLabel}
+      </Button>
+    </div>
   );
 
   return (
@@ -126,11 +131,6 @@ export function ServerGeneralSettings() {
         icon={<Globe className="h-4 w-4" />}
         title="Domains & Routing"
         description="Configure the primary hostname and root wildcard domains for routing."
-        action={saveAction('Domains & Routing', 'Save Domains & Routing', [
-          'siteName',
-          'dashboardDomain',
-          'defaultWildcardDomain',
-        ])}
       >
         <SettingsRow label="Site Name" description="Displayed in the browser tab and emails.">
           <Input
@@ -162,6 +162,11 @@ export function ServerGeneralSettings() {
             className="font-mono text-xs"
           />
         </SettingsRow>
+        {renderSaveFooter('Domains & Routing', 'Save Domains & Routing', [
+          'siteName',
+          'dashboardDomain',
+          'defaultWildcardDomain',
+        ])}
       </SettingsSection>
 
       <SettingsSection
@@ -169,12 +174,6 @@ export function ServerGeneralSettings() {
         icon={<Info className="h-4 w-4" />}
         title="Network"
         description="Public IP addresses, Traefik edge routing, and access control allowlists."
-        action={saveAction('Network', 'Save Network', [
-          'publicIpv4',
-          'publicIpv6',
-          'traefikWildcardIp',
-          'ipAllowlist',
-        ])}
       >
         <SettingsRow
           label="Public IPv4"
@@ -217,6 +216,12 @@ export function ServerGeneralSettings() {
             className="font-mono text-xs"
           />
         </SettingsRow>
+        {renderSaveFooter('Network', 'Save Network', [
+          'publicIpv4',
+          'publicIpv6',
+          'traefikWildcardIp',
+          'ipAllowlist',
+        ])}
       </SettingsSection>
 
       <SettingsSection
@@ -224,21 +229,13 @@ export function ServerGeneralSettings() {
         icon={<Lock className="h-4 w-4" />}
         title="Security & Access"
         description="User registration policies, domain restrictions, and safety confirmations."
-        action={saveAction('Security & Access', 'Save Security', [
-          'registrationEnabled',
-          'registrationDomainAllowlist',
-          'disableTwoStepConfirmation',
-        ])}
       >
-        <SettingsRow
-          label="User Registration"
-          description="Allow new users to sign up without an explicit invite."
-        >
-          <Switch
-            checked={form.registrationEnabled}
-            onCheckedChange={(v) => set('registrationEnabled', v)}
-          />
-        </SettingsRow>
+        <PreferenceRow
+          title="User Registration"
+          hint="Allow new users to sign up without an explicit invite."
+          checked={form.registrationEnabled}
+          onChange={(v) => set('registrationEnabled', v)}
+        />
         <SettingsRow
           label="Registration Domain Allowlist"
           description="Comma-separated domains allowed to register (e.g. acme.com)."
@@ -250,15 +247,17 @@ export function ServerGeneralSettings() {
             className="font-mono text-xs"
           />
         </SettingsRow>
-        <SettingsRow
-          label="Two-Step Confirmation"
-          description="Require confirmation dialog before destructive actions."
-        >
-          <Switch
-            checked={!form.disableTwoStepConfirmation}
-            onCheckedChange={(v) => set('disableTwoStepConfirmation', !v)}
-          />
-        </SettingsRow>
+        <PreferenceRow
+          title="Two-Step Confirmation"
+          hint="Require confirmation dialog before destructive actions."
+          checked={!form.disableTwoStepConfirmation}
+          onChange={(v) => set('disableTwoStepConfirmation', !v)}
+        />
+        {renderSaveFooter('Security & Access', 'Save Security & Access', [
+          'registrationEnabled',
+          'registrationDomainAllowlist',
+          'disableTwoStepConfirmation',
+        ])}
       </SettingsSection>
 
       <SettingsSection
@@ -266,10 +265,6 @@ export function ServerGeneralSettings() {
         icon={<Cpu className="h-4 w-4" />}
         title="Build & Deployment"
         description="Parallel build worker limits and deployment execution timeouts."
-        action={saveAction('Build & Deployment', 'Save Build & Deployment', [
-          'concurrentBuilds',
-          'deploymentTimeout',
-        ])}
       >
         <SettingsRow label="Concurrent Builds" description="Max number of parallel build jobs.">
           <Input
@@ -293,6 +288,10 @@ export function ServerGeneralSettings() {
             className="font-mono text-xs"
           />
         </SettingsRow>
+        {renderSaveFooter('Build & Deployment', 'Save Build & Deployment', [
+          'concurrentBuilds',
+          'deploymentTimeout',
+        ])}
       </SettingsSection>
 
       <SettingsSection
@@ -300,7 +299,6 @@ export function ServerGeneralSettings() {
         icon={<Clock className="h-4 w-4" />}
         title="System"
         description="Instance timezone and anonymous diagnostics reporting."
-        action={saveAction('System', 'Save System', ['serverTimezone', 'telemetryEnabled'])}
       >
         <SettingsRow label="Server Timezone" description="Timezone used for cron jobs and logs.">
           <Input
@@ -310,15 +308,13 @@ export function ServerGeneralSettings() {
             className="font-mono text-xs"
           />
         </SettingsRow>
-        <SettingsRow
-          label="Telemetry"
-          description="Send anonymous usage statistics to help improve Codedock."
-        >
-          <Switch
-            checked={form.telemetryEnabled}
-            onCheckedChange={(v) => set('telemetryEnabled', v)}
-          />
-        </SettingsRow>
+        <PreferenceRow
+          title="Telemetry"
+          hint="Send anonymous usage statistics to help improve Codedock."
+          checked={form.telemetryEnabled}
+          onChange={(v) => set('telemetryEnabled', v)}
+        />
+        {renderSaveFooter('System', 'Save System', ['serverTimezone', 'telemetryEnabled'])}
       </SettingsSection>
     </div>
   );

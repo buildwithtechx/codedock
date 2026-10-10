@@ -1,14 +1,14 @@
-import { Bell, Check } from 'lucide-react';
+import { Bell, BellRing, Check } from 'lucide-react';
 import { useEffect, useRef, useState } from 'react';
 import { toast } from 'sonner';
 import { Button } from '#/components/ui/button';
 import { Skeleton } from '#/components/ui/skeleton';
-import { Switch } from '#/components/ui/switch';
 import {
   useGetNotificationSettings,
   useTestNotification,
   useUpdateNotificationSettings,
 } from '#/features/settings';
+import { PreferenceRow } from '#/features/settings/preference-row';
 import { SettingsSection } from '#/features/settings/settings-section';
 import { NotificationChannelsList, type NotifSettingsForm } from './notification-channels-list';
 import { NotificationSubscriptionsTable } from './notification-subscriptions-table';
@@ -165,38 +165,44 @@ export const NotificationsSettings = () => {
   return (
     <div className="space-y-6">
       <SettingsSection
+        collapsible
         icon={<Bell className="size-4 text-primary" />}
         title="Alert Behavior"
         description="Enable or pause delivery across every configured channel."
-        action={
-          <div className="flex items-center gap-3">
-            <Switch
-              checked={form.notificationAlerts}
-              onCheckedChange={(v: boolean) => set('notificationAlerts', v)}
-            />
+      >
+        <div className="space-y-4">
+          <PreferenceRow
+            title="Notification Alerts"
+            hint="When paused, notifications for failed deployments, container restarts, and runtime warnings will be suppressed across all configured communication channels."
+            checked={form.notificationAlerts}
+            onChange={(v: boolean) => set('notificationAlerts', v)}
+          />
+          <div className="flex justify-end border-border/40 border-t pt-4">
             <Button size="sm" onClick={() => handleSave('alerts')} disabled={isSavingAny}>
               <Check className="mr-2 h-4 w-4" />
               {savingProvider === 'alerts' ? 'Saving...' : 'Save Alerts'}
             </Button>
           </div>
-        }
-      >
-        <p className="text-muted-foreground text-xs leading-relaxed">
-          When paused, notifications for failed deployments, container restarts, and runtime
-          warnings will be suppressed across all configured communication channels.
-        </p>
+        </div>
       </SettingsSection>
 
-      <NotificationChannelsList
-        form={form}
-        set={set}
-        handleSave={handleSave}
-        handleTest={handleTest}
-        savingProvider={savingProvider}
-        testingProvider={testingProvider}
-        testing={testing}
-        disabled={isSavingAny}
-      />
+      <SettingsSection
+        collapsible
+        icon={<BellRing className="size-4 text-primary" />}
+        title="Notification Channels"
+        description="Connect third-party webhook and chat integrations for automated alerts and deployment notifications."
+      >
+        <NotificationChannelsList
+          form={form}
+          set={set}
+          handleSave={handleSave}
+          handleTest={handleTest}
+          savingProvider={savingProvider}
+          testingProvider={testingProvider}
+          testing={testing}
+          disabled={isSavingAny}
+        />
+      </SettingsSection>
 
       <NotificationSubscriptionsTable />
     </div>

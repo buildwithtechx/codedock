@@ -1,8 +1,10 @@
+import { Brain } from 'lucide-react';
 import React, { useState } from 'react';
 import { toast } from 'sonner';
 import { useGetAISettings, useUpdateAISettings } from '#/features/settings';
 import { aiProviderCatalog } from '#/lib/ai-providers';
 import { AiProviderCard, type AiProviderItem } from './ai-provider-card';
+import { SettingsSection } from './settings-section';
 
 const PROVIDERS: AiProviderItem[] = [
   {
@@ -141,19 +143,21 @@ export function AISettings() {
   };
 
   return (
-    <div className="space-y-6">
-      <div className="flex flex-col gap-2 sm:flex-row sm:items-center sm:justify-between">
-        <div>
-          <h1 className="font-bold text-foreground text-xl">AI Providers</h1>
-          <p className="mt-1 text-muted-foreground text-sm">
-            Configure API keys and model parameters for platform AI services.
-          </p>
+    <SettingsSection
+      icon={<Brain className="size-4 text-primary" />}
+      title="AI Providers"
+      description="Configure API keys and model parameters for platform AI services."
+      action={
+        <div className="flex items-center gap-2">
+          <span className="text-muted-foreground text-xs uppercase tracking-wider">Default:</span>
+          <span className="rounded-md border border-border/60 bg-muted/40 px-2 py-0.5 font-semibold text-foreground text-xs">
+            {defaultProvider === 'none'
+              ? 'None'
+              : PROVIDERS.find((p) => p.id === defaultProvider)?.name || defaultProvider}
+          </span>
         </div>
-        <span className="self-start font-mono text-muted-foreground text-xs uppercase sm:self-auto">
-          Default: <strong className="text-foreground">{defaultProvider}</strong>
-        </span>
-      </div>
-
+      }
+    >
       <div className="space-y-4">
         {PROVIDERS.map((provider) => {
           const currentModel =
@@ -179,6 +183,6 @@ export function AISettings() {
           );
         })}
       </div>
-    </div>
+    </SettingsSection>
   );
 }

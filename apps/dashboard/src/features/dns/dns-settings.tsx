@@ -113,8 +113,9 @@ export const DnsSettings = () => {
                   />
                 </div>
                 <div className="min-w-0 flex-1">
-                  <div className="flex items-center gap-2">
-                    <p className="font-medium text-foreground text-sm">{provider.name}</p>
+                  <p className="font-medium text-foreground text-sm">{provider.name}</p>
+                  <p className="mt-0.5 text-muted-foreground text-xs">{provider.sub}</p>
+                  <div className="mt-2 flex items-center">
                     {isConfigured ? (
                       <span className="inline-flex items-center gap-1 rounded-full bg-emerald-500/10 px-2 py-0.5 font-medium text-[10px] text-emerald-600 dark:text-emerald-400">
                         <CheckCircle2 className="size-3" /> Active
@@ -125,7 +126,6 @@ export const DnsSettings = () => {
                       </span>
                     )}
                   </div>
-                  <p className="mt-0.5 text-muted-foreground text-xs">{provider.sub}</p>
                 </div>
                 <Button
                   variant="outline"

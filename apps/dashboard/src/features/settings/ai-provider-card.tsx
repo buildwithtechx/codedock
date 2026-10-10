@@ -1,4 +1,5 @@
-import { Check, CheckCircle2, ChevronDown, Star } from 'lucide-react';
+import { Check, CheckCircle2, ChevronDown, Plus, Star } from 'lucide-react';
+import { useState } from 'react';
 import { Button } from '#/components/ui/button';
 import {
   DropdownMenu,
@@ -8,7 +9,7 @@ import {
 } from '#/components/ui/dropdown-menu';
 import { Input } from '#/components/ui/input';
 import { Label } from '#/components/ui/label';
-import { SettingsSection } from './settings-section';
+import { Switch } from '#/components/ui/switch';
 
 export type AiProviderItem = {
   id: string;
@@ -42,35 +43,49 @@ export function AiProviderCard({
 }) {
   const isConfigured = Boolean(currentKey && currentKey.trim().length > 0);
   const activeModel = provider.models.find((m) => m.id === currentModel) || provider.models[0];
+  const [isExpanded, setIsExpanded] = useState(isDefault || isConfigured);
 
   return (
-    <SettingsSection
-      collapsible
-      defaultOpen={isDefault || isConfigured}
-      icon={<img src={provider.icon} alt={provider.name} className="h-5 w-5 object-contain" />}
-      title={provider.name}
-      description={activeModel ? `Model: ${activeModel.name}` : 'Not configured'}
-      action={
-        <div className="flex items-center gap-2">
-          {isDefault && (
-            <span className="inline-flex items-center gap-1 rounded-full bg-amber-500/10 px-2.5 py-0.5 font-medium text-[10px] text-amber-600 dark:text-amber-400">
-              <Star className="size-3 fill-amber-500 text-amber-500" /> Default
-            </span>
-          )}
-          {isConfigured ? (
-            <span className="inline-flex items-center gap-1 rounded-full bg-emerald-500/10 px-2.5 py-0.5 font-medium text-[10px] text-emerald-600 dark:text-emerald-400">
-              <CheckCircle2 className="size-3" /> Configured
-            </span>
-          ) : (
-            <span className="inline-flex items-center gap-1 rounded-full bg-muted px-2.5 py-0.5 font-medium text-[10px] text-muted-foreground">
-              Not configured
-            </span>
-          )}
+    <div className="rounded-xl border border-border/50 p-4">
+      <div className="flex items-start gap-3.5">
+        <div className="flex h-10 w-10 shrink-0 items-center justify-center rounded-xl border border-border/50 bg-background/50">
+          <img src={provider.icon} alt={provider.name} className="h-5 w-5 object-contain" />
         </div>
-      }
-    >
-      <div className="space-y-4">
-        <div className="grid grid-cols-1 gap-4 sm:grid-cols-2">
+        <div className="min-w-0 flex-1">
+          <p className="font-medium text-foreground text-sm">{provider.name}</p>
+          <p className="mt-0.5 text-muted-foreground text-xs">
+            {activeModel ? `Model: ${activeModel.name}` : 'Select a model and API key'}
+          </p>
+          <div className="mt-2 flex flex-wrap items-center gap-1.5">
+            {isConfigured ? (
+              <span className="inline-flex items-center gap-1 rounded-full bg-emerald-500/10 px-2 py-0.5 font-medium text-[10px] text-emerald-600 dark:text-emerald-400">
+                <CheckCircle2 className="size-3" /> Configured
+              </span>
+            ) : (
+              <span className="inline-flex items-center gap-1 rounded-full bg-muted px-2 py-0.5 font-medium text-[10px] text-muted-foreground">
+                Not configured
+              </span>
+            )}
+            {isDefault && (
+              <span className="inline-flex items-center gap-1 rounded-full bg-amber-500/10 px-2 py-0.5 font-medium text-[10px] text-amber-600 dark:text-amber-400">
+                <Star className="size-3 fill-amber-500 text-amber-500" /> Default
+              </span>
+            )}
+          </div>
+        </div>
+        <Button
+          variant="outline"
+          size="sm"
+          onClick={() => setIsExpanded(!isExpanded)}
+          className="shrink-0 gap-1 text-xs"
+        >
+          <Plus className="size-3.5" />
+          {isExpanded ? 'Close' : isConfigured ? 'Edit' : 'Add'}
+        </Button>
+      </div>
+
+      {isExpanded && (
+        <div className="mt-4 space-y-4 border-border/40 border-t pt-4">
           <div className="space-y-1.5">
             <Label className="text-xs">Model</Label>
             <DropdownMenu>
@@ -82,7 +97,7 @@ export function AiProviderCard({
                   <ChevronDown className="h-3.5 w-3.5 opacity-60" />
                 </Button>
               </DropdownMenuTrigger>
-              <DropdownMenuContent align="start" className="max-h-60 w-64 overflow-y-auto">
+              <DropdownMenuContent align="start" className="max-h-60 w-72 overflow-y-auto">
                 {provider.models.map((m) => (
                   <DropdownMenuItem
                     key={m.id}
@@ -99,6 +114,7 @@ export function AiProviderCard({
               </DropdownMenuContent>
             </DropdownMenu>
           </div>
+
           <div className="space-y-1.5">
             <Label className="text-xs">API Key</Label>
             <Input
@@ -109,26 +125,26 @@ export function AiProviderCard({
               className="bg-muted/30 font-mono text-xs"
             />
           </div>
-        </div>
 
-        <div className="flex items-center justify-between border-border/40 border-t pt-3">
-          <Button
-            type="button"
-            variant="ghost"
-            size="sm"
-            onClick={onSetDefault}
-            disabled={isDefault || !isConfigured}
-            className="gap-1.5 text-muted-foreground text-xs hover:text-foreground"
-          >
-            <Star className={`size-3.5 ${isDefault ? 'fill-current' : ''}`} />
-            {isDefault ? 'Default provider' : 'Make default'}
-          </Button>
-          <Button size="sm" onClick={onSave} disabled={isPending} className="gap-1.5 text-xs">
-            <Check className="size-3.5" />
-            Save {provider.name}
-          </Button>
+          <div className="flex items-center justify-between border-border/40 border-t pt-3">
+            <div className="flex items-center gap-2">
+              <Switch
+                checked={isDefault}
+                onCheckedChange={onSetDefault}
+                disabled={!isConfigured}
+                aria-label={`Make ${provider.name} default provider`}
+              />
+              <Label className="text-muted-foreground text-xs">
+                {isDefault ? 'Default provider' : 'Set as default'}
+              </Label>
+            </div>
+            <Button size="sm" onClick={onSave} disabled={isPending} className="gap-1.5 text-xs">
+              <Check className="size-3.5" />
+              Save {provider.name}
+            </Button>
+          </div>
         </div>
-      </div>
-    </SettingsSection>
+      )}
+    </div>
   );
 }
