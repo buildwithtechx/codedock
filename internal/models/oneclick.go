@@ -1,5 +1,10 @@
 package models
 
+import (
+	"encoding/json"
+	"time"
+)
+
 type OneClickEnvVar struct {
 	Key          string `json:"key"`
 	Label        string `json:"label"`
@@ -71,4 +76,14 @@ type AppInstallResult struct {
 	Kind      string        `json:"kind"`
 	ProjectID string        `json:"projectId,omitempty"`
 	Stack     *ComposeStack `json:"stack,omitempty"`
+}
+
+type CustomAppTemplate struct {
+	ID              string          `json:"id"`
+	OrganizationID  string          `json:"organizationId"`
+	AppID           string          `json:"appId"`
+	Template        json.RawMessage `json:"template"`
+	CreatedByUserID *string         `json:"createdByUserId,omitempty"`
+	CreatedAt       time.Time       `json:"createdAt"`
+	UpdatedAt       time.Time       `json:"updatedAt"`
 }

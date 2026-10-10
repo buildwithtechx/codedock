@@ -1,5 +1,19 @@
 import { useQuery } from '@tanstack/react-query';
-import { Search, Shield, User } from 'lucide-react';
+import {
+  AppWindow,
+  Bot,
+  CreditCard,
+  Globe,
+  Layers,
+  Rocket,
+  Search,
+  Server,
+  Shield,
+  User,
+  Users,
+  Wrench,
+} from 'lucide-react';
+import type { ComponentType } from 'react';
 import { useMemo, useState } from 'react';
 import { Input } from '#/components/ui/input';
 import { QueryErrorState } from '#/components/ui/query-error-state';
@@ -20,6 +34,19 @@ import {
   resourceDisplay,
   toneDot,
 } from './audit-taxonomy';
+
+const CATEGORY_ICON_MAP: Record<string, ComponentType<{ className?: string }>> = {
+  all: Layers,
+  deployments: Rocket,
+  apps: AppWindow,
+  domains: Globe,
+  servers: Server,
+  members: Users,
+  agent: Bot,
+  security: Shield,
+  billing: CreditCard,
+  system: Wrench,
+};
 
 const PER_PAGE = 50;
 
@@ -146,16 +173,22 @@ export function AuditLogList() {
     <div>
       <Tabs value={category} onValueChange={pickCategory}>
         <TabsList variant="line" className="flex w-full flex-wrap justify-start">
-          {tabDefs.map((tab) => (
-            <TabsTrigger key={tab.id} value={tab.id}>
-              {tab.label}
-              {facets && <span className="text-muted-foreground tabular-nums">({tab.count})</span>}
-            </TabsTrigger>
-          ))}
+          {tabDefs.map((tab) => {
+            const Icon = CATEGORY_ICON_MAP[tab.id] ?? Layers;
+            return (
+              <TabsTrigger key={tab.id} value={tab.id} className="gap-2">
+                <Icon className="size-4 shrink-0" />
+                <span>{tab.label}</span>
+                {facets && (
+                  <span className="text-muted-foreground tabular-nums">({tab.count})</span>
+                )}
+              </TabsTrigger>
+            );
+          })}
         </TabsList>
       </Tabs>
 
-      <div className="mt-6 grid grid-cols-1 gap-6 lg:grid-cols-[1fr_320px]">
+      <div className="mt-6 grid grid-cols-1 gap-6 lg:grid-cols-[1fr_340px]">
         <div className="min-w-0 space-y-6">
           <div className="relative min-w-52 flex-1">
             <Search className="absolute top-1/2 left-3 size-4 -translate-y-1/2 text-muted-foreground" />

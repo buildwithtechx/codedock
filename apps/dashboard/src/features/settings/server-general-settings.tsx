@@ -230,29 +230,32 @@ export function ServerGeneralSettings() {
         title="Security & Access"
         description="User registration policies, domain restrictions, and safety confirmations."
       >
-        <PreferenceRow
-          title="User Registration"
-          hint="Allow new users to sign up without an explicit invite."
-          checked={form.registrationEnabled}
-          onChange={(v) => set('registrationEnabled', v)}
-        />
-        <SettingsRow
-          label="Registration Domain Allowlist"
-          description="Comma-separated domains allowed to register (e.g. acme.com)."
-        >
-          <Input
-            value={form.registrationDomainAllowlist ?? ''}
-            onChange={(e) => set('registrationDomainAllowlist', e.target.value)}
-            placeholder="company.com, partner.com"
-            className="font-mono text-xs"
+        <div className="space-y-4">
+          <PreferenceRow
+            title="User Registration"
+            hint="Allow new users to sign up without an explicit invite."
+            checked={form.registrationEnabled}
+            onChange={(v) => set('registrationEnabled', v)}
           />
-        </SettingsRow>
-        <PreferenceRow
-          title="Two-Step Confirmation"
-          hint="Require confirmation dialog before destructive actions."
-          checked={!form.disableTwoStepConfirmation}
-          onChange={(v) => set('disableTwoStepConfirmation', !v)}
-        />
+          <SettingsRow
+            label="Registration Domain Allowlist"
+            description="Comma-separated domains allowed to register (e.g. acme.com)."
+            bordered={false}
+          >
+            <Input
+              value={form.registrationDomainAllowlist ?? ''}
+              onChange={(e) => set('registrationDomainAllowlist', e.target.value)}
+              placeholder="company.com, partner.com"
+              className="font-mono text-xs"
+            />
+          </SettingsRow>
+          <PreferenceRow
+            title="Two-Step Confirmation"
+            hint="Require confirmation dialog before destructive actions."
+            checked={!form.disableTwoStepConfirmation}
+            onChange={(v) => set('disableTwoStepConfirmation', !v)}
+          />
+        </div>
         {renderSaveFooter('Security & Access', 'Save Security & Access', [
           'registrationEnabled',
           'registrationDomainAllowlist',
@@ -300,20 +303,26 @@ export function ServerGeneralSettings() {
         title="System"
         description="Instance timezone and anonymous diagnostics reporting."
       >
-        <SettingsRow label="Server Timezone" description="Timezone used for cron jobs and logs.">
-          <Input
-            value={form.serverTimezone ?? ''}
-            onChange={(e) => set('serverTimezone', e.target.value)}
-            placeholder="UTC"
-            className="font-mono text-xs"
+        <div className="space-y-4">
+          <SettingsRow
+            label="Server Timezone"
+            description="Timezone used for cron jobs and logs."
+            bordered={false}
+          >
+            <Input
+              value={form.serverTimezone ?? ''}
+              onChange={(e) => set('serverTimezone', e.target.value)}
+              placeholder="UTC"
+              className="font-mono text-xs"
+            />
+          </SettingsRow>
+          <PreferenceRow
+            title="Telemetry"
+            hint="Send anonymous usage statistics to help improve Codedock."
+            checked={form.telemetryEnabled}
+            onChange={(v) => set('telemetryEnabled', v)}
           />
-        </SettingsRow>
-        <PreferenceRow
-          title="Telemetry"
-          hint="Send anonymous usage statistics to help improve Codedock."
-          checked={form.telemetryEnabled}
-          onChange={(v) => set('telemetryEnabled', v)}
-        />
+        </div>
         {renderSaveFooter('System', 'Save System', ['serverTimezone', 'telemetryEnabled'])}
       </SettingsSection>
     </div>

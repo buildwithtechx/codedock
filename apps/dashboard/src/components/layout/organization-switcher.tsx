@@ -1,5 +1,5 @@
 import { useNavigate } from '@tanstack/react-router';
-import { Building2, Check, ChevronsUpDown, LogOut, UserRound } from 'lucide-react';
+import { Building2, Check, ChevronsUpDown, Loader2, LogOut, UserRound } from 'lucide-react';
 import { useEffect } from 'react';
 import {
   DropdownMenu,
@@ -49,80 +49,98 @@ export function OrganizationSwitcher({ collapsed }: { collapsed: boolean }) {
   };
 
   return (
-    <DropdownMenu>
-      <DropdownMenuTrigger asChild>
-        <button
-          type="button"
-          className={`group flex w-full items-center rounded-lg text-left transition-colors hover:bg-sidebar-accent ${
-            collapsed ? 'justify-center p-2' : 'gap-2.5 px-2 py-2'
-          }`}
-          aria-label={`Switch organization. Current organization: ${selected.name}`}
-          title={collapsed ? selected.name : undefined}
+    <>
+      <DropdownMenu>
+        <DropdownMenuTrigger asChild>
+          <button
+            type="button"
+            className={`group flex w-full items-center rounded-lg text-left transition-colors hover:bg-sidebar-accent ${
+              collapsed ? 'justify-center p-2' : 'gap-2.5 px-2 py-2'
+            }`}
+            aria-label={`Switch organization. Current organization: ${selected.name}`}
+            title={collapsed ? selected.name : undefined}
+          >
+            <div className="flex h-8 w-8 shrink-0 items-center justify-center rounded-lg bg-primary/15 font-semibold text-[11px] text-primary">
+              {organizationInitials(selected.name) || <Building2 className="h-4 w-4" />}
+            </div>
+            {!collapsed && (
+              <>
+                <div className="min-w-0 flex-1">
+                  <p className="truncate font-medium text-sidebar-foreground text-sm">
+                    {selected.name}
+                  </p>
+                  <p className="truncate text-muted-foreground text-xs">
+                    {organizations.length > 1
+                      ? `${organizations.length} workspaces`
+                      : (user?.email ?? 'Workspace')}
+                  </p>
+                </div>
+                <ChevronsUpDown className="h-4 w-4 shrink-0 text-sidebar-foreground/40 transition-colors group-hover:text-sidebar-foreground/70" />
+              </>
+            )}
+          </button>
+        </DropdownMenuTrigger>
+        <DropdownMenuContent
+          className="!w-[232px] max-w-[calc(100vw-2rem)] rounded-xl border border-border/70 bg-popover p-1.5 shadow-xl"
+          align="start"
+          side="top"
+          collisionPadding={16}
         >
-          <div className="flex h-8 w-8 shrink-0 items-center justify-center rounded-lg bg-primary/15 font-semibold text-[11px] text-primary">
-            {organizationInitials(selected.name) || <Building2 className="h-4 w-4" />}
-          </div>
-          {!collapsed && (
-            <>
-              <div className="min-w-0 flex-1">
-                <p className="truncate font-medium text-sidebar-foreground text-sm">
-                  {selected.name}
-                </p>
-                <p className="truncate text-muted-foreground text-xs">
-                  {organizations.length > 1
-                    ? `${organizations.length} workspaces`
-                    : (user?.email ?? 'Workspace')}
-                </p>
+          <DropdownMenuLabel className="px-2.5 pt-1.5 pb-2 font-medium text-[10px] uppercase tracking-[0.14em]">
+            Switch organization
+          </DropdownMenuLabel>
+          {organizations.map((organization) => (
+            <DropdownMenuItem
+              key={organization.id}
+              onSelect={() => switchOrganization(organization.id)}
+              className="gap-2.5 rounded-lg px-2.5 py-2"
+            >
+              <div className="flex h-7 w-7 shrink-0 items-center justify-center rounded-md bg-muted font-semibold text-[10px] text-muted-foreground">
+                {organizationInitials(organization.name) || <Building2 className="h-3.5 w-3.5" />}
               </div>
-              <ChevronsUpDown className="h-4 w-4 shrink-0 text-sidebar-foreground/40 transition-colors group-hover:text-sidebar-foreground/70" />
-            </>
-          )}
-        </button>
-      </DropdownMenuTrigger>
-      <DropdownMenuContent
-        className="!w-[232px] max-w-[calc(100vw-2rem)] rounded-xl border border-border/70 bg-popover p-1.5 shadow-xl"
-        align="start"
-        side="top"
-        collisionPadding={16}
-      >
-        <DropdownMenuLabel className="px-2.5 pt-1.5 pb-2 font-medium text-[10px] uppercase tracking-[0.14em]">
-          Switch organization
-        </DropdownMenuLabel>
-        {organizations.map((organization) => (
+              <span className="flex-1 truncate font-medium text-sm">{organization.name}</span>
+              {organization.id === selected.id && <Check className="h-4 w-4 text-primary" />}
+            </DropdownMenuItem>
+          ))}
+          <DropdownMenuSeparator />
+          <div className="flex items-center gap-2.5 rounded-lg px-2.5 py-2">
+            <div className="flex h-7 w-7 shrink-0 items-center justify-center rounded-full bg-muted font-semibold text-[10px] text-muted-foreground">
+              {user?.name?.[0]?.toUpperCase() || <UserRound className="h-3.5 w-3.5" />}
+            </div>
+            <div className="min-w-0 flex-1">
+              <p className="truncate font-medium text-sm">{user?.name || 'Account'}</p>
+              <p className="truncate text-muted-foreground text-xs">
+                {user?.email || 'Account settings'}
+              </p>
+            </div>
+          </div>
           <DropdownMenuItem
-            key={organization.id}
-            onSelect={() => switchOrganization(organization.id)}
+            disabled={isLoggingOut}
+            onSelect={() => logout()}
+            variant="destructive"
             className="gap-2.5 rounded-lg px-2.5 py-2"
           >
-            <div className="flex h-7 w-7 shrink-0 items-center justify-center rounded-md bg-muted font-semibold text-[10px] text-muted-foreground">
-              {organizationInitials(organization.name) || <Building2 className="h-3.5 w-3.5" />}
-            </div>
-            <span className="flex-1 truncate font-medium text-sm">{organization.name}</span>
-            {organization.id === selected.id && <Check className="h-4 w-4 text-primary" />}
+            <LogOut className="h-4 w-4" />
+            Sign out
           </DropdownMenuItem>
-        ))}
-        <DropdownMenuSeparator />
-        <div className="flex items-center gap-2.5 rounded-lg px-2.5 py-2">
-          <div className="flex h-7 w-7 shrink-0 items-center justify-center rounded-full bg-muted font-semibold text-[10px] text-muted-foreground">
-            {user?.name?.[0]?.toUpperCase() || <UserRound className="h-3.5 w-3.5" />}
-          </div>
-          <div className="min-w-0 flex-1">
-            <p className="truncate font-medium text-sm">{user?.name || 'Account'}</p>
-            <p className="truncate text-muted-foreground text-xs">
-              {user?.email || 'Account settings'}
-            </p>
-          </div>
-        </div>
-        <DropdownMenuItem
+        </DropdownMenuContent>
+      </DropdownMenu>
+      {collapsed && (
+        <button
+          type="button"
+          onClick={() => logout()}
           disabled={isLoggingOut}
-          onSelect={() => logout()}
-          variant="destructive"
-          className="gap-2.5 rounded-lg px-2.5 py-2"
+          className="mt-2 flex w-full items-center justify-center rounded-xl py-2 text-muted-foreground transition-colors hover:bg-sidebar-accent hover:text-foreground disabled:opacity-50"
+          aria-label="Sign out"
+          title="Sign out"
         >
-          <LogOut className="h-4 w-4" />
-          Sign out
-        </DropdownMenuItem>
-      </DropdownMenuContent>
-    </DropdownMenu>
+          {isLoggingOut ? (
+            <Loader2 className="h-4 w-4 animate-spin" />
+          ) : (
+            <LogOut className="h-4 w-4" />
+          )}
+        </button>
+      )}
+    </>
   );
 }
