@@ -131,7 +131,7 @@ export function ServerOverviewTab({ server }: { server: Server }) {
           badge={live.connected ? 'Live' : 'Idle'}
           data={live.cpuSeries}
           isLoading={false}
-          color="hsl(var(--chart-1))"
+          color="#8b5cf6"
           formatY={(v) => `${Math.round(v)}%`}
           formatTooltip={(v) => `${v.toFixed(2)}%`}
         />
@@ -141,7 +141,7 @@ export function ServerOverviewTab({ server }: { server: Server }) {
           badge={live.connected ? 'Live' : 'Idle'}
           data={live.memorySeries}
           isLoading={false}
-          color="hsl(var(--chart-2))"
+          color="#3b82f6"
           formatY={(v) => `${Math.round(v)}%`}
           formatTooltip={(v) => `${v.toFixed(2)}%`}
         />
@@ -151,7 +151,7 @@ export function ServerOverviewTab({ server }: { server: Server }) {
           badge={live.connected ? 'Live' : 'Idle'}
           data={live.diskSeries}
           isLoading={false}
-          color="hsl(var(--chart-3))"
+          color="#10b981"
           formatY={(v) => `${Math.round(v)}%`}
           formatTooltip={(v) => `${v.toFixed(2)}%`}
         />

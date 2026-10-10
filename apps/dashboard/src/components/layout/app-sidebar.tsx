@@ -160,7 +160,7 @@ export function AppSidebar({ collapsed, onToggle, mobileOpen, onMobileClose }: A
         </div>
 
         <div className="relative min-h-0 flex-1">
-          <nav className="h-full space-y-5 overflow-y-auto px-3 pt-3 pb-12 [scrollbar-width:thin]">
+          <nav className="scrollbar-none h-full space-y-5 overflow-y-auto px-3 pt-3 pb-12 [scrollbar-width:none] [&::-webkit-scrollbar]:hidden">
             {navGroups.map((group, i) => (
               <div key={group.title ?? i} className="flex flex-col gap-0.5">
                 {!navCollapsed && group.title && (
@@ -191,7 +191,7 @@ export function AppSidebar({ collapsed, onToggle, mobileOpen, onMobileClose }: A
             to={'/library' as never}
             aria-label="New project"
             title={navCollapsed ? 'New project' : undefined}
-            className={`flex items-center justify-center gap-2.5 overflow-hidden rounded-xl bg-gradient-to-r from-[#f59e0b] to-[#f43f5e] px-3 py-2.5 font-semibold text-sm text-white transition-all hover:brightness-110 ${navCollapsed ? 'px-0' : 'px-3'}`}
+            className={`flex items-center justify-center gap-2.5 overflow-hidden rounded-xl bg-primary px-3 py-2.5 font-semibold text-primary-foreground text-sm shadow-sm transition-all hover:bg-primary/90 ${navCollapsed ? 'px-0' : 'px-3'}`}
           >
             <Plus className="h-4 w-4" />
             {!navCollapsed && 'New project'}

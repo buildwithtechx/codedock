@@ -6,6 +6,7 @@ type ClientDefinition = {
   id: string;
   name: string;
   icon: string;
+  color: string;
   getSetup: (endpoint: string) => {
     label: string;
     code?: string;
@@ -29,6 +30,7 @@ const CLIENTS: ClientDefinition[] = [
     id: 'claude-code',
     name: 'Claude Code',
     icon: '/icons/claude.png',
+    color: '#CC785C',
     getSetup: (e) => ({
       label: 'Run command in your project directory',
       code: `claude mcp add --transport sse codedock ${e}`,
@@ -39,6 +41,7 @@ const CLIENTS: ClientDefinition[] = [
     id: 'cursor',
     name: 'Cursor',
     icon: '/icons/cursor.png',
+    color: 'currentColor',
     getSetup: (e) => ({
       label: 'Add to ~/.cursor/mcp.json or Cursor Features Settings',
       code: JSON.stringify({ mcpServers: { codedock: { url: e } } }, null, 2),
@@ -51,6 +54,7 @@ const CLIENTS: ClientDefinition[] = [
     id: 'codex',
     name: 'Codex',
     icon: '/icons/openai.png',
+    color: '#10A37F',
     getSetup: (e) => ({
       label: 'Register server and authenticate',
       code: `codex mcp add codedock --url ${e}\ncodex mcp login codedock`,
@@ -61,6 +65,7 @@ const CLIENTS: ClientDefinition[] = [
     id: 'vscode',
     name: 'VS Code',
     icon: '/icons/copilot.png',
+    color: '#007ACC',
     getSetup: (e) => ({
       label: 'Register in VS Code terminal or .vscode/mcp.json',
       code: `code --add-mcp '{"name":"codedock","type":"sse","url":"${e}"}'`,
@@ -71,6 +76,7 @@ const CLIENTS: ClientDefinition[] = [
     id: 'claude-desktop',
     name: 'Claude Desktop',
     icon: '/icons/claude.png',
+    color: '#CC785C',
     getSetup: (e) => ({
       label: 'Add to claude_desktop_config.json',
       code: JSON.stringify({ mcpServers: { codedock: { url: e } } }, null, 2),
@@ -86,6 +92,7 @@ const CLIENTS: ClientDefinition[] = [
     id: 'windsurf',
     name: 'Windsurf',
     icon: '/icons/windsurf.png',
+    color: '#09B6A2',
     getSetup: (e) => ({
       label: 'Add to ~/.codeium/windsurf/mcp_config.json',
       code: JSON.stringify({ mcpServers: { codedock: { serverUrl: e } } }, null, 2),
@@ -96,6 +103,7 @@ const CLIENTS: ClientDefinition[] = [
     id: 'zed',
     name: 'Zed',
     icon: '/icons/zed.png',
+    color: '#5970EA',
     getSetup: (e) => ({
       label: 'Add to Zed settings.json',
       code: JSON.stringify(
@@ -117,6 +125,7 @@ const CLIENTS: ClientDefinition[] = [
     id: 'generic',
     name: 'Other',
     icon: '/icons/mcp.png',
+    color: '#8B5CF6',
     getSetup: (e) => ({
       label: 'Universal MCP SSE client configuration',
       code: JSON.stringify({ mcpServers: { codedock: { url: e } } }, null, 2),
@@ -157,12 +166,19 @@ export function McpClientSetup({ endpoint }: { endpoint: string }) {
                     : 'border-border/60 text-muted-foreground hover:bg-muted/40 hover:text-foreground'
                 }`}
               >
-                <img
-                  src={client.icon}
-                  alt={client.name}
-                  className="size-4 object-contain brightness-90 dark:brightness-100"
-                  onError={(e) => {
-                    e.currentTarget.style.display = 'none';
+                <span
+                  aria-hidden="true"
+                  className="inline-block size-4 shrink-0"
+                  style={{
+                    backgroundColor: client.color,
+                    maskImage: `url(${client.icon})`,
+                    WebkitMaskImage: `url(${client.icon})`,
+                    maskSize: 'contain',
+                    WebkitMaskSize: 'contain',
+                    maskRepeat: 'no-repeat',
+                    WebkitMaskRepeat: 'no-repeat',
+                    maskPosition: 'center',
+                    WebkitMaskPosition: 'center',
                   }}
                 />
                 <span>{client.name}</span>

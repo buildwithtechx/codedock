@@ -84,7 +84,15 @@ export function GitProviders() {
             <div key={provider.id} className="rounded-xl border border-border/50 p-4">
               <div className="flex items-start gap-3.5">
                 <div className="flex h-10 w-10 shrink-0 items-center justify-center rounded-xl border border-border/50 bg-background/50">
-                  <img src={provider.icon} alt={provider.name} className="h-5 w-5 object-contain" />
+                  <img
+                    src={provider.icon}
+                    alt={provider.name}
+                    className={`h-5 w-5 object-contain ${
+                      provider.id === 'github'
+                        ? 'dim:brightness-0 dim:invert dark:brightness-0 dark:invert'
+                        : ''
+                    }`}
+                  />
                 </div>
                 <div className="min-w-0 flex-1">
                   <p className="font-medium text-foreground text-sm">{provider.name}</p>

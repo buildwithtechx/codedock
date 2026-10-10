@@ -50,7 +50,7 @@ export function InstallWizard({ appId }: { appId: string }) {
     return (
       <div className="space-y-6">
         <Skeleton className="h-12 w-64" />
-        <div className="grid grid-cols-1 gap-6 lg:grid-cols-[minmax(0,1fr)_340px]">
+        <div className="grid grid-cols-1 gap-6 lg:grid-cols-[minmax(0,1fr)_300px] xl:grid-cols-[minmax(0,1fr)_340px]">
           <Skeleton className="h-96 rounded-2xl" />
           <Skeleton className="h-64 rounded-2xl" />
         </div>
@@ -243,7 +243,7 @@ export function InstallWizard({ appId }: { appId: string }) {
   return (
     <div className="space-y-6">
       <WizardHeader app={app} />
-      <div className="grid grid-cols-1 items-start gap-6 lg:grid-cols-[minmax(0,1fr)_340px]">
+      <div className="grid grid-cols-1 items-start gap-6 lg:grid-cols-[minmax(0,1fr)_300px] xl:grid-cols-[minmax(0,1fr)_340px]">
         <div className="min-w-0 space-y-5">
           <div className="rounded-2xl bg-card p-5">
             <Label htmlFor="wizard-name">Install name</Label>

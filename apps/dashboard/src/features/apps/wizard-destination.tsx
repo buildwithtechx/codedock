@@ -73,23 +73,23 @@ export function WizardDestination({
           <Skeleton className="h-16 w-full rounded-xl" />
         ) : (
           <div className="space-y-3">
-            <div className="flex items-center gap-3 rounded-xl border border-border/50 bg-muted/20 p-3.5">
+            <div className="flex min-w-0 items-center gap-3 overflow-hidden rounded-xl border border-border/50 bg-muted/20 p-3.5">
               <div className="flex size-9 shrink-0 items-center justify-center rounded-lg bg-muted text-muted-foreground">
                 <ServerIcon className="size-4" />
               </div>
-              <div className="min-w-0 flex-1">
+              <div className="min-w-0 flex-1 overflow-hidden">
                 {servers.length > 1 ? (
                   <Select
                     value={serverId || activeServer?.id || 'local'}
                     onValueChange={onServerChange}
                     disabled={disabled}
                   >
-                    <SelectTrigger className="h-7 border-none bg-transparent p-0 font-medium text-foreground text-sm shadow-none focus:ring-0">
+                    <SelectTrigger className="h-7 w-full min-w-0 max-w-full justify-between overflow-hidden border-none bg-transparent p-0 font-medium text-foreground text-sm shadow-none focus:ring-0 [&>span]:block [&>span]:min-w-0 [&>span]:truncate">
                       <SelectValue placeholder={serverDisplayName} />
                     </SelectTrigger>
                     <SelectContent>
                       {servers.map((s) => (
-                        <SelectItem key={s.id} value={s.id}>
+                        <SelectItem key={s.id} value={s.id} className="truncate">
                           {s.name} ({s.ipAddress || s.sshHost || 'Host'})
                         </SelectItem>
                       ))}

@@ -32,6 +32,8 @@ export function MetricChartCard({
   formatY,
   formatTooltip,
 }: MetricChartCardProps) {
+  const gradId = `grad-${title.toLowerCase().replace(/[^a-z0-9]/g, '-')}`;
+
   return (
     <Card className="overflow-hidden">
       <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
@@ -56,32 +58,38 @@ export function MetricChartCard({
           <ResponsiveContainer width="100%" height={160}>
             <AreaChart data={data} margin={{ top: 4, right: 4, left: 0, bottom: 0 }}>
               <defs>
-                <linearGradient id={`grad-${title}`} x1="0" y1="0" x2="0" y2="1">
+                <linearGradient id={gradId} x1="0" y1="0" x2="0" y2="1">
                   <stop offset="5%" stopColor={color} stopOpacity={0.25} />
                   <stop offset="95%" stopColor={color} stopOpacity={0} />
                 </linearGradient>
               </defs>
-              <CartesianGrid strokeDasharray="3 3" stroke="hsl(var(--border))" vertical={false} />
+              <CartesianGrid
+                strokeDasharray="3 3"
+                stroke="var(--border)"
+                strokeOpacity={0.5}
+                vertical={false}
+              />
               <XAxis
                 dataKey="time"
                 tickFormatter={formatTimestamp}
-                tick={{ fontSize: 10, fill: 'hsl(var(--muted-foreground))' }}
+                tick={{ fontSize: 10, fill: 'var(--muted-foreground)' }}
                 tickLine={false}
                 axisLine={false}
                 minTickGap={40}
               />
               <YAxis
                 tickFormatter={formatY}
-                tick={{ fontSize: 10, fill: 'hsl(var(--muted-foreground))' }}
+                tick={{ fontSize: 10, fill: 'var(--muted-foreground)' }}
                 tickLine={false}
                 axisLine={false}
                 width={48}
               />
               <Tooltip
                 contentStyle={{
-                  background: 'hsl(var(--card))',
-                  border: '1px solid hsl(var(--border))',
+                  background: 'var(--card)',
+                  border: '1px solid var(--border)',
                   borderRadius: '8px',
+                  color: 'var(--foreground)',
                   fontSize: '12px',
                 }}
                 labelFormatter={(v) => formatTimestamp(v as number)}
@@ -92,7 +100,7 @@ export function MetricChartCard({
                 dataKey="value"
                 stroke={color}
                 strokeWidth={2}
-                fill={`url(#grad-${title})`}
+                fill={`url(#${gradId})`}
                 dot={false}
                 activeDot={{ r: 4, strokeWidth: 0 }}
               />

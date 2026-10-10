@@ -1,224 +1,208 @@
 import { useNavigate } from '@tanstack/react-router';
-import { LayoutGrid, Loader2, Settings } from 'lucide-react';
-import { type FormEvent, useState } from 'react';
-import { toast } from 'sonner';
+import { LayoutGrid, Settings } from 'lucide-react';
 import { Button } from '#/components/ui/button';
-import { Dialog, DialogContent, DialogDescription, DialogTitle } from '#/components/ui/dialog';
-import { Input } from '#/components/ui/input';
-import { Label } from '#/components/ui/label';
 import type { GithubApp } from '#/features/settings';
 import { useGetGitApps } from '#/features/settings';
 import { GithubIcon } from '#/features/sources/github-app-dialogs';
-import { useConnectProvider } from './hooks';
 
-function ConnectIllustration() {
+function GitHubConnectSvg() {
   return (
-    <svg className="h-44 w-64" viewBox="0 0 256 176" fill="none" aria-hidden="true">
+    <svg className="h-44 w-64" viewBox="0 0 240 156" fill="none" aria-hidden="true">
       <circle
-        cx="128"
-        cy="88"
-        r="62"
-        stroke="var(--border)"
+        cx="120"
+        cy="74"
+        r="56"
+        className="stroke-foreground/20 dark:stroke-foreground/25"
         strokeWidth="1.5"
-        strokeDasharray="4 8"
+        strokeDasharray="3 7"
       />
       <path
-        d="M128 88 196 48"
-        stroke="var(--muted-foreground)"
-        strokeOpacity="0.3"
+        d="M120 74 L184 40"
+        className="stroke-foreground/20 dark:stroke-foreground/25"
         strokeWidth="1.5"
-        strokeDasharray="4 4"
+        strokeDasharray="3 4"
       />
       <path
-        d="M128 88 208 108"
-        stroke="var(--muted-foreground)"
-        strokeOpacity="0.3"
+        d="M120 74 L198 94"
+        className="stroke-foreground/20 dark:stroke-foreground/25"
         strokeWidth="1.5"
-        strokeDasharray="4 4"
+        strokeDasharray="3 4"
       />
       <path
-        d="M128 88 52 116"
-        stroke="var(--muted-foreground)"
-        strokeOpacity="0.3"
+        d="M120 74 L44 100"
+        className="stroke-foreground/20 dark:stroke-foreground/25"
         strokeWidth="1.5"
-        strokeDasharray="4 4"
+        strokeDasharray="3 4"
       />
       <g>
         <rect
-          x="182"
-          y="38"
-          width="30"
-          height="22"
-          rx="6"
-          fill="var(--muted)"
-          stroke="var(--border)"
+          x="170"
+          y="30"
+          width="28"
+          height="20"
+          rx="5"
+          className="fill-card stroke-border/80 dark:fill-card dark:stroke-border"
+          strokeWidth="1"
         />
         <rect
-          x="187"
-          y="44"
-          width="11"
-          height="3"
-          rx="1.5"
-          fill="var(--muted-foreground)"
-          fillOpacity="0.5"
+          x="175"
+          y="36"
+          width="10"
+          height="2.5"
+          rx="1.25"
+          className="fill-foreground/40 dark:fill-foreground/60"
         />
         <rect
-          x="187"
-          y="50"
-          width="18"
-          height="3"
-          rx="1.5"
-          fill="var(--muted-foreground)"
-          fillOpacity="0.25"
+          x="175"
+          y="41"
+          width="17"
+          height="2.5"
+          rx="1.25"
+          className="fill-foreground/20 dark:fill-foreground/35"
         />
       </g>
       <g>
         <rect
-          x="194"
-          y="98"
-          width="30"
-          height="22"
-          rx="6"
-          fill="var(--muted)"
-          stroke="var(--border)"
+          x="184"
+          y="84"
+          width="28"
+          height="20"
+          rx="5"
+          className="fill-card stroke-border/80 dark:fill-card dark:stroke-border"
+          strokeWidth="1"
         />
         <rect
-          x="199"
-          y="104"
-          width="11"
-          height="3"
-          rx="1.5"
-          fill="var(--muted-foreground)"
-          fillOpacity="0.5"
+          x="189"
+          y="90"
+          width="10"
+          height="2.5"
+          rx="1.25"
+          className="fill-foreground/40 dark:fill-foreground/60"
         />
         <rect
-          x="199"
-          y="110"
-          width="18"
-          height="3"
-          rx="1.5"
-          fill="var(--muted-foreground)"
-          fillOpacity="0.25"
+          x="189"
+          y="95"
+          width="17"
+          height="2.5"
+          rx="1.25"
+          className="fill-foreground/20 dark:fill-foreground/35"
         />
       </g>
       <g>
         <rect
-          x="36"
-          y="106"
-          width="30"
-          height="22"
-          rx="6"
-          fill="var(--muted)"
-          stroke="var(--border)"
+          x="28"
+          y="90"
+          width="28"
+          height="20"
+          rx="5"
+          className="fill-card stroke-border/80 dark:fill-card dark:stroke-border"
+          strokeWidth="1"
         />
         <rect
-          x="41"
-          y="112"
-          width="11"
-          height="3"
-          rx="1.5"
-          fill="var(--muted-foreground)"
-          fillOpacity="0.5"
+          x="33"
+          y="96"
+          width="10"
+          height="2.5"
+          rx="1.25"
+          className="fill-foreground/40 dark:fill-foreground/60"
         />
         <rect
-          x="41"
-          y="118"
-          width="18"
-          height="3"
-          rx="1.5"
-          fill="var(--muted-foreground)"
-          fillOpacity="0.25"
+          x="33"
+          y="101"
+          width="17"
+          height="2.5"
+          rx="1.25"
+          className="fill-foreground/20 dark:fill-foreground/35"
         />
       </g>
-      <circle cx="128" cy="88" r="32" fill="var(--card)" stroke="var(--border)" strokeWidth="1.5" />
-      <g transform="translate(128,88) scale(2.8) translate(-12,-12)">
+      <circle
+        cx="120"
+        cy="74"
+        r="30"
+        className="fill-card stroke-border dark:fill-card dark:stroke-border"
+        strokeWidth="1.5"
+      />
+      <g transform="translate(120,74) scale(3) translate(-85,-108)">
         <path
-          d="M15 22v-4a4.8 4.8 0 0 0-1-3.5c3 0 6-2 6-5.5.08-1.25-.27-2.48-1-3.5.28-1.15.28-2.35 0-3.5 0 0-1 0-3 1.5-2.64-.5-5.36-.5-8 0C6 2 5 2 5 2c-.3 1.15-.3 2.35 0 3.5A5.403 5.403 0 0 0 4 9c0 3.5 3 5.5 6 5.5-.39.49-.68 1.05-.85 1.65-.17.6-.22 1.23-.15 1.85v4"
-          stroke="var(--foreground)"
-          strokeWidth="1.5"
-          strokeLinecap="round"
-          strokeLinejoin="round"
-        />
-        <path
-          d="M9 18c-4.51 2-5-2-7-2"
-          stroke="var(--foreground)"
-          strokeWidth="1.5"
-          strokeLinecap="round"
-          strokeLinejoin="round"
+          d="M85 102a6 6 0 0 0-1.9 11.7c.3.05.4-.13.4-.3v-1.05c-1.63.35-1.97-.79-1.97-.79a1.55 1.55 0 0 0-.65-.86c-.53-.36.04-.35.04-.35a1.23 1.23 0 0 1 .9.6 1.25 1.25 0 0 0 1.71.49 1.25 1.25 0 0 1 .37-.78c-1.3-.15-2.67-.65-2.67-2.9a2.27 2.27 0 0 1 .6-1.57 2.1 2.1 0 0 1 .06-1.55s.49-.16 1.6.6a5.5 5.5 0 0 1 2.92 0c1.11-.76 1.6-.6 1.6-.6a2.1 2.1 0 0 1 .06 1.55 2.27 2.27 0 0 1 .6 1.57c0 2.26-1.37 2.75-2.68 2.9a1.4 1.4 0 0 1 .4 1.08v1.6c0 .17.1.35.4.3A6 6 0 0 0 85 102z"
+          className="fill-foreground"
         />
       </g>
-      <circle cx="30" cy="66" r="3" fill="var(--muted-foreground)" fillOpacity="0.3" />
-      <circle cx="222" cy="140" r="4" fill="var(--muted-foreground)" fillOpacity="0.2" />
-      <circle cx="64" cy="36" r="3" fill="var(--muted-foreground)" fillOpacity="0.35" />
+      <circle cx="26" cy="58" r="3" className="fill-foreground/30 dark:fill-foreground/40" />
+      <circle cx="208" cy="124" r="4" className="fill-foreground/25 dark:fill-foreground/35" />
+      <circle cx="58" cy="34" r="3" className="fill-foreground/30 dark:fill-foreground/40" />
     </svg>
   );
 }
 
+function startAutomaticGithubAppInstall() {
+  const origin = window.location.origin;
+  const isLocalhost =
+    window.location.hostname === 'localhost' || window.location.hostname === '127.0.0.1';
+  const manifest = {
+    name: `codedock-${Math.random().toString(36).substring(7)}`,
+    url: origin,
+    redirect_url: `${origin}/settings?tab=git`,
+    public: false,
+    default_permissions: {
+      contents: 'read',
+      metadata: 'read',
+      pull_requests: 'read',
+      emails: 'read',
+    },
+    ...(!isLocalhost
+      ? {
+          hook_attributes: {
+            url: `${origin}/api/webhooks/github/services/generic`,
+          },
+          default_events: ['push', 'pull_request'],
+        }
+      : {}),
+  };
+
+  const form = document.createElement('form');
+  form.method = 'POST';
+  form.action = 'https://github.com/settings/apps/new';
+  form.target = '_blank';
+  form.rel = 'noopener noreferrer';
+  const input = document.createElement('input');
+  input.type = 'hidden';
+  input.name = 'manifest';
+  input.value = JSON.stringify(manifest);
+  form.appendChild(input);
+  document.body.appendChild(form);
+  form.submit();
+  document.body.removeChild(form);
+}
+
 export function ConnectPrompt({ onBrowseApps }: { onBrowseApps: () => void }) {
   const navigate = useNavigate();
-  const connect = useConnectProvider();
-  const { data: gitAppsData } = useGetGitApps();
+  const { data: gitAppsData, isLoading } = useGetGitApps();
   const apps = (gitAppsData?.data as GithubApp[]) || [];
   const primaryApp = apps[0];
 
-  const [modalOpen, setModalOpen] = useState(false);
-  const [accountName, setAccountName] = useState('');
-  const [accessToken, setAccessToken] = useState('');
-
-  const handleConnectToken = async (event: FormEvent) => {
-    event.preventDefault();
-    if (!accessToken.trim() || connect.isPending) return;
-    try {
-      await connect.mutateAsync({
-        provider: 'github',
-        accessToken: accessToken.trim(),
-        accountName: accountName.trim() || 'Personal',
-      });
-      setAccessToken('');
-      setAccountName('');
-      setModalOpen(false);
-      toast.success('GitHub connected successfully');
-    } catch {
-      toast.error('Failed to connect GitHub');
-    }
-  };
-
-  const handlePrimaryClick = () => {
+  const handleConnect = () => {
     if (primaryApp?.name) {
       window.location.href = `https://github.com/apps/${primaryApp.name}/installations/new`;
       return;
     }
-    setModalOpen(true);
+    startAutomaticGithubAppInstall();
   };
 
   return (
     <div className="rounded-2xl border border-border/50 bg-card">
       <div className="px-6 pt-10 pb-10 text-center">
-        <div className="relative mx-auto h-44 w-64">
-          <ConnectIllustration />
+        <div className="relative mx-auto flex h-44 w-64 items-center justify-center">
+          <GitHubConnectSvg />
         </div>
         <h3 className="mt-2 font-medium text-foreground/85 text-lg">Connect GitHub to deploy</h3>
         <p className="mx-auto mt-1.5 mb-7 max-w-md text-muted-foreground text-sm leading-relaxed">
           Connect your GitHub account or install the GitHub App to browse and deploy repositories.
         </p>
         <div className="flex flex-wrap items-center justify-center gap-3">
-          <Button
-            type="button"
-            onClick={handlePrimaryClick}
-            disabled={connect.isPending}
-            className="h-11 px-6"
-          >
-            {connect.isPending ? (
-              <>
-                <Loader2 className="size-4 animate-spin" />
-                Connecting...
-              </>
-            ) : (
-              <>
-                <GithubIcon className="size-4" />
-                {primaryApp?.name ? 'Install GitHub App' : 'Connect GitHub'}
-              </>
-            )}
+          <Button type="button" onClick={handleConnect} disabled={isLoading} className="h-11 px-6">
+            <GithubIcon className="size-4" />
+            {primaryApp?.name ? 'Install GitHub App' : 'Connect GitHub'}
           </Button>
           <Button type="button" variant="secondary" onClick={onBrowseApps} className="h-11 px-6">
             <LayoutGrid className="size-4" aria-hidden="true" />
@@ -236,55 +220,6 @@ export function ConnectPrompt({ onBrowseApps }: { onBrowseApps: () => void }) {
           </button>
         </div>
       </div>
-
-      <Dialog open={modalOpen} onOpenChange={setModalOpen}>
-        <DialogContent className="sm:max-w-md">
-          <DialogTitle>Connect GitHub</DialogTitle>
-          <DialogDescription>
-            Enter a personal access token with repository read permissions to browse and deploy
-            repositories.
-          </DialogDescription>
-          <form onSubmit={handleConnectToken} className="mt-4 space-y-4">
-            <div className="space-y-1.5">
-              <Label htmlFor="connect-account-name">Account name (optional)</Label>
-              <Input
-                id="connect-account-name"
-                placeholder="Personal"
-                value={accountName}
-                onChange={(event) => setAccountName(event.target.value)}
-              />
-            </div>
-            <div className="space-y-1.5">
-              <Label htmlFor="connect-access-token">Personal access token</Label>
-              <Input
-                id="connect-access-token"
-                type="password"
-                placeholder="ghp_..."
-                autoComplete="off"
-                spellCheck={false}
-                value={accessToken}
-                onChange={(event) => setAccessToken(event.target.value)}
-              />
-            </div>
-            <div className="flex items-center justify-between pt-2">
-              <button
-                type="button"
-                onClick={() => {
-                  setModalOpen(false);
-                  void navigate({ to: '/settings', search: { tab: 'git' } as never });
-                }}
-                className="font-medium text-muted-foreground text-xs hover:text-foreground hover:underline"
-              >
-                Or configure GitHub App in settings
-              </button>
-              <Button type="submit" disabled={!accessToken.trim() || connect.isPending}>
-                {connect.isPending && <Loader2 className="mr-2 size-4 animate-spin" />}
-                Connect
-              </Button>
-            </div>
-          </form>
-        </DialogContent>
-      </Dialog>
     </div>
   );
 }

@@ -42,7 +42,15 @@ export function OAuthProviderCard({
       <div className="flex items-start gap-3.5">
         <div className="flex h-10 w-10 shrink-0 items-center justify-center rounded-xl border border-border/50 bg-background/50">
           {provider.icon ? (
-            <img src={provider.icon} alt={provider.name} className="h-5 w-5 object-contain" />
+            <img
+              src={provider.icon}
+              alt={provider.name}
+              className={`h-5 w-5 object-contain ${
+                provider.id === 'github'
+                  ? 'dim:brightness-0 dim:invert dark:brightness-0 dark:invert'
+                  : ''
+              }`}
+            />
           ) : (
             <span className="font-bold text-xs uppercase">{provider.name.slice(0, 2)}</span>
           )}

@@ -33,7 +33,11 @@ export function LibrarySidebar({
                       src={provider.icon}
                       alt=""
                       aria-hidden="true"
-                      className="size-4 object-contain"
+                      className={`size-4 object-contain ${
+                        provider.id === 'github'
+                          ? 'dim:brightness-0 dim:invert dark:brightness-0 dark:invert'
+                          : ''
+                      }`}
                     />
                   </div>
                   <div className="min-w-0">
