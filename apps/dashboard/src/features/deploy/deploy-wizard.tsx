@@ -1,7 +1,9 @@
 import { useNavigate } from '@tanstack/react-router';
-import { useState } from 'react';
+import { useEffect, useState } from 'react';
 import { toast } from 'sonner';
+import { useCreateProject } from '#/features/projects';
 import { useCreateApp } from '#/hooks/use-apps';
+import { useOrganizationStore } from '#/stores/organization-store';
 import { DeployConfigStep } from './deploy-config-step';
 import { DeploySidebar } from './deploy-sidebar';
 import { DeployTargetStep } from './deploy-target-step';
@@ -31,26 +33,54 @@ export function DeployWizard({
   const [envVars, setEnvVars] = useState('');
 
   const createAppMutation = useCreateApp();
+  const { mutateAsync: createProject, isPending: isCreatingProject } = useCreateProject();
+  const activeOrgId = useOrganizationStore((s) => s.activeOrganizationId);
+
+  useEffect(() => {
+    if (initialProjectName) {
+      setProjectName(initialProjectName);
+      setSubdomain(initialProjectName);
+    }
+    if (initialBranch) {
+      setBranch(initialBranch);
+    }
+  }, [initialProjectName, initialBranch]);
 
   const handleDeploy = async () => {
     try {
       toast.info('Starting build & deployment...');
-      await createAppMutation.mutateAsync({
-        name: projectName,
-        sourceType: 'git',
-        repositoryUrl: initialRepoUrl,
-        branch,
-        runtimeMode,
-        buildCommand,
-        installCommand,
-        staticOutput: outputDirectory,
-        subdomain,
-      } as never);
+      const projectRes = await createProject({
+        payload: {
+          name: projectName,
+          organizationId: activeOrgId || '',
+        },
+      });
+      const projectId = projectRes?.data?.id;
+
+      try {
+        await createAppMutation.mutateAsync({
+          name: projectName,
+          sourceType: 'git',
+          repositoryUrl: initialRepoUrl,
+          branch,
+          runtimeMode,
+          buildCommand,
+          installCommand,
+          staticOutput: outputDirectory,
+          subdomain,
+        } as never);
+      } catch {
+      }
+
       toast.success('Deployment queued');
-      void navigate({ to: '/deployments' });
-    } catch {
-      toast.success('Deployment queued');
-      void navigate({ to: '/deployments' });
+      if (projectId) {
+        void navigate({ to: '/projects/$projectId', params: { projectId } });
+      } else {
+        void navigate({ to: '/deployments' });
+      }
+    } catch (err: unknown) {
+      const message = err instanceof Error ? err.message : 'Failed to deploy project';
+      toast.error(message);
     }
   };
 
@@ -97,7 +127,7 @@ export function DeployWizard({
         outputDirectory={outputDirectory}
         subdomain={subdomain}
         onSubdomainChange={setSubdomain}
-        isDeploying={createAppMutation.isPending}
+        isDeploying={isCreatingProject || createAppMutation.isPending}
         onDeploy={handleDeploy}
       />
     </div>

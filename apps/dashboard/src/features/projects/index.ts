@@ -7,5 +7,6 @@ export * from './project-deployments-tab';
 export * from './project-git-repo-dialog';
 export * from './project-git-service-source';
 export * from './project-git-tab';
+export * from './project-delete-dialog';
 export * from './project-variables-tab';
 export * from './service-detail-drawer';

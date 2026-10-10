@@ -6,15 +6,12 @@ import { Skeleton } from '#/components/ui/skeleton';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '#/components/ui/tabs';
 import { AppCatalog } from '#/features/apps';
 import { TemplatesGallery } from '#/features/apps/templates-gallery';
-import { CreateGitAppModal } from '#/features/sources/create-git-app-modal';
 import { ConnectPrompt } from './connect-prompt';
 import { FolderUpload } from './folder-upload';
 import { useGitConnections, useLibraryRepos } from './hooks';
 import { LibrarySidebar } from './library-sidebar';
 import { LocalProjects } from './local-projects';
-import { RepoImportDialog } from './repo-import-dialog';
 import { RepositoryList } from './repository-list';
-import type { ImportTarget, PendingImport } from './types';
 import { UrlImport } from './url-import';
 
 export type LibraryTab = 'repositories' | 'folder' | 'url' | 'apps' | 'examples';
@@ -29,8 +26,6 @@ export function LibraryPage({ initialTab }: { initialTab?: LibraryTab }) {
     }
   }, [initialTab]);
   const [provider, setProvider] = useState('github');
-  const [pending, setPending] = useState<PendingImport | null>(null);
-  const [target, setTarget] = useState<ImportTarget | null>(null);
   const connectionsQuery = useGitConnections();
   const connections = connectionsQuery.data ?? [];
   const anyConnected = connections.some((item) => item.connected);
@@ -107,7 +102,15 @@ export function LibraryPage({ initialTab }: { initialTab?: LibraryTab }) {
               />
             </TabsContent>
             <TabsContent value="url" className="mt-0">
-              <UrlImport onImport={setPending} />
+              <UrlImport
+                onImport={(parsed) => {
+                  void navigate({
+                    to: '/deploy/$slug',
+                    params: { slug: encodeURIComponent(parsed.repositoryUrl) },
+                    search: { name: parsed.name, branch: parsed.branch },
+                  });
+                }}
+              />
             </TabsContent>
             <TabsContent value="apps" className="mt-0">
               <AppCatalog embedded />
@@ -119,25 +122,6 @@ export function LibraryPage({ initialTab }: { initialTab?: LibraryTab }) {
           <LibrarySidebar connections={connections} counts={counts} />
         </div>
       </Tabs>
-
-      <RepoImportDialog
-        pending={target ? null : pending}
-        onClose={() => setPending(null)}
-        onConfirm={(next) => {
-          setTarget(next);
-          setPending(null);
-        }}
-      />
-      <CreateGitAppModal
-        isOpen={target !== null}
-        onOpenChange={(open) => {
-          if (!open) setTarget(null);
-        }}
-        projectId={target?.projectId ?? ''}
-        initialName={target?.name}
-        initialRepositoryUrl={target?.repositoryUrl}
-        initialBranch={target?.branch}
-      />
     </div>
   );
 }

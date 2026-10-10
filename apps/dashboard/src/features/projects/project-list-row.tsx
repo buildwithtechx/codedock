@@ -1,6 +1,27 @@
 import { Link } from '@tanstack/react-router';
-import { ArrowRight, Database, FolderKanban, GitBranch, HardDrive, Server } from 'lucide-react';
+import {
+  ArrowRight,
+  Database,
+  ExternalLink,
+  FolderKanban,
+  GitBranch,
+  HardDrive,
+  MoreVertical,
+  Server,
+  Settings,
+  Trash2,
+} from 'lucide-react';
+import { useState } from 'react';
+import { Button } from '#/components/ui/button';
+import {
+  DropdownMenu,
+  DropdownMenuContent,
+  DropdownMenuItem,
+  DropdownMenuSeparator,
+  DropdownMenuTrigger,
+} from '#/components/ui/dropdown-menu';
 import type { CanvasSummary } from '#/features/projects';
+import { ProjectDeleteDialog } from './project-delete-dialog';
 
 function statusTone(project: CanvasSummary) {
   if (project.totalServices === 0) return 'bg-muted text-muted-foreground';
@@ -28,6 +49,7 @@ function timeAgo(value: string) {
 }
 
 export function ProjectListRow({ project }: { project: CanvasSummary }) {
+  const [deleteOpen, setDeleteOpen] = useState(false);
   const repoIcon = project.serviceIcons.includes('github');
   return (
     <div className="group relative transition-colors hover:bg-muted/40">
@@ -95,9 +117,55 @@ export function ProjectListRow({ project }: { project: CanvasSummary }) {
           >
             {statusLabel(project)}
           </span>
+          <div className="relative z-10 flex items-center gap-1">
+            <DropdownMenu>
+              <DropdownMenuTrigger asChild>
+                <Button
+                  variant="ghost"
+                  size="icon"
+                  className="h-8 w-8 text-muted-foreground hover:text-foreground"
+                  onClick={(e) => e.stopPropagation()}
+                >
+                  <MoreVertical className="h-4 w-4" />
+                  <span className="sr-only">Open menu</span>
+                </Button>
+              </DropdownMenuTrigger>
+              <DropdownMenuContent align="end" className="w-44">
+                <DropdownMenuItem asChild>
+                  <Link to="/projects/$projectId" params={{ projectId: project.id }}>
+                    <ExternalLink className="mr-2 h-4 w-4" />
+                    Open project
+                  </Link>
+                </DropdownMenuItem>
+                <DropdownMenuItem asChild>
+                  <Link to="/projects/$projectId/settings" params={{ projectId: project.id }}>
+                    <Settings className="mr-2 h-4 w-4" />
+                    Settings
+                  </Link>
+                </DropdownMenuItem>
+                <DropdownMenuSeparator />
+                <DropdownMenuItem
+                  variant="destructive"
+                  onClick={(e) => {
+                    e.stopPropagation();
+                    setDeleteOpen(true);
+                  }}
+                >
+                  <Trash2 className="mr-2 h-4 w-4" />
+                  Delete project
+                </DropdownMenuItem>
+              </DropdownMenuContent>
+            </DropdownMenu>
+          </div>
           <ArrowRight className="h-4 w-4 shrink-0 text-muted-foreground/40 transition-colors group-hover:text-muted-foreground" />
         </div>
       </div>
+
+      <ProjectDeleteDialog
+        isOpen={deleteOpen}
+        onOpenChange={setDeleteOpen}
+        project={project}
+      />
     </div>
   );
 }

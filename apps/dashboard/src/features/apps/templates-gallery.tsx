@@ -1,37 +1,19 @@
+import { useNavigate } from '@tanstack/react-router';
 import { ArrowRight, Search } from 'lucide-react';
-import { useEffect, useMemo, useState } from 'react';
-import { toast } from 'sonner';
+import { useMemo, useState } from 'react';
 import { Input } from '#/components/ui/input';
 import { QueryErrorState } from '#/components/ui/query-error-state';
 import { Skeleton } from '#/components/ui/skeleton';
-import { useCreateProject, useListAllProjects } from '#/features/projects';
-import { CreateGitAppModal } from '#/features/sources/create-git-app-modal';
 import { useListExampleApps } from '#/hooks/use-templates';
 import type { ExampleApp } from '#/interfaces/templates';
-import { useOrganizationStore } from '#/stores/organization-store';
 import { ExampleLogo } from './example-logo';
 
-const EXAMPLES_REPO_URL = 'https://github.com/buildwithtechx/codedock-examples.git';
-const EXAMPLES_BRANCH = 'main';
-
 export function TemplatesGallery() {
+  const navigate = useNavigate();
   const { data: examplesResponse, isLoading, isError, refetch } = useListExampleApps();
-  const projectsQuery = useListAllProjects();
-  const { mutateAsync: createProject, isPending: isCreatingProject } = useCreateProject();
-  const activeOrgId = useOrganizationStore((s) => s.activeOrganizationId);
-
   const [query, setQuery] = useState('');
-  const [projectId, setProjectId] = useState('');
-  const [deployTarget, setDeployTarget] = useState<ExampleApp | null>(null);
 
   const examples = Array.isArray(examplesResponse) ? examplesResponse : [];
-  const projects = projectsQuery.data ?? [];
-
-  useEffect(() => {
-    if (!projectId && projects.length > 0) {
-      setProjectId(projects[0].id);
-    }
-  }, [projectId, projects]);
 
   const filtered = useMemo(() => {
     const needle = (query ?? '').trim().toLowerCase();
@@ -41,30 +23,19 @@ export function TemplatesGallery() {
     );
   }, [examples, query]);
 
-  const handleDeploy = async (example: ExampleApp) => {
-    let targetProjectId = projectId;
-    if (!targetProjectId) {
-      if (projects.length > 0) {
-        targetProjectId = projects[0].id;
-        setProjectId(targetProjectId);
-      } else {
-        try {
-          const res = await createProject({
-            payload: {
-              name: example.name,
-              organizationId: activeOrgId || '',
-            },
-          });
-          targetProjectId = res.data.id;
-          setProjectId(targetProjectId);
-          toast.success(`Project "${example.name}" created`);
-        } catch {
-          toast.error('Failed to create project for template');
-          return;
-        }
-      }
-    }
-    setDeployTarget(example);
+  const handleSelect = (example: ExampleApp) => {
+    void navigate({
+      to: '/deploy/$slug',
+      params: {
+        slug: encodeURIComponent('buildwithtechx/codedock-examples'),
+      },
+      search: {
+        name: example.id,
+        branch: 'main',
+        dir: example.id,
+        template: example.id,
+      },
+    });
   };
 
   return (
@@ -107,9 +78,8 @@ export function TemplatesGallery() {
             <button
               key={example.id}
               type="button"
-              disabled={isCreatingProject}
-              onClick={() => void handleDeploy(example)}
-              className="group flex w-full cursor-pointer items-start gap-3 rounded-2xl border border-border/50 bg-card p-5 text-left transition-all hover:border-primary/40 hover:shadow-md disabled:cursor-not-allowed disabled:opacity-60"
+              onClick={() => handleSelect(example)}
+              className="group flex w-full cursor-pointer items-start gap-3 rounded-2xl border border-border/50 bg-card p-5 text-left transition-all hover:border-primary/40 hover:shadow-md"
             >
               <ExampleLogo example={example} />
               <div className="min-w-0 flex-1">
@@ -125,20 +95,6 @@ export function TemplatesGallery() {
           ))}
         </div>
       )}
-
-      <CreateGitAppModal
-        isOpen={deployTarget !== null}
-        onOpenChange={(open) => {
-          if (!open) {
-            setDeployTarget(null);
-          }
-        }}
-        projectId={projectId}
-        initialName={deployTarget?.id ?? ''}
-        initialRepositoryUrl={EXAMPLES_REPO_URL}
-        initialBranch={EXAMPLES_BRANCH}
-        initialRootDirectory={deployTarget?.id ?? ''}
-      />
     </div>
   );
 }
