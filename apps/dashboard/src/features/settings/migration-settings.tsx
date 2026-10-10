@@ -44,7 +44,18 @@ export function MigrationSettings() {
   return (
     <form onSubmit={handleExport}>
       <div className="space-y-6 pb-12">
-        <div className="flex justify-end">
+        <div className="flex items-center justify-between">
+          <div className="flex items-center gap-3">
+            <div className="flex h-9 w-9 items-center justify-center rounded-xl bg-primary/10 text-primary">
+              <ArrowRightLeft className="h-4 w-4" />
+            </div>
+            <div>
+              <h2 className="font-semibold text-foreground text-sm">Data Transfer & Migration</h2>
+              <p className="text-muted-foreground text-xs">
+                Export encrypted instance state or take over an existing deployment.
+              </p>
+            </div>
+          </div>
           <ServerTakeoverDialog />
         </div>
 

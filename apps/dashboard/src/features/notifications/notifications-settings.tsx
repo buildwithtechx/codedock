@@ -1,4 +1,4 @@
-import { Check } from 'lucide-react';
+import { Bell, Check } from 'lucide-react';
 import { useEffect, useRef, useState } from 'react';
 import { toast } from 'sonner';
 import { Button } from '#/components/ui/button';
@@ -163,12 +163,17 @@ export const NotificationsSettings = () => {
 
   return (
     <div className="space-y-6">
-      <section className="flex flex-col gap-4 rounded-2xl bg-card p-5 sm:flex-row sm:items-center sm:justify-between">
-        <div>
-          <h3 className="font-semibold text-sm">Alert behavior</h3>
-          <p className="mt-1 text-muted-foreground text-sm">
-            Enable or pause delivery across every configured channel.
-          </p>
+      <section className="flex flex-col gap-4 rounded-2xl border border-border/60 bg-card p-5 sm:flex-row sm:items-center sm:justify-between">
+        <div className="flex items-center gap-3">
+          <div className="flex h-9 w-9 items-center justify-center rounded-xl bg-primary/10 text-primary">
+            <Bell className="h-4 w-4" />
+          </div>
+          <div>
+            <h3 className="font-semibold text-foreground text-sm">Alert Behavior</h3>
+            <p className="text-muted-foreground text-xs">
+              Enable or pause delivery across every configured channel.
+            </p>
+          </div>
         </div>
         <div className="flex items-center gap-3">
           <Switch

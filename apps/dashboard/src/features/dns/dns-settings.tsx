@@ -1,3 +1,4 @@
+import { KeyRound } from 'lucide-react';
 import { useEffect, useState } from 'react';
 import { toast } from 'sonner';
 import { Skeleton } from '#/components/ui/skeleton';
@@ -76,24 +77,27 @@ export const DnsSettings = () => {
 
   return (
     <div className="space-y-6">
-      <div className="mb-5 flex items-center justify-between gap-4">
-        <div>
-          <h2 className="font-semibold text-lg">Provider credentials</h2>
-          <p className="mt-1 text-muted-foreground text-sm">
-            Connect the DNS provider Codedock should use for managed domain records.
-          </p>
-        </div>
-        <div className="flex shrink-0 flex-col items-end gap-4">
-          <div className="flex items-center gap-3">
-            <img
-              src={`/dns-providers/${activeProvider}.svg`}
-              alt={activeProviderData?.name}
-              className="h-4 w-auto"
-            />
-            <span className="font-bold text-[10px] text-muted-foreground uppercase tracking-[0.15em]">
-              {activeProviderData?.name}
-            </span>
+      <div className="flex items-center justify-between gap-4">
+        <div className="flex items-center gap-3">
+          <div className="flex h-9 w-9 items-center justify-center rounded-xl bg-primary/10 text-primary">
+            <KeyRound className="h-4 w-4" />
           </div>
+          <div>
+            <h2 className="font-semibold text-foreground text-sm">Provider Credentials</h2>
+            <p className="text-muted-foreground text-xs">
+              Connect DNS providers for managed domain records and automated SSL verification.
+            </p>
+          </div>
+        </div>
+        <div className="flex shrink-0 items-center gap-2">
+          <img
+            src={`/dns-providers/${activeProvider}.svg`}
+            alt={activeProviderData?.name}
+            className="h-4 w-auto"
+          />
+          <span className="font-bold text-[10px] text-muted-foreground uppercase tracking-[0.15em]">
+            {activeProviderData?.name}
+          </span>
         </div>
       </div>
 

@@ -1,4 +1,4 @@
-import { Check, ChevronDown, Star } from 'lucide-react';
+import { Brain, Check, ChevronDown, Star } from 'lucide-react';
 import React, { useState } from 'react';
 import {
   DropdownMenu,
@@ -106,7 +106,18 @@ export function AISettings() {
 
   return (
     <div className="space-y-6">
-      <div className="flex justify-end">
+      <div className="flex items-center justify-between">
+        <div className="flex items-center gap-3">
+          <div className="flex h-9 w-9 items-center justify-center rounded-xl bg-primary/10 text-primary">
+            <Brain className="h-4 w-4" />
+          </div>
+          <div>
+            <h2 className="font-semibold text-foreground text-sm">AI Providers</h2>
+            <p className="text-muted-foreground text-xs">
+              Configure API keys and model parameters for platform AI services.
+            </p>
+          </div>
+        </div>
         <p className="font-bold text-[10px] text-muted-foreground uppercase tracking-widest">
           Default <span className="text-foreground">{defaultProvider}</span>
         </p>

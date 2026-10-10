@@ -159,27 +159,28 @@ export function GithubIntegration() {
 
   return (
     <div className="space-y-6">
-      <div className="mb-5 flex items-center justify-between">
+      <div className="flex items-center justify-between">
         <div className="flex items-center gap-3">
-          <div className="flex h-12 w-12 shrink-0 items-center justify-center rounded-lg border border-primary/20 bg-primary/10 text-primary">
-            <GithubIcon className="h-6 w-6" />
+          <div className="flex h-9 w-9 shrink-0 items-center justify-center rounded-xl bg-primary/10 text-primary">
+            <GithubIcon className="h-4 w-4" />
           </div>
           <div>
-            <h2 className="font-semibold text-lg">Connected GitHub Apps</h2>
-            <p className="text-muted-foreground text-sm">
+            <h2 className="font-semibold text-foreground text-sm">Connected GitHub Apps</h2>
+            <p className="text-muted-foreground text-xs">
               Connect GitHub Apps to automatically deploy pushed commits.
             </p>
           </div>
         </div>
         <Button
-          className="gap-2"
+          size="sm"
+          className="gap-1.5"
           onClick={() => {
             setEditingApp(null);
             setIsEditing(true);
           }}
         >
           <Plus className="h-4 w-4" />
-          ADD GITHUB APP
+          Add GitHub App
         </Button>
       </div>
 
@@ -259,6 +260,7 @@ export function GithubIntegration() {
             Connect a GitHub App to deploy repositories and receive webhooks.
           </p>
           <Button
+            size="sm"
             className="mt-6 gap-2"
             onClick={() => {
               setEditingApp(null);
@@ -266,7 +268,7 @@ export function GithubIntegration() {
             }}
           >
             <Plus className="h-4 w-4" />
-            CONNECT GITHUB APP
+            Connect GitHub App
           </Button>
         </div>
       )}

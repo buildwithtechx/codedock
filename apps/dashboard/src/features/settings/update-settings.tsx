@@ -34,24 +34,36 @@ export const UpdatesPage = () => {
 
   return (
     <div className="space-y-6">
-      <div className="flex justify-end">
-        <div className="flex shrink-0 items-center gap-3">
+      <div className="flex items-center justify-between">
+        <div className="flex items-center gap-3">
+          <div className="flex h-9 w-9 items-center justify-center rounded-xl bg-primary/10 text-primary">
+            <RefreshCw className="h-4 w-4" />
+          </div>
+          <div>
+            <h2 className="font-semibold text-foreground text-sm">Instance Updates</h2>
+            <p className="text-muted-foreground text-xs">
+              Check for newer Codedock releases and deploy daemon upgrades.
+            </p>
+          </div>
+        </div>
+        <div className="flex shrink-0 items-center gap-2.5">
           {!isLoading && (
             <Badge
               variant="outline"
-              className={`rounded-md border border-primary/50 bg-primary/10 px-3 py-1 font-bold text-[10px] text-primary uppercase tracking-[0.15em]`}
+              className="border-primary/50 bg-primary/10 px-2.5 py-0.5 font-semibold text-[10px] text-primary uppercase tracking-wider"
             >
-              {hasUpdate ? 'UPDATE AVAILABLE' : 'UP TO DATE'}
+              {hasUpdate ? 'Update Available' : 'Up to Date'}
             </Badge>
           )}
           <Button
             variant="outline"
+            size="sm"
             onClick={handleCheck}
             disabled={checking || deploying}
-            className="flex h-11 items-center gap-2 rounded-xl border-border bg-background px-6 font-semibold text-foreground text-xs uppercase tracking-widest hover:bg-muted"
+            className="gap-1.5"
           >
-            <RefreshCw className={`h-4 w-4 ${checking ? 'animate-spin' : ''}`} />
-            {checking ? 'CHECKING...' : 'CHECK UPDATES'}
+            <RefreshCw className={`h-3.5 w-3.5 ${checking ? 'animate-spin' : ''}`} />
+            {checking ? 'Checking...' : 'Check Updates'}
           </Button>
         </div>
       </div>

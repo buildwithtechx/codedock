@@ -1,4 +1,4 @@
-import { Check, Copy, ExternalLink, Terminal } from 'lucide-react';
+import { Check, Copy, ExternalLink } from 'lucide-react';
 import { useState } from 'react';
 import { Button } from '#/components/ui/button';
 
@@ -6,6 +6,7 @@ type ClientDefinition = {
   id: string;
   name: string;
   badge?: string;
+  icon: string;
   getSetup: (endpoint: string) => {
     label: string;
     code?: string;
@@ -29,6 +30,7 @@ const CLIENTS: ClientDefinition[] = [
     id: 'claude-code',
     name: 'Claude Code',
     badge: 'CLI',
+    icon: '/icons/claude.png',
     getSetup: (e) => ({
       label: 'Run command in your project directory',
       code: `claude mcp add --transport sse codedock ${e}`,
@@ -39,6 +41,7 @@ const CLIENTS: ClientDefinition[] = [
     id: 'cursor',
     name: 'Cursor',
     badge: 'IDE',
+    icon: '/icons/cursor.png',
     getSetup: (e) => ({
       label: 'Add to ~/.cursor/mcp.json or Cursor Features Settings',
       code: JSON.stringify({ mcpServers: { codedock: { url: e } } }, null, 2),
@@ -51,6 +54,7 @@ const CLIENTS: ClientDefinition[] = [
     id: 'codex',
     name: 'Codex',
     badge: 'CLI',
+    icon: '/icons/openai.png',
     getSetup: (e) => ({
       label: 'Register server and authenticate',
       code: `codex mcp add codedock --url ${e}\ncodex mcp login codedock`,
@@ -61,6 +65,7 @@ const CLIENTS: ClientDefinition[] = [
     id: 'vscode',
     name: 'VS Code',
     badge: 'IDE',
+    icon: '/icons/copilot.png',
     getSetup: (e) => ({
       label: 'Register in VS Code terminal or .vscode/mcp.json',
       code: `code --add-mcp '{"name":"codedock","type":"sse","url":"${e}"}'`,
@@ -70,6 +75,7 @@ const CLIENTS: ClientDefinition[] = [
   {
     id: 'claude-desktop',
     name: 'Claude Desktop',
+    icon: '/icons/claude.png',
     getSetup: (e) => ({
       label: 'Add to claude_desktop_config.json',
       code: JSON.stringify({ mcpServers: { codedock: { url: e } } }, null, 2),
@@ -85,6 +91,7 @@ const CLIENTS: ClientDefinition[] = [
     id: 'windsurf',
     name: 'Windsurf',
     badge: 'IDE',
+    icon: '/icons/windsurf.png',
     getSetup: (e) => ({
       label: 'Add to ~/.codeium/windsurf/mcp_config.json',
       code: JSON.stringify({ mcpServers: { codedock: { serverUrl: e } } }, null, 2),
@@ -94,6 +101,7 @@ const CLIENTS: ClientDefinition[] = [
   {
     id: 'zed',
     name: 'Zed',
+    icon: '/icons/zed.png',
     getSetup: (e) => ({
       label: 'Add to Zed settings.json',
       code: JSON.stringify(
@@ -114,6 +122,7 @@ const CLIENTS: ClientDefinition[] = [
   {
     id: 'generic',
     name: 'Generic / Other',
+    icon: '/icons/mcp.png',
     getSetup: (e) => ({
       label: 'Universal MCP SSE client configuration',
       code: JSON.stringify({ mcpServers: { codedock: { url: e } } }, null, 2),
@@ -148,13 +157,20 @@ export function McpClientSetup({ endpoint }: { endpoint: string }) {
                 key={client.id}
                 type="button"
                 onClick={() => setSelectedId(client.id)}
-                className={`flex items-center gap-1.5 rounded-lg border px-3 py-1.5 font-medium text-xs transition-colors ${
+                className={`flex items-center gap-2 rounded-lg border px-3 py-1.5 font-medium text-xs transition-colors ${
                   isActive
                     ? 'border-primary/60 bg-primary/10 text-foreground'
                     : 'border-border/60 text-muted-foreground hover:bg-muted/40 hover:text-foreground'
                 }`}
               >
-                <Terminal className="size-3.5" />
+                <img
+                  src={client.icon}
+                  alt={client.name}
+                  className="size-4 object-contain brightness-90 dark:brightness-100"
+                  onError={(e) => {
+                    e.currentTarget.style.display = 'none';
+                  }}
+                />
                 <span>{client.name}</span>
                 {client.badge && (
                   <span className="rounded bg-muted px-1 py-0.2 font-mono text-[9px] text-muted-foreground">

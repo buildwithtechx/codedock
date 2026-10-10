@@ -31,14 +31,16 @@ export function McpSettings() {
 
   return (
     <div className="space-y-6">
-      <div>
-        <h2 className="font-semibold text-foreground text-lg tracking-tight">
-          Model Context Protocol (MCP)
-        </h2>
-        <p className="mt-1 text-muted-foreground text-sm">
-          Connect AI coding assistants and IDEs directly to your Codedock platform via standard MCP
-          JSON-RPC endpoints.
-        </p>
+      <div className="flex items-center gap-3">
+        <div className="flex h-9 w-9 items-center justify-center rounded-xl bg-primary/10 text-primary">
+          <Bot className="h-4 w-4" />
+        </div>
+        <div>
+          <h2 className="font-semibold text-foreground text-sm">Model Context Protocol</h2>
+          <p className="text-muted-foreground text-xs">
+            Connect AI coding assistants and IDEs directly via standard MCP JSON-RPC endpoints.
+          </p>
+        </div>
       </div>
 
       <div className="flex items-start gap-3 rounded-2xl border border-emerald-500/20 bg-emerald-500/5 p-4 text-xs">
@@ -57,7 +59,7 @@ export function McpSettings() {
       <section className="space-y-4 rounded-2xl border border-border/50 bg-card p-5">
         <div className="flex items-center gap-3">
           <div className="flex size-9 items-center justify-center rounded-xl bg-primary/10 text-primary">
-            <Bot className="size-5" />
+            <Bot className="size-4" />
           </div>
           <div>
             <h3 className="font-semibold text-foreground text-sm">SSE Endpoint</h3>

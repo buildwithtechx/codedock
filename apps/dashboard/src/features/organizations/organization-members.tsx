@@ -28,17 +28,22 @@ export function OrganizationMembers({ organizationId }: { organizationId: string
 
   return (
     <div className="space-y-6">
-      <div className="flex flex-col gap-4 sm:flex-row sm:items-start sm:justify-between">
-        <div>
-          <h2 className="font-semibold text-foreground text-lg tracking-tight">Team Members</h2>
-          <p className="mt-1 text-muted-foreground text-sm">
-            Manage who has access to this workspace and its deployed projects.
-          </p>
+      <div className="flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between">
+        <div className="flex items-center gap-3">
+          <div className="flex h-9 w-9 items-center justify-center rounded-xl bg-primary/10 text-primary">
+            <Users className="h-4 w-4" />
+          </div>
+          <div>
+            <h2 className="font-semibold text-foreground text-sm">Team Members</h2>
+            <p className="text-muted-foreground text-xs">
+              Manage who has access to this workspace and its deployed projects.
+            </p>
+          </div>
         </div>
         {canManageTeam && (
           <Button onClick={() => setInviteOpen(true)} size="sm" className="shrink-0 gap-2">
             <Plus className="size-4" />
-            Invite Member
+            Invite member
           </Button>
         )}
       </div>

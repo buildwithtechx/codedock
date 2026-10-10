@@ -1,4 +1,4 @@
-import { Check } from 'lucide-react';
+import { Check, Lock } from 'lucide-react';
 import React, { useEffect, useState } from 'react';
 import { toast } from 'sonner';
 import { Button } from '#/components/ui/button';
@@ -150,7 +150,19 @@ export const OAuthProvidersList = () => {
 
   return (
     <div className="space-y-6">
-      <p className="text-muted-foreground text-sm">
+      <div className="flex items-center gap-3">
+        <div className="flex h-9 w-9 items-center justify-center rounded-xl bg-primary/10 text-primary">
+          <Lock className="h-4 w-4" />
+        </div>
+        <div>
+          <h2 className="font-semibold text-foreground text-sm">OAuth Authentication</h2>
+          <p className="text-muted-foreground text-xs">
+            Configure single sign-on providers for your workspace users.
+          </p>
+        </div>
+      </div>
+
+      <p className="text-muted-foreground text-xs">
         The redirect URI is{' '}
         <code className="rounded bg-muted px-1.5 py-0.5 font-mono text-xs">
           {window.location.origin}/api/auth/oauth/[provider]/callback

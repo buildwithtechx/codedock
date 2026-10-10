@@ -81,8 +81,8 @@ export function AppCatalog({
     <div>
       {!embedded && (
         <PageHeader
-          title="Create app"
-          description="Install a one-click app into one of your projects."
+          title="Explore & Deploy Apps"
+          description="Deploy open-source templates, databases, and services in one click."
         />
       )}
       <div className={embedded ? 'space-y-4' : 'mt-6 space-y-4'}>

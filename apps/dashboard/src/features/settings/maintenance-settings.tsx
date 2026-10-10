@@ -1,4 +1,4 @@
-import { AlertTriangle, HardDrive, RefreshCw, Trash2 } from 'lucide-react';
+import { AlertTriangle, HardDrive, RefreshCw, Trash2, Wrench } from 'lucide-react';
 import { useState } from 'react';
 import { toast } from 'sonner';
 import { Badge } from '#/components/ui/badge';
@@ -62,29 +62,37 @@ export const MaintenancePage = () => {
 
   return (
     <div className="space-y-6">
-      <div className="flex justify-end">
-        <div className="flex shrink-0 items-center gap-3">
+      <div className="flex items-center justify-between">
+        <div className="flex items-center gap-3">
+          <div className="flex h-9 w-9 items-center justify-center rounded-xl bg-primary/10 text-primary">
+            <Wrench className="h-4 w-4" />
+          </div>
+          <div>
+            <h2 className="font-semibold text-foreground text-sm">System Maintenance</h2>
+            <p className="text-muted-foreground text-xs">
+              Monitor root disk capacity, Docker cache, and run cleanup routines.
+            </p>
+          </div>
+        </div>
+        <div className="flex shrink-0 items-center gap-2.5">
           {Number(reclaimableGb) > 3 ? (
             <Badge
               variant="outline"
-              className="border-destructive/50 bg-destructive/10 px-3 py-1 font-bold text-[10px] text-destructive uppercase tracking-widest"
+              className="border-destructive/50 bg-destructive/10 px-2.5 py-0.5 font-semibold text-[10px] text-destructive uppercase tracking-wider"
             >
-              ATTENTION
+              Attention
             </Badge>
           ) : (
             <Badge
               variant="outline"
-              className="border-primary/50 bg-primary/10 px-3 py-1 font-bold text-[10px] text-primary uppercase tracking-widest"
+              className="border-primary/50 bg-primary/10 px-2.5 py-0.5 font-semibold text-[10px] text-primary uppercase tracking-wider"
             >
-              0 ISSUES
+              Healthy
             </Badge>
           )}
-          <Button
-            variant="outline"
-            onClick={() => refetch()}
-            className="flex h-11 items-center gap-2 rounded-xl border-border bg-background px-6 font-semibold text-foreground text-xs uppercase tracking-widest hover:bg-muted"
-          >
-            <RefreshCw className="h-4 w-4" /> REFRESH
+          <Button variant="outline" size="sm" onClick={() => refetch()} className="gap-1.5">
+            <RefreshCw className="h-3.5 w-3.5" />
+            Refresh
           </Button>
         </div>
       </div>
