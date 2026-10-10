@@ -51,7 +51,8 @@ function StatCard({
   );
 }
 
-function formatHeartbeat(lastSeenAt?: string): string {
+function formatHeartbeat(lastSeenAt?: string, isLocal?: boolean): string {
+  if (isLocal) return 'Just now';
   if (!lastSeenAt) return 'Never';
   const seen = new Date(lastSeenAt);
   if (Number.isNaN(seen.getTime())) return 'Never';
@@ -64,8 +65,8 @@ function formatHeartbeat(lastSeenAt?: string): string {
 }
 
 export function ServerOverviewTab({ server }: { server: Server }) {
-  const live = useServerLiveMetrics(server.id);
   const stored = snapshotFromStored(parseServerMetrics(server.metrics));
+  const live = useServerLiveMetrics(server.id, stored);
   const stats: LiveMetricsSnapshot | null = live.snapshot ?? stored;
 
   return (
@@ -118,7 +119,7 @@ export function ServerOverviewTab({ server }: { server: Server }) {
         <StatCard
           icon={Activity}
           label="Heartbeat"
-          value={formatHeartbeat(server.lastSeenAt)}
+          value={formatHeartbeat(server.lastSeenAt, server.isLocal)}
           sub={live.connected ? 'Stream connected' : 'Stream idle'}
         />
       </div>

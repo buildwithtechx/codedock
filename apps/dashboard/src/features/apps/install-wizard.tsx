@@ -17,7 +17,6 @@ import { useCatalogApp, useDeployCatalogApp, useReviewCatalogInstall } from './h
 import { InstallDomainsRouting } from './install-domains-routing';
 import { WizardDestination } from './wizard-destination';
 import { WizardHeader } from './wizard-header';
-import { WizardSummary } from './wizard-summary';
 
 type Phase = 'form' | 'review' | 'done';
 
@@ -27,7 +26,6 @@ export function InstallWizard({ appId }: { appId: string }) {
   const deployApp = useDeployCatalogApp();
   const [phase, setPhase] = useState<Phase>('form');
   const [name, setName] = useState('');
-  const [targetMode, setTargetMode] = useState<'self-hosted' | 'cloud'>('self-hosted');
   const [values, setValues] = useState<Record<string, string>>({});
   const [hostPort, setHostPort] = useState('');
   const [domain, setDomain] = useState('');
@@ -283,28 +281,10 @@ export function InstallWizard({ appId }: { appId: string }) {
           />
         </div>
         <div className="min-w-0 space-y-4 lg:sticky lg:top-6">
-          <div className="rounded-2xl bg-card p-5">
-            <h2 className="font-semibold text-foreground text-sm">Destination</h2>
-            <p className="mt-0.5 text-muted-foreground text-xs">
-              Choose the host server or cloud runner where this application will run.
-            </p>
-            <div className="mt-4">
-              <WizardDestination
-                targetMode={targetMode}
-                onTargetModeChange={setTargetMode}
-                serverId={serverId}
-                onServerChange={setServerId}
-                disabled={busy}
-              />
-            </div>
-          </div>
-          <WizardSummary
+          <WizardDestination
+            serverId={serverId}
+            onServerChange={setServerId}
             appName={name || app.name}
-            targetMode={targetMode}
-            serverName={serverId === 'local' ? 'Local Server' : serverId}
-            domain={domain}
-            hostPort={hostPort || String(app.defaultPort || '')}
-            serviceCount={app.services?.length || 1}
             isDeploying={deployApp.isPending}
             onDeploy={() => void handleDeploy()}
             onReview={() => void handleReview()}

@@ -1,6 +1,9 @@
 package models
 
-import "time"
+import (
+	"encoding/json"
+	"time"
+)
 
 type ServerStatus string
 
@@ -38,7 +41,7 @@ type Server struct {
 	Managed      *CloudWorkspaceSummary `json:"managed,omitempty" db:"-"`
 	Capabilities *ServerCapabilities    `json:"capabilities,omitempty" db:"-"`
 
-	Metrics []byte `json:"metrics,omitempty" db:"metrics"`
+	Metrics json.RawMessage `json:"metrics,omitempty" db:"metrics"`
 
 	CreatedAt time.Time `json:"createdAt" db:"created_at"`
 	UpdatedAt time.Time `json:"updatedAt" db:"updated_at"`

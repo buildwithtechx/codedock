@@ -48,17 +48,58 @@ export function formatBytes(bytes: number): string {
   return `${value.toFixed(i > 1 ? 1 : 0)} ${units[i]}`;
 }
 
-export function useServerLiveMetrics(serverId: string | undefined) {
-  const [points, setPoints] = useState<LiveMetricPoint[]>([]);
-  const [latest, setLatest] = useState<LiveMetricsSnapshot | null>(null);
+export function useServerLiveMetrics(
+  serverId: string | undefined,
+  initialSnapshot?: LiveMetricsSnapshot | null
+) {
+  const [points, setPoints] = useState<LiveMetricPoint[]>(() => {
+    if (!initialSnapshot) return [];
+    const now = Date.now();
+    return [
+      {
+        time: now - 10000,
+        cpu: initialSnapshot.cpu,
+        memory: initialSnapshot.memory,
+        disk: initialSnapshot.disk,
+      },
+      {
+        time: now,
+        cpu: initialSnapshot.cpu,
+        memory: initialSnapshot.memory,
+        disk: initialSnapshot.disk,
+      },
+    ];
+  });
+  const [latest, setLatest] = useState<LiveMetricsSnapshot | null>(initialSnapshot ?? null);
   const [connected, setConnected] = useState(false);
   const [generation, setGeneration] = useState(0);
+
+  useEffect(() => {
+    if (initialSnapshot && points.length === 0) {
+      const now = Date.now();
+      setPoints([
+        {
+          time: now - 10000,
+          cpu: initialSnapshot.cpu,
+          memory: initialSnapshot.memory,
+          disk: initialSnapshot.disk,
+        },
+        {
+          time: now,
+          cpu: initialSnapshot.cpu,
+          memory: initialSnapshot.memory,
+          disk: initialSnapshot.disk,
+        },
+      ]);
+      setLatest((prev) => prev ?? initialSnapshot);
+    }
+  }, [initialSnapshot, points.length]);
 
   useEffect(() => {
     if (!serverId) return;
     const token = useAuthStore.getState().token;
     const wsPath = `/ws/servers/${serverId}/metrics${token ? `?token=${encodeURIComponent(token)}` : ''}`;
-    const socket = new WebSocket(websocketUrl(wsPath), token ? ['auth', token] : undefined);
+    const socket = new WebSocket(websocketUrl(wsPath));
 
     socket.onopen = () => setConnected(true);
     socket.onclose = () => setConnected(false);
