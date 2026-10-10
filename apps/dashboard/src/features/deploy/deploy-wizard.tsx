@@ -24,15 +24,16 @@ export function DeployWizard({
 }: DeployWizardProps) {
   const navigate = useNavigate();
   const [step, setStep] = useState<'target' | 'config'>('config');
-  const [framework, setFramework] = useState('Vite');
-  const [buildEnabled, setBuildEnabled] = useState(true);
-  const [runtimeMode, setRuntimeMode] = useState<'web' | 'worker' | 'static'>('static');
+  const [framework, setFramework] = useState('Dockerfile');
+  const runtimeMode: 'web' | 'worker' | 'static' =
+    framework.toLowerCase() === 'dockerfile' ? 'web' : 'static';
   const [installCommand, setInstallCommand] = useState('npm install');
   const [buildCommand, setBuildCommand] = useState('npm run build');
   const [outputDirectory, setOutputDirectory] = useState('dist');
   const [projectName, setProjectName] = useState(initialProjectName);
   const [branch, setBranch] = useState(initialBranch);
   const [subdomain, setSubdomain] = useState(initialProjectName);
+  const [exposedPort, setExposedPort] = useState(8080);
   const [envVars, setEnvVars] = useState('');
   const [isDeploying, setIsDeploying] = useState(false);
 
@@ -99,7 +100,7 @@ export function DeployWizard({
           staticOutput: outputDirectory,
           domain: subdomain,
           buildEngine: runtimeMode === 'static' ? 'static' : 'nixpacks',
-          internalPort: 3000,
+          internalPort: exposedPort,
           rootDirectory: '',
           dockerfilePath: '',
           healthCheckPath: '',
@@ -123,13 +124,7 @@ export function DeployWizard({
   };
 
   if (step === 'target') {
-    return (
-      <DeployTargetStep
-        runtimeMode={runtimeMode}
-        onRuntimeModeChange={setRuntimeMode}
-        onContinue={() => setStep('config')}
-      />
-    );
+    return <DeployTargetStep onContinue={() => setStep('config')} />;
   }
 
   return (
@@ -137,10 +132,8 @@ export function DeployWizard({
       <DeployConfigStep
         framework={framework}
         onFrameworkChange={setFramework}
-        buildEnabled={buildEnabled}
-        onBuildEnabledChange={setBuildEnabled}
-        runtimeMode={runtimeMode}
-        onRuntimeModeChange={setRuntimeMode}
+        exposedPort={exposedPort}
+        onExposedPortChange={setExposedPort}
         installCommand={installCommand}
         onInstallCommandChange={setInstallCommand}
         buildCommand={buildCommand}
@@ -159,12 +152,9 @@ export function DeployWizard({
         onBranchChange={setBranch}
         projectName={projectName}
         framework={framework}
-        runtimeMode={runtimeMode}
-        installCommand={installCommand}
-        buildCommand={buildCommand}
-        outputDirectory={outputDirectory}
         subdomain={subdomain}
         onSubdomainChange={setSubdomain}
+        exposedPort={exposedPort}
         isDeploying={isDeploying}
         onDeploy={handleDeploy}
       />

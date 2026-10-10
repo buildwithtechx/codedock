@@ -1,4 +1,4 @@
-import { ChevronDown, ChevronUp, Download, Key, Upload } from 'lucide-react';
+import { ChevronDown, ChevronUp, ClipboardPaste, Download, Key, Plus, Upload } from 'lucide-react';
 import { type ChangeEvent, useId, useRef, useState } from 'react';
 import { toast } from 'sonner';
 import { Button } from '#/components/ui/button';
@@ -10,6 +10,7 @@ interface DeployEnvSectionProps {
 
 export function DeployEnvSection({ envVars, onEnvVarsChange }: DeployEnvSectionProps) {
   const [open, setOpen] = useState(false);
+  const [isEditing, setIsEditing] = useState(false);
   const fileInputRef = useRef<HTMLInputElement>(null);
   const inputId = useId();
 
@@ -30,6 +31,7 @@ export function DeployEnvSection({ envVars, onEnvVarsChange }: DeployEnvSectionP
       }
       onEnvVarsChange(envVars.trim() ? `${envVars.trim()}\n${content.trim()}` : content.trim());
       setOpen(true);
+      setIsEditing(true);
       toast.success(`Imported ${file.name}`);
     };
     reader.onerror = () => {
@@ -57,9 +59,10 @@ export function DeployEnvSection({ envVars, onEnvVarsChange }: DeployEnvSectionP
   };
 
   const lineCount = envVars.split('\n').filter((l) => l.trim() && !l.trim().startsWith('#')).length;
+  const hasVars = lineCount > 0;
 
   return (
-    <section className="rounded-2xl border border-border/60 bg-card p-5">
+    <section className="rounded-2xl border border-border/60 bg-card p-6">
       <input
         ref={fileInputRef}
         type="file"
@@ -70,16 +73,14 @@ export function DeployEnvSection({ envVars, onEnvVarsChange }: DeployEnvSectionP
       />
 
       <div className="flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between">
-        <div className="flex items-center gap-3">
-          <div className="grid size-8 place-items-center rounded-lg bg-muted text-muted-foreground">
-            <Key className="size-4" />
+        <div className="flex items-center gap-3.5">
+          <div className="flex size-10 shrink-0 items-center justify-center rounded-xl bg-muted text-muted-foreground">
+            <Key className="size-5" />
           </div>
           <div>
-            <h3 className="font-semibold text-foreground text-sm">Environment Variables</h3>
-            <p className="text-[11px] text-muted-foreground">
-              {lineCount > 0
-                ? `${lineCount} variable${lineCount === 1 ? '' : 's'} configured`
-                : 'None configured'}
+            <h2 className="font-semibold text-foreground text-sm">Environment Variables</h2>
+            <p className="text-muted-foreground text-xs">
+              {hasVars ? `${lineCount} set` : 'None set'}
             </p>
           </div>
         </div>
@@ -89,9 +90,13 @@ export function DeployEnvSection({ envVars, onEnvVarsChange }: DeployEnvSectionP
             type="button"
             variant="outline"
             size="sm"
-            className="h-7 text-xs"
-            onClick={() => setOpen((prev) => !prev)}
+            className="h-8 gap-1.5 text-xs"
+            onClick={() => {
+              setOpen(true);
+              setIsEditing(true);
+            }}
           >
+            <ClipboardPaste className="size-3.5" />
             Paste .env
           </Button>
 
@@ -99,10 +104,10 @@ export function DeployEnvSection({ envVars, onEnvVarsChange }: DeployEnvSectionP
             type="button"
             variant="outline"
             size="sm"
-            className="h-7 gap-1 text-xs"
+            className="h-8 gap-1.5 text-xs"
             onClick={handleUploadClick}
           >
-            <Upload className="size-3" />
+            <Upload className="size-3.5" />
             Upload .env
           </Button>
 
@@ -110,18 +115,18 @@ export function DeployEnvSection({ envVars, onEnvVarsChange }: DeployEnvSectionP
             type="button"
             variant="outline"
             size="sm"
-            disabled={!envVars.trim()}
-            className="h-7 gap-1 text-xs"
+            disabled={!hasVars}
+            className="h-8 gap-1.5 text-xs"
             onClick={handleDownload}
           >
-            <Download className="size-3" />
-            Download
+            <Download className="size-3.5" />
+            Download .env
           </Button>
 
           <button
             type="button"
             onClick={() => setOpen((prev) => !prev)}
-            className="p-1 text-muted-foreground hover:text-foreground"
+            className="p-1 text-muted-foreground transition-colors hover:text-foreground"
             aria-label={open ? 'Collapse environment variables' : 'Expand environment variables'}
           >
             {open ? <ChevronUp className="size-4" /> : <ChevronDown className="size-4" />}
@@ -130,26 +135,52 @@ export function DeployEnvSection({ envVars, onEnvVarsChange }: DeployEnvSectionP
       </div>
 
       {open && (
-        <div className="mt-4 space-y-2">
-          <textarea
-            id={inputId}
-            value={envVars}
-            onChange={(e) => onEnvVarsChange(e.target.value)}
-            placeholder="KEY=value&#10;DATABASE_URL=postgres://..."
-            className="h-32 w-full rounded-lg border border-border/60 bg-background p-3 font-mono text-foreground text-xs focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-ring"
-          />
-          <div className="flex items-center justify-between text-[11px] text-muted-foreground">
-            <span>Supports standard KEY=value syntax, one per line.</span>
-            {envVars.trim() && (
-              <button
+        <div className="mt-5 border-border/50 border-t pt-5">
+          {!hasVars && !isEditing ? (
+            <div className="flex flex-col items-center justify-center rounded-xl border border-border/60 border-dashed bg-muted/10 py-10 text-center">
+              <div className="flex size-10 items-center justify-center rounded-full bg-muted/60 text-muted-foreground">
+                <Key className="size-5" />
+              </div>
+              <h3 className="mt-3 font-medium text-foreground text-sm">No environment variables</h3>
+              <p className="mt-1 max-w-sm text-muted-foreground text-xs leading-relaxed">
+                Paste a .env block anywhere in this box, or drop a .env file here.
+              </p>
+              <Button
                 type="button"
-                onClick={() => onEnvVarsChange('')}
-                className="text-destructive hover:underline"
+                size="sm"
+                className="mt-4 gap-1.5 rounded-full bg-foreground px-4 text-background text-xs hover:bg-foreground/90"
+                onClick={() => setIsEditing(true)}
               >
-                Clear all
-              </button>
-            )}
-          </div>
+                <Plus className="size-3.5" />
+                Add Variable
+              </Button>
+            </div>
+          ) : (
+            <div className="space-y-2">
+              <textarea
+                id={inputId}
+                value={envVars}
+                onChange={(e) => onEnvVarsChange(e.target.value)}
+                placeholder="KEY=value&#10;DATABASE_URL=postgres://..."
+                className="h-32 w-full rounded-xl border border-border/60 bg-background/50 p-3 font-mono text-foreground text-xs focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-ring"
+              />
+              <div className="flex items-center justify-between text-[11px] text-muted-foreground">
+                <span>Supports standard KEY=value syntax, one per line.</span>
+                {hasVars && (
+                  <button
+                    type="button"
+                    onClick={() => {
+                      onEnvVarsChange('');
+                      setIsEditing(false);
+                    }}
+                    className="text-destructive hover:underline"
+                  >
+                    Clear all
+                  </button>
+                )}
+              </div>
+            </div>
+          )}
         </div>
       )}
     </section>
