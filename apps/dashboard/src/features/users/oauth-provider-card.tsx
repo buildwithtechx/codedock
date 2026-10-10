@@ -3,7 +3,7 @@ import { useState } from 'react';
 import { Button } from '#/components/ui/button';
 import { Input } from '#/components/ui/input';
 import { Label } from '#/components/ui/label';
-import { Switch } from '#/components/ui/switch';
+import { PreferenceRow } from '#/features/settings/preference-row';
 import type { SaveOAuthProviderRequest } from '#/interfaces/oauth';
 
 export type OAuthProviderDef = {
@@ -52,21 +52,6 @@ export function OAuthProviderCard({
           <p className="mt-0.5 text-muted-foreground text-xs">
             Single sign-on authentication with {provider.name}
           </p>
-          <div className="mt-2 flex items-center">
-            {isActive ? (
-              <span className="inline-flex items-center gap-1 rounded-full bg-emerald-500/10 px-2 py-0.5 font-medium text-[10px] text-emerald-600 dark:text-emerald-400">
-                <CheckCircle2 className="size-3" /> Active
-              </span>
-            ) : isConfigured ? (
-              <span className="inline-flex items-center gap-1 rounded-full bg-amber-500/10 px-2 py-0.5 font-medium text-[10px] text-amber-600 dark:text-amber-400">
-                Disabled
-              </span>
-            ) : (
-              <span className="inline-flex items-center gap-1 rounded-full bg-muted px-2 py-0.5 font-medium text-[10px] text-muted-foreground">
-                Not configured
-              </span>
-            )}
-          </div>
         </div>
         <Button
           variant="outline"
@@ -77,6 +62,20 @@ export function OAuthProviderCard({
           <Plus className="size-3.5" />
           {isExpanded ? 'Close' : isConfigured ? 'Edit' : 'Add'}
         </Button>
+      </div>
+
+      <div className="mt-3">
+        {isActive ? (
+          <span className="inline-flex items-center gap-1 rounded-full bg-emerald-500/10 px-2 py-0.5 font-medium text-[10px] text-emerald-600 dark:text-emerald-400">
+            <CheckCircle2 className="size-3" /> Active
+          </span>
+        ) : isConfigured ? (
+          <span className="inline-flex items-center gap-1 rounded-full bg-amber-500/10 px-2 py-0.5 font-medium text-[10px] text-amber-600 dark:text-amber-400">
+            Disabled
+          </span>
+        ) : (
+          <p className="py-0.5 text-muted-foreground text-xs">None added yet.</p>
+        )}
       </div>
 
       {isExpanded && (
@@ -96,15 +95,14 @@ export function OAuthProviderCard({
             ))}
           </div>
 
-          <div className="flex items-center justify-between border-border/40 border-t pt-3">
-            <div className="flex items-center gap-2">
-              <Switch
-                checked={state.enabled ?? false}
-                onCheckedChange={(v) => onFieldChange('enabled', v)}
-                aria-label={`Enable ${provider.name} login`}
-              />
-              <Label className="text-muted-foreground text-xs">Enable {provider.name} login</Label>
-            </div>
+          <PreferenceRow
+            title={`Enable ${provider.name}`}
+            hint={`Allow users to sign in with their ${provider.name} account.`}
+            checked={Boolean(state.enabled)}
+            onChange={(checked) => onFieldChange('enabled', checked)}
+          />
+
+          <div className="flex justify-end border-border/40 border-t pt-3">
             <Button size="sm" onClick={onSave} disabled={isPending} className="gap-1.5 text-xs">
               <Check className="size-3.5" />
               {isSaving ? 'Saving...' : `Save ${provider.name}`}

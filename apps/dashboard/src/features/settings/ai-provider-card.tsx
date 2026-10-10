@@ -9,7 +9,7 @@ import {
 } from '#/components/ui/dropdown-menu';
 import { Input } from '#/components/ui/input';
 import { Label } from '#/components/ui/label';
-import { Switch } from '#/components/ui/switch';
+import { PreferenceRow } from './preference-row';
 
 export type AiProviderItem = {
   id: string;
@@ -56,22 +56,6 @@ export function AiProviderCard({
           <p className="mt-0.5 text-muted-foreground text-xs">
             {activeModel ? `Model: ${activeModel.name}` : 'Select a model and API key'}
           </p>
-          <div className="mt-2 flex flex-wrap items-center gap-1.5">
-            {isConfigured ? (
-              <span className="inline-flex items-center gap-1 rounded-full bg-emerald-500/10 px-2 py-0.5 font-medium text-[10px] text-emerald-600 dark:text-emerald-400">
-                <CheckCircle2 className="size-3" /> Configured
-              </span>
-            ) : (
-              <span className="inline-flex items-center gap-1 rounded-full bg-muted px-2 py-0.5 font-medium text-[10px] text-muted-foreground">
-                Not configured
-              </span>
-            )}
-            {isDefault && (
-              <span className="inline-flex items-center gap-1 rounded-full bg-amber-500/10 px-2 py-0.5 font-medium text-[10px] text-amber-600 dark:text-amber-400">
-                <Star className="size-3 fill-amber-500 text-amber-500" /> Default
-              </span>
-            )}
-          </div>
         </div>
         <Button
           variant="outline"
@@ -82,6 +66,23 @@ export function AiProviderCard({
           <Plus className="size-3.5" />
           {isExpanded ? 'Close' : isConfigured ? 'Edit' : 'Add'}
         </Button>
+      </div>
+
+      <div className="mt-3">
+        {isConfigured ? (
+          <div className="flex items-center gap-1.5">
+            <span className="inline-flex items-center gap-1 rounded-full bg-emerald-500/10 px-2 py-0.5 font-medium text-[10px] text-emerald-600 dark:text-emerald-400">
+              <CheckCircle2 className="size-3" /> Configured
+            </span>
+            {isDefault && (
+              <span className="inline-flex items-center gap-1 rounded-full bg-amber-500/10 px-2 py-0.5 font-medium text-[10px] text-amber-600 dark:text-amber-400">
+                <Star className="size-3 fill-amber-500 text-amber-500" /> Default
+              </span>
+            )}
+          </div>
+        ) : (
+          <p className="py-0.5 text-muted-foreground text-xs">None added yet.</p>
+        )}
       </div>
 
       {isExpanded && (
@@ -126,18 +127,14 @@ export function AiProviderCard({
             />
           </div>
 
-          <div className="flex items-center justify-between border-border/40 border-t pt-3">
-            <div className="flex items-center gap-2">
-              <Switch
-                checked={isDefault}
-                onCheckedChange={onSetDefault}
-                disabled={!isConfigured}
-                aria-label={`Make ${provider.name} default provider`}
-              />
-              <Label className="text-muted-foreground text-xs">
-                {isDefault ? 'Default provider' : 'Set as default'}
-              </Label>
-            </div>
+          <PreferenceRow
+            title="Default Provider"
+            hint={`Set ${provider.name} as the default AI provider across Codedock.`}
+            checked={isDefault}
+            onChange={onSetDefault}
+          />
+
+          <div className="flex justify-end border-border/40 border-t pt-3">
             <Button size="sm" onClick={onSave} disabled={isPending} className="gap-1.5 text-xs">
               <Check className="size-3.5" />
               Save {provider.name}

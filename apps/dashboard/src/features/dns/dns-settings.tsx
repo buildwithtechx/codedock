@@ -115,17 +115,6 @@ export const DnsSettings = () => {
                 <div className="min-w-0 flex-1">
                   <p className="font-medium text-foreground text-sm">{provider.name}</p>
                   <p className="mt-0.5 text-muted-foreground text-xs">{provider.sub}</p>
-                  <div className="mt-2 flex items-center">
-                    {isConfigured ? (
-                      <span className="inline-flex items-center gap-1 rounded-full bg-emerald-500/10 px-2 py-0.5 font-medium text-[10px] text-emerald-600 dark:text-emerald-400">
-                        <CheckCircle2 className="size-3" /> Active
-                      </span>
-                    ) : (
-                      <span className="inline-flex items-center gap-1 rounded-full bg-muted px-2 py-0.5 font-medium text-[10px] text-muted-foreground">
-                        Not configured
-                      </span>
-                    )}
-                  </div>
                 </div>
                 <Button
                   variant="outline"
@@ -136,6 +125,16 @@ export const DnsSettings = () => {
                   <Plus className="size-3.5" />
                   {isExpanded ? 'Close' : isConfigured ? 'Edit' : 'Add'}
                 </Button>
+              </div>
+
+              <div className="mt-3">
+                {isConfigured ? (
+                  <span className="inline-flex items-center gap-1 rounded-full bg-emerald-500/10 px-2 py-0.5 font-medium text-[10px] text-emerald-600 dark:text-emerald-400">
+                    <CheckCircle2 className="size-3" /> Active
+                  </span>
+                ) : (
+                  <p className="py-0.5 text-muted-foreground text-xs">None added yet.</p>
+                )}
               </div>
 
               {isExpanded && (

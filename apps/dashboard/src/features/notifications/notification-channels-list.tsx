@@ -1,7 +1,7 @@
 import { Mail, Webhook } from 'lucide-react';
 import { Input } from '#/components/ui/input';
 import { Label } from '#/components/ui/label';
-import { Switch } from '#/components/ui/switch';
+import { PreferenceRow } from '#/features/settings/preference-row';
 import { NotificationChannelRow } from './notification-channel-row';
 
 export type NotifSettingsForm = {
@@ -81,13 +81,12 @@ export const NotificationChannelsList = ({
             className="font-mono text-xs"
           />
         </div>
-        <div className="flex items-center gap-2">
-          <Switch
-            checked={form.discordPingEnabled ?? false}
-            onCheckedChange={(v) => set('discordPingEnabled', v)}
-          />
-          <Label className="text-muted-foreground text-xs">@here ping on critical alerts</Label>
-        </div>
+        <PreferenceRow
+          title="@here Mention"
+          hint="Ping @here on critical and failing deployment alerts in Discord."
+          checked={form.discordPingEnabled ?? false}
+          onChange={(v) => set('discordPingEnabled', v)}
+        />
       </NotificationChannelRow>
 
       <NotificationChannelRow

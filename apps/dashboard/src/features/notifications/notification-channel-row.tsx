@@ -2,8 +2,7 @@ import { Check, CheckCircle2, Plus, Zap } from 'lucide-react';
 import type React from 'react';
 import { useState } from 'react';
 import { Button } from '#/components/ui/button';
-import { Label } from '#/components/ui/label';
-import { Switch } from '#/components/ui/switch';
+import { PreferenceRow } from '#/features/settings/preference-row';
 
 export function NotificationChannelRow({
   icon,
@@ -43,21 +42,6 @@ export function NotificationChannelRow({
         <div className="min-w-0 flex-1">
           <p className="font-medium text-foreground text-sm">{name}</p>
           <p className="mt-0.5 text-muted-foreground text-xs">{description}</p>
-          <div className="mt-2 flex items-center">
-            {enabled ? (
-              <span className="inline-flex items-center gap-1 rounded-full bg-emerald-500/10 px-2 py-0.5 font-medium text-[10px] text-emerald-600 dark:text-emerald-400">
-                <CheckCircle2 className="size-3" /> Active
-              </span>
-            ) : isConfigured ? (
-              <span className="inline-flex items-center gap-1 rounded-full bg-amber-500/10 px-2 py-0.5 font-medium text-[10px] text-amber-600 dark:text-amber-400">
-                Disabled
-              </span>
-            ) : (
-              <span className="inline-flex items-center gap-1 rounded-full bg-muted px-2 py-0.5 font-medium text-[10px] text-muted-foreground">
-                Not configured
-              </span>
-            )}
-          </div>
         </div>
         <Button
           variant="outline"
@@ -70,31 +54,42 @@ export function NotificationChannelRow({
         </Button>
       </div>
 
+      <div className="mt-3">
+        {enabled ? (
+          <span className="inline-flex items-center gap-1 rounded-full bg-emerald-500/10 px-2 py-0.5 font-medium text-[10px] text-emerald-600 dark:text-emerald-400">
+            <CheckCircle2 className="size-3" /> Active
+          </span>
+        ) : isConfigured ? (
+          <span className="inline-flex items-center gap-1 rounded-full bg-amber-500/10 px-2 py-0.5 font-medium text-[10px] text-amber-600 dark:text-amber-400">
+            Disabled
+          </span>
+        ) : (
+          <p className="py-0.5 text-muted-foreground text-xs">None added yet.</p>
+        )}
+      </div>
+
       {isExpanded && (
         <div className="mt-4 space-y-4 border-border/40 border-t pt-4">
           <div className="space-y-3">{children}</div>
 
+          <PreferenceRow
+            title={`Enable ${name}`}
+            hint={`Deliver notification events and deployment alerts to ${name}.`}
+            checked={enabled}
+            onChange={onToggle}
+          />
+
           <div className="flex items-center justify-between border-border/40 border-t pt-3">
-            <div className="flex items-center gap-3">
-              <div className="flex items-center gap-2">
-                <Switch
-                  checked={enabled}
-                  onCheckedChange={onToggle}
-                  aria-label={`Enable ${name}`}
-                />
-                <Label className="text-muted-foreground text-xs">Enable {name}</Label>
-              </div>
-              <Button
-                size="sm"
-                variant="outline"
-                className="gap-1.5 text-xs"
-                disabled={!enabled || testing || disabled || saving}
-                onClick={onTest}
-              >
-                <Zap className="h-3.5 w-3.5" />
-                {testing ? 'Sending…' : 'Test'}
-              </Button>
-            </div>
+            <Button
+              size="sm"
+              variant="outline"
+              className="gap-1.5 text-xs"
+              disabled={!enabled || testing || disabled || saving}
+              onClick={onTest}
+            >
+              <Zap className="h-3.5 w-3.5" />
+              {testing ? 'Sending…' : 'Test'}
+            </Button>
             <Button
               size="sm"
               onClick={onSave}
