@@ -47,44 +47,46 @@ export function AiProviderCard({
 
   return (
     <div className="rounded-xl border border-border/50 p-4">
-      <div className="flex items-start gap-3.5">
-        <div className="flex h-10 w-10 shrink-0 items-center justify-center rounded-xl border border-border/50 bg-background/50">
-          <img src={provider.icon} alt={provider.name} className="h-5 w-5 object-contain" />
-        </div>
-        <div className="min-w-0 flex-1">
-          <p className="font-medium text-foreground text-sm">{provider.name}</p>
-          <p className="mt-0.5 text-muted-foreground text-xs">
-            {activeModel ? `Model: ${activeModel.name}` : 'Select a model and API key'}
-          </p>
-        </div>
-        <Button
-          variant="outline"
-          size="sm"
-          onClick={() => setIsExpanded(!isExpanded)}
-          className="shrink-0 gap-1 text-xs"
-        >
-          <Plus className="size-3.5" />
-          {isExpanded ? 'Close' : isConfigured ? 'Edit' : 'Add'}
-        </Button>
-      </div>
-
-      <div className="mt-3">
-        {isConfigured ? (
-          <div className="flex items-center gap-1.5">
-            <span className="inline-flex items-center gap-1 rounded-full bg-emerald-500/10 px-2 py-0.5 font-medium text-[10px] text-emerald-600 dark:text-emerald-400">
-              <CheckCircle2 className="size-3" /> Configured
-            </span>
-            {isDefault && (
-              <span className="inline-flex items-center gap-1 rounded-full bg-amber-500/10 px-2 py-0.5 font-medium text-[10px] text-amber-600 dark:text-amber-400">
-                <Star className="size-3 fill-amber-500 text-amber-500" /> Default
-              </span>
-            )}
+      <div className="flex flex-wrap items-center justify-between gap-3.5">
+        <div className="flex min-w-0 items-center gap-3.5">
+          <div className="flex h-10 w-10 shrink-0 items-center justify-center rounded-xl border border-border/50 bg-background/50">
+            <img src={provider.icon} alt={provider.name} className="h-5 w-5 object-contain" />
           </div>
-        ) : (
-          <span className="inline-flex items-center gap-1 rounded-full bg-muted px-2 py-0.5 font-medium text-[10px] text-muted-foreground">
-            Not configured
-          </span>
-        )}
+          <div className="min-w-0">
+            <p className="font-medium text-foreground text-sm">{provider.name}</p>
+            <p className="mt-0.5 text-muted-foreground text-xs">
+              {activeModel ? `Model: ${activeModel.name}` : 'Select a model and API key'}
+            </p>
+          </div>
+        </div>
+
+        <div className="flex shrink-0 items-center gap-2.5">
+          {isConfigured ? (
+            <div className="flex items-center gap-1.5">
+              <span className="inline-flex items-center gap-1 rounded-full bg-emerald-500/10 px-2.5 py-0.5 font-medium text-[11px] text-emerald-600 dark:text-emerald-400">
+                <CheckCircle2 className="size-3" /> Configured
+              </span>
+              {isDefault && (
+                <span className="inline-flex items-center gap-1 rounded-full bg-amber-500/10 px-2.5 py-0.5 font-medium text-[11px] text-amber-600 dark:text-amber-400">
+                  <Star className="size-3 fill-amber-500 text-amber-500" /> Default
+                </span>
+              )}
+            </div>
+          ) : (
+            <span className="inline-flex items-center gap-1 rounded-full bg-muted px-2.5 py-0.5 font-medium text-[11px] text-muted-foreground">
+              Not configured
+            </span>
+          )}
+          <Button
+            variant="outline"
+            size="sm"
+            onClick={() => setIsExpanded(!isExpanded)}
+            className="shrink-0 gap-1 text-xs"
+          >
+            <Plus className="size-3.5" />
+            {isExpanded ? 'Close' : isConfigured ? 'Edit' : 'Add'}
+          </Button>
+        </div>
       </div>
 
       {isExpanded && (

@@ -18,23 +18,22 @@ export function InstalledAppRow({ app }: { app: AppService }) {
     <Link
       to="/services/$serviceId"
       params={{ serviceId: app.id }}
-      className="group flex items-center gap-4 px-5 py-4 transition-colors hover:bg-muted/40"
+      className="group flex items-center justify-between gap-4 px-5 py-4 transition-colors hover:bg-muted/40"
     >
-      <AppLogo icon={app.icon} name={app.name} className="size-10 shrink-0" />
-      <div className="min-w-0 flex-1">
-        <p className="truncate font-medium text-foreground text-sm">{app.name}</p>
-        <p className="mt-0.5 flex items-center gap-2 text-muted-foreground text-xs">
+      <div className="flex min-w-0 items-center gap-4">
+        <AppLogo icon={app.icon} name={app.name} className="size-10 shrink-0" />
+        <div className="min-w-0">
+          <p className="truncate font-medium text-foreground text-sm">{app.name}</p>
+          {meta && <p className="mt-0.5 truncate text-muted-foreground text-xs">{meta}</p>}
+        </div>
+      </div>
+      <div className="flex shrink-0 items-center gap-3">
+        <span className="inline-flex items-center gap-1.5 rounded-full bg-muted/60 px-2.5 py-0.5 font-medium text-muted-foreground text-xs">
           <span className={cn('size-1.5 rounded-full', statusTone[app.status] ?? 'bg-zinc-500')} />
           <span className="capitalize">{app.status}</span>
-          {meta && (
-            <>
-              <span aria-hidden="true">·</span>
-              <span className="truncate">{meta}</span>
-            </>
-          )}
-        </p>
+        </span>
+        <ChevronRight className="size-4 shrink-0 text-muted-foreground/40 transition-colors group-hover:text-muted-foreground" />
       </div>
-      <ChevronRight className="size-4 shrink-0 text-muted-foreground/40 transition-colors group-hover:text-muted-foreground" />
     </Link>
   );
 }

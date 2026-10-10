@@ -82,64 +82,66 @@ export function GitProviders() {
 
           return (
             <div key={provider.id} className="rounded-xl border border-border/50 p-4">
-              <div className="flex items-start gap-3.5">
-                <div className="flex h-10 w-10 shrink-0 items-center justify-center rounded-xl border border-border/50 bg-background/50">
-                  <img
-                    src={provider.icon}
-                    alt={provider.name}
-                    className={`h-5 w-5 object-contain ${
-                      provider.id === 'github'
-                        ? 'dim:brightness-0 dim:invert dark:brightness-0 dark:invert'
-                        : ''
-                    }`}
-                  />
+              <div className="flex flex-wrap items-center justify-between gap-3.5">
+                <div className="flex min-w-0 items-center gap-3.5">
+                  <div className="flex h-10 w-10 shrink-0 items-center justify-center rounded-xl border border-border/50 bg-background/50">
+                    <img
+                      src={provider.icon}
+                      alt={provider.name}
+                      className={`h-5 w-5 object-contain ${
+                        provider.id === 'github'
+                          ? 'dim:brightness-0 dim:invert dark:brightness-0 dark:invert'
+                          : ''
+                      }`}
+                    />
+                  </div>
+                  <div className="min-w-0">
+                    <p className="font-medium text-foreground text-sm">{provider.name}</p>
+                    <p className="mt-0.5 text-muted-foreground text-xs">Personal Access Token</p>
+                  </div>
                 </div>
-                <div className="min-w-0 flex-1">
-                  <p className="font-medium text-foreground text-sm">{provider.name}</p>
-                  <p className="mt-0.5 text-muted-foreground text-xs">Personal Access Token</p>
-                </div>
-                {isConnected ? (
-                  <Button
-                    variant="outline"
-                    size="sm"
-                    className="shrink-0 gap-1 text-destructive text-xs hover:bg-destructive/10 hover:text-destructive"
-                    onClick={() => handleDisconnect(provider.id)}
-                    disabled={disconnectMutation.isPending}
-                  >
-                    <Trash2 className="size-3.5" />
-                    Disconnect
-                  </Button>
-                ) : (
-                  <Button
-                    variant="outline"
-                    size="sm"
-                    className="shrink-0 gap-1 text-xs"
-                    onClick={() => {
-                      if (isExpanded) {
-                        setActiveProvider(null);
-                      } else {
-                        setAccessToken('');
-                        setAccountName('');
-                        setActiveProvider(provider.id);
-                      }
-                    }}
-                  >
-                    <Plus className="size-3.5" />
-                    {isExpanded ? 'Close' : 'Connect'}
-                  </Button>
-                )}
-              </div>
 
-              <div className="mt-3">
-                {isConnected ? (
-                  <span className="inline-flex items-center gap-1 rounded-full bg-emerald-500/10 px-2 py-0.5 font-medium text-[10px] text-emerald-600 dark:text-emerald-400">
-                    <CheckCircle2 className="size-3" /> Connected as {status.accountName}
-                  </span>
-                ) : (
-                  <span className="inline-flex items-center gap-1 rounded-full bg-muted px-2 py-0.5 font-medium text-[10px] text-muted-foreground">
-                    Not connected
-                  </span>
-                )}
+                <div className="flex shrink-0 items-center gap-2.5">
+                  {isConnected ? (
+                    <span className="inline-flex items-center gap-1 rounded-full bg-emerald-500/10 px-2.5 py-0.5 font-medium text-[11px] text-emerald-600 dark:text-emerald-400">
+                      <CheckCircle2 className="size-3" /> Connected as {status.accountName}
+                    </span>
+                  ) : (
+                    <span className="inline-flex items-center gap-1 rounded-full bg-muted px-2.5 py-0.5 font-medium text-[11px] text-muted-foreground">
+                      Not connected
+                    </span>
+                  )}
+                  {isConnected ? (
+                    <Button
+                      variant="outline"
+                      size="sm"
+                      className="shrink-0 gap-1 text-destructive text-xs hover:bg-destructive/10 hover:text-destructive"
+                      onClick={() => handleDisconnect(provider.id)}
+                      disabled={disconnectMutation.isPending}
+                    >
+                      <Trash2 className="size-3.5" />
+                      Disconnect
+                    </Button>
+                  ) : (
+                    <Button
+                      variant="outline"
+                      size="sm"
+                      className="shrink-0 gap-1 text-xs"
+                      onClick={() => {
+                        if (isExpanded) {
+                          setActiveProvider(null);
+                        } else {
+                          setAccessToken('');
+                          setAccountName('');
+                          setActiveProvider(provider.id);
+                        }
+                      }}
+                    >
+                      <Plus className="size-3.5" />
+                      {isExpanded ? 'Close' : 'Connect'}
+                    </Button>
+                  )}
+                </div>
               </div>
 
               {isExpanded && !isConnected && (

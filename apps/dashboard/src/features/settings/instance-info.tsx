@@ -22,27 +22,38 @@ export function InstanceInfo() {
         }
       >
         <div className="grid grid-cols-1 gap-3 sm:grid-cols-2">
-          <div className="flex items-center gap-3 rounded-xl border border-border/60 bg-muted/20 p-4">
-            <div className="flex h-8 w-8 items-center justify-center rounded-lg bg-muted">
-              <MonitorCog className="h-4 w-4 text-muted-foreground" />
+          <div className="flex items-center justify-between gap-3 rounded-xl border border-border/60 bg-muted/20 p-4">
+            <div className="flex min-w-0 items-center gap-3">
+              <div className="flex h-8 w-8 shrink-0 items-center justify-center rounded-lg bg-muted">
+                <MonitorCog className="h-4 w-4 text-muted-foreground" />
+              </div>
+              <div className="min-w-0">
+                <p className="truncate font-medium text-foreground text-sm">
+                  {isCloud ? 'Codedock Cloud' : 'Self-hosted'}
+                </p>
+                <p className="text-muted-foreground text-xs">Operating mode</p>
+              </div>
             </div>
-            <div>
-              <p className="font-medium text-foreground text-sm">
-                {isCloud ? 'Codedock Cloud' : 'Self-hosted'}
-              </p>
-              <p className="text-muted-foreground text-xs">Operating mode · v{version}</p>
-            </div>
+            <span className="shrink-0 rounded-md bg-muted px-2 py-0.5 font-mono text-muted-foreground text-xs">
+              v{version}
+            </span>
           </div>
-          <div className="flex items-center gap-3 rounded-xl border border-border/60 bg-muted/20 p-4">
-            <div className="flex h-8 w-8 items-center justify-center rounded-lg bg-muted">
-              <ShieldCheck className="h-4 w-4 text-muted-foreground" />
+
+          <div className="flex items-center justify-between gap-3 rounded-xl border border-border/60 bg-muted/20 p-4">
+            <div className="flex min-w-0 items-center gap-3">
+              <div className="flex h-8 w-8 shrink-0 items-center justify-center rounded-lg bg-muted">
+                <ShieldCheck className="h-4 w-4 text-muted-foreground" />
+              </div>
+              <div className="min-w-0">
+                <p className="font-medium text-foreground text-sm">Authentication</p>
+                <p className="truncate text-muted-foreground text-xs">
+                  {user?.email || 'Instance owner'}
+                </p>
+              </div>
             </div>
-            <div className="min-w-0 flex-1">
-              <p className="font-medium text-foreground text-sm">Authentication</p>
-              <p className="truncate text-muted-foreground text-xs">
-                {user?.email || 'Instance owner'}
-              </p>
-            </div>
+            <span className="inline-flex shrink-0 items-center gap-1 rounded-full bg-emerald-500/10 px-2 py-0.5 font-medium text-[11px] text-emerald-600 dark:text-emerald-400">
+              Active
+            </span>
           </div>
         </div>
       </SettingsSection>

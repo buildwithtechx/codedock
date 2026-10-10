@@ -113,10 +113,7 @@ export function ServerComponentsTab({ serverId }: ServerComponentsTabProps) {
           {components.map((item: ServerComponentStatus) => {
             const Icon = componentIcon(item.name);
             return (
-              <div
-                key={item.name}
-                className="flex flex-col gap-3 p-5 sm:flex-row sm:items-center sm:justify-between"
-              >
+              <div key={item.name} className="flex items-center justify-between gap-4 p-5">
                 <div className="flex min-w-0 items-start gap-3.5">
                   <div
                     className={cn(
@@ -129,30 +126,31 @@ export function ServerComponentsTab({ serverId }: ServerComponentsTabProps) {
                     <Icon className="size-4" />
                   </div>
                   <div className="min-w-0 flex-1">
-                    <div className="flex flex-wrap items-center gap-2">
-                      <h3 className="font-medium text-foreground text-sm">{item.label}</h3>
-                      {item.version && (
-                        <span className="rounded-md bg-muted px-2 py-0.5 font-mono text-[11px] text-muted-foreground">
-                          {item.version}
-                        </span>
-                      )}
-                      <span
-                        className={cn(
-                          'inline-flex items-center gap-1 rounded-full px-2 py-0.5 font-medium text-[11px]',
-                          item.healthy
-                            ? 'bg-success/10 text-success'
-                            : 'bg-destructive/10 text-destructive'
-                        )}
-                      >
-                        <CheckCircle2 className="size-3" />
-                        {item.healthy ? 'Healthy' : 'Degraded'}
-                      </span>
-                    </div>
-                    <p className="mt-1 text-muted-foreground text-xs">{item.description}</p>
+                    <h3 className="font-medium text-foreground text-sm">{item.label}</h3>
+                    <p className="mt-0.5 text-muted-foreground text-xs">{item.description}</p>
                     <p className="mt-1 font-mono text-[11px] text-muted-foreground/80">
                       {item.message}
                     </p>
                   </div>
+                </div>
+
+                <div className="flex shrink-0 items-center gap-2.5">
+                  {item.version && (
+                    <span className="rounded-md bg-muted px-2 py-0.5 font-mono text-[11px] text-muted-foreground">
+                      {item.version}
+                    </span>
+                  )}
+                  <span
+                    className={cn(
+                      'inline-flex items-center gap-1.5 rounded-full px-2.5 py-1 font-medium text-xs',
+                      item.healthy
+                        ? 'bg-success/10 text-success'
+                        : 'bg-destructive/10 text-destructive'
+                    )}
+                  >
+                    <CheckCircle2 className="size-3.5" />
+                    {item.healthy ? 'Healthy' : 'Degraded'}
+                  </span>
                 </div>
               </div>
             );

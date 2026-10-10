@@ -161,37 +161,34 @@ export function RepositoryList({
                   key={repo.id}
                   type="button"
                   onClick={() => onImport(repo)}
-                  className="group flex w-full items-center gap-4 px-5 py-3.5 text-left transition-colors hover:bg-muted/40"
+                  className="group flex w-full items-center justify-between gap-4 px-5 py-3.5 text-left transition-colors hover:bg-muted/40"
                 >
-                  <div className="flex h-10 w-10 shrink-0 items-center justify-center rounded-xl bg-muted/60 transition-colors group-hover:bg-muted">
-                    {repo.private ? (
-                      <Lock className="size-[18px] text-muted-foreground" />
-                    ) : (
-                      <Globe className="size-[18px] text-muted-foreground" />
-                    )}
-                  </div>
-                  <div className="min-w-0 flex-1">
-                    <div className="flex items-center gap-2">
-                      <p className="truncate font-medium text-foreground text-sm">{repo.name}</p>
-                      {repo.private && (
-                        <span className="rounded-md bg-muted px-1.5 py-0.5 font-medium text-[10px] text-muted-foreground">
-                          Private
-                        </span>
+                  <div className="flex min-w-0 items-center gap-4">
+                    <div className="flex h-10 w-10 shrink-0 items-center justify-center rounded-xl bg-muted/60 transition-colors group-hover:bg-muted">
+                      {repo.private ? (
+                        <Lock className="size-[18px] text-muted-foreground" />
+                      ) : (
+                        <Globe className="size-[18px] text-muted-foreground" />
                       )}
                     </div>
-                    <div className="mt-0.5 flex items-center gap-2">
-                      <p className="truncate font-mono text-muted-foreground text-xs">
+                    <div className="min-w-0">
+                      <div className="flex items-center gap-2">
+                        <p className="truncate font-medium text-foreground text-sm">{repo.name}</p>
+                        {repo.private && (
+                          <span className="rounded-md bg-muted px-1.5 py-0.5 font-medium text-[10px] text-muted-foreground">
+                            Private
+                          </span>
+                        )}
+                      </div>
+                      <p className="mt-0.5 truncate font-mono text-muted-foreground text-xs">
                         {repo.fullName}
                       </p>
-                      {updated && (
-                        <>
-                          <span className="text-muted-foreground/40">·</span>
-                          <span className="shrink-0 text-muted-foreground text-xs">{updated}</span>
-                        </>
-                      )}
                     </div>
                   </div>
-                  <ArrowRight className="size-4 shrink-0 text-muted-foreground/40 transition-colors group-hover:text-muted-foreground" />
+                  <div className="flex shrink-0 items-center gap-3">
+                    {updated && <span className="text-muted-foreground text-xs">{updated}</span>}
+                    <ArrowRight className="size-4 shrink-0 text-muted-foreground/40 transition-colors group-hover:text-muted-foreground" />
+                  </div>
                 </button>
               );
             })}

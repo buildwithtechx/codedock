@@ -1,11 +1,51 @@
 import { Badge } from '#/components/ui/badge';
 import type { SystemStats } from '#/features/settings';
+import { cn } from '#/lib/utils';
 
 type Props = {
   stats?: SystemStats;
 };
 
 export const DockerStorageCard = ({ stats }: Props) => {
+  const items = [
+    {
+      label: 'IMAGES',
+      active: stats?.docker?.images?.active || 0,
+      total: stats?.docker?.images?.totalCount || 0,
+      widthClass: 'w-1/3',
+      size: stats?.docker?.images?.size || '0 B',
+      reclaimable: stats?.docker?.images?.reclaimable || '0 B',
+      candidateColor: 'text-yellow-500',
+    },
+    {
+      label: 'CONTAINERS',
+      active: stats?.docker?.containers?.active || 0,
+      total: stats?.docker?.containers?.totalCount || 0,
+      widthClass: 'w-1/12',
+      size: stats?.docker?.containers?.size || '0 B',
+      reclaimable: stats?.docker?.containers?.reclaimable || '0 B',
+      candidateColor: 'text-muted-foreground/50',
+    },
+    {
+      label: 'LOCAL VOLUMES',
+      active: stats?.docker?.volumes?.active || 0,
+      total: stats?.docker?.volumes?.totalCount || 0,
+      widthClass: 'w-1/6',
+      size: stats?.docker?.volumes?.size || '0 B',
+      reclaimable: stats?.docker?.volumes?.reclaimable || '0 B',
+      candidateColor: 'text-muted-foreground/50',
+    },
+    {
+      label: 'BUILD CACHE',
+      active: stats?.docker?.buildCache?.active || 0,
+      total: stats?.docker?.buildCache?.totalCount || 0,
+      widthClass: 'w-[80%]',
+      size: stats?.docker?.buildCache?.size || '0 B',
+      reclaimable: stats?.docker?.buildCache?.reclaimable || '0 B',
+      candidateColor: 'text-yellow-500',
+    },
+  ];
+
   return (
     <div className="w-full overflow-hidden rounded-2xl border border-border/80 bg-card shadow-sm">
       <div className="flex items-center justify-between border-border/70 border-b p-6">
@@ -19,92 +59,32 @@ export const DockerStorageCard = ({ stats }: Props) => {
       </div>
 
       <div className="divide-y divide-border/50">
-        <div className="grid grid-cols-3 items-center p-6">
-          <div>
-            <p className="font-bold text-[10px] text-muted-foreground uppercase tracking-[0.15em]">
-              IMAGES
-            </p>
-            <p className="mt-1 text-muted-foreground text-xs">
-              {stats?.docker?.images?.active || 0}/{stats?.docker?.images?.totalCount || 0} active
-            </p>
-          </div>
-          <div className="col-span-2 flex items-center gap-6">
-            <div className="flex h-2 w-48 overflow-hidden rounded-full bg-background">
-              <div className="h-full w-1/3 bg-muted-foreground" />
+        {items.map((item) => (
+          <div
+            key={item.label}
+            className="grid grid-cols-1 gap-4 p-6 sm:grid-cols-3 sm:items-center"
+          >
+            <div>
+              <p className="font-bold text-[10px] text-muted-foreground uppercase tracking-[0.15em]">
+                {item.label}
+              </p>
+              <p className="mt-1 text-muted-foreground text-xs">
+                {item.active}/{item.total} active
+              </p>
             </div>
-            <div className="space-x-2 font-mono text-sm">
-              <span className="text-foreground">{stats?.docker?.images?.size || '0 B'}</span>
-              <span className="text-yellow-500">
-                {stats?.docker?.images?.reclaimable || '0 B'} candidate
-              </span>
-            </div>
-          </div>
-        </div>
-        <div className="grid grid-cols-3 items-center p-6">
-          <div>
-            <p className="font-bold text-[10px] text-muted-foreground uppercase tracking-[0.15em]">
-              CONTAINERS
-            </p>
-            <p className="mt-1 text-muted-foreground text-xs">
-              {stats?.docker?.containers?.active || 0}/{stats?.docker?.containers?.totalCount || 0}{' '}
-              active
-            </p>
-          </div>
-          <div className="col-span-2 flex items-center gap-6">
-            <div className="flex h-2 w-48 overflow-hidden rounded-full bg-background">
-              <div className="h-full w-1/12 bg-muted-foreground" />
-            </div>
-            <div className="space-x-2 font-mono text-sm">
-              <span className="text-foreground">{stats?.docker?.containers?.size || '0 B'}</span>
-              <span className="text-muted-foreground/50">
-                {stats?.docker?.containers?.reclaimable || '0 B'} candidate
-              </span>
+            <div className="col-span-2 flex items-center justify-between gap-6">
+              <div className="flex max-w-xs flex-1 items-center gap-4">
+                <div className="flex h-2 w-full overflow-hidden rounded-full bg-background">
+                  <div className={cn('h-full bg-muted-foreground', item.widthClass)} />
+                </div>
+                <span className="shrink-0 font-mono text-foreground text-sm">{item.size}</span>
+              </div>
+              <div className="shrink-0 text-right font-mono text-sm">
+                <span className={item.candidateColor}>{item.reclaimable} candidate</span>
+              </div>
             </div>
           </div>
-        </div>
-        <div className="grid grid-cols-3 items-center p-6">
-          <div>
-            <p className="font-bold text-[10px] text-muted-foreground uppercase tracking-[0.15em]">
-              LOCAL VOLUMES
-            </p>
-            <p className="mt-1 text-muted-foreground text-xs">
-              {stats?.docker?.volumes?.active || 0}/{stats?.docker?.volumes?.totalCount || 0} active
-            </p>
-          </div>
-          <div className="col-span-2 flex items-center gap-6">
-            <div className="flex h-2 w-48 overflow-hidden rounded-full bg-background">
-              <div className="h-full w-1/6 bg-muted-foreground" />
-            </div>
-            <div className="space-x-2 font-mono text-sm">
-              <span className="text-foreground">{stats?.docker?.volumes?.size || '0 B'}</span>
-              <span className="text-muted-foreground/50">
-                {stats?.docker?.volumes?.reclaimable || '0 B'} candidate
-              </span>
-            </div>
-          </div>
-        </div>
-        <div className="grid grid-cols-3 items-center p-6">
-          <div>
-            <p className="font-bold text-[10px] text-muted-foreground uppercase tracking-[0.15em]">
-              BUILD CACHE
-            </p>
-            <p className="mt-1 text-muted-foreground text-xs">
-              {stats?.docker?.buildCache?.active || 0}/{stats?.docker?.buildCache?.totalCount || 0}{' '}
-              active
-            </p>
-          </div>
-          <div className="col-span-2 flex items-center gap-6">
-            <div className="flex h-2 w-48 overflow-hidden rounded-full bg-background">
-              <div className="h-full w-[80%] bg-muted-foreground" />
-            </div>
-            <div className="space-x-2 font-mono text-sm">
-              <span className="text-foreground">{stats?.docker?.buildCache?.size || '0 B'}</span>
-              <span className="text-yellow-500">
-                {stats?.docker?.buildCache?.reclaimable || '0 B'} candidate
-              </span>
-            </div>
-          </div>
-        </div>
+        ))}
         <div className="bg-background/30 p-6 text-muted-foreground text-xs">
           Docker can keep image layers listed as candidates after safe cleanup when running services
           still reference them.

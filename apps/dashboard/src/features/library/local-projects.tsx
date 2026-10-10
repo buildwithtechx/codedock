@@ -89,29 +89,32 @@ export function LocalProjects({ onImportFolder }: { onImportFolder: () => void }
           {imports.map((entry) => (
             <div
               key={entry.id}
-              className="group flex items-center gap-4 px-5 py-3.5 transition-colors hover:bg-muted/40"
+              className="group flex items-center justify-between gap-4 px-5 py-3.5 transition-colors hover:bg-muted/40"
             >
-              <div className="flex h-10 w-10 shrink-0 items-center justify-center rounded-xl bg-muted/60 transition-colors group-hover:bg-muted">
-                <FolderOpen className="size-[18px] text-muted-foreground" />
-              </div>
-              <div className="min-w-0 flex-1">
-                <p className="truncate font-medium text-foreground text-sm">{entry.name}</p>
-                <div className="mt-0.5 flex items-center gap-2">
-                  <p className="truncate font-mono text-muted-foreground text-xs">{entry.root}</p>
-                  <span className="text-muted-foreground/40">·</span>
-                  <span className="shrink-0 text-muted-foreground text-xs">
-                    {entry.framework} · {entry.fileCount} files
-                  </span>
+              <div className="flex min-w-0 items-center gap-4">
+                <div className="flex h-10 w-10 shrink-0 items-center justify-center rounded-xl bg-muted/60 transition-colors group-hover:bg-muted">
+                  <FolderOpen className="size-[18px] text-muted-foreground" />
+                </div>
+                <div className="min-w-0">
+                  <p className="truncate font-medium text-foreground text-sm">{entry.name}</p>
+                  <p className="mt-0.5 truncate font-mono text-muted-foreground text-xs">
+                    {entry.root}
+                  </p>
                 </div>
               </div>
-              <button
-                type="button"
-                onClick={() => handleDelete(entry.id)}
-                aria-label={`Forget ${entry.name}`}
-                className="rounded-lg p-1.5 text-muted-foreground/50 opacity-0 transition-all hover:bg-destructive/10 hover:text-destructive group-hover:opacity-100"
-              >
-                <Trash2 className="size-3.5" />
-              </button>
+              <div className="flex shrink-0 items-center gap-3">
+                <span className="text-muted-foreground text-xs">
+                  {entry.framework} · {entry.fileCount} files
+                </span>
+                <button
+                  type="button"
+                  onClick={() => handleDelete(entry.id)}
+                  aria-label={`Forget ${entry.name}`}
+                  className="rounded-lg p-1.5 text-muted-foreground/50 opacity-0 transition-all hover:bg-destructive/10 hover:text-destructive group-hover:opacity-100"
+                >
+                  <Trash2 className="size-3.5" />
+                </button>
+              </div>
             </div>
           ))}
         </div>

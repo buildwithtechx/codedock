@@ -286,40 +286,45 @@ export function ApiKeysList() {
       ) : (
         <div className="divide-y divide-border/50">
           {tokens.map((token) => (
-            <div key={token.id} className="flex items-center gap-3 py-3">
-              <Key className="h-4 w-4 shrink-0 text-muted-foreground" />
-              <div className="min-w-0 flex-1">
-                <div className="flex flex-wrap items-center gap-2">
-                  <p className="truncate font-medium text-foreground text-sm">{token.name}</p>
-                  {token.accessLevel === 'read' && (
-                    <Badge variant="secondary" className="gap-1 text-[10px]">
-                      <ShieldCheck className="h-3 w-3" />
-                      Read-only
-                    </Badge>
-                  )}
-                  {token.projectScope === 'specific' && (
-                    <Badge className="gap-1 bg-primary/15 text-[10px] text-primary hover:bg-primary/15">
-                      <Lock className="h-3 w-3" />
-                      Scoped
-                    </Badge>
-                  )}
+            <div key={token.id} className="flex items-center justify-between gap-3 py-3">
+              <div className="flex min-w-0 items-center gap-3">
+                <Key className="h-4 w-4 shrink-0 text-muted-foreground" />
+                <div className="min-w-0">
+                  <div className="flex flex-wrap items-center gap-2">
+                    <p className="truncate font-medium text-foreground text-sm">{token.name}</p>
+                    {token.accessLevel === 'read' && (
+                      <Badge variant="secondary" className="gap-1 text-[10px]">
+                        <ShieldCheck className="h-3 w-3" />
+                        Read-only
+                      </Badge>
+                    )}
+                    {token.projectScope === 'specific' && (
+                      <Badge className="gap-1 bg-primary/15 text-[10px] text-primary hover:bg-primary/15">
+                        <Lock className="h-3 w-3" />
+                        Scoped
+                      </Badge>
+                    )}
+                  </div>
+                  <p className="mt-0.5 font-mono text-muted-foreground text-xs">
+                    {token.prefix}...{' '}
+                    <span className="font-sans">Created {formatDate(token.createdAt)}</span>
+                  </p>
                 </div>
-                <p className="mt-0.5 font-mono text-muted-foreground text-xs">
-                  {token.prefix}...{' '}
-                  <span className="font-sans">
-                    Expires {formatDate(token.expiresAt)} · Created {formatDate(token.createdAt)}
-                  </span>
-                </p>
               </div>
-              <Button
-                variant="outline"
-                size="sm"
-                onClick={() => setDeleteId(token.id)}
-                className="shrink-0 gap-1.5 text-muted-foreground hover:border-destructive/50 hover:text-destructive"
-              >
-                <Trash2 className="h-3.5 w-3.5" />
-                Revoke
-              </Button>
+              <div className="flex shrink-0 items-center gap-3">
+                <span className="text-muted-foreground text-xs">
+                  Expires {formatDate(token.expiresAt)}
+                </span>
+                <Button
+                  variant="outline"
+                  size="sm"
+                  onClick={() => setDeleteId(token.id)}
+                  className="shrink-0 gap-1.5 text-muted-foreground hover:border-destructive/50 hover:text-destructive"
+                >
+                  <Trash2 className="h-3.5 w-3.5" />
+                  Revoke
+                </Button>
+              </div>
             </div>
           ))}
         </div>
