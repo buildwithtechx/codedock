@@ -5,17 +5,16 @@ import { Card, CardContent } from '#/components/ui/card';
 import { QueryErrorState } from '#/components/ui/query-error-state';
 import { DomainAuditTable } from './components/domain-audit-table';
 import { DnsSettings } from './dns-settings';
-import { DomainsPage } from './domains-page';
 import { useListAllDomains } from './hooks';
 
 export function DnsAuditPage() {
   const { data: domainsRes, isLoading, isError, refetch } = useListAllDomains();
-  const [activeTab, setActiveTab] = useState<'audit' | 'providers' | 'global'>('audit');
-  const [mountedTabs, setMountedTabs] = useState<Set<'audit' | 'providers' | 'global'>>(
+  const [activeTab, setActiveTab] = useState<'audit' | 'providers'>('audit');
+  const [mountedTabs, setMountedTabs] = useState<Set<'audit' | 'providers'>>(
     () => new Set(['audit'])
   );
 
-  const tabs = ['audit', 'providers', 'global'] as const;
+  const tabs = ['audit', 'providers'] as const;
 
   const domains = domainsRes?.data || [];
 
@@ -31,7 +30,7 @@ export function DnsAuditPage() {
       !d.dnsProvisionStatus
   ).length;
 
-  const showTab = (tab: 'audit' | 'providers' | 'global') => {
+  const showTab = (tab: 'audit' | 'providers') => {
     setActiveTab(tab);
     setMountedTabs((prev) => {
       if (prev.has(tab)) {
@@ -158,24 +157,6 @@ export function DnsAuditPage() {
           <Network className="h-4 w-4" />
           DNS Provider API Credentials
         </button>
-        <button
-          type="button"
-          id="dns-global-tab"
-          role="tab"
-          aria-selected={activeTab === 'global'}
-          aria-controls="dns-global-panel"
-          tabIndex={activeTab === 'global' ? 0 : -1}
-          onKeyDown={handleTabKeyDown}
-          onClick={() => showTab('global')}
-          className={`flex items-center gap-2 border-b-2 px-4 py-2.5 font-medium text-sm transition-colors ${
-            activeTab === 'global'
-              ? 'border-primary text-primary'
-              : 'border-transparent text-muted-foreground hover:text-foreground'
-          }`}
-        >
-          <Globe className="h-4 w-4" />
-          Global Domain Settings
-        </button>
       </div>
 
       <section
@@ -202,15 +183,6 @@ export function DnsAuditPage() {
         className={activeTab === 'providers' ? 'block' : 'hidden'}
       >
         {mountedTabs.has('providers') && <DnsSettings />}
-      </section>
-
-      <section
-        id="dns-global-panel"
-        role="tabpanel"
-        aria-labelledby="dns-global-tab"
-        className={activeTab === 'global' ? 'block' : 'hidden'}
-      >
-        {mountedTabs.has('global') && <DomainsPage />}
       </section>
     </div>
   );

@@ -29,6 +29,7 @@ import {
   EmptyMedia,
   EmptyTitle,
 } from '#/components/ui/empty';
+import { QueryErrorState } from '#/components/ui/query-error-state';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '#/components/ui/tabs';
 import { ServerComponentsTab } from '#/features/servers/server-components-tab';
 import { ServerConnectionBanner } from '#/features/servers/server-connection-banner';
@@ -66,7 +67,7 @@ function ServerDetailsPage() {
   const { serverId } = Route.useParams();
   const { tab: tabParam } = Route.useSearch();
   const navigate = useNavigate();
-  const { data: server, isLoading, isRefetching, refetch } = useServer(serverId);
+  const { data: server, isLoading, isError, isRefetching, refetch } = useServer(serverId);
   const [removeTarget, setRemoveTarget] = useState<Server | null>(null);
 
   const activeTab: ServerTab = tabKeys.includes(tabParam as ServerTab)
@@ -85,6 +86,16 @@ function ServerDetailsPage() {
       <div className="flex h-64 items-center justify-center">
         <Loader2 className="h-8 w-8 animate-spin text-muted-foreground" />
       </div>
+    );
+  }
+
+  if (isError) {
+    return (
+      <QueryErrorState
+        title="Server is unavailable"
+        description="Codedock could not load details for this server."
+        onRetry={() => void refetch()}
+      />
     );
   }
 

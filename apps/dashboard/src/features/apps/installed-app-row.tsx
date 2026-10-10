@@ -16,8 +16,8 @@ export function InstalledAppRow({ app }: { app: AppService }) {
   const meta = [app.branch, app.domain].filter(Boolean).join(' · ');
   return (
     <Link
-      to="/projects/$projectId"
-      params={{ projectId: app.projectId }}
+      to="/services/$serviceId"
+      params={{ serviceId: app.id }}
       className="group flex items-center gap-4 px-5 py-4 transition-colors hover:bg-muted/40"
     >
       <AppLogo icon={app.icon} name={app.name} className="size-10 shrink-0" />

@@ -32,12 +32,14 @@ func (s *serverService) ListServersByUser(ctx context.Context, userID string) ([
 }
 
 func (s *serverService) GetServer(ctx context.Context, id, userID string) (*models.Server, error) {
-	if id == controlPlaneServerID {
-		user, err := s.userRepo.GetUserByID(ctx, userID)
-		if err != nil {
-			return nil, fmt.Errorf("load server user: %w", err)
-		}
-		if user == nil || (user.Role != models.UserRoleOwner && user.Role != models.UserRoleAdmin) {
+	user, err := s.userRepo.GetUserByID(ctx, userID)
+	if err != nil && !utils.IsNotFound(err) {
+		return nil, fmt.Errorf("load server user: %w", err)
+	}
+	isAdmin := user != nil && (user.Role == models.UserRoleOwner || user.Role == models.UserRoleAdmin)
+
+	if id == controlPlaneServerID || id == "local" || id == "control-plane" {
+		if !isAdmin {
 			return nil, utils.NewForbiddenError("server access denied")
 		}
 		return s.controlPlaneServer(userID), nil
@@ -46,7 +48,10 @@ func (s *serverService) GetServer(ctx context.Context, id, userID string) (*mode
 	if err != nil {
 		return nil, err
 	}
-	if server != nil && server.UserID != userID && !(server.IsLocal && server.UserID == "system") {
+	if server == nil {
+		return nil, utils.NewNotFoundError("Server", id)
+	}
+	if !isAdmin && server.UserID != userID && !server.IsLocal {
 		return nil, utils.NewForbiddenError("server access denied")
 	}
 	return server, nil
@@ -63,7 +68,9 @@ func (s *serverService) DeleteServer(ctx context.Context, id, userID string) err
 	if server == nil {
 		return fmt.Errorf("server not found")
 	}
-	if server.UserID != userID {
+	user, _ := s.userRepo.GetUserByID(ctx, userID)
+	isAdmin := user != nil && (user.Role == models.UserRoleOwner || user.Role == models.UserRoleAdmin)
+	if !isAdmin && server.UserID != userID {
 		return fmt.Errorf("unauthorized to delete server")
 	}
 	if server.Provider != "" {

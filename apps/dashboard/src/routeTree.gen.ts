@@ -60,6 +60,7 @@ import { Route as DashboardJobsJobIdEditRouteImport } from './routes/_dashboard.
 import { Route as DashboardProjectsProjectIdIndexRouteImport } from './routes/_dashboard.projects/$projectId.index'
 import { Route as DashboardProjectsProjectIdCanvasRouteImport } from './routes/_dashboard.projects/$projectId.canvas'
 import { Route as DashboardProjectsProjectIdComposeRouteImport } from './routes/_dashboard.projects/$projectId.compose'
+import { Route as DashboardProjectsProjectIdDomainsRouteImport } from './routes/_dashboard.projects.$projectId.domains'
 import { Route as DashboardProjectsProjectIdNewRouteImport } from './routes/_dashboard.projects/$projectId.new'
 import { Route as DashboardProjectsProjectIdScheduledTasksRouteImport } from './routes/_dashboard.projects/$projectId.scheduled-tasks'
 import { Route as DashboardProjectsProjectIdSettingsRouteImport } from './routes/_dashboard.projects/$projectId.settings'
@@ -343,6 +344,12 @@ const DashboardProjectsProjectIdComposeRoute =
     path: '/compose',
     getParentRoute: () => DashboardProjectsProjectIdRoute,
   } as any)
+const DashboardProjectsProjectIdDomainsRoute =
+  DashboardProjectsProjectIdDomainsRouteImport.update({
+    id: '/domains',
+    path: '/domains',
+    getParentRoute: () => DashboardProjectsProjectIdRoute,
+  } as any)
 const DashboardProjectsProjectIdNewRoute =
   DashboardProjectsProjectIdNewRouteImport.update({
     id: '/new',
@@ -499,6 +506,7 @@ export interface FileRoutesByFullPath {
   '/jobs/$jobId/edit': typeof DashboardJobsJobIdEditRoute
   '/projects/$projectId/canvas': typeof DashboardProjectsProjectIdCanvasRoute
   '/projects/$projectId/compose': typeof DashboardProjectsProjectIdComposeRoute
+  '/projects/$projectId/domains': typeof DashboardProjectsProjectIdDomainsRoute
   '/projects/$projectId/new': typeof DashboardProjectsProjectIdNewRoute
   '/projects/$projectId/scheduled-tasks': typeof DashboardProjectsProjectIdScheduledTasksRoute
   '/projects/$projectId/settings': typeof DashboardProjectsProjectIdSettingsRoute
@@ -556,6 +564,7 @@ export interface FileRoutesByTo {
   '/jobs/$jobId/edit': typeof DashboardJobsJobIdEditRoute
   '/projects/$projectId/canvas': typeof DashboardProjectsProjectIdCanvasRoute
   '/projects/$projectId/compose': typeof DashboardProjectsProjectIdComposeRoute
+  '/projects/$projectId/domains': typeof DashboardProjectsProjectIdDomainsRoute
   '/projects/$projectId/new': typeof DashboardProjectsProjectIdNewRoute
   '/projects/$projectId/scheduled-tasks': typeof DashboardProjectsProjectIdScheduledTasksRoute
   '/projects/$projectId/settings': typeof DashboardProjectsProjectIdSettingsRoute
@@ -628,6 +637,7 @@ export interface FileRoutesById {
   '/_dashboard/jobs/$jobId/edit': typeof DashboardJobsJobIdEditRoute
   '/_dashboard/projects/$projectId/canvas': typeof DashboardProjectsProjectIdCanvasRoute
   '/_dashboard/projects/$projectId/compose': typeof DashboardProjectsProjectIdComposeRoute
+  '/_dashboard/projects/$projectId/domains': typeof DashboardProjectsProjectIdDomainsRoute
   '/_dashboard/projects/$projectId/new': typeof DashboardProjectsProjectIdNewRoute
   '/_dashboard/projects/$projectId/scheduled-tasks': typeof DashboardProjectsProjectIdScheduledTasksRoute
   '/_dashboard/projects/$projectId/settings': typeof DashboardProjectsProjectIdSettingsRoute
@@ -699,6 +709,7 @@ export interface FileRouteTypes {
     | '/jobs/$jobId/edit'
     | '/projects/$projectId/canvas'
     | '/projects/$projectId/compose'
+    | '/projects/$projectId/domains'
     | '/projects/$projectId/new'
     | '/projects/$projectId/scheduled-tasks'
     | '/projects/$projectId/settings'
@@ -756,6 +767,7 @@ export interface FileRouteTypes {
     | '/jobs/$jobId/edit'
     | '/projects/$projectId/canvas'
     | '/projects/$projectId/compose'
+    | '/projects/$projectId/domains'
     | '/projects/$projectId/new'
     | '/projects/$projectId/scheduled-tasks'
     | '/projects/$projectId/settings'
@@ -827,6 +839,7 @@ export interface FileRouteTypes {
     | '/_dashboard/jobs/$jobId/edit'
     | '/_dashboard/projects/$projectId/canvas'
     | '/_dashboard/projects/$projectId/compose'
+    | '/_dashboard/projects/$projectId/domains'
     | '/_dashboard/projects/$projectId/new'
     | '/_dashboard/projects/$projectId/scheduled-tasks'
     | '/_dashboard/projects/$projectId/settings'
@@ -1215,6 +1228,13 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof DashboardProjectsProjectIdComposeRouteImport
       parentRoute: typeof DashboardProjectsProjectIdRoute
     }
+    '/_dashboard/projects/$projectId/domains': {
+      id: '/_dashboard/projects/$projectId/domains'
+      path: '/domains'
+      fullPath: '/projects/$projectId/domains'
+      preLoaderRoute: typeof DashboardProjectsProjectIdDomainsRouteImport
+      parentRoute: typeof DashboardProjectsProjectIdRoute
+    }
     '/_dashboard/projects/$projectId/new': {
       id: '/_dashboard/projects/$projectId/new'
       path: '/new'
@@ -1478,6 +1498,7 @@ const DashboardOrganizationsRouteWithChildren =
 interface DashboardProjectsProjectIdRouteChildren {
   DashboardProjectsProjectIdCanvasRoute: typeof DashboardProjectsProjectIdCanvasRoute
   DashboardProjectsProjectIdComposeRoute: typeof DashboardProjectsProjectIdComposeRoute
+  DashboardProjectsProjectIdDomainsRoute: typeof DashboardProjectsProjectIdDomainsRoute
   DashboardProjectsProjectIdNewRoute: typeof DashboardProjectsProjectIdNewRoute
   DashboardProjectsProjectIdScheduledTasksRoute: typeof DashboardProjectsProjectIdScheduledTasksRoute
   DashboardProjectsProjectIdSettingsRoute: typeof DashboardProjectsProjectIdSettingsRoute
@@ -1490,6 +1511,8 @@ const DashboardProjectsProjectIdRouteChildren: DashboardProjectsProjectIdRouteCh
       DashboardProjectsProjectIdCanvasRoute,
     DashboardProjectsProjectIdComposeRoute:
       DashboardProjectsProjectIdComposeRoute,
+    DashboardProjectsProjectIdDomainsRoute:
+      DashboardProjectsProjectIdDomainsRoute,
     DashboardProjectsProjectIdNewRoute: DashboardProjectsProjectIdNewRoute,
     DashboardProjectsProjectIdScheduledTasksRoute:
       DashboardProjectsProjectIdScheduledTasksRoute,

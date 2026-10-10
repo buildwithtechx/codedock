@@ -13,7 +13,7 @@ export function InstanceInfo() {
 
   return (
     <div className="space-y-6">
-      <section className="rounded-2xl border border-border/60 bg-card p-6">
+      <section className="rounded-2xl border border-border/60 bg-card p-5">
         <div className="mb-5 flex items-center gap-3">
           <div className="flex h-9 w-9 items-center justify-center rounded-xl bg-violet-500/10 text-violet-500">
             <MonitorCog className="h-4 w-4" />
@@ -54,8 +54,12 @@ export function InstanceInfo() {
         </div>
       </section>
 
-      <PlatformModeCard initialMode={isCloud ? 'cloud' : 'self-hosted'} />
-      <CloudConnectionCard isCloudMode={isCloud} />
+      {isCloud && (
+        <>
+          <PlatformModeCard initialMode="cloud" />
+          <CloudConnectionCard isCloudMode={true} />
+        </>
+      )}
     </div>
   );
 }

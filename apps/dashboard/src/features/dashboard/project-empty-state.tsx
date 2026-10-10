@@ -4,10 +4,18 @@ import { Button } from '#/components/ui/button';
 import { EmptyIllustration } from './empty-illustration';
 
 const highlights = [
-  { icon: Zap, title: 'Instant deploys', description: 'Push to git and go live' },
-  { icon: Globe, title: 'Domains & TLS', description: 'Zero-config certificates' },
-  { icon: Eye, title: 'Previews', description: 'Per-branch environments' },
-  { icon: RotateCcw, title: 'Rollbacks', description: 'One-click atomic restore' },
+  { icon: Zap, title: 'Instant setup', description: 'Auto-detected stack and configuration' },
+  { icon: Globe, title: 'Custom domains', description: 'Free automatic SSL certificates' },
+  {
+    icon: Eye,
+    title: 'Live previews',
+    description: 'Git branch previews with isolated environments',
+  },
+  {
+    icon: RotateCcw,
+    title: 'Zero-downtime rollbacks',
+    description: 'Instant restore to any previous version',
+  },
 ];
 
 export function ProjectEmptyState() {
@@ -18,10 +26,10 @@ export function ProjectEmptyState() {
         className="mb-2 font-medium text-2xl text-foreground/80"
         style={{ letterSpacing: '-0.2px' }}
       >
-        Build and ship in seconds
+        No projects yet
       </h3>
       <p className="mx-auto mb-8 max-w-sm text-muted-foreground/70 text-sm leading-relaxed">
-        Connect a repository, pick a template, or deploy from a URL.
+        Deploy a Git repository, Docker container, or start with one of our ready-to-run templates.
       </p>
       <div className="mb-10 flex flex-col items-center justify-center gap-3 sm:flex-row">
         <Button asChild size="lg" className="gap-2 px-6">
@@ -57,8 +65,8 @@ export function ProjectEmptyState() {
         </div>
       </div>
       <p className="mt-8 text-muted-foreground/60 text-xs">
-        Press <kbd className="rounded bg-muted px-1.5 py-0.5 font-mono text-[10px]">&#8984; K</kbd>{' '}
-        to jump anywhere
+        Press <kbd className="rounded bg-muted px-1.5 py-0.5 font-mono text-[10px]">⌘ K</kbd> to
+        open the command palette
       </p>
     </div>
   );

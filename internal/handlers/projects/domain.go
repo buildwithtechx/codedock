@@ -97,6 +97,34 @@ func (h *DomainHandler) ListByService(c echo.Context) error {
 	return utils.Success(c, "Operation successful", domains)
 }
 
+func (h *DomainHandler) ListByProject(c echo.Context) error {
+	projectID := c.Param("id")
+	if projectID == "" {
+		return utils.Error(c, http.StatusBadRequest, "missing project id parameter")
+	}
+
+	domains, err := h.envService.ListAllDomains(c.Request().Context())
+	if err != nil {
+		return utils.Error(c, http.StatusInternalServerError, err.Error())
+	}
+	services, err := h.appService.ListByProject(c.Request().Context(), projectID)
+	if err != nil {
+		return utils.Error(c, http.StatusInternalServerError, err.Error())
+	}
+	serviceMap := make(map[string]bool)
+	for _, s := range services {
+		serviceMap[s.ID] = true
+	}
+
+	projectDomains := make([]models.DomainConfig, 0)
+	for _, d := range domains {
+		if serviceMap[d.ServiceID] {
+			projectDomains = append(projectDomains, d)
+		}
+	}
+	return utils.Success(c, "Operation successful", projectDomains)
+}
+
 func (h *DomainHandler) Create(c echo.Context) error {
 	serviceID := c.Param("id")
 	if serviceID == "" {

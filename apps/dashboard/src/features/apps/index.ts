@@ -2,6 +2,7 @@ export { appsApi } from './api';
 export { AppCatalog } from './app-catalog';
 export { AppLogo } from './app-logo';
 export { CatalogCard, CatalogShortcut } from './catalog-card';
+export { ExampleLogo } from './example-logo';
 export {
   useAppCatalog,
   useCatalogApp,

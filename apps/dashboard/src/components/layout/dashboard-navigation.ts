@@ -88,14 +88,12 @@ export const systemNavigation: DashboardNavigationItem[] = [
     description: 'Backup destinations and restores',
     to: '/backups',
     icon: HardDrive,
-    exact: true,
   },
   {
     title: 'Settings',
     description: 'Instance and workspace configuration',
     to: '/settings',
     icon: Settings,
-    exact: true,
   },
   {
     title: 'Audit',

@@ -158,22 +158,29 @@ export const useRemoveMember = () => {
 export const useListAllProjects = () => {
   const organizationId = useOrganizationStore((state) => state.activeOrganizationId);
   return useQuery({
-    queryKey: ['projects', 'all', organizationId],
-    enabled: Boolean(organizationId),
+    queryKey: ['projects', 'all', organizationId ?? 'default'],
     queryFn: async () => {
       const projects: ProjectConfig[] = [];
       let page = 1;
       let totalPages = 1;
       do {
-        const response = await projectsService.listProjects(organizationId as string, {
+        const response = await projectsService.listProjects(organizationId || undefined, {
           page,
           limit: 100,
         });
-        projects.push(...response.data.records);
-        totalPages = response.data.totalPages;
+        projects.push(...(response.data?.records || []));
+        totalPages = response.data?.totalPages || 1;
         page++;
       } while (page <= totalPages);
       return projects;
     },
+  });
+};
+
+export const useListProjectDomains = (projectId: string) => {
+  return useQuery({
+    queryKey: ['projects', projectId, 'domains'],
+    queryFn: () => projectsService.listProjectDomains(projectId),
+    enabled: Boolean(projectId),
   });
 };

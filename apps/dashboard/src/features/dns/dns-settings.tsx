@@ -97,7 +97,7 @@ export const DnsSettings = () => {
         </div>
       </div>
 
-      <div className="grid grid-cols-1 gap-6 pt-2 md:grid-cols-3">
+      <div className="grid grid-cols-1 gap-4 pt-2 md:grid-cols-3">
         {providers.map((p) => {
           const isActive = activeProvider === p.id;
           return (
@@ -105,30 +105,30 @@ export const DnsSettings = () => {
               type="button"
               key={p.id}
               onClick={() => setActiveProvider(p.id)}
-              className={`group relative w-full cursor-pointer rounded-2xl border p-6 text-left transition-all duration-200 ${
+              className={`group relative w-full cursor-pointer rounded-2xl border p-4 text-left transition-all duration-200 ${
                 isActive
                   ? 'border-primary/50 bg-card shadow-sm'
-                  : 'border-border bg-card hover:border-primary/30'
+                  : 'border-border/60 bg-card hover:border-primary/30'
               }`}
             >
               <div className="flex items-start justify-between">
-                <div className="flex items-center gap-4">
+                <div className="flex items-center gap-3.5">
                   <div
-                    className={`flex h-10 w-10 items-center justify-center rounded-xl border transition-colors ${
+                    className={`flex h-9 w-9 items-center justify-center rounded-xl border transition-colors ${
                       isActive ? 'border-primary/30 bg-primary/5' : 'border/50 bg-background'
                     }`}
                   >
-                    <img src={`/dns-providers/${p.id}.svg`} alt={p.name} className="h-5 w-auto" />
+                    <img src={`/dns-providers/${p.id}.svg`} alt={p.name} className="h-4.5 w-auto" />
                   </div>
                   <div>
-                    <h3 className="font-semibold text-[15px]">{p.name}</h3>
-                    <p className="mt-1 max-w-30 text-[9px] text-muted-foreground/70 uppercase leading-relaxed tracking-[0.15em]">
+                    <h3 className="font-semibold text-[14px]">{p.name}</h3>
+                    <p className="mt-0.5 max-w-30 text-[9px] text-muted-foreground/70 uppercase leading-relaxed tracking-[0.12em]">
                       {p.sub}
                     </p>
                   </div>
                 </div>
                 <span
-                  className={`rounded-md border px-2 py-0.5 font-bold text-[8px] uppercase tracking-wider ${
+                  className={`rounded-md border px-1.5 py-0.5 font-bold text-[8px] uppercase tracking-wider ${
                     isActive
                       ? 'border-primary/30 text-primary'
                       : 'border/50 text-muted-foreground/50'
@@ -142,20 +142,20 @@ export const DnsSettings = () => {
         })}
       </div>
 
-      <div className="mt-4 space-y-10 rounded-2xl border border-border bg-card p-6">
-        <div className="flex items-center gap-4">
-          <div className="border/50 flex h-14 w-14 items-center justify-center rounded-2xl border bg-background/50">
+      <div className="space-y-6 rounded-2xl border border-border/50 bg-card p-5">
+        <div className="flex items-center gap-3.5">
+          <div className="flex h-10 w-10 items-center justify-center rounded-xl border border-border/50 bg-background/50">
             <img
               src={`/dns-providers/${activeProvider}.svg`}
               alt={activeProvider}
-              className="h-6 w-auto"
+              className="h-5 w-auto"
             />
           </div>
           <div>
-            <h2 className="font-bold text-2xl tracking-tight">
+            <h3 className="font-semibold text-base text-foreground tracking-tight">
               Connect {activeProviderData?.name}
-            </h2>
-            <p className="mt-1.5 font-medium text-muted-foreground text-sm">
+            </h3>
+            <p className="mt-0.5 text-muted-foreground text-xs">
               Store provider credentials for DNS record automation.
             </p>
           </div>

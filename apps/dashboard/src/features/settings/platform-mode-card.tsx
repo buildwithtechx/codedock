@@ -35,7 +35,7 @@ export function PlatformModeCard({ initialMode = 'self-hosted' }: { initialMode?
   };
 
   return (
-    <section className="rounded-2xl border border-border/60 bg-card p-6">
+    <section className="rounded-2xl border border-border/60 bg-card p-5">
       <div className="mb-5">
         <h2 className="font-semibold text-foreground text-sm">Deployment & Operating Mode</h2>
         <p className="text-muted-foreground text-xs">

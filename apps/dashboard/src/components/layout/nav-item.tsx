@@ -12,6 +12,36 @@ export type NavItemProps = {
   count?: number | null;
 };
 
+export function isNavigationActive(url: string, pathname: string, exact?: boolean): boolean {
+  if (url === '/') return pathname === '/';
+  if (exact) return pathname === url;
+
+  if (url === '/apps') {
+    return (
+      pathname === '/apps' || pathname.startsWith('/apps/') || pathname.startsWith('/services/')
+    );
+  }
+  if (url === '/deployments') {
+    return (
+      pathname === '/deployments' ||
+      pathname.startsWith('/deployments/') ||
+      pathname.startsWith('/deploy/')
+    );
+  }
+  if (url === '/monitoring') {
+    return (
+      pathname === '/monitoring' ||
+      pathname.startsWith('/monitoring/') ||
+      pathname.startsWith('/issues')
+    );
+  }
+  if (url === '/settings') {
+    return pathname === '/settings' || pathname.startsWith('/settings/');
+  }
+
+  return pathname === url || pathname.startsWith(`${url}/`);
+}
+
 export function NavItem({
   item,
   exact = false,
@@ -26,10 +56,8 @@ export function NavItem({
   const currentSearch = routerState.location.search as Record<string, string | undefined>;
   const searchMatches = item.search
     ? Object.entries(item.search).every(([key, value]) => currentSearch[key] === value)
-    : !(item.url === '/settings' && currentSearch.tab);
-  const isActive = exact
-    ? pathname === item.url && searchMatches
-    : pathname.startsWith(item.url) && item.url !== '/';
+    : true;
+  const isActive = isNavigationActive(item.url, pathname, exact) && searchMatches;
   const showCount = item.count != null && item.count > 0;
 
   return (

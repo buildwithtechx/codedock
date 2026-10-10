@@ -202,7 +202,9 @@ func (s *serverService) UpdateServer(ctx context.Context, id, userID string, req
 	if server == nil {
 		return nil, fmt.Errorf("server not found")
 	}
-	if server.UserID != userID {
+	user, _ := s.userRepo.GetUserByID(ctx, userID)
+	isAdmin := user != nil && (user.Role == models.UserRoleOwner || user.Role == models.UserRoleAdmin)
+	if !isAdmin && server.UserID != userID {
 		return nil, fmt.Errorf("unauthorized to update server")
 	}
 

@@ -1,5 +1,5 @@
 import { Link } from '@tanstack/react-router';
-import { Code2, Search } from 'lucide-react';
+import { Search } from 'lucide-react';
 import { useEffect, useMemo, useState } from 'react';
 import { Button } from '#/components/ui/button';
 import { Input } from '#/components/ui/input';
@@ -17,35 +17,10 @@ import { useListAllProjects } from '#/features/projects';
 import { CreateGitAppModal } from '#/features/sources/create-git-app-modal';
 import { useListExampleApps } from '#/hooks/use-templates';
 import type { ExampleApp } from '#/interfaces/templates';
+import { ExampleLogo } from './example-logo';
 
 const EXAMPLES_REPO_URL = 'https://github.com/buildwithtechx/codedock-examples.git';
 const EXAMPLES_BRANCH = 'main';
-const GENERIC_LOGO = '/app-logos/_generic.svg';
-
-function ExampleLogo({ example }: { example: ExampleApp }) {
-  const [stage, setStage] = useState(0);
-  if (!example.logo || stage > 1) {
-    return (
-      <span
-        aria-hidden="true"
-        className="flex size-10 shrink-0 items-center justify-center rounded-xl bg-primary/10 text-primary"
-      >
-        <Code2 className="size-5" />
-      </span>
-    );
-  }
-  return (
-    <span className="flex size-10 shrink-0 items-center justify-center overflow-hidden rounded-xl bg-muted/60">
-      <img
-        src={stage === 0 ? example.logo : GENERIC_LOGO}
-        alt=""
-        aria-hidden="true"
-        className="size-3/5 object-contain"
-        onError={() => setStage((current) => current + 1)}
-      />
-    </span>
-  );
-}
 
 export function TemplatesGallery() {
   const { data: examplesResponse, isLoading, isError, refetch } = useListExampleApps();

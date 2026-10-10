@@ -1,14 +1,14 @@
 import { Check, Clock, Cpu, Globe, Info, Lock } from 'lucide-react';
-import type { ReactNode } from 'react';
 import { useEffect, useState } from 'react';
 import { toast } from 'sonner';
 import { Button } from '#/components/ui/button';
 import { Input } from '#/components/ui/input';
-import { Label } from '#/components/ui/label';
 import { Skeleton } from '#/components/ui/skeleton';
 import { Switch } from '#/components/ui/switch';
 import type { ServerSettings } from '#/features/settings';
 import { useGetSettings, useUpdateSettings } from '#/features/settings';
+import { SettingsRow } from './settings-row';
+import { SettingsSection } from './settings-section';
 
 type GeneralFields = Pick<
   ServerSettings,
@@ -47,53 +47,6 @@ const EMPTY: GeneralFields = {
   serverTimezone: 'UTC',
 };
 
-function Row({
-  label,
-  description,
-  children,
-}: {
-  label: string;
-  description?: string;
-  children: ReactNode;
-}) {
-  return (
-    <div className="flex items-start justify-between gap-8 border-border/70 border-b py-4 last:border-0">
-      <div className="min-w-0 flex-1">
-        <Label className="font-medium text-sm">{label}</Label>
-        {description && <p className="mt-0.5 text-muted-foreground text-xs">{description}</p>}
-      </div>
-      <div className="w-80 shrink-0">{children}</div>
-    </div>
-  );
-}
-
-function Section({
-  icon,
-  title,
-  action,
-  children,
-}: {
-  icon: ReactNode;
-  title: string;
-  action: ReactNode;
-  children: ReactNode;
-}) {
-  return (
-    <div className="rounded-2xl border border-border/60 bg-card p-6">
-      <div className="mb-4 flex items-center justify-between gap-4">
-        <div className="flex items-center gap-3">
-          <div className="flex h-8 w-8 items-center justify-center rounded-lg bg-primary/10 text-primary">
-            {icon}
-          </div>
-          <span className="font-semibold text-sm">{title}</span>
-        </div>
-        {action}
-      </div>
-      {children}
-    </div>
-  );
-}
-
 export function ServerGeneralSettings() {
   const { data, isLoading } = useGetSettings();
   const { mutateAsync: updateSettings, isPending } = useUpdateSettings();
@@ -119,65 +72,69 @@ export function ServerGeneralSettings() {
         telemetryEnabled: s.telemetryEnabled,
         concurrentBuilds: s.concurrentBuilds,
         deploymentTimeout: s.deploymentTimeout,
-        serverTimezone: s.serverTimezone,
+        serverTimezone: s.serverTimezone ?? 'UTC',
       });
     }
   }, [data]);
 
-  const set = <K extends keyof GeneralFields>(k: K, v: GeneralFields[K]) =>
-    setForm((f) => ({ ...f, [k]: v }));
+  const set = <K extends keyof GeneralFields>(key: K, val: GeneralFields[K]) =>
+    setForm((prev) => ({ ...prev, [key]: val }));
 
-  const handleSave = async (section: string, fields: (keyof GeneralFields)[]) => {
-    setSavingSection(section);
+  const save = async (sectionName: string, keys: (keyof GeneralFields)[]) => {
+    setSavingSection(sectionName);
     try {
-      await updateSettings({
-        payload: Object.fromEntries(fields.map((field) => [field, form[field]])),
-      });
-      toast.success(`${section} settings saved`);
+      const payload: Partial<ServerSettings> = {};
+      for (const k of keys) {
+        (payload as Record<string, unknown>)[k] = form[k];
+      }
+      await updateSettings({ payload });
+      toast.success(`${sectionName} saved`);
     } catch {
-      toast.error(`Failed to save ${section.toLowerCase()} settings`);
+      toast.error(`Failed to save ${sectionName}`);
     } finally {
       setSavingSection(null);
     }
   };
 
-  const saveAction = (section: string, fields: (keyof GeneralFields)[]) => (
-    <Button size="sm" onClick={() => handleSave(section, fields)} disabled={isPending}>
-      <Check className="mr-2 h-4 w-4" />
-      {savingSection === section ? 'Saving...' : 'Save'}
-    </Button>
-  );
-
   if (isLoading) {
     return (
       <div className="space-y-4">
-        {[...Array(3)].map((_, i) => (
-          <Skeleton key={i} className="h-48 w-full rounded-xl" />
+        {[0, 1, 2, 3].map((i) => (
+          <Skeleton key={i} className="h-32 w-full rounded-2xl" />
         ))}
       </div>
     );
   }
 
+  const saveAction = (sectionName: string, keys: (keyof GeneralFields)[]) => (
+    <Button
+      size="sm"
+      variant="outline"
+      onClick={() => save(sectionName, keys)}
+      disabled={isPending && savingSection === sectionName}
+      className="gap-1.5"
+    >
+      <Check className="h-3.5 w-3.5" />
+      {savingSection === sectionName ? 'Saving...' : 'Save'}
+    </Button>
+  );
+
   return (
     <div className="space-y-6">
-      <Section
+      <SettingsSection
         icon={<Globe className="h-4 w-4" />}
-        title="Instance Identity"
-        action={saveAction('Instance identity', [
-          'siteName',
-          'dashboardDomain',
-          'defaultWildcardDomain',
-        ])}
+        title="Domains & Routing"
+        action={saveAction('Domains', ['siteName', 'dashboardDomain', 'defaultWildcardDomain'])}
       >
-        <Row label="Site Name" description="Displayed in the browser tab and emails.">
+        <SettingsRow label="Site Name" description="Displayed in the browser tab and emails.">
           <Input
             value={form.siteName ?? ''}
             onChange={(e) => set('siteName', e.target.value)}
             placeholder="Codedock"
             className="text-sm"
           />
-        </Row>
-        <Row
+        </SettingsRow>
+        <SettingsRow
           label="Dashboard Domain"
           description="The domain Codedock control panel is served from."
         >
@@ -187,8 +144,8 @@ export function ServerGeneralSettings() {
             placeholder="pilot.example.com"
             className="font-mono text-xs"
           />
-        </Row>
-        <Row
+        </SettingsRow>
+        <SettingsRow
           label="Wildcard Domain"
           description="Root domain for generated app URLs (e.g. *.apps.example.com)."
         >
@@ -198,10 +155,10 @@ export function ServerGeneralSettings() {
             placeholder="apps.example.com"
             className="font-mono text-xs"
           />
-        </Row>
-      </Section>
+        </SettingsRow>
+      </SettingsSection>
 
-      <Section
+      <SettingsSection
         icon={<Info className="h-4 w-4" />}
         title="Network"
         action={saveAction('Network', [
@@ -211,31 +168,37 @@ export function ServerGeneralSettings() {
           'ipAllowlist',
         ])}
       >
-        <Row label="Public IPv4" description="Server's public IPv4 address for DNS A records.">
+        <SettingsRow
+          label="Public IPv4"
+          description="Server's public IPv4 address for DNS A records."
+        >
           <Input
             value={form.publicIpv4 ?? ''}
             onChange={(e) => set('publicIpv4', e.target.value)}
             placeholder="1.2.3.4"
             className="font-mono text-xs"
           />
-        </Row>
-        <Row label="Public IPv6" description="Server's public IPv6 address (optional).">
+        </SettingsRow>
+        <SettingsRow label="Public IPv6" description="Server's public IPv6 address (optional).">
           <Input
             value={form.publicIpv6 ?? ''}
             onChange={(e) => set('publicIpv6', e.target.value)}
             placeholder="2001:db8::1"
             className="font-mono text-xs"
           />
-        </Row>
-        <Row label="Traefik Wildcard IP" description="IP Traefik routes wildcard domains to.">
+        </SettingsRow>
+        <SettingsRow
+          label="Traefik Wildcard IP"
+          description="IP Traefik routes wildcard domains to."
+        >
           <Input
             value={form.traefikWildcardIp ?? ''}
             onChange={(e) => set('traefikWildcardIp', e.target.value)}
             placeholder="1.2.3.4"
             className="font-mono text-xs"
           />
-        </Row>
-        <Row
+        </SettingsRow>
+        <SettingsRow
           label="IP Allowlist"
           description="Comma-separated CIDRs that can access the control plane."
         >
@@ -245,65 +208,55 @@ export function ServerGeneralSettings() {
             placeholder="0.0.0.0/0"
             className="font-mono text-xs"
           />
-        </Row>
-      </Section>
+        </SettingsRow>
+      </SettingsSection>
 
-      <Section
+      <SettingsSection
         icon={<Lock className="h-4 w-4" />}
-        title="Access & Security"
-        action={saveAction('Access & security', [
+        title="Security & Access"
+        action={saveAction('Security', [
           'registrationEnabled',
           'registrationDomainAllowlist',
           'disableTwoStepConfirmation',
-          'mcpServerEnabled',
         ])}
       >
-        <Row
-          label="Open Registration"
-          description="Allow new users to register without an invitation."
+        <SettingsRow
+          label="User Registration"
+          description="Allow new users to sign up without an explicit invite."
         >
           <Switch
             checked={form.registrationEnabled}
             onCheckedChange={(v) => set('registrationEnabled', v)}
           />
-        </Row>
-        <Row
-          label="Domain Allowlist"
-          description="Restrict registration to specific email domains (comma-separated)."
+        </SettingsRow>
+        <SettingsRow
+          label="Registration Domain Allowlist"
+          description="Comma-separated domains allowed to register (e.g. acme.com)."
         >
           <Input
             value={form.registrationDomainAllowlist ?? ''}
             onChange={(e) => set('registrationDomainAllowlist', e.target.value)}
-            placeholder="example.com, company.org"
-            className="text-xs"
+            placeholder="company.com, partner.com"
+            className="font-mono text-xs"
           />
-        </Row>
-        <Row
-          label="Disable Two-Step Confirmation"
-          description="Skip destructive action confirmation dialogs (not recommended)."
+        </SettingsRow>
+        <SettingsRow
+          label="Two-Step Confirmation"
+          description="Require confirmation dialog before destructive actions."
         >
           <Switch
-            checked={form.disableTwoStepConfirmation}
-            onCheckedChange={(v) => set('disableTwoStepConfirmation', v)}
+            checked={!form.disableTwoStepConfirmation}
+            onCheckedChange={(v) => set('disableTwoStepConfirmation', !v)}
           />
-        </Row>
-        <Row
-          label="MCP Server"
-          description="Enable the Model Context Protocol server for AI tooling."
-        >
-          <Switch
-            checked={form.mcpServerEnabled}
-            onCheckedChange={(v) => set('mcpServerEnabled', v)}
-          />
-        </Row>
-      </Section>
+        </SettingsRow>
+      </SettingsSection>
 
-      <Section
+      <SettingsSection
         icon={<Cpu className="h-4 w-4" />}
         title="Build & Deployment"
         action={saveAction('Build & deployment', ['concurrentBuilds', 'deploymentTimeout'])}
       >
-        <Row label="Concurrent Builds" description="Max number of parallel build jobs.">
+        <SettingsRow label="Concurrent Builds" description="Max number of parallel build jobs.">
           <Input
             type="number"
             value={form.concurrentBuilds}
@@ -312,8 +265,8 @@ export function ServerGeneralSettings() {
             max={20}
             className="font-mono text-xs"
           />
-        </Row>
-        <Row
+        </SettingsRow>
+        <SettingsRow
           label="Deployment Timeout (s)"
           description="Seconds before a deployment is considered failed."
         >
@@ -324,23 +277,23 @@ export function ServerGeneralSettings() {
             min={60}
             className="font-mono text-xs"
           />
-        </Row>
-      </Section>
+        </SettingsRow>
+      </SettingsSection>
 
-      <Section
+      <SettingsSection
         icon={<Clock className="h-4 w-4" />}
         title="System"
         action={saveAction('System', ['serverTimezone', 'telemetryEnabled'])}
       >
-        <Row label="Server Timezone" description="Timezone used for cron jobs and logs.">
+        <SettingsRow label="Server Timezone" description="Timezone used for cron jobs and logs.">
           <Input
             value={form.serverTimezone ?? ''}
             onChange={(e) => set('serverTimezone', e.target.value)}
             placeholder="UTC"
             className="font-mono text-xs"
           />
-        </Row>
-        <Row
+        </SettingsRow>
+        <SettingsRow
           label="Telemetry"
           description="Send anonymous usage statistics to help improve Codedock."
         >
@@ -348,8 +301,8 @@ export function ServerGeneralSettings() {
             checked={form.telemetryEnabled}
             onCheckedChange={(v) => set('telemetryEnabled', v)}
           />
-        </Row>
-      </Section>
+        </SettingsRow>
+      </SettingsSection>
     </div>
   );
 }

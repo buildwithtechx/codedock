@@ -32,7 +32,7 @@ export function CloudConnectionCard({
   };
 
   return (
-    <section className="rounded-2xl border border-border/60 bg-card p-6">
+    <section className="rounded-2xl border border-border/60 bg-card p-5">
       <div className="mb-5 flex items-center justify-between gap-4">
         <div className="flex items-center gap-3">
           <div className="flex h-9 w-9 items-center justify-center rounded-xl bg-violet-500/10 text-violet-500">

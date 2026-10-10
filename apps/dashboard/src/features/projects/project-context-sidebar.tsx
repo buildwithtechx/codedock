@@ -2,7 +2,9 @@ import { Link, useLocation } from '@tanstack/react-router';
 import {
   CalendarDays,
   ChevronRight,
+  ExternalLink,
   FolderKanban,
+  Globe,
   Grid3X3,
   LayoutDashboard,
   Plus,
@@ -10,6 +12,7 @@ import {
   Workflow,
 } from 'lucide-react';
 import { useGetCanvasSummary } from '#/hooks/use-canvas';
+import { useListProjectDomains } from './hooks';
 
 export const getProjectContextNavigation = (projectId: string) => {
   const basePath = `/projects/${projectId}`;
@@ -17,6 +20,7 @@ export const getProjectContextNavigation = (projectId: string) => {
   return [
     { title: 'Overview', to: basePath, icon: LayoutDashboard, exact: true },
     { title: 'Canvas', to: `${basePath}/canvas`, icon: Grid3X3 },
+    { title: 'Domains', to: `${basePath}/domains`, icon: Globe },
     { title: 'Add resource', to: `${basePath}/new`, icon: Plus },
     { title: 'Compose', to: `${basePath}/compose`, icon: Workflow },
     { title: 'Scheduled tasks', to: `${basePath}/scheduled-tasks`, icon: CalendarDays },
@@ -27,7 +31,10 @@ export const getProjectContextNavigation = (projectId: string) => {
 export function ProjectContextSidebar({ projectId }: { projectId: string }) {
   const location = useLocation();
   const { data } = useGetCanvasSummary(projectId);
+  const { data: domainsRes } = useListProjectDomains(projectId);
   const project = data?.data;
+  const domains = domainsRes?.data || [];
+  const primaryDomain = domains[0]?.domain;
   const navigation = getProjectContextNavigation(projectId);
 
   return (
@@ -54,6 +61,28 @@ export function ProjectContextSidebar({ projectId }: { projectId: string }) {
           <div className="flex items-center justify-between gap-3">
             <span className="text-muted-foreground">Services</span>
             <span className="font-medium">{project?.totalServices ?? 0}</span>
+          </div>
+          <div className="flex items-center justify-between gap-3">
+            <span className="text-muted-foreground">Domain</span>
+            {primaryDomain ? (
+              <a
+                href={`https://${primaryDomain}`}
+                target="_blank"
+                rel="noopener noreferrer"
+                className="inline-flex max-w-[150px] items-center gap-1 truncate font-medium text-primary hover:underline"
+              >
+                <span className="truncate">{primaryDomain}</span>
+                <ExternalLink className="h-3 w-3 shrink-0" />
+              </a>
+            ) : (
+              <Link
+                to={`/projects/${projectId}/domains`}
+                className="inline-flex items-center gap-1 font-medium text-primary hover:underline"
+              >
+                <Plus className="h-3 w-3" />
+                Add domain
+              </Link>
+            )}
           </div>
         </div>
       </section>

@@ -34,15 +34,22 @@ func (h *ProjectHandler) ListProjects(c echo.Context) error {
 	}
 	offset := (page - 1) * limit
 	orgID := c.QueryParam("organizationId")
-	if orgID == "" {
-		return utils.Error(c, http.StatusBadRequest, "organizationId is required")
-	}
-
 	user := middleware.GetUserClaimsFromContext(c.Request().Context())
 	if user == nil {
 		return utils.Error(c, http.StatusUnauthorized, "unauthorized")
 	}
-	if !h.projectService.HasOrgPermission(c.Request().Context(), orgID, user.UserID, user.Role, "") {
+
+	if orgID == "" {
+		org, err := h.projectService.GetOrCreateDefaultOrganization(c.Request().Context(), user.UserID)
+		if err != nil {
+			return utils.Error(c, http.StatusInternalServerError, err.Error())
+		}
+		if org != nil {
+			orgID = org.ID
+		}
+	}
+
+	if orgID != "" && !h.projectService.HasOrgPermission(c.Request().Context(), orgID, user.UserID, user.Role, "") {
 		return utils.Error(c, http.StatusForbidden, "insufficient permissions for this organization")
 	}
 

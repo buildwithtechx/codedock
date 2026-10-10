@@ -8,6 +8,7 @@ import type {
   CreateTokenRequest,
   CreateWebhookRequest,
   GetProjectResponse,
+  ListDomainsResponse,
   ListProjectsResponse,
   ProjectMember,
   ProjectToken,
@@ -44,6 +45,14 @@ export const projectsService = {
   getProject: async (id: string): Promise<GetProjectResponse> => {
     try {
       return await apiClient.get<GetProjectResponse>(`/projects/${id}`);
+    } catch (error) {
+      throw handleApiError(error);
+    }
+  },
+
+  listProjectDomains: async (projectId: string): Promise<ListDomainsResponse> => {
+    try {
+      return await apiClient.get<ListDomainsResponse>(`/projects/${projectId}/domains`);
     } catch (error) {
       throw handleApiError(error);
     }

@@ -120,8 +120,8 @@ export function ProjectCreationPage() {
           </p>
         </header>
 
-        <form onSubmit={handleSubmit} className="mt-8 max-w-3xl space-y-6">
-          <section className="rounded-2xl border border-border bg-card p-6 shadow-sm">
+        <form onSubmit={handleSubmit} className="mt-6 max-w-3xl space-y-5">
+          <section className="rounded-2xl border border-border/60 bg-card p-5">
             <div className="flex items-center gap-3">
               <span className="font-semibold text-primary text-sm">01</span>
               <div className="flex h-9 w-9 items-center justify-center rounded-xl bg-primary/12 text-primary">
@@ -191,7 +191,7 @@ export function ProjectCreationPage() {
             </div>
           </section>
 
-          <section className="rounded-2xl border border-border bg-card p-6 shadow-sm">
+          <section className="rounded-2xl border border-border/60 bg-card p-5">
             <div className="flex items-center gap-3">
               <span className="font-semibold text-primary text-sm">02</span>
               <div>
