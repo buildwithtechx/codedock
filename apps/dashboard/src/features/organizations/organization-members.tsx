@@ -1,6 +1,7 @@
 import { Loader2, Plus, Users } from 'lucide-react';
 import { useState } from 'react';
 import { Button } from '#/components/ui/button';
+import { SettingsSection } from '#/features/settings/settings-section';
 import { useAuthStore } from '#/stores/auth-store';
 import { useListOrganizationMembers } from './hooks';
 import { InviteMemberModal } from './invite-member-modal';
@@ -28,33 +29,19 @@ export function OrganizationMembers({ organizationId }: { organizationId: string
 
   return (
     <div className="space-y-6">
-      <div className="flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between">
-        <div className="flex items-center gap-3">
-          <div className="flex h-9 w-9 items-center justify-center rounded-xl bg-primary/10 text-primary">
-            <Users className="h-4 w-4" />
-          </div>
-          <div>
-            <h2 className="font-semibold text-foreground text-sm">Team Members</h2>
-            <p className="text-muted-foreground text-xs">
-              Manage who has access to this workspace and its deployed projects.
-            </p>
-          </div>
-        </div>
-        {canManageTeam && (
-          <Button onClick={() => setInviteOpen(true)} size="sm" className="shrink-0 gap-2">
-            <Plus className="size-4" />
-            Invite member
-          </Button>
-        )}
-      </div>
-
-      <div className="overflow-hidden rounded-2xl border border-border/50 bg-card">
-        <div className="flex items-center justify-between border-border/50 border-b px-5 py-3.5">
-          <h3 className="font-semibold text-foreground text-sm">
-            Active members ({members.length})
-          </h3>
-        </div>
-
+      <SettingsSection
+        icon={<Users className="size-4 text-primary" />}
+        title="Team Members"
+        description="Manage who has access to this workspace and its deployed projects."
+        action={
+          canManageTeam ? (
+            <Button onClick={() => setInviteOpen(true)} size="sm" className="shrink-0 gap-2">
+              <Plus className="size-4" />
+              Invite member
+            </Button>
+          ) : undefined
+        }
+      >
         {isLoading ? (
           <div className="flex items-center justify-center py-12">
             <Loader2 className="size-5 animate-spin text-muted-foreground" />
@@ -70,22 +57,23 @@ export function OrganizationMembers({ organizationId }: { organizationId: string
             </p>
           </div>
         ) : (
-          <div className="divide-y divide-border/40">
+          <div className="-mx-5 -my-5 divide-y divide-border/40">
             {members.map((member) => (
-              <MemberRow
-                key={member.id}
-                member={member}
-                organizationId={organizationId}
-                isCurrentUserOwner={isCurrentUserOwner}
-                canManageTeam={canManageTeam}
-                ownerCount={ownerCount}
-                currentUserId={user?.id}
-                currentUserEmail={user?.email}
-              />
+              <div key={member.id} className="px-5">
+                <MemberRow
+                  member={member}
+                  organizationId={organizationId}
+                  isCurrentUserOwner={isCurrentUserOwner}
+                  canManageTeam={canManageTeam}
+                  ownerCount={ownerCount}
+                  currentUserId={user?.id}
+                  currentUserEmail={user?.email}
+                />
+              </div>
             ))}
           </div>
         )}
-      </div>
+      </SettingsSection>
 
       <InviteMemberModal
         organizationId={organizationId}

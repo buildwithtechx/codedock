@@ -9,6 +9,7 @@ import {
   useTestNotification,
   useUpdateNotificationSettings,
 } from '#/features/settings';
+import { SettingsSection } from '#/features/settings/settings-section';
 import { NotificationChannelsList, type NotifSettingsForm } from './notification-channels-list';
 import { NotificationSubscriptionsTable } from './notification-subscriptions-table';
 
@@ -163,29 +164,28 @@ export const NotificationsSettings = () => {
 
   return (
     <div className="space-y-6">
-      <section className="flex flex-col gap-4 rounded-2xl border border-border/60 bg-card p-5 sm:flex-row sm:items-center sm:justify-between">
-        <div className="flex items-center gap-3">
-          <div className="flex h-9 w-9 items-center justify-center rounded-xl bg-primary/10 text-primary">
-            <Bell className="h-4 w-4" />
+      <SettingsSection
+        icon={<Bell className="size-4 text-primary" />}
+        title="Alert Behavior"
+        description="Enable or pause delivery across every configured channel."
+        action={
+          <div className="flex items-center gap-3">
+            <Switch
+              checked={form.notificationAlerts}
+              onCheckedChange={(v: boolean) => set('notificationAlerts', v)}
+            />
+            <Button size="sm" onClick={() => handleSave('alerts')} disabled={isSavingAny}>
+              <Check className="mr-2 h-4 w-4" />
+              {savingProvider === 'alerts' ? 'Saving...' : 'Save Alerts'}
+            </Button>
           </div>
-          <div>
-            <h3 className="font-semibold text-foreground text-sm">Alert Behavior</h3>
-            <p className="text-muted-foreground text-xs">
-              Enable or pause delivery across every configured channel.
-            </p>
-          </div>
-        </div>
-        <div className="flex items-center gap-3">
-          <Switch
-            checked={form.notificationAlerts}
-            onCheckedChange={(v: boolean) => set('notificationAlerts', v)}
-          />
-          <Button size="sm" onClick={() => handleSave('alerts')} disabled={isSavingAny}>
-            <Check className="mr-2 h-4 w-4" />
-            {savingProvider === 'alerts' ? 'Saving...' : 'Save'}
-          </Button>
-        </div>
-      </section>
+        }
+      >
+        <p className="text-muted-foreground text-xs leading-relaxed">
+          When paused, notifications for failed deployments, container restarts, and runtime
+          warnings will be suppressed across all configured communication channels.
+        </p>
+      </SettingsSection>
 
       <NotificationChannelsList
         form={form}

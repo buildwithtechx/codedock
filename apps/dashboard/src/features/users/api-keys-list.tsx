@@ -15,6 +15,7 @@ import {
   SelectValue,
 } from '#/components/ui/select';
 import { useCreateToken, useListTokens } from '#/features/profile';
+import { SettingsSection } from '#/features/settings/settings-section';
 import type { CreatePATRequest } from '#/features/users';
 import { useListCanvasSummaries } from '#/hooks/use-canvas';
 import { ApiKeyDeleteDialog } from './components/api-key-delete-dialog';
@@ -111,19 +112,19 @@ export function ApiKeysList() {
   };
 
   return (
-    <section className="rounded-2xl bg-card p-6">
-      <div className="mb-4 flex items-center gap-3">
-        <div className="flex h-8 w-8 shrink-0 items-center justify-center rounded-lg bg-primary/10 text-primary">
-          <Key className="h-4 w-4" />
-        </div>
-        <div className="min-w-0">
-          <h2 className="font-semibold text-sm">Personal access tokens</h2>
-          <p className="text-muted-foreground text-xs">
-            Tokens authenticate with the API as your user account.
-          </p>
-        </div>
-      </div>
-
+    <SettingsSection
+      icon={<Key className="size-4 text-primary" />}
+      title="Personal access tokens"
+      description="Tokens authenticate with the API as your user account."
+      action={
+        !showForm ? (
+          <Button size="sm" onClick={() => setShowForm(true)} className="gap-1.5">
+            <Plus className="size-3.5" />
+            New token
+          </Button>
+        ) : undefined
+      }
+    >
       <div className="mb-4 flex gap-2.5 rounded-xl border border-border/50 bg-muted/30 p-3">
         <ShieldCheck className="mt-0.5 h-4 w-4 shrink-0 text-muted-foreground" />
         <div className="text-muted-foreground text-xs leading-relaxed">
@@ -325,6 +326,6 @@ export function ApiKeysList() {
       )}
 
       <ApiKeyDeleteDialog deleteId={deleteId} onClose={() => setDeleteId(null)} />
-    </section>
+    </SettingsSection>
   );
 }

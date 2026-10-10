@@ -1,30 +1,47 @@
-import { KeyRound } from 'lucide-react';
+import { CheckCircle2, KeyRound, Plus } from 'lucide-react';
 import { useEffect, useState } from 'react';
 import { toast } from 'sonner';
+import { Button } from '#/components/ui/button';
 import { Skeleton } from '#/components/ui/skeleton';
 import { useGetSettings, useUpdateSettings } from '#/features/settings';
+import { SettingsSection } from '#/features/settings/settings-section';
 import { DnsProviderForm } from './components/dns-provider-form';
 
-const providers = [
-  { id: 'cloudflare', name: 'Cloudflare', sub: 'API KEY / TOKEN + ZONE' },
-  { id: 'namecheap', name: 'Namecheap', sub: 'API USER + KEY' },
-  { id: 'spaceship', name: 'Spaceship', sub: 'API KEY + SECRET' },
-];
+const PROVIDERS = [
+  {
+    id: 'cloudflare',
+    name: 'Cloudflare',
+    sub: 'API KEY / TOKEN + ZONE',
+    check: (d: Record<string, string>) => Boolean(d.cloudflareApiToken),
+  },
+  {
+    id: 'namecheap',
+    name: 'Namecheap',
+    sub: 'API USER + KEY',
+    check: (d: Record<string, string>) => Boolean(d.namecheapApiUser && d.namecheapApiKey),
+  },
+  {
+    id: 'spaceship',
+    name: 'Spaceship',
+    sub: 'API KEY + SECRET',
+    check: (d: Record<string, string>) => Boolean(d.spaceshipApiKey && d.spaceshipApiSecret),
+  },
+] as const;
 
 export const DnsSettings = () => {
   const { data, isLoading } = useGetSettings();
   const { mutateAsync: updateSettings, isPending } = useUpdateSettings();
 
-  const [activeProvider, setActiveProvider] = useState('cloudflare');
+  const [activeProvider, setActiveProvider] = useState<string | null>(null);
   const [formData, setFormData] = useState<Record<string, string>>({
     cloudflareApiToken: '',
+    cloudflareEmail: '',
+    cloudflareZoneId: '',
     namecheapApiUser: '',
     namecheapApiKey: '',
     namecheapClientIp: '',
     spaceshipApiKey: '',
     spaceshipApiSecret: '',
-    cloudflareEmail: '',
-    cloudflareZoneId: '',
   });
 
   useEffect(() => {
@@ -58,7 +75,8 @@ export const DnsSettings = () => {
       }
 
       await updateSettings({ payload });
-      toast.success('Provider credentials saved');
+      toast.success(`${provider.charAt(0).toUpperCase() + provider.slice(1)} credentials saved`);
+      setActiveProvider(null);
     } catch {
       toast.error('Failed to save provider credentials');
     }
@@ -66,113 +84,76 @@ export const DnsSettings = () => {
 
   if (isLoading) {
     return (
-      <div className="space-y-6">
-        <Skeleton className="h-50 w-full rounded-2xl" />
-        <Skeleton className="h-75 w-full rounded-2xl" />
+      <div className="space-y-4">
+        <Skeleton className="h-40 w-full rounded-2xl" />
+        <Skeleton className="h-40 w-full rounded-2xl" />
       </div>
     );
   }
 
-  const activeProviderData = providers.find((p) => p.id === activeProvider);
-
   return (
-    <div className="space-y-6">
-      <div className="flex items-center justify-between gap-4">
-        <div className="flex items-center gap-3">
-          <div className="flex h-9 w-9 items-center justify-center rounded-xl bg-primary/10 text-primary">
-            <KeyRound className="h-4 w-4" />
-          </div>
-          <div>
-            <h2 className="font-semibold text-foreground text-sm">Provider Credentials</h2>
-            <p className="text-muted-foreground text-xs">
-              Connect DNS providers for managed domain records and automated SSL verification.
-            </p>
-          </div>
-        </div>
-        <div className="flex shrink-0 items-center gap-2">
-          <img
-            src={`/dns-providers/${activeProvider}.svg`}
-            alt={activeProviderData?.name}
-            className="h-4 w-auto"
-          />
-          <span className="font-bold text-[10px] text-muted-foreground uppercase tracking-[0.15em]">
-            {activeProviderData?.name}
-          </span>
-        </div>
-      </div>
+    <SettingsSection
+      icon={<KeyRound className="size-4 text-primary" />}
+      title="Credentials"
+      description="Connect DNS providers for managed domain records and automated SSL verification."
+    >
+      <div className="space-y-4">
+        {PROVIDERS.map((provider) => {
+          const isConfigured = provider.check(formData);
+          const isExpanded = activeProvider === provider.id;
 
-      <div className="grid grid-cols-1 gap-4 pt-2 md:grid-cols-3">
-        {providers.map((p) => {
-          const isActive = activeProvider === p.id;
           return (
-            <button
-              type="button"
-              key={p.id}
-              onClick={() => setActiveProvider(p.id)}
-              className={`group relative w-full cursor-pointer rounded-2xl border p-4 text-left transition-all duration-200 ${
-                isActive
-                  ? 'border-primary/50 bg-card shadow-sm'
-                  : 'border-border/60 bg-card hover:border-primary/30'
-              }`}
-            >
-              <div className="flex items-start justify-between">
-                <div className="flex items-center gap-3.5">
-                  <div
-                    className={`flex h-9 w-9 items-center justify-center rounded-xl border transition-colors ${
-                      isActive ? 'border-primary/30 bg-primary/5' : 'border/50 bg-background'
-                    }`}
-                  >
-                    <img src={`/dns-providers/${p.id}.svg`} alt={p.name} className="h-4.5 w-auto" />
-                  </div>
-                  <div>
-                    <h3 className="font-semibold text-[14px]">{p.name}</h3>
-                    <p className="mt-0.5 max-w-30 text-[9px] text-muted-foreground/70 uppercase leading-relaxed tracking-[0.12em]">
-                      {p.sub}
-                    </p>
-                  </div>
+            <div key={provider.id} className="rounded-xl border border-border/50 p-4">
+              <div className="flex items-start gap-3.5">
+                <div className="flex h-10 w-10 shrink-0 items-center justify-center rounded-xl border border-border/50 bg-background/50">
+                  <img
+                    src={`/dns-providers/${provider.id}.svg`}
+                    alt={provider.name}
+                    className="h-5 w-auto"
+                  />
                 </div>
-                <span
-                  className={`rounded-md border px-1.5 py-0.5 font-bold text-[8px] uppercase tracking-wider ${
-                    isActive
-                      ? 'border-primary/30 text-primary'
-                      : 'border/50 text-muted-foreground/50'
-                  }`}
+                <div className="min-w-0 flex-1">
+                  <div className="flex items-center gap-2">
+                    <p className="font-medium text-foreground text-sm">{provider.name}</p>
+                    {isConfigured ? (
+                      <span className="inline-flex items-center gap-1 rounded-full bg-emerald-500/10 px-2 py-0.5 font-medium text-[10px] text-emerald-600 dark:text-emerald-400">
+                        <CheckCircle2 className="size-3" /> Active
+                      </span>
+                    ) : (
+                      <span className="inline-flex items-center gap-1 rounded-full bg-muted px-2 py-0.5 font-medium text-[10px] text-muted-foreground">
+                        Not configured
+                      </span>
+                    )}
+                  </div>
+                  <p className="mt-0.5 text-muted-foreground text-xs">{provider.sub}</p>
+                </div>
+                <Button
+                  variant="outline"
+                  size="sm"
+                  onClick={() => setActiveProvider(isExpanded ? null : provider.id)}
+                  className="shrink-0 gap-1 text-xs"
                 >
-                  NEW
-                </span>
+                  <Plus className="size-3.5" />
+                  {isExpanded ? 'Close' : isConfigured ? 'Edit' : 'Add'}
+                </Button>
               </div>
-            </button>
+
+              {isExpanded && (
+                <div className="mt-4 border-border/40 border-t pt-4">
+                  <DnsProviderForm
+                    activeProvider={provider.id}
+                    formData={formData}
+                    setFormData={setFormData}
+                    isPending={isPending}
+                    handleSaveProvider={handleSaveProvider}
+                    onCancel={() => setActiveProvider(null)}
+                  />
+                </div>
+              )}
+            </div>
           );
         })}
       </div>
-
-      <div className="space-y-6 rounded-2xl border border-border/50 bg-card p-5">
-        <div className="flex items-center gap-3.5">
-          <div className="flex h-10 w-10 items-center justify-center rounded-xl border border-border/50 bg-background/50">
-            <img
-              src={`/dns-providers/${activeProvider}.svg`}
-              alt={activeProvider}
-              className="h-5 w-auto"
-            />
-          </div>
-          <div>
-            <h3 className="font-semibold text-base text-foreground tracking-tight">
-              Connect {activeProviderData?.name}
-            </h3>
-            <p className="mt-0.5 text-muted-foreground text-xs">
-              Store provider credentials for DNS record automation.
-            </p>
-          </div>
-        </div>
-
-        <DnsProviderForm
-          activeProvider={activeProvider}
-          formData={formData}
-          setFormData={setFormData}
-          isPending={isPending}
-          handleSaveProvider={handleSaveProvider}
-        />
-      </div>
-    </div>
+    </SettingsSection>
   );
 };

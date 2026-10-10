@@ -106,7 +106,7 @@ export function ServerGeneralSettings() {
     );
   }
 
-  const saveAction = (sectionName: string, keys: (keyof GeneralFields)[]) => (
+  const saveAction = (sectionName: string, buttonLabel: string, keys: (keyof GeneralFields)[]) => (
     <Button
       size="sm"
       variant="outline"
@@ -115,7 +115,7 @@ export function ServerGeneralSettings() {
       className="gap-1.5"
     >
       <Check className="h-3.5 w-3.5" />
-      {savingSection === sectionName ? 'Saving...' : 'Save'}
+      {savingSection === sectionName ? 'Saving...' : buttonLabel}
     </Button>
   );
 
@@ -124,7 +124,12 @@ export function ServerGeneralSettings() {
       <SettingsSection
         icon={<Globe className="h-4 w-4" />}
         title="Domains & Routing"
-        action={saveAction('Domains', ['siteName', 'dashboardDomain', 'defaultWildcardDomain'])}
+        description="Configure the primary hostname and root wildcard domains for routing."
+        action={saveAction('Domains & Routing', 'Save Domains & Routing', [
+          'siteName',
+          'dashboardDomain',
+          'defaultWildcardDomain',
+        ])}
       >
         <SettingsRow label="Site Name" description="Displayed in the browser tab and emails.">
           <Input
@@ -161,7 +166,8 @@ export function ServerGeneralSettings() {
       <SettingsSection
         icon={<Info className="h-4 w-4" />}
         title="Network"
-        action={saveAction('Network', [
+        description="Public IP addresses, Traefik edge routing, and access control allowlists."
+        action={saveAction('Network', 'Save Network', [
           'publicIpv4',
           'publicIpv6',
           'traefikWildcardIp',
@@ -214,7 +220,8 @@ export function ServerGeneralSettings() {
       <SettingsSection
         icon={<Lock className="h-4 w-4" />}
         title="Security & Access"
-        action={saveAction('Security', [
+        description="User registration policies, domain restrictions, and safety confirmations."
+        action={saveAction('Security & Access', 'Save Security', [
           'registrationEnabled',
           'registrationDomainAllowlist',
           'disableTwoStepConfirmation',
@@ -254,7 +261,11 @@ export function ServerGeneralSettings() {
       <SettingsSection
         icon={<Cpu className="h-4 w-4" />}
         title="Build & Deployment"
-        action={saveAction('Build & deployment', ['concurrentBuilds', 'deploymentTimeout'])}
+        description="Parallel build worker limits and deployment execution timeouts."
+        action={saveAction('Build & Deployment', 'Save Build & Deployment', [
+          'concurrentBuilds',
+          'deploymentTimeout',
+        ])}
       >
         <SettingsRow label="Concurrent Builds" description="Max number of parallel build jobs.">
           <Input
@@ -283,7 +294,8 @@ export function ServerGeneralSettings() {
       <SettingsSection
         icon={<Clock className="h-4 w-4" />}
         title="System"
-        action={saveAction('System', ['serverTimezone', 'telemetryEnabled'])}
+        description="Instance timezone and anonymous diagnostics reporting."
+        action={saveAction('System', 'Save System', ['serverTimezone', 'telemetryEnabled'])}
       >
         <SettingsRow label="Server Timezone" description="Timezone used for cron jobs and logs.">
           <Input

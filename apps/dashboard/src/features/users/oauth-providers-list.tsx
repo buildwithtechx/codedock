@@ -6,6 +6,7 @@ import { Input } from '#/components/ui/input';
 import { Label } from '#/components/ui/label';
 import { Skeleton } from '#/components/ui/skeleton';
 import { Switch } from '#/components/ui/switch';
+import { SettingsSection } from '#/features/settings/settings-section';
 import { useListOAuthProviders, useSaveOAuthProvider } from '#/hooks/use-oauth';
 import type { SaveOAuthProviderRequest } from '#/interfaces/oauth';
 
@@ -149,66 +150,61 @@ export const OAuthProvidersList = () => {
   }
 
   return (
-    <div className="space-y-6">
-      <div className="flex items-center gap-3">
-        <div className="flex h-9 w-9 items-center justify-center rounded-xl bg-primary/10 text-primary">
-          <Lock className="h-4 w-4" />
-        </div>
-        <div>
-          <h2 className="font-semibold text-foreground text-sm">OAuth Authentication</h2>
-          <p className="text-muted-foreground text-xs">
-            Configure single sign-on providers for your workspace users.
-          </p>
-        </div>
-      </div>
+    <SettingsSection
+      icon={<Lock className="size-4 text-primary" />}
+      title="OAuth Authentication"
+      description="Configure single sign-on providers for your workspace users."
+    >
+      <div className="space-y-4">
+        <p className="text-muted-foreground text-xs">
+          The redirect URI is{' '}
+          <code className="rounded bg-muted px-1.5 py-0.5 font-mono text-xs">
+            {typeof window !== 'undefined' ? window.location.origin : ''}
+            /api/auth/oauth/[provider]/callback
+          </code>
+        </p>
 
-      <p className="text-muted-foreground text-xs">
-        The redirect URI is{' '}
-        <code className="rounded bg-muted px-1.5 py-0.5 font-mono text-xs">
-          {window.location.origin}/api/auth/oauth/[provider]/callback
-        </code>
-      </p>
-
-      {PROVIDERS.map((provider) => {
-        const state = form[provider.id] ?? {};
-        return (
-          <div key={provider.id} className="rounded-2xl bg-card p-6">
-            <div className="mb-5 flex items-center justify-between">
-              <span className="font-semibold text-sm">{provider.name}</span>
-              <div className="flex items-center gap-2.5">
-                <span className="text-muted-foreground text-xs">
-                  {state.enabled ? 'Enabled' : 'Disabled'}
-                </span>
-                <Switch
-                  checked={state.enabled ?? false}
-                  onCheckedChange={(v) => set(provider.id, 'enabled', v)}
-                />
-              </div>
-            </div>
-
-            <div className="grid grid-cols-1 gap-4 sm:grid-cols-2">
-              {provider.fields.map((f) => (
-                <div key={f.key} className="space-y-1.5">
-                  <Label className="text-xs">{f.label}</Label>
-                  <Input
-                    type={f.type ?? 'text'}
-                    value={(state[f.key] as string) ?? ''}
-                    onChange={(e) => set(provider.id, f.key, e.target.value)}
-                    placeholder={f.placeholder}
-                    className="font-mono text-xs"
+        {PROVIDERS.map((provider) => {
+          const state = form[provider.id] ?? {};
+          return (
+            <div key={provider.id} className="rounded-xl border border-border/50 bg-card p-4">
+              <div className="mb-4 flex items-center justify-between">
+                <span className="font-semibold text-foreground text-sm">{provider.name}</span>
+                <div className="flex items-center gap-2.5">
+                  <span className="text-muted-foreground text-xs">
+                    {state.enabled ? 'Enabled' : 'Disabled'}
+                  </span>
+                  <Switch
+                    checked={state.enabled ?? false}
+                    onCheckedChange={(v) => set(provider.id, 'enabled', v)}
                   />
                 </div>
-              ))}
+              </div>
+
+              <div className="grid grid-cols-1 gap-4 sm:grid-cols-2">
+                {provider.fields.map((f) => (
+                  <div key={f.key} className="space-y-1.5">
+                    <Label className="text-xs">{f.label}</Label>
+                    <Input
+                      type={f.type ?? 'text'}
+                      value={(state[f.key] as string) ?? ''}
+                      onChange={(e) => set(provider.id, f.key, e.target.value)}
+                      placeholder={f.placeholder}
+                      className="bg-muted/30 font-mono text-xs"
+                    />
+                  </div>
+                ))}
+              </div>
+              <div className="mt-4 flex justify-end">
+                <Button size="sm" onClick={() => handleSaveProvider(provider)} disabled={isPending}>
+                  <Check className="mr-2 h-4 w-4" />
+                  {saving === provider.id ? 'Saving...' : `Save ${provider.name}`}
+                </Button>
+              </div>
             </div>
-            <div className="mt-5 flex justify-end">
-              <Button size="sm" onClick={() => handleSaveProvider(provider)} disabled={isPending}>
-                <Check className="mr-2 h-4 w-4" />
-                {saving === provider.id ? 'Saving...' : `Save ${provider.name}`}
-              </Button>
-            </div>
-          </div>
-        );
-      })}
-    </div>
+          );
+        })}
+      </div>
+    </SettingsSection>
   );
 };

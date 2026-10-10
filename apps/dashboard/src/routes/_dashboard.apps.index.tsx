@@ -1,6 +1,6 @@
 import { createFileRoute, Link } from '@tanstack/react-router';
-import { ArrowRight, BookOpen, ExternalLink, Plus, Search } from 'lucide-react';
-import { useMemo, useState } from 'react';
+import { ArrowRight, Plus, Search } from 'lucide-react';
+import { Fragment, useMemo, useState } from 'react';
 import { PageHeader } from '#/components/layout/page-header';
 import { Button } from '#/components/ui/button';
 import { Input } from '#/components/ui/input';
@@ -18,7 +18,7 @@ export const Route = createFileRoute('/_dashboard/apps/')({
   component: AppsPage,
 });
 
-const DOCS_URL = 'https://docs.codedock.run';
+const FEATURED_APP_IDS = ['supabase', 'convex', 'mongodb'];
 
 function AppsPage() {
   const installedQuery = useInstalledApps();
@@ -86,15 +86,19 @@ function AppsPage() {
       ) : apps.length === 0 ? (
         <div className="py-8 sm:py-12">
           <div className="flex items-center justify-center" aria-hidden="true">
-            {['A', 'B'].map((letter, index) => (
-              <div key={letter} className="flex items-center">
+            {FEATURED_APP_IDS.map((id, index) => (
+              <Fragment key={id}>
                 {index > 0 && (
                   <span className="mx-1.5 w-4 border-border border-t-2 border-dashed sm:w-8" />
                 )}
-                <div className="flex size-14 shrink-0 items-center justify-center rounded-2xl bg-card font-semibold text-lg text-primary">
-                  {letter}
+                <div
+                  className={`flex shrink-0 items-center justify-center overflow-hidden rounded-2xl bg-card ${
+                    index === 1 ? 'size-16 ring-4 ring-primary/10' : 'size-14'
+                  }`}
+                >
+                  <AppLogo appId={id} className={index === 1 ? 'size-8' : 'size-7'} />
                 </div>
-              </div>
+              </Fragment>
             ))}
             <span className="mx-1.5 w-4 border-border border-t-2 border-dashed sm:w-8" />
             <div className="flex size-14 shrink-0 items-center justify-center rounded-2xl border border-primary/40 border-dashed bg-primary/5">
@@ -102,28 +106,18 @@ function AppsPage() {
             </div>
           </div>
           <div className="mt-8 text-center">
-            <h2 className="font-medium text-2xl tracking-tight">No apps installed yet</h2>
+            <h2 className="font-medium text-2xl text-foreground tracking-tight">
+              Install your first app
+            </h2>
             <p className="mx-auto mt-2 max-w-md text-muted-foreground text-sm leading-relaxed">
-              Install a one-click app from the catalog, or import your own code from the library.
+              Deploy databases, tools and services from the app catalog.
             </p>
-            <div className="mt-6 flex flex-wrap items-center justify-center gap-3">
-              <Button asChild>
-                <Link to="/apps/new">
-                  <Plus className="size-4" />
-                  New app
-                </Link>
-              </Button>
-              <Button asChild variant="outline">
-                <Link to="/library">Open library</Link>
-              </Button>
-              <Button asChild variant="secondary">
-                <a href={DOCS_URL} target="_blank" rel="noopener noreferrer">
-                  <BookOpen className="size-4" />
-                  Docs
-                  <ExternalLink className="size-3.5 opacity-60" />
-                </a>
-              </Button>
-            </div>
+            <Button asChild className="mt-6">
+              <Link to="/apps/new">
+                <Plus className="size-4" />
+                Install App
+              </Link>
+            </Button>
           </div>
 
           {(catalogQuery.isLoading || suggestions.length > 0) && (

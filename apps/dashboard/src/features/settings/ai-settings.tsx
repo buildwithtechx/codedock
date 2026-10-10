@@ -1,5 +1,7 @@
 import { Brain, Check, ChevronDown, Star } from 'lucide-react';
 import React, { useState } from 'react';
+import { toast } from 'sonner';
+import { Button } from '#/components/ui/button';
 import {
   DropdownMenu,
   DropdownMenuContent,
@@ -9,6 +11,7 @@ import {
 import { Input } from '#/components/ui/input';
 import { useGetAISettings, useUpdateAISettings } from '#/features/settings';
 import { aiProviderCatalog } from '#/lib/ai-providers';
+import { SettingsSection } from './settings-section';
 
 const PROVIDERS = [
   {
@@ -80,13 +83,18 @@ const PROVIDERS = [
 export function AISettings() {
   const { data: settings } = useGetAISettings();
   const updateSettings = useUpdateAISettings();
-  const [editingId, setEditingId] = useState<string | null>(null);
+  const [localKeys, setLocalKeys] = useState<Record<string, string>>({});
 
   const pendingSettings = React.useRef<Record<string, unknown> | null>(null);
 
   React.useEffect(() => {
     if (settings?.data && !updateSettings.isPending) {
       pendingSettings.current = settings.data;
+      const initialKeys: Record<string, string> = {};
+      for (const p of PROVIDERS) {
+        initialKeys[p.keyField] = (settings.data[p.keyField] as string) || '';
+      }
+      setLocalKeys(initialKeys);
     }
   }, [settings?.data, updateSettings.isPending]);
 
@@ -95,104 +103,111 @@ export function AISettings() {
   const handleSetDefault = (id: string) => {
     const payload = { ...(pendingSettings.current || settings?.data || {}), defaultProvider: id };
     pendingSettings.current = payload;
-    updateSettings.mutate(payload);
+    updateSettings.mutate(payload, {
+      onSuccess: () => {
+        toast.success(`Default AI provider set to ${id}`);
+      },
+    });
   };
 
-  const handleUpdateKey = (keyField: string, value: string) => {
-    const payload = { ...(pendingSettings.current || settings?.data || {}), [keyField]: value };
+  const handleUpdateModel = (modelField: string, value: string) => {
+    const payload = { ...(pendingSettings.current || settings?.data || {}), [modelField]: value };
     pendingSettings.current = payload;
-    updateSettings.mutate(payload);
+    updateSettings.mutate(payload, {
+      onSuccess: () => {
+        toast.success('Model updated');
+      },
+    });
+  };
+
+  const handleSaveProvider = (provider: (typeof PROVIDERS)[number]) => {
+    const keyVal = localKeys[provider.keyField] || '';
+    const payload = {
+      ...(pendingSettings.current || settings?.data || {}),
+      [provider.keyField]: keyVal,
+    };
+    pendingSettings.current = payload;
+    updateSettings.mutate(payload, {
+      onSuccess: () => {
+        toast.success(`${provider.name} credentials saved`);
+      },
+    });
   };
 
   return (
-    <div className="space-y-6">
-      <div className="flex items-center justify-between">
-        <div className="flex items-center gap-3">
-          <div className="flex h-9 w-9 items-center justify-center rounded-xl bg-primary/10 text-primary">
-            <Brain className="h-4 w-4" />
-          </div>
-          <div>
-            <h2 className="font-semibold text-foreground text-sm">AI Providers</h2>
-            <p className="text-muted-foreground text-xs">
-              Configure API keys and model parameters for platform AI services.
-            </p>
-          </div>
-        </div>
-        <p className="font-bold text-[10px] text-muted-foreground uppercase tracking-widest">
-          Default <span className="text-foreground">{defaultProvider}</span>
-        </p>
-      </div>
-
-      <div className="grid grid-cols-1 gap-6 md:grid-cols-3">
+    <SettingsSection
+      icon={<Brain className="size-4 text-primary" />}
+      title="AI Providers"
+      description="Configure API keys and model parameters for platform AI services."
+      action={
+        <span className="font-mono text-muted-foreground text-xs uppercase">
+          Default: <strong className="text-foreground">{defaultProvider}</strong>
+        </span>
+      }
+    >
+      <div className="grid grid-cols-1 gap-4 md:grid-cols-2">
         {PROVIDERS.map((provider) => {
           const isDefault = defaultProvider === provider.id;
-          const currentKey = (settings?.data?.[provider.keyField] as string) || '';
           const currentModel =
             (settings?.data?.[provider.modelField] as string) || provider.models[0]?.id || '';
-          const isSet = currentKey.length > 0;
-          const isEditing = editingId === provider.id;
+          const currentKeyVal = localKeys[provider.keyField] ?? '';
 
           return (
             <div
               key={provider.id}
-              className="relative flex flex-col justify-between space-y-4 rounded-xl bg-card p-6 text-left transition-colors hover:bg-muted/60"
+              className="flex flex-col justify-between space-y-4 rounded-xl border border-border/50 bg-card p-4 transition-colors hover:bg-muted/30"
             >
               <div className="flex w-full items-start justify-between">
-                <div className="flex items-start gap-4">
-                  <div className="flex h-10 w-10 shrink-0 items-center justify-center overflow-hidden rounded-lg bg-black">
+                <div className="flex items-start gap-3">
+                  <div className="flex h-9 w-9 shrink-0 items-center justify-center overflow-hidden rounded-lg bg-black">
                     <img
                       src={provider.icon}
                       alt={provider.name}
-                      className="h-6 w-6 object-contain"
+                      className="h-5 w-5 object-contain"
                     />
                   </div>
                   <div className="space-y-1">
                     <h3 className="font-semibold text-sm leading-none">{provider.name}</h3>
-                    <div className="flex items-center text-muted-foreground">
-                      <DropdownMenu>
-                        <DropdownMenuTrigger asChild>
-                          <button
-                            type="button"
-                            className="flex max-w-37.5 cursor-pointer appearance-none items-center gap-1 truncate bg-transparent font-medium text-xs outline-none hover:text-foreground/80"
-                            onClick={(e) => e.stopPropagation()}
+                    <DropdownMenu>
+                      <DropdownMenuTrigger asChild>
+                        <button
+                          type="button"
+                          className="flex max-w-48 cursor-pointer appearance-none items-center gap-1 truncate bg-transparent font-medium text-muted-foreground text-xs outline-none hover:text-foreground"
+                        >
+                          <span className="truncate">
+                            {provider.models.find((m) => m.id === currentModel)?.name ||
+                              currentModel}
+                          </span>
+                          <ChevronDown className="h-3 w-3 shrink-0" />
+                        </button>
+                      </DropdownMenuTrigger>
+                      <DropdownMenuContent align="start" className="w-52">
+                        {provider.models.map((m) => (
+                          <DropdownMenuItem
+                            key={m.id}
+                            onSelect={() => handleUpdateModel(provider.modelField, m.id)}
+                            className="flex cursor-pointer items-center justify-between py-1.5"
                           >
-                            <span className="truncate">
-                              {provider.models.find((m) => m.id === currentModel)?.name ||
-                                currentModel}
-                            </span>
-                            <ChevronDown className="h-3 w-3 shrink-0" />
-                          </button>
-                        </DropdownMenuTrigger>
-                        <DropdownMenuContent align="start" className="w-50">
-                          {provider.models.map((m) => (
-                            <DropdownMenuItem
-                              key={m.id}
-                              onSelect={() => handleUpdateKey(provider.modelField, m.id)}
-                              className="flex cursor-pointer items-center justify-between py-2"
-                            >
-                              <div className="flex flex-col">
-                                <span className="font-medium text-sm">{m.name}</span>
-                                <span className="font-mono text-[10px] text-muted-foreground">
-                                  {m.id}
-                                </span>
-                              </div>
-                              {currentModel === m.id && (
-                                <Check className="h-4 w-4 text-emerald-500" />
-                              )}
-                            </DropdownMenuItem>
-                          ))}
-                        </DropdownMenuContent>
-                      </DropdownMenu>
-                    </div>
+                            <div className="flex flex-col">
+                              <span className="font-medium text-xs">{m.name}</span>
+                              <span className="font-mono text-[10px] text-muted-foreground">
+                                {m.id}
+                              </span>
+                            </div>
+                            {currentModel === m.id && (
+                              <Check className="h-3.5 w-3.5 text-emerald-500" />
+                            )}
+                          </DropdownMenuItem>
+                        ))}
+                      </DropdownMenuContent>
+                    </DropdownMenu>
                   </div>
                 </div>
                 <button
                   type="button"
-                  onClick={(e) => {
-                    e.stopPropagation();
-                    handleSetDefault(isDefault ? 'none' : provider.id);
-                  }}
-                  className="flex h-8 w-8 items-center justify-center rounded-md border border-border bg-background text-muted-foreground hover:text-foreground"
+                  onClick={() => handleSetDefault(isDefault ? 'none' : provider.id)}
+                  title={isDefault ? 'Active default provider' : 'Set as default'}
+                  className="flex h-8 w-8 items-center justify-center rounded-lg border border-border bg-background text-muted-foreground hover:text-foreground"
                 >
                   <Star
                     className={`h-4 w-4 ${isDefault ? 'fill-foreground text-foreground' : ''}`}
@@ -200,43 +215,33 @@ export function AISettings() {
                 </button>
               </div>
 
-              <div className="mt-4 w-full">
-                {isEditing || isSet ? (
-                  <Input
-                    autoFocus={isEditing && !isSet}
-                    onClick={(e) => e.stopPropagation()}
-                    type="password"
-                    placeholder="sk-..."
-                    defaultValue={currentKey}
-                    className="font-mono text-sm"
-                    onBlur={(e) => {
-                      if (e.target.value !== currentKey) {
-                        handleUpdateKey(provider.keyField, e.target.value);
-                      }
-                      if (!e.target.value) {
-                        setEditingId(null);
-                      }
-                    }}
-                    onKeyDown={(e) => {
-                      if (e.key === 'Enter') {
-                        e.currentTarget.blur();
-                      }
-                    }}
-                  />
-                ) : (
-                  <button
-                    type="button"
-                    onClick={() => setEditingId(provider.id)}
-                    className="flex h-8 items-center text-muted-foreground text-xs hover:text-foreground"
+              <div className="space-y-3">
+                <Input
+                  type="password"
+                  placeholder={`API key for ${provider.name}`}
+                  value={currentKeyVal}
+                  onChange={(e) =>
+                    setLocalKeys((prev) => ({ ...prev, [provider.keyField]: e.target.value }))
+                  }
+                  className="bg-muted/30 font-mono text-xs"
+                />
+                <div className="flex justify-end">
+                  <Button
+                    size="sm"
+                    variant="outline"
+                    onClick={() => handleSaveProvider(provider)}
+                    disabled={updateSettings.isPending}
+                    className="gap-1.5 text-xs"
                   >
-                    (API key unset — click to add)
-                  </button>
-                )}
+                    <Check className="size-3.5" />
+                    Save {provider.name}
+                  </Button>
+                </div>
               </div>
             </div>
           );
         })}
       </div>
-    </div>
+    </SettingsSection>
   );
 }

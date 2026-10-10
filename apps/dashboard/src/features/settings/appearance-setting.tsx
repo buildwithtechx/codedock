@@ -1,6 +1,7 @@
 import { Check, SunMedium } from 'lucide-react';
 import { useTheme } from 'next-themes';
 import { useId } from 'react';
+import { SettingsSection } from './settings-section';
 import { ThemePreview } from './theme-preview';
 
 const THEMES = [
@@ -15,19 +16,11 @@ export function AppearanceSetting() {
   const groupName = useId();
 
   return (
-    <section className="rounded-2xl border border-border/60 bg-card p-5">
-      <div className="mb-5 flex items-center gap-3">
-        <div className="flex h-9 w-9 items-center justify-center rounded-xl bg-primary/10 text-primary">
-          <SunMedium className="h-4 w-4" />
-        </div>
-        <div>
-          <h2 className="font-semibold text-foreground text-sm">Appearance</h2>
-          <p className="text-muted-foreground text-xs">
-            Choose a theme, or follow your device&apos;s appearance. Changes apply immediately.
-          </p>
-        </div>
-      </div>
-
+    <SettingsSection
+      icon={<SunMedium className="size-4 text-primary" />}
+      title="Appearance"
+      description="Choose a theme, or follow your device's appearance. Changes apply immediately."
+    >
       <fieldset className="grid grid-cols-2 gap-3 sm:grid-cols-4">
         <legend className="sr-only">Appearance themes</legend>
         {THEMES.map(({ id, label }) => {
@@ -70,6 +63,6 @@ export function AppearanceSetting() {
           );
         })}
       </fieldset>
-    </section>
+    </SettingsSection>
   );
 }

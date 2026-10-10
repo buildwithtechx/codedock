@@ -9,7 +9,14 @@ interface DnsProviderFormProps {
   setFormData: (data: Record<string, string>) => void;
   isPending: boolean;
   handleSaveProvider: (provider: string) => void;
+  onCancel?: () => void;
 }
+
+const PROVIDER_NAMES: Record<string, string> = {
+  cloudflare: 'Cloudflare',
+  namecheap: 'Namecheap',
+  spaceship: 'Spaceship',
+};
 
 export function DnsProviderForm({
   activeProvider,
@@ -17,16 +24,19 @@ export function DnsProviderForm({
   setFormData,
   isPending,
   handleSaveProvider,
+  onCancel,
 }: DnsProviderFormProps) {
+  const providerName = PROVIDER_NAMES[activeProvider] || 'Provider';
+
   return (
-    <div className="space-y-6">
+    <div className="space-y-5">
       {activeProvider === 'cloudflare' && (
-        <div className="fade-in-50 animate-in space-y-6 duration-300">
-          <div className="grid grid-cols-1 gap-6 md:grid-cols-2">
-            <div className="space-y-3">
+        <div className="space-y-4">
+          <div className="grid grid-cols-1 gap-4 md:grid-cols-2">
+            <div className="space-y-2">
               <Label
                 htmlFor="cf-api-token"
-                className="font-bold text-[10px] text-muted-foreground/90 uppercase tracking-[0.15em]"
+                className="font-bold text-[10px] text-muted-foreground uppercase tracking-wider"
               >
                 API KEY / TOKEN
               </Label>
@@ -41,16 +51,16 @@ export function DnsProviderForm({
                     cloudflareApiToken: e.target.value,
                   })
                 }
-                className="border/50 h-12 rounded-xl bg-background/80 px-4 font-medium"
+                className="bg-muted/30 font-medium"
               />
-              <p className="text-[11px] text-muted-foreground/70">
+              <p className="text-[11px] text-muted-foreground">
                 API Tokens only. Global API keys are not supported.
               </p>
             </div>
-            <div className="space-y-3">
+            <div className="space-y-2">
               <Label
                 htmlFor="cf-email"
-                className="font-bold text-[10px] text-muted-foreground/90 uppercase tracking-[0.15em]"
+                className="font-bold text-[10px] text-muted-foreground uppercase tracking-wider"
               >
                 ACCOUNT EMAIL
               </Label>
@@ -64,14 +74,14 @@ export function DnsProviderForm({
                     cloudflareEmail: e.target.value,
                   })
                 }
-                className="border/50 h-12 rounded-xl bg-background/80 px-4 font-medium placeholder:text-muted-foreground/40"
+                className="bg-muted/30 font-medium"
               />
             </div>
           </div>
-          <div className="space-y-3">
+          <div className="space-y-2">
             <Label
               htmlFor="cf-zone-id"
-              className="font-bold text-[10px] text-muted-foreground/90 uppercase tracking-[0.15em]"
+              className="font-bold text-[10px] text-muted-foreground uppercase tracking-wider"
             >
               ZONE ID
             </Label>
@@ -85,19 +95,19 @@ export function DnsProviderForm({
                   cloudflareZoneId: e.target.value,
                 })
               }
-              className="border/50 h-12 rounded-xl bg-background/80 px-4 font-medium placeholder:text-muted-foreground/40"
+              className="bg-muted/30 font-medium"
             />
           </div>
         </div>
       )}
 
       {activeProvider === 'namecheap' && (
-        <div className="fade-in-50 animate-in space-y-6 duration-300">
-          <div className="grid grid-cols-1 gap-6 md:grid-cols-2">
-            <div className="space-y-3">
+        <div className="space-y-4">
+          <div className="grid grid-cols-1 gap-4 md:grid-cols-2">
+            <div className="space-y-2">
               <Label
                 htmlFor="nc-api-user"
-                className="font-bold text-[10px] text-muted-foreground/90 uppercase tracking-[0.15em]"
+                className="font-bold text-[10px] text-muted-foreground uppercase tracking-wider"
               >
                 API USER
               </Label>
@@ -111,13 +121,13 @@ export function DnsProviderForm({
                     namecheapApiUser: e.target.value,
                   })
                 }
-                className="border/50 h-12 rounded-xl bg-background/80 px-4 font-medium"
+                className="bg-muted/30 font-medium"
               />
             </div>
-            <div className="space-y-3">
+            <div className="space-y-2">
               <Label
                 htmlFor="nc-api-key"
-                className="font-bold text-[10px] text-muted-foreground/90 uppercase tracking-[0.15em]"
+                className="font-bold text-[10px] text-muted-foreground uppercase tracking-wider"
               >
                 API KEY
               </Label>
@@ -132,14 +142,14 @@ export function DnsProviderForm({
                     namecheapApiKey: e.target.value,
                   })
                 }
-                className="border/50 h-12 rounded-xl bg-background/80 px-4 font-medium"
+                className="bg-muted/30 font-medium"
               />
             </div>
           </div>
-          <div className="space-y-3">
+          <div className="space-y-2">
             <Label
               htmlFor="nc-client-ip"
-              className="font-bold text-[10px] text-muted-foreground/90 uppercase tracking-[0.15em]"
+              className="font-bold text-[10px] text-muted-foreground uppercase tracking-wider"
             >
               CLIENT IP
             </Label>
@@ -153,19 +163,19 @@ export function DnsProviderForm({
                   namecheapClientIp: e.target.value,
                 })
               }
-              className="border/50 h-12 rounded-xl bg-background/80 px-4 font-medium placeholder:text-muted-foreground/40"
+              className="bg-muted/30 font-medium"
             />
           </div>
         </div>
       )}
 
       {activeProvider === 'spaceship' && (
-        <div className="fade-in-50 animate-in space-y-6 duration-300">
-          <div className="grid grid-cols-1 gap-6 md:grid-cols-2">
-            <div className="space-y-3">
+        <div className="space-y-4">
+          <div className="grid grid-cols-1 gap-4 md:grid-cols-2">
+            <div className="space-y-2">
               <Label
                 htmlFor="ss-api-key"
-                className="font-bold text-[10px] text-muted-foreground/90 uppercase tracking-[0.15em]"
+                className="font-bold text-[10px] text-muted-foreground uppercase tracking-wider"
               >
                 API KEY
               </Label>
@@ -180,13 +190,13 @@ export function DnsProviderForm({
                     spaceshipApiKey: e.target.value,
                   })
                 }
-                className="border/50 h-12 rounded-xl bg-background/80 px-4 font-medium"
+                className="bg-muted/30 font-medium"
               />
             </div>
-            <div className="space-y-3">
+            <div className="space-y-2">
               <Label
                 htmlFor="ss-api-secret"
-                className="font-bold text-[10px] text-muted-foreground/90 uppercase tracking-[0.15em]"
+                className="font-bold text-[10px] text-muted-foreground uppercase tracking-wider"
               >
                 API SECRET
               </Label>
@@ -195,21 +205,33 @@ export function DnsProviderForm({
                 type="password"
                 placeholder="Spaceship API secret"
                 value={formData.spaceshipApiSecret}
-                onChange={(e) => setFormData({ ...formData, spaceshipApiSecret: e.target.value })}
-                className="border/50 h-12 rounded-xl bg-background/80 px-4 font-medium"
+                onChange={(e) =>
+                  setFormData({
+                    ...formData,
+                    spaceshipApiSecret: e.target.value,
+                  })
+                }
+                className="bg-muted/30 font-medium"
               />
             </div>
           </div>
         </div>
       )}
 
-      <div className="pt-4">
+      <div className="flex items-center justify-end gap-2 pt-2">
+        {onCancel && (
+          <Button type="button" variant="ghost" size="sm" onClick={onCancel} disabled={isPending}>
+            Cancel
+          </Button>
+        )}
         <Button
           onClick={() => handleSaveProvider(activeProvider)}
           disabled={isPending}
-          className="flex h-11 items-center gap-2 rounded-xl border border-primary/20 bg-primary/10 px-6 font-semibold text-primary text-xs uppercase tracking-widest shadow-none transition-all hover:bg-primary/20 hover:text-primary"
+          size="sm"
+          className="gap-1.5"
         >
-          <CheckCircle2 className="h-4 w-4" /> SAVE CREDENTIALS
+          <CheckCircle2 className="size-4" />
+          Save {providerName}
         </Button>
       </div>
     </div>

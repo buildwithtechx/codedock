@@ -6,6 +6,7 @@ import { Button } from '#/components/ui/button';
 import { useCleanupSystem, useGetSystemStats, useRestartSystem } from '#/features/settings';
 import { DockerStorageCard } from './docker-storage-card';
 import { MaintenanceDialogs } from './maintenance-dialogs';
+import { SettingsSection } from './settings-section';
 
 const ProgressBar = ({ value, colorClass }: { value: number; colorClass: string }) => (
   <div className="flex h-1.5 w-full overflow-hidden rounded-full bg-background">
@@ -62,203 +63,199 @@ export const MaintenancePage = () => {
 
   return (
     <div className="space-y-6">
-      <div className="flex items-center justify-between">
-        <div className="flex items-center gap-3">
-          <div className="flex h-9 w-9 items-center justify-center rounded-xl bg-primary/10 text-primary">
-            <Wrench className="h-4 w-4" />
+      <SettingsSection
+        icon={<Wrench className="size-4 text-primary" />}
+        title="System Maintenance"
+        description="Monitor root disk capacity, Docker cache, and run cleanup routines."
+        action={
+          <div className="flex shrink-0 items-center gap-2.5">
+            {Number(reclaimableGb) > 3 ? (
+              <Badge
+                variant="outline"
+                className="border-destructive/50 bg-destructive/10 px-2.5 py-0.5 font-semibold text-[10px] text-destructive uppercase tracking-wider"
+              >
+                Attention
+              </Badge>
+            ) : (
+              <Badge
+                variant="outline"
+                className="border-primary/50 bg-primary/10 px-2.5 py-0.5 font-semibold text-[10px] text-primary uppercase tracking-wider"
+              >
+                Healthy
+              </Badge>
+            )}
+            <Button variant="outline" size="sm" onClick={() => refetch()} className="gap-1.5">
+              <RefreshCw className="h-3.5 w-3.5" />
+              Refresh
+            </Button>
           </div>
-          <div>
-            <h2 className="font-semibold text-foreground text-sm">System Maintenance</h2>
-            <p className="text-muted-foreground text-xs">
-              Monitor root disk capacity, Docker cache, and run cleanup routines.
-            </p>
-          </div>
-        </div>
-        <div className="flex shrink-0 items-center gap-2.5">
-          {Number(reclaimableGb) > 3 ? (
-            <Badge
-              variant="outline"
-              className="border-destructive/50 bg-destructive/10 px-2.5 py-0.5 font-semibold text-[10px] text-destructive uppercase tracking-wider"
-            >
-              Attention
-            </Badge>
-          ) : (
-            <Badge
-              variant="outline"
-              className="border-primary/50 bg-primary/10 px-2.5 py-0.5 font-semibold text-[10px] text-primary uppercase tracking-wider"
-            >
-              Healthy
-            </Badge>
-          )}
-          <Button variant="outline" size="sm" onClick={() => refetch()} className="gap-1.5">
-            <RefreshCw className="h-3.5 w-3.5" />
-            Refresh
-          </Button>
-        </div>
-      </div>
-
-      {stats?.docker?.reclaimableGb && stats.docker.reclaimableGb > 3 ? (
-        <div className="flex w-full items-center gap-3 rounded-lg border border-destructive/30 bg-destructive/10 p-4 font-medium text-destructive text-sm">
-          <AlertTriangle className="h-4 w-4" /> Docker has more than 3 GB reclaimable.
-        </div>
-      ) : null}
-
-      <div className="grid grid-cols-1 gap-6 md:grid-cols-3">
-        <div className="flex flex-col justify-between space-y-6 rounded-2xl border border-border/80 bg-card p-6 shadow-sm">
-          <div className="flex items-center justify-between">
-            <p className="font-bold text-[10px] text-muted-foreground uppercase tracking-[0.15em]">
-              ROOT DISK FREE
-            </p>
-            <p className="font-bold text-[10px] text-muted-foreground uppercase tracking-[0.15em]">
-              {usedPercent}% USED
-            </p>
-          </div>
-          <h2 className="font-bold text-3xl">{freeGb} GB</h2>
-          <div className="space-y-2">
-            <ProgressBar value={usedPercent} colorClass="bg-primary" />
-            <p className="text-muted-foreground text-xs">
-              {usedGb} GB used of {totalGb} GB on /.
-            </p>
-          </div>
-        </div>
-
-        <div className="flex flex-col justify-between space-y-6 rounded-2xl border border-border/80 bg-card p-6 shadow-sm">
-          <div className="flex items-center justify-between">
-            <p className="w-32 font-bold text-[10px] text-muted-foreground uppercase tracking-[0.15em]">
-              DOCKER CLEANUP CANDIDATES
-            </p>
-            <p className="w-20 text-right font-bold text-[10px] text-muted-foreground uppercase tracking-[0.15em]">
-              {dockerPercent}% OF DISK
-            </p>
-          </div>
-          <h2 className="font-bold text-3xl">{reclaimableGb} GB</h2>
-          <div className="space-y-2">
-            <ProgressBar value={dockerPercent} colorClass="bg-yellow-500" />
-            <p className="text-muted-foreground text-xs">
-              {buildCacheGb} GB is build cache. Safe cleanup can usually clear that.
-            </p>
-          </div>
-        </div>
-
-        <div className="flex flex-col justify-between space-y-6 rounded-2xl border border-border/80 bg-card p-6 shadow-sm">
-          <div className="flex items-center justify-between">
-            <p className="font-bold text-[10px] text-muted-foreground uppercase tracking-[0.15em]">
-              BUILD ARTIFACTS
-            </p>
-            <p className="font-bold text-[10px] text-muted-foreground uppercase tracking-[0.15em]">
-              0%
-            </p>
-          </div>
-          <h2 className="font-bold text-3xl">0 GB</h2>
-          <div className="space-y-2">
-            <ProgressBar value={0} colorClass="bg-primary" />
-            <p className="text-muted-foreground text-xs">No build artifact directory yet.</p>
-          </div>
-        </div>
-      </div>
-
-      <div className="grid grid-cols-1 gap-6 md:grid-cols-3">
-        <div className="flex h-32 flex-col rounded-2xl border border-border/80 bg-card p-6 shadow-sm">
-          <p className="mb-4 font-bold text-[10px] text-muted-foreground uppercase tracking-[0.15em]">
-            DISK TREND
-          </p>
-          <div className="flex flex-1 items-end gap-1">
-            {Array.from({ length: 15 }).map((_, i) => (
-              <div
-                key={i}
-                className="flex-1 rounded-sm bg-primary/40"
-                style={{ height: `${40 + i * 2}%` }}
-              />
-            ))}
-          </div>
-        </div>
-        <div className="flex h-32 flex-col rounded-2xl border border-border/80 bg-card p-6 shadow-sm">
-          <p className="mb-4 font-bold text-[10px] text-muted-foreground uppercase tracking-[0.15em]">
-            DOCKER RECLAIMABLE TREND
-          </p>
-          <div className="flex flex-1 items-end gap-1">
-            {Array.from({ length: 15 }).map((_, i) => (
-              <div
-                key={i}
-                className="flex-1 rounded-sm bg-yellow-500/40"
-                style={{ height: `${60 - i}%` }}
-              />
-            ))}
-          </div>
-        </div>
-        <div className="flex h-32 flex-col rounded-2xl border border-border/80 bg-card p-6 shadow-sm">
-          <p className="mb-4 font-bold text-[10px] text-muted-foreground uppercase tracking-[0.15em]">
-            BUILD ARTIFACT TREND
-          </p>
-          <div className="flex flex-1 items-end gap-1">
-            {Array.from({ length: 15 }).map((_, i) => (
-              <div key={i} className="h-1 flex-1 rounded-sm bg-primary/10" />
-            ))}
-          </div>
-        </div>
-      </div>
-
-      <div className="grid grid-cols-1 gap-6 lg:grid-cols-3">
-        <DockerStorageCard stats={stats} />
-
-        <div className="flex flex-col space-y-6 rounded-2xl border border-border/80 bg-card p-6 shadow-sm lg:col-span-1">
-          <div className="flex items-center gap-4">
-            <div className="flex h-12 w-12 items-center justify-center rounded-lg border border-primary/20 bg-primary/10 text-primary">
-              <HardDrive className="h-5 w-5" />
+        }
+      >
+        <div className="space-y-6">
+          {stats?.docker?.reclaimableGb && stats.docker.reclaimableGb > 3 ? (
+            <div className="flex w-full items-center gap-3 rounded-lg border border-destructive/30 bg-destructive/10 p-4 font-medium text-destructive text-sm">
+              <AlertTriangle className="h-4 w-4" /> Docker has more than 3 GB reclaimable.
             </div>
-            <div>
-              <h3 className="font-bold text-xl">Cleanup</h3>
-              <p className="mt-1 text-muted-foreground text-sm">
-                Current disk and Docker cleanup targets.
+          ) : null}
+
+          <div className="grid grid-cols-1 gap-6 md:grid-cols-3">
+            <div className="flex flex-col justify-between space-y-6 rounded-2xl border border-border/80 bg-card p-6 shadow-sm">
+              <div className="flex items-center justify-between">
+                <p className="font-bold text-[10px] text-muted-foreground uppercase tracking-[0.15em]">
+                  ROOT DISK FREE
+                </p>
+                <p className="font-bold text-[10px] text-muted-foreground uppercase tracking-[0.15em]">
+                  {usedPercent}% USED
+                </p>
+              </div>
+              <h2 className="font-bold text-3xl">{freeGb} GB</h2>
+              <div className="space-y-2">
+                <ProgressBar value={usedPercent} colorClass="bg-primary" />
+                <p className="text-muted-foreground text-xs">
+                  {usedGb} GB used of {totalGb} GB on /.
+                </p>
+              </div>
+            </div>
+
+            <div className="flex flex-col justify-between space-y-6 rounded-2xl border border-border/80 bg-card p-6 shadow-sm">
+              <div className="flex items-center justify-between">
+                <p className="w-32 font-bold text-[10px] text-muted-foreground uppercase tracking-[0.15em]">
+                  DOCKER CLEANUP CANDIDATES
+                </p>
+                <p className="w-20 text-right font-bold text-[10px] text-muted-foreground uppercase tracking-[0.15em]">
+                  {dockerPercent}% OF DISK
+                </p>
+              </div>
+              <h2 className="font-bold text-3xl">{reclaimableGb} GB</h2>
+              <div className="space-y-2">
+                <ProgressBar value={dockerPercent} colorClass="bg-yellow-500" />
+                <p className="text-muted-foreground text-xs">
+                  {buildCacheGb} GB is build cache. Safe cleanup can usually clear that.
+                </p>
+              </div>
+            </div>
+
+            <div className="flex flex-col justify-between space-y-6 rounded-2xl border border-border/80 bg-card p-6 shadow-sm">
+              <div className="flex items-center justify-between">
+                <p className="font-bold text-[10px] text-muted-foreground uppercase tracking-[0.15em]">
+                  BUILD ARTIFACTS
+                </p>
+                <p className="font-bold text-[10px] text-muted-foreground uppercase tracking-[0.15em]">
+                  0%
+                </p>
+              </div>
+              <h2 className="font-bold text-3xl">0 GB</h2>
+              <div className="space-y-2">
+                <ProgressBar value={0} colorClass="bg-primary" />
+                <p className="text-muted-foreground text-xs">No build artifact directory yet.</p>
+              </div>
+            </div>
+          </div>
+
+          <div className="grid grid-cols-1 gap-6 md:grid-cols-3">
+            <div className="flex h-32 flex-col rounded-2xl border border-border/80 bg-card p-6 shadow-sm">
+              <p className="mb-4 font-bold text-[10px] text-muted-foreground uppercase tracking-[0.15em]">
+                DISK TREND
               </p>
+              <div className="flex flex-1 items-end gap-1">
+                {Array.from({ length: 15 }).map((_, i) => (
+                  <div
+                    key={i}
+                    className="flex-1 rounded-sm bg-primary/40"
+                    style={{ height: `${40 + i * 2}%` }}
+                  />
+                ))}
+              </div>
+            </div>
+            <div className="flex h-32 flex-col rounded-2xl border border-border/80 bg-card p-6 shadow-sm">
+              <p className="mb-4 font-bold text-[10px] text-muted-foreground uppercase tracking-[0.15em]">
+                DOCKER RECLAIMABLE TREND
+              </p>
+              <div className="flex flex-1 items-end gap-1">
+                {Array.from({ length: 15 }).map((_, i) => (
+                  <div
+                    key={i}
+                    className="flex-1 rounded-sm bg-yellow-500/40"
+                    style={{ height: `${60 - i}%` }}
+                  />
+                ))}
+              </div>
+            </div>
+            <div className="flex h-32 flex-col rounded-2xl border border-border/80 bg-card p-6 shadow-sm">
+              <p className="mb-4 font-bold text-[10px] text-muted-foreground uppercase tracking-[0.15em]">
+                BUILD ARTIFACT TREND
+              </p>
+              <div className="flex flex-1 items-end gap-1">
+                {Array.from({ length: 15 }).map((_, i) => (
+                  <div key={i} className="h-1 flex-1 rounded-sm bg-primary/10" />
+                ))}
+              </div>
             </div>
           </div>
 
-          <div className="divide-y divide-border/70 rounded-xl border border-border/80 text-sm">
-            <div className="flex justify-between bg-background/30 p-4">
-              <span className="text-muted-foreground">Top Docker candidate</span>
-              <span className="font-mono">
-                {stats?.docker?.buildCache?.reclaimable || '0 B'} Build Cache
-              </span>
-            </div>
-            <div className="flex justify-between p-4">
-              <span className="text-muted-foreground">Codedock data</span>
-              <span className="font-mono">1.81 MB</span>
-            </div>
-            <div className="flex justify-between p-4">
-              <span className="text-muted-foreground">Backups</span>
-              <span className="font-mono">{stats?.backups?.size || '0 B'}</span>
-            </div>
-            <div className="flex justify-between p-4">
-              <span className="text-muted-foreground">Package cache</span>
-              <span className="font-mono">{stats?.packageCache?.size || '0 B'}</span>
-            </div>
-            <div className="flex justify-between p-4">
-              <span className="text-muted-foreground">System logs</span>
-              <span className="font-mono">{stats?.systemLogs?.size || '0 B'}</span>
-            </div>
-          </div>
+          <div className="grid grid-cols-1 gap-6 lg:grid-cols-3">
+            <DockerStorageCard stats={stats} />
 
-          <div className="mt-auto flex flex-col gap-3 pt-4">
-            <Button
-              variant="outline"
-              onClick={() => setConfirmCleanup(true)}
-              disabled={cleaning}
-              className="h-12 border-primary/30 bg-primary/5 font-semibold text-primary text-xs uppercase tracking-widest hover:bg-primary/10 hover:text-primary"
-            >
-              <RefreshCw className="mr-2 h-4 w-4" /> {cleaning ? 'CLEANING...' : 'SAFE CLEANUP'}
-            </Button>
-            <Button
-              variant="outline"
-              onClick={() => setConfirmRestart(true)}
-              disabled={restarting}
-              className="h-12 border-destructive/30 bg-destructive/5 font-semibold text-destructive text-xs uppercase tracking-widest hover:bg-destructive/10 hover:text-destructive"
-            >
-              <Trash2 className="mr-2 h-4 w-4" /> RESTART DAEMON
-            </Button>
+            <div className="flex flex-col space-y-6 rounded-2xl border border-border/80 bg-card p-6 shadow-sm lg:col-span-1">
+              <div className="flex items-center gap-4">
+                <div className="flex h-12 w-12 items-center justify-center rounded-lg border border-primary/20 bg-primary/10 text-primary">
+                  <HardDrive className="h-5 w-5" />
+                </div>
+                <div>
+                  <h3 className="font-bold text-xl">Cleanup</h3>
+                  <p className="mt-1 text-muted-foreground text-sm">
+                    Current disk and Docker cleanup targets.
+                  </p>
+                </div>
+              </div>
+
+              <div className="divide-y divide-border/70 rounded-xl border border-border/80 text-sm">
+                <div className="flex justify-between bg-background/30 p-4">
+                  <span className="text-muted-foreground">Top Docker candidate</span>
+                  <span className="font-mono">
+                    {stats?.docker?.buildCache?.reclaimable || '0 B'} Build Cache
+                  </span>
+                </div>
+                <div className="flex justify-between p-4">
+                  <span className="text-muted-foreground">Codedock data</span>
+                  <span className="font-mono">1.81 MB</span>
+                </div>
+                <div className="flex justify-between p-4">
+                  <span className="text-muted-foreground">Backups</span>
+                  <span className="font-mono">{stats?.backups?.size || '0 B'}</span>
+                </div>
+                <div className="flex justify-between p-4">
+                  <span className="text-muted-foreground">Package cache</span>
+                  <span className="font-mono">{stats?.packageCache?.size || '0 B'}</span>
+                </div>
+                <div className="flex justify-between p-4">
+                  <span className="text-muted-foreground">System logs</span>
+                  <span className="font-mono">{stats?.systemLogs?.size || '0 B'}</span>
+                </div>
+              </div>
+
+              <div className="mt-auto flex flex-col gap-3 pt-4">
+                <Button
+                  variant="outline"
+                  onClick={() => setConfirmCleanup(true)}
+                  disabled={cleaning}
+                  className="h-12 border-primary/30 bg-primary/5 font-semibold text-primary text-xs uppercase tracking-widest hover:bg-primary/10 hover:text-primary"
+                >
+                  <RefreshCw className="mr-2 h-4 w-4" /> {cleaning ? 'CLEANING...' : 'SAFE CLEANUP'}
+                </Button>
+                <Button
+                  variant="outline"
+                  onClick={() => setConfirmRestart(true)}
+                  disabled={restarting}
+                  className="h-12 border-destructive/30 bg-destructive/5 font-semibold text-destructive text-xs uppercase tracking-widest hover:bg-destructive/10 hover:text-destructive"
+                >
+                  <Trash2 className="mr-2 h-4 w-4" /> RESTART DAEMON
+                </Button>
+              </div>
+            </div>
           </div>
         </div>
-      </div>
+      </SettingsSection>
 
       <MaintenanceDialogs
         confirmCleanup={confirmCleanup}
