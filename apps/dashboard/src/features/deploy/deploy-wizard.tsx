@@ -128,7 +128,7 @@ export function DeployWizard({
   }
 
   return (
-    <div className="grid gap-6 lg:grid-cols-[1fr_340px]">
+    <div className="grid gap-5 lg:grid-cols-[1fr_340px]">
       <DeployConfigStep
         framework={framework}
         onFrameworkChange={setFramework}

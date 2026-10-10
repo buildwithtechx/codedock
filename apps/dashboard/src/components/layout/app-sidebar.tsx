@@ -82,9 +82,13 @@ export function AppSidebar({ collapsed, onToggle, mobileOpen, onMobileClose }: A
       )}
 
       <aside
-        className={`fixed inset-y-3 left-3 z-40 flex flex-col overflow-hidden rounded-2xl border border-sidebar-border/70 bg-sidebar shadow-2xl shadow-black/15 transition-all duration-300 md:z-20 ${
+        className={`z-40 my-3 ms-3 flex shrink-0 flex-col overflow-hidden rounded-2xl border border-sidebar-border/70 bg-sidebar shadow-2xl shadow-black/15 transition-all duration-300 md:static md:z-auto md:shadow-none ${
           collapsed ? 'md:w-[72px]' : 'md:w-[260px]'
-        } ${mobileOpen ? 'w-[min(19rem,calc(100vw-1.5rem))] translate-x-0' : 'w-[min(19rem,calc(100vw-1.5rem))] -translate-x-[calc(100%+1rem)] md:translate-x-0'}`}
+        } fixed inset-y-3 left-3 ${
+          mobileOpen
+            ? 'w-[min(19rem,calc(100vw-1.5rem))] translate-x-0'
+            : 'w-[min(19rem,calc(100vw-1.5rem))] -translate-x-[calc(100%+1rem)] md:translate-x-0'
+        }`}
       >
         <div className="flex items-center justify-between px-3 pt-3 pb-2 md:hidden">
           <div className="flex items-center gap-2.5 py-2">
@@ -178,7 +182,7 @@ export function AppSidebar({ collapsed, onToggle, mobileOpen, onMobileClose }: A
             to={'/library' as never}
             aria-label="New project"
             title={navCollapsed ? 'New project' : undefined}
-            className={`flex items-center justify-center gap-2.5 overflow-hidden rounded-xl bg-gradient-to-r from-violet-600 to-fuchsia-600 px-3 py-2.5 font-semibold text-sm text-white transition-all hover:brightness-110 ${navCollapsed ? 'px-0' : 'px-3'}`}
+            className={`flex items-center justify-center gap-2.5 overflow-hidden rounded-xl bg-gradient-to-r from-[#f59e0b] to-[#f43f5e] px-3 py-2.5 font-semibold text-sm text-white transition-all hover:brightness-110 ${navCollapsed ? 'px-0' : 'px-3'}`}
           >
             <Plus className="h-4 w-4" />
             {!navCollapsed && 'New project'}

@@ -47,7 +47,8 @@ export function DeploySidebar({
   const cleanIp = serverIp ? serverIp.replace(/\./g, '-') : '';
   const sslipSuffix = cleanIp ? `${cleanIp}.sslip.io` : 'sslip.io';
 
-  const defaultFreeSuffix = isCloud ? 'codedock.run' : sslipSuffix;
+  const configuredWildcard = settingsRes?.data?.defaultWildcardDomain?.trim();
+  const defaultFreeSuffix = isCloud ? 'codedock.run' : configuredWildcard || sslipSuffix;
 
   const [domainMode, setDomainMode] = useState<'free' | 'custom' | 'none'>('free');
   const [customDomain, setCustomDomain] = useState('');

@@ -23,8 +23,8 @@ export function DeployTargetStep({ onContinue }: DeployTargetStepProps) {
   const [rollbackHistory, setRollbackHistory] = useState(5);
 
   return (
-    <div className="grid gap-6 lg:grid-cols-[1fr_340px]">
-      <div className="space-y-6">
+    <div className="grid gap-5 lg:grid-cols-[1fr_340px]">
+      <div className="space-y-5">
         <div className="flex items-center justify-between">
           <div>
             <h1 className="font-semibold text-2xl text-foreground tracking-tight">

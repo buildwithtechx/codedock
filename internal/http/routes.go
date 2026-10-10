@@ -34,6 +34,8 @@ func (s *Server) registerRoutes() {
 	s.router.GET("/healthz", func(c echo.Context) error {
 		return c.JSON(200, map[string]string{"status": "ok"})
 	})
+	s.router.GET("/health/env", s.settingsHandler.GetHealthEnv)
+	apiGroup.GET("/health/env", s.settingsHandler.GetHealthEnv)
 
 	s.setupSPAFallback()
 }

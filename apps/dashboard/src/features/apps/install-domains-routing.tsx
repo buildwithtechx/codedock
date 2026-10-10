@@ -3,7 +3,7 @@ import { useEffect, useState } from 'react';
 import { Badge } from '#/components/ui/badge';
 import { Input } from '#/components/ui/input';
 import { Label } from '#/components/ui/label';
-import { useGetSettings } from '#/features/settings';
+import { useGetPublicSettings, useGetSettings } from '#/features/settings';
 
 function slugify(text: string): string {
   return text
@@ -29,11 +29,14 @@ export function InstallDomainsRouting({
   appName: string;
   disabled?: boolean;
 }) {
+  const { data: publicRes } = useGetPublicSettings();
   const { data: settingsRes } = useGetSettings();
-  const wildcardDomain = settingsRes?.data?.defaultWildcardDomain?.trim() || 'codedock.run';
+  const isCloud = Boolean(publicRes?.data?.cloudMode);
   const serverIp = settingsRes?.data?.publicIpv4 || settingsRes?.data?.traefikWildcardIp || '';
   const cleanIp = serverIp ? serverIp.replace(/\./g, '-') : '';
   const sslipSuffix = cleanIp ? `${cleanIp}.sslip.io` : 'sslip.io';
+  const configuredWildcard = settingsRes?.data?.defaultWildcardDomain?.trim();
+  const wildcardDomain = configuredWildcard || (isCloud ? 'codedock.run' : sslipSuffix);
 
   const [mode, setMode] = useState<'free' | 'custom' | 'none'>('free');
   const [freeProvider, setFreeProvider] = useState<'wildcard' | 'sslip'>('wildcard');
