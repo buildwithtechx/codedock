@@ -31,31 +31,44 @@ export function InstallDomainsRouting({
 }) {
   const { data: settingsRes } = useGetSettings();
   const wildcardDomain = settingsRes?.data?.defaultWildcardDomain?.trim() || 'codedock.run';
+  const serverIp = settingsRes?.data?.publicIpv4 || settingsRes?.data?.traefikWildcardIp || '';
+  const cleanIp = serverIp ? serverIp.replace(/\./g, '-') : '';
+  const sslipSuffix = cleanIp ? `${cleanIp}.sslip.io` : 'sslip.io';
 
   const [mode, setMode] = useState<'free' | 'custom' | 'none'>('free');
+  const [freeProvider, setFreeProvider] = useState<'wildcard' | 'sslip'>('wildcard');
   const [subdomain, setSubdomain] = useState(() => slugify(appName) || 'app');
+
+  const activeSuffix = freeProvider === 'wildcard' ? wildcardDomain : sslipSuffix;
 
   useEffect(() => {
     if (mode === 'free') {
       const slug = slugify(appName) || 'app';
       setSubdomain(slug);
-      onDomainChange(`${slug}.${wildcardDomain}`);
+      onDomainChange(`${slug}.${activeSuffix}`);
     } else if (mode === 'none') {
       onDomainChange('');
     }
-  }, [appName, mode, wildcardDomain]);
+  }, [appName, mode, activeSuffix]);
 
   const handleSubdomainChange = (val: string) => {
     const cleaned = slugify(val);
     setSubdomain(cleaned);
-    onDomainChange(cleaned ? `${cleaned}.${wildcardDomain}` : '');
+    onDomainChange(cleaned ? `${cleaned}.${activeSuffix}` : '');
+  };
+
+  const handleProviderChange = (provider: 'wildcard' | 'sslip') => {
+    setFreeProvider(provider);
+    const suffix = provider === 'wildcard' ? wildcardDomain : sslipSuffix;
+    const slug = subdomain || slugify(appName) || 'app';
+    onDomainChange(`${slug}.${suffix}`);
   };
 
   const handleModeChange = (nextMode: 'free' | 'custom' | 'none') => {
     setMode(nextMode);
     if (nextMode === 'free') {
       const slug = subdomain || slugify(appName) || 'app';
-      onDomainChange(`${slug}.${wildcardDomain}`);
+      onDomainChange(`${slug}.${activeSuffix}`);
     } else if (nextMode === 'none') {
       onDomainChange('');
     } else {
@@ -97,26 +110,67 @@ export function InstallDomainsRouting({
       </div>
 
       {mode === 'free' && (
-        <div className="space-y-2">
-          <Label htmlFor="wizard-subdomain">Subdomain</Label>
-          <div className="flex items-center rounded-lg border border-border/60 bg-background px-3 py-1.5">
-            <Input
-              id="wizard-subdomain"
-              value={subdomain}
-              disabled={disabled}
-              onChange={(e) => handleSubdomainChange(e.target.value)}
-              placeholder="my-app"
-              className="h-7 border-0 p-0 text-xs shadow-none focus-visible:ring-0"
-            />
-            <span className="shrink-0 font-mono text-muted-foreground text-xs">
-              .{wildcardDomain}
-            </span>
+        <div className="space-y-3">
+          <div className="flex items-center gap-2">
+            <span className="font-medium text-muted-foreground text-xs">Provider:</span>
+            <div className="flex items-center gap-1.5">
+              <button
+                type="button"
+                disabled={disabled}
+                onClick={() => handleProviderChange('wildcard')}
+                className={`rounded-md border px-2.5 py-1 font-medium text-[11px] transition-colors ${
+                  freeProvider === 'wildcard'
+                    ? 'border-primary/40 bg-primary/10 text-primary'
+                    : 'border-transparent text-muted-foreground hover:bg-muted/50'
+                }`}
+              >
+                .{wildcardDomain}
+              </button>
+              <button
+                type="button"
+                disabled={disabled}
+                onClick={() => handleProviderChange('sslip')}
+                className={`rounded-md border px-2.5 py-1 font-medium text-[11px] transition-colors ${
+                  freeProvider === 'sslip'
+                    ? 'border-primary/40 bg-primary/10 text-primary'
+                    : 'border-transparent text-muted-foreground hover:bg-muted/50'
+                }`}
+              >
+                .{sslipSuffix} (Magic DNS)
+              </button>
+            </div>
           </div>
-          <div className="flex items-center gap-1.5 text-emerald-600 text-xs dark:text-emerald-400">
-            <ShieldCheck className="size-3.5 shrink-0" />
-            <span className="truncate">
-              Live at https://{subdomain || 'my-app'}.{wildcardDomain} with automated SSL
-            </span>
+
+          <div className="space-y-2">
+            <Label htmlFor="wizard-subdomain">Subdomain</Label>
+            <div className="flex items-center rounded-lg border border-border/60 bg-background px-3 py-1.5">
+              <Input
+                id="wizard-subdomain"
+                value={subdomain}
+                disabled={disabled}
+                onChange={(e) => handleSubdomainChange(e.target.value)}
+                placeholder="my-app"
+                className="h-7 border-0 p-0 text-xs shadow-none focus-visible:ring-0"
+              />
+              <span className="shrink-0 font-mono text-muted-foreground text-xs">
+                .{activeSuffix}
+              </span>
+            </div>
+            {freeProvider === 'wildcard' ? (
+              <div className="flex items-center gap-1.5 text-emerald-600 text-xs dark:text-emerald-400">
+                <ShieldCheck className="size-3.5 shrink-0" />
+                <span className="truncate">
+                  Live at https://{subdomain || 'my-app'}.{wildcardDomain} with automated SSL
+                </span>
+              </div>
+            ) : (
+              <div className="flex items-center gap-1.5 text-sky-600 text-xs dark:text-sky-400">
+                <Globe className="size-3.5 shrink-0" />
+                <span className="truncate">
+                  Live at http://{subdomain || 'my-app'}.{sslipSuffix} with zero-config Magic DNS
+                </span>
+              </div>
+            )}
           </div>
         </div>
       )}

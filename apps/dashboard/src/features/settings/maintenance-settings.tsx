@@ -193,65 +193,90 @@ export const MaintenancePage = () => {
             </div>
           </div>
 
-          <div className="grid grid-cols-1 gap-6 lg:grid-cols-3">
-            <DockerStorageCard stats={stats} />
+          <DockerStorageCard stats={stats} />
 
-            <div className="flex flex-col space-y-6 rounded-2xl border border-border/80 bg-card p-6 shadow-sm lg:col-span-1">
+          <div className="flex flex-col space-y-6 rounded-2xl border border-border/80 bg-card p-6 shadow-sm">
+            <div className="flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between">
               <div className="flex items-center gap-4">
                 <div className="flex h-12 w-12 items-center justify-center rounded-lg border border-primary/20 bg-primary/10 text-primary">
                   <HardDrive className="h-5 w-5" />
                 </div>
                 <div>
-                  <h3 className="font-bold text-xl">Cleanup</h3>
+                  <h3 className="font-bold text-xl">Cleanup Targets</h3>
                   <p className="mt-1 text-muted-foreground text-sm">
-                    Current disk and Docker cleanup targets.
+                    Reclaimable space across Docker builds, service logs, and packages.
                   </p>
                 </div>
               </div>
 
-              <div className="divide-y divide-border/70 rounded-xl border border-border/80 text-sm">
-                <div className="flex justify-between bg-background/30 p-4">
-                  <span className="text-muted-foreground">Top Docker candidate</span>
-                  <span className="font-mono">
-                    {stats?.docker?.buildCache?.reclaimable || '0 B'} Build Cache
-                  </span>
-                </div>
-                <div className="flex justify-between p-4">
-                  <span className="text-muted-foreground">Codedock data</span>
-                  <span className="font-mono">1.81 MB</span>
-                </div>
-                <div className="flex justify-between p-4">
-                  <span className="text-muted-foreground">Backups</span>
-                  <span className="font-mono">{stats?.backups?.size || '0 B'}</span>
-                </div>
-                <div className="flex justify-between p-4">
-                  <span className="text-muted-foreground">Package cache</span>
-                  <span className="font-mono">{stats?.packageCache?.size || '0 B'}</span>
-                </div>
-                <div className="flex justify-between p-4">
-                  <span className="text-muted-foreground">System logs</span>
-                  <span className="font-mono">{stats?.systemLogs?.size || '0 B'}</span>
-                </div>
-              </div>
-
-              <div className="mt-auto flex flex-col gap-3 pt-4">
-                <Button
-                  variant="outline"
-                  onClick={() => setConfirmCleanup(true)}
-                  disabled={cleaning}
-                  className="h-12 border-primary/30 bg-primary/5 font-semibold text-primary text-xs uppercase tracking-widest hover:bg-primary/10 hover:text-primary"
-                >
-                  <RefreshCw className="mr-2 h-4 w-4" /> {cleaning ? 'CLEANING...' : 'SAFE CLEANUP'}
-                </Button>
+              <div className="flex items-center gap-2.5">
                 <Button
                   variant="outline"
                   onClick={() => setConfirmRestart(true)}
                   disabled={restarting}
-                  className="h-12 border-destructive/30 bg-destructive/5 font-semibold text-destructive text-xs uppercase tracking-widest hover:bg-destructive/10 hover:text-destructive"
+                  className="border-destructive/30 bg-destructive/5 font-semibold text-destructive text-xs uppercase tracking-wider hover:bg-destructive/10 hover:text-destructive"
                 >
                   <Trash2 className="mr-2 h-4 w-4" /> RESTART DAEMON
                 </Button>
+                <Button
+                  onClick={() => setConfirmCleanup(true)}
+                  disabled={cleaning}
+                  className="font-semibold text-xs uppercase tracking-wider"
+                >
+                  <RefreshCw className="mr-2 h-4 w-4" /> {cleaning ? 'CLEANING...' : 'SAFE CLEANUP'}
+                </Button>
               </div>
+            </div>
+
+            <div className="grid grid-cols-2 gap-3 sm:grid-cols-3 lg:grid-cols-5">
+              <div className="rounded-xl border border-border/70 bg-background/50 p-4">
+                <p className="font-bold text-[10px] text-muted-foreground uppercase tracking-[0.15em]">
+                  TOP DOCKER CANDIDATE
+                </p>
+                <p className="mt-2 font-mono font-semibold text-foreground text-lg">
+                  {stats?.docker?.buildCache?.reclaimable || '0 B'}
+                </p>
+                <p className="mt-1 text-muted-foreground text-xs">Build Cache</p>
+              </div>
+              <div className="rounded-xl border border-border/70 bg-background/50 p-4">
+                <p className="font-bold text-[10px] text-muted-foreground uppercase tracking-[0.15em]">
+                  CODEDOCK DATA
+                </p>
+                <p className="mt-2 font-mono font-semibold text-foreground text-lg">1.81 MB</p>
+                <p className="mt-1 text-muted-foreground text-xs">Runtime configs</p>
+              </div>
+              <div className="rounded-xl border border-border/70 bg-background/50 p-4">
+                <p className="font-bold text-[10px] text-muted-foreground uppercase tracking-[0.15em]">
+                  BACKUPS
+                </p>
+                <p className="mt-2 font-mono font-semibold text-foreground text-lg">
+                  {stats?.backups?.size || '0 B'}
+                </p>
+                <p className="mt-1 text-muted-foreground text-xs">Archived snapshots</p>
+              </div>
+              <div className="rounded-xl border border-border/70 bg-background/50 p-4">
+                <p className="font-bold text-[10px] text-muted-foreground uppercase tracking-[0.15em]">
+                  PACKAGE CACHE
+                </p>
+                <p className="mt-2 font-mono font-semibold text-foreground text-lg">
+                  {stats?.packageCache?.size || '0 B'}
+                </p>
+                <p className="mt-1 text-muted-foreground text-xs">Package downloads</p>
+              </div>
+              <div className="rounded-xl border border-border/70 bg-background/50 p-4">
+                <p className="font-bold text-[10px] text-muted-foreground uppercase tracking-[0.15em]">
+                  SYSTEM LOGS
+                </p>
+                <p className="mt-2 font-mono font-semibold text-foreground text-lg">
+                  {stats?.systemLogs?.size || '0 B'}
+                </p>
+                <p className="mt-1 text-muted-foreground text-xs">Daemon journal logs</p>
+              </div>
+            </div>
+
+            <div className="rounded-xl border border-border/60 bg-background/30 p-4 text-muted-foreground text-xs leading-relaxed">
+              Safe cleanup purges dangling image layers, unused build stages, and temporary package
+              caches without interrupting running containers or deleting production volumes.
             </div>
           </div>
         </div>

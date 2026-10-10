@@ -5,17 +5,8 @@ import { toast } from 'sonner';
 import { Button } from '#/components/ui/button';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '#/components/ui/card';
 import {
-  Dialog,
-  DialogContent,
-  DialogDescription,
-  DialogFooter,
-  DialogHeader,
-  DialogTitle,
-} from '#/components/ui/dialog';
-import { Input } from '#/components/ui/input';
-import {
+  CreateOrganizationModal,
   type Organization,
-  useCreateOrganization,
   useDeleteOrganization,
   useListOrganizations,
 } from '#/features/organizations';
@@ -120,72 +111,5 @@ function OrganizationCard({ org }: { org: Organization }) {
         </CardContent>
       </Card>
     </Link>
-  );
-}
-
-function CreateOrganizationModal({
-  open,
-  onOpenChange,
-}: {
-  open: boolean;
-  onOpenChange: (open: boolean) => void;
-}) {
-  const [name, setName] = useState('');
-  const { mutateAsync: createOrg, isPending } = useCreateOrganization();
-
-  const handleSubmit = async (e: React.FormEvent) => {
-    e.preventDefault();
-    if (!name.trim()) return;
-    try {
-      await createOrg({ name: name.trim() });
-      toast.success('Organization created');
-      onOpenChange(false);
-      setName('');
-    } catch (err: unknown) {
-      toast.error(err instanceof Error ? err.message : 'Failed to create organization');
-    }
-  };
-
-  return (
-    <Dialog open={open} onOpenChange={onOpenChange}>
-      <DialogContent>
-        <form onSubmit={handleSubmit}>
-          <DialogHeader>
-            <DialogTitle>Create Organization</DialogTitle>
-            <DialogDescription>
-              Create a new organization to manage projects with your team.
-            </DialogDescription>
-          </DialogHeader>
-          <div className="py-6">
-            <div className="space-y-2">
-              <label htmlFor="name" className="font-medium text-sm">
-                Name
-              </label>
-              <Input
-                id="name"
-                value={name}
-                onChange={(e) => setName(e.target.value)}
-                placeholder="Acme Corp"
-                disabled={isPending}
-              />
-            </div>
-          </div>
-          <DialogFooter>
-            <Button
-              type="button"
-              variant="outline"
-              onClick={() => onOpenChange(false)}
-              disabled={isPending}
-            >
-              Cancel
-            </Button>
-            <Button type="submit" disabled={!name.trim() || isPending}>
-              {isPending && <Loader2 className="mr-2 h-4 w-4 animate-spin" />}
-              Create
-            </Button>
-          </DialogFooter>
-        </form>
-      </DialogContent>
-    </Dialog>
   );
 }
