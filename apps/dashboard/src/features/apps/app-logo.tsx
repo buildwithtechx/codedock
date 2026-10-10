@@ -2,16 +2,20 @@ import { useState } from 'react';
 import { cn } from '#/lib/utils';
 
 export function AppLogo({
+  appId,
   icon,
   name,
   className,
 }: {
+  appId?: string;
   icon?: string;
-  name: string;
+  name?: string;
   className?: string;
 }) {
   const [failed, setFailed] = useState(false);
-  if (!icon || failed) {
+  const resolvedIcon = icon || appId;
+  const resolvedName = name || appId || '';
+  if (!resolvedIcon || failed) {
     return (
       <span
         aria-hidden="true"
@@ -20,7 +24,7 @@ export function AppLogo({
           className ?? 'size-10 text-sm'
         )}
       >
-        {name.trim().charAt(0) || '?'}
+        {resolvedName.trim().charAt(0) || '?'}
       </span>
     );
   }
@@ -32,7 +36,7 @@ export function AppLogo({
       )}
     >
       <img
-        src={`/app-logos/${icon}.svg`}
+        src={`/app-logos/${resolvedIcon}.svg`}
         alt=""
         aria-hidden="true"
         className="size-3/5 object-contain"

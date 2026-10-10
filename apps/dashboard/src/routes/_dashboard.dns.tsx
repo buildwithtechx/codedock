@@ -1,6 +1,7 @@
-import { createFileRoute } from '@tanstack/react-router';
-import { DnsAuditPage } from '#/features/dns/dns-audit-page';
+import { createFileRoute, redirect } from '@tanstack/react-router';
 
 export const Route = createFileRoute('/_dashboard/dns')({
-  component: DnsAuditPage,
+  beforeLoad: () => {
+    throw redirect({ to: '/domains' });
+  },
 });

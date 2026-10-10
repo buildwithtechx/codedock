@@ -26,5 +26,9 @@ export function TeamSettings() {
     );
   }
 
-  return <OrganizationMembers organizationId={organizationId} />;
+  const currentOrg = organizations?.find((o) => o.id === organizationId);
+
+  return (
+    <OrganizationMembers organizationId={organizationId} organizationName={currentOrg?.name} />
+  );
 }

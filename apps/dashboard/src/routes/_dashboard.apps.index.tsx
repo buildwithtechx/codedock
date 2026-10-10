@@ -35,9 +35,13 @@ function AppsPage() {
     () => catalog.filter((app) => !installedIds.has(app.id)).slice(0, 5),
     [catalog, installedIds]
   );
-  const query = search.trim().toLowerCase();
-  const filtered = apps.filter((app) =>
-    [app.name, app.branch, app.domain].some((value) => value?.toLowerCase().includes(query))
+  const query = (search ?? '').trim().toLowerCase();
+  const filtered = apps.filter(
+    (app) =>
+      Boolean(app) &&
+      [app.name, app.branch, app.domain].some((value) =>
+        (value ?? '').toLowerCase().includes(query)
+      )
   );
 
   if (installedQuery.isError) {

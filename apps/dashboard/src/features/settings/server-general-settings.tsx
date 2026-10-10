@@ -122,6 +122,7 @@ export function ServerGeneralSettings() {
   return (
     <div className="space-y-6">
       <SettingsSection
+        collapsible
         icon={<Globe className="h-4 w-4" />}
         title="Domains & Routing"
         description="Configure the primary hostname and root wildcard domains for routing."
@@ -164,6 +165,7 @@ export function ServerGeneralSettings() {
       </SettingsSection>
 
       <SettingsSection
+        collapsible
         icon={<Info className="h-4 w-4" />}
         title="Network"
         description="Public IP addresses, Traefik edge routing, and access control allowlists."
@@ -218,6 +220,7 @@ export function ServerGeneralSettings() {
       </SettingsSection>
 
       <SettingsSection
+        collapsible
         icon={<Lock className="h-4 w-4" />}
         title="Security & Access"
         description="User registration policies, domain restrictions, and safety confirmations."
@@ -259,6 +262,7 @@ export function ServerGeneralSettings() {
       </SettingsSection>
 
       <SettingsSection
+        collapsible
         icon={<Cpu className="h-4 w-4" />}
         title="Build & Deployment"
         description="Parallel build worker limits and deployment execution timeouts."
@@ -292,6 +296,7 @@ export function ServerGeneralSettings() {
       </SettingsSection>
 
       <SettingsSection
+        collapsible
         icon={<Clock className="h-4 w-4" />}
         title="System"
         description="Instance timezone and anonymous diagnostics reporting."

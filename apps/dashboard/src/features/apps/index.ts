@@ -10,6 +10,7 @@ export {
   useInstalledApps,
   useReviewCatalogInstall,
 } from './hooks';
+export { InstallDomainsRouting } from './install-domains-routing';
 export { InstallWizard } from './install-wizard';
 export { InstalledAppRow } from './installed-app-row';
 export { NewAppTabs } from './new-app-tabs';

@@ -13,7 +13,6 @@ import {
 } from 'lucide-react';
 import { PageFrame } from '#/components/layout/page-frame';
 import { PageHeader } from '#/components/layout/page-header';
-import { Tabs, TabsContent, TabsList, TabsTrigger } from '#/components/ui/tabs';
 import { NotificationsSettings } from '#/features/notifications/notifications-settings';
 import { GithubIntegration, GitProviders } from '#/features/sources';
 import { ApiKeysList } from '#/features/users/api-keys-list';
@@ -126,22 +125,10 @@ export const SettingsLayout = () => {
     credentials: <CredentialsSettings />,
     mcp: <McpSettings />,
     git: (
-      <Tabs defaultValue="github-app" className="pb-12">
-        <TabsList>
-          <TabsTrigger value="github-app">GitHub App</TabsTrigger>
-          <TabsTrigger value="tokens">Personal tokens</TabsTrigger>
-        </TabsList>
-        <p className="mt-3 text-muted-foreground text-sm">
-          Connect GitHub automatically with an App, or link providers manually with a personal
-          access token.
-        </p>
-        <TabsContent value="github-app" className="mt-6">
-          <GithubIntegration />
-        </TabsContent>
-        <TabsContent value="tokens" className="mt-6">
-          <GitProviders />
-        </TabsContent>
-      </Tabs>
+      <div className="space-y-6">
+        <GithubIntegration />
+        <GitProviders />
+      </div>
     ),
     tokens: <ApiKeysList />,
     team: <TeamSettings />,

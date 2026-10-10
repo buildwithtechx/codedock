@@ -69,9 +69,9 @@ export const infrastructureNavigation: DashboardNavigationItem[] = [
     icon: Server,
   },
   {
-    title: 'Domains & DNS',
+    title: 'Domains',
     description: 'Domain routing and SSL verification',
-    to: '/dns',
+    to: '/domains',
     icon: Globe2,
   },
   {

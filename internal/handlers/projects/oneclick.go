@@ -49,11 +49,10 @@ func (h *OneClickHandler) Review(c echo.Context) error {
 	if err := c.Bind(&req); err != nil {
 		return utils.Error(c, http.StatusBadRequest, "invalid payload")
 	}
-	if req.ProjectID == "" {
-		return utils.Error(c, http.StatusBadRequest, "projectId is required")
-	}
-	if err := h.authorize(c, req.ProjectID); err != nil {
-		return err
+	if req.ProjectID != "" {
+		if err := h.authorize(c, req.ProjectID); err != nil {
+			return err
+		}
 	}
 	preview, err := h.service.ReviewInstall(c.Request().Context(), installInput(req))
 	if err != nil {
@@ -67,11 +66,27 @@ func (h *OneClickHandler) Deploy(c echo.Context) error {
 	if err := c.Bind(&req); err != nil {
 		return utils.Error(c, http.StatusBadRequest, "invalid payload")
 	}
-	if req.ProjectID == "" {
-		return utils.Error(c, http.StatusBadRequest, "projectId is required")
+	user := middleware.GetUserClaimsFromContext(c.Request().Context())
+	if user == nil {
+		return utils.Error(c, http.StatusUnauthorized, "unauthorized")
 	}
-	if err := h.authorize(c, req.ProjectID); err != nil {
-		return err
+	if req.ProjectID == "" {
+		projectName := req.Name
+		if projectName == "" {
+			projectName = req.AppID
+		}
+		proj, err := h.projectService.CreateProjectWithMemberFromRequest(c.Request().Context(), &models.CreateProjectRequest{
+			Name:        projectName,
+			Description: "Installed " + req.AppID + " application",
+		}, user.UserID, string(models.UserRoleOwner))
+		if err != nil {
+			return utils.Error(c, http.StatusInternalServerError, "failed to create project: "+err.Error())
+		}
+		req.ProjectID = proj.ID
+	} else {
+		if err := h.authorize(c, req.ProjectID); err != nil {
+			return err
+		}
 	}
 	result, err := h.service.InstallApp(c.Request().Context(), installInput(req))
 	if err != nil {

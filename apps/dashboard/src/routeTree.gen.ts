@@ -24,6 +24,7 @@ import { Route as DashboardBackupsRouteImport } from './routes/_dashboard.backup
 import { Route as DashboardDeployRouteImport } from './routes/_dashboard.deploy'
 import { Route as DashboardDeploymentsRouteImport } from './routes/_dashboard.deployments'
 import { Route as DashboardDnsRouteImport } from './routes/_dashboard.dns'
+import { Route as DashboardDomainsRouteImport } from './routes/_dashboard.domains'
 import { Route as DashboardJobsRouteImport } from './routes/_dashboard.jobs'
 import { Route as DashboardLibraryRouteImport } from './routes/_dashboard.library'
 import { Route as DashboardMonitoringRouteImport } from './routes/_dashboard.monitoring'
@@ -151,6 +152,11 @@ const DashboardDeploymentsRoute = DashboardDeploymentsRouteImport.update({
 const DashboardDnsRoute = DashboardDnsRouteImport.update({
   id: '/dns',
   path: '/dns',
+  getParentRoute: () => DashboardRoute,
+} as any)
+const DashboardDomainsRoute = DashboardDomainsRouteImport.update({
+  id: '/domains',
+  path: '/domains',
   getParentRoute: () => DashboardRoute,
 } as any)
 const DashboardJobsRoute = DashboardJobsRouteImport.update({
@@ -473,6 +479,7 @@ export interface FileRoutesByFullPath {
   '/deploy': typeof DashboardDeployRouteWithChildren
   '/deployments': typeof DashboardDeploymentsRouteWithChildren
   '/dns': typeof DashboardDnsRoute
+  '/domains': typeof DashboardDomainsRoute
   '/jobs': typeof DashboardJobsRouteWithChildren
   '/library': typeof DashboardLibraryRoute
   '/monitoring': typeof DashboardMonitoringRoute
@@ -539,6 +546,7 @@ export interface FileRoutesByTo {
   '/verify-email': typeof AuthVerifyEmailRoute
   '/audit': typeof DashboardAuditRoute
   '/dns': typeof DashboardDnsRoute
+  '/domains': typeof DashboardDomainsRoute
   '/library': typeof DashboardLibraryRoute
   '/monitoring': typeof DashboardMonitoringRoute
   '/profile': typeof DashboardProfileRoute
@@ -603,6 +611,7 @@ export interface FileRoutesById {
   '/_dashboard/deploy': typeof DashboardDeployRouteWithChildren
   '/_dashboard/deployments': typeof DashboardDeploymentsRouteWithChildren
   '/_dashboard/dns': typeof DashboardDnsRoute
+  '/_dashboard/domains': typeof DashboardDomainsRoute
   '/_dashboard/jobs': typeof DashboardJobsRouteWithChildren
   '/_dashboard/library': typeof DashboardLibraryRoute
   '/_dashboard/monitoring': typeof DashboardMonitoringRoute
@@ -676,6 +685,7 @@ export interface FileRouteTypes {
     | '/deploy'
     | '/deployments'
     | '/dns'
+    | '/domains'
     | '/jobs'
     | '/library'
     | '/monitoring'
@@ -742,6 +752,7 @@ export interface FileRouteTypes {
     | '/verify-email'
     | '/audit'
     | '/dns'
+    | '/domains'
     | '/library'
     | '/monitoring'
     | '/profile'
@@ -805,6 +816,7 @@ export interface FileRouteTypes {
     | '/_dashboard/deploy'
     | '/_dashboard/deployments'
     | '/_dashboard/dns'
+    | '/_dashboard/domains'
     | '/_dashboard/jobs'
     | '/_dashboard/library'
     | '/_dashboard/monitoring'
@@ -974,6 +986,13 @@ declare module '@tanstack/react-router' {
       path: '/dns'
       fullPath: '/dns'
       preLoaderRoute: typeof DashboardDnsRouteImport
+      parentRoute: typeof DashboardRoute
+    }
+    '/_dashboard/domains': {
+      id: '/_dashboard/domains'
+      path: '/domains'
+      fullPath: '/domains'
+      preLoaderRoute: typeof DashboardDomainsRouteImport
       parentRoute: typeof DashboardRoute
     }
     '/_dashboard/jobs': {
@@ -1618,6 +1637,7 @@ interface DashboardRouteChildren {
   DashboardDeployRoute: typeof DashboardDeployRouteWithChildren
   DashboardDeploymentsRoute: typeof DashboardDeploymentsRouteWithChildren
   DashboardDnsRoute: typeof DashboardDnsRoute
+  DashboardDomainsRoute: typeof DashboardDomainsRoute
   DashboardJobsRoute: typeof DashboardJobsRouteWithChildren
   DashboardLibraryRoute: typeof DashboardLibraryRoute
   DashboardMonitoringRoute: typeof DashboardMonitoringRoute
@@ -1638,6 +1658,7 @@ const DashboardRouteChildren: DashboardRouteChildren = {
   DashboardDeployRoute: DashboardDeployRouteWithChildren,
   DashboardDeploymentsRoute: DashboardDeploymentsRouteWithChildren,
   DashboardDnsRoute: DashboardDnsRoute,
+  DashboardDomainsRoute: DashboardDomainsRoute,
   DashboardJobsRoute: DashboardJobsRouteWithChildren,
   DashboardLibraryRoute: DashboardLibraryRoute,
   DashboardMonitoringRoute: DashboardMonitoringRoute,

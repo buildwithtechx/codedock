@@ -50,11 +50,13 @@ export function AppCatalog({
   }, [catalog]);
 
   const filtered = useMemo(() => {
-    const needle = query.trim().toLowerCase();
+    const needle = (query ?? '').trim().toLowerCase();
     return catalog.filter((app) => {
-      if (category !== 'all' && app.category !== category) return false;
+      if (category !== 'all' && app?.category !== category) return false;
       if (!needle) return true;
-      return `${app.name} ${app.description} ${app.category}`.toLowerCase().includes(needle);
+      return `${app?.name ?? ''} ${app?.description ?? ''} ${app?.category ?? ''}`
+        .toLowerCase()
+        .includes(needle);
     });
   }, [catalog, category, query]);
 

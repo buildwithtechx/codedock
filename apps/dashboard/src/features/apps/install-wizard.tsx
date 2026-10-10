@@ -14,6 +14,7 @@ import {
 } from '#/features/templates/install-settings-tabs';
 import type { InstallPreview } from '#/interfaces/templates';
 import { useCatalogApp, useDeployCatalogApp, useReviewCatalogInstall } from './hooks';
+import { InstallDomainsRouting } from './install-domains-routing';
 import { WizardDestination } from './wizard-destination';
 import { WizardHeader } from './wizard-header';
 
@@ -87,24 +88,21 @@ export function InstallWizard({ appId }: { appId: string }) {
       else environment[variable.key] = value;
     }
     const port = Number.parseInt(hostPort, 10);
+    const resolvedProjectId = projectId === 'standalone' ? '' : projectId;
     return {
       appId,
-      projectId,
-      name: name.trim() || app.name,
+      projectId: resolvedProjectId,
+      name: (name ?? '').trim() || app.name,
       secrets,
       environment,
       hostPort: Number.isNaN(port) ? undefined : port,
-      domain: domain.trim() || undefined,
-      environmentId: environmentId || undefined,
+      domain: (domain ?? '').trim() || undefined,
+      environmentId: resolvedProjectId ? environmentId || undefined : undefined,
       digest,
     };
   };
 
   const configurationValid = () => {
-    if (!projectId) {
-      toast.error('Select a destination project');
-      return false;
-    }
     if (!name.trim()) {
       toast.error('Install name is required');
       return false;
@@ -240,32 +238,15 @@ export function InstallWizard({ appId }: { appId: string }) {
               />
             </div>
           )}
-          <div className="rounded-2xl bg-card p-5">
-            <h2 className="font-semibold text-foreground text-sm">Network</h2>
-            <div className="mt-4 grid grid-cols-1 gap-4 sm:grid-cols-2">
-              <div className="space-y-2">
-                <Label htmlFor="wizard-port">Host port</Label>
-                <Input
-                  id="wizard-port"
-                  inputMode="numeric"
-                  placeholder={String(app.defaultPort)}
-                  value={hostPort}
-                  disabled={busy}
-                  onChange={(event) => setHostPort(event.target.value)}
-                />
-              </div>
-              <div className="space-y-2">
-                <Label htmlFor="wizard-domain">Domain</Label>
-                <Input
-                  id="wizard-domain"
-                  placeholder="app.example.com"
-                  value={domain}
-                  disabled={busy}
-                  onChange={(event) => setDomain(event.target.value)}
-                />
-              </div>
-            </div>
-          </div>
+          <InstallDomainsRouting
+            hostPort={hostPort}
+            onHostPortChange={setHostPort}
+            defaultPort={app.defaultPort}
+            domain={domain}
+            onDomainChange={setDomain}
+            appName={name || app.name}
+            disabled={busy}
+          />
         </div>
         <div className="min-w-0 space-y-4 lg:sticky lg:top-6">
           <div className="rounded-2xl bg-card p-5">
