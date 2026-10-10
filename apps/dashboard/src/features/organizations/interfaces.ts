@@ -5,7 +5,7 @@ export interface Organization {
   updatedAt: string;
 }
 
-export type OrganizationRole = 'member' | 'admin' | 'owner';
+export type OrganizationRole = 'member' | 'admin' | 'owner' | 'restricted';
 
 export interface OrganizationMember {
   id: string;
@@ -16,6 +16,7 @@ export interface OrganizationMember {
   status: string;
   invitedAt: string;
   acceptedAt?: string;
+  inviteLink?: string;
 }
 
 export interface CreateOrganizationRequest {
@@ -25,6 +26,8 @@ export interface CreateOrganizationRequest {
 export interface InviteOrganizationMemberRequest {
   email: string;
   permission: OrganizationRole | string;
+  delivery?: 'email' | 'link';
+  projects?: string[];
 }
 
 export interface UpdateOrganizationMemberRequest {

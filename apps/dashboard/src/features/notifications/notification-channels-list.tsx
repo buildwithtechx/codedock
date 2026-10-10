@@ -234,7 +234,13 @@ export const NotificationChannelsList = ({
       </NotificationChannelRow>
 
       <NotificationChannelRow
-        icon={<Mail className="h-5 w-5" />}
+        icon={
+          <img
+            src="/notification-providers/resend.svg"
+            alt="Resend"
+            className="h-5 w-5 object-contain dark:invert"
+          />
+        }
         name="Resend"
         description="Modern email API service via Resend API key"
         isConfigured={Boolean(form.resendApiKey?.trim())}

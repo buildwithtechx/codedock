@@ -98,10 +98,7 @@ func (h *OrganizationHandler) InviteMember(c echo.Context) error {
 		return utils.Error(c, http.StatusUnauthorized, "unauthorized")
 	}
 	orgID := c.Param("id")
-	var req struct {
-		Email      string                  `json:"email"`
-		Permission models.MemberPermission `json:"permission"`
-	}
+	var req models.InviteOrganizationMemberRequest
 	if err := c.Bind(&req); err != nil {
 		return utils.Error(c, http.StatusBadRequest, "invalid request")
 	}
@@ -109,12 +106,13 @@ func (h *OrganizationHandler) InviteMember(c echo.Context) error {
 	if err != nil {
 		return utils.Error(c, http.StatusInternalServerError, err.Error())
 	}
+	member.InviteLink = "/invite/" + member.ID
 	h.auditService.LogAction(c.Request().Context(), authservices.AuditActionOpts{
 		UserID:    userClaims.UserID,
 		Action:    "member.invite",
 		Resource:  orgID,
 		IPAddress: c.RealIP(),
-		Details:   map[string]string{"email": req.Email, "permission": string(req.Permission)},
+		Details:   map[string]string{"email": req.Email, "permission": string(req.Permission), "delivery": req.Delivery},
 	})
 	return c.JSON(http.StatusCreated, member)
 }

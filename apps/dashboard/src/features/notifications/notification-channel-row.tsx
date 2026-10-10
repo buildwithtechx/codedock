@@ -64,7 +64,9 @@ export function NotificationChannelRow({
             Disabled
           </span>
         ) : (
-          <p className="py-0.5 text-muted-foreground text-xs">None added yet.</p>
+          <span className="inline-flex items-center gap-1 rounded-full bg-muted px-2 py-0.5 font-medium text-[10px] text-muted-foreground">
+            Not configured
+          </span>
         )}
       </div>
 
