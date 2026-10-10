@@ -59,7 +59,7 @@ export function TemplatesGallery() {
           onRetry={() => void refetch()}
         />
       ) : isLoading ? (
-        <div className="mt-6 grid grid-cols-1 gap-4 sm:grid-cols-2 md:grid-cols-2 lg:grid-cols-2 xl:grid-cols-2 2xl:grid-cols-3">
+        <div className="mt-6 grid grid-cols-1 gap-4 sm:grid-cols-2">
           {Array.from({ length: 6 }, (_, index) => (
             <Skeleton key={index} className="h-32 rounded-2xl" />
           ))}
@@ -73,7 +73,7 @@ export function TemplatesGallery() {
           </p>
         </div>
       ) : (
-        <div className="mt-6 grid grid-cols-1 gap-4 sm:grid-cols-2 md:grid-cols-2 lg:grid-cols-2 xl:grid-cols-2 2xl:grid-cols-3">
+        <div className="mt-6 grid grid-cols-1 gap-4 sm:grid-cols-2">
           {filtered.map((example) => (
             <button
               key={example.id}

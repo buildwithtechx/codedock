@@ -149,7 +149,7 @@ export function McpClientSetup({ endpoint }: { endpoint: string }) {
     <div className="space-y-4">
       <div>
         <p className="mb-2 font-medium text-foreground text-xs">Choose Your AI Assistant or IDE</p>
-        <div className="flex flex-wrap gap-1.5">
+        <div className="scrollbar-none flex items-center gap-1.5 overflow-x-auto whitespace-nowrap pb-1 [scrollbar-width:none]">
           {CLIENTS.map((client) => {
             const isActive = client.id === selectedId;
             return (
@@ -157,7 +157,7 @@ export function McpClientSetup({ endpoint }: { endpoint: string }) {
                 key={client.id}
                 type="button"
                 onClick={() => setSelectedId(client.id)}
-                className={`flex items-center gap-2 rounded-lg border px-3 py-1.5 font-medium text-xs transition-colors ${
+                className={`flex shrink-0 items-center gap-2 rounded-lg border px-3 py-1.5 font-medium text-xs transition-colors ${
                   isActive
                     ? 'border-primary/60 bg-primary/10 text-foreground'
                     : 'border-border/60 text-muted-foreground hover:bg-muted/40 hover:text-foreground'

@@ -156,14 +156,22 @@ export function HomeFirstProject({ onCreateProject }: { onCreateProject: () => v
           </text>
 
           <circle cx="144" cy="66" r="27" className="fill-primary/5" />
-          <circle
-            cx="144"
-            cy="66"
-            r="18"
-            fill="none"
-            className="stroke-foreground/80"
-            strokeWidth="3.5"
-          />
+          <g transform="translate(126 48) scale(0.5625)">
+            <rect width="64" height="64" rx="16" fill="#101827" />
+            <path
+              d="M18 22h17a9 9 0 0 1 9 9v2a9 9 0 0 1-9 9H29"
+              stroke="#60A5FA"
+              strokeWidth="6"
+              strokeLinecap="round"
+            />
+            <path
+              d="M46 42H29a9 9 0 0 1-9-9v-2a9 9 0 0 1 9-9h6"
+              stroke="#A78BFA"
+              strokeWidth="6"
+              strokeLinecap="round"
+            />
+            <path d="M31 32h2" stroke="#F8FAFC" strokeWidth="6" strokeLinecap="round" />
+          </g>
           <circle cx="158" cy="52" r="4.2" className="fill-card" />
           <circle cx="158" cy="52" r="2.8" className="fill-emerald-500" />
         </svg>

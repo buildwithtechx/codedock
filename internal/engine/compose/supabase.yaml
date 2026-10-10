@@ -1,0 +1,46 @@
+x-codedock:
+  is_one_click: true
+  verified: true
+  name: Supabase
+  description: Full self-hosted Supabase — Postgres, Auth, REST, Realtime, Storage, and Studio behind one API gateway.
+  category: backend
+  icon: supabase
+  secrets:
+    - var: POSTGRES_PASSWORD
+      label: Database password
+      length: 24
+    - var: JWT_SECRET
+      label: JWT secret
+      length: 32
+services:
+  kong:
+    image: kong:2.8.1
+    restart: always
+    ports:
+      - "8000"
+  studio:
+    image: supabase/studio:20240101-8e31004
+    restart: always
+    ports:
+      - "3000"
+  auth:
+    image: supabase/gotrue:v2.132.3
+    restart: always
+    environment:
+      - GOTRUE_JWT_SECRET=${secret:JWT_SECRET}
+  db:
+    image: supabase/postgres:15.1.0.117
+    restart: always
+    ports:
+      - "5432"
+    environment:
+      - POSTGRES_PASSWORD=${secret:POSTGRES_PASSWORD}
+    volumes:
+      - supabase-db-data:/var/lib/postgresql/data
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U postgres -d postgres"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+volumes:
+  supabase-db-data:

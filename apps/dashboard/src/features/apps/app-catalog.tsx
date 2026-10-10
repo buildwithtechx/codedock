@@ -17,15 +17,18 @@ const CATEGORY_ORDER = [
   'analytics',
   'automation',
   'mail',
-  'other',
+  'tools',
 ] as const;
 
 const STANDARD_CATEGORIES = new Set<string>(CATEGORY_ORDER);
 
 function normalizeCategory(cat?: string): string {
-  if (!cat) return 'other';
+  if (!cat) return 'tools';
   const lower = cat.toLowerCase();
-  return STANDARD_CATEGORIES.has(lower) && lower !== 'other' ? lower : 'other';
+  if (lower === 'devtools' || lower === 'productivity' || lower === 'search' || lower === 'other') {
+    return 'tools';
+  }
+  return STANDARD_CATEGORIES.has(lower) ? lower : 'tools';
 }
 
 const CATEGORY_LABELS: Record<string, string> = {
@@ -36,7 +39,7 @@ const CATEGORY_LABELS: Record<string, string> = {
   analytics: 'Analytics',
   automation: 'Automation',
   mail: 'Mail',
-  other: 'Other',
+  tools: 'Tools',
 };
 
 const DOCS_URL = 'https://docs.codedock.run';
@@ -127,7 +130,7 @@ export function AppCatalog({
           )}
         </div>
         {categories.length > 1 && (
-          <div className="flex flex-wrap items-center gap-1">
+          <div className="scrollbar-none flex items-center gap-1 overflow-x-auto whitespace-nowrap pb-1">
             {categories.map((item) => {
               const active = category === item;
               return (
@@ -138,8 +141,8 @@ export function AppCatalog({
                   onClick={() => setCategory(item)}
                   className={
                     active
-                      ? 'rounded-lg bg-foreground px-4 py-2 font-medium text-background text-sm transition-colors'
-                      : 'rounded-lg px-4 py-2 font-medium text-muted-foreground text-sm transition-colors hover:bg-muted/50 hover:text-foreground'
+                      ? 'shrink-0 rounded-lg bg-foreground px-4 py-2 font-medium text-background text-sm transition-colors'
+                      : 'shrink-0 rounded-lg px-4 py-2 font-medium text-muted-foreground text-sm transition-colors hover:bg-muted/50 hover:text-foreground'
                   }
                 >
                   {CATEGORY_LABELS[item] ?? item.charAt(0).toUpperCase() + item.slice(1)}
@@ -151,7 +154,7 @@ export function AppCatalog({
       </div>
 
       {isLoading ? (
-        <div className="mt-6 grid grid-cols-1 gap-4 sm:grid-cols-2 md:grid-cols-2 lg:grid-cols-2 xl:grid-cols-2 2xl:grid-cols-3">
+        <div className="mt-6 grid grid-cols-1 gap-4 sm:grid-cols-2">
           {Array.from({ length: 6 }, (_, index) => (
             <Skeleton key={index} className="h-28 rounded-2xl" />
           ))}
@@ -174,7 +177,7 @@ export function AppCatalog({
           )}
         </div>
       ) : (
-        <div className="mt-6 grid grid-cols-1 gap-4 sm:grid-cols-2 md:grid-cols-2 lg:grid-cols-2 xl:grid-cols-2 2xl:grid-cols-3">
+        <div className="mt-6 grid grid-cols-1 gap-4 sm:grid-cols-2">
           {filtered.map((app) => (
             <CatalogCard key={app.id} app={app} />
           ))}

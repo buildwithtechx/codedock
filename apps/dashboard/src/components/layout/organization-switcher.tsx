@@ -103,22 +103,23 @@ export function OrganizationSwitcher({ collapsed }: { collapsed: boolean }) {
             </DropdownMenuItem>
           ))}
           <DropdownMenuSeparator />
-          <div className="flex items-center gap-2.5 rounded-lg px-2.5 py-2">
+          <DropdownMenuItem
+            onSelect={() => void navigate({ to: '/profile' })}
+            className="cursor-pointer gap-2.5 rounded-lg px-2.5 py-2"
+          >
             <div className="flex h-7 w-7 shrink-0 items-center justify-center rounded-full bg-muted font-semibold text-[10px] text-muted-foreground">
               {user?.name?.[0]?.toUpperCase() || <UserRound className="h-3.5 w-3.5" />}
             </div>
             <div className="min-w-0 flex-1">
               <p className="truncate font-medium text-sm">{user?.name || 'Account'}</p>
-              <p className="truncate text-muted-foreground text-xs">
-                {user?.email || 'Account settings'}
-              </p>
+              <p className="truncate text-muted-foreground text-xs">Profile & security</p>
             </div>
-          </div>
+          </DropdownMenuItem>
           <DropdownMenuItem
             disabled={isLoggingOut}
             onSelect={() => logout()}
             variant="destructive"
-            className="gap-2.5 rounded-lg px-2.5 py-2"
+            className="cursor-pointer gap-2.5 rounded-lg px-2.5 py-2"
           >
             <LogOut className="h-4 w-4" />
             Sign out

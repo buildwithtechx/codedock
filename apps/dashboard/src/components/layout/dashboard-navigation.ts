@@ -16,6 +16,7 @@ import {
   Rocket,
   Server,
   Settings,
+  ShieldCheck,
   UserRound,
 } from 'lucide-react';
 
@@ -158,6 +159,12 @@ export const contextualNavigation: DashboardNavigationItem[] = [
     to: '/settings',
     icon: UserRound,
     search: { tab: 'team' },
+  },
+  {
+    title: 'Profile & Security',
+    description: 'Account settings, password, and 2FA',
+    to: '/profile',
+    icon: ShieldCheck,
   },
 ];
 

@@ -1,4 +1,4 @@
-import { useNavigate, useRouterState } from '@tanstack/react-router';
+import { Link, useNavigate, useRouterState } from '@tanstack/react-router';
 import {
   Bell,
   Bot,
@@ -8,6 +8,7 @@ import {
   Lock,
   Server,
   Settings as SettingsIcon,
+  UserRound,
   UsersRound,
   Wrench,
 } from 'lucide-react';
@@ -171,6 +172,13 @@ export const SettingsLayout = () => {
             </button>
           );
         })}
+        <Link
+          to="/profile"
+          className="flex shrink-0 items-center gap-2 rounded-lg px-3 py-2 text-muted-foreground text-sm transition-colors hover:bg-muted hover:text-foreground"
+        >
+          <UserRound className="h-4 w-4" />
+          Profile
+        </Link>
       </div>
 
       <PageFrame
@@ -211,6 +219,15 @@ export const SettingsLayout = () => {
                   );
                 })}
               </div>
+            </div>
+            <div className="mt-3 rounded-2xl bg-card p-2">
+              <Link
+                to="/profile"
+                className="flex w-full items-center gap-3 rounded-xl px-3 py-2.5 text-left font-medium text-muted-foreground text-sm transition-colors hover:bg-muted/60 hover:text-foreground"
+              >
+                <UserRound className="h-4 w-4" />
+                Profile & Security
+              </Link>
             </div>
           </div>
         }

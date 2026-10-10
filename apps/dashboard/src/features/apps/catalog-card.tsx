@@ -1,6 +1,5 @@
 import { Link } from '@tanstack/react-router';
 import { ArrowRight, BadgeCheck } from 'lucide-react';
-import { Badge } from '#/components/ui/badge';
 import type { OneClickAppDetails } from '#/interfaces/templates';
 import { AppLogo } from './app-logo';
 
@@ -17,20 +16,12 @@ export function CatalogCard({ app }: { app: OneClickAppDetails }) {
           <span className="inline-flex min-w-0 items-center gap-1.5 font-medium text-foreground">
             <span className="truncate">{app.name}</span>
             {app.verified && (
-              <Badge variant="secondary" className="shrink-0 gap-1">
-                <BadgeCheck className="size-3" />
-                Verified
-              </Badge>
+              <BadgeCheck className="size-4 shrink-0 text-sky-500" aria-label="Verified" />
             )}
           </span>
           <ArrowRight className="size-4 shrink-0 text-muted-foreground/40 transition-colors group-hover:text-foreground" />
         </div>
         <p className="mt-1 line-clamp-2 text-muted-foreground text-sm">{app.description}</p>
-        {app.category && (
-          <p className="mt-2 font-mono text-[10px] text-muted-foreground uppercase tracking-widest">
-            {app.category}
-          </p>
-        )}
       </div>
     </Link>
   );

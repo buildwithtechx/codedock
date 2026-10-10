@@ -1,4 +1,4 @@
-import { useQuery } from '@tanstack/react-query';
+import { keepPreviousData, useQuery } from '@tanstack/react-query';
 import {
   AppWindow,
   Bot,
@@ -84,6 +84,7 @@ export function AuditLogList() {
         limit: PER_PAGE,
         offset: (page - 1) * PER_PAGE,
       }),
+    placeholderData: keepPreviousData,
   });
   const rows = useMemo(() => listQuery.data?.data ?? [], [listQuery.data]);
 
@@ -149,34 +150,17 @@ export function AuditLogList() {
     setPage(1);
   };
 
-  if (listQuery.isLoading) {
-    return (
-      <div className="space-y-3">
-        {Array.from({ length: 6 }).map((_, index) => (
-          <Skeleton key={index} className="h-16 w-full rounded-2xl" />
-        ))}
-      </div>
-    );
-  }
-
-  if (listQuery.isError) {
-    return (
-      <QueryErrorState
-        title="Audit logs are unavailable"
-        description="Codedock could not load activity logs for your workspace."
-        onRetry={() => void listQuery.refetch()}
-      />
-    );
-  }
-
   return (
     <div>
       <Tabs value={category} onValueChange={pickCategory}>
-        <TabsList variant="line" className="flex w-full flex-wrap justify-start">
+        <TabsList
+          variant="line"
+          className="scrollbar-none flex w-full items-center justify-start overflow-x-auto whitespace-nowrap border-border/50 border-b [scrollbar-width:none]"
+        >
           {tabDefs.map((tab) => {
             const Icon = CATEGORY_ICON_MAP[tab.id] ?? Layers;
             return (
-              <TabsTrigger key={tab.id} value={tab.id} className="gap-2">
+              <TabsTrigger key={tab.id} value={tab.id} className="shrink-0 gap-2">
                 <Icon className="size-4 shrink-0" />
                 <span>{tab.label}</span>
                 {facets && (
@@ -201,7 +185,19 @@ export function AuditLogList() {
             />
           </div>
 
-          {searched.length === 0 ? (
+          {listQuery.isLoading && rows.length === 0 ? (
+            <div className="space-y-3">
+              {Array.from({ length: 6 }).map((_, index) => (
+                <Skeleton key={index} className="h-16 w-full rounded-2xl" />
+              ))}
+            </div>
+          ) : listQuery.isError && rows.length === 0 ? (
+            <QueryErrorState
+              title="Audit logs are unavailable"
+              description="Codedock could not load activity logs for your workspace."
+              onRetry={() => void listQuery.refetch()}
+            />
+          ) : searched.length === 0 ? (
             <div className="rounded-2xl border border-border/50 bg-card py-16 text-center">
               <Shield className="mx-auto mb-4 size-8 text-muted-foreground/30" />
               <p className="text-muted-foreground text-sm">
@@ -218,7 +214,9 @@ export function AuditLogList() {
               )}
             </div>
           ) : (
-            <div className="space-y-4">
+            <div
+              className={`space-y-4 ${listQuery.isFetching ? 'opacity-70 transition-opacity' : ''}`}
+            >
               {days.map((day) => (
                 <div
                   key={day.key}
