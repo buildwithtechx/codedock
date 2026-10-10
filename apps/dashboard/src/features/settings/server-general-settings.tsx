@@ -154,6 +154,7 @@ export function ServerGeneralSettings() {
         <SettingsRow
           label="Wildcard Domain"
           description="Root domain for generated app URLs (e.g. *.apps.example.com)."
+          bordered={false}
         >
           <Input
             value={form.defaultWildcardDomain ?? ''}
@@ -208,6 +209,7 @@ export function ServerGeneralSettings() {
         <SettingsRow
           label="IP Allowlist"
           description="Comma-separated CIDRs that can access the control plane."
+          bordered={false}
         >
           <Input
             value={form.ipAllowlist ?? ''}
@@ -282,6 +284,7 @@ export function ServerGeneralSettings() {
         <SettingsRow
           label="Deployment Timeout (s)"
           description="Seconds before a deployment is considered failed."
+          bordered={false}
         >
           <Input
             type="number"

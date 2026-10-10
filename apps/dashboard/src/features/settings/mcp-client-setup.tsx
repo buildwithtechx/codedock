@@ -149,7 +149,7 @@ export function McpClientSetup({ endpoint }: { endpoint: string }) {
     <div className="space-y-4">
       <div>
         <p className="mb-2 font-medium text-foreground text-xs">Choose Your AI Assistant or IDE</p>
-        <div className="scrollbar-none flex items-center gap-1.5 overflow-x-auto whitespace-nowrap pb-1 [scrollbar-width:none]">
+        <div className="scrollbar-none flex min-w-0 flex-nowrap items-center gap-1.5 overflow-x-auto pb-1 [scrollbar-width:none]">
           {CLIENTS.map((client) => {
             const isActive = client.id === selectedId;
             return (

@@ -34,7 +34,6 @@ import { Route as DashboardProfileRouteImport } from './routes/_dashboard.profil
 import { Route as DashboardProjectsRouteImport } from './routes/_dashboard.projects'
 import { Route as DashboardServersRouteImport } from './routes/_dashboard.servers'
 import { Route as DashboardSettingsRouteImport } from './routes/_dashboard.settings'
-import { Route as DashboardUsersRouteImport } from './routes/_dashboard.users'
 import { Route as DashboardAppsIndexRouteImport } from './routes/_dashboard.apps.index'
 import { Route as DashboardAppsNewRouteImport } from './routes/_dashboard.apps.new'
 import { Route as DashboardBackupsIndexRouteImport } from './routes/_dashboard.backups.index'
@@ -203,11 +202,6 @@ const DashboardServersRoute = DashboardServersRouteImport.update({
 const DashboardSettingsRoute = DashboardSettingsRouteImport.update({
   id: '/settings',
   path: '/settings',
-  getParentRoute: () => DashboardRoute,
-} as any)
-const DashboardUsersRoute = DashboardUsersRouteImport.update({
-  id: '/users',
-  path: '/users',
   getParentRoute: () => DashboardRoute,
 } as any)
 const DashboardAppsIndexRoute = DashboardAppsIndexRouteImport.update({
@@ -495,7 +489,6 @@ export interface FileRoutesByFullPath {
   '/projects': typeof DashboardProjectsRouteWithChildren
   '/servers': typeof DashboardServersRouteWithChildren
   '/settings': typeof DashboardSettingsRoute
-  '/users': typeof DashboardUsersRoute
   '/apps/new': typeof DashboardAppsNewRouteWithChildren
   '/backups/$backupId': typeof DashboardBackupsBackupIdRoute
   '/deploy/$slug': typeof DashboardDeploySlugRoute
@@ -559,7 +552,6 @@ export interface FileRoutesByTo {
   '/monitoring': typeof DashboardMonitoringRoute
   '/profile': typeof DashboardProfileRoute
   '/settings': typeof DashboardSettingsRoute
-  '/users': typeof DashboardUsersRoute
   '/backups/$backupId': typeof DashboardBackupsBackupIdRoute
   '/deploy/$slug': typeof DashboardDeploySlugRoute
   '/deployments/$deploymentId': typeof DashboardDeploymentsDeploymentIdRoute
@@ -629,7 +621,6 @@ export interface FileRoutesById {
   '/_dashboard/projects': typeof DashboardProjectsRouteWithChildren
   '/_dashboard/servers': typeof DashboardServersRouteWithChildren
   '/_dashboard/settings': typeof DashboardSettingsRoute
-  '/_dashboard/users': typeof DashboardUsersRoute
   '/_dashboard/': typeof DashboardIndexRoute
   '/_dashboard/apps/new': typeof DashboardAppsNewRouteWithChildren
   '/_dashboard/backups/$backupId': typeof DashboardBackupsBackupIdRoute
@@ -704,7 +695,6 @@ export interface FileRouteTypes {
     | '/projects'
     | '/servers'
     | '/settings'
-    | '/users'
     | '/apps/new'
     | '/backups/$backupId'
     | '/deploy/$slug'
@@ -768,7 +758,6 @@ export interface FileRouteTypes {
     | '/monitoring'
     | '/profile'
     | '/settings'
-    | '/users'
     | '/backups/$backupId'
     | '/deploy/$slug'
     | '/deployments/$deploymentId'
@@ -837,7 +826,6 @@ export interface FileRouteTypes {
     | '/_dashboard/projects'
     | '/_dashboard/servers'
     | '/_dashboard/settings'
-    | '/_dashboard/users'
     | '/_dashboard/'
     | '/_dashboard/apps/new'
     | '/_dashboard/backups/$backupId'
@@ -1068,13 +1056,6 @@ declare module '@tanstack/react-router' {
       path: '/settings'
       fullPath: '/settings'
       preLoaderRoute: typeof DashboardSettingsRouteImport
-      parentRoute: typeof DashboardRoute
-    }
-    '/_dashboard/users': {
-      id: '/_dashboard/users'
-      path: '/users'
-      fullPath: '/users'
-      preLoaderRoute: typeof DashboardUsersRouteImport
       parentRoute: typeof DashboardRoute
     }
     '/_dashboard/apps/': {
@@ -1666,7 +1647,6 @@ interface DashboardRouteChildren {
   DashboardProjectsRoute: typeof DashboardProjectsRouteWithChildren
   DashboardServersRoute: typeof DashboardServersRouteWithChildren
   DashboardSettingsRoute: typeof DashboardSettingsRoute
-  DashboardUsersRoute: typeof DashboardUsersRoute
   DashboardIndexRoute: typeof DashboardIndexRoute
   DashboardServicesServiceIdRoute: typeof DashboardServicesServiceIdRouteWithChildren
 }
@@ -1688,7 +1668,6 @@ const DashboardRouteChildren: DashboardRouteChildren = {
   DashboardProjectsRoute: DashboardProjectsRouteWithChildren,
   DashboardServersRoute: DashboardServersRouteWithChildren,
   DashboardSettingsRoute: DashboardSettingsRoute,
-  DashboardUsersRoute: DashboardUsersRoute,
   DashboardIndexRoute: DashboardIndexRoute,
   DashboardServicesServiceIdRoute: DashboardServicesServiceIdRouteWithChildren,
 }

@@ -3,6 +3,7 @@ package repositories
 import (
 	"context"
 	"database/sql"
+	"encoding/json"
 	"fmt"
 
 	"codedock/internal/models"
@@ -173,18 +174,24 @@ func (r *postgresServerRepository) UpdateMetrics(ctx context.Context, id string,
 
 func (r *postgresServerRepository) scanRow(row *sql.Row) (*models.Server, error) {
 	var s models.Server
+	var metricsRaw sql.NullString
 	err := row.Scan(
 		&s.ID, &s.UserID, &s.Name, &s.IPAddress, &s.IsLocal,
 		&s.SSHHost, &s.SSHPort, &s.SSHUser, &s.SSHAuthMethod,
 		&s.SSHKey, &s.SSHPrivateKey, &s.SSHPassword, &s.SSHTransport, &s.SSHJumpHost,
 		&s.Status, &s.Provider, &s.ExternalID, &s.Region, &s.ServerType,
-		&s.WorkerToken, &s.LastSeenAt, &s.Metrics, &s.CreatedAt, &s.UpdatedAt,
+		&s.WorkerToken, &s.LastSeenAt, &metricsRaw, &s.CreatedAt, &s.UpdatedAt,
 	)
 	if err != nil {
 		if err == sql.ErrNoRows {
 			return nil, nil
 		}
 		return nil, fmt.Errorf("failed to scan server: %w", err)
+	}
+	if metricsRaw.Valid && metricsRaw.String != "" {
+		s.Metrics = json.RawMessage(metricsRaw.String)
+	} else {
+		s.Metrics = json.RawMessage("{}")
 	}
 	if err := r.decryptSecrets(&s); err != nil {
 		return nil, err
@@ -194,15 +201,21 @@ func (r *postgresServerRepository) scanRow(row *sql.Row) (*models.Server, error)
 
 func (r *postgresServerRepository) scanRows(rows *sql.Rows) (*models.Server, error) {
 	var s models.Server
+	var metricsRaw sql.NullString
 	err := rows.Scan(
 		&s.ID, &s.UserID, &s.Name, &s.IPAddress, &s.IsLocal,
 		&s.SSHHost, &s.SSHPort, &s.SSHUser, &s.SSHAuthMethod,
 		&s.SSHKey, &s.SSHPrivateKey, &s.SSHPassword, &s.SSHTransport, &s.SSHJumpHost,
 		&s.Status, &s.Provider, &s.ExternalID, &s.Region, &s.ServerType,
-		&s.WorkerToken, &s.LastSeenAt, &s.Metrics, &s.CreatedAt, &s.UpdatedAt,
+		&s.WorkerToken, &s.LastSeenAt, &metricsRaw, &s.CreatedAt, &s.UpdatedAt,
 	)
 	if err != nil {
 		return nil, fmt.Errorf("failed to scan server: %w", err)
+	}
+	if metricsRaw.Valid && metricsRaw.String != "" {
+		s.Metrics = json.RawMessage(metricsRaw.String)
+	} else {
+		s.Metrics = json.RawMessage("{}")
 	}
 	if err := r.decryptSecrets(&s); err != nil {
 		return nil, err

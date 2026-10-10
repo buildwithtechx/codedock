@@ -66,8 +66,8 @@ export function NavItem({
       search={item.search as never}
       title={collapsed ? item.title : undefined}
       aria-current={isActive ? 'page' : undefined}
-      className={`group relative flex items-center rounded-xl font-medium text-[15px] transition-colors ${
-        collapsed ? 'justify-center px-0 py-2.5' : 'gap-3 px-3 py-2.5'
+      className={`group relative flex items-center rounded-xl font-medium text-sm transition-colors ${
+        collapsed ? 'justify-center px-0 py-2' : 'gap-3 px-3 py-2'
       } ${
         isActive
           ? 'bg-primary/12 text-sidebar-foreground'
@@ -81,7 +81,7 @@ export function NavItem({
       )}
 
       <item.icon
-        className={`h-5 w-5 shrink-0 transition-colors ${
+        className={`h-4.5 w-4.5 shrink-0 transition-colors ${
           isActive ? 'text-primary' : 'text-muted-foreground group-hover:text-sidebar-foreground'
         }`}
       />

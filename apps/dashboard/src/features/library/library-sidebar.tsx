@@ -11,20 +11,24 @@ export function LibrarySidebar({
 }) {
   const navigate = useNavigate();
   const byProvider = new Map(connections.map((item) => [item.provider, item]));
+  const connectedProviders = GIT_PROVIDERS.filter(
+    (provider) => byProvider.get(provider.id)?.connected
+  );
+  const displayProviders = connectedProviders.length > 0 ? connectedProviders : [GIT_PROVIDERS[0]!];
 
   return (
     <div className="space-y-4 lg:sticky lg:top-6 lg:self-start">
       <div className="rounded-2xl border border-border/50 bg-card p-5">
         <h3 className="mb-4 font-semibold text-foreground text-sm">Connection</h3>
         <div className="space-y-2.5">
-          {GIT_PROVIDERS.map((provider) => {
+          {displayProviders.map((provider) => {
             const status = byProvider.get(provider.id);
             const connected = status?.connected ?? false;
             return (
               <div key={provider.id} className="flex items-center justify-between gap-3">
                 <div className="flex min-w-0 items-center gap-2.5">
                   <div
-                    className={`flex h-9 w-9 shrink-0 items-center justify-center rounded-lg ${
+                    className={`flex h-8 w-8 shrink-0 items-center justify-center rounded-lg ${
                       connected ? 'bg-emerald-500/10' : 'bg-muted/60'
                     }`}
                   >
@@ -62,8 +66,8 @@ export function LibrarySidebar({
         </div>
         <button
           type="button"
-          onClick={() => void navigate({ to: '/settings', search: { tab: 'sources' } as never })}
-          className="mt-4 font-medium text-foreground text-xs hover:underline"
+          onClick={() => void navigate({ to: '/settings', search: { tab: 'git' } as never })}
+          className="mt-3 block font-medium text-muted-foreground text-xs transition-colors hover:text-foreground hover:underline"
         >
           Manage git providers in settings
         </button>
@@ -113,8 +117,8 @@ export function LibrarySidebar({
           <h3 className="font-semibold text-foreground text-sm">Quick tip</h3>
         </div>
         <p className="text-muted-foreground text-sm leading-relaxed">
-          Pick a repository to detect its stack automatically, or upload a folder to deploy code
-          that lives only on this machine.
+          Select any repository to deploy it instantly. Configure automatic deployments on every
+          push.
         </p>
       </div>
     </div>

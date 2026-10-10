@@ -52,7 +52,6 @@ import { ServerOverviewTab } from '#/features/servers/server-overview-tab';
 import { ServerSecurityTab } from '#/features/servers/server-security-tab';
 import { ServerSettingsTab } from '#/features/servers/server-settings-tab';
 import { ServerTerminalTab } from '#/features/servers/server-terminal-tab';
-import { useGetPublicSettings } from '#/features/settings';
 import { useServer } from '#/hooks/use-servers';
 import type { Server } from '#/interfaces/server';
 import { cn } from '#/lib/utils';
@@ -87,13 +86,9 @@ function ServerDetailsPage() {
   const { tab: tabParam } = Route.useSearch();
   const navigate = useNavigate();
   const { data: server, isLoading, isError, isRefetching, refetch } = useServer(serverId);
-  const { data: publicSettings } = useGetPublicSettings();
   const [removeTarget, setRemoveTarget] = useState<Server | null>(null);
 
-  const isCloud = Boolean(publicSettings?.data?.cloudMode);
-  const isManaged = Boolean(
-    server?.managed || server?.provider || server?.serverType === 'managed' || isCloud
-  );
+  const isManaged = Boolean(server?.managed || server?.serverType === 'managed');
 
   const currentTabs = isManaged ? cloudTabs : selfHostedTabs;
   const tabKeys = currentTabs.map((tab) => tab.key);

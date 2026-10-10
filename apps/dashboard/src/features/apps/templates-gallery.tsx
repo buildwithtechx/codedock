@@ -39,7 +39,7 @@ export function TemplatesGallery() {
   };
 
   return (
-    <div>
+    <div className="@container/templates-gallery">
       <div className="relative w-full max-w-md">
         <Search className="pointer-events-none absolute top-1/2 left-3.5 size-4 -translate-y-1/2 text-muted-foreground" />
         <Input
@@ -59,7 +59,7 @@ export function TemplatesGallery() {
           onRetry={() => void refetch()}
         />
       ) : isLoading ? (
-        <div className="mt-6 grid grid-cols-1 gap-4 sm:grid-cols-2">
+        <div className="mt-6 grid @4xl/templates-gallery:grid-cols-3 @xl/templates-gallery:grid-cols-2 grid-cols-1 gap-4">
           {Array.from({ length: 6 }, (_, index) => (
             <Skeleton key={index} className="h-32 rounded-2xl" />
           ))}
@@ -73,7 +73,7 @@ export function TemplatesGallery() {
           </p>
         </div>
       ) : (
-        <div className="mt-6 grid grid-cols-1 gap-4 sm:grid-cols-2">
+        <div className="mt-6 grid @4xl/templates-gallery:grid-cols-3 @xl/templates-gallery:grid-cols-2 grid-cols-1 gap-4">
           {filtered.map((example) => (
             <button
               key={example.id}

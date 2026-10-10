@@ -1,4 +1,4 @@
-import { Link, useNavigate, useRouterState } from '@tanstack/react-router';
+import { useNavigate, useRouterState } from '@tanstack/react-router';
 import {
   Bell,
   Bot,
@@ -8,7 +8,6 @@ import {
   Lock,
   Server,
   Settings as SettingsIcon,
-  UserRound,
   UsersRound,
   Wrench,
 } from 'lucide-react';
@@ -172,32 +171,26 @@ export const SettingsLayout = () => {
             </button>
           );
         })}
-        <Link
-          to="/profile"
-          className="flex shrink-0 items-center gap-2 rounded-lg px-3 py-2 text-muted-foreground text-sm transition-colors hover:bg-muted hover:text-foreground"
-        >
-          <UserRound className="h-4 w-4" />
-          Profile
-        </Link>
       </div>
 
       <PageFrame
+        className="lg:grid-cols-[minmax(0,1fr)_280px]"
         rail={
-          <div>
-            <section className="mb-3 rounded-2xl bg-card p-4">
+          <div className="space-y-3">
+            <section className="rounded-2xl border border-border/50 bg-card p-4">
               <div className="flex items-center gap-3">
-                <div className="flex h-8 w-8 items-center justify-center rounded-lg bg-primary/12 text-primary">
+                <div className="flex h-9 w-9 items-center justify-center rounded-xl bg-muted text-foreground">
                   <SettingsIcon className="h-4 w-4" />
                 </div>
-                <div className="min-w-0">
-                  <p className="font-semibold text-sm">Settings</p>
+                <div className="min-w-0 flex-1">
+                  <p className="truncate font-medium text-foreground text-sm">Settings</p>
                   <p className="truncate text-muted-foreground text-xs">
                     {user?.email || 'Instance owner'}
                   </p>
                 </div>
               </div>
             </section>
-            <div className="rounded-2xl bg-card p-2">
+            <div className="rounded-2xl border border-border/50 bg-card p-3">
               <div className="space-y-1">
                 {TABS.map((tab) => {
                   const isActive = tab.id === activeId;
@@ -207,10 +200,10 @@ export const SettingsLayout = () => {
                       onClick={() => setActiveId(tab.id)}
                       type="button"
                       aria-current={isActive ? 'page' : undefined}
-                      className={`flex w-full items-center gap-3 rounded-xl px-3 py-2.5 text-left font-medium text-sm transition-colors ${
+                      className={`flex w-full items-center gap-3 rounded-xl px-3 py-2 text-left font-medium text-[14px] transition-colors ${
                         isActive
-                          ? 'bg-primary/12 text-foreground'
-                          : 'text-muted-foreground hover:bg-muted/60 hover:text-foreground'
+                          ? 'bg-foreground/[0.07] text-foreground'
+                          : 'text-muted-foreground hover:bg-foreground/[0.04] hover:text-foreground'
                       }`}
                     >
                       {tab.icon}
@@ -219,15 +212,6 @@ export const SettingsLayout = () => {
                   );
                 })}
               </div>
-            </div>
-            <div className="mt-3 rounded-2xl bg-card p-2">
-              <Link
-                to="/profile"
-                className="flex w-full items-center gap-3 rounded-xl px-3 py-2.5 text-left font-medium text-muted-foreground text-sm transition-colors hover:bg-muted/60 hover:text-foreground"
-              >
-                <UserRound className="h-4 w-4" />
-                Profile & Security
-              </Link>
             </div>
           </div>
         }

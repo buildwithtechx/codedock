@@ -152,24 +152,26 @@ export function AuditLogList() {
 
   return (
     <div>
-      <Tabs value={category} onValueChange={pickCategory}>
-        <TabsList
-          variant="line"
-          className="scrollbar-none flex w-full items-center justify-start overflow-x-auto whitespace-nowrap border-border/50 border-b [scrollbar-width:none]"
-        >
-          {tabDefs.map((tab) => {
-            const Icon = CATEGORY_ICON_MAP[tab.id] ?? Layers;
-            return (
-              <TabsTrigger key={tab.id} value={tab.id} className="shrink-0 gap-2">
-                <Icon className="size-4 shrink-0" />
-                <span>{tab.label}</span>
-                {facets && (
-                  <span className="text-muted-foreground tabular-nums">({tab.count})</span>
-                )}
-              </TabsTrigger>
-            );
-          })}
-        </TabsList>
+      <Tabs value={category} onValueChange={pickCategory} className="w-full min-w-0">
+        <div className="scrollbar-none w-full min-w-0 overflow-x-auto [scrollbar-width:none]">
+          <TabsList
+            variant="line"
+            className="flex w-max min-w-full flex-nowrap items-center justify-start border-border/50 border-b pb-px"
+          >
+            {tabDefs.map((tab) => {
+              const Icon = CATEGORY_ICON_MAP[tab.id] ?? Layers;
+              return (
+                <TabsTrigger key={tab.id} value={tab.id} className="flex-none shrink-0 gap-2">
+                  <Icon className="size-4 shrink-0" />
+                  <span>{tab.label}</span>
+                  {facets && (
+                    <span className="text-muted-foreground tabular-nums">({tab.count})</span>
+                  )}
+                </TabsTrigger>
+              );
+            })}
+          </TabsList>
+        </div>
       </Tabs>
 
       <div className="mt-6 grid grid-cols-1 gap-6 lg:grid-cols-[1fr_340px]">
@@ -214,9 +216,7 @@ export function AuditLogList() {
               )}
             </div>
           ) : (
-            <div
-              className={`space-y-4 ${listQuery.isFetching ? 'opacity-70 transition-opacity' : ''}`}
-            >
+            <div className="space-y-4">
               {days.map((day) => (
                 <div
                   key={day.key}

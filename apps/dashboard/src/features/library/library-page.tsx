@@ -32,8 +32,7 @@ export function LibraryPage({ initialTab }: { initialTab?: LibraryTab }) {
   const anyConnected = connections.some((item) => item.connected);
   const countsQuery = useLibraryRepos(provider, anyConnected);
 
-  const counts =
-    tab === 'repositories' ? countsQuery.counts : { total: 0, publicCount: 0, privateCount: 0 };
+  const counts = countsQuery.counts;
 
   return (
     <div className="space-y-6">

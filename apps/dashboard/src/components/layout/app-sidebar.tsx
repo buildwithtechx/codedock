@@ -1,6 +1,7 @@
 import { Link } from '@tanstack/react-router';
-import { Moon, PanelLeftClose, PanelLeftOpen, Plus, Sun, X } from 'lucide-react';
+import { LogOut, Moon, PanelLeftClose, PanelLeftOpen, Plus, Sun, X } from 'lucide-react';
 import { useTheme } from 'next-themes';
+import { useLogout } from '#/features/auth';
 import { useGetPublicSettings } from '#/features/settings';
 import {
   getSystemNavigation,
@@ -34,6 +35,7 @@ export function AppSidebar({ collapsed, onToggle, mobileOpen, onMobileClose }: A
   const { theme, resolvedTheme, setTheme } = useTheme();
   const counts = useSidebarCounts();
   const { data: publicRes } = useGetPublicSettings();
+  const { mutate: logout, isPending: isLoggingOut } = useLogout();
   const isCloud = publicRes?.data?.cloudMode ?? false;
 
   const mainGroup: NavGroup = {
@@ -196,14 +198,28 @@ export function AppSidebar({ collapsed, onToggle, mobileOpen, onMobileClose }: A
           </Link>
         </div>
 
-        <div className={`mt-auto px-3 pt-1 pb-3 ${navCollapsed ? 'px-2' : ''}`}>
-          <div className="mx-2 mb-3 h-px bg-sidebar-border/60" />
+        <div
+          className={`mt-auto px-3 pt-1 pb-3 ${navCollapsed ? 'flex flex-col items-center px-2' : ''}`}
+        >
+          <div className="mx-2 mb-3 h-px w-full bg-sidebar-border/60" />
           {!navCollapsed && (
             <p className="mb-2 px-2 font-semibold text-[11px] text-sidebar-foreground/50 uppercase tracking-[0.14em]">
               Account
             </p>
           )}
           <OrganizationSwitcher collapsed={navCollapsed} />
+          {navCollapsed && (
+            <button
+              type="button"
+              onClick={() => logout()}
+              disabled={isLoggingOut}
+              className="mt-1.5 flex h-8 w-8 items-center justify-center rounded-lg text-muted-foreground transition-colors hover:bg-sidebar-accent hover:text-sidebar-foreground disabled:opacity-50"
+              aria-label="Log out"
+              title="Log out"
+            >
+              <LogOut className="h-4 w-4" />
+            </button>
+          )}
         </div>
       </aside>
     </>

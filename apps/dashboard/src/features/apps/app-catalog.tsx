@@ -96,7 +96,7 @@ export function AppCatalog({
   }
 
   return (
-    <div>
+    <div className="@container/app-catalog">
       {!embedded && (
         <PageHeader
           title="Explore & Deploy Apps"
@@ -130,7 +130,7 @@ export function AppCatalog({
           )}
         </div>
         {categories.length > 1 && (
-          <div className="scrollbar-none flex items-center gap-1 overflow-x-auto whitespace-nowrap pb-1">
+          <div className="scrollbar-none flex min-w-0 flex-nowrap items-center gap-1 overflow-x-auto pb-1 [scrollbar-width:none]">
             {categories.map((item) => {
               const active = category === item;
               return (
@@ -141,8 +141,8 @@ export function AppCatalog({
                   onClick={() => setCategory(item)}
                   className={
                     active
-                      ? 'shrink-0 rounded-lg bg-foreground px-4 py-2 font-medium text-background text-sm transition-colors'
-                      : 'shrink-0 rounded-lg px-4 py-2 font-medium text-muted-foreground text-sm transition-colors hover:bg-muted/50 hover:text-foreground'
+                      ? 'flex-none shrink-0 rounded-lg bg-foreground px-4 py-2 font-medium text-background text-sm transition-colors'
+                      : 'flex-none shrink-0 rounded-lg px-4 py-2 font-medium text-muted-foreground text-sm transition-colors hover:bg-muted/50 hover:text-foreground'
                   }
                 >
                   {CATEGORY_LABELS[item] ?? item.charAt(0).toUpperCase() + item.slice(1)}
@@ -154,7 +154,7 @@ export function AppCatalog({
       </div>
 
       {isLoading ? (
-        <div className="mt-6 grid grid-cols-1 gap-4 sm:grid-cols-2">
+        <div className="mt-6 grid @4xl/app-catalog:grid-cols-3 @xl/app-catalog:grid-cols-2 grid-cols-1 gap-4">
           {Array.from({ length: 6 }, (_, index) => (
             <Skeleton key={index} className="h-28 rounded-2xl" />
           ))}
@@ -177,7 +177,7 @@ export function AppCatalog({
           )}
         </div>
       ) : (
-        <div className="mt-6 grid grid-cols-1 gap-4 sm:grid-cols-2">
+        <div className="mt-6 grid @4xl/app-catalog:grid-cols-3 @xl/app-catalog:grid-cols-2 grid-cols-1 gap-4">
           {filtered.map((app) => (
             <CatalogCard key={app.id} app={app} />
           ))}
