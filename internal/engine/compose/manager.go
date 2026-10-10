@@ -5,6 +5,7 @@ import (
 	"fmt"
 	"io/fs"
 	"strings"
+	"sync"
 
 	"gopkg.in/yaml.v3"
 
@@ -15,6 +16,7 @@ import (
 var templateFiles embed.FS
 
 type TemplateManager struct {
+	mu        sync.RWMutex
 	templates map[string]ComposeTemplate
 }
 
@@ -63,9 +65,11 @@ func (m *TemplateManager) walkDir(path string, d fs.DirEntry, err error) error {
 }
 
 func (m *TemplateManager) GetTemplate(id string) (ComposeTemplate, error) {
-	if m == nil || m.templates == nil {
+	if m == nil {
 		return ComposeTemplate{}, utils.NewNotFoundError("Template", id)
 	}
+	m.mu.RLock()
+	defer m.mu.RUnlock()
 	tmpl, exists := m.templates[id]
 	if !exists {
 		return ComposeTemplate{}, utils.NewNotFoundError("Template", id)
@@ -74,12 +78,32 @@ func (m *TemplateManager) GetTemplate(id string) (ComposeTemplate, error) {
 }
 
 func (m *TemplateManager) ListTemplates() []string {
-	if m == nil || m.templates == nil {
+	if m == nil {
 		return []string{}
 	}
+	m.mu.RLock()
+	defer m.mu.RUnlock()
 	list := make([]string, 0, len(m.templates))
 	for id := range m.templates {
 		list = append(list, id)
 	}
 	return list
+}
+
+func (m *TemplateManager) AddTemplate(id string, tmpl ComposeTemplate) {
+	if m == nil {
+		return
+	}
+	m.mu.Lock()
+	defer m.mu.Unlock()
+	m.templates[id] = tmpl
+}
+
+func (m *TemplateManager) DeleteTemplate(id string) {
+	if m == nil {
+		return
+	}
+	m.mu.Lock()
+	defer m.mu.Unlock()
+	delete(m.templates, id)
 }

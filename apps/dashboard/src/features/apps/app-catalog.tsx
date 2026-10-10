@@ -1,11 +1,12 @@
 import { useNavigate } from '@tanstack/react-router';
-import { BookOpen, ExternalLink, Search } from 'lucide-react';
+import { BookOpen, ExternalLink, Plus, Search } from 'lucide-react';
 import { useEffect, useMemo, useRef, useState } from 'react';
 import { PageHeader } from '#/components/layout/page-header';
 import { Button } from '#/components/ui/button';
 import { Input } from '#/components/ui/input';
 import { QueryErrorState } from '#/components/ui/query-error-state';
 import { Skeleton } from '#/components/ui/skeleton';
+import { AddCustomAppModal } from './add-custom-app-modal';
 import { CatalogCard } from './catalog-card';
 import { useAppCatalog } from './hooks';
 
@@ -15,17 +16,27 @@ const CATEGORY_ORDER = [
   'cms',
   'analytics',
   'automation',
-  'devtools',
-  'monitoring',
-  'productivity',
-  'search',
-  'security',
-  'storage',
   'mail',
-];
+  'other',
+] as const;
+
+const STANDARD_CATEGORIES = new Set<string>(CATEGORY_ORDER);
+
+function normalizeCategory(cat?: string): string {
+  if (!cat) return 'other';
+  const lower = cat.toLowerCase();
+  return STANDARD_CATEGORIES.has(lower) && lower !== 'other' ? lower : 'other';
+}
 
 const CATEGORY_LABELS: Record<string, string> = {
-  devtools: 'Dev tools',
+  all: 'All',
+  backend: 'Backend',
+  database: 'Database',
+  cms: 'CMS',
+  analytics: 'Analytics',
+  automation: 'Automation',
+  mail: 'Mail',
+  other: 'Other',
 };
 
 const DOCS_URL = 'https://docs.codedock.run';
@@ -41,20 +52,22 @@ export function AppCatalog({
   const { data, isLoading, isError, refetch } = useAppCatalog();
   const [query, setQuery] = useState('');
   const [category, setCategory] = useState('all');
+  const [addCustomOpen, setAddCustomOpen] = useState(false);
   const autoStarted = useRef(false);
   const catalog = Array.isArray(data) ? data : [];
 
   const categories = useMemo(() => {
-    const present = new Set(catalog.map((app) => app.category).filter(Boolean));
+    const present = new Set(catalog.map((app) => normalizeCategory(app.category)));
     return ['all', ...CATEGORY_ORDER.filter((item) => present.has(item))];
   }, [catalog]);
 
   const filtered = useMemo(() => {
     const needle = (query ?? '').trim().toLowerCase();
     return catalog.filter((app) => {
-      if (category !== 'all' && app?.category !== category) return false;
+      const appCat = normalizeCategory(app?.category);
+      if (category !== 'all' && appCat !== category) return false;
       if (!needle) return true;
-      return `${app?.name ?? ''} ${app?.description ?? ''} ${app?.category ?? ''}`
+      return `${app?.name ?? ''} ${app?.description ?? ''} ${appCat}`
         .toLowerCase()
         .includes(needle);
     });
@@ -85,19 +98,33 @@ export function AppCatalog({
         <PageHeader
           title="Explore & Deploy Apps"
           description="Deploy open-source templates, databases, and services in one click."
+          action={
+            <Button variant="outline" onClick={() => setAddCustomOpen(true)} className="gap-2">
+              <Plus className="size-4" />
+              Add custom app
+            </Button>
+          }
         />
       )}
       <div className={embedded ? 'space-y-4' : 'mt-6 space-y-4'}>
-        <div className="relative w-full max-w-md">
-          <Search className="pointer-events-none absolute top-1/2 left-3.5 size-4 -translate-y-1/2 text-muted-foreground" />
-          <Input
-            type="search"
-            value={query}
-            onChange={(event) => setQuery(event.target.value)}
-            placeholder="Search apps…"
-            aria-label="Search apps"
-            className="pr-4 pl-10"
-          />
+        <div className="flex flex-wrap items-center justify-between gap-3">
+          <div className="relative w-full max-w-md flex-1">
+            <Search className="pointer-events-none absolute top-1/2 left-3.5 size-4 -translate-y-1/2 text-muted-foreground" />
+            <Input
+              type="search"
+              value={query}
+              onChange={(event) => setQuery(event.target.value)}
+              placeholder="Search apps…"
+              aria-label="Search apps"
+              className="pr-4 pl-10"
+            />
+          </div>
+          {embedded && (
+            <Button variant="outline" onClick={() => setAddCustomOpen(true)} className="gap-2">
+              <Plus className="size-4" />
+              Add custom app
+            </Button>
+          )}
         </div>
         {categories.length > 1 && (
           <div className="flex flex-wrap items-center gap-1">
@@ -115,9 +142,7 @@ export function AppCatalog({
                       : 'rounded-lg px-4 py-2 font-medium text-muted-foreground text-sm transition-colors hover:bg-muted/50 hover:text-foreground'
                   }
                 >
-                  {item === 'all'
-                    ? 'All'
-                    : (CATEGORY_LABELS[item] ?? item.charAt(0).toUpperCase() + item.slice(1))}
+                  {CATEGORY_LABELS[item] ?? item.charAt(0).toUpperCase() + item.slice(1)}
                 </button>
               );
             })}
@@ -126,7 +151,7 @@ export function AppCatalog({
       </div>
 
       {isLoading ? (
-        <div className="mt-6 grid grid-cols-1 gap-4 md:grid-cols-2 xl:grid-cols-3">
+        <div className="mt-6 grid grid-cols-1 gap-4 sm:grid-cols-2 md:grid-cols-2 lg:grid-cols-2 xl:grid-cols-2 2xl:grid-cols-3">
           {Array.from({ length: 6 }, (_, index) => (
             <Skeleton key={index} className="h-28 rounded-2xl" />
           ))}
@@ -149,7 +174,7 @@ export function AppCatalog({
           )}
         </div>
       ) : (
-        <div className="mt-6 grid grid-cols-1 gap-4 md:grid-cols-2 xl:grid-cols-3">
+        <div className="mt-6 grid grid-cols-1 gap-4 sm:grid-cols-2 md:grid-cols-2 lg:grid-cols-2 xl:grid-cols-2 2xl:grid-cols-3">
           {filtered.map((app) => (
             <CatalogCard key={app.id} app={app} />
           ))}
@@ -163,6 +188,12 @@ export function AppCatalog({
           </Button>
         </div>
       )}
+
+      <AddCustomAppModal
+        open={addCustomOpen}
+        onOpenChange={setAddCustomOpen}
+        onAdded={() => void refetch()}
+      />
     </div>
   );
 }

@@ -35,6 +35,9 @@ type Server struct {
 	WorkerToken    string       `json:"workerToken,omitempty" db:"worker_token"`
 	LastSeenAt     *time.Time   `json:"lastSeenAt,omitempty" db:"last_seen_at"`
 
+	Managed      *CloudWorkspaceSummary `json:"managed,omitempty" db:"-"`
+	Capabilities *ServerCapabilities    `json:"capabilities,omitempty" db:"-"`
+
 	Metrics []byte `json:"metrics,omitempty" db:"metrics"`
 
 	CreatedAt time.Time `json:"createdAt" db:"created_at"`

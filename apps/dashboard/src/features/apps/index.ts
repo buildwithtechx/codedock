@@ -1,3 +1,4 @@
+export { AddCustomAppModal } from './add-custom-app-modal';
 export { appsApi } from './api';
 export { AppCatalog } from './app-catalog';
 export { AppLogo } from './app-logo';

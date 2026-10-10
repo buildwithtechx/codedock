@@ -5,6 +5,7 @@ import (
 
 	"github.com/labstack/echo/v4"
 
+	"codedock/internal/engine/compose"
 	"codedock/internal/http/middleware"
 	"codedock/internal/models"
 	projectservices "codedock/internal/services/projects"
@@ -43,6 +44,29 @@ func (h *OneClickHandler) Get(c echo.Context) error {
 		return utils.Error(c, http.StatusNotFound, err.Error())
 	}
 	return utils.Success(c, "One-click app", app)
+}
+
+func (h *OneClickHandler) AddCustom(c echo.Context) error {
+	var tmpl compose.ComposeTemplate
+	if err := c.Bind(&tmpl); err != nil {
+		return utils.Error(c, http.StatusBadRequest, "invalid template json: "+err.Error())
+	}
+	app, err := h.service.AddCustomApp(tmpl)
+	if err != nil {
+		return utils.Error(c, http.StatusBadRequest, err.Error())
+	}
+	return utils.Success(c, "Custom app added", app)
+}
+
+func (h *OneClickHandler) DeleteCustom(c echo.Context) error {
+	id := c.Param("id")
+	if id == "" {
+		return utils.Error(c, http.StatusBadRequest, "app id required")
+	}
+	if err := h.service.RemoveCustomApp(id); err != nil {
+		return utils.Error(c, http.StatusInternalServerError, err.Error())
+	}
+	return utils.Success(c, "Custom app removed", map[string]string{"id": id})
 }
 
 func (h *OneClickHandler) Review(c echo.Context) error {

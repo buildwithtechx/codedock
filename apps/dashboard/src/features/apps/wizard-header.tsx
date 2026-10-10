@@ -15,18 +15,19 @@ export function WizardHeader({ app }: { app: OneClickAppDetails }) {
         className="mb-4 inline-flex items-center gap-1.5 text-muted-foreground text-sm transition-colors hover:text-foreground"
       >
         <ArrowLeft className="size-4" />
-        Back to catalog
+        Back
       </Link>
       <div className="flex items-center gap-4">
-        <AppLogo icon={app.icon} name={app.name} className="size-12 shrink-0" />
+        <div className="flex size-12 shrink-0 items-center justify-center rounded-2xl bg-muted/60">
+          <AppLogo icon={app.icon} name={app.name} className="size-7" />
+        </div>
         <div className="min-w-0">
           <div className="flex flex-wrap items-center gap-2">
             <h1 className="font-semibold text-foreground text-xl">{app.name}</h1>
             {app.verified && (
-              <Badge variant="secondary" className="gap-1">
-                <BadgeCheck className="size-3" />
-                Verified
-              </Badge>
+              <span className="inline-flex items-center text-primary" title="Verified app">
+                <BadgeCheck className="size-5 fill-primary text-primary-foreground" />
+              </span>
             )}
             {app.category && <Badge variant="outline">{app.category}</Badge>}
           </div>
@@ -39,7 +40,7 @@ export function WizardHeader({ app }: { app: OneClickAppDetails }) {
               onClick={() => setExpanded((value) => !value)}
               className="mt-0.5 font-medium text-muted-foreground/80 text-xs transition-colors hover:text-foreground"
             >
-              {expanded ? 'Show less' : 'Show more'}
+              {expanded ? 'Less' : 'More'}
             </button>
           )}
         </div>

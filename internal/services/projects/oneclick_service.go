@@ -4,6 +4,7 @@ import (
 	"context"
 	"errors"
 	"sort"
+	"strings"
 
 	"github.com/google/uuid"
 
@@ -55,6 +56,35 @@ func (s *OneClickService) GetApp(appID string) (*models.OneClickApp, error) {
 		return nil, errors.New("app has no one-click metadata")
 	}
 	return app, nil
+}
+
+func (s *OneClickService) AddCustomApp(tmpl compose.ComposeTemplate) (*models.OneClickApp, error) {
+	if tmpl.XCodedock == nil {
+		tmpl.XCodedock = &compose.CodedockMetadata{}
+	}
+	tmpl.XCodedock.IsOneClick = true
+	tmpl.XCodedock.Verified = false
+	if tmpl.XCodedock.Name == "" {
+		for name := range tmpl.Services {
+			tmpl.XCodedock.Name = name
+			break
+		}
+	}
+	if tmpl.XCodedock.Name == "" {
+		return nil, errors.New("custom app must define a name or at least one service")
+	}
+	id := strings.ToLower(strings.ReplaceAll(tmpl.XCodedock.Name, " ", "-"))
+	if tmpl.XCodedock.Category == "" {
+		tmpl.XCodedock.Category = "other"
+	}
+	s.tmplManager.AddTemplate(id, tmpl)
+	app := extractOneClickApp(id, &tmpl)
+	return app, nil
+}
+
+func (s *OneClickService) RemoveCustomApp(id string) error {
+	s.tmplManager.DeleteTemplate(id)
+	return nil
 }
 
 func (s *OneClickService) ReviewInstall(_ context.Context, input models.InstallAppInput) (*models.InstallPreview, error) {

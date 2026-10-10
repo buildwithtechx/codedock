@@ -9,18 +9,25 @@ type OneClickEnvVar struct {
 	Input        bool   `json:"input"`
 }
 
+type OneClickEndpoint struct {
+	Label string `json:"label"`
+	Port  int    `json:"port"`
+	Kind  string `json:"kind"`
+}
+
 type OneClickApp struct {
-	ID           string           `json:"id"`
-	Name         string           `json:"name"`
-	Description  string           `json:"description"`
-	Icon         string           `json:"icon"`
-	Category     string           `json:"category"`
-	DockerImage  string           `json:"dockerImage"`
-	DefaultPort  int              `json:"defaultPort"`
-	Services     []string         `json:"services"`
-	Volumes      []string         `json:"volumes"`
-	EnvVariables []OneClickEnvVar `json:"envVariables"`
-	Verified     bool             `json:"verified"`
+	ID           string             `json:"id"`
+	Name         string             `json:"name"`
+	Description  string             `json:"description"`
+	Icon         string             `json:"icon"`
+	Category     string             `json:"category"`
+	DockerImage  string             `json:"dockerImage"`
+	DefaultPort  int                `json:"defaultPort"`
+	Endpoints    []OneClickEndpoint `json:"endpoints,omitempty"`
+	Services     []string           `json:"services"`
+	Volumes      []string           `json:"volumes"`
+	EnvVariables []OneClickEnvVar   `json:"envVariables"`
+	Verified     bool               `json:"verified"`
 }
 
 type InstallAppInput struct {

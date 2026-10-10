@@ -26,6 +26,9 @@ export interface Server {
   status: string;
   workerToken?: string;
   lastSeenAt?: string;
+  managed?: CloudWorkspaceSummary | null;
+  capabilities?: ServerCapabilities | null;
+  purpose?: string;
   metrics: ServerMetrics | string | null;
   createdAt: string;
   updatedAt: string;
@@ -129,4 +132,100 @@ export interface ServerRateLimitConfig {
   rps: number;
   burst: number;
   whitelist: string[];
+}
+
+export interface ServerCapabilities {
+  monitor?: boolean;
+  terminal?: boolean;
+  exec?: boolean;
+  hostConfiguration?: boolean;
+  ssh?: boolean;
+  networkSettings?: boolean;
+}
+
+export interface CloudWorkspaceOperation {
+  id: string;
+  kind: string;
+  status: string;
+  requestedAt: string;
+  nextAttemptAt?: string | null;
+  error?: string | null;
+  logs: string[];
+}
+
+export interface CloudWorkspaceSummary {
+  id: string;
+  serverId: string;
+  name: string;
+  planTierId?: string;
+  subscriptionStatus?: string;
+  projectCount?: number;
+  state: string;
+  resources?: {
+    cpuCores: number;
+    memoryMb: number;
+    diskMb: number;
+  };
+  operation?: CloudWorkspaceOperation | null;
+  createdAt?: string;
+}
+
+export interface ServerNetworkSettings {
+  internetAccess?: boolean | null;
+  ingressPorts: number[];
+  ingressAll?: boolean;
+  egress?: string[] | null;
+  privateIp?: string | null;
+  outboundIp?: string | null;
+  outboundMode?: string | null;
+  revision?: string;
+}
+
+export interface ManagedWorkload {
+  id: string;
+  name: string;
+  state: string;
+  restartPolicy?: string | null;
+  source: 'manual' | 'project' | 'system';
+  projectId?: string | null;
+  manageable: boolean;
+}
+
+export interface ManagedSshStatus {
+  enabled?: boolean | null;
+  keyConfigured?: boolean | null;
+  passwordConfigured?: boolean | null;
+  requiresIdentityAccess: boolean;
+  connection?: {
+    user: string;
+    host: string;
+    bastion: string;
+    command: string;
+  } | null;
+}
+
+export interface ManagedRuntimeStatus {
+  enabled?: boolean | null;
+  running?: boolean | null;
+}
+
+export interface ManagedRuntimeCredential {
+  endpoint: string;
+  token: string;
+  revision: string;
+  expiresAt?: string | null;
+}
+
+export interface ManagedServerInfo {
+  workspaceId: string;
+  image: string;
+  state: string;
+  mode?: string | null;
+  operatingSystem?: string | null;
+  restartPolicy?: string | null;
+  resources: {
+    cpuCores: number;
+    memoryMb: number;
+    diskMb: number;
+  };
 }

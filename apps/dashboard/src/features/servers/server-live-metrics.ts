@@ -56,13 +56,9 @@ export function useServerLiveMetrics(serverId: string | undefined) {
 
   useEffect(() => {
     if (!serverId) return;
-    const socket = new WebSocket(
-      websocketUrl(`/ws/servers/${serverId}/metrics`),
-      (() => {
-        const token = useAuthStore.getState().token;
-        return token ? ['auth', token] : undefined;
-      })()
-    );
+    const token = useAuthStore.getState().token;
+    const wsPath = `/ws/servers/${serverId}/metrics${token ? `?token=${encodeURIComponent(token)}` : ''}`;
+    const socket = new WebSocket(websocketUrl(wsPath), token ? ['auth', token] : undefined);
 
     socket.onopen = () => setConnected(true);
     socket.onclose = () => setConnected(false);

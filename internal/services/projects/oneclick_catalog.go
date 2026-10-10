@@ -13,6 +13,15 @@ func extractOneClickApp(id string, tmpl *compose.ComposeTemplate) *models.OneCli
 	if meta == nil {
 		return nil
 	}
+	endpoints := extractEndpoints(tmpl)
+	defaultPort := extractPort(tmpl)
+	if len(endpoints) == 0 && defaultPort > 0 {
+		endpoints = []models.OneClickEndpoint{{
+			Label: meta.Name,
+			Port:  defaultPort,
+			Kind:  "http",
+		}}
+	}
 	return &models.OneClickApp{
 		ID:           id,
 		Name:         meta.Name,
@@ -20,7 +29,8 @@ func extractOneClickApp(id string, tmpl *compose.ComposeTemplate) *models.OneCli
 		Icon:         meta.Icon,
 		Category:     catalogCategory(meta.Category),
 		DockerImage:  catalogPrimaryImage(tmpl),
-		DefaultPort:  extractPort(tmpl),
+		DefaultPort:  defaultPort,
+		Endpoints:    endpoints,
 		Services:     catalogServiceNames(tmpl),
 		Volumes:      catalogVolumeNames(tmpl),
 		EnvVariables: catalogEnvVariables(tmpl, meta),
@@ -155,4 +165,35 @@ func extractPort(tmpl *compose.ComposeTemplate) int {
 		}
 	}
 	return 3000
+}
+
+func extractEndpoints(tmpl *compose.ComposeTemplate) []models.OneClickEndpoint {
+	endpoints := []models.OneClickEndpoint{}
+	seen := map[int]bool{}
+	for _, name := range catalogServiceNames(tmpl) {
+		service := tmpl.Services[name]
+		for _, portStr := range service.Ports {
+			if mapping, err := compose.ParseCatalogPort(portStr); err == nil {
+				targetPort := mapping.Host
+				if targetPort == 0 {
+					targetPort = mapping.Container
+				}
+				if targetPort > 0 && !seen[targetPort] {
+					seen[targetPort] = true
+					label := name
+					if targetPort == 9001 {
+						label = "Console"
+					} else if targetPort == 9000 {
+						label = "S3 API"
+					}
+					endpoints = append(endpoints, models.OneClickEndpoint{
+						Label: label,
+						Port:  targetPort,
+						Kind:  "http",
+					})
+				}
+			}
+		}
+	}
+	return endpoints
 }

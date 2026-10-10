@@ -58,4 +58,24 @@ export const appsApi = {
       throw handleApiError(error);
     }
   },
+
+  async addCustom(template: unknown): Promise<OneClickAppDetails> {
+    try {
+      const response = await apiClient.post<{ data: OneClickAppDetails }>(
+        '/one-click/custom',
+        template
+      );
+      return response.data;
+    } catch (error) {
+      throw handleApiError(error);
+    }
+  },
+
+  async removeCustom(appId: string): Promise<void> {
+    try {
+      await apiClient.delete(`/one-click/custom/${encodeURIComponent(appId)}`);
+    } catch (error) {
+      throw handleApiError(error);
+    }
+  },
 };

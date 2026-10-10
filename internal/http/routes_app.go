@@ -165,6 +165,8 @@ func (s *Server) registerMiscRoutes(apiGroup, authGroup *echo.Group) {
 	authGroup.GET("/one-click/:id", s.oneClickHandler.Get)
 	authGroup.POST("/one-click/review", s.oneClickHandler.Review)
 	authGroup.POST("/one-click/deploy", s.oneClickHandler.Deploy)
+	authGroup.POST("/one-click/custom", s.oneClickHandler.AddCustom)
+	authGroup.DELETE("/one-click/custom/:id", s.oneClickHandler.DeleteCustom)
 	authGroup.POST("/dns", s.dnsHandler.Create, s.authGuard.RequireRole("admin"))
 	authGroup.GET("/dns", s.dnsHandler.List, s.authGuard.RequireRole("admin"))
 	authGroup.PUT("/dns/:id", s.dnsHandler.Update, s.authGuard.RequireRole("admin"))

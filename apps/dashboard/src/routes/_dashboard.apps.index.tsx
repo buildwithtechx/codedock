@@ -7,6 +7,7 @@ import { Input } from '#/components/ui/input';
 import { QueryErrorState } from '#/components/ui/query-error-state';
 import { Skeleton } from '#/components/ui/skeleton';
 import {
+  AddCustomAppModal,
   AppLogo,
   CatalogShortcut,
   InstalledAppRow,
@@ -24,6 +25,7 @@ function AppsPage() {
   const installedQuery = useInstalledApps();
   const catalogQuery = useAppCatalog();
   const [search, setSearch] = useState('');
+  const [addCustomOpen, setAddCustomOpen] = useState(false);
   const apps = useMemo(() => installedQuery.data ?? [], [installedQuery.data]);
   const catalog = useMemo(
     () => (Array.isArray(catalogQuery.data) ? catalogQuery.data : []),
@@ -64,14 +66,18 @@ function AppsPage() {
             : `${apps.length} installed app${apps.length === 1 ? '' : 's'}`
         }
         action={
-          apps.length > 0 ? (
+          <div className="flex items-center gap-2">
+            <Button variant="outline" onClick={() => setAddCustomOpen(true)} className="gap-2">
+              <Plus className="size-4" />
+              Add custom app
+            </Button>
             <Button asChild>
               <Link to="/apps/new">
                 <Plus className="size-4" />
                 New app
               </Link>
             </Button>
-          ) : undefined
+          </div>
         }
       />
 
@@ -116,12 +122,18 @@ function AppsPage() {
             <p className="mx-auto mt-2 max-w-md text-muted-foreground text-sm leading-relaxed">
               Deploy databases, tools and services from the app catalog.
             </p>
-            <Button asChild className="mt-6">
-              <Link to="/apps/new">
+            <div className="mt-6 flex flex-wrap items-center justify-center gap-3">
+              <Button asChild>
+                <Link to="/apps/new">
+                  <Plus className="size-4" />
+                  Install App
+                </Link>
+              </Button>
+              <Button variant="outline" onClick={() => setAddCustomOpen(true)} className="gap-2">
                 <Plus className="size-4" />
-                Install App
-              </Link>
-            </Button>
+                Add custom app
+              </Button>
+            </div>
           </div>
 
           {(catalogQuery.isLoading || suggestions.length > 0) && (
@@ -129,7 +141,7 @@ function AppsPage() {
               <h2 id="popular-apps" className="mb-4 font-medium text-muted-foreground text-sm">
                 Popular apps
               </h2>
-              <div className="grid grid-cols-1 gap-3 md:grid-cols-2">
+              <div className="grid grid-cols-1 gap-3 sm:grid-cols-2">
                 {catalogQuery.isLoading
                   ? Array.from({ length: 4 }, (_, index) => (
                       <div
@@ -224,6 +236,15 @@ function AppsPage() {
           </aside>
         </div>
       )}
+
+      <AddCustomAppModal
+        open={addCustomOpen}
+        onOpenChange={setAddCustomOpen}
+        onAdded={() => {
+          void installedQuery.refetch();
+          void catalogQuery.refetch();
+        }}
+      />
     </div>
   );
 }

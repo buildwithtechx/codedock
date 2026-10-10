@@ -1,10 +1,15 @@
 import { createFileRoute, Link, useNavigate } from '@tanstack/react-router';
 import {
   ArrowLeft,
+  Code2,
   Container,
   EllipsisVertical,
+  History,
+  Key,
+  Layers,
   LayoutGrid,
   Loader2,
+  Network,
   RefreshCw,
   Server as ServerIcon,
   Settings,
@@ -31,6 +36,13 @@ import {
 } from '#/components/ui/empty';
 import { QueryErrorState } from '#/components/ui/query-error-state';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '#/components/ui/tabs';
+import { ManagedServerActivity } from '#/features/servers/managed/managed-server-activity';
+import { ManagedServerNetwork } from '#/features/servers/managed/managed-server-network';
+import { ManagedServerPlan } from '#/features/servers/managed/managed-server-plan';
+import { ManagedServerRuntime } from '#/features/servers/managed/managed-server-runtime';
+import { ManagedServerSettings } from '#/features/servers/managed/managed-server-settings';
+import { ManagedServerSsh } from '#/features/servers/managed/managed-server-ssh';
+import { ManagedServerWorkloads } from '#/features/servers/managed/managed-server-workloads';
 import { ServerComponentsTab } from '#/features/servers/server-components-tab';
 import { ServerConnectionBanner } from '#/features/servers/server-connection-banner';
 import { ServerConnectionCard } from '#/features/servers/server-connection-card';
@@ -40,21 +52,28 @@ import { ServerOverviewTab } from '#/features/servers/server-overview-tab';
 import { ServerSecurityTab } from '#/features/servers/server-security-tab';
 import { ServerSettingsTab } from '#/features/servers/server-settings-tab';
 import { ServerTerminalTab } from '#/features/servers/server-terminal-tab';
+import { useGetPublicSettings } from '#/features/settings';
 import { useServer } from '#/hooks/use-servers';
 import type { Server } from '#/interfaces/server';
 import { cn } from '#/lib/utils';
 
-const tabs = [
+const cloudTabs = [
+  { key: 'overview', label: 'Overview', icon: LayoutGrid },
+  { key: 'activity', label: 'Activity', icon: History },
+  { key: 'networking', label: 'Networking', icon: Network },
+  { key: 'workloads', label: 'Workloads', icon: Layers },
+  { key: 'ssh', label: 'SSH access', icon: Key },
+  { key: 'runtimeApi', label: 'Runtime API', icon: Code2 },
+  { key: 'settings', label: 'Settings', icon: Settings },
+] as const;
+
+const selfHostedTabs = [
   { key: 'overview', label: 'Overview', icon: LayoutGrid },
   { key: 'components', label: 'Components', icon: Container },
   { key: 'security', label: 'Security', icon: Shield },
   { key: 'terminal', label: 'Terminal', icon: TerminalSquare },
   { key: 'settings', label: 'Settings', icon: Settings },
 ] as const;
-
-type ServerTab = (typeof tabs)[number]['key'];
-
-const tabKeys = tabs.map((tab) => tab.key);
 
 export const Route = createFileRoute('/_dashboard/servers/$serverId')({
   validateSearch: z.object({
@@ -68,11 +87,21 @@ function ServerDetailsPage() {
   const { tab: tabParam } = Route.useSearch();
   const navigate = useNavigate();
   const { data: server, isLoading, isError, isRefetching, refetch } = useServer(serverId);
+  const { data: publicSettings } = useGetPublicSettings();
   const [removeTarget, setRemoveTarget] = useState<Server | null>(null);
 
-  const activeTab: ServerTab = tabKeys.includes(tabParam as ServerTab)
-    ? (tabParam as ServerTab)
+  const isCloud = Boolean(publicSettings?.data?.cloudMode);
+  const isManaged = Boolean(
+    server?.managed || server?.provider || server?.serverType === 'managed' || isCloud
+  );
+
+  const currentTabs = isManaged ? cloudTabs : selfHostedTabs;
+  const tabKeys = currentTabs.map((tab) => tab.key);
+
+  const activeTab = tabKeys.includes(tabParam as (typeof tabKeys)[number])
+    ? (tabParam as string)
     : 'overview';
+
   const changeTab = (value: string) =>
     navigate({
       to: '/servers/$serverId',
@@ -158,7 +187,7 @@ function ServerDetailsPage() {
           >
             <RefreshCw className={`size-4 ${isRefetching ? 'animate-spin' : ''}`} />
           </Button>
-          {!server.isLocal && (
+          {!server.isLocal && !isManaged && (
             <DropdownMenu>
               <DropdownMenuTrigger asChild>
                 <Button variant="ghost" size="icon" aria-label="Server actions">
@@ -175,26 +204,41 @@ function ServerDetailsPage() {
           )}
         </div>
         <div className="col-span-2 col-start-2 flex min-w-0 flex-wrap items-center gap-2">
-          <p className="min-w-0 break-all font-mono text-muted-foreground text-sm">
-            {server.isLocal
-              ? 'local deployment runtime'
-              : `${server.sshUser ?? 'root'}@${server.sshHost ?? server.ipAddress}`}
-          </p>
-          <span className={cn('rounded-full px-2 py-0.5 font-medium text-xs', statusTone)}>
-            {statusLabel}
-          </span>
+          {isManaged ? (
+            <>
+              <p className="min-w-0 break-all text-muted-foreground text-sm">
+                Managed Cloud Server
+              </p>
+              <span className="rounded-full bg-success/10 px-2 py-0.5 font-medium text-success text-xs">
+                Active
+              </span>
+            </>
+          ) : (
+            <>
+              <p className="min-w-0 break-all font-mono text-muted-foreground text-sm">
+                {server.isLocal
+                  ? 'local deployment runtime'
+                  : `${server.sshUser ?? 'root'}@${server.sshHost ?? server.ipAddress}`}
+              </p>
+              <span className={cn('rounded-full px-2 py-0.5 font-medium text-xs', statusTone)}>
+                {statusLabel}
+              </span>
+            </>
+          )}
         </div>
       </div>
 
-      <ServerConnectionBanner
-        server={server}
-        retrying={isRefetching}
-        onRetry={() => void refetch()}
-      />
+      {!isManaged && (
+        <ServerConnectionBanner
+          server={server}
+          retrying={isRefetching}
+          onRetry={() => void refetch()}
+        />
+      )}
 
       <Tabs value={activeTab} onValueChange={changeTab} className="gap-6">
         <TabsList variant="line">
-          {tabs.map((tab) => (
+          {currentTabs.map((tab) => (
             <TabsTrigger key={tab.key} value={tab.key} className="gap-1.5">
               <tab.icon className="size-4" />
               {tab.label}
@@ -204,25 +248,57 @@ function ServerDetailsPage() {
 
         <div className="grid grid-cols-1 items-start gap-6 xl:grid-cols-[minmax(0,1fr)_340px]">
           <div className="min-w-0 xl:col-start-1 xl:row-start-1">
-            <TabsContent value="overview">
-              <ServerOverviewTab server={server} />
-            </TabsContent>
-            <TabsContent value="components">
-              <ServerComponentsTab serverId={server.id} />
-            </TabsContent>
-            <TabsContent value="security">
-              <ServerSecurityTab serverId={server.id} />
-            </TabsContent>
-            <TabsContent value="terminal">
-              <ServerTerminalTab server={server} />
-            </TabsContent>
-            <TabsContent value="settings">
-              <ServerSettingsTab server={server} />
-            </TabsContent>
+            {isManaged ? (
+              <>
+                <TabsContent value="overview">
+                  <ServerOverviewTab server={server} />
+                </TabsContent>
+                <TabsContent value="activity">
+                  <ManagedServerActivity server={server.managed} onRetry={() => void refetch()} />
+                </TabsContent>
+                <TabsContent value="networking">
+                  <ManagedServerNetwork serverId={server.id} />
+                </TabsContent>
+                <TabsContent value="workloads">
+                  <ManagedServerWorkloads serverId={server.id} />
+                </TabsContent>
+                <TabsContent value="ssh">
+                  <ManagedServerSsh serverId={server.id} />
+                </TabsContent>
+                <TabsContent value="runtimeApi">
+                  <ManagedServerRuntime serverId={server.id} />
+                </TabsContent>
+                <TabsContent value="settings">
+                  <ManagedServerSettings serverId={server.id} />
+                </TabsContent>
+              </>
+            ) : (
+              <>
+                <TabsContent value="overview">
+                  <ServerOverviewTab server={server} />
+                </TabsContent>
+                <TabsContent value="components">
+                  <ServerComponentsTab serverId={server.id} />
+                </TabsContent>
+                <TabsContent value="security">
+                  <ServerSecurityTab serverId={server.id} />
+                </TabsContent>
+                <TabsContent value="terminal">
+                  <ServerTerminalTab server={server} />
+                </TabsContent>
+                <TabsContent value="settings">
+                  <ServerSettingsTab server={server} />
+                </TabsContent>
+              </>
+            )}
           </div>
 
           <div className="space-y-4 xl:sticky xl:top-6 xl:col-start-2 xl:row-start-1 xl:self-start">
-            <ServerConnectionCard server={server} />
+            {isManaged ? (
+              <ManagedServerPlan server={server.managed} />
+            ) : (
+              <ServerConnectionCard server={server} />
+            )}
           </div>
         </div>
       </Tabs>
