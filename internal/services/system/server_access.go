@@ -22,6 +22,7 @@ func (s *serverService) ListServersByUser(ctx context.Context, userID string) ([
 			now := time.Now().UTC()
 			srv.LastSeenAt = &now
 			srv.Status = models.ServerStatusOnline
+			srv.IsControlPlane = true
 			if len(srv.Metrics) == 0 {
 				srv.Metrics = observability.GetHostMetricsPayload()
 			}
@@ -41,9 +42,19 @@ func (s *serverService) ListServersByUser(ctx context.Context, userID string) ([
 	if user.Role != models.UserRoleOwner && user.Role != models.UserRoleAdmin {
 		return servers, nil
 	}
-	cp := s.controlPlaneServer(userID)
-	applyServerMetadata(cp)
-	return append([]*models.Server{cp}, servers...), nil
+	hasLocal := false
+	for _, srv := range servers {
+		if srv.IsLocal || srv.ID == "local" || srv.ID == controlPlaneServerID {
+			hasLocal = true
+			break
+		}
+	}
+	if !hasLocal {
+		cp := s.controlPlaneServer(userID)
+		applyServerMetadata(cp)
+		return append([]*models.Server{cp}, servers...), nil
+	}
+	return servers, nil
 }
 
 func (s *serverService) GetServer(ctx context.Context, id, userID string) (*models.Server, error) {
@@ -56,6 +67,19 @@ func (s *serverService) GetServer(ctx context.Context, id, userID string) (*mode
 	if id == controlPlaneServerID || id == "local" || id == "control-plane" {
 		if !isAdmin {
 			return nil, utils.NewForbiddenError("server access denied")
+		}
+		if srv, err := s.serverRepo.GetByID(ctx, id); err == nil && srv != nil {
+			if srv.IsLocal {
+				now := time.Now().UTC()
+				srv.LastSeenAt = &now
+				srv.Status = models.ServerStatusOnline
+				srv.IsControlPlane = true
+				if len(srv.Metrics) == 0 {
+					srv.Metrics = observability.GetHostMetricsPayload()
+				}
+			}
+			applyServerMetadata(srv)
+			return srv, nil
 		}
 		cp := s.controlPlaneServer(userID)
 		if id == "local" || id == "control-plane" {

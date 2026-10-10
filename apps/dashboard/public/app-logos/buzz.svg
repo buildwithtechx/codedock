@@ -1,7 +1,3 @@
-<!-- Buzz (block/buzz) brand mark. Source: admin-web/public/favicon.svg,
-     Apache-2.0. The upstream file recolors via @media (prefers-color-scheme),
-     which tracks the OS, not our [data-theme] app theme — stripped here so the
-     fill is deterministic (#231e1e) and AppLogo's darkInvert controls it. -->
 <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 466 309">
   <defs>
     <mask id="bee-mask">

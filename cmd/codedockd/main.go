@@ -41,8 +41,8 @@ func startServer() {
 
 	_, _ = db.Exec(`
 		INSERT INTO servers (id, user_id, name, ip_address, status, is_local, ssh_transport, created_at, updated_at)
-		VALUES ('local', 'system', 'Local Host', '127.0.0.1', 'online', TRUE, 'direct', CURRENT_TIMESTAMP, CURRENT_TIMESTAMP)
-		ON CONFLICT DO NOTHING
+		VALUES ('local', 'system', 'Codedock Control Plane', '127.0.0.1', 'online', TRUE, 'direct', CURRENT_TIMESTAMP, CURRENT_TIMESTAMP)
+		ON CONFLICT (id) DO UPDATE SET name = 'Codedock Control Plane' WHERE servers.id = 'local' AND servers.name = 'Local Host'
 	`)
 
 	telemetry.Init()

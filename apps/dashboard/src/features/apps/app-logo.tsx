@@ -1,6 +1,17 @@
 import { useState } from 'react';
 import { cn } from '#/lib/utils';
 
+const DARK_INVERT_LOGOS = new Set([
+  'buzz',
+  'calcom',
+  'directus',
+  'ghost',
+  'kafka',
+  'posthog',
+  'umami',
+  'vaultwarden',
+]);
+
 export function AppLogo({
   appId,
   icon,
@@ -28,6 +39,11 @@ export function AppLogo({
       </span>
     );
   }
+
+  const cleanIcon = resolvedIcon.toLowerCase().replace(/[^a-z0-9]/g, '');
+  const cleanAppId = (appId ?? '').toLowerCase().replace(/[^a-z0-9]/g, '');
+  const shouldInvert = DARK_INVERT_LOGOS.has(cleanIcon) || DARK_INVERT_LOGOS.has(cleanAppId);
+
   return (
     <span
       className={cn(
@@ -39,7 +55,10 @@ export function AppLogo({
         src={`/app-logos/${resolvedIcon}.svg`}
         alt=""
         aria-hidden="true"
-        className="size-3/5 object-contain"
+        className={cn(
+          'size-3/5 object-contain',
+          shouldInvert && 'dim:brightness-0 dim:invert dark:brightness-0 dark:invert'
+        )}
         onError={() => setFailed(true)}
       />
     </span>
