@@ -161,11 +161,7 @@ export function ProjectListRow({ project }: { project: CanvasSummary }) {
         </div>
       </div>
 
-      <ProjectDeleteDialog
-        isOpen={deleteOpen}
-        onOpenChange={setDeleteOpen}
-        project={project}
-      />
+      <ProjectDeleteDialog isOpen={deleteOpen} onOpenChange={setDeleteOpen} project={project} />
     </div>
   );
 }

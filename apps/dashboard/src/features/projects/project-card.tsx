@@ -96,7 +96,7 @@ export const ProjectCard = ({ project }: { project: CanvasSummary }) => {
             <p className="mt-0.5 truncate text-muted-foreground text-xs">{project.description}</p>
           )}
         </div>
-        <div className="relative z-10 -mr-1 -mt-1 shrink-0">
+        <div className="relative z-10 -mt-1 -mr-1 shrink-0">
           <DropdownMenu>
             <DropdownMenuTrigger asChild>
               <Button
@@ -200,11 +200,7 @@ export const ProjectCard = ({ project }: { project: CanvasSummary }) => {
         </span>
       </div>
 
-      <ProjectDeleteDialog
-        isOpen={deleteOpen}
-        onOpenChange={setDeleteOpen}
-        project={project}
-      />
+      <ProjectDeleteDialog isOpen={deleteOpen} onOpenChange={setDeleteOpen} project={project} />
     </div>
   );
 };

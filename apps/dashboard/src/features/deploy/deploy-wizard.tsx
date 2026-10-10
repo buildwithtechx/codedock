@@ -69,8 +69,7 @@ export function DeployWizard({
           staticOutput: outputDirectory,
           subdomain,
         } as never);
-      } catch {
-      }
+      } catch {}
 
       toast.success('Deployment queued');
       if (projectId) {

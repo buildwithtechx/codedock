@@ -47,11 +47,7 @@ function SettingsRouteComponent() {
                 and environment configurations.
               </p>
             </div>
-            <Button
-              variant="destructive"
-              onClick={() => setDeleteOpen(true)}
-              className="shrink-0"
-            >
+            <Button variant="destructive" onClick={() => setDeleteOpen(true)} className="shrink-0">
               Delete project
             </Button>
           </div>
