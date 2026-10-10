@@ -1,20 +1,10 @@
-import {
-  Boxes,
-  Check,
-  ChevronDown,
-  ChevronUp,
-  Flame,
-  HeartPulse,
-  Key,
-  Pencil,
-  RotateCcw,
-  Sliders,
-} from 'lucide-react';
+import { Boxes, Check, ChevronDown, ChevronUp, Flame, HeartPulse, Sliders } from 'lucide-react';
 import { useState } from 'react';
-import { Button } from '#/components/ui/button';
 import { Input } from '#/components/ui/input';
 import { Label } from '#/components/ui/label';
 import { Switch } from '#/components/ui/switch';
+import { DeployDestinationCard } from './deploy-destination-card';
+import { DeployEnvSection } from './deploy-env-section';
 
 const FRAMEWORKS = [
   'Vite',
@@ -68,31 +58,11 @@ export function DeployConfigStep({
   onEditTarget,
 }: DeployConfigStepProps) {
   const [advancedOpen, setAdvancedOpen] = useState(false);
-  const [envOpen, setEnvOpen] = useState(false);
   const [frameworkSelectOpen, setFrameworkSelectOpen] = useState(false);
 
   return (
     <div className="space-y-5">
-      <div className="flex flex-wrap items-center justify-between gap-3 text-muted-foreground text-xs">
-        <div className="flex items-center gap-2">
-          <span className="font-semibold text-foreground">Build & deploy:</span>
-          <span className="rounded-md bg-muted px-2 py-0.5 font-medium text-foreground">
-            Production
-          </span>
-        </div>
-        <div className="flex items-center gap-3">
-          <span>Cloud Pages (default)</span>
-          <button
-            type="button"
-            onClick={onEditTarget}
-            className="inline-flex items-center gap-1 text-primary hover:underline"
-          >
-            <RotateCcw className="size-3" />
-            Rollback: auto
-            <Pencil className="ml-0.5 size-2.5" />
-          </button>
-        </div>
-      </div>
+      <DeployDestinationCard runtimeMode={runtimeMode} onEdit={onEditTarget} />
 
       <section className="rounded-2xl border border-border/60 bg-card p-5">
         <div className="flex items-center justify-between">
@@ -251,48 +221,7 @@ export function DeployConfigStep({
         </div>
       </section>
 
-      <section className="rounded-2xl border border-border/60 bg-card p-5">
-        <div className="flex items-center justify-between">
-          <div className="flex items-center gap-3">
-            <div className="grid size-8 place-items-center rounded-lg bg-muted text-muted-foreground">
-              <Key className="size-4" />
-            </div>
-            <div>
-              <h3 className="font-semibold text-foreground text-sm">Environment Variables</h3>
-              <p className="text-[11px] text-muted-foreground">
-                {envVars.trim() ? 'Configured' : 'None set'}
-              </p>
-            </div>
-          </div>
-          <div className="flex items-center gap-2">
-            <Button
-              variant="outline"
-              size="sm"
-              className="h-7 text-xs"
-              onClick={() => setEnvOpen((prev) => !prev)}
-            >
-              Paste .env
-            </Button>
-            <button
-              type="button"
-              onClick={() => setEnvOpen((prev) => !prev)}
-              className="text-muted-foreground hover:text-foreground"
-            >
-              {envOpen ? <ChevronUp className="size-4" /> : <ChevronDown className="size-4" />}
-            </button>
-          </div>
-        </div>
-        {envOpen && (
-          <div className="mt-4">
-            <textarea
-              value={envVars}
-              onChange={(e) => onEnvVarsChange(e.target.value)}
-              placeholder="KEY=value&#10;DATABASE_URL=postgres://..."
-              className="h-28 w-full rounded-lg border border-border/60 bg-background p-3 font-mono text-foreground text-xs focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-ring"
-            />
-          </div>
-        )}
-      </section>
+      <DeployEnvSection envVars={envVars} onEnvVarsChange={onEnvVarsChange} />
 
       <section className="rounded-2xl border border-border/60 bg-card p-5">
         <div className="flex items-center gap-3">

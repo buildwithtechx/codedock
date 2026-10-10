@@ -14,7 +14,6 @@ export { LibraryPage } from './library-page';
 export { LibrarySidebar } from './library-sidebar';
 export { LocalProjects, readLocalImports, rememberLocalImport } from './local-projects';
 export { ProviderAccounts } from './provider-accounts';
-export { RepoImportDialog } from './repo-import-dialog';
 export { RepositoryList } from './repository-list';
 export {
   GIT_PROVIDERS,

@@ -6,6 +6,7 @@ import { Skeleton } from '#/components/ui/skeleton';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '#/components/ui/tabs';
 import { AppCatalog } from '#/features/apps';
 import { TemplatesGallery } from '#/features/apps/templates-gallery';
+import { encodeDeploySlug } from '#/lib/slug-utils';
 import { ConnectPrompt } from './connect-prompt';
 import { FolderUpload } from './folder-upload';
 import { useGitConnections, useLibraryRepos } from './hooks';
@@ -84,7 +85,8 @@ export function LibraryPage({ initialTab }: { initialTab?: LibraryTab }) {
                   onImport={(repo) => {
                     void navigate({
                       to: '/deploy/$slug',
-                      params: { slug: encodeURIComponent(repo.name) },
+                      params: { slug: encodeDeploySlug(repo.fullName || repo.name) },
+                      search: { name: repo.name, branch: repo.defaultBranch },
                     });
                   }}
                   onImportUrl={() => setTab('url')}
@@ -106,7 +108,7 @@ export function LibraryPage({ initialTab }: { initialTab?: LibraryTab }) {
                 onImport={(parsed) => {
                   void navigate({
                     to: '/deploy/$slug',
-                    params: { slug: encodeURIComponent(parsed.repositoryUrl) },
+                    params: { slug: encodeDeploySlug(parsed.repositoryUrl) },
                     search: { name: parsed.name, branch: parsed.branch },
                   });
                 }}

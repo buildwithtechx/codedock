@@ -1,6 +1,7 @@
 import { createFileRoute } from '@tanstack/react-router';
 import { z } from 'zod';
 import { DeployWizard } from '#/features/deploy/deploy-wizard';
+import { decodeDeploySlug } from '#/lib/slug-utils';
 
 export const Route = createFileRoute('/_dashboard/deploy/$slug')({
   component: DeploySlugPage,
@@ -15,7 +16,7 @@ export const Route = createFileRoute('/_dashboard/deploy/$slug')({
 function DeploySlugPage() {
   const { slug } = Route.useParams();
   const search = Route.useSearch();
-  const decoded = decodeURIComponent(slug);
+  const decoded = decodeDeploySlug(slug);
   const derivedName =
     decoded
       .split('/')

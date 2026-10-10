@@ -1,7 +1,7 @@
 import { zodResolver } from '@hookform/resolvers/zod';
 import { createFileRoute } from '@tanstack/react-router';
-import { Eye, EyeOff, Loader2, Plus, Trash } from 'lucide-react';
-import { useState } from 'react';
+import { Download, Eye, EyeOff, Loader2, Plus, Trash, Upload } from 'lucide-react';
+import { type ChangeEvent, useRef, useState } from 'react';
 import { useForm } from 'react-hook-form';
 import { toast } from 'sonner';
 import { z } from 'zod';
@@ -29,6 +29,7 @@ function VariablesTab() {
   const { mutateAsync: deleteVar } = useDeleteVariable();
 
   const [visibleValues, setVisibleValues] = useState<Record<string, boolean>>({});
+  const fileInputRef = useRef<HTMLInputElement>(null);
 
   const form = useForm<VariableFormValues>({
     resolver: zodResolver(variableSchema),
@@ -76,13 +77,95 @@ function VariablesTab() {
 
   const variables = variablesData?.data || [];
 
+  const handleDownload = () => {
+    if (variables.length === 0) {
+      toast.info('No environment variables to download');
+      return;
+    }
+    const content = variables.map((v) => `${v.key}=${v.value}`).join('\n');
+    const blob = new Blob([content], { type: 'text/plain;charset=utf-8' });
+    const url = URL.createObjectURL(blob);
+    const link = document.createElement('a');
+    link.href = url;
+    link.download = '.env';
+    document.body.appendChild(link);
+    link.click();
+    document.body.removeChild(link);
+    URL.revokeObjectURL(url);
+    toast.success('Downloaded .env file');
+  };
+
+  const handleFileUpload = (e: ChangeEvent<HTMLInputElement>) => {
+    const file = e.target.files?.[0];
+    if (!file) return;
+    const reader = new FileReader();
+    reader.onload = async (event) => {
+      const text = (event.target?.result as string) || '';
+      const lines = text.split('\n');
+      let count = 0;
+      for (const rawLine of lines) {
+        const line = rawLine.trim();
+        if (!line || line.startsWith('#')) continue;
+        const idx = line.indexOf('=');
+        if (idx > 0) {
+          const key = line.slice(0, idx).trim();
+          const value = line.slice(idx + 1).trim();
+          try {
+            await createVar({ appId: serviceId, payload: { key, value, isSecret: false } });
+            count++;
+          } catch {}
+        }
+      }
+      if (count > 0) {
+        toast.success(`Imported ${count} environment variables`);
+      } else {
+        toast.info('No valid variables found in file');
+      }
+    };
+    reader.readAsText(file);
+    e.target.value = '';
+  };
+
   return (
     <div className="space-y-6">
-      <div>
-        <h2 className="font-medium text-lg">Environment Variables</h2>
-        <p className="text-muted-foreground text-sm">
-          Manage environment variables and secrets for your service.
-        </p>
+      <div className="flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between">
+        <div>
+          <h2 className="font-medium text-lg">Environment Variables</h2>
+          <p className="text-muted-foreground text-sm">
+            Manage environment variables and secrets for your service.
+          </p>
+        </div>
+        <div className="flex items-center gap-2">
+          <input
+            ref={fileInputRef}
+            type="file"
+            accept=".env,text/plain"
+            onChange={handleFileUpload}
+            className="hidden"
+            aria-label="Upload .env file"
+          />
+          <Button
+            type="button"
+            variant="outline"
+            size="sm"
+            className="h-8 gap-1.5 text-xs"
+            onClick={() => fileInputRef.current?.click()}
+          >
+            <Upload className="size-3.5" />
+            Upload .env
+          </Button>
+          <Button
+            type="button"
+            variant="outline"
+            size="sm"
+            disabled={variables.length === 0}
+            className="h-8 gap-1.5 text-xs"
+            onClick={handleDownload}
+          >
+            <Download className="size-3.5" />
+            Download
+          </Button>
+        </div>
       </div>
 
       <div className="rounded-lg border bg-card p-6">

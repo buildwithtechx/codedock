@@ -6,6 +6,7 @@ import { QueryErrorState } from '#/components/ui/query-error-state';
 import { Skeleton } from '#/components/ui/skeleton';
 import { useListExampleApps } from '#/hooks/use-templates';
 import type { ExampleApp } from '#/interfaces/templates';
+import { encodeDeploySlug } from '#/lib/slug-utils';
 import { ExampleLogo } from './example-logo';
 
 export function TemplatesGallery() {
@@ -27,11 +28,10 @@ export function TemplatesGallery() {
     void navigate({
       to: '/deploy/$slug',
       params: {
-        slug: encodeURIComponent('buildwithtechx/codedock-examples'),
+        slug: encodeDeploySlug('buildwithtechx/codedock-examples'),
       },
       search: {
         name: example.id,
-        branch: 'main',
         dir: example.id,
         template: example.id,
       },

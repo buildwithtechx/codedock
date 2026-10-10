@@ -18,6 +18,7 @@ import { ProjectGitTab } from '#/features/projects/project-git-tab';
 import { StatusBadge } from '#/features/projects/service-status-badge';
 import { ProjectClusters } from '#/features/servers/project-clusters';
 import type { AppService } from '#/features/services';
+import { AddServiceModal } from '#/features/services';
 import { useListByProject as useListAppsByProject } from '#/hooks/use-apps';
 import { useTriggerProject } from '#/hooks/use-deployments';
 import { useListByProject as useListEnvironments } from '#/hooks/use-environments';
@@ -56,6 +57,7 @@ function ProjectOverviewComponent() {
 
   const [selectedService, setSelectedService] = useState<AppService | null>(null);
   const [drawerOpen, setDrawerOpen] = useState(false);
+  const [addServiceOpen, setAddServiceOpen] = useState(false);
 
   const triggerProjectMutation = useTriggerProject();
 
@@ -169,13 +171,9 @@ function ProjectOverviewComponent() {
             <Settings className="h-3.5 w-3.5" />
             Settings
           </Button>
-          <Button
-            size="sm"
-            onClick={() => navigate({ to: '/projects/$projectId/new', params: { projectId } })}
-            className="h-9 gap-1.5 text-xs"
-          >
+          <Button size="sm" onClick={() => setAddServiceOpen(true)} className="h-9 gap-1.5 text-xs">
             <Plus className="h-4 w-4" />
-            New Service
+            Add Service
           </Button>
         </div>
       </div>
@@ -283,6 +281,18 @@ function ProjectOverviewComponent() {
         onOpenChange={setDrawerOpen}
         onRefresh={refetchApps}
       />
+
+      {activeEnvId && (
+        <AddServiceModal
+          open={addServiceOpen}
+          onOpenChange={setAddServiceOpen}
+          projectId={projectId}
+          environmentId={activeEnvId}
+          onCreated={() => {
+            void refetchApps();
+          }}
+        />
+      )}
     </div>
   );
 }
