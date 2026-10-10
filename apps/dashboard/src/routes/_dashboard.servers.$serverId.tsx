@@ -208,10 +208,10 @@ function ServerDetailsPage() {
               <ServerOverviewTab server={server} />
             </TabsContent>
             <TabsContent value="components">
-              <ServerComponentsTab />
+              <ServerComponentsTab serverId={server.id} />
             </TabsContent>
             <TabsContent value="security">
-              <ServerSecurityTab />
+              <ServerSecurityTab serverId={server.id} />
             </TabsContent>
             <TabsContent value="terminal">
               <ServerTerminalTab server={server} />

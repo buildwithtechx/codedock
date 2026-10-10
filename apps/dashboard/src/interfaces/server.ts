@@ -99,3 +99,34 @@ export interface TestSSHRequest {
   sshPrivateKey?: string;
   sshPassword?: string;
 }
+
+export interface ServerComponentStatus {
+  name: string;
+  label: string;
+  description: string;
+  installable: boolean;
+  installed: boolean;
+  version?: string;
+  healthy: boolean;
+  message: string;
+}
+
+export interface ServerListener {
+  port: number;
+  protocol: string;
+  state: string;
+  exposed: boolean;
+  process: string;
+}
+
+export interface ServerPortScanResult {
+  scanned: boolean;
+  serverId: string;
+  listeners: ServerListener[];
+}
+
+export interface ServerRateLimitConfig {
+  rps: number;
+  burst: number;
+  whitelist: string[];
+}

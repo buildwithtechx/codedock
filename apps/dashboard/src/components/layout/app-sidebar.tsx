@@ -1,10 +1,11 @@
 import { Link } from '@tanstack/react-router';
 import { Moon, PanelLeftClose, PanelLeftOpen, Plus, Sun, X } from 'lucide-react';
 import { useTheme } from 'next-themes';
+import { useGetPublicSettings } from '#/features/settings';
 import {
+  getSystemNavigation,
   infrastructureNavigation,
   primaryNavigation,
-  systemNavigation,
 } from './dashboard-navigation';
 import { NavItem, type NavItemProps } from './nav-item';
 import { OrganizationSwitcher } from './organization-switcher';
@@ -14,36 +15,6 @@ type NavGroup = {
   title?: string;
   items: (NavItemProps & { exact?: boolean })[];
 };
-
-const navGroups: NavGroup[] = [
-  {
-    title: 'Main',
-    items: primaryNavigation.map(({ title, to, icon, exact }) => ({
-      title,
-      url: to,
-      icon,
-      exact,
-    })),
-  },
-  {
-    title: 'Infrastructure',
-    items: infrastructureNavigation.map(({ title, to, icon, exact }) => ({
-      title,
-      url: to,
-      icon,
-      exact,
-    })),
-  },
-  {
-    title: 'Settings',
-    items: systemNavigation.map(({ title, to, icon, exact }) => ({
-      title,
-      url: to,
-      icon,
-      exact,
-    })),
-  },
-];
 
 const countForUrl: Record<string, keyof ReturnType<typeof useSidebarCounts>> = {
   '/projects': 'projects',
@@ -62,6 +33,42 @@ export function AppSidebar({ collapsed, onToggle, mobileOpen, onMobileClose }: A
   const navCollapsed = collapsed && !mobileOpen;
   const { theme, resolvedTheme, setTheme } = useTheme();
   const counts = useSidebarCounts();
+  const { data: publicRes } = useGetPublicSettings();
+  const isCloud = publicRes?.data?.cloudMode ?? false;
+
+  const mainGroup: NavGroup = {
+    title: 'Main',
+    items: primaryNavigation.map(({ title, to, icon, exact }) => ({
+      title,
+      url: to,
+      icon,
+      exact,
+    })),
+  };
+
+  const infraGroup: NavGroup = {
+    title: 'Infrastructure',
+    items: infrastructureNavigation.map(({ title, to, icon, exact }) => ({
+      title,
+      url: to,
+      icon,
+      exact,
+    })),
+  };
+
+  const settingsGroup: NavGroup = {
+    title: 'Settings',
+    items: getSystemNavigation(isCloud).map(({ title, to, icon, exact }) => ({
+      title,
+      url: to,
+      icon,
+      exact,
+    })),
+  };
+
+  const navGroups: NavGroup[] = isCloud
+    ? [mainGroup, settingsGroup, infraGroup]
+    : [mainGroup, infraGroup, settingsGroup];
 
   const toggleTheme = () => {
     if (theme === 'light') setTheme('dim');

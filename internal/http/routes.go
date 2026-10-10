@@ -187,6 +187,10 @@ func (s *Server) registerServerRoutes(apiGroup, authGroup *echo.Group) {
 	authGroup.PATCH("/servers/:id", s.serverHandler.Update, s.authGuard.RequireScope("server:write"))
 	authGroup.POST("/servers/test-ssh", s.serverHandler.TestSSH, s.authGuard.RequireScope("server:write"))
 	authGroup.DELETE("/servers/:id", s.serverHandler.Delete, s.authGuard.RequireScope("server:write"))
+	authGroup.GET("/servers/:id/components", s.serverHandler.GetComponents, s.authGuard.RequireScope("server:read"))
+	authGroup.POST("/servers/:id/scan-ports", s.serverHandler.ScanPorts, s.authGuard.RequireScope("server:read"))
+	authGroup.GET("/servers/:id/rate-limit", s.serverHandler.GetRateLimit, s.authGuard.RequireScope("server:read"))
+	authGroup.PUT("/servers/:id/rate-limit", s.serverHandler.UpdateRateLimit, s.authGuard.RequireScope("server:write"))
 	apiGroup.GET("/ws/servers/:serverId/metrics", s.serverMetricsWSHandler.Handle)
 }
 

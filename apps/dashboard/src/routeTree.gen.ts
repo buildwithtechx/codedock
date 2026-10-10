@@ -21,6 +21,7 @@ import { Route as DashboardIndexRouteImport } from './routes/_dashboard.index'
 import { Route as DashboardAppsRouteImport } from './routes/_dashboard.apps'
 import { Route as DashboardAuditRouteImport } from './routes/_dashboard.audit'
 import { Route as DashboardBackupsRouteImport } from './routes/_dashboard.backups'
+import { Route as DashboardBillingRouteImport } from './routes/_dashboard.billing'
 import { Route as DashboardDeployRouteImport } from './routes/_dashboard.deploy'
 import { Route as DashboardDeploymentsRouteImport } from './routes/_dashboard.deployments'
 import { Route as DashboardDnsRouteImport } from './routes/_dashboard.dns'
@@ -137,6 +138,11 @@ const DashboardAuditRoute = DashboardAuditRouteImport.update({
 const DashboardBackupsRoute = DashboardBackupsRouteImport.update({
   id: '/backups',
   path: '/backups',
+  getParentRoute: () => DashboardRoute,
+} as any)
+const DashboardBillingRoute = DashboardBillingRouteImport.update({
+  id: '/billing',
+  path: '/billing',
   getParentRoute: () => DashboardRoute,
 } as any)
 const DashboardDeployRoute = DashboardDeployRouteImport.update({
@@ -476,6 +482,7 @@ export interface FileRoutesByFullPath {
   '/apps': typeof DashboardAppsRouteWithChildren
   '/audit': typeof DashboardAuditRoute
   '/backups': typeof DashboardBackupsRouteWithChildren
+  '/billing': typeof DashboardBillingRoute
   '/deploy': typeof DashboardDeployRouteWithChildren
   '/deployments': typeof DashboardDeploymentsRouteWithChildren
   '/dns': typeof DashboardDnsRoute
@@ -545,6 +552,7 @@ export interface FileRoutesByTo {
   '/signup': typeof AuthSignupRoute
   '/verify-email': typeof AuthVerifyEmailRoute
   '/audit': typeof DashboardAuditRoute
+  '/billing': typeof DashboardBillingRoute
   '/dns': typeof DashboardDnsRoute
   '/domains': typeof DashboardDomainsRoute
   '/library': typeof DashboardLibraryRoute
@@ -608,6 +616,7 @@ export interface FileRoutesById {
   '/_dashboard/apps': typeof DashboardAppsRouteWithChildren
   '/_dashboard/audit': typeof DashboardAuditRoute
   '/_dashboard/backups': typeof DashboardBackupsRouteWithChildren
+  '/_dashboard/billing': typeof DashboardBillingRoute
   '/_dashboard/deploy': typeof DashboardDeployRouteWithChildren
   '/_dashboard/deployments': typeof DashboardDeploymentsRouteWithChildren
   '/_dashboard/dns': typeof DashboardDnsRoute
@@ -682,6 +691,7 @@ export interface FileRouteTypes {
     | '/apps'
     | '/audit'
     | '/backups'
+    | '/billing'
     | '/deploy'
     | '/deployments'
     | '/dns'
@@ -751,6 +761,7 @@ export interface FileRouteTypes {
     | '/signup'
     | '/verify-email'
     | '/audit'
+    | '/billing'
     | '/dns'
     | '/domains'
     | '/library'
@@ -813,6 +824,7 @@ export interface FileRouteTypes {
     | '/_dashboard/apps'
     | '/_dashboard/audit'
     | '/_dashboard/backups'
+    | '/_dashboard/billing'
     | '/_dashboard/deploy'
     | '/_dashboard/deployments'
     | '/_dashboard/dns'
@@ -965,6 +977,13 @@ declare module '@tanstack/react-router' {
       path: '/backups'
       fullPath: '/backups'
       preLoaderRoute: typeof DashboardBackupsRouteImport
+      parentRoute: typeof DashboardRoute
+    }
+    '/_dashboard/billing': {
+      id: '/_dashboard/billing'
+      path: '/billing'
+      fullPath: '/billing'
+      preLoaderRoute: typeof DashboardBillingRouteImport
       parentRoute: typeof DashboardRoute
     }
     '/_dashboard/deploy': {
@@ -1634,6 +1653,7 @@ interface DashboardRouteChildren {
   DashboardAppsRoute: typeof DashboardAppsRouteWithChildren
   DashboardAuditRoute: typeof DashboardAuditRoute
   DashboardBackupsRoute: typeof DashboardBackupsRouteWithChildren
+  DashboardBillingRoute: typeof DashboardBillingRoute
   DashboardDeployRoute: typeof DashboardDeployRouteWithChildren
   DashboardDeploymentsRoute: typeof DashboardDeploymentsRouteWithChildren
   DashboardDnsRoute: typeof DashboardDnsRoute
@@ -1655,6 +1675,7 @@ const DashboardRouteChildren: DashboardRouteChildren = {
   DashboardAppsRoute: DashboardAppsRouteWithChildren,
   DashboardAuditRoute: DashboardAuditRoute,
   DashboardBackupsRoute: DashboardBackupsRouteWithChildren,
+  DashboardBillingRoute: DashboardBillingRoute,
   DashboardDeployRoute: DashboardDeployRouteWithChildren,
   DashboardDeploymentsRoute: DashboardDeploymentsRouteWithChildren,
   DashboardDnsRoute: DashboardDnsRoute,

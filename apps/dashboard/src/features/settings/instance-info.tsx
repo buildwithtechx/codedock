@@ -49,12 +49,8 @@ export function InstanceInfo() {
         </div>
       </SettingsSection>
 
-      {isCloud && (
-        <>
-          <PlatformModeCard initialMode="cloud" />
-          <CloudConnectionCard isCloudMode={true} />
-        </>
-      )}
+      <PlatformModeCard initialMode={isCloud ? 'cloud' : 'self-hosted'} />
+      {!isCloud && <CloudConnectionCard isCloudMode={false} />}
     </div>
   );
 }

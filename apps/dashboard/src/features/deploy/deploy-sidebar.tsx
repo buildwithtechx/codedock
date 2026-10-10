@@ -2,7 +2,6 @@ import {
   Container,
   Flame,
   GitBranch,
-  Github,
   Globe,
   Loader2,
   MoreHorizontal,
@@ -13,6 +12,7 @@ import { useState } from 'react';
 import { Button } from '#/components/ui/button';
 import { Input } from '#/components/ui/input';
 import { useGetPublicSettings, useGetSettings } from '#/features/settings';
+import { GithubIcon } from '#/features/sources/github-app-dialogs';
 
 interface DeploySidebarProps {
   repoName: string;
@@ -75,7 +75,7 @@ export function DeploySidebar({
 
         <div className="flex items-center justify-between">
           <div className="flex items-center gap-2">
-            <Github className="size-4 text-muted-foreground" />
+            <GithubIcon className="size-4 text-muted-foreground" />
             <span className="max-w-[200px] truncate font-medium text-foreground text-xs">
               {repoName || 'my-project'}
             </span>

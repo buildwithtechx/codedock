@@ -5,6 +5,7 @@ import {
   ClipboardList,
   Clock,
   CloudCog,
+  CreditCard,
   FolderKanban,
   Globe2,
   HardDrive,
@@ -102,6 +103,23 @@ export const systemNavigation: DashboardNavigationItem[] = [
     icon: ClipboardList,
   },
 ];
+
+export const getSystemNavigation = (isCloud: boolean): DashboardNavigationItem[] => {
+  if (!isCloud) {
+    return systemNavigation;
+  }
+  return [
+    systemNavigation[0],
+    systemNavigation[1],
+    {
+      title: 'Billing & Usage',
+      description: 'Manage subscription and compute plans',
+      to: '/billing',
+      icon: CreditCard,
+    },
+    systemNavigation[2],
+  ];
+};
 
 export const hiddenNavigation: DashboardNavigationItem[] = [];
 

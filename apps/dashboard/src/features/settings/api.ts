@@ -48,7 +48,11 @@ export const settingsService = {
       siteName?: string;
       emailEnabled: boolean;
       cloudMode: boolean;
+      selfHosted?: boolean;
       version?: string;
+      hostDomain?: string;
+      defaultWildcardDomain?: string;
+      serverIp?: string;
     }>
   > => {
     try {
@@ -58,7 +62,11 @@ export const settingsService = {
           siteName?: string;
           emailEnabled: boolean;
           cloudMode: boolean;
+          selfHosted?: boolean;
           version?: string;
+          hostDomain?: string;
+          defaultWildcardDomain?: string;
+          serverIp?: string;
         }>
       >('/system/public');
     } catch (error) {

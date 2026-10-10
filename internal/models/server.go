@@ -79,3 +79,34 @@ type TestSSHRequest struct {
 	SSHPrivateKey string `json:"sshPrivateKey,omitempty"`
 	SSHPassword   string `json:"sshPassword"`
 }
+
+type ServerComponentStatus struct {
+	Name        string `json:"name"`
+	Label       string `json:"label"`
+	Description string `json:"description"`
+	Installable bool   `json:"installable"`
+	Installed   bool   `json:"installed"`
+	Version     string `json:"version,omitempty"`
+	Healthy     bool   `json:"healthy"`
+	Message     string `json:"message"`
+}
+
+type ServerListener struct {
+	Port     int    `json:"port"`
+	Protocol string `json:"protocol"`
+	State    string `json:"state"`
+	Exposed  bool   `json:"exposed"`
+	Process  string `json:"process"`
+}
+
+type ServerPortScanResult struct {
+	Scanned   bool             `json:"scanned"`
+	ServerID  string           `json:"serverId"`
+	Listeners []ServerListener `json:"listeners"`
+}
+
+type ServerRateLimitConfig struct {
+	RPS       int      `json:"rps"`
+	Burst     int      `json:"burst"`
+	Whitelist []string `json:"whitelist"`
+}
