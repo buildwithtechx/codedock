@@ -2,7 +2,9 @@ package system
 
 import (
 	"encoding/json"
+	"fmt"
 	"net/http"
+	"sort"
 	"strings"
 	"sync"
 	"time"
@@ -52,14 +54,46 @@ func (s *ExampleService) ListExamples() ([]models.ExampleApp, error) {
 		return cached, nil
 	}
 
+	manifest := fetchExampleManifest(s.manifestURL)
 	contents, err := fetchExampleContents(s.contentsURL)
 	if err != nil {
 		if len(cached) > 0 {
 			return cached, nil
 		}
+		if len(manifest) > 0 {
+			examples := []models.ExampleApp{}
+			for id, entry := range manifest {
+				logo := ""
+				if entry.Logo != "" {
+					logo = s.rawBase + strings.TrimPrefix(entry.Logo, "/")
+				}
+				name := entry.Name
+				if name == "" {
+					name = formatExampleName(id)
+				}
+				desc := entry.Description
+				if desc == "" {
+					desc = "Deploy " + name + " example app"
+				}
+				examples = append(examples, models.ExampleApp{
+					ID:          id,
+					Name:        name,
+					Description: desc,
+					Repo:        "https://github.com/buildwithtechx/codedock-examples/tree/main/" + id,
+					Logo:        logo,
+				})
+			}
+			sort.Slice(examples, func(i, j int) bool {
+				return examples[i].Name < examples[j].Name
+			})
+			s.mu.Lock()
+			s.cache = examples
+			s.lastFetched = time.Now()
+			s.mu.Unlock()
+			return examples, nil
+		}
 		return nil, err
 	}
-	manifest := fetchExampleManifest(s.manifestURL)
 	assets := exampleAssetDirs(manifest)
 
 	examples := []models.ExampleApp{}
@@ -120,11 +154,20 @@ type exampleContentEntry struct {
 
 func fetchExampleContents(url string) ([]exampleContentEntry, error) {
 	client := &http.Client{Timeout: 10 * time.Second}
-	resp, err := client.Get(url)
+	req, err := http.NewRequest("GET", url, nil)
+	if err != nil {
+		return nil, err
+	}
+	req.Header.Set("User-Agent", "Codedock")
+	resp, err := client.Do(req)
 	if err != nil {
 		return nil, err
 	}
 	defer resp.Body.Close()
+
+	if resp.StatusCode != http.StatusOK {
+		return nil, fmt.Errorf("unexpected status: %d", resp.StatusCode)
+	}
 
 	var contents []exampleContentEntry
 	if err := json.NewDecoder(resp.Body).Decode(&contents); err != nil {
@@ -136,11 +179,20 @@ func fetchExampleContents(url string) ([]exampleContentEntry, error) {
 func fetchExampleManifest(url string) map[string]exampleManifestEntry {
 	manifest := map[string]exampleManifestEntry{}
 	client := &http.Client{Timeout: 10 * time.Second}
-	resp, err := client.Get(url)
+	req, err := http.NewRequest("GET", url, nil)
+	if err != nil {
+		return manifest
+	}
+	req.Header.Set("User-Agent", "Codedock")
+	resp, err := client.Do(req)
 	if err != nil {
 		return manifest
 	}
 	defer resp.Body.Close()
+
+	if resp.StatusCode != http.StatusOK {
+		return manifest
+	}
 
 	var document exampleManifest
 	if err := json.NewDecoder(resp.Body).Decode(&document); err != nil {

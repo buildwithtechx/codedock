@@ -1,4 +1,4 @@
-import { Loader2 } from 'lucide-react';
+import { Building2, Loader2 } from 'lucide-react';
 import { useState } from 'react';
 import { toast } from 'sonner';
 import { Button } from '#/components/ui/button';
@@ -50,7 +50,7 @@ export function CreateOrganizationModal({
     <Dialog open={open} onOpenChange={onOpenChange}>
       <DialogContent>
         <form onSubmit={handleSubmit}>
-          <DialogHeader>
+          <DialogHeader icon={Building2}>
             <DialogTitle>Create Organization</DialogTitle>
             <DialogDescription>
               Create a new organization to manage projects and resources with your team.

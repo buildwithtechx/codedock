@@ -25,16 +25,9 @@ export function DeploymentRollbackDialog({
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
       <DialogContent className="sm:max-w-md">
-        <DialogHeader>
-          <div className="flex items-start gap-3">
-            <span className="flex h-10 w-10 shrink-0 items-center justify-center rounded-xl bg-primary/10">
-              <RotateCcw className="h-5 w-5 text-primary" />
-            </span>
-            <div className="space-y-1">
-              <DialogTitle>Roll back to this release?</DialogTitle>
-              <DialogDescription>{releaseLabel}</DialogDescription>
-            </div>
-          </div>
+        <DialogHeader icon={RotateCcw}>
+          <DialogTitle>Roll back to this release?</DialogTitle>
+          <DialogDescription>{releaseLabel}</DialogDescription>
         </DialogHeader>
         <div className="space-y-3 text-sm">
           <p className="text-muted-foreground leading-6">

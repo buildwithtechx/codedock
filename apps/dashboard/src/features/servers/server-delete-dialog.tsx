@@ -44,7 +44,7 @@ export function ServerDeleteDialog({ server, onClose, onRemoved }: ServerDeleteD
   return (
     <Dialog open={server !== null} onOpenChange={(open) => !open && onClose()}>
       <DialogContent>
-        <DialogHeader>
+        <DialogHeader icon={Trash2}>
           <DialogTitle>Remove {server?.name ?? 'server'}?</DialogTitle>
           <DialogDescription>
             This removes the server from Codedock. Running workloads on the node are not affected.

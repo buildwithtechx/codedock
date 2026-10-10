@@ -331,7 +331,7 @@ function DeploymentTip({ hasDeployments }: { hasDeployments: boolean }) {
           : 'Connect a repository or choose a template to create the first deployment.'}
       </p>
       <Link
-        to={hasDeployments ? '/projects' : '/projects/new'}
+        to={hasDeployments ? '/projects' : '/library'}
         className="mt-4 inline-flex items-center gap-1.5 font-medium text-sm transition-colors hover:text-primary"
       >
         {hasDeployments ? 'View projects' : 'Create project'}

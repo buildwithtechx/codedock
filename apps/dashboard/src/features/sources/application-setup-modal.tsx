@@ -1,3 +1,4 @@
+import { Code2 } from 'lucide-react';
 import { Button } from '#/components/ui/button';
 import {
   Dialog,
@@ -19,7 +20,7 @@ export function ApplicationSetupModal(props: ApplicationSetupProps) {
   return (
     <Dialog open={props.isOpen} onOpenChange={props.onOpenChange}>
       <DialogContent className="max-h-[90vh] overflow-y-auto sm:max-w-3xl">
-        <DialogHeader>
+        <DialogHeader icon={Code2}>
           <DialogTitle>Set up an application</DialogTitle>
           <DialogDescription>
             Configure its source, environment and runtime, then review and deploy.

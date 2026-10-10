@@ -1,5 +1,6 @@
 import { zodResolver } from '@hookform/resolvers/zod';
 import { useMutation, useQueryClient } from '@tanstack/react-query';
+import { Database } from 'lucide-react';
 import { useForm } from 'react-hook-form';
 import { toast } from 'sonner';
 import { z } from 'zod';
@@ -115,7 +116,7 @@ export function CreateDatabaseModal({
   return (
     <Dialog open={isOpen} onOpenChange={onOpenChange}>
       <DialogContent className="max-h-[80vh] overflow-y-auto sm:max-w-md">
-        <DialogHeader>
+        <DialogHeader icon={Database}>
           <DialogTitle>Provision Database</DialogTitle>
           <DialogDescription>Select a database engine to spin up a new instance.</DialogDescription>
         </DialogHeader>

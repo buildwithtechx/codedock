@@ -1,3 +1,4 @@
+import { GitFork } from 'lucide-react';
 import { useEffect, useState } from 'react';
 import { Button } from '#/components/ui/button';
 import {
@@ -47,7 +48,7 @@ export function RepoImportDialog({
   return (
     <Dialog open={pending !== null} onOpenChange={(open) => !open && onClose()}>
       <DialogContent className="sm:max-w-md">
-        <DialogHeader>
+        <DialogHeader icon={GitFork}>
           <DialogTitle>Import repository</DialogTitle>
           <DialogDescription>
             Choose where this repository deploys, then configure the application.

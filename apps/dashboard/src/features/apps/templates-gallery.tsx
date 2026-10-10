@@ -1,22 +1,14 @@
-import { Link } from '@tanstack/react-router';
-import { Search } from 'lucide-react';
+import { ArrowRight, Search } from 'lucide-react';
 import { useEffect, useMemo, useState } from 'react';
-import { Button } from '#/components/ui/button';
+import { toast } from 'sonner';
 import { Input } from '#/components/ui/input';
-import { Label } from '#/components/ui/label';
 import { QueryErrorState } from '#/components/ui/query-error-state';
-import {
-  Select,
-  SelectContent,
-  SelectItem,
-  SelectTrigger,
-  SelectValue,
-} from '#/components/ui/select';
 import { Skeleton } from '#/components/ui/skeleton';
-import { useListAllProjects } from '#/features/projects';
+import { useCreateProject, useListAllProjects } from '#/features/projects';
 import { CreateGitAppModal } from '#/features/sources/create-git-app-modal';
 import { useListExampleApps } from '#/hooks/use-templates';
 import type { ExampleApp } from '#/interfaces/templates';
+import { useOrganizationStore } from '#/stores/organization-store';
 import { ExampleLogo } from './example-logo';
 
 const EXAMPLES_REPO_URL = 'https://github.com/buildwithtechx/codedock-examples.git';
@@ -25,6 +17,9 @@ const EXAMPLES_BRANCH = 'main';
 export function TemplatesGallery() {
   const { data: examplesResponse, isLoading, isError, refetch } = useListExampleApps();
   const projectsQuery = useListAllProjects();
+  const { mutateAsync: createProject, isPending: isCreatingProject } = useCreateProject();
+  const activeOrgId = useOrganizationStore((s) => s.activeOrganizationId);
+
   const [query, setQuery] = useState('');
   const [projectId, setProjectId] = useState('');
   const [deployTarget, setDeployTarget] = useState<ExampleApp | null>(null);
@@ -46,55 +41,44 @@ export function TemplatesGallery() {
     );
   }, [examples, query]);
 
-  if (projectsQuery.isLoading) {
-    return <Skeleton className="h-10 w-full max-w-md rounded-xl" />;
-  }
-
-  if (projects.length === 0 && !projectsQuery.isLoading) {
-    return (
-      <div className="rounded-2xl border border-border/50 bg-card px-5 py-12 text-center text-muted-foreground text-sm">
-        <p>You need a project before deploying a template.</p>
-        <Button asChild size="sm" variant="secondary" className="mt-4">
-          <Link to="/projects/new">Create a project</Link>
-        </Button>
-      </div>
-    );
-  }
+  const handleDeploy = async (example: ExampleApp) => {
+    let targetProjectId = projectId;
+    if (!targetProjectId) {
+      if (projects.length > 0) {
+        targetProjectId = projects[0].id;
+        setProjectId(targetProjectId);
+      } else {
+        try {
+          const res = await createProject({
+            payload: {
+              name: example.name,
+              organizationId: activeOrgId || '',
+            },
+          });
+          targetProjectId = res.data.id;
+          setProjectId(targetProjectId);
+          toast.success(`Project "${example.name}" created`);
+        } catch {
+          toast.error('Failed to create project for template');
+          return;
+        }
+      }
+    }
+    setDeployTarget(example);
+  };
 
   return (
     <div>
-      <div className="space-y-4">
-        <div className="w-full max-w-md space-y-2">
-          <Label htmlFor="templates-project">Project</Label>
-          <Select value={projectId} onValueChange={setProjectId}>
-            <SelectTrigger id="templates-project" className="w-full">
-              <SelectValue placeholder="Select a project" />
-            </SelectTrigger>
-            <SelectContent>
-              {projects.map((project) => (
-                <SelectItem key={project.id} value={project.id}>
-                  {project.name}
-                </SelectItem>
-              ))}
-            </SelectContent>
-          </Select>
-          {projectsQuery.isError && (
-            <p role="alert" className="text-destructive text-xs">
-              Projects could not be loaded.
-            </p>
-          )}
-        </div>
-        <div className="relative w-full max-w-md">
-          <Search className="pointer-events-none absolute top-1/2 left-3.5 size-4 -translate-y-1/2 text-muted-foreground" />
-          <Input
-            type="search"
-            value={query}
-            onChange={(event) => setQuery(event.target.value)}
-            placeholder="Search templates…"
-            aria-label="Search templates"
-            className="pr-4 pl-10"
-          />
-        </div>
+      <div className="relative w-full max-w-md">
+        <Search className="pointer-events-none absolute top-1/2 left-3.5 size-4 -translate-y-1/2 text-muted-foreground" />
+        <Input
+          type="search"
+          value={query}
+          onChange={(event) => setQuery(event.target.value)}
+          placeholder="Search templates…"
+          aria-label="Search templates"
+          className="pr-4 pl-10"
+        />
       </div>
 
       {isError ? (
@@ -120,35 +104,24 @@ export function TemplatesGallery() {
       ) : (
         <div className="mt-6 grid grid-cols-1 gap-4 md:grid-cols-2 xl:grid-cols-3">
           {filtered.map((example) => (
-            <div
+            <button
               key={example.id}
-              className="flex w-full items-start gap-3 rounded-2xl border border-border/50 bg-card p-5 transition-all hover:border-primary/40 hover:shadow-md"
+              type="button"
+              disabled={isCreatingProject}
+              onClick={() => void handleDeploy(example)}
+              className="group flex w-full cursor-pointer items-start gap-3 rounded-2xl border border-border/50 bg-card p-5 text-left transition-all hover:border-primary/40 hover:shadow-md disabled:cursor-not-allowed disabled:opacity-60"
             >
               <ExampleLogo example={example} />
               <div className="min-w-0 flex-1">
-                <p className="truncate font-medium text-foreground">{example.name}</p>
+                <div className="flex items-center justify-between gap-2">
+                  <p className="truncate font-medium text-foreground">{example.name}</p>
+                  <ArrowRight className="size-4 shrink-0 text-muted-foreground/40 transition-colors group-hover:text-foreground" />
+                </div>
                 <p className="mt-1 line-clamp-2 text-muted-foreground text-sm">
                   {example.description}
                 </p>
-                <div className="mt-3 flex gap-2">
-                  <Button
-                    size="sm"
-                    className="flex-1"
-                    disabled={!projectId}
-                    onClick={() => setDeployTarget(example)}
-                  >
-                    Deploy
-                  </Button>
-                  <Button
-                    size="sm"
-                    variant="outline"
-                    onClick={() => window.open(example.repo, '_blank')}
-                  >
-                    GitHub
-                  </Button>
-                </div>
               </div>
-            </div>
+            </button>
           ))}
         </div>
       )}

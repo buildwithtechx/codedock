@@ -1,12 +1,6 @@
-import { Building2, Loader2, MoreVertical, UserPlus, Users } from 'lucide-react';
+import { Building2, Loader2, UserPlus, Users } from 'lucide-react';
 import { useState } from 'react';
 import { Button } from '#/components/ui/button';
-import {
-  DropdownMenu,
-  DropdownMenuContent,
-  DropdownMenuItem,
-  DropdownMenuTrigger,
-} from '#/components/ui/dropdown-menu';
 import { SettingsSection } from '#/features/settings/settings-section';
 import { useAuthStore } from '#/stores/auth-store';
 import { CreateOrganizationModal } from './create-organization-modal';
@@ -65,25 +59,21 @@ export function OrganizationMembers({
       description="Manage who has access to this workspace and its deployed projects."
       action={
         <div className="flex items-center gap-2">
+          <Button
+            variant="outline"
+            size="sm"
+            onClick={() => setCreateOrgOpen(true)}
+            className="gap-1.5"
+          >
+            <Building2 className="size-3.5" />
+            Create organization
+          </Button>
           {canManageTeam && !inviteOpen && (
             <Button size="sm" onClick={() => setInviteOpen(true)} className="gap-1.5">
               <UserPlus className="size-3.5" />
               Invite member
             </Button>
           )}
-          <DropdownMenu>
-            <DropdownMenuTrigger asChild>
-              <Button variant="outline" size="icon" className="size-8" aria-label="Team actions">
-                <MoreVertical className="size-4" />
-              </Button>
-            </DropdownMenuTrigger>
-            <DropdownMenuContent align="end">
-              <DropdownMenuItem onClick={() => setCreateOrgOpen(true)}>
-                <Building2 className="mr-2 size-4" />
-                Create organization
-              </DropdownMenuItem>
-            </DropdownMenuContent>
-          </DropdownMenu>
         </div>
       }
     >

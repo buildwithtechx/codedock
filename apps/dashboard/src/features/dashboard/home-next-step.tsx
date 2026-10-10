@@ -5,9 +5,9 @@ export function HomeNextStep({ hasProjects }: { hasProjects: boolean }) {
   const title = hasProjects ? 'Keep building' : 'Your next move';
   const description = hasProjects
     ? 'Add an application or review the latest deployment activity.'
-    : 'Create a project before adding applications and environments.';
-  const href = hasProjects ? '/projects' : '/projects/new';
-  const action = hasProjects ? 'Deploy app or project' : 'Create project';
+    : 'Start from a repository, folder, or ready-to-run template.';
+  const href = hasProjects ? '/projects' : '/library';
+  const action = hasProjects ? 'View projects' : 'Create project';
 
   return (
     <section className="rounded-2xl bg-card p-5">

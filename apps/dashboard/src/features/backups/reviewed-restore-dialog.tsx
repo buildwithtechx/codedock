@@ -1,4 +1,5 @@
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
+import { RotateCcw } from 'lucide-react';
 import { useState } from 'react';
 import { Button } from '#/components/ui/button';
 import {
@@ -102,7 +103,7 @@ export function ReviewedRestoreDialog({
       }}
     >
       <DialogContent>
-        <DialogHeader>
+        <DialogHeader icon={RotateCcw}>
           <DialogTitle>Review restore</DialogTitle>
           <DialogDescription>
             Review the archive and target before changing data. Cancellation may leave partial data.

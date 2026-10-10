@@ -13,14 +13,15 @@ interface CommandPaletteProps {
 const creationItems = [
   {
     title: 'New project',
-    description: 'Create a project workspace',
-    to: '/projects/new',
+    description: 'Create a project workspace from Git, folder, or templates',
+    to: '/library',
     icon: FolderKanban,
   },
   {
-    title: 'New app or project',
-    description: 'Create a project or deploy an app template',
-    to: '/projects/new',
+    title: 'New app or template',
+    description: 'Deploy an app template or example',
+    to: '/library',
+    search: { tab: 'apps' },
     icon: Sparkles,
   },
   {
