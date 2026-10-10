@@ -5,7 +5,6 @@ import { Button } from '#/components/ui/button';
 type ClientDefinition = {
   id: string;
   name: string;
-  badge?: string;
   icon: string;
   getSetup: (endpoint: string) => {
     label: string;
@@ -29,7 +28,6 @@ const CLIENTS: ClientDefinition[] = [
   {
     id: 'claude-code',
     name: 'Claude Code',
-    badge: 'CLI',
     icon: '/icons/claude.png',
     getSetup: (e) => ({
       label: 'Run command in your project directory',
@@ -40,7 +38,6 @@ const CLIENTS: ClientDefinition[] = [
   {
     id: 'cursor',
     name: 'Cursor',
-    badge: 'IDE',
     icon: '/icons/cursor.png',
     getSetup: (e) => ({
       label: 'Add to ~/.cursor/mcp.json or Cursor Features Settings',
@@ -53,7 +50,6 @@ const CLIENTS: ClientDefinition[] = [
   {
     id: 'codex',
     name: 'Codex',
-    badge: 'CLI',
     icon: '/icons/openai.png',
     getSetup: (e) => ({
       label: 'Register server and authenticate',
@@ -64,7 +60,6 @@ const CLIENTS: ClientDefinition[] = [
   {
     id: 'vscode',
     name: 'VS Code',
-    badge: 'IDE',
     icon: '/icons/copilot.png',
     getSetup: (e) => ({
       label: 'Register in VS Code terminal or .vscode/mcp.json',
@@ -90,7 +85,6 @@ const CLIENTS: ClientDefinition[] = [
   {
     id: 'windsurf',
     name: 'Windsurf',
-    badge: 'IDE',
     icon: '/icons/windsurf.png',
     getSetup: (e) => ({
       label: 'Add to ~/.codeium/windsurf/mcp_config.json',
@@ -121,7 +115,7 @@ const CLIENTS: ClientDefinition[] = [
   },
   {
     id: 'generic',
-    name: 'Generic / Other',
+    name: 'Other',
     icon: '/icons/mcp.png',
     getSetup: (e) => ({
       label: 'Universal MCP SSE client configuration',
@@ -148,8 +142,8 @@ export function McpClientSetup({ endpoint }: { endpoint: string }) {
   return (
     <div className="space-y-4">
       <div>
-        <p className="mb-2 font-medium text-foreground text-xs">Choose Your AI Assistant or IDE</p>
-        <div className="scrollbar-none flex min-w-0 flex-nowrap items-center gap-1.5 overflow-x-auto pb-1 [scrollbar-width:none]">
+        <p className="mb-2 font-medium text-foreground text-xs">Add to your AI client</p>
+        <div className="scrollbar-none flex min-w-0 flex-nowrap items-center gap-1.5 overflow-x-auto pb-1">
           {CLIENTS.map((client) => {
             const isActive = client.id === selectedId;
             return (
@@ -172,11 +166,6 @@ export function McpClientSetup({ endpoint }: { endpoint: string }) {
                   }}
                 />
                 <span>{client.name}</span>
-                {client.badge && (
-                  <span className="rounded bg-muted px-1 py-0.2 font-mono text-[9px] text-muted-foreground">
-                    {client.badge}
-                  </span>
-                )}
               </button>
             );
           })}

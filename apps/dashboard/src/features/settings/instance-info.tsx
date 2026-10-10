@@ -1,8 +1,6 @@
 import { MonitorCog, ShieldCheck } from 'lucide-react';
 import { useAuthStore } from '#/stores/auth-store';
-import { CloudConnectionCard } from './cloud-connection-card';
 import { useGetPublicSettings } from './hooks';
-import { PlatformModeCard } from './platform-mode-card';
 import { SettingsSection } from './settings-section';
 
 export function InstanceInfo() {
@@ -48,9 +46,6 @@ export function InstanceInfo() {
           </div>
         </div>
       </SettingsSection>
-
-      <PlatformModeCard initialMode={isCloud ? 'cloud' : 'self-hosted'} />
-      {!isCloud && <CloudConnectionCard isCloudMode={false} />}
     </div>
   );
 }

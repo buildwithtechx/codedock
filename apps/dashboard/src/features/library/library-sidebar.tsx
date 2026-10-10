@@ -11,10 +11,7 @@ export function LibrarySidebar({
 }) {
   const navigate = useNavigate();
   const byProvider = new Map(connections.map((item) => [item.provider, item]));
-  const connectedProviders = GIT_PROVIDERS.filter(
-    (provider) => byProvider.get(provider.id)?.connected
-  );
-  const displayProviders = connectedProviders.length > 0 ? connectedProviders : [GIT_PROVIDERS[0]!];
+  const displayProviders = GIT_PROVIDERS;
 
   return (
     <div className="space-y-4 lg:sticky lg:top-6 lg:self-start">
