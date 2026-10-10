@@ -5,7 +5,7 @@ import { Button } from '#/components/ui/button';
 import { Checkbox } from '#/components/ui/checkbox';
 import { Input } from '#/components/ui/input';
 import { Label } from '#/components/ui/label';
-import { useListProjects } from '#/features/projects/hooks';
+import { useListAllProjects } from '#/features/projects';
 import { useInviteOrganizationMember } from './hooks';
 import type { OrganizationRole } from './interfaces';
 
@@ -55,8 +55,14 @@ export function InviteMemberInline({
     null
   );
 
-  const { data: projectsData } = useListProjects();
-  const projects = (projectsData?.data as any[]) || [];
+  const { data: projectsData } = useListAllProjects();
+  const projects = Array.isArray(projectsData)
+    ? projectsData
+    : Array.isArray((projectsData as any)?.items)
+      ? (projectsData as any).items
+      : Array.isArray((projectsData as any)?.data)
+        ? (projectsData as any).data
+        : [];
 
   const inviteMutation = useInviteOrganizationMember(organizationId);
 

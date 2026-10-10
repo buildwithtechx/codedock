@@ -39,7 +39,7 @@ export function TemplatesGallery() {
   }, [projectId, projects]);
 
   const filtered = useMemo(() => {
-    const needle = query.trim().toLowerCase();
+    const needle = (query ?? '').trim().toLowerCase();
     if (!needle) return examples;
     return examples.filter((example) =>
       `${example.name} ${example.description}`.toLowerCase().includes(needle)

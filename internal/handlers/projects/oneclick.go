@@ -24,6 +24,7 @@ type oneClickInstallRequest struct {
 	AppID         string            `json:"appId" form:"appId"`
 	ProjectID     string            `json:"projectId" form:"projectId"`
 	EnvironmentID string            `json:"environmentId" form:"environmentId"`
+	ServerID      string            `json:"serverId" form:"serverId"`
 	Name          string            `json:"name" form:"name"`
 	Secrets       map[string]string `json:"secrets" form:"secrets"`
 	Environment   map[string]string `json:"environment" form:"environment"`
@@ -76,8 +77,11 @@ func (h *OneClickHandler) Deploy(c echo.Context) error {
 			projectName = req.AppID
 		}
 		proj, err := h.projectService.CreateProjectWithMemberFromRequest(c.Request().Context(), &models.CreateProjectRequest{
-			Name:        projectName,
-			Description: "Installed " + req.AppID + " application",
+			Name:          projectName,
+			Description:   "Installed " + req.AppID + " application",
+			ServerID:      req.ServerID,
+			IsApp:         true,
+			AppTemplateID: req.AppID,
 		}, user.UserID, string(models.UserRoleOwner))
 		if err != nil {
 			return utils.Error(c, http.StatusInternalServerError, "failed to create project: "+err.Error())
@@ -92,6 +96,7 @@ func (h *OneClickHandler) Deploy(c echo.Context) error {
 	if err != nil {
 		return utils.Error(c, http.StatusBadRequest, err.Error())
 	}
+	result.ProjectID = req.ProjectID
 	return utils.Success(c, "App installed", result)
 }
 
@@ -113,6 +118,7 @@ func installInput(req oneClickInstallRequest) models.InstallAppInput {
 		AppID:         req.AppID,
 		ProjectID:     req.ProjectID,
 		EnvironmentID: req.EnvironmentID,
+		ServerID:      req.ServerID,
 		Name:          req.Name,
 		Secrets:       req.Secrets,
 		Environment:   req.Environment,

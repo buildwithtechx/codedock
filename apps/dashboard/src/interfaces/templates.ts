@@ -23,7 +23,8 @@ export interface OneClickAppDetails {
 
 export interface InstallAppInput {
   appId: string;
-  projectId: string;
+  projectId?: string;
+  serverId?: string;
   environmentId?: string;
   name: string;
   secrets?: Record<string, string>;
@@ -59,6 +60,7 @@ export interface InstallPreview {
 
 export interface AppInstallResult {
   kind: string;
+  projectId?: string;
   stack?: { id: string; name: string; status: string };
 }
 
@@ -73,7 +75,8 @@ export interface ExampleApp {
 
 export interface OneClickDeployRequest {
   appId: string;
-  projectId: string;
+  projectId?: string;
+  serverId?: string;
   name: string;
   environmentId?: string;
   secrets?: Record<string, string>;
@@ -86,6 +89,7 @@ export interface OneClickDeployRequest {
 export interface OneClickDeployResponse {
   success: boolean;
   message: string;
+  projectId?: string;
   serviceId?: string;
   data?: AppInstallResult;
 }

@@ -1,4 +1,6 @@
+import { Server as ServerIcon } from 'lucide-react';
 import { useEffect } from 'react';
+import { Badge } from '#/components/ui/badge';
 import { Label } from '#/components/ui/label';
 import {
   Select,
@@ -7,100 +9,96 @@ import {
   SelectTrigger,
   SelectValue,
 } from '#/components/ui/select';
-import { useListAllProjects } from '#/features/projects';
-import { useListByProject } from '#/hooks/use-environments';
+import { Skeleton } from '#/components/ui/skeleton';
+import { useListServers } from '#/hooks/use-servers';
 
 export function WizardDestination({
-  projectId,
-  environmentId,
-  onProjectChange,
-  onEnvironmentChange,
+  serverId,
+  onServerChange,
   disabled = false,
 }: {
-  projectId: string;
-  environmentId: string;
-  onProjectChange: (projectId: string) => void;
-  onEnvironmentChange: (environmentId: string) => void;
+  serverId: string;
+  onServerChange: (serverId: string) => void;
   disabled?: boolean;
 }) {
-  const projectsQuery = useListAllProjects();
-  const activeProjectId = projectId === 'standalone' ? '' : projectId;
-  const environmentsQuery = useListByProject(activeProjectId);
-  const projects = projectsQuery.data ?? [];
-  const environments = environmentsQuery.data?.data ?? [];
+  const { data: serversData, isLoading, isError } = useListServers();
+  const servers = Array.isArray(serversData) ? serversData : [];
 
   useEffect(() => {
-    if (!projectId && !projectsQuery.isLoading) {
-      if (projects.length > 0) {
-        onProjectChange(projects[0].id);
+    if (!serverId && !isLoading) {
+      if (servers.length > 0) {
+        onServerChange(servers[0].id);
       } else {
-        onProjectChange('standalone');
+        onServerChange('local');
       }
     }
-  }, [projectId, projects, projectsQuery.isLoading, onProjectChange]);
+  }, [serverId, servers, isLoading, onServerChange]);
+
+  if (isLoading) {
+    return <Skeleton className="h-16 w-full rounded-xl" />;
+  }
+
+  if (isError) {
+    return (
+      <div className="rounded-xl border border-border/60 bg-muted/30 p-3 text-xs">
+        <p className="text-muted-foreground">Default local container runtime will be used.</p>
+      </div>
+    );
+  }
+
+  if (servers.length <= 1) {
+    const activeServer = servers[0];
+    return (
+      <div className="space-y-2">
+        <Label>Target Server</Label>
+        <div className="flex items-center justify-between rounded-xl border border-border/60 bg-muted/20 p-3">
+          <div className="flex items-center gap-2.5">
+            <div className="flex size-8 items-center justify-center rounded-lg bg-primary/10 text-primary">
+              <ServerIcon className="size-4" />
+            </div>
+            <div>
+              <p className="font-medium text-foreground text-xs">
+                {activeServer?.name || 'Local Server'}
+              </p>
+              <p className="font-mono text-[11px] text-muted-foreground">
+                {activeServer?.ipAddress || activeServer?.sshHost || '127.0.0.1 (Docker Host)'}
+              </p>
+            </div>
+          </div>
+          <Badge variant="secondary" className="text-[10px]">
+            {activeServer?.status || 'Ready'}
+          </Badge>
+        </div>
+        <p className="text-[11px] text-muted-foreground">
+          Application containers will be provisioned directly on this host.
+        </p>
+      </div>
+    );
+  }
 
   return (
-    <div className="space-y-4">
-      <div className="space-y-2">
-        <Label htmlFor="wizard-project">Project</Label>
-        <Select
-          value={projectId || 'standalone'}
-          onValueChange={onProjectChange}
-          disabled={disabled}
-        >
-          <SelectTrigger id="wizard-project" className="w-full">
-            <SelectValue placeholder="Select destination" />
-          </SelectTrigger>
-          <SelectContent>
-            {projects.map((project) => (
-              <SelectItem key={project.id} value={project.id}>
-                {project.name}
-              </SelectItem>
-            ))}
-            <SelectItem value="standalone">
-              {projects.length === 0
-                ? 'Dedicated Project (Auto-created)'
-                : '+ Dedicated Project (Auto-created)'}
+    <div className="space-y-2">
+      <Label htmlFor="wizard-server">Target Server</Label>
+      <Select
+        value={serverId || servers[0]?.id || 'local'}
+        onValueChange={onServerChange}
+        disabled={disabled}
+      >
+        <SelectTrigger id="wizard-server" className="w-full">
+          <SelectValue placeholder="Select server" />
+        </SelectTrigger>
+        <SelectContent>
+          {servers.map((s) => (
+            <SelectItem key={s.id} value={s.id}>
+              {s.name} ({s.ipAddress || s.sshHost || 'Host'})
             </SelectItem>
-          </SelectContent>
-        </Select>
-        {projectId === 'standalone' && (
-          <p className="text-[11px] text-muted-foreground">
-            A dedicated project will be auto-created for this app upon deployment.
-          </p>
-        )}
-        {projectsQuery.isError && (
-          <p role="alert" className="text-destructive text-xs">
-            Projects could not be loaded.
-          </p>
-        )}
-      </div>
-      {projectId !== 'standalone' && (
-        <div className="space-y-2">
-          <Label htmlFor="wizard-environment">Environment</Label>
-          <Select
-            value={environmentId}
-            onValueChange={onEnvironmentChange}
-            disabled={disabled || !projectId}
-          >
-            <SelectTrigger id="wizard-environment" className="w-full">
-              <SelectValue placeholder="Default environment" />
-            </SelectTrigger>
-            <SelectContent>
-              {environments.map((environment) => (
-                <SelectItem key={environment.id} value={environment.id}>
-                  {environment.name}
-                </SelectItem>
-              ))}
-            </SelectContent>
-          </Select>
-          {projectId && environmentsQuery.isError && (
-            <p role="alert" className="text-destructive text-xs">
-              Environments could not be loaded.
-            </p>
-          )}
-        </div>
-      )}
+          ))}
+          <SelectItem value="local">Local Server (This Machine)</SelectItem>
+        </SelectContent>
+      </Select>
+      <p className="text-[11px] text-muted-foreground">
+        Application containers will be provisioned directly on this host.
+      </p>
     </div>
   );
 }

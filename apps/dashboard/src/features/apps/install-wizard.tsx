@@ -1,5 +1,12 @@
 import { Link } from '@tanstack/react-router';
-import { ArrowRight, CheckCircle2, Loader2 } from 'lucide-react';
+import {
+  ArrowRight,
+  CheckCircle2,
+  ExternalLink,
+  Globe,
+  Loader2,
+  SlidersHorizontal,
+} from 'lucide-react';
 import { useEffect, useState } from 'react';
 import { toast } from 'sonner';
 import { Badge } from '#/components/ui/badge';
@@ -12,7 +19,7 @@ import {
   findMissingRequired,
   InstallSettingsTabs,
 } from '#/features/templates/install-settings-tabs';
-import type { InstallPreview } from '#/interfaces/templates';
+import type { InstallPreview, OneClickDeployRequest } from '#/interfaces/templates';
 import { useCatalogApp, useDeployCatalogApp, useReviewCatalogInstall } from './hooks';
 import { InstallDomainsRouting } from './install-domains-routing';
 import { WizardDestination } from './wizard-destination';
@@ -29,8 +36,8 @@ export function InstallWizard({ appId }: { appId: string }) {
   const [values, setValues] = useState<Record<string, string>>({});
   const [hostPort, setHostPort] = useState('');
   const [domain, setDomain] = useState('');
-  const [projectId, setProjectId] = useState('');
-  const [environmentId, setEnvironmentId] = useState('');
+  const [serverId, setServerId] = useState('');
+  const [createdProjectId, setCreatedProjectId] = useState('');
   const [preview, setPreview] = useState<InstallPreview | null>(null);
   const [deployMessage, setDeployMessage] = useState('');
 
@@ -42,6 +49,7 @@ export function InstallWizard({ appId }: { appId: string }) {
       setDomain('');
       setPreview(null);
       setPhase('form');
+      setCreatedProjectId('');
     }
   }, [app]);
 
@@ -78,7 +86,7 @@ export function InstallWizard({ appId }: { appId: string }) {
   const setValue = (key: string, value: string) =>
     setValues((current) => ({ ...current, [key]: value }));
 
-  const buildPayload = (digest?: string) => {
+  const buildPayload = (digest?: string): OneClickDeployRequest => {
     const secrets: Record<string, string> = {};
     const environment: Record<string, string> = {};
     for (const variable of app.envVariables) {
@@ -88,16 +96,15 @@ export function InstallWizard({ appId }: { appId: string }) {
       else environment[variable.key] = value;
     }
     const port = Number.parseInt(hostPort, 10);
-    const resolvedProjectId = projectId === 'standalone' ? '' : projectId;
     return {
       appId,
-      projectId: resolvedProjectId,
+      projectId: '',
+      serverId: serverId === 'local' ? '' : serverId,
       name: (name ?? '').trim() || app.name,
       secrets,
       environment,
       hostPort: Number.isNaN(port) ? undefined : port,
       domain: (domain ?? '').trim() || undefined,
-      environmentId: resolvedProjectId ? environmentId || undefined : undefined,
       digest,
     };
   };
@@ -133,10 +140,12 @@ export function InstallWizard({ appId }: { appId: string }) {
   };
 
   const handleDeploy = async () => {
-    if (!preview) return;
+    if (!configurationValid()) return;
     try {
-      const response = await deployApp.mutateAsync(buildPayload(preview.digest));
-      setDeployMessage(response.message || `${app.name} deployed`);
+      const response = await deployApp.mutateAsync(buildPayload(preview?.digest));
+      const targetProjectId = response.data?.projectId || response.projectId || '';
+      setCreatedProjectId(targetProjectId);
+      setDeployMessage(response.message || `${app.name} installed successfully`);
       setPhase('done');
     } catch {
       toast.error(`Failed to deploy ${app.name}`);
@@ -149,14 +158,41 @@ export function InstallWizard({ appId }: { appId: string }) {
         <CheckCircle2 className="mx-auto size-12 text-emerald-500" />
         <h2 className="mt-4 font-semibold text-2xl tracking-tight">{deployMessage}</h2>
         <p className="mt-2 text-muted-foreground text-sm">
-          {name} is installing in your project. Track its progress from the project canvas.
+          {name} has been provisioned as a dedicated application stack.
         </p>
+
+        {domain && (
+          <div className="mt-6 flex items-center justify-between rounded-xl border border-border/60 bg-card p-4 text-left">
+            <div className="flex items-center gap-3">
+              <div className="flex size-9 items-center justify-center rounded-lg bg-emerald-500/10 text-emerald-500">
+                <Globe className="size-4" />
+              </div>
+              <div>
+                <p className="font-medium text-foreground text-xs">Public Route</p>
+                <p className="font-mono text-muted-foreground text-xs">https://{domain}</p>
+              </div>
+            </div>
+            <Button asChild size="sm" variant="outline" className="gap-1.5 text-xs">
+              <a href={`https://${domain}`} target="_blank" rel="noopener noreferrer">
+                Open
+                <ExternalLink className="size-3" />
+              </a>
+            </Button>
+          </div>
+        )}
+
         <div className="mt-6 flex flex-wrap items-center justify-center gap-3">
-          <Button asChild>
-            <Link to="/projects/$projectId" params={{ projectId }}>
-              Open project
-            </Link>
-          </Button>
+          {createdProjectId ? (
+            <Button asChild>
+              <Link to="/projects/$projectId" params={{ projectId: createdProjectId }}>
+                Open project
+              </Link>
+            </Button>
+          ) : (
+            <Button asChild>
+              <Link to="/projects">View projects</Link>
+            </Button>
+          )}
           <Button asChild variant="outline">
             <Link to="/apps">Back to apps</Link>
           </Button>
@@ -210,7 +246,7 @@ export function InstallWizard({ appId }: { appId: string }) {
     );
   }
 
-  const busy = reviewInstall.isPending;
+  const busy = deployApp.isPending || reviewInstall.isPending;
   return (
     <div className="space-y-6">
       <WizardHeader app={app} />
@@ -226,6 +262,9 @@ export function InstallWizard({ appId }: { appId: string }) {
               placeholder={app.name}
               className="mt-2"
             />
+            <p className="mt-1.5 text-muted-foreground text-xs">
+              Project name in Codedock. A dedicated project is provisioned for this application.
+            </p>
           </div>
           {app.envVariables.length > 0 && (
             <div className="rounded-2xl bg-card p-5">
@@ -252,34 +291,36 @@ export function InstallWizard({ appId }: { appId: string }) {
           <div className="rounded-2xl bg-card p-5">
             <h2 className="font-semibold text-foreground text-sm">Destination</h2>
             <p className="mt-0.5 text-muted-foreground text-xs">
-              The project this app installs into.
+              Choose the host server where this application will run.
             </p>
             <div className="mt-4">
-              <WizardDestination
-                projectId={projectId}
-                environmentId={environmentId}
-                onProjectChange={(next) => {
-                  setProjectId(next);
-                  setEnvironmentId('');
-                }}
-                onEnvironmentChange={setEnvironmentId}
-                disabled={busy}
-              />
+              <WizardDestination serverId={serverId} onServerChange={setServerId} disabled={busy} />
             </div>
           </div>
-          <Button className="w-full" onClick={() => void handleReview()} disabled={busy}>
-            {busy ? (
-              <>
-                <Loader2 className="size-4 animate-spin" />
-                Reviewing…
-              </>
-            ) : (
-              <>
-                Review install plan
-                <ArrowRight className="size-4" />
-              </>
-            )}
-          </Button>
+          <div className="space-y-2">
+            <Button className="w-full" onClick={() => void handleDeploy()} disabled={busy}>
+              {deployApp.isPending ? (
+                <>
+                  <Loader2 className="size-4 animate-spin" />
+                  Installing {app.name}…
+                </>
+              ) : (
+                <>
+                  Install {app.name}
+                  <ArrowRight className="size-4" />
+                </>
+              )}
+            </Button>
+            <Button
+              variant="outline"
+              className="w-full gap-1.5"
+              onClick={() => void handleReview()}
+              disabled={busy}
+            >
+              <SlidersHorizontal className="size-3.5" />
+              Review install plan
+            </Button>
+          </div>
         </div>
       </div>
     </div>

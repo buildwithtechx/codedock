@@ -1,8 +1,9 @@
-import { Loader2, UserPlus, Users } from 'lucide-react';
+import { Building2, Loader2, UserPlus, Users } from 'lucide-react';
 import { useState } from 'react';
 import { Button } from '#/components/ui/button';
 import { SettingsSection } from '#/features/settings/settings-section';
 import { useAuthStore } from '#/stores/auth-store';
+import { CreateOrganizationModal } from './create-organization-modal';
 import { useListOrganizationMembers } from './hooks';
 import { InviteMemberInline } from './invite-member-inline';
 import { MemberRow } from './member-row';
@@ -17,6 +18,7 @@ export function OrganizationMembers({
 }) {
   const { data: members = [], isLoading } = useListOrganizationMembers(organizationId);
   const [inviteOpen, setInviteOpen] = useState(false);
+  const [createOrgOpen, setCreateOrgOpen] = useState(false);
   const user = useAuthStore((s) => s.user);
 
   const currentUserMember = members.find((m) => m.userId === user?.id || m.email === user?.email);
@@ -56,15 +58,26 @@ export function OrganizationMembers({
       title={organizationName || 'Team'}
       description="Manage who has access to this workspace and its deployed projects."
       action={
-        canManageTeam &&
-        !inviteOpen && (
-          <Button size="sm" onClick={() => setInviteOpen(true)} className="gap-1.5">
-            <UserPlus className="size-3.5" />
-            Invite member
+        <div className="flex items-center gap-2">
+          <Button
+            size="sm"
+            variant="outline"
+            onClick={() => setCreateOrgOpen(true)}
+            className="gap-1.5"
+          >
+            <Building2 className="size-3.5" />
+            New organization
           </Button>
-        )
+          {canManageTeam && !inviteOpen && (
+            <Button size="sm" onClick={() => setInviteOpen(true)} className="gap-1.5">
+              <UserPlus className="size-3.5" />
+              Invite member
+            </Button>
+          )}
+        </div>
       }
     >
+      <CreateOrganizationModal open={createOrgOpen} onOpenChange={setCreateOrgOpen} />
       {isLoading ? (
         <div className="flex items-center justify-center py-12">
           <Loader2 className="size-5 animate-spin text-muted-foreground" />

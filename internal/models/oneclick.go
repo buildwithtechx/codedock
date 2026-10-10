@@ -27,6 +27,7 @@ type InstallAppInput struct {
 	AppID         string            `json:"appId"`
 	ProjectID     string            `json:"projectId"`
 	EnvironmentID string            `json:"environmentId,omitempty"`
+	ServerID      string            `json:"serverId,omitempty"`
 	Name          string            `json:"name"`
 	Secrets       map[string]string `json:"secrets,omitempty"`
 	Environment   map[string]string `json:"environment,omitempty"`
@@ -60,6 +61,7 @@ type InstallPreview struct {
 }
 
 type AppInstallResult struct {
-	Kind  string        `json:"kind"`
-	Stack *ComposeStack `json:"stack,omitempty"`
+	Kind      string        `json:"kind"`
+	ProjectID string        `json:"projectId,omitempty"`
+	Stack     *ComposeStack `json:"stack,omitempty"`
 }

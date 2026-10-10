@@ -15,7 +15,6 @@ export function InstanceInfo() {
   return (
     <div className="space-y-6">
       <SettingsSection
-        collapsible
         icon={<MonitorCog className="size-4 text-violet-500" />}
         iconBg="bg-violet-500/10"
         iconColor="text-violet-500"
