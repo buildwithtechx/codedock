@@ -44,8 +44,14 @@ export function DestinationModal({
 
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
-      <DialogContent className="gap-0 overflow-hidden p-0 sm:max-w-2xl">
-        <div className="flex items-center justify-between gap-3 border-border/40 border-b px-6 py-4">
+      <DialogContent
+        className={
+          step === 'pick'
+            ? 'gap-0 overflow-hidden p-0 sm:max-w-4xl'
+            : 'gap-0 overflow-hidden p-0 sm:max-w-3xl'
+        }
+      >
+        <div className="flex items-center justify-between gap-3 border-border/40 border-b py-4.5 ps-6 pe-16">
           <div className="flex min-w-0 items-center gap-2">
             {step === 'configure' && !editing && (
               <Button
@@ -71,7 +77,7 @@ export function DestinationModal({
             Encrypted at rest
           </span>
         </div>
-        <div className="max-h-[75vh] overflow-y-auto px-6 py-6">
+        <div className="max-h-[90vh] overflow-y-auto px-6 py-6 sm:px-8 sm:py-8">
           {step === 'pick' ? (
             <div className="grid gap-4 sm:grid-cols-2">
               <button

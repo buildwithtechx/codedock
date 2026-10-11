@@ -1,4 +1,4 @@
-import { Check, Loader2, Mail, User } from 'lucide-react';
+import { Check, Loader2, Lock, Mail, User } from 'lucide-react';
 import { useState } from 'react';
 import { toast } from 'sonner';
 import { Button } from '#/components/ui/button';
@@ -11,7 +11,6 @@ import {
 } from '#/components/ui/dialog';
 import { Input } from '#/components/ui/input';
 import { InputOTP, InputOTPGroup, InputOTPSlot } from '#/components/ui/input-otp';
-import { Row, Section } from '#/components/ui/section';
 import {
   useChangePassword,
   useGetProfile,
@@ -19,13 +18,14 @@ import {
   useUpdateProfile,
   useVerifyEmailChange,
 } from '#/features/profile';
+import { SettingsRow } from '#/features/settings/settings-row';
+import { SettingsSection } from '#/features/settings/settings-section';
 
 export function ProfileNameForm() {
   const { data: profile, isLoading } = useGetProfile();
   const updateProfile = useUpdateProfile();
   const [name, setName] = useState('');
 
-  // Sync state once profile loads
   if (!isLoading && profile?.data && !name && profile.data.name) {
     setName(profile.data.name);
   }
@@ -43,9 +43,10 @@ export function ProfileNameForm() {
 
   return (
     <form onSubmit={handleSave}>
-      <Section
-        icon={<User className="h-4 w-4" />}
+      <SettingsSection
+        icon={<User className="size-4 text-primary" />}
         title="Profile Name"
+        description="Your public display name on Codedock."
         action={
           <Button
             type="submit"
@@ -61,16 +62,20 @@ export function ProfileNameForm() {
           </Button>
         }
       >
-        <Row label="Full Name" description="Update your display name.">
+        <SettingsRow
+          label="Full Name"
+          description="Update your display name across workspace views."
+          bordered={false}
+        >
           <Input
             id="name"
             placeholder="John Doe"
             value={name}
             onChange={(e) => setName(e.target.value)}
-            className="w-full"
+            className="w-full text-sm"
           />
-        </Row>
-      </Section>
+        </SettingsRow>
+      </SettingsSection>
     </form>
   );
 }
@@ -84,7 +89,6 @@ export function ProfileEmailForm() {
   const [otpOpen, setOtpOpen] = useState(false);
   const [otp, setOtp] = useState('');
 
-  // Sync state once profile loads
   if (!isLoading && profile?.data && !email && profile.data.email) {
     setEmail(profile.data.email);
   }
@@ -121,9 +125,10 @@ export function ProfileEmailForm() {
   return (
     <>
       <form onSubmit={handleRequest}>
-        <Section
-          icon={<Mail className="h-4 w-4" />}
+        <SettingsSection
+          icon={<Mail className="size-4 text-primary" />}
           title="Email Address"
+          description="Manage the email address associated with your account."
           action={
             <Button
               type="submit"
@@ -139,9 +144,10 @@ export function ProfileEmailForm() {
             </Button>
           }
         >
-          <Row
+          <SettingsRow
             label="New Email Address"
             description="Change the email address associated with your account."
+            bordered={false}
           >
             <Input
               id="email"
@@ -149,10 +155,10 @@ export function ProfileEmailForm() {
               placeholder="john@example.com"
               value={email}
               onChange={(e) => setEmail(e.target.value)}
-              className="w-full"
+              className="w-full text-sm"
             />
-          </Row>
-        </Section>
+          </SettingsRow>
+        </SettingsSection>
       </form>
 
       <Dialog open={otpOpen} onOpenChange={setOtpOpen}>
@@ -238,25 +244,10 @@ export function ProfilePasswordForm() {
 
   return (
     <form onSubmit={handleSave}>
-      <Section
-        icon={
-          <svg
-            xmlns="http://www.w3.org/2000/svg"
-            width="24"
-            height="24"
-            viewBox="0 0 24 24"
-            fill="none"
-            stroke="currentColor"
-            strokeWidth="2"
-            strokeLinecap="round"
-            strokeLinejoin="round"
-            className="h-4 w-4"
-          >
-            <rect width="18" height="11" x="3" y="11" rx="2" ry="2" />
-            <path d="M7 11V7a5 5 0 0 1 10 0v4" />
-          </svg>
-        }
+      <SettingsSection
+        icon={<Lock className="size-4 text-primary" />}
         title="Change Password"
+        description="Ensure your account is using a secure password."
         action={
           <Button
             type="submit"
@@ -272,27 +263,31 @@ export function ProfilePasswordForm() {
           </Button>
         }
       >
-        <Row label="Current Password" description="Update the password you use to sign in.">
+        <SettingsRow label="Current Password" description="Update the password you use to sign in.">
           <Input
             id="oldPassword"
             type="password"
             value={oldPassword}
             onChange={(e) => setOldPassword(e.target.value)}
-            className="w-full"
+            className="w-full text-sm"
             placeholder="Current Password"
           />
-        </Row>
-        <Row label="New Password" description="Must be at least 8 characters long.">
+        </SettingsRow>
+        <SettingsRow
+          label="New Password"
+          description="Must be at least 8 characters long."
+          bordered={false}
+        >
           <Input
             id="newPassword"
             type="password"
             value={newPassword}
             onChange={(e) => setNewPassword(e.target.value)}
-            className="w-full"
+            className="w-full text-sm"
             placeholder="New Password"
           />
-        </Row>
-      </Section>
+        </SettingsRow>
+      </SettingsSection>
     </form>
   );
 }

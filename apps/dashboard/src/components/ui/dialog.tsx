@@ -81,7 +81,7 @@ function DialogHeader({
     return (
       <div
         data-slot="dialog-header"
-        className={cn('flex items-start gap-3.5', className)}
+        className={cn('flex items-start gap-3.5 pr-10', className)}
         {...props}
       >
         <div className="flex size-10 shrink-0 items-center justify-center rounded-xl bg-primary/10 text-primary">
@@ -93,7 +93,11 @@ function DialogHeader({
   }
 
   return (
-    <div data-slot="dialog-header" className={cn('flex flex-col gap-1.5', className)} {...props}>
+    <div
+      data-slot="dialog-header"
+      className={cn('flex flex-col gap-1.5 pr-10', className)}
+      {...props}
+    >
       {children}
     </div>
   );

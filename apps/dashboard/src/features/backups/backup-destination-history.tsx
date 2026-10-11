@@ -1,4 +1,4 @@
-import { BookOpen, ChevronLeft, ChevronRight, DatabaseBackup, ExternalLink } from 'lucide-react';
+import { ChevronLeft, ChevronRight, DatabaseBackup } from 'lucide-react';
 import { useMemo, useState } from 'react';
 import { toast } from 'sonner';
 import { Button } from '#/components/ui/button';
@@ -16,8 +16,6 @@ import { useDeleteRecord } from './hooks';
 import type { BackupConfig, BackupRecord } from './interfaces';
 import { RestoreWizard } from './restore-wizard';
 import { SnapshotTableRow } from './snapshot-table-row';
-
-const DOCS_URL = 'https://docs.codedock.run';
 
 const pageSize = 10;
 
@@ -119,17 +117,10 @@ export function BackupDestinationHistory({
             <DatabaseBackup className="h-5 w-5" />
           </div>
           <div>
-            <p className="font-medium text-sm">No backup runs recorded yet</p>
+            <p className="font-medium text-foreground text-sm">No backup runs recorded yet</p>
             <p className="mt-1 text-muted-foreground text-sm">
               Automated and manual snapshots will appear here with restore actions.
             </p>
-            <Button asChild size="sm" variant="secondary" className="mt-3">
-              <a href={DOCS_URL} target="_blank" rel="noopener noreferrer">
-                <BookOpen className="size-3.5" />
-                Docs
-                <ExternalLink className="size-3 opacity-60" />
-              </a>
-            </Button>
           </div>
         </div>
       ) : (

@@ -265,11 +265,33 @@ body {
     }
   }
 
-  .scrollbar-none {
+  ::-webkit-scrollbar {
+    display: none;
+  }
+
+  html,
+  body {
     -ms-overflow-style: none;
     scrollbar-width: none;
   }
-  .scrollbar-none::-webkit-scrollbar {
+
+  [data-slot='dialog-content'],
+  [data-slot='dialog-content'] * {
+    -ms-overflow-style: none;
+    scrollbar-width: none;
+  }
+  [data-slot='dialog-content']::-webkit-scrollbar,
+  [data-slot='dialog-content'] *::-webkit-scrollbar {
+    display: none;
+  }
+
+  .scrollbar-none,
+  .scrollbar-hide {
+    -ms-overflow-style: none;
+    scrollbar-width: none;
+  }
+  .scrollbar-none::-webkit-scrollbar,
+  .scrollbar-hide::-webkit-scrollbar {
     display: none;
   }
 }

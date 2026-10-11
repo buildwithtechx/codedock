@@ -12,9 +12,10 @@ import {
   DialogTitle,
 } from '#/components/ui/dialog';
 import { InputOTP, InputOTPGroup, InputOTPSlot } from '#/components/ui/input-otp';
-import { Section } from '#/components/ui/section';
 import { useDisable2FA, useSetup2FA, useVerify2FA } from '#/features/auth';
 import { useGetProfile } from '#/features/profile';
+import { SettingsRow } from '#/features/settings/settings-row';
+import { SettingsSection } from '#/features/settings/settings-section';
 
 function OtpSlots() {
   const indices = [0, 1, 2, 3, 4, 5] as const;
@@ -130,9 +131,10 @@ export function Security2FASetup() {
 
   return (
     <>
-      <Section
-        icon={<ShieldCheck className="h-4 w-4" />}
+      <SettingsSection
+        icon={<ShieldCheck className="size-4 text-primary" />}
         title="Two-Factor Authentication"
+        description="Add an extra layer of security to your account."
         action={
           isEnabled ? (
             <Button variant="destructive" size="sm" onClick={handleDisableClick}>
@@ -146,14 +148,24 @@ export function Security2FASetup() {
           )
         }
       >
-        <div className="py-4">
-          <p className="text-muted-foreground text-sm leading-relaxed">
-            {isEnabled
-              ? 'Two-factor authentication is currently enabled. You will need to enter a code from your authenticator app when signing in.'
-              : 'Protect your account from unauthorized access by requiring a second authentication method in addition to your password.'}
-          </p>
-        </div>
-      </Section>
+        <SettingsRow
+          label="Authenticator App (TOTP)"
+          description={
+            isEnabled
+              ? 'Two-factor authentication is active. You will need to enter a 6-digit code from your authenticator app when signing in.'
+              : 'Protect your account from unauthorized access with a mobile authenticator app (Google Authenticator, 1Password, etc.).'
+          }
+          bordered={false}
+        >
+          <span
+            className={`inline-flex items-center rounded-full px-2.5 py-0.5 font-medium text-xs ${
+              isEnabled ? 'bg-emerald-500/10 text-emerald-500' : 'bg-muted text-muted-foreground'
+            }`}
+          >
+            {isEnabled ? 'Enabled' : 'Not configured'}
+          </span>
+        </SettingsRow>
+      </SettingsSection>
 
       <Dialog open={verifyOpen} onOpenChange={setVerifyOpen}>
         <DialogContent className="border/50 gap-0 bg-card/95 p-0 backdrop-blur-xl sm:max-w-100 [&>button]:hidden">

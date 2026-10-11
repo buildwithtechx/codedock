@@ -1,15 +1,5 @@
 import { Link } from '@tanstack/react-router';
-import {
-  BookOpen,
-  ExternalLink,
-  HardDrive,
-  Loader2,
-  MoreVertical,
-  Pencil,
-  RefreshCw,
-  Star,
-  Trash2,
-} from 'lucide-react';
+import { HardDrive, Loader2, MoreVertical, Pencil, RefreshCw, Star, Trash2 } from 'lucide-react';
 import { useMemo, useState } from 'react';
 import { toast } from 'sonner';
 import { Button } from '#/components/ui/button';
@@ -49,8 +39,6 @@ import {
 } from './hooks';
 import type { BackupRecord, S3Destination, SFTPDestination } from './interfaces';
 
-const DOCS_URL = 'https://docs.codedock.run';
-
 export function BackupDestinations({
   s3,
   sftp,
@@ -60,7 +48,6 @@ export function BackupDestinations({
   onRetry,
   retrying,
   onChanged,
-  onAddDestination,
 }: {
   s3: S3Destination[];
   sftp: SFTPDestination[];
@@ -70,7 +57,6 @@ export function BackupDestinations({
   onRetry: () => void;
   retrying: boolean;
   onChanged: () => void;
-  onAddDestination: () => void;
 }) {
   const [verifyingIds, setVerifyingIds] = useState<Set<string>>(new Set());
   const [editing, setEditing] = useState<S3Destination | null>(null);
@@ -184,27 +170,15 @@ export function BackupDestinations({
           ))}
         </div>
       ) : items.length === 0 ? (
-        <div className="flex items-center gap-4 px-5 pb-6">
-          <div className="flex h-11 w-11 shrink-0 items-center justify-center rounded-xl bg-muted/50 text-muted-foreground">
-            <HardDrive className="h-5 w-5" />
+        <div className="flex items-center gap-4 px-5 pt-3 pb-6">
+          <div className="flex size-11 shrink-0 items-center justify-center rounded-xl bg-muted/50 text-muted-foreground">
+            <HardDrive className="size-5" />
           </div>
-          <div className="min-w-0 flex-1">
-            <p className="font-medium text-sm">No storage destinations</p>
+          <div>
+            <p className="font-medium text-foreground text-sm">No backup destinations yet</p>
             <p className="mt-1 text-muted-foreground text-sm">
-              Connect R2, S3, MinIO, or an SFTP server to store snapshots off-server.
+              Add an S3 or SFTP target to protect service volumes and cluster databases.
             </p>
-          </div>
-          <div className="flex shrink-0 items-center gap-2">
-            <Button size="sm" onClick={onAddDestination}>
-              Connect first destination
-            </Button>
-            <Button asChild size="sm" variant="secondary">
-              <a href={DOCS_URL} target="_blank" rel="noopener noreferrer">
-                <BookOpen className="size-3.5" />
-                Docs
-                <ExternalLink className="size-3 opacity-60" />
-              </a>
-            </Button>
           </div>
         </div>
       ) : (

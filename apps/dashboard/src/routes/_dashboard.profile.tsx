@@ -22,7 +22,7 @@ function ProfilePage() {
         description="Manage your personal profile and security preferences."
       />
 
-      <div className="grid gap-6">
+      <div className="space-y-6">
         <ProfileNameForm />
         <ProfileEmailForm />
         <ProfilePasswordForm />

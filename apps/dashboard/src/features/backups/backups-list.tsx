@@ -123,7 +123,6 @@ export function BackupsList() {
               }}
               retrying={s3Query.isFetching || sftpQuery.isFetching}
               onChanged={() => void refreshAll()}
-              onAddDestination={() => setIsModalOpen(true)}
             />
             <BackupPolicies configs={configs} isLoading={configsQuery.isLoading} />
           </div>
