@@ -22,9 +22,22 @@ func ProvisionUserData(hostname string) string {
 	return fmt.Sprintf(`#cloud-config
 hostname: %s
 manage_etc_hosts: true
-packages: [curl]
+ssh_pwauth: false
+disable_root: false
+package_update: true
+packages: [curl, ca-certificates, unattended-upgrades]
+write_files:
+  - path: /etc/ssh/sshd_config.d/10-codedock.conf
+    permissions: "0644"
+    content: |
+      PasswordAuthentication no
+      KbdInteractiveAuthentication no
+      PermitRootLogin prohibit-password
 runcmd:
+  - [systemctl, reload, ssh]
   - [sh, -c, "curl -fsSL https://get.docker.com | sh"]
   - [systemctl, enable, --now, docker]
+  - [systemctl, enable, --now, unattended-upgrades]
+  - [sh, -c, "mkdir -p /var/lib/codedock && date -u +%%FT%%TZ > /var/lib/codedock/bootstrap-complete"]
 `, name)
 }

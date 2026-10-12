@@ -38,6 +38,8 @@ type ManagedProvider interface {
 	WaitForStatus(ctx context.Context, externalID string, wanted []string, timeout time.Duration) (models.ManagedInstance, error)
 	CreateSSHKey(ctx context.Context, name, publicKey string) error
 	DeleteSSHKey(ctx context.Context, name string) error
+	Verify(ctx context.Context) error
+	Offers(ctx context.Context) (models.ManagedOffers, error)
 }
 
 type ProviderFactory func(token string) ManagedProvider
@@ -48,6 +50,9 @@ func DefaultProviderFactory(token string) ManagedProvider {
 
 type ManagedService interface {
 	Catalog() models.ManagedCatalog
+	Offers(ctx context.Context, userID, orgID, credentialID string) (*models.ManagedOffers, error)
+	GetOperation(ctx context.Context, userID, operationID string) (*models.Operation, error)
+	StreamOperation(ctx context.Context, userID, operationID string, emit func(*models.Operation) error) error
 	CreateCredential(ctx context.Context, userID, orgID string, req models.CreateManagedCredentialRequest) (*models.ManagedCredential, error)
 	ListCredentials(ctx context.Context, userID, orgID string) ([]*models.ManagedCredential, error)
 	DeleteCredential(ctx context.Context, userID, orgID, credentialID string) error
@@ -120,6 +125,9 @@ func (s *managedService) CreateCredential(ctx context.Context, userID, orgID str
 	}
 	if req.Token == "" {
 		return nil, fmt.Errorf("provider token is required")
+	}
+	if err := s.providers(req.Token).Verify(ctx); err != nil {
+		return nil, fmt.Errorf("hetzner rejected the token: %w", err)
 	}
 	credential := &models.ManagedCredential{
 		ID:             uuid.NewString(),

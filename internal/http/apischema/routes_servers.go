@@ -41,6 +41,26 @@ func managedQuotaSchema() Schema {
 	)
 }
 
+func managedLocationSchema() Schema {
+	return Obj("Managed location",
+		RF("name", Str("Location name")),
+		RF("city", Str("City")),
+		RF("country", Str("Country")),
+	)
+}
+
+func managedOffersSchema() Schema {
+	return Obj("Managed offers",
+		RF("provider", Str("Provider")),
+		RF("locations", Arr("Locations", managedLocationSchema())),
+		RF("offers", Arr("Offers", Obj("Offer",
+			RF("tier", managedTierSchema()),
+			RF("prices", Any("Per-location monthly prices")),
+		))),
+		RF("images", Arr("Images", Str("Image"))),
+	)
+}
+
 func managedReviewSchema() Schema {
 	return Obj("Managed review",
 		RF("operationId", Str("Operation ID")),
@@ -78,6 +98,9 @@ func serverOperations() []Operation {
 		{Method: "POST", Path: "/api/organizations/:id/managed/servers/review", Summary: "Review a server provision", Tags: []string{managed}, Auth: write, Request: JSON(Obj("Review provision", RF("credentialId", Str("Credential ID")), RF("name", Str("Server name")), RF("region", Str("Region")), RF("serverType", Str("Server type")), RF("image", Str("Image")), F("serverId", Str("Existing server ID")))), Response: managedReviewSchema()},
 		{Method: "POST", Path: "/api/organizations/:id/managed/servers/:serverId/resize/review", Summary: "Review a server resize", Tags: []string{managed}, Auth: AuthOrgAdmin, Request: JSON(Obj("Review resize", RF("serverType", Str("Target server type")))), Response: managedReviewSchema()},
 		{Method: "POST", Path: "/api/organizations/:id/managed/servers/:serverId/delete/review", Summary: "Review a server deletion", Tags: []string{managed}, Auth: AuthOrgAdmin, Response: managedReviewSchema()},
+		{Method: "GET", Path: "/api/organizations/:id/managed/credentials/:credentialId/offers", Summary: "Get live provider offers", Tags: []string{managed}, Auth: read, Response: managedOffersSchema()},
+		{Method: "GET", Path: "/api/managed-operations/:operationId", Summary: "Get a managed operation", Tags: []string{managed}, Auth: read, Response: operationSchema()},
+		{Method: "GET", Path: "/api/managed-operations/:operationId/stream", Summary: "Stream a managed operation", Tags: []string{managed}, Auth: read, Raw: true, Response: Str("SSE operation session")},
 		{Method: "POST", Path: "/api/managed-operations/:operationId/apply", Summary: "Apply a managed operation", Tags: []string{managed}, Auth: write, Request: JSON(operationApplySchema()), Response: EmptySchema()},
 		{Method: "POST", Path: "/api/organizations/:id/managed/servers/:serverId/refresh", Summary: "Refresh a managed server", Tags: []string{managed}, Auth: read, Response: ServerSchema()},
 	}

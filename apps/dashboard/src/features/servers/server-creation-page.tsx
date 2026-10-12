@@ -2,7 +2,7 @@ import { Link, useNavigate } from '@tanstack/react-router';
 import {
   ArrowLeft,
   CheckCircle2,
-  Cpu,
+  Cloud,
   Info,
   KeyRound,
   Network,
@@ -15,8 +15,9 @@ import { Card } from '#/components/ui/card';
 import { Input } from '#/components/ui/input';
 import { Label } from '#/components/ui/label';
 import type { Server, TestSSHRequest } from '#/interfaces/server';
-import { cn } from '#/lib/utils';
 import { createServer, testServerConnection } from './api';
+import { HetznerSetupWizard } from './managed/hetzner-setup-wizard';
+import { type ServerCreationMode, ServerCreationModeToggle } from './server-creation-mode-toggle';
 import {
   CheckingState,
   ChooseMode,
@@ -29,7 +30,7 @@ import {
 } from './server-setup-panels';
 import { ServerSshForm } from './server-ssh-form';
 
-type FormMode = 'remote' | 'local';
+type FormMode = ServerCreationMode;
 
 const guidance = [
   {
@@ -43,6 +44,21 @@ const guidance = [
   {
     icon: ServerIcon,
     text: 'Saved servers are verified, then appear in your fleet.',
+  },
+];
+
+const hetznerGuidance = [
+  {
+    icon: KeyRound,
+    text: 'A Hetzner Cloud API token with read/write access. It is verified live before saving.',
+  },
+  {
+    icon: Cloud,
+    text: 'Pick a location and server type at live Hetzner list prices. Hetzner bills your token directly.',
+  },
+  {
+    icon: ServerIcon,
+    text: 'cloud-init installs Docker and hardens SSH automatically, then the node joins your fleet.',
   },
 ];
 
@@ -238,37 +254,12 @@ export function ServerCreationPage() {
 
       <div className="grid grid-cols-1 items-start gap-6 xl:grid-cols-[minmax(0,1fr)_340px]">
         <div className="min-w-0 xl:col-start-1 xl:row-start-1">
-          <div className="flex items-center gap-2">
-            <button
-              type="button"
-              onClick={() => setFormMode('remote')}
-              className={cn(
-                'flex items-center gap-2 rounded-xl border px-4 py-2.5 font-medium text-xs transition-colors',
-                formMode === 'remote'
-                  ? 'border-primary bg-primary/10 text-primary'
-                  : 'border-border/80 bg-card text-muted-foreground hover:bg-muted/40 hover:text-foreground'
-              )}
-            >
-              <ServerIcon className="h-4 w-4" />
-              Remote SSH Server
-            </button>
-            <button
-              type="button"
-              onClick={() => setFormMode('local')}
-              className={cn(
-                'flex items-center gap-2 rounded-xl border px-4 py-2.5 font-medium text-xs transition-colors',
-                formMode === 'local'
-                  ? 'border-primary bg-primary/10 text-primary'
-                  : 'border-border/80 bg-card text-muted-foreground hover:bg-muted/40 hover:text-foreground'
-              )}
-            >
-              <Cpu className="h-4 w-4" />
-              Local Docker Node
-            </button>
-          </div>
+          <ServerCreationModeToggle mode={formMode} onChange={setFormMode} />
 
           <Card className="mt-6 p-6">
-            {formMode === 'remote' ? (
+            {formMode === 'hetzner' ? (
+              <HetznerSetupWizard onDone={goToServer} />
+            ) : formMode === 'remote' ? (
               <ServerSshForm
                 onSuccess={handleSaved}
                 onCancel={() => navigate({ to: '/servers' })}
@@ -334,7 +325,7 @@ export function ServerCreationPage() {
             </div>
             <div className="p-5">
               <ul className="space-y-3 text-muted-foreground text-sm">
-                {guidance.map((item) => (
+                {(formMode === 'hetzner' ? hetznerGuidance : guidance).map((item) => (
                   <li key={item.text} className="flex items-start gap-2">
                     <item.icon className="mt-0.5 size-4 shrink-0 text-muted-foreground" />
                     <span>{item.text}</span>

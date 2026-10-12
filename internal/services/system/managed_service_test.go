@@ -40,6 +40,7 @@ type fakeProvider struct {
 	powerOff  int
 	powerOn   int
 	createErr error
+	verifyErr error
 }
 
 func newFakeProvider() *fakeProvider {

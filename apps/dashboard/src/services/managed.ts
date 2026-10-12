@@ -2,6 +2,8 @@ import type {
   CreateManagedCredentialRequest,
   ManagedCatalog,
   ManagedCredential,
+  ManagedOffers,
+  ManagedOperation,
   ManagedQuota,
   ManagedReview,
   ReviewManagedProvisionRequest,
@@ -20,6 +22,7 @@ export const managedService = {
       throw handleApiError(err);
     }
   },
+
   listCredentials: async (organizationId: string): Promise<ManagedCredential[]> => {
     try {
       const res = await apiClient.get<BaseResponse<ManagedCredential[]>>(
@@ -30,6 +33,7 @@ export const managedService = {
       throw handleApiError(err);
     }
   },
+
   createCredential: async (
     organizationId: string,
     payload: CreateManagedCredentialRequest
@@ -44,6 +48,7 @@ export const managedService = {
       throw handleApiError(err);
     }
   },
+
   deleteCredential: async (organizationId: string, credentialId: string): Promise<void> => {
     try {
       await apiClient.delete<BaseResponse<null>>(
@@ -53,6 +58,7 @@ export const managedService = {
       throw handleApiError(err);
     }
   },
+
   getQuota: async (organizationId: string): Promise<ManagedQuota> => {
     try {
       const res = await apiClient.get<BaseResponse<ManagedQuota>>(
@@ -63,6 +69,7 @@ export const managedService = {
       throw handleApiError(err);
     }
   },
+
   setQuota: async (
     organizationId: string,
     payload: { maxServers: number; maxMemoryGB: number }
@@ -77,6 +84,7 @@ export const managedService = {
       throw handleApiError(err);
     }
   },
+
   reviewProvision: async (
     organizationId: string,
     payload: ReviewManagedProvisionRequest
@@ -91,6 +99,7 @@ export const managedService = {
       throw handleApiError(err);
     }
   },
+
   reviewResize: async (
     organizationId: string,
     serverId: string,
@@ -106,6 +115,7 @@ export const managedService = {
       throw handleApiError(err);
     }
   },
+
   reviewDelete: async (organizationId: string, serverId: string): Promise<ManagedReview> => {
     try {
       const res = await apiClient.post<BaseResponse<ManagedReview>>(
@@ -116,6 +126,7 @@ export const managedService = {
       throw handleApiError(err);
     }
   },
+
   applyOperation: async (operationId: string, confirmation: string): Promise<void> => {
     try {
       await apiClient.post<BaseResponse<null>>(`/managed-operations/${operationId}/apply`, {
@@ -125,6 +136,29 @@ export const managedService = {
       throw handleApiError(err);
     }
   },
+
+  offers: async (organizationId: string, credentialId: string): Promise<ManagedOffers> => {
+    try {
+      const res = await apiClient.get<BaseResponse<ManagedOffers>>(
+        `/organizations/${organizationId}/managed/credentials/${credentialId}/offers`
+      );
+      return res.data;
+    } catch (err) {
+      throw handleApiError(err);
+    }
+  },
+
+  getOperation: async (operationId: string): Promise<ManagedOperation> => {
+    try {
+      const res = await apiClient.get<BaseResponse<ManagedOperation>>(
+        `/managed-operations/${operationId}`
+      );
+      return res.data;
+    } catch (err) {
+      throw handleApiError(err);
+    }
+  },
+
   refreshServer: async (organizationId: string, serverId: string): Promise<Server> => {
     try {
       const res = await apiClient.post<BaseResponse<Server>>(

@@ -126,7 +126,34 @@ type ManagedCatalog struct {
 	Images   []string        `json:"images"`
 }
 
+type ManagedLocation struct {
+	Name    string `json:"name"`
+	City    string `json:"city"`
+	Country string `json:"country"`
+}
+
+type ManagedOffer struct {
+	Tier   ManagedTier        `json:"tier"`
+	Prices map[string]float64 `json:"prices"`
+}
+
+type ManagedOffers struct {
+	Provider  ManagedProvider   `json:"provider"`
+	Locations []ManagedLocation `json:"locations"`
+	Offers    []ManagedOffer    `json:"offers"`
+	Images    []string          `json:"images"`
+}
+
 type ManagedReview struct {
 	Review *OperationReview   `json:"review"`
 	Plan   *ManagedServerPlan `json:"plan"`
+}
+
+func ManagedOperationComplete(status string) bool {
+	switch status {
+	case "COMPLETED", "FAILED", "INTERRUPTED":
+		return true
+	default:
+		return false
+	}
 }

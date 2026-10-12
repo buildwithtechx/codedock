@@ -62,6 +62,21 @@ export type CreateManagedCredentialRequest = {
   label: string;
   token: string;
 };
+export type ManagedLocation = {
+  name: string;
+  city: string;
+  country: string;
+};
+export type ManagedOffer = {
+  tier: ManagedTier;
+  prices: Record<string, number>;
+};
+export type ManagedOffers = {
+  provider: string;
+  locations: ManagedLocation[];
+  offers: ManagedOffer[];
+  images: string[];
+};
 export type ReviewManagedProvisionRequest = {
   credentialId: string;
   serverId?: string;

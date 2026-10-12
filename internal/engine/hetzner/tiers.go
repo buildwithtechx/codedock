@@ -13,6 +13,10 @@ import (
 
 func Tiers() []models.ManagedTier {
 	return []models.ManagedTier{
+		{Name: "cx23", Cores: 2, MemoryGB: 4, DiskGB: 40, MonthlyPrice: 3.49},
+		{Name: "cx33", Cores: 4, MemoryGB: 8, DiskGB: 80, MonthlyPrice: 5.49},
+		{Name: "cx43", Cores: 8, MemoryGB: 16, DiskGB: 160, MonthlyPrice: 9.49},
+		{Name: "cx53", Cores: 16, MemoryGB: 32, DiskGB: 320, MonthlyPrice: 17.49},
 		{Name: "cx22", Cores: 2, MemoryGB: 4, DiskGB: 40, MonthlyPrice: 4.51},
 		{Name: "cx32", Cores: 2, MemoryGB: 8, DiskGB: 80, MonthlyPrice: 8.75},
 		{Name: "cx42", Cores: 4, MemoryGB: 16, DiskGB: 160, MonthlyPrice: 17.50},
