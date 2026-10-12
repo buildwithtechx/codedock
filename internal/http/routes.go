@@ -30,6 +30,7 @@ func (s *Server) registerRoutes() {
 	s.registerSettingsRoutes(apiGroup, authGroup)
 	s.registerMiscRoutes(apiGroup, authGroup)
 	s.registerBillingRoutes(apiGroup, authGroup)
+	s.registerMailRoutes(authGroup)
 
 	s.router.GET("/healthz", func(c echo.Context) error {
 		return c.JSON(200, map[string]string{"status": "ok"})

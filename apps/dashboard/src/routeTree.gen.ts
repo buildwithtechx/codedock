@@ -28,6 +28,7 @@ import { Route as DashboardDnsRouteImport } from './routes/_dashboard.dns'
 import { Route as DashboardDomainsRouteImport } from './routes/_dashboard.domains'
 import { Route as DashboardJobsRouteImport } from './routes/_dashboard.jobs'
 import { Route as DashboardLibraryRouteImport } from './routes/_dashboard.library'
+import { Route as DashboardMailRouteImport } from './routes/_dashboard.mail'
 import { Route as DashboardMonitoringRouteImport } from './routes/_dashboard.monitoring'
 import { Route as DashboardOrganizationsRouteImport } from './routes/_dashboard.organizations'
 import { Route as DashboardProfileRouteImport } from './routes/_dashboard.profile'
@@ -172,6 +173,11 @@ const DashboardJobsRoute = DashboardJobsRouteImport.update({
 const DashboardLibraryRoute = DashboardLibraryRouteImport.update({
   id: '/library',
   path: '/library',
+  getParentRoute: () => DashboardRoute,
+} as any)
+const DashboardMailRoute = DashboardMailRouteImport.update({
+  id: '/mail',
+  path: '/mail',
   getParentRoute: () => DashboardRoute,
 } as any)
 const DashboardMonitoringRoute = DashboardMonitoringRouteImport.update({
@@ -483,6 +489,7 @@ export interface FileRoutesByFullPath {
   '/domains': typeof DashboardDomainsRoute
   '/jobs': typeof DashboardJobsRouteWithChildren
   '/library': typeof DashboardLibraryRoute
+  '/mail': typeof DashboardMailRoute
   '/monitoring': typeof DashboardMonitoringRoute
   '/organizations': typeof DashboardOrganizationsRouteWithChildren
   '/profile': typeof DashboardProfileRoute
@@ -549,6 +556,7 @@ export interface FileRoutesByTo {
   '/dns': typeof DashboardDnsRoute
   '/domains': typeof DashboardDomainsRoute
   '/library': typeof DashboardLibraryRoute
+  '/mail': typeof DashboardMailRoute
   '/monitoring': typeof DashboardMonitoringRoute
   '/profile': typeof DashboardProfileRoute
   '/settings': typeof DashboardSettingsRoute
@@ -615,6 +623,7 @@ export interface FileRoutesById {
   '/_dashboard/domains': typeof DashboardDomainsRoute
   '/_dashboard/jobs': typeof DashboardJobsRouteWithChildren
   '/_dashboard/library': typeof DashboardLibraryRoute
+  '/_dashboard/mail': typeof DashboardMailRoute
   '/_dashboard/monitoring': typeof DashboardMonitoringRoute
   '/_dashboard/organizations': typeof DashboardOrganizationsRouteWithChildren
   '/_dashboard/profile': typeof DashboardProfileRoute
@@ -689,6 +698,7 @@ export interface FileRouteTypes {
     | '/domains'
     | '/jobs'
     | '/library'
+    | '/mail'
     | '/monitoring'
     | '/organizations'
     | '/profile'
@@ -755,6 +765,7 @@ export interface FileRouteTypes {
     | '/dns'
     | '/domains'
     | '/library'
+    | '/mail'
     | '/monitoring'
     | '/profile'
     | '/settings'
@@ -820,6 +831,7 @@ export interface FileRouteTypes {
     | '/_dashboard/domains'
     | '/_dashboard/jobs'
     | '/_dashboard/library'
+    | '/_dashboard/mail'
     | '/_dashboard/monitoring'
     | '/_dashboard/organizations'
     | '/_dashboard/profile'
@@ -1014,6 +1026,13 @@ declare module '@tanstack/react-router' {
       path: '/library'
       fullPath: '/library'
       preLoaderRoute: typeof DashboardLibraryRouteImport
+      parentRoute: typeof DashboardRoute
+    }
+    '/_dashboard/mail': {
+      id: '/_dashboard/mail'
+      path: '/mail'
+      fullPath: '/mail'
+      preLoaderRoute: typeof DashboardMailRouteImport
       parentRoute: typeof DashboardRoute
     }
     '/_dashboard/monitoring': {
@@ -1641,6 +1660,7 @@ interface DashboardRouteChildren {
   DashboardDomainsRoute: typeof DashboardDomainsRoute
   DashboardJobsRoute: typeof DashboardJobsRouteWithChildren
   DashboardLibraryRoute: typeof DashboardLibraryRoute
+  DashboardMailRoute: typeof DashboardMailRoute
   DashboardMonitoringRoute: typeof DashboardMonitoringRoute
   DashboardOrganizationsRoute: typeof DashboardOrganizationsRouteWithChildren
   DashboardProfileRoute: typeof DashboardProfileRoute
@@ -1662,6 +1682,7 @@ const DashboardRouteChildren: DashboardRouteChildren = {
   DashboardDomainsRoute: DashboardDomainsRoute,
   DashboardJobsRoute: DashboardJobsRouteWithChildren,
   DashboardLibraryRoute: DashboardLibraryRoute,
+  DashboardMailRoute: DashboardMailRoute,
   DashboardMonitoringRoute: DashboardMonitoringRoute,
   DashboardOrganizationsRoute: DashboardOrganizationsRouteWithChildren,
   DashboardProfileRoute: DashboardProfileRoute,

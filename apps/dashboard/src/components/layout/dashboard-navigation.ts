@@ -13,6 +13,7 @@ import {
   KeyRound,
   LayoutDashboard,
   LayoutGrid,
+  Mail,
   Rocket,
   Server,
   Settings,
@@ -75,6 +76,12 @@ export const infrastructureNavigation: DashboardNavigationItem[] = [
     description: 'Domain routing and SSL verification',
     to: '/domains',
     icon: Globe2,
+  },
+  {
+    title: 'Mail',
+    description: 'Mail servers, mailboxes and deliverability',
+    to: '/mail',
+    icon: Mail,
   },
   {
     title: 'Jobs',

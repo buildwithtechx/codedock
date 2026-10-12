@@ -17,6 +17,7 @@ import (
 	"codedock/internal/handlers/backups"
 	"codedock/internal/handlers/databases"
 	"codedock/internal/handlers/deployments"
+	"codedock/internal/handlers/mail"
 	"codedock/internal/handlers/projects"
 	"codedock/internal/handlers/system"
 	"codedock/internal/http/middleware"
@@ -98,6 +99,7 @@ type Server struct {
 	serviceLogsWSHandler      *system.ServiceLogsWSHandler
 	takeoverHandler           *system.TakeoverHandler
 	routeRuleHandler          *projects.RouteRuleHandler
+	mailHandler               *mail.MailHandler
 }
 
 func (s *Server) ServeHTTP(w http.ResponseWriter, r *http.Request) {

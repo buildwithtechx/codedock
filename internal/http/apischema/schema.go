@@ -186,6 +186,7 @@ func All() []Operation {
 	ops = append(ops, analyticsOperations()...)
 	ops = append(ops, clusterOperations()...)
 	ops = append(ops, systemOperations()...)
+	ops = append(ops, mailOperations()...)
 	return ops
 }
 

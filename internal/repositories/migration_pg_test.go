@@ -30,10 +30,10 @@ func TestRunMigrationsPostgres(t *testing.T) {
 	if err := db.QueryRowContext(ctx, `SELECT COUNT(*) FROM schema_migrations`).Scan(&count); err != nil {
 		t.Fatalf("count applied migrations: %v", err)
 	}
-	if count != 17 {
-		t.Fatalf("expected 17 applied migrations, got %d", count)
+	if count != 21 {
+		t.Fatalf("expected 21 applied migrations, got %d", count)
 	}
-	for _, table := range []string{"users", "projects", "deployments", "managed_servers", "migration_runs", "traffic_buckets", "schema_migrations"} {
+	for _, table := range []string{"users", "projects", "deployments", "managed_servers", "migration_runs", "traffic_buckets", "schema_migrations", "mail_servers"} {
 		var exists bool
 		query := `SELECT EXISTS (SELECT 1 FROM information_schema.tables WHERE table_schema = 'public' AND table_name = $1)`
 		if err := db.QueryRowContext(ctx, query, table).Scan(&exists); err != nil {
@@ -68,7 +68,7 @@ func TestRunMigrationsPostgres(t *testing.T) {
 	if err := db.QueryRowContext(ctx, `SELECT COUNT(*) FROM schema_migrations`).Scan(&count); err != nil {
 		t.Fatalf("recount applied migrations: %v", err)
 	}
-	if count != 17 {
-		t.Fatalf("expected 17 records after two runs, got %d", count)
+	if count != 21 {
+		t.Fatalf("expected 21 records after two runs, got %d", count)
 	}
 }

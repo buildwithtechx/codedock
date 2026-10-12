@@ -24,6 +24,7 @@ import (
 	"codedock/internal/handlers/backups"
 	"codedock/internal/handlers/databases"
 	"codedock/internal/handlers/deployments"
+	"codedock/internal/handlers/mail"
 	"codedock/internal/handlers/projects"
 	"codedock/internal/handlers/system"
 	"codedock/internal/http/middleware"
@@ -33,6 +34,7 @@ import (
 	backupservices "codedock/internal/services/backups"
 	databaseservices "codedock/internal/services/databases"
 	deploymentservices "codedock/internal/services/deployments"
+	mailservices "codedock/internal/services/mail"
 	"codedock/internal/services/operations"
 	projectservices "codedock/internal/services/projects"
 	systemservices "codedock/internal/services/system"
@@ -293,6 +295,10 @@ func NewServer(db *sql.DB, v *utils.Vault, deployer *deploy.Deployer, traefikMan
 	routeRuleService := systemservices.NewRouteRuleService(routeRuleRepo)
 	routeRuleHandler := projects.NewRouteRuleHandler(routeRuleService, appRepo)
 
+	mailRepo := repositories.NewMailRepo(db, v)
+	mailService := mailservices.NewMailService(mailRepo)
+	mailHandler := mail.NewMailHandler(mailService, projectService, auditService)
+
 	authLimiter := middleware.NewRateLimiter(10, time.Minute)
 	otpLimiter := middleware.NewRateLimiter(5, time.Minute)
 	aiLimiter := middleware.NewRateLimiter(5, time.Minute)
@@ -362,6 +368,7 @@ func NewServer(db *sql.DB, v *utils.Vault, deployer *deploy.Deployer, traefikMan
 		serviceLogsWSHandler:   serviceLogsWSHandler,
 		takeoverHandler:        takeoverHandler,
 		routeRuleHandler:       routeRuleHandler,
+		mailHandler:            mailHandler,
 	}
 
 	if err := configureManaged(srv, db, v, serverRepo, userRepo, orgRepo, sshManager, operationService); err != nil {

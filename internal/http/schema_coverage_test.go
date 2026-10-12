@@ -54,6 +54,7 @@ func schemaTestRouter(t *testing.T) *echo.Echo {
 	server.registerSettingsRoutes(apiGroup, authGroup)
 	server.registerMiscRoutes(apiGroup, authGroup)
 	server.registerBillingRoutes(apiGroup, authGroup)
+	server.registerMailRoutes(authGroup)
 	return router
 }
 
