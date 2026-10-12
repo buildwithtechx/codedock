@@ -65,10 +65,10 @@ func (r *postgresTrafficRepository) RecordBatch(ctx context.Context, samples []m
 		if sample.ClientIP != "" {
 			if _, err := tx.ExecContext(ctx, `
 				INSERT INTO traffic_visitors (day, project_id, ip, country, requests, bytes)
-				VALUES ($1, $2, $3, '', 1, $4)
+				VALUES ($1, $2, $3, $4, 1, $5)
 				ON CONFLICT(day, project_id, ip)
-				DO UPDATE SET requests = traffic_visitors.requests + 1, bytes = traffic_visitors.bytes + excluded.bytes
-			`, dayKey(sample), sample.ProjectID, sample.ClientIP, sample.Bytes); err != nil {
+				DO UPDATE SET requests = traffic_visitors.requests + 1, bytes = traffic_visitors.bytes + excluded.bytes, country = CASE WHEN traffic_visitors.country = '' THEN excluded.country ELSE traffic_visitors.country END
+			`, dayKey(sample), sample.ProjectID, sample.ClientIP, sample.Country, sample.Bytes); err != nil {
 				return fmt.Errorf("record traffic visitor: %w", err)
 			}
 		}

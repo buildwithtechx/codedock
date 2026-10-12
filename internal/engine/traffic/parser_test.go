@@ -88,7 +88,7 @@ func TestCollectorAttributesAndMasksPaths(t *testing.T) {
 			return "proj-1"
 		}
 		return ""
-	})
+	}, nil)
 	if err := collector.Collect(context.Background()); err != nil {
 		t.Fatalf("collect: %v", err)
 	}
@@ -120,5 +120,29 @@ func TestCollectorAttributesAndMasksPaths(t *testing.T) {
 	}
 	if len(store.samples) != 2 || store.samples[1].Path != "/visible" {
 		t.Fatalf("expected visible path after toggle, got %#v", store.samples)
+	}
+}
+
+func TestGeoIPResolver(t *testing.T) {
+	resolver, err := NewGeoIPResolver("")
+	if err != nil {
+		t.Fatalf("failed to create geoip resolver: %v", err)
+	}
+	defer resolver.Close()
+
+	if got := resolver.LookupCountry("127.0.0.1"); got != "" {
+		t.Errorf("expected empty for loopback, got %q", got)
+	}
+	if got := resolver.LookupCountry("192.168.1.1"); got != "" {
+		t.Errorf("expected empty for private IP, got %q", got)
+	}
+	if got := resolver.LookupCountry("10.0.0.1"); got != "" {
+		t.Errorf("expected empty for private IP, got %q", got)
+	}
+	if got := resolver.LookupCountry("8.8.8.8"); got != "US" {
+		t.Errorf("expected US for 8.8.8.8, got %q", got)
+	}
+	if got := resolver.LookupCountry("8.8.4.4"); got != "US" {
+		t.Errorf("expected US for 8.8.4.4, got %q", got)
 	}
 }

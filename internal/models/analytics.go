@@ -34,6 +34,7 @@ type TrafficSample struct {
 	Bytes      int64  `json:"bytes"`
 	DurationMs int64  `json:"durationMs"`
 	ClientIP   string `json:"clientIp"`
+	Country    string `json:"country"`
 }
 
 type AnalyticsSummary struct {

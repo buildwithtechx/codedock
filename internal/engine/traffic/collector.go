@@ -26,6 +26,7 @@ type Collector struct {
 	path      string
 	store     SampleStore
 	attribute AttributeFunc
+	geoip     *GeoIPResolver
 
 	mu         sync.Mutex
 	offset     int64
@@ -35,9 +36,9 @@ type Collector struct {
 	retainDays int
 }
 
-func NewCollector(path string, store SampleStore, attribute AttributeFunc) *Collector {
+func NewCollector(path string, store SampleStore, attribute AttributeFunc, geoip *GeoIPResolver) *Collector {
 	return &Collector{
-		path: path, store: store, attribute: attribute,
+		path: path, store: store, attribute: attribute, geoip: geoip,
 		paths: map[string]bool{}, interval: 30 * time.Second, retainDays: 30,
 	}
 }
@@ -150,6 +151,10 @@ func (c *Collector) convert(ctx context.Context, line string) (models.TrafficSam
 	if c.pathsEnabled(ctx, projectID) {
 		path = entry.Path()
 	}
+	country := ""
+	if c.geoip != nil && entry.ClientIP() != "" {
+		country = c.geoip.LookupCountry(entry.ClientIP())
+	}
 	return models.TrafficSample{
 		Time:       entry.Timestamp().Format(time.RFC3339),
 		ProjectID:  projectID,
@@ -159,6 +164,7 @@ func (c *Collector) convert(ctx context.Context, line string) (models.TrafficSam
 		Bytes:      entry.Bytes(),
 		DurationMs: entry.DurationMs(),
 		ClientIP:   entry.ClientIP(),
+		Country:    country,
 	}, true
 }
 

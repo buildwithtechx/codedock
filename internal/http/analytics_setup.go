@@ -3,6 +3,7 @@ package http
 import (
 	"context"
 	"database/sql"
+	"os"
 
 	"github.com/labstack/echo/v4"
 
@@ -66,7 +67,8 @@ func configureAnalytics(
 	server.attentionHandler = system.NewAttentionHandler(attentionService)
 
 	if path := traefikManager.AccessLogPath(); path != "" {
-		collector := traffic.NewCollector(path, trafficRepo, analyticsService.AttributeDomain)
+		geoResolver, _ := traffic.NewGeoIPResolver(os.Getenv("GEOIP_DB_PATH"))
+		collector := traffic.NewCollector(path, trafficRepo, analyticsService.AttributeDomain, geoResolver)
 		go collector.Run(context.Background())
 	}
 }

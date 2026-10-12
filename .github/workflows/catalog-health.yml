@@ -1,0 +1,72 @@
+name: Catalog Health
+
+on:
+  schedule:
+    - cron: "17 4 * * *"
+  workflow_dispatch: {}
+  pull_request:
+    paths:
+      - "internal/engine/compose/**"
+      - ".github/workflows/catalog-health.yml"
+  push:
+    branches: [main]
+    paths:
+      - "internal/engine/compose/**"
+      - ".github/workflows/catalog-health.yml"
+
+permissions:
+  contents: read
+
+concurrency:
+  group: catalog-health-${{ github.ref }}
+  cancel-in-progress: true
+
+jobs:
+  validate-templates:
+    name: Validate Template Specs
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-go@v5
+        with:
+          go-version-file: go.mod
+      - run: go test -v ./internal/engine/compose/...
+
+  test-data-apps:
+    name: Data App Container Health (${{ matrix.app }})
+    runs-on: ubuntu-latest
+    strategy:
+      fail-fast: false
+      matrix:
+        app: [postgres, redis, minio, neon, convex]
+    steps:
+      - uses: actions/checkout@v4
+      - name: Spin test container
+        run: |
+          case "${{ matrix.app }}" in
+            postgres)
+              docker run -d --name test-postgres -e POSTGRES_PASSWORD=testpass -p 5432:5432 postgres:16-alpine
+              sleep 5
+              docker exec test-postgres pg_isready -U postgres
+              docker rm -f test-postgres
+              ;;
+            redis)
+              docker run -d --name test-redis -p 6379:6379 redis:7-alpine
+              sleep 3
+              docker exec test-redis redis-cli ping
+              docker rm -f test-redis
+              ;;
+            minio)
+              docker run -d --name test-minio -e MINIO_ROOT_USER=minioadmin -e MINIO_ROOT_PASSWORD=minioadmin -p 9000:9000 minio/minio:latest server /data
+              sleep 5
+              curl -fsS http://localhost:9000/minio/health/live
+              docker rm -f test-minio
+              ;;
+            neon)
+              docker pull neond/neond:f04d396c133d81e28cf52560ea11ef7e9b814d71
+              ;;
+            convex)
+              docker pull ghcr.io/get-convex/convex-backend:19431ea0dd90bc55ae58dbbd06d9aa045f97336f
+              docker pull ghcr.io/get-convex/convex-dashboard:19431ea0dd90bc55ae58dbbd06d9aa045f97336f
+              ;;
+          esac
