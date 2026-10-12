@@ -101,7 +101,8 @@ export function ProjectDomainsTab({ projectId }: { projectId: string }) {
     }
   };
 
-  const serviceNameFor = (serviceId: string) => {
+  const serviceNameFor = (serviceId: string | undefined) => {
+    if (!serviceId) return 'Unknown Service';
     const s = services.find((srv) => srv.id === serviceId);
     return s ? s.name : 'Unknown Service';
   };

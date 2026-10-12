@@ -73,6 +73,120 @@ func managedReviewSchema() Schema {
 	)
 }
 
+func serverComponentSchema() Schema {
+	return Obj("Server component",
+		RF("name", Str("Component name")),
+		RF("label", Str("Display label")),
+		RF("description", Str("Description")),
+		RF("installable", Bool("Installable")),
+		RF("installed", Bool("Installed")),
+		F("version", Str("Version")),
+		RF("healthy", Bool("Healthy")),
+		RF("message", Str("Status message")),
+	)
+}
+
+func serverPortScanSchema() Schema {
+	return Obj("Port scan result",
+		RF("scanned", Bool("Scan completed")),
+		RF("serverId", Str("Server ID")),
+		RF("listeners", Arr("Listeners", Obj("Listener",
+			RF("port", Int("Port")),
+			RF("protocol", Str("Protocol")),
+			RF("state", Str("State")),
+			RF("exposed", Bool("Publicly exposed")),
+			RF("process", Str("Process")),
+		))),
+	)
+}
+
+func serverRateLimitSchema() Schema {
+	return Obj("Server rate limit",
+		RF("rps", Int("Requests per second")),
+		RF("burst", Int("Burst size")),
+		RF("whitelist", Arr("Whitelist", Str("IP or CIDR"))),
+	)
+}
+
+func serverNetworkSettingsSchema() Schema {
+	return Obj("Server network settings",
+		F("internetAccess", Bool("Internet access")),
+		F("ingressPorts", Arr("Ingress ports", Int("Port"))),
+		F("ingressAll", Bool("Ingress all")),
+		F("egress", Arr("Egress", Str("Egress rule"))),
+		F("privateIp", Str("Private IP")),
+		F("outboundIp", Str("Outbound IP")),
+		F("outboundMode", Str("Outbound mode")),
+		F("revision", Str("Revision")),
+	)
+}
+
+func managedServerInfoSchema() Schema {
+	return Obj("Managed server info",
+		RF("workspaceId", Str("Workspace ID")),
+		RF("image", Str("Runner image")),
+		RF("state", Str("State")),
+		F("mode", Str("Mode")),
+		F("operatingSystem", Str("Operating system")),
+		F("restartPolicy", Str("Restart policy")),
+		RF("resources", Obj("Resources",
+			RF("cpuCores", Num("CPU cores")),
+			RF("memoryMb", Int("Memory MB")),
+			RF("diskMb", Int("Disk MB")),
+		)),
+	)
+}
+
+func managedLogsSchema() Schema {
+	return Obj("Managed logs",
+		RF("logs", Str("Log output")),
+		RF("truncated", Bool("Truncated")),
+	)
+}
+
+func managedSshStatusSchema() Schema {
+	return Obj("Managed SSH status",
+		F("enabled", Bool("SSH enabled")),
+		F("keyConfigured", Bool("Key configured")),
+		F("passwordConfigured", Bool("Password configured")),
+		RF("requiresIdentityAccess", Bool("Requires identity access")),
+		F("connection", Obj("Connection",
+			RF("user", Str("SSH user")),
+			RF("host", Str("SSH host")),
+			RF("bastion", Str("Bastion host")),
+			RF("command", Str("SSH command")),
+		)),
+	)
+}
+
+func managedRuntimeStatusSchema() Schema {
+	return Obj("Managed runtime status",
+		F("enabled", Bool("Runtime enabled")),
+		F("running", Bool("Runtime running")),
+	)
+}
+
+func managedRuntimeCredentialSchema() Schema {
+	return Obj("Managed runtime credential",
+		RF("endpoint", Str("Runtime endpoint")),
+		RF("token", Str("Runtime token")),
+		RF("revision", Str("Revision")),
+		F("expiresAt", Str("Expiry time")),
+	)
+}
+
+func managedWorkloadSchema() Schema {
+	return Obj("Managed workload",
+		RF("id", ID("Workload ID")),
+		RF("name", Str("Workload name")),
+		RF("state", Str("State")),
+		F("restartPolicy", Str("Restart policy")),
+		RF("source", Str("Source")),
+		F("projectId", Str("Project ID")),
+		RF("manageable", Bool("Manageable")),
+	)
+}
+
 func serverOperations() []Operation {
 	servers := "servers"
 	managed := "managed"
@@ -103,5 +217,25 @@ func serverOperations() []Operation {
 		{Method: "GET", Path: "/api/managed-operations/:operationId/stream", Summary: "Stream a managed operation", Tags: []string{managed}, Auth: read, Raw: true, Response: Str("SSE operation session")},
 		{Method: "POST", Path: "/api/managed-operations/:operationId/apply", Summary: "Apply a managed operation", Tags: []string{managed}, Auth: write, Request: JSON(operationApplySchema()), Response: EmptySchema()},
 		{Method: "POST", Path: "/api/organizations/:id/managed/servers/:serverId/refresh", Summary: "Refresh a managed server", Tags: []string{managed}, Auth: read, Response: ServerSchema()},
+		{Method: "GET", Path: "/api/servers/:id/components", Summary: "List server components", Tags: []string{servers}, Auth: read, Response: Arr("Components", serverComponentSchema())},
+		{Method: "POST", Path: "/api/servers/:id/scan-ports", Summary: "Scan server ports", Tags: []string{servers}, Auth: read, Response: serverPortScanSchema()},
+		{Method: "GET", Path: "/api/servers/:id/rate-limit", Summary: "Get the server rate limit", Tags: []string{servers}, Auth: read, Response: serverRateLimitSchema()},
+		{Method: "PUT", Path: "/api/servers/:id/rate-limit", Summary: "Update the server rate limit", Tags: []string{servers}, Auth: write, Request: JSON(serverRateLimitSchema()), Response: serverRateLimitSchema()},
+		{Method: "GET", Path: "/api/servers/:id/network-settings", Summary: "Get server network settings", Tags: []string{servers}, Auth: read, Response: serverNetworkSettingsSchema()},
+		{Method: "PATCH", Path: "/api/servers/:id/network-settings", Summary: "Update server network settings", Tags: []string{servers}, Auth: write, Request: JSON(Obj("Update network settings", RF("internetAccess", Bool("Internet access")), RF("expectedInternetAccess", Bool("Expected internet access")), F("egress", Arr("Egress", Str("Egress rule"))), F("expectedRevision", Str("Expected revision")), RF("confirm", Bool("Confirm")))), Response: serverNetworkSettingsSchema()},
+		{Method: "GET", Path: "/api/servers/:id/managed/info", Summary: "Get managed server info", Tags: []string{servers}, Auth: read, Response: managedServerInfoSchema()},
+		{Method: "POST", Path: "/api/servers/:id/managed/boot-logs", Summary: "Get managed boot logs", Tags: []string{servers}, Auth: read, Request: JSON(Obj("Boot logs", F("tail", Int("Tail lines")))), Response: managedLogsSchema()},
+		{Method: "GET", Path: "/api/servers/:id/managed/ssh", Summary: "Get managed SSH status", Tags: []string{servers}, Auth: read, Response: managedSshStatusSchema()},
+		{Method: "PATCH", Path: "/api/servers/:id/managed/ssh", Summary: "Update managed SSH access", Tags: []string{servers}, Auth: write, Request: JSON(Obj("Update SSH", RF("enabled", Bool("SSH enabled")), RF("expectedEnabled", Bool("Expected enabled")), RF("confirm", Bool("Confirm")))), Response: Obj("SSH result", RF("status", managedSshStatusSchema()), F("initialPassword", Str("Initial password")))},
+		{Method: "PUT", Path: "/api/servers/:id/managed/ssh/key", Summary: "Set the managed SSH key", Tags: []string{servers}, Auth: write, Request: JSON(Obj("Set SSH key", RF("publicKey", Str("Public key")), RF("confirm", Bool("Confirm")))), Response: Obj("SSH key result", RF("ok", Bool("Updated")))},
+		{Method: "PUT", Path: "/api/servers/:id/managed/ssh/password", Summary: "Set the managed SSH password", Tags: []string{servers}, Auth: write, Request: JSON(Obj("Set SSH password", RF("password", Str("Password")), RF("confirm", Bool("Confirm")))), Response: Obj("SSH password result", RF("ok", Bool("Updated")))},
+		{Method: "GET", Path: "/api/servers/:id/managed/runtime-api", Summary: "Get managed runtime status", Tags: []string{servers}, Auth: read, Response: managedRuntimeStatusSchema()},
+		{Method: "POST", Path: "/api/servers/:id/managed/runtime-api/enable", Summary: "Enable the managed runtime", Tags: []string{servers}, Auth: write, Request: JSON(Obj("Enable runtime", RF("confirm", Bool("Confirm")))), Response: managedRuntimeStatusSchema()},
+		{Method: "POST", Path: "/api/servers/:id/managed/runtime-api/credential", Summary: "Get a managed runtime credential", Tags: []string{servers}, Auth: write, Request: JSON(Obj("Runtime credential", RF("confirm", Bool("Confirm")))), Response: managedRuntimeCredentialSchema()},
+		{Method: "POST", Path: "/api/servers/:id/managed/runtime-api/rotate", Summary: "Rotate the managed runtime credential", Tags: []string{servers}, Auth: write, Request: JSON(Obj("Rotate credential", RF("confirm", Bool("Confirm")))), Response: managedRuntimeCredentialSchema()},
+		{Method: "GET", Path: "/api/servers/:id/managed/workloads", Summary: "List managed workloads", Tags: []string{servers}, Auth: read, Response: Obj("Workloads", RF("workloads", Arr("Workloads", managedWorkloadSchema())), RF("truncated", Bool("Truncated")))},
+		{Method: "POST", Path: "/api/servers/:id/managed/workloads", Summary: "Create a managed workload", Tags: []string{servers}, Auth: write, Request: JSON(Obj("Create workload", RF("name", Str("Workload name")), RF("command", Str("Command")), F("workingDirectory", Str("Working directory")), F("environment", Arr("Environment", Str("Variable"))), F("restartPolicy", Str("Restart policy")), RF("confirm", Bool("Confirm")), RF("idempotencyKey", Str("Idempotency key")))), Response: managedWorkloadSchema()},
+		{Method: "POST", Path: "/api/servers/:id/managed/workloads/control", Summary: "Control a managed workload", Tags: []string{servers}, Auth: write, Request: JSON(Obj("Control workload", RF("workloadId", Str("Workload ID")), RF("action", StrEnum("Action", "start", "stop", "restart", "delete")), RF("confirm", Bool("Confirm")))), Response: Obj("Control result", RF("ok", Bool("Accepted")), F("workload", managedWorkloadSchema()))},
+		{Method: "POST", Path: "/api/servers/:id/managed/workloads/logs", Summary: "Get managed workload logs", Tags: []string{servers}, Auth: read, Request: JSON(Obj("Workload logs", RF("workloadId", Str("Workload ID")), F("tail", Int("Tail lines")))), Response: managedLogsSchema()},
 	}
 }

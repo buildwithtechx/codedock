@@ -25,6 +25,15 @@ func auditLogSchema() Schema {
 	)
 }
 
+func auditSettingsSchema() Schema {
+	return Obj("Audit settings",
+		RF("organizationId", Str("Organization ID")),
+		RF("enabled", Bool("Auditing enabled")),
+		RF("retentionDays", Int("Retention days")),
+		F("updatedAt", Str("Last update")),
+	)
+}
+
 func auditFacetsSchema() Schema {
 	return Obj("Audit facets",
 		RF("total", Int("Total entries")),
@@ -72,5 +81,7 @@ func authOperations() []Operation {
 		{Method: "GET", Path: "/api/system/setup-status", Summary: "Check whether setup is required", Tags: []string{auth}, Response: Obj("Setup status", RF("setupRequired", Bool("Whether initial setup is required")))},
 		{Method: "GET", Path: "/api/audit-logs", Summary: "List audit log entries", Tags: []string{auth}, Auth: AuthAdmin, Response: Arr("Entries", auditLogSchema()), Query: []Param{QueryParamInt("limit", "Max entries"), QueryParamInt("offset", "Offset"), QueryParam("category", "Category ID filter")}},
 		{Method: "GET", Path: "/api/audit-logs/facets", Summary: "Count audit log entries per category", Tags: []string{auth}, Auth: AuthAdmin, Response: auditFacetsSchema()},
+		{Method: "GET", Path: "/api/audit-logs/settings", Summary: "Get audit log settings", Tags: []string{auth}, Auth: AuthAdmin, Response: auditSettingsSchema()},
+		{Method: "PUT", Path: "/api/audit-logs/settings", Summary: "Update audit log settings", Tags: []string{auth}, Auth: AuthAdmin, Request: JSON(auditSettingsSchema()), Response: auditSettingsSchema()},
 	}
 }

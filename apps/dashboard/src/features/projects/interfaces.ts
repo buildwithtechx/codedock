@@ -80,6 +80,9 @@ export interface CreateProjectRequest {
   domain?: string;
   serverId?: string;
   organizationId?: string;
+  gitUrl?: string;
+  gitBranch?: string;
+  gitProvider?: string;
 }
 
 export interface ProjectToken {

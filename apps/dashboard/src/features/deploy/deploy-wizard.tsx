@@ -25,8 +25,7 @@ export function DeployWizard({
   const navigate = useNavigate();
   const [step, setStep] = useState<'target' | 'config'>('config');
   const [framework, setFramework] = useState('Dockerfile');
-  const runtimeMode: 'web' | 'worker' | 'static' =
-    framework.toLowerCase() === 'dockerfile' ? 'web' : 'static';
+  const runtimeMode: 'web' | 'static' = framework.toLowerCase() === 'dockerfile' ? 'web' : 'static';
   const [installCommand, setInstallCommand] = useState('npm install');
   const [buildCommand, setBuildCommand] = useState('npm run build');
   const [outputDirectory, setOutputDirectory] = useState('dist');
@@ -94,9 +93,10 @@ export function DeployWizard({
           name: projectName,
           repositoryUrl: initialRepoUrl,
           branch,
-          runtimeMode: runtimeMode === 'worker' ? 'worker' : 'web',
+          runtimeMode,
           installCommand,
           buildCommand,
+          startCommand: '',
           staticOutput: outputDirectory,
           domain: subdomain,
           buildEngine: runtimeMode === 'static' ? 'static' : 'nixpacks',

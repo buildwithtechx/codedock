@@ -34,7 +34,7 @@ export function ProjectContextSidebar({ projectId }: { projectId: string }) {
   const { data: domainsRes } = useListProjectDomains(projectId);
   const project = data?.data;
   const domains = domainsRes?.data || [];
-  const primaryDomain = domains[0]?.domain;
+  const primaryDomain = domains[0]?.domainName;
   const navigation = getProjectContextNavigation(projectId);
 
   return (
@@ -69,14 +69,15 @@ export function ProjectContextSidebar({ projectId }: { projectId: string }) {
                 href={`https://${primaryDomain}`}
                 target="_blank"
                 rel="noopener noreferrer"
-                className="inline-flex max-w-[150px] items-center gap-1 truncate font-medium text-primary hover:underline"
+                className="inline-flex max-w-37.5 items-center gap-1 truncate font-medium text-primary hover:underline"
               >
                 <span className="truncate">{primaryDomain}</span>
                 <ExternalLink className="h-3 w-3 shrink-0" />
               </a>
             ) : (
               <Link
-                to={`/projects/${projectId}/domains`}
+                to="/projects/$projectId/domains"
+                params={{ projectId }}
                 className="inline-flex items-center gap-1 font-medium text-primary hover:underline"
               >
                 <Plus className="h-3 w-3" />

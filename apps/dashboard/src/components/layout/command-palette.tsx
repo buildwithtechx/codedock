@@ -1,5 +1,6 @@
 import { useNavigate } from '@tanstack/react-router';
 import { Command } from 'cmdk';
+import type { LucideIcon } from 'lucide-react';
 import { CornerDownLeft, FolderKanban, Plus, Search, Server, Sparkles } from 'lucide-react';
 import { useEffect } from 'react';
 import { Dialog, DialogContent, DialogDescription, DialogTitle } from '#/components/ui/dialog';
@@ -10,7 +11,13 @@ interface CommandPaletteProps {
   onOpenChange: (open: boolean) => void;
 }
 
-const creationItems = [
+const creationItems: {
+  title: string;
+  description: string;
+  to: string;
+  search?: Record<string, string>;
+  icon: LucideIcon;
+}[] = [
   {
     title: 'New project',
     description: 'Create a project workspace from Git, folder, or templates',

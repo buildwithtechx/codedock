@@ -33,6 +33,8 @@ export function InstallDomainsRouting({
   domain: _domain,
   onDomainChange,
   appName,
+  hostPort,
+  onHostPortChange,
   disabled = false,
 }: {
   appId?: string;
@@ -41,6 +43,8 @@ export function InstallDomainsRouting({
   domain: string;
   onDomainChange: (domain: string) => void;
   appName: string;
+  hostPort: string;
+  onHostPortChange: (port: string) => void;
   disabled?: boolean;
 }) {
   const { data: publicRes } = useGetPublicSettings();
@@ -263,6 +267,24 @@ export function InstallDomainsRouting({
             </div>
           );
         })}
+      </div>
+
+      <div className="space-y-1.5">
+        <label htmlFor="install-host-port" className="font-medium text-foreground text-xs">
+          Host port override
+        </label>
+        <Input
+          id="install-host-port"
+          value={hostPort}
+          disabled={disabled}
+          onChange={(e) => onHostPortChange(e.target.value)}
+          placeholder={String(defaultPort || 3000)}
+          inputMode="numeric"
+          className="h-8 font-mono text-xs"
+        />
+        <p className="text-[11px] text-muted-foreground">
+          Optional published port for the primary endpoint. Leave empty for the default.
+        </p>
       </div>
     </div>
   );

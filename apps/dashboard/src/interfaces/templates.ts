@@ -7,6 +7,12 @@ export interface OneClickEnvVar {
   input: boolean;
 }
 
+export interface OneClickEndpoint {
+  label: string;
+  port: number;
+  kind: string;
+}
+
 export interface OneClickAppDetails {
   id: string;
   name: string;
@@ -15,6 +21,7 @@ export interface OneClickAppDetails {
   category: string;
   dockerImage: string;
   defaultPort: number;
+  endpoints?: OneClickEndpoint[];
   services: string[];
   volumes: string[];
   envVariables: OneClickEnvVar[];

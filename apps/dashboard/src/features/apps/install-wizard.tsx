@@ -271,6 +271,8 @@ export function InstallWizard({ appId }: { appId: string }) {
             </div>
           )}
           <InstallDomainsRouting
+            appId={appId}
+            endpoints={app.endpoints}
             hostPort={hostPort}
             onHostPortChange={setHostPort}
             defaultPort={app.defaultPort}

@@ -83,6 +83,7 @@ func serviceOperations() []Operation {
 		{Method: "GET", Path: "/api/services/:id/domains", Summary: "List service domains", Tags: []string{domains}, Auth: AuthUser, Response: Arr("Domains", DomainSchema())},
 		{Method: "POST", Path: "/api/services/:id/domains", Summary: "Attach a domain", Tags: []string{domains}, Auth: AuthUser, Code: 201, Request: JSON(Obj("Attach domain", RF("domainName", Str("Domain name")), F("redirectTo", Str("Redirect target")), F("pathPrefix", Str("Path prefix")))), Response: DomainSchema()},
 		{Method: "GET", Path: "/api/domains", Summary: "List all domains", Tags: []string{domains}, Auth: AuthUser, Response: Arr("Domains", DomainSchema())},
+		{Method: "GET", Path: "/api/projects/:id/domains", Summary: "List project domains", Tags: []string{domains}, Auth: AuthUser, Response: Arr("Domains", DomainSchema())},
 		{Method: "GET", Path: "/api/domains/:id/verify", Summary: "Verify a domain", Tags: []string{domains}, Auth: AuthUser, Response: domainVerifySchema()},
 		{Method: "POST", Path: "/api/domains/:id/verify", Summary: "Verify a domain", Tags: []string{domains}, Auth: AuthUser, Response: domainVerifySchema()},
 		{Method: "DELETE", Path: "/api/domains/:id", Summary: "Delete a domain", Tags: []string{domains}, Auth: AuthUser, Raw: true, Code: 204, Response: EmptySchema()},

@@ -125,5 +125,7 @@ func deploymentOperations() []Operation {
 		{Method: "GET", Path: "/api/one-click/:id", Summary: "Get a one-click app", Tags: []string{catalog}, Auth: AuthUser, Response: oneClickAppSchema()},
 		{Method: "POST", Path: "/api/one-click/review", Summary: "Preview an app install", Tags: []string{catalog}, Auth: AuthUser, Request: JSON(installInputSchema()), Response: installPreviewSchema()},
 		{Method: "POST", Path: "/api/one-click/deploy", Summary: "Install a one-click app", Tags: []string{catalog}, Auth: AuthUser, Request: JSON(installInputSchema()), Response: Obj("Install result", RF("kind", Str("Install kind")), F("stack", composeStackSchema()))},
+		{Method: "POST", Path: "/api/one-click/custom", Summary: "Add a custom one-click app", Tags: []string{catalog}, Auth: AuthUser, Request: JSON(Any("Compose template")), Response: oneClickAppSchema()},
+		{Method: "DELETE", Path: "/api/one-click/custom/:id", Summary: "Remove a custom one-click app", Tags: []string{catalog}, Auth: AuthUser, Response: Obj("Removed app", RF("id", Str("App ID")))},
 	}
 }

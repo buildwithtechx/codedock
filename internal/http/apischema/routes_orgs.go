@@ -44,6 +44,37 @@ func notificationSettingsSchema() Schema {
 	)
 }
 
+func notificationSubscriptionSchema() Schema {
+	return Obj("Notification subscription",
+		RF("id", ID("Subscription ID")),
+		RF("userId", Str("User ID")),
+		RF("organizationId", Str("Organization ID")),
+		RF("category", Str("Category")),
+		RF("channels", Arr("Channels", Str("Channel"))),
+		RF("enabled", Bool("Enabled")),
+		F("createdAt", Str("Creation time")),
+		F("updatedAt", Str("Last update")),
+	)
+}
+
+func notificationDefaultSchema() Schema {
+	return Obj("Notification default",
+		RF("organizationId", Str("Organization ID")),
+		RF("category", Str("Category")),
+		RF("channels", Arr("Channels", Str("Channel"))),
+		RF("enabled", Bool("Enabled")),
+		F("updatedAt", Str("Last update")),
+	)
+}
+
+func notificationPreferenceSchema() Schema {
+	return Obj("Notification preference",
+		RF("category", Str("Category")),
+		RF("channels", Arr("Channels", Str("Channel"))),
+		RF("enabled", Bool("Enabled")),
+	)
+}
+
 func organizationOperations() []Operation {
 	orgs := "organizations"
 	billing := "billing"
@@ -65,5 +96,9 @@ func organizationOperations() []Operation {
 		{Method: "POST", Path: "/api/operations/:operationId/cancel", Summary: "Cancel a durable operation", Tags: []string{ops}, Auth: Scope("backup:write"), Response: EmptySchema()},
 		{Method: "GET", Path: "/api/notifications", Summary: "Get notification settings", Tags: []string{orgs}, Auth: AuthUser, Response: notificationSettingsSchema()},
 		{Method: "PUT", Path: "/api/notifications", Summary: "Update notification settings", Tags: []string{orgs}, Auth: AuthAdmin, Request: JSON(notificationSettingsSchema()), Response: notificationSettingsSchema()},
+		{Method: "GET", Path: "/api/notifications/subscriptions", Summary: "List notification subscriptions", Tags: []string{orgs}, Auth: AuthUser, Response: Arr("Subscriptions", notificationSubscriptionSchema())},
+		{Method: "PUT", Path: "/api/notifications/subscriptions", Summary: "Save a notification subscription", Tags: []string{orgs}, Auth: AuthUser, Request: JSON(notificationPreferenceSchema()), Response: notificationSubscriptionSchema()},
+		{Method: "GET", Path: "/api/notifications/defaults", Summary: "List notification defaults", Tags: []string{orgs}, Auth: AuthUser, Response: Arr("Defaults", notificationDefaultSchema())},
+		{Method: "PUT", Path: "/api/notifications/defaults", Summary: "Save a notification default", Tags: []string{orgs}, Auth: AuthAdmin, Request: JSON(notificationPreferenceSchema()), Response: notificationDefaultSchema()},
 	}
 }

@@ -183,11 +183,7 @@ export function AddServiceModal({
                 <button
                   type="button"
                   onClick={() => setMode('catalog')}
-                  className={`rounded-md px-3 py-1 font-medium transition-colors ${
-                    mode === 'catalog'
-                      ? 'bg-background text-foreground shadow-sm'
-                      : 'text-muted-foreground hover:text-foreground'
-                  }`}
+                  className="rounded-md bg-background px-3 py-1 font-medium text-foreground shadow-sm transition-colors"
                 >
                   Curated Catalog
                 </button>
@@ -199,11 +195,7 @@ export function AddServiceModal({
                     setImage('');
                     setPort(8080);
                   }}
-                  className={`rounded-md px-3 py-1 font-medium transition-colors ${
-                    mode === 'custom'
-                      ? 'bg-background text-foreground shadow-sm'
-                      : 'text-muted-foreground hover:text-foreground'
-                  }`}
+                  className="rounded-md px-3 py-1 font-medium text-muted-foreground transition-colors hover:text-foreground"
                 >
                   Custom Docker Image
                 </button>
@@ -257,7 +249,7 @@ export function AddServiceModal({
                     </p>
                   </div>
                   <div className="mt-3 flex items-center justify-between border-border/40 border-t pt-2 font-mono text-[11px] text-muted-foreground">
-                    <span className="max-w-[160px] truncate">{item.image}</span>
+                    <span className="max-w-40 truncate">{item.image}</span>
                     <span className="text-primary group-hover:underline">Configure →</span>
                   </div>
                 </button>
