@@ -42,6 +42,10 @@ func (r *AuditLogRepo) List(ctx context.Context, limit, offset int) ([]models.Au
 	return r.ListFiltered(ctx, nil, limit, offset)
 }
 
+func escapeLikePrefix(s string) string {
+	return strings.NewReplacer(`\`, `\\`, `%`, `\%`, `_`, `\_`).Replace(s)
+}
+
 func (r *AuditLogRepo) ListFiltered(ctx context.Context, prefixes []string, limit, offset int) ([]models.AuditLog, error) {
 	query := `
 		SELECT id, user_id, action, resource, details, ip_address, created_at
@@ -51,8 +55,8 @@ func (r *AuditLogRepo) ListFiltered(ctx context.Context, prefixes []string, limi
 	if len(prefixes) > 0 {
 		conditions := make([]string, 0, len(prefixes))
 		for i, prefix := range prefixes {
-			conditions = append(conditions, fmt.Sprintf("action LIKE $%d", i+1))
-			args = append(args, prefix+"%")
+			conditions = append(conditions, fmt.Sprintf("action ILIKE $%d", i+1))
+			args = append(args, escapeLikePrefix(prefix)+"%")
 		}
 		query += " WHERE " + strings.Join(conditions, " OR ")
 	}
@@ -95,7 +99,7 @@ func (r *AuditLogRepo) Facets(ctx context.Context) (map[string]int, int, error) 
 		}
 		likes := make([]string, 0, len(prefixes))
 		for _, prefix := range prefixes {
-			likes = append(likes, fmt.Sprintf("action LIKE '%s%%'", strings.ReplaceAll(prefix, "'", "''")))
+			likes = append(likes, fmt.Sprintf("action ILIKE '%s%%'", strings.ReplaceAll(escapeLikePrefix(prefix), "'", "''")))
 		}
 		caseParts = append(caseParts, fmt.Sprintf("WHEN %s THEN '%s'", strings.Join(likes, " OR "), category.ID))
 	}

@@ -5,5 +5,5 @@ CREATE TABLE IF NOT EXISTS self_hosted_config (
     telemetry_salt TEXT NOT NULL DEFAULT '',
     tls_email TEXT NOT NULL DEFAULT '',
     wildcard_domain TEXT NOT NULL DEFAULT '',
-    updated_at TIMESTAMPTZ DEFAULT CURRENT_TIMESTAMP
+    updated_at TIMESTAMPTZ NOT NULL DEFAULT CURRENT_TIMESTAMP
 );

@@ -15,26 +15,26 @@ CREATE TABLE IF NOT EXISTS sftp_destinations (
     organization_id TEXT REFERENCES organizations(id) ON DELETE CASCADE,
     project_id TEXT REFERENCES projects(id) ON DELETE CASCADE,
     name TEXT NOT NULL,
-    description TEXT DEFAULT '',
+    description TEXT NOT NULL DEFAULT '',
     host TEXT NOT NULL,
-    port INTEGER DEFAULT 22,
+    port INTEGER NOT NULL DEFAULT 22,
     username TEXT NOT NULL,
-    password TEXT DEFAULT '',
-    private_key TEXT DEFAULT '',
-    path_prefix TEXT DEFAULT '',
+    password TEXT NOT NULL DEFAULT '',
+    private_key TEXT NOT NULL DEFAULT '',
+    path_prefix TEXT NOT NULL DEFAULT '',
     last_verified_at TIMESTAMPTZ,
-    last_verify_error TEXT DEFAULT '',
-    created_at TIMESTAMPTZ DEFAULT CURRENT_TIMESTAMP
+    last_verify_error TEXT NOT NULL DEFAULT '',
+    created_at TIMESTAMPTZ NOT NULL DEFAULT CURRENT_TIMESTAMP
 );
 CREATE TABLE IF NOT EXISTS backup_policy_batches (
     id TEXT PRIMARY KEY,
     project_id TEXT NOT NULL REFERENCES projects(id) ON DELETE CASCADE,
     name TEXT NOT NULL,
-    description TEXT DEFAULT '',
+    description TEXT NOT NULL DEFAULT '',
     schedule TEXT NOT NULL,
-    timezone TEXT DEFAULT 'UTC',
-    timeout INTEGER DEFAULT 3600,
-    status TEXT DEFAULT 'active',
-    created_at TIMESTAMPTZ DEFAULT CURRENT_TIMESTAMP,
-    updated_at TIMESTAMPTZ DEFAULT CURRENT_TIMESTAMP
+    timezone TEXT NOT NULL DEFAULT 'UTC',
+    timeout INTEGER NOT NULL DEFAULT 3600,
+    status TEXT NOT NULL DEFAULT 'active',
+    created_at TIMESTAMPTZ NOT NULL DEFAULT CURRENT_TIMESTAMP,
+    updated_at TIMESTAMPTZ NOT NULL DEFAULT CURRENT_TIMESTAMP
 );
