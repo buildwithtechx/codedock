@@ -1,0 +1,6 @@
+{
+  "name": "@codedock/codedock",
+  "version": "0.1.0",
+  "private": true,
+  "description": "Codedock shared core package"
+}
