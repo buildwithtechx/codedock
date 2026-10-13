@@ -12,10 +12,17 @@
   "type": "module",
   "description": "Codedock CLI installer — downloads the prebuilt Go binary for your platform",
   "license": "Apache-2.0",
+  "main": "./lib.js",
+  "exports": {
+    ".": "./lib.js",
+    "./client": "./client.js",
+    "./package.json": "./package.json"
+  },
   "files": [
     "bin/codedock.js",
     "install.js",
-    "lib.js"
+    "lib.js",
+    "client.js"
   ],
   "engines": {
     "node": ">=18"
