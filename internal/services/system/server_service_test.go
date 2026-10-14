@@ -21,7 +21,7 @@ func TestListServersByUserIncludesControlPlaneForOwner(t *testing.T) {
 		t.Fatalf("create user: %v", err)
 	}
 	service := NewServerService(repositories.NewServerRepository(db, nil), userRepo, nil)
-	servers, err := service.ListServersByUser(context.Background(), user.ID)
+	servers, err := service.ListServersByUser(context.Background(), user.ID, "")
 	if err != nil {
 		t.Fatalf("list servers: %v", err)
 	}
@@ -77,7 +77,7 @@ func TestListServersByAPITokenDoesNotLoadSyntheticUser(t *testing.T) {
 		t.Fatal(err)
 	}
 	service := NewServerService(repositories.NewServerRepository(db, nil), repositories.NewUserRepo(db), nil)
-	servers, err := service.ListServersByUser(context.Background(), "api-token-test")
+	servers, err := service.ListServersByUser(context.Background(), "api-token-test", "")
 	if err != nil {
 		t.Fatal(err)
 	}

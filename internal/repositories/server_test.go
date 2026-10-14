@@ -60,7 +60,7 @@ func TestServerRoundtrip(t *testing.T) {
 	if byToken == nil || byToken.ID != "srv-1" {
 		t.Fatalf("token lookup returned wrong server: %+v", byToken)
 	}
-	listed, err := repo.ListByUser(ctx, "user-1")
+	listed, err := repo.ListByUser(ctx, "user-1", "")
 	if err != nil {
 		t.Fatalf("list servers: %v", err)
 	}
@@ -108,5 +108,45 @@ func TestServerRoundtrip(t *testing.T) {
 	}
 	if deleted != nil {
 		t.Fatal("expected deleted server to be gone")
+	}
+}
+
+func TestServerSearchFiltersByNameAndSSHHost(t *testing.T) {
+	db := openPGTestDB(t)
+	ctx := context.Background()
+	vault, err := utils.NewVault(t.TempDir())
+	if err != nil {
+		t.Fatal(err)
+	}
+	repo := NewServerRepository(db, vault)
+	for _, seed := range []models.Server{
+		{ID: "srv-1", UserID: "user-1", Name: "prod-web", IPAddress: "10.0.0.1", SSHHost: "prod.example.com", SSHPort: 22, SSHUser: "root", SSHAuthMethod: "key", Status: models.ServerStatusOnline},
+		{ID: "srv-2", UserID: "user-1", Name: "staging", IPAddress: "10.0.0.2", SSHHost: "staging.example.com", SSHPort: 22, SSHUser: "root", SSHAuthMethod: "key", Status: models.ServerStatusOnline},
+	} {
+		seed := seed
+		if err := repo.Create(ctx, &seed); err != nil {
+			t.Fatalf("create server: %v", err)
+		}
+	}
+	cases := []struct {
+		name   string
+		search string
+		want   int
+	}{
+		{name: "name case-insensitive", search: "PROD", want: 1},
+		{name: "ssh host", search: "staging.example.com", want: 1},
+		{name: "no match", search: "nothing-matches-this", want: 0},
+		{name: "underscore literal", search: "prod_web", want: 0},
+	}
+	for _, tc := range cases {
+		t.Run(tc.name, func(t *testing.T) {
+			listed, err := repo.ListByUser(ctx, "user-1", tc.search)
+			if err != nil {
+				t.Fatalf("search servers: %v", err)
+			}
+			if len(listed) != tc.want {
+				t.Fatalf("expected %d matches for %q, got %d", tc.want, tc.search, len(listed))
+			}
+		})
 	}
 }

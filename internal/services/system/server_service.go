@@ -21,7 +21,7 @@ type ServerService interface {
 	CreateServer(ctx context.Context, userID string, req models.CreateServerRequest) (*models.Server, error)
 	UpdateServer(ctx context.Context, id, userID string, req models.UpdateServerRequest) (*models.Server, error)
 	TestSSH(ctx context.Context, req models.TestSSHRequest) error
-	ListServersByUser(ctx context.Context, userID string) ([]*models.Server, error)
+	ListServersByUser(ctx context.Context, userID string, search string) ([]*models.Server, error)
 	GetServer(ctx context.Context, id, userID string) (*models.Server, error)
 	DeleteServer(ctx context.Context, id, userID string) error
 }
@@ -90,7 +90,7 @@ func (s *serverService) CreateServer(ctx context.Context, userID string, req mod
 	}
 
 	if config.Get().Cloud.Enabled && u.PlanType != "pro" {
-		servers, err := s.serverRepo.ListByUser(ctx, userID)
+		servers, err := s.serverRepo.ListByUser(ctx, userID, "")
 		if err != nil {
 			return nil, fmt.Errorf("failed to check server limit: %w", err)
 		}

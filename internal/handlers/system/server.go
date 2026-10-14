@@ -135,7 +135,7 @@ func (h *ServerHandler) List(c echo.Context) error {
 		return utils.Error(c, http.StatusUnauthorized, "unauthorized")
 	}
 
-	servers, err := h.serverService.ListServersByUser(c.Request().Context(), userClaims.UserID)
+	servers, err := h.serverService.ListServersByUser(c.Request().Context(), userClaims.UserID, c.QueryParam("search"))
 	if err != nil {
 		return utils.Error(c, http.StatusInternalServerError, err.Error())
 	}

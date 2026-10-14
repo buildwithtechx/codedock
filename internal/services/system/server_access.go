@@ -12,8 +12,8 @@ import (
 	"codedock/internal/utils"
 )
 
-func (s *serverService) ListServersByUser(ctx context.Context, userID string) ([]*models.Server, error) {
-	servers, err := s.serverRepo.ListByUser(ctx, userID)
+func (s *serverService) ListServersByUser(ctx context.Context, userID string, search string) ([]*models.Server, error) {
+	servers, err := s.serverRepo.ListByUser(ctx, userID, search)
 	if err != nil {
 		return nil, err
 	}

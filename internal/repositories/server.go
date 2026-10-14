@@ -5,6 +5,7 @@ import (
 	"database/sql"
 	"encoding/json"
 	"fmt"
+	"strings"
 
 	"codedock/internal/models"
 )
@@ -14,7 +15,7 @@ type ServerRepository interface {
 	Update(ctx context.Context, server *models.Server) error
 	GetByID(ctx context.Context, id string) (*models.Server, error)
 	GetByToken(ctx context.Context, token string) (*models.Server, error)
-	ListByUser(ctx context.Context, userID string) ([]*models.Server, error)
+	ListByUser(ctx context.Context, userID string, search string) ([]*models.Server, error)
 	UpdateStatus(ctx context.Context, id string, status models.ServerStatus) error
 	UpdateMetrics(ctx context.Context, id string, metricsJSON []byte) error
 	Delete(ctx context.Context, id string) error
@@ -135,9 +136,11 @@ func (r *postgresServerRepository) GetByToken(ctx context.Context, token string)
 	return r.scanRow(row)
 }
 
-func (r *postgresServerRepository) ListByUser(ctx context.Context, userID string) ([]*models.Server, error) {
-	query := fmt.Sprintf(`SELECT %s FROM servers WHERE user_id = $1 OR (user_id = 'system' AND is_local = TRUE) ORDER BY created_at DESC`, serverSelectColumns)
-	rows, err := r.db.QueryContext(ctx, query, userID)
+func (r *postgresServerRepository) ListByUser(ctx context.Context, userID string, search string) ([]*models.Server, error) {
+	search = strings.TrimSpace(search)
+	pattern := ContainsLikePattern(search)
+	query := fmt.Sprintf(`SELECT %s FROM servers WHERE (user_id = $1 OR (user_id = 'system' AND is_local = TRUE)) AND ($2 = '' OR name ILIKE $3 OR ssh_host ILIKE $3) ORDER BY created_at DESC`, serverSelectColumns)
+	rows, err := r.db.QueryContext(ctx, query, userID, search, pattern)
 	if err != nil {
 		return nil, fmt.Errorf("failed to list servers: %w", err)
 	}

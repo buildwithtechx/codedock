@@ -155,7 +155,7 @@ func (m *SSHManager) StartMetricsPoller(ctx context.Context, userID string) {
 		case <-ctx.Done():
 			return
 		case <-ticker.C:
-			servers, err := m.serverRepo.ListByUser(ctx, userID)
+			servers, err := m.serverRepo.ListByUser(ctx, userID, "")
 			if err != nil {
 				continue
 			}

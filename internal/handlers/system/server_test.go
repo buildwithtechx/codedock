@@ -24,7 +24,7 @@ func (s testServerService) TestSSH(context.Context, models.TestSSHRequest) error
 	return nil
 }
 
-func (s testServerService) ListServersByUser(context.Context, string) ([]*models.Server, error) {
+func (s testServerService) ListServersByUser(context.Context, string, string) ([]*models.Server, error) {
 	return s.servers, nil
 }
 

@@ -193,7 +193,7 @@ func serverOperations() []Operation {
 	read := Scope("server:read")
 	write := Scope("server:write")
 	return []Operation{
-		{Method: "GET", Path: "/api/servers", Summary: "List servers", Tags: []string{servers}, Auth: read, Response: Arr("Servers", ServerSchema())},
+		{Method: "GET", Path: "/api/servers", Summary: "List servers", Tags: []string{servers}, Auth: read, Response: Arr("Servers", ServerSchema()), Query: []Param{QueryParam("search", "Search text")}},
 		{Method: "POST", Path: "/api/servers", Summary: "Add a server", Tags: []string{servers}, Auth: write, Request: JSON(Obj("Add server", RF("name", Str("Server name")), F("ipAddress", Str("IP address")), F("isLocal", Bool("Local server")), F("sshHost", Str("SSH hostname")), F("sshPort", Int("SSH port")), F("sshUser", Str("SSH username")), F("sshAuthMethod", Str("Auth method")), F("sshKey", Str("SSH key")), F("sshPrivateKey", Str("SSH private key")), F("sshPassword", Str("SSH password")), F("sshJumpHost", Str("Jump host")))), Response: ServerSchema()},
 		{Method: "GET", Path: "/api/servers/:id", Summary: "Get a server", Tags: []string{servers}, Auth: read, Response: ServerSchema()},
 		{Method: "PATCH", Path: "/api/servers/:id", Summary: "Update a server", Tags: []string{servers}, Auth: write, Request: JSON(Obj("Update server", F("name", Str("Server name")), F("ipAddress", Str("IP address")), F("sshHost", Str("SSH hostname")), F("sshPort", Int("SSH port")), F("sshUser", Str("SSH username")))), Response: ServerSchema()},

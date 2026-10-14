@@ -56,7 +56,7 @@ func TestManagedProvisionHappyPath(t *testing.T) {
 	if link.CredentialID != env.credID || link.SSHKeyName != plan.SSHKeyName {
 		t.Fatalf("expected managed link, got %#v", link)
 	}
-	visible, err := env.serverRepo.ListByUser(ctx, env.adminID)
+	visible, err := env.serverRepo.ListByUser(ctx, env.adminID, "")
 	if err != nil {
 		t.Fatalf("list servers: %v", err)
 	}
