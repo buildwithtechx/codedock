@@ -32,7 +32,7 @@ func runDatabases(args []string) {
 
 	switch cmd {
 	case "list":
-		dbs, err := dbRepo.List(context.Background())
+		dbs, err := dbRepo.List(context.Background(), "")
 		if err != nil {
 			exitError("Failed to list databases: %v", err)
 		}

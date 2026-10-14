@@ -12,7 +12,7 @@ import (
 
 type scalingTestApps struct{ app *models.AppService }
 
-func (s scalingTestApps) ListAll(context.Context) ([]*models.AppService, error) {
+func (s scalingTestApps) ListAll(context.Context, string) ([]*models.AppService, error) {
 	return []*models.AppService{s.app}, nil
 }
 

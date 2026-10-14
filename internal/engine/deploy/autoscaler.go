@@ -12,7 +12,7 @@ import (
 )
 
 type AppRepository interface {
-	ListAll(context.Context) ([]*models.AppService, error)
+	ListAll(context.Context, string) ([]*models.AppService, error)
 }
 type DeploymentCreator interface {
 	CreateDeployment(context.Context, *models.Deployment) (*models.Deployment, error)
@@ -101,7 +101,7 @@ func (a *AutoscalerWorker) checkAndScale(ctx context.Context) {
 	if len(policies) == 0 {
 		return
 	}
-	apps, err := a.appRepo.ListAll(ctx)
+	apps, err := a.appRepo.ListAll(ctx, "")
 	if err != nil {
 		slog.Error("list autoscaling apps", "error", err)
 		return
