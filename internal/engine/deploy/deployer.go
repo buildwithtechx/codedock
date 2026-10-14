@@ -15,6 +15,7 @@ import (
 	"github.com/google/uuid"
 
 	"codedock/internal/engine/build"
+	"codedock/internal/engine/stacks"
 	"codedock/internal/models"
 	"codedock/internal/utils"
 )
@@ -230,7 +231,7 @@ func (d *Deployer) DeployAppService(ctx context.Context, app *models.AppService,
 
 	return d.replaceReplicas(ctx, app, ContainerRunOptions{
 		ImageTag: imageTag, ServiceID: app.ID, Domain: appDomain, Hosts: d.routeHosts(ctx, app.ID, appDomain, logWriter), InternalPort: internalPort,
-		RuntimeMode: app.RuntimeMode, Envs: envSlice, Cmd: applicationCommand(app),
+		RuntimeMode: app.RuntimeMode, Envs: envSlice, Cmd: containerCommand(app, resolvedStartCommand(app, sourceDir)),
 		MemoryLimitMB: memoryLimit, CPURequest: cpuRequest, HealthCheckPath: app.HealthCheckPath,
 		Volumes: app.Volumes, MaintenanceMode: app.MaintenanceMode, LogDrains: logDrains, ExtraLabels: extraLabels,
 	}, replicas, logWriter)
@@ -294,9 +295,19 @@ func (d *Deployer) InspectServiceContainer(ctx context.Context, app *models.AppS
 	}, nil
 }
 
-func applicationCommand(app *models.AppService) []string {
-	if app.StartCommand == "" || app.StaticOutput != "" && app.ImageRef == "" {
+func resolvedStartCommand(app *models.AppService, sourceDir string) string {
+	if app.StartCommand == "" || !app.Optimize {
+		return app.StartCommand
+	}
+	if def, ok := stacks.Registry[stacks.DetectStack(sourceDir)]; ok && def.OptimizeCommand != "" {
+		return stacks.ResolveWebCommand(app.StartCommand, true, def.OptimizeCommand)
+	}
+	return app.StartCommand
+}
+
+func containerCommand(app *models.AppService, command string) []string {
+	if command == "" || app.StaticOutput != "" && app.ImageRef == "" {
 		return nil
 	}
-	return []string{"/bin/sh", "-c", app.StartCommand}
+	return []string{"/bin/sh", "-c", command}
 }

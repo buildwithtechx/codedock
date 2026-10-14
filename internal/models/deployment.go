@@ -159,6 +159,7 @@ type AppService struct {
 	UpdatedAt        time.Time        `json:"updatedAt" db:"updated_at"`
 	EnablePRPreviews bool             `json:"enablePRPreviews" db:"enable_pr_previews"`
 	MaintenanceMode  bool             `json:"maintenanceMode" db:"maintenance_mode"`
+	Optimize         bool             `json:"optimize" db:"optimize"`
 	RegistryID       *string          `json:"registryId,omitempty" db:"registry_id"`
 
 	Volumes []ServiceVolume `json:"volumes,omitempty" db:"-"`
@@ -192,6 +193,7 @@ type CreateAppServiceRequest struct {
 	StaticOutput     string      `json:"staticOutput"`
 	HealthCheckPath  string      `json:"healthCheckPath"`
 	EnablePRPreviews bool        `json:"enablePRPreviews"`
+	Optimize         bool        `json:"optimize,omitempty"`
 	MaintenanceMode  bool        `json:"maintenanceMode,omitempty"`
 	RegistryID       *string     `json:"registryId,omitempty"`
 }
@@ -216,6 +218,7 @@ type UpdateAppServiceRequest struct {
 	Status          string      `json:"status"`
 	DeployToken     string      `json:"deployToken"`
 	MaintenanceMode bool        `json:"maintenanceMode,omitempty"`
+	Optimize        bool        `json:"optimize,omitempty"`
 	RegistryID      *string     `json:"registryId,omitempty"`
 }
 

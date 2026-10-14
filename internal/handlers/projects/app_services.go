@@ -234,6 +234,7 @@ func (h *AppHandler) Update(c echo.Context) error {
 	existing.MemoryLimit = req.MemoryLimit
 	existing.DeployToken = req.DeployToken
 	existing.MaintenanceMode = req.MaintenanceMode
+	existing.Optimize = req.Optimize
 	existing.EnablePRPreviews = req.EnablePRPreviews
 	existing.ImageRef = req.ImageRef
 	existing.RegistryID = req.RegistryID

@@ -107,6 +107,7 @@ func AppServiceSchema() Schema {
 		F("containerId", Str("Running container ID")),
 		F("enablePrPreviews", Bool("PR previews enabled")),
 		F("maintenanceMode", Bool("Maintenance mode")),
+		F("optimize", Bool("Framework cache warming before start")),
 	}
 	return Obj("Application service", append(props, Timestamps()...)...)
 }

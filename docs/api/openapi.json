@@ -771,6 +771,10 @@
                             "description": "Service name",
                             "type": "string"
                           },
+                          "optimize": {
+                            "description": "Framework cache warming before start",
+                            "type": "boolean"
+                          },
                           "projectId": {
                             "description": "Project ID",
                             "type": "string"
@@ -1242,6 +1246,10 @@
                           "description": "Service name",
                           "type": "string"
                         },
+                        "optimize": {
+                          "description": "Framework cache warming before start",
+                          "type": "boolean"
+                        },
                         "projectId": {
                           "description": "Project ID",
                           "type": "string"
@@ -1605,6 +1613,10 @@
                         "name": {
                           "description": "Service name",
                           "type": "string"
+                        },
+                        "optimize": {
+                          "description": "Framework cache warming before start",
+                          "type": "boolean"
                         },
                         "projectId": {
                           "description": "Project ID",
@@ -2977,6 +2989,10 @@
                         "name": {
                           "description": "Service name",
                           "type": "string"
+                        },
+                        "optimize": {
+                          "description": "Framework cache warming before start",
+                          "type": "boolean"
                         },
                         "projectId": {
                           "description": "Project ID",
@@ -6168,6 +6184,10 @@
                         "name": {
                           "description": "Service name",
                           "type": "string"
+                        },
+                        "optimize": {
+                          "description": "Framework cache warming before start",
+                          "type": "boolean"
                         },
                         "projectId": {
                           "description": "Project ID",
@@ -28690,6 +28710,10 @@
                             "description": "Service name",
                             "type": "string"
                           },
+                          "optimize": {
+                            "description": "Framework cache warming before start",
+                            "type": "boolean"
+                          },
                           "projectId": {
                             "description": "Project ID",
                             "type": "string"
@@ -29057,6 +29081,10 @@
                           "description": "Service name",
                           "type": "string"
                         },
+                        "optimize": {
+                          "description": "Framework cache warming before start",
+                          "type": "boolean"
+                        },
                         "projectId": {
                           "description": "Project ID",
                           "type": "string"
@@ -29373,6 +29401,10 @@
                               "name": {
                                 "description": "Service name",
                                 "type": "string"
+                              },
+                              "optimize": {
+                                "description": "Framework cache warming before start",
+                                "type": "boolean"
                               },
                               "projectId": {
                                 "description": "Project ID",
@@ -62105,6 +62137,10 @@
                             "description": "Service name",
                             "type": "string"
                           },
+                          "optimize": {
+                            "description": "Framework cache warming before start",
+                            "type": "boolean"
+                          },
                           "projectId": {
                             "description": "Project ID",
                             "type": "string"
@@ -72556,6 +72592,10 @@
                           "name": {
                             "description": "Service name",
                             "type": "string"
+                          },
+                          "optimize": {
+                            "description": "Framework cache warming before start",
+                            "type": "boolean"
                           },
                           "projectId": {
                             "description": "Project ID",

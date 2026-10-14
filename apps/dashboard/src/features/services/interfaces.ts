@@ -57,6 +57,7 @@ export interface AppService {
   memoryLimit?: number;
   enablePRPreviews: boolean;
   maintenanceMode: boolean;
+  optimize: boolean;
   icon?: string;
   deployToken?: string;
   appId?: string;
@@ -194,6 +195,7 @@ export interface UpdateAppServiceRequest {
   deployToken?: string;
   enablePRPreviews?: boolean;
   maintenanceMode?: boolean;
+  optimize?: boolean;
 }
 
 export interface TriggerDeploymentRequest {

@@ -11,6 +11,7 @@ import { DatabaseNetworking } from '#/features/databases/database-networking';
 import { RedisKeyBrowser } from '#/features/databases/redis-key-browser';
 import { HealthcheckCard } from '#/features/services/healthcheck-card';
 import { MaintenanceModeCard } from '#/features/services/maintenance-mode-card';
+import { OptimizeCard } from '#/features/services/optimize-card';
 import { RuntimeModeCard } from '#/features/services/runtime-mode-card';
 import { ServiceAutoscaling } from '#/features/services/service-autoscaling';
 import { useGetApp } from '#/hooks/use-apps';
@@ -75,6 +76,7 @@ function ServiceIndexRoute() {
         <RuntimeModeCard serviceId={app.id} />
         <HealthcheckCard serviceId={app.id} />
         <MaintenanceModeCard serviceId={app.id} />
+        <OptimizeCard serviceId={app.id} />
       </div>
     );
   }
