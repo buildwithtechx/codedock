@@ -18,6 +18,28 @@ export interface AppCatalogEntry {
 
 export const appCatalog: AppCatalogEntry[] = [
   {
+    id: 'authentik',
+    name: 'Authentik',
+    description:
+      'Self-hosted identity provider with single sign-on, social login and application outposts.',
+    category: 'security',
+    icon: 'authentik',
+    verified: false,
+    services: ['server', 'worker', 'db', 'redis'],
+    secrets: [
+      {
+        var: 'DB_PASSWORD',
+        label: 'Database password',
+        length: 24,
+      },
+      {
+        var: 'AUTHENTIK_SECRET_KEY',
+        label: 'Authentik secret key',
+        length: 60,
+      },
+    ],
+  },
+  {
     id: 'calcom',
     name: 'Cal.com',
     description: 'Open-source scheduling platform',
@@ -283,6 +305,22 @@ export const appCatalog: AppCatalogEntry[] = [
         var: 'NC_AUTH_JWT_SECRET',
         label: 'Auth JWT secret',
         length: 32,
+      },
+    ],
+  },
+  {
+    id: 'odoo',
+    name: 'Odoo',
+    description: 'Business apps suite with CRM, sales, inventory and accounting on Postgres.',
+    category: 'productivity',
+    icon: 'odoo',
+    verified: false,
+    services: ['odoo', 'db'],
+    secrets: [
+      {
+        var: 'DB_PASSWORD',
+        label: 'Database password',
+        length: 24,
       },
     ],
   },

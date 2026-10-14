@@ -1,0 +1,70 @@
+x-codedock:
+  is_one_click: true
+  name: Authentik
+  description: Self-hosted identity provider with single sign-on, social login and application outposts.
+  category: security
+  icon: authentik
+  secrets:
+    - var: DB_PASSWORD
+      label: Database password
+      length: 24
+    - var: AUTHENTIK_SECRET_KEY
+      label: Authentik secret key
+      length: 60
+services:
+  server:
+    image: authentik/server:2026.8.3
+    restart: always
+    ports:
+      - "9000"
+    environment:
+      - AUTHENTIK_SECRET_KEY=${secret:AUTHENTIK_SECRET_KEY}
+      - AUTHENTIK_POSTGRESQL__HOST=db
+      - AUTHENTIK_POSTGRESQL__USER=authentik
+      - AUTHENTIK_POSTGRESQL__NAME=authentik
+      - AUTHENTIK_POSTGRESQL__PASSWORD=${secret:DB_PASSWORD}
+      - AUTHENTIK_REDIS__HOST=redis
+    depends_on:
+      - db
+      - redis
+  worker:
+    image: authentik/server:2026.8.3
+    restart: always
+    command: ["worker"]
+    environment:
+      - AUTHENTIK_SECRET_KEY=${secret:AUTHENTIK_SECRET_KEY}
+      - AUTHENTIK_POSTGRESQL__HOST=db
+      - AUTHENTIK_POSTGRESQL__USER=authentik
+      - AUTHENTIK_POSTGRESQL__NAME=authentik
+      - AUTHENTIK_POSTGRESQL__PASSWORD=${secret:DB_PASSWORD}
+      - AUTHENTIK_REDIS__HOST=redis
+    depends_on:
+      - db
+      - redis
+  db:
+    image: postgres:16-alpine
+    restart: always
+    environment:
+      - POSTGRES_DB=authentik
+      - POSTGRES_USER=authentik
+      - POSTGRES_PASSWORD=${secret:DB_PASSWORD}
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U authentik -d authentik"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+    volumes:
+      - authentik-db:/var/lib/postgresql/data
+  redis:
+    image: redis:7-alpine
+    restart: always
+    healthcheck:
+      test: ["CMD-SHELL", "redis-cli ping"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+    volumes:
+      - authentik-redis:/data
+volumes:
+  authentik-db:
+  authentik-redis:

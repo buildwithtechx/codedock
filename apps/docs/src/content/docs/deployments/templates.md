@@ -61,6 +61,10 @@ Configure persistent vector storage and authentication, then restrict access to 
 
 One-click Compose stacks from the verified catalogue. Each entry deploys its services, volumes and secrets together; review the stack's secrets and persistence before deploying.
 
+### Authentik
+
+Self-hosted identity provider with single sign-on, social login and application outposts. Runs server and worker services against Postgres and Redis; persist the database, Redis data and media volume.
+
 ### Convex
 
 Self-hosted Convex reactive backend and dashboard. Configure the instance secret and a persistent data volume before deploying.
@@ -120,6 +124,10 @@ Self-hosted file storage and collaboration suite with a database backend.
 ### NocoDB
 
 Spreadsheet-style database interface over Postgres with persistent metadata.
+
+### Odoo
+
+Business apps suite with CRM, sales, inventory and accounting on Postgres. Persist the database and the `/var/lib/odoo` data volume.
 
 ### Plausible
 

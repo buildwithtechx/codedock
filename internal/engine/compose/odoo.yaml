@@ -1,0 +1,41 @@
+x-codedock:
+  is_one_click: true
+  name: Odoo
+  description: Business apps suite with CRM, sales, inventory and accounting on Postgres.
+  category: productivity
+  icon: odoo
+  secrets:
+    - var: DB_PASSWORD
+      label: Database password
+      length: 24
+services:
+  odoo:
+    image: odoo:18
+    restart: always
+    ports:
+      - "8069"
+    environment:
+      - HOST=db
+      - USER=odoo
+      - PASSWORD=${secret:DB_PASSWORD}
+    depends_on:
+      - db
+    volumes:
+      - odoo-data:/var/lib/odoo
+  db:
+    image: postgres:16-alpine
+    restart: always
+    environment:
+      - POSTGRES_DB=odoo
+      - POSTGRES_USER=odoo
+      - POSTGRES_PASSWORD=${secret:DB_PASSWORD}
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U odoo -d odoo"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+    volumes:
+      - odoo-db:/var/lib/postgresql/data
+volumes:
+  odoo-db:
+  odoo-data:

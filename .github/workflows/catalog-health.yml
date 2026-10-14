@@ -38,7 +38,7 @@ jobs:
     strategy:
       fail-fast: false
       matrix:
-        app: [postgres, redis, minio, neon, convex]
+        app: [postgres, redis, minio, neon, convex, authentik, odoo]
     steps:
       - uses: actions/checkout@v4
       - name: Spin test container
@@ -68,5 +68,11 @@ jobs:
             convex)
               docker pull ghcr.io/get-convex/convex-backend:19431ea0dd90bc55ae58dbbd06d9aa045f97336f
               docker pull ghcr.io/get-convex/convex-dashboard:19431ea0dd90bc55ae58dbbd06d9aa045f97336f
+              ;;
+            authentik)
+              docker pull authentik/server:2026.8.3
+              ;;
+            odoo)
+              docker pull odoo:18
               ;;
           esac
