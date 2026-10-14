@@ -72,3 +72,13 @@ type UpsertDefaultRequest struct {
 	Channels []string `json:"channels"`
 	Enabled  bool     `json:"enabled"`
 }
+
+type NotificationDelivery struct {
+	ID        string `json:"id" db:"id"`
+	EventType string `json:"eventType" db:"event_type"`
+	Channel   string `json:"channel" db:"channel"`
+	Title     string `json:"title" db:"title"`
+	Success   bool   `json:"success" db:"success"`
+	Error     string `json:"error" db:"error"`
+	CreatedAt string `json:"createdAt" db:"created_at"`
+}

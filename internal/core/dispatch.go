@@ -15,6 +15,7 @@ type DispatcherService struct {
 	settingsRepo repositories.SettingsRepository
 	notifRepo    repositories.NotificationSettingsRepository
 	userRepo     repositories.UserRepository
+	deliveries   repositories.NotificationDeliveryRepository
 	mailer       interface {
 		SendSystemEmail(ctx context.Context, templateName string, toAddress string, subject string, data any) error
 	}
@@ -24,8 +25,8 @@ type Mailer interface {
 	SendSystemEmail(ctx context.Context, templateName string, toAddress string, subject string, data any) error
 }
 
-func NewDispatcherService(settingsRepo repositories.SettingsRepository, notifRepo repositories.NotificationSettingsRepository, userRepo repositories.UserRepository, mailer Mailer) *DispatcherService {
-	return &DispatcherService{settingsRepo: settingsRepo, notifRepo: notifRepo, userRepo: userRepo, mailer: mailer}
+func NewDispatcherService(settingsRepo repositories.SettingsRepository, notifRepo repositories.NotificationSettingsRepository, userRepo repositories.UserRepository, deliveries repositories.NotificationDeliveryRepository, mailer Mailer) *DispatcherService {
+	return &DispatcherService{settingsRepo: settingsRepo, notifRepo: notifRepo, userRepo: userRepo, deliveries: deliveries, mailer: mailer}
 }
 
 func (d *DispatcherService) Dispatch(event *models.NotificationEvent) {
@@ -51,7 +52,25 @@ func (d *DispatcherService) sendGlobalTest(event *models.NotificationEvent) erro
 	}
 
 	provider := event.EventType[len("test_global_"):]
+	err = d.sendToProvider(settings, provider, event)
+	d.recordDelivery(ctx, event, provider, err)
+	return err
+}
 
+func (d *DispatcherService) recordDelivery(ctx context.Context, event *models.NotificationEvent, channel string, err error) {
+	if d.deliveries == nil {
+		return
+	}
+	entry := &models.NotificationDelivery{EventType: event.EventType, Channel: channel, Title: event.Title, Success: err == nil}
+	if err != nil {
+		entry.Error = err.Error()
+	}
+	if recErr := d.deliveries.RecordDelivery(ctx, entry); recErr != nil {
+		slog.Error("failed to record notification delivery", "err", recErr)
+	}
+}
+
+func (d *DispatcherService) sendToProvider(settings *models.NotificationSettings, provider string, event *models.NotificationEvent) error {
 	switch provider {
 	case "discord":
 		if settings.DiscordEnabled && settings.DiscordWebhookURL != "" {

@@ -123,7 +123,7 @@ func NewServer(db *sql.DB, v *utils.Vault, deployer *deploy.Deployer, traefikMan
 		return nil, fmt.Errorf("token service: %w", err)
 	}
 	settingsService := authservices.NewSettingsService(settingsRepo)
-	notifSettingsService := systemservices.NewNotificationSettingsService(notifRepo)
+	notifSettingsService := systemservices.NewNotificationSettingsService(notifRepo, repositories.NewNotificationDeliveryRepo(db))
 	aiSettingsService := projectservices.NewAISettingsService(aiRepo)
 	serviceLinker := projectservices.NewServiceLinker(dbRepo)
 	serviceLinker.SetApplications(appRepo, serviceVarRepo)
@@ -134,7 +134,7 @@ func NewServer(db *sql.DB, v *utils.Vault, deployer *deploy.Deployer, traefikMan
 	}
 	authService := authservices.NewAuthService(userRepo, settingsRepo, notifRepo, projectSettingsRepo, tokenService, mailerService, refreshTokenRepo)
 	projectSettingsService := projectservices.NewProjectSettingsService(projectSettingsRepo, userRepo, authService)
-	dispatcherService := core.NewDispatcherService(settingsRepo, notifRepo, userRepo, mailerService)
+	dispatcherService := core.NewDispatcherService(settingsRepo, notifRepo, userRepo, repositories.NewNotificationDeliveryRepo(db), mailerService)
 
 	deploymentListeners := core.NewDeploymentListeners(dispatcherService, appRepo)
 	deploymentListeners.Register()

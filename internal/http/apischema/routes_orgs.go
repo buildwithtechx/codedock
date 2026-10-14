@@ -75,6 +75,18 @@ func notificationPreferenceSchema() Schema {
 	)
 }
 
+func notificationDeliverySchema() Schema {
+	return Obj("Notification delivery",
+		RF("id", Str("Delivery ID")),
+		RF("eventType", Str("Event type")),
+		RF("channel", Str("Channel")),
+		F("title", Str("Title")),
+		RF("success", Bool("Delivered")),
+		F("error", Str("Error")),
+		F("createdAt", Str("Created at")),
+	)
+}
+
 func organizationOperations() []Operation {
 	orgs := "organizations"
 	billing := "billing"
@@ -99,6 +111,7 @@ func organizationOperations() []Operation {
 		{Method: "GET", Path: "/api/notifications/subscriptions", Summary: "List notification subscriptions", Tags: []string{orgs}, Auth: AuthUser, Response: Arr("Subscriptions", notificationSubscriptionSchema())},
 		{Method: "PUT", Path: "/api/notifications/subscriptions", Summary: "Save a notification subscription", Tags: []string{orgs}, Auth: AuthUser, Request: JSON(notificationPreferenceSchema()), Response: notificationSubscriptionSchema()},
 		{Method: "GET", Path: "/api/notifications/defaults", Summary: "List notification defaults", Tags: []string{orgs}, Auth: AuthUser, Response: Arr("Defaults", notificationDefaultSchema())},
+		{Method: "GET", Path: "/api/notifications/deliveries", Summary: "List notification delivery attempts", Tags: []string{orgs}, Auth: AuthUser, Response: Arr("Deliveries", notificationDeliverySchema()), Query: []Param{QueryParamInt("limit", "Max entries")}},
 		{Method: "PUT", Path: "/api/notifications/defaults", Summary: "Save a notification default", Tags: []string{orgs}, Auth: AuthAdmin, Request: JSON(notificationPreferenceSchema()), Response: notificationDefaultSchema()},
 	}
 }

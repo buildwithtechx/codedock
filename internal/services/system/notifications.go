@@ -8,11 +8,12 @@ import (
 )
 
 type NotificationSettingsService struct {
-	repo repositories.NotificationSettingsRepository
+	repo       repositories.NotificationSettingsRepository
+	deliveries repositories.NotificationDeliveryRepository
 }
 
-func NewNotificationSettingsService(repo repositories.NotificationSettingsRepository) *NotificationSettingsService {
-	return &NotificationSettingsService{repo: repo}
+func NewNotificationSettingsService(repo repositories.NotificationSettingsRepository, deliveries repositories.NotificationDeliveryRepository) *NotificationSettingsService {
+	return &NotificationSettingsService{repo: repo, deliveries: deliveries}
 }
 
 func (s *NotificationSettingsService) GetNotificationSettings(ctx context.Context) (*models.NotificationSettings, error) {
@@ -37,4 +38,11 @@ func (s *NotificationSettingsService) ListDefaults(ctx context.Context, orgID st
 
 func (s *NotificationSettingsService) UpsertDefault(ctx context.Context, def *models.NotificationDefault) error {
 	return s.repo.UpsertDefault(ctx, def)
+}
+
+func (s *NotificationSettingsService) ListDeliveries(ctx context.Context, limit int) ([]models.NotificationDelivery, error) {
+	if s.deliveries == nil {
+		return []models.NotificationDelivery{}, nil
+	}
+	return s.deliveries.ListDeliveries(ctx, limit)
 }

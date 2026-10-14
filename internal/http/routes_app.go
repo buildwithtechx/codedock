@@ -133,6 +133,7 @@ func (s *Server) registerSettingsRoutes(apiGroup, authGroup *echo.Group) {
 	authGroup.PUT("/notifications/subscriptions", s.notifSettingsHandler.UpsertSubscription)
 	authGroup.GET("/notifications/defaults", s.notifSettingsHandler.ListDefaults)
 	apiGroup.PUT("/notifications/defaults", s.notifSettingsHandler.UpsertDefault, s.authGuard.RequireRole("admin"))
+	authGroup.GET("/notifications/deliveries", s.notifSettingsHandler.ListDeliveries)
 	authGroup.GET("/settings/updates/status", s.updaterHandler.GetUpdateStatus)
 	apiGroup.POST("/settings/updates/check", s.updaterHandler.CheckUpdate, s.authGuard.RequireRole("admin"))
 	apiGroup.POST("/settings/updates/deploy", s.updaterHandler.DeployUpdate, s.authGuard.RequireRole("admin"))

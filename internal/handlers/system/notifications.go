@@ -2,6 +2,7 @@ package system
 
 import (
 	"net/http"
+	"strconv"
 
 	"github.com/labstack/echo/v4"
 
@@ -173,4 +174,16 @@ func (h *NotificationSettingsHandler) UpsertDefault(c echo.Context) error {
 		return utils.Error(c, http.StatusInternalServerError, err.Error())
 	}
 	return utils.Success(c, "Default updated successfully", def)
+}
+
+func (h *NotificationSettingsHandler) ListDeliveries(c echo.Context) error {
+	limit, _ := strconv.Atoi(c.QueryParam("limit"))
+	deliveries, err := h.notifSettingsService.ListDeliveries(c.Request().Context(), limit)
+	if err != nil {
+		return utils.Error(c, http.StatusInternalServerError, err.Error())
+	}
+	if deliveries == nil {
+		deliveries = []models.NotificationDelivery{}
+	}
+	return utils.Success(c, "Operation successful", deliveries)
 }
