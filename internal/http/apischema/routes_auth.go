@@ -79,8 +79,8 @@ func authOperations() []Operation {
 		{Method: "GET", Path: "/api/settings/oauth/providers", Summary: "List OAuth provider configs", Tags: []string{auth}, Auth: AuthAdmin, Response: Arr("Providers", oauthProviderSchema())},
 		{Method: "PUT", Path: "/api/settings/oauth/providers", Summary: "Save an OAuth provider config", Tags: []string{auth}, Auth: AuthAdmin, Request: JSON(oauthProviderSchema()), Response: oauthProviderSchema()},
 		{Method: "GET", Path: "/api/system/setup-status", Summary: "Check whether setup is required", Tags: []string{auth}, Response: Obj("Setup status", RF("setupRequired", Bool("Whether initial setup is required")))},
-		{Method: "GET", Path: "/api/audit-logs", Summary: "List audit log entries", Tags: []string{auth}, Auth: AuthAdmin, Response: Arr("Entries", auditLogSchema()), Query: []Param{QueryParamInt("limit", "Max entries"), QueryParamInt("offset", "Offset"), QueryParam("category", "Category ID filter")}},
-		{Method: "GET", Path: "/api/audit-logs/facets", Summary: "Count audit log entries per category", Tags: []string{auth}, Auth: AuthAdmin, Response: auditFacetsSchema()},
+		{Method: "GET", Path: "/api/audit-logs", Summary: "List audit log entries", Tags: []string{auth}, Auth: AuthAdmin, Response: Arr("Entries", auditLogSchema()), Query: []Param{QueryParamInt("limit", "Max entries"), QueryParamInt("offset", "Offset"), QueryParam("category", "Category ID filter"), QueryParam("q", "Free-text search")}},
+		{Method: "GET", Path: "/api/audit-logs/facets", Summary: "Count audit log entries per category", Tags: []string{auth}, Auth: AuthAdmin, Response: auditFacetsSchema(), Query: []Param{QueryParam("category", "Category ID filter"), QueryParam("q", "Free-text search")}},
 		{Method: "GET", Path: "/api/audit-logs/settings", Summary: "Get audit log settings", Tags: []string{auth}, Auth: AuthAdmin, Response: auditSettingsSchema()},
 		{Method: "PUT", Path: "/api/audit-logs/settings", Summary: "Update audit log settings", Tags: []string{auth}, Auth: AuthAdmin, Request: JSON(auditSettingsSchema()), Response: auditSettingsSchema()},
 	}

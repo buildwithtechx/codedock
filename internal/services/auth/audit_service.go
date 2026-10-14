@@ -4,6 +4,7 @@ import (
 	"context"
 	"encoding/json"
 	"log/slog"
+	"strings"
 
 	"codedock/internal/models"
 	"codedock/internal/repositories"
@@ -11,11 +12,12 @@ import (
 )
 
 type AuditService struct {
-	repo repositories.AuditLogRepository
+	repo     repositories.AuditLogRepository
+	searcher AuditResourceSearcher
 }
 
-func NewAuditService(repo repositories.AuditLogRepository) *AuditService {
-	return &AuditService{repo: repo}
+func NewAuditService(repo repositories.AuditLogRepository, searcher AuditResourceSearcher) *AuditService {
+	return &AuditService{repo: repo, searcher: searcher}
 }
 
 type AuditActionOpts struct {
@@ -53,11 +55,11 @@ func (s *AuditService) LogAction(ctx context.Context, opts AuditActionOpts) {
 }
 
 func (s *AuditService) ListLogs(ctx context.Context, limit, offset int) ([]models.AuditLog, error) {
-	return s.ListLogsByCategory(ctx, "", limit, offset)
+	return s.ListLogsByCategory(ctx, "", "", limit, offset)
 }
 
-func (s *AuditService) ListLogsByCategory(ctx context.Context, category string, limit, offset int) ([]models.AuditLog, error) {
-	logs, err := s.repo.ListFiltered(ctx, models.AuditLogFilter{Prefixes: models.CategoryPrefixes(category)}, limit, offset)
+func (s *AuditService) ListLogsByCategory(ctx context.Context, category string, q string, limit, offset int) ([]models.AuditLog, error) {
+	logs, err := s.repo.ListFiltered(ctx, s.searchFilter(ctx, models.CategoryPrefixes(category), q), limit, offset)
 	if err != nil {
 		return nil, err
 	}
@@ -67,8 +69,19 @@ func (s *AuditService) ListLogsByCategory(ctx context.Context, category string, 
 	return logs, nil
 }
 
-func (s *AuditService) Facets(ctx context.Context) (models.AuditFacets, error) {
-	counts, total, err := s.repo.Facets(ctx, models.AuditLogFilter{})
+func (s *AuditService) searchFilter(ctx context.Context, prefixes []string, q string) models.AuditLogFilter {
+	filter := models.AuditLogFilter{Prefixes: prefixes}
+	if term := strings.TrimSpace(q); term != "" {
+		filter.Q = term
+		if s.searcher != nil {
+			filter.QResourceIDs = s.searcher.SearchResourceIDs(ctx, term)
+		}
+	}
+	return filter
+}
+
+func (s *AuditService) Facets(ctx context.Context, category string, q string) (models.AuditFacets, error) {
+	counts, total, err := s.repo.Facets(ctx, s.searchFilter(ctx, models.CategoryPrefixes(category), q))
 	if err != nil {
 		return models.AuditFacets{}, err
 	}

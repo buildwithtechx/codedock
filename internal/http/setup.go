@@ -200,7 +200,7 @@ func NewServer(db *sql.DB, v *utils.Vault, deployer *deploy.Deployer, traefikMan
 	envSuggestionService := projectservices.NewEnvSuggestionService(gitService)
 	metricsService := systemservices.NewMetricsService()
 	logService := systemservices.NewLogService()
-	auditService := authservices.NewAuditService(auditRepository)
+	auditService := authservices.NewAuditService(auditRepository, authservices.NewAuditResourceSearcher(projectRepo, serverRepo, dbRepo, appRepo))
 
 	updaterService := systemservices.NewUpdaterService(settingsRepo)
 	schedulerElector := leadership.NewElector(db, "scheduled-execution")
