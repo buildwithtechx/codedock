@@ -15,6 +15,7 @@ type BackupStorageSummaryProps = {
   destinations: S3Destination[];
   configs: BackupConfig[];
   sftpCount?: number;
+  compact?: boolean;
 };
 
 export function BackupStorageSummary({
@@ -22,6 +23,7 @@ export function BackupStorageSummary({
   destinations,
   configs,
   sftpCount = 0,
+  compact = false,
 }: BackupStorageSummaryProps) {
   const completed = records.filter((record) => record.status === 'completed');
   const totalStoredBytes = completed.reduce(
@@ -33,6 +35,46 @@ export function BackupStorageSummary({
   const latest = [...completed]
     .filter((record) => record.completedAt)
     .sort((a, b) => new Date(b.completedAt).getTime() - new Date(a.completedAt).getTime())[0];
+  const destinationCount = destinations.length + sftpCount;
+
+  if (compact) {
+    return (
+      <section
+        aria-label="Storage summary"
+        className="flex flex-wrap items-center gap-x-8 gap-y-3 overflow-hidden rounded-2xl bg-card px-5 py-4"
+      >
+        <div className="flex items-center gap-2 text-sm">
+          <Database className="h-4 w-4 shrink-0 text-muted-foreground" />
+          <span className="font-medium">{formatBytes(totalStoredBytes)}</span>
+          <span className="text-muted-foreground">stored</span>
+        </div>
+        <div className="flex items-center gap-2 text-sm">
+          <CheckCircle2 className="h-4 w-4 shrink-0 text-muted-foreground" />
+          <span className="font-medium">{completed.length}</span>
+          <span className="text-muted-foreground">snapshots</span>
+        </div>
+        <div className="flex items-center gap-2 text-sm">
+          <Server className="h-4 w-4 shrink-0 text-muted-foreground" />
+          <span className="font-medium">{destinationCount}</span>
+          <span className="text-muted-foreground">destinations</span>
+        </div>
+        {runningCount > 0 && (
+          <div className="flex items-center gap-2 text-sm">
+            <Loader2 className="h-4 w-4 shrink-0 animate-spin text-sky-500" />
+            <span className="font-medium text-sky-500">{runningCount}</span>
+            <span className="text-muted-foreground">active</span>
+          </div>
+        )}
+        {failedCount > 0 && (
+          <div className="flex items-center gap-2 text-sm">
+            <AlertCircle className="h-4 w-4 shrink-0 text-destructive" />
+            <span className="font-medium text-destructive">{failedCount}</span>
+            <span className="text-muted-foreground">failed</span>
+          </div>
+        )}
+      </section>
+    );
+  }
 
   return (
     <section

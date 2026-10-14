@@ -3,7 +3,6 @@ import { Plus, RefreshCw } from 'lucide-react';
 import { useEffect, useMemo, useState } from 'react';
 import { toast } from 'sonner';
 import { Button } from '#/components/ui/button';
-import { Skeleton } from '#/components/ui/skeleton';
 import {
   useList,
   useListAllRecords,
@@ -92,12 +91,19 @@ export function BackupsList() {
       </div>
 
       {loading ? (
-        <div aria-busy="true" className="grid gap-5 xl:grid-cols-[minmax(0,1fr)_300px]">
-          <Skeleton className="h-72 w-full rounded-2xl" />
-          <Skeleton className="h-52 w-full rounded-2xl" />
+        <div aria-busy="true" className="space-y-5">
+          <div className="h-24 animate-pulse rounded-2xl bg-muted/50" />
+          <div className="h-72 animate-pulse rounded-2xl bg-muted/50" />
         </div>
       ) : (
-        <div className="grid items-start gap-5 xl:grid-cols-[minmax(0,1fr)_300px]">
+        <div className="space-y-6">
+          <BackupStorageSummary
+            records={records}
+            destinations={s3}
+            configs={configs}
+            sftpCount={sftp.length}
+            compact
+          />
           <div className="min-w-0 space-y-5">
             <BackupDestinationHistory
               records={records}
@@ -126,14 +132,6 @@ export function BackupsList() {
             />
             <BackupPolicies configs={configs} isLoading={configsQuery.isLoading} />
           </div>
-          <aside className="space-y-5 xl:sticky xl:top-6">
-            <BackupStorageSummary
-              records={records}
-              destinations={s3}
-              configs={configs}
-              sftpCount={sftp.length}
-            />
-          </aside>
         </div>
       )}
 

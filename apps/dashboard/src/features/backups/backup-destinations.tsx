@@ -149,10 +149,10 @@ export function BackupDestinations({
   };
 
   return (
-    <section aria-label="Destinations" className="rounded-2xl border border-border/50 bg-card">
+    <section aria-label="Destinations" className="overflow-hidden rounded-2xl bg-card">
       <div className="px-5 py-4">
-        <h2 className="font-medium text-base">Destinations</h2>
-        <p className="mt-1 text-muted-foreground text-sm">
+        <h2 className="font-medium text-foreground text-sm">Destinations</h2>
+        <p className="sr-only">
           S3-compatible buckets and SFTP servers holding off-server snapshots.
         </p>
       </div>
@@ -171,7 +171,7 @@ export function BackupDestinations({
         </div>
       ) : items.length === 0 ? (
         <div className="flex items-center gap-4 px-5 pt-3 pb-6">
-          <div className="flex size-11 shrink-0 items-center justify-center rounded-xl bg-muted/50 text-muted-foreground">
+          <div className="flex size-11 shrink-0 items-center justify-center rounded-xl bg-background text-muted-foreground">
             <HardDrive className="size-5" />
           </div>
           <div>
@@ -182,7 +182,7 @@ export function BackupDestinations({
           </div>
         </div>
       ) : (
-        <ul className="divide-y divide-border/40 border-border/40 border-t">
+        <ul className="divide-y divide-border/40">
           {items.map((row) => {
             const stats = statsByDestination.get(row.id);
             const verifying = verifyingIds.has(row.id);
@@ -190,7 +190,7 @@ export function BackupDestinations({
             return (
               <li
                 key={`${row.kind}-${row.id}`}
-                className="group relative flex items-start gap-3 px-5 py-4 transition-colors last:rounded-b-2xl hover:bg-muted/20"
+                className="group relative flex items-start gap-3 px-5 py-4 transition-colors hover:bg-muted/20"
               >
                 <Link
                   to="/backups/$backupId"
@@ -198,7 +198,7 @@ export function BackupDestinations({
                   aria-label={row.name}
                   className="absolute inset-0 z-0 rounded-xl focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring"
                 />
-                <div className="mt-0.5 flex h-10 w-10 shrink-0 items-center justify-center rounded-xl bg-muted/50 text-muted-foreground">
+                <div className="mt-0.5 flex h-10 w-10 shrink-0 items-center justify-center rounded-xl bg-background text-muted-foreground">
                   <DestinationKindIcon kind={row.kind} className="h-5 w-5" />
                 </div>
                 <div className="min-w-0 flex-1">
