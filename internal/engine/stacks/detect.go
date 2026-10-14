@@ -82,7 +82,7 @@ func DetectDeps(sourceDir string) []string {
 		}
 	}
 	if data, err := os.ReadFile(filepath.Join(sourceDir, "Gemfile")); err == nil {
-		for _, line := range strings.Split(string(data), "\n") {
+		for line := range strings.SplitSeq(string(data), "\n") {
 			if m := gemfileGem.FindStringSubmatch(line); m != nil {
 				set[m[1]] = true
 			}
