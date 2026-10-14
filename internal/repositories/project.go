@@ -3,6 +3,7 @@ package repositories
 import (
 	"context"
 	"database/sql"
+	"fmt"
 	"strings"
 	"time"
 
@@ -30,6 +31,7 @@ type ProjectRepository interface {
 	Get(ctx context.Context, id string) (*models.ProjectConfig, error)
 	GetByOrganization(ctx context.Context, id, organizationID string) (*models.ProjectConfig, error)
 	CountByUser(ctx context.Context, userID string) (int, error)
+	SearchIDsByName(ctx context.Context, term string, limit int) ([]string, error)
 	Create(ctx context.Context, p *models.ProjectConfig) error
 	SetServer(ctx context.Context, projectID, serverID string) error
 	Delete(ctx context.Context, id string) error
@@ -107,6 +109,19 @@ func (r *ProjectRepo) CountByUser(ctx context.Context, userID string) (int, erro
 		WHERE om.user_id = $1`
 	err := r.db.GetContext(ctx, &total, query, userID)
 	return total, err
+}
+
+func (r *ProjectRepo) SearchIDsByName(_ context.Context, term string, limit int) ([]string, error) {
+	if limit <= 0 {
+		limit = 200
+	}
+	pattern := ContainsLikePattern(term)
+	ids := make([]string, 0)
+	err := r.db.Select(&ids, `SELECT id FROM projects WHERE name ILIKE $1 OR slug ILIKE $1 LIMIT $2`, pattern, limit)
+	if err != nil {
+		return nil, fmt.Errorf("search project ids by name: %w", err)
+	}
+	return ids, nil
 }
 
 func (r *ProjectRepo) Get(_ context.Context, id string) (*models.ProjectConfig, error) {

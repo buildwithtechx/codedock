@@ -111,6 +111,39 @@ func TestServerRoundtrip(t *testing.T) {
 	}
 }
 
+func TestServerSearchIDsByName(t *testing.T) {
+	db := openPGTestDB(t)
+	ctx := context.Background()
+	vault, err := utils.NewVault(t.TempDir())
+	if err != nil {
+		t.Fatal(err)
+	}
+	repo := NewServerRepository(db, vault)
+	for _, seed := range []models.Server{
+		{ID: "srv-1", UserID: "user-1", Name: "prod-web", IPAddress: "10.0.0.1", SSHHost: "prod.example.com", SSHPort: 22, SSHUser: "root", SSHAuthMethod: "key", Status: models.ServerStatusOnline},
+		{ID: "srv-2", UserID: "user-1", Name: "staging", IPAddress: "10.0.0.2", SSHHost: "staging.example.com", SSHPort: 22, SSHUser: "root", SSHAuthMethod: "key", Status: models.ServerStatusOnline},
+	} {
+		seed := seed
+		if err := repo.Create(ctx, &seed); err != nil {
+			t.Fatalf("create server: %v", err)
+		}
+	}
+	ids, err := repo.SearchIDsByName(ctx, "prod", 0)
+	if err != nil {
+		t.Fatalf("search ids: %v", err)
+	}
+	if len(ids) != 1 || ids[0] != "srv-1" {
+		t.Fatalf("expected only srv-1, got %v", ids)
+	}
+	ids, err = repo.SearchIDsByName(ctx, "nothing-matches-this", 0)
+	if err != nil {
+		t.Fatalf("search ids: %v", err)
+	}
+	if len(ids) != 0 {
+		t.Fatalf("expected no ids, got %v", ids)
+	}
+}
+
 func TestServerSearchFiltersByNameAndSSHHost(t *testing.T) {
 	db := openPGTestDB(t)
 	ctx := context.Background()

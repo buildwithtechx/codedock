@@ -128,6 +128,37 @@ func TestProjectRoundtrip(t *testing.T) {
 	}
 }
 
+func TestProjectSearchIDsByName(t *testing.T) {
+	db := openPGTestDB(t)
+	if _, err := db.Exec(`INSERT INTO organizations (id, name) VALUES ('org-one', 'Organization')`); err != nil {
+		t.Fatalf("seed organization: %v", err)
+	}
+	ctx := context.Background()
+	repo := NewProjectRepo(db, NewEnvironmentRepo(db))
+	billing := &models.ProjectConfig{OrganizationID: "org-one", Name: "Billing API"}
+	if err := repo.Create(ctx, billing); err != nil {
+		t.Fatalf("create project: %v", err)
+	}
+	marketing := &models.ProjectConfig{OrganizationID: "org-one", Name: "Marketing Site"}
+	if err := repo.Create(ctx, marketing); err != nil {
+		t.Fatalf("create project: %v", err)
+	}
+	ids, err := repo.SearchIDsByName(ctx, "billing", 0)
+	if err != nil {
+		t.Fatalf("search ids: %v", err)
+	}
+	if len(ids) != 1 || ids[0] != billing.ID {
+		t.Fatalf("expected only the billing project id, got %v", ids)
+	}
+	ids, err = repo.SearchIDsByName(ctx, "nothing-matches-this", 0)
+	if err != nil {
+		t.Fatalf("search ids: %v", err)
+	}
+	if len(ids) != 0 {
+		t.Fatalf("expected no ids, got %v", ids)
+	}
+}
+
 func TestProjectSearchFiltersByNameSlugAndDescription(t *testing.T) {
 	db := openPGTestDB(t)
 	if _, err := db.Exec(`INSERT INTO organizations (id, name) VALUES ('org-one', 'Organization')`); err != nil {

@@ -57,7 +57,7 @@ func (s *AuditService) ListLogs(ctx context.Context, limit, offset int) ([]model
 }
 
 func (s *AuditService) ListLogsByCategory(ctx context.Context, category string, limit, offset int) ([]models.AuditLog, error) {
-	logs, err := s.repo.ListFiltered(ctx, models.CategoryPrefixes(category), limit, offset)
+	logs, err := s.repo.ListFiltered(ctx, models.AuditLogFilter{Prefixes: models.CategoryPrefixes(category)}, limit, offset)
 	if err != nil {
 		return nil, err
 	}
@@ -68,7 +68,7 @@ func (s *AuditService) ListLogsByCategory(ctx context.Context, category string, 
 }
 
 func (s *AuditService) Facets(ctx context.Context) (models.AuditFacets, error) {
-	counts, total, err := s.repo.Facets(ctx)
+	counts, total, err := s.repo.Facets(ctx, models.AuditLogFilter{})
 	if err != nil {
 		return models.AuditFacets{}, err
 	}

@@ -12,8 +12,8 @@ import (
 type AuditLogRepository interface {
 	Create(ctx context.Context, log *models.AuditLog) error
 	List(ctx context.Context, limit, offset int) ([]models.AuditLog, error)
-	ListFiltered(ctx context.Context, prefixes []string, limit, offset int) ([]models.AuditLog, error)
-	Facets(ctx context.Context) (map[string]int, int, error)
+	ListFiltered(ctx context.Context, filter models.AuditLogFilter, limit, offset int) ([]models.AuditLog, error)
+	Facets(ctx context.Context, filter models.AuditLogFilter) (map[string]int, int, error)
 	GetSettings(ctx context.Context, orgID string) (*models.AuditSettings, error)
 	UpdateSettings(ctx context.Context, settings *models.AuditSettings) error
 }
@@ -39,27 +39,49 @@ func (r *AuditLogRepo) Create(ctx context.Context, log *models.AuditLog) error {
 }
 
 func (r *AuditLogRepo) List(ctx context.Context, limit, offset int) ([]models.AuditLog, error) {
-	return r.ListFiltered(ctx, nil, limit, offset)
+	return r.ListFiltered(ctx, models.AuditLogFilter{}, limit, offset)
 }
 
 func escapeLikePrefix(s string) string {
 	return strings.NewReplacer(`\`, `\\`, `%`, `\%`, `_`, `\_`).Replace(s)
 }
 
-func (r *AuditLogRepo) ListFiltered(ctx context.Context, prefixes []string, limit, offset int) ([]models.AuditLog, error) {
+func auditLogFilterClause(filter models.AuditLogFilter) (string, []any) {
+	conditions := []string{}
+	args := []any{}
+	if len(filter.Prefixes) > 0 {
+		likes := make([]string, 0, len(filter.Prefixes))
+		for _, prefix := range filter.Prefixes {
+			args = append(args, escapeLikePrefix(prefix)+"%")
+			likes = append(likes, fmt.Sprintf("action ILIKE $%d", len(args)))
+		}
+		conditions = append(conditions, "("+strings.Join(likes, " OR ")+")")
+	}
+	if q := strings.TrimSpace(filter.Q); q != "" {
+		args = append(args, ContainsLikePattern(q))
+		n := len(args)
+		conditions = append(conditions, fmt.Sprintf(`(action ILIKE $%d OR resource ILIKE $%d OR EXISTS (SELECT 1 FROM users WHERE users.id = audit_logs.user_id AND (users.email ILIKE $%d OR users.name ILIKE $%d)))`, n, n, n, n))
+	}
+	if len(filter.QResourceIDs) > 0 {
+		marks := make([]string, 0, len(filter.QResourceIDs))
+		for _, id := range filter.QResourceIDs {
+			args = append(args, id)
+			marks = append(marks, fmt.Sprintf("$%d", len(args)))
+		}
+		conditions = append(conditions, "resource IN ("+strings.Join(marks, ", ")+")")
+	}
+	if len(conditions) == 0 {
+		return "", args
+	}
+	return " WHERE " + strings.Join(conditions, " AND "), args
+}
+
+func (r *AuditLogRepo) ListFiltered(ctx context.Context, filter models.AuditLogFilter, limit, offset int) ([]models.AuditLog, error) {
+	where, args := auditLogFilterClause(filter)
 	query := `
 		SELECT id, user_id, action, resource, details, ip_address, created_at
 		FROM audit_logs
-	`
-	args := []any{}
-	if len(prefixes) > 0 {
-		conditions := make([]string, 0, len(prefixes))
-		for i, prefix := range prefixes {
-			conditions = append(conditions, fmt.Sprintf("action ILIKE $%d", i+1))
-			args = append(args, escapeLikePrefix(prefix)+"%")
-		}
-		query += " WHERE " + strings.Join(conditions, " OR ")
-	}
+	` + where
 	query += fmt.Sprintf(" ORDER BY created_at DESC LIMIT $%d OFFSET $%d", len(args)+1, len(args)+2)
 	args = append(args, limit, offset)
 	rows, err := r.db.QueryContext(ctx, query, args...)
@@ -90,7 +112,7 @@ func (r *AuditLogRepo) ListFiltered(ctx context.Context, prefixes []string, limi
 	return logs, nil
 }
 
-func (r *AuditLogRepo) Facets(ctx context.Context) (map[string]int, int, error) {
+func (r *AuditLogRepo) Facets(ctx context.Context, filter models.AuditLogFilter) (map[string]int, int, error) {
 	caseParts := []string{}
 	for _, category := range models.AuditCategories() {
 		prefixes := models.CategoryPrefixes(category.ID)
@@ -103,8 +125,9 @@ func (r *AuditLogRepo) Facets(ctx context.Context) (map[string]int, int, error) 
 		}
 		caseParts = append(caseParts, fmt.Sprintf("WHEN %s THEN '%s'", strings.Join(likes, " OR "), category.ID))
 	}
-	query := fmt.Sprintf(`SELECT CASE %s ELSE 'system' END AS category, COUNT(*) FROM audit_logs GROUP BY 1`, strings.Join(caseParts, " "))
-	rows, err := r.db.QueryContext(ctx, query)
+	where, args := auditLogFilterClause(filter)
+	query := fmt.Sprintf(`SELECT CASE %s ELSE 'system' END AS category, COUNT(*) FROM audit_logs%s GROUP BY 1`, strings.Join(caseParts, " "), where)
+	rows, err := r.db.QueryContext(ctx, query, args...)
 	if err != nil {
 		return nil, 0, fmt.Errorf("failed to load audit facets: %w", err)
 	}

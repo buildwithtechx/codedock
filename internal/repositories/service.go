@@ -23,6 +23,7 @@ type AppServiceRepository interface {
 	ListByProject(ctx context.Context, projectID string) ([]*models.AppService, error)
 	ListByOrganization(ctx context.Context, organizationID string, search string) ([]*models.AppService, error)
 	ListAll(ctx context.Context, search string) ([]*models.AppService, error)
+	SearchIDsByName(ctx context.Context, term string, limit int) ([]string, error)
 	Update(ctx context.Context, svc *models.AppService) error
 	Delete(ctx context.Context, id string) error
 	CreateWebhook(ctx context.Context, w *models.Webhook) error
@@ -157,6 +158,19 @@ func (r *AppServiceRepo) ListAll(ctx context.Context, search string) ([]*models.
 		list = make([]*models.AppService, 0)
 	}
 	return list, nil
+}
+
+func (r *AppServiceRepo) SearchIDsByName(ctx context.Context, term string, limit int) ([]string, error) {
+	if limit <= 0 {
+		limit = 200
+	}
+	pattern := ContainsLikePattern(term)
+	ids := make([]string, 0)
+	err := r.db.SelectContext(ctx, &ids, `SELECT id FROM app_services WHERE name ILIKE $1 LIMIT $2`, pattern, limit)
+	if err != nil {
+		return nil, fmt.Errorf("search service ids by name: %w", err)
+	}
+	return ids, nil
 }
 
 func (r *AppServiceRepo) Update(_ context.Context, svc *models.AppService) error {

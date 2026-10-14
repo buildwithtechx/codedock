@@ -16,6 +16,7 @@ type ServerRepository interface {
 	GetByID(ctx context.Context, id string) (*models.Server, error)
 	GetByToken(ctx context.Context, token string) (*models.Server, error)
 	ListByUser(ctx context.Context, userID string, search string) ([]*models.Server, error)
+	SearchIDsByName(ctx context.Context, term string, limit int) ([]string, error)
 	UpdateStatus(ctx context.Context, id string, status models.ServerStatus) error
 	UpdateMetrics(ctx context.Context, id string, metricsJSON []byte) error
 	Delete(ctx context.Context, id string) error
@@ -155,6 +156,27 @@ func (r *postgresServerRepository) ListByUser(ctx context.Context, userID string
 		servers = append(servers, server)
 	}
 	return servers, nil
+}
+
+func (r *postgresServerRepository) SearchIDsByName(ctx context.Context, term string, limit int) ([]string, error) {
+	if limit <= 0 {
+		limit = 200
+	}
+	pattern := ContainsLikePattern(term)
+	rows, err := r.db.QueryContext(ctx, `SELECT id FROM servers WHERE name ILIKE $1 OR ssh_host ILIKE $1 LIMIT $2`, pattern, limit)
+	if err != nil {
+		return nil, fmt.Errorf("search server ids by name: %w", err)
+	}
+	defer rows.Close()
+	ids := make([]string, 0)
+	for rows.Next() {
+		var id string
+		if err := rows.Scan(&id); err != nil {
+			return nil, fmt.Errorf("scan server id: %w", err)
+		}
+		ids = append(ids, id)
+	}
+	return ids, rows.Err()
 }
 
 func (r *postgresServerRepository) UpdateStatus(ctx context.Context, id string, status models.ServerStatus) error {

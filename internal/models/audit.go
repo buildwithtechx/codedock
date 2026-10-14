@@ -36,6 +36,12 @@ type AuditFacets struct {
 	Categories []AuditCategoryCount `json:"categories"`
 }
 
+type AuditLogFilter struct {
+	Prefixes     []string `json:"prefixes"`
+	Q            string   `json:"q"`
+	QResourceIDs []string `json:"qResourceIds"`
+}
+
 func AuditCategories() []AuditCategory {
 	return []AuditCategory{
 		{ID: "deployments", Label: "Deployments", Description: "Deploys, rollbacks and releases"},

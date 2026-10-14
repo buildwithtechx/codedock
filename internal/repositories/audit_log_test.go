@@ -61,7 +61,7 @@ func TestAuditLogFacetsAndFilter(t *testing.T) {
 			t.Fatalf("seed %s: %v", entry.ID, err)
 		}
 	}
-	counts, total, err := repo.Facets(ctx)
+	counts, total, err := repo.Facets(ctx, models.AuditLogFilter{})
 	if err != nil {
 		t.Fatalf("facets: %v", err)
 	}
@@ -71,11 +71,78 @@ func TestAuditLogFacetsAndFilter(t *testing.T) {
 	if counts["deployments"] != 2 || counts["servers"] != 1 || counts["system"] != 1 {
 		t.Fatalf("unexpected facet counts: %+v", counts)
 	}
-	filtered, err := repo.ListFiltered(ctx, models.CategoryPrefixes("deployments"), 10, 0)
+	filtered, err := repo.ListFiltered(ctx, models.AuditLogFilter{Prefixes: models.CategoryPrefixes("deployments")}, 10, 0)
 	if err != nil {
 		t.Fatalf("filtered list: %v", err)
 	}
 	if len(filtered) != 2 {
 		t.Fatalf("expected 2 deployment logs, got %d", len(filtered))
+	}
+}
+
+func TestAuditLogSearchMatchesActionResourceAndActor(t *testing.T) {
+	db := openPGTestDB(t)
+	if _, err := db.Exec(`INSERT INTO users (id, email, name, password_hash) VALUES ('user-1', 'ada@example.com', 'Ada', 'hash')`); err != nil {
+		t.Fatalf("seed user: %v", err)
+	}
+	ctx := context.Background()
+	repo := NewAuditLogRepo(db)
+	for _, entry := range []*models.AuditLog{
+		{ID: "log-1", UserID: "user-1", Action: "deployment.trigger", Resource: "svc-1"},
+		{ID: "log-2", UserID: "user-1", Action: "server.create", Resource: "srv-9"},
+	} {
+		if err := repo.Create(ctx, entry); err != nil {
+			t.Fatalf("seed log: %v", err)
+		}
+	}
+	cases := []struct {
+		name  string
+		query string
+		want  int
+	}{
+		{name: "action", query: "deployment", want: 1},
+		{name: "resource id", query: "srv-9", want: 1},
+		{name: "actor email case-insensitive", query: "ADA@", want: 2},
+		{name: "actor name", query: "ada", want: 2},
+		{name: "no match", query: "nothing-matches-this", want: 0},
+	}
+	for _, tc := range cases {
+		t.Run(tc.name, func(t *testing.T) {
+			logs, err := repo.ListFiltered(ctx, models.AuditLogFilter{Q: tc.query}, 10, 0)
+			if err != nil {
+				t.Fatalf("search logs: %v", err)
+			}
+			if len(logs) != tc.want {
+				t.Fatalf("expected %d matches for %q, got %d", tc.want, tc.query, len(logs))
+			}
+		})
+	}
+	resolved, err := repo.ListFiltered(ctx, models.AuditLogFilter{QResourceIDs: []string{"svc-1"}}, 10, 0)
+	if err != nil {
+		t.Fatalf("search by resource ids: %v", err)
+	}
+	if len(resolved) != 1 || resolved[0].ID != "log-1" {
+		t.Fatalf("expected only log-1, got %+v", resolved)
+	}
+}
+
+func TestAuditLogFacetsHonorSearchFilter(t *testing.T) {
+	db := openPGTestDB(t)
+	ctx := context.Background()
+	repo := NewAuditLogRepo(db)
+	for _, entry := range []*models.AuditLog{
+		{ID: "log-1", UserID: "user-1", Action: "deployment.trigger", Resource: "svc-1"},
+		{ID: "log-2", UserID: "user-1", Action: "server.create", Resource: "srv-1"},
+	} {
+		if err := repo.Create(ctx, entry); err != nil {
+			t.Fatalf("seed log: %v", err)
+		}
+	}
+	counts, total, err := repo.Facets(ctx, models.AuditLogFilter{Q: "deployment"})
+	if err != nil {
+		t.Fatalf("filtered facets: %v", err)
+	}
+	if total != 1 || counts["deployments"] != 1 {
+		t.Fatalf("expected only the deployment facet, got total=%d counts=%v", total, counts)
 	}
 }

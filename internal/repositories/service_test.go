@@ -197,3 +197,37 @@ func TestAppServiceSearchFiltersByNameDomainAndRepo(t *testing.T) {
 		})
 	}
 }
+
+func TestAppServiceSearchIDsByName(t *testing.T) {
+	db := openPGTestDB(t)
+	for _, query := range []string{
+		`INSERT INTO organizations (id, name) VALUES ('org-one', 'Organization')`,
+		`INSERT INTO project_apps (id, organization_id, name, slug) VALUES ('app-one', 'org-one', 'App', 'app')`,
+		`INSERT INTO projects (id, app_id, organization_id, name, slug) VALUES ('project-one', 'app-one', 'org-one', 'Project', 'project')`,
+		`INSERT INTO environments (id, project_id, name, created_at, updated_at) VALUES ('env-one', 'project-one', 'production', CURRENT_TIMESTAMP, CURRENT_TIMESTAMP)`,
+	} {
+		if _, err := db.Exec(query); err != nil {
+			t.Fatalf("seed service dependencies: %v", err)
+		}
+	}
+	ctx := context.Background()
+	repo := NewAppServiceRepo(db)
+	svc := &models.AppService{ProjectID: "project-one", EnvironmentID: "env-one", Name: "web", RepositoryURL: "https://example.com/app.git"}
+	if err := repo.Create(ctx, svc); err != nil {
+		t.Fatalf("create service: %v", err)
+	}
+	ids, err := repo.SearchIDsByName(ctx, "web", 0)
+	if err != nil {
+		t.Fatalf("search ids: %v", err)
+	}
+	if len(ids) != 1 || ids[0] != svc.ID {
+		t.Fatalf("expected only the seeded service id, got %v", ids)
+	}
+	ids, err = repo.SearchIDsByName(ctx, "nothing-matches-this", 0)
+	if err != nil {
+		t.Fatalf("search ids: %v", err)
+	}
+	if len(ids) != 0 {
+		t.Fatalf("expected no ids, got %v", ids)
+	}
+}

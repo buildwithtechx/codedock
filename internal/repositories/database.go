@@ -4,6 +4,7 @@ import (
 	"context"
 	"database/sql"
 	"errors"
+	"fmt"
 	"strings"
 	"sync"
 	"time"
@@ -21,6 +22,7 @@ type DatabaseRepository interface {
 	GetByID(ctx context.Context, id string) (*models.Database, error)
 	List(ctx context.Context, search string) ([]*models.Database, error)
 	ListByProject(ctx context.Context, projectID string, search string) ([]*models.Database, error)
+	SearchIDsByName(ctx context.Context, term string, limit int) ([]string, error)
 	Delete(ctx context.Context, id string) error
 	Update(ctx context.Context, db *models.Database) error
 }
@@ -95,6 +97,19 @@ func (r *DatabaseRepo) List(_ context.Context, search string) ([]*models.Databas
 		r.decryptPassword(d.EncryptedPassword, d)
 	}
 	return list, nil
+}
+
+func (r *DatabaseRepo) SearchIDsByName(_ context.Context, term string, limit int) ([]string, error) {
+	if limit <= 0 {
+		limit = 200
+	}
+	pattern := ContainsLikePattern(term)
+	ids := make([]string, 0)
+	err := r.db.Select(&ids, `SELECT id FROM databases WHERE name ILIKE $1 LIMIT $2`, pattern, limit)
+	if err != nil {
+		return nil, fmt.Errorf("search database ids by name: %w", err)
+	}
+	return ids, nil
 }
 
 func (r *DatabaseRepo) ListByProject(_ context.Context, projectID string, search string) ([]*models.Database, error) {

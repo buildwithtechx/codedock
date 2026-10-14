@@ -122,3 +122,27 @@ func TestDatabaseSearchFiltersByNameEngineAndDatabaseName(t *testing.T) {
 		})
 	}
 }
+
+func TestDatabaseSearchIDsByName(t *testing.T) {
+	db := openPGTestDB(t)
+	ctx := context.Background()
+	repo := NewDatabaseRepo(db, databaseTestVault{})
+	seed := models.Database{ProjectID: "project-one", Name: "main-db", Engine: "postgres", Version: "16", Port: 5432, Username: "app", Password: "secret", DatabaseName: "appdb"}
+	if err := repo.Create(ctx, &seed); err != nil {
+		t.Fatalf("create database: %v", err)
+	}
+	ids, err := repo.SearchIDsByName(ctx, "main", 0)
+	if err != nil {
+		t.Fatalf("search ids: %v", err)
+	}
+	if len(ids) != 1 || ids[0] != seed.ID {
+		t.Fatalf("expected only the seeded database id, got %v", ids)
+	}
+	ids, err = repo.SearchIDsByName(ctx, "nothing-matches-this", 0)
+	if err != nil {
+		t.Fatalf("search ids: %v", err)
+	}
+	if len(ids) != 0 {
+		t.Fatalf("expected no ids, got %v", ids)
+	}
+}
