@@ -99,14 +99,17 @@ export const appCatalog: AppCatalogEntry[] = ${body};
 }
 
 const entries = [];
-for (const file of readdirSync(composeDir).sort()) {
-  if (!file.endsWith('.yaml')) continue;
-  const entry = parseCatalogEntry(
-    file.replace(/\.yaml$/, ''),
-    readFileSync(join(composeDir, file), 'utf8')
-  );
-  if (entry) entries.push(entry);
+const isMain = process.argv[1] === fileURLToPath(import.meta.url);
+if (isMain) {
+  for (const file of readdirSync(composeDir).sort()) {
+    if (!file.endsWith('.yaml')) continue;
+    const entry = parseCatalogEntry(
+      file.replace(/\.yaml$/, ''),
+      readFileSync(join(composeDir, file), 'utf8')
+    );
+    if (entry) entries.push(entry);
+  }
+  entries.sort((a, b) => a.name.localeCompare(b.name));
+  writeFileSync(outFile, emit(entries));
+  console.log(`wrote ${entries.length} catalog entries to ${outFile}`);
 }
-entries.sort((a, b) => a.name.localeCompare(b.name));
-writeFileSync(outFile, emit(entries));
-console.log(`wrote ${entries.length} catalog entries to ${outFile}`);

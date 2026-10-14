@@ -57,6 +57,98 @@ Configure model storage and resource capacity. GPU drivers and runtime configura
 
 Configure persistent vector storage and authentication, then restrict access to the required application network. Use Qdrant's version-specific backup workflow.
 
+## Application stacks
+
+One-click Compose stacks from the verified catalogue. Each entry deploys its services, volumes and secrets together; review the stack's secrets and persistence before deploying.
+
+### Convex
+
+Self-hosted Convex reactive backend and dashboard. Configure the instance secret and a persistent data volume before deploying.
+
+### Neon
+
+Self-hosted Neon serverless Postgres with database branching, a web console and per-branch connection strings. Set the server secret and admin credentials.
+
+### Cal.com
+
+Self-hosted scheduling platform with calendar integrations and booking pages.
+
+### Code-server
+
+VS Code in the browser with a persistent workspace volume.
+
+### Convex
+
+Self-hosted Convex reactive backend and dashboard with a persistent data volume.
+
+### Directus
+
+Headless CMS and data platform over any SQL database.
+
+### FreshRSS
+
+Self-hosted RSS and Atom feed reader with a persistent database.
+
+### Ghost
+
+Professional publishing platform with themes and member subscriptions.
+
+### Gitea
+
+Self-hosted Git service with issues, pull requests and package registries.
+
+### IT Tools
+
+Handy developer utilities in a single page with no persistence requirements.
+
+### Codedock-mail
+
+Self-hosted mail control plane: maild API, Postgres metadata store and SnappyMail webmail. Point it at a Stalwart backend.
+
+### Meilisearch
+
+Fast instant-search engine with a REST API and persistent index storage.
+
+### Metabase
+
+Business intelligence dashboards over your databases with persistent application data.
+
+### Nextcloud
+
+Self-hosted file storage and collaboration suite with a database backend.
+
+### NocoDB
+
+Spreadsheet-style database interface over Postgres with persistent metadata.
+
+### Plausible
+
+Privacy-friendly web analytics with a ClickHouse backend.
+
+### PocketBase
+
+Backend with database, auth and file storage in a single binary with persistent data.
+
+### Stirling PDF
+
+PDF tools for merging, splitting, converting and OCR with no persistence requirements.
+
+### Umami
+
+Simple privacy-focused web analytics with a Postgres backend.
+
+### Uptimekuma
+
+Self-hosted uptime monitoring with persistent status data.
+
+### Vaultwarden
+
+Lightweight Bitwarden-compatible password manager. Back up its data volume; losing it loses every vault.
+
+### WordPress
+
+CMS and blogging platform with a MySQL backend and persistent uploads.
+
 ## Deployment checklist
 
 1. Pin an image version and read its configuration requirements.
