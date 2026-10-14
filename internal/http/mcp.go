@@ -18,7 +18,7 @@ func getArgString(req mcp.CallToolRequest, name string) string {
 }
 
 func (b *Bridge) handleListProjects(ctx context.Context, request mcp.CallToolRequest) (*mcp.CallToolResult, error) {
-	projects, _, err := b.projectService.ListProjects(ctx, 100, 0)
+	projects, _, err := b.projectService.ListProjects(ctx, "", 100, 0)
 	if err != nil {
 		return mcp.NewToolResultError(fmt.Sprintf("failed to list projects: %v", err)), nil
 	}
@@ -51,7 +51,7 @@ func (b *Bridge) handleGetProject(ctx context.Context, request mcp.CallToolReque
 func (b *Bridge) handleListApps(ctx context.Context, request mcp.CallToolRequest) (*mcp.CallToolResult, error) {
 	projectID := getArgString(request, "project_id")
 	if projectID == "" {
-		projects, _, err := b.projectService.ListProjects(ctx, 100, 0)
+		projects, _, err := b.projectService.ListProjects(ctx, "", 100, 0)
 		if err != nil || len(projects) == 0 {
 			return mcp.NewToolResultText("No applications found."), nil
 		}

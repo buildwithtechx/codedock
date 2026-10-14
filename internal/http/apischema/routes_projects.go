@@ -108,7 +108,7 @@ func projectOperations() []Operation {
 	canvas := "canvas"
 	stacks := "stacks"
 	return []Operation{
-		{Method: "GET", Path: "/api/projects", Summary: "List projects", Tags: []string{projects}, Auth: AuthUser, Response: PaginatedSchema(Arr("Projects", ProjectSchema()))},
+		{Method: "GET", Path: "/api/projects", Summary: "List projects", Tags: []string{projects}, Auth: AuthUser, Response: PaginatedSchema(Arr("Projects", ProjectSchema())), Query: []Param{QueryParam("organizationId", "Organization ID"), QueryParam("search", "Search text"), QueryParamInt("page", "Page"), QueryParamInt("limit", "Page size")}},
 		{Method: "POST", Path: "/api/projects", Summary: "Create a project", Tags: []string{projects}, Auth: AuthUser, Code: 201, Request: JSON(Obj("Create project", RF("name", Str("Project name")), F("description", Str("Description")), F("organizationId", Str("Organization ID")), F("serverId", Str("Server ID")), F("gitProvider", Str("Git provider")), F("gitOwner", Str("Repository owner")), F("gitRepo", Str("Repository name")), F("gitBranch", Str("Branch")), F("gitUrl", Str("Repository URL")), F("environmentName", Str("Environment name")))), Response: ProjectSchema()},
 		{Method: "GET", Path: "/api/projects/:id", Summary: "Get a project", Tags: []string{projects}, Auth: ProjectRole("member"), Response: ProjectSchema()},
 		{Method: "DELETE", Path: "/api/projects/:id", Summary: "Delete a project", Tags: []string{projects}, Auth: ProjectRole("owner"), Response: StatusSchema("deleted")},

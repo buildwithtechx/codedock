@@ -218,12 +218,12 @@ func (s *ProjectService) IsMemberOrOwner(ctx context.Context, projectID string, 
 	hasPerm := s.HasPermission(ctx, projectID, userID, userRole, "")
 	return hasPerm
 }
-func (s *ProjectService) ListProjectsByOrganization(ctx context.Context, organizationID string, limit, offset int) ([]models.ProjectConfig, int, error) {
-	return s.projectRepo.ListByOrganization(ctx, organizationID, limit, offset)
+func (s *ProjectService) ListProjectsByOrganization(ctx context.Context, organizationID string, search string, limit, offset int) ([]models.ProjectConfig, int, error) {
+	return s.projectRepo.ListByOrganization(ctx, organizationID, search, limit, offset)
 }
 
-func (s *ProjectService) ListProjects(ctx context.Context, limit, offset int) ([]models.ProjectConfig, int, error) {
-	return s.projectRepo.ListAll(ctx, limit, offset)
+func (s *ProjectService) ListProjects(ctx context.Context, search string, limit, offset int) ([]models.ProjectConfig, int, error) {
+	return s.projectRepo.ListAll(ctx, search, limit, offset)
 }
 
 func (s *ProjectService) CountProjectsByUser(ctx context.Context, userID string) (int, error) {

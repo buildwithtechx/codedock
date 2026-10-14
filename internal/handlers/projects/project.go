@@ -53,7 +53,7 @@ func (h *ProjectHandler) ListProjects(c echo.Context) error {
 		return utils.Error(c, http.StatusForbidden, "insufficient permissions for this organization")
 	}
 
-	projects, total, err := h.projectService.ListProjectsByOrganization(c.Request().Context(), orgID, limit, offset)
+	projects, total, err := h.projectService.ListProjectsByOrganization(c.Request().Context(), orgID, c.QueryParam("search"), limit, offset)
 	if err != nil {
 		return utils.Error(c, http.StatusInternalServerError, err.Error())
 	}

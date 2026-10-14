@@ -25,8 +25,8 @@ const projectSelectFields = `
 `
 
 type ProjectRepository interface {
-	ListByOrganization(ctx context.Context, organizationID string, limit, offset int) ([]models.ProjectConfig, int, error)
-	ListAll(ctx context.Context, limit, offset int) ([]models.ProjectConfig, int, error)
+	ListByOrganization(ctx context.Context, organizationID string, search string, limit, offset int) ([]models.ProjectConfig, int, error)
+	ListAll(ctx context.Context, search string, limit, offset int) ([]models.ProjectConfig, int, error)
 	Get(ctx context.Context, id string) (*models.ProjectConfig, error)
 	GetByOrganization(ctx context.Context, id, organizationID string) (*models.ProjectConfig, error)
 	CountByUser(ctx context.Context, userID string) (int, error)
@@ -49,21 +49,23 @@ func NewProjectRepo(db *sql.DB, envRepo EnvironmentRepository) *ProjectRepo {
 	return &ProjectRepo{db: sqlx.NewDb(db, "pgx"), environments: envRepo}
 }
 
-func (r *ProjectRepo) ListByOrganization(_ context.Context, organizationID string, limit, offset int) ([]models.ProjectConfig, int, error) {
+func (r *ProjectRepo) ListByOrganization(_ context.Context, organizationID string, search string, limit, offset int) ([]models.ProjectConfig, int, error) {
 	var total int
 	var err error
 	var projects []models.ProjectConfig
+	search = strings.TrimSpace(search)
+	pattern := ContainsLikePattern(search)
 
 	if organizationID == "none" {
-		if err = r.db.Get(&total, `SELECT COUNT(*) FROM projects WHERE organization_id IS NULL`); err != nil {
+		if err = r.db.Get(&total, `SELECT COUNT(*) FROM projects WHERE organization_id IS NULL AND ($1 = '' OR name ILIKE $2 OR slug ILIKE $2 OR description ILIKE $2)`, search, pattern); err != nil {
 			return nil, 0, err
 		}
-		err = r.db.Select(&projects, `SELECT `+projectSelectFields+` FROM projects WHERE organization_id IS NULL ORDER BY created_at DESC LIMIT $1 OFFSET $2`, limit, offset)
+		err = r.db.Select(&projects, `SELECT `+projectSelectFields+` FROM projects WHERE organization_id IS NULL AND ($1 = '' OR name ILIKE $2 OR slug ILIKE $2 OR description ILIKE $2) ORDER BY created_at DESC LIMIT $3 OFFSET $4`, search, pattern, limit, offset)
 	} else {
-		if err = r.db.Get(&total, `SELECT COUNT(*) FROM projects WHERE organization_id = $1`, organizationID); err != nil {
+		if err = r.db.Get(&total, `SELECT COUNT(*) FROM projects WHERE organization_id = $1 AND ($2 = '' OR name ILIKE $3 OR slug ILIKE $3 OR description ILIKE $3)`, organizationID, search, pattern); err != nil {
 			return nil, 0, err
 		}
-		err = r.db.Select(&projects, `SELECT `+projectSelectFields+` FROM projects WHERE organization_id = $1 ORDER BY created_at DESC LIMIT $2 OFFSET $3`, organizationID, limit, offset)
+		err = r.db.Select(&projects, `SELECT `+projectSelectFields+` FROM projects WHERE organization_id = $1 AND ($2 = '' OR name ILIKE $3 OR slug ILIKE $3 OR description ILIKE $3) ORDER BY created_at DESC LIMIT $4 OFFSET $5`, organizationID, search, pattern, limit, offset)
 	}
 
 	if err != nil {
@@ -75,15 +77,17 @@ func (r *ProjectRepo) ListByOrganization(_ context.Context, organizationID strin
 	return projects, total, nil
 }
 
-func (r *ProjectRepo) ListAll(_ context.Context, limit, offset int) ([]models.ProjectConfig, int, error) {
+func (r *ProjectRepo) ListAll(_ context.Context, search string, limit, offset int) ([]models.ProjectConfig, int, error) {
 	var total int
 	var err error
 	var projects []models.ProjectConfig
+	search = strings.TrimSpace(search)
+	pattern := ContainsLikePattern(search)
 
-	if err = r.db.Get(&total, `SELECT COUNT(*) FROM projects`); err != nil {
+	if err = r.db.Get(&total, `SELECT COUNT(*) FROM projects WHERE ($1 = '' OR name ILIKE $2 OR slug ILIKE $2 OR description ILIKE $2)`, search, pattern); err != nil {
 		return nil, 0, err
 	}
-	err = r.db.Select(&projects, `SELECT `+projectSelectFields+` FROM projects ORDER BY created_at DESC LIMIT $1 OFFSET $2`, limit, offset)
+	err = r.db.Select(&projects, `SELECT `+projectSelectFields+` FROM projects WHERE ($1 = '' OR name ILIKE $2 OR slug ILIKE $2 OR description ILIKE $2) ORDER BY created_at DESC LIMIT $3 OFFSET $4`, search, pattern, limit, offset)
 
 	if err != nil {
 		return nil, 0, err

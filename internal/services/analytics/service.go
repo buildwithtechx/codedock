@@ -229,7 +229,7 @@ func (s *Service) Dashboard(ctx context.Context, userID, orgID string) (*models.
 		return nil, err
 	}
 	dashboard := &models.AnalyticsDashboard{OrganizationID: orgID}
-	projects, _, err := s.projects.ListByOrganization(ctx, orgID, 200, 0)
+	projects, _, err := s.projects.ListByOrganization(ctx, orgID, "", 200, 0)
 	if err != nil {
 		return nil, err
 	}

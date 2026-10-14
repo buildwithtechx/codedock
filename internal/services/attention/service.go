@@ -217,7 +217,7 @@ func (s *Service) scanWorkloads(ctx context.Context, _ string, orgID string) ([]
 	if s.health == nil {
 		return nil, nil
 	}
-	projects, _, err := s.projects.ListByOrganization(ctx, orgID, 200, 0)
+	projects, _, err := s.projects.ListByOrganization(ctx, orgID, "", 200, 0)
 	if err != nil {
 		return nil, err
 	}
