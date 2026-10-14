@@ -4,6 +4,7 @@ import (
 	"context"
 	"database/sql"
 	"errors"
+	"strings"
 	"sync"
 	"time"
 
@@ -18,8 +19,8 @@ import (
 type DatabaseRepository interface {
 	Create(ctx context.Context, db *models.Database) error
 	GetByID(ctx context.Context, id string) (*models.Database, error)
-	List(ctx context.Context) ([]*models.Database, error)
-	ListByProject(ctx context.Context, projectID string) ([]*models.Database, error)
+	List(ctx context.Context, search string) ([]*models.Database, error)
+	ListByProject(ctx context.Context, projectID string, search string) ([]*models.Database, error)
 	Delete(ctx context.Context, id string) error
 	Update(ctx context.Context, db *models.Database) error
 }
@@ -77,11 +78,13 @@ func (r *DatabaseRepo) GetByID(_ context.Context, id string) (*models.Database, 
 	return &d, nil
 }
 
-func (r *DatabaseRepo) List(_ context.Context) ([]*models.Database, error) {
+func (r *DatabaseRepo) List(_ context.Context, search string) ([]*models.Database, error) {
 	r.mu.Lock()
 	defer r.mu.Unlock()
 	var list []*models.Database
-	err := r.db.Select(&list, listDatabaseQuery+` ORDER BY created_at ASC`)
+	search = strings.TrimSpace(search)
+	pattern := ContainsLikePattern(search)
+	err := r.db.Select(&list, listDatabaseQuery+` WHERE ($1 = '' OR name ILIKE $2 OR engine ILIKE $2 OR database_name ILIKE $2) ORDER BY created_at ASC`, search, pattern)
 	if err != nil {
 		return nil, err
 	}
@@ -94,11 +97,13 @@ func (r *DatabaseRepo) List(_ context.Context) ([]*models.Database, error) {
 	return list, nil
 }
 
-func (r *DatabaseRepo) ListByProject(_ context.Context, projectID string) ([]*models.Database, error) {
+func (r *DatabaseRepo) ListByProject(_ context.Context, projectID string, search string) ([]*models.Database, error) {
 	r.mu.Lock()
 	defer r.mu.Unlock()
 	var list []*models.Database
-	err := r.db.Select(&list, listDatabaseQuery+` WHERE project_id = $1 ORDER BY created_at ASC`, projectID)
+	search = strings.TrimSpace(search)
+	pattern := ContainsLikePattern(search)
+	err := r.db.Select(&list, listDatabaseQuery+` WHERE project_id = $1 AND ($2 = '' OR name ILIKE $3 OR engine ILIKE $3 OR database_name ILIKE $3) ORDER BY created_at ASC`, projectID, search, pattern)
 	if err != nil {
 		return nil, err
 	}

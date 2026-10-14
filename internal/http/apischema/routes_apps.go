@@ -71,7 +71,7 @@ func appOperations() []Operation {
 	apps := "apps"
 	runtime := "runtime"
 	return []Operation{
-		{Method: "GET", Path: "/api/apps", Summary: "List organization services", Tags: []string{apps}, Auth: AuthUser, Response: Arr("Services", AppServiceSchema())},
+		{Method: "GET", Path: "/api/apps", Summary: "List organization services", Tags: []string{apps}, Auth: AuthUser, Response: Arr("Services", AppServiceSchema()), Query: []Param{QueryParam("organizationId", "Organization ID"), QueryParam("search", "Search text")}},
 		{Method: "GET", Path: "/api/projects/:id/apps", Summary: "List project services", Tags: []string{apps}, Auth: ProjectRole("member"), Response: Arr("Services", AppServiceSchema())},
 		{Method: "GET", Path: "/api/projects/:id/services", Summary: "List project services", Tags: []string{apps}, Auth: ProjectRole("member"), Response: Arr("Services", AppServiceSchema())},
 		{Method: "GET", Path: "/api/environments/:id/apps", Summary: "List environment services", Tags: []string{apps}, Auth: AuthUser, Response: Arr("Services", AppServiceSchema())},

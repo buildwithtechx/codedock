@@ -44,7 +44,7 @@ func (s *MigrationService) Export(ctx context.Context, passphrase string) ([]byt
 	}
 	files["systemdb.sql"] = systemData
 
-	dbs, err := s.dbRepo.List(ctx)
+	dbs, err := s.dbRepo.List(ctx, "")
 	if err != nil {
 		return nil, fmt.Errorf("failed to list databases: %w", err)
 	}
@@ -111,7 +111,7 @@ func (s *MigrationService) Import(ctx context.Context, bundleData []byte, passph
 		}
 	}
 
-	dbs, _ := s.dbRepo.List(ctx)
+	dbs, _ := s.dbRepo.List(ctx, "")
 	dbsByName := make(map[string]*models.Database, len(dbs))
 	for _, db := range dbs {
 		dbsByName[db.Name] = db

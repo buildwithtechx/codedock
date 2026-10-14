@@ -173,7 +173,7 @@ func (s *ProjectService) HasPermission(ctx context.Context, projectID, userID st
 }
 
 func (s *ProjectService) AccessibleServiceIDs(ctx context.Context, userID string, userRole models.UserRole) (map[string]struct{}, error) {
-	services, err := s.appRepo.ListAll(ctx)
+	services, err := s.appRepo.ListAll(ctx, "")
 	if err != nil {
 		return nil, err
 	}

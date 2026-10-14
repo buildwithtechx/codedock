@@ -44,7 +44,7 @@ func (h *DatabaseHandler) verifyProjectOwnership(c echo.Context, projectID strin
 }
 
 func (h *DatabaseHandler) ListDatabases(c echo.Context) error {
-	databases, err := h.databaseService.ListDatabases(c.Request().Context())
+	databases, err := h.databaseService.ListDatabases(c.Request().Context(), c.QueryParam("search"))
 	if err != nil {
 		return utils.Error(c, http.StatusInternalServerError, err.Error())
 	}

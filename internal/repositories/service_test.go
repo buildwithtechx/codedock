@@ -60,14 +60,14 @@ func TestAppServiceRoundtrip(t *testing.T) {
 	if len(byProject) != 1 {
 		t.Fatalf("expected 1 service by project, got %d", len(byProject))
 	}
-	byOrg, err := repo.ListByOrganization(ctx, "org-one")
+	byOrg, err := repo.ListByOrganization(ctx, "org-one", "")
 	if err != nil {
 		t.Fatalf("list by organization: %v", err)
 	}
 	if len(byOrg) != 1 {
 		t.Fatalf("expected 1 service by organization, got %d", len(byOrg))
 	}
-	every, err := repo.ListAll(ctx)
+	every, err := repo.ListAll(ctx, "")
 	if err != nil {
 		t.Fatalf("list all: %v", err)
 	}
@@ -141,5 +141,59 @@ func TestAppServiceRoundtrip(t *testing.T) {
 	}
 	if _, err := repo.GetByID(ctx, svc.ID); err == nil {
 		t.Fatal("expected deleted service lookup to fail")
+	}
+}
+
+func TestAppServiceSearchFiltersByNameDomainAndRepo(t *testing.T) {
+	db := openPGTestDB(t)
+	for _, query := range []string{
+		`INSERT INTO organizations (id, name) VALUES ('org-one', 'Organization')`,
+		`INSERT INTO project_apps (id, organization_id, name, slug) VALUES ('app-one', 'org-one', 'App', 'app')`,
+		`INSERT INTO projects (id, app_id, organization_id, name, slug) VALUES ('project-one', 'app-one', 'org-one', 'Project', 'project')`,
+		`INSERT INTO environments (id, project_id, name, created_at, updated_at) VALUES ('env-one', 'project-one', 'production', CURRENT_TIMESTAMP, CURRENT_TIMESTAMP)`,
+	} {
+		if _, err := db.Exec(query); err != nil {
+			t.Fatalf("seed service dependencies: %v", err)
+		}
+	}
+	ctx := context.Background()
+	repo := NewAppServiceRepo(db)
+	for _, seed := range []models.AppService{
+		{ProjectID: "project-one", EnvironmentID: "env-one", Name: "web", RepositoryURL: "https://example.com/app.git", Domain: "app.example.com"},
+		{ProjectID: "project-one", EnvironmentID: "env-one", Name: "worker", RepositoryURL: "https://example.com/jobs.git"},
+	} {
+		seed := seed
+		if err := repo.Create(ctx, &seed); err != nil {
+			t.Fatalf("create service: %v", err)
+		}
+	}
+	cases := []struct {
+		name   string
+		search string
+		want   int
+	}{
+		{name: "name case-insensitive", search: "WEB", want: 1},
+		{name: "domain", search: "app.example.com", want: 1},
+		{name: "repository url", search: "jobs.git", want: 1},
+		{name: "no match", search: "nothing-matches-this", want: 0},
+		{name: "underscore literal", search: "wo_ker", want: 0},
+	}
+	for _, tc := range cases {
+		t.Run(tc.name, func(t *testing.T) {
+			byOrg, err := repo.ListByOrganization(ctx, "org-one", tc.search)
+			if err != nil {
+				t.Fatalf("search services: %v", err)
+			}
+			if len(byOrg) != tc.want {
+				t.Fatalf("expected %d matches for %q, got %d", tc.want, tc.search, len(byOrg))
+			}
+			every, err := repo.ListAll(ctx, tc.search)
+			if err != nil {
+				t.Fatalf("search all services: %v", err)
+			}
+			if len(every) != tc.want {
+				t.Fatalf("expected %d matches for %q, got %d", tc.want, tc.search, len(every))
+			}
+		})
 	}
 }

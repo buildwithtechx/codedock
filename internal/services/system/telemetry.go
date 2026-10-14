@@ -38,7 +38,7 @@ func pingTelemetry(db *sql.DB, version string) {
 	}
 
 	appRepo := repositories.NewAppServiceRepo(db)
-	apps, err := appRepo.ListAll(context.Background())
+	apps, err := appRepo.ListAll(context.Background(), "")
 	activeApps := 0
 	if err == nil {
 		activeApps = len(apps)

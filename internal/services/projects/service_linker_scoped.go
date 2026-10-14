@@ -14,7 +14,7 @@ func (sl *ServiceLinker) SetApplications(apps repositories.AppServiceRepository,
 
 func (sl *ServiceLinker) GetNamespacedVariablesForEnvironment(ctx context.Context, project, environment string) (map[string]map[string]string, error) {
 	registry := map[string]map[string]string{}
-	databases, err := sl.databases.ListByProject(ctx, project)
+	databases, err := sl.databases.ListByProject(ctx, project, "")
 	if err != nil {
 		return nil, err
 	}
@@ -97,7 +97,7 @@ func (sl *ServiceLinker) GetNamespacedVariablesForEnvironment(ctx context.Contex
 
 func (sl *ServiceLinker) GetLinkedVariablesForEnvironment(ctx context.Context, project, environment string) (map[string]string, error) {
 	values := map[string]string{}
-	databases, err := sl.databases.ListByProject(ctx, project)
+	databases, err := sl.databases.ListByProject(ctx, project, "")
 	if err != nil {
 		return nil, err
 	}

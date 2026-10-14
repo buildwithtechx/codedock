@@ -107,15 +107,15 @@ func (s *DatabaseService) GetDatabase(ctx context.Context, id string) (*models.D
 	return s.repo.GetByID(ctx, id)
 }
 
-func (s *DatabaseService) ListDatabases(ctx context.Context) ([]*models.Database, error) {
-	return s.repo.List(ctx)
+func (s *DatabaseService) ListDatabases(ctx context.Context, search string) ([]*models.Database, error) {
+	return s.repo.List(ctx, search)
 }
 
-func (s *DatabaseService) ListDatabasesByProject(ctx context.Context, projectID string) ([]*models.Database, error) {
+func (s *DatabaseService) ListDatabasesByProject(ctx context.Context, projectID string, search string) ([]*models.Database, error) {
 	if projectID == "" {
 		return nil, errors.New("project id is required")
 	}
-	return s.repo.ListByProject(ctx, projectID)
+	return s.repo.ListByProject(ctx, projectID, search)
 }
 
 func (s *DatabaseService) UpdateDatabase(ctx context.Context, db *models.Database) error {

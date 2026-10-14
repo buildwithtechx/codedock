@@ -21,8 +21,8 @@ type AppServiceRepository interface {
 	GetByID(ctx context.Context, id string) (*models.AppService, error)
 	ListByEnvironment(ctx context.Context, environmentID string) ([]*models.AppService, error)
 	ListByProject(ctx context.Context, projectID string) ([]*models.AppService, error)
-	ListByOrganization(ctx context.Context, organizationID string) ([]*models.AppService, error)
-	ListAll(ctx context.Context) ([]*models.AppService, error)
+	ListByOrganization(ctx context.Context, organizationID string, search string) ([]*models.AppService, error)
+	ListAll(ctx context.Context, search string) ([]*models.AppService, error)
 	Update(ctx context.Context, svc *models.AppService) error
 	Delete(ctx context.Context, id string) error
 	CreateWebhook(ctx context.Context, w *models.Webhook) error
@@ -121,14 +121,16 @@ func (r *AppServiceRepo) ListByProject(ctx context.Context, projectID string) ([
 	return list, nil
 }
 
-func (r *AppServiceRepo) ListByOrganization(ctx context.Context, organizationID string) ([]*models.AppService, error) {
+func (r *AppServiceRepo) ListByOrganization(ctx context.Context, organizationID string, search string) ([]*models.AppService, error) {
 	r.mu.RLock()
 	defer r.mu.RUnlock()
 	var list []*models.AppService
+	search = strings.TrimSpace(search)
+	pattern := ContainsLikePattern(search)
 	err := r.db.SelectContext(ctx, &list,
 		`SELECT COALESCE(projects.app_id, '') AS app_id, app_services.id, app_services.project_id, app_services.environment_id, app_services.name, app_services.repository_url, app_services.git_user_id, COALESCE(app_services.image_ref,'') AS image_ref, app_services.branch, app_services.root_directory, COALESCE(app_services.icon,'git') AS icon, app_services.runtime_mode, COALESCE(app_services.install_command,'') AS install_command, app_services.build_command, app_services.start_command, app_services.dockerfile_path, app_services.build_engine, app_services.internal_port, app_services.domain, COALESCE(app_services.static_output,'') AS static_output, app_services.health_check_path, app_services.container_id, app_services.status, app_services.replicas, COALESCE(app_services.cpu_limit, 0) AS cpu_limit, COALESCE(app_services.memory_limit, 0) AS memory_limit, COALESCE(app_services.deploy_token,'') AS deploy_token, COALESCE(app_services.enable_pr_previews, FALSE) AS enable_pr_previews, COALESCE(app_services.maintenance_mode, FALSE) AS maintenance_mode, app_services.registry_id, app_services.created_at, app_services.updated_at
 		FROM app_services JOIN projects ON projects.id = app_services.project_id
-		WHERE projects.organization_id = $1 ORDER BY app_services.created_at DESC`, organizationID,
+		WHERE projects.organization_id = $1 AND ($2 = '' OR app_services.name ILIKE $3 OR app_services.domain ILIKE $3 OR app_services.repository_url ILIKE $3) ORDER BY app_services.created_at DESC`, organizationID, search, pattern,
 	)
 	if err != nil {
 		return nil, fmt.Errorf("failed to list app services by organization: %w", err)
@@ -139,14 +141,15 @@ func (r *AppServiceRepo) ListByOrganization(ctx context.Context, organizationID 
 	return list, nil
 }
 
-func (r *AppServiceRepo) ListAll(ctx context.Context) ([]*models.AppService, error) {
+func (r *AppServiceRepo) ListAll(ctx context.Context, search string) ([]*models.AppService, error) {
 	r.mu.RLock()
 	defer r.mu.RUnlock()
 	var list []*models.AppService
+	search = strings.TrimSpace(search)
+	pattern := ContainsLikePattern(search)
 	err := r.db.SelectContext(ctx, &list,
 		`SELECT COALESCE((SELECT app_id FROM projects WHERE projects.id = app_services.project_id), '') AS app_id, id, project_id, environment_id, name, repository_url, git_user_id, COALESCE(image_ref,'') AS image_ref, branch, root_directory, COALESCE(icon,'git') AS icon, runtime_mode, COALESCE(install_command,'') AS install_command, build_command, start_command, dockerfile_path, build_engine, internal_port, domain, COALESCE(static_output,'') AS static_output, health_check_path, container_id, status, replicas, COALESCE(cpu_limit, 0) AS cpu_limit, COALESCE(memory_limit, 0) AS memory_limit, COALESCE(deploy_token,'') AS deploy_token, COALESCE(enable_pr_previews, FALSE) AS enable_pr_previews, COALESCE(maintenance_mode, FALSE) AS maintenance_mode, registry_id, created_at, updated_at
-		FROM app_services ORDER BY created_at ASC`,
-	)
+		FROM app_services WHERE ($1 = '' OR name ILIKE $2 OR domain ILIKE $2 OR repository_url ILIKE $2) ORDER BY created_at ASC`, search, pattern)
 	if err != nil {
 		return nil, fmt.Errorf("failed to list all app services: %w", err)
 	}

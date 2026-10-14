@@ -145,7 +145,7 @@ func (b *Bridge) handleStopApp(ctx context.Context, request mcp.CallToolRequest)
 }
 
 func (b *Bridge) handleListDatabases(ctx context.Context, request mcp.CallToolRequest) (*mcp.CallToolResult, error) {
-	dbs, err := b.dbService.ListDatabases(ctx)
+	dbs, err := b.dbService.ListDatabases(ctx, "")
 	if err != nil {
 		return mcp.NewToolResultError(fmt.Sprintf("failed to list databases: %v", err)), nil
 	}

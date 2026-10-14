@@ -69,7 +69,7 @@ func databaseOperations() []Operation {
 	clusterData := "cluster-databases"
 	db := Scope("database:manage")
 	return []Operation{
-		{Method: "GET", Path: "/api/databases", Summary: "List databases", Tags: []string{databases}, Auth: db, Response: Arr("Databases", DatabaseSchema())},
+		{Method: "GET", Path: "/api/databases", Summary: "List databases", Tags: []string{databases}, Auth: db, Response: Arr("Databases", DatabaseSchema()), Query: []Param{QueryParam("search", "Search text")}},
 		{Method: "POST", Path: "/api/databases", Summary: "Create a database", Tags: []string{databases}, Auth: db, Code: 201, Request: JSON(Obj("Create database", RF("projectId", Str("Project ID")), RF("name", Str("Database name")), RF("engine", Str("Engine")), F("environmentId", Str("Environment ID")), F("version", Str("Version")), F("databaseName", Str("Database name on server")), F("username", Str("Username")), F("password", Str("Password")))), Response: DatabaseSchema()},
 		{Method: "GET", Path: "/api/databases/:id", Summary: "Get a database", Tags: []string{databases}, Auth: db, Response: DatabaseSchema()},
 		{Method: "PUT", Path: "/api/databases/:id", Summary: "Update a database", Tags: []string{databases}, Auth: db, Request: JSON(Obj("Update database", F("name", Str("Name")), F("version", Str("Version")), F("externalDns", Str("External DNS")), F("cpuLimit", Num("CPU limit")), F("memoryLimit", Int("Memory MB")), F("logicalReplication", Bool("Logical replication")), F("customArgs", Str("Custom args")))), Response: DatabaseSchema()},

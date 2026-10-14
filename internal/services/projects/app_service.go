@@ -95,11 +95,11 @@ func (s *AppService) ListByProject(ctx context.Context, projectID string) ([]*mo
 	return apps, nil
 }
 
-func (s *AppService) ListByOrganization(ctx context.Context, organizationID string) ([]*models.AppService, error) {
+func (s *AppService) ListByOrganization(ctx context.Context, organizationID string, search string) ([]*models.AppService, error) {
 	if organizationID == "" {
 		return nil, errors.New("organization id required")
 	}
-	return s.repo.ListByOrganization(ctx, organizationID)
+	return s.repo.ListByOrganization(ctx, organizationID, search)
 }
 
 func (s *AppService) UpdateAppService(ctx context.Context, svc *models.AppService) error {
