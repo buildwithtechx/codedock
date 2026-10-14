@@ -5,6 +5,27 @@ description: Registered API methods, paths and middleware requirements.
 
 This catalogue follows the current route registrations. Access labels describe route middleware only; handlers also check resource ownership, account state, credentials or signatures. WebSockets authenticate in their own handlers. `Handler / middleware` does not mean anonymous access is allowed.
 
+## List filtering and search
+
+List endpoints accept an optional `search` query parameter that matches
+case-insensitively across the resource's name-like columns:
+
+| Endpoint | Matched columns |
+| --- | --- |
+| `GET /api/projects` | name, slug, description |
+| `GET /api/deployments` | service name, project name, branch, commit hash |
+| `GET /api/databases` | name, engine, database name |
+| `GET /api/apps` | service name, domain, repository URL |
+| `GET /api/servers` | name, SSH host |
+
+`%`, `_` and `\` in the term always match literally, never as wildcards. An
+empty or missing term returns the unfiltered list.
+
+`GET /api/audit-logs` and `GET /api/audit-logs/facets` accept `q` instead:
+free text matched against the action, resource ID, and actor email or name.
+Resource names resolve to IDs first, so searching a project or server name
+finds entries that stored only its ID. Facet counts follow the same filter.
+
 Read [API conventions](/api/) first. Paths use `:parameter` placeholders. Linked definitions identify each handler; request DTOs and response behavior live in the handler and model files. The exhaustive machine-readable schema is `docs/api/openapi.json` in the repository, also served at runtime as `GET /api/docs/openapi.json`; the Go suite fails when a route lacks a registry entry.
 
 ## Auth
