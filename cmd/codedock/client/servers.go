@@ -67,3 +67,45 @@ func (c *Client) DeleteServer(id string) error {
 
 	return nil
 }
+
+func (c *Client) GetServerNetworkSettings(id string) (*models.ServerNetworkSettings, error) {
+	resp, err := c.sendRequest("GET", fmt.Sprintf("/servers/%s/network-settings", id), nil)
+	if err != nil {
+		return nil, err
+	}
+	defer resp.Body.Close()
+
+	if resp.StatusCode != nethttp.StatusOK {
+		body, _ := io.ReadAll(resp.Body)
+		return nil, fmt.Errorf("failed to load network settings (status %d): %s", resp.StatusCode, string(body))
+	}
+
+	var result struct {
+		Data *models.ServerNetworkSettings `json:"data"`
+	}
+	if err := json.NewDecoder(resp.Body).Decode(&result); err != nil {
+		return nil, err
+	}
+	return result.Data, nil
+}
+
+func (c *Client) UpdateServerNetworkSettings(id string, req *models.UpdateServerNetworkSettingsRequest) (*models.ServerNetworkSettings, error) {
+	resp, err := c.sendRequest("PATCH", fmt.Sprintf("/servers/%s/network-settings", id), req)
+	if err != nil {
+		return nil, err
+	}
+	defer resp.Body.Close()
+
+	if resp.StatusCode != nethttp.StatusOK {
+		body, _ := io.ReadAll(resp.Body)
+		return nil, fmt.Errorf("failed to update network settings (status %d): %s", resp.StatusCode, string(body))
+	}
+
+	var result struct {
+		Data *models.ServerNetworkSettings `json:"data"`
+	}
+	if err := json.NewDecoder(resp.Body).Decode(&result); err != nil {
+		return nil, err
+	}
+	return result.Data, nil
+}

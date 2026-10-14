@@ -88,6 +88,66 @@ func TestDeleteServer(t *testing.T) {
 	}
 }
 
+func TestServerNetworkSettings(t *testing.T) {
+	var patched models.UpdateServerNetworkSettingsRequest
+	internet := true
+	client, done := stubServer(t, func(w http.ResponseWriter, r *http.Request) {
+		if r.URL.Path != "/api/v1/servers/srv-1/network-settings" {
+			w.WriteHeader(http.StatusNotFound)
+			return
+		}
+		switch r.Method {
+		case http.MethodGet:
+			writeJSON(w, http.StatusOK, map[string]any{"data": models.ServerNetworkSettings{
+				InternetAccess: &internet,
+				Egress:         []string{"api.example.com"},
+				Revision:       "abc",
+			}})
+		case http.MethodPatch:
+			if err := json.NewDecoder(r.Body).Decode(&patched); err != nil {
+				w.WriteHeader(http.StatusBadRequest)
+				return
+			}
+			writeJSON(w, http.StatusOK, map[string]any{"data": models.ServerNetworkSettings{
+				InternetAccess: &patched.InternetAccess,
+				Egress:         patched.Egress,
+			}})
+		default:
+			w.WriteHeader(http.StatusMethodNotAllowed)
+		}
+	})
+	defer done()
+
+	current, err := client.GetServerNetworkSettings("srv-1")
+	if err != nil {
+		t.Fatal(err)
+	}
+	if current.InternetAccess == nil || !*current.InternetAccess || current.Revision != "abc" {
+		t.Fatalf("unexpected settings: %+v", current)
+	}
+
+	off := false
+	updated, err := client.UpdateServerNetworkSettings("srv-1", &models.UpdateServerNetworkSettingsRequest{
+		InternetAccess:         off,
+		ExpectedInternetAccess: true,
+		Egress:                 []string{"api.example.com"},
+		ExpectedRevision:       "abc",
+		Confirm:                true,
+	})
+	if err != nil {
+		t.Fatal(err)
+	}
+	if patched.ExpectedRevision != "abc" || !patched.Confirm || patched.InternetAccess {
+		t.Fatalf("unexpected patch payload: %+v", patched)
+	}
+	if updated.InternetAccess == nil || *updated.InternetAccess {
+		t.Fatalf("expected disabled internet, got %+v", updated)
+	}
+	if len(updated.Egress) != 1 || updated.Egress[0] != "api.example.com" {
+		t.Fatalf("unexpected egress: %+v", updated.Egress)
+	}
+}
+
 func TestServersSurfaceErrors(t *testing.T) {
 	client, done := stubServer(t, func(w http.ResponseWriter, r *http.Request) {
 		writeJSON(w, http.StatusUnauthorized, map[string]any{"message": "bad token"})
