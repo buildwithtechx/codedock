@@ -179,3 +179,37 @@ func TestDeploymentSearchIsCaseInsensitive(t *testing.T) {
 		t.Fatalf("expected no matches, got total=%d rows=%d", total, len(items))
 	}
 }
+
+func TestDeploymentSearchTreatsWildcardsLiterally(t *testing.T) {
+	db := openPGTestDB(t)
+	for _, query := range []string{
+		`INSERT INTO organizations (id, name) VALUES ('org-one', 'Organization')`,
+		`INSERT INTO project_apps (id, organization_id, name, slug) VALUES ('app-one', 'org-one', 'App', 'app')`,
+		`INSERT INTO projects (id, app_id, organization_id, name, slug) VALUES ('project-one', 'app-one', 'org-one', 'Project', 'project')`,
+		`INSERT INTO app_services (id, project_id, environment_id, name) VALUES ('service-one', 'project-one', 'environment-one', 'BillingService')`,
+	} {
+		if _, err := db.Exec(query); err != nil {
+			t.Fatalf("seed deployment dependencies: %v", err)
+		}
+	}
+	ctx := context.Background()
+	repo := NewDeploymentRepo(db)
+	deployment := &models.Deployment{ProjectID: "project-one", ServiceID: "service-one", Branch: "main", Trigger: "manual"}
+	if err := repo.Create(ctx, deployment); err != nil {
+		t.Fatalf("create deployment: %v", err)
+	}
+	items, total, err := repo.ListByOrganization(ctx, models.DeploymentListFilter{OrganizationID: "org-one", Search: "m_n", Limit: 25})
+	if err != nil {
+		t.Fatalf("search deployments: %v", err)
+	}
+	if total != 0 || len(items) != 0 {
+		t.Fatalf("expected underscore to match literally, got total=%d rows=%d", total, len(items))
+	}
+	items, total, err = repo.ListByOrganization(ctx, models.DeploymentListFilter{OrganizationID: "org-one", Search: "%", Limit: 25})
+	if err != nil {
+		t.Fatalf("search deployments: %v", err)
+	}
+	if total != 0 || len(items) != 0 {
+		t.Fatalf("expected percent to match literally, got total=%d rows=%d", total, len(items))
+	}
+}

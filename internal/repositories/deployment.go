@@ -99,7 +99,7 @@ func (r *DeploymentRepo) ListByService(ctx context.Context, serviceID string, li
 
 func (r *DeploymentRepo) ListByOrganization(ctx context.Context, filter models.DeploymentListFilter) ([]models.DeploymentListItem, int, error) {
 	search := strings.TrimSpace(filter.Search)
-	searchPattern := "%" + search + "%"
+	searchPattern := ContainsLikePattern(search)
 	where := `
 		FROM deployments d
 		INNER JOIN projects p ON p.id = d.project_id
