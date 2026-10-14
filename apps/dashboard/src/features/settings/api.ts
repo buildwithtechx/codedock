@@ -1,5 +1,6 @@
 import type {
   NotificationDefaultDto,
+  NotificationDeliveryDto,
   NotificationSubscriptionDto,
   TeamNotificationChannel,
 } from '#/features/notifications';
@@ -190,6 +191,17 @@ export const settingsService = {
           channels: payload.channels,
           enabled: payload.enabled,
         }
+      );
+    } catch (error) {
+      throw handleApiError(error);
+    }
+  },
+
+  getDeliveries: async (limit?: number): Promise<BaseResponse<NotificationDeliveryDto[]>> => {
+    try {
+      const query = limit !== undefined ? `?limit=${limit}` : '';
+      return await apiClient.get<BaseResponse<NotificationDeliveryDto[]>>(
+        `/notifications/deliveries${query}`
       );
     } catch (error) {
       throw handleApiError(error);

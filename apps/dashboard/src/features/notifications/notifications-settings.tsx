@@ -11,6 +11,7 @@ import {
 import { PreferenceRow } from '#/features/settings/preference-row';
 import { SettingsSection } from '#/features/settings/settings-section';
 import { NotificationChannelsList, type NotifSettingsForm } from './notification-channels-list';
+import { NotificationDeliveryHistory } from './notification-delivery-history';
 import { NotificationSubscriptionsTable } from './notification-subscriptions-table';
 
 const EMPTY: NotifSettingsForm = {
@@ -205,6 +206,8 @@ export const NotificationsSettings = () => {
       </SettingsSection>
 
       <NotificationSubscriptionsTable />
+
+      <NotificationDeliveryHistory />
     </div>
   );
 };

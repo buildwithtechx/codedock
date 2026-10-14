@@ -35,3 +35,13 @@ export interface NotificationDefaultDto {
   enabled: boolean;
   updatedAt: string;
 }
+
+export interface NotificationDeliveryDto {
+  id: string;
+  eventType: string;
+  channel: string;
+  title: string;
+  success: boolean;
+  error: string;
+  createdAt: string;
+}
