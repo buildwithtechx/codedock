@@ -64,11 +64,13 @@ func (d *Deployer) ExecuteRollingUpdate(ctx context.Context, app *models.AppServ
 			effectiveImageTag = fmt.Sprintf("codedock-app-%s:latest", app.ID)
 		}
 
+		appDomain, _ := resolveAppDomain(app)
 		runOpts := ContainerRunOptions{
 			Name:            containerName,
 			ImageTag:        effectiveImageTag,
 			ServiceID:       app.ID,
 			Domain:          app.Domain,
+			Hosts:           d.routeHosts(ctx, app.ID, appDomain, logWriter),
 			InternalPort:    internalPort,
 			RuntimeMode:     app.RuntimeMode,
 			Envs:            envSlice,

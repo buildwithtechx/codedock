@@ -4,10 +4,11 @@ import (
 	"context"
 
 	"codedock/internal/engine/networking"
+	"codedock/internal/models"
 	"codedock/internal/repositories"
 )
 
-func configureDeploymentBindings(srv *Server, routeRuleRepo repositories.RouteRuleRepository) {
+func configureDeploymentBindings(srv *Server, routeRuleRepo repositories.RouteRuleRepository, domainRepo *repositories.DomainRepo) {
 	if srv.deployer != nil {
 		srv.deployer.ScopedEnvProvider = func(ctx context.Context, project, environment string) (map[string]string, error) {
 			return srv.serviceLinker.GetLinkedVariablesForEnvironment(ctx, project, environment)
@@ -27,6 +28,9 @@ func configureDeploymentBindings(srv *Server, routeRuleRepo repositories.RouteRu
 				return nil, err
 			}
 			return networking.BuildMiddlewareLabels(serviceName, rules), nil
+		}
+		srv.deployer.DomainFetcher = func(ctx context.Context, serviceID string) ([]models.DomainConfig, error) {
+			return domainRepo.ListByService(ctx, serviceID)
 		}
 	}
 

@@ -381,7 +381,7 @@ func NewServer(db *sql.DB, v *utils.Vault, deployer *deploy.Deployer, traefikMan
 	if err := configureClusters(srv, db, v, projectRepo, serverRepo, operationService, volumeOperations, appRepo, deploymentService, canvasService, backupManager); err != nil {
 		return nil, err
 	}
-	configureDeploymentBindings(srv, routeRuleRepo)
+	configureDeploymentBindings(srv, routeRuleRepo, domainRepo)
 
 	srv.registerRoutes()
 	return srv, nil

@@ -29,6 +29,36 @@ type Deployer struct {
 	EnvProvider           func(projectID string) (map[string]string, error)
 	EnvInterpolator       func(projectID string) (map[string]map[string]string, error)
 	RouteRuleFetcher      func(ctx context.Context, serviceID, serviceName string) (map[string]string, error)
+	DomainFetcher         func(ctx context.Context, serviceID string) ([]models.DomainConfig, error)
+}
+
+func resolveAppDomain(app *models.AppService) (string, error) {
+	appDomain := app.Domain
+	if appDomain == "" {
+		appDomain = utils.GenerateAppDomain(app.ID+"-"+app.Name, "", "")
+	}
+	if strings.Contains(appDomain, "://") {
+		parsed, err := url.Parse(appDomain)
+		if err != nil || parsed.Hostname() == "" {
+			return "", fmt.Errorf("invalid application domain")
+		}
+		appDomain = parsed.Hostname()
+	}
+	return appDomain, nil
+}
+
+func (d *Deployer) routeHosts(ctx context.Context, serviceID, appDomain string, logWriter io.Writer) []RouteHost {
+	if d.DomainFetcher == nil {
+		return NormalizeRouteHosts(appDomain, nil)
+	}
+	domains, err := d.DomainFetcher(ctx, serviceID)
+	if err != nil {
+		if logWriter != nil {
+			fmt.Fprintf(logWriter, "Failed to fetch service domains: %v\n", err)
+		}
+		return NormalizeRouteHosts(appDomain, nil)
+	}
+	return NormalizeRouteHosts(appDomain, domains)
 }
 
 func NewDeployer(dockerClient *client.Client, s DeployerStore) *Deployer {
@@ -75,17 +105,9 @@ func (d *Deployer) DeployAppService(ctx context.Context, app *models.AppService,
 		return "", fmt.Errorf("failed resolving service env vars: %w", err)
 	}
 
-	appDomain := app.Domain
-	if appDomain == "" {
-		appDomain = utils.GenerateAppDomain(app.ID+"-"+app.Name, "", "")
-	}
-
-	if strings.Contains(appDomain, "://") {
-		parsed, err := url.Parse(appDomain)
-		if err != nil || parsed.Hostname() == "" {
-			return "", fmt.Errorf("invalid application domain")
-		}
-		appDomain = parsed.Hostname()
+	appDomain, err := resolveAppDomain(app)
+	if err != nil {
+		return "", err
 	}
 
 	var envSlice []string
@@ -207,7 +229,7 @@ func (d *Deployer) DeployAppService(ctx context.Context, app *models.AppService,
 	}
 
 	return d.replaceReplicas(ctx, app, ContainerRunOptions{
-		ImageTag: imageTag, ServiceID: app.ID, Domain: appDomain, InternalPort: internalPort,
+		ImageTag: imageTag, ServiceID: app.ID, Domain: appDomain, Hosts: d.routeHosts(ctx, app.ID, appDomain, logWriter), InternalPort: internalPort,
 		RuntimeMode: app.RuntimeMode, Envs: envSlice, Cmd: applicationCommand(app),
 		MemoryLimitMB: memoryLimit, CPURequest: cpuRequest, HealthCheckPath: app.HealthCheckPath,
 		Volumes: app.Volumes, MaintenanceMode: app.MaintenanceMode, LogDrains: logDrains, ExtraLabels: extraLabels,

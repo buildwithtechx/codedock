@@ -34,6 +34,7 @@ type ContainerRunOptions struct {
 	ImageTag        string
 	ServiceID       string
 	Domain          string
+	Hosts           []RouteHost
 	InternalPort    int
 	RuntimeMode     models.RuntimeMode
 	Envs            []string
@@ -90,8 +91,8 @@ func (c *ContainerManager) createAndStart(ctx context.Context, opts ContainerRun
 
 	if opts.RuntimeMode != models.RuntimeModeWorker {
 		config.ExposedPorts = nat.PortSet{containerPort: struct{}{}}
-		if opts.ServiceID != "" && opts.Domain != "" {
-			config.Labels = c.buildTraefikLabels(opts.ServiceID, opts.Domain, opts.InternalPort, opts.HealthCheckPath, opts.ExtraLabels)
+		if opts.ServiceID != "" && len(opts.Hosts) > 0 {
+			config.Labels = c.buildTraefikLabels(opts.ServiceID, opts.Hosts, opts.InternalPort, opts.HealthCheckPath, opts.ExtraLabels)
 		}
 	}
 
@@ -142,21 +143,33 @@ func (c *ContainerManager) createAndStart(ctx context.Context, opts ContainerRun
 	return resp.ID, nil
 }
 
-func (c *ContainerManager) buildTraefikLabels(serviceID, domain string, internalPort int, healthCheckPath string, extra map[string]string) map[string]string {
+func (c *ContainerManager) buildTraefikLabels(serviceID string, hosts []RouteHost, internalPort int, healthCheckPath string, extra map[string]string) map[string]string {
 	labels := map[string]string{}
 	for k, v := range extra {
 		labels[k] = v
 	}
 	labels["traefik.enable"] = "true"
-	labels[fmt.Sprintf("traefik.http.routers.%s.rule", serviceID)] = fmt.Sprintf("Host(`%s`)", domain)
-	labels[fmt.Sprintf("traefik.http.routers.%s.tls", serviceID)] = "true"
-	labels[fmt.Sprintf("traefik.http.routers.%s.tls.certresolver", serviceID)] = "letsencrypt"
 	labels[fmt.Sprintf("traefik.http.services.%s.loadbalancer.server.port", serviceID)] = fmt.Sprintf("%d", internalPort)
 
 	if healthCheckPath != "" {
 		labels[fmt.Sprintf("traefik.http.services.%s.loadbalancer.healthcheck.path", serviceID)] = healthCheckPath
 		labels[fmt.Sprintf("traefik.http.services.%s.loadbalancer.healthcheck.interval", serviceID)] = "5s"
 		labels[fmt.Sprintf("traefik.http.services.%s.loadbalancer.healthcheck.timeout", serviceID)] = "2s"
+	}
+
+	for i, host := range hosts {
+		router := serviceID
+		if i > 0 {
+			router = fmt.Sprintf("%s-%d", serviceID, i)
+		}
+		rule := fmt.Sprintf("Host(`%s`)", host.Host)
+		if host.PathPrefix != "" {
+			rule = fmt.Sprintf("%s && PathPrefix(`%s`)", rule, host.PathPrefix)
+		}
+		labels[fmt.Sprintf("traefik.http.routers.%s.rule", router)] = rule
+		labels[fmt.Sprintf("traefik.http.routers.%s.service", router)] = serviceID
+		labels[fmt.Sprintf("traefik.http.routers.%s.tls", router)] = "true"
+		labels[fmt.Sprintf("traefik.http.routers.%s.tls.certresolver", router)] = "letsencrypt"
 	}
 	return labels
 }
