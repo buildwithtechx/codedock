@@ -58,6 +58,8 @@ export interface AppService {
   enablePRPreviews: boolean;
   maintenanceMode: boolean;
   optimize: boolean;
+  stack?: string;
+  stopGracePeriodSeconds?: number;
   icon?: string;
   deployToken?: string;
   appId?: string;
@@ -169,6 +171,7 @@ export interface CreateAppServiceRequest {
   healthCheckPath: string;
   cpuLimit?: number;
   memoryLimit?: number;
+  stack?: string;
 }
 
 export interface UpdateAppServiceRequest {
@@ -196,6 +199,8 @@ export interface UpdateAppServiceRequest {
   enablePRPreviews?: boolean;
   maintenanceMode?: boolean;
   optimize?: boolean;
+  stack?: string;
+  stopGracePeriodSeconds?: number;
 }
 
 export interface TriggerDeploymentRequest {

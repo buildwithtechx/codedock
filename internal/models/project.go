@@ -130,6 +130,7 @@ type CanvasSummary struct {
 	OnlineServices     int                `json:"onlineServices"`
 	DefaultEnvironment *EnvironmentConfig `json:"defaultEnvironment,omitempty"`
 	ServiceIcons       []string           `json:"serviceIcons"`
+	Stack              string             `json:"stack,omitempty"`
 	DeployTarget       string             `json:"deployTarget"`
 	ServerName         string             `json:"serverName,omitempty"`
 	Nodes              []string           `json:"nodes,omitempty"`

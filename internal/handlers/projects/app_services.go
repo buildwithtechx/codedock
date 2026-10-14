@@ -2,6 +2,8 @@ package projects
 
 import (
 	"net/http"
+	"strings"
+	"time"
 
 	"github.com/google/uuid"
 	"github.com/labstack/echo/v4"
@@ -131,6 +133,36 @@ func (h *AppHandler) Create(c echo.Context) error {
 		}
 	}
 
+	for _, role := range req.Roles {
+		if role.Command == "" {
+			continue
+		}
+		sibling := models.AppService{
+			ProjectID:              created.ProjectID,
+			EnvironmentID:          created.EnvironmentID,
+			Name:                   created.Name + "-" + role.Name,
+			RepositoryURL:          created.RepositoryURL,
+			ImageRef:               created.ImageRef,
+			Branch:                 created.Branch,
+			RootDirectory:          created.RootDirectory,
+			Icon:                   created.Icon,
+			GitUserID:              created.GitUserID,
+			RuntimeMode:            models.RuntimeModeWorker,
+			InstallCommand:         created.InstallCommand,
+			BuildCommand:           created.BuildCommand,
+			StartCommand:           role.Command,
+			DockerfilePath:         created.DockerfilePath,
+			BuildEngine:            created.BuildEngine,
+			InternalPort:           created.InternalPort,
+			Optimize:               created.Optimize,
+			Stack:                  created.Stack,
+			StopGracePeriodSeconds: roleGraceSeconds(role.StopGracePeriod),
+		}
+		if _, err := h.appService.CreateAppService(c.Request().Context(), &sibling); err != nil {
+			return utils.Error(c, http.StatusInternalServerError, err.Error())
+		}
+	}
+
 	user := middleware.GetUserClaimsFromContext(c.Request().Context())
 	distinctID := "anonymous"
 	if user != nil {
@@ -235,6 +267,8 @@ func (h *AppHandler) Update(c echo.Context) error {
 	existing.DeployToken = req.DeployToken
 	existing.MaintenanceMode = req.MaintenanceMode
 	existing.Optimize = req.Optimize
+	existing.Stack = req.Stack
+	existing.StopGracePeriodSeconds = req.StopGracePeriodSeconds
 	existing.EnablePRPreviews = req.EnablePRPreviews
 	existing.ImageRef = req.ImageRef
 	existing.RegistryID = req.RegistryID
@@ -345,6 +379,14 @@ func (h *AppHandler) RestartService(c echo.Context) error {
 	existing.Status = models.AppServiceStatusRunning
 	_ = h.appService.UpdateAppService(c.Request().Context(), existing)
 	return utils.Success(c, "Service restarted successfully", existing)
+}
+
+func roleGraceSeconds(value string) int {
+	parsed, err := time.ParseDuration(strings.TrimSpace(value))
+	if err != nil || parsed <= 0 {
+		return 0
+	}
+	return int(parsed.Seconds())
 }
 
 func isValidHealthCheckPath(path string) bool {

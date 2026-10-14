@@ -106,6 +106,9 @@ func (r *CanvasRepo) ListCanvasSummaries(ctx context.Context, organizationID str
 			if app.Status == models.AppServiceStatusRunning {
 				onlineCount++
 			}
+			if summary.Stack == "" && app.Stack != "" {
+				summary.Stack = app.Stack
+			}
 			summary.ServiceIcons = append(summary.ServiceIcons, "github")
 		}
 		for _, db := range dbs {
@@ -197,6 +200,9 @@ func (r *CanvasRepo) GetCanvasSummary(ctx context.Context, id string) (*models.C
 	for _, app := range apps {
 		if app.Status == models.AppServiceStatusRunning {
 			onlineCount++
+		}
+		if summary.Stack == "" && app.Stack != "" {
+			summary.Stack = app.Stack
 		}
 		summary.ServiceIcons = append(summary.ServiceIcons, "github")
 	}

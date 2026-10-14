@@ -153,6 +153,12 @@ export const ProjectCard = ({ project }: { project: CanvasSummary }) => {
         <span className="inline-flex items-center rounded-md bg-secondary px-2 py-0.5 text-secondary-foreground text-xs">
           {project.totalServices} service{project.totalServices === 1 ? '' : 's'}
         </span>
+        {project.stack && (
+          <span className="inline-flex items-center gap-1.5 rounded-md bg-muted/60 px-2 py-0.5 text-xs">
+            <Box className="h-3.5 w-3.5 shrink-0" />
+            <span className="capitalize">{project.stack}</span>
+          </span>
+        )}
         {project.databasesCount > 0 && (
           <span className="inline-flex items-center gap-1.5 text-xs">
             <Database className="h-3.5 w-3.5 shrink-0" />

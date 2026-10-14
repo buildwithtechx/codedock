@@ -233,7 +233,7 @@ func (d *Deployer) DeployAppService(ctx context.Context, app *models.AppService,
 		ImageTag: imageTag, ServiceID: app.ID, Domain: appDomain, Hosts: d.routeHosts(ctx, app.ID, appDomain, logWriter), InternalPort: internalPort,
 		RuntimeMode: app.RuntimeMode, Envs: envSlice, Cmd: containerCommand(app, resolvedStartCommand(app, sourceDir)),
 		MemoryLimitMB: memoryLimit, CPURequest: cpuRequest, HealthCheckPath: app.HealthCheckPath,
-		Volumes: app.Volumes, MaintenanceMode: app.MaintenanceMode, LogDrains: logDrains, ExtraLabels: extraLabels,
+		Volumes: app.Volumes, MaintenanceMode: app.MaintenanceMode, StopGracePeriodSeconds: app.StopGracePeriodSeconds, LogDrains: logDrains, ExtraLabels: extraLabels,
 	}, replicas, logWriter)
 }
 

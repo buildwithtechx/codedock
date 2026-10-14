@@ -30,6 +30,11 @@ func DetectStack(sourceDir string) string {
 	return "unknown"
 }
 
+func ResolveRolesForSource(sourceDir string) (string, []StackRole) {
+	id := DetectStack(sourceDir)
+	return id, ResolveStackRoles(nil, Registry[id].DefaultRoles, DetectDeps(sourceDir), DetectFiles(sourceDir))
+}
+
 func stackMatches(def StackDefinition, sourceDir string, deps map[string]bool) bool {
 	for _, marker := range def.RootMarkers {
 		if _, err := os.Stat(filepath.Join(sourceDir, marker)); err != nil {

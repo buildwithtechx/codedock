@@ -787,6 +787,10 @@
                             "description": "Runtime mode",
                             "type": "string"
                           },
+                          "stack": {
+                            "description": "Detected stack",
+                            "type": "string"
+                          },
                           "startCommand": {
                             "description": "Start command",
                             "type": "string"
@@ -794,6 +798,11 @@
                           "status": {
                             "description": "Service status",
                             "type": "string"
+                          },
+                          "stopGracePeriodSeconds": {
+                            "description": "Container stop grace period",
+                            "format": "int32",
+                            "type": "integer"
                           },
                           "updatedAt": {
                             "description": "Last update time",
@@ -1262,6 +1271,10 @@
                           "description": "Runtime mode",
                           "type": "string"
                         },
+                        "stack": {
+                          "description": "Detected stack",
+                          "type": "string"
+                        },
                         "startCommand": {
                           "description": "Start command",
                           "type": "string"
@@ -1269,6 +1282,11 @@
                         "status": {
                           "description": "Service status",
                           "type": "string"
+                        },
+                        "stopGracePeriodSeconds": {
+                          "description": "Container stop grace period",
+                          "format": "int32",
+                          "type": "integer"
                         },
                         "updatedAt": {
                           "description": "Last update time",
@@ -1630,6 +1648,10 @@
                           "description": "Runtime mode",
                           "type": "string"
                         },
+                        "stack": {
+                          "description": "Detected stack",
+                          "type": "string"
+                        },
                         "startCommand": {
                           "description": "Start command",
                           "type": "string"
@@ -1637,6 +1659,11 @@
                         "status": {
                           "description": "Service status",
                           "type": "string"
+                        },
+                        "stopGracePeriodSeconds": {
+                          "description": "Container stop grace period",
+                          "format": "int32",
+                          "type": "integer"
                         },
                         "updatedAt": {
                           "description": "Last update time",
@@ -3006,6 +3033,10 @@
                           "description": "Runtime mode",
                           "type": "string"
                         },
+                        "stack": {
+                          "description": "Detected stack",
+                          "type": "string"
+                        },
                         "startCommand": {
                           "description": "Start command",
                           "type": "string"
@@ -3013,6 +3044,11 @@
                         "status": {
                           "description": "Service status",
                           "type": "string"
+                        },
+                        "stopGracePeriodSeconds": {
+                          "description": "Container stop grace period",
+                          "format": "int32",
+                          "type": "integer"
                         },
                         "updatedAt": {
                           "description": "Last update time",
@@ -6201,6 +6237,10 @@
                           "description": "Runtime mode",
                           "type": "string"
                         },
+                        "stack": {
+                          "description": "Detected stack",
+                          "type": "string"
+                        },
                         "startCommand": {
                           "description": "Start command",
                           "type": "string"
@@ -6208,6 +6248,11 @@
                         "status": {
                           "description": "Service status",
                           "type": "string"
+                        },
+                        "stopGracePeriodSeconds": {
+                          "description": "Container stop grace period",
+                          "format": "int32",
+                          "type": "integer"
                         },
                         "updatedAt": {
                           "description": "Last update time",
@@ -28726,6 +28771,10 @@
                             "description": "Runtime mode",
                             "type": "string"
                           },
+                          "stack": {
+                            "description": "Detected stack",
+                            "type": "string"
+                          },
                           "startCommand": {
                             "description": "Start command",
                             "type": "string"
@@ -28733,6 +28782,11 @@
                           "status": {
                             "description": "Service status",
                             "type": "string"
+                          },
+                          "stopGracePeriodSeconds": {
+                            "description": "Container stop grace period",
+                            "format": "int32",
+                            "type": "integer"
                           },
                           "updatedAt": {
                             "description": "Last update time",
@@ -29097,6 +29151,10 @@
                           "description": "Runtime mode",
                           "type": "string"
                         },
+                        "stack": {
+                          "description": "Detected stack",
+                          "type": "string"
+                        },
                         "startCommand": {
                           "description": "Start command",
                           "type": "string"
@@ -29104,6 +29162,11 @@
                         "status": {
                           "description": "Service status",
                           "type": "string"
+                        },
+                        "stopGracePeriodSeconds": {
+                          "description": "Container stop grace period",
+                          "format": "int32",
+                          "type": "integer"
                         },
                         "updatedAt": {
                           "description": "Last update time",
@@ -29418,6 +29481,10 @@
                                 "description": "Runtime mode",
                                 "type": "string"
                               },
+                              "stack": {
+                                "description": "Detected stack",
+                                "type": "string"
+                              },
                               "startCommand": {
                                 "description": "Start command",
                                 "type": "string"
@@ -29425,6 +29492,11 @@
                               "status": {
                                 "description": "Service status",
                                 "type": "string"
+                              },
+                              "stopGracePeriodSeconds": {
+                                "description": "Container stop grace period",
+                                "format": "int32",
+                                "type": "integer"
                               },
                               "updatedAt": {
                                 "description": "Last update time",
@@ -62153,6 +62225,10 @@
                             "description": "Runtime mode",
                             "type": "string"
                           },
+                          "stack": {
+                            "description": "Detected stack",
+                            "type": "string"
+                          },
                           "startCommand": {
                             "description": "Start command",
                             "type": "string"
@@ -62160,6 +62236,11 @@
                           "status": {
                             "description": "Service status",
                             "type": "string"
+                          },
+                          "stopGracePeriodSeconds": {
+                            "description": "Container stop grace period",
+                            "format": "int32",
+                            "type": "integer"
                           },
                           "updatedAt": {
                             "description": "Last update time",
@@ -72609,6 +72690,10 @@
                             "description": "Runtime mode",
                             "type": "string"
                           },
+                          "stack": {
+                            "description": "Detected stack",
+                            "type": "string"
+                          },
                           "startCommand": {
                             "description": "Start command",
                             "type": "string"
@@ -72616,6 +72701,11 @@
                           "status": {
                             "description": "Service status",
                             "type": "string"
+                          },
+                          "stopGracePeriodSeconds": {
+                            "description": "Container stop grace period",
+                            "format": "int32",
+                            "type": "integer"
                           },
                           "updatedAt": {
                             "description": "Last update time",

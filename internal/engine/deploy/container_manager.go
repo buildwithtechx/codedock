@@ -29,23 +29,24 @@ func NewContainerManager(dockerClient *client.Client, st ContainerManagerStore) 
 }
 
 type ContainerRunOptions struct {
-	NetworkName     string `json:"networkName,omitempty"`
-	Name            string
-	ImageTag        string
-	ServiceID       string
-	Domain          string
-	Hosts           []RouteHost
-	InternalPort    int
-	RuntimeMode     models.RuntimeMode
-	Envs            []string
-	Cmd             []string
-	MemoryLimitMB   int
-	CPURequest      float64
-	HealthCheckPath string
-	Volumes         []models.ServiceVolume
-	MaintenanceMode bool
-	LogDrains       []*models.LogDrain
-	ExtraLabels     map[string]string
+	NetworkName            string `json:"networkName,omitempty"`
+	Name                   string
+	ImageTag               string
+	ServiceID              string
+	Domain                 string
+	Hosts                  []RouteHost
+	InternalPort           int
+	RuntimeMode            models.RuntimeMode
+	Envs                   []string
+	Cmd                    []string
+	MemoryLimitMB          int
+	CPURequest             float64
+	HealthCheckPath        string
+	Volumes                []models.ServiceVolume
+	MaintenanceMode        bool
+	StopGracePeriodSeconds int
+	LogDrains              []*models.LogDrain
+	ExtraLabels            map[string]string
 }
 
 func (c *ContainerManager) CreateAndStart(ctx context.Context, opts ContainerRunOptions) (string, error) {
@@ -120,6 +121,10 @@ func (c *ContainerManager) createAndStart(ctx context.Context, opts ContainerRun
 		NetworkMode: container.NetworkMode(networkName),
 		DNS:         c.getCustomDNSResolvers(),
 		Binds:       binds,
+	}
+	if opts.StopGracePeriodSeconds > 0 {
+		timeout := opts.StopGracePeriodSeconds
+		config.StopTimeout = &timeout
 	}
 
 	resp, err := c.dockerClient.ContainerCreate(ctx, config, hostConfig, nil, nil, opts.Name)

@@ -12,6 +12,7 @@ import (
 	"strings"
 	"time"
 
+	"codedock/internal/engine/stacks"
 	"codedock/internal/models"
 )
 
@@ -150,6 +151,17 @@ func inspectRepositoryFiles(root string) (*models.RepositoryInspection, error) {
 		result.InternalPort = 80
 		result.StartCommand = ""
 		result.Warnings = append(result.Warnings, "Confirm static output matches your framework configuration.")
+	}
+	stackID, roles := stacks.ResolveRolesForSource(root)
+	result.Stack = stackID
+	for _, role := range roles {
+		result.Roles = append(result.Roles, models.ServiceRoleSpec{
+			Name:            role.Name,
+			Kind:            string(role.Kind),
+			Command:         role.Command,
+			StopGracePeriod: role.StopGracePeriod,
+			Singleton:       role.Singleton,
+		})
 	}
 	return result, nil
 }

@@ -52,6 +52,20 @@ func TestDetectDepsParsesManifests(t *testing.T) {
 	}
 }
 
+func TestResolveRolesForSource(t *testing.T) {
+	dir := t.TempDir()
+	writeFile(t, dir, "composer.json", `{"require":{"laravel/framework":"^11","laravel/horizon":"^5"}}`)
+	writeFile(t, dir, "artisan", "")
+	id, roles := ResolveRolesForSource(dir)
+	if id != "laravel" {
+		t.Fatalf("expected laravel, got %q", id)
+	}
+	names := roleNames(roles)
+	if !contains(names, "horizon") || contains(names, "queue") {
+		t.Fatalf("expected horizon without queue, got %v", names)
+	}
+}
+
 func TestDetectFiles(t *testing.T) {
 	dir := t.TempDir()
 	writeFile(t, dir, "bin/jobs", "")

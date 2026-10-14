@@ -108,6 +108,8 @@ func AppServiceSchema() Schema {
 		F("enablePrPreviews", Bool("PR previews enabled")),
 		F("maintenanceMode", Bool("Maintenance mode")),
 		F("optimize", Bool("Framework cache warming before start")),
+		F("stack", Str("Detected stack")),
+		F("stopGracePeriodSeconds", Int("Container stop grace period")),
 	}
 	return Obj("Application service", append(props, Timestamps()...)...)
 }
