@@ -1,0 +1,66 @@
+package stacks
+
+import (
+	"os"
+	"path/filepath"
+	"testing"
+)
+
+func writeFile(t *testing.T, dir, name, content string) {
+	t.Helper()
+	path := filepath.Join(dir, name)
+	if err := os.MkdirAll(filepath.Dir(path), 0o755); err != nil {
+		t.Fatal(err)
+	}
+	if err := os.WriteFile(path, []byte(content), 0o644); err != nil {
+		t.Fatal(err)
+	}
+}
+
+func TestDetectStackLaravel(t *testing.T) {
+	dir := t.TempDir()
+	writeFile(t, dir, "composer.json", `{"require":{"laravel/framework":"^11"}}`)
+	writeFile(t, dir, "artisan", "")
+	if got := DetectStack(dir); got != "laravel" {
+		t.Fatalf("expected laravel, got %q", got)
+	}
+}
+
+func TestDetectStackNextAndGo(t *testing.T) {
+	next := t.TempDir()
+	writeFile(t, next, "package.json", `{"dependencies":{"next":"14"}}`)
+	if got := DetectStack(next); got != "nextjs" {
+		t.Fatalf("expected nextjs, got %q", got)
+	}
+
+	golang := t.TempDir()
+	writeFile(t, golang, "go.mod", "module example.com/app\n\ngo 1.22\n\nrequire github.com/labstack/echo/v4 v4.12.0\n")
+	if got := DetectStack(golang); got != "go" {
+		t.Fatalf("expected go, got %q", got)
+	}
+}
+
+func TestDetectDepsParsesManifests(t *testing.T) {
+	dir := t.TempDir()
+	writeFile(t, dir, "Gemfile", "source \"https://rubygems.org\"\ngem \"solid_queue\"\ngem 'sidekiq', '~> 7'\n")
+	writeFile(t, dir, "requirements.txt", "Flask==3.0.0\n# comment\n")
+	deps := DetectDeps(dir)
+	for _, want := range []string{"solid_queue", "sidekiq", "flask"} {
+		if !contains(deps, want) {
+			t.Errorf("expected dep %q in %v", want, deps)
+		}
+	}
+}
+
+func TestDetectFiles(t *testing.T) {
+	dir := t.TempDir()
+	writeFile(t, dir, "bin/jobs", "")
+	writeFile(t, dir, "node_modules/ignored.js", "")
+	files := DetectFiles(dir)
+	if !contains(files, "bin/jobs") {
+		t.Fatalf("expected bin/jobs in %v", files)
+	}
+	if contains(files, "node_modules/ignored.js") {
+		t.Fatalf("node_modules should be skipped, got %v", files)
+	}
+}
