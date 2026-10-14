@@ -689,6 +689,26 @@
     "/api/apps": {
       "get": {
         "operationId": "getApps",
+        "parameters": [
+          {
+            "description": "Organization ID",
+            "in": "query",
+            "name": "organizationId",
+            "required": false,
+            "schema": {
+              "type": "string"
+            }
+          },
+          {
+            "description": "Search text",
+            "in": "query",
+            "name": "search",
+            "required": false,
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
         "responses": {
           "200": {
             "content": {
@@ -7988,6 +8008,15 @@
             "schema": {
               "type": "string"
             }
+          },
+          {
+            "description": "Free-text search",
+            "in": "query",
+            "name": "q",
+            "required": false,
+            "schema": {
+              "type": "string"
+            }
           }
         ],
         "responses": {
@@ -8219,6 +8248,26 @@
     "/api/audit-logs/facets": {
       "get": {
         "operationId": "getAuditLogsFacets",
+        "parameters": [
+          {
+            "description": "Category ID filter",
+            "in": "query",
+            "name": "category",
+            "required": false,
+            "schema": {
+              "type": "string"
+            }
+          },
+          {
+            "description": "Free-text search",
+            "in": "query",
+            "name": "q",
+            "required": false,
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
         "responses": {
           "200": {
             "content": {
@@ -19629,6 +19678,17 @@
     "/api/databases": {
       "get": {
         "operationId": "getDatabases",
+        "parameters": [
+          {
+            "description": "Search text",
+            "in": "query",
+            "name": "search",
+            "required": false,
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
         "responses": {
           "200": {
             "content": {
@@ -39686,6 +39746,243 @@
           "organizations"
         ],
         "x-auth": "instance admin"
+      }
+    },
+    "/api/notifications/deliveries": {
+      "get": {
+        "operationId": "getNotificationsDeliveries",
+        "parameters": [
+          {
+            "description": "Max entries",
+            "in": "query",
+            "name": "limit",
+            "required": false,
+            "schema": {
+              "type": "integer"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "description": "Codedock API envelope",
+                  "properties": {
+                    "data": {
+                      "description": "Deliveries",
+                      "items": {
+                        "description": "Notification delivery",
+                        "properties": {
+                          "channel": {
+                            "description": "Channel",
+                            "type": "string"
+                          },
+                          "createdAt": {
+                            "description": "Created at",
+                            "type": "string"
+                          },
+                          "error": {
+                            "description": "Error",
+                            "type": "string"
+                          },
+                          "eventType": {
+                            "description": "Event type",
+                            "type": "string"
+                          },
+                          "id": {
+                            "description": "Delivery ID",
+                            "type": "string"
+                          },
+                          "success": {
+                            "description": "Delivered",
+                            "type": "boolean"
+                          },
+                          "title": {
+                            "description": "Title",
+                            "type": "string"
+                          }
+                        },
+                        "required": [
+                          "id",
+                          "eventType",
+                          "channel",
+                          "success"
+                        ],
+                        "type": "object"
+                      },
+                      "type": "array"
+                    },
+                    "executionTime": {
+                      "description": "Handler seconds",
+                      "format": "double",
+                      "type": "number"
+                    },
+                    "message": {
+                      "description": "Human-readable message",
+                      "type": "string"
+                    },
+                    "path": {
+                      "description": "Request path",
+                      "type": "string"
+                    },
+                    "status": {
+                      "description": "Result status",
+                      "enum": [
+                        "success"
+                      ],
+                      "type": "string"
+                    }
+                  },
+                  "required": [
+                    "status",
+                    "message"
+                  ],
+                  "type": "object"
+                }
+              }
+            },
+            "description": "List notification delivery attempts"
+          },
+          "400": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "description": "Codedock API error",
+                  "properties": {
+                    "message": {
+                      "description": "Human-readable message",
+                      "type": "string"
+                    },
+                    "path": {
+                      "description": "Request path",
+                      "type": "string"
+                    },
+                    "status": {
+                      "description": "Result status",
+                      "enum": [
+                        "error"
+                      ],
+                      "type": "string"
+                    }
+                  },
+                  "required": [
+                    "status",
+                    "message"
+                  ],
+                  "type": "object"
+                }
+              }
+            },
+            "description": "Invalid request"
+          },
+          "401": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "description": "Codedock API error",
+                  "properties": {
+                    "message": {
+                      "description": "Human-readable message",
+                      "type": "string"
+                    },
+                    "path": {
+                      "description": "Request path",
+                      "type": "string"
+                    },
+                    "status": {
+                      "description": "Result status",
+                      "enum": [
+                        "error"
+                      ],
+                      "type": "string"
+                    }
+                  },
+                  "required": [
+                    "status",
+                    "message"
+                  ],
+                  "type": "object"
+                }
+              }
+            },
+            "description": "Missing or invalid credentials"
+          },
+          "403": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "description": "Codedock API error",
+                  "properties": {
+                    "message": {
+                      "description": "Human-readable message",
+                      "type": "string"
+                    },
+                    "path": {
+                      "description": "Request path",
+                      "type": "string"
+                    },
+                    "status": {
+                      "description": "Result status",
+                      "enum": [
+                        "error"
+                      ],
+                      "type": "string"
+                    }
+                  },
+                  "required": [
+                    "status",
+                    "message"
+                  ],
+                  "type": "object"
+                }
+              }
+            },
+            "description": "Insufficient permissions"
+          },
+          "500": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "description": "Codedock API error",
+                  "properties": {
+                    "message": {
+                      "description": "Human-readable message",
+                      "type": "string"
+                    },
+                    "path": {
+                      "description": "Request path",
+                      "type": "string"
+                    },
+                    "status": {
+                      "description": "Result status",
+                      "enum": [
+                        "error"
+                      ],
+                      "type": "string"
+                    }
+                  },
+                  "required": [
+                    "status",
+                    "message"
+                  ],
+                  "type": "object"
+                }
+              }
+            },
+            "description": "Server error"
+          }
+        },
+        "security": [
+          {
+            "bearerAuth": []
+          }
+        ],
+        "summary": "List notification delivery attempts",
+        "tags": [
+          "organizations"
+        ],
+        "x-auth": "authenticated"
       }
     },
     "/api/notifications/subscriptions": {
@@ -60339,6 +60636,44 @@
     "/api/projects": {
       "get": {
         "operationId": "getProjects",
+        "parameters": [
+          {
+            "description": "Organization ID",
+            "in": "query",
+            "name": "organizationId",
+            "required": false,
+            "schema": {
+              "type": "string"
+            }
+          },
+          {
+            "description": "Search text",
+            "in": "query",
+            "name": "search",
+            "required": false,
+            "schema": {
+              "type": "string"
+            }
+          },
+          {
+            "description": "Page",
+            "in": "query",
+            "name": "page",
+            "required": false,
+            "schema": {
+              "type": "integer"
+            }
+          },
+          {
+            "description": "Page size",
+            "in": "query",
+            "name": "limit",
+            "required": false,
+            "schema": {
+              "type": "integer"
+            }
+          }
+        ],
         "responses": {
           "200": {
             "content": {
@@ -78795,6 +79130,17 @@
     "/api/servers": {
       "get": {
         "operationId": "getServers",
+        "parameters": [
+          {
+            "description": "Search text",
+            "in": "query",
+            "name": "search",
+            "required": false,
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
         "responses": {
           "200": {
             "content": {
