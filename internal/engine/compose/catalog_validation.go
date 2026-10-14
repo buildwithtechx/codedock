@@ -5,7 +5,6 @@ import (
 	"regexp"
 	"strconv"
 	"strings"
-	"time"
 )
 
 type CatalogPortMapping struct {
@@ -95,8 +94,8 @@ func validateCatalogHealthcheck(name string, check *CatalogHealthcheck) []string
 		if duration.value == "" {
 			continue
 		}
-		parsed, err := time.ParseDuration(duration.value)
-		if err != nil || parsed <= 0 {
+		ns, ok := ParseComposeDuration(duration.value)
+		if !ok || ns <= 0 {
 			failures = append(failures, fmt.Sprintf("service %s: healthcheck %s must be a positive duration like 30s", name, duration.label))
 		}
 	}
