@@ -1,4 +1,5 @@
 import { keepPreviousData, useQuery } from '@tanstack/react-query';
+import { getRouteApi } from '@tanstack/react-router';
 import {
   AppWindow,
   Bot,
@@ -14,11 +15,12 @@ import {
   Wrench,
 } from 'lucide-react';
 import type { ComponentType } from 'react';
-import { useMemo, useState } from 'react';
+import { useEffect, useMemo, useState } from 'react';
 import { Input } from '#/components/ui/input';
 import { QueryErrorState } from '#/components/ui/query-error-state';
 import { Skeleton } from '#/components/ui/skeleton';
 import { Tabs, TabsList, TabsTrigger } from '#/components/ui/tabs';
+import { useDebouncedSearch } from '#/hooks/use-debounced-search';
 import { type AuditLogRow, auditApi } from './api';
 import { AuditDetailsDialog } from './audit-details-dialog';
 import { AuditSettingsCard } from './audit-settings-card';
@@ -50,6 +52,8 @@ const CATEGORY_ICON_MAP: Record<string, ComponentType<{ className?: string }>> =
 
 const PER_PAGE = 50;
 
+const auditRouteApi = getRouteApi('/_dashboard/audit');
+
 function dayLabel(iso: string): string {
   const key = dayKey(iso);
   const today = dayKey(new Date().toISOString());
@@ -65,22 +69,49 @@ function dayLabel(iso: string): string {
 }
 
 export function AuditLogList() {
-  const [category, setCategory] = useState('all');
-  const [search, setSearch] = useState('');
+  const urlParams = auditRouteApi.useSearch();
+  const navigate = auditRouteApi.useNavigate();
+  const urlQuery = urlParams.q ?? '';
+  const urlCategory = urlParams.category ?? 'all';
+
+  const [category, setCategory] = useState(urlCategory);
+  const [search, setSearch] = useState(urlQuery);
   const [page, setPage] = useState(1);
   const [selected, setSelected] = useState<AuditLogRow | null>(null);
+  const settledSearch = useDebouncedSearch(search);
+
+  useEffect(() => {
+    setSearch((current) => (current.trim() === urlQuery ? current : urlQuery));
+    setCategory((current) => (current === urlCategory ? current : urlCategory));
+  }, [urlQuery, urlCategory]);
+
+  useEffect(() => {
+    const trimmed = settledSearch.trim();
+    if (trimmed === urlQuery) return;
+    setPage(1);
+    void navigate({
+      search: (previous) => ({ ...previous, q: trimmed || undefined }),
+      replace: true,
+      resetScroll: false,
+    });
+  }, [settledSearch, urlQuery, navigate]);
 
   const facetsQuery = useQuery({
-    queryKey: ['auditLogFacets'],
-    queryFn: () => auditApi.facets(),
+    queryKey: ['auditLogFacets', category, settledSearch],
+    queryFn: () =>
+      auditApi.facets({
+        category: category === 'all' ? undefined : category,
+        q: settledSearch.trim() || undefined,
+      }),
   });
   const facets = facetsQuery.data?.data ?? null;
 
   const listQuery = useQuery({
-    queryKey: ['auditLogs', category, page],
+    queryKey: ['auditLogs', category, settledSearch, page],
     queryFn: () =>
       auditApi.list({
         category: category === 'all' ? undefined : category,
+        q: settledSearch.trim() || undefined,
         limit: PER_PAGE,
         offset: (page - 1) * PER_PAGE,
       }),
@@ -110,21 +141,9 @@ export function AuditLogList() {
       ? (facets?.total ?? rows.length)
       : (facets?.categories.find((entry) => entry.id === category)?.count ?? rows.length);
 
-  const searched = useMemo(() => {
-    const query = search.trim().toLowerCase();
-    const matched = query
-      ? rows.filter((log) =>
-          `${log.action} ${log.resource} ${log.details} ${log.userId} ${log.ipAddress}`
-            .toLowerCase()
-            .includes(query)
-        )
-      : rows;
-    return [...matched].sort((a, b) => +new Date(b.createdAt) - +new Date(a.createdAt));
-  }, [rows, search]);
-
   const days = useMemo(() => {
     const groups: Array<{ key: string; label: string; rows: AuditLogRow[] }> = [];
-    for (const row of searched) {
+    for (const row of rows) {
       const key = dayKey(row.createdAt);
       const last = groups[groups.length - 1];
       if (last && last.key === key) {
@@ -134,7 +153,7 @@ export function AuditLogList() {
       groups.push({ key, label: dayLabel(row.createdAt), rows: [row] });
     }
     return groups;
-  }, [searched]);
+  }, [rows]);
 
   const totalPages = Math.max(1, Math.ceil(total / PER_PAGE));
   const filtersActive = category !== 'all' || search.trim() !== '';
@@ -142,12 +161,18 @@ export function AuditLogList() {
   const pickCategory = (value: string) => {
     setCategory(value);
     setPage(1);
+    void navigate({
+      search: (previous) => ({ ...previous, category: value === 'all' ? undefined : value }),
+      replace: true,
+      resetScroll: false,
+    });
   };
 
   const clearFilters = () => {
     setCategory('all');
     setSearch('');
     setPage(1);
+    void navigate({ search: {}, replace: true, resetScroll: false });
   };
 
   return (
@@ -199,7 +224,7 @@ export function AuditLogList() {
               description="Codedock could not load activity logs for your workspace."
               onRetry={() => void listQuery.refetch()}
             />
-          ) : searched.length === 0 ? (
+          ) : rows.length === 0 ? (
             <div className="rounded-2xl border border-border/50 bg-card py-16 text-center">
               <Shield className="mx-auto mb-4 size-8 text-muted-foreground/30" />
               <p className="text-muted-foreground text-sm">

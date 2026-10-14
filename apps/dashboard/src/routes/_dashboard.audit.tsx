@@ -1,9 +1,14 @@
 import { createFileRoute } from '@tanstack/react-router';
+import { z } from 'zod';
 import { PageHeader } from '#/components/layout/page-header';
 import { AuditLogList } from '#/features/audit/audit-log-list';
 
 export const Route = createFileRoute('/_dashboard/audit')({
   component: AuditPage,
+  validateSearch: z.object({
+    q: z.string().optional(),
+    category: z.string().optional(),
+  }),
 });
 
 export function AuditPage() {

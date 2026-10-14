@@ -21,6 +21,7 @@ export interface AuditFacets {
 
 export interface AuditListParams {
   category?: string;
+  q?: string;
   limit?: number;
   offset?: number;
 }
@@ -28,6 +29,7 @@ export interface AuditListParams {
 function toQuery(params: AuditListParams): string {
   const query = new URLSearchParams();
   if (params.category) query.set('category', params.category);
+  if (params.q) query.set('q', params.q);
   if (params.limit !== undefined) query.set('limit', String(params.limit));
   if (params.offset !== undefined) query.set('offset', String(params.offset));
   const text = query.toString();
@@ -49,9 +51,11 @@ export const auditApi = {
       throw handleApiError(error);
     }
   },
-  facets: async (): Promise<BaseResponse<AuditFacets>> => {
+  facets: async (
+    params: { category?: string; q?: string } = {}
+  ): Promise<BaseResponse<AuditFacets>> => {
     try {
-      return await apiClient.get<BaseResponse<AuditFacets>>('/audit-logs/facets');
+      return await apiClient.get<BaseResponse<AuditFacets>>(`/audit-logs/facets${toQuery(params)}`);
     } catch (error) {
       throw handleApiError(error);
     }
