@@ -131,3 +131,56 @@ func TestAttentionIssueLifecycle(t *testing.T) {
 		t.Fatalf("append: %v", err)
 	}
 }
+
+func TestAttentionClearResolved(t *testing.T) {
+	db := openPGTestDB(t)
+	ctx := context.Background()
+	orgRepo := NewOrganizationRepository(db)
+	for _, org := range []*models.Organization{{ID: "org-1", Name: "Acme"}, {ID: "org-2", Name: "Other"}} {
+		if err := orgRepo.Create(ctx, org); err != nil {
+			t.Fatalf("create org %s: %v", org.ID, err)
+		}
+	}
+	repo := NewAttentionRepository(db)
+	seed := func(org, id string, status models.AttentionStatus) {
+		if err := repo.Upsert(ctx, &models.AttentionIssue{ID: id, OrganizationID: org, Kind: id, Subject: id, Severity: models.AttentionSeverityWarning, Title: id}); err != nil {
+			t.Fatalf("upsert %s: %v", id, err)
+		}
+		if status != models.AttentionStatusOpen {
+			if err := repo.SetStatus(ctx, id, org, status); err != nil {
+				t.Fatalf("set status %s: %v", id, err)
+			}
+		}
+	}
+	seed("org-1", "resolved-1", models.AttentionStatusResolved)
+	seed("org-1", "acked-1", models.AttentionStatusAcked)
+	seed("org-1", "open-1", models.AttentionStatusOpen)
+	seed("org-2", "resolved-2", models.AttentionStatusResolved)
+
+	deleted, err := repo.ClearResolved(ctx, "org-1")
+	if err != nil {
+		t.Fatalf("clear resolved: %v", err)
+	}
+	if deleted != 1 {
+		t.Fatalf("expected 1 deleted, got %d", deleted)
+	}
+	remaining, err := repo.List(ctx, "org-1", "", 10)
+	if err != nil {
+		t.Fatalf("list: %v", err)
+	}
+	if len(remaining) != 2 {
+		t.Fatalf("expected open and acked retained, got %d", len(remaining))
+	}
+	for _, issue := range remaining {
+		if issue.Status == models.AttentionStatusResolved {
+			t.Fatalf("resolved issue survived clear: %s", issue.ID)
+		}
+	}
+	foreign, err := repo.List(ctx, "org-2", "", 10)
+	if err != nil {
+		t.Fatalf("list org-2: %v", err)
+	}
+	if len(foreign) != 1 || foreign[0].ID != "resolved-2" {
+		t.Fatalf("expected the other org's history untouched, got %#v", foreign)
+	}
+}

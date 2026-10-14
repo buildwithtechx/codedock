@@ -146,3 +146,8 @@ type AttentionActionRequest struct {
 	Action string            `json:"action"`
 	Params map[string]string `json:"params"`
 }
+
+type AttentionFeed struct {
+	Issues          []*AttentionIssue `json:"issues"`
+	CanClearHistory bool              `json:"canClearHistory"`
+}

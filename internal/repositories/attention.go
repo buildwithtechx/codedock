@@ -16,6 +16,7 @@ type AttentionRepository interface {
 	SetStatus(ctx context.Context, id, orgID string, status models.AttentionStatus) error
 	ResolveMissing(ctx context.Context, orgID string, live []string) error
 	AppendDetail(ctx context.Context, id, line string) error
+	ClearResolved(ctx context.Context, orgID string) (int64, error)
 }
 
 type postgresAttentionRepository struct {
@@ -125,6 +126,18 @@ func (r *postgresAttentionRepository) AppendDetail(ctx context.Context, id, line
 		return fmt.Errorf("append issue detail: %w", err)
 	}
 	return nil
+}
+
+func (r *postgresAttentionRepository) ClearResolved(ctx context.Context, orgID string) (int64, error) {
+	result, err := r.db.ExecContext(ctx, `DELETE FROM attention_issues WHERE organization_id = $1 AND status = 'resolved'`, orgID)
+	if err != nil {
+		return 0, fmt.Errorf("clear resolved attention issues: %w", err)
+	}
+	deleted, err := result.RowsAffected()
+	if err != nil {
+		return 0, fmt.Errorf("count cleared attention issues: %w", err)
+	}
+	return deleted, nil
 }
 
 func (r *postgresAttentionRepository) scanRow(row *sql.Row) (*models.AttentionIssue, error) {

@@ -75,6 +75,13 @@ func attentionIssueSchema() Schema {
 	)
 }
 
+func attentionFeedSchema() Schema {
+	return Obj("Attention feed",
+		RF("issues", Arr("Issues", attentionIssueSchema())),
+		RF("canClearHistory", Bool("Whether the caller may clear resolved history")),
+	)
+}
+
 func analyticsOperations() []Operation {
 	analytics := "analytics"
 	attention := "attention"
@@ -95,8 +102,9 @@ func analyticsOperations() []Operation {
 		{Method: "GET", Path: "/api/organizations/:id/projects/:projectId/analytics/container", Summary: "Get container analytics", Tags: []string{analytics}, Auth: read, Response: Any("Container analytics"), Query: []Param{QueryParam("containerId", "Container ID")}},
 		{Method: "GET", Path: "/api/organizations/:id/projects/:projectId/analytics/live", Summary: "Get live traffic", Tags: []string{analytics}, Auth: read, Response: analyticsOverviewSchema()},
 		{Method: "GET", Path: "/api/organizations/:id/projects/:projectId/analytics/resources", Summary: "Get resource analytics", Tags: []string{analytics}, Auth: read, Response: Any("Resource analytics")},
-		{Method: "GET", Path: "/api/organizations/:id/attention", Summary: "List attention issues", Tags: []string{attention}, Auth: read, Response: Arr("Issues", attentionIssueSchema()), Query: []Param{QueryParam("status", "Filter by status")}},
+		{Method: "GET", Path: "/api/organizations/:id/attention", Summary: "List attention issues", Tags: []string{attention}, Auth: read, Response: attentionFeedSchema(), Query: []Param{QueryParam("status", "Filter by status")}},
 		{Method: "POST", Path: "/api/organizations/:id/attention/evaluate", Summary: "Evaluate attention issues", Tags: []string{attention}, Auth: write, Response: EmptySchema()},
+		{Method: "DELETE", Path: "/api/organizations/:id/attention/history", Summary: "Clear resolved monitoring history", Tags: []string{attention}, Auth: AuthOrgAdmin, Response: Obj("Cleared", RF("deleted", Int("Deleted count")))},
 		{Method: "POST", Path: "/api/organizations/:id/attention/:issueId/ack", Summary: "Acknowledge an issue", Tags: []string{attention}, Auth: write, Response: EmptySchema()},
 		{Method: "POST", Path: "/api/organizations/:id/attention/:issueId/resolve", Summary: "Resolve an issue", Tags: []string{attention}, Auth: write, Response: EmptySchema()},
 		{Method: "POST", Path: "/api/organizations/:id/attention/:issueId/act", Summary: "Act on an issue", Tags: []string{attention}, Auth: write, Request: JSON(Obj("Act", RF("action", Str("Action")), F("params", Map("Params", Str("Value"))))), Response: Obj("Outcome", RF("outcome", Str("Outcome")))},

@@ -377,7 +377,7 @@ func NewServer(db *sql.DB, v *utils.Vault, deployer *deploy.Deployer, traefikMan
 	if err := configureMigration(srv, db, v, projectRepo, appService, appRepo, environmentRepo, serverRepo, userRepo, orgRepo, gitService, composeParserService, deploymentService, sshManager, runtimeRepository); err != nil {
 		return nil, err
 	}
-	configureAnalytics(srv, db, v, traefikManager, deployRepo, projectRepo, appRepo, domainRepo, userRepo, orgRepo, metricsService, statsMonitor, deploymentService, backupService, srv.migrationService)
+	configureAnalytics(srv, db, v, traefikManager, deployRepo, projectRepo, appRepo, domainRepo, userRepo, orgRepo, metricsService, statsMonitor, deploymentService, backupService, srv.migrationService, auditService)
 	if err := configureClusters(srv, db, v, projectRepo, serverRepo, operationService, volumeOperations, appRepo, deploymentService, canvasService, backupManager); err != nil {
 		return nil, err
 	}

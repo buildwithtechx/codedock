@@ -3,6 +3,7 @@ package attention
 import (
 	"context"
 	"encoding/json"
+	"errors"
 	"fmt"
 	"io"
 	"sync"
@@ -15,6 +16,8 @@ import (
 	"codedock/internal/repositories"
 	"codedock/internal/services/migrations"
 )
+
+var ErrClearHistoryForbidden = errors.New("an organization administrator is required to clear monitoring history")
 
 type WorkloadDeployer interface {
 	DeployAppService(ctx context.Context, appID, sourceDir string, logWriter io.Writer) (string, error)
@@ -179,6 +182,44 @@ func (s *Service) Resolve(ctx context.Context, userID, orgID, issueID string) er
 		return fmt.Errorf("attention issue not found")
 	}
 	return s.issues.SetStatus(ctx, issueID, orgID, models.AttentionStatusResolved)
+}
+
+func (s *Service) CanClearHistory(ctx context.Context, userID, orgID string) (bool, error) {
+	if orgID == "" {
+		return false, nil
+	}
+	if err := s.requireOrg(ctx, userID, orgID); err != nil {
+		return false, nil
+	}
+	user, err := s.users.GetUserByID(ctx, userID)
+	if err != nil {
+		return false, fmt.Errorf("failed to load user: %w", err)
+	}
+	if user != nil && (user.Role == models.UserRoleOwner || user.Role == models.UserRoleAdmin) {
+		return true, nil
+	}
+	member, err := s.orgs.GetMember(ctx, orgID, userID)
+	if err != nil {
+		return false, fmt.Errorf("failed to load organization membership: %w", err)
+	}
+	if member == nil {
+		return false, nil
+	}
+	return member.Permission == models.MemberPermissionAdmin || member.Permission == models.MemberPermissionOwner, nil
+}
+
+func (s *Service) ClearHistory(ctx context.Context, userID, orgID string) (int64, error) {
+	if err := s.requireOrg(ctx, userID, orgID); err != nil {
+		return 0, err
+	}
+	allowed, err := s.CanClearHistory(ctx, userID, orgID)
+	if err != nil {
+		return 0, err
+	}
+	if !allowed {
+		return 0, ErrClearHistoryForbidden
+	}
+	return s.issues.ClearResolved(ctx, orgID)
 }
 
 func (s *Service) scanDeployments(ctx context.Context, _ string, orgID string) ([]*models.AttentionIssue, error) {

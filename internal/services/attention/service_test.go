@@ -2,6 +2,7 @@ package attention
 
 import (
 	"context"
+	"errors"
 	"fmt"
 	"io"
 	"testing"
@@ -216,5 +217,60 @@ func TestAttentionMigrationAndQuota(t *testing.T) {
 	}
 	if outcome == "" {
 		t.Fatal("expected resume outcome")
+	}
+}
+
+func TestAttentionClearHistoryRequiresAdmin(t *testing.T) {
+	service, _, _, _, deployRepo, appRepo, _, _, _, orgID := setupAttentionTest(t)
+	ctx := context.Background()
+	svcID := seedAttentionService(t, appRepo, "proj-1", "c-bad")
+	if err := deployRepo.Create(ctx, &models.Deployment{OrganizationID: orgID, ProjectID: "proj-1", ServiceID: svcID, Status: models.DeploymentStatusFailed}); err != nil {
+		t.Fatalf("create deployment: %v", err)
+	}
+	if err := service.Evaluate(ctx, "member", orgID); err != nil {
+		t.Fatalf("evaluate: %v", err)
+	}
+	issues, err := service.ListIssues(ctx, "member", orgID, "open")
+	if err != nil {
+		t.Fatalf("list: %v", err)
+	}
+	failing := ""
+	for _, issue := range issues {
+		if issue.Kind == "deployment-failed" {
+			failing = issue.ID
+		}
+	}
+	if failing == "" {
+		t.Fatalf("expected a deployment-failed issue, got %#v", issues)
+	}
+	if err := service.Resolve(ctx, "member", orgID, failing); err != nil {
+		t.Fatalf("resolve: %v", err)
+	}
+
+	if allowed, err := service.CanClearHistory(ctx, "member", orgID); err != nil || allowed {
+		t.Fatalf("member should not be allowed to clear history: allowed=%v err=%v", allowed, err)
+	}
+	if _, err := service.ClearHistory(ctx, "member", orgID); !errors.Is(err, ErrClearHistoryForbidden) {
+		t.Fatalf("expected ErrClearHistoryForbidden, got %v", err)
+	}
+	resolved, err := service.ListIssues(ctx, "member", orgID, "resolved")
+	if err != nil || len(resolved) != 1 {
+		t.Fatalf("expected history retained after a forbidden clear, got %d %v", len(resolved), err)
+	}
+
+	if allowed, err := service.CanClearHistory(ctx, "admin", orgID); err != nil || !allowed {
+		t.Fatalf("admin should be allowed to clear history: allowed=%v err=%v", allowed, err)
+	}
+	deleted, err := service.ClearHistory(ctx, "admin", orgID)
+	if err != nil || deleted != 1 {
+		t.Fatalf("expected 1 cleared, got %d %v", deleted, err)
+	}
+	after, err := service.ListIssues(ctx, "member", orgID, "resolved")
+	if err != nil || len(after) != 0 {
+		t.Fatalf("expected empty history after clear, got %d %v", len(after), err)
+	}
+	open, err := service.ListIssues(ctx, "member", orgID, "open")
+	if err != nil || len(open) == 0 {
+		t.Fatalf("expected open issues retained after clear, got %d %v", len(open), err)
 	}
 }

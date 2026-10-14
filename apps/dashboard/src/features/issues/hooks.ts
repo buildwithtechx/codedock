@@ -81,3 +81,22 @@ export const useActOnIssue = () => {
     },
   });
 };
+
+export const useClearIssueHistory = () => {
+  const queryClient = useQueryClient();
+  const activeOrganizationId = useActiveOrganizationId();
+
+  return useMutation({
+    mutationFn: () => issuesService.clearHistory(activeOrganizationId as string),
+    onSuccess: async (response) => {
+      const deleted = response.data?.deleted ?? 0;
+      toast.success(
+        response.message ||
+          (deleted === 1 ? 'Cleared 1 resolved issue' : `Cleared ${deleted} resolved issues`)
+      );
+      await queryClient.invalidateQueries({
+        queryKey: ['issues', 'list', activeOrganizationId],
+      });
+    },
+  });
+};

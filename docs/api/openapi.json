@@ -44389,88 +44389,102 @@
                   "description": "Codedock API envelope",
                   "properties": {
                     "data": {
-                      "description": "Issues",
-                      "items": {
-                        "description": "Attention issue",
-                        "properties": {
-                          "action": {
-                            "description": "Action",
-                            "type": "string"
-                          },
-                          "detail": {
-                            "description": "Detail",
-                            "type": "string"
-                          },
-                          "firstSeen": {
-                            "description": "First seen",
-                            "type": "string"
-                          },
-                          "id": {
-                            "description": "Issue ID",
-                            "type": "string"
-                          },
-                          "kind": {
-                            "description": "Issue kind",
-                            "type": "string"
-                          },
-                          "lastSeen": {
-                            "description": "Last seen",
-                            "type": "string"
-                          },
-                          "occurrences": {
-                            "description": "Occurrences",
-                            "format": "int32",
-                            "type": "integer"
-                          },
-                          "organizationId": {
-                            "description": "Organization ID",
-                            "type": "string"
-                          },
-                          "projectId": {
-                            "description": "Project ID",
-                            "type": "string"
-                          },
-                          "remediation": {
-                            "description": "Remediation",
-                            "type": "string"
-                          },
-                          "serviceId": {
-                            "description": "Service ID",
-                            "type": "string"
-                          },
-                          "severity": {
-                            "description": "Severity",
-                            "type": "string"
-                          },
-                          "status": {
-                            "description": "Status",
-                            "type": "string"
-                          },
-                          "subject": {
-                            "description": "Subject",
-                            "type": "string"
-                          },
-                          "title": {
-                            "description": "Title",
-                            "type": "string"
-                          },
-                          "updatedAt": {
-                            "description": "Last update",
-                            "type": "string"
-                          }
+                      "description": "Attention feed",
+                      "properties": {
+                        "canClearHistory": {
+                          "description": "Whether the caller may clear resolved history",
+                          "type": "boolean"
                         },
-                        "required": [
-                          "id",
-                          "organizationId",
-                          "kind",
-                          "subject",
-                          "severity",
-                          "status",
-                          "title"
-                        ],
-                        "type": "object"
+                        "issues": {
+                          "description": "Issues",
+                          "items": {
+                            "description": "Attention issue",
+                            "properties": {
+                              "action": {
+                                "description": "Action",
+                                "type": "string"
+                              },
+                              "detail": {
+                                "description": "Detail",
+                                "type": "string"
+                              },
+                              "firstSeen": {
+                                "description": "First seen",
+                                "type": "string"
+                              },
+                              "id": {
+                                "description": "Issue ID",
+                                "type": "string"
+                              },
+                              "kind": {
+                                "description": "Issue kind",
+                                "type": "string"
+                              },
+                              "lastSeen": {
+                                "description": "Last seen",
+                                "type": "string"
+                              },
+                              "occurrences": {
+                                "description": "Occurrences",
+                                "format": "int32",
+                                "type": "integer"
+                              },
+                              "organizationId": {
+                                "description": "Organization ID",
+                                "type": "string"
+                              },
+                              "projectId": {
+                                "description": "Project ID",
+                                "type": "string"
+                              },
+                              "remediation": {
+                                "description": "Remediation",
+                                "type": "string"
+                              },
+                              "serviceId": {
+                                "description": "Service ID",
+                                "type": "string"
+                              },
+                              "severity": {
+                                "description": "Severity",
+                                "type": "string"
+                              },
+                              "status": {
+                                "description": "Status",
+                                "type": "string"
+                              },
+                              "subject": {
+                                "description": "Subject",
+                                "type": "string"
+                              },
+                              "title": {
+                                "description": "Title",
+                                "type": "string"
+                              },
+                              "updatedAt": {
+                                "description": "Last update",
+                                "type": "string"
+                              }
+                            },
+                            "required": [
+                              "id",
+                              "organizationId",
+                              "kind",
+                              "subject",
+                              "severity",
+                              "status",
+                              "title"
+                            ],
+                            "type": "object"
+                          },
+                          "type": "array"
+                        }
                       },
-                      "type": "array"
+                      "required": [
+                        "issues",
+                        "canClearHistory"
+                      ],
+                      "type": "object"
                     },
                     "executionTime": {
                       "description": "Handler seconds",
@@ -44909,6 +44923,245 @@
           "attention"
         ],
         "x-auth": "organization member"
+      }
+    },
+    "/api/organizations/{id}/attention/history": {
+      "delete": {
+        "operationId": "deleteOrganizationsIdAttentionHistory",
+        "parameters": [
+          {
+            "description": "id",
+            "in": "path",
+            "name": "id",
+            "required": true,
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "description": "Codedock API envelope",
+                  "properties": {
+                    "data": {
+                      "description": "Cleared",
+                      "properties": {
+                        "deleted": {
+                          "description": "Deleted count",
+                          "format": "int32",
+                          "type": "integer"
+                        }
+                      },
+                      "required": [
+                        "deleted"
+                      ],
+                      "type": "object"
+                    },
+                    "executionTime": {
+                      "description": "Handler seconds",
+                      "format": "double",
+                      "type": "number"
+                    },
+                    "message": {
+                      "description": "Human-readable message",
+                      "type": "string"
+                    },
+                    "path": {
+                      "description": "Request path",
+                      "type": "string"
+                    },
+                    "status": {
+                      "description": "Result status",
+                      "enum": [
+                        "success"
+                      ],
+                      "type": "string"
+                    }
+                  },
+                  "required": [
+                    "status",
+                    "message"
+                  ],
+                  "type": "object"
+                }
+              }
+            },
+            "description": "Clear resolved monitoring history"
+          },
+          "400": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "description": "Codedock API error",
+                  "properties": {
+                    "message": {
+                      "description": "Human-readable message",
+                      "type": "string"
+                    },
+                    "path": {
+                      "description": "Request path",
+                      "type": "string"
+                    },
+                    "status": {
+                      "description": "Result status",
+                      "enum": [
+                        "error"
+                      ],
+                      "type": "string"
+                    }
+                  },
+                  "required": [
+                    "status",
+                    "message"
+                  ],
+                  "type": "object"
+                }
+              }
+            },
+            "description": "Invalid request"
+          },
+          "401": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "description": "Codedock API error",
+                  "properties": {
+                    "message": {
+                      "description": "Human-readable message",
+                      "type": "string"
+                    },
+                    "path": {
+                      "description": "Request path",
+                      "type": "string"
+                    },
+                    "status": {
+                      "description": "Result status",
+                      "enum": [
+                        "error"
+                      ],
+                      "type": "string"
+                    }
+                  },
+                  "required": [
+                    "status",
+                    "message"
+                  ],
+                  "type": "object"
+                }
+              }
+            },
+            "description": "Missing or invalid credentials"
+          },
+          "403": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "description": "Codedock API error",
+                  "properties": {
+                    "message": {
+                      "description": "Human-readable message",
+                      "type": "string"
+                    },
+                    "path": {
+                      "description": "Request path",
+                      "type": "string"
+                    },
+                    "status": {
+                      "description": "Result status",
+                      "enum": [
+                        "error"
+                      ],
+                      "type": "string"
+                    }
+                  },
+                  "required": [
+                    "status",
+                    "message"
+                  ],
+                  "type": "object"
+                }
+              }
+            },
+            "description": "Insufficient permissions"
+          },
+          "404": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "description": "Codedock API error",
+                  "properties": {
+                    "message": {
+                      "description": "Human-readable message",
+                      "type": "string"
+                    },
+                    "path": {
+                      "description": "Request path",
+                      "type": "string"
+                    },
+                    "status": {
+                      "description": "Result status",
+                      "enum": [
+                        "error"
+                      ],
+                      "type": "string"
+                    }
+                  },
+                  "required": [
+                    "status",
+                    "message"
+                  ],
+                  "type": "object"
+                }
+              }
+            },
+            "description": "Resource not found"
+          },
+          "500": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "description": "Codedock API error",
+                  "properties": {
+                    "message": {
+                      "description": "Human-readable message",
+                      "type": "string"
+                    },
+                    "path": {
+                      "description": "Request path",
+                      "type": "string"
+                    },
+                    "status": {
+                      "description": "Result status",
+                      "enum": [
+                        "error"
+                      ],
+                      "type": "string"
+                    }
+                  },
+                  "required": [
+                    "status",
+                    "message"
+                  ],
+                  "type": "object"
+                }
+              }
+            },
+            "description": "Server error"
+          }
+        },
+        "security": [
+          {
+            "bearerAuth": []
+          }
+        ],
+        "summary": "Clear resolved monitoring history",
+        "tags": [
+          "attention"
+        ],
+        "x-auth": "organization admin"
       }
     },
     "/api/organizations/{id}/attention/{issueId}/ack": {

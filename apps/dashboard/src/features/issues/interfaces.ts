@@ -28,6 +28,11 @@ export interface ActIssueInput {
   action: string;
 }
 
+export interface AttentionFeed {
+  issues: AttentionIssue[];
+  canClearHistory: boolean;
+}
+
 export interface ActIssuePayload {
   action: string;
   params?: Record<string, string>;

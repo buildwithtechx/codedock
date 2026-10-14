@@ -1,6 +1,6 @@
 import { Link } from '@tanstack/react-router';
-import { Building2, Loader2, RefreshCw, Search } from 'lucide-react';
-import { useMemo, useRef, useState } from 'react';
+import { Building2, Loader2, RefreshCw, Search, Trash2 } from 'lucide-react';
+import { useEffect, useMemo, useRef, useState } from 'react';
 import { PageHeader } from '#/components/layout/page-header';
 import { Button } from '#/components/ui/button';
 import { Input } from '#/components/ui/input';
@@ -12,6 +12,7 @@ import {
   useAcknowledgeIssue,
   useActiveOrganizationId,
   useActOnIssue,
+  useClearIssueHistory,
   useEvaluateIssues,
   useListAttentionIssues,
   useResolveIssue,
@@ -36,8 +37,13 @@ export function IssuesView() {
   const acknowledge = useAcknowledgeIssue();
   const resolve = useResolveIssue();
   const act = useActOnIssue();
+  const clearHistory = useClearIssueHistory();
+  const [confirmingClear, setConfirmingClear] = useState(false);
+  const [clearError, setClearError] = useState<string | null>(null);
 
-  const issues = useMemo(() => listQuery.data?.data ?? [], [listQuery.data]);
+  const feed = listQuery.data?.data;
+  const issues = useMemo(() => feed?.issues ?? [], [feed]);
+  const canClearHistory = feed?.canClearHistory ?? false;
   const tabIssues = useMemo(
     () =>
       tab === 'resolved'
@@ -45,6 +51,11 @@ export function IssuesView() {
         : issues.filter((issue) => issue.status !== 'resolved'),
     [issues, tab]
   );
+
+  useEffect(() => {
+    setConfirmingClear(false);
+    setClearError(null);
+  }, [activeOrganizationId, tab]);
 
   const q = query.trim().toLowerCase();
   const filtered = useMemo(
@@ -97,6 +108,47 @@ export function IssuesView() {
     act.mutate({ issueId: issue.id, action: issue.action });
   };
 
+  const runClearHistory = () => {
+    clearHistory.mutate(undefined, {
+      onSuccess: () => setConfirmingClear(false),
+      onError: (error) =>
+        setClearError(
+          error instanceof Error ? error.message : 'Could not clear monitoring history'
+        ),
+    });
+  };
+
+  const showRescan = tab !== 'health';
+  const showClearHistory = tab === 'resolved' && canClearHistory && tabIssues.length > 0;
+  const headerAction =
+    showRescan || showClearHistory ? (
+      <div className="flex items-center gap-2">
+        {showRescan && (
+          <Button variant="outline" onClick={() => evaluate.mutate()} disabled={evaluate.isPending}>
+            {evaluate.isPending ? (
+              <Loader2 className="size-4 animate-spin" />
+            ) : (
+              <RefreshCw className="size-4" />
+            )}
+            {evaluate.isPending ? 'Rescanning' : 'Rescan'}
+          </Button>
+        )}
+        {showClearHistory && (
+          <Button
+            variant="destructive"
+            onClick={() => {
+              setClearError(null);
+              setConfirmingClear(true);
+            }}
+            disabled={clearHistory.isPending}
+          >
+            <Trash2 className="size-4" />
+            Clear history
+          </Button>
+        )}
+      </div>
+    ) : undefined;
+
   if (!activeOrganizationId) {
     return (
       <div className="space-y-6">
@@ -128,22 +180,7 @@ export function IssuesView() {
       <PageHeader
         title="Monitoring"
         description="Health, updates and activity across your projects, servers and domains."
-        action={
-          tab !== 'health' ? (
-            <Button
-              variant="outline"
-              onClick={() => evaluate.mutate()}
-              disabled={evaluate.isPending}
-            >
-              {evaluate.isPending ? (
-                <Loader2 className="size-4 animate-spin" />
-              ) : (
-                <RefreshCw className="size-4" />
-              )}
-              {evaluate.isPending ? 'Rescanning' : 'Rescan'}
-            </Button>
-          ) : undefined
-        }
+        action={headerAction}
       />
 
       <MonitoringNavigation value={tab} onChange={setTab} />
@@ -158,6 +195,45 @@ export function IssuesView() {
             History covers container and server incidents. Other checks report current state, so a
             fixed certificate or deploy simply stops appearing here.
           </p>
+        )}
+
+        {tab === 'resolved' && confirmingClear && canClearHistory && (
+          <section
+            aria-label="Clear monitoring history"
+            className="mb-5 space-y-3 rounded-2xl border border-border/50 bg-card p-5"
+          >
+            <p className="text-foreground text-sm">
+              Clear resolved monitoring history for this organization?
+            </p>
+            <p className="text-muted-foreground text-sm">
+              This permanently removes every resolved issue. Open and acknowledged issues are never
+              deleted.
+            </p>
+            {clearError && (
+              <p role="alert" className="text-destructive text-sm">
+                {clearError}
+              </p>
+            )}
+            <div className="flex flex-wrap gap-2">
+              <Button
+                variant="destructive"
+                size="sm"
+                onClick={runClearHistory}
+                disabled={clearHistory.isPending}
+              >
+                {clearHistory.isPending && <Loader2 className="size-4 animate-spin" />}
+                {clearHistory.isPending ? 'Clearing' : 'Clear history'}
+              </Button>
+              <Button
+                variant="secondary"
+                size="sm"
+                onClick={() => setConfirmingClear(false)}
+                disabled={clearHistory.isPending}
+              >
+                Cancel
+              </Button>
+            </div>
+          </section>
         )}
 
         {tab === 'health' ? (

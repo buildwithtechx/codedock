@@ -1,12 +1,12 @@
 import type { BaseResponse } from '#/interfaces/base';
 import { apiClient } from '#/lib/api-client';
 import { handleApiError } from '#/lib/error';
-import type { ActIssueOutcome, ActIssuePayload, AttentionIssue } from './interfaces';
+import type { ActIssueOutcome, ActIssuePayload, AttentionFeed } from './interfaces';
 
 export const issuesService = {
-  list: async (organizationId: string): Promise<BaseResponse<AttentionIssue[]>> => {
+  list: async (organizationId: string): Promise<BaseResponse<AttentionFeed>> => {
     try {
-      return await apiClient.get<BaseResponse<AttentionIssue[]>>(
+      return await apiClient.get<BaseResponse<AttentionFeed>>(
         `/organizations/${organizationId}/attention`
       );
     } catch (error) {
@@ -53,6 +53,16 @@ export const issuesService = {
       return await apiClient.post<BaseResponse<ActIssueOutcome>>(
         `/organizations/${organizationId}/attention/${issueId}/act`,
         payload
+      );
+    } catch (error) {
+      throw handleApiError(error);
+    }
+  },
+
+  clearHistory: async (organizationId: string): Promise<BaseResponse<{ deleted: number }>> => {
+    try {
+      return await apiClient.delete<BaseResponse<{ deleted: number }>>(
+        `/organizations/${organizationId}/attention/history`
       );
     } catch (error) {
       throw handleApiError(error);

@@ -15,6 +15,7 @@ import (
 	"codedock/internal/repositories"
 	"codedock/internal/services/analytics"
 	"codedock/internal/services/attention"
+	authservices "codedock/internal/services/auth"
 	backupservices "codedock/internal/services/backups"
 	deploymentservices "codedock/internal/services/deployments"
 	"codedock/internal/services/migrations"
@@ -53,6 +54,7 @@ func configureAnalytics(
 	deploymentService *deploymentservices.DeploymentService,
 	backupService *backupservices.BackupService,
 	migrationService *migrations.Service,
+	auditService *authservices.AuditService,
 ) {
 	trafficRepo := repositories.NewTrafficRepository(db)
 	attentionRepo := repositories.NewAttentionRepository(db)
@@ -64,7 +66,7 @@ func configureAnalytics(
 	attentionService := attention.NewService(attentionRepo, deployRepo, appRepo, projectRepo, userRepo, orgRepo, backupService, migrationService, managedRepo, serverRepo, &statsHealthAdapter{monitor: statsMonitor}, deploymentService)
 
 	server.analyticsHandler = system.NewAnalyticsHandler(analyticsService)
-	server.attentionHandler = system.NewAttentionHandler(attentionService)
+	server.attentionHandler = system.NewAttentionHandler(attentionService, auditService)
 
 	if path := traefikManager.AccessLogPath(); path != "" {
 		geoResolver, _ := traffic.NewGeoIPResolver(os.Getenv("GEOIP_DB_PATH"))
@@ -75,6 +77,7 @@ func configureAnalytics(
 
 func (s *Server) registerAnalyticsRoutes(authGroup *echo.Group) {
 	member := s.authGuard.RequireOrgRole(models.MemberPermissionMember)
+	admin := s.authGuard.RequireOrgRole(models.MemberPermissionAdmin)
 	read := s.authGuard.RequireScope("server:read")
 	write := s.authGuard.RequireScope("server:write")
 
@@ -95,6 +98,7 @@ func (s *Server) registerAnalyticsRoutes(authGroup *echo.Group) {
 
 	authGroup.GET("/organizations/:id/attention", s.attentionHandler.List, member, read)
 	authGroup.POST("/organizations/:id/attention/evaluate", s.attentionHandler.Evaluate, member, write)
+	authGroup.DELETE("/organizations/:id/attention/history", s.attentionHandler.ClearHistory, admin, write)
 	authGroup.POST("/organizations/:id/attention/:issueId/ack", s.attentionHandler.Acknowledge, member, write)
 	authGroup.POST("/organizations/:id/attention/:issueId/resolve", s.attentionHandler.Resolve, member, write)
 	authGroup.POST("/organizations/:id/attention/:issueId/act", s.attentionHandler.Act, member, write)
