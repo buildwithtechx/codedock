@@ -21,6 +21,7 @@ import { Route as FeaturesMonitoringRouteImport } from './routes/features.monito
 import { Route as SolutionsAgenciesRouteImport } from './routes/solutions.agencies'
 import { Route as SolutionsEnterpriseRouteImport } from './routes/solutions.enterprise'
 import { Route as SolutionsSelfHostedRouteImport } from './routes/solutions.self-hosted'
+import { Route as TemplatesTemplateIdRouteImport } from './routes/templates.$templateId'
 import { Route as VsIndexRouteImport } from './routes/vs.index'
 import { Route as VsCaproverRouteImport } from './routes/vs.caprover'
 import { Route as VsCoolifyRouteImport } from './routes/vs.coolify'
@@ -91,6 +92,11 @@ const SolutionsSelfHostedRoute = SolutionsSelfHostedRouteImport.update({
   path: '/solutions/self-hosted',
   getParentRoute: () => rootRouteImport,
 } as any)
+const TemplatesTemplateIdRoute = TemplatesTemplateIdRouteImport.update({
+  id: '/$templateId',
+  path: '/$templateId',
+  getParentRoute: () => TemplatesRoute,
+} as any)
 const VsIndexRoute = VsIndexRouteImport.update({
   id: '/vs/',
   path: '/vs/',
@@ -137,7 +143,7 @@ export interface FileRoutesByFullPath {
   '/changelog': typeof ChangelogRoute
   '/philosophy': typeof PhilosophyRoute
   '/pricing': typeof PricingRoute
-  '/templates': typeof TemplatesRoute
+  '/templates': typeof TemplatesRouteWithChildren
   '/features/ai-deployment': typeof FeaturesAiDeploymentRoute
   '/features/application-deployment': typeof FeaturesApplicationDeploymentRoute
   '/features/databases': typeof FeaturesDatabasesRoute
@@ -145,6 +151,7 @@ export interface FileRoutesByFullPath {
   '/solutions/agencies': typeof SolutionsAgenciesRoute
   '/solutions/enterprise': typeof SolutionsEnterpriseRoute
   '/solutions/self-hosted': typeof SolutionsSelfHostedRoute
+  '/templates/$templateId': typeof TemplatesTemplateIdRoute
   '/vs/caprover': typeof VsCaproverRoute
   '/vs/coolify': typeof VsCoolifyRoute
   '/vs/dokku': typeof VsDokkuRoute
@@ -159,7 +166,7 @@ export interface FileRoutesByTo {
   '/changelog': typeof ChangelogRoute
   '/philosophy': typeof PhilosophyRoute
   '/pricing': typeof PricingRoute
-  '/templates': typeof TemplatesRoute
+  '/templates': typeof TemplatesRouteWithChildren
   '/features/ai-deployment': typeof FeaturesAiDeploymentRoute
   '/features/application-deployment': typeof FeaturesApplicationDeploymentRoute
   '/features/databases': typeof FeaturesDatabasesRoute
@@ -167,6 +174,7 @@ export interface FileRoutesByTo {
   '/solutions/agencies': typeof SolutionsAgenciesRoute
   '/solutions/enterprise': typeof SolutionsEnterpriseRoute
   '/solutions/self-hosted': typeof SolutionsSelfHostedRoute
+  '/templates/$templateId': typeof TemplatesTemplateIdRoute
   '/vs/caprover': typeof VsCaproverRoute
   '/vs/coolify': typeof VsCoolifyRoute
   '/vs/dokku': typeof VsDokkuRoute
@@ -182,7 +190,7 @@ export interface FileRoutesById {
   '/changelog': typeof ChangelogRoute
   '/philosophy': typeof PhilosophyRoute
   '/pricing': typeof PricingRoute
-  '/templates': typeof TemplatesRoute
+  '/templates': typeof TemplatesRouteWithChildren
   '/features/ai-deployment': typeof FeaturesAiDeploymentRoute
   '/features/application-deployment': typeof FeaturesApplicationDeploymentRoute
   '/features/databases': typeof FeaturesDatabasesRoute
@@ -190,6 +198,7 @@ export interface FileRoutesById {
   '/solutions/agencies': typeof SolutionsAgenciesRoute
   '/solutions/enterprise': typeof SolutionsEnterpriseRoute
   '/solutions/self-hosted': typeof SolutionsSelfHostedRoute
+  '/templates/$templateId': typeof TemplatesTemplateIdRoute
   '/vs/caprover': typeof VsCaproverRoute
   '/vs/coolify': typeof VsCoolifyRoute
   '/vs/dokku': typeof VsDokkuRoute
@@ -214,6 +223,7 @@ export interface FileRouteTypes {
     | '/solutions/agencies'
     | '/solutions/enterprise'
     | '/solutions/self-hosted'
+    | '/templates/$templateId'
     | '/vs/caprover'
     | '/vs/coolify'
     | '/vs/dokku'
@@ -236,6 +246,7 @@ export interface FileRouteTypes {
     | '/solutions/agencies'
     | '/solutions/enterprise'
     | '/solutions/self-hosted'
+    | '/templates/$templateId'
     | '/vs/caprover'
     | '/vs/coolify'
     | '/vs/dokku'
@@ -258,6 +269,7 @@ export interface FileRouteTypes {
     | '/solutions/agencies'
     | '/solutions/enterprise'
     | '/solutions/self-hosted'
+    | '/templates/$templateId'
     | '/vs/caprover'
     | '/vs/coolify'
     | '/vs/dokku'
@@ -273,7 +285,7 @@ export interface RootRouteChildren {
   ChangelogRoute: typeof ChangelogRoute
   PhilosophyRoute: typeof PhilosophyRoute
   PricingRoute: typeof PricingRoute
-  TemplatesRoute: typeof TemplatesRoute
+  TemplatesRoute: typeof TemplatesRouteWithChildren
   FeaturesAiDeploymentRoute: typeof FeaturesAiDeploymentRoute
   FeaturesApplicationDeploymentRoute: typeof FeaturesApplicationDeploymentRoute
   FeaturesDatabasesRoute: typeof FeaturesDatabasesRoute
@@ -377,6 +389,13 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof SolutionsSelfHostedRouteImport
       parentRoute: typeof rootRouteImport
     }
+    '/templates/$templateId': {
+      id: '/templates/$templateId'
+      path: '/$templateId'
+      fullPath: '/templates/$templateId'
+      preLoaderRoute: typeof TemplatesTemplateIdRouteImport
+      parentRoute: typeof TemplatesRoute
+    }
     '/vs/': {
       id: '/vs/'
       path: '/vs'
@@ -436,12 +455,24 @@ declare module '@tanstack/react-router' {
   }
 }
 
+interface TemplatesRouteChildren {
+  TemplatesTemplateIdRoute: typeof TemplatesTemplateIdRoute
+}
+
+const TemplatesRouteChildren: TemplatesRouteChildren = {
+  TemplatesTemplateIdRoute: TemplatesTemplateIdRoute,
+}
+
+const TemplatesRouteWithChildren = TemplatesRoute._addFileChildren(
+  TemplatesRouteChildren,
+)
+
 const rootRouteChildren: RootRouteChildren = {
   IndexRoute: IndexRoute,
   ChangelogRoute: ChangelogRoute,
   PhilosophyRoute: PhilosophyRoute,
   PricingRoute: PricingRoute,
-  TemplatesRoute: TemplatesRoute,
+  TemplatesRoute: TemplatesRouteWithChildren,
   FeaturesAiDeploymentRoute: FeaturesAiDeploymentRoute,
   FeaturesApplicationDeploymentRoute: FeaturesApplicationDeploymentRoute,
   FeaturesDatabasesRoute: FeaturesDatabasesRoute,
