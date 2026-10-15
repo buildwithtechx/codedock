@@ -162,6 +162,7 @@ type AppService struct {
 	Optimize               bool             `json:"optimize" db:"optimize"`
 	Stack                  string           `json:"stack,omitempty" db:"stack"`
 	StopGracePeriodSeconds int              `json:"stopGracePeriodSeconds,omitempty" db:"stop_grace_period_seconds"`
+	RuntimeVersion         string           `json:"runtimeVersion,omitempty" db:"runtime_version"`
 	RegistryID             *string          `json:"registryId,omitempty" db:"registry_id"`
 
 	Volumes []ServiceVolume   `json:"volumes,omitempty" db:"-"`
@@ -199,6 +200,7 @@ type CreateAppServiceRequest struct {
 	Optimize               bool        `json:"optimize,omitempty"`
 	Stack                  string      `json:"stack,omitempty"`
 	StopGracePeriodSeconds int         `json:"stopGracePeriodSeconds,omitempty"`
+	RuntimeVersion         string      `json:"runtimeVersion,omitempty"`
 	MaintenanceMode        bool        `json:"maintenanceMode,omitempty"`
 	RegistryID             *string     `json:"registryId,omitempty"`
 }
@@ -226,6 +228,7 @@ type UpdateAppServiceRequest struct {
 	Optimize               bool        `json:"optimize,omitempty"`
 	Stack                  string      `json:"stack,omitempty"`
 	StopGracePeriodSeconds int         `json:"stopGracePeriodSeconds,omitempty"`
+	RuntimeVersion         string      `json:"runtimeVersion,omitempty"`
 	RegistryID             *string     `json:"registryId,omitempty"`
 }
 

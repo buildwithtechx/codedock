@@ -787,6 +787,10 @@
                             "description": "Runtime mode",
                             "type": "string"
                           },
+                          "runtimeVersion": {
+                            "description": "Pinned runtime version",
+                            "type": "string"
+                          },
                           "stack": {
                             "description": "Detected stack",
                             "type": "string"
@@ -1271,6 +1275,10 @@
                           "description": "Runtime mode",
                           "type": "string"
                         },
+                        "runtimeVersion": {
+                          "description": "Pinned runtime version",
+                          "type": "string"
+                        },
                         "stack": {
                           "description": "Detected stack",
                           "type": "string"
@@ -1648,6 +1656,10 @@
                           "description": "Runtime mode",
                           "type": "string"
                         },
+                        "runtimeVersion": {
+                          "description": "Pinned runtime version",
+                          "type": "string"
+                        },
                         "stack": {
                           "description": "Detected stack",
                           "type": "string"
@@ -1877,6 +1889,368 @@
           }
         ],
         "summary": "Update a service",
+        "tags": [
+          "apps"
+        ],
+        "x-auth": "service admin"
+      }
+    },
+    "/api/apps/{id}/build": {
+      "put": {
+        "operationId": "putAppsIdBuild",
+        "parameters": [
+          {
+            "description": "id",
+            "in": "path",
+            "name": "id",
+            "required": true,
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "description": "Update build settings",
+                "properties": {
+                  "buildCmd": {
+                    "description": "Build command",
+                    "type": "string"
+                  },
+                  "installCmd": {
+                    "description": "Install command",
+                    "type": "string"
+                  },
+                  "runtimeVersion": {
+                    "description": "Pinned runtime version",
+                    "type": "string"
+                  },
+                  "startCmd": {
+                    "description": "Start command",
+                    "type": "string"
+                  },
+                  "staticOutputDir": {
+                    "description": "Static output directory",
+                    "type": "string"
+                  }
+                },
+                "type": "object"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "description": "Codedock API envelope",
+                  "properties": {
+                    "data": {
+                      "description": "Application service",
+                      "properties": {
+                        "branch": {
+                          "description": "Deploy branch",
+                          "type": "string"
+                        },
+                        "buildCommand": {
+                          "description": "Build command",
+                          "type": "string"
+                        },
+                        "containerId": {
+                          "description": "Running container ID",
+                          "type": "string"
+                        },
+                        "createdAt": {
+                          "description": "Creation time",
+                          "format": "date-time",
+                          "type": "string"
+                        },
+                        "domain": {
+                          "description": "Assigned domain",
+                          "type": "string"
+                        },
+                        "enablePrPreviews": {
+                          "description": "PR previews enabled",
+                          "type": "boolean"
+                        },
+                        "environmentId": {
+                          "description": "Environment ID",
+                          "type": "string"
+                        },
+                        "id": {
+                          "description": "Service ID",
+                          "type": "string"
+                        },
+                        "imageRef": {
+                          "description": "Container image reference",
+                          "type": "string"
+                        },
+                        "internalPort": {
+                          "description": "Container port",
+                          "format": "int32",
+                          "type": "integer"
+                        },
+                        "maintenanceMode": {
+                          "description": "Maintenance mode",
+                          "type": "boolean"
+                        },
+                        "name": {
+                          "description": "Service name",
+                          "type": "string"
+                        },
+                        "optimize": {
+                          "description": "Framework cache warming before start",
+                          "type": "boolean"
+                        },
+                        "projectId": {
+                          "description": "Project ID",
+                          "type": "string"
+                        },
+                        "repositoryUrl": {
+                          "description": "Source repository",
+                          "type": "string"
+                        },
+                        "runtimeMode": {
+                          "description": "Runtime mode",
+                          "type": "string"
+                        },
+                        "runtimeVersion": {
+                          "description": "Pinned runtime version",
+                          "type": "string"
+                        },
+                        "stack": {
+                          "description": "Detected stack",
+                          "type": "string"
+                        },
+                        "startCommand": {
+                          "description": "Start command",
+                          "type": "string"
+                        },
+                        "status": {
+                          "description": "Service status",
+                          "type": "string"
+                        },
+                        "stopGracePeriodSeconds": {
+                          "description": "Container stop grace period",
+                          "format": "int32",
+                          "type": "integer"
+                        },
+                        "updatedAt": {
+                          "description": "Last update time",
+                          "format": "date-time",
+                          "type": "string"
+                        }
+                      },
+                      "required": [
+                        "id",
+                        "projectId",
+                        "environmentId",
+                        "name"
+                      ],
+                      "type": "object"
+                    },
+                    "executionTime": {
+                      "description": "Handler seconds",
+                      "format": "double",
+                      "type": "number"
+                    },
+                    "message": {
+                      "description": "Human-readable message",
+                      "type": "string"
+                    },
+                    "path": {
+                      "description": "Request path",
+                      "type": "string"
+                    },
+                    "status": {
+                      "description": "Result status",
+                      "enum": [
+                        "success"
+                      ],
+                      "type": "string"
+                    }
+                  },
+                  "required": [
+                    "status",
+                    "message"
+                  ],
+                  "type": "object"
+                }
+              }
+            },
+            "description": "Update build settings"
+          },
+          "400": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "description": "Codedock API error",
+                  "properties": {
+                    "message": {
+                      "description": "Human-readable message",
+                      "type": "string"
+                    },
+                    "path": {
+                      "description": "Request path",
+                      "type": "string"
+                    },
+                    "status": {
+                      "description": "Result status",
+                      "enum": [
+                        "error"
+                      ],
+                      "type": "string"
+                    }
+                  },
+                  "required": [
+                    "status",
+                    "message"
+                  ],
+                  "type": "object"
+                }
+              }
+            },
+            "description": "Invalid request"
+          },
+          "401": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "description": "Codedock API error",
+                  "properties": {
+                    "message": {
+                      "description": "Human-readable message",
+                      "type": "string"
+                    },
+                    "path": {
+                      "description": "Request path",
+                      "type": "string"
+                    },
+                    "status": {
+                      "description": "Result status",
+                      "enum": [
+                        "error"
+                      ],
+                      "type": "string"
+                    }
+                  },
+                  "required": [
+                    "status",
+                    "message"
+                  ],
+                  "type": "object"
+                }
+              }
+            },
+            "description": "Missing or invalid credentials"
+          },
+          "403": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "description": "Codedock API error",
+                  "properties": {
+                    "message": {
+                      "description": "Human-readable message",
+                      "type": "string"
+                    },
+                    "path": {
+                      "description": "Request path",
+                      "type": "string"
+                    },
+                    "status": {
+                      "description": "Result status",
+                      "enum": [
+                        "error"
+                      ],
+                      "type": "string"
+                    }
+                  },
+                  "required": [
+                    "status",
+                    "message"
+                  ],
+                  "type": "object"
+                }
+              }
+            },
+            "description": "Insufficient permissions"
+          },
+          "404": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "description": "Codedock API error",
+                  "properties": {
+                    "message": {
+                      "description": "Human-readable message",
+                      "type": "string"
+                    },
+                    "path": {
+                      "description": "Request path",
+                      "type": "string"
+                    },
+                    "status": {
+                      "description": "Result status",
+                      "enum": [
+                        "error"
+                      ],
+                      "type": "string"
+                    }
+                  },
+                  "required": [
+                    "status",
+                    "message"
+                  ],
+                  "type": "object"
+                }
+              }
+            },
+            "description": "Resource not found"
+          },
+          "500": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "description": "Codedock API error",
+                  "properties": {
+                    "message": {
+                      "description": "Human-readable message",
+                      "type": "string"
+                    },
+                    "path": {
+                      "description": "Request path",
+                      "type": "string"
+                    },
+                    "status": {
+                      "description": "Result status",
+                      "enum": [
+                        "error"
+                      ],
+                      "type": "string"
+                    }
+                  },
+                  "required": [
+                    "status",
+                    "message"
+                  ],
+                  "type": "object"
+                }
+              }
+            },
+            "description": "Server error"
+          }
+        },
+        "security": [
+          {
+            "bearerAuth": []
+          }
+        ],
+        "summary": "Update build settings",
         "tags": [
           "apps"
         ],
@@ -3031,6 +3405,10 @@
                         },
                         "runtimeMode": {
                           "description": "Runtime mode",
+                          "type": "string"
+                        },
+                        "runtimeVersion": {
+                          "description": "Pinned runtime version",
                           "type": "string"
                         },
                         "stack": {
@@ -6235,6 +6613,10 @@
                         },
                         "runtimeMode": {
                           "description": "Runtime mode",
+                          "type": "string"
+                        },
+                        "runtimeVersion": {
+                          "description": "Pinned runtime version",
                           "type": "string"
                         },
                         "stack": {
@@ -28771,6 +29153,10 @@
                             "description": "Runtime mode",
                             "type": "string"
                           },
+                          "runtimeVersion": {
+                            "description": "Pinned runtime version",
+                            "type": "string"
+                          },
                           "stack": {
                             "description": "Detected stack",
                             "type": "string"
@@ -29151,6 +29537,10 @@
                           "description": "Runtime mode",
                           "type": "string"
                         },
+                        "runtimeVersion": {
+                          "description": "Pinned runtime version",
+                          "type": "string"
+                        },
                         "stack": {
                           "description": "Detected stack",
                           "type": "string"
@@ -29479,6 +29869,10 @@
                               },
                               "runtimeMode": {
                                 "description": "Runtime mode",
+                                "type": "string"
+                              },
+                              "runtimeVersion": {
+                                "description": "Pinned runtime version",
                                 "type": "string"
                               },
                               "stack": {
@@ -62225,6 +62619,10 @@
                             "description": "Runtime mode",
                             "type": "string"
                           },
+                          "runtimeVersion": {
+                            "description": "Pinned runtime version",
+                            "type": "string"
+                          },
                           "stack": {
                             "description": "Detected stack",
                             "type": "string"
@@ -72688,6 +73086,10 @@
                           },
                           "runtimeMode": {
                             "description": "Runtime mode",
+                            "type": "string"
+                          },
+                          "runtimeVersion": {
+                            "description": "Pinned runtime version",
                             "type": "string"
                           },
                           "stack": {

@@ -32,6 +32,10 @@ func (r *RailpackBuilder) Build(ctx context.Context, opts BuildOptions, engineNa
 	if opts.LogWriter != nil {
 		fmt.Fprintf(opts.LogWriter, "🛠️ [Railpack/Nixpacks] Stack detected: %s\n", stack)
 	}
+	versionEnv := versionBuildEnv(stack, appRuntimeVersion(opts))
+	if opts.LogWriter != nil && len(versionEnv) > 0 {
+		fmt.Fprintf(opts.LogWriter, "🧩 [Railpack/Nixpacks] Pinning runtime version: %s\n", appRuntimeVersion(opts))
+	}
 	absSourceDir, err := filepath.Abs(opts.SourceDir)
 	if err != nil {
 		return "", fmt.Errorf("failed to resolve absolute source dir: %w", err)
@@ -58,6 +62,9 @@ func (r *RailpackBuilder) Build(ctx context.Context, opts BuildOptions, engineNa
 		for k, v := range opts.EnvVars {
 			args = append(args, "--env", fmt.Sprintf("%s=%s", k, v))
 		}
+		for k, v := range versionEnv {
+			args = append(args, "--env", fmt.Sprintf("%s=%s", k, v))
+		}
 		cmd := exec.CommandContext(ctx, "docker", args...)
 		cmd.Stdout = opts.LogWriter
 		cmd.Stderr = opts.LogWriter
@@ -81,6 +88,9 @@ func (r *RailpackBuilder) Build(ctx context.Context, opts BuildOptions, engineNa
 			"-v", fmt.Sprintf("%s:/app", absSourceDir),
 			nixpacksImage, "build", "/app", "--name", imageTag)
 		for k, v := range opts.EnvVars {
+			args = append(args, "--env", fmt.Sprintf("%s=%s", k, v))
+		}
+		for k, v := range versionEnv {
 			args = append(args, "--env", fmt.Sprintf("%s=%s", k, v))
 		}
 		if opts.AppConfig != nil {
@@ -267,6 +277,40 @@ func isBuildLine(line string) bool {
 		}
 	}
 	return false
+}
+
+var stackVersionEnv = []struct {
+	prefix   string
+	language string
+}{
+	{"Node.js", "NODE"},
+	{"Python", "PYTHON"},
+	{"Go", "GO"},
+	{"Rust", "RUST"},
+	{"PHP", "PHP"},
+	{"Ruby", "RUBY"},
+}
+
+func appRuntimeVersion(opts BuildOptions) string {
+	if opts.AppConfig == nil {
+		return ""
+	}
+	return strings.TrimSpace(opts.AppConfig.RuntimeVersion)
+}
+
+func versionBuildEnv(stack, version string) map[string]string {
+	if version == "" {
+		return nil
+	}
+	for _, entry := range stackVersionEnv {
+		if strings.HasPrefix(stack, entry.prefix) {
+			return map[string]string{
+				"NIXPACKS_" + entry.language + "_VERSION": version,
+				"RAILPACK_" + entry.language + "_VERSION": version,
+			}
+		}
+	}
+	return nil
 }
 
 func buildCMDLine(startCmd string) string {

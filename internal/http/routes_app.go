@@ -35,6 +35,7 @@ func (s *Server) registerAppRoutes(apiGroup, authGroup *echo.Group) {
 	authGroup.GET("/apps/:id/runtime/exec-terminal", s.appServiceHandler.RuntimeExecTerminal, serviceAuthAdmin, s.authGuard.RequireScope("terminal:write"))
 	authGroup.POST("/apps/:id/runtime/exec", s.appServiceHandler.RuntimeExec, serviceAuthAdmin, s.authGuard.RequireScope("terminal:write"))
 	authGroup.PUT("/apps/:id", s.appServiceHandler.Update, serviceAuthAdmin)
+	authGroup.PUT("/apps/:id/build", s.appServiceHandler.UpdateBuildSettings, serviceAuthAdmin)
 	authGroup.DELETE("/apps/:id", s.appServiceHandler.Delete, serviceAuthOwner)
 	authGroup.POST("/apps/:id/stop", s.appServiceHandler.StopService, serviceAuthAdmin)
 	authGroup.POST("/apps/:id/redeploy", s.appServiceHandler.RedeployService, serviceAuthAdmin)

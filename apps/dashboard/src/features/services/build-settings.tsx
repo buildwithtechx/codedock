@@ -15,6 +15,7 @@ interface BuildSettingsProps {
     installCmd?: string;
     buildCmd?: string;
     startCmd?: string;
+    runtimeVersion?: string;
   };
 }
 
@@ -24,11 +25,12 @@ export function BuildSettings({ serviceId, initialData }: BuildSettingsProps) {
   const [installCmd, setInstallCmd] = useState(initialData?.installCmd || '');
   const [buildCmd, setBuildCmd] = useState(initialData?.buildCmd || '');
   const [startCmd, setStartCmd] = useState(initialData?.startCmd || '');
+  const [runtimeVersion, setRuntimeVersion] = useState(initialData?.runtimeVersion || '');
   const [isExpanded, setIsExpanded] = useState(false);
 
   const updateMutation = useMutation({
     mutationFn: async (data: Record<string, string>) => {
-      return apiClient.put(`/services/${serviceId}/build`, data);
+      return apiClient.put(`/apps/${serviceId}/build`, data);
     },
     onSuccess: () => {
       toast.success('Build settings updated');
@@ -42,6 +44,7 @@ export function BuildSettings({ serviceId, initialData }: BuildSettingsProps) {
       installCmd,
       buildCmd,
       startCmd,
+      runtimeVersion,
     });
   };
 
@@ -115,6 +118,19 @@ export function BuildSettings({ serviceId, initialData }: BuildSettingsProps) {
                   onChange={(e) => setStartCmd(e.target.value)}
                   className="font-mono text-sm"
                 />
+              </div>
+              <div className="space-y-2">
+                <Label htmlFor="runtimeVersion">Runtime Version</Label>
+                <Input
+                  id="runtimeVersion"
+                  placeholder="e.g., 8.4, 22.11.0"
+                  value={runtimeVersion}
+                  onChange={(e) => setRuntimeVersion(e.target.value)}
+                  className="font-mono text-sm"
+                />
+                <p className="text-sm text-zinc-500">
+                  Pin the language runtime (Node, PHP, Python, Go, Ruby, Rust) used by the build.
+                </p>
               </div>
             </div>
           )}

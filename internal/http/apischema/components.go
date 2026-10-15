@@ -110,6 +110,7 @@ func AppServiceSchema() Schema {
 		F("optimize", Bool("Framework cache warming before start")),
 		F("stack", Str("Detected stack")),
 		F("stopGracePeriodSeconds", Int("Container stop grace period")),
+		F("runtimeVersion", Str("Pinned runtime version")),
 	}
 	return Obj("Application service", append(props, Timestamps()...)...)
 }

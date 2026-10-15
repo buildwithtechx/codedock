@@ -1,7 +1,9 @@
 package projects
 
 import (
+	"errors"
 	"net/http"
+	"regexp"
 	"strings"
 	"time"
 
@@ -116,6 +118,11 @@ func (h *AppHandler) Create(c echo.Context) error {
 	if req.InternalPort == 0 {
 		req.InternalPort = 3000
 	}
+	version, err := normalizeRuntimeVersion(req.RuntimeVersion)
+	if err != nil {
+		return utils.Error(c, http.StatusBadRequest, err.Error())
+	}
+	req.RuntimeVersion = version
 	if req.RuntimeMode == "" {
 		req.RuntimeMode = models.RuntimeModeWeb
 	}
@@ -157,6 +164,7 @@ func (h *AppHandler) Create(c echo.Context) error {
 			Optimize:               created.Optimize,
 			Stack:                  created.Stack,
 			StopGracePeriodSeconds: roleGraceSeconds(role.StopGracePeriod),
+			RuntimeVersion:         created.RuntimeVersion,
 		}
 		if _, err := h.appService.CreateAppService(c.Request().Context(), &sibling); err != nil {
 			return utils.Error(c, http.StatusInternalServerError, err.Error())
@@ -269,6 +277,11 @@ func (h *AppHandler) Update(c echo.Context) error {
 	existing.Optimize = req.Optimize
 	existing.Stack = req.Stack
 	existing.StopGracePeriodSeconds = req.StopGracePeriodSeconds
+	version, err := normalizeRuntimeVersion(req.RuntimeVersion)
+	if err != nil {
+		return utils.Error(c, http.StatusBadRequest, err.Error())
+	}
+	existing.RuntimeVersion = version
 	existing.EnablePRPreviews = req.EnablePRPreviews
 	existing.ImageRef = req.ImageRef
 	existing.RegistryID = req.RegistryID
@@ -282,6 +295,52 @@ func (h *AppHandler) Update(c echo.Context) error {
 		IPAddress: c.RealIP(),
 	})
 	return utils.Success(c, "Operation successful", existing)
+}
+
+func (h *AppHandler) UpdateBuildSettings(c echo.Context) error {
+	id := c.Param("id")
+	existing, err := h.appService.GetAppService(c.Request().Context(), id)
+	if err != nil || existing == nil {
+		return utils.Error(c, http.StatusNotFound, "app service not found")
+	}
+	if err := h.verifyProjectOwnership(c, existing.ProjectID); err != nil {
+		return err
+	}
+	var req updateBuildSettingsRequest
+	if err := c.Bind(&req); err != nil {
+		return utils.Error(c, http.StatusBadRequest, "invalid payload")
+	}
+	version, err := normalizeRuntimeVersion(req.RuntimeVersion)
+	if err != nil {
+		return utils.Error(c, http.StatusBadRequest, err.Error())
+	}
+	existing.StaticOutput = req.StaticOutputDir
+	existing.InstallCommand = req.InstallCmd
+	existing.BuildCommand = req.BuildCmd
+	existing.StartCommand = req.StartCmd
+	existing.RuntimeVersion = version
+	if err := h.appService.UpdateAppService(c.Request().Context(), existing); err != nil {
+		return utils.Error(c, http.StatusInternalServerError, err.Error())
+	}
+	return utils.Success(c, "Build settings updated", existing)
+}
+
+type updateBuildSettingsRequest struct {
+	StaticOutputDir string `json:"staticOutputDir"`
+	InstallCmd      string `json:"installCmd"`
+	BuildCmd        string `json:"buildCmd"`
+	StartCmd        string `json:"startCmd"`
+	RuntimeVersion  string `json:"runtimeVersion"`
+}
+
+var runtimeVersionPattern = regexp.MustCompile(`^[A-Za-z0-9][A-Za-z0-9._-]{0,31}$`)
+
+func normalizeRuntimeVersion(raw string) (string, error) {
+	version := strings.TrimSpace(raw)
+	if version != "" && !runtimeVersionPattern.MatchString(version) {
+		return "", errors.New("runtime version must look like 8.4 or 22.11.0")
+	}
+	return version, nil
 }
 
 func (h *AppHandler) Delete(c echo.Context) error {
