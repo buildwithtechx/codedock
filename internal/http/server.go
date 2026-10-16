@@ -103,6 +103,7 @@ type Server struct {
 	mailHandler               *mail.MailHandler
 	ingressHandler            *system.IngressHandler
 	serverNetworksHandler     *system.ServerNetworksHandler
+	actionsHandler            *system.ActionsHandler
 }
 
 func (s *Server) ServeHTTP(w http.ResponseWriter, r *http.Request) {

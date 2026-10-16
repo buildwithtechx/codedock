@@ -183,6 +183,74 @@ func serverNetworkSchema() Schema {
 	)
 }
 
+func actionWorkflowSchema() Schema {
+	return Obj("Action workflow",
+		RF("id", Str("Workflow ID")),
+		F("projectId", Str("Project ID")),
+		RF("name", Str("Workflow name")),
+		F("description", Str("Description")),
+		RF("trigger", Str("Trigger")),
+		F("yaml", Str("Workflow YAML")),
+		RF("enabled", Bool("Enabled")),
+		RF("createdAt", Str("Created timestamp")),
+		RF("updatedAt", Str("Updated timestamp")),
+	)
+}
+
+func actionStepSchema() Schema {
+	return Obj("Action step",
+		RF("id", Str("Step ID")),
+		RF("name", Str("Step name")),
+		RF("status", Str("Step status")),
+		F("durationSeconds", Int("Duration in seconds")),
+	)
+}
+
+func actionJobSchema() Schema {
+	return Obj("Action job",
+		RF("id", Str("Job ID")),
+		RF("name", Str("Job name")),
+		RF("status", Str("Job status")),
+		F("runnerId", Str("Runner ID")),
+		F("durationSeconds", Int("Duration in seconds")),
+		RF("steps", Arr("Steps", actionStepSchema())),
+	)
+}
+
+func actionRunSchema() Schema {
+	return Obj("Action run",
+		RF("id", Str("Run ID")),
+		RF("workflowId", Str("Workflow ID")),
+		RF("name", Str("Run name")),
+		RF("number", Int("Run number")),
+		RF("status", Str("Run status")),
+		RF("triggeredBy", Str("Triggered by")),
+		F("runnerId", Str("Runner ID")),
+		F("logs", Str("Execution logs")),
+		F("jobs", Arr("Jobs", actionJobSchema())),
+		F("startedAt", Str("Started timestamp")),
+		F("finishedAt", Str("Finished timestamp")),
+		RF("durationSeconds", Int("Duration in seconds")),
+		RF("createdAt", Str("Created timestamp")),
+		RF("updatedAt", Str("Updated timestamp")),
+	)
+}
+
+func actionRunnerSchema() Schema {
+	return Obj("Action runner",
+		RF("id", Str("Runner ID")),
+		RF("name", Str("Runner name")),
+		RF("mode", Str("Runner mode")),
+		F("image", Str("Container image")),
+		RF("status", Str("Runner status")),
+		RF("labels", Arr("Labels", Str("Label"))),
+		RF("enabled", Bool("Enabled")),
+		F("lastHeartbeatAt", Str("Last heartbeat timestamp")),
+		RF("createdAt", Str("Created timestamp")),
+		RF("updatedAt", Str("Updated timestamp")),
+	)
+}
+
 func systemOperations() []Operation {
 	system := "system"
 	settings := "settings"
@@ -191,6 +259,7 @@ func systemOperations() []Operation {
 	tasks := "tasks"
 	mcp := "mcp"
 	networks := "networks"
+	actions := "actions"
 	return []Operation{
 		{Method: "GET", Path: "/api/system/public", Summary: "Get public settings", Tags: []string{system}, Response: settingsSchema()},
 		{Method: "GET", Path: "/api/system/stats", Summary: "Get system stats", Tags: []string{system}, Auth: AuthUser, Response: systemStatsSchema()},
@@ -247,6 +316,14 @@ func systemOperations() []Operation {
 		{Method: "DELETE", Path: "/api/scheduled-tasks/:id", Summary: "Delete a scheduled task", Tags: []string{tasks}, Auth: AuthUser, Raw: true, Code: 204, Response: EmptySchema()},
 		{Method: "POST", Path: "/api/scheduled-tasks/:id/trigger", Summary: "Trigger a scheduled task", Tags: []string{tasks}, Auth: AuthUser, Response: StatusSchema("executed")},
 		{Method: "GET", Path: "/api/mcp/sse", Summary: "Open the MCP event stream", Tags: []string{mcp}, Auth: AuthUser, Raw: true, Content: ContentSSE, Response: Str("MCP events")},
+		{Method: "GET", Path: "/api/actions/workflows", Summary: "List action workflows", Tags: []string{actions}, Auth: AuthUser, Response: Arr("Workflows", actionWorkflowSchema())},
+		{Method: "POST", Path: "/api/actions/workflows", Summary: "Create action workflow", Tags: []string{actions}, Auth: AuthAdmin, Code: 200, Request: JSON(Obj("Create workflow", F("projectId", Str("Project ID")), RF("name", Str("Workflow name")), F("description", Str("Description")), F("trigger", Str("Trigger")), F("yaml", Str("YAML")))), Response: actionWorkflowSchema()},
+		{Method: "GET", Path: "/api/actions/runs", Summary: "List action runs", Tags: []string{actions}, Auth: AuthUser, Response: Arr("Runs", actionRunSchema())},
+		{Method: "GET", Path: "/api/actions/runs/:id", Summary: "Get action run", Tags: []string{actions}, Auth: AuthUser, Response: actionRunSchema()},
+		{Method: "POST", Path: "/api/actions/runs/:id/retry", Summary: "Retry action run", Tags: []string{actions}, Auth: AuthUser, Response: actionRunSchema()},
+		{Method: "POST", Path: "/api/actions/runs/:id/cancel", Summary: "Cancel action run", Tags: []string{actions}, Auth: AuthUser, Response: actionRunSchema()},
+		{Method: "GET", Path: "/api/actions/runners", Summary: "List action runners", Tags: []string{actions}, Auth: AuthUser, Response: Arr("Runners", actionRunnerSchema())},
+		{Method: "POST", Path: "/api/actions/runners", Summary: "Register action runner", Tags: []string{actions}, Auth: AuthAdmin, Code: 200, Request: JSON(Obj("Create runner", RF("name", Str("Runner name")), F("mode", Str("Mode")), F("image", Str("Image")), F("labels", Arr("Labels", Str("Label"))), RF("enabled", Bool("Enabled")))), Response: actionRunnerSchema()},
 		{Method: "POST", Path: "/api/mcp/messages", Summary: "Send an MCP message", Tags: []string{mcp}, Auth: AuthUser, Raw: true, Request: JSON(Obj("MCP message", RF("jsonrpc", Str("JSON-RPC version")), F("id", Any("Message ID")), F("method", Str("Method")), F("params", Any("Params")))), Response: Obj("MCP response", RF("jsonrpc", Str("JSON-RPC version")), F("id", Any("Message ID")), F("result", Any("Result")), F("error", Obj("Error", RF("code", Int("Code")), RF("message", Str("Message")))))},
 		{Method: "GET", Path: "/api/docs/openapi.json", Summary: "Download the OpenAPI document", Tags: []string{system}, Auth: AuthUser, Raw: true, Response: Any("OpenAPI 3.1 document")},
 	}

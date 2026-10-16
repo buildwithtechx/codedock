@@ -1,0 +1,130 @@
+package system
+
+import (
+	"bytes"
+	"encoding/json"
+	"net/http"
+	"net/http/httptest"
+	"testing"
+
+	"codedock/internal/models"
+
+	"github.com/labstack/echo/v4"
+)
+
+func TestActionsHandler_Lifecycle(t *testing.T) {
+	e := echo.New()
+	handler := NewActionsHandler()
+
+	// 1. List seeded workflows
+	req := httptest.NewRequest(http.MethodGet, "/actions/workflows", nil)
+	rec := httptest.NewRecorder()
+	c := e.NewContext(req, rec)
+	if err := handler.ListWorkflows(c); err != nil {
+		t.Fatalf("unexpected ListWorkflows error: %v", err)
+	}
+	var wfResp struct {
+		Data []*models.ActionWorkflow `json:"data"`
+	}
+	if err := json.Unmarshal(rec.Body.Bytes(), &wfResp); err != nil {
+		t.Fatalf("failed to decode workflows: %v", err)
+	}
+	if len(wfResp.Data) == 0 {
+		t.Fatalf("expected seeded workflows")
+	}
+
+	// 2. Create a new workflow
+	createBody, _ := json.Marshal(models.CreateWorkflowRequest{
+		Name:        "Deploy Production",
+		Description: "Staged deployment pipeline",
+		Trigger:     "manual",
+		YAML:        "name: Deploy\non: workflow_dispatch\n",
+	})
+	req = httptest.NewRequest(http.MethodPost, "/actions/workflows", bytes.NewReader(createBody))
+	req.Header.Set(echo.HeaderContentType, echo.MIMEApplicationJSON)
+	rec = httptest.NewRecorder()
+	c = e.NewContext(req, rec)
+	if err := handler.CreateWorkflow(c); err != nil {
+		t.Fatalf("unexpected CreateWorkflow error: %v", err)
+	}
+	var createdWf struct {
+		Data models.ActionWorkflow `json:"data"`
+	}
+	_ = json.Unmarshal(rec.Body.Bytes(), &createdWf)
+	if createdWf.Data.Name != "Deploy Production" {
+		t.Fatalf("expected name 'Deploy Production', got %q", createdWf.Data.Name)
+	}
+
+	// 3. List and get runs
+	req = httptest.NewRequest(http.MethodGet, "/actions/runs", nil)
+	rec = httptest.NewRecorder()
+	c = e.NewContext(req, rec)
+	if err := handler.ListRuns(c); err != nil {
+		t.Fatalf("unexpected ListRuns error: %v", err)
+	}
+	var runsResp struct {
+		Data []*models.ActionRun `json:"data"`
+	}
+	_ = json.Unmarshal(rec.Body.Bytes(), &runsResp)
+	if len(runsResp.Data) == 0 {
+		t.Fatalf("expected seeded run")
+	}
+	runID := runsResp.Data[0].ID
+
+	// 4. Retry run
+	req = httptest.NewRequest(http.MethodPost, "/actions/runs/"+runID+"/retry", nil)
+	rec = httptest.NewRecorder()
+	c = e.NewContext(req, rec)
+	c.SetParamNames("id")
+	c.SetParamValues(runID)
+	if err := handler.RetryRun(c); err != nil {
+		t.Fatalf("unexpected RetryRun error: %v", err)
+	}
+	var retryResp struct {
+		Data models.ActionRun `json:"data"`
+	}
+	_ = json.Unmarshal(rec.Body.Bytes(), &retryResp)
+	if retryResp.Data.Status != "running" {
+		t.Fatalf("expected status 'running', got %q", retryResp.Data.Status)
+	}
+	newRunID := retryResp.Data.ID
+
+	// 5. Cancel run
+	req = httptest.NewRequest(http.MethodPost, "/actions/runs/"+newRunID+"/cancel", nil)
+	rec = httptest.NewRecorder()
+	c = e.NewContext(req, rec)
+	c.SetParamNames("id")
+	c.SetParamValues(newRunID)
+	if err := handler.CancelRun(c); err != nil {
+		t.Fatalf("unexpected CancelRun error: %v", err)
+	}
+	var cancelResp struct {
+		Data models.ActionRun `json:"data"`
+	}
+	_ = json.Unmarshal(rec.Body.Bytes(), &cancelResp)
+	if cancelResp.Data.Status != "cancelled" {
+		t.Fatalf("expected status 'cancelled', got %q", cancelResp.Data.Status)
+	}
+
+	// 6. Register a new runner
+	runnerBody, _ := json.Marshal(models.CreateRunnerRequest{
+		Name:    "ARM64 Native Runner",
+		Mode:    "native",
+		Labels:  []string{"arm64", "linux"},
+		Enabled: true,
+	})
+	req = httptest.NewRequest(http.MethodPost, "/actions/runners", bytes.NewReader(runnerBody))
+	req.Header.Set(echo.HeaderContentType, echo.MIMEApplicationJSON)
+	rec = httptest.NewRecorder()
+	c = e.NewContext(req, rec)
+	if err := handler.CreateRunner(c); err != nil {
+		t.Fatalf("unexpected CreateRunner error: %v", err)
+	}
+	var runnerResp struct {
+		Data models.ActionRunner `json:"data"`
+	}
+	_ = json.Unmarshal(rec.Body.Bytes(), &runnerResp)
+	if runnerResp.Data.Name != "ARM64 Native Runner" {
+		t.Fatalf("expected name 'ARM64 Native Runner', got %q", runnerResp.Data.Name)
+	}
+}

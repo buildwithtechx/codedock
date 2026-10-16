@@ -19,6 +19,7 @@ import {
   Settings,
   ShieldCheck,
   UserRound,
+  Workflow,
 } from 'lucide-react';
 
 export type DashboardNavigationItem = {
@@ -88,6 +89,12 @@ export const infrastructureNavigation: DashboardNavigationItem[] = [
     description: 'Cron schedules and job runs',
     to: '/jobs',
     icon: Clock,
+  },
+  {
+    title: 'Actions',
+    description: 'CI workflows and runner execution',
+    to: '/actions',
+    icon: Workflow,
   },
 ];
 

@@ -15,6 +15,2456 @@
   },
   "openapi": "3.1.0",
   "paths": {
+    "/api/actions/runners": {
+      "get": {
+        "operationId": "getActionsRunners",
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "description": "Codedock API envelope",
+                  "properties": {
+                    "data": {
+                      "description": "Runners",
+                      "items": {
+                        "description": "Action runner",
+                        "properties": {
+                          "createdAt": {
+                            "description": "Created timestamp",
+                            "type": "string"
+                          },
+                          "enabled": {
+                            "description": "Enabled",
+                            "type": "boolean"
+                          },
+                          "id": {
+                            "description": "Runner ID",
+                            "type": "string"
+                          },
+                          "image": {
+                            "description": "Container image",
+                            "type": "string"
+                          },
+                          "labels": {
+                            "description": "Labels",
+                            "items": {
+                              "description": "Label",
+                              "type": "string"
+                            },
+                            "type": "array"
+                          },
+                          "lastHeartbeatAt": {
+                            "description": "Last heartbeat timestamp",
+                            "type": "string"
+                          },
+                          "mode": {
+                            "description": "Runner mode",
+                            "type": "string"
+                          },
+                          "name": {
+                            "description": "Runner name",
+                            "type": "string"
+                          },
+                          "status": {
+                            "description": "Runner status",
+                            "type": "string"
+                          },
+                          "updatedAt": {
+                            "description": "Updated timestamp",
+                            "type": "string"
+                          }
+                        },
+                        "required": [
+                          "id",
+                          "name",
+                          "mode",
+                          "status",
+                          "labels",
+                          "enabled",
+                          "createdAt",
+                          "updatedAt"
+                        ],
+                        "type": "object"
+                      },
+                      "type": "array"
+                    },
+                    "executionTime": {
+                      "description": "Handler seconds",
+                      "format": "double",
+                      "type": "number"
+                    },
+                    "message": {
+                      "description": "Human-readable message",
+                      "type": "string"
+                    },
+                    "path": {
+                      "description": "Request path",
+                      "type": "string"
+                    },
+                    "status": {
+                      "description": "Result status",
+                      "enum": [
+                        "success"
+                      ],
+                      "type": "string"
+                    }
+                  },
+                  "required": [
+                    "status",
+                    "message"
+                  ],
+                  "type": "object"
+                }
+              }
+            },
+            "description": "List action runners"
+          },
+          "400": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "description": "Codedock API error",
+                  "properties": {
+                    "message": {
+                      "description": "Human-readable message",
+                      "type": "string"
+                    },
+                    "path": {
+                      "description": "Request path",
+                      "type": "string"
+                    },
+                    "status": {
+                      "description": "Result status",
+                      "enum": [
+                        "error"
+                      ],
+                      "type": "string"
+                    }
+                  },
+                  "required": [
+                    "status",
+                    "message"
+                  ],
+                  "type": "object"
+                }
+              }
+            },
+            "description": "Invalid request"
+          },
+          "401": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "description": "Codedock API error",
+                  "properties": {
+                    "message": {
+                      "description": "Human-readable message",
+                      "type": "string"
+                    },
+                    "path": {
+                      "description": "Request path",
+                      "type": "string"
+                    },
+                    "status": {
+                      "description": "Result status",
+                      "enum": [
+                        "error"
+                      ],
+                      "type": "string"
+                    }
+                  },
+                  "required": [
+                    "status",
+                    "message"
+                  ],
+                  "type": "object"
+                }
+              }
+            },
+            "description": "Missing or invalid credentials"
+          },
+          "403": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "description": "Codedock API error",
+                  "properties": {
+                    "message": {
+                      "description": "Human-readable message",
+                      "type": "string"
+                    },
+                    "path": {
+                      "description": "Request path",
+                      "type": "string"
+                    },
+                    "status": {
+                      "description": "Result status",
+                      "enum": [
+                        "error"
+                      ],
+                      "type": "string"
+                    }
+                  },
+                  "required": [
+                    "status",
+                    "message"
+                  ],
+                  "type": "object"
+                }
+              }
+            },
+            "description": "Insufficient permissions"
+          },
+          "500": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "description": "Codedock API error",
+                  "properties": {
+                    "message": {
+                      "description": "Human-readable message",
+                      "type": "string"
+                    },
+                    "path": {
+                      "description": "Request path",
+                      "type": "string"
+                    },
+                    "status": {
+                      "description": "Result status",
+                      "enum": [
+                        "error"
+                      ],
+                      "type": "string"
+                    }
+                  },
+                  "required": [
+                    "status",
+                    "message"
+                  ],
+                  "type": "object"
+                }
+              }
+            },
+            "description": "Server error"
+          }
+        },
+        "security": [
+          {
+            "bearerAuth": []
+          }
+        ],
+        "summary": "List action runners",
+        "tags": [
+          "actions"
+        ],
+        "x-auth": "authenticated"
+      },
+      "post": {
+        "operationId": "postActionsRunners",
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "description": "Create runner",
+                "properties": {
+                  "enabled": {
+                    "description": "Enabled",
+                    "type": "boolean"
+                  },
+                  "image": {
+                    "description": "Image",
+                    "type": "string"
+                  },
+                  "labels": {
+                    "description": "Labels",
+                    "items": {
+                      "description": "Label",
+                      "type": "string"
+                    },
+                    "type": "array"
+                  },
+                  "mode": {
+                    "description": "Mode",
+                    "type": "string"
+                  },
+                  "name": {
+                    "description": "Runner name",
+                    "type": "string"
+                  }
+                },
+                "required": [
+                  "name",
+                  "enabled"
+                ],
+                "type": "object"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "description": "Codedock API envelope",
+                  "properties": {
+                    "data": {
+                      "description": "Action runner",
+                      "properties": {
+                        "createdAt": {
+                          "description": "Created timestamp",
+                          "type": "string"
+                        },
+                        "enabled": {
+                          "description": "Enabled",
+                          "type": "boolean"
+                        },
+                        "id": {
+                          "description": "Runner ID",
+                          "type": "string"
+                        },
+                        "image": {
+                          "description": "Container image",
+                          "type": "string"
+                        },
+                        "labels": {
+                          "description": "Labels",
+                          "items": {
+                            "description": "Label",
+                            "type": "string"
+                          },
+                          "type": "array"
+                        },
+                        "lastHeartbeatAt": {
+                          "description": "Last heartbeat timestamp",
+                          "type": "string"
+                        },
+                        "mode": {
+                          "description": "Runner mode",
+                          "type": "string"
+                        },
+                        "name": {
+                          "description": "Runner name",
+                          "type": "string"
+                        },
+                        "status": {
+                          "description": "Runner status",
+                          "type": "string"
+                        },
+                        "updatedAt": {
+                          "description": "Updated timestamp",
+                          "type": "string"
+                        }
+                      },
+                      "required": [
+                        "id",
+                        "name",
+                        "mode",
+                        "status",
+                        "labels",
+                        "enabled",
+                        "createdAt",
+                        "updatedAt"
+                      ],
+                      "type": "object"
+                    },
+                    "executionTime": {
+                      "description": "Handler seconds",
+                      "format": "double",
+                      "type": "number"
+                    },
+                    "message": {
+                      "description": "Human-readable message",
+                      "type": "string"
+                    },
+                    "path": {
+                      "description": "Request path",
+                      "type": "string"
+                    },
+                    "status": {
+                      "description": "Result status",
+                      "enum": [
+                        "success"
+                      ],
+                      "type": "string"
+                    }
+                  },
+                  "required": [
+                    "status",
+                    "message"
+                  ],
+                  "type": "object"
+                }
+              }
+            },
+            "description": "Register action runner"
+          },
+          "400": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "description": "Codedock API error",
+                  "properties": {
+                    "message": {
+                      "description": "Human-readable message",
+                      "type": "string"
+                    },
+                    "path": {
+                      "description": "Request path",
+                      "type": "string"
+                    },
+                    "status": {
+                      "description": "Result status",
+                      "enum": [
+                        "error"
+                      ],
+                      "type": "string"
+                    }
+                  },
+                  "required": [
+                    "status",
+                    "message"
+                  ],
+                  "type": "object"
+                }
+              }
+            },
+            "description": "Invalid request"
+          },
+          "401": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "description": "Codedock API error",
+                  "properties": {
+                    "message": {
+                      "description": "Human-readable message",
+                      "type": "string"
+                    },
+                    "path": {
+                      "description": "Request path",
+                      "type": "string"
+                    },
+                    "status": {
+                      "description": "Result status",
+                      "enum": [
+                        "error"
+                      ],
+                      "type": "string"
+                    }
+                  },
+                  "required": [
+                    "status",
+                    "message"
+                  ],
+                  "type": "object"
+                }
+              }
+            },
+            "description": "Missing or invalid credentials"
+          },
+          "403": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "description": "Codedock API error",
+                  "properties": {
+                    "message": {
+                      "description": "Human-readable message",
+                      "type": "string"
+                    },
+                    "path": {
+                      "description": "Request path",
+                      "type": "string"
+                    },
+                    "status": {
+                      "description": "Result status",
+                      "enum": [
+                        "error"
+                      ],
+                      "type": "string"
+                    }
+                  },
+                  "required": [
+                    "status",
+                    "message"
+                  ],
+                  "type": "object"
+                }
+              }
+            },
+            "description": "Insufficient permissions"
+          },
+          "500": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "description": "Codedock API error",
+                  "properties": {
+                    "message": {
+                      "description": "Human-readable message",
+                      "type": "string"
+                    },
+                    "path": {
+                      "description": "Request path",
+                      "type": "string"
+                    },
+                    "status": {
+                      "description": "Result status",
+                      "enum": [
+                        "error"
+                      ],
+                      "type": "string"
+                    }
+                  },
+                  "required": [
+                    "status",
+                    "message"
+                  ],
+                  "type": "object"
+                }
+              }
+            },
+            "description": "Server error"
+          }
+        },
+        "security": [
+          {
+            "bearerAuth": []
+          }
+        ],
+        "summary": "Register action runner",
+        "tags": [
+          "actions"
+        ],
+        "x-auth": "instance admin"
+      }
+    },
+    "/api/actions/runs": {
+      "get": {
+        "operationId": "getActionsRuns",
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "description": "Codedock API envelope",
+                  "properties": {
+                    "data": {
+                      "description": "Runs",
+                      "items": {
+                        "description": "Action run",
+                        "properties": {
+                          "createdAt": {
+                            "description": "Created timestamp",
+                            "type": "string"
+                          },
+                          "durationSeconds": {
+                            "description": "Duration in seconds",
+                            "format": "int32",
+                            "type": "integer"
+                          },
+                          "finishedAt": {
+                            "description": "Finished timestamp",
+                            "type": "string"
+                          },
+                          "id": {
+                            "description": "Run ID",
+                            "type": "string"
+                          },
+                          "jobs": {
+                            "description": "Jobs",
+                            "items": {
+                              "description": "Action job",
+                              "properties": {
+                                "durationSeconds": {
+                                  "description": "Duration in seconds",
+                                  "format": "int32",
+                                  "type": "integer"
+                                },
+                                "id": {
+                                  "description": "Job ID",
+                                  "type": "string"
+                                },
+                                "name": {
+                                  "description": "Job name",
+                                  "type": "string"
+                                },
+                                "runnerId": {
+                                  "description": "Runner ID",
+                                  "type": "string"
+                                },
+                                "status": {
+                                  "description": "Job status",
+                                  "type": "string"
+                                },
+                                "steps": {
+                                  "description": "Steps",
+                                  "items": {
+                                    "description": "Action step",
+                                    "properties": {
+                                      "durationSeconds": {
+                                        "description": "Duration in seconds",
+                                        "format": "int32",
+                                        "type": "integer"
+                                      },
+                                      "id": {
+                                        "description": "Step ID",
+                                        "type": "string"
+                                      },
+                                      "name": {
+                                        "description": "Step name",
+                                        "type": "string"
+                                      },
+                                      "status": {
+                                        "description": "Step status",
+                                        "type": "string"
+                                      }
+                                    },
+                                    "required": [
+                                      "id",
+                                      "name",
+                                      "status"
+                                    ],
+                                    "type": "object"
+                                  },
+                                  "type": "array"
+                                }
+                              },
+                              "required": [
+                                "id",
+                                "name",
+                                "status",
+                                "steps"
+                              ],
+                              "type": "object"
+                            },
+                            "type": "array"
+                          },
+                          "logs": {
+                            "description": "Execution logs",
+                            "type": "string"
+                          },
+                          "name": {
+                            "description": "Run name",
+                            "type": "string"
+                          },
+                          "number": {
+                            "description": "Run number",
+                            "format": "int32",
+                            "type": "integer"
+                          },
+                          "runnerId": {
+                            "description": "Runner ID",
+                            "type": "string"
+                          },
+                          "startedAt": {
+                            "description": "Started timestamp",
+                            "type": "string"
+                          },
+                          "status": {
+                            "description": "Run status",
+                            "type": "string"
+                          },
+                          "triggeredBy": {
+                            "description": "Triggered by",
+                            "type": "string"
+                          },
+                          "updatedAt": {
+                            "description": "Updated timestamp",
+                            "type": "string"
+                          },
+                          "workflowId": {
+                            "description": "Workflow ID",
+                            "type": "string"
+                          }
+                        },
+                        "required": [
+                          "id",
+                          "workflowId",
+                          "name",
+                          "number",
+                          "status",
+                          "triggeredBy",
+                          "durationSeconds",
+                          "createdAt",
+                          "updatedAt"
+                        ],
+                        "type": "object"
+                      },
+                      "type": "array"
+                    },
+                    "executionTime": {
+                      "description": "Handler seconds",
+                      "format": "double",
+                      "type": "number"
+                    },
+                    "message": {
+                      "description": "Human-readable message",
+                      "type": "string"
+                    },
+                    "path": {
+                      "description": "Request path",
+                      "type": "string"
+                    },
+                    "status": {
+                      "description": "Result status",
+                      "enum": [
+                        "success"
+                      ],
+                      "type": "string"
+                    }
+                  },
+                  "required": [
+                    "status",
+                    "message"
+                  ],
+                  "type": "object"
+                }
+              }
+            },
+            "description": "List action runs"
+          },
+          "400": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "description": "Codedock API error",
+                  "properties": {
+                    "message": {
+                      "description": "Human-readable message",
+                      "type": "string"
+                    },
+                    "path": {
+                      "description": "Request path",
+                      "type": "string"
+                    },
+                    "status": {
+                      "description": "Result status",
+                      "enum": [
+                        "error"
+                      ],
+                      "type": "string"
+                    }
+                  },
+                  "required": [
+                    "status",
+                    "message"
+                  ],
+                  "type": "object"
+                }
+              }
+            },
+            "description": "Invalid request"
+          },
+          "401": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "description": "Codedock API error",
+                  "properties": {
+                    "message": {
+                      "description": "Human-readable message",
+                      "type": "string"
+                    },
+                    "path": {
+                      "description": "Request path",
+                      "type": "string"
+                    },
+                    "status": {
+                      "description": "Result status",
+                      "enum": [
+                        "error"
+                      ],
+                      "type": "string"
+                    }
+                  },
+                  "required": [
+                    "status",
+                    "message"
+                  ],
+                  "type": "object"
+                }
+              }
+            },
+            "description": "Missing or invalid credentials"
+          },
+          "403": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "description": "Codedock API error",
+                  "properties": {
+                    "message": {
+                      "description": "Human-readable message",
+                      "type": "string"
+                    },
+                    "path": {
+                      "description": "Request path",
+                      "type": "string"
+                    },
+                    "status": {
+                      "description": "Result status",
+                      "enum": [
+                        "error"
+                      ],
+                      "type": "string"
+                    }
+                  },
+                  "required": [
+                    "status",
+                    "message"
+                  ],
+                  "type": "object"
+                }
+              }
+            },
+            "description": "Insufficient permissions"
+          },
+          "500": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "description": "Codedock API error",
+                  "properties": {
+                    "message": {
+                      "description": "Human-readable message",
+                      "type": "string"
+                    },
+                    "path": {
+                      "description": "Request path",
+                      "type": "string"
+                    },
+                    "status": {
+                      "description": "Result status",
+                      "enum": [
+                        "error"
+                      ],
+                      "type": "string"
+                    }
+                  },
+                  "required": [
+                    "status",
+                    "message"
+                  ],
+                  "type": "object"
+                }
+              }
+            },
+            "description": "Server error"
+          }
+        },
+        "security": [
+          {
+            "bearerAuth": []
+          }
+        ],
+        "summary": "List action runs",
+        "tags": [
+          "actions"
+        ],
+        "x-auth": "authenticated"
+      }
+    },
+    "/api/actions/runs/{id}": {
+      "get": {
+        "operationId": "getActionsRunsId",
+        "parameters": [
+          {
+            "description": "id",
+            "in": "path",
+            "name": "id",
+            "required": true,
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "description": "Codedock API envelope",
+                  "properties": {
+                    "data": {
+                      "description": "Action run",
+                      "properties": {
+                        "createdAt": {
+                          "description": "Created timestamp",
+                          "type": "string"
+                        },
+                        "durationSeconds": {
+                          "description": "Duration in seconds",
+                          "format": "int32",
+                          "type": "integer"
+                        },
+                        "finishedAt": {
+                          "description": "Finished timestamp",
+                          "type": "string"
+                        },
+                        "id": {
+                          "description": "Run ID",
+                          "type": "string"
+                        },
+                        "jobs": {
+                          "description": "Jobs",
+                          "items": {
+                            "description": "Action job",
+                            "properties": {
+                              "durationSeconds": {
+                                "description": "Duration in seconds",
+                                "format": "int32",
+                                "type": "integer"
+                              },
+                              "id": {
+                                "description": "Job ID",
+                                "type": "string"
+                              },
+                              "name": {
+                                "description": "Job name",
+                                "type": "string"
+                              },
+                              "runnerId": {
+                                "description": "Runner ID",
+                                "type": "string"
+                              },
+                              "status": {
+                                "description": "Job status",
+                                "type": "string"
+                              },
+                              "steps": {
+                                "description": "Steps",
+                                "items": {
+                                  "description": "Action step",
+                                  "properties": {
+                                    "durationSeconds": {
+                                      "description": "Duration in seconds",
+                                      "format": "int32",
+                                      "type": "integer"
+                                    },
+                                    "id": {
+                                      "description": "Step ID",
+                                      "type": "string"
+                                    },
+                                    "name": {
+                                      "description": "Step name",
+                                      "type": "string"
+                                    },
+                                    "status": {
+                                      "description": "Step status",
+                                      "type": "string"
+                                    }
+                                  },
+                                  "required": [
+                                    "id",
+                                    "name",
+                                    "status"
+                                  ],
+                                  "type": "object"
+                                },
+                                "type": "array"
+                              }
+                            },
+                            "required": [
+                              "id",
+                              "name",
+                              "status",
+                              "steps"
+                            ],
+                            "type": "object"
+                          },
+                          "type": "array"
+                        },
+                        "logs": {
+                          "description": "Execution logs",
+                          "type": "string"
+                        },
+                        "name": {
+                          "description": "Run name",
+                          "type": "string"
+                        },
+                        "number": {
+                          "description": "Run number",
+                          "format": "int32",
+                          "type": "integer"
+                        },
+                        "runnerId": {
+                          "description": "Runner ID",
+                          "type": "string"
+                        },
+                        "startedAt": {
+                          "description": "Started timestamp",
+                          "type": "string"
+                        },
+                        "status": {
+                          "description": "Run status",
+                          "type": "string"
+                        },
+                        "triggeredBy": {
+                          "description": "Triggered by",
+                          "type": "string"
+                        },
+                        "updatedAt": {
+                          "description": "Updated timestamp",
+                          "type": "string"
+                        },
+                        "workflowId": {
+                          "description": "Workflow ID",
+                          "type": "string"
+                        }
+                      },
+                      "required": [
+                        "id",
+                        "workflowId",
+                        "name",
+                        "number",
+                        "status",
+                        "triggeredBy",
+                        "durationSeconds",
+                        "createdAt",
+                        "updatedAt"
+                      ],
+                      "type": "object"
+                    },
+                    "executionTime": {
+                      "description": "Handler seconds",
+                      "format": "double",
+                      "type": "number"
+                    },
+                    "message": {
+                      "description": "Human-readable message",
+                      "type": "string"
+                    },
+                    "path": {
+                      "description": "Request path",
+                      "type": "string"
+                    },
+                    "status": {
+                      "description": "Result status",
+                      "enum": [
+                        "success"
+                      ],
+                      "type": "string"
+                    }
+                  },
+                  "required": [
+                    "status",
+                    "message"
+                  ],
+                  "type": "object"
+                }
+              }
+            },
+            "description": "Get action run"
+          },
+          "400": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "description": "Codedock API error",
+                  "properties": {
+                    "message": {
+                      "description": "Human-readable message",
+                      "type": "string"
+                    },
+                    "path": {
+                      "description": "Request path",
+                      "type": "string"
+                    },
+                    "status": {
+                      "description": "Result status",
+                      "enum": [
+                        "error"
+                      ],
+                      "type": "string"
+                    }
+                  },
+                  "required": [
+                    "status",
+                    "message"
+                  ],
+                  "type": "object"
+                }
+              }
+            },
+            "description": "Invalid request"
+          },
+          "401": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "description": "Codedock API error",
+                  "properties": {
+                    "message": {
+                      "description": "Human-readable message",
+                      "type": "string"
+                    },
+                    "path": {
+                      "description": "Request path",
+                      "type": "string"
+                    },
+                    "status": {
+                      "description": "Result status",
+                      "enum": [
+                        "error"
+                      ],
+                      "type": "string"
+                    }
+                  },
+                  "required": [
+                    "status",
+                    "message"
+                  ],
+                  "type": "object"
+                }
+              }
+            },
+            "description": "Missing or invalid credentials"
+          },
+          "403": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "description": "Codedock API error",
+                  "properties": {
+                    "message": {
+                      "description": "Human-readable message",
+                      "type": "string"
+                    },
+                    "path": {
+                      "description": "Request path",
+                      "type": "string"
+                    },
+                    "status": {
+                      "description": "Result status",
+                      "enum": [
+                        "error"
+                      ],
+                      "type": "string"
+                    }
+                  },
+                  "required": [
+                    "status",
+                    "message"
+                  ],
+                  "type": "object"
+                }
+              }
+            },
+            "description": "Insufficient permissions"
+          },
+          "404": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "description": "Codedock API error",
+                  "properties": {
+                    "message": {
+                      "description": "Human-readable message",
+                      "type": "string"
+                    },
+                    "path": {
+                      "description": "Request path",
+                      "type": "string"
+                    },
+                    "status": {
+                      "description": "Result status",
+                      "enum": [
+                        "error"
+                      ],
+                      "type": "string"
+                    }
+                  },
+                  "required": [
+                    "status",
+                    "message"
+                  ],
+                  "type": "object"
+                }
+              }
+            },
+            "description": "Resource not found"
+          },
+          "500": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "description": "Codedock API error",
+                  "properties": {
+                    "message": {
+                      "description": "Human-readable message",
+                      "type": "string"
+                    },
+                    "path": {
+                      "description": "Request path",
+                      "type": "string"
+                    },
+                    "status": {
+                      "description": "Result status",
+                      "enum": [
+                        "error"
+                      ],
+                      "type": "string"
+                    }
+                  },
+                  "required": [
+                    "status",
+                    "message"
+                  ],
+                  "type": "object"
+                }
+              }
+            },
+            "description": "Server error"
+          }
+        },
+        "security": [
+          {
+            "bearerAuth": []
+          }
+        ],
+        "summary": "Get action run",
+        "tags": [
+          "actions"
+        ],
+        "x-auth": "authenticated"
+      }
+    },
+    "/api/actions/runs/{id}/cancel": {
+      "post": {
+        "operationId": "postActionsRunsIdCancel",
+        "parameters": [
+          {
+            "description": "id",
+            "in": "path",
+            "name": "id",
+            "required": true,
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "description": "Codedock API envelope",
+                  "properties": {
+                    "data": {
+                      "description": "Action run",
+                      "properties": {
+                        "createdAt": {
+                          "description": "Created timestamp",
+                          "type": "string"
+                        },
+                        "durationSeconds": {
+                          "description": "Duration in seconds",
+                          "format": "int32",
+                          "type": "integer"
+                        },
+                        "finishedAt": {
+                          "description": "Finished timestamp",
+                          "type": "string"
+                        },
+                        "id": {
+                          "description": "Run ID",
+                          "type": "string"
+                        },
+                        "jobs": {
+                          "description": "Jobs",
+                          "items": {
+                            "description": "Action job",
+                            "properties": {
+                              "durationSeconds": {
+                                "description": "Duration in seconds",
+                                "format": "int32",
+                                "type": "integer"
+                              },
+                              "id": {
+                                "description": "Job ID",
+                                "type": "string"
+                              },
+                              "name": {
+                                "description": "Job name",
+                                "type": "string"
+                              },
+                              "runnerId": {
+                                "description": "Runner ID",
+                                "type": "string"
+                              },
+                              "status": {
+                                "description": "Job status",
+                                "type": "string"
+                              },
+                              "steps": {
+                                "description": "Steps",
+                                "items": {
+                                  "description": "Action step",
+                                  "properties": {
+                                    "durationSeconds": {
+                                      "description": "Duration in seconds",
+                                      "format": "int32",
+                                      "type": "integer"
+                                    },
+                                    "id": {
+                                      "description": "Step ID",
+                                      "type": "string"
+                                    },
+                                    "name": {
+                                      "description": "Step name",
+                                      "type": "string"
+                                    },
+                                    "status": {
+                                      "description": "Step status",
+                                      "type": "string"
+                                    }
+                                  },
+                                  "required": [
+                                    "id",
+                                    "name",
+                                    "status"
+                                  ],
+                                  "type": "object"
+                                },
+                                "type": "array"
+                              }
+                            },
+                            "required": [
+                              "id",
+                              "name",
+                              "status",
+                              "steps"
+                            ],
+                            "type": "object"
+                          },
+                          "type": "array"
+                        },
+                        "logs": {
+                          "description": "Execution logs",
+                          "type": "string"
+                        },
+                        "name": {
+                          "description": "Run name",
+                          "type": "string"
+                        },
+                        "number": {
+                          "description": "Run number",
+                          "format": "int32",
+                          "type": "integer"
+                        },
+                        "runnerId": {
+                          "description": "Runner ID",
+                          "type": "string"
+                        },
+                        "startedAt": {
+                          "description": "Started timestamp",
+                          "type": "string"
+                        },
+                        "status": {
+                          "description": "Run status",
+                          "type": "string"
+                        },
+                        "triggeredBy": {
+                          "description": "Triggered by",
+                          "type": "string"
+                        },
+                        "updatedAt": {
+                          "description": "Updated timestamp",
+                          "type": "string"
+                        },
+                        "workflowId": {
+                          "description": "Workflow ID",
+                          "type": "string"
+                        }
+                      },
+                      "required": [
+                        "id",
+                        "workflowId",
+                        "name",
+                        "number",
+                        "status",
+                        "triggeredBy",
+                        "durationSeconds",
+                        "createdAt",
+                        "updatedAt"
+                      ],
+                      "type": "object"
+                    },
+                    "executionTime": {
+                      "description": "Handler seconds",
+                      "format": "double",
+                      "type": "number"
+                    },
+                    "message": {
+                      "description": "Human-readable message",
+                      "type": "string"
+                    },
+                    "path": {
+                      "description": "Request path",
+                      "type": "string"
+                    },
+                    "status": {
+                      "description": "Result status",
+                      "enum": [
+                        "success"
+                      ],
+                      "type": "string"
+                    }
+                  },
+                  "required": [
+                    "status",
+                    "message"
+                  ],
+                  "type": "object"
+                }
+              }
+            },
+            "description": "Cancel action run"
+          },
+          "400": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "description": "Codedock API error",
+                  "properties": {
+                    "message": {
+                      "description": "Human-readable message",
+                      "type": "string"
+                    },
+                    "path": {
+                      "description": "Request path",
+                      "type": "string"
+                    },
+                    "status": {
+                      "description": "Result status",
+                      "enum": [
+                        "error"
+                      ],
+                      "type": "string"
+                    }
+                  },
+                  "required": [
+                    "status",
+                    "message"
+                  ],
+                  "type": "object"
+                }
+              }
+            },
+            "description": "Invalid request"
+          },
+          "401": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "description": "Codedock API error",
+                  "properties": {
+                    "message": {
+                      "description": "Human-readable message",
+                      "type": "string"
+                    },
+                    "path": {
+                      "description": "Request path",
+                      "type": "string"
+                    },
+                    "status": {
+                      "description": "Result status",
+                      "enum": [
+                        "error"
+                      ],
+                      "type": "string"
+                    }
+                  },
+                  "required": [
+                    "status",
+                    "message"
+                  ],
+                  "type": "object"
+                }
+              }
+            },
+            "description": "Missing or invalid credentials"
+          },
+          "403": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "description": "Codedock API error",
+                  "properties": {
+                    "message": {
+                      "description": "Human-readable message",
+                      "type": "string"
+                    },
+                    "path": {
+                      "description": "Request path",
+                      "type": "string"
+                    },
+                    "status": {
+                      "description": "Result status",
+                      "enum": [
+                        "error"
+                      ],
+                      "type": "string"
+                    }
+                  },
+                  "required": [
+                    "status",
+                    "message"
+                  ],
+                  "type": "object"
+                }
+              }
+            },
+            "description": "Insufficient permissions"
+          },
+          "404": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "description": "Codedock API error",
+                  "properties": {
+                    "message": {
+                      "description": "Human-readable message",
+                      "type": "string"
+                    },
+                    "path": {
+                      "description": "Request path",
+                      "type": "string"
+                    },
+                    "status": {
+                      "description": "Result status",
+                      "enum": [
+                        "error"
+                      ],
+                      "type": "string"
+                    }
+                  },
+                  "required": [
+                    "status",
+                    "message"
+                  ],
+                  "type": "object"
+                }
+              }
+            },
+            "description": "Resource not found"
+          },
+          "500": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "description": "Codedock API error",
+                  "properties": {
+                    "message": {
+                      "description": "Human-readable message",
+                      "type": "string"
+                    },
+                    "path": {
+                      "description": "Request path",
+                      "type": "string"
+                    },
+                    "status": {
+                      "description": "Result status",
+                      "enum": [
+                        "error"
+                      ],
+                      "type": "string"
+                    }
+                  },
+                  "required": [
+                    "status",
+                    "message"
+                  ],
+                  "type": "object"
+                }
+              }
+            },
+            "description": "Server error"
+          }
+        },
+        "security": [
+          {
+            "bearerAuth": []
+          }
+        ],
+        "summary": "Cancel action run",
+        "tags": [
+          "actions"
+        ],
+        "x-auth": "authenticated"
+      }
+    },
+    "/api/actions/runs/{id}/retry": {
+      "post": {
+        "operationId": "postActionsRunsIdRetry",
+        "parameters": [
+          {
+            "description": "id",
+            "in": "path",
+            "name": "id",
+            "required": true,
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "description": "Codedock API envelope",
+                  "properties": {
+                    "data": {
+                      "description": "Action run",
+                      "properties": {
+                        "createdAt": {
+                          "description": "Created timestamp",
+                          "type": "string"
+                        },
+                        "durationSeconds": {
+                          "description": "Duration in seconds",
+                          "format": "int32",
+                          "type": "integer"
+                        },
+                        "finishedAt": {
+                          "description": "Finished timestamp",
+                          "type": "string"
+                        },
+                        "id": {
+                          "description": "Run ID",
+                          "type": "string"
+                        },
+                        "jobs": {
+                          "description": "Jobs",
+                          "items": {
+                            "description": "Action job",
+                            "properties": {
+                              "durationSeconds": {
+                                "description": "Duration in seconds",
+                                "format": "int32",
+                                "type": "integer"
+                              },
+                              "id": {
+                                "description": "Job ID",
+                                "type": "string"
+                              },
+                              "name": {
+                                "description": "Job name",
+                                "type": "string"
+                              },
+                              "runnerId": {
+                                "description": "Runner ID",
+                                "type": "string"
+                              },
+                              "status": {
+                                "description": "Job status",
+                                "type": "string"
+                              },
+                              "steps": {
+                                "description": "Steps",
+                                "items": {
+                                  "description": "Action step",
+                                  "properties": {
+                                    "durationSeconds": {
+                                      "description": "Duration in seconds",
+                                      "format": "int32",
+                                      "type": "integer"
+                                    },
+                                    "id": {
+                                      "description": "Step ID",
+                                      "type": "string"
+                                    },
+                                    "name": {
+                                      "description": "Step name",
+                                      "type": "string"
+                                    },
+                                    "status": {
+                                      "description": "Step status",
+                                      "type": "string"
+                                    }
+                                  },
+                                  "required": [
+                                    "id",
+                                    "name",
+                                    "status"
+                                  ],
+                                  "type": "object"
+                                },
+                                "type": "array"
+                              }
+                            },
+                            "required": [
+                              "id",
+                              "name",
+                              "status",
+                              "steps"
+                            ],
+                            "type": "object"
+                          },
+                          "type": "array"
+                        },
+                        "logs": {
+                          "description": "Execution logs",
+                          "type": "string"
+                        },
+                        "name": {
+                          "description": "Run name",
+                          "type": "string"
+                        },
+                        "number": {
+                          "description": "Run number",
+                          "format": "int32",
+                          "type": "integer"
+                        },
+                        "runnerId": {
+                          "description": "Runner ID",
+                          "type": "string"
+                        },
+                        "startedAt": {
+                          "description": "Started timestamp",
+                          "type": "string"
+                        },
+                        "status": {
+                          "description": "Run status",
+                          "type": "string"
+                        },
+                        "triggeredBy": {
+                          "description": "Triggered by",
+                          "type": "string"
+                        },
+                        "updatedAt": {
+                          "description": "Updated timestamp",
+                          "type": "string"
+                        },
+                        "workflowId": {
+                          "description": "Workflow ID",
+                          "type": "string"
+                        }
+                      },
+                      "required": [
+                        "id",
+                        "workflowId",
+                        "name",
+                        "number",
+                        "status",
+                        "triggeredBy",
+                        "durationSeconds",
+                        "createdAt",
+                        "updatedAt"
+                      ],
+                      "type": "object"
+                    },
+                    "executionTime": {
+                      "description": "Handler seconds",
+                      "format": "double",
+                      "type": "number"
+                    },
+                    "message": {
+                      "description": "Human-readable message",
+                      "type": "string"
+                    },
+                    "path": {
+                      "description": "Request path",
+                      "type": "string"
+                    },
+                    "status": {
+                      "description": "Result status",
+                      "enum": [
+                        "success"
+                      ],
+                      "type": "string"
+                    }
+                  },
+                  "required": [
+                    "status",
+                    "message"
+                  ],
+                  "type": "object"
+                }
+              }
+            },
+            "description": "Retry action run"
+          },
+          "400": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "description": "Codedock API error",
+                  "properties": {
+                    "message": {
+                      "description": "Human-readable message",
+                      "type": "string"
+                    },
+                    "path": {
+                      "description": "Request path",
+                      "type": "string"
+                    },
+                    "status": {
+                      "description": "Result status",
+                      "enum": [
+                        "error"
+                      ],
+                      "type": "string"
+                    }
+                  },
+                  "required": [
+                    "status",
+                    "message"
+                  ],
+                  "type": "object"
+                }
+              }
+            },
+            "description": "Invalid request"
+          },
+          "401": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "description": "Codedock API error",
+                  "properties": {
+                    "message": {
+                      "description": "Human-readable message",
+                      "type": "string"
+                    },
+                    "path": {
+                      "description": "Request path",
+                      "type": "string"
+                    },
+                    "status": {
+                      "description": "Result status",
+                      "enum": [
+                        "error"
+                      ],
+                      "type": "string"
+                    }
+                  },
+                  "required": [
+                    "status",
+                    "message"
+                  ],
+                  "type": "object"
+                }
+              }
+            },
+            "description": "Missing or invalid credentials"
+          },
+          "403": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "description": "Codedock API error",
+                  "properties": {
+                    "message": {
+                      "description": "Human-readable message",
+                      "type": "string"
+                    },
+                    "path": {
+                      "description": "Request path",
+                      "type": "string"
+                    },
+                    "status": {
+                      "description": "Result status",
+                      "enum": [
+                        "error"
+                      ],
+                      "type": "string"
+                    }
+                  },
+                  "required": [
+                    "status",
+                    "message"
+                  ],
+                  "type": "object"
+                }
+              }
+            },
+            "description": "Insufficient permissions"
+          },
+          "404": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "description": "Codedock API error",
+                  "properties": {
+                    "message": {
+                      "description": "Human-readable message",
+                      "type": "string"
+                    },
+                    "path": {
+                      "description": "Request path",
+                      "type": "string"
+                    },
+                    "status": {
+                      "description": "Result status",
+                      "enum": [
+                        "error"
+                      ],
+                      "type": "string"
+                    }
+                  },
+                  "required": [
+                    "status",
+                    "message"
+                  ],
+                  "type": "object"
+                }
+              }
+            },
+            "description": "Resource not found"
+          },
+          "500": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "description": "Codedock API error",
+                  "properties": {
+                    "message": {
+                      "description": "Human-readable message",
+                      "type": "string"
+                    },
+                    "path": {
+                      "description": "Request path",
+                      "type": "string"
+                    },
+                    "status": {
+                      "description": "Result status",
+                      "enum": [
+                        "error"
+                      ],
+                      "type": "string"
+                    }
+                  },
+                  "required": [
+                    "status",
+                    "message"
+                  ],
+                  "type": "object"
+                }
+              }
+            },
+            "description": "Server error"
+          }
+        },
+        "security": [
+          {
+            "bearerAuth": []
+          }
+        ],
+        "summary": "Retry action run",
+        "tags": [
+          "actions"
+        ],
+        "x-auth": "authenticated"
+      }
+    },
+    "/api/actions/workflows": {
+      "get": {
+        "operationId": "getActionsWorkflows",
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "description": "Codedock API envelope",
+                  "properties": {
+                    "data": {
+                      "description": "Workflows",
+                      "items": {
+                        "description": "Action workflow",
+                        "properties": {
+                          "createdAt": {
+                            "description": "Created timestamp",
+                            "type": "string"
+                          },
+                          "description": {
+                            "description": "Description",
+                            "type": "string"
+                          },
+                          "enabled": {
+                            "description": "Enabled",
+                            "type": "boolean"
+                          },
+                          "id": {
+                            "description": "Workflow ID",
+                            "type": "string"
+                          },
+                          "name": {
+                            "description": "Workflow name",
+                            "type": "string"
+                          },
+                          "projectId": {
+                            "description": "Project ID",
+                            "type": "string"
+                          },
+                          "trigger": {
+                            "description": "Trigger",
+                            "type": "string"
+                          },
+                          "updatedAt": {
+                            "description": "Updated timestamp",
+                            "type": "string"
+                          },
+                          "yaml": {
+                            "description": "Workflow YAML",
+                            "type": "string"
+                          }
+                        },
+                        "required": [
+                          "id",
+                          "name",
+                          "trigger",
+                          "enabled",
+                          "createdAt",
+                          "updatedAt"
+                        ],
+                        "type": "object"
+                      },
+                      "type": "array"
+                    },
+                    "executionTime": {
+                      "description": "Handler seconds",
+                      "format": "double",
+                      "type": "number"
+                    },
+                    "message": {
+                      "description": "Human-readable message",
+                      "type": "string"
+                    },
+                    "path": {
+                      "description": "Request path",
+                      "type": "string"
+                    },
+                    "status": {
+                      "description": "Result status",
+                      "enum": [
+                        "success"
+                      ],
+                      "type": "string"
+                    }
+                  },
+                  "required": [
+                    "status",
+                    "message"
+                  ],
+                  "type": "object"
+                }
+              }
+            },
+            "description": "List action workflows"
+          },
+          "400": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "description": "Codedock API error",
+                  "properties": {
+                    "message": {
+                      "description": "Human-readable message",
+                      "type": "string"
+                    },
+                    "path": {
+                      "description": "Request path",
+                      "type": "string"
+                    },
+                    "status": {
+                      "description": "Result status",
+                      "enum": [
+                        "error"
+                      ],
+                      "type": "string"
+                    }
+                  },
+                  "required": [
+                    "status",
+                    "message"
+                  ],
+                  "type": "object"
+                }
+              }
+            },
+            "description": "Invalid request"
+          },
+          "401": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "description": "Codedock API error",
+                  "properties": {
+                    "message": {
+                      "description": "Human-readable message",
+                      "type": "string"
+                    },
+                    "path": {
+                      "description": "Request path",
+                      "type": "string"
+                    },
+                    "status": {
+                      "description": "Result status",
+                      "enum": [
+                        "error"
+                      ],
+                      "type": "string"
+                    }
+                  },
+                  "required": [
+                    "status",
+                    "message"
+                  ],
+                  "type": "object"
+                }
+              }
+            },
+            "description": "Missing or invalid credentials"
+          },
+          "403": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "description": "Codedock API error",
+                  "properties": {
+                    "message": {
+                      "description": "Human-readable message",
+                      "type": "string"
+                    },
+                    "path": {
+                      "description": "Request path",
+                      "type": "string"
+                    },
+                    "status": {
+                      "description": "Result status",
+                      "enum": [
+                        "error"
+                      ],
+                      "type": "string"
+                    }
+                  },
+                  "required": [
+                    "status",
+                    "message"
+                  ],
+                  "type": "object"
+                }
+              }
+            },
+            "description": "Insufficient permissions"
+          },
+          "500": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "description": "Codedock API error",
+                  "properties": {
+                    "message": {
+                      "description": "Human-readable message",
+                      "type": "string"
+                    },
+                    "path": {
+                      "description": "Request path",
+                      "type": "string"
+                    },
+                    "status": {
+                      "description": "Result status",
+                      "enum": [
+                        "error"
+                      ],
+                      "type": "string"
+                    }
+                  },
+                  "required": [
+                    "status",
+                    "message"
+                  ],
+                  "type": "object"
+                }
+              }
+            },
+            "description": "Server error"
+          }
+        },
+        "security": [
+          {
+            "bearerAuth": []
+          }
+        ],
+        "summary": "List action workflows",
+        "tags": [
+          "actions"
+        ],
+        "x-auth": "authenticated"
+      },
+      "post": {
+        "operationId": "postActionsWorkflows",
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "description": "Create workflow",
+                "properties": {
+                  "description": {
+                    "description": "Description",
+                    "type": "string"
+                  },
+                  "name": {
+                    "description": "Workflow name",
+                    "type": "string"
+                  },
+                  "projectId": {
+                    "description": "Project ID",
+                    "type": "string"
+                  },
+                  "trigger": {
+                    "description": "Trigger",
+                    "type": "string"
+                  },
+                  "yaml": {
+                    "description": "YAML",
+                    "type": "string"
+                  }
+                },
+                "required": [
+                  "name"
+                ],
+                "type": "object"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "description": "Codedock API envelope",
+                  "properties": {
+                    "data": {
+                      "description": "Action workflow",
+                      "properties": {
+                        "createdAt": {
+                          "description": "Created timestamp",
+                          "type": "string"
+                        },
+                        "description": {
+                          "description": "Description",
+                          "type": "string"
+                        },
+                        "enabled": {
+                          "description": "Enabled",
+                          "type": "boolean"
+                        },
+                        "id": {
+                          "description": "Workflow ID",
+                          "type": "string"
+                        },
+                        "name": {
+                          "description": "Workflow name",
+                          "type": "string"
+                        },
+                        "projectId": {
+                          "description": "Project ID",
+                          "type": "string"
+                        },
+                        "trigger": {
+                          "description": "Trigger",
+                          "type": "string"
+                        },
+                        "updatedAt": {
+                          "description": "Updated timestamp",
+                          "type": "string"
+                        },
+                        "yaml": {
+                          "description": "Workflow YAML",
+                          "type": "string"
+                        }
+                      },
+                      "required": [
+                        "id",
+                        "name",
+                        "trigger",
+                        "enabled",
+                        "createdAt",
+                        "updatedAt"
+                      ],
+                      "type": "object"
+                    },
+                    "executionTime": {
+                      "description": "Handler seconds",
+                      "format": "double",
+                      "type": "number"
+                    },
+                    "message": {
+                      "description": "Human-readable message",
+                      "type": "string"
+                    },
+                    "path": {
+                      "description": "Request path",
+                      "type": "string"
+                    },
+                    "status": {
+                      "description": "Result status",
+                      "enum": [
+                        "success"
+                      ],
+                      "type": "string"
+                    }
+                  },
+                  "required": [
+                    "status",
+                    "message"
+                  ],
+                  "type": "object"
+                }
+              }
+            },
+            "description": "Create action workflow"
+          },
+          "400": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "description": "Codedock API error",
+                  "properties": {
+                    "message": {
+                      "description": "Human-readable message",
+                      "type": "string"
+                    },
+                    "path": {
+                      "description": "Request path",
+                      "type": "string"
+                    },
+                    "status": {
+                      "description": "Result status",
+                      "enum": [
+                        "error"
+                      ],
+                      "type": "string"
+                    }
+                  },
+                  "required": [
+                    "status",
+                    "message"
+                  ],
+                  "type": "object"
+                }
+              }
+            },
+            "description": "Invalid request"
+          },
+          "401": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "description": "Codedock API error",
+                  "properties": {
+                    "message": {
+                      "description": "Human-readable message",
+                      "type": "string"
+                    },
+                    "path": {
+                      "description": "Request path",
+                      "type": "string"
+                    },
+                    "status": {
+                      "description": "Result status",
+                      "enum": [
+                        "error"
+                      ],
+                      "type": "string"
+                    }
+                  },
+                  "required": [
+                    "status",
+                    "message"
+                  ],
+                  "type": "object"
+                }
+              }
+            },
+            "description": "Missing or invalid credentials"
+          },
+          "403": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "description": "Codedock API error",
+                  "properties": {
+                    "message": {
+                      "description": "Human-readable message",
+                      "type": "string"
+                    },
+                    "path": {
+                      "description": "Request path",
+                      "type": "string"
+                    },
+                    "status": {
+                      "description": "Result status",
+                      "enum": [
+                        "error"
+                      ],
+                      "type": "string"
+                    }
+                  },
+                  "required": [
+                    "status",
+                    "message"
+                  ],
+                  "type": "object"
+                }
+              }
+            },
+            "description": "Insufficient permissions"
+          },
+          "500": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "description": "Codedock API error",
+                  "properties": {
+                    "message": {
+                      "description": "Human-readable message",
+                      "type": "string"
+                    },
+                    "path": {
+                      "description": "Request path",
+                      "type": "string"
+                    },
+                    "status": {
+                      "description": "Result status",
+                      "enum": [
+                        "error"
+                      ],
+                      "type": "string"
+                    }
+                  },
+                  "required": [
+                    "status",
+                    "message"
+                  ],
+                  "type": "object"
+                }
+              }
+            },
+            "description": "Server error"
+          }
+        },
+        "security": [
+          {
+            "bearerAuth": []
+          }
+        ],
+        "summary": "Create action workflow",
+        "tags": [
+          "actions"
+        ],
+        "x-auth": "instance admin"
+      }
+    },
     "/api/ai": {
       "get": {
         "operationId": "getAi",

@@ -18,6 +18,7 @@ import { Route as AuthSigninRouteImport } from './routes/_auth.signin'
 import { Route as AuthSignupRouteImport } from './routes/_auth.signup'
 import { Route as AuthVerifyEmailRouteImport } from './routes/_auth.verify-email'
 import { Route as DashboardIndexRouteImport } from './routes/_dashboard.index'
+import { Route as DashboardActionsRouteImport } from './routes/_dashboard.actions'
 import { Route as DashboardAppsRouteImport } from './routes/_dashboard.apps'
 import { Route as DashboardAuditRouteImport } from './routes/_dashboard.audit'
 import { Route as DashboardBackupsRouteImport } from './routes/_dashboard.backups'
@@ -123,6 +124,11 @@ const AuthVerifyEmailRoute = AuthVerifyEmailRouteImport.update({
 const DashboardIndexRoute = DashboardIndexRouteImport.update({
   id: '/',
   path: '/',
+  getParentRoute: () => DashboardRoute,
+} as any)
+const DashboardActionsRoute = DashboardActionsRouteImport.update({
+  id: '/actions',
+  path: '/actions',
   getParentRoute: () => DashboardRoute,
 } as any)
 const DashboardAppsRoute = DashboardAppsRouteImport.update({
@@ -479,6 +485,7 @@ export interface FileRoutesByFullPath {
   '/signin': typeof AuthSigninRoute
   '/signup': typeof AuthSignupRoute
   '/verify-email': typeof AuthVerifyEmailRoute
+  '/actions': typeof DashboardActionsRoute
   '/apps': typeof DashboardAppsRouteWithChildren
   '/audit': typeof DashboardAuditRoute
   '/backups': typeof DashboardBackupsRouteWithChildren
@@ -551,6 +558,7 @@ export interface FileRoutesByTo {
   '/signin': typeof AuthSigninRoute
   '/signup': typeof AuthSignupRoute
   '/verify-email': typeof AuthVerifyEmailRoute
+  '/actions': typeof DashboardActionsRoute
   '/audit': typeof DashboardAuditRoute
   '/billing': typeof DashboardBillingRoute
   '/dns': typeof DashboardDnsRoute
@@ -613,6 +621,7 @@ export interface FileRoutesById {
   '/_auth/signin': typeof AuthSigninRoute
   '/_auth/signup': typeof AuthSignupRoute
   '/_auth/verify-email': typeof AuthVerifyEmailRoute
+  '/_dashboard/actions': typeof DashboardActionsRoute
   '/_dashboard/apps': typeof DashboardAppsRouteWithChildren
   '/_dashboard/audit': typeof DashboardAuditRoute
   '/_dashboard/backups': typeof DashboardBackupsRouteWithChildren
@@ -688,6 +697,7 @@ export interface FileRouteTypes {
     | '/signin'
     | '/signup'
     | '/verify-email'
+    | '/actions'
     | '/apps'
     | '/audit'
     | '/backups'
@@ -760,6 +770,7 @@ export interface FileRouteTypes {
     | '/signin'
     | '/signup'
     | '/verify-email'
+    | '/actions'
     | '/audit'
     | '/billing'
     | '/dns'
@@ -821,6 +832,7 @@ export interface FileRouteTypes {
     | '/_auth/signin'
     | '/_auth/signup'
     | '/_auth/verify-email'
+    | '/_dashboard/actions'
     | '/_dashboard/apps'
     | '/_dashboard/audit'
     | '/_dashboard/backups'
@@ -956,6 +968,13 @@ declare module '@tanstack/react-router' {
       path: '/'
       fullPath: '/'
       preLoaderRoute: typeof DashboardIndexRouteImport
+      parentRoute: typeof DashboardRoute
+    }
+    '/_dashboard/actions': {
+      id: '/_dashboard/actions'
+      path: '/actions'
+      fullPath: '/actions'
+      preLoaderRoute: typeof DashboardActionsRouteImport
       parentRoute: typeof DashboardRoute
     }
     '/_dashboard/apps': {
@@ -1650,6 +1669,7 @@ const DashboardServicesServiceIdRouteWithChildren =
   )
 
 interface DashboardRouteChildren {
+  DashboardActionsRoute: typeof DashboardActionsRoute
   DashboardAppsRoute: typeof DashboardAppsRouteWithChildren
   DashboardAuditRoute: typeof DashboardAuditRoute
   DashboardBackupsRoute: typeof DashboardBackupsRouteWithChildren
@@ -1672,6 +1692,7 @@ interface DashboardRouteChildren {
 }
 
 const DashboardRouteChildren: DashboardRouteChildren = {
+  DashboardActionsRoute: DashboardActionsRoute,
   DashboardAppsRoute: DashboardAppsRouteWithChildren,
   DashboardAuditRoute: DashboardAuditRoute,
   DashboardBackupsRoute: DashboardBackupsRouteWithChildren,
