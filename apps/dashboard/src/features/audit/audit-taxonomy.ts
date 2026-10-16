@@ -218,6 +218,8 @@ export function describeAuditAction(action: string): {
   return { label: action, action: label, tone };
 }
 
+export const describeAuditEvent = describeAuditAction;
+
 export function auditCategoryOf(log: {
   action: string;
   resource: string;

@@ -6,6 +6,8 @@ import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '#/com
 import { type ActionRunner } from '#/services/actions';
 import { RunnerEditor } from './runner-editor';
 
+export { useCreateRunner } from './use-actions';
+
 interface RunnerCatalogProps {
   runners: ActionRunner[];
   onRunnerRegistered?: (runner: ActionRunner) => void;

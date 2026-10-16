@@ -1,336 +1,282 @@
-import { keepPreviousData, useQuery } from '@tanstack/react-query';
-import { getRouteApi } from '@tanstack/react-router';
+import { Layers } from 'lucide-react';
+import { useCallback, useEffect, useMemo, useState } from 'react';
+import { toast } from 'sonner';
+import { Button } from '#/components/ui/button';
 import {
-  AppWindow,
-  Bot,
-  CreditCard,
-  Globe,
-  Layers,
-  Rocket,
-  Search,
-  Server,
-  Shield,
-  User,
-  Users,
-  Wrench,
-} from 'lucide-react';
-import type { ComponentType } from 'react';
-import { useEffect, useMemo, useState } from 'react';
-import { Input } from '#/components/ui/input';
-import { QueryErrorState } from '#/components/ui/query-error-state';
-import { Skeleton } from '#/components/ui/skeleton';
-import { Tabs, TabsList, TabsTrigger } from '#/components/ui/tabs';
-import { useDebouncedSearch } from '#/hooks/use-debounced-search';
-import { type AuditLogRow, auditApi } from './api';
+  auditApi,
+  type AuditEventRow,
+  type AuditFacets,
+} from './api';
+import { AuditDayGroup } from './audit-day-group';
 import { AuditDetailsDialog } from './audit-details-dialog';
-import { AuditSettingsCard } from './audit-settings-card';
-import { AuditSummaryCard } from './audit-summary-card';
 import {
-  AUDIT_CATEGORIES,
-  absoluteTime,
-  actorDisplay,
-  clockTime,
-  dayKey,
-  describeAuditAction,
-  relativeTime,
-  resourceDisplay,
-  toneDot,
-} from './audit-taxonomy';
-
-const CATEGORY_ICON_MAP: Record<string, ComponentType<{ className?: string }>> = {
-  all: Layers,
-  deployments: Rocket,
-  apps: AppWindow,
-  domains: Globe,
-  servers: Server,
-  members: Users,
-  agent: Bot,
-  security: Shield,
-  billing: CreditCard,
-  system: Wrench,
-};
-
-const PER_PAGE = 50;
-
-const auditRouteApi = getRouteApi('/_dashboard/audit');
-
-function dayLabel(iso: string): string {
-  const key = dayKey(iso);
-  const today = dayKey(new Date().toISOString());
-  const yesterday = new Date();
-  yesterday.setDate(yesterday.getDate() - 1);
-  if (key === today) return 'Today';
-  if (key === dayKey(yesterday.toISOString())) return 'Yesterday';
-  return new Date(iso).toLocaleDateString(undefined, {
-    weekday: 'short',
-    month: 'short',
-    day: 'numeric',
-  });
-}
+  AuditFilterBar,
+  type PeriodKey,
+  type SourceKey,
+} from './audit-filter-bar';
+import {
+  CATEGORY_ICONS,
+  groupByDay,
+  periodStart,
+  type CategoryKey,
+} from './audit-helpers';
+import { AuditRecordingCard } from './audit-recording-card';
+import { AUDIT_CATEGORIES } from './audit-taxonomy';
 
 export function AuditLogList() {
-  const urlParams = auditRouteApi.useSearch();
-  const navigate = auditRouteApi.useNavigate();
-  const urlQuery = urlParams.q ?? '';
-  const urlCategory = urlParams.category ?? 'all';
-
-  const [category, setCategory] = useState(urlCategory);
-  const [search, setSearch] = useState(urlQuery);
+  const [category, setCategory] = useState<CategoryKey>('all');
+  const [search, setSearch] = useState('');
+  const [actor, setActor] = useState('');
+  const [period, setPeriod] = useState<PeriodKey>('all');
+  const [source, setSource] = useState<SourceKey>('all');
   const [page, setPage] = useState(1);
-  const [selected, setSelected] = useState<AuditLogRow | null>(null);
-  const settledSearch = useDebouncedSearch(search);
+
+  const [events, setEvents] = useState<AuditEventRow[]>([]);
+  const [total, setTotal] = useState(0);
+  const [loading, setLoading] = useState(true);
+  const [facets, setFacets] = useState<AuditFacets | null>(null);
+  const [selectedEvent, setSelectedEvent] = useState<AuditEventRow | null>(null);
+  const [savingSettings, setSavingSettings] = useState(false);
+
+  const query = useMemo(
+    () => ({
+      category: category === 'all' ? undefined : category,
+      source: source === 'all' ? undefined : source,
+      actorUserId: actor || undefined,
+      from: periodStart(period),
+      q: search.trim() || undefined,
+    }),
+    [category, source, actor, period, search]
+  );
 
   useEffect(() => {
-    setSearch((current) => (current.trim() === urlQuery ? current : urlQuery));
-    setCategory((current) => (current === urlCategory ? current : urlCategory));
-  }, [urlQuery, urlCategory]);
+    let cancelled = false;
+    setLoading(true);
+    auditApi
+      .list({ ...query, page, perPage: 50 })
+      .then((res) => {
+        if (!cancelled) {
+          setEvents(res.data);
+          setTotal(res.total);
+        }
+      })
+      .catch(() => {
+        if (!cancelled) {
+          setEvents([]);
+          setTotal(0);
+        }
+      })
+      .finally(() => {
+        if (!cancelled) setLoading(false);
+      });
+
+    return () => {
+      cancelled = true;
+    };
+  }, [query, page]);
 
   useEffect(() => {
-    const trimmed = settledSearch.trim();
-    if (trimmed === urlQuery) return;
-    setPage(1);
-    void navigate({
-      search: (previous) => ({ ...previous, q: trimmed || undefined }),
-      replace: true,
-      resetScroll: false,
-    });
-  }, [settledSearch, urlQuery, navigate]);
+    let cancelled = false;
+    auditApi
+      .facets(query)
+      .then((res) => {
+        if (!cancelled) setFacets(res);
+      })
+      .catch(() => {});
 
-  const facetsQuery = useQuery({
-    queryKey: ['auditLogFacets', category, settledSearch],
-    queryFn: () =>
-      auditApi.facets({
-        category: category === 'all' ? undefined : category,
-        q: settledSearch.trim() || undefined,
-      }),
-  });
-  const facets = facetsQuery.data?.data ?? null;
+    return () => {
+      cancelled = true;
+    };
+  }, [query]);
 
-  const listQuery = useQuery({
-    queryKey: ['auditLogs', category, settledSearch, page],
-    queryFn: () =>
-      auditApi.list({
-        category: category === 'all' ? undefined : category,
-        q: settledSearch.trim() || undefined,
-        limit: PER_PAGE,
-        offset: (page - 1) * PER_PAGE,
-      }),
-    placeholderData: keepPreviousData,
-  });
-  const rows = useMemo(() => listQuery.data?.data ?? [], [listQuery.data]);
-
-  const tabDefs = useMemo(() => {
-    if (facets) {
-      return [
-        { id: 'all', label: 'All', count: facets.total },
-        ...facets.categories.map((entry) => ({
-          id: entry.id,
-          label: entry.label,
-          count: entry.count,
-        })),
-      ];
-    }
-    return [
-      { id: 'all', label: 'All', count: 0 },
-      ...AUDIT_CATEGORIES.map((entry) => ({ id: entry.id, label: entry.label, count: 0 })),
-    ];
-  }, [facets]);
-
-  const total =
-    category === 'all'
-      ? (facets?.total ?? rows.length)
-      : (facets?.categories.find((entry) => entry.id === category)?.count ?? rows.length);
-
-  const days = useMemo(() => {
-    const groups: Array<{ key: string; label: string; rows: AuditLogRow[] }> = [];
-    for (const row of rows) {
-      const key = dayKey(row.createdAt);
-      const last = groups[groups.length - 1];
-      if (last && last.key === key) {
-        last.rows.push(row);
-        continue;
+  const handleToggleRecording = useCallback(
+    async (enabled: boolean) => {
+      setSavingSettings(true);
+      try {
+        const next = await auditApi.updateSettings({ enabled });
+        setFacets((prev) => (prev ? { ...prev, settings: next } : prev));
+        toast.success(enabled ? 'Activity recording enabled' : 'Activity recording disabled');
+      } catch {
+        toast.error('Failed to update recording setting');
+      } finally {
+        setSavingSettings(false);
       }
-      groups.push({ key, label: dayLabel(row.createdAt), rows: [row] });
-    }
-    return groups;
-  }, [rows]);
+    },
+    []
+  );
 
-  const totalPages = Math.max(1, Math.ceil(total / PER_PAGE));
-  const filtersActive = category !== 'all' || search.trim() !== '';
+  const handleRetentionChange = useCallback(
+    async (retentionDays: number) => {
+      setSavingSettings(true);
+      try {
+        const next = await auditApi.updateSettings({ retentionDays });
+        setFacets((prev) => (prev ? { ...prev, settings: next } : prev));
+        toast.success(`Retention updated to ${retentionDays} days`);
+      } catch {
+        toast.error('Failed to update retention days');
+      } finally {
+        setSavingSettings(false);
+      }
+    },
+    []
+  );
 
-  const pickCategory = (value: string) => {
-    setCategory(value);
-    setPage(1);
-    void navigate({
-      search: (previous) => ({ ...previous, category: value === 'all' ? undefined : value }),
-      replace: true,
-      resetScroll: false,
-    });
-  };
+  const dayGroups = useMemo(() => groupByDay(events), [events]);
+  const counts = useMemo(
+    () => new Map(facets?.categories.map((c) => [c.id, c.count]) ?? []),
+    [facets]
+  );
 
-  const clearFilters = () => {
-    setCategory('all');
-    setSearch('');
-    setPage(1);
-    void navigate({ search: {}, replace: true, resetScroll: false });
-  };
+  const settings = facets?.settings ?? { enabled: true, retentionDays: 90 };
+  const canManage = facets?.canManage ?? true;
 
   return (
-    <div>
-      <Tabs value={category} onValueChange={pickCategory} className="w-full min-w-0">
-        <div className="scrollbar-none w-full min-w-0 overflow-x-auto [scrollbar-width:none]">
-          <TabsList
-            variant="line"
-            className="flex w-max min-w-full flex-nowrap items-center justify-start border-border/50 border-b pb-px"
-          >
-            {tabDefs.map((tab) => {
-              const Icon = CATEGORY_ICON_MAP[tab.id] ?? Layers;
-              return (
-                <TabsTrigger key={tab.id} value={tab.id} className="flex-none shrink-0 gap-2">
-                  <Icon className="size-4 shrink-0" />
-                  <span>{tab.label}</span>
-                  {facets && (
-                    <span className="text-muted-foreground tabular-nums">({tab.count})</span>
-                  )}
-                </TabsTrigger>
-              );
-            })}
-          </TabsList>
-        </div>
-      </Tabs>
+    <div className="space-y-6">
+      <header>
+        <h1 className="font-medium text-2xl text-foreground tracking-tight">Audit log</h1>
+        <p className="mt-1 text-muted-foreground text-sm">
+          Everything that happened in this organization, who did it, and when.
+        </p>
+      </header>
 
-      <div className="mt-6 grid grid-cols-1 gap-6 lg:grid-cols-[1fr_340px]">
-        <div className="min-w-0 space-y-6">
-          <div className="relative min-w-52 flex-1">
-            <Search className="absolute top-1/2 left-3 size-4 -translate-y-1/2 text-muted-foreground" />
-            <Input
-              type="search"
-              value={search}
-              onChange={(event) => setSearch(event.target.value)}
-              placeholder="Search actions, resources, users…"
-              className="ps-10"
-            />
-          </div>
+      <div className="flex items-center gap-1 overflow-x-auto border-border/50 border-b pb-px">
+        <button
+          type="button"
+          onClick={() => {
+            setCategory('all');
+            setPage(1);
+          }}
+          className={`relative inline-flex items-center gap-2 whitespace-nowrap px-3 py-2.5 font-medium text-sm transition-colors ${
+            category === 'all'
+              ? 'text-foreground'
+              : 'text-muted-foreground hover:text-foreground/80'
+          }`}
+        >
+          All {facets?.total !== undefined ? facets.total : ''}
+          {category === 'all' && (
+            <span className="-bottom-px absolute inset-x-0 h-0.5 rounded-full bg-primary" />
+          )}
+        </button>
 
-          {listQuery.isLoading && rows.length === 0 ? (
-            <div className="space-y-3">
-              {Array.from({ length: 6 }).map((_, index) => (
-                <Skeleton key={index} className="h-16 w-full rounded-2xl" />
-              ))}
-            </div>
-          ) : listQuery.isError && rows.length === 0 ? (
-            <QueryErrorState
-              title="Audit logs are unavailable"
-              description="Codedock could not load activity logs for your workspace."
-              onRetry={() => void listQuery.refetch()}
-            />
-          ) : rows.length === 0 ? (
-            <div className="rounded-2xl border border-border/50 bg-card py-16 text-center">
-              <Shield className="mx-auto mb-4 size-8 text-muted-foreground/30" />
-              <p className="text-muted-foreground text-sm">
-                {filtersActive ? 'No events match these filters.' : 'No audit events recorded yet.'}
-              </p>
-              {filtersActive && (
-                <button
-                  type="button"
-                  onClick={clearFilters}
-                  className="mt-3 font-medium text-primary text-xs hover:underline"
-                >
-                  Clear filters
-                </button>
+        {AUDIT_CATEGORIES.map((cat) => {
+          const Icon = CATEGORY_ICONS[cat.id] ?? Layers;
+          const count = counts.get(cat.id) ?? 0;
+          const isSelected = category === cat.id;
+
+          return (
+            <button
+              key={cat.id}
+              type="button"
+              onClick={() => {
+                setCategory(cat.id);
+                setPage(1);
+              }}
+              className={`relative inline-flex items-center gap-2 whitespace-nowrap px-3 py-2.5 font-medium text-sm transition-colors ${
+                isSelected
+                  ? 'text-foreground'
+                  : 'text-muted-foreground hover:text-foreground/80'
+              }`}
+            >
+              <Icon className="size-4" />
+              {cat.label} {count}
+              {isSelected && (
+                <span className="-bottom-px absolute inset-x-0 h-0.5 rounded-full bg-primary" />
               )}
-            </div>
+            </button>
+          );
+        })}
+      </div>
+
+      <AuditFilterBar
+        search={search}
+        onSearchChange={(val) => {
+          setSearch(val);
+          setPage(1);
+        }}
+        actor={actor}
+        onActorChange={(val) => {
+          setActor(val);
+          setPage(1);
+        }}
+        period={period}
+        onPeriodChange={(val) => {
+          setPeriod(val);
+          setPage(1);
+        }}
+        source={source}
+        onSourceChange={(val) => {
+          setSource(val);
+          setPage(1);
+        }}
+        facets={facets}
+      />
+
+      <div className="grid items-start gap-6 lg:grid-cols-[minmax(0,1fr)_340px]">
+        <div className="min-w-0 space-y-6">
+          {loading && events.length === 0 ? (
+            <div className="h-64 animate-pulse rounded-2xl bg-card" />
+          ) : Object.keys(dayGroups).length > 0 ? (
+            Object.entries(dayGroups).map(([dKey, evts]) => (
+              <AuditDayGroup
+                key={dKey}
+                dayKey={dKey}
+                events={evts}
+                onSelectEvent={(evt) => setSelectedEvent(evt)}
+              />
+            ))
           ) : (
-            <div className="space-y-4">
-              {days.map((day) => (
-                <div
-                  key={day.key}
-                  className="overflow-hidden rounded-2xl border border-border/50 bg-card"
-                >
-                  <div className="border-border/40 border-b px-5 py-2.5">
-                    <span className="font-semibold text-muted-foreground text-xs uppercase tracking-wide">
-                      {day.label}
-                    </span>
-                  </div>
-                  <div className="divide-y divide-border/40">
-                    {day.rows.map((log) => {
-                      const info = describeAuditAction(log.action);
-                      const actor = actorDisplay(log);
-                      const resource = resourceDisplay(log);
-                      return (
-                        <button
-                          key={log.id}
-                          type="button"
-                          onClick={() => setSelected(log)}
-                          className="flex w-full items-center gap-4 px-5 py-3.5 text-start transition-colors hover:bg-muted/30 focus:bg-muted/40 focus:outline-none"
-                        >
-                          <span className="relative flex size-8 shrink-0 items-center justify-center rounded-full bg-muted/60">
-                            <User className="size-3.5 text-muted-foreground" />
-                            <span
-                              className={`absolute -end-0.5 -bottom-0.5 size-2.5 rounded-full ring-2 ring-card ${toneDot(info.tone)}`}
-                            />
-                          </span>
-                          <div className="min-w-0 flex-1">
-                            <p className="truncate text-foreground text-sm">
-                              <span className="font-medium">{actor}</span> {info.action}
-                              {resource && <span className="font-medium"> {resource}</span>}
-                            </p>
-                            <p className="mt-0.5 text-muted-foreground text-xs">
-                              {clockTime(log.createdAt)}
-                            </p>
-                          </div>
-                          <time
-                            className="shrink-0 text-muted-foreground text-xs"
-                            title={absoluteTime(log.createdAt)}
-                          >
-                            {relativeTime(log.createdAt)}
-                          </time>
-                        </button>
-                      );
-                    })}
-                  </div>
-                </div>
-              ))}
+            <div className="rounded-2xl border border-border/50 bg-card p-10 text-center">
+              <p className="font-medium text-foreground text-sm">No events found</p>
+              <p className="mt-1 text-muted-foreground text-xs">
+                No activity matched your selected filter parameters.
+              </p>
             </div>
           )}
 
-          {total > PER_PAGE && (
-            <div className="flex items-center justify-between text-muted-foreground text-sm">
-              <span>
-                Showing {(page - 1) * PER_PAGE + 1}–{Math.min(page * PER_PAGE, total)} of {total}
+          {total > 50 && (
+            <div className="flex items-center justify-between border-border/40 border-t pt-4">
+              <Button
+                variant="outline"
+                size="sm"
+                disabled={page <= 1}
+                onClick={() => setPage((p) => Math.max(1, p - 1))}
+              >
+                Previous
+              </Button>
+              <span className="text-muted-foreground text-xs">
+                Page {page} of {Math.ceil(total / 50)}
               </span>
-              <div className="flex gap-2">
-                <button
-                  type="button"
-                  onClick={() => setPage(Math.max(1, page - 1))}
-                  disabled={page === 1 || listQuery.isFetching}
-                  className="rounded-lg border border-border/50 px-3 py-1.5 transition-colors hover:bg-muted/40 disabled:opacity-50"
-                >
-                  Previous
-                </button>
-                <button
-                  type="button"
-                  onClick={() => setPage(Math.min(totalPages, page + 1))}
-                  disabled={page >= totalPages || listQuery.isFetching}
-                  className="rounded-lg border border-border/50 px-3 py-1.5 transition-colors hover:bg-muted/40 disabled:opacity-50"
-                >
-                  Next
-                </button>
-              </div>
+              <Button
+                variant="outline"
+                size="sm"
+                disabled={page * 50 >= total}
+                onClick={() => setPage((p) => p + 1)}
+              >
+                Next
+              </Button>
             </div>
           )}
         </div>
 
-        <aside className="space-y-4 lg:sticky lg:top-6 lg:self-start">
-          <AuditSummaryCard
-            total={facets?.total ?? rows.length}
-            facets={facets?.categories ?? []}
+        <aside className="space-y-4">
+          <AuditRecordingCard
+            enabled={settings.enabled}
+            retentionDays={settings.retentionDays}
+            saving={savingSettings}
+            canManage={canManage}
+            onToggle={handleToggleRecording}
+            onRetentionChange={handleRetentionChange}
           />
-          <AuditSettingsCard />
         </aside>
       </div>
 
-      <AuditDetailsDialog event={selected} onClose={() => setSelected(null)} />
+      {selectedEvent && (
+        <AuditDetailsDialog
+          event={selectedEvent}
+          open={!!selectedEvent}
+          onClose={() => setSelectedEvent(null)}
+        />
+      )}
     </div>
   );
 }

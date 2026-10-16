@@ -1,6 +1,5 @@
 import { createFileRoute } from '@tanstack/react-router';
 import { z } from 'zod';
-import { PageHeader } from '#/components/layout/page-header';
 import { AuditLogList } from '#/features/audit/audit-log-list';
 
 export const Route = createFileRoute('/_dashboard/audit')({
@@ -8,17 +7,12 @@ export const Route = createFileRoute('/_dashboard/audit')({
   validateSearch: z.object({
     q: z.string().optional(),
     category: z.string().optional(),
+    actor: z.string().optional(),
+    source: z.string().optional(),
+    period: z.string().optional(),
   }),
 });
 
 export function AuditPage() {
-  return (
-    <div className="space-y-6">
-      <PageHeader
-        title="Audit log"
-        description="A readable history of who did what in this workspace, newest first."
-      />
-      <AuditLogList />
-    </div>
-  );
+  return <AuditLogList />;
 }

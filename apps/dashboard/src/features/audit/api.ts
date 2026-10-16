@@ -5,6 +5,13 @@ import { handleApiError } from '#/lib/error';
 
 export interface AuditLogRow extends AuditLog {
   category?: string;
+  source?: 'dashboard' | 'mcp' | 'cli' | 'api' | 'webhook' | 'system';
+  sourceClientName?: string;
+  sourceClientId?: string;
+  actorName?: string;
+  actorEmail?: string;
+  before?: unknown;
+  after?: unknown;
 }
 
 export interface AuditCategoryFacet {
@@ -17,10 +24,15 @@ export interface AuditCategoryFacet {
 export interface AuditFacets {
   total: number;
   categories: AuditCategoryFacet[];
+  actors?: Array<{ id: string; name?: string; email?: string }>;
+  sources?: Array<{ source: string; count: number }>;
 }
 
 export interface AuditListParams {
   category?: string;
+  source?: string;
+  actor?: string;
+  period?: string;
   q?: string;
   limit?: number;
   offset?: number;
@@ -29,6 +41,9 @@ export interface AuditListParams {
 function toQuery(params: AuditListParams): string {
   const query = new URLSearchParams();
   if (params.category) query.set('category', params.category);
+  if (params.source) query.set('source', params.source);
+  if (params.actor) query.set('actor', params.actor);
+  if (params.period) query.set('period', params.period);
   if (params.q) query.set('q', params.q);
   if (params.limit !== undefined) query.set('limit', String(params.limit));
   if (params.offset !== undefined) query.set('offset', String(params.offset));

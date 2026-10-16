@@ -94,6 +94,12 @@ export function AuditSettingsCard() {
             </SelectContent>
           </Select>
         </div>
+
+        {!enabled && (
+          <div className="rounded-xl border border-border/50 bg-muted/40 p-3 text-xs text-muted-foreground">
+            Recording is paused. Changes to workspace resources will not be recorded in the audit log.
+          </div>
+        )}
       </div>
     </div>
   );

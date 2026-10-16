@@ -5,8 +5,8 @@ import { useLogout } from '#/features/auth';
 import { useGetPublicSettings } from '#/features/settings';
 import {
   getHelpNavigation,
+  getInfrastructureNavigation,
   getSystemNavigation,
-  infrastructureNavigation,
   primaryNavigation,
 } from './dashboard-navigation';
 import { NavItem, type NavItemProps } from './nav-item';
@@ -40,7 +40,7 @@ export function AppSidebar({ collapsed, onToggle, mobileOpen, onMobileClose }: A
   const isCloud = publicRes?.data?.cloudMode ?? false;
 
   const mainGroup: NavGroup = {
-    title: 'Main',
+    title: undefined,
     items: primaryNavigation.map(({ title, to, icon, exact }) => ({
       title,
       url: to,
@@ -51,7 +51,7 @@ export function AppSidebar({ collapsed, onToggle, mobileOpen, onMobileClose }: A
 
   const infraGroup: NavGroup = {
     title: 'Infrastructure',
-    items: infrastructureNavigation.map(({ title, to, icon, exact }) => ({
+    items: getInfrastructureNavigation(isCloud).map(({ title, to, icon, exact }) => ({
       title,
       url: to,
       icon,
@@ -80,9 +80,12 @@ export function AppSidebar({ collapsed, onToggle, mobileOpen, onMobileClose }: A
     })),
   };
 
-  const navGroups: NavGroup[] = isCloud
-    ? [mainGroup, settingsGroup, infraGroup, ...(helpGroup.items.length > 0 ? [helpGroup] : [])]
-    : [mainGroup, infraGroup, settingsGroup];
+  const navGroups: NavGroup[] = [
+    mainGroup,
+    settingsGroup,
+    infraGroup,
+    ...(helpGroup.items.length > 0 ? [helpGroup] : []),
+  ];
 
   const toggleTheme = () => {
     if (theme === 'light') setTheme('dim');
@@ -203,10 +206,12 @@ export function AppSidebar({ collapsed, onToggle, mobileOpen, onMobileClose }: A
             to={'/library' as never}
             aria-label="New project"
             title={navCollapsed ? 'New project' : undefined}
-            className={`flex items-center justify-center gap-2.5 overflow-hidden rounded-xl bg-primary px-3 py-2.5 font-semibold text-primary-foreground text-sm shadow-sm transition-all hover:bg-primary/90 ${navCollapsed ? 'px-0' : 'px-3'}`}
+            className={`flex items-center justify-center gap-2 overflow-hidden rounded-full bg-gradient-to-r from-amber-500 via-rose-500 to-pink-500 py-2.5 font-medium text-white text-sm shadow-md transition-all hover:opacity-95 ${
+              navCollapsed ? 'size-10 p-0 mx-auto' : 'px-4'
+            }`}
           >
-            <Plus className="h-4 w-4" />
-            {!navCollapsed && 'New project'}
+            <Plus className="h-4 w-4 shrink-0" />
+            {!navCollapsed && 'New Project'}
           </Link>
         </div>
 

@@ -5,7 +5,6 @@ import {
   ExternalLink,
   Layers,
   Receipt,
-  Server,
   Sparkles,
   Zap,
 } from 'lucide-react';
@@ -20,7 +19,7 @@ import {
   ResourceMetersOverview,
   type CustomPlanQuote,
 } from '#/features/billing';
-import { useGetPublicSettings } from '#/features/settings';
+import { BillingPlansCards } from '#/features/billing/billing-plans-cards';
 import { useAuthStore } from '#/stores/auth-store';
 import { useBillingConfig, useCreateCheckoutSession } from '#/hooks/use-billing';
 import { billingService } from '#/services/billing';
@@ -31,19 +30,19 @@ export const Route = createFileRoute('/_dashboard/billing')({
 
 function BillingPage() {
   const user = useAuthStore((s) => s.user);
-  const { data: publicRes } = useGetPublicSettings();
-  const isCloud = publicRes?.data?.cloudMode ?? true;
   const { data: config } = useBillingConfig();
   const { mutateAsync: createCheckoutSession, isPending } = useCreateCheckoutSession();
-  const [activeTab, setActiveTab] = useState<'overview' | 'plans' | 'usage' | 'topups' | 'invoices'>('overview');
+  const [activeTab, setActiveTab] = useState<'overview' | 'plans' | 'usage' | 'topups' | 'invoices'>('plans');
+  const [planMode, setPlanMode] = useState<'plans' | 'custom'>('plans');
+  const [billingCycle, setBillingCycle] = useState<'monthly' | 'payg'>('monthly');
   const [loadingPortal, setLoadingPortal] = useState(false);
 
-  const handleUpgradeToPro = async () => {
-    const proPlan = config?.plans.find((p) => p.id === 'pro');
-    if (!proPlan?.priceId) return;
+  const handleSelectTier = async (planId: string) => {
+    const plan = config?.plans.find((p) => p.id === planId) ?? config?.plans[0];
+    if (!plan?.priceId) return;
     try {
       const { url } = await createCheckoutSession({
-        priceId: proPlan.priceId,
+        priceId: plan.priceId,
         successUrl: `${window.location.origin}${window.location.pathname}?billing=success`,
         cancelUrl: `${window.location.origin}${window.location.pathname}?billing=canceled`,
       });
@@ -53,7 +52,7 @@ function BillingPage() {
     }
   };
 
-  const handleSelectCustomPlan = async (quote: CustomPlanQuote) => {
+  const handleSelectCustomPlan = async (_quote: CustomPlanQuote) => {
     const proPlan = config?.plans.find((p) => p.id === 'pro');
     if (!proPlan?.priceId) return;
     try {
@@ -82,21 +81,36 @@ function BillingPage() {
 
   return (
     <div className="space-y-6">
-      {/* Header matching OpenShip */}
       <header className="flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between">
-        <div className="flex items-center gap-3.5">
-          <span className="flex size-11 shrink-0 items-center justify-center rounded-2xl border border-border/60 bg-card text-primary shadow-xs">
-            <CreditCard className="size-6" />
-          </span>
-          <div>
-            <h1 className="text-2xl font-semibold tracking-tight text-foreground">Billing & Plans</h1>
-            <p className="mt-0.5 text-sm text-muted-foreground">
-              Manage your subscription, compute plans, and prepaid credit balance.
-            </p>
-          </div>
+        <div>
+          <h1 className="font-medium text-2xl text-foreground tracking-tight">Find the right plan</h1>
+          <p className="mt-1 text-muted-foreground text-sm">
+            Choose capacity and deploy. Codedock handles setup, routing and maintenance.
+          </p>
         </div>
 
-        <div className="flex items-center gap-2">
+        <div className="flex items-center gap-2.5">
+          <div className="inline-flex rounded-xl border border-border/60 bg-muted/40 p-1">
+            <button
+              type="button"
+              onClick={() => setPlanMode('plans')}
+              className={`rounded-lg px-3 py-1 font-medium text-xs transition-colors ${
+                planMode === 'plans' ? 'bg-card text-foreground shadow-xs' : 'text-muted-foreground hover:text-foreground'
+              }`}
+            >
+              Plans
+            </button>
+            <button
+              type="button"
+              onClick={() => setPlanMode('custom')}
+              className={`rounded-lg px-3 py-1 font-medium text-xs transition-colors ${
+                planMode === 'custom' ? 'bg-card text-foreground shadow-xs' : 'text-muted-foreground hover:text-foreground'
+              }`}
+            >
+              Custom
+            </button>
+          </div>
+
           <Button
             variant="outline"
             size="sm"
@@ -107,33 +121,24 @@ function BillingPage() {
             <ExternalLink className="size-3.5" />
             Customer Portal
           </Button>
-          <Button
-            size="sm"
-            onClick={handleUpgradeToPro}
-            className="gap-1.5 rounded-xl"
-          >
-            <Sparkles className="size-3.5" />
-            Upgrade Plan
-          </Button>
         </div>
       </header>
 
       <CheckoutRecovery />
 
-      {/* Tabs matching OpenShip structure */}
       <Tabs
         value={activeTab}
         onValueChange={(val) => setActiveTab(val as typeof activeTab)}
         className="space-y-6"
       >
         <TabsList className="rounded-xl">
-          <TabsTrigger value="overview" className="gap-2 rounded-lg">
-            <Layers className="size-4" />
-            Overview
-          </TabsTrigger>
           <TabsTrigger value="plans" className="gap-2 rounded-lg">
             <Sparkles className="size-4" />
             Plans & Pricing
+          </TabsTrigger>
+          <TabsTrigger value="overview" className="gap-2 rounded-lg">
+            <Layers className="size-4" />
+            Overview
           </TabsTrigger>
           <TabsTrigger value="usage" className="gap-2 rounded-lg">
             <Zap className="size-4" />
@@ -149,20 +154,48 @@ function BillingPage() {
           </TabsTrigger>
         </TabsList>
 
+        <TabsContent value="plans" className="space-y-6">
+          <div className="flex items-center gap-4 border-border/50 border-b pb-2 text-sm">
+            <button
+              type="button"
+              onClick={() => setBillingCycle('monthly')}
+              className={`relative pb-2 font-medium transition-colors ${
+                billingCycle === 'monthly' ? 'text-foreground' : 'text-muted-foreground hover:text-foreground'
+              }`}
+            >
+              Monthly plans
+              {billingCycle === 'monthly' && (
+                <span className="-bottom-2 absolute inset-x-0 h-0.5 rounded-full bg-primary" />
+              )}
+            </button>
+            <button
+              type="button"
+              onClick={() => setBillingCycle('payg')}
+              className={`relative pb-2 font-medium transition-colors ${
+                billingCycle === 'payg' ? 'text-foreground' : 'text-muted-foreground hover:text-foreground'
+              }`}
+            >
+              Prepaid PAYG
+              {billingCycle === 'payg' && (
+                <span className="-bottom-2 absolute inset-x-0 h-0.5 rounded-full bg-primary" />
+              )}
+            </button>
+          </div>
+
+          {planMode === 'plans' ? (
+            <BillingPlansCards busy={isPending} onSelectPlan={handleSelectTier} />
+          ) : (
+            <CustomPlanConfigurator busy={isPending} onSelectPlan={handleSelectCustomPlan} />
+          )}
+        </TabsContent>
+
         <TabsContent value="overview" className="space-y-6">
           <BillingOverview
             planType={user?.planType ?? 'hobby'}
-            onUpgradeClick={handleUpgradeToPro}
+            onUpgradeClick={() => setActiveTab('plans')}
             onPortalClick={handleOpenPortal}
           />
           <ResourceMetersOverview />
-        </TabsContent>
-
-        <TabsContent value="plans" className="space-y-6">
-          <CustomPlanConfigurator
-            busy={isPending}
-            onSelectPlan={handleSelectCustomPlan}
-          />
         </TabsContent>
 
         <TabsContent value="usage" className="space-y-6">
@@ -177,8 +210,8 @@ function BillingPage() {
           <div className="rounded-2xl border border-border bg-card p-6 shadow-sm">
             <div className="flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between">
               <div>
-                <h3 className="font-semibold text-foreground text-base">Payment Method & Invoices</h3>
-                <p className="mt-1 text-muted-foreground text-xs leading-relaxed max-w-lg">
+                <h3 className="font-semibold text-base text-foreground">Payment Method & Invoices</h3>
+                <p className="mt-1 max-w-lg text-muted-foreground text-xs leading-relaxed">
                   Access your Stripe customer billing portal to download official tax invoices, update credit cards, and manage enterprise billing details.
                 </p>
               </div>
@@ -186,10 +219,10 @@ function BillingPage() {
                 variant="outline"
                 disabled={loadingPortal}
                 onClick={handleOpenPortal}
-                className="gap-1.5 shrink-0"
+                className="shrink-0 gap-1.5"
               >
                 <ExternalLink className="size-4" />
-                Open Stripe Customer Portal
+                Open Customer Portal
               </Button>
             </div>
           </div>
@@ -198,4 +231,3 @@ function BillingPage() {
     </div>
   );
 }
-

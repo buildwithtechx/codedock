@@ -1,8 +1,9 @@
 import { Check, ChevronDown, Copy } from 'lucide-react';
-import { useState } from 'react';
+import { useMemo, useState } from 'react';
 import { Button } from '#/components/ui/button';
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from '#/components/ui/dialog';
 import type { AuditLog } from '#/interfaces/audit';
+import type { AuditLogRow } from './api';
 import {
   absoluteTime,
   actorDisplay,
@@ -60,17 +61,44 @@ function DetailRow({
   );
 }
 
+function JsonBlock({ value, label }: { value: unknown; label: string }) {
+  const text = useMemo(() => {
+    try {
+      return JSON.stringify(value, null, 2) ?? 'null';
+    } catch {
+      return String(value);
+    }
+  }, [value]);
+  return (
+    <div>
+      <div className="mb-1 flex items-center justify-between">
+        <span className="text-xs font-semibold uppercase tracking-wide text-muted-foreground">
+          {label}
+        </span>
+        <CopyButton value={text} />
+      </div>
+      <pre className="max-h-60 overflow-auto rounded-lg border border-border/50 bg-muted/30 p-3 text-xs leading-relaxed text-foreground whitespace-pre-wrap break-words font-mono">
+        {text}
+      </pre>
+    </div>
+  );
+}
+
 export function AuditDetailsDialog({
   event,
   onClose,
 }: {
-  event: AuditLog | null;
+  event: AuditLogRow | AuditLog | null;
   onClose: () => void;
 }) {
   const [showTechnical, setShowTechnical] = useState(false);
   const info = event ? describeAuditAction(event.action) : null;
   const actor = event ? actorDisplay(event) : '';
   const resource = event ? resourceDisplay(event) : '';
+
+  const row = event as AuditLogRow | null;
+  const hasBefore = row?.before !== undefined && row?.before !== null;
+  const hasAfter = row?.after !== undefined && row?.after !== null;
 
   return (
     <Dialog open={event !== null} onOpenChange={(open) => !open && onClose()}>
@@ -93,6 +121,16 @@ export function AuditDetailsDialog({
 
             <section className="rounded-xl bg-card p-4">
               <DetailRow label="Who" value={actor} />
+              {row?.actorEmail && <DetailRow label="Email" value={row.actorEmail} />}
+              <DetailRow
+                label="Came from"
+                value={
+                  row?.source ? row.source.toUpperCase() : 'Dashboard'
+                }
+              />
+              {row?.sourceClientName && (
+                <DetailRow label="Via agent" value={row.sourceClientName} />
+              )}
               <DetailRow label="Category" value={categoryLabel(auditCategoryOf(event))} />
               <DetailRow label="When" value={absoluteTime(event.createdAt)} />
               <DetailRow label="IP address" value={event.ipAddress || '—'} copyable mono />
@@ -115,11 +153,31 @@ export function AuditDetailsDialog({
                 />
               </button>
               {showTechnical && (
-                <div className="border-border/40 border-t px-4 pt-2 pb-4">
-                  <DetailRow label="Event ID" value={event.id} copyable mono />
-                  <DetailRow label="Action" value={event.action} copyable mono />
-                  <DetailRow label="Resource" value={event.resource || '—'} mono />
-                  <DetailRow label="User ID" value={event.userId || '—'} copyable mono />
+                <div className="border-border/40 border-t px-4 pt-2 pb-4 space-y-4">
+                  <div>
+                    <DetailRow label="Event ID" value={event.id} copyable mono />
+                    <DetailRow label="Action" value={event.action} copyable mono />
+                    <DetailRow label="Resource" value={event.resource || '—'} mono />
+                    <DetailRow label="User ID" value={event.userId || '—'} copyable mono />
+                  </div>
+
+                  {(hasBefore || hasAfter) && (
+                    <div className="border-t border-border/40 pt-3">
+                      <h4 className="mb-2 text-xs font-semibold uppercase tracking-wide text-muted-foreground">
+                        Payload Changes
+                      </h4>
+                      {hasBefore && hasAfter ? (
+                        <div className="grid grid-cols-1 gap-3 md:grid-cols-2">
+                          <JsonBlock value={row?.before} label="Before" />
+                          <JsonBlock value={row?.after} label="After" />
+                        </div>
+                      ) : hasAfter ? (
+                        <JsonBlock value={row?.after} label="After" />
+                      ) : (
+                        <JsonBlock value={row?.before} label="Removed" />
+                      )}
+                    </div>
+                  )}
                 </div>
               )}
             </section>

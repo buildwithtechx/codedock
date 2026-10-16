@@ -81,7 +81,11 @@ export function AppCatalog({
     const entry = catalog.find((app) => app.id === deepLinkAppId);
     if (entry) {
       autoStarted.current = true;
-      void navigate({ to: '/apps/new/$appId', params: { appId: entry.id } });
+      if (entry.id === 'mail' || (entry as { kind?: string }).kind === 'flow') {
+        void navigate({ to: '/apps/new/mail' as never });
+      } else {
+        void navigate({ to: '/apps/new/$appId', params: { appId: entry.id } });
+      }
     }
   }, [embedded, isLoading, catalog, deepLinkAppId, navigate]);
 

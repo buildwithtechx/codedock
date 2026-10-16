@@ -1,7 +1,14 @@
 import { fireEvent, render, screen, waitFor } from '@testing-library/react';
 import { beforeEach, describe, expect, it, vi } from 'vitest';
+import type { ReactNode } from 'react';
 import { actionsService, type ActionRun, type ActionRunner, type ActionWorkflow } from '#/services/actions';
 import { ActionsHome } from './actions-home';
+
+vi.mock('@tanstack/react-router', () => ({
+  Link: ({ children, to, ...props }: { children?: ReactNode; to?: string }) => (
+    <a href={to} {...props}>{children}</a>
+  ),
+}));
 
 const mockWorkflows: ActionWorkflow[] = [
   {
@@ -61,9 +68,9 @@ describe('ActionsHome', () => {
     );
 
     expect(screen.getByRole('heading', { name: /^Actions$/i })).toBeDefined();
-    expect(screen.getByText(/Recent Runs \(1\)/i)).toBeDefined();
-    expect(screen.getByText(/Workflows \(1\)/i)).toBeDefined();
-    expect(screen.getByText(/Runners \(1\)/i)).toBeDefined();
+    expect(screen.getByRole('button', { name: /workflows/i })).toBeDefined();
+    expect(screen.getByRole('button', { name: /^runs$/i })).toBeDefined();
+    expect(screen.getByRole('button', { name: /^runners/i })).toBeDefined();
   });
 
   it('navigates to run workspace on run click', async () => {
@@ -75,26 +82,17 @@ describe('ActionsHome', () => {
       />
     );
 
-    const runCard = screen.getByText('Build and Verify');
+    const runsTabButton = screen.getByRole('button', { name: /^runs$/i });
+    fireEvent.click(runsTabButton);
+
+    const runCard = await screen.findByText('Build and Verify');
     fireEvent.click(runCard);
 
     expect(await screen.findByText('Back to Actions Overview')).toBeDefined();
     expect(screen.getByText('#1')).toBeDefined();
   });
 
-  it('opens create workflow modal and creates workflow', async () => {
-    const newWorkflow: ActionWorkflow = {
-      id: 'wf-new',
-      name: 'Deploy Production',
-      description: 'Ship to cluster',
-      trigger: 'push',
-      yaml: 'name: Deploy',
-      enabled: true,
-      createdAt: '2026-10-16T12:00:00Z',
-      updatedAt: '2026-10-16T12:00:00Z',
-    };
-    vi.spyOn(actionsService, 'createWorkflow').mockResolvedValue(newWorkflow);
-
+  it('renders link to create new workflow', () => {
     render(
       <ActionsHome
         initialWorkflows={mockWorkflows}
@@ -103,19 +101,7 @@ describe('ActionsHome', () => {
       />
     );
 
-    const newBtn = screen.getByRole('button', { name: /new workflow/i });
-    fireEvent.click(newBtn);
-
-    expect(await screen.findByText('Create Action Workflow')).toBeDefined();
-
-    const nameInput = screen.getByLabelText(/workflow name/i);
-    fireEvent.change(nameInput, { target: { value: 'Deploy Production' } });
-
-    const submitBtn = screen.getByRole('button', { name: /save workflow/i });
-    fireEvent.click(submitBtn);
-
-    await waitFor(() => {
-      expect(actionsService.createWorkflow).toHaveBeenCalled();
-    });
+    const newLink = screen.getByRole('link', { name: /new workflow/i });
+    expect(newLink.getAttribute('href')).toBe('/actions/new');
   });
 });

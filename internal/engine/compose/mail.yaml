@@ -1,8 +1,8 @@
 x-codedock:
   is_one_click: true
   verified: true
-  name: codedock-mail
-  description: Self-hosted mail control plane — maild API, Postgres metadata store and SnappyMail webmail. Point it at a Stalwart engine or run local-only, then manage domains, DKIM, DNS and deliverability from one API.
+  name: Codedock Mail
+  description: Your own mail on your own domain — SMTP/IMAP, mailboxes and webmail on one server. Or keep the mailboxes you already have and just run the webmail.
   category: mail
   icon: mail
   secrets:

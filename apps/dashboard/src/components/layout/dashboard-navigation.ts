@@ -60,24 +60,31 @@ export const primaryNavigation: DashboardNavigationItem[] = [
     icon: PlayCircle,
   },
   {
-    title: 'Issues',
+    title: 'Monitoring',
     description: 'Health, system issues and metrics',
     to: '/monitoring',
     icon: Activity,
   },
 ];
 
-export const infrastructureNavigation: DashboardNavigationItem[] = [
+export const getInfrastructureNavigation = (isCloud: boolean): DashboardNavigationItem[] => [
+  isCloud
+    ? {
+        title: 'Cloud spaces',
+        description: 'Cloud compute, networks and managed instances',
+        to: '/resources',
+        icon: Server,
+      }
+    : {
+        title: 'Servers',
+        description: 'Deployment targets and runtime capacity',
+        to: '/servers',
+        icon: Server,
+      },
   {
-    title: 'Servers',
-    description: 'Deployment targets and runtime capacity',
-    to: '/servers',
-    icon: Server,
-  },
-  {
-    title: 'Mail',
+    title: 'Emails',
     description: 'Mail servers, mailboxes and deliverability',
-    to: '/mail',
+    to: '/emails',
     icon: Mail,
   },
   {
@@ -94,6 +101,8 @@ export const infrastructureNavigation: DashboardNavigationItem[] = [
   },
 ];
 
+export const infrastructureNavigation: DashboardNavigationItem[] = getInfrastructureNavigation(false);
+
 export const systemNavigation: DashboardNavigationItem[] = [
   {
     title: 'Settings',
@@ -102,7 +111,7 @@ export const systemNavigation: DashboardNavigationItem[] = [
     icon: Settings,
   },
   {
-    title: 'Audit',
+    title: 'Audit Logs',
     description: 'Security and operational events',
     to: '/audit',
     icon: ClipboardList,

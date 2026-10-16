@@ -5,10 +5,14 @@ import { AppGpuBadge } from '#/components/apps/app-gpu-badge';
 import { AppLogo } from './app-logo';
 
 export function CatalogCard({ app }: { app: OneClickAppDetails }) {
+  const isMailFlow = app.id === 'mail' || (app as { kind?: string }).kind === 'flow';
+  const to = isMailFlow ? ('/apps/new/mail' as never) : ('/apps/new/$appId' as never);
+  const params = isMailFlow ? undefined : ({ appId: app.id } as never);
+
   return (
     <Link
-      to="/apps/new/$appId"
-      params={{ appId: app.id }}
+      to={to}
+      params={params}
       className="group flex w-full items-start gap-3 rounded-2xl border border-border/50 bg-card p-5 text-left transition-all hover:border-primary/40 hover:shadow-md"
     >
       <AppLogo icon={app.icon} name={app.name} className="size-10 shrink-0" />
@@ -30,10 +34,14 @@ export function CatalogCard({ app }: { app: OneClickAppDetails }) {
 }
 
 export function CatalogShortcut({ app }: { app: OneClickAppDetails }) {
+  const isMailFlow = app.id === 'mail' || (app as { kind?: string }).kind === 'flow';
+  const to = isMailFlow ? ('/apps/new/mail' as never) : ('/apps/new/$appId' as never);
+  const params = isMailFlow ? undefined : ({ appId: app.id } as never);
+
   return (
     <Link
-      to="/apps/new/$appId"
-      params={{ appId: app.id }}
+      to={to}
+      params={params}
       className="group flex min-w-0 items-center gap-3 rounded-xl bg-card p-4 text-start transition-colors hover:bg-muted/50"
     >
       <AppLogo icon={app.icon} name={app.name} className="size-10 shrink-0" />
