@@ -95,6 +95,15 @@ func (c *ContainerManager) createAndStart(ctx context.Context, opts ContainerRun
 		if opts.ServiceID != "" && len(opts.Hosts) > 0 {
 			config.Labels = c.buildTraefikLabels(opts.ServiceID, opts.Hosts, opts.InternalPort, opts.HealthCheckPath, opts.ExtraLabels)
 		}
+	} else {
+		filtered := make([]string, 0, len(opts.Envs)+1)
+		for _, e := range opts.Envs {
+			if !strings.HasPrefix(e, "PORT=") {
+				filtered = append(filtered, e)
+			}
+		}
+		filtered = append(filtered, "PORT")
+		config.Env = filtered
 	}
 
 	config.Labels["codedock.service_id"] = opts.ServiceID

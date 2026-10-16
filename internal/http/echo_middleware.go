@@ -27,6 +27,10 @@ func configureEchoMiddleware(e *echo.Echo) {
 		"/api/v1/*": "/api/$1",
 	}))
 	e.Use(echomiddleware.Recover())
+	e.Use(echomiddleware.SecureWithConfig(echomiddleware.SecureConfig{
+		XFrameOptions:         "DENY",
+		ContentSecurityPolicy: "frame-ancestors 'none'",
+	}))
 	e.Use(echomiddleware.GzipWithConfig(echomiddleware.GzipConfig{
 		Level: 5,
 	}))

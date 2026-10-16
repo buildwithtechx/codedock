@@ -19,7 +19,7 @@ var Registry = map[string]StackDefinition{
 		DefaultRoles: []StackRole{
 			{Name: "queue", Kind: RoleKindWorker, Command: "exec php artisan queue:work", StopGracePeriod: "90s", Unless: &RoleGates{Deps: []string{"laravel/horizon"}}},
 			{Name: "horizon", Kind: RoleKindWorker, Command: "exec php artisan horizon", StopGracePeriod: "90s", When: &RoleGates{Deps: []string{"laravel/horizon"}}},
-			{Name: "scheduler", Kind: RoleKindScheduler, Command: "exec php artisan schedule:work", StopGracePeriod: "90s", Singleton: true},
+			{Name: "scheduler", Kind: RoleKindScheduler, Command: "exec php artisan schedule:work", StopGracePeriod: "10s", Singleton: true},
 		},
 	},
 	"symfony": {
