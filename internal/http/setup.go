@@ -377,6 +377,7 @@ func NewServer(db *sql.DB, v *utils.Vault, deployer *deploy.Deployer, traefikMan
 		ingressHandler:         ingressHandler,
 		serverNetworksHandler:  serverNetworksHandler,
 		actionsHandler:         actionsHandler,
+		checksHandler:          projects.NewChecksHandler(),
 	}
 
 	if err := configureManaged(srv, db, v, serverRepo, userRepo, orgRepo, sshManager, operationService); err != nil {

@@ -16,3 +16,4 @@ export { serverlessService } from './serverless';
 export { serviceVarsService } from './services';
 export * from './templates';
 export { actionsService } from './actions';
+export { checksService } from './checks';

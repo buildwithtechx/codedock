@@ -104,6 +104,7 @@ type Server struct {
 	ingressHandler            *system.IngressHandler
 	serverNetworksHandler     *system.ServerNetworksHandler
 	actionsHandler            *system.ActionsHandler
+	checksHandler             *projects.ChecksHandler
 }
 
 func (s *Server) ServeHTTP(w http.ResponseWriter, r *http.Request) {

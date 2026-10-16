@@ -103,6 +103,29 @@ func projectAppSchema() Schema {
 	return Obj("Project app", append(props, Timestamps()...)...)
 }
 
+func buildAdmissionSchema() Schema {
+	return Obj("Build admission status",
+		RF("canAdmit", Bool("Can admit immediately")),
+		RF("activeBuilds", Int("Active concurrent builds")),
+		RF("maxConcurrentBuilds", Int("Maximum concurrent builds allowed")),
+		RF("queuePosition", Int("Queue position")),
+		RF("estimatedWaitSeconds", Int("Estimated wait time in seconds")),
+		RF("reason", Str("Admission status reason")),
+	)
+}
+
+func projectChecksSchema() Schema {
+	return Obj("Project checks configuration",
+		RF("projectId", Str("Project ID")),
+		RF("enabled", Bool("Checks enabled")),
+		RF("reportCommitStatus", Bool("Report GitHub commit status")),
+		RF("requirePassingChecks", Bool("Require passing checks")),
+		RF("targetBranches", Arr("Target branches", Str("Branch"))),
+		RF("contextName", Str("Status context name")),
+		RF("updatedAt", Str("Updated timestamp")),
+	)
+}
+
 func projectOperations() []Operation {
 	projects := "projects"
 	canvas := "canvas"
@@ -140,5 +163,8 @@ func projectOperations() []Operation {
 		{Method: "POST", Path: "/api/projects/:id/stacks/:stackId/deploy", Summary: "Deploy a compose stack", Tags: []string{stacks}, Auth: AuthUser, Code: 202, Response: EmptySchema()},
 		{Method: "POST", Path: "/api/projects/:id/stacks/:stackId/cancel", Summary: "Cancel a stack deployment", Tags: []string{stacks}, Auth: AuthUser, Code: 202, Response: EmptySchema()},
 		{Method: "GET", Path: "/api/projects/:id/stacks/:stackId/config", Summary: "Get a stack config", Tags: []string{stacks}, Auth: Scope("env:read"), Response: Obj("Stack config", RF("stack", composeStackSchema()), F("config", Str("Resolved config")))},
+		{Method: "GET", Path: "/api/projects/:id/deployments/admission", Summary: "Get build admission status", Tags: []string{projects}, Auth: AuthUser, Response: buildAdmissionSchema()},
+		{Method: "GET", Path: "/api/projects/:id/checks", Summary: "Get project checks configuration", Tags: []string{projects}, Auth: AuthUser, Response: projectChecksSchema()},
+		{Method: "PUT", Path: "/api/projects/:id/checks", Summary: "Update project checks configuration", Tags: []string{projects}, Auth: ProjectRole("admin"), Request: JSON(Obj("Update checks", RF("enabled", Bool("Enabled")), RF("reportCommitStatus", Bool("Report commit status")), RF("requirePassingChecks", Bool("Require passing checks")), F("targetBranches", Arr("Branches", Str("Branch"))), F("contextName", Str("Context name")))), Response: projectChecksSchema()},
 	}
 }

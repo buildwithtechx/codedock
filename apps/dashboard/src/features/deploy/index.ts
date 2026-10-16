@@ -9,4 +9,6 @@ export { DeployTargetStep } from './deploy-target-step';
 export { DeployTopBar } from './deploy-top-bar';
 export { DeployWizard } from './deploy-wizard';
 export { CloudBuildQueueNotice } from './cloud-build-queue-notice';
+export { DeploymentAdmissionCard } from './deployment-admission-card';
+export { ProjectChecksSettings } from './project-checks-settings';
 
