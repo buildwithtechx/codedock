@@ -273,6 +273,8 @@ func NewServer(db *sql.DB, v *utils.Vault, deployer *deploy.Deployer, traefikMan
 
 	serverService := systemservices.NewServerService(serverRepo, userRepo, sshManager)
 	serverHandler := system.NewServerHandler(serverService, auditService)
+	ingressHandler := system.NewIngressHandler()
+	serverNetworksHandler := system.NewServerNetworksHandler()
 	serverMetricsWSHandler := system.NewServerMetricsWSHandler(tokenService, serverService, userRepo)
 	serviceLogsWSHandler := system.NewServiceLogsWSHandler(tokenService, appService, projectService, userRepo)
 	serviceLogsWSHandler.Streams = deploymentService
@@ -371,6 +373,8 @@ func NewServer(db *sql.DB, v *utils.Vault, deployer *deploy.Deployer, traefikMan
 		takeoverHandler:        takeoverHandler,
 		routeRuleHandler:       routeRuleHandler,
 		mailHandler:            mailHandler,
+		ingressHandler:         ingressHandler,
+		serverNetworksHandler:  serverNetworksHandler,
 	}
 
 	if err := configureManaged(srv, db, v, serverRepo, userRepo, orgRepo, sshManager, operationService); err != nil {

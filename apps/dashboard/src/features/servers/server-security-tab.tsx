@@ -5,6 +5,7 @@ import { toast } from 'sonner';
 import { Button } from '#/components/ui/button';
 import { Input } from '#/components/ui/input';
 import { Label } from '#/components/ui/label';
+import { ServerIngressCard } from '#/features/ingress';
 import type { ServerRateLimitConfig } from '#/interfaces/server';
 import { serverService } from '#/services/servers';
 
@@ -234,6 +235,8 @@ export function ServerSecurityTab({ serverId }: ServerSecurityTabProps) {
           )}
         </form>
       </div>
+
+      <ServerIngressCard serverId={serverId} />
     </div>
   );
 }

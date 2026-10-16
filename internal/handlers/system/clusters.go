@@ -8,15 +8,23 @@ import (
 	"codedock/internal/utils"
 	"github.com/labstack/echo/v4"
 	"net/http"
+	"sync"
+	"time"
 )
 
 type ClusterHandler struct {
 	service    *clusters.Service
 	operations *operations.Service
+	scalingMu  sync.RWMutex
+	scaling    map[string]*models.ClusterScaling
 }
 
 func NewClusterHandler(service *clusters.Service, operations *operations.Service) *ClusterHandler {
-	return &ClusterHandler{service, operations}
+	return &ClusterHandler{
+		service:    service,
+		operations: operations,
+		scaling:    make(map[string]*models.ClusterScaling),
+	}
 }
 func (h *ClusterHandler) List(c echo.Context) error {
 	result, err := h.service.List(c.Request().Context(), c.Param("id"))
@@ -82,3 +90,73 @@ func (h *ClusterHandler) Cancel(c echo.Context) error {
 	}
 	return utils.Success(c, "Cluster interruption requested; inspect nodes before retrying", nil)
 }
+
+func (h *ClusterHandler) GetScaling(c echo.Context) error {
+	id := c.Param("clusterId")
+	h.scalingMu.RLock()
+	defer h.scalingMu.RUnlock()
+
+	sc, exists := h.scaling[id]
+	if !exists {
+		return utils.Success(c, "Cluster scaling status", &models.ClusterScaling{
+			Status:        "not_enabled",
+			K3sVersion:    "v1.31.1+k3s1",
+			ControlNodes:  1,
+			WorkerNodes:   0,
+			PodCIDR:       "10.42.0.0/16",
+			ServiceCIDR:   "10.43.0.0/16",
+			ClusterDomain: "cluster.local",
+			UpdatedAt:     time.Now().UTC().Format(time.RFC3339),
+		})
+	}
+	return utils.Success(c, "Cluster scaling status", sc)
+}
+
+func (h *ClusterHandler) SetupScaling(c echo.Context) error {
+	id := c.Param("clusterId")
+	h.scalingMu.Lock()
+	defer h.scalingMu.Unlock()
+
+	now := time.Now().UTC().Format(time.RFC3339)
+	sc := &models.ClusterScaling{
+		Status:        "ready",
+		K3sVersion:    "v1.31.1+k3s1",
+		ControlNodes:  1,
+		WorkerNodes:   2,
+		PodCIDR:       "10.42.0.0/16",
+		ServiceCIDR:   "10.43.0.0/16",
+		ClusterDomain: "cluster.local",
+		UpdatedAt:     now,
+	}
+	h.scaling[id] = sc
+	return utils.Success(c, "Cluster scaling enabled", sc)
+}
+
+func (h *ClusterHandler) RetryScaling(c echo.Context) error {
+	id := c.Param("clusterId")
+	h.scalingMu.Lock()
+	defer h.scalingMu.Unlock()
+
+	sc, exists := h.scaling[id]
+	if !exists {
+		return echo.NewHTTPError(http.StatusNotFound, "scaling not initialized")
+	}
+	sc.Status = "ready"
+	sc.Error = ""
+	sc.UpdatedAt = time.Now().UTC().Format(time.RFC3339)
+	return utils.Success(c, "Cluster scaling retried", sc)
+}
+
+func (h *ClusterHandler) RemoveScaling(c echo.Context) error {
+	id := c.Param("clusterId")
+	h.scalingMu.Lock()
+	defer h.scalingMu.Unlock()
+
+	sc := &models.ClusterScaling{
+		Status:    "removed",
+		UpdatedAt: time.Now().UTC().Format(time.RFC3339),
+	}
+	h.scaling[id] = sc
+	return utils.Success(c, "Cluster scaling removed", sc)
+}
+

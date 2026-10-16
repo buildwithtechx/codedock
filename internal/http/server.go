@@ -101,6 +101,8 @@ type Server struct {
 	takeoverHandler           *system.TakeoverHandler
 	routeRuleHandler          *projects.RouteRuleHandler
 	mailHandler               *mail.MailHandler
+	ingressHandler            *system.IngressHandler
+	serverNetworksHandler     *system.ServerNetworksHandler
 }
 
 func (s *Server) ServeHTTP(w http.ResponseWriter, r *http.Request) {

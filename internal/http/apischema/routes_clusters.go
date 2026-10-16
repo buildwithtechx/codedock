@@ -15,6 +15,20 @@ func clusterSchema() Schema {
 	)
 }
 
+func clusterScalingSchema() Schema {
+	return Obj("ClusterScaling",
+		RF("status", Str("Status")),
+		RF("k3sVersion", Str("K3s version")),
+		RF("controlNodes", Int("Control nodes")),
+		RF("workerNodes", Int("Worker nodes")),
+		F("podCidr", Str("Pod CIDR")),
+		F("serviceCidr", Str("Service CIDR")),
+		F("clusterDomain", Str("Cluster domain")),
+		F("error", Str("Error message")),
+		RF("updatedAt", Str("Updated timestamp")),
+	)
+}
+
 func clusterOperations() []Operation {
 	clusters := "clusters"
 	admin := ProjectRole("admin")
@@ -30,5 +44,9 @@ func clusterOperations() []Operation {
 		{Method: "GET", Path: "/api/projects/:id/clusters/:clusterId/storage/health", Summary: "Get storage health", Tags: []string{clusters}, Auth: admin, Response: EmptySchema()},
 		{Method: "POST", Path: "/api/projects/:id/clusters/:clusterId/storage/review", Summary: "Review storage setup", Tags: []string{clusters}, Auth: admin, Request: JSON(Obj("Review storage", RF("version", Str("Longhorn version")))), Response: operationSchema()},
 		{Method: "POST", Path: "/api/cluster-storage-operations/:operationId/apply", Summary: "Apply a storage operation", Tags: []string{clusters}, Auth: admin, Request: JSON(operationApplySchema()), Response: operationSchema()},
+		{Method: "GET", Path: "/api/system/compute-clusters/:clusterId/scaling", Summary: "Get cluster scaling status", Tags: []string{clusters}, Auth: admin, Response: clusterScalingSchema()},
+		{Method: "POST", Path: "/api/system/compute-clusters/:clusterId/scaling/setup", Summary: "Setup cluster scaling", Tags: []string{clusters}, Auth: admin, Response: clusterScalingSchema()},
+		{Method: "POST", Path: "/api/system/compute-clusters/:clusterId/scaling/retry", Summary: "Retry cluster scaling", Tags: []string{clusters}, Auth: admin, Response: clusterScalingSchema()},
+		{Method: "POST", Path: "/api/system/compute-clusters/:clusterId/scaling/remove", Summary: "Remove cluster scaling", Tags: []string{clusters}, Auth: admin, Response: clusterScalingSchema()},
 	}
 }

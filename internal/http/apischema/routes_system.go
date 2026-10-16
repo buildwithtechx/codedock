@@ -108,6 +108,81 @@ func githubAppSchema() Schema {
 	)
 }
 
+func ingressConnectionSchema() Schema {
+	return Obj("Ingress connection",
+		RF("id", Str("Connection ID")),
+		RF("serverId", Str("Server ID")),
+		RF("credentialId", Str("Credential ID")),
+		RF("accountId", Str("Account ID")),
+		F("tunnelId", Str("Tunnel ID")),
+		RF("name", Str("Tunnel name")),
+		RF("connector", Str("Connector type")),
+		RF("edgePort", Int("Edge port")),
+		RF("managedTunnel", Bool("Managed tunnel")),
+		RF("defaultForDomains", Bool("Default for domains")),
+		F("defaultAccessPolicyId", Str("Default access policy ID")),
+		RF("status", Str("Status")),
+		F("error", Str("Error")),
+		RF("createdAt", Str("Creation timestamp")),
+		RF("updatedAt", Str("Update timestamp")),
+	)
+}
+
+func ingressHostnameSchema() Schema {
+	return Obj("Ingress hostname",
+		RF("id", Str("Hostname ID")),
+		F("domainId", Str("Domain ID")),
+		RF("connectionId", Str("Connection ID")),
+		RF("hostname", Str("Hostname")),
+		F("accessPolicyId", Str("Access policy ID")),
+		RF("status", Str("Status")),
+		RF("phase", Str("Phase")),
+		F("error", Str("Error")),
+		RF("updatedAt", Str("Update timestamp")),
+	)
+}
+
+func ingressDiscoverySchema() Schema {
+	return Obj("Ingress discovery",
+		RF("accounts", Arr("Accounts", Obj("Account", RF("id", Str("ID")), RF("name", Str("Name"))))),
+		RF("tunnels", Arr("Tunnels", Obj("Tunnel", RF("id", Str("ID")), RF("name", Str("Name")), RF("remote", Bool("Remote")), RF("status", Str("Status"))))),
+		RF("policies", Arr("Policies", Obj("Policy", RF("id", Str("ID")), RF("name", Str("Name")), RF("decision", Str("Decision"))))),
+		F("policiesError", Str("Policies error")),
+	)
+}
+
+func networkWatchdogSchema() Schema {
+	return Obj("Network rollback watchdog",
+		RF("operationId", Str("Operation ID")),
+		RF("armed", Bool("Armed")),
+		RF("timeoutSeconds", Int("Timeout seconds")),
+		RF("remainingSeconds", Int("Remaining seconds")),
+		RF("expiresAt", Str("Expiration timestamp")),
+		RF("canCommit", Bool("Can commit")),
+		RF("canRollback", Bool("Can rollback")),
+		RF("status", Str("Status")),
+	)
+}
+
+func serverNetworkSchema() Schema {
+	return Obj("Server network",
+		RF("id", Str("Network ID")),
+		F("organizationId", Str("Organization ID")),
+		RF("name", Str("Network name")),
+		RF("mode", Str("Mode")),
+		RF("subnetCidr", Str("Subnet CIDR")),
+		RF("mtu", Int("MTU")),
+		RF("verificationPort", Int("Verification port")),
+		RF("status", Str("Status")),
+		RF("revision", Int("Revision")),
+		F("members", Arr("Members", Obj("Member", RF("serverId", Str("Server ID")), F("serverName", Str("Server name")), RF("privateIp", Str("Private IP")), RF("interfaceName", Str("Interface name")), F("status", Str("Status")), F("latencyMs", Num("Latency ms"))))),
+		F("accessPolicy", Obj("Access policy", RF("mode", Str("Mode")), F("allowedPairs", Arr("Pairs", Arr("Pair", Str("Server ID")))))),
+		F("watchdog", networkWatchdogSchema()),
+		RF("createdAt", Str("Creation timestamp")),
+		RF("updatedAt", Str("Update timestamp")),
+	)
+}
+
 func systemOperations() []Operation {
 	system := "system"
 	settings := "settings"
@@ -115,6 +190,7 @@ func systemOperations() []Operation {
 	dns := "dns"
 	tasks := "tasks"
 	mcp := "mcp"
+	networks := "networks"
 	return []Operation{
 		{Method: "GET", Path: "/api/system/public", Summary: "Get public settings", Tags: []string{system}, Response: settingsSchema()},
 		{Method: "GET", Path: "/api/system/stats", Summary: "Get system stats", Tags: []string{system}, Auth: AuthUser, Response: systemStatsSchema()},
@@ -149,6 +225,22 @@ func systemOperations() []Operation {
 		{Method: "POST", Path: "/api/dns", Summary: "Create a DNS record", Tags: []string{dns}, Auth: AuthAdmin, Code: 201, Request: JSON(Obj("Create record", RF("domainName", Str("Domain name")), RF("recordType", Str("Record type")), RF("recordName", Str("Record name")), RF("recordValue", Str("Record value")), F("ttl", Int("TTL")))), Response: dnsRecordSchema()},
 		{Method: "PUT", Path: "/api/dns/:id", Summary: "Update a DNS record", Tags: []string{dns}, Auth: AuthAdmin, Request: JSON(Obj("Update record", RF("recordType", Str("Record type")), RF("recordName", Str("Record name")), RF("recordValue", Str("Record value")), F("ttl", Int("TTL")))), Response: dnsRecordSchema()},
 		{Method: "DELETE", Path: "/api/dns/:id", Summary: "Delete a DNS record", Tags: []string{dns}, Auth: AuthAdmin, Raw: true, Code: 204, Response: EmptySchema()},
+		{Method: "GET", Path: "/api/dns/ingress", Summary: "List ingress connections", Tags: []string{dns}, Auth: AuthUser, Response: Arr("Connections", ingressConnectionSchema())},
+		{Method: "POST", Path: "/api/dns/ingress/discover", Summary: "Discover Cloudflare resources", Tags: []string{dns}, Auth: AuthUser, Request: JSON(Obj("Discover", RF("credentialId", Str("Credential ID")), F("accountId", Str("Account ID")))), Response: ingressDiscoverySchema()},
+		{Method: "POST", Path: "/api/dns/ingress", Summary: "Connect ingress tunnel", Tags: []string{dns}, Auth: AuthAdmin, Request: JSON(Obj("Connect", RF("serverId", Str("Server ID")), RF("name", Str("Tunnel name")), RF("connector", Str("Connector")))), Response: ingressConnectionSchema()},
+		{Method: "PUT", Path: "/api/dns/ingress/:id", Summary: "Update ingress connection preferences", Tags: []string{dns}, Auth: AuthAdmin, Request: JSON(Obj("Update", RF("defaultForDomains", Bool("Default for domains")))), Response: ingressConnectionSchema()},
+		{Method: "POST", Path: "/api/dns/ingress/:id/retry", Summary: "Retry ingress reconciliation", Tags: []string{dns}, Auth: AuthAdmin, Response: ingressConnectionSchema()},
+		{Method: "DELETE", Path: "/api/dns/ingress/:id", Summary: "Disconnect ingress tunnel", Tags: []string{dns}, Auth: AuthAdmin, Response: Obj("Deleted", RF("success", Bool("Success")))},
+		{Method: "GET", Path: "/api/dns/ingress/domains/:domainId", Summary: "Get domain ingress", Tags: []string{dns}, Auth: AuthUser, Response: ingressHostnameSchema()},
+		{Method: "PUT", Path: "/api/dns/ingress/domains/:domainId", Summary: "Set domain ingress", Tags: []string{dns}, Auth: AuthAdmin, Request: JSON(Obj("Set domain ingress", F("connectionId", Str("Connection ID")))), Response: ingressHostnameSchema()},
+		{Method: "GET", Path: "/api/system/networks", Summary: "List server networks", Tags: []string{networks}, Auth: AuthUser, Response: Arr("Networks", serverNetworkSchema())},
+		{Method: "GET", Path: "/api/system/networks/:id", Summary: "Get server network", Tags: []string{networks}, Auth: AuthUser, Response: serverNetworkSchema()},
+		{Method: "POST", Path: "/api/system/networks", Summary: "Create server network", Tags: []string{networks}, Auth: AuthAdmin, Request: JSON(Obj("Create network", RF("name", Str("Network name")), RF("mode", Str("Mode")))), Response: serverNetworkSchema()},
+		{Method: "PUT", Path: "/api/system/networks/:id/access", Summary: "Revise network access policy", Tags: []string{networks}, Auth: AuthAdmin, Request: JSON(Obj("Revise access", RF("accessPolicy", Obj("Access policy", RF("mode", Str("Mode")))))), Response: serverNetworkSchema()},
+		{Method: "DELETE", Path: "/api/system/networks/:id", Summary: "Delete server network", Tags: []string{networks}, Auth: AuthAdmin, Response: Obj("Deleted", RF("success", Bool("Success")))},
+		{Method: "GET", Path: "/api/system/networks/operations/:operationId/watchdog", Summary: "Get network rollback watchdog", Tags: []string{networks}, Auth: AuthUser, Response: networkWatchdogSchema()},
+		{Method: "POST", Path: "/api/system/networks/operations/:operationId/watchdog/commit", Summary: "Commit network rollback watchdog", Tags: []string{networks}, Auth: AuthAdmin, Response: networkWatchdogSchema()},
+		{Method: "POST", Path: "/api/system/networks/operations/:operationId/watchdog/rollback", Summary: "Rollback network watchdog changes", Tags: []string{networks}, Auth: AuthAdmin, Response: networkWatchdogSchema()},
 		{Method: "GET", Path: "/api/scheduled-tasks", Summary: "List scheduled tasks", Tags: []string{tasks}, Auth: AuthUser, Response: Arr("Tasks", scheduledTaskSchema())},
 		{Method: "POST", Path: "/api/scheduled-tasks", Summary: "Create a scheduled task", Tags: []string{tasks}, Auth: AuthUser, Code: 201, Request: JSON(Obj("Create task", RF("serviceId", Str("Service ID")), RF("name", Str("Task name")), RF("schedule", Str("Cron schedule")), RF("command", Str("Command")))), Response: scheduledTaskSchema()},
 		{Method: "GET", Path: "/api/scheduled-tasks/:id", Summary: "Get a scheduled task", Tags: []string{tasks}, Auth: AuthUser, Response: scheduledTaskSchema()},

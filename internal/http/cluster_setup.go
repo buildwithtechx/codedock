@@ -90,4 +90,8 @@ func (s *Server) registerClusterRoutes(group *echo.Group) {
 	group.POST("/cluster-operations/:operationId/apply", s.clusterHandler.Apply, admin)
 	group.GET("/cluster-operations/:operationId", s.clusterHandler.GetOperation, admin)
 	group.POST("/cluster-operations/:operationId/cancel", s.clusterHandler.Cancel, admin)
+	group.GET("/system/compute-clusters/:clusterId/scaling", s.clusterHandler.GetScaling, admin)
+	group.POST("/system/compute-clusters/:clusterId/scaling/setup", s.clusterHandler.SetupScaling, admin)
+	group.POST("/system/compute-clusters/:clusterId/scaling/retry", s.clusterHandler.RetryScaling, admin)
+	group.POST("/system/compute-clusters/:clusterId/scaling/remove", s.clusterHandler.RemoveScaling, admin)
 }
