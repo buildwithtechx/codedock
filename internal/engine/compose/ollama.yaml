@@ -1,0 +1,18 @@
+x-codedock:
+  is_one_click: true
+  name: Ollama
+  description: Get up and running with large language models locally or with GPU acceleration
+  category: ai
+  icon: ollama
+  gpu: recommended
+services:
+  ollama:
+    image: ollama/ollama:0.4.0
+    ports:
+      - "11434"
+    gpus: "all"
+    shm_size: "2gb"
+    volumes:
+      - ollama-data:/root/.ollama
+volumes:
+  ollama-data:

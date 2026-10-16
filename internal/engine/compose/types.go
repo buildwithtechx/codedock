@@ -15,6 +15,8 @@ type ComposeService struct {
 	Command     []string            `yaml:"command,omitempty"`
 	DependsOn   []string            `yaml:"depends_on,omitempty"`
 	Healthcheck *CatalogHealthcheck `yaml:"healthcheck,omitempty"`
+	GPUs        any                 `yaml:"gpus,omitempty"`
+	ShmSize     any                 `yaml:"shm_size,omitempty"`
 	XCodedock   *CodedockMetadata   `yaml:"x-codedock,omitempty"`
 }
 
@@ -35,6 +37,7 @@ type CodedockMetadata struct {
 	Category         string                   `yaml:"category,omitempty"`
 	Icon             string                   `yaml:"icon,omitempty"`
 	ConnectionString string                   `yaml:"connection_string,omitempty"`
+	GPU              string                   `yaml:"gpu,omitempty"`
 	Secrets          []CodedockSecretSpec     `yaml:"secrets,omitempty"`
 	Inputs           []CodedockInputSpec      `yaml:"inputs,omitempty"`
 	Backup           *CodedockBackupMetadata  `yaml:"backup,omitempty"`

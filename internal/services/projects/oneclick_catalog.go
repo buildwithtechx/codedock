@@ -1,6 +1,7 @@
 package projects
 
 import (
+	"fmt"
 	"sort"
 	"strings"
 
@@ -22,6 +23,20 @@ func extractOneClickApp(id string, tmpl *compose.ComposeTemplate) *models.OneCli
 			Kind:  "http",
 		}}
 	}
+	gpu := meta.GPU
+	hasGpu := gpu != ""
+	var shmSize string
+	for _, svc := range tmpl.Services {
+		if svc.GPUs != nil {
+			hasGpu = true
+		}
+		if svc.ShmSize != nil && shmSize == "" {
+			shmSize = fmt.Sprintf("%v", svc.ShmSize)
+		}
+	}
+	if hasGpu && gpu == "" {
+		gpu = "recommended"
+	}
 	return &models.OneClickApp{
 		ID:           id,
 		Name:         meta.Name,
@@ -35,6 +50,9 @@ func extractOneClickApp(id string, tmpl *compose.ComposeTemplate) *models.OneCli
 		Volumes:      catalogVolumeNames(tmpl),
 		EnvVariables: catalogEnvVariables(tmpl, meta),
 		Verified:     meta.Verified,
+		GPU:          gpu,
+		HasGPU:       hasGpu,
+		ShmSize:      shmSize,
 	}
 }
 

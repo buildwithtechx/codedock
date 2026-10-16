@@ -197,3 +197,17 @@ func TestOneClickInstallRejectsChangedInputs(t *testing.T) {
 		t.Fatal("expected digest mismatch error")
 	}
 }
+
+func TestOneClickAppExposesGpuAndShm(t *testing.T) {
+	service, _ := oneClickTestService(t)
+	ollama, err := service.GetApp("ollama")
+	if err != nil {
+		t.Fatalf("failed to get ollama app: %v", err)
+	}
+	if !ollama.HasGPU || ollama.GPU != "recommended" {
+		t.Fatalf("expected HasGPU=true, GPU=recommended, got %+v", ollama)
+	}
+	if ollama.ShmSize != "2gb" {
+		t.Fatalf("expected ShmSize=2gb, got %s", ollama.ShmSize)
+	}
+}

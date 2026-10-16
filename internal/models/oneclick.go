@@ -33,6 +33,9 @@ type OneClickApp struct {
 	Volumes      []string           `json:"volumes"`
 	EnvVariables []OneClickEnvVar   `json:"envVariables"`
 	Verified     bool               `json:"verified"`
+	GPU          string             `json:"gpu,omitempty"`
+	HasGPU       bool               `json:"hasGpu,omitempty"`
+	ShmSize      string             `json:"shmSize,omitempty"`
 }
 
 type InstallAppInput struct {

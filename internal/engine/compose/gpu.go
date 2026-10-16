@@ -19,6 +19,64 @@ func IsNvidiaGpuID(id string) bool {
 	return nvidiaGpuIDRegex.MatchString(selector)
 }
 
+func NormalizeComposeGpuRequests(value any) ([]models.GPURequest, error) {
+	if value == nil {
+		return nil, nil
+	}
+	switch v := value.(type) {
+	case string:
+		trimmed := strings.ToLower(strings.TrimSpace(v))
+		if trimmed == "all" {
+			return []models.GPURequest{{Driver: "nvidia", Count: "all", Capabilities: []string{"gpu"}}}, nil
+		}
+		return nil, errors.New("gpus must be all or a list of device requests")
+	case int:
+		if v < 0 || v > 64 {
+			return nil, errors.New("GPU count must be all or an integer between 0 and 64")
+		}
+		return []models.GPURequest{{Driver: "nvidia", Count: v, Capabilities: []string{"gpu"}}}, nil
+	case []models.GPURequest:
+		return NormalizeGPURequests(v)
+	case models.GPURequest:
+		return NormalizeGPURequests([]models.GPURequest{v})
+	case []any:
+		reqs := make([]models.GPURequest, 0, len(v))
+		for _, item := range v {
+			if m, ok := item.(map[string]any); ok {
+				var req models.GPURequest
+				if drv, ok := m["driver"].(string); ok {
+					req.Driver = drv
+				}
+				if cnt, ok := m["count"]; ok {
+					req.Count = cnt
+				}
+				if caps, ok := m["capabilities"].([]any); ok {
+					for _, c := range caps {
+						if cs, ok := c.(string); ok {
+							req.Capabilities = append(req.Capabilities, cs)
+						}
+					}
+				}
+				if devs, ok := m["device_ids"].([]any); ok {
+					for _, d := range devs {
+						if ds, ok := d.(string); ok {
+							req.DeviceIDs = append(req.DeviceIDs, ds)
+						}
+					}
+				}
+				reqs = append(reqs, req)
+			} else {
+				return nil, errors.New("each GPU request must be an object")
+			}
+		}
+		return NormalizeGPURequests(reqs)
+	case map[string]any:
+		return NormalizeComposeGpuRequests([]any{v})
+	default:
+		return nil, errors.New("gpus must be all or a list of device requests")
+	}
+}
+
 func NormalizeGPURequests(requests []models.GPURequest) ([]models.GPURequest, error) {
 	if len(requests) == 0 {
 		return nil, nil

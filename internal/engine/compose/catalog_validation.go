@@ -66,6 +66,16 @@ func validateCatalogService(name string, service ComposeService, volumes map[str
 		}
 	}
 	failures = append(failures, validateCatalogHealthcheck(name, service.Healthcheck)...)
+	if service.GPUs != nil {
+		if _, err := NormalizeComposeGpuRequests(service.GPUs); err != nil {
+			failures = append(failures, fmt.Sprintf("service %s: invalid gpus: %v", name, err))
+		}
+	}
+	if service.ShmSize != nil {
+		if _, err := ParseComposeShmSize(service.ShmSize); err != nil {
+			failures = append(failures, fmt.Sprintf("service %s: invalid shm_size: %v", name, err))
+		}
+	}
 	return failures
 }
 
@@ -117,6 +127,9 @@ func validateCatalogMetadata(tmpl ComposeTemplate) []string {
 		}
 		if strings.TrimSpace(meta.Description) == "" {
 			failures = append(failures, "one-click description is required")
+		}
+		if meta.GPU != "" && meta.GPU != "recommended" && meta.GPU != "required" {
+			failures = append(failures, "gpu must be recommended or required")
 		}
 		return failures
 	}
