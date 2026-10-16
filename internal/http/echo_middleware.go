@@ -3,6 +3,7 @@ package http
 import (
 	"fmt"
 	"log/slog"
+	"net"
 	"net/http"
 	"slices"
 	"strings"
@@ -11,9 +12,11 @@ import (
 	echomiddleware "github.com/labstack/echo/v4/middleware"
 
 	"codedock/internal/config"
+	"codedock/internal/engine/networking"
 )
 
 func configureEchoMiddleware(e *echo.Echo) {
+	configureEchoIPExtractor(e)
 	e.Use(echomiddleware.RequestLoggerWithConfig(echomiddleware.RequestLoggerConfig{
 		LogStatus: true,
 		LogURI:    true,
@@ -72,3 +75,47 @@ func configureEchoMiddleware(e *echo.Echo) {
 		},
 	}))
 }
+
+func configureEchoIPExtractor(e *echo.Echo) {
+	trustedNets := networking.ParseCIDRs(networking.GetEdgeTrustedProxies())
+	header := networking.ValidateRealIPHeader(config.Get().Traefik.RealIPHeader)
+
+	e.IPExtractor = func(req *http.Request) string {
+		peerIPStr := req.RemoteAddr
+		if host, _, err := net.SplitHostPort(req.RemoteAddr); err == nil {
+			peerIPStr = host
+		}
+		peerIP := net.ParseIP(peerIPStr)
+		if peerIP == nil || !networking.IsIPInCIDRs(peerIP, trustedNets) {
+			return peerIPStr
+		}
+
+		if strings.EqualFold(header, "X-Forwarded-For") {
+			rawXFF := req.Header.Get("X-Forwarded-For")
+			if rawXFF != "" {
+				hops := strings.Split(rawXFF, ",")
+				for i := len(hops) - 1; i >= 0; i-- {
+					hop := strings.TrimSpace(hops[i])
+					hopIP := net.ParseIP(hop)
+					if hopIP != nil && !networking.IsIPInCIDRs(hopIP, trustedNets) {
+						return hop
+					}
+				}
+				if len(hops) > 0 {
+					return strings.TrimSpace(hops[0])
+				}
+			}
+			return peerIPStr
+		}
+
+		headerVal := strings.TrimSpace(req.Header.Get(header))
+		if headerVal != "" {
+			if ip := net.ParseIP(headerVal); ip != nil {
+				return headerVal
+			}
+		}
+
+		return peerIPStr
+	}
+}
+

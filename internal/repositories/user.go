@@ -30,6 +30,7 @@ type UserRepository interface {
 	CreatePAT(ctx context.Context, pat *models.PersonalAccessToken) error
 	ListPATs(ctx context.Context, userID string) ([]*models.PersonalAccessToken, error)
 	DeletePAT(ctx context.Context, id, userID string) error
+	FindFoundingAdmin(ctx context.Context) (*models.User, error)
 }
 
 type UserRepo struct {
@@ -257,3 +258,21 @@ func (r *UserRepo) GetUserTOTPSecret(ctx context.Context, userID string) (string
 	}
 	return secret, codes, nil
 }
+
+func (r *UserRepo) FindFoundingAdmin(ctx context.Context) (*models.User, error) {
+	var u models.User
+	query := `SELECT id, name, email, password_hash, role, plan_type, email_verified, totp_enabled, created_at, updated_at
+	          FROM users
+	          WHERE role = 'admin'
+	          ORDER BY created_at ASC
+	          LIMIT 1`
+	err := r.db.GetContext(ctx, &u, query)
+	if err != nil {
+		if errors.Is(err, sql.ErrNoRows) {
+			return nil, nil
+		}
+		return nil, err
+	}
+	return &u, nil
+}
+

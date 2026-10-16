@@ -66,11 +66,13 @@ type DockerConfig struct {
 }
 
 type TraefikConfig struct {
-	HTTPPort   int    `json:"httpPort"`
-	HTTPSPort  int    `json:"httpsPort"`
-	APIPort    int    `json:"apiPort"`
-	Image      string `json:"image"`
-	DockerHost string `json:"dockerHost"`
+	HTTPPort       int      `json:"httpPort"`
+	HTTPSPort      int      `json:"httpsPort"`
+	APIPort        int      `json:"apiPort"`
+	Image          string   `json:"image"`
+	DockerHost     string   `json:"dockerHost"`
+	TrustedProxies []string `json:"trustedProxies,omitempty"`
+	RealIPHeader   string   `json:"realIpHeader,omitempty"`
 }
 
 type BuilderConfig struct {

@@ -194,6 +194,16 @@ func (m *TraefikManager) buildTraefikCmdArgs() []string {
 	if m.logDir != "" {
 		cmdArgs = append(cmdArgs, "--accesslog=true", "--accesslog.format=json", "--accesslog.filepath=/var/log/traefik/access.json")
 	}
+
+	trustedProxies := GetEdgeTrustedProxies()
+	if len(trustedProxies) > 0 {
+		trustedList := strings.Join(trustedProxies, ",")
+		cmdArgs = append(cmdArgs,
+			"--entrypoints.web.forwardedheaders.trustedips="+trustedList,
+			"--entrypoints.websecure.forwardedheaders.trustedips="+trustedList,
+		)
+	}
+
 	return cmdArgs
 }
 

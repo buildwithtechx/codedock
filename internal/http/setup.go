@@ -259,7 +259,7 @@ func NewServer(db *sql.DB, v *utils.Vault, deployer *deploy.Deployer, traefikMan
 	archiveHandler := deployments.NewArchiveHandler(archiveService, projectService)
 	serverlessHandler := projects.NewServerlessHandler(serverlessService)
 	systemService := systemservices.NewSystemService()
-	systemHandler := system.NewSystemHandler(systemService)
+	systemHandler := system.NewSystemHandler(systemService, userRepo, tokenService)
 	migrationService := systemservices.NewMigrationService(db, dbRepo, dataDir, config.Get().Database.URL)
 	migrationHandler := system.NewMigrationHandler(migrationService, userService)
 	onboardingHandler := auth.NewOnboardingHandler(userService)

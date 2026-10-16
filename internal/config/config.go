@@ -49,11 +49,13 @@ func Load() *models.Config {
 			DryRun:         os.Getenv("DEPLOY_DRY_RUN") == "true",
 		},
 		Traefik: models.TraefikConfig{
-			HTTPPort:   getEnvInt("CODEDOCK_TRAEFIK_HTTP_PORT", 80),
-			HTTPSPort:  getEnvInt("CODEDOCK_TRAEFIK_HTTPS_PORT", 443),
-			APIPort:    getEnvInt("CODEDOCK_TRAEFIK_API_PORT", 8082),
-			Image:      getEnv("CODEDOCK_TRAEFIK_IMAGE", "traefik:v3.3"),
-			DockerHost: getEnv("CODEDOCK_TRAEFIK_DOCKER_HOST", ""),
+			HTTPPort:       getEnvInt("CODEDOCK_TRAEFIK_HTTP_PORT", 80),
+			HTTPSPort:      getEnvInt("CODEDOCK_TRAEFIK_HTTPS_PORT", 443),
+			APIPort:        getEnvInt("CODEDOCK_TRAEFIK_API_PORT", 8082),
+			Image:          getEnv("CODEDOCK_TRAEFIK_IMAGE", "traefik:v3.3"),
+			DockerHost:     getEnv("CODEDOCK_TRAEFIK_DOCKER_HOST", ""),
+			TrustedProxies: getEnvSlice("CODEDOCK_EDGE_TRUSTED_PROXIES"),
+			RealIPHeader:   getEnv("CODEDOCK_EDGE_REAL_IP_HEADER", ""),
 		},
 		Builder: models.BuilderConfig{
 			NixpacksImage: getEnv("CODEDOCK_NIXPACKS_IMAGE", "ghcr.io/railwayapp/nixpacks:latest"),

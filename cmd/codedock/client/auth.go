@@ -70,3 +70,44 @@ func (c *Client) Logout() error {
 
 	return nil
 }
+
+func (c *Client) VerifyToken(token string) (*models.User, error) {
+	c.Token = token
+	return c.Me()
+}
+
+func (c *Client) ExchangeLocalCLISession(internalToken string) (*AuthResponse, error) {
+	headers := map[string]string{
+		"X-Internal-Token": internalToken,
+	}
+	resp, err := c.sendRequestWithHeaders("POST", "/system/local-cli-session", nil, headers)
+	if err != nil {
+		return nil, err
+	}
+	defer resp.Body.Close()
+
+	if resp.StatusCode != http.StatusOK {
+		respBody, _ := io.ReadAll(resp.Body)
+		return nil, fmt.Errorf("local CLI session failed (%d): %s", resp.StatusCode, string(respBody))
+	}
+
+	var sessionResp struct {
+		Token     string `json:"token"`
+		ExpiresAt string `json:"expiresAt"`
+	}
+	if err := json.NewDecoder(resp.Body).Decode(&sessionResp); err != nil {
+		return nil, fmt.Errorf("failed to decode local session response: %w", err)
+	}
+
+	c.Token = sessionResp.Token
+	user, err := c.Me()
+	if err != nil {
+		return nil, fmt.Errorf("retrieving user profile for session: %w", err)
+	}
+
+	return &AuthResponse{
+		Token: sessionResp.Token,
+		User:  user,
+	}, nil
+}
+

@@ -1,6 +1,7 @@
 package system
 
 import (
+	"errors"
 	"io"
 	"net/http"
 
@@ -22,13 +23,20 @@ func NewBillingHandler(billingSvc *systemservices.BillingService) *BillingHandle
 }
 
 type CreateCheckoutRequest struct {
-	PriceID    string `json:"priceId"`
-	SuccessURL string `json:"successUrl"`
-	CancelURL  string `json:"cancelUrl"`
+	PriceID        string `json:"priceId"`
+	SuccessURL     string `json:"successUrl"`
+	CancelURL      string `json:"cancelUrl"`
+	IdempotencyKey string `json:"idempotencyKey,omitempty"`
+	PurchaseIntent string `json:"purchaseIntent,omitempty"`
+	CancelPending  bool   `json:"cancelPending,omitempty"`
 }
 
 type CreateCheckoutResponse struct {
 	URL string `json:"url"`
+}
+
+type CancelCheckoutRequest struct {
+	IdempotencyKey string `json:"idempotencyKey,omitempty"`
 }
 
 func (h *BillingHandler) CreateCheckoutSession(c echo.Context) error {
@@ -42,12 +50,78 @@ func (h *BillingHandler) CreateCheckoutSession(c echo.Context) error {
 		return echo.NewHTTPError(http.StatusBadRequest, err.Error())
 	}
 
-	url, err := h.billingSvc.CreateCheckoutSession(c.Request().Context(), claims.UserID, req.PriceID, req.SuccessURL, req.CancelURL)
+	if h.billingSvc == nil {
+		return echo.NewHTTPError(http.StatusServiceUnavailable, "billing service not initialized")
+	}
+
+	url, err := h.billingSvc.CreateCheckoutSession(
+		c.Request().Context(),
+		claims.UserID,
+		req.PriceID,
+		req.SuccessURL,
+		req.CancelURL,
+		req.IdempotencyKey,
+		req.PurchaseIntent,
+		req.CancelPending,
+	)
 	if err != nil {
+		var pendingErr *systemservices.ErrCheckoutPending
+		if errors.As(err, &pendingErr) {
+			return c.JSON(http.StatusConflict, map[string]any{
+				"code":    "CLOUD_WORKSPACE_CHECKOUT_PENDING",
+				"error":   pendingErr.Error(),
+				"pending": pendingErr.Pending,
+			})
+		}
 		return echo.NewHTTPError(http.StatusInternalServerError, err.Error())
 	}
 
 	return c.JSON(http.StatusOK, CreateCheckoutResponse{URL: url})
+}
+
+func (h *BillingHandler) GetPendingCheckout(c echo.Context) error {
+	claims, ok := c.Get("user").(*models.UserClaims)
+	if !ok || claims == nil {
+		return echo.NewHTTPError(http.StatusUnauthorized, "unauthorized")
+	}
+
+	if h.billingSvc == nil {
+		return echo.NewHTTPError(http.StatusServiceUnavailable, "billing service not initialized")
+	}
+
+	pending := h.billingSvc.GetPendingCheckout(c.Request().Context(), claims.UserID)
+	return c.JSON(http.StatusOK, map[string]any{
+		"pending": pending,
+	})
+}
+
+func (h *BillingHandler) CancelCheckoutSession(c echo.Context) error {
+	claims, ok := c.Get("user").(*models.UserClaims)
+	if !ok || claims == nil {
+		return echo.NewHTTPError(http.StatusUnauthorized, "unauthorized")
+	}
+
+	if h.billingSvc == nil {
+		return echo.NewHTTPError(http.StatusServiceUnavailable, "billing service not initialized")
+	}
+
+	checkoutID := c.Param("id")
+	if checkoutID == "" {
+		return echo.NewHTTPError(http.StatusBadRequest, "checkout id is required")
+	}
+
+	var req CancelCheckoutRequest
+	_ = c.Bind(&req)
+
+	checkout, err := h.billingSvc.CancelCheckoutSession(c.Request().Context(), claims.UserID, checkoutID, req.IdempotencyKey)
+	if err != nil {
+		return echo.NewHTTPError(http.StatusBadRequest, err.Error())
+	}
+
+	return c.JSON(http.StatusOK, map[string]any{
+		"status":   "canceled",
+		"checkout": checkout,
+	})
 }
 
 func (h *BillingHandler) Webhook(c echo.Context) error {
@@ -59,6 +133,10 @@ func (h *BillingHandler) Webhook(c echo.Context) error {
 	sigHeader := c.Request().Header.Get("Stripe-Signature")
 	if sigHeader == "" {
 		return echo.NewHTTPError(http.StatusBadRequest, "missing signature")
+	}
+
+	if h.billingSvc == nil {
+		return echo.NewHTTPError(http.StatusServiceUnavailable, "billing service not initialized")
 	}
 
 	if err := h.billingSvc.HandleWebhook(c.Request().Context(), payload, sigHeader); err != nil {

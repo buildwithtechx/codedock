@@ -210,6 +210,8 @@ func (s *Server) registerBillingRoutes(apiGroup, authGroup *echo.Group) {
 
 	authGroup.GET("/billing/config", s.billingHandler.GetConfig)
 	authGroup.POST("/billing/checkout", s.billingHandler.CreateCheckoutSession)
+	authGroup.GET("/billing/pending", s.billingHandler.GetPendingCheckout)
+	authGroup.POST("/billing/checkouts/:id/cancel", s.billingHandler.CancelCheckoutSession)
 }
 
 func (s *Server) setupSPAFallback() {
