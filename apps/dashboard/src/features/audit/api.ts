@@ -4,6 +4,11 @@ import { apiClient } from '#/lib/api-client';
 import { handleApiError } from '#/lib/error';
 
 export interface AuditLogRow extends AuditLog {
+  eventType?: string;
+  resourceType?: string;
+  resourceName?: string;
+  actorUserId?: string;
+  actor?: { id?: string; name?: string; email?: string };
   category?: string;
   source?: 'dashboard' | 'mcp' | 'cli' | 'api' | 'webhook' | 'system';
   sourceClientName?: string;
@@ -13,6 +18,8 @@ export interface AuditLogRow extends AuditLog {
   before?: unknown;
   after?: unknown;
 }
+
+export type AuditEventRow = AuditLogRow;
 
 export interface AuditCategoryFacet {
   id: string;

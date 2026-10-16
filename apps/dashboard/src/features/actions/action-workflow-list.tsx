@@ -1,5 +1,5 @@
 import { Link } from '@tanstack/react-router';
-import { Cloud, PlayCircle, Search } from 'lucide-react';
+import { Cloud, PlayCircle, Search, Trash2 } from 'lucide-react';
 import { useState } from 'react';
 import { Button } from '#/components/ui/button';
 import { Input } from '#/components/ui/input';
@@ -11,12 +11,14 @@ interface ActionWorkflowListProps {
   workflows: ActionWorkflow[];
   runs: ActionRun[];
   onTriggerWorkflow: (workflowId: string) => void;
+  onDeleteWorkflow?: (workflowId: string) => void;
 }
 
 export function ActionWorkflowList({
   workflows,
   runs,
   onTriggerWorkflow,
+  onDeleteWorkflow,
 }: ActionWorkflowListProps) {
   const [search, setSearch] = useState('');
 
@@ -98,6 +100,18 @@ export function ActionWorkflowList({
                   >
                     Run
                   </Button>
+                  {onDeleteWorkflow && (
+                    <Button
+                      size="sm"
+                      variant="ghost"
+                      onClick={() => onDeleteWorkflow(workflow.id)}
+                      className="h-7 w-7 p-0 rounded-lg text-muted-foreground hover:text-destructive"
+                      aria-label={`Delete workflow ${workflow.name}`}
+                      title="Delete workflow"
+                    >
+                      <Trash2 className="size-3.5" />
+                    </Button>
+                  )}
                 </div>
               </div>
             </div>

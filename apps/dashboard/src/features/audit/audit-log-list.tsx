@@ -56,8 +56,10 @@ export function AuditLogList() {
       .list({ ...query, page, perPage: 50 })
       .then((res) => {
         if (!cancelled) {
-          setEvents(res.data);
-          setTotal(res.total);
+          const listRes = res as unknown as { data?: AuditEventRow[]; total?: number };
+          const items = Array.isArray(listRes?.data) ? listRes.data : Array.isArray(res) ? (res as AuditEventRow[]) : [];
+          setEvents(items);
+          setTotal(listRes?.total ?? items.length);
         }
       })
       .catch(() => {
@@ -80,7 +82,10 @@ export function AuditLogList() {
     auditApi
       .facets(query)
       .then((res) => {
-        if (!cancelled) setFacets(res);
+        if (!cancelled) {
+          const facetsRes = res as unknown as { data?: AuditFacets };
+          setFacets(facetsRes?.data ?? (res as unknown as AuditFacets));
+        }
       })
       .catch(() => {});
 
@@ -94,7 +99,8 @@ export function AuditLogList() {
       setSavingSettings(true);
       try {
         const next = await auditApi.updateSettings({ enabled });
-        setFacets((prev) => (prev ? { ...prev, settings: next } : prev));
+        const data = (next as unknown as { data?: typeof next })?.data ?? next;
+        setFacets((prev) => (prev ? { ...prev, settings: data } : prev));
         toast.success(enabled ? 'Activity recording enabled' : 'Activity recording disabled');
       } catch {
         toast.error('Failed to update recording setting');
@@ -110,7 +116,8 @@ export function AuditLogList() {
       setSavingSettings(true);
       try {
         const next = await auditApi.updateSettings({ retentionDays });
-        setFacets((prev) => (prev ? { ...prev, settings: next } : prev));
+        const data = (next as unknown as { data?: typeof next })?.data ?? next;
+        setFacets((prev) => (prev ? { ...prev, settings: data } : prev));
         toast.success(`Retention updated to ${retentionDays} days`);
       } catch {
         toast.error('Failed to update retention days');
@@ -123,7 +130,7 @@ export function AuditLogList() {
 
   const dayGroups = useMemo(() => groupByDay(events), [events]);
   const counts = useMemo(
-    () => new Map(facets?.categories.map((c) => [c.id, c.count]) ?? []),
+    () => new Map(facets?.categories?.map((c) => [c.id, c.count]) ?? []),
     [facets]
   );
 

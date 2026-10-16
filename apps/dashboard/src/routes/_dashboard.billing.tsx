@@ -1,4 +1,4 @@
-import { createFileRoute } from '@tanstack/react-router';
+import { createFileRoute, useNavigate } from '@tanstack/react-router';
 import {
   Coins,
   CreditCard,
@@ -8,7 +8,7 @@ import {
   Sparkles,
   Zap,
 } from 'lucide-react';
-import { useState } from 'react';
+import { useEffect, useState } from 'react';
 import { Button } from '#/components/ui/button';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '#/components/ui/tabs';
 import {
@@ -20,6 +20,7 @@ import {
   type CustomPlanQuote,
 } from '#/features/billing';
 import { BillingPlansCards } from '#/features/billing/billing-plans-cards';
+import { useGetPublicSettings } from '#/features/settings';
 import { useAuthStore } from '#/stores/auth-store';
 import { useBillingConfig, useCreateCheckoutSession } from '#/hooks/use-billing';
 import { billingService } from '#/services/billing';
@@ -29,6 +30,10 @@ export const Route = createFileRoute('/_dashboard/billing')({
 });
 
 function BillingPage() {
+  const navigate = useNavigate();
+  const { data: publicRes, isLoading: isLoadingPublic } = useGetPublicSettings();
+  const isCloud = publicRes?.data?.cloudMode ?? false;
+
   const user = useAuthStore((s) => s.user);
   const { data: config } = useBillingConfig();
   const { mutateAsync: createCheckoutSession, isPending } = useCreateCheckoutSession();
@@ -36,6 +41,21 @@ function BillingPage() {
   const [planMode, setPlanMode] = useState<'plans' | 'custom'>('plans');
   const [billingCycle, setBillingCycle] = useState<'monthly' | 'payg'>('monthly');
   const [loadingPortal, setLoadingPortal] = useState(false);
+  const [showPending, setShowPending] = useState(false);
+
+  useEffect(() => {
+    if (!isLoadingPublic && !isCloud) {
+      void navigate({ to: '/' });
+    }
+  }, [isLoadingPublic, isCloud, navigate]);
+
+  if (!isCloud) {
+    return null;
+  }
+
+  const hasSubscription = Boolean(
+    user?.planType && user.planType !== 'free' && user.planType !== 'hobby'
+  );
 
   const handleSelectTier = async (planId: string) => {
     const plan = config?.plans.find((p) => p.id === planId) ?? config?.plans[0];
@@ -79,6 +99,43 @@ function BillingPage() {
     }
   };
 
+  const plansView = (
+    <div className="space-y-6">
+      <div className="flex items-center gap-4 border-border/50 border-b pb-2 text-sm">
+        <button
+          type="button"
+          onClick={() => setBillingCycle('monthly')}
+          className={`relative pb-2 font-medium transition-colors ${
+            billingCycle === 'monthly' ? 'text-foreground' : 'text-muted-foreground hover:text-foreground'
+          }`}
+        >
+          Monthly plans
+          {billingCycle === 'monthly' && (
+            <span className="-bottom-2 absolute inset-x-0 h-0.5 rounded-full bg-primary" />
+          )}
+        </button>
+        <button
+          type="button"
+          onClick={() => setBillingCycle('payg')}
+          className={`relative pb-2 font-medium transition-colors ${
+            billingCycle === 'payg' ? 'text-foreground' : 'text-muted-foreground hover:text-foreground'
+          }`}
+        >
+          Prepaid PAYG
+          {billingCycle === 'payg' && (
+            <span className="-bottom-2 absolute inset-x-0 h-0.5 rounded-full bg-primary" />
+          )}
+        </button>
+      </div>
+
+      {planMode === 'plans' ? (
+        <BillingPlansCards busy={isPending} onSelectPlan={handleSelectTier} />
+      ) : (
+        <CustomPlanConfigurator busy={isPending} onSelectPlan={handleSelectCustomPlan} />
+      )}
+    </div>
+  );
+
   return (
     <div className="space-y-6">
       <header className="flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between">
@@ -115,119 +172,92 @@ function BillingPage() {
             variant="outline"
             size="sm"
             disabled={loadingPortal}
-            onClick={handleOpenPortal}
-            className="gap-1.5 rounded-xl"
+            onClick={() => setShowPending((v) => !v)}
+            className="gap-1.5 rounded-xl text-xs"
           >
-            <ExternalLink className="size-3.5" />
-            Customer Portal
+            <CreditCard className="size-3.5" />
+            Pending payments
           </Button>
         </div>
       </header>
 
-      <CheckoutRecovery />
+      {showPending && <CheckoutRecovery />}
 
-      <Tabs
-        value={activeTab}
-        onValueChange={(val) => setActiveTab(val as typeof activeTab)}
-        className="space-y-6"
-      >
-        <TabsList className="rounded-xl">
-          <TabsTrigger value="plans" className="gap-2 rounded-lg">
-            <Sparkles className="size-4" />
-            Plans & Pricing
-          </TabsTrigger>
-          <TabsTrigger value="overview" className="gap-2 rounded-lg">
-            <Layers className="size-4" />
-            Overview
-          </TabsTrigger>
-          <TabsTrigger value="usage" className="gap-2 rounded-lg">
-            <Zap className="size-4" />
-            Usage & Quota
-          </TabsTrigger>
-          <TabsTrigger value="topups" className="gap-2 rounded-lg">
-            <Coins className="size-4" />
-            Prepaid Credits
-          </TabsTrigger>
-          <TabsTrigger value="invoices" className="gap-2 rounded-lg">
-            <Receipt className="size-4" />
-            Invoices & Portal
-          </TabsTrigger>
-        </TabsList>
+      {!hasSubscription ? (
+        plansView
+      ) : (
+        <Tabs
+          value={activeTab}
+          onValueChange={(val) => setActiveTab(val as typeof activeTab)}
+          className="space-y-6"
+        >
+          <TabsList className="rounded-xl">
+            <TabsTrigger value="plans" className="gap-2 rounded-lg">
+              <Sparkles className="size-4" />
+              Plans & Pricing
+            </TabsTrigger>
+            <TabsTrigger value="overview" className="gap-2 rounded-lg">
+              <Layers className="size-4" />
+              Overview
+            </TabsTrigger>
+            <TabsTrigger value="usage" className="gap-2 rounded-lg">
+              <Zap className="size-4" />
+              Usage & Quota
+            </TabsTrigger>
+            <TabsTrigger value="topups" className="gap-2 rounded-lg">
+              <Coins className="size-4" />
+              Prepaid Credits
+            </TabsTrigger>
+            <TabsTrigger value="invoices" className="gap-2 rounded-lg">
+              <Receipt className="size-4" />
+              Invoices & Portal
+            </TabsTrigger>
+          </TabsList>
 
-        <TabsContent value="plans" className="space-y-6">
-          <div className="flex items-center gap-4 border-border/50 border-b pb-2 text-sm">
-            <button
-              type="button"
-              onClick={() => setBillingCycle('monthly')}
-              className={`relative pb-2 font-medium transition-colors ${
-                billingCycle === 'monthly' ? 'text-foreground' : 'text-muted-foreground hover:text-foreground'
-              }`}
-            >
-              Monthly plans
-              {billingCycle === 'monthly' && (
-                <span className="-bottom-2 absolute inset-x-0 h-0.5 rounded-full bg-primary" />
-              )}
-            </button>
-            <button
-              type="button"
-              onClick={() => setBillingCycle('payg')}
-              className={`relative pb-2 font-medium transition-colors ${
-                billingCycle === 'payg' ? 'text-foreground' : 'text-muted-foreground hover:text-foreground'
-              }`}
-            >
-              Prepaid PAYG
-              {billingCycle === 'payg' && (
-                <span className="-bottom-2 absolute inset-x-0 h-0.5 rounded-full bg-primary" />
-              )}
-            </button>
-          </div>
+          <TabsContent value="plans" className="space-y-6">
+            {plansView}
+          </TabsContent>
 
-          {planMode === 'plans' ? (
-            <BillingPlansCards busy={isPending} onSelectPlan={handleSelectTier} />
-          ) : (
-            <CustomPlanConfigurator busy={isPending} onSelectPlan={handleSelectCustomPlan} />
-          )}
-        </TabsContent>
+          <TabsContent value="overview" className="space-y-6">
+            <BillingOverview
+              planType={user?.planType ?? 'hobby'}
+              onUpgradeClick={() => setActiveTab('plans')}
+              onPortalClick={handleOpenPortal}
+            />
+            <ResourceMetersOverview />
+          </TabsContent>
 
-        <TabsContent value="overview" className="space-y-6">
-          <BillingOverview
-            planType={user?.planType ?? 'hobby'}
-            onUpgradeClick={() => setActiveTab('plans')}
-            onPortalClick={handleOpenPortal}
-          />
-          <ResourceMetersOverview />
-        </TabsContent>
+          <TabsContent value="usage" className="space-y-6">
+            <ResourceMetersOverview />
+          </TabsContent>
 
-        <TabsContent value="usage" className="space-y-6">
-          <ResourceMetersOverview />
-        </TabsContent>
+          <TabsContent value="topups" className="space-y-6">
+            <BillingTopups />
+          </TabsContent>
 
-        <TabsContent value="topups" className="space-y-6">
-          <BillingTopups />
-        </TabsContent>
-
-        <TabsContent value="invoices" className="space-y-6">
-          <div className="rounded-2xl border border-border bg-card p-6 shadow-sm">
-            <div className="flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between">
-              <div>
-                <h3 className="font-semibold text-base text-foreground">Payment Method & Invoices</h3>
-                <p className="mt-1 max-w-lg text-muted-foreground text-xs leading-relaxed">
-                  Access your Stripe customer billing portal to download official tax invoices, update credit cards, and manage enterprise billing details.
-                </p>
+          <TabsContent value="invoices" className="space-y-6">
+            <div className="rounded-2xl border border-border bg-card p-6 shadow-sm">
+              <div className="flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between">
+                <div>
+                  <h3 className="font-semibold text-base text-foreground">Payment Method & Invoices</h3>
+                  <p className="mt-1 max-w-lg text-muted-foreground text-xs leading-relaxed">
+                    Access your Stripe customer billing portal to download official tax invoices, update credit cards, and manage enterprise billing details.
+                  </p>
+                </div>
+                <Button
+                  variant="outline"
+                  disabled={loadingPortal}
+                  onClick={handleOpenPortal}
+                  className="shrink-0 gap-1.5"
+                >
+                  <ExternalLink className="size-4" />
+                  Open Customer Portal
+                </Button>
               </div>
-              <Button
-                variant="outline"
-                disabled={loadingPortal}
-                onClick={handleOpenPortal}
-                className="shrink-0 gap-1.5"
-              >
-                <ExternalLink className="size-4" />
-                Open Customer Portal
-              </Button>
             </div>
-          </div>
-        </TabsContent>
-      </Tabs>
+          </TabsContent>
+        </Tabs>
+      )}
     </div>
   );
 }

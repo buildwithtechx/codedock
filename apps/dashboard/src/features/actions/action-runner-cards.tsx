@@ -1,14 +1,15 @@
 import { Link } from '@tanstack/react-router';
-import { Plus, Server } from 'lucide-react';
+import { Plus, Server, Trash2 } from 'lucide-react';
 import { Button } from '#/components/ui/button';
 import type { ActionRunner } from '#/services/actions';
 import { ActionsEmptyState } from './actions-empty-state';
 
 interface ActionRunnerCardsProps {
   runners: ActionRunner[];
+  onDeleteRunner?: (runnerId: string) => void;
 }
 
-export function ActionRunnerCards({ runners }: ActionRunnerCardsProps) {
+export function ActionRunnerCards({ runners, onDeleteRunner }: ActionRunnerCardsProps) {
   if (runners.length === 0) {
     return (
       <ActionsEmptyState
@@ -55,8 +56,22 @@ export function ActionRunnerCards({ runners }: ActionRunnerCardsProps) {
             ))}
           </div>
 
-          <div className="mt-4 border-border/40 border-t pt-3 text-muted-foreground text-xs">
-            {runner.config?.cpu ?? 1} vCPU · {(runner.config?.memoryMb ?? 2048) / 1024} GiB · Max {runner.config?.maxParallel ?? 1} parallel jobs
+          <div className="mt-4 flex items-center justify-between gap-2 border-border/40 border-t pt-3 text-muted-foreground text-xs">
+            <span>
+              {runner.config?.cpu ?? 1} vCPU · {(runner.config?.memoryMb ?? 2048) / 1024} GiB · Max {runner.config?.maxParallel ?? 1} parallel jobs
+            </span>
+            {onDeleteRunner && (
+              <Button
+                size="sm"
+                variant="ghost"
+                onClick={() => onDeleteRunner(runner.id)}
+                className="h-7 w-7 p-0 rounded-lg text-muted-foreground hover:text-destructive"
+                aria-label={`Delete runner ${runner.name}`}
+                title="Delete runner"
+              >
+                <Trash2 className="size-3.5" />
+              </Button>
+            )}
           </div>
         </article>
       ))}

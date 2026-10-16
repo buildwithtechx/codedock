@@ -160,85 +160,60 @@ const VERBS: Record<string, string> = {
 };
 
 const DANGER_VERBS = new Set([
-  'delete',
-  'remove',
-  'revoke',
-  'rollback',
-  'disable',
-  'fail',
-  'failed',
-  'cancel',
-  'cancelled',
-  'suspend',
-  'deny',
+  'delete', 'remove', 'revoke', 'rollback', 'disable', 'fail', 'failed', 'cancel', 'cancelled', 'suspend', 'deny',
 ]);
 const SUCCESS_VERBS = new Set([
-  'create',
-  'deploy',
-  'redeploy',
-  'enable',
-  'trigger',
-  'backup',
-  'invite',
-  'succeed',
-  'succeeded',
-  'complete',
-  'completed',
-  'verify',
-  'approve',
-  'renew',
+  'create', 'deploy', 'redeploy', 'enable', 'trigger', 'backup', 'invite', 'succeed', 'succeeded', 'complete', 'completed', 'verify', 'approve', 'renew',
 ]);
 const WARNING_VERBS = new Set([
-  'reveal',
-  'login',
-  'logout',
-  'rollback',
-  'credentials_reveal',
-  'rotate',
-  'suspend',
+  'reveal', 'login', 'logout', 'rollback', 'credentials_reveal', 'rotate', 'suspend',
 ]);
 
-export function actionVerb(action: string): string {
+export function actionVerb(action?: string): string {
+  if (!action || typeof action !== 'string') return 'event';
   return action.split('.').pop() ?? action;
 }
 
-export function describeAuditAction(action: string): {
+export function describeAuditAction(action?: string): {
   label: string;
   action: string;
   tone: AuditTone;
 } {
-  const verb = actionVerb(action).toLowerCase();
+  const safe = action && typeof action === 'string' ? action : 'system.event';
+  const verb = actionVerb(safe).toLowerCase();
   const label = VERBS[verb] ?? `${verb}d`;
   let tone: AuditTone = 'neutral';
   if (DANGER_VERBS.has(verb)) tone = 'danger';
   else if (SUCCESS_VERBS.has(verb)) tone = 'success';
-  else if (WARNING_VERBS.has(verb) || verb.includes('reveal') || verb.includes('secret'))
-    tone = 'warning';
+  else if (WARNING_VERBS.has(verb) || verb.includes('reveal') || verb.includes('secret')) tone = 'warning';
   else if (verb === 'update' || verb === 'scale' || verb === 'upgrade') tone = 'info';
-  return { label: action, action: label, tone };
+  return { label: safe, action: label, tone };
 }
 
 export const describeAuditEvent = describeAuditAction;
 
-export function auditCategoryOf(log: {
-  action: string;
-  resource: string;
+export function auditCategoryOf(log?: {
+  action?: string;
+  resource?: string;
   category?: string;
 }): AuditCategoryId {
+  if (!log) return 'system';
   if (log.category && isAuditCategoryId(log.category)) return log.category;
-  const first = (actionVerb(log.action) === log.action ? log.action : log.action.split('.')[0])
+  const action = log.action && typeof log.action === 'string' ? log.action : '';
+  const first = (actionVerb(action) === action ? action : action.split('.')[0])
     .toLowerCase()
     .replace(/_.*$/, '');
   const hit = CATEGORY_BY_PREFIX[first];
   if (hit) return hit;
-  const resource = log.resource.toLowerCase();
+  const resource = log.resource && typeof log.resource === 'string' ? log.resource.toLowerCase() : '';
   for (const [prefix, category] of Object.entries(CATEGORY_BY_PREFIX)) {
     if (resource.includes(prefix)) return category;
   }
   return 'system';
 }
 
-export function auditResourceLabel(resourceType: string): string {
+export function auditResourceLabel(resourceType?: string): string {
+  if (!resourceType || typeof resourceType !== 'string') return 'resource';
   const cleaned = resourceType.replace(/_/g, ' ').trim();
   return cleaned || 'resource';
 }
@@ -251,14 +226,14 @@ export function toneDot(tone: AuditTone): string {
   return 'bg-muted-foreground/40';
 }
 
-export function actorDisplay(log: AuditLog): string {
-  if (log.userId?.trim()) return log.userId;
+export function actorDisplay(log?: Partial<AuditLog>): string {
+  if (log?.userId && typeof log.userId === 'string' && log.userId.trim()) return log.userId.trim();
   return 'System';
 }
 
-export function resourceDisplay(log: AuditLog): string {
-  if (log.resource?.trim()) return log.resource;
-  if (log.details?.trim()) return log.details.slice(0, 80);
+export function resourceDisplay(log?: Partial<AuditLog>): string {
+  if (log?.resource && typeof log.resource === 'string' && log.resource.trim()) return log.resource.trim();
+  if (log?.details && typeof log.details === 'string' && log.details.trim()) return log.details.trim().slice(0, 80);
   return 'resource';
 }
 

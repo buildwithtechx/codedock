@@ -114,4 +114,16 @@ export const actionsService = {
     const res = await apiClient.post<{ data: ActionRunner }>('/actions/runners', input);
     return res.data;
   },
+
+  deleteWorkflow: async (id: string): Promise<void> => {
+    await apiClient.delete(`/actions/workflows/${encodeURIComponent(id)}`);
+  },
+
+  deleteRunner: async (id: string): Promise<void> => {
+    await apiClient.delete(`/actions/runners/${encodeURIComponent(id)}`);
+  },
+
+  deleteRun: async (id: string): Promise<void> => {
+    await apiClient.delete(`/actions/runs/${encodeURIComponent(id)}`);
+  },
 };

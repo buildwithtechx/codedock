@@ -38,6 +38,7 @@ import { Route as DashboardProjectsRouteImport } from './routes/_dashboard.proje
 import { Route as DashboardServersRouteImport } from './routes/_dashboard.servers'
 import { Route as DashboardSettingsRouteImport } from './routes/_dashboard.settings'
 import { Route as DashboardSupportRouteImport } from './routes/_dashboard.support'
+import { Route as DashboardActionsIndexRouteImport } from './routes/_dashboard.actions.index'
 import { Route as DashboardActionsNewRouteImport } from './routes/_dashboard.actions.new'
 import { Route as DashboardAppsIndexRouteImport } from './routes/_dashboard.apps.index'
 import { Route as DashboardAppsNewRouteImport } from './routes/_dashboard.apps.new'
@@ -230,6 +231,11 @@ const DashboardSupportRoute = DashboardSupportRouteImport.update({
   id: '/support',
   path: '/support',
   getParentRoute: () => DashboardRoute,
+} as any)
+const DashboardActionsIndexRoute = DashboardActionsIndexRouteImport.update({
+  id: '/',
+  path: '/',
+  getParentRoute: () => DashboardActionsRoute,
 } as any)
 const DashboardActionsNewRoute = DashboardActionsNewRouteImport.update({
   id: '/new',
@@ -549,6 +555,7 @@ export interface FileRoutesByFullPath {
   '/servers/$serverId': typeof DashboardServersServerIdRoute
   '/servers/new': typeof DashboardServersNewRoute
   '/services/$serviceId': typeof DashboardServicesServiceIdRouteWithChildren
+  '/actions/': typeof DashboardActionsIndexRoute
   '/apps/': typeof DashboardAppsIndexRoute
   '/backups/': typeof DashboardBackupsIndexRoute
   '/deploy/': typeof DashboardDeployIndexRoute
@@ -594,7 +601,6 @@ export interface FileRoutesByTo {
   '/signin': typeof AuthSigninRoute
   '/signup': typeof AuthSignupRoute
   '/verify-email': typeof AuthVerifyEmailRoute
-  '/actions': typeof DashboardActionsRouteWithChildren
   '/audit': typeof DashboardAuditRoute
   '/billing': typeof DashboardBillingRoute
   '/dns': typeof DashboardDnsRoute
@@ -615,6 +621,7 @@ export interface FileRoutesByTo {
   '/projects/new': typeof DashboardProjectsNewRoute
   '/servers/$serverId': typeof DashboardServersServerIdRoute
   '/servers/new': typeof DashboardServersNewRoute
+  '/actions': typeof DashboardActionsIndexRoute
   '/apps': typeof DashboardAppsIndexRoute
   '/backups': typeof DashboardBackupsIndexRoute
   '/deploy': typeof DashboardDeployIndexRoute
@@ -696,6 +703,7 @@ export interface FileRoutesById {
   '/_dashboard/servers/$serverId': typeof DashboardServersServerIdRoute
   '/_dashboard/servers/new': typeof DashboardServersNewRoute
   '/_dashboard/services/$serviceId': typeof DashboardServicesServiceIdRouteWithChildren
+  '/_dashboard/actions/': typeof DashboardActionsIndexRoute
   '/_dashboard/apps/': typeof DashboardAppsIndexRoute
   '/_dashboard/backups/': typeof DashboardBackupsIndexRoute
   '/_dashboard/deploy/': typeof DashboardDeployIndexRoute
@@ -776,6 +784,7 @@ export interface FileRouteTypes {
     | '/servers/$serverId'
     | '/servers/new'
     | '/services/$serviceId'
+    | '/actions/'
     | '/apps/'
     | '/backups/'
     | '/deploy/'
@@ -821,7 +830,6 @@ export interface FileRouteTypes {
     | '/signin'
     | '/signup'
     | '/verify-email'
-    | '/actions'
     | '/audit'
     | '/billing'
     | '/dns'
@@ -842,6 +850,7 @@ export interface FileRouteTypes {
     | '/projects/new'
     | '/servers/$serverId'
     | '/servers/new'
+    | '/actions'
     | '/apps'
     | '/backups'
     | '/deploy'
@@ -922,6 +931,7 @@ export interface FileRouteTypes {
     | '/_dashboard/servers/$serverId'
     | '/_dashboard/servers/new'
     | '/_dashboard/services/$serviceId'
+    | '/_dashboard/actions/'
     | '/_dashboard/apps/'
     | '/_dashboard/backups/'
     | '/_dashboard/deploy/'
@@ -1170,6 +1180,13 @@ declare module '@tanstack/react-router' {
       fullPath: '/support'
       preLoaderRoute: typeof DashboardSupportRouteImport
       parentRoute: typeof DashboardRoute
+    }
+    '/_dashboard/actions/': {
+      id: '/_dashboard/actions/'
+      path: '/'
+      fullPath: '/actions/'
+      preLoaderRoute: typeof DashboardActionsIndexRouteImport
+      parentRoute: typeof DashboardActionsRoute
     }
     '/_dashboard/actions/new': {
       id: '/_dashboard/actions/new'
@@ -1537,11 +1554,13 @@ const AuthRouteWithChildren = AuthRoute._addFileChildren(AuthRouteChildren)
 
 interface DashboardActionsRouteChildren {
   DashboardActionsNewRoute: typeof DashboardActionsNewRoute
+  DashboardActionsIndexRoute: typeof DashboardActionsIndexRoute
   DashboardActionsRunnersNewRoute: typeof DashboardActionsRunnersNewRoute
 }
 
 const DashboardActionsRouteChildren: DashboardActionsRouteChildren = {
   DashboardActionsNewRoute: DashboardActionsNewRoute,
+  DashboardActionsIndexRoute: DashboardActionsIndexRoute,
   DashboardActionsRunnersNewRoute: DashboardActionsRunnersNewRoute,
 }
 

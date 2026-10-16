@@ -64,7 +64,7 @@ export function WorkflowBuilder() {
     }
     setIsSubmitting(true);
     try {
-      const parts = repo.split('/');
+      const parts = (repo || '').split('/');
       const owner = mode === 'repository' && parts.length > 1 ? parts[0] : '';
       const repoName = mode === 'repository' && parts.length > 1 ? parts.slice(1).join('/') : repo;
 

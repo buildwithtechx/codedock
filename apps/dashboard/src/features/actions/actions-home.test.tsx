@@ -104,4 +104,43 @@ describe('ActionsHome', () => {
     const newLink = screen.getByRole('link', { name: /new workflow/i });
     expect(newLink.getAttribute('href')).toBe('/actions/new');
   });
+
+  it('allows deleting a workflow', async () => {
+    vi.spyOn(actionsService, 'deleteWorkflow').mockResolvedValue();
+    render(
+      <ActionsHome
+        initialWorkflows={mockWorkflows}
+        initialRuns={mockRuns}
+        initialRunners={mockRunners}
+      />
+    );
+
+    const deleteBtn = screen.getByRole('button', { name: /delete workflow build and verify/i });
+    fireEvent.click(deleteBtn);
+
+    await waitFor(() => {
+      expect(actionsService.deleteWorkflow).toHaveBeenCalledWith('wf-build');
+    });
+  });
+
+  it('allows deleting a runner', async () => {
+    vi.spyOn(actionsService, 'deleteRunner').mockResolvedValue();
+    render(
+      <ActionsHome
+        initialWorkflows={mockWorkflows}
+        initialRuns={mockRuns}
+        initialRunners={mockRunners}
+      />
+    );
+
+    const runnersTabButton = screen.getByRole('button', { name: /^runners/i });
+    fireEvent.click(runnersTabButton);
+
+    const deleteBtn = await screen.findByRole('button', { name: /delete runner ubuntu 22\.04 fast/i });
+    fireEvent.click(deleteBtn);
+
+    await waitFor(() => {
+      expect(actionsService.deleteRunner).toHaveBeenCalledWith('runner-1');
+    });
+  });
 });

@@ -20,7 +20,7 @@ interface ActionsSidebarProps {
   firstWorkflow?: ActionWorkflow;
   latestRun?: ActionRun;
   onRunners: () => void;
-  selfHosted?: boolean;
+  isCloud?: boolean;
 }
 
 export function ActionsSidebar({
@@ -30,7 +30,7 @@ export function ActionsSidebar({
   firstWorkflow,
   latestRun,
   onRunners,
-  selfHosted = true,
+  isCloud = false,
 }: ActionsSidebarProps) {
   const steps = [
     {
@@ -172,20 +172,22 @@ export function ActionsSidebar({
         </a>
       </section>
 
-      <section className="rounded-2xl bg-card p-5">
-        <div className="flex items-center gap-2">
-          <Cloud className="size-4 text-muted-foreground" />
-          <h2 className="font-medium text-foreground text-sm">Temporary Cloud VM</h2>
-        </div>
-        <p className="mt-2.5 text-muted-foreground text-xs leading-relaxed">
-          Every job gets a temporary Linux VM. VM usage and transfer use your separate Actions balance.
-        </p>
-        <Button asChild variant="secondary" className="mt-4 w-full rounded-full bg-muted/60 text-foreground hover:bg-muted text-xs">
-          <Link to={'/billing' as never}>
-            Budget <ArrowRight className="ms-1 size-3.5" />
-          </Link>
-        </Button>
-      </section>
+      {isCloud && (
+        <section className="rounded-2xl bg-card p-5">
+          <div className="flex items-center gap-2">
+            <Cloud className="size-4 text-muted-foreground" />
+            <h2 className="font-medium text-foreground text-sm">Temporary Cloud VM</h2>
+          </div>
+          <p className="mt-2.5 text-muted-foreground text-xs leading-relaxed">
+            Every job gets a temporary Linux VM. VM usage and transfer use your separate Actions balance.
+          </p>
+          <Button asChild variant="secondary" className="mt-4 w-full rounded-full bg-muted/60 text-foreground hover:bg-muted text-xs">
+            <Link to={'/billing' as never}>
+              Budget <ArrowRight className="ms-1 size-3.5" />
+            </Link>
+          </Button>
+        </section>
+      )}
     </aside>
   );
 }

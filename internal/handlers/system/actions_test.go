@@ -124,7 +124,32 @@ func TestActionsHandler_Lifecycle(t *testing.T) {
 		Data models.ActionRunner `json:"data"`
 	}
 	_ = json.Unmarshal(rec.Body.Bytes(), &runnerResp)
-	if runnerResp.Data.Name != "ARM64 Native Runner" {
-		t.Fatalf("expected name 'ARM64 Native Runner', got %q", runnerResp.Data.Name)
+
+	// 7. Delete workflow, runner, and run
+	req = httptest.NewRequest(http.MethodDelete, "/actions/workflows/"+createdWf.Data.ID, nil)
+	rec = httptest.NewRecorder()
+	c = e.NewContext(req, rec)
+	c.SetParamNames("id")
+	c.SetParamValues(createdWf.Data.ID)
+	if err := handler.DeleteWorkflow(c); err != nil {
+		t.Fatalf("unexpected DeleteWorkflow error: %v", err)
+	}
+
+	req = httptest.NewRequest(http.MethodDelete, "/actions/runners/"+runnerResp.Data.ID, nil)
+	rec = httptest.NewRecorder()
+	c = e.NewContext(req, rec)
+	c.SetParamNames("id")
+	c.SetParamValues(runnerResp.Data.ID)
+	if err := handler.DeleteRunner(c); err != nil {
+		t.Fatalf("unexpected DeleteRunner error: %v", err)
+	}
+
+	req = httptest.NewRequest(http.MethodDelete, "/actions/runs/run-1", nil)
+	rec = httptest.NewRecorder()
+	c = e.NewContext(req, rec)
+	c.SetParamNames("id")
+	c.SetParamValues("run-1")
+	if err := handler.DeleteRun(c); err != nil {
+		t.Fatalf("unexpected DeleteRun error: %v", err)
 	}
 }

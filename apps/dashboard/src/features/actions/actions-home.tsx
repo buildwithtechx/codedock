@@ -28,12 +28,14 @@ export interface ActionsHomeProps {
   initialWorkflows?: ActionWorkflow[];
   initialRuns?: ActionRun[];
   initialRunners?: ActionRunner[];
+  isCloud?: boolean;
 }
 
 export function ActionsHome({
   initialWorkflows,
   initialRuns,
   initialRunners,
+  isCloud = false,
 }: ActionsHomeProps) {
   const [tab, setTab] = useState<'workflows' | 'runs' | 'runners'>('workflows');
   const [selectedRun, setSelectedRun] = useState<ActionRun | null>(null);
@@ -71,6 +73,26 @@ export function ActionsHome({
       toast.success(`Workflow run #${run.number} started`);
     } catch {
       toast.error('Failed to trigger workflow');
+    }
+  };
+
+  const handleDeleteWorkflow = async (workflowId: string) => {
+    try {
+      await actionsService.deleteWorkflow(workflowId);
+      setWorkflows((prev) => prev.filter((w) => w.id !== workflowId));
+      toast.success('Workflow deleted');
+    } catch {
+      toast.error('Failed to delete workflow');
+    }
+  };
+
+  const handleDeleteRunner = async (runnerId: string) => {
+    try {
+      await actionsService.deleteRunner(runnerId);
+      setRunners((prev) => prev.filter((r) => r.id !== runnerId));
+      toast.success('Runner deleted');
+    } catch {
+      toast.error('Failed to delete runner');
     }
   };
 
@@ -171,6 +193,7 @@ export function ActionsHome({
                 workflows={workflows}
                 runs={runs}
                 onTriggerWorkflow={handleTriggerWorkflow}
+                onDeleteWorkflow={handleDeleteWorkflow}
               />
             </TabsContent>
 
@@ -196,7 +219,10 @@ export function ActionsHome({
             </TabsContent>
 
             <TabsContent value="runners" className="m-0 space-y-4">
-              <ActionRunnerCards runners={runners} />
+              <ActionRunnerCards
+                runners={runners}
+                onDeleteRunner={handleDeleteRunner}
+              />
             </TabsContent>
           </div>
 
@@ -207,6 +233,7 @@ export function ActionsHome({
             firstWorkflow={firstWorkflow}
             latestRun={latestRun}
             onRunners={() => setTab('runners')}
+            isCloud={isCloud}
           />
         </div>
       </Tabs>

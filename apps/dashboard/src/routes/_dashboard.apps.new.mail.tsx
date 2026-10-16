@@ -1,19 +1,20 @@
-import { createFileRoute } from '@tanstack/react-router';
-import { useGetPublicSettings } from '#/features/settings';
-import { CloudMailClient } from '#/features/mail/cloud-mail-client';
-import { MailWizardView } from '#/features/mail/mail-wizard-view';
+import { createFileRoute, useNavigate } from '@tanstack/react-router';
+import { useEffect } from 'react';
 
 export const Route = createFileRoute('/_dashboard/apps/new/mail')({
   component: MailAppRouteComponent,
 });
 
 function MailAppRouteComponent() {
-  const { data: publicRes } = useGetPublicSettings();
-  const isCloud = publicRes?.data?.cloudMode ?? false;
+  const navigate = useNavigate();
 
-  if (isCloud) {
-    return <CloudMailClient />;
-  }
+  useEffect(() => {
+    void navigate({
+      to: '/apps/new/$appId',
+      params: { appId: 'mail' },
+      replace: true,
+    });
+  }, [navigate]);
 
-  return <MailWizardView />;
+  return null;
 }

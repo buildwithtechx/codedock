@@ -58,34 +58,20 @@ func NewActionsHandler() *ActionsHandler {
 
 	// Seed default run
 	h.runCount = 1
+	nowIso := time.Now().UTC().Format(time.RFC3339)
 	defaultRun := &models.ActionRun{
-		ID:          "run-1",
-		WorkflowID:  defaultWorkflow.ID,
-		Name:        defaultWorkflow.Name,
-		Number:      1,
-		Status:      "ready",
-		TriggeredBy: "admin",
-		RunnerID:    defaultRunner.ID,
-		Logs:        "[Setup] Initializing runner environment\n[Checkout] Repository tree fetched at HEAD\n[Test] Running 41 test suites... 139 passed\n[Complete] Workflow finished cleanly in 14s",
-		Jobs: []models.ActionJob{
-			{
-				ID:        "job-build",
-				Name:      "build",
-				Status:    "ready",
-				RunnerID:  defaultRunner.ID,
-				DurationS: 14,
-				Steps: []models.ActionStep{
-					{ID: "step-1", Name: "Set up runner", Status: "ready", DurationS: 2},
-					{ID: "step-2", Name: "Checkout code", Status: "ready", DurationS: 3},
-					{ID: "step-3", Name: "Run tests", Status: "ready", DurationS: 9},
-				},
+		ID: "run-1", WorkflowID: defaultWorkflow.ID, Name: defaultWorkflow.Name,
+		Number: 1, Status: "ready", TriggeredBy: "admin", RunnerID: defaultRunner.ID,
+		Logs: "[Setup] Initializing runner environment\n[Test] Tests passed\n[Complete] Finished in 14s",
+		Jobs: []models.ActionJob{{
+			ID: "job-build", Name: "build", Status: "ready", RunnerID: defaultRunner.ID, DurationS: 14,
+			Steps: []models.ActionStep{
+				{ID: "step-1", Name: "Set up runner", Status: "ready", DurationS: 2},
+				{ID: "step-2", Name: "Checkout code", Status: "ready", DurationS: 3},
+				{ID: "step-3", Name: "Run tests", Status: "ready", DurationS: 9},
 			},
-		},
-		StartedAt:  time.Now().Add(-14 * time.Second).UTC().Format(time.RFC3339),
-		FinishedAt: time.Now().UTC().Format(time.RFC3339),
-		DurationS:  14,
-		CreatedAt:  time.Now().Add(-15 * time.Second).UTC().Format(time.RFC3339),
-		UpdatedAt:  time.Now().UTC().Format(time.RFC3339),
+		}},
+		StartedAt: nowIso, FinishedAt: nowIso, DurationS: 14, CreatedAt: nowIso, UpdatedAt: nowIso,
 	}
 	h.runs[defaultRun.ID] = defaultRun
 
@@ -259,6 +245,42 @@ func (h *ActionsHandler) CreateRunner(c echo.Context) error {
 
 	h.runners[runner.ID] = runner
 	return utils.Success(c, "Action runner registered", runner)
+}
+
+func (h *ActionsHandler) DeleteWorkflow(c echo.Context) error {
+	id := c.Param("id")
+	h.mu.Lock()
+	defer h.mu.Unlock()
+
+	if _, exists := h.workflows[id]; !exists {
+		return echo.NewHTTPError(http.StatusNotFound, "workflow not found")
+	}
+	delete(h.workflows, id)
+	return utils.Success(c, "Workflow deleted", map[string]string{"id": id})
+}
+
+func (h *ActionsHandler) DeleteRunner(c echo.Context) error {
+	id := c.Param("id")
+	h.mu.Lock()
+	defer h.mu.Unlock()
+
+	if _, exists := h.runners[id]; !exists {
+		return echo.NewHTTPError(http.StatusNotFound, "runner not found")
+	}
+	delete(h.runners, id)
+	return utils.Success(c, "Runner deleted", map[string]string{"id": id})
+}
+
+func (h *ActionsHandler) DeleteRun(c echo.Context) error {
+	id := c.Param("id")
+	h.mu.Lock()
+	defer h.mu.Unlock()
+
+	if _, exists := h.runs[id]; !exists {
+		return echo.NewHTTPError(http.StatusNotFound, "action run not found")
+	}
+	delete(h.runs, id)
+	return utils.Success(c, "Action run deleted", map[string]string{"id": id})
 }
 
 func generateActionBytes(n int) []byte {

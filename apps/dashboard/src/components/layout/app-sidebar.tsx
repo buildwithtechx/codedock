@@ -1,7 +1,6 @@
 import { Link } from '@tanstack/react-router';
-import { LogOut, Moon, PanelLeftClose, PanelLeftOpen, Plus, Sun, X } from 'lucide-react';
+import { Moon, PanelLeftClose, PanelLeftOpen, Plus, Sun, X } from 'lucide-react';
 import { useTheme } from 'next-themes';
-import { useLogout } from '#/features/auth';
 import { useGetPublicSettings } from '#/features/settings';
 import {
   getHelpNavigation,
@@ -36,7 +35,6 @@ export function AppSidebar({ collapsed, onToggle, mobileOpen, onMobileClose }: A
   const { theme, resolvedTheme, setTheme } = useTheme();
   const counts = useSidebarCounts();
   const { data: publicRes } = useGetPublicSettings();
-  const { mutate: logout, isPending: isLoggingOut } = useLogout();
   const isCloud = publicRes?.data?.cloudMode ?? false;
 
   const mainGroup: NavGroup = {
@@ -206,12 +204,12 @@ export function AppSidebar({ collapsed, onToggle, mobileOpen, onMobileClose }: A
             to={'/library' as never}
             aria-label="New project"
             title={navCollapsed ? 'New project' : undefined}
-            className={`flex items-center justify-center gap-2 overflow-hidden rounded-full bg-gradient-to-r from-amber-500 via-rose-500 to-pink-500 py-2.5 font-medium text-white text-sm shadow-md transition-all hover:opacity-95 ${
-              navCollapsed ? 'size-10 p-0 mx-auto' : 'px-4'
+            className={`flex items-center justify-center gap-2.5 overflow-hidden rounded-xl bg-primary px-3 py-2.5 font-semibold text-primary-foreground text-sm shadow-sm transition-all hover:bg-primary/90 ${
+              navCollapsed ? 'size-10 p-0 mx-auto' : 'px-3'
             }`}
           >
             <Plus className="h-4 w-4 shrink-0" />
-            {!navCollapsed && 'New Project'}
+            {!navCollapsed && 'New project'}
           </Link>
         </div>
 
@@ -225,18 +223,6 @@ export function AppSidebar({ collapsed, onToggle, mobileOpen, onMobileClose }: A
             </p>
           )}
           <OrganizationSwitcher collapsed={navCollapsed} />
-          {navCollapsed && (
-            <button
-              type="button"
-              onClick={() => logout()}
-              disabled={isLoggingOut}
-              className="mt-1.5 flex h-8 w-8 items-center justify-center rounded-lg text-muted-foreground transition-colors hover:bg-sidebar-accent hover:text-sidebar-foreground disabled:opacity-50"
-              aria-label="Log out"
-              title="Log out"
-            >
-              <LogOut className="h-4 w-4" />
-            </button>
-          )}
         </div>
       </aside>
     </>
