@@ -112,4 +112,24 @@ export const serverService = {
       throw handleApiError(err);
     }
   },
+
+  getMonitorStreamUrl: (serverId: string, options?: ServerMonitorOptions): string => {
+    return getServerMonitorStreamUrl(serverId, options);
+  },
 };
+
+export interface ServerMonitorOptions {
+  format?: 'stats' | 'usage';
+}
+
+export function getServerMonitorStreamUrl(
+  serverId: string,
+  options?: ServerMonitorOptions
+): string {
+  const params = new URLSearchParams({ serverId });
+  if (options?.format) {
+    params.set('format', options.format);
+  }
+  return `/api/system/monitor/stream?${params.toString()}`;
+}
+

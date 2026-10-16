@@ -118,6 +118,7 @@ func systemOperations() []Operation {
 	return []Operation{
 		{Method: "GET", Path: "/api/system/public", Summary: "Get public settings", Tags: []string{system}, Response: settingsSchema()},
 		{Method: "GET", Path: "/api/system/stats", Summary: "Get system stats", Tags: []string{system}, Auth: AuthUser, Response: systemStatsSchema()},
+		{Method: "GET", Path: "/api/system/monitor/stream", Summary: "Stream server monitoring metrics", Tags: []string{system}, Auth: Scope("server:read"), Raw: true, Content: ContentSSE, Response: Str("SSE server monitor stream")},
 		{Method: "POST", Path: "/api/system/restart", Summary: "Restart the daemon", Tags: []string{system}, Auth: AuthAdmin, Response: StatusSchema("restarting")},
 		{Method: "POST", Path: "/api/system/maintenance/cleanup", Summary: "Run maintenance cleanup", Tags: []string{system}, Auth: AuthAdmin, Response: EmptySchema()},
 		{Method: "POST", Path: "/api/system/export", Summary: "Export an instance bundle", Tags: []string{system}, Auth: AuthAdmin, Request: JSON(Obj("Export", RF("passphrase", Str("Bundle passphrase")))), Response: Any("Bundle manifest")},

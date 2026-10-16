@@ -1,34 +1,42 @@
-﻿version: "3.8"
+x-codedock:
+  is_one_click: true
+  is_database: true
+  name: MariaDB + Adminer
+  description: A MySQL-compatible database with a lightweight Adminer control panel for queries, tables, and exports.
+  category: database
+  icon: mariadb
+  secrets:
+    - var: ROOT_PASSWORD
+      label: Database root password
+      length: 24
+    - var: DB_PASSWORD
+      label: Database user password
+      length: 24
 services:
+  adminer:
+    image: adminer:4-standalone
+    restart: always
+    ports:
+      - "8080"
+    environment:
+      - ADMINER_DEFAULT_SERVER=mariadb
+    depends_on:
+      - mariadb
   mariadb:
     image: mariadb:11
-    x-codedock:
-      is_database: true
-      connection_string: "mariadb://${db.username}:${db.password}@${host}:${port}/${db.database_name}"
-      backup:
-        command:
-          [
-            "mariadb-dump",
-            "-u",
-            "root",
-            "-p${db.password}",
-            "${db.database_name}",
-          ]
-        file_extension: ".sql"
-      restore:
-        command:
-          [
-            "mariadb",
-            "-u",
-            "root",
-            "-p${db.password}",
-            "${db.database_name}",
-          ]
+    restart: always
+    ports:
+      - "3306"
     environment:
-      - MARIADB_ROOT_PASSWORD=${db.password}
-      - MARIADB_USER=${db.username}
-      - MARIADB_PASSWORD=${db.password}
-      - MARIADB_DATABASE=${db.database_name}
+      - MARIADB_ROOT_PASSWORD=${secret:ROOT_PASSWORD}
+      - MARIADB_USER=codedock
+      - MARIADB_PASSWORD=${secret:DB_PASSWORD}
+      - MARIADB_DATABASE=app
+    healthcheck:
+      test: ["CMD", "healthcheck.sh", "--connect"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
     volumes:
       - mariadb-data:/var/lib/mysql
 volumes:

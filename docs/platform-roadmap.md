@@ -15,11 +15,11 @@ Later phases can ship together in focused commits and one pull request, with one
 - [ ] Mail server and webmail as an optional capability with separate operational requirements.
 - [ ] Managed-server setup wizard in the dashboard for Hetzner provisioning.
 - [ ] Codedock Cloud hosted offering on the HA control plane.
-- [ ] Cloud connection and cloud deploy flow in settings, including plan picker, checkout feedback and credit alerts.
-- [ ] Support center with ticket list, conversations and cloud-gated availability.
+- [x] Cloud connection and cloud deploy flow in settings, including plan picker, checkout feedback and credit alerts.
+- [x] Support center with ticket list, conversations and cloud-gated availability.
 - [ ] Billing and usage experience: monthly host plans plus custom configurator, prepaid pay-as-you-go with top-ups, enterprise path, usage meters and Stripe portal/checkout recovery.
 - [ ] Server cluster and network provisioning editors with preparation and operation tracking.
-- [ ] Full managed data apps: Supabase, Convex and Neon equivalents with correct backing services.
+- [x] Full managed data apps: Supabase, Convex and Neon equivalents with correct backing services.
 
 ## Live-target validation backlog
 
@@ -30,7 +30,7 @@ Source-level and mocked checks do not establish live infrastructure reliability.
 - [ ] Compose, SSH Docker and backup recovery exercises against disposable targets.
 - [ ] Multi-host HA spread and failover drills for production certification.
 - [ ] Maintainer install pass over the app catalogue to set verified badges.
-- [ ] GeoIP database for IP-level traffic geography beyond private ranges.
+- [x] GeoIP database for IP-level traffic geography beyond private ranges.
 - [ ] Desktop sidecar release bundling, updater signing keys and notarization CI.
 
 ## Related backlogs

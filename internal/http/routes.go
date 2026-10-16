@@ -108,6 +108,7 @@ func (s *Server) registerSystemRoutes(apiGroup, authGroup *echo.Group) {
 	apiGroup.GET("/system/setup-status", s.onboardingHandler.SetupStatus)
 	apiGroup.POST("/system/setup/import", s.migrationHandler.ImportDuringSetup)
 	authGroup.GET("/system/stats", s.systemHandler.GetStats)
+	authGroup.GET("/system/monitor/stream", s.serverHandler.StreamMonitor, s.authGuard.RequireScope("server:read"))
 	apiGroup.POST("/system/restart", s.systemHandler.Restart, s.authGuard.RequireRole("admin"))
 	apiGroup.POST("/system/maintenance/cleanup", s.systemHandler.Cleanup, s.authGuard.RequireRole("admin"))
 	apiGroup.POST("/system/export", s.migrationHandler.Export, s.authGuard.RequireRole("admin"))
