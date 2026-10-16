@@ -1,0 +1,50 @@
+x-codedock:
+  is_one_click: true
+  name: Immich
+  description: Self-hosted photo and video management solution with vector search and machine learning.
+  category: media
+  icon: immich
+  secrets:
+    - var: DB_PASSWORD
+      label: Database password
+      length: 24
+services:
+  immich-server:
+    image: ghcr.io/immich-app/immich-server:v1.129.0
+    restart: always
+    ports:
+      - "2283"
+    environment:
+      - DB_HOSTNAME=immich-db
+      - DB_USERNAME=postgres
+      - DB_DATABASE_NAME=immich
+      - DB_PASSWORD=${secret:DB_PASSWORD}
+      - REDIS_HOSTNAME=immich-redis
+      - IMMICH_MACHINE_LEARNING_URL=http://immich-machine-learning:3003
+    depends_on:
+      - immich-redis
+      - immich-db
+      - immich-machine-learning
+    volumes:
+      - immich-uploads:/usr/src/app/upload
+  immich-machine-learning:
+    image: ghcr.io/immich-app/immich-machine-learning:v1.129.0
+    restart: always
+    volumes:
+      - immich-model-cache:/cache
+  immich-redis:
+    image: valkey/valkey:8-alpine
+    restart: always
+  immich-db:
+    image: tensorchord/pgvecto-rs:pg16-v0.2.1
+    restart: always
+    environment:
+      - POSTGRES_DB=immich
+      - POSTGRES_USER=postgres
+      - POSTGRES_PASSWORD=${secret:DB_PASSWORD}
+    volumes:
+      - immich-db-data:/var/lib/postgresql/data
+volumes:
+  immich-uploads:
+  immich-model-cache:
+  immich-db-data:
