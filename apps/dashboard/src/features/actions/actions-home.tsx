@@ -1,16 +1,18 @@
 import {
   ArrowLeft,
+  Check,
+  ChevronRight,
   Clock,
-  Code2,
   FileCode2,
-  Loader2,
-  Play,
+  GitBranch,
+  PlayCircle,
   Plus,
   RefreshCw,
+  Search,
   Server,
   Workflow as WorkflowIcon,
 } from 'lucide-react';
-import { useState } from 'react';
+import { useMemo, useState } from 'react';
 import { toast } from 'sonner';
 import { Badge } from '#/components/ui/badge';
 import { Button } from '#/components/ui/button';
@@ -36,6 +38,7 @@ import {
 import { ActionStatus } from './action-status';
 import { RunWorkspace } from './run-workspace';
 import { RunnerCatalog } from './runner-catalog';
+import { PageContainer } from '#/components/ui/page-container';
 
 interface ActionsHomeProps {
   initialWorkflows: ActionWorkflow[];
@@ -53,6 +56,8 @@ export function ActionsHome({
   const [runners, setRunners] = useState<ActionRunner[]>(initialRunners);
   const [selectedRun, setSelectedRun] = useState<ActionRun | null>(null);
   const [isRefreshing, setIsRefreshing] = useState(false);
+  const [activeTab, setActiveTab] = useState<'runs' | 'workflows' | 'runners'>('runs');
+  const [workflowSearch, setWorkflowSearch] = useState('');
 
   // Workflow Dialog State
   const [workflowDialogOpen, setWorkflowDialogOpen] = useState(false);
@@ -63,6 +68,24 @@ export function ActionsHome({
     'name: CI\non: [push]\njobs:\n  test:\n    runs-on: ubuntu-latest\n    steps:\n      - uses: actions/checkout@v4\n      - run: npm test\n'
   );
   const [isCreatingWf, setIsCreatingWf] = useState(false);
+
+  const readyRunnersCount = useMemo(
+    () => runners.filter((r) => r.enabled && r.status === 'online').length,
+    [runners]
+  );
+
+  const latestRun = runs[0] ?? null;
+
+  const filteredWorkflows = useMemo(() => {
+    const q = workflowSearch.trim().toLowerCase();
+    if (!q) return workflows;
+    return workflows.filter(
+      (w) =>
+        w.name.toLowerCase().includes(q) ||
+        (w.description && w.description.toLowerCase().includes(q)) ||
+        w.trigger.toLowerCase().includes(q)
+    );
+  }, [workflows, workflowSearch]);
 
   const handleRefresh = async () => {
     setIsRefreshing(true);
@@ -116,7 +139,7 @@ export function ActionsHome({
 
   if (selectedRun) {
     return (
-      <div className="space-y-6">
+      <PageContainer className="space-y-6">
         <Button
           variant="ghost"
           size="sm"
@@ -133,21 +156,24 @@ export function ActionsHome({
             setRuns(runs.map((r) => (r.id === updated.id ? updated : r)));
           }}
         />
-      </div>
+      </PageContainer>
     );
   }
 
   return (
-    <div className="space-y-6">
+    <PageContainer className="@container/actions-home space-y-6">
+      {/* Header */}
       <div className="flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between">
-        <div>
-          <div className="flex items-center gap-2">
-            <WorkflowIcon className="size-6 text-primary" />
-            <h1 className="text-2xl font-bold tracking-tight">Actions</h1>
+        <div className="flex items-center gap-3">
+          <span className="flex size-11 shrink-0 items-center justify-center rounded-2xl bg-card text-primary shadow-xs">
+            <WorkflowIcon className="size-6" />
+          </span>
+          <div>
+            <h1 className="text-2xl font-semibold tracking-tight text-foreground">Actions</h1>
+            <p className="text-sm text-muted-foreground">
+              Continuous integration workflows, runner catalog, and execution history.
+            </p>
           </div>
-          <p className="text-sm text-muted-foreground mt-0.5">
-            CI/CD workflow automation, parallel runner execution, and build verification.
-          </p>
         </div>
 
         <div className="flex items-center gap-2">
@@ -156,7 +182,7 @@ export function ActionsHome({
             size="sm"
             onClick={handleRefresh}
             disabled={isRefreshing}
-            className="gap-1.5"
+            className="gap-1.5 rounded-xl"
           >
             <RefreshCw className={`size-3.5 ${isRefreshing ? 'animate-spin' : ''}`} />
             Refresh
@@ -164,7 +190,7 @@ export function ActionsHome({
           <Button
             size="sm"
             onClick={() => setWorkflowDialogOpen(true)}
-            className="gap-1.5"
+            className="gap-1.5 rounded-xl"
           >
             <Plus className="size-4" />
             New Workflow
@@ -172,117 +198,219 @@ export function ActionsHome({
         </div>
       </div>
 
-      <Tabs defaultValue="runs" className="space-y-6">
-        <TabsList>
-          <TabsTrigger value="runs" className="gap-2">
-            <Clock className="size-4" />
-            Recent Runs ({runs.length})
-          </TabsTrigger>
-          <TabsTrigger value="workflows" className="gap-2">
-            <FileCode2 className="size-4" />
-            Workflows ({workflows.length})
-          </TabsTrigger>
-          <TabsTrigger value="runners" className="gap-2">
-            <Server className="size-4" />
-            Runners ({runners.length})
-          </TabsTrigger>
-        </TabsList>
+      {/* Main 2-column Grid matching OpenShip */}
+      <div className="grid items-start gap-6 @min-[980px]:grid-cols-[minmax(0,1fr)_340px]">
+        {/* Left Column: Tabs & Content */}
+        <div className="min-w-0 space-y-6">
+          <Tabs
+            value={activeTab}
+            onValueChange={(val) => setActiveTab(val as 'runs' | 'workflows' | 'runners')}
+            className="space-y-5"
+          >
+            <TabsList className="rounded-xl">
+              <TabsTrigger value="runs" className="gap-2 rounded-lg">
+                <Clock className="size-4" />
+                Recent Runs ({runs.length})
+              </TabsTrigger>
+              <TabsTrigger value="workflows" className="gap-2 rounded-lg">
+                <FileCode2 className="size-4" />
+                Workflows ({workflows.length})
+              </TabsTrigger>
+              <TabsTrigger value="runners" className="gap-2 rounded-lg">
+                <Server className="size-4" />
+                Runners ({runners.length})
+              </TabsTrigger>
+            </TabsList>
 
-        <TabsContent value="runs" className="space-y-4">
-          {runs.length === 0 ? (
-            <Card className="border-dashed">
-              <CardContent className="flex flex-col items-center justify-center p-8 text-center">
-                <Clock className="size-8 text-muted-foreground/60 mb-2" />
-                <h4 className="font-semibold text-sm">No action runs yet</h4>
-                <p className="text-xs text-muted-foreground max-w-sm mt-1">
-                  Trigger a workflow to view build progress, logs, and artifacts here.
-                </p>
-              </CardContent>
-            </Card>
-          ) : (
-            <div className="space-y-2">
-              {runs.map((run) => (
-                <div
-                  key={run.id}
-                  onClick={() => setSelectedRun(run)}
-                  className="flex flex-col gap-3 rounded-lg border border-border/70 bg-card p-4 transition-all hover:border-border hover:bg-muted/40 cursor-pointer sm:flex-row sm:items-center sm:justify-between"
-                >
-                  <div className="flex items-start gap-3">
-                    <div className="mt-0.5">
-                      <ActionStatus status={run.status} />
-                    </div>
-                    <div>
-                      <div className="flex items-center gap-2">
-                        <span className="font-semibold text-sm hover:underline">{run.name}</span>
-                        <span className="text-xs font-mono text-muted-foreground">#{run.number}</span>
-                      </div>
-                      <p className="text-xs text-muted-foreground">
-                        Triggered by <span className="font-medium">{run.triggeredBy}</span>
-                        {run.runnerId && ` • Runner: ${run.runnerId}`}
-                      </p>
-                    </div>
-                  </div>
-
-                  <div className="flex items-center gap-4 text-xs text-muted-foreground sm:text-right">
-                    <span>{run.durationSeconds}s duration</span>
-                    <Button variant="ghost" size="sm" className="h-8 text-xs">
-                      View Logs
-                    </Button>
-                  </div>
+            {/* Runs Tab */}
+            <TabsContent value="runs" className="space-y-4">
+              {runs.length === 0 ? (
+                <div className="flex flex-col items-center justify-center rounded-2xl border border-dashed border-border/70 bg-card p-12 text-center">
+                  <Clock className="mb-2 size-8 text-muted-foreground/50" />
+                  <h4 className="font-semibold text-sm">No action runs yet</h4>
+                  <p className="mt-1 max-w-sm text-xs text-muted-foreground">
+                    Trigger a workflow to view execution progress, logs, and artifacts here.
+                  </p>
                 </div>
-              ))}
-            </div>
-          )}
-        </TabsContent>
-
-        <TabsContent value="workflows" className="space-y-4">
-          {workflows.length === 0 ? (
-            <Card className="border-dashed">
-              <CardContent className="flex flex-col items-center justify-center p-8 text-center">
-                <FileCode2 className="size-8 text-muted-foreground/60 mb-2" />
-                <h4 className="font-semibold text-sm">No workflows configured</h4>
-                <p className="text-xs text-muted-foreground max-w-sm mt-1 mb-4">
-                  Define your first YAML pipeline to automate checks and deployments.
-                </p>
-                <Button onClick={() => setWorkflowDialogOpen(true)} size="sm" className="gap-1.5">
-                  <Plus className="size-4" />
-                  Create Workflow
-                </Button>
-              </CardContent>
-            </Card>
-          ) : (
-            <div className="grid gap-4 sm:grid-cols-2">
-              {workflows.map((wf) => (
-                <Card key={wf.id} className="border-border/70">
-                  <CardHeader className="p-4 pb-2">
-                    <div className="flex items-center justify-between">
-                      <CardTitle className="text-base font-semibold">{wf.name}</CardTitle>
-                      <Badge variant="outline" className="text-xs font-mono">
-                        {wf.trigger}
-                      </Badge>
+              ) : (
+                <div className="divide-y divide-border/40 overflow-hidden rounded-2xl border border-border/50 bg-card shadow-xs">
+                  {runs.map((run) => (
+                    <div
+                      key={run.id}
+                      onClick={() => setSelectedRun(run)}
+                      className="group flex flex-wrap items-center gap-x-5 gap-y-2 px-5 py-4 transition-colors hover:bg-muted/40 cursor-pointer"
+                    >
+                      <GitBranch className="size-4 shrink-0 text-muted-foreground group-hover:text-foreground" />
+                      <div className="min-w-0 flex-1">
+                        <p className="truncate text-sm font-medium text-foreground">
+                          {run.name}{' '}
+                          <span className="text-muted-foreground">#{run.number}</span>
+                        </p>
+                        <p className="mt-0.5 truncate text-xs text-muted-foreground">
+                          Triggered by {run.triggeredBy}
+                          {run.runnerId && ` · Runner: ${run.runnerId}`}
+                        </p>
+                      </div>
+                      <ActionStatus status={run.status} />
+                      <time className="text-xs text-muted-foreground tabular-nums">
+                        {run.durationSeconds}s
+                      </time>
+                      <ChevronRight className="size-4 text-muted-foreground/60 transition-transform group-hover:translate-x-0.5 group-hover:text-foreground" />
                     </div>
-                    {wf.description && (
-                      <CardDescription className="text-xs">{wf.description}</CardDescription>
-                    )}
-                  </CardHeader>
-                  <CardContent className="p-4 pt-2">
-                    <pre className="max-h-32 overflow-y-auto rounded-md bg-muted/60 p-2 font-mono text-[11px] text-muted-foreground">
-                      {wf.yaml || '# No definition provided'}
-                    </pre>
-                  </CardContent>
-                </Card>
-              ))}
-            </div>
-          )}
-        </TabsContent>
+                  ))}
+                </div>
+              )}
+            </TabsContent>
 
-        <TabsContent value="runners">
-          <RunnerCatalog
-            runners={runners}
-            onRunnerRegistered={(newRunner) => setRunners([...runners, newRunner])}
-          />
-        </TabsContent>
-      </Tabs>
+            {/* Workflows Tab */}
+            <TabsContent value="workflows" className="space-y-4">
+              <div className="relative w-full max-w-sm">
+                <Search className="pointer-events-none absolute top-1/2 left-3.5 size-4 -translate-y-1/2 text-muted-foreground" />
+                <Input
+                  type="search"
+                  placeholder="Search workflows…"
+                  aria-label="Search workflows"
+                  value={workflowSearch}
+                  onChange={(e) => setWorkflowSearch(e.target.value)}
+                  className="rounded-xl pl-10"
+                />
+              </div>
+
+              {filteredWorkflows.length === 0 ? (
+                <div className="flex flex-col items-center justify-center rounded-2xl border border-dashed border-border/70 bg-card p-12 text-center">
+                  <FileCode2 className="mb-2 size-8 text-muted-foreground/50" />
+                  <h4 className="font-semibold text-sm">
+                    {workflows.length === 0 ? 'No workflows configured' : 'No matching workflows'}
+                  </h4>
+                  <p className="mt-1 max-w-sm text-xs text-muted-foreground mb-4">
+                    Define automated pipelines with jobs, matrix runners, and custom triggers.
+                  </p>
+                  <Button
+                    onClick={() => setWorkflowDialogOpen(true)}
+                    size="sm"
+                    className="gap-1.5 rounded-xl"
+                  >
+                    <Plus className="size-4" />
+                    Create Workflow
+                  </Button>
+                </div>
+              ) : (
+                <div className="grid grid-cols-1 gap-4 sm:grid-cols-2">
+                  {filteredWorkflows.map((wf) => (
+                    <div
+                      key={wf.id}
+                      className="group flex flex-col justify-between rounded-2xl border border-border/60 bg-card p-5 transition-all hover:border-primary/40 hover:shadow-xs"
+                    >
+                      <div>
+                        <div className="flex items-start justify-between gap-3">
+                          <span className="flex size-10 shrink-0 items-center justify-center rounded-xl bg-primary/10 text-primary">
+                            <PlayCircle className="size-5" />
+                          </span>
+                          <Badge variant="outline" className="font-mono text-[11px] uppercase">
+                            {wf.trigger}
+                          </Badge>
+                        </div>
+                        <h3 className="mt-3 truncate font-semibold text-foreground text-sm">
+                          {wf.name}
+                        </h3>
+                        {wf.description && (
+                          <p className="mt-1 line-clamp-2 text-xs text-muted-foreground">
+                            {wf.description}
+                          </p>
+                        )}
+                      </div>
+
+                      <div className="mt-4">
+                        <pre className="max-h-24 overflow-y-auto rounded-lg bg-muted/60 p-2 font-mono text-[10px] text-muted-foreground">
+                          {wf.yaml || '# empty'}
+                        </pre>
+                      </div>
+                    </div>
+                  ))}
+                </div>
+              )}
+            </TabsContent>
+
+            {/* Runners Tab */}
+            <TabsContent value="runners">
+              <RunnerCatalog
+                runners={runners}
+                onRunnerRegistered={(newRunner) => setRunners([...runners, newRunner])}
+              />
+            </TabsContent>
+          </Tabs>
+        </div>
+
+        {/* Right Sidebar Column: Overview & Quick Context */}
+        <aside className="space-y-5 sticky top-6">
+          <section className="rounded-2xl border border-border/60 bg-card p-5 shadow-xs">
+            <h2 className="text-base font-semibold text-foreground">Actions Overview</h2>
+
+            <dl className="mt-4 space-y-3 text-sm">
+              <div className="flex items-center justify-between gap-3">
+                <dt className="text-muted-foreground">Workflows</dt>
+                <dd className="font-semibold tabular-nums text-foreground">{workflows.length}</dd>
+              </div>
+              <div className="flex items-center justify-between gap-3">
+                <dt className="text-muted-foreground">Ready Runners</dt>
+                <dd className="font-semibold tabular-nums text-foreground">
+                  {readyRunnersCount}{' '}
+                  <span className="font-normal text-muted-foreground">/ {runners.length}</span>
+                </dd>
+              </div>
+              <div className="flex items-center justify-between gap-3">
+                <dt className="text-muted-foreground">Total Runs</dt>
+                <dd className="font-semibold tabular-nums text-foreground">{runs.length}</dd>
+              </div>
+            </dl>
+
+            {latestRun && (
+              <div className="mt-5 border-t border-border/50 pt-4">
+                <p className="text-xs font-medium uppercase tracking-wider text-muted-foreground">
+                  Latest Run
+                </p>
+                <div
+                  onClick={() => setSelectedRun(latestRun)}
+                  className="mt-2 flex items-center justify-between gap-3 rounded-xl border border-border/40 bg-muted/30 p-2.5 transition-colors hover:bg-muted/60 cursor-pointer"
+                >
+                  <div className="min-w-0">
+                    <p className="truncate text-xs font-semibold text-foreground">
+                      Run #{latestRun.number}
+                    </p>
+                    <p className="text-[11px] text-muted-foreground">{latestRun.durationSeconds}s duration</p>
+                  </div>
+                  <ActionStatus status={latestRun.status} />
+                </div>
+              </div>
+            )}
+          </section>
+
+          {/* Quick Automation Guide Card */}
+          <section className="rounded-2xl border border-border/60 bg-card p-5 shadow-xs">
+            <h3 className="text-sm font-semibold text-foreground">Workflow Guide</h3>
+            <ol className="mt-3 space-y-3 text-xs text-muted-foreground">
+              <li className="flex items-start gap-2.5">
+                <span className="flex size-5 shrink-0 items-center justify-center rounded-full bg-primary/10 font-medium text-primary">
+                  1
+                </span>
+                <span>Configure target runners in docker or isolated environment.</span>
+              </li>
+              <li className="flex items-start gap-2.5">
+                <span className="flex size-5 shrink-0 items-center justify-center rounded-full bg-primary/10 font-medium text-primary">
+                  2
+                </span>
+                <span>Define YAML workflow triggers, matrix tasks, and secrets.</span>
+              </li>
+              <li className="flex items-start gap-2.5">
+                <span className="flex size-5 shrink-0 items-center justify-center rounded-full bg-primary/10 font-medium text-primary">
+                  3
+                </span>
+                <span>Inspect execution logs, artifacts, and test summaries live.</span>
+              </li>
+            </ol>
+          </section>
+        </aside>
+      </div>
 
       {/* New Workflow Dialog */}
       <Dialog open={workflowDialogOpen} onOpenChange={setWorkflowDialogOpen}>
@@ -300,9 +428,9 @@ export function ActionsHome({
                 <Label htmlFor="wf-name">Workflow Name</Label>
                 <Input
                   id="wf-name"
-                  placeholder="e.g. Test and Build"
                   value={wfName}
                   onChange={(e) => setWfName(e.target.value)}
+                  placeholder="e.g. Build and Verify"
                   required
                 />
               </div>
@@ -311,19 +439,19 @@ export function ActionsHome({
                 <Label htmlFor="wf-desc">Description</Label>
                 <Input
                   id="wf-desc"
-                  placeholder="e.g. Automated test suite and image build on push"
                   value={wfDescription}
                   onChange={(e) => setWfDescription(e.target.value)}
+                  placeholder="e.g. Automated CI checks on pull request"
                 />
               </div>
 
               <div className="space-y-1.5">
-                <Label htmlFor="wf-trigger">Event Trigger</Label>
+                <Label htmlFor="wf-trigger">Trigger</Label>
                 <Input
                   id="wf-trigger"
-                  placeholder="e.g. push, pull_request, schedule"
                   value={wfTrigger}
                   onChange={(e) => setWfTrigger(e.target.value)}
+                  placeholder="push, pull_request, manual"
                 />
               </div>
 
@@ -331,10 +459,10 @@ export function ActionsHome({
                 <Label htmlFor="wf-yaml">YAML Definition</Label>
                 <Textarea
                   id="wf-yaml"
-                  rows={8}
-                  className="font-mono text-xs"
+                  rows={6}
                   value={wfYaml}
                   onChange={(e) => setWfYaml(e.target.value)}
+                  className="font-mono text-xs"
                 />
               </div>
             </div>
@@ -344,18 +472,16 @@ export function ActionsHome({
                 type="button"
                 variant="outline"
                 onClick={() => setWorkflowDialogOpen(false)}
-                disabled={isCreatingWf}
               >
                 Cancel
               </Button>
               <Button type="submit" disabled={isCreatingWf}>
-                {isCreatingWf && <Loader2 className="mr-2 size-4 animate-spin" />}
-                Save Workflow
+                {isCreatingWf ? 'Saving...' : 'Save Workflow'}
               </Button>
             </DialogFooter>
           </form>
         </DialogContent>
       </Dialog>
-    </div>
+    </PageContainer>
   );
 }

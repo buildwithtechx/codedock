@@ -244,6 +244,30 @@ body {
 }
 
 @layer utilities {
+  .th-nav-item {
+    color: var(--muted-foreground);
+    transition: color 0.15s ease, background-color 0.15s ease;
+  }
+  .th-nav-item:hover {
+    color: var(--foreground);
+    background-color: color-mix(in oklab, var(--foreground) 6%, transparent);
+  }
+  .th-nav-item[aria-current="page"] {
+    color: var(--foreground);
+    background-color: color-mix(in oklab, var(--foreground) 9%, transparent);
+  }
+
+  .th-btn-accent {
+    color: var(--primary-foreground);
+    background-image:
+      radial-gradient(circle at 30% 50%, rgba(255, 255, 255, 0.18), transparent 70%),
+      linear-gradient(to right in oklab, var(--primary), var(--primary-hover, var(--primary)));
+    box-shadow: 0 1px 3px 0 rgba(0, 0, 0, 0.12), 0 1px 2px -1px rgba(0, 0, 0, 0.08);
+  }
+  .th-btn-accent:hover {
+    box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.15), 0 2px 4px -2px rgba(0, 0, 0, 0.1);
+  }
+
   .page-transition {
     animation: page-enter 160ms ease-out both;
   }

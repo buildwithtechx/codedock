@@ -2,6 +2,7 @@ import type { LucideIcon } from 'lucide-react';
 import {
   Activity,
   Bot,
+  CircleHelp,
   ClipboardList,
   Clock,
   CloudCog,
@@ -14,12 +15,12 @@ import {
   LayoutDashboard,
   LayoutGrid,
   Mail,
+  PlayCircle,
   Rocket,
   Server,
   Settings,
   ShieldCheck,
   UserRound,
-  Workflow,
 } from 'lucide-react';
 
 export type DashboardNavigationItem = {
@@ -52,10 +53,10 @@ export const primaryNavigation: DashboardNavigationItem[] = [
     icon: LayoutGrid,
   },
   {
-    title: 'Deployments',
-    description: 'Release activity and status',
-    to: '/deployments',
-    icon: Rocket,
+    title: 'Actions',
+    description: 'Continuous integration and automation',
+    to: '/actions',
+    icon: PlayCircle,
   },
   {
     title: 'Issues',
@@ -73,12 +74,6 @@ export const infrastructureNavigation: DashboardNavigationItem[] = [
     icon: Server,
   },
   {
-    title: 'Domains',
-    description: 'Domain routing and SSL verification',
-    to: '/domains',
-    icon: Globe2,
-  },
-  {
     title: 'Mail',
     description: 'Mail servers, mailboxes and deliverability',
     to: '/mail',
@@ -91,20 +86,14 @@ export const infrastructureNavigation: DashboardNavigationItem[] = [
     icon: Clock,
   },
   {
-    title: 'Actions',
-    description: 'CI workflows and runner execution',
-    to: '/actions',
-    icon: Workflow,
-  },
-];
-
-export const systemNavigation: DashboardNavigationItem[] = [
-  {
     title: 'Backups',
     description: 'Backup destinations and restores',
     to: '/backups',
     icon: HardDrive,
   },
+];
+
+export const settingsNavigation: DashboardNavigationItem[] = [
   {
     title: 'Settings',
     description: 'Instance and workspace configuration',
@@ -119,24 +108,48 @@ export const systemNavigation: DashboardNavigationItem[] = [
   },
 ];
 
-export const getSystemNavigation = (isCloud: boolean): DashboardNavigationItem[] => {
+export const getSettingsNavigation = (isCloud: boolean): DashboardNavigationItem[] => {
   if (!isCloud) {
-    return systemNavigation;
+    return settingsNavigation;
   }
   return [
-    systemNavigation[0],
-    systemNavigation[1],
+    settingsNavigation[0],
     {
       title: 'Billing & Usage',
       description: 'Manage subscription and compute plans',
       to: '/billing',
       icon: CreditCard,
     },
-    systemNavigation[2],
+    settingsNavigation[1],
   ];
 };
 
-export const hiddenNavigation: DashboardNavigationItem[] = [];
+export const systemNavigation = settingsNavigation;
+export const getSystemNavigation = getSettingsNavigation;
+
+export const helpNavigation: DashboardNavigationItem[] = [
+  {
+    title: 'Support',
+    description: 'Get help and view support tickets',
+    to: '/support',
+    icon: CircleHelp,
+  },
+];
+
+export const hiddenNavigation: DashboardNavigationItem[] = [
+  {
+    title: 'Deployments',
+    description: 'Release activity and status',
+    to: '/deployments',
+    icon: Rocket,
+  },
+  {
+    title: 'Domains',
+    description: 'Domain routing and SSL verification',
+    to: '/domains',
+    icon: Globe2,
+  },
+];
 
 export const contextualNavigation: DashboardNavigationItem[] = [
   {
@@ -185,7 +198,8 @@ export const contextualNavigation: DashboardNavigationItem[] = [
 export const commandNavigation: DashboardNavigationItem[] = [
   ...primaryNavigation,
   ...infrastructureNavigation,
-  ...systemNavigation,
+  ...settingsNavigation,
+  ...helpNavigation,
   ...hiddenNavigation,
   ...contextualNavigation,
 ];

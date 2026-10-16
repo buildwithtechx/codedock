@@ -105,6 +105,7 @@ type Server struct {
 	serverNetworksHandler     *system.ServerNetworksHandler
 	actionsHandler            *system.ActionsHandler
 	checksHandler             *projects.ChecksHandler
+	supportHandler            *system.SupportHandler
 }
 
 func (s *Server) ServeHTTP(w http.ResponseWriter, r *http.Request) {

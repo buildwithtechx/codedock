@@ -251,6 +251,55 @@ func actionRunnerSchema() Schema {
 	)
 }
 
+func supportSessionSchema() Schema {
+	return Obj("Support session",
+		F("account", Obj("Account",
+			RF("key", Str("Account key")),
+			RF("id", Str("Account ID")),
+			F("name", Str("Account name")),
+			RF("email", Str("Account email")),
+		)),
+	)
+}
+
+func supportTicketSchema() Schema {
+	return Obj("Support ticket",
+		RF("id", Str("Ticket ID")),
+		RF("subject", Str("Ticket subject")),
+		RF("category", Str("Category")),
+		RF("status", Str("Status")),
+		RF("createdAt", Str("Created timestamp")),
+		RF("updatedAt", Str("Updated timestamp")),
+	)
+}
+
+func supportDetailSchema() Schema {
+	return Obj("Support ticket detail",
+		RF("ticket", Obj("Ticket",
+			RF("id", Str("Ticket ID")),
+			RF("subject", Str("Ticket subject")),
+			RF("category", Str("Category")),
+			RF("status", Str("Status")),
+			RF("message", Str("Initial message")),
+			RF("createdAt", Str("Created timestamp")),
+			RF("updatedAt", Str("Updated timestamp")),
+		)),
+		RF("messages", Arr("Messages", Obj("Message",
+			RF("id", Str("Message ID")),
+			RF("author", Str("Author")),
+			RF("body", Str("Message body")),
+			RF("createdAt", Str("Created timestamp")),
+		))),
+	)
+}
+
+func supportReceiptSchema() Schema {
+	return Obj("Support ticket receipt",
+		RF("id", Str("Ticket ID")),
+		RF("createdAt", Str("Created timestamp")),
+	)
+}
+
 func systemOperations() []Operation {
 	system := "system"
 	settings := "settings"
@@ -260,6 +309,7 @@ func systemOperations() []Operation {
 	mcp := "mcp"
 	networks := "networks"
 	actions := "actions"
+	support := "support"
 	return []Operation{
 		{Method: "GET", Path: "/api/system/public", Summary: "Get public settings", Tags: []string{system}, Response: settingsSchema()},
 		{Method: "GET", Path: "/api/system/stats", Summary: "Get system stats", Tags: []string{system}, Auth: AuthUser, Response: systemStatsSchema()},
@@ -324,6 +374,16 @@ func systemOperations() []Operation {
 		{Method: "POST", Path: "/api/actions/runs/:id/cancel", Summary: "Cancel action run", Tags: []string{actions}, Auth: AuthUser, Response: actionRunSchema()},
 		{Method: "GET", Path: "/api/actions/runners", Summary: "List action runners", Tags: []string{actions}, Auth: AuthUser, Response: Arr("Runners", actionRunnerSchema())},
 		{Method: "POST", Path: "/api/actions/runners", Summary: "Register action runner", Tags: []string{actions}, Auth: AuthAdmin, Code: 200, Request: JSON(Obj("Create runner", RF("name", Str("Runner name")), F("mode", Str("Mode")), F("image", Str("Image")), F("labels", Arr("Labels", Str("Label"))), RF("enabled", Bool("Enabled")))), Response: actionRunnerSchema()},
+		{Method: "GET", Path: "/api/cloud/support/session", Summary: "Get support session", Tags: []string{support}, Auth: AuthUser, Response: supportSessionSchema()},
+		{Method: "GET", Path: "/api/cloud/support/mine", Summary: "List support tickets", Tags: []string{support}, Auth: AuthUser, Response: Obj("Support list", RF("tickets", Arr("Tickets", supportTicketSchema())), F("nextCursor", Str("Next cursor")))},
+		{Method: "POST", Path: "/api/cloud/support/mine", Summary: "Create support ticket", Tags: []string{support}, Auth: AuthUser, Code: 201, Request: JSON(Obj("Create ticket", RF("requestId", Str("Request ID")), RF("subject", Str("Subject")), RF("message", Str("Message")), RF("category", Str("Category")))), Response: supportReceiptSchema()},
+		{Method: "GET", Path: "/api/cloud/support/mine/:id", Summary: "Get support ticket", Tags: []string{support}, Auth: AuthUser, Response: supportDetailSchema()},
+		{Method: "POST", Path: "/api/cloud/support/mine/:id/replies", Summary: "Reply to support ticket", Tags: []string{support}, Auth: AuthUser, Code: 201, Request: JSON(Obj("Reply ticket", RF("requestId", Str("Request ID")), RF("message", Str("Message")))), Response: supportDetailSchema()},
+		{Method: "PATCH", Path: "/api/cloud/support/mine/:id", Summary: "Update support ticket status", Tags: []string{support}, Auth: AuthUser, Request: JSON(Obj("Update status", RF("status", Str("Status")))), Response: supportDetailSchema()},
+		{Method: "GET", Path: "/api/support/tickets", Summary: "List legacy support tickets", Tags: []string{support}, Auth: AuthUser, Response: Obj("Legacy tickets", RF("tickets", Arr("Tickets", supportTicketSchema())))},
+		{Method: "POST", Path: "/api/support/tickets", Summary: "Create legacy support ticket", Tags: []string{support}, Auth: AuthUser, Code: 201, Request: JSON(Obj("Create ticket", RF("subject", Str("Subject")), RF("message", Str("Message")), RF("category", Str("Category")), F("attachDiagnostics", Bool("Attach diagnostics")))), Response: Obj("Created ticket", RF("ticket", supportTicketSchema()))},
+		{Method: "GET", Path: "/api/support/tickets/:id", Summary: "Get legacy support ticket", Tags: []string{support}, Auth: AuthUser, Response: Obj("Ticket response", RF("ticket", supportDetailSchema()))},
+		{Method: "POST", Path: "/api/support/tickets/:id/reply", Summary: "Reply legacy support ticket", Tags: []string{support}, Auth: AuthUser, Request: JSON(Obj("Reply ticket", RF("message", Str("Message")))), Response: Obj("Ticket response", RF("ticket", supportDetailSchema()))},
 		{Method: "POST", Path: "/api/mcp/messages", Summary: "Send an MCP message", Tags: []string{mcp}, Auth: AuthUser, Raw: true, Request: JSON(Obj("MCP message", RF("jsonrpc", Str("JSON-RPC version")), F("id", Any("Message ID")), F("method", Str("Method")), F("params", Any("Params")))), Response: Obj("MCP response", RF("jsonrpc", Str("JSON-RPC version")), F("id", Any("Message ID")), F("result", Any("Result")), F("error", Obj("Error", RF("code", Int("Code")), RF("message", Str("Message")))))},
 		{Method: "GET", Path: "/api/docs/openapi.json", Summary: "Download the OpenAPI document", Tags: []string{system}, Auth: AuthUser, Raw: true, Response: Any("OpenAPI 3.1 document")},
 	}

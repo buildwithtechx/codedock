@@ -7,6 +7,7 @@ import { Input } from '#/components/ui/input';
 import { QueryErrorState } from '#/components/ui/query-error-state';
 import { Skeleton } from '#/components/ui/skeleton';
 import { cn } from '#/lib/utils';
+import { PageContainer } from '#/components/ui/page-container';
 import { EmptyIssues } from './empty-issues';
 import {
   useAcknowledgeIssue,
@@ -151,11 +152,15 @@ export function IssuesView() {
 
   if (!activeOrganizationId) {
     return (
-      <div className="space-y-6">
-        <PageHeader
-          title="Monitoring"
-          description="Health, updates and activity across your projects, servers and domains."
-        />
+      <PageContainer className="space-y-6">
+        <div className="mb-6 flex flex-wrap items-start justify-between gap-4">
+          <div>
+            <h1 className="text-2xl font-medium tracking-tight text-foreground/80">Monitoring</h1>
+            <p className="mt-1 text-sm text-muted-foreground/70">
+              Health, updates and activity across your projects, servers and domains.
+            </p>
+          </div>
+        </div>
         <div className="flex flex-col items-center rounded-2xl border border-border/60 bg-card px-6 py-14 text-center">
           <span className="flex size-11 items-center justify-center rounded-2xl bg-muted text-muted-foreground">
             <Building2 className="size-5" />
@@ -168,7 +173,7 @@ export function IssuesView() {
             <Link to="/organizations">Go to organizations</Link>
           </Button>
         </div>
-      </div>
+      </PageContainer>
     );
   }
 
@@ -176,12 +181,16 @@ export function IssuesView() {
   const loadError = listQuery.isError;
 
   return (
-    <div className="space-y-6">
-      <PageHeader
-        title="Monitoring"
-        description="Health, updates and activity across your projects, servers and domains."
-        action={headerAction}
-      />
+    <PageContainer className="space-y-6">
+      <div className="mb-6 flex flex-wrap items-start justify-between gap-4">
+        <div>
+          <h1 className="text-2xl font-medium tracking-tight text-foreground/80">Monitoring</h1>
+          <p className="mt-1 text-sm text-muted-foreground/70">
+            Health, updates and activity across your projects, servers and domains.
+          </p>
+        </div>
+        {headerAction}
+      </div>
 
       <MonitoringNavigation value={tab} onChange={setTab} />
 
@@ -360,6 +369,6 @@ export function IssuesView() {
           </div>
         )}
       </section>
-    </div>
+    </PageContainer>
   );
 }
