@@ -26,6 +26,8 @@ export interface OneClickAppDetails {
   volumes: string[];
   envVariables: OneClickEnvVar[];
   verified: boolean;
+  gpu?: 'required' | 'recommended' | null;
+  shmSize?: string | null;
 }
 
 export interface InstallAppInput {

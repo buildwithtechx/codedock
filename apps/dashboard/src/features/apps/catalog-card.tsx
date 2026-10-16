@@ -1,6 +1,7 @@
 import { Link } from '@tanstack/react-router';
 import { ArrowRight, BadgeCheck } from 'lucide-react';
 import type { OneClickAppDetails } from '#/interfaces/templates';
+import { AppGpuBadge } from '#/components/apps/app-gpu-badge';
 import { AppLogo } from './app-logo';
 
 export function CatalogCard({ app }: { app: OneClickAppDetails }) {
@@ -18,6 +19,7 @@ export function CatalogCard({ app }: { app: OneClickAppDetails }) {
             {app.verified && (
               <BadgeCheck className="size-4 shrink-0 text-sky-500" aria-label="Verified" />
             )}
+            <AppGpuBadge gpu={app.gpu} />
           </span>
           <ArrowRight className="size-4 shrink-0 text-muted-foreground/40 transition-colors group-hover:text-foreground" />
         </div>
@@ -36,7 +38,10 @@ export function CatalogShortcut({ app }: { app: OneClickAppDetails }) {
     >
       <AppLogo icon={app.icon} name={app.name} className="size-10 shrink-0" />
       <div className="min-w-0 flex-1">
-        <p className="truncate font-medium text-foreground text-sm">{app.name}</p>
+        <div className="flex items-center gap-1.5">
+          <p className="truncate font-medium text-foreground text-sm">{app.name}</p>
+          <AppGpuBadge gpu={app.gpu} />
+        </div>
         <p className="mt-0.5 line-clamp-2 text-muted-foreground text-xs leading-relaxed">
           {app.description}
         </p>

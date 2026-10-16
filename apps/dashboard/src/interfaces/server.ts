@@ -6,6 +6,14 @@ export interface ServerMetrics {
   disk_total_bytes: number;
 }
 
+export interface ServerGPUInfo {
+  probed?: boolean;
+  available?: boolean;
+  detected?: boolean;
+  count?: number;
+  override?: 'yes' | 'no' | null;
+}
+
 export interface Server {
   id: string;
   userId: string;
@@ -28,6 +36,7 @@ export interface Server {
   lastSeenAt?: string;
   managed?: CloudWorkspaceSummary | null;
   capabilities?: ServerCapabilities | null;
+  gpu?: ServerGPUInfo | null;
   purpose?: string;
   metrics: ServerMetrics | string | null;
   createdAt: string;

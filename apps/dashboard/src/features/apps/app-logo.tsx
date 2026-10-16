@@ -10,7 +10,32 @@ const DARK_INVERT_LOGOS = new Set([
   'posthog',
   'umami',
   'vaultwarden',
+  'linux',
 ]);
+
+const PNG_LOGOS = new Set([
+  'homepage',
+  'it-tools',
+  'wiki-js',
+  'ollama',
+  'openwebui',
+  'open-webui',
+  'vllm',
+]);
+
+function resolveLogoSrc(icon: string): string {
+  if (icon.startsWith('http://') || icon.startsWith('https://') || icon.startsWith('/')) {
+    return icon;
+  }
+  if (icon.endsWith('.png') || icon.endsWith('.svg')) {
+    return `/app-logos/${icon}`;
+  }
+  const clean = icon.toLowerCase().replace(/[^a-z0-9_-]/g, '');
+  if (PNG_LOGOS.has(clean) || PNG_LOGOS.has(icon.toLowerCase())) {
+    return `/app-logos/${icon}.png`;
+  }
+  return `/app-logos/${icon}.svg`;
+}
 
 export function AppLogo({
   appId,
@@ -52,7 +77,7 @@ export function AppLogo({
       )}
     >
       <img
-        src={`/app-logos/${resolvedIcon}.svg`}
+        src={resolveLogoSrc(resolvedIcon)}
         alt=""
         aria-hidden="true"
         className={cn(
