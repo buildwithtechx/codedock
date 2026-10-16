@@ -40,4 +40,11 @@ A missing engine template or missing dump/restore command metadata returns an er
 
 Database backups and volume archives do not replace a backup of Codedock's Postgres state and vault key. Preserve the control-plane database and vault key together; encrypted credentials depend on those keys.
 
+## Dashboard layout and management
+
+The Backups dashboard uses a summary-first stacked layout:
+- A compact storage summary header leads the view with total volume, snapshot count, and active destination metrics.
+- Below the summary, full-width destination history and destination cards display recent executions and configurations.
+- On smaller viewports, history entries stack gracefully while preserving dates, file sizes, payload indicators, and restore/detail actions.
+
 See [restore and download](/storage-and-backups/restore-and-download/), [R2](/storage-and-backups/r2-storage/) and [MinIO](/storage-and-backups/minio-storage/).
