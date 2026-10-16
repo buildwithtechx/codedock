@@ -38,6 +38,7 @@ type DeploymentService struct {
 	statsMonitor            *observability.StatsMonitor
 	volumeRepo              repositories.ServiceVolumeRepository
 	sshManager              *ssh.SSHManager
+	admissionGuard          *BuildAdmissionGuard
 	operationMu             sync.Mutex
 	operations              map[string]context.CancelFunc
 }
@@ -53,15 +54,16 @@ func NewDeploymentService(
 	smgr *ssh.SSHManager,
 ) *DeploymentService {
 	return &DeploymentService{
-		repo:         r,
-		appRepo:      ar,
-		projectRepo:  pr,
-		deployer:     d,
-		gitService:   gs,
-		statsMonitor: sm,
-		volumeRepo:   vr,
-		sshManager:   smgr,
-		operations:   make(map[string]context.CancelFunc),
+		repo:           r,
+		appRepo:        ar,
+		projectRepo:    pr,
+		deployer:       d,
+		gitService:     gs,
+		statsMonitor:   sm,
+		volumeRepo:     vr,
+		sshManager:     smgr,
+		admissionGuard: NewBuildAdmissionGuard(),
+		operations:     make(map[string]context.CancelFunc),
 	}
 }
 

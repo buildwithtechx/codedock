@@ -58,6 +58,7 @@ type Server struct {
 	projectSettingsHandler    *projects.ProjectSettingsHandler
 	backupHandler             *backups.BackupHandler
 	settingsHandler           *auth.SettingsHandler
+	appearanceHandler         *auth.AppearanceHandler
 	notifSettingsHandler      *system.NotificationSettingsHandler
 	aiSettingsHandler         *system.AISettingsHandler
 	updaterHandler            *system.UpdaterHandler

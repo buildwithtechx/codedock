@@ -51,6 +51,12 @@ func (m *mockUserRepoForCLI) DeletePAT(ctx context.Context, id, userID string) e
 func (m *mockUserRepoForCLI) FindFoundingAdmin(ctx context.Context) (*models.User, error) {
 	return m.admin, nil
 }
+func (m *mockUserRepoForCLI) GetAppearance(ctx context.Context, userID string) (*models.AppearancePreferences, error) {
+	return nil, nil
+}
+func (m *mockUserRepoForCLI) SetAppearance(ctx context.Context, userID string, pref *models.AppearancePreferences) error {
+	return nil
+}
 
 func TestLocalCLISession(t *testing.T) {
 	cfg := config.Get()

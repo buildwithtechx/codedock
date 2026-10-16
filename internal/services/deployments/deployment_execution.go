@@ -26,12 +26,23 @@ func (s *DeploymentService) ExecuteDeploymentAsync(d *models.Deployment) {
 		s.finishDeployment(d.ID, models.DeploymentStatusFailed, "Another deployment is already running for this service.\n", "")
 		return
 	}
+	if s.admissionGuard != nil {
+		if err := s.admissionGuard.Acquire(d.ServiceID, ""); err != nil {
+			s.operationMu.Unlock()
+			cancel()
+			s.finishDeployment(d.ID, models.DeploymentStatusFailed, fmt.Sprintf("Build admission limit exceeded: %v\n", err), "")
+			return
+		}
+	}
 	s.operations[d.ID] = cancel
 	s.operations["service:"+d.ServiceID] = cancel
 	s.operationMu.Unlock()
 	go func() {
 		defer cancel()
 		defer func() {
+			if s.admissionGuard != nil {
+				s.admissionGuard.Release(d.ServiceID)
+			}
 			s.operationMu.Lock()
 			delete(s.operations, d.ID)
 			delete(s.operations, "service:"+d.ServiceID)

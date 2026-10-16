@@ -30,6 +30,22 @@ func settingsSchema() Schema {
 	)
 }
 
+func appearanceSchema() Schema {
+	return Obj("Appearance preferences",
+		F("activeTheme", Str("Active theme name")),
+		F("mode", Str("Color mode")),
+		F("fontFamily", Str("Font family token")),
+		F("radius", Str("Border radius token")),
+		F("tokens", Map("Theme CSS tokens", Str("CSS property value"))),
+		F("customThemes", Arr("Custom themes", Obj("Custom theme",
+			RF("id", Str("Theme ID")),
+			RF("name", Str("Theme name")),
+			F("mode", Str("Color mode")),
+			F("tokens", Map("Theme CSS tokens", Str("CSS property value"))),
+		))),
+	)
+}
+
 func aiSettingsSchema() Schema {
 	return Obj("AI settings",
 		F("defaultProvider", Str("Default provider")),
@@ -114,6 +130,8 @@ func systemOperations() []Operation {
 		{Method: "GET", Path: "/api/system/takeover/runs/:id", Summary: "Get a takeover run", Tags: []string{takeover}, Auth: AuthAdmin, Response: takeoverRunSchema()},
 		{Method: "GET", Path: "/api/settings", Summary: "Get server settings", Tags: []string{settings}, Auth: AuthUser, Response: settingsSchema()},
 		{Method: "PUT", Path: "/api/settings", Summary: "Update server settings", Tags: []string{settings}, Auth: AuthAdmin, Request: JSON(settingsSchema()), Response: settingsSchema()},
+		{Method: "GET", Path: "/api/settings/appearance", Summary: "Get user appearance preferences", Tags: []string{settings}, Auth: AuthUser, Response: Obj("User appearance", F("appearance", appearanceSchema()))},
+		{Method: "PUT", Path: "/api/settings/appearance", Summary: "Update user appearance preferences", Tags: []string{settings}, Auth: AuthUser, Request: JSON(Obj("User appearance input", F("appearance", appearanceSchema()))), Response: Obj("User appearance", F("appearance", appearanceSchema()))},
 		{Method: "GET", Path: "/api/ai", Summary: "Get AI settings", Tags: []string{settings}, Auth: AuthUser, Response: aiSettingsSchema()},
 		{Method: "PUT", Path: "/api/ai", Summary: "Update AI settings", Tags: []string{settings}, Auth: AuthAdmin, Request: JSON(aiSettingsSchema()), Response: aiSettingsSchema()},
 		{Method: "POST", Path: "/api/ai/diagnose", Summary: "Diagnose logs with AI", Tags: []string{settings}, Auth: AuthUser, Raw: true, Content: ContentText, Request: JSON(Obj("Diagnose", RF("prompt", Str("Diagnosis prompt")))), Response: Str("Diagnosis")},

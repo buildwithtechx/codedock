@@ -263,6 +263,7 @@ func NewServer(db *sql.DB, v *utils.Vault, deployer *deploy.Deployer, traefikMan
 	migrationService := systemservices.NewMigrationService(db, dbRepo, dataDir, config.Get().Database.URL)
 	migrationHandler := system.NewMigrationHandler(migrationService, userService)
 	onboardingHandler := auth.NewOnboardingHandler(userService)
+	appearanceHandler := auth.NewAppearanceHandler(userRepo)
 	dnsHandler := system.NewDNSHandler(dnsService, auditService)
 	metricsHandler := system.NewMetricsHandler(metricsService)
 	logHandler := system.NewLogHandler(logService)
@@ -331,6 +332,7 @@ func NewServer(db *sql.DB, v *utils.Vault, deployer *deploy.Deployer, traefikMan
 		projectSettingsHandler: projectSettingsHandler,
 		backupHandler:          backupHandler,
 		settingsHandler:        settingsHandler,
+		appearanceHandler:      appearanceHandler,
 		notifSettingsHandler:   notifSettingsHandler,
 		aiSettingsHandler:      aiSettingsHandler,
 		updaterHandler:         updaterHandler,
