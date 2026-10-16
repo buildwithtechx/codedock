@@ -54,87 +54,76 @@ export function OrganizationSwitcher({ collapsed }: { collapsed: boolean }) {
         <DropdownMenuTrigger asChild>
           <button
             type="button"
-            className={`group flex w-full items-center rounded-xl px-2 py-2 text-start transition-colors hover:bg-foreground/[0.06] ${
-              collapsed ? 'justify-center' : 'gap-3'
+            className={`group flex w-full items-center rounded-lg text-left transition-colors hover:bg-sidebar-accent ${
+              collapsed ? 'justify-center p-2' : 'gap-2.5 px-2 py-2'
             }`}
             aria-label={`Switch organization. Current organization: ${selected.name}`}
             title={collapsed ? selected.name : undefined}
           >
-            <div className="flex size-9 shrink-0 items-center justify-center rounded-xl bg-foreground/[0.08] text-sm font-semibold uppercase text-foreground">
-              {organizationInitials(selected.name) || <Building2 className="size-4" />}
+            <div className="flex h-8 w-8 shrink-0 items-center justify-center rounded-lg bg-primary/15 font-semibold text-[11px] text-primary">
+              {organizationInitials(selected.name) || <Building2 className="h-4 w-4" />}
             </div>
             {!collapsed && (
               <>
                 <div className="min-w-0 flex-1">
-                  <p className="truncate text-[14px] font-semibold leading-tight text-foreground">
+                  <p className="truncate font-medium text-sidebar-foreground text-sm">
                     {selected.name}
                   </p>
-                  <p className="truncate text-[12px] leading-tight text-muted-foreground">
+                  <p className="truncate text-muted-foreground text-xs">
                     {organizations.length > 1
                       ? `${organizations.length} workspaces`
                       : (user?.email ?? 'Workspace')}
                   </p>
                 </div>
-                <ChevronsUpDown className="size-4 shrink-0 text-muted-foreground transition-colors group-hover:text-foreground" />
+                <ChevronsUpDown className="h-4 w-4 shrink-0 text-sidebar-foreground/40 transition-colors group-hover:text-sidebar-foreground/70" />
               </>
             )}
           </button>
         </DropdownMenuTrigger>
         <DropdownMenuContent
-          className="!w-[240px] max-w-[calc(100vw-2rem)] overflow-hidden rounded-2xl border border-border/50 bg-popover p-0 shadow-xl"
+          className="!w-[232px] max-w-[calc(100vw-2rem)] rounded-xl border border-border/70 bg-popover p-1.5 shadow-xl"
           align="start"
           side="top"
           collisionPadding={16}
         >
-          <div className="px-3 pt-3 pb-2">
-            <p className="text-[11px] font-semibold uppercase tracking-widest text-muted-foreground/70">
-              Switch organization
-            </p>
-          </div>
-          <div className="max-h-60 overflow-y-auto px-1 pb-1">
-            {organizations.map((organization) => (
-              <DropdownMenuItem
-                key={organization.id}
-                onSelect={() => switchOrganization(organization.id)}
-                className="flex cursor-pointer items-center gap-2.5 rounded-xl px-2.5 py-2 hover:bg-foreground/[0.05]"
-              >
-                <div className="flex size-7 shrink-0 items-center justify-center rounded-lg bg-foreground/[0.08] text-[12px] font-semibold uppercase text-foreground">
-                  {organizationInitials(organization.name) || <Building2 className="size-3.5" />}
-                </div>
-                <span className="flex-1 truncate text-[13px] font-medium leading-tight text-foreground">
-                  {organization.name}
-                </span>
-                {organization.id === selected.id && <Check className="size-4 shrink-0 text-primary" />}
-              </DropdownMenuItem>
-            ))}
-          </div>
-          <div className="border-t border-border/40 p-1.5">
+          <DropdownMenuLabel className="px-2.5 pt-1.5 pb-2 font-medium text-[10px] uppercase tracking-[0.14em]">
+            Switch organization
+          </DropdownMenuLabel>
+          {organizations.map((organization) => (
             <DropdownMenuItem
-              onSelect={() => void navigate({ to: '/profile' })}
-              className="flex cursor-pointer items-center gap-2.5 rounded-xl px-2.5 py-2 hover:bg-foreground/[0.05]"
+              key={organization.id}
+              onSelect={() => switchOrganization(organization.id)}
+              className="gap-2.5 rounded-lg px-2.5 py-2"
             >
-              <div className="flex size-7 shrink-0 items-center justify-center rounded-full bg-foreground/[0.08] text-[11px] font-semibold uppercase text-foreground">
-                {user?.name?.[0]?.toUpperCase() || <UserRound className="size-3.5" />}
+              <div className="flex h-7 w-7 shrink-0 items-center justify-center rounded-md bg-muted font-semibold text-[10px] text-muted-foreground">
+                {organizationInitials(organization.name) || <Building2 className="h-3.5 w-3.5" />}
               </div>
-              <div className="min-w-0 flex-1">
-                <p className="truncate text-[12px] font-medium leading-tight text-foreground">
-                  {user?.name || 'Account'}
-                </p>
-                <p className="truncate text-[11px] leading-tight text-muted-foreground">
-                  {user?.email || 'Profile & security'}
-                </p>
-              </div>
+              <span className="flex-1 truncate font-medium text-sm">{organization.name}</span>
+              {organization.id === selected.id && <Check className="h-4 w-4 text-primary" />}
             </DropdownMenuItem>
-            <DropdownMenuItem
-              disabled={isLoggingOut}
-              onSelect={() => logout()}
-              variant="destructive"
-              className="mt-0.5 flex cursor-pointer items-center gap-2 rounded-xl px-2.5 py-2 text-[13px] font-medium text-destructive transition-colors hover:bg-destructive/10"
-            >
-              <LogOut className="size-4" />
-              Sign out
-            </DropdownMenuItem>
-          </div>
+          ))}
+          <DropdownMenuSeparator />
+          <DropdownMenuItem
+            onSelect={() => void navigate({ to: '/profile' })}
+            className="cursor-pointer gap-2.5 rounded-lg px-2.5 py-2"
+          >
+            <div className="flex h-7 w-7 shrink-0 items-center justify-center rounded-full bg-muted font-semibold text-[10px] text-muted-foreground">
+              {user?.name?.[0]?.toUpperCase() || <UserRound className="h-3.5 w-3.5" />}
+            </div>
+            <div className="min-w-0 flex-1">
+              <p className="truncate font-medium text-sm">{user?.name || 'Account'}</p>
+              <p className="truncate text-muted-foreground text-xs">Profile & security</p>
+            </div>
+          </DropdownMenuItem>
+          <DropdownMenuItem
+            disabled={isLoggingOut}
+            onSelect={() => logout()}
+            variant="destructive"
+            className="cursor-pointer gap-2.5 rounded-lg px-2.5 py-2"
+          >
+            <LogOut className="h-4 w-4" />
+            Sign out
+          </DropdownMenuItem>
         </DropdownMenuContent>
       </DropdownMenu>
       {collapsed && (
@@ -142,14 +131,14 @@ export function OrganizationSwitcher({ collapsed }: { collapsed: boolean }) {
           type="button"
           onClick={() => logout()}
           disabled={isLoggingOut}
-          className="mt-2 flex w-full items-center justify-center rounded-xl py-2 text-muted-foreground transition-colors hover:bg-foreground/[0.06] hover:text-foreground disabled:opacity-50"
+          className="mt-2 flex w-full items-center justify-center rounded-xl py-2 text-muted-foreground transition-colors hover:bg-sidebar-accent hover:text-foreground disabled:opacity-50"
           aria-label="Sign out"
           title="Sign out"
         >
           {isLoggingOut ? (
-            <Loader2 className="size-4 animate-spin" />
+            <Loader2 className="h-4 w-4 animate-spin" />
           ) : (
-            <LogOut className="size-4" />
+            <LogOut className="h-4 w-4" />
           )}
         </button>
       )}

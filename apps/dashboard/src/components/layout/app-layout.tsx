@@ -64,27 +64,25 @@ export function AppLayout({ children }: { children: React.ReactNode }) {
             {mobileMenuOpen ? <X className="h-4 w-4" /> : <Menu className="h-4 w-4" />}
           </button>
         </div>
-        <main className="dashboard-content relative min-h-0 min-w-0 flex-1 overflow-y-auto overscroll-y-contain">
-          <div key={pathname} className="page-transition w-full">
+        <main className="dashboard-content relative min-h-0 min-w-0 flex-1 overflow-y-auto overscroll-y-contain p-4 sm:p-5 lg:p-6">
+          <div key={pathname} className="page-transition mx-auto w-full max-w-[1600px]">
             {user && user.emailVerified === false && (
-              <div className="mx-auto max-w-[1600px] px-4 pt-6 sm:px-6 lg:px-8">
-                <div className="flex flex-col items-center justify-between gap-4 rounded-xl border border-warning/50 bg-warning/20 p-4 sm:flex-row">
-                  <div className="flex items-center gap-3">
-                    <AlertCircle className="h-5 w-5 text-warning" />
-                    <p className="font-medium text-sm">
-                      Please verify your email address to unlock all features.
-                    </p>
-                  </div>
-                  <Button
-                    variant="outline"
-                    size="sm"
-                    onClick={handleResend}
-                    disabled={isResending}
-                    className="whitespace-nowrap"
-                  >
-                    {isResending ? 'Sending...' : 'Resend Email'}
-                  </Button>
+              <div className="mb-6 flex flex-col items-center justify-between gap-4 rounded-lg border border-warning/50 bg-warning/20 p-4 sm:flex-row">
+                <div className="flex items-center gap-3">
+                  <AlertCircle className="h-5 w-5 text-warning" />
+                  <p className="font-medium text-sm">
+                    Please verify your email address to unlock all features.
+                  </p>
                 </div>
+                <Button
+                  variant="outline"
+                  size="sm"
+                  onClick={handleResend}
+                  disabled={isResending}
+                  className="whitespace-nowrap"
+                >
+                  {isResending ? 'Sending...' : 'Resend Email'}
+                </Button>
               </div>
             )}
             {children}

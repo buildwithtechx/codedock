@@ -7,7 +7,6 @@ import { Input } from '#/components/ui/input';
 import { QueryErrorState } from '#/components/ui/query-error-state';
 import { Skeleton } from '#/components/ui/skeleton';
 import { cn } from '#/lib/utils';
-import { PageContainer } from '#/components/ui/page-container';
 import { EmptyIssues } from './empty-issues';
 import {
   useAcknowledgeIssue,
@@ -152,7 +151,7 @@ export function IssuesView() {
 
   if (!activeOrganizationId) {
     return (
-      <PageContainer className="space-y-6">
+      <div className="space-y-6">
         <div className="mb-6 flex flex-wrap items-start justify-between gap-4">
           <div>
             <h1 className="text-2xl font-medium tracking-tight text-foreground/80">Monitoring</h1>
@@ -173,7 +172,7 @@ export function IssuesView() {
             <Link to="/organizations">Go to organizations</Link>
           </Button>
         </div>
-      </PageContainer>
+      </div>
     );
   }
 
@@ -181,7 +180,7 @@ export function IssuesView() {
   const loadError = listQuery.isError;
 
   return (
-    <PageContainer className="space-y-6">
+    <div className="space-y-6">
       <div className="mb-6 flex flex-wrap items-start justify-between gap-4">
         <div>
           <h1 className="text-2xl font-medium tracking-tight text-foreground/80">Monitoring</h1>
@@ -369,6 +368,6 @@ export function IssuesView() {
           </div>
         )}
       </section>
-    </PageContainer>
+    </div>
   );
 }

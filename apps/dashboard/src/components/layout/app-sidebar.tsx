@@ -4,8 +4,8 @@ import { useTheme } from 'next-themes';
 import { useLogout } from '#/features/auth';
 import { useGetPublicSettings } from '#/features/settings';
 import {
+  getHelpNavigation,
   getSystemNavigation,
-  helpNavigation,
   infrastructureNavigation,
   primaryNavigation,
 } from './dashboard-navigation';
@@ -69,9 +69,10 @@ export function AppSidebar({ collapsed, onToggle, mobileOpen, onMobileClose }: A
     })),
   };
 
+  const helpItems = getHelpNavigation(isCloud);
   const helpGroup: NavGroup = {
     title: 'Help',
-    items: helpNavigation.map(({ title, to, icon, exact }) => ({
+    items: helpItems.map(({ title, to, icon, exact }) => ({
       title,
       url: to,
       icon,
@@ -80,8 +81,8 @@ export function AppSidebar({ collapsed, onToggle, mobileOpen, onMobileClose }: A
   };
 
   const navGroups: NavGroup[] = isCloud
-    ? [mainGroup, settingsGroup, infraGroup, helpGroup]
-    : [mainGroup, infraGroup, settingsGroup, helpGroup];
+    ? [mainGroup, settingsGroup, infraGroup, ...(helpGroup.items.length > 0 ? [helpGroup] : [])]
+    : [mainGroup, infraGroup, settingsGroup];
 
   const toggleTheme = () => {
     if (theme === 'light') setTheme('dim');
@@ -102,8 +103,7 @@ export function AppSidebar({ collapsed, onToggle, mobileOpen, onMobileClose }: A
       )}
 
       <aside
-        id="dashboard-sidebar"
-        className={`z-40 my-3 ms-3 flex shrink-0 flex-col overflow-hidden rounded-2xl border border-border/50 bg-card shadow-2xl shadow-black/15 transition-[width] duration-200 md:static md:z-auto md:shadow-none ${
+        className={`z-40 my-3 ms-3 flex shrink-0 flex-col overflow-hidden rounded-2xl border border-sidebar-border/70 bg-sidebar shadow-2xl shadow-black/15 transition-all duration-300 md:static md:z-auto md:shadow-none ${
           collapsed ? 'md:w-[72px]' : 'md:w-[260px]'
         } fixed inset-y-3 left-3 ${
           mobileOpen
@@ -113,93 +113,89 @@ export function AppSidebar({ collapsed, onToggle, mobileOpen, onMobileClose }: A
       >
         <div className="flex items-center justify-between px-3 pt-3 pb-2 md:hidden">
           <div className="flex items-center gap-2.5 py-2">
-            <img src="/apple-touch-icon.png" alt="" className="size-6.5 shrink-0 rounded-lg" />
-            <span className="truncate font-semibold tracking-tight text-foreground text-sm">Codedock</span>
+            <img src="/apple-touch-icon.png" alt="" className="h-7 w-7 shrink-0 rounded-lg" />
+            <span className="truncate font-medium text-sidebar-foreground text-sm">Codedock</span>
           </div>
           <button
             type="button"
             onClick={onMobileClose}
-            className="flex h-7 w-7 items-center justify-center rounded-lg text-muted-foreground transition-colors hover:bg-foreground/[0.06] hover:text-foreground"
+            className="flex h-7 w-7 items-center justify-center rounded-lg text-muted-foreground transition-colors hover:bg-sidebar-accent hover:text-sidebar-foreground"
           >
             <X className="h-4 w-4" />
           </button>
         </div>
 
         <div className="hidden md:block">
-          <div
-            className={`app-sidebar-header flex items-center px-5 py-6 ${
-              navCollapsed ? 'flex-col gap-3 pb-3' : 'justify-between'
-            }`}
-          >
-            <div className="flex min-w-0 items-center gap-2.5">
-              <img src="/apple-touch-icon.png" alt="" className="size-6.5 shrink-0 rounded-lg" />
-              {!navCollapsed && (
-                <span className="truncate text-base font-semibold tracking-tight text-foreground">
-                  Codedock
-                </span>
-              )}
-            </div>
-            <div className={`flex items-center ${navCollapsed ? 'flex-col gap-1' : 'gap-1'}`}>
-              <button
-                type="button"
-                onClick={toggleTheme}
-                className="flex size-8 items-center justify-center rounded-xl text-muted-foreground transition-colors hover:bg-foreground/[0.06] hover:text-foreground"
-                aria-label="Toggle theme"
-                title="Toggle theme"
-              >
-                {theme === 'dark' || (theme === 'system' && resolvedTheme === 'dark') ? (
-                  <Sun className="size-4" />
-                ) : theme === 'dim' ? (
-                  <Moon className="size-4 text-primary" />
-                ) : (
-                  <Moon className="size-4" />
+          <div className={navCollapsed ? 'px-2 py-3' : 'px-5 py-5'}>
+            <div
+              className={`flex ${navCollapsed ? 'flex-col items-center gap-2' : 'items-center justify-between gap-2.5 py-2'}`}
+            >
+              <div className="flex min-w-0 items-center gap-2.5">
+                <img src="/apple-touch-icon.png" alt="" className="h-7 w-7 shrink-0 rounded-lg" />
+                {!navCollapsed && (
+                  <span className="flex-1 truncate font-medium text-sidebar-foreground text-sm">
+                    Codedock
+                  </span>
                 )}
-              </button>
-              <button
-                type="button"
-                onClick={onToggle}
-                className="flex size-8 items-center justify-center rounded-xl text-muted-foreground transition-colors hover:bg-foreground/[0.06] hover:text-foreground"
-                aria-label={collapsed ? 'Expand sidebar' : 'Collapse sidebar'}
-                title={collapsed ? 'Expand sidebar' : 'Collapse sidebar'}
-              >
-                {collapsed ? (
-                  <PanelLeftOpen className="size-4" />
-                ) : (
-                  <PanelLeftClose className="size-4" />
-                )}
-              </button>
+              </div>
+              <div className={`flex items-center ${navCollapsed ? 'flex-col gap-1' : 'gap-1'}`}>
+                <button
+                  type="button"
+                  onClick={toggleTheme}
+                  className="flex h-8 w-8 items-center justify-center rounded-lg text-muted-foreground transition-colors hover:bg-sidebar-accent hover:text-sidebar-foreground"
+                  aria-label="Toggle theme"
+                >
+                  {theme === 'dark' || (theme === 'system' && resolvedTheme === 'dark') ? (
+                    <Sun className="h-4 w-4" />
+                  ) : theme === 'dim' ? (
+                    <Moon className="h-4 w-4 text-primary" />
+                  ) : (
+                    <Moon className="h-4 w-4" />
+                  )}
+                </button>
+                <button
+                  type="button"
+                  onClick={onToggle}
+                  className="flex h-8 w-8 items-center justify-center rounded-lg text-muted-foreground transition-colors hover:bg-sidebar-accent hover:text-sidebar-foreground"
+                  aria-label={collapsed ? 'Expand sidebar' : 'Collapse sidebar'}
+                >
+                  {collapsed ? (
+                    <PanelLeftOpen className="h-4 w-4" />
+                  ) : (
+                    <PanelLeftClose className="h-4 w-4" />
+                  )}
+                </button>
+              </div>
             </div>
           </div>
-          <div className="mx-3 h-px bg-border/60" />
+          <div className="mx-3 h-px bg-sidebar-border" />
         </div>
 
         <div className="relative min-h-0 flex-1">
           <nav className="scrollbar-none h-full space-y-5 overflow-y-auto px-3 pt-3 pb-12 [scrollbar-width:none] [&::-webkit-scrollbar]:hidden">
             {navGroups.map((group, i) => (
-              <div key={group.title ?? i} className={i > 0 ? 'mt-5' : undefined}>
+              <div key={group.title ?? i} className="flex flex-col gap-0.5">
                 {!navCollapsed && group.title && (
-                  <p className="mb-2 px-2 text-[11px] font-semibold uppercase tracking-widest text-muted-foreground/60">
+                  <h4 className="px-2 pb-1.5 font-semibold text-[11px] text-sidebar-foreground/50 uppercase tracking-[0.14em]">
                     {group.title}
-                  </p>
+                  </h4>
                 )}
-                {navCollapsed && i > 0 && <div className="mx-2 my-3 h-px bg-border/60" />}
-                <div className="space-y-1">
-                  {group.items.map((item) => {
-                    const countKey = countForUrl[item.url];
-                    return (
-                      <NavItem
-                        key={item.url}
-                        item={{ ...item, count: countKey ? counts[countKey] : null }}
-                        exact={item.exact}
-                        collapsed={navCollapsed}
-                      />
-                    );
-                  })}
-                </div>
+                {navCollapsed && i > 0 && <div className="mx-2 my-3 h-px bg-sidebar-border/60" />}
+                {group.items.map((item) => {
+                  const countKey = countForUrl[item.url];
+                  return (
+                    <NavItem
+                      key={item.url}
+                      item={{ ...item, count: countKey ? counts[countKey] : null }}
+                      exact={item.exact}
+                      collapsed={navCollapsed}
+                    />
+                  );
+                })}
               </div>
             ))}
           </nav>
-          <div className="pointer-events-none absolute inset-x-0 bottom-0 h-14 bg-gradient-to-t from-card to-transparent" />
+          <div className="pointer-events-none absolute inset-x-0 bottom-0 h-14 bg-gradient-to-t from-sidebar to-transparent" />
         </div>
 
         <div className="px-3 pb-2">
@@ -207,19 +203,19 @@ export function AppSidebar({ collapsed, onToggle, mobileOpen, onMobileClose }: A
             to={'/library' as never}
             aria-label="New project"
             title={navCollapsed ? 'New project' : undefined}
-            className="th-btn-accent flex items-center justify-center gap-2.5 rounded-xl px-3 py-2.5 text-sm font-semibold transition-all overflow-hidden hover:brightness-110"
+            className={`flex items-center justify-center gap-2.5 overflow-hidden rounded-xl bg-primary px-3 py-2.5 font-semibold text-primary-foreground text-sm shadow-sm transition-all hover:bg-primary/90 ${navCollapsed ? 'px-0' : 'px-3'}`}
           >
-            <Plus className="size-4" />
-            {!navCollapsed && <span>New project</span>}
+            <Plus className="h-4 w-4" />
+            {!navCollapsed && 'New project'}
           </Link>
         </div>
 
         <div
           className={`mt-auto px-3 pt-1 pb-3 ${navCollapsed ? 'flex flex-col items-center px-2' : ''}`}
         >
-          <div className="mx-2 mb-3 h-px bg-border/60" />
+          <div className="mx-2 mb-3 h-px w-full bg-sidebar-border/60" />
           {!navCollapsed && (
-            <p className="mb-2 px-2 text-[11px] font-semibold uppercase tracking-widest text-muted-foreground/60">
+            <p className="mb-2 px-2 font-semibold text-[11px] text-sidebar-foreground/50 uppercase tracking-[0.14em]">
               Account
             </p>
           )}
@@ -229,7 +225,7 @@ export function AppSidebar({ collapsed, onToggle, mobileOpen, onMobileClose }: A
               type="button"
               onClick={() => logout()}
               disabled={isLoggingOut}
-              className="mt-1.5 flex h-8 w-8 items-center justify-center rounded-lg text-muted-foreground transition-colors hover:bg-foreground/[0.06] hover:text-foreground disabled:opacity-50"
+              className="mt-1.5 flex h-8 w-8 items-center justify-center rounded-lg text-muted-foreground transition-colors hover:bg-sidebar-accent hover:text-sidebar-foreground disabled:opacity-50"
               aria-label="Log out"
               title="Log out"
             >

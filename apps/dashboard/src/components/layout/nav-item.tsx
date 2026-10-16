@@ -66,25 +66,37 @@ export function NavItem({
       search={item.search as never}
       title={collapsed ? item.title : undefined}
       aria-current={isActive ? 'page' : undefined}
-      className={`th-nav-item flex items-center rounded-xl text-[15px] font-medium transition-colors ${
-        collapsed ? 'justify-center px-2.5 py-2.5' : 'gap-3 px-3 py-2.5'
+      className={`group relative flex items-center rounded-xl font-medium text-sm transition-colors ${
+        collapsed ? 'justify-center px-0 py-2' : 'gap-3 px-3 py-2'
+      } ${
+        isActive
+          ? 'bg-primary/12 text-sidebar-foreground'
+          : 'text-sidebar-foreground/70 hover:bg-sidebar-accent hover:text-sidebar-foreground'
       }`}
       target={item.external ? '_blank' : undefined}
       rel={item.external ? 'noopener noreferrer' : undefined}
     >
-      <item.icon className="size-5 shrink-0" />
+      {!collapsed && isActive && (
+        <div className="absolute top-1/2 -left-3 h-4 w-0.5 -translate-y-1/2 rounded-r-full bg-primary" />
+      )}
+
+      <item.icon
+        className={`h-4.5 w-4.5 shrink-0 transition-colors ${
+          isActive ? 'text-primary' : 'text-muted-foreground group-hover:text-sidebar-foreground'
+        }`}
+      />
 
       {!collapsed && (
         <>
           <span className="flex-1 truncate">{item.title}</span>
-          {item.external && <ExternalLink className="size-3.5 shrink-0 opacity-50" />}
+          {item.external && <ExternalLink className="h-3 w-3 shrink-0 opacity-50" />}
           {item.badge && (
             <span className="rounded-full bg-primary/10 px-1.5 py-0.5 font-medium text-[9px] text-primary">
               {item.badge}
             </span>
           )}
           {showCount && (
-            <span className="shrink-0 text-[13px] tabular-nums text-muted-foreground/45">
+            <span className="shrink-0 text-[13px] text-muted-foreground/60 tabular-nums">
               {item.count}
             </span>
           )}

@@ -38,7 +38,6 @@ import {
 import { ActionStatus } from './action-status';
 import { RunWorkspace } from './run-workspace';
 import { RunnerCatalog } from './runner-catalog';
-import { PageContainer } from '#/components/ui/page-container';
 
 interface ActionsHomeProps {
   initialWorkflows: ActionWorkflow[];
@@ -139,7 +138,7 @@ export function ActionsHome({
 
   if (selectedRun) {
     return (
-      <PageContainer className="space-y-6">
+      <div className="space-y-6">
         <Button
           variant="ghost"
           size="sm"
@@ -156,13 +155,13 @@ export function ActionsHome({
             setRuns(runs.map((r) => (r.id === updated.id ? updated : r)));
           }}
         />
-      </PageContainer>
+      </div>
     );
   }
 
   return (
-    <PageContainer className="@container/actions-home space-y-6">
-      {/* Header */}
+    <div className="@container/actions-home space-y-6">
+      {/* Header matching OpenShip */}
       <div className="flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between">
         <div className="flex items-center gap-3">
           <span className="flex size-11 shrink-0 items-center justify-center rounded-2xl bg-card text-primary shadow-xs">
@@ -171,7 +170,7 @@ export function ActionsHome({
           <div>
             <h1 className="text-2xl font-semibold tracking-tight text-foreground">Actions</h1>
             <p className="text-sm text-muted-foreground">
-              Continuous integration workflows, runner catalog, and execution history.
+              Continuous integration workflows, runner execution, and build history.
             </p>
           </div>
         </div>
@@ -189,11 +188,17 @@ export function ActionsHome({
           </Button>
           <Button
             size="sm"
-            onClick={() => setWorkflowDialogOpen(true)}
+            onClick={() => {
+              if (activeTab === 'runners') {
+                setActiveTab('runners');
+              } else {
+                setWorkflowDialogOpen(true);
+              }
+            }}
             className="gap-1.5 rounded-xl"
           >
             <Plus className="size-4" />
-            New Workflow
+            {activeTab === 'runners' ? 'New Runner' : 'New Workflow'}
           </Button>
         </div>
       </div>
@@ -482,6 +487,6 @@ export function ActionsHome({
           </form>
         </DialogContent>
       </Dialog>
-    </PageContainer>
+    </div>
   );
 }

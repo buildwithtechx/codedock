@@ -16,7 +16,6 @@ import { SupportTicketList } from './support-ticket-list';
 import { SupportConversation } from './support-conversation';
 import { NewTicketModal } from './new-ticket-modal';
 import { Button } from '#/components/ui/button';
-import { PageContainer } from '#/components/ui/page-container';
 import {
   getTickets,
   createTicket,
@@ -100,7 +99,7 @@ export function SupportCenter({ className }: SupportCenterProps) {
   };
 
   return (
-    <PageContainer className={cn('@container/support-center space-y-6 text-left', className)}>
+    <div className={cn('@container/support-center space-y-6 text-left', className)}>
       {/* Header matching OpenShip */}
       <header className="flex flex-wrap items-center justify-between gap-4">
         <div className="flex items-center gap-3.5">
@@ -251,7 +250,7 @@ export function SupportCenter({ className }: SupportCenterProps) {
           defaultCategory={initialCategory}
         />
       )}
-    </PageContainer>
+    </div>
   );
 }
 

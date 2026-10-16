@@ -2,7 +2,6 @@ import type { LucideIcon } from 'lucide-react';
 import {
   Activity,
   Bot,
-  CircleHelp,
   ClipboardList,
   Clock,
   CloudCog,
@@ -10,6 +9,7 @@ import {
   FolderKanban,
   Globe2,
   HardDrive,
+  HelpCircle,
   Key,
   KeyRound,
   LayoutDashboard,
@@ -21,6 +21,7 @@ import {
   Settings,
   ShieldCheck,
   UserRound,
+  Workflow,
 } from 'lucide-react';
 
 export type DashboardNavigationItem = {
@@ -54,7 +55,7 @@ export const primaryNavigation: DashboardNavigationItem[] = [
   },
   {
     title: 'Actions',
-    description: 'Continuous integration and automation',
+    description: 'CI workflows and runner execution',
     to: '/actions',
     icon: PlayCircle,
   },
@@ -93,7 +94,7 @@ export const infrastructureNavigation: DashboardNavigationItem[] = [
   },
 ];
 
-export const settingsNavigation: DashboardNavigationItem[] = [
+export const systemNavigation: DashboardNavigationItem[] = [
   {
     title: 'Settings',
     description: 'Instance and workspace configuration',
@@ -108,33 +109,35 @@ export const settingsNavigation: DashboardNavigationItem[] = [
   },
 ];
 
-export const getSettingsNavigation = (isCloud: boolean): DashboardNavigationItem[] => {
+export const getSystemNavigation = (isCloud: boolean): DashboardNavigationItem[] => {
   if (!isCloud) {
-    return settingsNavigation;
+    return systemNavigation;
   }
   return [
-    settingsNavigation[0],
+    systemNavigation[0],
     {
       title: 'Billing & Usage',
       description: 'Manage subscription and compute plans',
       to: '/billing',
       icon: CreditCard,
     },
-    settingsNavigation[1],
+    systemNavigation[1],
   ];
 };
 
-export const systemNavigation = settingsNavigation;
-export const getSystemNavigation = getSettingsNavigation;
-
-export const helpNavigation: DashboardNavigationItem[] = [
-  {
-    title: 'Support',
-    description: 'Get help and view support tickets',
-    to: '/support',
-    icon: CircleHelp,
-  },
-];
+export const getHelpNavigation = (isCloud: boolean): DashboardNavigationItem[] => {
+  if (!isCloud) {
+    return [];
+  }
+  return [
+    {
+      title: 'Support',
+      description: 'Tickets, help center, and cloud assistance',
+      to: '/support',
+      icon: HelpCircle,
+    },
+  ];
+};
 
 export const hiddenNavigation: DashboardNavigationItem[] = [
   {
@@ -198,8 +201,7 @@ export const contextualNavigation: DashboardNavigationItem[] = [
 export const commandNavigation: DashboardNavigationItem[] = [
   ...primaryNavigation,
   ...infrastructureNavigation,
-  ...settingsNavigation,
-  ...helpNavigation,
+  ...systemNavigation,
   ...hiddenNavigation,
   ...contextualNavigation,
 ];
