@@ -10,7 +10,7 @@ x-codedock:
       length: 24
 services:
   odoo:
-    image: odoo:18
+    image: odoo:19.0-20260926
     restart: always
     ports:
       - "8069"
@@ -23,7 +23,7 @@ services:
     volumes:
       - odoo-data:/var/lib/odoo
   db:
-    image: postgres:16-alpine
+    image: postgres:17-alpine
     restart: always
     environment:
       - POSTGRES_DB=odoo

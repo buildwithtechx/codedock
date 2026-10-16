@@ -160,7 +160,7 @@ func (h *AppHandler) Create(c echo.Context) error {
 			StartCommand:           role.Command,
 			DockerfilePath:         created.DockerfilePath,
 			BuildEngine:            created.BuildEngine,
-			InternalPort:           created.InternalPort,
+			InternalPort:           0,
 			Optimize:               created.Optimize,
 			Stack:                  created.Stack,
 			StopGracePeriodSeconds: roleGraceSeconds(role.StopGracePeriod),

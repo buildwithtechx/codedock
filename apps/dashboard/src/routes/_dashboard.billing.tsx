@@ -3,7 +3,9 @@ import { PageHeader } from '#/components/layout/page-header';
 import {
   BillingOverview,
   BillingTopups,
+  CheckoutRecovery,
   CustomPlanConfigurator,
+  ResourceMetersOverview,
   type CustomPlanQuote,
 } from '#/features/billing';
 import { useAuthStore } from '#/stores/auth-store';
@@ -54,10 +56,12 @@ function BillingPage() {
         title="Billing & Subscription"
         description="Manage your subscription, compute plans, and prepaid credit balance."
       />
+      <CheckoutRecovery />
       <BillingOverview
         planType={user?.planType ?? 'hobby'}
         onUpgradeClick={handleUpgradeToPro}
       />
+      <ResourceMetersOverview />
       <CustomPlanConfigurator
         busy={isPending}
         onSelectPlan={handleSelectCustomPlan}

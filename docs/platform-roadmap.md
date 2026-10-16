@@ -17,7 +17,7 @@ Later phases can ship together in focused commits and one pull request, with one
 - [ ] Codedock Cloud hosted offering on the HA control plane.
 - [x] Cloud connection and cloud deploy flow in settings, including plan picker, checkout feedback and credit alerts.
 - [x] Support center with ticket list, conversations and cloud-gated availability.
-- [ ] Billing and usage experience: monthly host plans plus custom configurator, prepaid pay-as-you-go with top-ups, enterprise path, usage meters and Stripe portal/checkout recovery.
+- [x] Billing and usage experience: monthly host plans plus custom configurator, prepaid pay-as-you-go with top-ups, enterprise path, usage meters and Stripe portal/checkout recovery.
 - [ ] Server cluster and network provisioning editors with preparation and operation tracking.
 - [x] Full managed data apps: Supabase, Convex and Neon equivalents with correct backing services.
 
