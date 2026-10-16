@@ -35,6 +35,11 @@ func configureEchoMiddleware(e *echo.Echo) {
 	if dashboardURL := config.Get().Server.DashboardURL; dashboardURL != "" && !slices.Contains(allowOrigins, dashboardURL) {
 		allowOrigins = append(allowOrigins, dashboardURL)
 	}
+	for _, origin := range config.Get().Server.ExtraCORSOrigins {
+		if origin != "" && !slices.Contains(allowOrigins, origin) {
+			allowOrigins = append(allowOrigins, origin)
+		}
+	}
 
 	e.Use(echomiddleware.CORSWithConfig(echomiddleware.CORSConfig{
 		AllowOrigins:     allowOrigins,

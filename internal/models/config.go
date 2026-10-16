@@ -38,15 +38,16 @@ type PostgresConfig struct {
 }
 
 type ServerConfig struct {
-	Port         int    `json:"port"`
-	Host         string `json:"host"`
-	DataDir      string `json:"dataDir"`
-	HostIP       string `json:"hostIp"`
-	Domain       string `json:"domain"`
-	DashboardURL string `json:"dashboardUrl"`
-	ServerURL    string `json:"serverUrl"`
-	APIHost      string `json:"apiHost"`
-	StaticDir    string `json:"staticDir"`
+	Port             int      `json:"port"`
+	Host             string   `json:"host"`
+	DataDir          string   `json:"dataDir"`
+	HostIP           string   `json:"hostIp"`
+	Domain           string   `json:"domain"`
+	DashboardURL     string   `json:"dashboardUrl"`
+	ServerURL        string   `json:"serverUrl"`
+	APIHost          string   `json:"apiHost"`
+	StaticDir        string   `json:"staticDir"`
+	ExtraCORSOrigins []string `json:"extraCorsOrigins,omitempty"`
 }
 
 type SecurityConfig struct {

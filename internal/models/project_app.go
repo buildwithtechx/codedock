@@ -14,27 +14,30 @@ type ProjectApp struct {
 	InstallationID   int        `json:"installationId" db:"installation_id"`
 	Favicon          string     `json:"favicon" db:"favicon"`
 	FaviconCheckedAt *time.Time `json:"faviconCheckedAt,omitempty" db:"favicon_checked_at"`
-	DeletedAt        *time.Time `json:"deletedAt,omitempty" db:"deleted_at"`
-	CreatedAt        time.Time  `json:"createdAt" db:"created_at"`
-	UpdatedAt        time.Time  `json:"updatedAt" db:"updated_at"`
+	DeletedAt        *time.Time              `json:"deletedAt,omitempty" db:"deleted_at"`
+	CreatedAt        time.Time               `json:"createdAt" db:"created_at"`
+	UpdatedAt        time.Time               `json:"updatedAt" db:"updated_at"`
+	GitHubChecks     *GitHubDeploymentChecks `json:"githubChecks,omitempty" db:"-"`
 }
 
 type CreateProjectAppRequest struct {
-	Name           string `json:"name"`
-	Slug           string `json:"slug,omitempty"`
-	GitProvider    string `json:"gitProvider,omitempty"`
-	GitOwner       string `json:"gitOwner,omitempty"`
-	GitRepo        string `json:"gitRepo,omitempty"`
-	GitURL         string `json:"gitUrl,omitempty"`
-	InstallationID int    `json:"installationId,omitempty"`
+	Name           string                  `json:"name"`
+	Slug           string                  `json:"slug,omitempty"`
+	GitProvider    string                  `json:"gitProvider,omitempty"`
+	GitOwner       string                  `json:"gitOwner,omitempty"`
+	GitRepo        string                  `json:"gitRepo,omitempty"`
+	GitURL         string                  `json:"gitUrl,omitempty"`
+	InstallationID int                     `json:"installationId,omitempty"`
+	GitHubChecks   *GitHubDeploymentChecks `json:"githubChecks,omitempty"`
 }
 
 type UpdateProjectAppRequest struct {
-	Name        string `json:"name,omitempty"`
-	Slug        string `json:"slug,omitempty"`
-	Favicon     string `json:"favicon,omitempty"`
-	GitProvider string `json:"gitProvider,omitempty"`
-	GitOwner    string `json:"gitOwner,omitempty"`
-	GitRepo     string `json:"gitRepo,omitempty"`
-	GitURL      string `json:"gitUrl,omitempty"`
+	Name         string                  `json:"name,omitempty"`
+	Slug         string                  `json:"slug,omitempty"`
+	Favicon      string                  `json:"favicon,omitempty"`
+	GitProvider  string                  `json:"gitProvider,omitempty"`
+	GitOwner     string                  `json:"gitOwner,omitempty"`
+	GitRepo      string                  `json:"gitRepo,omitempty"`
+	GitURL       string                  `json:"gitUrl,omitempty"`
+	GitHubChecks *GitHubDeploymentChecks `json:"githubChecks,omitempty"`
 }

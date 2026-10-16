@@ -42,7 +42,7 @@ func NewServerMetricsWSHandler(ts *authservices.TokenService, ss systemservices.
 				}
 				return handlerutils.IsAllowedWebSocketOrigin(r, origin)
 			},
-			Subprotocols: []string{"auth"},
+			Subprotocols: []string{"auth", "bearer"},
 		},
 		tokenService:  ts,
 		serverService: ss,

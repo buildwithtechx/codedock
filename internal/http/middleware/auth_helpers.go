@@ -53,6 +53,12 @@ func ExtractTokenFromRequest(c echo.Context) string {
 				return val
 			}
 		}
+		for _, part := range parts {
+			trimmed := strings.TrimSpace(part)
+			if strings.HasPrefix(strings.ToLower(trimmed), "bearer ") {
+				return strings.TrimSpace(trimmed[7:])
+			}
+		}
 	}
 	cookie, err := c.Cookie("codedock_token")
 	if err == nil && cookie.Value != "" {

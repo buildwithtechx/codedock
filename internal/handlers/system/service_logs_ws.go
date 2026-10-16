@@ -42,6 +42,7 @@ type ServiceLogsWSHandler struct {
 func NewServiceLogsWSHandler(ts tokenValidator, as *projectservices.AppService, ps *projectservices.ProjectService, ur userStatusProvider) *ServiceLogsWSHandler {
 	return &ServiceLogsWSHandler{
 		upgrader: websocket.Upgrader{
+			Subprotocols: []string{"bearer"},
 			CheckOrigin: func(r *http.Request) bool {
 				origin := r.Header.Get("Origin")
 				if origin == "" {

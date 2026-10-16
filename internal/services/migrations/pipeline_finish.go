@@ -3,9 +3,12 @@ package migrations
 import (
 	"context"
 	"fmt"
+	"strconv"
+	"strings"
 	"time"
 
 	"codedock/internal/engine/dockerprobe"
+	"codedock/internal/engine/networking"
 	"codedock/internal/models"
 )
 
@@ -91,23 +94,55 @@ func (e *pipelineExecutor) checkPort(ctx context.Context, entry *models.Migratio
 		return nil
 	}
 	if decision, ok := e.selection.Decisions["port:"+port]; ok {
+		if strings.HasPrefix(decision, "use-port:") {
+			if newPort, err := strconv.Atoi(strings.TrimPrefix(decision, "use-port:")); err == nil && newPort > 0 {
+				service.InternalPort = newPort
+				_ = e.service.appRepo.Update(ctx, service)
+				return nil
+			}
+		}
 		if decision == "skip-service" {
 			entry.Skipped = true
 			return nil
 		}
 		return nil
 	}
+	var options []models.MigrationPromptOption
+	if portNum, err := strconv.Atoi(port); err == nil && portNum > 0 {
+		occupied := make(map[int]bool)
+		for p := range used {
+			if pn, err := strconv.Atoi(p); err == nil {
+				occupied[pn] = true
+			}
+		}
+		if altPort, err := networking.SuggestAlternativeHostPort(occupied, []int{portNum}, networking.AllocateHostPortOptions{
+			RangeStart: networking.DefaultRangeStart,
+			RangeEnd:   networking.DefaultRangeEnd,
+		}); err == nil && altPort > 0 {
+			options = append(options, models.MigrationPromptOption{
+				ID:          fmt.Sprintf("use-port:%d", altPort),
+				Label:       fmt.Sprintf("Use port %d", altPort),
+				Description: fmt.Sprintf("Assign alternative host port %d outside ephemeral range", altPort),
+			})
+		}
+	}
+	options = append(options,
+		models.MigrationPromptOption{ID: "deploy-anyway", Label: "Deploy anyway", Description: "Attempt deployment despite the conflict"},
+		models.MigrationPromptOption{ID: "skip-service", Label: "Skip service", Description: "Exclude this service from the move"},
+	)
 	answer, err := e.ask(ctx, newPrompt(models.MigrationPromptPortConflict, port,
 		fmt.Sprintf("host port %s on the target is already published; %s wants it", port, entry.Service),
-		[]models.MigrationPromptOption{
-			{ID: "deploy-anyway", Label: "Deploy anyway", Description: "Attempt deployment despite the conflict"},
-			{ID: "skip-service", Label: "Skip service", Description: "Exclude this service from the move"},
-		}))
+		options))
 	if err != nil {
 		return err
 	}
 	e.selection.Decisions["port:"+port] = answer.optionID
-	if answer.optionID == "skip-service" {
+	if strings.HasPrefix(answer.optionID, "use-port:") {
+		if newPort, err := strconv.Atoi(strings.TrimPrefix(answer.optionID, "use-port:")); err == nil && newPort > 0 {
+			service.InternalPort = newPort
+			_ = e.service.appRepo.Update(ctx, service)
+		}
+	} else if answer.optionID == "skip-service" {
 		entry.Skipped = true
 	}
 	return nil

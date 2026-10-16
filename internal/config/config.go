@@ -3,6 +3,7 @@ package config
 import (
 	"os"
 	"strconv"
+	"strings"
 	"sync"
 
 	"codedock/internal/models"
@@ -29,9 +30,10 @@ func Load() *models.Config {
 			HostIP:       getEnv("CODEDOCK_HOST_IP", ""),
 			Domain:       getEnv("CODEDOCK_DOMAIN", ""),
 			DashboardURL: getEnv("CODEDOCK_DASHBOARD_URL", "http://localhost:3000"),
-			ServerURL:    getEnv("CODEDOCK_SERVER_URL", ""),
-			APIHost:      getEnv("CODEDOCK_API_HOST", ""),
-			StaticDir:    getEnv("CODEDOCK_STATIC_DIR", ""),
+			ServerURL:        getEnv("CODEDOCK_SERVER_URL", ""),
+			APIHost:          getEnv("CODEDOCK_API_HOST", ""),
+			StaticDir:        getEnv("CODEDOCK_STATIC_DIR", ""),
+			ExtraCORSOrigins: getEnvSlice("CODEDOCK_EXTRA_CORS_ORIGINS"),
 		},
 		Security: models.SecurityConfig{
 			JWTSecret:     getEnv("CODEDOCK_JWT_SECRET", ""),
@@ -158,4 +160,19 @@ func firstEnv(keys ...string) string {
 		}
 	}
 	return ""
+}
+
+func getEnvSlice(key string) []string {
+	val := os.Getenv(key)
+	if val == "" {
+		return nil
+	}
+	parts := strings.Split(val, ",")
+	var result []string
+	for _, p := range parts {
+		if trimmed := strings.TrimSpace(p); trimmed != "" {
+			result = append(result, trimmed)
+		}
+	}
+	return result
 }
