@@ -98,11 +98,9 @@ export function ClusterEditor({ initialCluster, onSaved }: ClusterEditorProps) {
 
   return (
     <div className="space-y-6" data-testid="cluster-editor">
-      {cluster && (
-        <ClusterScalingPanel clusterId={cluster.id} />
-      )}
+      {cluster && <ClusterScalingPanel clusterId={cluster.id} />}
 
-      <form onSubmit={handleSubmit} className="rounded-2xl bg-card p-5 space-y-6">
+      <form onSubmit={handleSubmit} className="space-y-6 rounded-2xl bg-card p-5">
         <div className="flex items-center justify-between border-border/50 border-b pb-4">
           <div className="flex items-center gap-3">
             <div className="flex h-10 w-10 items-center justify-center rounded-xl bg-primary/10">
@@ -117,7 +115,7 @@ export function ClusterEditor({ initialCluster, onSaved }: ClusterEditorProps) {
           </div>
 
           <div className="flex items-center gap-2">
-            <span className="text-muted-foreground text-xs font-mono">
+            <span className="font-mono text-muted-foreground text-xs">
               Control nodes: {nodes.filter((n) => n.role === 'server').length}
             </span>
           </div>
@@ -171,14 +169,19 @@ export function ClusterEditor({ initialCluster, onSaved }: ClusterEditorProps) {
 
           <div className="divide-y divide-border/50 rounded-xl border border-border/60 bg-muted/20">
             {nodes.map((node, idx) => (
-              <div key={node.serverId} className="flex flex-wrap items-center justify-between gap-3 p-3">
+              <div
+                key={node.serverId}
+                className="flex flex-wrap items-center justify-between gap-3 p-3"
+              >
                 <div className="flex items-center gap-3">
                   <div className="flex h-7 w-7 items-center justify-center rounded-lg bg-muted text-muted-foreground">
                     <Server className="size-3.5" />
                   </div>
                   <div>
-                    <p className="font-medium text-foreground text-xs">{node.serverName || node.serverId}</p>
-                    <p className="font-mono text-muted-foreground text-[11px]">{node.privateIp}</p>
+                    <p className="font-medium text-foreground text-xs">
+                      {node.serverName || node.serverId}
+                    </p>
+                    <p className="font-mono text-[11px] text-muted-foreground">{node.privateIp}</p>
                   </div>
                 </div>
 

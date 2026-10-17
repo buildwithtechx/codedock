@@ -9,9 +9,9 @@ import (
 
 func TestCanonicalFormatting(t *testing.T) {
 	input := map[string]any{
-		"z": 1,
-		"a": "hello",
-		"empty": map[string]any{},
+		"z":      1,
+		"a":      "hello",
+		"empty":  map[string]any{},
 		"nilVal": nil,
 		"nested": map[string]any{"b": 2, "a": 1},
 	}

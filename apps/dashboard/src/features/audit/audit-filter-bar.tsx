@@ -1,11 +1,4 @@
-import {
-  Activity,
-  Bot,
-  Search,
-  Terminal,
-  Webhook,
-  Wrench,
-} from 'lucide-react';
+import { Activity, Bot, Search, Terminal, Webhook, Wrench } from 'lucide-react';
 import { Input } from '#/components/ui/input';
 import type { AuditFacets, AuditSource } from './api';
 

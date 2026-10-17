@@ -25,13 +25,13 @@ export function ActionsEmptyState({
         className={`h-auto w-full ${compact ? 'max-w-56' : 'max-w-sm'}`}
       />
       <h2
-        className={`mt-4 font-medium tracking-tight text-foreground ${
+        className={`mt-4 font-medium text-foreground tracking-tight ${
           compact ? 'text-base' : 'text-xl'
         }`}
       >
         {title}
       </h2>
-      <p className="mt-2 max-w-sm text-sm leading-relaxed text-muted-foreground">{description}</p>
+      <p className="mt-2 max-w-sm text-muted-foreground text-sm leading-relaxed">{description}</p>
       {children && (
         <div className="mt-6 flex flex-wrap items-center justify-center gap-3">{children}</div>
       )}

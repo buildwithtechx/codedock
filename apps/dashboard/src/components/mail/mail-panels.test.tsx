@@ -1,5 +1,5 @@
-import { describe, expect, it, beforeEach } from 'vitest';
 import { fireEvent, render, screen } from '@testing-library/react';
+import { beforeEach, describe, expect, it } from 'vitest';
 import { MailPanels } from './mail-panels';
 
 describe('MailPanels component', () => {

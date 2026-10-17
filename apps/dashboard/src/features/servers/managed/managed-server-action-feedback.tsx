@@ -64,14 +64,16 @@ export function ManagedServerActionFeedback({
 
       {deleting && (
         <section className="space-y-4 rounded-2xl border border-destructive/20 bg-card p-5">
-          <h3 className="font-semibold text-destructive text-base">Delete Server</h3>
+          <h3 className="font-semibold text-base text-destructive">Delete Server</h3>
           <p className="text-muted-foreground text-sm leading-relaxed">
-            Deleting this server immediately deprovisions its cloud compute. If this server has an active subscription, manage or cancel it in billing to stop recurring charges.
+            Deleting this server immediately deprovisions its cloud compute. If this server has an
+            active subscription, manage or cancel it in billing to stop recurring charges.
           </p>
 
           {server.projectCount && server.projectCount > 0 ? (
             <p className="font-medium text-amber-600 text-xs dark:text-amber-400">
-              Cannot delete server while it contains {server.projectCount} active project(s). Remove or migrate all projects first.
+              Cannot delete server while it contains {server.projectCount} active project(s). Remove
+              or migrate all projects first.
             </p>
           ) : null}
 
@@ -99,18 +101,20 @@ export function ManagedServerActionFeedback({
 
       {preview && (
         <section className="space-y-4 rounded-2xl border border-border/50 bg-card p-5">
-          <h3 className="font-semibold text-foreground text-base">Confirm Server Resize</h3>
+          <h3 className="font-semibold text-base text-foreground">Confirm Server Resize</h3>
           <div className="grid grid-cols-2 gap-4 rounded-xl bg-muted/40 p-4 text-xs">
             <div>
               <p className="font-semibold text-muted-foreground uppercase">Current</p>
               <p className="mt-1 font-medium text-foreground">
-                {preview.before.cpuCores} vCPU / {Math.round(preview.before.memoryMb / 1024)} GB RAM / {Math.round(preview.before.diskMb / 1024)} GB Disk
+                {preview.before.cpuCores} vCPU / {Math.round(preview.before.memoryMb / 1024)} GB RAM
+                / {Math.round(preview.before.diskMb / 1024)} GB Disk
               </p>
             </div>
             <div>
               <p className="font-semibold text-muted-foreground uppercase">New</p>
               <p className="mt-1 font-medium text-foreground">
-                {preview.after.cpuCores} vCPU / {Math.round(preview.after.memoryMb / 1024)} GB RAM / {Math.round(preview.after.diskMb / 1024)} GB Disk
+                {preview.after.cpuCores} vCPU / {Math.round(preview.after.memoryMb / 1024)} GB RAM /{' '}
+                {Math.round(preview.after.diskMb / 1024)} GB Disk
               </p>
             </div>
           </div>

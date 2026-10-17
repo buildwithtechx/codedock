@@ -1,5 +1,5 @@
-import { useState } from 'react';
 import { Check, X, Zap } from 'lucide-react';
+import { useState } from 'react';
 import { Button } from '#/components/ui/button';
 import { cn } from '#/lib/utils';
 
@@ -116,7 +116,8 @@ export function CloudDeployPlanModal({
             <p className="mt-1 text-muted-foreground text-sm">{restriction.message}</p>
           ) : (
             <p className="mt-1 text-muted-foreground text-sm">
-              Upgrade your cloud workspace to unlock higher build concurrency and dedicated resource tiers.
+              Upgrade your cloud workspace to unlock higher build concurrency and dedicated resource
+              tiers.
             </p>
           )}
         </div>
@@ -138,7 +139,7 @@ export function CloudDeployPlanModal({
                 <div className="flex items-center justify-between">
                   <span className="font-semibold text-foreground text-sm">{plan.name}</span>
                   {plan.recommended && (
-                    <span className="rounded-md bg-primary/15 px-1.5 py-0.5 text-[10px] font-semibold text-primary">
+                    <span className="rounded-md bg-primary/15 px-1.5 py-0.5 font-semibold text-[10px] text-primary">
                       Popular
                     </span>
                   )}
@@ -148,7 +149,7 @@ export function CloudDeployPlanModal({
                   <p className="font-medium text-foreground">{plan.concurrency}</p>
                   <p>{plan.resources}</p>
                 </div>
-                <div className="mt-4 space-y-1.5 border-t border-border/40 pt-3 text-xs">
+                <div className="mt-4 space-y-1.5 border-border/40 border-t pt-3 text-xs">
                   {plan.features.map((feature, i) => (
                     <div key={i} className="flex items-center gap-1.5 text-muted-foreground">
                       <Check className="size-3 text-primary" />
@@ -161,7 +162,7 @@ export function CloudDeployPlanModal({
           })}
         </div>
 
-        <div className="mt-6 flex items-center justify-end gap-3 border-t border-border/60 pt-4">
+        <div className="mt-6 flex items-center justify-end gap-3 border-border/60 border-t pt-4">
           <Button variant="outline" size="sm" onClick={onClose}>
             Cancel
           </Button>

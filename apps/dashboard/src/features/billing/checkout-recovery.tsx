@@ -1,7 +1,7 @@
-import { useState } from 'react';
 import { AlertCircle, ExternalLink, Loader2, RefreshCw, XCircle } from 'lucide-react';
+import { useState } from 'react';
 import { Button } from '#/components/ui/button';
-import { type PendingCheckout, billingService } from '#/services/billing';
+import { billingService, type PendingCheckout } from '#/services/billing';
 
 export interface CheckoutRecoveryProps {
   pending?: PendingCheckout | null;
@@ -90,17 +90,18 @@ export function CheckoutRecovery({
           </div>
           <div>
             <div className="flex items-center gap-2">
-              <h3 className="font-semibold text-foreground text-base">Unsettled Payment in Progress</h3>
+              <h3 className="font-semibold text-base text-foreground">
+                Unsettled Payment in Progress
+              </h3>
               <span className="inline-flex items-center rounded-full bg-amber-500/10 px-2 py-0.5 font-medium text-amber-500 text-xs uppercase">
                 {pending.status}
               </span>
             </div>
             <p className="mt-1 text-muted-foreground text-sm">
-              A checkout session is awaiting settlement. You can resume payment or safely cancel the session.
+              A checkout session is awaiting settlement. You can resume payment or safely cancel the
+              session.
             </p>
-            {cancelNotice && (
-              <p className="mt-1 text-muted-foreground text-xs">{cancelNotice}</p>
-            )}
+            {cancelNotice && <p className="mt-1 text-muted-foreground text-xs">{cancelNotice}</p>}
           </div>
         </div>
 
@@ -121,7 +122,11 @@ export function CheckoutRecovery({
             onClick={handleCancel}
             className="gap-1.5"
           >
-            {canceling ? <Loader2 className="size-3.5 animate-spin" /> : <XCircle className="size-3.5" />}
+            {canceling ? (
+              <Loader2 className="size-3.5 animate-spin" />
+            ) : (
+              <XCircle className="size-3.5" />
+            )}
             Cancel Checkout
           </Button>
 
@@ -139,7 +144,10 @@ export function CheckoutRecovery({
       </div>
 
       {error && (
-        <div className="mt-3 rounded-lg bg-destructive/10 p-2.5 text-destructive text-xs" role="alert">
+        <div
+          className="mt-3 rounded-lg bg-destructive/10 p-2.5 text-destructive text-xs"
+          role="alert"
+        >
           {error}
         </div>
       )}

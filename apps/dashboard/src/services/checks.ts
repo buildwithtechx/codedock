@@ -42,7 +42,10 @@ export const checksService = {
     return res.data;
   },
 
-  updateChecks: async (projectId: string, input: UpdateChecksInput): Promise<ProjectChecksConfig> => {
+  updateChecks: async (
+    projectId: string,
+    input: UpdateChecksInput
+  ): Promise<ProjectChecksConfig> => {
     const res = await apiClient.put<{ data: ProjectChecksConfig }>(
       `/projects/${encodeURIComponent(projectId)}/checks`,
       input

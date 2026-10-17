@@ -1,8 +1,8 @@
+import { ArrowLeft, Paperclip, Send, ShieldCheck, User } from 'lucide-react';
 import { useState } from 'react';
-import { ArrowLeft, Send, ShieldCheck, User, Paperclip } from 'lucide-react';
 import { Button } from '#/components/ui/button';
-import type { SupportTicket } from '#/services/cloud-support';
 import { cn } from '#/lib/utils';
+import type { SupportTicket } from '#/services/cloud-support';
 
 export interface SupportConversationProps {
   ticket: SupportTicket;
@@ -34,7 +34,7 @@ export function SupportConversation({
 
   return (
     <div className={cn('flex flex-col space-y-5 text-left', className)}>
-      <div className="flex flex-wrap items-center justify-between gap-3 border-b border-border/60 pb-4">
+      <div className="flex flex-wrap items-center justify-between gap-3 border-border/60 border-b pb-4">
         <div className="flex items-center gap-3">
           <Button variant="ghost" size="sm" onClick={onBack} className="gap-1 p-2">
             <ArrowLeft className="size-4" />
@@ -45,7 +45,7 @@ export function SupportConversation({
               <span className="font-mono text-muted-foreground text-xs">{ticket.id}</span>
               <span
                 className={cn(
-                  'rounded-full px-2 py-0.5 text-[10px] font-semibold uppercase',
+                  'rounded-full px-2 py-0.5 font-semibold text-[10px] uppercase',
                   ticket.status === 'open'
                     ? 'bg-amber-500/15 text-amber-600 dark:text-amber-400'
                     : ticket.status === 'resolved'
@@ -62,7 +62,7 @@ export function SupportConversation({
                 </span>
               )}
             </div>
-            <h3 className="mt-1 font-semibold text-foreground text-base">{ticket.subject}</h3>
+            <h3 className="mt-1 font-semibold text-base text-foreground">{ticket.subject}</h3>
           </div>
         </div>
       </div>
@@ -80,12 +80,12 @@ export function SupportConversation({
                   : 'border-border/60 bg-card text-foreground'
               )}
             >
-              <div className="flex items-center justify-between gap-2 border-b border-border/40 pb-2">
+              <div className="flex items-center justify-between gap-2 border-border/40 border-b pb-2">
                 <div className="flex items-center gap-1.5 font-medium text-xs">
                   {isStaff ? (
                     <>
                       <ShieldCheck className="size-3.5 text-primary" />
-                      <span className="text-primary font-semibold">CodeDock Staff</span>
+                      <span className="font-semibold text-primary">CodeDock Staff</span>
                     </>
                   ) : (
                     <>
@@ -94,7 +94,7 @@ export function SupportConversation({
                     </>
                   )}
                 </div>
-                <span className="text-muted-foreground text-[11px]">{msg.createdAt}</span>
+                <span className="text-[11px] text-muted-foreground">{msg.createdAt}</span>
               </div>
               <div className="mt-3 whitespace-pre-wrap font-sans text-sm leading-relaxed">
                 {msg.content}

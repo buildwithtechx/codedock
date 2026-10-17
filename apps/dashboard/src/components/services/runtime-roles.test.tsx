@@ -1,8 +1,8 @@
 import { act } from 'react';
 import { createRoot, type Root } from 'react-dom/client';
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
-import { RuntimeRolesCard } from './runtime-roles';
 import type { RuntimeRole } from '#/lib/runtime-roles';
+import { RuntimeRolesCard } from './runtime-roles';
 
 describe('RuntimeRolesCard', () => {
   let root: Root;

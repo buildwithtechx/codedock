@@ -5,7 +5,7 @@ import { Badge } from '#/components/ui/badge';
 import { Button } from '#/components/ui/button';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '#/components/ui/card';
 import { Progress } from '#/components/ui/progress';
-import { checksService, type BuildAdmissionStatus } from '#/services/checks';
+import { type BuildAdmissionStatus, checksService } from '#/services/checks';
 
 interface DeploymentAdmissionCardProps {
   projectId: string;
@@ -54,7 +54,7 @@ export function DeploymentAdmissionCard({
         <div className="space-y-1">
           <div className="flex items-center gap-2">
             <Cpu className="size-4 text-primary" />
-            <CardTitle className="text-base font-semibold">Build Admission & Concurrency</CardTitle>
+            <CardTitle className="font-semibold text-base">Build Admission & Concurrency</CardTitle>
           </div>
           <CardDescription className="text-xs">
             Guarantees fair execution slots and prevents container host memory exhaustion.
@@ -67,7 +67,9 @@ export function DeploymentAdmissionCard({
             ) : (
               <Clock className="size-3 text-amber-500" />
             )}
-            <span>{admission.canAdmit ? 'Admission Ready' : `Queued (#${admission.queuePosition})`}</span>
+            <span>
+              {admission.canAdmit ? 'Admission Ready' : `Queued (#${admission.queuePosition})`}
+            </span>
           </Badge>
           <Button
             type="button"
@@ -85,7 +87,7 @@ export function DeploymentAdmissionCard({
 
       <CardContent className="space-y-4 pt-1">
         <div className="space-y-1.5">
-          <div className="flex justify-between text-xs text-muted-foreground">
+          <div className="flex justify-between text-muted-foreground text-xs">
             <span>Concurrent Slot Utilization</span>
             <span className="font-medium text-foreground">
               {admission.activeBuilds} of {admission.maxConcurrentBuilds} active
@@ -94,10 +96,12 @@ export function DeploymentAdmissionCard({
           <Progress value={usagePercent} className="h-2" />
         </div>
 
-        <div className="flex flex-wrap items-center justify-between gap-2 rounded-lg border border-border/50 bg-muted/30 p-2.5 text-xs text-muted-foreground">
+        <div className="flex flex-wrap items-center justify-between gap-2 rounded-lg border border-border/50 bg-muted/30 p-2.5 text-muted-foreground text-xs">
           <span>{admission.reason}</span>
           {admission.estimatedWaitSeconds > 0 && (
-            <span className="font-mono text-foreground">~{admission.estimatedWaitSeconds}s wait</span>
+            <span className="font-mono text-foreground">
+              ~{admission.estimatedWaitSeconds}s wait
+            </span>
           )}
         </div>
       </CardContent>

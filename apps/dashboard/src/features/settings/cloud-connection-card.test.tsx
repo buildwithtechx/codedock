@@ -1,5 +1,5 @@
+import { act, fireEvent, render, screen } from '@testing-library/react';
 import { describe, expect, it, vi } from 'vitest';
-import { render, screen, fireEvent, act } from '@testing-library/react';
 import { CloudConnectionCard } from './cloud-connection-card';
 
 describe('CloudConnectionCard', () => {
@@ -8,9 +8,7 @@ describe('CloudConnectionCard', () => {
     render(<CloudConnectionCard connected={false} onConnect={handleConnect} />);
 
     expect(screen.getByText('Connect to CodeDock Cloud')).toBeTruthy();
-    expect(
-      screen.getByText(/Free wildcard domains on \*\.codedock\.app/)
-    ).toBeTruthy();
+    expect(screen.getByText(/Free wildcard domains on \*\.codedock\.app/)).toBeTruthy();
 
     const btn = screen.getByRole('button', { name: /Connect Cloud/ });
     fireEvent.click(btn);

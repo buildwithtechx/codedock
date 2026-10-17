@@ -159,4 +159,3 @@ func (h *ClusterHandler) RemoveScaling(c echo.Context) error {
 	h.scaling[id] = sc
 	return utils.Success(c, "Cluster scaling removed", sc)
 }
-

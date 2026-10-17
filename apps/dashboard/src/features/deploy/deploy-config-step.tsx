@@ -71,10 +71,7 @@ export function DeployConfigStep({
 
       <DeployEnvSection envVars={envVars} onEnvVarsChange={onEnvVarsChange} />
 
-      <DeployComposeCard
-        composePath={composePath}
-        onComposePathChange={onComposePathChange}
-      />
+      <DeployComposeCard composePath={composePath} onComposePathChange={onComposePathChange} />
 
       <DeployHealthChecksCard
         waitForPort={waitForPort}

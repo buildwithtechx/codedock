@@ -1,24 +1,20 @@
 import { Link } from '@tanstack/react-router';
-import {
-  ArrowLeft,
-  Cloud,
-  Plus,
-} from 'lucide-react';
+import { ArrowLeft, Cloud, Plus } from 'lucide-react';
 import { useCallback, useEffect, useState } from 'react';
 import { toast } from 'sonner';
 import { Button } from '#/components/ui/button';
 import { Tabs, TabsContent } from '#/components/ui/tabs';
 import {
-  actionsService,
   type ActionRun,
   type ActionRunner,
   type ActionWorkflow,
+  actionsService,
 } from '#/services/actions';
-import { ActionsSidebar } from './actions-sidebar';
 import { ActionRunList } from './action-run-list';
-import { ActionWorkflowList } from './action-workflow-list';
 import { ActionRunnerCards } from './action-runner-cards';
+import { ActionWorkflowList } from './action-workflow-list';
 import { ActionsEmptyState } from './actions-empty-state';
+import { ActionsSidebar } from './actions-sidebar';
 import { RunWorkspace } from './run-workspace';
 
 export interface ActionsHomeProps {
@@ -105,10 +101,7 @@ export function ActionsHome({
           <ArrowLeft className="size-4 rtl:rotate-180" />
           Back to Actions Overview
         </Button>
-        <RunWorkspace
-          run={selectedRun}
-          onRunUpdated={(updated) => setSelectedRun(updated)}
-        />
+        <RunWorkspace run={selectedRun} onRunUpdated={(updated) => setSelectedRun(updated)} />
       </div>
     );
   }
@@ -131,37 +124,47 @@ export function ActionsHome({
 
         {hasItemsForTab && (
           <Button asChild className="rounded-xl">
-            <Link to={tab === 'runners' ? ('/actions/runners/new' as never) : ('/actions/new' as never)}>
-              {tab === 'runners' ? (isCloud ? <Cloud className="size-4" /> : <Plus className="size-4" />) : <Plus className="size-4" />}
+            <Link
+              to={tab === 'runners' ? ('/actions/runners/new' as never) : ('/actions/new' as never)}
+            >
+              {tab === 'runners' ? (
+                isCloud ? (
+                  <Cloud className="size-4" />
+                ) : (
+                  <Plus className="size-4" />
+                )
+              ) : (
+                <Plus className="size-4" />
+              )}
               {tab === 'runners' ? 'Add runner' : 'New workflow'}
             </Link>
           </Button>
         )}
       </header>
 
-      <Tabs
-        value={tab}
-        onValueChange={(val) => setTab(val as typeof tab)}
-        className="space-y-6"
-      >
+      <Tabs value={tab} onValueChange={(val) => setTab(val as typeof tab)} className="space-y-6">
         <div className="flex items-center gap-1 overflow-x-auto border-border/50 border-b">
           <button
             type="button"
             onClick={() => setTab('workflows')}
             className={`relative inline-flex items-center gap-2 px-4 py-2.5 font-medium text-sm transition-colors ${
-              tab === 'workflows' ? 'text-foreground' : 'text-muted-foreground hover:text-foreground/70'
+              tab === 'workflows'
+                ? 'text-foreground'
+                : 'text-muted-foreground hover:text-foreground/70'
             }`}
           >
             Workflows
             <span
-              className={`rounded-full px-1.5 py-0.5 text-xs font-medium tabular-nums ${
-                tab === 'workflows' ? 'bg-muted text-foreground' : 'bg-muted/60 text-muted-foreground'
+              className={`rounded-full px-1.5 py-0.5 font-medium text-xs tabular-nums ${
+                tab === 'workflows'
+                  ? 'bg-muted text-foreground'
+                  : 'bg-muted/60 text-muted-foreground'
               }`}
             >
               {workflows.length}
             </span>
             {tab === 'workflows' && (
-              <span className="absolute bottom-0 inset-x-4 h-0.5 rounded-full bg-foreground" />
+              <span className="absolute inset-x-4 bottom-0 h-0.5 rounded-full bg-foreground" />
             )}
           </button>
           <button
@@ -174,7 +177,7 @@ export function ActionsHome({
             Runs
             {runs.length > 0 && (
               <span
-                className={`rounded-full px-1.5 py-0.5 text-xs font-medium tabular-nums ${
+                className={`rounded-full px-1.5 py-0.5 font-medium text-xs tabular-nums ${
                   tab === 'runs' ? 'bg-muted text-foreground' : 'bg-muted/60 text-muted-foreground'
                 }`}
               >
@@ -182,26 +185,28 @@ export function ActionsHome({
               </span>
             )}
             {tab === 'runs' && (
-              <span className="absolute bottom-0 inset-x-4 h-0.5 rounded-full bg-foreground" />
+              <span className="absolute inset-x-4 bottom-0 h-0.5 rounded-full bg-foreground" />
             )}
           </button>
           <button
             type="button"
             onClick={() => setTab('runners')}
             className={`relative inline-flex items-center gap-2 px-4 py-2.5 font-medium text-sm transition-colors ${
-              tab === 'runners' ? 'text-foreground' : 'text-muted-foreground hover:text-foreground/70'
+              tab === 'runners'
+                ? 'text-foreground'
+                : 'text-muted-foreground hover:text-foreground/70'
             }`}
           >
             Runners
             <span
-              className={`rounded-full px-1.5 py-0.5 text-xs font-medium tabular-nums ${
+              className={`rounded-full px-1.5 py-0.5 font-medium text-xs tabular-nums ${
                 tab === 'runners' ? 'bg-muted text-foreground' : 'bg-muted/60 text-muted-foreground'
               }`}
             >
               {runners.length}
             </span>
             {tab === 'runners' && (
-              <span className="absolute bottom-0 inset-x-4 h-0.5 rounded-full bg-foreground" />
+              <span className="absolute inset-x-4 bottom-0 h-0.5 rounded-full bg-foreground" />
             )}
           </button>
         </div>
@@ -232,14 +237,20 @@ export function ActionsHome({
                     description="Trigger a workflow to begin running jobs on your runners."
                   >
                     {firstWorkflow ? (
-                      <Button asChild className="h-10 rounded-full bg-primary px-5 font-medium text-primary-foreground hover:bg-primary/90">
+                      <Button
+                        asChild
+                        className="h-10 rounded-full bg-primary px-5 font-medium text-primary-foreground hover:bg-primary/90"
+                      >
                         <Link to={'/actions/new' as never}>
                           <Plus className="size-4" />
                           New workflow
                         </Link>
                       </Button>
                     ) : (
-                      <Button asChild className="h-10 rounded-full bg-primary px-5 font-medium text-primary-foreground hover:bg-primary/90">
+                      <Button
+                        asChild
+                        className="h-10 rounded-full bg-primary px-5 font-medium text-primary-foreground hover:bg-primary/90"
+                      >
                         <Link to={'/actions/runners/new' as never}>
                           {isCloud ? <Cloud className="size-4" /> : <Plus className="size-4" />}
                           Add runner

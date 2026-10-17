@@ -5,7 +5,7 @@ import { Button } from '#/components/ui/button';
 import { Input } from '#/components/ui/input';
 import { Label } from '#/components/ui/label';
 import { Switch } from '#/components/ui/switch';
-import { ingressService, type IngressConnectInput } from '#/services/ingress';
+import { type IngressConnectInput, ingressService } from '#/services/ingress';
 
 interface IngressConnectFormProps {
   serverId: string;
@@ -67,7 +67,9 @@ export function IngressConnectForm({
         </div>
         <div>
           <h3 className="font-semibold text-base text-foreground">Connect Cloudflare Tunnel</h3>
-          <p className="text-muted-foreground text-xs">Route traffic to this host through Cloudflare Tunnel</p>
+          <p className="text-muted-foreground text-xs">
+            Route traffic to this host through Cloudflare Tunnel
+          </p>
         </div>
       </div>
 
@@ -148,7 +150,9 @@ export function IngressConnectForm({
       <div className="flex items-center justify-between rounded-xl bg-muted/40 p-3">
         <div>
           <p className="font-medium text-foreground text-sm">Default for domains</p>
-          <p className="text-muted-foreground text-xs">Automatically assign new domains to this tunnel</p>
+          <p className="text-muted-foreground text-xs">
+            Automatically assign new domains to this tunnel
+          </p>
         </div>
         <Switch
           checked={defaultForDomains}

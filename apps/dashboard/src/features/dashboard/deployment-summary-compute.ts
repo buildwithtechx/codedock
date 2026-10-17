@@ -90,7 +90,8 @@ export function computeDeploymentSummary(
     }
   }
 
-  summary.avgBuildDurationMs = durationCount > 0 ? Math.round(totalDurationMs / durationCount) : null;
+  summary.avgBuildDurationMs =
+    durationCount > 0 ? Math.round(totalDurationMs / durationCount) : null;
   summary.projects = Array.from(projectMap.values()).sort(
     (a, b) => b.failed - a.failed || b.active - a.active || b.total - a.total
   );

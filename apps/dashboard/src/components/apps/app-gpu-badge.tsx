@@ -15,7 +15,7 @@ export function AppGpuBadge({
   return (
     <span
       className={cn(
-        'inline-flex items-center gap-1 rounded-md px-1.5 py-0.5 text-[11px] font-medium leading-none',
+        'inline-flex items-center gap-1 rounded-md px-1.5 py-0.5 font-medium text-[11px] leading-none',
         gpu === 'required'
           ? 'bg-amber-500/15 text-amber-600 dark:text-amber-400'
           : 'bg-muted/70 text-muted-foreground',

@@ -94,7 +94,9 @@ export function RunnerAdvancedFields({
                 />
               </div>
               <div className="space-y-1.5">
-                <label className="font-medium text-foreground text-xs">Memory per container (MiB)</label>
+                <label className="font-medium text-foreground text-xs">
+                  Memory per container (MiB)
+                </label>
                 <Input
                   type="number"
                   min={256}
@@ -131,7 +133,8 @@ export function RunnerAdvancedFields({
             <span>
               <span className="block font-medium text-foreground text-xs">Allow Docker access</span>
               <span className="mt-0.5 block text-muted-foreground text-xs leading-relaxed">
-                Enable image builds inside job containers. Only run trusted workflows on this server.
+                Enable image builds inside job containers. Only run trusted workflows on this
+                server.
               </span>
             </span>
           </label>

@@ -1,13 +1,4 @@
-import {
-  Bot,
-  Globe,
-  Layers,
-  LayoutGrid,
-  Rocket,
-  Server,
-  Shield,
-  Users,
-} from 'lucide-react';
+import { Bot, Globe, Layers, LayoutGrid, Rocket, Server, Shield, Users } from 'lucide-react';
 import type { AuditEventRow } from './api';
 import type { PeriodKey } from './audit-filter-bar';
 import type { AuditCategoryId } from './audit-taxonomy';

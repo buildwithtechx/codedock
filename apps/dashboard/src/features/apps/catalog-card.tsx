@@ -1,7 +1,7 @@
 import { Link } from '@tanstack/react-router';
 import { ArrowRight, BadgeCheck } from 'lucide-react';
-import type { OneClickAppDetails } from '#/interfaces/templates';
 import { AppGpuBadge } from '#/components/apps/app-gpu-badge';
+import type { OneClickAppDetails } from '#/interfaces/templates';
 import { AppLogo } from './app-logo';
 
 export function CatalogCard({ app }: { app: OneClickAppDetails }) {

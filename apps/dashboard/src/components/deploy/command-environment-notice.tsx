@@ -74,10 +74,14 @@ export function CommandEnvironmentNotice({
   const uniqueKeys = [...new Set(entries.flatMap((row) => row.parsed.keys))];
 
   return (
-    <div className="rounded-xl border border-amber-500/30 bg-amber-500/10 p-4 text-sm" role="status">
+    <div
+      className="rounded-xl border border-amber-500/30 bg-amber-500/10 p-4 text-sm"
+      role="status"
+    >
       <p className="font-medium text-foreground">Manage command variables in Environment</p>
       <p className="mt-1 text-muted-foreground text-xs">
-        Embedded variables: {uniqueKeys.join(', ')}. Saved variables are available during builds and at runtime.
+        Embedded variables: {uniqueKeys.join(', ')}. Saved variables are available during builds and
+        at runtime.
       </p>
       {allMigratable && (projectId || migrateDraft) ? (
         <Button
@@ -96,7 +100,7 @@ export function CommandEnvironmentNotice({
         </p>
       )}
       {error && (
-        <p role="alert" className="mt-2 text-destructive text-xs font-medium">
+        <p role="alert" className="mt-2 font-medium text-destructive text-xs">
           {error}
         </p>
       )}

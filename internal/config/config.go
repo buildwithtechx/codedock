@@ -24,12 +24,12 @@ func Get() *models.Config {
 func Load() *models.Config {
 	return &models.Config{
 		Server: models.ServerConfig{
-			Port:         getEnvInt("PORT", 8080),
-			Host:         getEnv("HOST", "0.0.0.0"),
-			DataDir:      getEnv("CODEDOCK_DATA_DIR", "data"),
-			HostIP:       getEnv("CODEDOCK_HOST_IP", ""),
-			Domain:       getEnv("CODEDOCK_DOMAIN", ""),
-			DashboardURL: getEnv("CODEDOCK_DASHBOARD_URL", "http://localhost:3000"),
+			Port:             getEnvInt("PORT", 8080),
+			Host:             getEnv("HOST", "0.0.0.0"),
+			DataDir:          getEnv("CODEDOCK_DATA_DIR", "data"),
+			HostIP:           getEnv("CODEDOCK_HOST_IP", ""),
+			Domain:           getEnv("CODEDOCK_DOMAIN", ""),
+			DashboardURL:     getEnv("CODEDOCK_DASHBOARD_URL", "http://localhost:3000"),
 			ServerURL:        getEnv("CODEDOCK_SERVER_URL", ""),
 			APIHost:          getEnv("CODEDOCK_API_HOST", ""),
 			StaticDir:        getEnv("CODEDOCK_STATIC_DIR", ""),

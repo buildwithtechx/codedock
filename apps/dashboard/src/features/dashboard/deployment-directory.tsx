@@ -112,7 +112,7 @@ export function DeploymentDirectory({ hideHeader = false }: { hideHeader?: boole
       />
 
       <div className="space-y-3">
-        <h2 className="text-base font-medium text-foreground">Deployment history</h2>
+        <h2 className="font-medium text-base text-foreground">Deployment history</h2>
 
         {isError ? (
           <QueryErrorState
@@ -137,7 +137,7 @@ export function DeploymentDirectory({ hideHeader = false }: { hideHeader?: boole
             {totalDeployments > 0 && (
               <nav
                 aria-label="Deployment pages"
-                className="flex flex-wrap items-center justify-between gap-3 text-xs text-muted-foreground pt-2"
+                className="flex flex-wrap items-center justify-between gap-3 pt-2 text-muted-foreground text-xs"
               >
                 <span>
                   {(page - 1) * pageSize + 1}–{Math.min(page * pageSize, totalDeployments)} of{' '}

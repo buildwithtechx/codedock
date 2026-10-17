@@ -37,18 +37,18 @@ export const billingService = {
   }): Promise<{ url: string }> => {
     return await apiClient.post<{ url: string }>('/billing/checkout', payload);
   },
-  
+
   getPendingCheckout: async (): Promise<{ pending: PendingCheckout | null }> => {
     return await apiClient.get<{ pending: PendingCheckout | null }>('/billing/pending');
   },
 
   cancelCheckoutSession: async (
     checkoutId: string,
-    idempotencyKey?: string,
+    idempotencyKey?: string
   ): Promise<{ status: string; checkout: PendingCheckout }> => {
     return await apiClient.post<{ status: string; checkout: PendingCheckout }>(
       `/billing/checkouts/${encodeURIComponent(checkoutId)}/cancel`,
-      { idempotencyKey },
+      { idempotencyKey }
     );
   },
 
@@ -65,7 +65,10 @@ export const billingService = {
     }
   },
 
-  purchaseTopup: async (payload: { packId: string; idempotencyKey: string }): Promise<{ url: string }> => {
+  purchaseTopup: async (payload: {
+    packId: string;
+    idempotencyKey: string;
+  }): Promise<{ url: string }> => {
     return await apiClient.post<{ url: string }>('/billing/topup', payload);
   },
 };
@@ -85,4 +88,3 @@ export const DEFAULT_TOPUP_PACKS: TopupPack[] = [
   { id: 'topup_100', name: '$100 Pro Pack', credits: 115000, priceCents: 10000, bonusPercent: 15 },
   { id: 'topup_250', name: '$250 Max Pack', credits: 300000, priceCents: 25000, bonusPercent: 20 },
 ];
-

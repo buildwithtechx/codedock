@@ -36,22 +36,8 @@ export function ActionsIllustration({
 
       {/* Layered source window */}
       <rect x="91" y="61" width="230" height="150" rx="17" fill="currentColor" fillOpacity="0.06" />
-      <rect
-        x="80"
-        y="48"
-        width="230"
-        height="150"
-        rx="17"
-        className="fill-card stroke-border/40"
-      />
-      <rect
-        x="68"
-        y="35"
-        width="230"
-        height="150"
-        rx="17"
-        className="fill-card stroke-border"
-      />
+      <rect x="80" y="48" width="230" height="150" rx="17" className="fill-card stroke-border/40" />
+      <rect x="68" y="35" width="230" height="150" rx="17" className="fill-card stroke-border" />
       <path
         d="M85 35h196a17 17 0 0 1 17 17v17H68V52a17 17 0 0 1 17-17Z"
         fill="currentColor"
@@ -108,12 +94,52 @@ export function ActionsIllustration({
             strokeLinecap="round"
             strokeLinejoin="round"
           />
-          <rect x="126" y="89" width="73" height="5" rx="2.5" fill="currentColor" fillOpacity="0.3" />
+          <rect
+            x="126"
+            y="89"
+            width="73"
+            height="5"
+            rx="2.5"
+            fill="currentColor"
+            fillOpacity="0.3"
+          />
           <path d="M95 111v42" stroke="currentColor" strokeOpacity="0.12" strokeWidth="1.5" />
-          <rect x="105" y="109" width="53" height="5" rx="2.5" fill="currentColor" fillOpacity="0.15" />
-          <rect x="105" y="124" width="87" height="5" rx="2.5" fill="currentColor" fillOpacity="0.1" />
-          <rect x="116" y="139" width="66" height="5" rx="2.5" fill="currentColor" fillOpacity="0.15" />
-          <rect x="116" y="154" width="92" height="5" rx="2.5" fill="currentColor" fillOpacity="0.1" />
+          <rect
+            x="105"
+            y="109"
+            width="53"
+            height="5"
+            rx="2.5"
+            fill="currentColor"
+            fillOpacity="0.15"
+          />
+          <rect
+            x="105"
+            y="124"
+            width="87"
+            height="5"
+            rx="2.5"
+            fill="currentColor"
+            fillOpacity="0.1"
+          />
+          <rect
+            x="116"
+            y="139"
+            width="66"
+            height="5"
+            rx="2.5"
+            fill="currentColor"
+            fillOpacity="0.15"
+          />
+          <rect
+            x="116"
+            y="154"
+            width="92"
+            height="5"
+            rx="2.5"
+            fill="currentColor"
+            fillOpacity="0.1"
+          />
         </>
       )}
 
@@ -131,14 +157,7 @@ export function ActionsIllustration({
         className="fill-card stroke-muted-foreground/30"
         strokeWidth="1.5"
       />
-      <rect
-        x="307"
-        y="43"
-        width="87"
-        height="42"
-        rx="12"
-        className="fill-card stroke-border"
-      />
+      <rect x="307" y="43" width="87" height="42" rx="12" className="fill-card stroke-border" />
       <rect x="319" y="55" width="18" height="18" rx="5" className="fill-emerald-500/15" />
       <path
         d="m324 64 3 3 5-6"
@@ -150,14 +169,7 @@ export function ActionsIllustration({
       <rect x="345" y="59" width="33" height="4" rx="2" fill="currentColor" fillOpacity="0.3" />
       <rect x="345" y="67" width="23" height="3" rx="1.5" fill="currentColor" fillOpacity="0.1" />
 
-      <rect
-        x="307"
-        y="151"
-        width="87"
-        height="42"
-        rx="12"
-        className="fill-card stroke-border"
-      />
+      <rect x="307" y="151" width="87" height="42" rx="12" className="fill-card stroke-border" />
       <rect x="319" y="163" width="18" height="18" rx="5" className="fill-blue-500/15" />
       {kind === 'history' ? (
         <>
@@ -176,14 +188,7 @@ export function ActionsIllustration({
       <rect x="345" y="175" width="19" height="3" rx="1.5" fill="currentColor" fillOpacity="0.1" />
 
       {/* Source badge */}
-      <rect
-        x="36"
-        y="97"
-        width="52"
-        height="52"
-        rx="14"
-        className="fill-card stroke-border"
-      />
+      <rect x="36" y="97" width="52" height="52" rx="14" className="fill-card stroke-border" />
       <path
         d="M55 116v16m0-8h7a8 8 0 0 0 8-8"
         stroke="currentColor"
@@ -191,35 +196,10 @@ export function ActionsIllustration({
         strokeWidth="2"
         strokeLinecap="round"
       />
-      <circle
-        cx="55"
-        cy="113"
-        r="3"
-        className="fill-card stroke-foreground/40"
-        strokeWidth="2"
-      />
-      <circle
-        cx="55"
-        cy="135"
-        r="3"
-        className="fill-card stroke-foreground/40"
-        strokeWidth="2"
-      />
-      <circle
-        cx="70"
-        cy="113"
-        r="3"
-        className="fill-card stroke-foreground/40"
-        strokeWidth="2"
-      />
-      <rect
-        x="160"
-        y="178"
-        width="123"
-        height="39"
-        rx="12"
-        className="fill-card stroke-border"
-      />
+      <circle cx="55" cy="113" r="3" className="fill-card stroke-foreground/40" strokeWidth="2" />
+      <circle cx="55" cy="135" r="3" className="fill-card stroke-foreground/40" strokeWidth="2" />
+      <circle cx="70" cy="113" r="3" className="fill-card stroke-foreground/40" strokeWidth="2" />
+      <rect x="160" y="178" width="123" height="39" rx="12" className="fill-card stroke-border" />
       <circle cx="181" cy="197.5" r="10" className="fill-emerald-500/15" />
       <path
         d="m177 198 3 3 5-6"

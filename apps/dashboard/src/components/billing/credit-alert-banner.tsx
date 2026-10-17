@@ -25,11 +25,7 @@ export function CreditAlertBanner({
   onViewPlans,
   className,
 }: CreditAlertBannerProps) {
-  if (
-    !alert ||
-    billingMode === 'monthly' ||
-    !['low', 'grace', 'depleted'].includes(alert.state)
-  ) {
+  if (!alert || billingMode === 'monthly' || !['low', 'grace', 'depleted'].includes(alert.state)) {
     return null;
   }
 
@@ -69,9 +65,7 @@ export function CreditAlertBanner({
         />
         <div role="status">
           <h4 className="font-semibold text-foreground text-sm">{title}</h4>
-          <p className="mt-0.5 text-muted-foreground text-xs leading-relaxed">
-            {description}
-          </p>
+          <p className="mt-0.5 text-muted-foreground text-xs leading-relaxed">{description}</p>
         </div>
       </div>
       <div className="flex items-center gap-2">

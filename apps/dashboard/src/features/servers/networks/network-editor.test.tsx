@@ -39,8 +39,20 @@ describe('NetworkEditor', () => {
       status: 'applying',
       revision: 1,
       members: [
-        { serverId: 'srv-1', privateIp: '10.42.0.1', interfaceName: 'wg0', status: 'ready', latencyMs: 1.2 },
-        { serverId: 'srv-2', privateIp: '10.42.0.2', interfaceName: 'wg0', status: 'ready', latencyMs: 1.9 },
+        {
+          serverId: 'srv-1',
+          privateIp: '10.42.0.1',
+          interfaceName: 'wg0',
+          status: 'ready',
+          latencyMs: 1.2,
+        },
+        {
+          serverId: 'srv-2',
+          privateIp: '10.42.0.2',
+          interfaceName: 'wg0',
+          status: 'ready',
+          latencyMs: 1.9,
+        },
       ],
       accessPolicy: { mode: 'full_mesh' },
       watchdog: {

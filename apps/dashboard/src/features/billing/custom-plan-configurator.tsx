@@ -1,5 +1,5 @@
-import { useMemo, useState } from 'react';
 import { Cpu, HardDrive, Layers, Server } from 'lucide-react';
+import { useMemo, useState } from 'react';
 import { Button } from '#/components/ui/button';
 
 export interface CustomPlanQuote {
@@ -20,7 +20,7 @@ export interface CustomPlanConfiguratorProps {
 
 const COST_PER_CORE = 5;
 const COST_PER_RAM_GB = 3;
-const COST_PER_DISK_GB = 0.10;
+const COST_PER_DISK_GB = 0.1;
 const BASE_PLATFORM_COST = 10;
 
 export function CustomPlanConfigurator({
@@ -187,11 +187,7 @@ export function CustomPlanConfigurator({
         </div>
 
         <div className="mt-6">
-          <Button
-            type="submit"
-            className="w-full gap-2"
-            disabled={disabled || busy}
-          >
+          <Button type="submit" className="w-full gap-2" disabled={disabled || busy}>
             <Server className="size-4" />
             Configure & Deploy
           </Button>

@@ -8,10 +8,10 @@ import (
 )
 
 var (
-	buildKitStepRegex     = regexp.MustCompile(`^#(\d+)\s`)
-	buildKitActionRegex   = regexp.MustCompile(`\]\s+(RUN|COPY|ADD)\s`)
-	buildKitCachedRegex   = regexp.MustCompile(`^#\d+\s+CACHED`)
-	buildKitDoneRegex     = regexp.MustCompile(`^#\d+\s+DONE`)
+	buildKitStepRegex   = regexp.MustCompile(`^#(\d+)\s`)
+	buildKitActionRegex = regexp.MustCompile(`\]\s+(RUN|COPY|ADD)\s`)
+	buildKitCachedRegex = regexp.MustCompile(`^#\d+\s+CACHED`)
+	buildKitDoneRegex   = regexp.MustCompile(`^#\d+\s+DONE`)
 )
 
 type BuildKitCacheObserver struct {

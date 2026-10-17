@@ -1,9 +1,6 @@
+import { fireEvent, render, screen } from '@testing-library/react';
 import { describe, expect, it, vi } from 'vitest';
-import { render, screen, fireEvent } from '@testing-library/react';
-import {
-  CloudBuildQueueNotice,
-  type CloudBuildQueueStatus,
-} from './cloud-build-queue-notice';
+import { CloudBuildQueueNotice, type CloudBuildQueueStatus } from './cloud-build-queue-notice';
 
 describe('CloudBuildQueueNotice', () => {
   const baseQueue: CloudBuildQueueStatus = {
@@ -19,9 +16,7 @@ describe('CloudBuildQueueNotice', () => {
     render(<CloudBuildQueueNotice queue={baseQueue} onComparePlans={handleCompare} />);
 
     expect(screen.getByText('Position 2 in queue')).toBeTruthy();
-    expect(
-      screen.getByText(/Simultaneous builds allowed by your plan: 1./)
-    ).toBeTruthy();
+    expect(screen.getByText(/Simultaneous builds allowed by your plan: 1./)).toBeTruthy();
     expect(screen.getByText(/Active builds: 1./)).toBeTruthy();
     expect(screen.getByText('Upgrading is optional')).toBeTruthy();
 
@@ -40,9 +35,7 @@ describe('CloudBuildQueueNotice', () => {
       />
     );
 
-    expect(
-      screen.getByText(/Waiting for available build resources/)
-    ).toBeTruthy();
+    expect(screen.getByText(/Waiting for available build resources/)).toBeTruthy();
     expect(screen.getByText(/No simultaneous build limit./)).toBeTruthy();
 
     const button = screen.getByRole('button', { name: 'Compare plans' });

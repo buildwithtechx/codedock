@@ -1,8 +1,8 @@
 import { ChevronRight, GitBranch } from 'lucide-react';
 import type { ReactNode } from 'react';
+import type { ActionRun } from '#/services/actions';
 import { ActionStatus } from './action-status';
 import { ActionsEmptyState } from './actions-empty-state';
-import type { ActionRun } from '#/services/actions';
 
 export function ActionRunList({
   runs,

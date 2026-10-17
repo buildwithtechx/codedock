@@ -4,8 +4,8 @@ import { toast } from 'sonner';
 import { Button } from '#/components/ui/button';
 import { Dialog, DialogContent } from '#/components/ui/dialog';
 import { Input } from '#/components/ui/input';
-import { serverService } from '#/services/servers';
 import type { Server as ServerModel } from '#/interfaces/server';
+import { serverService } from '#/services/servers';
 import { AddServerCloudPlans, type CloudPlan } from './add-server-cloud-plans';
 
 export interface AddServerModalProps {
@@ -61,9 +61,7 @@ export function AddServerModal({
   return (
     <Dialog open={open} onOpenChange={(val) => !val && onClose()}>
       <DialogContent
-        className={`overflow-hidden p-6 sm:p-7 ${
-          mode === 'managed' ? 'max-w-5xl' : 'max-w-xl'
-        }`}
+        className={`overflow-hidden p-6 sm:p-7 ${mode === 'managed' ? 'max-w-5xl' : 'max-w-xl'}`}
         showCloseButton={false}
       >
         <div className="space-y-6">

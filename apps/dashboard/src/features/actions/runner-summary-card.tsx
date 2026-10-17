@@ -87,11 +87,7 @@ export function RunnerSummaryCard({
         <span className="font-medium text-foreground text-xs">Accept new jobs</span>
       </label>
 
-      <Button
-        type="submit"
-        disabled={isPending || !canSubmit}
-        className="w-full rounded-full"
-      >
+      <Button type="submit" disabled={isPending || !canSubmit} className="w-full rounded-full">
         {isPending ? 'Verifying runner...' : 'Verify and save runner'}
       </Button>
 

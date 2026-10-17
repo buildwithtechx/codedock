@@ -1,15 +1,16 @@
-import { Loader2, Network as NetworkIcon, Plus, Shield, Trash2 } from 'lucide-react';
+import { Loader2, Network as NetworkIcon, Plus, Shield } from 'lucide-react';
 import { useState } from 'react';
 import { toast } from 'sonner';
 import { Button } from '#/components/ui/button';
 import { Input } from '#/components/ui/input';
 import { Label } from '#/components/ui/label';
 import {
-  networksService,
   type CreateNetworkInput,
   type NetworkMember,
+  networksService,
   type ServerNetwork,
 } from '#/services/networks';
+import { NetworkMemberList } from './network-member-list';
 import { NetworkPeerDiagnostics } from './network-peer-diagnostics';
 import { NetworkRollbackWatchdog } from './network-rollback-watchdog';
 
@@ -18,32 +19,36 @@ interface NetworkEditorProps {
   onSaved?: (network: ServerNetwork) => void;
 }
 
+const DEFAULT_MEMBERS: NetworkMember[] = [
+  {
+    serverId: 'srv-node-1',
+    serverName: 'Control Node 1',
+    privateIp: '10.42.0.1',
+    interfaceName: 'wg0',
+    status: 'ready',
+    latencyMs: 1.4,
+  },
+  {
+    serverId: 'srv-node-2',
+    serverName: 'Worker Node 2',
+    privateIp: '10.42.0.2',
+    interfaceName: 'wg0',
+    status: 'ready',
+    latencyMs: 2.1,
+  },
+];
+
 export function NetworkEditor({ initialNetwork, onSaved }: NetworkEditorProps) {
   const [network, setNetwork] = useState<ServerNetwork | null>(initialNetwork ?? null);
   const [name, setName] = useState(initialNetwork?.name ?? 'alpha-mesh');
   const [mode, setMode] = useState<'wireguard' | 'native'>(initialNetwork?.mode ?? 'wireguard');
   const [subnetCidr, setSubnetCidr] = useState(initialNetwork?.subnetCidr ?? '10.42.0.0/16');
   const [mtu, setMtu] = useState(initialNetwork?.mtu ?? 1420);
-  const [verificationPort, setVerificationPort] = useState(initialNetwork?.verificationPort ?? 51821);
+  const [verificationPort, setVerificationPort] = useState(
+    initialNetwork?.verificationPort ?? 51821
+  );
   const [members, setMembers] = useState<NetworkMember[]>(
-    initialNetwork?.members ?? [
-      {
-        serverId: 'srv-node-1',
-        serverName: 'Control Node 1',
-        privateIp: '10.42.0.1',
-        interfaceName: 'wg0',
-        status: 'ready',
-        latencyMs: 1.4,
-      },
-      {
-        serverId: 'srv-node-2',
-        serverName: 'Worker Node 2',
-        privateIp: '10.42.0.2',
-        interfaceName: 'wg0',
-        status: 'ready',
-        latencyMs: 2.1,
-      },
-    ]
+    initialNetwork?.members ?? DEFAULT_MEMBERS
   );
   const [isSubmitting, setIsSubmitting] = useState(false);
 
@@ -115,7 +120,9 @@ export function NetworkEditor({ initialNetwork, onSaved }: NetworkEditorProps) {
                 ? {
                     ...prev,
                     status: 'verified',
-                    watchdog: prev.watchdog ? { ...prev.watchdog, status: 'committed', armed: false } : undefined,
+                    watchdog: prev.watchdog
+                      ? { ...prev.watchdog, status: 'committed', armed: false }
+                      : undefined,
                   }
                 : null
             );
@@ -126,7 +133,9 @@ export function NetworkEditor({ initialNetwork, onSaved }: NetworkEditorProps) {
                 ? {
                     ...prev,
                     status: 'rolled_back',
-                    watchdog: prev.watchdog ? { ...prev.watchdog, status: 'rolled_back', armed: false } : undefined,
+                    watchdog: prev.watchdog
+                      ? { ...prev.watchdog, status: 'rolled_back', armed: false }
+                      : undefined,
                   }
                 : null
             );
@@ -134,7 +143,7 @@ export function NetworkEditor({ initialNetwork, onSaved }: NetworkEditorProps) {
         />
       )}
 
-      <form onSubmit={handleApply} className="rounded-2xl bg-card p-5 space-y-6">
+      <form onSubmit={handleApply} className="space-y-6 rounded-2xl bg-card p-5">
         <div className="flex items-center justify-between border-border/50 border-b pb-4">
           <div className="flex items-center gap-3">
             <div className="flex h-10 w-10 items-center justify-center rounded-xl bg-primary/10">
@@ -219,50 +228,27 @@ export function NetworkEditor({ initialNetwork, onSaved }: NetworkEditorProps) {
             <Label className="font-semibold text-foreground text-sm">
               Member Nodes ({members.length})
             </Label>
-            <Button type="button" variant="outline" size="sm" onClick={addMember} className="gap-1.5">
+            <Button
+              type="button"
+              variant="outline"
+              size="sm"
+              onClick={addMember}
+              className="gap-1.5"
+            >
               <Plus className="size-3.5" />
               Add Server
             </Button>
           </div>
 
-          <div className="divide-y divide-border/50 rounded-xl border border-border/60 bg-muted/20">
-            {members.map((member, idx) => (
-              <div key={member.serverId} className="flex flex-wrap items-center justify-between gap-3 p-3">
-                <div className="flex items-center gap-3">
-                  <span className="flex h-6 w-6 items-center justify-center rounded-md bg-muted font-mono text-muted-foreground text-xs">
-                    {idx + 1}
-                  </span>
-                  <div>
-                    <p className="font-medium text-foreground text-xs">{member.serverName || member.serverId}</p>
-                    <p className="font-mono text-muted-foreground text-[11px]">{member.privateIp}</p>
-                  </div>
-                </div>
-
-                <div className="flex items-center gap-2">
-                  <Input
-                    className="h-8 w-32 font-mono text-xs"
-                    value={member.privateIp}
-                    onChange={(e) => {
-                      const updated = [...members];
-                      updated[idx].privateIp = e.target.value;
-                      setMembers(updated);
-                    }}
-                    placeholder="Private IP"
-                  />
-                  <Button
-                    type="button"
-                    variant="ghost"
-                    size="icon"
-                    className="h-8 w-8 text-destructive hover:bg-destructive/10"
-                    onClick={() => removeMember(idx)}
-                    disabled={members.length <= 2}
-                  >
-                    <Trash2 className="size-3.5" />
-                  </Button>
-                </div>
-              </div>
-            ))}
-          </div>
+          <NetworkMemberList
+            members={members}
+            onUpdateIp={(idx, ip) => {
+              const updated = [...members];
+              updated[idx].privateIp = ip;
+              setMembers(updated);
+            }}
+            onRemove={removeMember}
+          />
         </div>
 
         {network && network.members.length > 0 && (

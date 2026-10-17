@@ -1,7 +1,7 @@
 import { fireEvent, render, screen } from '@testing-library/react';
 import { describe, expect, it, vi } from 'vitest';
-import { AuditDayGroup } from './audit-day-group';
 import type { AuditEventRow } from './api';
+import { AuditDayGroup } from './audit-day-group';
 
 const mockEvents: AuditEventRow[] = [
   {
@@ -27,13 +27,7 @@ const mockEvents: AuditEventRow[] = [
 describe('AuditDayGroup', () => {
   it('renders day header and event row sentence', () => {
     const onSelect = vi.fn();
-    render(
-      <AuditDayGroup
-        dayKey="2026-10-16"
-        events={mockEvents}
-        onSelectEvent={onSelect}
-      />
-    );
+    render(<AuditDayGroup dayKey="2026-10-16" events={mockEvents} onSelectEvent={onSelect} />);
 
     expect(screen.getByText(/Alice Developer/i)).toBeDefined();
     expect(screen.getByText(/web-prod/i)).toBeDefined();
@@ -55,13 +49,7 @@ describe('AuditDayGroup', () => {
       createdAt: '2026-10-16T12:00:00Z',
     };
 
-    render(
-      <AuditDayGroup
-        dayKey="2026-10-16"
-        events={[rawUuidEvent]}
-        onSelectEvent={vi.fn()}
-      />
-    );
+    render(<AuditDayGroup dayKey="2026-10-16" events={[rawUuidEvent]} onSelectEvent={vi.fn()} />);
 
     expect(screen.queryByText(/91fdae7e-559c-41af-8426-814fe0d5e643/i)).toBeNull();
     expect(screen.getByText('Solomon Olatunji created the project')).toBeDefined();

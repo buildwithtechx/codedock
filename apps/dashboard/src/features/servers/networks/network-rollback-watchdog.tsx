@@ -69,7 +69,10 @@ export function NetworkRollbackWatchdog({
     }
   };
 
-  const percentage = Math.max(0, Math.min(100, Math.round((remaining / (watchdog.timeoutSeconds || 120)) * 100)));
+  const percentage = Math.max(
+    0,
+    Math.min(100, Math.round((remaining / (watchdog.timeoutSeconds || 120)) * 100))
+  );
 
   return (
     <div
@@ -128,16 +131,24 @@ export function NetworkRollbackWatchdog({
               onClick={handleRollback}
               className="gap-1.5 border-destructive/40 text-destructive hover:bg-destructive/10"
             >
-              {isRollingBack ? <Loader2 className="size-3.5 animate-spin" /> : <RotateCcw className="size-3.5" />}
+              {isRollingBack ? (
+                <Loader2 className="size-3.5 animate-spin" />
+              ) : (
+                <RotateCcw className="size-3.5" />
+              )}
               Emergency Rollback
             </Button>
             <Button
               size="sm"
               disabled={isCommitting || isRollingBack}
               onClick={handleCommit}
-              className="gap-1.5 bg-emerald-600 hover:bg-emerald-700 text-white"
+              className="gap-1.5 bg-emerald-600 text-white hover:bg-emerald-700"
             >
-              {isCommitting ? <Loader2 className="size-3.5 animate-spin" /> : <CheckCircle2 className="size-3.5" />}
+              {isCommitting ? (
+                <Loader2 className="size-3.5 animate-spin" />
+              ) : (
+                <CheckCircle2 className="size-3.5" />
+              )}
               Commit Changes
             </Button>
           </div>
@@ -146,7 +157,7 @@ export function NetworkRollbackWatchdog({
 
       {watchdog.status === 'armed' && (
         <div className="mt-4 space-y-2">
-          <div className="flex justify-between font-mono text-xs text-muted-foreground">
+          <div className="flex justify-between font-mono text-muted-foreground text-xs">
             <span>Watchdog countdown</span>
             <span className="font-semibold text-foreground">{remaining}s remaining</span>
           </div>

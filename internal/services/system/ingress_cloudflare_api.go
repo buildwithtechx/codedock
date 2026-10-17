@@ -12,9 +12,9 @@ import (
 )
 
 type cfListResponse[T any] struct {
-	Success bool     `json:"success"`
-	Errors  []any    `json:"errors"`
-	Result  []T      `json:"result"`
+	Success bool  `json:"success"`
+	Errors  []any `json:"errors"`
+	Result  []T   `json:"result"`
 }
 
 type cfSingleResponse[T any] struct {

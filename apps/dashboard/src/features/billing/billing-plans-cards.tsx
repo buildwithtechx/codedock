@@ -97,7 +97,7 @@ export function BillingPlansCards({ onSelectPlan, busy = false }: BillingPlansCa
                   <span className="flex size-8 items-center justify-center rounded-xl bg-muted/60 text-foreground">
                     <Icon className="size-4" />
                   </span>
-                  <h3 className="font-medium text-foreground text-base">{plan.name}</h3>
+                  <h3 className="font-medium text-base text-foreground">{plan.name}</h3>
                 </div>
                 {plan.badge && (
                   <span className="rounded-full border border-border/80 bg-muted/80 px-2.5 py-0.5 font-medium text-[11px] text-foreground">
@@ -108,10 +108,14 @@ export function BillingPlansCards({ onSelectPlan, busy = false }: BillingPlansCa
 
               <div className="mt-4">
                 <div className="flex items-baseline gap-1">
-                  <span className="font-semibold text-2xl text-foreground tracking-tight">{plan.price}</span>
+                  <span className="font-semibold text-2xl text-foreground tracking-tight">
+                    {plan.price}
+                  </span>
                   <span className="text-muted-foreground text-xs">{plan.period}</span>
                 </div>
-                <p className="mt-0.5 text-muted-foreground text-xs">billed monthly, cancel anytime</p>
+                <p className="mt-0.5 text-muted-foreground text-xs">
+                  billed monthly, cancel anytime
+                </p>
               </div>
 
               <p className="mt-3 min-h-[36px] text-muted-foreground text-xs leading-relaxed">
@@ -122,7 +126,7 @@ export function BillingPlansCards({ onSelectPlan, busy = false }: BillingPlansCa
                 type="button"
                 disabled={busy}
                 onClick={() => onSelectPlan(plan.id)}
-                className={`mt-4 w-full justify-center gap-1.5 rounded-full text-xs font-medium ${
+                className={`mt-4 w-full justify-center gap-1.5 rounded-full font-medium text-xs ${
                   plan.isPopular
                     ? 'bg-primary text-primary-foreground hover:bg-primary/90'
                     : 'bg-muted/70 text-foreground hover:bg-muted'

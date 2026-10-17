@@ -1,5 +1,5 @@
+import { act, fireEvent, render, screen } from '@testing-library/react';
 import { describe, expect, it, vi } from 'vitest';
-import { render, screen, fireEvent, act } from '@testing-library/react';
 import { NewTicketModal } from './new-ticket-modal';
 
 describe('NewTicketModal', () => {
@@ -15,7 +15,9 @@ describe('NewTicketModal', () => {
     fireEvent.change(subjectInput, { target: { value: 'PostgreSQL connection timeout' } });
 
     const messageInput = screen.getByPlaceholderText(/Describe the issue/);
-    fireEvent.change(messageInput, { target: { value: 'Database logs show 100% pool utilization' } });
+    fireEvent.change(messageInput, {
+      target: { value: 'Database logs show 100% pool utilization' },
+    });
 
     const checkbox = screen.getByRole('checkbox');
     fireEvent.click(checkbox);

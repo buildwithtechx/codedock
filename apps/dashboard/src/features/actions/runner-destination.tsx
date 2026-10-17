@@ -1,5 +1,5 @@
 import { ArrowRight, Plus, Server, Sparkles } from 'lucide-react';
-import { useState, type ReactNode } from 'react';
+import { type ReactNode, useState } from 'react';
 import { Button } from '#/components/ui/button';
 import { AddServerModal } from '#/features/servers/add-server-modal';
 import type { Server as ServerModel } from '#/interfaces/server';
@@ -53,7 +53,7 @@ export function RunnerDestination({
           <div className="flex size-10 items-center justify-center rounded-xl bg-muted/60 text-foreground">
             <Server className="size-5" />
           </div>
-          <h2 className="mt-3 font-medium text-foreground text-base">Existing server</h2>
+          <h2 className="mt-3 font-medium text-base text-foreground">Existing server</h2>
           <p className="mt-1 text-muted-foreground text-xs leading-relaxed">
             Run inside a container or natively on one of your connected servers.
           </p>
@@ -67,7 +67,7 @@ export function RunnerDestination({
           <div className="flex size-10 items-center justify-center rounded-xl bg-muted/60 text-foreground">
             <Plus className="size-5" />
           </div>
-          <h2 className="mt-3 font-medium text-foreground text-base">Connect dedicated server</h2>
+          <h2 className="mt-3 font-medium text-base text-foreground">Connect dedicated server</h2>
           <p className="mt-1 text-muted-foreground text-xs leading-relaxed">
             Provision or pair a separate server reserved for running Actions.
           </p>

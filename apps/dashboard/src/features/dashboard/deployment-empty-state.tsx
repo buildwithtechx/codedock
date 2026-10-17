@@ -17,9 +17,7 @@ export function DeploymentEmptyState({
           <div className="mx-auto mb-4 flex h-16 w-16 items-center justify-center rounded-full border border-border/50 bg-muted/60">
             <SearchX className="h-7 w-7 text-muted-foreground/50" />
           </div>
-          <h3 className="mb-2 font-medium text-foreground/80 text-lg">
-            No deployments found
-          </h3>
+          <h3 className="mb-2 font-medium text-foreground/80 text-lg">No deployments found</h3>
           <p className="text-muted-foreground text-sm leading-relaxed">
             Try adjusting your filters or clearing your search.
           </p>
@@ -36,7 +34,8 @@ export function DeploymentEmptyState({
       <EmptyIllustration className="relative mx-auto h-44 w-64" />
       <h3 className="mb-2 font-medium text-foreground/80 text-lg">No deployments yet</h3>
       <p className="mx-auto mb-8 max-w-sm text-muted-foreground text-sm leading-relaxed">
-        Deploy your first project and it will appear here with build status, commit details, and performance metrics.
+        Deploy your first project and it will appear here with build status, commit details, and
+        performance metrics.
       </p>
       <div className="flex flex-col items-center justify-center gap-3 sm:flex-row">
         <Button asChild size="lg" className="gap-2 px-6">

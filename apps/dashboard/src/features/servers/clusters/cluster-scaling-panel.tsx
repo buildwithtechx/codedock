@@ -132,14 +132,25 @@ export function ClusterScalingPanel({
         {canManage && (
           <div className="flex items-center gap-2">
             {(status === 'not_enabled' || status === 'removing') && (
-              <Button size="sm" disabled={isBusy || isLoading} onClick={() => enableScaling()} className="gap-1.5">
+              <Button
+                size="sm"
+                disabled={isBusy || isLoading}
+                onClick={() => enableScaling()}
+                className="gap-1.5"
+              >
                 <Play className="size-3.5" />
                 Enable scaling
               </Button>
             )}
 
             {(status === 'failed' || status === 'interrupted') && (
-              <Button size="sm" variant="outline" disabled={isBusy} onClick={() => retryScaling()} className="gap-1.5">
+              <Button
+                size="sm"
+                variant="outline"
+                disabled={isBusy}
+                onClick={() => retryScaling()}
+                className="gap-1.5"
+              >
                 <RotateCcw className="size-3.5" />
                 Retry setup
               </Button>
@@ -186,12 +197,16 @@ export function ClusterScalingPanel({
             onClick={() => setDetailsOpen(!detailsOpen)}
             className="flex items-center gap-1.5 text-muted-foreground text-xs hover:text-foreground"
           >
-            {detailsOpen ? <ChevronUp className="size-3.5" /> : <ChevronDown className="size-3.5" />}
+            {detailsOpen ? (
+              <ChevronUp className="size-3.5" />
+            ) : (
+              <ChevronDown className="size-3.5" />
+            )}
             {detailsOpen ? 'Hide technical details' : 'Show technical details'}
           </button>
 
           {detailsOpen && (
-            <div className="mt-3 rounded-xl border border-border/60 bg-muted/20 p-4 font-mono text-xs space-y-2">
+            <div className="mt-3 space-y-2 rounded-xl border border-border/60 bg-muted/20 p-4 font-mono text-xs">
               <div className="flex justify-between">
                 <span className="text-muted-foreground">K3s Release:</span>
                 <span className="text-foreground">{scaling?.k3sVersion ?? 'v1.31.1+k3s1'}</span>

@@ -1,8 +1,8 @@
+import { Paperclip, Send, X } from 'lucide-react';
 import { useState } from 'react';
-import { X, Paperclip, Send } from 'lucide-react';
 import { Button } from '#/components/ui/button';
-import type { CreateTicketInput, SupportCategory } from '#/services/cloud-support';
 import { cn } from '#/lib/utils';
+import type { CreateTicketInput, SupportCategory } from '#/services/cloud-support';
 
 export interface NewTicketModalProps {
   onClose: () => void;
@@ -60,7 +60,7 @@ export function NewTicketModal({
     >
       <div
         className={cn(
-          'relative w-full max-w-lg rounded-2xl border border-border/60 bg-card p-6 shadow-2xl text-left',
+          'relative w-full max-w-lg rounded-2xl border border-border/60 bg-card p-6 text-left shadow-2xl',
           className
         )}
       >
@@ -80,7 +80,10 @@ export function NewTicketModal({
         </p>
 
         {error && (
-          <p role="alert" className="mt-3 rounded-lg bg-destructive/10 p-2 text-destructive text-xs">
+          <p
+            role="alert"
+            className="mt-3 rounded-lg bg-destructive/10 p-2 text-destructive text-xs"
+          >
             {error}
           </p>
         )}

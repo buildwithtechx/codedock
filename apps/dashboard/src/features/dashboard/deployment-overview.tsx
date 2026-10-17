@@ -1,12 +1,4 @@
-import {
-  Bar,
-  BarChart,
-  CartesianGrid,
-  ResponsiveContainer,
-  Tooltip,
-  XAxis,
-  YAxis,
-} from 'recharts';
+import { Bar, BarChart, CartesianGrid, ResponsiveContainer, Tooltip, XAxis, YAxis } from 'recharts';
 import { Button } from '#/components/ui/button';
 
 export interface DeploymentHistorySummary {
@@ -93,8 +85,8 @@ export function DeploymentOverview({
     <section aria-label="Deployment overview" className="space-y-4" aria-busy={loading}>
       <div className="flex flex-wrap items-center justify-between gap-3">
         <div>
-          <h2 className="text-base font-medium text-foreground">Deployment overview</h2>
-          <p className="mt-1 text-xs text-muted-foreground">
+          <h2 className="font-medium text-base text-foreground">Deployment overview</h2>
+          <p className="mt-1 text-muted-foreground text-xs">
             Selected project and search · UTC calendar days · retained deployment history
           </p>
         </div>
@@ -106,7 +98,7 @@ export function DeploymentOverview({
                 type="button"
                 aria-pressed={days === value}
                 onClick={() => onDaysChange(value)}
-                className={`rounded-lg px-3 py-1.5 text-xs font-medium transition-colors ${
+                className={`rounded-lg px-3 py-1.5 font-medium text-xs transition-colors ${
                   days === value
                     ? 'bg-background text-foreground shadow-sm'
                     : 'text-muted-foreground hover:text-foreground'
@@ -130,11 +122,11 @@ export function DeploymentOverview({
             onClick={() => onFilterChange(metric.filter)}
             className="flex flex-col items-start rounded-2xl border border-border/50 bg-card p-5 text-start transition-colors hover:bg-muted/60 focus-visible:ring-2 focus-visible:ring-ring"
           >
-            <span className="text-xs text-muted-foreground">{metric.label}</span>
-            <span className="mt-2 block text-3xl font-medium tabular-nums text-foreground">
+            <span className="text-muted-foreground text-xs">{metric.label}</span>
+            <span className="mt-2 block font-medium text-3xl text-foreground tabular-nums">
               {metric.value}
             </span>
-            <span className="mt-2 block text-xs text-muted-foreground">{metric.detail}</span>
+            <span className="mt-2 block text-muted-foreground text-xs">{metric.detail}</span>
           </button>
         ))}
       </div>
@@ -142,8 +134,8 @@ export function DeploymentOverview({
       <div className="grid gap-4 xl:grid-cols-[minmax(0,1fr)_340px]">
         <div className="min-w-0 rounded-2xl border border-border/50 bg-card p-5">
           <div className="flex flex-wrap items-center justify-between gap-3">
-            <h3 className="text-sm font-medium text-foreground">Daily outcomes</h3>
-            <span className="text-xs text-muted-foreground">
+            <h3 className="font-medium text-foreground text-sm">Daily outcomes</h3>
+            <span className="text-muted-foreground text-xs">
               Average successful build:{' '}
               {summary?.avgBuildDurationMs != null
                 ? `${Math.round(summary.avgBuildDurationMs / 1000)}s`
@@ -199,13 +191,13 @@ export function DeploymentOverview({
                 </BarChart>
               </ResponsiveContainer>
             ) : (
-              <div className="flex h-full items-center justify-center text-sm text-muted-foreground">
+              <div className="flex h-full items-center justify-center text-muted-foreground text-sm">
                 No deployments in this window.
               </div>
             )}
           </div>
 
-          <div className="mt-3 flex flex-wrap gap-x-4 gap-y-2 text-xs text-muted-foreground">
+          <div className="mt-3 flex flex-wrap gap-x-4 gap-y-2 text-muted-foreground text-xs">
             {SERIES.map((item) => (
               <span key={item.key} className="flex items-center gap-1.5">
                 <span className="h-2 w-2 rounded-full" style={{ background: item.color }} />
@@ -216,8 +208,8 @@ export function DeploymentOverview({
         </div>
 
         <div className="rounded-2xl border border-border/50 bg-card p-5">
-          <h3 className="text-sm font-medium text-foreground">Project breakdown</h3>
-          <p className="mt-1 text-xs text-muted-foreground">
+          <h3 className="font-medium text-foreground text-sm">Project breakdown</h3>
+          <p className="mt-1 text-muted-foreground text-xs">
             Top 6 by failures, then active attempts
           </p>
           <div className="mt-3 space-y-1">
@@ -229,12 +221,10 @@ export function DeploymentOverview({
                   onClick={() => onProjectChange(project.projectId)}
                   className="flex w-full items-center justify-between gap-3 rounded-xl px-2 py-2.5 text-start hover:bg-muted/60 focus-visible:ring-2 focus-visible:ring-ring"
                 >
-                  <span className="truncate text-sm">
-                    {project.name || project.projectId}
-                  </span>
+                  <span className="truncate text-sm">{project.name || project.projectId}</span>
                   <span
                     className={`shrink-0 text-xs tabular-nums ${
-                      project.failed > 0 ? 'text-destructive font-medium' : 'text-muted-foreground'
+                      project.failed > 0 ? 'font-medium text-destructive' : 'text-muted-foreground'
                     }`}
                   >
                     {project.failed}/{project.total} failed
@@ -242,7 +232,7 @@ export function DeploymentOverview({
                 </button>
               ))
             ) : (
-              <p className="py-4 text-sm text-muted-foreground">No deployments in this window.</p>
+              <p className="py-4 text-muted-foreground text-sm">No deployments in this window.</p>
             )}
           </div>
         </div>

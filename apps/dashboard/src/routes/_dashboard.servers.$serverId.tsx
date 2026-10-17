@@ -35,23 +35,13 @@ import {
   EmptyTitle,
 } from '#/components/ui/empty';
 import { QueryErrorState } from '#/components/ui/query-error-state';
-import { Tabs, TabsContent, TabsList, TabsTrigger } from '#/components/ui/tabs';
-import { ManagedServerActivity } from '#/features/servers/managed/managed-server-activity';
-import { ManagedServerNetwork } from '#/features/servers/managed/managed-server-network';
+import { Tabs, TabsList, TabsTrigger } from '#/components/ui/tabs';
+import { ServerDetailTabsContent } from '#/features/servers/server-detail-tabs';
 import { ManagedServerPlan } from '#/features/servers/managed/managed-server-plan';
-import { ManagedServerRuntime } from '#/features/servers/managed/managed-server-runtime';
-import { ManagedServerSettings } from '#/features/servers/managed/managed-server-settings';
-import { ManagedServerSsh } from '#/features/servers/managed/managed-server-ssh';
-import { ManagedServerWorkloads } from '#/features/servers/managed/managed-server-workloads';
-import { ServerComponentsTab } from '#/features/servers/server-components-tab';
 import { ServerConnectionBanner } from '#/features/servers/server-connection-banner';
 import { ServerConnectionCard } from '#/features/servers/server-connection-card';
 import { ServerDeleteDialog } from '#/features/servers/server-delete-dialog';
 import { reachabilityOf } from '#/features/servers/server-list-row';
-import { ServerOverviewTab } from '#/features/servers/server-overview-tab';
-import { ServerSecurityTab } from '#/features/servers/server-security-tab';
-import { ServerSettingsTab } from '#/features/servers/server-settings-tab';
-import { ServerTerminalTab } from '#/features/servers/server-terminal-tab';
 import { useServer } from '#/hooks/use-servers';
 import type { Server } from '#/interfaces/server';
 import { cn } from '#/lib/utils';
@@ -243,49 +233,11 @@ function ServerDetailsPage() {
 
         <div className="grid grid-cols-1 items-start gap-6 xl:grid-cols-[minmax(0,1fr)_340px]">
           <div className="min-w-0 xl:col-start-1 xl:row-start-1">
-            {isManaged ? (
-              <>
-                <TabsContent value="overview">
-                  <ServerOverviewTab server={server} />
-                </TabsContent>
-                <TabsContent value="activity">
-                  <ManagedServerActivity server={server.managed} onRetry={() => void refetch()} />
-                </TabsContent>
-                <TabsContent value="networking">
-                  <ManagedServerNetwork serverId={server.id} />
-                </TabsContent>
-                <TabsContent value="workloads">
-                  <ManagedServerWorkloads serverId={server.id} />
-                </TabsContent>
-                <TabsContent value="ssh">
-                  <ManagedServerSsh serverId={server.id} />
-                </TabsContent>
-                <TabsContent value="runtimeApi">
-                  <ManagedServerRuntime serverId={server.id} />
-                </TabsContent>
-                <TabsContent value="settings">
-                  <ManagedServerSettings serverId={server.id} />
-                </TabsContent>
-              </>
-            ) : (
-              <>
-                <TabsContent value="overview">
-                  <ServerOverviewTab server={server} />
-                </TabsContent>
-                <TabsContent value="components">
-                  <ServerComponentsTab serverId={server.id} />
-                </TabsContent>
-                <TabsContent value="security">
-                  <ServerSecurityTab serverId={server.id} />
-                </TabsContent>
-                <TabsContent value="terminal">
-                  <ServerTerminalTab server={server} />
-                </TabsContent>
-                <TabsContent value="settings">
-                  <ServerSettingsTab server={server} />
-                </TabsContent>
-              </>
-            )}
+            <ServerDetailTabsContent
+              server={server}
+              isManaged={isManaged}
+              onRetry={() => void refetch()}
+            />
           </div>
 
           <div className="space-y-4 xl:sticky xl:top-6 xl:col-start-2 xl:row-start-1 xl:self-start">

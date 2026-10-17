@@ -38,27 +38,40 @@ export interface ComputeCluster {
 
 export const clustersService = {
   list: async (projectId: string): Promise<ComputeCluster[]> => {
-    const res = await apiClient.get<{ data: ComputeCluster[] }>(`/projects/${encodeURIComponent(projectId)}/clusters`);
+    const res = await apiClient.get<{ data: ComputeCluster[] }>(
+      `/projects/${encodeURIComponent(projectId)}/clusters`
+    );
     return res.data ?? [];
   },
 
   getScaling: async (clusterId: string): Promise<ClusterScaling> => {
-    const res = await apiClient.get<{ data: ClusterScaling }>(`/system/compute-clusters/${encodeURIComponent(clusterId)}/scaling`);
+    const res = await apiClient.get<{ data: ClusterScaling }>(
+      `/system/compute-clusters/${encodeURIComponent(clusterId)}/scaling`
+    );
     return res.data;
   },
 
   setupScaling: async (clusterId: string): Promise<ClusterScaling> => {
-    const res = await apiClient.post<{ data: ClusterScaling }>(`/system/compute-clusters/${encodeURIComponent(clusterId)}/scaling/setup`, {});
+    const res = await apiClient.post<{ data: ClusterScaling }>(
+      `/system/compute-clusters/${encodeURIComponent(clusterId)}/scaling/setup`,
+      {}
+    );
     return res.data;
   },
 
   retryScaling: async (clusterId: string): Promise<ClusterScaling> => {
-    const res = await apiClient.post<{ data: ClusterScaling }>(`/system/compute-clusters/${encodeURIComponent(clusterId)}/scaling/retry`, {});
+    const res = await apiClient.post<{ data: ClusterScaling }>(
+      `/system/compute-clusters/${encodeURIComponent(clusterId)}/scaling/retry`,
+      {}
+    );
     return res.data;
   },
 
   removeScaling: async (clusterId: string): Promise<ClusterScaling> => {
-    const res = await apiClient.post<{ data: ClusterScaling }>(`/system/compute-clusters/${encodeURIComponent(clusterId)}/scaling/remove`, {});
+    const res = await apiClient.post<{ data: ClusterScaling }>(
+      `/system/compute-clusters/${encodeURIComponent(clusterId)}/scaling/remove`,
+      {}
+    );
     return res.data;
   },
 };

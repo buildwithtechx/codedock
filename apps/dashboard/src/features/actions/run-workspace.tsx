@@ -3,7 +3,7 @@ import { useState } from 'react';
 import { toast } from 'sonner';
 import { Button } from '#/components/ui/button';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '#/components/ui/card';
-import { actionsService, type ActionRun } from '#/services/actions';
+import { type ActionRun, actionsService } from '#/services/actions';
 import { ActionLogs } from './action-logs';
 import { ActionStatus } from './action-status';
 
@@ -53,7 +53,7 @@ export function RunWorkspace({ run: initialRun, onRunUpdated }: RunWorkspaceProp
         <CardHeader className="flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between">
           <div className="space-y-1">
             <div className="flex items-center gap-3">
-              <CardTitle className="text-xl font-bold tracking-tight">
+              <CardTitle className="font-bold text-xl tracking-tight">
                 {run.name} <span className="text-muted-foreground">#{run.number}</span>
               </CardTitle>
               <ActionStatus status={run.status} />
@@ -104,20 +104,27 @@ export function RunWorkspace({ run: initialRun, onRunUpdated }: RunWorkspaceProp
         <CardContent className="space-y-6">
           {run.jobs && run.jobs.length > 0 && (
             <div className="space-y-3">
-              <h4 className="text-xs font-semibold uppercase tracking-wider text-muted-foreground">Jobs & Steps</h4>
+              <h4 className="font-semibold text-muted-foreground text-xs uppercase tracking-wider">
+                Jobs & Steps
+              </h4>
               <div className="grid gap-3 sm:grid-cols-2 lg:grid-cols-3">
                 {run.jobs.map((job) => (
-                  <div key={job.id} className="rounded-lg border border-border/70 bg-card/60 p-3 text-sm">
+                  <div
+                    key={job.id}
+                    className="rounded-lg border border-border/70 bg-card/60 p-3 text-sm"
+                  >
                     <div className="mb-2 flex items-center justify-between">
                       <span className="font-medium">{job.name}</span>
                       <ActionStatus status={job.status} />
                     </div>
                     {job.steps && job.steps.length > 0 && (
-                      <ul className="space-y-1.5 text-xs text-muted-foreground">
+                      <ul className="space-y-1.5 text-muted-foreground text-xs">
                         {job.steps.map((step) => (
                           <li key={step.id} className="flex items-center justify-between">
                             <span className="truncate">{step.name}</span>
-                            <span className="shrink-0 text-[11px] font-mono">{step.durationSeconds ?? 0}s</span>
+                            <span className="shrink-0 font-mono text-[11px]">
+                              {step.durationSeconds ?? 0}s
+                            </span>
                           </li>
                         ))}
                       </ul>
@@ -129,7 +136,9 @@ export function RunWorkspace({ run: initialRun, onRunUpdated }: RunWorkspaceProp
           )}
 
           <div className="space-y-2">
-            <h4 className="text-xs font-semibold uppercase tracking-wider text-muted-foreground">Execution Log</h4>
+            <h4 className="font-semibold text-muted-foreground text-xs uppercase tracking-wider">
+              Execution Log
+            </h4>
             <ActionLogs logs={run.logs} isRunning={run.status === 'running'} />
           </div>
         </CardContent>

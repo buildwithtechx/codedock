@@ -1,8 +1,6 @@
-import { AddServerModal, type AddServerModalProps } from '#/features/servers/add-server-modal';
-export { type CloudPlan } from '#/features/servers/add-server-cloud-plans';
-
-export type RunnerCloudPlanModalProps = AddServerModalProps;
-
-export function RunnerCloudPlanModal(props: RunnerCloudPlanModalProps) {
-  return <AddServerModal {...props} />;
-}
+export {
+  CloudDeployPlanModal as RunnerCloudPlanModal,
+  type CloudDeployPlanModalProps as RunnerCloudPlanModalProps,
+  type CloudDeployRestriction,
+} from '#/features/billing/cloud-deploy-plan-modal';
+export type { CloudPlan } from '#/features/servers/add-server-cloud-plans';

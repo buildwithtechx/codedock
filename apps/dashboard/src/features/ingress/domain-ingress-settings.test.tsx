@@ -33,10 +33,9 @@ describe('DomainIngressSettings', () => {
     });
     vi.spyOn(ingressService, 'list').mockResolvedValue([]);
 
-    render(
-      <DomainIngressSettings domainId="dom-1" hostname="api.example.com" />,
-      { wrapper: createWrapper() }
-    );
+    render(<DomainIngressSettings domainId="dom-1" hostname="api.example.com" />, {
+      wrapper: createWrapper(),
+    });
 
     expect(await screen.findByText('Tunnel: ready')).toBeDefined();
     expect(screen.getByRole('button', { name: /tunnel routing/i })).toBeDefined();
@@ -72,10 +71,9 @@ describe('DomainIngressSettings', () => {
       updatedAt: '2026-10-16T12:00:00Z',
     });
 
-    render(
-      <DomainIngressSettings domainId="dom-1" serverId="srv-1" hostname="api.example.com" />,
-      { wrapper: createWrapper() }
-    );
+    render(<DomainIngressSettings domainId="dom-1" serverId="srv-1" hostname="api.example.com" />, {
+      wrapper: createWrapper(),
+    });
 
     const button = screen.getByRole('button', { name: /tunnel routing/i });
     fireEvent.click(button);

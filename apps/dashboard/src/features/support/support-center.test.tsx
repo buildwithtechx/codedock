@@ -1,7 +1,7 @@
-import { describe, expect, it, vi, beforeEach } from 'vitest';
-import { render, screen, fireEvent, act } from '@testing-library/react';
-import { SupportCenter } from './support-center';
+import { act, fireEvent, render, screen } from '@testing-library/react';
+import { beforeEach, describe, expect, it, vi } from 'vitest';
 import * as supportService from '#/services/cloud-support';
+import { SupportCenter } from './support-center';
 
 vi.mock('#/services/cloud-support', async (importOriginal) => {
   const actual = await importOriginal<typeof import('#/services/cloud-support')>();

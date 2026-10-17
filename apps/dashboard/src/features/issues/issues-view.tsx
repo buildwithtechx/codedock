@@ -34,7 +34,9 @@ function useMonitoringTab(): [MonitoringTab, (tab: MonitoringTab) => void] {
   const activeTab = urlTab || localTab;
   const setTab = (t: MonitoringTab) => {
     setLocalTab(t);
-    try { nav?.({ to: '/monitoring', search: (prev: any) => ({ ...prev, tab: t }), replace: true }); } catch {}
+    try {
+      nav?.({ to: '/monitoring', search: (prev: any) => ({ ...prev, tab: t }), replace: true });
+    } catch {}
   };
   return [activeTab, setTab];
 }
@@ -134,8 +136,8 @@ export function IssuesView() {
       <div className="space-y-6">
         <div className="mb-6 flex flex-wrap items-start justify-between gap-4">
           <div>
-            <h1 className="text-2xl font-medium tracking-tight text-foreground/80">Monitoring</h1>
-            <p className="mt-1 text-sm text-muted-foreground/70">
+            <h1 className="font-medium text-2xl text-foreground/80 tracking-tight">Monitoring</h1>
+            <p className="mt-1 text-muted-foreground/70 text-sm">
               Health, updates and activity across your projects, servers and domains.
             </p>
           </div>
@@ -163,8 +165,8 @@ export function IssuesView() {
     <div className="space-y-6">
       <div className="mb-6 flex flex-wrap items-start justify-between gap-4">
         <div>
-          <h1 className="text-2xl font-medium tracking-tight text-foreground/80">Monitoring</h1>
-          <p className="mt-1 text-sm text-muted-foreground/70">
+          <h1 className="font-medium text-2xl text-foreground/80 tracking-tight">Monitoring</h1>
+          <p className="mt-1 text-muted-foreground/70 text-sm">
             Health, updates and activity across your projects, servers and domains.
           </p>
         </div>
@@ -188,8 +190,8 @@ export function IssuesView() {
           <>
             {!loading && tab === 'resolved' && (
               <p className="mb-4 rounded-xl border border-border/50 bg-muted/25 px-4 py-3 text-[12px] text-muted-foreground leading-relaxed">
-                History covers container and server incidents. Other checks report current state, so a
-                fixed certificate or deploy simply stops appearing here.
+                History covers container and server incidents. Other checks report current state, so
+                a fixed certificate or deploy simply stops appearing here.
               </p>
             )}
 
@@ -202,8 +204,8 @@ export function IssuesView() {
                   Clear resolved monitoring history for this organization?
                 </p>
                 <p className="text-muted-foreground text-sm">
-                  This permanently removes every resolved issue. Open and acknowledged issues are never
-                  deleted.
+                  This permanently removes every resolved issue. Open and acknowledged issues are
+                  never deleted.
                 </p>
                 {clearError && (
                   <p role="alert" className="text-destructive text-sm">

@@ -44,9 +44,9 @@ export function MailServerList({ servers, onOpen, onAddNew, onRemove }: MailServ
       {/* Registry Rows */}
       <div className="min-w-0">
         <div className="mb-3 flex items-center justify-between gap-4 px-1">
-          <h2 className="inline-flex items-baseline gap-2 text-sm font-medium text-muted-foreground">
+          <h2 className="inline-flex items-baseline gap-2 font-medium text-muted-foreground text-sm">
             Mail servers
-            <span className="tabular-nums text-muted-foreground/60">({servers.length})</span>
+            <span className="text-muted-foreground/60 tabular-nums">({servers.length})</span>
           </h2>
           <Button onClick={onAddNew} size="sm" className="gap-2 rounded-xl">
             <Plus className="size-4" />
@@ -54,7 +54,7 @@ export function MailServerList({ servers, onOpen, onAddNew, onRemove }: MailServ
           </Button>
         </div>
 
-        <div className="rounded-2xl border border-border/50 bg-card overflow-hidden">
+        <div className="overflow-hidden rounded-2xl border border-border/50 bg-card">
           <ul className="divide-y divide-border/50">
             {servers.map((s) => {
               const label = s.domain || s.name || s.id;
@@ -63,7 +63,7 @@ export function MailServerList({ servers, onOpen, onAddNew, onRemove }: MailServ
               return (
                 <li
                   key={s.id}
-                  className="group relative flex items-center gap-4 px-5 py-4 transition-colors hover:bg-muted/30 cursor-pointer"
+                  className="group relative flex cursor-pointer items-center gap-4 px-5 py-4 transition-colors hover:bg-muted/30"
                   onClick={() => onOpen(s.id)}
                 >
                   <div className="flex size-10 shrink-0 items-center justify-center rounded-xl bg-muted/60 text-muted-foreground">
@@ -71,15 +71,15 @@ export function MailServerList({ servers, onOpen, onAddNew, onRemove }: MailServ
                   </div>
 
                   <div className="min-w-0 flex-1">
-                    <p className="truncate text-sm font-medium text-foreground">{label}</p>
-                    <p className="mt-0.5 truncate font-mono text-xs text-muted-foreground">
+                    <p className="truncate font-medium text-foreground text-sm">{label}</p>
+                    <p className="mt-0.5 truncate font-mono text-muted-foreground text-xs">
                       {s.maildUrl}
                     </p>
                   </div>
 
                   {/* Status Indicator */}
                   <span
-                    className={`inline-flex shrink-0 items-center gap-2 text-xs font-medium ${
+                    className={`inline-flex shrink-0 items-center gap-2 font-medium text-xs ${
                       status === 'running'
                         ? 'text-emerald-500'
                         : status === 'installing'
@@ -92,7 +92,7 @@ export function MailServerList({ servers, onOpen, onAddNew, onRemove }: MailServ
                         status === 'running'
                           ? 'border-emerald-500'
                           : status === 'installing'
-                            ? 'border-sky-500 animate-pulse'
+                            ? 'animate-pulse border-sky-500'
                             : 'border-amber-500'
                       }`}
                     />
@@ -135,20 +135,18 @@ export function MailServerList({ servers, onOpen, onAddNew, onRemove }: MailServ
 
       {/* Right Rail Overview Card */}
       <aside className="space-y-4 lg:sticky lg:top-6 lg:self-start">
-        <div className="rounded-2xl border border-border/50 bg-card p-5 space-y-4">
+        <div className="space-y-4 rounded-2xl border border-border/50 bg-card p-5">
           <div className="flex items-center gap-2">
             <Activity className="size-4 text-muted-foreground" />
-            <h3 className="text-sm font-semibold text-foreground">Registry Overview</h3>
+            <h3 className="font-semibold text-foreground text-sm">Registry Overview</h3>
           </div>
 
           <div className="flex items-baseline justify-between">
             <div className="flex items-baseline gap-1.5">
-              <span className="text-2xl font-semibold tabular-nums text-foreground">{running}</span>
-              <span className="text-sm text-muted-foreground">
-                / {servers.length} running
-              </span>
+              <span className="font-semibold text-2xl text-foreground tabular-nums">{running}</span>
+              <span className="text-muted-foreground text-sm">/ {servers.length} running</span>
             </div>
-            <span className="font-mono text-xs text-muted-foreground">{runningPct}%</span>
+            <span className="font-mono text-muted-foreground text-xs">{runningPct}%</span>
           </div>
 
           <div className="h-1.5 w-full overflow-hidden rounded-full bg-muted">
@@ -158,7 +156,7 @@ export function MailServerList({ servers, onOpen, onAddNew, onRemove }: MailServ
             />
           </div>
 
-          <div className="space-y-2 border-t border-border/50 pt-4 text-xs">
+          <div className="space-y-2 border-border/50 border-t pt-4 text-xs">
             <div className="flex items-center justify-between text-muted-foreground">
               <span className="flex items-center gap-2">
                 <Server className="size-3.5" />

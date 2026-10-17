@@ -55,7 +55,7 @@ export function ChannelMultiSelect({
         type="button"
         disabled={disabled}
         onClick={() => setOpen((prev) => !prev)}
-        className="inline-flex items-center gap-2 rounded-lg border border-border/50 bg-secondary/80 px-2.5 py-1.5 text-xs font-normal text-secondary-foreground transition-colors hover:bg-secondary disabled:cursor-not-allowed disabled:opacity-50"
+        className="inline-flex items-center gap-2 rounded-lg border border-border/50 bg-secondary/80 px-2.5 py-1.5 font-normal text-secondary-foreground text-xs transition-colors hover:bg-secondary disabled:cursor-not-allowed disabled:opacity-50"
         aria-expanded={open}
       >
         <span className="flex items-center gap-1.5">
@@ -73,14 +73,12 @@ export function ChannelMultiSelect({
               );
             })}
             {value.length > 2 && (
-              <span className="grid size-5 place-items-center rounded-full bg-muted text-[10px] font-semibold text-muted-foreground ring-1 ring-background">
+              <span className="grid size-5 place-items-center rounded-full bg-muted font-semibold text-[10px] text-muted-foreground ring-1 ring-background">
                 +{value.length - 2}
               </span>
             )}
           </span>
-          <span className="whitespace-nowrap text-muted-foreground">
-            {value.length} channels
-          </span>
+          <span className="whitespace-nowrap text-muted-foreground">{value.length} channels</span>
         </span>
         <ChevronDown className="size-3.5 shrink-0 text-muted-foreground" />
       </button>
@@ -88,7 +86,7 @@ export function ChannelMultiSelect({
       {open && (
         <div
           role="menu"
-          className="absolute right-0 z-50 mt-1.5 w-52 overflow-hidden rounded-xl border border-border/60 bg-popover/95 p-1 shadow-2xl backdrop-blur-xl animate-in fade-in slide-in-from-top-1 duration-150"
+          className="fade-in slide-in-from-top-1 absolute right-0 z-50 mt-1.5 w-52 animate-in overflow-hidden rounded-xl border border-border/60 bg-popover/95 p-1 shadow-2xl backdrop-blur-xl duration-150"
         >
           {CHANNELS.map((ch) => {
             const active = value.includes(ch.id);
@@ -100,7 +98,7 @@ export function ChannelMultiSelect({
                 role="menuitemcheckbox"
                 aria-checked={active}
                 onClick={() => toggle(ch.id)}
-                className="flex w-full items-center gap-2.5 rounded-lg px-2.5 py-1.5 text-start text-xs text-foreground transition-colors hover:bg-muted/50"
+                className="flex w-full items-center gap-2.5 rounded-lg px-2.5 py-1.5 text-start text-foreground text-xs transition-colors hover:bg-muted/50"
               >
                 <span
                   className={`grid size-4 shrink-0 place-items-center rounded border transition-colors ${
@@ -112,7 +110,7 @@ export function ChannelMultiSelect({
                   {active && <Check className="size-3" />}
                 </span>
                 <Icon className="size-4 shrink-0 text-muted-foreground" />
-                <span className="flex-1 text-sm font-normal text-foreground">{ch.label}</span>
+                <span className="flex-1 font-normal text-foreground text-sm">{ch.label}</span>
               </button>
             );
           })}

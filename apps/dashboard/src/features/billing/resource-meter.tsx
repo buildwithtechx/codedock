@@ -9,25 +9,14 @@ export interface ResourceMeterProps {
   icon?: React.ReactNode;
 }
 
-export function ResourceMeter({
-  label,
-  hint,
-  used,
-  max,
-  unit = '',
-  icon,
-}: ResourceMeterProps) {
+export function ResourceMeter({ label, hint, used, max, unit = '', icon }: ResourceMeterProps) {
   const isKnown = used !== null && Number.isFinite(used);
   const hasLimit = typeof max === 'number' && Number.isFinite(max) && max > 0;
   const fraction = isKnown && hasLimit ? Math.min(1, Math.max(0, used / max)) : 0;
   const percentage = Math.round(fraction * 100);
 
   const barColor =
-    percentage >= 100
-      ? 'bg-destructive'
-      : percentage >= 80
-        ? 'bg-amber-500'
-        : 'bg-primary';
+    percentage >= 100 ? 'bg-destructive' : percentage >= 80 ? 'bg-amber-500' : 'bg-primary';
 
   const usedDisplay = isKnown ? used.toLocaleString() : '0';
   const maxDisplay = hasLimit ? max.toLocaleString() : 'Unlimited';
@@ -48,7 +37,8 @@ export function ResourceMeter({
             {label}
           </span>
           <span className="font-semibold text-foreground text-sm">
-            {usedDisplay} {unit && <span className="font-normal text-muted-foreground text-xs">{unit}</span>}
+            {usedDisplay}{' '}
+            {unit && <span className="font-normal text-muted-foreground text-xs">{unit}</span>}
           </span>
         </div>
 
@@ -63,7 +53,9 @@ export function ResourceMeter({
       </div>
 
       <div className="mt-3 flex items-center justify-between text-muted-foreground text-xs">
-        <span>Limit: {maxDisplay} {unit}</span>
+        <span>
+          Limit: {maxDisplay} {unit}
+        </span>
         {hasLimit && <span>{percentage}% used</span>}
       </div>
     </div>
@@ -81,11 +73,7 @@ export interface ResourceUsageStats {
   bandwidthLimitGb: number;
 }
 
-export function ResourceMetersOverview({
-  stats,
-}: {
-  stats?: Partial<ResourceUsageStats>;
-}) {
+export function ResourceMetersOverview({ stats }: { stats?: Partial<ResourceUsageStats> }) {
   return (
     <div className="space-y-4 rounded-2xl border border-border bg-card p-6 shadow-sm">
       <div>

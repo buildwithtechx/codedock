@@ -118,14 +118,22 @@ export function WorkflowBuilder() {
         </Button>
       </header>
 
-      <form onSubmit={handleSubmit} className="grid items-start gap-6 lg:grid-cols-[minmax(0,1fr)_340px]">
-        <fieldset disabled={isSubmitting} className="m-0 min-w-0 space-y-5 rounded-2xl border-0 bg-card p-5">
+      <form
+        onSubmit={handleSubmit}
+        className="grid items-start gap-6 lg:grid-cols-[minmax(0,1fr)_340px]"
+      >
+        <fieldset
+          disabled={isSubmitting}
+          className="m-0 min-w-0 space-y-5 rounded-2xl border-0 bg-card p-5"
+        >
           <div className="flex gap-3">
             <button
               type="button"
               onClick={() => handleModeChange('repository')}
               className={`flex-1 rounded-xl border p-3.5 text-start transition-all ${
-                mode === 'repository' ? 'border-primary bg-primary/5' : 'border-border/60 bg-muted/20'
+                mode === 'repository'
+                  ? 'border-primary bg-primary/5'
+                  : 'border-border/60 bg-muted/20'
               }`}
             >
               <div className="flex items-center gap-2">
@@ -141,7 +149,9 @@ export function WorkflowBuilder() {
               type="button"
               onClick={() => handleModeChange('standalone')}
               className={`flex-1 rounded-xl border p-3.5 text-start transition-all ${
-                mode === 'standalone' ? 'border-primary bg-primary/5' : 'border-border/60 bg-muted/20'
+                mode === 'standalone'
+                  ? 'border-primary bg-primary/5'
+                  : 'border-border/60 bg-muted/20'
               }`}
             >
               <div className="flex items-center gap-2">
@@ -233,8 +243,12 @@ export function WorkflowBuilder() {
           <div className="flex items-center gap-3">
             <PlayCircle className="size-6 text-primary" />
             <div className="min-w-0">
-              <h2 className="truncate font-medium text-base text-foreground">{name || 'New workflow'}</h2>
-              <p className="mt-0.5 text-muted-foreground text-xs">{mode === 'repository' ? repo : 'Standalone'}</p>
+              <h2 className="truncate font-medium text-base text-foreground">
+                {name || 'New workflow'}
+              </h2>
+              <p className="mt-0.5 text-muted-foreground text-xs">
+                {mode === 'repository' ? repo : 'Standalone'}
+              </p>
             </div>
           </div>
 
@@ -249,7 +263,11 @@ export function WorkflowBuilder() {
             </div>
           </dl>
 
-          <Button type="submit" disabled={isSubmitting || !name.trim()} className="w-full rounded-xl">
+          <Button
+            type="submit"
+            disabled={isSubmitting || !name.trim()}
+            className="w-full rounded-xl"
+          >
             {isSubmitting ? 'Saving workflow...' : 'Save and activate workflow'}
           </Button>
         </aside>

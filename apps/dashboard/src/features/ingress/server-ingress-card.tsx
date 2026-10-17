@@ -1,10 +1,19 @@
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
-import { AlertCircle, CheckCircle2, Cloud, Loader2, Plus, RefreshCw, Settings, Trash2 } from 'lucide-react';
+import {
+  AlertCircle,
+  CheckCircle2,
+  Cloud,
+  Loader2,
+  Plus,
+  RefreshCw,
+  Settings,
+  Trash2,
+} from 'lucide-react';
 import { useState } from 'react';
 import { toast } from 'sonner';
 import { Button } from '#/components/ui/button';
 import { Dialog, DialogContent } from '#/components/ui/dialog';
-import { ingressService, type IngressConnection } from '#/services/ingress';
+import { type IngressConnection, ingressService } from '#/services/ingress';
 import { IngressConnectForm } from './ingress-connect-form';
 import { IngressPreferences } from './ingress-preferences';
 
@@ -122,7 +131,9 @@ export function ServerIngressCard({ serverId }: ServerIngressCardProps) {
                   </span>
                 </div>
                 <p className="mt-1 text-muted-foreground text-xs">
-                  {current.connector === 'managed' ? 'Managed cloudflared connector' : 'Existing external tunnel'}
+                  {current.connector === 'managed'
+                    ? 'Managed cloudflared connector'
+                    : 'Existing external tunnel'}
                   {' • '}
                   Account: {current.accountId}
                 </p>
@@ -174,11 +185,12 @@ export function ServerIngressCard({ serverId }: ServerIngressCardProps) {
             </p>
           </div>
         ) : (
-          <div className="flex flex-col items-center justify-center rounded-xl border border-dashed border-border/80 py-8 text-center">
+          <div className="flex flex-col items-center justify-center rounded-xl border border-border/80 border-dashed py-8 text-center">
             <Cloud className="mb-2 size-8 text-muted-foreground/60" />
             <p className="font-medium text-foreground text-sm">No ingress tunnel connected</p>
             <p className="mt-1 max-w-sm text-muted-foreground text-xs">
-              Connect Cloudflare Tunnel to expose services on this host without opening public inbound firewall ports.
+              Connect Cloudflare Tunnel to expose services on this host without opening public
+              inbound firewall ports.
             </p>
             <Button
               variant="outline"

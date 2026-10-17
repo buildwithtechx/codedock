@@ -1,8 +1,8 @@
 import { Check, ChevronDown, Container, Flame } from 'lucide-react';
 import { useState } from 'react';
+import { CommandEnvironmentNotice } from '#/components/deploy/command-environment-notice';
 import { Input } from '#/components/ui/input';
 import { Label } from '#/components/ui/label';
-import { CommandEnvironmentNotice } from '#/components/deploy/command-environment-notice';
 
 const FRAMEWORKS = [
   'Dockerfile',

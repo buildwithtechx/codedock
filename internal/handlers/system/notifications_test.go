@@ -29,7 +29,7 @@ func (m *mockOrgRepo) ListByUser(ctx context.Context, userID string) ([]*models.
 	return m.orgs, nil
 }
 func (m *mockOrgRepo) Update(ctx context.Context, org *models.Organization) error { return nil }
-func (m *mockOrgRepo) Delete(ctx context.Context, id string) error               { return nil }
+func (m *mockOrgRepo) Delete(ctx context.Context, id string) error                { return nil }
 func (m *mockOrgRepo) AddMember(ctx context.Context, member *models.OrganizationMember) error {
 	return nil
 }

@@ -55,18 +55,15 @@ interface RunnerCatalogModalProps {
   onClose: () => void;
 }
 
-export function RunnerCatalogModal({
-  open,
-  selected,
-  onSelect,
-  onClose,
-}: RunnerCatalogModalProps) {
+export function RunnerCatalogModal({ open, selected, onSelect, onClose }: RunnerCatalogModalProps) {
   return (
     <Dialog open={open} onOpenChange={(val) => !val && onClose()}>
       <DialogContent className="max-w-2xl p-5 sm:p-6" showCloseButton={true}>
         <div className="space-y-5">
           <DialogHeader className="text-left">
-            <DialogTitle className="font-medium text-foreground text-xl">Runner catalog</DialogTitle>
+            <DialogTitle className="font-medium text-foreground text-xl">
+              Runner catalog
+            </DialogTitle>
             <DialogDescription className="mt-1 text-muted-foreground text-sm leading-relaxed">
               Choose an environment that works on your selected server.
             </DialogDescription>
@@ -109,9 +106,7 @@ export function RunnerCatalogModal({
                   <p className="mt-2 text-muted-foreground text-xs leading-relaxed">
                     {preset.badge}
                   </p>
-                  <p className="mt-2 text-muted-foreground/70 text-[11px]">
-                    {preset.description}
-                  </p>
+                  <p className="mt-2 text-[11px] text-muted-foreground/70">{preset.description}</p>
                 </button>
               );
             })}

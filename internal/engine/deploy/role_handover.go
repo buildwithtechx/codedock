@@ -15,10 +15,10 @@ var (
 )
 
 type RoleRolloutPlan struct {
-	Candidates []models.RoleCandidate    `json:"candidates"`
-	Reused     []models.RoleContainerRef `json:"reused"`
-	Stopped    []models.RoleContainerRef `json:"stopped"`
-	PreserveWeb bool                     `json:"preserveWeb"`
+	Candidates  []models.RoleCandidate    `json:"candidates"`
+	Reused      []models.RoleContainerRef `json:"reused"`
+	Stopped     []models.RoleContainerRef `json:"stopped"`
+	PreserveWeb bool                      `json:"preserveWeb"`
 }
 
 // AssertRoleInventorySettled fences deploys and rollouts with 409 if any unknown or unrecorded

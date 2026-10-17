@@ -28,7 +28,7 @@ export function ActionLogs({ logs = '', isRunning = false }: ActionLogsProps) {
 
   return (
     <div className="flex flex-col rounded-xl border border-border/80 bg-zinc-950 font-mono text-xs text-zinc-100 shadow-inner">
-      <div className="flex items-center justify-between border-b border-zinc-800/80 px-4 py-2 text-zinc-400">
+      <div className="flex items-center justify-between border-zinc-800/80 border-b px-4 py-2 text-zinc-400">
         <div className="flex items-center gap-2">
           <Terminal className="size-4 text-emerald-400" />
           <span className="font-semibold text-zinc-300">Run Output</span>

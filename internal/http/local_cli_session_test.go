@@ -38,9 +38,9 @@ func (m *mockUserRepoForCLI) GetUserTOTPSecret(ctx context.Context, userID strin
 func (m *mockUserRepoForCLI) ListUsers(ctx context.Context, limit, offset int) ([]models.User, int, error) {
 	return nil, 0, nil
 }
-func (m *mockUserRepoForCLI) CountUsers(ctx context.Context) (int, error) { return 1, nil }
+func (m *mockUserRepoForCLI) CountUsers(ctx context.Context) (int, error)          { return 1, nil }
 func (m *mockUserRepoForCLI) UpdateUser(ctx context.Context, u *models.User) error { return nil }
-func (m *mockUserRepoForCLI) DeleteUser(ctx context.Context, id string) error     { return nil }
+func (m *mockUserRepoForCLI) DeleteUser(ctx context.Context, id string) error      { return nil }
 func (m *mockUserRepoForCLI) CreatePAT(ctx context.Context, pat *models.PersonalAccessToken) error {
 	return nil
 }

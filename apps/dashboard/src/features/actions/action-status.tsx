@@ -48,7 +48,10 @@ export function ActionStatus({ status, showIcon = true }: ActionStatusProps) {
   };
 
   return (
-    <Badge variant={getVariant()} className="inline-flex items-center gap-1.5 px-2 py-0.5 text-xs font-medium uppercase tracking-wider">
+    <Badge
+      variant={getVariant()}
+      className="inline-flex items-center gap-1.5 px-2 py-0.5 font-medium text-xs uppercase tracking-wider"
+    >
       {showIcon && getIcon()}
       <span>{status}</span>
     </Badge>

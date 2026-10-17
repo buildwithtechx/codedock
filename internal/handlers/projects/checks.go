@@ -12,7 +12,7 @@ import (
 )
 
 type ChecksHandler struct {
-	mu     sync.RWMutex
+	mu      sync.RWMutex
 	configs map[string]*models.ProjectChecksConfig
 }
 

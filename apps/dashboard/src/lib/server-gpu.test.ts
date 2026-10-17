@@ -1,6 +1,6 @@
 import { describe, expect, it } from 'vitest';
-import { gpuMismatch, serverHasGpu, sortForGpu } from './server-gpu';
 import type { ServerGPUInfo } from '#/interfaces/server';
+import { gpuMismatch, serverHasGpu, sortForGpu } from './server-gpu';
 
 const mockGpu = (over: Partial<ServerGPUInfo> = {}): ServerGPUInfo => ({
   available: true,
@@ -51,15 +51,15 @@ describe('sortForGpu', () => {
 
 describe('gpuMismatch', () => {
   it('detects when manual override is yes but hardware probe found none', () => {
-    expect(
-      gpuMismatch(mockGpu({ override: 'yes', detected: false, available: true }))
-    ).toBe('yes-not-detected');
+    expect(gpuMismatch(mockGpu({ override: 'yes', detected: false, available: true }))).toBe(
+      'yes-not-detected'
+    );
   });
 
   it('detects when manual override is no but hardware probe found a GPU', () => {
-    expect(
-      gpuMismatch(mockGpu({ override: 'no', detected: true, available: false }))
-    ).toBe('no-but-detected');
+    expect(gpuMismatch(mockGpu({ override: 'no', detected: true, available: false }))).toBe(
+      'no-but-detected'
+    );
   });
 
   it('returns null when override matches detection or is not set', () => {
@@ -69,8 +69,6 @@ describe('gpuMismatch', () => {
   });
 
   it('returns null when the server was not probed', () => {
-    expect(
-      gpuMismatch(mockGpu({ override: 'yes', detected: false, probed: false }))
-    ).toBeNull();
+    expect(gpuMismatch(mockGpu({ override: 'yes', detected: false, probed: false }))).toBeNull();
   });
 });

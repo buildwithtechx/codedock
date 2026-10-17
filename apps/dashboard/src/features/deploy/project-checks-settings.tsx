@@ -69,7 +69,9 @@ export function ProjectChecksSettings({
       <CardHeader>
         <div className="flex items-center gap-2">
           <GitPullRequest className="size-4 text-primary" />
-          <CardTitle className="text-base font-semibold">GitHub Checks & Deployment Admission</CardTitle>
+          <CardTitle className="font-semibold text-base">
+            GitHub Checks & Deployment Admission
+          </CardTitle>
         </div>
         <CardDescription className="text-xs">
           Report commit and pull request build statuses back to GitHub and gate production releases.
@@ -80,10 +82,10 @@ export function ProjectChecksSettings({
         <form onSubmit={handleSave} className="space-y-4">
           <div className="flex items-center justify-between rounded-lg border border-border p-3">
             <div className="space-y-0.5">
-              <Label htmlFor="report-status" className="text-sm font-medium">
+              <Label htmlFor="report-status" className="font-medium text-sm">
                 Report Commit Status to GitHub
               </Label>
-              <p className="text-xs text-muted-foreground">
+              <p className="text-muted-foreground text-xs">
                 Posts pending, success, and failure statuses directly on commits and pull requests.
               </p>
             </div>
@@ -96,10 +98,10 @@ export function ProjectChecksSettings({
 
           <div className="flex items-center justify-between rounded-lg border border-border p-3">
             <div className="space-y-0.5">
-              <Label htmlFor="require-checks" className="text-sm font-medium">
+              <Label htmlFor="require-checks" className="font-medium text-sm">
                 Require Passing Checks Before Deploy
               </Label>
-              <p className="text-xs text-muted-foreground">
+              <p className="text-muted-foreground text-xs">
                 Prevents promotion to production if external checks or tests are failing or pending.
               </p>
             </div>
@@ -132,7 +134,11 @@ export function ProjectChecksSettings({
 
           <div className="flex justify-end pt-2">
             <Button type="submit" size="sm" disabled={isSaving} className="gap-1.5">
-              {isSaving ? <Loader2 className="size-3.5 animate-spin" /> : <ShieldCheck className="size-3.5" />}
+              {isSaving ? (
+                <Loader2 className="size-3.5 animate-spin" />
+              ) : (
+                <ShieldCheck className="size-3.5" />
+              )}
               <span>{isSaving ? 'Saving...' : 'Save Checks Configuration'}</span>
             </Button>
           </div>

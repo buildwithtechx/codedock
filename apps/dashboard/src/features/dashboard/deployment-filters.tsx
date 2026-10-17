@@ -53,8 +53,8 @@ export function DeploymentFilters({
       </div>
 
       <Select value={projectId} onValueChange={onProjectChange}>
-        <SelectTrigger className="w-full bg-card sm:w-44 flex items-center gap-2">
-          <FolderGit2 className="h-4 w-4 text-muted-foreground shrink-0" />
+        <SelectTrigger className="flex w-full items-center gap-2 bg-card sm:w-44">
+          <FolderGit2 className="h-4 w-4 shrink-0 text-muted-foreground" />
           <SelectValue placeholder="All Projects" />
         </SelectTrigger>
         <SelectContent>
@@ -67,7 +67,7 @@ export function DeploymentFilters({
         </SelectContent>
       </Select>
 
-      <div className="max-w-full shrink-0 overflow-x-auto scrollbar-hide scrollbar-none [&::-webkit-scrollbar]:hidden">
+      <div className="scrollbar-hide scrollbar-none max-w-full shrink-0 overflow-x-auto [&::-webkit-scrollbar]:hidden">
         <div className="inline-flex items-center gap-1">
           {DEPLOYMENT_FILTERS.map((f) => (
             <button
@@ -75,7 +75,7 @@ export function DeploymentFilters({
               type="button"
               aria-pressed={status === f.value}
               onClick={() => onStatusChange(f.value)}
-              className={`inline-flex h-10 shrink-0 items-center rounded-lg px-4 text-sm font-medium whitespace-nowrap transition-colors focus-visible:outline-2 focus-visible:outline-ring ${
+              className={`inline-flex h-10 shrink-0 items-center whitespace-nowrap rounded-lg px-4 font-medium text-sm transition-colors focus-visible:outline-2 focus-visible:outline-ring ${
                 status === f.value
                   ? 'bg-foreground text-background'
                   : 'text-muted-foreground hover:bg-muted hover:text-foreground'

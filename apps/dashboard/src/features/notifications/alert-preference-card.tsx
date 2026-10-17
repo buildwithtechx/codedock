@@ -24,7 +24,7 @@ export function AlertPreferenceCard({
   onNotifyToggle,
 }: AlertPreferenceCardProps) {
   return (
-    <div className="rounded-xl border border-border/40 bg-card p-4 space-y-4">
+    <div className="space-y-4 rounded-xl border border-border/40 bg-card p-4">
       <div>
         <p className="font-medium text-foreground text-sm">{event.title}</p>
         <p className="mt-1 text-muted-foreground text-xs leading-relaxed">{event.description}</p>

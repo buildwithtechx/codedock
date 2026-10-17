@@ -1,10 +1,10 @@
 import { describe, expect, it } from 'vitest';
 import {
-  roleLogTargetKey,
+  type RuntimeRole,
   roleLogsHref,
+  roleLogTargetKey,
   runtimeRoleLogTargets,
   runtimeRoleState,
-  type RuntimeRole,
 } from './runtime-roles';
 
 describe('runtime-roles helpers', () => {
@@ -48,9 +48,7 @@ describe('runtime-roles helpers', () => {
           kind: 'worker',
           command: 'crawl.sh',
           replicas: 1,
-          containers: [
-            { containerId: 'cid-1', replica: 1, status: 'running', restartCount: 0 },
-          ],
+          containers: [{ containerId: 'cid-1', replica: 1, status: 'running', restartCount: 0 }],
         },
       ],
     });

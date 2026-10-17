@@ -1,7 +1,7 @@
-import { Plus, MessageSquare, Tag } from 'lucide-react';
+import { MessageSquare, Plus, Tag } from 'lucide-react';
 import { Button } from '#/components/ui/button';
-import type { SupportTicket, SupportCategory } from '#/services/cloud-support';
 import { cn } from '#/lib/utils';
+import type { SupportCategory, SupportTicket } from '#/services/cloud-support';
 
 export interface SupportTicketListProps {
   tickets: SupportTicket[];
@@ -41,7 +41,7 @@ export function SupportTicketList({
       </div>
 
       {tickets.length === 0 ? (
-        <div className="flex flex-col items-center justify-center rounded-2xl border border-dashed border-border/80 p-10 text-center">
+        <div className="flex flex-col items-center justify-center rounded-2xl border border-border/80 border-dashed p-10 text-center">
           <div className="flex size-10 items-center justify-center rounded-xl bg-muted/60 text-muted-foreground">
             <MessageSquare className="size-5" />
           </div>
@@ -71,12 +71,12 @@ export function SupportTicketList({
               >
                 <div className="min-w-0 flex-1">
                   <div className="flex items-center gap-2">
-                    <span className="font-mono text-muted-foreground text-xs font-medium">
+                    <span className="font-medium font-mono text-muted-foreground text-xs">
                       {ticket.id}
                     </span>
                     <span
                       className={cn(
-                        'rounded-full px-2 py-0.5 text-[10px] font-semibold uppercase tracking-wider',
+                        'rounded-full px-2 py-0.5 font-semibold text-[10px] uppercase tracking-wider',
                         ticket.status === 'open'
                           ? 'bg-amber-500/15 text-amber-600 dark:text-amber-400'
                           : ticket.status === 'resolved'
@@ -86,7 +86,7 @@ export function SupportTicketList({
                     >
                       {ticket.status}
                     </span>
-                    <span className="inline-flex items-center gap-1 text-muted-foreground text-[11px]">
+                    <span className="inline-flex items-center gap-1 text-[11px] text-muted-foreground">
                       <Tag className="size-3" />
                       <span>{CATEGORY_LABELS[ticket.category] || ticket.category}</span>
                     </span>

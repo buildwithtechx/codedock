@@ -1,7 +1,7 @@
 import { User } from 'lucide-react';
 import type { AuditEventRow } from './api';
 import { resolveResourceDisplay } from './audit-resource-helper';
-import { describeAuditEvent, actorDisplay, type AuditTone } from './audit-taxonomy';
+import { type AuditTone, actorDisplay, describeAuditEvent } from './audit-taxonomy';
 
 const TONE_DOT: Record<AuditTone, string> = {
   neutral: 'bg-muted-foreground/60',
@@ -15,11 +15,13 @@ function formatDayHeader(dateIso?: string): string {
   if (!dateIso) return '';
   const date = new Date(dateIso);
   if (Number.isNaN(date.getTime())) return dateIso;
-  return date.toLocaleDateString(undefined, {
-    weekday: 'short',
-    month: 'short',
-    day: 'numeric',
-  }).toUpperCase();
+  return date
+    .toLocaleDateString(undefined, {
+      weekday: 'short',
+      month: 'short',
+      day: 'numeric',
+    })
+    .toUpperCase();
 }
 
 function formatClockTime(dateIso?: string): string {
@@ -92,7 +94,7 @@ export function AuditDayGroup({ dayKey, events, onSelectEvent }: AuditDayGroupPr
               <div className="relative flex size-8 shrink-0 items-center justify-center rounded-full bg-muted/60 text-muted-foreground">
                 <User className="size-4" />
                 <span
-                  className={`absolute -bottom-0.5 -right-0.5 size-2.5 rounded-full ring-2 ring-card ${TONE_DOT[tone]}`}
+                  className={`absolute -right-0.5 -bottom-0.5 size-2.5 rounded-full ring-2 ring-card ${TONE_DOT[tone]}`}
                 />
               </div>
 

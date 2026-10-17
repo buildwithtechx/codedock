@@ -1,12 +1,5 @@
 import { Link } from '@tanstack/react-router';
-import {
-  Activity,
-  ArrowRight,
-  CheckCircle2,
-  CircleX,
-  Rocket,
-  Zap,
-} from 'lucide-react';
+import { Activity, ArrowRight, CheckCircle2, CircleX, Rocket, Zap } from 'lucide-react';
 import type { OrganizationDeployment } from '#/features/services';
 
 const activeStatuses = new Set(['PENDING', 'CLONING', 'PULLING', 'BUILDING']);

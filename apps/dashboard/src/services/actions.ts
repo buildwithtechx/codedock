@@ -133,7 +133,10 @@ export const actionsService = {
   },
 
   triggerWorkflow: async (id: string): Promise<ActionRun> => {
-    const res = await apiClient.post<{ data: ActionRun }>(`/actions/workflows/${encodeURIComponent(id)}/trigger`, {});
+    const res = await apiClient.post<{ data: ActionRun }>(
+      `/actions/workflows/${encodeURIComponent(id)}/trigger`,
+      {}
+    );
     return res.data;
   },
 
@@ -148,12 +151,18 @@ export const actionsService = {
   },
 
   retryRun: async (id: string): Promise<ActionRun> => {
-    const res = await apiClient.post<{ data: ActionRun }>(`/actions/runs/${encodeURIComponent(id)}/retry`, {});
+    const res = await apiClient.post<{ data: ActionRun }>(
+      `/actions/runs/${encodeURIComponent(id)}/retry`,
+      {}
+    );
     return res.data;
   },
 
   cancelRun: async (id: string): Promise<ActionRun> => {
-    const res = await apiClient.post<{ data: ActionRun }>(`/actions/runs/${encodeURIComponent(id)}/cancel`, {});
+    const res = await apiClient.post<{ data: ActionRun }>(
+      `/actions/runs/${encodeURIComponent(id)}/cancel`,
+      {}
+    );
     return res.data;
   },
 
@@ -163,7 +172,9 @@ export const actionsService = {
   },
 
   inspectDestination: async (serverId: string): Promise<ActionCapabilities> => {
-    const res = await apiClient.post<{ data: ActionCapabilities }>('/actions/runners/inspect', { serverId });
+    const res = await apiClient.post<{ data: ActionCapabilities }>('/actions/runners/inspect', {
+      serverId,
+    });
     return res.data;
   },
 

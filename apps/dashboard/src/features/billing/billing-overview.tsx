@@ -1,5 +1,5 @@
-import { useState } from 'react';
 import { CreditCard, ExternalLink, Loader2, Sparkles } from 'lucide-react';
+import { useState } from 'react';
 import { Button } from '#/components/ui/button';
 import { billingService } from '#/services/billing';
 
@@ -28,7 +28,8 @@ export function BillingOverview({
   const isPro = planType === 'pro';
   const isCustom = planType === 'custom';
   const isPaid = isPro || isCustom;
-  const displayName = planName ?? (isCustom ? 'Custom Cloud Dedicated' : isPro ? 'Pro Platform' : 'Hobby Developer');
+  const displayName =
+    planName ?? (isCustom ? 'Custom Cloud Dedicated' : isPro ? 'Pro Platform' : 'Hobby Developer');
 
   const handleOpenPortal = async () => {
     setLoadingPortal(true);
@@ -66,7 +67,13 @@ export function BillingOverview({
                       : 'bg-muted text-muted-foreground'
                 }`}
               >
-                {cancelAtPeriodEnd ? 'Canceling' : status === 'active' ? (isPaid ? 'Active' : 'Free') : status}
+                {cancelAtPeriodEnd
+                  ? 'Canceling'
+                  : status === 'active'
+                    ? isPaid
+                      ? 'Active'
+                      : 'Free'
+                    : status}
               </span>
             </div>
             <p className="mt-1 text-muted-foreground text-sm">
@@ -109,7 +116,10 @@ export function BillingOverview({
       </div>
 
       {portalError && (
-        <div className="mt-4 rounded-lg bg-destructive/10 p-3 text-destructive text-sm" role="alert">
+        <div
+          className="mt-4 rounded-lg bg-destructive/10 p-3 text-destructive text-sm"
+          role="alert"
+        >
           {portalError}
         </div>
       )}

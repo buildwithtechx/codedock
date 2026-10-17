@@ -11,11 +11,15 @@ vi.mock('#/features/projects', () => ({
 }));
 
 vi.mock('@tanstack/react-router', () => ({
-  Link: ({ children, to, ...props }: any) => <a href={to} {...props}>{children}</a>,
+  Link: ({ children, to, ...props }: any) => (
+    <a href={to} {...props}>
+      {children}
+    </a>
+  ),
 }));
 
-import { useListByOrganization } from '#/hooks/use-deployments';
 import { useListProjects } from '#/features/projects';
+import { useListByOrganization } from '#/hooks/use-deployments';
 
 describe('DeploymentDirectory', () => {
   beforeEach(() => {

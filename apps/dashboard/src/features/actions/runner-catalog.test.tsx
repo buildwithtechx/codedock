@@ -7,16 +7,18 @@ import { RunnerCatalog } from './runner-catalog';
 
 vi.mock('@tanstack/react-router', () => ({
   Link: ({ children, to, ...props }: { children?: ReactNode; to?: string }) => (
-    <a href={to} {...props}>{children}</a>
+    <a href={to} {...props}>
+      {children}
+    </a>
   ),
   useNavigate: () => vi.fn(),
 }));
 
 vi.mock('#/services/servers', () => ({
   serverService: {
-    list: vi.fn().mockResolvedValue([
-      { id: 'server-1', name: 'Dedicated Node', ipAddress: '1.2.3.4' },
-    ]),
+    list: vi
+      .fn()
+      .mockResolvedValue([{ id: 'server-1', name: 'Dedicated Node', ipAddress: '1.2.3.4' }]),
   },
 }));
 

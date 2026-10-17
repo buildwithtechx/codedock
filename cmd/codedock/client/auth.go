@@ -110,4 +110,3 @@ func (c *Client) ExchangeLocalCLISession(internalToken string) (*AuthResponse, e
 		User:  user,
 	}, nil
 }
-

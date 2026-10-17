@@ -51,7 +51,8 @@ export function RelaySetupAccordion({ relay, onChange }: RelaySetupAccordionProp
             Outbound relay (recommended)
           </span>
           <span className="mt-0.5 block text-muted-foreground text-xs leading-relaxed">
-            Send outgoing mail through an established email provider to avoid blocklisted server IPs and port 25 limits.
+            Send outgoing mail through an established email provider to avoid blocklisted server IPs
+            and port 25 limits.
           </span>
         </div>
       </div>

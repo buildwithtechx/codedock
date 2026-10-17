@@ -4,11 +4,7 @@ import { useState } from 'react';
 import { toast } from 'sonner';
 import { Button } from '#/components/ui/button';
 import { Input } from '#/components/ui/input';
-import {
-  getMailProvider,
-  MAIL_PROVIDERS,
-  type MailProviderId,
-} from './mail-providers-catalog';
+import { getMailProvider, MAIL_PROVIDERS, type MailProviderId } from './mail-providers-catalog';
 
 type WizardPhase = 'choose' | 'connect' | 'done';
 
@@ -66,7 +62,8 @@ export function MailWizardView() {
         </div>
         <h1 className="mt-4 font-semibold text-2xl text-foreground">Webmail is deploying</h1>
         <p className="mt-2 text-muted-foreground text-sm">
-          Your webmail client is being provisioned at <span className="font-mono text-foreground">{hostname}</span>.
+          Your webmail client is being provisioned at{' '}
+          <span className="font-mono text-foreground">{hostname}</span>.
         </p>
         <div className="mt-6 flex justify-center gap-3">
           <Button asChild variant="outline" className="rounded-xl">
@@ -81,10 +78,12 @@ export function MailWizardView() {
   }
 
   return (
-    <div className="mx-auto max-w-3xl pb-20 pt-6">
+    <div className="mx-auto max-w-3xl pt-6 pb-20">
       <button
         type="button"
-        onClick={() => (phase === 'connect' ? setPhase('choose') : navigate({ to: '/apps/new' as never }))}
+        onClick={() =>
+          phase === 'connect' ? setPhase('choose') : navigate({ to: '/apps/new' as never })
+        }
         className="mb-6 inline-flex items-center gap-1.5 text-muted-foreground text-sm transition-colors hover:text-foreground"
       >
         <ArrowLeft className="size-4 rtl:rotate-180" /> Back
@@ -97,7 +96,8 @@ export function MailWizardView() {
         <div className="min-w-0">
           <h1 className="font-semibold text-foreground text-xl">Codedock Mail</h1>
           <p className="text-muted-foreground text-sm">
-            Your own mail on your own domain — SMTP/IMAP, mailboxes and webmail on one server. Or keep the mailboxes you already have and just run the webmail.
+            Your own mail on your own domain — SMTP/IMAP, mailboxes and webmail on one server. Or
+            keep the mailboxes you already have and just run the webmail.
           </p>
         </div>
       </div>
@@ -115,7 +115,8 @@ export function MailWizardView() {
             <div className="min-w-0 flex-1">
               <h2 className="font-medium text-base text-foreground">Self-host mail server</h2>
               <p className="mt-1 text-muted-foreground text-sm leading-relaxed">
-                Deploy the complete mail engine (maild, SMTP/IMAP daemon, DKIM, and mailbox manager) on your server.
+                Deploy the complete mail engine (maild, SMTP/IMAP daemon, DKIM, and mailbox manager)
+                on your server.
               </p>
             </div>
           </button>
@@ -131,7 +132,8 @@ export function MailWizardView() {
             <div className="min-w-0 flex-1">
               <h2 className="font-medium text-base text-foreground">Connect existing mailboxes</h2>
               <p className="mt-1 text-muted-foreground text-sm leading-relaxed">
-                Install a fast webmail client pointed at an existing provider (Gmail, Fastmail, or an outbound relay like SES, SendGrid, or Resend).
+                Install a fast webmail client pointed at an existing provider (Gmail, Fastmail, or
+                an outbound relay like SES, SendGrid, or Resend).
               </p>
             </div>
           </button>
@@ -150,7 +152,7 @@ export function MailWizardView() {
                     key={p.id}
                     type="button"
                     onClick={() => applyPreset(p.id)}
-                    className={`inline-flex items-center gap-2 rounded-xl border px-3 py-1.5 text-xs font-medium transition-colors ${
+                    className={`inline-flex items-center gap-2 rounded-xl border px-3 py-1.5 font-medium text-xs transition-colors ${
                       isSelected
                         ? 'border-primary bg-primary/10 text-foreground'
                         : 'border-border/60 bg-muted/30 text-muted-foreground hover:bg-muted/60 hover:text-foreground'

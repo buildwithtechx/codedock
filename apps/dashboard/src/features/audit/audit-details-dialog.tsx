@@ -72,12 +72,12 @@ function JsonBlock({ value, label }: { value: unknown; label: string }) {
   return (
     <div>
       <div className="mb-1 flex items-center justify-between">
-        <span className="text-xs font-semibold uppercase tracking-wide text-muted-foreground">
+        <span className="font-semibold text-muted-foreground text-xs uppercase tracking-wide">
           {label}
         </span>
         <CopyButton value={text} />
       </div>
-      <pre className="max-h-60 overflow-auto rounded-lg border border-border/50 bg-muted/30 p-3 text-xs leading-relaxed text-foreground whitespace-pre-wrap break-words font-mono">
+      <pre className="max-h-60 overflow-auto whitespace-pre-wrap break-words rounded-lg border border-border/50 bg-muted/30 p-3 font-mono text-foreground text-xs leading-relaxed">
         {text}
       </pre>
     </div>
@@ -90,11 +90,7 @@ export interface AuditDetailsDialogProps {
   onClose: () => void;
 }
 
-export function AuditDetailsDialog({
-  event,
-  open,
-  onClose,
-}: AuditDetailsDialogProps) {
+export function AuditDetailsDialog({ event, open, onClose }: AuditDetailsDialogProps) {
   const [showTechnical, setShowTechnical] = useState(false);
   const info = event ? describeAuditAction(event.action) : null;
   const actor = event ? actorDisplay(event) : '';
@@ -129,9 +125,7 @@ export function AuditDetailsDialog({
               {row?.actorEmail && <DetailRow label="Email" value={row.actorEmail} />}
               <DetailRow
                 label="Came from"
-                value={
-                  row?.source ? row.source.toUpperCase() : 'Dashboard'
-                }
+                value={row?.source ? row.source.toUpperCase() : 'Dashboard'}
               />
               {row?.sourceClientName && (
                 <DetailRow label="Via agent" value={row.sourceClientName} />
@@ -158,7 +152,7 @@ export function AuditDetailsDialog({
                 />
               </button>
               {showTechnical && (
-                <div className="border-border/40 border-t px-4 pt-2 pb-4 space-y-4">
+                <div className="space-y-4 border-border/40 border-t px-4 pt-2 pb-4">
                   <div>
                     <DetailRow label="Event ID" value={event.id} copyable mono />
                     <DetailRow label="Action" value={event.action} copyable mono />
@@ -167,8 +161,8 @@ export function AuditDetailsDialog({
                   </div>
 
                   {(hasBefore || hasAfter) && (
-                    <div className="border-t border-border/40 pt-3">
-                      <h4 className="mb-2 text-xs font-semibold uppercase tracking-wide text-muted-foreground">
+                    <div className="border-border/40 border-t pt-3">
+                      <h4 className="mb-2 font-semibold text-muted-foreground text-xs uppercase tracking-wide">
                         Payload Changes
                       </h4>
                       {hasBefore && hasAfter ? (

@@ -1,7 +1,7 @@
 import { createFileRoute, useNavigate } from '@tanstack/react-router';
 import { useEffect } from 'react';
-import { SupportCenter } from '#/features/support';
 import { useGetPublicSettings } from '#/features/settings';
+import { SupportCenter } from '#/features/support';
 
 export const Route = createFileRoute('/_dashboard/support')({
   component: SupportPage,

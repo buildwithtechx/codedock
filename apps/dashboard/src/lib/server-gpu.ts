@@ -1,8 +1,6 @@
 import type { ServerGPUInfo } from '#/interfaces/server';
 
-export function serverHasGpu(
-  server: { gpu?: ServerGPUInfo | null } | null | undefined
-): boolean {
+export function serverHasGpu(server: { gpu?: ServerGPUInfo | null } | null | undefined): boolean {
   return server?.gpu?.available === true;
 }
 

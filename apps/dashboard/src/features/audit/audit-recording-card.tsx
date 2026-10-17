@@ -29,7 +29,9 @@ export function AuditRecordingCard({
             Keep a record of every change made in this organization. On by default.
           </p>
           {!canManage && (
-            <p className="mt-1 text-muted-foreground/70 text-xs">Admin permissions required to modify.</p>
+            <p className="mt-1 text-muted-foreground/70 text-xs">
+              Admin permissions required to modify.
+            </p>
           )}
         </div>
         <div className="flex shrink-0 items-center gap-2">
@@ -57,7 +59,7 @@ export function AuditRecordingCard({
             </option>
           ))}
         </select>
-        <span className="block w-full text-muted-foreground/70 text-[11px] sm:w-auto">
+        <span className="block w-full text-[11px] text-muted-foreground/70 sm:w-auto">
           Older entries are deleted automatically.
         </span>
       </div>

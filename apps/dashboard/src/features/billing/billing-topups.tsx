@@ -1,7 +1,7 @@
-import { useRef, useState } from 'react';
 import { Coins, Loader2, Zap } from 'lucide-react';
+import { useRef, useState } from 'react';
 import { Button } from '#/components/ui/button';
-import { DEFAULT_TOPUP_PACKS, type TopupPack, billingService } from '#/services/billing';
+import { billingService, DEFAULT_TOPUP_PACKS, type TopupPack } from '#/services/billing';
 
 export interface BillingTopupsProps {
   balanceCredits?: number;
@@ -57,7 +57,8 @@ export function BillingTopups({
             Prepaid Compute Credits
           </h3>
           <p className="mt-1 text-muted-foreground text-sm">
-            Top up on-demand credits for managed server hours, storage growth, and build concurrency.
+            Top up on-demand credits for managed server hours, storage growth, and build
+            concurrency.
           </p>
         </div>
 
@@ -65,7 +66,8 @@ export function BillingTopups({
           <div className="rounded-xl border border-border bg-muted/40 px-3.5 py-2">
             <p className="font-medium text-muted-foreground text-xs">Current Balance</p>
             <p className="font-bold text-foreground text-lg">
-              {balanceCredits.toLocaleString()} <span className="font-normal text-muted-foreground text-xs">credits</span>
+              {balanceCredits.toLocaleString()}{' '}
+              <span className="font-normal text-muted-foreground text-xs">credits</span>
             </p>
           </div>
         )}
@@ -92,8 +94,7 @@ export function BillingTopups({
                   <span className="font-bold text-foreground text-xl">{priceFormatted}</span>
                   {pack.bonusPercent && (
                     <span className="inline-flex items-center gap-1 rounded-full bg-emerald-500/10 px-2 py-0.5 font-medium text-emerald-500 text-xs">
-                      <Zap className="size-3" />
-                      +{pack.bonusPercent}%
+                      <Zap className="size-3" />+{pack.bonusPercent}%
                     </span>
                   )}
                 </div>

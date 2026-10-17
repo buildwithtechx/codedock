@@ -45,13 +45,7 @@ describe('BillingOverview', () => {
   });
 
   it('renders canceling state with scheduled end notice', () => {
-    render(
-      <BillingOverview
-        planType="pro"
-        cancelAtPeriodEnd={true}
-        renewalDate="Dec 1, 2026"
-      />
-    );
+    render(<BillingOverview planType="pro" cancelAtPeriodEnd={true} renewalDate="Dec 1, 2026" />);
 
     expect(screen.getByText('Canceling')).toBeDefined();
     expect(screen.getByText('Access remains active until Dec 1, 2026')).toBeDefined();

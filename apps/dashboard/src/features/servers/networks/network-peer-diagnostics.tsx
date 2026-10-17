@@ -18,14 +18,19 @@ export function NetworkPeerDiagnostics({ members }: NetworkPeerDiagnosticsProps)
 
       <div className="divide-y divide-border/50 rounded-xl border border-border/60 bg-card">
         {members.map((member) => (
-          <div key={member.serverId} className="flex flex-wrap items-center justify-between gap-3 p-3 text-xs">
+          <div
+            key={member.serverId}
+            className="flex flex-wrap items-center justify-between gap-3 p-3 text-xs"
+          >
             <div className="flex items-center gap-3">
               <div className="flex h-7 w-7 items-center justify-center rounded-lg bg-muted text-muted-foreground">
                 <Wifi className="size-3.5" />
               </div>
               <div>
-                <p className="font-semibold text-foreground">{member.serverName || member.serverId}</p>
-                <p className="font-mono text-muted-foreground text-[11px]">
+                <p className="font-semibold text-foreground">
+                  {member.serverName || member.serverId}
+                </p>
+                <p className="font-mono text-[11px] text-muted-foreground">
                   {member.privateIp} ({member.interfaceName})
                 </p>
               </div>
@@ -40,7 +45,9 @@ export function NetworkPeerDiagnostics({ members }: NetworkPeerDiagnosticsProps)
               </div>
 
               <div className="flex items-center gap-1.5 font-mono text-muted-foreground">
-                <span>Loss: {typeof member.packetLoss === 'number' ? `${member.packetLoss}%` : '0%'}</span>
+                <span>
+                  Loss: {typeof member.packetLoss === 'number' ? `${member.packetLoss}%` : '0%'}
+                </span>
               </div>
 
               <span

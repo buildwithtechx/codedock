@@ -27,6 +27,11 @@ func TestDumpRestoreRoundtrip(t *testing.T) {
 	supervisor := NewSupervisor(docker, "codedock-postgres-dumptest", dataDir, "postgres:16", 5546)
 	t.Cleanup(func() {
 		cleanupCtx := context.Background()
+		if execID, err := docker.ContainerExecCreate(cleanupCtx, "codedock-postgres-dumptest", container.ExecOptions{
+			Cmd: []string{"chmod", "-R", "777", "/var/lib/postgresql/data"},
+		}); err == nil {
+			_ = docker.ContainerExecStart(cleanupCtx, execID.ID, container.ExecStartOptions{})
+		}
 		_ = docker.ContainerStop(cleanupCtx, "codedock-postgres-dumptest", container.StopOptions{})
 		_ = docker.ContainerRemove(cleanupCtx, "codedock-postgres-dumptest", container.RemoveOptions{Force: true})
 	})

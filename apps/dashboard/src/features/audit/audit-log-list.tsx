@@ -2,24 +2,11 @@ import { Layers } from 'lucide-react';
 import { useCallback, useEffect, useMemo, useState } from 'react';
 import { toast } from 'sonner';
 import { Button } from '#/components/ui/button';
-import {
-  auditApi,
-  type AuditEventRow,
-  type AuditFacets,
-} from './api';
+import { type AuditEventRow, type AuditFacets, auditApi } from './api';
 import { AuditDayGroup } from './audit-day-group';
 import { AuditDetailsDialog } from './audit-details-dialog';
-import {
-  AuditFilterBar,
-  type PeriodKey,
-  type SourceKey,
-} from './audit-filter-bar';
-import {
-  CATEGORY_ICONS,
-  groupByDay,
-  periodStart,
-  type CategoryKey,
-} from './audit-helpers';
+import { AuditFilterBar, type PeriodKey, type SourceKey } from './audit-filter-bar';
+import { CATEGORY_ICONS, type CategoryKey, groupByDay, periodStart } from './audit-helpers';
 import { AuditRecordingCard } from './audit-recording-card';
 import { AUDIT_CATEGORIES } from './audit-taxonomy';
 
@@ -57,7 +44,11 @@ export function AuditLogList() {
       .then((res) => {
         if (!cancelled) {
           const listRes = res as unknown as { data?: AuditEventRow[]; total?: number };
-          const items = Array.isArray(listRes?.data) ? listRes.data : Array.isArray(res) ? (res as AuditEventRow[]) : [];
+          const items = Array.isArray(listRes?.data)
+            ? listRes.data
+            : Array.isArray(res)
+              ? (res as AuditEventRow[])
+              : [];
           setEvents(items);
           setTotal(listRes?.total ?? items.length);
         }
@@ -94,37 +85,31 @@ export function AuditLogList() {
     };
   }, [query]);
 
-  const handleToggleRecording = useCallback(
-    async (enabled: boolean) => {
-      setSavingSettings(true);
-      try {
-        const res = await auditApi.updateSettings({ enabled });
-        setFacets((prev) => (prev ? { ...prev, settings: res.data } : prev));
-        toast.success(enabled ? 'Activity recording enabled' : 'Activity recording disabled');
-      } catch {
-        toast.error('Failed to update recording setting');
-      } finally {
-        setSavingSettings(false);
-      }
-    },
-    []
-  );
+  const handleToggleRecording = useCallback(async (enabled: boolean) => {
+    setSavingSettings(true);
+    try {
+      const res = await auditApi.updateSettings({ enabled });
+      setFacets((prev) => (prev ? { ...prev, settings: res.data } : prev));
+      toast.success(enabled ? 'Activity recording enabled' : 'Activity recording disabled');
+    } catch {
+      toast.error('Failed to update recording setting');
+    } finally {
+      setSavingSettings(false);
+    }
+  }, []);
 
-  const handleRetentionChange = useCallback(
-    async (retentionDays: number) => {
-      setSavingSettings(true);
-      try {
-        const res = await auditApi.updateSettings({ retentionDays });
-        setFacets((prev) => (prev ? { ...prev, settings: res.data } : prev));
-        toast.success(`Retention updated to ${retentionDays} days`);
-      } catch {
-        toast.error('Failed to update retention days');
-      } finally {
-        setSavingSettings(false);
-      }
-    },
-    []
-  );
+  const handleRetentionChange = useCallback(async (retentionDays: number) => {
+    setSavingSettings(true);
+    try {
+      const res = await auditApi.updateSettings({ retentionDays });
+      setFacets((prev) => (prev ? { ...prev, settings: res.data } : prev));
+      toast.success(`Retention updated to ${retentionDays} days`);
+    } catch {
+      toast.error('Failed to update retention days');
+    } finally {
+      setSavingSettings(false);
+    }
+  }, []);
 
   const dayGroups = useMemo(() => groupByDay(events), [events]);
   const counts = useMemo(
@@ -159,7 +144,7 @@ export function AuditLogList() {
         >
           All {facets?.total !== undefined ? facets.total : ''}
           {category === 'all' && (
-            <span className="-bottom-px absolute inset-x-0 h-0.5 rounded-full bg-primary" />
+            <span className="absolute inset-x-0 -bottom-px h-0.5 rounded-full bg-primary" />
           )}
         </button>
 
@@ -177,15 +162,13 @@ export function AuditLogList() {
                 setPage(1);
               }}
               className={`relative inline-flex items-center gap-2 whitespace-nowrap px-3 py-2.5 font-medium text-sm transition-colors ${
-                isSelected
-                  ? 'text-foreground'
-                  : 'text-muted-foreground hover:text-foreground/80'
+                isSelected ? 'text-foreground' : 'text-muted-foreground hover:text-foreground/80'
               }`}
             >
               <Icon className="size-4" />
               {cat.label} {count}
               {isSelected && (
-                <span className="-bottom-px absolute inset-x-0 h-0.5 rounded-full bg-primary" />
+                <span className="absolute inset-x-0 -bottom-px h-0.5 rounded-full bg-primary" />
               )}
             </button>
           );

@@ -5,7 +5,7 @@ import { Button } from '#/components/ui/button';
 import { Input } from '#/components/ui/input';
 import { Label } from '#/components/ui/label';
 import { Switch } from '#/components/ui/switch';
-import { ingressService, type IngressConnection } from '#/services/ingress';
+import { type IngressConnection, ingressService } from '#/services/ingress';
 
 interface IngressPreferencesProps {
   connection: IngressConnection;

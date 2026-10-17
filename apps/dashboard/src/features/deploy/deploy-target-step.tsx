@@ -242,10 +242,7 @@ export function DeployTargetStep({ onContinue }: DeployTargetStepProps) {
         </div>
       </div>
 
-      <AddServerModal
-        open={addServerOpen}
-        onClose={() => setAddServerOpen(false)}
-      />
+      <AddServerModal open={addServerOpen} onClose={() => setAddServerOpen(false)} />
     </div>
   );
 }

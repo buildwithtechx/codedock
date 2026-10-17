@@ -1,13 +1,4 @@
-import {
-  Eye,
-  EyeOff,
-  Globe,
-  Mail,
-  Play,
-  Server,
-  Shield,
-  Sparkles,
-} from 'lucide-react';
+import { Eye, EyeOff, Globe, Mail, Play, Server, Shield, Sparkles } from 'lucide-react';
 import { useState } from 'react';
 import { Button } from '#/components/ui/button';
 import { Input } from '#/components/ui/input';
@@ -84,7 +75,10 @@ export function MailSetupForm({ onStart, isLoading = false, onCancel }: MailSetu
 
   return (
     <div className="grid grid-cols-1 gap-6 lg:grid-cols-[1fr_380px]">
-      <form onSubmit={handleSubmit} className="space-y-6 rounded-2xl border border-border/50 bg-card p-6">
+      <form
+        onSubmit={handleSubmit}
+        className="space-y-6 rounded-2xl border border-border/50 bg-card p-6"
+      >
         <div className="flex items-center gap-3">
           <div className="flex size-10 shrink-0 items-center justify-center rounded-xl bg-violet-500/10 text-violet-500">
             <Mail className="size-5" />
@@ -178,11 +172,7 @@ export function MailSetupForm({ onStart, isLoading = false, onCancel }: MailSetu
         </div>
 
         <div className="flex flex-wrap items-center gap-4 pt-2">
-          <Button
-            type="submit"
-            disabled={!isFormValid || isLoading}
-            className="gap-2 rounded-xl"
-          >
+          <Button type="submit" disabled={!isFormValid || isLoading} className="gap-2 rounded-xl">
             <Play className="size-4" />
             {isLoading ? 'Installing mail server...' : 'Install mail server'}
           </Button>
@@ -202,7 +192,8 @@ export function MailSetupForm({ onStart, isLoading = false, onCancel }: MailSetu
             Automatic Records
           </div>
           <p className="text-muted-foreground text-xs leading-relaxed">
-            During setup, MX, SPF, DKIM, and DMARC DNS records are generated automatically so your server reaches 10/10 deliverability scores.
+            During setup, MX, SPF, DKIM, and DMARC DNS records are generated automatically so your
+            server reaches 10/10 deliverability scores.
           </p>
         </div>
 
@@ -212,7 +203,8 @@ export function MailSetupForm({ onStart, isLoading = false, onCancel }: MailSetu
             Spam & Antivirus Protection
           </div>
           <p className="text-muted-foreground text-xs leading-relaxed">
-            SpamAssassin and Rspamd run locally to filter incoming spam, phishing attempts, and unauthorized relaying.
+            SpamAssassin and Rspamd run locally to filter incoming spam, phishing attempts, and
+            unauthorized relaying.
           </p>
         </div>
 
@@ -222,7 +214,8 @@ export function MailSetupForm({ onStart, isLoading = false, onCancel }: MailSetu
             Self-Hosted Isolation
           </div>
           <p className="text-muted-foreground text-xs leading-relaxed">
-            Mail storage, database accounts, and encrypted credentials stay entirely within your dedicated VPS server instances.
+            Mail storage, database accounts, and encrypted credentials stay entirely within your
+            dedicated VPS server instances.
           </p>
         </div>
       </div>

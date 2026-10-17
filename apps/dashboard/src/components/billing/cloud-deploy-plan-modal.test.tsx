@@ -1,5 +1,5 @@
+import { act, fireEvent, render, screen } from '@testing-library/react';
 import { describe, expect, it, vi } from 'vitest';
-import { render, screen, fireEvent, act } from '@testing-library/react';
 import { CloudDeployPlanModal } from './cloud-deploy-plan-modal';
 
 describe('CloudDeployPlanModal', () => {

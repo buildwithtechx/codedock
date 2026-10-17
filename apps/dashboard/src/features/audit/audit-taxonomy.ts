@@ -161,13 +161,44 @@ const VERBS: Record<string, string> = {
 };
 
 const DANGER_VERBS = new Set([
-  'delete', 'remove', 'revoke', 'rollback', 'disable', 'fail', 'failed', 'cancel', 'cancelled', 'suspend', 'deny',
+  'delete',
+  'remove',
+  'revoke',
+  'rollback',
+  'disable',
+  'fail',
+  'failed',
+  'suspend',
+  'deny',
+  'cancel',
+  'cancelled',
 ]);
+
 const SUCCESS_VERBS = new Set([
-  'create', 'deploy', 'redeploy', 'enable', 'trigger', 'backup', 'invite', 'succeed', 'succeeded', 'complete', 'completed', 'verify', 'approve', 'renew',
+  'create',
+  'deploy',
+  'redeploy',
+  'enable',
+  'trigger',
+  'backup',
+  'invite',
+  'succeed',
+  'succeeded',
+  'complete',
+  'completed',
+  'verify',
+  'approve',
+  'renew',
 ]);
+
 const WARNING_VERBS = new Set([
-  'reveal', 'login', 'logout', 'rollback', 'credentials_reveal', 'rotate', 'suspend',
+  'reveal',
+  'login',
+  'logout',
+  'rollback',
+  'credentials_reveal',
+  'rotate',
+  'suspend',
 ]);
 
 export function actionVerb(action?: string): string {
@@ -186,7 +217,8 @@ export function describeAuditAction(action?: string): {
   let tone: AuditTone = 'neutral';
   if (DANGER_VERBS.has(verb)) tone = 'danger';
   else if (SUCCESS_VERBS.has(verb)) tone = 'success';
-  else if (WARNING_VERBS.has(verb) || verb.includes('reveal') || verb.includes('secret')) tone = 'warning';
+  else if (WARNING_VERBS.has(verb) || verb.includes('reveal') || verb.includes('secret'))
+    tone = 'warning';
   else if (verb === 'update' || verb === 'scale' || verb === 'upgrade') tone = 'info';
   return { label: safe, action: label, tone };
 }
@@ -206,7 +238,8 @@ export function auditCategoryOf(log?: {
     .replace(/_.*$/, '');
   const hit = CATEGORY_BY_PREFIX[first];
   if (hit) return hit;
-  const resource = log.resource && typeof log.resource === 'string' ? log.resource.toLowerCase() : '';
+  const resource =
+    log.resource && typeof log.resource === 'string' ? log.resource.toLowerCase() : '';
   for (const [prefix, category] of Object.entries(CATEGORY_BY_PREFIX)) {
     if (resource.includes(prefix)) return category;
   }
@@ -243,33 +276,9 @@ export function resourceDisplay(log?: Partial<AuditLog>): string {
   return resolveResourceDisplay(log);
 }
 
-export function relativeTime(iso: string): string {
-  const date = new Date(iso);
-  if (Number.isNaN(date.getTime())) return iso;
-  const diff = Date.now() - date.getTime();
-  const min = Math.floor(diff / 60_000);
-  if (min < 1) return 'just now';
-  if (min < 60) return `${min}m ago`;
-  const hr = Math.floor(min / 60);
-  if (hr < 24) return `${hr}h ago`;
-  const days = Math.floor(hr / 24);
-  if (days < 7) return `${days}d ago`;
-  return date.toLocaleDateString();
-}
-
-export function absoluteTime(iso: string): string {
-  const date = new Date(iso);
-  if (Number.isNaN(date.getTime())) return iso;
-  return date.toLocaleString();
-}
-
-export function clockTime(iso: string): string {
-  const date = new Date(iso);
-  if (Number.isNaN(date.getTime())) return '';
-  return date.toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' });
-}
-
-export function dayKey(iso: string): string {
-  const date = new Date(iso);
-  return `${date.getFullYear()}-${String(date.getMonth() + 1).padStart(2, '0')}-${String(date.getDate()).padStart(2, '0')}`;
-}
+export {
+  relativeTime,
+  absoluteTime,
+  clockTime,
+  dayKey,
+} from './audit-date-helpers';

@@ -6,8 +6,8 @@ import { env } from '#/env';
 import { SettingsRow } from '#/features/settings/settings-row';
 import { SettingsSection } from '#/features/settings/settings-section';
 import { useBillingConfig, useCreateCheckoutSession } from '#/hooks/use-billing';
-import { billingService } from '#/services/billing';
 import { refreshAuthSession } from '#/lib/auth-refresh';
+import { billingService } from '#/services/billing';
 import { useAuthStore } from '#/stores/auth-store';
 
 export function BillingSection() {

@@ -1,6 +1,6 @@
 import { fireEvent, render, screen, waitFor } from '@testing-library/react';
 import { beforeEach, describe, expect, it, vi } from 'vitest';
-import { actionsService, type ActionRun } from '#/services/actions';
+import { type ActionRun, actionsService } from '#/services/actions';
 import { RunWorkspace } from './run-workspace';
 
 const mockRun: ActionRun = {

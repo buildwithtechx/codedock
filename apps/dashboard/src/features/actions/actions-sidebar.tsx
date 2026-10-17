@@ -10,8 +10,8 @@ import {
   Server,
 } from 'lucide-react';
 import { Button } from '#/components/ui/button';
-import { ActionStatus } from './action-status';
 import type { ActionRun, ActionWorkflow } from '#/services/actions';
+import { ActionStatus } from './action-status';
 
 interface ActionsSidebarProps {
   runnerCount: number;
@@ -118,7 +118,7 @@ export function ActionsSidebar({
                   {index < steps.length - 1 && (
                     <span
                       aria-hidden="true"
-                      className="-bottom-4 absolute start-4 top-9 w-px bg-border/70"
+                      className="absolute start-4 top-9 -bottom-4 w-px bg-border/70"
                     />
                   )}
                   <span
@@ -181,9 +181,14 @@ export function ActionsSidebar({
             <h2 className="font-medium text-foreground text-sm">Temporary Cloud VM</h2>
           </div>
           <p className="mt-2.5 text-muted-foreground text-xs leading-relaxed">
-            Every job gets a temporary Linux VM. VM usage and transfer use your separate Actions balance.
+            Every job gets a temporary Linux VM. VM usage and transfer use your separate Actions
+            balance.
           </p>
-          <Button asChild variant="secondary" className="mt-4 w-full rounded-full bg-muted/60 text-foreground hover:bg-muted text-xs">
+          <Button
+            asChild
+            variant="secondary"
+            className="mt-4 w-full rounded-full bg-muted/60 text-foreground text-xs hover:bg-muted"
+          >
             <Link to={'/billing' as never}>
               Budget <ArrowRight className="ms-1 size-3.5" />
             </Link>

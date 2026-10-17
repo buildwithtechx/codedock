@@ -62,7 +62,9 @@ export const networksService = {
   },
 
   get: async (id: string): Promise<ServerNetwork> => {
-    const res = await apiClient.get<{ data: ServerNetwork }>(`/system/networks/${encodeURIComponent(id)}`);
+    const res = await apiClient.get<{ data: ServerNetwork }>(
+      `/system/networks/${encodeURIComponent(id)}`
+    );
     return res.data;
   },
 
@@ -72,30 +74,43 @@ export const networksService = {
   },
 
   reviseAccess: async (id: string, accessPolicy: NetworkAccessPolicy): Promise<ServerNetwork> => {
-    const res = await apiClient.put<{ data: ServerNetwork }>(`/system/networks/${encodeURIComponent(id)}/access`, {
-      networkId: id,
-      accessPolicy,
-    });
+    const res = await apiClient.put<{ data: ServerNetwork }>(
+      `/system/networks/${encodeURIComponent(id)}/access`,
+      {
+        networkId: id,
+        accessPolicy,
+      }
+    );
     return res.data;
   },
 
   getWatchdog: async (operationId: string): Promise<NetworkRollbackWatchdog> => {
-    const res = await apiClient.get<{ data: NetworkRollbackWatchdog }>(`/system/networks/operations/${encodeURIComponent(operationId)}/watchdog`);
+    const res = await apiClient.get<{ data: NetworkRollbackWatchdog }>(
+      `/system/networks/operations/${encodeURIComponent(operationId)}/watchdog`
+    );
     return res.data;
   },
 
   commitWatchdog: async (operationId: string): Promise<NetworkRollbackWatchdog> => {
-    const res = await apiClient.post<{ data: NetworkRollbackWatchdog }>(`/system/networks/operations/${encodeURIComponent(operationId)}/watchdog/commit`, {});
+    const res = await apiClient.post<{ data: NetworkRollbackWatchdog }>(
+      `/system/networks/operations/${encodeURIComponent(operationId)}/watchdog/commit`,
+      {}
+    );
     return res.data;
   },
 
   rollbackWatchdog: async (operationId: string): Promise<NetworkRollbackWatchdog> => {
-    const res = await apiClient.post<{ data: NetworkRollbackWatchdog }>(`/system/networks/operations/${encodeURIComponent(operationId)}/watchdog/rollback`, {});
+    const res = await apiClient.post<{ data: NetworkRollbackWatchdog }>(
+      `/system/networks/operations/${encodeURIComponent(operationId)}/watchdog/rollback`,
+      {}
+    );
     return res.data;
   },
 
   delete: async (id: string): Promise<{ success: boolean }> => {
-    const res = await apiClient.delete<{ data: { success: boolean } }>(`/system/networks/${encodeURIComponent(id)}`);
+    const res = await apiClient.delete<{ data: { success: boolean } }>(
+      `/system/networks/${encodeURIComponent(id)}`
+    );
     return res.data ?? { success: true };
   },
 };

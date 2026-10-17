@@ -1,7 +1,7 @@
+import { fireEvent, render, screen } from '@testing-library/react';
 import { describe, expect, it, vi } from 'vitest';
-import { render, screen, fireEvent } from '@testing-library/react';
-import { SupportTicketList } from './support-ticket-list';
 import type { SupportTicket } from '#/services/cloud-support';
+import { SupportTicketList } from './support-ticket-list';
 
 describe('SupportTicketList', () => {
   const sampleTickets: SupportTicket[] = [
@@ -10,7 +10,9 @@ describe('SupportTicketList', () => {
       subject: 'Custom base image question',
       category: 'deployment',
       status: 'open',
-      messages: [{ id: '1', sender: 'user', senderName: 'Sam', content: 'Help', createdAt: '2026-10-16' }],
+      messages: [
+        { id: '1', sender: 'user', senderName: 'Sam', content: 'Help', createdAt: '2026-10-16' },
+      ],
       createdAt: '2026-10-16',
       updatedAt: '2026-10-16',
     },
@@ -19,7 +21,9 @@ describe('SupportTicketList', () => {
       subject: 'Invoice VAT receipt',
       category: 'billing',
       status: 'resolved',
-      messages: [{ id: '2', sender: 'user', senderName: 'Sam', content: 'Invoice', createdAt: '2026-10-16' }],
+      messages: [
+        { id: '2', sender: 'user', senderName: 'Sam', content: 'Invoice', createdAt: '2026-10-16' },
+      ],
       createdAt: '2026-10-16',
       updatedAt: '2026-10-16',
     },
@@ -30,11 +34,7 @@ describe('SupportTicketList', () => {
     const onNew = vi.fn();
 
     render(
-      <SupportTicketList
-        tickets={sampleTickets}
-        onSelectTicket={onSelect}
-        onNewTicket={onNew}
-      />
+      <SupportTicketList tickets={sampleTickets} onSelectTicket={onSelect} onNewTicket={onNew} />
     );
 
     expect(screen.getByText('Support Tickets')).toBeTruthy();

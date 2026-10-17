@@ -1,10 +1,10 @@
+import { act, fireEvent, render, screen } from '@testing-library/react';
 import { describe, expect, it, vi } from 'vitest';
-import { render, screen, fireEvent, act } from '@testing-library/react';
+import type { CloudWorkspaceSummary } from '#/interfaces/server';
 import {
   ManagedServerActionFeedback,
   type ManagedServerActions,
 } from './managed-server-action-feedback';
-import type { CloudWorkspaceSummary } from '#/interfaces/server';
 
 describe('ManagedServerActionFeedback', () => {
   const baseServer: CloudWorkspaceSummary = {

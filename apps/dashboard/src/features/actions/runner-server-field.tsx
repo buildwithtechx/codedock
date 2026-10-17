@@ -35,7 +35,9 @@ export function RunnerServerField({
       {isCloud ? (
         <div className="flex items-center justify-between rounded-xl border border-border/60 bg-muted/40 px-3.5 py-2.5 text-sm">
           <span className="font-medium text-foreground">
-            {selectedPlan ? `${selectedPlan.name} (${selectedPlan.price}/mo)` : 'Cloud space (Starter)'}
+            {selectedPlan
+              ? `${selectedPlan.name} (${selectedPlan.price}/mo)`
+              : 'Cloud space (Starter)'}
           </span>
           <span className="text-muted-foreground text-xs">Managed</span>
         </div>

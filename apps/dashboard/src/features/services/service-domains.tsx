@@ -99,7 +99,7 @@ export function ServiceDomains({ serviceId }: { serviceId: string }) {
         <div className="space-y-0.5">
           <div className="flex items-center gap-2">
             <Globe className="size-4 text-primary" />
-            <CardTitle className="text-base font-semibold">Service Domains & Routing</CardTitle>
+            <CardTitle className="font-semibold text-base">Service Domains & Routing</CardTitle>
           </div>
           <CardDescription className="text-xs">
             Configure custom domain aliases, SSL termination, and target container port mapping.
@@ -116,7 +116,7 @@ export function ServiceDomains({ serviceId }: { serviceId: string }) {
             <Loader2 className="mr-2 h-4 w-4 animate-spin" /> Loading domains...
           </div>
         ) : domains.length === 0 ? (
-          <div className="rounded-xl border border-dashed border-border/70 p-8 text-center text-muted-foreground text-sm">
+          <div className="rounded-xl border border-border/70 border-dashed p-8 text-center text-muted-foreground text-sm">
             <Globe className="mx-auto mb-2 size-8 text-muted-foreground/40" />
             <p className="font-medium text-foreground text-sm">No custom domains configured</p>
             <p className="mt-1 text-xs">
@@ -132,11 +132,13 @@ export function ServiceDomains({ serviceId }: { serviceId: string }) {
               return (
                 <div
                   key={domain.id}
-                  className="flex flex-col gap-3 p-4 sm:flex-row sm:items-center sm:justify-between transition-colors hover:bg-muted/30"
+                  className="flex flex-col gap-3 p-4 transition-colors hover:bg-muted/30 sm:flex-row sm:items-center sm:justify-between"
                 >
                   <div className="space-y-1">
                     <div className="flex items-center gap-2">
-                      <span className="font-semibold text-sm text-foreground">{domain.domainName}</span>
+                      <span className="font-semibold text-foreground text-sm">
+                        {domain.domainName}
+                      </span>
                       <DnsStatusBadge status={domain.dnsProvisionStatus} />
                     </div>
                     <div className="flex flex-wrap items-center gap-3 text-xs">
@@ -166,7 +168,7 @@ export function ServiceDomains({ serviceId }: { serviceId: string }) {
                       size="sm"
                       onClick={() => handleVerify(domain.id)}
                       disabled={isVerifying}
-                      className="h-8 gap-1.5 text-xs rounded-lg"
+                      className="h-8 gap-1.5 rounded-lg text-xs"
                     >
                       {isVerifying ? (
                         <Loader2 className="h-3.5 w-3.5 animate-spin" />
@@ -178,7 +180,7 @@ export function ServiceDomains({ serviceId }: { serviceId: string }) {
                     <Button
                       variant="ghost"
                       size="icon"
-                      className="h-8 w-8 text-destructive hover:bg-destructive/10 hover:text-destructive rounded-lg"
+                      className="h-8 w-8 rounded-lg text-destructive hover:bg-destructive/10 hover:text-destructive"
                       onClick={() => deleteDomain.mutate({ id: domain.id })}
                       disabled={deleteDomain.isPending}
                       aria-label={`Delete domain ${domain.domainName}`}
@@ -193,14 +195,14 @@ export function ServiceDomains({ serviceId }: { serviceId: string }) {
         )}
 
         {canManageProviderDomains && (
-          <div className="rounded-xl border border-border/60 bg-muted/20 p-4 space-y-4">
+          <div className="space-y-4 rounded-xl border border-border/60 bg-muted/20 p-4">
             <div className="flex items-center justify-between">
-              <Label className="font-semibold text-xs text-foreground">Add Domain Alias</Label>
+              <Label className="font-semibold text-foreground text-xs">Add Domain Alias</Label>
               <div className="flex items-center gap-1 rounded-lg bg-muted p-0.5 text-xs">
                 <button
                   type="button"
                   onClick={() => setDomainType('custom')}
-                  className={`rounded-md px-2.5 py-1 text-xs font-medium transition-colors ${
+                  className={`rounded-md px-2.5 py-1 font-medium text-xs transition-colors ${
                     domainType === 'custom'
                       ? 'bg-card text-foreground shadow-xs'
                       : 'text-muted-foreground hover:text-foreground'
@@ -211,7 +213,7 @@ export function ServiceDomains({ serviceId }: { serviceId: string }) {
                 <button
                   type="button"
                   onClick={() => setDomainType('free')}
-                  className={`rounded-md px-2.5 py-1 text-xs font-medium transition-colors ${
+                  className={`rounded-md px-2.5 py-1 font-medium text-xs transition-colors ${
                     domainType === 'free'
                       ? 'bg-card text-foreground shadow-xs'
                       : 'text-muted-foreground hover:text-foreground'
@@ -233,7 +235,7 @@ export function ServiceDomains({ serviceId }: { serviceId: string }) {
                   }
                   value={newDomain}
                   onChange={(e) => setNewDomain(e.target.value)}
-                  className="font-mono text-sm rounded-xl"
+                  className="rounded-xl font-mono text-sm"
                 />
               </div>
 
@@ -243,13 +245,13 @@ export function ServiceDomains({ serviceId }: { serviceId: string }) {
                   placeholder="Port (80)"
                   value={exposedPort}
                   onChange={(e) => setExposedPort(e.target.value)}
-                  className="font-mono text-sm rounded-xl"
+                  className="rounded-xl font-mono text-sm"
                 />
               </div>
             </div>
 
             {domainType === 'custom' && (
-              <label className="flex items-center gap-2 text-xs text-muted-foreground cursor-pointer select-none">
+              <label className="flex cursor-pointer select-none items-center gap-2 text-muted-foreground text-xs">
                 <input
                   type="checkbox"
                   checked={includeWww}
@@ -264,7 +266,7 @@ export function ServiceDomains({ serviceId }: { serviceId: string }) {
               <Button
                 onClick={handleCreate}
                 disabled={createDomain.isPending || !newDomain.trim()}
-                className="gap-1.5 rounded-xl text-xs h-9"
+                className="h-9 gap-1.5 rounded-xl text-xs"
               >
                 <Plus className="size-3.5" />
                 Add Domain

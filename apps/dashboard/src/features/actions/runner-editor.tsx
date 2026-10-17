@@ -1,4 +1,4 @@
-import { Link, useNavigate } from '@tanstack/react-router';
+import { useNavigate } from '@tanstack/react-router';
 import { ArrowLeft, Grid, Server, Sparkles } from 'lucide-react';
 import { useId, useState } from 'react';
 import { toast } from 'sonner';
@@ -6,16 +6,12 @@ import { Button } from '#/components/ui/button';
 import { Input } from '#/components/ui/input';
 import { useListServers } from '#/hooks/use-servers';
 import type { Server as ServerModel } from '#/interfaces/server';
-import { useCreateRunner, useInspectDestination } from './use-actions';
-import {
-  RunnerCatalogModal,
-  type RunnerPreset,
-  RUNNER_PRESETS,
-} from './runner-catalog-modal';
-import { RunnerCloudPlanModal, type CloudPlan } from './runner-cloud-plan-modal';
 import { RunnerAdvancedFields } from './runner-advanced-fields';
-import { RunnerSummaryCard } from './runner-summary-card';
+import { RUNNER_PRESETS, RunnerCatalogModal, type RunnerPreset } from './runner-catalog-modal';
+import { type CloudPlan, RunnerCloudPlanModal } from './runner-cloud-plan-modal';
 import { RunnerServerField } from './runner-server-field';
+import { RunnerSummaryCard } from './runner-summary-card';
+import { useCreateRunner, useInspectDestination } from './use-actions';
 
 export type DestinationServer = { id: string; name: string };
 
@@ -27,6 +23,13 @@ interface RunnerEditorProps {
   onSuccess?: (runner: any) => void;
   defaultCloud?: boolean;
 }
+
+const PRESET_DEFAULTS: Record<RunnerPreset, { image: string; labels: string }> = {
+  ubuntu: { image: 'catthehacker/ubuntu:act-22.04', labels: 'self-hosted, ubuntu, x64' },
+  macos: { image: '', labels: 'self-hosted, macos, arm64' },
+  linux: { image: '', labels: 'self-hosted, linux, x64' },
+  custom: { image: '', labels: 'self-hosted, custom' },
+};
 
 export function RunnerEditor({
   initialServer,
@@ -61,20 +64,17 @@ export function RunnerEditor({
   const [maxParallel, setMaxParallel] = useState(1);
   const [allowDockerSocket, setAllowDockerSocket] = useState(false);
 
-  const { data: capabilities, refetch: recheckCapabilities, isFetching: probing } =
-    useInspectDestination(isCloud ? undefined : serverId);
+  const {
+    data: capabilities,
+    refetch: recheckCapabilities,
+    isFetching: probing,
+  } = useInspectDestination(isCloud ? undefined : serverId);
 
   const handleSelectPreset = (nextPreset: RunnerPreset) => {
     setPreset(nextPreset);
-    const defaults: Record<RunnerPreset, { image: string; labels: string }> = {
-      ubuntu: { image: 'catthehacker/ubuntu:act-22.04', labels: 'self-hosted, ubuntu, x64' },
-      macos: { image: '', labels: 'self-hosted, macos, arm64' },
-      linux: { image: '', labels: 'self-hosted, linux, x64' },
-      custom: { image: '', labels: 'self-hosted, custom' },
-    };
-    if (defaults[nextPreset]) {
-      setImage(defaults[nextPreset].image);
-      setLabels(defaults[nextPreset].labels);
+    if (PRESET_DEFAULTS[nextPreset]) {
+      setImage(PRESET_DEFAULTS[nextPreset].image);
+      setLabels(PRESET_DEFAULTS[nextPreset].labels);
     }
   };
 
@@ -86,7 +86,10 @@ export function RunnerEditor({
     'self-hosted',
     capabilities?.os ?? 'linux',
     capabilities?.architecture ?? 'x64',
-    ...labels.split(',').map((l) => l.trim()).filter((l) => l && l !== 'self-hosted' && l !== 'linux' && l !== 'x64'),
+    ...labels
+      .split(',')
+      .map((l) => l.trim())
+      .filter((l) => l && l !== 'self-hosted' && l !== 'linux' && l !== 'x64'),
   ];
 
   const handleSubmit = async (e: React.FormEvent) => {
@@ -126,30 +129,16 @@ export function RunnerEditor({
     <div className="space-y-6">
       <header className="flex flex-wrap items-center justify-between gap-4">
         <div>
-          {onBack ? (
-            <Button
-              type="button"
-              variant="ghost"
-              size="sm"
-              onClick={onBack}
-              className="-ms-3 mb-2 gap-1.5 rounded-lg text-muted-foreground hover:text-foreground"
-            >
-              <ArrowLeft className="size-4 rtl:rotate-180" />
-              Back
-            </Button>
-          ) : (
-            <Button
-              asChild
-              variant="ghost"
-              size="sm"
-              className="-ms-3 mb-2 gap-1.5 rounded-lg text-muted-foreground hover:text-foreground"
-            >
-              <Link to={'/actions' as never}>
-                <ArrowLeft className="size-4 rtl:rotate-180" />
-                Back to Actions
-              </Link>
-            </Button>
-          )}
+          <Button
+            type="button"
+            variant="ghost"
+            size="sm"
+            onClick={onBack ?? (() => navigate({ to: '/actions' as never }))}
+            className="-ms-3 mb-2 gap-1.5 rounded-lg text-muted-foreground hover:text-foreground"
+          >
+            <ArrowLeft className="size-4 rtl:rotate-180" />
+            {onBack ? 'Back' : 'Back to Actions'}
+          </Button>
           <h1 className="font-medium text-2xl text-foreground tracking-tight">Add runner</h1>
           <p className="mt-1 text-muted-foreground text-sm">
             {isCloud
@@ -165,7 +154,11 @@ export function RunnerEditor({
             onClick={() => setIsCloud(!isCloud)}
             className="gap-1.5 rounded-xl text-xs"
           >
-            {isCloud ? <Server className="size-3.5" /> : <Sparkles className="size-3.5 text-blue-500" />}
+            {isCloud ? (
+              <Server className="size-3.5" />
+            ) : (
+              <Sparkles className="size-3.5 text-blue-500" />
+            )}
             {isCloud ? 'Switch to Server' : 'Switch to Cloud'}
           </Button>
           <Button
@@ -179,8 +172,14 @@ export function RunnerEditor({
         </div>
       </header>
 
-      <form onSubmit={handleSubmit} className="grid items-start gap-6 lg:grid-cols-[minmax(0,1fr)_340px]">
-        <fieldset disabled={isPending} className="m-0 min-w-0 space-y-5 rounded-2xl border-0 bg-card p-5">
+      <form
+        onSubmit={handleSubmit}
+        className="grid items-start gap-6 lg:grid-cols-[minmax(0,1fr)_340px]"
+      >
+        <fieldset
+          disabled={isPending}
+          className="m-0 min-w-0 space-y-5 rounded-2xl border-0 bg-card p-5"
+        >
           <RunnerServerField
             isCloud={isCloud}
             selectedPlan={selectedPlan}
@@ -217,7 +216,9 @@ export function RunnerEditor({
               </span>
               <div className="min-w-0">
                 <h3 className="font-medium text-foreground text-sm">{presetInfo.title}</h3>
-                <p className="mt-1 text-muted-foreground text-xs leading-relaxed">{presetInfo.badge}</p>
+                <p className="mt-1 text-muted-foreground text-xs leading-relaxed">
+                  {presetInfo.badge}
+                </p>
               </div>
             </div>
             <p className="text-muted-foreground text-xs">

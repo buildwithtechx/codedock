@@ -114,7 +114,9 @@ export function DomainIngressSettings({
           <div className="space-y-4 py-4">
             <div className="flex items-center justify-between rounded-xl bg-muted/40 p-4">
               <div>
-                <Label className="font-medium text-foreground text-sm">Enable Ingress Routing</Label>
+                <Label className="font-medium text-foreground text-sm">
+                  Enable Ingress Routing
+                </Label>
                 <p className="text-muted-foreground text-xs">
                   Proxy traffic through Cloudflare Tunnel without public ports
                 </p>

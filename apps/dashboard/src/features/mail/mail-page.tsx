@@ -7,6 +7,7 @@ import { Card, CardContent } from '#/components/ui/card';
 import { Input } from '#/components/ui/input';
 import { QueryErrorState } from '#/components/ui/query-error-state';
 import { Skeleton } from '#/components/ui/skeleton';
+import { useGetPublicSettings } from '#/features/settings';
 import {
   useCreateMailDomain,
   useCreateMailServer,
@@ -15,7 +16,6 @@ import {
   useListMailDomains,
   useListMailServers,
 } from '#/hooks/use-mail';
-import { useGetPublicSettings } from '#/features/settings';
 import { CloudMailClient } from './cloud-mail-client';
 import { MailDomainPanel } from './mail-domain-panel';
 import { MailServerList } from './mail-server-list';
@@ -43,8 +43,7 @@ export function MailPage() {
   const createDomain = useCreateMailDomain(activeServerId ?? undefined);
   const deleteDomain = useDeleteMailDomain(activeServerId ?? undefined);
 
-  const activeDomain =
-    domains.find((domain) => domain.id === selectedDomain) ?? domains[0] ?? null;
+  const activeDomain = domains.find((domain) => domain.id === selectedDomain) ?? domains[0] ?? null;
 
   const handleStartSetup = async (data: {
     domain: string;
@@ -165,7 +164,7 @@ export function MailPage() {
                 setSelectedServer(null);
                 setSelectedDomain(null);
               }}
-              className="gap-1.5 text-xs text-muted-foreground hover:text-foreground"
+              className="gap-1.5 text-muted-foreground text-xs hover:text-foreground"
             >
               <ArrowLeft className="size-4" />
               All mail servers
@@ -175,13 +174,17 @@ export function MailPage() {
           <div className="grid grid-cols-1 gap-6 lg:grid-cols-3">
             <Card className="border-border/60 bg-card lg:col-span-1">
               <CardContent className="space-y-4 p-5">
-                <div className="flex items-center gap-3 border-b border-border/40 pb-4">
+                <div className="flex items-center gap-3 border-border/40 border-b pb-4">
                   <div className="flex size-9 shrink-0 items-center justify-center rounded-xl bg-violet-500/10 text-violet-500">
                     <Server className="size-4" />
                   </div>
                   <div className="min-w-0 flex-1">
-                    <p className="font-semibold text-sm text-foreground truncate">{activeServer.domain}</p>
-                    <p className="font-mono text-xs text-muted-foreground truncate">{activeServer.maildUrl}</p>
+                    <p className="truncate font-semibold text-foreground text-sm">
+                      {activeServer.domain}
+                    </p>
+                    <p className="truncate font-mono text-muted-foreground text-xs">
+                      {activeServer.maildUrl}
+                    </p>
                   </div>
                   <Button
                     variant="ghost"
@@ -196,7 +199,7 @@ export function MailPage() {
 
                 <div className="space-y-2">
                   <div className="flex items-center justify-between">
-                    <span className="text-xs font-semibold uppercase tracking-wider text-muted-foreground">
+                    <span className="font-semibold text-muted-foreground text-xs uppercase tracking-wider">
                       Domains ({domains.length})
                     </span>
                   </div>
@@ -207,7 +210,7 @@ export function MailPage() {
                       placeholder="Add domain, e.g. app.io"
                       value={newDomain}
                       onChange={(e) => setNewDomain(e.target.value)}
-                      className="h-8 text-xs rounded-lg"
+                      className="h-8 rounded-lg text-xs"
                     />
                     <Button
                       size="sm"
@@ -227,10 +230,10 @@ export function MailPage() {
                     {domains.map((domain) => (
                       <li
                         key={domain.id}
-                        className={`flex items-center justify-between rounded-lg p-2 text-xs transition-colors cursor-pointer ${
+                        className={`flex cursor-pointer items-center justify-between rounded-lg p-2 text-xs transition-colors ${
                           activeDomain?.id === domain.id
-                            ? 'bg-primary/10 text-primary font-medium'
-                            : 'hover:bg-muted/40 text-foreground'
+                            ? 'bg-primary/10 font-medium text-primary'
+                            : 'text-foreground hover:bg-muted/40'
                         }`}
                         onClick={() => setSelectedDomain(domain.id)}
                       >

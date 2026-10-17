@@ -137,7 +137,7 @@ export function DeploySidebar({
               onClick={() => setDomainMode((m) => (m === 'custom' ? 'free' : 'custom'))}
               title="Add or configure custom domain"
               aria-label="Add or configure custom domain"
-              className="flex size-6 items-center justify-center rounded-full bg-muted text-muted-foreground transition-colors hover:bg-muted/80 hover:text-foreground cursor-pointer"
+              className="flex size-6 cursor-pointer items-center justify-center rounded-full bg-muted text-muted-foreground transition-colors hover:bg-muted/80 hover:text-foreground"
             >
               <Plus className="size-3.5" />
             </button>

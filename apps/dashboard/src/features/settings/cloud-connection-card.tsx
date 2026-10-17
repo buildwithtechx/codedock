@@ -1,14 +1,5 @@
+import { Check, Cloud, ExternalLink, Globe, Loader2, LogOut, Rocket, Shield } from 'lucide-react';
 import { useState } from 'react';
-import {
-  Cloud,
-  Check,
-  Globe,
-  Rocket,
-  Shield,
-  ExternalLink,
-  LogOut,
-  Loader2,
-} from 'lucide-react';
 import { Button } from '#/components/ui/button';
 import { cn } from '#/lib/utils';
 
@@ -142,7 +133,8 @@ export function CloudConnectionCard({
             Connect to CodeDock Cloud
           </h3>
           <p className="mt-1.5 max-w-md text-muted-foreground text-sm leading-relaxed">
-            Pair your self-hosted instance with CodeDock Cloud to unlock managed domain routing, cloud builds, and distributed edge workers.
+            Pair your self-hosted instance with CodeDock Cloud to unlock managed domain routing,
+            cloud builds, and distributed edge workers.
           </p>
 
           <ul className="mt-5 grid w-full max-w-lg gap-2 text-start sm:grid-cols-2">
@@ -161,11 +153,7 @@ export function CloudConnectionCard({
 
           <div className="mt-6 flex w-full max-w-xs flex-col gap-2.5 sm:flex-row">
             {onConnect && (
-              <Button
-                onClick={onConnect}
-                disabled={connecting}
-                className="flex-1"
-              >
+              <Button onClick={onConnect} disabled={connecting} className="flex-1">
                 {connecting ? (
                   <>
                     <Loader2 className="size-3.5 animate-spin" />

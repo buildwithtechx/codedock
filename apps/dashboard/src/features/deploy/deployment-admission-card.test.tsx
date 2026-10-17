@@ -1,6 +1,6 @@
 import { fireEvent, render, screen, waitFor } from '@testing-library/react';
 import { beforeEach, describe, expect, it, vi } from 'vitest';
-import { checksService, type BuildAdmissionStatus } from '#/services/checks';
+import { type BuildAdmissionStatus, checksService } from '#/services/checks';
 import { DeploymentAdmissionCard } from './deployment-admission-card';
 
 const mockAdmission: BuildAdmissionStatus = {

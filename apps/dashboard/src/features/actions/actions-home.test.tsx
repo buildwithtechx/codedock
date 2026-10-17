@@ -1,12 +1,19 @@
 import { fireEvent, render, screen, waitFor } from '@testing-library/react';
-import { beforeEach, describe, expect, it, vi } from 'vitest';
 import type { ReactNode } from 'react';
-import { actionsService, type ActionRun, type ActionRunner, type ActionWorkflow } from '#/services/actions';
+import { beforeEach, describe, expect, it, vi } from 'vitest';
+import {
+  type ActionRun,
+  type ActionRunner,
+  type ActionWorkflow,
+  actionsService,
+} from '#/services/actions';
 import { ActionsHome } from './actions-home';
 
 vi.mock('@tanstack/react-router', () => ({
   Link: ({ children, to, ...props }: { children?: ReactNode; to?: string }) => (
-    <a href={to} {...props}>{children}</a>
+    <a href={to} {...props}>
+      {children}
+    </a>
   ),
 }));
 
@@ -136,7 +143,9 @@ describe('ActionsHome', () => {
     const runnersTabButton = screen.getByRole('button', { name: /^runners/i });
     fireEvent.click(runnersTabButton);
 
-    const deleteBtn = await screen.findByRole('button', { name: /delete runner ubuntu 22\.04 fast/i });
+    const deleteBtn = await screen.findByRole('button', {
+      name: /delete runner ubuntu 22\.04 fast/i,
+    });
     fireEvent.click(deleteBtn);
 
     await waitFor(() => {

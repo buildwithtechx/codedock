@@ -23,8 +23,10 @@ export function CloudBuildQueueNotice({
   const number = new Intl.NumberFormat('en');
 
   const reasonCopy = {
-    concurrency: 'Waiting for concurrency slot. Build will start automatically once a slot is freed.',
-    resources: 'Waiting for available build resources. Build will start automatically once capacity is ready.',
+    concurrency:
+      'Waiting for concurrency slot. Build will start automatically once a slot is freed.',
+    resources:
+      'Waiting for available build resources. Build will start automatically once capacity is ready.',
     server: 'Waiting for build server. Build will start automatically once a worker is assigned.',
   };
 
@@ -35,9 +37,7 @@ export function CloudBuildQueueNotice({
     (queue.reason === 'concurrency' && queue.simultaneousBuilds !== null);
 
   const title =
-    queue.position === null
-      ? 'Build queued'
-      : `Position ${number.format(queue.position)} in queue`;
+    queue.position === null ? 'Build queued' : `Position ${number.format(queue.position)} in queue`;
 
   const allowanceText =
     queue.simultaneousBuilds === null

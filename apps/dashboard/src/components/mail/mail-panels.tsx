@@ -1,4 +1,4 @@
-import { useState, useEffect, useRef, type ReactNode, type KeyboardEvent } from 'react';
+import { type KeyboardEvent, type ReactNode, useEffect, useRef, useState } from 'react';
 import { cn } from '#/lib/utils';
 
 export interface MailPanelsProps {
@@ -89,12 +89,12 @@ export function MailPanels({
   return (
     <div
       ref={containerRef}
-      className={cn('relative flex h-full w-full overflow-hidden select-none', className)}
+      className={cn('relative flex h-full w-full select-none overflow-hidden', className)}
       data-testid="mail-panels-container"
     >
       {/* Desktop split view */}
       <div
-        className="hidden lg:flex flex-col h-full overflow-hidden border-r border-border/60"
+        className="hidden h-full flex-col overflow-hidden border-border/60 border-r lg:flex"
         style={{ width: `${listWidth}%` }}
         data-panel="mail-list"
         data-panel-size={listWidth.toFixed(1)}
@@ -114,13 +114,13 @@ export function MailPanels({
         onMouseDown={() => setIsDragging(true)}
         onKeyDown={handleKeyDown}
         className={cn(
-          'hidden lg:flex w-1.5 cursor-col-resize items-center justify-center transition-colors hover:bg-primary/20 focus:outline-hidden focus-visible:bg-primary/30',
+          'hidden w-1.5 cursor-col-resize items-center justify-center transition-colors hover:bg-primary/20 focus:outline-hidden focus-visible:bg-primary/30 lg:flex',
           isDragging && 'bg-primary/40'
         )}
       />
 
       <div
-        className="hidden lg:flex flex-1 flex-col h-full overflow-hidden"
+        className="hidden h-full flex-1 flex-col overflow-hidden lg:flex"
         style={{ width: `${100 - listWidth}%` }}
         data-panel="mail-reader"
         data-panel-size={(100 - listWidth).toFixed(1)}
@@ -129,7 +129,7 @@ export function MailPanels({
       </div>
 
       {/* Mobile single pane view */}
-      <div className="flex lg:hidden flex-1 h-full w-full overflow-hidden">
+      <div className="flex h-full w-full flex-1 overflow-hidden lg:hidden">
         {hasThread ? (
           <div className="h-full w-full overflow-y-auto" data-panel="mail-reader-mobile">
             {readingPane}

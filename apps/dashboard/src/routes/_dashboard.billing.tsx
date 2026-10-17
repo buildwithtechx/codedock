@@ -1,29 +1,22 @@
 import { createFileRoute, useNavigate } from '@tanstack/react-router';
-import {
-  Coins,
-  CreditCard,
-  ExternalLink,
-  Layers,
-  Receipt,
-  Sparkles,
-  Zap,
-} from 'lucide-react';
+import { Coins, CreditCard, ExternalLink, Layers, Receipt, Sparkles, Zap } from 'lucide-react';
 import { useEffect, useState } from 'react';
 import { Button } from '#/components/ui/button';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '#/components/ui/tabs';
 import {
   BillingOverview,
+  BillingPlansCards,
   BillingTopups,
   CheckoutRecovery,
   CustomPlanConfigurator,
-  ResourceMetersOverview,
   type CustomPlanQuote,
+  PayAsYouGoPlan,
+  ResourceMetersOverview,
 } from '#/features/billing';
-import { BillingPlansCards } from '#/features/billing/billing-plans-cards';
 import { useGetPublicSettings } from '#/features/settings';
-import { useAuthStore } from '#/stores/auth-store';
 import { useBillingConfig, useCreateCheckoutSession } from '#/hooks/use-billing';
 import { billingService } from '#/services/billing';
+import { useAuthStore } from '#/stores/auth-store';
 
 export const Route = createFileRoute('/_dashboard/billing')({
   component: BillingPage,
@@ -37,7 +30,9 @@ function BillingPage() {
   const user = useAuthStore((s) => s.user);
   const { data: config } = useBillingConfig();
   const { mutateAsync: createCheckoutSession, isPending } = useCreateCheckoutSession();
-  const [activeTab, setActiveTab] = useState<'overview' | 'plans' | 'usage' | 'topups' | 'invoices'>('plans');
+  const [activeTab, setActiveTab] = useState<
+    'overview' | 'plans' | 'usage' | 'topups' | 'invoices'
+  >('plans');
   const [planMode, setPlanMode] = useState<'plans' | 'custom'>('plans');
   const [billingCycle, setBillingCycle] = useState<'monthly' | 'payg'>('monthly');
   const [loadingPortal, setLoadingPortal] = useState(false);
@@ -87,6 +82,20 @@ function BillingPage() {
     }
   };
 
+  const handleAddCredits = async (cents: number) => {
+    try {
+      const packs = await billingService.getTopupPacks();
+      const pack = packs.find((p) => p.priceCents === cents) ?? packs[0];
+      const { url } = await billingService.purchaseTopup({
+        packId: pack.id,
+        idempotencyKey: crypto.randomUUID(),
+      });
+      if (url) window.location.href = url;
+    } catch (e) {
+      console.error(e);
+    }
+  };
+
   const handleOpenPortal = async () => {
     setLoadingPortal(true);
     try {
@@ -106,29 +115,35 @@ function BillingPage() {
           type="button"
           onClick={() => setBillingCycle('monthly')}
           className={`relative pb-2 font-medium transition-colors ${
-            billingCycle === 'monthly' ? 'text-foreground' : 'text-muted-foreground hover:text-foreground'
+            billingCycle === 'monthly'
+              ? 'text-foreground'
+              : 'text-muted-foreground hover:text-foreground'
           }`}
         >
           Monthly plans
           {billingCycle === 'monthly' && (
-            <span className="-bottom-2 absolute inset-x-0 h-0.5 rounded-full bg-primary" />
+            <span className="absolute inset-x-0 -bottom-2 h-0.5 rounded-full bg-primary" />
           )}
         </button>
         <button
           type="button"
           onClick={() => setBillingCycle('payg')}
           className={`relative pb-2 font-medium transition-colors ${
-            billingCycle === 'payg' ? 'text-foreground' : 'text-muted-foreground hover:text-foreground'
+            billingCycle === 'payg'
+              ? 'text-foreground'
+              : 'text-muted-foreground hover:text-foreground'
           }`}
         >
           Prepaid PAYG
           {billingCycle === 'payg' && (
-            <span className="-bottom-2 absolute inset-x-0 h-0.5 rounded-full bg-primary" />
+            <span className="absolute inset-x-0 -bottom-2 h-0.5 rounded-full bg-primary" />
           )}
         </button>
       </div>
 
-      {planMode === 'plans' ? (
+      {billingCycle === 'payg' ? (
+        <PayAsYouGoPlan busy={isPending} onAddCredits={handleAddCredits} />
+      ) : planMode === 'plans' ? (
         <BillingPlansCards busy={isPending} onSelectPlan={handleSelectTier} />
       ) : (
         <CustomPlanConfigurator busy={isPending} onSelectPlan={handleSelectCustomPlan} />
@@ -140,7 +155,9 @@ function BillingPage() {
     <div className="space-y-6">
       <header className="flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between">
         <div>
-          <h1 className="font-medium text-2xl text-foreground tracking-tight">Find the right plan</h1>
+          <h1 className="font-medium text-2xl text-foreground tracking-tight">
+            Find the right plan
+          </h1>
           <p className="mt-1 text-muted-foreground text-sm">
             Choose capacity and deploy. Codedock handles setup, routing and maintenance.
           </p>
@@ -152,7 +169,9 @@ function BillingPage() {
               type="button"
               onClick={() => setPlanMode('plans')}
               className={`rounded-lg px-3 py-1 font-medium text-xs transition-colors ${
-                planMode === 'plans' ? 'bg-card text-foreground shadow-xs' : 'text-muted-foreground hover:text-foreground'
+                planMode === 'plans'
+                  ? 'bg-card text-foreground shadow-xs'
+                  : 'text-muted-foreground hover:text-foreground'
               }`}
             >
               Plans
@@ -161,7 +180,9 @@ function BillingPage() {
               type="button"
               onClick={() => setPlanMode('custom')}
               className={`rounded-lg px-3 py-1 font-medium text-xs transition-colors ${
-                planMode === 'custom' ? 'bg-card text-foreground shadow-xs' : 'text-muted-foreground hover:text-foreground'
+                planMode === 'custom'
+                  ? 'bg-card text-foreground shadow-xs'
+                  : 'text-muted-foreground hover:text-foreground'
               }`}
             >
               Custom
@@ -239,9 +260,12 @@ function BillingPage() {
             <div className="rounded-2xl border border-border bg-card p-6 shadow-sm">
               <div className="flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between">
                 <div>
-                  <h3 className="font-semibold text-base text-foreground">Payment Method & Invoices</h3>
+                  <h3 className="font-semibold text-base text-foreground">
+                    Payment Method & Invoices
+                  </h3>
                   <p className="mt-1 max-w-lg text-muted-foreground text-xs leading-relaxed">
-                    Access your Stripe customer billing portal to download official tax invoices, update credit cards, and manage enterprise billing details.
+                    Access your Stripe customer billing portal to download official tax invoices,
+                    update credit cards, and manage enterprise billing details.
                   </p>
                 </div>
                 <Button

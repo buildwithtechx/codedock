@@ -100,7 +100,8 @@ export const getInfrastructureNavigation = (isCloud: boolean): DashboardNavigati
   },
 ];
 
-export const infrastructureNavigation: DashboardNavigationItem[] = getInfrastructureNavigation(false);
+export const infrastructureNavigation: DashboardNavigationItem[] =
+  getInfrastructureNavigation(false);
 
 export const systemNavigation: DashboardNavigationItem[] = [
   {

@@ -118,4 +118,3 @@ func configureEchoIPExtractor(e *echo.Echo) {
 		return peerIPStr
 	}
 }
-

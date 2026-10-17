@@ -177,7 +177,7 @@ export function AppSidebar({ collapsed, onToggle, mobileOpen, onMobileClose }: A
             {navGroups.map((group, i) => (
               <div key={group.title ?? i} className="space-y-1">
                 {!navCollapsed && group.title && (
-                  <h4 className="mb-2 px-2 text-[11px] font-semibold uppercase tracking-widest text-sidebar-foreground/60">
+                  <h4 className="mb-2 px-2 font-semibold text-[11px] text-sidebar-foreground/60 uppercase tracking-widest">
                     {group.title}
                   </h4>
                 )}
@@ -205,7 +205,7 @@ export function AppSidebar({ collapsed, onToggle, mobileOpen, onMobileClose }: A
             aria-label="New project"
             title={navCollapsed ? 'New project' : undefined}
             className={`flex items-center justify-center gap-2.5 overflow-hidden rounded-xl bg-primary px-3 py-2.5 font-semibold text-primary-foreground text-sm shadow-sm transition-all hover:bg-primary/90 ${
-              navCollapsed ? 'size-10 p-0 mx-auto' : 'px-3'
+              navCollapsed ? 'mx-auto size-10 p-0' : 'px-3'
             }`}
           >
             <Plus className="h-4 w-4 shrink-0" />

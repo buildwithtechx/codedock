@@ -132,4 +132,3 @@ export function getServerMonitorStreamUrl(
   }
   return `/api/system/monitor/stream?${params.toString()}`;
 }
-

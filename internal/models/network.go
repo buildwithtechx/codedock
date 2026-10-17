@@ -36,20 +36,20 @@ type NetworkRollbackWatchdog struct {
 }
 
 type ServerNetwork struct {
-	ID               string                  `json:"id" db:"id"`
-	OrganizationID   string                  `json:"organizationId" db:"organization_id"`
-	Name             string                  `json:"name" db:"name"`
-	Mode             string                  `json:"mode" db:"mode"`
-	SubnetCIDR       string                  `json:"subnetCidr" db:"subnet_cidr"`
-	MTU              int                     `json:"mtu" db:"mtu"`
-	VerificationPort int                     `json:"verificationPort" db:"verification_port"`
-	Status           string                  `json:"status" db:"status"`
-	Revision         int                     `json:"revision" db:"revision"`
-	Members          []NetworkMember         `json:"members"`
-	AccessPolicy     NetworkAccessPolicy     `json:"accessPolicy"`
+	ID               string                   `json:"id" db:"id"`
+	OrganizationID   string                   `json:"organizationId" db:"organization_id"`
+	Name             string                   `json:"name" db:"name"`
+	Mode             string                   `json:"mode" db:"mode"`
+	SubnetCIDR       string                   `json:"subnetCidr" db:"subnet_cidr"`
+	MTU              int                      `json:"mtu" db:"mtu"`
+	VerificationPort int                      `json:"verificationPort" db:"verification_port"`
+	Status           string                   `json:"status" db:"status"`
+	Revision         int                      `json:"revision" db:"revision"`
+	Members          []NetworkMember          `json:"members"`
+	AccessPolicy     NetworkAccessPolicy      `json:"accessPolicy"`
 	Watchdog         *NetworkRollbackWatchdog `json:"watchdog,omitempty"`
-	CreatedAt        string                  `json:"createdAt" db:"created_at"`
-	UpdatedAt        string                  `json:"updatedAt" db:"updated_at"`
+	CreatedAt        string                   `json:"createdAt" db:"created_at"`
+	UpdatedAt        string                   `json:"updatedAt" db:"updated_at"`
 }
 
 type CreateNetworkRequest struct {

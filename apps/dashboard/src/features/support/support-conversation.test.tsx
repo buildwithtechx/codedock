@@ -1,7 +1,7 @@
+import { act, fireEvent, render, screen } from '@testing-library/react';
 import { describe, expect, it, vi } from 'vitest';
-import { render, screen, fireEvent, act } from '@testing-library/react';
-import { SupportConversation } from './support-conversation';
 import type { SupportTicket } from '#/services/cloud-support';
+import { SupportConversation } from './support-conversation';
 
 describe('SupportConversation', () => {
   const sampleTicket: SupportTicket = {
@@ -39,7 +39,9 @@ describe('SupportConversation', () => {
     expect(screen.getByText('Morgan')).toBeTruthy();
     expect(screen.getByText('CodeDock Staff')).toBeTruthy();
     expect(screen.getByText('Port 5432 is timing out on my server.')).toBeTruthy();
-    expect(screen.getByText('Please ensure host firewall allows inbound TCP on 5432.')).toBeTruthy();
+    expect(
+      screen.getByText('Please ensure host firewall allows inbound TCP on 5432.')
+    ).toBeTruthy();
   });
 
   it('handles sending replies', async () => {

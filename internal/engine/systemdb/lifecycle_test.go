@@ -23,6 +23,11 @@ func TestSupervisorLifecycle(t *testing.T) {
 	supervisor := NewSupervisor(docker, "codedock-postgres-test", t.TempDir(), "postgres:16", 5544)
 	t.Cleanup(func() {
 		cleanupCtx := context.Background()
+		if execID, err := docker.ContainerExecCreate(cleanupCtx, "codedock-postgres-test", container.ExecOptions{
+			Cmd: []string{"chmod", "-R", "777", "/var/lib/postgresql/data"},
+		}); err == nil {
+			_ = docker.ContainerExecStart(cleanupCtx, execID.ID, container.ExecStartOptions{})
+		}
 		_ = docker.ContainerStop(cleanupCtx, "codedock-postgres-test", container.StopOptions{})
 		_ = docker.ContainerRemove(cleanupCtx, "codedock-postgres-test", container.RemoveOptions{Force: true})
 	})

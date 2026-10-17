@@ -1,9 +1,6 @@
 import { beforeEach, describe, expect, it, vi } from 'vitest';
 import { apiClient } from '#/lib/api-client';
-import {
-  getServerMonitorStreamUrl,
-  serverService,
-} from './servers';
+import { getServerMonitorStreamUrl, serverService } from './servers';
 
 vi.mock('#/lib/api-client', () => ({
   apiClient: {

@@ -42,11 +42,7 @@ describe('CheckoutRecovery', () => {
     const handleCancel = vi.fn().mockResolvedValue(undefined);
     const handleSettled = vi.fn();
     render(
-      <CheckoutRecovery
-        pending={mockPending}
-        onCancel={handleCancel}
-        onSettled={handleSettled}
-      />
+      <CheckoutRecovery pending={mockPending} onCancel={handleCancel} onSettled={handleSettled} />
     );
 
     const cancelBtn = screen.getByRole('button', { name: /cancel checkout/i });

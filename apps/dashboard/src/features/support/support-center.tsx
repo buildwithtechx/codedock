@@ -1,4 +1,3 @@
-import { useState, useEffect } from 'react';
 import {
   ArrowRight,
   BookOpen,
@@ -12,25 +11,31 @@ import {
   User,
   Users,
 } from 'lucide-react';
-import { SupportTicketList } from './support-ticket-list';
-import { SupportConversation } from './support-conversation';
-import { NewTicketModal } from './new-ticket-modal';
+import { useEffect, useState } from 'react';
 import { Button } from '#/components/ui/button';
-import {
-  getTickets,
-  createTicket,
-  replyTicket,
-  type SupportTicket,
-  type CreateTicketInput,
-  type SupportCategory,
-} from '#/services/cloud-support';
 import { cn } from '#/lib/utils';
+import {
+  type CreateTicketInput,
+  createTicket,
+  getTickets,
+  replyTicket,
+  type SupportCategory,
+  type SupportTicket,
+} from '#/services/cloud-support';
+import { NewTicketModal } from './new-ticket-modal';
+import { SupportConversation } from './support-conversation';
+import { SupportTicketList } from './support-ticket-list';
 
 export interface SupportCenterProps {
   className?: string;
 }
 
-const SUPPORT_TOPICS: { category: SupportCategory; label: string; description: string; icon: typeof Rocket }[] = [
+const SUPPORT_TOPICS: {
+  category: SupportCategory;
+  label: string;
+  description: string;
+  icon: typeof Rocket;
+}[] = [
   {
     category: 'deployment',
     label: 'Deployments',
@@ -106,13 +111,19 @@ export function SupportCenter({ className }: SupportCenterProps) {
             <HelpCircle className="size-6 text-primary" />
           </span>
           <div>
-            <h1 className="text-2xl font-semibold tracking-tight text-foreground">Support Center</h1>
-            <p className="mt-0.5 text-sm text-muted-foreground">
-              Connect directly with CodeDock platform engineers for deployment, billing, and technical guidance.
+            <h1 className="font-semibold text-2xl text-foreground tracking-tight">
+              Support Center
+            </h1>
+            <p className="mt-0.5 text-muted-foreground text-sm">
+              Connect directly with CodeDock platform engineers for deployment, billing, and
+              technical guidance.
             </p>
           </div>
         </div>
-        <Button onClick={() => openNewTicketWithCategory('deployment')} className="gap-1.5 rounded-xl">
+        <Button
+          onClick={() => openNewTicketWithCategory('deployment')}
+          className="gap-1.5 rounded-xl"
+        >
           <Plus className="size-4" />
           <span>New ticket</span>
         </Button>
@@ -124,9 +135,9 @@ export function SupportCenter({ className }: SupportCenterProps) {
           <p className="text-muted-foreground text-sm">Loading tickets...</p>
         </div>
       ) : (
-        <div className="grid items-start gap-6 @[820px]/support-center:grid-cols-[340px_minmax(0,1fr)]">
+        <div className="grid @[820px]/support-center:grid-cols-[340px_minmax(0,1fr)] items-start gap-6">
           {/* Left Column: Tickets List */}
-          <div className={selectedTicket ? 'hidden @[820px]/support-center:block' : ''}>
+          <div className={selectedTicket ? '@[820px]/support-center:block hidden' : ''}>
             <SupportTicketList
               tickets={tickets}
               selectedTicketId={selectedTicketId}
@@ -145,16 +156,17 @@ export function SupportCenter({ className }: SupportCenterProps) {
               />
             ) : (
               <>
-                <section className="space-y-6 rounded-2xl border border-border/50 bg-card p-6 sm:p-8 shadow-xs">
+                <section className="space-y-6 rounded-2xl border border-border/50 bg-card p-6 shadow-xs sm:p-8">
                   <div className="flex size-12 items-center justify-center rounded-2xl bg-primary/10 text-primary">
                     <Mail className="size-6" />
                   </div>
                   <div>
-                    <h2 className="text-xl font-semibold tracking-tight text-foreground">
+                    <h2 className="font-semibold text-foreground text-xl tracking-tight">
                       Need help with CodeDock?
                     </h2>
-                    <p className="mt-1 text-sm text-muted-foreground">
-                      Select a topic below to submit a priority support request directly to our platform engineers.
+                    <p className="mt-1 text-muted-foreground text-sm">
+                      Select a topic below to submit a priority support request directly to our
+                      platform engineers.
                     </p>
                   </div>
 
@@ -164,15 +176,15 @@ export function SupportCenter({ className }: SupportCenterProps) {
                         key={topic.category}
                         type="button"
                         onClick={() => openNewTicketWithCategory(topic.category)}
-                        className="group flex items-start gap-3.5 rounded-xl border border-border/50 bg-muted/30 p-4 text-left transition-all hover:border-primary/40 hover:bg-muted/60 hover:shadow-xs cursor-pointer"
+                        className="group flex cursor-pointer items-start gap-3.5 rounded-xl border border-border/50 bg-muted/30 p-4 text-left transition-all hover:border-primary/40 hover:bg-muted/60 hover:shadow-xs"
                       >
-                        <topic.icon className="mt-0.5 size-5 shrink-0 text-muted-foreground group-hover:text-primary transition-colors" />
+                        <topic.icon className="mt-0.5 size-5 shrink-0 text-muted-foreground transition-colors group-hover:text-primary" />
                         <div className="min-w-0 flex-1">
                           <div className="flex items-center justify-between">
-                            <p className="text-sm font-semibold text-foreground">{topic.label}</p>
+                            <p className="font-semibold text-foreground text-sm">{topic.label}</p>
                             <ArrowRight className="size-4 text-muted-foreground/40 transition-transform group-hover:translate-x-0.5 group-hover:text-foreground" />
                           </div>
-                          <p className="mt-1 line-clamp-2 text-xs text-muted-foreground leading-relaxed">
+                          <p className="mt-1 line-clamp-2 text-muted-foreground text-xs leading-relaxed">
                             {topic.description}
                           </p>
                         </div>
@@ -182,10 +194,10 @@ export function SupportCenter({ className }: SupportCenterProps) {
                 </section>
 
                 <section
-                  className="mt-6 rounded-2xl border border-border/50 bg-card p-5 sm:p-6 shadow-xs"
+                  className="mt-6 rounded-2xl border border-border/50 bg-card p-5 shadow-xs sm:p-6"
                   aria-labelledby="support-resources"
                 >
-                  <h2 id="support-resources" className="mb-4 text-sm font-semibold text-foreground">
+                  <h2 id="support-resources" className="mb-4 font-semibold text-foreground text-sm">
                     Resources
                   </h2>
                   <div className="grid gap-4 sm:grid-cols-2">
@@ -197,10 +209,10 @@ export function SupportCenter({ className }: SupportCenterProps) {
                     >
                       <BookOpen className="mt-0.5 size-4 shrink-0 text-muted-foreground group-hover:text-foreground" />
                       <div>
-                        <span className="text-sm font-medium text-foreground group-hover:underline">
+                        <span className="font-medium text-foreground text-sm group-hover:underline">
                           Documentation
                         </span>
-                        <span className="mt-0.5 block text-xs leading-5 text-muted-foreground">
+                        <span className="mt-0.5 block text-muted-foreground text-xs leading-5">
                           Read architecture guides, API references, and deployment cookbooks.
                         </span>
                       </div>
@@ -213,10 +225,10 @@ export function SupportCenter({ className }: SupportCenterProps) {
                     >
                       <Users className="mt-0.5 size-4 shrink-0 text-muted-foreground group-hover:text-foreground" />
                       <div>
-                        <span className="text-sm font-medium text-foreground group-hover:underline">
+                        <span className="font-medium text-foreground text-sm group-hover:underline">
                           Community Forum
                         </span>
-                        <span className="mt-0.5 block text-xs leading-5 text-muted-foreground">
+                        <span className="mt-0.5 block text-muted-foreground text-xs leading-5">
                           Ask questions, share workflows, and discuss features with other engineers.
                         </span>
                       </div>
@@ -224,14 +236,17 @@ export function SupportCenter({ className }: SupportCenterProps) {
                   </div>
                 </section>
 
-                <div className="mt-5 flex flex-wrap items-start justify-between gap-3 px-1 text-xs leading-5 text-muted-foreground">
+                <div className="mt-5 flex flex-wrap items-start justify-between gap-3 px-1 text-muted-foreground text-xs leading-5">
                   <p className="flex max-w-md items-start gap-2">
                     <ShieldCheck className="mt-0.5 size-3.5 shrink-0 text-emerald-500" />
-                    <span>Your tickets and diagnostic data are encrypted and visible only to your organization and authorized engineers.</span>
+                    <span>
+                      Your tickets and diagnostic data are encrypted and visible only to your
+                      organization and authorized engineers.
+                    </span>
                   </p>
                   <a
                     href="mailto:support@codedock.io"
-                    className="shrink-0 font-medium underline-offset-4 hover:underline hover:text-foreground"
+                    className="shrink-0 font-medium underline-offset-4 hover:text-foreground hover:underline"
                   >
                     Email support: support@codedock.io
                   </a>
@@ -252,4 +267,3 @@ export function SupportCenter({ className }: SupportCenterProps) {
     </div>
   );
 }
-

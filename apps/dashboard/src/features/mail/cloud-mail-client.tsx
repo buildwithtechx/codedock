@@ -31,7 +31,15 @@ export function CloudMailClient({ onSelfHost }: CloudMailClientProps = {}) {
               strokeWidth="1.5"
               strokeDasharray="4 5"
             />
-            <rect x="14" y="36" width="52" height="58" rx="12" fill="currentColor" fillOpacity=".05" />
+            <rect
+              x="14"
+              y="36"
+              width="52"
+              height="58"
+              rx="12"
+              fill="currentColor"
+              fillOpacity=".05"
+            />
             <rect
               x="28"
               y="49"
@@ -50,7 +58,15 @@ export function CloudMailClient({ onSelfHost }: CloudMailClientProps = {}) {
               strokeLinecap="round"
             />
             <circle cx="40" cy="72" r="1.5" fill="currentColor" fillOpacity=".7" />
-            <rect x="77" y="20" width="86" height="90" rx="20" fill="currentColor" fillOpacity=".05" />
+            <rect
+              x="77"
+              y="20"
+              width="86"
+              height="90"
+              rx="20"
+              fill="currentColor"
+              fillOpacity=".05"
+            />
             <rect
               x="95"
               y="46"
@@ -66,7 +82,15 @@ export function CloudMailClient({ onSelfHost }: CloudMailClientProps = {}) {
               strokeWidth="1.5"
               strokeLinecap="round"
             />
-            <rect x="174" y="36" width="52" height="58" rx="12" fill="currentColor" fillOpacity=".05" />
+            <rect
+              x="174"
+              y="36"
+              width="52"
+              height="58"
+              rx="12"
+              fill="currentColor"
+              fillOpacity=".05"
+            />
             <rect
               x="185"
               y="50"
@@ -91,7 +115,7 @@ export function CloudMailClient({ onSelfHost }: CloudMailClientProps = {}) {
             Connect any IMAP/SMTP server. Your provider keeps your mailboxes and mail delivery.
           </p>
 
-          <Button asChild className="mt-6 rounded-full font-medium px-5">
+          <Button asChild className="mt-6 rounded-full px-5 font-medium">
             <Link to={'/apps/new/mail' as never}>
               <Sparkles className="size-4" />
               <span>Connect existing mail server</span>
@@ -120,7 +144,8 @@ export function CloudMailClient({ onSelfHost }: CloudMailClientProps = {}) {
             <>
               <h2 className="font-medium text-foreground text-sm">Self-host Codedock Mail</h2>
               <p className="mt-3 text-muted-foreground text-xs leading-relaxed">
-                Deploy the complete mail engine with SMTP, IMAP, DKIM and mailbox management on your own server.
+                Deploy the complete mail engine with SMTP, IMAP, DKIM and mailbox management on your
+                own server.
               </p>
               <Button
                 type="button"
@@ -140,7 +165,8 @@ export function CloudMailClient({ onSelfHost }: CloudMailClientProps = {}) {
                 </span>
               </div>
               <p className="mt-4 text-muted-foreground text-xs leading-relaxed">
-                Managed email on Codedock Cloud is coming soon. Cloud server plans are for hosting applications and do not provision a mail server.
+                Managed email on Codedock Cloud is coming soon. Cloud server plans are for hosting
+                applications and do not provision a mail server.
               </p>
             </>
           )}

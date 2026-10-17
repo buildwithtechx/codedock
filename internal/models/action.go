@@ -46,7 +46,7 @@ type ActionRun struct {
 }
 
 type ActionCapabilities struct {
-	OS                 string   `json:"os"` // linux | macos
+	OS                 string   `json:"os"`           // linux | macos
 	Architecture       string   `json:"architecture"` // x64 | arm64
 	Docker             bool     `json:"docker"`
 	DockerArchitecture string   `json:"dockerArchitecture,omitempty"`
