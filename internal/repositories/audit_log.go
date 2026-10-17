@@ -123,6 +123,7 @@ func (r *AuditLogRepo) ListFiltered(ctx context.Context, filter models.AuditLogF
 	if err := rows.Err(); err != nil {
 		return nil, fmt.Errorf("rows error: %w", err)
 	}
+	resolveResourceNames(ctx, r.db, logs)
 	return logs, nil
 }
 

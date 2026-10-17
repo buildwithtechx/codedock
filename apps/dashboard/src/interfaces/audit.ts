@@ -3,6 +3,8 @@ export interface AuditLog {
   userId: string;
   action: string;
   resource: string;
+  resourceName?: string;
+  resourceType?: string;
   details: string;
   ipAddress: string;
   createdAt: string;

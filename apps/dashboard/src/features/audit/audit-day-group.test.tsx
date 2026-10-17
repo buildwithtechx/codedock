@@ -38,4 +38,28 @@ describe('AuditDayGroup', () => {
     fireEvent.click(row);
     expect(onSelect).toHaveBeenCalledWith(mockEvents[0]);
   });
+
+  it('never displays raw UUID in title and falls back to clean noun', () => {
+    const rawUuidEvent: AuditEventRow = {
+      id: 'evt-2',
+      action: 'project.create',
+      userId: 'usr-solomon',
+      actorName: 'Solomon Olatunji',
+      resource: '91fdae7e-559c-41af-8426-814fe0d5e643',
+      details: '',
+      ipAddress: '127.0.0.1',
+      createdAt: '2026-10-16T12:00:00Z',
+    };
+
+    render(
+      <AuditDayGroup
+        dayKey="2026-10-16"
+        events={[rawUuidEvent]}
+        onSelectEvent={vi.fn()}
+      />
+    );
+
+    expect(screen.queryByText(/91fdae7e-559c-41af-8426-814fe0d5e643/i)).toBeNull();
+    expect(screen.getByText('Solomon Olatunji created the project')).toBeDefined();
+  });
 });

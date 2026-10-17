@@ -1,4 +1,5 @@
 import type { AuditLog } from '#/interfaces/audit';
+import { resolveResourceDisplay } from './audit-resource-helper';
 
 export type AuditCategoryId =
   | 'deployments'
@@ -239,9 +240,7 @@ export function actorDisplay(log?: Partial<AuditLog>): string {
 }
 
 export function resourceDisplay(log?: Partial<AuditLog>): string {
-  if (log?.resource && typeof log.resource === 'string' && log.resource.trim()) return log.resource.trim();
-  if (log?.details && typeof log.details === 'string' && log.details.trim()) return log.details.trim().slice(0, 80);
-  return 'resource';
+  return resolveResourceDisplay(log);
 }
 
 export function relativeTime(iso: string): string {

@@ -1,21 +1,14 @@
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
-import { Bell, Check } from 'lucide-react';
+import { Bell } from 'lucide-react';
 import { useEffect, useMemo, useState } from 'react';
-import { Switch } from '#/components/ui/switch';
 import { settingsService } from '#/features/settings/api';
-import { ChannelMultiSelect } from './channel-multi-select';
+import { AlertPreferenceCard, type AlertPreferenceState } from './alert-preference-card';
 import { NOTIFICATION_EVENTS, NOTIFICATION_GROUPS } from './notification-events-meta';
-
-type EventState = {
-  channels: string[];
-  orgEnabled: boolean;
-  notifyMe: boolean;
-};
 
 export function NotificationSubscriptionsTable() {
   const queryClient = useQueryClient();
   const [selectedGroup, setSelectedGroup] = useState<string>('all');
-  const [states, setStates] = useState<Record<string, EventState>>(() =>
+  const [states, setStates] = useState<Record<string, AlertPreferenceState>>(() =>
     Object.fromEntries(
       NOTIFICATION_EVENTS.map((e) => [
         e.id,
@@ -83,11 +76,6 @@ export function NotificationSubscriptionsTable() {
     },
   });
 
-  const filteredEvents = useMemo(() => {
-    if (selectedGroup === 'all') return NOTIFICATION_EVENTS;
-    return NOTIFICATION_EVENTS.filter((e) => e.group === selectedGroup);
-  }, [selectedGroup]);
-
   const handleChannelChange = (id: string, channels: string[]) => {
     const current = states[id] || { channels: [], orgEnabled: false, notifyMe: false };
     setStates((prev) => ({
@@ -124,6 +112,24 @@ export function NotificationSubscriptionsTable() {
     return counts;
   }, []);
 
+  const sections = useMemo(() => {
+    if (selectedGroup !== 'all') {
+      const groupDef = NOTIFICATION_GROUPS.find((g) => g.id === selectedGroup);
+      return [
+        {
+          id: selectedGroup,
+          label: null,
+          events: NOTIFICATION_EVENTS.filter((e) => e.group === selectedGroup),
+        },
+      ];
+    }
+    return NOTIFICATION_GROUPS.map((g) => ({
+      id: g.id,
+      label: g.label,
+      events: NOTIFICATION_EVENTS.filter((e) => e.group === g.id),
+    })).filter((s) => s.events.length > 0);
+  }, [selectedGroup]);
+
   return (
     <section className="rounded-2xl border border-border/60 bg-card p-6">
       <div className="mb-5 flex items-center gap-3">
@@ -131,9 +137,9 @@ export function NotificationSubscriptionsTable() {
           <Bell className="h-4 w-4" />
         </div>
         <div>
-          <h2 className="font-semibold text-foreground text-sm">What to be notified about</h2>
-          <p className="text-muted-foreground text-xs">
-            Pick which events go to which channel. Each cell is one subscription.
+          <h2 className="font-semibold text-foreground text-sm">Alert preferences</h2>
+          <p className="mt-0.5 text-muted-foreground text-xs">
+            Organization defaults apply when a member has not made an explicit choice for an alert. Members can override them with their own preferences.
           </p>
         </div>
       </div>
@@ -176,65 +182,35 @@ export function NotificationSubscriptionsTable() {
         })}
       </div>
 
-      <div className="overflow-x-auto">
-        <table className="w-full text-left">
-          <thead>
-            <tr className="border-border/60 border-b text-[11px] text-muted-foreground uppercase tracking-wider">
-              <th className="pb-3 font-semibold">Event</th>
-              <th className="pb-3 text-right font-semibold">Delivery Channels</th>
-              <th className="pb-3 text-center font-semibold">Organization Defaults</th>
-              <th className="pb-3 text-center font-semibold">Notify Me</th>
-            </tr>
-          </thead>
-          <tbody className="divide-y divide-border/40">
-            {filteredEvents.map((event) => {
-              const state = states[event.id] || {
-                channels: event.defaultChannels,
-                orgEnabled: event.defaultOrgEnabled,
-                notifyMe: event.defaultNotifyMe,
-              };
-              return (
-                <tr key={event.id} className="group hover:bg-muted/15">
-                  <td className="py-3.5 pr-4">
-                    <p className="font-medium text-foreground text-sm">{event.title}</p>
-                    <p className="mt-0.5 max-w-xl text-muted-foreground text-xs leading-relaxed">
-                      {event.description}
-                    </p>
-                  </td>
-                  <td className="py-3.5 pr-6 text-right">
-                    <ChannelMultiSelect
-                      value={state.channels}
-                      onChange={(channels) => handleChannelChange(event.id, channels)}
-                    />
-                  </td>
-                  <td className="py-3.5 text-center">
-                    <div className="inline-flex justify-center">
-                      <Switch
-                        checked={state.orgEnabled}
-                        onCheckedChange={(orgEnabled) => handleOrgToggle(event.id, orgEnabled)}
-                        aria-label={`Organization default for ${event.title}`}
-                      />
-                    </div>
-                  </td>
-                  <td className="py-3.5 text-center">
-                    <button
-                      type="button"
-                      onClick={() => handleNotifyToggle(event.id)}
-                      className={`inline-flex size-4.5 items-center justify-center rounded border transition-colors ${
-                        state.notifyMe
-                          ? 'border-primary bg-primary text-primary-foreground'
-                          : 'border-border/70 hover:border-foreground/50'
-                      }`}
-                      aria-label={`Notify me for ${event.title}`}
-                    >
-                      {state.notifyMe && <Check className="size-3" />}
-                    </button>
-                  </td>
-                </tr>
-              );
-            })}
-          </tbody>
-        </table>
+      <div className="space-y-6">
+        {sections.map((section) => (
+          <div key={section.id} className="space-y-3">
+            {section.label && (
+              <h3 className="font-semibold text-foreground text-sm tracking-tight">
+                {section.label}
+              </h3>
+            )}
+            <div className="space-y-3">
+              {section.events.map((event) => {
+                const state = states[event.id] || {
+                  channels: event.defaultChannels,
+                  orgEnabled: event.defaultOrgEnabled,
+                  notifyMe: event.defaultNotifyMe,
+                };
+                return (
+                  <AlertPreferenceCard
+                    key={event.id}
+                    event={event}
+                    state={state}
+                    onChannelChange={(channels) => handleChannelChange(event.id, channels)}
+                    onOrgToggle={(orgEnabled) => handleOrgToggle(event.id, orgEnabled)}
+                    onNotifyToggle={() => handleNotifyToggle(event.id)}
+                  />
+                );
+              })}
+            </div>
+          </div>
+        ))}
       </div>
     </section>
   );

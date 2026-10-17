@@ -1,5 +1,6 @@
 import { User } from 'lucide-react';
 import type { AuditEventRow } from './api';
+import { resolveResourceDisplay } from './audit-resource-helper';
 import { describeAuditEvent, actorDisplay, type AuditTone } from './audit-taxonomy';
 
 const TONE_DOT: Record<AuditTone, string> = {
@@ -54,10 +55,7 @@ function resolveEventSentence(event: AuditEventRow): string {
   const actionName = resolveActionName(event);
   const desc = describeAuditEvent(actionName);
   const actor = actorDisplay(event);
-  const resource =
-    event.resourceName?.trim() ||
-    event.resource?.trim() ||
-    (event.resourceType?.trim() ? `the ${event.resourceType.trim()}` : '');
+  const resource = resolveResourceDisplay(event, actionName);
   const action = desc.action || actionName.replace('.', ' ');
 
   return resource ? `${actor} ${action} ${resource}` : `${actor} ${action}`;
