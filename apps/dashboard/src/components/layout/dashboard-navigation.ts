@@ -71,7 +71,7 @@ export const getInfrastructureNavigation = (isCloud: boolean): DashboardNavigati
     ? {
         title: 'Cloud spaces',
         description: 'Cloud compute, networks and managed instances',
-        to: '/resources',
+        to: '/servers',
         icon: Server,
       }
     : {
