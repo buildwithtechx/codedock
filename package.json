@@ -44,7 +44,7 @@
   },
   "devDependencies": {
     "@biomejs/biome": "^2.5.15",
-    "concurrently": "^10.0.5",
-    "tsup": "^8.5.1"
+    "concurrently": "^10.0.6",
+    "tsup": "^9.0.0"
   }
 }

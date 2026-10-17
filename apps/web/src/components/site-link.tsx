@@ -13,7 +13,7 @@ function isInternalLink(href: SiteHref): href is SitePath {
 
 export function SiteLink({ href, ...props }: SiteLinkProps) {
   if (isInternalLink(href)) {
-    return <Link {...props} to={href} />;
+    return <Link {...(props as any)} to={href} />;
   }
   return <a {...props} href={href} />;
 }
