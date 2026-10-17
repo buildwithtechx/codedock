@@ -17,6 +17,7 @@
     "generate-routes": "npm run generate-routes --workspace=@codedock/dashboard",
     "build": "npm run build:dashboard && npm run build:daemon",
     "test:wrapper": "npm run test --workspace=codedock",
+    "verify:package": "node scripts/verify-package.mjs",
     "build:daemon": "go build -ldflags \"-s -w\" -o bin/codedockd ./cmd/codedockd",
     "build:dashboard": "npm run build --workspace=@codedock/dashboard",
     "dev:desktop": "npm run dev --workspace=@codedock/desktop",
@@ -45,6 +46,7 @@
   "devDependencies": {
     "@biomejs/biome": "^2.5.15",
     "concurrently": "^10.0.6",
-    "tsup": "^9.0.0"
+    "tsup": "^9.0.0",
+    "typescript": "^7.0.2"
   }
 }

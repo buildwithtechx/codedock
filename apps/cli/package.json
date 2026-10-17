@@ -10,19 +10,41 @@
     "directory": "apps/cli"
   },
   "type": "module",
-  "description": "Codedock CLI installer — downloads the prebuilt Go binary for your platform",
+  "description": "Codedock CLI & programmatic client SDK",
   "license": "Apache-2.0",
-  "main": "./lib.js",
+  "main": "./dist/sdk/index.cjs",
+  "module": "./dist/sdk/index.js",
+  "types": "./dist/sdk/index.d.ts",
   "exports": {
-    ".": "./lib.js",
-    "./client": "./client.js",
+    ".": {
+      "import": {
+        "types": "./dist/sdk/index.d.ts",
+        "default": "./dist/sdk/index.js"
+      },
+      "require": {
+        "types": "./dist/sdk/index.d.cts",
+        "default": "./dist/sdk/index.cjs"
+      }
+    },
+    "./client": {
+      "import": {
+        "types": "./dist/sdk/client.d.ts",
+        "default": "./dist/sdk/client.js"
+      },
+      "require": {
+        "types": "./dist/sdk/client.d.cts",
+        "default": "./dist/sdk/client.cjs"
+      }
+    },
+    "./lib": "./lib.js",
     "./package.json": "./package.json"
   },
   "files": [
     "bin/codedock.js",
     "install.js",
     "lib.js",
-    "client.js"
+    "dist",
+    "LICENSE"
   ],
   "engines": {
     "node": ">=18"
@@ -31,6 +53,7 @@
     "codedock": "./bin/codedock.js"
   },
   "scripts": {
+    "prepack": "node scripts/stage-sdk.mjs",
     "postinstall": "node ./install.js",
     "test": "node --test lib.test.js"
   },
@@ -40,7 +63,8 @@
     "docker",
     "self-hosted",
     "deploy",
-    "cli"
+    "cli",
+    "sdk"
   ],
   "author": "TechX"
 }
