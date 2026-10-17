@@ -1,4 +1,4 @@
-import { aiProviderIdValues, type AiProviderCatalogItem } from '#/interfaces/ai';
+import { type AiProviderCatalogItem, aiProviderIdValues } from '#/interfaces/ai';
 
 export const AI_PROVIDER_CATALOG = [
   {

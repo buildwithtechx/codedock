@@ -2,11 +2,11 @@ import { useQuery } from '@tanstack/react-query';
 import { useState } from 'react';
 import { Button } from '#/components/ui/button';
 import type { BaseResponse } from '#/interfaces/base';
+import type { Cluster } from '#/interfaces/clusters';
+import type { ClusterDatabase, DatabaseAction } from '#/interfaces/databases';
 import { apiClient } from '#/lib/api-client';
 import { ClusterDatabaseCard } from './cluster-database-card';
 import { ClusterDatabaseDialog } from './cluster-database-dialog';
-import type { ClusterDatabase, DatabaseAction } from '#/interfaces/databases';
-import type { Cluster } from '#/interfaces/clusters';
 export function ClusterDatabasePanel({
   projectId,
   cluster,

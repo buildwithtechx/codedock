@@ -1,3 +1,4 @@
+import type { BaseResponse } from '#/interfaces/base';
 import type {
   CreateManagedCredentialRequest,
   ManagedCatalog,
@@ -8,7 +9,6 @@ import type {
   ManagedReview,
   ReviewManagedProvisionRequest,
 } from '#/interfaces/managed';
-import type { BaseResponse } from '#/interfaces/base';
 import type { Server } from '#/interfaces/server';
 import { apiClient } from '#/lib/api-client';
 import { handleApiError } from '#/lib/error';

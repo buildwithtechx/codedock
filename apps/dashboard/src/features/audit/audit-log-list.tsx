@@ -2,13 +2,13 @@ import { Layers } from 'lucide-react';
 import { useCallback, useEffect, useMemo, useState } from 'react';
 import { toast } from 'sonner';
 import { Button } from '#/components/ui/button';
+import { AUDIT_CATEGORIES } from '#/constants/audit';
 import { type AuditEventRow, type AuditFacets, auditApi } from './api';
 import { AuditDayGroup } from './audit-day-group';
 import { AuditDetailsDialog } from './audit-details-dialog';
 import { AuditFilterBar, type PeriodKey, type SourceKey } from './audit-filter-bar';
 import { CATEGORY_ICONS, type CategoryKey, groupByDay, periodStart } from './audit-helpers';
 import { AuditRecordingCard } from './audit-recording-card';
-import { AUDIT_CATEGORIES } from '#/constants/audit';
 
 export function AuditLogList() {
   const [category, setCategory] = useState<CategoryKey>('all');

@@ -1,8 +1,8 @@
 import { Paperclip, Send, X } from 'lucide-react';
 import { useState } from 'react';
 import { Button } from '#/components/ui/button';
-import { cn } from '#/lib/utils';
 import type { CreateTicketInput, SupportCategory } from '#/interfaces/support';
+import { cn } from '#/lib/utils';
 
 export interface NewTicketModalProps {
   onClose: () => void;

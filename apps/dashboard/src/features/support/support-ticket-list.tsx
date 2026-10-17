@@ -1,7 +1,7 @@
 import { MessageSquare, Plus, Tag } from 'lucide-react';
 import { Button } from '#/components/ui/button';
-import { cn } from '#/lib/utils';
 import type { SupportCategory, SupportTicket } from '#/interfaces/support';
+import { cn } from '#/lib/utils';
 
 export interface SupportTicketListProps {
   tickets: SupportTicket[];

@@ -1,8 +1,8 @@
 import { Brain } from 'lucide-react';
 import React, { useState } from 'react';
 import { toast } from 'sonner';
-import { useGetAISettings, useUpdateAISettings } from '#/features/settings';
 import { AI_PROVIDER_CATALOG } from '#/constants/ai';
+import { useGetAISettings, useUpdateAISettings } from '#/features/settings';
 import { AiProviderCard, type AiProviderItem } from './ai-provider-card';
 import { SettingsSection } from './settings-section';
 

@@ -1,3 +1,7 @@
+import {
+  HETZNER_WIZARD_STEPS as steps,
+  type HetznerWizardStep as WizardStep,
+} from '@codedock/setup';
 import { useEffect, useState } from 'react';
 import { toast } from 'sonner';
 import { Button } from '#/components/ui/button';
@@ -7,10 +11,6 @@ import { managedService } from '#/services/managed';
 import { useOrganizationStore } from '#/stores/organization-store';
 import { HetznerCredentialStep } from './hetzner-credential-step';
 import { HetznerPlanStep } from './hetzner-plan-step';
-import {
-  HETZNER_WIZARD_STEPS as steps,
-  type HetznerWizardStep as WizardStep,
-} from '@codedock/setup';
 import { HetznerProgressView } from './hetzner-progress-view';
 import { HetznerReviewStep } from './hetzner-review-step';
 

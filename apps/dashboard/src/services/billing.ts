@@ -55,5 +55,5 @@ export const billingService = {
   },
 };
 
-export { isCloudPurchaseIntent };
 export type { BillingConfig, PendingCheckout, TopupPack };
+export { isCloudPurchaseIntent };

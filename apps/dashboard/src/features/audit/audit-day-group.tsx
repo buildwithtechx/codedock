@@ -1,7 +1,7 @@
 import { User } from 'lucide-react';
+import type { AuditTone } from '#/interfaces/audit';
 import type { AuditEventRow } from './api';
 import { resolveResourceDisplay } from './audit-resource-helper';
-import type { AuditTone } from '#/interfaces/audit';
 import { actorDisplay, describeAuditEvent } from './audit-taxonomy';
 
 const TONE_DOT: Record<AuditTone, string> = {

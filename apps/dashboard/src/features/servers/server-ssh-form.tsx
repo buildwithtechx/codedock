@@ -1,21 +1,12 @@
-import {
-  AlertCircle,
-  CheckCircle2,
-  ChevronDown,
-  ChevronUp,
-  Eye,
-  EyeOff,
-  KeyRound,
-  Lock,
-  Upload,
-} from 'lucide-react';
+import { readSshPrivateKey, validateSshConnection } from '@codedock/setup';
+import { AlertCircle, CheckCircle2, ChevronDown, ChevronUp } from 'lucide-react';
 import { useRef, useState } from 'react';
 import { toast } from 'sonner';
 import { Button } from '#/components/ui/button';
 import { Input } from '#/components/ui/input';
 import { Label } from '#/components/ui/label';
 import { ServerSshAdvancedFields } from '#/features/servers/server-ssh-advanced-fields';
-import { readSshPrivateKey, validateSshConnection } from '@codedock/setup';
+import { ServerSshAuthFields } from '#/features/servers/server-ssh-auth-fields';
 import { useCreateServer, useTestSSH } from '#/hooks/use-servers';
 import type { Server, TestSSHRequest } from '#/interfaces/server';
 
@@ -197,98 +188,18 @@ export function ServerSshForm({ onSuccess, onCancel }: ServerSshFormProps) {
         </div>
       </div>
 
-      <div className="space-y-3 rounded-xl border border-border/70 bg-muted/20 p-4">
-        <div className="flex items-center justify-between">
-          <Label className="font-semibold text-xs">Authentication Method</Label>
-          <div className="inline-flex rounded-lg border border-border/80 bg-background p-0.5 text-xs">
-            <button
-              type="button"
-              onClick={() => setSshAuthMethod('key')}
-              className={`inline-flex items-center gap-1.5 rounded-md px-3 py-1 font-medium transition-colors ${
-                sshAuthMethod === 'key'
-                  ? 'bg-primary text-primary-foreground'
-                  : 'text-muted-foreground hover:text-foreground'
-              }`}
-            >
-              <KeyRound className="h-3 w-3" />
-              Private Key
-            </button>
-            <button
-              type="button"
-              onClick={() => setSshAuthMethod('password')}
-              className={`inline-flex items-center gap-1.5 rounded-md px-3 py-1 font-medium transition-colors ${
-                sshAuthMethod === 'password'
-                  ? 'bg-primary text-primary-foreground'
-                  : 'text-muted-foreground hover:text-foreground'
-              }`}
-            >
-              <Lock className="h-3 w-3" />
-              Password
-            </button>
-          </div>
-        </div>
-
-        {sshAuthMethod === 'key' ? (
-          <div className="space-y-2">
-            <div className="flex items-center justify-between">
-              <span className="text-muted-foreground text-xs">
-                Paste OpenSSH / PEM key or upload key file
-              </span>
-              <Button
-                type="button"
-                variant="outline"
-                size="sm"
-                className="h-7 gap-1 text-xs"
-                onClick={() => fileInputRef.current?.click()}
-              >
-                <Upload className="h-3 w-3" />
-                Upload file
-              </Button>
-              <input
-                ref={fileInputRef}
-                type="file"
-                className="hidden"
-                onChange={handleFileUpload}
-              />
-            </div>
-            <textarea
-              value={sshPrivateKey}
-              onChange={(e) => setSshPrivateKey(e.target.value)}
-              placeholder="-----BEGIN OPENSSH PRIVATE KEY-----&#10;...&#10;-----END OPENSSH PRIVATE KEY-----"
-              rows={4}
-              spellCheck={false}
-              className="w-full rounded-lg border border-border bg-background p-2.5 font-mono text-xs outline-none focus:ring-2 focus:ring-primary/20"
-            />
-          </div>
-        ) : (
-          <div className="space-y-1.5">
-            <Label htmlFor="srv-pass" className="text-xs">
-              SSH Password
-            </Label>
-            <div className="relative">
-              <Input
-                id="srv-pass"
-                type={showPassword ? 'text' : 'password'}
-                value={sshPassword}
-                onChange={(e) => setSshPassword(e.target.value)}
-                placeholder="••••••••••••"
-                className="pr-9"
-              />
-              <button
-                type="button"
-                onClick={() => setShowPassword(!showPassword)}
-                className="absolute top-1/2 right-2.5 -translate-y-1/2 text-muted-foreground hover:text-foreground"
-              >
-                {showPassword ? (
-                  <EyeOff className="h-3.5 w-3.5" />
-                ) : (
-                  <Eye className="h-3.5 w-3.5" />
-                )}
-              </button>
-            </div>
-          </div>
-        )}
-      </div>
+      <ServerSshAuthFields
+        sshAuthMethod={sshAuthMethod}
+        setSshAuthMethod={setSshAuthMethod}
+        sshPrivateKey={sshPrivateKey}
+        setSshPrivateKey={setSshPrivateKey}
+        sshPassword={sshPassword}
+        setSshPassword={setSshPassword}
+        showPassword={showPassword}
+        setShowPassword={setShowPassword}
+        fileInputRef={fileInputRef}
+        handleFileUpload={handleFileUpload}
+      />
 
       <div className="space-y-2">
         <button

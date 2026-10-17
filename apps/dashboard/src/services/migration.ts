@@ -1,3 +1,4 @@
+import type { BaseResponse } from '#/interfaces/base';
 import type {
   MaskedStack,
   MigrationPreview,
@@ -5,7 +6,6 @@ import type {
   MigrationRun,
   MigrationSource,
 } from '#/interfaces/migration';
-import type { BaseResponse } from '#/interfaces/base';
 import { apiClient } from '#/lib/api-client';
 import { handleApiError } from '#/lib/error';
 

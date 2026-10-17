@@ -73,7 +73,7 @@ export function PayAsYouGoPlan({
             className="rounded-2xl border border-border bg-card p-6 shadow-sm"
           >
             <div className="flex flex-wrap items-center justify-between gap-2">
-              <h3 id={`${id}-sizing`} className="font-semibold text-foreground text-base">
+              <h3 id={`${id}-sizing`} className="font-semibold text-base text-foreground">
                 Host resource sizing & pool limits
               </h3>
               <span className="rounded-lg bg-muted/60 px-2.5 py-1 font-medium text-muted-foreground text-xs">
@@ -187,7 +187,7 @@ export function PayAsYouGoPlan({
             aria-labelledby={`${id}-packages`}
             className="rounded-2xl border border-border bg-card p-6 shadow-sm"
           >
-            <h3 id={`${id}-packages`} className="font-semibold text-foreground text-base">
+            <h3 id={`${id}-packages`} className="font-semibold text-base text-foreground">
               Credit deposit packages
             </h3>
             <p className="mt-1 text-muted-foreground text-xs">

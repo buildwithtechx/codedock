@@ -36,11 +36,11 @@ import {
 } from '#/components/ui/empty';
 import { QueryErrorState } from '#/components/ui/query-error-state';
 import { Tabs, TabsList, TabsTrigger } from '#/components/ui/tabs';
-import { ServerDetailTabsContent } from '#/features/servers/server-detail-tabs';
 import { ManagedServerPlan } from '#/features/servers/managed/managed-server-plan';
 import { ServerConnectionBanner } from '#/features/servers/server-connection-banner';
 import { ServerConnectionCard } from '#/features/servers/server-connection-card';
 import { ServerDeleteDialog } from '#/features/servers/server-delete-dialog';
+import { ServerDetailTabsContent } from '#/features/servers/server-detail-tabs';
 import { reachabilityOf } from '#/features/servers/server-list-row';
 import { useServer } from '#/hooks/use-servers';
 import type { Server } from '#/interfaces/server';

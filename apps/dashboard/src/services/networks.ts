@@ -65,9 +65,9 @@ export const networksService = {
 };
 
 export type {
-  ServerNetwork,
-  NetworkMember,
   CreateNetworkInput,
   NetworkAccessPolicy,
+  NetworkMember,
   NetworkRollbackWatchdog,
+  ServerNetwork,
 };

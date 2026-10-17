@@ -2,10 +2,10 @@ import { useQuery } from '@tanstack/react-query';
 import { useState } from 'react';
 import { Button } from '#/components/ui/button';
 import type { BaseResponse } from '#/interfaces/base';
+import type { Cluster } from '#/interfaces/clusters';
 import { apiClient } from '#/lib/api-client';
 import { ClusterDatabasePanel } from './cluster-database-panel';
 import { ClusterReviewDialog } from './cluster-review-dialog';
-import type { Cluster } from '#/interfaces/clusters';
 
 export function ProjectClusters({ projectId }: { projectId: string }) {
   const clusters = useQuery({

@@ -41,4 +41,4 @@ export const clustersService = {
   },
 };
 
-export type { ComputeCluster, ClusterNode, ClusterScaling };
+export type { ClusterNode, ClusterScaling, ComputeCluster };

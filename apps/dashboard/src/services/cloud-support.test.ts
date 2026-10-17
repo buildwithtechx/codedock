@@ -1,6 +1,6 @@
 import { beforeEach, describe, expect, it, vi } from 'vitest';
-import { apiClient } from '#/lib/api-client';
 import type { SupportTicket } from '#/interfaces/support';
+import { apiClient } from '#/lib/api-client';
 import { createTicket, getTicket, getTickets, replyTicket } from './cloud-support';
 
 vi.mock('#/lib/api-client', () => ({

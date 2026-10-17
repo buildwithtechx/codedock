@@ -13,8 +13,8 @@ import {
 } from 'lucide-react';
 import { useEffect, useState } from 'react';
 import { Button } from '#/components/ui/button';
-import { cn } from '#/lib/utils';
 import type { CreateTicketInput, SupportCategory, SupportTicket } from '#/interfaces/support';
+import { cn } from '#/lib/utils';
 import { createTicket, getTickets, replyTicket } from '#/services/cloud-support';
 import { NewTicketModal } from './new-ticket-modal';
 import { SupportConversation } from './support-conversation';

@@ -34,7 +34,7 @@ export function PaygEstimateCard({
       className="space-y-5 rounded-2xl border border-border bg-card p-6 shadow-sm"
     >
       <div>
-        <h3 id={`${id}-burn`} className="font-semibold text-foreground text-base">
+        <h3 id={`${id}-burn`} className="font-semibold text-base text-foreground">
           Estimated Burn Rate
         </h3>
         <div className="mt-3">
