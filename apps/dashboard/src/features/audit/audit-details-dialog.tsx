@@ -84,13 +84,17 @@ function JsonBlock({ value, label }: { value: unknown; label: string }) {
   );
 }
 
+export interface AuditDetailsDialogProps {
+  event: AuditLogRow | AuditLog | null;
+  open?: boolean;
+  onClose: () => void;
+}
+
 export function AuditDetailsDialog({
   event,
+  open,
   onClose,
-}: {
-  event: AuditLogRow | AuditLog | null;
-  onClose: () => void;
-}) {
+}: AuditDetailsDialogProps) {
   const [showTechnical, setShowTechnical] = useState(false);
   const info = event ? describeAuditAction(event.action) : null;
   const actor = event ? actorDisplay(event) : '';
@@ -99,9 +103,10 @@ export function AuditDetailsDialog({
   const row = event as AuditLogRow | null;
   const hasBefore = row?.before !== undefined && row?.before !== null;
   const hasAfter = row?.after !== undefined && row?.after !== null;
+  const isOpen = open !== undefined ? open : event !== null;
 
   return (
-    <Dialog open={event !== null} onOpenChange={(open) => !open && onClose()}>
+    <Dialog open={isOpen} onOpenChange={(v) => !v && onClose()}>
       <DialogContent className="max-h-[85vh] max-w-2xl overflow-y-auto">
         {event && info && (
           <div className="flex flex-col gap-5">

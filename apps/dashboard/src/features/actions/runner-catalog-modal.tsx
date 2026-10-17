@@ -1,4 +1,4 @@
-import { Check, Laptop, Server, Terminal } from 'lucide-react';
+import { Laptop, Server, Terminal } from 'lucide-react';
 import {
   Dialog,
   DialogContent,

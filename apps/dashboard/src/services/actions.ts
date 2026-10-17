@@ -8,6 +8,9 @@ export interface ActionWorkflow {
   trigger: string;
   yaml?: string;
   enabled: boolean;
+  owner?: string;
+  repo?: string;
+  path?: string;
   createdAt: string;
   updatedAt: string;
 }
@@ -38,6 +41,11 @@ export interface ActionRun {
   runnerId?: string;
   logs?: string;
   jobs?: ActionJob[];
+  attempt?: number;
+  owner?: string;
+  repo?: string;
+  ref?: string;
+  revision?: string;
   startedAt?: string;
   finishedAt?: string;
   durationSeconds: number;
@@ -49,10 +57,13 @@ export interface ActionRunner {
   id: string;
   name: string;
   mode: 'container' | 'native';
+  kind?: string;
   image?: string;
   status: 'online' | 'offline' | 'busy';
   labels: string[];
   enabled: boolean;
+  error?: string;
+  config?: Record<string, any>;
   lastHeartbeatAt?: string;
   createdAt: string;
   updatedAt: string;
@@ -64,6 +75,11 @@ export interface CreateWorkflowInput {
   description?: string;
   trigger?: string;
   yaml?: string;
+  path?: string;
+  ref?: string;
+  owner?: string;
+  repo?: string;
+  yamlContent?: string;
 }
 
 export interface CreateRunnerInput {
@@ -72,6 +88,8 @@ export interface CreateRunnerInput {
   image?: string;
   labels?: string[];
   enabled: boolean;
+  serverId?: string;
+  config?: Record<string, any>;
 }
 
 export const actionsService = {
@@ -82,6 +100,11 @@ export const actionsService = {
 
   createWorkflow: async (input: CreateWorkflowInput): Promise<ActionWorkflow> => {
     const res = await apiClient.post<{ data: ActionWorkflow }>('/actions/workflows', input);
+    return res.data;
+  },
+
+  triggerWorkflow: async (id: string): Promise<ActionRun> => {
+    const res = await apiClient.post<{ data: ActionRun }>(`/actions/workflows/${encodeURIComponent(id)}/trigger`, {});
     return res.data;
   },
 

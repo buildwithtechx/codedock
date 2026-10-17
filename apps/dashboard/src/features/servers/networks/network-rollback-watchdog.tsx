@@ -1,4 +1,4 @@
-import { AlertTriangle, CheckCircle2, Clock, Loader2, RotateCcw, ShieldAlert } from 'lucide-react';
+import { CheckCircle2, Clock, Loader2, RotateCcw, ShieldAlert } from 'lucide-react';
 import { useEffect, useState } from 'react';
 import { toast } from 'sonner';
 import { Button } from '#/components/ui/button';

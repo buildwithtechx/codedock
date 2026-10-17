@@ -1,4 +1,4 @@
-import { Check, Loader2, Network as NetworkIcon, Plus, Shield, Trash2 } from 'lucide-react';
+import { Loader2, Network as NetworkIcon, Plus, Shield, Trash2 } from 'lucide-react';
 import { useState } from 'react';
 import { toast } from 'sonner';
 import { Button } from '#/components/ui/button';

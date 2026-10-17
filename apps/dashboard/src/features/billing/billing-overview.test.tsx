@@ -1,6 +1,5 @@
 import { act, fireEvent, render, screen } from '@testing-library/react';
 import { beforeEach, describe, expect, it, vi } from 'vitest';
-import { billingService } from '#/services/billing';
 import { BillingOverview } from './billing-overview';
 
 vi.mock('#/services/billing', () => ({

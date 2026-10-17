@@ -61,7 +61,7 @@ export function SupportCenter({ className }: SupportCenterProps) {
   const [tickets, setTickets] = useState<SupportTicket[]>([]);
   const [selectedTicketId, setSelectedTicketId] = useState<string | null>(null);
   const [isNewModalOpen, setIsNewModalOpen] = useState(false);
-  const [initialCategory, setInitialCategory] = useState<SupportCategory>('general');
+  const [initialCategory, setInitialCategory] = useState<SupportCategory>('deployment');
   const [loading, setLoading] = useState(true);
 
   useEffect(() => {
@@ -113,7 +113,7 @@ export function SupportCenter({ className }: SupportCenterProps) {
             </p>
           </div>
         </div>
-        <Button onClick={() => openNewTicketWithCategory('general')} className="gap-1.5 rounded-xl">
+        <Button onClick={() => openNewTicketWithCategory('deployment')} className="gap-1.5 rounded-xl">
           <Plus className="size-4" />
           <span>New ticket</span>
         </Button>
@@ -132,7 +132,7 @@ export function SupportCenter({ className }: SupportCenterProps) {
               tickets={tickets}
               selectedTicketId={selectedTicketId}
               onSelectTicket={setSelectedTicketId}
-              onNewTicket={() => openNewTicketWithCategory('general')}
+              onNewTicket={() => openNewTicketWithCategory('deployment')}
             />
           </div>
 

@@ -2,10 +2,7 @@ import { Link } from '@tanstack/react-router';
 import {
   ArrowLeft,
   Cloud,
-  History,
-  PlayCircle,
   Plus,
-  Server,
 } from 'lucide-react';
 import { useCallback, useEffect, useState } from 'react';
 import { toast } from 'sonner';

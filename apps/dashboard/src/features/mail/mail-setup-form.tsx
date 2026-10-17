@@ -1,9 +1,7 @@
 import {
-  AlertTriangle,
   Eye,
   EyeOff,
   Globe,
-  Key,
   Mail,
   Play,
   Server,

@@ -1,5 +1,5 @@
 import { Link, useNavigate } from '@tanstack/react-router';
-import { ArrowLeft, Check, Globe, Mail, Plug, Server } from 'lucide-react';
+import { ArrowLeft, Check, Mail, Plug, Server } from 'lucide-react';
 import { useState } from 'react';
 import { toast } from 'sonner';
 import { Button } from '#/components/ui/button';

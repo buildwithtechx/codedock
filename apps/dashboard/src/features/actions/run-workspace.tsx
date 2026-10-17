@@ -1,4 +1,4 @@
-import { AlertCircle, CheckCircle, Clock, Play, RotateCcw, StopCircle, User } from 'lucide-react';
+import { Clock, RotateCcw, StopCircle, User } from 'lucide-react';
 import { useState } from 'react';
 import { toast } from 'sonner';
 import { Button } from '#/components/ui/button';

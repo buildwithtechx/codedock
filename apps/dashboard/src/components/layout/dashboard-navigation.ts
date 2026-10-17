@@ -21,7 +21,6 @@ import {
   Settings,
   ShieldCheck,
   UserRound,
-  Workflow,
 } from 'lucide-react';
 
 export type DashboardNavigationItem = {

@@ -8,13 +8,12 @@ import {
   Loader2,
   Play,
   RotateCcw,
-  Server,
   Trash2,
 } from 'lucide-react';
 import { useState } from 'react';
 import { toast } from 'sonner';
 import { Button } from '#/components/ui/button';
-import { clustersService, type ClusterScaling } from '#/services/clusters';
+import { clustersService } from '#/services/clusters';
 
 interface ClusterScalingPanelProps {
   clusterId: string;
@@ -33,7 +32,6 @@ export function ClusterScalingPanel({
   const {
     data: scaling,
     isLoading,
-    refetch,
     isRefetching,
   } = useQuery({
     queryKey: ['cluster-scaling', clusterId],

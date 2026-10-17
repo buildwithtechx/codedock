@@ -1,5 +1,6 @@
 export interface AuditLog {
   id: string;
+  organizationId?: string;
   userId: string;
   action: string;
   resource: string;
@@ -10,5 +11,5 @@ export interface AuditLog {
   createdAt: string;
   actorName?: string;
   actorEmail?: string;
-  actor?: { id: string; name?: string; email?: string };
+  actor?: { id?: string; name?: string; email?: string };
 }

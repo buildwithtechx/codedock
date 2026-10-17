@@ -1,5 +1,5 @@
 import { Link, useNavigate } from '@tanstack/react-router';
-import { ArrowLeft, Check, Code2, PlayCircle, Sparkles, Terminal } from 'lucide-react';
+import { ArrowLeft, Code2, PlayCircle, Terminal } from 'lucide-react';
 import { useState } from 'react';
 import { toast } from 'sonner';
 import { Button } from '#/components/ui/button';
@@ -177,6 +177,17 @@ export function WorkflowBuilder() {
                 className="h-10 rounded-xl bg-muted/40 font-mono text-xs"
               />
             </div>
+          </div>
+
+          <div className="space-y-1.5">
+            <Label htmlFor="wf-desc">Description</Label>
+            <Input
+              id="wf-desc"
+              value={description}
+              onChange={(e) => setDescription(e.target.value)}
+              placeholder="e.g. Continuous integration pipeline"
+              className="h-10 rounded-xl bg-muted/40"
+            />
           </div>
 
           {mode === 'repository' && (

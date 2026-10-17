@@ -1,5 +1,5 @@
 import { Link } from '@tanstack/react-router';
-import { ArrowRight, Plus, Server } from 'lucide-react';
+import { Plus, Server } from 'lucide-react';
 import { useState, type ReactNode } from 'react';
 import { Button } from '#/components/ui/button';
 

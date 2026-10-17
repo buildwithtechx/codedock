@@ -1,4 +1,4 @@
-import { Activity, ArrowRightLeft, CheckCircle2, ShieldCheck, Wifi } from 'lucide-react';
+import { Activity, ArrowRightLeft, CheckCircle2, Wifi } from 'lucide-react';
 import type { NetworkMember } from '#/services/networks';
 
 interface NetworkPeerDiagnosticsProps {

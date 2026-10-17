@@ -1,10 +1,11 @@
 import { Link, useNavigate } from '@tanstack/react-router';
-import { ArrowLeft, Check, Grid, Laptop, PlayCircle, Server, Terminal } from 'lucide-react';
+import { ArrowLeft, Grid, PlayCircle, Server } from 'lucide-react';
 import { useState } from 'react';
 import { toast } from 'sonner';
 import { Button } from '#/components/ui/button';
 import { Input } from '#/components/ui/input';
 import { useListServers } from '#/hooks/use-servers';
+import type { Server as ServerModel } from '#/interfaces/server';
 import { useCreateRunner } from './use-actions';
 import {
   RunnerCatalogModal,
@@ -24,14 +25,13 @@ interface RunnerEditorProps {
 
 export function RunnerEditor({ initialServer, onBack, onClose, onSuccess }: RunnerEditorProps) {
   const navigate = useNavigate();
-  const { data: serversRes } = useListServers();
-  const servers = Array.isArray(serversRes) ? serversRes : (serversRes?.data ?? []);
+  const { data: serversData } = useListServers();
+  const servers: ServerModel[] = serversData ?? [];
   const { mutateAsync: createRunner, isPending } = useCreateRunner();
 
   const [serverId, setServerId] = useState<string>(
     initialServer?.id ?? (servers.length === 1 ? servers[0].id : '')
   );
-  const selectedServer = servers.find((s) => s.id === serverId) ?? (initialServer ? { id: initialServer.id, name: initialServer.name } : null);
 
   const [preset, setPreset] = useState<RunnerPreset>('ubuntu');
   const [catalogOpen, setCatalogOpen] = useState(false);

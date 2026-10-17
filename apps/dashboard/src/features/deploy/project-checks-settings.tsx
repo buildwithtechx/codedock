@@ -1,4 +1,4 @@
-import { Check, GitCommit, GitPullRequest, Loader2, ShieldCheck } from 'lucide-react';
+import { GitPullRequest, Loader2, ShieldCheck } from 'lucide-react';
 import { useState } from 'react';
 import { toast } from 'sonner';
 import { Button } from '#/components/ui/button';

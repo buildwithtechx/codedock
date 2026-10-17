@@ -98,9 +98,8 @@ export function AuditLogList() {
     async (enabled: boolean) => {
       setSavingSettings(true);
       try {
-        const next = await auditApi.updateSettings({ enabled });
-        const data = (next as unknown as { data?: typeof next })?.data ?? next;
-        setFacets((prev) => (prev ? { ...prev, settings: data } : prev));
+        const res = await auditApi.updateSettings({ enabled });
+        setFacets((prev) => (prev ? { ...prev, settings: res.data } : prev));
         toast.success(enabled ? 'Activity recording enabled' : 'Activity recording disabled');
       } catch {
         toast.error('Failed to update recording setting');
@@ -115,9 +114,8 @@ export function AuditLogList() {
     async (retentionDays: number) => {
       setSavingSettings(true);
       try {
-        const next = await auditApi.updateSettings({ retentionDays });
-        const data = (next as unknown as { data?: typeof next })?.data ?? next;
-        setFacets((prev) => (prev ? { ...prev, settings: data } : prev));
+        const res = await auditApi.updateSettings({ retentionDays });
+        setFacets((prev) => (prev ? { ...prev, settings: res.data } : prev));
         toast.success(`Retention updated to ${retentionDays} days`);
       } catch {
         toast.error('Failed to update retention days');

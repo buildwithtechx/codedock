@@ -7,6 +7,7 @@ import { cn } from '#/lib/utils';
 export interface NewTicketModalProps {
   onClose: () => void;
   onSubmit: (input: CreateTicketInput) => Promise<void> | void;
+  defaultCategory?: SupportCategory;
   className?: string;
 }
 
@@ -17,9 +18,14 @@ const CATEGORIES: { id: SupportCategory; label: string }[] = [
   { id: 'general', label: 'General Questions' },
 ];
 
-export function NewTicketModal({ onClose, onSubmit, className }: NewTicketModalProps) {
+export function NewTicketModal({
+  onClose,
+  onSubmit,
+  defaultCategory,
+  className,
+}: NewTicketModalProps) {
   const [subject, setSubject] = useState('');
-  const [category, setCategory] = useState<SupportCategory>('deployment');
+  const [category, setCategory] = useState<SupportCategory>(defaultCategory ?? 'deployment');
   const [message, setMessage] = useState('');
   const [attachDiagnostics, setAttachDiagnostics] = useState(false);
   const [submitting, setSubmitting] = useState(false);

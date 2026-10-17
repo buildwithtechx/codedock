@@ -1,4 +1,3 @@
-import { Link } from '@tanstack/react-router';
 import { ChevronRight, GitBranch } from 'lucide-react';
 import type { ReactNode } from 'react';
 import { ActionStatus } from './action-status';
@@ -42,7 +41,7 @@ export function ActionRunList({
               {run.name}{' '}
               <span className="text-muted-foreground">
                 #{run.number}
-                {run.attempt > 1 ? ` · attempt ${run.attempt}` : ''}
+                {(run.attempt ?? 1) > 1 ? ` · attempt ${run.attempt}` : ''}
               </span>
             </p>
             <p className="mt-1 truncate text-muted-foreground text-xs">

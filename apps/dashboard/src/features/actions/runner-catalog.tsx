@@ -1,4 +1,4 @@
-import { Box, Cpu, HardDrive, Plus, Radio, Server } from 'lucide-react';
+import { Box, Cpu, Plus, Radio, Server } from 'lucide-react';
 import { useState } from 'react';
 import { Badge } from '#/components/ui/badge';
 import { Button } from '#/components/ui/button';

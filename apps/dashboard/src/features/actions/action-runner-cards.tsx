@@ -50,7 +50,7 @@ export function ActionRunnerCards({ runners, onDeleteRunner, isCloud = false }: 
           </div>
 
           <div className="mt-4 flex flex-wrap gap-1.5">
-            {runner.config?.labels?.map((lbl) => (
+            {runner.config?.labels?.map((lbl: string) => (
               <span key={lbl} className="rounded-md bg-muted px-2 py-0.5 text-muted-foreground text-xs">
                 {lbl}
               </span>

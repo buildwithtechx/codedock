@@ -3,18 +3,22 @@ import type { BaseResponse } from '#/interfaces/base';
 import { apiClient } from '#/lib/api-client';
 import { handleApiError } from '#/lib/error';
 
+export type AuditSource = 'dashboard' | 'mcp' | 'cli' | 'api' | 'webhook' | 'system';
+
 export interface AuditLogRow extends AuditLog {
   eventType?: string;
   resourceType?: string;
+  resourceId?: string;
   resourceName?: string;
   actorUserId?: string;
   actor?: { id?: string; name?: string; email?: string };
   category?: string;
-  source?: 'dashboard' | 'mcp' | 'cli' | 'api' | 'webhook' | 'system';
+  source?: AuditSource;
   sourceClientName?: string;
   sourceClientId?: string;
   actorName?: string;
   actorEmail?: string;
+  userAgent?: string;
   before?: unknown;
   after?: unknown;
 }
@@ -33,6 +37,8 @@ export interface AuditFacets {
   categories: AuditCategoryFacet[];
   actors?: Array<{ id: string; name?: string; email?: string }>;
   sources?: Array<{ source: string; count: number }>;
+  settings?: AuditSettings;
+  canManage?: boolean;
 }
 
 export interface AuditListParams {
@@ -43,6 +49,8 @@ export interface AuditListParams {
   q?: string;
   limit?: number;
   offset?: number;
+  page?: number;
+  perPage?: number;
 }
 
 function toQuery(params: AuditListParams): string {
@@ -54,6 +62,8 @@ function toQuery(params: AuditListParams): string {
   if (params.q) query.set('q', params.q);
   if (params.limit !== undefined) query.set('limit', String(params.limit));
   if (params.offset !== undefined) query.set('offset', String(params.offset));
+  if (params.page !== undefined) query.set('page', String(params.page));
+  if (params.perPage !== undefined) query.set('perPage', String(params.perPage));
   const text = query.toString();
   return text ? `?${text}` : '';
 }

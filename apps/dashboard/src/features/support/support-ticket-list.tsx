@@ -1,6 +1,6 @@
 import { Plus, MessageSquare, Tag } from 'lucide-react';
 import { Button } from '#/components/ui/button';
-import type { SupportTicket, SupportCategory, SupportStatus } from '#/services/cloud-support';
+import type { SupportTicket, SupportCategory } from '#/services/cloud-support';
 import { cn } from '#/lib/utils';
 
 export interface SupportTicketListProps {
