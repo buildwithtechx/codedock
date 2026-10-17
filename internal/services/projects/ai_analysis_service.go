@@ -74,7 +74,7 @@ func (s *AIAnalysisService) ExplainDeploymentFailure(ctx context.Context, deploy
 		apiKey = aiSettings.GroqKey
 		modelName = aiSettings.GroqModel
 		if modelName == "" {
-			modelName = "llama3-8b-8192"
+			modelName = "llama-3.3-70b-versatile"
 		}
 	case "mistral":
 		baseURL = "https://api.mistral.ai/v1"
@@ -95,14 +95,14 @@ func (s *AIAnalysisService) ExplainDeploymentFailure(ctx context.Context, deploy
 		apiKey = aiSettings.XAIKey
 		modelName = aiSettings.XAIModel
 		if modelName == "" {
-			modelName = "grok-beta"
+			modelName = "grok-4.7"
 		}
 	case "moonshot":
 		baseURL = "https://api.moonshot.cn/v1"
 		apiKey = aiSettings.MoonshotKey
 		modelName = aiSettings.MoonshotModel
 		if modelName == "" {
-			modelName = "moonshot-v1-8k"
+			modelName = "kimi-k3"
 		}
 	case "openai":
 		fallthrough
@@ -111,7 +111,7 @@ func (s *AIAnalysisService) ExplainDeploymentFailure(ctx context.Context, deploy
 		apiKey = aiSettings.OpenAIKey
 		modelName = aiSettings.OpenAIModel
 		if modelName == "" {
-			modelName = "gpt-4o"
+			modelName = "gpt-6-astra"
 		}
 	}
 

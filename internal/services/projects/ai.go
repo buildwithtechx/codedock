@@ -56,7 +56,7 @@ func (s *AISettingsService) DiagnoseLogs(ctx context.Context, logs string) (stri
 		apiKey = settings.GroqKey
 		modelName = settings.GroqModel
 		if modelName == "" {
-			modelName = "llama3-8b-8192"
+			modelName = "llama-3.3-70b-versatile"
 		}
 	case "mistral":
 		baseURL = "https://api.mistral.ai/v1"
@@ -77,14 +77,14 @@ func (s *AISettingsService) DiagnoseLogs(ctx context.Context, logs string) (stri
 		apiKey = settings.XAIKey
 		modelName = settings.XAIModel
 		if modelName == "" {
-			modelName = "grok-beta"
+			modelName = "grok-4.7"
 		}
 	case "moonshot":
 		baseURL = "https://api.moonshot.cn/v1"
 		apiKey = settings.MoonshotKey
 		modelName = settings.MoonshotModel
 		if modelName == "" {
-			modelName = "moonshot-v1-8k"
+			modelName = "kimi-k3"
 		}
 	case "openai":
 		fallthrough
@@ -93,7 +93,7 @@ func (s *AISettingsService) DiagnoseLogs(ctx context.Context, logs string) (stri
 		apiKey = settings.OpenAIKey
 		modelName = settings.OpenAIModel
 		if modelName == "" {
-			modelName = "gpt-4o"
+			modelName = "gpt-6-astra"
 		}
 	}
 

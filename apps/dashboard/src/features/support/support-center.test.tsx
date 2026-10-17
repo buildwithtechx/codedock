@@ -1,5 +1,6 @@
 import { act, fireEvent, render, screen } from '@testing-library/react';
 import { beforeEach, describe, expect, it, vi } from 'vitest';
+import type { SupportTicket } from '#/interfaces/support';
 import * as supportService from '#/services/cloud-support';
 import { SupportCenter } from './support-center';
 
@@ -14,7 +15,7 @@ vi.mock('#/services/cloud-support', async (importOriginal) => {
 });
 
 describe('SupportCenter', () => {
-  const sampleTicket: supportService.SupportTicket = {
+  const sampleTicket: SupportTicket = {
     id: 'SUP-0001',
     subject: 'Cannot deploy Dockerfile with cache mounts',
     category: 'deployment',
@@ -63,7 +64,7 @@ describe('SupportCenter', () => {
 
   it('opens new ticket modal and handles submission', async () => {
     vi.mocked(supportService.getTickets).mockResolvedValue([]);
-    const created: supportService.SupportTicket = {
+    const created: SupportTicket = {
       ...sampleTicket,
       id: 'SUP-0002',
       subject: 'New billing question',
