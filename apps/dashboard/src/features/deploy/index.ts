@@ -1,4 +1,3 @@
-export { CloudBuildQueueNotice } from './cloud-build-queue-notice';
 export { DeployComposeCard } from './deploy-compose-card';
 export { DeployConfigStep } from './deploy-config-step';
 export { DeployEnvSection } from './deploy-env-section';

@@ -6,13 +6,6 @@ import { createIngressOperations } from './clients/ingress-client';
 import { createNetworksOperations } from './clients/networks-client';
 import { type CodedockClientOptions, HttpClient } from './http';
 
-export {
-  CodedockApiError,
-  CodedockBillingGateError,
-  CodedockRateLimitError,
-} from './errors';
-export { type CodedockClientOptions, HttpClient } from './http';
-
 export class CodedockClient {
   private http: HttpClient;
   private options: CodedockClientOptions;

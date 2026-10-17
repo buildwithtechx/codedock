@@ -19,7 +19,7 @@ import { ApiKeysList } from '#/features/users/api-keys-list';
 import { OAuthProvidersList } from '#/features/users/oauth-providers-list';
 import { useAuthStore } from '#/stores/auth-store';
 import { AISettings } from './ai-settings';
-import { CredentialsSettings } from './credentials-settings';
+import { DnsSettings } from '#/features/dns/dns-settings';
 import { GeneralSettings } from './general-settings';
 import { InstanceInfo } from './instance-info';
 import { MaintenancePage } from './maintenance-settings';
@@ -122,7 +122,7 @@ export const SettingsLayout = () => {
 
   const content = {
     general: <GeneralSettings />,
-    credentials: <CredentialsSettings />,
+    credentials: <DnsSettings />,
     mcp: <McpSettings />,
     git: (
       <div className="space-y-6">

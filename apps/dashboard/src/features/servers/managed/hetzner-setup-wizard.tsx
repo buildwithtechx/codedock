@@ -1,6 +1,8 @@
 import {
   HETZNER_WIZARD_STEPS as steps,
   type HetznerWizardStep as WizardStep,
+  nextStep,
+  prevStep,
 } from '@codedock/setup';
 import { useEffect, useState } from 'react';
 import { toast } from 'sonner';
@@ -125,6 +127,17 @@ export function HetznerSetupWizard({ onDone }: { onDone: (serverId: string) => v
 
   const selectedOffer = offers?.offers.find((offer) => offer.tier.name === tierName) ?? null;
   const stepIndex = steps.findIndex((entry) => entry.id === step);
+  const stepIds = steps.map((entry) => entry.id);
+
+  const handleNext = () => {
+    const next = nextStep(stepIds, step);
+    if (next) setStep(next);
+  };
+
+  const handleBack = () => {
+    const prev = prevStep(stepIds, step);
+    if (prev) setStep(prev);
+  };
 
   const handleCreateCredential = async (label: string, token: string) => {
     setCreatingCredential(true);
@@ -210,7 +223,7 @@ export function HetznerSetupWizard({ onDone }: { onDone: (serverId: string) => v
           <div className="flex items-center justify-end border-border/60 border-t pt-4">
             <Button
               type="button"
-              onClick={() => setStep('plan')}
+              onClick={handleNext}
               disabled={!selectedCredentialId}
               className="text-xs"
             >
@@ -232,17 +245,12 @@ export function HetznerSetupWizard({ onDone }: { onDone: (serverId: string) => v
             onTierChange={setTierName}
           />
           <div className="flex items-center justify-between border-border/60 border-t pt-4">
-            <Button
-              type="button"
-              variant="ghost"
-              onClick={() => setStep('credential')}
-              className="text-xs"
-            >
+            <Button type="button" variant="ghost" onClick={handleBack} className="text-xs">
               Back
             </Button>
             <Button
               type="button"
-              onClick={() => setStep('review')}
+              onClick={handleNext}
               disabled={!location || !selectedOffer}
               className="text-xs"
             >
@@ -267,7 +275,7 @@ export function HetznerSetupWizard({ onDone }: { onDone: (serverId: string) => v
           error={reviewError}
           onNameChange={setName}
           onImageChange={setImage}
-          onBack={() => setStep('plan')}
+          onBack={handleBack}
           onConfirm={() => void handleConfirm()}
         />
       )}

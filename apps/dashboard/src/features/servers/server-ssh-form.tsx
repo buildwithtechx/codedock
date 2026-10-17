@@ -1,4 +1,8 @@
-import { readSshPrivateKey, validateSshConnection } from '@codedock/setup';
+import {
+  buildCreateServerPayload,
+  readSshPrivateKey,
+  validateSshConnection,
+} from '@codedock/setup';
 import { AlertCircle, CheckCircle2, ChevronDown, ChevronUp } from 'lucide-react';
 import { useRef, useState } from 'react';
 import { toast } from 'sonner';
@@ -28,9 +32,12 @@ export function ServerSshForm({ onSuccess, onCancel }: ServerSshFormProps) {
   const [sshTransport, setSshTransport] = useState<'direct' | 'cloudflare'>('direct');
   const [showAdvanced, setShowAdvanced] = useState(false);
   const [testResult, setTestResult] = useState<{ ok: boolean; message: string } | null>(null);
+
   const fileInputRef = useRef<HTMLInputElement>(null);
+
   const { mutateAsync: testSSH, isPending: isTesting } = useTestSSH();
   const { mutateAsync: createServer, isPending: isCreating } = useCreateServer();
+
   const handleFileUpload = async (event: React.ChangeEvent<HTMLInputElement>) => {
     const file = event.target.files?.[0];
     event.target.value = '';
@@ -46,6 +53,7 @@ export function ServerSshForm({ onSuccess, onCancel }: ServerSshFormProps) {
 
   const handleTestConnection = async () => {
     setTestResult(null);
+
     if (!sshHost.trim()) {
       toast.error('Host IP address is required');
       return;
@@ -57,10 +65,12 @@ export function ServerSshForm({ onSuccess, onCancel }: ServerSshFormProps) {
       sshPassword,
       sshPort
     );
+
     if (validationError) {
       toast.error(validationError);
       return;
     }
+
     try {
       const result = await testSSH({
         sshHost: sshHost.trim(),
@@ -69,7 +79,9 @@ export function ServerSshForm({ onSuccess, onCancel }: ServerSshFormProps) {
         sshKey: sshAuthMethod === 'key' ? sshPrivateKey : undefined,
         sshPassword: sshAuthMethod === 'password' ? sshPassword : undefined,
       });
+
       setTestResult({ ok: result.success, message: result.message });
+
       if (result.success) {
         toast.success('SSH preflight check passed');
       } else {
@@ -81,12 +93,15 @@ export function ServerSshForm({ onSuccess, onCancel }: ServerSshFormProps) {
       toast.error(msg);
     }
   };
+
   const handleSubmit = async (event: React.FormEvent) => {
     event.preventDefault();
+
     if (!name.trim()) {
       toast.error('Server name is required');
       return;
     }
+
     if (!sshHost.trim()) {
       toast.error('Host address is required');
       return;
@@ -98,31 +113,40 @@ export function ServerSshForm({ onSuccess, onCancel }: ServerSshFormProps) {
       sshPassword,
       sshPort
     );
+
     if (validationError) {
       toast.error(validationError);
       return;
     }
+
     try {
+      const serverPayload = buildCreateServerPayload(name, {
+        host: sshHost,
+        port: sshPort,
+        user: sshUser,
+        authMethod: sshAuthMethod,
+        privateKey: sshPrivateKey,
+        password: sshPassword,
+        jumpHost: sshJumpHost,
+        transport: sshTransport,
+      });
+
       const credentials: TestSSHRequest = {
-        sshHost: sshHost.trim(),
-        sshPort: Number(sshPort),
-        sshUser: sshUser.trim() || 'root',
-        sshKey: sshAuthMethod === 'key' ? sshPrivateKey : undefined,
-        sshPassword: sshAuthMethod === 'password' ? sshPassword : undefined,
+        sshHost: serverPayload.ipAddress,
+        sshPort: serverPayload.sshPort,
+        sshUser: serverPayload.sshUser,
+        sshKey: serverPayload.sshKey,
+        sshPassword: serverPayload.sshPassword,
       };
+
       const server = await createServer({
-        name: name.trim(),
-        ipAddress: sshHost.trim(),
-        sshHost: sshHost.trim(),
-        sshPort: Number(sshPort),
-        sshUser: sshUser.trim() || 'root',
-        sshAuthMethod,
-        sshPrivateKey: sshAuthMethod === 'key' ? sshPrivateKey : undefined,
-        sshPassword: sshAuthMethod === 'password' ? sshPassword : undefined,
+        ...serverPayload,
+        sshHost: serverPayload.ipAddress,
+        sshPrivateKey: serverPayload.sshKey,
         sshTransport,
-        sshJumpHost: sshJumpHost.trim() || undefined,
         isLocal: false,
       });
+
       toast.success('Server added successfully');
       onSuccess(server, credentials);
     } catch (err) {
