@@ -18,10 +18,10 @@ export function DeploymentEmptyState({
             <SearchX className="h-7 w-7 text-muted-foreground/50" />
           </div>
           <h3 className="mb-2 font-medium text-foreground/80 text-lg">
-            No releases match these filters
+            No deployments found
           </h3>
           <p className="text-muted-foreground text-sm leading-relaxed">
-            Change or clear a filter to look across a different set of releases.
+            Try adjusting your filters or clearing your search.
           </p>
           <Button variant="outline" size="sm" onClick={onClear} className="mt-6">
             Clear filters
@@ -36,19 +36,19 @@ export function DeploymentEmptyState({
       <EmptyIllustration className="relative mx-auto h-44 w-64" />
       <h3 className="mb-2 font-medium text-foreground/80 text-lg">No deployments yet</h3>
       <p className="mx-auto mb-8 max-w-sm text-muted-foreground text-sm leading-relaxed">
-        Deploy an app and its build status, release history, and commit details will appear here.
+        Deploy your first project and it will appear here with build status, commit details, and performance metrics.
       </p>
       <div className="flex flex-col items-center justify-center gap-3 sm:flex-row">
         <Button asChild size="lg" className="gap-2 px-6">
           <Link to="/library">
             <Plus className="h-4 w-4" />
-            Create deployment
+            Deploy Project
           </Link>
         </Button>
         <Button asChild size="lg" variant="secondary" className="gap-2 px-6">
           <Link to="/library" search={{ tab: 'examples' }}>
             <GitBranch className="h-4 w-4" />
-            Browse templates
+            Browse Templates
           </Link>
         </Button>
       </div>

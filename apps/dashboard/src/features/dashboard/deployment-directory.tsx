@@ -1,42 +1,25 @@
 import { Link } from '@tanstack/react-router';
-import {
-  Activity,
-  Plus,
-  Search,
-} from 'lucide-react';
-import { useDeferredValue, useState } from 'react';
-import { PageFrame } from '#/components/layout/page-frame';
+import { Activity, ChevronLeft, ChevronRight, Plus } from 'lucide-react';
+import { useDeferredValue, useMemo, useState } from 'react';
 import { PageHeader } from '#/components/layout/page-header';
 import { Button } from '#/components/ui/button';
-import { Input } from '#/components/ui/input';
 import { QueryErrorState } from '#/components/ui/query-error-state';
-import {
-  Select,
-  SelectContent,
-  SelectItem,
-  SelectTrigger,
-  SelectValue,
-} from '#/components/ui/select';
 import { useListProjects } from '#/features/projects';
 import { useListByOrganization } from '#/hooks/use-deployments';
 import { DeploymentEmptyState } from './deployment-empty-state';
+import { DeploymentFilters } from './deployment-filters';
 import { DeploymentHistoryCard } from './deployment-history-card';
-import { DeploymentSummary } from './deployment-directory-summary';
-
-const statusOptions = [
-  ['all', 'All'],
-  ['READY', 'Ready'],
-  ['ACTIVE', 'Active'],
-  ['BUILDING', 'Building'],
-  ['FAILED', 'Failed'],
-] as const;
+import { DeploymentOverview } from './deployment-overview';
+import { computeDeploymentSummary } from './deployment-summary-compute';
 
 export function DeploymentDirectory({ hideHeader = false }: { hideHeader?: boolean } = {}) {
   const [projectId, setProjectId] = useState('all');
   const [status, setStatus] = useState('all');
   const [search, setSearch] = useState('');
   const [page, setPage] = useState(1);
+  const [days, setDays] = useState(30);
   const pageSize = 20;
+
   const deferredSearch = useDeferredValue(search);
   const filters = {
     projectId: projectId === 'all' ? undefined : projectId,
@@ -45,14 +28,25 @@ export function DeploymentDirectory({ hideHeader = false }: { hideHeader?: boole
     page,
     limit: pageSize,
   };
+
   const { data: deploymentsResponse, isLoading, isError, refetch } = useListByOrganization(filters);
   const { data: projectsResponse } = useListProjects({ limit: 100 });
+
   const deployments = deploymentsResponse?.data?.records || [];
   const totalDeployments = deploymentsResponse?.data?.total ?? deployments.length;
   const projects = projectsResponse?.data?.records || [];
   const totalProjects = projectsResponse?.data?.total ?? projects.length;
-  const totalPages = Math.ceil(totalDeployments / pageSize);
+  const totalPages = Math.max(1, Math.ceil(totalDeployments / pageSize));
   const hasFilters = projectId !== 'all' || status !== 'all' || search.trim() !== '';
+
+  const summary = useMemo(() => computeDeploymentSummary(deployments, days), [deployments, days]);
+
+  const handleClearFilters = () => {
+    setProjectId('all');
+    setStatus('all');
+    setSearch('');
+    setPage(1);
+  };
 
   return (
     <div className="space-y-6">
@@ -76,149 +70,107 @@ export function DeploymentDirectory({ hideHeader = false }: { hideHeader?: boole
           }
         />
       )}
-      <PageFrame rail={<DeploymentSummary deployments={deployments} isLoading={isLoading} />}>
-        <div className="space-y-4">
-          <DeploymentFilters
-            projectId={projectId}
-            projects={projects}
-            search={search}
-            status={status}
-            onProjectChange={(val) => {
-              setProjectId(val);
-              setPage(1);
-            }}
-            onSearchChange={(val) => {
-              setSearch(val);
-              setPage(1);
-            }}
-            onStatusChange={(val) => {
-              setStatus(val);
-              setPage(1);
-            }}
-          />
-          {isError ? (
-            <QueryErrorState
-              title="Deployment history is unavailable"
-              description="Codedock could not load releases for the active workspace."
-              onRetry={() => void refetch()}
-            />
-          ) : isLoading ? (
-            <div className="flex min-h-[25rem] items-center justify-center">
-              <Activity className="h-5 w-5 animate-pulse text-muted-foreground" />
-            </div>
-          ) : deployments.length === 0 ? (
-            <DeploymentEmptyState
-              hasFilters={hasFilters}
-              onClear={() => {
-                setProjectId('all');
-                setStatus('all');
-                setSearch('');
-                setPage(1);
-              }}
-            />
-          ) : (
-            <>
-              <div className="divide-y divide-border/50 rounded-2xl bg-card">
-                {deployments.map((deployment) => (
-                  <DeploymentHistoryCard key={deployment.id} deployment={deployment} />
-                ))}
-              </div>
-              {totalPages > 1 && (
-                <div className="flex items-center justify-between border-border/40 border-t pt-4">
-                  <p className="text-muted-foreground text-sm">
-                    Showing {(page - 1) * pageSize + 1} to{' '}
-                    {Math.min(page * pageSize, totalDeployments)} of {totalDeployments}
-                  </p>
-                  <div className="flex items-center gap-2">
-                    <Button
-                      variant="outline"
-                      size="sm"
-                      onClick={() => setPage((p) => Math.max(1, p - 1))}
-                      disabled={page <= 1}
-                    >
-                      Previous
-                    </Button>
-                    <span className="text-muted-foreground text-sm">
-                      Page {page} of {totalPages}
-                    </span>
-                    <Button
-                      variant="outline"
-                      size="sm"
-                      onClick={() => setPage((p) => Math.min(totalPages, p + 1))}
-                      disabled={page >= totalPages}
-                    >
-                      Next
-                    </Button>
-                  </div>
-                </div>
-              )}
-            </>
-          )}
-        </div>
-      </PageFrame>
-    </div>
-  );
-}
 
-function DeploymentFilters({
-  projectId,
-  projects,
-  search,
-  status,
-  onProjectChange,
-  onSearchChange,
-  onStatusChange,
-}: {
-  projectId: string;
-  projects: { id: string; name: string }[];
-  search: string;
-  status: string;
-  onProjectChange: (value: string) => void;
-  onSearchChange: (value: string) => void;
-  onStatusChange: (value: string) => void;
-}) {
-  return (
-    <div className="flex flex-col gap-3 sm:flex-row sm:flex-wrap sm:items-center">
-      <div className="relative w-full sm:min-w-55 sm:flex-1">
-        <Search className="pointer-events-none absolute top-1/2 left-3.5 h-4 w-4 -translate-y-1/2 text-muted-foreground" />
-        <Input
-          value={search}
-          onChange={(event) => onSearchChange(event.target.value)}
-          placeholder="Search app, project, branch, or commit"
-          className="h-10 bg-muted/60 ps-10 pe-4"
-        />
-      </div>
-      <Select value={projectId} onValueChange={onProjectChange}>
-        <SelectTrigger className="w-full bg-card sm:w-44">
-          <SelectValue placeholder="All projects" />
-        </SelectTrigger>
-        <SelectContent>
-          <SelectItem value="all">All projects</SelectItem>
-          {projects.map((project) => (
-            <SelectItem key={project.id} value={project.id}>
-              {project.name}
-            </SelectItem>
-          ))}
-        </SelectContent>
-      </Select>
-      <div className="max-w-full shrink-0 overflow-x-auto [scrollbar-width:none] [&::-webkit-scrollbar]:hidden">
-        <div className="inline-flex items-center gap-1">
-          {statusOptions.map(([value, label]) => (
-            <button
-              key={value}
-              type="button"
-              aria-pressed={status === value}
-              onClick={() => onStatusChange(value)}
-              className={`inline-flex h-10 shrink-0 items-center whitespace-nowrap rounded-lg px-4 font-medium text-sm transition-colors ${
-                status === value
-                  ? 'border border-border/60 bg-card text-foreground'
-                  : 'text-muted-foreground hover:bg-muted hover:text-foreground'
-              }`}
-            >
-              {label}
-            </button>
-          ))}
-        </div>
+      <DeploymentFilters
+        search={search}
+        projectId={projectId}
+        status={status}
+        projects={projects}
+        onSearchChange={(val) => {
+          setSearch(val);
+          setPage(1);
+        }}
+        onProjectChange={(val) => {
+          setProjectId(val);
+          setPage(1);
+        }}
+        onStatusChange={(val) => {
+          setStatus(val);
+          setPage(1);
+        }}
+      />
+
+      <DeploymentOverview
+        summary={summary}
+        loading={isLoading}
+        days={days}
+        onDaysChange={(d) => {
+          setDays(d);
+          setPage(1);
+        }}
+        onFilterChange={(f) => {
+          setStatus(f);
+          setPage(1);
+        }}
+        onProjectChange={(pId) => {
+          setProjectId(pId);
+          setStatus('all');
+          setPage(1);
+        }}
+        onRefresh={() => void refetch()}
+      />
+
+      <div className="space-y-3">
+        <h2 className="text-base font-medium text-foreground">Deployment history</h2>
+
+        {isError ? (
+          <QueryErrorState
+            title="Deployment history is unavailable"
+            description="Codedock could not load releases for the active workspace."
+            onRetry={() => void refetch()}
+          />
+        ) : isLoading ? (
+          <div className="flex min-h-[20rem] items-center justify-center">
+            <Activity className="h-5 w-5 animate-pulse text-muted-foreground" />
+          </div>
+        ) : deployments.length === 0 ? (
+          <DeploymentEmptyState hasFilters={hasFilters} onClear={handleClearFilters} />
+        ) : (
+          <div className="space-y-4">
+            <div className="divide-y divide-border/50 rounded-2xl border border-border/50 bg-card">
+              {deployments.map((deployment) => (
+                <DeploymentHistoryCard key={deployment.id} deployment={deployment} />
+              ))}
+            </div>
+
+            {totalDeployments > 0 && (
+              <nav
+                aria-label="Deployment pages"
+                className="flex flex-wrap items-center justify-between gap-3 text-xs text-muted-foreground pt-2"
+              >
+                <span>
+                  {(page - 1) * pageSize + 1}–{Math.min(page * pageSize, totalDeployments)} of{' '}
+                  {totalDeployments} deployments
+                </span>
+                <div className="flex items-center gap-3">
+                  <Button
+                    type="button"
+                    variant="secondary"
+                    size="icon"
+                    disabled={isLoading || page <= 1}
+                    onClick={() => setPage((p) => p - 1)}
+                    aria-label="Previous page"
+                  >
+                    <ChevronLeft className="h-4 w-4" />
+                  </Button>
+                  <span>
+                    Page {page} of {totalPages}
+                  </span>
+                  <Button
+                    type="button"
+                    variant="secondary"
+                    size="icon"
+                    disabled={isLoading || page >= totalPages}
+                    onClick={() => setPage((p) => p + 1)}
+                    aria-label="Next page"
+                  >
+                    <ChevronRight className="h-4 w-4" />
+                  </Button>
+                </div>
+              </nav>
+            )}
+          </div>
+        )}
       </div>
     </div>
   );

@@ -97,9 +97,34 @@ func (r *DeploymentRepo) ListByService(ctx context.Context, serviceID string, li
 	return deps, total, nil
 }
 
+func mapStatusAliases(status string) []string {
+	switch strings.ToLower(strings.TrimSpace(status)) {
+	case "success":
+		return []string{"ready", "active", "success"}
+	case "active", "in_progress", "in progress":
+		return []string{"building", "cloning", "pulling", "pending", "deploying"}
+	case "building":
+		return []string{"building", "cloning", "pulling", "deploying"}
+	case "failed":
+		return []string{"failed", "error"}
+	case "canceled", "cancelled":
+		return []string{"canceled", "cancelled"}
+	default:
+		return nil
+	}
+}
+
 func (r *DeploymentRepo) ListByOrganization(ctx context.Context, filter models.DeploymentListFilter) ([]models.DeploymentListItem, int, error) {
 	search := strings.TrimSpace(filter.Search)
 	searchPattern := ContainsLikePattern(search)
+	statusCond := "($6 = '' OR lower(d.status) = lower($7))"
+	if aliases := mapStatusAliases(filter.Status); len(aliases) > 0 {
+		quoted := make([]string, len(aliases))
+		for i, a := range aliases {
+			quoted[i] = fmt.Sprintf("'%s'", a)
+		}
+		statusCond = fmt.Sprintf("($6 != '' AND $7 != '' AND lower(d.status) IN (%s))", strings.Join(quoted, ", "))
+	}
 	where := `
 		FROM deployments d
 		INNER JOIN projects p ON p.id = d.project_id
@@ -107,7 +132,7 @@ func (r *DeploymentRepo) ListByOrganization(ctx context.Context, filter models.D
 		WHERE p.organization_id = $1
 			AND ($2 = '' OR d.project_id = $3)
 			AND ($4 = '' OR d.service_id = $5)
-			AND ($6 = '' OR lower(d.status) = lower($7))
+			AND ` + statusCond + `
 			AND (
 				$8 = '' OR s.name ILIKE $9 OR p.name ILIKE $10
 				OR d.branch ILIKE $11 OR d.commit_hash ILIKE $12
