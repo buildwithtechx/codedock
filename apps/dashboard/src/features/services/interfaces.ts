@@ -95,6 +95,7 @@ export interface ListOrganizationDeploymentsParams {
   serviceId?: string;
   status?: string;
   search?: string;
+  days?: number;
   page?: number;
   limit?: number;
 }

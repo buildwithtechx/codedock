@@ -139,12 +139,14 @@ func (h *DeploymentHandler) ListOrganizationDeployments(c echo.Context) error {
 	if limit > 100 {
 		limit = 100
 	}
+	days, _ := strconv.Atoi(c.QueryParam("days"))
 	filter := models.DeploymentListFilter{
 		OrganizationID: organizationID,
 		ProjectID:      c.QueryParam("projectId"),
 		ServiceID:      c.QueryParam("serviceId"),
 		Status:         c.QueryParam("status"),
 		Search:         c.QueryParam("search"),
+		Days:           days,
 		Limit:          limit,
 		Offset:         (page - 1) * limit,
 	}

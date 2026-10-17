@@ -26,6 +26,7 @@ export const deploymentsService = {
       if (params.serviceId) query.set('serviceId', params.serviceId);
       if (params.status) query.set('status', params.status);
       if (params.search) query.set('search', params.search);
+      if (params.days) query.set('days', String(params.days));
       if (params.page) query.set('page', String(params.page));
       if (params.limit) query.set('limit', String(params.limit));
       return await apiClient.get<ListOrganizationDeploymentsResponse>(`/deployments?${query}`);

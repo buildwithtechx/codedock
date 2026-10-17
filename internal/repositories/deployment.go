@@ -125,6 +125,10 @@ func (r *DeploymentRepo) ListByOrganization(ctx context.Context, filter models.D
 		}
 		statusCond = fmt.Sprintf("($6 != '' AND $7 != '' AND lower(d.status) IN (%s))", strings.Join(quoted, ", "))
 	}
+	daysCond := ""
+	if filter.Days > 0 {
+		daysCond = fmt.Sprintf("AND d.created_at >= NOW() - INTERVAL '%d days'", filter.Days)
+	}
 	where := `
 		FROM deployments d
 		INNER JOIN projects p ON p.id = d.project_id
@@ -133,6 +137,7 @@ func (r *DeploymentRepo) ListByOrganization(ctx context.Context, filter models.D
 			AND ($2 = '' OR d.project_id = $3)
 			AND ($4 = '' OR d.service_id = $5)
 			AND ` + statusCond + `
+			` + daysCond + `
 			AND (
 				$8 = '' OR s.name ILIKE $9 OR p.name ILIKE $10
 				OR d.branch ILIKE $11 OR d.commit_hash ILIKE $12

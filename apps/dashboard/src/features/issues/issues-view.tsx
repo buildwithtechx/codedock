@@ -1,4 +1,4 @@
-import { Link } from '@tanstack/react-router';
+import { Link, useNavigate, useSearch } from '@tanstack/react-router';
 import { Building2, Loader2, RefreshCw, Trash2 } from 'lucide-react';
 import { useEffect, useMemo, useState } from 'react';
 import { Button } from '#/components/ui/button';
@@ -20,9 +20,28 @@ import { IssuesFeedView } from './issues-feed-view';
 import { MonitoringHealth } from './monitoring-health';
 import { MonitoringNavigation } from './monitoring-navigation';
 
+function useMonitoringTab(): [MonitoringTab, (tab: MonitoringTab) => void] {
+  let urlTab: MonitoringTab | undefined;
+  let nav: ((opts: any) => void) | undefined;
+  try {
+    const s = useSearch({ strict: false }) as { tab?: MonitoringTab };
+    if (s?.tab && ['open', 'health', 'resolved', 'notifications', 'deployments'].includes(s.tab)) {
+      urlTab = s.tab;
+    }
+    nav = useNavigate();
+  } catch {}
+  const [localTab, setLocalTab] = useState<MonitoringTab>(urlTab || 'open');
+  const activeTab = urlTab || localTab;
+  const setTab = (t: MonitoringTab) => {
+    setLocalTab(t);
+    try { nav?.({ to: '/monitoring', search: (prev: any) => ({ ...prev, tab: t }), replace: true }); } catch {}
+  };
+  return [activeTab, setTab];
+}
+
 export function IssuesView() {
   const activeOrganizationId = useActiveOrganizationId();
-  const [tab, setTab] = useState<MonitoringTab>('open');
+  const [tab, setTab] = useMonitoringTab();
 
   const listQuery = useListAttentionIssues();
   const evaluate = useEvaluateIssues();

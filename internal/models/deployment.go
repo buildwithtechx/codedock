@@ -31,6 +31,7 @@ type DeploymentListFilter struct {
 	ServiceID      string `json:"serviceId,omitempty"`
 	Status         string `json:"status,omitempty"`
 	Search         string `json:"search,omitempty"`
+	Days           int    `json:"days,omitempty"`
 	Limit          int    `json:"limit"`
 	Offset         int    `json:"offset"`
 }

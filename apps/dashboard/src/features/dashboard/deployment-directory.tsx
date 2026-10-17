@@ -25,6 +25,7 @@ export function DeploymentDirectory({ hideHeader = false }: { hideHeader?: boole
     projectId: projectId === 'all' ? undefined : projectId,
     status: status === 'all' ? undefined : status,
     search: deferredSearch.trim() || undefined,
+    days,
     page,
     limit: pageSize,
   };
