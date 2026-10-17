@@ -134,7 +134,10 @@ export function DeploySidebar({
             </div>
             <button
               type="button"
-              className="flex size-6 items-center justify-center rounded-full bg-muted text-muted-foreground hover:bg-muted/80"
+              onClick={() => setDomainMode((m) => (m === 'custom' ? 'free' : 'custom'))}
+              title="Add or configure custom domain"
+              aria-label="Add or configure custom domain"
+              className="flex size-6 items-center justify-center rounded-full bg-muted text-muted-foreground transition-colors hover:bg-muted/80 hover:text-foreground cursor-pointer"
             >
               <Plus className="size-3.5" />
             </button>

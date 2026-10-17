@@ -34,6 +34,9 @@ export function DeployWizard({
   const [subdomain, setSubdomain] = useState(initialProjectName);
   const [exposedPort, setExposedPort] = useState(8080);
   const [envVars, setEnvVars] = useState('');
+  const [composePath, setComposePath] = useState('');
+  const [waitForPort, setWaitForPort] = useState(false);
+  const [watchCrashLoop, setWatchCrashLoop] = useState(false);
   const [isDeploying, setIsDeploying] = useState(false);
 
   const { mutateAsync: createProject } = useCreateProject();
@@ -144,6 +147,12 @@ export function DeployWizard({
         onProjectNameChange={setProjectName}
         envVars={envVars}
         onEnvVarsChange={setEnvVars}
+        composePath={composePath}
+        onComposePathChange={setComposePath}
+        waitForPort={waitForPort}
+        onWaitForPortChange={setWaitForPort}
+        watchCrashLoop={watchCrashLoop}
+        onWatchCrashLoopChange={setWatchCrashLoop}
         onEditTarget={() => setStep('target')}
       />
       <DeploySidebar

@@ -1,10 +1,12 @@
 import { CreditCard, Loader2 } from 'lucide-react';
-import { useEffect } from 'react';
+import { useEffect, useState } from 'react';
+import { toast } from 'sonner';
 import { Button } from '#/components/ui/button';
 import { env } from '#/env';
 import { SettingsRow } from '#/features/settings/settings-row';
 import { SettingsSection } from '#/features/settings/settings-section';
 import { useBillingConfig, useCreateCheckoutSession } from '#/hooks/use-billing';
+import { billingService } from '#/services/billing';
 import { refreshAuthSession } from '#/lib/auth-refresh';
 import { useAuthStore } from '#/stores/auth-store';
 
@@ -12,6 +14,7 @@ export function BillingSection() {
   const user = useAuthStore((s) => s.user);
   const { data: config, isLoading } = useBillingConfig();
   const { mutateAsync: createCheckoutSession, isPending } = useCreateCheckoutSession();
+  const [loadingPortal, setLoadingPortal] = useState(false);
 
   useEffect(() => {
     if (typeof window === 'undefined' || !window.location.search.includes('billing=success')) {
@@ -46,6 +49,18 @@ export function BillingSection() {
       window.location.href = url;
     } catch (e) {
       console.error(e);
+    }
+  };
+
+  const handleManagePortal = async () => {
+    setLoadingPortal(true);
+    try {
+      const { url } = await billingService.createPortalSession();
+      if (url) window.location.href = url;
+    } catch {
+      toast.error('Unable to open billing portal');
+    } finally {
+      setLoadingPortal(false);
     }
   };
 
@@ -90,7 +105,13 @@ export function BillingSection() {
               </Button>
             )}
             {isPro && (
-              <Button variant="outline" size="sm" disabled>
+              <Button
+                variant="outline"
+                size="sm"
+                onClick={handleManagePortal}
+                disabled={loadingPortal}
+              >
+                {loadingPortal && <Loader2 className="mr-2 h-4 w-4 animate-spin" />}
                 Manage Subscription
               </Button>
             )}

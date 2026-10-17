@@ -20,6 +20,12 @@ interface DeployConfigStepProps {
   onProjectNameChange: (s: string) => void;
   envVars: string;
   onEnvVarsChange: (s: string) => void;
+  composePath?: string;
+  onComposePathChange?: (p: string) => void;
+  waitForPort?: boolean;
+  onWaitForPortChange?: (v: boolean) => void;
+  watchCrashLoop?: boolean;
+  onWatchCrashLoopChange?: (v: boolean) => void;
   onEditTarget: () => void;
 }
 
@@ -38,6 +44,12 @@ export function DeployConfigStep({
   onProjectNameChange,
   envVars,
   onEnvVarsChange,
+  composePath,
+  onComposePathChange,
+  waitForPort,
+  onWaitForPortChange,
+  watchCrashLoop,
+  onWatchCrashLoopChange,
   onEditTarget,
 }: DeployConfigStepProps) {
   return (
@@ -59,9 +71,17 @@ export function DeployConfigStep({
 
       <DeployEnvSection envVars={envVars} onEnvVarsChange={onEnvVarsChange} />
 
-      <DeployComposeCard />
+      <DeployComposeCard
+        composePath={composePath}
+        onComposePathChange={onComposePathChange}
+      />
 
-      <DeployHealthChecksCard />
+      <DeployHealthChecksCard
+        waitForPort={waitForPort}
+        onWaitForPortChange={onWaitForPortChange}
+        watchCrashLoop={watchCrashLoop}
+        onWatchCrashLoopChange={onWatchCrashLoopChange}
+      />
 
       <DeployProjectNameCard projectName={projectName} onProjectNameChange={onProjectNameChange} />
     </div>

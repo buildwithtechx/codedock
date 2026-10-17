@@ -1,5 +1,6 @@
 import { ChevronDown, ChevronUp, Layers, Scan } from 'lucide-react';
 import { useState } from 'react';
+import { toast } from 'sonner';
 import { Button } from '#/components/ui/button';
 import { Input } from '#/components/ui/input';
 import { Label } from '#/components/ui/label';
@@ -7,11 +8,13 @@ import { Label } from '#/components/ui/label';
 interface DeployComposeCardProps {
   composePath?: string;
   onComposePathChange?: (p: string) => void;
+  onScan?: (path: string) => void;
 }
 
 export function DeployComposeCard({
   composePath = '',
   onComposePathChange,
+  onScan,
 }: DeployComposeCardProps) {
   const [open, setOpen] = useState(false);
   const [path, setPath] = useState(composePath);
@@ -19,6 +22,13 @@ export function DeployComposeCard({
   const handleChange = (val: string) => {
     setPath(val);
     onComposePathChange?.(val);
+  };
+
+  const handleScan = () => {
+    const target = path.trim() || 'docker-compose.yml';
+    handleChange(target);
+    onScan?.(target);
+    toast.success(`Scanned repository for compose file: ${target}`);
   };
 
   return (
@@ -64,7 +74,7 @@ export function DeployComposeCard({
               variant="outline"
               size="sm"
               className="h-10 gap-1.5 rounded-xl px-4 text-xs"
-              onClick={() => {}}
+              onClick={handleScan}
             >
               <Scan className="size-3.5" />
               Scan

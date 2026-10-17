@@ -98,12 +98,12 @@ export function ServerEmptyState({ onAddLocal, addingLocal }: ServerEmptyStatePr
       </p>
 
       <div className="mb-10 flex flex-col items-center justify-center gap-3 sm:flex-row">
-        <Link to="/servers/new">
-          <Button size="lg" className="gap-2 px-6">
+        <Button asChild size="lg" className="gap-2 px-6">
+          <Link to="/servers/new">
             <Plus className="h-4 w-4" />
             Add your first server
-          </Button>
-        </Link>
+          </Link>
+        </Button>
         {onAddLocal && (
           <Button
             size="lg"

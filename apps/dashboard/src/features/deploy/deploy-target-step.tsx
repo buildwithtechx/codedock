@@ -10,6 +10,7 @@ import {
   Sliders,
 } from 'lucide-react';
 import { useState } from 'react';
+import { Link } from '@tanstack/react-router';
 import { Button } from '#/components/ui/button';
 import { Switch } from '#/components/ui/switch';
 
@@ -57,9 +58,11 @@ export function DeployTargetStep({ onContinue }: DeployTargetStepProps) {
                 <p className="text-muted-foreground text-xs">0 projects · Choose a plan</p>
               </div>
             </div>
-            <Button variant="outline" size="sm" className="gap-1.5 rounded-xl text-xs">
-              <Plus className="size-3.5" />
-              New dedicated server
+            <Button asChild variant="outline" size="sm" className="gap-1.5 rounded-xl text-xs">
+              <Link to={'/servers' as never}>
+                <Plus className="size-3.5" />
+                New dedicated server
+              </Link>
             </Button>
           </div>
           <p className="mt-3 text-[11px] text-muted-foreground">Uses this server&apos;s plan.</p>
