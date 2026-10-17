@@ -194,32 +194,32 @@ export function AuditLogList() {
         })}
       </div>
 
-      <AuditFilterBar
-        search={search}
-        onSearchChange={(val) => {
-          setSearch(val);
-          setPage(1);
-        }}
-        actor={actor}
-        onActorChange={(val) => {
-          setActor(val);
-          setPage(1);
-        }}
-        period={period}
-        onPeriodChange={(val) => {
-          setPeriod(val);
-          setPage(1);
-        }}
-        source={source}
-        onSourceChange={(val) => {
-          setSource(val);
-          setPage(1);
-        }}
-        facets={facets}
-      />
-
       <div className="grid items-start gap-6 lg:grid-cols-[minmax(0,1fr)_340px]">
         <div className="min-w-0 space-y-6">
+          <AuditFilterBar
+            search={search}
+            onSearchChange={(val) => {
+              setSearch(val);
+              setPage(1);
+            }}
+            actor={actor}
+            onActorChange={(val) => {
+              setActor(val);
+              setPage(1);
+            }}
+            period={period}
+            onPeriodChange={(val) => {
+              setPeriod(val);
+              setPage(1);
+            }}
+            source={source}
+            onSourceChange={(val) => {
+              setSource(val);
+              setPage(1);
+            }}
+            facets={facets}
+          />
+
           {loading && events.length === 0 ? (
             <div className="h-64 animate-pulse rounded-2xl bg-card" />
           ) : Object.keys(dayGroups).length > 0 ? (

@@ -147,41 +147,64 @@ export function ActionsHome({
         onValueChange={(val) => setTab(val as typeof tab)}
         className="space-y-6"
       >
-        <div className="flex items-center gap-6 border-b border-border/50 text-sm">
+        <div className="flex items-center gap-1 overflow-x-auto border-border/50 border-b">
           <button
             type="button"
             onClick={() => setTab('workflows')}
-            className={`relative pb-3 font-medium transition-colors ${
-              tab === 'workflows' ? 'text-foreground' : 'text-muted-foreground hover:text-foreground'
+            className={`relative inline-flex items-center gap-2 px-4 py-2.5 font-medium text-sm transition-colors ${
+              tab === 'workflows' ? 'text-foreground' : 'text-muted-foreground hover:text-foreground/70'
             }`}
           >
-            Workflows <span className="tabular-nums">{workflows.length}</span>
+            Workflows
+            <span
+              className={`rounded-full px-1.5 py-0.5 text-xs font-medium tabular-nums ${
+                tab === 'workflows' ? 'bg-muted text-foreground' : 'bg-muted/60 text-muted-foreground'
+              }`}
+            >
+              {workflows.length}
+            </span>
             {tab === 'workflows' && (
-              <span className="-bottom-px absolute inset-x-0 h-0.5 rounded-full bg-primary" />
+              <span className="absolute bottom-0 inset-x-4 h-0.5 rounded-full bg-foreground" />
             )}
           </button>
           <button
             type="button"
             onClick={() => setTab('runs')}
-            className={`relative pb-3 font-medium transition-colors ${
-              tab === 'runs' ? 'text-foreground' : 'text-muted-foreground hover:text-foreground'
+            className={`relative inline-flex items-center gap-2 px-4 py-2.5 font-medium text-sm transition-colors ${
+              tab === 'runs' ? 'text-foreground' : 'text-muted-foreground hover:text-foreground/70'
             }`}
           >
             Runs
+            {runs.length > 0 && (
+              <span
+                className={`rounded-full px-1.5 py-0.5 text-xs font-medium tabular-nums ${
+                  tab === 'runs' ? 'bg-muted text-foreground' : 'bg-muted/60 text-muted-foreground'
+                }`}
+              >
+                {runs.length}
+              </span>
+            )}
             {tab === 'runs' && (
-              <span className="-bottom-px absolute inset-x-0 h-0.5 rounded-full bg-primary" />
+              <span className="absolute bottom-0 inset-x-4 h-0.5 rounded-full bg-foreground" />
             )}
           </button>
           <button
             type="button"
             onClick={() => setTab('runners')}
-            className={`relative pb-3 font-medium transition-colors ${
-              tab === 'runners' ? 'text-foreground' : 'text-muted-foreground hover:text-foreground'
+            className={`relative inline-flex items-center gap-2 px-4 py-2.5 font-medium text-sm transition-colors ${
+              tab === 'runners' ? 'text-foreground' : 'text-muted-foreground hover:text-foreground/70'
             }`}
           >
-            Runners <span className="tabular-nums">{runners.length}</span>
+            Runners
+            <span
+              className={`rounded-full px-1.5 py-0.5 text-xs font-medium tabular-nums ${
+                tab === 'runners' ? 'bg-muted text-foreground' : 'bg-muted/60 text-muted-foreground'
+              }`}
+            >
+              {runners.length}
+            </span>
             {tab === 'runners' && (
-              <span className="-bottom-px absolute inset-x-0 h-0.5 rounded-full bg-primary" />
+              <span className="absolute bottom-0 inset-x-4 h-0.5 rounded-full bg-foreground" />
             )}
           </button>
         </div>
@@ -194,6 +217,10 @@ export function ActionsHome({
                 runs={runs}
                 onTriggerWorkflow={handleTriggerWorkflow}
                 onDeleteWorkflow={handleDeleteWorkflow}
+                readyRunnerCount={readyRunnerCount}
+                runnerCount={runners.length}
+                onGoToRunners={() => setTab('runners')}
+                isCloud={isCloud}
               />
             </TabsContent>
 
@@ -204,15 +231,24 @@ export function ActionsHome({
                 empty={
                   <ActionsEmptyState
                     kind="history"
-                    title="No runs yet"
+                    title="No workflow runs yet"
                     description="Trigger a workflow to begin running jobs on your runners."
                   >
-                    <Button asChild className="rounded-full bg-white text-zinc-950 hover:bg-zinc-100 font-medium px-5">
-                      <Link to={'/actions/runners/new' as never}>
-                        <Cloud className="size-4" />
-                        Add runner
-                      </Link>
-                    </Button>
+                    {firstWorkflow ? (
+                      <Button asChild className="h-10 rounded-full bg-foreground px-5 font-medium text-background hover:bg-foreground/90">
+                        <Link to={'/actions/new' as never}>
+                          <Plus className="size-4" />
+                          New workflow
+                        </Link>
+                      </Button>
+                    ) : (
+                      <Button asChild className="h-10 rounded-full bg-foreground px-5 font-medium text-background hover:bg-foreground/90">
+                        <Link to={'/actions/runners/new' as never}>
+                          {isCloud ? <Cloud className="size-4" /> : <Plus className="size-4" />}
+                          Add runner
+                        </Link>
+                      </Button>
+                    )}
                   </ActionsEmptyState>
                 }
               />
@@ -222,6 +258,7 @@ export function ActionsHome({
               <ActionRunnerCards
                 runners={runners}
                 onDeleteRunner={handleDeleteRunner}
+                isCloud={isCloud}
               />
             </TabsContent>
           </div>

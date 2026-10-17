@@ -35,10 +35,12 @@ export function ActionsSidebar({
   const steps = [
     {
       title: 'Choose a runner',
-      description: 'Use a temporary Cloud VM or a connected server.',
+      description: isCloud
+        ? 'Use a temporary Cloud VM or a connected server.'
+        : 'Run workflows on your connected servers.',
       icon: Server,
       done: readyRunnerCount > 0,
-      href: runnerCount ? undefined : '/actions/runners/new',
+      href: runnerCount ? undefined : isCloud ? '/billing' : '/actions/runners/new',
       onClick: runnerCount ? onRunners : undefined,
     },
     {

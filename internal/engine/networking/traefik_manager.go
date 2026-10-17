@@ -5,6 +5,7 @@ import (
 	"fmt"
 	"io"
 	"log/slog"
+	"path/filepath"
 	"strings"
 	"time"
 
@@ -32,6 +33,12 @@ type TraefikManager struct {
 }
 
 func (m *TraefikManager) SetLogDir(dir string) {
+	if dir != "" {
+		if abs, err := filepath.Abs(dir); err == nil {
+			m.logDir = abs
+			return
+		}
+	}
 	m.logDir = dir
 }
 

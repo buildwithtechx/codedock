@@ -69,7 +69,7 @@ describe('ActionsHome', () => {
 
     expect(screen.getByRole('heading', { name: /^Actions$/i })).toBeDefined();
     expect(screen.getByRole('button', { name: /workflows/i })).toBeDefined();
-    expect(screen.getByRole('button', { name: /^runs$/i })).toBeDefined();
+    expect(screen.getByRole('button', { name: /^runs/i })).toBeDefined();
     expect(screen.getByRole('button', { name: /^runners/i })).toBeDefined();
   });
 
@@ -82,7 +82,7 @@ describe('ActionsHome', () => {
       />
     );
 
-    const runsTabButton = screen.getByRole('button', { name: /^runs$/i });
+    const runsTabButton = screen.getByRole('button', { name: /^runs/i });
     fireEvent.click(runsTabButton);
 
     const runCard = await screen.findByText('Build and Verify');

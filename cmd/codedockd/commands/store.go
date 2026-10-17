@@ -5,6 +5,7 @@ import (
 	"database/sql"
 	"log/slog"
 	"os"
+	"path/filepath"
 
 	"github.com/docker/docker/client"
 
@@ -62,6 +63,9 @@ func (a *DBDeployerStore) GetRegistry(id string) (*models.Registry, error) {
 
 func InitDataDir() (string, *sql.DB, *utils.Vault) {
 	dataDir := config.Get().Server.DataDir
+	if abs, err := filepath.Abs(dataDir); err == nil {
+		dataDir = abs
+	}
 	if err := os.MkdirAll(dataDir, 0o700); err != nil {
 		slog.Error("failed to create data directory", "err", err)
 		os.Exit(1)

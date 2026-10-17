@@ -60,6 +60,9 @@ func startServer() {
 
 	traefikMgr := networking.NewTraefikManager(dockerClient, config.Get().Security.TLSEmail)
 	traefikLogDir := filepath.Join(dataDir, "traefik-logs")
+	if abs, err := filepath.Abs(traefikLogDir); err == nil {
+		traefikLogDir = abs
+	}
 	if err := os.MkdirAll(traefikLogDir, 0o755); err != nil {
 		slog.Warn("failed to prepare Traefik log dir", "err", err)
 	} else {

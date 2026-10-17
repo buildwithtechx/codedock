@@ -1,5 +1,5 @@
 import { Link } from '@tanstack/react-router';
-import { Cloud, PlayCircle, Search, Trash2 } from 'lucide-react';
+import { ArrowRight, Cloud, PlayCircle, Plus, Search, Trash2 } from 'lucide-react';
 import { useState } from 'react';
 import { Button } from '#/components/ui/button';
 import { Input } from '#/components/ui/input';
@@ -12,6 +12,10 @@ interface ActionWorkflowListProps {
   runs: ActionRun[];
   onTriggerWorkflow: (workflowId: string) => void;
   onDeleteWorkflow?: (workflowId: string) => void;
+  readyRunnerCount?: number;
+  runnerCount?: number;
+  onGoToRunners?: () => void;
+  isCloud?: boolean;
 }
 
 export function ActionWorkflowList({
@@ -19,21 +23,42 @@ export function ActionWorkflowList({
   runs,
   onTriggerWorkflow,
   onDeleteWorkflow,
+  readyRunnerCount = 0,
+  runnerCount = 0,
+  onGoToRunners,
+  isCloud = false,
 }: ActionWorkflowListProps) {
   const [search, setSearch] = useState('');
 
   if (workflows.length === 0) {
+    const setupAction =
+      readyRunnerCount > 0 ? (
+        <Button asChild className="h-10 rounded-full bg-foreground px-5 font-medium text-background hover:bg-foreground/90">
+          <Link to={'/actions/new' as never}>
+            <Plus className="size-4" />
+            New workflow
+          </Link>
+        </Button>
+      ) : runnerCount > 0 ? (
+        <Button onClick={onGoToRunners} className="h-10 rounded-full bg-foreground px-5 font-medium text-background hover:bg-foreground/90">
+          Review runners
+          <ArrowRight className="size-4 rtl:rotate-180" />
+        </Button>
+      ) : (
+        <Button asChild className="h-10 rounded-full bg-foreground px-5 font-medium text-background hover:bg-foreground/90">
+          <Link to={'/actions/runners/new' as never}>
+            {isCloud ? <Cloud className="size-4" /> : <Plus className="size-4" />}
+            Add runner
+          </Link>
+        </Button>
+      );
+
     return (
       <ActionsEmptyState
         title="From commit to done"
         description="Build, test and ship from your repositories. Follow every job and its logs in one place."
       >
-        <Button asChild className="rounded-full bg-white text-zinc-950 hover:bg-zinc-100 font-medium px-5">
-          <Link to={'/actions/runners/new' as never}>
-            <Cloud className="size-4" />
-            Add runner
-          </Link>
-        </Button>
+        {setupAction}
       </ActionsEmptyState>
     );
   }

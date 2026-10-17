@@ -1,5 +1,5 @@
 import { Link } from '@tanstack/react-router';
-import { Plus, Server, Trash2 } from 'lucide-react';
+import { Cloud, Plus, Server, Trash2 } from 'lucide-react';
 import { Button } from '#/components/ui/button';
 import type { ActionRunner } from '#/services/actions';
 import { ActionsEmptyState } from './actions-empty-state';
@@ -7,9 +7,10 @@ import { ActionsEmptyState } from './actions-empty-state';
 interface ActionRunnerCardsProps {
   runners: ActionRunner[];
   onDeleteRunner?: (runnerId: string) => void;
+  isCloud?: boolean;
 }
 
-export function ActionRunnerCards({ runners, onDeleteRunner }: ActionRunnerCardsProps) {
+export function ActionRunnerCards({ runners, onDeleteRunner, isCloud = false }: ActionRunnerCardsProps) {
   if (runners.length === 0) {
     return (
       <ActionsEmptyState
@@ -17,9 +18,9 @@ export function ActionRunnerCards({ runners, onDeleteRunner }: ActionRunnerCards
         title="No runners configured"
         description="Runners execute your workflow jobs in isolated containers or directly on host machines."
       >
-        <Button asChild className="rounded-xl">
+        <Button asChild className="h-10 rounded-full bg-foreground px-5 font-medium text-background hover:bg-foreground/90">
           <Link to={'/actions/runners/new' as never}>
-            <Plus className="size-4" />
+            {isCloud ? <Cloud className="size-4" /> : <Plus className="size-4" />}
             Add runner
           </Link>
         </Button>

@@ -175,9 +175,9 @@ export function AppSidebar({ collapsed, onToggle, mobileOpen, onMobileClose }: A
         <div className="relative min-h-0 flex-1">
           <nav className="scrollbar-none h-full space-y-5 overflow-y-auto px-3 pt-3 pb-12 [scrollbar-width:none] [&::-webkit-scrollbar]:hidden">
             {navGroups.map((group, i) => (
-              <div key={group.title ?? i} className="flex flex-col gap-0.5">
+              <div key={group.title ?? i} className="space-y-1">
                 {!navCollapsed && group.title && (
-                  <h4 className="px-2 pb-1.5 font-semibold text-[11px] text-sidebar-foreground/50 uppercase tracking-[0.14em]">
+                  <h4 className="mb-2 px-2 text-[11px] font-semibold uppercase tracking-widest text-sidebar-foreground/60">
                     {group.title}
                   </h4>
                 )}
