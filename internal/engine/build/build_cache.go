@@ -72,12 +72,12 @@ func ParseBuildStorage(raw string) (BuildStorage, error) {
 	var storageLine, inodesLine string
 	for _, l := range lines {
 		trimmed := strings.TrimSpace(l)
-		if strings.HasPrefix(trimmed, "CODEDOCK_STORAGE ") || strings.HasPrefix(trimmed, "OPENSHIP_STORAGE ") {
+		if strings.HasPrefix(trimmed, "CODEDOCK_STORAGE ") {
 			parts := strings.SplitN(trimmed, " ", 2)
 			if len(parts) == 2 {
 				storageLine = parts[1]
 			}
-		} else if strings.HasPrefix(trimmed, "CODEDOCK_INODES ") || strings.HasPrefix(trimmed, "OPENSHIP_INODES ") {
+		} else if strings.HasPrefix(trimmed, "CODEDOCK_INODES ") {
 			parts := strings.SplitN(trimmed, " ", 2)
 			if len(parts) == 2 {
 				inodesLine = parts[1]
@@ -103,8 +103,14 @@ func ParseBuildStorage(raw string) (BuildStorage, error) {
 
 		if inodesLine != "" {
 			inFields := strings.Fields(inodesLine)
-			if len(inFields) > 0 {
-				if inVal, err := strconv.ParseInt(inFields[0], 10, 64); err == nil && inVal >= 0 {
+			if len(inFields) >= 2 {
+				totalInodes, errT := strconv.ParseInt(inFields[0], 10, 64)
+				freeIn, errF := strconv.ParseInt(inFields[1], 10, 64)
+				if errT == nil && errF == nil && totalInodes > 0 && freeIn >= 0 && freeIn <= totalInodes {
+					freeInodes = &freeIn
+				}
+			} else if len(inFields) == 1 {
+				if inVal, err := strconv.ParseInt(inFields[0], 10, 64); err == nil && inVal > 0 {
 					freeInodes = &inVal
 				}
 			}
@@ -121,8 +127,14 @@ func ParseBuildStorage(raw string) (BuildStorage, error) {
 		}
 		totalKb = t
 		freeKb = f
-		if len(fields) >= 3 {
-			if inVal, err := strconv.ParseInt(fields[2], 10, 64); err == nil && inVal >= 0 {
+		if len(fields) >= 4 {
+			totalInodes, errT := strconv.ParseInt(fields[2], 10, 64)
+			freeIn, errF := strconv.ParseInt(fields[3], 10, 64)
+			if errT == nil && errF == nil && totalInodes > 0 && freeIn >= 0 && freeIn <= totalInodes {
+				freeInodes = &freeIn
+			}
+		} else if len(fields) >= 3 {
+			if inVal, err := strconv.ParseInt(fields[2], 10, 64); err == nil && inVal > 0 {
 				freeInodes = &inVal
 			}
 		}
@@ -136,13 +148,11 @@ func ParseBuildStorage(raw string) (BuildStorage, error) {
 }
 
 func IsBuildCacheMountsEnabled(envVars map[string]string) bool {
-	if strings.EqualFold(os.Getenv("CODEDOCK_BUILD_CACHE_MOUNTS"), "false") ||
-		strings.EqualFold(os.Getenv("OPENSHIP_BUILD_CACHE_MOUNTS"), "false") {
+	if strings.EqualFold(os.Getenv("CODEDOCK_BUILD_CACHE_MOUNTS"), "false") {
 		return false
 	}
 	if envVars != nil {
-		if strings.EqualFold(envVars["CODEDOCK_BUILD_CACHE_MOUNTS"], "false") ||
-			strings.EqualFold(envVars["OPENSHIP_BUILD_CACHE_MOUNTS"], "false") {
+		if strings.EqualFold(envVars["CODEDOCK_BUILD_CACHE_MOUNTS"], "false") {
 			return false
 		}
 	}

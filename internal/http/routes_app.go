@@ -188,6 +188,7 @@ func (s *Server) registerMiscRoutes(apiGroup, authGroup *echo.Group) {
 	authGroup.DELETE("/actions/runs/:id", s.actionsHandler.DeleteRun, s.authGuard.RequireRole("admin"))
 	authGroup.GET("/actions/runners", s.actionsHandler.ListRunners)
 	authGroup.POST("/actions/runners", s.actionsHandler.CreateRunner, s.authGuard.RequireRole("admin"))
+	authGroup.POST("/actions/runners/inspect", s.actionsHandler.InspectDestination, s.authGuard.RequireRole("admin"))
 	authGroup.DELETE("/actions/runners/:id", s.actionsHandler.DeleteRunner, s.authGuard.RequireRole("admin"))
 	authGroup.GET("/dns/ingress", s.ingressHandler.List)
 	authGroup.POST("/dns/ingress/discover", s.ingressHandler.Discover)

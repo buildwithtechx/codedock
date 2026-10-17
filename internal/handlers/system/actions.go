@@ -199,54 +199,6 @@ func (h *ActionsHandler) CancelRun(c echo.Context) error {
 	return utils.Success(c, "Action run cancelled", run)
 }
 
-func (h *ActionsHandler) ListRunners(c echo.Context) error {
-	h.mu.RLock()
-	defer h.mu.RUnlock()
-
-	var list []*models.ActionRunner
-	for _, runner := range h.runners {
-		list = append(list, runner)
-	}
-	if list == nil {
-		list = make([]*models.ActionRunner, 0)
-	}
-	return utils.Success(c, "Runners retrieved", list)
-}
-
-func (h *ActionsHandler) CreateRunner(c echo.Context) error {
-	var req models.CreateRunnerRequest
-	if err := c.Bind(&req); err != nil {
-		return echo.NewHTTPError(http.StatusBadRequest, "invalid runner payload")
-	}
-	if req.Name == "" {
-		return echo.NewHTTPError(http.StatusBadRequest, "runner name is required")
-	}
-
-	h.mu.Lock()
-	defer h.mu.Unlock()
-
-	now := time.Now().UTC().Format(time.RFC3339)
-	mode := req.Mode
-	if mode == "" {
-		mode = "container"
-	}
-	runner := &models.ActionRunner{
-		ID:            "runner-" + hex.EncodeToString(generateActionBytes(6)),
-		Name:          req.Name,
-		Mode:          mode,
-		Image:         req.Image,
-		Status:        "online",
-		Labels:        req.Labels,
-		Enabled:       req.Enabled,
-		LastHeartbeat: now,
-		CreatedAt:     now,
-		UpdatedAt:     now,
-	}
-
-	h.runners[runner.ID] = runner
-	return utils.Success(c, "Action runner registered", runner)
-}
-
 func (h *ActionsHandler) DeleteWorkflow(c echo.Context) error {
 	id := c.Param("id")
 	h.mu.Lock()
@@ -257,18 +209,6 @@ func (h *ActionsHandler) DeleteWorkflow(c echo.Context) error {
 	}
 	delete(h.workflows, id)
 	return utils.Success(c, "Workflow deleted", map[string]string{"id": id})
-}
-
-func (h *ActionsHandler) DeleteRunner(c echo.Context) error {
-	id := c.Param("id")
-	h.mu.Lock()
-	defer h.mu.Unlock()
-
-	if _, exists := h.runners[id]; !exists {
-		return echo.NewHTTPError(http.StatusNotFound, "runner not found")
-	}
-	delete(h.runners, id)
-	return utils.Success(c, "Runner deleted", map[string]string{"id": id})
 }
 
 func (h *ActionsHandler) DeleteRun(c echo.Context) error {

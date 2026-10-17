@@ -49,8 +49,8 @@ func TestAssertBuildStorage(t *testing.T) {
 
 func TestParseBuildStorage(t *testing.T) {
 	raw := `
-OPENSHIP_STORAGE 52428800 20971520
-OPENSHIP_INODES 3500000
+CODEDOCK_STORAGE 52428800 20971520
+CODEDOCK_INODES 3500000
 `
 	storage, err := ParseBuildStorage(raw)
 	if err != nil {
@@ -78,6 +78,21 @@ CODEDOCK_INODES 1200000
 		t.Fatalf("unexpected totalBytes: %d", storage.TotalBytes)
 	}
 
+	btrfsRaw := `
+CODEDOCK_STORAGE 524288000 301989888
+CODEDOCK_INODES 0 0
+`
+	storage, err = ParseBuildStorage(btrfsRaw)
+	if err != nil {
+		t.Fatalf("failed to parse btrfs storage: %v", err)
+	}
+	if storage.FreeInodes != nil {
+		t.Fatalf("expected nil freeInodes for btrfs 0 0, got %v", storage.FreeInodes)
+	}
+	if err := AssertBuildStorage(storage); err != nil {
+		t.Fatalf("expected btrfs storage to pass build assertion, got %v", err)
+	}
+
 	invalid := `not a valid storage output`
 	if _, err := ParseBuildStorage(invalid); err != ErrBuildStorageUnknown {
 		t.Fatalf("expected ErrBuildStorageUnknown, got %v", err)
@@ -102,10 +117,6 @@ func TestIsBuildCacheMountsEnabled(t *testing.T) {
 
 	if IsBuildCacheMountsEnabled(map[string]string{"CODEDOCK_BUILD_CACHE_MOUNTS": "false"}) {
 		t.Fatal("expected disabled when env map specifies false")
-	}
-
-	if IsBuildCacheMountsEnabled(map[string]string{"OPENSHIP_BUILD_CACHE_MOUNTS": "false"}) {
-		t.Fatal("expected disabled when OPENSHIP_BUILD_CACHE_MOUNTS=false")
 	}
 }
 

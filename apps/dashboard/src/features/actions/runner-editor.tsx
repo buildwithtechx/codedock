@@ -1,18 +1,22 @@
 import { Link, useNavigate } from '@tanstack/react-router';
-import { ArrowLeft, Grid, PlayCircle, Server } from 'lucide-react';
-import { useState } from 'react';
+import { ArrowLeft, Grid, Server, Sparkles } from 'lucide-react';
+import { useId, useState } from 'react';
 import { toast } from 'sonner';
 import { Button } from '#/components/ui/button';
 import { Input } from '#/components/ui/input';
 import { useListServers } from '#/hooks/use-servers';
 import type { Server as ServerModel } from '#/interfaces/server';
-import { useCreateRunner } from './use-actions';
+import { useCreateRunner, useInspectDestination } from './use-actions';
 import {
   RunnerCatalogModal,
   type RunnerPreset,
   RUNNER_PRESETS,
 } from './runner-catalog-modal';
+import { RunnerCloudPlanModal, type CloudPlan } from './runner-cloud-plan-modal';
 import { RunnerAdvancedFields } from './runner-advanced-fields';
+import { RunnerSummaryCard } from './runner-summary-card';
+import { RunnerServerField } from './runner-server-field';
+
 export type DestinationServer = { id: string; name: string };
 
 interface RunnerEditorProps {
@@ -21,21 +25,32 @@ interface RunnerEditorProps {
   open?: boolean;
   onClose?: () => void;
   onSuccess?: (runner: any) => void;
+  defaultCloud?: boolean;
 }
 
-export function RunnerEditor({ initialServer, onBack, onClose, onSuccess }: RunnerEditorProps) {
+export function RunnerEditor({
+  initialServer,
+  onBack,
+  onClose,
+  onSuccess,
+  defaultCloud = false,
+}: RunnerEditorProps) {
   const navigate = useNavigate();
+  const runnerNameId = useId();
   const { data: serversData } = useListServers();
   const servers: ServerModel[] = serversData ?? [];
   const { mutateAsync: createRunner, isPending } = useCreateRunner();
 
+  const [isCloud, setIsCloud] = useState(defaultCloud);
+  const [selectedPlan, setSelectedPlan] = useState<CloudPlan | null>(null);
   const [serverId, setServerId] = useState<string>(
-    initialServer?.id ?? (servers.length === 1 ? servers[0].id : '')
+    initialServer?.id ?? (servers.length > 0 ? servers[0].id : 'cloud-space-default')
   );
 
   const [preset, setPreset] = useState<RunnerPreset>('ubuntu');
   const [catalogOpen, setCatalogOpen] = useState(false);
-  const [name, setName] = useState(initialServer?.name ?? (servers.length === 1 ? servers[0].name : ''));
+  const [planModalOpen, setPlanModalOpen] = useState(false);
+  const [name, setName] = useState(initialServer?.name ?? '');
   const [enabled, setEnabled] = useState(true);
 
   // Advanced settings state
@@ -45,6 +60,9 @@ export function RunnerEditor({ initialServer, onBack, onClose, onSuccess }: Runn
   const [memoryMb, setMemoryMb] = useState(2048);
   const [maxParallel, setMaxParallel] = useState(1);
   const [allowDockerSocket, setAllowDockerSocket] = useState(false);
+
+  const { data: capabilities, refetch: recheckCapabilities, isFetching: probing } =
+    useInspectDestination(isCloud ? undefined : serverId);
 
   const handleSelectPreset = (nextPreset: RunnerPreset) => {
     setPreset(nextPreset);
@@ -64,12 +82,15 @@ export function RunnerEditor({ initialServer, onBack, onClose, onSuccess }: Runn
   const presetInfo = RUNNER_PRESETS.find((p) => p.id === preset) ?? RUNNER_PRESETS[0];
   const PresetIcon = presetInfo.icon;
 
+  const matchingLabels = [
+    'self-hosted',
+    capabilities?.os ?? 'linux',
+    capabilities?.architecture ?? 'x64',
+    ...labels.split(',').map((l) => l.trim()).filter((l) => l && l !== 'self-hosted' && l !== 'linux' && l !== 'x64'),
+  ];
+
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
-    if (!serverId) {
-      toast.error('Please select a destination server');
-      return;
-    }
     if (!name.trim()) {
       toast.error('Please enter a runner name');
       return;
@@ -77,20 +98,22 @@ export function RunnerEditor({ initialServer, onBack, onClose, onSuccess }: Runn
 
     try {
       const created = await createRunner({
-        serverId,
+        serverId: isCloud ? undefined : serverId,
+        cloudPoolId: isCloud ? (selectedPlan?.id ?? 'starter') : undefined,
+        kind: isCloud ? 'cloud' : 'server',
         name: name.trim(),
         enabled,
         config: {
           mode: isContainer ? 'container' : 'native',
           image: isContainer ? image.trim() : null,
-          labels: labels.split(',').map((l) => l.trim()).filter(Boolean),
+          labels: matchingLabels,
           maxParallel,
           cpu,
           memoryMb,
           allowDockerSocket,
         },
       });
-      toast.success('Runner created successfully');
+      toast.success('Runner verified and saved');
       onSuccess?.(created);
       if (onClose) onClose();
       else navigate({ to: '/actions' as never });
@@ -129,52 +152,49 @@ export function RunnerEditor({ initialServer, onBack, onClose, onSuccess }: Runn
           )}
           <h1 className="font-medium text-2xl text-foreground tracking-tight">Add runner</h1>
           <p className="mt-1 text-muted-foreground text-sm">
-            Choose a server and a ready-to-use job environment.
+            {isCloud
+              ? 'Choose a Cloud space and a ready-to-use job environment.'
+              : 'Choose a server and a ready-to-use job environment.'}
           </p>
         </div>
-        <Button
-          type="button"
-          variant="ghost"
-          onClick={() => (onClose ? onClose() : navigate({ to: '/actions' as never }))}
-          className="rounded-xl"
-        >
-          Cancel
-        </Button>
+        <div className="flex items-center gap-2">
+          <Button
+            type="button"
+            variant="outline"
+            size="sm"
+            onClick={() => setIsCloud(!isCloud)}
+            className="gap-1.5 rounded-xl text-xs"
+          >
+            {isCloud ? <Server className="size-3.5" /> : <Sparkles className="size-3.5 text-blue-500" />}
+            {isCloud ? 'Switch to Server' : 'Switch to Cloud'}
+          </Button>
+          <Button
+            type="button"
+            variant="ghost"
+            onClick={() => (onClose ? onClose() : navigate({ to: '/actions' as never }))}
+            className="rounded-xl"
+          >
+            Cancel
+          </Button>
+        </div>
       </header>
 
       <form onSubmit={handleSubmit} className="grid items-start gap-6 lg:grid-cols-[minmax(0,1fr)_340px]">
         <fieldset disabled={isPending} className="m-0 min-w-0 space-y-5 rounded-2xl border-0 bg-card p-5">
-          <div className="space-y-1.5">
-            <label className="font-medium text-foreground text-sm">Server</label>
-            {initialServer ? (
-              <div className="flex items-center gap-2.5 rounded-xl border border-border/60 bg-muted/40 px-3.5 py-2.5 text-sm">
-                <Server className="size-4 text-muted-foreground" />
-                <span className="font-medium text-foreground">{initialServer.name}</span>
-              </div>
-            ) : (
-              <select
-                value={serverId}
-                onChange={(e) => {
-                  setServerId(e.target.value);
-                  const s = servers.find((srv) => srv.id === e.target.value);
-                  if (s && !name) setName(s.name);
-                }}
-                required
-                className="h-10 w-full rounded-xl border border-border/60 bg-muted/40 px-3 text-foreground text-sm focus:outline-none focus:ring-2 focus:ring-ring"
-              >
-                <option value="">Select a server...</option>
-                {servers.map((s) => (
-                  <option key={s.id} value={s.id}>
-                    {s.name} ({s.ipAddress || 'Connected'})
-                  </option>
-                ))}
-              </select>
-            )}
-            <div className="flex items-center justify-between text-muted-foreground text-xs">
-              <span>Uses the existing capacity.</span>
-              <Link to={'/servers' as never} className="text-primary hover:underline">+ Connect server</Link>
-            </div>
-          </div>
+          <RunnerServerField
+            isCloud={isCloud}
+            selectedPlan={selectedPlan}
+            initialServer={initialServer}
+            serverId={serverId}
+            onServerIdChange={(id, sName) => {
+              setServerId(id);
+              if (sName && !name) setName(sName);
+            }}
+            servers={servers}
+            onOpenPlanModal={() => setPlanModalOpen(true)}
+            probing={probing}
+            onRecheckCapabilities={() => recheckCapabilities()}
+          />
 
           <div className="space-y-3 border-border/50 border-t pt-5">
             <div className="flex flex-wrap items-center justify-between gap-2">
@@ -200,13 +220,19 @@ export function RunnerEditor({ initialServer, onBack, onClose, onSuccess }: Runn
                 <p className="mt-1 text-muted-foreground text-xs leading-relaxed">{presetInfo.badge}</p>
               </div>
             </div>
-            <p className="text-muted-foreground text-xs">Choose a server to see compatible environments.</p>
+            <p className="text-muted-foreground text-xs">
+              {isCloud
+                ? 'Choose a Cloud space to see compatible environments.'
+                : 'Choose a server to see compatible environments.'}
+            </p>
           </div>
 
           <div className="space-y-1.5">
-            <label htmlFor="runner-name" className="font-medium text-foreground text-sm">Runner name</label>
+            <label htmlFor={runnerNameId} className="font-medium text-foreground text-sm">
+              Runner name
+            </label>
             <Input
-              id="runner-name"
+              id={runnerNameId}
               value={name}
               onChange={(e) => setName(e.target.value)}
               placeholder="e.g. production-runner-1"
@@ -232,60 +258,32 @@ export function RunnerEditor({ initialServer, onBack, onClose, onSuccess }: Runn
           />
         </fieldset>
 
-        <aside className="space-y-5 rounded-2xl bg-card p-5">
-          <div className="flex items-center gap-3">
-            <span className="flex size-8 shrink-0 items-center justify-center rounded-full bg-blue-500/15 text-blue-500">
-              <PlayCircle className="size-4" />
-            </span>
-            <div className="min-w-0">
-              <h2 className="font-medium text-base text-foreground">Add runner</h2>
-              <p className="mt-0.5 text-muted-foreground text-xs">Runner configuration</p>
-            </div>
-          </div>
-
-          <dl className="space-y-3 text-sm">
-            <div className="flex items-center justify-between gap-3">
-              <dt className="text-muted-foreground">Default environment</dt>
-              <dd className="font-medium text-foreground">{presetInfo.title}</dd>
-            </div>
-            {isContainer && (
-              <div className="flex items-center justify-between gap-3">
-                <dt className="text-muted-foreground">Per job</dt>
-                <dd className="font-medium text-foreground tabular-nums">
-                  {cpu} vCPU · {memoryMb / 1024} GiB
-                </dd>
-              </div>
-            )}
-            <div className="flex items-center justify-between gap-3">
-              <dt className="text-muted-foreground">Concurrent jobs</dt>
-              <dd className="font-medium text-foreground tabular-nums">{maxParallel}</dd>
-            </div>
-          </dl>
-
-          <label className="flex items-center gap-2 pt-2 text-sm">
-            <input
-              type="checkbox"
-              checked={enabled}
-              onChange={(e) => setEnabled(e.target.checked)}
-              className="size-4 rounded border-border"
-            />
-            <span className="font-medium text-foreground text-xs">Accept new jobs</span>
-          </label>
-
-          <Button type="submit" disabled={isPending || !serverId || !name.trim()} className="w-full rounded-full">
-            {isPending ? 'Verifying runner...' : 'Verify and save runner'}
-          </Button>
-
-          <p className="text-muted-foreground text-xs leading-relaxed">
-            Jobs share this server&apos;s capacity. Only run trusted workflows.
-          </p>
-        </aside>
+        <RunnerSummaryCard
+          title={name}
+          presetTitle={presetInfo.title}
+          isContainer={isContainer}
+          cpu={cpu}
+          memoryMb={memoryMb}
+          maxParallel={maxParallel}
+          matchingLabels={matchingLabels}
+          enabled={enabled}
+          onEnabledChange={setEnabled}
+          isPending={isPending}
+          canSubmit={Boolean((isCloud || serverId) && name.trim())}
+          isCloud={isCloud}
+        />
 
         <RunnerCatalogModal
           open={catalogOpen}
           selected={preset}
           onSelect={handleSelectPreset}
           onClose={() => setCatalogOpen(false)}
+        />
+
+        <RunnerCloudPlanModal
+          open={planModalOpen}
+          onClose={() => setPlanModalOpen(false)}
+          onSelectPlan={(plan: CloudPlan) => setSelectedPlan(plan)}
         />
       </form>
     </div>

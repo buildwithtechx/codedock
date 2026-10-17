@@ -26,6 +26,14 @@ export function useRunners() {
   });
 }
 
+export function useInspectDestination(serverId?: string) {
+  return useQuery({
+    queryKey: ['actions', 'destinations', serverId, 'inspect'],
+    queryFn: () => (serverId ? actionsService.inspectDestination(serverId) : null),
+    enabled: Boolean(serverId),
+  });
+}
+
 export function useCreateRunner() {
   const queryClient = useQueryClient();
   return useMutation({

@@ -38,7 +38,7 @@ jobs:
     strategy:
       fail-fast: false
       matrix:
-        app: [postgres, redis, minio, neon, convex, authentik, odoo]
+        app: [postgres, redis, minio, neon, convex, authentik, odoo, paperless-ngx, wiki-js, homepage, immich, jellyfin, ollama, open-webui, wordpress]
     steps:
       - uses: actions/checkout@v4
       - name: Spin test container
@@ -73,6 +73,30 @@ jobs:
               docker pull authentik/server:2026.8.3
               ;;
             odoo)
-              docker pull odoo:18
+              docker pull odoo:19.0-20260926
+              ;;
+            paperless-ngx)
+              docker pull ghcr.io/paperless-ngx/paperless-ngx:3.3.1
+              ;;
+            wiki-js)
+              docker pull ghcr.io/requarks/wiki:2
+              ;;
+            homepage)
+              docker pull ghcr.io/gethomepage/homepage:latest
+              ;;
+            immich)
+              docker pull ghcr.io/immich-app/immich-server:v1.129.0
+              ;;
+            jellyfin)
+              docker pull jellyfin/jellyfin:latest
+              ;;
+            ollama)
+              docker pull ollama/ollama:0.4.0
+              ;;
+            open-webui)
+              docker pull ghcr.io/open-webui/open-webui:main
+              ;;
+            wordpress)
+              docker pull wordpress:latest
               ;;
           esac

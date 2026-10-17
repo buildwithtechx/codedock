@@ -38,7 +38,7 @@ describe('DeploymentDirectory', () => {
     expect(activityIcon).not.toBeNull();
   });
 
-  it('renders full overview, filters, and empty state matching OpenShip design', () => {
+  it('renders full overview, filters, and empty state matching platform design', () => {
     vi.mocked(useListByOrganization).mockReturnValue({
       data: { records: [], total: 0 },
       isLoading: false,

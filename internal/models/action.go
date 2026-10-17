@@ -45,17 +45,47 @@ type ActionRun struct {
 	UpdatedAt   string      `json:"updatedAt" db:"updated_at"`
 }
 
+type ActionCapabilities struct {
+	OS                 string   `json:"os"` // linux | macos
+	Architecture       string   `json:"architecture"` // x64 | arm64
+	Docker             bool     `json:"docker"`
+	DockerArchitecture string   `json:"dockerArchitecture,omitempty"`
+	DockerPlatforms    []string `json:"dockerPlatforms,omitempty"`
+	Git                bool     `json:"git"`
+	Node               bool     `json:"node"`
+	Distribution       *string  `json:"distribution,omitempty"`
+	Version            *string  `json:"version,omitempty"`
+}
+
+type ActionRunnerConfig struct {
+	Mode              string   `json:"mode"` // container | native
+	Labels            []string `json:"labels"`
+	Image             *string  `json:"image,omitempty"`
+	MaxParallel       int      `json:"maxParallel"`
+	CPU               float64  `json:"cpu"`
+	MemoryMB          int      `json:"memoryMb"`
+	AllowDockerSocket bool     `json:"allowDockerSocket"`
+	CloudDiskGB       int      `json:"cloudDiskGb,omitempty"`
+}
+
 type ActionRunner struct {
-	ID            string   `json:"id" db:"id"`
-	Name          string   `json:"name" db:"name"`
-	Mode          string   `json:"mode" db:"mode"` // container | native
-	Image         string   `json:"image,omitempty" db:"image"`
-	Status        string   `json:"status" db:"status"` // online | offline | busy
-	Labels        []string `json:"labels"`
-	Enabled       bool     `json:"enabled" db:"enabled"`
-	LastHeartbeat string   `json:"lastHeartbeatAt,omitempty" db:"last_heartbeat"`
-	CreatedAt     string   `json:"createdAt" db:"created_at"`
-	UpdatedAt     string   `json:"updatedAt" db:"updated_at"`
+	ID            string              `json:"id" db:"id"`
+	Name          string              `json:"name" db:"name"`
+	ServerID      *string             `json:"serverId,omitempty" db:"server_id"`
+	CloudPoolID   *string             `json:"cloudPoolId,omitempty" db:"cloud_pool_id"`
+	Kind          string              `json:"kind" db:"kind"` // server | cloud
+	Mode          string              `json:"mode" db:"mode"` // container | native
+	Image         string              `json:"image,omitempty" db:"image"`
+	Status        string              `json:"status" db:"status"` // online | offline | busy
+	Labels        []string            `json:"labels"`
+	Config        ActionRunnerConfig  `json:"config"`
+	Capabilities  *ActionCapabilities `json:"capabilities,omitempty"`
+	Enabled       bool                `json:"enabled" db:"enabled"`
+	Error         *string             `json:"error,omitempty" db:"error"`
+	CheckedAt     string              `json:"checkedAt,omitempty"`
+	LastHeartbeat string              `json:"lastHeartbeatAt,omitempty" db:"last_heartbeat"`
+	CreatedAt     string              `json:"createdAt" db:"created_at"`
+	UpdatedAt     string              `json:"updatedAt" db:"updated_at"`
 }
 
 type CreateWorkflowRequest struct {
@@ -66,10 +96,18 @@ type CreateWorkflowRequest struct {
 	YAML        string `json:"yaml,omitempty"`
 }
 
+type InspectDestinationRequest struct {
+	ServerID string `json:"serverId"`
+}
+
 type CreateRunnerRequest struct {
-	Name    string   `json:"name"`
-	Mode    string   `json:"mode"`
-	Image   string   `json:"image,omitempty"`
-	Labels  []string `json:"labels,omitempty"`
-	Enabled bool     `json:"enabled"`
+	ServerID    string             `json:"serverId,omitempty"`
+	CloudPoolID string             `json:"cloudPoolId,omitempty"`
+	Kind        string             `json:"kind,omitempty"`
+	Name        string             `json:"name"`
+	Mode        string             `json:"mode,omitempty"`
+	Image       string             `json:"image,omitempty"`
+	Labels      []string           `json:"labels,omitempty"`
+	Enabled     bool               `json:"enabled"`
+	Config      ActionRunnerConfig `json:"config,omitempty"`
 }

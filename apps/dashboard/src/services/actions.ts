@@ -53,17 +53,44 @@ export interface ActionRun {
   updatedAt: string;
 }
 
+export interface ActionCapabilities {
+  os: 'linux' | 'macos';
+  architecture: 'x64' | 'arm64';
+  docker: boolean;
+  dockerArchitecture?: 'x64' | 'arm64';
+  dockerPlatforms?: ('linux/amd64' | 'linux/arm64')[];
+  git: boolean;
+  node: boolean;
+  distribution?: string | null;
+  version?: string | null;
+}
+
+export interface ActionRunnerConfig {
+  mode: 'container' | 'native';
+  labels: string[];
+  image: string | null;
+  maxParallel: number;
+  cpu: number;
+  memoryMb: number;
+  allowDockerSocket: boolean;
+  cloudDiskGb?: number;
+}
+
 export interface ActionRunner {
   id: string;
   name: string;
+  serverId?: string | null;
+  cloudPoolId?: string | null;
+  kind?: 'server' | 'cloud';
   mode: 'container' | 'native';
-  kind?: string;
   image?: string;
   status: 'online' | 'offline' | 'busy';
   labels: string[];
   enabled: boolean;
-  error?: string;
-  config?: Record<string, any>;
+  error?: string | null;
+  config?: ActionRunnerConfig;
+  capabilities?: ActionCapabilities | null;
+  checkedAt?: string;
   lastHeartbeatAt?: string;
   createdAt: string;
   updatedAt: string;
@@ -84,12 +111,14 @@ export interface CreateWorkflowInput {
 
 export interface CreateRunnerInput {
   name: string;
+  serverId?: string;
+  cloudPoolId?: string;
+  kind?: string;
   mode?: string;
   image?: string;
   labels?: string[];
   enabled: boolean;
-  serverId?: string;
-  config?: Record<string, any>;
+  config?: ActionRunnerConfig;
 }
 
 export const actionsService = {
@@ -131,6 +160,11 @@ export const actionsService = {
   listRunners: async (): Promise<ActionRunner[]> => {
     const res = await apiClient.get<{ data: ActionRunner[] }>('/actions/runners');
     return res.data ?? [];
+  },
+
+  inspectDestination: async (serverId: string): Promise<ActionCapabilities> => {
+    const res = await apiClient.post<{ data: ActionCapabilities }>('/actions/runners/inspect', { serverId });
+    return res.data;
   },
 
   createRunner: async (input: CreateRunnerInput): Promise<ActionRunner> => {

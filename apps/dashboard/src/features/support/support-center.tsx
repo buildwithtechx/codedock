@@ -100,7 +100,6 @@ export function SupportCenter({ className }: SupportCenterProps) {
 
   return (
     <div className={cn('@container/support-center space-y-6 text-left', className)}>
-      {/* Header matching OpenShip */}
       <header className="flex flex-wrap items-center justify-between gap-4">
         <div className="flex items-center gap-3.5">
           <span className="flex size-11 shrink-0 items-center justify-center rounded-2xl border border-border/60 bg-card text-muted-foreground shadow-xs">

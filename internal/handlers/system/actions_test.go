@@ -106,12 +106,23 @@ func TestActionsHandler_Lifecycle(t *testing.T) {
 		t.Fatalf("expected status 'cancelled', got %q", cancelResp.Data.Status)
 	}
 
-	// 6. Register a new runner
+	// 6. Inspect destination capabilities
+	inspectBody, _ := json.Marshal(models.InspectDestinationRequest{ServerID: "srv-prod-1"})
+	req = httptest.NewRequest(http.MethodPost, "/actions/runners/inspect", bytes.NewReader(inspectBody))
+	req.Header.Set(echo.HeaderContentType, echo.MIMEApplicationJSON)
+	rec = httptest.NewRecorder()
+	c = e.NewContext(req, rec)
+	if err := handler.InspectDestination(c); err != nil {
+		t.Fatalf("unexpected InspectDestination error: %v", err)
+	}
+
+	// 7. Register a new runner
 	runnerBody, _ := json.Marshal(models.CreateRunnerRequest{
-		Name:    "ARM64 Native Runner",
-		Mode:    "native",
-		Labels:  []string{"arm64", "linux"},
-		Enabled: true,
+		ServerID: "srv-prod-1",
+		Name:     "ARM64 Native Runner",
+		Mode:     "native",
+		Labels:   []string{"arm64", "linux"},
+		Enabled:  true,
 	})
 	req = httptest.NewRequest(http.MethodPost, "/actions/runners", bytes.NewReader(runnerBody))
 	req.Header.Set(echo.HeaderContentType, echo.MIMEApplicationJSON)
@@ -125,7 +136,16 @@ func TestActionsHandler_Lifecycle(t *testing.T) {
 	}
 	_ = json.Unmarshal(rec.Body.Bytes(), &runnerResp)
 
-	// 7. Delete workflow, runner, and run
+	// 8. Reject duplicate runner on same server
+	req = httptest.NewRequest(http.MethodPost, "/actions/runners", bytes.NewReader(runnerBody))
+	req.Header.Set(echo.HeaderContentType, echo.MIMEApplicationJSON)
+	rec = httptest.NewRecorder()
+	c = e.NewContext(req, rec)
+	if err := handler.CreateRunner(c); err == nil {
+		t.Fatalf("expected conflict on duplicate runner, got nil")
+	}
+
+	// 9. Delete workflow, runner, and run
 	req = httptest.NewRequest(http.MethodDelete, "/actions/workflows/"+createdWf.Data.ID, nil)
 	rec = httptest.NewRecorder()
 	c = e.NewContext(req, rec)

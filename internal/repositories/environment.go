@@ -158,3 +158,17 @@ func (r *DomainRepo) GetByID(ctx context.Context, id string) (*models.DomainConf
 	}
 	return &domain, nil
 }
+
+func (r *DomainRepo) BindUnassignedVerifiedDomainsToSingleService(ctx context.Context, projectID, singleServiceID string) error {
+	if projectID == "" || singleServiceID == "" {
+		return nil
+	}
+	_, err := r.db.ExecContext(ctx, `
+		UPDATE domains
+		SET service_id = $1, updated_at = CURRENT_TIMESTAMP
+		WHERE project_id = $2
+		  AND (service_id = '' OR service_id IS NULL)
+		  AND (dns_verification_status = 'verified' OR dns_provision_status = 'verified')
+	`, singleServiceID, projectID)
+	return err
+}

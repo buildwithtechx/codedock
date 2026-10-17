@@ -10,9 +10,9 @@ import {
   Sliders,
 } from 'lucide-react';
 import { useState } from 'react';
-import { Link } from '@tanstack/react-router';
 import { Button } from '#/components/ui/button';
 import { Switch } from '#/components/ui/switch';
+import { AddServerModal } from '#/features/servers/add-server-modal';
 
 interface DeployTargetStepProps {
   onContinue: () => void;
@@ -22,6 +22,7 @@ export function DeployTargetStep({ onContinue }: DeployTargetStepProps) {
   const [machinePower, setMachinePower] = useState<'full' | 'custom'>('full');
   const [rollbackReuse, setRollbackReuse] = useState(false);
   const [rollbackHistory, setRollbackHistory] = useState(5);
+  const [addServerOpen, setAddServerOpen] = useState(false);
 
   return (
     <div className="grid gap-5 lg:grid-cols-[1fr_340px]">
@@ -58,11 +59,15 @@ export function DeployTargetStep({ onContinue }: DeployTargetStepProps) {
                 <p className="text-muted-foreground text-xs">0 projects · Choose a plan</p>
               </div>
             </div>
-            <Button asChild variant="outline" size="sm" className="gap-1.5 rounded-xl text-xs">
-              <Link to={'/servers' as never}>
-                <Plus className="size-3.5" />
-                New dedicated server
-              </Link>
+            <Button
+              type="button"
+              variant="outline"
+              size="sm"
+              onClick={() => setAddServerOpen(true)}
+              className="gap-1.5 rounded-xl text-xs"
+            >
+              <Plus className="size-3.5" />
+              New dedicated server
             </Button>
           </div>
           <p className="mt-3 text-[11px] text-muted-foreground">Uses this server&apos;s plan.</p>
@@ -236,6 +241,11 @@ export function DeployTargetStep({ onContinue }: DeployTargetStepProps) {
           </p>
         </div>
       </div>
+
+      <AddServerModal
+        open={addServerOpen}
+        onClose={() => setAddServerOpen(false)}
+      />
     </div>
   );
 }

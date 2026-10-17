@@ -18,6 +18,7 @@ import { ServerEmptyState } from '#/features/servers/server-empty-state';
 import { ServerFleetPanel } from '#/features/servers/server-fleet-panel';
 import { ServerListRow } from '#/features/servers/server-list-row';
 import { ServerListSkeleton } from '#/features/servers/server-list-skeleton';
+import { AddServerModal } from '#/features/servers/add-server-modal';
 import { useListServers } from '#/hooks/use-servers';
 import type { Server } from '#/interfaces/server';
 
@@ -31,6 +32,7 @@ function ServersPage() {
   const [search, setSearch] = useState('');
   const [removeServer, setRemoveServer] = useState<Server | null>(null);
   const [addingLocal, setAddingLocal] = useState(false);
+  const [addServerModalOpen, setAddServerModalOpen] = useState(false);
 
   const rows = servers ?? [];
   const hasLocalServer = rows.some((server) => server.isLocal);
@@ -78,31 +80,30 @@ function ServersPage() {
             >
               <RefreshCw className={`size-4 ${isRefetching ? 'animate-spin' : ''}`} />
             </Button>
-            {hasLocalServer ? (
-              <Button className="gap-2" onClick={() => navigate({ to: '/servers/new' })}>
-                <Plus className="h-4 w-4" />
-                Add server
-              </Button>
-            ) : (
-              <DropdownMenu>
-                <DropdownMenuTrigger asChild>
-                  <Button className="gap-2">
-                    <Plus className="h-4 w-4" />
-                    Add server
-                  </Button>
-                </DropdownMenuTrigger>
-                <DropdownMenuContent align="end">
-                  <DropdownMenuItem onClick={() => navigate({ to: '/servers/new' })}>
-                    <ServerIcon className="size-4" />
-                    Add remote server
-                  </DropdownMenuItem>
+            <DropdownMenu>
+              <DropdownMenuTrigger asChild>
+                <Button className="gap-2">
+                  <Plus className="h-4 w-4" />
+                  Add server
+                </Button>
+              </DropdownMenuTrigger>
+              <DropdownMenuContent align="end">
+                <DropdownMenuItem onClick={() => setAddServerModalOpen(true)}>
+                  <ServerIcon className="size-4" />
+                  Add server / Cloud plan
+                </DropdownMenuItem>
+                <DropdownMenuItem onClick={() => navigate({ to: '/servers/new' })}>
+                  <ServerIcon className="size-4" />
+                  Connect SSH host
+                </DropdownMenuItem>
+                {!hasLocalServer && (
                   <DropdownMenuItem onClick={() => void addThisMachine()} disabled={addingLocal}>
                     <Cpu className="size-4" />
                     {addingLocal ? 'Connecting…' : 'Use this machine'}
                   </DropdownMenuItem>
-                </DropdownMenuContent>
-              </DropdownMenu>
-            )}
+                )}
+              </DropdownMenuContent>
+            </DropdownMenu>
           </div>
         }
       />
@@ -152,6 +153,12 @@ function ServersPage() {
       )}
 
       <ServerDeleteDialog server={removeServer} onClose={() => setRemoveServer(null)} />
+
+      <AddServerModal
+        open={addServerModalOpen}
+        onClose={() => setAddServerModalOpen(false)}
+        onCreated={() => void refetch()}
+      />
     </div>
   );
 }

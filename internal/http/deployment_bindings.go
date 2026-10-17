@@ -30,6 +30,13 @@ func configureDeploymentBindings(srv *Server, routeRuleRepo repositories.RouteRu
 			return networking.BuildMiddlewareLabels(serviceName, rules), nil
 		}
 		srv.deployer.DomainFetcher = func(ctx context.Context, serviceID string) ([]models.DomainConfig, error) {
+			if srv.appService != nil {
+				if app, err := srv.appService.GetAppService(ctx, serviceID); err == nil && app != nil && app.ProjectID != "" {
+					if services, err := srv.appService.ListByProject(ctx, app.ProjectID); err == nil && len(services) == 1 {
+						_ = domainRepo.BindUnassignedVerifiedDomainsToSingleService(ctx, app.ProjectID, serviceID)
+					}
+				}
+			}
 			return domainRepo.ListByService(ctx, serviceID)
 		}
 	}

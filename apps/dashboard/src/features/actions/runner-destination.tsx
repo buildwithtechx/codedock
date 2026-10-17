@@ -1,7 +1,8 @@
-import { Link } from '@tanstack/react-router';
-import { Plus, Server } from 'lucide-react';
+import { ArrowRight, Plus, Server, Sparkles } from 'lucide-react';
 import { useState, type ReactNode } from 'react';
 import { Button } from '#/components/ui/button';
+import { AddServerModal } from '#/features/servers/add-server-modal';
+import type { Server as ServerModel } from '#/interfaces/server';
 
 export type DestinationServer = { id: string; name: string };
 
@@ -16,11 +17,12 @@ export function RunnerDestination({
   selfHosted = true,
   renderForm,
 }: RunnerDestinationProps) {
-  const [mode, setMode] = useState<'existing' | null>(null);
+  const [mode, setMode] = useState<'existing' | 'cloud' | null>(null);
   const [selectedServer, setSelectedServer] = useState<DestinationServer>();
+  const [addServerOpen, setAddServerOpen] = useState(false);
 
-  if (!selfHosted) {
-    return renderForm(undefined);
+  if (!selfHosted || mode === 'cloud') {
+    return renderForm(undefined, () => setMode(null));
   }
 
   if (mode === 'existing') {
@@ -57,8 +59,9 @@ export function RunnerDestination({
           </p>
         </button>
 
-        <Link
-          to={'/servers' as never}
+        <button
+          type="button"
+          onClick={() => setAddServerOpen(true)}
           className="flex flex-col items-start rounded-2xl border border-border/60 bg-card p-5 text-start transition-all hover:bg-muted/40"
         >
           <div className="flex size-10 items-center justify-center rounded-xl bg-muted/60 text-foreground">
@@ -68,8 +71,32 @@ export function RunnerDestination({
           <p className="mt-1 text-muted-foreground text-xs leading-relaxed">
             Provision or pair a separate server reserved for running Actions.
           </p>
-        </Link>
+        </button>
       </div>
+
+      <div className="pt-2">
+        <Button
+          type="button"
+          variant="ghost"
+          size="sm"
+          onClick={() => setMode('cloud')}
+          className="gap-1.5 text-muted-foreground text-xs hover:text-foreground"
+        >
+          <Sparkles className="size-3.5 text-blue-500" />
+          Or configure a Managed Cloud space runner
+          <ArrowRight className="size-3.5 rtl:rotate-180" />
+        </Button>
+      </div>
+
+      <AddServerModal
+        open={addServerOpen}
+        initialMode="connected"
+        onClose={() => setAddServerOpen(false)}
+        onCreated={(created: ServerModel) => {
+          setSelectedServer({ id: created.id, name: created.name || created.ipAddress });
+          setMode('existing');
+        }}
+      />
     </div>
   );
 }

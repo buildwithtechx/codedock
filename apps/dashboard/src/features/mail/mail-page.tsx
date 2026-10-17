@@ -105,8 +105,8 @@ export function MailPage() {
 
   // View Resolution:
   // 1. Loading: Skeleton loader
-  // 2. No servers or actively adding: Render OpenShip's setup hero form (MailSetupForm)
-  // 3. Multiple servers and none selected: Render OpenShip's MailServerList
+  // 2. No servers or actively adding: Render setup hero form (MailSetupForm)
+  // 3. Multiple servers and none selected: Render MailServerList
   // 4. Server selected or single server: Render Mail Server Console
 
   return (
