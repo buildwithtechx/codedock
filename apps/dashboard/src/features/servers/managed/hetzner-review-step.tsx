@@ -9,7 +9,7 @@ import {
   SelectTrigger,
   SelectValue,
 } from '#/components/ui/select';
-import type { ManagedQuota } from '#/features/servers/managed-types';
+import type { ManagedQuota } from '#/interfaces/managed';
 
 export function HetznerReviewStep({
   name,

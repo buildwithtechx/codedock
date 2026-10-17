@@ -178,11 +178,11 @@ func TestMaildUnreachable(t *testing.T) {
 	}
 }
 
-func TestMaildContractFallbackToLegacy(t *testing.T) {
+func TestMaildContractFallbackToUnversioned(t *testing.T) {
 	mux := http.NewServeMux()
 	mux.HandleFunc("/api/domains", func(w http.ResponseWriter, r *http.Request) {
 		w.Header().Set("Content-Type", "application/json")
-		_ = json.NewEncoder(w).Encode([]models.MailDomain{{ID: "dom-legacy", Name: "legacy.com"}})
+		_ = json.NewEncoder(w).Encode([]models.MailDomain{{ID: "dom-fallback", Name: "fallback.com"}})
 	})
 	server := httptest.NewServer(mux)
 	defer server.Close()
@@ -192,7 +192,7 @@ func TestMaildContractFallbackToLegacy(t *testing.T) {
 	if err != nil {
 		t.Fatalf("expected fallback to succeed, got %v", err)
 	}
-	if len(domains) != 1 || domains[0].Name != "legacy.com" {
+	if len(domains) != 1 || domains[0].Name != "fallback.com" {
 		t.Fatalf("unexpected domains: %+v", domains)
 	}
 }

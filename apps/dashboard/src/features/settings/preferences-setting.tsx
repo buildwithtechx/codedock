@@ -1,6 +1,6 @@
 import { Sliders } from 'lucide-react';
 import { useEffect, useState } from 'react';
-import { useDemoMode } from '#/lib/demo-mode';
+import { useDemoMode } from '#/hooks/use-demo-mode';
 import { PreferenceRow } from './preference-row';
 import { SettingsSection } from './settings-section';
 

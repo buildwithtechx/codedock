@@ -3,7 +3,7 @@ import { useState } from 'react';
 import { Button } from '#/components/ui/button';
 import { Input } from '#/components/ui/input';
 import { Label } from '#/components/ui/label';
-import type { Cluster } from '#/features/servers/cluster-types';
+import type { Cluster } from '#/interfaces/clusters';
 import type { BaseResponse } from '#/interfaces/base';
 import { apiClient } from '#/lib/api-client';
 import { BareRuntimeFields } from './bare-runtime-fields';

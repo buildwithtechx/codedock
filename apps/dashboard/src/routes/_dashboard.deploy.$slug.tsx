@@ -1,7 +1,7 @@
 import { createFileRoute } from '@tanstack/react-router';
 import { z } from 'zod';
 import { DeployWizard } from '#/features/deploy/deploy-wizard';
-import { decodeDeploySlug } from '#/lib/slug-utils';
+import { decodeDeploySlug } from '#/lib/utils';
 
 export const Route = createFileRoute('/_dashboard/deploy/$slug')({
   component: DeploySlugPage,

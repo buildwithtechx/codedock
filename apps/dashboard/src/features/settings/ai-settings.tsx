@@ -2,7 +2,7 @@ import { Brain } from 'lucide-react';
 import React, { useState } from 'react';
 import { toast } from 'sonner';
 import { useGetAISettings, useUpdateAISettings } from '#/features/settings';
-import { aiProviderCatalog } from '#/lib/ai-providers';
+import { AI_PROVIDER_CATALOG } from '#/constants/ai';
 import { AiProviderCard, type AiProviderItem } from './ai-provider-card';
 import { SettingsSection } from './settings-section';
 
@@ -10,7 +10,8 @@ const PROVIDERS: AiProviderItem[] = [
   {
     id: 'openai',
     name: 'OpenAI',
-    models: aiProviderCatalog.find((c) => c.id === 'openai')?.models || [],
+    models: (AI_PROVIDER_CATALOG.find((c) => c.id === 'openai')?.models ||
+      []) as AiProviderItem['models'],
     icon: '/ai-providers/openai.svg',
     keyField: 'openAIKey',
     modelField: 'openAIModel',
@@ -18,7 +19,8 @@ const PROVIDERS: AiProviderItem[] = [
   {
     id: 'anthropic',
     name: 'Anthropic',
-    models: aiProviderCatalog.find((c) => c.id === 'anthropic')?.models || [],
+    models: (AI_PROVIDER_CATALOG.find((c) => c.id === 'anthropic')?.models ||
+      []) as AiProviderItem['models'],
     icon: '/ai-providers/anthropic.svg',
     keyField: 'anthropicKey',
     modelField: 'anthropicModel',
@@ -26,7 +28,8 @@ const PROVIDERS: AiProviderItem[] = [
   {
     id: 'google',
     name: 'Google',
-    models: aiProviderCatalog.find((c) => c.id === 'google')?.models || [],
+    models: (AI_PROVIDER_CATALOG.find((c) => c.id === 'google')?.models ||
+      []) as AiProviderItem['models'],
     icon: '/ai-providers/google.svg',
     keyField: 'googleKey',
     modelField: 'googleModel',
@@ -34,7 +37,8 @@ const PROVIDERS: AiProviderItem[] = [
   {
     id: 'mistral',
     name: 'Mistral',
-    models: aiProviderCatalog.find((c) => c.id === 'mistral')?.models || [],
+    models: (AI_PROVIDER_CATALOG.find((c) => c.id === 'mistral')?.models ||
+      []) as AiProviderItem['models'],
     icon: '/ai-providers/mistral.svg',
     keyField: 'mistralKey',
     modelField: 'mistralModel',
@@ -42,7 +46,8 @@ const PROVIDERS: AiProviderItem[] = [
   {
     id: 'groq',
     name: 'Groq',
-    models: aiProviderCatalog.find((c) => c.id === 'groq')?.models || [],
+    models: (AI_PROVIDER_CATALOG.find((c) => c.id === 'groq')?.models ||
+      []) as AiProviderItem['models'],
     icon: '/ai-providers/groq.svg',
     keyField: 'groqKey',
     modelField: 'groqModel',
@@ -50,7 +55,8 @@ const PROVIDERS: AiProviderItem[] = [
   {
     id: 'deepseek',
     name: 'DeepSeek',
-    models: aiProviderCatalog.find((c) => c.id === 'deepseek')?.models || [],
+    models: (AI_PROVIDER_CATALOG.find((c) => c.id === 'deepseek')?.models ||
+      []) as AiProviderItem['models'],
     icon: '/ai-providers/deepseek.svg',
     keyField: 'deepSeekKey',
     modelField: 'deepSeekModel',
@@ -58,7 +64,8 @@ const PROVIDERS: AiProviderItem[] = [
   {
     id: 'xai',
     name: 'xAI',
-    models: aiProviderCatalog.find((c) => c.id === 'xai')?.models || [],
+    models: (AI_PROVIDER_CATALOG.find((c) => c.id === 'xai')?.models ||
+      []) as AiProviderItem['models'],
     icon: '/ai-providers/xai.svg',
     keyField: 'xaiKey',
     modelField: 'xaiModel',
@@ -66,7 +73,8 @@ const PROVIDERS: AiProviderItem[] = [
   {
     id: 'moonshot',
     name: 'Moonshot',
-    models: aiProviderCatalog.find((c) => c.id === 'moonshot')?.models || [],
+    models: (AI_PROVIDER_CATALOG.find((c) => c.id === 'moonshot')?.models ||
+      []) as AiProviderItem['models'],
     icon: '/ai-providers/moonshot.svg',
     keyField: 'moonshotKey',
     modelField: 'moonshotModel',

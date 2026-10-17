@@ -1,5 +1,5 @@
 import { beforeEach, describe, expect, it, vi } from 'vitest';
-import type { AppearancePreferences } from '#/services/appearance';
+import type { AppearancePreferences } from '#/interfaces/appearance';
 import {
   APPEARANCE_CACHE_POINTER,
   APPEARANCE_CHANGED,
@@ -9,7 +9,7 @@ import {
   cacheAppearance,
   cachedAppearance,
   resolveAppearanceMode,
-} from './appearance-runtime';
+} from './appearance';
 
 describe('appearance-runtime', () => {
   const samplePref: AppearancePreferences = {

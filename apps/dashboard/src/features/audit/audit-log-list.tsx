@@ -8,7 +8,7 @@ import { AuditDetailsDialog } from './audit-details-dialog';
 import { AuditFilterBar, type PeriodKey, type SourceKey } from './audit-filter-bar';
 import { CATEGORY_ICONS, type CategoryKey, groupByDay, periodStart } from './audit-helpers';
 import { AuditRecordingCard } from './audit-recording-card';
-import { AUDIT_CATEGORIES } from './audit-taxonomy';
+import { AUDIT_CATEGORIES } from '#/constants/audit';
 
 export function AuditLogList() {
   const [category, setCategory] = useState<CategoryKey>('all');

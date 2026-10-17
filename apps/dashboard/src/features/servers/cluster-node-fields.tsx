@@ -9,7 +9,7 @@ import {
   SelectValue,
 } from '#/components/ui/select';
 import { useListServers } from '#/hooks/use-servers';
-import type { ClusterNode } from './cluster-types';
+import type { ClusterNode } from '#/interfaces/clusters';
 
 export function ClusterNodeFields({
   nodes,

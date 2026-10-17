@@ -47,11 +47,11 @@ type ComposeAnalyzeRequest struct {
 }
 
 func (h *ComposeHandler) Analyze(c echo.Context) error {
-	return utils.Error(c, http.StatusGone, "Use the project-scoped stack review API; legacy analysis discards runtime fields.")
+	return utils.Error(c, http.StatusGone, "Use the project-scoped stack review API; direct analysis discards runtime fields.")
 }
 
 func (h *ComposeHandler) Deploy(c echo.Context) error {
-	return utils.Error(c, http.StatusGone, "Legacy partial Compose import has been replaced. Open the project's Compose page to review and save a complete stack before deployment.")
+	return utils.Error(c, http.StatusGone, "Partial Compose import has been replaced. Open the project's Compose page to review and save a complete stack before deployment.")
 }
 
 func (h *ComposeHandler) readUploadedFile(c echo.Context) ([]byte, error) {

@@ -3,7 +3,7 @@ import { ArrowRight, Cloud, PlayCircle, Plus, Search, Trash2 } from 'lucide-reac
 import { useState } from 'react';
 import { Button } from '#/components/ui/button';
 import { Input } from '#/components/ui/input';
-import type { ActionRun, ActionWorkflow } from '#/services/actions';
+import type { ActionRun, ActionWorkflow } from '#/interfaces/actions';
 import { ActionStatus } from './action-status';
 import { ActionsEmptyState } from './actions-empty-state';
 

@@ -1,48 +1,13 @@
-import type { AuditLog } from '#/interfaces/audit';
+import {
+  AUDIT_CATEGORIES,
+  AUDIT_CATEGORY_BY_PREFIX,
+  AUDIT_VERBS,
+  DANGER_VERBS,
+  SUCCESS_VERBS,
+  WARNING_VERBS,
+} from '#/constants/audit';
+import type { AuditCategoryId, AuditLog, AuditTone } from '#/interfaces/audit';
 import { resolveResourceDisplay } from './audit-resource-helper';
-
-export type AuditCategoryId =
-  | 'deployments'
-  | 'apps'
-  | 'domains'
-  | 'servers'
-  | 'members'
-  | 'agent'
-  | 'security'
-  | 'billing'
-  | 'system';
-
-export type AuditTone = 'neutral' | 'info' | 'success' | 'warning' | 'danger';
-
-export interface AuditCategory {
-  id: AuditCategoryId;
-  label: string;
-  description: string;
-}
-
-export const AUDIT_CATEGORIES: AuditCategory[] = [
-  { id: 'deployments', label: 'Deployments', description: 'Builds and releases.' },
-  { id: 'apps', label: 'Apps & services', description: 'Projects, services, and runtime health.' },
-  { id: 'domains', label: 'Domains & SSL', description: 'Custom domains, DNS, and certificates.' },
-  { id: 'servers', label: 'Servers', description: 'Deployment targets and shell access.' },
-  {
-    id: 'members',
-    label: 'Members & access',
-    description: 'Who is in this workspace and what they can do.',
-  },
-  { id: 'agent', label: 'AI agents', description: 'What connected assistants did over MCP.' },
-  {
-    id: 'security',
-    label: 'Security',
-    description: 'Credentials, auth, exports, and audit recording.',
-  },
-  { id: 'billing', label: 'Billing', description: 'Subscriptions, credits, and quotas.' },
-  {
-    id: 'system',
-    label: 'System',
-    description: 'Settings, integrations, backups, and maintenance.',
-  },
-];
 
 const CATEGORY_IDS = new Set<string>(AUDIT_CATEGORIES.map((category) => category.id));
 
@@ -53,153 +18,6 @@ export function isAuditCategoryId(value: unknown): value is AuditCategoryId {
 export function categoryLabel(id: string): string {
   return AUDIT_CATEGORIES.find((category) => category.id === id)?.label ?? 'System';
 }
-
-const CATEGORY_BY_PREFIX: Record<string, AuditCategoryId> = {
-  deployment: 'deployments',
-  deploy: 'deployments',
-  release: 'deployments',
-  build: 'deployments',
-  app: 'apps',
-  project: 'apps',
-  service: 'apps',
-  database: 'apps',
-  container: 'apps',
-  job: 'apps',
-  scheduled: 'apps',
-  cron: 'apps',
-  domain: 'domains',
-  dns: 'domains',
-  ssl: 'domains',
-  certificate: 'domains',
-  server: 'servers',
-  ssh: 'servers',
-  host: 'servers',
-  member: 'members',
-  user: 'members',
-  team: 'members',
-  invitation: 'members',
-  invite: 'members',
-  role: 'members',
-  agent: 'agent',
-  mcp: 'agent',
-  tool: 'agent',
-  auth: 'security',
-  login: 'security',
-  token: 'security',
-  apikey: 'security',
-  credential: 'security',
-  secret: 'security',
-  audit: 'security',
-  billing: 'billing',
-  subscription: 'billing',
-  invoice: 'billing',
-  credit: 'billing',
-  quota: 'billing',
-  backup: 'system',
-  restore: 'system',
-  organization: 'system',
-  settings: 'system',
-  notification: 'system',
-  integration: 'system',
-  webhook: 'system',
-};
-
-const VERBS: Record<string, string> = {
-  create: 'created',
-  update: 'updated',
-  delete: 'deleted',
-  remove: 'removed',
-  trigger: 'triggered',
-  rollback: 'rolled back',
-  deploy: 'deployed',
-  redeploy: 'redeployed',
-  restart: 'restarted',
-  stop: 'stopped',
-  start: 'started',
-  enable: 'enabled',
-  disable: 'disabled',
-  login: 'signed in',
-  logout: 'signed out',
-  invite: 'invited',
-  join: 'joined',
-  leave: 'left',
-  revoke: 'revoked',
-  reveal: 'revealed credentials for',
-  query: 'queried',
-  insert: 'added a row to',
-  backup: 'backed up',
-  restore: 'restored',
-  setup: 'set up',
-  upgrade: 'upgraded',
-  scale: 'scaled',
-  verify: 'verified',
-  issue: 'issued',
-  renew: 'renewed',
-  suspend: 'suspended',
-  resume: 'resumed',
-  rotate: 'rotated',
-  sync: 'synced',
-  cancel: 'cancelled',
-  cancelled: 'cancelled',
-  fail: 'failed',
-  failed: 'failed',
-  succeed: 'succeeded',
-  succeeded: 'succeeded',
-  complete: 'completed',
-  completed: 'completed',
-  approve: 'approved',
-  transfer: 'transferred',
-  attach: 'attached',
-  detach: 'detached',
-  link: 'linked',
-  unlink: 'unlinked',
-  install: 'installed',
-  execute: 'executed',
-  run: 'ran',
-  grant: 'granted',
-  deny: 'denied',
-};
-
-const DANGER_VERBS = new Set([
-  'delete',
-  'remove',
-  'revoke',
-  'rollback',
-  'disable',
-  'fail',
-  'failed',
-  'suspend',
-  'deny',
-  'cancel',
-  'cancelled',
-]);
-
-const SUCCESS_VERBS = new Set([
-  'create',
-  'deploy',
-  'redeploy',
-  'enable',
-  'trigger',
-  'backup',
-  'invite',
-  'succeed',
-  'succeeded',
-  'complete',
-  'completed',
-  'verify',
-  'approve',
-  'renew',
-]);
-
-const WARNING_VERBS = new Set([
-  'reveal',
-  'login',
-  'logout',
-  'rollback',
-  'credentials_reveal',
-  'rotate',
-  'suspend',
-]);
 
 export function actionVerb(action?: string): string {
   if (!action || typeof action !== 'string') return 'event';
@@ -213,7 +31,7 @@ export function describeAuditAction(action?: string): {
 } {
   const safe = action && typeof action === 'string' ? action : 'system.event';
   const verb = actionVerb(safe).toLowerCase();
-  const label = VERBS[verb] ?? `${verb}d`;
+  const label = AUDIT_VERBS[verb] ?? `${verb}d`;
   let tone: AuditTone = 'neutral';
   if (DANGER_VERBS.has(verb)) tone = 'danger';
   else if (SUCCESS_VERBS.has(verb)) tone = 'success';
@@ -236,11 +54,11 @@ export function auditCategoryOf(log?: {
   const first = (actionVerb(action) === action ? action : action.split('.')[0])
     .toLowerCase()
     .replace(/_.*$/, '');
-  const hit = CATEGORY_BY_PREFIX[first];
+  const hit = AUDIT_CATEGORY_BY_PREFIX[first];
   if (hit) return hit;
   const resource =
     log.resource && typeof log.resource === 'string' ? log.resource.toLowerCase() : '';
-  for (const [prefix, category] of Object.entries(CATEGORY_BY_PREFIX)) {
+  for (const [prefix, category] of Object.entries(AUDIT_CATEGORY_BY_PREFIX)) {
     if (resource.includes(prefix)) return category;
   }
   return 'system';
@@ -275,10 +93,3 @@ export function actorDisplay(log?: Partial<AuditLog>): string {
 export function resourceDisplay(log?: Partial<AuditLog>): string {
   return resolveResourceDisplay(log);
 }
-
-export {
-  relativeTime,
-  absoluteTime,
-  clockTime,
-  dayKey,
-} from './audit-date-helpers';

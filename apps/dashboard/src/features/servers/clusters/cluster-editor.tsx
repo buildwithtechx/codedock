@@ -4,7 +4,7 @@ import { toast } from 'sonner';
 import { Button } from '#/components/ui/button';
 import { Input } from '#/components/ui/input';
 import { Label } from '#/components/ui/label';
-import type { ClusterNode, ComputeCluster } from '#/services/clusters';
+import type { ClusterNode, ComputeCluster } from '#/interfaces/clusters';
 import { ClusterScalingPanel } from './cluster-scaling-panel';
 
 interface ClusterEditorProps {

@@ -10,7 +10,7 @@ import {
   Server,
 } from 'lucide-react';
 import { Button } from '#/components/ui/button';
-import type { ActionRun, ActionWorkflow } from '#/services/actions';
+import type { ActionRun, ActionWorkflow } from '#/interfaces/actions';
 import { ActionStatus } from './action-status';
 
 interface ActionsSidebarProps {

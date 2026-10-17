@@ -1,7 +1,7 @@
 import { MessageSquare, Plus, Tag } from 'lucide-react';
 import { Button } from '#/components/ui/button';
 import { cn } from '#/lib/utils';
-import type { SupportCategory, SupportTicket } from '#/services/cloud-support';
+import type { SupportCategory, SupportTicket } from '#/interfaces/support';
 
 export interface SupportTicketListProps {
   tickets: SupportTicket[];
@@ -16,6 +16,8 @@ const CATEGORY_LABELS: Record<SupportCategory, string> = {
   billing: 'Billing',
   account: 'Account',
   general: 'General',
+  technical: 'Technical',
+  urgent: 'Urgent',
 };
 
 export function SupportTicketList({

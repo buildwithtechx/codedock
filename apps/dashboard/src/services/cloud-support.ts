@@ -1,37 +1,9 @@
+import type { CreateTicketInput, SupportTicket } from '#/interfaces/support';
 import { apiClient } from '#/lib/api-client';
-
-export type SupportCategory = 'deployment' | 'billing' | 'account' | 'general';
-export type SupportStatus = 'open' | 'closed' | 'resolved';
-
-export interface SupportMessage {
-  id: string;
-  sender: 'user' | 'staff';
-  senderName: string;
-  content: string;
-  createdAt: string;
-}
-
-export interface SupportTicket {
-  id: string;
-  subject: string;
-  category: SupportCategory;
-  status: SupportStatus;
-  hasDiagnosticBundle?: boolean;
-  messages: SupportMessage[];
-  createdAt: string;
-  updatedAt: string;
-}
-
-export interface CreateTicketInput {
-  subject: string;
-  category: SupportCategory;
-  message: string;
-  attachDiagnostics?: boolean;
-}
 
 export async function getTickets(): Promise<SupportTicket[]> {
   try {
-    const res = await apiClient.get<{ tickets: SupportTicket[] }>('/api/support/tickets');
+    const res = await apiClient.get<{ tickets: SupportTicket[] }>('/cloud/support/mine');
     return res.tickets || [];
   } catch {
     return [];
@@ -39,18 +11,20 @@ export async function getTickets(): Promise<SupportTicket[]> {
 }
 
 export async function createTicket(input: CreateTicketInput): Promise<SupportTicket> {
-  const res = await apiClient.post<{ ticket: SupportTicket }>('/api/support/tickets', input);
+  const res = await apiClient.post<{ ticket: SupportTicket }>('/cloud/support/mine', input);
   return res.ticket;
 }
 
 export async function getTicket(id: string): Promise<SupportTicket> {
-  const res = await apiClient.get<{ ticket: SupportTicket }>(`/api/support/tickets/${id}`);
+  const res = await apiClient.get<{ ticket: SupportTicket }>(
+    `/cloud/support/mine/${encodeURIComponent(id)}`
+  );
   return res.ticket;
 }
 
 export async function replyTicket(ticketId: string, message: string): Promise<SupportTicket> {
   const res = await apiClient.post<{ ticket: SupportTicket }>(
-    `/api/support/tickets/${ticketId}/reply`,
+    `/cloud/support/mine/${encodeURIComponent(ticketId)}/replies`,
     { message }
   );
   return res.ticket;

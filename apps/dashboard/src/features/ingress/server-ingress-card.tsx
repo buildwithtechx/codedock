@@ -13,7 +13,8 @@ import { useState } from 'react';
 import { toast } from 'sonner';
 import { Button } from '#/components/ui/button';
 import { Dialog, DialogContent } from '#/components/ui/dialog';
-import { type IngressConnection, ingressService } from '#/services/ingress';
+import type { IngressConnection } from '#/interfaces/ingress';
+import { ingressService } from '#/services/ingress';
 import { IngressConnectForm } from './ingress-connect-form';
 import { IngressPreferences } from './ingress-preferences';
 

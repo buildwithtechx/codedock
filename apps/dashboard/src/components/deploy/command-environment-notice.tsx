@@ -1,7 +1,7 @@
 import { useState } from 'react';
 import { Button } from '#/components/ui/button';
 import { apiClient } from '#/lib/api-client';
-import { inspectCommandEnvironment } from '#/lib/command-environment';
+import { inspectCommandEnvironment } from '#/services/command-environment';
 
 type Commands = Partial<Record<'installCommand' | 'buildCommand' | 'startCommand', string | null>>;
 

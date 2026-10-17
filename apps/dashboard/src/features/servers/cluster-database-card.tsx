@@ -3,7 +3,7 @@ import { useState } from 'react';
 import { Button } from '#/components/ui/button';
 import type { BaseResponse } from '#/interfaces/base';
 import { apiClient } from '#/lib/api-client';
-import type { ClusterDatabase, DatabaseAction } from './cluster-database-types';
+import type { ClusterDatabase, DatabaseAction } from '#/interfaces/databases';
 export function ClusterDatabaseCard({
   projectId,
   record,

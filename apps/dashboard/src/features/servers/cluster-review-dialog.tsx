@@ -13,7 +13,7 @@ import { Label } from '#/components/ui/label';
 import type { BaseResponse } from '#/interfaces/base';
 import { apiClient } from '#/lib/api-client';
 import { ClusterNodeFields } from './cluster-node-fields';
-import type { Cluster, ClusterOperation, ClusterReview } from './cluster-types';
+import type { Cluster, ClusterOperation, ClusterReview } from '#/interfaces/clusters';
 
 export function ClusterReviewDialog({
   projectId,

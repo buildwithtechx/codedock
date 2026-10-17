@@ -11,7 +11,7 @@ import { RUNNER_PRESETS, RunnerCatalogModal, type RunnerPreset } from './runner-
 import { type CloudPlan, RunnerCloudPlanModal } from './runner-cloud-plan-modal';
 import { RunnerServerField } from './runner-server-field';
 import { RunnerSummaryCard } from './runner-summary-card';
-import { useCreateRunner, useInspectDestination } from './use-actions';
+import { useCreateRunner, useInspectDestination } from '#/hooks/use-actions';
 
 export type DestinationServer = { id: string; name: string };
 

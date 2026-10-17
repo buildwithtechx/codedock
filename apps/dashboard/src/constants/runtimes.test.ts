@@ -1,11 +1,11 @@
 import { describe, expect, it } from 'vitest';
+import type { RuntimeRole } from '#/interfaces/roles';
 import {
-  type RuntimeRole,
   roleLogsHref,
   roleLogTargetKey,
   runtimeRoleLogTargets,
   runtimeRoleState,
-} from './runtime-roles';
+} from './runtimes';
 
 describe('runtime-roles helpers', () => {
   it('computes correct role status based on replica states', () => {
@@ -54,6 +54,6 @@ describe('runtime-roles helpers', () => {
     });
     expect(targets.length).toBe(1);
     expect(targets[0].role).toBe('crawler');
-    expect(targets[0].deploymentId).toBe('dep-100');
+    expect(targets[0].key).toBe('role:["dep-100","crawler",1]');
   });
 });

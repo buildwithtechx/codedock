@@ -1,5 +1,5 @@
 import { create } from 'zustand';
-import type { User } from '#/interfaces';
+import type { User } from '#/interfaces/users';
 
 export interface AuthState {
   token: string | null;

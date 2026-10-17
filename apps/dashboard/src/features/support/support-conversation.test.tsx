@@ -1,6 +1,6 @@
 import { act, fireEvent, render, screen } from '@testing-library/react';
 import { describe, expect, it, vi } from 'vitest';
-import type { SupportTicket } from '#/services/cloud-support';
+import type { SupportTicket } from '#/interfaces/support';
 import { SupportConversation } from './support-conversation';
 
 describe('SupportConversation', () => {

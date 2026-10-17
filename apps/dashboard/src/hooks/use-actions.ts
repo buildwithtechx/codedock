@@ -1,9 +1,6 @@
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
-import {
-  actionsService,
-  type CreateRunnerInput,
-  type CreateWorkflowInput,
-} from '#/services/actions';
+import type { CreateRunnerInput, CreateWorkflowInput } from '#/interfaces/actions';
+import { actionsService } from '#/services/actions';
 
 export function useWorkflows() {
   return useQuery({

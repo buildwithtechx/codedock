@@ -2,18 +2,20 @@ import { Cpu, HardDrive, Layers } from 'lucide-react';
 import { useId, useMemo, useState } from 'react';
 import { Button } from '#/components/ui/button';
 import {
+  type ComputePricing,
   DEFAULT_COMPUTE_PRICING,
   DEFAULT_CREDIT_PACKAGES_CENTS,
   DEFAULT_PAYG_TIERS,
+  type PaygTier,
+} from '#/constants/billing';
+import type { CustomServerResources } from '#/interfaces/billing';
+import {
   estimatePrepaidUsage,
   formatMoney,
   formatNumber,
   previewPaygPool,
   previewPaygTier,
-  type ComputePricing,
-  type CustomServerResources,
-  type PaygTier,
-} from '#/lib/prepaid-estimate';
+} from '#/services/billing-estimate';
 import { PaygEstimateCard } from './payg-estimate-card';
 import { PaygResourceTiers } from './payg-resource-tiers';
 

@@ -1,7 +1,8 @@
 import { User } from 'lucide-react';
 import type { AuditEventRow } from './api';
 import { resolveResourceDisplay } from './audit-resource-helper';
-import { type AuditTone, actorDisplay, describeAuditEvent } from './audit-taxonomy';
+import type { AuditTone } from '#/interfaces/audit';
+import { actorDisplay, describeAuditEvent } from './audit-taxonomy';
 
 const TONE_DOT: Record<AuditTone, string> = {
   neutral: 'bg-muted-foreground/60',

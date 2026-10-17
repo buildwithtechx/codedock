@@ -5,7 +5,8 @@ import { Button } from '#/components/ui/button';
 import { Input } from '#/components/ui/input';
 import { Label } from '#/components/ui/label';
 import { Switch } from '#/components/ui/switch';
-import { type IngressConnectInput, ingressService } from '#/services/ingress';
+import type { IngressConnectInput } from '#/interfaces/ingress';
+import { ingressService } from '#/services/ingress';
 
 interface IngressConnectFormProps {
   serverId: string;

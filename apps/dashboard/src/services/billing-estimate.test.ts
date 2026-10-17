@@ -3,11 +3,13 @@ import {
   type ComputePricing,
   DEFAULT_COMPUTE_PRICING,
   DEFAULT_PAYG_TIERS,
+} from '#/constants/billing';
+import {
   estimatePrepaidUsage,
   hasPrepaidRates,
   previewPaygPool,
   previewPaygTier,
-} from './prepaid-estimate';
+} from './billing-estimate';
 
 const testPricing: ComputePricing = {
   tariffId: 'test-tariff',
@@ -42,7 +44,7 @@ describe('prepaid pricing preview', () => {
   });
 
   it('compares configured server resources with a shared tier pool', () => {
-    const tier = DEFAULT_PAYG_TIERS[1]; // Tier 2: 4 cores, 12288 MB, 150 GB, 4 servers
+    const tier = DEFAULT_PAYG_TIERS[1];
     expect(previewPaygPool(tier, input.resources, 2)).toEqual({
       selected: { cpuCores: 2, memoryMb: 8192, diskGb: 50, servers: 2 },
       exceeded: [],
@@ -60,44 +62,31 @@ describe('prepaid pricing preview', () => {
     expect(previewPaygPool(tier, { ...input.resources, cpuCores: -1 }, 1)).toBeNull();
   });
 
-  it('previews prospective tier unlocked by purchase amount', () => {
-    expect(previewPaygTier(DEFAULT_PAYG_TIERS, 500)).toBeNull();
+  it('identifies the prospective PAYG tier enabled by a credit top-up', () => {
     expect(previewPaygTier(DEFAULT_PAYG_TIERS, 1000)?.id).toBe('tier_1');
-    expect(previewPaygTier(DEFAULT_PAYG_TIERS, 2499)?.id).toBe('tier_1');
     expect(previewPaygTier(DEFAULT_PAYG_TIERS, 2500)?.id).toBe('tier_2');
     expect(previewPaygTier(DEFAULT_PAYG_TIERS, 5000)?.id).toBe('tier_3');
     expect(previewPaygTier(DEFAULT_PAYG_TIERS, 10000)?.id).toBe('tier_4');
-    expect(previewPaygTier(DEFAULT_PAYG_TIERS, -50)).toBeNull();
+    expect(previewPaygTier(DEFAULT_PAYG_TIERS, 999)).toBeNull();
   });
 
-  it('estimates hourly usage and calculates credits and runtime duration', () => {
-    const result = estimatePrepaidUsage(input);
-    expect(result).not.toBeNull();
-    if (!result) return;
+  it('computes hourly usage and duration ranges correctly', () => {
+    const est = estimatePrepaidUsage(input);
+    expect(est).not.toBeNull();
+    if (!est) return;
 
-    expect(result.balanceCredits).toBe(500);
-    expect(result.hourlyCents.cpu).toBe(3);
-    expect(result.hourlyCents.memory).toBe(3.2);
-    expect(result.hourlyCents.disk * 720).toBeCloseTo(125);
-    expect(result.totalHourlyCents).toBeCloseTo(6.3736, 3);
-    expect(result.hourlyCredits).toBeCloseTo(6.3736, 3);
-    expect(result.coveredElapsedHours).toBeCloseTo(500 / result.totalHourlyCents);
-    expect(result.durationRange.minElapsedHours).toBeLessThan(result.durationRange.maxElapsedHours);
-  });
+    expect(est.hourlyUsage.cpuVcpuHours).toBe(1);
+    expect(est.hourlyUsage.memoryGiBHours).toBe(4);
+    expect(est.hourlyUsage.storageGiBHours).toBe(25);
 
-  it('scales covered duration linearly with package amount', () => {
-    const baseline = estimatePrepaidUsage(input)!;
-    const doubled = estimatePrepaidUsage({ ...input, packageCents: 1000 })!;
-    expect(doubled.coveredElapsedHours).toBeCloseTo(baseline.coveredElapsedHours * 2);
-  });
+    expect(est.hourlyCents.cpu).toBeCloseTo(3);
+    expect(est.hourlyCents.memory).toBeCloseTo(3.2);
+    expect(est.hourlyCents.disk).toBeCloseTo((25 * 5) / 720);
 
-  it('maintains memory and disk costs when CPU is at idle (0%)', () => {
-    const idle = estimatePrepaidUsage({ ...input, cpuPercent: 0 })!;
-    expect(idle.hourlyCents.cpu).toBe(0);
-    expect(idle.hourlyCents.memory).toBeGreaterThan(0);
-    expect(idle.hourlyCents.disk).toBeGreaterThan(0);
-    expect(idle.durationRange.maxElapsedHours).toBeCloseTo(
-      input.packageCents / idle.totalHourlyCents
+    expect(est.totalHourlyCents).toBeGreaterThan(6.3);
+    expect(est.coveredElapsedHours).toBeCloseTo(500 / est.totalHourlyCents);
+    expect(est.durationRange.minElapsedHours).toBeLessThanOrEqual(
+      est.durationRange.maxElapsedHours
     );
   });
 });

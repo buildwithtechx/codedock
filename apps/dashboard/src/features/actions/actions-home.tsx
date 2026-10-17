@@ -4,12 +4,8 @@ import { useCallback, useEffect, useState } from 'react';
 import { toast } from 'sonner';
 import { Button } from '#/components/ui/button';
 import { Tabs, TabsContent } from '#/components/ui/tabs';
-import {
-  type ActionRun,
-  type ActionRunner,
-  type ActionWorkflow,
-  actionsService,
-} from '#/services/actions';
+import type { ActionRun, ActionRunner, ActionWorkflow } from '#/interfaces/actions';
+import { actionsService } from '#/services/actions';
 import { ActionRunList } from './action-run-list';
 import { ActionRunnerCards } from './action-runner-cards';
 import { ActionWorkflowList } from './action-workflow-list';

@@ -5,12 +5,14 @@ export type ManagedTier = {
   diskGB: number;
   monthlyPrice: number;
 };
+
 export type ManagedCatalog = {
   provider: string;
   tiers: ManagedTier[];
   regions: string[];
   images: string[];
 };
+
 export type ManagedCredential = {
   id: string;
   organizationId: string;
@@ -19,6 +21,7 @@ export type ManagedCredential = {
   createdAt: string;
   updatedAt: string;
 };
+
 export type ManagedQuota = {
   organizationId: string;
   maxServers: number;
@@ -27,6 +30,7 @@ export type ManagedQuota = {
   usedMemoryGB: number;
   updatedAt: string;
 };
+
 export type ManagedServerPlan = {
   credentialId: string;
   organizationId: string;
@@ -44,6 +48,7 @@ export type ManagedServerPlan = {
   monthlyPrice: number;
   action: string;
 };
+
 export type ManagedOperation = {
   id: string;
   status: string;
@@ -53,30 +58,36 @@ export type ManagedOperation = {
   error: string;
   expiresAt: number;
 };
+
 export type ManagedReview = {
   review: { operation: ManagedOperation; confirmation: string };
   plan: ManagedServerPlan;
 };
+
 export type CreateManagedCredentialRequest = {
   provider: string;
   label: string;
   token: string;
 };
+
 export type ManagedLocation = {
   name: string;
   city: string;
   country: string;
 };
+
 export type ManagedOffer = {
   tier: ManagedTier;
   prices: Record<string, number>;
 };
+
 export type ManagedOffers = {
   provider: string;
   locations: ManagedLocation[];
   offers: ManagedOffer[];
   images: string[];
 };
+
 export type ReviewManagedProvisionRequest = {
   credentialId: string;
   serverId?: string;

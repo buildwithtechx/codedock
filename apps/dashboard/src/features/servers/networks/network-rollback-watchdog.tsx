@@ -2,7 +2,8 @@ import { CheckCircle2, Clock, Loader2, RotateCcw, ShieldAlert } from 'lucide-rea
 import { useEffect, useState } from 'react';
 import { toast } from 'sonner';
 import { Button } from '#/components/ui/button';
-import { networksService, type NetworkRollbackWatchdog as WatchdogType } from '#/services/networks';
+import type { NetworkRollbackWatchdog as WatchdogType } from '#/interfaces/networks';
+import { networksService } from '#/services/networks';
 
 interface NetworkRollbackWatchdogProps {
   watchdog: WatchdogType;

@@ -4,13 +4,12 @@ import { Button } from '#/components/ui/button';
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from '#/components/ui/dialog';
 import type { AuditLog } from '#/interfaces/audit';
 import type { AuditLogRow } from './api';
+import { absoluteTime, relativeTime } from './audit-date-helpers';
 import {
-  absoluteTime,
   actorDisplay,
   auditCategoryOf,
   categoryLabel,
   describeAuditAction,
-  relativeTime,
   resourceDisplay,
   toneDot,
 } from './audit-taxonomy';

@@ -1,6 +1,6 @@
 import { act, fireEvent, render, screen } from '@testing-library/react';
 import { beforeEach, describe, expect, it, vi } from 'vitest';
-import type { PendingCheckout } from '#/services/billing';
+import type { PendingCheckout } from '#/interfaces/billing';
 import { CheckoutRecovery } from './checkout-recovery';
 
 describe('CheckoutRecovery', () => {

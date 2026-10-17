@@ -3,7 +3,7 @@ import { useState } from 'react';
 import { Button } from '#/components/ui/button';
 import { Input } from '#/components/ui/input';
 import { Label } from '#/components/ui/label';
-import type { ManagedCredential } from '#/features/servers/managed-types';
+import type { ManagedCredential } from '#/interfaces/managed';
 import { cn } from '#/lib/utils';
 
 export function HetznerCredentialStep({

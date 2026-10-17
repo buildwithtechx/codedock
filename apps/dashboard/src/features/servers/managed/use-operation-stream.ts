@@ -1,5 +1,5 @@
 import { useEffect, useState } from 'react';
-import type { ManagedOperation } from '#/features/servers/managed-types';
+import type { ManagedOperation } from '#/interfaces/managed';
 import { getApiBaseUrl } from '#/lib/api-client';
 import { getAuthHeaders } from '#/lib/auth-refresh';
 import { managedService } from '#/services/managed';

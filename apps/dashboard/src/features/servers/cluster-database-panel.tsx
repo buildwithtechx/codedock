@@ -5,8 +5,8 @@ import type { BaseResponse } from '#/interfaces/base';
 import { apiClient } from '#/lib/api-client';
 import { ClusterDatabaseCard } from './cluster-database-card';
 import { ClusterDatabaseDialog } from './cluster-database-dialog';
-import type { ClusterDatabase, DatabaseAction } from './cluster-database-types';
-import type { Cluster } from './cluster-types';
+import type { ClusterDatabase, DatabaseAction } from '#/interfaces/databases';
+import type { Cluster } from '#/interfaces/clusters';
 export function ClusterDatabasePanel({
   projectId,
   cluster,

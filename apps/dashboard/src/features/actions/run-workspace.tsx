@@ -3,7 +3,8 @@ import { useState } from 'react';
 import { toast } from 'sonner';
 import { Button } from '#/components/ui/button';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '#/components/ui/card';
-import { type ActionRun, actionsService } from '#/services/actions';
+import type { ActionRun } from '#/interfaces/actions';
+import { actionsService } from '#/services/actions';
 import { ActionLogs } from './action-logs';
 import { ActionStatus } from './action-status';
 

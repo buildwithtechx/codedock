@@ -1,32 +1,12 @@
+import { DEFAULT_TOPUP_PACKS, isCloudPurchaseIntent } from '#/constants/billing';
+import type { BillingConfig, PendingCheckout, TopupPack } from '#/interfaces/billing';
 import { apiClient } from '#/lib/api-client';
-
-export interface BillingConfig {
-  publishableKey: string;
-  plans: {
-    id: string;
-    name: string;
-    price: number;
-    priceId?: string;
-    features: string[];
-  }[];
-}
-
-export interface PendingCheckout {
-  checkoutId: string;
-  idempotencyKey: string;
-  purchaseIntent?: string;
-  priceId: string;
-  url: string;
-  status: 'open' | 'expired' | 'complete' | 'canceled';
-  canCancel: boolean;
-  cancelUnavailableReason?: 'unsupported' | 'provider_unavailable';
-  createdAt: string;
-}
 
 export const billingService = {
   getConfig: async (): Promise<BillingConfig> => {
     return await apiClient.get<BillingConfig>('/billing/config');
   },
+
   createCheckoutSession: async (payload: {
     priceId: string;
     successUrl: string;
@@ -59,9 +39,11 @@ export const billingService = {
   getTopupPacks: async (): Promise<TopupPack[]> => {
     try {
       const res = await apiClient.get<{ packs: TopupPack[] }>('/billing/topups');
-      return res.packs || DEFAULT_TOPUP_PACKS;
+      return (
+        (res.packs as unknown as TopupPack[]) || (DEFAULT_TOPUP_PACKS as unknown as TopupPack[])
+      );
     } catch {
-      return DEFAULT_TOPUP_PACKS;
+      return DEFAULT_TOPUP_PACKS as unknown as TopupPack[];
     }
   },
 
@@ -73,18 +55,5 @@ export const billingService = {
   },
 };
 
-export interface TopupPack {
-  id: string;
-  name: string;
-  credits: number;
-  priceCents: number;
-  bonusPercent?: number;
-}
-
-export const DEFAULT_TOPUP_PACKS: TopupPack[] = [
-  { id: 'topup_10', name: '$10 Starter Pack', credits: 10000, priceCents: 1000 },
-  { id: 'topup_25', name: '$25 Growth Pack', credits: 25000, priceCents: 2500 },
-  { id: 'topup_50', name: '$50 Scale Pack', credits: 55000, priceCents: 5000, bonusPercent: 10 },
-  { id: 'topup_100', name: '$100 Pro Pack', credits: 115000, priceCents: 10000, bonusPercent: 15 },
-  { id: 'topup_250', name: '$250 Max Pack', credits: 300000, priceCents: 25000, bonusPercent: 20 },
-];
+export { isCloudPurchaseIntent };
+export type { BillingConfig, PendingCheckout, TopupPack };

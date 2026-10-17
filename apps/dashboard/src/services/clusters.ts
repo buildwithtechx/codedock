@@ -1,40 +1,5 @@
+import type { ClusterNode, ClusterScaling, ComputeCluster } from '#/interfaces/clusters';
 import { apiClient } from '#/lib/api-client';
-
-export interface ClusterNode {
-  serverId: string;
-  serverName?: string;
-  role: 'server' | 'agent';
-  privateIp: string;
-  interface?: string;
-  fingerprint?: string;
-}
-
-export interface ClusterScaling {
-  status: 'not_enabled' | 'setting_up' | 'ready' | 'failed' | 'interrupted' | 'removing';
-  k3sVersion: string;
-  controlNodes: number;
-  workerNodes: number;
-  podCidr?: string;
-  serviceCidr?: string;
-  clusterDomain?: string;
-  error?: string;
-  updatedAt: string;
-}
-
-export interface ComputeCluster {
-  id: string;
-  projectId?: string;
-  name: string;
-  version: string;
-  networkId?: string;
-  controls: number;
-  nodes: ClusterNode[];
-  revision: number;
-  status: string;
-  scaling?: ClusterScaling;
-  error?: string;
-  updatedAt?: string;
-}
 
 export const clustersService = {
   list: async (projectId: string): Promise<ComputeCluster[]> => {
@@ -75,3 +40,5 @@ export const clustersService = {
     return res.data;
   },
 };
+
+export type { ComputeCluster, ClusterNode, ClusterScaling };

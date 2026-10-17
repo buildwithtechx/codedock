@@ -1,6 +1,6 @@
 import { Input } from '#/components/ui/input';
 import { Label } from '#/components/ui/label';
-import type { Cluster, ClusterNode } from '#/features/servers/cluster-types';
+import type { Cluster, ClusterNode } from '#/interfaces/clusters';
 import { BareRuntimeFields } from '#/features/services/bare-runtime-fields';
 import type { RuntimeTarget } from '#/features/services/runtime-types';
 

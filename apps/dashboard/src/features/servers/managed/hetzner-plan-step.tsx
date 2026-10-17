@@ -1,5 +1,5 @@
 import { CheckCircle2, Loader2, MapPin } from 'lucide-react';
-import type { ManagedOffers } from '#/features/servers/managed-types';
+import type { ManagedOffers } from '#/interfaces/managed';
 import { cn } from '#/lib/utils';
 
 function priceFor(offer: ManagedOffers['offers'][number], location: string): number | null {

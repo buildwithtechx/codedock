@@ -7,7 +7,7 @@ import type {
   ManagedQuota,
   ManagedReview,
   ReviewManagedProvisionRequest,
-} from '#/features/servers/managed-types';
+} from '#/interfaces/managed';
 import type { BaseResponse } from '#/interfaces/base';
 import type { Server } from '#/interfaces/server';
 import { apiClient } from '#/lib/api-client';

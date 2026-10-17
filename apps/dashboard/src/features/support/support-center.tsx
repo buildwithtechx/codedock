@@ -14,14 +14,8 @@ import {
 import { useEffect, useState } from 'react';
 import { Button } from '#/components/ui/button';
 import { cn } from '#/lib/utils';
-import {
-  type CreateTicketInput,
-  createTicket,
-  getTickets,
-  replyTicket,
-  type SupportCategory,
-  type SupportTicket,
-} from '#/services/cloud-support';
+import type { CreateTicketInput, SupportCategory, SupportTicket } from '#/interfaces/support';
+import { createTicket, getTickets, replyTicket } from '#/services/cloud-support';
 import { NewTicketModal } from './new-ticket-modal';
 import { SupportConversation } from './support-conversation';
 import { SupportTicketList } from './support-ticket-list';

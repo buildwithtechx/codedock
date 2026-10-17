@@ -4,12 +4,8 @@ import { toast } from 'sonner';
 import { Button } from '#/components/ui/button';
 import { Input } from '#/components/ui/input';
 import { Label } from '#/components/ui/label';
-import {
-  type CreateNetworkInput,
-  type NetworkMember,
-  networksService,
-  type ServerNetwork,
-} from '#/services/networks';
+import type { CreateNetworkInput, NetworkMember, ServerNetwork } from '#/interfaces/networks';
+import { networksService } from '#/services/networks';
 import { NetworkMemberList } from './network-member-list';
 import { NetworkPeerDiagnostics } from './network-peer-diagnostics';
 import { NetworkRollbackWatchdog } from './network-rollback-watchdog';

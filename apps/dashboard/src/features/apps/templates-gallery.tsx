@@ -6,7 +6,7 @@ import { QueryErrorState } from '#/components/ui/query-error-state';
 import { Skeleton } from '#/components/ui/skeleton';
 import { useListExampleApps } from '#/hooks/use-templates';
 import type { ExampleApp } from '#/interfaces/templates';
-import { encodeDeploySlug } from '#/lib/slug-utils';
+import { encodeDeploySlug } from '#/lib/utils';
 import { ExampleLogo } from './example-logo';
 
 export function TemplatesGallery() {

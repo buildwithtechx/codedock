@@ -5,7 +5,7 @@ import type { BaseResponse } from '#/interfaces/base';
 import { apiClient } from '#/lib/api-client';
 import { ClusterDatabasePanel } from './cluster-database-panel';
 import { ClusterReviewDialog } from './cluster-review-dialog';
-import type { Cluster } from './cluster-types';
+import type { Cluster } from '#/interfaces/clusters';
 
 export function ProjectClusters({ projectId }: { projectId: string }) {
   const clusters = useQuery({

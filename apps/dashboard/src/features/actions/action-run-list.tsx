@@ -1,6 +1,6 @@
 import { ChevronRight, GitBranch } from 'lucide-react';
 import type { ReactNode } from 'react';
-import type { ActionRun } from '#/services/actions';
+import type { ActionRun } from '#/interfaces/actions';
 import { ActionStatus } from './action-status';
 import { ActionsEmptyState } from './actions-empty-state';
 

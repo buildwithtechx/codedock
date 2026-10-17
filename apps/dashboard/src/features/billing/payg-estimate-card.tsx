@@ -1,11 +1,7 @@
 import { ChevronDown, Server } from 'lucide-react';
 import { Button } from '#/components/ui/button';
-import {
-  formatDuration,
-  formatMoney,
-  formatNumber,
-  type PrepaidUsageEstimate,
-} from '#/lib/prepaid-estimate';
+import type { PrepaidUsageEstimate } from '#/interfaces/billing';
+import { formatDuration, formatMoney, formatNumber } from '#/services/billing-estimate';
 
 export interface PaygEstimateCardProps {
   id: string;

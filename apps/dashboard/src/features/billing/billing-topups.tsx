@@ -1,7 +1,9 @@
 import { Coins, Loader2, Zap } from 'lucide-react';
 import { useRef, useState } from 'react';
 import { Button } from '#/components/ui/button';
-import { billingService, DEFAULT_TOPUP_PACKS, type TopupPack } from '#/services/billing';
+import { DEFAULT_TOPUP_PACKS } from '#/constants/billing';
+import type { TopupPack } from '#/interfaces/billing';
+import { billingService } from '#/services/billing';
 
 export interface BillingTopupsProps {
   balanceCredits?: number;

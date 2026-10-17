@@ -1,6 +1,6 @@
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
 import { useRef, useState } from 'react';
-import type { Cluster } from '#/features/servers/cluster-types';
+import type { Cluster } from '#/interfaces/clusters';
 import type { CreateAppServiceRequest } from '#/features/services';
 import type { RuntimeReview, RuntimeTarget } from '#/features/services/runtime-types';
 import { useListByProject } from '#/hooks/use-environments';

@@ -1,4 +1,4 @@
-import type { ManagedOperation } from '#/features/servers/managed-types';
+import type { ManagedOperation } from '#/interfaces/managed';
 
 export const hetznerStages = [
   { id: 'creating_server', label: 'Creating server', detail: 'Reserving the Hetzner Cloud server' },

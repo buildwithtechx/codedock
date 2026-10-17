@@ -7,7 +7,7 @@ export type RuntimeVolume = {
 };
 export type RuntimeTarget = {
   kind: 'docker' | 'kubernetes' | 'bare';
-  bareNode?: import('../servers/cluster-types').ClusterNode;
+  bareNode?: import('#/interfaces/clusters').ClusterNode;
   bareReleaseUrl?: string;
   bareSha256?: string;
   bareCommand?: string[];

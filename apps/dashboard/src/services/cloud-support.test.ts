@@ -1,12 +1,7 @@
 import { beforeEach, describe, expect, it, vi } from 'vitest';
 import { apiClient } from '#/lib/api-client';
-import {
-  createTicket,
-  getTicket,
-  getTickets,
-  replyTicket,
-  type SupportTicket,
-} from './cloud-support';
+import type { SupportTicket } from '#/interfaces/support';
+import { createTicket, getTicket, getTickets, replyTicket } from './cloud-support';
 
 vi.mock('#/lib/api-client', () => ({
   apiClient: {
@@ -43,7 +38,7 @@ describe('cloud-support service', () => {
     const result = await getTickets();
     expect(result).toHaveLength(1);
     expect(result[0].id).toBe('SUP-0001');
-    expect(apiClient.get).toHaveBeenCalledWith('/api/support/tickets');
+    expect(apiClient.get).toHaveBeenCalledWith('/cloud/support/mine');
   });
 
   it('handles empty ticket list on error', async () => {
@@ -61,7 +56,7 @@ describe('cloud-support service', () => {
       attachDiagnostics: true,
     });
     expect(result.id).toBe('SUP-0001');
-    expect(apiClient.post).toHaveBeenCalledWith('/api/support/tickets', {
+    expect(apiClient.post).toHaveBeenCalledWith('/cloud/support/mine', {
       subject: 'Build failing',
       category: 'deployment',
       message: 'Help needed',
@@ -73,7 +68,7 @@ describe('cloud-support service', () => {
     vi.mocked(apiClient.get).mockResolvedValueOnce({ ticket: mockTicket });
     const result = await getTicket('SUP-0001');
     expect(result.id).toBe('SUP-0001');
-    expect(apiClient.get).toHaveBeenCalledWith('/api/support/tickets/SUP-0001');
+    expect(apiClient.get).toHaveBeenCalledWith('/cloud/support/mine/SUP-0001');
   });
 
   it('replies to a support ticket', async () => {
@@ -93,7 +88,7 @@ describe('cloud-support service', () => {
     vi.mocked(apiClient.post).mockResolvedValueOnce({ ticket: updated });
     const result = await replyTicket('SUP-0001', 'Here are the extra logs');
     expect(result.messages).toHaveLength(2);
-    expect(apiClient.post).toHaveBeenCalledWith('/api/support/tickets/SUP-0001/reply', {
+    expect(apiClient.post).toHaveBeenCalledWith('/cloud/support/mine/SUP-0001/replies', {
       message: 'Here are the extra logs',
     });
   });

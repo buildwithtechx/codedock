@@ -1,28 +1,6 @@
-export type AiProviderModel = {
-  id: string;
-  name: string;
-};
+import { aiProviderIdValues, type AiProviderCatalogItem } from '#/interfaces/ai';
 
-export type AiProviderCatalogItem = {
-  id: AiProviderId;
-  name: string;
-  apiKeyPlaceholder: string;
-  models: AiProviderModel[];
-};
-
-export const aiProviderIdValues = [
-  'openai',
-  'anthropic',
-  'google',
-  'mistral',
-  'groq',
-  'deepseek',
-  'xai',
-  'moonshot',
-] as const;
-export type AiProviderId = (typeof aiProviderIdValues)[number];
-
-export const aiProviderCatalog = [
+export const AI_PROVIDER_CATALOG = [
   {
     id: 'openai',
     name: 'OpenAI',
@@ -114,27 +92,4 @@ export const aiProviderCatalog = [
   },
 ] as const satisfies readonly AiProviderCatalogItem[];
 
-export const aiProviderIds = [...aiProviderIdValues];
-
-export function isAiProviderId(value: unknown): value is AiProviderId {
-  return typeof value === 'string' && aiProviderIds.includes(value as AiProviderId);
-}
-
-export function aiProviderName(providerId: AiProviderId) {
-  return aiProviderCatalog.find((provider) => provider.id === providerId)?.name ?? providerId;
-}
-
-export function aiProviderModels(providerId: AiProviderId): AiProviderModel[] {
-  return [...(aiProviderCatalog.find((provider) => provider.id === providerId)?.models ?? [])];
-}
-
-export function defaultAiModel(providerId: AiProviderId) {
-  return aiProviderModels(providerId)[0]?.id ?? '';
-}
-
-export function isAiProviderModel(providerId: AiProviderId, modelId: unknown): modelId is string {
-  return (
-    typeof modelId === 'string' &&
-    aiProviderModels(providerId).some((model) => model.id === modelId)
-  );
-}
+export const AI_PROVIDER_IDS = [...aiProviderIdValues];

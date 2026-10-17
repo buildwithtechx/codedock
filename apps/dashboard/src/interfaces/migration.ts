@@ -11,12 +11,14 @@ export type MaskedContainer = {
   composeProject?: string;
   routes: string[];
 };
+
 export type MaskedStack = {
   containers: MaskedContainer[];
   composeProjects: string[];
   platform: string;
   host: string;
 };
+
 export type MigrationSource = {
   id: string;
   organizationId: string;
@@ -29,6 +31,7 @@ export type MigrationSource = {
   createdAt: string;
   updatedAt: string;
 };
+
 export type MigrationRun = {
   id: string;
   organizationId: string;
@@ -46,6 +49,7 @@ export type MigrationRun = {
   createdAt: string;
   updatedAt: string;
 };
+
 export type MigrationPrompt = {
   id: string;
   kind: string;
@@ -54,10 +58,12 @@ export type MigrationPrompt = {
   options: { id: string; label: string; description: string }[];
   expiresAt: number;
 };
+
 export type MigrationReview = {
   runId: string;
   confirmation: string;
 };
+
 export type MigrationPreview = {
   images: string[];
   volumes: string[];

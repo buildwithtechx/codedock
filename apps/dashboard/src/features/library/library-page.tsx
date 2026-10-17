@@ -6,7 +6,7 @@ import { Skeleton } from '#/components/ui/skeleton';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '#/components/ui/tabs';
 import { AppCatalog } from '#/features/apps';
 import { TemplatesGallery } from '#/features/apps/templates-gallery';
-import { encodeDeploySlug } from '#/lib/slug-utils';
+import { encodeDeploySlug } from '#/lib/utils';
 import { ConnectPrompt } from './connect-prompt';
 import { FolderUpload } from './folder-upload';
 import { useGitConnections, useLibraryRepos } from './hooks';

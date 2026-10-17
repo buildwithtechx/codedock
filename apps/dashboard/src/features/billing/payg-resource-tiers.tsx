@@ -1,5 +1,5 @@
 import { useId } from 'react';
-import type { PaygTier } from '#/lib/prepaid-estimate';
+import type { PaygTier } from '#/constants/billing';
 
 export interface PaygResourceTiersProps {
   tiers: PaygTier[];

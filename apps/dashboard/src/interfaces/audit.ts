@@ -1,3 +1,22 @@
+export type AuditCategoryId =
+  | 'deployments'
+  | 'apps'
+  | 'domains'
+  | 'servers'
+  | 'members'
+  | 'agent'
+  | 'security'
+  | 'billing'
+  | 'system';
+
+export type AuditTone = 'neutral' | 'info' | 'success' | 'warning' | 'danger';
+
+export interface AuditCategory {
+  id: AuditCategoryId;
+  label: string;
+  description: string;
+}
+
 export interface AuditLog {
   id: string;
   organizationId?: string;

@@ -3,10 +3,8 @@ import { useState } from 'react';
 import { Badge } from '#/components/ui/badge';
 import { Button } from '#/components/ui/button';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '#/components/ui/card';
-import type { ActionRunner } from '#/services/actions';
+import type { ActionRunner } from '#/interfaces/actions';
 import { RunnerEditor } from './runner-editor';
-
-export { useCreateRunner } from './use-actions';
 
 interface RunnerCatalogProps {
   runners: ActionRunner[];

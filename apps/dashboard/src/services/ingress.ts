@@ -1,65 +1,12 @@
+import type {
+  IngressConnectInput,
+  IngressConnection,
+  IngressDiscovery,
+  IngressDomainInput,
+  IngressHostname,
+  IngressUpdateInput,
+} from '#/interfaces/ingress';
 import { apiClient } from '#/lib/api-client';
-
-export interface IngressConnection {
-  id: string;
-  serverId: string;
-  credentialId: string;
-  accountId: string;
-  tunnelId?: string | null;
-  name: string;
-  connector: 'existing' | 'managed';
-  edgePort: number;
-  managedTunnel: boolean;
-  defaultForDomains: boolean;
-  defaultAccessPolicyId?: string | null;
-  status: 'ready' | 'pending' | 'removing' | 'error';
-  error?: string | null;
-  createdAt: string;
-  updatedAt: string;
-}
-
-export interface IngressHostname {
-  id: string;
-  domainId?: string | null;
-  connectionId: string;
-  hostname: string;
-  accessPolicyId?: string | null;
-  status: 'ready' | 'pending' | 'removing' | 'error';
-  phase: string;
-  error?: string | null;
-  updatedAt: string;
-}
-
-export interface IngressDiscovery {
-  accounts: Array<{ id: string; name: string }>;
-  tunnels: Array<{ id: string; name: string; remote: boolean; status: string }>;
-  policies: Array<{ id: string; name: string; decision: string }>;
-  policiesError?: string | null;
-}
-
-export interface IngressConnectInput {
-  serverId: string;
-  credentialId: string;
-  accountId: string;
-  name: string;
-  tunnelId?: string;
-  connector: 'existing' | 'managed';
-  edgePort?: number;
-  defaultForDomains: boolean;
-  defaultAccessPolicyId?: string;
-}
-
-export interface IngressUpdateInput {
-  id: string;
-  defaultForDomains: boolean;
-  defaultAccessPolicyId?: string | null;
-}
-
-export interface IngressDomainInput {
-  domainId: string;
-  connectionId: string | null;
-  accessPolicyId?: string | null;
-}
 
 export const ingressService = {
   list: async (serverId?: string): Promise<IngressConnection[]> => {
@@ -98,25 +45,29 @@ export const ingressService = {
     return res.data;
   },
 
-  disconnect: async (id: string): Promise<{ success: boolean }> => {
-    const res = await apiClient.delete<{ data: { success: boolean } }>(
-      `/dns/ingress/${encodeURIComponent(id)}`
-    );
-    return res.data ?? { success: true };
+  disconnect: async (id: string): Promise<void> => {
+    await apiClient.delete(`/dns/ingress/${encodeURIComponent(id)}`);
+  },
+
+  listHostnames: async (domainId?: string): Promise<IngressHostname[]> => {
+    const query = domainId ? `?domainId=${encodeURIComponent(domainId)}` : '';
+    const res = await apiClient.get<{ data: IngressHostname[] }>(`/dns/ingress/hostnames${query}`);
+    return res.data ?? [];
   },
 
   getDomain: async (domainId: string): Promise<IngressHostname | null> => {
-    const res = await apiClient.get<{ data: IngressHostname | null }>(
-      `/dns/ingress/domains/${encodeURIComponent(domainId)}`
-    );
-    return res.data ?? null;
+    const query = `?domainId=${encodeURIComponent(domainId)}`;
+    const res = await apiClient.get<{ data: IngressHostname[] }>(`/dns/ingress/hostnames${query}`);
+    return res.data?.[0] ?? null;
   },
 
-  setDomain: async ({ domainId, ...body }: IngressDomainInput): Promise<IngressHostname | null> => {
-    const res = await apiClient.put<{ data: IngressHostname | null }>(
-      `/dns/ingress/domains/${encodeURIComponent(domainId)}`,
-      body
-    );
-    return res.data ?? null;
+  bindDomain: async (input: IngressDomainInput): Promise<IngressHostname> => {
+    const res = await apiClient.put<{ data: IngressHostname }>('/dns/ingress/domain', input);
+    return res.data;
+  },
+
+  setDomain: async (input: IngressDomainInput): Promise<IngressHostname> => {
+    const res = await apiClient.put<{ data: IngressHostname }>('/dns/ingress/domain', input);
+    return res.data;
   },
 };

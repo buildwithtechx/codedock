@@ -1,5 +1,5 @@
 import { describe, expect, it } from 'vitest';
-import type { ManagedOperation } from '#/features/servers/managed-types';
+import type { ManagedOperation } from '#/interfaces/managed';
 import { hetznerFailed, hetznerStageIndex, hetznerStages } from './hetzner-progress-stages';
 
 function snapshot(partial: Partial<ManagedOperation>): ManagedOperation {

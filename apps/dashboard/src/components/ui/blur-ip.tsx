@@ -1,5 +1,5 @@
 import type * as React from 'react';
-import { useDemoMode } from '#/lib/demo-mode';
+import { useDemoMode } from '#/hooks/use-demo-mode';
 import { cn } from '#/lib/utils';
 
 type BlurIpProps = React.HTMLAttributes<HTMLSpanElement> & {

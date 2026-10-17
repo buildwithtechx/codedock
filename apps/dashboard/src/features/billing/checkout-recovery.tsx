@@ -1,7 +1,8 @@
 import { AlertCircle, ExternalLink, Loader2, RefreshCw, XCircle } from 'lucide-react';
 import { useState } from 'react';
 import { Button } from '#/components/ui/button';
-import { billingService, type PendingCheckout } from '#/services/billing';
+import type { PendingCheckout } from '#/interfaces/billing';
+import { billingService } from '#/services/billing';
 
 export interface CheckoutRecoveryProps {
   pending?: PendingCheckout | null;
@@ -28,7 +29,7 @@ export function CheckoutRecovery({
     if (!pending.canCancel || canceling) return;
 
     const checkoutId = pending.checkoutId;
-    const idempotencyKey = pending.idempotencyKey;
+    const idempotencyKey = pending.idempotencyKey || `cancel_${checkoutId}`;
 
     setCanceling(true);
     setError(null);

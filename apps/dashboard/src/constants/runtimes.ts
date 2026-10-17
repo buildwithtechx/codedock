@@ -1,34 +1,6 @@
-export interface RuntimeRoleContainer {
-  containerId: string | null;
-  replica: number;
-  status: 'running' | 'starting' | 'stopped' | 'failed' | 'restarting' | 'missing' | 'unknown';
-  restartCount: number | null;
-}
+import type { ProjectRuntimeRoles, RuntimeRole, RuntimeRoleContainer } from '#/interfaces/roles';
 
-export interface RuntimeRole {
-  name: string;
-  kind: string;
-  command: string;
-  replicas: number;
-  containers: RuntimeRoleContainer[];
-}
-
-export interface ProjectRuntimeRoles {
-  deploymentId: string;
-  roles: RuntimeRole[];
-}
-
-export interface RuntimeRoleConfiguration {
-  supported: boolean;
-  deploymentId?: string;
-  updatedAt?: string;
-  roles: Array<{
-    name: string;
-    kind: string;
-    command: string;
-    replicas: number;
-  }>;
-}
+export const DEFAULT_ROLE_KINDS = ['web', 'worker', 'cron', 'queue', 'api'] as const;
 
 export function runtimeRoleState(role: RuntimeRole): RuntimeRoleContainer['status'] {
   const states = role.containers.map((container) => container.status);
@@ -58,16 +30,13 @@ export function roleLogTargetKey(deploymentId: string, name: string, replica: nu
 
 export function runtimeRoleLogTargets(data: ProjectRuntimeRoles | null) {
   if (!data?.deploymentId) return [];
-  const deploymentId = data.deploymentId;
   return data.roles.flatMap((role) =>
-    role.containers
-      .filter((replica) => replica.containerId)
-      .map((replica) => ({
-        value: roleLogTargetKey(deploymentId, role.name, replica.replica),
-        role: role.name,
-        replica: replica.replica,
-        deploymentId,
-        kind: role.kind,
-      }))
+    role.containers.map((c) => ({
+      key: roleLogTargetKey(data.deploymentId, role.name, c.replica),
+      name: `${role.name} #${c.replica}`,
+      role: role.name,
+      replica: c.replica,
+      status: c.status,
+    }))
   );
 }

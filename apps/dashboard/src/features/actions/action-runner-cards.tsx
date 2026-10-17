@@ -1,7 +1,7 @@
 import { Link } from '@tanstack/react-router';
 import { Cloud, Plus, Server, Trash2 } from 'lucide-react';
 import { Button } from '#/components/ui/button';
-import type { ActionRunner } from '#/services/actions';
+import type { ActionRunner } from '#/interfaces/actions';
 import { ActionsEmptyState } from './actions-empty-state';
 
 interface ActionRunnerCardsProps {

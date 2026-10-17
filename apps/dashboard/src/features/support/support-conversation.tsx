@@ -2,7 +2,7 @@ import { ArrowLeft, Paperclip, Send, ShieldCheck, User } from 'lucide-react';
 import { useState } from 'react';
 import { Button } from '#/components/ui/button';
 import { cn } from '#/lib/utils';
-import type { SupportTicket } from '#/services/cloud-support';
+import type { SupportTicket } from '#/interfaces/support';
 
 export interface SupportConversationProps {
   ticket: SupportTicket;

@@ -1,89 +1,6 @@
-export interface CustomServerResources {
-  cpuCores: number;
-  memoryMb: number;
-  diskGb: number;
-}
+import type { ComputePricing, PaygTier } from '#/constants/billing';
+import type { CustomServerResources, PrepaidUsageEstimate } from '#/interfaces/billing';
 
-export interface ComputePricing {
-  tariffId: string;
-  currency: 'usd';
-  creditsPerDollar: number;
-  paygCapPercent?: number;
-  usage: {
-    activeVcpuHourCents: number;
-    reservedGiBHourCents: number;
-    retainedGiBMonthCents: number;
-    monthHours: number;
-  };
-  network?: {
-    managedProxyGiBCents: number;
-    minimumTopupCents: number;
-  };
-  retentionDays?: number;
-  paygCheckoutAvailable?: boolean;
-}
-
-export interface PaygTier {
-  id: string;
-  level: number;
-  minimumFundingCents: number;
-  pool: {
-    cpuCores: number;
-    memoryMb: number;
-    diskGb: number;
-    servers: number;
-  };
-}
-
-export const DEFAULT_COMPUTE_PRICING: ComputePricing = {
-  tariffId: 'codedock-standard-compute',
-  currency: 'usd',
-  creditsPerDollar: 100,
-  paygCapPercent: 125,
-  usage: {
-    activeVcpuHourCents: 0.7,
-    reservedGiBHourCents: 0.35,
-    retainedGiBMonthCents: 10,
-    monthHours: 730,
-  },
-  network: {
-    managedProxyGiBCents: 5,
-    minimumTopupCents: 1000,
-  },
-  retentionDays: 30,
-  paygCheckoutAvailable: true,
-};
-
-export const DEFAULT_PAYG_TIERS: PaygTier[] = [
-  {
-    id: 'tier_1',
-    level: 1,
-    minimumFundingCents: 1000,
-    pool: { cpuCores: 2, memoryMb: 4096, diskGb: 60, servers: 2 },
-  },
-  {
-    id: 'tier_2',
-    level: 2,
-    minimumFundingCents: 2500,
-    pool: { cpuCores: 4, memoryMb: 12288, diskGb: 150, servers: 4 },
-  },
-  {
-    id: 'tier_3',
-    level: 3,
-    minimumFundingCents: 5000,
-    pool: { cpuCores: 8, memoryMb: 24576, diskGb: 350, servers: 8 },
-  },
-  {
-    id: 'tier_4',
-    level: 4,
-    minimumFundingCents: 10000,
-    pool: { cpuCores: 16, memoryMb: 65536, diskGb: 800, servers: 16 },
-  },
-];
-
-export const DEFAULT_CREDIT_PACKAGES_CENTS = [1000, 2500, 5000, 10000, 25000];
-
-/** Selected allocation across all proposed servers, not their metered CPU activity. */
 export function previewPaygPool(
   tier: PaygTier,
   resources: CustomServerResources,
@@ -111,7 +28,6 @@ export function previewPaygPool(
   return { selected, exceeded, fits: exceeded.length === 0 };
 }
 
-/** Prospective access from this credit purchase, not a customer's current entitlement. */
 export function previewPaygTier(tiers: PaygTier[], purchaseCents: number) {
   if (!Number.isSafeInteger(purchaseCents) || purchaseCents <= 0) return null;
   return [...tiers].reverse().find((tier) => tier.minimumFundingCents <= purchaseCents) ?? null;
@@ -132,28 +48,6 @@ export function hasPrepaidRates(pricing: unknown): pricing is ComputePricing {
   );
 }
 
-export interface PrepaidUsageEstimate {
-  balanceCredits: number;
-  hourlyUsage: {
-    cpuVcpuHours: number;
-    memoryGiBHours: number;
-    storageGiBHours: number;
-  };
-  hourlyCents: {
-    cpu: number;
-    memory: number;
-    disk: number;
-  };
-  totalHourlyCents: number;
-  hourlyCredits: number;
-  coveredElapsedHours: number;
-  durationRange: {
-    minElapsedHours: number;
-    maxElapsedHours: number;
-  };
-}
-
-/** Presentation only: published resource rates applied to prepaid usage. */
 export function estimatePrepaidUsage({
   pricing,
   resources,
