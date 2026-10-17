@@ -7,17 +7,12 @@ import { managedService } from '#/services/managed';
 import { useOrganizationStore } from '#/stores/organization-store';
 import { HetznerCredentialStep } from './hetzner-credential-step';
 import { HetznerPlanStep } from './hetzner-plan-step';
+import {
+  HETZNER_WIZARD_STEPS as steps,
+  type HetznerWizardStep as WizardStep,
+} from '@codedock/setup';
 import { HetznerProgressView } from './hetzner-progress-view';
 import { HetznerReviewStep } from './hetzner-review-step';
-
-type WizardStep = 'credential' | 'plan' | 'review' | 'progress';
-
-const steps: { id: WizardStep; label: string }[] = [
-  { id: 'credential', label: 'Credential' },
-  { id: 'plan', label: 'Location & type' },
-  { id: 'review', label: 'Review' },
-  { id: 'progress', label: 'Provision' },
-];
 
 export function HetznerSetupWizard({ onDone }: { onDone: (serverId: string) => void }) {
   const organizationId = useOrganizationStore((state) => state.activeOrganizationId);

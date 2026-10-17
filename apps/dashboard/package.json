@@ -20,6 +20,8 @@
   },
   "dependencies": {
     "@ai-sdk/react": "^4.0.47",
+    "@codedock/setup": "*",
+    "@codedock/ui": "*",
     "@hookform/resolvers": "^5.5.7",
     "@monaco-editor/react": "^4.7.0",
     "@posthog/react": "^1.10.3",

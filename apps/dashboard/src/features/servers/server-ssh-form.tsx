@@ -15,7 +15,7 @@ import { Button } from '#/components/ui/button';
 import { Input } from '#/components/ui/input';
 import { Label } from '#/components/ui/label';
 import { ServerSshAdvancedFields } from '#/features/servers/server-ssh-advanced-fields';
-import { readSshPrivateKey, validateSshConnection } from '#/features/servers/server-ssh-validation';
+import { readSshPrivateKey, validateSshConnection } from '@codedock/setup';
 import { useCreateServer, useTestSSH } from '#/hooks/use-servers';
 import type { Server, TestSSHRequest } from '#/interfaces/server';
 
