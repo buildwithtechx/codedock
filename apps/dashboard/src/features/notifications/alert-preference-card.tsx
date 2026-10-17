@@ -24,15 +24,15 @@ export function AlertPreferenceCard({
   onNotifyToggle,
 }: AlertPreferenceCardProps) {
   return (
-    <div className="rounded-xl border border-border/50 bg-card p-4 transition-colors hover:border-border/80">
-      <div className="mb-3.5">
+    <div className="rounded-xl border border-border/40 bg-card p-4 space-y-4">
+      <div>
         <p className="font-medium text-foreground text-sm">{event.title}</p>
         <p className="mt-1 text-muted-foreground text-xs leading-relaxed">{event.description}</p>
       </div>
 
-      <div className="flex flex-wrap items-center gap-x-6 gap-y-3 border-border/30 border-t pt-3">
-        <div className="flex items-center gap-2.5">
-          <span className="font-medium text-foreground text-xs">Notify me</span>
+      <div className="flex flex-wrap items-center gap-x-6 gap-y-4">
+        <div className="flex items-center gap-3">
+          <span className="text-foreground text-sm">Notify me</span>
           <Switch
             checked={state.notifyMe}
             onCheckedChange={onNotifyToggle}
@@ -40,18 +40,16 @@ export function AlertPreferenceCard({
           />
         </div>
 
-        <div className="flex items-center gap-2.5">
-          <span className="text-muted-foreground text-xs">Organization default</span>
+        <div className="flex items-center gap-3">
+          <span className="text-muted-foreground text-sm">Organization defaults</span>
           <Switch
             checked={state.orgEnabled}
             onCheckedChange={onOrgToggle}
-            aria-label={`Organization default: ${event.title}`}
+            aria-label={`Organization defaults: ${event.title}`}
           />
         </div>
 
-        <div className="sm:ml-auto">
-          <ChannelMultiSelect value={state.channels} onChange={onChannelChange} />
-        </div>
+        <ChannelMultiSelect value={state.channels} onChange={onChannelChange} />
       </div>
     </div>
   );

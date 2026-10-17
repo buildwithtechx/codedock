@@ -23,7 +23,7 @@ describe('NotificationSubscriptionsTable (Alert preferences)', () => {
     });
   });
 
-  it('renders Alert preferences header with requested description and cards', () => {
+  it('renders Alert preferences header with exact 24 events, underline tabs, and card controls', () => {
     render(
       <QueryClientProvider client={queryClient}>
         <NotificationSubscriptionsTable />
@@ -37,8 +37,11 @@ describe('NotificationSubscriptionsTable (Alert preferences)', () => {
       )
     ).toBeDefined();
 
+    expect(screen.getByText('24')).toBeDefined();
+    expect(screen.getAllByText('Deployment').length).toBeGreaterThan(0);
+    expect(screen.getAllByText('App health').length).toBeGreaterThan(0);
     expect(screen.getByText('Deploy failed')).toBeDefined();
     expect(screen.getAllByText('Notify me').length).toBeGreaterThan(0);
-    expect(screen.getAllByText('Organization default').length).toBeGreaterThan(0);
+    expect(screen.getAllByText('Organization defaults').length).toBeGreaterThan(0);
   });
 });

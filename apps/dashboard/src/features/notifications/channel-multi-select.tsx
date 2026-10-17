@@ -1,19 +1,31 @@
-import { Check, ChevronDown, Mail, MessageSquare, Send, Webhook } from 'lucide-react';
+import { Check, ChevronDown, Mail, MessageSquare, Send, Users, Webhook } from 'lucide-react';
+import type React from 'react';
 import { useEffect, useRef, useState } from 'react';
 
-const CHANNELS = [
+export type ChannelKind = 'email' | 'webhook' | 'slack' | 'discord' | 'msteams' | 'telegram';
+
+interface ChannelChoice {
+  id: ChannelKind;
+  label: string;
+  icon: React.ComponentType<{ className?: string }>;
+}
+
+const CHANNELS: ChannelChoice[] = [
   { id: 'email', label: 'Email', icon: Mail },
   { id: 'webhook', label: 'Webhook', icon: Webhook },
   { id: 'slack', label: 'Slack', icon: MessageSquare },
   { id: 'discord', label: 'Discord', icon: MessageSquare },
+  { id: 'msteams', label: 'Microsoft Teams', icon: Users },
   { id: 'telegram', label: 'Telegram', icon: Send },
 ];
 
 export function ChannelMultiSelect({
   value,
+  disabled,
   onChange,
 }: {
   value: string[];
+  disabled?: boolean;
   onChange: (channels: string[]) => void;
 }) {
   const [open, setOpen] = useState(false);
@@ -31,20 +43,20 @@ export function ChannelMultiSelect({
   }, [open]);
 
   const toggle = (id: string) => {
-    const next = value.includes(id)
-      ? value.length > 1
-        ? value.filter((c) => c !== id)
-        : value
-      : [...value, id];
+    const has = value.includes(id);
+    if (has && value.length === 1) return;
+    const next = has ? value.filter((c) => c !== id) : [...value, id];
     onChange(next);
   };
 
   return (
-    <div ref={containerRef} className="relative inline-block text-start">
+    <div ref={containerRef} className="relative inline-flex justify-end text-start">
       <button
         type="button"
+        disabled={disabled}
         onClick={() => setOpen((prev) => !prev)}
-        className="inline-flex items-center gap-2 rounded-lg border border-border/60 bg-background px-2.5 py-1.5 text-foreground text-xs transition-colors hover:bg-muted/40"
+        className="inline-flex items-center gap-2 rounded-lg border border-border/50 bg-secondary/80 px-2.5 py-1.5 text-xs font-normal text-secondary-foreground transition-colors hover:bg-secondary disabled:cursor-not-allowed disabled:opacity-50"
+        aria-expanded={open}
       >
         <span className="flex items-center gap-1.5">
           <span className="flex -space-x-1">
@@ -54,27 +66,30 @@ export function ChannelMultiSelect({
               return (
                 <span
                   key={ch}
-                  className="grid size-4 place-items-center rounded-full bg-muted ring-1 ring-background"
+                  className="grid size-5 place-items-center rounded-full bg-muted ring-1 ring-background"
                 >
-                  <Icon className="size-2.5 text-muted-foreground" />
+                  <Icon className="size-3 text-muted-foreground" />
                 </span>
               );
             })}
             {value.length > 2 && (
-              <span className="grid size-4 place-items-center rounded-full bg-muted font-semibold text-[8px] text-muted-foreground ring-1 ring-background">
+              <span className="grid size-5 place-items-center rounded-full bg-muted text-[10px] font-semibold text-muted-foreground ring-1 ring-background">
                 +{value.length - 2}
               </span>
             )}
           </span>
-          <span className="text-muted-foreground">
-            {value.length} channel{value.length === 1 ? '' : 's'}
+          <span className="whitespace-nowrap text-muted-foreground">
+            {value.length} channels
           </span>
         </span>
-        <ChevronDown className="size-3 text-muted-foreground" />
+        <ChevronDown className="size-3.5 shrink-0 text-muted-foreground" />
       </button>
 
       {open && (
-        <div className="absolute right-0 z-50 mt-1 w-44 rounded-xl border border-border/70 bg-popover/95 p-1 shadow-lg backdrop-blur-md">
+        <div
+          role="menu"
+          className="absolute right-0 z-50 mt-1.5 w-52 overflow-hidden rounded-xl border border-border/60 bg-popover/95 p-1 shadow-2xl backdrop-blur-xl animate-in fade-in slide-in-from-top-1 duration-150"
+        >
           {CHANNELS.map((ch) => {
             const active = value.includes(ch.id);
             const Icon = ch.icon;
@@ -82,18 +97,22 @@ export function ChannelMultiSelect({
               <button
                 key={ch.id}
                 type="button"
+                role="menuitemcheckbox"
+                aria-checked={active}
                 onClick={() => toggle(ch.id)}
-                className="flex w-full items-center gap-2 rounded-lg px-2 py-1.5 text-foreground text-xs transition-colors hover:bg-muted/50"
+                className="flex w-full items-center gap-2.5 rounded-lg px-2.5 py-1.5 text-start text-xs text-foreground transition-colors hover:bg-muted/50"
               >
                 <span
-                  className={`grid size-3.5 place-items-center rounded border transition-colors ${
-                    active ? 'border-primary bg-primary text-primary-foreground' : 'border-border'
+                  className={`grid size-4 shrink-0 place-items-center rounded border transition-colors ${
+                    active
+                      ? 'border-primary bg-primary text-primary-foreground'
+                      : 'border-border/70 bg-transparent'
                   }`}
                 >
-                  {active && <Check className="size-2.5" />}
+                  {active && <Check className="size-3" />}
                 </span>
-                <Icon className="size-3.5 text-muted-foreground" />
-                <span className="flex-1 text-left">{ch.label}</span>
+                <Icon className="size-4 shrink-0 text-muted-foreground" />
+                <span className="flex-1 text-sm font-normal text-foreground">{ch.label}</span>
               </button>
             );
           })}

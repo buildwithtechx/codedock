@@ -1,5 +1,4 @@
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
-import { Bell } from 'lucide-react';
 import { useEffect, useMemo, useState } from 'react';
 import { settingsService } from '#/features/settings/api';
 import { AlertPreferenceCard, type AlertPreferenceState } from './alert-preference-card';
@@ -114,7 +113,6 @@ export function NotificationSubscriptionsTable() {
 
   const sections = useMemo(() => {
     if (selectedGroup !== 'all') {
-      const groupDef = NOTIFICATION_GROUPS.find((g) => g.id === selectedGroup);
       return [
         {
           id: selectedGroup,
@@ -131,52 +129,61 @@ export function NotificationSubscriptionsTable() {
   }, [selectedGroup]);
 
   return (
-    <section className="rounded-2xl border border-border/60 bg-card p-6">
-      <div className="mb-5 flex items-center gap-3">
-        <div className="flex h-9 w-9 items-center justify-center rounded-xl bg-primary/10 text-primary">
-          <Bell className="h-4 w-4" />
-        </div>
-        <div>
-          <h2 className="font-semibold text-foreground text-sm">Alert preferences</h2>
-          <p className="mt-0.5 text-muted-foreground text-xs">
-            Organization defaults apply when a member has not made an explicit choice for an alert. Members can override them with their own preferences.
-          </p>
-        </div>
+    <div className="space-y-6">
+      <div>
+        <h2 className="text-base font-medium text-foreground">Alert preferences</h2>
+        <p className="mt-1 text-sm text-muted-foreground leading-relaxed">
+          Organization defaults apply when a member has not made an explicit choice for an alert. Members can override them with their own preferences.
+        </p>
       </div>
 
-      <div className="mb-6 flex flex-wrap gap-1.5 border-border/60 border-b pb-3">
+      <div className="flex items-center gap-1 overflow-x-auto border-b border-border/50 scrollbar-hide">
         <button
           type="button"
           onClick={() => setSelectedGroup('all')}
-          className={`inline-flex items-center gap-1.5 rounded-lg px-2.5 py-1 font-medium text-xs transition-colors ${
+          className={`relative inline-flex min-w-0 shrink-0 items-center gap-2 whitespace-nowrap px-4 py-2.5 text-sm font-medium transition-colors ${
             selectedGroup === 'all'
-              ? 'bg-primary/10 text-primary'
-              : 'text-muted-foreground hover:bg-muted/50 hover:text-foreground'
+              ? 'text-foreground'
+              : 'text-muted-foreground hover:text-foreground/80'
           }`}
         >
           All
-          <span className="rounded-full bg-muted px-1.5 py-0.2 font-mono text-[10px]">
+          <span
+            className={`rounded-full px-1.5 py-0.5 text-xs font-medium tabular-nums ${
+              selectedGroup === 'all' ? 'bg-muted text-foreground' : 'bg-muted/60 text-muted-foreground'
+            }`}
+          >
             {groupCounts.all}
           </span>
+          {selectedGroup === 'all' && (
+            <span className="absolute bottom-0 start-4 end-4 h-0.5 rounded-full bg-primary" />
+          )}
         </button>
+
         {NOTIFICATION_GROUPS.map((group) => {
           const count = groupCounts[group.id] || 0;
           if (count === 0) return null;
+          const active = selectedGroup === group.id;
           return (
             <button
               key={group.id}
               type="button"
               onClick={() => setSelectedGroup(group.id)}
-              className={`inline-flex items-center gap-1.5 rounded-lg px-2.5 py-1 font-medium text-xs transition-colors ${
-                selectedGroup === group.id
-                  ? 'bg-primary/10 text-primary'
-                  : 'text-muted-foreground hover:bg-muted/50 hover:text-foreground'
+              className={`relative inline-flex min-w-0 shrink-0 items-center gap-2 whitespace-nowrap px-4 py-2.5 text-sm font-medium transition-colors ${
+                active ? 'text-foreground' : 'text-muted-foreground hover:text-foreground/80'
               }`}
             >
               {group.label}
-              <span className="rounded-full bg-muted px-1.5 py-0.2 font-mono text-[10px]">
+              <span
+                className={`rounded-full px-1.5 py-0.5 text-xs font-medium tabular-nums ${
+                  active ? 'bg-muted text-foreground' : 'bg-muted/60 text-muted-foreground'
+                }`}
+              >
                 {count}
               </span>
+              {active && (
+                <span className="absolute bottom-0 start-4 end-4 h-0.5 rounded-full bg-primary" />
+              )}
             </button>
           );
         })}
@@ -184,11 +191,9 @@ export function NotificationSubscriptionsTable() {
 
       <div className="space-y-6">
         {sections.map((section) => (
-          <div key={section.id} className="space-y-3">
+          <section key={section.id} className="space-y-3">
             {section.label && (
-              <h3 className="font-semibold text-foreground text-sm tracking-tight">
-                {section.label}
-              </h3>
+              <h3 className="text-sm font-medium text-foreground">{section.label}</h3>
             )}
             <div className="space-y-3">
               {section.events.map((event) => {
@@ -209,9 +214,9 @@ export function NotificationSubscriptionsTable() {
                 );
               })}
             </div>
-          </div>
+          </section>
         ))}
       </div>
-    </section>
+    </div>
   );
 }
