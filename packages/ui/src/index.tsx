@@ -128,6 +128,12 @@ export {
 } from './components/tabs';
 export { Textarea } from './components/textarea';
 export {
+  type Theme,
+  ThemeProvider,
+  type ThemeProviderProps,
+  useTheme,
+} from './components/theme-provider';
+export {
   Tooltip,
   TooltipContent,
   TooltipProvider,

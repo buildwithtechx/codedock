@@ -1,5 +1,5 @@
 import { Check, SunMedium } from 'lucide-react';
-import { useTheme } from 'next-themes';
+import { useTheme } from '@codedock/ui';
 import { useId } from 'react';
 import { SettingsSection } from './settings-section';
 import { ThemePreview } from './theme-preview';

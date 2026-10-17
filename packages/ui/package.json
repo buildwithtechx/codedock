@@ -12,7 +12,9 @@
       "import": "./src/index.tsx",
       "default": "./src/index.tsx"
     },
+    "./theme.css": "./src/theme.css",
     "./globals.css": "./src/globals.css",
+    "./styles.css": "./src/theme.css",
     "./*": {
       "types": "./src/components/*.tsx",
       "import": "./src/components/*.tsx",

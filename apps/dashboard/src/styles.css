@@ -39,7 +39,7 @@
 @custom-variant dark (&:is(.dark *, .dim *));
 @custom-variant dim (&:is(.dim *));
 
-@import './theme.css';
+@import '@codedock/ui/theme.css';
 
 html,
 body,

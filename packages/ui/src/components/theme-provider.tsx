@@ -1,5 +1,13 @@
-import { ThemeProvider as NextThemesProvider } from 'next-themes';
+'use client';
+
+import { ThemeProvider as NextThemesProvider, useTheme } from 'next-themes';
 import type * as React from 'react';
+
+export type Theme = 'light' | 'dim' | 'dark' | 'system';
+
+export interface ThemeProviderProps extends React.ComponentProps<typeof NextThemesProvider> {
+  children: React.ReactNode;
+}
 
 export function ThemeProvider({
   children,
@@ -9,7 +17,7 @@ export function ThemeProvider({
   disableTransitionOnChange = true,
   themes = ['light', 'dim', 'dark', 'system'],
   ...props
-}: React.ComponentProps<typeof NextThemesProvider>) {
+}: ThemeProviderProps) {
   return (
     <NextThemesProvider
       attribute={attribute}
@@ -23,3 +31,5 @@ export function ThemeProvider({
     </NextThemesProvider>
   );
 }
+
+export { useTheme };
