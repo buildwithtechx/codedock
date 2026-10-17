@@ -3,9 +3,7 @@ package mail
 import (
 	"bytes"
 	"context"
-	"database/sql"
 	"encoding/json"
-	"errors"
 	"fmt"
 	"io"
 	"net/http"
@@ -15,9 +13,6 @@ import (
 	"codedock/internal/models"
 	"codedock/internal/repositories"
 )
-
-var ErrMailNotFound = errors.New("not found")
-var ErrMailExists = errors.New("already exists")
 
 type MailService struct {
 	repo   repositories.MailRepository
@@ -210,31 +205,59 @@ func (s *MailService) resolve(ctx context.Context, id string) (*models.MailServe
 	return server, nil
 }
 
+func v1Path(path string) string {
+	if strings.HasPrefix(path, "/api/") && !strings.HasPrefix(path, "/api/v1/") {
+		return "/api/v1" + strings.TrimPrefix(path, "/api")
+	}
+	return path
+}
+
 func (s *MailService) do(ctx context.Context, server *models.MailServer, method, path string, body any, out any) error {
-	var reader io.Reader
+	var encoded []byte
 	if body != nil {
-		encoded, err := json.Marshal(body)
+		var err error
+		encoded, err = json.Marshal(body)
 		if err != nil {
 			return fmt.Errorf("encode mail request: %w", err)
 		}
-		reader = bytes.NewReader(encoded)
 	}
-	req, err := http.NewRequestWithContext(ctx, method, server.MaildURL+path, reader)
+
+	exec := func(p string) (*http.Response, []byte, error) {
+		var reader io.Reader
+		if encoded != nil {
+			reader = bytes.NewReader(encoded)
+		}
+		req, err := http.NewRequestWithContext(ctx, method, server.MaildURL+p, reader)
+		if err != nil {
+			return nil, nil, fmt.Errorf("build mail request: %w", err)
+		}
+		req.Header.Set("Authorization", "Bearer "+server.APIToken)
+		req.Header.Set("Content-Type", "application/json")
+		req.Header.Set("Accept", "application/json")
+		resp, err := s.client.Do(req)
+		if err != nil {
+			return nil, nil, fmt.Errorf("mail server unreachable: %w", err)
+		}
+		defer resp.Body.Close()
+		raw, err := io.ReadAll(io.LimitReader(resp.Body, 4<<20))
+		if err != nil {
+			return nil, nil, fmt.Errorf("read mail response: %w", err)
+		}
+		return resp, raw, nil
+	}
+
+	targetPath := v1Path(path)
+	resp, raw, err := exec(targetPath)
 	if err != nil {
-		return fmt.Errorf("build mail request: %w", err)
+		return err
 	}
-	req.Header.Set("Authorization", "Bearer "+server.APIToken)
-	req.Header.Set("Content-Type", "application/json")
-	req.Header.Set("Accept", "application/json")
-	resp, err := s.client.Do(req)
-	if err != nil {
-		return fmt.Errorf("mail server unreachable: %w", err)
+	if resp.StatusCode == http.StatusNotFound && targetPath != path {
+		if fbResp, fbRaw, fbErr := exec(path); fbErr == nil && fbResp.StatusCode != http.StatusNotFound {
+			resp = fbResp
+			raw = fbRaw
+		}
 	}
-	defer resp.Body.Close()
-	raw, err := io.ReadAll(io.LimitReader(resp.Body, 4<<20))
-	if err != nil {
-		return fmt.Errorf("read mail response: %w", err)
-	}
+
 	if resp.StatusCode == http.StatusNoContent {
 		return nil
 	}
@@ -247,29 +270,4 @@ func (s *MailService) do(ctx context.Context, server *models.MailServer, method,
 		}
 	}
 	return nil
-}
-
-func mapStatusError(status int, raw []byte) error {
-	var payload struct {
-		Error string `json:"error"`
-	}
-	message := strings.TrimSpace(string(raw))
-	if err := json.Unmarshal(raw, &payload); err == nil && payload.Error != "" {
-		message = payload.Error
-	}
-	switch status {
-	case http.StatusNotFound:
-		return ErrMailNotFound
-	case http.StatusConflict:
-		return ErrMailExists
-	default:
-		return fmt.Errorf("maild: status %d: %s", status, message)
-	}
-}
-
-func mapRepoError(err error) error {
-	if errors.Is(err, sql.ErrNoRows) {
-		return ErrMailNotFound
-	}
-	return err
 }

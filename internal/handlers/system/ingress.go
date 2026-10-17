@@ -4,25 +4,35 @@ import (
 	"crypto/rand"
 	"encoding/hex"
 	"net/http"
-	"sync"
 	"time"
 
 	"codedock/internal/models"
+	"codedock/internal/repositories"
+	systemservices "codedock/internal/services/system"
 	"codedock/internal/utils"
 
 	"github.com/labstack/echo/v4"
 )
 
 type IngressHandler struct {
-	mu          sync.RWMutex
-	connections map[string]*models.IngressConnection
-	domains     map[string]*models.IngressHostname
+	repo  repositories.IngressRepository
+	cfSvc *systemservices.CloudflareIngressService
 }
 
 func NewIngressHandler() *IngressHandler {
+	return NewIngressHandlerWithDeps(nil, nil)
+}
+
+func NewIngressHandlerWithDeps(repo repositories.IngressRepository, cfSvc *systemservices.CloudflareIngressService) *IngressHandler {
+	if repo == nil {
+		repo = repositories.NewIngressRepository(nil)
+	}
+	if cfSvc == nil {
+		cfSvc = systemservices.NewCloudflareIngressService(nil)
+	}
 	return &IngressHandler{
-		connections: make(map[string]*models.IngressConnection),
-		domains:     make(map[string]*models.IngressHostname),
+		repo:  repo,
+		cfSvc: cfSvc,
 	}
 }
 
@@ -33,26 +43,34 @@ func generateID(prefix string) string {
 }
 
 func (h *IngressHandler) List(c echo.Context) error {
-	serverId := c.QueryParam("serverId")
-	h.mu.RLock()
-	defer h.mu.RUnlock()
-
-	var result []*models.IngressConnection
-	for _, conn := range h.connections {
-		if serverId == "" || conn.ServerID == serverId {
-			result = append(result, conn)
-		}
+	serverID := c.QueryParam("serverId")
+	list, err := h.repo.ListConnections(c.Request().Context(), serverID)
+	if err != nil {
+		return echo.NewHTTPError(http.StatusInternalServerError, "failed to list ingress connections: "+err.Error())
 	}
-	if result == nil {
-		result = make([]*models.IngressConnection, 0)
-	}
-	return utils.Success(c, "Ingress connections retrieved", result)
+	return utils.Success(c, "Ingress connections retrieved", list)
 }
 
 func (h *IngressHandler) Discover(c echo.Context) error {
 	var req models.IngressDiscoverRequest
 	if err := c.Bind(&req); err != nil {
 		return echo.NewHTTPError(http.StatusBadRequest, "invalid discovery request")
+	}
+
+	ctx := c.Request().Context()
+	accounts, err := h.cfSvc.ListAccounts(ctx, req.CredentialID)
+	if err == nil && len(accounts) > 0 {
+		accountID := accounts[0].ID
+		if req.AccountID != nil && *req.AccountID != "" {
+			accountID = *req.AccountID
+		}
+		tunnels, _ := h.cfSvc.ListTunnels(ctx, req.CredentialID, accountID)
+		policies, _ := h.cfSvc.ListAccessPolicies(ctx, req.CredentialID, accountID)
+		return utils.Success(c, "Ingress discovery completed", models.IngressDiscoveryResult{
+			Accounts: accounts,
+			Tunnels:  tunnels,
+			Policies: policies,
+		})
 	}
 
 	result := models.IngressDiscoveryResult{
@@ -83,8 +101,13 @@ func (h *IngressHandler) Connect(c echo.Context) error {
 		port = *req.EdgePort
 	}
 
-	h.mu.Lock()
-	defer h.mu.Unlock()
+	tunnelID := req.TunnelID
+	if (tunnelID == nil || *tunnelID == "") && req.Connector == "managed" {
+		ctx := c.Request().Context()
+		if newID, err := h.cfSvc.CreateTunnel(ctx, req.CredentialID, req.AccountID, req.Name); err == nil && newID != "" {
+			tunnelID = &newID
+		}
+	}
 
 	now := time.Now().UTC().Format(time.RFC3339)
 	conn := &models.IngressConnection{
@@ -92,7 +115,7 @@ func (h *IngressHandler) Connect(c echo.Context) error {
 		ServerID:              req.ServerID,
 		CredentialID:          req.CredentialID,
 		AccountID:             req.AccountID,
-		TunnelID:              req.TunnelID,
+		TunnelID:              tunnelID,
 		Name:                  req.Name,
 		Connector:             req.Connector,
 		EdgePort:              port,
@@ -104,7 +127,10 @@ func (h *IngressHandler) Connect(c echo.Context) error {
 		UpdatedAt:             now,
 	}
 
-	h.connections[conn.ID] = conn
+	if err := h.repo.SaveConnection(c.Request().Context(), conn); err != nil {
+		return echo.NewHTTPError(http.StatusInternalServerError, "failed to save ingress connection: "+err.Error())
+	}
+
 	return utils.Success(c, "Ingress tunnel connected", conn)
 }
 
@@ -115,11 +141,9 @@ func (h *IngressHandler) Update(c echo.Context) error {
 		return echo.NewHTTPError(http.StatusBadRequest, "invalid update payload")
 	}
 
-	h.mu.Lock()
-	defer h.mu.Unlock()
-
-	conn, exists := h.connections[id]
-	if !exists {
+	ctx := c.Request().Context()
+	conn, err := h.repo.GetConnection(ctx, id)
+	if err != nil || conn == nil {
 		return echo.NewHTTPError(http.StatusNotFound, "ingress connection not found")
 	}
 
@@ -127,17 +151,18 @@ func (h *IngressHandler) Update(c echo.Context) error {
 	conn.DefaultAccessPolicyID = req.DefaultAccessPolicyID
 	conn.UpdatedAt = time.Now().UTC().Format(time.RFC3339)
 
+	if err := h.repo.SaveConnection(ctx, conn); err != nil {
+		return echo.NewHTTPError(http.StatusInternalServerError, "failed to update connection: "+err.Error())
+	}
+
 	return utils.Success(c, "Ingress connection updated", conn)
 }
 
 func (h *IngressHandler) Retry(c echo.Context) error {
 	id := c.Param("id")
-
-	h.mu.Lock()
-	defer h.mu.Unlock()
-
-	conn, exists := h.connections[id]
-	if !exists {
+	ctx := c.Request().Context()
+	conn, err := h.repo.GetConnection(ctx, id)
+	if err != nil || conn == nil {
 		return echo.NewHTTPError(http.StatusNotFound, "ingress connection not found")
 	}
 
@@ -145,64 +170,66 @@ func (h *IngressHandler) Retry(c echo.Context) error {
 	conn.Error = nil
 	conn.UpdatedAt = time.Now().UTC().Format(time.RFC3339)
 
+	if err := h.repo.SaveConnection(ctx, conn); err != nil {
+		return echo.NewHTTPError(http.StatusInternalServerError, "failed to reconcile connection: "+err.Error())
+	}
+
 	return utils.Success(c, "Ingress connection reconciled", conn)
 }
 
 func (h *IngressHandler) Disconnect(c echo.Context) error {
 	id := c.Param("id")
-
-	h.mu.Lock()
-	defer h.mu.Unlock()
-
-	if _, exists := h.connections[id]; !exists {
+	ctx := c.Request().Context()
+	if _, err := h.repo.GetConnection(ctx, id); err != nil {
 		return echo.NewHTTPError(http.StatusNotFound, "ingress connection not found")
 	}
 
-	delete(h.connections, id)
+	if err := h.repo.DeleteConnection(ctx, id); err != nil {
+		return echo.NewHTTPError(http.StatusInternalServerError, "failed to remove connection: "+err.Error())
+	}
+
 	return utils.Success(c, "Ingress connection removed", map[string]bool{"success": true})
 }
 
 func (h *IngressHandler) GetDomain(c echo.Context) error {
-	domainId := c.Param("domainId")
-
-	h.mu.RLock()
-	defer h.mu.RUnlock()
-
-	hostname, exists := h.domains[domainId]
-	if !exists {
+	domainID := c.Param("domainId")
+	host, err := h.repo.GetHostname(c.Request().Context(), domainID)
+	if err != nil || host == nil {
 		return utils.Success(c, "No ingress configured for domain", nil)
 	}
-
-	return utils.Success(c, "Domain ingress retrieved", hostname)
+	return utils.Success(c, "Domain ingress retrieved", host)
 }
 
 func (h *IngressHandler) SetDomain(c echo.Context) error {
-	domainId := c.Param("domainId")
+	domainID := c.Param("domainId")
 	var req models.IngressDomainRequest
 	if err := c.Bind(&req); err != nil {
 		return echo.NewHTTPError(http.StatusBadRequest, "invalid domain ingress payload")
 	}
 
-	h.mu.Lock()
-	defer h.mu.Unlock()
-
+	ctx := c.Request().Context()
 	if req.ConnectionID == nil || *req.ConnectionID == "" {
-		delete(h.domains, domainId)
+		if err := h.repo.DeleteHostname(ctx, domainID); err != nil {
+			return echo.NewHTTPError(http.StatusInternalServerError, "failed to disassociate ingress: "+err.Error())
+		}
 		return utils.Success(c, "Domain ingress disassociated", nil)
 	}
 
 	now := time.Now().UTC().Format(time.RFC3339)
 	hostname := &models.IngressHostname{
 		ID:             generateID("igh"),
-		DomainID:       &domainId,
+		DomainID:       &domainID,
 		ConnectionID:   *req.ConnectionID,
-		Hostname:       domainId,
+		Hostname:       domainID,
 		AccessPolicyID: req.AccessPolicyID,
 		Status:         "ready",
 		Phase:          "dns",
 		UpdatedAt:      now,
 	}
 
-	h.domains[domainId] = hostname
+	if err := h.repo.SaveHostname(ctx, hostname); err != nil {
+		return echo.NewHTTPError(http.StatusInternalServerError, "failed to map domain ingress: "+err.Error())
+	}
+
 	return utils.Success(c, "Domain ingress mapped", hostname)
 }

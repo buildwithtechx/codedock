@@ -179,6 +179,20 @@ func (h *WebhookHandler) HandleGitHubWebhook(c echo.Context) error {
 			if !appSvc.EnablePRPreviews {
 				return utils.Success(c, "PR previews are disabled for this service", nil)
 			}
+			prInfo := deploymentservices.PullRequestInfo{
+				Number:   payload.Number,
+				State:    payload.PullRequest.State,
+				Draft:    payload.PullRequest.Draft,
+				HeadSHA:  payload.PullRequest.Head.Sha,
+				HeadRef:  payload.PullRequest.Head.Ref,
+				HeadRepo: payload.PullRequest.Head.Repo.FullName,
+				BaseRef:  payload.PullRequest.Base.Ref,
+				BaseRepo: payload.PullRequest.Base.Repo.FullName,
+			}
+			gitOwner, gitRepo := deploymentservices.ParseRepoOwnerAndName(appSvc.RepositoryURL)
+			if eligible, reason := deploymentservices.IsPreviewEligible(prInfo, gitOwner, gitRepo, appSvc.Branch); !eligible {
+				return utils.Success(c, "PR is not eligible for preview: "+reason, nil)
+			}
 			h.deployPRPreviewAsync(serviceID, payload)
 			return utils.Accepted(c, "Deploying PR preview", nil)
 		case "closed":

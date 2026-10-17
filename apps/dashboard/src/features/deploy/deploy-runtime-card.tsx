@@ -2,6 +2,7 @@ import { Check, ChevronDown, Container, Flame } from 'lucide-react';
 import { useState } from 'react';
 import { Input } from '#/components/ui/input';
 import { Label } from '#/components/ui/label';
+import { CommandEnvironmentNotice } from '#/components/deploy/command-environment-notice';
 
 const FRAMEWORKS = [
   'Dockerfile',
@@ -157,6 +158,13 @@ export function DeployRuntimeCard({
               placeholder="dist"
             />
           </div>
+          <CommandEnvironmentNotice
+            commands={{ installCommand, buildCommand }}
+            migrateDraft={(cmds) => {
+              if (cmds.installCommand !== undefined) onInstallCommandChange(cmds.installCommand);
+              if (cmds.buildCommand !== undefined) onBuildCommandChange(cmds.buildCommand);
+            }}
+          />
         </div>
       )}
     </section>

@@ -66,14 +66,14 @@ func (s *PRPreviewService) DeployPRPreview(ctx context.Context, opts DeployPRPre
 	if err != nil || app == nil {
 		return nil, utils.NewNotFoundError("AppService", opts.AppID)
 	}
-	previewDomain := fmt.Sprintf("pr-%d.%s", opts.PRNumber, app.Domain)
-	if app.Domain == "" {
-		magicDomain := config.Get().Domains.MagicDomain
-		if magicDomain == "" {
-			magicDomain = "sslip.io"
-		}
-		previewDomain = fmt.Sprintf("pr-%d.%s.%s", opts.PRNumber, app.Name, magicDomain)
+	if err := ValidatePreviewCommands(app.InstallCommand, app.BuildCommand, app.StartCommand); err != nil {
+		return nil, err
 	}
+	if err := ValidatePreviewVolumes(app.Volumes); err != nil {
+		return nil, err
+	}
+	magicDomain := config.Get().Domains.MagicDomain
+	previewDomain := GeneratePreviewDomain(app.Domain, magicDomain, app.Name, app.ProjectID, opts.PRNumber)
 	preview := &models.PRPreview{
 		ID:            uuid.NewString(),
 		ServiceID:     app.ID,

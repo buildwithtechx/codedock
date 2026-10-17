@@ -238,7 +238,7 @@ func NewServer(db *sql.DB, v *utils.Vault, deployer *deploy.Deployer, traefikMan
 	webhookHandler := deployments.NewWebhookHandler(gitService, projectService, appService, deploymentService, prPreviewService, gitAppsService)
 
 	domainHandler := projects.NewDomainHandler(environmentService, appService, projectService, settingsRepo, auditService)
-	projectEnvHandler := projects.NewProjectEnvHandler(environmentService)
+	projectEnvHandler := projects.NewProjectEnvHandler(environmentService, appService)
 	notificationHandler := system.NewNotificationHandler(notificationService)
 	gitAppsHandler := deployments.NewGitAppsHandler(gitAppsService)
 	tmplMgr, err := compose.NewTemplateManager()
@@ -273,7 +273,9 @@ func NewServer(db *sql.DB, v *utils.Vault, deployer *deploy.Deployer, traefikMan
 
 	serverService := systemservices.NewServerService(serverRepo, userRepo, sshManager)
 	serverHandler := system.NewServerHandler(serverService, auditService)
-	ingressHandler := system.NewIngressHandler()
+	ingressRepo := repositories.NewIngressRepository(db)
+	cfIngressService := systemservices.NewCloudflareIngressService(nil)
+	ingressHandler := system.NewIngressHandlerWithDeps(ingressRepo, cfIngressService)
 	serverNetworksHandler := system.NewServerNetworksHandler()
 	actionsHandler := system.NewActionsHandler()
 	supportHandler := system.NewSupportHandler()

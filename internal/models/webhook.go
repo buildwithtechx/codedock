@@ -11,12 +11,25 @@ type GithubWebhookPayload struct {
 }
 
 type GithubPullRequest struct {
-	Head GithubPullRequestHead `json:"head"`
+	State string                `json:"state"`
+	Draft bool                  `json:"draft"`
+	Head  GithubPullRequestHead `json:"head"`
+	Base  GithubPullRequestBase `json:"base"`
 }
 
 type GithubPullRequestHead struct {
-	Ref string `json:"ref"`
-	Sha string `json:"sha"`
+	Ref  string                `json:"ref"`
+	Sha  string                `json:"sha"`
+	Repo GithubPullRequestRepo `json:"repo"`
+}
+
+type GithubPullRequestBase struct {
+	Ref  string                `json:"ref"`
+	Repo GithubPullRequestRepo `json:"repo"`
+}
+
+type GithubPullRequestRepo struct {
+	FullName string `json:"full_name"`
 }
 
 type Webhook struct {

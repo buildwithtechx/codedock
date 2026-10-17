@@ -107,7 +107,7 @@ func TestDeleteNoContent(t *testing.T) {
 	if err := service.DeleteMailbox(context.Background(), "srv-1", "d-1", "m-1"); err != nil {
 		t.Fatalf("delete mailbox: %v", err)
 	}
-	if captured.method != http.MethodDelete || captured.path != "/api/domains/d-1/mailboxes/m-1" {
+	if captured.method != http.MethodDelete || captured.path != "/api/v1/domains/d-1/mailboxes/m-1" {
 		t.Fatalf("unexpected request %s %s", captured.method, captured.path)
 	}
 }

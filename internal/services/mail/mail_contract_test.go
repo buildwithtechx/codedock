@@ -36,48 +36,51 @@ func newMaildStub(t *testing.T, calls *[]recordedCall, bodies map[string][]byte)
 			_ = json.NewEncoder(w).Encode(payload)
 		}
 	}
-	mux.HandleFunc("/api/domains", func(w http.ResponseWriter, r *http.Request) {
-		if r.Method == http.MethodGet {
-			respond(w, r, http.StatusOK, []models.MailDomain{{ID: "dom-1", Name: "example.com"}})
-			return
-		}
-		var req models.CreateMailDomainRequest
-		raw, _ := io.ReadAll(r.Body)
-		_ = json.Unmarshal(raw, &req)
-		bodies["create-domain"] = raw
-		respond(w, r, http.StatusCreated, models.MailDomain{ID: "dom-2", Name: req.Name})
-	})
-	mux.HandleFunc("/api/domains/", func(w http.ResponseWriter, r *http.Request) {
-		rest := strings.TrimPrefix(r.URL.Path, "/api/domains/")
-		switch {
-		case rest == "missing":
-			respond(w, r, http.StatusNotFound, map[string]string{"error": "nope"})
-		case strings.HasSuffix(rest, "/mailboxes") && r.Method == http.MethodGet:
-			respond(w, r, http.StatusOK, []models.Mailbox{{ID: "mb-1", DomainID: "dom-1", LocalPart: "ops", Address: "ops@example.com"}})
-		case strings.HasSuffix(rest, "/mailboxes") && r.Method == http.MethodPost:
-			var req models.CreateMailboxRequest
+	register := func(base string) {
+		mux.HandleFunc(base+"/domains", func(w http.ResponseWriter, r *http.Request) {
+			if r.Method == http.MethodGet {
+				respond(w, r, http.StatusOK, []models.MailDomain{{ID: "dom-1", Name: "example.com"}})
+				return
+			}
+			var req models.CreateMailDomainRequest
 			raw, _ := io.ReadAll(r.Body)
 			_ = json.Unmarshal(raw, &req)
-			bodies["create-mailbox"] = raw
-			respond(w, r, http.StatusCreated, models.MailboxCredentials{Mailbox: models.Mailbox{ID: "mb-2", DomainID: "dom-1", LocalPart: req.LocalPart}, Password: "secret"})
-		case strings.HasSuffix(rest, "/dkim"):
-			respond(w, r, http.StatusCreated, models.DKIMKey{ID: "key-1", DomainID: "dom-1", Selector: "mail", Algorithm: "rsa"})
-		case strings.HasSuffix(rest, "/dns"):
-			respond(w, r, http.StatusOK, models.DNSResponse{Domain: "example.com", Records: []models.MailDNSRecord{}})
-		case strings.HasSuffix(rest, "/checks"):
-			respond(w, r, http.StatusOK, models.MailCheckReport{Domain: "example.com", Checks: []models.MailCheck{}})
-		case r.Method == http.MethodDelete:
-			respond(w, r, http.StatusNoContent, nil)
-		default:
-			respond(w, r, http.StatusNotFound, map[string]string{"error": "nope"})
-		}
-	})
-	mux.HandleFunc("/api/certs", func(w http.ResponseWriter, r *http.Request) {
-		respond(w, r, http.StatusOK, []models.MailCert{{ID: "cert-1", Hostname: "mail.example.com"}})
-	})
-	mux.HandleFunc("/api/certs/probe", func(w http.ResponseWriter, r *http.Request) {
-		respond(w, r, http.StatusOK, models.MailCert{ID: "cert-1", Hostname: "mail.example.com"})
-	})
+			bodies["create-domain"] = raw
+			respond(w, r, http.StatusCreated, models.MailDomain{ID: "dom-2", Name: req.Name})
+		})
+		mux.HandleFunc(base+"/domains/", func(w http.ResponseWriter, r *http.Request) {
+			rest := strings.TrimPrefix(r.URL.Path, base+"/domains/")
+			switch {
+			case rest == "missing":
+				respond(w, r, http.StatusNotFound, map[string]string{"error": "nope"})
+			case strings.HasSuffix(rest, "/mailboxes") && r.Method == http.MethodGet:
+				respond(w, r, http.StatusOK, []models.Mailbox{{ID: "mb-1", DomainID: "dom-1", LocalPart: "ops", Address: "ops@example.com"}})
+			case strings.HasSuffix(rest, "/mailboxes") && r.Method == http.MethodPost:
+				var req models.CreateMailboxRequest
+				raw, _ := io.ReadAll(r.Body)
+				_ = json.Unmarshal(raw, &req)
+				bodies["create-mailbox"] = raw
+				respond(w, r, http.StatusCreated, models.MailboxCredentials{Mailbox: models.Mailbox{ID: "mb-2", DomainID: "dom-1", LocalPart: req.LocalPart}, Password: "secret"})
+			case strings.HasSuffix(rest, "/dkim"):
+				respond(w, r, http.StatusCreated, models.DKIMKey{ID: "key-1", DomainID: "dom-1", Selector: "mail", Algorithm: "rsa"})
+			case strings.HasSuffix(rest, "/dns"):
+				respond(w, r, http.StatusOK, models.DNSResponse{Domain: "example.com", Records: []models.MailDNSRecord{}})
+			case strings.HasSuffix(rest, "/checks"):
+				respond(w, r, http.StatusOK, models.MailCheckReport{Domain: "example.com", Checks: []models.MailCheck{}})
+			case r.Method == http.MethodDelete:
+				respond(w, r, http.StatusNoContent, nil)
+			default:
+				respond(w, r, http.StatusNotFound, map[string]string{"error": "nope"})
+			}
+		})
+		mux.HandleFunc(base+"/certs", func(w http.ResponseWriter, r *http.Request) {
+			respond(w, r, http.StatusOK, []models.MailCert{{ID: "cert-1", Hostname: "mail.example.com"}})
+		})
+		mux.HandleFunc(base+"/certs/probe", func(w http.ResponseWriter, r *http.Request) {
+			respond(w, r, http.StatusOK, models.MailCert{ID: "cert-1", Hostname: "mail.example.com"})
+		})
+	}
+	register("/api/v1")
 	return httptest.NewServer(mux)
 }
 
@@ -128,17 +131,17 @@ func TestMaildContractPaths(t *testing.T) {
 	}
 
 	want := []recordedCall{
-		{method: "GET", path: "/api/domains"},
-		{method: "POST", path: "/api/domains"},
-		{method: "DELETE", path: "/api/domains/dom-2"},
-		{method: "GET", path: "/api/domains/dom-1/mailboxes"},
-		{method: "POST", path: "/api/domains/dom-1/mailboxes"},
-		{method: "DELETE", path: "/api/domains/dom-1/mailboxes/mb-2"},
-		{method: "POST", path: "/api/domains/dom-1/dkim"},
-		{method: "GET", path: "/api/domains/dom-1/dns"},
-		{method: "GET", path: "/api/domains/dom-1/checks?ip=1.2.3.4"},
-		{method: "GET", path: "/api/certs"},
-		{method: "POST", path: "/api/certs/probe"},
+		{method: "GET", path: "/api/v1/domains"},
+		{method: "POST", path: "/api/v1/domains"},
+		{method: "DELETE", path: "/api/v1/domains/dom-2"},
+		{method: "GET", path: "/api/v1/domains/dom-1/mailboxes"},
+		{method: "POST", path: "/api/v1/domains/dom-1/mailboxes"},
+		{method: "DELETE", path: "/api/v1/domains/dom-1/mailboxes/mb-2"},
+		{method: "POST", path: "/api/v1/domains/dom-1/dkim"},
+		{method: "GET", path: "/api/v1/domains/dom-1/dns"},
+		{method: "GET", path: "/api/v1/domains/dom-1/checks?ip=1.2.3.4"},
+		{method: "GET", path: "/api/v1/certs"},
+		{method: "POST", path: "/api/v1/certs/probe"},
 	}
 	if len(calls) != len(want) {
 		t.Fatalf("expected %d maild calls, got %d (%v)", len(want), len(calls), calls)
@@ -172,5 +175,24 @@ func TestMaildUnreachable(t *testing.T) {
 	_, err := service.ListDomains(context.Background(), "srv-1")
 	if err == nil || !strings.Contains(err.Error(), "unreachable") {
 		t.Fatalf("expected unreachable error, got %v", err)
+	}
+}
+
+func TestMaildContractFallbackToLegacy(t *testing.T) {
+	mux := http.NewServeMux()
+	mux.HandleFunc("/api/domains", func(w http.ResponseWriter, r *http.Request) {
+		w.Header().Set("Content-Type", "application/json")
+		_ = json.NewEncoder(w).Encode([]models.MailDomain{{ID: "dom-legacy", Name: "legacy.com"}})
+	})
+	server := httptest.NewServer(mux)
+	defer server.Close()
+
+	svc := NewMailService(&stubMailRepo{server: &models.MailServer{ID: "srv-legacy", MaildURL: server.URL, APIToken: "token"}})
+	domains, err := svc.ListDomains(context.Background(), "srv-legacy")
+	if err != nil {
+		t.Fatalf("expected fallback to succeed, got %v", err)
+	}
+	if len(domains) != 1 || domains[0].Name != "legacy.com" {
+		t.Fatalf("unexpected domains: %+v", domains)
 	}
 }

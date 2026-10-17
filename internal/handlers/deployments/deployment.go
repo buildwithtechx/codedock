@@ -224,10 +224,18 @@ func (h *DeploymentHandler) GetLogs(c echo.Context) error {
 		return err
 	}
 
-	return utils.Success(c, "Logs fetched successfully", map[string]string{
+	role := c.QueryParam("role")
+	replica := c.QueryParam("replica")
+	if role != "" && (dep.Status == models.DeploymentStatusFailed || dep.Status == models.DeploymentStatusRemoved) {
+		return utils.Error(c, http.StatusConflict, "the requested role target is stale or no longer active for this deployment")
+	}
+
+	return utils.Success(c, "Logs fetched successfully", map[string]any{
 		"id":        dep.ID,
 		"buildLogs": dep.BuildLogs,
 		"status":    string(dep.Status),
+		"role":      role,
+		"replica":   replica,
 	})
 }
 
