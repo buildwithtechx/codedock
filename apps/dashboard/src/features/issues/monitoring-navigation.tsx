@@ -5,6 +5,8 @@ const NAV_TABS: Array<{ value: MonitoringTab; label: string }> = [
   { value: 'open', label: 'Overview' },
   { value: 'health', label: 'Health' },
   { value: 'resolved', label: 'History' },
+  { value: 'notifications', label: 'Notifications' },
+  { value: 'deployments', label: 'Deployments' },
 ];
 
 export function MonitoringNavigation({

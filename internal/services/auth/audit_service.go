@@ -92,7 +92,8 @@ func (s *AuditService) Facets(ctx context.Context, category string, q string) (m
 			Count:         counts[category.ID],
 		})
 	}
-	return models.AuditFacets{Total: total, Categories: categories}, nil
+	actors, _ := s.repo.ListActors(ctx)
+	return models.AuditFacets{Total: total, Categories: categories, Actors: actors}, nil
 }
 
 func (s *AuditService) GetSettings(ctx context.Context, orgID string) (*models.AuditSettings, error) {

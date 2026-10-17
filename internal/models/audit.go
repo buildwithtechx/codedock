@@ -2,15 +2,24 @@ package models
 
 import "strings"
 
+type AuditActor struct {
+	ID    string `json:"id"`
+	Name  string `json:"name,omitempty"`
+	Email string `json:"email,omitempty"`
+}
+
 type AuditLog struct {
-	ID        string `json:"id"`
-	UserID    string `json:"userId"`
-	Action    string `json:"action"`
-	Resource  string `json:"resource"`
-	Details   string `json:"details"`
-	IPAddress string `json:"ipAddress"`
-	CreatedAt string `json:"createdAt"`
-	Category  string `json:"category"`
+	ID         string      `json:"id"`
+	UserID     string      `json:"userId"`
+	Action     string      `json:"action"`
+	Resource   string      `json:"resource"`
+	Details    string      `json:"details"`
+	IPAddress  string      `json:"ipAddress"`
+	CreatedAt  string      `json:"createdAt"`
+	Category   string      `json:"category"`
+	ActorName  string      `json:"actorName,omitempty"`
+	ActorEmail string      `json:"actorEmail,omitempty"`
+	Actor      *AuditActor `json:"actor,omitempty"`
 }
 
 type AuditSettings struct {
@@ -34,6 +43,7 @@ type AuditCategoryCount struct {
 type AuditFacets struct {
 	Total      int                  `json:"total"`
 	Categories []AuditCategoryCount `json:"categories"`
+	Actors     []AuditActor         `json:"actors,omitempty"`
 }
 
 type AuditLogFilter struct {

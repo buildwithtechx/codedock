@@ -135,7 +135,7 @@ export function ActionsHome({
         {hasItemsForTab && (
           <Button asChild className="rounded-xl">
             <Link to={tab === 'runners' ? ('/actions/runners/new' as never) : ('/actions/new' as never)}>
-              <Plus className="size-4" />
+              {tab === 'runners' ? (isCloud ? <Cloud className="size-4" /> : <Plus className="size-4" />) : <Plus className="size-4" />}
               {tab === 'runners' ? 'Add runner' : 'New workflow'}
             </Link>
           </Button>
@@ -235,14 +235,14 @@ export function ActionsHome({
                     description="Trigger a workflow to begin running jobs on your runners."
                   >
                     {firstWorkflow ? (
-                      <Button asChild className="h-10 rounded-full bg-foreground px-5 font-medium text-background hover:bg-foreground/90">
+                      <Button asChild className="h-10 rounded-full bg-primary px-5 font-medium text-primary-foreground hover:bg-primary/90">
                         <Link to={'/actions/new' as never}>
                           <Plus className="size-4" />
                           New workflow
                         </Link>
                       </Button>
                     ) : (
-                      <Button asChild className="h-10 rounded-full bg-foreground px-5 font-medium text-background hover:bg-foreground/90">
+                      <Button asChild className="h-10 rounded-full bg-primary px-5 font-medium text-primary-foreground hover:bg-primary/90">
                         <Link to={'/actions/runners/new' as never}>
                           {isCloud ? <Cloud className="size-4" /> : <Plus className="size-4" />}
                           Add runner

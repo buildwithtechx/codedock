@@ -6,4 +6,7 @@ export interface AuditLog {
   details: string;
   ipAddress: string;
   createdAt: string;
+  actorName?: string;
+  actorEmail?: string;
+  actor?: { id: string; name?: string; email?: string };
 }

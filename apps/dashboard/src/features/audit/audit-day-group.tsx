@@ -1,6 +1,6 @@
 import { User } from 'lucide-react';
 import type { AuditEventRow } from './api';
-import { describeAuditEvent, type AuditTone } from './audit-taxonomy';
+import { describeAuditEvent, actorDisplay, type AuditTone } from './audit-taxonomy';
 
 const TONE_DOT: Record<AuditTone, string> = {
   neutral: 'bg-muted-foreground/60',
@@ -50,20 +50,10 @@ function resolveActionName(event?: Partial<AuditEventRow>): string {
   return event.eventType || event.action || 'system.event';
 }
 
-function resolveActor(event: AuditEventRow): string {
-  if (event.actor?.name?.trim()) return event.actor.name.trim();
-  if (event.actorName?.trim()) return event.actorName.trim();
-  if (event.actor?.email?.trim()) return event.actor.email.trim();
-  if (event.actorEmail?.trim()) return event.actorEmail.trim();
-  if (event.actorUserId?.trim()) return `User ${event.actorUserId.trim().slice(0, 8)}`;
-  if (event.userId?.trim()) return `User ${event.userId.trim().slice(0, 8)}`;
-  return 'System';
-}
-
 function resolveEventSentence(event: AuditEventRow): string {
   const actionName = resolveActionName(event);
   const desc = describeAuditEvent(actionName);
-  const actor = resolveActor(event);
+  const actor = actorDisplay(event);
   const resource =
     event.resourceName?.trim() ||
     event.resource?.trim() ||

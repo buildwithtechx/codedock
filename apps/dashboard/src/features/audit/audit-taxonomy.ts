@@ -227,7 +227,14 @@ export function toneDot(tone: AuditTone): string {
 }
 
 export function actorDisplay(log?: Partial<AuditLog>): string {
-  if (log?.userId && typeof log.userId === 'string' && log.userId.trim()) return log.userId.trim();
+  if (log?.actor?.name?.trim()) return log.actor.name.trim();
+  if (log?.actorName?.trim()) return log.actorName.trim();
+  if (log?.actor?.email?.trim()) return log.actor.email.trim();
+  if (log?.actorEmail?.trim()) return log.actorEmail.trim();
+  if (log?.userId && typeof log.userId === 'string' && log.userId.trim()) {
+    if (log.userId.toLowerCase() === 'system') return 'System';
+    return `User ${log.userId.trim().slice(0, 8)}`;
+  }
   return 'System';
 }
 

@@ -14,6 +14,7 @@ type AuditLogRepository interface {
 	List(ctx context.Context, limit, offset int) ([]models.AuditLog, error)
 	ListFiltered(ctx context.Context, filter models.AuditLogFilter, limit, offset int) ([]models.AuditLog, error)
 	Facets(ctx context.Context, filter models.AuditLogFilter) (map[string]int, int, error)
+	ListActors(ctx context.Context) ([]models.AuditActor, error)
 	GetSettings(ctx context.Context, orgID string) (*models.AuditSettings, error)
 	UpdateSettings(ctx context.Context, settings *models.AuditSettings) error
 }
@@ -53,14 +54,14 @@ func auditLogFilterClause(filter models.AuditLogFilter) (string, []any) {
 		likes := make([]string, 0, len(filter.Prefixes))
 		for _, prefix := range filter.Prefixes {
 			args = append(args, escapeLikePrefix(prefix)+"%")
-			likes = append(likes, fmt.Sprintf("action ILIKE $%d", len(args)))
+			likes = append(likes, fmt.Sprintf("audit_logs.action ILIKE $%d", len(args)))
 		}
 		conditions = append(conditions, "("+strings.Join(likes, " OR ")+")")
 	}
 	if q := strings.TrimSpace(filter.Q); q != "" {
 		args = append(args, ContainsLikePattern(q))
 		n := len(args)
-		conditions = append(conditions, fmt.Sprintf(`(action ILIKE $%d OR resource ILIKE $%d OR EXISTS (SELECT 1 FROM users WHERE users.id = audit_logs.user_id AND (users.email ILIKE $%d OR users.name ILIKE $%d)))`, n, n, n, n))
+		conditions = append(conditions, fmt.Sprintf(`(audit_logs.action ILIKE $%d OR audit_logs.resource ILIKE $%d OR COALESCE(u.name, '') ILIKE $%d OR COALESCE(u.email, '') ILIKE $%d)`, n, n, n, n))
 	}
 	if len(filter.QResourceIDs) > 0 {
 		marks := make([]string, 0, len(filter.QResourceIDs))
@@ -68,7 +69,7 @@ func auditLogFilterClause(filter models.AuditLogFilter) (string, []any) {
 			args = append(args, id)
 			marks = append(marks, fmt.Sprintf("$%d", len(args)))
 		}
-		conditions = append(conditions, "resource IN ("+strings.Join(marks, ", ")+")")
+		conditions = append(conditions, "audit_logs.resource IN ("+strings.Join(marks, ", ")+")")
 	}
 	if len(conditions) == 0 {
 		return "", args
@@ -79,10 +80,12 @@ func auditLogFilterClause(filter models.AuditLogFilter) (string, []any) {
 func (r *AuditLogRepo) ListFiltered(ctx context.Context, filter models.AuditLogFilter, limit, offset int) ([]models.AuditLog, error) {
 	where, args := auditLogFilterClause(filter)
 	query := `
-		SELECT id, user_id, action, resource, details, ip_address, created_at
+		SELECT audit_logs.id, audit_logs.user_id, audit_logs.action, audit_logs.resource, audit_logs.details, audit_logs.ip_address, audit_logs.created_at,
+		       COALESCE(u.name, ''), COALESCE(u.email, '')
 		FROM audit_logs
+		LEFT JOIN users u ON audit_logs.user_id = u.id
 	` + where
-	query += fmt.Sprintf(" ORDER BY created_at DESC LIMIT $%d OFFSET $%d", len(args)+1, len(args)+2)
+	query += fmt.Sprintf(" ORDER BY audit_logs.created_at DESC LIMIT $%d OFFSET $%d", len(args)+1, len(args)+2)
 	args = append(args, limit, offset)
 	rows, err := r.db.QueryContext(ctx, query, args...)
 	if err != nil {
@@ -94,7 +97,8 @@ func (r *AuditLogRepo) ListFiltered(ctx context.Context, filter models.AuditLogF
 	for rows.Next() {
 		var log models.AuditLog
 		var details, ipAddress sql.NullString
-		if err := rows.Scan(&log.ID, &log.UserID, &log.Action, &log.Resource, &details, &ipAddress, &log.CreatedAt); err != nil {
+		var userName, userEmail string
+		if err := rows.Scan(&log.ID, &log.UserID, &log.Action, &log.Resource, &details, &ipAddress, &log.CreatedAt, &userName, &userEmail); err != nil {
 			return nil, fmt.Errorf("failed to scan audit log: %w", err)
 		}
 		if details.Valid {
@@ -102,6 +106,16 @@ func (r *AuditLogRepo) ListFiltered(ctx context.Context, filter models.AuditLogF
 		}
 		if ipAddress.Valid {
 			log.IPAddress = ipAddress.String
+		}
+		log.ActorName = userName
+		log.ActorEmail = userEmail
+		if log.UserID == "system" {
+			log.ActorName = "System"
+		}
+		log.Actor = &models.AuditActor{
+			ID:    log.UserID,
+			Name:  log.ActorName,
+			Email: log.ActorEmail,
 		}
 		logs = append(logs, log)
 	}
@@ -121,12 +135,12 @@ func (r *AuditLogRepo) Facets(ctx context.Context, filter models.AuditLogFilter)
 		}
 		likes := make([]string, 0, len(prefixes))
 		for _, prefix := range prefixes {
-			likes = append(likes, fmt.Sprintf("action ILIKE '%s%%'", strings.ReplaceAll(escapeLikePrefix(prefix), "'", "''")))
+			likes = append(likes, fmt.Sprintf("audit_logs.action ILIKE '%s%%'", strings.ReplaceAll(escapeLikePrefix(prefix), "'", "''")))
 		}
 		caseParts = append(caseParts, fmt.Sprintf("WHEN %s THEN '%s'", strings.Join(likes, " OR "), category.ID))
 	}
 	where, args := auditLogFilterClause(filter)
-	query := fmt.Sprintf(`SELECT CASE %s ELSE 'system' END AS category, COUNT(*) FROM audit_logs%s GROUP BY 1`, strings.Join(caseParts, " "), where)
+	query := fmt.Sprintf(`SELECT CASE %s ELSE 'system' END AS category, COUNT(*) FROM audit_logs LEFT JOIN users u ON audit_logs.user_id = u.id%s GROUP BY 1`, strings.Join(caseParts, " "), where)
 	rows, err := r.db.QueryContext(ctx, query, args...)
 	if err != nil {
 		return nil, 0, fmt.Errorf("failed to load audit facets: %w", err)
@@ -145,6 +159,30 @@ func (r *AuditLogRepo) Facets(ctx context.Context, filter models.AuditLogFilter)
 		total += count
 	}
 	return counts, total, nil
+}
+
+func (r *AuditLogRepo) ListActors(ctx context.Context) ([]models.AuditActor, error) {
+	query := `
+		SELECT DISTINCT u.id, COALESCE(u.name, ''), COALESCE(u.email, '')
+		FROM audit_logs
+		JOIN users u ON audit_logs.user_id = u.id
+		ORDER BY 2 ASC
+	`
+	rows, err := r.db.QueryContext(ctx, query)
+	if err != nil {
+		return nil, fmt.Errorf("failed to load audit actors: %w", err)
+	}
+	defer rows.Close()
+
+	var actors []models.AuditActor
+	for rows.Next() {
+		var a models.AuditActor
+		if err := rows.Scan(&a.ID, &a.Name, &a.Email); err != nil {
+			return nil, fmt.Errorf("failed to scan audit actor: %w", err)
+		}
+		actors = append(actors, a)
+	}
+	return actors, nil
 }
 
 func (r *AuditLogRepo) GetSettings(ctx context.Context, orgID string) (*models.AuditSettings, error) {

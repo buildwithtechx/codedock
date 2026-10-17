@@ -23,6 +23,10 @@ func (f *fakeAuditRepo) Facets(_ context.Context, filter models.AuditLogFilter) 
 	return map[string]int{}, 0, nil
 }
 
+func (f *fakeAuditRepo) ListActors(_ context.Context) ([]models.AuditActor, error) {
+	return []models.AuditActor{{ID: "usr-1", Name: "Alice"}}, nil
+}
+
 type fakeResourceSearcher struct {
 	ids   []string
 	terms []string

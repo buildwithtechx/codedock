@@ -1,7 +1,7 @@
 export type AttentionSeverity = 'info' | 'warning' | 'critical';
 export type AttentionStatus = 'open' | 'acked' | 'resolved';
 export type DisplaySeverity = 'outage' | 'action_required' | 'advisory';
-export type MonitoringTab = 'open' | 'resolved' | 'health';
+export type MonitoringTab = 'open' | 'health' | 'resolved' | 'notifications' | 'deployments';
 export type SeverityFilter = 'all' | DisplaySeverity;
 
 export interface AttentionIssue {

@@ -18,7 +18,7 @@ export function ActionRunnerCards({ runners, onDeleteRunner, isCloud = false }: 
         title="No runners configured"
         description="Runners execute your workflow jobs in isolated containers or directly on host machines."
       >
-        <Button asChild className="h-10 rounded-full bg-foreground px-5 font-medium text-background hover:bg-foreground/90">
+        <Button asChild className="h-10 rounded-full bg-primary px-5 font-medium text-primary-foreground hover:bg-primary/90">
           <Link to={'/actions/runners/new' as never}>
             {isCloud ? <Cloud className="size-4" /> : <Plus className="size-4" />}
             Add runner

@@ -124,7 +124,7 @@ export function BillingPlansCards({ onSelectPlan, busy = false }: BillingPlansCa
                 onClick={() => onSelectPlan(plan.id)}
                 className={`mt-4 w-full justify-center gap-1.5 rounded-full text-xs font-medium ${
                   plan.isPopular
-                    ? 'bg-white text-zinc-950 hover:bg-zinc-100'
+                    ? 'bg-primary text-primary-foreground hover:bg-primary/90'
                     : 'bg-muted/70 text-foreground hover:bg-muted'
                 }`}
               >

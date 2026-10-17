@@ -82,7 +82,7 @@ export function RepositoryList({
                 className={cn(
                   'rounded-lg px-3.5 py-2 font-medium text-xs capitalize transition-all',
                   repos.visibility === value
-                    ? 'bg-foreground text-background shadow-sm'
+                    ? 'border border-border/60 bg-card text-foreground shadow-sm'
                     : 'text-muted-foreground hover:text-foreground'
                 )}
               >

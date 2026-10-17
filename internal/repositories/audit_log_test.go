@@ -146,3 +146,47 @@ func TestAuditLogFacetsHonorSearchFilter(t *testing.T) {
 		t.Fatalf("expected only the deployment facet, got total=%d counts=%v", total, counts)
 	}
 }
+
+func TestAuditLogResolvesActor(t *testing.T) {
+	db := openPGTestDB(t)
+	ctx := context.Background()
+	_, err := db.ExecContext(ctx, `INSERT INTO users (id, email, name, password_hash) VALUES ('usr-solomon', 'solomon@example.com', 'Solomon Olatunji', 'hash')`)
+	if err != nil {
+		t.Fatalf("insert user: %v", err)
+	}
+	repo := NewAuditLogRepo(db)
+	entry := &models.AuditLog{ID: "log-actor-1", UserID: "usr-solomon", Action: "project.create", Resource: "my-project"}
+	if err := repo.Create(ctx, entry); err != nil {
+		t.Fatalf("create log: %v", err)
+	}
+	logs, err := repo.List(ctx, 10, 0)
+	if err != nil {
+		t.Fatalf("list logs: %v", err)
+	}
+	found := false
+	for _, l := range logs {
+		if l.ID == "log-actor-1" {
+			found = true
+			if l.ActorName != "Solomon Olatunji" {
+				t.Errorf("expected ActorName 'Solomon Olatunji', got %q", l.ActorName)
+			}
+			if l.ActorEmail != "solomon@example.com" {
+				t.Errorf("expected ActorEmail 'solomon@example.com', got %q", l.ActorEmail)
+			}
+			if l.Actor == nil || l.Actor.Name != "Solomon Olatunji" {
+				t.Errorf("expected Actor.Name 'Solomon Olatunji', got %+v", l.Actor)
+			}
+		}
+	}
+	if !found {
+		t.Fatal("log-actor-1 not found in list")
+	}
+
+	actors, err := repo.ListActors(ctx)
+	if err != nil {
+		t.Fatalf("list actors: %v", err)
+	}
+	if len(actors) == 0 {
+		t.Fatal("expected at least 1 actor")
+	}
+}
