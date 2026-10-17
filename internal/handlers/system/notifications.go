@@ -1,6 +1,7 @@
 package system
 
 import (
+	"context"
 	"net/http"
 	"strconv"
 
@@ -8,16 +9,18 @@ import (
 
 	handlerutils "codedock/internal/handlers/utils"
 	"codedock/internal/models"
+	"codedock/internal/repositories"
 	systemservices "codedock/internal/services/system"
 	"codedock/internal/utils"
 )
 
 type NotificationSettingsHandler struct {
 	notifSettingsService *systemservices.NotificationSettingsService
+	orgRepo              repositories.OrganizationRepository
 }
 
-func NewNotificationSettingsHandler(s *systemservices.NotificationSettingsService) *NotificationSettingsHandler {
-	return &NotificationSettingsHandler{notifSettingsService: s}
+func NewNotificationSettingsHandler(s *systemservices.NotificationSettingsService, orgRepo repositories.OrganizationRepository) *NotificationSettingsHandler {
+	return &NotificationSettingsHandler{notifSettingsService: s, orgRepo: orgRepo}
 }
 
 func maskNotificationSecrets(s *models.NotificationSettings) {
@@ -89,17 +92,34 @@ func (h *NotificationSettingsHandler) UpdateNotificationSettings(c echo.Context)
 	return utils.Success(c, "Notification settings updated successfully", existing)
 }
 
-func (h *NotificationSettingsHandler) ListSubscriptions(c echo.Context) error {
-	userID := handlerutils.ExtractUserID(c)
-	if userID == "" {
-		return utils.Error(c, http.StatusUnauthorized, "unauthorized")
-	}
+func (h *NotificationSettingsHandler) resolveOrgID(ctx context.Context, c echo.Context, userID string) string {
 	orgID := c.QueryParam("organizationId")
 	if orgID == "" {
 		orgID = c.QueryParam("orgId")
 	}
 	if orgID == "" {
-		orgID = "default"
+		orgID = c.Request().Header.Get("X-Organization-Id")
+	}
+	if orgID != "" && orgID != "default" {
+		return orgID
+	}
+	if h.orgRepo != nil && userID != "" {
+		orgs, err := h.orgRepo.ListByUser(ctx, userID)
+		if err == nil && len(orgs) > 0 && orgs[0] != nil && orgs[0].ID != "" {
+			return orgs[0].ID
+		}
+	}
+	return orgID
+}
+
+func (h *NotificationSettingsHandler) ListSubscriptions(c echo.Context) error {
+	userID := handlerutils.ExtractUserID(c)
+	if userID == "" {
+		return utils.Error(c, http.StatusUnauthorized, "unauthorized")
+	}
+	orgID := h.resolveOrgID(c.Request().Context(), c, userID)
+	if orgID == "" || orgID == "default" {
+		return utils.Success(c, "Operation successful", []models.NotificationSubscription{})
 	}
 	subs, err := h.notifSettingsService.ListSubscriptions(c.Request().Context(), userID, orgID)
 	if err != nil {
@@ -117,12 +137,9 @@ func (h *NotificationSettingsHandler) UpsertSubscription(c echo.Context) error {
 	if err := c.Bind(&req); err != nil {
 		return utils.Error(c, http.StatusBadRequest, err.Error())
 	}
-	orgID := c.QueryParam("organizationId")
-	if orgID == "" {
-		orgID = c.QueryParam("orgId")
-	}
-	if orgID == "" {
-		orgID = "default"
+	orgID := h.resolveOrgID(c.Request().Context(), c, userID)
+	if orgID == "" || orgID == "default" {
+		return utils.Error(c, http.StatusBadRequest, "organization not found")
 	}
 	sub := models.NotificationSubscription{
 		UserID:         userID,
@@ -138,12 +155,10 @@ func (h *NotificationSettingsHandler) UpsertSubscription(c echo.Context) error {
 }
 
 func (h *NotificationSettingsHandler) ListDefaults(c echo.Context) error {
-	orgID := c.QueryParam("organizationId")
-	if orgID == "" {
-		orgID = c.QueryParam("orgId")
-	}
-	if orgID == "" {
-		orgID = "default"
+	userID := handlerutils.ExtractUserID(c)
+	orgID := h.resolveOrgID(c.Request().Context(), c, userID)
+	if orgID == "" || orgID == "default" {
+		return utils.Success(c, "Operation successful", []models.NotificationDefault{})
 	}
 	defs, err := h.notifSettingsService.ListDefaults(c.Request().Context(), orgID)
 	if err != nil {
@@ -153,16 +168,14 @@ func (h *NotificationSettingsHandler) ListDefaults(c echo.Context) error {
 }
 
 func (h *NotificationSettingsHandler) UpsertDefault(c echo.Context) error {
+	userID := handlerutils.ExtractUserID(c)
 	var req models.UpsertDefaultRequest
 	if err := c.Bind(&req); err != nil {
 		return utils.Error(c, http.StatusBadRequest, err.Error())
 	}
-	orgID := c.QueryParam("organizationId")
-	if orgID == "" {
-		orgID = c.QueryParam("orgId")
-	}
-	if orgID == "" {
-		orgID = "default"
+	orgID := h.resolveOrgID(c.Request().Context(), c, userID)
+	if orgID == "" || orgID == "default" {
+		return utils.Error(c, http.StatusBadRequest, "organization not found")
 	}
 	def := models.NotificationDefault{
 		OrganizationID: orgID,

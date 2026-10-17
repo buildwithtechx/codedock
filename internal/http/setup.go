@@ -228,7 +228,7 @@ func NewServer(db *sql.DB, v *utils.Vault, deployer *deploy.Deployer, traefikMan
 	backupHandler := backups.NewBackupHandler(backupService, appService, databaseService, projectService, auditService)
 	backupHandler.SetOperations(operationService)
 	settingsHandler := auth.NewSettingsHandler(settingsService, notifSettingsService)
-	notifSettingsHandler := system.NewNotificationSettingsHandler(notifSettingsService)
+	notifSettingsHandler := system.NewNotificationSettingsHandler(notifSettingsService, orgRepo)
 	aiSettingsHandler := system.NewAISettingsHandler(aiSettingsService)
 	updaterHandler := system.NewUpdaterHandler(updaterService)
 	userHandler := auth.NewUserHandler(userService, mailerService, auditService)

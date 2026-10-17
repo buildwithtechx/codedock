@@ -1,11 +1,17 @@
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
 import { useEffect, useMemo, useState } from 'react';
+import { useListOrganizations } from '#/features/organizations';
 import { settingsService } from '#/features/settings/api';
+import { useOrganizationStore } from '#/stores/organization-store';
 import { AlertPreferenceCard, type AlertPreferenceState } from './alert-preference-card';
 import { NOTIFICATION_EVENTS, NOTIFICATION_GROUPS } from './notification-events-meta';
 
 export function NotificationSubscriptionsTable() {
   const queryClient = useQueryClient();
+  const activeOrganizationId = useOrganizationStore((state) => state.activeOrganizationId);
+  const { data: organizations } = useListOrganizations();
+  const organizationId = activeOrganizationId || organizations?.[0]?.id;
+
   const [selectedGroup, setSelectedGroup] = useState<string>('all');
   const [states, setStates] = useState<Record<string, AlertPreferenceState>>(() =>
     Object.fromEntries(
@@ -21,13 +27,13 @@ export function NotificationSubscriptionsTable() {
   );
 
   const { data: subsData } = useQuery({
-    queryKey: ['notification-subscriptions'],
-    queryFn: () => settingsService.getSubscriptions(),
+    queryKey: ['notification-subscriptions', organizationId],
+    queryFn: () => settingsService.getSubscriptions(organizationId),
   });
 
   const { data: defaultsData } = useQuery({
-    queryKey: ['notification-defaults'],
-    queryFn: () => settingsService.getDefaults(),
+    queryKey: ['notification-defaults', organizationId],
+    queryFn: () => settingsService.getDefaults(organizationId),
   });
 
   useEffect(() => {
@@ -60,7 +66,7 @@ export function NotificationSubscriptionsTable() {
   }, [subsData, defaultsData]);
 
   const subMutation = useMutation({
-    mutationFn: (payload: { category: string; channels: string[]; enabled: boolean }) =>
+    mutationFn: (payload: { category: string; channels: string[]; enabled: boolean; orgId?: string }) =>
       settingsService.upsertSubscription(payload),
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ['notification-subscriptions'] });
@@ -68,7 +74,7 @@ export function NotificationSubscriptionsTable() {
   });
 
   const defaultMutation = useMutation({
-    mutationFn: (payload: { category: string; channels: string[]; enabled: boolean }) =>
+    mutationFn: (payload: { category: string; channels: string[]; enabled: boolean; orgId?: string }) =>
       settingsService.upsertDefault(payload),
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ['notification-defaults'] });
@@ -81,7 +87,7 @@ export function NotificationSubscriptionsTable() {
       ...prev,
       [id]: { ...current, channels },
     }));
-    subMutation.mutate({ category: id, channels, enabled: current.notifyMe });
+    subMutation.mutate({ category: id, channels, enabled: current.notifyMe, orgId: organizationId });
   };
 
   const handleOrgToggle = (id: string, orgEnabled: boolean) => {
@@ -90,7 +96,7 @@ export function NotificationSubscriptionsTable() {
       ...prev,
       [id]: { ...current, orgEnabled },
     }));
-    defaultMutation.mutate({ category: id, channels: current.channels, enabled: orgEnabled });
+    defaultMutation.mutate({ category: id, channels: current.channels, enabled: orgEnabled, orgId: organizationId });
   };
 
   const handleNotifyToggle = (id: string) => {
@@ -100,7 +106,7 @@ export function NotificationSubscriptionsTable() {
       ...prev,
       [id]: { ...current, notifyMe: nextNotify },
     }));
-    subMutation.mutate({ category: id, channels: current.channels, enabled: nextNotify });
+    subMutation.mutate({ category: id, channels: current.channels, enabled: nextNotify, orgId: organizationId });
   };
 
   const groupCounts = useMemo(() => {
