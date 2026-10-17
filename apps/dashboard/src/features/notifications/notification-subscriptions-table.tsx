@@ -135,19 +135,21 @@ export function NotificationSubscriptionsTable() {
   }, [selectedGroup]);
 
   return (
-    <div className="space-y-6">
-      <div>
-        <h2 className="text-base font-medium text-foreground">Alert preferences</h2>
-        <p className="mt-1 text-sm text-muted-foreground leading-relaxed">
-          Organization defaults apply when a member has not made an explicit choice for an alert. Members can override them with their own preferences.
-        </p>
+    <section aria-label="Alert preferences" className="rounded-2xl border border-border/50 bg-card p-5 space-y-5">
+      <div className="flex flex-wrap items-start justify-between gap-3">
+        <div className="min-w-0">
+          <h2 className="text-base font-medium text-foreground">Alert preferences</h2>
+          <p className="mt-1 text-sm text-muted-foreground leading-relaxed">
+            Organization defaults apply when a member has not made an explicit choice for an alert. Members can override them with their own preferences.
+          </p>
+        </div>
       </div>
 
       <div className="flex items-center gap-1 overflow-x-auto border-b border-border/50 scrollbar-hide">
         <button
           type="button"
           onClick={() => setSelectedGroup('all')}
-          className={`relative inline-flex min-w-0 shrink-0 items-center gap-2 whitespace-nowrap px-4 py-2.5 text-sm font-medium transition-colors ${
+          className={`relative inline-flex min-w-0 shrink-0 items-center gap-1.5 whitespace-nowrap px-2.5 sm:px-3.5 py-2 text-xs sm:text-sm font-medium transition-colors ${
             selectedGroup === 'all'
               ? 'text-foreground'
               : 'text-muted-foreground hover:text-foreground/80'
@@ -155,14 +157,14 @@ export function NotificationSubscriptionsTable() {
         >
           All
           <span
-            className={`rounded-full px-1.5 py-0.5 text-xs font-medium tabular-nums ${
+            className={`rounded-full px-1.5 py-0.5 text-[11px] sm:text-xs font-medium tabular-nums ${
               selectedGroup === 'all' ? 'bg-muted text-foreground' : 'bg-muted/60 text-muted-foreground'
             }`}
           >
             {groupCounts.all}
           </span>
           {selectedGroup === 'all' && (
-            <span className="absolute bottom-0 start-4 end-4 h-0.5 rounded-full bg-primary" />
+            <span className="absolute bottom-0 start-2.5 end-2.5 sm:start-3.5 sm:end-3.5 h-0.5 rounded-full bg-primary" />
           )}
         </button>
 
@@ -175,27 +177,27 @@ export function NotificationSubscriptionsTable() {
               key={group.id}
               type="button"
               onClick={() => setSelectedGroup(group.id)}
-              className={`relative inline-flex min-w-0 shrink-0 items-center gap-2 whitespace-nowrap px-4 py-2.5 text-sm font-medium transition-colors ${
+              className={`relative inline-flex min-w-0 shrink-0 items-center gap-1.5 whitespace-nowrap px-2.5 sm:px-3.5 py-2 text-xs sm:text-sm font-medium transition-colors ${
                 active ? 'text-foreground' : 'text-muted-foreground hover:text-foreground/80'
               }`}
             >
               {group.label}
               <span
-                className={`rounded-full px-1.5 py-0.5 text-xs font-medium tabular-nums ${
+                className={`rounded-full px-1.5 py-0.5 text-[11px] sm:text-xs font-medium tabular-nums ${
                   active ? 'bg-muted text-foreground' : 'bg-muted/60 text-muted-foreground'
                 }`}
               >
                 {count}
               </span>
               {active && (
-                <span className="absolute bottom-0 start-4 end-4 h-0.5 rounded-full bg-primary" />
+                <span className="absolute bottom-0 start-2.5 end-2.5 sm:start-3.5 sm:end-3.5 h-0.5 rounded-full bg-primary" />
               )}
             </button>
           );
         })}
       </div>
 
-      <div className="space-y-6">
+      <div className="space-y-5">
         {sections.map((section) => (
           <section key={section.id} className="space-y-3">
             {section.label && (
@@ -223,6 +225,6 @@ export function NotificationSubscriptionsTable() {
           </section>
         ))}
       </div>
-    </div>
+    </section>
   );
 }

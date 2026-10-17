@@ -1,5 +1,6 @@
 import { Link } from '@tanstack/react-router';
 import {
+  Activity,
   Plus,
   Search,
 } from 'lucide-react';
@@ -17,7 +18,6 @@ import {
   SelectValue,
 } from '#/components/ui/select';
 import { useListProjects } from '#/features/projects';
-import type { OrganizationDeployment } from '#/features/services';
 import { useListByOrganization } from '#/hooks/use-deployments';
 import { DeploymentEmptyState } from './deployment-empty-state';
 import { DeploymentHistoryCard } from './deployment-history-card';
