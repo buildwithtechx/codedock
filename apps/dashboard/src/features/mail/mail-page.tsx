@@ -2,11 +2,11 @@ import { ArrowLeft, MailPlus, Plus, Server, Trash2 } from 'lucide-react';
 import { useState } from 'react';
 import { toast } from 'sonner';
 import { PageHeader } from '#/components/layout/page-header';
-import { Button } from '#/components/ui/button';
-import { Card, CardContent } from '#/components/ui/card';
-import { Input } from '#/components/ui/input';
-import { QueryErrorState } from '#/components/ui/query-error-state';
-import { Skeleton } from '#/components/ui/skeleton';
+import { Button } from '@codedock/ui/button';
+import { Card, CardContent } from '@codedock/ui/card';
+import { Input } from '@codedock/ui/input';
+import { QueryErrorState } from '#/components/query-error-state';
+import { Skeleton } from '@codedock/ui/skeleton';
 import { useGetPublicSettings } from '#/features/settings';
 import {
   useCreateMailDomain,

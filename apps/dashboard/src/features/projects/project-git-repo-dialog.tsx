@@ -1,22 +1,16 @@
 import { GitBranch, Loader2, Search } from 'lucide-react';
 import { useMemo, useState } from 'react';
-import { Button } from '#/components/ui/button';
+import { Button } from '@codedock/ui/button';
 import {
   Dialog,
   DialogContent,
   DialogDescription,
   DialogHeader,
   DialogTitle,
-} from '#/components/ui/dialog';
-import { Input } from '#/components/ui/input';
-import { Label } from '#/components/ui/label';
-import {
-  Select,
-  SelectContent,
-  SelectItem,
-  SelectTrigger,
-  SelectValue,
-} from '#/components/ui/select';
+} from '@codedock/ui/dialog';
+import { Input } from '@codedock/ui/input';
+import { Label } from '@codedock/ui/label';
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@codedock/ui/select';
 import { useGetStatus, useListGitRepos } from '#/hooks/use-git';
 import type { GitRepo } from '#/interfaces/git';
 

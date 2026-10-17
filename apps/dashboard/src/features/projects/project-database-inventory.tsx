@@ -1,6 +1,6 @@
 import { Link } from '@tanstack/react-router';
 import { Database as DatabaseIcon } from 'lucide-react';
-import { QueryErrorState } from '#/components/ui/query-error-state';
+import { QueryErrorState } from '#/components/query-error-state';
 import { useGetDatabases } from '#/features/databases/hooks';
 
 export function ProjectDatabaseInventory({

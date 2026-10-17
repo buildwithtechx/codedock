@@ -1,9 +1,9 @@
 import { useNavigate } from '@tanstack/react-router';
 import { ArrowRight, Search } from 'lucide-react';
 import { useMemo, useState } from 'react';
-import { Input } from '#/components/ui/input';
-import { QueryErrorState } from '#/components/ui/query-error-state';
-import { Skeleton } from '#/components/ui/skeleton';
+import { Input } from '@codedock/ui/input';
+import { QueryErrorState } from '#/components/query-error-state';
+import { Skeleton } from '@codedock/ui/skeleton';
 import { useListExampleApps } from '#/hooks/use-templates';
 import type { ExampleApp } from '#/interfaces/templates';
 import { encodeDeploySlug } from '#/lib/utils';

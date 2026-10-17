@@ -3,16 +3,10 @@ import { ArrowLeft, ArrowRight, FolderKanban, LibraryBig, Server } from 'lucide-
 import { useEffect, useState } from 'react';
 import { toast } from 'sonner';
 import { ContextRail } from '#/components/layout/context-rail';
-import { Button } from '#/components/ui/button';
-import { Input } from '#/components/ui/input';
-import { Label } from '#/components/ui/label';
-import {
-  Select,
-  SelectContent,
-  SelectItem,
-  SelectTrigger,
-  SelectValue,
-} from '#/components/ui/select';
+import { Button } from '@codedock/ui/button';
+import { Input } from '@codedock/ui/input';
+import { Label } from '@codedock/ui/label';
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@codedock/ui/select';
 import { useListOrganizations } from '#/features/organizations';
 import { useCreateProject } from '#/features/projects';
 import { useListServers } from '#/hooks/use-servers';

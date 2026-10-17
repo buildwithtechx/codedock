@@ -6,13 +6,13 @@ import {
   type LucideIcon,
   MessagesSquare,
 } from 'lucide-react';
-import { Button } from '#/components/ui/button';
+import { Button } from '@codedock/ui/button';
 import {
   DropdownMenu,
   DropdownMenuContent,
   DropdownMenuItem,
   DropdownMenuTrigger,
-} from '#/components/ui/dropdown-menu';
+} from '@codedock/ui/dropdown-menu';
 
 const DOCS_URL = 'https://docs.codedock.run';
 const SUPPORT_URL = 'https://codedock.run/support';

@@ -10,8 +10,8 @@ import {
   Sliders,
 } from 'lucide-react';
 import { useState } from 'react';
-import { Button } from '#/components/ui/button';
-import { Switch } from '#/components/ui/switch';
+import { Button } from '@codedock/ui/button';
+import { Switch } from '@codedock/ui/switch';
 import { AddServerModal } from '#/features/servers/add-server-modal';
 
 interface DeployTargetStepProps {

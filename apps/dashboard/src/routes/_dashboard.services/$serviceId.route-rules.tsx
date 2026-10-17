@@ -1,6 +1,6 @@
 import { createFileRoute } from '@tanstack/react-router';
 import { Loader2 } from 'lucide-react';
-import { Button } from '#/components/ui/button';
+import { Button } from '@codedock/ui/button';
 import { ServiceRouteRules } from '#/features/services/components/service-route-rules';
 import { useGetApp } from '#/hooks/use-apps';
 

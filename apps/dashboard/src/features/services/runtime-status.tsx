@@ -1,7 +1,7 @@
 import { useMutation, useQuery } from '@tanstack/react-query';
 import { useState } from 'react';
-import { Button } from '#/components/ui/button';
-import { Input } from '#/components/ui/input';
+import { Button } from '@codedock/ui/button';
+import { Input } from '@codedock/ui/input';
 import type { BaseResponse } from '#/interfaces/base';
 import { apiClient } from '#/lib/api-client';
 import type { WorkloadObservation } from './runtime-types';

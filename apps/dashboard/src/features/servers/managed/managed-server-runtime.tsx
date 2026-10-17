@@ -1,6 +1,6 @@
 import { Code2, KeyRound, RefreshCw } from 'lucide-react';
 import { useEffect, useState } from 'react';
-import { Button } from '#/components/ui/button';
+import { Button } from '@codedock/ui/button';
 import type { ManagedRuntimeCredential, ManagedRuntimeStatus } from '#/interfaces/server';
 import { ConnectionValue } from './connection-value';
 import {

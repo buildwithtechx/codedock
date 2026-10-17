@@ -1,6 +1,6 @@
 import { ArrowRight, Plus, Server, Sparkles } from 'lucide-react';
 import { type ReactNode, useState } from 'react';
-import { Button } from '#/components/ui/button';
+import { Button } from '@codedock/ui/button';
 import { AddServerModal } from '#/features/servers/add-server-modal';
 import type { Server as ServerModel } from '#/interfaces/server';
 

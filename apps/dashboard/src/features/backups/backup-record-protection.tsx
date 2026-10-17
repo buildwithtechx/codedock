@@ -1,5 +1,5 @@
 import { useMutation, useQueryClient } from '@tanstack/react-query';
-import { Button } from '#/components/ui/button';
+import { Button } from '@codedock/ui/button';
 import { apiClient } from '#/lib/api-client';
 
 export function BackupRecordProtection({

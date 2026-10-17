@@ -3,9 +3,9 @@ import { Plus, Search, Server } from 'lucide-react';
 import { useEffect, useMemo, useState } from 'react';
 import { HelpMenu } from '#/components/layout/help-menu';
 import { PageHeader } from '#/components/layout/page-header';
-import { Button } from '#/components/ui/button';
-import { Input } from '#/components/ui/input';
-import { QueryErrorState } from '#/components/ui/query-error-state';
+import { Button } from '@codedock/ui/button';
+import { Input } from '@codedock/ui/input';
+import { QueryErrorState } from '#/components/query-error-state';
 import { ProjectCard } from '#/features/projects/project-card';
 import {
   buildHostingFilterOptions,

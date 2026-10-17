@@ -1,5 +1,5 @@
 import { ArrowRight, Check, Gem, Layers, Rocket, Zap } from 'lucide-react';
-import { Button } from '#/components/ui/button';
+import { Button } from '@codedock/ui/button';
 
 export interface PlanTier {
   id: string;

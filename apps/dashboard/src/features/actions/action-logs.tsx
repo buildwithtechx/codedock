@@ -1,6 +1,6 @@
 import { Check, Copy, Terminal } from 'lucide-react';
 import { useEffect, useRef, useState } from 'react';
-import { Button } from '#/components/ui/button';
+import { Button } from '@codedock/ui/button';
 
 interface ActionLogsProps {
   logs?: string;

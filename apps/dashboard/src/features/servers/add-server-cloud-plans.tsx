@@ -1,5 +1,5 @@
 import { Check, Flame, Layers, Sparkles, Zap } from 'lucide-react';
-import { Button } from '#/components/ui/button';
+import { Button } from '@codedock/ui/button';
 
 export interface CloudPlan {
   id: string;

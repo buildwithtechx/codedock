@@ -1,8 +1,8 @@
 import { Clock, RotateCcw, StopCircle, User } from 'lucide-react';
 import { useState } from 'react';
 import { toast } from 'sonner';
-import { Button } from '#/components/ui/button';
-import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '#/components/ui/card';
+import { Button } from '@codedock/ui/button';
+import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@codedock/ui/card';
 import type { ActionRun } from '#/interfaces/actions';
 import { actionsService } from '#/services/actions';
 import { ActionLogs } from './action-logs';

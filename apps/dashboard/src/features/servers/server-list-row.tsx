@@ -8,14 +8,14 @@ import {
   Server as ServerIcon,
   Trash2,
 } from 'lucide-react';
-import { BlurIp } from '#/components/ui/blur-ip';
-import { Button } from '#/components/ui/button';
+import { BlurIp } from '#/components/blur-ip';
+import { Button } from '@codedock/ui/button';
 import {
   DropdownMenu,
   DropdownMenuContent,
   DropdownMenuItem,
   DropdownMenuTrigger,
-} from '#/components/ui/dropdown-menu';
+} from '@codedock/ui/dropdown-menu';
 import type { Server } from '#/interfaces/server';
 import { cn } from '#/lib/utils';
 

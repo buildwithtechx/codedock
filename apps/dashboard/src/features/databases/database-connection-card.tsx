@@ -1,10 +1,10 @@
 import { Copy, Eye, EyeOff, Loader2 } from 'lucide-react';
 import { useState } from 'react';
 import { toast } from 'sonner';
-import { Button } from '#/components/ui/button';
-import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '#/components/ui/card';
-import { Input } from '#/components/ui/input';
-import { Label } from '#/components/ui/label';
+import { Button } from '@codedock/ui/button';
+import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@codedock/ui/card';
+import { Input } from '@codedock/ui/input';
+import { Label } from '@codedock/ui/label';
 import { type Database, databasesService } from '#/features/databases';
 
 interface Props {

@@ -7,9 +7,9 @@ import {
   XCircle,
 } from 'lucide-react';
 import { useEffect, useState } from 'react';
-import { Button } from '#/components/ui/button';
-import { Dialog, DialogContent, DialogDescription, DialogTitle } from '#/components/ui/dialog';
-import { Input } from '#/components/ui/input';
+import { Button } from '@codedock/ui/button';
+import { Dialog, DialogContent, DialogDescription, DialogTitle } from '@codedock/ui/dialog';
+import { Input } from '@codedock/ui/input';
 import { cn } from '#/lib/utils';
 import { formatBytes } from './destination-display';
 import { useApplyRestore, useCancelRestore, usePrepareRestore, useRestoreOperation } from './hooks';

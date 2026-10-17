@@ -1,7 +1,7 @@
 import { Lock } from 'lucide-react';
 import React, { useEffect, useState } from 'react';
 import { toast } from 'sonner';
-import { Skeleton } from '#/components/ui/skeleton';
+import { Skeleton } from '@codedock/ui/skeleton';
 import { SettingsSection } from '#/features/settings/settings-section';
 import { useListOAuthProviders, useSaveOAuthProvider } from '#/hooks/use-oauth';
 import type { SaveOAuthProviderRequest } from '#/interfaces/oauth';

@@ -1,4 +1,4 @@
-import { Button } from '#/components/ui/button';
+import { Button } from '@codedock/ui/button';
 import { useEnabledOAuthProviders } from '#/hooks/use-oauth';
 import { oauthService } from '#/services/oauth';
 

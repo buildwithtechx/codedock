@@ -1,5 +1,5 @@
 import { RotateCcw } from 'lucide-react';
-import { Button } from '#/components/ui/button';
+import { Button } from '@codedock/ui/button';
 import {
   Dialog,
   DialogContent,
@@ -7,7 +7,7 @@ import {
   DialogFooter,
   DialogHeader,
   DialogTitle,
-} from '#/components/ui/dialog';
+} from '@codedock/ui/dialog';
 
 export function DeploymentRollbackDialog({
   open,

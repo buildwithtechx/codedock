@@ -1,6 +1,6 @@
 import { Search } from 'lucide-react';
 import { useMemo, useRef, useState } from 'react';
-import { Input } from '#/components/ui/input';
+import { Input } from '@codedock/ui/input';
 import { cn } from '#/lib/utils';
 import { EmptyIssues } from './empty-issues';
 import type { AttentionIssue, MonitoringTab, SeverityFilter } from './interfaces';

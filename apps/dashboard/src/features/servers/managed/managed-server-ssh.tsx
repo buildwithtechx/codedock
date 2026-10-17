@@ -1,7 +1,7 @@
 import { Key } from 'lucide-react';
 import { useEffect, useState } from 'react';
-import { Button } from '#/components/ui/button';
-import { Textarea } from '#/components/ui/textarea';
+import { Button } from '@codedock/ui/button';
+import { Textarea } from '@codedock/ui/textarea';
 import type { ManagedSshStatus } from '#/interfaces/server';
 import { ConnectionValue } from './connection-value';
 import { getManagedSshStatus, setManagedSsh, setManagedSshKey } from './managed-api';

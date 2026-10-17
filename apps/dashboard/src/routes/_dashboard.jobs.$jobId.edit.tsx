@@ -2,7 +2,7 @@ import { useQuery } from '@tanstack/react-query';
 import { createFileRoute, useNavigate } from '@tanstack/react-router';
 import { ArrowLeft, Loader2 } from 'lucide-react';
 import { toast } from 'sonner';
-import { QueryErrorState } from '#/components/ui/query-error-state';
+import { QueryErrorState } from '#/components/query-error-state';
 import { jobsApi } from '#/features/jobs/api';
 import { JobForm } from '#/features/jobs/job-form';
 

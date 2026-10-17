@@ -1,6 +1,6 @@
 import { createFileRoute, Link } from '@tanstack/react-router';
 import { AlertCircle } from 'lucide-react';
-import { Button } from '#/components/ui/button';
+import { Button } from '@codedock/ui/button';
 import { AuthPageFrame } from '#/features/auth';
 import { ForgotPasswordForm } from '#/features/auth/forgot-password-form';
 import { useGetPublicSettings } from '#/features/settings';

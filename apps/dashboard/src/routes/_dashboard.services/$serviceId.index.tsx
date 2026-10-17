@@ -1,7 +1,7 @@
 import { createFileRoute } from '@tanstack/react-router';
 import { Loader2 } from 'lucide-react';
 import { useState } from 'react';
-import { Button } from '#/components/ui/button';
+import { Button } from '@codedock/ui/button';
 import { useGetDatabase } from '#/features/databases';
 import { BackupManager } from '#/features/databases/backup-manager';
 import { DataBrowser } from '#/features/databases/data-browser';

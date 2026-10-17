@@ -1,6 +1,6 @@
 import { Link } from '@tanstack/react-router';
 import { GitBranch, Plus } from 'lucide-react';
-import { Button } from '#/components/ui/button';
+import { Button } from '@codedock/ui/button';
 
 export function HomeFirstProject({ onCreateProject }: { onCreateProject: () => void }) {
   return (

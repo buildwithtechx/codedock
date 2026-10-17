@@ -12,7 +12,7 @@ import {
 } from 'lucide-react';
 import { useState } from 'react';
 import { toast } from 'sonner';
-import { Button } from '#/components/ui/button';
+import { Button } from '@codedock/ui/button';
 import {
   Dialog,
   DialogContent,
@@ -20,7 +20,7 @@ import {
   DialogFooter,
   DialogHeader,
   DialogTitle,
-} from '#/components/ui/dialog';
+} from '@codedock/ui/dialog';
 import {
   Empty,
   EmptyContent,
@@ -28,10 +28,10 @@ import {
   EmptyHeader,
   EmptyMedia,
   EmptyTitle,
-} from '#/components/ui/empty';
-import { QueryErrorState } from '#/components/ui/query-error-state';
-import { Switch } from '#/components/ui/switch';
-import { Tabs, TabsContent, TabsList, TabsTrigger } from '#/components/ui/tabs';
+} from '@codedock/ui/empty';
+import { QueryErrorState } from '#/components/query-error-state';
+import { Switch } from '@codedock/ui/switch';
+import { Tabs, TabsContent, TabsList, TabsTrigger } from '@codedock/ui/tabs';
 import { jobsApi } from '#/features/jobs/api';
 import { formatTime, statusDot, statusLabel } from '#/features/jobs/job-format';
 import { JobInfoRow } from '#/features/jobs/job-info-row';

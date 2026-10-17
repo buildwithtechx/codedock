@@ -1,5 +1,5 @@
 import { useMutation } from '@tanstack/react-query';
-import { Button } from '#/components/ui/button';
+import { Button } from '@codedock/ui/button';
 import type { BaseResponse } from '#/interfaces/base';
 import { apiClient } from '#/lib/api-client';
 import { activeStackStates, type ComposeStack, stackResults } from './compose-stack-types';

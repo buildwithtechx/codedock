@@ -9,7 +9,7 @@ import {
 } from '@xyflow/react';
 import '@xyflow/react/dist/style.css';
 import { useState } from 'react';
-import { Button } from '#/components/ui/button';
+import { Button } from '@codedock/ui/button';
 import { AppServiceNode } from './app-service-node';
 import { CanvasBindingForm } from './canvas-binding-form';
 import { CanvasResourcePanel } from './canvas-resource-panel';

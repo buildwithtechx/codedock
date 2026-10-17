@@ -1,7 +1,7 @@
 import { Building2, Loader2 } from 'lucide-react';
 import { useState } from 'react';
 import { toast } from 'sonner';
-import { Button } from '#/components/ui/button';
+import { Button } from '@codedock/ui/button';
 import {
   Dialog,
   DialogContent,
@@ -9,9 +9,9 @@ import {
   DialogFooter,
   DialogHeader,
   DialogTitle,
-} from '#/components/ui/dialog';
-import { Input } from '#/components/ui/input';
-import { Label } from '#/components/ui/label';
+} from '@codedock/ui/dialog';
+import { Input } from '@codedock/ui/input';
+import { Label } from '@codedock/ui/label';
 import { useOrganizationStore } from '#/stores/organization-store';
 import { useCreateOrganization } from './hooks';
 

@@ -3,16 +3,16 @@ import { useMutation, useQueryClient } from '@tanstack/react-query';
 import { useForm } from 'react-hook-form';
 import { toast } from 'sonner';
 import { z } from 'zod';
-import { Button } from '#/components/ui/button';
+import { Button } from '@codedock/ui/button';
 import {
   Dialog,
   DialogContent,
   DialogDescription,
   DialogHeader,
   DialogTitle,
-} from '#/components/ui/dialog';
-import { Input } from '#/components/ui/input';
-import { Label } from '#/components/ui/label';
+} from '@codedock/ui/dialog';
+import { Input } from '@codedock/ui/input';
+import { Label } from '@codedock/ui/label';
 import type { ImportDatabaseResponse } from '#/features/databases';
 import { apiClient } from '#/lib/api-client';
 

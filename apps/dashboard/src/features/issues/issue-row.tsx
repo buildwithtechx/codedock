@@ -1,7 +1,7 @@
 import { Link } from '@tanstack/react-router';
 import { ArrowRight, Check, Eye, Loader2 } from 'lucide-react';
-import { Badge } from '#/components/ui/badge';
-import { Button } from '#/components/ui/button';
+import { Badge } from '@codedock/ui/badge';
+import { Button } from '@codedock/ui/button';
 import { cn } from '#/lib/utils';
 import type { AttentionIssue } from './interfaces';
 import {

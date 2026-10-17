@@ -1,9 +1,9 @@
 import { X } from 'lucide-react';
 import { useState } from 'react';
 import { toast } from 'sonner';
-import { Button } from '#/components/ui/button';
-import { Dialog, DialogContent } from '#/components/ui/dialog';
-import { Input } from '#/components/ui/input';
+import { Button } from '@codedock/ui/button';
+import { Dialog, DialogContent } from '@codedock/ui/dialog';
+import { Input } from '@codedock/ui/input';
 import type { Server as ServerModel } from '#/interfaces/server';
 import { serverService } from '#/services/servers';
 import { AddServerCloudPlans, type CloudPlan } from './add-server-cloud-plans';

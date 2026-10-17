@@ -1,5 +1,5 @@
 import { Link2 } from 'lucide-react';
-import { Button } from '#/components/ui/button';
+import { Button } from '@codedock/ui/button';
 import { cn } from '#/lib/utils';
 import { GIT_PROVIDERS, type ProviderConnection } from './types';
 

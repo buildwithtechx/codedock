@@ -1,4 +1,4 @@
-import { Tabs, TabsList, TabsTrigger } from '#/components/ui/tabs';
+import { Tabs, TabsList, TabsTrigger } from '@codedock/ui/tabs';
 import type { MonitoringTab } from './interfaces';
 
 const NAV_TABS: Array<{ value: MonitoringTab; label: string }> = [

@@ -1,7 +1,7 @@
 import { ArrowLeft, Cloud, Lock, Server } from 'lucide-react';
 import { useEffect, useState } from 'react';
-import { Button } from '#/components/ui/button';
-import { Dialog, DialogContent, DialogDescription, DialogTitle } from '#/components/ui/dialog';
+import { Button } from '@codedock/ui/button';
+import { Dialog, DialogContent, DialogDescription, DialogTitle } from '@codedock/ui/dialog';
 import { DestinationConfigureForm } from './destination-configure-form';
 import type { DestinationKind, S3Destination } from './interfaces';
 import { S3ProviderMark } from './s3-destination-fields';

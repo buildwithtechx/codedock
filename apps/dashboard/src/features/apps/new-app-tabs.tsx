@@ -1,7 +1,7 @@
 import { useNavigate } from '@tanstack/react-router';
 import { useEffect, useRef } from 'react';
 import { PageHeader } from '#/components/layout/page-header';
-import { Tabs, TabsContent, TabsList, TabsTrigger } from '#/components/ui/tabs';
+import { Tabs, TabsContent, TabsList, TabsTrigger } from '@codedock/ui/tabs';
 import { AppCatalog } from './app-catalog';
 import { useAppCatalog } from './hooks';
 import { TemplatesGallery } from './templates-gallery';

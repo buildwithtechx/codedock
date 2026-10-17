@@ -1,6 +1,6 @@
 import { Trash2 } from 'lucide-react';
-import { Button } from '#/components/ui/button';
-import { Input } from '#/components/ui/input';
+import { Button } from '@codedock/ui/button';
+import { Input } from '@codedock/ui/input';
 import type { NetworkMember } from '#/interfaces/networks';
 
 interface NetworkMemberListProps {

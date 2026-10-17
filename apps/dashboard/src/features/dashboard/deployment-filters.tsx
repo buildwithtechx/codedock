@@ -1,12 +1,6 @@
 import { FolderGit2, Search } from 'lucide-react';
-import { Input } from '#/components/ui/input';
-import {
-  Select,
-  SelectContent,
-  SelectItem,
-  SelectTrigger,
-  SelectValue,
-} from '#/components/ui/select';
+import { Input } from '@codedock/ui/input';
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@codedock/ui/select';
 
 export const DEPLOYMENT_FILTERS = [
   { value: 'all', label: 'All' },

@@ -1,7 +1,7 @@
 import { ChevronDown, ChevronUp, ClipboardPaste, Download, Key, Plus, Upload } from 'lucide-react';
 import { type ChangeEvent, useId, useRef, useState } from 'react';
 import { toast } from 'sonner';
-import { Button } from '#/components/ui/button';
+import { Button } from '@codedock/ui/button';
 
 interface DeployEnvSectionProps {
   envVars: string;

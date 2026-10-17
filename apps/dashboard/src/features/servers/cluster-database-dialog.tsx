@@ -1,13 +1,13 @@
 import { useMutation, useQuery } from '@tanstack/react-query';
 import { useState } from 'react';
-import { Button } from '#/components/ui/button';
+import { Button } from '@codedock/ui/button';
 import {
   Dialog,
   DialogContent,
   DialogDescription,
   DialogHeader,
   DialogTitle,
-} from '#/components/ui/dialog';
+} from '@codedock/ui/dialog';
 import type { BaseResponse } from '#/interfaces/base';
 import type { Cluster } from '#/interfaces/clusters';
 import type {

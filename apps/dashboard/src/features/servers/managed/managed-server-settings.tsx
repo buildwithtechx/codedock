@@ -1,7 +1,7 @@
 import { Link } from '@tanstack/react-router';
 import { FileText, Settings } from 'lucide-react';
 import { useEffect, useState } from 'react';
-import { Button } from '#/components/ui/button';
+import { Button } from '@codedock/ui/button';
 import type { ManagedServerInfo } from '#/interfaces/server';
 import { CapacitySummary } from './capacity-summary';
 import { ConnectionValue } from './connection-value';

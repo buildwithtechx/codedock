@@ -1,7 +1,7 @@
 import { ChevronLeft, ChevronRight, DatabaseBackup } from 'lucide-react';
 import { useMemo, useState } from 'react';
 import { toast } from 'sonner';
-import { Button } from '#/components/ui/button';
+import { Button } from '@codedock/ui/button';
 import {
   Dialog,
   DialogContent,
@@ -9,8 +9,8 @@ import {
   DialogFooter,
   DialogHeader,
   DialogTitle,
-} from '#/components/ui/dialog';
-import { Skeleton } from '#/components/ui/skeleton';
+} from '@codedock/ui/dialog';
+import { Skeleton } from '@codedock/ui/skeleton';
 import { DestinationLoadError } from './destination-display';
 import { useDeleteRecord } from './hooks';
 import type { BackupConfig, BackupRecord } from './interfaces';

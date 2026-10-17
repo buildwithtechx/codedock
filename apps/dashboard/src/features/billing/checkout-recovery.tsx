@@ -1,6 +1,6 @@
 import { AlertCircle, ExternalLink, Loader2, RefreshCw, XCircle } from 'lucide-react';
 import { useState } from 'react';
-import { Button } from '#/components/ui/button';
+import { Button } from '@codedock/ui/button';
 import type { PendingCheckout } from '#/interfaces/billing';
 import { billingService } from '#/services/billing';
 

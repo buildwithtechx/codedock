@@ -2,13 +2,13 @@ import { Link } from '@tanstack/react-router';
 import { Ban, Clock, ExternalLink, GitBranch, MoreVertical, Rocket, RotateCcw } from 'lucide-react';
 import { useState } from 'react';
 import { toast } from 'sonner';
-import { Button } from '#/components/ui/button';
+import { Button } from '@codedock/ui/button';
 import {
   DropdownMenu,
   DropdownMenuContent,
   DropdownMenuItem,
   DropdownMenuTrigger,
-} from '#/components/ui/dropdown-menu';
+} from '@codedock/ui/dropdown-menu';
 import type { OrganizationDeployment } from '#/features/services';
 import { useCancelDeployment, useRollback, useTrigger } from '#/hooks/use-deployments';
 

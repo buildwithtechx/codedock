@@ -2,16 +2,10 @@ import { Link } from '@tanstack/react-router';
 import { ArrowRight, FolderUp, Loader2, Package, X } from 'lucide-react';
 import { useEffect, useRef, useState } from 'react';
 import { toast } from 'sonner';
-import { Button } from '#/components/ui/button';
-import { Input } from '#/components/ui/input';
-import { Label } from '#/components/ui/label';
-import {
-  Select,
-  SelectContent,
-  SelectItem,
-  SelectTrigger,
-  SelectValue,
-} from '#/components/ui/select';
+import { Button } from '@codedock/ui/button';
+import { Input } from '@codedock/ui/input';
+import { Label } from '@codedock/ui/label';
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@codedock/ui/select';
 import { useListAllProjects } from '#/features/projects';
 import { libraryApi } from './api';
 import {

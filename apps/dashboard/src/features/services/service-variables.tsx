@@ -1,7 +1,7 @@
 import { FileSearch, Loader2, Plus, Trash } from 'lucide-react';
 import { useState } from 'react';
-import { Button } from '#/components/ui/button';
-import { Input } from '#/components/ui/input';
+import { Button } from '@codedock/ui/button';
+import { Input } from '@codedock/ui/input';
 import type { AppService, EnvExampleVariableSuggestion, Variable } from '#/features/services';
 import { useCreate, useDelete, useEnvSuggestions, useList } from '#/hooks/use-services';
 

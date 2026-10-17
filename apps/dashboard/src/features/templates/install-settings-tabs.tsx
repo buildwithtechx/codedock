@@ -1,7 +1,7 @@
 import { useMemo } from 'react';
-import { Input } from '#/components/ui/input';
-import { Label } from '#/components/ui/label';
-import { Tabs, TabsContent, TabsList, TabsTrigger } from '#/components/ui/tabs';
+import { Input } from '@codedock/ui/input';
+import { Label } from '@codedock/ui/label';
+import { Tabs, TabsContent, TabsList, TabsTrigger } from '@codedock/ui/tabs';
 import type { OneClickEnvVar } from '#/interfaces/templates';
 
 export interface InstallVariableGroup {

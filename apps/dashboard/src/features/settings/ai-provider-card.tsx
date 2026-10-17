@@ -1,14 +1,14 @@
 import { Check, CheckCircle2, ChevronDown, Plus, Star } from 'lucide-react';
 import { useState } from 'react';
-import { Button } from '#/components/ui/button';
+import { Button } from '@codedock/ui/button';
 import {
   DropdownMenu,
   DropdownMenuContent,
   DropdownMenuItem,
   DropdownMenuTrigger,
-} from '#/components/ui/dropdown-menu';
-import { Input } from '#/components/ui/input';
-import { Label } from '#/components/ui/label';
+} from '@codedock/ui/dropdown-menu';
+import { Input } from '@codedock/ui/input';
+import { Label } from '@codedock/ui/label';
 import { PreferenceRow } from './preference-row';
 
 export type AiProviderItem = {

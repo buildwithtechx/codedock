@@ -1,5 +1,5 @@
-import { Input } from '#/components/ui/input';
-import { Label } from '#/components/ui/label';
+import { Input } from '@codedock/ui/input';
+import { Label } from '@codedock/ui/label';
 import { BareRuntimeFields } from '#/features/services/bare-runtime-fields';
 import type { RuntimeTarget } from '#/features/services/runtime-types';
 import type { Cluster, ClusterNode } from '#/interfaces/clusters';

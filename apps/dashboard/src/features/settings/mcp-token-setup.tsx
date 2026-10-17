@@ -1,7 +1,7 @@
 import { Link } from '@tanstack/react-router';
 import { Check, Copy, ExternalLink, Key } from 'lucide-react';
 import { useState } from 'react';
-import { Button } from '#/components/ui/button';
+import { Button } from '@codedock/ui/button';
 
 export function McpTokenSetup({ endpoint }: { endpoint: string }) {
   const [copied, setCopied] = useState(false);

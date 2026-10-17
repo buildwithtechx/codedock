@@ -9,7 +9,7 @@ import {
   PlayCircle,
   Server,
 } from 'lucide-react';
-import { Button } from '#/components/ui/button';
+import { Button } from '@codedock/ui/button';
 import type { ActionRun, ActionWorkflow } from '#/interfaces/actions';
 import { ActionStatus } from './action-status';
 

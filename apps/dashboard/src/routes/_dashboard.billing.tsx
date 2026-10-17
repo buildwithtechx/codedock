@@ -1,8 +1,8 @@
 import { createFileRoute, useNavigate } from '@tanstack/react-router';
 import { Coins, CreditCard, ExternalLink, Layers, Receipt, Sparkles, Zap } from 'lucide-react';
 import { useEffect, useState } from 'react';
-import { Button } from '#/components/ui/button';
-import { Tabs, TabsContent, TabsList, TabsTrigger } from '#/components/ui/tabs';
+import { Button } from '@codedock/ui/button';
+import { Tabs, TabsContent, TabsList, TabsTrigger } from '@codedock/ui/tabs';
 import {
   BillingOverview,
   BillingPlansCards,

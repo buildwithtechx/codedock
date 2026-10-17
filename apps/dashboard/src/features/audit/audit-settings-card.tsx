@@ -1,15 +1,9 @@
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
 import { Clock, Shield } from 'lucide-react';
 import { toast } from 'sonner';
-import { Label } from '#/components/ui/label';
-import {
-  Select,
-  SelectContent,
-  SelectItem,
-  SelectTrigger,
-  SelectValue,
-} from '#/components/ui/select';
-import { Switch } from '#/components/ui/switch';
+import { Label } from '@codedock/ui/label';
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@codedock/ui/select';
+import { Switch } from '@codedock/ui/switch';
 import { auditApi } from './api';
 
 const RETENTION_OPTIONS = [

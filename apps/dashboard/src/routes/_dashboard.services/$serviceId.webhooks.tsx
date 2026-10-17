@@ -3,9 +3,9 @@ import { createFileRoute } from '@tanstack/react-router';
 import { Copy, RefreshCw, Trash2, Webhook } from 'lucide-react';
 import { toast } from 'sonner';
 import { v4 as uuidv4 } from 'uuid';
-import { Button } from '#/components/ui/button';
-import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '#/components/ui/card';
-import { Input } from '#/components/ui/input';
+import { Button } from '@codedock/ui/button';
+import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@codedock/ui/card';
+import { Input } from '@codedock/ui/input';
 import { useGetApp, useUpdateApp } from '#/hooks/use-apps';
 
 export const Route = createFileRoute('/_dashboard/services/$serviceId/webhooks')({

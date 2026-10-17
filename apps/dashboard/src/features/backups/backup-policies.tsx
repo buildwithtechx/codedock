@@ -10,17 +10,10 @@ import {
 } from 'lucide-react';
 import { useState } from 'react';
 import { toast } from 'sonner';
-import { Button } from '#/components/ui/button';
-import { Checkbox } from '#/components/ui/checkbox';
-import { Switch } from '#/components/ui/switch';
-import {
-  Table,
-  TableBody,
-  TableCell,
-  TableHead,
-  TableHeader,
-  TableRow,
-} from '#/components/ui/table';
+import { Button } from '@codedock/ui/button';
+import { Checkbox } from '@codedock/ui/checkbox';
+import { Switch } from '@codedock/ui/switch';
+import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@codedock/ui/table';
 import { useDelete, useTrigger, useUpdate } from '#/features/backups';
 import type { BackupConfig } from './interfaces';
 

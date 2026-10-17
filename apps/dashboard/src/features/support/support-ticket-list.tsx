@@ -1,5 +1,5 @@
 import { MessageSquare, Plus, Tag } from 'lucide-react';
-import { Button } from '#/components/ui/button';
+import { Button } from '@codedock/ui/button';
 import type { SupportCategory, SupportTicket } from '#/interfaces/support';
 import { cn } from '#/lib/utils';
 

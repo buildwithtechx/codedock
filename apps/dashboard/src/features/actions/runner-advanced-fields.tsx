@@ -1,6 +1,6 @@
 import { ChevronDown, Settings } from 'lucide-react';
 import { useState } from 'react';
-import { Input } from '#/components/ui/input';
+import { Input } from '@codedock/ui/input';
 
 interface RunnerAdvancedFieldsProps {
   image: string;

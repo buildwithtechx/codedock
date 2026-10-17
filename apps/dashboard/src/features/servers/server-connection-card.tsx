@@ -1,6 +1,6 @@
 import { Globe, Hash, KeyRound, Network, Server as ServerIcon, User } from 'lucide-react';
 import type { ReactNode } from 'react';
-import { BlurIp } from '#/components/ui/blur-ip';
+import { BlurIp } from '#/components/blur-ip';
 import type { Server } from '#/interfaces/server';
 
 function ConnectionRow({

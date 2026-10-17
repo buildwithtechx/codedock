@@ -1,6 +1,6 @@
 import { useCompletion } from '@ai-sdk/react';
 import { AlertCircle, Bot, Loader2, Sparkles } from 'lucide-react';
-import { Button } from '#/components/ui/button';
+import { Button } from '@codedock/ui/button';
 import {
   Dialog,
   DialogContent,
@@ -8,7 +8,7 @@ import {
   DialogHeader,
   DialogTitle,
   DialogTrigger,
-} from '#/components/ui/dialog';
+} from '@codedock/ui/dialog';
 
 interface AIDiagnoseDialogProps {
   logs: string;

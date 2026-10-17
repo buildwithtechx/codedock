@@ -1,5 +1,5 @@
 import { ChevronDown, Server } from 'lucide-react';
-import { Button } from '#/components/ui/button';
+import { Button } from '@codedock/ui/button';
 import type { PrepaidUsageEstimate } from '#/interfaces/billing';
 import { formatDuration, formatMoney, formatNumber } from '#/services/billing-estimate';
 

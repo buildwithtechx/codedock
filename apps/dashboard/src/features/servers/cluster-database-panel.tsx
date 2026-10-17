@@ -1,6 +1,6 @@
 import { useQuery } from '@tanstack/react-query';
 import { useState } from 'react';
-import { Button } from '#/components/ui/button';
+import { Button } from '@codedock/ui/button';
 import type { BaseResponse } from '#/interfaces/base';
 import type { Cluster } from '#/interfaces/clusters';
 import type { ClusterDatabase, DatabaseAction } from '#/interfaces/databases';

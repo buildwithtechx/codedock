@@ -1,6 +1,6 @@
 import { Building2, Loader2, UserPlus, Users } from 'lucide-react';
 import { useState } from 'react';
-import { Button } from '#/components/ui/button';
+import { Button } from '@codedock/ui/button';
 import { SettingsSection } from '#/features/settings/settings-section';
 import { useAuthStore } from '#/stores/auth-store';
 import { CreateOrganizationModal } from './create-organization-modal';

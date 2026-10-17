@@ -1,8 +1,8 @@
 import { Layers, Play, RotateCw, Square, Terminal, Trash2 } from 'lucide-react';
 import { useEffect, useState } from 'react';
-import { Button } from '#/components/ui/button';
-import { Input } from '#/components/ui/input';
-import { Textarea } from '#/components/ui/textarea';
+import { Button } from '@codedock/ui/button';
+import { Input } from '@codedock/ui/input';
+import { Textarea } from '@codedock/ui/textarea';
 import type { ManagedWorkload } from '#/interfaces/server';
 import {
   controlManagedWorkload,

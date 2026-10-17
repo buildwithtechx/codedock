@@ -1,6 +1,6 @@
 import { useState } from 'react';
-import { Input } from '#/components/ui/input';
-import { Label } from '#/components/ui/label';
+import { Input } from '@codedock/ui/input';
+import { Label } from '@codedock/ui/label';
 import { ClusterNodeFields } from '../servers/cluster-node-fields';
 import type { RuntimeTarget } from './runtime-types';
 export function BareRuntimeFields({

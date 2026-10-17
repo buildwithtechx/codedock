@@ -6,8 +6,7 @@ import { Footer } from '../components/main/footer';
 import { Header } from '../components/main/header';
 import { PosthogTracking } from '../components/posthog-tracking';
 import { ThemeProvider } from '../components/theme-provider';
-import { Toaster } from '../components/ui/sonner';
-import { TooltipProvider } from '../components/ui/tooltip';
+import { Toaster, TooltipProvider } from '@codedock/ui';
 import { createMeta } from '../lib/seo';
 
 interface MyRouterContext {

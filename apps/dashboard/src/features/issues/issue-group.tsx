@@ -1,4 +1,4 @@
-import { Badge } from '#/components/ui/badge';
+import { Badge } from '@codedock/ui/badge';
 import { cn } from '#/lib/utils';
 import type { AttentionIssue } from './interfaces';
 import { kindMeta, SEVERITY_TONE, toDisplaySeverity } from './issue-meta';

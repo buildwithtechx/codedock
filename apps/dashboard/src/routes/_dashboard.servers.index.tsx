@@ -3,15 +3,15 @@ import { Cpu, Plus, RefreshCw, Search, Server as ServerIcon } from 'lucide-react
 import { useState } from 'react';
 import { toast } from 'sonner';
 import { PageHeader } from '#/components/layout/page-header';
-import { Button } from '#/components/ui/button';
+import { Button } from '@codedock/ui/button';
 import {
   DropdownMenu,
   DropdownMenuContent,
   DropdownMenuItem,
   DropdownMenuTrigger,
-} from '#/components/ui/dropdown-menu';
-import { Input } from '#/components/ui/input';
-import { QueryErrorState } from '#/components/ui/query-error-state';
+} from '@codedock/ui/dropdown-menu';
+import { Input } from '@codedock/ui/input';
+import { QueryErrorState } from '#/components/query-error-state';
 import { AddServerModal } from '#/features/servers/add-server-modal';
 import { createServer } from '#/features/servers/api';
 import { ServerDeleteDialog } from '#/features/servers/server-delete-dialog';

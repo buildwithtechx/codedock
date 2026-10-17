@@ -1,7 +1,7 @@
 import { Check, CheckCircle2, Plus, Zap } from 'lucide-react';
 import type React from 'react';
 import { useState } from 'react';
-import { Button } from '#/components/ui/button';
+import { Button } from '@codedock/ui/button';
 import { PreferenceRow } from '#/features/settings/preference-row';
 
 export function NotificationChannelRow({

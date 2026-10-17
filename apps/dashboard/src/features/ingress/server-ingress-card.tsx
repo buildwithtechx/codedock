@@ -11,8 +11,8 @@ import {
 } from 'lucide-react';
 import { useState } from 'react';
 import { toast } from 'sonner';
-import { Button } from '#/components/ui/button';
-import { Dialog, DialogContent } from '#/components/ui/dialog';
+import { Button } from '@codedock/ui/button';
+import { Dialog, DialogContent } from '@codedock/ui/dialog';
 import type { IngressConnection } from '#/interfaces/ingress';
 import { ingressService } from '#/services/ingress';
 import { IngressConnectForm } from './ingress-connect-form';

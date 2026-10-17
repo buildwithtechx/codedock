@@ -1,6 +1,6 @@
 import { Terminal } from 'lucide-react';
-import { QueryErrorState } from '#/components/ui/query-error-state';
-import { Skeleton } from '#/components/ui/skeleton';
+import { QueryErrorState } from '#/components/query-error-state';
+import { Skeleton } from '@codedock/ui/skeleton';
 import { useGetLogs } from '#/hooks/use-deployments';
 
 export function DeploymentLogs({

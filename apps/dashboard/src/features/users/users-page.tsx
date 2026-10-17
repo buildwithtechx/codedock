@@ -1,8 +1,8 @@
 import { format } from 'date-fns';
 import { Key, Plus, Server, Trash2, Users } from 'lucide-react';
 import { useState } from 'react';
-import { Button } from '#/components/ui/button';
-import { Skeleton } from '#/components/ui/skeleton';
+import { Button } from '@codedock/ui/button';
+import { Skeleton } from '@codedock/ui/skeleton';
 import type { User } from '#/features/users';
 import { useListUsers } from '#/features/users';
 import { UserDeleteDialog } from './components/user-delete-dialog';

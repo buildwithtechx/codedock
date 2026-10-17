@@ -2,7 +2,7 @@ import { useSearch } from '@tanstack/react-router';
 import { Plus, RefreshCw } from 'lucide-react';
 import { useEffect, useMemo, useState } from 'react';
 import { toast } from 'sonner';
-import { Button } from '#/components/ui/button';
+import { Button } from '@codedock/ui/button';
 import {
   useList,
   useListAllRecords,

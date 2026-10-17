@@ -9,16 +9,9 @@ import {
   Trash2,
   XCircle,
 } from 'lucide-react';
-import { Button } from '#/components/ui/button';
-import { Card, CardContent } from '#/components/ui/card';
-import {
-  Table,
-  TableBody,
-  TableCell,
-  TableHead,
-  TableHeader,
-  TableRow,
-} from '#/components/ui/table';
+import { Button } from '@codedock/ui/button';
+import { Card, CardContent } from '@codedock/ui/card';
+import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@codedock/ui/table';
 import type { BackupRecord } from '#/features/backups/interfaces';
 import { getApiBaseUrl } from '#/lib/api-client';
 import { formatBytes } from '#/lib/utils';

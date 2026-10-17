@@ -7,8 +7,8 @@ import {
   XAxis,
   YAxis,
 } from 'recharts';
-import { Card, CardContent, CardHeader, CardTitle } from '#/components/ui/card';
-import { Skeleton } from '#/components/ui/skeleton';
+import { Card, CardContent, CardHeader, CardTitle } from '@codedock/ui/card';
+import { Skeleton } from '@codedock/ui/skeleton';
 import { formatTimestamp } from './metrics-utils';
 
 interface MetricChartCardProps {

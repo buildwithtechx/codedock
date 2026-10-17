@@ -1,5 +1,5 @@
 import { AlertTriangle, CheckCircle2, CircleDashed, Cloud, Loader2, Server } from 'lucide-react';
-import { Button } from '#/components/ui/button';
+import { Button } from '@codedock/ui/button';
 import { cn } from '#/lib/utils';
 import type { DestinationKind, S3Destination, SFTPDestination } from './interfaces';
 

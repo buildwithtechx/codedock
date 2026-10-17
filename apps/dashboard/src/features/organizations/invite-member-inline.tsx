@@ -1,10 +1,10 @@
 import { Check, Copy, Link, Lock, Send, Shield, Users } from 'lucide-react';
 import { useState } from 'react';
 import { toast } from 'sonner';
-import { Button } from '#/components/ui/button';
-import { Checkbox } from '#/components/ui/checkbox';
-import { Input } from '#/components/ui/input';
-import { Label } from '#/components/ui/label';
+import { Button } from '@codedock/ui/button';
+import { Checkbox } from '@codedock/ui/checkbox';
+import { Input } from '@codedock/ui/input';
+import { Label } from '@codedock/ui/label';
 import { useListAllProjects } from '#/features/projects';
 import { useInviteOrganizationMember } from './hooks';
 import type { OrganizationRole } from './interfaces';

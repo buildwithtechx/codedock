@@ -1,6 +1,6 @@
 import { Check, Copy, ExternalLink } from 'lucide-react';
 import { useState } from 'react';
-import { Button } from '#/components/ui/button';
+import { Button } from '@codedock/ui/button';
 
 type ClientDefinition = {
   id: string;

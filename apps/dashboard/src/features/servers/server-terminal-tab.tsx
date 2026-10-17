@@ -1,12 +1,6 @@
 import { TerminalSquare } from 'lucide-react';
-import { BlurIp } from '#/components/ui/blur-ip';
-import {
-  Empty,
-  EmptyDescription,
-  EmptyHeader,
-  EmptyMedia,
-  EmptyTitle,
-} from '#/components/ui/empty';
+import { BlurIp } from '#/components/blur-ip';
+import { Empty, EmptyDescription, EmptyHeader, EmptyMedia, EmptyTitle } from '@codedock/ui/empty';
 import type { Server } from '#/interfaces/server';
 
 export function ServerTerminalTab({ server }: { server: Server }) {

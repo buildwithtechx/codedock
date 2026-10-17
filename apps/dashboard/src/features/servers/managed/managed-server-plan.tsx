@@ -1,5 +1,5 @@
 import { Link } from '@tanstack/react-router';
-import { Button } from '#/components/ui/button';
+import { Button } from '@codedock/ui/button';
 import type { CloudWorkspaceSummary } from '#/interfaces/server';
 import { CapacitySummary } from './capacity-summary';
 

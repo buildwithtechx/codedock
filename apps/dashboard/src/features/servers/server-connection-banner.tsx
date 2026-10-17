@@ -1,7 +1,7 @@
 import { Link } from '@tanstack/react-router';
 import { RotateCw, Settings, WifiOff } from 'lucide-react';
-import { BlurIp } from '#/components/ui/blur-ip';
-import { Button } from '#/components/ui/button';
+import { BlurIp } from '#/components/blur-ip';
+import { Button } from '@codedock/ui/button';
 import type { Server } from '#/interfaces/server';
 import { reachabilityOf } from './server-list-row';
 

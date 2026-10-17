@@ -1,8 +1,8 @@
 import { Box, Cpu, Plus, Radio, Server } from 'lucide-react';
 import { useState } from 'react';
-import { Badge } from '#/components/ui/badge';
-import { Button } from '#/components/ui/button';
-import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '#/components/ui/card';
+import { Badge } from '@codedock/ui/badge';
+import { Button } from '@codedock/ui/button';
+import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@codedock/ui/card';
 import type { ActionRunner } from '#/interfaces/actions';
 import { RunnerEditor } from './runner-editor';
 

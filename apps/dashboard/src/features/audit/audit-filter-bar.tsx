@@ -1,5 +1,5 @@
 import { Activity, Bot, Search, Terminal, Webhook, Wrench } from 'lucide-react';
-import { Input } from '#/components/ui/input';
+import { Input } from '@codedock/ui/input';
 import type { AuditFacets, AuditSource } from './api';
 
 export type PeriodKey = 'all' | 'today' | '7d' | '30d' | '90d';

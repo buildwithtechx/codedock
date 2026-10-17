@@ -1,7 +1,7 @@
 import { createFileRoute } from '@tanstack/react-router';
 import { Activity, Grid3X3 } from 'lucide-react';
 import { useState } from 'react';
-import { QueryErrorState } from '#/components/ui/query-error-state';
+import { QueryErrorState } from '#/components/query-error-state';
 import { EnvironmentCanvas } from '#/features/canvas/environment-canvas';
 import { useGetCanvasSummary, useGetEnvironmentCanvas } from '#/hooks/use-canvas';
 import { useListByProject } from '#/hooks/use-environments';

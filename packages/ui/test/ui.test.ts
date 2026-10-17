@@ -17,12 +17,12 @@ describe('@codedock/ui', () => {
     it('produces default button styles', () => {
       const classes = buttonVariants();
       expect(classes).toContain('bg-primary');
-      expect(classes).toContain('h-9');
+      expect(classes).toContain('h-10');
     });
 
     it('produces variant-specific styles', () => {
       expect(buttonVariants({ variant: 'destructive' })).toContain('bg-destructive');
-      expect(buttonVariants({ variant: 'outline' })).toContain('border-input');
+      expect(buttonVariants({ variant: 'outline' })).toContain('border-border');
       expect(buttonVariants({ size: 'sm' })).toContain('h-8');
     });
   });

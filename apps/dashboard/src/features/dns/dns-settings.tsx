@@ -1,8 +1,8 @@
 import { CheckCircle2, KeyRound, Plus } from 'lucide-react';
 import { useEffect, useState } from 'react';
 import { toast } from 'sonner';
-import { Button } from '#/components/ui/button';
-import { Skeleton } from '#/components/ui/skeleton';
+import { Button } from '@codedock/ui/button';
+import { Skeleton } from '@codedock/ui/skeleton';
 import { useGetSettings, useUpdateSettings } from '#/features/settings';
 import { SettingsSection } from '#/features/settings/settings-section';
 import { DnsProviderForm } from './components/dns-provider-form';

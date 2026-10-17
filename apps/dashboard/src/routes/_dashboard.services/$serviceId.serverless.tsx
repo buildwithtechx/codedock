@@ -3,14 +3,8 @@ import { createFileRoute } from '@tanstack/react-router';
 import { Loader2 } from 'lucide-react';
 import { useEffect, useState } from 'react';
 import { toast } from 'sonner';
-import { Button } from '#/components/ui/button';
-import {
-  Select,
-  SelectContent,
-  SelectItem,
-  SelectTrigger,
-  SelectValue,
-} from '#/components/ui/select';
+import { Button } from '@codedock/ui/button';
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@codedock/ui/select';
 import { useGetApp } from '#/hooks/use-apps';
 import { useGetCode, useSaveCode } from '#/hooks/use-serverless';
 

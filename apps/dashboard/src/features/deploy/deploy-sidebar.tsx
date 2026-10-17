@@ -9,8 +9,8 @@ import {
   Rocket,
 } from 'lucide-react';
 import { useState } from 'react';
-import { Button } from '#/components/ui/button';
-import { Input } from '#/components/ui/input';
+import { Button } from '@codedock/ui/button';
+import { Input } from '@codedock/ui/input';
 import { useGetPublicSettings, useGetSettings } from '#/features/settings';
 import { GithubIcon } from '#/features/sources/github-app-dialogs';
 

@@ -1,4 +1,5 @@
-import { Label } from '#/components/ui/label';
+import type * as React from 'react';
+import { Label } from './label';
 
 export type SectionProps = {
   icon: React.ReactNode;
@@ -22,7 +23,12 @@ export const Section = ({ icon, title, action, children }: SectionProps) => (
   </section>
 );
 
-export type RowProps = { label: string; description?: string; children: React.ReactNode };
+export type RowProps = {
+  label: string;
+  description?: string;
+  children: React.ReactNode;
+};
+
 export const Row = ({ label, description, children }: RowProps) => (
   <div className="flex flex-col gap-4 py-4 md:flex-row md:items-center md:justify-between">
     <div className="flex-1 pr-4">

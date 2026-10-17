@@ -11,15 +11,9 @@ import {
 } from 'lucide-react';
 import { useState } from 'react';
 import { toast } from 'sonner';
-import { Badge } from '#/components/ui/badge';
-import { Button } from '#/components/ui/button';
-import {
-  Sheet,
-  SheetContent,
-  SheetDescription,
-  SheetHeader,
-  SheetTitle,
-} from '#/components/ui/sheet';
+import { Badge } from '@codedock/ui/badge';
+import { Button } from '@codedock/ui/button';
+import { Sheet, SheetContent, SheetDescription, SheetHeader, SheetTitle } from '@codedock/ui/sheet';
 import type { AppService } from '#/features/services';
 import { appsService } from '#/services/apps';
 

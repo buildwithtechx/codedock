@@ -1,14 +1,8 @@
 import { useQuery } from '@tanstack/react-query';
 import { History } from 'lucide-react';
-import { Badge } from '#/components/ui/badge';
-import {
-  Empty,
-  EmptyDescription,
-  EmptyHeader,
-  EmptyMedia,
-  EmptyTitle,
-} from '#/components/ui/empty';
-import { Skeleton } from '#/components/ui/skeleton';
+import { Badge } from '@codedock/ui/badge';
+import { Empty, EmptyDescription, EmptyHeader, EmptyMedia, EmptyTitle } from '@codedock/ui/empty';
+import { Skeleton } from '@codedock/ui/skeleton';
 import { settingsService } from '#/features/settings/api';
 
 export function NotificationDeliveryHistory() {

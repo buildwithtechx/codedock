@@ -2,10 +2,10 @@ import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
 import { AlertCircle, CheckCircle2, Cloud } from 'lucide-react';
 import { useState } from 'react';
 import { toast } from 'sonner';
-import { Button } from '#/components/ui/button';
-import { Dialog, DialogContent } from '#/components/ui/dialog';
-import { Label } from '#/components/ui/label';
-import { Switch } from '#/components/ui/switch';
+import { Button } from '@codedock/ui/button';
+import { Dialog, DialogContent } from '@codedock/ui/dialog';
+import { Label } from '@codedock/ui/label';
+import { Switch } from '@codedock/ui/switch';
 import { ingressService } from '#/services/ingress';
 
 interface DomainIngressSettingsProps {

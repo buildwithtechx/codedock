@@ -11,17 +11,11 @@ import {
 import type { ReactNode } from 'react';
 import { useEffect, useState } from 'react';
 import { toast } from 'sonner';
-import { Button } from '#/components/ui/button';
-import { Input } from '#/components/ui/input';
-import { Label } from '#/components/ui/label';
-import {
-  Select,
-  SelectContent,
-  SelectItem,
-  SelectTrigger,
-  SelectValue,
-} from '#/components/ui/select';
-import { Textarea } from '#/components/ui/textarea';
+import { Button } from '@codedock/ui/button';
+import { Input } from '@codedock/ui/input';
+import { Label } from '@codedock/ui/label';
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@codedock/ui/select';
+import { Textarea } from '@codedock/ui/textarea';
 import { useListAllProjects } from '#/features/projects';
 import type { AppService, Job } from '#/features/services';
 import { appsService } from '#/services/apps';

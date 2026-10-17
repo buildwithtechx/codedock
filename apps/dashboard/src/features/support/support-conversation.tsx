@@ -1,6 +1,6 @@
 import { ArrowLeft, Paperclip, Send, ShieldCheck, User } from 'lucide-react';
 import { useState } from 'react';
-import { Button } from '#/components/ui/button';
+import { Button } from '@codedock/ui/button';
 import type { SupportTicket } from '#/interfaces/support';
 import { cn } from '#/lib/utils';
 

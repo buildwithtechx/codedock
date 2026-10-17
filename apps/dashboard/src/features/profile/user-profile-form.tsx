@@ -1,16 +1,16 @@
 import { Check, Loader2, Lock, Mail, User } from 'lucide-react';
 import { useState } from 'react';
 import { toast } from 'sonner';
-import { Button } from '#/components/ui/button';
+import { Button } from '@codedock/ui/button';
 import {
   Dialog,
   DialogClose,
   DialogContent,
   DialogDescription,
   DialogTitle,
-} from '#/components/ui/dialog';
-import { Input } from '#/components/ui/input';
-import { InputOTP, InputOTPGroup, InputOTPSlot } from '#/components/ui/input-otp';
+} from '@codedock/ui/dialog';
+import { Input } from '@codedock/ui/input';
+import { InputOTP, InputOTPGroup, InputOTPSlot } from '@codedock/ui/input-otp';
 import {
   useChangePassword,
   useGetProfile,

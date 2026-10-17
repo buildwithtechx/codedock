@@ -1,6 +1,6 @@
 import { Cpu, HardDrive, Layers, Server } from 'lucide-react';
 import { useMemo, useState } from 'react';
-import { Button } from '#/components/ui/button';
+import { Button } from '@codedock/ui/button';
 
 export interface CustomPlanQuote {
   cores: number;

@@ -16,7 +16,7 @@ import {
 } from 'lucide-react';
 import { useMemo, useState } from 'react';
 import { toast } from 'sonner';
-import { Button } from '#/components/ui/button';
+import { Button } from '@codedock/ui/button';
 import {
   Empty,
   EmptyContent,
@@ -24,8 +24,8 @@ import {
   EmptyHeader,
   EmptyMedia,
   EmptyTitle,
-} from '#/components/ui/empty';
-import { Skeleton } from '#/components/ui/skeleton';
+} from '@codedock/ui/empty';
+import { Skeleton } from '@codedock/ui/skeleton';
 import { cn } from '#/lib/utils';
 import {
   DestinationLoadError,

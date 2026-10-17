@@ -1,4 +1,4 @@
-import { TabsContent } from '#/components/ui/tabs';
+import { TabsContent } from '@codedock/ui/tabs';
 import { ManagedServerActivity } from '#/features/servers/managed/managed-server-activity';
 import { ManagedServerNetwork } from '#/features/servers/managed/managed-server-network';
 import { ManagedServerRuntime } from '#/features/servers/managed/managed-server-runtime';

@@ -1,6 +1,6 @@
 import { Mail, Webhook } from 'lucide-react';
-import { Input } from '#/components/ui/input';
-import { Label } from '#/components/ui/label';
+import { Input } from '@codedock/ui/input';
+import { Label } from '@codedock/ui/label';
 import { PreferenceRow } from '#/features/settings/preference-row';
 import { NotificationChannelRow } from './notification-channel-row';
 

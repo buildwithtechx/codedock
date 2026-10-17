@@ -1,6 +1,6 @@
 import type { LucideIcon } from 'lucide-react';
 import { Activity, Cpu, HardDrive, MemoryStick, WifiOff } from 'lucide-react';
-import { Button } from '#/components/ui/button';
+import { Button } from '@codedock/ui/button';
 import { MetricChartCard } from '#/features/services/metric-chart-card';
 import { parseServerMetrics, type Server } from '#/interfaces/server';
 import { cn } from '#/lib/utils';

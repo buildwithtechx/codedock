@@ -1,7 +1,7 @@
 import { Layers } from 'lucide-react';
 import { useCallback, useEffect, useMemo, useState } from 'react';
 import { toast } from 'sonner';
-import { Button } from '#/components/ui/button';
+import { Button } from '@codedock/ui/button';
 import { AUDIT_CATEGORIES } from '#/constants/audit';
 import { type AuditEventRow, type AuditFacets, auditApi } from './api';
 import { AuditDayGroup } from './audit-day-group';

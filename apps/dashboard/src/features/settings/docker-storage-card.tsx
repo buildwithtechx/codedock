@@ -1,4 +1,4 @@
-import { Badge } from '#/components/ui/badge';
+import { Badge } from '@codedock/ui/badge';
 import type { SystemStats } from '#/features/settings';
 import { cn } from '#/lib/utils';
 

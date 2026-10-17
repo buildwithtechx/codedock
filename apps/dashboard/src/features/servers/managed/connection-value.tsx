@@ -1,6 +1,6 @@
 import { Check, Copy, Eye, EyeOff } from 'lucide-react';
 import { useState } from 'react';
-import { Button } from '#/components/ui/button';
+import { Button } from '@codedock/ui/button';
 
 export function ConnectionValue({
   label,

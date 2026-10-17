@@ -1,5 +1,5 @@
 import { Loader2 } from 'lucide-react';
-import { Switch } from '#/components/ui/switch';
+import { Switch } from '@codedock/ui/switch';
 
 const RETENTION_CHOICES = [7, 30, 90, 180, 365];
 

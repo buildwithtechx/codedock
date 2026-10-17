@@ -1,10 +1,10 @@
 import { Globe, Loader2, Plus, RefreshCw, Shield, Trash2 } from 'lucide-react';
 import { useState } from 'react';
 import { toast } from 'sonner';
-import { Button } from '#/components/ui/button';
-import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '#/components/ui/card';
-import { Input } from '#/components/ui/input';
-import { Label } from '#/components/ui/label';
+import { Button } from '@codedock/ui/button';
+import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@codedock/ui/card';
+import { Input } from '@codedock/ui/input';
+import { Label } from '@codedock/ui/label';
 import { useCreate, useDelete, useListByService } from '#/features/dns';
 import { useDomainVerification } from '#/features/dns/domain-verification';
 import { useGetSettings } from '#/features/settings';

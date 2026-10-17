@@ -1,6 +1,6 @@
 import { useNavigate } from '@tanstack/react-router';
 import { LayoutGrid, Settings } from 'lucide-react';
-import { Button } from '#/components/ui/button';
+import { Button } from '@codedock/ui/button';
 import type { GithubApp } from '#/features/settings';
 import { useGetGitApps } from '#/features/settings';
 import { GithubIcon } from '#/features/sources/github-app-dialogs';

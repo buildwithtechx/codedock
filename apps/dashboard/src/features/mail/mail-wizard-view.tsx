@@ -2,8 +2,8 @@ import { Link, useNavigate } from '@tanstack/react-router';
 import { ArrowLeft, Check, Mail, Plug, Server } from 'lucide-react';
 import { useState } from 'react';
 import { toast } from 'sonner';
-import { Button } from '#/components/ui/button';
-import { Input } from '#/components/ui/input';
+import { Button } from '@codedock/ui/button';
+import { Input } from '@codedock/ui/input';
 import { getMailProvider, MAIL_PROVIDERS, type MailProviderId } from './mail-providers-catalog';
 
 type WizardPhase = 'choose' | 'connect' | 'done';

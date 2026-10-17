@@ -1,13 +1,13 @@
 import { CheckCircle2, KeyRound, Plus, ShieldAlert, Trash2, XCircle } from 'lucide-react';
 import { useState } from 'react';
-import { Alert, AlertDescription } from '#/components/ui/alert';
-import { Badge } from '#/components/ui/badge';
-import { Button } from '#/components/ui/button';
-import { Card, CardContent, CardHeader, CardTitle } from '#/components/ui/card';
-import { Input } from '#/components/ui/input';
-import { Label } from '#/components/ui/label';
-import { QueryErrorState } from '#/components/ui/query-error-state';
-import { Tabs, TabsContent, TabsList, TabsTrigger } from '#/components/ui/tabs';
+import { Alert, AlertDescription } from '@codedock/ui/alert';
+import { Badge } from '@codedock/ui/badge';
+import { Button } from '@codedock/ui/button';
+import { Card, CardContent, CardHeader, CardTitle } from '@codedock/ui/card';
+import { Input } from '@codedock/ui/input';
+import { Label } from '@codedock/ui/label';
+import { QueryErrorState } from '#/components/query-error-state';
+import { Tabs, TabsContent, TabsList, TabsTrigger } from '@codedock/ui/tabs';
 import {
   useCreateDkim,
   useCreateMailbox,

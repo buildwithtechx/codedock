@@ -7,7 +7,7 @@ import {
   Trash2,
   XCircle,
 } from 'lucide-react';
-import { Button } from '#/components/ui/button';
+import { Button } from '@codedock/ui/button';
 import { getApiBaseUrl } from '#/lib/api-client';
 import { cn } from '#/lib/utils';
 import { BackupRecordProtection } from './backup-record-protection';

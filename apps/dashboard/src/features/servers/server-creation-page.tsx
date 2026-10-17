@@ -10,10 +10,10 @@ import {
 } from 'lucide-react';
 import { useState } from 'react';
 import { toast } from 'sonner';
-import { Button } from '#/components/ui/button';
-import { Card } from '#/components/ui/card';
-import { Input } from '#/components/ui/input';
-import { Label } from '#/components/ui/label';
+import { Button } from '@codedock/ui/button';
+import { Card } from '@codedock/ui/card';
+import { Input } from '@codedock/ui/input';
+import { Label } from '@codedock/ui/label';
 import type { Server, TestSSHRequest } from '#/interfaces/server';
 import { createServer, testServerConnection } from './api';
 import { HetznerSetupWizard } from './managed/hetzner-setup-wizard';

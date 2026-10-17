@@ -1,7 +1,7 @@
 import { ArrowUpRight, FileUp, Loader2, LockKeyhole, Upload } from 'lucide-react';
 import { useRef, useState } from 'react';
 import { toast } from 'sonner';
-import { Button } from '#/components/ui/button';
+import { Button } from '@codedock/ui/button';
 import {
   Dialog,
   DialogContent,
@@ -9,9 +9,9 @@ import {
   DialogHeader,
   DialogTitle,
   DialogTrigger,
-} from '#/components/ui/dialog';
-import { Input } from '#/components/ui/input';
-import { Label } from '#/components/ui/label';
+} from '@codedock/ui/dialog';
+import { Input } from '@codedock/ui/input';
+import { Label } from '@codedock/ui/label';
 import { useGetSetupStatus } from '#/features/settings';
 import { apiClient } from '#/lib/api-client';
 

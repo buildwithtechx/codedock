@@ -9,8 +9,8 @@ import {
   DialogDescription,
   DialogHeader,
   DialogTitle,
-} from '#/components/ui/dialog';
-import { Input } from '#/components/ui/input';
+} from '@codedock/ui/dialog';
+import { Input } from '@codedock/ui/input';
 import { appsService } from '#/services/apps';
 import { deploymentsService } from '#/services/deployments';
 import { COMPANION_CATALOG, type CompanionCatalogItem } from './companion-catalog';

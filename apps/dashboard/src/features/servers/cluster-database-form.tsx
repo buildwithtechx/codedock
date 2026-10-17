@@ -1,6 +1,6 @@
-import { Button } from '#/components/ui/button';
-import { Input } from '#/components/ui/input';
-import { Label } from '#/components/ui/label';
+import { Button } from '@codedock/ui/button';
+import { Input } from '@codedock/ui/input';
+import { Label } from '@codedock/ui/label';
 import type { ClusterDatabaseSpec, DatabaseAction } from '#/interfaces/databases';
 
 export interface ClusterDatabaseFormProps {

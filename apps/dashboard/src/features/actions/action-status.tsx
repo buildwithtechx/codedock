@@ -1,5 +1,5 @@
 import { AlertCircle, CheckCircle2, Circle, Clock, Loader2, XCircle } from 'lucide-react';
-import { Badge } from '#/components/ui/badge';
+import { Badge } from '@codedock/ui/badge';
 
 export type ActionStatusType = 'queued' | 'running' | 'ready' | 'failed' | 'cancelled';
 

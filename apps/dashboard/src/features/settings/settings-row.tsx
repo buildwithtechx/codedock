@@ -1,5 +1,5 @@
 import type { ReactNode } from 'react';
-import { Label } from '#/components/ui/label';
+import { Label } from '@codedock/ui/label';
 import { cn } from '#/lib/utils';
 
 export function SettingsRow({

@@ -1,8 +1,8 @@
 import { Link } from '@tanstack/react-router';
 import { ArrowRight, Cloud, PlayCircle, Plus, Search, Trash2 } from 'lucide-react';
 import { useState } from 'react';
-import { Button } from '#/components/ui/button';
-import { Input } from '#/components/ui/input';
+import { Button } from '@codedock/ui/button';
+import { Input } from '@codedock/ui/input';
 import type { ActionRun, ActionWorkflow } from '#/interfaces/actions';
 import { ActionStatus } from './action-status';
 import { ActionsEmptyState } from './actions-empty-state';

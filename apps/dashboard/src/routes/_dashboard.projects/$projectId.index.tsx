@@ -2,10 +2,10 @@ import { createFileRoute, useNavigate } from '@tanstack/react-router';
 import { Activity, Box, Folder, Plus, Rocket, Server, Settings } from 'lucide-react';
 import { useState } from 'react';
 import { toast } from 'sonner';
-import { Button } from '#/components/ui/button';
-import { QueryErrorState } from '#/components/ui/query-error-state';
-import { ServiceIcon } from '#/components/ui/service-icon';
-import { Tabs, TabsContent, TabsList, TabsTrigger } from '#/components/ui/tabs';
+import { Button } from '@codedock/ui/button';
+import { QueryErrorState } from '#/components/query-error-state';
+import { ServiceIcon } from '@codedock/ui/service-icon';
+import { Tabs, TabsContent, TabsList, TabsTrigger } from '@codedock/ui/tabs';
 import {
   EnvironmentSwitcher,
   ProjectDeploymentsTab,

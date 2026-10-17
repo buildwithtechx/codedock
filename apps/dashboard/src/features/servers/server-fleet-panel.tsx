@@ -1,5 +1,5 @@
 import { Activity, Layers, MapPin, Server as ServerIcon } from 'lucide-react';
-import { Skeleton } from '#/components/ui/skeleton';
+import { Skeleton } from '@codedock/ui/skeleton';
 import type { Server } from '#/interfaces/server';
 import { reachabilityOf } from './server-list-row';
 

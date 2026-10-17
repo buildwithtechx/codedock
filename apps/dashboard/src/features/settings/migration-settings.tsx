@@ -1,9 +1,9 @@
 import { ArrowRightLeft, Download, Loader2, Upload } from 'lucide-react';
 import { useRef, useState } from 'react';
 import { toast } from 'sonner';
-import { Button } from '#/components/ui/button';
-import { Input } from '#/components/ui/input';
-import { Label } from '#/components/ui/label';
+import { Button } from '@codedock/ui/button';
+import { Input } from '@codedock/ui/input';
+import { Label } from '@codedock/ui/label';
 import { ServerTakeoverDialog } from '#/features/servers/components/server-takeover-dialog';
 import { useExportSystem, useImportSystem } from '#/features/settings';
 import { SettingsSection } from './settings-section';

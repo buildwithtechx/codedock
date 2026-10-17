@@ -1,6 +1,6 @@
 import { Cpu, HardDrive, Layers } from 'lucide-react';
 import { useId, useMemo, useState } from 'react';
-import { Button } from '#/components/ui/button';
+import { Button } from '@codedock/ui/button';
 import {
   type ComputePricing,
   DEFAULT_COMPUTE_PRICING,

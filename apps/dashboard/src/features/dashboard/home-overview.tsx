@@ -1,7 +1,7 @@
 import { useNavigate } from '@tanstack/react-router';
 import { PageFrame } from '#/components/layout/page-frame';
 import { PageHeader } from '#/components/layout/page-header';
-import { QueryErrorState } from '#/components/ui/query-error-state';
+import { QueryErrorState } from '#/components/query-error-state';
 import { useListCanvasSummaries } from '#/hooks/use-canvas';
 import { useAuthStore } from '#/stores/auth-store';
 import { HomeAppInventory } from './home-app-inventory';

@@ -1,4 +1,4 @@
-import { Skeleton } from '#/components/ui/skeleton';
+import { Skeleton } from '@codedock/ui/skeleton';
 
 export function ServerListSkeleton({ rows = 4 }: { rows?: number }) {
   return (

@@ -2,8 +2,8 @@ import type { QueryClient } from '@tanstack/react-query';
 import { createRootRouteWithContext, HeadContent, Outlet } from '@tanstack/react-router';
 import { BackendGate } from '#/components/backend-gate';
 import { ThemeProvider } from '#/components/theme-provider';
-import { Toaster } from '#/components/ui/sonner';
-import { TooltipProvider } from '#/components/ui/tooltip';
+import { Toaster } from '@codedock/ui/sonner';
+import { TooltipProvider } from '@codedock/ui/tooltip';
 import { PostHogProvider } from '#/integrations/posthog-provider';
 
 interface MyRouterContext {

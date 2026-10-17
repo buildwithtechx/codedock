@@ -1,8 +1,8 @@
 import { Network } from 'lucide-react';
 import { useEffect, useId, useState } from 'react';
-import { Button } from '#/components/ui/button';
-import { Checkbox } from '#/components/ui/checkbox';
-import { Textarea } from '#/components/ui/textarea';
+import { Button } from '@codedock/ui/button';
+import { Checkbox } from '@codedock/ui/checkbox';
+import { Textarea } from '@codedock/ui/textarea';
 import type { ServerNetworkSettings } from '#/interfaces/server';
 import { ConnectionValue } from './connection-value';
 import { getServerNetworkSettings, updateServerNetworkSettings } from './managed-api';

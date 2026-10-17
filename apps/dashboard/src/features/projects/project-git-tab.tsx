@@ -2,18 +2,18 @@ import { Link } from '@tanstack/react-router';
 import { Check, GitBranch, GitCommitHorizontal, Loader2, Plus, Settings2 } from 'lucide-react';
 import { useState } from 'react';
 import { toast } from 'sonner';
-import { Badge } from '#/components/ui/badge';
-import { Button } from '#/components/ui/button';
+import { Badge } from '@codedock/ui/badge';
+import { Button } from '@codedock/ui/button';
 import {
   Dialog,
   DialogContent,
   DialogDescription,
   DialogHeader,
   DialogTitle,
-} from '#/components/ui/dialog';
-import { Input } from '#/components/ui/input';
-import { Label } from '#/components/ui/label';
-import { QueryErrorState } from '#/components/ui/query-error-state';
+} from '@codedock/ui/dialog';
+import { Input } from '@codedock/ui/input';
+import { Label } from '@codedock/ui/label';
+import { QueryErrorState } from '#/components/query-error-state';
 import { useListByProject as useListAppsByProject } from '#/hooks/use-apps';
 import { useListByOrganization as useListDeployments } from '#/hooks/use-deployments';
 import { useConnect, useDisconnect, useGetStatus } from '#/hooks/use-git';

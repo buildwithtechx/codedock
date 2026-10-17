@@ -11,8 +11,8 @@ import {
   ShieldCheck,
   TerminalSquare,
 } from 'lucide-react';
-import { Button } from '#/components/ui/button';
-import { QueryErrorState } from '#/components/ui/query-error-state';
+import { Button } from '@codedock/ui/button';
+import { QueryErrorState } from '#/components/query-error-state';
 import type { ServerComponentStatus } from '#/interfaces/server';
 import { cn } from '#/lib/utils';
 import { serverService } from '#/services/servers';

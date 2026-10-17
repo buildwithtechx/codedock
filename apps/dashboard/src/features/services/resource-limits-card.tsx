@@ -1,6 +1,6 @@
 import { useEffect, useState } from 'react';
 import { toast } from 'sonner';
-import { Button } from '#/components/ui/button';
+import { Button } from '@codedock/ui/button';
 import {
   Card,
   CardContent,
@@ -8,9 +8,9 @@ import {
   CardFooter,
   CardHeader,
   CardTitle,
-} from '#/components/ui/card';
-import { Input } from '#/components/ui/input';
-import { Label } from '#/components/ui/label';
+} from '@codedock/ui/card';
+import { Input } from '@codedock/ui/input';
+import { Label } from '@codedock/ui/label';
 import type { AppService } from '#/features/services';
 import { useUpdateApp } from '#/hooks/use-apps';
 

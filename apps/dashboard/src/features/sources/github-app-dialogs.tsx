@@ -1,16 +1,16 @@
 import { Check, ExternalLink, Trash } from 'lucide-react';
 import type React from 'react';
-import { Button } from '#/components/ui/button';
+import { Button } from '@codedock/ui/button';
 import {
   Dialog,
   DialogClose,
   DialogContent,
   DialogDescription,
   DialogTitle,
-} from '#/components/ui/dialog';
-import { Input } from '#/components/ui/input';
-import { Label } from '#/components/ui/label';
-import { Textarea } from '#/components/ui/textarea';
+} from '@codedock/ui/dialog';
+import { Input } from '@codedock/ui/input';
+import { Label } from '@codedock/ui/label';
+import { Textarea } from '@codedock/ui/textarea';
 import type { GithubApp } from '#/features/settings';
 
 export const GithubIcon = ({ className }: { className?: string }) => (

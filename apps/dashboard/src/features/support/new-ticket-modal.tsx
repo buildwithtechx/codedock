@@ -1,6 +1,6 @@
 import { Paperclip, Send, X } from 'lucide-react';
 import { useState } from 'react';
-import { Button } from '#/components/ui/button';
+import { Button } from '@codedock/ui/button';
 import type { CreateTicketInput, SupportCategory } from '#/interfaces/support';
 import { cn } from '#/lib/utils';
 

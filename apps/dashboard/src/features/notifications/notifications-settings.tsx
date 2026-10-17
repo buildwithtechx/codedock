@@ -1,8 +1,8 @@
 import { Bell, BellRing, Check } from 'lucide-react';
 import { useEffect, useRef, useState } from 'react';
 import { toast } from 'sonner';
-import { Button } from '#/components/ui/button';
-import { Skeleton } from '#/components/ui/skeleton';
+import { Button } from '@codedock/ui/button';
+import { Skeleton } from '@codedock/ui/skeleton';
 import {
   useGetNotificationSettings,
   useTestNotification,

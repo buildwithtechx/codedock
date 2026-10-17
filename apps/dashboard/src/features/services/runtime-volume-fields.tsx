@@ -1,5 +1,5 @@
-import { Button } from '#/components/ui/button';
-import { Input } from '#/components/ui/input';
+import { Button } from '@codedock/ui/button';
+import { Input } from '@codedock/ui/input';
 import type { RuntimeVolume } from './runtime-types';
 
 export function RuntimeVolumeFields({

@@ -1,7 +1,7 @@
 import type { LucideIcon } from 'lucide-react';
 import { RefreshCw } from 'lucide-react';
 import type { ReactNode } from 'react';
-import { Button } from '#/components/ui/button';
+import { Button } from '@codedock/ui/button';
 
 export function ManagedControlPanel({
   title,

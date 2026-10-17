@@ -1,6 +1,6 @@
 import { CheckCircle2, CircleDashed, Loader2, XCircle } from 'lucide-react';
 import { useEffect, useRef } from 'react';
-import { Button } from '#/components/ui/button';
+import { Button } from '@codedock/ui/button';
 import { cn } from '#/lib/utils';
 import { hetznerFailed, hetznerStageIndex, hetznerStages } from './hetzner-progress-stages';
 import { useOperationStream } from './use-operation-stream';

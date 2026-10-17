@@ -1,7 +1,7 @@
 import { CheckCircle2, Globe, HelpCircle } from 'lucide-react';
 import { PageHeader } from '#/components/layout/page-header';
-import { Card, CardContent } from '#/components/ui/card';
-import { QueryErrorState } from '#/components/ui/query-error-state';
+import { Card, CardContent } from '@codedock/ui/card';
+import { QueryErrorState } from '#/components/query-error-state';
 import { DomainAuditTable } from './components/domain-audit-table';
 import { useListAllDomains } from './hooks';
 

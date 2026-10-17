@@ -2,7 +2,7 @@ import { Link } from '@tanstack/react-router';
 import { Check, Clock3, FileText, Loader2, Pencil, Play, Trash2, X } from 'lucide-react';
 import { useState } from 'react';
 import { toast } from 'sonner';
-import { Button } from '#/components/ui/button';
+import { Button } from '@codedock/ui/button';
 import {
   Dialog,
   DialogContent,
@@ -10,8 +10,8 @@ import {
   DialogFooter,
   DialogHeader,
   DialogTitle,
-} from '#/components/ui/dialog';
-import { Switch } from '#/components/ui/switch';
+} from '@codedock/ui/dialog';
+import { Switch } from '@codedock/ui/switch';
 import type { Job } from '#/features/services';
 import { jobsApi } from './api';
 import { formatTime, isFailedStatus, relativeTime, statusDot, statusLabel } from './job-format';

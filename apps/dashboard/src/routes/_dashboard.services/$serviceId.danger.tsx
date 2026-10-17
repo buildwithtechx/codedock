@@ -1,7 +1,7 @@
 import { createFileRoute, useNavigate } from '@tanstack/react-router';
 import { PowerOff, RefreshCw, Trash2 } from 'lucide-react';
 import { toast } from 'sonner';
-import { Button } from '#/components/ui/button';
+import { Button } from '@codedock/ui/button';
 import {
   useDeleteDatabase,
   useGetDatabase,

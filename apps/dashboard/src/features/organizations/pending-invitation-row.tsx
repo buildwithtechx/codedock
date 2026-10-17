@@ -1,7 +1,7 @@
 import { Check, Copy, Mail, Trash2 } from 'lucide-react';
 import { useState } from 'react';
 import { toast } from 'sonner';
-import { Button } from '#/components/ui/button';
+import { Button } from '@codedock/ui/button';
 import { useRemoveOrganizationMember } from './hooks';
 import type { OrganizationMember } from './interfaces';
 

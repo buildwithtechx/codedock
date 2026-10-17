@@ -12,14 +12,14 @@ import {
   Trash2,
 } from 'lucide-react';
 import { useState } from 'react';
-import { Button } from '#/components/ui/button';
+import { Button } from '@codedock/ui/button';
 import {
   DropdownMenu,
   DropdownMenuContent,
   DropdownMenuItem,
   DropdownMenuSeparator,
   DropdownMenuTrigger,
-} from '#/components/ui/dropdown-menu';
+} from '@codedock/ui/dropdown-menu';
 import type { CanvasSummary } from '#/features/projects';
 import { ProjectDeleteDialog } from './project-delete-dialog';
 

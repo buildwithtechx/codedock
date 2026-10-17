@@ -1,7 +1,7 @@
 import { createFileRoute } from '@tanstack/react-router';
 import { AlertTriangle } from 'lucide-react';
 import { useState } from 'react';
-import { Button } from '#/components/ui/button';
+import { Button } from '@codedock/ui/button';
 import { ProjectDeleteDialog, useGetProject } from '#/features/projects';
 import { ProjectMembers } from '#/features/projects/project-members';
 import { ProjectTokens } from '#/features/projects/project-tokens';

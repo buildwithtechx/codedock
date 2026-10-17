@@ -1,7 +1,7 @@
 import { useState } from 'react';
-import { Checkbox } from '#/components/ui/checkbox';
-import { Input } from '#/components/ui/input';
-import { Label } from '#/components/ui/label';
+import { Checkbox } from '@codedock/ui/checkbox';
+import { Input } from '@codedock/ui/input';
+import { Label } from '@codedock/ui/label';
 import { cn } from '#/lib/utils';
 import type { S3Provider, S3ProviderId } from './s3-providers';
 import { providerById, s3Providers } from './s3-providers';

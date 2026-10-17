@@ -1,7 +1,7 @@
 import { Loader2, Sparkles } from 'lucide-react';
 import { toast } from 'sonner';
-import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '#/components/ui/card';
-import { Switch } from '#/components/ui/switch';
+import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@codedock/ui/card';
+import { Switch } from '@codedock/ui/switch';
 import { useGetApp, useRedeployApp, useUpdateApp } from '#/hooks/use-apps';
 
 export function OptimizeCard({ serviceId }: { serviceId: string }) {

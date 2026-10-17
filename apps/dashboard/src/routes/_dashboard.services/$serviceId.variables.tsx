@@ -5,9 +5,9 @@ import { type ChangeEvent, useRef, useState } from 'react';
 import { useForm } from 'react-hook-form';
 import { toast } from 'sonner';
 import { z } from 'zod';
-import { Button } from '#/components/ui/button';
-import { Input } from '#/components/ui/input';
-import { Switch } from '#/components/ui/switch';
+import { Button } from '@codedock/ui/button';
+import { Input } from '@codedock/ui/input';
+import { Switch } from '@codedock/ui/switch';
 import { useCreateVariable, useDeleteVariable, useListVariables } from '#/hooks/use-apps';
 
 export const Route = createFileRoute('/_dashboard/services/$serviceId/variables')({

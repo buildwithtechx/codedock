@@ -8,7 +8,7 @@ import {
   DropdownMenuLabel,
   DropdownMenuSeparator,
   DropdownMenuTrigger,
-} from '#/components/ui/dropdown-menu';
+} from '@codedock/ui/dropdown-menu';
 import { useLogout } from '#/features/auth';
 import { useListOrganizations } from '#/features/organizations';
 import { useAuthStore } from '#/stores/auth-store';

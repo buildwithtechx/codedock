@@ -1,5 +1,5 @@
-import { Input } from '#/components/ui/input';
-import { Label } from '#/components/ui/label';
+import { Input } from '@codedock/ui/input';
+import { Label } from '@codedock/ui/label';
 import type { CreateAppServiceRequest } from '#/features/services';
 
 export function ApplicationSetupFields({

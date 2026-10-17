@@ -1,6 +1,6 @@
-import { Checkbox } from '#/components/ui/checkbox';
-import { Input } from '#/components/ui/input';
-import { Label } from '#/components/ui/label';
+import { Checkbox } from '@codedock/ui/checkbox';
+import { Input } from '@codedock/ui/input';
+import { Label } from '@codedock/ui/label';
 
 export const RELAY_PROVIDERS = [
   { id: 'ses', label: 'Amazon SES', host: 'email-smtp.us-east-1.amazonaws.com', port: '587' },

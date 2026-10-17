@@ -2,12 +2,12 @@ import { Link } from '@tanstack/react-router';
 import { CheckCircle2, ExternalLink, Globe, Loader2 } from 'lucide-react';
 import { useEffect, useState } from 'react';
 import { toast } from 'sonner';
-import { Badge } from '#/components/ui/badge';
-import { Button } from '#/components/ui/button';
-import { Input } from '#/components/ui/input';
-import { Label } from '#/components/ui/label';
-import { QueryErrorState } from '#/components/ui/query-error-state';
-import { Skeleton } from '#/components/ui/skeleton';
+import { Badge } from '@codedock/ui/badge';
+import { Button } from '@codedock/ui/button';
+import { Input } from '@codedock/ui/input';
+import { Label } from '@codedock/ui/label';
+import { QueryErrorState } from '#/components/query-error-state';
+import { Skeleton } from '@codedock/ui/skeleton';
 import {
   findMissingRequired,
   InstallSettingsTabs,

@@ -4,7 +4,7 @@ import { AlertCircle, Menu, X } from 'lucide-react';
 import type * as React from 'react';
 import { useEffect, useState } from 'react';
 import { toast } from 'sonner';
-import { Button } from '#/components/ui/button';
+import { Button } from '@codedock/ui/button';
 import { OrganizationOnboarding } from '#/features/organizations';
 import { apiClient } from '#/lib/api-client';
 import { useAuthStore } from '#/stores/auth-store';

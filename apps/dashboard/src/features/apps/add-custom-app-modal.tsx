@@ -1,7 +1,7 @@
 import { AlertCircle, CheckCircle2, FileUp, Loader2, Upload } from 'lucide-react';
 import { useState } from 'react';
 import { toast } from 'sonner';
-import { Button } from '#/components/ui/button';
+import { Button } from '@codedock/ui/button';
 import {
   Dialog,
   DialogContent,
@@ -9,7 +9,7 @@ import {
   DialogFooter,
   DialogHeader,
   DialogTitle,
-} from '#/components/ui/dialog';
+} from '@codedock/ui/dialog';
 import { appsApi } from './api';
 
 interface AddCustomAppModalProps {

@@ -1,10 +1,10 @@
 import { CheckCircle2, Clock, Cpu, RefreshCw } from 'lucide-react';
 import { useState } from 'react';
 import { toast } from 'sonner';
-import { Badge } from '#/components/ui/badge';
-import { Button } from '#/components/ui/button';
-import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '#/components/ui/card';
-import { Progress } from '#/components/ui/progress';
+import { Badge } from '@codedock/ui/badge';
+import { Button } from '@codedock/ui/button';
+import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@codedock/ui/card';
+import { Progress } from '@codedock/ui/progress';
 import { type BuildAdmissionStatus, checksService } from '#/services/checks';
 
 interface DeploymentAdmissionCardProps {

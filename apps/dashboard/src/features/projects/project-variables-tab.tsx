@@ -1,9 +1,9 @@
 import { Copy, Download, Eye, EyeOff, FileText, Plus, Save, Trash2 } from 'lucide-react';
 import { useState } from 'react';
 import { toast } from 'sonner';
-import { Button } from '#/components/ui/button';
-import { Card } from '#/components/ui/card';
-import { Input } from '#/components/ui/input';
+import { Button } from '@codedock/ui/button';
+import { Card } from '@codedock/ui/card';
+import { Input } from '@codedock/ui/input';
 import { useGetVars, useSetVars } from '#/features/projects';
 import { EnvBulkModal } from '#/features/projects/env-bulk-modal';
 import { type EnvEntry, serializeDotenv } from '#/lib/dotenv';

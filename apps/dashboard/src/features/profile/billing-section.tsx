@@ -1,7 +1,7 @@
 import { CreditCard, Loader2 } from 'lucide-react';
 import { useEffect, useState } from 'react';
 import { toast } from 'sonner';
-import { Button } from '#/components/ui/button';
+import { Button } from '@codedock/ui/button';
 import { env } from '#/env';
 import { SettingsRow } from '#/features/settings/settings-row';
 import { SettingsSection } from '#/features/settings/settings-section';

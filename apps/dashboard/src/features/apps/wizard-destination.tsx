@@ -1,15 +1,9 @@
 import { Link } from '@tanstack/react-router';
 import { Plus, RefreshCw, Server as ServerIcon, SlidersHorizontal } from 'lucide-react';
 import { useEffect } from 'react';
-import { Button } from '#/components/ui/button';
-import {
-  Select,
-  SelectContent,
-  SelectItem,
-  SelectTrigger,
-  SelectValue,
-} from '#/components/ui/select';
-import { Skeleton } from '#/components/ui/skeleton';
+import { Button } from '@codedock/ui/button';
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@codedock/ui/select';
+import { Skeleton } from '@codedock/ui/skeleton';
 import { useGetPublicSettings } from '#/features/settings';
 import { useListServers } from '#/hooks/use-servers';
 

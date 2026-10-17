@@ -2,18 +2,12 @@ import { format } from 'date-fns';
 import { Check, Copy, Key, Lock, Plus, ShieldCheck, Trash2 } from 'lucide-react';
 import { useState } from 'react';
 import { toast } from 'sonner';
-import { Badge } from '#/components/ui/badge';
-import { Button } from '#/components/ui/button';
-import { Checkbox } from '#/components/ui/checkbox';
-import { Input } from '#/components/ui/input';
-import { Label } from '#/components/ui/label';
-import {
-  Select,
-  SelectContent,
-  SelectItem,
-  SelectTrigger,
-  SelectValue,
-} from '#/components/ui/select';
+import { Badge } from '@codedock/ui/badge';
+import { Button } from '@codedock/ui/button';
+import { Checkbox } from '@codedock/ui/checkbox';
+import { Input } from '@codedock/ui/input';
+import { Label } from '@codedock/ui/label';
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@codedock/ui/select';
 import { useCreateToken, useListTokens } from '#/features/profile';
 import { SettingsSection } from '#/features/settings/settings-section';
 import type { CreatePATRequest } from '#/features/users';

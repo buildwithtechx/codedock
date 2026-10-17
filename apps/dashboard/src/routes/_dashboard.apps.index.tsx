@@ -2,10 +2,10 @@ import { createFileRoute, Link } from '@tanstack/react-router';
 import { ArrowRight, Plus, Search } from 'lucide-react';
 import { Fragment, useMemo, useState } from 'react';
 import { PageHeader } from '#/components/layout/page-header';
-import { Button } from '#/components/ui/button';
-import { Input } from '#/components/ui/input';
-import { QueryErrorState } from '#/components/ui/query-error-state';
-import { Skeleton } from '#/components/ui/skeleton';
+import { Button } from '@codedock/ui/button';
+import { Input } from '@codedock/ui/input';
+import { QueryErrorState } from '#/components/query-error-state';
+import { Skeleton } from '@codedock/ui/skeleton';
 import {
   AddCustomAppModal,
   AppLogo,

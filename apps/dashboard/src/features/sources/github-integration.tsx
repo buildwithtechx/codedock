@@ -2,7 +2,7 @@ import { useNavigate, useRouterState } from '@tanstack/react-router';
 import { Edit, Plus, Trash } from 'lucide-react';
 import { useEffect, useState } from 'react';
 import { toast } from 'sonner';
-import { Button } from '#/components/ui/button';
+import { Button } from '@codedock/ui/button';
 import type { GithubApp } from '#/features/settings';
 import {
   useDeleteGitApp,

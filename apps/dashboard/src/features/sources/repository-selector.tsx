@@ -1,5 +1,5 @@
 import { useState } from 'react';
-import { Label } from '#/components/ui/label';
+import { Label } from '@codedock/ui/label';
 import { useGitStatus, useListGitRepos } from '#/hooks/use-git';
 
 export function RepositorySelector({

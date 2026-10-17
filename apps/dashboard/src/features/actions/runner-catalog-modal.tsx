@@ -5,7 +5,7 @@ import {
   DialogDescription,
   DialogHeader,
   DialogTitle,
-} from '#/components/ui/dialog';
+} from '@codedock/ui/dialog';
 
 export type RunnerPreset = 'ubuntu' | 'macos' | 'linux' | 'custom';
 

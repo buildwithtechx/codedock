@@ -2,10 +2,10 @@ import { Link, useNavigate } from '@tanstack/react-router';
 import { ArrowLeft, Code2, PlayCircle, Terminal } from 'lucide-react';
 import { useState } from 'react';
 import { toast } from 'sonner';
-import { Button } from '#/components/ui/button';
-import { Input } from '#/components/ui/input';
-import { Label } from '#/components/ui/label';
-import { Textarea } from '#/components/ui/textarea';
+import { Button } from '@codedock/ui/button';
+import { Input } from '@codedock/ui/input';
+import { Label } from '@codedock/ui/label';
+import { Textarea } from '@codedock/ui/textarea';
 import { actionsService } from '#/services/actions';
 
 const STARTER_CI = `name: CI

@@ -1,6 +1,6 @@
 import { CreditCard, ExternalLink, Loader2, Sparkles } from 'lucide-react';
 import { useState } from 'react';
-import { Button } from '#/components/ui/button';
+import { Button } from '@codedock/ui/button';
 import { billingService } from '#/services/billing';
 
 export interface BillingOverviewProps {

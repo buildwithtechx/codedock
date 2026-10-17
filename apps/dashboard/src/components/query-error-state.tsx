@@ -1,6 +1,5 @@
+import { Button, cn } from '@codedock/ui';
 import { CircleAlert, RefreshCw } from 'lucide-react';
-import { cn } from '#/lib/utils';
-import { Button } from './button';
 
 type QueryErrorStateProps = {
   title: string;

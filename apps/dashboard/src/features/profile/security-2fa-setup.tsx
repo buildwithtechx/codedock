@@ -3,15 +3,15 @@ import { Loader2, ShieldCheck, Trash2 } from 'lucide-react';
 import QRCode from 'qrcode';
 import { useEffect, useState } from 'react';
 import { toast } from 'sonner';
-import { Button } from '#/components/ui/button';
+import { Button } from '@codedock/ui/button';
 import {
   Dialog,
   DialogClose,
   DialogContent,
   DialogDescription,
   DialogTitle,
-} from '#/components/ui/dialog';
-import { InputOTP, InputOTPGroup, InputOTPSlot } from '#/components/ui/input-otp';
+} from '@codedock/ui/dialog';
+import { InputOTP, InputOTPGroup, InputOTPSlot } from '@codedock/ui/input-otp';
 import { useDisable2FA, useSetup2FA, useVerify2FA } from '#/features/auth';
 import { useGetProfile } from '#/features/profile';
 import { SettingsRow } from '#/features/settings/settings-row';

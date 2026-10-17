@@ -1,15 +1,9 @@
 import { CheckCircle2, Globe, Loader2, RefreshCw, Search, Trash2 } from 'lucide-react';
 import { useState } from 'react';
 import { toast } from 'sonner';
-import { Button } from '#/components/ui/button';
-import { Input } from '#/components/ui/input';
-import {
-  Select,
-  SelectContent,
-  SelectItem,
-  SelectTrigger,
-  SelectValue,
-} from '#/components/ui/select';
+import { Button } from '@codedock/ui/button';
+import { Input } from '@codedock/ui/input';
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@codedock/ui/select';
 import { useDomainVerification } from '#/features/dns/domain-verification';
 import { useDeleteDomain } from '#/features/dns/hooks';
 import type { DomainConfig } from '#/features/projects';

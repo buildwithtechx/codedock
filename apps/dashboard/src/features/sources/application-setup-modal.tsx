@@ -1,13 +1,13 @@
 import { Code2 } from 'lucide-react';
-import { Button } from '#/components/ui/button';
+import { Button } from '@codedock/ui/button';
 import {
   Dialog,
   DialogContent,
   DialogDescription,
   DialogHeader,
   DialogTitle,
-} from '#/components/ui/dialog';
-import { Label } from '#/components/ui/label';
+} from '@codedock/ui/dialog';
+import { Label } from '@codedock/ui/label';
 import { ApplicationSetupFields } from './application-setup-fields';
 import { type ApplicationSetupProps, parseSetupVariables } from './application-setup-types';
 import { DeploymentProgress } from './deployment-progress';

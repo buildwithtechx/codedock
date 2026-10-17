@@ -1,14 +1,14 @@
-import { Link } from '@tanstack/react-router';
-import { FileQuestion, LayoutDashboard } from 'lucide-react';
-import { Button } from './button';
 import {
+  Button,
   Empty,
   EmptyContent,
   EmptyDescription,
   EmptyHeader,
   EmptyMedia,
   EmptyTitle,
-} from './empty';
+} from '@codedock/ui';
+import { Link } from '@tanstack/react-router';
+import { FileQuestion, LayoutDashboard } from 'lucide-react';
 
 export function NotFoundComponent() {
   return (

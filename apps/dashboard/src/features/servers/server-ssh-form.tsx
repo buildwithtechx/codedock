@@ -6,9 +6,9 @@ import {
 import { AlertCircle, CheckCircle2, ChevronDown, ChevronUp } from 'lucide-react';
 import { useRef, useState } from 'react';
 import { toast } from 'sonner';
-import { Button } from '#/components/ui/button';
-import { Input } from '#/components/ui/input';
-import { Label } from '#/components/ui/label';
+import { Button } from '@codedock/ui/button';
+import { Input } from '@codedock/ui/input';
+import { Label } from '@codedock/ui/label';
 import { ServerSshAdvancedFields } from '#/features/servers/server-ssh-advanced-fields';
 import { ServerSshAuthFields } from '#/features/servers/server-ssh-auth-fields';
 import { useCreateServer, useTestSSH } from '#/hooks/use-servers';

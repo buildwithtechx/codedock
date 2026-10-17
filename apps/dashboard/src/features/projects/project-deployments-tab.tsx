@@ -1,9 +1,9 @@
 import { Link } from '@tanstack/react-router';
 import { Activity, ArrowRight, Clock, GitBranch, GitCommit, RotateCw } from 'lucide-react';
 import { useState } from 'react';
-import { Badge } from '#/components/ui/badge';
-import { Button } from '#/components/ui/button';
-import { Card } from '#/components/ui/card';
+import { Badge } from '@codedock/ui/badge';
+import { Button } from '@codedock/ui/button';
+import { Card } from '@codedock/ui/card';
 import { useListByOrganization, useRollback } from '#/hooks/use-deployments';
 
 interface ProjectDeploymentsTabProps {

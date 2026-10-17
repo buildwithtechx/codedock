@@ -1,6 +1,6 @@
 import { Link } from '@tanstack/react-router';
 import { GitBranch, Plus, SearchX } from 'lucide-react';
-import { Button } from '#/components/ui/button';
+import { Button } from '@codedock/ui/button';
 import { EmptyIllustration } from './empty-illustration';
 
 export function DeploymentEmptyState({

@@ -11,11 +11,11 @@ import {
   RefreshCw,
   Server,
 } from 'lucide-react';
-import { Button } from '#/components/ui/button';
-import { Card, CardContent, CardHeader, CardTitle } from '#/components/ui/card';
-import { Progress } from '#/components/ui/progress';
-import { QueryErrorState } from '#/components/ui/query-error-state';
-import { Skeleton } from '#/components/ui/skeleton';
+import { Button } from '@codedock/ui/button';
+import { Card, CardContent, CardHeader, CardTitle } from '@codedock/ui/card';
+import { Progress } from '@codedock/ui/progress';
+import { QueryErrorState } from '#/components/query-error-state';
+import { Skeleton } from '@codedock/ui/skeleton';
 import { useGetSystemStats } from '#/features/settings/hooks';
 import { useListCanvasSummaries } from '#/hooks/use-canvas';
 

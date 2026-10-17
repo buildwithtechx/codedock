@@ -1,9 +1,9 @@
 import { Boxes, Loader2, Plus, Server, Trash2 } from 'lucide-react';
 import { useState } from 'react';
 import { toast } from 'sonner';
-import { Button } from '#/components/ui/button';
-import { Input } from '#/components/ui/input';
-import { Label } from '#/components/ui/label';
+import { Button } from '@codedock/ui/button';
+import { Input } from '@codedock/ui/input';
+import { Label } from '@codedock/ui/label';
 import type { ClusterNode, ComputeCluster } from '#/interfaces/clusters';
 import { ClusterScalingPanel } from './cluster-scaling-panel';
 

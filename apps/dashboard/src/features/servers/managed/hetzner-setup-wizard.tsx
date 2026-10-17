@@ -6,7 +6,7 @@ import {
 } from '@codedock/setup';
 import { useEffect, useState } from 'react';
 import { toast } from 'sonner';
-import { Button } from '#/components/ui/button';
+import { Button } from '@codedock/ui/button';
 import type { ManagedCredential, ManagedOffers, ManagedQuota } from '#/interfaces/managed';
 import { cn } from '#/lib/utils';
 import { managedService } from '#/services/managed';

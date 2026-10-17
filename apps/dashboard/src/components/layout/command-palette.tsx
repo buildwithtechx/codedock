@@ -3,7 +3,7 @@ import { Command } from 'cmdk';
 import type { LucideIcon } from 'lucide-react';
 import { CornerDownLeft, FolderKanban, Plus, Search, Server, Sparkles } from 'lucide-react';
 import { useEffect } from 'react';
-import { Dialog, DialogContent, DialogDescription, DialogTitle } from '#/components/ui/dialog';
+import { Dialog, DialogContent, DialogDescription, DialogTitle } from '@codedock/ui/dialog';
 import { commandNavigation } from './dashboard-navigation';
 
 interface CommandPaletteProps {

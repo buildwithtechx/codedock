@@ -1,9 +1,9 @@
 import { Link, useNavigate, useSearch } from '@tanstack/react-router';
 import { Building2, Loader2, RefreshCw, Trash2 } from 'lucide-react';
 import { useEffect, useMemo, useState } from 'react';
-import { Button } from '#/components/ui/button';
-import { QueryErrorState } from '#/components/ui/query-error-state';
-import { Skeleton } from '#/components/ui/skeleton';
+import { Button } from '@codedock/ui/button';
+import { QueryErrorState } from '#/components/query-error-state';
+import { Skeleton } from '@codedock/ui/skeleton';
 import { DeploymentDirectory } from '#/features/dashboard/deployment-directory';
 import { NotificationsSettings } from '#/features/notifications/notifications-settings';
 import {

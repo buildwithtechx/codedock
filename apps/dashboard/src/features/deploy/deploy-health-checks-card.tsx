@@ -1,6 +1,6 @@
 import { Activity, ChevronDown, ChevronUp } from 'lucide-react';
 import { useState } from 'react';
-import { Switch } from '#/components/ui/switch';
+import { Switch } from '@codedock/ui/switch';
 
 interface DeployHealthChecksCardProps {
   waitForPort?: boolean;

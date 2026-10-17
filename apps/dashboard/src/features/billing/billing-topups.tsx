@@ -1,6 +1,6 @@
 import { Coins, Loader2, Zap } from 'lucide-react';
 import { useRef, useState } from 'react';
-import { Button } from '#/components/ui/button';
+import { Button } from '@codedock/ui/button';
 import { DEFAULT_TOPUP_PACKS } from '#/constants/billing';
 import type { TopupPack } from '#/interfaces/billing';
 import { billingService } from '#/services/billing';

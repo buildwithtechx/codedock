@@ -1,5 +1,5 @@
 import { BookOpen, CalendarClock, ExternalLink, Plus } from 'lucide-react';
-import { Button } from '#/components/ui/button';
+import { Button } from '@codedock/ui/button';
 
 const DOCS_URL = 'https://docs.codedock.run';
 

@@ -1,7 +1,7 @@
 import { BookOpen, DatabaseBackup, ExternalLink } from 'lucide-react';
 import { useState } from 'react';
-import { Button } from '#/components/ui/button';
-import { Skeleton } from '#/components/ui/skeleton';
+import { Button } from '@codedock/ui/button';
+import { Skeleton } from '@codedock/ui/skeleton';
 import { cn } from '#/lib/utils';
 import { formatBytes } from './destination-display';
 import type { BackupRecord } from './interfaces';

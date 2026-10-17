@@ -20,8 +20,8 @@ import {
 } from 'lucide-react';
 import { MobileContextNav } from '#/components/layout/mobile-context-nav';
 import { PageFrame } from '#/components/layout/page-frame';
-import { Button } from '#/components/ui/button';
-import { ServiceIcon } from '#/components/ui/service-icon';
+import { Button } from '@codedock/ui/button';
+import { ServiceIcon } from '@codedock/ui/service-icon';
 import { useGetDatabase } from '#/features/databases';
 import {
   ServiceContextSidebar,

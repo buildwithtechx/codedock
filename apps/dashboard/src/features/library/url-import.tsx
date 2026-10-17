@@ -1,7 +1,7 @@
 import { Link2 } from 'lucide-react';
 import { useId, useState } from 'react';
-import { Button } from '#/components/ui/button';
-import { Input } from '#/components/ui/input';
+import { Button } from '@codedock/ui/button';
+import { Input } from '@codedock/ui/input';
 import type { PendingImport } from './types';
 
 export function parseGitUrl(raw: string): PendingImport | null {

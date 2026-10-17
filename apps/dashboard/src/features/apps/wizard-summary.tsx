@@ -7,7 +7,7 @@ import {
   Server,
   SlidersHorizontal,
 } from 'lucide-react';
-import { Button } from '#/components/ui/button';
+import { Button } from '@codedock/ui/button';
 
 interface WizardSummaryProps {
   appName: string;

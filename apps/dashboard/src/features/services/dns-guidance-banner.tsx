@@ -1,7 +1,7 @@
 import { Check, Copy, Info } from 'lucide-react';
 import { useEffect, useRef, useState } from 'react';
 import { toast } from 'sonner';
-import { Button } from '#/components/ui/button';
+import { Button } from '@codedock/ui/button';
 
 interface DnsGuidanceBannerProps {
   serverIp: string;

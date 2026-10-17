@@ -1,5 +1,5 @@
 import { Bar, BarChart, CartesianGrid, ResponsiveContainer, Tooltip, XAxis, YAxis } from 'recharts';
-import { Button } from '#/components/ui/button';
+import { Button } from '@codedock/ui/button';
 
 export interface DeploymentHistorySummary {
   total: number;

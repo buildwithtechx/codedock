@@ -1,7 +1,7 @@
 import { Link } from '@tanstack/react-router';
 import { ArrowLeft, BadgeCheck } from 'lucide-react';
 import { useState } from 'react';
-import { Badge } from '#/components/ui/badge';
+import { Badge } from '@codedock/ui/badge';
 import type { OneClickAppDetails } from '#/interfaces/templates';
 import { AppLogo } from './app-logo';
 

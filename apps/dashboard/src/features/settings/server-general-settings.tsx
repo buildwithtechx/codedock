@@ -1,9 +1,9 @@
 import { Check, Clock, Cpu, Globe, Info, Lock } from 'lucide-react';
 import { useEffect, useState } from 'react';
 import { toast } from 'sonner';
-import { Button } from '#/components/ui/button';
-import { Input } from '#/components/ui/input';
-import { Skeleton } from '#/components/ui/skeleton';
+import { Button } from '@codedock/ui/button';
+import { Input } from '@codedock/ui/input';
+import { Skeleton } from '@codedock/ui/skeleton';
 import type { ServerSettings } from '#/features/settings';
 import { useGetSettings, useUpdateSettings } from '#/features/settings';
 import { PreferenceRow } from './preference-row';

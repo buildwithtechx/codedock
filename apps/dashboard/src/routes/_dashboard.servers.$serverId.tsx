@@ -19,13 +19,13 @@ import {
 } from 'lucide-react';
 import { useState } from 'react';
 import { z } from 'zod';
-import { Button } from '#/components/ui/button';
+import { Button } from '@codedock/ui/button';
 import {
   DropdownMenu,
   DropdownMenuContent,
   DropdownMenuItem,
   DropdownMenuTrigger,
-} from '#/components/ui/dropdown-menu';
+} from '@codedock/ui/dropdown-menu';
 import {
   Empty,
   EmptyContent,
@@ -33,9 +33,9 @@ import {
   EmptyHeader,
   EmptyMedia,
   EmptyTitle,
-} from '#/components/ui/empty';
-import { QueryErrorState } from '#/components/ui/query-error-state';
-import { Tabs, TabsList, TabsTrigger } from '#/components/ui/tabs';
+} from '@codedock/ui/empty';
+import { QueryErrorState } from '#/components/query-error-state';
+import { Tabs, TabsList, TabsTrigger } from '@codedock/ui/tabs';
 import { ManagedServerPlan } from '#/features/servers/managed/managed-server-plan';
 import { ServerConnectionBanner } from '#/features/servers/server-connection-banner';
 import { ServerConnectionCard } from '#/features/servers/server-connection-card';

@@ -1,6 +1,6 @@
 import { AlertCircle, CheckCircle2, Loader2, Sparkles, X } from 'lucide-react';
 import { useCallback, useEffect, useId, useState } from 'react';
-import { Button } from '#/components/ui/button';
+import { Button } from '@codedock/ui/button';
 import { useBillingConfig, useCreateCheckoutSession } from '#/hooks/use-billing';
 import { useAuthStore } from '#/stores/auth-store';
 import { BillingPlansCards } from './billing-plans-cards';

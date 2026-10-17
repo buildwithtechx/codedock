@@ -1,7 +1,7 @@
 import { Database, LayoutTemplate, Loader2 } from 'lucide-react';
 import { useState } from 'react';
-import { Badge } from '#/components/ui/badge';
-import { Button } from '#/components/ui/button';
+import { Badge } from '@codedock/ui/badge';
+import { Button } from '@codedock/ui/button';
 import {
   Sheet,
   SheetContent,
@@ -9,7 +9,7 @@ import {
   SheetHeader,
   SheetTitle,
   SheetTrigger,
-} from '#/components/ui/sheet';
+} from '@codedock/ui/sheet';
 import { useGetDatabases } from '#/features/databases';
 import { useListByProject } from '#/hooks/use-apps';
 
