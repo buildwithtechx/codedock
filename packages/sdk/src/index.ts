@@ -1,5 +1,6 @@
 import { CodedockClientOptions, HttpClient } from './client';
 import type {
+  AccountInfo,
   ActionRun,
   ActionRunner,
   ActionWorkflow,
@@ -10,8 +11,11 @@ import type {
   IngressDiscovery,
   IngressHostname,
   NetworkWatchdog,
+  PairingClaimResult,
+  PairingHandshake,
   PrepaidTopupPackage,
   ServerNetwork,
+  TenantCorsConfig,
 } from './types';
 
 export * from './client';
@@ -20,10 +24,25 @@ export * from 'zod';
 
 export class CodedockClient {
   private http: HttpClient;
+  private options: CodedockClientOptions;
 
   constructor(options: CodedockClientOptions = {}) {
+    this.options = options;
     this.http = new HttpClient(options);
   }
+
+  scope(tenantId: string): CodedockClient {
+    return new CodedockClient({ ...this.options, tenantId });
+  }
+
+  readonly auth = {
+    getAccount: (): Promise<AccountInfo> => this.http.get<AccountInfo>('/auth/account'),
+    createPairingCode: (): Promise<PairingHandshake> => this.http.post<PairingHandshake>('/auth/pairing/code'),
+    pair: (pairingCode: string): Promise<PairingClaimResult> =>
+      this.http.post<PairingClaimResult>('/auth/pair', { code: pairingCode }),
+    getCors: (tenantId?: string): Promise<TenantCorsConfig> =>
+      this.http.get<TenantCorsConfig>(tenantId ? `/auth/cors?tenantId=${encodeURIComponent(tenantId)}` : '/auth/cors'),
+  };
 
   readonly ingress = {
     list: (): Promise<IngressConnection[]> => this.http.get<IngressConnection[]>('/dns/ingress'),

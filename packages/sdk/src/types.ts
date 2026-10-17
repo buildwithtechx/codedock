@@ -164,3 +164,47 @@ export interface PrepaidTopupPackage {
   totalCreditsUsd: number;
   badge?: string;
 }
+
+export interface AccountInfo {
+  id: string;
+  email: string;
+  name?: string;
+  organizationId?: string;
+  role?: string;
+  tier?: string;
+  createdAt?: string;
+}
+
+export interface PairingHandshake {
+  code: string;
+  instanceId?: string;
+  expiresAt: string;
+}
+
+export interface PairingClaimResult {
+  token: string;
+  account: AccountInfo;
+  organizationId?: string;
+}
+
+export interface TenantCorsConfig {
+  tenantId: string;
+  allowedOrigins: string[];
+  allowedMethods?: string[];
+  maxAgeSeconds?: number;
+}
+
+export interface RateLimitDetails {
+  retryAfterSeconds: number;
+  limit?: number;
+  remaining?: number;
+  resetAt?: string;
+  planTier?: string;
+}
+
+export interface BillingGateDetails {
+  code: 'BILLING_GATE_REQUIRED' | 'PAYMENT_REQUIRED';
+  message: string;
+  upgradeUrl?: string;
+  requiredPlan?: string;
+}

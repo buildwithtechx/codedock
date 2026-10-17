@@ -1,6 +1,7 @@
 export interface CodedockClientOptions {
   baseUrl?: string;
   token?: string;
+  tenantId?: string;
   fetch?: typeof fetch;
 }
 
@@ -15,14 +16,42 @@ export class CodedockApiError extends Error {
   }
 }
 
+export class CodedockRateLimitError extends CodedockApiError {
+  constructor(
+    status: number,
+    statusText: string,
+    body: unknown,
+    public retryAfterSeconds: number,
+    public planTier?: string
+  ) {
+    super(status, statusText, body);
+    this.name = 'CodedockRateLimitError';
+  }
+}
+
+export class CodedockBillingGateError extends CodedockApiError {
+  constructor(
+    status: number,
+    statusText: string,
+    body: unknown,
+    public upgradeUrl?: string,
+    public requiredPlan?: string
+  ) {
+    super(status, statusText, body);
+    this.name = 'CodedockBillingGateError';
+  }
+}
+
 export class HttpClient {
   private baseUrl: string;
   private token?: string;
+  private tenantId?: string;
   private fetchImpl: typeof fetch;
 
   constructor(options: CodedockClientOptions = {}) {
     this.baseUrl = (options.baseUrl || 'http://localhost:8080/api').replace(/\/+$/, '');
     this.token = options.token;
+    this.tenantId = options.tenantId;
     this.fetchImpl = options.fetch || globalThis.fetch;
   }
 
@@ -32,6 +61,9 @@ export class HttpClient {
 
     if (this.token && !headers.has('Authorization')) {
       headers.set('Authorization', `Bearer ${this.token}`);
+    }
+    if (this.tenantId && !headers.has('X-Tenant-ID')) {
+      headers.set('X-Tenant-ID', this.tenantId);
     }
     if (!headers.has('Accept')) {
       headers.set('Accept', 'application/json');
@@ -52,6 +84,49 @@ export class HttpClient {
       } catch {
         body = await res.text();
       }
+
+      if (res.status === 429) {
+        let retryAfter = 60;
+        const retryHeader = res.headers.get('Retry-After');
+        if (retryHeader) {
+          const parsed = Number.parseInt(retryHeader, 10);
+          if (!Number.isNaN(parsed) && parsed > 0) {
+            retryAfter = parsed;
+          }
+        } else if (body && typeof body === 'object' && 'retryAfterSeconds' in body) {
+          const parsed = Number((body as { retryAfterSeconds?: unknown }).retryAfterSeconds);
+          if (!Number.isNaN(parsed) && parsed > 0) {
+            retryAfter = parsed;
+          }
+        }
+        const planTier = body && typeof body === 'object' && 'planTier' in body
+          ? String((body as { planTier?: unknown }).planTier)
+          : undefined;
+        throw new CodedockRateLimitError(res.status, res.statusText, body, retryAfter, planTier);
+      }
+
+      const isBillingGate =
+        res.status === 402 ||
+        (res.status === 403 &&
+          body !== null &&
+          typeof body === 'object' &&
+          ('code' in body || 'error' in body) &&
+          (String((body as Record<string, unknown>).code).toUpperCase().includes('BILLING') ||
+            String((body as Record<string, unknown>).code).toUpperCase().includes('PAYMENT') ||
+            String((body as Record<string, unknown>).error).toUpperCase().includes('BILLING')));
+
+      if (isBillingGate) {
+        const upgradeUrl =
+          body && typeof body === 'object' && 'upgradeUrl' in body
+            ? String((body as { upgradeUrl?: unknown }).upgradeUrl)
+            : undefined;
+        const requiredPlan =
+          body && typeof body === 'object' && 'requiredPlan' in body
+            ? String((body as { requiredPlan?: unknown }).requiredPlan)
+            : undefined;
+        throw new CodedockBillingGateError(res.status, res.statusText, body, upgradeUrl, requiredPlan);
+      }
+
       throw new CodedockApiError(res.status, res.statusText, body);
     }
 
