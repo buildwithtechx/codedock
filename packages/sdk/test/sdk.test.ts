@@ -4,7 +4,7 @@ import {
   CodedockBillingGateError,
   CodedockRateLimitError,
   createCodedockClient,
-} from './index';
+} from '../src/index';
 
 describe('CodedockClient SDK', () => {
   it('instantiates client with base options and sends authenticated requests', async () => {
@@ -114,7 +114,9 @@ describe('CodedockClient SDK', () => {
         return {
           ok: true,
           status: 200,
-          json: async () => ({ data: { code: 'pair-code-abc', expiresAt: '2026-10-18T00:00:00Z' } }),
+          json: async () => ({
+            data: { code: 'pair-code-abc', expiresAt: '2026-10-18T00:00:00Z' },
+          }),
         };
       }
       if (url.endsWith('/auth/pair')) {
@@ -190,7 +192,7 @@ describe('CodedockClient SDK', () => {
       await client.actions.listRuns();
     } catch (err) {
       expect(err).toBeInstanceOf(CodedockRateLimitError);
-      const rateErr = err as import('./client').CodedockRateLimitError;
+      const rateErr = err as CodedockRateLimitError;
       expect(rateErr.retryAfterSeconds).toBe(120);
       expect(rateErr.planTier).toBe('starter');
     }
@@ -217,7 +219,7 @@ describe('CodedockClient SDK', () => {
       await client.clusters.setupScaling('cl-1');
     } catch (err) {
       expect(err).toBeInstanceOf(CodedockBillingGateError);
-      const gateErr = err as import('./client').CodedockBillingGateError;
+      const gateErr = err as CodedockBillingGateError;
       expect(gateErr.upgradeUrl).toBe('https://codedock.example/billing/plans');
       expect(gateErr.requiredPlan).toBe('team');
     }

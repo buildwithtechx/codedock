@@ -80,6 +80,8 @@
       "apps/docs/src/**",
       "apps/cli/*.js",
       "apps/cli/bin/*.js",
+      "packages/**/src/**",
+      "packages/**/test/**",
       "!**/.tanstack",
       "!**/*.gen.ts",
       "!**/routeTree.gen.ts",

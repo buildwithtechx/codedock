@@ -1,175 +1,45 @@
-export interface CodedockClientOptions {
-  baseUrl?: string;
-  token?: string;
-  tenantId?: string;
-  fetch?: typeof fetch;
-}
+import { createActionsOperations } from './clients/actions-client';
+import { createAuthOperations } from './clients/auth-client';
+import { createBillingOperations } from './clients/billing-client';
+import { createClustersOperations } from './clients/clusters-client';
+import { createIngressOperations } from './clients/ingress-client';
+import { createNetworksOperations } from './clients/networks-client';
+import { type CodedockClientOptions, HttpClient } from './http';
 
-export class CodedockApiError extends Error {
-  constructor(
-    public status: number,
-    public statusText: string,
-    public body: unknown
-  ) {
-    super(`API error ${status} (${statusText}): ${typeof body === 'string' ? body : JSON.stringify(body)}`);
-    this.name = 'CodedockApiError';
-  }
-}
+export {
+  CodedockApiError,
+  CodedockBillingGateError,
+  CodedockRateLimitError,
+} from './errors';
+export { type CodedockClientOptions, HttpClient } from './http';
 
-export class CodedockRateLimitError extends CodedockApiError {
-  constructor(
-    status: number,
-    statusText: string,
-    body: unknown,
-    public retryAfterSeconds: number,
-    public planTier?: string
-  ) {
-    super(status, statusText, body);
-    this.name = 'CodedockRateLimitError';
-  }
-}
+export class CodedockClient {
+  private http: HttpClient;
+  private options: CodedockClientOptions;
 
-export class CodedockBillingGateError extends CodedockApiError {
-  constructor(
-    status: number,
-    statusText: string,
-    body: unknown,
-    public upgradeUrl?: string,
-    public requiredPlan?: string
-  ) {
-    super(status, statusText, body);
-    this.name = 'CodedockBillingGateError';
-  }
-}
-
-export class HttpClient {
-  private baseUrl: string;
-  private token?: string;
-  private tenantId?: string;
-  private fetchImpl: typeof fetch;
+  readonly auth: ReturnType<typeof createAuthOperations>;
+  readonly ingress: ReturnType<typeof createIngressOperations>;
+  readonly networks: ReturnType<typeof createNetworksOperations>;
+  readonly clusters: ReturnType<typeof createClustersOperations>;
+  readonly actions: ReturnType<typeof createActionsOperations>;
+  readonly billing: ReturnType<typeof createBillingOperations>;
 
   constructor(options: CodedockClientOptions = {}) {
-    this.baseUrl = (options.baseUrl || 'http://localhost:8080/api').replace(/\/+$/, '');
-    this.token = options.token;
-    this.tenantId = options.tenantId;
-    this.fetchImpl = options.fetch || globalThis.fetch;
+    this.options = options;
+    this.http = new HttpClient(options);
+    this.auth = createAuthOperations(this.http);
+    this.ingress = createIngressOperations(this.http);
+    this.networks = createNetworksOperations(this.http);
+    this.clusters = createClustersOperations(this.http);
+    this.actions = createActionsOperations(this.http);
+    this.billing = createBillingOperations(this.http);
   }
 
-  async request<T>(path: string, options: RequestInit = {}): Promise<T> {
-    const url = `${this.baseUrl}${path.startsWith('/') ? path : `/${path}`}`;
-    const headers = new Headers(options.headers);
-
-    if (this.token && !headers.has('Authorization')) {
-      headers.set('Authorization', `Bearer ${this.token}`);
-    }
-    if (this.tenantId && !headers.has('X-Tenant-ID')) {
-      headers.set('X-Tenant-ID', this.tenantId);
-    }
-    if (!headers.has('Accept')) {
-      headers.set('Accept', 'application/json');
-    }
-    if (options.body && typeof options.body === 'string' && !headers.has('Content-Type')) {
-      headers.set('Content-Type', 'application/json');
-    }
-
-    const res = await this.fetchImpl(url, {
-      ...options,
-      headers,
-    });
-
-    if (!res.ok) {
-      let body: unknown;
-      try {
-        body = await res.json();
-      } catch {
-        body = await res.text();
-      }
-
-      if (res.status === 429) {
-        let retryAfter = 60;
-        const retryHeader = res.headers.get('Retry-After');
-        if (retryHeader) {
-          const parsed = Number.parseInt(retryHeader, 10);
-          if (!Number.isNaN(parsed) && parsed > 0) {
-            retryAfter = parsed;
-          }
-        } else if (body && typeof body === 'object' && 'retryAfterSeconds' in body) {
-          const parsed = Number((body as { retryAfterSeconds?: unknown }).retryAfterSeconds);
-          if (!Number.isNaN(parsed) && parsed > 0) {
-            retryAfter = parsed;
-          }
-        }
-        const planTier = body && typeof body === 'object' && 'planTier' in body
-          ? String((body as { planTier?: unknown }).planTier)
-          : undefined;
-        throw new CodedockRateLimitError(res.status, res.statusText, body, retryAfter, planTier);
-      }
-
-      const isBillingGate =
-        res.status === 402 ||
-        (res.status === 403 &&
-          body !== null &&
-          typeof body === 'object' &&
-          ('code' in body || 'error' in body) &&
-          (String((body as Record<string, unknown>).code).toUpperCase().includes('BILLING') ||
-            String((body as Record<string, unknown>).code).toUpperCase().includes('PAYMENT') ||
-            String((body as Record<string, unknown>).error).toUpperCase().includes('BILLING')));
-
-      if (isBillingGate) {
-        const upgradeUrl =
-          body && typeof body === 'object' && 'upgradeUrl' in body
-            ? String((body as { upgradeUrl?: unknown }).upgradeUrl)
-            : undefined;
-        const requiredPlan =
-          body && typeof body === 'object' && 'requiredPlan' in body
-            ? String((body as { requiredPlan?: unknown }).requiredPlan)
-            : undefined;
-        throw new CodedockBillingGateError(res.status, res.statusText, body, upgradeUrl, requiredPlan);
-      }
-
-      throw new CodedockApiError(res.status, res.statusText, body);
-    }
-
-    if (res.status === 204) {
-      return {} as T;
-    }
-
-    const json = (await res.json()) as { data?: T } | T;
-    if (json && typeof json === 'object' && 'data' in json && (json as { data: T }).data !== undefined) {
-      return (json as { data: T }).data;
-    }
-    return json as T;
+  scope(tenantId: string): CodedockClient {
+    return new CodedockClient({ ...this.options, tenantId });
   }
+}
 
-  get<T>(path: string, headers?: HeadersInit): Promise<T> {
-    return this.request<T>(path, { method: 'GET', headers });
-  }
-
-  post<T>(path: string, body?: unknown, headers?: HeadersInit): Promise<T> {
-    return this.request<T>(path, {
-      method: 'POST',
-      body: body !== undefined ? JSON.stringify(body) : undefined,
-      headers,
-    });
-  }
-
-  put<T>(path: string, body?: unknown, headers?: HeadersInit): Promise<T> {
-    return this.request<T>(path, {
-      method: 'PUT',
-      body: body !== undefined ? JSON.stringify(body) : undefined,
-      headers,
-    });
-  }
-
-  patch<T>(path: string, body?: unknown, headers?: HeadersInit): Promise<T> {
-    return this.request<T>(path, {
-      method: 'PATCH',
-      body: body !== undefined ? JSON.stringify(body) : undefined,
-      headers,
-    });
-  }
-
-  delete<T>(path: string, headers?: HeadersInit): Promise<T> {
-    return this.request<T>(path, { method: 'DELETE', headers });
-  }
+export function createCodedockClient(options?: CodedockClientOptions): CodedockClient {
+  return new CodedockClient(options);
 }
