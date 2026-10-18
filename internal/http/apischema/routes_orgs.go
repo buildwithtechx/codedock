@@ -115,5 +115,19 @@ func organizationOperations() []Operation {
 		{Method: "GET", Path: "/api/notifications/defaults", Summary: "List notification defaults", Tags: []string{orgs}, Auth: AuthUser, Response: Arr("Defaults", notificationDefaultSchema())},
 		{Method: "GET", Path: "/api/notifications/deliveries", Summary: "List notification delivery attempts", Tags: []string{orgs}, Auth: AuthUser, Response: Arr("Deliveries", notificationDeliverySchema()), Query: []Param{QueryParamInt("limit", "Max entries")}},
 		{Method: "PUT", Path: "/api/notifications/defaults", Summary: "Save a notification default", Tags: []string{orgs}, Auth: AuthAdmin, Request: JSON(notificationPreferenceSchema()), Response: notificationDefaultSchema()},
+		{Method: "GET", Path: "/api/notifications/devices", Summary: "List registered device tokens", Tags: []string{orgs}, Auth: AuthUser, Response: Arr("Device tokens", deviceTokenSchema())},
+		{Method: "POST", Path: "/api/notifications/devices", Summary: "Register a device token", Tags: []string{orgs}, Auth: AuthUser, Request: JSON(Obj("Register token", RF("token", Str("Device token")), F("platform", Str("Platform")))), Response: deviceTokenSchema()},
+		{Method: "DELETE", Path: "/api/notifications/devices/:token", Summary: "Delete a registered device token", Tags: []string{orgs}, Auth: AuthUser, Response: EmptySchema()},
 	}
+}
+
+func deviceTokenSchema() Schema {
+	return Obj("Device token",
+		RF("id", Str("Device token ID")),
+		RF("userId", Str("User ID")),
+		RF("token", Str("Push token")),
+		RF("platform", Str("Platform")),
+		F("createdAt", Str("Creation time")),
+		F("updatedAt", Str("Last update")),
+	)
 }

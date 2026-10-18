@@ -82,3 +82,57 @@ type NotificationDelivery struct {
 	Error     string `json:"error" db:"error"`
 	CreatedAt string `json:"createdAt" db:"created_at"`
 }
+
+type DeviceToken struct {
+	ID        string `json:"id" db:"id"`
+	UserID    string `json:"userId" db:"user_id"`
+	Token     string `json:"token" db:"token"`
+	Platform  string `json:"platform" db:"platform"`
+	CreatedAt string `json:"createdAt" db:"created_at"`
+	UpdatedAt string `json:"updatedAt" db:"updated_at"`
+}
+
+type RegisterDeviceTokenRequest struct {
+	Token    string `json:"token"`
+	Platform string `json:"platform"`
+}
+
+const (
+	NotificationCategoryDeployment = "deployment"
+	NotificationCategoryAppHealth  = "app_health"
+	NotificationCategoryBackups    = "backups"
+	NotificationCategoryDomains    = "domains"
+	NotificationCategoryBilling    = "billing"
+	NotificationCategoryJobs       = "jobs"
+	NotificationCategoryActions    = "actions"
+	NotificationCategoryMembers    = "members"
+
+	EventDeploySucceeded          = "deploy.succeeded"
+	EventDeployFailed             = "deploy.failed"
+	EventDeployCancelled          = "deploy.cancelled"
+	EventServiceDown              = "service.down"
+	EventServiceCrashLoop         = "service.crash_loop"
+	EventServiceUnhealthy         = "service.unhealthy"
+	EventServiceRecovered         = "service.recovered"
+	EventServerUnreachable        = "server.unreachable"
+	EventBackupFailed             = "backup.failed"
+	EventBackupSucceeded          = "backup.succeeded"
+	EventBackupRestoreCompleted   = "backup.restore_completed"
+	EventDomainExpiring           = "domain.expiring"
+	EventDomainVerificationFailed = "domain.verification_failed"
+)
+
+func GetNotificationCategory(eventType string) string {
+	switch {
+	case eventType == EventDeploySucceeded || eventType == EventDeployFailed || eventType == EventDeployCancelled:
+		return NotificationCategoryDeployment
+	case eventType == EventServiceDown || eventType == EventServiceCrashLoop || eventType == EventServiceUnhealthy || eventType == EventServiceRecovered || eventType == EventServerUnreachable:
+		return NotificationCategoryAppHealth
+	case eventType == EventBackupFailed || eventType == EventBackupSucceeded || eventType == EventBackupRestoreCompleted:
+		return NotificationCategoryBackups
+	case eventType == EventDomainExpiring || eventType == EventDomainVerificationFailed:
+		return NotificationCategoryDomains
+	default:
+		return "general"
+	}
+}

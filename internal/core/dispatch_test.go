@@ -29,6 +29,15 @@ func (s *stubDeliveriesRepo) RecordDelivery(_ context.Context, delivery *models.
 	return nil
 }
 
+type stubDeviceTokenRepo struct {
+	repositories.DeviceTokenRepository
+	tokens []*models.DeviceToken
+}
+
+func (s *stubDeviceTokenRepo) ListAllTokens(context.Context) ([]*models.DeviceToken, error) {
+	return s.tokens, nil
+}
+
 func TestDispatcherRecordsSuccessfulDelivery(t *testing.T) {
 	server := httptest.NewServer(http.HandlerFunc(func(w http.ResponseWriter, _ *http.Request) {
 		w.WriteHeader(http.StatusNoContent)
@@ -38,7 +47,7 @@ func TestDispatcherRecordsSuccessfulDelivery(t *testing.T) {
 	dispatcher := NewDispatcherService(nil, &stubNotifSettingsRepo{settings: &models.NotificationSettings{
 		DiscordEnabled:    true,
 		DiscordWebhookURL: server.URL,
-	}}, nil, deliveries, nil)
+	}}, nil, deliveries, nil, nil)
 	err := dispatcher.Send(&models.NotificationEvent{EventType: "test_global_discord", Title: "hello"})
 	if err != nil {
 		t.Fatalf("send test notification: %v", err)
@@ -54,7 +63,7 @@ func TestDispatcherRecordsSuccessfulDelivery(t *testing.T) {
 
 func TestDispatcherRecordsFailedDelivery(t *testing.T) {
 	deliveries := &stubDeliveriesRepo{}
-	dispatcher := NewDispatcherService(nil, &stubNotifSettingsRepo{settings: &models.NotificationSettings{}}, nil, deliveries, nil)
+	dispatcher := NewDispatcherService(nil, &stubNotifSettingsRepo{settings: &models.NotificationSettings{}}, nil, deliveries, nil, nil)
 	err := dispatcher.Send(&models.NotificationEvent{EventType: "test_global_slack", Title: "hello"})
 	if err == nil {
 		t.Fatal("expected send to fail for unconfigured provider")
@@ -68,5 +77,92 @@ func TestDispatcherRecordsFailedDelivery(t *testing.T) {
 	}
 	if recorded.Error == "" {
 		t.Fatal("expected error text on failed delivery")
+	}
+}
+
+func TestDispatcherFanoutRealEvent(t *testing.T) {
+	discordServer := httptest.NewServer(http.HandlerFunc(func(w http.ResponseWriter, _ *http.Request) {
+		w.WriteHeader(http.StatusNoContent)
+	}))
+	defer discordServer.Close()
+
+	slackServer := httptest.NewServer(http.HandlerFunc(func(w http.ResponseWriter, _ *http.Request) {
+		w.WriteHeader(http.StatusOK)
+	}))
+	defer slackServer.Close()
+
+	deliveries := &stubDeliveriesRepo{}
+	settings := &models.NotificationSettings{
+		NotificationAlerts: true,
+		DiscordEnabled:     true,
+		DiscordWebhookURL:  discordServer.URL,
+		SlackEnabled:       true,
+		SlackWebhookURL:    slackServer.URL,
+	}
+
+	dispatcher := NewDispatcherService(nil, &stubNotifSettingsRepo{settings: settings}, nil, deliveries, nil, nil)
+	err := dispatcher.Send(&models.NotificationEvent{
+		EventType: models.EventDeploySucceeded,
+		Title:     "Deploy Succeeded",
+		Message:   "Service web deployed",
+		Level:     "success",
+		URL:       "https://dashboard.example.com",
+	})
+	if err != nil {
+		t.Fatalf("expected successful fanout, got: %v", err)
+	}
+
+	if len(deliveries.recorded) != 2 {
+		t.Fatalf("expected 2 recorded deliveries (discord + slack), got %d", len(deliveries.recorded))
+	}
+}
+
+func TestDispatcherSilencedWhenAlertsDisabled(t *testing.T) {
+	deliveries := &stubDeliveriesRepo{}
+	settings := &models.NotificationSettings{
+		NotificationAlerts: false,
+		DiscordEnabled:     true,
+		DiscordWebhookURL:  "https://discord.com/api/webhooks/test",
+	}
+
+	dispatcher := NewDispatcherService(nil, &stubNotifSettingsRepo{settings: settings}, nil, deliveries, nil, nil)
+	err := dispatcher.Send(&models.NotificationEvent{
+		EventType: models.EventDeployFailed,
+		Title:     "Deploy Failed",
+	})
+	if err != nil {
+		t.Fatalf("expected nil on silenced alerts, got: %v", err)
+	}
+
+	if len(deliveries.recorded) != 0 {
+		t.Fatalf("expected 0 deliveries when alerts silenced, got %d", len(deliveries.recorded))
+	}
+}
+
+func TestDispatcherFanoutExpoPush(t *testing.T) {
+	deliveries := &stubDeliveriesRepo{}
+	settings := &models.NotificationSettings{
+		NotificationAlerts: true,
+	}
+	deviceTokens := &stubDeviceTokenRepo{
+		tokens: []*models.DeviceToken{
+			{Token: "ExponentPushToken[device-mobile-1]", Platform: "expo"},
+			{Token: "unsupported-raw-token", Platform: "ios"}, // Non-expo token skipped
+		},
+	}
+
+	dispatcher := NewDispatcherService(nil, &stubNotifSettingsRepo{settings: settings}, nil, deliveries, nil, deviceTokens)
+	_ = dispatcher.Send(&models.NotificationEvent{
+		EventType: models.EventServerUnreachable,
+		Title:     "Server unreachable: srv-1",
+		Message:   "Docker connection lost",
+		Level:     "error",
+	})
+
+	if len(deliveries.recorded) != 1 {
+		t.Fatalf("expected 1 delivery record for expo token, got %d", len(deliveries.recorded))
+	}
+	if deliveries.recorded[0].Channel != "expo" {
+		t.Fatalf("expected channel expo, got %s", deliveries.recorded[0].Channel)
 	}
 }

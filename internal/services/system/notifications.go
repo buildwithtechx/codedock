@@ -8,12 +8,13 @@ import (
 )
 
 type NotificationSettingsService struct {
-	repo       repositories.NotificationSettingsRepository
-	deliveries repositories.NotificationDeliveryRepository
+	repo         repositories.NotificationSettingsRepository
+	deliveries   repositories.NotificationDeliveryRepository
+	deviceTokens repositories.DeviceTokenRepository
 }
 
-func NewNotificationSettingsService(repo repositories.NotificationSettingsRepository, deliveries repositories.NotificationDeliveryRepository) *NotificationSettingsService {
-	return &NotificationSettingsService{repo: repo, deliveries: deliveries}
+func NewNotificationSettingsService(repo repositories.NotificationSettingsRepository, deliveries repositories.NotificationDeliveryRepository, deviceTokens repositories.DeviceTokenRepository) *NotificationSettingsService {
+	return &NotificationSettingsService{repo: repo, deliveries: deliveries, deviceTokens: deviceTokens}
 }
 
 func (s *NotificationSettingsService) GetNotificationSettings(ctx context.Context) (*models.NotificationSettings, error) {
@@ -45,4 +46,25 @@ func (s *NotificationSettingsService) ListDeliveries(ctx context.Context, limit 
 		return []models.NotificationDelivery{}, nil
 	}
 	return s.deliveries.ListDeliveries(ctx, limit)
+}
+
+func (s *NotificationSettingsService) RegisterDeviceToken(ctx context.Context, userID, token, platform string) (*models.DeviceToken, error) {
+	if s.deviceTokens == nil {
+		return nil, nil
+	}
+	return s.deviceTokens.RegisterToken(ctx, userID, token, platform)
+}
+
+func (s *NotificationSettingsService) DeleteDeviceToken(ctx context.Context, userID, token string) error {
+	if s.deviceTokens == nil {
+		return nil
+	}
+	return s.deviceTokens.DeleteToken(ctx, userID, token)
+}
+
+func (s *NotificationSettingsService) ListDeviceTokens(ctx context.Context, userID string) ([]*models.DeviceToken, error) {
+	if s.deviceTokens == nil {
+		return []*models.DeviceToken{}, nil
+	}
+	return s.deviceTokens.ListTokensByUser(ctx, userID)
 }

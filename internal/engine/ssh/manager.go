@@ -19,9 +19,10 @@ type clientEntry struct {
 }
 
 type SSHManager struct {
-	mu         sync.Mutex
-	clients    map[string]*clientEntry
-	serverRepo repositories.ServerRepository
+	mu                  sync.Mutex
+	clients             map[string]*clientEntry
+	serverRepo          repositories.ServerRepository
+	OnServerUnreachable func(server *models.Server, err error)
 }
 
 func NewSSHManager(repo repositories.ServerRepository) *SSHManager {
@@ -114,6 +115,9 @@ func (m *SSHManager) TestConnection(ctx context.Context, cfg Config) error {
 func (m *SSHManager) RefreshServerStatus(ctx context.Context, server *models.Server) error {
 	client, release, err := m.GetClient(server)
 	if err != nil {
+		if server.Status != models.ServerStatusOffline && m.OnServerUnreachable != nil {
+			m.OnServerUnreachable(server, err)
+		}
 		_ = m.serverRepo.UpdateStatus(ctx, server.ID, models.ServerStatusOffline)
 		return err
 	}
@@ -122,6 +126,9 @@ func (m *SSHManager) RefreshServerStatus(ctx context.Context, server *models.Ser
 	metrics, err := client.CollectMetrics(ctx)
 	if err != nil {
 		m.RemoveClient(server.ID)
+		if server.Status != models.ServerStatusOffline && m.OnServerUnreachable != nil {
+			m.OnServerUnreachable(server, err)
+		}
 		_ = m.serverRepo.UpdateStatus(ctx, server.ID, models.ServerStatusOffline)
 		return fmt.Errorf("failed to collect remote metrics: %w", err)
 	}

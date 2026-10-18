@@ -16,6 +16,7 @@ type DispatcherService struct {
 	notifRepo    repositories.NotificationSettingsRepository
 	userRepo     repositories.UserRepository
 	deliveries   repositories.NotificationDeliveryRepository
+	deviceTokens repositories.DeviceTokenRepository
 	mailer       interface {
 		SendSystemEmail(ctx context.Context, templateName string, toAddress string, subject string, data any) error
 	}
@@ -25,14 +26,28 @@ type Mailer interface {
 	SendSystemEmail(ctx context.Context, templateName string, toAddress string, subject string, data any) error
 }
 
-func NewDispatcherService(settingsRepo repositories.SettingsRepository, notifRepo repositories.NotificationSettingsRepository, userRepo repositories.UserRepository, deliveries repositories.NotificationDeliveryRepository, mailer Mailer) *DispatcherService {
-	return &DispatcherService{settingsRepo: settingsRepo, notifRepo: notifRepo, userRepo: userRepo, deliveries: deliveries, mailer: mailer}
+func NewDispatcherService(
+	settingsRepo repositories.SettingsRepository,
+	notifRepo repositories.NotificationSettingsRepository,
+	userRepo repositories.UserRepository,
+	deliveries repositories.NotificationDeliveryRepository,
+	mailer Mailer,
+	deviceTokens repositories.DeviceTokenRepository,
+) *DispatcherService {
+	return &DispatcherService{
+		settingsRepo: settingsRepo,
+		notifRepo:    notifRepo,
+		userRepo:     userRepo,
+		deliveries:   deliveries,
+		deviceTokens: deviceTokens,
+		mailer:       mailer,
+	}
 }
 
 func (d *DispatcherService) Dispatch(event *models.NotificationEvent) {
 	go func() {
 		if err := d.Send(event); err != nil {
-			slog.Error("failed to dispatch event", "title", event.Title, "err", err)
+			slog.Error("failed to dispatch event", "title", event.Title, "type", event.EventType, "err", err)
 		}
 	}()
 }
@@ -41,7 +56,67 @@ func (d *DispatcherService) Send(event *models.NotificationEvent) error {
 	if strings.HasPrefix(event.EventType, "test_global_") {
 		return d.sendGlobalTest(event)
 	}
+
+	ctx := context.Background()
+	settings, err := d.notifRepo.GetNotificationSettings(ctx)
+	if err != nil || settings == nil {
+		return fmt.Errorf("could not fetch notification settings: %v", err)
+	}
+
+	if !settings.NotificationAlerts {
+		return nil
+	}
+
+	var dispatchErrs []error
+
+	// 1. Fan out to configured global notification channels
+	providers := []string{"discord", "slack", "telegram", "generic", "pushover"}
+	for _, provider := range providers {
+		if d.isProviderConfigured(settings, provider) {
+			sendErr := d.sendToProvider(settings, provider, event)
+			d.recordDelivery(ctx, event, provider, sendErr)
+			if sendErr != nil {
+				dispatchErrs = append(dispatchErrs, fmt.Errorf("%s: %w", provider, sendErr))
+			}
+		}
+	}
+
+	// 2. Fan out to registered Expo push device tokens
+	if d.deviceTokens != nil {
+		tokens, err := d.deviceTokens.ListAllTokens(ctx)
+		if err == nil && len(tokens) > 0 {
+			for _, dt := range tokens {
+				if notifications.IsExpoPushToken(dt.Token) {
+					pushErr := notifications.SendExpoNotification(dt.Token, event)
+					d.recordDelivery(ctx, event, "expo", pushErr)
+					if pushErr != nil {
+						dispatchErrs = append(dispatchErrs, fmt.Errorf("expo: %w", pushErr))
+					}
+				}
+			}
+		}
+	}
+
+	if len(dispatchErrs) > 0 {
+		return fmt.Errorf("dispatch completed with %d error(s): %v", len(dispatchErrs), dispatchErrs)
+	}
 	return nil
+}
+
+func (d *DispatcherService) isProviderConfigured(settings *models.NotificationSettings, provider string) bool {
+	switch provider {
+	case "discord":
+		return settings.DiscordEnabled && settings.DiscordWebhookURL != ""
+	case "slack":
+		return settings.SlackEnabled && settings.SlackWebhookURL != ""
+	case "telegram":
+		return settings.TelegramEnabled && settings.TelegramBotToken != "" && settings.TelegramChatID != ""
+	case "generic":
+		return settings.GenericWebhookEnabled && settings.GenericWebhookURL != ""
+	case "pushover":
+		return settings.PushoverEnabled && settings.PushoverAPIToken != "" && settings.PushoverUserKey != ""
+	}
+	return false
 }
 
 func (d *DispatcherService) sendGlobalTest(event *models.NotificationEvent) error {

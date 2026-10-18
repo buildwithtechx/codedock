@@ -5,6 +5,7 @@ import (
 	"database/sql"
 	"fmt"
 	"path/filepath"
+	"strings"
 	"time"
 
 	"github.com/docker/docker/client"
@@ -12,6 +13,7 @@ import (
 
 	"codedock/internal/config"
 	"codedock/internal/core"
+	"codedock/internal/models"
 	"codedock/internal/engine/backup"
 	"codedock/internal/engine/compose"
 	"codedock/internal/engine/cron"
@@ -123,7 +125,8 @@ func NewServer(db *sql.DB, v *utils.Vault, deployer *deploy.Deployer, traefikMan
 		return nil, fmt.Errorf("token service: %w", err)
 	}
 	settingsService := authservices.NewSettingsService(settingsRepo)
-	notifSettingsService := systemservices.NewNotificationSettingsService(notifRepo, repositories.NewNotificationDeliveryRepo(db))
+	deviceTokenRepo := repositories.NewDeviceTokenRepo(db)
+	notifSettingsService := systemservices.NewNotificationSettingsService(notifRepo, repositories.NewNotificationDeliveryRepo(db), deviceTokenRepo)
 	aiSettingsService := projectservices.NewAISettingsService(aiRepo)
 	serviceLinker := projectservices.NewServiceLinker(dbRepo)
 	serviceLinker.SetApplications(appRepo, serviceVarRepo)
@@ -134,13 +137,26 @@ func NewServer(db *sql.DB, v *utils.Vault, deployer *deploy.Deployer, traefikMan
 	}
 	authService := authservices.NewAuthService(userRepo, settingsRepo, notifRepo, projectSettingsRepo, tokenService, mailerService, refreshTokenRepo)
 	projectSettingsService := projectservices.NewProjectSettingsService(projectSettingsRepo, userRepo, authService)
-	dispatcherService := core.NewDispatcherService(settingsRepo, notifRepo, userRepo, repositories.NewNotificationDeliveryRepo(db), mailerService)
+	dispatcherService := core.NewDispatcherService(settingsRepo, notifRepo, userRepo, repositories.NewNotificationDeliveryRepo(db), mailerService, deviceTokenRepo)
 
 	deploymentListeners := core.NewDeploymentListeners(dispatcherService, appRepo)
 	deploymentListeners.Register()
 
 	serverRepo := repositories.NewServerRepository(db, v)
 	sshManager := ssh.NewSSHManager(serverRepo)
+	sshManager.OnServerUnreachable = func(server *models.Server, err error) {
+		baseURL := strings.TrimRight(config.Get().Server.DashboardURL, "/")
+		if baseURL == "" {
+			baseURL = "http://localhost:8080"
+		}
+		dispatcherService.Dispatch(&models.NotificationEvent{
+			EventType: models.EventServerUnreachable,
+			Title:     "Server unreachable: " + server.Name,
+			Message:   fmt.Sprintf("Cannot reach Docker daemon on server %s (%s): %v", server.Name, server.IPAddress, err),
+			Level:     "error",
+			URL:       fmt.Sprintf("%s/servers/%s", baseURL, server.ID),
+		})
+	}
 
 	scheduledTaskService := systemservices.NewScheduledTaskService(scheduledTaskRepo, cronManager)
 	canvasService := projectservices.NewCanvasService(canvasRepo)
@@ -171,6 +187,19 @@ func NewServer(db *sql.DB, v *utils.Vault, deployer *deploy.Deployer, traefikMan
 	backupService := backupservices.NewBackupService(backupRepo, s3DestinationRepo, backupManager)
 	backupService.SetBatches(repositories.NewPolicyBatchRepo(db))
 	backupService.SetSFTP(repositories.NewSFTPDestinationRepo(db))
+	backupManager.OnBackupFailed = func(recordID, errStr string) {
+		baseURL := strings.TrimRight(config.Get().Server.DashboardURL, "/")
+		if baseURL == "" {
+			baseURL = "http://localhost:8080"
+		}
+		dispatcherService.Dispatch(&models.NotificationEvent{
+			EventType: models.EventBackupFailed,
+			Title:     "Backup failed: " + recordID,
+			Message:   fmt.Sprintf("Backup execution failed: %s", errStr),
+			Level:     "error",
+			URL:       fmt.Sprintf("%s/backups", baseURL),
+		})
+	}
 	backupManager.SetServiceRuntime(func(ctx context.Context, serviceID string) (string, error) {
 		runtime, err := runtimeRepository.Get(ctx, serviceID)
 		if err != nil {

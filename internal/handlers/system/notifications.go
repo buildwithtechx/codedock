@@ -200,3 +200,60 @@ func (h *NotificationSettingsHandler) ListDeliveries(c echo.Context) error {
 	}
 	return utils.Success(c, "Operation successful", deliveries)
 }
+
+func (h *NotificationSettingsHandler) RegisterDeviceToken(c echo.Context) error {
+	userID := handlerutils.ExtractUserID(c)
+	if userID == "" {
+		return utils.Error(c, http.StatusUnauthorized, "unauthorized")
+	}
+
+	var req models.RegisterDeviceTokenRequest
+	if err := c.Bind(&req); err != nil {
+		return utils.Error(c, http.StatusBadRequest, err.Error())
+	}
+	if req.Token == "" {
+		return utils.Error(c, http.StatusBadRequest, "token is required")
+	}
+
+	token, err := h.notifSettingsService.RegisterDeviceToken(c.Request().Context(), userID, req.Token, req.Platform)
+	if err != nil {
+		return utils.Error(c, http.StatusInternalServerError, err.Error())
+	}
+	return utils.Success(c, "Device token registered successfully", token)
+}
+
+func (h *NotificationSettingsHandler) DeleteDeviceToken(c echo.Context) error {
+	userID := handlerutils.ExtractUserID(c)
+	if userID == "" {
+		return utils.Error(c, http.StatusUnauthorized, "unauthorized")
+	}
+
+	token := c.Param("token")
+	if token == "" {
+		token = c.QueryParam("token")
+	}
+	if token == "" {
+		return utils.Error(c, http.StatusBadRequest, "token parameter is required")
+	}
+
+	if err := h.notifSettingsService.DeleteDeviceToken(c.Request().Context(), userID, token); err != nil {
+		return utils.Error(c, http.StatusInternalServerError, err.Error())
+	}
+	return utils.Success(c, "Device token deleted successfully", nil)
+}
+
+func (h *NotificationSettingsHandler) ListDeviceTokens(c echo.Context) error {
+	userID := handlerutils.ExtractUserID(c)
+	if userID == "" {
+		return utils.Error(c, http.StatusUnauthorized, "unauthorized")
+	}
+
+	tokens, err := h.notifSettingsService.ListDeviceTokens(c.Request().Context(), userID)
+	if err != nil {
+		return utils.Error(c, http.StatusInternalServerError, err.Error())
+	}
+	if tokens == nil {
+		tokens = []*models.DeviceToken{}
+	}
+	return utils.Success(c, "Operation successful", tokens)
+}

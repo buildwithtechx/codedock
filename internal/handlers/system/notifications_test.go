@@ -84,7 +84,7 @@ func TestNotificationSettingsHandler_UpsertSubscriptionResolvesOrg(t *testing.T)
 		},
 	}
 	notifRepo := &mockNotifRepo{}
-	svc := systemservices.NewNotificationSettingsService(notifRepo, nil)
+	svc := systemservices.NewNotificationSettingsService(notifRepo, nil, nil)
 	handler := NewNotificationSettingsHandler(svc, orgRepo)
 
 	e := echo.New()
@@ -120,7 +120,7 @@ func TestNotificationSettingsHandler_UpsertSubscriptionResolvesOrg(t *testing.T)
 func TestNotificationSettingsHandler_RejectsDefaultOrgWhenUnresolved(t *testing.T) {
 	orgRepo := &mockOrgRepo{orgs: []*models.Organization{}}
 	notifRepo := &mockNotifRepo{}
-	svc := systemservices.NewNotificationSettingsService(notifRepo, nil)
+	svc := systemservices.NewNotificationSettingsService(notifRepo, nil, nil)
 	handler := NewNotificationSettingsHandler(svc, orgRepo)
 
 	e := echo.New()

@@ -18,7 +18,7 @@ func (s *stubDeliveryStore) ListDeliveries(context.Context, int) ([]models.Notif
 }
 
 func TestListDeliveriesReturnsStoredRows(t *testing.T) {
-	service := NewNotificationSettingsService(nil, &stubDeliveryStore{rows: []models.NotificationDelivery{{ID: "d-1", Channel: "discord", Success: true}}})
+	service := NewNotificationSettingsService(nil, &stubDeliveryStore{rows: []models.NotificationDelivery{{ID: "d-1", Channel: "discord", Success: true}}}, nil)
 	rows, err := service.ListDeliveries(context.Background(), 10)
 	if err != nil {
 		t.Fatalf("list deliveries: %v", err)
@@ -29,7 +29,7 @@ func TestListDeliveriesReturnsStoredRows(t *testing.T) {
 }
 
 func TestListDeliveriesWithoutStoreReturnsEmpty(t *testing.T) {
-	service := NewNotificationSettingsService(nil, nil)
+	service := NewNotificationSettingsService(nil, nil, nil)
 	rows, err := service.ListDeliveries(context.Background(), 10)
 	if err != nil {
 		t.Fatalf("list deliveries: %v", err)

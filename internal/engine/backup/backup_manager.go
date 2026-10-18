@@ -50,6 +50,7 @@ type BackupManager struct {
 	restores         map[string]context.CancelFunc
 	restoreVolumes   map[string]string
 	volumeOperations VolumeOperations
+	OnBackupFailed   func(recordID, errStr string)
 }
 
 func (bm *BackupManager) SetServiceRuntime(lookup func(context.Context, string) (string, error)) {
@@ -161,6 +162,9 @@ func (bm *BackupManager) failBackupRecord(recID, errStr string) (*models.BackupR
 }
 
 func (bm *BackupManager) failBackupWithLogs(recID, priorLogs, errStr string) (*models.BackupRecord, error) {
+	if bm.OnBackupFailed != nil {
+		bm.OnBackupFailed(recID, errStr)
+	}
 	logs := priorLogs + fmt.Sprintf("Failed: %s\n", errStr)
 	if err := bm.store.UpdateBackupRecord(models.UpdateBackupRecordOpts{
 		ID:          recID,
