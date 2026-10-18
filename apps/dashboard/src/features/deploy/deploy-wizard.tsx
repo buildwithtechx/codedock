@@ -15,12 +15,14 @@ interface DeployWizardProps {
   initialRepoUrl?: string;
   initialBranch?: string;
   initialProjectName?: string;
+  initialDir?: string;
 }
 
 export function DeployWizard({
   initialRepoUrl = 'https://github.com/codedock/starter',
   initialBranch = 'main',
   initialProjectName = 'my-web-app',
+  initialDir = '',
 }: DeployWizardProps) {
   const navigate = useNavigate();
   const [step, setStep] = useState<'target' | 'config'>('config');
@@ -29,6 +31,7 @@ export function DeployWizard({
   const [installCommand, setInstallCommand] = useState('npm install');
   const [buildCommand, setBuildCommand] = useState('npm run build');
   const [outputDirectory, setOutputDirectory] = useState('dist');
+  const [rootDirectory, setRootDirectory] = useState(initialDir);
   const [projectName, setProjectName] = useState(initialProjectName);
   const [branch, setBranch] = useState(initialBranch);
   const [subdomain, setSubdomain] = useState(initialProjectName);
@@ -50,7 +53,10 @@ export function DeployWizard({
     if (initialBranch) {
       setBranch(initialBranch);
     }
-  }, [initialProjectName, initialBranch]);
+    if (initialDir !== undefined) {
+      setRootDirectory(initialDir);
+    }
+  }, [initialProjectName, initialBranch, initialDir]);
 
   const handleDeploy = async () => {
     setIsDeploying(true);
@@ -104,7 +110,7 @@ export function DeployWizard({
           domain: subdomain,
           buildEngine: runtimeMode === 'static' ? 'static' : 'nixpacks',
           internalPort: exposedPort,
-          rootDirectory: '',
+          rootDirectory: rootDirectory || '',
           dockerfilePath: '',
           healthCheckPath: '',
         });
@@ -143,6 +149,8 @@ export function DeployWizard({
         onBuildCommandChange={setBuildCommand}
         outputDirectory={outputDirectory}
         onOutputDirectoryChange={setOutputDirectory}
+        rootDirectory={rootDirectory}
+        onRootDirectoryChange={setRootDirectory}
         projectName={projectName}
         onProjectNameChange={setProjectName}
         envVars={envVars}

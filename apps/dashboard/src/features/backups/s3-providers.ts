@@ -87,7 +87,10 @@ export function buildS3Endpoint(
   const endpoint = fields.endpoint.trim();
   switch (provider) {
     case 'aws':
-      return { endpoint: '', region: region || 'us-east-1' };
+      return {
+        endpoint: `https://s3.${region || 'us-east-1'}.amazonaws.com`,
+        region: region || 'us-east-1',
+      };
     case 'r2':
       return {
         endpoint: accountId ? `https://${accountId}.r2.cloudflarestorage.com` : '',

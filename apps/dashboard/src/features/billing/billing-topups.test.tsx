@@ -12,8 +12,8 @@ describe('BillingTopups', () => {
 
     expect(screen.getByText('Prepaid Compute Credits')).toBeDefined();
     expect(screen.getByText(/15,400/)).toBeDefined();
-    expect(screen.getByText('10,000 credits')).toBeDefined();
-    expect(screen.getByText('55,000 credits')).toBeDefined();
+    expect(screen.getByText('1,000 credits')).toBeDefined();
+    expect(screen.getByText('5,500 credits')).toBeDefined();
     expect(screen.getByText('+10%')).toBeDefined();
     expect(screen.getByText('+15%')).toBeDefined();
     expect(screen.getByText('+20%')).toBeDefined();

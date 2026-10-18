@@ -25,11 +25,19 @@ export function BillingOverview({
   const [loadingPortal, setLoadingPortal] = useState(false);
   const [portalError, setPortalError] = useState<string | null>(null);
 
-  const isPro = planType === 'pro';
-  const isCustom = planType === 'custom';
-  const isPaid = isPro || isCustom;
+  const isPaid = planType !== 'hobby' && planType !== 'free';
+  const isCanceled = status === 'canceled';
   const displayName =
-    planName ?? (isCustom ? 'Custom Cloud Dedicated' : isPro ? 'Pro Platform' : 'Hobby Developer');
+    planName ??
+    (planType === 'custom'
+      ? 'Custom Cloud Dedicated'
+      : planType === 'scale'
+        ? 'Scale Platform'
+        : planType === 'starter'
+          ? 'Starter Platform'
+          : planType === 'pro'
+            ? 'Pro Platform'
+            : 'Hobby Developer');
 
   const handleOpenPortal = async () => {
     setLoadingPortal(true);
@@ -48,6 +56,24 @@ export function BillingOverview({
     }
   };
 
+  const badgeClass = isCanceled
+    ? 'bg-rose-500/10 text-rose-500'
+    : cancelAtPeriodEnd
+      ? 'bg-amber-500/10 text-amber-500'
+      : isPaid
+        ? 'bg-emerald-500/10 text-emerald-500'
+        : 'bg-muted text-muted-foreground';
+
+  const badgeText = isCanceled
+    ? 'Canceled'
+    : cancelAtPeriodEnd
+      ? 'Canceling'
+      : status === 'active'
+        ? isPaid
+          ? 'Active'
+          : 'Free'
+        : status;
+
   return (
     <div className="rounded-2xl border border-border bg-card p-6 shadow-sm">
       <div className="flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between">
@@ -59,33 +85,23 @@ export function BillingOverview({
             <div className="flex items-center gap-2">
               <h2 className="font-semibold text-foreground text-lg">{displayName}</h2>
               <span
-                className={`inline-flex items-center rounded-full px-2.5 py-0.5 font-medium text-xs ${
-                  isPaid && !cancelAtPeriodEnd
-                    ? 'bg-emerald-500/10 text-emerald-500'
-                    : cancelAtPeriodEnd
-                      ? 'bg-amber-500/10 text-amber-500'
-                      : 'bg-muted text-muted-foreground'
-                }`}
+                className={`inline-flex items-center rounded-full px-2.5 py-0.5 font-medium text-xs ${badgeClass}`}
               >
-                {cancelAtPeriodEnd
-                  ? 'Canceling'
-                  : status === 'active'
-                    ? isPaid
-                      ? 'Active'
-                      : 'Free'
-                    : status}
+                {badgeText}
               </span>
             </div>
             <p className="mt-1 text-muted-foreground text-sm">
-              {cancelAtPeriodEnd
-                ? renewalDate
-                  ? `Access remains active until ${renewalDate}`
-                  : 'Subscription will not renew at the end of the billing period'
-                : renewalDate
-                  ? `Renews on ${renewalDate}`
-                  : isPaid
-                    ? 'Automatic monthly renewal active'
-                    : 'Free community plan for personal workloads and testing'}
+              {isCanceled
+                ? 'Subscription has been canceled'
+                : cancelAtPeriodEnd
+                  ? renewalDate
+                    ? `Access remains active until ${renewalDate}`
+                    : 'Subscription will not renew at the end of the billing period'
+                  : renewalDate
+                    ? `Renews on ${renewalDate}`
+                    : isPaid
+                      ? 'Automatic monthly renewal active'
+                      : 'Free community plan for personal workloads and testing'}
             </p>
           </div>
         </div>

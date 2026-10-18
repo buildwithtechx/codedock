@@ -78,11 +78,11 @@ export const DEFAULT_PAYG_TIERS: PaygTier[] = [
 export const DEFAULT_CREDIT_PACKAGES_CENTS = [1000, 2500, 5000, 10000, 25000];
 
 export const DEFAULT_TOPUP_PACKS = [
-  { id: 'topup_10', name: '$10 Starter Pack', credits: 10000, priceCents: 1000 },
-  { id: 'topup_25', name: '$25 Growth Pack', credits: 25000, priceCents: 2500 },
-  { id: 'topup_50', name: '$50 Scale Pack', credits: 55000, priceCents: 5000, bonusPercent: 10 },
-  { id: 'topup_100', name: '$100 Pro Pack', credits: 115000, priceCents: 10000, bonusPercent: 15 },
-  { id: 'topup_250', name: '$250 Max Pack', credits: 300000, priceCents: 25000, bonusPercent: 20 },
+  { id: 'topup_10', name: '$10 Starter Pack', credits: 1000, priceCents: 1000 },
+  { id: 'topup_25', name: '$25 Growth Pack', credits: 2500, priceCents: 2500 },
+  { id: 'topup_50', name: '$50 Scale Pack', credits: 5500, priceCents: 5000, bonusPercent: 10 },
+  { id: 'topup_100', name: '$100 Pro Pack', credits: 11500, priceCents: 10000, bonusPercent: 15 },
+  { id: 'topup_250', name: '$250 Max Pack', credits: 30000, priceCents: 25000, bonusPercent: 20 },
 ];
 
 export function isCloudPurchaseIntent(value: unknown): value is string {

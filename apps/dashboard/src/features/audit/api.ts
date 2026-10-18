@@ -56,14 +56,24 @@ export interface AuditListParams {
 function toQuery(params: AuditListParams): string {
   const query = new URLSearchParams();
   if (params.category) query.set('category', params.category);
-  if (params.source) query.set('source', params.source);
-  if (params.actor) query.set('actor', params.actor);
-  if (params.period) query.set('period', params.period);
-  if (params.q) query.set('q', params.q);
-  if (params.limit !== undefined) query.set('limit', String(params.limit));
-  if (params.offset !== undefined) query.set('offset', String(params.offset));
-  if (params.page !== undefined) query.set('page', String(params.page));
-  if (params.perPage !== undefined) query.set('perPage', String(params.perPage));
+
+  const limit = params.limit ?? params.perPage;
+  if (limit !== undefined) query.set('limit', String(limit));
+
+  let offset = params.offset;
+  if (offset === undefined && params.page !== undefined && limit !== undefined) {
+    offset = Math.max(0, (params.page - 1) * limit);
+  }
+  if (offset !== undefined) query.set('offset', String(offset));
+
+  const qParts: string[] = [];
+  if (params.q) qParts.push(params.q);
+  if (params.actor) qParts.push(params.actor);
+  if (params.source) qParts.push(params.source);
+  if (qParts.length > 0) {
+    query.set('q', qParts.join(' '));
+  }
+
   const text = query.toString();
   return text ? `?${text}` : '';
 }

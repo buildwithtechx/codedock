@@ -3,8 +3,12 @@ WORKDIR /app
 
 COPY package.json package-lock.json ./
 COPY apps/dashboard/package.json ./apps/dashboard/
-RUN npm ci --workspace=@codedock/dashboard
+COPY packages/setup/package.json ./packages/setup/
+COPY packages/ui/package.json ./packages/ui/
+RUN npm ci --workspace=@codedock/dashboard --include-workspace-root
 
+COPY packages/setup/ ./packages/setup/
+COPY packages/ui/ ./packages/ui/
 COPY apps/dashboard/ ./apps/dashboard/
 COPY tsconfig.base.json ./
 
@@ -20,7 +24,6 @@ RUN go mod download
 
 COPY cmd/ ./cmd/
 COPY internal/ ./internal/
-COPY pkg/ ./pkg/
 COPY apps/dashboard/*.go ./apps/dashboard/
 COPY --from=dashboard-builder /app/apps/dashboard/dist ./apps/dashboard/dist
 

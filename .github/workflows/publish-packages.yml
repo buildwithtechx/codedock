@@ -5,6 +5,7 @@ on:
   push:
     tags:
       - "packages-v*"
+      - "v*"
 
 permissions:
   contents: read
@@ -87,6 +88,8 @@ jobs:
     runs-on: ubuntu-latest
     permissions:
       contents: write
+    env:
+      VSCE_PAT: ${{ secrets.VSCE_PAT }}
     steps:
       - name: Check out repository
         uses: actions/checkout@v4
@@ -112,13 +115,17 @@ jobs:
         run: |
           VSIX_FILE=$(ls apps/extension/*.vsix | head -n 1)
           if [ -n "$VSIX_FILE" ]; then
-            gh release upload "${GITHUB_REF_NAME}" "$VSIX_FILE" --clobber || true
+            TAG="${GITHUB_REF#refs/tags/}"
+            if [[ "$TAG" == packages-v* ]]; then
+              RELEASE_TAG="v${TAG#packages-v}"
+            else
+              RELEASE_TAG="$TAG"
+            fi
+            gh release upload "$RELEASE_TAG" "$VSIX_FILE" --clobber || gh release upload "$TAG" "$VSIX_FILE" --clobber || true
           fi
 
       - name: Publish to VS Code Marketplace
         if: env.VSCE_PAT != ''
-        env:
-          VSCE_PAT: ${{ secrets.VSCE_PAT }}
         run: |
           npx vsce publish --no-dependencies --pat "$VSCE_PAT"
         working-directory: apps/extension

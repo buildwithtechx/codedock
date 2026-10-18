@@ -29,7 +29,25 @@ export function PaygResourceTiers({
     <section aria-label="Resource pool tier capacity" className="min-w-0 space-y-3">
       <div className="flex flex-wrap items-center justify-between gap-x-3 gap-y-1">
         <h4 className="font-medium text-foreground text-sm">Resource pool limits</h4>
-        <div role="tablist" aria-label="Pool tiers" className="inline-flex rounded-lg bg-muted p-1">
+        <div
+          role="tablist"
+          aria-label="Pool tiers"
+          className="inline-flex rounded-lg bg-muted p-1"
+          onKeyDown={(e) => {
+            if (e.key !== 'ArrowLeft' && e.key !== 'ArrowRight') return;
+            e.preventDefault();
+            const idx = tiers.findIndex((t) => t.id === selected.id);
+            if (idx === -1) return;
+            const nextIdx =
+              e.key === 'ArrowRight'
+                ? (idx + 1) % tiers.length
+                : (idx - 1 + tiers.length) % tiers.length;
+            const nextTier = tiers[nextIdx];
+            onChange(nextTier.id);
+            const el = document.getElementById(`${id}-tab-${nextTier.id}`);
+            el?.focus();
+          }}
+        >
           {tiers.map((tier) => {
             const isSelected = tier.id === selected.id;
             return (

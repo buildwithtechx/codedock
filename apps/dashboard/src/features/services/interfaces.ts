@@ -247,7 +247,7 @@ export type TriggerDeploymentResponse = BaseResponse<Deployment>;
 export type RollbackDeploymentResponse = BaseResponse<Deployment>;
 export type GetDeploymentResponse = BaseResponse<Deployment>;
 export type CancelDeploymentResponse = BaseResponse<null>;
-export type GetDeploymentLogsResponse = BaseResponse<string>;
+export type GetDeploymentLogsResponse = BaseResponse<{ id?: string; buildLogs?: string } | string>;
 export type GetServiceMetricsResponse = BaseResponse<ServiceMetric>;
 
 export type ListVariablesResponse = BaseResponse<Variable[]>;

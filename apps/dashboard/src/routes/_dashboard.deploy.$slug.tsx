@@ -32,6 +32,7 @@ function DeploySlugPage() {
         initialProjectName={projectName}
         initialRepoUrl={repoUrl}
         initialBranch={branch}
+        initialDir={search.dir}
       />
     </div>
   );

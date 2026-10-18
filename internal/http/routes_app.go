@@ -219,6 +219,7 @@ func (s *Server) registerMiscRoutes(apiGroup, authGroup *echo.Group) {
 	authGroup.GET("/scheduled-tasks", s.scheduledTaskHandler.ListProjectScheduledTasks)
 	authGroup.POST("/scheduled-tasks", s.scheduledTaskHandler.Create)
 	authGroup.GET("/scheduled-tasks/:id", s.scheduledTaskHandler.Get)
+	authGroup.PUT("/scheduled-tasks/:id", s.scheduledTaskHandler.Update)
 	authGroup.DELETE("/scheduled-tasks/:id", s.scheduledTaskHandler.Delete)
 	authGroup.POST("/scheduled-tasks/:id/trigger", s.scheduledTaskHandler.Run)
 	authGroup.POST("/git/connect", s.gitHandler.Connect)

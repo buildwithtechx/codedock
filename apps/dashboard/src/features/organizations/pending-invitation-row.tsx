@@ -1,5 +1,4 @@
-import { Check, Copy, Mail, Trash2 } from 'lucide-react';
-import { useState } from 'react';
+import { Mail, Trash2 } from 'lucide-react';
 import { toast } from 'sonner';
 import { Button } from '@codedock/ui/button';
 import { useRemoveOrganizationMember } from './hooks';
@@ -15,19 +14,6 @@ export function PendingInvitationRow({
   canManageTeam: boolean;
 }) {
   const { mutateAsync: cancelInvite, isPending } = useRemoveOrganizationMember(organizationId);
-  const [copied, setCopied] = useState(false);
-
-  const handleCopyLink = async () => {
-    try {
-      const inviteUrl = `${window.location.origin}/invite/${member.id}`;
-      await navigator.clipboard.writeText(inviteUrl);
-      setCopied(true);
-      toast.success('Invitation link copied to clipboard');
-      setTimeout(() => setCopied(false), 2000);
-    } catch {
-      toast.error('Failed to copy invitation link');
-    }
-  };
 
   const handleCancel = async () => {
     if (!window.confirm(`Cancel invitation for ${member.email}?`)) return;
@@ -55,16 +41,6 @@ export function PendingInvitationRow({
       </div>
 
       <div className="flex items-center gap-2">
-        <Button
-          type="button"
-          variant="outline"
-          size="sm"
-          onClick={handleCopyLink}
-          className="gap-1.5 text-xs"
-        >
-          {copied ? <Check className="size-3.5 text-emerald-500" /> : <Copy className="size-3.5" />}
-          {copied ? 'Copied' : 'Copy link'}
-        </Button>
         {canManageTeam && (
           <Button
             type="button"

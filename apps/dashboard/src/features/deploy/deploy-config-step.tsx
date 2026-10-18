@@ -16,6 +16,8 @@ interface DeployConfigStepProps {
   onBuildCommandChange: (s: string) => void;
   outputDirectory: string;
   onOutputDirectoryChange: (s: string) => void;
+  rootDirectory?: string;
+  onRootDirectoryChange?: (s: string) => void;
   projectName: string;
   onProjectNameChange: (s: string) => void;
   envVars: string;
@@ -40,6 +42,8 @@ export function DeployConfigStep({
   onBuildCommandChange,
   outputDirectory,
   onOutputDirectoryChange,
+  rootDirectory,
+  onRootDirectoryChange,
   projectName,
   onProjectNameChange,
   envVars,
@@ -52,6 +56,18 @@ export function DeployConfigStep({
   onWatchCrashLoopChange,
   onEditTarget,
 }: DeployConfigStepProps) {
+  const handleMigrateDraft = (cmds: Record<string, string>, vars: Record<string, string>) => {
+    if (cmds.installCommand !== undefined) onInstallCommandChange(cmds.installCommand);
+    if (cmds.buildCommand !== undefined) onBuildCommandChange(cmds.buildCommand);
+    if (Object.keys(vars).length > 0) {
+      const lines = envVars.trim() ? envVars.trim().split('\n') : [];
+      for (const [k, v] of Object.entries(vars)) {
+        lines.push(`${k}=${v}`);
+      }
+      onEnvVarsChange(lines.join('\n'));
+    }
+  };
+
   return (
     <div className="space-y-5">
       <DeployTopBar environmentName="Production" onEditTarget={onEditTarget} />
@@ -67,6 +83,9 @@ export function DeployConfigStep({
         onBuildCommandChange={onBuildCommandChange}
         outputDirectory={outputDirectory}
         onOutputDirectoryChange={onOutputDirectoryChange}
+        rootDirectory={rootDirectory}
+        onRootDirectoryChange={onRootDirectoryChange}
+        onMigrateDraft={handleMigrateDraft}
       />
 
       <DeployEnvSection envVars={envVars} onEnvVarsChange={onEnvVarsChange} />

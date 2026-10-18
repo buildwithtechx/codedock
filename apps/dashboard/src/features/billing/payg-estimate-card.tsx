@@ -106,7 +106,7 @@ export function PaygEstimateCard({
           className="w-full gap-2 rounded-xl"
         >
           <Server className="size-4" />
-          Add Credits & Deploy
+          Add Credits
         </Button>
       </div>
     </aside>

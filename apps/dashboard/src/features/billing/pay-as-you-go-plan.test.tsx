@@ -18,7 +18,7 @@ describe('PayAsYouGoPlan', () => {
     const packageBtn = screen.getByRole('button', { name: /\$50/i });
     fireEvent.click(packageBtn);
 
-    const submitBtn = screen.getByRole('button', { name: /Add Credits & Deploy/i });
+    const submitBtn = screen.getByRole('button', { name: /^Add Credits/i });
     fireEvent.click(submitBtn);
 
     expect(handleAddCredits).toHaveBeenCalledWith(5000);

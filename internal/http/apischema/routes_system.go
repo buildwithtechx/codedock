@@ -364,6 +364,7 @@ func systemOperations() []Operation {
 		{Method: "GET", Path: "/api/scheduled-tasks", Summary: "List scheduled tasks", Tags: []string{tasks}, Auth: AuthUser, Response: Arr("Tasks", scheduledTaskSchema())},
 		{Method: "POST", Path: "/api/scheduled-tasks", Summary: "Create a scheduled task", Tags: []string{tasks}, Auth: AuthUser, Code: 201, Request: JSON(Obj("Create task", RF("serviceId", Str("Service ID")), RF("name", Str("Task name")), RF("schedule", Str("Cron schedule")), RF("command", Str("Command")))), Response: scheduledTaskSchema()},
 		{Method: "GET", Path: "/api/scheduled-tasks/:id", Summary: "Get a scheduled task", Tags: []string{tasks}, Auth: AuthUser, Response: scheduledTaskSchema()},
+		{Method: "PUT", Path: "/api/scheduled-tasks/:id", Summary: "Update a scheduled task", Tags: []string{tasks}, Auth: AuthUser, Request: JSON(Obj("Update task", F("name", Str("Task name")), F("schedule", Str("Cron schedule")), F("command", Str("Command")), F("status", Str("Status")))), Response: scheduledTaskSchema()},
 		{Method: "DELETE", Path: "/api/scheduled-tasks/:id", Summary: "Delete a scheduled task", Tags: []string{tasks}, Auth: AuthUser, Raw: true, Code: 204, Response: EmptySchema()},
 		{Method: "POST", Path: "/api/scheduled-tasks/:id/trigger", Summary: "Trigger a scheduled task", Tags: []string{tasks}, Auth: AuthUser, Response: StatusSchema("executed")},
 		{Method: "GET", Path: "/api/mcp/sse", Summary: "Open the MCP event stream", Tags: []string{mcp}, Auth: AuthUser, Raw: true, Content: ContentSSE, Response: Str("MCP events")},

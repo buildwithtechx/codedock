@@ -11,7 +11,11 @@ export function DeploymentLogs({
   fallbackLogs?: string;
 }) {
   const { data, isLoading, isError, refetch } = useGetLogs(deploymentId);
-  const logs = data?.data || fallbackLogs || '';
+  const rawData = data?.data;
+  const logs =
+    typeof rawData === 'string'
+      ? rawData
+      : (rawData as { buildLogs?: string } | undefined)?.buildLogs || fallbackLogs || '';
 
   if (isLoading) {
     return (

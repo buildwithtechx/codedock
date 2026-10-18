@@ -89244,6 +89244,314 @@
           "tasks"
         ],
         "x-auth": "authenticated"
+      },
+      "put": {
+        "operationId": "putScheduledTasksId",
+        "parameters": [
+          {
+            "description": "id",
+            "in": "path",
+            "name": "id",
+            "required": true,
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "description": "Update task",
+                "properties": {
+                  "command": {
+                    "description": "Command",
+                    "type": "string"
+                  },
+                  "name": {
+                    "description": "Task name",
+                    "type": "string"
+                  },
+                  "schedule": {
+                    "description": "Cron schedule",
+                    "type": "string"
+                  },
+                  "status": {
+                    "description": "Status",
+                    "type": "string"
+                  }
+                },
+                "type": "object"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "description": "Codedock API envelope",
+                  "properties": {
+                    "data": {
+                      "description": "Scheduled task",
+                      "properties": {
+                        "command": {
+                          "description": "Command",
+                          "type": "string"
+                        },
+                        "createdAt": {
+                          "description": "Creation time",
+                          "format": "date-time",
+                          "type": "string"
+                        },
+                        "id": {
+                          "description": "Task ID",
+                          "type": "string"
+                        },
+                        "lastOutput": {
+                          "description": "Last output",
+                          "type": "string"
+                        },
+                        "lastRunAt": {
+                          "description": "Last run",
+                          "format": "date-time",
+                          "type": "string"
+                        },
+                        "name": {
+                          "description": "Task name",
+                          "type": "string"
+                        },
+                        "schedule": {
+                          "description": "Cron schedule",
+                          "type": "string"
+                        },
+                        "serviceId": {
+                          "description": "Service ID",
+                          "type": "string"
+                        },
+                        "status": {
+                          "description": "Status",
+                          "type": "string"
+                        },
+                        "updatedAt": {
+                          "description": "Last update time",
+                          "format": "date-time",
+                          "type": "string"
+                        }
+                      },
+                      "required": [
+                        "id",
+                        "serviceId",
+                        "name",
+                        "schedule",
+                        "command"
+                      ],
+                      "type": "object"
+                    },
+                    "executionTime": {
+                      "description": "Handler seconds",
+                      "format": "double",
+                      "type": "number"
+                    },
+                    "message": {
+                      "description": "Human-readable message",
+                      "type": "string"
+                    },
+                    "path": {
+                      "description": "Request path",
+                      "type": "string"
+                    },
+                    "status": {
+                      "description": "Result status",
+                      "enum": [
+                        "success"
+                      ],
+                      "type": "string"
+                    }
+                  },
+                  "required": [
+                    "status",
+                    "message"
+                  ],
+                  "type": "object"
+                }
+              }
+            },
+            "description": "Update a scheduled task"
+          },
+          "400": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "description": "Codedock API error",
+                  "properties": {
+                    "message": {
+                      "description": "Human-readable message",
+                      "type": "string"
+                    },
+                    "path": {
+                      "description": "Request path",
+                      "type": "string"
+                    },
+                    "status": {
+                      "description": "Result status",
+                      "enum": [
+                        "error"
+                      ],
+                      "type": "string"
+                    }
+                  },
+                  "required": [
+                    "status",
+                    "message"
+                  ],
+                  "type": "object"
+                }
+              }
+            },
+            "description": "Invalid request"
+          },
+          "401": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "description": "Codedock API error",
+                  "properties": {
+                    "message": {
+                      "description": "Human-readable message",
+                      "type": "string"
+                    },
+                    "path": {
+                      "description": "Request path",
+                      "type": "string"
+                    },
+                    "status": {
+                      "description": "Result status",
+                      "enum": [
+                        "error"
+                      ],
+                      "type": "string"
+                    }
+                  },
+                  "required": [
+                    "status",
+                    "message"
+                  ],
+                  "type": "object"
+                }
+              }
+            },
+            "description": "Missing or invalid credentials"
+          },
+          "403": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "description": "Codedock API error",
+                  "properties": {
+                    "message": {
+                      "description": "Human-readable message",
+                      "type": "string"
+                    },
+                    "path": {
+                      "description": "Request path",
+                      "type": "string"
+                    },
+                    "status": {
+                      "description": "Result status",
+                      "enum": [
+                        "error"
+                      ],
+                      "type": "string"
+                    }
+                  },
+                  "required": [
+                    "status",
+                    "message"
+                  ],
+                  "type": "object"
+                }
+              }
+            },
+            "description": "Insufficient permissions"
+          },
+          "404": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "description": "Codedock API error",
+                  "properties": {
+                    "message": {
+                      "description": "Human-readable message",
+                      "type": "string"
+                    },
+                    "path": {
+                      "description": "Request path",
+                      "type": "string"
+                    },
+                    "status": {
+                      "description": "Result status",
+                      "enum": [
+                        "error"
+                      ],
+                      "type": "string"
+                    }
+                  },
+                  "required": [
+                    "status",
+                    "message"
+                  ],
+                  "type": "object"
+                }
+              }
+            },
+            "description": "Resource not found"
+          },
+          "500": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "description": "Codedock API error",
+                  "properties": {
+                    "message": {
+                      "description": "Human-readable message",
+                      "type": "string"
+                    },
+                    "path": {
+                      "description": "Request path",
+                      "type": "string"
+                    },
+                    "status": {
+                      "description": "Result status",
+                      "enum": [
+                        "error"
+                      ],
+                      "type": "string"
+                    }
+                  },
+                  "required": [
+                    "status",
+                    "message"
+                  ],
+                  "type": "object"
+                }
+              }
+            },
+            "description": "Server error"
+          }
+        },
+        "security": [
+          {
+            "bearerAuth": []
+          }
+        ],
+        "summary": "Update a scheduled task",
+        "tags": [
+          "tasks"
+        ],
+        "x-auth": "authenticated"
       }
     },
     "/api/scheduled-tasks/{id}/trigger": {

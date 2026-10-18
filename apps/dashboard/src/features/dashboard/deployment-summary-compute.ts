@@ -48,7 +48,7 @@ export function computeDeploymentSummary(
     if (['ready', 'active', 'success', 'deployed'].includes(s)) return 'success';
     if (['failed', 'error', 'action_required', 'rejected'].includes(s)) return 'failed';
     if (['building', 'cloning', 'pulling', 'pending', 'deploying'].includes(s)) return 'active';
-    if (['canceled', 'cancelled'].includes(s)) return 'canceled';
+    if (['canceled', 'cancelled', 'removed', 'slept'].includes(s)) return 'canceled';
     return 'active';
   };
 

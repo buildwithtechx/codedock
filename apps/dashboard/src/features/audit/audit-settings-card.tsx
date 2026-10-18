@@ -4,6 +4,7 @@ import { toast } from 'sonner';
 import { Label } from '@codedock/ui/label';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@codedock/ui/select';
 import { Switch } from '@codedock/ui/switch';
+import { useOrganizationStore } from '#/stores/organization-store';
 import { auditApi } from './api';
 
 const RETENTION_OPTIONS = [
@@ -15,26 +16,32 @@ const RETENTION_OPTIONS = [
 
 export function AuditSettingsCard() {
   const queryClient = useQueryClient();
+  const activeOrganizationId = useOrganizationStore((state) => state.activeOrganizationId);
+
   const { data: settingsRes, isLoading } = useQuery({
-    queryKey: ['auditSettings'],
-    queryFn: () => auditApi.getSettings(),
+    queryKey: ['auditSettings', activeOrganizationId],
+    queryFn: () => auditApi.getSettings(activeOrganizationId || undefined),
   });
+
+  const settings = settingsRes?.data;
+  const enabled = settings?.enabled ?? true;
+  const retentionDays = String(settings?.retentionDays ?? 90);
 
   const mutation = useMutation({
     mutationFn: (payload: { enabled?: boolean; retentionDays?: number }) =>
-      auditApi.updateSettings(payload),
+      auditApi.updateSettings({
+        organizationId: activeOrganizationId || settings?.organizationId || 'default',
+        enabled: payload.enabled ?? enabled,
+        retentionDays: payload.retentionDays ?? Number(retentionDays),
+      }),
     onSuccess: () => {
-      void queryClient.invalidateQueries({ queryKey: ['auditSettings'] });
+      void queryClient.invalidateQueries({ queryKey: ['auditSettings', activeOrganizationId] });
       toast.success('Audit settings updated');
     },
     onError: (err: unknown) => {
       toast.error(err instanceof Error ? err.message : 'Failed to update audit settings');
     },
   });
-
-  const settings = settingsRes?.data;
-  const enabled = settings?.enabled ?? true;
-  const retentionDays = String(settings?.retentionDays ?? 90);
 
   return (
     <div className="rounded-2xl border border-border/50 bg-card p-5">

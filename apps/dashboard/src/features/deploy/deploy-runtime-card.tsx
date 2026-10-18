@@ -27,6 +27,9 @@ interface DeployRuntimeCardProps {
   onBuildCommandChange: (s: string) => void;
   outputDirectory: string;
   onOutputDirectoryChange: (s: string) => void;
+  rootDirectory?: string;
+  onRootDirectoryChange?: (s: string) => void;
+  onMigrateDraft?: (commands: Record<string, string>, variables: Record<string, string>) => void;
 }
 
 export function DeployRuntimeCard({
@@ -40,6 +43,9 @@ export function DeployRuntimeCard({
   onBuildCommandChange,
   outputDirectory,
   onOutputDirectoryChange,
+  rootDirectory,
+  onRootDirectoryChange,
+  onMigrateDraft,
 }: DeployRuntimeCardProps) {
   const [frameworkSelectOpen, setFrameworkSelectOpen] = useState(false);
   const isDocker = framework.toLowerCase() === 'dockerfile';
@@ -149,20 +155,35 @@ export function DeployRuntimeCard({
               />
             </div>
           </div>
-          <div>
-            <Label className="text-xs">Output Directory</Label>
-            <Input
-              value={outputDirectory}
-              onChange={(e) => onOutputDirectoryChange(e.target.value)}
-              className="mt-1 font-mono text-xs"
-              placeholder="dist"
-            />
+          <div className="grid gap-3 sm:grid-cols-2">
+            <div>
+              <Label className="text-xs">Root Directory</Label>
+              <Input
+                value={rootDirectory ?? ''}
+                onChange={(e) => onRootDirectoryChange?.(e.target.value)}
+                className="mt-1 font-mono text-xs"
+                placeholder="/"
+              />
+            </div>
+            <div>
+              <Label className="text-xs">Output Directory</Label>
+              <Input
+                value={outputDirectory}
+                onChange={(e) => onOutputDirectoryChange(e.target.value)}
+                className="mt-1 font-mono text-xs"
+                placeholder="dist"
+              />
+            </div>
           </div>
           <CommandEnvironmentNotice
             commands={{ installCommand, buildCommand }}
-            migrateDraft={(cmds) => {
-              if (cmds.installCommand !== undefined) onInstallCommandChange(cmds.installCommand);
-              if (cmds.buildCommand !== undefined) onBuildCommandChange(cmds.buildCommand);
+            migrateDraft={(cmds, vars) => {
+              if (onMigrateDraft) {
+                onMigrateDraft(cmds, vars);
+              } else {
+                if (cmds.installCommand !== undefined) onInstallCommandChange(cmds.installCommand);
+                if (cmds.buildCommand !== undefined) onBuildCommandChange(cmds.buildCommand);
+              }
             }}
           />
         </div>
