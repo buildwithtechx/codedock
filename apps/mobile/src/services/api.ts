@@ -8,10 +8,10 @@ import type {
   CodedockServer,
   UserProfile,
 } from '@/interfaces';
+import { env } from '@/env';
 import { cleanUrl } from '@/utils';
 
-export const DEFAULT_CLOUD_URL =
-  process.env.EXPO_PUBLIC_CODEDOCK_CLOUD_URL || 'https://app.codedock.run';
+export const DEFAULT_CLOUD_URL = env.EXPO_PUBLIC_CODEDOCK_CLOUD_URL;
 
 function createClient(url: string, token: string = '') {
   return axios.create({

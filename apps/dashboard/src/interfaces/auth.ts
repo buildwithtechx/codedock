@@ -1,5 +1,5 @@
-import type { User } from '#/features/users';
 import type { BaseResponse } from '#/interfaces/base';
+import type { User } from '#/interfaces/users';
 
 export interface AuthResponse {
   token: string;
@@ -46,6 +46,29 @@ export interface Setup2FAResponse {
 
 export interface Verify2FARequest {
   passcode: string;
+}
+
+export interface DeviceCodeResponse {
+  deviceCode: string;
+  userCode: string;
+  verificationUri: string;
+  verificationUriComplete: string;
+  expiresIn: number;
+  interval: number;
+}
+
+export interface DeviceVerifyResponse {
+  valid: boolean;
+  userCode: string;
+  clientName: string;
+  status: string;
+}
+
+export interface DeviceAuthorizeResponse {
+  status: string;
+  clientName?: string;
+  token?: string;
+  email?: string;
 }
 
 export type LoginResponse = BaseResponse<AuthResponse>;

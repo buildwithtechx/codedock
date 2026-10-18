@@ -1,8 +1,8 @@
 import { useMutation, useQueryClient } from '@tanstack/react-query';
 import { useRouter } from '@tanstack/react-router';
 import { toast } from 'sonner';
+import { authService } from '#/services/auth';
 import { useAuthStore } from '#/stores/auth-store';
-import { authService } from './api';
 
 export const useLogin = () => {
   const queryClient = useQueryClient();

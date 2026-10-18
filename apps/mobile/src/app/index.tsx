@@ -14,11 +14,11 @@ import {
   View,
 } from 'react-native';
 import Toast from 'react-native-toast-message';
+import { AuthBrandHeader } from '@/components/AuthBrandHeader';
+import { AuthModeSelector } from '@/components/AuthModeSelector';
+import { CloudNoticeCard } from '@/components/CloudNoticeCard';
 import { Icon } from '@/components/Icon';
-import { AuthBrandHeader } from '@/features/auth/AuthBrandHeader';
-import { AuthModeSelector } from '@/features/auth/AuthModeSelector';
-import { CloudNoticeCard } from '@/features/auth/CloudNoticeCard';
-import { ManualTokenSection } from '@/features/auth/ManualTokenSection';
+import { ManualTokenSection } from '@/components/ManualTokenSection';
 import { DEFAULT_CLOUD_URL, MobileApi } from '@/services/api';
 import { registerForPushNotificationsAsync } from '@/services/notifications';
 import { MobileStorage } from '@/services/storage';

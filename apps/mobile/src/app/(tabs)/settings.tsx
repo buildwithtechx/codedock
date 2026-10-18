@@ -12,8 +12,8 @@ import {
   View,
 } from 'react-native';
 import Toast from 'react-native-toast-message';
-import { AuthModeSelector } from '@/features/auth/AuthModeSelector';
-import { ConnectedStatusCard } from '@/features/auth/ConnectedStatusCard';
+import { AuthModeSelector } from '@/components/AuthModeSelector';
+import { ConnectedStatusCard } from '@/components/ConnectedStatusCard';
 import { DEFAULT_CLOUD_URL, MobileApi } from '@/services/api';
 import { registerForPushNotificationsAsync } from '@/services/notifications';
 import { MobileStorage } from '@/services/storage';

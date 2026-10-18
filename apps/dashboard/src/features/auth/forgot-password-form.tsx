@@ -4,7 +4,7 @@ import { useState } from 'react';
 import { Button } from '@codedock/ui/button';
 import { Input } from '@codedock/ui/input';
 import { Label } from '@codedock/ui/label';
-import { useForgotPassword } from '#/features/auth';
+import { useForgotPassword } from '#/hooks/use-auth';
 
 export const ForgotPasswordForm = () => {
   const [email, setEmail] = useState('');

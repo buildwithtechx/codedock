@@ -7,7 +7,7 @@ import { z } from 'zod';
 import { Button } from '@codedock/ui/button';
 import { Input } from '@codedock/ui/input';
 import { Label } from '@codedock/ui/label';
-import { useLogin } from '#/features/auth';
+import { useLogin } from '#/hooks/use-auth';
 
 const loginSchema = z.object({
   email: z.string().email('Please enter a valid email address'),

@@ -9,8 +9,8 @@ import {
   DropdownMenuSeparator,
   DropdownMenuTrigger,
 } from '@codedock/ui/dropdown-menu';
-import { useLogout } from '#/features/auth';
 import { useListOrganizations } from '#/features/organizations';
+import { useLogout } from '#/hooks/use-auth';
 import { useAuthStore } from '#/stores/auth-store';
 import { useOrganizationStore } from '#/stores/organization-store';
 

@@ -4,7 +4,7 @@ import { useState } from 'react';
 import { z } from 'zod';
 import { Button } from '@codedock/ui';
 import { AuthPageFrame, LoginForm } from '#/features/auth';
-import { authService } from '#/features/auth/api';
+import { authService } from '#/services/auth';
 import { useAuthStore } from '#/stores/auth-store';
 import { useSystemStore } from '#/stores/system-store';
 

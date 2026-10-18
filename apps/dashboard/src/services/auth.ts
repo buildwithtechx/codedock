@@ -1,8 +1,9 @@
-import { apiClient } from '#/lib/api-client';
-import { handleApiError } from '#/lib/error';
 import type {
   AuthCredentials,
   AuthResponse,
+  DeviceAuthorizeResponse,
+  DeviceCodeResponse,
+  DeviceVerifyResponse,
   Disable2FAResponse,
   ForgotPasswordResponse,
   LoginResponse,
@@ -14,7 +15,9 @@ import type {
   SetupResponse,
   Verify2FARequest,
   Verify2FAResponse,
-} from './interfaces';
+} from '#/interfaces/auth';
+import { apiClient } from '#/lib/api-client';
+import { handleApiError } from '#/lib/error';
 
 export const authService = {
   login: async (credentials: AuthCredentials): Promise<AuthResponse> => {
@@ -95,32 +98,37 @@ export const authService = {
     }
   },
 
-  verifyDeviceCode: async (code: string) => {
+  verifyDeviceCode: async (code: string): Promise<DeviceVerifyResponse> => {
     try {
-      const response = await apiClient.get<{
-        data: {
-          valid: boolean;
-          userCode: string;
-          clientName: string;
-          status: string;
-        };
-      }>(`/auth/device/verify?code=${encodeURIComponent(code)}`);
+      const response = await apiClient.get<{ data: DeviceVerifyResponse }>(
+        `/auth/device/verify?code=${encodeURIComponent(code)}`
+      );
       return response.data;
     } catch (error) {
       throw handleApiError(error);
     }
   },
 
-  authorizeDevice: async (userCode: string, action: 'approve' | 'deny') => {
+  authorizeDevice: async (
+    userCode: string,
+    action: 'approve' | 'deny'
+  ): Promise<DeviceAuthorizeResponse> => {
     try {
-      const response = await apiClient.post<{
-        data: {
-          status: string;
-          clientName?: string;
-          token?: string;
-          email?: string;
-        };
-      }>('/auth/device/authorize', { userCode, action });
+      const response = await apiClient.post<{ data: DeviceAuthorizeResponse }>(
+        '/auth/device/authorize',
+        { userCode, action }
+      );
+      return response.data;
+    } catch (error) {
+      throw handleApiError(error);
+    }
+  },
+
+  createDeviceCode: async (clientName?: string): Promise<DeviceCodeResponse> => {
+    try {
+      const response = await apiClient.post<{ data: DeviceCodeResponse }>('/auth/device/code', {
+        clientName,
+      });
       return response.data;
     } catch (error) {
       throw handleApiError(error);

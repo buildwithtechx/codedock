@@ -12,7 +12,7 @@ import {
   DialogTitle,
 } from '@codedock/ui/dialog';
 import { InputOTP, InputOTPGroup, InputOTPSlot } from '@codedock/ui/input-otp';
-import { useDisable2FA, useSetup2FA, useVerify2FA } from '#/features/auth';
+import { useDisable2FA, useSetup2FA, useVerify2FA } from '#/hooks/use-auth';
 import { useGetProfile } from '#/features/profile';
 import { SettingsRow } from '#/features/settings/settings-row';
 import { SettingsSection } from '#/features/settings/settings-section';
