@@ -1,5 +1,5 @@
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
-import { databasesService } from './api';
+import { databasesService } from '#/services/databases';
 
 export const useListDatabases = () => {
   return useQuery({

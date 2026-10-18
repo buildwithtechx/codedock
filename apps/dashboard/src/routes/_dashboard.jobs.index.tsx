@@ -5,14 +5,14 @@ import { useMemo, useState } from 'react';
 import { PageHeader } from '#/components/layout/page-header';
 import { Button } from '@codedock/ui/button';
 import { QueryErrorState } from '#/components/query-error-state';
-import { jobsApi } from '#/features/jobs/api';
+import { jobsApi } from '#/services/jobs';
 import { JobCard } from '#/features/jobs/job-card';
 import { isFailedStatus } from '#/features/jobs/job-format';
 import { JobOutputDialog } from '#/features/jobs/job-output-dialog';
 import { JobsEmptyState } from '#/features/jobs/jobs-empty-state';
 import { type JobStatusFilter, JobsOverview } from '#/features/jobs/jobs-overview';
-import { useListAllProjects } from '#/features/projects';
-import type { Job } from '#/features/services';
+import { useListAllProjects } from '#/hooks/use-projects';
+import type { Job } from '#/interfaces/services';
 
 export const Route = createFileRoute('/_dashboard/jobs/')({
   component: JobsPage,

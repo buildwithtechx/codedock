@@ -1,4 +1,4 @@
-import type { BackupRecord } from '#/features/backups/interfaces';
+import type { BackupRecord } from '#/interfaces/backups';
 import { ReviewedRestoreDialog } from '#/features/backups/reviewed-restore-dialog';
 
 type DatabaseRestoreDialogProps = {

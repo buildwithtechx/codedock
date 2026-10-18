@@ -1,6 +1,6 @@
 import { Link } from '@tanstack/react-router';
 import { ArrowUpRight, FolderKanban } from 'lucide-react';
-import type { CanvasSummary } from '#/features/projects';
+import type { CanvasSummary } from '#/interfaces/projects';
 import { HomeFirstProject } from './home-first-project';
 
 export function HomeProjectList({

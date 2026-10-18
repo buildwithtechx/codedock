@@ -12,8 +12,8 @@ import {
   DialogTitle,
 } from '@codedock/ui/dialog';
 import { Switch } from '@codedock/ui/switch';
-import type { Job } from '#/features/services';
-import { jobsApi } from './api';
+import type { Job } from '#/interfaces/services';
+import { jobsApi } from '#/services/jobs';
 import { formatTime, isFailedStatus, relativeTime, statusDot, statusLabel } from './job-format';
 
 export function JobCard({

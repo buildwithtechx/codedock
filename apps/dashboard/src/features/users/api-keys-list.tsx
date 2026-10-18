@@ -8,9 +8,9 @@ import { Checkbox } from '@codedock/ui/checkbox';
 import { Input } from '@codedock/ui/input';
 import { Label } from '@codedock/ui/label';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@codedock/ui/select';
-import { useCreateToken, useListTokens } from '#/features/profile';
+import { useCreateToken, useListTokens } from '#/hooks/use-profile';
 import { SettingsSection } from '#/features/settings/settings-section';
-import type { CreatePATRequest } from '#/features/users';
+import type { CreatePATRequest } from '#/interfaces/users';
 import { useListCanvasSummaries } from '#/hooks/use-canvas';
 import { ApiKeyDeleteDialog } from './components/api-key-delete-dialog';
 

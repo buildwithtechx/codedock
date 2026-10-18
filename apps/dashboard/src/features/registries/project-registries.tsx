@@ -12,8 +12,8 @@ import {
 } from '@codedock/ui/dialog';
 import { Input } from '@codedock/ui/input';
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@codedock/ui/table';
-import type { Registry } from '#/features/registries';
-import { useCreateRegistry, useDeleteRegistry, useListRegistries } from '#/features/registries';
+import type { Registry } from '#/interfaces/registries';
+import { useCreateRegistry, useDeleteRegistry, useListRegistries } from '#/hooks/use-registries';
 
 export function ProjectRegistries({ projectId }: { projectId: string }) {
   const { data: registries, isLoading } = useListRegistries(projectId);

@@ -1,5 +1,5 @@
 import { AlertCircle, CheckCircle2, Clock, HelpCircle } from 'lucide-react';
-import type { DNSProvisionStatus } from '#/features/dns';
+import type { DNSProvisionStatus } from '#/interfaces/dns';
 
 interface DnsStatusBadgeProps {
   status?: DNSProvisionStatus | string;

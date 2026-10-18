@@ -1,6 +1,4 @@
 import type { BaseResponse } from '#/interfaces/base';
-import { apiClient } from '#/lib/api-client';
-import { handleApiError } from '#/lib/error';
 import type {
   AddMemberRequest,
   CreateProjectRequest,
@@ -12,17 +10,12 @@ import type {
   ListProjectsResponse,
   ProjectMember,
   ProjectToken,
-} from './interfaces';
+  ServiceWebhook,
+} from '#/interfaces/projects';
+import { apiClient } from '#/lib/api-client';
+import { handleApiError } from '#/lib/error';
 
-export interface ServiceWebhook {
-  id: string;
-  serviceId: string;
-  url: string;
-  eventTypes: string[];
-  includePrEnvironments: boolean;
-  createdAt: string;
-  updatedAt: string;
-}
+export type { ServiceWebhook };
 
 export const projectsService = {
   listProjects: async (

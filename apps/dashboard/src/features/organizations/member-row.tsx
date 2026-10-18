@@ -2,8 +2,11 @@ import { Loader2, Trash2 } from 'lucide-react';
 import { toast } from 'sonner';
 import { Button } from '@codedock/ui/button';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@codedock/ui/select';
-import { useRemoveOrganizationMember, useUpdateOrganizationMember } from './hooks';
-import type { OrganizationMember } from './interfaces';
+import {
+  useRemoveOrganizationMember,
+  useUpdateOrganizationMember,
+} from '#/hooks/use-organizations';
+import type { OrganizationMember } from '#/interfaces/organizations';
 
 export function MemberRow({
   member,

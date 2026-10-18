@@ -1,4 +1,4 @@
-import type { CreateAppServiceRequest } from '#/features/services';
+import type { CreateAppServiceRequest } from '#/interfaces/services';
 
 export interface ApplicationSetupProps {
   isOpen: boolean;

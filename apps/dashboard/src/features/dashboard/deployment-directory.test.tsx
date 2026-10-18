@@ -6,7 +6,7 @@ vi.mock('#/hooks/use-deployments', () => ({
   useListByOrganization: vi.fn(),
 }));
 
-vi.mock('#/features/projects', () => ({
+vi.mock('#/hooks/use-projects', () => ({
   useListProjects: vi.fn(),
 }));
 
@@ -18,7 +18,7 @@ vi.mock('@tanstack/react-router', () => ({
   ),
 }));
 
-import { useListProjects } from '#/features/projects';
+import { useListProjects } from '#/hooks/use-projects';
 import { useListByOrganization } from '#/hooks/use-deployments';
 
 describe('DeploymentDirectory', () => {

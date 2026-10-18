@@ -7,7 +7,7 @@ import {
   useGetDatabase,
   useRestartDatabase,
   useStopDatabase,
-} from '#/features/databases';
+} from '#/hooks/use-databases';
 import { useDeleteApp, useGetApp, useRestartApp, useStopApp } from '#/hooks/use-apps';
 
 export const Route = createFileRoute('/_dashboard/services/$serviceId/danger')({

@@ -5,7 +5,7 @@ import { Button } from '@codedock/ui/button';
 import type { ManagedServerInfo } from '#/interfaces/server';
 import { CapacitySummary } from './capacity-summary';
 import { ConnectionValue } from './connection-value';
-import { getManagedBootLogs, getManagedInfo } from './managed-api';
+import { getManagedBootLogs, getManagedInfo } from '#/services/managed-server';
 import { ManagedControlPanel } from './managed-control-panel';
 
 export function ManagedServerSettings({ serverId }: { serverId: string }) {

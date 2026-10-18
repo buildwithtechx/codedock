@@ -9,7 +9,7 @@ import { TemplatesGallery } from '#/features/apps/templates-gallery';
 import { encodeDeploySlug } from '#/lib/utils';
 import { ConnectPrompt } from './connect-prompt';
 import { FolderUpload } from './folder-upload';
-import { useGitConnections, useLibraryRepos } from './hooks';
+import { useGitConnections, useLibraryRepos } from '#/hooks/use-library';
 import { LibrarySidebar } from './library-sidebar';
 import { LocalProjects } from './local-projects';
 import { RepositoryList } from './repository-list';

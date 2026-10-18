@@ -1,4 +1,4 @@
-import { useListProjects } from '#/features/projects';
+import { useListProjects } from '#/hooks/use-projects';
 import { useListAppsByOrganization } from '#/hooks/use-apps';
 import { useListServers } from '#/hooks/use-servers';
 

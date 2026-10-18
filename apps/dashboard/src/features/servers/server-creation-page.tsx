@@ -15,7 +15,7 @@ import { Card } from '@codedock/ui/card';
 import { Input } from '@codedock/ui/input';
 import { Label } from '@codedock/ui/label';
 import type { Server, TestSSHRequest } from '#/interfaces/server';
-import { createServer, testServerConnection } from './api';
+import { createServer, testServerConnection } from '#/services/servers';
 import { HetznerSetupWizard } from './managed/hetzner-setup-wizard';
 import { type ServerCreationMode, ServerCreationModeToggle } from './server-creation-mode-toggle';
 import {

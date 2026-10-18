@@ -1,8 +1,8 @@
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
 import { toast } from 'sonner';
+import type { ActIssueInput } from '#/interfaces/issues';
+import { issuesService } from '#/services/issues';
 import { useOrganizationStore } from '#/stores/organization-store';
-import { issuesService } from './api';
-import type { ActIssueInput } from './interfaces';
 
 export const useActiveOrganizationId = () =>
   useOrganizationStore((state) => state.activeOrganizationId);

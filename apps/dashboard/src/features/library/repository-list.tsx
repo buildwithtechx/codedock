@@ -12,9 +12,14 @@ import {
 import { Button } from '@codedock/ui/button';
 import { Input } from '@codedock/ui/input';
 import { cn } from '#/lib/utils';
-import { useLibraryRepos } from './hooks';
+import { useLibraryRepos } from '#/hooks/use-library';
 import { ProviderAccounts } from './provider-accounts';
-import type { LibraryRepo, ProviderConnection, SortBy, VisibilityFilter } from './types';
+import type {
+  LibraryRepo,
+  ProviderConnection,
+  SortBy,
+  VisibilityFilter,
+} from '#/interfaces/library';
 
 const DOCS_URL = 'https://docs.codedock.run';
 

@@ -10,7 +10,7 @@ import {
   SheetTitle,
   SheetTrigger,
 } from '@codedock/ui/sheet';
-import { useGetDatabases } from '#/features/databases';
+import { useGetDatabases } from '#/hooks/use-databases';
 import { useListByProject } from '#/hooks/use-apps';
 
 interface SmartLinkerDrawerProps {

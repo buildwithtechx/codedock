@@ -2,8 +2,13 @@ import { ArchiveRestore, Loader2 } from 'lucide-react';
 import { useEffect, useState } from 'react';
 import { Button } from '@codedock/ui/button';
 import { Dialog, DialogContent, DialogDescription, DialogTitle } from '@codedock/ui/dialog';
-import { useApplyRestore, useCancelRestore, usePrepareRestore, useRestoreOperation } from './hooks';
-import type { BackupRecord, RestoreOperation } from './interfaces';
+import {
+  useApplyRestore,
+  useCancelRestore,
+  usePrepareRestore,
+  useRestoreOperation,
+} from '#/hooks/use-backups';
+import type { BackupRecord, RestoreOperation } from '#/interfaces/backups';
 import {
   isTerminal,
   RestoreApplyingStep,

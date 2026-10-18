@@ -1,5 +1,6 @@
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
 import { appsService } from '#/services/apps';
+import type { InstallAppInput, OneClickDeployRequest } from '#/interfaces/templates';
 import { useOrganizationStore } from '#/stores/organization-store';
 
 export const useListAppsByOrganization = () => {
@@ -182,3 +183,46 @@ export const useDeleteLogDrain = () => {
     },
   });
 };
+
+export function useInstalledApps() {
+  const organizationId = useOrganizationStore((state) => state.activeOrganizationId);
+  return useQuery({
+    queryKey: ['apps', 'installed', organizationId],
+    queryFn: () => appsService.listInstalled(organizationId as string),
+    enabled: Boolean(organizationId),
+  });
+}
+
+export function useAppCatalog() {
+  return useQuery({
+    queryKey: ['apps', 'catalog'],
+    queryFn: () => appsService.listCatalog(),
+  });
+}
+
+export function useCatalogApp(appId: string) {
+  return useQuery({
+    queryKey: ['apps', 'catalog', appId],
+    queryFn: () => appsService.getCatalogApp(appId),
+    enabled: appId.length > 0,
+    retry: false,
+  });
+}
+
+export function useReviewCatalogInstall() {
+  return useMutation({
+    mutationFn: (payload: InstallAppInput) => appsService.reviewInstall(payload),
+  });
+}
+
+export function useDeployCatalogApp() {
+  const queryClient = useQueryClient();
+  return useMutation({
+    mutationFn: (payload: OneClickDeployRequest) => appsService.deployCatalogApp(payload),
+    onSuccess: async () => {
+      await queryClient.invalidateQueries({ queryKey: ['apps'] });
+      await queryClient.invalidateQueries({ queryKey: ['projects'] });
+      await queryClient.invalidateQueries({ queryKey: ['canvas'] });
+    },
+  });
+}

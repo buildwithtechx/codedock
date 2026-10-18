@@ -1,4 +1,3 @@
-export * from './api';
 export * from './backup-destination-history';
 export * from './backup-destinations';
 export * from './backup-policies';
@@ -8,8 +7,6 @@ export * from './destination-detail';
 export * from './destination-display';
 export * from './destination-modal';
 export * from './destination-snapshots';
-export * from './hooks';
-export * from './interfaces';
 export * from './restore-wizard';
 export * from './s3-destination-fields';
 export * from './s3-providers';

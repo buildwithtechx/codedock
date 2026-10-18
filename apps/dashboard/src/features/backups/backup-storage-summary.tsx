@@ -8,7 +8,7 @@ import {
   Server,
 } from 'lucide-react';
 import { formatBytes } from './destination-display';
-import type { BackupConfig, BackupRecord, S3Destination } from './interfaces';
+import type { BackupConfig, BackupRecord, S3Destination } from '#/interfaces/backups';
 
 type BackupStorageSummaryProps = {
   records: BackupRecord[];

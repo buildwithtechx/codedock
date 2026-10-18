@@ -11,13 +11,13 @@ import {
   ProjectDeploymentsTab,
   ProjectVariablesTab,
   ServiceDetailDrawer,
-  useGetProject,
 } from '#/features/projects';
+import { useGetProject } from '#/hooks/use-projects';
 import { ProjectDatabaseInventory } from '#/features/projects/project-database-inventory';
 import { ProjectGitTab } from '#/features/projects/project-git-tab';
 import { StatusBadge } from '#/features/projects/service-status-badge';
 import { ProjectClusters } from '#/features/servers/project-clusters';
-import type { AppService } from '#/features/services';
+import type { AppService } from '#/interfaces/services';
 import { AddServiceModal } from '#/features/services';
 import { useListByProject as useListAppsByProject } from '#/hooks/use-apps';
 import { useTriggerProject } from '#/hooks/use-deployments';

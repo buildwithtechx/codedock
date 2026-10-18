@@ -13,7 +13,7 @@ import {
 } from '@codedock/ui/dialog';
 import { Input } from '@codedock/ui/input';
 import { Label } from '@codedock/ui/label';
-import { useDeleteProject } from './hooks';
+import { useDeleteProject } from '#/hooks/use-projects';
 
 export interface ProjectDeleteDialogProps {
   isOpen: boolean;

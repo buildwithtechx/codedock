@@ -5,7 +5,7 @@ import { Checkbox } from '@codedock/ui/checkbox';
 import { Textarea } from '@codedock/ui/textarea';
 import type { ServerNetworkSettings } from '#/interfaces/server';
 import { ConnectionValue } from './connection-value';
-import { getServerNetworkSettings, updateServerNetworkSettings } from './managed-api';
+import { getServerNetworkSettings, updateServerNetworkSettings } from '#/services/managed-server';
 import { ManagedControlPanel } from './managed-control-panel';
 
 export function ManagedServerNetwork({ serverId }: { serverId: string }) {

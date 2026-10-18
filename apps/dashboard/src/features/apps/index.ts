@@ -1,16 +1,8 @@
 export { AddCustomAppModal } from './add-custom-app-modal';
-export { appsApi } from './api';
 export { AppCatalog } from './app-catalog';
 export { AppLogo } from './app-logo';
 export { CatalogCard, CatalogShortcut } from './catalog-card';
 export { ExampleLogo } from './example-logo';
-export {
-  useAppCatalog,
-  useCatalogApp,
-  useDeployCatalogApp,
-  useInstalledApps,
-  useReviewCatalogInstall,
-} from './hooks';
 export { InstallDomainsRouting } from './install-domains-routing';
 export { InstallWizard } from './install-wizard';
 export { InstalledAppRow } from './installed-app-row';

@@ -1,4 +1,11 @@
-import type { JobStatus } from '#/features/services';
+import type { JobStatus } from '#/interfaces/services';
+
+export const SCHEDULE_PRESETS = [
+  { label: 'Every 5 minutes', value: '*/5 * * * *' },
+  { label: 'Hourly', value: '0 * * * *' },
+  { label: 'Daily at midnight', value: '0 0 * * *' },
+  { label: 'Weekly on Sunday', value: '0 0 * * 0' },
+];
 
 export function formatTime(iso?: string | null): string {
   if (!iso) return 'Never';

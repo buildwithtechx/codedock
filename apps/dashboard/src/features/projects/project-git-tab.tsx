@@ -1,22 +1,14 @@
 import { Link } from '@tanstack/react-router';
-import { Check, GitBranch, GitCommitHorizontal, Loader2, Plus, Settings2 } from 'lucide-react';
+import { GitBranch, GitCommitHorizontal, Loader2, Plus, Settings2 } from 'lucide-react';
 import { useState } from 'react';
 import { toast } from 'sonner';
 import { Badge } from '@codedock/ui/badge';
 import { Button } from '@codedock/ui/button';
-import {
-  Dialog,
-  DialogContent,
-  DialogDescription,
-  DialogHeader,
-  DialogTitle,
-} from '@codedock/ui/dialog';
-import { Input } from '@codedock/ui/input';
-import { Label } from '@codedock/ui/label';
 import { QueryErrorState } from '#/components/query-error-state';
 import { useListByProject as useListAppsByProject } from '#/hooks/use-apps';
 import { useListByOrganization as useListDeployments } from '#/hooks/use-deployments';
 import { useConnect, useDisconnect, useGetStatus } from '#/hooks/use-git';
+import { ProjectGitConnectDialog } from './project-git-connect-dialog';
 import { ProjectGitServiceSource } from './project-git-service-source';
 
 const PROVIDERS = [
@@ -260,46 +252,16 @@ export function ProjectGitTab({ projectId, environmentId }: ProjectGitTabProps) 
         </div>
       </section>
 
-      <Dialog open={connecting !== null} onOpenChange={(open) => !open && setConnecting(null)}>
-        <DialogContent className="sm:max-w-md">
-          <DialogHeader>
-            <DialogTitle>Connect {connecting}</DialogTitle>
-            <DialogDescription>
-              Enter a personal access token for this git account.
-            </DialogDescription>
-          </DialogHeader>
-          <form onSubmit={handleConnect} className="space-y-4">
-            <div className="space-y-2">
-              <Label>Account name</Label>
-              <Input
-                value={accountName}
-                onChange={(event) => setAccountName(event.target.value)}
-                placeholder="Personal"
-              />
-            </div>
-            <div className="space-y-2">
-              <Label>Personal access token</Label>
-              <Input
-                type="password"
-                value={accessToken}
-                onChange={(event) => setAccessToken(event.target.value)}
-                placeholder="Token with repository read access"
-                required
-                className="font-mono"
-              />
-            </div>
-            <div className="flex justify-end gap-2">
-              <Button type="button" variant="ghost" onClick={() => setConnecting(null)}>
-                Cancel
-              </Button>
-              <Button type="submit" disabled={connectMutation.isPending}>
-                <Check className="h-3.5 w-3.5" />
-                {connectMutation.isPending ? 'Connecting' : 'Connect'}
-              </Button>
-            </div>
-          </form>
-        </DialogContent>
-      </Dialog>
+      <ProjectGitConnectDialog
+        connecting={connecting}
+        onClose={() => setConnecting(null)}
+        accountName={accountName}
+        onAccountNameChange={setAccountName}
+        accessToken={accessToken}
+        onAccessTokenChange={setAccessToken}
+        onSubmit={handleConnect}
+        isPending={connectMutation.isPending}
+      />
     </div>
   );
 }

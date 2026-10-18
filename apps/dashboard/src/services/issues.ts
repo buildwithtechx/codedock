@@ -1,7 +1,7 @@
 import type { BaseResponse } from '#/interfaces/base';
+import type { ActIssueOutcome, ActIssuePayload, AttentionFeed } from '#/interfaces/issues';
 import { apiClient } from '#/lib/api-client';
 import { handleApiError } from '#/lib/error';
-import type { ActIssueOutcome, ActIssuePayload, AttentionFeed } from './interfaces';
 
 export const issuesService = {
   list: async (organizationId: string): Promise<BaseResponse<AttentionFeed>> => {

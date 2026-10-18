@@ -32,7 +32,7 @@ import {
 import { QueryErrorState } from '#/components/query-error-state';
 import { Switch } from '@codedock/ui/switch';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@codedock/ui/tabs';
-import { jobsApi } from '#/features/jobs/api';
+import { jobsApi } from '#/services/jobs';
 import { formatTime, statusDot, statusLabel } from '#/features/jobs/job-format';
 import { JobInfoRow } from '#/features/jobs/job-info-row';
 

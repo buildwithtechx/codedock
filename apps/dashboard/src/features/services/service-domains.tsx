@@ -5,7 +5,7 @@ import { Button } from '@codedock/ui/button';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@codedock/ui/card';
 import { Input } from '@codedock/ui/input';
 import { Label } from '@codedock/ui/label';
-import { useCreate, useDelete, useListByService } from '#/features/dns';
+import { useCreate, useDelete, useListByService } from '#/hooks/use-dns';
 import { useDomainVerification } from '#/features/dns/domain-verification';
 import { useGetSettings } from '#/hooks/use-settings';
 import { useAuthStore } from '#/stores/auth-store';

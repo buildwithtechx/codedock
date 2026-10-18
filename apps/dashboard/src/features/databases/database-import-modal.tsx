@@ -13,7 +13,7 @@ import {
 } from '@codedock/ui/dialog';
 import { Input } from '@codedock/ui/input';
 import { Label } from '@codedock/ui/label';
-import type { ImportDatabaseResponse } from '#/features/databases';
+import type { ImportDatabaseResponse } from '#/interfaces/databases';
 import { apiClient } from '#/lib/api-client';
 
 const schema = z.object({

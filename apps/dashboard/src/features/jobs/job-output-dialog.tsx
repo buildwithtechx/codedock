@@ -7,7 +7,7 @@ import {
   DialogHeader,
   DialogTitle,
 } from '@codedock/ui/dialog';
-import type { Job } from '#/features/services';
+import type { Job } from '#/interfaces/services';
 import { formatTime } from './job-format';
 
 export function JobOutputDialog({ job, onClose }: { job: Job | null; onClose: () => void }) {

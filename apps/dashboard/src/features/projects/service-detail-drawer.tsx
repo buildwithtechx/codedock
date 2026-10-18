@@ -14,7 +14,7 @@ import { toast } from 'sonner';
 import { Badge } from '@codedock/ui/badge';
 import { Button } from '@codedock/ui/button';
 import { Sheet, SheetContent, SheetDescription, SheetHeader, SheetTitle } from '@codedock/ui/sheet';
-import type { AppService } from '#/features/services';
+import type { AppService } from '#/interfaces/services';
 import { appsService } from '#/services/apps';
 
 interface ServiceDetailDrawerProps {

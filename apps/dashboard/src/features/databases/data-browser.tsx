@@ -4,7 +4,7 @@ import { useMemo, useState } from 'react';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@codedock/ui/card';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@codedock/ui/select';
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@codedock/ui/table';
-import type { ListTablesResponse } from '#/features/databases';
+import type { ListTablesResponse } from '#/interfaces/databases';
 import { apiClient } from '#/lib/api-client';
 
 interface Props {

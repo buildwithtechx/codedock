@@ -1,7 +1,7 @@
 import { render, screen } from '@testing-library/react';
 import { describe, expect, it } from 'vitest';
 import { BackupStorageSummary } from './backup-storage-summary';
-import type { BackupConfig, BackupRecord, S3Destination } from './interfaces';
+import type { BackupConfig, BackupRecord, S3Destination } from '#/interfaces/backups';
 
 const records: BackupRecord[] = [
   {

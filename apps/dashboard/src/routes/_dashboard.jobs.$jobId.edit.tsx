@@ -3,7 +3,7 @@ import { createFileRoute, useNavigate } from '@tanstack/react-router';
 import { ArrowLeft, Loader2 } from 'lucide-react';
 import { toast } from 'sonner';
 import { QueryErrorState } from '#/components/query-error-state';
-import { jobsApi } from '#/features/jobs/api';
+import { jobsApi } from '#/services/jobs';
 import { JobForm } from '#/features/jobs/job-form';
 
 export const Route = createFileRoute('/_dashboard/jobs/$jobId/edit')({

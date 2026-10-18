@@ -1,4 +1,4 @@
-import type { OrganizationDeployment } from '#/features/services';
+import type { OrganizationDeployment } from '#/interfaces/services';
 import type { DeploymentHistorySummary } from './deployment-overview';
 
 export function computeDeploymentSummary(

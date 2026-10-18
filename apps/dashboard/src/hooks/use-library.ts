@@ -1,7 +1,7 @@
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
 import { useMemo, useState } from 'react';
-import { libraryApi } from './api';
-import type { SortBy, VisibilityFilter } from './types';
+import type { SortBy, VisibilityFilter } from '#/interfaces/library';
+import { libraryApi } from '#/services/library';
 
 export const REPOS_PER_PAGE = 20;
 

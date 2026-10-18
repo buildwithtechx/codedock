@@ -1,13 +1,13 @@
-import type { DomainConfig } from '#/features/projects';
+import type { DomainConfig } from '#/interfaces/projects';
 import type { BaseResponse } from '#/interfaces/base';
-import { apiClient } from '#/lib/api-client';
-import { handleApiError } from '#/lib/error';
 import type {
   CreateDNSRecordRequest,
   DNSRecord,
   DomainVerifyResult,
   UpdateDNSRecordRequest,
-} from './interfaces';
+} from '#/interfaces/dns';
+import { apiClient } from '#/lib/api-client';
+import { handleApiError } from '#/lib/error';
 
 export const dnsService = {
   list: async (): Promise<BaseResponse<DNSRecord[]>> => {

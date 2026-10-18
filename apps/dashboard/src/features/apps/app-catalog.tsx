@@ -8,7 +8,7 @@ import { QueryErrorState } from '#/components/query-error-state';
 import { Skeleton } from '@codedock/ui/skeleton';
 import { AddCustomAppModal } from './add-custom-app-modal';
 import { CatalogCard } from './catalog-card';
-import { useAppCatalog } from './hooks';
+import { useAppCatalog } from '#/hooks/use-apps';
 
 const CATEGORY_ORDER = [
   'backend',

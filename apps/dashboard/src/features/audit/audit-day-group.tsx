@@ -1,6 +1,5 @@
 import { User } from 'lucide-react';
-import type { AuditTone } from '#/interfaces/audit';
-import type { AuditEventRow } from './api';
+import type { AuditEventRow, AuditTone } from '#/interfaces/audit';
 import { resolveResourceDisplay } from './audit-resource-helper';
 import { actorDisplay, describeAuditEvent } from './audit-taxonomy';
 

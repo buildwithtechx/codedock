@@ -14,8 +14,8 @@ import { Button } from '@codedock/ui/button';
 import { Checkbox } from '@codedock/ui/checkbox';
 import { Switch } from '@codedock/ui/switch';
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@codedock/ui/table';
-import { useDelete, useTrigger, useUpdate } from '#/features/backups';
-import type { BackupConfig } from './interfaces';
+import { useDelete, useTrigger, useUpdate } from '#/hooks/use-backups';
+import type { BackupConfig } from '#/interfaces/backups';
 
 const DOCS_URL = 'https://docs.codedock.run';
 

@@ -1,7 +1,7 @@
 import { BookOpen, ExternalLink, Loader2, RefreshCw } from 'lucide-react';
 import { Button } from '@codedock/ui/button';
 import { cn } from '#/lib/utils';
-import { useEvaluateIssues } from './hooks';
+import { useEvaluateIssues } from '#/hooks/use-issues';
 
 const DOCS_URL = 'https://docs.codedock.run';
 

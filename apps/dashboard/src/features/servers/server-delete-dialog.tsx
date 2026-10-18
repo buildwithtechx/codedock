@@ -11,7 +11,7 @@ import {
   DialogTitle,
 } from '@codedock/ui/dialog';
 import type { Server } from '#/interfaces/server';
-import { removeServer } from './api';
+import { removeServer } from '#/services/servers';
 
 interface ServerDeleteDialogProps {
   server: Server | null;

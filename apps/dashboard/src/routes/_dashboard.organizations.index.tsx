@@ -4,12 +4,9 @@ import { useState } from 'react';
 import { toast } from 'sonner';
 import { Button } from '@codedock/ui/button';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@codedock/ui/card';
-import {
-  CreateOrganizationModal,
-  type Organization,
-  useDeleteOrganization,
-  useListOrganizations,
-} from '#/features/organizations';
+import { CreateOrganizationModal } from '#/features/organizations';
+import { useDeleteOrganization, useListOrganizations } from '#/hooks/use-organizations';
+import type { Organization } from '#/interfaces/organizations';
 
 export const Route = createFileRoute('/_dashboard/organizations/')({
   component: OrganizationsPage,

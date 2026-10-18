@@ -17,7 +17,7 @@ import type {
   UpdateS3DestinationRequest,
   UpdateS3DestinationResponse,
   VerifySFTPDestinationResponse,
-} from './interfaces';
+} from '#/interfaces/backups';
 
 export const backupsService = {
   list: async (): Promise<ListBackupsResponse> => {
@@ -241,3 +241,5 @@ export const backupsService = {
     }
   },
 };
+
+export const backupsApi = backupsService;

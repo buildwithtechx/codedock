@@ -1,6 +1,6 @@
 import { Link } from '@tanstack/react-router';
 import { Activity, ArrowRight, CheckCircle2, CircleX, Rocket, Zap } from 'lucide-react';
-import type { OrganizationDeployment } from '#/features/services';
+import type { OrganizationDeployment } from '#/interfaces/services';
 
 const activeStatuses = new Set(['PENDING', 'CLONING', 'PULLING', 'BUILDING']);
 const successfulStatuses = new Set(['READY', 'ACTIVE', 'SUCCESS']);

@@ -238,3 +238,8 @@ export interface ManagedServerInfo {
     diskMb: number;
   };
 }
+
+export interface ServerConnectionVerdict {
+  ok: boolean;
+  message: string;
+}

@@ -3,7 +3,7 @@ import type {
   AttentionSeverity,
   DisplaySeverity,
   SeverityFilter,
-} from './interfaces';
+} from '#/interfaces/issues';
 
 export const KIND_ORDER = [
   'deployment-failed',

@@ -1,7 +1,7 @@
 import { AlertTriangle, CheckCircle2, CircleDashed, Cloud, Loader2, Server } from 'lucide-react';
 import { Button } from '@codedock/ui/button';
 import { cn } from '#/lib/utils';
-import type { DestinationKind, S3Destination, SFTPDestination } from './interfaces';
+import type { DestinationKind, S3Destination, SFTPDestination } from '#/interfaces/backups';
 
 export interface UnifiedDestination {
   kind: DestinationKind;

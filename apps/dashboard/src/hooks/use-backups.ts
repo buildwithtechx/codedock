@@ -1,5 +1,5 @@
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
-import { backupsService } from './api';
+import { backupsService } from '#/services/backups';
 
 export const useList = () => {
   return useQuery({

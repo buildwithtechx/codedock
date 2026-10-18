@@ -1,10 +1,10 @@
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
-import { orgService } from './api';
 import type {
   CreateOrganizationRequest,
   InviteOrganizationMemberRequest,
   UpdateOrganizationMemberRequest,
-} from './interfaces';
+} from '#/interfaces/organizations';
+import { orgService } from '#/services/organizations';
 
 export const useListOrganizations = () =>
   useQuery({ queryKey: ['organizations'], queryFn: () => orgService.list() });

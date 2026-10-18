@@ -44,7 +44,7 @@ import {
   useTrigger,
   useVerifyS3Destination,
   useVerifySFTPDestination,
-} from './hooks';
+} from '#/hooks/use-backups';
 
 const DOCS_URL = 'https://docs.codedock.run';
 

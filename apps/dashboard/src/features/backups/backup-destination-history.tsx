@@ -12,8 +12,8 @@ import {
 } from '@codedock/ui/dialog';
 import { Skeleton } from '@codedock/ui/skeleton';
 import { DestinationLoadError } from './destination-display';
-import { useDeleteRecord } from './hooks';
-import type { BackupConfig, BackupRecord } from './interfaces';
+import { useDeleteRecord } from '#/hooks/use-backups';
+import type { BackupConfig, BackupRecord } from '#/interfaces/backups';
 import { RestoreWizard } from './restore-wizard';
 import { SnapshotTableRow } from './snapshot-table-row';
 

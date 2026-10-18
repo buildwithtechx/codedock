@@ -1,5 +1,5 @@
 import { useMemo } from 'react';
-import type { AttentionIssue } from './interfaces';
+import type { AttentionIssue } from '#/interfaces/issues';
 import { IssueGroup } from './issue-group';
 import { KIND_ORDER, SEVERITY_RANK, toDisplaySeverity } from './issue-meta';
 

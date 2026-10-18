@@ -6,8 +6,8 @@ import { Input } from '@codedock/ui/input';
 import { Label } from '@codedock/ui/label';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@codedock/ui/select';
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@codedock/ui/table';
-import { useGetProfile } from '#/features/profile';
-import { useAddMember, useListMembers, useRemoveMember } from '#/features/projects';
+import { useGetProfile } from '#/hooks/use-profile';
+import { useAddMember, useListMembers, useRemoveMember } from '#/hooks/use-projects';
 
 export function ProjectMembers({ projectId }: { projectId: string }) {
   const { data: members, isLoading } = useListMembers(projectId);

@@ -5,7 +5,7 @@ import { Label } from '@codedock/ui/label';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@codedock/ui/select';
 import { Switch } from '@codedock/ui/switch';
 import { useOrganizationStore } from '#/stores/organization-store';
-import { auditApi } from './api';
+import { auditApi } from '#/services/audit-logs';
 
 const RETENTION_OPTIONS = [
   { value: '7', label: '7 days' },

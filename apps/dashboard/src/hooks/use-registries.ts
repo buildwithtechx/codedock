@@ -1,6 +1,6 @@
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
-import { registryService } from './api';
-import type { CreateRegistryRequest } from './interfaces';
+import type { CreateRegistryRequest } from '#/interfaces/registries';
+import { registryService } from '#/services/registries';
 
 export const useListRegistries = (projectId: string) =>
   useQuery({

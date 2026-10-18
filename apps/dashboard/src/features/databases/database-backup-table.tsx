@@ -12,7 +12,7 @@ import {
 import { Button } from '@codedock/ui/button';
 import { Card, CardContent } from '@codedock/ui/card';
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@codedock/ui/table';
-import type { BackupRecord } from '#/features/backups/interfaces';
+import type { BackupRecord } from '#/interfaces/backups';
 import { getApiBaseUrl } from '#/lib/api-client';
 import { formatBytes } from '#/lib/utils';
 

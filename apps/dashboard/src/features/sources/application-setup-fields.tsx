@@ -1,6 +1,6 @@
 import { Input } from '@codedock/ui/input';
 import { Label } from '@codedock/ui/label';
-import type { CreateAppServiceRequest } from '#/features/services';
+import type { CreateAppServiceRequest } from '#/interfaces/services';
 
 export function ApplicationSetupFields({
   draft,

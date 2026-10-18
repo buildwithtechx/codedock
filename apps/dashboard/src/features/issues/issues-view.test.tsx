@@ -3,7 +3,7 @@ import { fireEvent, render, screen, waitFor } from '@testing-library/react';
 import type { ReactNode } from 'react';
 import { beforeEach, describe, expect, it, vi } from 'vitest';
 import { useOrganizationStore } from '#/stores/organization-store';
-import type { AttentionIssue } from './interfaces';
+import type { AttentionIssue } from '#/interfaces/issues';
 import { IssuesView } from './issues-view';
 
 const mocks = vi.hoisted(() => ({ get: vi.fn(), delete: vi.fn(), post: vi.fn() }));

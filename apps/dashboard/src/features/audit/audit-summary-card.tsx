@@ -1,6 +1,6 @@
 import { History } from 'lucide-react';
 import { useMemo } from 'react';
-import type { AuditCategoryFacet } from './api';
+import type { AuditCategoryFacet } from '#/interfaces/audit';
 
 export function AuditSummaryCard({
   total,

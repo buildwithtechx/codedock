@@ -12,8 +12,8 @@ import {
 } from '@codedock/ui/dialog';
 import { Input } from '@codedock/ui/input';
 import { Label } from '@codedock/ui/label';
+import { useCreateOrganization } from '#/hooks/use-organizations';
 import { useOrganizationStore } from '#/stores/organization-store';
-import { useCreateOrganization } from './hooks';
 
 export function CreateOrganizationModal({
   open,

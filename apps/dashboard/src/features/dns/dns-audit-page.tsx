@@ -3,7 +3,7 @@ import { PageHeader } from '#/components/layout/page-header';
 import { Card, CardContent } from '@codedock/ui/card';
 import { QueryErrorState } from '#/components/query-error-state';
 import { DomainAuditTable } from './components/domain-audit-table';
-import { useListAllDomains } from './hooks';
+import { useListAllDomains } from '#/hooks/use-dns';
 
 export function DnsAuditPage() {
   const { data: domainsRes, isLoading, isError, refetch } = useListAllDomains();

@@ -1,6 +1,6 @@
 import { Activity } from 'lucide-react';
 import { cn } from '#/lib/utils';
-import type { AttentionIssue, DisplaySeverity, MonitoringTab } from './interfaces';
+import type { AttentionIssue, DisplaySeverity, MonitoringTab } from '#/interfaces/issues';
 import {
   KIND_ORDER,
   kindMeta,

@@ -1,7 +1,7 @@
 import { BookOpen, ExternalLink, FolderOpen, Plus, Trash2 } from 'lucide-react';
 import { useState } from 'react';
 import { Button } from '@codedock/ui/button';
-import type { LocalImport } from './types';
+import type { LocalImport } from '#/interfaces/library';
 
 const DOCS_URL = 'https://docs.codedock.run';
 

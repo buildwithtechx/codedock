@@ -1,8 +1,8 @@
 import { Mail, Trash2 } from 'lucide-react';
 import { toast } from 'sonner';
 import { Button } from '@codedock/ui/button';
-import { useRemoveOrganizationMember } from './hooks';
-import type { OrganizationMember } from './interfaces';
+import { useRemoveOrganizationMember } from '#/hooks/use-organizations';
+import type { OrganizationMember } from '#/interfaces/organizations';
 
 export function PendingInvitationRow({
   member,

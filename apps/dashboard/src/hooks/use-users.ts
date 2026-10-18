@@ -1,5 +1,5 @@
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
-import { usersService } from './api';
+import { usersService } from '#/services/users';
 
 export const useListUsers = () =>
   useQuery({ queryKey: ['users'], queryFn: () => usersService.list() });

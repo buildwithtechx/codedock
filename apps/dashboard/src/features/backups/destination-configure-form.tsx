@@ -10,8 +10,8 @@ import {
   useCreateSFTPDestination,
   useUpdateS3Destination,
   useVerifyS3Draft,
-} from './hooks';
-import type { DestinationKind, S3Destination } from './interfaces';
+} from '#/hooks/use-backups';
+import type { DestinationKind, S3Destination } from '#/interfaces/backups';
 import type { S3FieldValues } from './s3-destination-fields';
 import { S3DestinationFields } from './s3-destination-fields';
 import type { S3ProviderId } from './s3-providers';

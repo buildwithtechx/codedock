@@ -5,8 +5,8 @@ import { Button } from '@codedock/ui/button';
 import { Input } from '@codedock/ui/input';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@codedock/ui/select';
 import { useDomainVerification } from '#/features/dns/domain-verification';
-import { useDeleteDomain } from '#/features/dns/hooks';
-import type { DomainConfig } from '#/features/projects';
+import { useDeleteDomain } from '#/hooks/use-dns';
+import type { DomainConfig } from '#/interfaces/projects';
 import { DnsStatusBadge } from '#/features/services/dns-status-badge';
 
 interface DomainAuditTableProps {

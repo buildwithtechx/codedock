@@ -1,5 +1,5 @@
 import { Link, useNavigate, useSearch } from '@tanstack/react-router';
-import { ArrowLeft, ArrowRight, FolderKanban, LibraryBig, Server } from 'lucide-react';
+import { ArrowLeft, ArrowRight, FolderKanban, LibraryBig } from 'lucide-react';
 import { useEffect, useState } from 'react';
 import { toast } from 'sonner';
 import { ContextRail } from '#/components/layout/context-rail';
@@ -7,11 +7,12 @@ import { Button } from '@codedock/ui/button';
 import { Input } from '@codedock/ui/input';
 import { Label } from '@codedock/ui/label';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@codedock/ui/select';
-import { useListOrganizations } from '#/features/organizations';
-import { useCreateProject } from '#/features/projects';
+import { useListOrganizations } from '#/hooks/use-organizations';
+import { useCreateProject } from '#/hooks/use-projects';
 import { useListServers } from '#/hooks/use-servers';
 import { useOrganizationStore } from '#/stores/organization-store';
 import { DEPLOY_PATHS, type DeployPathId, deployPathById } from './project-creation-paths';
+import { ProjectCreationSidebar } from './project-creation-sidebar';
 
 type CreationTarget = DeployPathId | 'empty';
 
@@ -267,34 +268,7 @@ export function ProjectCreationPage() {
       </main>
 
       <ContextRail>
-        <section className="rounded-2xl border border-border bg-card p-5 shadow-sm">
-          <div className="flex items-center gap-2">
-            <Server className="h-4 w-4 text-primary" />
-            <h2 className="font-semibold text-sm">What happens next</h2>
-          </div>
-          <ol className="mt-5 space-y-4 text-sm">
-            <li className="flex gap-3">
-              <span className="font-semibold text-primary">01</span>
-              <span className="text-muted-foreground">
-                {selectedPath
-                  ? `Codedock opens the ${selectedPath.title.toLowerCase()} setup for this project.`
-                  : 'Codedock opens the empty project overview.'}
-              </span>
-            </li>
-            <li className="flex gap-3">
-              <span className="font-semibold text-primary">02</span>
-              <span className="text-muted-foreground">
-                Connect a source and configure build settings.
-              </span>
-            </li>
-            <li className="flex gap-3">
-              <span className="font-semibold text-primary">03</span>
-              <span className="text-muted-foreground">
-                Attach domains and monitor deployments from the project.
-              </span>
-            </li>
-          </ol>
-        </section>
+        <ProjectCreationSidebar selectedPath={selectedPath} />
       </ContextRail>
     </div>
   );

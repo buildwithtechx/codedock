@@ -1,6 +1,5 @@
 import { Bot, Globe, Layers, LayoutGrid, Rocket, Server, Shield, Users } from 'lucide-react';
-import type { AuditCategoryId } from '#/interfaces/audit';
-import type { AuditEventRow } from './api';
+import type { AuditCategoryId, AuditEventRow } from '#/interfaces/audit';
 import type { PeriodKey } from './audit-filter-bar';
 
 export type CategoryKey = 'all' | AuditCategoryId;

@@ -1,5 +1,5 @@
 import type { Edge, Node } from '@xyflow/react';
-import type { EnvironmentCanvas } from '#/features/projects';
+import type { EnvironmentCanvas } from '#/interfaces/projects';
 
 export interface TopologyEdge extends Edge {
   kind: 'dependency' | 'binding' | 'routing';

@@ -14,8 +14,8 @@ import {
   useEvaluateIssues,
   useListAttentionIssues,
   useResolveIssue,
-} from './hooks';
-import type { AttentionIssue, MonitoringTab } from './interfaces';
+} from '#/hooks/use-issues';
+import type { AttentionIssue, MonitoringTab } from '#/interfaces/issues';
 import { IssuesFeedView } from './issues-feed-view';
 import { MonitoringHealth } from './monitoring-health';
 import { MonitoringNavigation } from './monitoring-navigation';

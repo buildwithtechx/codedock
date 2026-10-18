@@ -1,5 +1,5 @@
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
-import type { ListOrganizationDeploymentsParams } from '#/features/services';
+import type { ListOrganizationDeploymentsParams } from '#/interfaces/services';
 import { deploymentsService } from '#/services/deployments';
 import { useOrganizationStore } from '#/stores/organization-store';
 

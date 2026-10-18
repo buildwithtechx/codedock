@@ -3,7 +3,7 @@ import { Button } from '@codedock/ui/button';
 import { Input } from '@codedock/ui/input';
 import { cn } from '#/lib/utils';
 import { formatBytes } from './destination-display';
-import type { BackupRecord, RestoreOperation } from './interfaces';
+import type { BackupRecord, RestoreOperation } from '#/interfaces/backups';
 
 export type WizardStep = 'review' | 'preparing' | 'prepared' | 'applying' | 'done';
 

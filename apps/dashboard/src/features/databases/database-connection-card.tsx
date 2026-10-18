@@ -5,7 +5,8 @@ import { Button } from '@codedock/ui/button';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@codedock/ui/card';
 import { Input } from '@codedock/ui/input';
 import { Label } from '@codedock/ui/label';
-import { type Database, databasesService } from '#/features/databases';
+import type { Database } from '#/interfaces/databases';
+import { databasesService } from '#/services/databases';
 
 interface Props {
   database: Database;

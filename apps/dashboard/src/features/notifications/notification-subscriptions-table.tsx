@@ -1,6 +1,6 @@
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
 import { useEffect, useMemo, useState } from 'react';
-import { useListOrganizations } from '#/features/organizations';
+import { useListOrganizations } from '#/hooks/use-organizations';
 import { notificationsService } from '#/services/notifications';
 import { useOrganizationStore } from '#/stores/organization-store';
 import { AlertPreferenceCard, type AlertPreferenceState } from './alert-preference-card';

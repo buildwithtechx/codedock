@@ -3,7 +3,7 @@ import { useMemo, useRef, useState } from 'react';
 import { Input } from '@codedock/ui/input';
 import { cn } from '#/lib/utils';
 import { EmptyIssues } from './empty-issues';
-import type { AttentionIssue, MonitoringTab, SeverityFilter } from './interfaces';
+import type { AttentionIssue, MonitoringTab, SeverityFilter } from '#/interfaces/issues';
 import { IssueList } from './issue-list';
 import { SEVERITY_FILTERS, SEVERITY_LABELS, toDisplaySeverity } from './issue-meta';
 import { IssueSummary } from './issue-summary';

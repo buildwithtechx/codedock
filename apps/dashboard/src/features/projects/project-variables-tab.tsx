@@ -4,8 +4,8 @@ import { toast } from 'sonner';
 import { Button } from '@codedock/ui/button';
 import { Card } from '@codedock/ui/card';
 import { Input } from '@codedock/ui/input';
-import { useGetVars, useSetVars } from '#/features/projects';
-import { EnvBulkModal } from '#/features/projects/env-bulk-modal';
+import { useGetVars, useSetVars } from '#/hooks/use-projects';
+import { EnvBulkModal } from './env-bulk-modal';
 import { type EnvEntry, serializeDotenv } from '#/lib/dotenv';
 import { cn } from '#/lib/utils';
 

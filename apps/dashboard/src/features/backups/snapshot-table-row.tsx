@@ -12,7 +12,7 @@ import { getApiBaseUrl } from '#/lib/api-client';
 import { cn } from '#/lib/utils';
 import { BackupRecordProtection } from './backup-record-protection';
 import { formatBytes, formatDuration } from './destination-display';
-import type { BackupRecord } from './interfaces';
+import type { BackupRecord } from '#/interfaces/backups';
 
 export function SnapshotStatusChip({ status }: { status: BackupRecord['status'] }) {
   const completed = status === 'completed';

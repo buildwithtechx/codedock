@@ -17,7 +17,7 @@ import {
   useRequestEmailChange,
   useUpdateProfile,
   useVerifyEmailChange,
-} from '#/features/profile';
+} from '#/hooks/use-profile';
 import { SettingsRow } from '#/features/settings/settings-row';
 import { SettingsSection } from '#/features/settings/settings-section';
 

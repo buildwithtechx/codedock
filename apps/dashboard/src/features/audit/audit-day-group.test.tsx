@@ -1,6 +1,6 @@
 import { fireEvent, render, screen } from '@testing-library/react';
 import { describe, expect, it, vi } from 'vitest';
-import type { AuditEventRow } from './api';
+import type { AuditEventRow } from '#/interfaces/audit';
 import { AuditDayGroup } from './audit-day-group';
 
 const mockEvents: AuditEventRow[] = [

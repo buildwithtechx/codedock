@@ -1,6 +1,6 @@
 import { Link } from '@tanstack/react-router';
 import { ArrowRight, Box, Database, Plus, Workflow } from 'lucide-react';
-import type { CanvasSummary } from '#/features/projects';
+import type { CanvasSummary } from '#/interfaces/projects';
 
 export function HomeAppInventory({
   projects,

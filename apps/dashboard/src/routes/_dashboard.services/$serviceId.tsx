@@ -22,7 +22,7 @@ import { MobileContextNav } from '#/components/layout/mobile-context-nav';
 import { PageFrame } from '#/components/layout/page-frame';
 import { Button } from '@codedock/ui/button';
 import { ServiceIcon } from '@codedock/ui/service-icon';
-import { useGetDatabase } from '#/features/databases';
+import { useGetDatabase } from '#/hooks/use-databases';
 import {
   ServiceContextSidebar,
   type ServiceContextTab,

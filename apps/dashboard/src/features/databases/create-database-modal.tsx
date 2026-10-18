@@ -16,7 +16,7 @@ import { Input } from '@codedock/ui/input';
 import { Label } from '@codedock/ui/label';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@codedock/ui/select';
 import { Switch } from '@codedock/ui/switch';
-import type { CreateDatabaseResponse, DatabaseEngine } from '#/features/databases';
+import type { CreateDatabaseResponse, DatabaseEngine } from '#/interfaces/databases';
 import { apiClient } from '#/lib/api-client';
 
 const engines: { label: string; value: DatabaseEngine }[] = [

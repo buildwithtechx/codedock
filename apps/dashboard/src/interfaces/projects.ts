@@ -1,6 +1,6 @@
-import type { Database } from '#/features/databases';
-import type { DomainBase } from '#/features/dns/contracts';
-import type { AppService } from '#/features/services';
+import type { Database } from '#/interfaces/databases';
+import type { DomainBase } from '#/interfaces/dns';
+import type { AppService } from '#/interfaces/services';
 import type { BaseResponse, PaginatedData } from '#/interfaces/base';
 
 export type {
@@ -8,7 +8,7 @@ export type {
   DNSVerificationStatus,
   DomainBase,
   DomainVerifyResult,
-} from '#/features/dns/contracts';
+} from '#/interfaces/dns';
 
 export type MemberPermission = 'admin' | 'member' | 'viewer';
 export type MemberStatus = 'pending' | 'accepted';
@@ -66,7 +66,7 @@ export interface CanvasSummary {
 export interface EnvironmentCanvas {
   revision: string;
   nodes: import('@xyflow/react').Node[];
-  edges: import('../canvas/topology-types').TopologyEdge[];
+  edges: import('#/features/canvas/topology-types').TopologyEdge[];
   environment: EnvironmentConfig;
   apps: AppService[];
   databases: Database[];
@@ -107,6 +107,16 @@ export interface ProjectMember {
   status: MemberStatus;
   invitedAt: string;
   acceptedAt?: string;
+}
+
+export interface ServiceWebhook {
+  id: string;
+  serviceId: string;
+  url: string;
+  eventTypes: string[];
+  includePrEnvironments: boolean;
+  createdAt: string;
+  updatedAt: string;
 }
 
 export interface CreateWebhookRequest {

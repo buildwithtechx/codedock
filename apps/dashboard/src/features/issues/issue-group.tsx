@@ -1,6 +1,6 @@
 import { Badge } from '@codedock/ui/badge';
 import { cn } from '#/lib/utils';
-import type { AttentionIssue } from './interfaces';
+import type { AttentionIssue } from '#/interfaces/issues';
 import { kindMeta, SEVERITY_TONE, toDisplaySeverity } from './issue-meta';
 import { IssueRow } from './issue-row';
 import { KindIcon } from './kind-icon';

@@ -1,6 +1,6 @@
 import type { LucideIcon } from 'lucide-react';
 import { HardDrive, LayoutGrid, Server } from 'lucide-react';
-import type { CanvasSummary } from '#/features/projects';
+import type { CanvasSummary } from '#/interfaces/projects';
 
 export type ProjectHostingFilter =
   | { kind: 'all' }

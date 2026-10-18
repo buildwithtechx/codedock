@@ -6,14 +6,8 @@ import { Button } from '@codedock/ui/button';
 import { Input } from '@codedock/ui/input';
 import { QueryErrorState } from '#/components/query-error-state';
 import { Skeleton } from '@codedock/ui/skeleton';
-import {
-  AddCustomAppModal,
-  AppLogo,
-  CatalogShortcut,
-  InstalledAppRow,
-  useAppCatalog,
-  useInstalledApps,
-} from '#/features/apps';
+import { AddCustomAppModal, AppLogo, CatalogShortcut, InstalledAppRow } from '#/features/apps';
+import { useAppCatalog, useInstalledApps } from '#/hooks/use-apps';
 
 export const Route = createFileRoute('/_dashboard/apps/')({
   component: AppsPage,

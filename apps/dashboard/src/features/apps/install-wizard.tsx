@@ -13,7 +13,7 @@ import {
   InstallSettingsTabs,
 } from '#/features/templates/install-settings-tabs';
 import type { InstallPreview, OneClickDeployRequest } from '#/interfaces/templates';
-import { useCatalogApp, useDeployCatalogApp, useReviewCatalogInstall } from './hooks';
+import { useCatalogApp, useDeployCatalogApp, useReviewCatalogInstall } from '#/hooks/use-apps';
 import { InstallDomainsRouting } from './install-domains-routing';
 import { WizardDestination } from './wizard-destination';
 import { WizardHeader } from './wizard-header';

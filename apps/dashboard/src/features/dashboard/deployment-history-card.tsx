@@ -9,7 +9,7 @@ import {
   DropdownMenuItem,
   DropdownMenuTrigger,
 } from '@codedock/ui/dropdown-menu';
-import type { OrganizationDeployment } from '#/features/services';
+import type { OrganizationDeployment } from '#/interfaces/services';
 import { useCancelDeployment, useRollback, useTrigger } from '#/hooks/use-deployments';
 
 const activeStatuses = new Set(['PENDING', 'CLONING', 'PULLING', 'BUILDING']);

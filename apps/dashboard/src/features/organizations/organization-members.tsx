@@ -4,7 +4,7 @@ import { Button } from '@codedock/ui/button';
 import { SettingsSection } from '#/features/settings/settings-section';
 import { useAuthStore } from '#/stores/auth-store';
 import { CreateOrganizationModal } from './create-organization-modal';
-import { useListOrganizationMembers } from './hooks';
+import { useListOrganizationMembers } from '#/hooks/use-organizations';
 import { InviteMemberInline } from './invite-member-inline';
 import { MemberRow } from './member-row';
 import { PendingInvitationRow } from './pending-invitation-row';

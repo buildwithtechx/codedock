@@ -1,12 +1,12 @@
-import { apiClient } from '#/lib/api-client';
-import { handleApiError } from '#/lib/error';
 import type {
   CreateOrganizationRequest,
   InviteOrganizationMemberRequest,
   Organization,
   OrganizationMember,
   UpdateOrganizationMemberRequest,
-} from './interfaces';
+} from '#/interfaces/organizations';
+import { apiClient } from '#/lib/api-client';
+import { handleApiError } from '#/lib/error';
 
 export const orgService = {
   list: async (): Promise<Organization[]> => {

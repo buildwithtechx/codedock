@@ -1,7 +1,7 @@
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
+import type { ProjectConfig } from '#/interfaces/projects';
+import { projectSettingsService, projectsService } from '#/services/projects';
 import { useOrganizationStore } from '#/stores/organization-store';
-import { projectSettingsService, projectsService } from './api';
-import type { ProjectConfig } from './interfaces';
 
 export const useListProjects = (params?: { page?: number; limit?: number }) => {
   const activeOrganizationId = useOrganizationStore((state) => state.activeOrganizationId);

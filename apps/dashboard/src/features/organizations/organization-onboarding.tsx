@@ -12,7 +12,7 @@ import {
 } from '@codedock/ui/dialog';
 import { Input } from '@codedock/ui/input';
 import { useAuthStore } from '#/stores/auth-store';
-import { useCreateOrganization, useListOrganizations } from './hooks';
+import { useCreateOrganization, useListOrganizations } from '#/hooks/use-organizations';
 
 export function OrganizationOnboarding() {
   const user = useAuthStore((state) => state.user);

@@ -10,9 +10,9 @@ import {
   useListS3Destinations,
   useTriggerDatabaseBackup,
   useUpdate,
-} from '#/features/backups';
-import type { BackupRecord } from '#/features/backups/interfaces';
-import type { Database } from '#/features/databases/interfaces';
+} from '#/hooks/use-backups';
+import type { BackupRecord } from '#/interfaces/backups';
+import type { Database } from '#/interfaces/databases';
 import { DatabaseBackupScheduleForm } from './database-backup-schedule-form';
 import { DatabaseBackupTable } from './database-backup-table';
 import { DatabaseRestoreDialog } from './database-restore-dialog';

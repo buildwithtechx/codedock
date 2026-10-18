@@ -10,7 +10,7 @@ import {
   DialogHeader,
   DialogTitle,
 } from '@codedock/ui/dialog';
-import { appsApi } from './api';
+import { appsApi } from '#/services/apps';
 
 interface AddCustomAppModalProps {
   open: boolean;

@@ -1,6 +1,6 @@
 import { Link } from '@tanstack/react-router';
 import { ChevronRight } from 'lucide-react';
-import type { AppService } from '#/features/services';
+import type { AppService } from '#/interfaces/services';
 import { cn } from '#/lib/utils';
 import { AppLogo } from './app-logo';
 

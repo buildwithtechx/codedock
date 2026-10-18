@@ -36,8 +36,8 @@ import {
   useSetDefaultS3Destination,
   useVerifyS3Destination,
   useVerifySFTPDestination,
-} from './hooks';
-import type { BackupRecord, S3Destination, SFTPDestination } from './interfaces';
+} from '#/hooks/use-backups';
+import type { BackupRecord, S3Destination, SFTPDestination } from '#/interfaces/backups';
 
 export function BackupDestinations({
   s3,

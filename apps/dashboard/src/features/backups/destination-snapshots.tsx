@@ -4,7 +4,7 @@ import { Button } from '@codedock/ui/button';
 import { Skeleton } from '@codedock/ui/skeleton';
 import { cn } from '#/lib/utils';
 import { formatBytes } from './destination-display';
-import type { BackupRecord } from './interfaces';
+import type { BackupRecord } from '#/interfaces/backups';
 import { RestoreWizard } from './restore-wizard';
 import { SnapshotStatusChip } from './snapshot-table-row';
 

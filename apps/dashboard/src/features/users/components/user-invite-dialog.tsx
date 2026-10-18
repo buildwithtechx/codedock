@@ -12,7 +12,7 @@ import {
 import { Input } from '@codedock/ui/input';
 import { Label } from '@codedock/ui/label';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@codedock/ui/select';
-import { useInviteUser } from '#/features/users';
+import { useInviteUser } from '#/hooks/use-users';
 
 interface UserInviteDialogProps {
   open: boolean;

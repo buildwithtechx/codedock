@@ -11,7 +11,7 @@ import {
 } from '@codedock/ui/card';
 import { Input } from '@codedock/ui/input';
 import { Label } from '@codedock/ui/label';
-import type { AppService } from '#/features/services';
+import type { AppService } from '#/interfaces/services';
 import { useUpdateApp } from '#/hooks/use-apps';
 
 interface ResourceLimitsProps {

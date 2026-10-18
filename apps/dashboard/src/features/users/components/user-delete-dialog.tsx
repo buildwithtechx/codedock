@@ -8,8 +8,8 @@ import {
   DialogDescription,
   DialogTitle,
 } from '@codedock/ui/dialog';
-import type { User } from '#/features/users';
-import { useDeleteUser } from '#/features/users';
+import { useDeleteUser } from '#/hooks/use-users';
+import type { User } from '#/interfaces/users';
 
 interface UserDeleteDialogProps {
   target: User | null;

@@ -20,7 +20,7 @@ import {
   DropdownMenuSeparator,
   DropdownMenuTrigger,
 } from '@codedock/ui/dropdown-menu';
-import type { CanvasSummary } from '#/features/projects';
+import type { CanvasSummary } from '#/interfaces/projects';
 import { ProjectDeleteDialog } from './project-delete-dialog';
 
 function statusTone(project: CanvasSummary) {

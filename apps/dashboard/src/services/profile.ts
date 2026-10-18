@@ -1,18 +1,18 @@
-import type {
-  CreatePATRequest,
-  CreatePATResponseType,
-  PersonalAccessToken,
-} from '#/features/users';
 import type { BaseResponse } from '#/interfaces/base';
-import { apiClient } from '#/lib/api-client';
-import { handleApiError } from '#/lib/error';
 import type {
   ChangePasswordRequest,
   GetProfileResponse,
   RequestEmailChangeRequest,
   UpdateProfileRequest,
   VerifyEmailChangeRequest,
-} from './interfaces';
+} from '#/interfaces/profile';
+import type {
+  CreatePATRequest,
+  CreatePATResponseType,
+  PersonalAccessToken,
+} from '#/interfaces/users';
+import { apiClient } from '#/lib/api-client';
+import { handleApiError } from '#/lib/error';
 
 type ListPATsResponse = BaseResponse<PersonalAccessToken[]>;
 

@@ -11,7 +11,7 @@ import {
 } from '@codedock/ui/dialog';
 import { Label } from '@codedock/ui/label';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@codedock/ui/select';
-import { databasesService } from '#/features/databases/api';
+import { databasesService } from '#/services/databases';
 import type { BaseResponse } from '#/interfaces/base';
 import { apiClient } from '#/lib/api-client';
 

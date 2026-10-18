@@ -5,8 +5,13 @@ import { Button } from '@codedock/ui/button';
 import { Input } from '@codedock/ui/input';
 import { Label } from '@codedock/ui/label';
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@codedock/ui/table';
-import { useGetProfile } from '#/features/profile';
-import { useCreateToken, useDeleteToken, useListMembers, useListTokens } from '#/features/projects';
+import { useGetProfile } from '#/hooks/use-profile';
+import {
+  useCreateToken,
+  useDeleteToken,
+  useListMembers,
+  useListTokens,
+} from '#/hooks/use-projects';
 
 export function ProjectTokens({ projectId }: { projectId: string }) {
   const { data: tokens, isLoading } = useListTokens(projectId);

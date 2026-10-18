@@ -2,8 +2,7 @@ import { Check, ChevronDown, Copy } from 'lucide-react';
 import { useMemo, useState } from 'react';
 import { Button } from '@codedock/ui/button';
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from '@codedock/ui/dialog';
-import type { AuditLog } from '#/interfaces/audit';
-import type { AuditLogRow } from './api';
+import type { AuditLog, AuditLogRow } from '#/interfaces/audit';
 import { absoluteTime, relativeTime } from './audit-date-helpers';
 import {
   actorDisplay,

@@ -1,6 +1,6 @@
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
 import { useRef, useState } from 'react';
-import type { CreateAppServiceRequest } from '#/features/services';
+import type { CreateAppServiceRequest } from '#/interfaces/services';
 import type { RuntimeReview, RuntimeTarget } from '#/features/services/runtime-types';
 import { useListByProject } from '#/hooks/use-environments';
 import type { BaseResponse } from '#/interfaces/base';

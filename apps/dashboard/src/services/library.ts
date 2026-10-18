@@ -1,8 +1,8 @@
 import type { BaseResponse } from '#/interfaces/base';
+import type { LibraryRepo, ProviderConnection } from '#/interfaces/library';
 import type { ArchiveDeployResponse } from '#/interfaces/templates';
 import { apiClient } from '#/lib/api-client';
 import { handleApiError } from '#/lib/error';
-import type { LibraryRepo, ProviderConnection } from './types';
 
 export const libraryApi = {
   async gitStatus(): Promise<ProviderConnection[]> {
@@ -49,3 +49,5 @@ export const libraryApi = {
     }
   },
 };
+
+export const libraryService = libraryApi;

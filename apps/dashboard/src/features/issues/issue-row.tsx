@@ -3,7 +3,7 @@ import { ArrowRight, Check, Eye, Loader2 } from 'lucide-react';
 import { Badge } from '@codedock/ui/badge';
 import { Button } from '@codedock/ui/button';
 import { cn } from '#/lib/utils';
-import type { AttentionIssue } from './interfaces';
+import type { AttentionIssue } from '#/interfaces/issues';
 import {
   ACTION_LABELS,
   formatRelativeTime,

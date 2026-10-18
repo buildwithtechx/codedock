@@ -1,4 +1,3 @@
-import { Link } from '@tanstack/react-router';
 import { ArrowRight, FolderUp, Loader2, Package, X } from 'lucide-react';
 import { useEffect, useRef, useState } from 'react';
 import { toast } from 'sonner';
@@ -6,8 +5,9 @@ import { Button } from '@codedock/ui/button';
 import { Input } from '@codedock/ui/input';
 import { Label } from '@codedock/ui/label';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@codedock/ui/select';
-import { useListAllProjects } from '#/features/projects';
-import { libraryApi } from './api';
+import { useListAllProjects } from '#/hooks/use-projects';
+import { libraryApi } from '#/services/library';
+import { FolderDropzone } from './folder-dropzone';
 import {
   collectFolderFiles,
   type FolderEntry,
@@ -15,6 +15,7 @@ import {
   inspectFolderFiles,
   packTarGz,
 } from './folder-pack';
+import { FolderUploadDone } from './folder-upload-done';
 import { rememberLocalImport } from './local-projects';
 
 type Phase = 'idle' | 'packing' | 'uploading' | 'done';
@@ -146,31 +147,14 @@ export function FolderUpload() {
 
   if (phase === 'done') {
     return (
-      <div className="rounded-2xl border border-border/50 bg-card p-8 text-center">
-        <div className="mx-auto mb-4 flex h-14 w-14 items-center justify-center rounded-2xl bg-emerald-500/10">
-          <Package className="size-7 text-emerald-500" />
-        </div>
-        <h3 className="font-semibold text-base text-foreground">Archive deployed</h3>
-        <p className="mx-auto mt-1 max-w-sm text-muted-foreground text-sm">
-          {name} is deploying in your project.
-        </p>
-        <div className="mt-6 flex flex-wrap items-center justify-center gap-3">
-          <Button asChild>
-            <Link to="/projects/$projectId" params={{ projectId }}>
-              Open project
-            </Link>
-          </Button>
-          <Button
-            variant="outline"
-            onClick={() => {
-              clear();
-              setPhase('idle');
-            }}
-          >
-            Upload another
-          </Button>
-        </div>
-      </div>
+      <FolderUploadDone
+        name={name}
+        projectId={projectId}
+        onReset={() => {
+          clear();
+          setPhase('idle');
+        }}
+      />
     );
   }
 
@@ -220,58 +204,15 @@ export function FolderUpload() {
         </div>
 
         {!archive && !folder ? (
-          <div
-            ref={dropRef}
-            className={`rounded-xl border-2 border-dashed p-8 text-center transition-all ${
-              dragging
-                ? 'border-primary bg-primary/5'
-                : 'border-border/60 hover:border-border hover:bg-muted/30'
-            }`}
-          >
-            <input
-              ref={archiveRef}
-              type="file"
-              className="hidden"
-              accept=".tar.gz,.tgz"
-              onChange={(event) => handleArchiveFiles(event.target.files)}
-            />
-            <input
-              ref={(element) => {
-                folderRef.current = element;
-                element?.setAttribute('webkitdirectory', '');
-              }}
-              type="file"
-              className="hidden"
-              multiple
-              onChange={(event) => void handleFolderFiles(event.target.files)}
-            />
-            <p className="font-medium text-foreground text-sm">
-              Drop a folder or a .tar.gz archive
-            </p>
-            <p className="mt-1 text-muted-foreground text-xs">
-              Folders are packed into a .tar.gz archive locally before upload.
-            </p>
-            <div className="mt-4 flex flex-wrap items-center justify-center gap-2">
-              <Button
-                type="button"
-                variant="outline"
-                size="sm"
-                disabled={busy}
-                onClick={() => folderRef.current?.click()}
-              >
-                Pick a folder
-              </Button>
-              <Button
-                type="button"
-                variant="outline"
-                size="sm"
-                disabled={busy}
-                onClick={() => archiveRef.current?.click()}
-              >
-                Pick an archive
-              </Button>
-            </div>
-          </div>
+          <FolderDropzone
+            dropRef={dropRef}
+            archiveRef={archiveRef}
+            folderRef={folderRef}
+            dragging={dragging}
+            busy={busy}
+            onArchiveFiles={handleArchiveFiles}
+            onFolderFiles={handleFolderFiles}
+          />
         ) : (
           <div className="space-y-4">
             <div className="flex items-center gap-3 rounded-xl border border-border/50 bg-muted/40 px-3 py-3">

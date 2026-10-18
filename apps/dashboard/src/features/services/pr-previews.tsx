@@ -5,7 +5,7 @@ import { Button } from '@codedock/ui/button';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@codedock/ui/card';
 import { Label } from '@codedock/ui/label';
 import { Switch } from '@codedock/ui/switch';
-import type { PRPreviewStatus } from '#/features/services';
+import type { PRPreviewStatus } from '#/interfaces/services';
 import { useGetApp, useUpdateApp } from '#/hooks/use-apps';
 import { useListPRPreviews } from '#/hooks/use-pr-previews';
 

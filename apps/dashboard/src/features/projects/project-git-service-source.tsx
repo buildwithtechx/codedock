@@ -7,7 +7,7 @@ import { Input } from '@codedock/ui/input';
 import { Label } from '@codedock/ui/label';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@codedock/ui/select';
 import { ServiceIcon } from '@codedock/ui/service-icon';
-import type { AppService } from '#/features/services';
+import type { AppService } from '#/interfaces/services';
 import { useUpdateApp } from '#/hooks/use-apps';
 import { useListGitBranches } from '#/hooks/use-git';
 import type { GitRepo } from '#/interfaces/git';

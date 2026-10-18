@@ -12,7 +12,7 @@ import {
   Workflow,
 } from 'lucide-react';
 import { useGetCanvasSummary } from '#/hooks/use-canvas';
-import { useListProjectDomains } from './hooks';
+import { useListProjectDomains } from '#/hooks/use-projects';
 
 export const getProjectContextNavigation = (projectId: string) => {
   const basePath = `/projects/${projectId}`;

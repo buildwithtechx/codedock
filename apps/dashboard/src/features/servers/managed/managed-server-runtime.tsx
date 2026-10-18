@@ -8,7 +8,7 @@ import {
   getManagedRuntimeCredential,
   getManagedRuntimeStatus,
   rotateManagedRuntimeCredential,
-} from './managed-api';
+} from '#/services/managed-server';
 import { ManagedControlPanel } from './managed-control-panel';
 
 export function ManagedServerRuntime({ serverId }: { serverId: string }) {

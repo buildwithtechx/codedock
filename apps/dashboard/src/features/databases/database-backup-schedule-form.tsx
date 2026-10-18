@@ -3,7 +3,7 @@ import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@code
 import { Input } from '@codedock/ui/input';
 import { Label } from '@codedock/ui/label';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@codedock/ui/select';
-import type { S3Destination } from '#/features/backups/interfaces';
+import type { S3Destination } from '#/interfaces/backups';
 
 type DatabaseBackupScheduleFormProps = {
   s3DestinationId: string;

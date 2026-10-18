@@ -1,5 +1,5 @@
 import { Activity, Boxes, CheckCircle2, FolderKanban } from 'lucide-react';
-import type { CanvasSummary } from '#/features/projects';
+import type { CanvasSummary } from '#/interfaces/projects';
 
 export function HomeRuntimeSummary({
   projects,

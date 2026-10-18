@@ -4,7 +4,7 @@ import { useDeferredValue, useMemo, useState } from 'react';
 import { PageHeader } from '#/components/layout/page-header';
 import { Button } from '@codedock/ui/button';
 import { QueryErrorState } from '#/components/query-error-state';
-import { useListProjects } from '#/features/projects';
+import { useListProjects } from '#/hooks/use-projects';
 import { useListByOrganization } from '#/hooks/use-deployments';
 import { DeploymentEmptyState } from './deployment-empty-state';
 import { DeploymentFilters } from './deployment-filters';

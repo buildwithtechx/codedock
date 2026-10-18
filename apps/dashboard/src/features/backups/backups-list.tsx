@@ -8,7 +8,7 @@ import {
   useListAllRecords,
   useListS3Destinations,
   useListSFTPDestinations,
-} from '#/features/backups';
+} from '#/hooks/use-backups';
 import { BackupDestinationHistory } from './backup-destination-history';
 import { BackupDestinations } from './backup-destinations';
 import { BackupOperationHistory } from './backup-operation-history';

@@ -1,6 +1,6 @@
 import { useNavigate } from '@tanstack/react-router';
 import { BookOpen, GitBranch, Globe, Lock, Zap } from 'lucide-react';
-import { GIT_PROVIDERS, type ProviderConnection } from './types';
+import { GIT_PROVIDERS, type ProviderConnection } from '#/interfaces/library';
 
 export function LibrarySidebar({
   connections,

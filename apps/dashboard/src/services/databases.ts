@@ -1,6 +1,4 @@
 import type { BaseResponse } from '#/interfaces/base';
-import { apiClient } from '#/lib/api-client';
-import { handleApiError } from '#/lib/error';
 import type {
   CreateDatabaseRequest,
   CreateDatabaseResponse,
@@ -11,7 +9,9 @@ import type {
   ImportDatabaseRequest,
   ListTablesResponse,
   TableRowPayload,
-} from './interfaces';
+} from '#/interfaces/databases';
+import { apiClient } from '#/lib/api-client';
+import { handleApiError } from '#/lib/error';
 
 export const databasesService = {
   listDatabases: async (): Promise<GetDatabasesResponse> => {

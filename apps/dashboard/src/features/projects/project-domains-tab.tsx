@@ -15,10 +15,10 @@ import { Card, CardContent, CardHeader, CardTitle } from '@codedock/ui/card';
 import { Input } from '@codedock/ui/input';
 import { Label } from '@codedock/ui/label';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@codedock/ui/select';
-import { useCreateDomain, useDeleteDomain, useVerifyDomain } from '#/features/dns/hooks';
+import { useCreateDomain, useDeleteDomain, useVerifyDomain } from '#/hooks/use-dns';
 import { useGetSettings } from '#/hooks/use-settings';
 import { useListByProject as useListAppsByProject } from '#/hooks/use-apps';
-import { useListProjectDomains } from './hooks';
+import { useListProjectDomains } from '#/hooks/use-projects';
 
 export function ProjectDomainsTab({ projectId }: { projectId: string }) {
   const {

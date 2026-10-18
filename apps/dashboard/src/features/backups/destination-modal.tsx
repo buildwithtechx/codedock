@@ -3,7 +3,7 @@ import { useEffect, useState } from 'react';
 import { Button } from '@codedock/ui/button';
 import { Dialog, DialogContent, DialogDescription, DialogTitle } from '@codedock/ui/dialog';
 import { DestinationConfigureForm } from './destination-configure-form';
-import type { DestinationKind, S3Destination } from './interfaces';
+import type { DestinationKind, S3Destination } from '#/interfaces/backups';
 import { S3ProviderMark } from './s3-destination-fields';
 import { s3Providers } from './s3-providers';
 

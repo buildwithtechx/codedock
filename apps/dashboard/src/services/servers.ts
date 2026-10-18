@@ -7,6 +7,7 @@ import type {
   ServerRateLimitConfig,
   TestSSHRequest,
   UpdateServerRequest,
+  ServerConnectionVerdict,
 } from '#/interfaces/server';
 import { apiClient } from '#/lib/api-client';
 import { handleApiError } from '#/lib/error';
@@ -132,3 +133,18 @@ export function getServerMonitorStreamUrl(
   }
   return `/api/system/monitor/stream?${params.toString()}`;
 }
+
+export const listServers = serverService.list;
+export const getServer = serverService.get;
+export const createServer = serverService.create;
+export const updateServer = serverService.update;
+export const removeServer = serverService.delete;
+
+export async function testServerConnection(
+  payload: TestSSHRequest
+): Promise<ServerConnectionVerdict> {
+  const result = await serverService.testSSH(payload);
+  return { ok: result.success, message: result.message };
+}
+
+export type { ServerConnectionVerdict } from '#/interfaces/server';

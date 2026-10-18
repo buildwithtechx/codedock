@@ -4,7 +4,7 @@ import { Button } from '@codedock/ui/button';
 import { Textarea } from '@codedock/ui/textarea';
 import type { ManagedSshStatus } from '#/interfaces/server';
 import { ConnectionValue } from './connection-value';
-import { getManagedSshStatus, setManagedSsh, setManagedSshKey } from './managed-api';
+import { getManagedSshStatus, setManagedSsh, setManagedSshKey } from '#/services/managed-server';
 import { ManagedControlPanel } from './managed-control-panel';
 
 export function ManagedServerSsh({ serverId }: { serverId: string }) {

@@ -1,8 +1,8 @@
 import { useNavigate } from '@tanstack/react-router';
 import { useEffect, useState } from 'react';
 import { toast } from 'sonner';
-import { useCreateProject } from '#/features/projects';
-import { projectsService } from '#/features/projects/api';
+import { useCreateProject } from '#/hooks/use-projects';
+import { projectsService } from '#/services/projects';
 import { appsService } from '#/services/apps';
 import { deploymentsService } from '#/services/deployments';
 import { environmentsService } from '#/services/environments';
