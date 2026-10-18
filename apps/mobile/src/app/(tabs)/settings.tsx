@@ -12,15 +12,13 @@ import {
   View,
 } from 'react-native';
 import Toast from 'react-native-toast-message';
-import { AuthModeSelector } from '@/components/AuthModeSelector';
-import { ConnectedStatusCard } from '@/components/ConnectedStatusCard';
-import { MobileApi } from '@/services/api';
+import { AuthModeSelector } from '@/features/auth/AuthModeSelector';
+import { ConnectedStatusCard } from '@/features/auth/ConnectedStatusCard';
+import { DEFAULT_CLOUD_URL, MobileApi } from '@/services/api';
 import { registerForPushNotificationsAsync } from '@/services/notifications';
 import { MobileStorage } from '@/services/storage';
 import { useAppStore } from '@/store/useAppStore';
 import { useAppTheme } from '@/theme';
-
-const CLOUD_DEFAULT_URL = 'https://api.codedock.io';
 
 export default function SettingsScreen() {
   const router = useRouter();
@@ -28,20 +26,20 @@ export default function SettingsScreen() {
   const { connection, setConnection, setApps, setProjects } = useAppStore();
 
   const [mode, setMode] = useState<'cloud' | 'self-hosted'>(
-    connection?.mode || (connection?.url?.includes('codedock.io') ? 'cloud' : 'self-hosted')
+    connection?.mode || (connection?.url?.includes('codedock') ? 'cloud' : 'self-hosted')
   );
-  const [url, setUrl] = useState(connection?.url || CLOUD_DEFAULT_URL);
+  const [url, setUrl] = useState(connection?.url || DEFAULT_CLOUD_URL);
   const [token, setToken] = useState(connection?.token || '');
   const [loading, setLoading] = useState(false);
   const [pushEnabled, setPushEnabled] = useState(true);
 
   const handleModeChange = (newMode: 'cloud' | 'self-hosted') => {
     setMode(newMode);
-    setUrl(newMode === 'cloud' ? CLOUD_DEFAULT_URL : url === CLOUD_DEFAULT_URL ? '' : url);
+    setUrl(newMode === 'cloud' ? DEFAULT_CLOUD_URL : url === DEFAULT_CLOUD_URL ? '' : url);
   };
 
   const onConnect = async () => {
-    const targetUrl = mode === 'cloud' ? url || CLOUD_DEFAULT_URL : url.trim();
+    const targetUrl = mode === 'cloud' ? url || DEFAULT_CLOUD_URL : url.trim();
     const cleanToken = token.trim();
 
     if (!targetUrl || !cleanToken) {
@@ -121,7 +119,7 @@ export default function SettingsScreen() {
           ]}
         >
           <Text style={[styles.cloudBannerText, { color: colors.textSecondary }]}>
-            Connected to Codedock Cloud service ({CLOUD_DEFAULT_URL}).
+            Connected to Codedock Cloud service ({DEFAULT_CLOUD_URL}).
           </Text>
         </View>
       ) : (

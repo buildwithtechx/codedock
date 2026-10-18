@@ -263,6 +263,8 @@ func NewServer(db *sql.DB, v *utils.Vault, deployer *deploy.Deployer, traefikMan
 	userHandler := auth.NewUserHandler(userService, mailerService, auditService)
 	authHandler := auth.NewAuthHandler(authService, auditService)
 	oAuthHandler := auth.NewOAuthHandler(oAuthService)
+	deviceFlowService := authservices.NewDeviceFlowService()
+	deviceFlowHandler := auth.NewDeviceFlowHandler(deviceFlowService, userService, auditService)
 	gitHandler := deployments.NewGitHandler(gitService)
 	webhookHandler := deployments.NewWebhookHandler(gitService, projectService, appService, deploymentService, prPreviewService, gitAppsService)
 
@@ -374,6 +376,7 @@ func NewServer(db *sql.DB, v *utils.Vault, deployer *deploy.Deployer, traefikMan
 		userHandler:            userHandler,
 		authHandler:            authHandler,
 		oauthHandler:           oAuthHandler,
+		deviceFlowHandler:      deviceFlowHandler,
 		gitHandler:             gitHandler,
 		webhookHandler:         webhookHandler,
 		projectHandler:         projectHandler,

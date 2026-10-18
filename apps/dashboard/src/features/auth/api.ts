@@ -94,4 +94,36 @@ export const authService = {
       throw handleApiError(error);
     }
   },
+
+  verifyDeviceCode: async (code: string) => {
+    try {
+      const response = await apiClient.get<{
+        data: {
+          valid: boolean;
+          userCode: string;
+          clientName: string;
+          status: string;
+        };
+      }>(`/auth/device/verify?code=${encodeURIComponent(code)}`);
+      return response.data;
+    } catch (error) {
+      throw handleApiError(error);
+    }
+  },
+
+  authorizeDevice: async (userCode: string, action: 'approve' | 'deny') => {
+    try {
+      const response = await apiClient.post<{
+        data: {
+          status: string;
+          clientName?: string;
+          token?: string;
+          email?: string;
+        };
+      }>('/auth/device/authorize', { userCode, action });
+      return response.data;
+    } catch (error) {
+      throw handleApiError(error);
+    }
+  },
 };

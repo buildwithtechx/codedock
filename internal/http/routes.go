@@ -101,6 +101,11 @@ func (s *Server) registerAuthRoutes(apiGroup, authGroup *echo.Group) {
 	authGroup.POST("/auth/2fa/setup", s.oauthHandler.Setup2FA)
 	authGroup.POST("/auth/2fa/verify", s.oauthHandler.Verify2FA)
 	authGroup.POST("/auth/2fa/disable", s.oauthHandler.Disable2FA, s.otpRateLimiter.Middleware)
+
+	apiGroup.POST("/auth/device/code", s.deviceFlowHandler.CreateDeviceCode)
+	apiGroup.POST("/auth/device/token", s.deviceFlowHandler.PollDeviceToken)
+	apiGroup.GET("/auth/device/verify", s.deviceFlowHandler.VerifyUserCode)
+	authGroup.POST("/auth/device/authorize", s.deviceFlowHandler.AuthorizeDevice)
 }
 
 func (s *Server) registerSystemRoutes(apiGroup, authGroup *echo.Group) {

@@ -1,5 +1,7 @@
+import * as Linking from 'expo-linking';
 import { Redirect, useRouter } from 'expo-router';
-import { useEffect, useState } from 'react';
+import * as WebBrowser from 'expo-web-browser';
+import { useEffect, useRef, useState } from 'react';
 import {
   ActivityIndicator,
   KeyboardAvoidingView,
@@ -9,20 +11,21 @@ import {
   StyleSheet,
   Switch,
   Text,
-  TextInput,
   View,
 } from 'react-native';
 import Toast from 'react-native-toast-message';
-import { AuthModeSelector } from '@/components/AuthModeSelector';
-import { CloudNoticeCard } from '@/components/CloudNoticeCard';
 import { Icon } from '@/components/Icon';
-import { MobileApi } from '@/services/api';
+import { AuthBrandHeader } from '@/features/auth/AuthBrandHeader';
+import { AuthModeSelector } from '@/features/auth/AuthModeSelector';
+import { CloudNoticeCard } from '@/features/auth/CloudNoticeCard';
+import { ManualTokenSection } from '@/features/auth/ManualTokenSection';
+import { DEFAULT_CLOUD_URL, MobileApi } from '@/services/api';
 import { registerForPushNotificationsAsync } from '@/services/notifications';
 import { MobileStorage } from '@/services/storage';
 import { useAppStore } from '@/store/useAppStore';
 import { useAppTheme } from '@/theme';
 
-const CLOUD_DEFAULT_URL = 'https://api.codedock.io';
+WebBrowser.maybeCompleteAuthSession();
 
 export default function IndexAuthScreen() {
   const router = useRouter();
@@ -32,16 +35,28 @@ export default function IndexAuthScreen() {
 
   const [checkingAuth, setCheckingAuth] = useState(true);
   const [mode, setMode] = useState<'cloud' | 'self-hosted'>('cloud');
-  const [url, setUrl] = useState(CLOUD_DEFAULT_URL);
+  const [url, setUrl] = useState(DEFAULT_CLOUD_URL);
   const [token, setToken] = useState('');
+  const [showManualToken, setShowManualToken] = useState(false);
   const [pushEnabled, setPushEnabled] = useState(true);
   const [loading, setLoading] = useState(false);
+  const [authorizingDevice, setAuthorizingDevice] = useState(false);
+  const pollTimerRef = useRef<ReturnType<typeof setInterval> | null>(null);
 
   useEffect(() => {
     MobileStorage.getConnection().then((conn) => {
       if (conn?.url && conn?.token) setConnection(conn);
       setCheckingAuth(false);
     });
+
+    const sub = Linking.addEventListener('url', (event) => {
+      void handleDeepLink(event.url);
+    });
+
+    return () => {
+      sub.remove();
+      if (pollTimerRef.current) clearInterval(pollTimerRef.current);
+    };
   }, [setConnection]);
 
   if (checkingAuth) {
@@ -56,45 +71,45 @@ export default function IndexAuthScreen() {
     return <Redirect href="/(tabs)" />;
   }
 
-  const handleModeChange = (newMode: 'cloud' | 'self-hosted') => {
-    setMode(newMode);
-    setUrl(newMode === 'cloud' ? CLOUD_DEFAULT_URL : '');
+  const handleDeepLink = async (incomingUrl: string) => {
+    const parsed = Linking.parse(incomingUrl);
+    const incomingToken = parsed.queryParams?.token as string | undefined;
+    const incomingEmail = parsed.queryParams?.email as string | undefined;
+    if (incomingToken) {
+      if (pollTimerRef.current) clearInterval(pollTimerRef.current);
+      setAuthorizingDevice(false);
+      await finishLogin(DEFAULT_CLOUD_URL, incomingToken, incomingEmail, 'cloud');
+    }
   };
 
-  const handleConnect = async () => {
-    const targetUrl = mode === 'cloud' ? url || CLOUD_DEFAULT_URL : url.trim();
-    const cleanToken = token.trim();
-
-    if (!targetUrl || !cleanToken) {
-      Toast.show({
-        type: 'error',
-        text1: 'Validation Error',
-        text2: !targetUrl ? 'Instance URL is required' : 'Personal Access Token is required',
-      });
-      return;
-    }
-
+  const finishLogin = async (
+    targetUrl: string,
+    authToken: string,
+    email?: string,
+    authMode: 'cloud' | 'self-hosted' = 'cloud'
+  ) => {
     setLoading(true);
     try {
       const meta = await MobileApi.getMeta(targetUrl);
-      const me = await MobileApi.getMe(targetUrl, cleanToken);
+      const me = await MobileApi.getMe(targetUrl, authToken);
+      const userEmail = email || me.email;
 
-      await MobileStorage.saveConnection(targetUrl, cleanToken, me.email, mode);
+      await MobileStorage.saveConnection(targetUrl, authToken, userEmail, authMode);
       setConnection({
         url: targetUrl,
-        token: cleanToken,
-        mode,
-        userEmail: me.email,
+        token: authToken,
+        mode: authMode,
+        userEmail,
         userName: me.name,
         version: meta.version,
       });
 
-      if (pushEnabled) await registerForPushNotificationsAsync(targetUrl, cleanToken);
+      if (pushEnabled) await registerForPushNotificationsAsync(targetUrl, authToken);
 
       Toast.show({
         type: 'success',
-        text1: `Connected to ${mode === 'cloud' ? 'Codedock Cloud' : 'Instance'}`,
-        text2: `Signed in as ${me.email}`,
+        text1: `Connected to ${authMode === 'cloud' ? 'Codedock Cloud' : 'Instance'}`,
+        text2: `Signed in as ${userEmail}`,
       });
       router.replace('/(tabs)');
     } catch (err: unknown) {
@@ -105,65 +120,123 @@ export default function IndexAuthScreen() {
     }
   };
 
+  const handleStartCloudAuth = async () => {
+    setAuthorizingDevice(true);
+    try {
+      const targetUrl = DEFAULT_CLOUD_URL;
+      const session = await MobileApi.startDeviceAuth(targetUrl, 'Codedock Mobile');
+      const authUrl = `${targetUrl}${session.verificationUriComplete}`;
+
+      void WebBrowser.openAuthSessionAsync(authUrl, 'codedock://auth/callback');
+
+      let attempts = 0;
+      if (pollTimerRef.current) clearInterval(pollTimerRef.current);
+      pollTimerRef.current = setInterval(async () => {
+        attempts += 1;
+        if (attempts > 150) {
+          if (pollTimerRef.current) clearInterval(pollTimerRef.current);
+          setAuthorizingDevice(false);
+          return;
+        }
+
+        try {
+          const res = await MobileApi.pollDeviceToken(targetUrl, session.deviceCode);
+          if (res.status === 'approved' && res.token) {
+            if (pollTimerRef.current) clearInterval(pollTimerRef.current);
+            setAuthorizingDevice(false);
+            WebBrowser.dismissAuthSession();
+            await finishLogin(targetUrl, res.token, res.email, 'cloud');
+          } else if (res.status === 'denied') {
+            if (pollTimerRef.current) clearInterval(pollTimerRef.current);
+            setAuthorizingDevice(false);
+            WebBrowser.dismissAuthSession();
+            Toast.show({ type: 'error', text1: 'Authorization Declined' });
+          }
+        } catch {
+          // Continue polling until timeout or success
+        }
+      }, 2000);
+    } catch (err: unknown) {
+      setAuthorizingDevice(false);
+      const msg = err instanceof Error ? err.message : 'Failed to launch cloud login';
+      Toast.show({ type: 'error', text1: 'Login Error', text2: msg });
+    }
+  };
+
+  const handleManualConnect = async () => {
+    const targetUrl = mode === 'cloud' ? url || DEFAULT_CLOUD_URL : url.trim();
+    const cleanToken = token.trim();
+    if (!targetUrl || !cleanToken) {
+      Toast.show({
+        type: 'error',
+        text1: 'Validation Error',
+        text2: !targetUrl ? 'Instance URL is required' : 'Token is required',
+      });
+      return;
+    }
+    await finishLogin(targetUrl, cleanToken, undefined, mode);
+  };
+
   return (
     <KeyboardAvoidingView
       behavior={Platform.OS === 'ios' ? 'padding' : undefined}
       style={[styles.container, { backgroundColor: colors.background }]}
     >
       <ScrollView contentContainerStyle={styles.scrollContent} keyboardShouldPersistTaps="handled">
-        <View style={styles.brandHeader}>
-          <View style={[styles.iconContainer, { backgroundColor: colors.primarySoft }]}>
-            <Icon name="rocket-launch-outline" size={36} color={colors.primary} />
-          </View>
-          <Text style={[styles.brandTitle, { color: colors.text }]}>Codedock</Text>
-          <Text style={[styles.brandSubtitle, { color: colors.textSecondary }]}>
-            Cloud & Self-Hosted Infrastructure
-          </Text>
-        </View>
+        <AuthBrandHeader />
 
-        <AuthModeSelector mode={mode} onModeChange={handleModeChange} />
+        <AuthModeSelector
+          mode={mode}
+          onModeChange={(m) => {
+            setMode(m);
+            setUrl(m === 'cloud' ? DEFAULT_CLOUD_URL : '');
+          }}
+        />
 
         {mode === 'cloud' ? (
-          <CloudNoticeCard cloudUrl={CLOUD_DEFAULT_URL} />
-        ) : (
-          <View style={styles.fieldGroup}>
-            <Text style={[styles.label, { color: colors.textSecondary }]}>Instance URL</Text>
-            <TextInput
+          <>
+            <CloudNoticeCard cloudUrl={DEFAULT_CLOUD_URL} />
+            <Pressable
               style={[
-                styles.input,
-                { backgroundColor: colors.surface, borderColor: colors.border, color: colors.text },
+                styles.primaryButton,
+                { backgroundColor: colors.primary },
+                authorizingDevice && { opacity: 0.7 },
               ]}
-              placeholder="https://codedock.example.com"
-              placeholderTextColor={colors.textMuted}
-              value={url}
-              onChangeText={setUrl}
-              autoCapitalize="none"
-              autoCorrect={false}
-            />
-          </View>
-        )}
+              onPress={handleStartCloudAuth}
+              disabled={authorizingDevice || loading}
+            >
+              {authorizingDevice ? (
+                <ActivityIndicator color="#FFFFFF" />
+              ) : (
+                <View style={styles.buttonInner}>
+                  <Icon name="shield-check-outline" size={19} color="#FFFFFF" />
+                  <Text style={styles.primaryButtonText}>Authorize with Codedock Cloud</Text>
+                </View>
+              )}
+            </Pressable>
 
-        <View style={styles.fieldGroup}>
-          <Text style={[styles.label, { color: colors.textSecondary }]}>
-            Personal Access Token (PAT)
-          </Text>
-          <TextInput
-            style={[
-              styles.input,
-              { backgroundColor: colors.surface, borderColor: colors.border, color: colors.text },
-            ]}
-            placeholder="pat_..."
-            placeholderTextColor={colors.textMuted}
-            value={token}
-            onChangeText={setToken}
-            secureTextEntry
-            autoCapitalize="none"
-            autoCorrect={false}
+            <Pressable
+              onPress={() => setShowManualToken((v) => !v)}
+              style={styles.manualTokenToggle}
+            >
+              <Text style={[styles.manualTokenToggleText, { color: colors.primary }]}>
+                {showManualToken ? 'Hide manual token entry' : 'Or connect with Access Token (PAT)'}
+              </Text>
+            </Pressable>
+          </>
+        ) : null}
+
+        {(mode === 'self-hosted' || showManualToken) && (
+          <ManualTokenSection
+            mode={mode}
+            url={url}
+            token={token}
+            loading={loading}
+            onChangeUrl={setUrl}
+            onChangeToken={setToken}
+            onConnect={handleManualConnect}
           />
-          <Text style={[styles.helperText, { color: colors.textMuted }]}>
-            Generate a token from your Codedock Dashboard under Settings &gt; Personal Tokens.
-          </Text>
-        </View>
+        )}
 
         <View style={styles.switchRow}>
           <View style={{ flex: 1, marginRight: 12 }}>
@@ -178,27 +251,6 @@ export default function IndexAuthScreen() {
             trackColor={{ false: colors.border, true: colors.primary }}
           />
         </View>
-
-        <Pressable
-          style={[
-            styles.primaryButton,
-            { backgroundColor: colors.primary },
-            loading && { opacity: 0.7 },
-          ]}
-          onPress={handleConnect}
-          disabled={loading}
-        >
-          {loading ? (
-            <ActivityIndicator color="#FFFFFF" />
-          ) : (
-            <View style={styles.buttonInner}>
-              <Text style={styles.primaryButtonText}>
-                {mode === 'cloud' ? 'Sign In to Cloud' : 'Connect to Instance'}
-              </Text>
-              <Icon name="arrow-right" size={18} color="#FFFFFF" />
-            </View>
-          )}
-        </Pressable>
       </ScrollView>
     </KeyboardAvoidingView>
   );
@@ -208,32 +260,11 @@ const styles = StyleSheet.create({
   container: { flex: 1 },
   center: { flex: 1, justifyContent: 'center', alignItems: 'center' },
   scrollContent: { padding: 24, paddingTop: 56 },
-  brandHeader: { alignItems: 'center', marginBottom: 28 },
-  iconContainer: {
-    width: 64,
-    height: 64,
-    borderRadius: 20,
-    justifyContent: 'center',
-    alignItems: 'center',
-    marginBottom: 14,
-  },
-  brandTitle: { fontSize: 26, fontWeight: '800', letterSpacing: -0.5 },
-  brandSubtitle: { fontSize: 13, marginTop: 4 },
-  fieldGroup: { marginBottom: 16 },
-  label: { fontSize: 13, fontWeight: '500', marginBottom: 6 },
-  input: {
-    borderWidth: 1,
-    borderRadius: 10,
-    paddingHorizontal: 14,
-    paddingVertical: 11,
-    fontSize: 14,
-  },
-  helperText: { fontSize: 11, marginTop: 5, lineHeight: 15 },
   switchRow: {
     flexDirection: 'row',
     justifyContent: 'space-between',
     alignItems: 'center',
-    marginVertical: 10,
+    marginTop: 20,
   },
   switchLabel: { fontSize: 14, fontWeight: '500' },
   switchSub: { fontSize: 11, marginTop: 2 },
@@ -242,8 +273,10 @@ const styles = StyleSheet.create({
     paddingVertical: 14,
     alignItems: 'center',
     justifyContent: 'center',
-    marginTop: 16,
+    marginTop: 6,
   },
   buttonInner: { flexDirection: 'row', alignItems: 'center', gap: 8 },
   primaryButtonText: { color: '#FFFFFF', fontWeight: '700', fontSize: 15 },
+  manualTokenToggle: { alignItems: 'center', marginTop: 14, paddingVertical: 4 },
+  manualTokenToggleText: { fontSize: 12, fontWeight: '600' },
 });

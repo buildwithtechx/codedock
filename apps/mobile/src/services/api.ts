@@ -10,6 +10,9 @@ import type {
 } from '@/interfaces';
 import { cleanUrl } from '@/utils';
 
+export const DEFAULT_CLOUD_URL =
+  process.env.EXPO_PUBLIC_CODEDOCK_CLOUD_URL || 'https://app.codedock.run';
+
 function createClient(url: string, token: string = '') {
   return axios.create({
     baseURL: cleanUrl(url),
@@ -22,6 +25,36 @@ function createClient(url: string, token: string = '') {
 }
 
 export const MobileApi = {
+  async startDeviceAuth(
+    url: string,
+    clientName: string = 'Codedock Mobile'
+  ): Promise<{
+    deviceCode: string;
+    userCode: string;
+    verificationUri: string;
+    verificationUriComplete: string;
+    expiresIn: number;
+    interval: number;
+  }> {
+    const client = createClient(url);
+    const { data } = await client.post('/api/auth/device/code', { clientName });
+    return data.data;
+  },
+
+  async pollDeviceToken(
+    url: string,
+    deviceCode: string
+  ): Promise<{
+    status: 'pending' | 'approved' | 'denied';
+    token?: string;
+    email?: string;
+    name?: string;
+    message?: string;
+  }> {
+    const client = createClient(url);
+    const { data } = await client.post('/api/auth/device/token', { deviceCode });
+    return data.data;
+  },
   async getMeta(url: string): Promise<CodedockMeta> {
     const client = createClient(url);
     const { data } = await client.get<CodedockMeta>('/api/meta');

@@ -16,7 +16,8 @@ export function CloudNoticeCard({ cloudUrl }: { cloudUrl: string }) {
         </Text>
       </View>
       <Text style={[styles.cloudNoticeText, { color: colors.textSecondary }]}>
-        Connecting to {cloudUrl}. Provide your Cloud API token to sign in.
+        Connected to {cloudUrl}. Authorize seamlessly via your browser without entering a token, or
+        provide a Personal Access Token below.
       </Text>
     </View>
   );

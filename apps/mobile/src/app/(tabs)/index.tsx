@@ -9,9 +9,9 @@ import {
   Text,
   View,
 } from 'react-native';
-import { AppCard } from '@/components/AppCard';
 import { Icon } from '@/components/Icon';
-import { ProjectCard } from '@/components/ProjectCard';
+import { ProjectCard } from '@/features/projects/ProjectCard';
+import { AppCard } from '@/features/workloads/AppCard';
 import { useProjectsQuery } from '@/hooks/useProjects';
 import { useAppsQuery } from '@/hooks/useWorkloads';
 import type { CodedockApp, CodedockProject } from '@/interfaces';

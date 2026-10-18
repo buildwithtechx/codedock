@@ -64,7 +64,7 @@
         "expo-notifications",
         {
           "icon": "./assets/images/notification.png",
-          "color": "#3B82F6",
+          "color": "#8B5CF6",
           "androidMode": "default",
           "androidCollapsedTitle": "Codedock",
           "iosDisplayInForeground": true,

@@ -24,8 +24,7 @@ export const MobileStorage = {
         url,
         token,
         mode:
-          (mode as 'cloud' | 'self-hosted') ||
-          (url.includes('codedock.io') ? 'cloud' : 'self-hosted'),
+          (mode as 'cloud' | 'self-hosted') || (url.includes('codedock') ? 'cloud' : 'self-hosted'),
         userEmail: userEmail || undefined,
       };
     } catch {

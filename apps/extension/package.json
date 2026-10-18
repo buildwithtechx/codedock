@@ -230,7 +230,17 @@
           "when": "view == codedock.views.deployments && viewItem == codedock-deployment",
           "group": "inline@1"
         }
-      ]
+      ],
+      "configuration": {
+        "title": "Codedock",
+        "properties": {
+          "codedock.cloudUrl": {
+            "type": "string",
+            "default": "https://app.codedock.run",
+            "description": "Codedock Cloud instance base URL"
+          }
+        }
+      }
     }
   },
   "scripts": {
