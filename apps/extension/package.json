@@ -17,9 +17,6 @@
     "Other"
   ],
   "icon": "icons/codedock.png",
-  "activationEvents": [
-    "onView:codedock.views.workloads"
-  ],
   "main": "./out/extension.js",
   "contributes": {
     "viewsContainers": {
@@ -242,7 +239,7 @@
     "watch": "esbuild src/extension.ts --bundle --outfile=out/extension.js --external:vscode --format=cjs --platform=node --watch",
     "typecheck": "tsc --noEmit",
     "package": "vsce package --no-dependencies",
-    "test": "vscode-test"
+    "test": "vitest run src/test/api.test.ts"
   },
   "devDependencies": {
     "@types/mocha": "^10.0.10",

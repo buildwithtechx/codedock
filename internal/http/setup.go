@@ -13,7 +13,6 @@ import (
 
 	"codedock/internal/config"
 	"codedock/internal/core"
-	"codedock/internal/models"
 	"codedock/internal/engine/backup"
 	"codedock/internal/engine/compose"
 	"codedock/internal/engine/cron"
@@ -30,6 +29,7 @@ import (
 	"codedock/internal/handlers/projects"
 	"codedock/internal/handlers/system"
 	"codedock/internal/http/middleware"
+	"codedock/internal/models"
 	"codedock/internal/notifications"
 	"codedock/internal/repositories"
 	authservices "codedock/internal/services/auth"

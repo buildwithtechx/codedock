@@ -288,4 +288,3 @@ func (s *Server) getMeta(c echo.Context) error {
 		},
 	})
 }
-
