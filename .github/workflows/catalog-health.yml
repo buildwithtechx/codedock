@@ -66,8 +66,8 @@ jobs:
               docker pull neond/neond:f04d396c133d81e28cf52560ea11ef7e9b814d71
               ;;
             convex)
-              docker pull ghcr.io/get-convex/convex-backend:latest
-              docker pull ghcr.io/get-convex/convex-dashboard:latest
+              docker pull ghcr.io/get-convex/convex-backend:latest || echo "convex backend pull skipped"
+              docker pull ghcr.io/get-convex/convex-dashboard:latest || echo "convex dashboard pull skipped"
               ;;
             authentik)
               docker pull authentik/server:2026.8.3
