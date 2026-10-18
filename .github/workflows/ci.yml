@@ -5,6 +5,7 @@ on:
     branches: [main, dev]
   pull_request:
     branches: [main, dev]
+  workflow_call:
 
 permissions:
   contents: read
@@ -24,6 +25,7 @@ jobs:
           cache: npm
       - run: npm ci
       - run: npm run build:dashboard
+      - run: npm run build:daemon
       - run: go vet ./...
       - run: go test -race ./...
 

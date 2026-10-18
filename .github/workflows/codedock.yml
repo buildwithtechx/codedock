@@ -10,8 +10,13 @@ permissions:
   packages: write # Needed to publish container images
 
 jobs:
+  gate:
+    name: Release Gate (CI)
+    uses: ./.github/workflows/ci.yml
+
   release-images:
     name: Build & Push Images
+    needs: [gate]
     runs-on: ubuntu-latest
     steps:
       - name: Checkout code
@@ -49,6 +54,7 @@ jobs:
 
   release-server-cli:
     name: Build & Release Server & CLI
+    needs: [gate]
     runs-on: ubuntu-latest
     steps:
       - name: Checkout code
