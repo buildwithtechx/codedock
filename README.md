@@ -46,6 +46,8 @@ Databases, backups, TLS, and monitoring live in the same control plane as your a
 
 - **Web dashboard** — deploy, monitor, and manage every resource from the UI the daemon serves.
 - **Desktop app** — native Tauri shell around the dashboard in `apps/desktop`.
+- **Mobile app** — native iOS and Android client with 5 tabs (Workloads, Databases, Servers, Deployments, Settings), push notifications, and TanStack Query state ([README](./apps/mobile/README.md)).
+- **VS Code extension** — official extension for multi-profile instance management, live SSE log streaming, database controls, and instant deployments ([README](./apps/extension/README.md)).
 - **`codedockd`** — the server daemon ([README](./cmd/codedockd/README.md)).
 - **`codedock`** — the remote CLI that runs on your machine ([README](./cmd/codedock/README.md)): `curl -fsSL https://get.codedock.run/cli | sh`, or `npm i -g codedock` for the same binary via npm.
 - **REST API** — versioned HTTP API with a maintained spec in `docs/api/openapi.json`.

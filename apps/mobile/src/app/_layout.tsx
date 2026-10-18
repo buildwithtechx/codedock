@@ -5,7 +5,7 @@ import { useEffect, useState } from 'react';
 import { QueryClient, QueryClientProvider } from '@tanstack/react-query';
 import 'react-native-reanimated';
 
-import { useColorScheme } from '@/components/useColorScheme';
+import { useColorScheme } from 'react-native';
 import { MobileStorage } from '@/services/storage';
 import { registerForPushNotificationsAsync } from '@/services/notifications';
 import { useAppStore } from '@/store/useAppStore';

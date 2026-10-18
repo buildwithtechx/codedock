@@ -96,6 +96,16 @@ jobs:
       - run: npm run typecheck:extension
       - run: npm run test:mobile
       - run: npm run test:extension
+      - name: Validate Expo mobile configuration
+        run: npx expo config --type public
+        working-directory: apps/mobile
       - run: npm run build:extension
       - run: npm run package:extension
+      - name: Upload VS Code Extension VSIX
+        uses: actions/upload-artifact@v4
+        with:
+          name: vscode-codedock-extension
+          path: apps/extension/*.vsix
+          retention-days: 14
+
 
