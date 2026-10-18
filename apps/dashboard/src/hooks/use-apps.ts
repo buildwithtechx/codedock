@@ -226,3 +226,14 @@ export function useDeployCatalogApp() {
     },
   });
 }
+
+export function useAddCustomApp() {
+  const queryClient = useQueryClient();
+  return useMutation({
+    mutationFn: (template: unknown) => appsService.addCustom(template),
+    onSuccess: async () => {
+      await queryClient.invalidateQueries({ queryKey: ['apps'] });
+      await queryClient.invalidateQueries({ queryKey: ['catalog'] });
+    },
+  });
+}

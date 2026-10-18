@@ -11,7 +11,7 @@ import {
 } from '@codedock/ui/dialog';
 import { Label } from '@codedock/ui/label';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@codedock/ui/select';
-import { databasesService } from '#/services/databases';
+import { useGetDatabase, useGetDatabases } from '#/hooks/use-databases';
 import type { BaseResponse } from '#/interfaces/base';
 import { apiClient } from '#/lib/api-client';
 
@@ -41,16 +41,12 @@ export function ReviewedRestoreDialog({
   const [target, setTarget] = useState('');
   const [review, setReview] = useState<Review>();
   const [approved, setApproved] = useState(false);
-  const source = useQuery({
-    queryKey: ['restore-source', sourceDatabaseId],
-    queryFn: () => databasesService.getDatabase(sourceDatabaseId!),
-    enabled: allowDatabaseTarget && !!sourceDatabaseId,
-  });
-  const destinations = useQuery({
-    queryKey: ['restore-destinations', source.data?.data.projectId],
-    queryFn: () => databasesService.getDatabases(source.data!.data.projectId),
-    enabled: !!source.data?.data.projectId,
-  });
+  const source = useGetDatabase(
+    sourceDatabaseId ?? '',
+    Boolean(allowDatabaseTarget && sourceDatabaseId)
+  );
+  const destinations = useGetDatabases(source.data?.data.projectId ?? '');
+
   const candidates = (destinations.data?.data ?? []).filter(
     (database) =>
       database.engine === source.data?.data.engine &&

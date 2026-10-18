@@ -6,7 +6,7 @@ import { Input } from '@codedock/ui/input';
 import { Label } from '@codedock/ui/label';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@codedock/ui/select';
 import { useListAllProjects } from '#/hooks/use-projects';
-import { libraryApi } from '#/services/library';
+import { useDeployLibraryArchive } from '#/hooks/use-library';
 import { FolderDropzone } from './folder-dropzone';
 import {
   collectFolderFiles,
@@ -26,6 +26,7 @@ interface PickedFolder extends FolderInspection {
 
 export function FolderUpload() {
   const projectsQuery = useListAllProjects();
+  const deployArchiveMutation = useDeployLibraryArchive();
   const [projectId, setProjectId] = useState('');
   const [name, setName] = useState('');
   const [archive, setArchive] = useState<File | null>(null);
@@ -125,7 +126,11 @@ export function FolderUpload() {
       }
       if (!file) return;
       setPhase('uploading');
-      const response = await libraryApi.deployArchive(projectId, name.trim(), file);
+      const response = await deployArchiveMutation.mutateAsync({
+        projectId,
+        name: name.trim(),
+        file,
+      });
       if (folder) {
         rememberLocalImport({
           name: name.trim(),

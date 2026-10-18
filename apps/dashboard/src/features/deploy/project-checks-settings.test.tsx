@@ -1,7 +1,16 @@
+import { QueryClient, QueryClientProvider } from '@tanstack/react-query';
 import { fireEvent, render, screen, waitFor } from '@testing-library/react';
+import type { ReactNode } from 'react';
 import { beforeEach, describe, expect, it, vi } from 'vitest';
 import { checksService, type ProjectChecksConfig } from '#/services/checks';
 import { ProjectChecksSettings } from './project-checks-settings';
+
+function renderWithClient(ui: ReactNode) {
+  const queryClient = new QueryClient({
+    defaultOptions: { queries: { retry: false } },
+  });
+  return render(<QueryClientProvider client={queryClient}>{ui}</QueryClientProvider>);
+}
 
 const mockConfig: ProjectChecksConfig = {
   projectId: 'proj-1',
@@ -19,7 +28,7 @@ describe('ProjectChecksSettings', () => {
   });
 
   it('renders form fields with initial checks config', () => {
-    render(<ProjectChecksSettings projectId="proj-1" initialConfig={mockConfig} />);
+    renderWithClient(<ProjectChecksSettings projectId="proj-1" initialConfig={mockConfig} />);
 
     expect(screen.getByText('GitHub Checks & Deployment Admission')).toBeDefined();
     expect(screen.getByLabelText(/report commit status to github/i)).toBeDefined();
@@ -36,7 +45,7 @@ describe('ProjectChecksSettings', () => {
     };
     vi.spyOn(checksService, 'updateChecks').mockResolvedValue(updatedConfig);
 
-    render(<ProjectChecksSettings projectId="proj-1" initialConfig={mockConfig} />);
+    renderWithClient(<ProjectChecksSettings projectId="proj-1" initialConfig={mockConfig} />);
 
     const requireSwitch = screen.getByLabelText(/require passing checks before deploy/i);
     fireEvent.click(requireSwitch);

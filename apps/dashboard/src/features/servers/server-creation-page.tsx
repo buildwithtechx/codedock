@@ -1,13 +1,5 @@
 import { Link, useNavigate } from '@tanstack/react-router';
-import {
-  ArrowLeft,
-  CheckCircle2,
-  Cloud,
-  Info,
-  KeyRound,
-  Network,
-  Server as ServerIcon,
-} from 'lucide-react';
+import { ArrowLeft, CheckCircle2 } from 'lucide-react';
 import { useState } from 'react';
 import { toast } from 'sonner';
 import { Button } from '@codedock/ui/button';
@@ -15,8 +7,9 @@ import { Card } from '@codedock/ui/card';
 import { Input } from '@codedock/ui/input';
 import { Label } from '@codedock/ui/label';
 import type { Server, TestSSHRequest } from '#/interfaces/server';
-import { createServer, testServerConnection } from '#/services/servers';
+import { useCreateServer, useTestSSH } from '#/hooks/use-servers';
 import { HetznerSetupWizard } from './managed/hetzner-setup-wizard';
+import { ServerCreationGuidance } from './server-creation-guidance';
 import { type ServerCreationMode, ServerCreationModeToggle } from './server-creation-mode-toggle';
 import {
   CheckingState,
@@ -32,42 +25,13 @@ import { ServerSshForm } from './server-ssh-form';
 
 type FormMode = ServerCreationMode;
 
-const guidance = [
-  {
-    icon: Network,
-    text: 'Any host with SSH access. Codedock connects over port 22 by default.',
-  },
-  {
-    icon: KeyRound,
-    text: 'An SSH private key or password for the connection user.',
-  },
-  {
-    icon: ServerIcon,
-    text: 'Saved servers are verified, then appear in your fleet.',
-  },
-];
-
-const hetznerGuidance = [
-  {
-    icon: KeyRound,
-    text: 'A Hetzner Cloud API token with read/write access. It is verified live before saving.',
-  },
-  {
-    icon: Cloud,
-    text: 'Pick a location and server type at live Hetzner list prices. Hetzner bills your token directly.',
-  },
-  {
-    icon: ServerIcon,
-    text: 'cloud-init installs Docker and hardens SSH automatically, then the node joins your fleet.',
-  },
-];
-
 export function ServerCreationPage() {
   const navigate = useNavigate();
+  const createServerMutation = useCreateServer();
+  const testSshMutation = useTestSSH();
+
   const [formMode, setFormMode] = useState<FormMode>('remote');
   const [localName, setLocalName] = useState('Local Daemon Node');
-  const [creatingLocal, setCreatingLocal] = useState(false);
-
   const [step, setStep] = useState<SetupStep | null>(null);
   const [mode, setMode] = useState<SetupMode | null>(null);
   const [savedServer, setSavedServer] = useState<Server | null>(null);
@@ -136,9 +100,20 @@ export function ServerCreationPage() {
       },
     ]);
 
-    const verdict = credentials
-      ? await testServerConnection(credentials)
-      : { ok: false, message: 'No credentials captured for verification' };
+    let verdict: { ok: boolean; message: string };
+    if (credentials) {
+      try {
+        const res = await testSshMutation.mutateAsync(credentials);
+        verdict = { ok: res.success, message: res.message };
+      } catch (err) {
+        verdict = {
+          ok: false,
+          message: err instanceof Error ? err.message : 'SSH verification failed',
+        };
+      }
+    } else {
+      verdict = { ok: false, message: 'No credentials captured for verification' };
+    }
 
     const next: VerifyCheck[] = [
       {
@@ -192,9 +167,8 @@ export function ServerCreationPage() {
   };
 
   const handleConnectLocal = async () => {
-    setCreatingLocal(true);
     try {
-      const server = await createServer({
+      const server = await createServerMutation.mutateAsync({
         name: localName.trim() || 'Local Daemon Node',
         isLocal: true,
         ipAddress: '127.0.0.1',
@@ -203,8 +177,6 @@ export function ServerCreationPage() {
       handleSaved(server, null);
     } catch (err) {
       toast.error(err instanceof Error ? err.message : 'Failed to register local node');
-    } finally {
-      setCreatingLocal(false);
     }
   };
 
@@ -301,10 +273,10 @@ export function ServerCreationPage() {
                   <Button
                     type="button"
                     onClick={handleConnectLocal}
-                    disabled={creatingLocal}
+                    disabled={createServerMutation.isPending}
                     className="text-xs"
                   >
-                    {creatingLocal ? 'Connecting…' : 'Connect Local Node'}
+                    {createServerMutation.isPending ? 'Connecting…' : 'Connect Local Node'}
                   </Button>
                 </div>
               </div>
@@ -312,29 +284,7 @@ export function ServerCreationPage() {
           </Card>
         </div>
 
-        <aside className="xl:sticky xl:top-6 xl:col-start-2 xl:row-start-1">
-          <div className="rounded-2xl border border-border/50 bg-card">
-            <div className="flex items-center gap-3 border-border/50 border-b px-5 py-4">
-              <div className="flex h-9 w-9 items-center justify-center rounded-xl bg-warning/10">
-                <Info className="size-[18px] text-warning" />
-              </div>
-              <div>
-                <h2 className="font-semibold text-[15px] text-foreground">Getting started</h2>
-                <p className="text-muted-foreground text-xs">What you need</p>
-              </div>
-            </div>
-            <div className="p-5">
-              <ul className="space-y-3 text-muted-foreground text-sm">
-                {(formMode === 'hetzner' ? hetznerGuidance : guidance).map((item) => (
-                  <li key={item.text} className="flex items-start gap-2">
-                    <item.icon className="mt-0.5 size-4 shrink-0 text-muted-foreground" />
-                    <span>{item.text}</span>
-                  </li>
-                ))}
-              </ul>
-            </div>
-          </div>
-        </aside>
+        <ServerCreationGuidance mode={formMode} />
       </div>
     </div>
   );

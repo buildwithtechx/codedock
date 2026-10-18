@@ -1,6 +1,20 @@
+import { QueryClient, QueryClientProvider } from '@tanstack/react-query';
 import { act, fireEvent, render, screen } from '@testing-library/react';
 import { beforeEach, describe, expect, it, vi } from 'vitest';
 import { BillingTopups } from './billing-topups';
+
+const createTestQueryClient = () =>
+  new QueryClient({
+    defaultOptions: {
+      queries: { retry: false },
+      mutations: { retry: false },
+    },
+  });
+
+function renderWithClient(ui: React.ReactElement) {
+  const queryClient = createTestQueryClient();
+  return render(<QueryClientProvider client={queryClient}>{ui}</QueryClientProvider>);
+}
 
 describe('BillingTopups', () => {
   beforeEach(() => {
@@ -8,7 +22,7 @@ describe('BillingTopups', () => {
   });
 
   it('renders credit balance and standard credit packs', () => {
-    render(<BillingTopups balanceCredits={15400} />);
+    renderWithClient(<BillingTopups balanceCredits={15400} />);
 
     expect(screen.getByText('Prepaid Compute Credits')).toBeDefined();
     expect(screen.getByText(/15,400/)).toBeDefined();
@@ -21,7 +35,7 @@ describe('BillingTopups', () => {
 
   it('triggers onBuy with pack and idempotency key when clicked', async () => {
     const handleBuy = vi.fn().mockResolvedValue(undefined);
-    render(<BillingTopups onBuy={handleBuy} />);
+    renderWithClient(<BillingTopups onBuy={handleBuy} />);
 
     const buyFiftyBtn = screen.getByRole('button', { name: /^buy \$50$/i });
     await act(async () => {
@@ -37,7 +51,7 @@ describe('BillingTopups', () => {
 
   it('displays error message when purchase fails', async () => {
     const failingBuy = vi.fn().mockRejectedValue(new Error('Gateway failure'));
-    render(<BillingTopups onBuy={failingBuy} />);
+    renderWithClient(<BillingTopups onBuy={failingBuy} />);
 
     const buyTwentyFiveBtn = screen.getByRole('button', { name: /^buy \$25$/i });
     await act(async () => {

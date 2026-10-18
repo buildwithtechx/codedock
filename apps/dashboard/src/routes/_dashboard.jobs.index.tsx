@@ -5,12 +5,12 @@ import { useMemo, useState } from 'react';
 import { PageHeader } from '#/components/layout/page-header';
 import { Button } from '@codedock/ui/button';
 import { QueryErrorState } from '#/components/query-error-state';
-import { jobsApi } from '#/services/jobs';
 import { JobCard } from '#/features/jobs/job-card';
 import { isFailedStatus } from '#/features/jobs/job-format';
 import { JobOutputDialog } from '#/features/jobs/job-output-dialog';
 import { JobsEmptyState } from '#/features/jobs/jobs-empty-state';
 import { type JobStatusFilter, JobsOverview } from '#/features/jobs/jobs-overview';
+import { projectJobsQueryOptions } from '#/hooks/use-jobs';
 import { useListAllProjects } from '#/hooks/use-projects';
 import type { Job } from '#/interfaces/services';
 
@@ -43,10 +43,7 @@ export function JobsPage() {
   const projectNames = new Map(projects.map((project) => [project.id, project.name]));
 
   const taskQueries = useQueries({
-    queries: projects.map((project) => ({
-      queryKey: ['scheduled-tasks', 'project', project.id],
-      queryFn: () => jobsApi.listByProject(project.id),
-    })),
+    queries: projects.map((project) => projectJobsQueryOptions(project.id)),
   });
   const isLoadingTasks = taskQueries.some((query) => query.isLoading);
   const failedQueries = taskQueries.flatMap((query, index) =>
@@ -56,7 +53,7 @@ export function JobsPage() {
   const loading = isLoadingProjects || (isLoadingTasks && tasks.length === 0);
 
   const refresh = () => {
-    void queryClient.invalidateQueries({ queryKey: ['scheduled-tasks'] });
+    void queryClient.invalidateQueries({ queryKey: ['jobs'] });
   };
 
   const q = query.trim().toLowerCase();

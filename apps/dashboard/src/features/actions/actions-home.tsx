@@ -1,11 +1,18 @@
 import { Link } from '@tanstack/react-router';
 import { ArrowLeft, Cloud, Plus } from 'lucide-react';
-import { useCallback, useEffect, useState } from 'react';
+import { useState } from 'react';
 import { toast } from 'sonner';
 import { Button } from '@codedock/ui/button';
 import { Tabs, TabsContent } from '@codedock/ui/tabs';
 import type { ActionRun, ActionRunner, ActionWorkflow } from '#/interfaces/actions';
-import { actionsService } from '#/services/actions';
+import {
+  useDeleteRunner,
+  useDeleteWorkflow,
+  useRunners,
+  useRuns,
+  useTriggerWorkflow,
+  useWorkflows,
+} from '#/hooks/use-actions';
 import { ActionRunList } from './action-run-list';
 import { ActionRunnerCards } from './action-runner-cards';
 import { ActionWorkflowList } from './action-workflow-list';
@@ -29,35 +36,20 @@ export function ActionsHome({
   const [tab, setTab] = useState<'workflows' | 'runs' | 'runners'>('workflows');
   const [selectedRun, setSelectedRun] = useState<ActionRun | null>(null);
 
-  const [workflows, setWorkflows] = useState<ActionWorkflow[]>(initialWorkflows ?? []);
-  const [runs, setRuns] = useState<ActionRun[]>(initialRuns ?? []);
-  const [runners, setRunners] = useState<ActionRunner[]>(initialRunners ?? []);
+  const workflowsQuery = useWorkflows();
+  const runsQuery = useRuns();
+  const runnersQuery = useRunners();
+  const triggerWorkflowMutation = useTriggerWorkflow();
+  const deleteWorkflowMutation = useDeleteWorkflow();
+  const deleteRunnerMutation = useDeleteRunner();
 
-  const loadData = useCallback(async () => {
-    try {
-      const [wfList, runList, runnerList] = await Promise.all([
-        actionsService.listWorkflows(),
-        actionsService.listRuns(),
-        actionsService.listRunners(),
-      ]);
-      setWorkflows(wfList);
-      setRuns(runList);
-      setRunners(runnerList);
-    } catch {
-      // Retain existing
-    }
-  }, []);
-
-  useEffect(() => {
-    if (!initialWorkflows && !initialRuns && !initialRunners) {
-      loadData();
-    }
-  }, [loadData, initialWorkflows, initialRuns, initialRunners]);
+  const workflows = workflowsQuery.data ?? initialWorkflows ?? [];
+  const runs = runsQuery.data ?? initialRuns ?? [];
+  const runners = runnersQuery.data ?? initialRunners ?? [];
 
   const handleTriggerWorkflow = async (workflowId: string) => {
     try {
-      const run = await actionsService.triggerWorkflow(workflowId);
-      setRuns((prev) => [run, ...prev]);
+      const run = await triggerWorkflowMutation.mutateAsync(workflowId);
       setSelectedRun(run);
       toast.success(`Workflow run #${run.number} started`);
     } catch {
@@ -67,8 +59,7 @@ export function ActionsHome({
 
   const handleDeleteWorkflow = async (workflowId: string) => {
     try {
-      await actionsService.deleteWorkflow(workflowId);
-      setWorkflows((prev) => prev.filter((w) => w.id !== workflowId));
+      await deleteWorkflowMutation.mutateAsync(workflowId);
       toast.success('Workflow deleted');
     } catch {
       toast.error('Failed to delete workflow');
@@ -77,8 +68,7 @@ export function ActionsHome({
 
   const handleDeleteRunner = async (runnerId: string) => {
     try {
-      await actionsService.deleteRunner(runnerId);
-      setRunners((prev) => prev.filter((r) => r.id !== runnerId));
+      await deleteRunnerMutation.mutateAsync(runnerId);
       toast.success('Runner deleted');
     } catch {
       toast.error('Failed to delete runner');

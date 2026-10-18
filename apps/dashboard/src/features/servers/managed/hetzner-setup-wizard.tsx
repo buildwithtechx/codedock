@@ -7,9 +7,15 @@ import {
 import { useEffect, useState } from 'react';
 import { toast } from 'sonner';
 import { Button } from '@codedock/ui/button';
-import type { ManagedCredential, ManagedOffers, ManagedQuota } from '#/interfaces/managed';
 import { cn } from '#/lib/utils';
-import { managedService } from '#/services/managed';
+import {
+  useApplyManagedOperation,
+  useCreateManagedCredential,
+  useManagedCredentials,
+  useManagedOffers,
+  useManagedQuota,
+  useReviewManagedProvision,
+} from '#/hooks/use-managed';
 import { useOrganizationStore } from '#/stores/organization-store';
 import { HetznerCredentialStep } from './hetzner-credential-step';
 import { HetznerPlanStep } from './hetzner-plan-step';
@@ -19,22 +25,29 @@ import { HetznerReviewStep } from './hetzner-review-step';
 export function HetznerSetupWizard({ onDone }: { onDone: (serverId: string) => void }) {
   const organizationId = useOrganizationStore((state) => state.activeOrganizationId);
   const [step, setStep] = useState<WizardStep>('credential');
-  const [credentials, setCredentials] = useState<ManagedCredential[]>([]);
-  const [credentialsLoading, setCredentialsLoading] = useState(true);
   const [selectedCredentialId, setSelectedCredentialId] = useState<string | null>(null);
-  const [creatingCredential, setCreatingCredential] = useState(false);
   const [createError, setCreateError] = useState<string | null>(null);
 
-  const [offers, setOffers] = useState<ManagedOffers | null>(null);
-  const [offersLoading, setOffersLoading] = useState(false);
-  const [offersError, setOffersError] = useState<string | null>(null);
+  const { data: credentialsData = [], isLoading: credentialsLoading } = useManagedCredentials(
+    organizationId ?? undefined
+  );
+  const { data: quotaData = null, isLoading: quotaLoading } = useManagedQuota(
+    organizationId ?? undefined
+  );
+  const {
+    data: offersData = null,
+    isLoading: offersLoading,
+    error: offersQueryError,
+  } = useManagedOffers(organizationId ?? undefined, selectedCredentialId ?? undefined);
+
+  const createCredentialMutation = useCreateManagedCredential();
+  const reviewProvisionMutation = useReviewManagedProvision();
+  const applyOperationMutation = useApplyManagedOperation();
+
   const [location, setLocation] = useState('');
   const [tierName, setTierName] = useState('');
-
   const [name, setName] = useState('');
   const [image, setImage] = useState('');
-  const [quota, setQuota] = useState<ManagedQuota | null>(null);
-  const [quotaLoading, setQuotaLoading] = useState(false);
 
   const [working, setWorking] = useState(false);
   const [reviewError, setReviewError] = useState<string | null>(null);
@@ -42,79 +55,26 @@ export function HetznerSetupWizard({ onDone }: { onDone: (serverId: string) => v
   const [serverId, setServerId] = useState<string | null>(null);
 
   useEffect(() => {
-    if (!organizationId) {
-      setCredentialsLoading(false);
-      return;
+    if (credentialsData.length === 1 && !selectedCredentialId) {
+      setSelectedCredentialId(credentialsData[0].id);
     }
-    let cancelled = false;
-    setCredentialsLoading(true);
-    setQuotaLoading(true);
-    managedService
-      .listCredentials(organizationId)
-      .then((rows) => {
-        if (cancelled) return;
-        setCredentials(rows);
-        if (rows.length === 1) setSelectedCredentialId(rows[0].id);
-      })
-      .catch(() => {
-        if (!cancelled) setCredentials([]);
-      })
-      .finally(() => {
-        if (!cancelled) setCredentialsLoading(false);
-      });
-    managedService
-      .getQuota(organizationId)
-      .then((value) => {
-        if (!cancelled) setQuota(value);
-      })
-      .catch(() => {
-        if (!cancelled) setQuota(null);
-      })
-      .finally(() => {
-        if (!cancelled) setQuotaLoading(false);
-      });
-    return () => {
-      cancelled = true;
-    };
-  }, [organizationId]);
+  }, [credentialsData, selectedCredentialId]);
 
   useEffect(() => {
-    if (!organizationId || !selectedCredentialId) {
-      setOffers(null);
-      return;
+    if (offersData) {
+      setLocation((prev) =>
+        offersData.locations.some((entry) => entry.name === prev)
+          ? prev
+          : (offersData.locations[0]?.name ?? '')
+      );
+      setTierName((prev) =>
+        offersData.offers.some((offer) => offer.tier.name === prev)
+          ? prev
+          : (offersData.offers[0]?.tier.name ?? '')
+      );
+      setImage((prev) => (offersData.images.includes(prev) ? prev : (offersData.images[0] ?? '')));
     }
-    let cancelled = false;
-    setOffersLoading(true);
-    setOffersError(null);
-    managedService
-      .offers(organizationId, selectedCredentialId)
-      .then((value) => {
-        if (cancelled) return;
-        setOffers(value);
-        setLocation((prev) =>
-          value.locations.some((entry) => entry.name === prev)
-            ? prev
-            : (value.locations[0]?.name ?? '')
-        );
-        setTierName((prev) =>
-          value.offers.some((offer) => offer.tier.name === prev)
-            ? prev
-            : (value.offers[0]?.tier.name ?? '')
-        );
-        setImage((prev) => (value.images.includes(prev) ? prev : (value.images[0] ?? '')));
-      })
-      .catch((err: unknown) => {
-        if (cancelled) return;
-        setOffers(null);
-        setOffersError(err instanceof Error ? err.message : 'Failed to load Hetzner offers');
-      })
-      .finally(() => {
-        if (!cancelled) setOffersLoading(false);
-      });
-    return () => {
-      cancelled = true;
-    };
-  }, [organizationId, selectedCredentialId]);
+  }, [offersData]);
 
   if (!organizationId) {
     return (
@@ -124,6 +84,12 @@ export function HetznerSetupWizard({ onDone }: { onDone: (serverId: string) => v
       </div>
     );
   }
+
+  const offers = offersData;
+  const offersError = offersQueryError instanceof Error ? offersQueryError.message : null;
+  const credentials = credentialsData;
+  const quota = quotaData;
+  const creatingCredential = createCredentialMutation.isPending;
 
   const selectedOffer = offers?.offers.find((offer) => offer.tier.name === tierName) ?? null;
   const stepIndex = steps.findIndex((entry) => entry.id === step);
@@ -140,37 +106,39 @@ export function HetznerSetupWizard({ onDone }: { onDone: (serverId: string) => v
   };
 
   const handleCreateCredential = async (label: string, token: string) => {
-    setCreatingCredential(true);
+    if (!organizationId) return;
     setCreateError(null);
     try {
-      const credential = await managedService.createCredential(organizationId, {
-        provider: 'hetzner',
-        label,
-        token,
+      const credential = await createCredentialMutation.mutateAsync({
+        organizationId,
+        payload: { provider: 'hetzner', label, token },
       });
-      setCredentials((prev) => [...prev, credential]);
       setSelectedCredentialId(credential.id);
       toast.success('Hetzner token verified and saved');
     } catch (err) {
       setCreateError(err instanceof Error ? err.message : 'Token verification failed');
-    } finally {
-      setCreatingCredential(false);
     }
   };
 
   const handleConfirm = async () => {
-    if (!selectedCredentialId || !selectedOffer) return;
+    if (!organizationId || !selectedCredentialId || !selectedOffer) return;
     setWorking(true);
     setReviewError(null);
     try {
-      const review = await managedService.reviewProvision(organizationId, {
-        credentialId: selectedCredentialId,
-        name: name.trim(),
-        region: location,
-        serverType: selectedOffer.tier.name,
-        image,
+      const review = await reviewProvisionMutation.mutateAsync({
+        organizationId,
+        payload: {
+          credentialId: selectedCredentialId,
+          name: name.trim(),
+          region: location,
+          serverType: selectedOffer.tier.name,
+          image,
+        },
       });
-      await managedService.applyOperation(review.review.operation.id, review.review.confirmation);
+      await applyOperationMutation.mutateAsync({
+        operationId: review.review.operation.id,
+        confirmation: review.review.confirmation,
+      });
       setOperationId(review.review.operation.id);
       setServerId(review.plan.serverId);
       setStep('progress');

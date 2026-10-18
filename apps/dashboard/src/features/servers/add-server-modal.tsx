@@ -5,7 +5,7 @@ import { Button } from '@codedock/ui/button';
 import { Dialog, DialogContent } from '@codedock/ui/dialog';
 import { Input } from '@codedock/ui/input';
 import type { Server as ServerModel } from '#/interfaces/server';
-import { serverService } from '#/services/servers';
+import { useCreateServer } from '#/hooks/use-servers';
 import { AddServerCloudPlans, type CloudPlan } from './add-server-cloud-plans';
 
 export interface AddServerModalProps {
@@ -32,6 +32,7 @@ export function AddServerModal({
   const [sshPort, setSshPort] = useState(22);
   const [sshUser, setSshUser] = useState('root');
   const [connecting, setConnecting] = useState(false);
+  const createServerMutation = useCreateServer();
 
   const handleConnectServer = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -41,7 +42,7 @@ export function AddServerModal({
     }
     setConnecting(true);
     try {
-      const server = await serverService.create({
+      const server = await createServerMutation.mutateAsync({
         name: serverName.trim() || ipAddress.trim(),
         ipAddress: ipAddress.trim(),
         sshPort,

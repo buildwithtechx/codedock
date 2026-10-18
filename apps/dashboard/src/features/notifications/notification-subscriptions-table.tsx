@@ -1,13 +1,16 @@
-import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
 import { useEffect, useMemo, useState } from 'react';
+import {
+  useGetNotificationDefaults,
+  useGetNotificationSubscriptions,
+  useUpsertNotificationDefault,
+  useUpsertNotificationSubscription,
+} from '#/hooks/use-notifications';
 import { useListOrganizations } from '#/hooks/use-organizations';
-import { notificationsService } from '#/services/notifications';
 import { useOrganizationStore } from '#/stores/organization-store';
 import { AlertPreferenceCard, type AlertPreferenceState } from './alert-preference-card';
 import { NOTIFICATION_EVENTS, NOTIFICATION_GROUPS } from './notification-events-meta';
 
 export function NotificationSubscriptionsTable() {
-  const queryClient = useQueryClient();
   const activeOrganizationId = useOrganizationStore((state) => state.activeOrganizationId);
   const { data: organizations } = useListOrganizations();
   const organizationId = activeOrganizationId || organizations?.[0]?.id;
@@ -26,15 +29,8 @@ export function NotificationSubscriptionsTable() {
     )
   );
 
-  const { data: subsData } = useQuery({
-    queryKey: ['notification-subscriptions', organizationId],
-    queryFn: () => notificationsService.getNotificationSubscriptions(organizationId),
-  });
-
-  const { data: defaultsData } = useQuery({
-    queryKey: ['notification-defaults', organizationId],
-    queryFn: () => notificationsService.getNotificationDefaults(),
-  });
+  const { data: subsData } = useGetNotificationSubscriptions(organizationId);
+  const { data: defaultsData } = useGetNotificationDefaults();
 
   useEffect(() => {
     if (!subsData?.data && !defaultsData?.data) return;
@@ -65,29 +61,8 @@ export function NotificationSubscriptionsTable() {
     });
   }, [subsData, defaultsData]);
 
-  const subMutation = useMutation({
-    mutationFn: (payload: {
-      category: string;
-      channels: string[];
-      enabled: boolean;
-      orgId?: string;
-    }) => notificationsService.upsertNotificationSubscription(payload),
-    onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: ['notification-subscriptions'] });
-    },
-  });
-
-  const defaultMutation = useMutation({
-    mutationFn: (payload: {
-      category: string;
-      channels: string[];
-      enabled: boolean;
-      orgId?: string;
-    }) => notificationsService.upsertNotificationDefault(payload),
-    onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: ['notification-defaults'] });
-    },
-  });
+  const subMutation = useUpsertNotificationSubscription();
+  const defaultMutation = useUpsertNotificationDefault();
 
   const handleChannelChange = (id: string, channels: string[]) => {
     const current = states[id] || { channels: [], orgEnabled: false, notifyMe: false };

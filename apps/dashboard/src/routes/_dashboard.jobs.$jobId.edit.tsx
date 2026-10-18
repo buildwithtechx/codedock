@@ -1,9 +1,8 @@
-import { useQuery } from '@tanstack/react-query';
 import { createFileRoute, useNavigate } from '@tanstack/react-router';
 import { ArrowLeft, Loader2 } from 'lucide-react';
 import { toast } from 'sonner';
 import { QueryErrorState } from '#/components/query-error-state';
-import { jobsApi } from '#/services/jobs';
+import { useGetJob } from '#/hooks/use-jobs';
 import { JobForm } from '#/features/jobs/job-form';
 
 export const Route = createFileRoute('/_dashboard/jobs/$jobId/edit')({
@@ -15,10 +14,8 @@ function EditJobPage() {
   const navigate = useNavigate();
   const backToDetail = () => navigate({ to: '/jobs/$jobId', params: { jobId } });
 
-  const { data, isLoading, isError, refetch } = useQuery({
-    queryKey: ['scheduled-task', jobId],
-    queryFn: () => jobsApi.get(jobId),
-  });
+  const { data, isLoading, isError, refetch } = useGetJob(jobId);
+
   const job = data?.data;
 
   return (

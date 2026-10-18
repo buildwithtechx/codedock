@@ -1,15 +1,11 @@
-import { useQuery } from '@tanstack/react-query';
 import { History } from 'lucide-react';
 import { Badge } from '@codedock/ui/badge';
 import { Empty, EmptyDescription, EmptyHeader, EmptyMedia, EmptyTitle } from '@codedock/ui/empty';
 import { Skeleton } from '@codedock/ui/skeleton';
-import { notificationsService } from '#/services/notifications';
+import { useGetNotificationDeliveries } from '#/hooks/use-notifications';
 
 export function NotificationDeliveryHistory() {
-  const { data, isLoading } = useQuery({
-    queryKey: ['notification-deliveries'],
-    queryFn: () => notificationsService.getNotificationDeliveries(20),
-  });
+  const { data, isLoading } = useGetNotificationDeliveries(20);
   const rows = data?.data ?? [];
 
   return (

@@ -8,10 +8,11 @@ export const useListDatabases = () => {
   });
 };
 
-export const useGetDatabase = (id: string) => {
+export const useGetDatabase = (id: string, enabled = true) => {
   return useQuery({
     queryKey: ['databases', 'getDatabase', id].filter(Boolean),
     queryFn: () => databasesService.getDatabase(id),
+    enabled: Boolean(id) && enabled,
   });
 };
 
@@ -181,5 +182,11 @@ export const useImportDatabase = () => {
         queryClient.invalidateQueries({ queryKey: ['databases', 'getTableData', variables.id] }),
       ]);
     },
+  });
+};
+
+export const useRevealDatabaseCredentials = () => {
+  return useMutation({
+    mutationFn: (id: string) => databasesService.revealCredentials(id),
   });
 };

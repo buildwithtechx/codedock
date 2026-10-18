@@ -14,8 +14,13 @@ import {
   ResourceMetersOverview,
 } from '#/features/billing';
 import { useGetPublicSettings } from '#/hooks/use-settings';
-import { useBillingConfig, useCreateCheckoutSession } from '#/hooks/use-billing';
-import { billingService } from '#/services/billing';
+import {
+  useBillingConfig,
+  useCreateCheckoutSession,
+  useCreatePortalSession,
+  usePurchaseTopup,
+  useTopupPacks,
+} from '#/hooks/use-billing';
 import { useAuthStore } from '#/stores/auth-store';
 
 export const Route = createFileRoute('/_dashboard/billing')({
@@ -30,6 +35,9 @@ function BillingPage() {
   const user = useAuthStore((s) => s.user);
   const { data: config } = useBillingConfig();
   const { mutateAsync: createCheckoutSession, isPending } = useCreateCheckoutSession();
+  const { data: topupPacks = [] } = useTopupPacks();
+  const purchaseTopupMutation = usePurchaseTopup();
+  const createPortalSessionMutation = useCreatePortalSession();
   const [activeTab, setActiveTab] = useState<
     'overview' | 'plans' | 'usage' | 'topups' | 'invoices'
   >('plans');
@@ -84,9 +92,9 @@ function BillingPage() {
 
   const handleAddCredits = async (cents: number) => {
     try {
-      const packs = await billingService.getTopupPacks();
-      const pack = packs.find((p) => p.priceCents === cents) ?? packs[0];
-      const { url } = await billingService.purchaseTopup({
+      const pack = topupPacks.find((p) => p.priceCents === cents) ?? topupPacks[0];
+      if (!pack) return;
+      const { url } = await purchaseTopupMutation.mutateAsync({
         packId: pack.id,
         idempotencyKey: crypto.randomUUID(),
       });
@@ -99,7 +107,7 @@ function BillingPage() {
   const handleOpenPortal = async () => {
     setLoadingPortal(true);
     try {
-      const { url } = await billingService.createPortalSession();
+      const { url } = await createPortalSessionMutation.mutateAsync();
       if (url) window.location.href = url;
     } catch (e) {
       console.error(e);

@@ -10,7 +10,7 @@ import {
   DialogHeader,
   DialogTitle,
 } from '@codedock/ui/dialog';
-import { appsApi } from '#/services/apps';
+import { useAddCustomApp } from '#/hooks/use-apps';
 
 interface AddCustomAppModalProps {
   open: boolean;
@@ -19,6 +19,7 @@ interface AddCustomAppModalProps {
 }
 
 export function AddCustomAppModal({ open, onOpenChange, onAdded }: AddCustomAppModalProps) {
+  const addCustomMutation = useAddCustomApp();
   const [template, setTemplate] = useState<unknown>(null);
   const [name, setName] = useState<string | null>(null);
   const [error, setError] = useState<string | null>(null);
@@ -62,7 +63,7 @@ export function AddCustomAppModal({ open, onOpenChange, onAdded }: AddCustomAppM
     if (!template || busy) return;
     setBusy(true);
     try {
-      await appsApi.addCustom(template);
+      await addCustomMutation.mutateAsync(template);
       toast.success(`Added "${name}" to your catalog.`);
       onAdded?.();
       onOpenChange(false);

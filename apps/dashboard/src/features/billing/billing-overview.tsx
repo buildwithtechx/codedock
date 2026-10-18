@@ -1,7 +1,7 @@
 import { CreditCard, ExternalLink, Loader2, Sparkles } from 'lucide-react';
 import { useState } from 'react';
 import { Button } from '@codedock/ui/button';
-import { billingService } from '#/services/billing';
+import { useCreatePortalSession } from '#/hooks/use-billing';
 
 export interface BillingOverviewProps {
   planType?: 'hobby' | 'pro' | 'custom' | string;
@@ -24,6 +24,7 @@ export function BillingOverview({
 }: BillingOverviewProps) {
   const [loadingPortal, setLoadingPortal] = useState(false);
   const [portalError, setPortalError] = useState<string | null>(null);
+  const createPortalSession = useCreatePortalSession();
 
   const isPaid = planType !== 'hobby' && planType !== 'free';
   const isCanceled = status === 'canceled';
@@ -46,7 +47,7 @@ export function BillingOverview({
       if (onPortalClick) {
         await onPortalClick();
       } else {
-        const { url } = await billingService.createPortalSession();
+        const { url } = await createPortalSession.mutateAsync();
         if (url) window.location.href = url;
       }
     } catch {

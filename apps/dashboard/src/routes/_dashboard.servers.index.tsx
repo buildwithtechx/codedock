@@ -13,13 +13,12 @@ import {
 import { Input } from '@codedock/ui/input';
 import { QueryErrorState } from '#/components/query-error-state';
 import { AddServerModal } from '#/features/servers/add-server-modal';
-import { createServer } from '#/services/servers';
 import { ServerDeleteDialog } from '#/features/servers/server-delete-dialog';
 import { ServerEmptyState } from '#/features/servers/server-empty-state';
 import { ServerFleetPanel } from '#/features/servers/server-fleet-panel';
 import { ServerListRow } from '#/features/servers/server-list-row';
 import { ServerListSkeleton } from '#/features/servers/server-list-skeleton';
-import { useListServers } from '#/hooks/use-servers';
+import { useCreateServer, useListServers } from '#/hooks/use-servers';
 import type { Server } from '#/interfaces/server';
 
 export const Route = createFileRoute('/_dashboard/servers/')({
@@ -29,6 +28,7 @@ export const Route = createFileRoute('/_dashboard/servers/')({
 function ServersPage() {
   const navigate = useNavigate();
   const { data: servers, isLoading, isError, refetch, isRefetching } = useListServers();
+  const createServerMutation = useCreateServer();
   const [search, setSearch] = useState('');
   const [removeServer, setRemoveServer] = useState<Server | null>(null);
   const [addingLocal, setAddingLocal] = useState(false);
@@ -49,7 +49,7 @@ function ServersPage() {
   const addThisMachine = async () => {
     setAddingLocal(true);
     try {
-      const server = await createServer({
+      const server = await createServerMutation.mutateAsync({
         name: 'Local Daemon Node',
         isLocal: true,
         ipAddress: '127.0.0.1',

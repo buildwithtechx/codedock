@@ -3,7 +3,7 @@ import { useRef, useState } from 'react';
 import { Button } from '@codedock/ui/button';
 import { DEFAULT_TOPUP_PACKS } from '#/constants/billing';
 import type { TopupPack } from '#/interfaces/billing';
-import { billingService } from '#/services/billing';
+import { usePurchaseTopup } from '#/hooks/use-billing';
 
 export interface BillingTopupsProps {
   balanceCredits?: number;
@@ -21,6 +21,7 @@ export function BillingTopups({
   const [buyingPackId, setBuyingPackId] = useState<string | null>(null);
   const [error, setError] = useState<string | null>(null);
   const idempotencyKeysRef = useRef<Map<string, string>>(new Map());
+  const purchaseTopupMutation = usePurchaseTopup();
 
   const handleBuy = async (pack: TopupPack) => {
     if (disabled || buyingPackId) return;
@@ -37,7 +38,7 @@ export function BillingTopups({
       if (onBuy) {
         await onBuy(pack, idempotencyKey);
       } else {
-        const { url } = await billingService.purchaseTopup({
+        const { url } = await purchaseTopupMutation.mutateAsync({
           packId: pack.id,
           idempotencyKey,
         });

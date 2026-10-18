@@ -6,7 +6,7 @@ import { Input } from '@codedock/ui/input';
 import { Label } from '@codedock/ui/label';
 import { Switch } from '@codedock/ui/switch';
 import type { IngressConnectInput } from '#/interfaces/ingress';
-import { ingressService } from '#/services/ingress';
+import { useConnectIngress } from '#/hooks/use-ingress';
 
 interface IngressConnectFormProps {
   serverId: string;
@@ -28,6 +28,7 @@ export function IngressConnectForm({
   const [tunnelId, setTunnelId] = useState('');
   const [defaultForDomains, setDefaultForDomains] = useState(true);
   const [isSubmitting, setIsSubmitting] = useState(false);
+  const connectIngressMutation = useConnectIngress();
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -49,7 +50,7 @@ export function IngressConnectForm({
         defaultForDomains,
       };
 
-      await ingressService.connect(payload);
+      await connectIngressMutation.mutateAsync(payload);
       toast.success('Cloudflare Tunnel ingress connection created');
       onSaved();
     } catch (err) {

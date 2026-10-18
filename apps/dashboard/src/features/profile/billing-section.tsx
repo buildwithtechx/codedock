@@ -5,15 +5,19 @@ import { Button } from '@codedock/ui/button';
 import { env } from '#/env';
 import { SettingsRow } from '#/features/settings/settings-row';
 import { SettingsSection } from '#/features/settings/settings-section';
-import { useBillingConfig, useCreateCheckoutSession } from '#/hooks/use-billing';
+import {
+  useBillingConfig,
+  useCreateCheckoutSession,
+  useCreatePortalSession,
+} from '#/hooks/use-billing';
 import { refreshAuthSession } from '#/lib/auth-refresh';
-import { billingService } from '#/services/billing';
 import { useAuthStore } from '#/stores/auth-store';
 
 export function BillingSection() {
   const user = useAuthStore((s) => s.user);
   const { data: config, isLoading } = useBillingConfig();
   const { mutateAsync: createCheckoutSession, isPending } = useCreateCheckoutSession();
+  const createPortalSession = useCreatePortalSession();
   const [loadingPortal, setLoadingPortal] = useState(false);
 
   useEffect(() => {
@@ -55,7 +59,7 @@ export function BillingSection() {
   const handleManagePortal = async () => {
     setLoadingPortal(true);
     try {
-      const { url } = await billingService.createPortalSession();
+      const { url } = await createPortalSession.mutateAsync();
       if (url) window.location.href = url;
     } catch {
       toast.error('Unable to open billing portal');

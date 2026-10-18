@@ -1,7 +1,21 @@
+import { QueryClient, QueryClientProvider } from '@tanstack/react-query';
 import { act, fireEvent, render, screen } from '@testing-library/react';
 import { beforeEach, describe, expect, it, vi } from 'vitest';
 import type { PendingCheckout } from '#/interfaces/billing';
 import { CheckoutRecovery } from './checkout-recovery';
+
+const createTestQueryClient = () =>
+  new QueryClient({
+    defaultOptions: {
+      queries: { retry: false },
+      mutations: { retry: false },
+    },
+  });
+
+function renderWithClient(ui: React.ReactElement) {
+  const queryClient = createTestQueryClient();
+  return render(<QueryClientProvider client={queryClient}>{ui}</QueryClientProvider>);
+}
 
 describe('CheckoutRecovery', () => {
   beforeEach(() => {
@@ -19,17 +33,17 @@ describe('CheckoutRecovery', () => {
   };
 
   it('renders nothing when pending is null or status is complete', () => {
-    const { container: empty } = render(<CheckoutRecovery pending={null} />);
+    const { container: empty } = renderWithClient(<CheckoutRecovery pending={null} />);
     expect(empty.firstChild).toBeNull();
 
-    const { container: complete } = render(
+    const { container: complete } = renderWithClient(
       <CheckoutRecovery pending={{ ...mockPending, status: 'complete' }} />
     );
     expect(complete.firstChild).toBeNull();
   });
 
   it('renders unsettled payment banner with resume payment link', () => {
-    render(<CheckoutRecovery pending={mockPending} />);
+    renderWithClient(<CheckoutRecovery pending={mockPending} />);
 
     expect(screen.getByText('Unsettled Payment in Progress')).toBeDefined();
     expect(screen.getByText(/open/i)).toBeDefined();
@@ -41,7 +55,7 @@ describe('CheckoutRecovery', () => {
   it('cancels checkout with id and idempotency key when clicked', async () => {
     const handleCancel = vi.fn().mockResolvedValue(undefined);
     const handleSettled = vi.fn();
-    render(
+    renderWithClient(
       <CheckoutRecovery pending={mockPending} onCancel={handleCancel} onSettled={handleSettled} />
     );
 
@@ -56,7 +70,7 @@ describe('CheckoutRecovery', () => {
   });
 
   it('disables cancel and displays reason when canCancel is false', () => {
-    render(
+    renderWithClient(
       <CheckoutRecovery
         pending={{
           ...mockPending,
@@ -73,7 +87,7 @@ describe('CheckoutRecovery', () => {
 
   it('retains session on uncertain outcome failure and displays alert', async () => {
     const failingCancel = vi.fn().mockRejectedValue(new Error('Network error'));
-    render(<CheckoutRecovery pending={mockPending} onCancel={failingCancel} />);
+    renderWithClient(<CheckoutRecovery pending={mockPending} onCancel={failingCancel} />);
 
     const cancelBtn = screen.getByRole('button', { name: /cancel checkout/i });
     await act(async () => {

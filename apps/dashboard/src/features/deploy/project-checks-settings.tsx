@@ -6,7 +6,8 @@ import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@code
 import { Input } from '@codedock/ui/input';
 import { Label } from '@codedock/ui/label';
 import { Switch } from '@codedock/ui/switch';
-import { checksService, type ProjectChecksConfig } from '#/services/checks';
+import type { ProjectChecksConfig } from '#/services/checks';
+import { useUpdateProjectChecks } from '#/hooks/use-checks';
 
 interface ProjectChecksSettingsProps {
   projectId: string;
@@ -35,23 +36,26 @@ export function ProjectChecksSettings({
   const [requirePassingChecks, setRequirePassingChecks] = useState(config.requirePassingChecks);
   const [targetBranches, setTargetBranches] = useState(config.targetBranches.join(', '));
   const [contextName, setContextName] = useState(config.contextName);
-  const [isSaving, setIsSaving] = useState(false);
+  const updateProjectChecksMutation = useUpdateProjectChecks();
+  const isSaving = updateProjectChecksMutation.isPending;
 
   const handleSave = async (e: React.FormEvent) => {
     e.preventDefault();
-    setIsSaving(true);
     try {
       const branches = targetBranches
         .split(',')
         .map((b) => b.trim())
         .filter(Boolean);
 
-      const updated = await checksService.updateChecks(projectId, {
-        enabled: true,
-        reportCommitStatus,
-        requirePassingChecks,
-        targetBranches: branches.length > 0 ? branches : ['main', 'master'],
-        contextName: contextName.trim() || 'codedock/deploy',
+      const updated = await updateProjectChecksMutation.mutateAsync({
+        projectId,
+        input: {
+          enabled: true,
+          reportCommitStatus,
+          requirePassingChecks,
+          targetBranches: branches.length > 0 ? branches : ['main', 'master'],
+          contextName: contextName.trim() || 'codedock/deploy',
+        },
       });
 
       setConfig(updated);
@@ -59,8 +63,6 @@ export function ProjectChecksSettings({
       toast.success('GitHub checks settings saved successfully');
     } catch {
       toast.error('Failed to update checks settings');
-    } finally {
-      setIsSaving(false);
     }
   };
 

@@ -212,6 +212,7 @@ export interface CreateServiceVarRequest {
   key: string;
   value: string;
   isSecret: boolean;
+  expectedTopologyRevision?: string;
 }
 
 export interface UpdateServiceVarRequest {

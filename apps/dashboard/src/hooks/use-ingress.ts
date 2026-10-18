@@ -76,3 +76,21 @@ export function useBindIngressDomain() {
     },
   });
 }
+
+export function useIngressDomain(domainId?: string) {
+  return useQuery({
+    queryKey: ['dns', 'ingress', 'domain', domainId],
+    queryFn: () => (domainId ? ingressService.getDomain(domainId) : null),
+    enabled: Boolean(domainId),
+  });
+}
+
+export function useSetIngressDomain() {
+  const queryClient = useQueryClient();
+  return useMutation({
+    mutationFn: (input: IngressDomainInput) => ingressService.setDomain(input),
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ['dns', 'ingress'] });
+    },
+  });
+}

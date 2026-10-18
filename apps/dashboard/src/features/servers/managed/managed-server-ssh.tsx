@@ -4,44 +4,59 @@ import { Button } from '@codedock/ui/button';
 import { Textarea } from '@codedock/ui/textarea';
 import type { ManagedSshStatus } from '#/interfaces/server';
 import { ConnectionValue } from './connection-value';
-import { getManagedSshStatus, setManagedSsh, setManagedSshKey } from '#/services/managed-server';
+import {
+  useManagedSshStatus,
+  useSetManagedSsh,
+  useSetManagedSshKey,
+} from '#/hooks/use-managed-server';
 import { ManagedControlPanel } from './managed-control-panel';
 
 export function ManagedServerSsh({ serverId }: { serverId: string }) {
+  const {
+    data: serverStatus,
+    isLoading: loading,
+    error: queryError,
+    refetch,
+  } = useManagedSshStatus(serverId);
+  const setSshMutation = useSetManagedSsh();
+  const setSshKeyMutation = useSetManagedSshKey();
+
   const [status, setStatus] = useState<ManagedSshStatus | null>(null);
-  const [loading, setLoading] = useState(true);
   const [saving, setSaving] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const [notice, setNotice] = useState<string | null>(null);
   const [confirmDisable, setConfirmDisable] = useState(false);
   const [publicKey, setPublicKey] = useState('');
 
-  const fetchStatus = async () => {
-    setLoading(true);
-    setError(null);
-    try {
-      const data = await getManagedSshStatus(serverId);
-      setStatus(data);
-    } catch (err) {
-      setError(err instanceof Error ? err.message : 'Failed to load SSH status');
-    } finally {
-      setLoading(false);
+  useEffect(() => {
+    if (serverStatus) {
+      setStatus(serverStatus);
     }
-  };
+  }, [serverStatus]);
 
   useEffect(() => {
-    void fetchStatus();
-  }, [serverId]);
+    if (queryError) {
+      setError(queryError instanceof Error ? queryError.message : 'Failed to load SSH status');
+    }
+  }, [queryError]);
+
+  const fetchStatus = async () => {
+    setError(null);
+    await refetch();
+  };
 
   const toggleSsh = async (enabled: boolean) => {
     setSaving(true);
     setError(null);
     setNotice(null);
     try {
-      const res = await setManagedSsh(serverId, {
-        enabled,
-        expectedEnabled: status?.enabled ?? !enabled,
-        confirm: true,
+      const res = await setSshMutation.mutateAsync({
+        serverId,
+        payload: {
+          enabled,
+          expectedEnabled: status?.enabled ?? !enabled,
+          confirm: true,
+        },
       });
       setStatus(res.status);
       setConfirmDisable(false);
@@ -59,7 +74,7 @@ export function ManagedServerSsh({ serverId }: { serverId: string }) {
     setError(null);
     setNotice(null);
     try {
-      await setManagedSshKey(serverId, publicKey.trim());
+      await setSshKeyMutation.mutateAsync({ serverId, publicKey: publicKey.trim() });
       setPublicKey('');
       setNotice('Public SSH key added successfully.');
       void fetchStatus();

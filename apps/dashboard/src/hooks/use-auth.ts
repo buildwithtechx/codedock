@@ -151,3 +151,16 @@ export const useDisable2FA = () => {
     },
   });
 };
+
+export const useVerifyDeviceCode = () => {
+  return useMutation({
+    mutationFn: (code: string) => authService.verifyDeviceCode(code),
+  });
+};
+
+export const useAuthorizeDevice = () => {
+  return useMutation({
+    mutationFn: ({ userCode, action }: { userCode: string; action: 'approve' | 'deny' }) =>
+      authService.authorizeDevice(userCode, action),
+  });
+};

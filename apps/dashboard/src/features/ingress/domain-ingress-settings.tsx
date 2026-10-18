@@ -1,4 +1,3 @@
-import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
 import { AlertCircle, CheckCircle2, Cloud } from 'lucide-react';
 import { useState } from 'react';
 import { toast } from 'sonner';
@@ -6,7 +5,7 @@ import { Button } from '@codedock/ui/button';
 import { Dialog, DialogContent } from '@codedock/ui/dialog';
 import { Label } from '@codedock/ui/label';
 import { Switch } from '@codedock/ui/switch';
-import { ingressService } from '#/services/ingress';
+import { useIngressConnections, useIngressDomain, useSetIngressDomain } from '#/hooks/use-ingress';
 
 interface DomainIngressSettingsProps {
   domainId: string;
@@ -21,38 +20,30 @@ export function DomainIngressSettings({
   hostname,
   onChanged,
 }: DomainIngressSettingsProps) {
-  const queryClient = useQueryClient();
   const [modalOpen, setModalOpen] = useState(false);
 
-  const { data: host, isLoading } = useQuery({
-    queryKey: ['domain-ingress', domainId],
-    queryFn: () => ingressService.getDomain(domainId),
-  });
-
-  const { data: connections = [] } = useQuery({
-    queryKey: ['server-ingress', serverId],
-    queryFn: () => ingressService.list(serverId),
-    enabled: Boolean(serverId),
-  });
+  const { data: host, isLoading } = useIngressDomain(domainId);
+  const { data: connections = [] } = useIngressConnections(serverId);
+  const setDomainMutation = useSetIngressDomain();
 
   const defaultConnection = connections[0] ?? null;
 
-  const { mutate: updateDomain, isPending: isUpdating } = useMutation({
-    mutationFn: (connectionId: string | null) =>
-      ingressService.setDomain({
+  const updateDomain = (connectionId: string | null) => {
+    setDomainMutation
+      .mutateAsync({
         domainId,
         connectionId,
-      }),
-    onSuccess: (data) => {
-      queryClient.invalidateQueries({ queryKey: ['domain-ingress', domainId] });
-      toast.success(data ? 'Domain mapped to ingress tunnel' : 'Ingress routing disabled');
-      onChanged?.();
-      setModalOpen(false);
-    },
-    onError: (err) => {
-      toast.error(err instanceof Error ? err.message : 'Failed to update domain ingress');
-    },
-  });
+      })
+      .then((data) => {
+        toast.success(data ? 'Domain mapped to ingress tunnel' : 'Ingress routing disabled');
+        onChanged?.();
+        setModalOpen(false);
+      })
+      .catch((err) => {
+        toast.error(err instanceof Error ? err.message : 'Failed to update domain ingress');
+      });
+  };
+  const isUpdating = setDomainMutation.isPending;
 
   const isEnabled = Boolean(host && host.status !== 'removing');
 

@@ -11,8 +11,8 @@ import {
   DialogTitle,
 } from '@codedock/ui/dialog';
 import { Input } from '@codedock/ui/input';
-import { appsService } from '#/services/apps';
-import { deploymentsService } from '#/services/deployments';
+import { useCreateApp, useCreateVariable } from '#/hooks/use-apps';
+import { useTrigger } from '#/hooks/use-deployments';
 import { COMPANION_CATALOG, type CompanionCatalogItem } from './companion-catalog';
 import { ServiceConfigForm } from './service-config-form';
 
@@ -32,6 +32,9 @@ export function AddServiceModal({
   onCreated,
 }: AddServiceModalProps) {
   const queryClient = useQueryClient();
+  const createAppMutation = useCreateApp();
+  const createVariableMutation = useCreateVariable();
+  const triggerDeploymentMutation = useTrigger();
   const [mode, setMode] = useState<'catalog' | 'custom'>('catalog');
   const [selectedCompanion, setSelectedCompanion] = useState<CompanionCatalogItem | null>(null);
   const [category, setCategory] = useState<string>('all');
@@ -102,23 +105,26 @@ export function AddServiceModal({
 
     setIsSubmitting(true);
     try {
-      const appRes = await appsService.createApp(environmentId, {
-        projectId,
-        name: name.trim(),
-        repositoryUrl: '',
-        imageRef: image.trim(),
-        branch: 'main',
-        rootDirectory: '',
-        runtimeMode: 'web',
-        installCommand: '',
-        buildCommand: '',
-        startCommand: '',
-        dockerfilePath: '',
-        buildEngine: 'dockerfile',
-        internalPort: Number(port) || 80,
-        domain: '',
-        staticOutput: '',
-        healthCheckPath: '',
+      const appRes = await createAppMutation.mutateAsync({
+        environmentId,
+        payload: {
+          projectId,
+          name: name.trim(),
+          repositoryUrl: '',
+          imageRef: image.trim(),
+          branch: 'main',
+          rootDirectory: '',
+          runtimeMode: 'web',
+          installCommand: '',
+          buildCommand: '',
+          startCommand: '',
+          dockerfilePath: '',
+          buildEngine: 'dockerfile',
+          internalPort: Number(port) || 80,
+          domain: '',
+          staticOutput: '',
+          healthCheckPath: '',
+        },
       });
 
       const serviceId = appRes?.data?.id;
@@ -127,17 +133,15 @@ export function AddServiceModal({
         for (const row of envRows) {
           if (row.key.trim()) {
             try {
-              await appsService.createVariable(serviceId, {
-                key: row.key.trim(),
-                value: row.value.trim(),
-                isSecret: false,
+              await createVariableMutation.mutateAsync({
+                appId: serviceId,
+                payload: { key: row.key.trim(), value: row.value.trim(), isSecret: false },
               });
             } catch {}
           }
         }
-
         try {
-          await deploymentsService.trigger(serviceId);
+          await triggerDeploymentMutation.mutateAsync({ serviceId });
         } catch {}
       }
 

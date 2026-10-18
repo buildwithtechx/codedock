@@ -1,8 +1,17 @@
+import { QueryClient, QueryClientProvider } from '@tanstack/react-query';
 import { fireEvent, render, screen, waitFor } from '@testing-library/react';
+import type { ReactNode } from 'react';
 import { beforeEach, describe, expect, it, vi } from 'vitest';
 import type { ActionRun } from '#/interfaces/actions';
 import { actionsService } from '#/services/actions';
 import { RunWorkspace } from './run-workspace';
+
+function renderWithClient(ui: ReactNode) {
+  const queryClient = new QueryClient({
+    defaultOptions: { queries: { retry: false } },
+  });
+  return render(<QueryClientProvider client={queryClient}>{ui}</QueryClientProvider>);
+}
 
 const mockRun: ActionRun = {
   id: 'run-101',
@@ -38,7 +47,7 @@ describe('RunWorkspace', () => {
   });
 
   it('renders run header, metadata, jobs, and terminal log', () => {
-    render(<RunWorkspace run={mockRun} />);
+    renderWithClient(<RunWorkspace run={mockRun} />);
 
     expect(screen.getByText(/CI Build & Test/i)).toBeDefined();
     expect(screen.getByText('#12')).toBeDefined();
@@ -58,7 +67,7 @@ describe('RunWorkspace', () => {
     };
     vi.spyOn(actionsService, 'cancelRun').mockResolvedValue(updatedRun);
 
-    render(<RunWorkspace run={mockRun} />);
+    renderWithClient(<RunWorkspace run={mockRun} />);
 
     const cancelBtn = screen.getByRole('button', { name: /cancel run/i });
     fireEvent.click(cancelBtn);
@@ -79,7 +88,7 @@ describe('RunWorkspace', () => {
     };
     vi.spyOn(actionsService, 'retryRun').mockResolvedValue(retriedRun);
 
-    render(<RunWorkspace run={mockRun} />);
+    renderWithClient(<RunWorkspace run={mockRun} />);
 
     const retryBtn = screen.getByRole('button', { name: /re-run/i });
     fireEvent.click(retryBtn);

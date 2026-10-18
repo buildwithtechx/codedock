@@ -3,7 +3,7 @@ import { useEffect, useState } from 'react';
 import { toast } from 'sonner';
 import { Button } from '@codedock/ui/button';
 import type { NetworkRollbackWatchdog as WatchdogType } from '#/interfaces/networks';
-import { networksService } from '#/services/networks';
+import { useCommitNetworkWatchdog, useRollbackNetworkWatchdog } from '#/hooks/use-networks';
 
 interface NetworkRollbackWatchdogProps {
   watchdog: WatchdogType;
@@ -20,6 +20,8 @@ export function NetworkRollbackWatchdog({
   const [remaining, setRemaining] = useState<number>(initialWatchdog.remainingSeconds);
   const [isCommitting, setIsCommitting] = useState(false);
   const [isRollingBack, setIsRollingBack] = useState(false);
+  const commitMutation = useCommitNetworkWatchdog();
+  const rollbackMutation = useRollbackNetworkWatchdog();
 
   useEffect(() => {
     setWatchdog(initialWatchdog);
@@ -45,7 +47,7 @@ export function NetworkRollbackWatchdog({
   const handleCommit = async () => {
     setIsCommitting(true);
     try {
-      const updated = await networksService.commitWatchdog(watchdog.operationId);
+      const updated = await commitMutation.mutateAsync(watchdog.operationId);
       setWatchdog(updated);
       toast.success('Network changes committed permanently');
       onCommitted?.();
@@ -59,7 +61,7 @@ export function NetworkRollbackWatchdog({
   const handleRollback = async () => {
     setIsRollingBack(true);
     try {
-      const updated = await networksService.rollbackWatchdog(watchdog.operationId);
+      const updated = await rollbackMutation.mutateAsync(watchdog.operationId);
       setWatchdog(updated);
       toast.warning('Emergency network rollback executed');
       onRolledBack?.();

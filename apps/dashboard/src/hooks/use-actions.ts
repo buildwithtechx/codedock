@@ -50,3 +50,53 @@ export function useCreateWorkflow() {
     },
   });
 }
+
+export function useTriggerWorkflow() {
+  const queryClient = useQueryClient();
+  return useMutation({
+    mutationFn: (workflowId: string) => actionsService.triggerWorkflow(workflowId),
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ['actions', 'runs'] });
+    },
+  });
+}
+
+export function useDeleteWorkflow() {
+  const queryClient = useQueryClient();
+  return useMutation({
+    mutationFn: (workflowId: string) => actionsService.deleteWorkflow(workflowId),
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ['actions', 'workflows'] });
+    },
+  });
+}
+
+export function useDeleteRunner() {
+  const queryClient = useQueryClient();
+  return useMutation({
+    mutationFn: (runnerId: string) => actionsService.deleteRunner(runnerId),
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ['actions', 'runners'] });
+    },
+  });
+}
+
+export function useRetryRun() {
+  const queryClient = useQueryClient();
+  return useMutation({
+    mutationFn: (runId: string) => actionsService.retryRun(runId),
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ['actions', 'runs'] });
+    },
+  });
+}
+
+export function useCancelRun() {
+  const queryClient = useQueryClient();
+  return useMutation({
+    mutationFn: (runId: string) => actionsService.cancelRun(runId),
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ['actions', 'runs'] });
+    },
+  });
+}

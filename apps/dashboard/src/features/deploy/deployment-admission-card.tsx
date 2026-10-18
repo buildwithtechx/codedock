@@ -1,11 +1,11 @@
 import { CheckCircle2, Clock, Cpu, RefreshCw } from 'lucide-react';
-import { useState } from 'react';
 import { toast } from 'sonner';
 import { Badge } from '@codedock/ui/badge';
 import { Button } from '@codedock/ui/button';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@codedock/ui/card';
 import { Progress } from '@codedock/ui/progress';
-import { type BuildAdmissionStatus, checksService } from '#/services/checks';
+import { type BuildAdmissionStatus } from '#/services/checks';
+import { useBuildAdmission } from '#/hooks/use-checks';
 
 interface DeploymentAdmissionCardProps {
   projectId: string;
@@ -16,7 +16,8 @@ export function DeploymentAdmissionCard({
   projectId,
   initialAdmission,
 }: DeploymentAdmissionCardProps) {
-  const [admission, setAdmission] = useState<BuildAdmissionStatus | null>(
+  const { data: admissionData, isFetching: isRefreshing, refetch } = useBuildAdmission(projectId);
+  const admission = admissionData ??
     initialAdmission ?? {
       canAdmit: true,
       activeBuilds: 1,
@@ -24,20 +25,14 @@ export function DeploymentAdmissionCard({
       queuePosition: 0,
       estimatedWaitSeconds: 0,
       reason: 'Capacity available for immediate execution',
-    }
-  );
-  const [isRefreshing, setIsRefreshing] = useState(false);
+    };
 
   const handleRefresh = async () => {
-    setIsRefreshing(true);
     try {
-      const updated = await checksService.getAdmission(projectId);
-      setAdmission(updated);
+      await refetch();
       toast.success('Admission quota refreshed');
     } catch {
       toast.error('Failed to refresh build admission status');
-    } finally {
-      setIsRefreshing(false);
     }
   };
 

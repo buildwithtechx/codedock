@@ -1,11 +1,10 @@
-import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
 import { Clock, Shield } from 'lucide-react';
 import { toast } from 'sonner';
 import { Label } from '@codedock/ui/label';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@codedock/ui/select';
 import { Switch } from '@codedock/ui/switch';
 import { useOrganizationStore } from '#/stores/organization-store';
-import { auditApi } from '#/services/audit-logs';
+import { useAuditSettings, useUpdateAuditSettings } from '#/hooks/use-audit-logs';
 
 const RETENTION_OPTIONS = [
   { value: '7', label: '7 days' },
@@ -15,33 +14,32 @@ const RETENTION_OPTIONS = [
 ];
 
 export function AuditSettingsCard() {
-  const queryClient = useQueryClient();
   const activeOrganizationId = useOrganizationStore((state) => state.activeOrganizationId);
 
-  const { data: settingsRes, isLoading } = useQuery({
-    queryKey: ['auditSettings', activeOrganizationId],
-    queryFn: () => auditApi.getSettings(activeOrganizationId || undefined),
-  });
+  const { data: settingsRes, isLoading } = useAuditSettings(activeOrganizationId || undefined);
+  const updateSettingsMutation = useUpdateAuditSettings();
 
   const settings = settingsRes?.data;
   const enabled = settings?.enabled ?? true;
   const retentionDays = String(settings?.retentionDays ?? 90);
 
-  const mutation = useMutation({
-    mutationFn: (payload: { enabled?: boolean; retentionDays?: number }) =>
-      auditApi.updateSettings({
-        organizationId: activeOrganizationId || settings?.organizationId || 'default',
-        enabled: payload.enabled ?? enabled,
-        retentionDays: payload.retentionDays ?? Number(retentionDays),
-      }),
-    onSuccess: () => {
-      void queryClient.invalidateQueries({ queryKey: ['auditSettings', activeOrganizationId] });
-      toast.success('Audit settings updated');
+  const mutation = {
+    isPending: updateSettingsMutation.isPending,
+    mutate: (payload: { enabled?: boolean; retentionDays?: number }) => {
+      updateSettingsMutation
+        .mutateAsync({
+          organizationId: activeOrganizationId || settings?.organizationId || 'default',
+          enabled: payload.enabled ?? enabled,
+          retentionDays: payload.retentionDays ?? Number(retentionDays),
+        })
+        .then(() => {
+          toast.success('Audit settings updated');
+        })
+        .catch((err: unknown) => {
+          toast.error(err instanceof Error ? err.message : 'Failed to update audit settings');
+        });
     },
-    onError: (err: unknown) => {
-      toast.error(err instanceof Error ? err.message : 'Failed to update audit settings');
-    },
-  });
+  };
 
   return (
     <div className="rounded-2xl border border-border/50 bg-card p-5">

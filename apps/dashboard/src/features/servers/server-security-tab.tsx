@@ -1,4 +1,3 @@
-import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
 import { Gauge, Globe, Loader2, RefreshCw, ScanSearch, ShieldCheck } from 'lucide-react';
 import { useEffect, useState } from 'react';
 import { toast } from 'sonner';
@@ -7,45 +6,49 @@ import { Input } from '@codedock/ui/input';
 import { Label } from '@codedock/ui/label';
 import { ServerIngressCard } from '#/features/ingress';
 import type { ServerRateLimitConfig } from '#/interfaces/server';
-import { serverService } from '#/services/servers';
+import {
+  useScanServerPorts,
+  useServerRateLimit,
+  useUpdateServerRateLimit,
+} from '#/hooks/use-servers';
 
 interface ServerSecurityTabProps {
   serverId: string;
 }
 
 export function ServerSecurityTab({ serverId }: ServerSecurityTabProps) {
-  const queryClient = useQueryClient();
+  const { data: rateLimit, isLoading: isRateLimitLoading } = useServerRateLimit(serverId);
+  const scanPortsMutation = useScanServerPorts();
+  const updateRateLimitMutation = useUpdateServerRateLimit();
 
-  const { data: rateLimit, isLoading: isRateLimitLoading } = useQuery({
-    queryKey: ['server-rate-limit', serverId],
-    queryFn: () => serverService.getRateLimit(serverId),
-  });
+  const runScan = () => {
+    scanPortsMutation.mutate(serverId, {
+      onSuccess: () => {
+        toast.success('Port scan completed successfully');
+      },
+      onError: () => {
+        toast.error('Failed to run port scan');
+      },
+    });
+  };
 
-  const {
-    mutate: runScan,
-    data: scanResult,
-    isPending: isScanning,
-  } = useMutation({
-    mutationFn: () => serverService.scanPorts(serverId),
-    onSuccess: () => {
-      toast.success('Port scan completed successfully');
-    },
-    onError: () => {
-      toast.error('Failed to run port scan');
-    },
-  });
+  const saveRateLimit = (payload: ServerRateLimitConfig) => {
+    updateRateLimitMutation.mutate(
+      { id: serverId, payload },
+      {
+        onSuccess: () => {
+          toast.success('Rate limit settings saved');
+        },
+        onError: () => {
+          toast.error('Failed to save rate limit settings');
+        },
+      }
+    );
+  };
 
-  const { mutate: saveRateLimit, isPending: isSavingRateLimit } = useMutation({
-    mutationFn: (payload: ServerRateLimitConfig) =>
-      serverService.updateRateLimit(serverId, payload),
-    onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: ['server-rate-limit', serverId] });
-      toast.success('Rate limit settings saved');
-    },
-    onError: () => {
-      toast.error('Failed to save rate limit settings');
-    },
-  });
+  const scanResult = scanPortsMutation.data;
+  const isScanning = scanPortsMutation.isPending;
+  const isSavingRateLimit = updateRateLimitMutation.isPending;
 
   const [rps, setRps] = useState<number>(50);
   const [burst, setBurst] = useState<number>(20);

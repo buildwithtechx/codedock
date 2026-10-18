@@ -4,43 +4,47 @@ import { Button } from '@codedock/ui/button';
 import type { ManagedRuntimeCredential, ManagedRuntimeStatus } from '#/interfaces/server';
 import { ConnectionValue } from './connection-value';
 import {
-  enableManagedRuntime,
-  getManagedRuntimeCredential,
-  getManagedRuntimeStatus,
-  rotateManagedRuntimeCredential,
-} from '#/services/managed-server';
+  useEnableManagedRuntime,
+  useManagedRuntimeCredential,
+  useManagedRuntimeStatus,
+  useRotateManagedRuntimeCredential,
+} from '#/hooks/use-managed-server';
 import { ManagedControlPanel } from './managed-control-panel';
 
 export function ManagedServerRuntime({ serverId }: { serverId: string }) {
+  const {
+    data: serverStatus,
+    isLoading: loading,
+    error: queryError,
+    refetch,
+  } = useManagedRuntimeStatus(serverId);
+  const enableRuntimeMutation = useEnableManagedRuntime();
+  const getCredentialMutation = useManagedRuntimeCredential();
+  const rotateCredentialMutation = useRotateManagedRuntimeCredential();
+
   const [status, setStatus] = useState<ManagedRuntimeStatus | null>(null);
   const [credential, setCredential] = useState<ManagedRuntimeCredential | null>(null);
-  const [loading, setLoading] = useState(true);
   const [busy, setBusy] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const [confirmRotate, setConfirmRotate] = useState(false);
 
-  const fetchStatus = async () => {
-    setLoading(true);
-    setError(null);
-    try {
-      const data = await getManagedRuntimeStatus(serverId);
-      setStatus(data);
-    } catch (err) {
-      setError(err instanceof Error ? err.message : 'Failed to load runtime status');
-    } finally {
-      setLoading(false);
+  useEffect(() => {
+    if (serverStatus) {
+      setStatus(serverStatus);
     }
-  };
+  }, [serverStatus]);
 
   useEffect(() => {
-    void fetchStatus();
-  }, [serverId]);
+    if (queryError) {
+      setError(queryError instanceof Error ? queryError.message : 'Failed to load runtime status');
+    }
+  }, [queryError]);
 
   const handleEnable = async () => {
     setBusy(true);
     setError(null);
     try {
-      const updated = await enableManagedRuntime(serverId);
+      const updated = await enableRuntimeMutation.mutateAsync(serverId);
       setStatus(updated);
     } catch (err) {
       setError(err instanceof Error ? err.message : 'Failed to enable runtime API');
@@ -53,7 +57,7 @@ export function ManagedServerRuntime({ serverId }: { serverId: string }) {
     setBusy(true);
     setError(null);
     try {
-      const cred = await getManagedRuntimeCredential(serverId);
+      const cred = await getCredentialMutation.mutateAsync(serverId);
       setCredential(cred);
     } catch (err) {
       setError(err instanceof Error ? err.message : 'Failed to generate runtime credentials');
@@ -66,7 +70,7 @@ export function ManagedServerRuntime({ serverId }: { serverId: string }) {
     setBusy(true);
     setError(null);
     try {
-      const cred = await rotateManagedRuntimeCredential(serverId);
+      const cred = await rotateCredentialMutation.mutateAsync(serverId);
       setCredential(cred);
       setConfirmRotate(false);
     } catch (err) {
@@ -74,6 +78,11 @@ export function ManagedServerRuntime({ serverId }: { serverId: string }) {
     } finally {
       setBusy(false);
     }
+  };
+
+  const fetchStatus = async () => {
+    setError(null);
+    await refetch();
   };
 
   return (

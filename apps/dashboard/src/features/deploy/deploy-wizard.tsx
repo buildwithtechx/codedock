@@ -1,11 +1,11 @@
+import { useQueryClient } from '@tanstack/react-query';
 import { useNavigate } from '@tanstack/react-router';
 import { useEffect, useState } from 'react';
 import { toast } from 'sonner';
-import { useCreateProject } from '#/hooks/use-projects';
-import { projectsService } from '#/services/projects';
-import { appsService } from '#/services/apps';
-import { deploymentsService } from '#/services/deployments';
-import { environmentsService } from '#/services/environments';
+import { useCreateApp } from '#/hooks/use-apps';
+import { useTrigger } from '#/hooks/use-deployments';
+import { projectEnvironmentsQueryOptions } from '#/hooks/use-environments';
+import { useCreateProject, useSetVars } from '#/hooks/use-projects';
 import { useOrganizationStore } from '#/stores/organization-store';
 import { DeployConfigStep } from './deploy-config-step';
 import { DeploySidebar } from './deploy-sidebar';
@@ -42,7 +42,11 @@ export function DeployWizard({
   const [watchCrashLoop, setWatchCrashLoop] = useState(false);
   const [isDeploying, setIsDeploying] = useState(false);
 
+  const queryClient = useQueryClient();
   const { mutateAsync: createProject } = useCreateProject();
+  const setVarsMutation = useSetVars();
+  const createAppMutation = useCreateApp();
+  const triggerDeploymentMutation = useTrigger();
   const activeOrgId = useOrganizationStore((s) => s.activeOrganizationId);
 
   useEffect(() => {
@@ -89,35 +93,41 @@ export function DeployWizard({
         }
         if (Object.keys(parsedVars).length > 0) {
           try {
-            await projectsService.setVars(projectId, parsedVars);
+            await setVarsMutation.mutateAsync({
+              id: projectId,
+              payload: { variables: parsedVars },
+            });
           } catch {}
         }
       }
 
-      const envsRes = await environmentsService.listByProject(projectId);
+      const envsRes = await queryClient.fetchQuery(projectEnvironmentsQueryOptions(projectId));
       const defaultEnv = envsRes?.data?.[0];
       if (defaultEnv?.id) {
-        const appRes = await appsService.createApp(defaultEnv.id, {
-          projectId,
-          name: projectName,
-          repositoryUrl: initialRepoUrl,
-          branch,
-          runtimeMode,
-          installCommand,
-          buildCommand,
-          startCommand: '',
-          staticOutput: outputDirectory,
-          domain: subdomain,
-          buildEngine: runtimeMode === 'static' ? 'static' : 'nixpacks',
-          internalPort: exposedPort,
-          rootDirectory: rootDirectory || '',
-          dockerfilePath: '',
-          healthCheckPath: '',
+        const appRes = await createAppMutation.mutateAsync({
+          environmentId: defaultEnv.id,
+          payload: {
+            projectId,
+            name: projectName,
+            repositoryUrl: initialRepoUrl,
+            branch,
+            runtimeMode,
+            installCommand,
+            buildCommand,
+            startCommand: '',
+            staticOutput: outputDirectory,
+            domain: subdomain,
+            buildEngine: runtimeMode === 'static' ? 'static' : 'nixpacks',
+            internalPort: exposedPort,
+            rootDirectory: rootDirectory || '',
+            dockerfilePath: '',
+            healthCheckPath: '',
+          },
         });
         const serviceId = appRes?.data?.id;
         if (serviceId) {
           try {
-            await deploymentsService.trigger(serviceId);
+            await triggerDeploymentMutation.mutateAsync({ serviceId });
           } catch {}
         }
       }

@@ -89,3 +89,16 @@ export function useLibraryRepos(provider: string, enabled: boolean) {
     },
   };
 }
+
+export function useDeployLibraryArchive() {
+  const queryClient = useQueryClient();
+  return useMutation({
+    mutationFn: ({ projectId, name, file }: { projectId: string; name: string; file: File }) =>
+      libraryApi.deployArchive(projectId, name, file),
+    onSuccess: async () => {
+      await queryClient.invalidateQueries({ queryKey: ['apps'] });
+      await queryClient.invalidateQueries({ queryKey: ['canvas'] });
+      await queryClient.invalidateQueries({ queryKey: ['deployments'] });
+    },
+  });
+}

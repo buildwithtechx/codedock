@@ -5,15 +5,25 @@ import { Checkbox } from '@codedock/ui/checkbox';
 import { Textarea } from '@codedock/ui/textarea';
 import type { ServerNetworkSettings } from '#/interfaces/server';
 import { ConnectionValue } from './connection-value';
-import { getServerNetworkSettings, updateServerNetworkSettings } from '#/services/managed-server';
+import {
+  useServerNetworkSettings,
+  useUpdateServerNetworkSettings,
+} from '#/hooks/use-managed-server';
 import { ManagedControlPanel } from './managed-control-panel';
 
 export function ManagedServerNetwork({ serverId }: { serverId: string }) {
   const checkboxId = useId();
   const egressId = useId();
 
+  const {
+    data: serverSettings,
+    isLoading: loading,
+    error: queryError,
+    refetch,
+  } = useServerNetworkSettings(serverId);
+  const updateSettingsMutation = useUpdateServerNetworkSettings();
+
   const [settings, setSettings] = useState<ServerNetworkSettings | null>(null);
-  const [loading, setLoading] = useState(true);
   const [saving, setSaving] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const [notice, setNotice] = useState<string | null>(null);
@@ -21,24 +31,26 @@ export function ManagedServerNetwork({ serverId }: { serverId: string }) {
   const [internet, setInternet] = useState(true);
   const [rules, setRules] = useState('*');
 
-  const fetchSettings = async () => {
-    setLoading(true);
-    setError(null);
-    try {
-      const data = await getServerNetworkSettings(serverId);
-      setSettings(data);
-      setInternet(data.internetAccess ?? true);
-      setRules(data.egress?.length ? data.egress.join('\n') : '*');
-    } catch (err) {
-      setError(err instanceof Error ? err.message : 'Failed to load network settings');
-    } finally {
-      setLoading(false);
+  useEffect(() => {
+    if (serverSettings) {
+      setSettings(serverSettings);
+      setInternet(serverSettings.internetAccess ?? true);
+      setRules(serverSettings.egress?.length ? serverSettings.egress.join('\n') : '*');
     }
-  };
+  }, [serverSettings]);
 
   useEffect(() => {
-    void fetchSettings();
-  }, [serverId]);
+    if (queryError) {
+      setError(
+        queryError instanceof Error ? queryError.message : 'Failed to load network settings'
+      );
+    }
+  }, [queryError]);
+
+  const fetchSettings = async () => {
+    setError(null);
+    await refetch();
+  };
 
   const egress = [
     ...new Set(
@@ -60,12 +72,15 @@ export function ManagedServerNetwork({ serverId }: { serverId: string }) {
     setError(null);
     setNotice(null);
     try {
-      const updated = await updateServerNetworkSettings(serverId, {
-        internetAccess: internet,
-        expectedInternetAccess: settings.internetAccess ?? true,
-        egress,
-        expectedRevision: settings.revision,
-        confirm: true,
+      const updated = await updateSettingsMutation.mutateAsync({
+        serverId,
+        payload: {
+          internetAccess: internet,
+          expectedInternetAccess: settings.internetAccess ?? true,
+          egress,
+          expectedRevision: settings.revision,
+          confirm: true,
+        },
       });
       setSettings(updated);
       setNotice('Network configuration saved successfully.');

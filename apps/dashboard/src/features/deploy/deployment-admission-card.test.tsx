@@ -1,7 +1,16 @@
+import { QueryClient, QueryClientProvider } from '@tanstack/react-query';
 import { fireEvent, render, screen, waitFor } from '@testing-library/react';
+import type { ReactNode } from 'react';
 import { beforeEach, describe, expect, it, vi } from 'vitest';
 import { type BuildAdmissionStatus, checksService } from '#/services/checks';
 import { DeploymentAdmissionCard } from './deployment-admission-card';
+
+function renderWithClient(ui: ReactNode) {
+  const queryClient = new QueryClient({
+    defaultOptions: { queries: { retry: false } },
+  });
+  return render(<QueryClientProvider client={queryClient}>{ui}</QueryClientProvider>);
+}
 
 const mockAdmission: BuildAdmissionStatus = {
   canAdmit: true,
@@ -18,7 +27,9 @@ describe('DeploymentAdmissionCard', () => {
   });
 
   it('renders admission card with active slot usage and ready badge', () => {
-    render(<DeploymentAdmissionCard projectId="proj-1" initialAdmission={mockAdmission} />);
+    renderWithClient(
+      <DeploymentAdmissionCard projectId="proj-1" initialAdmission={mockAdmission} />
+    );
 
     expect(screen.getByText('Build Admission & Concurrency')).toBeDefined();
     expect(screen.getByText('Admission Ready')).toBeDefined();
@@ -36,7 +47,9 @@ describe('DeploymentAdmissionCard', () => {
       reason: 'Maximum concurrent builds reached; run queued',
     };
 
-    render(<DeploymentAdmissionCard projectId="proj-1" initialAdmission={queuedAdmission} />);
+    renderWithClient(
+      <DeploymentAdmissionCard projectId="proj-1" initialAdmission={queuedAdmission} />
+    );
 
     expect(screen.getByText('Queued (#2)')).toBeDefined();
     expect(screen.getByText('~45s wait')).toBeDefined();
@@ -50,7 +63,9 @@ describe('DeploymentAdmissionCard', () => {
     };
     vi.spyOn(checksService, 'getAdmission').mockResolvedValue(updatedAdmission);
 
-    render(<DeploymentAdmissionCard projectId="proj-1" initialAdmission={mockAdmission} />);
+    renderWithClient(
+      <DeploymentAdmissionCard projectId="proj-1" initialAdmission={mockAdmission} />
+    );
 
     const refreshBtn = screen.getByRole('button', { name: /refresh admission/i });
     fireEvent.click(refreshBtn);

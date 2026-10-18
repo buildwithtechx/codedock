@@ -11,11 +11,15 @@ import {
   User,
   Users,
 } from 'lucide-react';
-import { useEffect, useState } from 'react';
+import { useState } from 'react';
 import { Button } from '@codedock/ui/button';
-import type { CreateTicketInput, SupportCategory, SupportTicket } from '#/interfaces/support';
+import type { CreateTicketInput, SupportCategory } from '#/interfaces/support';
+import {
+  useCreateSupportTicket,
+  useReplySupportTicket,
+  useSupportTickets,
+} from '#/hooks/use-support';
 import { cn } from '#/lib/utils';
-import { createTicket, getTickets, replyTicket } from '#/services/cloud-support';
 import { NewTicketModal } from './new-ticket-modal';
 import { SupportConversation } from './support-conversation';
 import { SupportTicketList } from './support-ticket-list';
@@ -57,39 +61,23 @@ const SUPPORT_TOPICS: {
 ];
 
 export function SupportCenter({ className }: SupportCenterProps) {
-  const [tickets, setTickets] = useState<SupportTicket[]>([]);
+  const { data: tickets = [], isLoading: loading } = useSupportTickets();
+  const createTicketMutation = useCreateSupportTicket();
+  const replyTicketMutation = useReplySupportTicket();
   const [selectedTicketId, setSelectedTicketId] = useState<string | null>(null);
   const [isNewModalOpen, setIsNewModalOpen] = useState(false);
   const [initialCategory, setInitialCategory] = useState<SupportCategory>('deployment');
-  const [loading, setLoading] = useState(true);
-
-  useEffect(() => {
-    let mounted = true;
-    void (async () => {
-      try {
-        const list = await getTickets();
-        if (mounted) setTickets(list);
-      } finally {
-        if (mounted) setLoading(false);
-      }
-    })();
-    return () => {
-      mounted = false;
-    };
-  }, []);
 
   const selectedTicket = tickets.find((t) => t.id === selectedTicketId) || null;
 
   async function handleCreateTicket(input: CreateTicketInput) {
-    const newTicket = await createTicket(input);
-    setTickets((prev) => [newTicket, ...prev]);
+    const newTicket = await createTicketMutation.mutateAsync(input);
     setSelectedTicketId(newTicket.id);
   }
 
   async function handleReply(message: string) {
     if (!selectedTicketId) return;
-    const updated = await replyTicket(selectedTicketId, message);
-    setTickets((prev) => prev.map((t) => (t.id === updated.id ? updated : t)));
+    await replyTicketMutation.mutateAsync({ ticketId: selectedTicketId, message });
   }
 
   const openNewTicketWithCategory = (cat: SupportCategory) => {

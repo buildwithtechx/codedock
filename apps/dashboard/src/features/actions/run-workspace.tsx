@@ -4,7 +4,7 @@ import { toast } from 'sonner';
 import { Button } from '@codedock/ui/button';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@codedock/ui/card';
 import type { ActionRun } from '#/interfaces/actions';
-import { actionsService } from '#/services/actions';
+import { useCancelRun, useRetryRun } from '#/hooks/use-actions';
 import { ActionLogs } from './action-logs';
 import { ActionStatus } from './action-status';
 
@@ -15,36 +15,33 @@ interface RunWorkspaceProps {
 
 export function RunWorkspace({ run: initialRun, onRunUpdated }: RunWorkspaceProps) {
   const [run, setRun] = useState<ActionRun>(initialRun);
-  const [isRetrying, setIsRetrying] = useState(false);
-  const [isCancelling, setIsCancelling] = useState(false);
+  const retryMutation = useRetryRun();
+  const cancelMutation = useCancelRun();
 
   const handleRetry = async () => {
-    setIsRetrying(true);
     try {
-      const updated = await actionsService.retryRun(run.id);
+      const updated = await retryMutation.mutateAsync(run.id);
       setRun(updated);
       onRunUpdated?.(updated);
       toast.success(`Run #${updated.number} triggered for workflow ${updated.name}`);
     } catch {
       toast.error('Failed to re-run action');
-    } finally {
-      setIsRetrying(false);
     }
   };
 
   const handleCancel = async () => {
-    setIsCancelling(true);
     try {
-      const updated = await actionsService.cancelRun(run.id);
+      const updated = await cancelMutation.mutateAsync(run.id);
       setRun(updated);
       onRunUpdated?.(updated);
       toast.info(`Run #${updated.number} cancelled`);
     } catch {
       toast.error('Failed to cancel action run');
-    } finally {
-      setIsCancelling(false);
     }
   };
+
+  const isRetrying = retryMutation.isPending;
+  const isCancelling = cancelMutation.isPending;
 
   const isPending = run.status === 'running' || run.status === 'queued';
 

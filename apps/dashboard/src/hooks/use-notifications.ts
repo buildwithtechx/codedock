@@ -35,8 +35,12 @@ export const useGetNotificationSubscriptions = (userId?: string) =>
 export const useUpsertNotificationSubscription = () => {
   const queryClient = useQueryClient();
   return useMutation({
-    mutationFn: (payload: { category: string; channels: string[]; enabled: boolean }) =>
-      notificationsService.upsertNotificationSubscription(payload),
+    mutationFn: (payload: {
+      category: string;
+      channels: string[];
+      enabled: boolean;
+      orgId?: string;
+    }) => notificationsService.upsertNotificationSubscription(payload),
     onSuccess: async () => {
       await queryClient.invalidateQueries({ queryKey: ['notification-subscriptions'] });
     },
@@ -52,8 +56,12 @@ export const useGetNotificationDefaults = () =>
 export const useUpsertNotificationDefault = () => {
   const queryClient = useQueryClient();
   return useMutation({
-    mutationFn: (payload: { category: string; channels: string[]; enabled: boolean }) =>
-      notificationsService.upsertNotificationDefault(payload),
+    mutationFn: (payload: {
+      category: string;
+      channels: string[];
+      enabled: boolean;
+      orgId?: string;
+    }) => notificationsService.upsertNotificationDefault(payload),
     onSuccess: async () => {
       await queryClient.invalidateQueries({ queryKey: ['notification-defaults'] });
     },

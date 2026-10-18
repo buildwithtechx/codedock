@@ -6,7 +6,7 @@ import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@code
 import { Input } from '@codedock/ui/input';
 import { Label } from '@codedock/ui/label';
 import type { Database } from '#/interfaces/databases';
-import { databasesService } from '#/services/databases';
+import { useRevealDatabaseCredentials } from '#/hooks/use-databases';
 
 interface Props {
   database: Database;
@@ -17,15 +17,15 @@ export function DatabaseConnectionCard({ database }: Props) {
   const [revealedPassword, setRevealedPassword] = useState<string | null>(
     database.password || null
   );
-  const [isRevealing, setIsRevealing] = useState(false);
+  const revealCredentialsMutation = useRevealDatabaseCredentials();
+  const isRevealing = revealCredentialsMutation.isPending;
 
   const handleRevealPassword = async (): Promise<string | null> => {
     if (revealedPassword) {
       return revealedPassword;
     }
     try {
-      setIsRevealing(true);
-      const res = await databasesService.revealCredentials(database.id);
+      const res = await revealCredentialsMutation.mutateAsync(database.id);
       if (res.password) {
         setRevealedPassword(res.password);
         return res.password;
@@ -34,8 +34,6 @@ export function DatabaseConnectionCard({ database }: Props) {
     } catch (_error) {
       toast.error('Failed to reveal credentials');
       return null;
-    } finally {
-      setIsRevealing(false);
     }
   };
 

@@ -1,4 +1,3 @@
-import { useQuery } from '@tanstack/react-query';
 import {
   Boxes,
   CheckCircle2,
@@ -15,7 +14,7 @@ import { Button } from '@codedock/ui/button';
 import { QueryErrorState } from '#/components/query-error-state';
 import type { ServerComponentStatus } from '#/interfaces/server';
 import { cn } from '#/lib/utils';
-import { serverService } from '#/services/servers';
+import { useServerComponents } from '#/hooks/use-servers';
 
 interface ServerComponentsTabProps {
   serverId: string;
@@ -45,10 +44,7 @@ export function ServerComponentsTab({ serverId }: ServerComponentsTabProps) {
     isError,
     refetch,
     isRefetching,
-  } = useQuery({
-    queryKey: ['server-components', serverId],
-    queryFn: () => serverService.getComponents(serverId),
-  });
+  } = useServerComponents(serverId);
 
   if (isLoading) {
     return (

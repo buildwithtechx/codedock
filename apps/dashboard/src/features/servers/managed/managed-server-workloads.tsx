@@ -1,20 +1,30 @@
-import { Layers, Play, RotateCw, Square, Terminal, Trash2 } from 'lucide-react';
+import { Layers } from 'lucide-react';
 import { useEffect, useState } from 'react';
 import { Button } from '@codedock/ui/button';
 import { Input } from '@codedock/ui/input';
 import { Textarea } from '@codedock/ui/textarea';
 import type { ManagedWorkload } from '#/interfaces/server';
 import {
-  controlManagedWorkload,
-  createManagedWorkload,
-  getManagedWorkloadLogs,
-  getManagedWorkloads,
-} from '#/services/managed-server';
+  useControlManagedWorkload,
+  useCreateManagedWorkload,
+  useFetchManagedWorkloadLogs,
+  useManagedWorkloads,
+} from '#/hooks/use-managed-server';
 import { ManagedControlPanel } from './managed-control-panel';
+import { ManagedWorkloadRow } from './managed-workload-row';
 
 export function ManagedServerWorkloads({ serverId }: { serverId: string }) {
+  const {
+    data: workloadsData,
+    isLoading: loading,
+    error: queryError,
+    refetch,
+  } = useManagedWorkloads(serverId);
+  const createWorkloadMutation = useCreateManagedWorkload();
+  const controlWorkloadMutation = useControlManagedWorkload();
+  const fetchLogsMutation = useFetchManagedWorkloadLogs();
+
   const [workloads, setWorkloads] = useState<ManagedWorkload[]>([]);
-  const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
   const [createOpen, setCreateOpen] = useState(false);
 
@@ -26,24 +36,19 @@ export function ManagedServerWorkloads({ serverId }: { serverId: string }) {
   const [submitting, setSubmitting] = useState(false);
 
   const [logs, setLogs] = useState<{ id: string; name: string; logs: string } | null>(null);
-  const [logsLoading, setLogsLoading] = useState(false);
-
-  const fetchWorkloads = async () => {
-    setLoading(true);
-    setError(null);
-    try {
-      const res = await getManagedWorkloads(serverId);
-      setWorkloads(res.workloads);
-    } catch (err) {
-      setError(err instanceof Error ? err.message : 'Failed to load workloads');
-    } finally {
-      setLoading(false);
-    }
-  };
+  const logsLoading = fetchLogsMutation.isPending;
 
   useEffect(() => {
-    void fetchWorkloads();
-  }, [serverId]);
+    if (workloadsData?.workloads) {
+      setWorkloads(workloadsData.workloads);
+    }
+  }, [workloadsData]);
+
+  useEffect(() => {
+    if (queryError) {
+      setError(queryError instanceof Error ? queryError.message : 'Failed to load workloads');
+    }
+  }, [queryError]);
 
   const handleCreate = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -51,13 +56,16 @@ export function ManagedServerWorkloads({ serverId }: { serverId: string }) {
     setSubmitting(true);
     setError(null);
     try {
-      const created = await createManagedWorkload(serverId, {
-        name: name.trim(),
-        command: command.trim(),
-        workingDirectory: directory.trim() || '/root',
-        environment: environment.split(/\r?\n/).filter((l) => l.trim()),
-        restartPolicy: policy,
-        confirm: true,
+      const created = await createWorkloadMutation.mutateAsync({
+        serverId,
+        payload: {
+          name: name.trim(),
+          command: command.trim(),
+          workingDirectory: directory.trim() || '/root',
+          environment: environment.split(/\r?\n/).filter((l) => l.trim()),
+          restartPolicy: policy,
+          confirm: true,
+        },
       });
       setWorkloads((prev) => [...prev, created]);
       setCreateOpen(false);
@@ -76,10 +84,9 @@ export function ManagedServerWorkloads({ serverId }: { serverId: string }) {
     action: 'start' | 'stop' | 'restart' | 'delete'
   ) => {
     try {
-      const res = await controlManagedWorkload(serverId, {
-        workloadId,
-        action,
-        confirm: true,
+      const res = await controlWorkloadMutation.mutateAsync({
+        serverId,
+        payload: { workloadId, action, confirm: true },
       });
       if (action === 'delete') {
         setWorkloads((prev) => prev.filter((w) => w.id !== workloadId));
@@ -93,14 +100,15 @@ export function ManagedServerWorkloads({ serverId }: { serverId: string }) {
   };
 
   const handleViewLogs = async (workload: ManagedWorkload) => {
-    setLogsLoading(true);
     try {
-      const res = await getManagedWorkloadLogs(serverId, workload.id, 100);
+      const res = await fetchLogsMutation.mutateAsync({
+        serverId,
+        workloadId: workload.id,
+        tail: 100,
+      });
       setLogs({ id: workload.id, name: workload.name, logs: res.logs });
     } catch (err) {
       setError(err instanceof Error ? err.message : 'Failed to fetch logs');
-    } finally {
-      setLogsLoading(false);
     }
   };
 
@@ -111,7 +119,7 @@ export function ManagedServerWorkloads({ serverId }: { serverId: string }) {
       icon={Layers}
       busy={loading}
       error={error}
-      refresh={() => void fetchWorkloads()}
+      refresh={() => void refetch()}
     >
       <p className="rounded-xl bg-muted/30 p-4 text-muted-foreground text-xs leading-relaxed">
         Background daemons run under systemd supervisor on this server with automated restart
@@ -206,79 +214,12 @@ export function ManagedServerWorkloads({ serverId }: { serverId: string }) {
 
       <div className="space-y-3">
         {workloads.map((workload) => (
-          <div
+          <ManagedWorkloadRow
             key={workload.id}
-            className="flex flex-wrap items-center justify-between gap-3 rounded-xl border border-border/40 bg-card p-4"
-          >
-            <div>
-              <div className="flex items-center gap-2">
-                <span className="font-medium text-foreground text-sm">{workload.name}</span>
-                <span
-                  className={`rounded-full px-2 py-0.5 font-medium text-[10px] ${
-                    workload.state === 'running'
-                      ? 'bg-success/10 text-success'
-                      : 'bg-muted text-muted-foreground'
-                  }`}
-                >
-                  {workload.state}
-                </span>
-              </div>
-              <p className="mt-1 font-mono text-muted-foreground text-xs">
-                Policy: {workload.restartPolicy ?? 'on-failure'} • Source: {workload.source}
-              </p>
-            </div>
-
-            <div className="flex items-center gap-1.5">
-              <Button
-                size="icon"
-                variant="ghost"
-                className="size-8"
-                aria-label="View logs"
-                onClick={() => void handleViewLogs(workload)}
-              >
-                <Terminal className="size-4" />
-              </Button>
-              {workload.state === 'running' ? (
-                <Button
-                  size="icon"
-                  variant="ghost"
-                  className="size-8 text-warning"
-                  aria-label="Stop workload"
-                  onClick={() => void handleControl(workload.id, 'stop')}
-                >
-                  <Square className="size-4" />
-                </Button>
-              ) : (
-                <Button
-                  size="icon"
-                  variant="ghost"
-                  className="size-8 text-success"
-                  aria-label="Start workload"
-                  onClick={() => void handleControl(workload.id, 'start')}
-                >
-                  <Play className="size-4" />
-                </Button>
-              )}
-              <Button
-                size="icon"
-                variant="ghost"
-                className="size-8"
-                aria-label="Restart workload"
-                onClick={() => void handleControl(workload.id, 'restart')}
-              >
-                <RotateCw className="size-4" />
-              </Button>
-              <Button
-                size="icon"
-                variant="ghost"
-                className="size-8 text-destructive"
-                aria-label="Delete workload"
-                onClick={() => void handleControl(workload.id, 'delete')}
-              >
-                <Trash2 className="size-4" />
-              </Button>
-            </div>
-          </div>
+            workload={workload}
+            onViewLogs={handleViewLogs}
+            onControl={handleControl}
+          />
         ))}
       </div>
 

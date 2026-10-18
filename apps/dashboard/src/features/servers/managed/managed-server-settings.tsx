@@ -5,43 +5,47 @@ import { Button } from '@codedock/ui/button';
 import type { ManagedServerInfo } from '#/interfaces/server';
 import { CapacitySummary } from './capacity-summary';
 import { ConnectionValue } from './connection-value';
-import { getManagedBootLogs, getManagedInfo } from '#/services/managed-server';
+import { useFetchManagedBootLogs, useManagedInfo } from '#/hooks/use-managed-server';
 import { ManagedControlPanel } from './managed-control-panel';
 
 export function ManagedServerSettings({ serverId }: { serverId: string }) {
+  const {
+    data: serverInfo,
+    isLoading: loading,
+    error: queryError,
+    refetch,
+  } = useManagedInfo(serverId);
+  const fetchBootLogsMutation = useFetchManagedBootLogs();
+
   const [info, setInfo] = useState<ManagedServerInfo | null>(null);
-  const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
 
   const [bootLogs, setBootLogs] = useState<string | null>(null);
-  const [logsLoading, setLogsLoading] = useState(false);
-
-  const fetchInfo = async () => {
-    setLoading(true);
-    setError(null);
-    try {
-      const data = await getManagedInfo(serverId);
-      setInfo(data);
-    } catch (err) {
-      setError(err instanceof Error ? err.message : 'Failed to load server settings');
-    } finally {
-      setLoading(false);
-    }
-  };
+  const logsLoading = fetchBootLogsMutation.isPending;
 
   useEffect(() => {
-    void fetchInfo();
-  }, [serverId]);
+    if (serverInfo) {
+      setInfo(serverInfo);
+    }
+  }, [serverInfo]);
+
+  useEffect(() => {
+    if (queryError) {
+      setError(queryError instanceof Error ? queryError.message : 'Failed to load server settings');
+    }
+  }, [queryError]);
+
+  const fetchInfo = async () => {
+    setError(null);
+    await refetch();
+  };
 
   const handleFetchBootLogs = async () => {
-    setLogsLoading(true);
     try {
-      const res = await getManagedBootLogs(serverId, 200);
+      const res = await fetchBootLogsMutation.mutateAsync({ serverId, tail: 200 });
       setBootLogs(res.logs);
     } catch (err) {
       setError(err instanceof Error ? err.message : 'Failed to fetch boot logs');
-    } finally {
-      setLogsLoading(false);
     }
   };
 

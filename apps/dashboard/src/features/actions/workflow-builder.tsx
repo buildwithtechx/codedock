@@ -6,7 +6,7 @@ import { Button } from '@codedock/ui/button';
 import { Input } from '@codedock/ui/input';
 import { Label } from '@codedock/ui/label';
 import { Textarea } from '@codedock/ui/textarea';
-import { actionsService } from '#/services/actions';
+import { useCreateWorkflow } from '#/hooks/use-actions';
 
 const STARTER_CI = `name: CI
 on: [push, workflow_dispatch]
@@ -31,6 +31,7 @@ jobs:
 
 export function WorkflowBuilder() {
   const navigate = useNavigate();
+  const createWorkflowMutation = useCreateWorkflow();
   const [name, setName] = useState('CI');
   const [description, setDescription] = useState('Continuous integration pipeline');
   const [mode, setMode] = useState<'repository' | 'standalone'>('repository');
@@ -68,7 +69,7 @@ export function WorkflowBuilder() {
       const owner = mode === 'repository' && parts.length > 1 ? parts[0] : '';
       const repoName = mode === 'repository' && parts.length > 1 ? parts.slice(1).join('/') : repo;
 
-      await actionsService.createWorkflow({
+      await createWorkflowMutation.mutateAsync({
         name: name.trim(),
         description: description.trim(),
         path: path.trim(),

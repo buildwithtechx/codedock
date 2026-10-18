@@ -8,17 +8,17 @@ import {
   Server,
   Terminal,
 } from 'lucide-react';
-import { useEffect, useState } from 'react';
+import { useState } from 'react';
 import { toast } from 'sonner';
 import { Button } from '@codedock/ui/button';
 import { Input } from '@codedock/ui/input';
 import { Label } from '@codedock/ui/label';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@codedock/ui/select';
 import { Textarea } from '@codedock/ui/textarea';
+import { useListByProject } from '#/hooks/use-apps';
+import { useCreateJob, useUpdateJob } from '#/hooks/use-jobs';
 import { useListAllProjects } from '#/hooks/use-projects';
 import type { AppService, Job } from '#/interfaces/services';
-import { appsService } from '#/services/apps';
-import { jobsApi } from '#/services/jobs';
 import { SCHEDULE_PRESETS } from './job-format';
 import { Section, SummaryRow } from './job-form-sections';
 
@@ -34,57 +34,38 @@ export function JobForm({
   const editing = !!job;
   const { data: projects = [], isLoading: projectsLoading } = useListAllProjects();
   const [projectId, setProjectId] = useState(job?.projectId ?? '');
-  const [services, setServices] = useState<AppService[]>([]);
-  const [servicesLoading, setServicesLoading] = useState(false);
   const [serviceId, setServiceId] = useState(job?.serviceId ?? '');
   const [name, setName] = useState(job?.name ?? '');
   const [schedule, setSchedule] = useState(job?.schedule ?? '0 * * * *');
   const [command, setCommand] = useState(job?.command ?? '');
-  const [saving, setSaving] = useState(false);
 
-  useEffect(() => {
-    if (!projectId) {
-      setServices([]);
-      if (!editing) setServiceId('');
-      return;
-    }
-    let cancelled = false;
-    setServicesLoading(true);
-    appsService
-      .listByProject(projectId)
-      .then((response) => {
-        if (cancelled) return;
-        setServices(response.data ?? []);
-      })
-      .catch(() => {
-        if (!cancelled) toast.error('Could not load services for this project');
-      })
-      .finally(() => {
-        if (!cancelled) setServicesLoading(false);
-      });
-    return () => {
-      cancelled = true;
-    };
-  }, [projectId, editing]);
+  const createJobMutation = useCreateJob();
+  const updateJobMutation = useUpdateJob();
+  const servicesQuery = useListByProject(projectId, undefined, Boolean(projectId));
+  const services = (servicesQuery.data?.data as AppService[] | undefined) ?? [];
+  const servicesLoading = servicesQuery.isLoading;
 
   const valid =
     serviceId !== '' && name.trim() !== '' && schedule.trim() !== '' && command.trim() !== '';
+  const saving = createJobMutation.isPending || updateJobMutation.isPending;
 
   const handleSubmit = async (event: React.FormEvent) => {
     event.preventDefault();
     if (!valid || saving) return;
-    setSaving(true);
     try {
       if (editing && job) {
-        const response = await jobsApi.update(job.id, {
-          name: name.trim(),
-          schedule: schedule.trim(),
-          command: command.trim(),
+        const response = await updateJobMutation.mutateAsync({
+          id: job.id,
+          payload: {
+            name: name.trim(),
+            schedule: schedule.trim(),
+            command: command.trim(),
+          },
         });
         toast.success(`Job ${name.trim()} saved`);
         onSaved(response.data);
       } else {
-        const response = await jobsApi.create({
+        const response = await createJobMutation.mutateAsync({
           serviceId,
           name: name.trim(),
           schedule: schedule.trim(),
@@ -95,8 +76,6 @@ export function JobForm({
       }
     } catch {
       toast.error(editing ? 'Failed to save job' : 'Failed to create job');
-    } finally {
-      setSaving(false);
     }
   };
 

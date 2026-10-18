@@ -5,7 +5,7 @@ import { Button } from '@codedock/ui/button';
 import { Input } from '@codedock/ui/input';
 import { Label } from '@codedock/ui/label';
 import type { CreateNetworkInput, NetworkMember, ServerNetwork } from '#/interfaces/networks';
-import { networksService } from '#/services/networks';
+import { useCreateNetwork } from '#/hooks/use-networks';
 import { NetworkMemberList } from './network-member-list';
 import { NetworkPeerDiagnostics } from './network-peer-diagnostics';
 import { NetworkRollbackWatchdog } from './network-rollback-watchdog';
@@ -47,6 +47,7 @@ export function NetworkEditor({ initialNetwork, onSaved }: NetworkEditorProps) {
     initialNetwork?.members ?? DEFAULT_MEMBERS
   );
   const [isSubmitting, setIsSubmitting] = useState(false);
+  const createNetworkMutation = useCreateNetwork();
 
   const addMember = () => {
     const nextIndex = members.length + 1;
@@ -94,7 +95,7 @@ export function NetworkEditor({ initialNetwork, onSaved }: NetworkEditorProps) {
         accessPolicy: { mode: 'full_mesh' },
       };
 
-      const created = await networksService.create(payload);
+      const created = await createNetworkMutation.mutateAsync(payload);
       setNetwork(created);
       toast.success('Private network created and 120s rollback watchdog armed');
       onSaved?.(created);

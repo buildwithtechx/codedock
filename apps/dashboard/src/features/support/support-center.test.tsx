@@ -1,8 +1,17 @@
+import { QueryClient, QueryClientProvider } from '@tanstack/react-query';
 import { act, fireEvent, render, screen } from '@testing-library/react';
+import type { ReactNode } from 'react';
 import { beforeEach, describe, expect, it, vi } from 'vitest';
 import type { SupportTicket } from '#/interfaces/support';
 import * as supportService from '#/services/cloud-support';
 import { SupportCenter } from './support-center';
+
+function renderWithClient(ui: ReactNode) {
+  const queryClient = new QueryClient({
+    defaultOptions: { queries: { retry: false } },
+  });
+  return render(<QueryClientProvider client={queryClient}>{ui}</QueryClientProvider>);
+}
 
 vi.mock('#/services/cloud-support', async (importOriginal) => {
   const actual = await importOriginal<typeof import('#/services/cloud-support')>();
@@ -41,13 +50,13 @@ describe('SupportCenter', () => {
     vi.mocked(supportService.getTickets).mockResolvedValue([sampleTicket]);
 
     await act(async () => {
-      render(<SupportCenter />);
+      renderWithClient(<SupportCenter />);
     });
 
     expect(screen.getByText('Support Center')).toBeTruthy();
-    expect(screen.getByText('Cannot deploy Dockerfile with cache mounts')).toBeTruthy();
+    expect(await screen.findByText('Cannot deploy Dockerfile with cache mounts')).toBeTruthy();
 
-    const ticketRow = screen.getByText('Cannot deploy Dockerfile with cache mounts');
+    const ticketRow = await screen.findByText('Cannot deploy Dockerfile with cache mounts');
     await act(async () => {
       fireEvent.click(ticketRow);
     });
@@ -72,10 +81,10 @@ describe('SupportCenter', () => {
     vi.mocked(supportService.createTicket).mockResolvedValue(created);
 
     await act(async () => {
-      render(<SupportCenter />);
+      renderWithClient(<SupportCenter />);
     });
 
-    const newBtn = screen.getByRole('button', { name: /Open your first ticket/ });
+    const newBtn = await screen.findByRole('button', { name: /Open your first ticket/ });
     await act(async () => {
       fireEvent.click(newBtn);
     });

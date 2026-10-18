@@ -1,4 +1,3 @@
-import { useMutation, useQueryClient } from '@tanstack/react-query';
 import { Trash2 } from 'lucide-react';
 import { toast } from 'sonner';
 import { Button } from '@codedock/ui/button';
@@ -11,7 +10,7 @@ import {
   DialogTitle,
 } from '@codedock/ui/dialog';
 import type { Server } from '#/interfaces/server';
-import { removeServer } from '#/services/servers';
+import { useDeleteServer } from '#/hooks/use-servers';
 
 interface ServerDeleteDialogProps {
   server: Server | null;
@@ -20,14 +19,7 @@ interface ServerDeleteDialogProps {
 }
 
 export function ServerDeleteDialog({ server, onClose, onRemoved }: ServerDeleteDialogProps) {
-  const queryClient = useQueryClient();
-  const deletion = useMutation({
-    mutationFn: (id: string) => removeServer(id),
-    onSuccess: (_, id) => {
-      queryClient.invalidateQueries({ queryKey: ['servers'] });
-      queryClient.invalidateQueries({ queryKey: ['servers', id] });
-    },
-  });
+  const deletion = useDeleteServer();
 
   const handleDelete = async () => {
     if (!server) return;

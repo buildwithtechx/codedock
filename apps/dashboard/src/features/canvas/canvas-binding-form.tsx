@@ -1,13 +1,13 @@
-import { useMutation, useQueryClient } from '@tanstack/react-query';
+import { useMutation } from '@tanstack/react-query';
 import { useState } from 'react';
 import { Button } from '@codedock/ui/button';
 import { Input } from '@codedock/ui/input';
 import { Label } from '@codedock/ui/label';
-import { serviceVariablesService } from '#/services/service-variables';
+import { useCreate as useCreateServiceVar } from '#/hooks/use-services';
 import type { OperationalCanvas } from './topology-types';
 
 export function CanvasBindingForm({ canvas }: { canvas: OperationalCanvas }) {
-  const client = useQueryClient();
+  const createServiceVarMutation = useCreateServiceVar();
   const [sourceId, setSource] = useState('');
   const [target, setTarget] = useState('');
   const [key, setKey] = useState('DATABASE_URL');
@@ -27,17 +27,18 @@ export function CanvasBindingForm({ canvas }: { canvas: OperationalCanvas }) {
         !/^[A-Za-z_][A-Za-z0-9_]*$/.test(sourceKey)
       )
         throw new Error('Select a database and application and enter valid variable keys.');
-      await serviceVariablesService.create(target, {
-        key,
-        value,
-        isSecret: true,
-        expectedTopologyRevision: reviewedRevision,
+      await createServiceVarMutation.mutateAsync({
+        serviceId: target,
+        payload: {
+          key,
+          value,
+          isSecret: true,
+          expectedTopologyRevision: reviewedRevision,
+        },
       });
     },
-    onSuccess: async () => {
+    onSuccess: () => {
       setReview(false);
-      await client.invalidateQueries({ queryKey: ['canvas'] });
-      await client.invalidateQueries({ queryKey: ['variables'] });
     },
   });
   return (

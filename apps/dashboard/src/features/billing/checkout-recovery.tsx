@@ -2,7 +2,7 @@ import { AlertCircle, ExternalLink, Loader2, RefreshCw, XCircle } from 'lucide-r
 import { useState } from 'react';
 import { Button } from '@codedock/ui/button';
 import type { PendingCheckout } from '#/interfaces/billing';
-import { billingService } from '#/services/billing';
+import { useCancelCheckoutSession, usePendingCheckout } from '#/hooks/use-billing';
 
 export interface CheckoutRecoveryProps {
   pending?: PendingCheckout | null;
@@ -20,6 +20,8 @@ export function CheckoutRecovery({
   const [canceling, setCanceling] = useState(false);
   const [refreshing, setRefreshing] = useState(false);
   const [error, setError] = useState<string | null>(null);
+  const cancelCheckoutMutation = useCancelCheckoutSession();
+  const { refetch: refetchPending } = usePendingCheckout();
 
   if (!pending || pending.status === 'complete') {
     return null;
@@ -38,7 +40,7 @@ export function CheckoutRecovery({
       if (onCancel) {
         await onCancel(checkoutId, idempotencyKey);
       } else {
-        const result = await billingService.cancelCheckoutSession(checkoutId, idempotencyKey);
+        const result = await cancelCheckoutMutation.mutateAsync({ checkoutId, idempotencyKey });
         if (result.checkout.checkoutId !== checkoutId) {
           throw new Error('Mismatched checkout response during cancellation');
         }
@@ -59,8 +61,8 @@ export function CheckoutRecovery({
       if (onRefresh) {
         await onRefresh();
       } else {
-        const res = await billingService.getPendingCheckout();
-        if (!res.pending || res.pending.status === 'complete') {
+        const res = await refetchPending();
+        if (!res.data?.pending || res.data.pending.status === 'complete') {
           onSettled?.();
         }
       }

@@ -1,4 +1,3 @@
-import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
 import {
   AlertCircle,
   CheckCircle2,
@@ -10,10 +9,15 @@ import {
   RotateCcw,
   Trash2,
 } from 'lucide-react';
-import { useState } from 'react';
+import { useEffect, useState } from 'react';
 import { toast } from 'sonner';
 import { Button } from '@codedock/ui/button';
-import { clustersService } from '#/services/clusters';
+import {
+  useClusterScaling,
+  useRemoveClusterScaling,
+  useRetryClusterScaling,
+  useSetupClusterScaling,
+} from '#/hooks/use-clusters';
 
 interface ClusterScalingPanelProps {
   clusterId: string;
@@ -26,58 +30,58 @@ export function ClusterScalingPanel({
   canManage = true,
   onReadyChange,
 }: ClusterScalingPanelProps) {
-  const queryClient = useQueryClient();
   const [detailsOpen, setDetailsOpen] = useState(false);
 
-  const {
-    data: scaling,
-    isLoading,
-    isRefetching,
-  } = useQuery({
-    queryKey: ['cluster-scaling', clusterId],
-    queryFn: async () => {
-      const res = await clustersService.getScaling(clusterId);
-      onReadyChange?.(res.status === 'ready');
-      return res;
-    },
-  });
+  const { data: scaling, isLoading, isRefetching } = useClusterScaling(clusterId);
+  const setupMutation = useSetupClusterScaling();
+  const retryMutation = useRetryClusterScaling();
+  const removeMutation = useRemoveClusterScaling();
 
-  const { mutate: enableScaling, isPending: isSettingUp } = useMutation({
-    mutationFn: () => clustersService.setupScaling(clusterId),
-    onSuccess: (data) => {
-      queryClient.setQueryData(['cluster-scaling', clusterId], data);
-      toast.success('Cluster scaling enabled successfully');
-      onReadyChange?.(data.status === 'ready');
-    },
-    onError: (err) => {
-      toast.error(err instanceof Error ? err.message : 'Failed to enable scaling');
-    },
-  });
+  useEffect(() => {
+    if (scaling) {
+      onReadyChange?.(scaling.status === 'ready');
+    }
+  }, [scaling, onReadyChange]);
 
-  const { mutate: retryScaling, isPending: isRetrying } = useMutation({
-    mutationFn: () => clustersService.retryScaling(clusterId),
-    onSuccess: (data) => {
-      queryClient.setQueryData(['cluster-scaling', clusterId], data);
-      toast.success('Retrying scaling setup');
-      onReadyChange?.(data.status === 'ready');
-    },
-    onError: (err) => {
-      toast.error(err instanceof Error ? err.message : 'Failed to retry scaling');
-    },
-  });
+  const enableScaling = () => {
+    setupMutation.mutate(clusterId, {
+      onSuccess: (data) => {
+        toast.success('Cluster scaling enabled successfully');
+        onReadyChange?.(data.status === 'ready');
+      },
+      onError: (err) => {
+        toast.error(err instanceof Error ? err.message : 'Failed to enable scaling');
+      },
+    });
+  };
 
-  const { mutate: removeScaling, isPending: isRemoving } = useMutation({
-    mutationFn: () => clustersService.removeScaling(clusterId),
-    onSuccess: (data) => {
-      queryClient.setQueryData(['cluster-scaling', clusterId], data);
-      toast.warning('Cluster scaling runtime removed');
-      onReadyChange?.(false);
-    },
-    onError: (err) => {
-      toast.error(err instanceof Error ? err.message : 'Failed to remove scaling runtime');
-    },
-  });
+  const retryScaling = () => {
+    retryMutation.mutate(clusterId, {
+      onSuccess: (data) => {
+        toast.success('Retrying scaling setup');
+        onReadyChange?.(data.status === 'ready');
+      },
+      onError: (err) => {
+        toast.error(err instanceof Error ? err.message : 'Failed to retry scaling');
+      },
+    });
+  };
 
+  const removeScaling = () => {
+    removeMutation.mutate(clusterId, {
+      onSuccess: () => {
+        toast.warning('Cluster scaling runtime removed');
+        onReadyChange?.(false);
+      },
+      onError: (err) => {
+        toast.error(err instanceof Error ? err.message : 'Failed to remove scaling runtime');
+      },
+    });
+  };
+
+  const isSettingUp = setupMutation.isPending;
+  const isRetrying = retryMutation.isPending;
+  const isRemoving = removeMutation.isPending;
   const status = scaling?.status ?? 'not_enabled';
   const isBusy = isSettingUp || isRetrying || isRemoving || isRefetching;
 

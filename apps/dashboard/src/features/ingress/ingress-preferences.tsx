@@ -6,7 +6,7 @@ import { Input } from '@codedock/ui/input';
 import { Label } from '@codedock/ui/label';
 import { Switch } from '@codedock/ui/switch';
 import type { IngressConnection } from '#/interfaces/ingress';
-import { ingressService } from '#/services/ingress';
+import { useUpdateIngress } from '#/hooks/use-ingress';
 
 interface IngressPreferencesProps {
   connection: IngressConnection;
@@ -18,12 +18,13 @@ export function IngressPreferences({ connection, onClose, onSaved }: IngressPref
   const [defaultForDomains, setDefaultForDomains] = useState(connection.defaultForDomains);
   const [policyId, setPolicyId] = useState(connection.defaultAccessPolicyId ?? '');
   const [isSubmitting, setIsSubmitting] = useState(false);
+  const updateIngressMutation = useUpdateIngress();
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     setIsSubmitting(true);
     try {
-      await ingressService.update({
+      await updateIngressMutation.mutateAsync({
         id: connection.id,
         defaultForDomains,
         defaultAccessPolicyId: policyId.trim() || null,

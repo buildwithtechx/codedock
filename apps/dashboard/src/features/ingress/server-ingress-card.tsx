@@ -1,4 +1,3 @@
-import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
 import {
   AlertCircle,
   CheckCircle2,
@@ -14,7 +13,7 @@ import { toast } from 'sonner';
 import { Button } from '@codedock/ui/button';
 import { Dialog, DialogContent } from '@codedock/ui/dialog';
 import type { IngressConnection } from '#/interfaces/ingress';
-import { ingressService } from '#/services/ingress';
+import { useDisconnectIngress, useIngressConnections, useRetryIngress } from '#/hooks/use-ingress';
 import { IngressConnectForm } from './ingress-connect-form';
 import { IngressPreferences } from './ingress-preferences';
 
@@ -23,7 +22,6 @@ interface ServerIngressCardProps {
 }
 
 export function ServerIngressCard({ serverId }: ServerIngressCardProps) {
-  const queryClient = useQueryClient();
   const [connectOpen, setConnectOpen] = useState(false);
   const [preferencesOpen, setPreferencesOpen] = useState(false);
   const [selectedConnection, setSelectedConnection] = useState<IngressConnection | null>(null);
@@ -34,32 +32,35 @@ export function ServerIngressCard({ serverId }: ServerIngressCardProps) {
     isRefetching,
     refetch,
     isError,
-  } = useQuery({
-    queryKey: ['server-ingress', serverId],
-    queryFn: () => ingressService.list(serverId),
-  });
+  } = useIngressConnections(serverId);
 
-  const { mutate: retryConnection, isPending: isRetrying } = useMutation({
-    mutationFn: (id: string) => ingressService.retry(id),
-    onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: ['server-ingress', serverId] });
-      toast.success('Tunnel reconciliation triggered');
-    },
-    onError: (err) => {
-      toast.error(err instanceof Error ? err.message : 'Failed to retry tunnel');
-    },
-  });
+  const retryMutation = useRetryIngress();
+  const disconnectMutation = useDisconnectIngress();
 
-  const { mutate: disconnectConnection, isPending: isDisconnecting } = useMutation({
-    mutationFn: (id: string) => ingressService.disconnect(id),
-    onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: ['server-ingress', serverId] });
-      toast.success('Tunnel disconnected');
-    },
-    onError: (err) => {
-      toast.error(err instanceof Error ? err.message : 'Failed to disconnect tunnel');
-    },
-  });
+  const retryConnection = (id: string) => {
+    retryMutation.mutate(id, {
+      onSuccess: () => {
+        toast.success('Tunnel reconciliation triggered');
+      },
+      onError: (err) => {
+        toast.error(err instanceof Error ? err.message : 'Failed to retry tunnel');
+      },
+    });
+  };
+
+  const disconnectConnection = (id: string) => {
+    disconnectMutation.mutate(id, {
+      onSuccess: () => {
+        toast.success('Tunnel disconnected');
+      },
+      onError: (err) => {
+        toast.error(err instanceof Error ? err.message : 'Failed to disconnect tunnel');
+      },
+    });
+  };
+
+  const isRetrying = retryMutation.isPending;
+  const isDisconnecting = disconnectMutation.isPending;
 
   const current = connections[0] ?? null;
 

@@ -13,7 +13,7 @@ import {
 } from '@codedock/ui/dialog';
 import { Switch } from '@codedock/ui/switch';
 import type { Job } from '#/interfaces/services';
-import { jobsApi } from '#/services/jobs';
+import { useDeleteJob, useTriggerJob, useUpdateJob } from '#/hooks/use-jobs';
 import { formatTime, isFailedStatus, relativeTime, statusDot, statusLabel } from './job-format';
 
 export function JobCard({
@@ -25,58 +25,58 @@ export function JobCard({
   onChanged: () => void;
   onViewOutput: (job: Job) => void;
 }) {
-  const [busy, setBusy] = useState(false);
+  const triggerJobMutation = useTriggerJob();
+  const updateJobMutation = useUpdateJob();
+  const deleteJobMutation = useDeleteJob();
+  const busy =
+    triggerJobMutation.isPending || updateJobMutation.isPending || deleteJobMutation.isPending;
+
   const [editingSchedule, setEditingSchedule] = useState(false);
   const [scheduleDraft, setScheduleDraft] = useState('');
   const [confirmDelete, setConfirmDelete] = useState(false);
   const enabled = job.status !== 'inactive';
 
   const handleRun = async () => {
-    if (busy) return;
-    setBusy(true);
     try {
-      await jobsApi.trigger(job.id);
+      await triggerJobMutation.mutateAsync(job.id);
       toast.success(`Job ${job.name} started`);
       onChanged();
     } catch {
       toast.error(`Could not run ${job.name}`);
-    } finally {
-      setBusy(false);
     }
   };
 
   const handleToggle = async (next: boolean) => {
-    if (busy) return;
-    setBusy(true);
     try {
-      await jobsApi.update(job.id, { status: next ? 'active' : 'inactive' });
+      await updateJobMutation.mutateAsync({
+        id: job.id,
+        payload: { status: next ? 'active' : 'inactive' },
+      });
       toast.success(next ? `Job ${job.name} enabled` : `Job ${job.name} disabled`);
       onChanged();
     } catch {
       toast.error(`Could not ${next ? 'enable' : 'disable'} ${job.name}`);
-    } finally {
-      setBusy(false);
     }
   };
 
   const handleSaveSchedule = async () => {
-    if (busy || !scheduleDraft.trim()) return;
-    setBusy(true);
+    if (!scheduleDraft.trim()) return;
     try {
-      await jobsApi.update(job.id, { schedule: scheduleDraft.trim() });
+      await updateJobMutation.mutateAsync({
+        id: job.id,
+        payload: { schedule: scheduleDraft.trim() },
+      });
       toast.success(`Schedule saved for ${job.name}`);
       setEditingSchedule(false);
       onChanged();
     } catch {
       toast.error(`Could not save schedule for ${job.name}`);
-    } finally {
-      setBusy(false);
     }
   };
 
   const handleDelete = async () => {
     try {
-      await jobsApi.remove(job.id);
+      await deleteJobMutation.mutateAsync(job.id);
       toast.success(`Job ${job.name} deleted`);
       setConfirmDelete(false);
       onChanged();

@@ -1,7 +1,21 @@
+import { QueryClient, QueryClientProvider } from '@tanstack/react-query';
 import { fireEvent, render, screen, waitFor } from '@testing-library/react';
 import { beforeEach, describe, expect, it, vi } from 'vitest';
 import { networksService } from '#/services/networks';
 import { NetworkEditor } from './network-editor';
+
+const createTestQueryClient = () =>
+  new QueryClient({
+    defaultOptions: {
+      queries: { retry: false },
+      mutations: { retry: false },
+    },
+  });
+
+function renderWithClient(ui: React.ReactElement) {
+  const queryClient = createTestQueryClient();
+  return render(<QueryClientProvider client={queryClient}>{ui}</QueryClientProvider>);
+}
 
 describe('NetworkEditor', () => {
   beforeEach(() => {
@@ -9,7 +23,7 @@ describe('NetworkEditor', () => {
   });
 
   it('renders initial form fields for WireGuard mesh', () => {
-    render(<NetworkEditor />);
+    renderWithClient(<NetworkEditor />);
 
     expect(screen.getByText('Private Network Mesh')).toBeDefined();
     expect(screen.getByLabelText(/network name/i)).toBeDefined();
@@ -20,7 +34,7 @@ describe('NetworkEditor', () => {
   });
 
   it('adds a member server when Add Server is clicked', () => {
-    render(<NetworkEditor />);
+    renderWithClient(<NetworkEditor />);
 
     const addBtn = screen.getByRole('button', { name: /add server/i });
     fireEvent.click(addBtn);
@@ -70,7 +84,7 @@ describe('NetworkEditor', () => {
     });
 
     const onSaved = vi.fn();
-    render(<NetworkEditor onSaved={onSaved} />);
+    renderWithClient(<NetworkEditor onSaved={onSaved} />);
 
     const nameInput = screen.getByLabelText(/network name/i);
     fireEvent.change(nameInput, { target: { value: 'beta-mesh' } });

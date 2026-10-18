@@ -4,7 +4,7 @@ import { useState } from 'react';
 import { z } from 'zod';
 import { Button } from '@codedock/ui';
 import { AuthPageFrame, LoginForm } from '#/features/auth';
-import { authService } from '#/services/auth';
+import { useAuthorizeDevice, useVerifyDeviceCode } from '#/hooks/use-auth';
 import { useAuthStore } from '#/stores/auth-store';
 import { useSystemStore } from '#/stores/system-store';
 
@@ -24,6 +24,8 @@ export const Route = createFileRoute('/_auth/device')({
 function DeviceAuthorizePage() {
   const { code: initialCode } = Route.useSearch();
   const { isAuthenticated, user } = useAuthStore();
+  const verifyDeviceCodeMutation = useVerifyDeviceCode();
+  const authorizeDeviceMutation = useAuthorizeDevice();
 
   const [inputCode, setInputCode] = useState(initialCode || '');
   const [activeCode, setActiveCode] = useState(initialCode || '');
@@ -53,7 +55,7 @@ function DeviceAuthorizePage() {
     setLoadingVerify(true);
     setErrorMsg(null);
     try {
-      const data = await authService.verifyDeviceCode(clean);
+      const data = await verifyDeviceCodeMutation.mutateAsync(clean);
       setDeviceInfo(data);
       setActiveCode(clean);
     } catch (err: unknown) {
@@ -70,7 +72,7 @@ function DeviceAuthorizePage() {
     setSubmitting(true);
     setErrorMsg(null);
     try {
-      const res = await authService.authorizeDevice(activeCode, action);
+      const res = await authorizeDeviceMutation.mutateAsync({ userCode: activeCode, action });
       setAuthResult({
         status: action === 'approve' ? 'approved' : 'denied',
         token: res.token,

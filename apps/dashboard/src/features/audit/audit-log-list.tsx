@@ -1,10 +1,10 @@
 import { Layers } from 'lucide-react';
-import { useCallback, useEffect, useMemo, useState } from 'react';
+import { useCallback, useMemo, useState } from 'react';
 import { toast } from 'sonner';
 import { Button } from '@codedock/ui/button';
 import { AUDIT_CATEGORIES } from '#/constants/audit';
 import type { AuditEventRow, AuditFacets } from '#/interfaces/audit';
-import { auditApi } from '#/services/audit-logs';
+import { useAuditFacets, useAuditLogs, useUpdateAuditSettings } from '#/hooks/use-audit-logs';
 import { AuditDayGroup } from './audit-day-group';
 import { AuditDetailsDialog } from './audit-details-dialog';
 import { AuditFilterBar, type PeriodKey, type SourceKey } from './audit-filter-bar';
@@ -19,12 +19,9 @@ export function AuditLogList() {
   const [source, setSource] = useState<SourceKey>('all');
   const [page, setPage] = useState(1);
 
-  const [events, setEvents] = useState<AuditEventRow[]>([]);
-  const [total, setTotal] = useState(0);
-  const [loading, setLoading] = useState(true);
-  const [facets, setFacets] = useState<AuditFacets | null>(null);
   const [selectedEvent, setSelectedEvent] = useState<AuditEventRow | null>(null);
   const [savingSettings, setSavingSettings] = useState(false);
+  const updateSettingsMutation = useUpdateAuditSettings();
 
   const query = useMemo(
     () => ({
@@ -37,80 +34,47 @@ export function AuditLogList() {
     [category, source, actor, period, search]
   );
 
-  useEffect(() => {
-    let cancelled = false;
-    setLoading(true);
-    auditApi
-      .list({ ...query, page, perPage: 50 })
-      .then((res) => {
-        if (!cancelled) {
-          const listRes = res as unknown as { data?: AuditEventRow[]; total?: number };
-          const items = Array.isArray(listRes?.data)
-            ? listRes.data
-            : Array.isArray(res)
-              ? (res as AuditEventRow[])
-              : [];
-          setEvents(items);
-          setTotal(listRes?.total ?? items.length);
-        }
-      })
-      .catch(() => {
-        if (!cancelled) {
-          setEvents([]);
-          setTotal(0);
-        }
-      })
-      .finally(() => {
-        if (!cancelled) setLoading(false);
-      });
+  const { data: logsRes, isLoading: loading } = useAuditLogs({ ...query, page, perPage: 50 });
+  const { data: facetsRes } = useAuditFacets(query);
 
-    return () => {
-      cancelled = true;
-    };
-  }, [query, page]);
+  const rawList = logsRes?.data;
+  const events = Array.isArray(rawList)
+    ? rawList
+    : Array.isArray(logsRes)
+      ? (logsRes as AuditEventRow[])
+      : [];
+  const total = (logsRes as unknown as { total?: number })?.total ?? events.length;
+  const facets = facetsRes?.data ?? (facetsRes as unknown as AuditFacets) ?? null;
 
-  useEffect(() => {
-    let cancelled = false;
-    auditApi
-      .facets(query)
-      .then((res) => {
-        if (!cancelled) {
-          const facetsRes = res as unknown as { data?: AuditFacets };
-          setFacets(facetsRes?.data ?? (res as unknown as AuditFacets));
-        }
-      })
-      .catch(() => {});
+  const handleToggleRecording = useCallback(
+    async (enabled: boolean) => {
+      setSavingSettings(true);
+      try {
+        await updateSettingsMutation.mutateAsync({ enabled });
+        toast.success(enabled ? 'Activity recording enabled' : 'Activity recording disabled');
+      } catch {
+        toast.error('Failed to update recording setting');
+      } finally {
+        setSavingSettings(false);
+      }
+    },
+    [updateSettingsMutation]
+  );
 
-    return () => {
-      cancelled = true;
-    };
-  }, [query]);
-
-  const handleToggleRecording = useCallback(async (enabled: boolean) => {
-    setSavingSettings(true);
-    try {
-      const res = await auditApi.updateSettings({ enabled });
-      setFacets((prev) => (prev ? { ...prev, settings: res.data } : prev));
-      toast.success(enabled ? 'Activity recording enabled' : 'Activity recording disabled');
-    } catch {
-      toast.error('Failed to update recording setting');
-    } finally {
-      setSavingSettings(false);
-    }
-  }, []);
-
-  const handleRetentionChange = useCallback(async (retentionDays: number) => {
-    setSavingSettings(true);
-    try {
-      const res = await auditApi.updateSettings({ retentionDays });
-      setFacets((prev) => (prev ? { ...prev, settings: res.data } : prev));
-      toast.success(`Retention updated to ${retentionDays} days`);
-    } catch {
-      toast.error('Failed to update retention days');
-    } finally {
-      setSavingSettings(false);
-    }
-  }, []);
+  const handleRetentionChange = useCallback(
+    async (retentionDays: number) => {
+      setSavingSettings(true);
+      try {
+        await updateSettingsMutation.mutateAsync({ retentionDays });
+        toast.success(`Retention updated to ${retentionDays} days`);
+      } catch {
+        toast.error('Failed to update retention days');
+      } finally {
+        setSavingSettings(false);
+      }
+    },
+    [updateSettingsMutation]
+  );
 
   const dayGroups = useMemo(() => groupByDay(events), [events]);
   const counts = useMemo(

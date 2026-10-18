@@ -1,4 +1,4 @@
-import { useQuery, useQueryClient } from '@tanstack/react-query';
+import { useQueryClient } from '@tanstack/react-query';
 import { createFileRoute, Link, useNavigate } from '@tanstack/react-router';
 import {
   ArrowLeft,
@@ -32,7 +32,7 @@ import {
 import { QueryErrorState } from '#/components/query-error-state';
 import { Switch } from '@codedock/ui/switch';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@codedock/ui/tabs';
-import { jobsApi } from '#/services/jobs';
+import { useDeleteJob, useGetJob, useTriggerJob, useUpdateJob } from '#/hooks/use-jobs';
 import { formatTime, statusDot, statusLabel } from '#/features/jobs/job-format';
 import { JobInfoRow } from '#/features/jobs/job-info-row';
 
@@ -45,54 +45,52 @@ function JobDetailsPage() {
   const navigate = useNavigate();
   const queryClient = useQueryClient();
   const [confirmDelete, setConfirmDelete] = useState(false);
-  const [busy, setBusy] = useState(false);
 
-  const { data, isLoading, isError, refetch } = useQuery({
-    queryKey: ['scheduled-task', jobId],
-    queryFn: () => jobsApi.get(jobId),
-  });
+  const { data, isLoading, isError, refetch } = useGetJob(jobId);
+  const triggerJobMutation = useTriggerJob();
+  const updateJobMutation = useUpdateJob();
+  const deleteJobMutation = useDeleteJob();
+  const busy =
+    triggerJobMutation.isPending || updateJobMutation.isPending || deleteJobMutation.isPending;
+
   const job = data?.data;
   const enabled = job?.status !== 'inactive';
 
   const refresh = () => {
     void refetch();
-    void queryClient.invalidateQueries({ queryKey: ['scheduled-tasks'] });
+    void queryClient.invalidateQueries({ queryKey: ['jobs'] });
   };
 
   const handleRun = async () => {
     if (!job || busy) return;
-    setBusy(true);
     try {
-      await jobsApi.trigger(job.id);
+      await triggerJobMutation.mutateAsync(job.id);
       toast.success(`Job ${job.name} started`);
       refresh();
     } catch {
       toast.error(`Could not run ${job.name}`);
-    } finally {
-      setBusy(false);
     }
   };
 
   const handleToggle = async (next: boolean) => {
     if (!job || busy) return;
-    setBusy(true);
     try {
-      await jobsApi.update(job.id, { status: next ? 'active' : 'inactive' });
+      await updateJobMutation.mutateAsync({
+        id: job.id,
+        payload: { status: next ? 'active' : 'inactive' },
+      });
       toast.success(next ? `Job ${job.name} enabled` : `Job ${job.name} disabled`);
       refresh();
     } catch {
       toast.error(`Could not ${next ? 'enable' : 'disable'} ${job.name}`);
-    } finally {
-      setBusy(false);
     }
   };
 
   const handleDelete = async () => {
     if (!job) return;
     try {
-      await jobsApi.remove(job.id);
+      await deleteJobMutation.mutateAsync(job.id);
       toast.success(`Job ${job.name} deleted`);
-      void queryClient.invalidateQueries({ queryKey: ['scheduled-tasks'] });
       navigate({ to: '/jobs' });
     } catch {
       toast.error(`Could not delete ${job.name}`);

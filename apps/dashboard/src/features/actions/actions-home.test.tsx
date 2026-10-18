@@ -1,9 +1,17 @@
+import { QueryClient, QueryClientProvider } from '@tanstack/react-query';
 import { fireEvent, render, screen, waitFor } from '@testing-library/react';
 import type { ReactNode } from 'react';
 import { beforeEach, describe, expect, it, vi } from 'vitest';
 import type { ActionRun, ActionRunner, ActionWorkflow } from '#/interfaces/actions';
 import { actionsService } from '#/services/actions';
 import { ActionsHome } from './actions-home';
+
+function renderWithClient(ui: ReactNode) {
+  const queryClient = new QueryClient({
+    defaultOptions: { queries: { retry: false } },
+  });
+  return render(<QueryClientProvider client={queryClient}>{ui}</QueryClientProvider>);
+}
 
 vi.mock('@tanstack/react-router', () => ({
   Link: ({ children, to, ...props }: { children?: ReactNode; to?: string }) => (
@@ -62,7 +70,7 @@ describe('ActionsHome', () => {
   });
 
   it('renders actions dashboard with runs, workflows, and runners count', () => {
-    render(
+    renderWithClient(
       <ActionsHome
         initialWorkflows={mockWorkflows}
         initialRuns={mockRuns}
@@ -77,7 +85,7 @@ describe('ActionsHome', () => {
   });
 
   it('navigates to run workspace on run click', async () => {
-    render(
+    renderWithClient(
       <ActionsHome
         initialWorkflows={mockWorkflows}
         initialRuns={mockRuns}
@@ -96,7 +104,7 @@ describe('ActionsHome', () => {
   });
 
   it('renders link to create new workflow', () => {
-    render(
+    renderWithClient(
       <ActionsHome
         initialWorkflows={mockWorkflows}
         initialRuns={mockRuns}
@@ -110,7 +118,7 @@ describe('ActionsHome', () => {
 
   it('allows deleting a workflow', async () => {
     vi.spyOn(actionsService, 'deleteWorkflow').mockResolvedValue();
-    render(
+    renderWithClient(
       <ActionsHome
         initialWorkflows={mockWorkflows}
         initialRuns={mockRuns}
@@ -128,7 +136,7 @@ describe('ActionsHome', () => {
 
   it('allows deleting a runner', async () => {
     vi.spyOn(actionsService, 'deleteRunner').mockResolvedValue();
-    render(
+    renderWithClient(
       <ActionsHome
         initialWorkflows={mockWorkflows}
         initialRuns={mockRuns}
