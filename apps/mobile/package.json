@@ -4,8 +4,8 @@
   "private": true,
   "main": "expo-router/entry",
   "scripts": {
-    "start": "EXPO_UNSTABLE_HEADLESS=1 expo start --dev-client",
-    "start:clear": "EXPO_UNSTABLE_HEADLESS=1 expo start --dev-client --clear",
+    "start": "expo start --dev-client",
+    "start:clear": "expo start --dev-client --clear",
     "android": "expo run:android",
     "ios": "expo run:ios",
     "build:dev": "eas build --platform all --profile development",
