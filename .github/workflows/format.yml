@@ -25,6 +25,6 @@ jobs:
         uses: biomejs/setup-biome@v2
 
       - name: Run Biome formatter on Apps
-        run: npx @biomejs/biome check --write apps
+        run: npx @biomejs/biome format --write apps packages
 
       - uses: autofix-ci/action@635ffb0c9798bd160680f18fd73371e355b85f27 # v1.3.2

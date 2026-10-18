@@ -57,7 +57,7 @@ jobs:
               docker rm -f test-redis
               ;;
             minio)
-              docker run -d --name test-minio -e MINIO_ROOT_USER=minioadmin -e MINIO_ROOT_PASSWORD=minioadmin -p 9000:9000 minio/minio:latest server /data
+              docker run -d --name test-minio -e MINIO_ROOT_USER=minioadmin -e MINIO_ROOT_PASSWORD=minioadmin -p 9000:9000 cgr.dev/chainguard/minio:latest server /data
               sleep 5
               curl -fsS http://localhost:9000/minio/health/live
               docker rm -f test-minio
@@ -66,8 +66,8 @@ jobs:
               docker pull neond/neond:f04d396c133d81e28cf52560ea11ef7e9b814d71
               ;;
             convex)
-              docker pull ghcr.io/get-convex/convex-backend:19431ea0dd90bc55ae58dbbd06d9aa045f97336f
-              docker pull ghcr.io/get-convex/convex-dashboard:19431ea0dd90bc55ae58dbbd06d9aa045f97336f
+              docker pull ghcr.io/get-convex/convex-backend:latest
+              docker pull ghcr.io/get-convex/convex-dashboard:latest
               ;;
             authentik)
               docker pull authentik/server:2026.8.3

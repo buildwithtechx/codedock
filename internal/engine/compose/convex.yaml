@@ -16,7 +16,7 @@ x-codedock:
       required: false
 services:
   backend:
-    image: ghcr.io/get-convex/convex-backend:19431ea0dd90bc55ae58dbbd06d9aa045f97336f
+    image: ghcr.io/get-convex/convex-backend:latest
     restart: always
     ports:
       - "3210"
@@ -34,7 +34,7 @@ services:
       retries: 5
       start_period: 20s
   dashboard:
-    image: ghcr.io/get-convex/convex-dashboard:19431ea0dd90bc55ae58dbbd06d9aa045f97336f
+    image: ghcr.io/get-convex/convex-dashboard:latest
     restart: always
     depends_on:
       - backend

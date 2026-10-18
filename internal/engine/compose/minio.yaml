@@ -13,7 +13,7 @@ x-codedock:
       length: 24
 services:
   minio:
-    image: minio/minio
+    image: cgr.dev/chainguard/minio:latest
     restart: always
     ports:
       - "9000"
