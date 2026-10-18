@@ -36,18 +36,20 @@ The official iOS and Android client for [Codedock](https://github.com/buildwitht
 apps/mobile/
 ├── assets/images/          # Official brand icons and splash screens
 ├── eas.json                # EAS Build configuration for dev, preview & prod
+├── test/                   # Jest unit test suites
+│   ├── store.test.ts
+│   └── utils.test.ts
 ├── src/
 │   ├── app/                # Expo Router native routes & tabs
 │   │   ├── (tabs)/         # 5 Tabs: index, databases, servers, deploys, settings
 │   │   ├── _layout.tsx     # Root navigation & QueryClientProvider
 │   │   ├── modal.tsx       # Workload action modal
 │   │   └── +not-found.tsx  # Missing route fallback
-│   ├── components/         # Reusable UI components (Icon)
+│   ├── components/         # Reusable native UI components (Icon)
 │   ├── hooks/              # TanStack Query hooks (workloads, databases, deploys, servers)
 │   ├── interfaces/         # TypeScript type definitions
 │   ├── services/           # API client, SecureStore storage, Push notifications
 │   ├── store/              # Zustand app state
-│   ├── test/               # Jest test suites
 │   ├── theme/              # Codedock dark zinc color palette & spacing
 │   └── utils/              # Formatting and helper utilities
 ├── babel.config.js

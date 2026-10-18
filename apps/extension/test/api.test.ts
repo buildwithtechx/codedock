@@ -1,6 +1,6 @@
 import * as assert from 'node:assert';
 import { afterEach, describe, test } from 'vitest';
-import { DatabasesApi, DeploymentsApi, InfrastructureApi, WorkloadsApi } from '../api';
+import { DatabasesApi, DeploymentsApi, InfrastructureApi, WorkloadsApi } from '../src/api';
 
 describe('Codedock API Client Suite', () => {
   const originalFetch = globalThis.fetch;

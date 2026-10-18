@@ -239,7 +239,7 @@
     "watch": "esbuild src/extension.ts --bundle --outfile=out/extension.js --external:vscode --format=cjs --platform=node --watch",
     "typecheck": "tsc --noEmit",
     "package": "vsce package --no-dependencies",
-    "test": "vitest run src/test/api.test.ts"
+    "test": "vitest run test/api.test.ts"
   },
   "devDependencies": {
     "@types/mocha": "^10.0.10",

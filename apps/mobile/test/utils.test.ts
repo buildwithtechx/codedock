@@ -1,4 +1,4 @@
-import { cleanUrl, formatDuration, formatStatus, truncate } from '../utils';
+import { cleanUrl, formatDuration, formatStatus, truncate } from '@/utils';
 
 describe('Mobile utils', () => {
   test('cleanUrl trims trailing slashes', () => {
