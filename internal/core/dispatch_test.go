@@ -12,11 +12,19 @@ import (
 
 type stubNotifSettingsRepo struct {
 	repositories.NotificationSettingsRepository
-	settings *models.NotificationSettings
+	settings      *models.NotificationSettings
+	subscriptions map[string][]models.NotificationSubscription
 }
 
 func (s *stubNotifSettingsRepo) GetNotificationSettings(context.Context) (*models.NotificationSettings, error) {
 	return s.settings, nil
+}
+
+func (s *stubNotifSettingsRepo) ListSubscriptions(_ context.Context, userID, _ string) ([]models.NotificationSubscription, error) {
+	if s.subscriptions != nil {
+		return s.subscriptions[userID], nil
+	}
+	return nil, nil
 }
 
 type stubDeliveriesRepo struct {
@@ -164,5 +172,86 @@ func TestDispatcherFanoutExpoPush(t *testing.T) {
 	}
 	if deliveries.recorded[0].Channel != "expo" {
 		t.Fatalf("expected channel expo, got %s", deliveries.recorded[0].Channel)
+	}
+}
+
+func TestDispatcherEnforcesUserCategorySubscription(t *testing.T) {
+	deliveries := &stubDeliveriesRepo{}
+	settings := &models.NotificationSettings{
+		NotificationAlerts: true,
+	}
+
+	notifRepo := &stubNotifSettingsRepo{
+		settings: settings,
+		subscriptions: map[string][]models.NotificationSubscription{
+			"user-opted-out": {
+				{Category: "deployment", Enabled: false},
+			},
+			"user-opted-in": {
+				{Category: "deployment", Enabled: true},
+			},
+		},
+	}
+
+	deviceTokens := &stubDeviceTokenRepo{
+		tokens: []*models.DeviceToken{
+			{UserID: "user-opted-out", Token: "ExponentPushToken[user-1-phone]", Platform: "expo"},
+			{UserID: "user-opted-in", Token: "ExponentPushToken[user-2-phone]", Platform: "expo"},
+		},
+	}
+
+	dispatcher := NewDispatcherService(nil, notifRepo, nil, deliveries, nil, deviceTokens)
+	_ = dispatcher.Send(&models.NotificationEvent{
+		EventType: models.EventDeploySucceeded,
+		Title:     "Deploy Succeeded",
+		Message:   "Production release completed",
+	})
+
+	// Only user-opted-in's token should have received the notification
+	if len(deliveries.recorded) != 1 {
+		t.Fatalf("expected exactly 1 delivery record for opted-in user, got %d", len(deliveries.recorded))
+	}
+}
+
+func TestDispatcherSpecificEventOverridesCategory(t *testing.T) {
+	deliveries := &stubDeliveriesRepo{}
+	settings := &models.NotificationSettings{
+		NotificationAlerts: true,
+	}
+
+	notifRepo := &stubNotifSettingsRepo{
+		settings: settings,
+		subscriptions: map[string][]models.NotificationSubscription{
+			"user-granular": {
+				{Category: "deployment", Enabled: true},
+				{Category: "deploy.succeeded", Enabled: false},
+			},
+		},
+	}
+
+	deviceTokens := &stubDeviceTokenRepo{
+		tokens: []*models.DeviceToken{
+			{UserID: "user-granular", Token: "ExponentPushToken[user-granular-phone]", Platform: "expo"},
+		},
+	}
+
+	dispatcher := NewDispatcherService(nil, notifRepo, nil, deliveries, nil, deviceTokens)
+
+	// deploy.succeeded is specifically disabled -> 0 deliveries
+	_ = dispatcher.Send(&models.NotificationEvent{
+		EventType: models.EventDeploySucceeded,
+		Title:     "Deploy Succeeded",
+	})
+	if len(deliveries.recorded) != 0 {
+		t.Fatalf("expected 0 deliveries for silenced specific event, got %d", len(deliveries.recorded))
+	}
+
+	// deploy.failed falls back to category 'deployment' which is enabled -> 1 delivery
+	_ = dispatcher.Send(&models.NotificationEvent{
+		EventType: models.EventDeployFailed,
+		Title:     "Deploy Failed",
+	})
+	if len(deliveries.recorded) != 1 {
+		t.Fatalf("expected 1 delivery for enabled category, got %d", len(deliveries.recorded))
 	}
 }

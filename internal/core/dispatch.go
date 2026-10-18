@@ -81,17 +81,34 @@ func (d *DispatcherService) Send(event *models.NotificationEvent) error {
 		}
 	}
 
-	// 2. Fan out to registered Expo push device tokens
+	// 2. Fan out to registered Expo push device tokens, consulting user category preferences
 	if d.deviceTokens != nil {
 		tokens, err := d.deviceTokens.ListAllTokens(ctx)
 		if err == nil && len(tokens) > 0 {
+			category := models.GetNotificationCategory(event.EventType)
+			userPrefsCache := make(map[string]bool)
+
 			for _, dt := range tokens {
-				if notifications.IsExpoPushToken(dt.Token) {
-					pushErr := notifications.SendExpoNotification(dt.Token, event)
-					d.recordDelivery(ctx, event, "expo", pushErr)
-					if pushErr != nil {
-						dispatchErrs = append(dispatchErrs, fmt.Errorf("expo: %w", pushErr))
+				if !notifications.IsExpoPushToken(dt.Token) {
+					continue
+				}
+
+				// Consult per-user category subscriptions before sending
+				if dt.UserID != "" && d.notifRepo != nil {
+					allowed, cached := userPrefsCache[dt.UserID]
+					if !cached {
+						allowed = d.isUserSubscribed(ctx, dt.UserID, event.EventType, category)
+						userPrefsCache[dt.UserID] = allowed
 					}
+					if !allowed {
+						continue
+					}
+				}
+
+				pushErr := notifications.SendExpoNotification(dt.Token, event)
+				d.recordDelivery(ctx, event, "expo", pushErr)
+				if pushErr != nil {
+					dispatchErrs = append(dispatchErrs, fmt.Errorf("expo: %w", pushErr))
 				}
 			}
 		}
@@ -170,4 +187,36 @@ func (d *DispatcherService) sendToProvider(settings *models.NotificationSettings
 	}
 
 	return fmt.Errorf("provider not enabled or configured")
+}
+
+func (d *DispatcherService) isUserSubscribed(ctx context.Context, userID, eventType, category string) bool {
+	if d.notifRepo == nil || userID == "" {
+		return true
+	}
+
+	subs, err := d.notifRepo.ListSubscriptions(ctx, userID, "")
+	if err != nil {
+		slog.Warn("failed to fetch user notification subscriptions", "userID", userID, "err", err)
+		return true
+	}
+
+	if len(subs) == 0 {
+		return true
+	}
+
+	// 1. Check specific event match (highest precedence, e.g. "deploy.succeeded")
+	for _, sub := range subs {
+		if sub.Category == eventType {
+			return sub.Enabled
+		}
+	}
+
+	// 2. Check general category group match (e.g. "deployment", "app_health", "backups")
+	for _, sub := range subs {
+		if sub.Category == category {
+			return sub.Enabled
+		}
+	}
+
+	return true
 }

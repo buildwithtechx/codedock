@@ -1,0 +1,15 @@
+# Runtime data & docker volumes
+data/
+data/**
+**/data/**
+tmp/
+bin/
+
+# Monorepo workspaces not needed for mobile build
+apps/dashboard/
+apps/web/
+apps/docs/
+apps/extension/
+cmd/
+internal/
+tests/

@@ -31,7 +31,6 @@
     },
     "android": {
       "package": "com.codedock.app",
-      "versionCode": 1,
       "softwareKeyboardLayoutMode": "pan",
       "adaptiveIcon": {
         "backgroundColor": "#09090B",

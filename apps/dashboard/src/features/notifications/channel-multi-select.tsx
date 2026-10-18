@@ -1,8 +1,24 @@
-import { Check, ChevronDown, Mail, MessageSquare, Send, Users, Webhook } from 'lucide-react';
+import {
+  Check,
+  ChevronDown,
+  Mail,
+  MessageSquare,
+  Send,
+  Smartphone,
+  Users,
+  Webhook,
+} from 'lucide-react';
 import type React from 'react';
 import { useEffect, useRef, useState } from 'react';
 
-export type ChannelKind = 'email' | 'webhook' | 'slack' | 'discord' | 'msteams' | 'telegram';
+export type ChannelKind =
+  | 'email'
+  | 'webhook'
+  | 'slack'
+  | 'discord'
+  | 'msteams'
+  | 'telegram'
+  | 'expo';
 
 interface ChannelChoice {
   id: ChannelKind;
@@ -11,6 +27,7 @@ interface ChannelChoice {
 }
 
 const CHANNELS: ChannelChoice[] = [
+  { id: 'expo', label: 'Mobile Push (Expo)', icon: Smartphone },
   { id: 'email', label: 'Email', icon: Mail },
   { id: 'webhook', label: 'Webhook', icon: Webhook },
   { id: 'slack', label: 'Slack', icon: MessageSquare },

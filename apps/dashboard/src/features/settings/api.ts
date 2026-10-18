@@ -1,4 +1,5 @@
 import type {
+  DeviceTokenDto,
   NotificationDefaultDto,
   NotificationDeliveryDto,
   NotificationSubscriptionDto,
@@ -234,6 +235,24 @@ export const settingsService = {
           channels: payload.channels,
           enabled: payload.enabled,
         }
+      );
+    } catch (error) {
+      throw handleApiError(error);
+    }
+  },
+
+  getDeviceTokens: async (): Promise<BaseResponse<DeviceTokenDto[]>> => {
+    try {
+      return await apiClient.get<BaseResponse<DeviceTokenDto[]>>('/notifications/devices');
+    } catch (error) {
+      throw handleApiError(error);
+    }
+  },
+
+  deleteDeviceToken: async (token: string): Promise<BaseResponse<null>> => {
+    try {
+      return await apiClient.delete<BaseResponse<null>>(
+        `/notifications/devices/${encodeURIComponent(token)}`
       );
     } catch (error) {
       throw handleApiError(error);

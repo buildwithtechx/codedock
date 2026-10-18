@@ -45,3 +45,12 @@ export interface NotificationDeliveryDto {
   error: string;
   createdAt: string;
 }
+
+export interface DeviceTokenDto {
+  id: string;
+  userId: string;
+  token: string;
+  platform: string;
+  createdAt: string;
+  updatedAt: string;
+}
