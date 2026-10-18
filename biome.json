@@ -78,6 +78,7 @@
       "apps/desktop/src/**",
       "apps/web/src/**",
       "apps/docs/src/**",
+      "apps/extension/src/**",
       "apps/cli/*.js",
       "apps/cli/bin/*.js",
       "packages/**/src/**",

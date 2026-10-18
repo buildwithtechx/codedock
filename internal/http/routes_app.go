@@ -158,6 +158,7 @@ func (s *Server) registerSettingsRoutes(apiGroup, authGroup *echo.Group) {
 }
 
 func (s *Server) registerMiscRoutes(apiGroup, authGroup *echo.Group) {
+	apiGroup.GET("/meta", s.getMeta)
 	authGroup.GET("/docs/openapi.json", serveOpenAPISpec)
 	authGroup.GET("/projects/:id/stacks", s.composeStackHandler.List)
 	authGroup.GET("/projects/:id/stacks/:stackId/config", s.composeStackHandler.Config, s.authGuard.RequireScope("env:read"))
@@ -274,3 +275,17 @@ func (s *Server) setupSPAFallback() {
 
 	dashboard.RegisterHandlers(s.router)
 }
+
+func (s *Server) getMeta(c echo.Context) error {
+	return c.JSON(http.StatusOK, map[string]any{
+		"name":    "codedock",
+		"version": "v1.0.0",
+		"capabilities": map[string]bool{
+			"sseLogs": true,
+			"push":    true,
+			"actions": true,
+			"apps":    true,
+		},
+	})
+}
+

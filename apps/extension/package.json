@@ -1,48 +1,257 @@
 {
-  "name": "@codedock/extension",
-  "displayName": "extension",
-  "description": "",
-  "version": "0.0.1",
+  "name": "vscode-codedock",
+  "displayName": "Codedock",
+  "description": "Deploy and manage Codedock workloads, databases, servers, and stream runtime logs",
+  "version": "0.1.0",
+  "publisher": "codedock",
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/buildwithtechx/codedock"
+  },
   "engines": {
-    "vscode": "^1.140.0"
+    "vscode": "^1.96.0"
   },
   "categories": [
+    "Deployment",
+    "DevOps",
     "Other"
   ],
-  "activationEvents": [],
+  "icon": "icons/codedock.png",
+  "activationEvents": [
+    "onView:codedock.views.workloads"
+  ],
   "main": "./out/extension.js",
   "contributes": {
+    "viewsContainers": {
+      "activitybar": [
+        {
+          "id": "codedock-sidebar",
+          "title": "Codedock",
+          "icon": "icons/codedock.png"
+        }
+      ]
+    },
+    "views": {
+      "codedock-sidebar": [
+        {
+          "id": "codedock.views.workloads",
+          "name": "Workloads & Databases"
+        },
+        {
+          "id": "codedock.views.servers",
+          "name": "Servers & Clusters"
+        },
+        {
+          "id": "codedock.views.deployments",
+          "name": "Recent Deployments"
+        }
+      ]
+    },
     "commands": [
       {
-        "command": "extension.helloWorld",
-        "title": "Hello World"
+        "command": "codedock.connect",
+        "title": "Connect to Instance",
+        "category": "Codedock",
+        "icon": "$(plug)"
+      },
+      {
+        "command": "codedock.switchProfile",
+        "title": "Switch Instance Profile",
+        "category": "Codedock"
+      },
+      {
+        "command": "codedock.disconnect",
+        "title": "Disconnect Instance",
+        "category": "Codedock"
+      },
+      {
+        "command": "codedock.refreshAll",
+        "title": "Refresh All Workloads",
+        "category": "Codedock",
+        "icon": "$(refresh)"
+      },
+      {
+        "command": "codedock.showQuickMenu",
+        "title": "Show Codedock Menu",
+        "category": "Codedock"
+      },
+      {
+        "command": "codedock.deployApp",
+        "title": "Redeploy App",
+        "category": "Codedock",
+        "icon": "$(cloud-upload)"
+      },
+      {
+        "command": "codedock.restartApp",
+        "title": "Restart App",
+        "category": "Codedock",
+        "icon": "$(debug-restart)"
+      },
+      {
+        "command": "codedock.stopApp",
+        "title": "Stop App",
+        "category": "Codedock"
+      },
+      {
+        "command": "codedock.viewLogs",
+        "title": "Stream Runtime Logs",
+        "category": "Codedock",
+        "icon": "$(output)"
+      },
+      {
+        "command": "codedock.viewEnvVars",
+        "title": "View Environment Variables",
+        "category": "Codedock"
+      },
+      {
+        "command": "codedock.copyPublicUrl",
+        "title": "Copy Public Domain URL",
+        "category": "Codedock"
+      },
+      {
+        "command": "codedock.openDashboard",
+        "title": "Open in Dashboard",
+        "category": "Codedock",
+        "icon": "$(globe)"
+      },
+      {
+        "command": "codedock.restartDatabase",
+        "title": "Restart Database",
+        "category": "Codedock",
+        "icon": "$(debug-restart)"
+      },
+      {
+        "command": "codedock.stopDatabase",
+        "title": "Stop Database",
+        "category": "Codedock"
+      },
+      {
+        "command": "codedock.startDatabase",
+        "title": "Start Database",
+        "category": "Codedock"
+      },
+      {
+        "command": "codedock.revealCredentials",
+        "title": "Reveal Connection Credentials",
+        "category": "Codedock",
+        "icon": "$(key)"
+      },
+      {
+        "command": "codedock.testServerSSH",
+        "title": "Test SSH Connection",
+        "category": "Codedock",
+        "icon": "$(terminal)"
+      },
+      {
+        "command": "codedock.viewSystemStats",
+        "title": "View System Metrics",
+        "category": "Codedock"
+      },
+      {
+        "command": "codedock.viewDeploymentLogs",
+        "title": "View Deployment Logs",
+        "category": "Codedock",
+        "icon": "$(output)"
       }
-    ]
+    ],
+    "menus": {
+      "view/title": [
+        {
+          "command": "codedock.refreshAll",
+          "when": "view == codedock.views.workloads || view == codedock.views.servers || view == codedock.views.deployments",
+          "group": "navigation@1"
+        },
+        {
+          "command": "codedock.connect",
+          "when": "view == codedock.views.workloads",
+          "group": "navigation@2"
+        }
+      ],
+      "view/item/context": [
+        {
+          "command": "codedock.viewLogs",
+          "when": "view == codedock.views.workloads && viewItem == codedock-app",
+          "group": "inline@1"
+        },
+        {
+          "command": "codedock.deployApp",
+          "when": "view == codedock.views.workloads && viewItem == codedock-app",
+          "group": "inline@2"
+        },
+        {
+          "command": "codedock.restartApp",
+          "when": "view == codedock.views.workloads && viewItem == codedock-app",
+          "group": "inline@3"
+        },
+        {
+          "command": "codedock.viewEnvVars",
+          "when": "view == codedock.views.workloads && viewItem == codedock-app",
+          "group": "secondary@1"
+        },
+        {
+          "command": "codedock.copyPublicUrl",
+          "when": "view == codedock.views.workloads && viewItem == codedock-app",
+          "group": "secondary@2"
+        },
+        {
+          "command": "codedock.stopApp",
+          "when": "view == codedock.views.workloads && viewItem == codedock-app",
+          "group": "secondary@3"
+        },
+        {
+          "command": "codedock.openDashboard",
+          "when": "view == codedock.views.workloads && viewItem == codedock-app",
+          "group": "secondary@4"
+        },
+        {
+          "command": "codedock.restartDatabase",
+          "when": "view == codedock.views.workloads && viewItem == codedock-database",
+          "group": "inline@1"
+        },
+        {
+          "command": "codedock.revealCredentials",
+          "when": "view == codedock.views.workloads && viewItem == codedock-database",
+          "group": "inline@2"
+        },
+        {
+          "command": "codedock.stopDatabase",
+          "when": "view == codedock.views.workloads && viewItem == codedock-database",
+          "group": "secondary@1"
+        },
+        {
+          "command": "codedock.startDatabase",
+          "when": "view == codedock.views.workloads && viewItem == codedock-database",
+          "group": "secondary@2"
+        },
+        {
+          "command": "codedock.testServerSSH",
+          "when": "view == codedock.views.servers && viewItem == codedock-server",
+          "group": "inline@1"
+        },
+        {
+          "command": "codedock.viewDeploymentLogs",
+          "when": "view == codedock.views.deployments && viewItem == codedock-deployment",
+          "group": "inline@1"
+        }
+      ]
+    }
   },
   "scripts": {
     "vscode:prepublish": "npm run compile",
-    "compile": "tsc -p ./",
-    "watch": "tsc -watch -p ./",
-    "pretest": "npm run compile && npm run lint",
-    "lint": "eslint src",
+    "compile": "esbuild src/extension.ts --bundle --outfile=out/extension.js --external:vscode --format=cjs --platform=node",
+    "watch": "esbuild src/extension.ts --bundle --outfile=out/extension.js --external:vscode --format=cjs --platform=node --watch",
+    "typecheck": "tsc --noEmit",
+    "package": "vsce package --no-dependencies",
     "test": "vscode-test"
   },
   "devDependencies": {
     "@types/mocha": "^10.0.10",
     "@types/node": "24.x",
-    "@types/vscode": "^1.140.0",
+    "@types/vscode": "^1.96.0",
     "@vscode/test-cli": "^0.0.15",
     "@vscode/test-electron": "^3.0.0",
     "@vscode/vsce": "^4.0.0",
-    "eslint": "^10.5.0",
-    "typescript": "^6.0.3",
-    "typescript-eslint": "^8.61.1"
-  },
-  "overrides": {
-    "diff": "^8.0.4",
-    "serialize-javascript": "^7.0.6"
-  },
-  "dependencies": {
-    "zod": "^4.6.7"
+    "esbuild": "^0.28.2",
+    "typescript": "^5.8.2"
   }
 }

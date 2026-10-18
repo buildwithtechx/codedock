@@ -311,6 +311,7 @@ func systemOperations() []Operation {
 	actions := "actions"
 	support := "support"
 	return []Operation{
+		{Method: "GET", Path: "/api/meta", Summary: "Get instance metadata and capabilities", Tags: []string{system}, Response: Obj("Metadata", RF("name", Str("Name")), RF("version", Str("Version")), RF("capabilities", Obj("Capabilities", RF("sseLogs", Bool("SSE logs")), RF("push", Bool("Push")), RF("actions", Bool("Actions")), RF("apps", Bool("Apps")))))},
 		{Method: "GET", Path: "/api/system/public", Summary: "Get public settings", Tags: []string{system}, Response: settingsSchema()},
 		{Method: "GET", Path: "/api/system/stats", Summary: "Get system stats", Tags: []string{system}, Auth: AuthUser, Response: systemStatsSchema()},
 		{Method: "GET", Path: "/api/system/monitor/stream", Summary: "Stream server monitoring metrics", Tags: []string{system}, Auth: Scope("server:read"), Raw: true, Content: ContentSSE, Response: Str("SSE server monitor stream")},

@@ -1,26 +1,41 @@
-// The module 'vscode' contains the VS Code extensibility API
-// Import the module and reference it with the alias vscode in your code below
 import * as vscode from 'vscode';
+import { ConnectionManager } from './auth/connection-manager';
+import { registerAllCommands, stopActiveLogStream } from './commands';
+import { DeploymentsTreeProvider } from './providers/deployments-tree-provider';
+import { ServersTreeProvider } from './providers/servers-tree-provider';
+import { WorkloadsTreeProvider } from './providers/workloads-tree-provider';
+import { OutputChannels } from './views/output-channels';
+import { CodedockStatusBar } from './views/status-bar';
 
-// This method is called when your extension is activated
-// Your extension is activated the very first time the command is executed
-export function activate(context: vscode.ExtensionContext) {
+export function activate(context: vscode.ExtensionContext): void {
+  const connectionManager = new ConnectionManager(context);
+  const workloadsProvider = new WorkloadsTreeProvider(connectionManager);
+  const serversProvider = new ServersTreeProvider(connectionManager);
+  const deploymentsProvider = new DeploymentsTreeProvider(connectionManager);
+  const outputChannels = OutputChannels.getInstance();
+  const statusBar = new CodedockStatusBar(connectionManager);
 
-	// Use the console to output diagnostic information (console.log) and errors (console.error)
-	// This line of code will only be executed once when your extension is activated
-	console.log('Congratulations, your extension "extension" is now active!');
+  // Register Tree Views
+  context.subscriptions.push(
+    vscode.window.registerTreeDataProvider('codedock.views.workloads', workloadsProvider),
+    vscode.window.registerTreeDataProvider('codedock.views.servers', serversProvider),
+    vscode.window.registerTreeDataProvider('codedock.views.deployments', deploymentsProvider)
+  );
 
-	// The command has been defined in the package.json file
-	// Now provide the implementation of the command with registerCommand
-	// The commandId parameter must match the command field in package.json
-	const disposable = vscode.commands.registerCommand('extension.helloWorld', () => {
-		// The code you place here will be executed every time your command is executed
-		// Display a message box to the user
-		vscode.window.showInformationMessage('Hello World from extension!');
-	});
+  // Register Status Bar & Output Channels
+  context.subscriptions.push(statusBar, outputChannels);
 
-	context.subscriptions.push(disposable);
+  // Register All Commands
+  registerAllCommands(
+    context,
+    connectionManager,
+    workloadsProvider,
+    serversProvider,
+    deploymentsProvider,
+    outputChannels
+  );
 }
 
-// This method is called when your extension is deactivated
-export function deactivate() {}
+export function deactivate(): void {
+  stopActiveLogStream();
+}

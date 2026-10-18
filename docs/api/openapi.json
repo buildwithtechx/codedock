@@ -44768,6 +44768,165 @@
         "x-auth": "authenticated"
       }
     },
+    "/api/meta": {
+      "get": {
+        "operationId": "getMeta",
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "description": "Codedock API envelope",
+                  "properties": {
+                    "data": {
+                      "description": "Metadata",
+                      "properties": {
+                        "capabilities": {
+                          "description": "Capabilities",
+                          "properties": {
+                            "actions": {
+                              "description": "Actions",
+                              "type": "boolean"
+                            },
+                            "apps": {
+                              "description": "Apps",
+                              "type": "boolean"
+                            },
+                            "push": {
+                              "description": "Push",
+                              "type": "boolean"
+                            },
+                            "sseLogs": {
+                              "description": "SSE logs",
+                              "type": "boolean"
+                            }
+                          },
+                          "required": [
+                            "sseLogs",
+                            "push",
+                            "actions",
+                            "apps"
+                          ],
+                          "type": "object"
+                        },
+                        "name": {
+                          "description": "Name",
+                          "type": "string"
+                        },
+                        "version": {
+                          "description": "Version",
+                          "type": "string"
+                        }
+                      },
+                      "required": [
+                        "name",
+                        "version",
+                        "capabilities"
+                      ],
+                      "type": "object"
+                    },
+                    "executionTime": {
+                      "description": "Handler seconds",
+                      "format": "double",
+                      "type": "number"
+                    },
+                    "message": {
+                      "description": "Human-readable message",
+                      "type": "string"
+                    },
+                    "path": {
+                      "description": "Request path",
+                      "type": "string"
+                    },
+                    "status": {
+                      "description": "Result status",
+                      "enum": [
+                        "success"
+                      ],
+                      "type": "string"
+                    }
+                  },
+                  "required": [
+                    "status",
+                    "message"
+                  ],
+                  "type": "object"
+                }
+              }
+            },
+            "description": "Get instance metadata and capabilities"
+          },
+          "400": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "description": "Codedock API error",
+                  "properties": {
+                    "message": {
+                      "description": "Human-readable message",
+                      "type": "string"
+                    },
+                    "path": {
+                      "description": "Request path",
+                      "type": "string"
+                    },
+                    "status": {
+                      "description": "Result status",
+                      "enum": [
+                        "error"
+                      ],
+                      "type": "string"
+                    }
+                  },
+                  "required": [
+                    "status",
+                    "message"
+                  ],
+                  "type": "object"
+                }
+              }
+            },
+            "description": "Invalid request"
+          },
+          "500": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "description": "Codedock API error",
+                  "properties": {
+                    "message": {
+                      "description": "Human-readable message",
+                      "type": "string"
+                    },
+                    "path": {
+                      "description": "Request path",
+                      "type": "string"
+                    },
+                    "status": {
+                      "description": "Result status",
+                      "enum": [
+                        "error"
+                      ],
+                      "type": "string"
+                    }
+                  },
+                  "required": [
+                    "status",
+                    "message"
+                  ],
+                  "type": "object"
+                }
+              }
+            },
+            "description": "Server error"
+          }
+        },
+        "summary": "Get instance metadata and capabilities",
+        "tags": [
+          "system"
+        ]
+      }
+    },
     "/api/migrations/{runId}": {
       "delete": {
         "operationId": "deleteMigrationsRunId",

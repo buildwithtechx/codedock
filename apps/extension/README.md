@@ -1,71 +1,29 @@
-# extension README
+# Codedock for Visual Studio Code
 
-This is the README for your extension "extension". After writing up a brief description, we recommend including the following sections.
+The official Visual Studio Code extension for [Codedock](https://codedock.io) — deploy, manage, and monitor your containerized applications, databases, and microservices directly from your editor.
 
 ## Features
 
-Describe specific features of your extension including screenshots of your extension in action. Image paths are relative to this README file.
+- **Direct Instance Connection**: Connect securely to any self-hosted or cloud Codedock daemon using Personal Access Tokens (PAT) stored safely in VS Code's `SecretStorage`.
+- **Apps & Services Explorer**: Interactive sidebar view displaying real-time status of all your services (`running`, `stopped`, `failed`, `building`).
+- **One-Click Deploy & Restart**: Trigger rebuilds, redeployments, or quick service restarts with single clicks or keyboard commands.
+- **Live SSE Log Streaming**: Stream real-time container runtime logs directly into a dedicated VS Code Output Channel without leaving your code editor.
+- **Status Bar Integration**: Always see your connected Codedock instance and jump straight to the web dashboard.
 
-For example if there is an image subfolder under your extension project workspace:
+## Getting Started
 
-\!\[feature X\]\(images/feature-x.png\)
+1. Open the Command Palette (`Ctrl+Shift+P` / `Cmd+Shift+P`).
+2. Run **`Codedock: Connect to Instance`**.
+3. Enter your Codedock daemon URL (e.g. `http://localhost:8080` or `https://codedock.example.com`).
+4. Enter your Personal Access Token (PAT) generated from your Codedock user settings.
+5. Explore and manage your applications in the **Codedock** activity bar icon!
 
-> Tip: Many popular extensions utilize animations. This is an excellent way to show off your extension! We recommend short, focused animations that are easy to follow.
+## Commands
 
-## Requirements
-
-If you have any requirements or dependencies, add a section describing those and how to install and configure them.
-
-## Extension Settings
-
-Include if your extension adds any VS Code settings through the `contributes.configuration` extension point.
-
-For example:
-
-This extension contributes the following settings:
-
-* `myExtension.enable`: Enable/disable this extension.
-* `myExtension.thing`: Set to `blah` to do something.
-
-## Known Issues
-
-Calling out known issues can help limit users opening duplicate issues against your extension.
-
-## Release Notes
-
-Users appreciate release notes as you update your extension.
-
-### 1.0.0
-
-Initial release of ...
-
-### 1.0.1
-
-Fixed issue #.
-
-### 1.1.0
-
-Added features X, Y, and Z.
-
----
-
-## Following extension guidelines
-
-Ensure that you've read through the extensions guidelines and follow the best practices for creating your extension.
-
-* [Extension Guidelines](https://code.visualstudio.com/api/references/extension-guidelines)
-
-## Working with Markdown
-
-You can author your README using Visual Studio Code. Here are some useful editor keyboard shortcuts:
-
-* Split the editor (`Cmd+\` on macOS or `Ctrl+\` on Windows and Linux).
-* Toggle preview (`Shift+Cmd+V` on macOS or `Shift+Ctrl+V` on Windows and Linux).
-* Press `Ctrl+Space` (Windows, Linux, macOS) to see a list of Markdown snippets.
-
-## For more information
-
-* [Visual Studio Code's Markdown Support](http://code.visualstudio.com/docs/languages/markdown)
-* [Markdown Syntax Reference](https://help.github.com/articles/markdown-basics/)
-
-**Enjoy!**
+- `Codedock: Connect to Instance` — Configure instance URL and PAT.
+- `Codedock: Disconnect Instance` — Clear stored credentials.
+- `Codedock: Refresh Apps` — Refresh the applications tree view.
+- `Codedock: Redeploy App` — Trigger an application deployment.
+- `Codedock: Restart App` — Restart an active application container.
+- `Codedock: View Runtime Logs` — Stream live container runtime logs.
+- `Codedock: Open in Dashboard` — Open the web dashboard in your default browser.
