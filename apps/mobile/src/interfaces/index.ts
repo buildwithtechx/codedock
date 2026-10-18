@@ -1,9 +1,24 @@
 export interface CodedockConnection {
   url: string;
   token: string;
+  mode?: 'cloud' | 'self-hosted';
   userName?: string;
   userEmail?: string;
   version?: string;
+}
+
+export interface CodedockProject {
+  id: string;
+  name: string;
+  description?: string;
+  organizationId?: string;
+  gitUrl?: string;
+  gitBranch?: string;
+  gitProvider?: string;
+  appsCount?: number;
+  databasesCount?: number;
+  createdAt?: string;
+  updatedAt?: string;
 }
 
 export interface CodedockMeta {

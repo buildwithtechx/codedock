@@ -1,6 +1,8 @@
 import { useRouter } from 'expo-router';
 import { useState } from 'react';
-import { ActivityIndicator, Alert, Pressable, StyleSheet, Text, View } from 'react-native';
+import { ActivityIndicator, Pressable, StyleSheet, Text, View } from 'react-native';
+import Toast from 'react-native-toast-message';
+import { Icon } from '@/components/Icon';
 import { MobileApi } from '@/services/api';
 import { useAppStore } from '@/store/useAppStore';
 import { useAppTheme } from '@/theme';
@@ -13,8 +15,9 @@ export default function AppDetailsModal() {
 
   if (!selectedApp) {
     return (
-      <View style={[styles.container, { backgroundColor: colors.background }]}>
-        <Text style={[styles.title, { color: colors.text }]}>No app selected</Text>
+      <View style={[styles.container, { backgroundColor: colors.surface }]}>
+        <View style={[styles.grabber, { backgroundColor: colors.border }]} />
+        <Text style={[styles.title, { color: colors.text }]}>No App Selected</Text>
         <Pressable style={styles.closeButton} onPress={() => router.back()}>
           <Text style={[styles.closeButtonText, { color: colors.textMuted }]}>Close</Text>
         </Pressable>
@@ -24,7 +27,11 @@ export default function AppDetailsModal() {
 
   const handleAction = async (action: 'redeploy' | 'restart' | 'stop') => {
     if (!connection) {
-      Alert.alert('Error', 'Not connected to Codedock instance');
+      Toast.show({
+        type: 'error',
+        text1: 'Authentication Error',
+        text2: 'Not connected to Codedock instance',
+      });
       return;
     }
 
@@ -32,32 +39,60 @@ export default function AppDetailsModal() {
     try {
       if (action === 'redeploy') {
         await MobileApi.redeployApp(connection.url, connection.token, selectedApp.id);
-        Alert.alert('Success', `Redeploy triggered for ${selectedApp.name}`);
+        Toast.show({
+          type: 'success',
+          text1: 'Redeploy Triggered',
+          text2: `Queued rebuild for ${selectedApp.name}`,
+        });
       } else if (action === 'restart') {
         await MobileApi.restartApp(connection.url, connection.token, selectedApp.id);
-        Alert.alert('Success', `Restart triggered for ${selectedApp.name}`);
+        Toast.show({
+          type: 'success',
+          text1: 'Restart Triggered',
+          text2: `Restarting container for ${selectedApp.name}`,
+        });
       } else if (action === 'stop') {
         await MobileApi.stopApp(connection.url, connection.token, selectedApp.id);
-        Alert.alert('Success', `Service ${selectedApp.name} stopped`);
+        Toast.show({
+          type: 'info',
+          text1: 'Service Stopped',
+          text2: `${selectedApp.name} has been stopped`,
+        });
       }
       router.back();
     } catch (err: unknown) {
       const msg = err instanceof Error ? err.message : String(err);
-      Alert.alert('Action Failed', msg);
+      Toast.show({
+        type: 'error',
+        text1: 'Action Failed',
+        text2: msg,
+      });
     } finally {
       setBusyAction(null);
     }
   };
 
   return (
-    <View style={[styles.container, { backgroundColor: colors.background }]}>
-      <Text style={[styles.title, { color: colors.text }]}>{selectedApp.name}</Text>
-      <Text style={[styles.subtitle, { color: colors.textSecondary }]}>
-        {selectedApp.projectName || 'Default Project'} · {selectedApp.status || 'stopped'}
-      </Text>
+    <View style={[styles.container, { backgroundColor: colors.surface }]}>
+      <View style={[styles.grabber, { backgroundColor: colors.border }]} />
+
+      <View style={styles.header}>
+        <View style={{ flex: 1 }}>
+          <Text style={[styles.title, { color: colors.text }]}>{selectedApp.name}</Text>
+          <Text style={[styles.subtitle, { color: colors.textSecondary }]}>
+            {selectedApp.projectName || 'Default Project'} · {selectedApp.status || 'stopped'}
+          </Text>
+        </View>
+        <Pressable onPress={() => router.back()} style={styles.dismissBtn}>
+          <Icon name="close" size={20} color={colors.textMuted} />
+        </Pressable>
+      </View>
 
       <View
-        style={[styles.infoCard, { backgroundColor: colors.surface, borderColor: colors.border }]}
+        style={[
+          styles.infoCard,
+          { backgroundColor: colors.background, borderColor: colors.border },
+        ]}
       >
         <View style={styles.infoRow}>
           <Text style={[styles.infoLabel, { color: colors.textSecondary }]}>Status</Text>
@@ -77,9 +112,15 @@ export default function AppDetailsModal() {
             {selectedApp.gitRepo || 'None'}
           </Text>
         </View>
+        {selectedApp.branch ? (
+          <View style={styles.infoRow}>
+            <Text style={[styles.infoLabel, { color: colors.textSecondary }]}>Branch</Text>
+            <Text style={[styles.infoValue, { color: colors.text }]}>{selectedApp.branch}</Text>
+          </View>
+        ) : null}
       </View>
 
-      <Text style={[styles.sectionHeader, { color: colors.text }]}>Service Actions</Text>
+      <Text style={[styles.sectionHeader, { color: colors.text }]}>Service Operations</Text>
 
       <Pressable
         style={[styles.actionBtn, { backgroundColor: colors.primary }]}
@@ -89,7 +130,10 @@ export default function AppDetailsModal() {
         {busyAction === 'redeploy' ? (
           <ActivityIndicator color="#FFFFFF" />
         ) : (
-          <Text style={styles.actionBtnText}>Redeploy Service</Text>
+          <View style={styles.btnInner}>
+            <Icon name="rocket-launch-outline" size={18} color="#FFFFFF" />
+            <Text style={styles.actionBtnText}>Redeploy Service</Text>
+          </View>
         )}
       </Pressable>
 
@@ -99,9 +143,12 @@ export default function AppDetailsModal() {
         disabled={!!busyAction}
       >
         {busyAction === 'restart' ? (
-          <ActivityIndicator color="#FFFFFF" />
+          <ActivityIndicator color={colors.text} />
         ) : (
-          <Text style={styles.actionBtnText}>Restart Service</Text>
+          <View style={styles.btnInner}>
+            <Icon name="restart" size={18} color={colors.text} />
+            <Text style={[styles.actionBtnText, { color: colors.text }]}>Restart Service</Text>
+          </View>
         )}
       </Pressable>
 
@@ -120,12 +167,11 @@ export default function AppDetailsModal() {
         {busyAction === 'stop' ? (
           <ActivityIndicator color={colors.danger} />
         ) : (
-          <Text style={[styles.actionBtnText, { color: colors.danger }]}>Stop Service</Text>
+          <View style={styles.btnInner}>
+            <Icon name="stop-circle-outline" size={18} color={colors.danger} />
+            <Text style={[styles.actionBtnText, { color: colors.danger }]}>Stop Service</Text>
+          </View>
         )}
-      </Pressable>
-
-      <Pressable style={styles.closeButton} onPress={() => router.back()}>
-        <Text style={[styles.closeButtonText, { color: colors.textMuted }]}>Done</Text>
       </Pressable>
     </View>
   );
@@ -134,50 +180,73 @@ export default function AppDetailsModal() {
 const styles = StyleSheet.create({
   container: {
     flex: 1,
-    padding: 24,
+    padding: 20,
+    borderTopLeftRadius: 20,
+    borderTopRightRadius: 20,
+  },
+  grabber: {
+    width: 40,
+    height: 4,
+    borderRadius: 2,
+    alignSelf: 'center',
+    marginBottom: 16,
+  },
+  header: {
+    flexDirection: 'row',
+    justifyContent: 'space-between',
+    alignItems: 'flex-start',
+    marginBottom: 16,
   },
   title: {
-    fontSize: 22,
+    fontSize: 20,
     fontWeight: 'bold',
-    marginBottom: 4,
   },
   subtitle: {
-    fontSize: 14,
-    marginBottom: 20,
+    fontSize: 13,
+    marginTop: 2,
+  },
+  dismissBtn: {
+    padding: 6,
   },
   infoCard: {
     borderWidth: 1,
-    borderRadius: 8,
-    padding: 16,
-    marginBottom: 24,
+    borderRadius: 12,
+    padding: 14,
+    marginBottom: 20,
   },
   infoRow: {
     flexDirection: 'row',
     justifyContent: 'space-between',
-    paddingVertical: 6,
+    paddingVertical: 5,
   },
   infoLabel: {
-    fontSize: 14,
+    fontSize: 13,
   },
   infoValue: {
-    fontSize: 14,
+    fontSize: 13,
     fontWeight: '500',
   },
   sectionHeader: {
-    fontSize: 16,
+    fontSize: 15,
     fontWeight: '600',
     marginBottom: 12,
   },
   actionBtn: {
-    borderRadius: 8,
-    paddingVertical: 14,
+    borderRadius: 10,
+    paddingVertical: 13,
     alignItems: 'center',
-    marginBottom: 12,
+    justifyContent: 'center',
+    marginBottom: 10,
+  },
+  btnInner: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 8,
   },
   actionBtnText: {
     color: '#FFFFFF',
     fontWeight: '600',
-    fontSize: 15,
+    fontSize: 14,
   },
   closeButton: {
     marginTop: 'auto',

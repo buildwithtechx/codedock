@@ -41,4 +41,18 @@ describe('useAppStore', () => {
     useAppStore.getState().setSelectedApp(mockApp);
     expect(useAppStore.getState().selectedApp?.id).toBe('app-1');
   });
+
+  test('sets projects and selected project', () => {
+    const mockProject = {
+      id: 'proj-1',
+      name: 'Web Platform',
+      gitUrl: 'https://github.com/codedock/starter',
+    };
+
+    useAppStore.getState().setProjects([mockProject]);
+    expect(useAppStore.getState().projects).toHaveLength(1);
+
+    useAppStore.getState().setSelectedProject(mockProject);
+    expect(useAppStore.getState().selectedProject?.id).toBe('proj-1');
+  });
 });

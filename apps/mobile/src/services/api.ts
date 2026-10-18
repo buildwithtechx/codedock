@@ -4,6 +4,7 @@ import type {
   CodedockDatabase,
   CodedockDeployment,
   CodedockMeta,
+  CodedockProject,
   CodedockServer,
   UserProfile,
 } from '@/interfaces';
@@ -33,10 +34,25 @@ export const MobileApi = {
     return data;
   },
 
-  async listApps(url: string, token: string): Promise<CodedockApp[]> {
+  async listProjects(url: string, token: string): Promise<CodedockProject[]> {
     const client = createClient(url, token);
-    const { data } = await client.get<CodedockApp[]>('/api/apps');
-    return Array.isArray(data) ? data : [];
+    const { data } = await client.get<any>('/api/projects');
+    if (Array.isArray(data)) return data;
+    if (Array.isArray(data?.projects)) return data.projects;
+    if (Array.isArray(data?.data)) return data.data;
+    return [];
+  },
+
+  async listApps(url: string, token: string, projectId?: string): Promise<CodedockApp[]> {
+    const client = createClient(url, token);
+    const endpoint = projectId
+      ? `/api/projects/${encodeURIComponent(projectId)}/services`
+      : '/api/apps';
+    const { data } = await client.get<any>(endpoint);
+    if (Array.isArray(data)) return data;
+    if (Array.isArray(data?.services)) return data.services;
+    if (Array.isArray(data?.data)) return data.data;
+    return [];
   },
 
   async redeployApp(url: string, token: string, appId: string): Promise<void> {

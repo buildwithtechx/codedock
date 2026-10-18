@@ -1,3 +1,4 @@
+import { useRouter } from 'expo-router';
 import { useState } from 'react';
 import {
   ActivityIndicator,
@@ -10,66 +11,93 @@ import {
   TextInput,
   View,
 } from 'react-native';
+import Toast from 'react-native-toast-message';
+import { AuthModeSelector } from '@/components/AuthModeSelector';
+import { ConnectedStatusCard } from '@/components/ConnectedStatusCard';
 import { MobileApi } from '@/services/api';
 import { registerForPushNotificationsAsync } from '@/services/notifications';
 import { MobileStorage } from '@/services/storage';
 import { useAppStore } from '@/store/useAppStore';
 import { useAppTheme } from '@/theme';
 
-export default function SettingsScreen() {
-  const { colors } = useAppTheme();
-  const { connection, setConnection, setApps } = useAppStore();
+const CLOUD_DEFAULT_URL = 'https://api.codedock.io';
 
-  const [url, setUrl] = useState(connection?.url || 'http://localhost:8080');
+export default function SettingsScreen() {
+  const router = useRouter();
+  const { colors } = useAppTheme();
+  const { connection, setConnection, setApps, setProjects } = useAppStore();
+
+  const [mode, setMode] = useState<'cloud' | 'self-hosted'>(
+    connection?.mode || (connection?.url?.includes('codedock.io') ? 'cloud' : 'self-hosted')
+  );
+  const [url, setUrl] = useState(connection?.url || CLOUD_DEFAULT_URL);
   const [token, setToken] = useState(connection?.token || '');
   const [loading, setLoading] = useState(false);
   const [pushEnabled, setPushEnabled] = useState(true);
 
+  const handleModeChange = (newMode: 'cloud' | 'self-hosted') => {
+    setMode(newMode);
+    setUrl(newMode === 'cloud' ? CLOUD_DEFAULT_URL : url === CLOUD_DEFAULT_URL ? '' : url);
+  };
+
   const onConnect = async () => {
-    if (!url || !token) {
-      Alert.alert('Validation Error', 'Instance URL and PAT token are required.');
+    const targetUrl = mode === 'cloud' ? url || CLOUD_DEFAULT_URL : url.trim();
+    const cleanToken = token.trim();
+
+    if (!targetUrl || !cleanToken) {
+      Toast.show({
+        type: 'error',
+        text1: 'Validation Error',
+        text2: 'Instance URL and PAT token are required.',
+      });
       return;
     }
 
     setLoading(true);
     try {
-      const meta = await MobileApi.getMeta(url);
-      const me = await MobileApi.getMe(url, token);
+      const meta = await MobileApi.getMeta(targetUrl);
+      const me = await MobileApi.getMe(targetUrl, cleanToken);
 
-      await MobileStorage.saveConnection(url, token, me.email);
+      await MobileStorage.saveConnection(targetUrl, cleanToken, me.email, mode);
       setConnection({
-        url,
-        token,
+        url: targetUrl,
+        token: cleanToken,
+        mode,
         userEmail: me.email,
         userName: me.name,
         version: meta.version,
       });
 
       if (pushEnabled) {
-        await registerForPushNotificationsAsync(url, token);
+        await registerForPushNotificationsAsync(targetUrl, cleanToken);
       }
 
-      Alert.alert('Connected', `Connected to Codedock (${meta.version}) as ${me.email}`);
+      Toast.show({
+        type: 'success',
+        text1: 'Connection Saved',
+        text2: `Connected to Codedock (${meta.version}) as ${me.email}`,
+      });
     } catch (err: unknown) {
       const msg = err instanceof Error ? err.message : String(err);
-      Alert.alert('Connection Failed', msg);
+      Toast.show({ type: 'error', text1: 'Connection Failed', text2: msg });
     } finally {
       setLoading(false);
     }
   };
 
-  const onDisconnect = async () => {
-    Alert.alert('Disconnect', 'Clear stored credentials from this device?', [
+  const onDisconnect = () => {
+    Alert.alert('Sign Out / Disconnect', 'Clear stored credentials from this device?', [
       { text: 'Cancel', style: 'cancel' },
       {
-        text: 'Disconnect',
+        text: 'Sign Out',
         style: 'destructive',
         onPress: async () => {
           await MobileStorage.clearConnection();
           setConnection(null);
           setApps([]);
-          setUrl('');
-          setToken('');
+          setProjects([]);
+          Toast.show({ type: 'info', text1: 'Signed Out', text2: 'Credentials cleared.' });
+          router.replace('/');
         },
       },
     ]);
@@ -79,26 +107,40 @@ export default function SettingsScreen() {
     <ScrollView
       style={[styles.container, { backgroundColor: colors.background }]}
       contentContainerStyle={styles.content}
+      keyboardShouldPersistTaps="handled"
     >
-      <Text style={[styles.headerTitle, { color: colors.text }]}>Instance Connection</Text>
+      <Text style={[styles.headerTitle, { color: colors.text }]}>Platform Connection</Text>
 
-      <Text style={[styles.label, { color: colors.textSecondary }]}>Codedock Instance URL</Text>
-      <TextInput
-        style={[
-          styles.input,
-          {
-            backgroundColor: colors.surface,
-            borderColor: colors.border,
-            color: colors.text,
-          },
-        ]}
-        placeholder="https://codedock.example.com"
-        placeholderTextColor={colors.textMuted}
-        value={url}
-        onChangeText={setUrl}
-        autoCapitalize="none"
-        autoCorrect={false}
-      />
+      <AuthModeSelector mode={mode} onModeChange={handleModeChange} />
+
+      {mode === 'cloud' ? (
+        <View
+          style={[
+            styles.cloudBanner,
+            { backgroundColor: colors.surface, borderColor: colors.border },
+          ]}
+        >
+          <Text style={[styles.cloudBannerText, { color: colors.textSecondary }]}>
+            Connected to Codedock Cloud service ({CLOUD_DEFAULT_URL}).
+          </Text>
+        </View>
+      ) : (
+        <>
+          <Text style={[styles.label, { color: colors.textSecondary }]}>Instance URL</Text>
+          <TextInput
+            style={[
+              styles.input,
+              { backgroundColor: colors.surface, borderColor: colors.border, color: colors.text },
+            ]}
+            placeholder="https://codedock.example.com"
+            placeholderTextColor={colors.textMuted}
+            value={url}
+            onChangeText={setUrl}
+            autoCapitalize="none"
+            autoCorrect={false}
+          />
+        </>
+      )}
 
       <Text style={[styles.label, { color: colors.textSecondary }]}>
         Personal Access Token (PAT)
@@ -106,11 +148,7 @@ export default function SettingsScreen() {
       <TextInput
         style={[
           styles.input,
-          {
-            backgroundColor: colors.surface,
-            borderColor: colors.border,
-            color: colors.text,
-          },
+          { backgroundColor: colors.surface, borderColor: colors.border, color: colors.text },
         ]}
         placeholder="pat_..."
         placeholderTextColor={colors.textMuted}
@@ -122,7 +160,7 @@ export default function SettingsScreen() {
       />
 
       <View style={styles.switchRow}>
-        <View>
+        <View style={{ flex: 1, marginRight: 12 }}>
           <Text style={[styles.switchLabel, { color: colors.text }]}>Push Notifications</Text>
           <Text style={[styles.switchSub, { color: colors.textMuted }]}>
             Receive alerts on deployment and server events
@@ -150,106 +188,28 @@ export default function SettingsScreen() {
       </Pressable>
 
       {connection ? (
-        <View
-          style={[
-            styles.connectedCard,
-            { backgroundColor: colors.surface, borderColor: colors.border },
-          ]}
-        >
-          <Text style={[styles.connectedTitle, { color: colors.success }]}>
-            Connected to Codedock
-          </Text>
-          <Text style={[styles.connectedText, { color: colors.textSecondary }]}>
-            User: {connection.userEmail || 'Active'}
-          </Text>
-          <Text style={[styles.connectedText, { color: colors.textSecondary }]}>
-            Version: {connection.version || 'v1.0.0'}
-          </Text>
-
-          <Pressable
-            style={[styles.dangerButton, { backgroundColor: colors.dangerBackground }]}
-            onPress={onDisconnect}
-          >
-            <Text style={[styles.dangerButtonText, { color: colors.danger }]}>Disconnect</Text>
-          </Pressable>
-        </View>
+        <ConnectedStatusCard connection={connection} onDisconnect={onDisconnect} />
       ) : null}
     </ScrollView>
   );
 }
 
 const styles = StyleSheet.create({
-  container: {
-    flex: 1,
-  },
-  content: {
-    padding: 20,
-  },
-  headerTitle: {
-    fontSize: 18,
-    fontWeight: 'bold',
-    marginBottom: 16,
-  },
-  label: {
-    fontSize: 13,
-    marginBottom: 6,
-  },
-  input: {
-    borderWidth: 1,
-    borderRadius: 8,
-    padding: 12,
-    fontSize: 15,
-    marginBottom: 16,
-  },
+  container: { flex: 1 },
+  content: { padding: 20 },
+  headerTitle: { fontSize: 18, fontWeight: 'bold', marginBottom: 14 },
+  cloudBanner: { borderWidth: 1, borderRadius: 8, padding: 12, marginBottom: 16 },
+  cloudBannerText: { fontSize: 13, lineHeight: 18 },
+  label: { fontSize: 13, marginBottom: 6 },
+  input: { borderWidth: 1, borderRadius: 8, padding: 12, fontSize: 14, marginBottom: 14 },
   switchRow: {
     flexDirection: 'row',
     justifyContent: 'space-between',
     alignItems: 'center',
-    marginBottom: 24,
-    paddingVertical: 8,
-  },
-  switchLabel: {
-    fontSize: 15,
-    fontWeight: '500',
-  },
-  switchSub: {
-    fontSize: 12,
-    marginTop: 2,
-  },
-  button: {
-    borderRadius: 8,
-    padding: 14,
-    alignItems: 'center',
     marginBottom: 20,
   },
-  buttonText: {
-    color: '#FFFFFF',
-    fontWeight: '600',
-    fontSize: 15,
-  },
-  connectedCard: {
-    borderWidth: 1,
-    borderRadius: 8,
-    padding: 16,
-    marginTop: 10,
-  },
-  connectedTitle: {
-    fontWeight: '600',
-    fontSize: 15,
-    marginBottom: 6,
-  },
-  connectedText: {
-    fontSize: 13,
-    marginBottom: 4,
-  },
-  dangerButton: {
-    marginTop: 12,
-    paddingVertical: 10,
-    borderRadius: 6,
-    alignItems: 'center',
-  },
-  dangerButtonText: {
-    fontWeight: '600',
-    fontSize: 14,
-  },
+  switchLabel: { fontSize: 14, fontWeight: '500' },
+  switchSub: { fontSize: 11, marginTop: 2 },
+  button: { borderRadius: 10, padding: 14, alignItems: 'center', marginBottom: 16 },
+  buttonText: { color: '#FFFFFF', fontWeight: '600', fontSize: 15 },
 });
