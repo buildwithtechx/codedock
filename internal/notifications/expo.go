@@ -44,15 +44,22 @@ func IsExpoPushToken(token string) bool {
 
 func SendExpoNotification(token string, event *models.NotificationEvent) error {
 	client := &http.Client{Timeout: 10 * time.Second}
-	return SendExpoNotificationWithClient(client, expoPushAPIURL, token, event)
+	return SendExpoNotificationWithAuth(client, expoPushAPIURL, token, "", event)
 }
 
 func SendExpoNotificationWithClient(httpClient *http.Client, apiURL, token string, event *models.NotificationEvent) error {
+	return SendExpoNotificationWithAuth(httpClient, apiURL, token, "", event)
+}
+
+func SendExpoNotificationWithAuth(httpClient *http.Client, apiURL, token, accessToken string, event *models.NotificationEvent) error {
 	if !IsExpoPushToken(token) {
 		return fmt.Errorf("invalid expo push token: %s", token)
 	}
 	if httpClient == nil {
 		httpClient = &http.Client{Timeout: 10 * time.Second}
+	}
+	if apiURL == "" {
+		apiURL = expoPushAPIURL
 	}
 
 	msg := ExpoPushMessage{
@@ -80,6 +87,9 @@ func SendExpoNotificationWithClient(httpClient *http.Client, apiURL, token strin
 	}
 	req.Header.Set("Content-Type", "application/json")
 	req.Header.Set("Accept", "application/json")
+	if accessToken != "" {
+		req.Header.Set("Authorization", "Bearer "+accessToken)
+	}
 
 	resp, err := httpClient.Do(req)
 	if err != nil {

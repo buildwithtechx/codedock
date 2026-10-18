@@ -3,12 +3,12 @@ import { render, screen } from '@testing-library/react';
 import { beforeEach, describe, expect, it, vi } from 'vitest';
 import { NotificationSubscriptionsTable } from './notification-subscriptions-table';
 
-vi.mock('#/features/settings/api', () => ({
-  settingsService: {
-    getSubscriptions: vi.fn().mockResolvedValue({ data: [] }),
-    getDefaults: vi.fn().mockResolvedValue({ data: [] }),
-    upsertSubscription: vi.fn().mockResolvedValue({}),
-    upsertDefault: vi.fn().mockResolvedValue({}),
+vi.mock('#/services/notifications', () => ({
+  notificationsService: {
+    getNotificationSubscriptions: vi.fn().mockResolvedValue({ data: [] }),
+    getNotificationDefaults: vi.fn().mockResolvedValue({ data: [] }),
+    upsertNotificationSubscription: vi.fn().mockResolvedValue({}),
+    upsertNotificationDefault: vi.fn().mockResolvedValue({}),
   },
 }));
 

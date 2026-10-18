@@ -2,7 +2,7 @@ import { useQuery } from '@tanstack/react-query';
 import { createFileRoute } from '@tanstack/react-router';
 import { Loader2 } from 'lucide-react';
 import { ActionsHome } from '#/features/actions';
-import { useGetPublicSettings } from '#/features/settings';
+import { useGetPublicSettings } from '#/hooks/use-settings';
 import { actionsService } from '#/services/actions';
 
 export const Route = createFileRoute('/_dashboard/actions/')({

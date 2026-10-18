@@ -5,7 +5,7 @@ import { Button } from '@codedock/ui/button';
 import { Input } from '@codedock/ui/input';
 import { Label } from '@codedock/ui/label';
 import { ServerTakeoverDialog } from '#/features/servers/components/server-takeover-dialog';
-import { useExportSystem, useImportSystem } from '#/features/settings';
+import { useExportSystem, useImportSystem } from '#/hooks/use-settings';
 import { SettingsSection } from './settings-section';
 
 export function MigrationSettings() {

@@ -1,9 +1,10 @@
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
-import { settingsService, systemService } from './api';
+import type { UpdateSettingsRequest } from '#/interfaces/settings';
+import { settingsService, systemService } from '#/services/settings';
 
 export const useGetSettings = () => {
   return useQuery({
-    queryKey: ['settings', 'getSettings'].filter(Boolean),
+    queryKey: ['settings', 'getSettings'],
     queryFn: () => settingsService.getSettings(),
   });
 };
@@ -25,7 +26,7 @@ export const useGetSetupStatus = () => {
 export const useUpdateSettings = () => {
   const queryClient = useQueryClient();
   return useMutation({
-    mutationFn: (payload: { payload: Parameters<typeof settingsService.updateSettings>[0] }) =>
+    mutationFn: (payload: { payload: UpdateSettingsRequest }) =>
       settingsService.updateSettings(payload.payload),
     onSuccess: async () => {
       await queryClient.invalidateQueries({ queryKey: ['settings'] });
@@ -35,7 +36,7 @@ export const useUpdateSettings = () => {
 
 export const useGetAISettings = () => {
   return useQuery({
-    queryKey: ['settings', 'getAISettings'].filter(Boolean),
+    queryKey: ['settings', 'getAISettings'],
     queryFn: () => settingsService.getAISettings(),
   });
 };
@@ -50,31 +51,6 @@ export const useUpdateAISettings = () => {
   });
 };
 
-export const useGetNotificationSettings = () => {
-  return useQuery({
-    queryKey: ['settings', 'getNotificationSettings'].filter(Boolean),
-    queryFn: () => settingsService.getNotificationSettings(),
-  });
-};
-
-export const useUpdateNotificationSettings = () => {
-  const queryClient = useQueryClient();
-  return useMutation({
-    mutationFn: (payload: Record<string, unknown>) =>
-      settingsService.updateNotificationSettings(payload),
-    onSuccess: async () => {
-      await queryClient.invalidateQueries({ queryKey: ['settings', 'getNotificationSettings'] });
-    },
-  });
-};
-
-export const useGetNotifications = () => {
-  return useQuery({
-    queryKey: ['settings', 'getNotifications'].filter(Boolean),
-    queryFn: () => settingsService.getNotifications(),
-  });
-};
-
 export const useGetGitApps = () => {
   return useQuery({
     queryKey: ['settings', 'getGitApps', 'github'],
@@ -85,7 +61,8 @@ export const useGetGitApps = () => {
 export const useSaveGitApp = () => {
   const queryClient = useQueryClient();
   return useMutation({
-    mutationFn: (payload: Record<string, unknown>) => settingsService.saveGitApp(payload),
+    mutationFn: (payload: Parameters<typeof settingsService.saveGitApp>[0]) =>
+      settingsService.saveGitApp(payload),
     onSuccess: async () => {
       await queryClient.invalidateQueries({ queryKey: ['settings', 'getGitApps', 'github'] });
     },
@@ -115,7 +92,7 @@ export const useExchangeGithubManifest = () => {
 
 export const useGetUpdateStatus = () => {
   return useQuery({
-    queryKey: ['settings', 'getUpdateStatus'].filter(Boolean),
+    queryKey: ['settings', 'getUpdateStatus'],
     queryFn: () => settingsService.getUpdateStatus(),
   });
 };
@@ -129,33 +106,6 @@ export const useCheckUpdate = () => {
 export const useDeployUpdate = () => {
   return useMutation({
     mutationFn: () => settingsService.deployUpdate(),
-  });
-};
-
-export const useSaveNotificationChannel = () => {
-  const queryClient = useQueryClient();
-  return useMutation({
-    mutationFn: (payload: Record<string, unknown>) =>
-      settingsService.saveNotificationChannel(payload),
-    onSuccess: async () => {
-      await queryClient.invalidateQueries({ queryKey: ['settings', 'getNotifications'] });
-    },
-  });
-};
-
-export const useTestNotification = () => {
-  return useMutation({
-    mutationFn: (payload: Record<string, unknown>) => settingsService.testNotification(payload),
-  });
-};
-
-export const useDeleteNotificationChannel = () => {
-  const queryClient = useQueryClient();
-  return useMutation({
-    mutationFn: (id: string) => settingsService.deleteNotificationChannel(id),
-    onSuccess: async () => {
-      await queryClient.invalidateQueries({ queryKey: ['settings', 'getNotifications'] });
-    },
   });
 };
 

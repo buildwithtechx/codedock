@@ -2,33 +2,11 @@ import { Mail, Webhook } from 'lucide-react';
 import { Input } from '@codedock/ui/input';
 import { Label } from '@codedock/ui/label';
 import { PreferenceRow } from '#/features/settings/preference-row';
+import type { NotifSettingsForm } from '#/interfaces/notifications';
 import { NotificationChannelRow } from './notification-channel-row';
+import { NotificationSmtpForm } from './notification-smtp-form';
 
-export type NotifSettingsForm = {
-  discordWebhookUrl: string;
-  discordPingEnabled: boolean;
-  discordEnabled: boolean;
-  slackWebhookUrl: string;
-  slackEnabled: boolean;
-  telegramBotToken: string;
-  telegramChatId: string;
-  telegramEnabled: boolean;
-  smtpHost: string;
-  smtpPort: number;
-  smtpUser: string;
-  smtpPassword: string;
-  smtpFromName: string;
-  smtpFromAddress: string;
-  smtpEnabled: boolean;
-  resendApiKey: string;
-  resendEnabled: boolean;
-  pushoverUserKey: string;
-  pushoverApiToken: string;
-  pushoverEnabled: boolean;
-  genericWebhookUrl: string;
-  genericWebhookEnabled: boolean;
-  notificationAlerts: boolean;
-};
+export type { NotifSettingsForm };
 
 type Props = {
   form: NotifSettingsForm;
@@ -53,6 +31,36 @@ export const NotificationChannelsList = ({
 }: Props) => {
   return (
     <div className="space-y-4">
+      <NotificationChannelRow
+        icon={
+          <img
+            src="/notification-providers/expo.svg"
+            alt="Expo"
+            className="h-5 w-5 object-contain dark:invert"
+          />
+        }
+        name="Expo Push"
+        description="Native iOS and Android push notifications via Expo Push Service"
+        isConfigured={Boolean(form.expoPushToken?.trim())}
+        enabled={form.expoEnabled ?? false}
+        onToggle={(v) => set('expoEnabled', v)}
+        onSave={() => handleSave('expo')}
+        onTest={() => handleTest('expo')}
+        saving={savingProvider === 'expo'}
+        testing={testingProvider === 'expo' && testing}
+        disabled={disabled}
+      >
+        <div className="space-y-1.5">
+          <Label className="text-xs">Push Token</Label>
+          <Input
+            value={form.expoPushToken ?? ''}
+            onChange={(e) => set('expoPushToken', e.target.value)}
+            placeholder="ExponentPushToken[xxxxxxxxxxxxxxxxxxxxxx]"
+            className="font-mono text-xs"
+          />
+        </div>
+      </NotificationChannelRow>
+
       <NotificationChannelRow
         icon={
           <img
@@ -172,65 +180,7 @@ export const NotificationChannelsList = ({
         testing={testingProvider === 'smtp' && testing}
         disabled={disabled}
       >
-        <div className="grid grid-cols-1 gap-3 sm:grid-cols-2">
-          <div className="space-y-1.5">
-            <Label className="text-xs">Host</Label>
-            <Input
-              value={form.smtpHost ?? ''}
-              onChange={(e) => set('smtpHost', e.target.value)}
-              placeholder="smtp.example.com"
-              className="font-mono text-xs"
-            />
-          </div>
-          <div className="space-y-1.5">
-            <Label className="text-xs">Port</Label>
-            <Input
-              type="number"
-              value={form.smtpPort ?? 587}
-              onChange={(e) => set('smtpPort', Number(e.target.value))}
-              className="font-mono text-xs"
-            />
-          </div>
-        </div>
-        <div className="grid grid-cols-1 gap-3 sm:grid-cols-2">
-          <div className="space-y-1.5">
-            <Label className="text-xs">Username</Label>
-            <Input
-              value={form.smtpUser ?? ''}
-              onChange={(e) => set('smtpUser', e.target.value)}
-              className="font-mono text-xs"
-            />
-          </div>
-          <div className="space-y-1.5">
-            <Label className="text-xs">Password</Label>
-            <Input
-              type="password"
-              value={form.smtpPassword ?? ''}
-              onChange={(e) => set('smtpPassword', e.target.value)}
-              className="font-mono text-xs"
-            />
-          </div>
-        </div>
-        <div className="grid grid-cols-1 gap-3 sm:grid-cols-2">
-          <div className="space-y-1.5">
-            <Label className="text-xs">From Name</Label>
-            <Input
-              value={form.smtpFromName ?? ''}
-              onChange={(e) => set('smtpFromName', e.target.value)}
-              placeholder="Codedock Alerts"
-              className="text-xs"
-            />
-          </div>
-          <div className="space-y-1.5">
-            <Label className="text-xs">From Address</Label>
-            <Input
-              value={form.smtpFromAddress ?? ''}
-              onChange={(e) => set('smtpFromAddress', e.target.value)}
-              placeholder="alerts@example.com"
-              className="font-mono text-xs"
-            />
-          </div>
-        </div>
+        <NotificationSmtpForm form={form} set={set} />
       </NotificationChannelRow>
 
       <NotificationChannelRow

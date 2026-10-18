@@ -24,6 +24,8 @@ type NotificationSettings struct {
 	PushoverEnabled       bool   `json:"pushoverEnabled"`
 	GenericWebhookURL     string `json:"genericWebhookUrl,omitempty"`
 	GenericWebhookEnabled bool   `json:"genericWebhookEnabled"`
+	ExpoPushToken         string `json:"expoPushToken,omitempty"`
+	ExpoEnabled           bool   `json:"expoEnabled"`
 	NotificationAlerts    bool   `json:"notificationAlerts"`
 	CreatedAt             string `json:"createdAt"`
 	UpdatedAt             string `json:"updatedAt"`

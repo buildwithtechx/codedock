@@ -3,7 +3,7 @@ import { AlertCircle } from 'lucide-react';
 import { Button } from '@codedock/ui/button';
 import { AuthPageFrame } from '#/features/auth';
 import { ForgotPasswordForm } from '#/features/auth/forgot-password-form';
-import { useGetPublicSettings } from '#/features/settings';
+import { useGetPublicSettings } from '#/hooks/use-settings';
 import { useSystemStore } from '#/stores/system-store';
 
 export const Route = createFileRoute('/_auth/forgot-password')({

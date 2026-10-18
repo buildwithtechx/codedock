@@ -35,7 +35,7 @@ func NewNotificationSettingsRepo(db *sql.DB) *NotificationSettingsRepo {
 	return &NotificationSettingsRepo{db: sqlx.NewDb(db, "pgx")}
 }
 
-const notificationSettingsColumns = `id, discord_webhook_url, discord_ping_enabled, discord_enabled, slack_webhook_url, slack_enabled, telegram_bot_token, telegram_chat_id, telegram_enabled, smtp_host, smtp_port, smtp_user, smtp_password, smtp_from_name, smtp_from_address, smtp_enabled, resend_api_key, resend_enabled, pushover_user_key, pushover_api_token, pushover_enabled, generic_webhook_url, generic_webhook_enabled, notification_alerts, created_at, updated_at`
+const notificationSettingsColumns = `id, discord_webhook_url, discord_ping_enabled, discord_enabled, slack_webhook_url, slack_enabled, telegram_bot_token, telegram_chat_id, telegram_enabled, smtp_host, smtp_port, smtp_user, smtp_password, smtp_from_name, smtp_from_address, smtp_enabled, resend_api_key, resend_enabled, pushover_user_key, pushover_api_token, pushover_enabled, generic_webhook_url, generic_webhook_enabled, expo_push_token, expo_enabled, notification_alerts, created_at, updated_at`
 
 func notificationSettingsPlaceholders() string {
 	columns := strings.Split(notificationSettingsColumns, ",")
@@ -51,6 +51,7 @@ func scanNotificationSettings(scanner interface{ Scan(dest ...any) error }, cfg 
 		&cfg.ID, &cfg.DiscordWebhookURL, &cfg.DiscordPingEnabled, &cfg.DiscordEnabled, &cfg.SlackWebhookURL, &cfg.SlackEnabled, &cfg.TelegramBotToken, &cfg.TelegramChatID, &cfg.TelegramEnabled,
 		&cfg.SMTPHost, &cfg.SMTPPort, &cfg.SMTPUser, &cfg.SMTPPassword, &cfg.SMTPFromName, &cfg.SMTPFromAddress, &cfg.SMTPEnabled,
 		&cfg.ResendAPIKey, &cfg.ResendEnabled, &cfg.PushoverUserKey, &cfg.PushoverAPIToken, &cfg.PushoverEnabled, &cfg.GenericWebhookURL, &cfg.GenericWebhookEnabled,
+		&cfg.ExpoPushToken, &cfg.ExpoEnabled,
 		&cfg.NotificationAlerts,
 		&cfg.CreatedAt, &cfg.UpdatedAt,
 	)
@@ -61,6 +62,7 @@ func notificationSettingsArgs(cfg *models.NotificationSettings) []any {
 		cfg.ID, cfg.DiscordWebhookURL, cfg.DiscordPingEnabled, cfg.DiscordEnabled, cfg.SlackWebhookURL, cfg.SlackEnabled, cfg.TelegramBotToken, cfg.TelegramChatID, cfg.TelegramEnabled,
 		cfg.SMTPHost, cfg.SMTPPort, cfg.SMTPUser, cfg.SMTPPassword, cfg.SMTPFromName, cfg.SMTPFromAddress, cfg.SMTPEnabled,
 		cfg.ResendAPIKey, cfg.ResendEnabled, cfg.PushoverUserKey, cfg.PushoverAPIToken, cfg.PushoverEnabled, cfg.GenericWebhookURL, cfg.GenericWebhookEnabled,
+		cfg.ExpoPushToken, cfg.ExpoEnabled,
 		cfg.NotificationAlerts,
 		cfg.CreatedAt, cfg.UpdatedAt,
 	}
@@ -121,6 +123,8 @@ func (r *NotificationSettingsRepo) UpdateNotificationSettings(ctx context.Contex
 	          pushover_enabled = excluded.pushover_enabled,
 	          generic_webhook_url = excluded.generic_webhook_url,
 	          generic_webhook_enabled = excluded.generic_webhook_enabled,
+	          expo_push_token = excluded.expo_push_token,
+	          expo_enabled = excluded.expo_enabled,
 	          notification_alerts = excluded.notification_alerts,
 	          updated_at = excluded.updated_at`, notificationSettingsColumns, notificationSettingsPlaceholders())
 	_, err := r.db.ExecContext(ctx, query, notificationSettingsArgs(cfg)...)

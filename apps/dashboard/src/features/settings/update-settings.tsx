@@ -2,7 +2,7 @@ import { CheckCircle2, Download, ExternalLink, RefreshCw, ShieldCheck } from 'lu
 import { toast } from 'sonner';
 import { Button } from '@codedock/ui/button';
 import { Skeleton } from '@codedock/ui/skeleton';
-import { useCheckUpdate, useDeployUpdate, useGetUpdateStatus } from '#/features/settings';
+import { useCheckUpdate, useDeployUpdate, useGetUpdateStatus } from '#/hooks/use-settings';
 import { SettingsSection } from './settings-section';
 
 export const UpdatesPage = () => {

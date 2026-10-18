@@ -3,13 +3,13 @@ import { Edit, Plus, Trash } from 'lucide-react';
 import { useEffect, useState } from 'react';
 import { toast } from 'sonner';
 import { Button } from '@codedock/ui/button';
-import type { GithubApp } from '#/features/settings';
+import type { GithubApp } from '#/interfaces/settings';
 import {
   useDeleteGitApp,
   useExchangeGithubManifest,
   useGetGitApps,
   useSaveGitApp,
-} from '#/features/settings';
+} from '#/hooks/use-settings';
 import { SettingsSection } from '#/features/settings/settings-section';
 import { GithubAppDialogs, GithubIcon } from './github-app-dialogs';
 

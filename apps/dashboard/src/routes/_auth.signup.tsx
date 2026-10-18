@@ -1,7 +1,7 @@
 import { createFileRoute, Link, Navigate } from '@tanstack/react-router';
 import { useEffect } from 'react';
 import { AuthPageFrame, OAuthButtons, RegisterForm } from '#/features/auth';
-import { useGetPublicSettings, useGetSetupStatus } from '#/features/settings';
+import { useGetPublicSettings, useGetSetupStatus } from '#/hooks/use-settings';
 import { useSystemStore } from '#/stores/system-store';
 
 export const Route = createFileRoute('/_auth/signup')({

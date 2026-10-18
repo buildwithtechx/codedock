@@ -1,5 +1,5 @@
 import { Badge } from '@codedock/ui/badge';
-import type { SystemStats } from '#/features/settings';
+import type { SystemStats } from '#/interfaces/settings';
 import { cn } from '#/lib/utils';
 
 type Props = {

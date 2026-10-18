@@ -12,7 +12,7 @@ import {
 } from '@codedock/ui/dialog';
 import { Input } from '@codedock/ui/input';
 import { Label } from '@codedock/ui/label';
-import { useGetSetupStatus } from '#/features/settings';
+import { useGetSetupStatus } from '#/hooks/use-settings';
 import { apiClient } from '#/lib/api-client';
 
 export function OnboardingImport({ triggerClassName }: { triggerClassName?: string } = {}) {

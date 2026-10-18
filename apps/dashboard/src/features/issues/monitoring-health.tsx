@@ -16,7 +16,7 @@ import { Card, CardContent, CardHeader, CardTitle } from '@codedock/ui/card';
 import { Progress } from '@codedock/ui/progress';
 import { QueryErrorState } from '#/components/query-error-state';
 import { Skeleton } from '@codedock/ui/skeleton';
-import { useGetSystemStats } from '#/features/settings/hooks';
+import { useGetSystemStats } from '#/hooks/use-settings';
 import { useListCanvasSummaries } from '#/hooks/use-canvas';
 
 function formatUptime(seconds?: number): string {

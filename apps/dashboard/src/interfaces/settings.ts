@@ -151,6 +151,7 @@ export type GetServerSettingsResponse = BaseResponse<ServerSettings>;
 export type UpdateServerSettingsResponse = BaseResponse<ServerSettings>;
 export type TestNotificationResponseType = BaseResponse<void>;
 export type GetGithubAppsResponse = BaseResponse<GithubApp[]>;
+export type SaveGithubAppPayload = Partial<GithubApp>;
 export type SaveGithubAppResponse = BaseResponse<GithubApp>;
 
 export type ExchangeGithubManifestResponse = BaseResponse<GithubApp>;

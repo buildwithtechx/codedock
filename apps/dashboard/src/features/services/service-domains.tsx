@@ -7,7 +7,7 @@ import { Input } from '@codedock/ui/input';
 import { Label } from '@codedock/ui/label';
 import { useCreate, useDelete, useListByService } from '#/features/dns';
 import { useDomainVerification } from '#/features/dns/domain-verification';
-import { useGetSettings } from '#/features/settings';
+import { useGetSettings } from '#/hooks/use-settings';
 import { useAuthStore } from '#/stores/auth-store';
 import { DnsGuidanceBanner } from './dns-guidance-banner';
 import { DnsStatusBadge } from './dns-status-badge';

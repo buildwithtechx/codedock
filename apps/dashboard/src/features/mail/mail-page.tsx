@@ -7,7 +7,7 @@ import { Card, CardContent } from '@codedock/ui/card';
 import { Input } from '@codedock/ui/input';
 import { QueryErrorState } from '#/components/query-error-state';
 import { Skeleton } from '@codedock/ui/skeleton';
-import { useGetPublicSettings } from '#/features/settings';
+import { useGetPublicSettings } from '#/hooks/use-settings';
 import {
   useCreateMailDomain,
   useCreateMailServer,

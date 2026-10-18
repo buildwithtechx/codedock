@@ -3,12 +3,12 @@ import { History } from 'lucide-react';
 import { Badge } from '@codedock/ui/badge';
 import { Empty, EmptyDescription, EmptyHeader, EmptyMedia, EmptyTitle } from '@codedock/ui/empty';
 import { Skeleton } from '@codedock/ui/skeleton';
-import { settingsService } from '#/features/settings/api';
+import { notificationsService } from '#/services/notifications';
 
 export function NotificationDeliveryHistory() {
   const { data, isLoading } = useQuery({
     queryKey: ['notification-deliveries'],
-    queryFn: () => settingsService.getDeliveries(20),
+    queryFn: () => notificationsService.getNotificationDeliveries(20),
   });
   const rows = data?.data ?? [];
 

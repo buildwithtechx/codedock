@@ -1,8 +1,8 @@
 import { useNavigate } from '@tanstack/react-router';
 import { LayoutGrid, Settings } from 'lucide-react';
 import { Button } from '@codedock/ui/button';
-import type { GithubApp } from '#/features/settings';
-import { useGetGitApps } from '#/features/settings';
+import type { GithubApp } from '#/interfaces/settings';
+import { useGetGitApps } from '#/hooks/use-settings';
 import { GithubIcon } from '#/features/sources/github-app-dialogs';
 
 function GitHubConnectSvg() {

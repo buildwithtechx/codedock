@@ -13,7 +13,7 @@ import {
   PayAsYouGoPlan,
   ResourceMetersOverview,
 } from '#/features/billing';
-import { useGetPublicSettings } from '#/features/settings';
+import { useGetPublicSettings } from '#/hooks/use-settings';
 import { useBillingConfig, useCreateCheckoutSession } from '#/hooks/use-billing';
 import { billingService } from '#/services/billing';
 import { useAuthStore } from '#/stores/auth-store';

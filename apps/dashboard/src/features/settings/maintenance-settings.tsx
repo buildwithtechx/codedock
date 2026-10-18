@@ -3,7 +3,7 @@ import { useState } from 'react';
 import { toast } from 'sonner';
 import { Badge } from '@codedock/ui/badge';
 import { Button } from '@codedock/ui/button';
-import { useCleanupSystem, useGetSystemStats, useRestartSystem } from '#/features/settings';
+import { useCleanupSystem, useGetSystemStats, useRestartSystem } from '#/hooks/use-settings';
 import { DockerStorageCard } from './docker-storage-card';
 import { MaintenanceDialogs } from './maintenance-dialogs';
 import { SettingsSection } from './settings-section';

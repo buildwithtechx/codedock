@@ -1,7 +1,7 @@
 import { Link } from '@tanstack/react-router';
 import { Moon, PanelLeftClose, PanelLeftOpen, Plus, Sun, X } from 'lucide-react';
 import { useTheme } from '@codedock/ui';
-import { useGetPublicSettings } from '#/features/settings';
+import { useGetPublicSettings } from '#/hooks/use-settings';
 import {
   getHelpNavigation,
   getInfrastructureNavigation,

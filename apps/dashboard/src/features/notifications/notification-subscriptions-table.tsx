@@ -1,7 +1,7 @@
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
 import { useEffect, useMemo, useState } from 'react';
 import { useListOrganizations } from '#/features/organizations';
-import { settingsService } from '#/features/settings/api';
+import { notificationsService } from '#/services/notifications';
 import { useOrganizationStore } from '#/stores/organization-store';
 import { AlertPreferenceCard, type AlertPreferenceState } from './alert-preference-card';
 import { NOTIFICATION_EVENTS, NOTIFICATION_GROUPS } from './notification-events-meta';
@@ -28,12 +28,12 @@ export function NotificationSubscriptionsTable() {
 
   const { data: subsData } = useQuery({
     queryKey: ['notification-subscriptions', organizationId],
-    queryFn: () => settingsService.getSubscriptions(organizationId),
+    queryFn: () => notificationsService.getNotificationSubscriptions(organizationId),
   });
 
   const { data: defaultsData } = useQuery({
     queryKey: ['notification-defaults', organizationId],
-    queryFn: () => settingsService.getDefaults(organizationId),
+    queryFn: () => notificationsService.getNotificationDefaults(),
   });
 
   useEffect(() => {
@@ -71,7 +71,7 @@ export function NotificationSubscriptionsTable() {
       channels: string[];
       enabled: boolean;
       orgId?: string;
-    }) => settingsService.upsertSubscription(payload),
+    }) => notificationsService.upsertNotificationSubscription(payload),
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ['notification-subscriptions'] });
     },
@@ -83,7 +83,7 @@ export function NotificationSubscriptionsTable() {
       channels: string[];
       enabled: boolean;
       orgId?: string;
-    }) => settingsService.upsertDefault(payload),
+    }) => notificationsService.upsertNotificationDefault(payload),
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ['notification-defaults'] });
     },

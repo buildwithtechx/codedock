@@ -1,7 +1,7 @@
 import { createFileRoute, Navigate, Outlet, useLocation } from '@tanstack/react-router';
 import { FaDiscord, FaGithub, FaXTwitter } from 'react-icons/fa6';
 import { OnboardingImport } from '#/features/auth';
-import { useGetSetupStatus } from '#/features/settings';
+import { useGetSetupStatus } from '#/hooks/use-settings';
 import { useSystemStore } from '#/stores/system-store';
 
 export const Route = createFileRoute('/_auth')({ component: AuthLayout });

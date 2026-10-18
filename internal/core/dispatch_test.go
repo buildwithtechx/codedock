@@ -255,3 +255,22 @@ func TestDispatcherSpecificEventOverridesCategory(t *testing.T) {
 		t.Fatalf("expected 1 delivery for enabled category, got %d", len(deliveries.recorded))
 	}
 }
+
+func TestDispatcherGlobalExpoProviderConfigured(t *testing.T) {
+	dispatcher := &DispatcherService{}
+
+	s1 := &models.NotificationSettings{ExpoEnabled: true, ExpoPushToken: "ExponentPushToken[test-channel-token]"}
+	if !dispatcher.isProviderConfigured(s1, "expo") {
+		t.Fatalf("expected expo provider to be configured")
+	}
+
+	s2 := &models.NotificationSettings{ExpoEnabled: false, ExpoPushToken: "ExponentPushToken[test-channel-token]"}
+	if dispatcher.isProviderConfigured(s2, "expo") {
+		t.Fatalf("expected disabled expo provider not to be configured")
+	}
+
+	s3 := &models.NotificationSettings{ExpoEnabled: true, ExpoPushToken: ""}
+	if dispatcher.isProviderConfigured(s3, "expo") {
+		t.Fatalf("expected empty token expo provider not to be configured")
+	}
+}

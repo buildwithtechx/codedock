@@ -28,7 +28,7 @@
     "dev:docs": "npm run dev --workspace=@codedock/docs",
     "build:docs": "npm run build --workspace=@codedock/docs",
     "deploy:docs": "npm run deploy --workspace=@codedock/docs",
-    "dev:mobile": "npm run start --workspace=@codedock/mobile",
+    "dev:mobile": "EXPO_UNSTABLE_HEADLESS=1 npm run start --workspace=@codedock/mobile",
     "typecheck:mobile": "npm run typecheck --workspace=@codedock/mobile",
     "test:mobile": "npm run test --workspace=@codedock/mobile",
     "dev:extension": "npm run watch --workspace=vscode-codedock",

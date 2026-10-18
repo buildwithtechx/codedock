@@ -11,7 +11,7 @@ import {
 import { useState } from 'react';
 import { Button } from '@codedock/ui/button';
 import { Input } from '@codedock/ui/input';
-import { useGetPublicSettings, useGetSettings } from '#/features/settings';
+import { useGetPublicSettings, useGetSettings } from '#/hooks/use-settings';
 import { GithubIcon } from '#/features/sources/github-app-dialogs';
 
 interface DeploySidebarProps {

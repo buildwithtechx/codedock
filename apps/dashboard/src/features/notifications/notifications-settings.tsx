@@ -7,13 +7,12 @@ import {
   useGetNotificationSettings,
   useTestNotification,
   useUpdateNotificationSettings,
-} from '#/features/settings';
+} from '#/hooks/use-notifications';
 import { PreferenceRow } from '#/features/settings/preference-row';
 import { SettingsSection } from '#/features/settings/settings-section';
 import { NotificationChannelsList, type NotifSettingsForm } from './notification-channels-list';
 import { NotificationDeliveryHistory } from './notification-delivery-history';
 import { NotificationSubscriptionsTable } from './notification-subscriptions-table';
-import { RegisteredDevicesList } from './registered-devices-list';
 
 const EMPTY: NotifSettingsForm = {
   discordWebhookUrl: '',
@@ -38,11 +37,14 @@ const EMPTY: NotifSettingsForm = {
   pushoverEnabled: false,
   genericWebhookUrl: '',
   genericWebhookEnabled: false,
+  expoPushToken: '',
+  expoEnabled: false,
   notificationAlerts: true,
 };
 
 const notificationFields: Record<string, (keyof NotifSettingsForm)[]> = {
   alerts: ['notificationAlerts'],
+  expo: ['expoPushToken', 'expoEnabled'],
   discord: ['discordWebhookUrl', 'discordPingEnabled', 'discordEnabled'],
   slack: ['slackWebhookUrl', 'slackEnabled'],
   telegram: ['telegramBotToken', 'telegramChatId', 'telegramEnabled'],
@@ -98,6 +100,8 @@ export const NotificationsSettings = () => {
         pushoverEnabled: (s.pushoverEnabled as boolean) ?? false,
         genericWebhookUrl: (s.genericWebhookUrl as string) ?? '',
         genericWebhookEnabled: (s.genericWebhookEnabled as boolean) ?? false,
+        expoPushToken: (s.expoPushToken as string) ?? '',
+        expoEnabled: (s.expoEnabled as boolean) ?? false,
         notificationAlerts: (s.notificationAlerts as boolean) ?? true,
       };
 
@@ -205,8 +209,6 @@ export const NotificationsSettings = () => {
           disabled={isSavingAny}
         />
       </SettingsSection>
-
-      <RegisteredDevicesList />
 
       <NotificationSubscriptionsTable />
 

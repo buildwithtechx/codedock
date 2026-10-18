@@ -4,7 +4,7 @@ import { useEffect } from 'react';
 import { Button } from '@codedock/ui/button';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@codedock/ui/select';
 import { Skeleton } from '@codedock/ui/skeleton';
-import { useGetPublicSettings } from '#/features/settings';
+import { useGetPublicSettings } from '#/hooks/use-settings';
 import { useListServers } from '#/hooks/use-servers';
 
 interface WizardDestinationProps {

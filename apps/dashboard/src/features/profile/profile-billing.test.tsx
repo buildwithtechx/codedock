@@ -5,7 +5,7 @@ import { Route } from '#/routes/_dashboard.profile';
 
 const state = vi.hoisted(() => ({ cloudMode: undefined as boolean | undefined, billing: vi.fn() }));
 vi.mock('#/components/layout/page-header', () => ({ PageHeader: () => null }));
-vi.mock('#/features/settings', () => ({
+vi.mock('#/hooks/use-settings', () => ({
   useGetPublicSettings: () => ({ data: { data: { cloudMode: state.cloudMode } } }),
 }));
 vi.mock('#/features/profile/security-2fa-setup', () => ({ Security2FASetup: () => null }));

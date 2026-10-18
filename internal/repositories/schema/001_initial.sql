@@ -580,6 +580,8 @@ CREATE TABLE IF NOT EXISTS notification_settings (
     pushover_enabled BOOLEAN NOT NULL DEFAULT FALSE,
     generic_webhook_url TEXT NOT NULL DEFAULT '',
     generic_webhook_enabled BOOLEAN NOT NULL DEFAULT FALSE,
+    expo_push_token TEXT NOT NULL DEFAULT '',
+    expo_enabled BOOLEAN NOT NULL DEFAULT FALSE,
     notification_alerts BOOLEAN NOT NULL DEFAULT FALSE,
     created_at TIMESTAMPTZ NOT NULL DEFAULT CURRENT_TIMESTAMP,
     updated_at TIMESTAMPTZ NOT NULL DEFAULT CURRENT_TIMESTAMP

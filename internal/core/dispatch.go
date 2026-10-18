@@ -70,7 +70,7 @@ func (d *DispatcherService) Send(event *models.NotificationEvent) error {
 	var dispatchErrs []error
 
 	// 1. Fan out to configured global notification channels
-	providers := []string{"discord", "slack", "telegram", "generic", "pushover"}
+	providers := []string{"discord", "slack", "telegram", "generic", "pushover", "expo"}
 	for _, provider := range providers {
 		if d.isProviderConfigured(settings, provider) {
 			sendErr := d.sendToProvider(settings, provider, event)
@@ -132,6 +132,8 @@ func (d *DispatcherService) isProviderConfigured(settings *models.NotificationSe
 		return settings.GenericWebhookEnabled && settings.GenericWebhookURL != ""
 	case "pushover":
 		return settings.PushoverEnabled && settings.PushoverAPIToken != "" && settings.PushoverUserKey != ""
+	case "expo":
+		return settings.ExpoEnabled && settings.ExpoPushToken != ""
 	}
 	return false
 }
@@ -183,6 +185,10 @@ func (d *DispatcherService) sendToProvider(settings *models.NotificationSettings
 	case "pushover":
 		if settings.PushoverEnabled && settings.PushoverAPIToken != "" && settings.PushoverUserKey != "" {
 			return notifications.SendPushoverNotification(settings.PushoverAPIToken, settings.PushoverUserKey, event)
+		}
+	case "expo":
+		if settings.ExpoEnabled && settings.ExpoPushToken != "" {
+			return notifications.SendExpoNotification(settings.ExpoPushToken, event)
 		}
 	}
 

@@ -1,7 +1,7 @@
 import { createFileRoute, useNavigate } from '@tanstack/react-router';
 import { RunnerDestination } from '#/features/actions/runner-destination';
 import { RunnerEditor } from '#/features/actions/runner-editor';
-import { useGetPublicSettings } from '#/features/settings';
+import { useGetPublicSettings } from '#/hooks/use-settings';
 
 export const Route = createFileRoute('/_dashboard/actions/runners/new')({
   component: AddRunnerPage,

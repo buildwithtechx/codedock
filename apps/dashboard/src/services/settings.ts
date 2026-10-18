@@ -1,13 +1,4 @@
-import type {
-  DeviceTokenDto,
-  NotificationDefaultDto,
-  NotificationDeliveryDto,
-  NotificationSubscriptionDto,
-  TeamNotificationChannel,
-} from '#/features/notifications';
 import type { BaseResponse } from '#/interfaces/base';
-import { apiClient } from '#/lib/api-client';
-import { handleApiError } from '#/lib/error';
 import type {
   CheckUpdateResponse,
   DeployUpdateResponse,
@@ -16,14 +7,14 @@ import type {
   GetServerSettingsResponse,
   GetUpdateStatusResponse,
   GitAppsManifestRequest,
-  GithubApp,
+  SaveGithubAppPayload,
   SaveGithubAppResponse,
   SystemStats,
-  TestNotificationRequest,
-  TestNotificationResponseType,
   UpdateServerSettingsResponse,
   UpdateSettingsRequest,
-} from './interfaces';
+} from '#/interfaces/settings';
+import { apiClient } from '#/lib/api-client';
+import { handleApiError } from '#/lib/error';
 
 export const settingsService = {
   getSettings: async (): Promise<GetServerSettingsResponse> => {
@@ -102,168 +93,11 @@ export const settingsService = {
     }
   },
 
-  getNotificationSettings: async (): Promise<BaseResponse<Record<string, unknown>>> => {
-    try {
-      return await apiClient.get<BaseResponse<Record<string, unknown>>>('/notifications');
-    } catch (error) {
-      throw handleApiError(error);
-    }
-  },
-
-  updateNotificationSettings: async (
-    payload: Record<string, unknown>
-  ): Promise<BaseResponse<Record<string, unknown>>> => {
-    try {
-      return await apiClient.put<BaseResponse<Record<string, unknown>>>('/notifications', payload);
-    } catch (error) {
-      throw handleApiError(error);
-    }
-  },
-
-  testNotification: async (
-    payload: TestNotificationRequest | Record<string, unknown>
-  ): Promise<TestNotificationResponseType> => {
-    try {
-      return await apiClient.post<TestNotificationResponseType>(
-        '/settings/notifications/test',
-        payload
-      );
-    } catch (error) {
-      throw handleApiError(error);
-    }
-  },
-
-  getNotifications: async (): Promise<BaseResponse<TeamNotificationChannel[]>> => {
-    try {
-      return await apiClient.get<BaseResponse<TeamNotificationChannel[]>>(
-        '/settings/notifications'
-      );
-    } catch (error) {
-      throw handleApiError(error);
-    }
-  },
-
-  saveNotificationChannel: async (
-    payload: Record<string, unknown>
-  ): Promise<BaseResponse<TeamNotificationChannel>> => {
-    try {
-      return await apiClient.post<BaseResponse<TeamNotificationChannel>>(
-        '/settings/notifications',
-        payload
-      );
-    } catch (error) {
-      throw handleApiError(error);
-    }
-  },
-
-  deleteNotificationChannel: async (id: string): Promise<void> => {
-    try {
-      await apiClient.delete(`/settings/notifications/${id}`);
-    } catch (error) {
-      throw handleApiError(error);
-    }
-  },
-
-  getSubscriptions: async (
-    orgId?: string
-  ): Promise<BaseResponse<NotificationSubscriptionDto[]>> => {
-    try {
-      const query = orgId ? `?orgId=${encodeURIComponent(orgId)}` : '';
-      return await apiClient.get<BaseResponse<NotificationSubscriptionDto[]>>(
-        `/notifications/subscriptions${query}`
-      );
-    } catch (error) {
-      throw handleApiError(error);
-    }
-  },
-
-  upsertSubscription: async (payload: {
-    category: string;
-    channels: string[];
-    enabled: boolean;
-    orgId?: string;
-  }): Promise<BaseResponse<NotificationSubscriptionDto>> => {
-    try {
-      const query = payload.orgId ? `?orgId=${encodeURIComponent(payload.orgId)}` : '';
-      return await apiClient.put<BaseResponse<NotificationSubscriptionDto>>(
-        `/notifications/subscriptions${query}`,
-        {
-          category: payload.category,
-          channels: payload.channels,
-          enabled: payload.enabled,
-        }
-      );
-    } catch (error) {
-      throw handleApiError(error);
-    }
-  },
-
-  getDeliveries: async (limit?: number): Promise<BaseResponse<NotificationDeliveryDto[]>> => {
-    try {
-      const query = limit !== undefined ? `?limit=${limit}` : '';
-      return await apiClient.get<BaseResponse<NotificationDeliveryDto[]>>(
-        `/notifications/deliveries${query}`
-      );
-    } catch (error) {
-      throw handleApiError(error);
-    }
-  },
-
-  getDefaults: async (orgId?: string): Promise<BaseResponse<NotificationDefaultDto[]>> => {
-    try {
-      const query = orgId ? `?orgId=${encodeURIComponent(orgId)}` : '';
-      return await apiClient.get<BaseResponse<NotificationDefaultDto[]>>(
-        `/notifications/defaults${query}`
-      );
-    } catch (error) {
-      throw handleApiError(error);
-    }
-  },
-
-  upsertDefault: async (payload: {
-    category: string;
-    channels: string[];
-    enabled: boolean;
-    orgId?: string;
-  }): Promise<BaseResponse<NotificationDefaultDto>> => {
-    try {
-      const query = payload.orgId ? `?orgId=${encodeURIComponent(payload.orgId)}` : '';
-      return await apiClient.put<BaseResponse<NotificationDefaultDto>>(
-        `/notifications/defaults${query}`,
-        {
-          category: payload.category,
-          channels: payload.channels,
-          enabled: payload.enabled,
-        }
-      );
-    } catch (error) {
-      throw handleApiError(error);
-    }
-  },
-
-  getDeviceTokens: async (): Promise<BaseResponse<DeviceTokenDto[]>> => {
-    try {
-      return await apiClient.get<BaseResponse<DeviceTokenDto[]>>('/notifications/devices');
-    } catch (error) {
-      throw handleApiError(error);
-    }
-  },
-
-  deleteDeviceToken: async (token: string): Promise<BaseResponse<null>> => {
-    try {
-      return await apiClient.delete<BaseResponse<null>>(
-        `/notifications/devices/${encodeURIComponent(token)}`
-      );
-    } catch (error) {
-      throw handleApiError(error);
-    }
-  },
-
   getGitApps: async (): Promise<GetGithubAppsResponse> => {
     return await settingsService.getGithubApps();
   },
 
-  saveGitApp: async (payload: any): Promise<any> => {
+  saveGitApp: async (payload: SaveGithubAppPayload): Promise<SaveGithubAppResponse> => {
     return await settingsService.saveGithubApp(payload);
   },
 
@@ -279,7 +113,7 @@ export const settingsService = {
     }
   },
 
-  saveGithubApp: async (payload: GithubApp): Promise<SaveGithubAppResponse> => {
+  saveGithubApp: async (payload: SaveGithubAppPayload): Promise<SaveGithubAppResponse> => {
     try {
       return await apiClient.put<SaveGithubAppResponse>('/settings/git_apps/github', payload);
     } catch (error) {

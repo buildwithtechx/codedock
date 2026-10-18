@@ -3,7 +3,7 @@ import { useEffect, useState } from 'react';
 import { toast } from 'sonner';
 import { Button } from '@codedock/ui/button';
 import { Skeleton } from '@codedock/ui/skeleton';
-import { useGetSettings, useUpdateSettings } from '#/features/settings';
+import { useGetSettings, useUpdateSettings } from '#/hooks/use-settings';
 import { SettingsSection } from '#/features/settings/settings-section';
 import { DnsProviderForm } from './components/dns-provider-form';
 

@@ -3,7 +3,7 @@ import { useEffect, useState } from 'react';
 import { Badge } from '@codedock/ui/badge';
 import { Input } from '@codedock/ui/input';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@codedock/ui/select';
-import { useGetPublicSettings, useGetSettings } from '#/features/settings';
+import { useGetPublicSettings, useGetSettings } from '#/hooks/use-settings';
 import type { OneClickEndpoint } from '#/interfaces/templates';
 
 function slugify(text: string): string {
