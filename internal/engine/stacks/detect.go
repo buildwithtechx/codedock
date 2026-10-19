@@ -15,7 +15,23 @@ var (
 	goModReq   = regexp.MustCompile(`^\s*([^\s/]+/[^\s]+)\s+v[0-9]`)
 )
 
+var composeMarkers = []string{"compose.yaml", "compose.yml", "docker-compose.yaml", "docker-compose.yml"}
+
+func hasComposeMarker(sourceDir string) bool {
+	for _, marker := range composeMarkers {
+		if _, err := os.Stat(filepath.Join(sourceDir, marker)); err == nil {
+			return true
+		}
+	}
+	return false
+}
+
 func DetectStack(sourceDir string) string {
+	if hasComposeMarker(sourceDir) {
+		if _, err := os.Stat(filepath.Join(sourceDir, "Dockerfile")); err == nil {
+			return "docker-compose"
+		}
+	}
 	deps := DetectDeps(sourceDir)
 	depSet := make(map[string]bool, len(deps))
 	for _, dep := range deps {
@@ -36,6 +52,9 @@ func ResolveRolesForSource(sourceDir string) (string, []StackRole) {
 }
 
 func stackMatches(def StackDefinition, sourceDir string, deps map[string]bool) bool {
+	if def.ID == "docker-compose" {
+		return hasComposeMarker(sourceDir)
+	}
 	for _, marker := range def.RootMarkers {
 		if _, err := os.Stat(filepath.Join(sourceDir, marker)); err != nil {
 			return false

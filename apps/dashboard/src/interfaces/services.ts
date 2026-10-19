@@ -82,6 +82,7 @@ export interface Deployment {
   containerId?: string;
   artifactRetainedAt?: string | null;
   pinned?: boolean;
+  resourceIssue?: string;
   createdAt: string;
   updatedAt: string;
   finishedAt?: string;

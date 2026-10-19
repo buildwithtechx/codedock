@@ -76,7 +76,7 @@ func (m *mockDeploymentRepo) ListByOrganization(_ context.Context, _ models.Depl
 func (m *mockDeploymentRepo) Update(_ context.Context, _ *models.Deployment) error {
 	return nil
 }
-func (m *mockDeploymentRepo) UpdateStatus(_ context.Context, _ string, _ models.DeploymentStatus, _, _ string) error {
+func (m *mockDeploymentRepo) UpdateStatus(_ context.Context, _ string, _ models.DeploymentStatus, _, _, _ string) error {
 	return nil
 }
 func (m *mockDeploymentRepo) ListForRetention(_ context.Context, _ string) ([]*models.Deployment, error) {

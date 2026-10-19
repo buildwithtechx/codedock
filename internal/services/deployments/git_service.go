@@ -23,7 +23,10 @@ import (
 	"codedock/internal/utils"
 )
 
-var validBranchRegex = regexp.MustCompile(`^[a-zA-Z0-9._/-]+$`)
+var (
+	validBranchRegex     = regexp.MustCompile(`^[a-zA-Z0-9._/-]+$`)
+	validCommitHashRegex = regexp.MustCompile(`^[a-fA-F0-9]{7,40}$`)
+)
 
 type GitService struct {
 	repo       repositories.GitRepository
@@ -135,6 +138,33 @@ func (s *GitService) DeleteProvider(ctx context.Context, userID, provider string
 
 func (s *GitService) CloneOrPullAppRepository(ctx context.Context, app *models.AppService, targetDir string, logWriter io.Writer) error {
 	return s.SyncCodebase(ctx, app, targetDir, logWriter)
+}
+
+func (s *GitService) CloneOrPullAppRepositoryAtCommit(ctx context.Context, app *models.AppService, commitHash string, targetDir string, logWriter io.Writer) error {
+	return s.SyncCodebaseAtCommit(ctx, app, commitHash, targetDir, logWriter)
+}
+
+func (s *GitService) SyncCodebaseAtCommit(ctx context.Context, app *models.AppService, commitHash string, targetDir string, logWriter io.Writer) error {
+	if err := s.SyncCodebase(ctx, app, targetDir, logWriter); err != nil {
+		return err
+	}
+	cleanCommit := strings.TrimSpace(commitHash)
+	if cleanCommit == "" || !validCommitHashRegex.MatchString(cleanCommit) {
+		return nil
+	}
+	if logWriter != nil {
+		fmt.Fprintf(logWriter, "📌 [GitService] Checking out pinned commit %s...\n", cleanCommit)
+	}
+	fetchCmd := exec.CommandContext(ctx, "git", "-C", targetDir, "fetch", "origin", cleanCommit)
+	_ = fetchCmd.Run()
+	checkoutCmd := exec.CommandContext(ctx, "git", "-C", targetDir, "checkout", cleanCommit)
+	if out, err := checkoutCmd.CombinedOutput(); err != nil {
+		return utils.NewDeploymentError(fmt.Sprintf("git checkout commit %s failed: %s", cleanCommit, string(out)), err)
+	}
+	if logWriter != nil {
+		fmt.Fprintf(logWriter, "✅ [GitService] Checked out commit %s.\n", cleanCommit)
+	}
+	return nil
 }
 
 func (s *GitService) SyncCodebase(ctx context.Context, app *models.AppService, targetDir string, logWriter io.Writer) error {

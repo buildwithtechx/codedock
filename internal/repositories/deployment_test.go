@@ -110,7 +110,7 @@ func TestDeploymentUpdateStatusAndRecovery(t *testing.T) {
 	if updated.Branch != "feature" || updated.CommitHash != "def5678" {
 		t.Fatalf("update did not persist: %+v", updated)
 	}
-	if err := repo.UpdateStatus(ctx, deployment.ID, models.DeploymentStatusBuilding, "building", "container-one"); err != nil {
+	if err := repo.UpdateStatus(ctx, deployment.ID, models.DeploymentStatusBuilding, "building", "container-one", ""); err != nil {
 		t.Fatalf("update to building: %v", err)
 	}
 	building, err := repo.GetByID(ctx, deployment.ID)
@@ -120,12 +120,15 @@ func TestDeploymentUpdateStatusAndRecovery(t *testing.T) {
 	if building.FinishedAt != nil {
 		t.Fatal("non-terminal status should not set finished_at")
 	}
-	if err := repo.UpdateStatus(ctx, deployment.ID, models.DeploymentStatusReady, "done", "container-one"); err != nil {
+	if err := repo.UpdateStatus(ctx, deployment.ID, models.DeploymentStatusReady, "done", "container-one", "storage-low"); err != nil {
 		t.Fatalf("update to ready: %v", err)
 	}
 	ready, err := repo.GetByID(ctx, deployment.ID)
 	if err != nil {
 		t.Fatalf("read ready deployment: %v", err)
+	}
+	if ready.ResourceIssue != "storage-low" {
+		t.Fatalf("expected resource_issue storage-low, got %q", ready.ResourceIssue)
 	}
 	if ready.FinishedAt == nil {
 		t.Fatal("terminal status should set finished_at")

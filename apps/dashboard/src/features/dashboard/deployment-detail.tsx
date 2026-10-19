@@ -13,6 +13,7 @@ import { DeploymentFailureAi } from '#/features/services/deployment-failure-ai';
 import { useGetApp } from '#/hooks/use-apps';
 import { useCancelDeployment, useDeployment, useRollback } from '#/hooks/use-deployments';
 import { DeploymentLogs } from './deployment-logs';
+import { DeploymentResourceNotice } from './deployment-resource-notice';
 import { DeploymentRollbackDialog } from './deployment-rollback-dialog';
 
 const inFlightStatuses = new Set(['PENDING', 'CLONING', 'PULLING', 'BUILDING']);
@@ -35,6 +36,7 @@ const statusLabel = (status: string) =>
 const formatDateTime = (value?: string) => (value ? new Date(value).toLocaleString() : '–');
 
 export function DeploymentDetail({ deploymentId }: { deploymentId: string }) {
+  const [activeTab, setActiveTab] = useState('overview');
   const [rollbackOpen, setRollbackOpen] = useState(false);
   const { data, isLoading, isError, refetch } = useDeployment(deploymentId);
   const deployment = data?.data;
@@ -143,7 +145,15 @@ export function DeploymentDetail({ deploymentId }: { deploymentId: string }) {
         {deployment.trigger && <Badge variant="outline">{deployment.trigger}</Badge>}
       </div>
 
-      <Tabs defaultValue="overview">
+      {deployment.resourceIssue && (
+        <DeploymentResourceNotice
+          issue={deployment.resourceIssue}
+          serviceId={deployment.serviceId}
+          onViewLogs={() => setActiveTab('logs')}
+        />
+      )}
+
+      <Tabs value={activeTab} onValueChange={setActiveTab}>
         <TabsList>
           <TabsTrigger value="overview">Overview</TabsTrigger>
           <TabsTrigger value="logs">Logs</TabsTrigger>
@@ -163,7 +173,7 @@ export function DeploymentDetail({ deploymentId }: { deploymentId: string }) {
           {normalizedStatus === 'FAILED' ? (
             <DeploymentFailureAi deploymentId={deployment.id} />
           ) : (
-            <div className="flex min-h-[16rem] flex-col items-center justify-center rounded-2xl bg-card px-6 py-12 text-center">
+            <div className="flex min-h-64 flex-col items-center justify-center rounded-2xl bg-card px-6 py-12 text-center">
               <span className="flex h-12 w-12 items-center justify-center rounded-2xl bg-muted text-muted-foreground">
                 <Bot className="h-5 w-5" />
               </span>
@@ -222,7 +232,7 @@ function DeploymentOverview({
               {item.label}
             </p>
             <p
-              className={`mt-1.5 break-words text-sm ${
+              className={`mt-1.5 wrap-break-word text-sm ${
                 item.mono ? 'font-mono text-[13px]' : 'font-medium'
               }`}
             >

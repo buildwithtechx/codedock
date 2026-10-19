@@ -2,6 +2,7 @@ package deployments
 
 import (
 	"context"
+	"errors"
 	"fmt"
 	"log/slog"
 	"os"
@@ -23,14 +24,14 @@ func (s *DeploymentService) ExecuteDeploymentAsync(d *models.Deployment) {
 	if _, busy := s.operations["service:"+d.ServiceID]; busy {
 		s.operationMu.Unlock()
 		cancel()
-		s.finishDeployment(d.ID, models.DeploymentStatusFailed, "Another deployment is already running for this service.\n", "")
+		s.finishDeployment(d.ID, models.DeploymentStatusFailed, "Another deployment is already running for this service.\n", "", "")
 		return
 	}
 	if s.admissionGuard != nil {
 		if err := s.admissionGuard.Acquire(d.ServiceID, ""); err != nil {
 			s.operationMu.Unlock()
 			cancel()
-			s.finishDeployment(d.ID, models.DeploymentStatusFailed, fmt.Sprintf("Build admission limit exceeded: %v\n", err), "")
+			s.finishDeployment(d.ID, models.DeploymentStatusFailed, fmt.Sprintf("Build admission limit exceeded: %v\n", err), "", "")
 			return
 		}
 	}
@@ -51,16 +52,23 @@ func (s *DeploymentService) ExecuteDeploymentAsync(d *models.Deployment) {
 		logWriter := &deploymentLogWriter{service: s, id: d.ID, ctx: ctx, phase: "PREPARING"}
 		id, err := s.executeDeployment(deploy.WithDeploymentProgress(ctx, logWriter.phaseChanged), d, logWriter)
 		status := models.DeploymentStatusReady
+		resourceIssue := ""
 		if err != nil {
 			status = models.DeploymentStatusFailed
 			if ctx.Err() != nil {
 				status = models.DeploymentStatus("CANCELLED")
 			}
 			logWriter.logs.WriteString(fmt.Sprintf("Deployment stopped: %v\n", err))
+			var rErr *deploy.ResourceFailureError
+			if errors.As(err, &rErr) {
+				resourceIssue = rErr.Issue
+			} else {
+				resourceIssue = deploy.ClassifyResourceIssue(err.Error() + " " + logWriter.logs.String())
+			}
 		} else {
 			logWriter.logs.WriteString("Deployment ready.\n")
 		}
-		s.finishDeployment(d.ID, status, logWriter.logs.String(), id)
+		s.finishDeployment(d.ID, status, logWriter.logs.String(), id, resourceIssue)
 	}()
 }
 
@@ -75,10 +83,16 @@ func (s *DeploymentService) CancelDeployment(id string) error {
 	return nil
 }
 
-func (s *DeploymentService) finishDeployment(id string, status models.DeploymentStatus, logs, containerID string) {
+func (s *DeploymentService) finishDeployment(id string, status models.DeploymentStatus, logs, containerID, resourceIssue string) {
 	ctx, cancel := context.WithTimeout(context.Background(), 10*time.Second)
 	defer cancel()
-	if err := s.UpdateStatus(ctx, DeployStatusOpts{ID: id, Status: status, BuildLogs: logs, ContainerID: containerID}); err != nil {
+	if err := s.UpdateStatus(ctx, DeployStatusOpts{
+		ID:            id,
+		Status:        status,
+		BuildLogs:     logs,
+		ContainerID:   containerID,
+		ResourceIssue: resourceIssue,
+	}); err != nil {
 		slog.Error("save deployment result", "deployment", id, "error", err)
 	}
 	if status == models.DeploymentStatusReady {
@@ -159,7 +173,7 @@ func (s *DeploymentService) executeDeployment(ctx context.Context, d *models.Dep
 		if err := writer.phaseChanged("CLONING"); err != nil {
 			return "", err
 		}
-		if err := s.gitService.CloneOrPullAppRepository(ctx, app, sourceDir, writer); err != nil {
+		if err := s.gitService.CloneOrPullAppRepositoryAtCommit(ctx, app, d.CommitHash, sourceDir, writer); err != nil {
 			return "", err
 		}
 		if err := writer.phaseChanged("BUILDING"); err != nil {

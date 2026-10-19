@@ -100,9 +100,14 @@ var Registry = map[string]StackDefinition{
 		Name:        "Dockerfile",
 		RootMarkers: []string{"Dockerfile"},
 	},
+	"docker-compose": {
+		ID:          "docker-compose",
+		Name:        "Docker Compose",
+		RootMarkers: []string{"docker-compose.yml"},
+	},
 }
 
 var DetectOrder = []string{
 	"laravel", "symfony", "rails", "sinatra", "django", "flask",
-	"nextjs", "node", "go", "rust", "python", "php", "ruby", "static", "docker",
+	"nextjs", "node", "go", "rust", "python", "php", "ruby", "static", "docker", "docker-compose",
 }

@@ -22,7 +22,7 @@ type DeploymentRepository interface {
 	ListByService(ctx context.Context, serviceID string, limit, offset int) ([]*models.Deployment, int, error)
 	ListByOrganization(ctx context.Context, filter models.DeploymentListFilter) ([]models.DeploymentListItem, int, error)
 	Update(ctx context.Context, d *models.Deployment) error
-	UpdateStatus(ctx context.Context, id string, status models.DeploymentStatus, buildLogs, containerID string) error
+	UpdateStatus(ctx context.Context, id string, status models.DeploymentStatus, buildLogs, containerID, resourceIssue string) error
 	ListForRetention(ctx context.Context, projectID string) ([]*models.Deployment, error)
 	SetArtifactRetainedAt(ctx context.Context, id string, at *time.Time) error
 	SetPinned(ctx context.Context, id string, pinned bool) error
@@ -55,10 +55,10 @@ func (r *DeploymentRepo) Create(ctx context.Context, d *models.Deployment) error
 	}
 	_, err := r.db.ExecContext(ctx, `INSERT INTO deployments (
 		id, service_id, organization_id, project_id, status, commit_hash,
-		commit_message, branch, image_ref, "trigger", build_logs, container_id, created_at, updated_at, finished_at
-	) VALUES ($1, NULLIF($2, ''), $3, $4, $5, $6, $7, $8, $9, $10, $11, $12, $13, $14, $15)`,
+		commit_message, branch, image_ref, "trigger", build_logs, container_id, resource_issue, created_at, updated_at, finished_at
+	) VALUES ($1, NULLIF($2, ''), $3, $4, $5, $6, $7, $8, $9, $10, $11, $12, $13, $14, $15, $16)`,
 		d.ID, d.ServiceID, d.OrganizationID, d.ProjectID, d.Status, d.CommitHash,
-		d.CommitMessage, d.Branch, d.ImageRef, d.Trigger, d.BuildLogs, d.ContainerID, d.CreatedAt, d.UpdatedAt, d.FinishedAt)
+		d.CommitMessage, d.Branch, d.ImageRef, d.Trigger, d.BuildLogs, d.ContainerID, d.ResourceIssue, d.CreatedAt, d.UpdatedAt, d.FinishedAt)
 	if err != nil {
 		return fmt.Errorf("failed to create deployment: %w", err)
 	}
@@ -70,6 +70,7 @@ func (r *DeploymentRepo) GetByID(ctx context.Context, id string) (*models.Deploy
 	err := r.db.GetContext(ctx, &d, `SELECT d.id, COALESCE(d.service_id, '') AS service_id, d.organization_id,
 		COALESCE(s.environment_id, '') AS environment_id, d.project_id, d.status, d.commit_hash,
 		d.commit_message, d.branch, d."trigger", COALESCE(d.image_ref, '') AS image_ref, d.build_logs, d.container_id,
+		COALESCE(d.resource_issue, '') AS resource_issue,
 		d.artifact_retained_at, COALESCE(d.pinned, FALSE) AS pinned, d.created_at, d.updated_at, d.finished_at
 		FROM deployments d LEFT JOIN app_services s ON s.id = d.service_id WHERE d.id = $1`, id)
 	if errors.Is(err, sql.ErrNoRows) {
@@ -91,6 +92,7 @@ func (r *DeploymentRepo) ListByService(ctx context.Context, serviceID string, li
 	err := r.db.SelectContext(ctx, &deps, `SELECT d.id, COALESCE(d.service_id, '') AS service_id, d.organization_id,
 		COALESCE(s.environment_id, '') AS environment_id, d.project_id, d.status, d.commit_hash,
 		d.commit_message, d.branch, d."trigger", COALESCE(d.image_ref, '') AS image_ref, d.build_logs, d.container_id,
+		COALESCE(d.resource_issue, '') AS resource_issue,
 		d.artifact_retained_at, COALESCE(d.pinned, FALSE) AS pinned, d.created_at, d.updated_at, d.finished_at
 		FROM deployments d LEFT JOIN app_services s ON s.id = d.service_id
 		WHERE d.service_id = $1 ORDER BY d.created_at DESC LIMIT $2 OFFSET $3`, serviceID, limit, offset)
@@ -172,7 +174,7 @@ func (r *DeploymentRepo) ListByOrganization(ctx context.Context, filter models.D
 	query := `SELECT d.id, COALESCE(d.service_id, '') AS service_id, COALESCE(s.name, '') AS service_name,
 		COALESCE(s.environment_id, '') AS environment_id,
 		d.project_id, p.name AS project_name, d.status, d.commit_hash, d.commit_message,
-		d.branch, d."trigger", d.container_id, d.artifact_retained_at, COALESCE(d.pinned, FALSE) AS pinned,
+		d.branch, d."trigger", d.container_id, COALESCE(d.resource_issue, '') AS resource_issue, d.artifact_retained_at, COALESCE(d.pinned, FALSE) AS pinned,
 		d.created_at, d.updated_at, d.finished_at ` + where + `
 		ORDER BY d.created_at DESC LIMIT $13 OFFSET $14`
 	args = append(args, filter.Limit, filter.Offset)
@@ -187,21 +189,21 @@ func (r *DeploymentRepo) Update(_ context.Context, d *models.Deployment) error {
 	defer r.mu.Unlock()
 	d.UpdatedAt = time.Now().UTC()
 	_, err := r.db.Exec(`UPDATE deployments SET status = $1, commit_hash = $2, commit_message = $3,
-		branch = $4, image_ref = $5, "trigger" = $6, build_logs = $7, container_id = $8, updated_at = $9, finished_at = $10 WHERE id = $11`,
-		d.Status, d.CommitHash, d.CommitMessage, d.Branch, d.ImageRef, d.Trigger, d.BuildLogs, d.ContainerID, d.UpdatedAt, d.FinishedAt, d.ID)
+		branch = $4, image_ref = $5, "trigger" = $6, build_logs = $7, container_id = $8, resource_issue = $9, updated_at = $10, finished_at = $11 WHERE id = $12`,
+		d.Status, d.CommitHash, d.CommitMessage, d.Branch, d.ImageRef, d.Trigger, d.BuildLogs, d.ContainerID, d.ResourceIssue, d.UpdatedAt, d.FinishedAt, d.ID)
 	return err
 }
 
-func (r *DeploymentRepo) UpdateStatus(_ context.Context, id string, status models.DeploymentStatus, buildLogs, containerID string) error {
+func (r *DeploymentRepo) UpdateStatus(_ context.Context, id string, status models.DeploymentStatus, buildLogs, containerID, resourceIssue string) error {
 	r.mu.Lock()
 	defer r.mu.Unlock()
 	now := time.Now().UTC()
 	if status == models.DeploymentStatusReady || status == models.DeploymentStatus("CANCELLED") || status == models.DeploymentStatusActive || status == models.DeploymentStatusFailed || status == models.DeploymentStatusRemoved || status == models.DeploymentStatusSlept {
-		_, err := r.db.Exec(`UPDATE deployments SET status = $1, build_logs = $2, container_id = $3, updated_at = $4, finished_at = $5 WHERE id = $6`,
-			status, buildLogs, containerID, now, now, id)
+		_, err := r.db.Exec(`UPDATE deployments SET status = $1, build_logs = $2, container_id = $3, resource_issue = COALESCE(NULLIF($4, ''), resource_issue), updated_at = $5, finished_at = $6 WHERE id = $7`,
+			status, buildLogs, containerID, resourceIssue, now, now, id)
 		return err
 	}
-	_, err := r.db.Exec(`UPDATE deployments SET status = $1, build_logs = $2, container_id = $3, updated_at = $4 WHERE id = $5`,
-		status, buildLogs, containerID, now, id)
+	_, err := r.db.Exec(`UPDATE deployments SET status = $1, build_logs = $2, container_id = $3, resource_issue = COALESCE(NULLIF($4, ''), resource_issue), updated_at = $5 WHERE id = $6`,
+		status, buildLogs, containerID, resourceIssue, now, id)
 	return err
 }

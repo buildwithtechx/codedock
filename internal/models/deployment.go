@@ -22,6 +22,7 @@ type Deployment struct {
 	ContainerID        string           `json:"containerId,omitempty" db:"container_id"`
 	ArtifactRetainedAt *time.Time       `json:"artifactRetainedAt,omitempty" db:"artifact_retained_at"`
 	Pinned             bool             `json:"pinned" db:"pinned"`
+	ResourceIssue      string           `json:"resourceIssue,omitempty" db:"resource_issue"`
 	CreatedAt          time.Time        `json:"createdAt" db:"created_at"`
 	UpdatedAt          time.Time        `json:"updatedAt" db:"updated_at"`
 	FinishedAt         *time.Time       `json:"finishedAt,omitempty" db:"finished_at"`
@@ -53,6 +54,7 @@ type DeploymentListItem struct {
 	ContainerID        string           `json:"containerId,omitempty" db:"container_id"`
 	ArtifactRetainedAt *time.Time       `json:"artifactRetainedAt,omitempty" db:"artifact_retained_at"`
 	Pinned             bool             `json:"pinned" db:"pinned"`
+	ResourceIssue      string           `json:"resourceIssue,omitempty" db:"resource_issue"`
 	CreatedAt          time.Time        `json:"createdAt" db:"created_at"`
 	UpdatedAt          time.Time        `json:"updatedAt" db:"updated_at"`
 	FinishedAt         *time.Time       `json:"finishedAt,omitempty" db:"finished_at"`

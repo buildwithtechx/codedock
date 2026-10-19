@@ -107,9 +107,19 @@ func (d *Deployer) verifyHealthCheck(ctx context.Context, app *models.AppService
 	}
 	healthy := d.waitForHealthyContainer(ctx, containerName, app.HealthCheckPath, app.InternalPort)
 	if !healthy {
+		issue, tail := DiagnoseContainerFailure(ctx, d.containerManager, containerName)
 		_ = d.containerManager.StopAndRemove(ctx, containerName)
 		if logWriter != nil {
+			if issue != "" {
+				fmt.Fprintf(logWriter, "❌ [Deployer] Resource failure detected: %s\n", issue)
+			}
+			if tail != "" {
+				fmt.Fprintf(logWriter, "Last container logs:\n%s\n", tail)
+			}
 			fmt.Fprintf(logWriter, "❌ [Deployer] Health check failed. Rolling back to previous version.\n")
+		}
+		if issue != "" {
+			return NewResourceFailureError(issue, fmt.Sprintf("deployment failed (%s): health check unsuccessful", issue))
 		}
 		return fmt.Errorf("health check failed, deployment aborted")
 	}
