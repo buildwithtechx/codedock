@@ -66,6 +66,7 @@ type Server struct {
 	authHandler               *auth.AuthHandler
 	oauthHandler              *auth.OAuthHandler
 	deviceFlowHandler         *auth.DeviceFlowHandler
+	passkeyHandler            *auth.PasskeyHandler
 	gitHandler                *deployments.GitHandler
 	webhookHandler            *deployments.WebhookHandler
 	projectHandler            *projects.ProjectHandler

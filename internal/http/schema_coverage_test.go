@@ -9,6 +9,7 @@ import (
 	"github.com/labstack/echo/v4"
 
 	"codedock/internal/config"
+	authhandlers "codedock/internal/handlers/auth"
 	"codedock/internal/http/apischema"
 	"codedock/internal/http/middleware"
 	authservices "codedock/internal/services/auth"
@@ -34,6 +35,7 @@ func schemaTestRouter(t *testing.T) *echo.Echo {
 		authRateLimiter: middleware.NewRateLimiter(10, time.Minute),
 		otpRateLimiter:  middleware.NewRateLimiter(5, time.Minute),
 		aiRateLimiter:   middleware.NewRateLimiter(5, time.Minute),
+		passkeyHandler:  authhandlers.NewPasskeyHandler(nil),
 	}
 	apiGroup := router.Group("/api")
 	authGroup := apiGroup.Group("", server.authGuard.RequireAuth())

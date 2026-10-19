@@ -8,6 +8,7 @@ vi.mock('#/components/layout/page-header', () => ({ PageHeader: () => null }));
 vi.mock('#/hooks/use-settings', () => ({
   useGetPublicSettings: () => ({ data: { data: { cloudMode: state.cloudMode } } }),
 }));
+vi.mock('#/features/profile/passkeys-section', () => ({ PasskeysSection: () => null }));
 vi.mock('#/features/profile/security-2fa-setup', () => ({ Security2FASetup: () => null }));
 vi.mock('#/features/profile/user-profile-form', () => ({
   ProfileEmailForm: () => null,

@@ -93,6 +93,7 @@ func NewServer(db *sql.DB, v *utils.Vault, deployer *deploy.Deployer, traefikMan
 	volumeRepo := repositories.NewServiceVolumeRepo(db)
 	orgRepo := repositories.NewOrganizationRepository(db)
 	refreshTokenRepo := repositories.NewRefreshTokenRepo(db)
+	passkeyRepo := repositories.NewPasskeyRepo(db)
 
 	httpEngineAdapter := newEngineAdapter(settingsRepo, appRepo, envVarRepo, dbRepo, projectRepo, scheduledTaskRepo, backupRepo, s3DestinationRepo, serviceVarRepo, serverlessRepository)
 	httpEngineAdapter.sftpRepo = repositories.NewSFTPDestinationRepo(db)
@@ -265,6 +266,11 @@ func NewServer(db *sql.DB, v *utils.Vault, deployer *deploy.Deployer, traefikMan
 	oAuthHandler := auth.NewOAuthHandler(oAuthService)
 	deviceFlowService := authservices.NewDeviceFlowService()
 	deviceFlowHandler := auth.NewDeviceFlowHandler(deviceFlowService, userService, auditService)
+	passkeyService, err := authservices.NewPasskeyService(passkeyRepo, userRepo, tokenService, refreshTokenRepo, auditService)
+	if err != nil {
+		return nil, fmt.Errorf("initialize passkey service: %w", err)
+	}
+	passkeyHandler := auth.NewPasskeyHandler(passkeyService)
 	gitHandler := deployments.NewGitHandler(gitService)
 	webhookHandler := deployments.NewWebhookHandler(gitService, projectService, appService, deploymentService, prPreviewService, gitAppsService)
 
@@ -377,6 +383,7 @@ func NewServer(db *sql.DB, v *utils.Vault, deployer *deploy.Deployer, traefikMan
 		authHandler:            authHandler,
 		oauthHandler:           oAuthHandler,
 		deviceFlowHandler:      deviceFlowHandler,
+		passkeyHandler:         passkeyHandler,
 		gitHandler:             gitHandler,
 		webhookHandler:         webhookHandler,
 		projectHandler:         projectHandler,

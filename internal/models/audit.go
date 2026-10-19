@@ -76,7 +76,7 @@ func categoryPrefixes() map[string][]string {
 		"servers":     {"server.", "ssh."},
 		"members":     {"member.", "organization.", "invite.", "user.create", "user.delete", "user.role"},
 		"agent":       {"ai.", "agent."},
-		"security":    {"auth.", "login.", "user.login", "user.logout", "user.password", "user.2fa", "user.totp", "token.", "apikey.", "oauth.", "credentials."},
+		"security":    {"auth.", "passkey.", "login.", "user.login", "user.logout", "user.password", "user.2fa", "user.totp", "token.", "apikey.", "oauth.", "credentials."},
 		"billing":     {"billing.", "subscription.", "checkout.", "credit."},
 	}
 }

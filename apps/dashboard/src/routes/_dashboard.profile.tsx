@@ -1,6 +1,7 @@
 import { createFileRoute } from '@tanstack/react-router';
 import { PageHeader } from '#/components/layout/page-header';
 import { BillingSection } from '#/features/profile/billing-section';
+import { PasskeysSection } from '#/features/profile/passkeys-section';
 import { Security2FASetup } from '#/features/profile/security-2fa-setup';
 import {
   ProfileEmailForm,
@@ -26,6 +27,7 @@ function ProfilePage() {
         <ProfileNameForm />
         <ProfileEmailForm />
         <ProfilePasswordForm />
+        <PasskeysSection />
         <Security2FASetup />
         {publicSettings?.data?.cloudMode && <BillingSection />}
       </div>

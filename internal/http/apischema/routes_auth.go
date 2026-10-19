@@ -46,6 +46,19 @@ func auditFacetsSchema() Schema {
 	)
 }
 
+func passkeySchema() Schema {
+	return Obj("Passkey credential",
+		RF("id", ID("Passkey ID")),
+		RF("name", Str("Passkey friendly name")),
+		RF("deviceType", Str("Device type")),
+		RF("backedUp", Bool("Whether the passkey is backed up")),
+		F("transports", Arr("Supported transports", Str("Transport"))),
+		F("aaguid", Str("Authenticator AAGUID")),
+		RF("createdAt", DateTime("Creation timestamp")),
+		F("lastUsedAt", DateTime("Last used timestamp")),
+	)
+}
+
 func authOperations() []Operation {
 	auth := "auth"
 	return []Operation{
@@ -68,6 +81,13 @@ func authOperations() []Operation {
 		{Method: "POST", Path: "/api/auth/device/token", Summary: "Poll device authorization token", Tags: []string{auth}, Request: JSON(Obj("Device token poll", RF("deviceCode", Str("Device code")))), Response: Obj("Device token response", RF("status", Str("Status")), F("token", Str("Access token")), F("email", Str("User email")), F("name", Str("User display name")), F("message", Str("Message")))},
 		{Method: "GET", Path: "/api/auth/device/verify", Summary: "Verify device code validity", Tags: []string{auth}, Query: []Param{QueryParam("code", "User verification code")}, Response: Obj("Device verification", RF("valid", Bool("Code validity")), F("userCode", Str("User code")), F("clientName", Str("Client name")), F("status", Str("Status")))},
 		{Method: "POST", Path: "/api/auth/device/authorize", Summary: "Approve or decline device authorization", Tags: []string{auth}, Auth: AuthUser, Request: JSON(Obj("Device authorization", RF("userCode", Str("User code")), RF("action", Str("approve or deny")))), Response: Obj("Device auth result", RF("status", Str("Status")), F("clientName", Str("Client name")), F("token", Str("Access token")), F("email", Str("User email")))},
+		{Method: "POST", Path: "/api/auth/passkeys/authenticate/options", Summary: "Request passkey authentication options", Tags: []string{auth}, Response: Obj("Assertion options", F("publicKey", Obj("Public key options")))},
+		{Method: "POST", Path: "/api/auth/passkeys/authenticate/verify", Summary: "Verify passkey assertion and sign in", Tags: []string{auth}, Request: JSON(Obj("Assertion response", F("totpCode", Str("TOTP code if 2FA enabled")), F("response", Obj("WebAuthn assertion")))), Response: AuthResponseSchema()},
+		{Method: "POST", Path: "/api/auth/passkeys/register/options", Summary: "Request passkey registration options", Tags: []string{auth}, Auth: AuthUser, Response: Obj("Creation options", F("publicKey", Obj("Public key options")))},
+		{Method: "POST", Path: "/api/auth/passkeys/register/verify", Summary: "Verify and register a new passkey", Tags: []string{auth}, Auth: AuthUser, Request: JSON(Obj("Registration response", F("name", Str("Passkey name")), F("response", Obj("WebAuthn registration")))), Response: passkeySchema()},
+		{Method: "GET", Path: "/api/auth/passkeys", Summary: "List user passkeys", Tags: []string{auth}, Auth: AuthUser, Response: Arr("Passkeys", passkeySchema())},
+		{Method: "PUT", Path: "/api/auth/passkeys/:id", Summary: "Rename a passkey", Tags: []string{auth}, Auth: AuthUser, Request: JSON(Obj("Rename passkey", RF("name", Str("New name")))), Response: EmptySchema()},
+		{Method: "DELETE", Path: "/api/auth/passkeys/:id", Summary: "Delete a passkey", Tags: []string{auth}, Auth: AuthUser, Response: EmptySchema()},
 		{Method: "GET", Path: "/api/auth/me", Summary: "Get the current user", Tags: []string{auth}, Auth: AuthUser, Response: UserSchema()},
 		{Method: "GET", Path: "/api/users", Summary: "List users", Tags: []string{auth}, Auth: AuthAdmin, Response: PaginatedSchema(Arr("Users", UserSchema())), Query: []Param{QueryParamInt("page", "Page number"), QueryParamInt("limit", "Page size")}},
 		{Method: "DELETE", Path: "/api/users/:id", Summary: "Delete a user", Tags: []string{auth}, Auth: AuthAdmin, Response: EmptySchema()},

@@ -106,6 +106,14 @@ func (s *Server) registerAuthRoutes(apiGroup, authGroup *echo.Group) {
 	apiGroup.POST("/auth/device/token", s.deviceFlowHandler.PollDeviceToken)
 	apiGroup.GET("/auth/device/verify", s.deviceFlowHandler.VerifyUserCode)
 	authGroup.POST("/auth/device/authorize", s.deviceFlowHandler.AuthorizeDevice)
+
+	apiGroup.POST("/auth/passkeys/authenticate/options", s.passkeyHandler.BeginAuthentication)
+	apiGroup.POST("/auth/passkeys/authenticate/verify", s.passkeyHandler.FinishAuthentication, s.authRateLimiter.Middleware)
+	authGroup.POST("/auth/passkeys/register/options", s.passkeyHandler.BeginRegistration)
+	authGroup.POST("/auth/passkeys/register/verify", s.passkeyHandler.FinishRegistration)
+	authGroup.GET("/auth/passkeys", s.passkeyHandler.List)
+	authGroup.PUT("/auth/passkeys/:id", s.passkeyHandler.Rename)
+	authGroup.DELETE("/auth/passkeys/:id", s.passkeyHandler.Delete)
 }
 
 func (s *Server) registerSystemRoutes(apiGroup, authGroup *echo.Group) {
