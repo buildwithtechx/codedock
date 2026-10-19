@@ -1,7 +1,5 @@
-import { useCallback, useEffect, useRef, useState } from 'react';
 import { toast } from 'sonner';
-import type { RollbackCapacityUI } from '#/interfaces/projects';
-import { projectsApi } from '#/services/projects';
+import { useGetRollbackCapacity, useUpdateRollbackSettings } from '#/hooks/use-projects';
 import { MAX_ROLLBACK_WINDOW } from './rollback-retention-cards';
 
 function clampWindow(val: number): number {
@@ -11,97 +9,47 @@ function clampWindow(val: number): number {
 }
 
 export function useRollbackSettings(projectId?: string | null, enabled = true) {
-  const identity = useRef(projectId);
-  identity.current = projectId;
-  const mounted = useRef(false);
-  const pending = useRef(false);
-  const [state, setState] = useState<{
-    projectId?: string | null;
-    capacity: RollbackCapacityUI | null;
-    error: string | null;
-    loading: boolean;
-  }>({ projectId, capacity: null, error: null, loading: true });
-  const [saving, setSaving] = useState<'window' | 'strategy' | null>(null);
+  const {
+    data: capacityResponse,
+    isLoading,
+    error: queryError,
+    refetch,
+  } = useGetRollbackCapacity(projectId as string, Boolean(projectId && enabled));
 
-  const reload = useCallback(async () => {
-    if (!mounted.current || !projectId || identity.current !== projectId) return;
-    setState((prev) => ({ ...prev, loading: true, error: null }));
-    try {
-      const response = await projectsApi.getRollbackCapacity(projectId);
-      if (mounted.current && identity.current === projectId) {
-        setState({
-          projectId,
-          capacity: response.data,
-          error: null,
-          loading: false,
-        });
-      }
-    } catch (err: any) {
-      if (mounted.current && identity.current === projectId) {
-        setState({
-          projectId,
-          capacity: null,
-          loading: false,
-          error: err?.message || 'Could not load rollback settings.',
-        });
-      }
-    }
-  }, [projectId]);
+  const updateMutation = useUpdateRollbackSettings();
 
-  useEffect(() => {
-    mounted.current = true;
-    if (enabled && projectId) {
-      void reload();
-    }
-    return () => {
-      mounted.current = false;
-    };
-  }, [enabled, projectId, reload]);
-
-  const capacity = state.projectId === projectId ? state.capacity : null;
+  const capacity = capacityResponse?.data ?? null;
 
   const save = async (
     kind: 'window' | 'strategy',
     patch: { defaultRollbackStrategy?: 'snapshot' | 'git'; rollbackWindow?: number | null }
   ) => {
-    if (!projectId || !capacity || pending.current) return;
-    pending.current = true;
-    setSaving(kind);
+    if (!projectId || !capacity || updateMutation.isPending) return;
     try {
-      const response = await projectsApi.updateRollbackSettings(projectId, patch);
-      if (mounted.current && identity.current === projectId) {
-        setState({
-          projectId,
-          capacity: response.data,
-          error: null,
-          loading: false,
-        });
-        toast.success(
-          kind === 'strategy' ? 'Rollback strategy updated' : 'Rollback history limit updated'
-        );
-      }
+      await updateMutation.mutateAsync({ projectId, payload: patch });
+      toast.success(
+        kind === 'strategy' ? 'Rollback strategy updated' : 'Rollback history limit updated'
+      );
     } catch (err: any) {
-      if (identity.current === projectId) {
-        toast.error(
-          err?.message ||
-            (kind === 'window'
-              ? 'Failed to update rollback history'
-              : 'Failed to update rollback strategy')
-        );
-      }
-    } finally {
-      pending.current = false;
-      if (mounted.current) setSaving(null);
+      toast.error(
+        err?.message ||
+          (kind === 'window'
+            ? 'Failed to update rollback history'
+            : 'Failed to update rollback strategy')
+      );
     }
   };
 
+  const isPending = updateMutation.isPending;
+  const pendingPayload = updateMutation.variables?.payload;
+
   return {
     capacity,
-    error: state.projectId === projectId ? state.error : null,
-    loading: state.projectId !== projectId || state.loading,
-    savingWindow: saving === 'window',
-    togglingStrategy: saving === 'strategy',
-    reload,
+    error: (queryError as any)?.message ?? null,
+    loading: Boolean(projectId) && isLoading,
+    savingWindow: isPending && pendingPayload?.rollbackWindow !== undefined,
+    togglingStrategy: isPending && pendingPayload?.defaultRollbackStrategy !== undefined,
+    reload: refetch,
     changeWindow: async (value: number | null) => {
       const next = value === null ? null : clampWindow(value);
       if (

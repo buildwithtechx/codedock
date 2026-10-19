@@ -102,3 +102,14 @@ export const useExplainFailure = (deploymentId: string, enabled: boolean) => {
     enabled: enabled && !!deploymentId,
   });
 };
+
+export const useTogglePinDeployment = () => {
+  const queryClient = useQueryClient();
+  return useMutation({
+    mutationFn: (payload: { deploymentId: string }) =>
+      deploymentsService.togglePin(payload.deploymentId),
+    onSuccess: async () => {
+      await queryClient.invalidateQueries({ queryKey: ['deployments'] });
+    },
+  });
+};

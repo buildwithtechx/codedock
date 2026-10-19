@@ -184,3 +184,27 @@ export const useListProjectDomains = (projectId: string) => {
     enabled: Boolean(projectId),
   });
 };
+
+export const useGetRollbackCapacity = (projectId: string, enabled = true) => {
+  return useQuery({
+    queryKey: ['projectSettings', 'rollbackCapacity', projectId].filter(Boolean),
+    queryFn: () => projectSettingsService.getRollbackCapacity(projectId),
+    enabled: Boolean(projectId) && enabled,
+  });
+};
+
+export const useUpdateRollbackSettings = () => {
+  const queryClient = useQueryClient();
+  return useMutation({
+    mutationFn: (payload: {
+      projectId: string;
+      payload: Parameters<typeof projectSettingsService.updateRollbackSettings>[1];
+    }) => projectSettingsService.updateRollbackSettings(payload.projectId, payload.payload),
+    onSuccess: async (_, variables) => {
+      await queryClient.invalidateQueries({
+        queryKey: ['projectSettings', 'rollbackCapacity', variables.projectId],
+      });
+      await queryClient.invalidateQueries({ queryKey: ['projects'] });
+    },
+  });
+};

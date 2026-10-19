@@ -1,17 +1,14 @@
+import { Button } from '@codedock/ui/button';
 import {
   ArrowLeft,
   ArrowRight,
   Database,
-  History,
   Infinity as InfinityIcon,
-  Minus,
   Plus,
-  RotateCcw,
   Sliders,
 } from 'lucide-react';
 import { useState } from 'react';
-import { Button } from '@codedock/ui/button';
-import { Switch } from '@codedock/ui/switch';
+import { RollbackRetentionCards } from '#/components/rollback/rollback-retention-cards';
 import { AddServerModal } from '#/features/servers/add-server-modal';
 
 interface DeployTargetStepProps {
@@ -151,54 +148,24 @@ export function DeployTargetStep({ onContinue }: DeployTargetStepProps) {
             deploy.
           </p>
 
-          <div className="mt-5 space-y-4">
-            <div className="flex items-center justify-between gap-4 rounded-xl border border-border/50 bg-muted/20 p-4">
-              <div className="flex items-start gap-3">
-                <RotateCcw className="mt-0.5 size-4 text-muted-foreground" />
-                <div>
-                  <p className="font-medium text-foreground text-sm">Rollback strategy</p>
-                  <p className="font-semibold text-foreground/80 text-xs">
-                    Reuse images or rebuild
-                  </p>
-                  <p className="mt-0.5 text-[11px] text-muted-foreground">
-                    Rebuilds the old commit, unless its image is still on the host.
-                  </p>
-                </div>
-              </div>
-              <Switch checked={rollbackReuse} onCheckedChange={setRollbackReuse} />
-            </div>
-
-            <div className="flex items-center justify-between gap-4 rounded-xl border border-border/50 bg-muted/20 p-4">
-              <div className="flex items-start gap-3">
-                <History className="mt-0.5 size-4 text-muted-foreground" />
-                <div>
-                  <p className="font-medium text-foreground text-sm">Rollback history</p>
-                </div>
-              </div>
-              <div className="flex items-center gap-2">
-                <Button
-                  variant="outline"
-                  size="icon"
-                  className="size-8 rounded-lg"
-                  onClick={() => setRollbackHistory((prev) => Math.max(1, prev - 1))}
-                  disabled={rollbackHistory <= 1}
-                >
-                  <Minus className="size-3" />
-                </Button>
-                <span className="w-6 text-center font-semibold text-xs tabular-nums">
-                  {rollbackHistory}
-                </span>
-                <Button
-                  variant="outline"
-                  size="icon"
-                  className="size-8 rounded-lg"
-                  onClick={() => setRollbackHistory((prev) => Math.min(20, prev + 1))}
-                  disabled={rollbackHistory >= 20}
-                >
-                  <Plus className="size-3" />
-                </Button>
-              </div>
-            </div>
+          <div className="mt-5">
+            <RollbackRetentionCards
+              strategy={rollbackReuse ? 'snapshot' : 'git'}
+              capacity={{
+                window: rollbackHistory,
+                source: rollbackHistory === 5 ? 'instance-default' : 'explicit',
+                explicit: rollbackHistory === 5 ? null : rollbackHistory,
+                snapshotSizeBytes: null,
+                measuredAt: null,
+                diskFreeBytes: null,
+                diskTotalBytes: null,
+                maxWindow: 20,
+                diskBudgetFraction: 0.2,
+                strategy: rollbackReuse ? 'snapshot' : 'git',
+              }}
+              onToggleStrategy={() => setRollbackReuse((prev) => !prev)}
+              onChangeWindow={(next) => setRollbackHistory(next ?? 5)}
+            />
           </div>
         </section>
       </div>

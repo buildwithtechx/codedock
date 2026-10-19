@@ -18,9 +18,13 @@ import {
 } from 'lucide-react';
 import { useState } from 'react';
 import { toast } from 'sonner';
-import { useCancelDeployment, useRollback, useTrigger } from '#/hooks/use-deployments';
+import {
+  useCancelDeployment,
+  useRollback,
+  useTogglePinDeployment,
+  useTrigger,
+} from '#/hooks/use-deployments';
 import type { OrganizationDeployment } from '#/interfaces/services';
-import { deploymentsService } from '#/services/deployments';
 
 const activeStatuses = new Set(['PENDING', 'CLONING', 'PULLING', 'BUILDING']);
 const successfulStatuses = new Set(['READY', 'ACTIVE', 'SUCCESS']);
@@ -76,6 +80,7 @@ export function DeploymentHistoryCard({ deployment }: { deployment: Organization
   const trigger = useTrigger();
   const rollback = useRollback();
   const cancel = useCancelDeployment();
+  const togglePinMutation = useTogglePinDeployment();
   const normalized = deployment.status.toUpperCase();
   const isActive = activeStatuses.has(normalized);
   const isReclaimed = deployment.artifactRetainedAt === null && successfulStatuses.has(normalized);
@@ -87,7 +92,7 @@ export function DeploymentHistoryCard({ deployment }: { deployment: Organization
 
   const togglePin = async () => {
     try {
-      const res = await deploymentsService.togglePin(deployment.id);
+      const res = await togglePinMutation.mutateAsync({ deploymentId: deployment.id });
       setPinned(res.data.pinned);
       toast.success(res.data.pinned ? 'Deployment pinned' : 'Deployment unpinned');
     } catch {
