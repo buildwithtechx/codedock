@@ -73,45 +73,6 @@ export function parseServerMetrics(
   };
 }
 
-export interface CreateServerRequest {
-  name: string;
-  ipAddress?: string;
-  isLocal?: boolean;
-  sshHost?: string;
-  sshPort?: number;
-  sshUser?: string;
-  sshAuthMethod?: 'key' | 'password' | 'agent';
-  sshKey?: string;
-  sshPrivateKey?: string;
-  sshPassword?: string;
-  sshTransport?: 'direct' | 'cloudflare';
-  sshJumpHost?: string;
-}
-
-export interface UpdateServerRequest {
-  name?: string;
-  ipAddress?: string;
-  isLocal?: boolean;
-  sshHost?: string;
-  sshPort?: number;
-  sshUser?: string;
-  sshAuthMethod?: 'key' | 'password' | 'agent';
-  sshKey?: string;
-  sshPrivateKey?: string;
-  sshPassword?: string;
-  sshTransport?: 'direct' | 'cloudflare';
-  sshJumpHost?: string;
-}
-
-export interface TestSSHRequest {
-  sshHost: string;
-  sshPort?: number;
-  sshUser?: string;
-  sshKey?: string;
-  sshPrivateKey?: string;
-  sshPassword?: string;
-}
-
 export interface ServerComponentStatus {
   name: string;
   label: string;

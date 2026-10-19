@@ -1,4 +1,4 @@
-import type { DomainConfig } from '#/interfaces/projects';
+import type { DomainConfig } from '@codedock/contracts';
 import type { BaseResponse } from '#/interfaces/base';
 import type {
   CreateDNSRecordRequest,

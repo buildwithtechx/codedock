@@ -6,7 +6,7 @@ import { Input } from '@codedock/ui/input';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@codedock/ui/select';
 import { useDomainVerification } from '#/features/dns/domain-verification';
 import { useDeleteDomain } from '#/hooks/use-dns';
-import type { DomainConfig } from '#/interfaces/projects';
+import type { DomainConfig } from '@codedock/contracts';
 import { DnsStatusBadge } from '#/features/services/dns-status-badge';
 
 interface DomainAuditTableProps {

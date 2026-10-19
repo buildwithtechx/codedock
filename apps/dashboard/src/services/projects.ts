@@ -1,22 +1,23 @@
-import type { RollbackCapacityUI, UpdateRollbackSettingsRequest } from '@codedock/contracts';
-import type { BaseResponse } from '#/interfaces/base';
 import type {
   AddMemberRequest,
   CreateProjectRequest,
-  CreateProjectResponse,
   CreateTokenRequest,
   CreateWebhookRequest,
+  ProjectMember,
+  ProjectToken,
+  RollbackCapacityUI,
+  ServiceWebhook,
+  UpdateRollbackSettingsRequest,
+} from '@codedock/contracts';
+import type { BaseResponse } from '#/interfaces/base';
+import type {
+  CreateProjectResponse,
   GetProjectResponse,
   ListDomainsResponse,
   ListProjectsResponse,
-  ProjectMember,
-  ProjectToken,
-  ServiceWebhook,
 } from '#/interfaces/projects';
 import { apiClient } from '#/lib/api-client';
 import { handleApiError } from '#/lib/error';
-
-export type { ServiceWebhook };
 
 export const projectsService = {
   listProjects: async (

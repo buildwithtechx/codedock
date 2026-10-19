@@ -12,7 +12,8 @@ import { Label } from '@codedock/ui/label';
 import { ServerSshAdvancedFields } from '#/features/servers/server-ssh-advanced-fields';
 import { ServerSshAuthFields } from '#/features/servers/server-ssh-auth-fields';
 import { useCreateServer, useTestSSH } from '#/hooks/use-servers';
-import type { Server, TestSSHRequest } from '#/interfaces/server';
+import type { TestSSHRequest } from '@codedock/contracts';
+import type { Server } from '#/interfaces/server';
 
 interface ServerSshFormProps {
   onSuccess: (server: Server, credentials: TestSSHRequest) => void;

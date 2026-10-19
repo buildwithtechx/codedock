@@ -1,5 +1,5 @@
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
-import type { ProjectConfig } from '#/interfaces/projects';
+import type { ProjectConfig } from '@codedock/contracts';
 import { projectSettingsService, projectsService } from '#/services/projects';
 import { useOrganizationStore } from '#/stores/organization-store';
 

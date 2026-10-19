@@ -1,13 +1,11 @@
+import type { CreateServerRequest, TestSSHRequest, UpdateServerRequest } from '@codedock/contracts';
 import type { BaseResponse } from '#/interfaces/base';
 import type {
-  CreateServerRequest,
   Server,
   ServerComponentStatus,
+  ServerConnectionVerdict,
   ServerPortScanResult,
   ServerRateLimitConfig,
-  TestSSHRequest,
-  UpdateServerRequest,
-  ServerConnectionVerdict,
 } from '#/interfaces/server';
 import { apiClient } from '#/lib/api-client';
 import { handleApiError } from '#/lib/error';
