@@ -5,6 +5,7 @@ import (
 	"testing"
 	"time"
 
+	cdkdb "codedock/db"
 	"codedock/internal/models"
 	"codedock/internal/repositories"
 	"codedock/internal/testdb"
@@ -13,7 +14,7 @@ import (
 func setupAnalyticsTest(t *testing.T) (*Service, *repositories.DeploymentRepo, *repositories.EnvironmentRepo, string, string) {
 	t.Helper()
 	db := testdb.Open(t)
-	if err := repositories.RunMigrations(db); err != nil {
+	if err := cdkdb.RunMigrations(db); err != nil {
 		t.Fatalf("run migrations: %v", err)
 	}
 	ctx := context.Background()

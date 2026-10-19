@@ -8,6 +8,7 @@ import (
 
 	"github.com/google/uuid"
 
+	cdkdb "codedock/db"
 	"codedock/internal/engine/compose"
 	"codedock/internal/models"
 	"codedock/internal/repositories"
@@ -42,7 +43,7 @@ func (r *oneclickIntegrationRuntime) Results(_ context.Context, _ string) ([]mod
 
 func newOneClickIntegrationService(t *testing.T) (*projectservices.OneClickService, *repositories.ComposeStackRepo, string) {
 	db := testdb.Open(t)
-	if err := repositories.RunMigrations(db); err != nil {
+	if err := cdkdb.RunMigrations(db); err != nil {
 		t.Fatalf("failed to run migrations: %v", err)
 	}
 	vlt, err := utils.NewVault(t.TempDir())

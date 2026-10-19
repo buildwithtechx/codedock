@@ -1,4 +1,4 @@
-package repositories
+package db
 
 import (
 	"context"
@@ -6,6 +6,8 @@ import (
 	"testing"
 
 	_ "github.com/jackc/pgx/v5/stdlib"
+
+	"codedock/internal/testdb"
 )
 
 type pgColumnExpectation struct {
@@ -16,7 +18,7 @@ type pgColumnExpectation struct {
 }
 
 func TestRunMigrationsPostgres(t *testing.T) {
-	db := openPostgresTestDB(t)
+	db := testdb.Open(t)
 	ctx := context.Background()
 	if _, err := db.ExecContext(ctx, `DROP SCHEMA public CASCADE`); err != nil {
 		t.Fatalf("drop public schema: %v", err)
@@ -27,7 +29,7 @@ func TestRunMigrationsPostgres(t *testing.T) {
 	if err := RunMigrations(db); err != nil {
 		t.Fatalf("postgres migrations failed: %v", err)
 	}
-	entries, err := fs.Glob(schemaFS, "schema/*.sql")
+	entries, err := fs.Glob(MigrationsFS, "migrations/*.sql")
 	if err != nil {
 		t.Fatalf("failed to read schema migrations: %v", err)
 	}

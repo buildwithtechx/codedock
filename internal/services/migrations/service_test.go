@@ -10,6 +10,7 @@ import (
 	"testing"
 	"time"
 
+	cdkdb "codedock/db"
 	"codedock/internal/engine/dockerprobe"
 	"codedock/internal/models"
 	"codedock/internal/repositories"
@@ -191,7 +192,7 @@ const fakePs = `{"ID":"abc123def456","Names":"web","Image":"nginx:1.25","State":
 func setupMigrationTest(t *testing.T) *migrationTestEnv {
 	t.Helper()
 	db := testdb.Open(t)
-	if err := repositories.RunMigrations(db); err != nil {
+	if err := cdkdb.RunMigrations(db); err != nil {
 		t.Fatalf("run migrations: %v", err)
 	}
 	ctx := context.Background()

@@ -8,6 +8,7 @@ import (
 	"testing"
 	"time"
 
+	cdkdb "codedock/db"
 	"codedock/internal/engine/dockerprobe"
 	"codedock/internal/models"
 	"codedock/internal/repositories"
@@ -72,7 +73,7 @@ func (errRunner) RunPipe(ctx context.Context, cmd string, stdin io.Reader, stdou
 func setupAttentionTest(t *testing.T) (*Service, *fakeHealth, *fakeBackups, *fakeWorkloads, *repositories.DeploymentRepo, *repositories.AppServiceRepo, repositories.MigrationRepository, repositories.ManagedRepository, repositories.ServerRepository, string) {
 	t.Helper()
 	db := testdb.Open(t)
-	if err := repositories.RunMigrations(db); err != nil {
+	if err := cdkdb.RunMigrations(db); err != nil {
 		t.Fatalf("run migrations: %v", err)
 	}
 	ctx := context.Background()

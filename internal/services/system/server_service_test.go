@@ -4,6 +4,7 @@ import (
 	"context"
 	"testing"
 
+	cdkdb "codedock/db"
 	"codedock/internal/config"
 	"codedock/internal/models"
 	"codedock/internal/repositories"
@@ -12,7 +13,7 @@ import (
 
 func TestListServersByUserIncludesControlPlaneForOwner(t *testing.T) {
 	db := testdb.Open(t)
-	if err := repositories.RunMigrations(db); err != nil {
+	if err := cdkdb.RunMigrations(db); err != nil {
 		t.Fatalf("run migrations: %v", err)
 	}
 	userRepo := repositories.NewUserRepo(db)
@@ -47,7 +48,7 @@ func TestWorkerLimitsOnlyApplyInCloudMode(t *testing.T) {
 		t.Run(check.name, func(t *testing.T) {
 			cfg.Cloud.Enabled = check.cloud
 			db := testdb.Open(t)
-			if err := repositories.RunMigrations(db); err != nil {
+			if err := cdkdb.RunMigrations(db); err != nil {
 				t.Fatal(err)
 			}
 			users := repositories.NewUserRepo(db)
@@ -73,7 +74,7 @@ func TestWorkerLimitsOnlyApplyInCloudMode(t *testing.T) {
 
 func TestListServersByAPITokenDoesNotLoadSyntheticUser(t *testing.T) {
 	db := testdb.Open(t)
-	if err := repositories.RunMigrations(db); err != nil {
+	if err := cdkdb.RunMigrations(db); err != nil {
 		t.Fatal(err)
 	}
 	service := NewServerService(repositories.NewServerRepository(db, nil), repositories.NewUserRepo(db), nil)

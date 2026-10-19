@@ -1,18 +1,20 @@
-package repositories
+package db
 
 import (
 	"strings"
 	"testing"
 	"testing/fstest"
+
+	"codedock/internal/testdb"
 )
 
 func TestMigrationFreshDatabase(t *testing.T) {
-	db := openPGBareDB(t)
+	db := testdb.Open(t)
 	fsys := fstest.MapFS{
 		"001_create_users.sql": {Data: []byte("CREATE TABLE mig_users (id TEXT PRIMARY KEY);")},
 		"002_add_email.sql":    {Data: []byte("ALTER TABLE mig_users ADD COLUMN email TEXT;")},
 	}
-	if err := runMigrations(db, fsys); err != nil {
+	if err := RunMigrationsFromFS(db, fsys); err != nil {
 		t.Fatalf("unexpected error: %v", err)
 	}
 	var count int
@@ -25,14 +27,14 @@ func TestMigrationFreshDatabase(t *testing.T) {
 }
 
 func TestMigrationIdempotent(t *testing.T) {
-	db := openPGBareDB(t)
+	db := testdb.Open(t)
 	fsys := fstest.MapFS{
 		"001_create_users.sql": {Data: []byte("CREATE TABLE mig_users (id TEXT PRIMARY KEY);")},
 	}
-	if err := runMigrations(db, fsys); err != nil {
+	if err := RunMigrationsFromFS(db, fsys); err != nil {
 		t.Fatalf("first run failed: %v", err)
 	}
-	if err := runMigrations(db, fsys); err != nil {
+	if err := RunMigrationsFromFS(db, fsys); err != nil {
 		t.Fatalf("second run failed: %v", err)
 	}
 	var count int
@@ -45,23 +47,23 @@ func TestMigrationIdempotent(t *testing.T) {
 }
 
 func TestMigrationOrdering(t *testing.T) {
-	db := openPGBareDB(t)
+	db := testdb.Open(t)
 	fsys := fstest.MapFS{
 		"002_add_email.sql":    {Data: []byte("ALTER TABLE mig_users ADD COLUMN email TEXT;")},
 		"001_create_users.sql": {Data: []byte("CREATE TABLE mig_users (id TEXT PRIMARY KEY);")},
 	}
-	if err := runMigrations(db, fsys); err != nil {
+	if err := RunMigrationsFromFS(db, fsys); err != nil {
 		t.Fatalf("migrations applied out of order or failed: %v", err)
 	}
 }
 
 func TestMigrationFailedRollback(t *testing.T) {
-	db := openPGBareDB(t)
+	db := testdb.Open(t)
 	fsys := fstest.MapFS{
 		"001_create_users.sql": {Data: []byte("CREATE TABLE mig_users (id TEXT PRIMARY KEY);")},
 		"002_bad.sql":          {Data: []byte("NOT VALID SQL !!!;")},
 	}
-	if err := runMigrations(db, fsys); err == nil {
+	if err := RunMigrationsFromFS(db, fsys); err == nil {
 		t.Fatal("expected migration to fail on bad SQL")
 	}
 	var count int
@@ -81,17 +83,17 @@ func TestMigrationFailedRollback(t *testing.T) {
 }
 
 func TestMigrationChecksumMismatch(t *testing.T) {
-	db := openPGBareDB(t)
+	db := testdb.Open(t)
 	original := fstest.MapFS{
 		"001_create_users.sql": {Data: []byte("CREATE TABLE mig_users (id TEXT PRIMARY KEY);")},
 	}
-	if err := runMigrations(db, original); err != nil {
+	if err := RunMigrationsFromFS(db, original); err != nil {
 		t.Fatalf("initial migration failed: %v", err)
 	}
 	modified := fstest.MapFS{
 		"001_create_users.sql": {Data: []byte("CREATE TABLE mig_users (id TEXT PRIMARY KEY, injected TEXT);")},
 	}
-	err := runMigrations(db, modified)
+	err := RunMigrationsFromFS(db, modified)
 	if err == nil {
 		t.Fatal("expected error on modified migration")
 	}
@@ -101,13 +103,13 @@ func TestMigrationChecksumMismatch(t *testing.T) {
 }
 
 func TestMigrationSQLOnlyFiles(t *testing.T) {
-	db := openPGBareDB(t)
+	db := testdb.Open(t)
 	fsys := fstest.MapFS{
 		"001_create_users.sql": {Data: []byte("CREATE TABLE mig_users (id TEXT PRIMARY KEY);")},
 		"README.md":            {Data: []byte("not sql")},
 		".gitkeep":             {Data: []byte("")},
 	}
-	if err := runMigrations(db, fsys); err != nil {
+	if err := RunMigrationsFromFS(db, fsys); err != nil {
 		t.Fatalf("unexpected error: %v", err)
 	}
 	var count int
@@ -118,6 +120,7 @@ func TestMigrationSQLOnlyFiles(t *testing.T) {
 		t.Fatalf("expected only .sql files to be applied, got %d migrations", count)
 	}
 }
+
 func TestSplitStatements(t *testing.T) {
 	cases := []struct {
 		name    string
@@ -131,7 +134,7 @@ func TestSplitStatements(t *testing.T) {
 	}
 	for _, tc := range cases {
 		t.Run(tc.name, func(t *testing.T) {
-			got := splitStatements(tc.content)
+			got := SplitStatements(tc.content)
 			if len(got) != len(tc.want) {
 				t.Fatalf("expected %d statements, got %d (%q)", len(tc.want), len(got), got)
 			}
@@ -141,5 +144,28 @@ func TestSplitStatements(t *testing.T) {
 				}
 			}
 		})
+	}
+}
+
+func TestFileChecksum(t *testing.T) {
+	content := []byte("SELECT 1;")
+	sum := fileChecksum(content)
+	if sum == "" {
+		t.Fatal("expected non-empty checksum")
+	}
+}
+
+func TestSchemaFiles(t *testing.T) {
+	fsys := fstest.MapFS{
+		"002_two.sql": {Data: []byte("SELECT 2;")},
+		"001_one.sql": {Data: []byte("SELECT 1;")},
+		"readme.txt":  {Data: []byte("text")},
+	}
+	files, err := schemaFiles(fsys)
+	if err != nil {
+		t.Fatalf("schemaFiles failed: %v", err)
+	}
+	if len(files) != 2 || files[0] != "001_one.sql" || files[1] != "002_two.sql" {
+		t.Fatalf("unexpected files ordering: %v", files)
 	}
 }

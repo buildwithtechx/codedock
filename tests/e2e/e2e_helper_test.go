@@ -14,8 +14,8 @@ import (
 
 	"github.com/docker/docker/client"
 
-	codedockhttp "codedock/internal/http"
-	"codedock/internal/repositories"
+	cdkdb "codedock/db"
+	cdkhttp "codedock/internal/http"
 	"codedock/internal/testdb"
 	"codedock/internal/utils"
 )
@@ -41,7 +41,7 @@ func newE2EHarness(t *testing.T) *e2eHarness {
 
 	db := testdb.Open(t)
 
-	if err := repositories.RunMigrations(db); err != nil {
+	if err := cdkdb.RunMigrations(db); err != nil {
 		t.Fatalf("failed to run migrations: %v", err)
 	}
 
@@ -51,7 +51,7 @@ func newE2EHarness(t *testing.T) *e2eHarness {
 		dockerClient = nil
 	}
 
-	s, err := codedockhttp.NewServer(db, vlt, nil, nil, dockerClient, dataDir)
+	s, err := cdkhttp.NewServer(db, vlt, nil, nil, dockerClient, dataDir)
 	if err != nil {
 		t.Fatalf("failed to create http server: %v", err)
 	}

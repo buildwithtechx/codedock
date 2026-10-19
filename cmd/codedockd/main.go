@@ -20,7 +20,7 @@ import (
 	"codedock/internal/engine/deploy"
 	"codedock/internal/engine/networking"
 	"codedock/internal/engine/observability"
-	codedockhttp "codedock/internal/http"
+	cdkhttp "codedock/internal/http"
 	"codedock/internal/services/system"
 
 	"codedock/internal/telemetry"
@@ -99,7 +99,7 @@ func startServer() {
 	addr := host + ":" + port
 
 	deployer := deploy.NewDeployer(dockerClient, commands.NewDBDeployerStore(db, vlt))
-	apiServer, err := codedockhttp.NewServer(db, vlt, deployer, traefikMgr, dockerClient, dataDir)
+	apiServer, err := cdkhttp.NewServer(db, vlt, deployer, traefikMgr, dockerClient, dataDir)
 	if err != nil {
 		slog.Error("failed to initialize server", "err", err)
 		os.Exit(1)
@@ -142,7 +142,7 @@ func runMCP() {
 	dockerClient, _ := client.NewClientWithOpts(client.FromEnv, client.WithAPIVersionNegotiation())
 	deployer := deploy.NewDeployer(dockerClient, commands.NewDBDeployerStore(db, vlt))
 	traefikMgr := networking.NewTraefikManager(dockerClient, config.Get().Security.TLSEmail)
-	apiServer, err := codedockhttp.NewServer(db, vlt, deployer, traefikMgr, dockerClient, "")
+	apiServer, err := cdkhttp.NewServer(db, vlt, deployer, traefikMgr, dockerClient, "")
 	if err != nil {
 		slog.Error("failed to initialize server", "err", err)
 		os.Exit(1)

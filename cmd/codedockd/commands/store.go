@@ -9,6 +9,7 @@ import (
 
 	"github.com/docker/docker/client"
 
+	cdkdb "codedock/db"
 	"codedock/internal/config"
 	"codedock/internal/engine/systemdb"
 	"codedock/internal/models"
@@ -95,18 +96,18 @@ func InitDataDir() (string, *sql.DB, *utils.Vault) {
 			os.Exit(1)
 		}
 	}
-	db, err := repositories.OpenDatabase(databaseURL)
+	sqlDB, err := repositories.OpenDatabase(databaseURL)
 	if err != nil {
 		slog.Error("failed to open database", "err", err)
 		os.Exit(1)
 	}
-	if err := repositories.RunMigrations(db); err != nil {
+	if err := cdkdb.RunMigrations(sqlDB); err != nil {
 		slog.Error("failed to run database migrations", "err", err)
 		os.Exit(1)
 	}
-	if err := config.PrepareSelfHosted(context.Background(), config.Get(), repositories.NewSelfHostedRepo(db)); err != nil {
+	if err := config.PrepareSelfHosted(context.Background(), config.Get(), repositories.NewSelfHostedRepo(sqlDB)); err != nil {
 		slog.Error("failed to prepare self-hosted configuration", "err", err)
 		os.Exit(1)
 	}
-	return dataDir, db, vlt
+	return dataDir, sqlDB, vlt
 }

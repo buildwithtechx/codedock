@@ -1,6 +1,7 @@
 package projects
 
 import (
+	cdkdb "codedock/db"
 	"codedock/internal/models"
 	"codedock/internal/repositories"
 	"codedock/internal/testdb"
@@ -11,7 +12,7 @@ import (
 
 func TestConcurrentDefaultOrganizationProvisioning(t *testing.T) {
 	db := testdb.Open(t)
-	if err := repositories.RunMigrations(db); err != nil {
+	if err := cdkdb.RunMigrations(db); err != nil {
 		t.Fatal(err)
 	}
 	if err := repositories.NewUserRepo(db).CreateUser(context.Background(), &models.User{ID: "user", Email: "user@example.com", Role: models.UserRoleMember, IsActive: true}); err != nil {

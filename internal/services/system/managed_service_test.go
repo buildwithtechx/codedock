@@ -9,6 +9,7 @@ import (
 	"testing"
 	"time"
 
+	cdkdb "codedock/db"
 	"codedock/internal/config"
 	"codedock/internal/engine/hetzner"
 	"codedock/internal/models"
@@ -163,7 +164,7 @@ type managedTestEnv struct {
 func setupManagedTest(t *testing.T) *managedTestEnv {
 	t.Helper()
 	db := testdb.Open(t)
-	if err := repositories.RunMigrations(db); err != nil {
+	if err := cdkdb.RunMigrations(db); err != nil {
 		t.Fatalf("run migrations: %v", err)
 	}
 	ctx := context.Background()

@@ -11,7 +11,7 @@ import (
 
 	_ "github.com/jackc/pgx/v5/stdlib"
 
-	"codedock/internal/repositories"
+	cdkdb "codedock/db"
 )
 
 func TestDumpRestoreRoundtrip(t *testing.T) {
@@ -44,7 +44,7 @@ func TestDumpRestoreRoundtrip(t *testing.T) {
 		t.Fatalf("open database: %v", err)
 	}
 	defer db.Close()
-	if err := repositories.RunMigrations(db); err != nil {
+	if err := cdkdb.RunMigrations(db); err != nil {
 		t.Fatalf("migrate: %v", err)
 	}
 	if _, err := db.ExecContext(ctx, `INSERT INTO organizations (id, name) VALUES ('org-dump', 'Dump')`); err != nil {

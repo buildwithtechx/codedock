@@ -1,4 +1,4 @@
-package repositories
+package db
 
 import (
 	"crypto/sha256"
@@ -12,18 +12,18 @@ import (
 	"strings"
 )
 
-//go:embed schema/*.sql
-var schemaFS embed.FS
+//go:embed migrations/*.sql
+var MigrationsFS embed.FS
 
 func RunMigrations(db *sql.DB) error {
-	sub, err := fs.Sub(schemaFS, "schema")
+	sub, err := fs.Sub(MigrationsFS, "migrations")
 	if err != nil {
-		return fmt.Errorf("failed to sub schema fs: %w", err)
+		return fmt.Errorf("failed to sub migrations fs: %w", err)
 	}
-	return runMigrations(db, sub)
+	return RunMigrationsFromFS(db, sub)
 }
 
-func runMigrations(db *sql.DB, fsys fs.FS) error {
+func RunMigrationsFromFS(db *sql.DB, fsys fs.FS) error {
 	if err := createMigrationsTable(db); err != nil {
 		return err
 	}
@@ -67,7 +67,7 @@ func applyMigration(db *sql.DB, file, content, sum string) error {
 		}
 		return cause
 	}
-	for _, stmt := range splitStatements(content) {
+	for _, stmt := range SplitStatements(content) {
 		if strings.TrimSpace(stmt) == "" {
 			continue
 		}
@@ -136,7 +136,7 @@ func fileChecksum(content []byte) string {
 	return hex.EncodeToString(sum[:])
 }
 
-func splitStatements(content string) []string {
+func SplitStatements(content string) []string {
 	var statements []string
 	var current strings.Builder
 	rest := content

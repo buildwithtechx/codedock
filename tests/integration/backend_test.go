@@ -6,8 +6,8 @@ import (
 
 	"github.com/docker/docker/client"
 
-	codedockhttp "codedock/internal/http"
-	"codedock/internal/repositories"
+	cdkdb "codedock/db"
+	cdkhttp "codedock/internal/http"
 	"codedock/internal/testdb"
 	"codedock/internal/utils"
 )
@@ -23,13 +23,13 @@ func TestCodedockBackendInitialization(t *testing.T) {
 
 	db := testdb.Open(t)
 
-	if err := repositories.RunMigrations(db); err != nil {
+	if err := cdkdb.RunMigrations(db); err != nil {
 		t.Fatalf("failed to run migrations: %v", err)
 	}
 
 	dockerClient, _ := client.NewClientWithOpts(client.FromEnv, client.WithAPIVersionNegotiation())
 
-	server, err := codedockhttp.NewServer(db, vlt, nil, nil, dockerClient, dataDir)
+	server, err := cdkhttp.NewServer(db, vlt, nil, nil, dockerClient, dataDir)
 	if err != nil {
 		t.Fatalf("failed to initialize server: %v", err)
 	}
