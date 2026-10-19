@@ -9,7 +9,9 @@ import {
   formatDuration,
   isValidDomain,
   isValidUrl,
+  normalizeProjectRootDirectory,
   normalizeRollbackWindow,
+  parseComposeDurationSeconds,
 } from '../src/index';
 
 describe('@codedock/core', () => {
@@ -58,6 +60,24 @@ describe('@codedock/core', () => {
       expect(formatDuration(90)).toBe('1m 30s');
       expect(formatDuration(120)).toBe('2m');
       expect(formatDuration(3665)).toBe('1h 1m');
+    });
+
+    it('normalizes project root directories', () => {
+      expect(normalizeProjectRootDirectory('./src')).toBe('src');
+      expect(normalizeProjectRootDirectory('/app/frontend/')).toBe('app/frontend');
+      expect(normalizeProjectRootDirectory('.')).toBe('');
+      expect(normalizeProjectRootDirectory('')).toBe('');
+      expect(normalizeProjectRootDirectory(undefined)).toBe('');
+      expect(normalizeProjectRootDirectory('apps\\web')).toBe('apps/web');
+    });
+
+    it('parses compose duration strings into seconds', () => {
+      expect(parseComposeDurationSeconds('30s')).toBe(30);
+      expect(parseComposeDurationSeconds('2m')).toBe(120);
+      expect(parseComposeDurationSeconds('1h')).toBe(3600);
+      expect(parseComposeDurationSeconds('60')).toBe(60);
+      expect(parseComposeDurationSeconds('')).toBeUndefined();
+      expect(parseComposeDurationSeconds(null)).toBeUndefined();
     });
   });
 
