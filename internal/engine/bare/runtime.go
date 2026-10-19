@@ -12,6 +12,11 @@ import (
 	"strings"
 )
 
+var (
+	sha256HexPattern     = regexp.MustCompile(`^[a-fA-F0-9]{64}$`)
+	managedDomainPattern = regexp.MustCompile(`^[a-z0-9]([a-z0-9.-]{0,251}[a-z0-9])?$`)
+)
+
 type Runner interface {
 	Script(context.Context, models.ClusterNode, string, string) error
 	Host(context.Context, models.ClusterNode, string) (string, error)
@@ -46,7 +51,7 @@ func Validate(app *models.AppService, target models.RuntimeTarget) error {
 		if err != nil || parsed.Scheme != "https" || parsed.Host == "" || parsed.User != nil || parsed.Fragment != "" {
 			return fmt.Errorf("bare release requires an HTTPS artifact URL without credentials or fragment")
 		}
-		if !regexp.MustCompile(`^[a-fA-F0-9]{64}$`).MatchString(target.BareSHA256) {
+		if !sha256HexPattern.MatchString(target.BareSHA256) {
 			return fmt.Errorf("bare release requires its SHA256 checksum")
 		}
 	}
@@ -83,7 +88,7 @@ func Validate(app *models.AppService, target models.RuntimeTarget) error {
 	if app.Replicas > 1 || len(target.Volumes) > 0 || len(app.Volumes) > 0 || target.ClusterID != "" || len(target.NodeIDs) > 0 {
 		return fmt.Errorf("bare runtime supports one supervised process and its private data directory; Docker volumes and cluster placement are unavailable")
 	}
-	if app.Domain != "" && !regexp.MustCompile(`^[a-z0-9]([a-z0-9.-]{0,251}[a-z0-9])?$`).MatchString(strings.ToLower(app.Domain)) {
+	if app.Domain != "" && !managedDomainPattern.MatchString(strings.ToLower(app.Domain)) {
 		return fmt.Errorf("invalid managed HTTP domain")
 	}
 	if app.RuntimeMode != models.RuntimeModeWorker && (app.InternalPort < 1024 || app.InternalPort > 65535) {

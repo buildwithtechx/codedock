@@ -18,6 +18,11 @@ var allowedStorageVersions = map[string]string{
 	"v1.7.0": "https://raw.githubusercontent.com/longhorn/longhorn/v1.7.0/deploy/longhorn.yaml",
 }
 
+var (
+	storageVersionPattern = regexp.MustCompile(`^v1\.[67]\.[0-9]+$`)
+	storageNamePattern    = regexp.MustCompile(`^[a-z0-9][a-z0-9.-]{0,62}$`)
+)
+
 func (s *Service) ReviewStorageSetup(ctx context.Context, user, project, id string, request models.StorageSetupRequest) (*models.OperationReview, error) {
 	cluster, err := s.store.Get(ctx, id)
 	if err != nil {
@@ -27,7 +32,7 @@ func (s *Service) ReviewStorageSetup(ctx context.Context, user, project, id stri
 		return nil, fmt.Errorf("select a ready cluster in this project")
 	}
 	url, ok := allowedStorageVersions[request.Version]
-	if !ok || !regexp.MustCompile(`^v1\.[67]\.[0-9]+$`).MatchString(request.Version) {
+	if !ok || !storageVersionPattern.MatchString(request.Version) {
 		return nil, fmt.Errorf("select a reviewed Longhorn release")
 	}
 	httpRequest, err := http.NewRequestWithContext(ctx, http.MethodGet, url, nil)
@@ -95,7 +100,7 @@ func (s *Service) SnapshotVolume(ctx context.Context, project, id, namespace, cl
 	if cluster.ProjectID != project || cluster.Status != "READY" || len(cluster.Nodes) == 0 {
 		return fmt.Errorf("select a ready cluster in this project")
 	}
-	if !regexp.MustCompile(`^[a-z0-9][a-z0-9.-]{0,62}$`).MatchString(snapshot) || !regexp.MustCompile(`^[a-z0-9][a-z0-9.-]{0,62}$`).MatchString(claim) {
+	if !storageNamePattern.MatchString(snapshot) || !storageNamePattern.MatchString(claim) {
 		return fmt.Errorf("select a valid claim and snapshot name")
 	}
 	runtime := kubernetes.NewWorkloadRuntime(s.runner)

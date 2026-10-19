@@ -17,6 +17,10 @@ import (
 	"strings"
 )
 
+var (
+	k3sVersionPattern = regexp.MustCompile(`^v1\.[0-9]+\.[0-9]+\+k3s[0-9]+$`)
+)
+
 type Store interface {
 	Get(context.Context, string) (*models.Cluster, error)
 	List(context.Context, string) ([]models.Cluster, error)
@@ -74,7 +78,7 @@ func (s *Service) Review(ctx context.Context, user, projectID string, request mo
 	if request.Action != "install" && request.Action != "join" && request.Action != "upgrade" && request.Action != "remove" {
 		return nil, fmt.Errorf("unsupported cluster action")
 	}
-	if !regexp.MustCompile(`^v1\.[0-9]+\.[0-9]+\+k3s[0-9]+$`).MatchString(cluster.Version) {
+	if !k3sVersionPattern.MatchString(cluster.Version) {
 		return nil, fmt.Errorf("select an exact K3s release version")
 	}
 	if strings.TrimSpace(cluster.Name) == "" || len(cluster.Name) > 100 || len(cluster.Nodes) == 0 || len(cluster.Nodes) > 32 {

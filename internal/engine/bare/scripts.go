@@ -9,6 +9,8 @@ import (
 	"strings"
 )
 
+var envIdentifierPattern = regexp.MustCompile(`^[A-Za-z_][A-Za-z0-9_]*$`)
+
 func identity(app *models.AppService) (string, string, string, error) {
 	if _, err := uuid.Parse(app.ID); err != nil {
 		return "", "", "", err
@@ -38,7 +40,7 @@ func DeploymentScript(app *models.AppService, target models.RuntimeTarget, varia
 	}
 	launch := "#!/bin/sh\nset -eu\ncd " + ssh.ShellQuote(base+"/current") + "\nexport CODEDOCK_DATA_DIR=" + ssh.ShellQuote(base+"/data") + "\n"
 	for key, value := range variables {
-		if !regexp.MustCompile(`^[A-Za-z_][A-Za-z0-9_]*$`).MatchString(key) || strings.ContainsRune(value, 0) {
+		if !envIdentifierPattern.MatchString(key) || strings.ContainsRune(value, 0) {
 			return "", fmt.Errorf("invalid native environment variable")
 		}
 		launch += "export " + key + "=" + ssh.ShellQuote(value) + "\n"

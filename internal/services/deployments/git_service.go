@@ -23,6 +23,8 @@ import (
 	"codedock/internal/utils"
 )
 
+var validBranchRegex = regexp.MustCompile(`^[a-zA-Z0-9._/-]+$`)
+
 type GitService struct {
 	repo       repositories.GitRepository
 	httpClient *http.Client
@@ -147,8 +149,7 @@ func (s *GitService) SyncCodebase(ctx context.Context, app *models.AppService, t
 	if branch == "" {
 		branch = "main"
 	}
-	validBranch := regexp.MustCompile(`^[a-zA-Z0-9._/-]+$`)
-	if !validBranch.MatchString(branch) {
+	if !validBranchRegex.MatchString(branch) {
 		return errors.New("invalid branch name")
 	}
 

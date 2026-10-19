@@ -8,13 +8,20 @@ import (
 	"regexp"
 )
 
+var (
+	dataSpecNamePattern       = regexp.MustCompile(`^[a-z][a-z0-9-]{0,39}$`)
+	dataSpecStoragePattern    = regexp.MustCompile(`^[a-z0-9][a-z0-9.-]{0,62}$`)
+	cloudNativePGImagePattern = regexp.MustCompile(`^ghcr\.io/cloudnative-pg/postgresql:[0-9]+\.[0-9]+[-a-zA-Z0-9.]*$`)
+	redisImagePattern         = regexp.MustCompile(`^redis:[0-9]+\.[0-9]+\.[0-9]+[-a-zA-Z0-9.]*$`)
+)
+
 func ValidateDataSpec(spec models.ClusterDataSpec, nodes int) error {
 	for _, id := range []string{spec.ID, spec.EnvironmentID} {
 		if _, err := uuid.Parse(id); err != nil {
 			return fmt.Errorf("database and environment identities must be UUIDs")
 		}
 	}
-	if !regexp.MustCompile(`^[a-z][a-z0-9-]{0,39}$`).MatchString(spec.Name) {
+	if !dataSpecNamePattern.MatchString(spec.Name) {
 		return fmt.Errorf("database name must use lowercase letters, numbers and hyphens")
 	}
 	if spec.Instances != 1 && spec.Instances != 3 {
@@ -35,19 +42,19 @@ func ValidateDataSpec(spec models.ClusterDataSpec, nodes int) error {
 	if spec.StorageGiB < 1 || spec.StorageGiB > 16384 {
 		return fmt.Errorf("select persistent storage from 1 to 16384 GiB")
 	}
-	if spec.StorageClass != "" && !regexp.MustCompile(`^[a-z0-9][a-z0-9.-]{0,62}$`).MatchString(spec.StorageClass) {
+	if spec.StorageClass != "" && !dataSpecStoragePattern.MatchString(spec.StorageClass) {
 		return fmt.Errorf("invalid storage class")
 	}
 	switch spec.Engine {
 	case "postgres":
-		if !regexp.MustCompile(`^ghcr\.io/cloudnative-pg/postgresql:[0-9]+\.[0-9]+[-a-zA-Z0-9.]*$`).MatchString(spec.Image) {
+		if !cloudNativePGImagePattern.MatchString(spec.Image) {
 			return fmt.Errorf("select an exact CloudNativePG PostgreSQL image tag")
 		}
 		if spec.Instances == 3 && !spec.Synchronous {
 			return fmt.Errorf("three PostgreSQL instances require synchronous durability")
 		}
 	case "redis":
-		if !regexp.MustCompile(`^redis:[0-9]+\.[0-9]+\.[0-9]+[-a-zA-Z0-9.]*$`).MatchString(spec.Image) {
+		if !redisImagePattern.MatchString(spec.Image) {
 			return fmt.Errorf("select an exact Redis image tag")
 		}
 		if spec.S3DestinationID != "" {

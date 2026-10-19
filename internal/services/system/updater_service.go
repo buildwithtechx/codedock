@@ -20,6 +20,10 @@ const (
 	defaultVersion = "v1.0.0"
 )
 
+var (
+	semverPattern = regexp.MustCompile(`^v?\d+\.\d+\.\d+(-[\w.]+)?$`)
+)
+
 type UpdateInfo struct {
 	CurrentVersion  string `json:"currentVersion"`
 	LatestVersion   string `json:"latestVersion"`
@@ -179,7 +183,7 @@ func (u *UpdaterService) DeployUpdate(ctx context.Context) error {
 
 	targetVersion := settingsCfg.LatestVersion
 
-	if !regexp.MustCompile(`^v?\d+\.\d+\.\d+(-[\w.]+)?$`).MatchString(targetVersion) {
+	if !semverPattern.MatchString(targetVersion) {
 		return fmt.Errorf("invalid target version format: %s", targetVersion)
 	}
 

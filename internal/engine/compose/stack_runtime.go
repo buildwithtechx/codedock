@@ -18,6 +18,8 @@ import (
 	"github.com/docker/docker/client"
 )
 
+var composeVarPattern = regexp.MustCompile(`^[A-Za-z_][A-Za-z0-9_]*$`)
+
 type StackRuntime struct{ docker *client.Client }
 
 func NewStackRuntime(docker *client.Client) *StackRuntime { return &StackRuntime{docker: docker} }
@@ -134,7 +136,7 @@ func (r *StackRuntime) command(ctx context.Context, id, content string, variable
 	}
 	for key, value := range variables {
 		normalized := strings.ToUpper(key)
-		if !regexp.MustCompile(`^[A-Za-z_][A-Za-z0-9_]*$`).MatchString(key) || strings.HasPrefix(normalized, "COMPOSE_") || strings.HasPrefix(normalized, "DOCKER_") || normalized == "PATH" || normalized == "HOME" || normalized == "SYSTEMROOT" || normalized == "USERPROFILE" || normalized == "TEMP" || normalized == "TMP" {
+		if !composeVarPattern.MatchString(key) || strings.HasPrefix(normalized, "COMPOSE_") || strings.HasPrefix(normalized, "DOCKER_") || normalized == "PATH" || normalized == "HOME" || normalized == "SYSTEMROOT" || normalized == "USERPROFILE" || normalized == "TEMP" || normalized == "TMP" {
 			return nil, fmt.Errorf("reserved interpolation variable: %s", key)
 		}
 		command.Env = append(command.Env, key+"="+value)

@@ -14,10 +14,11 @@ import (
 	"strings"
 )
 
+var numericVersionPattern = regexp.MustCompile(`^[0-9]+\.[0-9]+\.[0-9]+$`)
+
 func (s *Service) operatorManifests(ctx context.Context, cluster string, request models.ClusterDataRequest) ([]models.OperatorManifest, error) {
-	pattern := regexp.MustCompile(`^[0-9]+\.[0-9]+\.[0-9]+$`)
 	for _, version := range []string{request.OperatorVersion, request.BarmanVersion, request.CertManagerVersion} {
-		if !pattern.MatchString(version) {
+		if !numericVersionPattern.MatchString(version) {
 			return nil, fmt.Errorf("operator dependencies require exact numeric release versions")
 		}
 	}

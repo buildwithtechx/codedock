@@ -12,6 +12,8 @@ import (
 	"strings"
 )
 
+var canvasBindingPattern = regexp.MustCompile(`\$\{([a-zA-Z0-9_-]+)\.([a-zA-Z0-9_]+)\}`)
+
 type topologyReader interface {
 	SelectContext(context.Context, any, string, ...any) error
 }
@@ -81,9 +83,8 @@ func (r *CanvasRepo) projectTopology(ctx context.Context, canvas *models.Environ
 	if err := r.db.SelectContext(ctx, &variables, `SELECT v.id,v.service_id,v.key,v.value FROM service_vars v JOIN app_services a ON a.id=v.service_id WHERE a.environment_id=$1`, canvas.Environment.ID); err != nil {
 		return err
 	}
-	pattern := regexp.MustCompile(`\$\{([a-zA-Z0-9_-]+)\.([a-zA-Z0-9_]+)\}`)
 	for _, variable := range variables {
-		for index, match := range pattern.FindAllStringSubmatch(variable.Value, -1) {
+		for index, match := range canvasBindingPattern.FindAllStringSubmatch(variable.Value, -1) {
 			if source := names[match[1]]; source != "" {
 				canvas.Edges = append(canvas.Edges, models.CanvasEdge{ID: fmt.Sprintf("binding:%s:%d", variable.ID, index), Source: source, Target: "app-" + variable.ServiceID, Kind: "binding", Label: variable.Key + " ← " + match[2]})
 			}

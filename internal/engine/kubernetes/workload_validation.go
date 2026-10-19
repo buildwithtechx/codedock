@@ -11,6 +11,13 @@ import (
 	"strings"
 )
 
+var (
+	dnsHostnamePattern  = regexp.MustCompile(`^[a-zA-Z0-9]([a-zA-Z0-9.-]*[a-zA-Z0-9])?$`)
+	volumeNamePattern   = regexp.MustCompile(`^[a-z][a-z0-9-]{0,30}$`)
+	storageClassPattern = regexp.MustCompile(`^[a-z0-9][a-z0-9.-]{0,252}$`)
+	envVarNamePattern   = regexp.MustCompile(`^[A-Za-z_][A-Za-z0-9_]*$`)
+)
+
 func WorkloadIdentity(app *models.AppService) (string, string, error) {
 	if _, err := uuid.Parse(app.ID); err != nil {
 		return "", "", fmt.Errorf("invalid service identity")
@@ -58,13 +65,13 @@ func ValidateWorkload(workload *models.KubernetesWorkload) error {
 			}
 			host = parsed.Hostname()
 		}
-		if net.ParseIP(host) != nil || !regexp.MustCompile(`^[a-zA-Z0-9]([a-zA-Z0-9.-]*[a-zA-Z0-9])?$`).MatchString(host) || !strings.Contains(host, ".") {
+		if net.ParseIP(host) != nil || !dnsHostnamePattern.MatchString(host) || !strings.Contains(host, ".") {
 			return fmt.Errorf("routing requires a DNS hostname")
 		}
 	}
 	names, mounts := map[string]bool{}, map[string]bool{}
 	for _, volume := range target.Volumes {
-		if !regexp.MustCompile(`^[a-z][a-z0-9-]{0,30}$`).MatchString(volume.Name) || names[volume.Name] {
+		if !volumeNamePattern.MatchString(volume.Name) || names[volume.Name] {
 			return fmt.Errorf("persistent volume names must be unique DNS labels")
 		}
 		if !path.IsAbs(volume.MountPath) || path.Clean(volume.MountPath) != volume.MountPath || volume.MountPath == "/" || mounts[volume.MountPath] {
@@ -73,7 +80,7 @@ func ValidateWorkload(workload *models.KubernetesWorkload) error {
 		if volume.SizeGiB < 1 || volume.SizeGiB > 16384 {
 			return fmt.Errorf("persistent storage size must be between 1 and 16384 GiB")
 		}
-		if volume.StorageClass != "" && !regexp.MustCompile(`^[a-z0-9][a-z0-9.-]{0,252}$`).MatchString(volume.StorageClass) {
+		if volume.StorageClass != "" && !storageClassPattern.MatchString(volume.StorageClass) {
 			return fmt.Errorf("invalid storage class")
 		}
 		if app.Replicas > 1 && !volume.Shared {
@@ -82,7 +89,7 @@ func ValidateWorkload(workload *models.KubernetesWorkload) error {
 		names[volume.Name], mounts[volume.MountPath] = true, true
 	}
 	for key := range workload.Variables {
-		if !regexp.MustCompile(`^[A-Za-z_][A-Za-z0-9_]*$`).MatchString(key) {
+		if !envVarNamePattern.MatchString(key) {
 			return fmt.Errorf("invalid environment variable name")
 		}
 	}

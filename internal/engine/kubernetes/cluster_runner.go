@@ -14,6 +14,8 @@ import (
 	"strings"
 )
 
+var networkInterfacePattern = regexp.MustCompile(`^[A-Za-z0-9_.:-]{1,32}$`)
+
 type ClusterServers interface {
 	GetByID(context.Context, string) (*models.Server, error)
 }
@@ -37,7 +39,7 @@ func ValidateNode(node models.ClusterNode) error {
 			return fmt.Errorf("private node addresses cannot overlap the default K3s pod or service network")
 		}
 	}
-	if !regexp.MustCompile(`^[A-Za-z0-9_.:-]{1,32}$`).MatchString(node.Interface) {
+	if !networkInterfacePattern.MatchString(node.Interface) {
 		return fmt.Errorf("select a valid private network interface")
 	}
 	fingerprint, err := base64.RawStdEncoding.DecodeString(strings.TrimPrefix(node.Fingerprint, "SHA256:"))
