@@ -118,7 +118,6 @@ func (s *PasskeyService) FinishAuthentication(ctx context.Context, parsed *proto
 		return nil, "", "", errors.New("account is disabled")
 	}
 
-	// 2FA gate: verify TOTP before consuming single-use challenge or incrementing counter
 	if u.TOTPEnabled {
 		if totpCode == "" {
 			return nil, "", "", errors.New("2FA code required")

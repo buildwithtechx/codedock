@@ -31,7 +31,6 @@ func TestPasskeyVirtualCeremonyAnd2FAGating(t *testing.T) {
 	}
 	_ = userRepo.CreateUser(ctx, user)
 
-	// 1. Begin registration
 	creationOptions, err := svc.BeginRegistration(ctx, user.ID)
 	if err != nil {
 		t.Fatalf("BeginRegistration failed: %v", err)
@@ -56,7 +55,6 @@ func TestPasskeyVirtualCeremonyAnd2FAGating(t *testing.T) {
 		t.Fatalf("parse credential creation body: %v", err)
 	}
 
-	// 2. Finish registration
 	regResult, err := svc.FinishRegistration(ctx, user.ID, "Virtual FIDO2 Key", parsedCreation, "127.0.0.1")
 	if err != nil {
 		t.Fatalf("FinishRegistration failed: %v", err)
@@ -65,7 +63,6 @@ func TestPasskeyVirtualCeremonyAnd2FAGating(t *testing.T) {
 		t.Errorf("expected key name 'Virtual FIDO2 Key', got %s", regResult.Name)
 	}
 
-	// 3. Begin authentication
 	assertionOptionsWrapped, err := svc.BeginAuthentication(ctx)
 	if err != nil {
 		t.Fatalf("BeginAuthentication failed: %v", err)
@@ -87,29 +84,24 @@ func TestPasskeyVirtualCeremonyAnd2FAGating(t *testing.T) {
 		t.Fatalf("parse assertion payload: %v", err)
 	}
 
-	// 4. Test 2FA gate (First attempt without code)
 	_, _, _, err = svc.FinishAuthentication(ctx, parsedAssertion, "", "127.0.0.1")
 	if err == nil || !strings.Contains(err.Error(), "2FA code required") {
 		t.Fatalf("expected '2FA code required', got %v", err)
 	}
 
-	// Challenge must NOT have been consumed
 	if len(repo.challenges) == 0 {
 		t.Fatal("challenge was consumed prematurely on missing 2FA code")
 	}
 
-	// 5. Test 2FA gate with invalid TOTP code
 	_, _, _, err = svc.FinishAuthentication(ctx, parsedAssertion, "999999", "127.0.0.1")
 	if err == nil || !strings.Contains(err.Error(), "invalid 2FA verification code") {
 		t.Fatalf("expected 'invalid 2FA verification code', got %v", err)
 	}
 
-	// Challenge must still NOT have been consumed
 	if len(repo.challenges) == 0 {
 		t.Fatal("challenge was consumed prematurely on mistyped 2FA code")
 	}
 
-	// 6. Test 2FA gate with valid recovery code (from mock user repo: "1111-2222")
 	authedUser, token, refresh, err := svc.FinishAuthentication(ctx, parsedAssertion, "1111-2222", "127.0.0.1")
 	if err != nil {
 		t.Fatalf("FinishAuthentication with 2FA code failed: %v", err)
@@ -118,7 +110,6 @@ func TestPasskeyVirtualCeremonyAnd2FAGating(t *testing.T) {
 		t.Fatal("expected non-empty user, token, and refresh token")
 	}
 
-	// 7. Verify replay fails (challenge is now atomically consumed)
 	_, _, _, err = svc.FinishAuthentication(ctx, parsedAssertion, "1111-2222", "127.0.0.1")
 	if err == nil || !strings.Contains(err.Error(), "challenge expired or already used") {
 		t.Fatalf("expected replay rejection 'challenge expired or already used', got %v", err)
@@ -143,7 +134,6 @@ func TestPasskeyVirtualCeremonyDirectLogin(t *testing.T) {
 	}
 	_ = userRepo.CreateUser(ctx, user)
 
-	// Register
 	creationOptions, err := svc.BeginRegistration(ctx, user.ID)
 	if err != nil {
 		t.Fatalf("BeginRegistration failed: %v", err)
@@ -161,7 +151,6 @@ func TestPasskeyVirtualCeremonyDirectLogin(t *testing.T) {
 		t.Fatalf("FinishRegistration failed: %v", err)
 	}
 
-	// Authenticate directly (no 2FA required)
 	assertionOptionsWrapped, _ := svc.BeginAuthentication(ctx)
 	assertionJSON, _ := json.Marshal(assertionOptionsWrapped.Response)
 	parsedAssertionOpts, _ := virtualwebauthn.ParseAssertionOptions(string(assertionJSON))
