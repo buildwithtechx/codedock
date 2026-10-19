@@ -1,10 +1,9 @@
+import type { RollbackCapacityUI } from '@codedock/contracts';
+import { DEFAULT_ROLLBACK_WINDOW, MAX_ROLLBACK_WINDOW, formatBytes } from '@codedock/core';
 import { Loader2, RotateCcw } from 'lucide-react';
-import type { RollbackCapacityUI } from '#/interfaces/projects';
-import { formatBytes } from '#/lib/utils';
 import { InfoCard } from './info-card';
 
-export const DEFAULT_ROLLBACK_WINDOW = 5;
-export const MAX_ROLLBACK_WINDOW = 20;
+export { DEFAULT_ROLLBACK_WINDOW, MAX_ROLLBACK_WINDOW };
 
 export interface RollbackRetentionCardsProps {
   strategy: 'git' | 'snapshot';

@@ -20,6 +20,8 @@
   },
   "dependencies": {
     "@ai-sdk/react": "^4.0.147",
+    "@codedock/contracts": "*",
+    "@codedock/core": "*",
     "@codedock/setup": "*",
     "@codedock/ui": "*",
     "@hookform/resolvers": "^5.9.2",

@@ -1,3 +1,4 @@
+import type { RollbackCapacityUI, UpdateRollbackSettingsRequest } from '@codedock/contracts';
 import type { BaseResponse } from '#/interfaces/base';
 import type {
   AddMemberRequest,
@@ -10,9 +11,7 @@ import type {
   ListProjectsResponse,
   ProjectMember,
   ProjectToken,
-  RollbackCapacityUI,
   ServiceWebhook,
-  UpdateRollbackSettingsRequest,
 } from '#/interfaces/projects';
 import { apiClient } from '#/lib/api-client';
 import { handleApiError } from '#/lib/error';

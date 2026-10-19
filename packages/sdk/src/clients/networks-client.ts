@@ -1,5 +1,5 @@
+import type { NetworkWatchdog, ServerNetwork } from '@codedock/contracts';
 import type { HttpClient } from '../http';
-import type { NetworkWatchdog, ServerNetwork } from '../types';
 
 export function createNetworksOperations(http: HttpClient) {
   return {

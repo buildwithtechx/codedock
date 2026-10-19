@@ -1,5 +1,5 @@
+import type { ActiveSubscriptionOverview, PrepaidTopupPackage } from '@codedock/contracts';
 import type { HttpClient } from '../http';
-import type { ActiveSubscriptionOverview, PrepaidTopupPackage } from '../types';
 
 export function createBillingOperations(http: HttpClient) {
   return {

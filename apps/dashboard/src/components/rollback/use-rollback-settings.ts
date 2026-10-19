@@ -1,12 +1,6 @@
+import { clampRollbackWindow } from '@codedock/core';
 import { toast } from 'sonner';
 import { useGetRollbackCapacity, useUpdateRollbackSettings } from '#/hooks/use-projects';
-import { MAX_ROLLBACK_WINDOW } from './rollback-retention-cards';
-
-function clampWindow(val: number): number {
-  if (Number.isNaN(val) || val < 0) return 0;
-  if (val > MAX_ROLLBACK_WINDOW) return MAX_ROLLBACK_WINDOW;
-  return Math.floor(val);
-}
 
 export function useRollbackSettings(projectId?: string | null, enabled = true) {
   const {
@@ -51,7 +45,7 @@ export function useRollbackSettings(projectId?: string | null, enabled = true) {
     togglingStrategy: isPending && pendingPayload?.defaultRollbackStrategy !== undefined,
     reload: refetch,
     changeWindow: async (value: number | null) => {
-      const next = value === null ? null : clampWindow(value);
+      const next = value === null ? null : clampRollbackWindow(value, capacity?.maxWindow);
       if (
         capacity &&
         (next === null

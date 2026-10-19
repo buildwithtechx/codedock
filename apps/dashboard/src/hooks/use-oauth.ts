@@ -30,3 +30,7 @@ export const useSaveOAuthProvider = () => {
     },
   });
 };
+
+export const useTriggerOAuthLogin = () => {
+  return (provider: string) => oauthService.triggerOAuthLogin(provider);
+};

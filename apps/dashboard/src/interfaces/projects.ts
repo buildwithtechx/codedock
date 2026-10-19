@@ -25,24 +25,6 @@ export interface ProjectConfig {
   updatedAt: string;
 }
 
-export interface RollbackCapacityUI {
-  window: number;
-  source: 'explicit' | 'instance-default';
-  explicit: number | null;
-  snapshotSizeBytes: number | null;
-  measuredAt: string | null;
-  diskFreeBytes: number | null;
-  diskTotalBytes: number | null;
-  maxWindow: number;
-  diskBudgetFraction: number;
-  strategy: 'snapshot' | 'git';
-}
-
-export interface UpdateRollbackSettingsRequest {
-  defaultRollbackStrategy?: 'snapshot' | 'git';
-  rollbackWindow?: number | null;
-}
-
 export interface EnvironmentConfig {
   id: string;
   projectId: string;

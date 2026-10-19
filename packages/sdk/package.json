@@ -24,6 +24,10 @@
     "typecheck": "tsc --noEmit",
     "test": "vitest run"
   },
+  "dependencies": {
+    "@codedock/contracts": "*",
+    "@codedock/core": "*"
+  },
   "devDependencies": {
     "tsup": "^9.0.0",
     "typescript": "^7.0.2",

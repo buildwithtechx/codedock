@@ -1,5 +1,5 @@
+import type { IngressConnection, IngressDiscovery, IngressHostname } from '@codedock/contracts';
 import type { HttpClient } from '../http';
-import type { IngressConnection, IngressDiscovery, IngressHostname } from '../types';
 
 export function createIngressOperations(http: HttpClient) {
   return {

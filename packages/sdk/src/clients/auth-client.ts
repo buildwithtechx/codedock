@@ -1,5 +1,10 @@
+import type {
+  AccountInfo,
+  PairingClaimResult,
+  PairingHandshake,
+  TenantCorsConfig,
+} from '@codedock/contracts';
 import type { HttpClient } from '../http';
-import type { AccountInfo, PairingClaimResult, PairingHandshake, TenantCorsConfig } from '../types';
 
 export function createAuthOperations(http: HttpClient) {
   return {

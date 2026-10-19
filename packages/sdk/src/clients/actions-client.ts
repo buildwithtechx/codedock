@@ -1,5 +1,5 @@
+import type { ActionRun, ActionRunner, ActionWorkflow } from '@codedock/contracts';
 import type { HttpClient } from '../http';
-import type { ActionRun, ActionRunner, ActionWorkflow } from '../types';
 
 export function createActionsOperations(http: HttpClient) {
   return {

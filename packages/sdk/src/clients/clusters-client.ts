@@ -1,5 +1,5 @@
+import type { ClusterScaling, ComputeCluster } from '@codedock/contracts';
 import type { HttpClient } from '../http';
-import type { ClusterScaling, ComputeCluster } from '../types';
 
 export function createClustersOperations(http: HttpClient) {
   return {
