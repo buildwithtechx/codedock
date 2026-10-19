@@ -1,5 +1,5 @@
 import { listen } from '@tauri-apps/api/event';
-import { invokeCommand } from './tauri-ipc.js';
+import { invokeCommand } from './tauri-ipc';
 
 export interface SidecarStatus {
   running: boolean;

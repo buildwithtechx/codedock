@@ -8,16 +8,16 @@ import {
   saveToken,
   setDaemonPort,
   setDaemonUrl,
-} from './connection-client.js';
+} from './connection-client';
 import {
   getSidecarStatus,
   restartSidecar,
   setSidecarPort,
   startSidecar,
   stopSidecar,
-} from './sidecar-client.js';
-import { setInvokeForTesting } from './tauri-ipc.js';
-import { checkUpdate, downloadAndInstall, restartApp } from './update-client.js';
+} from './sidecar-client';
+import { setInvokeForTesting } from './tauri-ipc';
+import { checkUpdate, downloadAndInstall, restartApp } from './update-client';
 
 afterEach(() => {
   setInvokeForTesting(null);

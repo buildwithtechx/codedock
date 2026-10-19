@@ -23,7 +23,7 @@ For scripts, use the remote CLI login flow or a project token accepted by the ta
 curl "$CODEDOCK_URL/api/projects/$PROJECT_ID"   -H "Authorization: Bearer $CODEDOCK_TOKEN"
 ```
 
-Browser cookie requests have CSRF requirements. See [API overview](/api/) for authentication and response behavior and [endpoint catalogue](/reference/api-endpoints/) for route-specific middleware wiring.
+Browser cookie requests have CSRF requirements. See [API overview](/reference/api/) for authentication and response behavior and [endpoint catalogue](/reference/api-endpoints/) for route-specific middleware wiring.
 
 ## Personal API tokens
 

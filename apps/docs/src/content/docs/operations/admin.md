@@ -65,7 +65,7 @@ curl -fsSL https://get.codedock.run/cli | bash
 codedock login    # Connect to your server
 ```
 
-For a full list of remote commands, see the [CLI Reference](/cli/).
+For a full list of remote commands, see the [CLI Reference](/reference/cli/).
 
 ### Update with `codedockd update`
 

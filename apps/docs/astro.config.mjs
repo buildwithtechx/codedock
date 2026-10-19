@@ -5,6 +5,15 @@ import { defineConfig } from "astro/config";
 
 export default defineConfig({
   site: "https://docs.codedock.run",
+  redirects: {
+    "/tutorial": "/getting-started/tutorial",
+    "/admin": "/operations/admin",
+    "/integrations": "/operations/integrations",
+    "/cli": "/reference/cli",
+    "/configuration": "/reference/configuration",
+    "/api": "/reference/api",
+    "/adopt": "/reference/adopt",
+  },
   integrations: [
     starlight({
       title: "Codedock Docs",
@@ -19,7 +28,7 @@ export default defineConfig({
             { label: "Installation", slug: "getting-started/installation" },
             { label: "Browser Onboarding", slug: "getting-started/onboarding" },
             { label: "Quick Start Guide", slug: "getting-started/quick-start" },
-            { label: "Deploy Your First App", slug: "tutorial" },
+            { label: "Deploy Your First App", slug: "getting-started/tutorial" },
             { label: "Architecture", slug: "core-concepts/architecture" },
             { label: "Projects & Environments", slug: "projects/overview" },
             { label: "Project Settings", slug: "projects/settings" },
@@ -103,8 +112,8 @@ export default defineConfig({
           collapsed: false,
           items: [
             { label: "Teams & Collaboration", slug: "operations/teams" },
-            { label: "Admin Dashboard", slug: "admin" },
-            { label: "Third-party Integrations", slug: "integrations" },
+            { label: "Admin Dashboard", slug: "operations/admin" },
+            { label: "Third-party Integrations", slug: "operations/integrations" },
             { label: "Observability & Logs", slug: "operations/observability" },
             { label: "Account Security & 2FA", slug: "operations/account-security" },
             {
@@ -118,9 +127,9 @@ export default defineConfig({
           label: "Reference",
           collapsed: false,
           items: [
-            { label: "System Configuration", slug: "configuration" },
-            { label: "CLI Reference", slug: "cli" },
-            { label: "REST API Overview", slug: "api" },
+            { label: "System Configuration", slug: "reference/configuration" },
+            { label: "CLI Reference", slug: "reference/cli" },
+            { label: "REST API Overview", slug: "reference/api" },
             { label: "API Endpoint Catalogue", slug: "reference/api-endpoints" },
             { label: "System Settings API", slug: "reference/system-settings" },
             { label: "API Authentication Access", slug: "reference/api-access" },
@@ -132,7 +141,7 @@ export default defineConfig({
               label: "API Env & Domains",
               slug: "reference/api-environment-and-domains",
             },
-            { label: "Zero Lock-in Commitment", slug: "adopt" },
+            { label: "Zero Lock-in Commitment", slug: "reference/adopt" },
           ],
         },
       ],

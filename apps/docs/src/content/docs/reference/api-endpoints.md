@@ -26,7 +26,7 @@ free text matched against the action, resource ID, and actor email or name.
 Resource names resolve to IDs first, so searching a project or server name
 finds entries that stored only its ID. Facet counts follow the same filter.
 
-Read [API conventions](/api/) first. Paths use `:parameter` placeholders. Linked definitions identify each handler; request DTOs and response behavior live in the handler and model files. The exhaustive machine-readable schema is `docs/api/openapi.json` in the repository, also served at runtime as `GET /api/docs/openapi.json`; the Go suite fails when a route lacks a registry entry.
+Read [API conventions](/reference/api/) first. Paths use `:parameter` placeholders. Linked definitions identify each handler; request DTOs and response behavior live in the handler and model files. The exhaustive machine-readable schema is `docs/api/openapi.json` in the repository, also served at runtime as `GET /api/docs/openapi.json`; the Go suite fails when a route lacks a registry entry.
 
 ## Auth
 
