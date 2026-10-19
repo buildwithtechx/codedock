@@ -44,7 +44,7 @@ func (h *ServerHandler) StreamMonitor(c echo.Context) error {
 	}
 
 	emitSample := func() error {
-		raw := GetHostMetricsPayload()
+		raw := getHostMetricsPayload()
 		if format == "stats" {
 			writeStreamEvent(writer, flush, "stats", string(raw))
 			return nil

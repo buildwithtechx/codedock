@@ -1,9 +1,12 @@
 package deployments
 
 import (
+	"context"
 	"testing"
 
 	"codedock/internal/models"
+	deploymentservices "codedock/internal/services/deployments"
+	"codedock/internal/utils"
 )
 
 func TestHasRedactedConfiguration(t *testing.T) {
@@ -41,7 +44,7 @@ func TestHasRedactedConfiguration(t *testing.T) {
 
 	for _, tc := range cases {
 		t.Run(tc.name, func(t *testing.T) {
-			got := HasRedactedConfiguration(tc.values...)
+			got := utils.HasRedactedConfiguration(tc.values...)
 			if got != tc.expected {
 				t.Errorf("HasRedactedConfiguration(%v) = %v; want %v", tc.values, got, tc.expected)
 			}
@@ -49,29 +52,48 @@ func TestHasRedactedConfiguration(t *testing.T) {
 	}
 }
 
-func TestIsRestorableStatus(t *testing.T) {
-	valid := []models.DeploymentStatus{
-		models.DeploymentStatusReady,
-		models.DeploymentStatusActive,
-		models.DeploymentStatus("SUCCESS"),
-		models.DeploymentStatus("PARTIAL_FAILURE"),
-	}
-	for _, s := range valid {
-		if !isRestorableStatus(s) {
-			t.Errorf("expected status %s to be restorable", s)
-		}
+func TestValidateRollback(t *testing.T) {
+	svc := &deploymentservices.RetentionService{}
+
+	// Not ready
+	res := svc.ValidateRollback(context.Background(), &models.Deployment{Status: "PENDING"}, nil)
+	if res.Eligible || res.ErrorCode != RollbackErrorNotReady {
+		t.Errorf("expected RollbackErrorNotReady, got %+v", res)
 	}
 
-	invalid := []models.DeploymentStatus{
-		models.DeploymentStatusPending,
-		models.DeploymentStatusFailed,
-		models.DeploymentStatusBuilding,
-		models.DeploymentStatus("CANCELLED"),
+	// Already active
+	res = svc.ValidateRollback(context.Background(), &models.Deployment{
+		Status:      "READY",
+		ContainerID: "cont-123",
+	}, &models.AppService{ContainerID: "cont-123"})
+	if res.Eligible || res.ErrorCode != RollbackErrorAlreadyActive {
+		t.Errorf("expected RollbackErrorAlreadyActive, got %+v", res)
 	}
-	for _, s := range invalid {
-		if isRestorableStatus(s) {
-			t.Errorf("expected status %s NOT to be restorable", s)
-		}
+
+	// Redacted
+	res = svc.ValidateRollback(context.Background(), &models.Deployment{
+		Status:    "READY",
+		BuildLogs: "secret: ***",
+	}, nil)
+	if res.Eligible || res.ErrorCode != RollbackErrorConfigurationRedacted {
+		t.Errorf("expected RollbackErrorConfigurationRedacted, got %+v", res)
+	}
+
+	// Artifact gone and no commit hash
+	res = svc.ValidateRollback(context.Background(), &models.Deployment{
+		Status: "READY",
+	}, nil)
+	if res.Eligible || res.ErrorCode != RollbackErrorArtifactGone {
+		t.Errorf("expected RollbackErrorArtifactGone, got %+v", res)
+	}
+
+	// Rebuild fallback when artifact gone but commit hash exists
+	res = svc.ValidateRollback(context.Background(), &models.Deployment{
+		Status:     "READY",
+		CommitHash: "abc1234",
+	}, nil)
+	if !res.Eligible || res.UseArtifact || res.RollbackImage != "" {
+		t.Errorf("expected eligible rebuild fallback, got %+v", res)
 	}
 }
 

@@ -66,14 +66,14 @@ func (s *PRPreviewService) DeployPRPreview(ctx context.Context, opts DeployPRPre
 	if err != nil || app == nil {
 		return nil, utils.NewNotFoundError("AppService", opts.AppID)
 	}
-	if err := ValidatePreviewCommands(app.InstallCommand, app.BuildCommand, app.StartCommand); err != nil {
+	if err := validatePreviewCommands(app.InstallCommand, app.BuildCommand, app.StartCommand); err != nil {
 		return nil, err
 	}
-	if err := ValidatePreviewVolumes(app.Volumes); err != nil {
+	if err := validatePreviewVolumes(app.Volumes); err != nil {
 		return nil, err
 	}
 	magicDomain := config.Get().Domains.MagicDomain
-	previewDomain := GeneratePreviewDomain(app.Domain, magicDomain, app.Name, app.ProjectID, opts.PRNumber)
+	previewDomain := generatePreviewDomain(app.Domain, magicDomain, app.Name, app.ProjectID, opts.PRNumber)
 	preview := &models.PRPreview{
 		ID:            uuid.NewString(),
 		ServiceID:     app.ID,

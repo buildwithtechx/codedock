@@ -34,8 +34,8 @@ func ParseRepoOwnerAndName(rawURL string) (string, string) {
 	return "", ""
 }
 
-// NormalizeRepoIdentity returns a canonical lowercase repository identity.
-func NormalizeRepoIdentity(source, owner, repo string) string {
+// normalizeRepoIdentity returns a canonical lowercase repository identity.
+func normalizeRepoIdentity(source, owner, repo string) string {
 	src := strings.ToLower(strings.TrimSpace(source))
 	o := strings.ToLower(strings.TrimSpace(owner))
 	r := strings.ToLower(strings.TrimSpace(repo))
@@ -77,9 +77,9 @@ func IsPreviewEligible(pr PullRequestInfo, targetOwner, targetRepo, targetBranch
 	return true, ""
 }
 
-// ValidatePreviewVolumes ensures only isolated named volumes are mounted,
+// validatePreviewVolumes ensures only isolated named volumes are mounted,
 // rejecting host bind mounts (starting with / or containing . or ..).
-func ValidatePreviewVolumes(volumes []models.ServiceVolume) error {
+func validatePreviewVolumes(volumes []models.ServiceVolume) error {
 	for _, v := range volumes {
 		source := strings.TrimSpace(v.HostPath)
 		if strings.HasPrefix(source, "/") || strings.HasPrefix(source, "./") || source == "." || source == ".." || strings.Contains(source, `\`) {
@@ -89,9 +89,9 @@ func ValidatePreviewVolumes(volumes []models.ServiceVolume) error {
 	return nil
 }
 
-// ValidatePreviewCommands checks that commands do not embed environment variables,
+// validatePreviewCommands checks that commands do not embed environment variables,
 // enforcing that embedded variables are moved to Environment first.
-func ValidatePreviewCommands(commands ...string) error {
+func validatePreviewCommands(commands ...string) error {
 	for _, cmd := range commands {
 		if cmd == "" {
 			continue
@@ -104,8 +104,8 @@ func ValidatePreviewCommands(commands ...string) error {
 	return nil
 }
 
-// GeneratePreviewDomain generates an isolated domain for the preview environment.
-func GeneratePreviewDomain(baseDomain, magicDomain, appName, projectID string, prNumber int) string {
+// generatePreviewDomain generates an isolated domain for the preview environment.
+func generatePreviewDomain(baseDomain, magicDomain, appName, projectID string, prNumber int) string {
 	hash := sha256.Sum256([]byte(fmt.Sprintf("%s:%d", projectID, prNumber)))
 	suffix := hex.EncodeToString(hash[:])[:6]
 	cleanApp := strings.ToLower(strings.ReplaceAll(appName, "_", "-"))

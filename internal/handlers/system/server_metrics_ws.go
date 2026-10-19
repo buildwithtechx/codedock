@@ -18,7 +18,7 @@ import (
 	"github.com/labstack/echo/v4"
 )
 
-func GetHostMetricsPayload() []byte {
+func getHostMetricsPayload() []byte {
 	return observability.GetHostMetricsPayload()
 }
 
@@ -119,7 +119,7 @@ func (h *ServerMetricsWSHandler) Handle(c echo.Context) error {
 		}
 	}()
 
-	_ = ws.WriteMessage(websocket.TextMessage, GetHostMetricsPayload())
+	_ = ws.WriteMessage(websocket.TextMessage, getHostMetricsPayload())
 
 	ticker := time.NewTicker(2 * time.Second)
 	defer ticker.Stop()
@@ -129,7 +129,7 @@ func (h *ServerMetricsWSHandler) Handle(c echo.Context) error {
 		case <-done:
 			return nil
 		case <-ticker.C:
-			if err := ws.WriteMessage(websocket.TextMessage, GetHostMetricsPayload()); err != nil {
+			if err := ws.WriteMessage(websocket.TextMessage, getHostMetricsPayload()); err != nil {
 				return nil
 			}
 		}

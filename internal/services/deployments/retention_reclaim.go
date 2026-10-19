@@ -9,6 +9,7 @@ import (
 	"github.com/docker/docker/client"
 
 	"codedock/internal/models"
+	"codedock/internal/utils"
 )
 
 func isRestorableStatus(status models.DeploymentStatus) bool {
@@ -16,15 +17,9 @@ func isRestorableStatus(status models.DeploymentStatus) bool {
 	return s == "READY" || s == "ACTIVE" || s == "SUCCESS" || s == "PARTIAL_FAILURE"
 }
 
-// HasRedactedConfiguration detects unrecoverable redacted secrets in saved configurations or logs.
+// HasRedactedConfiguration delegates to utils.HasRedactedConfiguration.
 func HasRedactedConfiguration(values ...string) bool {
-	for _, val := range values {
-		trimmed := strings.TrimSpace(val)
-		if strings.Contains(val, "://***@") || trimmed == "***" || strings.Contains(val, "=\"***\"") || strings.Contains(val, "=***") {
-			return true
-		}
-	}
-	return false
+	return utils.HasRedactedConfiguration(values...)
 }
 
 func isReproducible(dep *models.Deployment) bool {

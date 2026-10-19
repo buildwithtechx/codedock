@@ -57,44 +57,44 @@ func TestValidatePreviewVolumes(t *testing.T) {
 		{HostPath: "codedock-data", ContainerPath: "/data"},
 		{HostPath: "app_cache", ContainerPath: "/root/.cache"},
 	}
-	if err := ValidatePreviewVolumes(validVolumes); err != nil {
+	if err := validatePreviewVolumes(validVolumes); err != nil {
 		t.Fatalf("expected valid volumes, got error: %v", err)
 	}
 
 	invalidBind := []models.ServiceVolume{
 		{HostPath: "/host/data", ContainerPath: "/app/data"},
 	}
-	if err := ValidatePreviewVolumes(invalidBind); err == nil {
+	if err := validatePreviewVolumes(invalidBind); err == nil {
 		t.Fatalf("expected error on host bind mount")
 	}
 
 	invalidRelative := []models.ServiceVolume{
 		{HostPath: "./relative", ContainerPath: "/app/data"},
 	}
-	if err := ValidatePreviewVolumes(invalidRelative); err == nil {
+	if err := validatePreviewVolumes(invalidRelative); err == nil {
 		t.Fatalf("expected error on relative host bind mount")
 	}
 }
 
 func TestValidatePreviewCommands(t *testing.T) {
-	if err := ValidatePreviewCommands("npm run build", "node server.js"); err != nil {
+	if err := validatePreviewCommands("npm run build", "node server.js"); err != nil {
 		t.Fatalf("expected plain commands to pass: %v", err)
 	}
 
-	if err := ValidatePreviewCommands("NODE_ENV=production npm run build"); err == nil {
+	if err := validatePreviewCommands("NODE_ENV=production npm run build"); err == nil {
 		t.Fatalf("expected error on command embedding env vars")
 	}
 }
 
 func TestNormalizeRepoIdentity(t *testing.T) {
-	id := NormalizeRepoIdentity("github", "MyOrg", "MyRepo.git")
+	id := normalizeRepoIdentity("github", "MyOrg", "MyRepo.git")
 	if id != "github:myorg/myrepo" {
 		t.Fatalf("expected 'github:myorg/myrepo', got %q", id)
 	}
 }
 
 func TestGeneratePreviewDomain(t *testing.T) {
-	domain := GeneratePreviewDomain("preview.example.com", "", "web-app", "proj-123", 10)
+	domain := generatePreviewDomain("preview.example.com", "", "web-app", "proj-123", 10)
 	if domain == "" || !testing.Short() {
 		// Verify structure: web-app-pr-10-<suffix>.preview.example.com
 		if domain[:14] != "web-app-pr-10-" {
