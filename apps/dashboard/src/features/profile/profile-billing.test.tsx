@@ -1,7 +1,7 @@
 import { cleanup, render } from '@testing-library/react';
 import type { ComponentType } from 'react';
 import { afterEach, describe, expect, it, vi } from 'vitest';
-import { Route } from '#/routes/_dashboard.profile';
+import { Route } from '#/routes/_dashboard/profile';
 
 const state = vi.hoisted(() => ({ cloudMode: undefined as boolean | undefined, billing: vi.fn() }));
 vi.mock('#/components/layout/page-header', () => ({ PageHeader: () => null }));
