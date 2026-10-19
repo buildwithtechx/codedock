@@ -132,17 +132,17 @@ func (d *Deployer) replaceReplicas(ctx context.Context, app *models.AppService, 
 				return "", err
 			}
 			if inspected.State == nil || !inspected.State.Running {
-				issue, tail := DiagnoseContainerFailure(ctx, manager, id)
+				verdict := DiagnoseContainerFailure(ctx, manager, id)
 				if logs != nil {
-					if issue != "" {
-						fmt.Fprintf(logs, "❌ [Deployer] Worker resource failure: %s\n", issue)
+					if verdict.ResourceIssue != "" {
+						fmt.Fprintf(logs, "❌ [Deployer] Worker resource failure: %s\n", verdict.ResourceIssue)
 					}
-					if tail != "" {
-						fmt.Fprintf(logs, "Last container logs:\n%s\n", tail)
+					if verdict.LogTail != "" {
+						fmt.Fprintf(logs, "Last container logs:\n%s\n", verdict.LogTail)
 					}
 				}
-				if issue != "" {
-					return "", NewResourceFailureError(issue, fmt.Sprintf("worker exited before activation (%s)", issue))
+				if verdict.ResourceIssue != "" {
+					return "", NewResourceFailureError(verdict.ResourceIssue, fmt.Sprintf("worker exited before activation (%s)", verdict.ResourceIssue))
 				}
 				return "", fmt.Errorf("worker exited before activation")
 			}

@@ -67,13 +67,21 @@ func ClassifyResourceIssue(output string) string {
 	return ""
 }
 
-func DiagnoseContainerFailure(ctx context.Context, cm *ContainerManager, containerIDOrName string) (string, string) {
+type ContainerStabilityVerdict struct {
+	OOMKilled     bool
+	ExitCode      int
+	ResourceIssue string
+	LogTail       string
+	Reason        string
+}
+
+func DiagnoseContainerFailure(ctx context.Context, cm *ContainerManager, containerIDOrName string) ContainerStabilityVerdict {
 	if cm == nil {
-		return "", ""
+		return ContainerStabilityVerdict{}
 	}
 	inspect, err := cm.Inspect(ctx, containerIDOrName)
 	if err != nil {
-		return "", ""
+		return ContainerStabilityVerdict{}
 	}
 
 	tail := readContainerLogTail(ctx, cm, containerIDOrName, 30)
@@ -82,19 +90,47 @@ func DiagnoseContainerFailure(ctx context.Context, cm *ContainerManager, contain
 		combined = combined + "\n" + inspect.State.Error
 	}
 
-	if inspect.State != nil && inspect.State.OOMKilled {
-		return ResourceIssueContainerOOM, tail
+	oomKilled := inspect.State != nil && inspect.State.OOMKilled
+	exitCode := 0
+	if inspect.State != nil {
+		exitCode = inspect.State.ExitCode
+	}
+
+	if oomKilled {
+		return ContainerStabilityVerdict{
+			OOMKilled:     true,
+			ExitCode:      exitCode,
+			ResourceIssue: ResourceIssueContainerOOM,
+			LogTail:       tail,
+			Reason:        "Docker confirmed container was OOM-killed (State.OOMKilled)",
+		}
 	}
 
 	if issue := ClassifyResourceIssue(combined); issue != "" {
-		return issue, tail
+		return ContainerStabilityVerdict{
+			OOMKilled:     false,
+			ExitCode:      exitCode,
+			ResourceIssue: issue,
+			LogTail:       tail,
+			Reason:        issue,
+		}
 	}
 
-	if inspect.State != nil && inspect.State.ExitCode == 137 {
-		return ResourceIssueProcessKilled, tail
+	if exitCode == 137 {
+		return ContainerStabilityVerdict{
+			OOMKilled:     false,
+			ExitCode:      137,
+			ResourceIssue: ResourceIssueProcessKilled,
+			LogTail:       tail,
+			Reason:        "process terminated with SIGKILL (exit code 137)",
+		}
 	}
 
-	return "", tail
+	return ContainerStabilityVerdict{
+		OOMKilled: false,
+		ExitCode:  exitCode,
+		LogTail:   tail,
+	}
 }
 
 func readContainerLogTail(ctx context.Context, cm *ContainerManager, containerIDOrName string, lines int) string {
