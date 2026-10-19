@@ -77,6 +77,7 @@ func (s *Server) registerDeploymentRoutes(authGroup *echo.Group) {
 	authGroup.GET("/services/:serviceId/previews", s.deploymentHandler.ListPRPreviews, serviceAuth)
 	authGroup.POST("/services/:serviceId/deploy", s.deploymentHandler.Trigger, serviceAuthAdmin)
 	authGroup.POST("/deployments/:id/rollback", s.deploymentHandler.Rollback)
+	authGroup.POST("/deployments/:id/pin", s.deploymentHandler.TogglePin)
 	authGroup.POST("/deployments/:id/cancel", s.deploymentHandler.Cancel)
 	authGroup.GET("/deployments/:id/logs", s.deploymentHandler.GetLogs, s.authGuard.RequireScope("logs:read"))
 	authGroup.GET("/deployments/:id/explain", s.deploymentHandler.ExplainFailure)

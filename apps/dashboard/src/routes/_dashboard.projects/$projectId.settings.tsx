@@ -1,12 +1,12 @@
+import { Button } from '@codedock/ui/button';
 import { createFileRoute } from '@tanstack/react-router';
 import { AlertTriangle } from 'lucide-react';
 import { useState } from 'react';
-import { Button } from '@codedock/ui/button';
-import { ProjectDeleteDialog } from '#/features/projects';
-import { useGetProject } from '#/hooks/use-projects';
+import { ProjectDeleteDialog, ProjectRollbackSettings } from '#/features/projects';
 import { ProjectMembers } from '#/features/projects/project-members';
 import { ProjectTokens } from '#/features/projects/project-tokens';
 import { ProjectRegistries } from '#/features/registries/project-registries';
+import { useGetProject } from '#/hooks/use-projects';
 
 export const Route = createFileRoute('/_dashboard/projects/$projectId/settings')({
   component: SettingsRouteComponent,
@@ -34,6 +34,10 @@ function SettingsRouteComponent() {
 
         <section className="rounded-lg border border-border/60 bg-card p-6 shadow-sm">
           <ProjectTokens projectId={projectId} />
+        </section>
+
+        <section className="rounded-lg border border-border/60 bg-card p-6 shadow-sm">
+          <ProjectRollbackSettings projectId={projectId} />
         </section>
 
         <section className="rounded-lg border border-destructive/40 bg-card p-6 shadow-sm">

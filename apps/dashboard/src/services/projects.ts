@@ -10,7 +10,9 @@ import type {
   ListProjectsResponse,
   ProjectMember,
   ProjectToken,
+  RollbackCapacityUI,
   ServiceWebhook,
+  UpdateRollbackSettingsRequest,
 } from '#/interfaces/projects';
 import { apiClient } from '#/lib/api-client';
 import { handleApiError } from '#/lib/error';
@@ -181,4 +183,33 @@ export const projectSettingsService = {
       throw handleApiError(error);
     }
   },
+
+  getRollbackCapacity: async (projectId: string): Promise<BaseResponse<RollbackCapacityUI>> => {
+    try {
+      return await apiClient.get<BaseResponse<RollbackCapacityUI>>(
+        `/projects/${projectId}/rollback-capacity`
+      );
+    } catch (error) {
+      throw handleApiError(error);
+    }
+  },
+
+  updateRollbackSettings: async (
+    projectId: string,
+    payload: UpdateRollbackSettingsRequest
+  ): Promise<BaseResponse<RollbackCapacityUI>> => {
+    try {
+      return await apiClient.patch<BaseResponse<RollbackCapacityUI>>(
+        `/projects/${projectId}/rollback-settings`,
+        payload
+      );
+    } catch (error) {
+      throw handleApiError(error);
+    }
+  },
+};
+
+export const projectsApi = {
+  ...projectsService,
+  ...projectSettingsService,
 };

@@ -176,6 +176,8 @@ func (s *Server) registerProjectRoutes(apiGroup, authGroup *echo.Group) {
 	authGroup.GET("/projects/:id/services", s.appServiceHandler.ListByProject, projectAuth)
 	authGroup.GET("/projects/:id/deployments", s.deploymentHandler.ListProjectDeployments, projectAuth)
 	authGroup.POST("/projects/:id/deploy", s.deploymentHandler.TriggerProject, projectAuthAdmin)
+	authGroup.GET("/projects/:id/rollback-capacity", s.rollbackSettingsHandler.GetRollbackCapacity, projectAuth)
+	authGroup.PATCH("/projects/:id/rollback-settings", s.rollbackSettingsHandler.UpdateRollbackSettings, projectAuthAdmin)
 
 	authGroup.GET("/project-apps", s.projectAppHandler.List)
 	authGroup.POST("/project-apps", s.projectAppHandler.Create)

@@ -23,6 +23,10 @@ type DeploymentRepository interface {
 	ListByOrganization(ctx context.Context, filter models.DeploymentListFilter) ([]models.DeploymentListItem, int, error)
 	Update(ctx context.Context, d *models.Deployment) error
 	UpdateStatus(ctx context.Context, id string, status models.DeploymentStatus, buildLogs, containerID string) error
+	ListForRetention(ctx context.Context, projectID string) ([]*models.Deployment, error)
+	SetArtifactRetainedAt(ctx context.Context, id string, at *time.Time) error
+	SetPinned(ctx context.Context, id string, pinned bool) error
+	TogglePinned(ctx context.Context, id string) (bool, error)
 }
 
 type DeploymentRepo struct {
@@ -65,7 +69,8 @@ func (r *DeploymentRepo) GetByID(ctx context.Context, id string) (*models.Deploy
 	var d models.Deployment
 	err := r.db.GetContext(ctx, &d, `SELECT d.id, COALESCE(d.service_id, '') AS service_id, d.organization_id,
 		COALESCE(s.environment_id, '') AS environment_id, d.project_id, d.status, d.commit_hash,
-		d.commit_message, d.branch, d."trigger", COALESCE(d.image_ref, '') AS image_ref, d.build_logs, d.container_id, d.created_at, d.updated_at, d.finished_at
+		d.commit_message, d.branch, d."trigger", COALESCE(d.image_ref, '') AS image_ref, d.build_logs, d.container_id,
+		d.artifact_retained_at, COALESCE(d.pinned, FALSE) AS pinned, d.created_at, d.updated_at, d.finished_at
 		FROM deployments d LEFT JOIN app_services s ON s.id = d.service_id WHERE d.id = $1`, id)
 	if errors.Is(err, sql.ErrNoRows) {
 		return nil, utils.NewNotFoundError("Deployment", id)
@@ -85,7 +90,8 @@ func (r *DeploymentRepo) ListByService(ctx context.Context, serviceID string, li
 	var deps []*models.Deployment
 	err := r.db.SelectContext(ctx, &deps, `SELECT d.id, COALESCE(d.service_id, '') AS service_id, d.organization_id,
 		COALESCE(s.environment_id, '') AS environment_id, d.project_id, d.status, d.commit_hash,
-		d.commit_message, d.branch, d."trigger", COALESCE(d.image_ref, '') AS image_ref, d.build_logs, d.container_id, d.created_at, d.updated_at, d.finished_at
+		d.commit_message, d.branch, d."trigger", COALESCE(d.image_ref, '') AS image_ref, d.build_logs, d.container_id,
+		d.artifact_retained_at, COALESCE(d.pinned, FALSE) AS pinned, d.created_at, d.updated_at, d.finished_at
 		FROM deployments d LEFT JOIN app_services s ON s.id = d.service_id
 		WHERE d.service_id = $1 ORDER BY d.created_at DESC LIMIT $2 OFFSET $3`, serviceID, limit, offset)
 	if err != nil {
@@ -166,7 +172,8 @@ func (r *DeploymentRepo) ListByOrganization(ctx context.Context, filter models.D
 	query := `SELECT d.id, COALESCE(d.service_id, '') AS service_id, COALESCE(s.name, '') AS service_name,
 		COALESCE(s.environment_id, '') AS environment_id,
 		d.project_id, p.name AS project_name, d.status, d.commit_hash, d.commit_message,
-		d.branch, d."trigger", d.container_id, d.created_at, d.updated_at, d.finished_at ` + where + `
+		d.branch, d."trigger", d.container_id, d.artifact_retained_at, COALESCE(d.pinned, FALSE) AS pinned,
+		d.created_at, d.updated_at, d.finished_at ` + where + `
 		ORDER BY d.created_at DESC LIMIT $13 OFFSET $14`
 	args = append(args, filter.Limit, filter.Offset)
 	if err := r.db.SelectContext(ctx, &deployments, query, args...); err != nil {

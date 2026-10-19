@@ -81,6 +81,10 @@ func (s *DeploymentService) finishDeployment(id string, status models.Deployment
 	if err := s.UpdateStatus(ctx, DeployStatusOpts{ID: id, Status: status, BuildLogs: logs, ContainerID: containerID}); err != nil {
 		slog.Error("save deployment result", "deployment", id, "error", err)
 	}
+	if status == models.DeploymentStatusReady {
+		now := time.Now().UTC()
+		_ = s.repo.SetArtifactRetainedAt(ctx, id, &now)
+	}
 }
 
 func (s *DeploymentService) executeDeployment(ctx context.Context, d *models.Deployment, writer *deploymentLogWriter) (string, error) {

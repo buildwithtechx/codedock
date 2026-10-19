@@ -9,6 +9,7 @@ import type {
   ListOrganizationDeploymentsResponse,
   ListPRPreviewsResponse,
   RollbackDeploymentResponse,
+  TogglePinResponse,
   TriggerDeploymentRequest,
   TriggerDeploymentResponse,
 } from '#/interfaces/services';
@@ -97,6 +98,14 @@ export const deploymentsService = {
       return await apiClient.post<RollbackDeploymentResponse>(
         `/deployments/${deploymentId}/rollback`
       );
+    } catch (error) {
+      throw handleApiError(error);
+    }
+  },
+
+  togglePin: async (deploymentId: string): Promise<TogglePinResponse> => {
+    try {
+      return await apiClient.post<TogglePinResponse>(`/deployments/${deploymentId}/pin`);
     } catch (error) {
       throw handleApiError(error);
     }

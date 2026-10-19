@@ -23,6 +23,7 @@ type DeploymentHandler struct {
 	aiAnalysis        *projectservices.AIAnalysisService
 	prPreviewService  *deploymentservices.PRPreviewService
 	projectService    *projectservices.ProjectService
+	retentionService  *deploymentservices.RetentionService
 }
 
 func NewDeploymentHandler(ds *deploymentservices.DeploymentService, as *projectservices.AppService, audit *authservices.AuditService, aiAnalysis *projectservices.AIAnalysisService, prp *deploymentservices.PRPreviewService, ps *projectservices.ProjectService) *DeploymentHandler {
@@ -34,6 +35,10 @@ func NewDeploymentHandler(ds *deploymentservices.DeploymentService, as *projects
 		prPreviewService:  prp,
 		projectService:    ps,
 	}
+}
+
+func (h *DeploymentHandler) SetRetentionService(rs *deploymentservices.RetentionService) {
+	h.retentionService = rs
 }
 
 func (h *DeploymentHandler) verifyProjectOwnership(c echo.Context, projectID string) error {

@@ -29,6 +29,9 @@ type AuditActionOpts struct {
 }
 
 func (s *AuditService) LogAction(ctx context.Context, opts AuditActionOpts) {
+	if s == nil || s.repo == nil {
+		return
+	}
 	var detailsStr string
 	if opts.Details != nil {
 		b, err := json.Marshal(opts.Details)

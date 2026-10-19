@@ -3,26 +3,28 @@ package models
 import "time"
 
 type Deployment struct {
-	ID              string           `json:"id" db:"id"`
-	OrganizationID  string           `json:"organizationId,omitempty" db:"organization_id"`
-	ProjectID       string           `json:"projectId" db:"project_id"`
-	ServiceID       string           `json:"serviceId,omitempty" db:"service_id"`
-	EnvironmentID   string           `json:"environmentId,omitempty" db:"environment_id"`
-	Status          DeploymentStatus `json:"status" db:"status"`
-	Branch          string           `json:"branch,omitempty" db:"branch"`
-	CommitHash      string           `json:"commitHash,omitempty" db:"commit_hash"`
-	CommitMessage   string           `json:"commitMessage,omitempty" db:"commit_message"`
-	CommitSHABefore string           `json:"commitShaBefore,omitempty" db:"commit_sha_before"`
-	Trigger         string           `json:"trigger,omitempty" db:"trigger"`
-	Framework       string           `json:"framework,omitempty" db:"framework"`
-	ImageRef        string           `json:"imageRef,omitempty" db:"image_ref"`
-	BuildDurationMS int              `json:"buildDurationMs,omitempty" db:"build_duration_ms"`
-	Version         int              `json:"version" db:"version"`
-	BuildLogs       string           `json:"buildLogs,omitempty" db:"build_logs"`
-	ContainerID     string           `json:"containerId,omitempty" db:"container_id"`
-	CreatedAt       time.Time        `json:"createdAt" db:"created_at"`
-	UpdatedAt       time.Time        `json:"updatedAt" db:"updated_at"`
-	FinishedAt      *time.Time       `json:"finishedAt,omitempty" db:"finished_at"`
+	ID                 string           `json:"id" db:"id"`
+	OrganizationID     string           `json:"organizationId,omitempty" db:"organization_id"`
+	ProjectID          string           `json:"projectId" db:"project_id"`
+	ServiceID          string           `json:"serviceId,omitempty" db:"service_id"`
+	EnvironmentID      string           `json:"environmentId,omitempty" db:"environment_id"`
+	Status             DeploymentStatus `json:"status" db:"status"`
+	Branch             string           `json:"branch,omitempty" db:"branch"`
+	CommitHash         string           `json:"commitHash,omitempty" db:"commit_hash"`
+	CommitMessage      string           `json:"commitMessage,omitempty" db:"commit_message"`
+	CommitSHABefore    string           `json:"commitShaBefore,omitempty" db:"commit_sha_before"`
+	Trigger            string           `json:"trigger,omitempty" db:"trigger"`
+	Framework          string           `json:"framework,omitempty" db:"framework"`
+	ImageRef           string           `json:"imageRef,omitempty" db:"image_ref"`
+	BuildDurationMS    int              `json:"buildDurationMs,omitempty" db:"build_duration_ms"`
+	Version            int              `json:"version" db:"version"`
+	BuildLogs          string           `json:"buildLogs,omitempty" db:"build_logs"`
+	ContainerID        string           `json:"containerId,omitempty" db:"container_id"`
+	ArtifactRetainedAt *time.Time       `json:"artifactRetainedAt,omitempty" db:"artifact_retained_at"`
+	Pinned             bool             `json:"pinned" db:"pinned"`
+	CreatedAt          time.Time        `json:"createdAt" db:"created_at"`
+	UpdatedAt          time.Time        `json:"updatedAt" db:"updated_at"`
+	FinishedAt         *time.Time       `json:"finishedAt,omitempty" db:"finished_at"`
 }
 
 type DeploymentListFilter struct {
@@ -37,21 +39,23 @@ type DeploymentListFilter struct {
 }
 
 type DeploymentListItem struct {
-	ID            string           `json:"id" db:"id"`
-	ServiceID     string           `json:"serviceId" db:"service_id"`
-	ServiceName   string           `json:"serviceName" db:"service_name"`
-	EnvironmentID string           `json:"environmentId" db:"environment_id"`
-	ProjectID     string           `json:"projectId" db:"project_id"`
-	ProjectName   string           `json:"projectName" db:"project_name"`
-	Status        DeploymentStatus `json:"status" db:"status"`
-	Branch        string           `json:"branch,omitempty" db:"branch"`
-	CommitHash    string           `json:"commitHash,omitempty" db:"commit_hash"`
-	CommitMessage string           `json:"commitMessage,omitempty" db:"commit_message"`
-	Trigger       string           `json:"trigger,omitempty" db:"trigger"`
-	ContainerID   string           `json:"containerId,omitempty" db:"container_id"`
-	CreatedAt     time.Time        `json:"createdAt" db:"created_at"`
-	UpdatedAt     time.Time        `json:"updatedAt" db:"updated_at"`
-	FinishedAt    *time.Time       `json:"finishedAt,omitempty" db:"finished_at"`
+	ID                 string           `json:"id" db:"id"`
+	ServiceID          string           `json:"serviceId" db:"service_id"`
+	ServiceName        string           `json:"serviceName" db:"service_name"`
+	EnvironmentID      string           `json:"environmentId" db:"environment_id"`
+	ProjectID          string           `json:"projectId" db:"project_id"`
+	ProjectName        string           `json:"projectName" db:"project_name"`
+	Status             DeploymentStatus `json:"status" db:"status"`
+	Branch             string           `json:"branch,omitempty" db:"branch"`
+	CommitHash         string           `json:"commitHash,omitempty" db:"commit_hash"`
+	CommitMessage      string           `json:"commitMessage,omitempty" db:"commit_message"`
+	Trigger            string           `json:"trigger,omitempty" db:"trigger"`
+	ContainerID        string           `json:"containerId,omitempty" db:"container_id"`
+	ArtifactRetainedAt *time.Time       `json:"artifactRetainedAt,omitempty" db:"artifact_retained_at"`
+	Pinned             bool             `json:"pinned" db:"pinned"`
+	CreatedAt          time.Time        `json:"createdAt" db:"created_at"`
+	UpdatedAt          time.Time        `json:"updatedAt" db:"updated_at"`
+	FinishedAt         *time.Time       `json:"finishedAt,omitempty" db:"finished_at"`
 }
 
 type ServiceMetric struct {

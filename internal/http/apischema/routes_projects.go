@@ -126,6 +126,21 @@ func projectChecksSchema() Schema {
 	)
 }
 
+func rollbackCapacitySchema() Schema {
+	return Obj("Rollback capacity",
+		RF("window", Int("Rollback retention window")),
+		RF("source", Str("Window source: explicit or instance-default")),
+		F("explicit", Int("Explicitly configured window")),
+		F("snapshotSizeBytes", Int64("Mean snapshot size in bytes")),
+		F("measuredAt", Str("Measurement timestamp")),
+		F("diskFreeBytes", Int64("Host free disk space in bytes")),
+		F("diskTotalBytes", Int64("Host total disk space in bytes")),
+		RF("maxWindow", Int("Maximum allowed rollback window")),
+		RF("diskBudgetFraction", Num("Storage pressure GC fraction")),
+		RF("strategy", Str("Default rollback strategy: snapshot or git")),
+	)
+}
+
 func projectOperations() []Operation {
 	projects := "projects"
 	canvas := "canvas"
@@ -167,5 +182,7 @@ func projectOperations() []Operation {
 		{Method: "GET", Path: "/api/projects/:id/deployments/admission", Summary: "Get build admission status", Tags: []string{projects}, Auth: AuthUser, Response: buildAdmissionSchema()},
 		{Method: "GET", Path: "/api/projects/:id/checks", Summary: "Get project checks configuration", Tags: []string{projects}, Auth: AuthUser, Response: projectChecksSchema()},
 		{Method: "PUT", Path: "/api/projects/:id/checks", Summary: "Update project checks configuration", Tags: []string{projects}, Auth: ProjectRole("admin"), Request: JSON(Obj("Update checks", RF("enabled", Bool("Enabled")), RF("reportCommitStatus", Bool("Report commit status")), RF("requirePassingChecks", Bool("Require passing checks")), F("targetBranches", Arr("Branches", Str("Branch"))), F("contextName", Str("Context name")))), Response: projectChecksSchema()},
+		{Method: "GET", Path: "/api/projects/:id/rollback-capacity", Summary: "Get rollback retention capacity", Tags: []string{projects}, Auth: ProjectRole(""), Response: rollbackCapacitySchema()},
+		{Method: "PATCH", Path: "/api/projects/:id/rollback-settings", Summary: "Update rollback retention settings", Tags: []string{projects}, Auth: ProjectRole("admin"), Request: JSON(Obj("Update rollback settings", F("defaultRollbackStrategy", Str("Default rollback strategy")), F("rollbackWindow", Int("Rollback window limit")))), Response: rollbackCapacitySchema()},
 	}
 }

@@ -80,6 +80,8 @@ export interface Deployment {
   commitShaBefore?: string;
   buildLogs?: string;
   containerId?: string;
+  artifactRetainedAt?: string | null;
+  pinned?: boolean;
   createdAt: string;
   updatedAt: string;
   finishedAt?: string;
@@ -248,6 +250,7 @@ export type TriggerDeploymentResponse = BaseResponse<Deployment>;
 export type RollbackDeploymentResponse = BaseResponse<Deployment>;
 export type GetDeploymentResponse = BaseResponse<Deployment>;
 export type CancelDeploymentResponse = BaseResponse<null>;
+export type TogglePinResponse = BaseResponse<{ id: string; pinned: boolean }>;
 export type GetDeploymentLogsResponse = BaseResponse<{ id?: string; buildLogs?: string } | string>;
 export type GetServiceMetricsResponse = BaseResponse<ServiceMetric>;
 

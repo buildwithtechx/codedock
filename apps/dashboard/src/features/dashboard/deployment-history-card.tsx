@@ -1,7 +1,3 @@
-import { Link } from '@tanstack/react-router';
-import { Ban, Clock, ExternalLink, GitBranch, MoreVertical, Rocket, RotateCcw } from 'lucide-react';
-import { useState } from 'react';
-import { toast } from 'sonner';
 import { Button } from '@codedock/ui/button';
 import {
   DropdownMenu,
@@ -9,8 +5,22 @@ import {
   DropdownMenuItem,
   DropdownMenuTrigger,
 } from '@codedock/ui/dropdown-menu';
-import type { OrganizationDeployment } from '#/interfaces/services';
+import { Link } from '@tanstack/react-router';
+import {
+  Ban,
+  Clock,
+  ExternalLink,
+  GitBranch,
+  MoreVertical,
+  Pin,
+  Rocket,
+  RotateCcw,
+} from 'lucide-react';
+import { useState } from 'react';
+import { toast } from 'sonner';
 import { useCancelDeployment, useRollback, useTrigger } from '#/hooks/use-deployments';
+import type { OrganizationDeployment } from '#/interfaces/services';
+import { deploymentsService } from '#/services/deployments';
 
 const activeStatuses = new Set(['PENDING', 'CLONING', 'PULLING', 'BUILDING']);
 const successfulStatuses = new Set(['READY', 'ACTIVE', 'SUCCESS']);
@@ -62,14 +72,28 @@ function buildDuration(deployment: OrganizationDeployment) {
 
 export function DeploymentHistoryCard({ deployment }: { deployment: OrganizationDeployment }) {
   const [menuOpen, setMenuOpen] = useState(false);
+  const [pinned, setPinned] = useState(Boolean(deployment.pinned));
   const trigger = useTrigger();
   const rollback = useRollback();
   const cancel = useCancelDeployment();
   const normalized = deployment.status.toUpperCase();
   const isActive = activeStatuses.has(normalized);
-  const canRollback = successfulStatuses.has(normalized) || normalized === 'FAILED';
+  const isReclaimed = deployment.artifactRetainedAt === null && successfulStatuses.has(normalized);
+  const canRollback =
+    (successfulStatuses.has(normalized) || normalized === 'FAILED') &&
+    (!isReclaimed || !!deployment.commitHash);
   const duration = buildDuration(deployment);
   const commitHash = deployment.commitHash?.slice(0, 7);
+
+  const togglePin = async () => {
+    try {
+      const res = await deploymentsService.togglePin(deployment.id);
+      setPinned(res.data.pinned);
+      toast.success(res.data.pinned ? 'Deployment pinned' : 'Deployment unpinned');
+    } catch {
+      toast.error('Failed to toggle pin');
+    }
+  };
 
   const redeploy = async () => {
     try {
@@ -124,6 +148,17 @@ export function DeploymentHistoryCard({ deployment }: { deployment: Organization
           >
             {statusLabel(deployment.status)}
           </span>
+          {pinned && (
+            <span className="inline-flex shrink-0 items-center gap-1 rounded-full bg-primary/10 px-2 py-0.5 font-medium text-primary text-xs">
+              <Pin className="h-3 w-3 fill-current" />
+              Pinned
+            </span>
+          )}
+          {isReclaimed && (
+            <span className="inline-flex shrink-0 items-center rounded-full bg-muted/80 px-2 py-0.5 font-medium text-muted-foreground text-xs">
+              Reclaimed
+            </span>
+          )}
         </div>
         <div className="mt-0.5 flex flex-wrap items-center gap-x-2 gap-y-1">
           <p className="min-w-0 max-w-full truncate text-muted-foreground text-xs sm:max-w-[320px]">
@@ -191,6 +226,10 @@ export function DeploymentHistoryCard({ deployment }: { deployment: Organization
                 Roll back to this
               </DropdownMenuItem>
             )}
+            <DropdownMenuItem onClick={togglePin}>
+              <Pin className="h-4 w-4" />
+              {pinned ? 'Unpin deployment' : 'Pin deployment'}
+            </DropdownMenuItem>
             {isActive && (
               <DropdownMenuItem
                 variant="destructive"

@@ -74,3 +74,18 @@ func TestIsRestorableStatus(t *testing.T) {
 		}
 	}
 }
+
+func TestRollbackErrorCodes(t *testing.T) {
+	if RollbackErrorArtifactGone != "ROLLBACK_ARTIFACT_GONE" {
+		t.Errorf("expected RollbackErrorArtifactGone to be ROLLBACK_ARTIFACT_GONE, got %s", RollbackErrorArtifactGone)
+	}
+	if RollbackErrorNotReady != "ROLLBACK_NOT_READY" {
+		t.Errorf("expected RollbackErrorNotReady to be ROLLBACK_NOT_READY, got %s", RollbackErrorNotReady)
+	}
+	if RollbackErrorAlreadyActive != "ROLLBACK_ALREADY_ACTIVE" {
+		t.Errorf("expected RollbackErrorAlreadyActive to be ROLLBACK_ALREADY_ACTIVE, got %s", RollbackErrorAlreadyActive)
+	}
+	if RollbackErrorConfigurationRedacted != "ROLLBACK_CONFIGURATION_REDACTED" {
+		t.Errorf("expected RollbackErrorConfigurationRedacted to be ROLLBACK_CONFIGURATION_REDACTED, got %s", RollbackErrorConfigurationRedacted)
+	}
+}

@@ -1,7 +1,7 @@
+import type { BaseResponse, PaginatedData } from '#/interfaces/base';
 import type { Database } from '#/interfaces/databases';
 import type { DomainBase } from '#/interfaces/dns';
 import type { AppService } from '#/interfaces/services';
-import type { BaseResponse, PaginatedData } from '#/interfaces/base';
 
 export type {
   DNSProvisionStatus,
@@ -17,8 +17,30 @@ export interface ProjectConfig {
   id: string;
   name: string;
   description?: string;
+  defaultRollbackStrategy?: 'snapshot' | 'git';
+  rollbackWindow?: number | null;
+  snapshotSizeBytes?: number | null;
+  capacityMeasuredAt?: string | null;
   createdAt: string;
   updatedAt: string;
+}
+
+export interface RollbackCapacityUI {
+  window: number;
+  source: 'explicit' | 'instance-default';
+  explicit: number | null;
+  snapshotSizeBytes: number | null;
+  measuredAt: string | null;
+  diskFreeBytes: number | null;
+  diskTotalBytes: number | null;
+  maxWindow: number;
+  diskBudgetFraction: number;
+  strategy: 'snapshot' | 'git';
+}
+
+export interface UpdateRollbackSettingsRequest {
+  defaultRollbackStrategy?: 'snapshot' | 'git';
+  rollbackWindow?: number | null;
 }
 
 export interface EnvironmentConfig {

@@ -22,7 +22,10 @@ const projectSelectFields = `
 	COALESCE(local_path, '') AS local_path, COALESCE(git_provider, 'github') AS git_provider,
 	COALESCE(git_owner, '') AS git_owner, COALESCE(git_repo, '') AS git_repo,
 	COALESCE(git_branch, 'main') AS git_branch, COALESCE(git_url, '') AS git_url,
-	COALESCE(status, 'ready') AS status, created_at, updated_at
+	COALESCE(status, 'ready') AS status,
+	COALESCE(default_rollback_strategy, 'snapshot') AS default_rollback_strategy,
+	rollback_window, snapshot_size_bytes, capacity_measured_at,
+	created_at, updated_at
 `
 
 type ProjectRepository interface {
@@ -35,6 +38,8 @@ type ProjectRepository interface {
 	Create(ctx context.Context, p *models.ProjectConfig) error
 	SetServer(ctx context.Context, projectID, serverID string) error
 	Delete(ctx context.Context, id string) error
+	UpdateRollbackSettings(ctx context.Context, projectID string, strategy *string, window *int) error
+	UpdateCapacityMeasurement(ctx context.Context, projectID string, snapshotSizeBytes int64) error
 }
 
 type EnvRepository interface {

@@ -82,6 +82,27 @@ func (h *DeploymentHandler) Rollback(c echo.Context) error {
 		})
 	}
 
+	var isArtifactAvailable bool
+	if h.retentionService != nil {
+		available, _ := h.retentionService.IsArtifactAvailable(c.Request().Context(), targetDep.ProjectID, targetDep)
+		isArtifactAvailable = available
+	} else {
+		isArtifactAvailable = targetDep.ArtifactRetainedAt != nil && targetDep.ImageRef != ""
+	}
+
+	if !isArtifactAvailable && targetDep.CommitHash == "" {
+		return c.JSON(http.StatusConflict, map[string]any{
+			"error":   "This deployment can't be restored: its artifact is no longer retained and it has no commit to rebuild from.",
+			"code":    RollbackErrorArtifactGone,
+			"success": false,
+		})
+	}
+
+	rollbackImageRef := targetDep.ImageRef
+	if !isArtifactAvailable {
+		rollbackImageRef = ""
+	}
+
 	newDep := &models.Deployment{
 		ServiceID:     targetDep.ServiceID,
 		EnvironmentID: targetDep.EnvironmentID,
@@ -90,13 +111,13 @@ func (h *DeploymentHandler) Rollback(c echo.Context) error {
 		CommitHash:    targetDep.CommitHash,
 		CommitMessage: "Rollback to " + targetDep.ID,
 		Branch:        targetDep.Branch,
-		ImageRef:      targetDep.ImageRef,
+		ImageRef:      rollbackImageRef,
 		Trigger:       "Rollback",
 		BuildLogs:     "Rolling back to deployment " + targetDep.ID + "...\n",
 	}
 
-	if targetDep.ImageRef != "" && currentApp != nil {
-		currentApp.ImageRef = targetDep.ImageRef
+	if rollbackImageRef != "" && currentApp != nil {
+		currentApp.ImageRef = rollbackImageRef
 		if updateErr := h.deploymentService.UpdateService(c.Request().Context(), currentApp); updateErr != nil {
 			return utils.Error(c, http.StatusInternalServerError, updateErr.Error())
 		}
@@ -120,4 +141,29 @@ func (h *DeploymentHandler) Rollback(c echo.Context) error {
 	})
 
 	return utils.Accepted(c, "Rollback created", created)
+}
+
+func (h *DeploymentHandler) TogglePin(c echo.Context) error {
+	id := c.Param("id")
+	if id == "" {
+		return utils.Error(c, http.StatusBadRequest, "missing id parameter")
+	}
+	targetDep, err := h.deploymentService.GetDeployment(c.Request().Context(), id)
+	if err != nil || targetDep == nil {
+		return utils.Error(c, http.StatusNotFound, "deployment not found")
+	}
+
+	if err := h.verifyProjectAdmin(c, targetDep.ProjectID); err != nil {
+		return err
+	}
+
+	pinned, err := h.deploymentService.TogglePin(c.Request().Context(), id)
+	if err != nil {
+		return utils.Error(c, http.StatusInternalServerError, err.Error())
+	}
+
+	return utils.Success(c, "Deployment pin toggled", models.PinDeploymentResponse{
+		ID:     id,
+		Pinned: pinned,
+	})
 }
