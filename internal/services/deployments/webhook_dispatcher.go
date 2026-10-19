@@ -142,6 +142,30 @@ func (d *WebhookDispatcher) DispatchPush(
 			continue
 		}
 
+		changedFiles := ExtractChangedFilesFromPush(payload)
+		commitMsg := ""
+		if payload.HeadCommit != nil {
+			commitMsg = payload.HeadCommit.Message
+		}
+		impact := ResolveProjectChangeImpact(svc, changedFiles, commitMsg)
+		if !impact.Affected {
+			slog.Info("skipping auto-deploy: changes do not affect service", "serviceId", svc.ID, "name", svc.Name, "root", svc.RootDirectory, "reason", impact.Reason)
+			_, _ = d.deliveryService.Record(ctx, models.WebhookDeliveryInput{
+				ProjectID:  &svc.ProjectID,
+				Source:     "github",
+				DeliveryID: &deliveryID,
+				Event:      "push",
+				Outcome:    "skipped",
+				Summary: map[string]any{
+					"reason": impact.Reason,
+					"root":   svc.RootDirectory,
+				},
+				ClientIP:  clientIP,
+				UserAgent: userAgent,
+			})
+			continue
+		}
+
 		dep := &models.Deployment{
 			ID:            uuid.NewString(),
 			ServiceID:     svc.ID,

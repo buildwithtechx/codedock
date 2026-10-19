@@ -3,14 +3,15 @@ package models
 import "time"
 
 type GithubWebhookPayload struct {
-	Action      string            `json:"action"`
-	Number      int               `json:"number"`
-	PullRequest GithubPullRequest `json:"pull_request"`
-	Ref         string            `json:"ref"`
-	After       string            `json:"after"`
-	Deleted     bool              `json:"deleted"`
-	Repository  GithubRepoInfo    `json:"repository"`
-	HeadCommit  *GithubCommitInfo `json:"head_commit"`
+	Action      string                `json:"action"`
+	Number      int                   `json:"number"`
+	PullRequest GithubPullRequest     `json:"pull_request"`
+	Ref         string                `json:"ref"`
+	After       string                `json:"after"`
+	Deleted     bool                  `json:"deleted"`
+	Repository  GithubRepoInfo        `json:"repository"`
+	HeadCommit  *GithubCommitInfo     `json:"head_commit"`
+	Commits     []GithubWebhookCommit `json:"commits"`
 }
 
 type GithubRepoInfo struct {
@@ -25,8 +26,19 @@ type GithubRepoOwner struct {
 }
 
 type GithubCommitInfo struct {
-	ID      string `json:"id"`
-	Message string `json:"message"`
+	ID       string   `json:"id"`
+	Message  string   `json:"message"`
+	Added    []string `json:"added"`
+	Modified []string `json:"modified"`
+	Removed  []string `json:"removed"`
+}
+
+type GithubWebhookCommit struct {
+	ID       string   `json:"id"`
+	Message  string   `json:"message"`
+	Added    []string `json:"added"`
+	Modified []string `json:"modified"`
+	Removed  []string `json:"removed"`
 }
 
 type GithubPullRequest struct {
