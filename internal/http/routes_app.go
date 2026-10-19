@@ -228,6 +228,8 @@ func (s *Server) registerMiscRoutes(apiGroup, authGroup *echo.Group) {
 	authGroup.GET("/git/repos", s.gitHandler.ListRepos)
 	apiGroup.POST("/webhooks/git/services/:serviceId", s.webhookHandler.HandleServiceWebhook)
 	apiGroup.POST("/webhooks/github/services/:serviceId", s.webhookHandler.HandleGitHubWebhook)
+	apiGroup.POST("/webhooks/github", s.webhookHandler.HandleGitHubWebhook)
+	authGroup.GET("/projects/:id/webhooks/deliveries", s.webhookHandler.ListProjectDeliveries)
 	authGroup.GET("/canvas/projects", s.canvasHandler.ListCanvasSummaries)
 	authGroup.GET("/projects/:id/summary", s.canvasHandler.GetCanvasSummary)
 	authGroup.GET("/environments/:id/canvas", s.canvasHandler.GetEnvironmentCanvas)

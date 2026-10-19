@@ -87131,6 +87131,252 @@
         "x-auth": "authenticated"
       }
     },
+    "/api/projects/{id}/webhooks/deliveries": {
+      "get": {
+        "operationId": "getProjectsIdWebhooksDeliveries",
+        "parameters": [
+          {
+            "description": "id",
+            "in": "path",
+            "name": "id",
+            "required": true,
+            "schema": {
+              "type": "string"
+            }
+          },
+          {
+            "description": "Page limit",
+            "in": "query",
+            "name": "limit",
+            "required": false,
+            "schema": {
+              "type": "integer"
+            }
+          },
+          {
+            "description": "Pagination cursor",
+            "in": "query",
+            "name": "cursor",
+            "required": false,
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "description": "Codedock API envelope",
+                  "properties": {
+                    "data": {
+                      "description": "Webhook deliveries"
+                    },
+                    "executionTime": {
+                      "description": "Handler seconds",
+                      "format": "double",
+                      "type": "number"
+                    },
+                    "message": {
+                      "description": "Human-readable message",
+                      "type": "string"
+                    },
+                    "path": {
+                      "description": "Request path",
+                      "type": "string"
+                    },
+                    "status": {
+                      "description": "Result status",
+                      "enum": [
+                        "success"
+                      ],
+                      "type": "string"
+                    }
+                  },
+                  "required": [
+                    "status",
+                    "message"
+                  ],
+                  "type": "object"
+                }
+              }
+            },
+            "description": "List webhook deliveries for a project"
+          },
+          "400": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "description": "Codedock API error",
+                  "properties": {
+                    "message": {
+                      "description": "Human-readable message",
+                      "type": "string"
+                    },
+                    "path": {
+                      "description": "Request path",
+                      "type": "string"
+                    },
+                    "status": {
+                      "description": "Result status",
+                      "enum": [
+                        "error"
+                      ],
+                      "type": "string"
+                    }
+                  },
+                  "required": [
+                    "status",
+                    "message"
+                  ],
+                  "type": "object"
+                }
+              }
+            },
+            "description": "Invalid request"
+          },
+          "401": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "description": "Codedock API error",
+                  "properties": {
+                    "message": {
+                      "description": "Human-readable message",
+                      "type": "string"
+                    },
+                    "path": {
+                      "description": "Request path",
+                      "type": "string"
+                    },
+                    "status": {
+                      "description": "Result status",
+                      "enum": [
+                        "error"
+                      ],
+                      "type": "string"
+                    }
+                  },
+                  "required": [
+                    "status",
+                    "message"
+                  ],
+                  "type": "object"
+                }
+              }
+            },
+            "description": "Missing or invalid credentials"
+          },
+          "403": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "description": "Codedock API error",
+                  "properties": {
+                    "message": {
+                      "description": "Human-readable message",
+                      "type": "string"
+                    },
+                    "path": {
+                      "description": "Request path",
+                      "type": "string"
+                    },
+                    "status": {
+                      "description": "Result status",
+                      "enum": [
+                        "error"
+                      ],
+                      "type": "string"
+                    }
+                  },
+                  "required": [
+                    "status",
+                    "message"
+                  ],
+                  "type": "object"
+                }
+              }
+            },
+            "description": "Insufficient permissions"
+          },
+          "404": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "description": "Codedock API error",
+                  "properties": {
+                    "message": {
+                      "description": "Human-readable message",
+                      "type": "string"
+                    },
+                    "path": {
+                      "description": "Request path",
+                      "type": "string"
+                    },
+                    "status": {
+                      "description": "Result status",
+                      "enum": [
+                        "error"
+                      ],
+                      "type": "string"
+                    }
+                  },
+                  "required": [
+                    "status",
+                    "message"
+                  ],
+                  "type": "object"
+                }
+              }
+            },
+            "description": "Resource not found"
+          },
+          "500": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "description": "Codedock API error",
+                  "properties": {
+                    "message": {
+                      "description": "Human-readable message",
+                      "type": "string"
+                    },
+                    "path": {
+                      "description": "Request path",
+                      "type": "string"
+                    },
+                    "status": {
+                      "description": "Result status",
+                      "enum": [
+                        "error"
+                      ],
+                      "type": "string"
+                    }
+                  },
+                  "required": [
+                    "status",
+                    "message"
+                  ],
+                  "type": "object"
+                }
+              }
+            },
+            "description": "Server error"
+          }
+        },
+        "security": [
+          {
+            "bearerAuth": []
+          }
+        ],
+        "summary": "List webhook deliveries for a project",
+        "tags": [
+          "git"
+        ],
+        "x-auth": "project "
+      }
+    },
     "/api/projects/{projectId}/registries": {
       "get": {
         "operationId": "getProjectsProjectIdRegistries",
@@ -117446,6 +117692,101 @@
           }
         },
         "summary": "Handle a generic git webhook",
+        "tags": [
+          "git"
+        ]
+      }
+    },
+    "/api/webhooks/github": {
+      "post": {
+        "operationId": "postWebhooksGithub",
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "description": "GitHub event"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "description": "Webhook dispatch result"
+                }
+              }
+            },
+            "description": "Handle a GitHub webhook"
+          },
+          "400": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "description": "Codedock API error",
+                  "properties": {
+                    "message": {
+                      "description": "Human-readable message",
+                      "type": "string"
+                    },
+                    "path": {
+                      "description": "Request path",
+                      "type": "string"
+                    },
+                    "status": {
+                      "description": "Result status",
+                      "enum": [
+                        "error"
+                      ],
+                      "type": "string"
+                    }
+                  },
+                  "required": [
+                    "status",
+                    "message"
+                  ],
+                  "type": "object"
+                }
+              }
+            },
+            "description": "Invalid request"
+          },
+          "500": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "description": "Codedock API error",
+                  "properties": {
+                    "message": {
+                      "description": "Human-readable message",
+                      "type": "string"
+                    },
+                    "path": {
+                      "description": "Request path",
+                      "type": "string"
+                    },
+                    "status": {
+                      "description": "Result status",
+                      "enum": [
+                        "error"
+                      ],
+                      "type": "string"
+                    }
+                  },
+                  "required": [
+                    "status",
+                    "message"
+                  ],
+                  "type": "object"
+                }
+              }
+            },
+            "description": "Server error"
+          }
+        },
+        "summary": "Handle a GitHub webhook",
         "tags": [
           "git"
         ]

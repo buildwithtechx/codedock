@@ -94,6 +94,7 @@ func NewServer(db *sql.DB, v *utils.Vault, deployer *deploy.Deployer, traefikMan
 	orgRepo := repositories.NewOrganizationRepository(db)
 	refreshTokenRepo := repositories.NewRefreshTokenRepo(db)
 	passkeyRepo := repositories.NewPasskeyRepo(db)
+	webhookDeliveryRepo := repositories.NewWebhookDeliveryRepo(db)
 
 	httpEngineAdapter := newEngineAdapter(settingsRepo, appRepo, envVarRepo, dbRepo, projectRepo, scheduledTaskRepo, backupRepo, s3DestinationRepo, serviceVarRepo, serverlessRepository)
 	httpEngineAdapter.sftpRepo = repositories.NewSFTPDestinationRepo(db)
@@ -272,7 +273,9 @@ func NewServer(db *sql.DB, v *utils.Vault, deployer *deploy.Deployer, traefikMan
 	}
 	passkeyHandler := auth.NewPasskeyHandler(passkeyService)
 	gitHandler := deployments.NewGitHandler(gitService)
-	webhookHandler := deployments.NewWebhookHandler(gitService, projectService, appService, deploymentService, prPreviewService, gitAppsService)
+	webhookDeliveryService := deploymentservices.NewWebhookDeliveryService(webhookDeliveryRepo)
+	webhookDispatcher := deploymentservices.NewWebhookDispatcher(webhookDeliveryService, deploymentService, appService, gitAppsService, prPreviewService)
+	webhookHandler := deployments.NewWebhookHandler(gitService, projectService, appService, deploymentService, prPreviewService, gitAppsService, webhookDispatcher, webhookDeliveryService)
 
 	domainHandler := projects.NewDomainHandler(environmentService, appService, projectService, settingsRepo, auditService)
 	projectEnvHandler := projects.NewProjectEnvHandler(environmentService, appService)

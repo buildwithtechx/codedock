@@ -2,25 +2,22 @@ package deployments
 
 import (
 	"context"
-	"crypto/hmac"
-	"crypto/sha256"
-	"encoding/hex"
 	"encoding/json"
 	"fmt"
 	"io"
 	"log/slog"
 	"net/http"
-
+	"strconv"
+	"strings"
 	"time"
 
 	"github.com/google/uuid"
 	"github.com/labstack/echo/v4"
 
-	"codedock/internal/utils"
-
 	"codedock/internal/models"
 	deploymentservices "codedock/internal/services/deployments"
 	projectservices "codedock/internal/services/projects"
+	"codedock/internal/utils"
 )
 
 type WebhookHandler struct {
@@ -30,6 +27,8 @@ type WebhookHandler struct {
 	deploymentService *deploymentservices.DeploymentService
 	prPreviewService  *deploymentservices.PRPreviewService
 	gitAppsService    *deploymentservices.GitAppsService
+	dispatcher        *deploymentservices.WebhookDispatcher
+	deliveryService   *deploymentservices.WebhookDeliveryService
 }
 
 func NewWebhookHandler(
@@ -39,6 +38,8 @@ func NewWebhookHandler(
 	deploymentService *deploymentservices.DeploymentService,
 	prPreviewService *deploymentservices.PRPreviewService,
 	gitAppsService *deploymentservices.GitAppsService,
+	dispatcher *deploymentservices.WebhookDispatcher,
+	deliveryService *deploymentservices.WebhookDeliveryService,
 ) *WebhookHandler {
 	return &WebhookHandler{
 		gitService:        gitService,
@@ -47,6 +48,8 @@ func NewWebhookHandler(
 		deploymentService: deploymentService,
 		prPreviewService:  prPreviewService,
 		gitAppsService:    gitAppsService,
+		dispatcher:        dispatcher,
+		deliveryService:   deliveryService,
 	}
 }
 
@@ -65,15 +68,36 @@ func (h *WebhookHandler) HandleServiceWebhook(c echo.Context) error {
 		return utils.Error(c, http.StatusUnauthorized, "invalid or missing deploy token")
 	}
 
-	h.deployServiceAsync(appSvc)
+	clientIP := c.RealIP()
+	userAgent := c.Request().UserAgent()
+
+	depID := h.deployServiceAsync(appSvc)
+	if h.deliveryService != nil {
+		_, _ = h.deliveryService.Record(c.Request().Context(), models.WebhookDeliveryInput{
+			ProjectID:  &appSvc.ProjectID,
+			Source:     "deploy_token",
+			Event:      "deploy",
+			Outcome:    "dispatched",
+			ActionRef:  &depID,
+			ClientIP:   &clientIP,
+			UserAgent:  &userAgent,
+			StatusCode: intPtr(202),
+		})
+	}
+
 	return utils.Accepted(c, fmt.Sprintf("triggering background build & rollout for service %s", appSvc.Name), nil)
 }
 
-func (h *WebhookHandler) deployServiceAsync(appSvc *models.AppService) {
+func intPtr(v int) *int {
+	return &v
+}
+
+func (h *WebhookHandler) deployServiceAsync(appSvc *models.AppService) string {
+	depID := uuid.NewString()
 	go func() {
 		ctx := context.Background()
 		dep := &models.Deployment{
-			ID:            uuid.NewString(),
+			ID:            depID,
 			ServiceID:     appSvc.ID,
 			EnvironmentID: appSvc.EnvironmentID,
 			ProjectID:     appSvc.ProjectID,
@@ -92,23 +116,10 @@ func (h *WebhookHandler) deployServiceAsync(appSvc *models.AppService) {
 		}
 		h.deploymentService.ExecuteDeploymentAsync(dep)
 	}()
-}
-
-func verifyHMAC(payload []byte, secret, signature string) bool {
-	if secret == "" {
-		return false
-	}
-	mac := hmac.New(sha256.New, []byte(secret))
-	mac.Write(payload)
-	expectedMAC := "sha256=" + hex.EncodeToString(mac.Sum(nil))
-	return hmac.Equal([]byte(expectedMAC), []byte(signature))
+	return depID
 }
 
 func (h *WebhookHandler) HandleGitHubWebhook(c echo.Context) error {
-	serviceID := c.Param("serviceId")
-	if serviceID == "" {
-		return utils.Error(c, http.StatusBadRequest, "missing serviceId parameter")
-	}
 	event := c.Request().Header.Get("X-GitHub-Event")
 	if event == "" {
 		return utils.Error(c, http.StatusBadRequest, "missing X-GitHub-Event header")
@@ -119,106 +130,117 @@ func (h *WebhookHandler) HandleGitHubWebhook(c echo.Context) error {
 		return utils.Error(c, http.StatusBadRequest, "failed to read body")
 	}
 
-	apps, err := h.gitAppsService.ListGithubApps(c.Request().Context())
-	if err != nil {
-		return utils.Error(c, http.StatusInternalServerError, "failed to check webhook secrets")
-	}
-
-	hasSecret := false
-	for _, app := range apps {
-		if app.WebhookSecret != "" {
-			hasSecret = true
-			break
-		}
-	}
-	if !hasSecret {
-		return utils.Error(c, http.StatusUnauthorized, "github webhook secret is not configured")
-	}
-
 	signature := c.Request().Header.Get("X-Hub-Signature-256")
-	if signature == "" {
-		return utils.Error(c, http.StatusUnauthorized, "missing X-Hub-Signature-256 header")
-	}
-
-	valid := false
-	for _, app := range apps {
-		if app.WebhookSecret != "" && verifyHMAC(bodyBytes, app.WebhookSecret, signature) {
-			valid = true
-			break
-		}
+	valid, err := h.dispatcher.VerifySignature(c.Request().Context(), bodyBytes, signature)
+	if err != nil {
+		return utils.Error(c, http.StatusInternalServerError, "failed to verify signature")
 	}
 	if !valid {
 		return utils.Error(c, http.StatusUnauthorized, "invalid webhook signature")
 	}
+
+	deliveryID := c.Request().Header.Get("X-GitHub-Delivery")
+	clientIP := c.RealIP()
+	userAgent := c.Request().UserAgent()
+	serviceID := c.Param("serviceId")
 
 	var payload models.GithubWebhookPayload
 	if err := json.Unmarshal(bodyBytes, &payload); err != nil {
 		return utils.Error(c, http.StatusBadRequest, "invalid payload")
 	}
 
-	if event == "push" {
-		appSvc, err := h.appService.GetAppService(c.Request().Context(), serviceID)
-		if err != nil || appSvc == nil {
-			return utils.Error(c, http.StatusNotFound, "service not found")
-		}
-		expectedRef := "refs/heads/" + appSvc.Branch
-		if payload.Ref == expectedRef {
-			h.deployServiceAsync(appSvc)
-			return utils.Accepted(c, fmt.Sprintf("triggering background build for branch %s", appSvc.Branch), nil)
-		}
-		return utils.Success(c, "Push event ignored (branch mismatch)", nil)
+	if event == "ping" {
+		return utils.Success(c, "Pong", map[string]string{"message": "Pong"})
 	}
 
-	if event == "pull_request" {
-		appSvc, err := h.appService.GetAppService(c.Request().Context(), serviceID)
-		if err != nil || appSvc == nil {
-			return utils.Error(c, http.StatusNotFound, "service not found")
+	if event == "push" {
+		result, err := h.dispatcher.DispatchPush(c.Request().Context(), deliveryID, serviceID, payload, &clientIP, &userAgent)
+		if err != nil {
+			return utils.Error(c, http.StatusInternalServerError, err.Error())
 		}
-		switch payload.Action {
-		case "opened", "synchronize", "reopened":
-			if !appSvc.EnablePRPreviews {
-				return utils.Success(c, "PR previews are disabled for this service", nil)
-			}
-			prInfo := deploymentservices.PullRequestInfo{
-				Number:   payload.Number,
-				State:    payload.PullRequest.State,
-				Draft:    payload.PullRequest.Draft,
-				HeadSHA:  payload.PullRequest.Head.Sha,
-				HeadRef:  payload.PullRequest.Head.Ref,
-				HeadRepo: payload.PullRequest.Head.Repo.FullName,
-				BaseRef:  payload.PullRequest.Base.Ref,
-				BaseRepo: payload.PullRequest.Base.Repo.FullName,
-			}
-			gitOwner, gitRepo := deploymentservices.ParseRepoOwnerAndName(appSvc.RepositoryURL)
-			if eligible, reason := deploymentservices.IsPreviewEligible(prInfo, gitOwner, gitRepo, appSvc.Branch); !eligible {
-				return utils.Success(c, "PR is not eligible for preview: "+reason, nil)
-			}
-			h.deployPRPreviewAsync(serviceID, payload)
-			return utils.Accepted(c, "Deploying PR preview", nil)
-		case "closed":
-			h.destroyPRPreviewAsync(serviceID, payload.Number)
-			return utils.Accepted(c, "Destroying PR preview", nil)
+		if result.Duplicate {
+			return utils.Success(c, "Duplicate delivery ignored", map[string]string{"message": "Duplicate delivery ignored"})
 		}
+		if result.FailedCount > 0 {
+			msg := fmt.Sprintf("Triggered %d, %d failed: %s", result.HandledCount, result.FailedCount, strings.Join(result.Errors, "; "))
+			return c.JSON(http.StatusInternalServerError, map[string]any{
+				"success": false,
+				"message": msg,
+			})
+		}
+		return utils.Success(c, fmt.Sprintf("Triggered %d deployments", result.HandledCount), map[string]any{
+			"handledCount": result.HandledCount,
+		})
 	}
+
+	if event == "pull_request" && serviceID != "" {
+		return h.handlePullRequest(c, serviceID, payload)
+	}
+
 	return utils.Success(c, "Operation successful", map[string]string{"message": "Event ignored"})
 }
 
-func (h *WebhookHandler) deployPRPreviewAsync(serviceID string, payload models.GithubWebhookPayload) {
-	go func() {
-		ctx := context.Background()
-		opts := deploymentservices.DeployPRPreviewOpts{
-			AppID:      serviceID,
-			PRNumber:   payload.Number,
-			CommitHash: payload.PullRequest.Head.Sha,
-			Branch:     payload.PullRequest.Head.Ref,
+func (h *WebhookHandler) handlePullRequest(c echo.Context, serviceID string, payload models.GithubWebhookPayload) error {
+	appSvc, err := h.appService.GetAppService(c.Request().Context(), serviceID)
+	if err != nil || appSvc == nil {
+		return utils.Error(c, http.StatusNotFound, "service not found")
+	}
+
+	switch payload.Action {
+	case "opened", "synchronize", "reopened":
+		if !appSvc.EnablePRPreviews {
+			return utils.Success(c, "PR previews are disabled for this service", nil)
 		}
-		_, _ = h.prPreviewService.DeployPRPreview(ctx, opts)
-	}()
+		prInfo := deploymentservices.PullRequestInfo{
+			Number:   payload.Number,
+			State:    payload.PullRequest.State,
+			Draft:    payload.PullRequest.Draft,
+			HeadSHA:  payload.PullRequest.Head.Sha,
+			HeadRef:  payload.PullRequest.Head.Ref,
+			HeadRepo: payload.PullRequest.Head.Repo.FullName,
+			BaseRef:  payload.PullRequest.Base.Ref,
+			BaseRepo: payload.PullRequest.Base.Repo.FullName,
+		}
+		gitOwner, gitRepo := deploymentservices.ParseRepoOwnerAndName(appSvc.RepositoryURL)
+		if eligible, reason := deploymentservices.IsPreviewEligible(prInfo, gitOwner, gitRepo, appSvc.Branch); !eligible {
+			return utils.Success(c, "PR is not eligible for preview: "+reason, nil)
+		}
+		go func() {
+			ctx := context.Background()
+			opts := deploymentservices.DeployPRPreviewOpts{
+				AppID:      serviceID,
+				PRNumber:   payload.Number,
+				CommitHash: payload.PullRequest.Head.Sha,
+				Branch:     payload.PullRequest.Head.Ref,
+			}
+			_, _ = h.prPreviewService.DeployPRPreview(ctx, opts)
+		}()
+		return utils.Accepted(c, "Deploying PR preview", nil)
+	case "closed":
+		go func() {
+			ctx := context.Background()
+			_ = h.prPreviewService.DestroyPRPreview(ctx, serviceID, payload.Number)
+		}()
+		return utils.Accepted(c, "Destroying PR preview", nil)
+	}
+	return utils.Success(c, "PR action ignored", nil)
 }
 
-func (h *WebhookHandler) destroyPRPreviewAsync(serviceID string, prNumber int) {
-	go func() {
-		ctx := context.Background()
-		_ = h.prPreviewService.DestroyPRPreview(ctx, serviceID, prNumber)
-	}()
+func (h *WebhookHandler) ListProjectDeliveries(c echo.Context) error {
+	projectID := c.Param("id")
+	if projectID == "" {
+		return utils.Error(c, http.StatusBadRequest, "project id required")
+	}
+	limit, _ := strconv.Atoi(c.QueryParam("limit"))
+	cursor := c.QueryParam("cursor")
+
+	deliveries, nextCursor, err := h.deliveryService.ListByProject(c.Request().Context(), projectID, limit, cursor)
+	if err != nil {
+		return utils.Error(c, http.StatusInternalServerError, err.Error())
+	}
+
+	return utils.Success(c, "Deliveries retrieved", map[string]any{
+		"deliveries": deliveries,
+		"nextCursor": nextCursor,
+	})
 }

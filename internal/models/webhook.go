@@ -8,6 +8,25 @@ type GithubWebhookPayload struct {
 	PullRequest GithubPullRequest `json:"pull_request"`
 	Ref         string            `json:"ref"`
 	After       string            `json:"after"`
+	Deleted     bool              `json:"deleted"`
+	Repository  GithubRepoInfo    `json:"repository"`
+	HeadCommit  *GithubCommitInfo `json:"head_commit"`
+}
+
+type GithubRepoInfo struct {
+	Name          string          `json:"name"`
+	FullName      string          `json:"full_name"`
+	DefaultBranch string          `json:"default_branch"`
+	Owner         GithubRepoOwner `json:"owner"`
+}
+
+type GithubRepoOwner struct {
+	Login string `json:"login"`
+}
+
+type GithubCommitInfo struct {
+	ID      string `json:"id"`
+	Message string `json:"message"`
 }
 
 type GithubPullRequest struct {

@@ -268,3 +268,7 @@ func (s *AppService) DeleteLogDrain(ctx context.Context, id, serviceID string) e
 	}
 	return s.repo.DeleteLogDrain(ctx, id, serviceID)
 }
+
+func (s *AppService) ListAllServices(ctx context.Context, search string) ([]*models.AppService, error) {
+	return s.repo.ListAll(ctx, search)
+}
