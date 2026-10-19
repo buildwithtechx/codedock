@@ -14,9 +14,14 @@ import { handleApiError } from '#/lib/error';
 export const passkeyService = {
   getRegisterOptions: async (): Promise<PublicKeyCredentialCreationOptionsJSON> => {
     try {
-      return await apiClient.post<PublicKeyCredentialCreationOptionsJSON>(
-        '/auth/passkeys/register/options'
-      );
+      const response = await apiClient.post<
+        | PublicKeyCredentialCreationOptionsJSON
+        | { publicKey: PublicKeyCredentialCreationOptionsJSON }
+      >('/auth/passkeys/register/options');
+      if (response && 'publicKey' in response && response.publicKey) {
+        return response.publicKey;
+      }
+      return response as PublicKeyCredentialCreationOptionsJSON;
     } catch (error) {
       throw handleApiError(error);
     }
@@ -37,9 +42,13 @@ export const passkeyService = {
 
   getAuthenticateOptions: async (): Promise<PublicKeyCredentialRequestOptionsJSON> => {
     try {
-      return await apiClient.post<PublicKeyCredentialRequestOptionsJSON>(
-        '/auth/passkeys/authenticate/options'
-      );
+      const response = await apiClient.post<
+        PublicKeyCredentialRequestOptionsJSON | { publicKey: PublicKeyCredentialRequestOptionsJSON }
+      >('/auth/passkeys/authenticate/options');
+      if (response && 'publicKey' in response && response.publicKey) {
+        return response.publicKey;
+      }
+      return response as PublicKeyCredentialRequestOptionsJSON;
     } catch (error) {
       throw handleApiError(error);
     }
@@ -67,7 +76,7 @@ export const passkeyService = {
 
   renamePasskey: async (id: string, name: string): Promise<BaseResponse<void>> => {
     try {
-      return await apiClient.patch<BaseResponse<void>>(`/auth/passkeys/${id}`, { name });
+      return await apiClient.put<BaseResponse<void>>(`/auth/passkeys/${id}`, { name });
     } catch (error) {
       throw handleApiError(error);
     }

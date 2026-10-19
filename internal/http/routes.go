@@ -107,7 +107,7 @@ func (s *Server) registerAuthRoutes(apiGroup, authGroup *echo.Group) {
 	apiGroup.GET("/auth/device/verify", s.deviceFlowHandler.VerifyUserCode)
 	authGroup.POST("/auth/device/authorize", s.deviceFlowHandler.AuthorizeDevice)
 
-	apiGroup.POST("/auth/passkeys/authenticate/options", s.passkeyHandler.BeginAuthentication)
+	apiGroup.POST("/auth/passkeys/authenticate/options", s.passkeyHandler.BeginAuthentication, s.authRateLimiter.Middleware)
 	apiGroup.POST("/auth/passkeys/authenticate/verify", s.passkeyHandler.FinishAuthentication, s.authRateLimiter.Middleware)
 	authGroup.POST("/auth/passkeys/register/options", s.passkeyHandler.BeginRegistration)
 	authGroup.POST("/auth/passkeys/register/verify", s.passkeyHandler.FinishRegistration)

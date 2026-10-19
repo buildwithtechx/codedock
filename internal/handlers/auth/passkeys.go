@@ -45,7 +45,7 @@ func (h *PasskeyHandler) BeginRegistration(c echo.Context) error {
 	if err != nil {
 		return utils.Error(c, http.StatusBadRequest, err.Error())
 	}
-	return c.JSON(http.StatusOK, options)
+	return c.JSON(http.StatusOK, options.Response)
 }
 
 func (h *PasskeyHandler) FinishRegistration(c echo.Context) error {
@@ -96,7 +96,7 @@ func (h *PasskeyHandler) BeginAuthentication(c echo.Context) error {
 	if err != nil {
 		return utils.Error(c, http.StatusBadRequest, err.Error())
 	}
-	return c.JSON(http.StatusOK, options)
+	return c.JSON(http.StatusOK, options.Response)
 }
 
 func (h *PasskeyHandler) FinishAuthentication(c echo.Context) error {

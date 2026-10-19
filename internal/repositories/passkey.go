@@ -165,6 +165,10 @@ func (r *PasskeyRepo) SaveChallenge(ctx context.Context, challenge *models.Passk
 	if challenge.CreatedAt.IsZero() {
 		challenge.CreatedAt = time.Now().UTC()
 	}
+
+	// Opportunistic pruning of expired challenges to prevent table bloat
+	_, _ = r.db.ExecContext(ctx, `DELETE FROM passkey_challenges WHERE expires_at < $1`, time.Now().UTC())
+
 	query := `INSERT INTO passkey_challenges (challenge, user_id, ceremony_type, session_data, created_at, expires_at)
 	          VALUES ($1, $2, $3, $4, $5, $6)`
 	_, err := r.db.ExecContext(ctx, query,

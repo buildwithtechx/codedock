@@ -103,16 +103,6 @@ func (s *PasskeyService) FinishAuthentication(ctx context.Context, parsed *proto
 	if parsed == nil {
 		return nil, "", "", errors.New("missing assertion data")
 	}
-	challengeStr := parsed.Response.CollectedClientData.Challenge
-	challengeRecord, err := s.passkeyRepo.GetAndConsumeChallenge(ctx, challengeStr, "authentication")
-	if err != nil {
-		return nil, "", "", errors.New("challenge expired or already used")
-	}
-
-	var sessionData webauthn.SessionData
-	if err := json.Unmarshal([]byte(challengeRecord.SessionData), &sessionData); err != nil {
-		return nil, "", "", fmt.Errorf("parse session data: %w", err)
-	}
 
 	credIDStr := base64.RawURLEncoding.EncodeToString(parsed.RawID)
 	storedCred, err := s.passkeyRepo.GetCredentialByCredentialID(ctx, credIDStr)
@@ -128,14 +118,7 @@ func (s *PasskeyService) FinishAuthentication(ctx context.Context, parsed *proto
 		return nil, "", "", errors.New("account is disabled")
 	}
 
-	webUser := toWebAuthnUser(u, []*models.PasskeyCredential{storedCred})
-	verifiedCred, err := s.webauthn.ValidateLogin(webUser, sessionData, parsed)
-	if err != nil {
-		return nil, "", "", fmt.Errorf("passkey verification failed: %w", err)
-	}
-
-	_ = s.passkeyRepo.UpdateCredentialCounter(ctx, storedCred.ID, int64(verifiedCred.Authenticator.SignCount), time.Now().UTC())
-
+	// 2FA gate: verify TOTP before consuming single-use challenge or incrementing counter
 	if u.TOTPEnabled {
 		if totpCode == "" {
 			return nil, "", "", errors.New("2FA code required")
@@ -157,6 +140,28 @@ func (s *PasskeyService) FinishAuthentication(ctx context.Context, parsed *proto
 			}
 		}
 	}
+
+	challengeStr := parsed.Response.CollectedClientData.Challenge
+	challengeRecord, err := s.passkeyRepo.GetAndConsumeChallenge(ctx, challengeStr, "authentication")
+	if err != nil {
+		return nil, "", "", errors.New("challenge expired or already used")
+	}
+
+	var sessionData webauthn.SessionData
+	if err := json.Unmarshal([]byte(challengeRecord.SessionData), &sessionData); err != nil {
+		return nil, "", "", fmt.Errorf("parse session data: %w", err)
+	}
+
+	webUser := toWebAuthnUser(u, []*models.PasskeyCredential{storedCred})
+	if len(sessionData.UserID) == 0 {
+		sessionData.UserID = webUser.WebAuthnID()
+	}
+	verifiedCred, err := s.webauthn.ValidateLogin(webUser, sessionData, parsed)
+	if err != nil {
+		return nil, "", "", fmt.Errorf("passkey verification failed: %w", err)
+	}
+
+	_ = s.passkeyRepo.UpdateCredentialCounter(ctx, storedCred.ID, int64(verifiedCred.Authenticator.SignCount), time.Now().UTC())
 
 	token, err := s.tokenService.GenerateToken(u)
 	if err != nil {
