@@ -1,7 +1,7 @@
 import { createFileRoute } from '@tanstack/react-router';
-import { TemplateCatalog } from '../features/templates/template-catalog';
-import { pageHead } from '../lib/seo';
-export const Route = createFileRoute('/templates')({
+import { TemplateCatalog } from '#/features/templates/template-catalog';
+import { pageHead } from '#/lib/seo';
+export const Route = createFileRoute('/templates/')({
   component: TemplateCatalog,
   head: () =>
     pageHead(

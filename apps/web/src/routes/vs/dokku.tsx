@@ -1,7 +1,7 @@
 import { createFileRoute } from '@tanstack/react-router';
-import { ComparisonPage } from '../features/compare/comparison-page';
-import { comparisons } from '../features/compare/comparisons';
-import { pageHead } from '../lib/seo';
+import { ComparisonPage } from '#/features/compare/comparison-page';
+import { comparisons } from '#/features/compare/comparisons';
+import { pageHead } from '#/lib/seo';
 
 const content = comparisons.dokku;
 export const Route = createFileRoute('/vs/dokku')({

@@ -1,6 +1,6 @@
 import { createFileRoute } from '@tanstack/react-router';
-import { ComparisonHub } from '../features/compare/comparison-hub';
-import { pageHead } from '../lib/seo';
+import { ComparisonHub } from '#/features/compare/comparison-hub';
+import { pageHead } from '#/lib/seo';
 export const Route = createFileRoute('/vs/')({
   component: ComparisonHub,
   head: () =>
