@@ -1,0 +1,53 @@
+---
+title: Push Notifications & Mobile Alerts
+description: Real-time push notifications via Expo, device tokens, and webhook alerts.
+---
+
+import { Tabs, TabItem, Aside, Steps } from "@astrojs/starlight/components";
+
+Codedock provides a multi-channel alerting system that delivers instant notifications to your mobile devices, team chat apps, and custom webhooks when important platform events occur.
+
+## Alerting Channels
+
+<Tabs>
+  <TabItem label="Mobile Push (Expo)" icon="seti:mobile">
+    Instant push notifications sent directly to your phone via the Codedock Mobile app for iOS & Android powered by Expo.
+  </TabItem>
+  <TabItem label="Discord" icon="discord">
+    Rich embed notifications with direct links to failing services, deployment history, and live container logs.
+  </TabItem>
+  <TabItem label="Slack" icon="slack">
+    Standard Slack incoming webhooks delivered to your engineering or incident channels.
+  </TabItem>
+  <TabItem label="Email" icon="seti:email">
+    Transactional email alerts sent via your configured SMTP server or Resend integration.
+  </TabItem>
+  <TabItem label="Webhooks" icon="seti:graphql">
+    Raw JSON event payloads delivered to any HTTP endpoint, PagerDuty, or custom automation service.
+  </TabItem>
+</Tabs>
+
+## Mobile Device Token Registration
+
+<Steps>
+1. Download and sign in to the Codedock Mobile app on your iOS or Android device.
+2. Grant notification permissions when prompted. The app automatically registers an Expo Push Token with your Codedock account (`POST /api/notifications/devices`).
+3. You can inspect or revoke active mobile device tokens at any time under **Profile → Mobile Devices**.
+</Steps>
+
+## Event Subscriptions
+
+Configure which events trigger alerts under **Server Settings → Notifications → Subscriptions**:
+
+| Event Category | Severity | Description |
+| --- | --- | --- |
+| `deployment_success` | Info | Notifies when a build and rollout finishes successfully. |
+| `deployment_failure` | Critical | Alerts when a container build fails or crash-loops on startup. |
+| `server_offline` | Critical | Triggered when a worker node stops responding to control plane heartbeats. |
+| `resource_attention` | Warning | Triggered on OOMKilled events or abnormal container exit codes. |
+| `disk_threshold` | Warning | Alerts when a host server crosses the configured disk usage threshold (e.g. 80%). |
+| `backup_completed` | Info | Confirms that scheduled database backups to S3 or R2 completed. |
+
+<Aside type="tip" title="Delivery Diagnostics">
+Codedock logs every delivery attempt under **Notifications → Deliveries** (`GET /api/notifications/deliveries`). If an external webhook encounters a temporary network timeout, Codedock retries with exponential backoff.
+</Aside>

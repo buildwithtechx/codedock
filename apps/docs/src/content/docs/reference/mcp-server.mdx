@@ -1,0 +1,89 @@
+---
+title: Model Context Protocol (MCP) Server
+description: Connect AI assistants like Claude Desktop, Cursor, and Antigravity to Codedock.
+---
+
+import { Tabs, TabItem, Aside, Steps, Badge } from "@astrojs/starlight/components";
+
+Codedock provides native support for the **Model Context Protocol (MCP)**, allowing AI coding assistants and autonomous agents to query server metrics, inspect containers, trigger deployments, and manage PaaS resources safely.
+
+## What is MCP?
+
+MCP is an open standard that enables AI models to securely discover and invoke tools provided by external platforms. With Codedock's MCP integration, you can interact with your PaaS using natural language:
+
+- *"Why did the latest deployment for `api-server` fail?"*
+- *"Check the CPU and memory utilization on worker-02."*
+- *"Run a read query on my staging PostgreSQL database to check customer records."*
+- *"Redeploy the web service with zero downtime."*
+
+## Transport Modes
+
+Codedock supports both standard MCP transport protocols:
+
+<Tabs>
+  <TabItem label="Stdio Mode (Local & CLI)" icon="seti:shell">
+    Run the MCP server directly via stdio on your workstation or host:
+    ```sh
+    codedockd mcp
+    ```
+    Ideal for local clients such as Claude Desktop or terminal-based AI agents.
+  </TabItem>
+  <TabItem label="SSE Mode (Remote HTTP)" icon="laptop">
+    Connect remote agents and web IDEs over Server-Sent Events:
+    - **SSE Connection**: `GET /api/mcp/sse` (Authenticated)
+    - **Message Endpoint**: `POST /api/mcp/messages` (Authenticated)
+    
+    Pass your authentication token in the `Authorization: Bearer <TOKEN>` header.
+  </TabItem>
+</Tabs>
+
+## Client Setup
+
+<Tabs>
+  <TabItem label="Claude Desktop" icon="apple">
+    Add Codedock to your `claude_desktop_config.json`:
+
+    ```json
+    {
+      "mcpServers": {
+        "codedock": {
+          "command": "codedockd",
+          "args": ["mcp"],
+          "env": {
+            "CODEDOCK_API_URL": "https://codedock.example.com",
+            "CODEDOCK_TOKEN": "your-personal-access-token"
+          }
+        }
+      }
+    }
+    ```
+  </TabItem>
+  <TabItem label="Cursor & AI IDEs" icon="seti:code-climate">
+    In Cursor's MCP Settings, add a new server:
+    1. **Type**: `command` (or `sse`)
+    2. **Command**: `codedockd mcp`
+    3. **Environment**: Add `CODEDOCK_API_URL` and `CODEDOCK_TOKEN`
+  </TabItem>
+</Tabs>
+
+<Aside type="tip" title="Token Scopes">
+Generate a dedicated Personal Access Token under **Profile → Tokens** with granular scopes (`server:read`, `logs:read`, `env:read`). Avoid using owner credentials for untrusted agents.
+</Aside>
+
+## Available MCP Tools
+
+| Tool Name | Scope Required | Description |
+| --- | --- | --- |
+| `list_projects` | `project:read` | Lists all accessible projects and current environment statuses. |
+| `get_project_summary` | `project:read` | Retrieves detailed application, database, and domain topologies. |
+| `get_service_logs` | `logs:read` | Fetches recent stdout/stderr runtime logs with configurable tail limits. |
+| `get_server_metrics` | `server:read` | Returns live CPU, RAM, disk, and load metrics for cluster hosts. |
+| `trigger_deployment` | `project:write` | Initiates a fresh container build and rollout for an application service. |
+| `rollback_deployment` | `project:write` | Instantly rolls back a service to its previous stable release. |
+| `query_database` | `database:manage` | Executes read-only SQL queries against project databases. |
+| `get_environment_vars` | `env:read` | Inspects service environment variable keys (secrets masked by default). |
+| `set_environment_var` | `env:write` | Injects or updates environment variables and triggers a service reload. |
+
+<Aside type="caution" title="Global Admin Control">
+Administrators can globally disable the MCP server at any time under **Server Settings → AI & MCP → Enable MCP Server**. All AI interactions are logged in the Codedock Audit Log with the `mcp-bridge` actor attribution.
+</Aside>

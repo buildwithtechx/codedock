@@ -1,0 +1,69 @@
+---
+title: Ingress Controller & L7 Route Rules
+description: Path-based routing, Traefik ingress controller, and advanced traffic rules.
+---
+
+import { Tabs, TabItem, Aside, Steps } from "@astrojs/starlight/components";
+
+Codedock features a built-in **Ingress Controller** powered by Traefik, providing automated TLS certificate issuance, path-based routing, URL rewriting, and custom HTTP middleware for your services.
+
+## Ingress Architecture
+
+Incoming web requests are routed through Traefik before reaching containerized applications:
+
+```
+[ Client Request ]
+       │
+       ▼ (HTTPS :443 / HTTP :80)
+┌────────────────────────────────────────────────────────┐
+│               Codedock Ingress Controller              │
+│       (Traefik Dynamic Routing & Let's Encrypt)        │
+└──────────┬───────────────────────────────┬─────────────┘
+           │ /api/*                        │ /*
+           ▼                               ▼
+┌──────────────────────┐       ┌──────────────────────┐
+│    Backend Service   │       │   Frontend Service   │
+│   (Node / Go / Py)   │       │     (Next.js / SPA)  │
+└──────────────────────┘       └──────────────────────┘
+```
+
+## Adding Domains & Ingress
+
+<Steps>
+1. Select the service you wish to expose publicly in your Project.
+2. Navigate to **Domains & Ingress**.
+3. Enter your domain (e.g. `app.example.com`) and target port (e.g. `3000`).
+4. Codedock requests a Let's Encrypt TLS certificate via HTTP-01 challenge once DNS resolves to your server IP.
+</Steps>
+
+## L7 Route Rules & Middleware
+
+You can attach granular L7 routing rules to any service domain:
+
+<Tabs>
+  <TabItem label="Path Prefix Routing" icon="seti:folder">
+    Route different URL paths to separate backend containers:
+    - **Path Prefix**: e.g., `/api` or `/auth`
+    - **Target Service**: Destination container
+    - **Strip Prefix**: Strips the prefix before forwarding (e.g., `/api/v1/users` &rarr; `/v1/users`)
+  </TabItem>
+  <TabItem label="Custom Headers" icon="seti:code-climate">
+    Inject or manipulate HTTP headers:
+    - **Request Headers**: Add `X-Forwarded-Proto: https` or client tracking headers.
+    - **Security Headers**: Inject `HSTS`, `X-Frame-Options: DENY`, and `X-Content-Type-Options: nosniff`.
+  </TabItem>
+  <TabItem label="Basic Authentication" icon="seti:lock">
+    Protect staging environments or internal endpoints:
+    - Enter a username and secure password.
+    - Codedock hashes credentials with bcrypt and attaches Traefik's `basicauth` middleware.
+  </TabItem>
+  <TabItem label="Redirects" icon="external">
+    Configure edge redirects:
+    - **Apex to WWW**: Redirect `example.com` &rarr; `www.example.com` (HTTP 301).
+    - **Path Redirects**: Reroute legacy endpoints to new URLs at the edge.
+  </TabItem>
+</Tabs>
+
+<Aside type="tip" title="Automatic Certificate Renewal">
+Let's Encrypt certificates are renewed automatically 30 days before expiration. The dashboard displays live TLS status and expiry dates.
+</Aside>

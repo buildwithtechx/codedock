@@ -1,0 +1,58 @@
+---
+title: Developer Tools & Mobile Apps
+description: Official VS Code extension, desktop client, mobile app, and device authorization.
+---
+
+import { Tabs, TabItem, Aside, Steps } from "@astrojs/starlight/components";
+
+Codedock provides developer tooling that integrates into your daily workflow, including an official **VS Code Extension**, a **Mobile App** for iOS & Android, a cross-platform **Desktop Client**, and secure **Device Authorization**.
+
+## Official VS Code Extension
+
+The **Codedock VS Code Extension** (`vscode-codedock`) brings PaaS control into your code editor.
+
+<Tabs>
+  <TabItem label="Key Capabilities" icon="star">
+    - **One-Click Deploy**: Deploy directly from the editor palette (`Codedock: Deploy Current Project`).
+    - **Live Log Streaming**: Stream build and container logs inside dedicated VS Code output channels with syntax highlighting.
+    - **Interactive Web Terminal**: Open an embedded remote terminal directly inside running containers.
+    - **Environment Editor**: View, add, and update service environment variables with automatic sync.
+    - **Status Bar Health**: Monitor CPU, RAM, and deployment statuses from the editor status bar.
+  </TabItem>
+  <TabItem label="Installation" icon="seti:visualstudio">
+    Search for `Codedock` in the VS Code Extensions Marketplace or install the pre-packaged `.vsix` from `apps/extension/`:
+    ```sh
+    code --install-extension vscode-codedock-0.1.0.vsix
+    ```
+  </TabItem>
+</Tabs>
+
+## Codedock Mobile App (iOS & Android)
+
+Built with React Native and Expo, the Codedock Mobile App connects you to your infrastructure on the go.
+
+- **Real-Time Push Alerts**: Receive instant push notifications for deployment failures, server downtime, and disk saturation.
+- **Emergency Operations**: Trigger instant zero-downtime rollbacks, restart containers, or cancel runaway builds with one tap.
+- **Live Fleet Metrics**: Monitor CPU and RAM graphs across all worker servers.
+- **Biometric Security**: Protect mobile access with Face ID, Touch ID, or fingerprint authentication.
+
+## Codedock Desktop App
+
+For developers who prefer a dedicated desktop experience without keeping browser tabs open, Codedock provides a native client built with Tauri and Rust.
+- **Minimal Resource Footprint**: Uses native operating system webviews for ultra-low memory consumption compared to Electron.
+- **System Tray Quick-Actions**: Inspect cluster health from your macOS menu bar or Windows system tray.
+
+## Device Authorization Flow (OAuth 2.0 Device Flow)
+
+Authenticate CLI tools, IDE extensions, or mobile devices securely without entering passwords or copying API tokens:
+
+<Steps>
+1. Run `codedock login` in your terminal or click **Sign In** in the VS Code extension.
+2. The client requests a device code and displays an authorization URL (`/auth/device/verify`).
+3. Open the link in your browser, confirm that the 8-character verification code matches, and click **Authorize**.
+4. The client automatically receives a scoped Personal Access Token and stores it in your operating system keychain.
+</Steps>
+
+<Aside type="tip" title="Secure Credential Storage">
+Device flow tokens are stored securely in macOS Keychain, Linux Secret Service (freedesktop.org), or Windows Credential Manager. Plaintext tokens are never written to disk.
+</Aside>
