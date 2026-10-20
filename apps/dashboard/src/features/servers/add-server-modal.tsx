@@ -68,8 +68,8 @@ export function AddServerModal({
       <DialogContent
         className={`p-6 sm:p-7 max-h-[calc(100dvh-2rem)] overflow-y-auto ${
           mode === 'managed'
-            ? 'sm:max-w-[1400px] w-[calc(100vw-2rem)]'
-            : 'sm:max-w-xl w-full'
+            ? 'sm:max-w-[1440px] w-[calc(100vw-2rem)]'
+            : 'sm:max-w-[720px] w-[calc(100vw-2rem)]'
         }`}
         showCloseButton={false}
       >

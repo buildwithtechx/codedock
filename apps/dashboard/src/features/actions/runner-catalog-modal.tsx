@@ -1,4 +1,3 @@
-import { Laptop, Server, Terminal } from 'lucide-react';
 import type { ComponentType } from 'react';
 import {
   Dialog,
@@ -7,7 +6,12 @@ import {
   DialogHeader,
   DialogTitle,
 } from '@codedock/ui/dialog';
-import { UbuntuLogo } from './ubuntu-logo';
+import {
+  CustomImageLogo,
+  LinuxLogo,
+  MacosLogo,
+  UbuntuLogo,
+} from './runner-logos';
 
 export type RunnerPreset = 'ubuntu' | 'macos' | 'linux' | 'custom';
 
@@ -16,6 +20,7 @@ export interface RunnerPresetInfo {
   title: string;
   badge: string;
   description: string;
+  runtimeType: string;
   icon: ComponentType<{ className?: string }>;
 }
 
@@ -25,6 +30,7 @@ export const RUNNER_PRESETS: RunnerPresetInfo[] = [
     title: 'Ubuntu 22.04',
     badge: 'Ready-to-use Linux image with Node.js and Git.',
     description: 'Choose a server to see compatible environments.',
+    runtimeType: 'Container',
     icon: UbuntuLogo,
   },
   {
@@ -32,21 +38,24 @@ export const RUNNER_PRESETS: RunnerPresetInfo[] = [
     title: 'macOS',
     badge: 'Use the tools installed on your connected Mac.',
     description: 'Choose a server to see compatible environments.',
-    icon: Laptop,
+    runtimeType: 'Native',
+    icon: MacosLogo,
   },
   {
     id: 'linux',
     title: 'Linux',
     badge: "Run directly with your server's installed tools.",
     description: 'Choose a server to see compatible environments.',
-    icon: Terminal,
+    runtimeType: 'Native',
+    icon: LinuxLogo,
   },
   {
     id: 'custom',
     title: 'Custom image',
     badge: 'Bring a Docker runner image with Node.js and Git.',
     description: 'Choose a server to see compatible environments.',
-    icon: Server,
+    runtimeType: 'Container',
+    icon: CustomImageLogo,
   },
 ];
 
@@ -60,7 +69,10 @@ interface RunnerCatalogModalProps {
 export function RunnerCatalogModal({ open, selected, onSelect, onClose }: RunnerCatalogModalProps) {
   return (
     <Dialog open={open} onOpenChange={(val) => !val && onClose()}>
-      <DialogContent className="max-w-2xl p-5 sm:p-6" showCloseButton={true}>
+      <DialogContent
+        className="w-[calc(100vw-2rem)] p-5 sm:max-w-[720px] sm:p-6 outline-none"
+        showCloseButton={true}
+      >
         <div className="space-y-5">
           <DialogHeader className="text-left">
             <DialogTitle className="font-medium text-foreground text-xl">
@@ -84,31 +96,53 @@ export function RunnerCatalogModal({ open, selected, onSelect, onClose }: Runner
                     onSelect(preset.id);
                     onClose();
                   }}
-                  className={`relative flex flex-col items-start rounded-2xl border p-4 text-start transition-all hover:bg-muted/40 ${
+                  className={`relative flex h-full w-full rounded-xl border p-4 text-start transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring ${
                     isSelected
-                      ? 'border-foreground/80 bg-muted/20 shadow-xs'
-                      : 'border-border/60 bg-card'
+                      ? 'border-primary bg-primary/5 ring-1 ring-primary/20'
+                      : 'border-border/50 bg-card hover:border-primary/30 hover:bg-primary/[0.02]'
                   }`}
                 >
-                  <div className="flex w-full items-start justify-between gap-2">
-                    <div className="flex items-center gap-3">
-                      <span className="flex size-9 shrink-0 items-center justify-center rounded-xl bg-muted/60 text-foreground">
-                        <Icon className="size-4" />
-                      </span>
-                      <span className="font-medium text-foreground text-sm">{preset.title}</span>
-                    </div>
-                    <span
-                      className={`flex size-4 shrink-0 items-center justify-center rounded-full border-2 ${
-                        isSelected ? 'border-primary' : 'border-muted-foreground/30'
+                  <div className="flex w-full items-start gap-3">
+                    <div
+                      className={`shrink-0 rounded-lg p-2.5 ${
+                        isSelected ? 'bg-primary/10 text-primary' : 'bg-muted/50 text-muted-foreground'
                       }`}
                     >
-                      {isSelected && <span className="size-2 rounded-full bg-primary" />}
-                    </span>
+                      <Icon className="size-6" />
+                    </div>
+
+                    <div className="min-w-0 flex-1">
+                      <div className="flex flex-wrap items-center gap-2">
+                        <span
+                          className={`font-semibold text-sm ${
+                            isSelected ? 'text-foreground' : 'text-foreground/80'
+                          }`}
+                        >
+                          {preset.title}
+                        </span>
+                      </div>
+
+                      <div className="mt-1 space-y-3 text-muted-foreground text-xs leading-relaxed">
+                        <span className="block">{preset.badge}</span>
+                        <span
+                          className={`block font-medium text-xs ${
+                            isSelected ? 'text-foreground/80' : 'text-muted-foreground'
+                          }`}
+                        >
+                          {preset.runtimeType}
+                        </span>
+                      </div>
+                    </div>
+
+                    {isSelected && (
+                      <span
+                        aria-hidden="true"
+                        className="mt-0.5 flex size-5 shrink-0 items-center justify-center rounded-full bg-primary"
+                      >
+                        <span className="size-2 rounded-full bg-primary-foreground" />
+                      </span>
+                    )}
                   </div>
-                  <p className="mt-2 text-muted-foreground text-xs leading-relaxed">
-                    {preset.badge}
-                  </p>
-                  <p className="mt-2 text-[11px] text-muted-foreground/70">{preset.description}</p>
                 </button>
               );
             })}

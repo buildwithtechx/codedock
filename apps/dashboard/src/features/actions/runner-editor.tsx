@@ -188,7 +188,7 @@ export function RunnerEditor({
             </div>
 
             <div className="flex items-center gap-4 rounded-xl border border-border/40 bg-card p-4">
-              <span className="flex size-12 shrink-0 items-center justify-center rounded-xl bg-card">
+              <span className="flex size-12 shrink-0 items-center justify-center rounded-xl bg-muted/50 p-2.5 text-foreground">
                 <PresetIcon className="size-7" />
               </span>
               <div className="min-w-0">
