@@ -16,6 +16,7 @@ interface RunnerServerFieldProps {
 }
 
 export function RunnerServerField({
+  isCloud = false,
   initialServer,
   serverId,
   onServerIdChange,
@@ -27,13 +28,21 @@ export function RunnerServerField({
   const [addModalOpen, setAddModalOpen] = useState(false);
 
   const selectedServer =
-    servers.find((s) => s.id === serverId) ?? (initialServer ? { id: initialServer.id, name: initialServer.name } : undefined);
+    servers.find((s) => s.id === serverId) ??
+    (initialServer ? { id: initialServer.id, name: initialServer.name } : undefined);
+
+  const fieldLabel = isCloud ? 'Cloud space' : 'Server';
+  const placeholder = selectedServer
+    ? selectedServer.name
+    : isCloud
+      ? 'Cloud space'
+      : 'Select server';
+  const helperText = isCloud ? 'Uses the existing plan.' : 'Target execution host';
+  const addLabel = isCloud ? 'New Cloud space' : 'Connect server';
 
   return (
     <div className="space-y-2">
-      <label className="font-medium text-foreground text-sm">
-        Cloud space
-      </label>
+      <label className="font-medium text-foreground text-sm">{fieldLabel}</label>
 
       <div className="relative">
         <button
@@ -42,7 +51,7 @@ export function RunnerServerField({
           className="flex h-11 w-full items-center justify-between rounded-xl bg-muted/40 px-3.5 text-left text-sm transition-colors hover:bg-muted/60"
         >
           <span className={selectedServer ? 'text-foreground' : 'text-muted-foreground'}>
-            {selectedServer ? selectedServer.name : 'Cloud space'}
+            {placeholder}
           </span>
           <ChevronDown className="size-4 text-muted-foreground" />
         </button>
@@ -51,7 +60,9 @@ export function RunnerServerField({
           <div className="absolute z-20 mt-1 max-h-60 w-full overflow-auto rounded-xl border border-border/80 bg-card p-1 shadow-lg">
             {servers.length === 0 ? (
               <div className="p-3 text-center text-muted-foreground text-xs">
-                No Cloud spaces available. Click + New Cloud space below.
+                {isCloud
+                  ? 'No Cloud spaces available. Click + New Cloud space below.'
+                  : 'No servers connected. Click + Connect server below.'}
               </div>
             ) : (
               servers.map((s) => (
@@ -76,7 +87,7 @@ export function RunnerServerField({
       </div>
 
       <div className="flex items-center justify-between pt-0.5 text-xs">
-        <span className="text-muted-foreground">Uses the existing plan.</span>
+        <span className="text-muted-foreground">{helperText}</span>
         <Button
           type="button"
           variant="outline"
@@ -85,7 +96,7 @@ export function RunnerServerField({
           className="h-7 gap-1 rounded-full px-2.5 text-xs text-muted-foreground hover:text-foreground"
         >
           <Plus className="size-3" />
-          New Cloud space
+          {addLabel}
         </Button>
       </div>
 
@@ -108,7 +119,7 @@ export function RunnerServerField({
 
       <AddServerModal
         open={addModalOpen}
-        initialMode="managed"
+        initialMode={isCloud ? 'managed' : 'connected'}
         onClose={() => setAddModalOpen(false)}
         onCreated={(created) => {
           onServerIdChange(created.id, created.name);

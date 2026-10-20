@@ -38,6 +38,7 @@ interface JobServersSectionProps {
   serverIds: string[];
   onToggleServer: (id: string) => void;
   onOpenAddServer: () => void;
+  isCloud?: boolean;
 }
 
 export function JobServersSection({
@@ -45,23 +46,30 @@ export function JobServersSection({
   serverIds,
   onToggleServer,
   onOpenAddServer,
+  isCloud = false,
 }: JobServersSectionProps) {
   return (
     <Section title="Target servers" icon={<Server className="size-[18px]" />} tone={SECTION_TONES.servers}>
       <p className="text-muted-foreground text-sm">
-        Use an existing server, or add a dedicated server with its own subscription.
+        {isCloud
+          ? 'Use an existing server, or add a dedicated server with its own subscription.'
+          : 'Select the servers where this job should execute.'}
       </p>
       <div className="space-y-2">
         {servers.length === 0 ? (
-          <button
-            type="button"
-            onClick={() => onToggleServer('production')}
-            className="flex w-full items-center gap-2.5 rounded-xl border border-border/60 bg-muted/20 p-3 text-start transition-colors hover:bg-muted/40"
-          >
-            <Checkbox checked={serverIds.includes('production')} className="pointer-events-none" />
-            <Server className="size-4 text-muted-foreground" />
-            <span className="font-medium text-foreground text-sm">Production</span>
-          </button>
+          isCloud ? (
+            <button
+              type="button"
+              onClick={() => onToggleServer('production')}
+              className="flex w-full items-center gap-2.5 rounded-xl border border-border/60 bg-muted/20 p-3 text-start transition-colors hover:bg-muted/40"
+            >
+              <Checkbox checked={serverIds.includes('production')} className="pointer-events-none" />
+              <Server className="size-4 text-muted-foreground" />
+              <span className="font-medium text-foreground text-sm">Production</span>
+            </button>
+          ) : (
+            <p className="text-muted-foreground text-sm">No connected servers found.</p>
+          )
         ) : (
           servers.map((srv) => (
             <button
@@ -88,10 +96,12 @@ export function JobServersSection({
         onClick={onOpenAddServer}
         className="gap-1.5 rounded-lg"
       >
-        <Plus className="size-3.5" /> Add a dedicated server
+        <Plus className="size-3.5" /> {isCloud ? 'Add a dedicated server' : 'Add server'}
       </Button>
       <p className="text-muted-foreground text-xs leading-relaxed">
-        Jobs share the selected server's capacity and usage allowance. Its plan must be active to run.
+        {isCloud
+          ? "Jobs share the selected server's capacity and usage allowance. Its plan must be active to run."
+          : "Jobs share the selected server's capacity and usage allowance."}
       </p>
     </Section>
   );

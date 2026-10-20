@@ -8,6 +8,7 @@ import { useListByProject } from '#/hooks/use-apps';
 import { useCreateJob, useUpdateJob } from '#/hooks/use-jobs';
 import { useListAllProjects } from '#/hooks/use-projects';
 import { useListServers } from '#/hooks/use-servers';
+import { useGetPublicSettings } from '#/hooks/use-settings';
 import type { AppService, Job } from '#/interfaces/services';
 import { JobBasicsSection, JobScheduleSection } from './job-form-basics';
 import type { KV } from './job-form-sections';
@@ -31,6 +32,8 @@ export function JobForm({
   onSaved: (job: Job) => void;
 }) {
   const editing = Boolean(job);
+  const { data: publicRes } = useGetPublicSettings();
+  const isCloud = publicRes?.data?.cloudMode ?? false;
   const { data: workflows = [] } = useWorkflows();
   const { data: servers = [] } = useListServers();
   const { data: projects = [] } = useListAllProjects();
@@ -160,6 +163,7 @@ export function JobForm({
               serverIds={serverIds}
               onToggleServer={(id) => toggleItem(serverIds, id, setServerIds)}
               onOpenAddServer={() => setAddServerOpen(true)}
+              isCloud={isCloud}
             />
 
             <JobReliabilitySection
@@ -213,7 +217,7 @@ export function JobForm({
 
       <AddServerModal
         open={addServerOpen}
-        initialMode="managed"
+        initialMode={isCloud ? 'managed' : 'connected'}
         onClose={() => setAddServerOpen(false)}
         onCreated={(srv) => {
           setServerIds((prev) => (prev.includes(srv.id) ? prev : [...prev, srv.id]));

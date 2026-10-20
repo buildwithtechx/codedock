@@ -29,6 +29,7 @@ export function RunnerSummaryCard({
   onEnabledChange,
   isPending,
   canSubmit,
+  isCloud = false,
 }: RunnerSummaryCardProps) {
   return (
     <aside className="space-y-5 rounded-2xl bg-card p-5">
@@ -96,7 +97,9 @@ export function RunnerSummaryCard({
       </Button>
 
       <p className="text-muted-foreground text-xs leading-relaxed">
-        Jobs share this Cloud space's capacity. Only run trusted workflows.
+        {isCloud
+          ? "Jobs share this Cloud space's capacity. Only run trusted workflows."
+          : "Jobs share this server's capacity. Only run trusted workflows."}
       </p>
     </aside>
   );

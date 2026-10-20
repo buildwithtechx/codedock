@@ -59,7 +59,7 @@ export function JobTriggersSection({
   return (
     <Section
       title="Dependencies & triggers"
-      icon={<GitBranch className="size-[18px]" />}
+      icon={<GitBranch className="size-4.5" />}
       tone={SECTION_TONES.triggers}
     >
       {otherJobs.length > 0 && (
@@ -145,7 +145,7 @@ export function JobNotificationsSection({
   return (
     <Section
       title="Notifications"
-      icon={<Bell className="size-[18px]" />}
+      icon={<Bell className="size-4.5" />}
       tone={SECTION_TONES.notifications}
     >
       {channels.length === 0 ? (

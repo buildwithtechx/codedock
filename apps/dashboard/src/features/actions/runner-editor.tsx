@@ -6,6 +6,7 @@ import { Button } from '@codedock/ui/button';
 import { Input } from '@codedock/ui/input';
 import { useCreateRunner, useInspectDestination } from '#/hooks/use-actions';
 import { useListServers } from '#/hooks/use-servers';
+import { useGetPublicSettings } from '#/hooks/use-settings';
 import type { Server as ServerModel } from '#/interfaces/server';
 import { RunnerAdvancedFields } from './runner-advanced-fields';
 import { RUNNER_PRESETS, RunnerCatalogModal, type RunnerPreset } from './runner-catalog-modal';
@@ -38,6 +39,8 @@ export function RunnerEditor({
 }: RunnerEditorProps) {
   const navigate = useNavigate();
   const runnerNameId = useId();
+  const { data: publicRes } = useGetPublicSettings();
+  const isCloud = publicRes?.data?.cloudMode ?? false;
   const { data: serversData } = useListServers();
   const servers: ServerModel[] = serversData ?? [];
   const { mutateAsync: createRunner, isPending } = useCreateRunner();
@@ -133,7 +136,9 @@ export function RunnerEditor({
           </Button>
           <h1 className="font-medium text-2xl text-foreground tracking-tight">Add runner</h1>
           <p className="mt-1 text-muted-foreground text-sm">
-            Choose a Cloud space and a ready-to-use job environment.
+            {isCloud
+              ? 'Choose a Cloud space and a ready-to-use job environment.'
+              : 'Choose a server and a ready-to-use job environment.'}
           </p>
         </div>
         <Button
@@ -155,6 +160,7 @@ export function RunnerEditor({
           className="m-0 min-w-0 space-y-5 rounded-2xl border-0 bg-card p-5"
         >
           <RunnerServerField
+            isCloud={isCloud}
             initialServer={initialServer}
             serverId={serverId}
             onServerIdChange={(id, sName) => {
@@ -193,7 +199,9 @@ export function RunnerEditor({
               </div>
             </div>
             <p className="text-muted-foreground text-xs leading-relaxed">
-              Choose a Cloud space to see compatible environments.
+              {isCloud
+                ? 'Choose a Cloud space to see compatible environments.'
+                : 'Choose a server to see compatible environments.'}
             </p>
           </div>
 
@@ -238,6 +246,7 @@ export function RunnerEditor({
           onEnabledChange={setEnabled}
           isPending={isPending}
           canSubmit={Boolean(name.trim())}
+          isCloud={isCloud}
         />
 
         <RunnerCatalogModal

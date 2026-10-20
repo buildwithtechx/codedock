@@ -4,8 +4,9 @@ import { toast } from 'sonner';
 import { Button } from '@codedock/ui/button';
 import { Dialog, DialogContent } from '@codedock/ui/dialog';
 import { Input } from '@codedock/ui/input';
-import type { Server as ServerModel } from '#/interfaces/server';
 import { useCreateServer } from '#/hooks/use-servers';
+import { useGetPublicSettings } from '#/hooks/use-settings';
+import type { Server as ServerModel } from '#/interfaces/server';
 import { AddServerCloudPlans, type CloudPlan } from './add-server-cloud-plans';
 
 export interface AddServerModalProps {
@@ -19,14 +20,17 @@ export interface AddServerModalProps {
 export function AddServerModal({
   open,
   onClose,
-  initialMode = 'managed',
+  initialMode,
   onCreated,
   onSelectPlan,
 }: AddServerModalProps) {
-  const [mode, setMode] = useState<'managed' | 'connected'>(initialMode);
+  const { data: publicRes } = useGetPublicSettings();
+  const isCloud = publicRes?.data?.cloudMode ?? false;
+
+  const resolvedInitialMode = initialMode ?? (isCloud ? 'managed' : 'connected');
+  const [mode, setMode] = useState<'managed' | 'connected'>(resolvedInitialMode);
   const [tab, setTab] = useState<'monthly' | 'payg'>('monthly');
 
-  // Connected SSH form state
   const [serverName, setServerName] = useState('');
   const [ipAddress, setIpAddress] = useState('');
   const [sshPort, setSshPort] = useState(22);
@@ -62,46 +66,25 @@ export function AddServerModal({
   return (
     <Dialog open={open} onOpenChange={(val) => !val && onClose()}>
       <DialogContent
-        className={`overflow-hidden p-6 sm:p-7 ${mode === 'managed' ? 'max-w-5xl' : 'max-w-xl'}`}
+        className={`p-6 sm:p-7 max-h-[calc(100dvh-2rem)] overflow-y-auto ${
+          mode === 'managed'
+            ? 'sm:max-w-[1400px] w-[calc(100vw-2rem)]'
+            : 'sm:max-w-xl w-full'
+        }`}
         showCloseButton={false}
       >
         <div className="space-y-6">
-          <div className="flex items-center justify-between">
-            <div className="flex items-center gap-3">
-              <h2 className="font-semibold text-foreground text-xl tracking-tight">Add Server</h2>
-              <div className="flex items-center rounded-lg bg-muted/60 p-0.5 text-xs">
-                <button
-                  type="button"
-                  onClick={() => setMode('managed')}
-                  className={`rounded-md px-2.5 py-1 font-medium transition-colors ${
-                    mode === 'managed'
-                      ? 'bg-background text-foreground shadow-xs'
-                      : 'text-muted-foreground hover:text-foreground'
-                  }`}
-                >
-                  Cloud space
-                </button>
-                <button
-                  type="button"
-                  onClick={() => setMode('connected')}
-                  className={`rounded-md px-2.5 py-1 font-medium transition-colors ${
-                    mode === 'connected'
-                      ? 'bg-background text-foreground shadow-xs'
-                      : 'text-muted-foreground hover:text-foreground'
-                  }`}
-                >
-                  Self-hosted
-                </button>
-              </div>
-            </div>
+          <header className="flex items-center justify-between">
+            <h2 className="font-semibold text-foreground text-lg tracking-tight">Add Server</h2>
             <button
               type="button"
               onClick={onClose}
               className="rounded-lg p-1.5 text-muted-foreground hover:bg-muted hover:text-foreground"
+              aria-label="Close"
             >
               <X className="size-4" />
             </button>
-          </div>
+          </header>
 
           {mode === 'managed' ? (
             <>
@@ -131,7 +114,7 @@ export function AddServerModal({
                   </button>
                 </div>
                 <div className="flex items-center rounded-lg bg-muted/60 p-0.5 text-xs">
-                  <span className="rounded-md bg-background px-2.5 py-1 font-medium text-foreground shadow-xs">
+                  <span className="rounded-md bg-card px-2.5 py-1 font-medium text-foreground shadow-xs">
                     Plans
                   </span>
                   <span className="px-2.5 py-1 text-muted-foreground">Custom</span>
@@ -195,7 +178,7 @@ export function AddServerModal({
 }
 
 export function useAddServerModal({
-  initialMode = 'managed',
+  initialMode,
 }: {
   initialMode?: 'managed' | 'connected';
 } = {}) {
