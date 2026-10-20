@@ -81,19 +81,22 @@ export const apiClient = {
         endpoint.startsWith('/auth/signup') ||
         endpoint.startsWith('/auth/passkeys/authenticate');
 
-      if (!isAuthEndpoint && useAuthStore.getState().token) {
-        const newToken = await refreshAuthSession(baseUrl);
-        if (newToken) {
-          headers.set('Authorization', `Bearer ${newToken}`);
-          const retryResponse = await fetch(url, {
-            ...options,
-            headers,
-            credentials: 'include',
-          });
-          if (retryResponse.ok) {
-            if (retryResponse.status === 204) return {} as T;
-            const isJson = retryResponse.headers.get('content-type')?.includes('application/json');
-            return (isJson ? await retryResponse.json() : await retryResponse.text()) as T;
+      if (!isAuthEndpoint) {
+        const { token, refreshToken } = useAuthStore.getState();
+        if (token || refreshToken) {
+          const newToken = await refreshAuthSession(baseUrl);
+          if (newToken) {
+            headers.set('Authorization', `Bearer ${newToken}`);
+            const retryResponse = await fetch(url, {
+              ...options,
+              headers,
+              credentials: 'include',
+            });
+            if (retryResponse.ok) {
+              if (retryResponse.status === 204) return {} as T;
+              const isJson = retryResponse.headers.get('content-type')?.includes('application/json');
+              return (isJson ? await retryResponse.json() : await retryResponse.text()) as T;
+            }
           }
         }
         handleAuthFailure();
