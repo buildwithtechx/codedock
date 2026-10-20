@@ -1,5 +1,5 @@
 @import 'tailwindcss';
-@source '@codedock/ui';
+@source '../../../packages/ui/src';
 
 @font-face {
   font-family: 'Manrope';

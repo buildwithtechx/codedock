@@ -22,60 +22,11 @@ type ActionsHandler struct {
 }
 
 func NewActionsHandler() *ActionsHandler {
-	h := &ActionsHandler{
+	return &ActionsHandler{
 		workflows: make(map[string]*models.ActionWorkflow),
 		runs:      make(map[string]*models.ActionRun),
 		runners:   make(map[string]*models.ActionRunner),
 	}
-
-	// Seed default runner
-	defaultRunner := &models.ActionRunner{
-		ID:            "runner-ubuntu-default",
-		Name:          "Ubuntu 22.04 Default Runner",
-		Mode:          "container",
-		Image:         "catthehacker/ubuntu:act-22.04",
-		Status:        "online",
-		Labels:        []string{"ubuntu-latest", "docker", "x86_64"},
-		Enabled:       true,
-		LastHeartbeat: time.Now().UTC().Format(time.RFC3339),
-		CreatedAt:     time.Now().UTC().Format(time.RFC3339),
-		UpdatedAt:     time.Now().UTC().Format(time.RFC3339),
-	}
-	h.runners[defaultRunner.ID] = defaultRunner
-
-	// Seed default workflow
-	defaultWorkflow := &models.ActionWorkflow{
-		ID:          "wf-build-test",
-		Name:        "Build and Verify",
-		Description: "Run automated tests and container image build",
-		Trigger:     "push",
-		YAML:        "name: Build and Verify\non: [push]\njobs:\n  build:\n    runs-on: ubuntu-latest\n    steps:\n      - uses: actions/checkout@v4\n      - run: npm test\n",
-		Enabled:     true,
-		CreatedAt:   time.Now().UTC().Format(time.RFC3339),
-		UpdatedAt:   time.Now().UTC().Format(time.RFC3339),
-	}
-	h.workflows[defaultWorkflow.ID] = defaultWorkflow
-
-	// Seed default run
-	h.runCount = 1
-	nowIso := time.Now().UTC().Format(time.RFC3339)
-	defaultRun := &models.ActionRun{
-		ID: "run-1", WorkflowID: defaultWorkflow.ID, Name: defaultWorkflow.Name,
-		Number: 1, Status: "ready", TriggeredBy: "admin", RunnerID: defaultRunner.ID,
-		Logs: "[Setup] Initializing runner environment\n[Test] Tests passed\n[Complete] Finished in 14s",
-		Jobs: []models.ActionJob{{
-			ID: "job-build", Name: "build", Status: "ready", RunnerID: defaultRunner.ID, DurationS: 14,
-			Steps: []models.ActionStep{
-				{ID: "step-1", Name: "Set up runner", Status: "ready", DurationS: 2},
-				{ID: "step-2", Name: "Checkout code", Status: "ready", DurationS: 3},
-				{ID: "step-3", Name: "Run tests", Status: "ready", DurationS: 9},
-			},
-		}},
-		StartedAt: nowIso, FinishedAt: nowIso, DurationS: 14, CreatedAt: nowIso, UpdatedAt: nowIso,
-	}
-	h.runs[defaultRun.ID] = defaultRun
-
-	return h
 }
 
 func (h *ActionsHandler) ListWorkflows(c echo.Context) error {
@@ -122,6 +73,36 @@ func (h *ActionsHandler) CreateWorkflow(c echo.Context) error {
 
 	h.workflows[wf.ID] = wf
 	return utils.Success(c, "Workflow created", wf)
+}
+
+func (h *ActionsHandler) DispatchWorkflow(c echo.Context) error {
+	id := c.Param("id")
+	h.mu.Lock()
+	defer h.mu.Unlock()
+
+	wf, exists := h.workflows[id]
+	if !exists {
+		return echo.NewHTTPError(http.StatusNotFound, "workflow not found")
+	}
+
+	h.runCount++
+	now := time.Now().UTC().Format(time.RFC3339)
+	newRun := &models.ActionRun{
+		ID:          "run-" + hex.EncodeToString(generateActionBytes(6)),
+		WorkflowID:  wf.ID,
+		Name:        wf.Name,
+		Number:      h.runCount,
+		Status:      "running",
+		TriggeredBy: "manual",
+		Logs:        "[Dispatch] Workflow triggered manually\n[Worker] Picked up by runner\n",
+		StartedAt:   now,
+		DurationS:   0,
+		CreatedAt:   now,
+		UpdatedAt:   now,
+	}
+
+	h.runs[newRun.ID] = newRun
+	return utils.Success(c, "Workflow dispatched", newRun)
 }
 
 func (h *ActionsHandler) ListRuns(c echo.Context) error {

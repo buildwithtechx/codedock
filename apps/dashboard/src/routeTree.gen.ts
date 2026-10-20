@@ -65,7 +65,6 @@ import { Route as DashboardServicesServiceIdRouteImport } from './routes/_dashbo
 import { Route as DashboardActionsRunnersNewRouteImport } from './routes/_dashboard/actions/runners.new'
 import { Route as DashboardAppsNewIndexRouteImport } from './routes/_dashboard/apps/new/index'
 import { Route as DashboardAppsNewAppIdRouteImport } from './routes/_dashboard/apps/new/$appId'
-import { Route as DashboardAppsNewMailRouteImport } from './routes/_dashboard/apps/new/mail'
 import { Route as DashboardJobsJobIdIndexRouteImport } from './routes/_dashboard/jobs/$jobId/index'
 import { Route as DashboardJobsJobIdEditRouteImport } from './routes/_dashboard/jobs/$jobId/edit'
 import { Route as DashboardProjectsProjectIdIndexRouteImport } from './routes/_dashboard/projects/$projectId.index'
@@ -378,11 +377,6 @@ const DashboardAppsNewAppIdRoute = DashboardAppsNewAppIdRouteImport.update({
   path: '/$appId',
   getParentRoute: () => DashboardAppsNewRoute,
 } as any)
-const DashboardAppsNewMailRoute = DashboardAppsNewMailRouteImport.update({
-  id: '/mail',
-  path: '/mail',
-  getParentRoute: () => DashboardAppsNewRoute,
-} as any)
 const DashboardJobsJobIdIndexRoute = DashboardJobsJobIdIndexRouteImport.update({
   id: '/',
   path: '/',
@@ -580,7 +574,6 @@ export interface FileRoutesByFullPath {
   '/servers/': typeof DashboardServersIndexRoute
   '/actions/runners/new': typeof DashboardActionsRunnersNewRoute
   '/apps/new/$appId': typeof DashboardAppsNewAppIdRoute
-  '/apps/new/mail': typeof DashboardAppsNewMailRoute
   '/jobs/$jobId/edit': typeof DashboardJobsJobIdEditRoute
   '/projects/$projectId/canvas': typeof DashboardProjectsProjectIdCanvasRoute
   '/projects/$projectId/compose': typeof DashboardProjectsProjectIdComposeRoute
@@ -648,7 +641,6 @@ export interface FileRoutesByTo {
   '/servers': typeof DashboardServersIndexRoute
   '/actions/runners/new': typeof DashboardActionsRunnersNewRoute
   '/apps/new/$appId': typeof DashboardAppsNewAppIdRoute
-  '/apps/new/mail': typeof DashboardAppsNewMailRoute
   '/jobs/$jobId/edit': typeof DashboardJobsJobIdEditRoute
   '/projects/$projectId/canvas': typeof DashboardProjectsProjectIdCanvasRoute
   '/projects/$projectId/compose': typeof DashboardProjectsProjectIdComposeRoute
@@ -732,7 +724,6 @@ export interface FileRoutesById {
   '/_dashboard/servers/': typeof DashboardServersIndexRoute
   '/_dashboard/actions/runners/new': typeof DashboardActionsRunnersNewRoute
   '/_dashboard/apps/new/$appId': typeof DashboardAppsNewAppIdRoute
-  '/_dashboard/apps/new/mail': typeof DashboardAppsNewMailRoute
   '/_dashboard/jobs/$jobId/edit': typeof DashboardJobsJobIdEditRoute
   '/_dashboard/projects/$projectId/canvas': typeof DashboardProjectsProjectIdCanvasRoute
   '/_dashboard/projects/$projectId/compose': typeof DashboardProjectsProjectIdComposeRoute
@@ -815,7 +806,6 @@ export interface FileRouteTypes {
     | '/servers/'
     | '/actions/runners/new'
     | '/apps/new/$appId'
-    | '/apps/new/mail'
     | '/jobs/$jobId/edit'
     | '/projects/$projectId/canvas'
     | '/projects/$projectId/compose'
@@ -883,7 +873,6 @@ export interface FileRouteTypes {
     | '/servers'
     | '/actions/runners/new'
     | '/apps/new/$appId'
-    | '/apps/new/mail'
     | '/jobs/$jobId/edit'
     | '/projects/$projectId/canvas'
     | '/projects/$projectId/compose'
@@ -966,7 +955,6 @@ export interface FileRouteTypes {
     | '/_dashboard/servers/'
     | '/_dashboard/actions/runners/new'
     | '/_dashboard/apps/new/$appId'
-    | '/_dashboard/apps/new/mail'
     | '/_dashboard/jobs/$jobId/edit'
     | '/_dashboard/projects/$projectId/canvas'
     | '/_dashboard/projects/$projectId/compose'
@@ -1394,13 +1382,6 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof DashboardAppsNewAppIdRouteImport
       parentRoute: typeof DashboardAppsNewRoute
     }
-    '/_dashboard/apps/new/mail': {
-      id: '/_dashboard/apps/new/mail'
-      path: '/mail'
-      fullPath: '/apps/new/mail'
-      preLoaderRoute: typeof DashboardAppsNewMailRouteImport
-      parentRoute: typeof DashboardAppsNewRoute
-    }
     '/_dashboard/jobs/$jobId/': {
       id: '/_dashboard/jobs/$jobId/'
       path: '/'
@@ -1609,13 +1590,11 @@ const DashboardActionsRouteWithChildren =
 
 interface DashboardAppsNewRouteChildren {
   DashboardAppsNewAppIdRoute: typeof DashboardAppsNewAppIdRoute
-  DashboardAppsNewMailRoute: typeof DashboardAppsNewMailRoute
   DashboardAppsNewIndexRoute: typeof DashboardAppsNewIndexRoute
 }
 
 const DashboardAppsNewRouteChildren: DashboardAppsNewRouteChildren = {
   DashboardAppsNewAppIdRoute: DashboardAppsNewAppIdRoute,
-  DashboardAppsNewMailRoute: DashboardAppsNewMailRoute,
   DashboardAppsNewIndexRoute: DashboardAppsNewIndexRoute,
 }
 

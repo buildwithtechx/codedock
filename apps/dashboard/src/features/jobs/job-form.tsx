@@ -1,251 +1,225 @@
-import {
-  ArrowRight,
-  BookOpen,
-  CalendarClock,
-  Check,
-  ListCheck,
-  Loader2,
-  Server,
-  Terminal,
-} from 'lucide-react';
-import { useState } from 'react';
+import { Check, Loader2 } from 'lucide-react';
+import { useMemo, useState } from 'react';
 import { toast } from 'sonner';
 import { Button } from '@codedock/ui/button';
-import { Input } from '@codedock/ui/input';
-import { Label } from '@codedock/ui/label';
-import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@codedock/ui/select';
-import { Textarea } from '@codedock/ui/textarea';
+import { AddServerModal } from '#/features/servers/add-server-modal';
+import { useWorkflows } from '#/hooks/use-actions';
 import { useListByProject } from '#/hooks/use-apps';
 import { useCreateJob, useUpdateJob } from '#/hooks/use-jobs';
 import { useListAllProjects } from '#/hooks/use-projects';
+import { useListServers } from '#/hooks/use-servers';
 import type { AppService, Job } from '#/interfaces/services';
-import { SCHEDULE_PRESETS } from './job-format';
-import { Section, SummaryRow } from './job-form-sections';
+import { JobBasicsSection, JobScheduleSection } from './job-form-basics';
+import type { KV } from './job-form-sections';
+import {
+  JobEnvironmentSection,
+  JobReliabilitySection,
+  JobServersSection,
+} from './job-form-servers';
+import { JobSummaryRail } from './job-form-summary';
+import { JobNotificationsSection, JobTriggersSection } from './job-form-triggers';
 
 export function JobForm({
   job,
+  initialWorkflowId,
   onCancel,
   onSaved,
 }: {
   job?: Job;
+  initialWorkflowId?: string;
   onCancel: () => void;
   onSaved: (job: Job) => void;
 }) {
-  const editing = !!job;
-  const { data: projects = [], isLoading: projectsLoading } = useListAllProjects();
-  const [projectId, setProjectId] = useState(job?.projectId ?? '');
-  const [serviceId, setServiceId] = useState(job?.serviceId ?? '');
-  const [name, setName] = useState(job?.name ?? '');
-  const [schedule, setSchedule] = useState(job?.schedule ?? '0 * * * *');
+  const editing = Boolean(job);
+  const { data: workflows = [] } = useWorkflows();
+  const { data: servers = [] } = useListServers();
+  const { data: projects = [] } = useListAllProjects();
+
+  const [mode, setMode] = useState<'command' | 'workflow'>(
+    initialWorkflowId ? 'workflow' : 'command'
+  );
+  const [label, setLabel] = useState(job?.name ?? '');
   const [command, setCommand] = useState(job?.command ?? '');
+  const [workflowId, setWorkflowId] = useState(initialWorkflowId ?? '');
+  const [scheduleType, setScheduleType] = useState<'recurring' | 'once' | 'manual'>('recurring');
+  const [cron, setCron] = useState(job?.schedule ?? '0 3 * * *');
+  const [runAt, setRunAt] = useState('');
+  const [serverIds, setServerIds] = useState<string[]>(
+    servers.length > 0 ? [servers[0].id] : []
+  );
+  const [envRows, setEnvRows] = useState<KV[]>([]);
+  const [secretRows, setSecretRows] = useState<KV[]>([]);
+  const [timeoutSec, setTimeoutSec] = useState('300');
+  const [maxAttempts, setMaxAttempts] = useState('1');
+  const [backoffSec, setBackoffSec] = useState('0');
+  const [triggerIds, setTriggerIds] = useState<string[]>([]);
+  const [dependsOn, setDependsOn] = useState<string[]>([]);
+  const [notifyChannels, setNotifyChannels] = useState<string[]>([]);
+  const [notifyStates, setNotifyStates] = useState<string[]>(['failed']);
+  const [addServerOpen, setAddServerOpen] = useState(false);
+
+  const [projectId] = useState(job?.projectId ?? (projects[0]?.id || ''));
+  const servicesQuery = useListByProject(projectId, undefined, Boolean(projectId));
+  const services = (servicesQuery.data?.data as AppService[] | undefined) ?? [];
+  const [serviceId] = useState(job?.serviceId ?? (services[0]?.id || ''));
 
   const createJobMutation = useCreateJob();
   const updateJobMutation = useUpdateJob();
-  const servicesQuery = useListByProject(projectId, undefined, Boolean(projectId));
-  const services = (servicesQuery.data?.data as AppService[] | undefined) ?? [];
-  const servicesLoading = servicesQuery.isLoading;
-
-  const valid =
-    serviceId !== '' && name.trim() !== '' && schedule.trim() !== '' && command.trim() !== '';
   const saving = createJobMutation.isPending || updateJobMutation.isPending;
+
+  const toggleItem = (list: string[], item: string, setter: (val: string[]) => void) => {
+    setter(list.includes(item) ? list.filter((x) => x !== item) : [...list, item]);
+  };
+
+  const selectedWorkflow = workflows.find((w) => w.id === workflowId);
+  const canSave = useMemo(() => {
+    if (!label.trim() || saving) return false;
+    if (mode === 'workflow' && !workflowId) return false;
+    if (mode === 'command' && !command.trim()) return false;
+    if (scheduleType === 'recurring' && !cron.trim()) return false;
+    if (scheduleType === 'once' && !runAt) return false;
+    return true;
+  }, [label, saving, mode, workflowId, command, scheduleType, cron, runAt]);
 
   const handleSubmit = async (event: React.FormEvent) => {
     event.preventDefault();
-    if (!valid || saving) return;
+    if (!canSave) return;
+
     try {
+      const resolvedServiceId = serviceId || (services[0]?.id ?? 'default-service');
+      const resolvedSchedule =
+        scheduleType === 'recurring' ? cron.trim() : scheduleType === 'once' ? `@once ${runAt}` : '@manual';
+
       if (editing && job) {
-        const response = await updateJobMutation.mutateAsync({
+        const res = await updateJobMutation.mutateAsync({
           id: job.id,
           payload: {
-            name: name.trim(),
-            schedule: schedule.trim(),
-            command: command.trim(),
+            name: label.trim(),
+            schedule: resolvedSchedule,
+            command: mode === 'workflow' ? `workflow:${workflowId}` : command.trim(),
           },
         });
-        toast.success(`Job ${name.trim()} saved`);
-        onSaved(response.data);
+        toast.success(`Job ${label.trim()} saved`);
+        onSaved(res.data);
       } else {
-        const response = await createJobMutation.mutateAsync({
-          serviceId,
-          name: name.trim(),
-          schedule: schedule.trim(),
-          command: command.trim(),
+        const res = await createJobMutation.mutateAsync({
+          serviceId: resolvedServiceId,
+          name: label.trim(),
+          schedule: resolvedSchedule,
+          command: mode === 'workflow' ? `workflow:${workflowId}` : command.trim(),
         });
-        toast.success(`Job ${name.trim()} created`);
-        onSaved(response.data);
+        toast.success(`Job ${label.trim()} created`);
+        onSaved(res.data);
       }
     } catch {
       toast.error(editing ? 'Failed to save job' : 'Failed to create job');
     }
   };
 
-  const selectedProject = projects.find((p: { id: string; name: string }) => p.id === projectId);
-  const selectedService = services.find((s) => s.id === serviceId);
+  const scheduleRecap =
+    scheduleType === 'recurring' ? cron : scheduleType === 'once' ? runAt || '—' : 'Manual';
+  const retryRecap =
+    parseInt(maxAttempts, 10) > 1 ? `${maxAttempts}× · ${backoffSec}s` : 'None';
 
   return (
-    <form onSubmit={handleSubmit}>
-      <div className="grid grid-cols-1 items-start gap-6 lg:grid-cols-[minmax(0,1fr)_340px]">
-        <div className="space-y-6">
-          <Section title="Basics" icon={<Terminal className="size-4" />}>
-            <div className="space-y-1.5">
-              <Label htmlFor="job-name">Name</Label>
-              <Input
-                id="job-name"
-                placeholder="nightly-cleanup"
-                value={name}
-                onChange={(event) => setName(event.target.value)}
-              />
-            </div>
-            <div className="space-y-1.5">
-              <Label htmlFor="job-command">Command</Label>
-              <Textarea
-                id="job-command"
-                placeholder="./scripts/cleanup.sh --prune"
-                value={command}
-                onChange={(event) => setCommand(event.target.value)}
-                rows={3}
-                spellCheck={false}
-                className="resize-y font-mono text-sm"
-              />
-              <p className="text-muted-foreground/60 text-xs">
-                Runs inside the target service container on every tick of the schedule.
-              </p>
-            </div>
-          </Section>
+    <form onSubmit={handleSubmit} className="grid grid-cols-1 items-start gap-6 pb-16 lg:grid-cols-[minmax(0,1fr)_340px]">
+      <div className="min-w-0 space-y-5">
+        <JobBasicsSection
+          label={label}
+          onLabelChange={setLabel}
+          mode={mode}
+          onModeChange={setMode}
+          command={command}
+          onCommandChange={setCommand}
+          workflowId={workflowId}
+          onWorkflowIdChange={setWorkflowId}
+          workflows={workflows}
+          editing={editing}
+        />
 
-          <Section title="Schedule" icon={<CalendarClock className="size-4" />}>
-            <div className="space-y-1.5">
-              <Label htmlFor="job-schedule">Cron expression</Label>
-              <Input
-                id="job-schedule"
-                placeholder="0 * * * *"
-                value={schedule}
-                spellCheck={false}
-                className="font-mono"
-                onChange={(event) => setSchedule(event.target.value)}
-              />
-              <div className="flex flex-wrap gap-2 pt-1">
-                {SCHEDULE_PRESETS.map((preset) => (
-                  <Button
-                    key={preset.value}
-                    type="button"
-                    variant={schedule === preset.value ? 'secondary' : 'outline'}
-                    size="sm"
-                    onClick={() => setSchedule(preset.value)}
-                  >
-                    {preset.label}
-                  </Button>
-                ))}
-              </div>
-            </div>
-          </Section>
+        <JobScheduleSection
+          scheduleType={scheduleType}
+          onScheduleTypeChange={setScheduleType}
+          cron={cron}
+          onCronChange={setCron}
+          runAt={runAt}
+          onRunAtChange={setRunAt}
+        />
 
-          <Section title="Target service" icon={<Server className="size-4" />}>
-            <div className="grid gap-5 sm:grid-cols-2">
-              <div className="space-y-1.5">
-                <Label>Project</Label>
-                <Select value={projectId} onValueChange={setProjectId} disabled={projectsLoading}>
-                  <SelectTrigger>
-                    <SelectValue placeholder="Select a project" />
-                  </SelectTrigger>
-                  <SelectContent>
-                    {projects.map((project: { id: string; name: string }) => (
-                      <SelectItem key={project.id} value={project.id}>
-                        {project.name}
-                      </SelectItem>
-                    ))}
-                  </SelectContent>
-                </Select>
-              </div>
-              <div className="space-y-1.5">
-                <Label>Service</Label>
-                <Select
-                  value={serviceId}
-                  onValueChange={setServiceId}
-                  disabled={!projectId || editing}
-                >
-                  <SelectTrigger>
-                    <SelectValue
-                      placeholder={
-                        servicesLoading
-                          ? 'Loading services…'
-                          : editing
-                            ? 'Service cannot be changed'
-                            : 'Select a service'
-                      }
-                    />
-                  </SelectTrigger>
-                  <SelectContent>
-                    {services.map((service) => (
-                      <SelectItem key={service.id} value={service.id}>
-                        {service.name}
-                      </SelectItem>
-                    ))}
-                  </SelectContent>
-                </Select>
-              </div>
-            </div>
-            {editing && (
-              <p className="text-muted-foreground/60 text-xs">
-                A job stays attached to its service; create a new job to run elsewhere.
-              </p>
-            )}
-          </Section>
+        {mode === 'command' && (
+          <>
+            <JobEnvironmentSection
+              envRows={envRows}
+              setEnvRows={setEnvRows}
+              secretRows={secretRows}
+              setSecretRows={setSecretRows}
+            />
 
-          <div className="flex items-center gap-3">
-            <Button type="submit" disabled={!valid || saving} className="gap-2">
-              {saving ? <Loader2 className="size-4 animate-spin" /> : <Check className="size-4" />}
-              {saving
-                ? editing
-                  ? 'Saving…'
-                  : 'Creating…'
-                : editing
-                  ? 'Save changes'
-                  : 'Create job'}
-            </Button>
-            <Button type="button" variant="outline" onClick={onCancel}>
-              Cancel
-            </Button>
-          </div>
-        </div>
+            <JobServersSection
+              servers={servers}
+              serverIds={serverIds}
+              onToggleServer={(id) => toggleItem(serverIds, id, setServerIds)}
+              onOpenAddServer={() => setAddServerOpen(true)}
+            />
 
-        <div className="space-y-4 lg:sticky lg:top-6 lg:self-start">
-          <div className="rounded-2xl border border-border/60 bg-card p-5">
-            <div className="mb-4 flex items-center gap-2">
-              <ListCheck className="size-4 text-muted-foreground/70" />
-              <h3 className="font-medium text-[14px] text-foreground">Job Summary</h3>
-            </div>
-            <div className="space-y-2.5">
-              <SummaryRow
-                label="Command"
-                value={name.trim() || command.trim() || 'None'}
-                mono={!name.trim() && Boolean(command.trim())}
-              />
-              <SummaryRow label="Schedule" value={schedule || 'None'} mono />
-              <SummaryRow label="Target" value={selectedService?.name || 'None'} />
-              <SummaryRow label="Project" value={selectedProject?.name || 'None'} />
-            </div>
-          </div>
+            <JobReliabilitySection
+              timeoutSec={timeoutSec}
+              onTimeoutChange={setTimeoutSec}
+              maxAttempts={maxAttempts}
+              onMaxAttemptsChange={setMaxAttempts}
+              backoffSec={backoffSec}
+              onBackoffChange={setBackoffSec}
+            />
+          </>
+        )}
 
-          <a
-            href="https://codedock.io/docs/jobs"
-            target="_blank"
-            rel="noreferrer"
-            className="flex items-center gap-3 rounded-2xl border border-border/60 bg-card p-4 transition-colors hover:border-border"
-          >
-            <div className="flex size-9 shrink-0 items-center justify-center rounded-xl bg-muted">
-              <BookOpen className="size-[18px] text-muted-foreground" />
-            </div>
-            <div className="min-w-0 flex-1">
-              <p className="font-medium text-foreground text-sm">Cron job documentation</p>
-              <p className="truncate text-muted-foreground/70 text-xs">
-                Learn about cron expressions, timeouts, and execution logs
-              </p>
-            </div>
-            <ArrowRight className="size-4 shrink-0 text-muted-foreground/40" />
-          </a>
+        <JobTriggersSection
+          triggerIds={triggerIds}
+          onToggleTrigger={(id) => toggleItem(triggerIds, id, setTriggerIds)}
+          dependsOn={dependsOn}
+          onToggleDependsOn={(key) => toggleItem(dependsOn, key, setDependsOn)}
+        />
+
+        <JobNotificationsSection
+          notifyChannels={notifyChannels}
+          onToggleChannel={(id) => toggleItem(notifyChannels, id, setNotifyChannels)}
+          notifyStates={notifyStates}
+          onToggleState={(s) => toggleItem(notifyStates, s, setNotifyStates)}
+        />
+
+        <div className="flex items-center justify-end gap-2 pt-2">
+          <Button type="button" variant="ghost" onClick={onCancel} className="rounded-xl">
+            Cancel
+          </Button>
+          <Button type="submit" disabled={!canSave} className="gap-2 rounded-xl px-6">
+            {saving ? <Loader2 className="size-4 animate-spin" /> : <Check className="size-4" />}
+            {saving ? 'Saving…' : editing ? 'Save changes' : 'Create job'}
+          </Button>
         </div>
       </div>
+
+      <JobSummaryRail
+        mode={mode}
+        workflowName={selectedWorkflow?.name}
+        label={label}
+        command={command}
+        scheduleRecap={scheduleRecap}
+        isRecurring={scheduleType === 'recurring'}
+        targetsCount={serverIds.length}
+        retryRecap={retryRecap}
+        timeoutSec={timeoutSec}
+        notifyChannelsCount={notifyChannels.length}
+      />
+
+      <AddServerModal
+        open={addServerOpen}
+        initialMode="managed"
+        onClose={() => setAddServerOpen(false)}
+        onCreated={(srv) => {
+          setServerIds((prev) => (prev.includes(srv.id) ? prev : [...prev, srv.id]));
+          setAddServerOpen(false);
+        }}
+      />
     </form>
   );
 }

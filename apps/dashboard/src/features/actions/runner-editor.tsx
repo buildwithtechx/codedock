@@ -1,5 +1,5 @@
 import { useNavigate } from '@tanstack/react-router';
-import { ArrowLeft, Grid, Server, Sparkles } from 'lucide-react';
+import { ArrowLeft, Grid } from 'lucide-react';
 import { useId, useState } from 'react';
 import { toast } from 'sonner';
 import { Button } from '@codedock/ui/button';
@@ -9,7 +9,6 @@ import { useListServers } from '#/hooks/use-servers';
 import type { Server as ServerModel } from '#/interfaces/server';
 import { RunnerAdvancedFields } from './runner-advanced-fields';
 import { RUNNER_PRESETS, RunnerCatalogModal, type RunnerPreset } from './runner-catalog-modal';
-import { type CloudPlan, RunnerCloudPlanModal } from './runner-cloud-plan-modal';
 import { RunnerServerField } from './runner-server-field';
 import { RunnerSummaryCard } from './runner-summary-card';
 
@@ -36,7 +35,6 @@ export function RunnerEditor({
   onBack,
   onClose,
   onSuccess,
-  defaultCloud = false,
 }: RunnerEditorProps) {
   const navigate = useNavigate();
   const runnerNameId = useId();
@@ -44,19 +42,12 @@ export function RunnerEditor({
   const servers: ServerModel[] = serversData ?? [];
   const { mutateAsync: createRunner, isPending } = useCreateRunner();
 
-  const [isCloud, setIsCloud] = useState(defaultCloud);
-  const [selectedPlan, setSelectedPlan] = useState<CloudPlan | null>(null);
-  const [serverId, setServerId] = useState<string>(
-    initialServer?.id ?? (servers.length > 0 ? servers[0].id : 'cloud-space-default')
-  );
-
+  const [serverId, setServerId] = useState<string>(initialServer?.id ?? '');
   const [preset, setPreset] = useState<RunnerPreset>('ubuntu');
   const [catalogOpen, setCatalogOpen] = useState(false);
-  const [planModalOpen, setPlanModalOpen] = useState(false);
   const [name, setName] = useState(initialServer?.name ?? '');
   const [enabled, setEnabled] = useState(true);
 
-  // Advanced settings state
   const [image, setImage] = useState('catthehacker/ubuntu:act-22.04');
   const [labels, setLabels] = useState('self-hosted, ubuntu, x64');
   const [cpu, setCpu] = useState(1);
@@ -68,7 +59,7 @@ export function RunnerEditor({
     data: capabilities,
     refetch: recheckCapabilities,
     isFetching: probing,
-  } = useInspectDestination(isCloud ? undefined : serverId);
+  } = useInspectDestination(serverId || undefined);
 
   const handleSelectPreset = (nextPreset: RunnerPreset) => {
     setPreset(nextPreset);
@@ -82,15 +73,17 @@ export function RunnerEditor({
   const presetInfo = RUNNER_PRESETS.find((p) => p.id === preset) ?? RUNNER_PRESETS[0];
   const PresetIcon = presetInfo.icon;
 
-  const matchingLabels = [
-    'self-hosted',
-    capabilities?.os ?? 'linux',
-    capabilities?.architecture ?? 'x64',
-    ...labels
-      .split(',')
-      .map((l) => l.trim())
-      .filter((l) => l && l !== 'self-hosted' && l !== 'linux' && l !== 'x64'),
-  ];
+  const matchingLabels = capabilities
+    ? [
+        'self-hosted',
+        capabilities?.os ?? 'linux',
+        capabilities?.architecture ?? 'x64',
+        ...labels
+          .split(',')
+          .map((l) => l.trim())
+          .filter((l) => l && l !== 'self-hosted' && l !== 'linux' && l !== 'x64'),
+      ]
+    : [];
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -101,9 +94,8 @@ export function RunnerEditor({
 
     try {
       const created = await createRunner({
-        serverId: isCloud ? undefined : serverId,
-        cloudPoolId: isCloud ? (selectedPlan?.id ?? 'starter') : undefined,
-        kind: isCloud ? 'cloud' : 'server',
+        serverId: serverId || undefined,
+        kind: 'cloud',
         name: name.trim(),
         enabled,
         config: {
@@ -141,35 +133,17 @@ export function RunnerEditor({
           </Button>
           <h1 className="font-medium text-2xl text-foreground tracking-tight">Add runner</h1>
           <p className="mt-1 text-muted-foreground text-sm">
-            {isCloud
-              ? 'Choose a Cloud space and a ready-to-use job environment.'
-              : 'Choose a server and a ready-to-use job environment.'}
+            Choose a Cloud space and a ready-to-use job environment.
           </p>
         </div>
-        <div className="flex items-center gap-2">
-          <Button
-            type="button"
-            variant="outline"
-            size="sm"
-            onClick={() => setIsCloud(!isCloud)}
-            className="gap-1.5 rounded-xl text-xs"
-          >
-            {isCloud ? (
-              <Server className="size-3.5" />
-            ) : (
-              <Sparkles className="size-3.5 text-blue-500" />
-            )}
-            {isCloud ? 'Switch to Server' : 'Switch to Cloud'}
-          </Button>
-          <Button
-            type="button"
-            variant="ghost"
-            onClick={() => (onClose ? onClose() : navigate({ to: '/actions' as never }))}
-            className="rounded-xl"
-          >
-            Cancel
-          </Button>
-        </div>
+        <Button
+          type="button"
+          variant="ghost"
+          onClick={() => (onClose ? onClose() : navigate({ to: '/actions' as never }))}
+          className="rounded-xl text-muted-foreground hover:text-foreground"
+        >
+          Cancel
+        </Button>
       </header>
 
       <form
@@ -181,8 +155,6 @@ export function RunnerEditor({
           className="m-0 min-w-0 space-y-5 rounded-2xl border-0 bg-card p-5"
         >
           <RunnerServerField
-            isCloud={isCloud}
-            selectedPlan={selectedPlan}
             initialServer={initialServer}
             serverId={serverId}
             onServerIdChange={(id, sName) => {
@@ -190,7 +162,6 @@ export function RunnerEditor({
               if (sName && !name) setName(sName);
             }}
             servers={servers}
-            onOpenPlanModal={() => setPlanModalOpen(true)}
             probing={probing}
             onRecheckCapabilities={() => recheckCapabilities()}
           />
@@ -210,9 +181,9 @@ export function RunnerEditor({
               </Button>
             </div>
 
-            <div className="flex items-center gap-4 rounded-xl bg-muted/30 p-4">
-              <span className="flex size-12 shrink-0 items-center justify-center rounded-xl bg-card text-foreground shadow-xs">
-                <PresetIcon className="size-6" />
+            <div className="flex items-center gap-4 rounded-xl border border-border/40 bg-card p-4">
+              <span className="flex size-12 shrink-0 items-center justify-center rounded-xl bg-card">
+                <PresetIcon className="size-7" />
               </span>
               <div className="min-w-0">
                 <h3 className="font-medium text-foreground text-sm">{presetInfo.title}</h3>
@@ -221,10 +192,8 @@ export function RunnerEditor({
                 </p>
               </div>
             </div>
-            <p className="text-muted-foreground text-xs">
-              {isCloud
-                ? 'Choose a Cloud space to see compatible environments.'
-                : 'Choose a server to see compatible environments.'}
+            <p className="text-muted-foreground text-xs leading-relaxed">
+              Choose a Cloud space to see compatible environments.
             </p>
           </div>
 
@@ -236,8 +205,6 @@ export function RunnerEditor({
               id={runnerNameId}
               value={name}
               onChange={(e) => setName(e.target.value)}
-              placeholder="e.g. production-runner-1"
-              required
               className="h-10 rounded-xl bg-muted/40"
             />
           </div>
@@ -270,8 +237,7 @@ export function RunnerEditor({
           enabled={enabled}
           onEnabledChange={setEnabled}
           isPending={isPending}
-          canSubmit={Boolean((isCloud || serverId) && name.trim())}
-          isCloud={isCloud}
+          canSubmit={Boolean(name.trim())}
         />
 
         <RunnerCatalogModal
@@ -279,12 +245,6 @@ export function RunnerEditor({
           selected={preset}
           onSelect={handleSelectPreset}
           onClose={() => setCatalogOpen(false)}
-        />
-
-        <RunnerCloudPlanModal
-          open={planModalOpen}
-          onClose={() => setPlanModalOpen(false)}
-          onSelectPlan={(plan: CloudPlan) => setSelectedPlan(plan)}
         />
       </form>
     </div>

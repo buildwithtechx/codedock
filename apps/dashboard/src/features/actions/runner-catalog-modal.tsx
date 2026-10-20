@@ -1,4 +1,5 @@
 import { Laptop, Server, Terminal } from 'lucide-react';
+import type { ComponentType } from 'react';
 import {
   Dialog,
   DialogContent,
@@ -6,6 +7,7 @@ import {
   DialogHeader,
   DialogTitle,
 } from '@codedock/ui/dialog';
+import { UbuntuLogo } from './ubuntu-logo';
 
 export type RunnerPreset = 'ubuntu' | 'macos' | 'linux' | 'custom';
 
@@ -14,7 +16,7 @@ export interface RunnerPresetInfo {
   title: string;
   badge: string;
   description: string;
-  icon: typeof Server;
+  icon: ComponentType<{ className?: string }>;
 }
 
 export const RUNNER_PRESETS: RunnerPresetInfo[] = [
@@ -23,7 +25,7 @@ export const RUNNER_PRESETS: RunnerPresetInfo[] = [
     title: 'Ubuntu 22.04',
     badge: 'Ready-to-use Linux image with Node.js and Git.',
     description: 'Choose a server to see compatible environments.',
-    icon: Server,
+    icon: UbuntuLogo,
   },
   {
     id: 'macos',

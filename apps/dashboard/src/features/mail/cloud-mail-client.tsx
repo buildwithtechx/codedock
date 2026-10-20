@@ -116,7 +116,7 @@ export function CloudMailClient({ onSelfHost }: CloudMailClientProps = {}) {
           </p>
 
           <Button asChild className="mt-6 rounded-full px-5 font-medium">
-            <Link to={'/apps/new/mail' as never}>
+            <Link to="/apps/new/$appId" params={{ appId: 'mail' }}>
               <Sparkles className="size-4" />
               <span>Connect existing mail server</span>
             </Link>

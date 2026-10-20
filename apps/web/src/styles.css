@@ -17,6 +17,16 @@ html.dim {
   color-scheme: dark;
 }
 
+body {
+  background-color: var(--background);
+  background-image:
+    radial-gradient(ellipse 80% 50% at 50% -20%, rgba(124, 58, 237, 0.22), transparent),
+    radial-gradient(rgba(139, 92, 246, 0.25) 1.5px, transparent 1.5px);
+  background-size: 100% 100%, 36px 36px;
+  background-position: center top, center top;
+  background-attachment: fixed, fixed;
+}
+
 @layer base {
   * {
     @apply border-border outline-ring/50;

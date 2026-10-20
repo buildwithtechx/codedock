@@ -1,88 +1,96 @@
-import { Link } from '@tanstack/react-router';
-import { RefreshCw, Server } from 'lucide-react';
+import { ChevronDown, Plus, RefreshCw, Server as ServerIcon } from 'lucide-react';
+import { useState } from 'react';
+import { Button } from '@codedock/ui/button';
+import { AddServerModal } from '#/features/servers/add-server-modal';
 import type { Server as ServerModel } from '#/interfaces/server';
-import type { CloudPlan } from './runner-cloud-plan-modal';
 import type { DestinationServer } from './runner-editor';
 
 interface RunnerServerFieldProps {
-  isCloud: boolean;
-  selectedPlan: CloudPlan | null;
+  isCloud?: boolean;
   initialServer?: DestinationServer;
   serverId: string;
   onServerIdChange: (id: string, name?: string) => void;
   servers: ServerModel[];
-  onOpenPlanModal: () => void;
   probing: boolean;
   onRecheckCapabilities: () => void;
 }
 
 export function RunnerServerField({
-  isCloud,
-  selectedPlan,
   initialServer,
   serverId,
   onServerIdChange,
   servers,
-  onOpenPlanModal,
   probing,
   onRecheckCapabilities,
 }: RunnerServerFieldProps) {
+  const [dropdownOpen, setDropdownOpen] = useState(false);
+  const [addModalOpen, setAddModalOpen] = useState(false);
+
+  const selectedServer =
+    servers.find((s) => s.id === serverId) ?? (initialServer ? { id: initialServer.id, name: initialServer.name } : undefined);
+
   return (
-    <div className="space-y-1.5">
+    <div className="space-y-2">
       <label className="font-medium text-foreground text-sm">
-        {isCloud ? 'Cloud space' : 'Server'}
+        Cloud space
       </label>
-      {isCloud ? (
-        <div className="flex items-center justify-between rounded-xl border border-border/60 bg-muted/40 px-3.5 py-2.5 text-sm">
-          <span className="font-medium text-foreground">
-            {selectedPlan
-              ? `${selectedPlan.name} (${selectedPlan.price}/mo)`
-              : 'Cloud space (Starter)'}
-          </span>
-          <span className="text-muted-foreground text-xs">Managed</span>
-        </div>
-      ) : initialServer ? (
-        <div className="flex items-center gap-2.5 rounded-xl border border-border/60 bg-muted/40 px-3.5 py-2.5 text-sm">
-          <Server className="size-4 text-muted-foreground" />
-          <span className="font-medium text-foreground">{initialServer.name}</span>
-        </div>
-      ) : (
-        <select
-          value={serverId}
-          onChange={(e) => {
-            const nextId = e.target.value;
-            const s = servers.find((srv) => srv.id === nextId);
-            onServerIdChange(nextId, s?.name);
-          }}
-          required
-          className="h-10 w-full rounded-xl border border-border/60 bg-muted/40 px-3 text-foreground text-sm focus:outline-none focus:ring-2 focus:ring-ring"
+
+      <div className="relative">
+        <button
+          type="button"
+          onClick={() => setDropdownOpen((prev) => !prev)}
+          className="flex h-11 w-full items-center justify-between rounded-xl bg-muted/40 px-3.5 text-left text-sm transition-colors hover:bg-muted/60"
         >
-          {servers.map((s) => (
-            <option key={s.id} value={s.id}>
-              {s.name} ({s.ipAddress || 'Connected'})
-            </option>
-          ))}
-        </select>
-      )}
-      <div className="flex items-center justify-between text-muted-foreground text-xs">
-        <span>Uses the existing plan.</span>
-        {isCloud ? (
-          <button
-            type="button"
-            onClick={onOpenPlanModal}
-            className="font-medium text-primary hover:underline"
-          >
-            + New Cloud space
-          </button>
-        ) : (
-          <Link to={'/servers' as never} className="text-primary hover:underline">
-            + Connect server
-          </Link>
+          <span className={selectedServer ? 'text-foreground' : 'text-muted-foreground'}>
+            {selectedServer ? selectedServer.name : 'Cloud space'}
+          </span>
+          <ChevronDown className="size-4 text-muted-foreground" />
+        </button>
+
+        {dropdownOpen && (
+          <div className="absolute z-20 mt-1 max-h-60 w-full overflow-auto rounded-xl border border-border/80 bg-card p-1 shadow-lg">
+            {servers.length === 0 ? (
+              <div className="p-3 text-center text-muted-foreground text-xs">
+                No Cloud spaces available. Click + New Cloud space below.
+              </div>
+            ) : (
+              servers.map((s) => (
+                <button
+                  key={s.id}
+                  type="button"
+                  onClick={() => {
+                    onServerIdChange(s.id, s.name);
+                    setDropdownOpen(false);
+                  }}
+                  className={`flex w-full items-center gap-2.5 rounded-lg px-3 py-2 text-left text-sm transition-colors hover:bg-muted/60 ${
+                    s.id === serverId ? 'bg-muted/40 font-medium text-foreground' : 'text-muted-foreground'
+                  }`}
+                >
+                  <ServerIcon className="size-3.5 shrink-0" />
+                  <span className="truncate">{s.name}</span>
+                </button>
+              ))
+            )}
+          </div>
         )}
       </div>
 
-      {!isCloud && serverId && (
-        <div className="mt-2 flex items-center justify-between rounded-xl bg-muted/30 px-3 py-2 text-muted-foreground text-xs">
+      <div className="flex items-center justify-between pt-0.5 text-xs">
+        <span className="text-muted-foreground">Uses the existing plan.</span>
+        <Button
+          type="button"
+          variant="outline"
+          size="sm"
+          onClick={() => setAddModalOpen(true)}
+          className="h-7 gap-1 rounded-full px-2.5 text-xs text-muted-foreground hover:text-foreground"
+        >
+          <Plus className="size-3" />
+          New Cloud space
+        </Button>
+      </div>
+
+      {serverId && (
+        <div className="flex items-center justify-between rounded-xl bg-muted/30 px-3 py-2 text-muted-foreground text-xs">
           <span>
             {probing ? 'Checking destination capabilities...' : 'Linux · x64 · Docker available'}
           </span>
@@ -91,11 +99,22 @@ export function RunnerServerField({
             onClick={onRecheckCapabilities}
             disabled={probing}
             className="hover:text-foreground"
+            aria-label="Probe server capabilities"
           >
             <RefreshCw className={`size-3.5 ${probing ? 'animate-spin' : ''}`} />
           </button>
         </div>
       )}
+
+      <AddServerModal
+        open={addModalOpen}
+        initialMode="managed"
+        onClose={() => setAddModalOpen(false)}
+        onCreated={(created) => {
+          onServerIdChange(created.id, created.name);
+          setAddModalOpen(false);
+        }}
+      />
     </div>
   );
 }

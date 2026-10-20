@@ -16,7 +16,7 @@ func TestActionsHandler_Lifecycle(t *testing.T) {
 	e := echo.New()
 	handler := NewActionsHandler()
 
-	// 1. List seeded workflows
+	// 1. List initial workflows (should be empty by default)
 	req := httptest.NewRequest(http.MethodGet, "/actions/workflows", nil)
 	rec := httptest.NewRecorder()
 	c := e.NewContext(req, rec)
@@ -29,8 +29,8 @@ func TestActionsHandler_Lifecycle(t *testing.T) {
 	if err := json.Unmarshal(rec.Body.Bytes(), &wfResp); err != nil {
 		t.Fatalf("failed to decode workflows: %v", err)
 	}
-	if len(wfResp.Data) == 0 {
-		t.Fatalf("expected seeded workflows")
+	if len(wfResp.Data) != 0 {
+		t.Fatalf("expected 0 workflows initially, got %d", len(wfResp.Data))
 	}
 
 	// 2. Create a new workflow
@@ -55,6 +55,16 @@ func TestActionsHandler_Lifecycle(t *testing.T) {
 		t.Fatalf("expected name 'Deploy Production', got %q", createdWf.Data.Name)
 	}
 
+	// 2b. Dispatch workflow to create a run
+	req = httptest.NewRequest(http.MethodPost, "/actions/workflows/"+createdWf.Data.ID+"/dispatch", nil)
+	rec = httptest.NewRecorder()
+	c = e.NewContext(req, rec)
+	c.SetParamNames("id")
+	c.SetParamValues(createdWf.Data.ID)
+	if err := handler.DispatchWorkflow(c); err != nil {
+		t.Fatalf("unexpected DispatchWorkflow error: %v", err)
+	}
+
 	// 3. List and get runs
 	req = httptest.NewRequest(http.MethodGet, "/actions/runs", nil)
 	rec = httptest.NewRecorder()
@@ -67,7 +77,7 @@ func TestActionsHandler_Lifecycle(t *testing.T) {
 	}
 	_ = json.Unmarshal(rec.Body.Bytes(), &runsResp)
 	if len(runsResp.Data) == 0 {
-		t.Fatalf("expected seeded run")
+		t.Fatalf("expected dispatched run")
 	}
 	runID := runsResp.Data[0].ID
 
@@ -164,11 +174,11 @@ func TestActionsHandler_Lifecycle(t *testing.T) {
 		t.Fatalf("unexpected DeleteRunner error: %v", err)
 	}
 
-	req = httptest.NewRequest(http.MethodDelete, "/actions/runs/run-1", nil)
+	req = httptest.NewRequest(http.MethodDelete, "/actions/runs/"+runID, nil)
 	rec = httptest.NewRecorder()
 	c = e.NewContext(req, rec)
 	c.SetParamNames("id")
-	c.SetParamValues("run-1")
+	c.SetParamValues(runID)
 	if err := handler.DeleteRun(c); err != nil {
 		t.Fatalf("unexpected DeleteRun error: %v", err)
 	}

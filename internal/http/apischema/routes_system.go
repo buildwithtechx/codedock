@@ -371,6 +371,7 @@ func systemOperations() []Operation {
 		{Method: "GET", Path: "/api/actions/workflows", Summary: "List action workflows", Tags: []string{actions}, Auth: AuthUser, Response: Arr("Workflows", actionWorkflowSchema())},
 		{Method: "POST", Path: "/api/actions/workflows", Summary: "Create action workflow", Tags: []string{actions}, Auth: AuthAdmin, Code: 200, Request: JSON(Obj("Create workflow", F("projectId", Str("Project ID")), RF("name", Str("Workflow name")), F("description", Str("Description")), F("trigger", Str("Trigger")), F("yaml", Str("YAML")))), Response: actionWorkflowSchema()},
 		{Method: "DELETE", Path: "/api/actions/workflows/:id", Summary: "Delete action workflow", Tags: []string{actions}, Auth: AuthAdmin, Raw: true, Code: 204, Response: EmptySchema()},
+		{Method: "POST", Path: "/api/actions/workflows/:id/dispatch", Summary: "Dispatch action workflow", Tags: []string{actions}, Auth: AuthUser, Code: 200, Request: JSON(Obj("Dispatch workflow", F("inputs", Any("Inputs")))), Response: actionRunSchema()},
 		{Method: "GET", Path: "/api/actions/runs", Summary: "List action runs", Tags: []string{actions}, Auth: AuthUser, Response: Arr("Runs", actionRunSchema())},
 		{Method: "GET", Path: "/api/actions/runs/:id", Summary: "Get action run", Tags: []string{actions}, Auth: AuthUser, Response: actionRunSchema()},
 		{Method: "DELETE", Path: "/api/actions/runs/:id", Summary: "Delete action run", Tags: []string{actions}, Auth: AuthAdmin, Raw: true, Code: 204, Response: EmptySchema()},

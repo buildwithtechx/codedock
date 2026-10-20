@@ -13,9 +13,7 @@ export function Header() {
           aria-label="Codedock home"
           className="flex shrink-0 items-center gap-2.5 font-extrabold text-lg tracking-tight"
         >
-          <span className="flex size-8 items-center justify-center rounded-xl bg-primary font-mono text-sm text-white">
-            cd
-          </span>
+          <img src="/favicon.svg" alt="Codedock" className="size-8 rounded-xl object-contain shadow-xs" />
           Codedock
           <span className="ml-1 hidden rounded-full border border-border px-2 py-0.5 font-medium text-[10px] text-muted-foreground sm:inline">
             OPEN SOURCE
