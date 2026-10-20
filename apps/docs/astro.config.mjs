@@ -43,6 +43,7 @@ export default defineConfig({
             { label: "AI Workloads", slug: "deployments/ai-workloads" },
             { label: "Templates & Examples", slug: "deployments/templates" },
             { label: "CI/CD & Git Webhooks", slug: "deployments/ci-cd" },
+            { label: "Actions & CI/CD Runners", slug: "deployments/actions-and-runners" },
             { label: "Service Types", slug: "deployments/service-types" },
             { label: "Scheduled Cron Jobs", slug: "deployments/jobs" },
             {
@@ -52,6 +53,10 @@ export default defineConfig({
             {
               label: "Deployment Lifecycle",
               slug: "deployments/deployment-lifecycle",
+            },
+            {
+              label: "Rollbacks & Attention Health",
+              slug: "deployments/rollbacks-and-health",
             },
           ],
         },
@@ -92,10 +97,12 @@ export default defineConfig({
           ],
         },
         {
-          label: "Networking & SSL",
+          label: "Networking & Ingress",
           collapsed: false,
           items: [
             { label: "Domains & DNS Setup", slug: "operations/domains-and-dns" },
+            { label: "Ingress & L7 Route Rules", slug: "networking/ingress-and-routing" },
+            { label: "Software-Defined Networks", slug: "networking/software-defined-networks" },
             { label: "Migration & Bundles", slug: "migration/codedock-bundles" },
           ],
         },
@@ -104,6 +111,9 @@ export default defineConfig({
           collapsed: false,
           items: [
             { label: "Worker Servers", slug: "fleet-management/servers" },
+            { label: "Managed Cloud (Hetzner)", slug: "fleet-management/managed-servers" },
+            { label: "High Availability & Clustering", slug: "fleet-management/clustering-ha" },
+            { label: "Server Takeover & Adoption", slug: "fleet-management/server-takeover" },
             { label: "Canvas Topology", slug: "fleet-management/canvas" },
           ],
         },
@@ -115,6 +125,8 @@ export default defineConfig({
             { label: "Admin Dashboard", slug: "operations/admin" },
             { label: "Third-party Integrations", slug: "operations/integrations" },
             { label: "Observability & Logs", slug: "operations/observability" },
+            { label: "Codedock Mail Server", slug: "operations/mail-server" },
+            { label: "Push Notifications & Mobile", slug: "operations/push-notifications" },
             { label: "Account Security & 2FA", slug: "operations/account-security" },
             {
               label: "Maintenance & Updates",
@@ -127,6 +139,8 @@ export default defineConfig({
           label: "Reference",
           collapsed: false,
           items: [
+            { label: "Model Context Protocol (MCP)", slug: "reference/mcp-server" },
+            { label: "Developer Tools & Mobile Apps", slug: "reference/developer-tools" },
             { label: "System Configuration", slug: "reference/configuration" },
             { label: "CLI Reference", slug: "reference/cli" },
             { label: "REST API Overview", slug: "reference/api" },
