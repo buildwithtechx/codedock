@@ -232,6 +232,25 @@ func (s *AppService) DeleteVolume(ctx context.Context, id string) error {
 	return s.volumeRepo.Delete(ctx, id)
 }
 
+func (s *AppService) EmptyVolume(ctx context.Context, serviceID, volumeID string) (*models.ServiceVolume, string, error) {
+	if serviceID == "" || volumeID == "" {
+		return nil, "", errors.New("serviceId and volumeId are required")
+	}
+	vol, err := s.volumeRepo.GetByID(ctx, volumeID)
+	if err != nil {
+		return nil, "", err
+	}
+	if vol == nil || vol.ServiceID != serviceID {
+		return nil, "", errors.New("volume not found for service")
+	}
+	previousHostPath := vol.HostPath
+	vol.HostPath = "codedock-fresh-" + uuid.New().String()
+	if err := s.volumeRepo.Update(ctx, vol); err != nil {
+		return nil, "", err
+	}
+	return vol, previousHostPath, nil
+}
+
 func (s *AppService) CreateLogDrain(ctx context.Context, d *models.LogDrain) (*models.LogDrain, error) {
 	if d == nil {
 		return nil, errors.New("log drain is nil")

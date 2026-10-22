@@ -12,6 +12,7 @@ type ServiceVolumeRepository interface {
 	Create(ctx context.Context, volume *models.ServiceVolume) error
 	GetByID(ctx context.Context, id string) (*models.ServiceVolume, error)
 	ListByService(ctx context.Context, serviceID string) ([]models.ServiceVolume, error)
+	Update(ctx context.Context, volume *models.ServiceVolume) error
 	Delete(ctx context.Context, id string) error
 }
 
@@ -46,6 +47,16 @@ func (r *serviceVolumeRepo) ListByService(ctx context.Context, serviceID string)
 	query := `SELECT ` + serviceVolumeColumns + ` FROM service_volumes WHERE service_id = $1 ORDER BY created_at DESC`
 	err := r.db.SelectContext(ctx, &volumes, query, serviceID)
 	return volumes, err
+}
+
+func (r *serviceVolumeRepo) Update(ctx context.Context, volume *models.ServiceVolume) error {
+	query := `
+		UPDATE service_volumes
+		SET host_path = :host_path, container_path = :container_path
+		WHERE id = :id AND service_id = :service_id
+	`
+	_, err := r.db.NamedExecContext(ctx, query, volume)
+	return err
 }
 
 func (r *serviceVolumeRepo) Delete(ctx context.Context, id string) error {

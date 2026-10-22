@@ -1,6 +1,6 @@
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
 import { createFileRoute } from '@tanstack/react-router';
-import { DatabaseBackup, HardDrive, Loader2, Plus, Trash2 } from 'lucide-react';
+import { DatabaseBackup, HardDrive, Loader2, Plus, RotateCcw, Trash2 } from 'lucide-react';
 import { useState } from 'react';
 import { toast } from 'sonner';
 import { Button } from '@codedock/ui/button';
@@ -8,6 +8,7 @@ import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@code
 import { Input } from '@codedock/ui/input';
 import { Label } from '@codedock/ui/label';
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@codedock/ui/table';
+import { EmptyVolumeDialog } from '#/features/services/empty-volume-dialog';
 import { VolumeBackupModal } from '#/features/services/volume-backup-modal';
 import { useGetApp } from '#/hooks/use-apps';
 import { apiClient } from '#/lib/api-client';
@@ -26,6 +27,7 @@ function ServiceVolumesRoute() {
   const [hostPath, setHostPath] = useState('');
   const [containerPath, setContainerPath] = useState('');
   const [backupVolume, setBackupVolume] = useState<string | null>(null);
+  const [emptyVolumeTarget, setEmptyVolumeTarget] = useState<any | null>(null);
 
   const { data: volumesResponse, isLoading: isLoadingVolumes } = useQuery({
     queryKey: ['volumes', 'service', serviceId],
@@ -165,6 +167,15 @@ function ServiceVolumesRoute() {
                         <Button
                           variant="outline"
                           size="icon"
+                          title="Start with empty storage"
+                          className="hover:text-amber-600 dark:hover:text-amber-400"
+                          onClick={() => setEmptyVolumeTarget(vol)}
+                        >
+                          <RotateCcw className="h-4 w-4" />
+                        </Button>
+                        <Button
+                          variant="outline"
+                          size="icon"
                           title="Configure Backup"
                           onClick={() => setBackupVolume(vol.hostPath)}
                         >
@@ -196,6 +207,21 @@ function ServiceVolumesRoute() {
           volumeName={backupVolume}
           open={!!backupVolume}
           onOpenChange={(open) => !open && setBackupVolume(null)}
+        />
+      )}
+
+      {emptyVolumeTarget && (
+        <EmptyVolumeDialog
+          serviceId={serviceId}
+          serviceName={app.name || 'service'}
+          volumeId={emptyVolumeTarget.id}
+          hostPath={emptyVolumeTarget.hostPath}
+          containerPath={emptyVolumeTarget.containerPath}
+          open={!!emptyVolumeTarget}
+          onOpenChange={(open) => !open && setEmptyVolumeTarget(null)}
+          onSuccess={() => {
+            queryClient.invalidateQueries({ queryKey: ['volumes', 'service', serviceId] });
+          }}
         />
       )}
     </div>

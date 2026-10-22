@@ -44,6 +44,15 @@ func TestServiceVolumeRoundtrip(t *testing.T) {
 	if len(list) != 1 || list[0].ID != "vol-one" {
 		t.Fatalf("expected 1 volume, got %d", len(list))
 	}
+	volume.HostPath = "/new-data"
+	if err := repo.Update(ctx, volume); err != nil {
+		t.Fatalf("update volume: %v", err)
+	}
+	updated, err := repo.GetByID(ctx, "vol-one")
+	if err != nil || updated.HostPath != "/new-data" {
+		t.Fatalf("expected updated host path /new-data, got %v (err: %v)", updated, err)
+	}
+
 	if err := repo.Delete(ctx, "vol-one"); err != nil {
 		t.Fatalf("delete volume: %v", err)
 	}

@@ -9,3 +9,5 @@ export * from './billing';
 export * from './actions';
 export * from './ingress';
 export * from './auth';
+export * from './updates';
+
