@@ -54,4 +54,24 @@ describe('AuditDayGroup', () => {
     expect(screen.queryByText(/91fdae7e-559c-41af-8426-814fe0d5e643/i)).toBeNull();
     expect(screen.getByText('Solomon Olatunji created the project')).toBeDefined();
   });
+
+  it('correctly formats auth.signup as "signed up" without repeating actor as resource', () => {
+    const signupEvent: AuditEventRow = {
+      id: 'evt-3',
+      action: 'auth.signup',
+      userId: 'usr-solomon',
+      actorName: 'Solomon Olatunji',
+      resourceName: 'Solomon Olatunji',
+      resource: 'usr-solomon',
+      details: '',
+      ipAddress: '127.0.0.1',
+      createdAt: '2026-10-16T12:00:00Z',
+    };
+
+    render(<AuditDayGroup dayKey="2026-10-16" events={[signupEvent]} onSelectEvent={vi.fn()} />);
+
+    expect(screen.getByText('Solomon Olatunji signed up')).toBeDefined();
+    expect(screen.queryByText(/signupd/i)).toBeNull();
+    expect(screen.queryByText(/Solomon Olatunji signed up Solomon Olatunji/i)).toBeNull();
+  });
 });

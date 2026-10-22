@@ -60,7 +60,26 @@ function resolveEventSentence(event: AuditEventRow): string {
   const resource = resolveResourceDisplay(event, actionName);
   const action = desc.action || actionName.replace('.', ' ');
 
-  return resource ? `${actor} ${action} ${resource}` : `${actor} ${action}`;
+  const normalizedAction = actionName.toLowerCase();
+  const isAuthSelfAction =
+    normalizedAction.includes('signup') ||
+    normalizedAction.includes('login') ||
+    normalizedAction.includes('logout') ||
+    normalizedAction.includes('signin') ||
+    normalizedAction.includes('signout') ||
+    normalizedAction.includes('register');
+
+  const isSelfResource =
+    !resource ||
+    actor.trim().toLowerCase() === resource.trim().toLowerCase() ||
+    (isAuthSelfAction &&
+      (resource === 'the member' || resource === 'the resource' || resource === 'the user'));
+
+  if (isSelfResource || isAuthSelfAction) {
+    return `${actor} ${action}`;
+  }
+
+  return `${actor} ${action} ${resource}`;
 }
 
 interface AuditDayGroupProps {

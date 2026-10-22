@@ -90,6 +90,13 @@ export const AUDIT_VERBS: Record<string, string> = {
   disable: 'disabled',
   login: 'signed in',
   logout: 'signed out',
+  signin: 'signed in',
+  signout: 'signed out',
+  sign_in: 'signed in',
+  sign_out: 'signed out',
+  signup: 'signed up',
+  sign_up: 'signed up',
+  register: 'registered',
   invite: 'invited',
   join: 'joined',
   leave: 'left',
@@ -159,6 +166,9 @@ export const SUCCESS_VERBS = new Set([
   'verify',
   'approve',
   'renew',
+  'signup',
+  'sign_up',
+  'register',
 ]);
 
 export const WARNING_VERBS = new Set([

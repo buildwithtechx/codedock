@@ -31,7 +31,13 @@ export function describeAuditAction(action?: string): {
 } {
   const safe = action && typeof action === 'string' ? action : 'system.event';
   const verb = actionVerb(safe).toLowerCase();
-  const label = AUDIT_VERBS[verb] ?? `${verb}d`;
+  const label =
+    AUDIT_VERBS[verb] ??
+    (verb.endsWith('e')
+      ? `${verb}d`
+      : verb.endsWith('y') && !/[aeiou]y$/.test(verb)
+        ? `${verb.slice(0, -1)}ied`
+        : `${verb}ed`);
   let tone: AuditTone = 'neutral';
   if (DANGER_VERBS.has(verb)) tone = 'danger';
   else if (SUCCESS_VERBS.has(verb)) tone = 'success';

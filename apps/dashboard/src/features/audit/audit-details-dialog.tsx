@@ -99,6 +99,23 @@ export function AuditDetailsDialog({ event, open, onClose }: AuditDetailsDialogP
   const hasAfter = row?.after !== undefined && row?.after !== null;
   const isOpen = open !== undefined ? open : event !== null;
 
+  const normalizedAction = (event?.action || '').toLowerCase();
+  const isAuthSelfAction =
+    normalizedAction.includes('signup') ||
+    normalizedAction.includes('login') ||
+    normalizedAction.includes('logout') ||
+    normalizedAction.includes('signin') ||
+    normalizedAction.includes('signout') ||
+    normalizedAction.includes('register');
+
+  const showResource =
+    resource &&
+    actor.trim().toLowerCase() !== resource.trim().toLowerCase() &&
+    !isAuthSelfAction &&
+    resource !== 'the member' &&
+    resource !== 'the user' &&
+    resource !== 'the resource';
+
   return (
     <Dialog open={isOpen} onOpenChange={(v) => !v && onClose()}>
       <DialogContent className="max-h-[85vh] max-w-2xl overflow-y-auto">
@@ -111,7 +128,7 @@ export function AuditDetailsDialog({ event, open, onClose }: AuditDetailsDialogP
               </div>
               <p className="mt-1.5 text-foreground/80 text-sm">
                 <span className="font-medium">{actor}</span> {info.action}
-                {resource && <span className="font-medium"> {resource}</span>}
+                {showResource && <span className="font-medium"> {resource}</span>}
               </p>
               <p className="text-muted-foreground text-xs" title={absoluteTime(event.createdAt)}>
                 {relativeTime(event.createdAt)} · {absoluteTime(event.createdAt)}
