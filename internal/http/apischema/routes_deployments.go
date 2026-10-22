@@ -104,6 +104,7 @@ func deploymentOperations() []Operation {
 		{Method: "GET", Path: "/api/deployments/:id/explain", Summary: "Explain a deployment failure", Tags: []string{deployments}, Auth: AuthUser, Response: Any("Failure explanation")},
 		{Method: "POST", Path: "/api/deployments/:id/cancel", Summary: "Cancel a deployment", Tags: []string{deployments}, Auth: AuthUser, Code: 202, Response: EmptySchema()},
 		{Method: "POST", Path: "/api/deployments/:id/rollback", Summary: "Roll back a deployment", Tags: []string{deployments}, Auth: AuthUser, Code: 202, Response: DeploymentSchema()},
+		{Method: "POST", Path: "/api/deployments/:id/retry", Summary: "Retry a deployment with its built artifact", Tags: []string{deployments}, Auth: AuthUser, Code: 202, Response: DeploymentSchema()},
 		{Method: "POST", Path: "/api/deployments/:id/pin", Summary: "Toggle deployment pin status", Tags: []string{deployments}, Auth: ProjectRole("admin"), Response: Obj("Pin status", RF("id", Str("Deployment ID")), RF("pinned", Bool("Pinned status")))},
 		{Method: "POST", Path: "/api/services/:serviceId/deploy", Summary: "Trigger a service deployment", Tags: []string{deployments}, Auth: ServiceRole("admin"), Code: 202, Request: JSON(Obj("Trigger", F("branch", Str("Branch override")))), Response: DeploymentSchema()},
 		{Method: "POST", Path: "/api/projects/:id/deploy", Summary: "Trigger a project deployment", Tags: []string{deployments}, Auth: ProjectRole("admin"), Code: 202, Response: Any("Triggered deployments")},

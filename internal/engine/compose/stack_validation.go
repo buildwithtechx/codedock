@@ -5,12 +5,43 @@ import (
 	"encoding/json"
 	"fmt"
 	"net/url"
+	"regexp"
+	"sort"
 	"strconv"
 	"strings"
 
 	"github.com/docker/docker/api/types/container"
 	"gopkg.in/yaml.v3"
 )
+
+var requiredVarRegex = regexp.MustCompile(`\$\{([A-Za-z0-9_]+):?\?([^}]*)\}`)
+
+func ValidateRequiredEnvironment(content string, variables map[string]string) error {
+	matches := requiredVarRegex.FindAllStringSubmatch(content, -1)
+	if len(matches) == 0 {
+		return nil
+	}
+	missing := make(map[string]bool)
+	for _, m := range matches {
+		if len(m) >= 2 {
+			varName := m[1]
+			val, ok := variables[varName]
+			isColon := strings.Contains(m[0], ":?")
+			if !ok || (isColon && strings.TrimSpace(val) == "") {
+				missing[varName] = true
+			}
+		}
+	}
+	if len(missing) > 0 {
+		var names []string
+		for k := range missing {
+			names = append(names, k)
+		}
+		sort.Strings(names)
+		return fmt.Errorf("Required Compose environment variables are not configured: %s", strings.Join(names, ", "))
+	}
+	return nil
+}
 
 func ValidateStackInput(content string) error {
 	if len(content) == 0 || len(content) > 1024*1024 {

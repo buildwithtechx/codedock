@@ -83,6 +83,7 @@ export const AUDIT_VERBS: Record<string, string> = {
   rollback: 'rolled back',
   deploy: 'deployed',
   redeploy: 'redeployed',
+  retry: 'retried',
   restart: 'restarted',
   stop: 'stopped',
   start: 'started',

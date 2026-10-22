@@ -50,7 +50,14 @@ func (s *DeploymentService) ExecuteDeploymentAsync(d *models.Deployment) {
 			s.operationMu.Unlock()
 		}()
 		logWriter := &deploymentLogWriter{service: s, id: d.ID, ctx: ctx, phase: "PREPARING"}
-		id, err := s.executeDeployment(deploy.WithDeploymentProgress(ctx, logWriter.phaseChanged), d, logWriter)
+		execCtx := deploy.WithDeploymentProgress(ctx, logWriter.phaseChanged)
+		execCtx = deploy.WithImageBuiltCallback(execCtx, func(tag string) {
+			d.ImageRef = tag
+			if err := s.repo.Update(context.Background(), d); err != nil {
+				slog.Warn("failed to update deployment image ref", "deployment", d.ID, "error", err)
+			}
+		})
+		id, err := s.executeDeployment(execCtx, d, logWriter)
 		status := models.DeploymentStatusReady
 		resourceIssue := ""
 		if err != nil {
@@ -126,6 +133,9 @@ func (s *DeploymentService) executeDeployment(ctx context.Context, d *models.Dep
 		}
 		app.Volumes = volumes
 	}
+	if err := deploy.AssertRequiredServiceEnvironment(ctx, s.deployer, app); err != nil {
+		return "", err
+	}
 	if s.BeforeProjectDeployment != nil {
 		if err := s.BeforeProjectDeployment(ctx, app.ProjectID, app.ID); err != nil {
 			return "", fmt.Errorf("pre-deployment backup: %w", err)
@@ -159,6 +169,16 @@ func (s *DeploymentService) executeDeployment(ctx context.Context, d *models.Dep
 			}
 		}
 	}
+	isRetryWithArtifact := strings.EqualFold(d.Trigger, "retry") && d.ImageRef != ""
+	if isRetryWithArtifact {
+		if _, writeErr := writer.Write([]byte(fmt.Sprintf("⚡ Reusing verified build artifact: %s\nSkipping source checkout and Docker build.\n", d.ImageRef))); writeErr != nil {
+			return "", writeErr
+		}
+		appCopy := *app
+		appCopy.ImageRef = d.ImageRef
+		return s.deployTarget(ctx, &appCopy, "", writer)
+	}
+
 	sourceDir := ""
 	if app.ImageRef == "" {
 		if s.gitService == nil {

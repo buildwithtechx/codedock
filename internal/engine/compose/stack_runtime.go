@@ -30,6 +30,9 @@ func (r *StackRuntime) Canonical(ctx context.Context, id, content string, variab
 	if err := ValidateStackInput(content); err != nil {
 		return "", err
 	}
+	if err := ValidateRequiredEnvironment(content, variables); err != nil {
+		return "", err
+	}
 	output, err := r.command(ctx, id, content, variables, "config", "--format", "json")
 	if err != nil {
 		return "", fmt.Errorf("Compose validation failed. Check required variables and supported configuration; Docker Compose v2 must be installed: %w", err)
@@ -46,6 +49,9 @@ func (r *StackRuntime) Canonical(ctx context.Context, id, content string, variab
 func (r *StackRuntime) Apply(ctx context.Context, stack *models.ComposeStack, progress func(string) error) error {
 	if r.docker == nil {
 		return fmt.Errorf("local Docker is unavailable")
+	}
+	if err := ValidateRequiredEnvironment(stack.Config, nil); err != nil {
+		return err
 	}
 	if err := r.ValidatePorts(ctx, stack.ID, stack.Config); err != nil {
 		return err

@@ -70,6 +70,13 @@ func NewDeployer(dockerClient *client.Client, s DeployerStore) *Deployer {
 	}
 }
 
+func (d *Deployer) DockerClient() *client.Client {
+	if d.containerManager == nil {
+		return nil
+	}
+	return d.containerManager.dockerClient
+}
+
 func (d *Deployer) DeployAppService(ctx context.Context, app *models.AppService, sourceDir string, logWriter io.Writer) (string, error) {
 	release, err := d.serviceOperation(ctx, app.ID)
 	if err != nil {
@@ -159,7 +166,16 @@ func (d *Deployer) DeployAppService(ctx context.Context, app *models.AppService,
 				pullOpts.RegistryAuth = base64.URLEncoding.EncodeToString(encodedJSON)
 			}
 		}
-		if d.containerManager != nil && d.containerManager.dockerClient != nil {
+		skipPull := false
+		if d.containerManager != nil && d.containerManager.dockerClient != nil && (app.RegistryID == nil || *app.RegistryID == "") {
+			if _, _, inspectErr := d.containerManager.dockerClient.ImageInspectWithRaw(ctx, imageTag); inspectErr == nil {
+				skipPull = true
+				if logWriter != nil {
+					fmt.Fprintf(logWriter, "⚡ [Deployer] Image %s already exists locally. Skipping remote pull.\n", imageTag)
+				}
+			}
+		}
+		if !skipPull && d.containerManager != nil && d.containerManager.dockerClient != nil {
 			out, err := d.containerManager.dockerClient.ImagePull(ctx, imageTag, pullOpts)
 			if err != nil {
 				return "", fmt.Errorf("pull image: %w", err)
@@ -207,6 +223,7 @@ func (d *Deployer) DeployAppService(ctx context.Context, app *models.AppService,
 			return "", fmt.Errorf("build failed: %w", err)
 		}
 		imageTag = builtTag
+		NotifyImageBuilt(ctx, builtTag)
 	}
 
 	replicas := app.Replicas
@@ -230,7 +247,7 @@ func (d *Deployer) DeployAppService(ctx context.Context, app *models.AppService,
 	}
 
 	return d.replaceReplicas(ctx, app, ContainerRunOptions{
-		ImageTag: imageTag, ServiceID: app.ID, Domain: appDomain, Hosts: d.routeHosts(ctx, app.ID, appDomain, logWriter), InternalPort: internalPort,
+		ImageTag: imageTag, ServiceID: app.ID, ProjectID: app.ProjectID, PreviousContainerID: app.ContainerID, Domain: appDomain, Hosts: d.routeHosts(ctx, app.ID, appDomain, logWriter), InternalPort: internalPort,
 		RuntimeMode: app.RuntimeMode, Envs: envSlice, Cmd: containerCommand(app, resolvedStartCommand(app, sourceDir)),
 		MemoryLimitMB: memoryLimit, CPURequest: cpuRequest, HealthCheckPath: app.HealthCheckPath,
 		Volumes: app.Volumes, MaintenanceMode: app.MaintenanceMode, StopGracePeriodSeconds: app.StopGracePeriodSeconds, LogDrains: logDrains, ExtraLabels: extraLabels,

@@ -103,6 +103,16 @@ export const deploymentsService = {
     }
   },
 
+  retry: async (deploymentId: string): Promise<TriggerDeploymentResponse> => {
+    try {
+      return await apiClient.post<TriggerDeploymentResponse>(
+        `/deployments/${deploymentId}/retry`
+      );
+    } catch (error) {
+      throw handleApiError(error);
+    }
+  },
+
   togglePin: async (deploymentId: string): Promise<TogglePinResponse> => {
     try {
       return await apiClient.post<TogglePinResponse>(`/deployments/${deploymentId}/pin`);

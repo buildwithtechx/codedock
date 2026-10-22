@@ -44,6 +44,10 @@ func newRolloutFixture(t *testing.T) (*Deployer, *rolloutTestStore, *rolloutFixt
 			json.NewEncoder(w).Encode([]map[string]any{{"Id": id, "Names": []string{fixture.names[id]}, "State": "running"}})
 			return
 		}
+		if strings.HasPrefix(path, "/images/") {
+			json.NewEncoder(w).Encode(map[string]any{"Config": map[string]any{}})
+			return
+		}
 		if path == "/containers/create" {
 			fixture.names["new"] = "/" + r.URL.Query().Get("name")
 			json.NewEncoder(w).Encode(map[string]string{"Id": "new"})

@@ -33,6 +33,8 @@ type ContainerRunOptions struct {
 	Name                   string
 	ImageTag               string
 	ServiceID              string
+	ProjectID              string
+	PreviousContainerID    string
 	Domain                 string
 	Hosts                  []RouteHost
 	InternalPort           int
@@ -116,6 +118,12 @@ func (c *ContainerManager) createAndStart(ctx context.Context, opts ContainerRun
 			binds = append(binds, fmt.Sprintf("%s:%s", v.HostPath, v.ContainerPath))
 		}
 	}
+
+	resolvedBinds, err := ResolveImageVolumeBinds(ctx, c.dockerClient, opts.ServiceID, opts.ProjectID, binds, opts.ImageTag, opts.PreviousContainerID)
+	if err != nil {
+		return "", fmt.Errorf("resolve image volume binds: %w", err)
+	}
+	binds = resolvedBinds
 
 	networkName := opts.NetworkName
 	if networkName == "" {

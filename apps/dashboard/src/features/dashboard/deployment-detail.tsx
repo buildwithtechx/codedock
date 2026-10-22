@@ -1,5 +1,5 @@
 import { Link } from '@tanstack/react-router';
-import { ArrowLeft, Ban, Bot, Loader2, RotateCcw } from 'lucide-react';
+import { ArrowLeft, Ban, Bot, Loader2, Play, RotateCcw } from 'lucide-react';
 import { useState } from 'react';
 import { toast } from 'sonner';
 import { PageHeader } from '#/components/layout/page-header';
@@ -11,7 +11,7 @@ import { useListProjects } from '#/hooks/use-projects';
 import type { Deployment } from '#/interfaces/services';
 import { DeploymentFailureAi } from '#/features/services/deployment-failure-ai';
 import { useGetApp } from '#/hooks/use-apps';
-import { useCancelDeployment, useDeployment, useRollback } from '#/hooks/use-deployments';
+import { useCancelDeployment, useDeployment, useRetryDeployment, useRollback } from '#/hooks/use-deployments';
 import { DeploymentLogs } from './deployment-logs';
 import { DeploymentResourceNotice } from './deployment-resource-notice';
 import { DeploymentRollbackDialog } from './deployment-rollback-dialog';
@@ -44,6 +44,7 @@ export function DeploymentDetail({ deploymentId }: { deploymentId: string }) {
   const { data: projectsResponse } = useListProjects({ limit: 100 });
   const cancelDeployment = useCancelDeployment();
   const rollbackDeployment = useRollback();
+  const retryDeployment = useRetryDeployment();
 
   if (isLoading) {
     return (
@@ -89,6 +90,22 @@ export function DeploymentDetail({ deploymentId }: { deploymentId: string }) {
     );
   };
 
+  const canRetry = normalizedStatus === 'FAILED';
+
+  const handleRetry = () => {
+    retryDeployment.mutate(
+      { deploymentId: deployment.id },
+      {
+        onSuccess: () => toast.success('Deployment retry started'),
+        onError: (err: unknown) => {
+          const apiErr = err as { response?: { data?: { error?: string } } };
+          const msg = apiErr?.response?.data?.error || 'Could not retry this deployment';
+          toast.error(msg);
+        },
+      }
+    );
+  };
+
   const handleRollback = () => {
     rollbackDeployment.mutate(
       { deploymentId: deployment.id },
@@ -125,6 +142,20 @@ export function DeploymentDetail({ deploymentId }: { deploymentId: string }) {
               >
                 <Ban className="h-4 w-4" />
                 {cancelDeployment.isPending ? 'Cancelling...' : 'Cancel'}
+              </Button>
+            )}
+            {canRetry && (
+              <Button
+                onClick={handleRetry}
+                disabled={retryDeployment.isPending}
+                className="gap-2"
+              >
+                {retryDeployment.isPending ? (
+                  <Loader2 className="h-4 w-4 animate-spin" />
+                ) : (
+                  <Play className="h-4 w-4" />
+                )}
+                Retry deployment
               </Button>
             )}
             {canRollback && (

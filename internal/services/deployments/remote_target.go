@@ -1,15 +1,18 @@
 package deployments
 
 import (
+	"context"
+	"fmt"
+	"log/slog"
+	"strings"
+
+	"github.com/containerd/errdefs"
+	"github.com/docker/docker/client"
+
 	"codedock/internal/engine/deploy"
 	"codedock/internal/engine/networking"
 	"codedock/internal/models"
 	"codedock/internal/repositories"
-	"context"
-	"fmt"
-	"github.com/containerd/errdefs"
-	"log/slog"
-	"strings"
 )
 
 func (s *DeploymentService) dockerTarget(ctx context.Context, app *models.AppService) (*deploy.Deployer, func(), error) {
@@ -71,6 +74,19 @@ func (s *DeploymentService) dockerTarget(ctx context.Context, app *models.AppSer
 	}
 	return runtime, cleanup, nil
 }
+
+func (s *DeploymentService) DockerClientForApp(ctx context.Context, app *models.AppService) (*client.Client, func(), error) {
+	runtime, release, err := s.dockerTarget(ctx, app)
+	if err != nil {
+		return nil, nil, err
+	}
+	if runtime == nil || runtime.DockerClient() == nil {
+		release()
+		return nil, nil, fmt.Errorf("Docker client unavailable")
+	}
+	return runtime.DockerClient(), release, nil
+}
+
 func (s *DeploymentService) SetRemoteTargets(servers repositories.ServerRepository, gate deploy.VolumeOperations) {
 	s.Servers = servers
 	s.HostGate = gate

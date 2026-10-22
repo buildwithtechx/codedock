@@ -13,6 +13,7 @@ import {
   GitBranch,
   MoreVertical,
   Pin,
+  Play,
   Rocket,
   RotateCcw,
 } from 'lucide-react';
@@ -20,6 +21,7 @@ import { useState } from 'react';
 import { toast } from 'sonner';
 import {
   useCancelDeployment,
+  useRetryDeployment,
   useRollback,
   useTogglePinDeployment,
   useTrigger,
@@ -79,10 +81,12 @@ export function DeploymentHistoryCard({ deployment }: { deployment: Organization
   const [pinned, setPinned] = useState(Boolean(deployment.pinned));
   const trigger = useTrigger();
   const rollback = useRollback();
+  const retryMutation = useRetryDeployment();
   const cancel = useCancelDeployment();
   const togglePinMutation = useTogglePinDeployment();
   const normalized = deployment.status.toUpperCase();
   const isActive = activeStatuses.has(normalized);
+  const canRetry = normalized === 'FAILED';
   const isReclaimed = deployment.artifactRetainedAt === null && successfulStatuses.has(normalized);
   const canRollback =
     (successfulStatuses.has(normalized) || normalized === 'FAILED') &&
@@ -106,6 +110,17 @@ export function DeploymentHistoryCard({ deployment }: { deployment: Organization
       toast.success('Redeploy started');
     } catch {
       toast.error('Failed to start redeploy');
+    }
+  };
+
+  const retryDeploy = async () => {
+    try {
+      await retryMutation.mutateAsync({ deploymentId: deployment.id });
+      toast.success('Retry started');
+    } catch (err: unknown) {
+      const apiErr = err as { response?: { data?: { error?: string } } };
+      const msg = apiErr?.response?.data?.error || 'Failed to start retry';
+      toast.error(msg);
     }
   };
 
@@ -225,6 +240,12 @@ export function DeploymentHistoryCard({ deployment }: { deployment: Organization
               <Rocket className="h-4 w-4" />
               Redeploy
             </DropdownMenuItem>
+            {canRetry && (
+              <DropdownMenuItem onClick={retryDeploy} disabled={retryMutation.isPending}>
+                <Play className="h-4 w-4" />
+                Retry deployment
+              </DropdownMenuItem>
+            )}
             {canRollback && (
               <DropdownMenuItem onClick={rollbackTo} disabled={rollback.isPending}>
                 <RotateCcw className="h-4 w-4" />

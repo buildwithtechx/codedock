@@ -60,6 +60,18 @@ export const useRollback = () => {
   });
 };
 
+export const useRetryDeployment = () => {
+  const queryClient = useQueryClient();
+  return useMutation({
+    mutationFn: (payload: { deploymentId: string }) =>
+      deploymentsService.retry(payload.deploymentId),
+    onSuccess: async () => {
+      await queryClient.invalidateQueries({ queryKey: ['deployments'] });
+      await queryClient.invalidateQueries({ queryKey: ['canvas'] });
+    },
+  });
+};
+
 export const useDeployment = (deploymentId: string) => {
   return useQuery({
     queryKey: ['deployments', 'get', deploymentId].filter(Boolean),
