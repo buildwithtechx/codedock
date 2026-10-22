@@ -53,8 +53,8 @@ The latest OpenShip upstream release cycle (`6887ba85a..ed662afe7`) brings criti
 | [13. Background Restart Loop Watch & Incident Detection](#13-background-restart-loop-watch--incident-detection) | **P1 (High)** | Monitoring / Engine | Medium | **COMPLETED** (Phase 4) |
 | [14. Live GitHub Stars Nav Counter](#14-live-github-stars-nav-counter) | **P2 (Polish)** | Marketing & Web | Low | **COMPLETED** (Phase 4) |
 | [15. Catalog Automatic Credential Generation](#15-catalog-automatic-credential-generation) | **P2 (Polish)** | Catalog / UI | Low | **COMPLETED** (Phase 4) |
-| [16. Fine-Grained Token Capabilities & Domain Scoping](#16-fine-grained-token-capabilities--domain-scoping) | **P2 (Strategic)** | Auth & Permissions | Medium | **PLANNED** |
-| [17. Hosted Manage Plans vs Cloud Pricing Architecture](#17-hosted-manage-plans-vs-cloud-pricing-architecture) | **P2 (Strategic)** | Billing / Plans | Medium | **PLANNED** |
+| [16. Fine-Grained Token Capabilities & Domain Scoping](#16-fine-grained-token-capabilities--domain-scoping) | **P2 (Strategic)** | Auth & Permissions | Medium | **COMPLETED** (Phase 5) |
+| [17. Hosted Manage Plans vs Cloud Pricing Architecture](#17-hosted-manage-plans-vs-cloud-pricing-architecture) | **P2 (Strategic)** | Billing / Plans | Medium | **COMPLETED** (Phase 5) |
 | [18. Docker Swarm Multi-Node Combined Orchestration](#18-docker-swarm-multi-node-combined-orchestration) | **P3 (Long-Term)** | Multi-Host Cluster | High | **RESEARCH** |
 
 ---
@@ -169,14 +169,14 @@ Phase 4: Ingress & Runtime Resilience
   └── [x] 7. Actionable Multi-Service Operation Refusals (PR #1313 / GH-1308)
 
 Phase 5: Permissions, Governance & Managed Plans
-  ├── [ ] 1. Fine-Grained Token Capabilities & Domain-Scoped Access Grants (PR #1304)
+  ├── [x] 1. Fine-Grained Token Capabilities & Domain-Scoped Access Grants (PR #1304)
   │         ├── domains:read, domains:write, domains:delete
   │         └── deployments:read, deployments:trigger
-  ├── [ ] 2. Hosted Manage Plans vs Cloud Pricing Split Architecture (PR #1397)
+  ├── [x] 2. Hosted Manage Plans vs Cloud Pricing Split Architecture (PR #1397)
   │         ├── Management billing contract & schemas (packages/contracts/src/management-billing.ts)
   │         └── Server slot capacity enforcement & provider checkout reconciliation
-  ├── [ ] 3. Connected Server Health Auditing & Tenant Boundary Checks (PR #1411)
-  └── [ ] 4. Bounded Background Service Incident Tracking & Attention Derivation (PR #1198)
+  ├── [x] 3. Connected Server Health Auditing & Tenant Boundary Checks (PR #1411)
+  └── [x] 4. Bounded Background Service Incident Tracking & Attention Derivation (PR #1198)
 
 Phase 6: Multi-Node Swarm Orchestration & Advanced Clustering
   ├── [ ] 1. Docker Swarm Overlay Network Integration (feat/swarm-combined-20261022)

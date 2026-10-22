@@ -33,6 +33,9 @@ func NewSSHManager(repo repositories.ServerRepository) *SSHManager {
 }
 
 func (m *SSHManager) GetClient(server *models.Server) (*Client, func(), error) {
+	if server == nil {
+		return nil, nil, fmt.Errorf("server cannot be nil")
+	}
 	m.mu.Lock()
 	defer m.mu.Unlock()
 
@@ -173,4 +176,15 @@ func (m *SSHManager) StartMetricsPoller(ctx context.Context, userID string) {
 			}
 		}
 	}
+}
+
+// AssertOperatorSSHAccess ensures tenant boundaries are enforced on SSH connections.
+func AssertOperatorSSHAccess(server *models.Server, expectedOrgID string) error {
+	if server == nil {
+		return fmt.Errorf("server cannot be nil")
+	}
+	if server.OrganizationID != "" && expectedOrgID != "" && server.OrganizationID != expectedOrgID {
+		return fmt.Errorf("server %s belongs to organization %s, cannot be accessed by %s", server.ID, server.OrganizationID, expectedOrgID)
+	}
+	return nil
 }

@@ -55,18 +55,39 @@ func (g *AuthGuard) verifyScope(c echo.Context, requiredScope string) error {
 		if !ok {
 			return echo.NewHTTPError(http.StatusForbidden, "insufficient scopes")
 		}
-		hasScope := false
-		for _, s := range scopes {
-			if s == requiredScope || s == "admin" || s == "*" {
-				hasScope = true
-				break
-			}
+		if hasMatchingScope(scopes, requiredScope) {
+			return nil
 		}
-		if !hasScope {
-			return echo.NewHTTPError(http.StatusForbidden, "missing required scope: "+requiredScope)
-		}
+		return echo.NewHTTPError(http.StatusForbidden, "missing required scope: "+requiredScope)
 	}
 	return nil
+}
+
+func hasMatchingScope(scopes []string, required string) bool {
+	for _, s := range scopes {
+		if s == required || s == "admin" || s == "*" {
+			return true
+		}
+		switch required {
+		case "domains:read":
+			if s == "domains:write" || s == "domains:delete" || s == "domain:manage" {
+				return true
+			}
+		case "domains:write":
+			if s == "domains:delete" || s == "domain:manage" {
+				return true
+			}
+		case "deployments:read":
+			if s == "deployments:trigger" || s == "deploy:manage" {
+				return true
+			}
+		case "deployments:trigger":
+			if s == "deploy:manage" {
+				return true
+			}
+		}
+	}
+	return false
 }
 
 func (g *AuthGuard) RequireProjectRole(minPermission models.MemberPermission) echo.MiddlewareFunc {
