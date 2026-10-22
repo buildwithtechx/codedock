@@ -76,10 +76,7 @@ export function JobTriggersSection({
                     : 'border-border/60 hover:bg-muted/40 text-muted-foreground'
                 }`}
               >
-                <Checkbox
-                  checked={dependsOn.includes(o.key)}
-                  className="pointer-events-none"
-                />
+                <Checkbox checked={dependsOn.includes(o.key)} className="pointer-events-none" />
                 <span className="font-medium text-foreground">{o.label}</span>
               </button>
             ))}
@@ -102,10 +99,7 @@ export function JobTriggersSection({
                 aria-pressed={checked}
                 className="flex w-full cursor-pointer items-start gap-2 rounded-lg px-1 py-1 text-start text-sm hover:bg-muted/40"
               >
-                <Checkbox
-                  checked={checked}
-                  className="pointer-events-none mt-0.5"
-                />
+                <Checkbox checked={checked} className="pointer-events-none mt-0.5" />
                 <span className="text-sm">
                   <span className="text-foreground">{tg.label}</span>{' '}
                   <span className="text-muted-foreground/60">— {tg.description}</span>
@@ -196,10 +190,7 @@ export function JobNotificationsSection({
                   aria-pressed={notifyStates.includes(s)}
                   className="flex cursor-pointer items-center gap-1.5 text-muted-foreground text-sm"
                 >
-                  <Checkbox
-                    checked={notifyStates.includes(s)}
-                    className="pointer-events-none"
-                  />
+                  <Checkbox checked={notifyStates.includes(s)} className="pointer-events-none" />
                   <span className="capitalize">{s}</span>
                 </button>
               ))}

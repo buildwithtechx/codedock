@@ -24,10 +24,15 @@ export function RuntimeImageUpdateNotice({
           <ShieldAlert className="size-4" />
         </span>
         <div className="space-y-1">
-          <h4 className="font-semibold text-sm">A newer base image is available with security patches</h4>
+          <h4 className="font-semibold text-sm">
+            A newer base image is available with security patches
+          </h4>
           <div className="space-y-1 text-xs">
             {changed.map((img) => (
-              <div key={`${img.serviceId}:${img.ref}`} className="flex flex-wrap items-center gap-1.5 font-mono">
+              <div
+                key={`${img.serviceId}:${img.ref}`}
+                className="flex flex-wrap items-center gap-1.5 font-mono"
+              >
                 <span className="font-medium text-foreground">
                   {img.serviceName ? `${img.serviceName}: ` : ''}
                   {img.ref}

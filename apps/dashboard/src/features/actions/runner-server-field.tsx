@@ -74,7 +74,9 @@ export function RunnerServerField({
                     setDropdownOpen(false);
                   }}
                   className={`flex w-full items-center gap-2.5 rounded-lg px-3 py-2 text-left text-sm transition-colors hover:bg-muted/60 ${
-                    s.id === serverId ? 'bg-muted/40 font-medium text-foreground' : 'text-muted-foreground'
+                    s.id === serverId
+                      ? 'bg-muted/40 font-medium text-foreground'
+                      : 'text-muted-foreground'
                   }`}
                 >
                   <ServerIcon className="size-3.5 shrink-0" />

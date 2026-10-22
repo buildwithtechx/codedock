@@ -45,9 +45,7 @@ describe('RuntimeImageUpdateNotice', () => {
 
     render(<RuntimeImageUpdateNotice result={result} busy={false} onRefresh={onRefresh} />);
 
-    expect(
-      screen.getByText('A newer base image is available with security patches')
-    ).toBeTruthy();
+    expect(screen.getByText('A newer base image is available with security patches')).toBeTruthy();
     expect(screen.getByText(/web:/)).toBeTruthy();
     expect(screen.getByText(/node:20-alpine/)).toBeTruthy();
 

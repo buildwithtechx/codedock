@@ -1,9 +1,3 @@
-/**
- * Pure helpers for safe zero-downtime cutover.
- * Overlap: start the replacement under a temporary name, wait until healthy,
- * update proxy routing, then retire predecessor.
- * Replace: stop and remove predecessor first, then create newcomer.
- */
 export type CutoverConfig = {
   ports: string[];
   volumes: string[];
@@ -15,7 +9,6 @@ export type CutoverConfig = {
 
 export const CUTOVER_SHARED_VOLUMES_ENV = 'CODEDOCK_CUTOVER_SHARED_VOLUMES';
 
-/** Explicit host publish (hostPort:containerPort or ip:host:container). Bare "3000" is internal. */
 export function hasHostPortBindings(ports: string[]): boolean {
   return ports.some((p) => {
     const mapping = p.includes('/') ? p.slice(0, p.lastIndexOf('/')) : p;
@@ -102,7 +95,9 @@ export function decideCutover(opts: CutoverInput): CutoverDecision {
   }
 
   if (opts.volumes && opts.incumbentMounts) {
-    const liveRw = opts.incumbentMounts.filter((m) => m.RW !== false).map((m) => normalizeDest(m.Destination));
+    const liveRw = opts.incumbentMounts
+      .filter((m) => m.RW !== false)
+      .map((m) => normalizeDest(m.Destination));
     const clashes: string[] = [];
     for (const spec of opts.volumes) {
       const parsed = parseVolumeDestination(spec);

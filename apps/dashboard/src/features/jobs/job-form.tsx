@@ -47,9 +47,7 @@ export function JobForm({
   const [scheduleType, setScheduleType] = useState<'recurring' | 'once' | 'manual'>('recurring');
   const [cron, setCron] = useState(job?.schedule ?? '0 3 * * *');
   const [runAt, setRunAt] = useState('');
-  const [serverIds, setServerIds] = useState<string[]>(
-    servers.length > 0 ? [servers[0].id] : []
-  );
+  const [serverIds, setServerIds] = useState<string[]>(servers.length > 0 ? [servers[0].id] : []);
   const [envRows, setEnvRows] = useState<KV[]>([]);
   const [secretRows, setSecretRows] = useState<KV[]>([]);
   const [timeoutSec, setTimeoutSec] = useState('300');
@@ -91,7 +89,11 @@ export function JobForm({
     try {
       const resolvedServiceId = serviceId || (services[0]?.id ?? 'default-service');
       const resolvedSchedule =
-        scheduleType === 'recurring' ? cron.trim() : scheduleType === 'once' ? `@once ${runAt}` : '@manual';
+        scheduleType === 'recurring'
+          ? cron.trim()
+          : scheduleType === 'once'
+            ? `@once ${runAt}`
+            : '@manual';
 
       if (editing && job) {
         const res = await updateJobMutation.mutateAsync({
@@ -121,11 +123,13 @@ export function JobForm({
 
   const scheduleRecap =
     scheduleType === 'recurring' ? cron : scheduleType === 'once' ? runAt || '—' : 'Manual';
-  const retryRecap =
-    parseInt(maxAttempts, 10) > 1 ? `${maxAttempts}× · ${backoffSec}s` : 'None';
+  const retryRecap = parseInt(maxAttempts, 10) > 1 ? `${maxAttempts}× · ${backoffSec}s` : 'None';
 
   return (
-    <form onSubmit={handleSubmit} className="grid grid-cols-1 items-start gap-6 pb-16 lg:grid-cols-[minmax(0,1fr)_340px]">
+    <form
+      onSubmit={handleSubmit}
+      className="grid grid-cols-1 items-start gap-6 pb-16 lg:grid-cols-[minmax(0,1fr)_340px]"
+    >
       <div className="min-w-0 space-y-5">
         <JobBasicsSection
           label={label}

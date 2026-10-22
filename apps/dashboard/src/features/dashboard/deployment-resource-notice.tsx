@@ -8,35 +8,44 @@ interface DeploymentResourceNoticeProps {
   onViewLogs?: () => void;
 }
 
-const ISSUE_CONFIG: Record<string, { title: string; description: string; icon: typeof AlertTriangle }> = {
+const ISSUE_CONFIG: Record<
+  string,
+  { title: string; description: string; icon: typeof AlertTriangle }
+> = {
   'container-oom': {
     title: 'Container ran out of memory',
-    description: 'Docker confirmed an out-of-memory kill. The container exceeded its configured memory limit. Adjust the service memory limit or upgrade server capacity before retrying.',
+    description:
+      'Docker confirmed an out-of-memory kill. The container exceeded its configured memory limit. Adjust the service memory limit or upgrade server capacity before retrying.',
     icon: Cpu,
   },
   'memory-allocation': {
     title: 'Memory allocation failed',
-    description: 'The process could not allocate system memory (ENOMEM). Review memory limits and available server capacity before choosing a larger instance.',
+    description:
+      'The process could not allocate system memory (ENOMEM). Review memory limits and available server capacity before choosing a larger instance.',
     icon: Cpu,
   },
   'process-heap': {
     title: 'Application heap limit reached',
-    description: 'The process reached its runtime heap limit. Adjust NODE_OPTIONS="--max-old-space-size=..." in environment variables before upgrading server capacity.',
+    description:
+      'The process reached its runtime heap limit. Adjust NODE_OPTIONS="--max-old-space-size=..." in environment variables before upgrading server capacity.',
     icon: Terminal,
   },
   'storage-full': {
     title: 'Storage allocation failed',
-    description: 'The operation ran out of disk space or inodes (ENOSPC). Review disk usage and prune unused Docker artifacts, preserving data volumes.',
+    description:
+      'The operation ran out of disk space or inodes (ENOSPC). Review disk usage and prune unused Docker artifacts, preserving data volumes.',
     icon: HardDrive,
   },
   'storage-low': {
     title: 'Low build storage',
-    description: 'The Docker filesystem has too little free space or inodes to safely complete the build.',
+    description:
+      'The Docker filesystem has too little free space or inodes to safely complete the build.',
     icon: HardDrive,
   },
   'process-killed': {
     title: 'Build process was terminated',
-    description: 'The process received SIGKILL (exit 137). Check command timeouts, external termination signals, or host logs.',
+    description:
+      'The process received SIGKILL (exit 137). Check command timeouts, external termination signals, or host logs.',
     icon: AlertTriangle,
   },
 };
@@ -56,7 +65,10 @@ export function DeploymentResourceNotice({
   const Icon = info.icon;
 
   return (
-    <section aria-label="Deployment resource guidance" className="rounded-2xl border border-amber-500/20 bg-amber-500/5 p-5">
+    <section
+      aria-label="Deployment resource guidance"
+      className="rounded-2xl border border-amber-500/20 bg-amber-500/5 p-5"
+    >
       <div className="flex items-start gap-3">
         <Icon className="mt-0.5 size-5 shrink-0 text-amber-500" aria-hidden="true" />
         <div className="min-w-0 flex-1">

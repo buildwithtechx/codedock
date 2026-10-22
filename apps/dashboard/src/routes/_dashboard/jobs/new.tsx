@@ -23,7 +23,8 @@ function NewJobPage() {
         <div>
           <h1 className="font-medium text-2xl text-foreground/80 tracking-[-0.2px]">New job</h1>
           <p className="mt-1 text-muted-foreground/70 text-sm">
-            Run a command on one of your servers — on a schedule, once, or on an event — with retry, secrets, live logs and notifications.
+            Run a command on one of your servers — on a schedule, once, or on an event — with retry,
+            secrets, live logs and notifications.
           </p>
         </div>
       </div>

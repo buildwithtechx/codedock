@@ -81,10 +81,7 @@ export function RunnerSummaryCard({
       )}
 
       <label className="flex cursor-pointer items-center gap-2 pt-1 text-sm">
-        <Checkbox
-          checked={enabled}
-          onCheckedChange={(val) => onEnabledChange(Boolean(val))}
-        />
+        <Checkbox checked={enabled} onCheckedChange={(val) => onEnabledChange(Boolean(val))} />
         <span className="font-medium text-foreground text-sm">Accept new jobs</span>
       </label>
 

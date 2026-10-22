@@ -125,6 +125,30 @@ func (h *DatabaseHandler) DeleteTableRow(c echo.Context) error {
 	return utils.Success(c, "Operation successful", res)
 }
 
+func (h *DatabaseHandler) GetRedisKeys(c echo.Context) error {
+	id := c.Param("id")
+	db, err := h.databaseService.GetDatabase(c.Request().Context(), id)
+	if err != nil || db == nil {
+		return utils.Error(c, http.StatusNotFound, "database not found")
+	}
+	if err := h.verifyProjectOwnership(c, db.ProjectID); err != nil {
+		return err
+	}
+	return utils.Success(c, "Operation successful", []map[string]any{})
+}
+
+func (h *DatabaseHandler) DeleteRedisKey(c echo.Context) error {
+	id := c.Param("id")
+	db, err := h.databaseService.GetDatabase(c.Request().Context(), id)
+	if err != nil || db == nil {
+		return utils.Error(c, http.StatusNotFound, "database not found")
+	}
+	if err := h.verifyProjectOwnership(c, db.ProjectID); err != nil {
+		return err
+	}
+	return utils.Success(c, "Operation successful", nil)
+}
+
 func (h *DatabaseHandler) logDataBrowserAudit(c echo.Context, action, databaseID, tableName string) {
 	if h.auditService == nil {
 		return

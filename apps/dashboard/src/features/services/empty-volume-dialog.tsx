@@ -69,7 +69,9 @@ export function EmptyVolumeDialog({
                 <HardDrive className="size-5" />
               </span>
               <div>
-                <DialogTitle className="text-base font-semibold">Start with empty storage</DialogTitle>
+                <DialogTitle className="text-base font-semibold">
+                  Start with empty storage
+                </DialogTitle>
                 <DialogDescription className="text-xs">
                   Attach fresh empty storage while retaining the previous volume.
                 </DialogDescription>
@@ -88,7 +90,9 @@ export function EmptyVolumeDialog({
             </div>
             <div className="flex justify-between">
               <span className="text-muted-foreground">New volume:</span>
-              <span className="font-mono text-emerald-600 dark:text-emerald-400">codedock-fresh-new</span>
+              <span className="font-mono text-emerald-600 dark:text-emerald-400">
+                codedock-fresh-new
+              </span>
             </div>
           </div>
 
@@ -99,7 +103,8 @@ export function EmptyVolumeDialog({
 
           <div className="space-y-1.5">
             <Label htmlFor={inputId} className="text-xs font-medium">
-              Type <span className="font-bold font-mono text-foreground">{serviceName}</span> to confirm
+              Type <span className="font-bold font-mono text-foreground">{serviceName}</span> to
+              confirm
             </Label>
             <Input
               id={inputId}

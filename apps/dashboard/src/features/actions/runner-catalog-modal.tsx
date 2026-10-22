@@ -6,12 +6,7 @@ import {
   DialogHeader,
   DialogTitle,
 } from '@codedock/ui/dialog';
-import {
-  CustomImageLogo,
-  LinuxLogo,
-  MacosLogo,
-  UbuntuLogo,
-} from './runner-logos';
+import { CustomImageLogo, LinuxLogo, MacosLogo, UbuntuLogo } from './runner-logos';
 
 export type RunnerPreset = 'ubuntu' | 'macos' | 'linux' | 'custom';
 
@@ -105,7 +100,9 @@ export function RunnerCatalogModal({ open, selected, onSelect, onClose }: Runner
                   <div className="flex w-full items-start gap-3">
                     <div
                       className={`shrink-0 rounded-lg p-2.5 ${
-                        isSelected ? 'bg-primary/10 text-primary' : 'bg-muted/50 text-muted-foreground'
+                        isSelected
+                          ? 'bg-primary/10 text-primary'
+                          : 'bg-muted/50 text-muted-foreground'
                       }`}
                     >
                       <Icon className="size-6" />

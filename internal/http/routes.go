@@ -157,6 +157,9 @@ func (s *Server) registerProjectRoutes(apiGroup, authGroup *echo.Group) {
 
 	authGroup.GET("/projects/:id", s.projectHandler.GetProject, projectAuth)
 	authGroup.DELETE("/projects/:id", s.projectHandler.DeleteProject, projectAuthOwner)
+	authGroup.GET("/projects/:id/members", s.projectHandler.ListMembers, projectAuth)
+	authGroup.POST("/projects/:id/members", s.projectHandler.AddMember, projectAuthAdmin)
+	authGroup.DELETE("/projects/:id/members/:memberId", s.projectHandler.RemoveMember, projectAuthAdmin)
 
 	authGroup.GET("/domains", s.domainHandler.ListAll)
 	authGroup.GET("/projects/:id/domains", s.domainHandler.ListByProject, projectAuth)
@@ -254,6 +257,8 @@ func (s *Server) registerDatabaseRoutes(authGroup *echo.Group) {
 	authGroup.POST("/databases/:id/import", s.dbHandler.ImportData, s.authGuard.RequireScope("database:manage"))
 
 	authGroup.GET("/databases/:id/schemas", s.dbHandler.GetSchemas, s.authGuard.RequireScope("database:manage"))
+	authGroup.GET("/databases/:id/redis/keys", s.dbHandler.GetRedisKeys, s.authGuard.RequireScope("database:manage"))
+	authGroup.DELETE("/databases/:id/redis/keys/:key", s.dbHandler.DeleteRedisKey, s.authGuard.RequireScope("database:manage"))
 	authGroup.GET("/databases/:id/data/:table", s.dbHandler.GetTableData, s.authGuard.RequireScope("database:manage"))
 	authGroup.POST("/databases/:id/data/:table", s.dbHandler.InsertTableRow, s.authGuard.RequireScope("database:manage"))
 	authGroup.PUT("/databases/:id/data/:table", s.dbHandler.UpdateTableRow, s.authGuard.RequireScope("database:manage"))

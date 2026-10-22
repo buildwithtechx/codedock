@@ -81,6 +81,8 @@ func databaseOperations() []Operation {
 		{Method: "POST", Path: "/api/databases/:id/import", Summary: "Import SQL into a database", Tags: []string{databases}, Auth: db, Request: JSON(Obj("Import", RF("sql", Str("SQL statements")))), Response: EmptySchema()},
 		{Method: "POST", Path: "/api/databases/:id/credentials/reveal", Summary: "Reveal database credentials", Tags: []string{databases}, Auth: db, Response: Obj("Credentials", RF("password", Str("Password")))},
 		{Method: "GET", Path: "/api/databases/:id/schemas", Summary: "List database tables", Tags: []string{databases}, Auth: db, Response: Arr("Tables", tableSchemaSchema())},
+		{Method: "GET", Path: "/api/databases/:id/redis/keys", Summary: "List Redis keys", Tags: []string{databases}, Auth: db, Response: Arr("Keys", Any("Redis key"))},
+		{Method: "DELETE", Path: "/api/databases/:id/redis/keys/:key", Summary: "Delete Redis key", Tags: []string{databases}, Auth: db, Response: EmptySchema()},
 		{Method: "GET", Path: "/api/databases/:id/data/:table", Summary: "Get table rows", Tags: []string{databases}, Auth: db, Response: Any("Table rows"), Query: []Param{QueryParamInt("page", "Page"), QueryParamInt("limit", "Page size")}},
 		{Method: "POST", Path: "/api/databases/:id/data/:table", Summary: "Insert a table row", Tags: []string{databases}, Auth: db, Request: JSON(Map("Row", Any("Value"))), Response: Any("Insert result")},
 		{Method: "PUT", Path: "/api/databases/:id/data/:table", Summary: "Update table rows", Tags: []string{databases}, Auth: db, Request: JSON(Map("Row", Any("Value"))), Response: Any("Update result")},

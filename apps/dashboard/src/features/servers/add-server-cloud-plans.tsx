@@ -1,4 +1,14 @@
-import { ArrowRight, Building2, Check, ChevronDown, Flame, Layers, Rocket, Sparkles, Zap } from 'lucide-react';
+import {
+  ArrowRight,
+  Building2,
+  Check,
+  ChevronDown,
+  Flame,
+  Layers,
+  Rocket,
+  Sparkles,
+  Zap,
+} from 'lucide-react';
 import { Button } from '@codedock/ui/button';
 
 export interface CloudPlan {
@@ -123,7 +133,9 @@ export function AddServerCloudPlans({ onSelectPlan, onClose }: AddServerCloudPla
                     </span>
                     <span className="font-medium text-muted-foreground text-sm">/mo</span>
                   </div>
-                  <p className="mt-0.5 text-muted-foreground text-xs">billed monthly, cancel anytime</p>
+                  <p className="mt-0.5 text-muted-foreground text-xs">
+                    billed monthly, cancel anytime
+                  </p>
                   <p className="mt-2 min-h-[40px] text-muted-foreground text-sm leading-5">
                     {plan.description}
                   </p>
@@ -149,15 +161,21 @@ export function AddServerCloudPlans({ onSelectPlan, onClose }: AddServerCloudPla
                   <p className="font-medium text-muted-foreground text-xs">Plan capacity</p>
                   <dl className="grid grid-cols-3 gap-2 rounded-xl bg-muted/40 p-3 text-center">
                     <div>
-                      <dd className="font-semibold text-foreground text-base tabular-nums">{plan.vcpu}</dd>
+                      <dd className="font-semibold text-foreground text-base tabular-nums">
+                        {plan.vcpu}
+                      </dd>
                       <dt className="text-muted-foreground text-xs">vCPU</dt>
                     </div>
                     <div>
-                      <dd className="font-semibold text-foreground text-base tabular-nums">{plan.ram}</dd>
+                      <dd className="font-semibold text-foreground text-base tabular-nums">
+                        {plan.ram}
+                      </dd>
                       <dt className="text-muted-foreground text-xs">RAM</dt>
                     </div>
                     <div>
-                      <dd className="font-semibold text-foreground text-base tabular-nums">{plan.storage}</dd>
+                      <dd className="font-semibold text-foreground text-base tabular-nums">
+                        {plan.storage}
+                      </dd>
                       <dt className="text-muted-foreground text-xs">Storage</dt>
                     </div>
                   </dl>
@@ -165,15 +183,21 @@ export function AddServerCloudPlans({ onSelectPlan, onClose }: AddServerCloudPla
                   <div className="space-y-2 text-sm">
                     <div className="flex justify-between">
                       <span className="text-muted-foreground">Projects</span>
-                      <span className="font-medium text-foreground tabular-nums">{plan.projects}</span>
+                      <span className="font-medium text-foreground tabular-nums">
+                        {plan.projects}
+                      </span>
                     </div>
                     <div className="flex justify-between">
                       <span className="text-muted-foreground">Running services</span>
-                      <span className="font-medium text-foreground tabular-nums">{plan.services}</span>
+                      <span className="font-medium text-foreground tabular-nums">
+                        {plan.services}
+                      </span>
                     </div>
                     <div className="flex justify-between">
                       <span className="text-muted-foreground">Concurrent builds</span>
-                      <span className="font-medium text-foreground tabular-nums">{plan.builds}</span>
+                      <span className="font-medium text-foreground tabular-nums">
+                        {plan.builds}
+                      </span>
                     </div>
                     <div className="flex items-center gap-2 pt-1 text-muted-foreground">
                       <Check className="size-3.5 shrink-0" />

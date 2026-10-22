@@ -11,7 +11,12 @@ import { useListProjects } from '#/hooks/use-projects';
 import type { Deployment } from '#/interfaces/services';
 import { DeploymentFailureAi } from '#/features/services/deployment-failure-ai';
 import { useGetApp } from '#/hooks/use-apps';
-import { useCancelDeployment, useDeployment, useRetryDeployment, useRollback } from '#/hooks/use-deployments';
+import {
+  useCancelDeployment,
+  useDeployment,
+  useRetryDeployment,
+  useRollback,
+} from '#/hooks/use-deployments';
 import { DeploymentLogs } from './deployment-logs';
 import { DeploymentResourceNotice } from './deployment-resource-notice';
 import { DeploymentRollbackDialog } from './deployment-rollback-dialog';
@@ -145,11 +150,7 @@ export function DeploymentDetail({ deploymentId }: { deploymentId: string }) {
               </Button>
             )}
             {canRetry && (
-              <Button
-                onClick={handleRetry}
-                disabled={retryDeployment.isPending}
-                className="gap-2"
-              >
+              <Button onClick={handleRetry} disabled={retryDeployment.isPending} className="gap-2">
                 {retryDeployment.isPending ? (
                   <Loader2 className="h-4 w-4 animate-spin" />
                 ) : (

@@ -81,7 +81,9 @@ export function JobBasicsSection({
               }}
               className={`${inputCls} h-10`}
             >
-              <option value="" disabled>Select workflow</option>
+              <option value="" disabled>
+                Select workflow
+              </option>
               {workflows.map((wf) => (
                 <option key={wf.id} value={wf.id}>
                   {wf.name}
@@ -130,7 +132,11 @@ export function JobScheduleSection({
   onRunAtChange,
 }: JobScheduleSectionProps) {
   return (
-    <Section title="Schedule" icon={<CalendarClock className="size-[18px]" />} tone={SECTION_TONES.schedule}>
+    <Section
+      title="Schedule"
+      icon={<CalendarClock className="size-[18px]" />}
+      tone={SECTION_TONES.schedule}
+    >
       <div className="grid grid-cols-3 gap-2">
         {[
           { id: 'recurring', label: 'On a schedule' },

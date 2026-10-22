@@ -40,10 +40,7 @@ export function RuntimeRedeployMenu({
       <DropdownMenuContent align="end" className="w-64 rounded-xl p-1.5 shadow-lg">
         {onStandardRedeploy && (
           <>
-            <DropdownMenuItem
-              onClick={onStandardRedeploy}
-              className="gap-2 rounded-lg text-xs"
-            >
+            <DropdownMenuItem onClick={onStandardRedeploy} className="gap-2 rounded-lg text-xs">
               <RefreshCw className="size-3.5" />
               <span>Redeploy (current image)</span>
             </DropdownMenuItem>

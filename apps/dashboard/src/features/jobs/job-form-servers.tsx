@@ -21,7 +21,11 @@ export function JobEnvironmentSection({
   setSecretRows,
 }: JobEnvironmentSectionProps) {
   return (
-    <Section title="Environment" icon={<Key className="size-[18px]" />} tone={SECTION_TONES.environment}>
+    <Section
+      title="Environment"
+      icon={<Key className="size-[18px]" />}
+      tone={SECTION_TONES.environment}
+    >
       <div className="space-y-4">
         <KeyValueEditor rows={envRows} setRows={setEnvRows} addLabel="Add variable" />
         <div className="space-y-2 pt-2">
@@ -49,7 +53,11 @@ export function JobServersSection({
   isCloud = false,
 }: JobServersSectionProps) {
   return (
-    <Section title="Target servers" icon={<Server className="size-[18px]" />} tone={SECTION_TONES.servers}>
+    <Section
+      title="Target servers"
+      icon={<Server className="size-[18px]" />}
+      tone={SECTION_TONES.servers}
+    >
       <p className="text-muted-foreground text-sm">
         {isCloud
           ? 'Use an existing server, or add a dedicated server with its own subscription.'
@@ -63,7 +71,10 @@ export function JobServersSection({
               onClick={() => onToggleServer('production')}
               className="flex w-full items-center gap-2.5 rounded-xl border border-border/60 bg-muted/20 p-3 text-start transition-colors hover:bg-muted/40"
             >
-              <Checkbox checked={serverIds.includes('production')} className="pointer-events-none" />
+              <Checkbox
+                checked={serverIds.includes('production')}
+                className="pointer-events-none"
+              />
               <Server className="size-4 text-muted-foreground" />
               <span className="font-medium text-foreground text-sm">Production</span>
             </button>
@@ -125,7 +136,11 @@ export function JobReliabilitySection({
   onBackoffChange,
 }: JobReliabilitySectionProps) {
   return (
-    <Section title="Reliability" icon={<ShieldCheck className="size-[18px]" />} tone={SECTION_TONES.reliability}>
+    <Section
+      title="Reliability"
+      icon={<ShieldCheck className="size-[18px]" />}
+      tone={SECTION_TONES.reliability}
+    >
       <div className="grid grid-cols-3 gap-3">
         <Field label="Timeout (s)">
           <input

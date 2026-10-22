@@ -33,13 +33,11 @@ func TestClashingRWDestinations(t *testing.T) {
 	incumbent := []string{"/host/data:/app/data", "/host/logs:/app/logs:ro"}
 	candidate := []string{"/host/new-data:/app/data", "/host/logs:/app/logs"}
 
-	// Without opt-in, /app/data clashes because incumbent has it RW and candidate has it RW
 	clashes := ClashingRWDestinations(incumbent, candidate, nil)
 	if len(clashes) != 1 || clashes[0] != "/app/data" {
 		t.Fatalf("expected ['/app/data'], got %v", clashes)
 	}
 
-	// With opt-in for /app/data, no clashes
 	optIn := map[string]bool{"/app/data": true}
 	clashesWithOptIn := ClashingRWDestinations(incumbent, candidate, optIn)
 	if len(clashesWithOptIn) != 0 {

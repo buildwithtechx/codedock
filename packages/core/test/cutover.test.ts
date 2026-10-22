@@ -47,10 +47,12 @@ describe('cutover helpers', () => {
       reason: 'host-ports',
     });
 
-    expect(decideCutover({ incumbentRunning: true, ports: ['3000'], networkMode: 'host' })).toEqual({
-      mode: 'replace',
-      reason: 'shared-namespaces',
-    });
+    expect(decideCutover({ incumbentRunning: true, ports: ['3000'], networkMode: 'host' })).toEqual(
+      {
+        mode: 'replace',
+        reason: 'shared-namespaces',
+      }
+    );
 
     expect(
       decideCutover({

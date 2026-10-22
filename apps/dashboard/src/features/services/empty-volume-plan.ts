@@ -1,7 +1,3 @@
-/**
- * Configuration change only. Docker creates the new volume during normal deployment,
- * while the previous volume remains retained in the host volume pool.
- */
 export function emptyVolumePlan(volumes: readonly string[], selected: string) {
   if (!volumes.includes(selected)) return null;
 

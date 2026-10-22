@@ -1,15 +1,17 @@
 export interface CertbotDiagnosis {
   domain: string;
-  category: 'gateway_error' | 'port_occupied' | 'firewall_timeout' | 'cloudflare_525' | 'dns_or_not_found' | 'generic';
+  category:
+    | 'gateway_error'
+    | 'port_occupied'
+    | 'firewall_timeout'
+    | 'cloudflare_525'
+    | 'dns_or_not_found'
+    | 'generic';
   summary: string;
 }
 
 export const ACME_HTTP01_PORT = 49180;
 
-/**
- * Classifies Let's Encrypt and Certbot challenge outputs precisely.
- * Avoids false takeover / port 80 claims when HTTP 502 or 504 are returned by a gateway.
- */
 export function summarizeCertbotFailure(output: string, domain: string): string {
   const text = output || '';
 
@@ -17,12 +19,13 @@ export function summarizeCertbotFailure(output: string, domain: string): string 
   const challengeUrl = challengeUrlMatch ? challengeUrlMatch[0] : null;
   const redirectedToHttps = challengeUrl ? /^https:/i.test(challengeUrl) : false;
 
-  // Extract HTTP status from: "Invalid response from https?://...: <status>"
   const statusMatch = text.match(/invalid response from https?:\/\/\S+:\s*(\d{3})\b/i);
   const challengeStatus = statusMatch ? statusMatch[1] : null;
 
   if (
-    /bind: address already in use|could not bind to IPv4 or IPv6|failed to bind to :80\b/i.test(text)
+    /bind: address already in use|could not bind to IPv4 or IPv6|failed to bind to :80\b/i.test(
+      text
+    )
   ) {
     return (
       `Port 80 is occupied by another process on this server. Another web server or container ` +
@@ -62,7 +65,5 @@ export function summarizeCertbotFailure(output: string, domain: string): string 
     );
   }
 
-  return (
-    `Let's Encrypt could not verify the challenge for ${domain}. Check your DNS records and server connectivity.`
-  );
+  return `Let's Encrypt could not verify the challenge for ${domain}. Check your DNS records and server connectivity.`;
 }

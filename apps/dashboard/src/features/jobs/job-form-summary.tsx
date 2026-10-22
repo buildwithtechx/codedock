@@ -29,9 +29,7 @@ export function JobSummaryRail({
   notifyChannelsCount,
 }: JobSummaryRailProps) {
   const displayCommand =
-    mode === 'workflow'
-      ? workflowName || '—'
-      : label.trim() || command.trim() || '—';
+    mode === 'workflow' ? workflowName || '—' : label.trim() || command.trim() || '—';
 
   return (
     <div className="space-y-4 lg:sticky lg:top-6 lg:self-start">
@@ -46,11 +44,7 @@ export function JobSummaryRail({
             value={displayCommand}
             mono={mode === 'command' && !label.trim() && Boolean(command.trim())}
           />
-          <SummaryRow
-            label="Schedule"
-            value={scheduleRecap}
-            mono={isRecurring}
-          />
+          <SummaryRow label="Schedule" value={scheduleRecap} mono={isRecurring} />
           {mode === 'command' && (
             <>
               <SummaryRow label="Targets" value={String(targetsCount)} />

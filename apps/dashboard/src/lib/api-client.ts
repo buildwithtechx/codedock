@@ -94,7 +94,9 @@ export const apiClient = {
             });
             if (retryResponse.ok) {
               if (retryResponse.status === 204) return {} as T;
-              const isJson = retryResponse.headers.get('content-type')?.includes('application/json');
+              const isJson = retryResponse.headers
+                .get('content-type')
+                ?.includes('application/json');
               return (isJson ? await retryResponse.json() : await retryResponse.text()) as T;
             }
           }

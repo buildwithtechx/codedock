@@ -31,9 +31,9 @@ func BuildMetadataFirewallScript() string {
 	sb.WriteString("set -eu\n")
 
 	type toolConfig struct {
-		cmd  string
-		ips  []string
-		dns  string
+		cmd string
+		ips []string
+		dns string
 	}
 
 	tools := []toolConfig{

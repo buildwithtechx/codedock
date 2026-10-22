@@ -177,11 +177,7 @@ export function AddServerModal({
   );
 }
 
-export function useAddServerModal({
-  initialMode,
-}: {
-  initialMode?: 'managed' | 'connected';
-} = {}) {
+export function useAddServerModal({ initialMode }: { initialMode?: 'managed' | 'connected' } = {}) {
   const [open, setOpen] = useState(false);
   const [callback, setCallback] = useState<((server: ServerModel) => void) | undefined>();
 

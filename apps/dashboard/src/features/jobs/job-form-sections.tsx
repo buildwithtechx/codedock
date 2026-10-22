@@ -46,7 +46,9 @@ export function Section({
 export function Field({ label, children }: { label?: string; children: ReactNode }) {
   return (
     <label className="block">
-      {label && <span className="mb-1.5 block font-medium text-muted-foreground text-sm">{label}</span>}
+      {label && (
+        <span className="mb-1.5 block font-medium text-muted-foreground text-sm">{label}</span>
+      )}
       {children}
     </label>
   );
@@ -112,7 +114,9 @@ export function KeyValueEditor({
     <div className="space-y-2">
       {!secret && (
         <div className="flex items-center justify-between gap-2">
-          <span className="font-medium text-muted-foreground text-xs uppercase tracking-wider">Variables</span>
+          <span className="font-medium text-muted-foreground text-xs uppercase tracking-wider">
+            Variables
+          </span>
           <div className="flex items-center gap-1.5">
             <button
               type="button"

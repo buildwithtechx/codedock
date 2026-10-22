@@ -21,6 +21,21 @@ func logDrainSchema() Schema {
 	return Obj("Log drain", append(props, Timestamps()...)...)
 }
 
+func runtimeUpdateSchema() Schema {
+	return Obj("Runtime image check result",
+		RF("checkedAt", DateTime("Check timestamp")),
+		RF("images", Arr("Images", Obj("Runtime image info",
+			F("serviceId", Str("Service ID")),
+			F("serviceName", Str("Service name")),
+			RF("role", Str("Role")),
+			RF("ref", Str("Image reference")),
+			F("currentDigest", Str("Current digest")),
+			F("latestDigest", Str("Latest digest")),
+			RF("status", Str("Status")),
+		))),
+	)
+}
+
 func webhookSchema() Schema {
 	props := []Property{
 		RF("id", ID("Webhook ID")),
@@ -85,7 +100,10 @@ func appOperations() []Operation {
 		{Method: "POST", Path: "/api/apps/:id/stop", Summary: "Stop a service", Tags: []string{apps}, Auth: ServiceRole("admin"), Response: AppServiceSchema()},
 		{Method: "GET", Path: "/api/apps/:id/volumes", Summary: "List service volumes", Tags: []string{apps}, Auth: ServiceRole(""), Response: Arr("Volumes", serviceVolumeSchema())},
 		{Method: "POST", Path: "/api/apps/:id/volumes", Summary: "Add a service volume", Tags: []string{apps}, Auth: ServiceRole("admin"), Request: JSON(Obj("Add volume", RF("hostPath", Str("Host path")), RF("containerPath", Str("Container path")))), Response: serviceVolumeSchema()},
+		{Method: "POST", Path: "/api/apps/:id/volumes/:volumeId/empty", Summary: "Reset to fresh empty volume", Tags: []string{apps}, Auth: ServiceRole("admin"), Response: Obj("Reset result", RF("volume", serviceVolumeSchema()), RF("retainedVolume", Str("Retained volume")), RF("newVolume", Str("New volume")))},
 		{Method: "DELETE", Path: "/api/apps/:id/volumes/:volumeId", Summary: "Delete a service volume", Tags: []string{apps}, Auth: ServiceRole("admin"), Response: EmptySchema()},
+		{Method: "GET", Path: "/api/apps/:id/runtime-updates", Summary: "Check runtime image updates", Tags: []string{apps}, Auth: ServiceRole(""), Response: runtimeUpdateSchema()},
+		{Method: "POST", Path: "/api/apps/:id/runtime-updates", Summary: "Redeploy service with latest runtime image", Tags: []string{apps}, Auth: ServiceRole("admin"), Code: 202, Response: DeploymentSchema()},
 		{Method: "GET", Path: "/api/apps/:id/log-drains", Summary: "List log drains", Tags: []string{apps}, Auth: ServiceRole(""), Response: Arr("Drains", logDrainSchema())},
 		{Method: "POST", Path: "/api/apps/:id/log-drains", Summary: "Create a log drain", Tags: []string{apps}, Auth: ServiceRole("admin"), Code: 201, Request: JSON(Obj("Create drain", RF("drainType", Str("Drain type")), RF("endpointUrl", Str("Endpoint URL")), F("authToken", Str("Auth token")))), Response: logDrainSchema()},
 		{Method: "DELETE", Path: "/api/apps/:id/log-drains/:drainId", Summary: "Delete a log drain", Tags: []string{apps}, Auth: ServiceRole("admin"), Raw: true, Code: 204, Response: EmptySchema()},

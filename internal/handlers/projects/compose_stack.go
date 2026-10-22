@@ -119,3 +119,11 @@ func (h *ComposeStackHandler) Cancel(c echo.Context) error {
 	}
 	return utils.Error(c, http.StatusNotFound, "stack not found")
 }
+
+func (h *ComposeStackHandler) Restart(c echo.Context) error {
+	return h.Deploy(c)
+}
+
+func (h *ComposeStackHandler) Stop(c echo.Context) error {
+	return h.Cancel(c)
+}

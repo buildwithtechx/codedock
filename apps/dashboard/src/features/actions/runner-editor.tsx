@@ -31,12 +31,7 @@ const PRESET_DEFAULTS: Record<RunnerPreset, { image: string; labels: string }> =
   custom: { image: '', labels: 'self-hosted, custom' },
 };
 
-export function RunnerEditor({
-  initialServer,
-  onBack,
-  onClose,
-  onSuccess,
-}: RunnerEditorProps) {
+export function RunnerEditor({ initialServer, onBack, onClose, onSuccess }: RunnerEditorProps) {
   const navigate = useNavigate();
   const runnerNameId = useId();
   const { data: publicRes } = useGetPublicSettings();

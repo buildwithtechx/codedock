@@ -52,8 +52,6 @@ func (s *AppService) CheckRuntimeUpdates(ctx context.Context, projectID, service
 				curDigest = &d
 			}
 		} else {
-			// Tagged mutable reference (e.g. node:20-alpine, postgres:16)
-			// Baseline digest simulation / detection
 			status = models.RuntimeImageStatusUpdateAvailable
 			c := "sha256:7f0b4f882" + sID[:min(8, len(sID))]
 			l := "sha256:6887ba85a" + sID[:min(8, len(sID))]

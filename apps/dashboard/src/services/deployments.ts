@@ -105,9 +105,7 @@ export const deploymentsService = {
 
   retry: async (deploymentId: string): Promise<TriggerDeploymentResponse> => {
     try {
-      return await apiClient.post<TriggerDeploymentResponse>(
-        `/deployments/${deploymentId}/retry`
-      );
+      return await apiClient.post<TriggerDeploymentResponse>(`/deployments/${deploymentId}/retry`);
     } catch (error) {
       throw handleApiError(error);
     }

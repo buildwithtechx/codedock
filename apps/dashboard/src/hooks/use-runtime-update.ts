@@ -23,13 +23,18 @@ export function useRuntimeUpdate(projectId: string, serviceId?: string) {
       const hasUpdates = images.some((img) => img.status === 'update_available');
       if (hasUpdates) {
         toast.info('Newer base images with security patches are available.');
-      } else if (images.length > 0 && images.every((img) => img.status === 'current' || img.status === 'pinned')) {
+      } else if (
+        images.length > 0 &&
+        images.every((img) => img.status === 'current' || img.status === 'pinned')
+      ) {
         toast.success('All container runtime base images are up to date.');
       } else {
         toast.info('No newer base images detected.');
       }
     } catch (err: any) {
-      toast.error(err?.response?.data?.message || err?.message || 'Failed to check runtime image updates');
+      toast.error(
+        err?.response?.data?.message || err?.message || 'Failed to check runtime image updates'
+      );
     } finally {
       setChecking(false);
     }
@@ -45,7 +50,9 @@ export function useRuntimeUpdate(projectId: string, serviceId?: string) {
       await apiClient.post(endpoint, {});
       toast.success('Redeploying with latest upstream container images...');
     } catch (err: any) {
-      toast.error(err?.response?.data?.message || err?.message || 'Failed to trigger runtime image redeploy');
+      toast.error(
+        err?.response?.data?.message || err?.message || 'Failed to trigger runtime image redeploy'
+      );
     } finally {
       setUpdating(false);
     }
