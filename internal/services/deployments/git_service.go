@@ -164,7 +164,24 @@ func (s *GitService) SyncCodebaseAtCommit(ctx context.Context, app *models.AppSe
 	if logWriter != nil {
 		fmt.Fprintf(logWriter, "✅ [GitService] Checked out commit %s.\n", cleanCommit)
 	}
-	return nil
+	cleanURL, token := s.getAuthTokenIfAvailable(ctx, app.RepositoryURL, app.GitUserID)
+	return SyncAndInitSubmodules(ctx, targetDir, buildGitConfigArgs(cleanURL, token), logWriter)
+}
+
+func buildGitConfigArgs(cleanURL, token string) []string {
+	gitConfigArgs := []string{"-c", "http.followRedirects=false", "-c", "protocol.file.allow=never"}
+	if token != "" {
+		username := "x-access-token"
+		if strings.Contains(cleanURL, "https://gitlab.com/") {
+			username = "oauth2"
+		}
+		if strings.Contains(cleanURL, "https://bitbucket.org/") {
+			username = "x-token-auth"
+		}
+		authHeader := fmt.Sprintf("Authorization: Basic %s", base64.StdEncoding.EncodeToString([]byte(username+":"+token)))
+		gitConfigArgs = append(gitConfigArgs, "-c", fmt.Sprintf("http.extraheader=%s", authHeader))
+	}
+	return gitConfigArgs
 }
 
 func (s *GitService) SyncCodebase(ctx context.Context, app *models.AppService, targetDir string, logWriter io.Writer) error {
@@ -184,18 +201,7 @@ func (s *GitService) SyncCodebase(ctx context.Context, app *models.AppService, t
 	}
 
 	cleanURL, token := s.getAuthTokenIfAvailable(ctx, repoURL, app.GitUserID)
-	gitConfigArgs := []string{"-c", "http.followRedirects=false", "-c", "protocol.file.allow=never"}
-	if token != "" {
-		username := "x-access-token"
-		if strings.Contains(cleanURL, "https://gitlab.com/") {
-			username = "oauth2"
-		}
-		if strings.Contains(cleanURL, "https://bitbucket.org/") {
-			username = "x-token-auth"
-		}
-		authHeader := fmt.Sprintf("Authorization: Basic %s", base64.StdEncoding.EncodeToString([]byte(username+":"+token)))
-		gitConfigArgs = append(gitConfigArgs, "-c", fmt.Sprintf("http.extraheader=%s", authHeader))
-	}
+	gitConfigArgs := buildGitConfigArgs(cleanURL, token)
 
 	if logWriter != nil {
 		fmt.Fprintf(logWriter, "📥 [GitService] Preparing to sync codebase from %s (branch: %s)...\n", cleanURL, branch)
@@ -217,7 +223,7 @@ func (s *GitService) SyncCodebase(ctx context.Context, app *models.AppService, t
 		if logWriter != nil {
 			fmt.Fprintf(logWriter, "✅ [GitService] Successfully updated local repository to latest commit on %s.\n", branch)
 		}
-		return nil
+		return SyncAndInitSubmodules(ctx, targetDir, gitConfigArgs, logWriter)
 	}
 	_ = os.RemoveAll(targetDir)
 	if err := os.MkdirAll(filepath.Dir(targetDir), 0o755); err != nil {
@@ -249,7 +255,7 @@ func (s *GitService) SyncCodebase(ctx context.Context, app *models.AppService, t
 	if logWriter != nil {
 		fmt.Fprintf(logWriter, "✅ [GitService] Successfully cloned repository into %s.\n", targetDir)
 	}
-	return nil
+	return SyncAndInitSubmodules(ctx, targetDir, gitConfigArgs, logWriter)
 }
 
 func (s *GitService) getAuthTokenIfAvailable(ctx context.Context, repoURL, userID string) (string, string) {

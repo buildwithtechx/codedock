@@ -12,6 +12,7 @@ import (
 	"strings"
 	"time"
 
+	"codedock/internal/engine/build"
 	"codedock/internal/models"
 )
 
@@ -110,6 +111,10 @@ func signedS3Request(ctx context.Context, dest *models.S3Destination, method, ke
 	endpoint := strings.TrimPrefix(dest.Endpoint, "https://")
 	endpoint = strings.TrimPrefix(endpoint, "http://")
 	endpoint = strings.TrimRight(endpoint, "/")
+
+	if err := build.ValidateOutboundTarget(endpoint); err != nil {
+		return nil, err
+	}
 
 	region := dest.Region
 	if region == "" {

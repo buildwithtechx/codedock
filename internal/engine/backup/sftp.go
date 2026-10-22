@@ -1,6 +1,7 @@
 package backup
 
 import (
+	"codedock/internal/engine/build"
 	"codedock/internal/models"
 	"context"
 	"fmt"
@@ -17,6 +18,9 @@ import (
 func sftpDial(ctx context.Context, dest *models.SFTPDestination) (*sftp.Client, error) {
 	if dest.Host == "" || dest.Username == "" {
 		return nil, fmt.Errorf("sftp destination needs a host and username")
+	}
+	if err := build.ValidateOutboundTarget(dest.Host); err != nil {
+		return nil, err
 	}
 	port := dest.Port
 	if port <= 0 {

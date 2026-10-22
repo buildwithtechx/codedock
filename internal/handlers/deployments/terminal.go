@@ -110,8 +110,10 @@ func (h *TerminalHandler) HandleWebSocket(c echo.Context) error {
 		return utils.Error(c, http.StatusBadRequest, "missing id parameter")
 	}
 	containerName := h.normalizeName(id)
+	var targetSvc *models.AppService
 	if h.appService != nil {
 		if svc, err := h.appService.GetAppService(c.Request().Context(), id); err == nil && svc != nil {
+			targetSvc = svc
 			if h.projectService != nil && claimsMap != nil {
 				sub, _ := claimsMap["sub"].(string)
 				if strings.TrimSpace(sub) == "" {
@@ -156,6 +158,11 @@ func (h *TerminalHandler) HandleWebSocket(c echo.Context) error {
 	if inspectErr != nil || owned.Config == nil || owned.Config.Labels["codedock.service_id"] != id {
 		return utils.Error(c, http.StatusConflict, "terminal container ownership changed")
 	}
+	if targetSvc != nil && targetSvc.ProjectID != "" {
+		if projLabel, exists := owned.Config.Labels["codedock.project"]; exists && projLabel != targetSvc.ProjectID {
+			return utils.Error(c, http.StatusConflict, "terminal container project boundary violation")
+		}
+	}
 	resp, err := target.ContainerExecCreate(c.Request().Context(), containerName, execConfig)
 	if err != nil {
 		return utils.Error(c, http.StatusInternalServerError, "failed to create exec instance: "+err.Error())
@@ -177,6 +184,24 @@ func (h *TerminalHandler) HandleWebSocket(c echo.Context) error {
 		return err
 	}
 	defer ws.Close()
+
+	if claimsMap != nil && targetSvc != nil {
+		sub, _ := claimsMap["sub"].(string)
+		if strings.TrimSpace(sub) == "" {
+			sub, _ = claimsMap["Subject"].(string)
+		}
+		userID := strings.TrimSpace(sub)
+		role, _ := claimsMap["role"].(string)
+		stopWatcher := StartTerminalAuthorityWatcher(c.Request().Context(), 5*time.Second, func() error {
+			return VerifyTerminalAuthority(c.Request().Context(), h.projectService, h.userRepo, targetSvc.ProjectID, userID, role)
+		}, func() {
+			_ = ws.WriteControl(websocket.CloseMessage, websocket.FormatCloseMessage(websocket.ClosePolicyViolation, "terminal authority revoked"), time.Now().Add(time.Second))
+			_ = ws.Close()
+			hijackedResp.Close()
+		})
+		defer stopWatcher()
+	}
+
 	errChan := make(chan error, 2)
 	go func() {
 		wsReader := h.wsToReader(ws)
