@@ -23,6 +23,7 @@ type Deployment struct {
 	ArtifactRetainedAt *time.Time       `json:"artifactRetainedAt,omitempty" db:"artifact_retained_at"`
 	Pinned             bool             `json:"pinned" db:"pinned"`
 	ResourceIssue      string           `json:"resourceIssue,omitempty" db:"resource_issue"`
+	RestartLoop        string           `json:"restartLoop,omitempty" db:"restart_loop"`
 	CreatedAt          time.Time        `json:"createdAt" db:"created_at"`
 	UpdatedAt          time.Time        `json:"updatedAt" db:"updated_at"`
 	FinishedAt         *time.Time       `json:"finishedAt,omitempty" db:"finished_at"`
@@ -55,6 +56,7 @@ type DeploymentListItem struct {
 	ArtifactRetainedAt *time.Time       `json:"artifactRetainedAt,omitempty" db:"artifact_retained_at"`
 	Pinned             bool             `json:"pinned" db:"pinned"`
 	ResourceIssue      string           `json:"resourceIssue,omitempty" db:"resource_issue"`
+	RestartLoop        string           `json:"restartLoop,omitempty" db:"restart_loop"`
 	CreatedAt          time.Time        `json:"createdAt" db:"created_at"`
 	UpdatedAt          time.Time        `json:"updatedAt" db:"updated_at"`
 	FinishedAt         *time.Time       `json:"finishedAt,omitempty" db:"finished_at"`
@@ -162,6 +164,7 @@ type AppService struct {
 	Replicas               int              `json:"replicas" db:"replicas"`
 	CPULimit               float64          `json:"cpuLimit,omitempty" db:"cpu_limit"`
 	MemoryLimit            int              `json:"memoryLimit,omitempty" db:"memory_limit"`
+	SwapDisabled           bool             `json:"swapDisabled,omitempty" db:"swap_disabled"`
 	CreatedAt              time.Time        `json:"createdAt" db:"created_at"`
 	UpdatedAt              time.Time        `json:"updatedAt" db:"updated_at"`
 	EnablePRPreviews       bool             `json:"enablePRPreviews" db:"enable_pr_previews"`

@@ -112,6 +112,15 @@ func (m *mockDeploymentRepo) TogglePinned(_ context.Context, id string) (bool, e
 	}
 	return false, nil
 }
+func (m *mockDeploymentRepo) SetRestartLoop(_ context.Context, id string, finding string) error {
+	for _, d := range m.deployments {
+		if d.ID == id {
+			d.RestartLoop = finding
+			return nil
+		}
+	}
+	return nil
+}
 
 func intPtr(i int) *int { return &i }
 

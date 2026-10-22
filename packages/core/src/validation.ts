@@ -22,3 +22,24 @@ export function isValidUrl(input: string): boolean {
     return false;
   }
 }
+
+/** Resolves the parent wildcard pattern (*.example.com) for a subdomain, or null. */
+export function parentWildcardDomain(domain: string): string | null {
+  if (!domain || domain.startsWith('*.')) return null;
+  const clean = domain.trim().toLowerCase();
+  const firstDot = clean.indexOf('.');
+  if (firstDot <= 0) return null;
+  const parent = clean.slice(firstDot + 1);
+  if (!parent.includes('.')) return null;
+  return `*.${parent}`;
+}
+
+/** Validates that disabling swap requires a positive memory limit. */
+export function validateSwapDisabled(
+  resources?: { memoryLimit?: number; swapDisabled?: boolean } | null
+): boolean {
+  if (resources?.swapDisabled === true && (!resources.memoryLimit || resources.memoryLimit <= 0)) {
+    return false;
+  }
+  return true;
+}

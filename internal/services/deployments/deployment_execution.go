@@ -24,14 +24,14 @@ func (s *DeploymentService) ExecuteDeploymentAsync(d *models.Deployment) {
 	if _, busy := s.operations["service:"+d.ServiceID]; busy {
 		s.operationMu.Unlock()
 		cancel()
-		s.finishDeployment(d.ID, models.DeploymentStatusFailed, "Another deployment is already running for this service.\n", "", "")
+		s.finishDeployment(d.ID, d.ProjectID, models.DeploymentStatusFailed, "Another deployment is already running for this service.\n", "", "")
 		return
 	}
 	if s.admissionGuard != nil {
 		if err := s.admissionGuard.Acquire(d.ServiceID, ""); err != nil {
 			s.operationMu.Unlock()
 			cancel()
-			s.finishDeployment(d.ID, models.DeploymentStatusFailed, fmt.Sprintf("Build admission limit exceeded: %v\n", err), "", "")
+			s.finishDeployment(d.ID, d.ProjectID, models.DeploymentStatusFailed, fmt.Sprintf("Build admission limit exceeded: %v\n", err), "", "")
 			return
 		}
 	}
@@ -75,7 +75,7 @@ func (s *DeploymentService) ExecuteDeploymentAsync(d *models.Deployment) {
 		} else {
 			logWriter.logs.WriteString("Deployment ready.\n")
 		}
-		s.finishDeployment(d.ID, status, logWriter.logs.String(), id, resourceIssue)
+		s.finishDeployment(d.ID, d.ProjectID, status, logWriter.logs.String(), id, resourceIssue)
 	}()
 }
 
@@ -90,7 +90,7 @@ func (s *DeploymentService) CancelDeployment(id string) error {
 	return nil
 }
 
-func (s *DeploymentService) finishDeployment(id string, status models.DeploymentStatus, logs, containerID, resourceIssue string) {
+func (s *DeploymentService) finishDeployment(id, projectID string, status models.DeploymentStatus, logs, containerID, resourceIssue string) {
 	ctx, cancel := context.WithTimeout(context.Background(), 10*time.Second)
 	defer cancel()
 	if err := s.UpdateStatus(ctx, DeployStatusOpts{
@@ -105,6 +105,9 @@ func (s *DeploymentService) finishDeployment(id string, status models.Deployment
 	if status == models.DeploymentStatusReady {
 		now := time.Now().UTC()
 		_ = s.repo.SetArtifactRetainedAt(ctx, id, &now)
+		if containerID != "" {
+			s.watchPostDeployStability(id, projectID, containerID)
+		}
 	}
 }
 

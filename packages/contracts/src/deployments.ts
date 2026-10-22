@@ -26,6 +26,10 @@ export interface Deployment {
   containerId?: string;
   artifactRetainedAt?: string | null;
   pinned?: boolean;
+  /** Storage pressure, capacity failure, or crash diagnostics on this deployment. */
+  resourceIssue?: string;
+  /** Background post-deploy crash loop diagnosis with exit code and log tail. */
+  restartLoop?: string;
   createdAt: string;
   updatedAt: string;
   finishedAt?: string;

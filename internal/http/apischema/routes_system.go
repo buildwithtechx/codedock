@@ -311,6 +311,7 @@ func systemOperations() []Operation {
 	actions := "actions"
 	support := "support"
 	return []Operation{
+		{Method: "GET", Path: "/api/github-stars", Summary: "Get repository stars count", Tags: []string{system}, Response: Obj("GitHub stars", RF("stars", Int("Stars count")))},
 		{Method: "GET", Path: "/api/meta", Summary: "Get instance metadata and capabilities", Tags: []string{system}, Response: Obj("Metadata", RF("name", Str("Name")), RF("version", Str("Version")), RF("capabilities", Obj("Capabilities", RF("sseLogs", Bool("SSE logs")), RF("push", Bool("Push")), RF("actions", Bool("Actions")), RF("apps", Bool("Apps")))))},
 		{Method: "GET", Path: "/api/system/public", Summary: "Get public settings", Tags: []string{system}, Response: settingsSchema()},
 		{Method: "GET", Path: "/api/system/stats", Summary: "Get system stats", Tags: []string{system}, Auth: AuthUser, Response: systemStatsSchema()},

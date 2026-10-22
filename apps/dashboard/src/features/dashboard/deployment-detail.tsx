@@ -1,5 +1,5 @@
 import { Link } from '@tanstack/react-router';
-import { ArrowLeft, Ban, Bot, Loader2, Play, RotateCcw } from 'lucide-react';
+import { AlertCircle, ArrowLeft, Ban, Bot, Loader2, Play, RotateCcw } from 'lucide-react';
 import { useState } from 'react';
 import { toast } from 'sonner';
 import { PageHeader } from '#/components/layout/page-header';
@@ -183,6 +183,16 @@ export function DeploymentDetail({ deploymentId }: { deploymentId: string }) {
           serviceId={deployment.serviceId}
           onViewLogs={() => setActiveTab('logs')}
         />
+      )}
+
+      {deployment.restartLoop && (
+        <div className="flex items-start gap-3 rounded-xl border border-destructive/30 bg-destructive/10 p-4 text-destructive">
+          <AlertCircle className="mt-0.5 h-5 w-5 shrink-0" />
+          <div className="space-y-1">
+            <h4 className="font-medium text-sm">Action Required: Restart Loop Detected</h4>
+            <p className="whitespace-pre-wrap text-xs">{deployment.restartLoop}</p>
+          </div>
+        </div>
       )}
 
       <Tabs value={activeTab} onValueChange={setActiveTab}>

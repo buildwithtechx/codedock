@@ -126,3 +126,18 @@ func SettleHandover(journal *models.RoleHandoverJournal, nextPhase models.RoleHa
 	journal.Revision++
 	return nil
 }
+
+// ValidateMultiServiceRoles verifies role configuration against multi-service deployment constraints.
+func ValidateMultiServiceRoles(roles []models.ServiceRoleSpec, isMultiService bool) error {
+	if len(roles) == 0 {
+		return nil
+	}
+	if isMultiService {
+		return errors.New("Runtime roles are not supported on multi-service deployments yet. " +
+			"To keep the roles, deploy the app as a new single-app Docker project. " +
+			"Connect separately deployed services through Apps & Services → Add → Connect existing. " +
+			"Connecting services does not convert this project back to single-app. " +
+			"To remove the roles, clear roles in your project configuration or remove \"roles\" from codedock.json.")
+	}
+	return nil
+}

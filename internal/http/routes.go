@@ -117,6 +117,7 @@ func (s *Server) registerAuthRoutes(apiGroup, authGroup *echo.Group) {
 }
 
 func (s *Server) registerSystemRoutes(apiGroup, authGroup *echo.Group) {
+	apiGroup.GET("/github-stars", s.getGithubStars)
 	apiGroup.GET("/system/public", s.settingsHandler.GetPublicSettings)
 	apiGroup.GET("/system/setup-status", s.onboardingHandler.SetupStatus)
 	apiGroup.POST("/system/setup/import", s.migrationHandler.ImportDuringSetup)

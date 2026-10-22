@@ -249,7 +249,7 @@ func (d *Deployer) DeployAppService(ctx context.Context, app *models.AppService,
 	return d.replaceReplicas(ctx, app, ContainerRunOptions{
 		ImageTag: imageTag, ServiceID: app.ID, ProjectID: app.ProjectID, PreviousContainerID: app.ContainerID, Domain: appDomain, Hosts: d.routeHosts(ctx, app.ID, appDomain, logWriter), InternalPort: internalPort,
 		RuntimeMode: app.RuntimeMode, Envs: envSlice, Cmd: containerCommand(app, resolvedStartCommand(app, sourceDir)),
-		MemoryLimitMB: memoryLimit, CPURequest: cpuRequest, HealthCheckPath: app.HealthCheckPath,
+		MemoryLimitMB: memoryLimit, SwapDisabled: app.SwapDisabled, CPURequest: cpuRequest, HealthCheckPath: app.HealthCheckPath,
 		Volumes: app.Volumes, MaintenanceMode: app.MaintenanceMode, StopGracePeriodSeconds: app.StopGracePeriodSeconds, LogDrains: logDrains, ExtraLabels: extraLabels,
 	}, replicas, logWriter)
 }

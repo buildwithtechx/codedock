@@ -91,3 +91,25 @@ func TestSettleHandover(t *testing.T) {
 		t.Fatalf("expected kept containers to refuse rollouts")
 	}
 }
+
+func TestValidateMultiServiceRoles(t *testing.T) {
+	roles := []models.ServiceRoleSpec{
+		{Name: "worker", Kind: "worker", Command: "python worker.py"},
+	}
+
+	if err := ValidateMultiServiceRoles(nil, true); err != nil {
+		t.Fatalf("expected no error for empty roles, got %v", err)
+	}
+
+	if err := ValidateMultiServiceRoles(roles, false); err != nil {
+		t.Fatalf("expected no error for single-service, got %v", err)
+	}
+
+	err := ValidateMultiServiceRoles(roles, true)
+	if err == nil {
+		t.Fatalf("expected error for multi-service roles")
+	}
+	if !strings.Contains(err.Error(), "single-app Docker project") || !strings.Contains(err.Error(), "Connect existing") {
+		t.Fatalf("expected actionable refusal message, got: %v", err)
+	}
+}

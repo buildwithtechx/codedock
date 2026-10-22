@@ -55,6 +55,7 @@ export interface AppService {
   updatedAt: string;
   cpuLimit?: number;
   memoryLimit?: number;
+  swapDisabled?: boolean;
   enablePRPreviews: boolean;
   maintenanceMode: boolean;
   optimize: boolean;
@@ -83,6 +84,7 @@ export interface Deployment {
   artifactRetainedAt?: string | null;
   pinned?: boolean;
   resourceIssue?: string;
+  restartLoop?: string;
   createdAt: string;
   updatedAt: string;
   finishedAt?: string;

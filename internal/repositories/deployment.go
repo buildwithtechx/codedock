@@ -27,6 +27,7 @@ type DeploymentRepository interface {
 	SetArtifactRetainedAt(ctx context.Context, id string, at *time.Time) error
 	SetPinned(ctx context.Context, id string, pinned bool) error
 	TogglePinned(ctx context.Context, id string) (bool, error)
+	SetRestartLoop(ctx context.Context, id string, finding string) error
 }
 
 type DeploymentRepo struct {
@@ -70,7 +71,7 @@ func (r *DeploymentRepo) GetByID(ctx context.Context, id string) (*models.Deploy
 	err := r.db.GetContext(ctx, &d, `SELECT d.id, COALESCE(d.service_id, '') AS service_id, d.organization_id,
 		COALESCE(s.environment_id, '') AS environment_id, d.project_id, d.status, d.commit_hash,
 		d.commit_message, d.branch, d."trigger", COALESCE(d.image_ref, '') AS image_ref, d.build_logs, d.container_id,
-		COALESCE(d.resource_issue, '') AS resource_issue,
+		COALESCE(d.resource_issue, '') AS resource_issue, COALESCE(d.restart_loop, '') AS restart_loop,
 		d.artifact_retained_at, COALESCE(d.pinned, FALSE) AS pinned, d.created_at, d.updated_at, d.finished_at
 		FROM deployments d LEFT JOIN app_services s ON s.id = d.service_id WHERE d.id = $1`, id)
 	if errors.Is(err, sql.ErrNoRows) {
@@ -92,7 +93,7 @@ func (r *DeploymentRepo) ListByService(ctx context.Context, serviceID string, li
 	err := r.db.SelectContext(ctx, &deps, `SELECT d.id, COALESCE(d.service_id, '') AS service_id, d.organization_id,
 		COALESCE(s.environment_id, '') AS environment_id, d.project_id, d.status, d.commit_hash,
 		d.commit_message, d.branch, d."trigger", COALESCE(d.image_ref, '') AS image_ref, d.build_logs, d.container_id,
-		COALESCE(d.resource_issue, '') AS resource_issue,
+		COALESCE(d.resource_issue, '') AS resource_issue, COALESCE(d.restart_loop, '') AS restart_loop,
 		d.artifact_retained_at, COALESCE(d.pinned, FALSE) AS pinned, d.created_at, d.updated_at, d.finished_at
 		FROM deployments d LEFT JOIN app_services s ON s.id = d.service_id
 		WHERE d.service_id = $1 ORDER BY d.created_at DESC LIMIT $2 OFFSET $3`, serviceID, limit, offset)
@@ -174,7 +175,8 @@ func (r *DeploymentRepo) ListByOrganization(ctx context.Context, filter models.D
 	query := `SELECT d.id, COALESCE(d.service_id, '') AS service_id, COALESCE(s.name, '') AS service_name,
 		COALESCE(s.environment_id, '') AS environment_id,
 		d.project_id, p.name AS project_name, d.status, d.commit_hash, d.commit_message,
-		d.branch, d."trigger", d.container_id, COALESCE(d.resource_issue, '') AS resource_issue, d.artifact_retained_at, COALESCE(d.pinned, FALSE) AS pinned,
+		d.branch, d."trigger", d.container_id, COALESCE(d.resource_issue, '') AS resource_issue,
+		COALESCE(d.restart_loop, '') AS restart_loop, d.artifact_retained_at, COALESCE(d.pinned, FALSE) AS pinned,
 		d.created_at, d.updated_at, d.finished_at ` + where + `
 		ORDER BY d.created_at DESC LIMIT $13 OFFSET $14`
 	args = append(args, filter.Limit, filter.Offset)
@@ -205,5 +207,12 @@ func (r *DeploymentRepo) UpdateStatus(_ context.Context, id string, status model
 	}
 	_, err := r.db.Exec(`UPDATE deployments SET status = $1, build_logs = $2, container_id = $3, resource_issue = COALESCE(NULLIF($4, ''), resource_issue), updated_at = $5 WHERE id = $6`,
 		status, buildLogs, containerID, resourceIssue, now, id)
+	return err
+}
+
+func (r *DeploymentRepo) SetRestartLoop(ctx context.Context, id string, finding string) error {
+	r.mu.Lock()
+	defer r.mu.Unlock()
+	_, err := r.db.ExecContext(ctx, `UPDATE deployments SET restart_loop = $1, updated_at = CURRENT_TIMESTAMP WHERE id = $2`, finding, id)
 	return err
 }

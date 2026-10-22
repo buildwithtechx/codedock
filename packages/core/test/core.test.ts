@@ -9,9 +9,11 @@ import {
   formatDuration,
   isValidDomain,
   isValidUrl,
+  parentWildcardDomain,
   normalizeProjectRootDirectory,
   normalizeRollbackWindow,
   parseComposeDurationSeconds,
+  validateSwapDisabled,
 } from '../src/index';
 
 describe('@codedock/core', () => {
@@ -110,6 +112,23 @@ describe('@codedock/core', () => {
       expect(isValidUrl('http://localhost:8080/api')).toBe(true);
       expect(isValidUrl('ftp://ftp.example.com')).toBe(false);
       expect(isValidUrl('not a url')).toBe(false);
+    });
+
+    it('resolves parent wildcard domains for subdomains', () => {
+      expect(parentWildcardDomain('api.example.com')).toBe('*.example.com');
+      expect(parentWildcardDomain('deep.sub.example.com')).toBe('*.sub.example.com');
+      expect(parentWildcardDomain('*.example.com')).toBeNull();
+      expect(parentWildcardDomain('example.com')).toBeNull();
+      expect(parentWildcardDomain('localhost')).toBeNull();
+      expect(parentWildcardDomain('')).toBeNull();
+    });
+
+    it('validates swap disabling requirement for positive memory limit', () => {
+      expect(validateSwapDisabled({ swapDisabled: false })).toBe(true);
+      expect(validateSwapDisabled({ swapDisabled: true, memoryLimit: 512 })).toBe(true);
+      expect(validateSwapDisabled({ swapDisabled: true, memoryLimit: 0 })).toBe(false);
+      expect(validateSwapDisabled({ swapDisabled: true })).toBe(false);
+      expect(validateSwapDisabled(null)).toBe(true);
     });
   });
 });

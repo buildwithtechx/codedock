@@ -13,7 +13,11 @@ import {
 import { Input } from '@codedock/ui/input';
 import { useCreateApp, useCreateVariable } from '#/hooks/use-apps';
 import { useTrigger } from '#/hooks/use-deployments';
-import { COMPANION_CATALOG, type CompanionCatalogItem } from './companion-catalog';
+import {
+  COMPANION_CATALOG,
+  type CompanionCatalogItem,
+  resolveCatalogEnvironment,
+} from './companion-catalog';
 import { ServiceConfigForm } from './service-config-form';
 
 interface AddServiceModalProps {
@@ -64,7 +68,7 @@ export function AddServiceModal({
     setImage(item.image);
     setPort(item.port);
     setVolume(item.defaultVolume || '');
-    setEnvRows(item.defaultEnv.map((e) => ({ ...e })));
+    setEnvRows(resolveCatalogEnvironment(item));
   };
 
   const filteredCatalog = useMemo(() => {

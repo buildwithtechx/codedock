@@ -42,6 +42,7 @@ type ContainerRunOptions struct {
 	Envs                   []string
 	Cmd                    []string
 	MemoryLimitMB          int
+	SwapDisabled           bool
 	CPURequest             float64
 	HealthCheckPath        string
 	Volumes                []models.ServiceVolume
@@ -129,15 +130,20 @@ func (c *ContainerManager) createAndStart(ctx context.Context, opts ContainerRun
 	if networkName == "" {
 		networkName = utils.GetRuntimeNetwork()
 	}
+	memBytes := utils.MegaBytesToBytes(opts.MemoryLimitMB)
 	hostConfig := &container.HostConfig{
 		RestartPolicy: container.RestartPolicy{Name: "always"},
 		Resources: container.Resources{
-			Memory:   utils.MegaBytesToBytes(opts.MemoryLimitMB),
+			Memory:   memBytes,
 			NanoCPUs: utils.CPURequestToNanoCPUs(opts.CPURequest),
 		},
 		NetworkMode: container.NetworkMode(networkName),
 		DNS:         c.getCustomDNSResolvers(),
 		Binds:       binds,
+	}
+	if opts.SwapDisabled && memBytes > 0 {
+		// Pin MemorySwap to Memory to completely disable container swap in Docker
+		hostConfig.Resources.MemorySwap = memBytes
 	}
 	if opts.StopGracePeriodSeconds > 0 {
 		timeout := opts.StopGracePeriodSeconds

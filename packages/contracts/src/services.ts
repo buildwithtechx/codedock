@@ -41,6 +41,7 @@ export interface AppService {
   updatedAt: string;
   cpuLimit?: number;
   memoryLimit?: number;
+  swapDisabled?: boolean;
   enablePRPreviews: boolean;
   maintenanceMode: boolean;
   optimize: boolean;
