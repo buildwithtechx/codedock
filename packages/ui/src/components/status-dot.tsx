@@ -1,6 +1,6 @@
 import { cva, type VariantProps } from 'class-variance-authority';
 import type * as React from 'react';
-import { cn } from '../lib/cn';
+import { cn } from 'cn';
 
 export const statusDotVariants = cva('rounded-full shrink-0', {
   variants: {
