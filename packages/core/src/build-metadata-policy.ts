@@ -2,6 +2,7 @@
  * credential agents by destination regardless of the URL or DNS spelling. */
 export const BUILD_METADATA_POLICY_VERSION = '1';
 
+/** The published artifact and the runtime enforce the same image identity. */
 export function isProtectedBuildKitConfig(config: unknown): boolean {
   const value = config as { Labels?: Record<string, unknown>; Entrypoint?: unknown } | null;
   return (
@@ -24,6 +25,7 @@ export const BUILD_METADATA_IPV6 = [
   'fd20:ce::254/128', // GCE IPv6-only metadata and DNS
 ] as const;
 
+/** Runs inside the trusted BuildKit worker before buildkitd to block metadata endpoints. */
 export function buildMetadataFirewallScript(): string {
   const chain = 'CODEDOCK_METADATA_V1';
   return (
@@ -55,6 +57,7 @@ export function buildMetadataFirewallScript(): string {
   );
 }
 
+/** Installed as the image ENTRYPOINT so the guard reapplies before daemon accepts builds. */
 export function buildKitGuardEntrypoint(): string {
   return (
     '#!/bin/sh\n' +

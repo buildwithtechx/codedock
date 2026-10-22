@@ -1,3 +1,8 @@
+/**
+ * Pure helpers for the build-first overlap cutover.
+ * Overlap: start the replacement under a temporary name, wait until it serves,
+ * then retire the incumbent. Replace: stop and remove incumbent first, then create.
+ */
 export type CutoverConfig = {
   ports: string[];
   volumes: string[];
@@ -7,8 +12,10 @@ export type CutoverConfig = {
   deploymentId: string;
 };
 
+/** Env var holding the shared read/write mount opt-in list. */
 export const CUTOVER_SHARED_VOLUMES_ENV = 'CODEDOCK_CUTOVER_SHARED_VOLUMES';
 
+/** Explicit host publish (hostPort:containerPort). Bare "3000" is not a host collision. */
 export function hasHostPortBindings(ports: string[]): boolean {
   return ports.some((p) => {
     const mapping = p.includes('/') ? p.slice(0, p.lastIndexOf('/')) : p;
@@ -31,6 +38,7 @@ function normalizeDest(dest: string): string {
   return cleaned.startsWith('/') ? cleaned : `/${cleaned}`;
 }
 
+/** Mount record returned by container inspect. */
 export interface CutoverMount {
   Type?: string;
   Source?: string;
@@ -69,6 +77,7 @@ export interface CutoverInput {
   capacity?: { availableCpuCores: number; availableMemoryMb: number };
 }
 
+/** Container destination of a volume spec and read-only flag. */
 export function parseVolumeDestination(spec: string): { target: string; isReadOnly: boolean } {
   const parts = spec.split(':');
   if (parts.length === 1) {
@@ -80,6 +89,7 @@ export function parseVolumeDestination(spec: string): { target: string; isReadOn
   return { target: normalizeDest(target), isReadOnly };
 }
 
+/** Decides whether overlap cutover is safe or must fall back to in-place replacement. */
 export function decideCutover(opts: CutoverInput): CutoverDecision {
   if (!opts.incumbentRunning) {
     return { mode: 'replace', reason: 'no-incumbent' };

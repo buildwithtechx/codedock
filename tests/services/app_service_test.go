@@ -91,6 +91,7 @@ func (m *mockVarRepo) Delete(ctx context.Context, id string) error { return nil 
 type mockVolRepo struct{}
 
 func (m *mockVolRepo) Create(ctx context.Context, volume *models.ServiceVolume) error { return nil }
+func (m *mockVolRepo) Update(ctx context.Context, volume *models.ServiceVolume) error { return nil }
 func (m *mockVolRepo) GetByID(ctx context.Context, id string) (*models.ServiceVolume, error) {
 	return nil, nil
 }

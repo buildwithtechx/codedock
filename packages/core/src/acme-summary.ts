@@ -1,3 +1,4 @@
+/** Structured classification of an ACME Certbot challenge failure. */
 export interface CertbotDiagnosis {
   domain: string;
   category:
@@ -10,8 +11,10 @@ export interface CertbotDiagnosis {
   summary: string;
 }
 
+/** Temporary HTTP-01 challenge responder port during standalone Certbot verification. */
 export const ACME_HTTP01_PORT = 49180;
 
+/** Actionable explanation of why ACME certificate validation failed. */
 export function summarizeCertbotFailure(output: string, domain: string): string {
   const text = output || '';
 
