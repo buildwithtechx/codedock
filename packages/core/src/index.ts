@@ -6,4 +6,3 @@ export * from './build-metadata-policy';
 export * from './cutover';
 export * from './acme-summary';
 export * from './access-capabilities';
-export * from './docker-swarm';

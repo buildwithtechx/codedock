@@ -1,9 +1,4 @@
-import type {
-  CreateServerRequest,
-  SwarmInspection,
-  TestSSHRequest,
-  UpdateServerRequest,
-} from '@codedock/contracts';
+import type { CreateServerRequest, TestSSHRequest, UpdateServerRequest } from '@codedock/contracts';
 import type { BaseResponse } from '#/interfaces/base';
 import type {
   Server,
@@ -85,15 +80,6 @@ export const serverService = {
       const res = await apiClient.post<BaseResponse<ServerPortScanResult>>(
         `/servers/${id}/scan-ports`
       );
-      return res.data;
-    } catch (err) {
-      throw handleApiError(err);
-    }
-  },
-
-  inspectSwarm: async (id: string): Promise<SwarmInspection> => {
-    try {
-      const res = await apiClient.get<BaseResponse<SwarmInspection>>(`/servers/${id}/swarm`);
       return res.data;
     } catch (err) {
       throw handleApiError(err);

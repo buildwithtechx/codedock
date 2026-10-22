@@ -56,13 +56,6 @@ export const useServerComponents = (id?: string) =>
     enabled: Boolean(id),
   });
 
-export const useServerSwarm = (id?: string) =>
-  useQuery({
-    queryKey: ['servers', id, 'swarm'],
-    queryFn: () => (id ? serverService.inspectSwarm(id) : null),
-    enabled: Boolean(id),
-  });
-
 export const useServerRateLimit = (id?: string) =>
   useQuery({
     queryKey: ['servers', id, 'rate-limit'],

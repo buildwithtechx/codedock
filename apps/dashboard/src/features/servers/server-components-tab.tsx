@@ -5,7 +5,6 @@ import {
   GitBranch,
   Globe,
   Loader2,
-  Network,
   RefreshCw,
   ShieldAlert,
   ShieldCheck,
@@ -15,7 +14,7 @@ import { Button } from '@codedock/ui/button';
 import { QueryErrorState } from '#/components/query-error-state';
 import type { ServerComponentStatus } from '#/interfaces/server';
 import { cn } from '#/lib/utils';
-import { useServerComponents, useServerSwarm } from '#/hooks/use-servers';
+import { useServerComponents } from '#/hooks/use-servers';
 
 interface ServerComponentsTabProps {
   serverId: string;
@@ -46,7 +45,6 @@ export function ServerComponentsTab({ serverId }: ServerComponentsTabProps) {
     refetch,
     isRefetching,
   } = useServerComponents(serverId);
-  const { data: swarm } = useServerSwarm(serverId);
 
   if (isLoading) {
     return (
@@ -155,29 +153,6 @@ export function ServerComponentsTab({ serverId }: ServerComponentsTabProps) {
           })}
         </div>
       </div>
-
-      {swarm && swarm.state === 'active' && (
-        <div className="rounded-2xl border border-border/70 bg-card p-5">
-          <div className="flex items-center justify-between gap-3">
-            <div className="flex items-center gap-3.5">
-              <div className="flex size-9 shrink-0 items-center justify-center rounded-xl bg-primary/10 text-primary">
-                <Network className="size-4" />
-              </div>
-              <div>
-                <h3 className="font-medium text-foreground text-sm">Docker Swarm Cluster</h3>
-                <p className="text-muted-foreground text-xs">
-                  {swarm.role === 'manager' ? 'Cluster Manager' : 'Cluster Worker'} ·{' '}
-                  {swarm.nodeCount ?? 1} node{swarm.nodeCount === 1 ? '' : 's'} (
-                  {swarm.managerCount ?? 1} manager{swarm.managerCount === 1 ? '' : 's'})
-                </p>
-              </div>
-            </div>
-            <span className="rounded-full bg-success/10 px-2.5 py-1 font-medium text-success text-xs">
-              Active
-            </span>
-          </div>
-        </div>
-      )}
     </div>
   );
 }

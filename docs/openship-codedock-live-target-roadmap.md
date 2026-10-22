@@ -55,7 +55,7 @@ The latest OpenShip upstream release cycle (`6887ba85a..ed662afe7`) brings criti
 | [15. Catalog Automatic Credential Generation](#15-catalog-automatic-credential-generation) | **P2 (Polish)** | Catalog / UI | Low | **COMPLETED** (Phase 4) |
 | [16. Fine-Grained Token Capabilities & Domain Scoping](#16-fine-grained-token-capabilities--domain-scoping) | **P2 (Strategic)** | Auth & Permissions | Medium | **COMPLETED** (Phase 5) |
 | [17. Hosted Manage Plans vs Cloud Pricing Architecture](#17-hosted-manage-plans-vs-cloud-pricing-architecture) | **P2 (Strategic)** | Billing / Plans | Medium | **COMPLETED** (Phase 5) |
-| [18. Docker Swarm Multi-Node Combined Orchestration](#18-docker-swarm-multi-node-combined-orchestration) | **P3 (Long-Term)** | Multi-Host Cluster | High | **COMPLETED** (Phase 6) |
+| [18. Multi-Node Architecture & Clustering Strategy](#18-multi-node-architecture--clustering-strategy) | **P1 (Core)** | Multi-Host Cluster | High | **STANDARDIZED (Native Docker + K3s)** |
 
 ---
 
@@ -143,16 +143,13 @@ The latest OpenShip upstream release cycle (`6887ba85a..ed662afe7`) brings criti
 
 ---
 
-### 18. Docker Swarm Multi-Node Combined Orchestration
+### 18. Multi-Node Architecture & Clustering Strategy
 
-- **Upstream Reference**: `feat/swarm-combined-20261022` (commits `05125d334`, `7753ed94c`, `8bf6a87a0`).
-
-- **Details**:
-  - Integrates Docker Swarm clusters directly into Codedock runtime:
-    - **Manager & Worker Node Discovery**: Automatic swarm init, join-tokens, and dynamic cluster topology observation.
-    - **Overlay Ingress & Routing Mesh**: Built-in ingress mesh across all swarm nodes with service mesh discovery.
-    - **Rolling Zero-Downtime Service Updates**: Updates deployed using Docker Swarm service spec (`Order: start-first` or `stop-first`, update parallelism and delay).
-    - **Host Constraint Placement & Resource Limits**: Strict node labeling, memory limits, and rejection of unsupported per-node swap overrides in swarm mode.
+- **Architectural Directive**:
+  - **Docker Swarm Legacy Excluded**: Docker Swarm has been in upstream maintenance mode since 2019 and lacks native CSI volumes, per-service swap controls, and modern SNAT-free routing. Because Codedock is brand new with zero legacy installations, Swarm is completely omitted to avoid technical debt.
+  - **Dual Production Standard**:
+    1. **Native Direct Docker + Traefik (`internal/engine/deploy/`)**: Primary default for simple, zero-overhead (< 50MB RAM) multi-host server deployments over SSH.
+    2. **K3s / Kubernetes Engine (`internal/engine/kubernetes/`)**: High-availability multi-node clustering with distributed block storage (Longhorn CSI) and automated database failover.
 
 ---
 
@@ -178,9 +175,8 @@ Phase 5: Permissions, Governance & Managed Plans
   ├── [x] 3. Connected Server Health Auditing & Tenant Boundary Checks (PR #1411)
   └── [x] 4. Bounded Background Service Incident Tracking & Attention Derivation (PR #1198)
 
-Phase 6: Multi-Node Swarm Orchestration & Advanced Clustering
-  ├── [x] 1. Docker Swarm Overlay Network Integration (feat/swarm-combined-20261022)
-  ├── [x] 2. Multi-Host Node Discovery & Dynamic Scaling
-  ├── [x] 3. Swarm Deployment Runtime & Rolling Service Updates
-  └── [x] 4. Cross-Node Health Watch & Ingress Routing
+Phase 6: Multi-Node Clustering Architecture
+  ├── [x] 1. Native Direct Multi-Host Docker + Traefik Engine Standardized
+  ├── [x] 2. Legacy Docker Swarm Cleanly Excluded
+  └── [x] 3. K3s / Kubernetes Foundation Verified for Elastic Node Pools
 ```

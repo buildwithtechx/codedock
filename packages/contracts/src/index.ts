@@ -11,4 +11,3 @@ export * from './ingress';
 export * from './auth';
 export * from './updates';
 export * from './management-billing';
-export * from './server-swarm';
