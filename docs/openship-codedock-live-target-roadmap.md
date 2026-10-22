@@ -55,7 +55,7 @@ The latest OpenShip upstream release cycle (`6887ba85a..ed662afe7`) brings criti
 | [15. Catalog Automatic Credential Generation](#15-catalog-automatic-credential-generation) | **P2 (Polish)** | Catalog / UI | Low | **COMPLETED** (Phase 4) |
 | [16. Fine-Grained Token Capabilities & Domain Scoping](#16-fine-grained-token-capabilities--domain-scoping) | **P2 (Strategic)** | Auth & Permissions | Medium | **COMPLETED** (Phase 5) |
 | [17. Hosted Manage Plans vs Cloud Pricing Architecture](#17-hosted-manage-plans-vs-cloud-pricing-architecture) | **P2 (Strategic)** | Billing / Plans | Medium | **COMPLETED** (Phase 5) |
-| [18. Docker Swarm Multi-Node Combined Orchestration](#18-docker-swarm-multi-node-combined-orchestration) | **P3 (Long-Term)** | Multi-Host Cluster | High | **RESEARCH** |
+| [18. Docker Swarm Multi-Node Combined Orchestration](#18-docker-swarm-multi-node-combined-orchestration) | **P3 (Long-Term)** | Multi-Host Cluster | High | **COMPLETED** (Phase 6) |
 
 ---
 
@@ -179,8 +179,8 @@ Phase 5: Permissions, Governance & Managed Plans
   └── [x] 4. Bounded Background Service Incident Tracking & Attention Derivation (PR #1198)
 
 Phase 6: Multi-Node Swarm Orchestration & Advanced Clustering
-  ├── [ ] 1. Docker Swarm Overlay Network Integration (feat/swarm-combined-20261022)
-  ├── [ ] 2. Multi-Host Node Discovery & Dynamic Scaling
-  ├── [ ] 3. Swarm Deployment Runtime & Rolling Service Updates
-  └── [ ] 4. Cross-Node Health Watch & Ingress Routing
+  ├── [x] 1. Docker Swarm Overlay Network Integration (feat/swarm-combined-20261022)
+  ├── [x] 2. Multi-Host Node Discovery & Dynamic Scaling
+  ├── [x] 3. Swarm Deployment Runtime & Rolling Service Updates
+  └── [x] 4. Cross-Node Health Watch & Ingress Routing
 ```
