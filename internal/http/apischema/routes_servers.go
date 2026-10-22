@@ -218,6 +218,7 @@ func serverOperations() []Operation {
 		{Method: "POST", Path: "/api/managed-operations/:operationId/apply", Summary: "Apply a managed operation", Tags: []string{managed}, Auth: write, Request: JSON(operationApplySchema()), Response: EmptySchema()},
 		{Method: "POST", Path: "/api/organizations/:id/managed/servers/:serverId/refresh", Summary: "Refresh a managed server", Tags: []string{managed}, Auth: read, Response: ServerSchema()},
 		{Method: "GET", Path: "/api/servers/:id/components", Summary: "List server components", Tags: []string{servers}, Auth: read, Response: Arr("Components", serverComponentSchema())},
+		{Method: "GET", Path: "/api/servers/:id/swarm", Summary: "Inspect Docker Swarm cluster status", Tags: []string{servers}, Auth: read, Response: Obj("Swarm inspection", RF("state", Str("Swarm state")), F("role", Str("Swarm role")), F("nodeId", Str("Node ID")), F("clusterId", Str("Cluster ID")), F("nodeCount", Int("Node count")), F("managerCount", Int("Manager count")), RF("observedAt", Str("Observed at")))},
 		{Method: "POST", Path: "/api/servers/:id/scan-ports", Summary: "Scan server ports", Tags: []string{servers}, Auth: read, Response: serverPortScanSchema()},
 		{Method: "GET", Path: "/api/servers/:id/rate-limit", Summary: "Get the server rate limit", Tags: []string{servers}, Auth: read, Response: serverRateLimitSchema()},
 		{Method: "PUT", Path: "/api/servers/:id/rate-limit", Summary: "Update the server rate limit", Tags: []string{servers}, Auth: write, Request: JSON(serverRateLimitSchema()), Response: serverRateLimitSchema()},

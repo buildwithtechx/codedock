@@ -28,7 +28,7 @@ export function AddServerModal({
   const isCloud = publicRes?.data?.cloudMode ?? false;
 
   const resolvedInitialMode = initialMode ?? (isCloud ? 'managed' : 'connected');
-  const [mode, setMode] = useState<'managed' | 'connected'>(resolvedInitialMode);
+  const mode = resolvedInitialMode;
   const [tab, setTab] = useState<'monthly' | 'payg'>('monthly');
 
   const [serverName, setServerName] = useState('');

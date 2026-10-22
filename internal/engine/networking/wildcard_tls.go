@@ -6,8 +6,7 @@ import (
 	"strings"
 )
 
-// ParentWildcardDomain returns the wildcard representation for a subdomain (e.g. "*.example.com" for "api.example.com").
-// Returns empty string if the domain is already a wildcard, has no dots, or is an apex domain.
+// ParentWildcardDomain returns the wildcard representation for a subdomain.
 func ParentWildcardDomain(domain string) string {
 	clean := strings.TrimSpace(strings.ToLower(domain))
 	if clean == "" || strings.HasPrefix(clean, "*.") {
@@ -24,8 +23,7 @@ func ParentWildcardDomain(domain string) string {
 	return "*." + parent
 }
 
-// ResolveCertDomain returns the directory name containing a valid certificate.
-// If direct cert doesn't exist, checks if a parent wildcard cert exists.
+// ResolveCertDomain resolves direct certificate or parent wildcard certificate.
 func ResolveCertDomain(certDir, domain string, exists func(string) bool) string {
 	clean := strings.TrimSpace(strings.ToLower(domain))
 	if clean == "" {
@@ -54,8 +52,7 @@ func ResolveCertDomain(certDir, domain string, exists func(string) bool) string 
 	return clean
 }
 
-// CleanupObsoleteCertbotRenewalConf removes the Certbot renewal configuration file
-// when a custom or manual certificate replaces an ACME lineage, preventing renewal crashes.
+// CleanupObsoleteCertbotRenewalConf removes stale Certbot renewal config.
 func CleanupObsoleteCertbotRenewalConf(renewalDir, domain string) error {
 	clean := strings.TrimSpace(strings.ToLower(domain))
 	if clean == "" || renewalDir == "" {

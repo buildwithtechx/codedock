@@ -1,5 +1,9 @@
 import { describe, expect, it } from 'vitest';
-import { assertStandaloneContainer, swarmTaskOwner } from '../src/index';
+import {
+  assertStandaloneContainer,
+  assertSwarmSupportedSettings,
+  swarmTaskOwner,
+} from '../src/index';
 
 describe('docker-swarm utilities', () => {
   it('detects swarm service and task labels', () => {
@@ -20,6 +24,13 @@ describe('docker-swarm utilities', () => {
   it('rejects swarm task container adoption as standalone', () => {
     expect(() => assertStandaloneContainer({ 'com.docker.swarm.service.name': 'db' })).toThrowError(
       /belongs to Docker Swarm \(db\)/
+    );
+  });
+
+  it('rejects unsupported swap disabling on swarm', () => {
+    expect(() => assertSwarmSupportedSettings({ swapDisabled: false })).not.toThrow();
+    expect(() => assertSwarmSupportedSettings({ swapDisabled: true })).toThrowError(
+      /cannot enforce per-service swap settings/
     );
   });
 });

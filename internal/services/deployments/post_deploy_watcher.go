@@ -24,7 +24,7 @@ func (s *DeploymentService) watchPostDeployStability(deploymentID, projectID, co
 			}
 		}()
 
-		time.Sleep(3 * time.Second) // allow container to finish initial initialization
+		time.Sleep(3 * time.Second)
 		ctx, cancel := context.WithTimeout(context.Background(), 65*time.Second)
 		defer cancel()
 

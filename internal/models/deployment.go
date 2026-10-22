@@ -206,6 +206,9 @@ type CreateAppServiceRequest struct {
 	Domain                 string      `json:"domain"`
 	StaticOutput           string      `json:"staticOutput"`
 	HealthCheckPath        string      `json:"healthCheckPath"`
+	CPULimit               float64     `json:"cpuLimit,omitempty"`
+	MemoryLimit            int         `json:"memoryLimit,omitempty"`
+	SwapDisabled           bool        `json:"swapDisabled,omitempty"`
 	EnablePRPreviews       bool        `json:"enablePRPreviews"`
 	Optimize               bool        `json:"optimize,omitempty"`
 	Stack                  string      `json:"stack,omitempty"`
@@ -233,6 +236,9 @@ type UpdateAppServiceRequest struct {
 	HealthCheckPath        string      `json:"healthCheckPath"`
 	ContainerID            string      `json:"containerId"`
 	Status                 string      `json:"status"`
+	CPULimit               float64     `json:"cpuLimit,omitempty"`
+	MemoryLimit            int         `json:"memoryLimit,omitempty"`
+	SwapDisabled           bool        `json:"swapDisabled,omitempty"`
 	DeployToken            string      `json:"deployToken"`
 	MaintenanceMode        bool        `json:"maintenanceMode,omitempty"`
 	Optimize               bool        `json:"optimize,omitempty"`

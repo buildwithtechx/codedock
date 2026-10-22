@@ -45,6 +45,12 @@ func (s testServerService) DeleteServer(context.Context, string, string) error {
 	return nil
 }
 
+func (s testServerService) InspectSwarm(context.Context, string, string) (*models.SwarmInspection, error) {
+	return &models.SwarmInspection{
+		State: models.SwarmStateActive,
+	}, nil
+}
+
 func TestServerListReturnsControlPlane(t *testing.T) {
 	e := echo.New()
 	req := httptest.NewRequest(http.MethodGet, "/api/servers", nil)

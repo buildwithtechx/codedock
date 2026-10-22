@@ -24,6 +24,7 @@ type ServerService interface {
 	ListServersByUser(ctx context.Context, userID string, search string) ([]*models.Server, error)
 	GetServer(ctx context.Context, id, userID string) (*models.Server, error)
 	DeleteServer(ctx context.Context, id, userID string) error
+	InspectSwarm(ctx context.Context, id, userID string) (*models.SwarmInspection, error)
 }
 
 type serverService struct {

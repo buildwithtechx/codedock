@@ -142,7 +142,6 @@ func (c *ContainerManager) createAndStart(ctx context.Context, opts ContainerRun
 		Binds:       binds,
 	}
 	if opts.SwapDisabled && memBytes > 0 {
-		// Pin MemorySwap to Memory to completely disable container swap in Docker
 		hostConfig.Resources.MemorySwap = memBytes
 	}
 	if opts.StopGracePeriodSeconds > 0 {

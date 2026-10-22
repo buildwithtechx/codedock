@@ -3,7 +3,6 @@ import {
   Building2,
   Check,
   ChevronDown,
-  Flame,
   Layers,
   Rocket,
   Sparkles,

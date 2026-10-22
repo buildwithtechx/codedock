@@ -1,71 +1,17 @@
 package projects
 
 import (
-	"errors"
 	"net/http"
-	"regexp"
-	"strings"
-	"time"
 
 	"github.com/google/uuid"
 	"github.com/labstack/echo/v4"
 
-	"codedock/internal/utils"
-
-	"codedock/internal/engine/deploy"
 	"codedock/internal/http/middleware"
 	"codedock/internal/models"
 	authservices "codedock/internal/services/auth"
-	deploymentservices "codedock/internal/services/deployments"
-	projectservices "codedock/internal/services/projects"
-	"codedock/internal/services/runtimes"
 	"codedock/internal/telemetry"
+	"codedock/internal/utils"
 )
-
-type AppHandler struct {
-	Runtime           *runtimes.Service
-	appService        *projectservices.AppService
-	projectService    *projectservices.ProjectService
-	deployer          *deploy.Deployer
-	deploymentService *deploymentservices.DeploymentService
-	envService        *projectservices.EnvironmentService
-	auditService      *authservices.AuditService
-}
-
-func NewAppHandler(s *projectservices.AppService, ps *projectservices.ProjectService, d *deploy.Deployer, ds *deploymentservices.DeploymentService, es *projectservices.EnvironmentService, auditService *authservices.AuditService) *AppHandler {
-	return &AppHandler{
-		appService:        s,
-		projectService:    ps,
-		deployer:          d,
-		deploymentService: ds,
-		envService:        es,
-		auditService:      auditService,
-	}
-}
-
-func (h *AppHandler) verifyProjectOwnership(c echo.Context, projectID string) error {
-	user := middleware.GetUserClaimsFromContext(c.Request().Context())
-	if user == nil {
-		return echo.NewHTTPError(http.StatusUnauthorized, "unauthorized")
-	}
-
-	if user.Role == "api" {
-		tokenProjectID, ok := c.Get("project_id").(string)
-		if ok && tokenProjectID != projectID {
-			return echo.NewHTTPError(http.StatusForbidden, "token does not have access to this project")
-		}
-	}
-
-	project, err := h.projectService.GetProject(c.Request().Context(), projectID)
-	if err != nil || project == nil {
-		return echo.NewHTTPError(http.StatusNotFound, "project not found")
-	}
-
-	if !h.projectService.IsMemberOrOwner(c.Request().Context(), projectID, user.UserID, user.Role) {
-		return echo.NewHTTPError(http.StatusForbidden, "access denied")
-	}
-	return nil
-}
 
 func (h *AppHandler) Create(c echo.Context) error {
 	envID := c.Param("id")
@@ -94,6 +40,9 @@ func (h *AppHandler) Create(c echo.Context) error {
 	}
 	if req.CPULimit < 0 || req.MemoryLimit < 0 {
 		return utils.Error(c, http.StatusBadRequest, "resource limits cannot be negative")
+	}
+	if req.SwapDisabled && req.MemoryLimit <= 0 {
+		return utils.Error(c, http.StatusBadRequest, "disabling swap requires a positive memory limit")
 	}
 	if req.RuntimeMode == "docker" {
 		req.RuntimeMode = models.RuntimeModeWeb
@@ -270,8 +219,12 @@ func (h *AppHandler) Update(c echo.Context) error {
 	existing.HealthCheckPath = req.HealthCheckPath
 	existing.ContainerID = req.ContainerID
 	existing.Status = req.Status
+	if req.SwapDisabled && req.MemoryLimit <= 0 {
+		return utils.Error(c, http.StatusBadRequest, "disabling swap requires a positive memory limit")
+	}
 	existing.CPULimit = req.CPULimit
 	existing.MemoryLimit = req.MemoryLimit
+	existing.SwapDisabled = req.SwapDisabled
 	existing.DeployToken = req.DeployToken
 	existing.MaintenanceMode = req.MaintenanceMode
 	existing.Optimize = req.Optimize
@@ -295,170 +248,4 @@ func (h *AppHandler) Update(c echo.Context) error {
 		IPAddress: c.RealIP(),
 	})
 	return utils.Success(c, "Operation successful", existing)
-}
-
-func (h *AppHandler) UpdateBuildSettings(c echo.Context) error {
-	id := c.Param("id")
-	existing, err := h.appService.GetAppService(c.Request().Context(), id)
-	if err != nil || existing == nil {
-		return utils.Error(c, http.StatusNotFound, "app service not found")
-	}
-	if err := h.verifyProjectOwnership(c, existing.ProjectID); err != nil {
-		return err
-	}
-	var req updateBuildSettingsRequest
-	if err := c.Bind(&req); err != nil {
-		return utils.Error(c, http.StatusBadRequest, "invalid payload")
-	}
-	version, err := normalizeRuntimeVersion(req.RuntimeVersion)
-	if err != nil {
-		return utils.Error(c, http.StatusBadRequest, err.Error())
-	}
-	existing.StaticOutput = req.StaticOutputDir
-	existing.InstallCommand = req.InstallCmd
-	existing.BuildCommand = req.BuildCmd
-	existing.StartCommand = req.StartCmd
-	existing.RuntimeVersion = version
-	if err := h.appService.UpdateAppService(c.Request().Context(), existing); err != nil {
-		return utils.Error(c, http.StatusInternalServerError, err.Error())
-	}
-	return utils.Success(c, "Build settings updated", existing)
-}
-
-type updateBuildSettingsRequest struct {
-	StaticOutputDir string `json:"staticOutputDir"`
-	InstallCmd      string `json:"installCmd"`
-	BuildCmd        string `json:"buildCmd"`
-	StartCmd        string `json:"startCmd"`
-	RuntimeVersion  string `json:"runtimeVersion"`
-}
-
-var runtimeVersionPattern = regexp.MustCompile(`^[A-Za-z0-9][A-Za-z0-9._-]{0,31}$`)
-
-func normalizeRuntimeVersion(raw string) (string, error) {
-	version := strings.TrimSpace(raw)
-	if version != "" && !runtimeVersionPattern.MatchString(version) {
-		return "", errors.New("runtime version must look like 8.4 or 22.11.0")
-	}
-	return version, nil
-}
-
-func (h *AppHandler) Delete(c echo.Context) error {
-	id := c.Param("id")
-	release, err := h.guardAppOperation(c, id)
-	if err != nil {
-		return err
-	}
-	defer release()
-	existing, err := h.appService.GetAppService(c.Request().Context(), id)
-	if err != nil || existing == nil {
-		return utils.Error(c, http.StatusNotFound, "app service not found")
-	}
-	if err := h.verifyProjectOwnership(c, existing.ProjectID); err != nil {
-		return err
-	}
-
-	if h.deployer == nil {
-		return utils.Error(c, http.StatusServiceUnavailable, "runtime unavailable")
-	}
-	if err := h.deploymentService.RemoveAppService(c.Request().Context(), existing); err != nil {
-		return utils.Error(c, http.StatusConflict, err.Error())
-	}
-
-	if err := h.appService.DeleteAppService(c.Request().Context(), id); err != nil {
-		return utils.Error(c, http.StatusInternalServerError, err.Error())
-	}
-	h.auditService.LogAction(c.Request().Context(), authservices.AuditActionOpts{
-		UserID:    utils.AuditActorID(c),
-		Action:    "app.delete",
-		Resource:  id,
-		IPAddress: c.RealIP(),
-		Details:   map[string]string{"name": existing.Name},
-	})
-	return c.NoContent(http.StatusNoContent)
-}
-
-func (h *AppHandler) StopService(c echo.Context) error {
-	id := c.Param("id")
-	existing, err := h.appService.GetAppService(c.Request().Context(), id)
-	if err != nil || existing == nil {
-		return utils.Error(c, http.StatusNotFound, "app service not found")
-	}
-	if err := h.verifyProjectOwnership(c, existing.ProjectID); err != nil {
-		return err
-	}
-	if err := h.deploymentService.StopAppService(c.Request().Context(), existing); err != nil {
-		return utils.Error(c, http.StatusInternalServerError, err.Error())
-	}
-	existing.Status = models.AppServiceStatusStopped
-	_ = h.appService.UpdateAppService(c.Request().Context(), existing)
-	return utils.Success(c, "Service stopped successfully", existing)
-}
-
-func (h *AppHandler) RedeployService(c echo.Context) error {
-	id := c.Param("id")
-	existing, err := h.appService.GetAppService(c.Request().Context(), id)
-	if err != nil || existing == nil {
-		return utils.Error(c, http.StatusNotFound, "app service not found")
-	}
-	if err := h.verifyProjectOwnership(c, existing.ProjectID); err != nil {
-		return err
-	}
-
-	newDep := &models.Deployment{
-		ServiceID:     existing.ID,
-		EnvironmentID: existing.EnvironmentID,
-		ProjectID:     existing.ProjectID,
-		Status:        "BUILDING",
-		CommitMessage: "Manual Redeploy",
-		Branch:        existing.Branch,
-		Trigger:       "Manual Redeploy",
-	}
-	created, err := h.deploymentService.CreateDeployment(c.Request().Context(), newDep)
-	if err != nil {
-		return utils.Error(c, http.StatusInternalServerError, err.Error())
-	}
-
-	h.deploymentService.ExecuteDeploymentAsync(created)
-	return utils.Accepted(c, "Redeployment triggered", created)
-}
-
-func (h *AppHandler) RestartService(c echo.Context) error {
-	id := c.Param("id")
-	existing, err := h.appService.GetAppService(c.Request().Context(), id)
-	if err != nil || existing == nil {
-		return utils.Error(c, http.StatusNotFound, "app service not found")
-	}
-	if err := h.verifyProjectOwnership(c, existing.ProjectID); err != nil {
-		return err
-	}
-	if err := h.deploymentService.RestartAppService(c.Request().Context(), existing); err != nil {
-		return utils.Error(c, http.StatusInternalServerError, err.Error())
-	}
-	existing.Status = models.AppServiceStatusRunning
-	_ = h.appService.UpdateAppService(c.Request().Context(), existing)
-	return utils.Success(c, "Service restarted successfully", existing)
-}
-
-func roleGraceSeconds(value string) int {
-	parsed, err := time.ParseDuration(strings.TrimSpace(value))
-	if err != nil || parsed <= 0 {
-		return 0
-	}
-	return int(parsed.Seconds())
-}
-
-func isValidHealthCheckPath(path string) bool {
-	if path == "" {
-		return true
-	}
-	if path[0] != '/' {
-		return false
-	}
-	for _, ch := range path {
-		if !((ch >= 'a' && ch <= 'z') || (ch >= 'A' && ch <= 'Z') || (ch >= '0' && ch <= '9') || ch == '/' || ch == '-' || ch == '_' || ch == '.' || ch == '?' || ch == '=' || ch == '&') {
-			return false
-		}
-	}
-	return true
 }

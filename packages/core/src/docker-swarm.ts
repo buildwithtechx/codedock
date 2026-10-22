@@ -53,3 +53,12 @@ export function assertStandaloneContainer(labels: Record<string, string> | null 
     );
   }
 }
+
+/** Asserts that a configuration does not request features unsupported by Docker Swarm. */
+export function assertSwarmSupportedSettings(config: { swapDisabled?: boolean }): void {
+  if (config.swapDisabled) {
+    throw new Error(
+      'Docker Swarm cannot enforce per-service swap settings. Remove Disable swap or use a standalone Docker target.'
+    );
+  }
+}

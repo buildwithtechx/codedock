@@ -99,6 +99,7 @@ export interface CreateAppServiceRequest {
   healthCheckPath: string;
   cpuLimit?: number;
   memoryLimit?: number;
+  swapDisabled?: boolean;
   stack?: string;
 }
 
@@ -122,6 +123,7 @@ export interface UpdateAppServiceRequest {
   status: ServiceStatus;
   cpuLimit?: number;
   memoryLimit?: number;
+  swapDisabled?: boolean;
   icon?: string;
   deployToken?: string;
   enablePRPreviews?: boolean;

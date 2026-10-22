@@ -84,19 +84,16 @@ func PlanRoleReplicas(
 		existing := existingByRole[spec.Name]
 		reusedCount := 0
 		if sameImage {
-			// Reuse matching running replicas
 			for i := 0; i < len(existing) && i < replicas; i++ {
 				plan.Reused = append(plan.Reused, existing[i])
 				reusedCount++
 			}
 		}
 
-		// Surplus existing replicas must be stopped
 		for i := reusedCount; i < len(existing); i++ {
 			plan.Stopped = append(plan.Stopped, existing[i])
 		}
 
-		// New replicas needed
 		for r := reusedCount + 1; r <= replicas; r++ {
 			plan.Candidates = append(plan.Candidates, models.RoleCandidate{
 				Role:    spec.Name,
@@ -109,7 +106,7 @@ func PlanRoleReplicas(
 	return plan, nil
 }
 
-// SettleHandover transitions the journal. If in committing phase, it settles forward instead of unwinding.
+// SettleHandover transitions the journal forward.
 func SettleHandover(journal *models.RoleHandoverJournal, nextPhase models.RoleHandoverPhase) error {
 	if journal == nil {
 		return nil
@@ -118,7 +115,6 @@ func SettleHandover(journal *models.RoleHandoverJournal, nextPhase models.RoleHa
 		return fmt.Errorf("kept containers refuse rollouts until deployment is deleted")
 	}
 	if journal.Phase == models.RoleHandoverPhaseCommitting && nextPhase == models.RoleHandoverPhasePreparing {
-		// Committing settles forward instead of unwinding
 		journal.Phase = models.RoleHandoverPhaseComplete
 		return nil
 	}
