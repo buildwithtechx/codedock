@@ -119,8 +119,8 @@ export function WizardDestination({
         )}
 
         {needsUpgrade && (
-          <div className="space-y-2.5 rounded-xl border border-amber-500/20 bg-amber-500/10 p-4 text-xs">
-            <p className="font-medium text-amber-500">This app needs a larger Cloud plan</p>
+          <div className="space-y-2.5 rounded-xl border border-primary/20 bg-primary/10 p-4 text-xs">
+            <p className="font-medium text-primary">This app needs a larger Cloud plan</p>
             <p className="text-muted-foreground leading-relaxed">
               Your plan can deploy static sites only. Service stacks need a paid plan.
             </p>
@@ -138,10 +138,7 @@ export function WizardDestination({
 
       <div className="space-y-3">
         {needsUpgrade ? (
-          <Button
-            asChild
-            className="h-11 w-full gap-2 rounded-xl bg-foreground font-semibold text-background text-sm shadow-sm hover:bg-foreground/90"
-          >
+          <Button asChild className="h-11 w-full gap-2 rounded-xl font-semibold text-sm shadow-sm">
             <Link to="/billing">
               <ArrowRight className="size-4" />
               Upgrade plan
@@ -149,7 +146,7 @@ export function WizardDestination({
           </Button>
         ) : (
           <Button
-            className="h-11 w-full gap-2 rounded-xl bg-foreground font-semibold text-background text-sm shadow-sm hover:bg-foreground/90"
+            className="h-11 w-full gap-2 rounded-xl font-semibold text-sm shadow-sm"
             onClick={onDeploy}
             disabled={disabled || isDeploying}
           >

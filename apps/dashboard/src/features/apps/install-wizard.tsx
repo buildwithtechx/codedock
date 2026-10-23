@@ -144,7 +144,7 @@ export function InstallWizard({ appId, projectId = '' }: { appId: string; projec
   if (phase === 'done') {
     return (
       <div className="mx-auto max-w-xl py-12 text-center">
-        <CheckCircle2 className="mx-auto size-12 text-emerald-500" />
+        <CheckCircle2 className="mx-auto size-12 text-primary" />
         <h2 className="mt-4 font-semibold text-2xl tracking-tight">{deployMessage}</h2>
         <p className="mt-2 text-muted-foreground text-sm">
           {name} has been provisioned as a dedicated application stack.
@@ -153,7 +153,7 @@ export function InstallWizard({ appId, projectId = '' }: { appId: string; projec
         {domain && (
           <div className="mt-6 flex items-center justify-between rounded-xl border border-border/60 bg-card p-4 text-left">
             <div className="flex items-center gap-3">
-              <div className="flex size-9 items-center justify-center rounded-lg bg-emerald-500/10 text-emerald-500">
+              <div className="flex size-9 items-center justify-center rounded-lg bg-primary/10 text-primary">
                 <Globe className="size-4" />
               </div>
               <div>

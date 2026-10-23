@@ -36,7 +36,7 @@ export function WizardHeader({ app, projectId }: { app: OneClickAppDetails; proj
           <div className="flex flex-wrap items-center gap-2">
             <h1 className="font-semibold text-foreground text-xl tracking-tight">{app.name}</h1>
             {app.verified && (
-              <BadgeCheck className="size-4 shrink-0 text-sky-500" aria-label="Verified app" />
+              <BadgeCheck className="size-4 shrink-0 text-primary" aria-label="Verified app" />
             )}
           </div>
           <p className={`mt-1 text-muted-foreground text-sm ${expanded ? '' : 'line-clamp-2'}`}>

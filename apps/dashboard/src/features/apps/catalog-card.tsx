@@ -18,7 +18,7 @@ export function CatalogCard({ app, projectId }: { app: OneClickAppDetails; proje
           <span className="inline-flex min-w-0 items-center gap-1.5 font-medium text-foreground">
             <span className="truncate">{app.name}</span>
             {app.verified && (
-              <BadgeCheck className="size-4 shrink-0 text-sky-500" aria-label="Verified" />
+              <BadgeCheck className="size-4 shrink-0 text-primary" aria-label="Verified" />
             )}
             <AppGpuBadge gpu={app.gpu} />
           </span>
