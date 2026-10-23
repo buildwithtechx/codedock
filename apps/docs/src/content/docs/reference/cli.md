@@ -31,6 +31,8 @@ codedock db create --project PROJECT_ID --environment ENVIRONMENT_ID --name prim
 | `db backups` | `list`, `create`, `trigger`, `history` |
 | `compose` | `analyze`, `deploy` |
 | `deploy` | Local path or existing service ID |
+| `mcp` | `serve`, `status`, `tools`; stdio JSON-RPC 2.0 MCP bridge and tool catalogue |
+| `ai` | `ask`, `confirm`; query the instance-aware Codedock AI Copilot and approve pending actions |
 | `version` | Binary version |
 
 Use `codedock COMMAND --help` for resource flags. See [Compose import](/deployments/compose/) before using the Compose commands.

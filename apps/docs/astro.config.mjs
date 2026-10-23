@@ -106,7 +106,7 @@ export default defineConfig({
           label: "Developer Tools & AI",
           collapsed: false,
           items: [
-            { label: "Model Context Protocol (MCP)", slug: "reference/mcp-server" },
+            { label: "MCP Server & Ask AI Copilot", slug: "reference/mcp-server" },
             { label: "Developer Tools & Mobile Apps", slug: "reference/developer-tools" },
           ],
         },

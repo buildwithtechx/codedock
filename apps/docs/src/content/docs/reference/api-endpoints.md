@@ -291,8 +291,14 @@ Read [API conventions](/reference/api/) first. Paths use `:parameter` placeholde
 | GET | `/api/projects/:id/summary` | Authenticated | [`canvasHandler.GetCanvasSummary`](https://github.com/buildwithtechx/codedock/blob/main/internal/http/routes_app.go) |
 | GET | `/api/environments/:id/canvas` | Authenticated | [`canvasHandler.GetEnvironmentCanvas`](https://github.com/buildwithtechx/codedock/blob/main/internal/http/routes_app.go) |
 | GET | `/api/audit-logs` | Authenticated; instance admin | [`auditLogHandler.List`](https://github.com/buildwithtechx/codedock/blob/main/internal/http/routes_app.go) |
-| GET | `/api/mcp/sse` | Authenticated | [`HandleMCPSSE`](https://github.com/buildwithtechx/codedock/blob/main/internal/http/routes_app.go) |
-| POST | `/api/mcp/messages` | Authenticated | [`HandleMCPMessage`](https://github.com/buildwithtechx/codedock/blob/main/internal/http/routes_app.go) |
+| GET | `/api/mcp/status` | Authenticated | [`handleMcpStatus`](https://github.com/buildwithtechx/codedock/blob/main/internal/http/routes_mcp_ai.go) |
+| GET | `/api/mcp/tools` | Authenticated | [`handleMcpTools`](https://github.com/buildwithtechx/codedock/blob/main/internal/http/routes_mcp_ai.go) |
+| POST | `/api/mcp` | Authenticated | [`handleMcpStreamableHTTP`](https://github.com/buildwithtechx/codedock/blob/main/internal/http/routes_mcp_ai.go) |
+| GET | `/api/mcp/sse` | Authenticated | [`HandleMCPSSE`](https://github.com/buildwithtechx/codedock/blob/main/internal/http/routes_mcp_ai.go) |
+| POST | `/api/mcp/messages` | Authenticated | [`HandleMCPMessage`](https://github.com/buildwithtechx/codedock/blob/main/internal/http/routes_mcp_ai.go) |
+| GET | `/api/ai/assistant/context` | Authenticated | [`assistant.HandleContext`](https://github.com/buildwithtechx/codedock/blob/main/internal/http/routes_mcp_ai.go) |
+| POST | `/api/ai/assistant/chat` | Authenticated | [`assistant.HandleChat`](https://github.com/buildwithtechx/codedock/blob/main/internal/http/routes_mcp_ai.go) |
+| POST | `/api/ai/assistant/actions/:actionId/confirm` | Authenticated | [`assistant.HandleConfirmAction`](https://github.com/buildwithtechx/codedock/blob/main/internal/http/routes_mcp_ai.go) |
 | GET | `/api/ws/terminal/:id` | Handler / middleware | [`terminalHandler.HandleWebSocket`](https://github.com/buildwithtechx/codedock/blob/main/internal/http/routes_app.go) |
 | GET | `/api/ws/services/:id/terminal` | Handler / middleware | [`terminalHandler.HandleWebSocket`](https://github.com/buildwithtechx/codedock/blob/main/internal/http/routes_app.go) |
 

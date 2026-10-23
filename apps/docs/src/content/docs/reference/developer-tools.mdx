@@ -13,9 +13,10 @@ The **Codedock VS Code Extension** (`vscode-codedock`) brings PaaS control into 
 
 <Tabs>
   <TabItem label="Key Capabilities" icon="star">
-    - **One-Click Deploy**: Deploy directly from the editor palette (`Codedock: Deploy Current Project`).
+    - **One-Click Deploy**: Deploy directly from the editor palette (`Codedock: Redeploy App`).
+    - **One-Click MCP Setup**: Run `Codedock: Configure MCP Server (.vscode/mcp.json)` to automatically write `.vscode/mcp.json` or copy the authenticated MCP config for GitHub Copilot, Cursor, and Windsurf.
+    - **Built-In AI Copilot**: Run `Codedock: Ask Codedock AI Copilot` to inspect services, diagnose deployments, and stream MCP tool execution steps in the `Codedock: AI Copilot` output channel.
     - **Live Log Streaming**: Stream build and container logs inside dedicated VS Code output channels with syntax highlighting.
-    - **Interactive Web Terminal**: Open an embedded remote terminal directly inside running containers.
     - **Environment Editor**: View, add, and update service environment variables with automatic sync.
     - **Status Bar Health**: Monitor CPU, RAM, and deployment statuses from the editor status bar.
   </TabItem>
@@ -32,6 +33,7 @@ The **Codedock VS Code Extension** (`vscode-codedock`) brings PaaS control into 
 Built with React Native and Expo, the Codedock Mobile App connects you to your infrastructure on the go.
 
 - **Real-Time Push Alerts**: Receive instant push notifications for deployment failures, server downtime, and disk saturation.
+- **Ask AI Deployment Diagnostics**: Tap **Ask AI** on any deployment card in the Deployments tab to have the instance-aware Codedock Copilot inspect logs and summarize root causes.
 - **Emergency Operations**: Trigger instant zero-downtime rollbacks, restart containers, or cancel runaway builds with one tap.
 - **Live Fleet Metrics**: Monitor CPU and RAM graphs across all worker servers.
 - **Biometric Security**: Protect mobile access with Face ID, Touch ID, or fingerprint authentication.
