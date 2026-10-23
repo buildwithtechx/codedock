@@ -200,7 +200,7 @@ export function CloudDeployPlanModal({
                     size="sm"
                     variant="outline"
                     onClick={() => setReady(true)}
-                    className="rounded-lg text-xs"
+                    className="text-xs"
                   >
                     I completed payment
                   </Button>

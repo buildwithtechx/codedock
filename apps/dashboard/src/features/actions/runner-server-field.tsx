@@ -95,7 +95,7 @@ export function RunnerServerField({
           variant="outline"
           size="sm"
           onClick={() => setAddModalOpen(true)}
-          className="h-7 gap-1 rounded-full px-2.5 text-xs text-muted-foreground hover:text-foreground"
+          className="h-7 gap-1 px-2.5 text-xs text-muted-foreground hover:text-foreground"
         >
           <Plus className="size-3" />
           {addLabel}

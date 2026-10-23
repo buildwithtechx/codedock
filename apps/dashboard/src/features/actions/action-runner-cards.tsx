@@ -22,10 +22,7 @@ export function ActionRunnerCards({
         title="No runners configured"
         description="Runners execute your workflow jobs in isolated containers or directly on host machines."
       >
-        <Button
-          asChild
-          className="h-10 rounded-full bg-primary px-5 font-medium text-primary-foreground hover:bg-primary/90"
-        >
+        <Button asChild className="h-10 px-5 font-medium">
           <Link to={'/actions/runners/new' as never}>
             {isCloud ? <Cloud className="size-4" /> : <Plus className="size-4" />}
             Add runner
@@ -80,7 +77,7 @@ export function ActionRunnerCards({
                 size="sm"
                 variant="ghost"
                 onClick={() => onDeleteRunner(runner.id)}
-                className="h-7 w-7 rounded-lg p-0 text-muted-foreground hover:text-destructive"
+                className="h-7 w-7 p-0 text-muted-foreground hover:text-destructive"
                 aria-label={`Delete runner ${runner.name}`}
                 title="Delete runner"
               >

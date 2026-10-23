@@ -33,7 +33,7 @@ export function ProviderAccounts({
               onClick={() => onSelect(provider.id)}
               aria-pressed={active}
               className={cn(
-                'h-9 shrink-0 rounded-lg px-3',
+                'h-9 shrink-0 px-3',
                 active ? 'bg-primary/10 text-primary' : 'text-muted-foreground'
               )}
             >
@@ -60,7 +60,7 @@ export function ProviderAccounts({
             aria-label="Import from URL"
             title="Import from URL"
             aria-pressed={importingUrl}
-            className={cn('rounded-lg', importingUrl && 'bg-primary/10 text-primary')}
+            className={cn(importingUrl && 'bg-primary/10 text-primary')}
           >
             <Link2 className="size-4" aria-hidden="true" />
           </Button>

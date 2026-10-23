@@ -124,13 +124,10 @@ export function BillingPlansCards({ onSelectPlan, busy = false }: BillingPlansCa
 
               <Button
                 type="button"
+                variant={plan.isPopular ? 'default' : 'secondary'}
                 disabled={busy}
                 onClick={() => onSelectPlan(plan.id)}
-                className={`mt-4 w-full justify-center gap-1.5 rounded-full font-medium text-xs ${
-                  plan.isPopular
-                    ? 'bg-primary text-primary-foreground hover:bg-primary/90'
-                    : 'bg-muted/70 text-foreground hover:bg-muted'
-                }`}
+                className="mt-4 w-full justify-center gap-1.5 font-medium text-xs"
               >
                 Choose {plan.name}
                 <ArrowRight className="size-3.5" />

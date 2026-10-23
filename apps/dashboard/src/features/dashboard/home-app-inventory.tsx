@@ -150,7 +150,7 @@ export function HomeAppInventory({ isLoading: parentLoading = false }: { isLoadi
           )}
         </div>
         {hasApps && (
-          <Button asChild variant="ghost" size="icon" className="size-7 rounded-lg">
+          <Button asChild variant="ghost" size="icon-xs">
             <Link to="/apps/new" aria-label="New app" title="New app">
               <Plus className="size-4" aria-hidden="true" />
             </Link>

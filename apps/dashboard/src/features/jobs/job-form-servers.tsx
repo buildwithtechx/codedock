@@ -105,7 +105,7 @@ export function JobServersSection({
         variant="secondary"
         size="sm"
         onClick={onOpenAddServer}
-        className="gap-1.5 rounded-lg"
+        className="gap-1.5"
       >
         <Plus className="size-3.5" /> {isCloud ? 'Add a dedicated server' : 'Add server'}
       </Button>

@@ -195,11 +195,7 @@ export function DeployTargetStep({ onContinue }: DeployTargetStepProps) {
             </div>
           </div>
 
-          <Button
-            className="mt-6 w-full gap-2 rounded-xl bg-foreground py-3 font-semibold text-background text-sm shadow-md hover:bg-foreground/90"
-            size="lg"
-            onClick={onContinue}
-          >
+          <Button className="mt-6 w-full gap-2 font-semibold" size="lg" onClick={onContinue}>
             Continue
             <ArrowRight className="size-4" />
           </Button>

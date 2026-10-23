@@ -226,7 +226,7 @@ export function MailPage() {
                     />
                     <Button
                       size="sm"
-                      className="h-8 rounded-lg"
+                      className="h-8"
                       disabled={newDomain.trim() === '' || createDomain.isPending}
                       onClick={() => {
                         createDomain.mutate(newDomain.trim(), {

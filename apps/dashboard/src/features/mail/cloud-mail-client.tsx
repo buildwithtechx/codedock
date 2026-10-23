@@ -115,7 +115,7 @@ export function CloudMailClient({ onSelfHost }: CloudMailClientProps = {}) {
             Connect any IMAP/SMTP server. Your provider keeps your mailboxes and mail delivery.
           </p>
 
-          <Button asChild className="mt-6 rounded-full px-5 font-medium">
+          <Button asChild className="mt-6 px-5 font-medium">
             <Link to="/apps/new/$appId" params={{ appId: 'mail' }}>
               <Sparkles className="size-4" />
               <span>Connect existing mail server</span>
@@ -151,7 +151,7 @@ export function CloudMailClient({ onSelfHost }: CloudMailClientProps = {}) {
                 type="button"
                 variant="secondary"
                 onClick={onSelfHost}
-                className="mt-4 w-full rounded-full text-xs"
+                className="mt-4 w-full text-xs"
               >
                 Deploy mail server
               </Button>

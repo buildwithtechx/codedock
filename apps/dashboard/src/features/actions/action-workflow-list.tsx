@@ -33,29 +33,19 @@ export function ActionWorkflowList({
   if (workflows.length === 0) {
     const setupAction =
       readyRunnerCount > 0 ? (
-        <Button
-          asChild
-          className="h-10 rounded-full bg-primary px-5 font-medium text-primary-foreground hover:bg-primary/90"
-        >
+        <Button asChild className="h-10 px-5 font-medium">
           <Link to={'/actions/new' as never}>
             <Plus className="size-4" />
             New workflow
           </Link>
         </Button>
       ) : runnerCount > 0 ? (
-        <Button
-          onClick={onGoToRunners}
-          variant="secondary"
-          className="h-10 rounded-full px-5 font-medium"
-        >
+        <Button onClick={onGoToRunners} variant="secondary" className="h-10 px-5 font-medium">
           Review runners
           <ArrowRight className="size-4 rtl:rotate-180" />
         </Button>
       ) : (
-        <Button
-          asChild
-          className="h-10 rounded-full bg-primary px-5 font-medium text-primary-foreground hover:bg-primary/90"
-        >
+        <Button asChild className="h-10 px-5 font-medium">
           <Link to={'/actions/runners/new' as never}>
             {isCloud ? <Cloud className="size-4" /> : <Plus className="size-4" />}
             Add runner
@@ -131,7 +121,7 @@ export function ActionWorkflowList({
                     size="sm"
                     variant="outline"
                     onClick={() => onTriggerWorkflow(workflow.id)}
-                    className="h-7 rounded-lg px-2 text-xs"
+                    className="h-7 px-2 text-xs"
                   >
                     Run
                   </Button>
@@ -140,7 +130,7 @@ export function ActionWorkflowList({
                       size="sm"
                       variant="ghost"
                       onClick={() => onDeleteWorkflow(workflow.id)}
-                      className="h-7 w-7 rounded-lg p-0 text-muted-foreground hover:text-destructive"
+                      className="h-7 w-7 p-0 text-muted-foreground hover:text-destructive"
                       aria-label={`Delete workflow ${workflow.name}`}
                       title="Delete workflow"
                     >

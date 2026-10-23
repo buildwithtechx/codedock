@@ -3,7 +3,7 @@ import { ArrowLeft, Cloud, Plus, RefreshCw } from 'lucide-react';
 import { useState } from 'react';
 import { toast } from 'sonner';
 import { Button } from '@codedock/ui/button';
-import { Tabs, TabsContent } from '@codedock/ui/tabs';
+import { Tabs, TabsContent, TabsList, TabsTrigger } from '@codedock/ui/tabs';
 import type { ActionRun, ActionRunner, ActionWorkflow } from '#/interfaces/actions';
 import {
   useDeleteRunner,
@@ -82,7 +82,7 @@ export function ActionsHome({
           variant="ghost"
           size="sm"
           onClick={() => setSelectedRun(null)}
-          className="-ms-3 gap-1.5 rounded-lg text-muted-foreground hover:text-foreground"
+          className="-ms-3 gap-1.5 text-muted-foreground hover:text-foreground"
         >
           <ArrowLeft className="size-4 rtl:rotate-180" />
           Back to Actions Overview
@@ -147,73 +147,28 @@ export function ActionsHome({
       </header>
 
       <Tabs value={tab} onValueChange={(val) => setTab(val as typeof tab)} className="space-y-6">
-        <div className="flex items-center gap-1 overflow-x-auto border-border/50 border-b">
-          <button
-            type="button"
-            onClick={() => setTab('workflows')}
-            className={`relative inline-flex items-center gap-2 px-4 py-2.5 font-medium text-sm transition-colors ${
-              tab === 'workflows'
-                ? 'text-foreground'
-                : 'text-muted-foreground hover:text-foreground/70'
-            }`}
-          >
+        <TabsList>
+          <TabsTrigger value="workflows">
             Workflows
-            <span
-              className={`rounded-full px-1.5 py-0.5 font-medium text-xs tabular-nums ${
-                tab === 'workflows'
-                  ? 'bg-muted text-foreground'
-                  : 'bg-muted/60 text-muted-foreground'
-              }`}
-            >
+            <span className="rounded-full bg-muted px-1.5 py-0.5 font-medium text-xs tabular-nums">
               {workflows.length}
             </span>
-            {tab === 'workflows' && (
-              <span className="absolute inset-x-4 bottom-0 h-0.5 rounded-full bg-foreground" />
-            )}
-          </button>
-          <button
-            type="button"
-            onClick={() => setTab('runs')}
-            className={`relative inline-flex items-center gap-2 px-4 py-2.5 font-medium text-sm transition-colors ${
-              tab === 'runs' ? 'text-foreground' : 'text-muted-foreground hover:text-foreground/70'
-            }`}
-          >
+          </TabsTrigger>
+          <TabsTrigger value="runs">
             Runs
             {runs.length > 0 && (
-              <span
-                className={`rounded-full px-1.5 py-0.5 font-medium text-xs tabular-nums ${
-                  tab === 'runs' ? 'bg-muted text-foreground' : 'bg-muted/60 text-muted-foreground'
-                }`}
-              >
+              <span className="rounded-full bg-muted px-1.5 py-0.5 font-medium text-xs tabular-nums">
                 {runs.length}
               </span>
             )}
-            {tab === 'runs' && (
-              <span className="absolute inset-x-4 bottom-0 h-0.5 rounded-full bg-foreground" />
-            )}
-          </button>
-          <button
-            type="button"
-            onClick={() => setTab('runners')}
-            className={`relative inline-flex items-center gap-2 px-4 py-2.5 font-medium text-sm transition-colors ${
-              tab === 'runners'
-                ? 'text-foreground'
-                : 'text-muted-foreground hover:text-foreground/70'
-            }`}
-          >
+          </TabsTrigger>
+          <TabsTrigger value="runners">
             Runners
-            <span
-              className={`rounded-full px-1.5 py-0.5 font-medium text-xs tabular-nums ${
-                tab === 'runners' ? 'bg-muted text-foreground' : 'bg-muted/60 text-muted-foreground'
-              }`}
-            >
+            <span className="rounded-full bg-muted px-1.5 py-0.5 font-medium text-xs tabular-nums">
               {runners.length}
             </span>
-            {tab === 'runners' && (
-              <span className="absolute inset-x-4 bottom-0 h-0.5 rounded-full bg-foreground" />
-            )}
-          </button>
-        </div>
+          </TabsTrigger>
+        </TabsList>
 
         <div className="grid items-start gap-6 lg:grid-cols-[minmax(0,1fr)_340px]">
           <div className="min-w-0 space-y-4">
@@ -241,20 +196,14 @@ export function ActionsHome({
                     description="Trigger a workflow to begin running jobs on your runners."
                   >
                     {firstWorkflow ? (
-                      <Button
-                        asChild
-                        className="h-10 rounded-full bg-primary px-5 font-medium text-primary-foreground hover:bg-primary/90"
-                      >
+                      <Button asChild className="h-10 px-5 font-medium">
                         <Link to={'/actions/new' as never}>
                           <Plus className="size-4" />
                           New workflow
                         </Link>
                       </Button>
                     ) : (
-                      <Button
-                        asChild
-                        className="h-10 rounded-full bg-primary px-5 font-medium text-primary-foreground hover:bg-primary/90"
-                      >
+                      <Button asChild className="h-10 px-5 font-medium">
                         <Link to={'/actions/runners/new' as never}>
                           {isCloud ? <Cloud className="size-4" /> : <Plus className="size-4" />}
                           Add runner

@@ -190,7 +190,7 @@ export function ActionsSidebar({
           <Button
             asChild
             variant="secondary"
-            className="mt-4 w-full rounded-full bg-muted/60 text-foreground text-xs hover:bg-muted"
+            className="mt-4 w-full bg-muted/60 text-foreground text-xs hover:bg-muted"
           >
             <Link to={'/billing' as never}>
               Budget <ArrowRight className="ms-1 size-3.5" />

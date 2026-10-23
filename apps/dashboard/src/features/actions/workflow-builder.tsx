@@ -97,7 +97,7 @@ export function WorkflowBuilder() {
             asChild
             variant="ghost"
             size="sm"
-            className="-ms-3 mb-2 gap-1.5 rounded-lg text-muted-foreground hover:text-foreground"
+            className="-ms-3 mb-2 gap-1.5 text-muted-foreground hover:text-foreground"
           >
             <Link to={'/actions' as never}>
               <ArrowLeft className="size-4 rtl:rotate-180" />

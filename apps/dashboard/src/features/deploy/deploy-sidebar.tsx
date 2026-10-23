@@ -177,7 +177,7 @@ export function DeploySidebar({
       )}
 
       <Button
-        className="w-full gap-2 rounded-xl bg-foreground py-3 font-semibold text-background text-sm shadow-md hover:bg-foreground/90"
+        className="w-full gap-2 font-semibold"
         size="lg"
         onClick={onDeploy}
         disabled={isDeploying || !projectName.trim()}

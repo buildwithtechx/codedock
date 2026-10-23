@@ -148,7 +148,7 @@ export function DeployEnvSection({ envVars, onEnvVarsChange }: DeployEnvSectionP
               <Button
                 type="button"
                 size="sm"
-                className="mt-4 gap-1.5 rounded-full bg-foreground px-4 text-background text-xs hover:bg-foreground/90"
+                className="mt-4 gap-1.5 px-4 text-xs"
                 onClick={() => setIsEditing(true)}
               >
                 <Plus className="size-3.5" />

@@ -168,7 +168,7 @@ export function ServiceDomains({ serviceId }: { serviceId: string }) {
                       size="sm"
                       onClick={() => handleVerify(domain.id)}
                       disabled={isVerifying}
-                      className="h-8 gap-1.5 rounded-lg text-xs"
+                      className="h-8 gap-1.5 text-xs"
                     >
                       {isVerifying ? (
                         <Loader2 className="h-3.5 w-3.5 animate-spin" />
@@ -180,7 +180,7 @@ export function ServiceDomains({ serviceId }: { serviceId: string }) {
                     <Button
                       variant="ghost"
                       size="icon"
-                      className="h-8 w-8 rounded-lg text-destructive hover:bg-destructive/10 hover:text-destructive"
+                      className="h-8 w-8 text-destructive hover:bg-destructive/10 hover:text-destructive"
                       onClick={() => deleteDomain.mutate({ id: domain.id })}
                       disabled={deleteDomain.isPending}
                       aria-label={`Delete domain ${domain.domainName}`}
