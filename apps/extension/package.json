@@ -149,6 +149,18 @@
         "title": "View Deployment Logs",
         "category": "Codedock",
         "icon": "$(output)"
+      },
+      {
+        "command": "codedock.configureMcp",
+        "title": "Configure MCP Server (.vscode/mcp.json)",
+        "category": "Codedock",
+        "icon": "$(plug)"
+      },
+      {
+        "command": "codedock.askAi",
+        "title": "Ask Codedock AI Copilot",
+        "category": "Codedock",
+        "icon": "$(sparkle)"
       }
     ],
     "menus": {

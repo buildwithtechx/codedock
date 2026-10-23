@@ -1,6 +1,6 @@
 import { Button } from '@codedock/ui/button';
-import { Check, Copy, ExternalLink } from 'lucide-react';
-import { useState } from 'react';
+import { Check, ChevronLeft, ChevronRight, Copy, ExternalLink } from 'lucide-react';
+import { useCallback, useEffect, useRef, useState } from 'react';
 
 type ClientDefinition = {
   id: string;
@@ -137,6 +137,32 @@ const CLIENTS: ClientDefinition[] = [
 export function McpClientSetup({ endpoint }: { endpoint: string }) {
   const [selectedId, setSelectedId] = useState(CLIENTS[0].id);
   const [copied, setCopied] = useState(false);
+  const tabsRef = useRef<HTMLDivElement>(null);
+  const [canScrollLeft, setCanScrollLeft] = useState(false);
+  const [canScrollRight, setCanScrollRight] = useState(false);
+
+  const checkScroll = useCallback(() => {
+    const el = tabsRef.current;
+    if (!el) return;
+    setCanScrollLeft(el.scrollLeft > 4);
+    setCanScrollRight(el.scrollLeft + el.clientWidth < el.scrollWidth - 4);
+  }, []);
+
+  useEffect(() => {
+    const el = tabsRef.current;
+    checkScroll();
+    window.addEventListener('resize', checkScroll);
+    const ro = typeof ResizeObserver !== 'undefined' ? new ResizeObserver(checkScroll) : null;
+    if (el && ro) ro.observe(el);
+    return () => {
+      window.removeEventListener('resize', checkScroll);
+      ro?.disconnect();
+    };
+  }, [checkScroll]);
+
+  const scrollTabs = (dir: 'left' | 'right') => {
+    tabsRef.current?.scrollBy({ left: dir === 'left' ? -200 : 200, behavior: 'smooth' });
+  };
 
   const selectedClient = CLIENTS.find((c) => c.id === selectedId) || CLIENTS[0];
   const setup = selectedClient.getSetup(endpoint);
@@ -152,39 +178,80 @@ export function McpClientSetup({ endpoint }: { endpoint: string }) {
     <div className="space-y-4">
       <div>
         <p className="mb-2 font-medium text-foreground text-xs">Add to your AI client</p>
-        <div className="scrollbar-none flex min-w-0 flex-nowrap items-center gap-1.5 overflow-x-auto pb-1">
-          {CLIENTS.map((client) => {
-            const isActive = client.id === selectedId;
-            return (
-              <button
-                key={client.id}
+        <div className="group relative">
+          {canScrollLeft && (
+            <div className="absolute top-0 bottom-1 left-0 z-10 flex items-center bg-gradient-to-r from-card via-card/85 to-transparent pr-3">
+              <Button
                 type="button"
-                onClick={() => setSelectedId(client.id)}
-                className={`flex shrink-0 items-center gap-2 rounded-lg border px-3 py-1.5 font-medium text-xs transition-colors ${
-                  isActive
-                    ? 'border-primary/60 bg-primary/10 text-foreground'
-                    : 'border-border/60 text-muted-foreground hover:bg-muted/40 hover:text-foreground'
-                }`}
+                variant="outline"
+                size="icon"
+                onClick={() => scrollTabs('left')}
+                className="h-7 w-7 rounded-full bg-card shadow-sm hover:bg-accent"
+                aria-label="Scroll clients left"
               >
-                <span
-                  aria-hidden="true"
-                  className="inline-block size-4 shrink-0"
-                  style={{
-                    backgroundColor: client.color,
-                    maskImage: `url(${client.icon})`,
-                    WebkitMaskImage: `url(${client.icon})`,
-                    maskSize: 'contain',
-                    WebkitMaskSize: 'contain',
-                    maskRepeat: 'no-repeat',
-                    WebkitMaskRepeat: 'no-repeat',
-                    maskPosition: 'center',
-                    WebkitMaskPosition: 'center',
-                  }}
-                />
-                <span>{client.name}</span>
-              </button>
-            );
-          })}
+                <ChevronLeft className="h-3.5 w-3.5" />
+              </Button>
+            </div>
+          )}
+
+          <div
+            ref={tabsRef}
+            onScroll={checkScroll}
+            onWheel={(e) => {
+              if (Math.abs(e.deltaY) > Math.abs(e.deltaX)) {
+                e.currentTarget.scrollLeft += e.deltaY;
+              }
+            }}
+            className="scrollbar-none flex min-w-0 flex-nowrap items-center gap-1.5 overflow-x-auto scroll-smooth pb-1"
+          >
+            {CLIENTS.map((client) => {
+              const isActive = client.id === selectedId;
+              return (
+                <button
+                  key={client.id}
+                  type="button"
+                  onClick={() => setSelectedId(client.id)}
+                  className={`flex shrink-0 items-center gap-2 rounded-lg border px-3 py-1.5 font-medium text-xs transition-colors ${
+                    isActive
+                      ? 'border-primary/60 bg-primary/10 text-foreground'
+                      : 'border-border/60 text-muted-foreground hover:bg-muted/40 hover:text-foreground'
+                  }`}
+                >
+                  <span
+                    aria-hidden="true"
+                    className="inline-block size-4 shrink-0"
+                    style={{
+                      backgroundColor: client.color,
+                      maskImage: `url(${client.icon})`,
+                      WebkitMaskImage: `url(${client.icon})`,
+                      maskSize: 'contain',
+                      WebkitMaskSize: 'contain',
+                      maskRepeat: 'no-repeat',
+                      WebkitMaskRepeat: 'no-repeat',
+                      maskPosition: 'center',
+                      WebkitMaskPosition: 'center',
+                    }}
+                  />
+                  <span>{client.name}</span>
+                </button>
+              );
+            })}
+          </div>
+
+          {canScrollRight && (
+            <div className="absolute top-0 right-0 bottom-1 z-10 flex items-center bg-gradient-to-l from-card via-card/85 to-transparent pl-3">
+              <Button
+                type="button"
+                variant="outline"
+                size="icon"
+                onClick={() => scrollTabs('right')}
+                className="h-7 w-7 rounded-full bg-card shadow-sm hover:bg-accent"
+                aria-label="Scroll clients right"
+              >
+                <ChevronRight className="h-3.5 w-3.5" />
+              </Button>
+            </div>
+          )}
         </div>
       </div>
 

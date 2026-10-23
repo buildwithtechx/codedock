@@ -34,9 +34,15 @@ export function AuditLogList() {
   }, []);
 
   useEffect(() => {
+    const el = tabsRef.current;
     checkScroll();
     window.addEventListener('resize', checkScroll);
-    return () => window.removeEventListener('resize', checkScroll);
+    const ro = typeof ResizeObserver !== 'undefined' ? new ResizeObserver(checkScroll) : null;
+    if (el && ro) ro.observe(el);
+    return () => {
+      window.removeEventListener('resize', checkScroll);
+      ro?.disconnect();
+    };
   }, [checkScroll]);
 
   const scrollTabs = (dir: 'left' | 'right') => {

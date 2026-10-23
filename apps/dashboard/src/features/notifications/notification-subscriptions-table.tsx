@@ -1,4 +1,6 @@
-import { useEffect, useMemo, useState } from 'react';
+import { Button } from '@codedock/ui/button';
+import { ChevronLeft, ChevronRight } from 'lucide-react';
+import { useCallback, useEffect, useMemo, useRef, useState } from 'react';
 import {
   useGetNotificationDefaults,
   useGetNotificationSubscriptions,
@@ -16,6 +18,32 @@ export function NotificationSubscriptionsTable() {
   const organizationId = activeOrganizationId || organizations?.[0]?.id;
 
   const [selectedGroup, setSelectedGroup] = useState<string>('all');
+  const tabsRef = useRef<HTMLDivElement>(null);
+  const [canScrollLeft, setCanScrollLeft] = useState(false);
+  const [canScrollRight, setCanScrollRight] = useState(false);
+
+  const checkScroll = useCallback(() => {
+    const el = tabsRef.current;
+    if (!el) return;
+    setCanScrollLeft(el.scrollLeft > 4);
+    setCanScrollRight(el.scrollLeft + el.clientWidth < el.scrollWidth - 4);
+  }, []);
+
+  useEffect(() => {
+    const el = tabsRef.current;
+    checkScroll();
+    window.addEventListener('resize', checkScroll);
+    const ro = typeof ResizeObserver !== 'undefined' ? new ResizeObserver(checkScroll) : null;
+    if (el && ro) ro.observe(el);
+    return () => {
+      window.removeEventListener('resize', checkScroll);
+      ro?.disconnect();
+    };
+  }, [checkScroll]);
+
+  const scrollTabs = (dir: 'left' | 'right') => {
+    tabsRef.current?.scrollBy({ left: dir === 'left' ? -200 : 200, behavior: 'smooth' });
+  };
   const [states, setStates] = useState<Record<string, AlertPreferenceState>>(() =>
     Object.fromEntries(
       NOTIFICATION_EVENTS.map((e) => [
@@ -147,58 +175,99 @@ export function NotificationSubscriptionsTable() {
         </div>
       </div>
 
-      <div className="scrollbar-hide flex items-center gap-1 overflow-x-auto border-border/50 border-b">
-        <button
-          type="button"
-          onClick={() => setSelectedGroup('all')}
-          className={`relative inline-flex min-w-0 shrink-0 items-center gap-1.5 whitespace-nowrap px-2.5 py-2 font-medium text-xs transition-colors sm:px-3.5 sm:text-sm ${
-            selectedGroup === 'all'
-              ? 'text-foreground'
-              : 'text-muted-foreground hover:text-foreground/80'
-          }`}
+      <div className="group relative">
+        {canScrollLeft && (
+          <div className="absolute top-0 bottom-0 left-0 z-10 flex items-center bg-linear-to-r from-card via-card/85 to-transparent pr-4">
+            <Button
+              type="button"
+              variant="outline"
+              size="icon"
+              onClick={() => scrollTabs('left')}
+              className="h-7 w-7 rounded-full bg-card shadow-sm hover:bg-accent"
+              aria-label="Scroll alert categories left"
+            >
+              <ChevronLeft className="h-3.5 w-3.5" />
+            </Button>
+          </div>
+        )}
+
+        <div
+          ref={tabsRef}
+          onScroll={checkScroll}
+          onWheel={(e) => {
+            if (Math.abs(e.deltaY) > Math.abs(e.deltaX)) {
+              e.currentTarget.scrollLeft += e.deltaY;
+            }
+          }}
+          className="no-scrollbar scrollbar-hide flex select-none items-center gap-1 overflow-x-auto scroll-smooth border-border/50 border-b"
         >
-          All
-          <span
-            className={`rounded-full px-1.5 py-0.5 font-medium text-[11px] tabular-nums sm:text-xs ${
+          <button
+            type="button"
+            onClick={() => setSelectedGroup('all')}
+            className={`relative inline-flex min-w-0 shrink-0 items-center gap-1.5 whitespace-nowrap px-2.5 py-2 font-medium text-xs transition-colors sm:px-3.5 sm:text-sm ${
               selectedGroup === 'all'
-                ? 'bg-muted text-foreground'
-                : 'bg-muted/60 text-muted-foreground'
+                ? 'text-foreground'
+                : 'text-muted-foreground hover:text-foreground/80'
             }`}
           >
-            {groupCounts.all}
-          </span>
-          {selectedGroup === 'all' && (
-            <span className="absolute start-2.5 end-2.5 bottom-0 h-0.5 rounded-full bg-primary sm:start-3.5 sm:end-3.5" />
-          )}
-        </button>
-
-        {NOTIFICATION_GROUPS.map((group) => {
-          const count = groupCounts[group.id] || 0;
-          if (count === 0) return null;
-          const active = selectedGroup === group.id;
-          return (
-            <button
-              key={group.id}
-              type="button"
-              onClick={() => setSelectedGroup(group.id)}
-              className={`relative inline-flex min-w-0 shrink-0 items-center gap-1.5 whitespace-nowrap px-2.5 py-2 font-medium text-xs transition-colors sm:px-3.5 sm:text-sm ${
-                active ? 'text-foreground' : 'text-muted-foreground hover:text-foreground/80'
+            All
+            <span
+              className={`rounded-full px-1.5 py-0.5 font-medium text-[11px] tabular-nums sm:text-xs ${
+                selectedGroup === 'all'
+                  ? 'bg-muted text-foreground'
+                  : 'bg-muted/60 text-muted-foreground'
               }`}
             >
-              {group.label}
-              <span
-                className={`rounded-full px-1.5 py-0.5 font-medium text-[11px] tabular-nums sm:text-xs ${
-                  active ? 'bg-muted text-foreground' : 'bg-muted/60 text-muted-foreground'
+              {groupCounts.all}
+            </span>
+            {selectedGroup === 'all' && (
+              <span className="absolute inset-s-2.5 inset-e-2.5 bottom-0 h-0.5 rounded-full bg-primary sm:inset-s-3.5 sm:inset-e-3.5" />
+            )}
+          </button>
+
+          {NOTIFICATION_GROUPS.map((group) => {
+            const count = groupCounts[group.id] || 0;
+            if (count === 0) return null;
+            const active = selectedGroup === group.id;
+            return (
+              <button
+                key={group.id}
+                type="button"
+                onClick={() => setSelectedGroup(group.id)}
+                className={`relative inline-flex min-w-0 shrink-0 items-center gap-1.5 whitespace-nowrap px-2.5 py-2 font-medium text-xs transition-colors sm:px-3.5 sm:text-sm ${
+                  active ? 'text-foreground' : 'text-muted-foreground hover:text-foreground/80'
                 }`}
               >
-                {count}
-              </span>
-              {active && (
-                <span className="absolute start-2.5 end-2.5 bottom-0 h-0.5 rounded-full bg-primary sm:start-3.5 sm:end-3.5" />
-              )}
-            </button>
-          );
-        })}
+                {group.label}
+                <span
+                  className={`rounded-full px-1.5 py-0.5 font-medium text-[11px] tabular-nums sm:text-xs ${
+                    active ? 'bg-muted text-foreground' : 'bg-muted/60 text-muted-foreground'
+                  }`}
+                >
+                  {count}
+                </span>
+                {active && (
+                  <span className="absolute inset-s-2.5 inset-e-2.5 bottom-0 h-0.5 rounded-full bg-primary sm:inset-s-3.5 sm:inset-e-3.5" />
+                )}
+              </button>
+            );
+          })}
+        </div>
+
+        {canScrollRight && (
+          <div className="absolute top-0 right-0 bottom-0 z-10 flex items-center bg-linear-to-l from-card via-card/85 to-transparent pl-4">
+            <Button
+              type="button"
+              variant="outline"
+              size="icon"
+              onClick={() => scrollTabs('right')}
+              className="h-7 w-7 rounded-full bg-card shadow-sm hover:bg-accent"
+              aria-label="Scroll alert categories right"
+            >
+              <ChevronRight className="h-3.5 w-3.5" />
+            </Button>
+          </div>
+        )}
       </div>
 
       <div className="space-y-5">

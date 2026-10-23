@@ -49,6 +49,8 @@ codedock deploy .
 - `codedock db [list|create|destroy|import]` - Manage databases, plus `backups`
 - `codedock compose [analyze|deploy]` - Deploy compose files
 - `codedock deploy [path|service-id]` - Trigger deployment
+- `codedock mcp [serve|status|tools]` - Stdio MCP bridge and tool inspection
+- `codedock ai [ask|confirm]` - Query the instance-aware Codedock AI Copilot
 - `codedock version` - View CLI version
 
 Full reference with every flag: [cmd/codedock/README.md](../../cmd/codedock/README.md).

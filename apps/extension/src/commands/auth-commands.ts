@@ -104,6 +104,8 @@ export function registerAuthCommands(
       }
 
       const options = [
+        { label: '$(sparkle) Ask Codedock AI Copilot', cmd: 'codedock.askAi' },
+        { label: '$(plug) Configure MCP Server (.vscode/mcp.json)', cmd: 'codedock.configureMcp' },
         { label: '$(globe) Open Dashboard', cmd: 'codedock.openDashboard' },
         { label: '$(sync) Refresh All Data', cmd: 'codedock.refreshAll' },
         { label: '$(pulse) View System Metrics', cmd: 'codedock.viewSystemStats' },

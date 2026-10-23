@@ -79,4 +79,34 @@ export const InfrastructureApi = {
   async getSystemStats(url: string, token: string): Promise<SystemStats> {
     return await apiRequest<SystemStats>(url, token, '/api/system/stats');
   },
+
+  async askAiAssistant(
+    url: string,
+    token: string,
+    prompt: string
+  ): Promise<{
+    reply: string;
+    provider?: string;
+    model?: string;
+    steps?: Array<{ id: string; tool: string; label: string; status: string }>;
+  }> {
+    const res = await apiRequest<{
+      data?: {
+        reply: string;
+        provider?: string;
+        model?: string;
+        steps?: Array<{ id: string; tool: string; label: string; status: string }>;
+      };
+      reply?: string;
+    }>(url, token, '/api/ai/assistant/chat', {
+      method: 'POST',
+      body: JSON.stringify({
+        messages: [{ role: 'user', content: prompt }],
+        mode: 'agent',
+        currentPath: '/vscode',
+      }),
+    });
+    if (res?.data) return res.data;
+    return { reply: res?.reply || 'No response returned from Codedock Copilot.' };
+  },
 };

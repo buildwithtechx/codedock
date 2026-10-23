@@ -118,6 +118,16 @@ codedock deploy <service-id>              # Trigger a remote deployment
 codedock deploy .                         # Package and deploy a local directory
 ```
 
+### MCP & AI Copilot
+
+```sh
+codedock mcp serve                        # Start stdio JSON-RPC 2.0 MCP bridge
+codedock mcp status                       # Check MCP server capabilities & endpoints
+codedock mcp tools                        # List all MCP tools on the instance
+codedock ai "Inspect unhealthy services"  # Ask the instance-aware Codedock AI Copilot
+codedock ai confirm <action-id>           # Approve and execute a pending AI action
+```
+
 ## Config
 
 Credentials are stored at `~/.codedock/config.json`:

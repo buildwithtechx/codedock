@@ -170,4 +170,17 @@ export const MobileApi = {
       platform,
     });
   },
+
+  async askAiCopilot(url: string, token: string, prompt: string): Promise<string> {
+    const client = createClient(url, token);
+    const { data } = await client.post<{ data?: { reply?: string }; reply?: string }>(
+      '/api/ai/assistant/chat',
+      {
+        messages: [{ role: 'user', content: prompt }],
+        mode: 'agent',
+        currentPath: '/mobile',
+      }
+    );
+    return data?.data?.reply || data?.reply || 'No response returned from Codedock Copilot.';
+  },
 };

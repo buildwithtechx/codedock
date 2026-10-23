@@ -1,5 +1,16 @@
-import { ActivityIndicator, FlatList, RefreshControl, StyleSheet, Text, View } from 'react-native';
+import { useState } from 'react';
+import {
+  ActivityIndicator,
+  Alert,
+  FlatList,
+  Pressable,
+  RefreshControl,
+  StyleSheet,
+  Text,
+  View,
+} from 'react-native';
 import { useDeploymentsQuery } from '@/hooks/useDeployments';
+import { MobileApi } from '@/services/api';
 import { useAppStore } from '@/store/useAppStore';
 import { useAppTheme } from '@/theme';
 import { formatDuration, formatStatus } from '@/utils';
@@ -8,6 +19,25 @@ export default function DeploymentsScreen() {
   const { colors } = useAppTheme();
   const { connection } = useAppStore();
   const { data: deployments = [], isLoading, isRefetching, refetch } = useDeploymentsQuery();
+  const [diagnosingId, setDiagnosingId] = useState<string | null>(null);
+
+  const handleAskCopilot = async (deploymentId: string, serviceName?: string) => {
+    if (!connection) return;
+    setDiagnosingId(deploymentId);
+    try {
+      const reply = await MobileApi.askAiCopilot(
+        connection.url,
+        connection.token,
+        `Inspect deployment ${deploymentId}${serviceName ? ` for service ${serviceName}` : ''} and summarize its status or any failure logs.`
+      );
+      Alert.alert('Codedock Copilot', reply);
+    } catch (err: unknown) {
+      const msg = err instanceof Error ? err.message : String(err);
+      Alert.alert('Copilot Error', msg);
+    } finally {
+      setDiagnosingId(null);
+    }
+  };
 
   if (!connection) {
     return (
@@ -84,9 +114,20 @@ export default function DeploymentsScreen() {
                   <Text style={[styles.metaText, { color: colors.textMuted }]}>
                     {item.branch || 'main'}
                   </Text>
-                  {duration ? (
-                    <Text style={[styles.metaText, { color: colors.textMuted }]}>{duration}</Text>
-                  ) : null}
+                  <View style={styles.metaActions}>
+                    {duration ? (
+                      <Text style={[styles.metaText, { color: colors.textMuted }]}>{duration}</Text>
+                    ) : null}
+                    <Pressable
+                      onPress={() => void handleAskCopilot(item.id, item.serviceName)}
+                      disabled={diagnosingId === item.id}
+                      style={[styles.aiBtn, { borderColor: colors.border }]}
+                    >
+                      <Text style={[styles.aiBtnText, { color: colors.primary }]}>
+                        {diagnosingId === item.id ? 'Inspecting...' : 'Ask AI'}
+                      </Text>
+                    </Pressable>
+                  </View>
                 </View>
               </View>
             );
@@ -140,6 +181,22 @@ const styles = StyleSheet.create({
   metaRow: {
     flexDirection: 'row',
     justifyContent: 'space-between',
+    alignItems: 'center',
+  },
+  metaActions: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 8,
+  },
+  aiBtn: {
+    borderWidth: 1,
+    borderRadius: 6,
+    paddingHorizontal: 8,
+    paddingVertical: 3,
+  },
+  aiBtnText: {
+    fontSize: 11,
+    fontWeight: '600',
   },
   metaText: {
     fontSize: 12,
