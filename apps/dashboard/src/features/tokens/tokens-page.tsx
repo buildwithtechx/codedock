@@ -4,6 +4,7 @@ import type * as React from 'react';
 import { PageFrame } from '#/components/layout/page-frame';
 import { PageHeader } from '#/components/layout/page-header';
 import { ApiKeysList } from '#/features/users/api-keys-list';
+import { useAiSidebarStore } from '#/stores/ai-sidebar-store';
 import { CloudInitTab } from './cloud-init-tab';
 import { CloudTokensTab } from './cloud-tokens-tab';
 import { IntegrationTokensTab } from './integration-tokens-tab';
@@ -32,6 +33,7 @@ const TOKEN_TABS: TokensTabItem[] = [
 
 export function TokensLayout() {
   const navigate = useNavigate();
+  const aiSidebarOpen = useAiSidebarStore((s) => s.isOpen);
   const search = useRouterState({
     select: (state) => state.location.search as { tab?: string },
   });
@@ -62,8 +64,8 @@ export function TokensLayout() {
         description="Manage SSH keys, cloud provider credentials, integration tokens, bootstrap scripts, and API access."
       />
 
-      {/* Mobile Tab Scroller */}
-      <div className="flex gap-1 overflow-x-auto xl:hidden">
+      {/* Mobile / Stacked Tab Scroller */}
+      <div className={`flex gap-1 overflow-x-auto ${aiSidebarOpen ? '2xl:hidden' : 'lg:hidden'}`}>
         {TOKEN_TABS.map((tab) => {
           const isActive = tab.id === activeTab;
           return (
@@ -86,7 +88,12 @@ export function TokensLayout() {
       </div>
 
       <PageFrame
-        className="lg:grid-cols-[minmax(0,1fr)_280px]"
+        hideRailWhenStacked
+        className={
+          aiSidebarOpen
+            ? '2xl:grid-cols-[minmax(0,1fr)_280px]'
+            : 'lg:grid-cols-[minmax(0,1fr)_280px]'
+        }
         rail={
           <div className="space-y-3">
             <section className="rounded-2xl border border-border/50 bg-card p-4">

@@ -86,7 +86,10 @@ export function ClusterScalingPanel({
   const isBusy = isSettingUp || isRetrying || isRemoving || isRefetching;
 
   return (
-    <div className="rounded-2xl border border-border/50 bg-card p-5 shadow-xs sm:p-6" data-testid="cluster-scaling-panel">
+    <div
+      className="rounded-2xl border border-border/50 bg-card p-5 shadow-xs sm:p-6"
+      data-testid="cluster-scaling-panel"
+    >
       <div className="flex flex-wrap items-center justify-between gap-4 border-border/50 border-b pb-4">
         <div className="flex items-center gap-3">
           <div

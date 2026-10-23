@@ -42,24 +42,24 @@ func BuildMetadataFirewallScript() string {
 	}
 
 	for _, tc := range tools {
-		sb.WriteString(fmt.Sprintf("command -v %s >/dev/null\n", tc.cmd))
-		sb.WriteString(fmt.Sprintf("%s -w 5 -t raw -N %s 2>/dev/null || %s -w 5 -t raw -S %s >/dev/null\n", tc.cmd, chain, tc.cmd, chain))
-		sb.WriteString(fmt.Sprintf("%s -w 5 -t raw -F %s\n", tc.cmd, chain))
+		fmt.Fprintf(&sb, "command -v %s >/dev/null\n", tc.cmd)
+		fmt.Fprintf(&sb, "%s -w 5 -t raw -N %s 2>/dev/null || %s -w 5 -t raw -S %s >/dev/null\n", tc.cmd, chain, tc.cmd, chain)
+		fmt.Fprintf(&sb, "%s -w 5 -t raw -F %s\n", tc.cmd, chain)
 		// Allow DNS resolution on port 53 (GCE uses its metadata IP for DNS)
-		sb.WriteString(fmt.Sprintf("%s -w 5 -t raw -A %s -d %s -p udp --dport 53 -j RETURN\n", tc.cmd, chain, tc.dns))
-		sb.WriteString(fmt.Sprintf("%s -w 5 -t raw -A %s -d %s -p tcp --dport 53 -j RETURN\n", tc.cmd, chain, tc.dns))
+		fmt.Fprintf(&sb, "%s -w 5 -t raw -A %s -d %s -p udp --dport 53 -j RETURN\n", tc.cmd, chain, tc.dns)
+		fmt.Fprintf(&sb, "%s -w 5 -t raw -A %s -d %s -p tcp --dport 53 -j RETURN\n", tc.cmd, chain, tc.dns)
 
 		for _, ip := range tc.ips {
-			sb.WriteString(fmt.Sprintf("%s -w 5 -t raw -A %s -d %s -j DROP\n", tc.cmd, chain, ip))
+			fmt.Fprintf(&sb, "%s -w 5 -t raw -A %s -d %s -j DROP\n", tc.cmd, chain, ip)
 		}
 
 		for _, hook := range []string{"PREROUTING", "OUTPUT"} {
-			sb.WriteString(fmt.Sprintf("%s -w 5 -t raw -I %s 1 -j %s\n", tc.cmd, hook, chain))
-			sb.WriteString(fmt.Sprintf("test \"$(%s -w 5 -t raw -S %s | sed -n '/^-A /{p;q;}')\" = '-A %s -j %s'\n", tc.cmd, hook, hook, chain))
+			fmt.Fprintf(&sb, "%s -w 5 -t raw -I %s 1 -j %s\n", tc.cmd, hook, chain)
+			fmt.Fprintf(&sb, "test \"$(%s -w 5 -t raw -S %s | sed -n '/^-A /{p;q;}')\" = '-A %s -j %s'\n", tc.cmd, hook, hook, chain)
 		}
 
 		for _, ip := range tc.ips {
-			sb.WriteString(fmt.Sprintf("%s -w 5 -t raw -C %s -d %s -j DROP\n", tc.cmd, chain, ip))
+			fmt.Fprintf(&sb, "%s -w 5 -t raw -C %s -d %s -j DROP\n", tc.cmd, chain, ip)
 		}
 	}
 

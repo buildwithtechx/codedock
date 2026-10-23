@@ -106,7 +106,7 @@ func validatePreviewCommands(commands ...string) error {
 
 // generatePreviewDomain generates an isolated domain for the preview environment.
 func generatePreviewDomain(baseDomain, magicDomain, appName, projectID string, prNumber int) string {
-	hash := sha256.Sum256([]byte(fmt.Sprintf("%s:%d", projectID, prNumber)))
+	hash := sha256.Sum256(fmt.Appendf(nil, "%s:%d", projectID, prNumber))
 	suffix := hex.EncodeToString(hash[:])[:6]
 	cleanApp := strings.ToLower(strings.ReplaceAll(appName, "_", "-"))
 

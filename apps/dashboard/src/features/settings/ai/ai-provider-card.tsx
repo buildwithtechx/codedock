@@ -1,3 +1,4 @@
+import { Avatar, AvatarFallback, AvatarImage } from '@codedock/ui/avatar';
 import { Button } from '@codedock/ui/button';
 import {
   DropdownMenu,
@@ -9,7 +10,7 @@ import { Input } from '@codedock/ui/input';
 import { Label } from '@codedock/ui/label';
 import { Check, CheckCircle2, ChevronDown, Plus, Star } from 'lucide-react';
 import { useState } from 'react';
-import { PreferenceRow } from './preference-row';
+import { PreferenceRow } from '../preference-row';
 
 export type AiProviderItem = {
   id: string;
@@ -19,6 +20,18 @@ export type AiProviderItem = {
   keyField: string;
   modelField: string;
 };
+
+const LIGHT_MODE_INVERT_PROVIDERS = new Set(['openai', 'anthropic', 'xai']);
+
+function getProviderIconClass(providerId: string): string {
+  if (LIGHT_MODE_INVERT_PROVIDERS.has(providerId)) {
+    return 'h-5 w-5 object-contain invert dark:invert-0';
+  }
+  if (providerId === 'moonshot') {
+    return 'h-5 w-5 object-contain invert hue-rotate-180 dark:invert-0 dark:hue-rotate-0';
+  }
+  return 'h-5 w-5 object-contain';
+}
 
 export function AiProviderCard({
   provider,
@@ -49,9 +62,16 @@ export function AiProviderCard({
     <div className="rounded-xl border border-border/50 p-4">
       <div className="flex flex-wrap items-center justify-between gap-3.5">
         <div className="flex min-w-0 items-center gap-3.5">
-          <div className="flex h-10 w-10 shrink-0 items-center justify-center rounded-xl border border-border/50 bg-background/50">
-            <img src={provider.icon} alt={provider.name} className="h-5 w-5 object-contain" />
-          </div>
+          <Avatar className="size-10 shrink-0 rounded-xl border border-border/50 bg-background/50 p-2">
+            <AvatarImage
+              src={provider.icon}
+              alt={provider.name}
+              className={getProviderIconClass(provider.id)}
+            />
+            <AvatarFallback className="rounded-xl bg-transparent font-semibold text-xs">
+              {provider.name.slice(0, 2).toUpperCase()}
+            </AvatarFallback>
+          </Avatar>
           <div className="min-w-0">
             <p className="font-medium text-foreground text-sm">{provider.name}</p>
             <p className="mt-0.5 text-muted-foreground text-xs">

@@ -93,13 +93,14 @@ export function HomeNextStep({
     }
   }, [pool.length]);
 
-  const tip = !isLoading && !hasProjects
-    ? {
-        text: 'Create your first project from a Git repository, Dockerfile, or ready-to-use template.',
-        label: 'Create a project',
-        href: '/library',
-      }
-    : (pool[idx] ?? pool[0]);
+  const tip =
+    !isLoading && !hasProjects
+      ? {
+          text: 'Create your first project from a Git repository, Dockerfile, or ready-to-use template.',
+          label: 'Create a project',
+          href: '/library',
+        }
+      : (pool[idx] ?? pool[0]);
 
   if (!tip) return null;
 

@@ -1,5 +1,6 @@
 import { Loader2, Trash2 } from 'lucide-react';
 import { toast } from 'sonner';
+import { Avatar, AvatarFallback } from '@codedock/ui/avatar';
 import { Button } from '@codedock/ui/button';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@codedock/ui/select';
 import {
@@ -62,9 +63,11 @@ export function MemberRow({
 
   return (
     <div className="flex items-center gap-4 px-5 py-4 transition-colors hover:bg-muted/30">
-      <div className="flex size-9 shrink-0 items-center justify-center rounded-full bg-muted font-medium text-foreground text-sm">
-        {initial}
-      </div>
+      <Avatar className="size-9">
+        <AvatarFallback className="bg-muted font-medium text-foreground text-sm">
+          {initial}
+        </AvatarFallback>
+      </Avatar>
 
       <div className="min-w-0 flex-1">
         <div className="flex items-center gap-2">

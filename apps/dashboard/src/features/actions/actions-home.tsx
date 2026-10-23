@@ -97,8 +97,7 @@ export function ActionsHome({
   const latestRun = runs[0];
 
   const hasItemsForTab = tab === 'runners' ? runners.length > 0 : workflows.length > 0;
-  const isRefreshing =
-    workflowsQuery.isFetching || runsQuery.isFetching || runnersQuery.isFetching;
+  const isRefreshing = workflowsQuery.isFetching || runsQuery.isFetching || runnersQuery.isFetching;
   const handleRefresh = () => {
     void workflowsQuery.refetch();
     void runsQuery.refetch();

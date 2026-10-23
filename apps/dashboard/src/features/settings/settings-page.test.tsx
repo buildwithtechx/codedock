@@ -39,11 +39,11 @@ vi.mock('#/features/dns/dns-settings', () => ({
   DnsSettings: () => <div data-testid="dns-content">DNS Providers Tab</div>,
 }));
 
-vi.mock('./ai-settings', () => ({
+vi.mock('./ai/ai-settings', () => ({
   AISettings: () => <div data-testid="ai-content">AI Hub Tab</div>,
 }));
 
-vi.mock('./mcp-settings', () => ({
+vi.mock('./mcp/mcp-settings', () => ({
   McpSettings: () => <div data-testid="mcp-content">MCP Tab</div>,
 }));
 

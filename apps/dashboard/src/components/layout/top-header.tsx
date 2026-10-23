@@ -6,6 +6,7 @@ import {
   Moon,
   Plus,
   Search,
+  Sparkles,
   Sun,
   Terminal as TerminalIcon,
   Users,
@@ -33,6 +34,7 @@ import { EnvironmentSwitcher } from '#/features/projects/environment-switcher';
 import { useListOrganizations } from '#/hooks/use-organizations';
 import { useGetProject } from '#/hooks/use-projects';
 import { useServer } from '#/hooks/use-servers';
+import { useAiSidebarStore } from '#/stores/ai-sidebar-store';
 import { useAuthStore } from '#/stores/auth-store';
 import { useDockStore } from '#/stores/dock-store';
 import { useOrganizationStore } from '#/stores/organization-store';
@@ -52,6 +54,8 @@ export function TopHeader({ mobileOpen, onToggleMobile, onOpenCommand }: TopHead
   const { theme, resolvedTheme, setTheme } = useTheme();
   const user = useAuthStore((s) => s.user);
   const openDock = useDockStore((s) => s.openDock);
+  const aiSidebarOpen = useAiSidebarStore((s) => s.isOpen);
+  const toggleAiSidebar = useAiSidebarStore((s) => s.toggleSidebar);
 
   const activeOrgId = useOrganizationStore((s) => s.activeOrganizationId);
   const setActiveOrgId = useOrganizationStore((s) => s.setActiveOrganizationId);
@@ -229,6 +233,22 @@ export function TopHeader({ mobileOpen, onToggleMobile, onOpenCommand }: TopHead
           <kbd className="rounded border border-sidebar-border bg-sidebar px-1 py-0.2 font-mono text-[9px] text-muted-foreground">
             ⌘K
           </kbd>
+        </Button>
+
+        <Button
+          variant="outline"
+          size="sm"
+          onClick={toggleAiSidebar}
+          aria-pressed={aiSidebarOpen}
+          title="Toggle Ask AI Sidebar (⌘I)"
+          className={`h-8 gap-1.5 px-2.5 font-medium text-xs transition-colors ${
+            aiSidebarOpen
+              ? 'border-blue-500/50 bg-blue-500/15 text-blue-500 hover:bg-blue-500/20'
+              : 'border-sidebar-border bg-sidebar-accent/50 text-sidebar-foreground hover:bg-sidebar-accent'
+          }`}
+        >
+          <Sparkles className="size-3.5 text-blue-500" />
+          <span>Ask AI</span>
         </Button>
 
         <Button

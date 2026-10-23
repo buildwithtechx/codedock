@@ -33,7 +33,7 @@ const CLIENTS: ClientDefinition[] = [
     color: '#CC785C',
     getSetup: (e) => ({
       label: 'Run command in your project directory',
-      code: `claude mcp add --transport sse codedock ${e}`,
+      code: `claude mcp add --transport ${e.endsWith('/sse') ? 'sse' : 'http'} codedock ${e}`,
       note: 'Claude Code automatically prompts to authorize access in your browser on first command execution.',
     }),
   },
@@ -68,7 +68,7 @@ const CLIENTS: ClientDefinition[] = [
     color: '#007ACC',
     getSetup: (e) => ({
       label: 'Register in VS Code terminal or .vscode/mcp.json',
-      code: `code --add-mcp '{"name":"codedock","type":"sse","url":"${e}"}'`,
+      code: `code --add-mcp '{"name":"codedock","type":"${e.endsWith('/sse') ? 'sse' : 'http'}","url":"${e}"}'`,
       note: 'Works seamlessly with GitHub Copilot agent mode and MCP extensions.',
     }),
   },
@@ -118,7 +118,7 @@ const CLIENTS: ClientDefinition[] = [
         null,
         2
       ),
-      note: 'Bridges remote Codedock SSE endpoints through mcp-remote in Zed.',
+      note: 'Bridges remote Codedock endpoints through mcp-remote in Zed.',
     }),
   },
   {
@@ -127,9 +127,9 @@ const CLIENTS: ClientDefinition[] = [
     icon: '/icons/mcp.png',
     color: '#8B5CF6',
     getSetup: (e) => ({
-      label: 'Universal MCP SSE client configuration',
+      label: 'Universal MCP client configuration',
       code: JSON.stringify({ mcpServers: { codedock: { url: e } } }, null, 2),
-      note: 'Compatible with any client supporting standard Model Context Protocol SSE transports.',
+      note: 'Compatible with any client supporting standard Model Context Protocol Streamable-HTTP or SSE transports.',
     }),
   },
 ];

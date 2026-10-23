@@ -1,11 +1,13 @@
 import { useNavigate, useRouterState } from '@tanstack/react-router';
 import { AlertTriangle, Building2, ShieldCheck, Users } from 'lucide-react';
 import type * as React from 'react';
+import { Avatar, AvatarFallback } from '@codedock/ui/avatar';
 import { PageFrame } from '#/components/layout/page-frame';
 import { PageHeader } from '#/components/layout/page-header';
 import { AuditLogList } from '#/features/audit/audit-log-list';
 import { TeamSettings } from '#/features/settings/team-settings';
 import { useListOrganizations } from '#/hooks/use-organizations';
+import { useAiSidebarStore } from '#/stores/ai-sidebar-store';
 import { useOrganizationStore } from '#/stores/organization-store';
 import { TeamDangerZoneTab } from './team-danger-zone-tab';
 import { TeamGeneralTab } from './team-general-tab';
@@ -32,6 +34,7 @@ export function TeamLayout() {
   });
 
   const activeOrgId = useOrganizationStore((s) => s.activeOrganizationId);
+  const aiSidebarOpen = useAiSidebarStore((s) => s.isOpen);
   const { data: orgs, isLoading } = useListOrganizations();
   const organization = orgs?.find((o) => o.id === activeOrgId) || orgs?.[0];
 
@@ -76,8 +79,8 @@ export function TeamLayout() {
         description="Manage workspace organization, team member permissions, audit logs, and security controls."
       />
 
-      {/* Mobile Tab Scroller */}
-      <div className="flex gap-1 overflow-x-auto xl:hidden">
+      {/* Mobile / Stacked Tab Scroller */}
+      <div className={`flex gap-1 overflow-x-auto ${aiSidebarOpen ? '2xl:hidden' : 'lg:hidden'}`}>
         {TEAM_TABS.map((tab) => {
           const isActive = tab.id === activeTab;
           return (
@@ -100,14 +103,21 @@ export function TeamLayout() {
       </div>
 
       <PageFrame
-        className="lg:grid-cols-[minmax(0,1fr)_280px]"
+        hideRailWhenStacked
+        className={
+          aiSidebarOpen
+            ? '2xl:grid-cols-[minmax(0,1fr)_280px]'
+            : 'lg:grid-cols-[minmax(0,1fr)_280px]'
+        }
         rail={
           <div className="space-y-3">
             <section className="rounded-2xl border border-border/50 bg-card p-4">
               <div className="flex items-center gap-3">
-                <div className="flex h-9 w-9 items-center justify-center rounded-xl bg-primary/10 text-primary font-bold text-sm">
-                  {organization.name.charAt(0).toUpperCase()}
-                </div>
+                <Avatar className="size-9 rounded-xl">
+                  <AvatarFallback className="rounded-xl bg-primary/10 font-bold text-primary text-sm">
+                    {organization.name.charAt(0).toUpperCase()}
+                  </AvatarFallback>
+                </Avatar>
                 <div className="min-w-0 flex-1">
                   <p className="truncate font-medium text-foreground text-sm">
                     {organization.name}

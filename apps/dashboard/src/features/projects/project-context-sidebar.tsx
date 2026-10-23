@@ -88,7 +88,10 @@ export function ProjectContextSidebar({ projectId }: { projectId: string }) {
         </div>
       </section>
 
-      <nav className="rounded-2xl border border-border/50 bg-card p-2 shadow-xs" aria-label="Project sections">
+      <nav
+        className="rounded-2xl border border-border/50 bg-card p-2 shadow-xs"
+        aria-label="Project sections"
+      >
         {navigation.map((item) => {
           const active = item.exact
             ? location.pathname === item.to || location.pathname === `${item.to}/`

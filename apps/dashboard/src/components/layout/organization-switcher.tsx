@@ -1,6 +1,7 @@
 import { useNavigate } from '@tanstack/react-router';
 import { Building2, Check, ChevronsUpDown, Loader2, LogOut, UserRound } from 'lucide-react';
 import { useEffect } from 'react';
+import { Avatar, AvatarFallback } from '@codedock/ui/avatar';
 import {
   DropdownMenu,
   DropdownMenuContent,
@@ -60,9 +61,11 @@ export function OrganizationSwitcher({ collapsed }: { collapsed: boolean }) {
             aria-label={`Switch organization. Current organization: ${selected.name}`}
             title={collapsed ? selected.name : undefined}
           >
-            <div className="flex h-8 w-8 shrink-0 items-center justify-center rounded-lg bg-primary/15 font-semibold text-[11px] text-primary">
-              {organizationInitials(selected.name) || <Building2 className="h-4 w-4" />}
-            </div>
+            <Avatar className="size-8 rounded-lg">
+              <AvatarFallback className="rounded-lg bg-primary/15 font-semibold text-[11px] text-primary">
+                {organizationInitials(selected.name) || <Building2 className="h-4 w-4" />}
+              </AvatarFallback>
+            </Avatar>
             {!collapsed && (
               <>
                 <div className="min-w-0 flex-1">
@@ -95,9 +98,11 @@ export function OrganizationSwitcher({ collapsed }: { collapsed: boolean }) {
               onSelect={() => switchOrganization(organization.id)}
               className="gap-2.5 rounded-lg px-2.5 py-2"
             >
-              <div className="flex h-7 w-7 shrink-0 items-center justify-center rounded-md bg-muted font-semibold text-[10px] text-muted-foreground">
-                {organizationInitials(organization.name) || <Building2 className="h-3.5 w-3.5" />}
-              </div>
+              <Avatar className="size-7 rounded-md">
+                <AvatarFallback className="rounded-md bg-muted font-semibold text-[10px] text-muted-foreground">
+                  {organizationInitials(organization.name) || <Building2 className="h-3.5 w-3.5" />}
+                </AvatarFallback>
+              </Avatar>
               <span className="flex-1 truncate font-medium text-sm">{organization.name}</span>
               {organization.id === selected.id && <Check className="h-4 w-4 text-primary" />}
             </DropdownMenuItem>
@@ -107,9 +112,11 @@ export function OrganizationSwitcher({ collapsed }: { collapsed: boolean }) {
             onSelect={() => void navigate({ to: '/settings', search: { tab: 'profile' } as never })}
             className="cursor-pointer gap-2.5 rounded-lg px-2.5 py-2"
           >
-            <div className="flex h-7 w-7 shrink-0 items-center justify-center rounded-full bg-muted font-semibold text-[10px] text-muted-foreground">
-              {user?.name?.[0]?.toUpperCase() || <UserRound className="h-3.5 w-3.5" />}
-            </div>
+            <Avatar className="size-7">
+              <AvatarFallback className="bg-muted font-semibold text-[10px] text-muted-foreground">
+                {user?.name?.[0]?.toUpperCase() || <UserRound className="h-3.5 w-3.5" />}
+              </AvatarFallback>
+            </Avatar>
             <div className="min-w-0 flex-1">
               <p className="truncate font-medium text-sm">{user?.name || 'Account'}</p>
               <p className="truncate text-muted-foreground text-xs">Profile & security</p>

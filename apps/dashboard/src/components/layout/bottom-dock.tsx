@@ -1,13 +1,5 @@
-import {
-  ChevronUp,
-  Maximize2,
-  Minimize2,
-  ScrollText,
-  Terminal as TerminalIcon,
-  X,
-} from 'lucide-react';
+import { Maximize2, Minimize2, ScrollText, Terminal as TerminalIcon, X } from 'lucide-react';
 import { Suspense, lazy, useEffect, useState } from 'react';
-import { Button } from '@codedock/ui/button';
 import { useDockStore } from '#/stores/dock-store';
 
 const LiveLogsViewer = lazy(() =>
@@ -68,23 +60,7 @@ export function BottomDock() {
   };
 
   if (!isOpen) {
-    return (
-      <div className="fixed right-6 bottom-4 z-40">
-        <Button
-          size="sm"
-          variant="outline"
-          onClick={toggleDock}
-          className="flex h-8 items-center gap-2 rounded-full border-border/80 bg-background/90 px-3 text-xs shadow-lg backdrop-blur-md hover:bg-muted"
-        >
-          <TerminalIcon className="size-3.5 text-primary" />
-          <span className="font-medium">Logs & Terminal</span>
-          <kbd className="rounded border bg-muted px-1 py-0.2 font-mono text-[9px] text-muted-foreground">
-            ⌘J
-          </kbd>
-          <ChevronUp className="size-3.5 text-muted-foreground" />
-        </Button>
-      </div>
-    );
+    return null;
   }
 
   const currentHeight = isMaximized ? 'calc(100vh - 4rem)' : `${height}px`;

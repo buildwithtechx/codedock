@@ -7,7 +7,9 @@ import { toast } from 'sonner';
 import { Button } from '@codedock/ui/button';
 import { OrganizationOnboarding } from '#/features/organizations';
 import { apiClient } from '#/lib/api-client';
+import { useAiSidebarStore } from '#/stores/ai-sidebar-store';
 import { useAuthStore } from '#/stores/auth-store';
+import { AskAiSidebar } from '../ai/ask-ai-sidebar';
 import { AppSidebar } from './app-sidebar';
 import { BottomDock } from './bottom-dock';
 import { CommandPalette } from './command-palette';
@@ -15,6 +17,10 @@ import { TopHeader } from './top-header';
 import { UpdateCenter } from './update-center';
 
 export function AppLayout({ children }: { children: React.ReactNode }) {
+  const pathname = useRouterState({
+    select: (state) => state.location.pathname,
+  });
+  const isAiSidebarOpen = useAiSidebarStore((s) => s.isOpen);
   const [sidebarCollapsed, setSidebarCollapsed] = useState(() => {
     if (typeof window === 'undefined') return false;
     return localStorage.getItem('codedock_auto_collapse_sidebar') === 'true';
@@ -22,14 +28,22 @@ export function AppLayout({ children }: { children: React.ReactNode }) {
   const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
   const [commandOpen, setCommandOpen] = useState(false);
   const mainRef = useRef<HTMLElement>(null);
-  const pathname = useRouterState({
-    select: (state) => state.location.pathname,
-  });
 
   useEffect(() => {
     setMobileMenuOpen(false);
     mainRef.current?.scrollTo({ top: 0, behavior: 'instant' });
   }, [pathname]);
+
+  useEffect(() => {
+    const prefersAlwaysCollapsed =
+      typeof window !== 'undefined' &&
+      localStorage.getItem('codedock_auto_collapse_sidebar') === 'true';
+    if (isAiSidebarOpen) {
+      setSidebarCollapsed(true);
+    } else if (!prefersAlwaysCollapsed) {
+      setSidebarCollapsed(false);
+    }
+  }, [isAiSidebarOpen]);
 
   const { user } = useAuthStore();
   const [isResending, setIsResending] = useState(false);
@@ -109,6 +123,7 @@ export function AppLayout({ children }: { children: React.ReactNode }) {
           </div>
         </main>
       </div>
+      <AskAiSidebar />
       <BottomDock />
       <CommandPalette open={commandOpen} onOpenChange={setCommandOpen} />
       <OrganizationOnboarding />

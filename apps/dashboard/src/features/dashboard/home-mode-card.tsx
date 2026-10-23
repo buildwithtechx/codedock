@@ -47,7 +47,15 @@ function CloudPlanIllustration() {
         fillOpacity="0.35"
         stroke="var(--border)"
       />
-      <rect x="43" y="40" width="98" height="58" rx="11" fill="var(--card)" stroke="var(--border)" />
+      <rect
+        x="43"
+        y="40"
+        width="98"
+        height="58"
+        rx="11"
+        fill="var(--card)"
+        stroke="var(--border)"
+      />
       <path d="M44 54h96" stroke="var(--border)" />
       <g fill="var(--muted-foreground)" fillOpacity="0.45">
         <circle cx="54" cy="47" r="1.5" />

@@ -85,7 +85,9 @@ body {
     font-size: 0.8125rem;
     line-height: 1.25rem;
     cursor: pointer;
-    transition: border-color 0.15s ease, box-shadow 0.15s ease;
+    transition:
+      border-color 0.15s ease,
+      box-shadow 0.15s ease;
   }
   select:focus {
     outline: none;

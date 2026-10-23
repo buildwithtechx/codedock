@@ -253,8 +253,7 @@ func (s *Server) registerMiscRoutes(apiGroup, authGroup *echo.Group) {
 	authGroup.GET("/audit-logs/facets", s.auditLogHandler.Facets, s.authGuard.RequireRole("admin"))
 	authGroup.GET("/audit-logs/settings", s.auditLogHandler.GetSettings, s.authGuard.RequireRole("admin"))
 	authGroup.PUT("/audit-logs/settings", s.auditLogHandler.UpdateSettings, s.authGuard.RequireRole("admin"))
-	authGroup.GET("/mcp/sse", s.HandleMCPSSE)
-	authGroup.POST("/mcp/messages", s.HandleMCPMessage)
+	s.registerMcpAndAiRoutes(authGroup)
 	apiGroup.GET("/ws/terminal/:id", s.terminalHandler.HandleWebSocket)
 	apiGroup.GET("/ws/services/:id/terminal", s.terminalHandler.HandleWebSocket)
 }
@@ -293,17 +292,4 @@ func (s *Server) setupSPAFallback() {
 	}
 
 	dashboard.RegisterHandlers(s.router)
-}
-
-func (s *Server) getMeta(c echo.Context) error {
-	return c.JSON(http.StatusOK, map[string]any{
-		"name":    "codedock",
-		"version": "v1.0.0",
-		"capabilities": map[string]bool{
-			"sseLogs": true,
-			"push":    true,
-			"actions": true,
-			"apps":    true,
-		},
-	})
 }

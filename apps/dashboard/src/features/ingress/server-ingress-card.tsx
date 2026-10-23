@@ -65,7 +65,10 @@ export function ServerIngressCard({ serverId }: ServerIngressCardProps) {
   const current = connections[0] ?? null;
 
   return (
-    <div className="rounded-2xl border border-border/50 bg-card shadow-xs" data-testid="server-ingress-card">
+    <div
+      className="rounded-2xl border border-border/50 bg-card shadow-xs"
+      data-testid="server-ingress-card"
+    >
       <div className="flex flex-wrap items-center justify-between gap-3 border-border/50 border-b px-5 py-4">
         <div className="flex min-w-0 items-center gap-3">
           <div className="flex h-9 w-9 items-center justify-center rounded-xl bg-primary/10">

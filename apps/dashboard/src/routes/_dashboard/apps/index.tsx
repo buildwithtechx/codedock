@@ -8,6 +8,7 @@ import { QueryErrorState } from '#/components/query-error-state';
 import { Skeleton } from '@codedock/ui/skeleton';
 import { AddCustomAppModal, AppLogo, CatalogShortcut, InstalledAppRow } from '#/features/apps';
 import { useAppCatalog, useInstalledApps } from '#/hooks/use-apps';
+import { useAiSidebarStore } from '#/stores/ai-sidebar-store';
 
 export const Route = createFileRoute('/_dashboard/apps/')({
   component: AppsPage,
@@ -18,6 +19,7 @@ const FEATURED_APP_IDS = ['supabase', 'convex', 'mongodb'];
 function AppsPage() {
   const installedQuery = useInstalledApps();
   const catalogQuery = useAppCatalog();
+  const aiSidebarOpen = useAiSidebarStore((s) => s.isOpen);
   const [search, setSearch] = useState('');
   const [addCustomOpen, setAddCustomOpen] = useState(false);
   const apps = useMemo(() => installedQuery.data ?? [], [installedQuery.data]);
@@ -91,7 +93,10 @@ function AppsPage() {
       />
 
       {installedQuery.isLoading ? (
-        <div className="divide-y divide-border/50 rounded-2xl border border-border/50 bg-card shadow-xs" aria-busy="true">
+        <div
+          className="divide-y divide-border/50 rounded-2xl border border-border/50 bg-card shadow-xs"
+          aria-busy="true"
+        >
           {Array.from({ length: 3 }, (_, index) => (
             <div key={index} className="flex items-center gap-4 px-5 py-4">
               <Skeleton className="size-10 shrink-0 rounded-xl" />
@@ -188,7 +193,13 @@ function AppsPage() {
           )}
         </div>
       ) : (
-        <div className="grid grid-cols-1 items-start gap-6 lg:grid-cols-[minmax(0,1fr)_340px]">
+        <div
+          className={`grid grid-cols-1 items-start gap-6 ${
+            aiSidebarOpen
+              ? '2xl:grid-cols-[minmax(0,1fr)_320px]'
+              : 'lg:grid-cols-[minmax(0,1fr)_340px]'
+          }`}
+        >
           <section className="min-w-0 space-y-4" aria-label="Installed apps">
             <div className="relative">
               <Search className="pointer-events-none absolute top-1/2 left-3.5 size-4 -translate-y-1/2 text-muted-foreground" />

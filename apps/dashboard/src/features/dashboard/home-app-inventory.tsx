@@ -194,9 +194,7 @@ export function HomeAppInventory({ isLoading: parentLoading = false }: { isLoadi
                 </p>
                 <span
                   className={`shrink-0 rounded-md px-1.5 py-0.5 font-medium text-xs capitalize ${
-                    online
-                      ? 'bg-emerald-500/10 text-emerald-500'
-                      : 'bg-muted text-muted-foreground'
+                    online ? 'bg-emerald-500/10 text-emerald-500' : 'bg-muted text-muted-foreground'
                   }`}
                 >
                   {app.status || 'deployed'}

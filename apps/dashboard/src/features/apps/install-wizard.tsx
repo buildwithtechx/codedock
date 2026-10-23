@@ -216,7 +216,11 @@ export function InstallWizard({ appId }: { appId: string }) {
             {preview.composeYaml}
           </pre>
           <div className="flex justify-end gap-2">
-            <Button variant="outline" onClick={() => setPhase('form')} disabled={deployApp.isPending}>
+            <Button
+              variant="outline"
+              onClick={() => setPhase('form')}
+              disabled={deployApp.isPending}
+            >
               Back
             </Button>
             <Button onClick={() => void handleDeploy()} disabled={deployApp.isPending}>

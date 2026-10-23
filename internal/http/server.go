@@ -20,6 +20,7 @@ import (
 	"codedock/internal/handlers/mail"
 	"codedock/internal/handlers/projects"
 	"codedock/internal/handlers/system"
+	"codedock/internal/http/mcp"
 	"codedock/internal/http/middleware"
 	"codedock/internal/models"
 	authservices "codedock/internal/services/auth"
@@ -32,7 +33,7 @@ type Server struct {
 	clusterHandler            *system.ClusterHandler
 	operationHandler          *system.OperationHandler
 	router                    *echo.Echo
-	mcpBridge                 *Bridge
+	mcpBridge                 *mcp.Bridge
 	authRateLimiter           *middleware.RateLimiter
 	otpRateLimiter            *middleware.RateLimiter
 	aiRateLimiter             *middleware.RateLimiter
@@ -129,15 +130,11 @@ func (s *Server) StartMCPStdio() error {
 }
 
 func (s *Server) HandleMCPSSE(c echo.Context) error {
-	mcpServer := s.mcpBridge.MCPServer()
-	sseServer := server.NewSSEServer(mcpServer)
-	sseServer.SSEHandler().ServeHTTP(c.Response().Writer, c.Request())
+	s.mcpBridge.SSEServer().SSEHandler().ServeHTTP(c.Response().Writer, c.Request())
 	return nil
 }
 
 func (s *Server) HandleMCPMessage(c echo.Context) error {
-	mcpServer := s.mcpBridge.MCPServer()
-	sseServer := server.NewSSEServer(mcpServer)
-	sseServer.MessageHandler().ServeHTTP(c.Response().Writer, c.Request())
+	s.mcpBridge.SSEServer().MessageHandler().ServeHTTP(c.Response().Writer, c.Request())
 	return nil
 }

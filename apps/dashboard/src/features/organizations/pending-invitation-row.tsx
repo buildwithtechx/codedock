@@ -1,5 +1,6 @@
 import { Mail, Trash2 } from 'lucide-react';
 import { toast } from 'sonner';
+import { Avatar, AvatarFallback } from '@codedock/ui/avatar';
 import { Button } from '@codedock/ui/button';
 import { useRemoveOrganizationMember } from '#/hooks/use-organizations';
 import type { OrganizationMember } from '#/interfaces/organizations';
@@ -28,9 +29,11 @@ export function PendingInvitationRow({
 
   return (
     <div className="flex items-center gap-4 px-5 py-4 transition-colors hover:bg-muted/20">
-      <div className="flex size-9 shrink-0 items-center justify-center rounded-full bg-muted/60 text-muted-foreground">
-        <Mail className="size-4" />
-      </div>
+      <Avatar className="size-9">
+        <AvatarFallback className="bg-muted/60 text-muted-foreground">
+          <Mail className="size-4" />
+        </AvatarFallback>
+      </Avatar>
 
       <div className="min-w-0 flex-1">
         <p className="truncate font-medium text-foreground text-sm">{member.email}</p>

@@ -85,7 +85,7 @@ func (s *ComposeStackService) Review(ctx context.Context, request models.Compose
 }
 
 func composeReviewDigest(request models.ComposeStackRequest, config string) string {
-	digest := sha256.Sum256([]byte(fmt.Sprintf("%q|%q|%q|%q|%d", request.ID, request.EnvironmentID, request.Name, config, request.Revision)))
+	digest := sha256.Sum256(fmt.Appendf(nil, "%q|%q|%q|%q|%d", request.ID, request.EnvironmentID, request.Name, config, request.Revision))
 	return hex.EncodeToString(digest[:])
 }
 

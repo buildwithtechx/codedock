@@ -43,6 +43,7 @@ import { ServerDeleteDialog } from '#/features/servers/server-delete-dialog';
 import { ServerDetailTabsContent } from '#/features/servers/server-detail-tabs';
 import { reachabilityOf } from '#/features/servers/server-list-row';
 import { useServer } from '#/hooks/use-servers';
+import { useAiSidebarStore } from '#/stores/ai-sidebar-store';
 import type { Server } from '#/interfaces/server';
 import { cn } from '#/lib/utils';
 
@@ -75,6 +76,7 @@ function ServerDetailsPage() {
   const { serverId } = Route.useParams();
   const { tab: tabParam } = Route.useSearch();
   const navigate = useNavigate();
+  const aiSidebarOpen = useAiSidebarStore((s) => s.isOpen);
   const { data: server, isLoading, isError, isRefetching, refetch } = useServer(serverId);
   const [removeTarget, setRemoveTarget] = useState<Server | null>(null);
 
@@ -231,8 +233,18 @@ function ServerDetailsPage() {
           ))}
         </TabsList>
 
-        <div className="grid grid-cols-1 items-start gap-6 xl:grid-cols-[minmax(0,1fr)_340px]">
-          <div className="min-w-0 xl:col-start-1 xl:row-start-1">
+        <div
+          className={`grid grid-cols-1 items-start gap-6 ${
+            aiSidebarOpen
+              ? '2xl:grid-cols-[minmax(0,1fr)_320px]'
+              : 'xl:grid-cols-[minmax(0,1fr)_340px]'
+          }`}
+        >
+          <div
+            className={`min-w-0 ${
+              aiSidebarOpen ? '2xl:col-start-1 2xl:row-start-1' : 'xl:col-start-1 xl:row-start-1'
+            }`}
+          >
             <ServerDetailTabsContent
               server={server}
               isManaged={isManaged}
@@ -240,7 +252,13 @@ function ServerDetailsPage() {
             />
           </div>
 
-          <div className="space-y-4 xl:sticky xl:top-6 xl:col-start-2 xl:row-start-1 xl:self-start">
+          <div
+            className={`space-y-4 ${
+              aiSidebarOpen
+                ? '2xl:sticky 2xl:top-6 2xl:col-start-2 2xl:row-start-1 2xl:self-start'
+                : 'xl:sticky xl:top-6 xl:col-start-2 xl:row-start-1 xl:self-start'
+            }`}
+          >
             {isManaged ? (
               <ManagedServerPlan server={server.managed} />
             ) : (

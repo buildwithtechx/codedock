@@ -63,7 +63,10 @@ export function ActionsSidebar({
 
   return (
     <aside className="min-w-0 space-y-4">
-      <section className="rounded-2xl border border-border/50 bg-card p-5 shadow-xs" aria-labelledby="actions-setup-title">
+      <section
+        className="rounded-2xl border border-border/50 bg-card p-5 shadow-xs"
+        aria-labelledby="actions-setup-title"
+      >
         <h2 id="actions-setup-title" className="font-medium text-base text-foreground">
           {latestRun ? 'Overview' : 'Get started'}
         </h2>

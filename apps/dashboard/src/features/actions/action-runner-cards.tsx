@@ -38,7 +38,10 @@ export function ActionRunnerCards({
   return (
     <div className="grid grid-cols-1 gap-4 sm:grid-cols-2">
       {runners.map((runner) => (
-        <article key={runner.id} className="rounded-2xl border border-border/50 bg-card p-5 shadow-xs">
+        <article
+          key={runner.id}
+          className="rounded-2xl border border-border/50 bg-card p-5 shadow-xs"
+        >
           <div className="flex items-center gap-3">
             <span className="flex size-10 items-center justify-center rounded-xl bg-muted/60 text-foreground">
               <Server className="size-5" />

@@ -1,6 +1,7 @@
 package system
 
 import (
+	"context"
 	"net/http"
 
 	"github.com/labstack/echo/v4"
@@ -51,6 +52,10 @@ func redactAISettings(s *models.AISettings) *models.AISettings {
 		s.MoonshotKey = "********"
 	}
 	return s
+}
+
+func (h *AISettingsHandler) GetRawSettings(ctx context.Context) (*models.AISettings, error) {
+	return h.aiSettingsService.GetAISettings(ctx)
 }
 
 func (h *AISettingsHandler) GetAISettings(c echo.Context) error {

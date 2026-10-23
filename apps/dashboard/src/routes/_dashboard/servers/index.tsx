@@ -19,6 +19,7 @@ import { ServerFleetPanel } from '#/features/servers/server-fleet-panel';
 import { ServerListRow } from '#/features/servers/server-list-row';
 import { ServerListSkeleton } from '#/features/servers/server-list-skeleton';
 import { useCreateServer, useListServers } from '#/hooks/use-servers';
+import { useAiSidebarStore } from '#/stores/ai-sidebar-store';
 import type { Server } from '#/interfaces/server';
 
 export const Route = createFileRoute('/_dashboard/servers/')({
@@ -27,6 +28,7 @@ export const Route = createFileRoute('/_dashboard/servers/')({
 
 function ServersPage() {
   const navigate = useNavigate();
+  const aiSidebarOpen = useAiSidebarStore((s) => s.isOpen);
   const { data: servers, isLoading, isError, refetch, isRefetching } = useListServers();
   const createServerMutation = useCreateServer();
   const [search, setSearch] = useState('');
@@ -117,7 +119,13 @@ function ServersPage() {
       ) : !isLoading && rows.length === 0 ? (
         <ServerEmptyState onAddLocal={() => void addThisMachine()} addingLocal={addingLocal} />
       ) : (
-        <div className="grid grid-cols-1 items-start gap-6 xl:grid-cols-[minmax(0,1fr)_340px]">
+        <div
+          className={`grid grid-cols-1 items-start gap-6 ${
+            aiSidebarOpen
+              ? '2xl:grid-cols-[minmax(0,1fr)_320px]'
+              : 'xl:grid-cols-[minmax(0,1fr)_340px]'
+          }`}
+        >
           <div className="min-w-0">
             {!isLoading && showFilters && (
               <div className="relative mb-4">

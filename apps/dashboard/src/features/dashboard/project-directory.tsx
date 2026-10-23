@@ -16,6 +16,7 @@ import {
 import { ProjectListRow } from '#/features/projects/project-list-row';
 import { type ProjectView, ProjectViewToggle } from '#/features/projects/project-view-toggle';
 import { useListCanvasSummaries } from '#/hooks/use-canvas';
+import { useAiSidebarStore } from '#/stores/ai-sidebar-store';
 import { EmptyIllustration } from './empty-illustration';
 import { ProjectEmptyState } from './project-empty-state';
 
@@ -23,6 +24,7 @@ const viewStorageKey = 'codedock-projects-view';
 
 export function ProjectDirectory() {
   const { data, isLoading, isRefetching, isError, refetch } = useListCanvasSummaries();
+  const aiSidebarOpen = useAiSidebarStore((s) => s.isOpen);
   const projects = data?.data || [];
   const [search, setSearch] = useState('');
   const [filter, setFilter] = useState<ProjectHostingFilter>({ kind: 'all' });
@@ -91,7 +93,10 @@ export function ProjectDirectory() {
       />
 
       {isLoading ? (
-        <div className="divide-y divide-border/50 rounded-2xl border border-border/50 bg-card shadow-xs" aria-busy="true">
+        <div
+          className="divide-y divide-border/50 rounded-2xl border border-border/50 bg-card shadow-xs"
+          aria-busy="true"
+        >
           {Array.from({ length: 5 }, (_, index) => (
             <div key={index} className="flex animate-pulse items-center gap-4 px-5 py-4">
               <div className="size-10 rounded-xl bg-muted" />
@@ -113,9 +118,19 @@ export function ProjectDirectory() {
         <ProjectEmptyState />
       ) : (
         <div
-          className={`grid grid-cols-1 gap-x-6 gap-y-4 ${showSidebar ? 'lg:grid-cols-[minmax(0,1fr)_340px]' : ''}`}
+          className={`grid grid-cols-1 gap-x-6 gap-y-4 ${
+            showSidebar
+              ? aiSidebarOpen
+                ? '2xl:grid-cols-[minmax(0,1fr)_320px]'
+                : 'lg:grid-cols-[minmax(0,1fr)_340px]'
+              : ''
+          }`}
         >
-          <div className="flex min-w-0 items-center gap-3 lg:col-start-1 lg:row-start-1">
+          <div
+            className={`flex min-w-0 items-center gap-3 ${
+              aiSidebarOpen ? '2xl:col-start-1 2xl:row-start-1' : 'lg:col-start-1 lg:row-start-1'
+            }`}
+          >
             <div className="relative min-w-0 flex-1">
               <Search className="pointer-events-none absolute top-1/2 left-3.5 h-4 w-4 -translate-y-1/2 text-muted-foreground" />
               <Input
@@ -130,7 +145,11 @@ export function ProjectDirectory() {
             <ProjectViewToggle value={view} onChange={changeView} />
           </div>
 
-          <div className="min-w-0 lg:col-start-1 lg:row-start-2">
+          <div
+            className={`min-w-0 ${
+              aiSidebarOpen ? '2xl:col-start-1 2xl:row-start-2' : 'lg:col-start-1 lg:row-start-2'
+            }`}
+          >
             {filtered.length > 0 ? (
               view === 'grid' ? (
                 <div className="grid grid-cols-[repeat(auto-fill,minmax(min(100%,20rem),1fr))] gap-3">
@@ -168,7 +187,13 @@ export function ProjectDirectory() {
           </div>
 
           {showSidebar && (
-            <aside className="space-y-4 lg:sticky lg:top-6 lg:col-start-2 lg:row-span-2 lg:row-start-1 lg:self-start">
+            <aside
+              className={`space-y-4 ${
+                aiSidebarOpen
+                  ? '2xl:sticky 2xl:top-6 2xl:col-start-2 2xl:row-span-2 2xl:row-start-1 2xl:self-start'
+                  : 'lg:sticky lg:top-6 lg:col-start-2 lg:row-span-2 lg:row-start-1 lg:self-start'
+              }`}
+            >
               {showFilters && (
                 <ProjectHostingFilters options={filters} active={filter} onChange={setFilter} />
               )}

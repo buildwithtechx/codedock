@@ -223,9 +223,9 @@ func preserveExistingNodes(previous, next *models.Cluster, action string) error 
 	return nil
 }
 func clusterSnapshot(cluster *models.Cluster) string {
-	data := []byte(fmt.Sprintf("%s|%d|%s|%d", cluster.ID, cluster.Revision, cluster.Version, cluster.Controls))
+	data := fmt.Appendf(nil, "%s|%d|%s|%d", cluster.ID, cluster.Revision, cluster.Version, cluster.Controls)
 	for _, node := range cluster.Nodes {
-		data = append(data, []byte(fmt.Sprintf("|%s|%s|%s|%s", node.ServerID, node.PrivateIP, node.Interface, node.Fingerprint))...)
+		data = fmt.Appendf(data, "|%s|%s|%s|%s", node.ServerID, node.PrivateIP, node.Interface, node.Fingerprint)
 	}
 	digest := sha256.Sum256(data)
 	return hex.EncodeToString(digest[:])

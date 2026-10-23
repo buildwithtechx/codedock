@@ -13,11 +13,7 @@ import {
 import { Skeleton } from '@codedock/ui/skeleton';
 import { BackupDestinationRow } from './backup-destination-row';
 import type { UnifiedDestination } from './destination-display';
-import {
-  DestinationLoadError,
-  toUnifiedS3,
-  toUnifiedSftp,
-} from './destination-display';
+import { DestinationLoadError, toUnifiedS3, toUnifiedSftp } from './destination-display';
 import { DestinationModal } from './destination-modal';
 import {
   useDeleteS3Destination,
@@ -138,7 +134,10 @@ export function BackupDestinations({
   };
 
   return (
-    <section aria-label="Destinations" className="overflow-hidden rounded-2xl border border-border/50 bg-card shadow-xs">
+    <section
+      aria-label="Destinations"
+      className="overflow-hidden rounded-2xl border border-border/50 bg-card shadow-xs"
+    >
       <div className="px-5 py-4">
         <h2 className="font-medium text-foreground text-sm">Destinations</h2>
         <p className="sr-only">

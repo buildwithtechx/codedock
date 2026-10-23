@@ -28,6 +28,7 @@ import (
 	"codedock/internal/handlers/mail"
 	"codedock/internal/handlers/projects"
 	"codedock/internal/handlers/system"
+	"codedock/internal/http/mcp"
 	"codedock/internal/http/middleware"
 	"codedock/internal/models"
 	"codedock/internal/notifications"
@@ -237,7 +238,7 @@ func NewServer(db *sql.DB, v *utils.Vault, deployer *deploy.Deployer, traefikMan
 	schedulerElector := leadership.NewElector(db, "scheduled-execution")
 	go schedulerElector.Run(context.Background(), cronManager.ServeElected, backupManager.ServeElected, updaterService.ServeElected)
 
-	bridge := NewBridge(projectService, appService, databaseService, deploymentService)
+	bridge := mcp.NewBridge(projectService, databaseService)
 
 	authGuard := middleware.NewAuthGuard(tokenService, settingsService, projectSettingsService, orgRepo, projectRepo, userRepo)
 	authGuard.PersonalTokens = userRepo

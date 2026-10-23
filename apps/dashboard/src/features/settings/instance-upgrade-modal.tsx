@@ -1,6 +1,23 @@
 import { Button } from '@codedock/ui/button';
-import { Dialog, DialogContent, DialogDescription, DialogHeader, DialogTitle } from '@codedock/ui/dialog';
-import { AlertCircle, Check, CheckCircle2, Circle, Copy, Download, Loader2, RefreshCw, ShieldCheck, Terminal } from 'lucide-react';
+import {
+  Dialog,
+  DialogContent,
+  DialogDescription,
+  DialogHeader,
+  DialogTitle,
+} from '@codedock/ui/dialog';
+import {
+  AlertCircle,
+  Check,
+  CheckCircle2,
+  Circle,
+  Copy,
+  Download,
+  Loader2,
+  RefreshCw,
+  ShieldCheck,
+  Terminal,
+} from 'lucide-react';
 import { useCallback, useEffect, useRef, useState } from 'react';
 import { toast } from 'sonner';
 import { useDeployUpdate, useGetUpdateStatus } from '#/hooks/use-settings';
@@ -9,19 +26,54 @@ import { settingsService } from '#/services/settings';
 export const OPEN_UPGRADE_MODAL_EVENT = 'codedock:open-upgrade-modal';
 
 export function openInstanceUpgradeModal() {
-  if (typeof window !== 'undefined') window.dispatchEvent(new CustomEvent(OPEN_UPGRADE_MODAL_EVENT));
+  if (typeof window !== 'undefined')
+    window.dispatchEvent(new CustomEvent(OPEN_UPGRADE_MODAL_EVENT));
 }
 
 type StepStatus = 'pending' | 'running' | 'done' | 'error';
-interface UpgradeStep { id: string; label: string; detail: string; status: StepStatus }
-interface LogEntry { time: string; message: string; level: 'info' | 'success' | 'warn' | 'error' }
+interface UpgradeStep {
+  id: string;
+  label: string;
+  detail: string;
+  status: StepStatus;
+}
+interface LogEntry {
+  time: string;
+  message: string;
+  level: 'info' | 'success' | 'warn' | 'error';
+}
 
 const INITIAL_STEPS: UpgradeStep[] = [
-  { id: 'preflight', label: 'Preflight & Version Verification', detail: 'Verify release tag and control-plane readiness', status: 'pending' },
-  { id: 'pull', label: 'Pulling Release Images & Binaries', detail: 'Fetch signed release artifacts from GitHub Releases', status: 'pending' },
-  { id: 'migrate', label: 'Applying Schema & State Migrations', detail: 'Snapshot configuration and run idempotent migrations', status: 'pending' },
-  { id: 'restart', label: 'Restarting Codedock Control Plane', detail: 'Execute upgrade.sh and hand over daemon process', status: 'pending' },
-  { id: 'verify', label: 'Health Check & Reconnection', detail: 'Wait for control plane to respond on the new version', status: 'pending' },
+  {
+    id: 'preflight',
+    label: 'Preflight & Version Verification',
+    detail: 'Verify release tag and control-plane readiness',
+    status: 'pending',
+  },
+  {
+    id: 'pull',
+    label: 'Pulling Release Images & Binaries',
+    detail: 'Fetch signed release artifacts from GitHub Releases',
+    status: 'pending',
+  },
+  {
+    id: 'migrate',
+    label: 'Applying Schema & State Migrations',
+    detail: 'Snapshot configuration and run idempotent migrations',
+    status: 'pending',
+  },
+  {
+    id: 'restart',
+    label: 'Restarting Codedock Control Plane',
+    detail: 'Execute upgrade.sh and hand over daemon process',
+    status: 'pending',
+  },
+  {
+    id: 'verify',
+    label: 'Health Check & Reconnection',
+    detail: 'Wait for control plane to respond on the new version',
+    status: 'pending',
+  },
 ];
 
 export function InstanceUpgradeModal({
@@ -146,7 +198,13 @@ export function InstanceUpgradeModal({
           <div className="space-y-1.5">
             <div className="flex items-center justify-between text-xs">
               <span className="font-medium text-foreground">
-                {phase === 'idle' ? 'Ready to upgrade' : phase === 'running' ? 'Applying platform update...' : phase === 'completed' ? 'Upgrade complete' : 'Upgrade interrupted'}
+                {phase === 'idle'
+                  ? 'Ready to upgrade'
+                  : phase === 'running'
+                    ? 'Applying platform update...'
+                    : phase === 'completed'
+                      ? 'Upgrade complete'
+                      : 'Upgrade interrupted'}
               </span>
               <span className="font-mono text-muted-foreground tabular-nums">{pct}%</span>
             </div>
@@ -180,11 +238,22 @@ export function InstanceUpgradeModal({
 
           {logs.length > 0 && (
             <div className="space-y-1.5">
-              <div ref={logBoxRef} className="max-h-36 space-y-1 overflow-y-auto rounded-xl border border-border/50 bg-background/80 p-3 font-mono text-[11px]">
+              <div
+                ref={logBoxRef}
+                className="max-h-36 space-y-1 overflow-y-auto rounded-xl border border-border/50 bg-background/80 p-3 font-mono text-[11px]"
+              >
                 {logs.map((entry, idx) => (
                   <div
                     key={idx}
-                    className={entry.level === 'error' ? 'text-destructive' : entry.level === 'warn' ? 'text-amber-500' : entry.level === 'success' ? 'text-emerald-500' : 'text-muted-foreground'}
+                    className={
+                      entry.level === 'error'
+                        ? 'text-destructive'
+                        : entry.level === 'warn'
+                          ? 'text-amber-500'
+                          : entry.level === 'success'
+                            ? 'text-emerald-500'
+                            : 'text-muted-foreground'
+                    }
                   >
                     <span className="opacity-50">[{entry.time}]</span> {entry.message}
                   </div>
@@ -194,7 +263,9 @@ export function InstanceUpgradeModal({
                 <button
                   type="button"
                   onClick={() => {
-                    void navigator.clipboard.writeText(logs.map((l) => `[${l.time}] ${l.message}`).join('\n'));
+                    void navigator.clipboard.writeText(
+                      logs.map((l) => `[${l.time}] ${l.message}`).join('\n')
+                    );
                     setCopiedLog(true);
                     setTimeout(() => setCopiedLog(false), 1500);
                   }}
@@ -240,7 +311,9 @@ export function InstanceUpgradeModal({
         <div className="flex items-center justify-end gap-2 border-border/50 border-t bg-muted/10 px-6 py-3.5">
           {phase === 'idle' && (
             <>
-              <Button variant="ghost" size="sm" onClick={() => onOpenChange(false)}>Cancel</Button>
+              <Button variant="ghost" size="sm" onClick={() => onOpenChange(false)}>
+                Cancel
+              </Button>
               <Button size="sm" onClick={() => void runUpgrade()} className="gap-1.5">
                 <Download className="size-3.5" /> Start Upgrade
               </Button>
@@ -253,7 +326,9 @@ export function InstanceUpgradeModal({
           )}
           {phase === 'failed' && (
             <>
-              <Button variant="ghost" size="sm" onClick={() => onOpenChange(false)}>Close</Button>
+              <Button variant="ghost" size="sm" onClick={() => onOpenChange(false)}>
+                Close
+              </Button>
               <Button size="sm" onClick={() => void runUpgrade()} className="gap-1.5">
                 <RefreshCw className="size-3.5" /> Try again
               </Button>

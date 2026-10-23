@@ -269,7 +269,10 @@ function DeploymentOverview({
       )}
       <section className="grid grid-cols-1 gap-3 sm:grid-cols-2 lg:grid-cols-4">
         {items.map((item) => (
-          <div key={item.label} className="rounded-2xl border border-border/50 bg-card p-4 shadow-xs">
+          <div
+            key={item.label}
+            className="rounded-2xl border border-border/50 bg-card p-4 shadow-xs"
+          >
             <p className="font-medium text-muted-foreground text-xs uppercase tracking-[0.08em]">
               {item.label}
             </p>

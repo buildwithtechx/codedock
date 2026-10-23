@@ -1,5 +1,12 @@
 import { Link } from '@tanstack/react-router';
-import { Activity, AlertTriangle, ArrowRight, CheckCircle2, FolderKanban, Rocket } from 'lucide-react';
+import {
+  Activity,
+  AlertTriangle,
+  ArrowRight,
+  CheckCircle2,
+  FolderKanban,
+  Rocket,
+} from 'lucide-react';
 import type { CanvasSummary } from '#/interfaces/projects';
 
 export function HomeRuntimeSummary({

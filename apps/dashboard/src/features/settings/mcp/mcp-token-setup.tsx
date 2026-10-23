@@ -41,7 +41,7 @@ export function McpTokenSetup({ endpoint }: { endpoint: string }) {
           </p>
           <div className="mt-3">
             <Button asChild variant="outline" size="sm" className="gap-1.5 text-xs">
-              <Link to="/settings" search={{ tab: 'tokens' }}>
+              <Link to="/settings" search={{ tab: 'tokens' } as never}>
                 Create API Token
                 <ExternalLink className="size-3" />
               </Link>

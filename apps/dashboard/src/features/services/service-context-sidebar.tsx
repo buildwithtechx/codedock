@@ -48,7 +48,10 @@ export function ServiceContextSidebar({
         </div>
       </section>
 
-      <nav className="rounded-2xl border border-border/50 bg-card p-2 shadow-xs" aria-label="Service sections">
+      <nav
+        className="rounded-2xl border border-border/50 bg-card p-2 shadow-xs"
+        aria-label="Service sections"
+      >
         {Object.entries(groups).map(([group, groupTabs], index) => (
           <div key={group} className={index === 0 ? '' : 'mt-4'}>
             <p className="px-3 pb-1.5 font-semibold text-[10px] text-muted-foreground uppercase tracking-[0.16em]">

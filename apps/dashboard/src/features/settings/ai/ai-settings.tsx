@@ -3,8 +3,8 @@ import React, { useState } from 'react';
 import { toast } from 'sonner';
 import { AI_PROVIDER_CATALOG } from '#/constants/ai';
 import { useGetAISettings, useUpdateAISettings } from '#/hooks/use-settings';
+import { SettingsSection } from '../settings-section';
 import { AiProviderCard, type AiProviderItem } from './ai-provider-card';
-import { SettingsSection } from './settings-section';
 
 const PROVIDERS: AiProviderItem[] = [
   {

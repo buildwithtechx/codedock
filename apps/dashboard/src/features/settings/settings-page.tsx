@@ -19,13 +19,14 @@ import { DnsSettings } from '#/features/dns/dns-settings';
 import { NotificationsSettings } from '#/features/notifications/notifications-settings';
 import { GithubIntegration, GitProviders } from '#/features/sources';
 import { OAuthProvidersList } from '#/features/users/oauth-providers-list';
+import { useAiSidebarStore } from '#/stores/ai-sidebar-store';
 import { useAuthStore } from '#/stores/auth-store';
-import { AISettings } from './ai-settings';
+import { AISettings } from './ai/ai-settings';
 import { AppearanceEditor } from './appearance-editor/appearance-editor';
 import { GeneralSettings } from './general-settings';
 import { InstanceInfo } from './instance-info';
 import { MaintenancePage } from './maintenance-settings';
-import { McpSettings } from './mcp-settings';
+import { McpSettings } from './mcp/mcp-settings';
 import { MigrationSettings } from './migration-settings';
 import { ProfileSettingsTab } from './profile-settings-tab';
 import { ServerSettingsTab } from './server-settings-tab';
@@ -94,6 +95,7 @@ const ALL_TABS = TAB_GROUPS.flatMap((g) => g.tabs);
 export const SettingsLayout = () => {
   const navigate = useNavigate();
   const user = useAuthStore((state) => state.user);
+  const aiSidebarOpen = useAiSidebarStore((s) => s.isOpen);
   const search = useRouterState({
     select: (state) => state.location.search as { tab?: string; view?: string; code?: string },
   });
@@ -152,7 +154,7 @@ export const SettingsLayout = () => {
         description="Manage workspace preferences, developer integrations, AI tooling, and fleet configuration."
       />
 
-      <div className="flex gap-1 overflow-x-auto xl:hidden">
+      <div className={`flex gap-1 overflow-x-auto ${aiSidebarOpen ? '2xl:hidden' : 'lg:hidden'}`}>
         {ALL_TABS.map((tab) => {
           const isActive = tab.id === activeId;
           return (
@@ -175,7 +177,12 @@ export const SettingsLayout = () => {
       </div>
 
       <PageFrame
-        className="lg:grid-cols-[minmax(0,1fr)_280px]"
+        hideRailWhenStacked
+        className={
+          aiSidebarOpen
+            ? '2xl:grid-cols-[minmax(0,1fr)_280px]'
+            : 'lg:grid-cols-[minmax(0,1fr)_280px]'
+        }
         rail={
           <div className="space-y-3">
             <section className="rounded-2xl border border-border/50 bg-card p-4">

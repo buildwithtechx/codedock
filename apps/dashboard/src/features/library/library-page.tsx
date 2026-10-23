@@ -10,6 +10,7 @@ import { encodeDeploySlug } from '#/lib/utils';
 import { ConnectPrompt } from './connect-prompt';
 import { FolderUpload } from './folder-upload';
 import { useGitConnections, useLibraryRepos } from '#/hooks/use-library';
+import { useAiSidebarStore } from '#/stores/ai-sidebar-store';
 import { LibrarySidebar } from './library-sidebar';
 import { LocalProjects } from './local-projects';
 import { RepositoryList } from './repository-list';
@@ -19,6 +20,7 @@ export type LibraryTab = 'repositories' | 'folder' | 'url' | 'apps' | 'examples'
 
 export function LibraryPage({ initialTab }: { initialTab?: LibraryTab }) {
   const navigate = useNavigate();
+  const aiSidebarOpen = useAiSidebarStore((s) => s.isOpen);
   const [tab, setTab] = useState<LibraryTab>(initialTab || 'repositories');
 
   useEffect(() => {
@@ -65,7 +67,13 @@ export function LibraryPage({ initialTab }: { initialTab?: LibraryTab }) {
           </TabsTrigger>
         </TabsList>
 
-        <div className="mt-6 grid grid-cols-1 items-start gap-6 lg:grid-cols-[minmax(0,1fr)_340px]">
+        <div
+          className={`mt-6 grid grid-cols-1 items-start gap-6 ${
+            aiSidebarOpen
+              ? '2xl:grid-cols-[minmax(0,1fr)_320px]'
+              : 'lg:grid-cols-[minmax(0,1fr)_340px]'
+          }`}
+        >
           <div className="min-w-0">
             <TabsContent value="repositories" className="mt-0">
               {connectionsQuery.isLoading ? (

@@ -1,7 +1,16 @@
 import { PanelLeft, PanelLeftClose, Search, X } from 'lucide-react';
 import { useEffect, useState } from 'react';
-import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from '@codedock/ui';
+import {
+  Avatar,
+  AvatarFallback,
+  AvatarImage,
+  Tooltip,
+  TooltipContent,
+  TooltipProvider,
+  TooltipTrigger,
+} from '@codedock/ui';
 import { cn } from 'cn';
+import { CodedockLogo } from './codedock-logo';
 import { NavItem } from './nav-item';
 import { getSidebarSections } from './sidebar-items';
 import { SidebarUserPopover } from './sidebar-user-popover';
@@ -65,9 +74,12 @@ export function AppSidebar({
         <div className="flex h-13 shrink-0 items-center justify-between border-sidebar-border/70 border-b px-3">
           {!navCollapsed ? (
             <div className="flex min-w-0 items-center gap-2">
-              <div className="flex size-6 items-center justify-center rounded-lg bg-primary/20 font-bold text-primary text-xs ring-1 ring-primary/40">
-                CD
-              </div>
+              <Avatar size="sm" className="size-6 rounded-lg shadow-xs">
+                <AvatarImage src="/favicon.svg" alt="Codedock" className="rounded-lg" />
+                <AvatarFallback className="rounded-lg bg-transparent p-0">
+                  <CodedockLogo className="size-6 rounded-lg" />
+                </AvatarFallback>
+              </Avatar>
               <span className="truncate font-semibold text-sidebar-foreground text-sm tracking-tight">
                 Codedock
               </span>
@@ -76,9 +88,12 @@ export function AppSidebar({
               </span>
             </div>
           ) : (
-            <div className="mx-auto flex size-7 items-center justify-center rounded-lg bg-primary/20 font-bold text-primary text-xs ring-1 ring-primary/40">
-              CD
-            </div>
+            <Avatar className="mx-auto size-7 rounded-lg shadow-xs">
+              <AvatarImage src="/favicon.svg" alt="Codedock" className="rounded-lg" />
+              <AvatarFallback className="rounded-lg bg-transparent p-0">
+                <CodedockLogo className="size-7 rounded-lg" />
+              </AvatarFallback>
+            </Avatar>
           )}
 
           {!navCollapsed && (

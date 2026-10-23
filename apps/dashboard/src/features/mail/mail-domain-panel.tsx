@@ -1,4 +1,12 @@
-import { CheckCircle2, KeyRound, Plus, RefreshCw, ShieldAlert, Trash2, XCircle } from 'lucide-react';
+import {
+  CheckCircle2,
+  KeyRound,
+  Plus,
+  RefreshCw,
+  ShieldAlert,
+  Trash2,
+  XCircle,
+} from 'lucide-react';
 import { useState } from 'react';
 import { Alert, AlertDescription } from '@codedock/ui/alert';
 import { Badge } from '@codedock/ui/badge';

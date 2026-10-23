@@ -35,7 +35,7 @@ func redisS3Put(ctx context.Context, dest *models.S3Destination, key string, bod
 			if (c >= 'a' && c <= 'z') || (c >= 'A' && c <= 'Z') || (c >= '0' && c <= '9') || c == '-' || c == '_' || c == '.' || c == '~' {
 				buf.WriteByte(c)
 			} else {
-				buf.WriteString(fmt.Sprintf("%%%02X", c))
+				fmt.Fprintf(&buf, "%%%02X", c)
 			}
 		}
 		return buf.String()
@@ -103,7 +103,7 @@ func redisS3Get(ctx context.Context, dest *models.S3Destination, key string) ([]
 			if (c >= 'a' && c <= 'z') || (c >= 'A' && c <= 'Z') || (c >= '0' && c <= '9') || c == '-' || c == '_' || c == '.' || c == '~' {
 				buf.WriteByte(c)
 			} else {
-				buf.WriteString(fmt.Sprintf("%%%02X", c))
+				fmt.Fprintf(&buf, "%%%02X", c)
 			}
 		}
 		return buf.String()

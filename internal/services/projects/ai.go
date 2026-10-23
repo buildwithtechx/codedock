@@ -48,9 +48,19 @@ func (s *AISettingsService) DiagnoseLogs(ctx context.Context, logs string) (stri
 
 	switch provider {
 	case "anthropic":
-		return "", errors.New("Anthropic is not fully supported for this endpoint yet")
+		baseURL = "https://api.anthropic.com/v1"
+		apiKey = settings.AnthropicKey
+		modelName = settings.AnthropicModel
+		if modelName == "" {
+			modelName = "claude-sonnet-4-6"
+		}
 	case "google":
-		return "", errors.New("Google is not fully supported for this endpoint yet")
+		baseURL = "https://generativelanguage.googleapis.com/v1beta/openai"
+		apiKey = settings.GoogleKey
+		modelName = settings.GoogleModel
+		if modelName == "" {
+			modelName = "gemini-2.5-pro"
+		}
 	case "groq":
 		baseURL = "https://api.groq.com/openai/v1"
 		apiKey = settings.GroqKey

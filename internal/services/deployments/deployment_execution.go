@@ -65,7 +65,7 @@ func (s *DeploymentService) ExecuteDeploymentAsync(d *models.Deployment) {
 			if ctx.Err() != nil {
 				status = models.DeploymentStatus("CANCELLED")
 			}
-			logWriter.logs.WriteString(fmt.Sprintf("Deployment stopped: %v\n", err))
+			fmt.Fprintf(&logWriter.logs, "Deployment stopped: %v\n", err)
 			var rErr *deploy.ResourceFailureError
 			if errors.As(err, &rErr) {
 				resourceIssue = rErr.Issue
@@ -174,7 +174,7 @@ func (s *DeploymentService) executeDeployment(ctx context.Context, d *models.Dep
 	}
 	isRetryWithArtifact := strings.EqualFold(d.Trigger, "retry") && d.ImageRef != ""
 	if isRetryWithArtifact {
-		if _, writeErr := writer.Write([]byte(fmt.Sprintf("⚡ Reusing verified build artifact: %s\nSkipping source checkout and Docker build.\n", d.ImageRef))); writeErr != nil {
+		if _, writeErr := writer.Write(fmt.Appendf(nil, "⚡ Reusing verified build artifact: %s\nSkipping source checkout and Docker build.\n", d.ImageRef)); writeErr != nil {
 			return "", writeErr
 		}
 		appCopy := *app
