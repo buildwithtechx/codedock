@@ -47,9 +47,11 @@ const DOCS_URL = 'https://docs.codedock.run';
 export function AppCatalog({
   embedded = false,
   deepLinkAppId,
+  projectId,
 }: {
   embedded?: boolean;
   deepLinkAppId?: string;
+  projectId?: string;
 }) {
   const navigate = useNavigate();
   const { data, isLoading, isFetching, isError, refetch } = useAppCatalog();
@@ -205,7 +207,7 @@ export function AppCatalog({
       ) : (
         <div className="mt-6 grid @4xl/app-catalog:grid-cols-3 @xl/app-catalog:grid-cols-2 grid-cols-1 gap-4">
           {filtered.map((app) => (
-            <CatalogCard key={app.id} app={app} />
+            <CatalogCard key={app.id} app={app} projectId={projectId} />
           ))}
         </div>
       )}

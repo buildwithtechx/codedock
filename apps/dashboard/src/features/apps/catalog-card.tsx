@@ -4,11 +4,12 @@ import { AppGpuBadge } from '#/components/apps/app-gpu-badge';
 import type { OneClickAppDetails } from '#/interfaces/templates';
 import { AppLogo } from './app-logo';
 
-export function CatalogCard({ app }: { app: OneClickAppDetails }) {
+export function CatalogCard({ app, projectId }: { app: OneClickAppDetails; projectId?: string }) {
   return (
     <Link
       to="/apps/new/$appId"
       params={{ appId: app.id }}
+      search={projectId ? { projectId } : undefined}
       className="group flex w-full items-start gap-3 rounded-2xl border border-border/50 bg-card p-5 text-left transition-all hover:border-primary/40 hover:shadow-md"
     >
       <AppLogo icon={app.icon} name={app.name} className="size-10 shrink-0" />

@@ -1,12 +1,14 @@
-import { ArrowRight, FolderUp, Loader2, Package, X } from 'lucide-react';
+import { ArrowRight, FolderPlus, FolderUp, Loader2, Package, X } from 'lucide-react';
 import { useEffect, useRef, useState } from 'react';
 import { toast } from 'sonner';
 import { Button } from '@codedock/ui/button';
 import { Input } from '@codedock/ui/input';
 import { Label } from '@codedock/ui/label';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@codedock/ui/select';
-import { useListAllProjects } from '#/hooks/use-projects';
 import { useDeployLibraryArchive } from '#/hooks/use-library';
+import { useListOrganizations } from '#/hooks/use-organizations';
+import { useCreateProject, useListAllProjects } from '#/hooks/use-projects';
+import { useOrganizationStore } from '#/stores/organization-store';
 import { FolderDropzone } from './folder-dropzone';
 import {
   collectFolderFiles,
@@ -20,14 +22,20 @@ import { rememberLocalImport } from './local-projects';
 
 type Phase = 'idle' | 'packing' | 'uploading' | 'done';
 
+const NEW_PROJECT_VALUE = '__new__';
+
 interface PickedFolder extends FolderInspection {
   entries: FolderEntry[];
 }
 
-export function FolderUpload() {
+export function FolderUpload({ fixedProjectId }: { fixedProjectId?: string }) {
   const projectsQuery = useListAllProjects();
+  const { data: organizations = [] } = useListOrganizations();
+  const activeOrgId = useOrganizationStore((s) => s.activeOrganizationId);
+  const { mutateAsync: createProject } = useCreateProject();
   const deployArchiveMutation = useDeployLibraryArchive();
-  const [projectId, setProjectId] = useState('');
+  const [projectId, setProjectId] = useState(fixedProjectId || NEW_PROJECT_VALUE);
+  const [deployedProjectId, setDeployedProjectId] = useState(fixedProjectId || '');
   const [name, setName] = useState('');
   const [archive, setArchive] = useState<File | null>(null);
   const [folder, setFolder] = useState<PickedFolder | null>(null);
@@ -55,9 +63,8 @@ export function FolderUpload() {
       event.preventDefault();
       setDragging(false);
       const files = event.dataTransfer?.files;
-      if (!files || files.length === 0) return;
-      const [first] = Array.from(files);
-      if (first && /\.t(ar\.)?gz$/i.test(first.name)) {
+      if (!files?.length) return;
+      if (/\.t(ar\.)?gz$/i.test(files[0].name)) {
         handlersRef.current.handleArchiveFiles(files);
       } else {
         void handlersRef.current.handleFolderFiles(files);
@@ -107,13 +114,7 @@ export function FolderUpload() {
   handlersRef.current = { handleArchiveFiles, handleFolderFiles };
 
   const handleDeploy = async () => {
-    if (
-      (!archive && !folder) ||
-      !projectId ||
-      !name.trim() ||
-      phase === 'packing' ||
-      phase === 'uploading'
-    ) {
+    if ((!archive && !folder) || !name.trim() || phase === 'packing' || phase === 'uploading') {
       return;
     }
     setError('');
@@ -126,11 +127,22 @@ export function FolderUpload() {
       }
       if (!file) return;
       setPhase('uploading');
+
+      let targetProjectId = fixedProjectId || projectId;
+      if (!targetProjectId || targetProjectId === NEW_PROJECT_VALUE) {
+        const orgId = activeOrgId || organizations[0]?.id || '';
+        const created = await createProject({
+          payload: { name: name.trim(), organizationId: orgId },
+        });
+        targetProjectId = created.data.id;
+      }
+
       const response = await deployArchiveMutation.mutateAsync({
-        projectId,
+        projectId: targetProjectId,
         name: name.trim(),
         file,
       });
+      setDeployedProjectId(targetProjectId);
       if (folder) {
         rememberLocalImport({
           name: name.trim(),
@@ -154,7 +166,7 @@ export function FolderUpload() {
     return (
       <FolderUploadDone
         name={name}
-        projectId={projectId}
+        projectId={fixedProjectId || deployedProjectId}
         onReset={() => {
           clear();
           setPhase('idle');
@@ -170,7 +182,7 @@ export function FolderUpload() {
     >
       <div className="flex items-center gap-3 border-border/50 border-b px-5 py-4">
         <div className="flex h-9 w-9 items-center justify-center rounded-xl bg-muted/60">
-          <FolderUp className="size-[18px] text-muted-foreground" />
+          <FolderUp className="size-4.5 text-muted-foreground" />
         </div>
         <div>
           <h2 className="font-semibold text-[15px] text-foreground">Upload a folder</h2>
@@ -180,34 +192,6 @@ export function FolderUpload() {
         </div>
       </div>
       <div className="space-y-4 px-5 py-4">
-        <div className="grid gap-4 sm:grid-cols-2">
-          <div className="space-y-2">
-            <Label htmlFor="folder-project">Project *</Label>
-            <Select value={projectId} onValueChange={setProjectId} disabled={busy}>
-              <SelectTrigger id="folder-project" className="w-full">
-                <SelectValue placeholder="Select a project" />
-              </SelectTrigger>
-              <SelectContent>
-                {projects.map((project) => (
-                  <SelectItem key={project.id} value={project.id}>
-                    {project.name}
-                  </SelectItem>
-                ))}
-              </SelectContent>
-            </Select>
-          </div>
-          <div className="space-y-2">
-            <Label htmlFor="folder-name">Application name *</Label>
-            <Input
-              id="folder-name"
-              value={name}
-              disabled={busy}
-              onChange={(event) => setName(event.target.value)}
-              placeholder="my-app"
-            />
-          </div>
-        </div>
-
         {!archive && !folder ? (
           <FolderDropzone
             dropRef={dropRef}
@@ -222,7 +206,7 @@ export function FolderUpload() {
           <div className="space-y-4">
             <div className="flex items-center gap-3 rounded-xl border border-border/50 bg-muted/40 px-3 py-3">
               <div className="flex h-9 w-9 shrink-0 items-center justify-center rounded-lg bg-muted">
-                <Package className="size-[18px] text-muted-foreground" />
+                <Package className="size-4.5 text-muted-foreground" />
               </div>
               <div className="min-w-0 flex-1">
                 <p className="truncate font-medium text-foreground text-sm">
@@ -245,9 +229,46 @@ export function FolderUpload() {
                 </button>
               )}
             </div>
+
+            <div className={fixedProjectId ? 'space-y-2' : 'grid gap-4 sm:grid-cols-2'}>
+              <div className="space-y-2">
+                <Label htmlFor="folder-name">Application name *</Label>
+                <Input
+                  id="folder-name"
+                  value={name}
+                  disabled={busy}
+                  onChange={(event) => setName(event.target.value)}
+                  placeholder="my-app"
+                />
+              </div>
+              {!fixedProjectId && (
+                <div className="space-y-2">
+                  <Label htmlFor="folder-project">Destination project</Label>
+                  <Select value={projectId} onValueChange={setProjectId} disabled={busy}>
+                    <SelectTrigger id="folder-project" className="w-full">
+                      <SelectValue placeholder="Create new project" />
+                    </SelectTrigger>
+                    <SelectContent>
+                      <SelectItem value={NEW_PROJECT_VALUE}>
+                        <span className="inline-flex items-center gap-1.5">
+                          <FolderPlus className="size-3.5 text-primary" />
+                          Create new project ({name.trim() || 'my-app'})
+                        </span>
+                      </SelectItem>
+                      {projects.map((project) => (
+                        <SelectItem key={project.id} value={project.id}>
+                          {project.name}
+                        </SelectItem>
+                      ))}
+                    </SelectContent>
+                  </Select>
+                </div>
+              )}
+            </div>
+
             <Button
               onClick={() => void handleDeploy()}
-              disabled={busy || !projectId || !name.trim()}
+              disabled={busy || !name.trim()}
               className="w-full"
             >
               {busy ? (

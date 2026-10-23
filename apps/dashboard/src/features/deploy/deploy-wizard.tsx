@@ -16,6 +16,7 @@ interface DeployWizardProps {
   initialBranch?: string;
   initialProjectName?: string;
   initialDir?: string;
+  initialProjectId?: string;
 }
 
 export function DeployWizard({
@@ -23,6 +24,7 @@ export function DeployWizard({
   initialBranch = 'main',
   initialProjectName = 'my-web-app',
   initialDir = '',
+  initialProjectId = '',
 }: DeployWizardProps) {
   const navigate = useNavigate();
   const [step, setStep] = useState<'target' | 'config'>('config');
@@ -66,16 +68,19 @@ export function DeployWizard({
     setIsDeploying(true);
     try {
       toast.info('Starting build & deployment...');
-      const projectRes = await createProject({
-        payload: {
-          name: projectName,
-          organizationId: activeOrgId || '',
-          gitUrl: initialRepoUrl,
-          gitBranch: branch,
-          gitProvider: 'github',
-        },
-      });
-      const projectId = projectRes?.data?.id;
+      let projectId = initialProjectId;
+      if (!projectId) {
+        const projectRes = await createProject({
+          payload: {
+            name: projectName,
+            organizationId: activeOrgId || '',
+            gitUrl: initialRepoUrl,
+            gitBranch: branch,
+            gitProvider: 'github',
+          },
+        });
+        projectId = projectRes?.data?.id || '';
+      }
 
       if (!projectId) {
         throw new Error('Project creation failed: missing project ID');

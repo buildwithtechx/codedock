@@ -220,24 +220,24 @@ function BillingPage() {
           onValueChange={(val) => setActiveTab(val as typeof activeTab)}
           className="space-y-6"
         >
-          <TabsList className="rounded-xl">
-            <TabsTrigger value="plans" className="gap-2 rounded-lg">
+          <TabsList>
+            <TabsTrigger value="plans">
               <Sparkles className="size-4" />
               Plans & Pricing
             </TabsTrigger>
-            <TabsTrigger value="overview" className="gap-2 rounded-lg">
+            <TabsTrigger value="overview">
               <Layers className="size-4" />
               Overview
             </TabsTrigger>
-            <TabsTrigger value="usage" className="gap-2 rounded-lg">
+            <TabsTrigger value="usage">
               <Zap className="size-4" />
               Usage & Quota
             </TabsTrigger>
-            <TabsTrigger value="topups" className="gap-2 rounded-lg">
+            <TabsTrigger value="topups">
               <Coins className="size-4" />
               Prepaid Credits
             </TabsTrigger>
-            <TabsTrigger value="invoices" className="gap-2 rounded-lg">
+            <TabsTrigger value="invoices">
               <Receipt className="size-4" />
               Invoices & Portal
             </TabsTrigger>

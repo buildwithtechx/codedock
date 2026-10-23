@@ -20,7 +20,7 @@ import { WizardHeader } from './wizard-header';
 
 type Phase = 'form' | 'review' | 'done';
 
-export function InstallWizard({ appId }: { appId: string }) {
+export function InstallWizard({ appId, projectId = '' }: { appId: string; projectId?: string }) {
   const { data: app, isLoading, isError, refetch } = useCatalogApp(appId);
   const reviewInstall = useReviewCatalogInstall();
   const deployApp = useDeployCatalogApp();
@@ -91,7 +91,7 @@ export function InstallWizard({ appId }: { appId: string }) {
     const port = Number.parseInt(hostPort, 10);
     return {
       appId,
-      projectId: '',
+      projectId,
       serverId: serverId === 'local' ? '' : serverId,
       name: (name ?? '').trim() || app.name,
       secrets,
@@ -136,7 +136,7 @@ export function InstallWizard({ appId }: { appId: string }) {
     if (!configurationValid()) return;
     try {
       const response = await deployApp.mutateAsync(buildPayload(preview?.digest));
-      const targetProjectId = response.data?.projectId || response.projectId || '';
+      const targetProjectId = response.data?.projectId || response.projectId || projectId || '';
       setCreatedProjectId(targetProjectId);
       setDeployMessage(response.message || `${app.name} installed successfully`);
       setPhase('done');
@@ -197,7 +197,7 @@ export function InstallWizard({ appId }: { appId: string }) {
   if (phase === 'review' && preview) {
     return (
       <div className="space-y-6">
-        <WizardHeader app={app} />
+        <WizardHeader app={app} projectId={projectId} />
         <div className="max-w-3xl space-y-4 rounded-2xl border border-border/50 bg-card p-5 shadow-xs">
           <h2 className="font-semibold text-foreground">Review install plan</h2>
           <div className="flex flex-wrap gap-2">

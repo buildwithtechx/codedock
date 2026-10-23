@@ -5,18 +5,30 @@ import { Badge } from '@codedock/ui/badge';
 import type { OneClickAppDetails } from '#/interfaces/templates';
 import { AppLogo } from './app-logo';
 
-export function WizardHeader({ app }: { app: OneClickAppDetails }) {
+export function WizardHeader({ app, projectId }: { app: OneClickAppDetails; projectId?: string }) {
   const [expanded, setExpanded] = useState(false);
   const long = app.description.length > 160;
   return (
     <div>
-      <Link
-        to="/apps/new"
-        className="mb-4 inline-flex items-center gap-1.5 text-muted-foreground text-sm transition-colors hover:text-foreground"
-      >
-        <ArrowLeft className="size-4" />
-        Back
-      </Link>
+      {projectId ? (
+        <Link
+          to="/projects/$projectId/new"
+          params={{ projectId }}
+          search={{ tab: 'one-click' }}
+          className="mb-4 inline-flex items-center gap-1.5 text-muted-foreground text-sm transition-colors hover:text-foreground"
+        >
+          <ArrowLeft className="size-4" />
+          Back to project
+        </Link>
+      ) : (
+        <Link
+          to="/apps/new"
+          className="mb-4 inline-flex items-center gap-1.5 text-muted-foreground text-sm transition-colors hover:text-foreground"
+        >
+          <ArrowLeft className="size-4" />
+          Back
+        </Link>
+      )}
       <div className="flex items-center gap-4">
         <div className="flex size-12 shrink-0 items-center justify-center rounded-2xl bg-muted/60">
           <AppLogo icon={app.icon} name={app.name} className="size-7" />

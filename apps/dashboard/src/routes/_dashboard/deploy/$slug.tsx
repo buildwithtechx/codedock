@@ -10,6 +10,7 @@ export const Route = createFileRoute('/_dashboard/deploy/$slug')({
     branch: z.string().optional(),
     dir: z.string().optional(),
     template: z.string().optional(),
+    projectId: z.string().optional(),
   }),
 });
 
@@ -33,6 +34,7 @@ function DeploySlugPage() {
         initialRepoUrl={repoUrl}
         initialBranch={branch}
         initialDir={search.dir}
+        initialProjectId={search.projectId}
       />
     </div>
   );

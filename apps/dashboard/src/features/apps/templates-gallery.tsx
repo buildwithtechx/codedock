@@ -9,7 +9,7 @@ import type { ExampleApp } from '#/interfaces/templates';
 import { encodeDeploySlug } from '#/lib/utils';
 import { ExampleLogo } from './example-logo';
 
-export function TemplatesGallery() {
+export function TemplatesGallery({ projectId }: { projectId?: string } = {}) {
   const navigate = useNavigate();
   const { data: examplesResponse, isLoading, isError, refetch } = useListExampleApps();
   const [query, setQuery] = useState('');
@@ -34,6 +34,7 @@ export function TemplatesGallery() {
         name: example.id,
         dir: example.id,
         template: example.id,
+        ...(projectId ? { projectId } : {}),
       },
     });
   };
