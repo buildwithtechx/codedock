@@ -1,7 +1,6 @@
 import { cleanup, render } from '@testing-library/react';
-import type { ComponentType } from 'react';
 import { afterEach, describe, expect, it, vi } from 'vitest';
-import { Route } from '#/routes/_dashboard/profile';
+import { ProfileSettingsTab } from '#/features/settings/profile-settings-tab';
 
 const state = vi.hoisted(() => ({ cloudMode: undefined as boolean | undefined, billing: vi.fn() }));
 vi.mock('#/components/layout/page-header', () => ({ PageHeader: () => null }));
@@ -30,8 +29,7 @@ describe('profile billing visibility', () => {
   for (const cloudMode of [undefined, false, true]) {
     it(`only mounts billing when the server reports cloud mode (${cloudMode})`, () => {
       state.cloudMode = cloudMode;
-      const Profile = Route.options.component as ComponentType;
-      const view = render(<Profile />);
+      const view = render(<ProfileSettingsTab />);
       expect(view.queryByText('Cloud billing') !== null).toBe(cloudMode === true);
       expect(state.billing).toHaveBeenCalledTimes(cloudMode === true ? 1 : 0);
     });

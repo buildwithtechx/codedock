@@ -104,7 +104,7 @@ export function OrganizationSwitcher({ collapsed }: { collapsed: boolean }) {
           ))}
           <DropdownMenuSeparator />
           <DropdownMenuItem
-            onSelect={() => void navigate({ to: '/profile' })}
+            onSelect={() => void navigate({ to: '/settings', search: { tab: 'profile' } as never })}
             className="cursor-pointer gap-2.5 rounded-lg px-2.5 py-2"
           >
             <div className="flex h-7 w-7 shrink-0 items-center justify-center rounded-full bg-muted font-semibold text-[10px] text-muted-foreground">

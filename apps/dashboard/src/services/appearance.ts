@@ -22,12 +22,12 @@ export function resolveAppearanceMode(
   prefersDark = false
 ): 'light' | 'dim' | 'dark' {
   if (preferences.mode === 'system') {
-    return prefersDark ? 'dark' : 'light';
+    return prefersDark ? 'dim' : 'light';
   }
   if (preferences.mode === 'dim' || preferences.mode === 'dark' || preferences.mode === 'light') {
     return preferences.mode;
   }
-  return 'dark';
+  return 'dim';
 }
 
 const APPLIED_VARIABLES = [
@@ -55,6 +55,14 @@ export function applyAppearance(
   root.classList.remove('light', 'dim', 'dark');
   root.classList.add(resolvedMode);
 
+  // Clear previously applied inline custom variables from root so clean theme CSS rules apply
+  const existingStyles = Array.from(root.style);
+  for (const prop of existingStyles) {
+    if (prop.startsWith('--')) {
+      root.style.removeProperty(prop);
+    }
+  }
+
   for (const key of APPLIED_VARIABLES) {
     root.style.removeProperty(key);
   }
@@ -67,14 +75,18 @@ export function applyAppearance(
   }
 
   const customTheme = preferences.customThemes?.find((t) => t.id === preferences.activeTheme);
-  const allTokens = {
-    ...(preferences.tokens ?? {}),
-    ...(customTheme?.tokens ?? {}),
-  };
+  const isBaseTheme = ['light', 'dim', 'dark', 'system'].includes(preferences.activeTheme);
 
-  for (const [key, value] of Object.entries(allTokens)) {
-    if (typeof value === 'string' && !/[;{}<>\\]|url\s*\(/i.test(value)) {
-      root.style.setProperty(key, value);
+  if (!isBaseTheme) {
+    const allTokens = {
+      ...(preferences.tokens ?? {}),
+      ...(customTheme?.tokens ?? {}),
+    };
+
+    for (const [key, value] of Object.entries(allTokens)) {
+      if (typeof value === 'string' && !/[;{}<>\\]|url\s*\(/i.test(value)) {
+        root.style.setProperty(key, value);
+      }
     }
   }
 
@@ -113,7 +125,7 @@ export function bootAppearance(): void {
       : null;
     const snapshot = raw && raw.length < 64_000 ? JSON.parse(raw) : null;
 
-    let mode: 'light' | 'dim' | 'dark' = dark ? 'dark' : 'light';
+    let mode: 'light' | 'dim' | 'dark' = dark ? 'dim' : 'light';
     if (snapshot?.mode && ['light', 'dim', 'dark'].includes(snapshot.mode)) {
       mode = snapshot.mode;
     }
@@ -127,14 +139,14 @@ export function bootAppearance(): void {
       applyAppearance(snapshot.preferences, mode);
     }
   } catch {
-    document.documentElement.setAttribute('data-theme', 'dark');
-    document.documentElement.classList.add('dark');
+    document.documentElement.setAttribute('data-theme', 'dim');
+    document.documentElement.classList.add('dim');
   }
 }
 
 export async function getAppearance(): Promise<AppearancePreferences> {
   const response = await apiClient.get<{ appearance: AppearancePreferences }>(
-    '/api/settings/appearance'
+    '/settings/appearance'
   );
   return response.appearance;
 }
@@ -143,7 +155,7 @@ export async function setAppearance(
   appearance: AppearancePreferences
 ): Promise<AppearancePreferences> {
   const response = await apiClient.put<{ appearance: AppearancePreferences }>(
-    '/api/settings/appearance',
+    '/settings/appearance',
     { appearance }
   );
   return response.appearance;

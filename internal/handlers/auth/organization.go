@@ -69,6 +69,32 @@ func (h *OrganizationHandler) Get(c echo.Context) error {
 	return c.JSON(http.StatusOK, org)
 }
 
+func (h *OrganizationHandler) Update(c echo.Context) error {
+	id := c.Param("id")
+	userClaims, ok := c.Get("user").(*models.UserClaims)
+	if !ok || userClaims == nil {
+		return utils.Error(c, http.StatusUnauthorized, "unauthorized")
+	}
+	var req struct {
+		Name string `json:"name"`
+	}
+	if err := c.Bind(&req); err != nil {
+		return utils.Error(c, http.StatusBadRequest, "invalid request body")
+	}
+	org, err := h.orgService.UpdateOrganization(c.Request().Context(), userClaims.UserID, id, req.Name)
+	if err != nil {
+		return utils.Error(c, http.StatusBadRequest, err.Error())
+	}
+	h.auditService.LogAction(c.Request().Context(), authservices.AuditActionOpts{
+		UserID:    userClaims.UserID,
+		Action:    "organization.update",
+		Resource:  id,
+		Details:   map[string]string{"name": req.Name},
+		IPAddress: c.RealIP(),
+	})
+	return c.JSON(http.StatusOK, org)
+}
+
 func (h *OrganizationHandler) Delete(c echo.Context) error {
 	id := c.Param("id")
 	if err := h.orgService.DeleteOrganization(c.Request().Context(), id); err != nil {

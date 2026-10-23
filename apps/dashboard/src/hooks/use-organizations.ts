@@ -25,6 +25,17 @@ export const useDeleteOrganization = () => {
   });
 };
 
+export const useUpdateOrganization = () => {
+  const qc = useQueryClient();
+  return useMutation({
+    mutationFn: ({ id, name }: { id: string; name: string }) => orgService.update(id, { name }),
+    onSuccess: (_, variables) => {
+      qc.invalidateQueries({ queryKey: ['organizations'] });
+      qc.invalidateQueries({ queryKey: ['organization', variables.id] });
+    },
+  });
+};
+
 export const useGetOrganization = (id: string) =>
   useQuery({
     queryKey: ['organization', id],

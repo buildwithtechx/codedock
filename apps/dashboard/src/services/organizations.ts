@@ -30,6 +30,13 @@ export const orgService = {
       throw handleApiError(err);
     }
   },
+  update: async (id: string, payload: { name: string }): Promise<Organization> => {
+    try {
+      return await apiClient.put<Organization>(`/organizations/${id}`, payload);
+    } catch (err) {
+      throw handleApiError(err);
+    }
+  },
   get: async (id: string): Promise<Organization> => {
     try {
       return await apiClient.get<Organization>(`/organizations/${id}`);

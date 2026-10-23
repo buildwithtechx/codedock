@@ -53,6 +53,12 @@ export const primaryNavigation: DashboardNavigationItem[] = [
     icon: LayoutGrid,
   },
   {
+    title: 'Deployments',
+    description: 'Release activity and background builds',
+    to: '/deployments',
+    icon: Rocket,
+  },
+  {
     title: 'Actions',
     description: 'CI workflows and runner execution',
     to: '/actions',
@@ -80,6 +86,12 @@ export const getInfrastructureNavigation = (isCloud: boolean): DashboardNavigati
         to: '/servers',
         icon: Server,
       },
+  {
+    title: 'Domains',
+    description: 'Domain routing and SSL verification',
+    to: '/domains',
+    icon: Globe2,
+  },
   {
     title: 'Emails',
     description: 'Mail servers, mailboxes and deliverability',
@@ -207,10 +219,18 @@ export const contextualNavigation: DashboardNavigationItem[] = [
   },
 ];
 
-export const commandNavigation: DashboardNavigationItem[] = [
+const rawCommandItems: DashboardNavigationItem[] = [
   ...primaryNavigation,
   ...infrastructureNavigation,
   ...systemNavigation,
   ...hiddenNavigation,
   ...contextualNavigation,
 ];
+
+const seenNavKeys = new Set<string>();
+export const commandNavigation: DashboardNavigationItem[] = rawCommandItems.filter((item) => {
+  const key = `${item.title}:${item.to}`;
+  if (seenNavKeys.has(key)) return false;
+  seenNavKeys.add(key);
+  return true;
+});

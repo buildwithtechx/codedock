@@ -30,8 +30,8 @@ func ValidateAppearance(pref *AppearancePreferences) error {
 
 	if pref.Mode != "" {
 		mode := strings.ToLower(pref.Mode)
-		if mode != "light" && mode != "dim" && mode != "dark" {
-			return errors.New("mode must be light, dim, or dark")
+		if mode != "light" && mode != "dim" && mode != "dark" && mode != "system" {
+			return errors.New("mode must be light, dim, dark, or system")
 		}
 		pref.Mode = mode
 	}
@@ -65,8 +65,8 @@ func ValidateAppearance(pref *AppearancePreferences) error {
 		}
 		if ct.Mode != "" {
 			mode := strings.ToLower(ct.Mode)
-			if mode != "light" && mode != "dim" && mode != "dark" {
-				return errors.New("custom theme mode must be light, dim, or dark")
+			if mode != "light" && mode != "dim" && mode != "dark" && mode != "system" {
+				return errors.New("custom theme mode must be light, dim, dark, or system")
 			}
 		}
 		if err := validateTokens(ct.Tokens); err != nil {

@@ -1,9 +1,15 @@
-import { createFileRoute } from '@tanstack/react-router';
+import { createFileRoute, redirect } from '@tanstack/react-router';
 import { z } from 'zod';
 import { AuditLogList } from '#/features/audit/audit-log-list';
 
 export const Route = createFileRoute('/_dashboard/audit')({
-  component: AuditPage,
+  beforeLoad: () => {
+    throw redirect({
+      to: '/team',
+      search: { tab: 'audit' },
+      replace: true,
+    });
+  },
   validateSearch: z.object({
     q: z.string().optional(),
     category: z.string().optional(),
@@ -11,6 +17,7 @@ export const Route = createFileRoute('/_dashboard/audit')({
     source: z.string().optional(),
     period: z.string().optional(),
   }),
+  component: AuditPage,
 });
 
 export function AuditPage() {

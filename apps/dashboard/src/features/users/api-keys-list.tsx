@@ -1,25 +1,15 @@
 import { format } from 'date-fns';
-import { Check, Copy, Key, Lock, Plus, ShieldCheck, Trash2 } from 'lucide-react';
+import { Check, Copy, Key, Plus, ShieldCheck, Trash2 } from 'lucide-react';
 import { useState } from 'react';
 import { toast } from 'sonner';
 import { Badge } from '@codedock/ui/badge';
 import { Button } from '@codedock/ui/button';
-import { Checkbox } from '@codedock/ui/checkbox';
-import { Input } from '@codedock/ui/input';
-import { Label } from '@codedock/ui/label';
-import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@codedock/ui/select';
 import { useCreateToken, useListTokens } from '#/hooks/use-profile';
 import { SettingsSection } from '#/features/settings/settings-section';
 import type { CreatePATRequest } from '#/interfaces/users';
 import { useListCanvasSummaries } from '#/hooks/use-canvas';
 import { ApiKeyDeleteDialog } from './components/api-key-delete-dialog';
-
-const EXPIRY_OPTIONS = [
-  { value: 'none', days: null, label: 'No expiration' },
-  { value: '30', days: 30, label: '30 days' },
-  { value: '90', days: 90, label: '90 days' },
-  { value: '365', days: 365, label: '1 year' },
-] as const;
+import { ApiKeyCreateForm } from './components/api-key-create-form';
 
 function formatDate(iso: string | undefined): string {
   if (!iso) return 'Never expires';
@@ -155,170 +145,72 @@ export function ApiKeysList() {
         </div>
       )}
 
-      {showForm ? (
-        <div className="mb-4 space-y-3 rounded-xl border border-border/50 p-4">
-          <Input
-            value={name}
-            onChange={(e) => setName(e.target.value)}
-            placeholder="Token name, e.g. CI deploys"
-            className="bg-muted/30"
-          />
-          <div className="flex flex-wrap items-center gap-4">
-            <div className="flex select-none items-center gap-2 text-foreground text-sm">
-              <Checkbox
-                id="token-read-only"
-                checked={readOnly}
-                onCheckedChange={(v) => setReadOnly(v === true)}
-              />
-              <Label htmlFor="token-read-only" className="cursor-pointer font-normal">
-                Read-only
-              </Label>
-            </div>
-            <Select
-              value={expiryDays === null ? 'none' : String(expiryDays)}
-              onValueChange={(v) => setExpiryDays(v === 'none' ? null : Number(v))}
-            >
-              <SelectTrigger className="w-40 bg-muted/30">
-                <SelectValue placeholder="Expiration" />
-              </SelectTrigger>
-              <SelectContent>
-                {EXPIRY_OPTIONS.map((o) => (
-                  <SelectItem key={o.value} value={o.value}>
-                    {o.label}
-                  </SelectItem>
-                ))}
-              </SelectContent>
-            </Select>
-          </div>
-
-          <div className="rounded-lg border border-border/50 bg-muted/[0.04] p-3">
-            <div className="grid grid-cols-2 gap-2">
-              <button
-                type="button"
-                onClick={() => setProjectScope('all')}
-                className={`flex h-9 items-center justify-center gap-2 rounded-lg border font-medium text-xs transition-colors ${
-                  projectScope === 'all'
-                    ? 'border-primary/50 bg-primary/10 text-primary'
-                    : 'border-border/50 bg-transparent text-muted-foreground hover:bg-background/50 hover:text-foreground'
-                }`}
-              >
-                All projects
-              </button>
-              <button
-                type="button"
-                onClick={() => setProjectScope('specific')}
-                className={`flex h-9 items-center justify-center gap-2 rounded-lg border font-medium text-xs transition-colors ${
-                  projectScope === 'specific'
-                    ? 'border-primary/50 bg-primary/10 text-primary'
-                    : 'border-border/50 bg-transparent text-muted-foreground hover:bg-background/50 hover:text-foreground'
-                }`}
-              >
-                <Lock className="h-3.5 w-3.5" />
-                Specific projects
-              </button>
-            </div>
-            {projectScope === 'specific' && (
-              <div className="mt-3 max-h-40 space-y-2 overflow-y-auto rounded-lg border border-border/50 p-3">
-                {projectsQuery.isLoading && (
-                  <p className="text-muted-foreground text-sm">Loading projects...</p>
-                )}
-                {projectsQuery.isError && (
-                  <div className="space-y-2">
-                    <p className="text-sm">Could not load projects.</p>
-                    <Button
-                      type="button"
-                      variant="outline"
-                      size="sm"
-                      onClick={() => projectsQuery.refetch()}
-                    >
-                      Retry projects
-                    </Button>
-                  </div>
-                )}
-                {projects.map((project) => (
-                  <div key={project.id} className="flex items-center gap-2 text-sm">
-                    <Checkbox
-                      id={`token-project-${project.id}`}
-                      checked={allowedProjects.includes(project.id)}
-                      onCheckedChange={(v) => toggleProject(project.id, v === true)}
-                    />
-                    <Label
-                      htmlFor={`token-project-${project.id}`}
-                      className="cursor-pointer font-normal"
-                    >
-                      {project.name}
-                    </Label>
-                  </div>
-                ))}
-              </div>
-            )}
-          </div>
-
-          <div className="flex items-center gap-2">
-            <Button onClick={handleCreate} disabled={createToken.isPending} className="gap-2">
-              <Plus className="h-4 w-4" />
-              {createToken.isPending ? 'Creating...' : 'Create token'}
-            </Button>
-            <Button variant="ghost" onClick={resetForm}>
-              Cancel
-            </Button>
-          </div>
-        </div>
-      ) : (
-        <Button variant="secondary" onClick={() => setShowForm(true)} className="mb-4 gap-2">
-          <Plus className="h-4 w-4" />
-          New token
-        </Button>
+      {showForm && (
+        <ApiKeyCreateForm
+          name={name}
+          setName={setName}
+          readOnly={readOnly}
+          setReadOnly={setReadOnly}
+          expiryDays={expiryDays}
+          setExpiryDays={setExpiryDays}
+          projectScope={projectScope}
+          setProjectScope={setProjectScope}
+          allowedProjects={allowedProjects}
+          toggleProject={toggleProject}
+          projects={projects}
+          isPending={createToken.isPending}
+          onCancel={resetForm}
+          onSubmit={handleCreate}
+        />
       )}
 
       {isLoading ? (
-        <p className="py-3 text-muted-foreground text-sm">Loading tokens...</p>
+        <div className="space-y-2">
+          {[1, 2].map((i) => (
+            <div key={i} className="h-16 animate-pulse rounded-xl bg-muted/40" />
+          ))}
+        </div>
       ) : tokens.length === 0 ? (
-        <p className="py-2 text-muted-foreground text-sm">
-          No active tokens. Create one to access the API programmatically.
-        </p>
+        <div className="rounded-xl border border-border/50 border-dashed py-8 text-center text-muted-foreground text-sm">
+          No personal access tokens yet. Create one to authenticate API requests.
+        </div>
       ) : (
-        <div className="divide-y divide-border/50">
+        <div className="divide-y divide-border/50 rounded-xl border border-border/50">
           {tokens.map((token) => (
-            <div key={token.id} className="flex items-center justify-between gap-3 py-3">
-              <div className="flex min-w-0 items-center gap-3">
-                <Key className="h-4 w-4 shrink-0 text-muted-foreground" />
-                <div className="min-w-0">
-                  <div className="flex flex-wrap items-center gap-2">
-                    <p className="truncate font-medium text-foreground text-sm">{token.name}</p>
-                    {token.accessLevel === 'read' && (
-                      <Badge variant="secondary" className="gap-1 text-[10px]">
-                        <ShieldCheck className="h-3 w-3" />
-                        Read-only
-                      </Badge>
-                    )}
-                    {token.projectScope === 'specific' && (
-                      <Badge className="gap-1 bg-primary/15 text-[10px] text-primary hover:bg-primary/15">
-                        <Lock className="h-3 w-3" />
-                        Scoped
-                      </Badge>
-                    )}
-                  </div>
-                  <p className="mt-0.5 font-mono text-muted-foreground text-xs">
-                    {token.prefix}...{' '}
-                    <span className="font-sans">Created {formatDate(token.createdAt)}</span>
-                  </p>
+            <div key={token.id} className="flex items-center justify-between p-3.5">
+              <div className="space-y-1">
+                <div className="flex items-center gap-2">
+                  <span className="font-medium text-foreground text-sm">{token.name}</span>
+                  <Badge
+                    variant={token.accessLevel === 'read' ? 'secondary' : 'default'}
+                    className="text-[10px]"
+                  >
+                    {token.accessLevel === 'read' ? 'Read-only' : 'Read/Write'}
+                  </Badge>
+                  {token.projectScope === 'specific' && (
+                    <Badge variant="outline" className="text-[10px]">
+                      {token.allowedProjects?.length ?? 0} project
+                      {(token.allowedProjects?.length ?? 0) === 1 ? '' : 's'}
+                    </Badge>
+                  )}
+                </div>
+                <div className="flex items-center gap-3 text-muted-foreground text-xs">
+                  <span>
+                    Prefix: <code className="font-mono">{token.prefix}••••</code>
+                  </span>
+                  <span>Expires: {formatDate(token.expiresAt)}</span>
+                  <span>Created: {formatDate(token.createdAt)}</span>
                 </div>
               </div>
-              <div className="flex shrink-0 items-center gap-3">
-                <span className="text-muted-foreground text-xs">
-                  Expires {formatDate(token.expiresAt)}
-                </span>
-                <Button
-                  variant="outline"
-                  size="sm"
-                  onClick={() => setDeleteId(token.id)}
-                  className="shrink-0 gap-1.5 text-muted-foreground hover:border-destructive/50 hover:text-destructive"
-                >
-                  <Trash2 className="h-3.5 w-3.5" />
-                  Revoke
-                </Button>
-              </div>
+              <Button
+                variant="ghost"
+                size="icon"
+                onClick={() => setDeleteId(token.id)}
+                className="text-muted-foreground hover:text-destructive"
+                aria-label={`Revoke token ${token.name}`}
+              >
+                <Trash2 className="size-4" />
+              </Button>
             </div>
           ))}
         </div>

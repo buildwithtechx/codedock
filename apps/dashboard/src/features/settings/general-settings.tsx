@@ -1,7 +1,6 @@
 import { AppearanceSetting } from './appearance-setting';
 import { LanguageSetting } from './language-setting';
 import { PreferencesSetting } from './preferences-setting';
-import { ServerGeneralSettings } from './server-general-settings';
 
 export function GeneralSettings() {
   return (
@@ -9,7 +8,6 @@ export function GeneralSettings() {
       <AppearanceSetting />
       <LanguageSetting />
       <PreferencesSetting />
-      <ServerGeneralSettings />
     </div>
   );
 }

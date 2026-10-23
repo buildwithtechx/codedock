@@ -1,6 +1,6 @@
 import { useMutation } from '@tanstack/react-query';
 import { useRouterState } from '@tanstack/react-router';
-import { AlertCircle, Menu, X } from 'lucide-react';
+import { AlertCircle } from 'lucide-react';
 import type * as React from 'react';
 import { useEffect, useState } from 'react';
 import { toast } from 'sonner';
@@ -9,7 +9,9 @@ import { OrganizationOnboarding } from '#/features/organizations';
 import { apiClient } from '#/lib/api-client';
 import { useAuthStore } from '#/stores/auth-store';
 import { AppSidebar } from './app-sidebar';
+import { BottomDock } from './bottom-dock';
 import { CommandPalette } from './command-palette';
+import { TopHeader } from './top-header';
 
 export function AppLayout({ children }: { children: React.ReactNode }) {
   const [sidebarCollapsed, setSidebarCollapsed] = useState(false);
@@ -53,18 +55,16 @@ export function AppLayout({ children }: { children: React.ReactNode }) {
         onToggle={() => setSidebarCollapsed((p) => !p)}
         mobileOpen={mobileMenuOpen}
         onMobileClose={() => setMobileMenuOpen(false)}
+        onOpenCommand={() => setCommandOpen(true)}
       />
-      <div className="relative flex min-h-0 min-w-0 flex-1 flex-col">
-        <div className="flex h-14 items-center px-4 md:hidden">
-          <button
-            type="button"
-            onClick={() => setMobileMenuOpen((p) => !p)}
-            className="flex h-9 w-9 items-center justify-center rounded-xl border border-border/60 text-muted-foreground transition-colors hover:bg-muted"
-          >
-            {mobileMenuOpen ? <X className="h-4 w-4" /> : <Menu className="h-4 w-4" />}
-          </button>
-        </div>
-        <main className="dashboard-content relative min-h-0 min-w-0 flex-1 overflow-y-auto overscroll-y-contain p-4 sm:p-5 lg:p-6">
+      <div className="relative flex min-h-0 min-w-0 flex-1 flex-col bg-background text-foreground">
+        <TopHeader
+          mobileOpen={mobileMenuOpen}
+          onToggleMobile={() => setMobileMenuOpen((p) => !p)}
+          onOpenCommand={() => setCommandOpen(true)}
+          onToggleSidebar={() => setSidebarCollapsed((p) => !p)}
+        />
+        <main className="dashboard-content relative min-h-0 min-w-0 flex-1 overflow-y-auto overscroll-y-contain p-4 sm:p-5 lg:p-6 bg-background text-foreground">
           <div key={pathname} className="page-transition mx-auto w-full max-w-[1600px]">
             {user && user.emailVerified === false && (
               <div className="mb-6 flex flex-col items-center justify-between gap-4 rounded-lg border border-warning/50 bg-warning/20 p-4 sm:flex-row">
@@ -89,6 +89,7 @@ export function AppLayout({ children }: { children: React.ReactNode }) {
           </div>
         </main>
       </div>
+      <BottomDock />
       <CommandPalette open={commandOpen} onOpenChange={setCommandOpen} />
       <OrganizationOnboarding />
     </div>

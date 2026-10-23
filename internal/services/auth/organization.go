@@ -77,6 +77,25 @@ func (s *OrganizationService) GetOrganization(ctx context.Context, id string) (*
 	return s.orgRepo.GetByID(ctx, id)
 }
 
+func (s *OrganizationService) UpdateOrganization(ctx context.Context, requesterUserID, id, name string) (*models.Organization, error) {
+	if name == "" {
+		return nil, errors.New("name is required")
+	}
+	if !s.isRequesterOwnerOrAdmin(ctx, id, requesterUserID) {
+		return nil, errors.New("insufficient permissions to update organization")
+	}
+	org, err := s.orgRepo.GetByID(ctx, id)
+	if err != nil {
+		return nil, err
+	}
+	org.Name = name
+	org.UpdatedAt = time.Now()
+	if err := s.orgRepo.Update(ctx, org); err != nil {
+		return nil, err
+	}
+	return org, nil
+}
+
 func (s *OrganizationService) DeleteOrganization(ctx context.Context, id string) error {
 	return s.orgRepo.Delete(ctx, id)
 }

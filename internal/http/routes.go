@@ -237,6 +237,7 @@ func (s *Server) registerOrganizationRoutes(authGroup *echo.Group) {
 	authGroup.GET("/organizations", s.orgHandler.List)
 	authGroup.POST("/organizations", s.orgHandler.Create)
 	authGroup.GET("/organizations/:id", s.orgHandler.Get, s.authGuard.RequireOrgRole(models.MemberPermissionMember))
+	authGroup.PUT("/organizations/:id", s.orgHandler.Update, s.authGuard.RequireOrgRole(models.MemberPermissionAdmin))
 	authGroup.DELETE("/organizations/:id", s.orgHandler.Delete, s.authGuard.RequireOrgRole(models.MemberPermissionOwner))
 	authGroup.GET("/organizations/:id/members", s.orgHandler.ListMembers, s.authGuard.RequireOrgRole(models.MemberPermissionMember))
 	authGroup.POST("/organizations/:id/members", s.orgHandler.InviteMember, s.authGuard.RequireOrgRole(models.MemberPermissionAdmin))

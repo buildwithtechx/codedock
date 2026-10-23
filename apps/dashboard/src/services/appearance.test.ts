@@ -62,7 +62,7 @@ describe('appearance-runtime', () => {
     expect(resolveAppearanceMode({ activeTheme: 'default', mode: 'dim' }, false)).toBe('dim');
     expect(resolveAppearanceMode({ activeTheme: 'default', mode: 'light' }, true)).toBe('light');
     expect(resolveAppearanceMode({ activeTheme: 'default', mode: 'dark' }, false)).toBe('dark');
-    expect(resolveAppearanceMode({ activeTheme: 'default', mode: 'system' }, true)).toBe('dark');
+    expect(resolveAppearanceMode({ activeTheme: 'default', mode: 'system' }, true)).toBe('dim');
     expect(resolveAppearanceMode({ activeTheme: 'default', mode: 'system' }, false)).toBe('light');
   });
 

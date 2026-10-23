@@ -1,230 +1,204 @@
-import { Link } from '@tanstack/react-router';
-import { Moon, PanelLeftClose, PanelLeftOpen, Plus, Sun, X } from 'lucide-react';
-import { useTheme } from '@codedock/ui';
-import { useGetPublicSettings } from '#/hooks/use-settings';
-import {
-  getHelpNavigation,
-  getInfrastructureNavigation,
-  getSystemNavigation,
-  primaryNavigation,
-} from './dashboard-navigation';
-import { NavItem, type NavItemProps } from './nav-item';
-import { OrganizationSwitcher } from './organization-switcher';
+import { cn } from 'cn';
+import { PanelLeft, PanelLeftClose, Search, X } from 'lucide-react';
+import { useEffect, useState } from 'react';
+import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from '@codedock/ui';
+import { NavItem } from './nav-item';
+import { getSidebarSections } from './sidebar-items';
+import { SidebarUserPopover } from './sidebar-user-popover';
 import { useSidebarCounts } from './use-sidebar-counts';
-
-type NavGroup = {
-  title?: string;
-  items: (NavItemProps & { exact?: boolean })[];
-};
-
-const countForUrl: Record<string, keyof ReturnType<typeof useSidebarCounts>> = {
-  '/projects': 'projects',
-  '/apps': 'apps',
-  '/servers': 'servers',
-};
 
 interface AppSidebarProps {
   collapsed: boolean;
   onToggle: () => void;
   mobileOpen: boolean;
   onMobileClose: () => void;
+  onOpenCommand?: () => void;
 }
 
-export function AppSidebar({ collapsed, onToggle, mobileOpen, onMobileClose }: AppSidebarProps) {
-  const navCollapsed = collapsed && !mobileOpen;
-  const { theme, resolvedTheme, setTheme } = useTheme();
+export function AppSidebar({
+  collapsed,
+  onToggle,
+  mobileOpen,
+  onMobileClose,
+  onOpenCommand,
+}: AppSidebarProps) {
+  const [autoCollapse, setAutoCollapse] = useState(() => {
+    if (typeof window === 'undefined') return false;
+    return localStorage.getItem('codedock_auto_collapse_sidebar') === 'true';
+  });
+
   const counts = useSidebarCounts();
-  const { data: publicRes } = useGetPublicSettings();
-  const isCloud = publicRes?.data?.cloudMode ?? false;
 
-  const mainGroup: NavGroup = {
-    title: undefined,
-    items: primaryNavigation.map(({ title, to, icon, exact }) => ({
-      title,
-      url: to,
-      icon,
-      exact,
-    })),
+  const navCollapsed = (collapsed || autoCollapse) && !mobileOpen;
+
+  useEffect(() => {
+    const handleKeyDown = (event: KeyboardEvent) => {
+      if (event.key.toLowerCase() === 'b' && (event.metaKey || event.ctrlKey)) {
+        event.preventDefault();
+        onToggle();
+      }
+    };
+    window.addEventListener('keydown', handleKeyDown);
+    return () => window.removeEventListener('keydown', handleKeyDown);
+  }, [onToggle]);
+
+  const handleToggleAutoCollapse = () => {
+    const next = !autoCollapse;
+    setAutoCollapse(next);
+    localStorage.setItem('codedock_auto_collapse_sidebar', next ? 'true' : 'false');
   };
 
-  const infraGroup: NavGroup = {
-    title: 'Infrastructure',
-    items: getInfrastructureNavigation(isCloud).map(({ title, to, icon, exact }) => ({
-      title,
-      url: to,
-      icon,
-      exact,
-    })),
-  };
-
-  const settingsGroup: NavGroup = {
-    title: 'Settings',
-    items: getSystemNavigation(isCloud).map(({ title, to, icon, exact }) => ({
-      title,
-      url: to,
-      icon,
-      exact,
-    })),
-  };
-
-  const helpItems = getHelpNavigation(isCloud);
-  const helpGroup: NavGroup = {
-    title: 'Help',
-    items: helpItems.map(({ title, to, icon, exact }) => ({
-      title,
-      url: to,
-      icon,
-      exact,
-    })),
-  };
-
-  const navGroups: NavGroup[] = [
-    mainGroup,
-    settingsGroup,
-    infraGroup,
-    ...(helpGroup.items.length > 0 ? [helpGroup] : []),
-  ];
-
-  const toggleTheme = () => {
-    if (theme === 'light') setTheme('dim');
-    else if (theme === 'dim') setTheme('dark');
-    else if (theme === 'dark') setTheme('light');
-    else setTheme(resolvedTheme === 'dark' ? 'light' : 'dim');
-  };
+  const { workspaceItems, infrastructureItems, manageItems } = getSidebarSections(counts);
 
   return (
-    <>
-      {mobileOpen && (
-        <button
-          type="button"
-          className="fixed inset-0 z-30 cursor-default bg-black/50 md:hidden"
-          onClick={onMobileClose}
-          aria-label="Close menu"
-        />
-      )}
-
+    <TooltipProvider delayDuration={150}>
       <aside
-        className={`z-40 my-3 ms-3 flex shrink-0 flex-col overflow-hidden rounded-2xl border border-sidebar-border/70 bg-sidebar shadow-2xl shadow-black/15 transition-all duration-300 md:static md:z-auto md:shadow-none ${
-          collapsed ? 'md:w-[72px]' : 'md:w-[260px]'
-        } fixed inset-y-3 left-3 ${
-          mobileOpen
-            ? 'w-[min(19rem,calc(100vw-1.5rem))] translate-x-0'
-            : 'w-[min(19rem,calc(100vw-1.5rem))] -translate-x-[calc(100%+1rem)] md:translate-x-0'
-        }`}
+        className={cn(
+          'fixed inset-y-0 left-0 z-40 flex h-dvh max-h-dvh flex-col border-sidebar-border border-r bg-sidebar text-sidebar-foreground transition-all duration-200 ease-in-out md:static',
+          navCollapsed ? 'w-16' : 'w-60',
+          mobileOpen ? 'translate-x-0 shadow-2xl' : '-translate-x-full md:translate-x-0'
+        )}
       >
-        <div className="flex items-center justify-between px-3 pt-3 pb-2 md:hidden">
-          <div className="flex items-center gap-2.5 py-2">
-            <img src="/apple-touch-icon.png" alt="" className="h-7 w-7 shrink-0 rounded-lg" />
-            <span className="truncate font-medium text-sidebar-foreground text-sm">Codedock</span>
-          </div>
-          <button
-            type="button"
-            onClick={onMobileClose}
-            className="flex h-7 w-7 items-center justify-center rounded-lg text-muted-foreground transition-colors hover:bg-sidebar-accent hover:text-sidebar-foreground"
-          >
-            <X className="h-4 w-4" />
-          </button>
-        </div>
-
-        <div className="hidden md:block">
-          <div className={navCollapsed ? 'px-2 py-3' : 'px-5 py-5'}>
-            <div
-              className={`flex ${navCollapsed ? 'flex-col items-center gap-2' : 'items-center justify-between gap-2.5 py-2'}`}
-            >
-              <div className="flex min-w-0 items-center gap-2.5">
-                <img src="/apple-touch-icon.png" alt="" className="h-7 w-7 shrink-0 rounded-lg" />
-                {!navCollapsed && (
-                  <span className="flex-1 truncate font-medium text-sidebar-foreground text-sm">
-                    Codedock
-                  </span>
-                )}
+        {/* Sidebar Header */}
+        <div className="flex h-13 shrink-0 items-center justify-between border-sidebar-border/70 border-b px-3">
+          {!navCollapsed ? (
+            <div className="flex min-w-0 items-center gap-2">
+              <div className="flex size-6 items-center justify-center rounded-lg bg-primary/20 font-bold text-primary text-xs ring-1 ring-primary/40">
+                CD
               </div>
-              <div className={`flex items-center ${navCollapsed ? 'flex-col gap-1' : 'gap-1'}`}>
-                <button
-                  type="button"
-                  onClick={toggleTheme}
-                  className="flex h-8 w-8 items-center justify-center rounded-lg text-muted-foreground transition-colors hover:bg-sidebar-accent hover:text-sidebar-foreground"
-                  aria-label="Toggle theme"
-                >
-                  {theme === 'dark' || (theme === 'system' && resolvedTheme === 'dark') ? (
-                    <Sun className="h-4 w-4" />
-                  ) : theme === 'dim' ? (
-                    <Moon className="h-4 w-4 text-primary" />
-                  ) : (
-                    <Moon className="h-4 w-4" />
-                  )}
-                </button>
+              <span className="truncate font-semibold text-sidebar-foreground text-sm tracking-tight">
+                Codedock
+              </span>
+              <span className="rounded bg-muted/70 px-1.5 py-0.5 font-mono text-[10px] text-muted-foreground">
+                v0.1.0
+              </span>
+            </div>
+          ) : (
+            <Tooltip delayDuration={150}>
+              <TooltipTrigger asChild>
                 <button
                   type="button"
                   onClick={onToggle}
-                  className="flex h-8 w-8 items-center justify-center rounded-lg text-muted-foreground transition-colors hover:bg-sidebar-accent hover:text-sidebar-foreground"
-                  aria-label={collapsed ? 'Expand sidebar' : 'Collapse sidebar'}
+                  aria-label="Expand sidebar (⌘B)"
+                  className="mx-auto flex size-8 items-center justify-center rounded-lg text-muted-foreground transition-colors hover:bg-sidebar-accent hover:text-sidebar-foreground"
                 >
-                  {collapsed ? (
-                    <PanelLeftOpen className="h-4 w-4" />
-                  ) : (
-                    <PanelLeftClose className="h-4 w-4" />
-                  )}
+                  <PanelLeft className="size-4 text-primary" />
                 </button>
-              </div>
+              </TooltipTrigger>
+              <TooltipContent side="right">Expand sidebar (⌘B)</TooltipContent>
+            </Tooltip>
+          )}
+
+          {!navCollapsed && (
+            <button
+              type="button"
+              onClick={onToggle}
+              aria-label="Collapse sidebar (⌘B)"
+              className="hidden size-7 items-center justify-center rounded-lg text-muted-foreground transition-colors hover:bg-sidebar-accent hover:text-sidebar-foreground md:flex"
+            >
+              <PanelLeftClose className="size-4" />
+            </button>
+          )}
+
+          {mobileOpen && (
+            <button
+              type="button"
+              onClick={onMobileClose}
+              className="flex size-7 items-center justify-center rounded-lg text-muted-foreground hover:bg-sidebar-accent md:hidden"
+            >
+              <X className="size-4" />
+            </button>
+          )}
+        </div>
+
+        {/* Quick Search */}
+        <div className="p-2.5 pb-1">
+          {!navCollapsed ? (
+            <button
+              type="button"
+              onClick={onOpenCommand}
+              className="flex w-full items-center justify-between rounded-lg border border-sidebar-border/80 bg-sidebar-accent/40 px-2.5 py-1.5 text-muted-foreground text-xs transition-colors hover:border-sidebar-border hover:bg-sidebar-accent hover:text-sidebar-foreground"
+            >
+              <span className="flex items-center gap-2">
+                <Search className="size-3.5 text-muted-foreground" />
+                <span>Search</span>
+              </span>
+              <kbd className="rounded border border-sidebar-border/80 bg-sidebar px-1.5 py-0.5 font-mono text-[10px] text-muted-foreground">
+                Ctrl+K
+              </kbd>
+            </button>
+          ) : (
+            <Tooltip>
+              <TooltipTrigger asChild>
+                <button
+                  type="button"
+                  onClick={onOpenCommand}
+                  className="mx-auto flex size-9 items-center justify-center rounded-lg border border-sidebar-border/80 bg-sidebar-accent/40 text-muted-foreground transition-colors hover:bg-sidebar-accent hover:text-sidebar-foreground"
+                >
+                  <Search className="size-3.5" />
+                </button>
+              </TooltipTrigger>
+              <TooltipContent side="right">Search (Ctrl+K)</TooltipContent>
+            </Tooltip>
+          )}
+        </div>
+
+        {/* Scrollable Navigation List */}
+        <div className="min-h-0 flex-1 overflow-y-auto overscroll-contain px-2.5 py-2">
+          <div className="space-y-3">
+            {/* Workspace Group */}
+            <div className="space-y-0.5">
+              {!navCollapsed && (
+                <p className="px-2.5 py-1 font-semibold text-[10px] text-muted-foreground/75 uppercase tracking-wider">
+                  Workspace
+                </p>
+              )}
+              {workspaceItems.map((item) => (
+                <NavItem
+                  key={item.url + item.title}
+                  item={item}
+                  exact={item.exact}
+                  collapsed={navCollapsed}
+                />
+              ))}
+            </div>
+
+            {/* Infrastructure Group */}
+            <div className="space-y-0.5">
+              {!navCollapsed && (
+                <p className="px-2.5 py-1 font-semibold text-[10px] text-muted-foreground/75 uppercase tracking-wider">
+                  Infrastructure
+                </p>
+              )}
+              {infrastructureItems.map((item) => (
+                <NavItem key={item.url + item.title} item={item} collapsed={navCollapsed} />
+              ))}
+            </div>
+
+            {/* Manage Group */}
+            <div className="space-y-0.5">
+              {!navCollapsed && (
+                <p className="px-2.5 py-1 font-semibold text-[10px] text-muted-foreground/75 uppercase tracking-wider">
+                  Manage
+                </p>
+              )}
+              {manageItems.map((item) => (
+                <NavItem key={item.url + item.title} item={item} collapsed={navCollapsed} />
+              ))}
             </div>
           </div>
-          <div className="mx-3 h-px bg-sidebar-border" />
         </div>
 
-        <div className="relative min-h-0 flex-1">
-          <nav className="scrollbar-none h-full space-y-5 overflow-y-auto px-3 pt-3 pb-12 [scrollbar-width:none] [&::-webkit-scrollbar]:hidden">
-            {navGroups.map((group, i) => (
-              <div key={group.title ?? i} className="space-y-1">
-                {!navCollapsed && group.title && (
-                  <h4 className="mb-2 px-2 font-semibold text-[11px] text-sidebar-foreground/60 uppercase tracking-widest">
-                    {group.title}
-                  </h4>
-                )}
-                {navCollapsed && i > 0 && <div className="mx-2 my-3 h-px bg-sidebar-border/60" />}
-                {group.items.map((item) => {
-                  const countKey = countForUrl[item.url];
-                  return (
-                    <NavItem
-                      key={item.url}
-                      item={{ ...item, count: countKey ? counts[countKey] : null }}
-                      exact={item.exact}
-                      collapsed={navCollapsed}
-                    />
-                  );
-                })}
-              </div>
-            ))}
-          </nav>
-          <div className="pointer-events-none absolute inset-x-0 bottom-0 h-14 bg-gradient-to-t from-sidebar to-transparent" />
-        </div>
-
-        <div className="px-3 pb-2">
-          <Link
-            to={'/library' as never}
-            aria-label="New project"
-            title={navCollapsed ? 'New project' : undefined}
-            className={`flex items-center justify-center gap-2.5 overflow-hidden rounded-xl bg-primary px-3 py-2.5 font-semibold text-primary-foreground text-sm shadow-sm transition-all hover:bg-primary/90 ${
-              navCollapsed ? 'mx-auto size-10 p-0' : 'px-3'
-            }`}
-          >
-            <Plus className="h-4 w-4 shrink-0" />
-            {!navCollapsed && 'New project'}
-          </Link>
-        </div>
-
-        <div
-          className={`mt-auto px-3 pt-1 pb-3 ${navCollapsed ? 'flex flex-col items-center px-2' : ''}`}
-        >
-          <div className="mx-2 mb-3 h-px w-full bg-sidebar-border/60" />
-          {!navCollapsed && (
-            <p className="mb-2 px-2 font-semibold text-[11px] text-sidebar-foreground/50 uppercase tracking-[0.14em]">
-              Account
-            </p>
-          )}
-          <OrganizationSwitcher collapsed={navCollapsed} />
+        {/* Sidebar Footer with Active User Popover */}
+        <div className="shrink-0 border-sidebar-border/70 border-t bg-sidebar p-2 pb-[max(0.75rem,env(safe-area-inset-bottom))]">
+          <SidebarUserPopover
+            collapsed={navCollapsed}
+            onToggleCollapse={onToggle}
+            autoCollapse={autoCollapse}
+            onToggleAutoCollapse={handleToggleAutoCollapse}
+          />
         </div>
       </aside>
-    </>
+    </TooltipProvider>
   );
 }

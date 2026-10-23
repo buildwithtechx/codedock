@@ -34,12 +34,13 @@ import { Route as DashboardLibraryRouteImport } from './routes/_dashboard/librar
 import { Route as DashboardMailRouteImport } from './routes/_dashboard/mail'
 import { Route as DashboardMonitoringRouteImport } from './routes/_dashboard/monitoring'
 import { Route as DashboardOrganizationsRouteImport } from './routes/_dashboard/organizations'
-import { Route as DashboardProfileRouteImport } from './routes/_dashboard/profile'
 import { Route as DashboardProjectsRouteImport } from './routes/_dashboard/projects'
 import { Route as DashboardResourcesRouteImport } from './routes/_dashboard/resources'
 import { Route as DashboardServersRouteImport } from './routes/_dashboard/servers'
 import { Route as DashboardSettingsRouteImport } from './routes/_dashboard/settings'
 import { Route as DashboardSupportRouteImport } from './routes/_dashboard/support'
+import { Route as DashboardTeamRouteImport } from './routes/_dashboard/team'
+import { Route as DashboardTokensRouteImport } from './routes/_dashboard/tokens'
 import { Route as DashboardActionsIndexRouteImport } from './routes/_dashboard/actions/index'
 import { Route as DashboardActionsNewRouteImport } from './routes/_dashboard/actions/new'
 import { Route as DashboardAppsIndexRouteImport } from './routes/_dashboard/apps/index'
@@ -213,11 +214,6 @@ const DashboardOrganizationsRoute = DashboardOrganizationsRouteImport.update({
   path: '/organizations',
   getParentRoute: () => DashboardRoute,
 } as any)
-const DashboardProfileRoute = DashboardProfileRouteImport.update({
-  id: '/profile',
-  path: '/profile',
-  getParentRoute: () => DashboardRoute,
-} as any)
 const DashboardProjectsRoute = DashboardProjectsRouteImport.update({
   id: '/projects',
   path: '/projects',
@@ -241,6 +237,16 @@ const DashboardSettingsRoute = DashboardSettingsRouteImport.update({
 const DashboardSupportRoute = DashboardSupportRouteImport.update({
   id: '/support',
   path: '/support',
+  getParentRoute: () => DashboardRoute,
+} as any)
+const DashboardTeamRoute = DashboardTeamRouteImport.update({
+  id: '/team',
+  path: '/team',
+  getParentRoute: () => DashboardRoute,
+} as any)
+const DashboardTokensRoute = DashboardTokensRouteImport.update({
+  id: '/tokens',
+  path: '/tokens',
   getParentRoute: () => DashboardRoute,
 } as any)
 const DashboardActionsIndexRoute = DashboardActionsIndexRouteImport.update({
@@ -544,12 +550,13 @@ export interface FileRoutesByFullPath {
   '/mail': typeof DashboardMailRoute
   '/monitoring': typeof DashboardMonitoringRoute
   '/organizations': typeof DashboardOrganizationsRouteWithChildren
-  '/profile': typeof DashboardProfileRoute
   '/projects': typeof DashboardProjectsRouteWithChildren
   '/resources': typeof DashboardResourcesRoute
   '/servers': typeof DashboardServersRouteWithChildren
   '/settings': typeof DashboardSettingsRoute
   '/support': typeof DashboardSupportRoute
+  '/team': typeof DashboardTeamRoute
+  '/tokens': typeof DashboardTokensRoute
   '/actions/new': typeof DashboardActionsNewRoute
   '/apps/new': typeof DashboardAppsNewRouteWithChildren
   '/backups/$backupId': typeof DashboardBackupsBackupIdRoute
@@ -617,10 +624,11 @@ export interface FileRoutesByTo {
   '/library': typeof DashboardLibraryRoute
   '/mail': typeof DashboardMailRoute
   '/monitoring': typeof DashboardMonitoringRoute
-  '/profile': typeof DashboardProfileRoute
   '/resources': typeof DashboardResourcesRoute
   '/settings': typeof DashboardSettingsRoute
   '/support': typeof DashboardSupportRoute
+  '/team': typeof DashboardTeamRoute
+  '/tokens': typeof DashboardTokensRoute
   '/actions/new': typeof DashboardActionsNewRoute
   '/backups/$backupId': typeof DashboardBackupsBackupIdRoute
   '/deploy/$slug': typeof DashboardDeploySlugRoute
@@ -693,12 +701,13 @@ export interface FileRoutesById {
   '/_dashboard/mail': typeof DashboardMailRoute
   '/_dashboard/monitoring': typeof DashboardMonitoringRoute
   '/_dashboard/organizations': typeof DashboardOrganizationsRouteWithChildren
-  '/_dashboard/profile': typeof DashboardProfileRoute
   '/_dashboard/projects': typeof DashboardProjectsRouteWithChildren
   '/_dashboard/resources': typeof DashboardResourcesRoute
   '/_dashboard/servers': typeof DashboardServersRouteWithChildren
   '/_dashboard/settings': typeof DashboardSettingsRoute
   '/_dashboard/support': typeof DashboardSupportRoute
+  '/_dashboard/team': typeof DashboardTeamRoute
+  '/_dashboard/tokens': typeof DashboardTokensRoute
   '/_dashboard/': typeof DashboardIndexRoute
   '/_dashboard/actions/new': typeof DashboardActionsNewRoute
   '/_dashboard/apps/new': typeof DashboardAppsNewRouteWithChildren
@@ -776,12 +785,13 @@ export interface FileRouteTypes {
     | '/mail'
     | '/monitoring'
     | '/organizations'
-    | '/profile'
     | '/projects'
     | '/resources'
     | '/servers'
     | '/settings'
     | '/support'
+    | '/team'
+    | '/tokens'
     | '/actions/new'
     | '/apps/new'
     | '/backups/$backupId'
@@ -849,10 +859,11 @@ export interface FileRouteTypes {
     | '/library'
     | '/mail'
     | '/monitoring'
-    | '/profile'
     | '/resources'
     | '/settings'
     | '/support'
+    | '/team'
+    | '/tokens'
     | '/actions/new'
     | '/backups/$backupId'
     | '/deploy/$slug'
@@ -924,12 +935,13 @@ export interface FileRouteTypes {
     | '/_dashboard/mail'
     | '/_dashboard/monitoring'
     | '/_dashboard/organizations'
-    | '/_dashboard/profile'
     | '/_dashboard/projects'
     | '/_dashboard/resources'
     | '/_dashboard/servers'
     | '/_dashboard/settings'
     | '/_dashboard/support'
+    | '/_dashboard/team'
+    | '/_dashboard/tokens'
     | '/_dashboard/'
     | '/_dashboard/actions/new'
     | '/_dashboard/apps/new'
@@ -1165,13 +1177,6 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof DashboardOrganizationsRouteImport
       parentRoute: typeof DashboardRoute
     }
-    '/_dashboard/profile': {
-      id: '/_dashboard/profile'
-      path: '/profile'
-      fullPath: '/profile'
-      preLoaderRoute: typeof DashboardProfileRouteImport
-      parentRoute: typeof DashboardRoute
-    }
     '/_dashboard/projects': {
       id: '/_dashboard/projects'
       path: '/projects'
@@ -1205,6 +1210,20 @@ declare module '@tanstack/react-router' {
       path: '/support'
       fullPath: '/support'
       preLoaderRoute: typeof DashboardSupportRouteImport
+      parentRoute: typeof DashboardRoute
+    }
+    '/_dashboard/team': {
+      id: '/_dashboard/team'
+      path: '/team'
+      fullPath: '/team'
+      preLoaderRoute: typeof DashboardTeamRouteImport
+      parentRoute: typeof DashboardRoute
+    }
+    '/_dashboard/tokens': {
+      id: '/_dashboard/tokens'
+      path: '/tokens'
+      fullPath: '/tokens'
+      preLoaderRoute: typeof DashboardTokensRouteImport
       parentRoute: typeof DashboardRoute
     }
     '/_dashboard/actions/': {
@@ -1833,12 +1852,13 @@ interface DashboardRouteChildren {
   DashboardMailRoute: typeof DashboardMailRoute
   DashboardMonitoringRoute: typeof DashboardMonitoringRoute
   DashboardOrganizationsRoute: typeof DashboardOrganizationsRouteWithChildren
-  DashboardProfileRoute: typeof DashboardProfileRoute
   DashboardProjectsRoute: typeof DashboardProjectsRouteWithChildren
   DashboardResourcesRoute: typeof DashboardResourcesRoute
   DashboardServersRoute: typeof DashboardServersRouteWithChildren
   DashboardSettingsRoute: typeof DashboardSettingsRoute
   DashboardSupportRoute: typeof DashboardSupportRoute
+  DashboardTeamRoute: typeof DashboardTeamRoute
+  DashboardTokensRoute: typeof DashboardTokensRoute
   DashboardIndexRoute: typeof DashboardIndexRoute
   DashboardServicesServiceIdRoute: typeof DashboardServicesServiceIdRouteWithChildren
 }
@@ -1859,12 +1879,13 @@ const DashboardRouteChildren: DashboardRouteChildren = {
   DashboardMailRoute: DashboardMailRoute,
   DashboardMonitoringRoute: DashboardMonitoringRoute,
   DashboardOrganizationsRoute: DashboardOrganizationsRouteWithChildren,
-  DashboardProfileRoute: DashboardProfileRoute,
   DashboardProjectsRoute: DashboardProjectsRouteWithChildren,
   DashboardResourcesRoute: DashboardResourcesRoute,
   DashboardServersRoute: DashboardServersRouteWithChildren,
   DashboardSettingsRoute: DashboardSettingsRoute,
   DashboardSupportRoute: DashboardSupportRoute,
+  DashboardTeamRoute: DashboardTeamRoute,
+  DashboardTokensRoute: DashboardTokensRoute,
   DashboardIndexRoute: DashboardIndexRoute,
   DashboardServicesServiceIdRoute: DashboardServicesServiceIdRouteWithChildren,
 }

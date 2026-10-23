@@ -17,6 +17,7 @@ export const useGetProject = (id: string) => {
   return useQuery({
     queryKey: ['projects', 'getProject', id].filter(Boolean),
     queryFn: () => projectsService.getProject(id),
+    enabled: Boolean(id),
   });
 };
 
