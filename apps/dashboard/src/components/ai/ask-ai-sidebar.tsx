@@ -118,7 +118,7 @@ export function AskAiSidebar() {
     <aside
       aria-label="Ask AI Assistant Sidebar"
       className={`flex h-dvh shrink-0 flex-col border-sidebar-border/80 border-l bg-sidebar text-sidebar-foreground transition-[width] duration-200 ease-out ${
-        isExpanded ? 'w-full sm:w-[540px] lg:w-[620px]' : 'w-full sm:w-[390px] lg:w-[410px]'
+        isExpanded ? 'w-full sm:w-135 lg:w-155' : 'w-full sm:w-97.5 lg:w-102.5'
       }`}
     >
       {/* Top Header Bar */}
@@ -127,7 +127,7 @@ export function AskAiSidebar() {
           <DropdownMenuTrigger asChild>
             <button
               type="button"
-              className="inline-flex max-w-[230px] items-center gap-1.5 rounded-md px-2 py-1 font-semibold text-sidebar-foreground text-xs transition-colors hover:bg-sidebar-accent"
+              className="inline-flex max-w-57.5 items-center gap-1.5 rounded-md px-2 py-1 font-semibold text-sidebar-foreground text-xs transition-colors hover:bg-sidebar-accent"
             >
               <span className="truncate">{activeThread?.title || 'New conversation'}</span>
               <ChevronDown className="size-3.5 shrink-0 text-muted-foreground" />
