@@ -67,6 +67,41 @@ body {
     color: var(--foreground);
   }
 
+  /* Standard styled select for native selects across all features */
+  select {
+    appearance: none;
+    background-image: url("data:image/svg+xml,%3csvg xmlns='http://www.w3.org/2000/svg' fill='none' viewBox='0 0 20 20'%3e%3cpath stroke='%23888888' stroke-linecap='round' stroke-linejoin='round' stroke-width='1.5' d='M6 8l4 4 4-4'/%3e%3c/svg%3e");
+    background-position: right 0.65rem center;
+    background-repeat: no-repeat;
+    background-size: 1.25em 1.25em;
+    padding-right: 2.25rem;
+    padding-left: 0.75rem;
+    padding-top: 0.4rem;
+    padding-bottom: 0.4rem;
+    border-radius: 0.5rem;
+    border: 1px solid var(--border);
+    background-color: var(--secondary);
+    color: var(--foreground);
+    font-size: 0.8125rem;
+    line-height: 1.25rem;
+    cursor: pointer;
+    transition: border-color 0.15s ease, box-shadow 0.15s ease;
+  }
+  select:focus {
+    outline: none;
+    border-color: var(--ring);
+    box-shadow: 0 0 0 1px var(--ring);
+  }
+  select option {
+    background-color: var(--popover);
+    color: var(--popover-foreground);
+    padding: 0.5rem;
+  }
+  select:disabled {
+    cursor: not-allowed;
+    opacity: 0.5;
+  }
+
   /* Fix WebKit autofill styling to match our theme */
   input:-webkit-autofill,
   input:-webkit-autofill:hover,

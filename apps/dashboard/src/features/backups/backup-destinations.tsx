@@ -1,5 +1,4 @@
-import { Link } from '@tanstack/react-router';
-import { HardDrive, Loader2, MoreVertical, Pencil, RefreshCw, Star, Trash2 } from 'lucide-react';
+import { HardDrive, Loader2, Trash2 } from 'lucide-react';
 import { useMemo, useState } from 'react';
 import { toast } from 'sonner';
 import { Button } from '@codedock/ui/button';
@@ -11,21 +10,11 @@ import {
   DialogHeader,
   DialogTitle,
 } from '@codedock/ui/dialog';
-import {
-  DropdownMenu,
-  DropdownMenuContent,
-  DropdownMenuItem,
-  DropdownMenuSeparator,
-  DropdownMenuTrigger,
-} from '@codedock/ui/dropdown-menu';
 import { Skeleton } from '@codedock/ui/skeleton';
+import { BackupDestinationRow } from './backup-destination-row';
 import type { UnifiedDestination } from './destination-display';
 import {
-  DestinationKindIcon,
   DestinationLoadError,
-  DestinationVerificationBadge,
-  formatBytes,
-  kindLabel,
   toUnifiedS3,
   toUnifiedSftp,
 } from './destination-display';
@@ -115,17 +104,17 @@ export function BackupDestinations({
         next.delete(row.id);
         return next;
       });
-      onChanged();
     }
   };
 
   const handleSetDefault = async (row: UnifiedDestination) => {
+    if (row.kind !== 's3') return;
     try {
       await setDefault.mutateAsync(row.id);
-      toast.success(`"${row.name}" is now the default destination`);
+      toast.success(`"${row.name}" set as default`);
       onChanged();
     } catch (error) {
-      toast.error(error instanceof Error ? error.message : 'Failed to set default destination');
+      toast.error(error instanceof Error ? error.message : 'Failed to set default');
     }
   };
 
@@ -149,7 +138,7 @@ export function BackupDestinations({
   };
 
   return (
-    <section aria-label="Destinations" className="overflow-hidden rounded-2xl bg-card">
+    <section aria-label="Destinations" className="overflow-hidden rounded-2xl border border-border/50 bg-card shadow-xs">
       <div className="px-5 py-4">
         <h2 className="font-medium text-foreground text-sm">Destinations</h2>
         <p className="sr-only">
@@ -183,111 +172,19 @@ export function BackupDestinations({
         </div>
       ) : (
         <ul className="divide-y divide-border/40">
-          {items.map((row) => {
-            const stats = statsByDestination.get(row.id);
-            const verifying = verifyingIds.has(row.id);
-            const s3Destination = row.kind === 's3' ? s3ById.get(row.id) : undefined;
-            return (
-              <li
-                key={`${row.kind}-${row.id}`}
-                className="group relative flex items-start gap-3 px-5 py-4 transition-colors hover:bg-muted/20"
-              >
-                <Link
-                  to="/backups/$backupId"
-                  params={{ backupId: row.id }}
-                  aria-label={row.name}
-                  className="absolute inset-0 z-0 rounded-xl focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring"
-                />
-                <div className="mt-0.5 flex h-10 w-10 shrink-0 items-center justify-center rounded-xl bg-background text-muted-foreground">
-                  <DestinationKindIcon kind={row.kind} className="h-5 w-5" />
-                </div>
-                <div className="min-w-0 flex-1">
-                  <div className="flex flex-wrap items-center gap-2">
-                    <p className="truncate font-medium text-foreground text-sm">{row.name}</p>
-                    {row.isDefault && (
-                      <span className="inline-flex items-center gap-1 text-muted-foreground text-xs">
-                        <Star className="h-3 w-3" />
-                        Default
-                      </span>
-                    )}
-                    <DestinationVerificationBadge destination={row} verifying={verifying} />
-                  </div>
-                  <p className="mt-1 truncate text-muted-foreground text-xs" title={row.detail}>
-                    {kindLabel(row.kind)} · {row.detail}
-                  </p>
-                  <div className="mt-1.5 flex flex-wrap items-center gap-x-2 gap-y-1 text-muted-foreground text-xs">
-                    {stats && stats.runs > 0 ? (
-                      <>
-                        <span>
-                          {formatBytes(stats.bytes)} stored · {stats.runs} runs
-                        </span>
-                        {stats.active > 0 && (
-                          <span className="text-sky-500">· {stats.active} active</span>
-                        )}
-                        {stats.failed > 0 && (
-                          <span className="text-destructive">· {stats.failed} failed</span>
-                        )}
-                      </>
-                    ) : (
-                      <span>No runs yet</span>
-                    )}
-                  </div>
-                  {row.lastVerifyError && (
-                    <p
-                      className="mt-1 truncate text-destructive text-xs"
-                      title={row.lastVerifyError}
-                    >
-                      {row.lastVerifyError}
-                    </p>
-                  )}
-                </div>
-                <div className="relative z-10 flex shrink-0 items-center gap-1">
-                  <Button
-                    variant="ghost"
-                    size="icon"
-                    onClick={() => void handleVerify(row)}
-                    disabled={verifying}
-                    title="Verify connection"
-                    aria-label={`Verify connection: ${row.name}`}
-                  >
-                    {verifying ? (
-                      <Loader2 className="h-4 w-4 animate-spin" />
-                    ) : (
-                      <RefreshCw className="h-4 w-4" />
-                    )}
-                  </Button>
-                  <DropdownMenu>
-                    <DropdownMenuTrigger asChild>
-                      <Button variant="ghost" size="icon" aria-label={`Actions: ${row.name}`}>
-                        <MoreVertical className="h-4 w-4" />
-                      </Button>
-                    </DropdownMenuTrigger>
-                    <DropdownMenuContent align="end">
-                      {s3Destination && (
-                        <DropdownMenuItem onClick={() => setEditing(s3Destination)}>
-                          <Pencil className="h-4 w-4" />
-                          Edit
-                        </DropdownMenuItem>
-                      )}
-                      {row.kind === 's3' && !row.isDefault && (
-                        <DropdownMenuItem onClick={() => void handleSetDefault(row)}>
-                          <Star className="h-4 w-4" />
-                          Set as default
-                        </DropdownMenuItem>
-                      )}
-                      {(s3Destination || (row.kind === 's3' && !row.isDefault)) && (
-                        <DropdownMenuSeparator />
-                      )}
-                      <DropdownMenuItem variant="destructive" onClick={() => setDeleting(row)}>
-                        <Trash2 className="h-4 w-4" />
-                        Delete
-                      </DropdownMenuItem>
-                    </DropdownMenuContent>
-                  </DropdownMenu>
-                </div>
-              </li>
-            );
-          })}
+          {items.map((row) => (
+            <BackupDestinationRow
+              key={`${row.kind}-${row.id}`}
+              row={row}
+              stats={statsByDestination.get(row.id)}
+              verifying={verifyingIds.has(row.id)}
+              s3Destination={row.kind === 's3' ? s3ById.get(row.id) : undefined}
+              onVerify={(r) => void handleVerify(r)}
+              onEdit={(s) => setEditing(s)}
+              onSetDefault={(r) => void handleSetDefault(r)}
+              onDelete={(r) => setDeleting(r)}
+            />
+          ))}
         </ul>
       )}
 

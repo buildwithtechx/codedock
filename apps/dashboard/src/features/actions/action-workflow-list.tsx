@@ -96,7 +96,7 @@ export function ActionWorkflowList({
           return (
             <div
               key={workflow.id}
-              className="group relative flex flex-col justify-between rounded-2xl bg-card p-5 transition-colors hover:bg-muted/40"
+              className="group relative flex flex-col justify-between rounded-2xl border border-border/50 bg-card p-5 shadow-xs transition-colors hover:bg-muted/40"
             >
               <div>
                 <div className="flex items-center gap-3">

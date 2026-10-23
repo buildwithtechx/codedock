@@ -131,7 +131,7 @@ function ServersPage() {
                 />
               </div>
             )}
-            <div className="divide-y divide-border/50 rounded-2xl bg-card">
+            <div className="divide-y divide-border/50 rounded-2xl border border-border/50 bg-card shadow-xs">
               {isLoading ? (
                 <ServerListSkeleton />
               ) : visible.length === 0 ? (

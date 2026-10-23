@@ -140,7 +140,7 @@ export function NetworkEditor({ initialNetwork, onSaved }: NetworkEditorProps) {
         />
       )}
 
-      <form onSubmit={handleApply} className="space-y-6 rounded-2xl bg-card p-5">
+      <form onSubmit={handleApply} className="space-y-6 rounded-2xl border border-border/50 bg-card p-5 shadow-xs">
         <div className="flex items-center justify-between border-border/50 border-b pb-4">
           <div className="flex items-center gap-3">
             <div className="flex h-10 w-10 items-center justify-center rounded-xl bg-primary/10">

@@ -60,7 +60,7 @@ export function WizardDestination({
 
   return (
     <div className="space-y-4">
-      <div className="space-y-3 rounded-2xl bg-card p-5">
+      <div className="space-y-3 rounded-2xl border border-border/50 bg-card p-5 shadow-xs">
         <h3 className="font-semibold text-foreground text-sm">Where to install</h3>
 
         {isLoading ? (

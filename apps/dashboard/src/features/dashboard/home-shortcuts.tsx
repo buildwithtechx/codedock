@@ -48,7 +48,8 @@ export function HomeShortcuts() {
             <p className="mt-1 text-muted-foreground text-xs leading-5">{shortcut.description}</p>
           </>
         );
-        const className = 'group rounded-xl bg-card p-4 transition-colors hover:bg-muted/60';
+        const className =
+          'group rounded-xl border border-border/50 bg-card p-4 shadow-xs transition-colors hover:bg-muted/60 hover:border-border/80';
         return shortcut.external ? (
           <a
             key={shortcut.title}

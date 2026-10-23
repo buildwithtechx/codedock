@@ -215,7 +215,7 @@ export function DeploymentDetail({ deploymentId }: { deploymentId: string }) {
           {normalizedStatus === 'FAILED' ? (
             <DeploymentFailureAi deploymentId={deployment.id} />
           ) : (
-            <div className="flex min-h-64 flex-col items-center justify-center rounded-2xl bg-card px-6 py-12 text-center">
+            <div className="flex min-h-64 flex-col items-center justify-center rounded-2xl border border-border/50 bg-card px-6 py-12 text-center shadow-xs">
               <span className="flex h-12 w-12 items-center justify-center rounded-2xl bg-muted text-muted-foreground">
                 <Bot className="h-5 w-5" />
               </span>
@@ -262,14 +262,14 @@ function DeploymentOverview({
   return (
     <div className="space-y-4">
       {deployment.commitMessage && (
-        <section className="rounded-2xl bg-card p-5">
+        <section className="rounded-2xl border border-border/50 bg-card p-5 shadow-xs">
           <h2 className="font-semibold text-sm">Commit message</h2>
           <p className="mt-2 text-muted-foreground text-sm leading-6">{deployment.commitMessage}</p>
         </section>
       )}
       <section className="grid grid-cols-1 gap-3 sm:grid-cols-2 lg:grid-cols-4">
         {items.map((item) => (
-          <div key={item.label} className="rounded-2xl bg-card p-4">
+          <div key={item.label} className="rounded-2xl border border-border/50 bg-card p-4 shadow-xs">
             <p className="font-medium text-muted-foreground text-xs uppercase tracking-[0.08em]">
               {item.label}
             </p>

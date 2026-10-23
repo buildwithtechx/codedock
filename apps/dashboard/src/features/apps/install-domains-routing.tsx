@@ -122,7 +122,7 @@ export function InstallDomainsRouting({
   };
 
   return (
-    <div className="space-y-4 rounded-2xl bg-card p-5">
+    <div className="space-y-4 rounded-2xl border border-border/50 bg-card p-5 shadow-xs">
       <div className="flex items-center justify-between">
         <h2 className="font-semibold text-foreground text-sm">Domains & routing</h2>
         <Badge variant="outline" className="gap-1 font-mono text-[10px]">

@@ -13,7 +13,7 @@ export function HomeProjectList({
   onCreateProject: () => void;
 }) {
   return (
-    <section className="overflow-hidden rounded-2xl bg-card">
+    <section className="overflow-hidden rounded-2xl border border-border/50 bg-card shadow-xs">
       <div className="flex items-center justify-between border-border/70 border-b px-5 py-4">
         <div className="flex items-center gap-3">
           <div className="flex h-9 w-9 items-center justify-center rounded-xl bg-primary/12 text-primary">

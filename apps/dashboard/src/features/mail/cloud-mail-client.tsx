@@ -17,7 +17,7 @@ export function CloudMailClient({ onSelfHost }: CloudMailClientProps = {}) {
       </header>
 
       <div className="grid items-start gap-6 lg:grid-cols-[minmax(0,1fr)_340px]">
-        <section className="flex flex-col items-center rounded-2xl bg-card px-5 py-10 text-center sm:px-8 sm:py-12">
+        <section className="flex flex-col items-center rounded-2xl border border-border/50 bg-card px-5 py-10 text-center shadow-xs sm:px-8 sm:py-12">
           <svg
             aria-hidden="true"
             viewBox="0 0 240 130"
@@ -139,7 +139,7 @@ export function CloudMailClient({ onSelfHost }: CloudMailClientProps = {}) {
           </Button>
         </section>
 
-        <aside className="rounded-2xl bg-card p-5">
+        <aside className="rounded-2xl border border-border/50 bg-card p-5 shadow-xs">
           {onSelfHost ? (
             <>
               <h2 className="font-medium text-foreground text-sm">Self-host Codedock Mail</h2>

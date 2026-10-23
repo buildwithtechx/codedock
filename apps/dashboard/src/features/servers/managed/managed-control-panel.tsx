@@ -21,7 +21,7 @@ export function ManagedControlPanel({
   children: ReactNode;
 }) {
   return (
-    <section className="min-w-0 space-y-5 rounded-2xl bg-card p-5" aria-busy={busy}>
+    <section className="min-w-0 space-y-5 rounded-2xl border border-border/50 bg-card p-5 shadow-xs" aria-busy={busy}>
       <div className="flex items-start justify-between gap-3">
         <div className="min-w-0">
           <h2 className="flex items-center gap-2 font-medium text-base">

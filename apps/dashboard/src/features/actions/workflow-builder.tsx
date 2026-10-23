@@ -125,7 +125,7 @@ export function WorkflowBuilder() {
       >
         <fieldset
           disabled={isSubmitting}
-          className="m-0 min-w-0 space-y-5 rounded-2xl border-0 bg-card p-5"
+          className="m-0 min-w-0 space-y-5 rounded-2xl border border-border/50 bg-card p-5 shadow-xs"
         >
           <div className="flex gap-3">
             <button
@@ -240,7 +240,7 @@ export function WorkflowBuilder() {
           </div>
         </fieldset>
 
-        <aside className="space-y-5 rounded-2xl bg-card p-5">
+        <aside className="space-y-5 rounded-2xl border border-border/50 bg-card p-5 shadow-xs">
           <div className="flex items-center gap-3">
             <PlayCircle className="size-6 text-primary" />
             <div className="min-w-0">

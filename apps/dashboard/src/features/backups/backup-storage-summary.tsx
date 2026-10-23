@@ -41,7 +41,7 @@ export function BackupStorageSummary({
     return (
       <section
         aria-label="Storage summary"
-        className="flex flex-wrap items-center gap-x-8 gap-y-3 overflow-hidden rounded-2xl bg-card px-5 py-4"
+        className="flex flex-wrap items-center gap-x-8 gap-y-3 overflow-hidden rounded-2xl border border-border/50 bg-card px-5 py-4 shadow-xs"
       >
         <div className="flex items-center gap-2 text-sm">
           <Database className="h-4 w-4 shrink-0 text-muted-foreground" />

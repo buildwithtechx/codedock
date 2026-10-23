@@ -7,7 +7,7 @@ export function ServerTerminalTab({ server }: { server: Server }) {
   const host = server.sshHost ?? server.ipAddress;
 
   return (
-    <div className="overflow-hidden rounded-2xl bg-card">
+    <div className="overflow-hidden rounded-2xl border border-border/50 bg-card shadow-xs">
       <div className="flex items-center gap-3 border-border/50 border-b px-5 py-4">
         <div className="flex size-9 shrink-0 items-center justify-center rounded-xl bg-muted">
           <TerminalSquare className="size-[18px] text-muted-foreground" />

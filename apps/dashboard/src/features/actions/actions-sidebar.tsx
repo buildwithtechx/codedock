@@ -63,7 +63,7 @@ export function ActionsSidebar({
 
   return (
     <aside className="min-w-0 space-y-4">
-      <section className="rounded-2xl bg-card p-5" aria-labelledby="actions-setup-title">
+      <section className="rounded-2xl border border-border/50 bg-card p-5 shadow-xs" aria-labelledby="actions-setup-title">
         <h2 id="actions-setup-title" className="font-medium text-base text-foreground">
           {latestRun ? 'Overview' : 'Get started'}
         </h2>
@@ -175,7 +175,7 @@ export function ActionsSidebar({
       </section>
 
       {isCloud && (
-        <section className="rounded-2xl bg-card p-5">
+        <section className="rounded-2xl border border-border/50 bg-card p-5 shadow-xs">
           <div className="flex items-center gap-2">
             <Cloud className="size-4 text-muted-foreground" />
             <h2 className="font-medium text-foreground text-sm">Temporary Cloud VM</h2>

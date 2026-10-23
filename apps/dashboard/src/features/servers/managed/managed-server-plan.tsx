@@ -13,7 +13,7 @@ export function ManagedServerPlan({ server }: { server?: CloudWorkspaceSummary |
   const isFree = server?.planTierId === 'free';
 
   return (
-    <section className="space-y-4 rounded-2xl bg-card p-5">
+    <section className="space-y-4 rounded-2xl border border-border/50 bg-card p-5 shadow-xs">
       <h2 className="font-medium text-base">Provisioned capacity</h2>
       <CapacitySummary resources={resources} />
       <p className="text-muted-foreground text-sm">

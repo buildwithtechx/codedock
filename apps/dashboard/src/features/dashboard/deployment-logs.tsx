@@ -19,7 +19,7 @@ export function DeploymentLogs({
 
   if (isLoading) {
     return (
-      <div className="space-y-2 rounded-2xl bg-card p-5">
+      <div className="space-y-2 rounded-2xl border border-border/50 bg-card p-5 shadow-xs">
         <Skeleton className="h-4 w-3/4" />
         <Skeleton className="h-4 w-full" />
         <Skeleton className="h-4 w-5/6" />
@@ -41,7 +41,7 @@ export function DeploymentLogs({
 
   if (!logs) {
     return (
-      <div className="flex min-h-[16rem] flex-col items-center justify-center rounded-2xl bg-card px-6 py-12 text-center">
+      <div className="flex min-h-[16rem] flex-col items-center justify-center rounded-2xl border border-border/50 bg-card px-6 py-12 text-center shadow-xs">
         <span className="flex h-12 w-12 items-center justify-center rounded-2xl bg-muted text-muted-foreground">
           <Terminal className="h-5 w-5" />
         </span>
@@ -54,7 +54,7 @@ export function DeploymentLogs({
   }
 
   return (
-    <section className="overflow-hidden rounded-2xl bg-card">
+    <section className="overflow-hidden rounded-2xl border border-border/50 bg-card shadow-xs">
       <pre className="max-h-[36rem] overflow-auto whitespace-pre-wrap p-5 font-mono text-foreground/85 text-xs leading-6">
         {logs}
       </pre>

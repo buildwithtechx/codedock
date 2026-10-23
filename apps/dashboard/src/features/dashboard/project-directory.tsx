@@ -81,7 +81,7 @@ export function ProjectDirectory() {
       />
 
       {isLoading ? (
-        <div className="divide-y divide-border/50 rounded-2xl bg-card" aria-busy="true">
+        <div className="divide-y divide-border/50 rounded-2xl border border-border/50 bg-card shadow-xs" aria-busy="true">
           {Array.from({ length: 5 }, (_, index) => (
             <div key={index} className="flex animate-pulse items-center gap-4 px-5 py-4">
               <div className="size-10 rounded-xl bg-muted" />
@@ -129,7 +129,7 @@ export function ProjectDirectory() {
                   ))}
                 </div>
               ) : (
-                <div className="divide-y divide-border/50 rounded-2xl bg-card">
+                <div className="divide-y divide-border/50 rounded-2xl border border-border/50 bg-card shadow-xs">
                   {filtered.map((project) => (
                     <ProjectListRow key={project.id} project={project} />
                   ))}
@@ -163,7 +163,7 @@ export function ProjectDirectory() {
                 <ProjectHostingFilters options={filters} active={filter} onChange={setFilter} />
               )}
               {showServerCta && (
-                <div className="rounded-2xl bg-card p-5">
+                <div className="rounded-2xl border border-border/50 bg-card p-5 shadow-xs">
                   <Server className="mb-3 h-5 w-5 text-muted-foreground" />
                   <h2 className="font-medium text-foreground text-sm">Deploy to a server</h2>
                   <p className="mt-1 text-muted-foreground text-sm leading-relaxed">

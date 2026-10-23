@@ -26,7 +26,7 @@ export function ServerFleetPanel({ servers, loading }: ServerFleetPanelProps) {
   ];
 
   return (
-    <div className="rounded-2xl bg-card" aria-busy={loading}>
+    <div className="rounded-2xl border border-border/50 bg-card shadow-xs" aria-busy={loading}>
       <div className="flex items-center gap-3 border-border/50 border-b px-5 py-4">
         <div className="flex h-9 w-9 items-center justify-center rounded-xl bg-muted">
           <Activity className="size-[18px] text-muted-foreground" />

@@ -16,7 +16,7 @@ export function ActionsEmptyState({
 }) {
   return (
     <div
-      className={`flex flex-col items-center rounded-2xl bg-card px-6 text-center ${
+      className={`flex flex-col items-center rounded-2xl border border-border/50 bg-card px-6 text-center shadow-xs ${
         compact ? 'py-7' : 'py-10 sm:py-12'
       }`}
     >

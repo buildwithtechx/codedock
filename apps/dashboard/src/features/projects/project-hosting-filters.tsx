@@ -85,7 +85,7 @@ export function ProjectHostingFilters({
 }) {
   const activeKey = projectFilterKey(active);
   return (
-    <div className="rounded-2xl bg-card">
+    <div className="rounded-2xl border border-border/50 bg-card shadow-xs">
       <div className="border-border/50 border-b px-5 py-4">
         <h2 className="font-semibold text-[15px] text-foreground">Filters</h2>
         <p className="text-muted-foreground text-xs">Filter by deploy target</p>

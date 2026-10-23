@@ -85,7 +85,7 @@ function CanvasRouteComponent() {
           </option>
         ))}
       </select>
-      <div className="flex-1 overflow-hidden rounded-2xl bg-card">
+      <div className="flex-1 overflow-hidden rounded-2xl border border-border/50 bg-card shadow-xs">
         <EnvironmentCanvas key={envId} envData={envRes.data} />
       </div>
     </div>

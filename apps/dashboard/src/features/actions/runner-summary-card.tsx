@@ -32,7 +32,7 @@ export function RunnerSummaryCard({
   isCloud = false,
 }: RunnerSummaryCardProps) {
   return (
-    <aside className="space-y-5 rounded-2xl bg-card p-5">
+    <aside className="space-y-5 rounded-2xl border border-border/50 bg-card p-5 shadow-xs">
       <div className="flex items-center gap-3">
         <span className="flex size-7 shrink-0 items-center justify-center rounded-full text-sky-400">
           <PlayCircle className="size-6" />

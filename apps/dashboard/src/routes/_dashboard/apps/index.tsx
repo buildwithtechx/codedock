@@ -76,7 +76,7 @@ function AppsPage() {
       />
 
       {installedQuery.isLoading ? (
-        <div className="divide-y divide-border/50 rounded-2xl bg-card" aria-busy="true">
+        <div className="divide-y divide-border/50 rounded-2xl border border-border/50 bg-card shadow-xs" aria-busy="true">
           {Array.from({ length: 3 }, (_, index) => (
             <div key={index} className="flex items-center gap-4 px-5 py-4">
               <Skeleton className="size-10 shrink-0 rounded-xl" />
@@ -186,7 +186,7 @@ function AppsPage() {
                 className="h-10 bg-muted/60 pr-4 pl-10"
               />
             </div>
-            <div className="divide-y divide-border/50 rounded-2xl bg-card">
+            <div className="divide-y divide-border/50 rounded-2xl border border-border/50 bg-card shadow-xs">
               {filtered.length > 0 ? (
                 filtered.map((app) => <InstalledAppRow key={app.id} app={app} />)
               ) : (
@@ -198,7 +198,7 @@ function AppsPage() {
           </section>
 
           <aside
-            className="rounded-2xl bg-card p-5 lg:sticky lg:top-6"
+            className="rounded-2xl border border-border/50 bg-card p-5 shadow-xs lg:sticky lg:top-6"
             aria-labelledby="suggested-apps"
           >
             <h2 id="suggested-apps" className="mb-4 font-medium text-foreground text-sm">

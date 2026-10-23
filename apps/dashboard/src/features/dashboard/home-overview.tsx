@@ -5,6 +5,7 @@ import { QueryErrorState } from '#/components/query-error-state';
 import { useListCanvasSummaries } from '#/hooks/use-canvas';
 import { useAuthStore } from '#/stores/auth-store';
 import { HomeAppInventory } from './home-app-inventory';
+import { HomeModeCard } from './home-mode-card';
 import { HomeNextStep } from './home-next-step';
 import { HomeProjectList } from './home-project-list';
 import { HomeRuntimeSummary } from './home-runtime-summary';
@@ -29,13 +30,14 @@ export function HomeOverview() {
         rail={
           isError ? undefined : (
             <div className="space-y-4">
+              <HomeModeCard />
               <HomeRuntimeSummary
                 projects={projects}
                 isLoading={isLoading}
                 isUnavailable={isError}
               />
-              <HomeNextStep hasProjects={projects.length > 0} />
               <HomeAppInventory projects={projects} isLoading={isLoading} />
+              <HomeNextStep hasProjects={projects.length > 0} />
             </div>
           )
         }

@@ -198,7 +198,7 @@ export function InstallWizard({ appId }: { appId: string }) {
     return (
       <div className="space-y-6">
         <WizardHeader app={app} />
-        <div className="max-w-3xl space-y-4 rounded-2xl bg-card p-5">
+        <div className="max-w-3xl space-y-4 rounded-2xl border border-border/50 bg-card p-5 shadow-xs">
           <h2 className="font-semibold text-foreground">Review install plan</h2>
           <div className="flex flex-wrap gap-2">
             {preview.services.map((service) => (
@@ -216,11 +216,7 @@ export function InstallWizard({ appId }: { appId: string }) {
             {preview.composeYaml}
           </pre>
           <div className="flex justify-end gap-2">
-            <Button
-              variant="outline"
-              onClick={() => setPhase('form')}
-              disabled={deployApp.isPending}
-            >
+            <Button variant="outline" onClick={() => setPhase('form')} disabled={deployApp.isPending}>
               Back
             </Button>
             <Button onClick={() => void handleDeploy()} disabled={deployApp.isPending}>
@@ -245,7 +241,7 @@ export function InstallWizard({ appId }: { appId: string }) {
       <WizardHeader app={app} />
       <div className="grid grid-cols-1 items-start gap-6 lg:grid-cols-[minmax(0,1fr)_300px] xl:grid-cols-[minmax(0,1fr)_340px]">
         <div className="min-w-0 space-y-5">
-          <div className="rounded-2xl bg-card p-5">
+          <div className="rounded-2xl border border-border/50 bg-card p-5 shadow-xs">
             <Label htmlFor="wizard-name">Install name</Label>
             <Input
               id="wizard-name"
@@ -260,7 +256,7 @@ export function InstallWizard({ appId }: { appId: string }) {
             </p>
           </div>
           {app.envVariables.length > 0 && (
-            <div className="rounded-2xl bg-card p-5">
+            <div className="rounded-2xl border border-border/50 bg-card p-5 shadow-xs">
               <h2 className="mb-4 font-semibold text-foreground text-sm">Configuration</h2>
               <InstallSettingsTabs
                 variables={app.envVariables}

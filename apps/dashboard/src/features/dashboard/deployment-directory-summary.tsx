@@ -34,7 +34,7 @@ export function DeploymentSummary({
 
   return (
     <div className="space-y-4">
-      <aside className="rounded-2xl bg-card p-5">
+      <aside className="rounded-2xl border border-border/50 bg-card p-5 shadow-xs">
         <div className="flex items-center gap-2">
           <Activity className="h-4 w-4 text-muted-foreground" />
           <h2 className="font-semibold text-sm">Overview</h2>

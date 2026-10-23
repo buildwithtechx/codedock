@@ -37,7 +37,7 @@ function StatCard({
   pct?: number;
 }) {
   return (
-    <div className="min-w-0 rounded-2xl bg-card p-5">
+    <div className="min-w-0 rounded-2xl border border-border/50 bg-card p-5 shadow-xs">
       <div className="mb-3 flex items-center gap-2">
         <Icon className="size-4 text-muted-foreground" />
         <span className="font-medium text-muted-foreground text-xs uppercase tracking-wide">

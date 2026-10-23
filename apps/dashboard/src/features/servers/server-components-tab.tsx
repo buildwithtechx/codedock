@@ -68,7 +68,7 @@ export function ServerComponentsTab({ serverId }: ServerComponentsTabProps) {
 
   return (
     <div className="space-y-6">
-      <div className="rounded-2xl bg-card">
+      <div className="rounded-2xl border border-border/50 bg-card shadow-xs">
         <div className="flex flex-wrap items-center justify-between gap-3 border-border/50 border-b px-5 py-4">
           <div className="flex items-center gap-3">
             <div

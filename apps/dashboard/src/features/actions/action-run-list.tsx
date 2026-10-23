@@ -27,7 +27,7 @@ export function ActionRunList({
   }
 
   return (
-    <div className="divide-y divide-border/40 overflow-hidden rounded-2xl bg-card">
+    <div className="divide-y divide-border/40 overflow-hidden rounded-2xl border border-border/50 bg-card shadow-xs">
       {runs.map((run) => (
         <button
           key={run.id}
