@@ -1,6 +1,5 @@
-import { Link, useNavigate, useRouterState } from '@tanstack/react-router';
+import { useNavigate, useRouterState } from '@tanstack/react-router';
 import {
-  ArrowLeft,
   Bell,
   Bot,
   Brain,
@@ -123,21 +122,7 @@ export const SettingsLayout = () => {
 
   const content: Record<TabId, React.ReactNode> = {
     profile: <ProfileSettingsTab />,
-    general: isAppearanceView ? (
-      <div className="space-y-6">
-        <Link
-          to="/settings"
-          search={{ tab: 'general' } as never}
-          className="inline-flex items-center gap-2 text-sm text-muted-foreground hover:text-foreground transition-colors"
-        >
-          <ArrowLeft className="size-4 rtl:rotate-180" />
-          <span>Back to General</span>
-        </Link>
-        <AppearanceEditor />
-      </div>
-    ) : (
-      <GeneralSettings />
-    ),
+    general: isAppearanceView ? <AppearanceEditor /> : <GeneralSettings />,
     notifications: <NotificationsSettings />,
     dns: <DnsSettings />,
     git: (

@@ -140,7 +140,16 @@ export function AuditLogList() {
         })}
       </div>
 
-      <div className="grid items-start gap-6 lg:grid-cols-[minmax(0,1fr)_340px]">
+      <div className="space-y-6">
+        <AuditRecordingCard
+          enabled={settings.enabled}
+          retentionDays={settings.retentionDays}
+          saving={savingSettings}
+          canManage={canManage}
+          onToggle={handleToggleRecording}
+          onRetentionChange={handleRetentionChange}
+        />
+
         <div className="min-w-0 space-y-6">
           <AuditFilterBar
             search={search}
@@ -210,17 +219,6 @@ export function AuditLogList() {
             </div>
           )}
         </div>
-
-        <aside className="space-y-4">
-          <AuditRecordingCard
-            enabled={settings.enabled}
-            retentionDays={settings.retentionDays}
-            saving={savingSettings}
-            canManage={canManage}
-            onToggle={handleToggleRecording}
-            onRetentionChange={handleRetentionChange}
-          />
-        </aside>
       </div>
 
       {selectedEvent && (

@@ -104,37 +104,37 @@
 .dark,
 [data-theme='dark'] {
   --background: #000000;
-  --foreground: #ffffff;
-  --card: #0a0a0d;
-  --card-foreground: #ffffff;
-  --popover: #0d0e12;
-  --popover-foreground: #ffffff;
+  --foreground: #ededed;
+  --card: #0a0a0a;
+  --card-foreground: #ededed;
+  --popover: #0d0d0d;
+  --popover-foreground: #ededed;
   --primary: #8b5cf6;
   --primary-foreground: #ffffff;
   --primary-hover: #7c3aed;
-  --primary-soft: #1c1832;
-  --secondary: #121318;
-  --secondary-foreground: #ffffff;
-  --secondary-hover: #1e1f26;
-  --muted: #121318;
-  --muted-foreground: #71717a;
+  --primary-soft: rgba(139, 92, 246, 0.14);
+  --secondary: #141414;
+  --secondary-foreground: #ededed;
+  --secondary-hover: #1e1e1e;
+  --muted: #141414;
+  --muted-foreground: #888888;
   --accent: #8b5cf6;
-  --accent-foreground: #ffffff;
+  --accent-foreground: #ededed;
   --destructive: #ef4444;
   --destructive-foreground: #ffffff;
   --success: #22c55e;
   --warning: #f59e0b;
-  --border: #1a1a22;
-  --input: #1a1a22;
+  --border: rgba(255, 255, 255, 0.08);
+  --input: rgba(255, 255, 255, 0.08);
   --ring: #8b5cf6;
   --radius: 0.5rem;
-  --sidebar: #060608;
-  --sidebar-foreground: #ffffff;
+  --sidebar: #060606;
+  --sidebar-foreground: #ededed;
   --sidebar-primary: #8b5cf6;
   --sidebar-primary-foreground: #ffffff;
-  --sidebar-accent: #121318;
-  --sidebar-accent-foreground: #ffffff;
-  --sidebar-border: #1a1a22;
+  --sidebar-accent: #141414;
+  --sidebar-accent-foreground: #ededed;
+  --sidebar-border: rgba(255, 255, 255, 0.07);
   --sidebar-ring: #8b5cf6;
   --chart-1: #8b5cf6;
   --chart-2: #3b82f6;
@@ -142,14 +142,14 @@
   --chart-4: #f59e0b;
   --chart-5: #ec4899;
   --th-bg-page: #000000;
-  --th-bg-card: #0a0a0d;
-  --th-card-bg: #0a0a0d;
-  --th-card-on-page: #060608;
+  --th-bg-card: #0a0a0a;
+  --th-card-bg: #0a0a0a;
+  --th-card-on-page: #0d0d0d;
   --th-text-heading: #ffffff;
-  --th-text-title: #ffffff;
-  --th-text-body: #a1a1aa;
-  --th-text-muted: #71717a;
-  --th-bd-default: #1a1a22;
+  --th-text-title: #ededed;
+  --th-text-body: #a1a1a1;
+  --th-text-muted: #888888;
+  --th-bd-default: rgba(255, 255, 255, 0.08);
 }
 
 @theme inline {

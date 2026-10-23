@@ -84,10 +84,7 @@ export function AppearanceEditor() {
   };
 
   const handleSetToken = (key: string, value: string) => {
-    updateDraft({
-      ...draft,
-      tokens: { ...(draft.tokens ?? {}), [key]: value },
-    });
+    updateDraft({ ...draft, tokens: { ...(draft.tokens ?? {}), [key]: value } });
   };
 
   const handleResetToken = (key: string) => {
@@ -150,7 +147,7 @@ export function AppearanceEditor() {
   };
 
   return (
-    <div className="space-y-6 pb-28">
+    <div className="space-y-6 pb-6">
       {/* Back button */}
       <div>
         <Link
@@ -198,40 +195,47 @@ export function AppearanceEditor() {
       </div>
 
       {/* Theme Mode Strip Card */}
-      <div className="flex flex-wrap items-center justify-between gap-3 rounded-2xl border border-border/60 bg-card p-2 sm:p-2.5">
-        <div className="flex items-center gap-1">
-          {MODES.map((m) => {
-            const Icon = m.icon;
-            const isSelected = draft.mode === m.id;
-            return (
-              <button
-                key={m.id}
-                type="button"
-                onClick={() => handleModeChange(m.id)}
-                className={`flex items-center gap-2 rounded-xl px-3.5 py-1.5 font-medium text-xs transition-colors ${
-                  isSelected
-                    ? 'border border-border/80 bg-background text-foreground shadow-xs'
-                    : 'text-muted-foreground hover:bg-muted/40 hover:text-foreground'
-                }`}
-              >
-                <Icon className="size-3.5" />
-                <span>{m.label}</span>
-              </button>
-            );
-          })}
-        </div>
+      <section className="rounded-2xl border border-border/60 bg-card p-4">
+        <div className="flex flex-wrap items-center justify-between gap-3">
+          <div
+            role="group"
+            aria-label="Presets"
+            className="grid w-full grid-cols-2 gap-1 rounded-xl bg-background/60 p-1 sm:flex sm:w-auto sm:flex-wrap"
+          >
+            {MODES.map((m) => {
+              const Icon = m.icon;
+              const isSelected = draft.mode === m.id;
+              return (
+                <button
+                  key={m.id}
+                  type="button"
+                  aria-pressed={isSelected}
+                  onClick={() => handleModeChange(m.id)}
+                  className={`flex h-9 items-center gap-2 rounded-lg px-3.5 font-medium text-xs transition-colors ${
+                    isSelected
+                      ? 'bg-foreground/[0.08] text-foreground hover:bg-foreground/[0.08]'
+                      : 'text-muted-foreground hover:bg-muted/50 hover:text-foreground'
+                  }`}
+                >
+                  <Icon className="size-4 shrink-0" />
+                  <span>{m.label}</span>
+                </button>
+              );
+            })}
+          </div>
 
-        <Button
-          type="button"
-          variant="ghost"
-          size="sm"
-          onClick={handleCreateTheme}
-          className="gap-1.5 text-xs text-muted-foreground hover:text-foreground"
-        >
-          <Plus className="size-3.5" />
-          <span>New theme</span>
-        </Button>
-      </div>
+          <Button
+            type="button"
+            variant="ghost"
+            size="sm"
+            onClick={handleCreateTheme}
+            className="gap-1.5 text-xs text-muted-foreground hover:text-foreground"
+          >
+            <Plus className="size-3.5" />
+            <span>New theme</span>
+          </Button>
+        </div>
+      </section>
 
       {/* Two Column Layout (Tokens + Typography Left, Live Preview Right) */}
       <div className="grid grid-cols-1 gap-6 lg:grid-cols-[1fr_360px]">

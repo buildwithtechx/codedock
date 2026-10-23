@@ -128,11 +128,10 @@ describe('SettingsLayout Modernization', () => {
     expect(screen.getByTestId('dns-content')).toBeDefined();
   });
 
-  it('renders AppearanceEditor and back button when view is appearance', () => {
+  it('renders AppearanceEditor when view is appearance', () => {
     currentSearch = { tab: 'general', view: 'appearance' } as never;
     render(<SettingsLayout />);
 
     expect(screen.getByTestId('appearance-editor-content')).toBeDefined();
-    expect(screen.getByText('Back to General')).toBeDefined();
   });
 });

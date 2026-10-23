@@ -63,7 +63,7 @@ export function DesignTokensSection({
                 setSearch('');
                 setActiveCategory(cat.id);
               }}
-              className={`rounded-full px-3 py-1 font-medium text-xs transition-colors ${
+              className={`rounded-lg px-2.5 py-1.5 font-medium text-xs transition-colors ${
                 isSelected
                   ? 'bg-foreground/[0.08] text-foreground'
                   : 'text-muted-foreground hover:bg-muted/50 hover:text-foreground'

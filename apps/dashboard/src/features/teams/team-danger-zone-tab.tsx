@@ -5,14 +5,8 @@ import { toast } from 'sonner';
 import { Button } from '@codedock/ui/button';
 import { Input } from '@codedock/ui/input';
 import { Label } from '@codedock/ui/label';
-import {
-  Dialog,
-  DialogContent,
-  DialogDescription,
-  DialogFooter,
-  DialogHeader,
-  DialogTitle,
-} from '@codedock/ui/dialog';
+import { Dialog, DialogContent, DialogTitle } from '@codedock/ui/dialog';
+import { SettingsSection } from '#/features/settings/settings-section';
 import { useDeleteOrganization } from '#/hooks/use-organizations';
 import type { Organization } from '#/interfaces/organizations';
 
@@ -43,75 +37,83 @@ export function TeamDangerZoneTab({ organization }: TeamDangerZoneTabProps) {
     });
   };
 
+  const isMatched = confirmName.trim() === organization.name;
+
   return (
     <div className="space-y-6">
-      <div className="rounded-2xl border border-destructive/30 bg-destructive/5 p-6">
-        <div className="flex items-start gap-4">
-          <div className="flex size-11 shrink-0 items-center justify-center rounded-2xl bg-destructive/15 text-destructive">
-            <AlertTriangle className="size-5" />
-          </div>
-          <div className="min-w-0 flex-1">
-            <h2 className="font-semibold text-foreground text-lg">Danger Zone</h2>
-            <p className="text-muted-foreground text-sm">
-              Irreversible destructive actions for the workspace{' '}
-              <span className="font-semibold text-foreground">{organization.name}</span>.
-            </p>
-          </div>
-        </div>
-
-        <div className="mt-6 flex flex-col items-start justify-between gap-4 border-t border-destructive/20 pt-5 sm:flex-row sm:items-center">
-          <div>
+      <SettingsSection
+        icon={<AlertTriangle className="size-4 text-destructive" />}
+        title="Danger Zone"
+        description="Irreversible destructive actions for this workspace."
+        iconBg="bg-destructive/10"
+        iconColor="text-destructive"
+      >
+        <div className="flex flex-col items-start justify-between gap-4 sm:flex-row sm:items-center">
+          <div className="space-y-1">
             <h3 className="font-medium text-foreground text-sm">Delete this workspace</h3>
-            <p className="max-w-xl text-muted-foreground text-xs">
-              Permanently removes this workspace, projects, associated credentials, and team
-              members. This action cannot be undone.
+            <p className="max-w-xl text-muted-foreground text-xs leading-relaxed">
+              Permanently removes{' '}
+              <span className="font-semibold text-foreground">{organization.name}</span>, associated
+              servers, projects, domain routing, and teammate access. This action cannot be undone.
             </p>
           </div>
           <Button
             variant="destructive"
             size="sm"
-            onClick={() => setOpenDelete(true)}
+            onClick={() => {
+              setConfirmName('');
+              setOpenDelete(true);
+            }}
             className="gap-2 shrink-0"
           >
             <Trash2 className="size-4" />
-            Delete Workspace
+            Delete workspace
           </Button>
         </div>
-      </div>
+      </SettingsSection>
 
-      <Dialog open={openDelete} onOpenChange={setOpenDelete}>
-        <DialogContent className="sm:max-w-md">
-          <DialogHeader>
-            <DialogTitle className="text-destructive flex items-center gap-2">
-              <AlertTriangle className="size-5" />
-              Delete Workspace
-            </DialogTitle>
-            <DialogDescription className="space-y-2 pt-2">
-              <span>
-                Are you sure you want to delete{' '}
-                <strong className="text-foreground">{organization.name}</strong>? All associated
-                services, domains, and team members will be removed.
-              </span>
-            </DialogDescription>
-          </DialogHeader>
+      <Dialog open={openDelete} onOpenChange={(open) => !open && setOpenDelete(false)}>
+        <DialogContent className="border/50 gap-0 bg-card/95 p-0 backdrop-blur-xl sm:max-w-md [&>button]:hidden">
+          <div className="p-5">
+            <div className="flex items-start justify-between">
+              <div className="flex flex-col">
+                <DialogTitle className="flex items-center gap-2 font-bold text-foreground text-xl tracking-tight">
+                  <Trash2 className="h-5 w-5 text-destructive" />
+                  Delete Workspace
+                </DialogTitle>
+              </div>
+            </div>
 
-          <div className="space-y-2 py-3">
-            <Label htmlFor="confirm-org-name" className="text-xs">
-              Type <strong className="text-foreground">{organization.name}</strong> to confirm:
-            </Label>
-            <Input
-              id="confirm-org-name"
-              value={confirmName}
-              onChange={(e) => setConfirmName(e.target.value)}
-              placeholder={organization.name}
-              className="font-mono text-sm"
-            />
+            <p className="mt-3 text-muted-foreground text-sm leading-relaxed">
+              Are you sure you want to delete{' '}
+              <strong className="text-foreground">{organization.name}</strong>? All associated
+              services, deployments, and databases will be immediately removed.
+            </p>
+
+            <div className="mt-4 rounded-xl border border-destructive/30 bg-destructive/5 p-3 text-xs text-destructive">
+              This action is permanent and cannot be reversed.
+            </div>
+
+            <div className="mt-4 space-y-2">
+              <Label htmlFor="confirm-workspace-input" className="text-xs text-muted-foreground">
+                To confirm, type{' '}
+                <strong className="font-mono text-foreground">{organization.name}</strong>:
+              </Label>
+              <Input
+                id="confirm-workspace-input"
+                value={confirmName}
+                onChange={(e) => setConfirmName(e.target.value)}
+                placeholder={organization.name}
+                className="font-mono text-xs bg-muted/40"
+                autoFocus
+              />
+            </div>
           </div>
 
-          <DialogFooter className="gap-2 sm:gap-0">
+          <div className="flex items-center justify-end gap-3 p-5 pt-0">
             <Button
               type="button"
-              variant="outline"
+              variant="ghost"
               size="sm"
               onClick={() => {
                 setOpenDelete(false);
@@ -124,12 +126,12 @@ export function TeamDangerZoneTab({ organization }: TeamDangerZoneTabProps) {
               type="button"
               variant="destructive"
               size="sm"
-              disabled={confirmName !== organization.name || deleteMutation.isPending}
+              disabled={!isMatched || deleteMutation.isPending}
               onClick={handleDelete}
             >
               {deleteMutation.isPending ? 'Deleting...' : 'Delete Workspace'}
             </Button>
-          </DialogFooter>
+          </div>
         </DialogContent>
       </Dialog>
     </div>

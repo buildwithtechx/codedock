@@ -17,7 +17,7 @@ export function AppearanceFloatingBar({
   onSave,
 }: AppearanceFloatingBarProps) {
   return (
-    <div className="fixed bottom-6 left-1/2 z-40 flex w-[calc(100%-2rem)] max-w-3xl -translate-x-1/2 items-center justify-between rounded-2xl border border-border/80 bg-card/95 px-5 py-3 shadow-2xl backdrop-blur-md">
+    <div className="sticky bottom-3 z-10 flex w-full flex-wrap items-center justify-between gap-3 rounded-2xl border border-border/80 bg-popover/90 px-4 py-3 shadow-lg backdrop-blur-xl">
       <div className="flex items-center gap-2">
         {isDirty ? (
           <>
