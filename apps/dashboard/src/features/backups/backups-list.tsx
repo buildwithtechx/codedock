@@ -63,8 +63,6 @@ export function BackupsList() {
 
   return (
     <div className="space-y-6">
-      <BackupOperationHistory />
-
       <div className="flex flex-wrap items-center justify-between gap-4">
         <div>
           <h1 className="font-medium text-2xl">Backups</h1>
@@ -115,6 +113,7 @@ export function BackupsList() {
               retrying={recordsQuery.isFetching}
               onChanged={() => void refreshAll()}
             />
+            <BackupOperationHistory />
             <BackupDestinations
               s3={s3}
               sftp={sftp}

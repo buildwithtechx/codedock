@@ -72,7 +72,7 @@ export function SidebarUserPopover({
               <DropdownMenuTrigger asChild>
                 <button
                   type="button"
-                  className="mx-auto flex size-9 items-center justify-center rounded-xl transition-colors hover:bg-sidebar-accent cursor-pointer"
+                  className="mx-auto flex size-9 cursor-pointer items-center justify-center rounded-xl transition-colors hover:bg-sidebar-accent"
                   aria-label="User account menu"
                 >
                   <Avatar className="size-8 shrink-0 ring-1 ring-sidebar-border">
@@ -91,7 +91,7 @@ export function SidebarUserPopover({
           <DropdownMenuTrigger asChild>
             <button
               type="button"
-              className="group flex min-w-0 flex-1 items-center justify-between gap-2 rounded-xl p-1.5 text-left transition-colors hover:bg-sidebar-accent/80 cursor-pointer"
+              className="group flex min-w-0 flex-1 cursor-pointer items-center justify-between gap-2 rounded-xl p-1.5 text-left transition-colors hover:bg-sidebar-accent/80"
               aria-label="User account menu"
             >
               <div className="flex min-w-0 items-center gap-2.5">
@@ -112,56 +112,59 @@ export function SidebarUserPopover({
 
         <DropdownMenuContent
           side={collapsed ? 'right' : 'top'}
-          align={collapsed ? 'end' : 'center'}
+          align={collapsed ? 'end' : 'start'}
           sideOffset={8}
-          className="w-64 rounded-xl border border-border/80 bg-popover p-1.5 text-popover-foreground shadow-2xl"
+          collisionPadding={12}
+          className="!w-[224px] max-w-[calc(100vw-1.5rem)] rounded-xl border border-border/70 bg-popover/95 p-1 text-popover-foreground shadow-xl backdrop-blur-md"
         >
           {/* User Card Header */}
-          <DropdownMenuLabel className="p-2 font-normal">
-            <div className="flex items-center gap-2.5">
-              <Avatar className="size-9 shrink-0 ring-1 ring-border/50">
-                <AvatarFallback className="bg-primary/10 font-semibold text-primary text-sm">
+          <DropdownMenuLabel className="p-0 font-normal">
+            <div className="flex items-center gap-2.5 px-2.5 py-2">
+              <Avatar className="size-8 shrink-0 ring-1 ring-border/50">
+                <AvatarFallback className="bg-primary/10 font-semibold text-primary text-xs">
                   {userInitial}
                 </AvatarFallback>
               </Avatar>
               <div className="min-w-0 flex-1">
-                <p className="truncate font-medium text-foreground text-xs leading-none">
+                <p className="truncate font-medium text-[13px] text-foreground leading-snug">
                   {userName}
                 </p>
-                <p className="mt-1 truncate text-[11px] text-muted-foreground leading-none">
+                <p className="truncate text-[11px] text-muted-foreground leading-snug">
                   {userEmail}
                 </p>
               </div>
             </div>
           </DropdownMenuLabel>
 
-          <DropdownMenuSeparator className="bg-border/60" />
+          <DropdownMenuSeparator className="my-1 bg-border/50" />
 
           {/* Navigation links */}
           <DropdownMenuItem asChild>
             <Link
               to="/settings"
               search={{ tab: 'profile' } as never}
-              className="flex cursor-pointer items-center gap-2.5 rounded-lg px-2.5 py-1.5 text-xs hover:bg-muted"
+              className="group flex cursor-pointer items-center gap-2.5 rounded-lg px-2.5 py-1.5 font-medium text-[13px] text-sidebar-foreground/80 transition-colors hover:bg-sidebar-accent hover:text-sidebar-foreground"
             >
-              <UserIcon className="size-4 text-muted-foreground" />
+              <UserIcon className="size-4 shrink-0 text-muted-foreground transition-colors group-hover:text-sidebar-foreground" />
               <span className="flex-1">Profile</span>
             </Link>
           </DropdownMenuItem>
 
           {/* Appearance Switcher Submenu */}
           <DropdownMenuSub>
-            <DropdownMenuSubTrigger className="flex cursor-pointer items-center gap-2.5 rounded-lg px-2.5 py-1.5 text-xs hover:bg-muted">
-              <Palette className="size-4 text-muted-foreground" />
+            <DropdownMenuSubTrigger className="group flex cursor-pointer items-center gap-2.5 rounded-lg px-2.5 py-1.5 font-medium text-[13px] text-sidebar-foreground/80 transition-colors hover:bg-sidebar-accent hover:text-sidebar-foreground">
+              <Palette className="size-4 shrink-0 text-muted-foreground transition-colors group-hover:text-sidebar-foreground" />
               <span className="flex-1">Appearance</span>
-              <span className="capitalize text-[11px] text-muted-foreground">{theme}</span>
+              <span className="font-normal text-[11px] text-muted-foreground capitalize">
+                {theme}
+              </span>
             </DropdownMenuSubTrigger>
-            <DropdownMenuSubContent className="w-36 rounded-xl border border-border/80 bg-popover p-1 shadow-xl">
+            <DropdownMenuSubContent className="w-36 rounded-xl border border-border/70 bg-popover/95 p-1 shadow-xl backdrop-blur-md">
               {THEME_OPTIONS.map(({ id, label, icon: Icon }) => (
                 <DropdownMenuItem
                   key={id}
                   onClick={() => setTheme(id)}
-                  className="flex cursor-pointer items-center justify-between rounded-lg px-2.5 py-1.5 text-xs hover:bg-muted"
+                  className="flex cursor-pointer items-center justify-between rounded-lg px-2.5 py-1.5 font-medium text-foreground/80 text-xs hover:bg-muted hover:text-foreground"
                 >
                   <span className="flex items-center gap-2">
                     <Icon className="size-3.5 text-muted-foreground" />
@@ -177,30 +180,30 @@ export function SidebarUserPopover({
           {onToggleAutoCollapse && (
             <DropdownMenuItem
               onClick={onToggleAutoCollapse}
-              className="flex cursor-pointer items-center justify-between rounded-lg px-2.5 py-1.5 text-xs hover:bg-muted"
+              className="group flex cursor-pointer items-center justify-between rounded-lg px-2.5 py-1.5 font-medium text-[13px] text-sidebar-foreground/80 transition-colors hover:bg-sidebar-accent hover:text-sidebar-foreground"
             >
               <span className="flex items-center gap-2.5">
-                <PanelLeftClose className="size-4 text-muted-foreground" />
-                <span>Auto-collapse sidebar</span>
+                <PanelLeftClose className="size-4 shrink-0 text-muted-foreground transition-colors group-hover:text-sidebar-foreground" />
+                <span>Auto-collapse</span>
               </span>
               {autoCollapse && <Check className="size-3.5 text-primary" />}
             </DropdownMenuItem>
           )}
 
-          <DropdownMenuSeparator className="bg-border/60" />
+          <DropdownMenuSeparator className="my-1 bg-border/50" />
 
           {/* What's New */}
           <DropdownMenuItem asChild>
             <Link
               to="/settings"
               search={{ tab: 'instance' } as never}
-              className="flex cursor-pointer items-center justify-between rounded-lg px-2.5 py-1.5 text-xs hover:bg-muted"
+              className="group flex cursor-pointer items-center justify-between rounded-lg px-2.5 py-1.5 font-medium text-[13px] text-sidebar-foreground/80 transition-colors hover:bg-sidebar-accent hover:text-sidebar-foreground"
             >
               <span className="flex items-center gap-2.5">
-                <Sparkles className="size-4 text-amber-500" />
+                <Sparkles className="size-4 shrink-0 text-amber-500" />
                 <span>What's New</span>
               </span>
-              <span className="rounded-full bg-rose-500/20 px-1.5 py-0.2 font-semibold text-[10px] text-rose-500">
+              <span className="rounded-full bg-rose-500/15 px-1.5 py-0.5 font-semibold text-[10px] text-rose-500">
                 9+
               </span>
             </Link>
@@ -212,9 +215,9 @@ export function SidebarUserPopover({
               href="https://codedock.io/docs"
               target="_blank"
               rel="noopener noreferrer"
-              className="flex cursor-pointer items-center gap-2.5 rounded-lg px-2.5 py-1.5 text-xs hover:bg-muted"
+              className="group flex cursor-pointer items-center gap-2.5 rounded-lg px-2.5 py-1.5 font-medium text-[13px] text-sidebar-foreground/80 transition-colors hover:bg-sidebar-accent hover:text-sidebar-foreground"
             >
-              <BookOpen className="size-4 text-muted-foreground" />
+              <BookOpen className="size-4 shrink-0 text-muted-foreground transition-colors group-hover:text-sidebar-foreground" />
               <span className="flex-1">Documentation</span>
             </a>
           </DropdownMenuItem>
@@ -224,9 +227,9 @@ export function SidebarUserPopover({
             <Link
               to="/settings"
               search={{ tab: 'general' } as never}
-              className="flex cursor-pointer items-center gap-2.5 rounded-lg px-2.5 py-1.5 text-xs hover:bg-muted"
+              className="group flex cursor-pointer items-center gap-2.5 rounded-lg px-2.5 py-1.5 font-medium text-[13px] text-sidebar-foreground/80 transition-colors hover:bg-sidebar-accent hover:text-sidebar-foreground"
             >
-              <MessageSquare className="size-4 text-muted-foreground" />
+              <MessageSquare className="size-4 shrink-0 text-muted-foreground transition-colors group-hover:text-sidebar-foreground" />
               <span className="flex-1">Feedback</span>
             </Link>
           </DropdownMenuItem>
@@ -237,21 +240,21 @@ export function SidebarUserPopover({
               href="https://github.com/sponsors"
               target="_blank"
               rel="noopener noreferrer"
-              className="flex cursor-pointer items-center gap-2.5 rounded-lg px-2.5 py-1.5 text-xs hover:bg-muted"
+              className="group flex cursor-pointer items-center gap-2.5 rounded-lg px-2.5 py-1.5 font-medium text-[13px] text-sidebar-foreground/80 transition-colors hover:bg-sidebar-accent hover:text-sidebar-foreground"
             >
-              <Heart className="size-4 text-rose-500" />
+              <Heart className="size-4 shrink-0 text-rose-500" />
               <span className="flex-1">Sponsor us</span>
             </a>
           </DropdownMenuItem>
 
-          <DropdownMenuSeparator className="bg-border/60" />
+          <DropdownMenuSeparator className="my-1 bg-border/50" />
 
           {/* Log out */}
           <DropdownMenuItem
             onClick={() => logout()}
-            className="flex cursor-pointer items-center gap-2.5 rounded-lg px-2.5 py-1.5 text-destructive text-xs hover:bg-destructive/10"
+            className="flex cursor-pointer items-center gap-2.5 rounded-lg px-2.5 py-1.5 font-medium text-[13px] text-destructive transition-colors hover:bg-destructive/10"
           >
-            <LogOut className="size-4" />
+            <LogOut className="size-4 shrink-0" />
             <span>Log out</span>
           </DropdownMenuItem>
         </DropdownMenuContent>

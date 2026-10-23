@@ -1,4 +1,3 @@
-import { Button } from '@codedock/ui/button';
 import { Link } from '@tanstack/react-router';
 import {
   BookOpen,
@@ -9,35 +8,36 @@ import {
   Network,
   ShieldCheck,
 } from 'lucide-react';
+import { Button } from '@codedock/ui/button';
 
 const DOCS_URL = 'https://docs.codedock.run/networking/domains';
 
 const capabilities = [
   {
     label: 'Automated TLS',
-    desc: "Let's Encrypt certificates provisioned & auto-renewed",
+    desc: "Let's Encrypt certificates provisioned automatically with hands-free renewal.",
     icon: ShieldCheck,
   },
   {
     label: 'Edge Ingress',
-    desc: 'Traefik reverse proxy directs apex and subdomains',
+    desc: 'Traefik proxy directs apex and subdomains straight to your container ports.',
     icon: Network,
   },
   {
     label: 'Live Probing',
-    desc: 'Instant DNS propagation verification & health checks',
+    desc: 'Instant propagation checks verify A and CNAME records with live reporting.',
     icon: CheckCircle2,
   },
   {
-    label: 'Wildcards',
-    desc: 'Catch-all wildcard routing for dynamic preview envs',
+    label: 'Wildcard SSL',
+    desc: 'Configure catch-all wildcard rules (*.domain.com) for preview environments.',
     icon: Globe,
   },
 ];
 
 export function DomainEmptyState() {
   return (
-    <div className="py-12 text-center">
+    <div className="py-10 text-center">
       <div className="relative mx-auto mb-8 h-44 w-64" aria-hidden="true">
         <svg className="absolute inset-0 h-full w-full" viewBox="0 0 260 180" fill="none">
           {/* Background card */}
@@ -132,12 +132,12 @@ export function DomainEmptyState() {
       <h3 className="mb-2 font-medium text-2xl text-foreground/90 tracking-[-0.2px]">
         No domains configured
       </h3>
-      <p className="mx-auto mb-8 max-w-md text-muted-foreground/75 text-sm leading-relaxed">
+      <p className="mx-auto mb-8 max-w-lg text-muted-foreground/75 text-sm leading-relaxed">
         Route custom domains and subdomains to your application services with automatic SSL/TLS
         certificates, zero downtime, and real-time DNS verification.
       </p>
 
-      <div className="mb-10 flex flex-col items-center justify-center gap-3 sm:flex-row">
+      <div className="mb-12 flex flex-col items-center justify-center gap-3 sm:flex-row">
         <Button asChild size="lg" className="gap-2 px-6">
           <Link to="/projects">
             <FolderGit2 className="h-4 w-4" />
@@ -153,23 +153,30 @@ export function DomainEmptyState() {
         </Button>
       </div>
 
-      <div className="mx-auto max-w-2xl">
+      <div className="mx-auto max-w-5xl">
         <p className="mb-4 text-muted-foreground/60 text-xs uppercase tracking-wider">
           What gets configured
         </p>
-        <div className="grid grid-cols-1 gap-3 text-start sm:grid-cols-2 lg:grid-cols-4">
+        <div className="grid grid-cols-1 gap-3.5 text-start sm:grid-cols-2 lg:grid-cols-4">
           {capabilities.map((item) => (
-            <div key={item.label} className="rounded-xl border border-border/50 bg-card p-4">
-              <div className="mb-3 flex h-8 w-8 items-center justify-center rounded-lg bg-muted">
-                <item.icon className="h-4 w-4 text-muted-foreground" />
+            <div
+              key={item.label}
+              className="flex flex-col justify-between rounded-2xl border border-border/50 bg-card p-4 shadow-xs transition-colors hover:border-border/80"
+            >
+              <div>
+                <div className="mb-3 flex h-9 w-9 items-center justify-center rounded-xl bg-primary/10 text-primary">
+                  <item.icon className="h-4 w-4" />
+                </div>
+                <h4 className="font-semibold text-[13px] text-foreground tracking-tight leading-snug">
+                  {item.label}
+                </h4>
+                <p className="mt-1 text-muted-foreground text-xs leading-relaxed">{item.desc}</p>
               </div>
-              <p className="font-medium text-foreground text-sm">{item.label}</p>
-              <p className="mt-0.5 text-muted-foreground text-xs">{item.desc}</p>
             </div>
           ))}
         </div>
-        <p className="mt-6 inline-flex items-center gap-1.5 text-muted-foreground/65 text-xs">
-          <Globe className="h-3.5 w-3.5" />
+        <p className="mt-8 inline-flex items-center gap-2 text-muted-foreground/65 text-xs">
+          <Globe className="h-4 w-4 text-primary/70" />
           Domains are assigned to individual services under each project's networking settings.
         </p>
       </div>

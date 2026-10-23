@@ -1,19 +1,25 @@
 import { Link } from '@tanstack/react-router';
 import {
   ChevronRight,
+  Copy,
   Cpu,
   EllipsisVertical,
   KeyRound,
+  LayoutGrid,
   Lock,
   Server as ServerIcon,
+  Settings,
+  TerminalSquare,
   Trash2,
 } from 'lucide-react';
+import { toast } from 'sonner';
 import { BlurIp } from '#/components/blur-ip';
 import { Button } from '@codedock/ui/button';
 import {
   DropdownMenu,
   DropdownMenuContent,
   DropdownMenuItem,
+  DropdownMenuSeparator,
   DropdownMenuTrigger,
 } from '@codedock/ui/dropdown-menu';
 import type { Server } from '#/interfaces/server';
@@ -46,6 +52,13 @@ export function ServerListRow({ server, onRemove }: ServerListRowProps) {
   const host = server.sshHost || server.ipAddress;
   const AuthIcon = server.sshAuthMethod === 'password' ? Lock : KeyRound;
 
+  const handleCopyHost = (e: React.MouseEvent) => {
+    e.stopPropagation();
+    if (!host) return;
+    void navigator.clipboard.writeText(host);
+    toast.success('Host IP copied to clipboard');
+  };
+
   return (
     <div className="flex items-center pe-3">
       <Link
@@ -61,15 +74,15 @@ export function ServerListRow({ server, onRemove }: ServerListRowProps) {
           )}
         </div>
 
-        <div className="min-w-0 text-start sm:w-44 sm:shrink-0 lg:w-56">
-          <p className="truncate font-medium text-foreground text-sm">
-            {server.name}
+        <div className="min-w-0 text-start sm:min-w-44 sm:max-w-xs lg:max-w-sm">
+          <div className="flex items-center gap-2">
+            <span className="truncate font-medium text-foreground text-sm">{server.name}</span>
             {server.isLocal && (
-              <span className="ms-2 rounded bg-primary/10 px-1.5 py-0.5 align-middle font-medium text-[10px] text-primary">
+              <span className="shrink-0 whitespace-nowrap rounded bg-primary/10 px-1.5 py-0.5 font-medium text-[10px] text-primary">
                 This server
               </span>
             )}
-          </p>
+          </div>
           <p className="mt-0.5 truncate font-mono text-muted-foreground text-xs">
             {server.isLocal ? 'Local deployment runtime' : <BlurIp>{host}</BlurIp>}
           </p>
@@ -109,10 +122,59 @@ export function ServerListRow({ server, onRemove }: ServerListRowProps) {
             <EllipsisVertical className="size-4" />
           </Button>
         </DropdownMenuTrigger>
-        <DropdownMenuContent align="end">
-          <DropdownMenuItem variant="destructive" onClick={() => onRemove(server)}>
-            <Trash2 className="size-4" />
-            Remove server
+        <DropdownMenuContent
+          align="end"
+          className="w-48 rounded-xl border border-border/60 bg-popover/95 p-1 text-popover-foreground shadow-xl backdrop-blur-md"
+        >
+          <DropdownMenuItem asChild>
+            <Link
+              to="/servers/$serverId"
+              params={{ serverId: server.id }}
+              className="flex cursor-pointer items-center gap-2 rounded-lg px-2.5 py-1.5 text-xs font-medium"
+            >
+              <LayoutGrid className="size-3.5 text-muted-foreground" />
+              <span className="whitespace-nowrap">View server</span>
+            </Link>
+          </DropdownMenuItem>
+          <DropdownMenuItem asChild>
+            <Link
+              to="/servers/$serverId"
+              params={{ serverId: server.id }}
+              search={{ tab: 'terminal' }}
+              className="flex cursor-pointer items-center gap-2 rounded-lg px-2.5 py-1.5 text-xs font-medium"
+            >
+              <TerminalSquare className="size-3.5 text-muted-foreground" />
+              <span className="whitespace-nowrap">Open terminal</span>
+            </Link>
+          </DropdownMenuItem>
+          {host && (
+            <DropdownMenuItem
+              onClick={handleCopyHost}
+              className="flex cursor-pointer items-center gap-2 rounded-lg px-2.5 py-1.5 text-xs font-medium"
+            >
+              <Copy className="size-3.5 text-muted-foreground" />
+              <span className="whitespace-nowrap">Copy host address</span>
+            </DropdownMenuItem>
+          )}
+          <DropdownMenuItem asChild>
+            <Link
+              to="/servers/$serverId"
+              params={{ serverId: server.id }}
+              search={{ tab: 'settings' }}
+              className="flex cursor-pointer items-center gap-2 rounded-lg px-2.5 py-1.5 text-xs font-medium"
+            >
+              <Settings className="size-3.5 text-muted-foreground" />
+              <span className="whitespace-nowrap">Server settings</span>
+            </Link>
+          </DropdownMenuItem>
+          <DropdownMenuSeparator className="my-1 bg-border/40" />
+          <DropdownMenuItem
+            variant="destructive"
+            onClick={() => onRemove(server)}
+            className="flex cursor-pointer items-center gap-2 rounded-lg px-2.5 py-1.5 text-xs font-medium text-destructive hover:bg-destructive/10"
+          >
+            <Trash2 className="size-3.5" />
+            <span className="whitespace-nowrap">Delete server</span>
           </DropdownMenuItem>
         </DropdownMenuContent>
       </DropdownMenu>
