@@ -1,7 +1,7 @@
-import { cn } from 'cn';
 import { PanelLeft, PanelLeftClose, Search, X } from 'lucide-react';
 import { useEffect, useState } from 'react';
 import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from '@codedock/ui';
+import { cn } from 'cn';
 import { NavItem } from './nav-item';
 import { getSidebarSections } from './sidebar-items';
 import { SidebarUserPopover } from './sidebar-user-popover';
@@ -12,7 +12,7 @@ interface AppSidebarProps {
   onToggle: () => void;
   mobileOpen: boolean;
   onMobileClose: () => void;
-  onOpenCommand?: () => void;
+  onOpenCommand: () => void;
 }
 
 export function AppSidebar({
@@ -28,8 +28,7 @@ export function AppSidebar({
   });
 
   const counts = useSidebarCounts();
-
-  const navCollapsed = (collapsed || autoCollapse) && !mobileOpen;
+  const navCollapsed = collapsed && !mobileOpen;
 
   useEffect(() => {
     const handleKeyDown = (event: KeyboardEvent) => {
@@ -46,6 +45,9 @@ export function AppSidebar({
     const next = !autoCollapse;
     setAutoCollapse(next);
     localStorage.setItem('codedock_auto_collapse_sidebar', next ? 'true' : 'false');
+    if (next !== collapsed) {
+      onToggle();
+    }
   };
 
   const { workspaceItems, infrastructureItems, manageItems } = getSidebarSections(counts);
@@ -74,19 +76,9 @@ export function AppSidebar({
               </span>
             </div>
           ) : (
-            <Tooltip delayDuration={150}>
-              <TooltipTrigger asChild>
-                <button
-                  type="button"
-                  onClick={onToggle}
-                  aria-label="Expand sidebar (⌘B)"
-                  className="mx-auto flex size-8 items-center justify-center rounded-lg text-muted-foreground transition-colors hover:bg-sidebar-accent hover:text-sidebar-foreground"
-                >
-                  <PanelLeft className="size-4 text-primary" />
-                </button>
-              </TooltipTrigger>
-              <TooltipContent side="right">Expand sidebar (⌘B)</TooltipContent>
-            </Tooltip>
+            <div className="mx-auto flex size-7 items-center justify-center rounded-lg bg-primary/20 font-bold text-primary text-xs ring-1 ring-primary/40">
+              CD
+            </div>
           )}
 
           {!navCollapsed && (
@@ -111,8 +103,8 @@ export function AppSidebar({
           )}
         </div>
 
-        {/* Quick Search */}
-        <div className="p-2.5 pb-1">
+        {/* Quick Search & Collapsed Expand Toggle */}
+        <div className="p-2.5 pb-1 space-y-1.5">
           {!navCollapsed ? (
             <button
               type="button"
@@ -128,18 +120,35 @@ export function AppSidebar({
               </kbd>
             </button>
           ) : (
-            <Tooltip>
-              <TooltipTrigger asChild>
-                <button
-                  type="button"
-                  onClick={onOpenCommand}
-                  className="mx-auto flex size-9 items-center justify-center rounded-lg border border-sidebar-border/80 bg-sidebar-accent/40 text-muted-foreground transition-colors hover:bg-sidebar-accent hover:text-sidebar-foreground"
-                >
-                  <Search className="size-3.5" />
-                </button>
-              </TooltipTrigger>
-              <TooltipContent side="right">Search (Ctrl+K)</TooltipContent>
-            </Tooltip>
+            <>
+              <Tooltip>
+                <TooltipTrigger asChild>
+                  <button
+                    type="button"
+                    onClick={onOpenCommand}
+                    className="mx-auto flex size-9 items-center justify-center rounded-lg border border-sidebar-border/80 bg-sidebar-accent/40 text-muted-foreground transition-colors hover:bg-sidebar-accent hover:text-sidebar-foreground"
+                  >
+                    <Search className="size-3.5" />
+                  </button>
+                </TooltipTrigger>
+                <TooltipContent side="right">Search (Ctrl+K)</TooltipContent>
+              </Tooltip>
+
+              {/* Show Expand button right below search in collapsed state */}
+              <Tooltip delayDuration={150}>
+                <TooltipTrigger asChild>
+                  <button
+                    type="button"
+                    onClick={onToggle}
+                    aria-label="Expand sidebar (⌘B)"
+                    className="mx-auto flex size-9 items-center justify-center rounded-lg text-muted-foreground transition-colors hover:bg-sidebar-accent hover:text-sidebar-foreground"
+                  >
+                    <PanelLeft className="size-4" />
+                  </button>
+                </TooltipTrigger>
+                <TooltipContent side="right">Expand sidebar (⌘B)</TooltipContent>
+              </Tooltip>
+            </>
           )}
         </div>
 
@@ -154,16 +163,11 @@ export function AppSidebar({
                 </p>
               )}
               {workspaceItems.map((item) => (
-                <NavItem
-                  key={item.url + item.title}
-                  item={item}
-                  exact={item.exact}
-                  collapsed={navCollapsed}
-                />
+                <NavItem key={item.url + item.title} item={item} collapsed={navCollapsed} />
               ))}
             </div>
 
-            {/* Infrastructure Group */}
+            {/* Fleet & Infrastructure Group */}
             <div className="space-y-0.5">
               {!navCollapsed && (
                 <p className="px-2.5 py-1 font-semibold text-[10px] text-muted-foreground/75 uppercase tracking-wider">

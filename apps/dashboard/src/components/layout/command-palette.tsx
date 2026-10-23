@@ -91,7 +91,7 @@ export function CommandPalette({ open, onOpenChange }: CommandPaletteProps) {
       title="Global Command Palette"
       description="Search projects, services, servers, and execute commands."
       showCloseButton={false}
-      className="top-[14%] max-w-2xl border-border/80 bg-popover shadow-2xl"
+      className="top-16 translate-y-0 w-[95vw] sm:max-w-2xl border-border/80 bg-popover shadow-2xl"
     >
       <CommandInput
         value={search}

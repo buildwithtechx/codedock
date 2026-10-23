@@ -1,10 +1,20 @@
 export interface CodedockThemeFile {
   version: 1;
+  id?: string;
   name: string;
   author?: string;
+  base?: 'dark' | 'dim' | 'light';
   mode: 'dark' | 'dim' | 'light';
   radius?: string;
   tokens: Record<string, string>;
+  typography?: {
+    sans?: string;
+    mono?: string;
+    size?: number;
+    monoSize?: number;
+    lineHeight?: number;
+    weight?: number;
+  };
 }
 
 const ILLEGAL_CHARS = [';', '{', '}', '<', '>', '\\'];
@@ -16,24 +26,23 @@ export function validateThemeFile(
     return { valid: false, error: 'Theme file must be a JSON object' };
   }
 
-  const payload = data as Partial<CodedockThemeFile>;
+  const payload = data as Partial<CodedockThemeFile> & { base?: string };
 
   if (payload.version !== 1) {
     return { valid: false, error: 'Unsupported theme file version (expected version: 1)' };
   }
 
-  if (typeof payload.name !== 'string' || !payload.name.trim() || payload.name.length > 64) {
+  const rawName = payload.name || payload.id;
+  if (typeof rawName !== 'string' || !rawName.trim() || rawName.length > 64) {
     return { valid: false, error: 'Theme name must be a string between 1 and 64 characters' };
   }
 
-  if (
-    payload.mode !== 'dark' &&
-    payload.mode !== 'dim' &&
-    payload.mode !== 'light' &&
-    payload.mode !== 'system'
-  ) {
+  const rawMode = payload.mode ?? payload.base;
+  if (rawMode !== 'dark' && rawMode !== 'dim' && rawMode !== 'light' && rawMode !== 'system') {
     return { valid: false, error: 'Theme mode must be one of: "dark", "dim", "light", "system"' };
   }
+
+  const mode = (rawMode as string) === 'system' ? 'dark' : rawMode;
 
   if (payload.radius && typeof payload.radius !== 'string') {
     return { valid: false, error: 'Theme radius must be a valid CSS string' };
@@ -62,11 +71,14 @@ export function validateThemeFile(
     valid: true,
     theme: {
       version: 1,
-      name: payload.name.trim(),
+      id: payload.id,
+      name: rawName.trim(),
       author: typeof payload.author === 'string' ? payload.author.slice(0, 64) : undefined,
-      mode: payload.mode,
+      base: mode,
+      mode,
       radius: payload.radius,
       tokens: payload.tokens,
+      typography: payload.typography,
     },
   };
 }
@@ -100,5 +112,6 @@ export async function parseThemeFile(file: File): Promise<CodedockThemeFile> {
   if (!result.valid) {
     throw new Error(result.error);
   }
+
   return result.theme;
 }

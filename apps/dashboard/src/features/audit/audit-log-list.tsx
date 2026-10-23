@@ -87,13 +87,6 @@ export function AuditLogList() {
 
   return (
     <div className="space-y-6">
-      <header>
-        <h1 className="font-medium text-2xl text-foreground tracking-tight">Audit log</h1>
-        <p className="mt-1 text-muted-foreground text-sm">
-          Everything that happened in this organization, who did it, and when.
-        </p>
-      </header>
-
       <div className="flex items-center gap-1 overflow-x-auto border-border/50 border-b pb-px">
         <button
           type="button"

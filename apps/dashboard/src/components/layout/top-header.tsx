@@ -4,7 +4,6 @@ import {
   ChevronsUpDown,
   Menu,
   Moon,
-  PanelLeft,
   Plus,
   Search,
   Sun,
@@ -44,15 +43,9 @@ interface TopHeaderProps {
   mobileOpen: boolean;
   onToggleMobile: () => void;
   onOpenCommand: () => void;
-  onToggleSidebar?: () => void;
 }
 
-export function TopHeader({
-  mobileOpen,
-  onToggleMobile,
-  onOpenCommand,
-  onToggleSidebar,
-}: TopHeaderProps) {
+export function TopHeader({ mobileOpen, onToggleMobile, onOpenCommand }: TopHeaderProps) {
   const pathname = useRouterState({
     select: (state) => state.location.pathname,
   });
@@ -103,17 +96,6 @@ export function TopHeader({
         >
           {mobileOpen ? <X className="size-4" /> : <Menu className="size-4" />}
         </button>
-
-        {onToggleSidebar && (
-          <button
-            type="button"
-            onClick={onToggleSidebar}
-            aria-label="Toggle sidebar (⌘B)"
-            className="hidden size-8 items-center justify-center rounded-lg border border-sidebar-border text-muted-foreground transition-colors hover:bg-sidebar-accent hover:text-sidebar-foreground md:flex"
-          >
-            <PanelLeft className="size-4" />
-          </button>
-        )}
 
         <Breadcrumb className="hidden sm:block">
           <BreadcrumbList className="font-medium text-muted-foreground text-xs">

@@ -14,7 +14,10 @@ import { CommandPalette } from './command-palette';
 import { TopHeader } from './top-header';
 
 export function AppLayout({ children }: { children: React.ReactNode }) {
-  const [sidebarCollapsed, setSidebarCollapsed] = useState(false);
+  const [sidebarCollapsed, setSidebarCollapsed] = useState(() => {
+    if (typeof window === 'undefined') return false;
+    return localStorage.getItem('codedock_auto_collapse_sidebar') === 'true';
+  });
   const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
   const [commandOpen, setCommandOpen] = useState(false);
   const pathname = useRouterState({
@@ -62,7 +65,6 @@ export function AppLayout({ children }: { children: React.ReactNode }) {
           mobileOpen={mobileMenuOpen}
           onToggleMobile={() => setMobileMenuOpen((p) => !p)}
           onOpenCommand={() => setCommandOpen(true)}
-          onToggleSidebar={() => setSidebarCollapsed((p) => !p)}
         />
         <main className="dashboard-content relative min-h-0 min-w-0 flex-1 overflow-y-auto overscroll-y-contain p-4 sm:p-5 lg:p-6 bg-background text-foreground">
           <div key={pathname} className="page-transition mx-auto w-full max-w-[1600px]">

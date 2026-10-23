@@ -1,14 +1,5 @@
 import { Link } from '@tanstack/react-router';
-import {
-  ArrowDownToLine,
-  ArrowLeft,
-  ArrowUpToLine,
-  Moon,
-  Plus,
-  Sun,
-  SunMedium,
-  Tv,
-} from 'lucide-react';
+import { ArrowDownToLine, ArrowLeft, ArrowUpToLine } from 'lucide-react';
 import { useEffect, useState } from 'react';
 import { toast } from 'sonner';
 import { Button } from '@codedock/ui/button';
@@ -26,16 +17,11 @@ import {
 import { useAuthStore } from '#/stores/auth-store';
 import { AppearanceFloatingBar } from './appearance-floating-bar';
 import { AppearanceLivePreview } from './appearance-live-preview';
+import { AppearanceModeStrip } from './appearance-mode-strip';
 import { DesignTokensSection } from './design-tokens-section';
 import { ThemeImportModal } from './theme-import-modal';
 import { TypographySection } from './typography-section';
-
-const MODES: { id: ThemeMode; label: string; icon: typeof Sun }[] = [
-  { id: 'light', label: 'Light', icon: Sun },
-  { id: 'dim', label: 'Dim', icon: SunMedium },
-  { id: 'dark', label: 'Dark', icon: Moon },
-  { id: 'system', label: 'System', icon: Tv },
-];
+import { getEffectiveThemeTokens } from './appearance-tokens-data';
 
 export function AppearanceEditor() {
   const { theme, setTheme } = useTheme();
@@ -43,8 +29,8 @@ export function AppearanceEditor() {
   const owner = user?.id || 'default';
   const cacheKey = appearanceCacheKey(owner);
 
-  const [saved, setSaved] = useState<AppearancePreferences>(() => {
-    return (
+  const [saved, setSaved] = useState<AppearancePreferences>(
+    () =>
       cachedAppearance(cacheKey) ?? {
         activeTheme: 'neutral-slate',
         mode: (theme as ThemeMode) || 'dark',
@@ -52,8 +38,7 @@ export function AppearanceEditor() {
         tokens: {},
         customThemes: [],
       }
-    );
-  });
+  );
 
   const [draft, setDraft] = useState<AppearancePreferences>(saved);
   const [importModalOpen, setImportModalOpen] = useState(false);
@@ -136,14 +121,25 @@ export function AppearanceEditor() {
   };
 
   const handleDownloadTheme = () => {
+    const mode = draft.mode === 'system' ? 'dark' : (draft.mode as 'light' | 'dim' | 'dark');
     downloadThemeFile({
       version: 1,
-      name: draft.activeTheme || 'Codedock Custom',
-      mode: draft.mode === 'system' ? 'dark' : draft.mode,
+      id: draft.activeTheme || `theme-${Date.now()}`,
+      name: draft.activeTheme || `${mode.charAt(0).toUpperCase() + mode.slice(1)} Custom`,
+      base: mode,
+      mode,
       radius: draft.radius || '0.5rem',
-      tokens: draft.tokens ?? {},
+      tokens: getEffectiveThemeTokens(mode, draft.tokens ?? {}),
+      typography: {
+        sans: draft.fontFamily || 'system',
+        mono: 'mono',
+        size: 14,
+        monoSize: 13,
+        lineHeight: 1.5,
+        weight: 400,
+      },
     });
-    toast.success('Theme JSON downloaded');
+    toast.success('Theme JSON downloaded with full tokens');
   };
 
   return (
@@ -195,47 +191,11 @@ export function AppearanceEditor() {
       </div>
 
       {/* Theme Mode Strip Card */}
-      <section className="rounded-2xl border border-border/60 bg-card p-4">
-        <div className="flex flex-wrap items-center justify-between gap-3">
-          <div
-            role="group"
-            aria-label="Presets"
-            className="grid w-full grid-cols-2 gap-1 rounded-xl bg-background/60 p-1 sm:flex sm:w-auto sm:flex-wrap"
-          >
-            {MODES.map((m) => {
-              const Icon = m.icon;
-              const isSelected = draft.mode === m.id;
-              return (
-                <button
-                  key={m.id}
-                  type="button"
-                  aria-pressed={isSelected}
-                  onClick={() => handleModeChange(m.id)}
-                  className={`flex h-9 items-center gap-2 rounded-lg px-3.5 font-medium text-xs transition-colors ${
-                    isSelected
-                      ? 'bg-foreground/[0.08] text-foreground hover:bg-foreground/[0.08]'
-                      : 'text-muted-foreground hover:bg-muted/50 hover:text-foreground'
-                  }`}
-                >
-                  <Icon className="size-4 shrink-0" />
-                  <span>{m.label}</span>
-                </button>
-              );
-            })}
-          </div>
-
-          <Button
-            type="button"
-            variant="ghost"
-            size="sm"
-            onClick={handleCreateTheme}
-            className="gap-1.5 text-xs text-muted-foreground hover:text-foreground"
-          >
-            <Plus className="size-3.5" />
-            <span>New theme</span>
-          </Button>
-        </div>
-      </section>
+      <AppearanceModeStrip
+        currentMode={draft.mode}
+        onSelectMode={handleModeChange}
+        onNewTheme={handleCreateTheme}
+      />
 
       {/* Two Column Layout (Tokens + Typography Left, Live Preview Right) */}
       <div className="grid grid-cols-1 gap-6 lg:grid-cols-[1fr_360px]">
@@ -280,13 +240,12 @@ export function AppearanceEditor() {
         open={importModalOpen}
         onOpenChange={setImportModalOpen}
         onImport={(imported) => {
-          const next: AppearancePreferences = {
+          updateDraft({
             ...draft,
             activeTheme: imported.id,
             customThemes: [...(draft.customThemes ?? []), imported],
             tokens: { ...(draft.tokens ?? {}), ...(imported.tokens ?? {}) },
-          };
-          updateDraft(next);
+          });
         }}
       />
     </div>

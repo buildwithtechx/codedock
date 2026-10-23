@@ -66,13 +66,13 @@ export function SidebarUserPopover({
   return (
     <div className="flex w-full items-center gap-1">
       <DropdownMenu open={open} onOpenChange={setOpen}>
-        <DropdownMenuTrigger asChild>
-          {collapsed ? (
-            <Tooltip delayDuration={150}>
-              <TooltipTrigger asChild>
+        {collapsed ? (
+          <Tooltip delayDuration={150}>
+            <TooltipTrigger asChild>
+              <DropdownMenuTrigger asChild>
                 <button
                   type="button"
-                  className="mx-auto flex size-9 items-center justify-center rounded-xl transition-colors hover:bg-sidebar-accent"
+                  className="mx-auto flex size-9 items-center justify-center rounded-xl transition-colors hover:bg-sidebar-accent cursor-pointer"
                   aria-label="User account menu"
                 >
                   <Avatar className="size-8 shrink-0 ring-1 ring-sidebar-border">
@@ -81,15 +81,17 @@ export function SidebarUserPopover({
                     </AvatarFallback>
                   </Avatar>
                 </button>
-              </TooltipTrigger>
-              <TooltipContent side="right" className="text-xs">
-                {userName}
-              </TooltipContent>
-            </Tooltip>
-          ) : (
+              </DropdownMenuTrigger>
+            </TooltipTrigger>
+            <TooltipContent side="right" className="text-xs">
+              {userName}
+            </TooltipContent>
+          </Tooltip>
+        ) : (
+          <DropdownMenuTrigger asChild>
             <button
               type="button"
-              className="group flex min-w-0 flex-1 items-center justify-between gap-2 rounded-xl p-1.5 text-left transition-colors hover:bg-sidebar-accent/80"
+              className="group flex min-w-0 flex-1 items-center justify-between gap-2 rounded-xl p-1.5 text-left transition-colors hover:bg-sidebar-accent/80 cursor-pointer"
               aria-label="User account menu"
             >
               <div className="flex min-w-0 items-center gap-2.5">
@@ -105,12 +107,12 @@ export function SidebarUserPopover({
               </div>
               <ChevronsUpDown className="size-3.5 shrink-0 text-muted-foreground transition-transform group-hover:text-sidebar-foreground" />
             </button>
-          )}
-        </DropdownMenuTrigger>
+          </DropdownMenuTrigger>
+        )}
 
         <DropdownMenuContent
-          side="top"
-          align={collapsed ? 'start' : 'center'}
+          side={collapsed ? 'right' : 'top'}
+          align={collapsed ? 'end' : 'center'}
           sideOffset={8}
           className="w-64 rounded-xl border border-border/80 bg-popover p-1.5 text-popover-foreground shadow-2xl"
         >

@@ -1,5 +1,6 @@
 import { Activity, Bot, Search, Terminal, Webhook, Wrench } from 'lucide-react';
 import { Input } from '@codedock/ui/input';
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@codedock/ui/select';
 import type { AuditFacets, AuditSource } from '#/interfaces/audit';
 
 export type PeriodKey = 'all' | 'today' | '7d' | '30d' | '90d';
@@ -50,32 +51,39 @@ export function AuditFilterBar({
           />
         </div>
 
-        <select
-          value={actor}
-          onChange={(e) => onActorChange(e.target.value)}
-          aria-label="Filter by actor"
-          className="h-10 rounded-xl border border-border/60 bg-muted/40 px-3 font-medium text-foreground text-xs focus:outline-none focus:ring-1 focus:ring-ring"
-        >
-          <option value="">Anyone</option>
-          {facets?.actors?.map((a) => (
-            <option key={a.id} value={a.id}>
-              {a.name || a.email || a.id.slice(0, 8)}
-            </option>
-          ))}
-        </select>
+        <div>
+          <Select
+            value={actor || 'all'}
+            onValueChange={(val) => onActorChange(val === 'all' ? '' : val)}
+          >
+            <SelectTrigger className="h-10 rounded-xl border border-border/60 bg-muted/40 px-3 text-xs">
+              <SelectValue placeholder="Anyone" />
+            </SelectTrigger>
+            <SelectContent>
+              <SelectItem value="all">Anyone</SelectItem>
+              {facets?.actors?.map((a) => (
+                <SelectItem key={a.id} value={a.id}>
+                  {a.name || a.email || a.id.slice(0, 8)}
+                </SelectItem>
+              ))}
+            </SelectContent>
+          </Select>
+        </div>
 
-        <select
-          value={period}
-          onChange={(e) => onPeriodChange(e.target.value as PeriodKey)}
-          aria-label="Filter by time period"
-          className="h-10 rounded-xl border border-border/60 bg-muted/40 px-3 font-medium text-foreground text-xs focus:outline-none focus:ring-1 focus:ring-ring"
-        >
-          <option value="all">All time</option>
-          <option value="today">Today</option>
-          <option value="7d">Last 7 days</option>
-          <option value="30d">Last 30 days</option>
-          <option value="90d">Last 90 days</option>
-        </select>
+        <div>
+          <Select value={period} onValueChange={(val) => onPeriodChange(val as PeriodKey)}>
+            <SelectTrigger className="h-10 rounded-xl border border-border/60 bg-muted/40 px-3 text-xs">
+              <SelectValue />
+            </SelectTrigger>
+            <SelectContent>
+              <SelectItem value="all">All time</SelectItem>
+              <SelectItem value="today">Today</SelectItem>
+              <SelectItem value="7d">Last 7 days</SelectItem>
+              <SelectItem value="30d">Last 30 days</SelectItem>
+              <SelectItem value="90d">Last 90 days</SelectItem>
+            </SelectContent>
+          </Select>
+        </div>
       </div>
 
       <div className="flex flex-wrap items-center gap-1.5 pt-1">
