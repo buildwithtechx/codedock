@@ -1,7 +1,7 @@
+import { Button } from '@codedock/ui/button';
 import { Check, Copy, Key, ShieldCheck } from 'lucide-react';
 import { useEffect, useState } from 'react';
 import { toast } from 'sonner';
-import { Button } from '@codedock/ui/button';
 import { McpClientSetup } from './mcp-client-setup';
 import { McpTokenSetup } from './mcp-token-setup';
 import { McpToolsList } from './mcp-tools-list';

@@ -1,8 +1,8 @@
+import { useTheme } from '@codedock/ui';
+import { Button } from '@codedock/ui/button';
 import { Link } from '@tanstack/react-router';
 import { Check, SunMedium } from 'lucide-react';
 import { useId } from 'react';
-import { Button } from '@codedock/ui/button';
-import { useTheme } from '@codedock/ui';
 import type { AppearancePreferences, ThemeMode } from '#/interfaces/appearance';
 import {
   appearanceCacheKey,

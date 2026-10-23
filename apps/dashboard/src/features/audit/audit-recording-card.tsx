@@ -1,6 +1,6 @@
-import { Loader2 } from 'lucide-react';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@codedock/ui/select';
 import { Switch } from '@codedock/ui/switch';
+import { Loader2 } from 'lucide-react';
 
 const RETENTION_CHOICES = [7, 30, 90, 180, 365];
 

@@ -1,6 +1,6 @@
 import { MonitorCog, ShieldCheck } from 'lucide-react';
-import { useAuthStore } from '#/stores/auth-store';
 import { useGetPublicSettings } from '#/hooks/use-settings';
+import { useAuthStore } from '#/stores/auth-store';
 import { SettingsSection } from './settings-section';
 
 export function InstanceInfo() {

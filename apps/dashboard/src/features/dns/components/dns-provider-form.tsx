@@ -1,7 +1,7 @@
-import { CheckCircle2 } from 'lucide-react';
 import { Button } from '@codedock/ui/button';
 import { Input } from '@codedock/ui/input';
 import { Label } from '@codedock/ui/label';
+import { CheckCircle2 } from 'lucide-react';
 
 interface DnsProviderFormProps {
   activeProvider: string;

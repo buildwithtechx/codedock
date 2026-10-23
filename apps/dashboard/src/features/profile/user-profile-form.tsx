@@ -1,6 +1,3 @@
-import { Check, Loader2, Lock, Mail, User } from 'lucide-react';
-import { useState } from 'react';
-import { toast } from 'sonner';
 import { Button } from '@codedock/ui/button';
 import {
   Dialog,
@@ -11,6 +8,11 @@ import {
 } from '@codedock/ui/dialog';
 import { Input } from '@codedock/ui/input';
 import { InputOTP, InputOTPGroup, InputOTPSlot } from '@codedock/ui/input-otp';
+import { Check, Loader2, Lock, Mail, User } from 'lucide-react';
+import { useEffect, useState } from 'react';
+import { toast } from 'sonner';
+import { SettingsRow } from '#/features/settings/settings-row';
+import { SettingsSection } from '#/features/settings/settings-section';
 import {
   useChangePassword,
   useGetProfile,
@@ -18,93 +20,65 @@ import {
   useUpdateProfile,
   useVerifyEmailChange,
 } from '#/hooks/use-profile';
-import { SettingsRow } from '#/features/settings/settings-row';
-import { SettingsSection } from '#/features/settings/settings-section';
 
-export function ProfileNameForm() {
+export function ProfileDetailsForm() {
   const { data: profile, isLoading } = useGetProfile();
   const updateProfile = useUpdateProfile();
-  const [name, setName] = useState('');
-
-  if (!isLoading && profile?.data && !name && profile.data.name) {
-    setName(profile.data.name);
-  }
-
-  const handleSave = (e: React.FormEvent) => {
-    e.preventDefault();
-    updateProfile.mutate(
-      { name },
-      {
-        onSuccess: () => toast.success('Profile name updated!'),
-        onError: (err) => toast.error(err.message),
-      }
-    );
-  };
-
-  return (
-    <form onSubmit={handleSave}>
-      <SettingsSection
-        icon={<User className="size-4 text-primary" />}
-        title="Profile Name"
-        description="Your public display name on Codedock."
-        action={
-          <Button
-            type="submit"
-            size="sm"
-            disabled={isLoading || updateProfile.isPending || name === profile?.data?.name}
-          >
-            {updateProfile.isPending ? (
-              <Loader2 className="mr-2 h-4 w-4 animate-spin" />
-            ) : (
-              <Check className="mr-2 h-4 w-4" />
-            )}
-            Save Changes
-          </Button>
-        }
-      >
-        <SettingsRow
-          label="Full Name"
-          description="Update your display name across workspace views."
-          bordered={false}
-        >
-          <Input
-            id="name"
-            placeholder="John Doe"
-            value={name}
-            onChange={(e) => setName(e.target.value)}
-            className="w-full text-sm"
-          />
-        </SettingsRow>
-      </SettingsSection>
-    </form>
-  );
-}
-
-export function ProfileEmailForm() {
-  const { data: profile, isLoading } = useGetProfile();
   const requestEmailChange = useRequestEmailChange();
   const verifyEmailChange = useVerifyEmailChange();
 
+  const [name, setName] = useState('');
   const [email, setEmail] = useState('');
   const [otpOpen, setOtpOpen] = useState(false);
   const [otp, setOtp] = useState('');
 
-  if (!isLoading && profile?.data && !email && profile.data.email) {
-    setEmail(profile.data.email);
-  }
+  useEffect(() => {
+    if (profile?.data) {
+      if (profile.data.name !== undefined) setName(profile.data.name);
+      if (profile.data.email !== undefined) setEmail(profile.data.email);
+    }
+  }, [profile?.data]);
 
-  const handleRequest = (e: React.FormEvent) => {
+  const originalName = profile?.data?.name ?? '';
+  const originalEmail = profile?.data?.email ?? '';
+  const isNameChanged = name.trim() !== originalName;
+  const isEmailChanged = email.trim().toLowerCase() !== originalEmail.toLowerCase();
+  const isPending = updateProfile.isPending || requestEmailChange.isPending;
+
+  const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault();
-    requestEmailChange.mutate(
-      { newEmail: email },
-      {
-        onSuccess: () => {
-          setOtpOpen(true);
-          toast.success('Verification code sent to your new email.');
-        },
-        onError: (err) => toast.error(err.message),
+    if (!name.trim()) {
+      toast.error('Profile name cannot be empty');
+      return;
+    }
+    if (!email.trim()) {
+      toast.error('Email address cannot be empty');
+      return;
+    }
+
+    if (isNameChanged && !isEmailChanged) {
+      updateProfile.mutate(
+        { name: name.trim() },
+        {
+          onSuccess: () => toast.success('Profile updated successfully'),
+          onError: (err) => toast.error(err.message),
+        }
+      );
+    } else if (isEmailChanged) {
+      if (isNameChanged) {
+        updateProfile.mutate({ name: name.trim() });
       }
-    );
+      requestEmailChange.mutate(
+        { newEmail: email.trim() },
+        {
+          onSuccess: () => {
+            setOtpOpen(true);
+            toast.success('Verification code sent to your new email');
+          },
+          onError: (err) => toast.error(err.message),
+        }
+      );
+    }
   };
 
   const handleVerify = (e: React.FormEvent) => {
@@ -124,33 +98,32 @@ export function ProfileEmailForm() {
 
   return (
     <>
-      <form onSubmit={handleRequest}>
+      <form onSubmit={handleSubmit}>
         <SettingsSection
-          icon={<Mail className="size-4 text-primary" />}
-          title="Email Address"
-          description="Manage the email address associated with your account."
-          action={
-            <Button
-              type="submit"
-              size="sm"
-              disabled={isLoading || requestEmailChange.isPending || email === profile?.data?.email}
-            >
-              {requestEmailChange.isPending ? (
-                <Loader2 className="mr-2 h-4 w-4 animate-spin" />
-              ) : (
-                <Check className="mr-2 h-4 w-4" />
-              )}
-              Save Changes
-            </Button>
-          }
+          icon={<User className="size-4" />}
+          title="Profile Information"
+          description="Update your personal account details and primary email address."
         >
           <SettingsRow
-            label="New Email Address"
-            description="Change the email address associated with your account."
+            label="Full Name"
+            description="Shown on your profile and across team workspaces."
+          >
+            <Input
+              id="profile-name"
+              placeholder="John Doe"
+              value={name}
+              onChange={(e) => setName(e.target.value)}
+              className="w-full text-sm"
+            />
+          </SettingsRow>
+
+          <SettingsRow
+            label="Email Address"
+            description="The primary email address used for login and notifications."
             bordered={false}
           >
             <Input
-              id="email"
+              id="profile-email"
               type="email"
               placeholder="john@example.com"
               value={email}
@@ -158,6 +131,22 @@ export function ProfileEmailForm() {
               className="w-full text-sm"
             />
           </SettingsRow>
+
+          <div className="flex justify-end border-border/40 border-t pt-4">
+            <Button
+              type="submit"
+              size="sm"
+              disabled={isLoading || isPending || (!isNameChanged && !isEmailChanged)}
+              className="gap-1.5"
+            >
+              {isPending ? (
+                <Loader2 className="h-3.5 w-3.5 animate-spin" />
+              ) : (
+                <Check className="h-3.5 w-3.5" />
+              )}
+              <span>Save Profile</span>
+            </Button>
+          </div>
         </SettingsSection>
       </form>
 
@@ -245,23 +234,9 @@ export function ProfilePasswordForm() {
   return (
     <form onSubmit={handleSave}>
       <SettingsSection
-        icon={<Lock className="size-4 text-primary" />}
-        title="Change Password"
-        description="Ensure your account is using a secure password."
-        action={
-          <Button
-            type="submit"
-            size="sm"
-            disabled={changePassword.isPending || !oldPassword || !newPassword}
-          >
-            {changePassword.isPending ? (
-              <Loader2 className="mr-2 h-4 w-4 animate-spin" />
-            ) : (
-              <Check className="mr-2 h-4 w-4" />
-            )}
-            Save Changes
-          </Button>
-        }
+        icon={<Lock className="size-4" />}
+        title="Password & Security"
+        description="Ensure your account is using a secure and robust password."
       >
         <SettingsRow label="Current Password" description="Update the password you use to sign in.">
           <Input
@@ -287,7 +262,26 @@ export function ProfilePasswordForm() {
             placeholder="New Password"
           />
         </SettingsRow>
+
+        <div className="flex justify-end border-border/40 border-t pt-4">
+          <Button
+            type="submit"
+            size="sm"
+            disabled={changePassword.isPending || !oldPassword || !newPassword}
+            className="gap-1.5"
+          >
+            {changePassword.isPending ? (
+              <Loader2 className="mr-2 h-4 w-4 animate-spin" />
+            ) : (
+              <Check className="mr-2 h-4 w-4" />
+            )}
+            <span>Update Password</span>
+          </Button>
+        </div>
       </SettingsSection>
     </form>
   );
 }
+
+export const ProfileNameForm = ProfileDetailsForm;
+export const ProfileEmailForm = ProfileDetailsForm;

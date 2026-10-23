@@ -1,9 +1,9 @@
-import { Upload } from 'lucide-react';
-import { useRef, useState } from 'react';
-import { toast } from 'sonner';
 import { Button } from '@codedock/ui/button';
 import { Input } from '@codedock/ui/input';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@codedock/ui/select';
+import { Upload } from 'lucide-react';
+import { useRef, useState } from 'react';
+import { toast } from 'sonner';
 
 interface TypographySectionProps {
   interfaceFont?: string;

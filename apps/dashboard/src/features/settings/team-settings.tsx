@@ -1,6 +1,6 @@
 import { Building2 } from 'lucide-react';
-import { useListOrganizations } from '#/hooks/use-organizations';
 import { OrganizationMembers } from '#/features/organizations/organization-members';
+import { useListOrganizations } from '#/hooks/use-organizations';
 import { useOrganizationStore } from '#/stores/organization-store';
 
 export function TeamSettings() {

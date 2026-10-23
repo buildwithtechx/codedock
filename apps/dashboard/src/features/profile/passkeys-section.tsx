@@ -1,13 +1,14 @@
+import { Badge } from '@codedock/ui/badge';
+import { Button } from '@codedock/ui/button';
 import { browserSupportsWebAuthn } from '@simplewebauthn/browser';
 import { Fingerprint, KeyRound, Loader2, Pencil, Plus, Trash2 } from 'lucide-react';
 import { useState } from 'react';
-import { Badge } from '@codedock/ui/badge';
-import { Button } from '@codedock/ui/button';
 import {
   PasskeyAddDialog,
   PasskeyDeleteDialog,
   PasskeyRenameDialog,
 } from '#/features/profile/passkeys-dialogs';
+import { SettingsSection } from '#/features/settings/settings-section';
 import {
   useDeletePasskey,
   usePasskeys,
@@ -15,7 +16,6 @@ import {
   useRenamePasskey,
 } from '#/hooks/use-passkeys';
 import type { Passkey } from '#/interfaces/passkey';
-import { SettingsSection } from '#/features/settings/settings-section';
 
 export function PasskeysSection() {
   const { data: passkeysResponse, isLoading } = usePasskeys();
@@ -98,7 +98,7 @@ export function PasskeysSection() {
             <Loader2 className="h-5 w-5 animate-spin text-muted-foreground" />
           </div>
         ) : passkeys.length === 0 ? (
-          <div className="flex flex-col items-center justify-center rounded-xl border border-dashed border-border/60 py-8 text-center">
+          <div className="flex flex-col items-center justify-center rounded-xl border border-border/60 border-dashed py-8 text-center">
             <div className="flex h-10 w-10 items-center justify-center rounded-full bg-primary/10 text-primary">
               <Fingerprint className="h-5 w-5" />
             </div>

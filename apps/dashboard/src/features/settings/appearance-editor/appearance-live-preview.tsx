@@ -1,5 +1,5 @@
-import { LayoutGrid } from 'lucide-react';
 import { Button } from '@codedock/ui/button';
+import { LayoutGrid } from 'lucide-react';
 
 interface AppearanceLivePreviewProps {
   tokens: Record<string, string>;
@@ -15,7 +15,7 @@ export function AppearanceLivePreview({
   const borderCol = tokens['--th-bd-default'] || 'var(--border)';
 
   return (
-    <div className="space-y-2 sticky top-6">
+    <div className="sticky top-6 space-y-2">
       <h3 className="font-semibold text-foreground text-sm">Live preview</h3>
 
       <div
@@ -34,7 +34,7 @@ export function AppearanceLivePreview({
         {/* Workspace status */}
         <div className="mt-4 rounded-xl border border-border/50 bg-background/40 p-3.5">
           <div className="flex items-center gap-2">
-            <span className="size-2 rounded-full bg-emerald-500 shadow-xs shadow-emerald-500/50" />
+            <span className="size-2 rounded-full bg-emerald-500 shadow-emerald-500/50 shadow-xs" />
             <span className="font-medium text-foreground text-xs">{activeThemeName}</span>
           </div>
           <p className="mt-1 text-[11px] text-muted-foreground">
@@ -83,7 +83,7 @@ export function AppearanceLivePreview({
         </div>
 
         {/* 7 Vertical Metric Bars Chart */}
-        <div className="mt-5 flex items-end justify-between gap-2 h-18 px-1">
+        <div className="mt-5 flex h-18 items-end justify-between gap-2 px-1">
           <div className="h-6 w-full rounded-sm bg-sky-500/80 transition-all" />
           <div className="h-10 w-full rounded-sm bg-sky-500/80 transition-all" />
           <div className="h-8 w-full rounded-sm bg-sky-500/80 transition-all" />

@@ -1,9 +1,9 @@
+import { useTheme } from '@codedock/ui';
+import { Button } from '@codedock/ui/button';
 import { Link } from '@tanstack/react-router';
 import { ArrowDownToLine, ArrowLeft, ArrowUpToLine } from 'lucide-react';
 import { useEffect, useState } from 'react';
 import { toast } from 'sonner';
-import { Button } from '@codedock/ui/button';
-import { useTheme } from '@codedock/ui';
 import type { AppearancePreferences, CustomTheme, ThemeMode } from '#/interfaces/appearance';
 import { downloadThemeFile } from '#/lib/theme-export-import';
 import {
@@ -18,10 +18,10 @@ import { useAuthStore } from '#/stores/auth-store';
 import { AppearanceFloatingBar } from './appearance-floating-bar';
 import { AppearanceLivePreview } from './appearance-live-preview';
 import { AppearanceModeStrip } from './appearance-mode-strip';
+import { getEffectiveThemeTokens } from './appearance-tokens-data';
 import { DesignTokensSection } from './design-tokens-section';
 import { ThemeImportModal } from './theme-import-modal';
 import { TypographySection } from './typography-section';
-import { getEffectiveThemeTokens } from './appearance-tokens-data';
 
 export function AppearanceEditor() {
   const { theme, setTheme } = useTheme();
@@ -149,7 +149,7 @@ export function AppearanceEditor() {
         <Link
           to="/settings"
           search={{ tab: 'general' } as never}
-          className="inline-flex items-center gap-1.5 text-xs text-muted-foreground transition-colors hover:text-foreground"
+          className="inline-flex items-center gap-1.5 text-muted-foreground text-xs transition-colors hover:text-foreground"
         >
           <ArrowLeft className="size-3.5" />
           <span>Back to General</span>
@@ -171,7 +171,7 @@ export function AppearanceEditor() {
             variant="outline"
             size="sm"
             onClick={() => setImportModalOpen(true)}
-            className="gap-1.5 text-xs border-border/60"
+            className="gap-1.5 border-border/60 text-xs"
           >
             <ArrowUpToLine className="size-3.5" />
             <span>Import</span>
@@ -182,7 +182,7 @@ export function AppearanceEditor() {
             variant="outline"
             size="sm"
             onClick={handleDownloadTheme}
-            className="gap-1.5 text-xs border-border/60"
+            className="gap-1.5 border-border/60 text-xs"
           >
             <ArrowDownToLine className="size-3.5" />
             <span>Download theme</span>

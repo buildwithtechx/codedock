@@ -1,6 +1,7 @@
 export { BillingSection } from './billing-section';
 export { Security2FASetup } from './security-2fa-setup';
 export {
+  ProfileDetailsForm,
   ProfileEmailForm,
   ProfileNameForm,
   ProfilePasswordForm,

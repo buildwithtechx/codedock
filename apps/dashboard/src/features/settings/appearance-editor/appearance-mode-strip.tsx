@@ -1,5 +1,5 @@
-import { Moon, Plus, Sun, SunMedium, Tv } from 'lucide-react';
 import { Button } from '@codedock/ui/button';
+import { Moon, Plus, Sun, SunMedium, Tv } from 'lucide-react';
 import type { ThemeMode } from '#/interfaces/appearance';
 
 const MODES: { id: ThemeMode; label: string; icon: typeof Sun }[] = [
@@ -55,7 +55,7 @@ export function AppearanceModeStrip({
           variant="ghost"
           size="sm"
           onClick={onNewTheme}
-          className="gap-1.5 text-xs text-muted-foreground hover:text-foreground"
+          className="gap-1.5 text-muted-foreground text-xs hover:text-foreground"
         >
           <Plus className="size-3.5" />
           <span>New theme</span>

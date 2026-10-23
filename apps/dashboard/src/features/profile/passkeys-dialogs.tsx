@@ -1,4 +1,3 @@
-import { Loader2 } from 'lucide-react';
 import { Button } from '@codedock/ui/button';
 import {
   Dialog,
@@ -8,6 +7,7 @@ import {
   DialogTitle,
 } from '@codedock/ui/dialog';
 import { Input } from '@codedock/ui/input';
+import { Loader2 } from 'lucide-react';
 import type { Passkey } from '#/interfaces/passkey';
 
 interface AddDialogProps {

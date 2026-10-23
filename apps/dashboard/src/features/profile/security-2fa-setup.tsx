@@ -1,8 +1,3 @@
-import { useQueryClient } from '@tanstack/react-query';
-import { Loader2, ShieldCheck, Trash2 } from 'lucide-react';
-import QRCode from 'qrcode';
-import { useEffect, useState } from 'react';
-import { toast } from 'sonner';
 import { Button } from '@codedock/ui/button';
 import {
   Dialog,
@@ -12,10 +7,15 @@ import {
   DialogTitle,
 } from '@codedock/ui/dialog';
 import { InputOTP, InputOTPGroup, InputOTPSlot } from '@codedock/ui/input-otp';
-import { useDisable2FA, useSetup2FA, useVerify2FA } from '#/hooks/use-auth';
-import { useGetProfile } from '#/hooks/use-profile';
+import { useQueryClient } from '@tanstack/react-query';
+import { Loader2, ShieldCheck, Trash2 } from 'lucide-react';
+import QRCode from 'qrcode';
+import { useEffect, useState } from 'react';
+import { toast } from 'sonner';
 import { SettingsRow } from '#/features/settings/settings-row';
 import { SettingsSection } from '#/features/settings/settings-section';
+import { useDisable2FA, useSetup2FA, useVerify2FA } from '#/hooks/use-auth';
+import { useGetProfile } from '#/hooks/use-profile';
 
 function OtpSlots() {
   const indices = [0, 1, 2, 3, 4, 5] as const;

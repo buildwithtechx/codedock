@@ -1,10 +1,10 @@
-import { Clock, Shield } from 'lucide-react';
-import { toast } from 'sonner';
 import { Label } from '@codedock/ui/label';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@codedock/ui/select';
 import { Switch } from '@codedock/ui/switch';
-import { useOrganizationStore } from '#/stores/organization-store';
+import { Clock, Shield } from 'lucide-react';
+import { toast } from 'sonner';
 import { useAuditSettings, useUpdateAuditSettings } from '#/hooks/use-audit-logs';
+import { useOrganizationStore } from '#/stores/organization-store';
 
 const RETENTION_OPTIONS = [
   { value: '7', label: '7 days' },

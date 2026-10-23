@@ -1,10 +1,10 @@
-import { Layers } from 'lucide-react';
-import { useCallback, useMemo, useState } from 'react';
-import { toast } from 'sonner';
 import { Button } from '@codedock/ui/button';
+import { ChevronLeft, ChevronRight, Layers } from 'lucide-react';
+import { useCallback, useEffect, useMemo, useRef, useState } from 'react';
+import { toast } from 'sonner';
 import { AUDIT_CATEGORIES } from '#/constants/audit';
-import type { AuditEventRow, AuditFacets } from '#/interfaces/audit';
 import { useAuditFacets, useAuditLogs, useUpdateAuditSettings } from '#/hooks/use-audit-logs';
+import type { AuditEventRow, AuditFacets } from '#/interfaces/audit';
 import { AuditDayGroup } from './audit-day-group';
 import { AuditDetailsDialog } from './audit-details-dialog';
 import { AuditFilterBar, type PeriodKey, type SourceKey } from './audit-filter-bar';
@@ -18,12 +18,32 @@ export function AuditLogList() {
   const [period, setPeriod] = useState<PeriodKey>('all');
   const [source, setSource] = useState<SourceKey>('all');
   const [page, setPage] = useState(1);
-
   const [selectedEvent, setSelectedEvent] = useState<AuditEventRow | null>(null);
   const [savingSettings, setSavingSettings] = useState(false);
   const updateSettingsMutation = useUpdateAuditSettings();
 
-  const query = useMemo(
+  const tabsRef = useRef<HTMLDivElement>(null);
+  const [canScrollLeft, setCanScrollLeft] = useState(false);
+  const [canScrollRight, setCanScrollRight] = useState(false);
+
+  const checkScroll = useCallback(() => {
+    const el = tabsRef.current;
+    if (!el) return;
+    setCanScrollLeft(el.scrollLeft > 4);
+    setCanScrollRight(el.scrollLeft + el.clientWidth < el.scrollWidth - 4);
+  }, []);
+
+  useEffect(() => {
+    checkScroll();
+    window.addEventListener('resize', checkScroll);
+    return () => window.removeEventListener('resize', checkScroll);
+  }, [checkScroll]);
+
+  const scrollTabs = (dir: 'left' | 'right') => {
+    tabsRef.current?.scrollBy({ left: dir === 'left' ? -220 : 220, behavior: 'smooth' });
+  };
+
+  const logsQuery = useMemo(
     () => ({
       category: category === 'all' ? undefined : category,
       source: source === 'all' ? undefined : source,
@@ -34,8 +54,18 @@ export function AuditLogList() {
     [category, source, actor, period, search]
   );
 
-  const { data: logsRes, isLoading: loading } = useAuditLogs({ ...query, page, perPage: 50 });
-  const { data: facetsRes } = useAuditFacets(query);
+  const facetsQuery = useMemo(
+    () => ({
+      source: source === 'all' ? undefined : source,
+      actorUserId: actor || undefined,
+      from: periodStart(period),
+      q: search.trim() || undefined,
+    }),
+    [source, actor, period, search]
+  );
+
+  const { data: logsRes, isLoading: loading } = useAuditLogs({ ...logsQuery, page, perPage: 50 });
+  const { data: facetsRes } = useAuditFacets(facetsQuery);
 
   const rawList = logsRes?.data;
   const events = Array.isArray(rawList)
@@ -87,50 +117,91 @@ export function AuditLogList() {
 
   return (
     <div className="space-y-6">
-      <div className="flex items-center gap-1 overflow-x-auto border-border/50 border-b pb-px">
-        <button
-          type="button"
-          onClick={() => {
-            setCategory('all');
-            setPage(1);
-          }}
-          className={`relative inline-flex items-center gap-2 whitespace-nowrap px-3 py-2.5 font-medium text-sm transition-colors ${
-            category === 'all'
-              ? 'text-foreground'
-              : 'text-muted-foreground hover:text-foreground/80'
-          }`}
-        >
-          All {facets?.total !== undefined ? facets.total : ''}
-          {category === 'all' && (
-            <span className="absolute inset-x-0 -bottom-px h-0.5 rounded-full bg-primary" />
-          )}
-        </button>
-
-        {AUDIT_CATEGORIES.map((cat) => {
-          const Icon = CATEGORY_ICONS[cat.id] ?? Layers;
-          const count = counts.get(cat.id) ?? 0;
-          const isSelected = category === cat.id;
-
-          return (
-            <button
-              key={cat.id}
+      <div className="group relative">
+        {canScrollLeft && (
+          <div className="absolute top-0 bottom-0 left-0 z-10 flex items-center bg-gradient-to-r from-background via-background/80 to-transparent pr-4">
+            <Button
               type="button"
-              onClick={() => {
-                setCategory(cat.id);
-                setPage(1);
-              }}
-              className={`relative inline-flex items-center gap-2 whitespace-nowrap px-3 py-2.5 font-medium text-sm transition-colors ${
-                isSelected ? 'text-foreground' : 'text-muted-foreground hover:text-foreground/80'
-              }`}
+              variant="outline"
+              size="icon"
+              onClick={() => scrollTabs('left')}
+              className="h-7 w-7 rounded-full bg-card shadow-sm hover:bg-accent"
+              aria-label="Scroll tabs left"
             >
-              <Icon className="size-4" />
-              {cat.label} {count}
-              {isSelected && (
-                <span className="absolute inset-x-0 -bottom-px h-0.5 rounded-full bg-primary" />
-              )}
-            </button>
-          );
-        })}
+              <ChevronLeft className="h-3.5 w-3.5" />
+            </Button>
+          </div>
+        )}
+
+        <div
+          ref={tabsRef}
+          onScroll={checkScroll}
+          onWheel={(e) => {
+            if (Math.abs(e.deltaY) > Math.abs(e.deltaX)) {
+              e.currentTarget.scrollLeft += e.deltaY;
+            }
+          }}
+          className="no-scrollbar flex select-none items-center gap-1 overflow-x-auto scroll-smooth border-border/50 border-b pb-px"
+        >
+          <button
+            type="button"
+            onClick={() => {
+              setCategory('all');
+              setPage(1);
+            }}
+            className={`relative inline-flex items-center gap-2 whitespace-nowrap px-3 py-2.5 font-medium text-sm transition-colors ${
+              category === 'all'
+                ? 'text-foreground'
+                : 'text-muted-foreground hover:text-foreground/80'
+            }`}
+          >
+            All {facets?.total !== undefined ? facets.total : ''}
+            {category === 'all' && (
+              <span className="absolute inset-x-0 -bottom-px h-0.5 rounded-full bg-primary" />
+            )}
+          </button>
+
+          {AUDIT_CATEGORIES.map((cat) => {
+            const Icon = CATEGORY_ICONS[cat.id] ?? Layers;
+            const count = counts.get(cat.id) ?? 0;
+            const isSelected = category === cat.id;
+
+            return (
+              <button
+                key={cat.id}
+                type="button"
+                onClick={() => {
+                  setCategory(cat.id);
+                  setPage(1);
+                }}
+                className={`relative inline-flex items-center gap-2 whitespace-nowrap px-3 py-2.5 font-medium text-sm transition-colors ${
+                  isSelected ? 'text-foreground' : 'text-muted-foreground hover:text-foreground/80'
+                }`}
+              >
+                <Icon className="size-4" />
+                {cat.label} {count}
+                {isSelected && (
+                  <span className="absolute inset-x-0 -bottom-px h-0.5 rounded-full bg-primary" />
+                )}
+              </button>
+            );
+          })}
+        </div>
+
+        {canScrollRight && (
+          <div className="absolute top-0 right-0 bottom-0 z-10 flex items-center bg-gradient-to-l from-background via-background/80 to-transparent pl-4">
+            <Button
+              type="button"
+              variant="outline"
+              size="icon"
+              onClick={() => scrollTabs('right')}
+              className="h-7 w-7 rounded-full bg-card shadow-sm hover:bg-accent"
+              aria-label="Scroll tabs right"
+            >
+              <ChevronRight className="h-3.5 w-3.5" />
+            </Button>
+          </div>
+        )}
       </div>
 
       <div className="space-y-6">

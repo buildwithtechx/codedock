@@ -10,6 +10,7 @@ vi.mock('#/hooks/use-settings', () => ({
 vi.mock('#/features/profile/passkeys-section', () => ({ PasskeysSection: () => null }));
 vi.mock('#/features/profile/security-2fa-setup', () => ({ Security2FASetup: () => null }));
 vi.mock('#/features/profile/user-profile-form', () => ({
+  ProfileDetailsForm: () => null,
   ProfileEmailForm: () => null,
   ProfileNameForm: () => null,
   ProfilePasswordForm: () => null,

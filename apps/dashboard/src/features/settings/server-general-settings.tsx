@@ -1,11 +1,11 @@
-import { Check, Clock, Cpu, Globe } from 'lucide-react';
-import { useEffect, useState } from 'react';
-import { toast } from 'sonner';
 import { Button } from '@codedock/ui/button';
 import { Input } from '@codedock/ui/input';
 import { Skeleton } from '@codedock/ui/skeleton';
-import type { ServerSettings } from '#/interfaces/settings';
+import { Check, Clock, Cpu, Globe } from 'lucide-react';
+import { useEffect, useState } from 'react';
+import { toast } from 'sonner';
 import { useGetSettings, useUpdateSettings } from '#/hooks/use-settings';
+import type { ServerSettings } from '#/interfaces/settings';
 import { PreferenceRow } from './preference-row';
 import {
   type GeneralFields,

@@ -1,6 +1,3 @@
-import { ArrowUpToLine, FileJson, UploadCloud } from 'lucide-react';
-import { useRef, useState } from 'react';
-import { toast } from 'sonner';
 import { Button } from '@codedock/ui/button';
 import {
   Dialog,
@@ -11,6 +8,9 @@ import {
   DialogTitle,
 } from '@codedock/ui/dialog';
 import { Textarea } from '@codedock/ui/textarea';
+import { ArrowUpToLine, FileJson, UploadCloud } from 'lucide-react';
+import { useRef, useState } from 'react';
+import { toast } from 'sonner';
 import type { CustomTheme } from '#/interfaces/appearance';
 import { parseThemeFile, validateThemeFile } from '#/lib/theme-export-import';
 
@@ -100,18 +100,18 @@ export function ThemeImportModal({ open, onOpenChange, onImport }: ThemeImportMo
           <button
             type="button"
             onClick={() => fileInputRef.current?.click()}
-            className="flex w-full flex-col items-center justify-center rounded-xl border border-dashed border-border/80 bg-muted/10 p-6 transition-colors hover:border-primary/50 hover:bg-muted/20"
+            className="flex w-full flex-col items-center justify-center rounded-xl border border-border/80 border-dashed bg-muted/10 p-6 transition-colors hover:border-primary/50 hover:bg-muted/20"
           >
-            <FileJson className="size-8 text-muted-foreground mb-2" />
+            <FileJson className="mb-2 size-8 text-muted-foreground" />
             <span className="font-medium text-foreground text-xs">Click to browse theme JSON</span>
-            <span className="text-[11px] text-muted-foreground mt-1">
+            <span className="mt-1 text-[11px] text-muted-foreground">
               Supports Codedock and OpenShip theme formats
             </span>
           </button>
 
           <div className="relative">
             <div className="absolute inset-0 flex items-center">
-              <span className="w-full border-t border-border/60" />
+              <span className="w-full border-border/60 border-t" />
             </div>
             <div className="relative flex justify-center text-[10px] uppercase">
               <span className="bg-popover px-2 text-muted-foreground">Or paste JSON</span>

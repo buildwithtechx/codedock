@@ -1,5 +1,5 @@
-import type { ReactNode } from 'react';
 import { Switch } from '@codedock/ui/switch';
+import type { ReactNode } from 'react';
 
 export function PreferenceRow({
   title,

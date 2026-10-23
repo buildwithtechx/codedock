@@ -1,4 +1,3 @@
-import { Check, RefreshCw, Trash2 } from 'lucide-react';
 import { Button } from '@codedock/ui/button';
 import {
   Dialog,
@@ -7,6 +6,7 @@ import {
   DialogDescription,
   DialogTitle,
 } from '@codedock/ui/dialog';
+import { Check, RefreshCw, Trash2 } from 'lucide-react';
 
 interface MaintenanceDialogsProps {
   confirmCleanup: boolean;

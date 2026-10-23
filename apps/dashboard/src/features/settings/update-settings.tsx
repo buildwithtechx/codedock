@@ -1,7 +1,7 @@
-import { CheckCircle2, Download, ExternalLink, RefreshCw, ShieldCheck } from 'lucide-react';
-import { toast } from 'sonner';
 import { Button } from '@codedock/ui/button';
 import { Skeleton } from '@codedock/ui/skeleton';
+import { CheckCircle2, Download, ExternalLink, RefreshCw, ShieldCheck } from 'lucide-react';
+import { toast } from 'sonner';
 import { useCheckUpdate, useDeployUpdate, useGetUpdateStatus } from '#/hooks/use-settings';
 import { SettingsSection } from './settings-section';
 

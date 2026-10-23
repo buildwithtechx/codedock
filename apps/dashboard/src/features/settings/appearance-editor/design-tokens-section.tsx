@@ -1,7 +1,7 @@
-import { RotateCcw, Search } from 'lucide-react';
-import { useMemo, useState } from 'react';
 import { Button } from '@codedock/ui/button';
 import { Input } from '@codedock/ui/input';
+import { RotateCcw, Search } from 'lucide-react';
+import { useMemo, useState } from 'react';
 import { TOKEN_CATEGORIES, TOKEN_DEFINITIONS, type TokenCategory } from './appearance-tokens-data';
 
 interface DesignTokensSectionProps {
@@ -87,12 +87,12 @@ export function DesignTokensSection({
               className="group flex flex-col gap-2 py-2.5 sm:flex-row sm:items-center sm:justify-between"
             >
               <div className="min-w-0 flex-1">
-                <span className="font-mono text-xs text-foreground/90">{def.key}</span>
+                <span className="font-mono text-foreground/90 text-xs">{def.key}</span>
               </div>
 
               <div className="flex items-center gap-2">
                 {/* Color Swatch Button with Hidden Native Color Picker */}
-                <label className="relative flex size-8 cursor-pointer shrink-0 items-center justify-center rounded-lg border border-border/80 shadow-inner overflow-hidden">
+                <label className="relative flex size-8 shrink-0 cursor-pointer items-center justify-center overflow-hidden rounded-lg border border-border/80 shadow-inner">
                   <div
                     className="size-full"
                     style={{
@@ -116,7 +116,7 @@ export function DesignTokensSection({
                 <Input
                   value={currentValue}
                   onChange={(e) => onSetToken(def.key, e.target.value)}
-                  className="h-8 w-48 font-mono text-xs bg-background/50 border-border/60"
+                  className="h-8 w-48 border-border/60 bg-background/50 font-mono text-xs"
                   aria-label={`Token value for ${def.key}`}
                 />
 

@@ -1,5 +1,5 @@
-import { Check } from 'lucide-react';
 import { Button } from '@codedock/ui/button';
+import { Check } from 'lucide-react';
 
 interface AppearanceFloatingBarProps {
   isDirty: boolean;
@@ -21,7 +21,7 @@ export function AppearanceFloatingBar({
       <div className="flex items-center gap-2">
         {isDirty ? (
           <>
-            <span className="size-2 rounded-full bg-amber-500 animate-pulse" />
+            <span className="size-2 animate-pulse rounded-full bg-amber-500" />
             <span className="font-medium text-amber-500 text-xs">Unsaved changes</span>
           </>
         ) : (
@@ -35,7 +35,7 @@ export function AppearanceFloatingBar({
           variant="ghost"
           size="sm"
           onClick={onReset}
-          className="text-muted-foreground hover:text-foreground text-xs"
+          className="text-muted-foreground text-xs hover:text-foreground"
         >
           Reset
         </Button>
@@ -46,7 +46,7 @@ export function AppearanceFloatingBar({
           size="sm"
           onClick={onDiscard}
           disabled={!isDirty || isSaving}
-          className="text-muted-foreground hover:text-foreground text-xs"
+          className="text-muted-foreground text-xs hover:text-foreground"
         >
           Discard
         </Button>

@@ -1,6 +1,6 @@
+import { Input } from '@codedock/ui/input';
 import { Info, Lock } from 'lucide-react';
 import type { ReactNode } from 'react';
-import { Input } from '@codedock/ui/input';
 import type { ServerSettings } from '#/interfaces/settings';
 import { PreferenceRow } from './preference-row';
 import { SettingsRow } from './settings-row';
