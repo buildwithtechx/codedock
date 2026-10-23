@@ -24,6 +24,7 @@ export function ProjectDomainsTab({ projectId }: { projectId: string }) {
   const {
     data: domainsRes,
     isLoading: domainsLoading,
+    isFetching: domainsFetching,
     refetch: refetchDomains,
   } = useListProjectDomains(projectId);
   const { data: appsRes, isLoading: appsLoading } = useListAppsByProject(
@@ -190,10 +191,11 @@ export function ProjectDomainsTab({ projectId }: { projectId: string }) {
             <Button
               variant="ghost"
               size="sm"
-              onClick={() => refetchDomains()}
+              disabled={domainsFetching}
+              onClick={() => void refetchDomains()}
               className="h-8 gap-1.5 text-muted-foreground text-xs hover:text-foreground"
             >
-              <RefreshCw className="size-3.5" />
+              <RefreshCw className={`size-3.5 ${domainsFetching ? 'animate-spin' : ''}`} />
               Refresh
             </Button>
           </div>

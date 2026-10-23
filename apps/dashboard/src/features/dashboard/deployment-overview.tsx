@@ -1,4 +1,5 @@
 import { Bar, BarChart, CartesianGrid, ResponsiveContainer, Tooltip, XAxis, YAxis } from 'recharts';
+import { RefreshCw } from 'lucide-react';
 import { Button } from '@codedock/ui/button';
 
 export interface DeploymentHistorySummary {
@@ -108,7 +109,14 @@ export function DeploymentOverview({
               </button>
             ))}
           </div>
-          <Button variant="secondary" size="sm" disabled={loading} onClick={onRefresh}>
+          <Button
+            variant="secondary"
+            size="sm"
+            disabled={loading}
+            onClick={onRefresh}
+            className="gap-1.5"
+          >
+            <RefreshCw className={`size-3.5 ${loading ? 'animate-spin' : ''}`} />
             Refresh
           </Button>
         </div>

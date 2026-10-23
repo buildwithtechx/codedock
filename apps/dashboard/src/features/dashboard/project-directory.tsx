@@ -1,5 +1,5 @@
 import { Link } from '@tanstack/react-router';
-import { Plus, Search, Server } from 'lucide-react';
+import { Plus, RefreshCw, Search, Server } from 'lucide-react';
 import { useEffect, useMemo, useState } from 'react';
 import { HelpMenu } from '#/components/layout/help-menu';
 import { PageHeader } from '#/components/layout/page-header';
@@ -22,7 +22,7 @@ import { ProjectEmptyState } from './project-empty-state';
 const viewStorageKey = 'codedock-projects-view';
 
 export function ProjectDirectory() {
-  const { data, isLoading, isError, refetch } = useListCanvasSummaries();
+  const { data, isLoading, isRefetching, isError, refetch } = useListCanvasSummaries();
   const projects = data?.data || [];
   const [search, setSearch] = useState('');
   const [filter, setFilter] = useState<ProjectHostingFilter>({ kind: 'all' });
@@ -69,6 +69,16 @@ export function ProjectDirectory() {
         }
         action={
           <div className="flex items-center gap-2">
+            <Button
+              variant="ghost"
+              size="icon"
+              disabled={isRefetching}
+              aria-label="Refresh projects"
+              title="Refresh projects"
+              onClick={() => void refetch()}
+            >
+              <RefreshCw className={`size-4 ${isRefetching ? 'animate-spin' : ''}`} />
+            </Button>
             <Button asChild className="gap-2">
               <Link to="/library">
                 <Plus className="h-4 w-4" />

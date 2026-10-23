@@ -1,5 +1,5 @@
 import { useNavigate } from '@tanstack/react-router';
-import { BookOpen, ExternalLink, Plus, Search } from 'lucide-react';
+import { BookOpen, ExternalLink, Plus, RefreshCw, Search } from 'lucide-react';
 import { useEffect, useMemo, useRef, useState } from 'react';
 import { PageHeader } from '#/components/layout/page-header';
 import { Button } from '@codedock/ui/button';
@@ -52,7 +52,7 @@ export function AppCatalog({
   deepLinkAppId?: string;
 }) {
   const navigate = useNavigate();
-  const { data, isLoading, isError, refetch } = useAppCatalog();
+  const { data, isLoading, isFetching, isError, refetch } = useAppCatalog();
   const [query, setQuery] = useState('');
   const [category, setCategory] = useState('all');
   const [addCustomOpen, setAddCustomOpen] = useState(false);
@@ -102,10 +102,23 @@ export function AppCatalog({
           title="Explore & Deploy Apps"
           description="Deploy open-source templates, databases, and services in one click."
           action={
-            <Button variant="outline" onClick={() => setAddCustomOpen(true)} className="gap-2">
-              <Plus className="size-4" />
-              Add custom app
-            </Button>
+            <div className="flex items-center gap-2">
+              <Button
+                type="button"
+                variant="outline"
+                size="icon"
+                onClick={() => void refetch()}
+                disabled={isFetching}
+                title="Refresh catalog"
+                aria-label="Refresh catalog"
+              >
+                <RefreshCw className={`size-4 ${isFetching ? 'animate-spin' : ''}`} />
+              </Button>
+              <Button variant="outline" onClick={() => setAddCustomOpen(true)} className="gap-2">
+                <Plus className="size-4" />
+                Add custom app
+              </Button>
+            </div>
           }
         />
       )}
@@ -123,10 +136,23 @@ export function AppCatalog({
             />
           </div>
           {embedded && (
-            <Button variant="outline" onClick={() => setAddCustomOpen(true)} className="gap-2">
-              <Plus className="size-4" />
-              Add custom app
-            </Button>
+            <div className="flex items-center gap-2">
+              <Button
+                type="button"
+                variant="outline"
+                size="icon"
+                onClick={() => void refetch()}
+                disabled={isFetching}
+                title="Refresh catalog"
+                aria-label="Refresh catalog"
+              >
+                <RefreshCw className={`size-4 ${isFetching ? 'animate-spin' : ''}`} />
+              </Button>
+              <Button variant="outline" onClick={() => setAddCustomOpen(true)} className="gap-2">
+                <Plus className="size-4" />
+                Add custom app
+              </Button>
+            </div>
           )}
         </div>
         {categories.length > 1 && (
@@ -186,7 +212,13 @@ export function AppCatalog({
 
       {!embedded && !isLoading && catalog.length > 0 && (
         <div className="mt-6 flex justify-end">
-          <Button variant="outline" onClick={() => void refetch()}>
+          <Button
+            variant="outline"
+            disabled={isFetching}
+            onClick={() => void refetch()}
+            className="gap-2"
+          >
+            <RefreshCw className={`size-3.5 ${isFetching ? 'animate-spin' : ''}`} />
             Refresh catalog
           </Button>
         </div>

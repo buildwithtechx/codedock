@@ -1,4 +1,5 @@
 import { useSearch } from '@tanstack/react-router';
+import { useQueryClient } from '@tanstack/react-query';
 import { Plus, RefreshCw } from 'lucide-react';
 import { useEffect, useMemo, useState } from 'react';
 import { toast } from 'sonner';
@@ -17,6 +18,7 @@ import { BackupStorageSummary } from './backup-storage-summary';
 import { DestinationModal } from './destination-modal';
 
 export function BackupsList() {
+  const queryClient = useQueryClient();
   const search = useSearch({ strict: false }) as { add?: string } | undefined;
   const [isModalOpen, setIsModalOpen] = useState(search?.add === 'true');
 
@@ -53,6 +55,7 @@ export function BackupsList() {
       recordsQuery.refetch(),
       s3Query.refetch(),
       sftpQuery.refetch(),
+      queryClient.invalidateQueries({ queryKey: ['backup-operations'] }),
     ]);
   };
 

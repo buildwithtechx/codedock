@@ -1,4 +1,5 @@
 import { useMutation, useQuery } from '@tanstack/react-query';
+import { RefreshCw } from 'lucide-react';
 import { useRef, useState } from 'react';
 import { Button } from '@codedock/ui/button';
 import { Input } from '@codedock/ui/input';
@@ -236,7 +237,8 @@ export function ComposeDeployForm({ projectId }: { projectId: string }) {
         {stacks.isError && (
           <p role="alert" className="text-destructive">
             Saved stacks unavailable.{' '}
-            <Button onClick={() => stacks.refetch()} variant="outline">
+            <Button onClick={() => void stacks.refetch()} variant="outline" className="gap-1.5">
+              <RefreshCw className={`size-3.5 ${stacks.isFetching ? 'animate-spin' : ''}`} />
               Retry
             </Button>
           </p>

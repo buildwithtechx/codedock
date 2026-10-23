@@ -1,6 +1,6 @@
 import { useQueries, useQueryClient } from '@tanstack/react-query';
 import { createFileRoute, Link, useNavigate } from '@tanstack/react-router';
-import { Loader2, Plus, Search } from 'lucide-react';
+import { Loader2, Plus, RefreshCw, Search } from 'lucide-react';
 import { useMemo, useState } from 'react';
 import { PageHeader } from '#/components/layout/page-header';
 import { Button } from '@codedock/ui/button';
@@ -36,6 +36,7 @@ export function JobsPage() {
   const {
     data: projectsResponse,
     isLoading: isLoadingProjects,
+    isFetching: isFetchingProjects,
     isError: projectsError,
     refetch: refetchProjects,
   } = useListAllProjects();
@@ -46,6 +47,7 @@ export function JobsPage() {
     queries: projects.map((project) => projectJobsQueryOptions(project.id)),
   });
   const isLoadingTasks = taskQueries.some((query) => query.isLoading);
+  const isRefreshing = isFetchingProjects || taskQueries.some((query) => query.isFetching);
   const failedQueries = taskQueries.flatMap((query, index) =>
     query.isError ? [{ query, project: projects[index] }] : []
   );
@@ -53,6 +55,8 @@ export function JobsPage() {
   const loading = isLoadingProjects || (isLoadingTasks && tasks.length === 0);
 
   const refresh = () => {
+    void refetchProjects();
+    for (const query of taskQueries) void query.refetch();
     void queryClient.invalidateQueries({ queryKey: ['jobs'] });
   };
 
@@ -100,12 +104,25 @@ export function JobsPage() {
           title="Jobs"
           description="Schedule recurring commands on your services and track every run."
         />
-        <Button asChild>
-          <Link to="/jobs/new">
-            <Plus className="size-4" />
-            New job
-          </Link>
-        </Button>
+        <div className="flex items-center gap-2">
+          <Button
+            type="button"
+            variant="outline"
+            size="icon"
+            onClick={refresh}
+            disabled={isRefreshing}
+            title="Refresh jobs"
+            aria-label="Refresh jobs"
+          >
+            <RefreshCw className={`size-4 ${isRefreshing ? 'animate-spin' : ''}`} />
+          </Button>
+          <Button asChild>
+            <Link to="/jobs/new">
+              <Plus className="size-4" />
+              New job
+            </Link>
+          </Button>
+        </div>
       </div>
 
       {loading ? (

@@ -71,6 +71,7 @@ export function useLibraryRepos(provider: string, enabled: boolean) {
     repos: pageItems,
     total: filtered.length,
     loading: query.isLoading,
+    isFetching: query.isFetching,
     isError: query.isError,
     refetch: query.refetch,
     search,

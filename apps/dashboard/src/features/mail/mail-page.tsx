@@ -1,4 +1,4 @@
-import { ArrowLeft, MailPlus, Plus, Server, Trash2 } from 'lucide-react';
+import { ArrowLeft, MailPlus, Plus, RefreshCw, Server, Trash2 } from 'lucide-react';
 import { useState } from 'react';
 import { toast } from 'sonner';
 import { PageHeader } from '#/components/layout/page-header';
@@ -29,7 +29,7 @@ export function MailPage() {
   const [selectedDomain, setSelectedDomain] = useState<string | null>(null);
   const [newDomain, setNewDomain] = useState('');
 
-  const { data: servers = [], isLoading, isError, refetch } = useListMailServers();
+  const { data: servers = [], isLoading, isFetching, isError, refetch } = useListMailServers();
   const createServer = useCreateMailServer();
   const deleteServer = useDeleteMailServer();
 
@@ -118,12 +118,24 @@ export function MailPage() {
               description="Self-hosted mail servers, mailboxes, DNS and deliverability."
             />
           </div>
-          {servers.length > 0 && !isAddingNew && !activeServerId && (
-            <Button onClick={() => setIsAddingNew(true)} className="gap-2 rounded-xl">
-              <MailPlus className="h-4 w-4" />
-              Add mail server
+          <div className="flex items-center gap-2">
+            <Button
+              variant="ghost"
+              size="icon"
+              disabled={isFetching}
+              aria-label="Refresh mail servers"
+              title="Refresh mail servers"
+              onClick={() => void refetch()}
+            >
+              <RefreshCw className={`size-4 ${isFetching ? 'animate-spin' : ''}`} />
             </Button>
-          )}
+            {servers.length > 0 && !isAddingNew && !activeServerId && (
+              <Button onClick={() => setIsAddingNew(true)} className="gap-2 rounded-xl">
+                <MailPlus className="h-4 w-4" />
+                Add mail server
+              </Button>
+            )}
+          </div>
         </div>
       )}
 

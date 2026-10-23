@@ -12,6 +12,7 @@ import { AppSidebar } from './app-sidebar';
 import { BottomDock } from './bottom-dock';
 import { CommandPalette } from './command-palette';
 import { TopHeader } from './top-header';
+import { UpdateCenter } from './update-center';
 
 export function AppLayout({ children }: { children: React.ReactNode }) {
   const [sidebarCollapsed, setSidebarCollapsed] = useState(() => {
@@ -111,6 +112,7 @@ export function AppLayout({ children }: { children: React.ReactNode }) {
       <BottomDock />
       <CommandPalette open={commandOpen} onOpenChange={setCommandOpen} />
       <OrganizationOnboarding />
+      <UpdateCenter />
     </div>
   );
 }

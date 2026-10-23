@@ -1,11 +1,12 @@
-import { AlertTriangle, CheckCircle2, Globe } from 'lucide-react';
+import { Button } from '@codedock/ui/button';
+import { AlertTriangle, CheckCircle2, Globe, RefreshCw } from 'lucide-react';
 import { PageHeader } from '#/components/layout/page-header';
 import { QueryErrorState } from '#/components/query-error-state';
 import { DomainAuditTable } from './components/domain-audit-table';
 import { useListAllDomains } from '#/hooks/use-dns';
 
 export function DnsAuditPage() {
-  const { data: domainsRes, isLoading, isError, refetch } = useListAllDomains();
+  const { data: domainsRes, isLoading, isFetching, isError, refetch } = useListAllDomains();
 
   const domains = domainsRes?.data || [];
   const hasDomains = domains.length > 0;
@@ -28,6 +29,18 @@ export function DnsAuditPage() {
       <PageHeader
         title="Domains"
         description="Audit configured domains, DNS provisioning, and live verification across services."
+        action={
+          <Button
+            variant="ghost"
+            size="icon"
+            disabled={isFetching}
+            aria-label="Refresh domains"
+            title="Refresh domains"
+            onClick={() => void refetch()}
+          >
+            <RefreshCw className={`size-4 ${isFetching ? 'animate-spin' : ''}`} />
+          </Button>
+        }
       />
 
       {showStatCards && (

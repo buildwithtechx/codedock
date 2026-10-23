@@ -30,7 +30,13 @@ export function DeploymentDirectory({ hideHeader = false }: { hideHeader?: boole
     limit: pageSize,
   };
 
-  const { data: deploymentsResponse, isLoading, isError, refetch } = useListByOrganization(filters);
+  const {
+    data: deploymentsResponse,
+    isLoading,
+    isFetching,
+    isError,
+    refetch,
+  } = useListByOrganization(filters);
   const { data: projectsResponse } = useListProjects({ limit: 100 });
 
   const deployments = deploymentsResponse?.data?.records || [];
@@ -93,7 +99,7 @@ export function DeploymentDirectory({ hideHeader = false }: { hideHeader?: boole
 
       <DeploymentOverview
         summary={summary}
-        loading={isLoading}
+        loading={isLoading || isFetching}
         days={days}
         onDaysChange={(d) => {
           setDays(d);

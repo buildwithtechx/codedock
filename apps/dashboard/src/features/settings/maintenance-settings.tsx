@@ -15,7 +15,7 @@ const ProgressBar = ({ value, colorClass }: { value: number; colorClass: string 
 );
 
 export const MaintenancePage = () => {
-  const { data: statsData, refetch } = useGetSystemStats();
+  const { data: statsData, isFetching, refetch } = useGetSystemStats();
   const { mutateAsync: cleanup, isPending: cleaning } = useCleanupSystem();
   const { mutateAsync: restart, isPending: restarting } = useRestartSystem();
   const [confirmCleanup, setConfirmCleanup] = useState(false);
@@ -84,8 +84,8 @@ export const MaintenancePage = () => {
                 Healthy
               </Badge>
             )}
-            <Button variant="outline" size="sm" onClick={() => refetch()} className="gap-1.5">
-              <RefreshCw className="h-3.5 w-3.5" />
+            <Button variant="outline" size="sm" disabled={isFetching} onClick={() => void refetch()} className="gap-1.5">
+              <RefreshCw className={`h-3.5 w-3.5 ${isFetching ? 'animate-spin' : ''}`} />
               Refresh
             </Button>
           </div>

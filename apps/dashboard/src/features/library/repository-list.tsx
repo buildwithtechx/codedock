@@ -7,6 +7,7 @@ import {
   ExternalLink,
   Globe,
   Lock,
+  RefreshCw,
   Search,
 } from 'lucide-react';
 import { Button } from '@codedock/ui/button';
@@ -107,6 +108,18 @@ export function RepositoryList({
             </select>
             <ChevronDown className="pointer-events-none absolute top-1/2 right-2.5 size-3.5 -translate-y-1/2 text-muted-foreground" />
           </div>
+          <Button
+            type="button"
+            variant="outline"
+            size="icon"
+            onClick={() => void repos.refetch()}
+            disabled={repos.isFetching}
+            title="Refresh repositories"
+            aria-label="Refresh repositories"
+            className="shrink-0"
+          >
+            <RefreshCw className={`size-3.5 ${repos.isFetching ? 'animate-spin' : ''}`} />
+          </Button>
         </div>
       </div>
 
@@ -128,13 +141,16 @@ export function RepositoryList({
           <p className="mx-auto mt-1 max-w-sm text-muted-foreground text-sm">
             The provider may be unreachable or the token may have expired.
           </p>
-          <button
+          <Button
             type="button"
+            variant="outline"
+            size="sm"
             onClick={() => void repos.refetch()}
-            className="mt-4 font-medium text-primary text-sm hover:underline"
+            className="mt-4 gap-1.5"
           >
+            <RefreshCw className={`size-3.5 ${repos.isFetching ? 'animate-spin' : ''}`} />
             Try again
-          </button>
+          </Button>
         </div>
       ) : repos.repos.length === 0 ? (
         <div className="px-6 py-12 text-center">

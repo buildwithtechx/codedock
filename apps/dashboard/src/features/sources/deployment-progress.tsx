@@ -1,4 +1,5 @@
 import { useMutation, useQuery } from '@tanstack/react-query';
+import { RefreshCw } from 'lucide-react';
 import { Button } from '@codedock/ui/button';
 import type { BaseResponse } from '#/interfaces/base';
 import { apiClient } from '#/lib/api-client';
@@ -45,7 +46,8 @@ export function DeploymentProgress({ deploymentId }: { deploymentId: string }) {
       {progress.isError && (
         <p role="alert" className="text-destructive">
           Progress unavailable.{' '}
-          <Button variant="outline" onClick={() => progress.refetch()}>
+          <Button variant="outline" onClick={() => void progress.refetch()} className="gap-1.5">
+            <RefreshCw className={`size-3.5 ${progress.isFetching ? 'animate-spin' : ''}`} />
             Retry
           </Button>
         </p>

@@ -1,4 +1,5 @@
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
+import { RefreshCw } from 'lucide-react';
 import { useState } from 'react';
 import { toast } from 'sonner';
 import { Button } from '@codedock/ui/button';
@@ -62,7 +63,8 @@ export function ServiceAutoscaling({ serviceId }: { serviceId: string }) {
         {query.isError && (
           <p role="alert">
             Could not load autoscaling policy.{' '}
-            <Button variant="outline" onClick={() => query.refetch()}>
+            <Button variant="outline" onClick={() => void query.refetch()} className="gap-1.5">
+              <RefreshCw className={`size-3.5 ${query.isFetching ? 'animate-spin' : ''}`} />
               Retry
             </Button>
           </p>

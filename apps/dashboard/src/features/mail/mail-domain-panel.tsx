@@ -1,4 +1,4 @@
-import { CheckCircle2, KeyRound, Plus, ShieldAlert, Trash2, XCircle } from 'lucide-react';
+import { CheckCircle2, KeyRound, Plus, RefreshCw, ShieldAlert, Trash2, XCircle } from 'lucide-react';
 import { useState } from 'react';
 import { Alert, AlertDescription } from '@codedock/ui/alert';
 import { Badge } from '@codedock/ui/badge';
@@ -35,7 +35,11 @@ export function MailDomainPanel({
     refetch,
   } = useListMailboxes(serverId, domainId);
   const { data: dns } = useMailDns(serverId, domainId);
-  const { data: checks, refetch: refetchChecks } = useMailChecks(serverId, domainId);
+  const {
+    data: checks,
+    isFetching: isFetchingChecks,
+    refetch: refetchChecks,
+  } = useMailChecks(serverId, domainId);
   const createMailbox = useCreateMailbox(serverId, domainId);
   const deleteMailbox = useDeleteMailbox(serverId, domainId);
   const createDkim = useCreateDkim(serverId, domainId);
@@ -164,7 +168,14 @@ export function MailDomainPanel({
           <Card className="border-border/60 bg-card">
             <CardHeader className="flex flex-row items-center justify-between">
               <CardTitle>Deliverability checks</CardTitle>
-              <Button variant="outline" size="sm" onClick={() => refetchChecks()}>
+              <Button
+                variant="outline"
+                size="sm"
+                disabled={isFetchingChecks}
+                onClick={() => void refetchChecks()}
+                className="gap-1.5"
+              >
+                <RefreshCw className={`h-3.5 w-3.5 ${isFetchingChecks ? 'animate-spin' : ''}`} />
                 Re-run
               </Button>
             </CardHeader>

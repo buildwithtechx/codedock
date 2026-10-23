@@ -1,18 +1,31 @@
 import { Button } from '@codedock/ui/button';
 import { Skeleton } from '@codedock/ui/skeleton';
-import { CheckCircle2, Download, ExternalLink, RefreshCw, ShieldCheck } from 'lucide-react';
+import {
+  Check,
+  CheckCircle2,
+  Download,
+  ExternalLink,
+  RefreshCw,
+  ShieldCheck,
+  Terminal,
+} from 'lucide-react';
+import { useState } from 'react';
 import { toast } from 'sonner';
-import { useCheckUpdate, useDeployUpdate, useGetUpdateStatus } from '#/hooks/use-settings';
+import { useCheckUpdate, useGetUpdateStatus } from '#/hooks/use-settings';
+import { openInstanceUpgradeModal } from './instance-upgrade-modal';
 import { SettingsSection } from './settings-section';
 
 export const UpdatesPage = () => {
-  const { data, isLoading, refetch } = useGetUpdateStatus();
+  const { data, isLoading, isRefetching, refetch } = useGetUpdateStatus();
   const { mutateAsync: checkUpdate, isPending: checking } = useCheckUpdate();
-  const { mutateAsync: deployUpdate, isPending: deploying } = useDeployUpdate();
+  const [copiedCli, setCopiedCli] = useState(false);
 
   const info = data?.data;
   const hasUpdate = info?.hasUpdate ?? false;
   const upToDate = !isLoading && !hasUpdate;
+  const busyChecking = checking || isRefetching;
+  const latestVer = (info?.latestVersion || '0.1.0').replace(/^v/, '');
+  const cliCommand = `curl -fsSL https://raw.githubusercontent.com/buildwithtechx/codedock/main/scripts/upgrade.sh | bash -s -- v${latestVer}`;
 
   const handleCheck = async () => {
     try {
@@ -21,15 +34,6 @@ export const UpdatesPage = () => {
       toast.success('Update check complete');
     } catch {
       toast.error('Failed to check for updates');
-    }
-  };
-
-  const handleDeploy = async () => {
-    try {
-      await deployUpdate();
-      toast.success('Update started — daemon will restart shortly');
-    } catch {
-      toast.error('Failed to deploy update');
     }
   };
 
@@ -58,40 +62,57 @@ export const UpdatesPage = () => {
                   {isLoading
                     ? 'Checking for updates...'
                     : hasUpdate
-                      ? `Version ${info?.latestVersion} available`
+                      ? `Version v${latestVer} available`
                       : 'Codedock is up to date'}
                 </p>
                 <p className="mt-0.5 text-muted-foreground text-xs">
                   {isLoading ? (
                     <Skeleton className="h-3.5 w-32" />
                   ) : (
-                    `Current version: v${info?.currentVersion || '0.1.0'}`
+                    `Current version: v${(info?.currentVersion || '0.1.0').replace(/^v/, '')}`
                   )}
                 </p>
               </div>
             </div>
 
-            <div className="flex items-center gap-2">
+            <div className="flex flex-wrap items-center gap-2">
               {hasUpdate && (
-                <Button
-                  size="sm"
-                  onClick={handleDeploy}
-                  disabled={deploying}
-                  className="gap-1.5 text-xs"
-                >
-                  <Download className="size-3.5" />
-                  {deploying ? 'Updating...' : 'Update Now'}
-                </Button>
+                <>
+                  <Button
+                    type="button"
+                    variant="outline"
+                    size="sm"
+                    onClick={() => {
+                      void navigator.clipboard.writeText(cliCommand);
+                      setCopiedCli(true);
+                      toast.success('Upgrade CLI command copied');
+                      setTimeout(() => setCopiedCli(false), 1500);
+                    }}
+                    className="gap-1.5 font-mono text-xs"
+                    title={cliCommand}
+                  >
+                    {copiedCli ? <Check className="size-3.5" /> : <Terminal className="size-3.5" />}
+                    {copiedCli ? 'Copied' : 'Copy CLI command'}
+                  </Button>
+                  <Button
+                    size="sm"
+                    onClick={() => openInstanceUpgradeModal()}
+                    className="gap-1.5 text-xs"
+                  >
+                    <Download className="size-3.5" />
+                    Update Now
+                  </Button>
+                </>
               )}
               <Button
                 variant="outline"
                 size="sm"
-                onClick={handleCheck}
-                disabled={checking || deploying}
+                onClick={() => void handleCheck()}
+                disabled={busyChecking}
                 className="gap-1.5 text-xs"
               >
-                <RefreshCw className={`size-3.5 ${checking ? 'animate-spin' : ''}`} />
-                {checking ? 'Checking...' : 'Check now'}
+                <RefreshCw className={`size-3.5 ${busyChecking ? 'animate-spin' : ''}`} />
+                {busyChecking ? 'Checking...' : 'Check now'}
               </Button>
             </div>
           </div>
@@ -108,7 +129,7 @@ export const UpdatesPage = () => {
                 Latest Remote Tag
               </p>
               <p className="mt-1 font-mono text-foreground text-xs">
-                {isLoading ? '...' : `v${info?.latestVersion || '0.1.0'}`}
+                {isLoading ? '...' : `v${latestVer}`}
               </p>
             </div>
           </div>

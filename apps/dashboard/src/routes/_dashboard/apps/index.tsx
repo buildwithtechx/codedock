@@ -1,5 +1,5 @@
 import { createFileRoute, Link } from '@tanstack/react-router';
-import { ArrowRight, Plus, Search } from 'lucide-react';
+import { ArrowRight, Plus, RefreshCw, Search } from 'lucide-react';
 import { Fragment, useMemo, useState } from 'react';
 import { PageHeader } from '#/components/layout/page-header';
 import { Button } from '@codedock/ui/button';
@@ -61,6 +61,21 @@ function AppsPage() {
         }
         action={
           <div className="flex items-center gap-2">
+            <Button
+              variant="ghost"
+              size="icon"
+              disabled={installedQuery.isFetching || catalogQuery.isFetching}
+              aria-label="Refresh apps"
+              title="Refresh apps"
+              onClick={() => {
+                void installedQuery.refetch();
+                void catalogQuery.refetch();
+              }}
+            >
+              <RefreshCw
+                className={`size-4 ${installedQuery.isFetching || catalogQuery.isFetching ? 'animate-spin' : ''}`}
+              />
+            </Button>
             <Button variant="outline" onClick={() => setAddCustomOpen(true)} className="gap-2">
               <Plus className="size-4" />
               Add custom app

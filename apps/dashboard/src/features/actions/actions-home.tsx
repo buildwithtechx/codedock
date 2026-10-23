@@ -1,5 +1,5 @@
 import { Link } from '@tanstack/react-router';
-import { ArrowLeft, Cloud, Plus } from 'lucide-react';
+import { ArrowLeft, Cloud, Plus, RefreshCw } from 'lucide-react';
 import { useState } from 'react';
 import { toast } from 'sonner';
 import { Button } from '@codedock/ui/button';
@@ -97,6 +97,13 @@ export function ActionsHome({
   const latestRun = runs[0];
 
   const hasItemsForTab = tab === 'runners' ? runners.length > 0 : workflows.length > 0;
+  const isRefreshing =
+    workflowsQuery.isFetching || runsQuery.isFetching || runnersQuery.isFetching;
+  const handleRefresh = () => {
+    void workflowsQuery.refetch();
+    void runsQuery.refetch();
+    void runnersQuery.refetch();
+  };
 
   return (
     <div className="space-y-6">
@@ -108,24 +115,36 @@ export function ActionsHome({
           </p>
         </div>
 
-        {hasItemsForTab && (
-          <Button asChild className="rounded-xl">
-            <Link
-              to={tab === 'runners' ? ('/actions/runners/new' as never) : ('/actions/new' as never)}
-            >
-              {tab === 'runners' ? (
-                isCloud ? (
+        <div className="flex items-center gap-2">
+          <Button
+            type="button"
+            variant="outline"
+            size="icon"
+            onClick={handleRefresh}
+            disabled={isRefreshing}
+            title="Refresh actions"
+            aria-label="Refresh actions"
+            className="rounded-xl"
+          >
+            <RefreshCw className={`size-4 ${isRefreshing ? 'animate-spin' : ''}`} />
+          </Button>
+          {hasItemsForTab && (
+            <Button asChild className="rounded-xl">
+              <Link
+                to={
+                  tab === 'runners' ? ('/actions/runners/new' as never) : ('/actions/new' as never)
+                }
+              >
+                {tab === 'runners' && isCloud ? (
                   <Cloud className="size-4" />
                 ) : (
                   <Plus className="size-4" />
-                )
-              ) : (
-                <Plus className="size-4" />
-              )}
-              {tab === 'runners' ? 'Add runner' : 'New workflow'}
-            </Link>
-          </Button>
-        )}
+                )}
+                {tab === 'runners' ? 'Add runner' : 'New workflow'}
+              </Link>
+            </Button>
+          )}
+        </div>
       </header>
 
       <Tabs value={tab} onValueChange={(val) => setTab(val as typeof tab)} className="space-y-6">
