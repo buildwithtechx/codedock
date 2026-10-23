@@ -35,25 +35,21 @@ export function InstallWizard({ appId, projectId = '' }: { appId: string; projec
   const [deployMessage, setDeployMessage] = useState('');
 
   useEffect(() => {
-    if (app) {
-      setName(app.name);
-      setValues({});
-      setHostPort('');
-      setDomain('');
-      setPreview(null);
-      setPhase('form');
-      setCreatedProjectId('');
-    }
+    if (!app) return;
+    setName(app.name);
+    setValues({});
+    setHostPort('');
+    setDomain('');
+    setPreview(null);
+    setPhase('form');
+    setCreatedProjectId('');
   }, [app]);
 
   if (isLoading) {
     return (
       <div className="space-y-6">
         <Skeleton className="h-12 w-64" />
-        <div className="grid grid-cols-1 gap-6 lg:grid-cols-[minmax(0,1fr)_300px] xl:grid-cols-[minmax(0,1fr)_340px]">
-          <Skeleton className="h-96 rounded-2xl" />
-          <Skeleton className="h-64 rounded-2xl" />
-        </div>
+        <Skeleton className="h-96 rounded-2xl" />
       </div>
     );
   }
@@ -63,7 +59,7 @@ export function InstallWizard({ appId, projectId = '' }: { appId: string; projec
       <div className="space-y-6">
         <Link
           to="/apps/new"
-          className="inline-flex items-center gap-1.5 text-muted-foreground text-sm transition-colors hover:text-foreground"
+          className="inline-flex items-center gap-1.5 text-muted-foreground text-sm hover:text-foreground"
         >
           Back to catalog
         </Link>
@@ -175,17 +171,15 @@ export function InstallWizard({ appId, projectId = '' }: { appId: string; projec
         )}
 
         <div className="mt-6 flex flex-wrap items-center justify-center gap-3">
-          {createdProjectId ? (
-            <Button asChild>
+          <Button asChild>
+            {createdProjectId ? (
               <Link to="/projects/$projectId" params={{ projectId: createdProjectId }}>
                 Open project
               </Link>
-            </Button>
-          ) : (
-            <Button asChild>
+            ) : (
               <Link to="/projects">View projects</Link>
-            </Button>
-          )}
+            )}
+          </Button>
           <Button asChild variant="outline">
             <Link to="/apps">Back to apps</Link>
           </Button>
@@ -198,8 +192,16 @@ export function InstallWizard({ appId, projectId = '' }: { appId: string; projec
     return (
       <div className="space-y-6">
         <WizardHeader app={app} projectId={projectId} />
-        <div className="max-w-3xl space-y-4 rounded-2xl border border-border/50 bg-card p-5 shadow-xs">
-          <h2 className="font-semibold text-foreground">Review install plan</h2>
+        <div className="max-w-3xl space-y-5 rounded-2xl border border-border/50 bg-card p-5 shadow-xs">
+          <h2 className="font-semibold text-foreground">Advanced deployment options</h2>
+          {app.envVariables.length > 0 && (
+            <InstallSettingsTabs
+              variables={app.envVariables}
+              values={values}
+              onChange={setValue}
+              disabled={deployApp.isPending}
+            />
+          )}
           <div className="flex flex-wrap gap-2">
             {preview.services.map((service) => (
               <Badge key={service.service} variant="secondary">
@@ -212,7 +214,7 @@ export function InstallWizard({ appId, projectId = '' }: { appId: string; projec
               Generated secrets: {preview.generatedSecrets.join(', ')}
             </p>
           )}
-          <pre className="max-h-72 overflow-auto rounded-md border bg-muted p-3 font-mono text-xs">
+          <pre className="max-h-72 overflow-auto rounded-xl border bg-muted/60 p-3 font-mono text-xs">
             {preview.composeYaml}
           </pre>
           <div className="flex justify-end gap-2">
@@ -224,14 +226,8 @@ export function InstallWizard({ appId, projectId = '' }: { appId: string; projec
               Back
             </Button>
             <Button onClick={() => void handleDeploy()} disabled={deployApp.isPending}>
-              {deployApp.isPending ? (
-                <>
-                  <Loader2 className="size-4 animate-spin" />
-                  Deploying…
-                </>
-              ) : (
-                'Deploy'
-              )}
+              {deployApp.isPending && <Loader2 className="size-4 animate-spin" />}
+              {deployApp.isPending ? 'Deploying…' : 'Deploy'}
             </Button>
           </div>
         </div>
@@ -240,30 +236,31 @@ export function InstallWizard({ appId, projectId = '' }: { appId: string; projec
   }
 
   const busy = deployApp.isPending || reviewInstall.isPending;
+  const userInputs = app.envVariables.filter((variable) => variable.input);
   return (
     <div className="space-y-6">
-      <WizardHeader app={app} />
-      <div className="grid grid-cols-1 items-start gap-6 lg:grid-cols-[minmax(0,1fr)_300px] xl:grid-cols-[minmax(0,1fr)_340px]">
+      <WizardHeader app={app} projectId={projectId} />
+      <div className="grid grid-cols-1 items-start gap-6 lg:grid-cols-[minmax(0,1fr)_320px] xl:grid-cols-[minmax(0,1fr)_350px]">
         <div className="min-w-0 space-y-5">
           <div className="rounded-2xl border border-border/50 bg-card p-5 shadow-xs">
-            <Label htmlFor="wizard-name">Install name</Label>
+            <Label htmlFor="wizard-name" className="font-semibold text-foreground text-sm">
+              Name
+            </Label>
             <Input
               id="wizard-name"
               value={name}
               disabled={busy}
               onChange={(event) => setName(event.target.value)}
               placeholder={app.name}
-              className="mt-2"
+              className="mt-2.5 h-10 rounded-xl border-border/60 bg-background/80 px-3.5"
             />
-            <p className="mt-1.5 text-muted-foreground text-xs">
-              Project name in Codedock. A dedicated project is provisioned for this application.
-            </p>
+            <p className="mt-2 text-muted-foreground text-xs">How this app appears in Codedock.</p>
           </div>
-          {app.envVariables.length > 0 && (
+          {userInputs.length > 0 && (
             <div className="rounded-2xl border border-border/50 bg-card p-5 shadow-xs">
               <h2 className="mb-4 font-semibold text-foreground text-sm">Configuration</h2>
               <InstallSettingsTabs
-                variables={app.envVariables}
+                variables={userInputs}
                 values={values}
                 onChange={setValue}
                 disabled={busy}

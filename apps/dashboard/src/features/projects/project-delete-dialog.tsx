@@ -1,16 +1,9 @@
 import { useNavigate } from '@tanstack/react-router';
-import { AlertTriangle, Loader2 } from 'lucide-react';
+import { Trash2 } from 'lucide-react';
 import { useState } from 'react';
 import { toast } from 'sonner';
 import { Button } from '@codedock/ui/button';
-import {
-  Dialog,
-  DialogContent,
-  DialogDescription,
-  DialogFooter,
-  DialogHeader,
-  DialogTitle,
-} from '@codedock/ui/dialog';
+import { Dialog, DialogContent, DialogTitle } from '@codedock/ui/dialog';
 import { Input } from '@codedock/ui/input';
 import { Label } from '@codedock/ui/label';
 import { useDeleteProject } from '#/hooks/use-projects';
@@ -49,12 +42,10 @@ export function ProjectDeleteDialog({
     if (!isConfirmed) return;
     try {
       await deleteProjectMutation.mutateAsync({ id: project.id });
-      toast.success(`Project "${project.name}" was deleted successfully`);
+      toast.success(`Project "${project.name}" was deleted`);
       setConfirmName('');
       onOpenChange(false);
-      if (onDeleted) {
-        onDeleted();
-      }
+      onDeleted?.();
       if (redirectToProjectsOnDelete) {
         void navigate({ to: '/projects' });
       }
@@ -65,26 +56,28 @@ export function ProjectDeleteDialog({
   };
 
   return (
-    <Dialog open={isOpen} onOpenChange={handleClose}>
-      <DialogContent className="sm:max-w-md">
-        <DialogHeader icon={AlertTriangle}>
-          <DialogTitle>Delete project</DialogTitle>
-          <DialogDescription>
-            This action cannot be undone. All services, containers, logs, and configurations
-            associated with <span className="font-semibold text-foreground">{project.name}</span>{' '}
-            will be permanently removed.
-          </DialogDescription>
-        </DialogHeader>
+    <Dialog open={isOpen} onOpenChange={(open) => !open && handleClose()}>
+      <DialogContent className="border/50 gap-0 bg-card/95 p-0 backdrop-blur-xl sm:max-w-md [&>button]:hidden">
+        <div className="p-5">
+          <DialogTitle className="flex items-center gap-2 font-bold text-foreground text-xl tracking-tight">
+            <Trash2 className="h-5 w-5 text-destructive" />
+            Delete Project
+          </DialogTitle>
 
-        <div className="space-y-4 py-2">
-          <div className="rounded-xl border border-destructive/20 bg-destructive/10 p-3 text-destructive text-xs leading-relaxed">
-            Please be certain. Once deleted, this project cannot be recovered.
+          <p className="mt-3 text-muted-foreground text-sm leading-relaxed">
+            Are you sure you want to delete{' '}
+            <strong className="text-foreground">{project.name}</strong>? All associated services,
+            containers, logs, and configurations will be immediately removed.
+          </p>
+
+          <div className="mt-4 rounded-xl border border-destructive/30 bg-destructive/5 p-3 text-destructive text-xs">
+            This action is permanent and cannot be reversed.
           </div>
 
-          <div className="space-y-2">
-            <Label htmlFor="delete-confirm-input" className="text-xs">
-              To confirm, type <span className="font-semibold text-foreground">{project.name}</span>{' '}
-              below:
+          <div className="mt-4 space-y-2">
+            <Label htmlFor="delete-confirm-input" className="text-muted-foreground text-xs">
+              To confirm, type <strong className="font-mono text-foreground">{project.name}</strong>
+              :
             </Label>
             <Input
               id="delete-confirm-input"
@@ -92,16 +85,18 @@ export function ProjectDeleteDialog({
               onChange={(e) => setConfirmName(e.target.value)}
               placeholder={project.name}
               disabled={deleteProjectMutation.isPending}
-              className="text-sm"
+              className="bg-muted/40 font-mono text-xs"
               autoComplete="off"
+              autoFocus
             />
           </div>
         </div>
 
-        <DialogFooter className="gap-2 sm:gap-0">
+        <div className="flex items-center justify-end gap-3 p-5 pt-0">
           <Button
             type="button"
-            variant="outline"
+            variant="ghost"
+            size="sm"
             onClick={handleClose}
             disabled={deleteProjectMutation.isPending}
           >
@@ -110,20 +105,13 @@ export function ProjectDeleteDialog({
           <Button
             type="button"
             variant="destructive"
+            size="sm"
             onClick={() => void handleDelete()}
             disabled={!isConfirmed || deleteProjectMutation.isPending}
-            className="gap-2"
           >
-            {deleteProjectMutation.isPending ? (
-              <>
-                <Loader2 className="size-4 animate-spin" />
-                Deleting…
-              </>
-            ) : (
-              'Delete project'
-            )}
+            {deleteProjectMutation.isPending ? 'Deleting...' : 'Delete Project'}
           </Button>
-        </DialogFooter>
+        </div>
       </DialogContent>
     </Dialog>
   );

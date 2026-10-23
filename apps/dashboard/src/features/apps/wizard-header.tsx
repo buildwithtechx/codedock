@@ -1,7 +1,6 @@
 import { Link } from '@tanstack/react-router';
 import { ArrowLeft, BadgeCheck } from 'lucide-react';
 import { useState } from 'react';
-import { Badge } from '@codedock/ui/badge';
 import type { OneClickAppDetails } from '#/interfaces/templates';
 import { AppLogo } from './app-logo';
 
@@ -18,7 +17,7 @@ export function WizardHeader({ app, projectId }: { app: OneClickAppDetails; proj
           className="mb-4 inline-flex items-center gap-1.5 text-muted-foreground text-sm transition-colors hover:text-foreground"
         >
           <ArrowLeft className="size-4" />
-          Back to project
+          Back
         </Link>
       ) : (
         <Link
@@ -30,18 +29,15 @@ export function WizardHeader({ app, projectId }: { app: OneClickAppDetails; proj
         </Link>
       )}
       <div className="flex items-center gap-4">
-        <div className="flex size-12 shrink-0 items-center justify-center rounded-2xl bg-muted/60">
+        <div className="flex size-12 shrink-0 items-center justify-center rounded-2xl border border-border/50 bg-card shadow-xs">
           <AppLogo icon={app.icon} name={app.name} className="size-7" />
         </div>
         <div className="min-w-0">
           <div className="flex flex-wrap items-center gap-2">
-            <h1 className="font-semibold text-foreground text-xl">{app.name}</h1>
+            <h1 className="font-semibold text-foreground text-xl tracking-tight">{app.name}</h1>
             {app.verified && (
-              <span className="inline-flex items-center text-primary" title="Verified app">
-                <BadgeCheck className="size-5 fill-primary text-primary-foreground" />
-              </span>
+              <BadgeCheck className="size-4 shrink-0 text-sky-500" aria-label="Verified app" />
             )}
-            {app.category && <Badge variant="outline">{app.category}</Badge>}
           </div>
           <p className={`mt-1 text-muted-foreground text-sm ${expanded ? '' : 'line-clamp-2'}`}>
             {app.description}

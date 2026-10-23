@@ -1,6 +1,4 @@
-import { Globe, ShieldCheck } from 'lucide-react';
 import { useEffect, useState } from 'react';
-import { Badge } from '@codedock/ui/badge';
 import { Input } from '@codedock/ui/input';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@codedock/ui/select';
 import { useGetPublicSettings, useGetSettings } from '#/hooks/use-settings';
@@ -58,19 +56,21 @@ export function InstallDomainsRouting({
             { label: 'Console', port: 9001, kind: 'http' },
             { label: 'S3 API', port: 9000, kind: 'http' },
           ]
-        : [{ label: appName.toLowerCase() || 'web', port: defaultPort || 3000, kind: 'http' }];
+        : [{ label: appId || slugify(appName) || 'web', port: defaultPort || 3000, kind: 'http' }];
+
+  const buildDefaultSubdomain = (ep: OneClickEndpoint) => {
+    const appSlug = slugify(appName) || 'app';
+    const epSlug = slugify(ep.label) || 'web';
+    return `${appSlug}-${epSlug}`;
+  };
 
   const [routes, setRoutes] = useState<Record<number, EndpointRouteState>>(() => {
     const initial: Record<number, EndpointRouteState> = {};
     for (const ep of resolvedEndpoints) {
-      const epSlug =
-        resolvedEndpoints.length > 1
-          ? `${slugify(appName)}-${slugify(ep.label)}`
-          : slugify(appName) || 'app';
       initial[ep.port] = {
         mode: 'domain',
         domainType: 'free',
-        subdomain: epSlug,
+        subdomain: buildDefaultSubdomain(ep),
         customDomain: '',
       };
     }
@@ -82,14 +82,10 @@ export function InstallDomainsRouting({
       const next = { ...prev };
       for (const ep of resolvedEndpoints) {
         if (!next[ep.port]) {
-          const epSlug =
-            resolvedEndpoints.length > 1
-              ? `${slugify(appName)}-${slugify(ep.label)}`
-              : slugify(appName) || 'app';
           next[ep.port] = {
             mode: 'domain',
             domainType: 'free',
-            subdomain: epSlug,
+            subdomain: buildDefaultSubdomain(ep),
             customDomain: '',
           };
         }
@@ -107,7 +103,7 @@ export function InstallDomainsRouting({
       return;
     }
     if (st.domainType === 'free') {
-      const sub = st.subdomain || slugify(appName) || 'app';
+      const sub = st.subdomain || buildDefaultSubdomain(primary);
       onDomainChange(`${sub}.${wildcardDomain}`);
     } else {
       onDomainChange(st.customDomain);
@@ -123,40 +119,27 @@ export function InstallDomainsRouting({
 
   return (
     <div className="space-y-4 rounded-2xl border border-border/50 bg-card p-5 shadow-xs">
-      <div className="flex items-center justify-between">
-        <h2 className="font-semibold text-foreground text-sm">Domains & routing</h2>
-        <Badge variant="outline" className="gap-1 font-mono text-[10px]">
-          <Globe className="size-3" />
-          HTTP / HTTPS
-        </Badge>
-      </div>
+      <h2 className="font-semibold text-foreground text-sm">Domains & routing</h2>
 
-      <div
-        className={
-          resolvedEndpoints.length > 1
-            ? 'grid grid-cols-1 items-start gap-4 sm:grid-cols-2'
-            : 'space-y-4'
-        }
-      >
+      <div className="grid grid-cols-1 items-start gap-4 sm:grid-cols-2">
         {resolvedEndpoints.map((ep) => {
           const st = routes[ep.port] ?? {
             mode: 'domain',
             domainType: 'free',
-            subdomain:
-              resolvedEndpoints.length > 1
-                ? `${slugify(appName)}-${slugify(ep.label)}`
-                : slugify(appName) || 'app',
+            subdomain: buildDefaultSubdomain(ep),
             customDomain: '',
           };
 
           return (
             <div
               key={ep.port}
-              className="space-y-3 rounded-xl border border-border/40 bg-muted/20 p-4"
+              className="space-y-3 rounded-2xl border border-border/50 bg-muted/20 p-4"
             >
               <div className="flex items-center justify-between gap-3">
-                <span className="truncate font-medium text-foreground text-sm">{ep.label}</span>
-                <span className="shrink-0 rounded-md bg-muted/60 px-2 py-0.5 font-mono text-muted-foreground text-xs">
+                <span className="truncate font-semibold text-foreground text-sm">
+                  {ep.label.toLowerCase()}
+                </span>
+                <span className="shrink-0 rounded-lg border border-border/50 bg-muted/60 px-2.5 py-0.5 font-mono text-muted-foreground text-xs">
                   Web {ep.port}
                 </span>
               </div>
@@ -168,27 +151,27 @@ export function InstallDomainsRouting({
                 }
                 disabled={disabled}
               >
-                <SelectTrigger className="w-full bg-background text-xs">
-                  <SelectValue placeholder="HTTP (domain)" />
+                <SelectTrigger className="h-9 w-full rounded-xl border-border/60 bg-background/70 px-3 text-sm">
+                  <SelectValue placeholder="Domain" />
                 </SelectTrigger>
                 <SelectContent>
-                  <SelectItem value="domain">HTTP (domain)</SelectItem>
+                  <SelectItem value="domain">Domain</SelectItem>
                   <SelectItem value="port">Port only</SelectItem>
                   <SelectItem value="internal">Internal</SelectItem>
                 </SelectContent>
               </Select>
 
               {st.mode === 'domain' && (
-                <div className="space-y-2">
-                  <div className="flex rounded-lg bg-muted/50 p-0.5">
+                <div className="space-y-3">
+                  <div className="inline-flex items-center gap-1.5">
                     <button
                       type="button"
                       disabled={disabled}
                       onClick={() => updateRoute(ep.port, { domainType: 'free' })}
-                      className={`flex-1 rounded-md py-1 font-medium text-xs transition-colors ${
+                      className={`rounded-xl px-3.5 py-1.5 font-medium text-xs transition-colors ${
                         st.domainType === 'free'
-                          ? 'bg-card text-foreground shadow-sm'
-                          : 'text-muted-foreground hover:text-foreground'
+                          ? 'border border-border/70 bg-muted/80 text-foreground shadow-2xs'
+                          : 'text-muted-foreground hover:bg-muted/40 hover:text-foreground'
                       }`}
                     >
                       Free
@@ -197,10 +180,10 @@ export function InstallDomainsRouting({
                       type="button"
                       disabled={disabled}
                       onClick={() => updateRoute(ep.port, { domainType: 'custom' })}
-                      className={`flex-1 rounded-md py-1 font-medium text-xs transition-colors ${
+                      className={`rounded-xl px-3.5 py-1.5 font-medium text-xs transition-colors ${
                         st.domainType === 'custom'
-                          ? 'bg-card text-foreground shadow-sm'
-                          : 'text-muted-foreground hover:text-foreground'
+                          ? 'border border-border/70 bg-muted/80 text-foreground shadow-2xs'
+                          : 'text-muted-foreground hover:bg-muted/40 hover:text-foreground'
                       }`}
                     >
                       Custom
@@ -208,77 +191,56 @@ export function InstallDomainsRouting({
                   </div>
 
                   {st.domainType === 'free' ? (
-                    <div className="space-y-1.5">
-                      <div className="flex items-center rounded-lg border border-border/60 bg-background px-3 py-1.5">
-                        <Input
-                          value={st.subdomain}
-                          disabled={disabled}
-                          onChange={(e) =>
-                            updateRoute(ep.port, { subdomain: slugify(e.target.value) })
-                          }
-                          placeholder="slug"
-                          className="h-6 border-0 p-0 font-mono text-xs shadow-none focus-visible:ring-0"
-                        />
-                        <span className="shrink-0 font-mono text-muted-foreground text-xs">
-                          .{wildcardDomain}
-                        </span>
-                      </div>
-                      <div className="flex items-center gap-1.5 text-[11px] text-emerald-600 dark:text-emerald-400">
-                        <ShieldCheck className="size-3 shrink-0" />
-                        <span className="truncate">
-                          https://{st.subdomain || 'app'}.{wildcardDomain}
-                        </span>
-                      </div>
+                    <div className="flex h-10 items-center rounded-xl border border-border/60 bg-background/80 px-3.5">
+                      <Input
+                        value={st.subdomain}
+                        disabled={disabled}
+                        onChange={(e) =>
+                          updateRoute(ep.port, { subdomain: slugify(e.target.value) })
+                        }
+                        placeholder="slug"
+                        className="h-7 border-0 bg-transparent p-0 font-mono text-xs shadow-none focus-visible:ring-0"
+                      />
+                      <span className="shrink-0 pl-2 font-mono text-muted-foreground text-xs">
+                        .{wildcardDomain}
+                      </span>
                     </div>
                   ) : (
-                    <div className="space-y-1">
-                      <Input
-                        value={st.customDomain}
-                        disabled={disabled}
-                        onChange={(e) => updateRoute(ep.port, { customDomain: e.target.value })}
-                        placeholder="app.example.com"
-                        className="h-8 font-mono text-xs"
-                      />
-                      <p className="text-[11px] text-muted-foreground">
-                        Point a CNAME record to your host IP.
-                      </p>
-                    </div>
+                    <Input
+                      value={st.customDomain}
+                      disabled={disabled}
+                      onChange={(e) => updateRoute(ep.port, { customDomain: e.target.value })}
+                      placeholder="app.example.com"
+                      className="h-10 rounded-xl border-border/60 bg-background/80 px-3.5 font-mono text-xs"
+                    />
                   )}
                 </div>
               )}
 
               {st.mode === 'port' && (
-                <p className="text-[11px] text-muted-foreground">
-                  Bound directly to host port {ep.port} without domain routing.
-                </p>
+                <div className="space-y-1.5">
+                  <Input
+                    value={hostPort}
+                    disabled={disabled}
+                    onChange={(e) => onHostPortChange(e.target.value)}
+                    placeholder={String(ep.port)}
+                    inputMode="numeric"
+                    className="h-10 rounded-xl border-border/60 bg-background/80 px-3.5 font-mono text-xs"
+                  />
+                  <p className="text-[11px] text-muted-foreground">
+                    Bound directly to host port {hostPort || ep.port}.
+                  </p>
+                </div>
               )}
 
               {st.mode === 'internal' && (
                 <p className="text-[11px] text-muted-foreground">
-                  Internal east-west traffic only. No external port exposed.
+                  Internal network traffic only. No external port exposed.
                 </p>
               )}
             </div>
           );
         })}
-      </div>
-
-      <div className="space-y-1.5">
-        <label htmlFor="install-host-port" className="font-medium text-foreground text-xs">
-          Host port override
-        </label>
-        <Input
-          id="install-host-port"
-          value={hostPort}
-          disabled={disabled}
-          onChange={(e) => onHostPortChange(e.target.value)}
-          placeholder={String(defaultPort || 3000)}
-          inputMode="numeric"
-          className="h-8 font-mono text-xs"
-        />
-        <p className="text-[11px] text-muted-foreground">
-          Optional published port for the primary endpoint. Leave empty for the default.
-        </p>
       </div>
     </div>
   );

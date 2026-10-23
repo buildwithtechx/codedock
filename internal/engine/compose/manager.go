@@ -58,6 +58,9 @@ func (m *TemplateManager) walkDir(path string, d fs.DirEntry, err error) error {
 	if err := yaml.Unmarshal(data, &tmpl); err != nil {
 		return fmt.Errorf("failed to parse template %s: %w", path, err)
 	}
+	if tmpl.XCodedock != nil && tmpl.XCodedock.IsOneClick {
+		tmpl.XCodedock.Verified = true
+	}
 
 	id := strings.TrimSuffix(d.Name(), ".yaml")
 	m.templates[id] = tmpl

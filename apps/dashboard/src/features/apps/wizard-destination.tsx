@@ -1,11 +1,18 @@
 import { Link } from '@tanstack/react-router';
-import { Plus, RefreshCw, Server as ServerIcon, SlidersHorizontal } from 'lucide-react';
+import {
+  ArrowRight,
+  Cloud,
+  Plus,
+  RefreshCw,
+  Server as ServerIcon,
+  SlidersHorizontal,
+} from 'lucide-react';
 import { useEffect } from 'react';
 import { Button } from '@codedock/ui/button';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@codedock/ui/select';
 import { Skeleton } from '@codedock/ui/skeleton';
-import { useGetPublicSettings } from '#/hooks/use-settings';
 import { useListServers } from '#/hooks/use-servers';
+import { useGetPublicSettings } from '#/hooks/use-settings';
 
 interface WizardDestinationProps {
   serverId: string;
@@ -60,7 +67,7 @@ export function WizardDestination({
 
   return (
     <div className="space-y-4">
-      <div className="space-y-3 rounded-2xl border border-border/50 bg-card p-5 shadow-xs">
+      <div className="space-y-3.5 rounded-2xl border border-border/50 bg-card p-5 shadow-xs">
         <h3 className="font-semibold text-foreground text-sm">Where to install</h3>
 
         {isLoading ? (
@@ -69,7 +76,7 @@ export function WizardDestination({
           <div className="space-y-3">
             <div className="flex min-w-0 items-center gap-3 overflow-hidden rounded-xl border border-border/50 bg-muted/20 p-3.5">
               <div className="flex size-9 shrink-0 items-center justify-center rounded-lg bg-muted text-muted-foreground">
-                <ServerIcon className="size-4" />
+                {isCloud ? <Cloud className="size-4" /> : <ServerIcon className="size-4" />}
               </div>
               <div className="min-w-0 flex-1 overflow-hidden">
                 {servers.length > 1 ? (
@@ -98,24 +105,21 @@ export function WizardDestination({
               </div>
             </div>
 
-            <p className="text-muted-foreground text-xs">Uses this server's plan.</p>
-
-            <Button
-              variant="outline"
-              size="sm"
-              asChild
-              className="w-full justify-center gap-1.5 border-dashed text-xs"
-            >
-              <Link to="/servers">
+            <div className="flex items-center justify-between gap-2">
+              <p className="text-muted-foreground text-xs">Uses the existing plan.</p>
+              <Link
+                to="/servers"
+                className="inline-flex shrink-0 items-center gap-1.5 rounded-xl border border-border/60 bg-muted/30 px-3 py-1.5 font-medium text-foreground text-xs transition-colors hover:bg-muted/60"
+              >
                 <Plus className="size-3.5" />
-                New dedicated server
+                {isCloud ? 'New Cloud space' : 'New dedicated server'}
               </Link>
-            </Button>
+            </div>
           </div>
         )}
 
         {needsUpgrade && (
-          <div className="space-y-3 rounded-xl border border-amber-500/20 bg-amber-500/10 p-4 text-xs">
+          <div className="space-y-2.5 rounded-xl border border-amber-500/20 bg-amber-500/10 p-4 text-xs">
             <p className="font-medium text-amber-500">This app needs a larger Cloud plan</p>
             <p className="text-muted-foreground leading-relaxed">
               Your plan can deploy static sites only. Service stacks need a paid plan.
@@ -123,7 +127,7 @@ export function WizardDestination({
             <button
               type="button"
               onClick={() => void onDeploy()}
-              className="inline-flex items-center gap-1 font-medium text-foreground hover:underline"
+              className="inline-flex items-center gap-1.5 font-medium text-foreground hover:underline"
             >
               <RefreshCw className="size-3" />
               Check again
@@ -134,18 +138,22 @@ export function WizardDestination({
 
       <div className="space-y-3">
         {needsUpgrade ? (
-          <Button asChild className="w-full py-5 font-medium text-sm">
+          <Button
+            asChild
+            className="h-11 w-full gap-2 rounded-xl bg-foreground font-semibold text-background text-sm shadow-sm hover:bg-foreground/90"
+          >
             <Link to="/billing">
+              <ArrowRight className="size-4" />
               Upgrade plan
-              <span className="ml-1">↗</span>
             </Link>
           </Button>
         ) : (
           <Button
-            className="w-full py-5 font-medium text-sm"
+            className="h-11 w-full gap-2 rounded-xl bg-foreground font-semibold text-background text-sm shadow-sm hover:bg-foreground/90"
             onClick={onDeploy}
             disabled={disabled || isDeploying}
           >
+            {!isDeploying && <ArrowRight className="size-4" />}
             {isDeploying ? 'Installing…' : `Install ${appName}`}
           </Button>
         )}
