@@ -34,10 +34,29 @@ func (s *Service) Review(ctx context.Context, user, project, clusterID string, r
 			return nil, err
 		}
 	} else {
-		if request.Action != "create" && request.Action != "restore" && request.Action != "recover" && request.Action != "backup" {
+		if request.Action != "create" && request.Action != "restore" && request.Action != "recover" && request.Action != "backup" && request.Action != "scale" {
 			return nil, fmt.Errorf("unsupported cluster database action")
 		}
-		if request.Action == "recover" || request.Action == "backup" {
+		if request.Action == "scale" {
+			existing, err := s.owned(ctx, project, clusterID, request.Spec.ID)
+			if err != nil {
+				return nil, err
+			}
+			if request.Spec.Instances < 1 || request.Spec.Instances > 9 {
+				return nil, fmt.Errorf("select 1 to 9 database instances")
+			}
+			plan = existing
+			plan.Action = "scale"
+			plan.Record.Spec.Instances = request.Spec.Instances
+			destination, err := s.destination(ctx, plan.Record.Spec.S3DestinationID)
+			if err != nil {
+				return nil, err
+			}
+			plan.Manifest, err = kubernetes.DataManifest(plan, destination, nil, "")
+			if err != nil {
+				return nil, err
+			}
+		} else if request.Action == "recover" || request.Action == "backup" {
 			plan, err = s.owned(ctx, project, clusterID, request.Spec.ID)
 			if err != nil {
 				return nil, err

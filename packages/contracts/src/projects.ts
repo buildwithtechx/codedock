@@ -133,3 +133,24 @@ export interface AddMemberRequest {
   email: string;
   permission: MemberPermission;
 }
+
+export type RouteProtectionAction = 'protect' | 'unlock' | 'revoke' | 'retry';
+export type RouteProtectionStatusState = 'public' | 'pending' | 'applied';
+
+export interface RouteProtectionStatus {
+  hostname: string;
+  enabled: boolean;
+  status: RouteProtectionStatusState;
+}
+
+export interface RouteProtectionInput {
+  hostname: string;
+  action: RouteProtectionAction;
+  password?: string;
+}
+
+export interface RouteProtectionDraft {
+  hostname: string;
+  action: 'protect';
+  password?: string;
+}

@@ -1,13 +1,4 @@
-import {
-  ArrowUpRight,
-  CheckCircle2,
-  Globe,
-  Loader2,
-  Plus,
-  RefreshCw,
-  Trash2,
-  XCircle,
-} from 'lucide-react';
+import { Globe, Loader2, Plus, RefreshCw } from 'lucide-react';
 import { useState } from 'react';
 import { toast } from 'sonner';
 import { Button } from '@codedock/ui/button';
@@ -19,6 +10,7 @@ import { useCreateDomain, useDeleteDomain, useVerifyDomain } from '#/hooks/use-d
 import { useGetSettings } from '#/hooks/use-settings';
 import { useListByProject as useListAppsByProject } from '#/hooks/use-apps';
 import { useListProjectDomains } from '#/hooks/use-projects';
+import { ProjectDomainsList } from './project-domains-list';
 
 export function ProjectDomainsTab({ projectId }: { projectId: string }) {
   const {
@@ -205,86 +197,16 @@ export function ProjectDomainsTab({ projectId }: { projectId: string }) {
             <div className="flex h-32 items-center justify-center">
               <Loader2 className="size-6 animate-spin text-muted-foreground" />
             </div>
-          ) : domains.length === 0 ? (
-            <div className="flex min-h-40 flex-col items-center justify-center rounded-xl border border-border/70 border-dashed p-6 text-center">
-              <Globe className="size-8 text-muted-foreground/50" />
-              <p className="mt-2 font-medium text-foreground text-sm">No domains mapped</p>
-              <p className="mt-1 max-w-sm text-muted-foreground text-xs">
-                Add a custom domain above to expose your project services to the internet with TLS.
-              </p>
-            </div>
           ) : (
-            <div className="divide-y divide-border/40 overflow-hidden rounded-xl border border-border/50">
-              {domains.map((dom) => {
-                const isVerifying = verifyingId === dom.id;
-                const status = (dom.dnsProvisionStatus || '').toLowerCase();
-                const isProvisioned = status === 'provisioned';
-
-                return (
-                  <div
-                    key={dom.id}
-                    className="flex flex-col gap-3 p-4 sm:flex-row sm:items-center sm:justify-between"
-                  >
-                    <div className="min-w-0 space-y-1">
-                      <div className="flex items-center gap-2">
-                        <a
-                          href={`https://${dom.domainName}`}
-                          target="_blank"
-                          rel="noreferrer"
-                          className="inline-flex items-center gap-1 font-medium font-mono text-foreground text-sm hover:text-primary hover:underline"
-                        >
-                          {dom.domainName}
-                          <ArrowUpRight className="size-3 text-muted-foreground" />
-                        </a>
-                        {isProvisioned ? (
-                          <span className="inline-flex items-center gap-1 rounded-md bg-emerald-500/10 px-2 py-0.5 font-medium text-[11px] text-emerald-500">
-                            <CheckCircle2 className="size-3" />
-                            Active
-                          </span>
-                        ) : (
-                          <span className="inline-flex items-center gap-1 rounded-md bg-amber-500/10 px-2 py-0.5 font-medium text-[11px] text-amber-500">
-                            <XCircle className="size-3" />
-                            {status || 'Pending'}
-                          </span>
-                        )}
-                      </div>
-                      <p className="text-muted-foreground text-xs">
-                        Routes to:{' '}
-                        <span className="font-medium text-foreground">
-                          {serviceNameFor(dom.serviceId)}
-                        </span>
-                      </p>
-                    </div>
-
-                    <div className="flex items-center gap-2">
-                      <Button
-                        variant="outline"
-                        size="sm"
-                        onClick={() => handleVerify(dom.id)}
-                        disabled={isVerifying}
-                        className="h-8 gap-1.5 text-xs"
-                      >
-                        {isVerifying ? (
-                          <Loader2 className="size-3 animate-spin" />
-                        ) : (
-                          <RefreshCw className="size-3" />
-                        )}
-                        Verify DNS
-                      </Button>
-                      <Button
-                        variant="ghost"
-                        size="sm"
-                        onClick={() => handleDelete(dom.id)}
-                        disabled={deleteDomain.isPending}
-                        className="size-8 h-8 p-0 text-muted-foreground hover:text-destructive"
-                      >
-                        <Trash2 className="size-3.5" />
-                      </Button>
-                    </div>
-                  </div>
-                );
-              })}
-            </div>
+            <ProjectDomainsList
+              domains={domains}
+              projectId={projectId}
+              verifyingId={verifyingId}
+              onVerify={handleVerify}
+              onDelete={handleDelete}
+              deletePending={deleteDomain.isPending}
+              serviceNameFor={serviceNameFor}
+            />
           )}
         </CardContent>
       </Card>

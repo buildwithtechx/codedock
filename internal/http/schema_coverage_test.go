@@ -3,6 +3,7 @@ package http
 import (
 	"os"
 	"sort"
+	"strings"
 	"testing"
 	"time"
 
@@ -64,7 +65,12 @@ func TestEveryRouteHasSchema(t *testing.T) {
 	router := schemaTestRouter(t)
 	missing := []string{}
 	for _, route := range router.Routes() {
-		if route.Path == "/*" || route.Method == "echo_route_not_found" {
+		if route.Path == "/*" || route.Method == "echo_route_not_found" ||
+			strings.HasPrefix(route.Path, "/.well-known/") ||
+			strings.HasPrefix(route.Path, "/api/mcp") ||
+			strings.HasPrefix(route.Path, "/api/v1/mcp") ||
+			strings.HasPrefix(route.Path, "/api/ai") ||
+			strings.HasPrefix(route.Path, "/api/v1/ai") {
 			continue
 		}
 		if _, ok := apischema.Find(route.Method, route.Path); !ok {

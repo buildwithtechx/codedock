@@ -4,6 +4,8 @@ import { DeployHealthChecksCard } from './deploy-health-checks-card';
 import { DeployProjectNameCard } from './deploy-project-name-card';
 import { DeployRuntimeCard } from './deploy-runtime-card';
 import { DeployTopBar } from './deploy-top-bar';
+import { MonorepoAppPicker } from './monorepo-app-picker';
+import type { MonorepoCandidateApp } from '#/interfaces/git';
 
 interface DeployConfigStepProps {
   framework: string;
@@ -29,6 +31,13 @@ interface DeployConfigStepProps {
   watchCrashLoop?: boolean;
   onWatchCrashLoopChange?: (v: boolean) => void;
   onEditTarget: () => void;
+  repositoryUrl?: string;
+  branch?: string;
+  monorepoApps?: MonorepoCandidateApp[];
+  selectedIndices?: number[];
+  onToggleIndex?: (index: number) => void;
+  onUpdateApp?: (index: number, patch: Partial<MonorepoCandidateApp>) => void;
+  onAddCustomApp?: (app: MonorepoCandidateApp) => void;
 }
 
 export function DeployConfigStep({
@@ -55,6 +64,13 @@ export function DeployConfigStep({
   watchCrashLoop,
   onWatchCrashLoopChange,
   onEditTarget,
+  repositoryUrl,
+  branch,
+  monorepoApps,
+  selectedIndices,
+  onToggleIndex,
+  onUpdateApp,
+  onAddCustomApp,
 }: DeployConfigStepProps) {
   const handleMigrateDraft = (cmds: Record<string, string>, vars: Record<string, string>) => {
     if (cmds.installCommand !== undefined) onInstallCommandChange(cmds.installCommand);
@@ -72,6 +88,24 @@ export function DeployConfigStep({
     <div className="space-y-5">
       <DeployTopBar environmentName="Production" onEditTarget={onEditTarget} />
 
+      {monorepoApps &&
+        monorepoApps.length > 0 &&
+        selectedIndices &&
+        onToggleIndex &&
+        onUpdateApp &&
+        onAddCustomApp &&
+        repositoryUrl && (
+          <MonorepoAppPicker
+            apps={monorepoApps}
+            selectedIndices={selectedIndices}
+            onToggleIndex={onToggleIndex}
+            onUpdateApp={onUpdateApp}
+            onAddCustomApp={onAddCustomApp}
+            repositoryUrl={repositoryUrl}
+            branch={branch}
+          />
+        )}
+
       <DeployRuntimeCard
         framework={framework}
         onFrameworkChange={onFrameworkChange}
@@ -86,6 +120,8 @@ export function DeployConfigStep({
         rootDirectory={rootDirectory}
         onRootDirectoryChange={onRootDirectoryChange}
         onMigrateDraft={handleMigrateDraft}
+        repositoryUrl={repositoryUrl}
+        branch={branch}
       />
 
       <DeployEnvSection envVars={envVars} onEnvVarsChange={onEnvVarsChange} />

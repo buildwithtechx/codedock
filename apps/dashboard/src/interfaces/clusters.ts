@@ -52,3 +52,17 @@ export interface ClusterReview {
   operation: ClusterOperation;
   confirmation: string;
 }
+
+export interface ScaleDatabaseSpec {
+  id: string;
+  instances: number;
+}
+
+export interface ScaleDatabaseReviewInput {
+  action: 'scale';
+  spec: ScaleDatabaseSpec;
+}
+
+export interface ApplyDatabaseScaleInput {
+  confirmation: string;
+}

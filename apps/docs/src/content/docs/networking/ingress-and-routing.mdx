@@ -52,6 +52,13 @@ You can attach granular L7 routing rules to any service domain:
     - **Request Headers**: Add `X-Forwarded-Proto: https` or client tracking headers.
     - **Security Headers**: Inject `HSTS`, `X-Frame-Options: DENY`, and `X-Content-Type-Options: nosniff`.
   </TabItem>
+  <TabItem label="Password Protection & Gates" icon="seti:lock">
+    Protect entire staging domains, staging hosts, or PR preview routes:
+    - **PBKDF2 Password Gate**: Protected by 600,000-iteration PBKDF2-HMAC-SHA256 verifiers.
+    - **Edge ForwardAuth**: Evaluated at Traefik edge layer via `/_codedock/access` with no origin container exposure.
+    - **24-hour Session**: Issues a secure, HttpOnly, SameSite HMAC cookie valid for 24 hours.
+    - **One-click Revocation**: Revoke all active sessions across all devices or unlock access instantly.
+  </TabItem>
   <TabItem label="Basic Authentication" icon="seti:lock">
     Protect staging environments or internal endpoints:
     - Enter a username and secure password.

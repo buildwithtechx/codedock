@@ -13,6 +13,7 @@ import (
 	"github.com/docker/docker/client"
 	"github.com/docker/go-connections/nat"
 
+	"codedock/internal/engine/networking"
 	"codedock/internal/engine/observability"
 	"codedock/internal/models"
 	"codedock/internal/utils"
@@ -197,6 +198,19 @@ func (c *ContainerManager) buildTraefikLabels(serviceID string, hosts []RouteHos
 		labels[fmt.Sprintf("traefik.http.routers.%s.service", router)] = serviceID
 		labels[fmt.Sprintf("traefik.http.routers.%s.tls", router)] = "true"
 		labels[fmt.Sprintf("traefik.http.routers.%s.tls.certresolver", router)] = "letsencrypt"
+
+		if host.Protected {
+			mwLabels, mwName := networking.BuildRouteProtectionMiddlewareLabels(router, 8080)
+			for k, v := range mwLabels {
+				labels[k] = v
+			}
+			routerKey := fmt.Sprintf("traefik.http.routers.%s.middlewares", router)
+			if existingMW, ok := labels[routerKey]; ok && existingMW != "" {
+				labels[routerKey] = existingMW + "," + mwName
+			} else {
+				labels[routerKey] = mwName
+			}
+		}
 	}
 	return labels
 }

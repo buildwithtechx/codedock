@@ -29,7 +29,9 @@ func (s *Server) getMeta(c echo.Context) error {
 }
 
 func (s *Server) registerMcpAndAiRoutes(authGroup *echo.Group) {
-	s.mcpBridge.SetDispatcher(s.router)
+	if s.mcpBridge != nil {
+		s.mcpBridge.SetDispatcher(s.router)
+	}
 
 	// OAuth 2.1 Protected Resource Discovery for MCP clients
 	s.router.GET("/.well-known/oauth-protected-resource", s.handleOAuthProtectedResource)

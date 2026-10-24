@@ -1,8 +1,12 @@
-import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
+import { useQuery } from '@tanstack/react-query';
 import type { Node } from '@xyflow/react';
+import { useState } from 'react';
 import { Button } from '@codedock/ui/button';
+import { useExecuteResourceAction, useObserveCanvasResource } from '#/hooks/use-canvas';
 import type { BaseResponse } from '#/interfaces/base';
 import { apiClient } from '#/lib/api-client';
+import { ClusterDatabaseScaling } from './cluster-database-scaling';
+import { TopologyScalingSetup } from './topology-scaling-setup';
 
 export function CanvasResourcePanel({
   node,
@@ -13,31 +17,36 @@ export function CanvasResourcePanel({
   onClose: () => void;
   environmentId: string;
 }) {
-  const client = useQueryClient();
+  const [setupModalOpen, setSetupModalOpen] = useState(false);
   const serviceId = typeof node.data.serviceId === 'string' ? node.data.serviceId : '';
   const databaseId = typeof node.data.databaseId === 'string' ? node.data.databaseId : '';
+  const projectId = typeof node.data.projectId === 'string' ? node.data.projectId : '';
+  const clusterId = typeof node.data.clusterId === 'string' ? node.data.clusterId : '';
+  const engine = typeof node.data.engine === 'string' ? node.data.engine : 'postgres';
+  const instances = typeof node.data.instances === 'number' ? node.data.instances : 1;
   const path = serviceId ? `/apps/${serviceId}` : databaseId ? `/databases/${databaseId}` : '';
   const details = useQuery({
     queryKey: ['canvas-resource', node.id],
     queryFn: () => apiClient.get<BaseResponse<Record<string, unknown>>>(path),
     enabled: !!path,
   });
-  const metrics = useQuery({
-    queryKey: ['canvas-observation', environmentId, node.id],
-    queryFn: () =>
-      apiClient.get<BaseResponse<{ logs: string; metrics: Record<string, unknown> }>>(
-        `/environments/${environmentId}/canvas/observe?node=${encodeURIComponent(node.id)}`
-      ),
-    enabled: !!path || !!node.data.stackId,
-    refetchInterval: 5000,
+  const metrics = useObserveCanvasResource(environmentId, node.id, {
+    enabled: Boolean(path || node.data.stackId),
   });
-  const action = useMutation({
-    mutationFn: (operation: string) => apiClient.post(`${path}/${operation}`),
-    onSuccess: async () => {
-      await details.refetch();
-      await client.invalidateQueries({ queryKey: ['canvas'] });
+  const executeAction = useExecuteResourceAction();
+  const action = {
+    ...executeAction,
+    mutate: (operation: string) => {
+      executeAction.mutate(
+        { path, operation },
+        {
+          onSuccess: async () => {
+            await details.refetch();
+          },
+        }
+      );
     },
-  });
+  };
   return (
     <aside className="w-80 shrink-0 space-y-4 overflow-y-auto border-l bg-card p-4">
       <div className="flex items-center justify-between">
@@ -61,6 +70,23 @@ export function CanvasResourcePanel({
         <a className="text-primary text-sm" href={`/services/${databaseId}`}>
           Database details
         </a>
+      )}
+      {databaseId && projectId && (
+        <ClusterDatabaseScaling
+          projectId={projectId}
+          clusterId={clusterId}
+          databaseId={databaseId}
+          currentInstances={instances}
+          engine={engine}
+          onOpenSetup={() => setSetupModalOpen(true)}
+        />
+      )}
+      {clusterId && (
+        <TopologyScalingSetup
+          clusterId={clusterId}
+          isOpen={setupModalOpen}
+          onClose={() => setSetupModalOpen(false)}
+        />
       )}
       {!!node.data.stackId && (
         <a

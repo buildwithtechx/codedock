@@ -258,6 +258,11 @@ func NewServer(db *sql.DB, v *utils.Vault, deployer *deploy.Deployer, traefikMan
 	retentionService := deploymentservices.NewRetentionService(projectRepo, deployRepo, deploymentService.DockerForProject)
 	deploymentHandler.SetRetentionService(retentionService)
 	rollbackSettingsHandler := projects.NewRollbackSettingsHandler(retentionService)
+	routeProtectionRepo := repositories.NewRouteProtectionRepository(db)
+	routeProtectionService := projectservices.NewRouteProtectionService(routeProtectionRepo, projectRepo, settingsRepo)
+	routeProtectionHandler := projects.NewRouteProtectionHandler(routeProtectionService, projectService)
+	edgeAuthHandler := system.NewEdgeAuthHandler(routeProtectionService)
+	_ = networking.EnsureTraefikAccessRoute(networking.DynamicDir, config.Get().Server.Port)
 	serviceVarHandler := projects.NewServiceVarHandler(appService, auditService, envSuggestionService)
 	projectSettingsHandler := projects.NewProjectSettingsHandler(projectSettingsService)
 	backupHandler := backups.NewBackupHandler(backupService, appService, databaseService, projectService, auditService)
@@ -429,6 +434,8 @@ func NewServer(db *sql.DB, v *utils.Vault, deployer *deploy.Deployer, traefikMan
 		checksHandler:           projects.NewChecksHandler(),
 		supportHandler:          supportHandler,
 		rollbackSettingsHandler: rollbackSettingsHandler,
+		routeProtectionHandler:  routeProtectionHandler,
+		edgeAuthHandler:         edgeAuthHandler,
 	}
 
 	if err := configureManaged(srv, db, v, serverRepo, userRepo, orgRepo, sshManager, operationService); err != nil {
@@ -441,7 +448,7 @@ func NewServer(db *sql.DB, v *utils.Vault, deployer *deploy.Deployer, traefikMan
 	if err := configureClusters(srv, db, v, projectRepo, serverRepo, operationService, volumeOperations, appRepo, deploymentService, canvasService, backupManager); err != nil {
 		return nil, err
 	}
-	configureDeploymentBindings(srv, routeRuleRepo, domainRepo)
+	configureDeploymentBindings(srv, routeRuleRepo, domainRepo, routeProtectionRepo)
 
 	srv.registerRoutes()
 	return srv, nil

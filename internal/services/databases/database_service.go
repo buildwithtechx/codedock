@@ -2,6 +2,8 @@ package databases
 
 import (
 	"context"
+	"crypto/rand"
+	"encoding/hex"
 	"errors"
 	"strings"
 	"time"
@@ -66,21 +68,31 @@ func (s *DatabaseService) CreateDatabaseFromRequest(ctx context.Context, req *mo
 		switch strings.ToLower(string(req.Engine)) {
 		case "postgres", "postgresql":
 			req.Port = 5432
-		case "mysql":
+		case "mysql", "mariadb":
 			req.Port = 3306
 		case "redis":
 			req.Port = 6379
 		case "mongodb", "mongo":
 			req.Port = 27017
+		case "typesense":
+			req.Port = 8108
 		default:
 			req.Port = 5432
 		}
 	}
-	if req.Username == "" && strings.ToLower(string(req.Engine)) != "redis" {
+	if req.Username == "" && strings.ToLower(string(req.Engine)) != "redis" && strings.ToLower(string(req.Engine)) != "typesense" {
 		req.Username = "codedockadmin"
 	}
-	if req.DatabaseName == "" {
+	if req.DatabaseName == "" && strings.ToLower(string(req.Engine)) != "typesense" {
 		req.DatabaseName = "appdb"
+	}
+	if req.Password == "" {
+		b := make([]byte, 16)
+		if _, err := rand.Read(b); err == nil {
+			req.Password = hex.EncodeToString(b)
+		} else {
+			req.Password = uuid.New().String()
+		}
 	}
 	db := &models.Database{
 		ProjectID:          req.ProjectID,

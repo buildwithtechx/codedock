@@ -1,8 +1,17 @@
-import { Check, ChevronDown, Container, Flame } from 'lucide-react';
+import { Check, ChevronDown, Container, Flame, Folder } from 'lucide-react';
 import { useState } from 'react';
 import { CommandEnvironmentNotice } from '#/components/deploy/command-environment-notice';
+import { Button } from '@codedock/ui/button';
+import {
+  Dialog,
+  DialogContent,
+  DialogDescription,
+  DialogHeader,
+  DialogTitle,
+} from '@codedock/ui/dialog';
 import { Input } from '@codedock/ui/input';
 import { Label } from '@codedock/ui/label';
+import { RepositoryPathBrowser } from '#/features/sources/repository-path-browser';
 
 const FRAMEWORKS = [
   'Dockerfile',
@@ -30,6 +39,8 @@ interface DeployRuntimeCardProps {
   rootDirectory?: string;
   onRootDirectoryChange?: (s: string) => void;
   onMigrateDraft?: (commands: Record<string, string>, variables: Record<string, string>) => void;
+  repositoryUrl?: string;
+  branch?: string;
 }
 
 export function DeployRuntimeCard({
@@ -46,8 +57,11 @@ export function DeployRuntimeCard({
   rootDirectory,
   onRootDirectoryChange,
   onMigrateDraft,
+  repositoryUrl,
+  branch,
 }: DeployRuntimeCardProps) {
   const [frameworkSelectOpen, setFrameworkSelectOpen] = useState(false);
+  const [browserOpen, setBrowserOpen] = useState(false);
   const isDocker = framework.toLowerCase() === 'dockerfile';
 
   return (
@@ -157,7 +171,21 @@ export function DeployRuntimeCard({
           </div>
           <div className="grid gap-3 sm:grid-cols-2">
             <div>
-              <Label className="text-xs">Root Directory</Label>
+              <div className="flex items-center justify-between">
+                <Label className="text-xs">Root Directory</Label>
+                {repositoryUrl && (
+                  <Button
+                    type="button"
+                    variant="ghost"
+                    size="sm"
+                    onClick={() => setBrowserOpen(true)}
+                    className="h-6 gap-1 px-1.5 text-[11px] text-muted-foreground hover:text-foreground"
+                  >
+                    <Folder className="size-3" />
+                    Browse
+                  </Button>
+                )}
+              </div>
               <Input
                 value={rootDirectory ?? ''}
                 onChange={(e) => onRootDirectoryChange?.(e.target.value)}
@@ -175,6 +203,34 @@ export function DeployRuntimeCard({
               />
             </div>
           </div>
+
+          {repositoryUrl && (
+            <Dialog open={browserOpen} onOpenChange={setBrowserOpen}>
+              <DialogContent className="max-w-md rounded-2xl p-6">
+                <DialogHeader icon={Folder}>
+                  <DialogTitle className="text-base font-semibold">
+                    Select Root Directory
+                  </DialogTitle>
+                  <DialogDescription className="text-xs text-muted-foreground">
+                    Choose the folder containing your application build context.
+                  </DialogDescription>
+                </DialogHeader>
+
+                <div className="space-y-4 pt-2">
+                  <RepositoryPathBrowser
+                    repositoryUrl={repositoryUrl}
+                    branch={branch}
+                    kind="directory"
+                    value={rootDirectory ?? ''}
+                    onChange={(p) => {
+                      onRootDirectoryChange?.(p);
+                      setBrowserOpen(false);
+                    }}
+                  />
+                </div>
+              </DialogContent>
+            </Dialog>
+          )}
           <CommandEnvironmentNotice
             commands={{ installCommand, buildCommand }}
             migrateDraft={(cmds, vars) => {

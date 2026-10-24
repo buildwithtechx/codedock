@@ -52,3 +52,38 @@ export function useRemoveClusterScaling() {
     },
   });
 }
+
+export function useReviewDatabaseScale() {
+  return useMutation({
+    mutationFn: ({
+      projectId,
+      clusterId,
+      spec,
+    }: {
+      projectId: string;
+      clusterId: string;
+      spec: { id: string; instances: number };
+    }) => clustersService.reviewDatabaseScale(projectId, clusterId, spec),
+  });
+}
+
+export function useApplyDatabaseScale() {
+  const queryClient = useQueryClient();
+  return useMutation({
+    mutationFn: ({
+      projectId,
+      clusterId,
+      operationId,
+      confirmation,
+    }: {
+      projectId: string;
+      clusterId: string;
+      operationId: string;
+      confirmation?: string;
+    }) => clustersService.applyDatabaseScale(projectId, clusterId, operationId, confirmation),
+    onSuccess: (_, { projectId }) => {
+      queryClient.invalidateQueries({ queryKey: ['projects', projectId] });
+      queryClient.invalidateQueries({ queryKey: ['canvas'] });
+    },
+  });
+}

@@ -38,6 +38,10 @@ func (s *Server) registerRoutes() {
 	s.router.GET("/health/env", s.settingsHandler.GetHealthEnv)
 	apiGroup.GET("/health/env", s.settingsHandler.GetHealthEnv)
 
+	s.router.GET("/api/v1/edge/auth", s.edgeAuthHandler.Verify)
+	s.router.GET("/_codedock/access", s.edgeAuthHandler.LoginForm)
+	s.router.POST("/_codedock/access", s.edgeAuthHandler.Login)
+
 	s.setupSPAFallback()
 }
 
@@ -169,6 +173,9 @@ func (s *Server) registerProjectRoutes(apiGroup, authGroup *echo.Group) {
 	authGroup.DELETE("/domains/:id", s.domainHandler.Delete)
 	authGroup.POST("/domains/:id/verify", s.domainHandler.Verify)
 	authGroup.GET("/domains/:id/verify", s.domainHandler.Verify)
+
+	authGroup.GET("/projects/:id/route-protection", s.routeProtectionHandler.List, projectAuth)
+	authGroup.POST("/projects/:id/route-protection", s.routeProtectionHandler.Change, projectAuth)
 
 	authGroup.GET("/projects/:id/env", s.projectEnvHandler.GetVars, projectAuth, s.authGuard.RequireScope("env:read"))
 	authGroup.PUT("/projects/:id/env", s.projectEnvHandler.SetVars, projectAuthAdmin, s.authGuard.RequireScope("env:write"))

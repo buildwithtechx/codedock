@@ -24,8 +24,8 @@ func ValidateDataSpec(spec models.ClusterDataSpec, nodes int) error {
 	if !dataSpecNamePattern.MatchString(spec.Name) {
 		return fmt.Errorf("database name must use lowercase letters, numbers and hyphens")
 	}
-	if spec.Instances != 1 && spec.Instances != 3 {
-		return fmt.Errorf("select standalone or three database instances")
+	if spec.Instances < 1 || spec.Instances > 9 {
+		return fmt.Errorf("select 1 to 9 database instances")
 	}
 	if spec.Shards < 0 || spec.Shards > 8 {
 		return fmt.Errorf("select zero to eight Redis shards")

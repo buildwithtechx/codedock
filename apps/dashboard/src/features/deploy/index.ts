@@ -10,3 +10,4 @@ export { DeployTopBar } from './deploy-top-bar';
 export { DeployWizard } from './deploy-wizard';
 export { DeploymentAdmissionCard } from './deployment-admission-card';
 export { ProjectChecksSettings } from './project-checks-settings';
+export { MonorepoAppPicker } from './monorepo-app-picker';

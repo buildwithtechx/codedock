@@ -13,6 +13,10 @@ import { Button } from '@codedock/ui/button';
 import { Input } from '@codedock/ui/input';
 import { useGetPublicSettings, useGetSettings } from '#/hooks/use-settings';
 import { GithubIcon } from '#/features/sources/github-app-dialogs';
+import {
+  RouteProtectionButton,
+  type RouteProtectionDraft,
+} from '#/features/dns/route-protection-button';
 
 interface DeploySidebarProps {
   repoName: string;
@@ -25,6 +29,8 @@ interface DeploySidebarProps {
   exposedPort?: number;
   isDeploying: boolean;
   onDeploy: () => void;
+  routeProtectionDraft?: RouteProtectionDraft;
+  onRouteProtectionDraftChange?: (draft: RouteProtectionDraft | undefined) => void;
 }
 
 export function DeploySidebar({
@@ -38,6 +44,8 @@ export function DeploySidebar({
   exposedPort = 8080,
   isDeploying,
   onDeploy,
+  routeProtectionDraft,
+  onRouteProtectionDraftChange,
 }: DeploySidebarProps) {
   const { data: publicRes } = useGetPublicSettings();
   const { data: settingsRes } = useGetSettings();
@@ -143,25 +151,34 @@ export function DeploySidebar({
             </button>
           </div>
 
-          <div className="mt-4 flex items-center rounded-xl border border-border/60 bg-background/50 px-3 py-2">
-            {domainMode === 'free' ? (
-              <>
+          <div className="mt-4 flex items-center gap-1.5 rounded-xl border border-border/60 bg-background/50 px-3 py-2">
+            <div className="flex flex-1 items-center">
+              {domainMode === 'free' ? (
+                <>
+                  <Input
+                    value={subdomain}
+                    onChange={(e) => onSubdomainChange(e.target.value)}
+                    placeholder="send-matrix"
+                    className="h-6 border-0 p-0 font-mono text-xs shadow-none focus-visible:ring-0"
+                  />
+                  <span className="font-mono text-muted-foreground text-xs">
+                    .{defaultFreeSuffix}
+                  </span>
+                </>
+              ) : (
                 <Input
-                  value={subdomain}
-                  onChange={(e) => onSubdomainChange(e.target.value)}
-                  placeholder="send-matrix"
+                  value={customDomain}
+                  onChange={(e) => setCustomDomain(e.target.value)}
+                  placeholder="app.example.com"
                   className="h-6 border-0 p-0 font-mono text-xs shadow-none focus-visible:ring-0"
                 />
-                <span className="font-mono text-muted-foreground text-xs">
-                  .{defaultFreeSuffix}
-                </span>
-              </>
-            ) : (
-              <Input
-                value={customDomain}
-                onChange={(e) => setCustomDomain(e.target.value)}
-                placeholder="app.example.com"
-                className="h-6 border-0 p-0 font-mono text-xs shadow-none focus-visible:ring-0"
+              )}
+            </div>
+            {activeDomain && (
+              <RouteProtectionButton
+                hostname={activeDomain}
+                draft={routeProtectionDraft}
+                onDraftChange={onRouteProtectionDraftChange}
               />
             )}
           </div>

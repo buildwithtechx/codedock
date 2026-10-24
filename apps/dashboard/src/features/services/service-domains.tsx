@@ -9,13 +9,23 @@ import { useCreate, useDelete, useListByService } from '#/hooks/use-dns';
 import { useDomainVerification } from '#/features/dns/domain-verification';
 import { useGetSettings } from '#/hooks/use-settings';
 import { useAuthStore } from '#/stores/auth-store';
+import { useGetApp } from '#/hooks/use-apps';
+import { RouteProtectionButton } from '#/features/dns';
 import { DnsGuidanceBanner } from './dns-guidance-banner';
 import { DnsStatusBadge } from './dns-status-badge';
 
-export function ServiceDomains({ serviceId }: { serviceId: string }) {
+export function ServiceDomains({
+  serviceId,
+  projectId,
+}: {
+  serviceId: string;
+  projectId?: string;
+}) {
   const userRole = useAuthStore((state) => state.user?.role);
   const canManageProviderDomains = userRole === 'admin' || String(userRole) === 'owner';
   const { data: domainsRes, isLoading } = useListByService(serviceId);
+  const { data: appRes } = useGetApp(serviceId);
+  const resolvedProjectId = projectId || appRes?.data?.projectId;
   const {
     data: settingsRes,
     isLoading: isLoadingSettings,
@@ -163,6 +173,10 @@ export function ServiceDomains({ serviceId }: { serviceId: string }) {
                   </div>
 
                   <div className="flex items-center gap-2 pt-2 sm:pt-0">
+                    <RouteProtectionButton
+                      hostname={domain.domainName}
+                      projectId={domain.projectId || resolvedProjectId}
+                    />
                     <Button
                       variant="outline"
                       size="sm"

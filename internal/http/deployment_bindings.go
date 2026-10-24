@@ -8,8 +8,15 @@ import (
 	"codedock/internal/repositories"
 )
 
-func configureDeploymentBindings(srv *Server, routeRuleRepo repositories.RouteRuleRepository, domainRepo *repositories.DomainRepo) {
+func configureDeploymentBindings(srv *Server, routeRuleRepo repositories.RouteRuleRepository, domainRepo *repositories.DomainRepo, routeProtectionRepo repositories.RouteProtectionRepository) {
 	if srv.deployer != nil {
+		srv.deployer.ProtectionChecker = func(ctx context.Context, hostname string) bool {
+			if routeProtectionRepo == nil {
+				return false
+			}
+			rp, err := routeProtectionRepo.GetByHostname(ctx, hostname)
+			return err == nil && rp != nil && rp.Enabled && rp.Secret != nil
+		}
 		srv.deployer.ScopedEnvProvider = func(ctx context.Context, project, environment string) (map[string]string, error) {
 			return srv.serviceLinker.GetLinkedVariablesForEnvironment(ctx, project, environment)
 		}

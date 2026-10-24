@@ -23,7 +23,7 @@ codedock db create --project PROJECT_ID --environment ENVIRONMENT_ID --name prim
 | `login`, `logout`, `me` | Account and saved client configuration (`whoami` aliases `me`) |
 | `status` | Service ID |
 | `servers` | `list`, `create`, `delete` |
-| `projects` | `list`, `create`, `destroy` |
+| `projects` | `list`, `create`, `destroy`, `routing protection` (`list`, `protect`, `unlock`, `revoke`, `retry`) |
 | `environments`, `env` | `list`, `create`, `destroy`; the `env` alias manages environments, not variables |
 | `apps` | `list`, `create`, `destroy`, plus `secrets`, `domains`, `deployments` and `logs` |
 | `apps secrets` | `list`, `set`; project variable operations |

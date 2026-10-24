@@ -31,6 +31,7 @@ type Deployer struct {
 	EnvInterpolator       func(projectID string) (map[string]map[string]string, error)
 	RouteRuleFetcher      func(ctx context.Context, serviceID, serviceName string) (map[string]string, error)
 	DomainFetcher         func(ctx context.Context, serviceID string) ([]models.DomainConfig, error)
+	ProtectionChecker     func(ctx context.Context, hostname string) bool
 }
 
 func resolveAppDomain(app *models.AppService) (string, error) {
@@ -49,17 +50,23 @@ func resolveAppDomain(app *models.AppService) (string, error) {
 }
 
 func (d *Deployer) routeHosts(ctx context.Context, serviceID, appDomain string, logWriter io.Writer) []RouteHost {
+	isProtected := func(h string) bool {
+		if d.ProtectionChecker != nil {
+			return d.ProtectionChecker(ctx, h)
+		}
+		return false
+	}
 	if d.DomainFetcher == nil {
-		return NormalizeRouteHosts(appDomain, nil)
+		return NormalizeRouteHostsWithProtection(appDomain, nil, isProtected)
 	}
 	domains, err := d.DomainFetcher(ctx, serviceID)
 	if err != nil {
 		if logWriter != nil {
 			fmt.Fprintf(logWriter, "Failed to fetch service domains: %v\n", err)
 		}
-		return NormalizeRouteHosts(appDomain, nil)
+		return NormalizeRouteHostsWithProtection(appDomain, nil, isProtected)
 	}
-	return NormalizeRouteHosts(appDomain, domains)
+	return NormalizeRouteHostsWithProtection(appDomain, domains, isProtected)
 }
 
 func NewDeployer(dockerClient *client.Client, s DeployerStore) *Deployer {

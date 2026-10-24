@@ -110,6 +110,8 @@ type Server struct {
 	checksHandler             *projects.ChecksHandler
 	supportHandler            *system.SupportHandler
 	rollbackSettingsHandler   *projects.RollbackSettingsHandler
+	routeProtectionHandler    *projects.RouteProtectionHandler
+	edgeAuthHandler           *system.EdgeAuthHandler
 }
 
 func (s *Server) ServeHTTP(w http.ResponseWriter, r *http.Request) {

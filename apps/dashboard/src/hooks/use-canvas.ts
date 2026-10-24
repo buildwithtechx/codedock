@@ -1,4 +1,4 @@
-import { useQuery } from '@tanstack/react-query';
+import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
 import { canvasService } from '#/services/canvas';
 import { useOrganizationStore } from '#/stores/organization-store';
 
@@ -26,5 +26,29 @@ export const useGetEnvironmentCanvas = (envId: string) => {
     queryFn: () => canvasService.getEnvironmentCanvas(envId),
     enabled: Boolean(envId),
     refetchInterval: 5000,
+  });
+};
+
+export const useObserveCanvasResource = (
+  envId: string,
+  nodeId: string,
+  options?: { enabled?: boolean }
+) => {
+  return useQuery({
+    queryKey: ['canvas-observation', envId, nodeId],
+    queryFn: () => canvasService.observeResource(envId, nodeId),
+    enabled: options?.enabled ?? (Boolean(envId) && Boolean(nodeId)),
+    refetchInterval: 5000,
+  });
+};
+
+export const useExecuteResourceAction = () => {
+  const queryClient = useQueryClient();
+  return useMutation({
+    mutationFn: ({ path, operation }: { path: string; operation: string }) =>
+      canvasService.executeAction(path, operation),
+    onSuccess: async () => {
+      await queryClient.invalidateQueries({ queryKey: ['canvas'] });
+    },
   });
 };

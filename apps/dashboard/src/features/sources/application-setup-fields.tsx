@@ -1,6 +1,17 @@
+import { Folder } from 'lucide-react';
+import { useState } from 'react';
+import { Button } from '@codedock/ui/button';
+import {
+  Dialog,
+  DialogContent,
+  DialogDescription,
+  DialogHeader,
+  DialogTitle,
+} from '@codedock/ui/dialog';
 import { Input } from '@codedock/ui/input';
 import { Label } from '@codedock/ui/label';
 import type { CreateAppServiceRequest } from '#/interfaces/services';
+import { RepositoryPathBrowser } from './repository-path-browser';
 
 export function ApplicationSetupFields({
   draft,
@@ -18,6 +29,7 @@ export function ApplicationSetupFields({
   variables: string;
   setVariables: (value: string) => void;
 }) {
+  const [browseField, setBrowseField] = useState<'rootDirectory' | 'dockerfilePath' | null>(null);
   const textFields =
     source === 'git'
       ? ([
@@ -50,16 +62,66 @@ export function ApplicationSetupFields({
   };
   return (
     <div className="grid gap-4 sm:grid-cols-2">
-      {textFields.map((key) => (
-        <div key={key} className="space-y-2">
-          <Label htmlFor={`setup-${key}`}>{labels[key]}</Label>
-          <Input
-            id={`setup-${key}`}
-            value={draft[key] ?? ''}
-            onChange={(event) => update(key, event.target.value)}
-          />
-        </div>
-      ))}
+      {textFields.map((key) => {
+        const canBrowse =
+          source === 'git' &&
+          Boolean(draft.repositoryUrl) &&
+          (key === 'rootDirectory' || key === 'dockerfilePath');
+        return (
+          <div key={key} className="space-y-2">
+            <div className="flex items-center justify-between">
+              <Label htmlFor={`setup-${key}`}>{labels[key]}</Label>
+              {canBrowse && (
+                <Button
+                  type="button"
+                  variant="ghost"
+                  size="sm"
+                  onClick={() => setBrowseField(key)}
+                  className="h-5 gap-1 px-1.5 text-[11px] text-muted-foreground hover:text-foreground"
+                >
+                  <Folder className="size-3" />
+                  Browse
+                </Button>
+              )}
+            </div>
+            <Input
+              id={`setup-${key}`}
+              value={draft[key] ?? ''}
+              onChange={(event) => update(key, event.target.value)}
+            />
+          </div>
+        );
+      })}
+
+      {browseField && draft.repositoryUrl && (
+        <Dialog open={Boolean(browseField)} onOpenChange={() => setBrowseField(null)}>
+          <DialogContent className="max-w-md rounded-2xl p-6">
+            <DialogHeader icon={Folder}>
+              <DialogTitle className="text-base font-semibold">
+                {browseField === 'rootDirectory' ? 'Select Repository Root' : 'Select Dockerfile'}
+              </DialogTitle>
+              <DialogDescription className="text-xs text-muted-foreground">
+                {browseField === 'rootDirectory'
+                  ? 'Choose the subfolder containing your application source'
+                  : 'Choose the Dockerfile to build this container'}
+              </DialogDescription>
+            </DialogHeader>
+
+            <div className="space-y-4 pt-2">
+              <RepositoryPathBrowser
+                repositoryUrl={draft.repositoryUrl}
+                branch={draft.branch}
+                kind={browseField === 'rootDirectory' ? 'directory' : 'file'}
+                value={draft[browseField] ?? ''}
+                onChange={(p) => {
+                  update(browseField, p);
+                  setBrowseField(null);
+                }}
+              />
+            </div>
+          </DialogContent>
+        </Dialog>
+      )}
       <div className="space-y-2">
         <Label htmlFor="setup-runtime">Runtime mode</Label>
         <select

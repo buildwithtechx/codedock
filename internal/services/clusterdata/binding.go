@@ -46,6 +46,13 @@ func clusterBindingVars(plan *models.ClusterDataPlan) map[string]string {
 		vars["DATABASE_URL"] = conn
 		vars[prefix+"_HOST"] = host
 		vars[prefix+"_PASSWORD"] = plan.Password
+		if plan.Record.Spec.Instances > 1 {
+			roHost := name + "-ro." + namespace + ".svc.cluster.local"
+			roConn := fmt.Sprintf("postgresql://app:%s@%s:5432/app", plan.Password, roHost)
+			vars[prefix+"_DATABASE_READ_URL"] = roConn
+			vars["DATABASE_READ_URL"] = roConn
+			vars[prefix+"_READ_HOST"] = roHost
+		}
 	} else {
 		host := name + "." + namespace + ".svc.cluster.local"
 		conn := fmt.Sprintf("redis://:%s@%s:6379", plan.Password, host)

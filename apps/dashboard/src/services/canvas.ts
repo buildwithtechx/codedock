@@ -30,4 +30,25 @@ export const canvasService = {
       throw handleApiError(error);
     }
   },
+
+  observeResource: async (
+    envId: string,
+    nodeId: string
+  ): Promise<BaseResponse<{ logs: string; metrics: Record<string, unknown> }>> => {
+    try {
+      return await apiClient.get<BaseResponse<{ logs: string; metrics: Record<string, unknown> }>>(
+        `/environments/${envId}/canvas/observe?node=${encodeURIComponent(nodeId)}`
+      );
+    } catch (error) {
+      throw handleApiError(error);
+    }
+  },
+
+  executeAction: async (path: string, operation: string): Promise<void> => {
+    try {
+      await apiClient.post(`${path}/${operation}`);
+    } catch (error) {
+      throw handleApiError(error);
+    }
+  },
 };

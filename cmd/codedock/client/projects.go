@@ -89,3 +89,47 @@ func (c *Client) DeleteProject(id string) error {
 
 	return nil
 }
+
+func (c *Client) ListRouteProtection(projectID string) ([]*models.RouteProtectionStatus, error) {
+	resp, err := c.sendRequest("GET", fmt.Sprintf("/projects/%s/route-protection", projectID), nil)
+	if err != nil {
+		return nil, err
+	}
+	defer resp.Body.Close()
+
+	if resp.StatusCode != nethttp.StatusOK {
+		body, _ := io.ReadAll(resp.Body)
+		return nil, fmt.Errorf("failed to list route protection (status %d): %s", resp.StatusCode, string(body))
+	}
+
+	var result struct {
+		Data []*models.RouteProtectionStatus `json:"data"`
+	}
+	if err := json.NewDecoder(resp.Body).Decode(&result); err != nil {
+		return nil, err
+	}
+
+	return result.Data, nil
+}
+
+func (c *Client) ChangeRouteProtection(projectID string, input *models.RouteProtectionInput) (*models.RouteProtectionStatus, error) {
+	resp, err := c.sendRequest("POST", fmt.Sprintf("/projects/%s/route-protection", projectID), input)
+	if err != nil {
+		return nil, err
+	}
+	defer resp.Body.Close()
+
+	if resp.StatusCode != nethttp.StatusOK {
+		body, _ := io.ReadAll(resp.Body)
+		return nil, fmt.Errorf("failed to update route protection (status %d): %s", resp.StatusCode, string(body))
+	}
+
+	var result struct {
+		Data *models.RouteProtectionStatus `json:"data"`
+	}
+	if err := json.NewDecoder(resp.Body).Decode(&result); err != nil {
+		return nil, err
+	}
+
+	return result.Data, nil
+}

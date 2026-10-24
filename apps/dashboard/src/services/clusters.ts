@@ -1,4 +1,9 @@
-import type { ClusterNode, ClusterScaling, ComputeCluster } from '#/interfaces/clusters';
+import type {
+  ClusterNode,
+  ClusterOperation,
+  ClusterScaling,
+  ComputeCluster,
+} from '#/interfaces/clusters';
 import { apiClient } from '#/lib/api-client';
 
 export const clustersService = {
@@ -39,6 +44,36 @@ export const clustersService = {
     );
     return res.data;
   },
+
+  reviewDatabaseScale: async (
+    projectId: string,
+    clusterId: string,
+    spec: { id: string; instances: number }
+  ): Promise<ClusterOperation> => {
+    const res = await apiClient.post<{ data: ClusterOperation }>(
+      `/projects/${encodeURIComponent(projectId)}/clusters/${encodeURIComponent(clusterId)}/databases/review`,
+      {
+        action: 'scale',
+        spec,
+      }
+    );
+    return res.data;
+  },
+
+  applyDatabaseScale: async (
+    projectId: string,
+    clusterId: string,
+    operationId: string,
+    confirmation = 'CONFIRM'
+  ): Promise<void> => {
+    await apiClient.post(
+      `/projects/${encodeURIComponent(projectId)}/clusters/${encodeURIComponent(clusterId)}/databases/apply/${encodeURIComponent(operationId)}`,
+      {
+        confirmation,
+      }
+    );
+  },
 };
 
 export type { ClusterNode, ClusterScaling, ComputeCluster };
+export * from '#/interfaces/clusters';

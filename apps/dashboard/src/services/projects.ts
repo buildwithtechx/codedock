@@ -207,6 +207,31 @@ export const projectSettingsService = {
       throw handleApiError(error);
     }
   },
+
+  listRouteProtection: async (
+    projectId: string
+  ): Promise<BaseResponse<import('@codedock/contracts').RouteProtectionStatus[]>> => {
+    try {
+      return await apiClient.get<
+        BaseResponse<import('@codedock/contracts').RouteProtectionStatus[]>
+      >(`/projects/${projectId}/route-protection`);
+    } catch (error) {
+      throw handleApiError(error);
+    }
+  },
+
+  changeRouteProtection: async (
+    projectId: string,
+    payload: import('@codedock/contracts').RouteProtectionInput
+  ): Promise<BaseResponse<import('@codedock/contracts').RouteProtectionStatus>> => {
+    try {
+      return await apiClient.post<
+        BaseResponse<import('@codedock/contracts').RouteProtectionStatus>
+      >(`/projects/${projectId}/route-protection`, payload);
+    } catch (error) {
+      throw handleApiError(error);
+    }
+  },
 };
 
 export const projectsApi = {

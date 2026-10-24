@@ -65,7 +65,20 @@ func (s *GitService) InspectRepository(ctx context.Context, userID string, reque
 	if err != nil {
 		return nil, err
 	}
-	return inspectRepositoryFiles(root)
+	result, err := inspectRepositoryFiles(root)
+	if err != nil {
+		return nil, err
+	}
+	if request.RootDirectory == "" || request.RootDirectory == "." {
+		candidates := DetectMonorepoCandidateApps(checkout)
+		if len(candidates) > 0 {
+			result.CandidateApps = candidates
+			if len(candidates) >= 2 {
+				result.IsMonorepo = true
+			}
+		}
+	}
+	return result, nil
 }
 
 func inspectionRoot(checkout, root string) (string, error) {

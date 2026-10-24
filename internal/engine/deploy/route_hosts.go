@@ -9,15 +9,28 @@ import (
 type RouteHost struct {
 	Host       string
 	PathPrefix string
+	Protected  bool
 }
 
 func NormalizeRouteHosts(primary string, domains []models.DomainConfig) []RouteHost {
+	return NormalizeRouteHostsWithProtection(primary, domains, nil)
+}
+
+func NormalizeRouteHostsWithProtection(primary string, domains []models.DomainConfig, isProtected func(string) bool) []RouteHost {
 	hosts := make([]RouteHost, 0, len(domains)+1)
 	seen := map[string]bool{}
 	primary = strings.ToLower(strings.TrimSpace(primary))
 	if primary != "" {
 		seen[primary] = true
-		hosts = append(hosts, RouteHost{Host: primary, PathPrefix: routePathPrefix(domainPathPrefix(primary, domains))})
+		prot := false
+		if isProtected != nil {
+			prot = isProtected(primary)
+		}
+		hosts = append(hosts, RouteHost{
+			Host:       primary,
+			PathPrefix: routePathPrefix(domainPathPrefix(primary, domains)),
+			Protected:  prot,
+		})
 	}
 	for _, domain := range domains {
 		host := strings.ToLower(strings.TrimSpace(domain.DomainName))
@@ -25,7 +38,15 @@ func NormalizeRouteHosts(primary string, domains []models.DomainConfig) []RouteH
 			continue
 		}
 		seen[host] = true
-		hosts = append(hosts, RouteHost{Host: host, PathPrefix: routePathPrefix(domain.PathPrefix)})
+		prot := false
+		if isProtected != nil {
+			prot = isProtected(host)
+		}
+		hosts = append(hosts, RouteHost{
+			Host:       host,
+			PathPrefix: routePathPrefix(domain.PathPrefix),
+			Protected:  prot,
+		})
 	}
 	return hosts
 }
