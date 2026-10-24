@@ -95,6 +95,7 @@ if [ ! -f "$CODEDOCK_DIR/.env" ]; then
   echo -e "${BOLD}🔑 Generating .env file...${NC}"
   JWT_SECRET=$(od -An -N32 -tx1 /dev/urandom | tr -d ' \n')
   REFRESH_SECRET=$(od -An -N32 -tx1 /dev/urandom | tr -d ' \n')
+  VAULT_KEY=$(od -An -N32 -tx1 /dev/urandom | tr -d ' \n')
 
   install -m 0600 /dev/null "$CODEDOCK_DIR/.env"
   cat > "$CODEDOCK_DIR/.env" <<ENV
@@ -105,6 +106,7 @@ CODEDOCK_CLOUD_MODE=false
 CODEDOCK_HOST_IP=${SERVER_IP}
 CODEDOCK_JWT_SECRET=${JWT_SECRET}
 CODEDOCK_REFRESH_SECRET=${REFRESH_SECRET}
+CODEDOCK_VAULT_KEY=${VAULT_KEY}
 CODEDOCK_TLS_EMAIL=
 CODEDOCK_WILDCARD_DOMAIN=
 CODEDOCK_MAGIC_DOMAIN=sslip.io
@@ -113,6 +115,8 @@ CODEDOCK_DASHBOARD_URL=http://${SERVER_IP}:8080
 CODEDOCK_SERVER_URL=http://${SERVER_IP}:8080
 CODEDOCK_API_HOST=http://${SERVER_IP}:8080
 CODEDOCK_RUNTIME_NETWORK=codedock-network
+CODEDOCK_PG_HOST=codedock-postgres
+CODEDOCK_PG_NETWORK=codedock-network
 DEPLOY_HOST_PORT_START=4100
 DEPLOY_HOST_PORT_END=4999
 DEPLOY_DRY_RUN=false
@@ -139,6 +143,8 @@ docker run -d \
   --env-file "$CODEDOCK_DIR/.env" \
   -e CODEDOCK_DATA_DIR=/codedock/data \
   -e CODEDOCK_CLOUD_MODE=false \
+  -e CODEDOCK_PG_HOST=codedock-postgres \
+  -e CODEDOCK_PG_NETWORK=codedock-network \
   -v codedock_data:/codedock/data \
   -v "${DOCKER_SOCKET_PATH:-/var/run/docker.sock}":/var/run/docker.sock:ro \
   --network codedock-network \

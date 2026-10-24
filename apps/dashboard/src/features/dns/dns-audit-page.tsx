@@ -1,23 +1,16 @@
-import { CheckCircle2, Globe, HelpCircle, Network, ShieldCheck } from 'lucide-react';
-import { type KeyboardEvent, useState } from 'react';
+import { Button } from '@codedock/ui/button';
+import { AlertTriangle, CheckCircle2, Globe, RefreshCw } from 'lucide-react';
 import { PageHeader } from '#/components/layout/page-header';
-import { Card, CardContent } from '#/components/ui/card';
-import { QueryErrorState } from '#/components/ui/query-error-state';
+import { QueryErrorState } from '#/components/query-error-state';
 import { DomainAuditTable } from './components/domain-audit-table';
-import { DnsSettings } from './dns-settings';
-import { DomainsPage } from './domains-page';
-import { useListAllDomains } from './hooks';
+import { useListAllDomains } from '#/hooks/use-dns';
 
 export function DnsAuditPage() {
-  const { data: domainsRes, isLoading, isError, refetch } = useListAllDomains();
-  const [activeTab, setActiveTab] = useState<'audit' | 'providers' | 'global'>('audit');
-  const [mountedTabs, setMountedTabs] = useState<Set<'audit' | 'providers' | 'global'>>(
-    () => new Set(['audit'])
-  );
-
-  const tabs = ['audit', 'providers', 'global'] as const;
+  const { data: domainsRes, isLoading, isFetching, isError, refetch } = useListAllDomains();
 
   const domains = domainsRes?.data || [];
+  const hasDomains = domains.length > 0;
+  const showStatCards = !isError && (isLoading || hasDomains);
 
   const totalCount = domains.length;
   const provisionedCount = domains.filter((d) => {
@@ -31,159 +24,72 @@ export function DnsAuditPage() {
       !d.dnsProvisionStatus
   ).length;
 
-  const showTab = (tab: 'audit' | 'providers' | 'global') => {
-    setActiveTab(tab);
-    setMountedTabs((prev) => {
-      if (prev.has(tab)) {
-        return prev;
-      }
-
-      const next = new Set(prev);
-      next.add(tab);
-      return next;
-    });
-  };
-
-  const handleTabKeyDown = (event: KeyboardEvent<HTMLButtonElement>) => {
-    if (!['ArrowRight', 'ArrowLeft', 'Home', 'End'].includes(event.key)) {
-      return;
-    }
-    const current = tabs.indexOf(activeTab);
-    let next = current;
-    if (event.key === 'ArrowRight') next = (current + 1) % tabs.length;
-    if (event.key === 'ArrowLeft') next = (current - 1 + tabs.length) % tabs.length;
-    if (event.key === 'Home') next = 0;
-    if (event.key === 'End') next = tabs.length - 1;
-    event.preventDefault();
-    if (next === current) return;
-    showTab(tabs[next]);
-    document.getElementById(`dns-${tabs[next]}-tab`)?.focus();
-  };
-
   return (
     <div className="space-y-6 pb-12">
       <PageHeader
-        title="Domains & DNS"
+        title="Domains"
         description="Audit configured domains, DNS provisioning, and live verification across services."
+        action={
+          <Button
+            variant="ghost"
+            size="icon"
+            disabled={isFetching}
+            aria-label="Refresh domains"
+            title="Refresh domains"
+            onClick={() => void refetch()}
+          >
+            <RefreshCw className={`size-4 ${isFetching ? 'animate-spin' : ''}`} />
+          </Button>
+        }
       />
 
-      <div className="grid grid-cols-1 gap-4 sm:grid-cols-3">
-        <Card className="border-border/60 bg-card">
-          <CardContent className="flex items-center gap-4 p-4">
-            <div className="flex h-10 w-10 shrink-0 items-center justify-center rounded-lg bg-primary/10 text-primary">
+      {showStatCards && (
+        <div className="grid grid-cols-1 gap-4 sm:grid-cols-3">
+          <div className="flex items-center gap-4 rounded-2xl border border-border/50 bg-card p-5 shadow-sm transition-colors hover:border-border/80">
+            <div className="flex h-11 w-11 shrink-0 items-center justify-center rounded-xl bg-primary/10 text-primary">
               <Globe className="h-5 w-5" />
             </div>
-            <div>
+            <div className="min-w-0 flex-1">
               <p className="font-medium text-muted-foreground text-xs uppercase tracking-wider">
                 Total Domains
               </p>
-              <h3 className="mt-0.5 font-bold text-2xl">
+              <h3 className="mt-1 font-bold text-2xl text-foreground tracking-tight">
                 {isLoading || isError ? '...' : totalCount}
               </h3>
             </div>
-          </CardContent>
-        </Card>
+          </div>
 
-        <Card className="border-border/60 bg-card">
-          <CardContent className="flex items-center gap-4 p-4">
-            <div className="flex h-10 w-10 shrink-0 items-center justify-center rounded-lg bg-emerald-500/10 text-emerald-500">
+          <div className="flex items-center gap-4 rounded-2xl border border-border/50 bg-card p-5 shadow-sm transition-colors hover:border-border/80">
+            <div className="flex h-11 w-11 shrink-0 items-center justify-center rounded-xl bg-emerald-500/10 text-emerald-500">
               <CheckCircle2 className="h-5 w-5" />
             </div>
-            <div>
+            <div className="min-w-0 flex-1">
               <p className="font-medium text-muted-foreground text-xs uppercase tracking-wider">
                 Auto-Provisioned
               </p>
-              <h3 className="mt-0.5 font-bold text-2xl">
+              <h3 className="mt-1 font-bold text-2xl text-foreground tracking-tight">
                 {isLoading || isError ? '...' : provisionedCount}
               </h3>
             </div>
-          </CardContent>
-        </Card>
+          </div>
 
-        <Card className="border-border/60 bg-card">
-          <CardContent className="flex items-center gap-4 p-4">
-            <div className="flex h-10 w-10 shrink-0 items-center justify-center rounded-lg bg-amber-500/10 text-amber-500">
-              <HelpCircle className="h-5 w-5" />
+          <div className="flex items-center gap-4 rounded-2xl border border-border/50 bg-card p-5 shadow-sm transition-colors hover:border-border/80">
+            <div className="flex h-11 w-11 shrink-0 items-center justify-center rounded-xl bg-amber-500/10 text-amber-500">
+              <AlertTriangle className="h-5 w-5" />
             </div>
-            <div>
+            <div className="min-w-0 flex-1">
               <p className="font-medium text-muted-foreground text-xs uppercase tracking-wider">
-                Manual / Pending / Failed Setup
+                Pending / Action Needed
               </p>
-              <h3 className="mt-0.5 font-bold text-2xl">
+              <h3 className="mt-1 font-bold text-2xl text-foreground tracking-tight">
                 {isLoading || isError ? '...' : manualCount}
               </h3>
             </div>
-          </CardContent>
-        </Card>
-      </div>
+          </div>
+        </div>
+      )}
 
-      <div
-        role="tablist"
-        aria-label="DNS audit views"
-        className="flex flex-wrap gap-x-2 gap-y-2 border-border/60 border-b"
-      >
-        <button
-          type="button"
-          id="dns-audit-tab"
-          role="tab"
-          aria-selected={activeTab === 'audit'}
-          aria-controls="dns-audit-panel"
-          tabIndex={activeTab === 'audit' ? 0 : -1}
-          onKeyDown={handleTabKeyDown}
-          onClick={() => showTab('audit')}
-          className={`flex items-center gap-2 border-b-2 px-4 py-2.5 font-medium text-sm transition-colors ${
-            activeTab === 'audit'
-              ? 'border-primary text-primary'
-              : 'border-transparent text-muted-foreground hover:text-foreground'
-          }`}
-        >
-          <ShieldCheck className="h-4 w-4" />
-          Domain Overview & Audit
-        </button>
-        <button
-          type="button"
-          id="dns-providers-tab"
-          role="tab"
-          aria-selected={activeTab === 'providers'}
-          aria-controls="dns-providers-panel"
-          tabIndex={activeTab === 'providers' ? 0 : -1}
-          onKeyDown={handleTabKeyDown}
-          onClick={() => showTab('providers')}
-          className={`flex items-center gap-2 border-b-2 px-4 py-2.5 font-medium text-sm transition-colors ${
-            activeTab === 'providers'
-              ? 'border-primary text-primary'
-              : 'border-transparent text-muted-foreground hover:text-foreground'
-          }`}
-        >
-          <Network className="h-4 w-4" />
-          DNS Provider API Credentials
-        </button>
-        <button
-          type="button"
-          id="dns-global-tab"
-          role="tab"
-          aria-selected={activeTab === 'global'}
-          aria-controls="dns-global-panel"
-          tabIndex={activeTab === 'global' ? 0 : -1}
-          onKeyDown={handleTabKeyDown}
-          onClick={() => showTab('global')}
-          className={`flex items-center gap-2 border-b-2 px-4 py-2.5 font-medium text-sm transition-colors ${
-            activeTab === 'global'
-              ? 'border-primary text-primary'
-              : 'border-transparent text-muted-foreground hover:text-foreground'
-          }`}
-        >
-          <Globe className="h-4 w-4" />
-          Global Domain Settings
-        </button>
-      </div>
-
-      <section
-        id="dns-audit-panel"
-        role="tabpanel"
-        aria-labelledby="dns-audit-tab"
-        className={activeTab === 'audit' ? 'block' : 'hidden'}
-      >
+      <section aria-label="Domains overview table">
         {isError ? (
           <QueryErrorState
             title="Domain audit is unavailable"
@@ -191,26 +97,8 @@ export function DnsAuditPage() {
             onRetry={() => void refetch()}
           />
         ) : (
-          mountedTabs.has('audit') && <DomainAuditTable domains={domains} isLoading={isLoading} />
+          <DomainAuditTable domains={domains} isLoading={isLoading} />
         )}
-      </section>
-
-      <section
-        id="dns-providers-panel"
-        role="tabpanel"
-        aria-labelledby="dns-providers-tab"
-        className={activeTab === 'providers' ? 'block' : 'hidden'}
-      >
-        {mountedTabs.has('providers') && <DnsSettings />}
-      </section>
-
-      <section
-        id="dns-global-panel"
-        role="tabpanel"
-        aria-labelledby="dns-global-tab"
-        className={activeTab === 'global' ? 'block' : 'hidden'}
-      >
-        {mountedTabs.has('global') && <DomainsPage />}
       </section>
     </div>
   );

@@ -1,4 +1,4 @@
-version: "3.8"
+﻿version: "3.8"
 services:
   mongodb:
     image: mongo:7.0
@@ -16,3 +16,5 @@ services:
       - MONGO_INITDB_DATABASE=${db.database_name}
     volumes:
       - mongo-data:/data/db
+volumes:
+  mongo-data:

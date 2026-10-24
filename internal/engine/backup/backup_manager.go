@@ -1,9 +1,13 @@
 package backup
 
 import (
+	"bytes"
 	"context"
+	"crypto/sha256"
+	"encoding/hex"
 	"errors"
 	"fmt"
+	"io"
 	"log/slog"
 	"os"
 	"path/filepath"
@@ -15,8 +19,8 @@ import (
 	"github.com/google/uuid"
 	"github.com/robfig/cron/v3"
 
-	"codedock.run/codedock/internal/models"
-	"codedock.run/codedock/internal/utils"
+	"codedock/internal/models"
+	"codedock/internal/utils"
 )
 
 type Store interface {
@@ -31,12 +35,39 @@ type Store interface {
 }
 
 type BackupManager struct {
-	dockerClient *client.Client
-	store        Store
-	cronEngine   *cron.Cron
-	entries      map[string]cron.EntryID
-	backupDir    string
-	mu           sync.Mutex
+	dockerTarget     DockerTarget
+	serviceRuntime   func(context.Context, string) (string, error)
+	nativeBackup     func(context.Context, string, io.Writer) error
+	nativeRestore    func(ctx context.Context, serviceID string, archive io.Reader) error
+	scheduledRunner  func(context.Context, string) error
+	dockerClient     *client.Client
+	store            Store
+	cronEngine       *cron.Cron
+	entries          map[string]cron.EntryID
+	backupDir        string
+	mu               sync.Mutex
+	restoreMu        sync.Mutex
+	restores         map[string]context.CancelFunc
+	restoreVolumes   map[string]string
+	volumeOperations VolumeOperations
+	OnBackupFailed   func(recordID, errStr string)
+}
+
+func (bm *BackupManager) SetServiceRuntime(lookup func(context.Context, string) (string, error)) {
+	bm.serviceRuntime = lookup
+}
+
+func (bm *BackupManager) SetNativeData(backup func(context.Context, string, io.Writer) error, restore func(context.Context, string, io.Reader) error) {
+	bm.nativeBackup = backup
+	bm.nativeRestore = restore
+}
+
+func (bm *BackupManager) isNativeService(ctx context.Context, serviceID string) bool {
+	if serviceID == "" || bm.serviceRuntime == nil {
+		return false
+	}
+	kind, err := bm.serviceRuntime(ctx, serviceID)
+	return err == nil && kind == "bare"
 }
 
 func NewBackupManager(dockerClient *client.Client, s Store, backupDir string) *BackupManager {
@@ -45,25 +76,19 @@ func NewBackupManager(dockerClient *client.Client, s Store, backupDir string) *B
 	}
 	_ = os.MkdirAll(backupDir, 0o700)
 	return &BackupManager{
-		dockerClient: dockerClient,
-		store:        s,
-		cronEngine:   cron.New(cron.WithSeconds()),
-		entries:      make(map[string]cron.EntryID),
-		backupDir:    backupDir,
+		dockerClient:   dockerClient,
+		store:          s,
+		cronEngine:     cron.New(cron.WithSeconds()),
+		entries:        make(map[string]cron.EntryID),
+		restores:       make(map[string]context.CancelFunc),
+		restoreVolumes: make(map[string]string),
+		backupDir:      backupDir,
 	}
 }
 
 func (bm *BackupManager) Start() error {
-	cfgs, err := bm.store.ListAllActiveBackupConfigs()
-	if err != nil {
-		return fmt.Errorf("failed to load active backup configs during start: %w", err)
-	}
-	bm.mu.Lock()
-	defer bm.mu.Unlock()
-	for _, cfg := range cfgs {
-		if err := bm.registerBackupLocked(cfg); err != nil {
-			slog.Warn("failed to schedule backup", "name", cfg.Name, "id", cfg.ID, "err", err)
-		}
+	if err := bm.Reconcile(); err != nil {
+		return err
 	}
 	bm.cronEngine.Start()
 	slog.Info("backup manager started")
@@ -83,27 +108,43 @@ func (bm *BackupManager) RegisterBackup(cfg *models.BackupConfig) error {
 }
 
 func (bm *BackupManager) registerBackupLocked(cfg *models.BackupConfig) error {
+	active := cfg.Status == models.BackupConfigStatusActive && cfg.BackupEnabled && strings.TrimSpace(cfg.Schedule) != "manual"
+	var schedule cron.Schedule
+	if active {
+		var err error
+		schedule, err = ParseSchedule(cfg.Schedule, cfg.Timezone)
+		if err != nil {
+			return fmt.Errorf("schedule backup %s: %w", cfg.Name, err)
+		}
+	}
 	if entryID, exists := bm.entries[cfg.ID]; exists {
 		bm.cronEngine.Remove(entryID)
 		delete(bm.entries, cfg.ID)
 	}
-	if cfg.Status != "active" || !cfg.BackupEnabled || strings.TrimSpace(cfg.Schedule) == "manual" {
+	if !active {
 		return nil
 	}
-	schedule := strings.TrimSpace(cfg.Schedule)
-	if len(strings.Fields(schedule)) == 5 && !strings.HasPrefix(schedule, "@") {
-		schedule = "0 " + schedule
-	}
 	cfgID := cfg.ID
-	entryID, err := bm.cronEngine.AddFunc(schedule, func() {
-		ctx, cancel := context.WithTimeout(context.Background(), 30*time.Minute)
-		defer cancel()
-		_, _ = bm.TriggerBackup(ctx, cfgID)
-	})
-	if err != nil {
-		return fmt.Errorf("invalid cron schedule '%s' for backup %s: %w", cfg.Schedule, cfg.Name, err)
+	timeout := time.Duration(cfg.Timeout) * time.Second
+	if timeout <= 0 {
+		timeout = 30 * time.Minute
 	}
-	bm.entries[cfg.ID] = entryID
+	bm.entries[cfg.ID] = bm.cronEngine.Schedule(schedule, cron.FuncJob(func() {
+		ctx, cancel := context.WithTimeout(context.Background(), timeout)
+		defer cancel()
+		bm.mu.Lock()
+		runner := bm.scheduledRunner
+		bm.mu.Unlock()
+		var runErr error
+		if runner != nil {
+			runErr = runner(ctx, cfgID)
+		} else {
+			_, runErr = bm.TriggerBackup(ctx, cfgID)
+		}
+		if err := runErr; err != nil {
+			slog.Error("scheduled backup failed", "backup_id", cfgID, "error", err)
+		}
+	}))
 	return nil
 }
 
@@ -121,6 +162,9 @@ func (bm *BackupManager) failBackupRecord(recID, errStr string) (*models.BackupR
 }
 
 func (bm *BackupManager) failBackupWithLogs(recID, priorLogs, errStr string) (*models.BackupRecord, error) {
+	if bm.OnBackupFailed != nil {
+		bm.OnBackupFailed(recID, errStr)
+	}
 	logs := priorLogs + fmt.Sprintf("Failed: %s\n", errStr)
 	if err := bm.store.UpdateBackupRecord(models.UpdateBackupRecordOpts{
 		ID:          recID,
@@ -133,11 +177,16 @@ func (bm *BackupManager) failBackupWithLogs(recID, priorLogs, errStr string) (*m
 	return nil, errors.New(errStr)
 }
 
-func (bm *BackupManager) DeleteBackupRecord(ctx context.Context, recordID string) {
-	rec, err := bm.store.GetBackupRecord(recordID)
-	if err == nil && rec != nil && rec.FilePath != "" {
-		_ = os.Remove(rec.FilePath)
+func (bm *BackupManager) DeleteBackupRecord(ctx context.Context, recordID string) error {
+	record, err := bm.store.GetBackupRecord(recordID)
+	if err != nil {
+		return err
 	}
+	cfg, err := bm.store.GetBackupConfig(record.BackupConfigID)
+	if err != nil {
+		return err
+	}
+	return bm.removeArchive(ctx, cfg, record)
 }
 
 func (bm *BackupManager) TriggerBackup(ctx context.Context, backupConfigID string) (*models.BackupRecord, error) {
@@ -149,33 +198,112 @@ func (bm *BackupManager) TriggerBackup(ctx context.Context, backupConfigID strin
 		return nil, fmt.Errorf("backup execution disabled for config %s", backupConfigID)
 	}
 
+	producer, release, err := bm.producer(ctx, cfg)
+	if err != nil {
+		return nil, err
+	}
+	defer release()
+	if producer != bm {
+		if cfg.Incremental {
+			return nil, fmt.Errorf("incremental backups require a local Docker target")
+		}
+		return producer.TriggerBackup(ctx, backupConfigID)
+	}
 	rec := &models.BackupRecord{
-		ID:              uuid.New().String(),
-		BackupConfigID:  cfg.ID,
-		DatabaseID:      cfg.DatabaseID,
-		S3DestinationID: cfg.S3DestinationID,
-		Status:          models.BackupRecordStatusRunning,
-		Logs:            fmt.Sprintf("Initiating automated backup '%s' at %s...\n", cfg.Name, time.Now().UTC().Format(time.RFC3339)),
+		ID:                uuid.New().String(),
+		BackupConfigID:    cfg.ID,
+		DatabaseID:        cfg.DatabaseID,
+		S3DestinationID:   cfg.S3DestinationID,
+		SFTPDestinationID: cfg.SFTPDestinationID,
+		Status:            models.BackupRecordStatusRunning,
+		Logs:              fmt.Sprintf("Initiating automated backup '%s' at %s...\n", cfg.Name, time.Now().UTC().Format(time.RFC3339)),
 	}
 	if err := bm.store.CreateBackupRecord(rec); err != nil {
 		return nil, fmt.Errorf("failed to create backup record: %w", err)
 	}
 
+	timeout := cfg.Timeout
+	if timeout <= 0 {
+		timeout = 3600
+	}
+	ctx, cancel := context.WithTimeout(ctx, time.Duration(timeout)*time.Second)
+	defer cancel()
+	if err := backupProgress(ctx, "PRODUCING", "Creating backup record "+rec.ID); err != nil {
+		return bm.failBackupRecord(rec.ID, err.Error())
+	}
 	var dumpBytes []byte
 	var execLogs string
 	var fileExt string
 
-	if cfg.VolumeName != "" {
-		dumpBytes, execLogs, err = bm.executeVolumeBackup(ctx, cfg.VolumeName)
+	if cfg.VolumeName != "" && !bm.isNativeService(ctx, cfg.ServiceID) {
+		if err := bm.validateVolumeProducer(ctx, cfg); err != nil {
+			return bm.failBackupRecord(rec.ID, err.Error())
+		}
+		containerName := ""
+		if cfg.ServiceID != "" {
+			if resolved, err := bm.serviceContainer(ctx, cfg.ServiceID); err == nil {
+				containerName = resolved
+			}
+		}
+		unquiesce, err := bm.quiesceTarget(ctx, cfg, containerName)
+		if err != nil {
+			return bm.failBackupRecord(rec.ID, err.Error())
+		}
+		defer unquiesce()
+		if cfg.Incremental {
+			dumpBytes, execLogs, err = bm.executeVolumeBackupIncremental(ctx, cfg, cfg.VolumeName)
+			if parent := bm.latestCompletedRecord(ctx, cfg.ID); parent != "" {
+				rec.ParentRecordID = parent
+			}
+		} else {
+			dumpBytes, execLogs, err = bm.executeVolumeBackup(ctx, cfg.VolumeName)
+		}
 		if err != nil {
 			return bm.failBackupRecord(rec.ID, err.Error())
 		}
 		fileExt = ".tar.gz"
-	} else if cfg.DatabaseID == "global" || cfg.DatabaseID == "" {
-		dbPath := filepath.Join(utils.GetDataDir(), "codedock.db")
-		content, err := os.ReadFile(dbPath)
+	} else if cfg.FileSourcePath != "" && !bm.isNativeService(ctx, cfg.ServiceID) {
+		dumpBytes, execLogs, err = bm.executeFileBackup(ctx, cfg.FileSourcePath)
 		if err != nil {
-			return bm.failBackupRecord(rec.ID, fmt.Sprintf("failed to read global db: %v", err))
+			return bm.failBackupRecord(rec.ID, err.Error())
+		}
+		fileExt = ".tar.gz"
+	} else if cfg.ServiceID != "" && bm.isNativeService(ctx, cfg.ServiceID) {
+		if bm.nativeBackup == nil {
+			return bm.failBackupRecord(rec.ID, "native backup transport unavailable")
+		}
+		var out bytes.Buffer
+		if err := bm.nativeBackup(ctx, cfg.ServiceID, &out); err != nil {
+			return bm.failBackupRecord(rec.ID, err.Error())
+		}
+		dumpBytes = out.Bytes()
+		execLogs = "Native data directory archived.\n"
+		fileExt = ".tar.gz"
+	} else if strings.TrimSpace(cfg.CustomBackupCommand) != "" {
+		containerName, err := bm.serviceContainer(ctx, cfg.ServiceID)
+		if err != nil {
+			return bm.failBackupRecord(rec.ID, err.Error())
+		}
+		unquiesce, err := bm.quiesceTarget(ctx, cfg, containerName)
+		if err != nil {
+			return bm.failBackupRecord(rec.ID, err.Error())
+		}
+		defer unquiesce()
+		dumpBytes, execLogs, err = bm.executeCustomBackup(ctx, cfg)
+		if err != nil {
+			return bm.failBackupRecord(rec.ID, err.Error())
+		}
+		fileExt = ".bin"
+	} else if cfg.DatabaseID == "global" || cfg.DatabaseID == "" {
+		snapshotter, ok := bm.store.(interface {
+			ControlPlaneSnapshot(context.Context) ([]byte, error)
+		})
+		if !ok {
+			return bm.failBackupRecord(rec.ID, "consistent control-plane snapshots unavailable")
+		}
+		content, err := snapshotter.ControlPlaneSnapshot(ctx)
+		if err != nil {
+			return bm.failBackupRecord(rec.ID, err.Error())
 		}
 		dumpBytes = content
 		fileExt = ".db"
@@ -185,6 +313,11 @@ func (bm *BackupManager) TriggerBackup(ctx context.Context, backupConfigID strin
 		if err != nil {
 			return bm.failBackupRecord(rec.ID, err.Error())
 		}
+		unquiesce, err := bm.quiesceTarget(ctx, cfg, containerName)
+		if err != nil {
+			return bm.failBackupRecord(rec.ID, err.Error())
+		}
+		defer unquiesce()
 		fileExt = ext
 		dumpBytes, execLogs, err = bm.executeDump(ctx, containerName, dumpCmd, cfg.Name)
 		if err != nil {
@@ -192,7 +325,16 @@ func (bm *BackupManager) TriggerBackup(ctx context.Context, backupConfigID strin
 		}
 	}
 
-	fileName := fmt.Sprintf("backup_%s_%s%s", cfg.ID, time.Now().UTC().Format("20060102_150405"), fileExt)
+	if err := backupProgress(ctx, "VERIFYING", "Checking produced archive"); err != nil {
+		return bm.failBackupRecord(rec.ID, err.Error())
+	}
+	if len(dumpBytes) == 0 {
+		return bm.failBackupRecord(rec.ID, "backup producer returned an empty archive")
+	}
+	digest := sha256.Sum256(dumpBytes)
+	rec.SHA256 = hex.EncodeToString(digest[:])
+	rec.VerifiedAt = time.Now().UTC().Format(time.RFC3339)
+	fileName := fmt.Sprintf("backup_%s_%s%s", cfg.ID, time.Now().UTC().Format("20060102_150405")+"_"+rec.ID, fileExt)
 	filePath := filepath.Join(bm.backupDir, fileName)
 
 	if err := os.WriteFile(filePath, dumpBytes, 0o600); err != nil {
@@ -206,6 +348,9 @@ func (bm *BackupManager) TriggerBackup(ctx context.Context, backupConfigID strin
 
 	s3URL := ""
 	if cfg.S3Enabled {
+		if err := backupProgress(ctx, "UPLOADING", "Uploading verified archive"); err != nil {
+			return bm.failBackupRecord(rec.ID, err.Error())
+		}
 		var s3Err error
 		s3URL, execLogs, s3Err = bm.handleS3Upload(ctx, cfg, fileName, dumpBytes, execLogs)
 		if s3Err != nil {
@@ -224,50 +369,86 @@ func (bm *BackupManager) TriggerBackup(ctx context.Context, backupConfigID strin
 
 	}
 
-	if cfg.DisableLocal && s3URL != "" {
+	sftpURL := ""
+	if cfg.SFTPEnabled {
+		if err := backupProgress(ctx, "UPLOADING", "Uploading verified archive to SFTP"); err != nil {
+			return bm.failBackupRecord(rec.ID, err.Error())
+		}
+		var sftpErr error
+		sftpURL, execLogs, sftpErr = bm.handleSFTPUpload(ctx, cfg, fileName, dumpBytes, execLogs)
+		if sftpErr != nil {
+			if err := bm.store.UpdateBackupRecord(models.UpdateBackupRecordOpts{
+				ID:            rec.ID,
+				Status:        models.BackupRecordStatusFailed,
+				FilePath:      filePath,
+				FileSizeBytes: sizeBytes,
+				Logs:          execLogs + fmt.Sprintf("Failed: %s\n", sftpErr.Error()),
+				CompletedAt:   time.Now().UTC().Format(time.RFC3339),
+			}); err != nil {
+				slog.Warn("failed to update backup record on sftp upload failure", "error", err)
+			}
+			return nil, sftpErr
+		}
+	}
+
+	if cfg.DisableLocal && (s3URL != "" || sftpURL != "") {
 		_ = os.Remove(filePath)
 		filePath = ""
 	}
 
-	bm.enforceRetentionPolicy(cfg)
-
-	return bm.finalizeBackupRecord(FinalizeBackupOpts{
-		Record:    rec,
-		FilePath:  filePath,
-		S3URL:     s3URL,
-		ExecLogs:  execLogs,
-		SizeBytes: sizeBytes,
+	completed, err := bm.finalizeBackupRecord(FinalizeBackupOpts{
+		Record:         rec,
+		FilePath:       filePath,
+		S3URL:          s3URL,
+		SFTPURL:        sftpURL,
+		ParentRecordID: rec.ParentRecordID,
+		ExecLogs:       execLogs,
+		SizeBytes:      sizeBytes,
 	})
-}
-
-type FinalizeBackupOpts struct {
-	Record    *models.BackupRecord
-	FilePath  string
-	S3URL     string
-	ExecLogs  string
-	SizeBytes int64
-}
-
-func (bm *BackupManager) finalizeBackupRecord(opts FinalizeBackupOpts) (*models.BackupRecord, error) {
-	nowStr := time.Now().UTC().Format(time.RFC3339)
-	finalLogs := opts.Record.Logs + opts.ExecLogs + "\nBackup run completed successfully."
-	if err := bm.store.UpdateBackupRecord(models.UpdateBackupRecordOpts{
-		ID:            opts.Record.ID,
-		Status:        models.BackupRecordStatusCompleted,
-		FilePath:      opts.FilePath,
-		S3URL:         opts.S3URL,
-		Logs:          finalLogs,
-		FileSizeBytes: opts.SizeBytes,
-		CompletedAt:   nowStr,
-	}); err != nil {
-		slog.Warn("failed to update backup record", "error", err)
+	if err != nil {
+		return nil, err
 	}
+	bm.enforceRetentionPolicy(cfg)
+	return completed, nil
+}
 
-	opts.Record.Status = models.BackupRecordStatusCompleted
-	opts.Record.FilePath = opts.FilePath
-	opts.Record.FileSizeBytes = opts.SizeBytes
-	opts.Record.S3URL = opts.S3URL
-	opts.Record.Logs = finalLogs
-	opts.Record.CompletedAt = nowStr
-	return opts.Record, nil
+func (bm *BackupManager) latestCompletedRecord(ctx context.Context, configID string) string {
+	records, err := bm.store.ListBackupRecords(configID)
+	if err != nil {
+		return ""
+	}
+	for _, record := range records {
+		if record.Status == models.BackupRecordStatusCompleted {
+			return record.ID
+		}
+	}
+	return ""
+}
+
+func (bm *BackupManager) handleSFTPUpload(ctx context.Context, cfg *models.BackupConfig, fileName string, dumpBytes []byte, execLogs string) (string, string, error) {
+	if cfg.SFTPDestinationID == "" {
+		return "", execLogs, fmt.Errorf("SFTP destination ID missing for config %s", cfg.ID)
+	}
+	getter, ok := bm.store.(interface {
+		GetSFTPDestination(string) (*models.SFTPDestination, error)
+	})
+	if !ok {
+		return "", execLogs, fmt.Errorf("SFTP destination lookup unavailable")
+	}
+	dest, err := getter.GetSFTPDestination(cfg.SFTPDestinationID)
+	if err != nil || dest == nil {
+		return "", execLogs, fmt.Errorf("SFTP destination %s not found", cfg.SFTPDestinationID)
+	}
+	sftpURL, err := sftpPut(ctx, dest, fileName, dumpBytes)
+	if err != nil {
+		return "", execLogs, fmt.Errorf("SFTP upload failed: %w", err)
+	}
+	execLogs += fmt.Sprintf("\nUploaded backup to SFTP destination: %s", sftpURL)
+	return sftpURL, execLogs, nil
+}
+
+func (bm *BackupManager) SetScheduledRunner(runner func(context.Context, string) error) {
+	bm.mu.Lock()
+	defer bm.mu.Unlock()
+	bm.scheduledRunner = runner
 }

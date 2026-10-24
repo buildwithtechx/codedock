@@ -25,6 +25,8 @@ export const useCreate = () => {
     }) => serviceVarsService.create(payload.serviceId, payload.payload),
     onSuccess: async () => {
       await queryClient.invalidateQueries({ queryKey: ['serviceVars'] });
+      await queryClient.invalidateQueries({ queryKey: ['canvas'] });
+      await queryClient.invalidateQueries({ queryKey: ['variables'] });
     },
   });
 };

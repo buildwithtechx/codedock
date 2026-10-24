@@ -1,7 +1,10 @@
 x-codedock:
   is_one_click: true
+  verified: true
   name: Ghost
-  description: Professional publishing platform
+  description: Publishing for blogs, newsletters, and membership sites, with a focused editor and your own database.
+  category: cms
+  icon: ghost
 services:
   ghost:
     image: ghost:5-alpine
@@ -10,3 +13,7 @@ services:
       - "2368"
     environment:
       - NODE_ENV=production
+    volumes:
+      - ghost-data:/var/lib/ghost/content
+volumes:
+  ghost-data:

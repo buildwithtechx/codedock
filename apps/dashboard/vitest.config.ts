@@ -5,10 +5,13 @@ export default defineConfig({
   test: {
     environment: 'jsdom',
     globals: true,
+    setupFiles: ['./src/test-setup.ts'],
+    testTimeout: 30000,
   },
   resolve: {
     alias: {
       '#': path.resolve(import.meta.dirname, './src'),
+      '@': path.resolve(import.meta.dirname, './src'),
     },
   },
 });

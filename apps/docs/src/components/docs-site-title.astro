@@ -4,9 +4,9 @@ const { siteTitleHref } = Astro.locals.starlightRoute;
 
 <a href={siteTitleHref} class="docs-site-title">
   <span class="docs-site-title__mark">
-    <img src="/favicon.svg" alt="" />
+    <img src="/favicon.svg" alt="Codedock Logo" width="32" height="32" />
   </span>
-  <span translate="no">Codedock Docs</span>
+  <span class="docs-site-title__text" translate="no">Codedock</span>
 </a>
 
 <style>
@@ -17,26 +17,35 @@ const { siteTitleHref } = Astro.locals.starlightRoute;
       align-items: center;
       gap: 0.75rem;
       color: var(--sl-color-white);
-      font-family: var(--sl-font);
+      font-family: var(--sl-font-heading);
       font-size: var(--sl-text-lg);
-      font-weight: 800;
+      font-weight: 700;
       text-decoration: none;
       white-space: nowrap;
+      letter-spacing: -0.02em;
+    }
+
+    .docs-site-title:hover .docs-site-title__text {
+      color: var(--sl-color-accent);
     }
 
     .docs-site-title__mark {
-      display: grid;
+      display: flex;
       width: 2rem;
       height: 2rem;
       flex: 0 0 auto;
-      place-items: center;
-      border: 1px solid rgba(139, 92, 246, 0.44);
-      background: rgba(124, 58, 237, 0.1);
+      align-items: center;
+      justify-content: center;
+      border-radius: 0.5rem;
+      overflow: hidden;
+      box-shadow: 0 2px 8px rgba(0, 0, 0, 0.12);
     }
 
     .docs-site-title__mark img {
-      width: 1.1rem;
-      height: 1.1rem;
+      width: 2rem;
+      height: 2rem;
+      display: block;
+      object-fit: contain;
     }
   }
 </style>

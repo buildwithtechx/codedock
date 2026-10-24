@@ -1,10 +1,10 @@
 import { format } from 'date-fns';
 import { Key, Plus, Server, Trash2, Users } from 'lucide-react';
 import { useState } from 'react';
-import { Button } from '#/components/ui/button';
-import { Skeleton } from '#/components/ui/skeleton';
-import type { User } from '#/features/users';
-import { useListUsers } from '#/features/users';
+import { Button } from '@codedock/ui/button';
+import { Skeleton } from '@codedock/ui/skeleton';
+import { useListUsers } from '#/hooks/use-users';
+import type { User } from '#/interfaces/users';
 import { UserDeleteDialog } from './components/user-delete-dialog';
 import { UserInviteDialog } from './components/user-invite-dialog';
 
@@ -35,7 +35,7 @@ const UserRow = ({ user, onDelete }: { user: User; onDelete: (u: User) => void }
       <div className="space-y-2">
         <div className="flex items-center gap-3">
           <h3 className="font-bold text-foreground text-xl">
-            {user.name || user.email.split('@')[0]}
+            {user.name || (user.email ? user.email.split('@')[0] : 'User')}
           </h3>
           <div className="rounded border border-primary/30 bg-primary/10 px-2 py-0.5 font-bold text-[10px] text-primary uppercase tracking-widest">
             {user.role}

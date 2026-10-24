@@ -11,8 +11,10 @@ import (
 	"regexp"
 	"strings"
 
-	"codedock.run/codedock/internal/models"
+	"codedock/internal/models"
 )
+
+var envKeyPattern = regexp.MustCompile(`^[A-Z_][A-Z0-9_]*$`)
 
 type gitProviderFetcher interface {
 	GetAnyProviderByType(ctx context.Context, providerType string) (*models.GitProviderConfig, error)
@@ -131,7 +133,6 @@ func (s *EnvSuggestionService) parseEnvExampleText(input, sourcePath string) []E
 	seen := map[string]bool{}
 
 	lines := strings.Split(input, "\n")
-	keyRegex := regexp.MustCompile(`^[A-Z_][A-Z0-9_]*$`)
 
 	for _, rawLine := range lines {
 		line := strings.TrimSpace(rawLine)
@@ -149,7 +150,7 @@ func (s *EnvSuggestionService) parseEnvExampleText(input, sourcePath string) []E
 		}
 
 		key := strings.TrimSpace(line[:idx])
-		if !keyRegex.MatchString(strings.ToUpper(key)) {
+		if !envKeyPattern.MatchString(strings.ToUpper(key)) {
 			continue
 		}
 

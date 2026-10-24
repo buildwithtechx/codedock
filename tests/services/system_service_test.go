@@ -3,7 +3,7 @@ package services_test
 import (
 	"testing"
 
-	"codedock.run/codedock/internal/services/system"
+	"codedock/internal/services/system"
 )
 
 func TestSystemService_GetStats(t *testing.T) {

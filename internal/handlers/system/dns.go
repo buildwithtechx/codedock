@@ -3,21 +3,23 @@ package system
 import (
 	"net/http"
 
-	systemservices "codedock.run/codedock/internal/services/system"
+	authservices "codedock/internal/services/auth"
+	systemservices "codedock/internal/services/system"
 
 	"github.com/labstack/echo/v4"
 
-	"codedock.run/codedock/internal/models"
+	"codedock/internal/models"
 
-	"codedock.run/codedock/internal/utils"
+	"codedock/internal/utils"
 )
 
 type DNSHandler struct {
-	dnsService *systemservices.DNSService
+	dnsService   *systemservices.DNSService
+	auditService *authservices.AuditService
 }
 
-func NewDNSHandler(dnsService *systemservices.DNSService) *DNSHandler {
-	return &DNSHandler{dnsService: dnsService}
+func NewDNSHandler(dnsService *systemservices.DNSService, auditService *authservices.AuditService) *DNSHandler {
+	return &DNSHandler{dnsService: dnsService, auditService: auditService}
 }
 
 func (h *DNSHandler) Create(c echo.Context) error {
@@ -31,6 +33,13 @@ func (h *DNSHandler) Create(c echo.Context) error {
 		return utils.Error(c, http.StatusInternalServerError, err.Error())
 	}
 
+	h.auditService.LogAction(c.Request().Context(), authservices.AuditActionOpts{
+		UserID:    utils.AuditActorID(c),
+		Action:    "dns.create",
+		Resource:  record.ID,
+		IPAddress: c.RealIP(),
+		Details:   map[string]string{"domain": req.DomainName, "record": req.RecordName, "type": req.RecordType},
+	})
 	return utils.Created(c, "DNS record created successfully", record)
 }
 
@@ -74,5 +83,11 @@ func (h *DNSHandler) Delete(c echo.Context) error {
 		return utils.Error(c, http.StatusInternalServerError, err.Error())
 	}
 
+	h.auditService.LogAction(c.Request().Context(), authservices.AuditActionOpts{
+		UserID:    utils.AuditActorID(c),
+		Action:    "dns.delete",
+		Resource:  id,
+		IPAddress: c.RealIP(),
+	})
 	return c.NoContent(http.StatusNoContent)
 }

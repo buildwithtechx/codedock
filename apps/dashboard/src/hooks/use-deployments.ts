@@ -1,5 +1,5 @@
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
-import type { ListOrganizationDeploymentsParams } from '#/features/services';
+import type { ListOrganizationDeploymentsParams } from '#/interfaces/services';
 import { deploymentsService } from '#/services/deployments';
 import { useOrganizationStore } from '#/stores/organization-store';
 
@@ -60,6 +60,38 @@ export const useRollback = () => {
   });
 };
 
+export const useRetryDeployment = () => {
+  const queryClient = useQueryClient();
+  return useMutation({
+    mutationFn: (payload: { deploymentId: string }) =>
+      deploymentsService.retry(payload.deploymentId),
+    onSuccess: async () => {
+      await queryClient.invalidateQueries({ queryKey: ['deployments'] });
+      await queryClient.invalidateQueries({ queryKey: ['canvas'] });
+    },
+  });
+};
+
+export const useDeployment = (deploymentId: string) => {
+  return useQuery({
+    queryKey: ['deployments', 'get', deploymentId].filter(Boolean),
+    queryFn: () => deploymentsService.get(deploymentId),
+    enabled: Boolean(deploymentId),
+  });
+};
+
+export const useCancelDeployment = () => {
+  const queryClient = useQueryClient();
+  return useMutation({
+    mutationFn: (payload: { deploymentId: string }) =>
+      deploymentsService.cancel(payload.deploymentId),
+    onSuccess: async () => {
+      await queryClient.invalidateQueries({ queryKey: ['deployments'] });
+      await queryClient.invalidateQueries({ queryKey: ['canvas'] });
+    },
+  });
+};
+
 export const useGetLogs = (deploymentId: string) => {
   return useQuery({
     queryKey: ['deployments', 'getLogs', deploymentId].filter(Boolean),
@@ -75,16 +107,21 @@ export const useGetMetrics = (serviceId: string) => {
   });
 };
 
-export const useDiagnostics = () => {
-  return useMutation({
-    mutationFn: (deploymentId: string) => deploymentsService.diagnostics(deploymentId),
-  });
-};
-
 export const useExplainFailure = (deploymentId: string, enabled: boolean) => {
   return useQuery({
     queryKey: ['deployments', 'explainFailure', deploymentId].filter(Boolean),
     queryFn: () => deploymentsService.explainFailure(deploymentId),
     enabled: enabled && !!deploymentId,
+  });
+};
+
+export const useTogglePinDeployment = () => {
+  const queryClient = useQueryClient();
+  return useMutation({
+    mutationFn: (payload: { deploymentId: string }) =>
+      deploymentsService.togglePin(payload.deploymentId),
+    onSuccess: async () => {
+      await queryClient.invalidateQueries({ queryKey: ['deployments'] });
+    },
   });
 };

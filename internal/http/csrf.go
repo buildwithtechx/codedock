@@ -7,7 +7,7 @@ import (
 	"net/http"
 	"strings"
 
-	"codedock.run/codedock/internal/config"
+	"codedock/internal/config"
 
 	"github.com/labstack/echo/v4"
 	echomiddleware "github.com/labstack/echo/v4/middleware"

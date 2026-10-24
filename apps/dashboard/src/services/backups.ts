@@ -1,0 +1,245 @@
+import { apiClient } from '#/lib/api-client';
+import { handleApiError } from '#/lib/error';
+import type {
+  CreateBackupConfigRequest,
+  CreateBackupResponse,
+  CreateS3DestinationRequest,
+  CreateS3DestinationResponse,
+  CreateSFTPDestinationRequest,
+  CreateSFTPDestinationResponse,
+  GetBackupResponse,
+  ListBackupRecordsResponse,
+  ListBackupsResponse,
+  ListS3DestinationsResponse,
+  ListSFTPDestinationsResponse,
+  RestoreOperationResponse,
+  RestoreReviewResponse,
+  UpdateS3DestinationRequest,
+  UpdateS3DestinationResponse,
+  VerifySFTPDestinationResponse,
+} from '#/interfaces/backups';
+
+export const backupsService = {
+  list: async (): Promise<ListBackupsResponse> => {
+    try {
+      return await apiClient.get<ListBackupsResponse>(`/backups`);
+    } catch (error) {
+      throw handleApiError(error);
+    }
+  },
+
+  get: async (id: string): Promise<GetBackupResponse> => {
+    try {
+      return await apiClient.get<GetBackupResponse>(`/backups/${id}`);
+    } catch (error) {
+      throw handleApiError(error);
+    }
+  },
+
+  create: async (payload: CreateBackupConfigRequest): Promise<CreateBackupResponse> => {
+    try {
+      return await apiClient.post<CreateBackupResponse>('/backups', payload);
+    } catch (error) {
+      throw handleApiError(error);
+    }
+  },
+
+  update: async (id: string, payload: CreateBackupConfigRequest): Promise<CreateBackupResponse> => {
+    try {
+      return await apiClient.put<CreateBackupResponse>(`/backups/${id}`, payload);
+    } catch (error) {
+      throw handleApiError(error);
+    }
+  },
+
+  delete: async (id: string): Promise<void> => {
+    try {
+      await apiClient.delete(`/backups/${id}`);
+    } catch (error) {
+      throw handleApiError(error);
+    }
+  },
+
+  trigger: async (id: string): Promise<void> => {
+    try {
+      await apiClient.post(`/backups/${id}/runs`);
+    } catch (error) {
+      throw handleApiError(error);
+    }
+  },
+
+  deleteRecord: async (configId: string, recordId: string): Promise<void> => {
+    try {
+      await apiClient.delete(`/backups/${configId}/records/${recordId}`);
+    } catch (error) {
+      throw handleApiError(error);
+    }
+  },
+
+  listRecords: async (id: string): Promise<ListBackupRecordsResponse> => {
+    try {
+      return await apiClient.get<ListBackupRecordsResponse>(`/backups/${id}/records`);
+    } catch (error) {
+      throw handleApiError(error);
+    }
+  },
+
+  listAllRecords: async (limit = 50): Promise<ListBackupRecordsResponse> => {
+    try {
+      return await apiClient.get<ListBackupRecordsResponse>(`/backup-records?limit=${limit}`);
+    } catch (error) {
+      throw handleApiError(error);
+    }
+  },
+
+  listS3Destinations: async (): Promise<ListS3DestinationsResponse> => {
+    try {
+      return await apiClient.get<ListS3DestinationsResponse>(`/s3-destinations`);
+    } catch (error) {
+      throw handleApiError(error);
+    }
+  },
+
+  createS3Destination: async (
+    payload: CreateS3DestinationRequest
+  ): Promise<CreateS3DestinationResponse> => {
+    try {
+      return await apiClient.post<CreateS3DestinationResponse>('/s3-destinations', payload);
+    } catch (error) {
+      throw handleApiError(error);
+    }
+  },
+
+  verifyS3Destination: async (id: string): Promise<{ data: { ok: boolean; reason?: string } }> => {
+    try {
+      return await apiClient.post<{ data: { ok: boolean; reason?: string } }>(
+        `/s3-destinations/${id}/verify`
+      );
+    } catch (error) {
+      throw handleApiError(error);
+    }
+  },
+
+  verifyS3Draft: async (
+    payload: Partial<CreateS3DestinationRequest>
+  ): Promise<{ data: { ok: boolean; reason?: string } }> => {
+    try {
+      return await apiClient.post<{ data: { ok: boolean; reason?: string } }>(
+        '/s3-destinations/verify',
+        payload
+      );
+    } catch (error) {
+      throw handleApiError(error);
+    }
+  },
+
+  deleteS3Destination: async (id: string): Promise<void> => {
+    try {
+      await apiClient.delete(`/s3-destinations/${id}`);
+    } catch (error) {
+      throw handleApiError(error);
+    }
+  },
+
+  setDefaultS3Destination: async (id: string): Promise<void> => {
+    try {
+      await apiClient.post(`/s3-destinations/${id}/default`);
+    } catch (error) {
+      throw handleApiError(error);
+    }
+  },
+
+  triggerDatabaseBackup: async (databaseId: string): Promise<void> => {
+    try {
+      await apiClient.post(`/databases/${databaseId}/backups`);
+    } catch (error) {
+      throw handleApiError(error);
+    }
+  },
+
+  updateS3Destination: async (
+    id: string,
+    payload: UpdateS3DestinationRequest
+  ): Promise<UpdateS3DestinationResponse> => {
+    try {
+      return await apiClient.put<UpdateS3DestinationResponse>(`/s3-destinations/${id}`, payload);
+    } catch (error) {
+      throw handleApiError(error);
+    }
+  },
+
+  listSFTPDestinations: async (projectId?: string): Promise<ListSFTPDestinationsResponse> => {
+    try {
+      const query = projectId ? `?projectId=${encodeURIComponent(projectId)}` : '';
+      return await apiClient.get<ListSFTPDestinationsResponse>(`/sftp-destinations${query}`);
+    } catch (error) {
+      throw handleApiError(error);
+    }
+  },
+
+  createSFTPDestination: async (
+    payload: CreateSFTPDestinationRequest
+  ): Promise<CreateSFTPDestinationResponse> => {
+    try {
+      return await apiClient.post<CreateSFTPDestinationResponse>('/sftp-destinations', payload);
+    } catch (error) {
+      throw handleApiError(error);
+    }
+  },
+
+  verifySFTPDestination: async (id: string): Promise<VerifySFTPDestinationResponse> => {
+    try {
+      return await apiClient.post<VerifySFTPDestinationResponse>(`/sftp-destinations/${id}/verify`);
+    } catch (error) {
+      throw handleApiError(error);
+    }
+  },
+
+  deleteSFTPDestination: async (id: string): Promise<void> => {
+    try {
+      await apiClient.delete(`/sftp-destinations/${id}`);
+    } catch (error) {
+      throw handleApiError(error);
+    }
+  },
+
+  prepareRestore: async (
+    recordId: string,
+    targetDatabaseId?: string
+  ): Promise<RestoreReviewResponse> => {
+    try {
+      return await apiClient.post<RestoreReviewResponse>(
+        `/backup-records/${recordId}/restore/review`,
+        { targetDatabaseId: targetDatabaseId ?? '' }
+      );
+    } catch (error) {
+      throw handleApiError(error);
+    }
+  },
+
+  getOperation: async (operationId: string): Promise<RestoreOperationResponse> => {
+    try {
+      return await apiClient.get<RestoreOperationResponse>(`/operations/${operationId}`);
+    } catch (error) {
+      throw handleApiError(error);
+    }
+  },
+
+  applyRestore: async (operationId: string, confirmation: string): Promise<void> => {
+    try {
+      await apiClient.post(`/backup-operations/${operationId}/apply`, { confirmation });
+    } catch (error) {
+      throw handleApiError(error);
+    }
+  },
+
+  cancelRestore: async (operationId: string): Promise<void> => {
+    try {
+      await apiClient.post(`/operations/${operationId}/cancel`);
+    } catch (error) {
+      throw handleApiError(error);
+    }
+  },
+};
+
+export const backupsApi = backupsService;

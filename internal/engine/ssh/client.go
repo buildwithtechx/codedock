@@ -4,6 +4,7 @@ import (
 	"context"
 	"encoding/json"
 	"fmt"
+	"io"
 	"net"
 	"net/http"
 	"strconv"
@@ -13,7 +14,7 @@ import (
 	dockerclient "github.com/docker/docker/client"
 	"golang.org/x/crypto/ssh"
 
-	"codedock.run/codedock/internal/models"
+	"codedock/internal/models"
 )
 
 type Config struct {
@@ -87,6 +88,14 @@ func (c *Client) Close() error {
 		return c.sshClient.Close()
 	}
 	return nil
+}
+
+func (c *Client) Run(ctx context.Context, cmd string) (string, error) {
+	return c.RunCommand(ctx, cmd)
+}
+
+func (c *Client) RunPipe(ctx context.Context, cmd string, stdin io.Reader, stdout io.Writer) error {
+	return c.Stream(ctx, cmd, stdin, stdout)
 }
 
 func (c *Client) RunCommand(ctx context.Context, cmd string) (string, error) {

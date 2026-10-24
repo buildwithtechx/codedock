@@ -1,0 +1,70 @@
+---
+title: High Availability & Clustering
+description: Multi-node control planes, Patroni PostgreSQL clustering, and automated failover.
+---
+
+import { Tabs, TabItem, Aside, Steps } from "@astrojs/starlight/components";
+
+For mission-critical production environments, Codedock can be deployed in a **High Availability (HA)** architecture that eliminates single points of failure across the control plane, database, and ingress layers.
+
+## High Availability Architecture
+
+In an HA topology, Codedock decouples the control plane and data store across redundant nodes:
+
+```
+                  ┌───────────────────────────────┐
+                  │    External Load Balancer     │
+                  │   (DNS Failover / Anycast)    │
+                  └──────────────┬────────────────┘
+                                 │
+                 ┌───────────────┴───────────────┐
+                 │                               │
+        ┌────────▼────────┐             ┌────────▼────────┐
+        │  Codedock Node  │             │  Codedock Node  │
+        │ (Active Leader) │             │ (Standby Node)  │
+        └────────┬────────┘             └────────┬────────┘
+                 │                               │
+                 └───────────────┬───────────────┘
+                                 │
+                  ┌──────────────▼────────────────┐
+                  │    Patroni PostgreSQL Cluster │
+                  │  (Synchronous Replication HA) │
+                  └───────────────────────────────┘
+```
+
+## Layer-by-Layer HA Breakdown
+
+<Tabs>
+  <TabItem label="Patroni Database HA" icon="seti:db">
+    Codedock stores all system metadata, project configs, and audit logs in PostgreSQL:
+    - **Distributed Consensus**: Patroni uses Raft consensus via etcd or Consul to manage cluster topology.
+    - **Synchronous Replication**: Commits are replicated to standby nodes before acknowledgement, preventing data loss.
+    - **Automated Failover**: If the primary database fails, a healthy standby is promoted to primary within seconds.
+    - **HAProxy Routing**: Health-check proxy detects the primary and routes SQL connections dynamically.
+    
+    A ready-to-use Compose template is provided in `compose.ha.yml` and `docker/patroni/`.
+  </TabItem>
+  <TabItem label="Control Plane Leadership" icon="laptop">
+    When multiple Codedock daemons connect to the database:
+    - The engine leadership manager (`internal/engine/leadership`) elects an **active leader** using atomic database advisory locks.
+    - The leader manages background cron jobs, updates, and event dispatching.
+    - Standby instances serve read-only dashboard traffic and API requests.
+    - If the leader shuts down or loses its lease, a standby node assumes leadership seamlessly.
+  </TabItem>
+  <TabItem label="Worker Fleet Clustering" icon="seti:docker">
+    Distribute compute across servers:
+    - Group multiple worker nodes into runtime clusters under **Fleet Management → Clusters**.
+    - Place containers across availability zones using round-robin or resource-aware placement policies.
+    - Reschedule stateless workloads onto surviving nodes if a physical worker server fails.
+  </TabItem>
+</Tabs>
+
+<Aside type="tip" title="Failover Drills">
+Test failure recovery periodically by stopping primary nodes in a staging environment to verify that standby promotions and Traefik rerouting complete without dropped connections.
+</Aside>
+
+## Disaster Recovery & Backups
+
+<Aside type="caution" title="Replication is Not a Backup">
+While Patroni protects against host hardware failure, always configure automated database snapshots to S3 or Cloudflare R2 to safeguard against accidental deletions or multi-region outages.
+</Aside>

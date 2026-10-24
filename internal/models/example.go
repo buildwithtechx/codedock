@@ -6,4 +6,5 @@ type ExampleApp struct {
 	Description string `json:"description"`
 	Repo        string `json:"repo"`
 	Icon        string `json:"icon,omitempty"`
+	Logo        string `json:"logo,omitempty"`
 }

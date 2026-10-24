@@ -3,9 +3,9 @@ package engine
 import (
 	"time"
 
-	"codedock.run/codedock/internal/engine/backup"
-	"codedock.run/codedock/internal/engine/deploy"
-	"codedock.run/codedock/internal/models"
+	"codedock/internal/engine/backup"
+	"codedock/internal/engine/deploy"
+	"codedock/internal/models"
 )
 
 type DeployerStore = deploy.DeployerStore

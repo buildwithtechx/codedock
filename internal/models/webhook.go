@@ -3,20 +3,64 @@ package models
 import "time"
 
 type GithubWebhookPayload struct {
-	Action      string            `json:"action"`
-	Number      int               `json:"number"`
-	PullRequest GithubPullRequest `json:"pull_request"`
-	Ref         string            `json:"ref"`
-	After       string            `json:"after"`
+	Action      string                `json:"action"`
+	Number      int                   `json:"number"`
+	PullRequest GithubPullRequest     `json:"pull_request"`
+	Ref         string                `json:"ref"`
+	After       string                `json:"after"`
+	Deleted     bool                  `json:"deleted"`
+	Repository  GithubRepoInfo        `json:"repository"`
+	HeadCommit  *GithubCommitInfo     `json:"head_commit"`
+	Commits     []GithubWebhookCommit `json:"commits"`
+}
+
+type GithubRepoInfo struct {
+	Name          string          `json:"name"`
+	FullName      string          `json:"full_name"`
+	DefaultBranch string          `json:"default_branch"`
+	Owner         GithubRepoOwner `json:"owner"`
+}
+
+type GithubRepoOwner struct {
+	Login string `json:"login"`
+}
+
+type GithubCommitInfo struct {
+	ID       string   `json:"id"`
+	Message  string   `json:"message"`
+	Added    []string `json:"added"`
+	Modified []string `json:"modified"`
+	Removed  []string `json:"removed"`
+}
+
+type GithubWebhookCommit struct {
+	ID       string   `json:"id"`
+	Message  string   `json:"message"`
+	Added    []string `json:"added"`
+	Modified []string `json:"modified"`
+	Removed  []string `json:"removed"`
 }
 
 type GithubPullRequest struct {
-	Head GithubPullRequestHead `json:"head"`
+	State string                `json:"state"`
+	Draft bool                  `json:"draft"`
+	Head  GithubPullRequestHead `json:"head"`
+	Base  GithubPullRequestBase `json:"base"`
 }
 
 type GithubPullRequestHead struct {
-	Ref string `json:"ref"`
-	Sha string `json:"sha"`
+	Ref  string                `json:"ref"`
+	Sha  string                `json:"sha"`
+	Repo GithubPullRequestRepo `json:"repo"`
+}
+
+type GithubPullRequestBase struct {
+	Ref  string                `json:"ref"`
+	Repo GithubPullRequestRepo `json:"repo"`
+}
+
+type GithubPullRequestRepo struct {
+	FullName string `json:"full_name"`
 }
 
 type Webhook struct {

@@ -1,0 +1,67 @@
+x-codedock:
+  is_one_click: true
+  name: Paperless-ngx
+  description: Archive and search scanned documents with OCR, private database, and persistent original files.
+  category: productivity
+  icon: paperless-ngx
+  secrets:
+    - var: DB_PASSWORD
+      label: Database password
+      length: 24
+    - var: SECRET_KEY
+      label: Paperless secret key
+      length: 32
+    - var: ADMIN_PASSWORD
+      label: Initial administrator password
+      length: 20
+services:
+  paperless:
+    image: ghcr.io/paperless-ngx/paperless-ngx:3.3.1
+    restart: always
+    ports:
+      - "8000"
+    environment:
+      - PAPERLESS_REDIS=redis://paperless-broker:6379
+      - PAPERLESS_DBENGINE=postgresql
+      - PAPERLESS_DBHOST=paperless-db
+      - PAPERLESS_DBNAME=paperless
+      - PAPERLESS_DBUSER=paperless
+      - PAPERLESS_DBPASS=${secret:DB_PASSWORD}
+      - PAPERLESS_SECRET_KEY=${secret:SECRET_KEY}
+      - PAPERLESS_ADMIN_PASSWORD=${secret:ADMIN_PASSWORD}
+      - PAPERLESS_ADMIN_USER=admin
+      - PAPERLESS_URL=http://localhost:8000
+    depends_on:
+      - paperless-db
+      - paperless-broker
+    volumes:
+      - paperless-data:/usr/src/paperless/data
+      - paperless-media:/usr/src/paperless/media
+      - paperless-consume:/usr/src/paperless/consume
+      - paperless-export:/usr/src/paperless/export
+  paperless-db:
+    image: postgres:16-alpine
+    restart: always
+    environment:
+      - POSTGRES_DB=paperless
+      - POSTGRES_USER=paperless
+      - POSTGRES_PASSWORD=${secret:DB_PASSWORD}
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U paperless -d paperless"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+    volumes:
+      - paperless-db-data:/var/lib/postgresql/data
+  paperless-broker:
+    image: valkey/valkey:8-alpine
+    restart: always
+    volumes:
+      - paperless-broker-data:/data
+volumes:
+  paperless-data:
+  paperless-media:
+  paperless-consume:
+  paperless-export:
+  paperless-db-data:
+  paperless-broker-data:

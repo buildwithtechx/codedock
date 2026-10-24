@@ -6,6 +6,7 @@ import (
 	"encoding/json"
 	"fmt"
 	"io"
+	"net/url"
 	"strings"
 
 	"github.com/docker/docker/api/types/image"
@@ -13,18 +14,52 @@ import (
 	"github.com/docker/docker/client"
 	"github.com/google/uuid"
 
-	"codedock.run/codedock/internal/engine/build"
-	"codedock.run/codedock/internal/models"
-	"codedock.run/codedock/internal/utils"
+	"codedock/internal/engine/build"
+	"codedock/internal/engine/stacks"
+	"codedock/internal/models"
+	"codedock/internal/utils"
 )
 
 type Deployer struct {
-	builder          build.Builder
-	containerManager *ContainerManager
-	store            DeployerStore
-	EnvProvider      func(projectID string) (map[string]string, error)
-	EnvInterpolator  func(projectID string) (map[string]map[string]string, error)
-	RouteRuleFetcher func(ctx context.Context, serviceID, serviceName string) (map[string]string, error)
+	rolloutDirectory      string
+	builder               build.Builder
+	containerManager      *ContainerManager
+	store                 DeployerStore
+	ScopedEnvProvider     func(context.Context, string, string) (map[string]string, error)
+	ScopedEnvInterpolator func(context.Context, string, string) (map[string]map[string]string, error)
+	EnvProvider           func(projectID string) (map[string]string, error)
+	EnvInterpolator       func(projectID string) (map[string]map[string]string, error)
+	RouteRuleFetcher      func(ctx context.Context, serviceID, serviceName string) (map[string]string, error)
+	DomainFetcher         func(ctx context.Context, serviceID string) ([]models.DomainConfig, error)
+}
+
+func resolveAppDomain(app *models.AppService) (string, error) {
+	appDomain := app.Domain
+	if appDomain == "" {
+		appDomain = utils.GenerateAppDomain(app.ID+"-"+app.Name, "", "")
+	}
+	if strings.Contains(appDomain, "://") {
+		parsed, err := url.Parse(appDomain)
+		if err != nil || parsed.Hostname() == "" {
+			return "", fmt.Errorf("invalid application domain")
+		}
+		appDomain = parsed.Hostname()
+	}
+	return appDomain, nil
+}
+
+func (d *Deployer) routeHosts(ctx context.Context, serviceID, appDomain string, logWriter io.Writer) []RouteHost {
+	if d.DomainFetcher == nil {
+		return NormalizeRouteHosts(appDomain, nil)
+	}
+	domains, err := d.DomainFetcher(ctx, serviceID)
+	if err != nil {
+		if logWriter != nil {
+			fmt.Fprintf(logWriter, "Failed to fetch service domains: %v\n", err)
+		}
+		return NormalizeRouteHosts(appDomain, nil)
+	}
+	return NormalizeRouteHosts(appDomain, domains)
 }
 
 func NewDeployer(dockerClient *client.Client, s DeployerStore) *Deployer {
@@ -35,7 +70,19 @@ func NewDeployer(dockerClient *client.Client, s DeployerStore) *Deployer {
 	}
 }
 
+func (d *Deployer) DockerClient() *client.Client {
+	if d.containerManager == nil {
+		return nil
+	}
+	return d.containerManager.dockerClient
+}
+
 func (d *Deployer) DeployAppService(ctx context.Context, app *models.AppService, sourceDir string, logWriter io.Writer) (string, error) {
+	release, err := d.serviceOperation(ctx, app.ID)
+	if err != nil {
+		return "", err
+	}
+	defer release()
 	if logWriter != nil {
 		fmt.Fprintf(logWriter, "🚀 [Deployer] Starting deployment for service: %s (ID: %s)\n", app.Name, app.ID)
 	}
@@ -48,18 +95,27 @@ func (d *Deployer) DeployAppService(ctx context.Context, app *models.AppService,
 		return newContainerName, nil
 	}
 
+	if d.containerManager.dockerClient == nil {
+		return "", fmt.Errorf("Docker runtime is unavailable")
+	}
+	if app.ImageRef == "" {
+		sourceDir, err = build.ResolveSourceRoot(sourceDir, app.RootDirectory)
+		if err != nil {
+			return "", err
+		}
+	}
 	if err := d.prepareServerlessCode(app, sourceDir, logWriter); err != nil {
 		return "", err
 	}
 
-	envVarsMap, err := d.getEnvironmentVariables(app, logWriter)
+	envVarsMap, err := d.getEnvironmentVariables(ctx, app, logWriter)
 	if err != nil {
 		return "", fmt.Errorf("failed resolving service env vars: %w", err)
 	}
 
-	appDomain := app.Domain
-	if appDomain == "" {
-		appDomain = utils.GenerateAppDomain(app.Name, "", "")
+	appDomain, err := resolveAppDomain(app)
+	if err != nil {
+		return "", err
 	}
 
 	var envSlice []string
@@ -68,6 +124,9 @@ func (d *Deployer) DeployAppService(ctx context.Context, app *models.AppService,
 	}
 
 	internalPort := app.InternalPort
+	if app.StaticOutput != "" && app.ImageRef == "" {
+		internalPort = 80
+	}
 	if internalPort <= 0 {
 		internalPort = defaultAppPort()
 	}
@@ -88,23 +147,59 @@ func (d *Deployer) DeployAppService(ctx context.Context, app *models.AppService,
 		var pullOpts image.PullOptions
 		if app.RegistryID != nil && *app.RegistryID != "" {
 			reg, err := d.store.GetRegistry(*app.RegistryID)
-			if err == nil && reg != nil {
+			if err != nil {
+				return "", fmt.Errorf("load image registry: %w", err)
+			}
+			if reg == nil {
+				return "", fmt.Errorf("image registry not found")
+			}
+			{
 				authConfig := registry.AuthConfig{
 					Username:      reg.Username,
 					Password:      reg.PasswordToken,
 					ServerAddress: reg.RegistryURL,
 				}
 				encodedJSON, err := json.Marshal(authConfig)
-				if err == nil {
-					pullOpts.RegistryAuth = base64.URLEncoding.EncodeToString(encodedJSON)
+				if err != nil {
+					return "", fmt.Errorf("encode registry authentication: %w", err)
+				}
+				pullOpts.RegistryAuth = base64.URLEncoding.EncodeToString(encodedJSON)
+			}
+		}
+		skipPull := false
+		if d.containerManager != nil && d.containerManager.dockerClient != nil && (app.RegistryID == nil || *app.RegistryID == "") {
+			if _, _, inspectErr := d.containerManager.dockerClient.ImageInspectWithRaw(ctx, imageTag); inspectErr == nil {
+				skipPull = true
+				if logWriter != nil {
+					fmt.Fprintf(logWriter, "⚡ [Deployer] Image %s already exists locally. Skipping remote pull.\n", imageTag)
 				}
 			}
 		}
-		if d.containerManager != nil && d.containerManager.dockerClient != nil {
+		if !skipPull && d.containerManager != nil && d.containerManager.dockerClient != nil {
 			out, err := d.containerManager.dockerClient.ImagePull(ctx, imageTag, pullOpts)
-			if err == nil {
-				io.Copy(io.Discard, out)
-				out.Close()
+			if err != nil {
+				return "", fmt.Errorf("pull image: %w", err)
+			}
+			decoder := json.NewDecoder(out)
+			for {
+				var event struct {
+					Error string `json:"error"`
+				}
+				err := decoder.Decode(&event)
+				if err == io.EOF {
+					break
+				}
+				if err != nil {
+					out.Close()
+					return "", fmt.Errorf("read image pull: %w", err)
+				}
+				if event.Error != "" {
+					out.Close()
+					return "", fmt.Errorf("pull image: %s", event.Error)
+				}
+			}
+			if err := out.Close(); err != nil {
+				return "", fmt.Errorf("close image pull: %w", err)
 			}
 		}
 	} else {
@@ -128,6 +223,7 @@ func (d *Deployer) DeployAppService(ctx context.Context, app *models.AppService,
 			return "", fmt.Errorf("build failed: %w", err)
 		}
 		imageTag = builtTag
+		NotifyImageBuilt(ctx, builtTag)
 	}
 
 	replicas := app.Replicas
@@ -135,7 +231,6 @@ func (d *Deployer) DeployAppService(ctx context.Context, app *models.AppService,
 		replicas = 1
 	}
 
-	primaryContainerName := utils.NormalizeContainerName(app.ID)
 	logDrains, _ := d.store.ListLogDrainsByService(app.ID)
 	app.InternalPort = internalPort
 
@@ -151,67 +246,26 @@ func (d *Deployer) DeployAppService(ctx context.Context, app *models.AppService,
 		}
 	}
 
-	for i := 0; i < replicas; i++ {
-		containerName := primaryContainerName
-		if replicas > 1 {
-			containerName = fmt.Sprintf("%s-%d", primaryContainerName, i+1)
-		}
-
-		runOpts := ContainerRunOptions{
-			Name:            containerName,
-			ImageTag:        imageTag,
-			ServiceID:       app.ID,
-			Domain:          appDomain,
-			InternalPort:    internalPort,
-			RuntimeMode:     app.RuntimeMode,
-			Envs:            envSlice,
-			Cmd:             strings.Fields(app.StartCommand),
-			MemoryLimitMB:   memoryLimit,
-			CPURequest:      cpuRequest,
-			HealthCheckPath: app.HealthCheckPath,
-			Volumes:         app.Volumes,
-			MaintenanceMode: app.MaintenanceMode,
-			LogDrains:       logDrains,
-			ExtraLabels:     extraLabels,
-		}
-
-		containerID, err := d.containerManager.CreateAndStart(ctx, runOpts)
-		if err != nil {
-			return "", fmt.Errorf("failed starting container %s: %w", containerName, err)
-		}
-
-		if i == 0 {
-			if err := d.verifyHealthCheck(ctx, app, containerName, logWriter); err != nil {
-				return "", err
-			}
-			app.ContainerID = containerID
-			app.Status = models.AppServiceStatusRunning
-			app.Domain = appDomain
-			_ = d.store.UpdateAppService(app)
-		}
-	}
-
-	if replicas > 1 {
-		_ = d.containerManager.StopAndRemove(ctx, primaryContainerName)
-	}
-
-	var excludeNames []string
-	for i := 0; i < replicas; i++ {
-		if replicas == 1 {
-			excludeNames = append(excludeNames, primaryContainerName)
-		} else {
-			excludeNames = append(excludeNames, fmt.Sprintf("%s-%d", primaryContainerName, i+1))
-		}
-	}
-
-	_ = d.containerManager.CleanupOrphanedContainers(ctx, primaryContainerName, excludeNames)
-
-	return primaryContainerName, nil
+	return d.replaceReplicas(ctx, app, ContainerRunOptions{
+		ImageTag: imageTag, ServiceID: app.ID, ProjectID: app.ProjectID, PreviousContainerID: app.ContainerID, Domain: appDomain, Hosts: d.routeHosts(ctx, app.ID, appDomain, logWriter), InternalPort: internalPort,
+		RuntimeMode: app.RuntimeMode, Envs: envSlice, Cmd: containerCommand(app, resolvedStartCommand(app, sourceDir)),
+		MemoryLimitMB: memoryLimit, SwapDisabled: app.SwapDisabled, CPURequest: cpuRequest, HealthCheckPath: app.HealthCheckPath,
+		Volumes: app.Volumes, MaintenanceMode: app.MaintenanceMode, StopGracePeriodSeconds: app.StopGracePeriodSeconds, LogDrains: logDrains, ExtraLabels: extraLabels,
+	}, replicas, logWriter)
 }
 
 func (d *Deployer) StopAppService(ctx context.Context, app *models.AppService) error {
+	release, err := d.serviceOperation(ctx, app.ID)
+	if err != nil {
+		return err
+	}
+	defer release()
 	if utils.IsDryRun() {
 		return nil
+	}
+
+	if d.containerManager.dockerClient == nil {
+		return fmt.Errorf("Docker runtime is unavailable")
 	}
 
 	containerName := utils.NormalizeContainerName(app.ID)
@@ -256,4 +310,21 @@ func (d *Deployer) InspectServiceContainer(ctx context.Context, app *models.AppS
 		"started_at": inspect.State.StartedAt,
 		"ip_address": inspect.NetworkSettings.IPAddress,
 	}, nil
+}
+
+func resolvedStartCommand(app *models.AppService, sourceDir string) string {
+	if app.StartCommand == "" || !app.Optimize {
+		return app.StartCommand
+	}
+	if def, ok := stacks.Registry[stacks.DetectStack(sourceDir)]; ok && def.OptimizeCommand != "" {
+		return stacks.ResolveWebCommand(app.StartCommand, true, def.OptimizeCommand)
+	}
+	return app.StartCommand
+}
+
+func containerCommand(app *models.AppService, command string) []string {
+	if command == "" || app.StaticOutput != "" && app.ImageRef == "" {
+		return nil
+	}
+	return []string{"/bin/sh", "-c", command}
 }

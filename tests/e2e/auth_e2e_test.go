@@ -5,7 +5,7 @@ import (
 	"net/http"
 	"testing"
 
-	"codedock.run/codedock/internal/repositories"
+	"codedock/internal/repositories"
 )
 
 func TestE2ESetupStatusAndFirstUserSignup(t *testing.T) {

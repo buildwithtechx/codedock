@@ -6,9 +6,9 @@ import (
 
 	"github.com/labstack/echo/v4"
 
-	"codedock.run/codedock/internal/http/middleware"
-	"codedock.run/codedock/internal/models"
-	"codedock.run/codedock/internal/utils"
+	"codedock/internal/http/middleware"
+	"codedock/internal/models"
+	"codedock/internal/utils"
 )
 
 func (h *AppHandler) ListByOrganization(c echo.Context) error {
@@ -23,7 +23,7 @@ func (h *AppHandler) ListByOrganization(c echo.Context) error {
 	if !h.projectService.HasOrgPermission(c.Request().Context(), organizationID, user.UserID, user.Role, "") {
 		return utils.Error(c, http.StatusForbidden, "insufficient permissions for this organization")
 	}
-	apps, err := h.appService.ListByOrganization(c.Request().Context(), organizationID)
+	apps, err := h.appService.ListByOrganization(c.Request().Context(), organizationID, c.QueryParam("search"))
 	if err != nil {
 		return utils.Error(c, http.StatusInternalServerError, err.Error())
 	}

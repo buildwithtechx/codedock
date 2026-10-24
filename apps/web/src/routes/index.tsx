@@ -2,19 +2,19 @@ import { createFileRoute } from '@tanstack/react-router';
 import { BottomCta } from '../features/home/bottom-cta';
 import { Features } from '../features/home/features';
 import { Hero } from '../features/home/hero';
+import { HowItWorks } from '../features/home/how-it-works';
 import { SocialProof } from '../features/home/social-proof';
 import { StackCarousel } from '../features/home/stack-carousel';
-import { createMeta } from '../lib/seo';
+import { pageHead } from '../lib/seo';
 
 export const Route = createFileRoute('/')({
   component: IndexComponent,
-  head: () => ({
-    meta: createMeta({
-      title: 'Codedock — Ship fast, own your infrastructure',
-      description:
-        'Codedock is a sub-30MB daemon that turns any Linux server into a full deployment platform — apps, databases, backups, domains, and a fleet control plane.',
-    }),
-  }),
+  head: () =>
+    pageHead(
+      '/',
+      'Ship fast. Own your infrastructure.',
+      'Deploy applications, databases and services on your own Linux servers with Codedock, an open-source Go control plane with Docker and Traefik.'
+    ),
 });
 
 function IndexComponent() {
@@ -22,6 +22,7 @@ function IndexComponent() {
     <>
       <Hero />
       <StackCarousel />
+      <HowItWorks />
       <Features />
       <SocialProof />
       <BottomCta />

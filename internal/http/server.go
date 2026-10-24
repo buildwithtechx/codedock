@@ -8,85 +8,108 @@ import (
 	"github.com/labstack/echo/v4"
 	"github.com/mark3labs/mcp-go/server"
 
-	"codedock.run/codedock/internal/core"
-	"codedock.run/codedock/internal/engine/cron"
-	"codedock.run/codedock/internal/engine/deploy"
-	"codedock.run/codedock/internal/engine/networking"
-	"codedock.run/codedock/internal/engine/ssh"
-	"codedock.run/codedock/internal/handlers/auth"
-	"codedock.run/codedock/internal/handlers/backups"
-	"codedock.run/codedock/internal/handlers/databases"
-	"codedock.run/codedock/internal/handlers/deployments"
-	"codedock.run/codedock/internal/handlers/projects"
-	"codedock.run/codedock/internal/handlers/system"
-	"codedock.run/codedock/internal/http/middleware"
-	"codedock.run/codedock/internal/models"
-	authservices "codedock.run/codedock/internal/services/auth"
-	projectservices "codedock.run/codedock/internal/services/projects"
+	"codedock/internal/core"
+	"codedock/internal/engine/cron"
+	"codedock/internal/engine/deploy"
+	"codedock/internal/engine/networking"
+	"codedock/internal/engine/ssh"
+	"codedock/internal/handlers/auth"
+	"codedock/internal/handlers/backups"
+	"codedock/internal/handlers/databases"
+	"codedock/internal/handlers/deployments"
+	"codedock/internal/handlers/mail"
+	"codedock/internal/handlers/projects"
+	"codedock/internal/handlers/system"
+	"codedock/internal/http/mcp"
+	"codedock/internal/http/middleware"
+	"codedock/internal/models"
+	authservices "codedock/internal/services/auth"
+	"codedock/internal/services/migrations"
+	projectservices "codedock/internal/services/projects"
 )
 
 type Server struct {
-	router                 *echo.Echo
-	mcpBridge              *Bridge
-	authRateLimiter        *middleware.RateLimiter
-	otpRateLimiter         *middleware.RateLimiter
-	aiRateLimiter          *middleware.RateLimiter
-	deployer               *deploy.Deployer
-	traefikManager         *networking.TraefikManager
-	dockerClient           *client.Client
-	sshManager             *ssh.SSHManager
-	tokenService           *authservices.TokenService
-	authGuard              *middleware.AuthGuard
-	cronManager            *cron.CronManager
-	serviceLinker          *projectservices.ServiceLinker
-	dispatcherService      *core.DispatcherService
-	projectService         *projectservices.ProjectService
-	appService             *projectservices.AppService
-	appServiceHandler      *projects.AppHandler
-	dbHandler              *databases.DatabaseHandler
-	scheduledTaskHandler   *system.ScheduledTaskHandler
-	canvasHandler          *projects.CanvasHandler
-	terminalHandler        *deployments.TerminalHandler
-	deploymentHandler      *deployments.DeploymentHandler
-	serviceVarHandler      *projects.ServiceVarHandler
-	projectSettingsHandler *projects.ProjectSettingsHandler
-	backupHandler          *backups.BackupHandler
-	settingsHandler        *auth.SettingsHandler
-	notifSettingsHandler   *system.NotificationSettingsHandler
-	aiSettingsHandler      *system.AISettingsHandler
-	updaterHandler         *system.UpdaterHandler
-	userHandler            *auth.UserHandler
-	authHandler            *auth.AuthHandler
-	oauthHandler           *auth.OAuthHandler
-	gitHandler             *deployments.GitHandler
-	webhookHandler         *deployments.WebhookHandler
-	projectHandler         *projects.ProjectHandler
-	projectAppHandler      *projects.ProjectAppHandler
-	orgHandler             *auth.OrganizationHandler
-	environmentHandler     *projects.EnvironmentHandler
-	domainHandler          *projects.DomainHandler
-	projectEnvHandler      *projects.ProjectEnvHandler
-	notificationHandler    *system.NotificationHandler
-	gitAppsHandler         *deployments.GitAppsHandler
-	serverlessHandler      *projects.ServerlessHandler
-	systemHandler          *system.SystemHandler
-	composeHandler         *projects.ComposeHandler
-	oneClickHandler        *projects.OneClickHandler
-	archiveHandler         *deployments.ArchiveHandler
-	migrationHandler       *system.MigrationHandler
-	onboardingHandler      *auth.OnboardingHandler
-	dnsHandler             *system.DNSHandler
-	metricsHandler         *system.MetricsHandler
-	logHandler             *system.LogHandler
-	auditLogHandler        *auth.AuditLogHandler
-	exampleHandler         *system.ExampleHandler
-	serverHandler          *system.ServerHandler
-	registryHandler        *deployments.RegistryHandler
-	billingHandler         *system.BillingHandler
-	serverMetricsWSHandler *system.ServerMetricsWSHandler
-	serviceLogsWSHandler   *system.ServiceLogsWSHandler
-	takeoverHandler        *system.TakeoverHandler
-	routeRuleHandler       *projects.RouteRuleHandler
+	clusterDataHandler        *system.ClusterDataHandler
+	clusterHandler            *system.ClusterHandler
+	operationHandler          *system.OperationHandler
+	router                    *echo.Echo
+	mcpBridge                 *mcp.Bridge
+	authRateLimiter           *middleware.RateLimiter
+	otpRateLimiter            *middleware.RateLimiter
+	aiRateLimiter             *middleware.RateLimiter
+	deployer                  *deploy.Deployer
+	traefikManager            *networking.TraefikManager
+	dockerClient              *client.Client
+	sshManager                *ssh.SSHManager
+	tokenService              *authservices.TokenService
+	authGuard                 *middleware.AuthGuard
+	cronManager               *cron.CronManager
+	serviceLinker             *projectservices.ServiceLinker
+	dispatcherService         *core.DispatcherService
+	projectService            *projectservices.ProjectService
+	appService                *projectservices.AppService
+	appServiceHandler         *projects.AppHandler
+	autoscalingHandler        *projects.AutoscalingHandler
+	dbHandler                 *databases.DatabaseHandler
+	scheduledTaskHandler      *system.ScheduledTaskHandler
+	canvasHandler             *projects.CanvasHandler
+	terminalHandler           *deployments.TerminalHandler
+	deploymentHandler         *deployments.DeploymentHandler
+	serviceVarHandler         *projects.ServiceVarHandler
+	projectSettingsHandler    *projects.ProjectSettingsHandler
+	backupHandler             *backups.BackupHandler
+	settingsHandler           *auth.SettingsHandler
+	appearanceHandler         *auth.AppearanceHandler
+	notifSettingsHandler      *system.NotificationSettingsHandler
+	aiSettingsHandler         *system.AISettingsHandler
+	updaterHandler            *system.UpdaterHandler
+	userHandler               *auth.UserHandler
+	authHandler               *auth.AuthHandler
+	oauthHandler              *auth.OAuthHandler
+	deviceFlowHandler         *auth.DeviceFlowHandler
+	passkeyHandler            *auth.PasskeyHandler
+	gitHandler                *deployments.GitHandler
+	webhookHandler            *deployments.WebhookHandler
+	projectHandler            *projects.ProjectHandler
+	projectAppHandler         *projects.ProjectAppHandler
+	orgHandler                *auth.OrganizationHandler
+	environmentHandler        *projects.EnvironmentHandler
+	domainHandler             *projects.DomainHandler
+	projectEnvHandler         *projects.ProjectEnvHandler
+	notificationHandler       *system.NotificationHandler
+	gitAppsHandler            *deployments.GitAppsHandler
+	serverlessHandler         *projects.ServerlessHandler
+	systemHandler             *system.SystemHandler
+	composeHandler            *projects.ComposeHandler
+	composeStackHandler       *projects.ComposeStackHandler
+	oneClickHandler           *projects.OneClickHandler
+	archiveHandler            *deployments.ArchiveHandler
+	migrationHandler          *system.MigrationHandler
+	onboardingHandler         *auth.OnboardingHandler
+	dnsHandler                *system.DNSHandler
+	metricsHandler            *system.MetricsHandler
+	logHandler                *system.LogHandler
+	auditLogHandler           *auth.AuditLogHandler
+	exampleHandler            *system.ExampleHandler
+	serverHandler             *system.ServerHandler
+	managedHandler            *system.ManagedHandler
+	migrationLifecycleHandler *system.MigrationLifecycleHandler
+	migrationService          *migrations.Service
+	analyticsHandler          *system.AnalyticsHandler
+	attentionHandler          *system.AttentionHandler
+	registryHandler           *deployments.RegistryHandler
+	billingHandler            *system.BillingHandler
+	serverMetricsWSHandler    *system.ServerMetricsWSHandler
+	serviceLogsWSHandler      *system.ServiceLogsWSHandler
+	takeoverHandler           *system.TakeoverHandler
+	routeRuleHandler          *projects.RouteRuleHandler
+	mailHandler               *mail.MailHandler
+	ingressHandler            *system.IngressHandler
+	serverNetworksHandler     *system.ServerNetworksHandler
+	actionsHandler            *system.ActionsHandler
+	checksHandler             *projects.ChecksHandler
+	supportHandler            *system.SupportHandler
+	rollbackSettingsHandler   *projects.RollbackSettingsHandler
 }
 
 func (s *Server) ServeHTTP(w http.ResponseWriter, r *http.Request) {
@@ -107,15 +130,11 @@ func (s *Server) StartMCPStdio() error {
 }
 
 func (s *Server) HandleMCPSSE(c echo.Context) error {
-	mcpServer := s.mcpBridge.MCPServer()
-	sseServer := server.NewSSEServer(mcpServer)
-	sseServer.SSEHandler().ServeHTTP(c.Response().Writer, c.Request())
+	s.mcpBridge.SSEServer().SSEHandler().ServeHTTP(c.Response().Writer, c.Request())
 	return nil
 }
 
 func (s *Server) HandleMCPMessage(c echo.Context) error {
-	mcpServer := s.mcpBridge.MCPServer()
-	sseServer := server.NewSSEServer(mcpServer)
-	sseServer.MessageHandler().ServeHTTP(c.Response().Writer, c.Request())
+	s.mcpBridge.SSEServer().MessageHandler().ServeHTTP(c.Response().Writer, c.Request())
 	return nil
 }

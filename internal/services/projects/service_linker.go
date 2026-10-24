@@ -4,17 +4,27 @@ import (
 	"context"
 	"fmt"
 
-	"codedock.run/codedock/internal/models"
-	"codedock.run/codedock/internal/repositories"
+	"codedock/internal/models"
+	"codedock/internal/repositories"
 )
 
 type ServiceLinker struct {
 	databases repositories.DatabaseRepository
+	clusterDB clusterDataPlans
+	apps      repositories.AppServiceRepository
+	variables repositories.ServiceVarRepository
+}
+
+type clusterDataPlans interface {
+	Get(ctx context.Context, id string) (*models.ClusterDataPlan, error)
+	ListByProject(ctx context.Context, project string) ([]models.ClusterData, error)
 }
 
 func NewServiceLinker(dbRepo repositories.DatabaseRepository) *ServiceLinker {
 	return &ServiceLinker{databases: dbRepo}
 }
+
+func (sl *ServiceLinker) SetClusterData(plans clusterDataPlans) { sl.clusterDB = plans }
 
 func buildDatabaseEnvVars(db *models.Database) map[string]string {
 	vars := make(map[string]string)
@@ -78,13 +88,33 @@ func (sl *ServiceLinker) GetLinkedEnvironmentVariables(ctx context.Context, proj
 		return envMap, nil
 	}
 
-	databases, err := sl.databases.ListByProject(ctx, projectID)
+	databases, err := sl.databases.ListByProject(ctx, projectID, "")
 	if err != nil {
 		return nil, fmt.Errorf("failed to list linked databases for project %s: %w", projectID, err)
 	}
 	for _, db := range databases {
 		for k, v := range buildDatabaseEnvVars(db) {
 			envMap[k] = v
+		}
+	}
+	if sl.clusterDB != nil {
+		records, err := sl.clusterDB.ListByProject(ctx, projectID)
+		if err != nil {
+			return nil, fmt.Errorf("failed to list linked cluster databases for project %s: %w", projectID, err)
+		}
+		for _, record := range records {
+			if record.Status != "READY" {
+				continue
+			}
+			plan, err := sl.clusterDB.Get(ctx, record.ID)
+			if err != nil {
+				return nil, err
+			}
+			for k, v := range buildClusterEnvVars(plan) {
+				if _, duplicate := envMap[k]; !duplicate {
+					envMap[k] = v
+				}
+			}
 		}
 	}
 
@@ -97,7 +127,7 @@ func (sl *ServiceLinker) GetNamespacedVariables(ctx context.Context, projectID s
 		return registry, nil
 	}
 
-	databases, err := sl.databases.ListByProject(ctx, projectID)
+	databases, err := sl.databases.ListByProject(ctx, projectID, "")
 	if err != nil {
 		return nil, fmt.Errorf("failed to list databases for interpolation: %w", err)
 	}
@@ -106,6 +136,25 @@ func (sl *ServiceLinker) GetNamespacedVariables(ctx context.Context, projectID s
 		vars := buildDatabaseEnvVars(db)
 		if len(vars) > 0 {
 			registry[db.Name] = vars
+		}
+	}
+	if sl.clusterDB != nil {
+		records, err := sl.clusterDB.ListByProject(ctx, projectID)
+		if err != nil {
+			return nil, fmt.Errorf("failed to list cluster databases for interpolation: %w", err)
+		}
+		for _, record := range records {
+			if record.Status != "READY" {
+				continue
+			}
+			plan, err := sl.clusterDB.Get(ctx, record.ID)
+			if err != nil {
+				return nil, err
+			}
+			vars := buildClusterEnvVars(plan)
+			if len(vars) > 0 {
+				registry[record.Spec.Name] = vars
+			}
 		}
 	}
 

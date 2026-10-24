@@ -12,12 +12,16 @@ import (
 	"sync"
 	"time"
 
-	"codedock.run/codedock/internal/config"
-	"codedock.run/codedock/internal/repositories"
+	"codedock/internal/config"
+	"codedock/internal/repositories"
 )
 
 const (
 	defaultVersion = "v1.0.0"
+)
+
+var (
+	semverPattern = regexp.MustCompile(`^v?\d+\.\d+\.\d+(-[\w.]+)?$`)
 )
 
 type UpdateInfo struct {
@@ -49,30 +53,32 @@ func NewUpdaterService(repo repositories.SettingsRepository) *UpdaterService {
 }
 
 func (u *UpdaterService) Start(ctx context.Context) {
+	go u.ServeElected(ctx)
+}
+
+func (u *UpdaterService) ServeElected(ctx context.Context) {
+	ticker := time.NewTicker(1 * time.Hour)
+	defer ticker.Stop()
 	go func() {
-		ticker := time.NewTicker(1 * time.Hour)
-		defer ticker.Stop()
-		go func() {
-			time.Sleep(30 * time.Second)
-			settingsCfg, err := u.repo.GetServerSettings(ctx)
-			if err == nil && strings.TrimSpace(settingsCfg.LastUpdateCheck) == "" {
-				_, _ = u.CheckForUpdates(ctx)
-			}
-		}()
-		for {
-			select {
-			case <-ctx.Done():
-				return
-			case <-u.stopCh:
-				return
-			case <-ticker.C:
-				info, err := u.CheckForUpdates(ctx)
-				if err == nil && info.HasUpdate && info.AutoUpdate {
-					_ = u.DeployUpdate(ctx)
-				}
-			}
+		time.Sleep(30 * time.Second)
+		settingsCfg, err := u.repo.GetServerSettings(ctx)
+		if err == nil && strings.TrimSpace(settingsCfg.LastUpdateCheck) == "" {
+			_, _ = u.CheckForUpdates(ctx)
 		}
 	}()
+	for {
+		select {
+		case <-ctx.Done():
+			return
+		case <-u.stopCh:
+			return
+		case <-ticker.C:
+			info, err := u.CheckForUpdates(ctx)
+			if err == nil && info.HasUpdate && info.AutoUpdate {
+				_ = u.DeployUpdate(ctx)
+			}
+		}
+	}
 }
 
 func (u *UpdaterService) Stop() {
@@ -177,7 +183,7 @@ func (u *UpdaterService) DeployUpdate(ctx context.Context) error {
 
 	targetVersion := settingsCfg.LatestVersion
 
-	if !regexp.MustCompile(`^v?\d+\.\d+\.\d+(-[\w.]+)?$`).MatchString(targetVersion) {
+	if !semverPattern.MatchString(targetVersion) {
 		return fmt.Errorf("invalid target version format: %s", targetVersion)
 	}
 

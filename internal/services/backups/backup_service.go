@@ -8,16 +8,21 @@ import (
 
 	"github.com/google/uuid"
 
-	"codedock.run/codedock/internal/engine/backup"
-	"codedock.run/codedock/internal/models"
-	"codedock.run/codedock/internal/repositories"
-	"codedock.run/codedock/internal/utils"
+	"codedock/internal/engine/backup"
+	"codedock/internal/models"
+	"codedock/internal/repositories"
+	"codedock/internal/services/operations"
+	"codedock/internal/utils"
 )
 
 type BackupService struct {
-	backupRepo repositories.BackupRepository
-	s3Repo     repositories.S3DestinationRepository
-	manager    *backup.BackupManager
+	RunAuthorization func(context.Context, string, string) error
+	operations       *operations.Service
+	backupRepo       repositories.BackupRepository
+	s3Repo           repositories.S3DestinationRepository
+	batches          BatchStore
+	sftp             SFTPStore
+	manager          *backup.BackupManager
 }
 
 func NewBackupService(br repositories.BackupRepository, sr repositories.S3DestinationRepository, m *backup.BackupManager) *BackupService {
@@ -41,7 +46,7 @@ func (s *BackupService) CreateConfig(ctx context.Context, cfg *models.BackupConf
 	if cfg.Timeout == 0 {
 		cfg.Timeout = 3600
 	}
-	if err := backup.ValidateSchedule(cfg.Schedule); err != nil {
+	if _, err := backup.ParseSchedule(cfg.Schedule, cfg.Timezone); err != nil {
 		return err
 	}
 	cfg.CreatedAt = time.Now().UTC().Format(time.RFC3339)
@@ -65,7 +70,7 @@ func (s *BackupService) UpdateConfig(ctx context.Context, cfg *models.BackupConf
 	if cfg.Timeout == 0 {
 		cfg.Timeout = 3600
 	}
-	if err := backup.ValidateSchedule(cfg.Schedule); err != nil {
+	if _, err := backup.ParseSchedule(cfg.Schedule, cfg.Timezone); err != nil {
 		return err
 	}
 	setScheduleStatus(cfg)
@@ -96,10 +101,13 @@ func (s *BackupService) DeleteConfig(ctx context.Context, id string) error {
 	if id == "" {
 		return errors.New("id required")
 	}
+	if err := s.backupRepo.DeleteConfig(ctx, id); err != nil {
+		return err
+	}
 	if s.manager != nil {
 		s.manager.UnregisterBackup(id)
 	}
-	return s.backupRepo.DeleteConfig(ctx, id)
+	return nil
 }
 
 func (s *BackupService) CreateS3Destination(ctx context.Context, dest *models.S3Destination) error {
@@ -231,13 +239,43 @@ func (s *BackupService) GetRecord(ctx context.Context, recordID string) (*models
 	return s.backupRepo.GetRecordByID(ctx, recordID)
 }
 
-func (s *BackupService) DeleteRecord(ctx context.Context, recordID string) error {
+func (s *BackupService) DeleteRecord(ctx context.Context, recordID string) (resultErr error) {
 	if recordID == "" {
 		return errors.New("record id required")
 	}
-	if s.manager != nil {
-		s.manager.DeleteBackupRecord(ctx, recordID)
+	store, ok := s.backupRepo.(interface {
+		ClaimRecordDeletion(context.Context, string) (bool, error)
+	})
+	if !ok {
+		return fmt.Errorf("atomic archive deletion unavailable")
 	}
+	claimed, err := store.ClaimRecordDeletion(ctx, recordID)
+	if err != nil {
+		return err
+	}
+	if !claimed {
+		return fmt.Errorf("record is protected or active")
+	}
+	record, err := s.backupRepo.GetRecordByID(ctx, recordID)
+	if err != nil {
+		return err
+	}
+	defer func() {
+		if resultErr != nil {
+			final, cancel := context.WithTimeout(context.Background(), 10*time.Second)
+			defer cancel()
+			record.Status = models.BackupRecordStatusFailed
+			record.Logs += "\nArchive deletion failed; inspect storage before retrying."
+			resultErr = errors.Join(resultErr, s.backupRepo.UpdateRecord(final, record))
+		}
+	}()
+	if s.manager == nil {
+		return fmt.Errorf("backup manager unavailable")
+	}
+	if err := s.manager.DeleteBackupRecord(ctx, recordID); err != nil {
+		return fmt.Errorf("archive deletion failed; inspect storage before retrying: %w", err)
+	}
+
 	return s.backupRepo.DeleteRecord(ctx, recordID)
 }
 

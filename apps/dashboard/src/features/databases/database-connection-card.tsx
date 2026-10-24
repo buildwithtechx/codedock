@@ -1,11 +1,12 @@
 import { Copy, Eye, EyeOff, Loader2 } from 'lucide-react';
 import { useState } from 'react';
 import { toast } from 'sonner';
-import { Button } from '#/components/ui/button';
-import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '#/components/ui/card';
-import { Input } from '#/components/ui/input';
-import { Label } from '#/components/ui/label';
-import { type Database, databasesService } from '#/features/databases';
+import { Button } from '@codedock/ui/button';
+import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@codedock/ui/card';
+import { Input } from '@codedock/ui/input';
+import { Label } from '@codedock/ui/label';
+import type { Database } from '#/interfaces/databases';
+import { useRevealDatabaseCredentials } from '#/hooks/use-databases';
 
 interface Props {
   database: Database;
@@ -16,15 +17,15 @@ export function DatabaseConnectionCard({ database }: Props) {
   const [revealedPassword, setRevealedPassword] = useState<string | null>(
     database.password || null
   );
-  const [isRevealing, setIsRevealing] = useState(false);
+  const revealCredentialsMutation = useRevealDatabaseCredentials();
+  const isRevealing = revealCredentialsMutation.isPending;
 
   const handleRevealPassword = async (): Promise<string | null> => {
     if (revealedPassword) {
       return revealedPassword;
     }
     try {
-      setIsRevealing(true);
-      const res = await databasesService.revealCredentials(database.id);
+      const res = await revealCredentialsMutation.mutateAsync(database.id);
       if (res.password) {
         setRevealedPassword(res.password);
         return res.password;
@@ -33,8 +34,6 @@ export function DatabaseConnectionCard({ database }: Props) {
     } catch (_error) {
       toast.error('Failed to reveal credentials');
       return null;
-    } finally {
-      setIsRevealing(false);
     }
   };
 

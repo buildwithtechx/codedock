@@ -1,0 +1,18 @@
+x-codedock:
+  is_one_click: true
+  name: Homepage
+  description: A modern, highly customizable application dashboard with integrations for Docker and services.
+  category: utilities
+  icon: homepage
+services:
+  homepage:
+    image: ghcr.io/gethomepage/homepage:latest
+    restart: always
+    ports:
+      - "3000"
+    environment:
+      - PORT=3000
+    volumes:
+      - homepage-config:/app/config
+volumes:
+  homepage-config:

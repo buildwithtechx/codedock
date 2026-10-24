@@ -1,9 +1,9 @@
 import { Lock } from 'lucide-react';
 import { useState } from 'react';
-import { Button } from '#/components/ui/button';
-import { Input } from '#/components/ui/input';
-import { Label } from '#/components/ui/label';
-import { useResetPassword } from '#/features/auth';
+import { Button } from '@codedock/ui/button';
+import { Input } from '@codedock/ui/input';
+import { Label } from '@codedock/ui/label';
+import { useResetPassword } from '#/hooks/use-auth';
 
 interface ResetPasswordFormProps {
   token: string;
@@ -41,7 +41,7 @@ export const ResetPasswordForm = ({ token }: ResetPasswordFormProps) => {
             id="new-password"
             type="password"
             placeholder="Enter new password"
-            className="h-12 pl-10"
+            className="pl-10"
             value={newPassword}
             onChange={(e) => {
               setNewPassword(e.target.value);
@@ -63,7 +63,7 @@ export const ResetPasswordForm = ({ token }: ResetPasswordFormProps) => {
             id="confirm-password"
             type="password"
             placeholder="Confirm new password"
-            className="h-12 pl-10"
+            className="pl-10"
             value={confirmPassword}
             onChange={(e) => {
               setConfirmPassword(e.target.value);
@@ -76,7 +76,7 @@ export const ResetPasswordForm = ({ token }: ResetPasswordFormProps) => {
       </div>
 
       {error && (
-        <p className="border-[#b42318] border-l-2 pl-3 font-medium text-[#b42318] text-sm">
+        <p className="border-destructive border-l-2 pl-3 font-medium text-destructive text-sm">
           {error}
         </p>
       )}
@@ -84,7 +84,7 @@ export const ResetPasswordForm = ({ token }: ResetPasswordFormProps) => {
       <Button
         type="submit"
         disabled={isPending || !newPassword || !confirmPassword}
-        className="h-12 w-full"
+        className="w-full"
       >
         {isPending ? 'Resetting...' : 'Reset Password'}
       </Button>

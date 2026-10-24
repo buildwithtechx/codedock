@@ -5,11 +5,11 @@ import (
 
 	"github.com/labstack/echo/v4"
 
-	"codedock.run/codedock/internal/utils"
+	"codedock/internal/utils"
 
-	"codedock.run/codedock/internal/models"
-	projectservices "codedock.run/codedock/internal/services/projects"
-	systemservices "codedock.run/codedock/internal/services/system"
+	"codedock/internal/models"
+	projectservices "codedock/internal/services/projects"
+	systemservices "codedock/internal/services/system"
 )
 
 type ScheduledTaskHandler struct {
@@ -130,6 +130,44 @@ func (h *ScheduledTaskHandler) Get(c echo.Context) error {
 	}
 
 	return utils.Success(c, "Operation successful", j)
+}
+
+func (h *ScheduledTaskHandler) Update(c echo.Context) error {
+	id := c.Param("id")
+	if id == "" {
+		return utils.Error(c, http.StatusBadRequest, "missing id parameter")
+	}
+	existing, err := h.scheduledTaskService.GetScheduledTask(c.Request().Context(), id)
+	if err != nil || existing == nil {
+		return utils.Error(c, http.StatusNotFound, "scheduled task not found")
+	}
+
+	if !h.hasAccess(c, existing.ServiceID) {
+		return utils.Error(c, http.StatusForbidden, "insufficient permissions")
+	}
+
+	var req models.UpdateScheduledTaskRequest
+	if err := c.Bind(&req); err != nil {
+		return utils.Error(c, http.StatusBadRequest, "invalid payload")
+	}
+
+	if req.Name != nil {
+		existing.Name = *req.Name
+	}
+	if req.Schedule != nil {
+		existing.Schedule = *req.Schedule
+	}
+	if req.Command != nil {
+		existing.Command = *req.Command
+	}
+	if req.Status != nil {
+		existing.Status = *req.Status
+	}
+
+	if err := h.scheduledTaskService.UpdateScheduledTask(c.Request().Context(), existing); err != nil {
+		return utils.Error(c, http.StatusInternalServerError, err.Error())
+	}
+	return utils.Success(c, "Updated successfully", existing)
 }
 
 func (h *ScheduledTaskHandler) Delete(c echo.Context) error {

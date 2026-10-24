@@ -1,0 +1,55 @@
+x-codedock:
+  is_one_click: true
+  verified: true
+  name: Neon
+  description: Self-hosted Neon — serverless Postgres with database branching, web console and per-branch connection strings.
+  category: database
+  icon: neon
+  connection_string: postgresql://postgres:${secret:PG_PASSWORD}@localhost:55432/postgres?sslmode=require
+  secrets:
+    - var: SERVER_SECRET
+      label: Server management secret
+      length: 32
+    - var: ADMIN_PASSWORD
+      label: Console admin password
+      length: 24
+    - var: PG_PASSWORD
+      label: Branch database password
+      length: 24
+  inputs:
+    - var: ADMIN_EMAIL
+      label: Console admin email
+      default: admin@codedock.local
+      required: false
+services:
+  neond:
+    image: neond/neond:f04d396c133d81e28cf52560ea11ef7e9b814d71
+    restart: always
+    ports:
+      - "3000"
+      - "55432"
+      - "55433"
+      - "55434"
+      - "55435"
+      - "55436"
+      - "55437"
+    environment:
+      - PORT=3000
+      - PORT_RANGE=55432-55437
+      - DO_NOT_TRACK=1
+      - TELEMETRY_DISABLED=1
+      - RUST_LOG=info
+      - SERVER_SECRET=${secret:SERVER_SECRET}
+      - ADMIN_EMAIL=${input:ADMIN_EMAIL}
+      - ADMIN_PASSWORD=${secret:ADMIN_PASSWORD}
+      - PG_PASSWORD=${secret:PG_PASSWORD}
+    volumes:
+      - neond-data:/neond
+    healthcheck:
+      test: ["CMD-SHELL", "curl -fsS http://localhost:3000/api/auth/setup || exit 1"]
+      interval: 30s
+      timeout: 5s
+      retries: 3
+      start_period: 30s
+volumes:
+  neond-data:

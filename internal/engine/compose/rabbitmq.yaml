@@ -1,4 +1,4 @@
-version: "3.8"
+﻿version: "3.8"
 services:
   rabbitmq:
     image: rabbitmq:4-alpine
@@ -12,3 +12,5 @@ services:
       - RABBITMQ_DEFAULT_PASS=${db.password}
     volumes:
       - rabbitmq-data:/var/lib/rabbitmq
+volumes:
+  rabbitmq-data:

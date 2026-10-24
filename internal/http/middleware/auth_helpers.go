@@ -41,6 +41,9 @@ func ExtractTokenFromRequest(c echo.Context) string {
 	if authHeader != "" && strings.HasPrefix(authHeader, "Bearer ") {
 		return strings.TrimSpace(strings.TrimPrefix(authHeader, "Bearer "))
 	}
+	if q := c.QueryParam("token"); q != "" {
+		return strings.TrimSpace(q)
+	}
 	if wsProtocols := c.Request().Header.Get("Sec-WebSocket-Protocol"); wsProtocols != "" {
 		parts := strings.Split(wsProtocols, ",")
 		for i := 0; i < len(parts)-1; i++ {
@@ -48,6 +51,12 @@ func ExtractTokenFromRequest(c echo.Context) string {
 			val := strings.TrimSpace(parts[i+1])
 			if (key == "auth" || key == "bearer" || key == "token") && val != "" {
 				return val
+			}
+		}
+		for _, part := range parts {
+			trimmed := strings.TrimSpace(part)
+			if strings.HasPrefix(strings.ToLower(trimmed), "bearer ") {
+				return strings.TrimSpace(trimmed[7:])
 			}
 		}
 	}

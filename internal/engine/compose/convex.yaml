@@ -1,0 +1,46 @@
+x-codedock:
+  is_one_click: true
+  verified: true
+  name: Convex
+  description: Self-hosted Convex reactive backend + dashboard, with a persistent data volume.
+  category: backend
+  icon: convex
+  secrets:
+    - var: INSTANCE_SECRET
+      label: Instance secret
+      length: 32
+  inputs:
+    - var: INSTANCE_NAME
+      label: Instance name
+      default: convex-self-hosted
+      required: false
+services:
+  backend:
+    image: ghcr.io/get-convex/convex-backend:latest
+    restart: always
+    ports:
+      - "3210"
+      - "3211"
+    environment:
+      - INSTANCE_NAME=${input:INSTANCE_NAME}
+      - DISABLE_BEACON=true
+      - INSTANCE_SECRET=${secret:INSTANCE_SECRET}
+    volumes:
+      - convex-data:/convex/data
+    healthcheck:
+      test: ["CMD-SHELL", "curl -f http://localhost:3210/version || exit 1"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+      start_period: 20s
+  dashboard:
+    image: ghcr.io/get-convex/convex-dashboard:latest
+    restart: always
+    depends_on:
+      - backend
+    ports:
+      - "6791"
+    environment:
+      - NEXT_PUBLIC_DEPLOYMENT_URL=http://backend:3210
+volumes:
+  convex-data:

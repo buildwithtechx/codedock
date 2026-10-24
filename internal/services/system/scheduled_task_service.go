@@ -7,9 +7,9 @@ import (
 
 	"github.com/google/uuid"
 
-	"codedock.run/codedock/internal/engine/cron"
-	"codedock.run/codedock/internal/models"
-	"codedock.run/codedock/internal/repositories"
+	"codedock/internal/engine/cron"
+	"codedock/internal/models"
+	"codedock/internal/repositories"
 )
 
 type ScheduledTaskService struct {

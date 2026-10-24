@@ -1,9 +1,9 @@
 import { Link } from '@tanstack/react-router';
 import { Activity, ArrowRight, Clock, GitBranch, GitCommit, RotateCw } from 'lucide-react';
 import { useState } from 'react';
-import { Badge } from '#/components/ui/badge';
-import { Button } from '#/components/ui/button';
-import { Card } from '#/components/ui/card';
+import { Badge } from '@codedock/ui/badge';
+import { Button } from '@codedock/ui/button';
+import { Card } from '@codedock/ui/card';
 import { useListByOrganization, useRollback } from '#/hooks/use-deployments';
 
 interface ProjectDeploymentsTabProps {
@@ -15,6 +15,7 @@ export function ProjectDeploymentsTab({ projectId }: ProjectDeploymentsTabProps)
   const {
     data: depsRes,
     isLoading,
+    isFetching,
     refetch,
   } = useListByOrganization({
     projectId,
@@ -58,8 +59,14 @@ export function ProjectDeploymentsTab({ projectId }: ProjectDeploymentsTabProps)
     <div className="space-y-4">
       <div className="flex items-center justify-between">
         <h3 className="font-semibold text-foreground/90 text-sm">Deployment Activity ({total})</h3>
-        <Button variant="ghost" size="sm" onClick={() => refetch()} className="h-8 gap-1.5 text-xs">
-          <RotateCw className="h-3 w-3" />
+        <Button
+          variant="ghost"
+          size="sm"
+          disabled={isFetching}
+          onClick={() => void refetch()}
+          className="h-8 gap-1.5 text-xs"
+        >
+          <RotateCw className={`h-3 w-3 ${isFetching ? 'animate-spin' : ''}`} />
           Refresh
         </Button>
       </div>

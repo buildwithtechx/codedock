@@ -1,99 +1,40 @@
 ---
 title: API Access
-description: Authenticate scripts and CI jobs with scoped Codedock API keys.
+description: Use login and project tokens supported by the current request guard.
 ---
 
-API keys let scripts, CI jobs, and local tools call Codedock without a browser session.
+Use `Authorization: Bearer TOKEN` with a valid JWT access token, a `vpt_` personal token or a `vsl_tok_` project token. Project tokens are managed in project settings through `/api/projects/:projectId/tokens`. Project binding is enforced on routes with project or service authorization checks; it is not a universal boundary. Scope-only routes, such as server management with `server:write`, can authorize instance-wide operations without checking the token project. Grant only the scopes needed for the intended endpoints.
 
-API keys use the same `/api/*` endpoints as the dashboard. Browser requests authenticate with the session cookie. Programmatic requests authenticate with a bearer token.
+The request guard checks authentication, account state, configured IP restrictions, role and route-specific scopes. Project tokens cannot perform administrator or owner-only operations. Read the relevant endpoint's requirements before using a token in automation.
 
-## Create a Key
+## Create a project token
 
-Open `System Settings` -> `API Access`, then click `Create API key`.
+Use the project's token settings as a project administrator. Copy the generated value when it is shown, store it securely and revoke it when no longer needed. Creation and deletion require the appropriate project role and environment-write scope; listing requires environment-read scope.
 
-Choose:
+## Token types
 
-- `Name`: a label for the key, such as `CI deploys`.
-- `Access`: `Read` or `Read and write`.
-- `Projects`: all projects or selected projects.
-- `Expiration`: `7 days`, `30 days`, `90 days`, or `No expiration`.
+The profile token endpoint creates `vpt_` personal bearer tokens with their own access level and project selection. There is no generic `ap_` key or `X-API-Key` authentication path documented for this implementation.
 
-After creation, Codedock shows the full key once. Copy it before closing the dialog. Later, the API Access page only shows metadata such as prefix, scope, expiration, and last-used time.
+For scripts, use the remote CLI login flow or a project token accepted by the target endpoint. Avoid recording token values in CI logs.
 
-## Authentication
+## Examples
 
-Use bearer authentication:
-
-```bash
-export CODEDOCK_URL="https://pilot.example.com"
-export CODEDOCK_API_KEY="ap_..."
-
-curl "$CODEDOCK_URL/api/projects" \
-  -H "Authorization: Bearer $CODEDOCK_API_KEY"
+```sh
+curl "$CODEDOCK_URL/api/projects/$PROJECT_ID"   -H "Authorization: Bearer $CODEDOCK_TOKEN"
 ```
 
-Codedock also accepts `X-API-Key`:
+Browser cookie requests have CSRF requirements. See [API overview](/reference/api/) for authentication and response behavior and [endpoint catalogue](/reference/api-endpoints/) for route-specific middleware wiring.
 
-```bash
-curl "$CODEDOCK_URL/api/projects" \
-  -H "X-API-Key: $CODEDOCK_API_KEY"
-```
+## Personal API tokens
 
-## Access Levels
+Create personal tokens in profile token management. Send the returned `vpt_` credential as `Authorization: Bearer TOKEN`. Credentials are stored as SHA-256 hashes and shown once. The API returns the token metadata in `data.token` and the one-time credential in `data.plain`.
 
-`Read` keys can call `GET` endpoints.
+**Read** tokens allow GET, HEAD and OPTIONS. **Read and write** tokens additionally permit mutations within their owner's current resource permissions. Expired, deleted tokens and tokens belonging to inactive or deleted users are rejected. The UI's **No expiration** choice creates a token without an expiry; revoke it when no longer needed.
 
-`Read and write` keys can call `GET`, `POST`, `PATCH`, and `DELETE` endpoints.
+**Specific projects** limits access to the selected projects and their services, environments, databases, deployments and backups. Unscoped collection endpoints are denied for these tokens; request a selected project's resources through its scoped routes. Recognized project, environment, service and database ID references in query parameters or JSON bodies are checked against the selected projects, including snake_case aliases. Requests with bodies must use JSON; other body formats are rejected for specific-project personal tokens. Project scope narrows the owner's existing permissions and grants no additional membership.
 
-Read-only keys receive `403` for write actions.
+Account changes, token management, interactive terminals and instance role-restricted operations require a user session. Existing project API tokens retain their separate project and operation scopes.
 
-## Project Scopes
+## API Stability Policy
 
-`All projects` keys can access every project according to their access level.
-
-`Specific projects` keys can only access the selected projects. For service routes, Codedock resolves the service to its project before allowing the request. For deployment routes, Codedock resolves the deployment to its service, then to the service project.
-
-Selected-project keys cannot create new projects because new projects are outside their scope. Use an all-project write key for project creation.
-
-## Session-Only Endpoints
-
-Some endpoints always require a browser session and cannot be called with an API key:
-
-- `/api/system/*`
-- API key creation and revocation.
-- GitHub repository browsing endpoints such as `/api/github/repos`, `/api/github/branches`, and `/api/github/directories`.
-- Onboarding, login, logout, and setup flows.
-
-GitHub webhooks and health checks keep their own public or signature-based behavior.
-
-## Endpoint Pages
-
-- [Projects API](/docs/reference/api-projects/)
-- [Services API](/docs/reference/api-services/)
-- [Deployments API](/docs/reference/api-deployments/)
-- [Databases API](/docs/reference/api-databases/)
-- [Environment and Domains API](/docs/reference/api-environment-and-domains/)
-
-## Errors
-
-Common responses:
-
-- `401 Authentication required`: no session cookie or API key was provided.
-- `401 Invalid or expired API key`: the key is wrong, revoked, or expired.
-- `403 This API key is read-only`: the key tried to call a write endpoint.
-- `403 This API key cannot access that project`: the key is scoped to different projects.
-- `403 This endpoint requires a browser session`: the endpoint does not allow API keys.
-
-Error response:
-
-```json
-{
-  "error": "This API key is read-only"
-}
-```
-
-## Revocation
-
-Revoke keys from `System Settings` -> `API Access`.
-
-Revocation takes effect immediately. Existing scripts using the key will receive `401 Invalid or expired API key`.
+The `/api/v1/*` endpoint surface is frozen and stable. All breaking changes, backwards-incompatible contract mutations, or removed fields are deferred to `/api/v2/*`. Minor additive fields and optional parameters may be introduced within `/api/v1/*` without breaking existing SDK and API clients.

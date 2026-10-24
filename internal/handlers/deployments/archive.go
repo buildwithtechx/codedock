@@ -10,11 +10,11 @@ import (
 	"github.com/google/uuid"
 	"github.com/labstack/echo/v4"
 
-	"codedock.run/codedock/internal/http/middleware"
-	"codedock.run/codedock/internal/models"
-	deploymentservices "codedock.run/codedock/internal/services/deployments"
-	projectservices "codedock.run/codedock/internal/services/projects"
-	"codedock.run/codedock/internal/utils"
+	"codedock/internal/http/middleware"
+	"codedock/internal/models"
+	deploymentservices "codedock/internal/services/deployments"
+	projectservices "codedock/internal/services/projects"
+	"codedock/internal/utils"
 )
 
 type ArchiveHandler struct {

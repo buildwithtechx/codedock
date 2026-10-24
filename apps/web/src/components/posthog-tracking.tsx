@@ -1,11 +1,14 @@
 import { useEffect } from 'react';
 import { env } from '../env';
+import { flushInstallCopies } from '../lib/analytics';
 
 declare global {
   interface Window {
     __codedock_posthog_initialized?: boolean;
+    __codedock_install_copies?: { source: string; command: string }[];
     posthog?: {
       init: (key: string, config: Record<string, unknown>) => void;
+      capture?: (event: string, properties?: Record<string, unknown>) => void;
     };
   }
 }
@@ -35,6 +38,7 @@ export function PosthogTracking() {
           capture_pageview: true,
           capture_pageleave: true,
         });
+        flushInstallCopies();
       }
     };
 

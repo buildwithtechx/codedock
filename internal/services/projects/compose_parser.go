@@ -3,7 +3,7 @@ package projects
 import (
 	"strings"
 
-	"codedock.run/codedock/internal/models"
+	"codedock/internal/models"
 	"gopkg.in/yaml.v3"
 )
 

@@ -14,14 +14,15 @@ import (
 	"github.com/docker/docker/api/types/network"
 	"github.com/docker/docker/client"
 
-	"codedock.run/codedock/internal/engine/compose"
-	"codedock.run/codedock/internal/models"
-	"codedock.run/codedock/internal/utils"
+	"codedock/internal/engine/compose"
+	"codedock/internal/models"
+	"codedock/internal/utils"
 )
 
 type DatabaseDeployer struct {
 	dockerClient *client.Client
 	store        DatabaseDeployerStore
+	volumes      VolumeOperations
 }
 
 func NewDatabaseDeployer(dockerClient *client.Client, s DatabaseDeployerStore) *DatabaseDeployer {
@@ -36,8 +37,24 @@ func (d *DatabaseDeployer) SpinUp(ctx context.Context, dbConfig *models.Database
 		return "", fmt.Errorf("docker daemon connection is not available")
 	}
 
+	release, err := d.acquireVolume(dbConfig.ID)
+	if err != nil {
+		return "", err
+	}
+	defer release()
 	if utils.IsDryRun() {
 		return fmt.Sprintf("codedock-db-%s-dryrun", dbConfig.Name), nil
+	}
+
+	if d.store != nil {
+		fresh, err := d.store.GetDatabase(dbConfig.ID)
+		if err != nil {
+			return "", fmt.Errorf("reload database before startup: %w", err)
+		}
+		if fresh == nil {
+			return "", utils.NewNotFoundError("Database", dbConfig.ID)
+		}
+		*dbConfig = *fresh
 	}
 
 	containerName := utils.NormalizeContainerName(fmt.Sprintf("codedock-db-%s", dbConfig.Name))
@@ -159,7 +176,7 @@ func (d *DatabaseDeployer) buildContainerConfig(dbConfig *models.Database) (stri
 func (d *DatabaseDeployer) createContainerSettings(dbConfig *models.Database, containerName, imageName string, envVars, cmd []string, containerMountPath string) (*container.Config, *container.HostConfig, *network.NetworkingConfig) {
 	volumeName := fmt.Sprintf("codedock-db-data-%s", dbConfig.ID)
 
-	labels := make(map[string]string)
+	labels := map[string]string{"codedock.database_id": dbConfig.ID}
 	if dbConfig.ExternalDNS != "" {
 		labels["traefik.enable"] = "true"
 		labels[fmt.Sprintf("traefik.tcp.routers.%s.rule", containerName)] = fmt.Sprintf("HostSNI(`%s`)", dbConfig.ExternalDNS)
@@ -185,7 +202,7 @@ func (d *DatabaseDeployer) createContainerSettings(dbConfig *models.Database, co
 	}
 
 	hostCfg := &container.HostConfig{
-		RestartPolicy: container.RestartPolicy{Name: "always"},
+		RestartPolicy: container.RestartPolicy{Name: "unless-stopped"},
 		Resources: container.Resources{
 			Memory:   utils.MegaBytesToBytes(memMB),
 			NanoCPUs: utils.CPURequestToNanoCPUs(cpuReq),
@@ -209,26 +226,15 @@ func (d *DatabaseDeployer) createContainerSettings(dbConfig *models.Database, co
 	return containerCfg, hostCfg, netCfg
 }
 
-func (d *DatabaseDeployer) Stop(ctx context.Context, dbID string) error {
-	if d.dockerClient == nil {
-		return fmt.Errorf("docker daemon connection is not available")
-	}
-	if utils.IsDryRun() {
-		return nil
-	}
-	dbConfig, err := d.store.GetDatabase(dbID)
-	if err != nil || dbConfig == nil {
-		return utils.NewNotFoundError("Database", dbID)
-	}
-	containerName := utils.NormalizeContainerName(fmt.Sprintf("codedock-db-%s", dbConfig.Name))
-	_ = d.dockerClient.ContainerRemove(ctx, containerName, container.RemoveOptions{Force: true})
-	return d.store.UpdateDatabaseStatus(dbID, models.DatabaseStatusStopped, "")
-}
-
 func (d *DatabaseDeployer) ImportData(ctx context.Context, dbConfig *models.Database, sourceURL string) error {
 	if d.dockerClient == nil {
 		return fmt.Errorf("docker daemon connection is not available")
 	}
+	release, err := d.acquireVolume(dbConfig.ID)
+	if err != nil {
+		return err
+	}
+	defer release()
 	if utils.IsDryRun() {
 		return nil
 	}

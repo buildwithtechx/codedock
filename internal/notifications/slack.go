@@ -3,7 +3,7 @@ package notifications
 import (
 	"fmt"
 
-	"codedock.run/codedock/internal/models"
+	"codedock/internal/models"
 )
 
 func SendSlackNotification(webhookURL string, event *models.NotificationEvent) error {

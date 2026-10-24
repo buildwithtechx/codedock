@@ -1,11 +1,11 @@
 import { formatDistanceToNow } from 'date-fns';
 import { ExternalLink, GitPullRequest, Loader2 } from 'lucide-react';
-import { Badge } from '#/components/ui/badge';
-import { Button } from '#/components/ui/button';
-import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '#/components/ui/card';
-import { Label } from '#/components/ui/label';
-import { Switch } from '#/components/ui/switch';
-import type { PRPreviewStatus } from '#/features/services';
+import { Badge } from '@codedock/ui/badge';
+import { Button } from '@codedock/ui/button';
+import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@codedock/ui/card';
+import { Label } from '@codedock/ui/label';
+import { Switch } from '@codedock/ui/switch';
+import type { PRPreviewStatus } from '#/interfaces/services';
 import { useGetApp, useUpdateApp } from '#/hooks/use-apps';
 import { useListPRPreviews } from '#/hooks/use-pr-previews';
 

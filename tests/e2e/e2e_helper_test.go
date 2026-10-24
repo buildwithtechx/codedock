@@ -10,15 +10,14 @@ import (
 	"net/http/cookiejar"
 	"net/http/httptest"
 	"net/url"
-	"path/filepath"
 	"testing"
 
 	"github.com/docker/docker/client"
-	_ "modernc.org/sqlite"
 
-	codedockhttp "codedock.run/codedock/internal/http"
-	"codedock.run/codedock/internal/repositories"
-	"codedock.run/codedock/internal/utils"
+	cdkdb "codedock/db"
+	cdkhttp "codedock/internal/http"
+	"codedock/internal/testdb"
+	"codedock/internal/utils"
 )
 
 type e2eHarness struct {
@@ -31,24 +30,20 @@ type e2eHarness struct {
 }
 
 func newE2EHarness(t *testing.T) *e2eHarness {
+	jwtSecret := "super-secure-e2e-test-jwt-secret-32-chars-minimum!"
+	t.Setenv("CODEDOCK_JWT_SECRET", jwtSecret)
+
 	dataDir := t.TempDir()
 	vlt, err := utils.NewVault(dataDir)
 	if err != nil {
 		t.Fatalf("failed to create vault: %v", err)
 	}
 
-	dbPath := filepath.Join(dataDir, "codedock_e2e.db")
-	db, err := sql.Open("sqlite", dbPath+"?_pragma=journal_mode(WAL)&_pragma=busy_timeout(5000)&_pragma=foreign_keys(ON)")
-	if err != nil {
-		t.Fatalf("failed to open sqlite database: %v", err)
-	}
+	db := testdb.Open(t)
 
-	if err := repositories.RunMigrations(db); err != nil {
+	if err := cdkdb.RunMigrations(db); err != nil {
 		t.Fatalf("failed to run migrations: %v", err)
 	}
-
-	jwtSecret := "super-secure-e2e-test-jwt-secret-32-chars-minimum!"
-	t.Setenv("CODEDOCK_JWT_SECRET", jwtSecret)
 
 	dockerClient, err := client.NewClientWithOpts(client.FromEnv, client.WithAPIVersionNegotiation())
 	if err != nil {
@@ -56,7 +51,7 @@ func newE2EHarness(t *testing.T) *e2eHarness {
 		dockerClient = nil
 	}
 
-	s, err := codedockhttp.NewServer(db, vlt, nil, nil, dockerClient, dataDir)
+	s, err := cdkhttp.NewServer(db, vlt, nil, nil, dockerClient, dataDir)
 	if err != nil {
 		t.Fatalf("failed to create http server: %v", err)
 	}

@@ -1,7 +1,7 @@
 import { Database, LayoutTemplate, Loader2 } from 'lucide-react';
 import { useState } from 'react';
-import { Badge } from '#/components/ui/badge';
-import { Button } from '#/components/ui/button';
+import { Badge } from '@codedock/ui/badge';
+import { Button } from '@codedock/ui/button';
 import {
   Sheet,
   SheetContent,
@@ -9,8 +9,8 @@ import {
   SheetHeader,
   SheetTitle,
   SheetTrigger,
-} from '#/components/ui/sheet';
-import { useGetDatabases } from '#/features/databases';
+} from '@codedock/ui/sheet';
+import { useGetDatabases } from '#/hooks/use-databases';
 import { useListByProject } from '#/hooks/use-apps';
 
 interface SmartLinkerDrawerProps {

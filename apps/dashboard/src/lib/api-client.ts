@@ -2,6 +2,7 @@ import { toast } from 'sonner';
 import { env } from '#/env';
 import { getAuthHeaders, handleAuthFailure, refreshAuthSession } from '#/lib/auth-refresh';
 import { clearCsrfToken, prepareCsrfHeaders } from '#/lib/csrf';
+import { useAuthStore } from '#/stores/auth-store';
 
 export function getApiBaseUrl(): string {
   if (typeof window !== 'undefined') {
@@ -41,7 +42,9 @@ async function handleResponseError(response: Response): Promise<never> {
   const isJson = response.headers.get('content-type')?.includes('application/json');
   const data = isJson ? await response.json() : await response.text();
   const errorMessage = data?.message || data?.error || response.statusText || 'An error occurred';
-  toast.error(errorMessage);
+  if (!errorMessage.toLowerCase().includes('2fa code required')) {
+    toast.error(errorMessage);
+  }
   throw new ApiError(response.status, errorMessage, data);
 }
 
@@ -73,22 +76,36 @@ export const apiClient = {
     });
 
     if (response.status === 401) {
-      const newToken = await refreshAuthSession(baseUrl);
-      if (newToken) {
-        headers.set('Authorization', `Bearer ${newToken}`);
-        const retryResponse = await fetch(url, {
-          ...options,
-          headers,
-          credentials: 'include',
-        });
-        if (retryResponse.ok) {
-          if (retryResponse.status === 204) return {} as T;
-          const isJson = retryResponse.headers.get('content-type')?.includes('application/json');
-          return (isJson ? await retryResponse.json() : await retryResponse.text()) as T;
+      const isAuthEndpoint =
+        endpoint.startsWith('/auth/signin') ||
+        endpoint.startsWith('/auth/signup') ||
+        endpoint.startsWith('/auth/passkeys/authenticate');
+
+      if (!isAuthEndpoint) {
+        const { token, refreshToken } = useAuthStore.getState();
+        if (token || refreshToken) {
+          const newToken = await refreshAuthSession(baseUrl);
+          if (newToken) {
+            headers.set('Authorization', `Bearer ${newToken}`);
+            const retryResponse = await fetch(url, {
+              ...options,
+              headers,
+              credentials: 'include',
+            });
+            if (retryResponse.ok) {
+              if (retryResponse.status === 204) return {} as T;
+              const isJson = retryResponse.headers
+                .get('content-type')
+                ?.includes('application/json');
+              return (isJson ? await retryResponse.json() : await retryResponse.text()) as T;
+            }
+          }
         }
+        handleAuthFailure();
+        throw new ApiError(401, 'Session expired. Please log in again.');
       }
-      handleAuthFailure();
-      throw new ApiError(401, 'Session expired. Please log in again.');
+
+      return handleResponseError(response);
     }
 
     if (response.status === 204) {

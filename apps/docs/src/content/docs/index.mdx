@@ -1,99 +1,128 @@
 ---
 title: Codedock Docs
-description: Documentation for Codedock — turn any bare-metal VPS into your own private Platform-as-a-Service.
+description: Modern self-hosted PaaS — deploy applications, databases, and AI workloads on your own servers.
 template: splash
 hero:
-  tagline: Turn any bare-metal VPS into your own private Platform-as-a-Service in 60 seconds.
+  tagline: Deploy applications, databases, and AI workloads on your own servers with zero lock-in.
   actions:
-    - text: Get Started
-      link: /getting-started/installation/
+    - text: Quick Start Guide
+      link: /getting-started/quick-start/
       icon: rocket
       variant: primary
+    - text: Installation
+      link: /getting-started/installation/
+      icon: seti:shell
+      variant: secondary
     - text: View on GitHub
       link: https://github.com/buildwithtechx/codedock
       icon: github
       variant: secondary
 ---
 
-import { Card, CardGrid, LinkCard, Icon } from '@astrojs/starlight/components';
+import { CardGrid, LinkCard } from '@astrojs/starlight/components';
 
 ## Getting Started
 
 <CardGrid>
   <LinkCard
+    title="Quick Start Guide"
+    description="Tour the dashboard, deploy your first service, and explore core features."
+    href="/getting-started/quick-start/"
+  />
+  <LinkCard
     title="Installation"
-    description="Deploy Codedock on any Linux VPS in under 60 seconds."
+    description="One-line install script for any Linux VPS with automatic Docker setup."
     href="/getting-started/installation/"
   />
   <LinkCard
     title="Browser Onboarding"
-    description="Securely initialize your server and create an admin account."
+    description="Securely initialize your server and create your owner account."
     href="/getting-started/onboarding/"
   />
   <LinkCard
-    title="Quick Start"
-    description="Take a quick tour of the Codedock dashboard and core features."
-    href="/getting-started/quick-start/"
-  />
-  <LinkCard
-    title="Deploy Your First App"
-    description="Learn how to deploy a basic app from GitHub or a template."
-    href="/tutorial/"
+    title="Architecture"
+    description="Explore Codedock's control plane, daemon, and container networking."
+    href="/core-concepts/architecture/"
   />
 </CardGrid>
 
-## Platform Features
+## Deployments & Workflows
 
 <CardGrid>
   <LinkCard
-    title="Projects & Canvas"
-    description="Organize services into environments with an interactive visual canvas view."
-    href="/projects/overview/"
+    title="Build Strategies"
+    description="Deploy via Dockerfile, Nixpacks, Railpacks, or static sites."
+    href="/deployments/build-strategies/"
   />
   <LinkCard
-    title="Apps & Deployments"
-    description="Deploy Docker, source code, and functions. Features zero-downtime, PR previews, and Log Drains."
-    href="/deployments/service-types/"
+    title="Actions & CI/CD Runners"
+    description="Native containerized pipelines and self-hosted GitHub/GitLab runners."
+    href="/deployments/actions-and-runners/"
   />
   <LinkCard
-    title="Databases & Data Browsers"
-    description="15 managed engines with automated backups, 1-click restore, SQL Studio, and Redis browser."
-    href="/databases/provisioning/"
+    title="Zero-Downtime Rollbacks"
+    description="Instant rollbacks, pinned releases, and attention health diagnostics."
+    href="/deployments/rollbacks-and-health/"
   />
   <LinkCard
-    title="Storage & Operations"
-    description="MinIO storage, live log viewing, instantaneous Maintenance Mode, and AI Log Diagnosis."
-    href="/operations/observability/"
+    title="Docker Compose Import"
+    description="Import and manage multi-container applications from standard compose files."
+    href="/deployments/compose/"
   />
 </CardGrid>
 
-## Configuration & Management
+## Infrastructure & Networking
 
 <CardGrid>
   <LinkCard
-    title="System Settings"
-    description="Notifications, emails, AI keys, auto-updates, MCP."
-    href="/reference/system-settings/"
+    title="Managed Cloud (Hetzner)"
+    description="Automated server provisioning and dynamic scaling via Hetzner Cloud API."
+    href="/fleet-management/managed-servers/"
   />
   <LinkCard
-    title="Teams"
-    description="Invite members to collaborate on projects with role-based access."
-    href="/operations/teams/"
+    title="High Availability & Clustering"
+    description="Multi-node control planes, Patroni PostgreSQL HA, and failover."
+    href="/fleet-management/clustering-ha/"
   />
   <LinkCard
-    title="Maintenance & Updates"
-    description="Automated garbage collection, disk alerts, and seamless auto-updates."
-    href="/operations/maintenance-and-updates/"
+    title="Ingress & L7 Route Rules"
+    description="Traefik routing, path prefix rules, basic auth, and automatic Let's Encrypt."
+    href="/networking/ingress-and-routing/"
   />
   <LinkCard
-    title="API Reference"
-    description="Full REST API with personal access tokens and rate limits."
-    href="/api/"
+    title="Software-Defined Networks"
+    description="Isolated subnets, inter-service private DNS, and atomic watchdog commits."
+    href="/networking/software-defined-networks/"
   />
 </CardGrid>
 
-## Community
+## Developer Tooling & AI
 
-- **[GitHub Issues](https://github.com/buildwithtechx/codedock/issues)** — Report bugs and request features
-- **[Discord](https://discord.gg/codedock)** — Community discussions and support
-- **[GitHub Discussions](https://github.com/buildwithtechx/codedock/discussions)** — Ask questions and share ideas
+<CardGrid>
+  <LinkCard
+    title="Model Context Protocol (MCP)"
+    description="Connect AI assistants like Claude Desktop, Cursor, and Antigravity."
+    href="/reference/mcp-server/"
+  />
+  <LinkCard
+    title="Developer Tools & Mobile"
+    description="Official VS Code extension, Tauri desktop client, and Expo mobile app."
+    href="/reference/developer-tools/"
+  />
+  <LinkCard
+    title="Codedock Mail Server"
+    description="Self-hosted email control plane with Stalwart, SnappyMail, and DKIM."
+    href="/operations/mail-server/"
+  />
+  <LinkCard
+    title="Push Notifications"
+    description="Real-time mobile push notifications, Slack, Discord, and webhooks."
+    href="/operations/push-notifications/"
+  />
+</CardGrid>
+
+## Community & Resources
+
+- **[GitHub Repository](https://github.com/buildwithtechx/codedock)** — Star, fork, and contribute to Codedock
+- **[Report an Issue](https://github.com/buildwithtechx/codedock/issues)** — Bug reports and feature suggestions
+- **[REST API Reference](/reference/api/)** — Complete programmatic API catalogue

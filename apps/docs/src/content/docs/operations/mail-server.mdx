@@ -1,0 +1,95 @@
+---
+title: Codedock Mail Server
+description: Complete self-hosted email infrastructure with Stalwart and SnappyMail.
+---
+
+import { Steps, Tabs, TabItem, Aside } from "@astrojs/starlight/components";
+
+Codedock features a dedicated **Mail Server Management** control plane that enables you to host your own secure, modern email infrastructure with automated DKIM signing, DNS verification, and webmail access.
+
+## Architecture
+
+Codedock pairs high-performance mail components with automated PaaS orchestration:
+
+```
+[ Inbound / Outbound Email ]
+            │
+            ▼ (Ports 25, 465, 587, 993)
+┌───────────────────────────────────────┐
+│        Stalwart Mail Server           │
+│   (JMAP, IMAP4, SMTP, Sieve Filters)  │
+└───────────────────┬───────────────────┘
+                    │
+                    ▼
+┌───────────────────────────────────────┐
+│       Codedock Mail Control Plane     │
+│ (Domains, Mailboxes, DKIM, DNS Probes)│
+└───────────────────┬───────────────────┘
+                    │
+                    ▼
+┌───────────────────────────────────────┐
+│         SnappyMail Webmail UI         │
+│   (Modern, Lightweight Web Client)    │
+└───────────────────────────────────────┘
+```
+
+## Adding a Mail Server
+
+<Steps>
+1. Deploy the Codedock Mail template from **Templates → Codedock Mail** or connect an external Stalwart instance.
+2. In Codedock, navigate to **Mail → Servers** (or use `POST /api/mail/servers`).
+3. Enter your mail server host, management endpoint, and admin credentials.
+4. Test the connection to verify administrative API access.
+</Steps>
+
+## Domains & DKIM Configuration
+
+1. Open your Mail Server and click **Add Domain** (`POST .../domains`).
+2. Enter your email domain (e.g. `company.com`).
+3. Click **Generate DKIM Key** (`POST .../dkim`). Codedock automatically generates a 2048-bit RSA key pair, configures Stalwart for outbound signing, and outputs the exact DNS TXT record.
+
+## DNS Record Guidance
+
+<Tabs>
+  <TabItem label="MX Record" icon="seti:email">
+    Directs inbound mail to your server:
+    - **Host**: `@`
+    - **Target**: `mail.example.com`
+    - **Priority**: `10`
+  </TabItem>
+  <TabItem label="SPF Record" icon="seti:lock">
+    Authorizes your server IP address to send email:
+    - **Host**: `@`
+    - **Type**: `TXT`
+    - **Value**: `v=spf1 mx ~all`
+  </TabItem>
+  <TabItem label="DKIM Record" icon="seti:key">
+    Cryptographic signature verification for deliverability:
+    - **Host**: `codedock._domainkey`
+    - **Type**: `TXT`
+    - **Value**: `v=DKIM1; k=rsa; p=MIIBIjANB...`
+  </TabItem>
+  <TabItem label="DMARC Record" icon="shield">
+    DMARC enforcement policy and reporting:
+    - **Host**: `_dmarc`
+    - **Type**: `TXT`
+    - **Value**: `v=DMARC1; p=quarantine; rua=mailto:dmarc@example.com`
+  </TabItem>
+</Tabs>
+
+<Aside type="tip" title="Real-Time DNS Health Check">
+Click **Run DNS Health Check** in the domain view (`GET .../dns` and `GET .../checks`). Codedock queries authoritative nameservers and validates each record in real time.
+</Aside>
+
+## Creating Mailboxes
+
+1. In your domain view, click **Create Mailbox** (`POST .../mailboxes`).
+2. Enter the email address (e.g., `alex@company.com`) and a secure password.
+3. Connect desktop and mobile clients (Apple Mail, Thunderbird, Outlook) using standard ports:
+   - **Incoming (IMAP)**: Port 993 (SSL/TLS)
+   - **Outgoing (SMTP)**: Port 465 (SSL/TLS) or 587 (STARTTLS)
+4. Or log in directly via the integrated **SnappyMail Webmail** client.
+
+<Aside type="caution" title="Port 25 Unblocking">
+Many cloud VPS providers (Hetzner, DigitalOcean, Linode) block outbound port 25 by default to prevent spam. You may need to submit a brief support ticket to your VPS provider requesting port 25 unblocking for legitimate transactional mail.
+</Aside>

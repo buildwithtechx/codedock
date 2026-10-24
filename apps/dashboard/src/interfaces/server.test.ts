@@ -37,4 +37,21 @@ describe('parseServerMetrics', () => {
     expect(parseServerMetrics('invalid-json')).toBeNull();
     expect(parseServerMetrics('{broken:json}')).toBeNull();
   });
+
+  it('normalizes partial objects so numeric fields never crash render', () => {
+    const result = parseServerMetrics({} as ServerMetrics);
+    expect(result).toEqual({
+      cpu_usage_percentage: 0,
+      memory_usage_bytes: 0,
+      memory_limit_bytes: 0,
+      disk_usage_bytes: 0,
+      disk_total_bytes: 0,
+    });
+  });
+
+  it('normalizes partial JSON strings and drops non-finite values', () => {
+    const result = parseServerMetrics('{"cpu_usage_percentage":12.5}');
+    expect(result?.cpu_usage_percentage).toBe(12.5);
+    expect(result?.memory_limit_bytes).toBe(0);
+  });
 });

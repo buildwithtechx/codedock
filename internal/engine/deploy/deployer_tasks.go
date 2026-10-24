@@ -10,8 +10,8 @@ import (
 	"github.com/docker/docker/errdefs"
 	"github.com/google/uuid"
 
-	"codedock.run/codedock/internal/models"
-	"codedock.run/codedock/internal/utils"
+	"codedock/internal/models"
+	"codedock/internal/utils"
 )
 
 func (d *Deployer) ExecuteRollingUpdate(ctx context.Context, app *models.AppService, newImageTag string, logWriter io.Writer) error {
@@ -47,7 +47,10 @@ func (d *Deployer) ExecuteRollingUpdate(ctx context.Context, app *models.AppServ
 			fmt.Fprintf(logWriter, "🔄 [Deployer] Rolling update: replacing replica %d/%d (%s)...\n", i+1, replicas, containerName)
 		}
 
-		envVarsMap, _ := d.getEnvironmentVariables(app, logWriter)
+		envVarsMap, err := d.getEnvironmentVariables(ctx, app, logWriter)
+		if err != nil {
+			return err
+		}
 		var envSlice []string
 		for k, v := range envVarsMap {
 			envSlice = append(envSlice, fmt.Sprintf("%s=%s", k, v))
@@ -61,11 +64,13 @@ func (d *Deployer) ExecuteRollingUpdate(ctx context.Context, app *models.AppServ
 			effectiveImageTag = fmt.Sprintf("codedock-app-%s:latest", app.ID)
 		}
 
+		appDomain, _ := resolveAppDomain(app)
 		runOpts := ContainerRunOptions{
 			Name:            containerName,
 			ImageTag:        effectiveImageTag,
 			ServiceID:       app.ID,
 			Domain:          app.Domain,
+			Hosts:           d.routeHosts(ctx, app.ID, appDomain, logWriter),
 			InternalPort:    internalPort,
 			RuntimeMode:     app.RuntimeMode,
 			Envs:            envSlice,
@@ -104,7 +109,10 @@ func (d *Deployer) ExecuteOneOffTask(ctx context.Context, app *models.AppService
 		fmt.Fprintf(logWriter, "🏃 [Deployer] Running one-off task in container %s: %s\n", containerName, command)
 	}
 
-	envVarsMap, _ := d.getEnvironmentVariables(app, logWriter)
+	envVarsMap, err := d.getEnvironmentVariables(ctx, app, logWriter)
+	if err != nil {
+		return err
+	}
 	var envSlice []string
 	for k, v := range envVarsMap {
 		envSlice = append(envSlice, fmt.Sprintf("%s=%s", k, v))
@@ -166,6 +174,11 @@ func (d *Deployer) ExecuteOneOffTask(ctx context.Context, app *models.AppService
 }
 
 func (d *Deployer) RestartAppService(ctx context.Context, app *models.AppService) error {
+	release, err := d.containerManager.acquireService(app.ID)
+	if err != nil {
+		return err
+	}
+	defer release()
 	containerName := utils.NormalizeContainerName(app.ID)
 	replicas := app.Replicas
 	if replicas <= 1 {

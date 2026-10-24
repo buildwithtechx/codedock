@@ -1,15 +1,15 @@
 import { Trash2 } from 'lucide-react';
 import { toast } from 'sonner';
-import { Button } from '#/components/ui/button';
+import { Button } from '@codedock/ui/button';
 import {
   Dialog,
   DialogClose,
   DialogContent,
   DialogDescription,
   DialogTitle,
-} from '#/components/ui/dialog';
-import type { User } from '#/features/users';
-import { useDeleteUser } from '#/features/users';
+} from '@codedock/ui/dialog';
+import { useDeleteUser } from '#/hooks/use-users';
+import type { User } from '#/interfaces/users';
 
 interface UserDeleteDialogProps {
   target: User | null;

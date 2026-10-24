@@ -10,7 +10,7 @@ import (
 	"strings"
 	"sync"
 
-	"codedock.run/codedock/internal/models"
+	"codedock/internal/models"
 )
 
 type namecheapApiResponse struct {

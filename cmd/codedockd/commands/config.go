@@ -4,9 +4,10 @@ import (
 	"context"
 	"fmt"
 	"os"
+	"strings"
 
-	"codedock.run/codedock/internal/config"
-	"codedock.run/codedock/internal/repositories"
+	"codedock/internal/config"
+	"codedock/internal/repositories"
 )
 
 func runConfig() {
@@ -34,7 +35,7 @@ func runConfig() {
 		return
 	}
 
-	key, value, ok := stringsCut(os.Args[2], "=")
+	key, value, ok := strings.Cut(os.Args[2], "=")
 	if !ok {
 		exitError("Usage: codedockd config <key>=<value>")
 	}
@@ -54,13 +55,4 @@ func runConfig() {
 		exitError("Failed to update settings: %v", err)
 	}
 	fmt.Printf("✅ %s set to %s\n", key, value)
-}
-
-func stringsCut(s, sep string) (string, string, bool) {
-	for i := 0; i < len(s)-len(sep); i++ {
-		if s[i:i+len(sep)] == sep {
-			return s[:i], s[i+len(sep):], true
-		}
-	}
-	return s, "", false
 }

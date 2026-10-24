@@ -8,8 +8,8 @@ import (
 
 	"github.com/google/uuid"
 
-	"codedock.run/codedock/internal/models"
-	"codedock.run/codedock/internal/repositories"
+	"codedock/internal/models"
+	"codedock/internal/repositories"
 )
 
 func runProjects(args []string) {
@@ -34,7 +34,7 @@ func runProjects(args []string) {
 
 	switch cmd {
 	case "list":
-		projects, total, err := projectRepo.ListAll(context.Background(), 100, 0)
+		projects, total, err := projectRepo.ListAll(context.Background(), "", 100, 0)
 		if err != nil {
 			exitError("Failed to list projects: %v", err)
 		}

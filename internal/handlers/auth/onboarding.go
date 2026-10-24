@@ -5,8 +5,8 @@ import (
 
 	"github.com/labstack/echo/v4"
 
-	authservices "codedock.run/codedock/internal/services/auth"
-	"codedock.run/codedock/internal/utils"
+	authservices "codedock/internal/services/auth"
+	"codedock/internal/utils"
 )
 
 type OnboardingHandler struct {

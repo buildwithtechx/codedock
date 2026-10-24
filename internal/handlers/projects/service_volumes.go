@@ -3,8 +3,8 @@ package projects
 import (
 	"net/http"
 
-	"codedock.run/codedock/internal/models"
-	"codedock.run/codedock/internal/utils"
+	"codedock/internal/models"
+	"codedock/internal/utils"
 	"github.com/labstack/echo/v4"
 )
 
@@ -67,4 +67,27 @@ func (h *AppHandler) DeleteVolume(c echo.Context) error {
 		return utils.Error(c, http.StatusInternalServerError, "failed to delete volume")
 	}
 	return utils.Success(c, "Operation successful", nil)
+}
+
+func (h *AppHandler) EmptyVolume(c echo.Context) error {
+	serviceID := c.Param("id")
+	volumeID := c.Param("volumeId")
+	if serviceID == "" || volumeID == "" {
+		return utils.Error(c, http.StatusBadRequest, "serviceId and volumeId are required")
+	}
+
+	existing, err := h.appService.GetAppService(c.Request().Context(), serviceID)
+	if err != nil || existing == nil {
+		return utils.Error(c, http.StatusNotFound, "Service not found")
+	}
+
+	updated, previous, err := h.appService.EmptyVolume(c.Request().Context(), serviceID, volumeID)
+	if err != nil {
+		return utils.Error(c, http.StatusInternalServerError, "failed to empty volume: "+err.Error())
+	}
+	return utils.Success(c, "Storage reset to fresh volume", map[string]any{
+		"volume":         updated,
+		"retainedVolume": previous,
+		"newVolume":      updated.HostPath,
+	})
 }

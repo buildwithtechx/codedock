@@ -1,48 +1,40 @@
 ---
 title: Restore and Download
-description: Download, delete, and restore database backups from disk or R2.
+description: Recover from a completed local or S3-compatible backup record.
 ---
 
-Successful backups can be downloaded, restored, or deleted from the database Backups tab.
+Inspect completed backup records before restoring. Confirm the target, engine, file size and logs. Keep the credentials for any destination containing remote-only backups.
 
 ## Download
 
-When the local backup file exists, Codedock downloads it directly from disk.
-
-When the backup exists only in R2, Codedock downloads the object from R2 into a temporary file, streams it to the browser, then cleans up the temporary file.
-
-If neither a local file nor an accessible R2 object exists, the backup file cannot be downloaded.
+`GET /api/backups/:configId/records/:recordId/download` streams the record. The handler serves the recorded local file when present, or streams the stored S3 object when the local archive is absent. Remote-only records use their recorded destination and object key. The same project administrator authorization applies to both paths.
 
 ## Restore
 
-Restore starts or recreates the database container, waits for readiness, then loads the dump.
+`POST /api/backups/:recordId/restore` restores a specific record. The same route also accepts a configuration ID and selects a completed record; use an explicit record ID when the recovery point matters.
 
-Supported restore paths:
+The restore operation requires administrative access to the target project and a database-backed record. Database restore and named-volume restore use separate workflows. Database restore can read a local file or fetch its S3 object with the configured destination credentials. Engine restore support depends on the installed template metadata and compatible database image. Test recovery before an incident.
 
-- PostgreSQL and TimescaleDB: `pg_restore --clean --if-exists --no-owner`.
-- MySQL: `mysql < backup.sql`.
-- MongoDB: `mongorestore --archive --gzip --drop`.
-- Redis: replace `/data/dump.rdb` and restart Redis.
+1. Verify the database you are about to overwrite.
+2. Make a fresh recovery copy where possible.
+3. Pause application writes and plan for interruption.
+4. Restore the selected completed record.
+5. Inspect service logs, data and application connectivity.
 
-ClickHouse restore is not available yet.
+Restore overwrites target data. A successful API response should be followed by application-level verification. Do not assume an archive from one engine or image version is portable to another.
 
-## Restore Safety
+## Named volume restore
 
-Restores overwrite target data. Treat restore as destructive:
+The backup history opens a volume restore dialog for volume configurations. The target must be an existing named Docker volume mounted by its registered local service or database. Host bind mounts, unowned volumes and remote targets are rejected. Stop every container using the volume before validation and restoration.
 
-- Create a fresh manual backup first when possible.
-- Confirm you are on the correct database service.
-- Expect client interruption during restore.
-- Verify app variables after restoring into a migrated or recreated service.
+- `GET /api/backup-records/:recordId/volume-restore` validates the target and reports its name and timeout.
+- `POST /api/backup-records/:recordId/volume-restore` requires `{ "volumeName": "exact-target-name", "confirmOverwrite": true }` and restores the archive.
+- `DELETE /api/backup-records/:recordId/volume-restore` interrupts the active restore after checking the same project administrator permissions.
 
-## Delete
+Files present in the archive overwrite matching files; unrelated target files remain. The configured timeout is applied, capped at 24 hours. Disconnecting the request, reaching the timeout or choosing **Interrupt restore** stops and removes the helper container. Interruption cannot undo files already written. Keep consumers stopped, verify the contents and restore again if needed. Only one restore may run against a volume at a time.
 
-Deleting a backup removes the local disk file when present. If the backup has an R2 key and R2 is connected, Codedock also tries to delete the R2 object.
+## Delete and retain
 
-The database backup record is removed from Codedock after deletion.
+Delete records only after checking retention needs. Keep an independent off-server copy for important recovery points and verify it periodically.
 
-## R2 Dependency
-
-If the backup only exists in R2, restore and download require an active R2 connection with access to the same bucket and key.
-
-For highest recovery confidence, use `disk+r2` for recent backups and a server-level offsite copy strategy for long-term retention.
+See [backup configuration](/storage-and-backups/database-backups/).

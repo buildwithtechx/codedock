@@ -12,7 +12,8 @@ import (
 	"strings"
 	"time"
 
-	"codedock.run/codedock/internal/models"
+	"codedock/internal/engine/build"
+	"codedock/internal/models"
 )
 
 var s3HTTPClient = &http.Client{Timeout: 30 * time.Second}
@@ -58,7 +59,7 @@ func encodePathSegment(value string) string {
 		if (c >= 'a' && c <= 'z') || (c >= 'A' && c <= 'Z') || (c >= '0' && c <= '9') || c == '-' || c == '_' || c == '.' || c == '~' {
 			buf.WriteByte(c)
 		} else {
-			buf.WriteString(fmt.Sprintf("%%%02X", c))
+			fmt.Fprintf(&buf, "%%%02X", c)
 		}
 	}
 	return buf.String()
@@ -110,6 +111,10 @@ func signedS3Request(ctx context.Context, dest *models.S3Destination, method, ke
 	endpoint := strings.TrimPrefix(dest.Endpoint, "https://")
 	endpoint = strings.TrimPrefix(endpoint, "http://")
 	endpoint = strings.TrimRight(endpoint, "/")
+
+	if err := build.ValidateOutboundTarget(endpoint); err != nil {
+		return nil, err
+	}
 
 	region := dest.Region
 	if region == "" {

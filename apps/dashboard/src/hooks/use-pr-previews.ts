@@ -1,5 +1,5 @@
 import { useQuery } from '@tanstack/react-query';
-import { deploymentsService } from '#/services';
+import { deploymentsService } from '#/services/deployments';
 
 export const useListPRPreviews = (serviceId: string) => {
   return useQuery({

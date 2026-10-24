@@ -3,8 +3,8 @@ package http
 import (
 	"github.com/labstack/echo/v4"
 
-	"codedock.run/codedock/internal/models"
-	"codedock.run/codedock/internal/utils"
+	"codedock/internal/models"
+	"codedock/internal/utils"
 )
 
 func (s *Server) registerRoutes() {
@@ -19,17 +19,24 @@ func (s *Server) registerRoutes() {
 	s.registerProjectRoutes(apiGroup, authGroup)
 	s.registerOrganizationRoutes(authGroup)
 	s.registerServerRoutes(apiGroup, authGroup)
+	s.registerManagedRoutes(authGroup)
+	s.registerMigrationRoutes(authGroup)
+	s.registerAnalyticsRoutes(authGroup)
 	s.registerDatabaseRoutes(authGroup)
 	s.registerAppRoutes(apiGroup, authGroup)
 	s.registerDeploymentRoutes(authGroup)
 	s.registerBackupRoutes(authGroup)
+	s.registerClusterRoutes(authGroup)
 	s.registerSettingsRoutes(apiGroup, authGroup)
 	s.registerMiscRoutes(apiGroup, authGroup)
 	s.registerBillingRoutes(apiGroup, authGroup)
+	s.registerMailRoutes(authGroup)
 
 	s.router.GET("/healthz", func(c echo.Context) error {
 		return c.JSON(200, map[string]string{"status": "ok"})
 	})
+	s.router.GET("/health/env", s.settingsHandler.GetHealthEnv)
+	apiGroup.GET("/health/env", s.settingsHandler.GetHealthEnv)
 
 	s.setupSPAFallback()
 }
@@ -94,19 +101,35 @@ func (s *Server) registerAuthRoutes(apiGroup, authGroup *echo.Group) {
 	authGroup.POST("/auth/2fa/setup", s.oauthHandler.Setup2FA)
 	authGroup.POST("/auth/2fa/verify", s.oauthHandler.Verify2FA)
 	authGroup.POST("/auth/2fa/disable", s.oauthHandler.Disable2FA, s.otpRateLimiter.Middleware)
+
+	apiGroup.POST("/auth/device/code", s.deviceFlowHandler.CreateDeviceCode)
+	apiGroup.POST("/auth/device/token", s.deviceFlowHandler.PollDeviceToken)
+	apiGroup.GET("/auth/device/verify", s.deviceFlowHandler.VerifyUserCode)
+	authGroup.POST("/auth/device/authorize", s.deviceFlowHandler.AuthorizeDevice)
+
+	apiGroup.POST("/auth/passkeys/authenticate/options", s.passkeyHandler.BeginAuthentication, s.authRateLimiter.Middleware)
+	apiGroup.POST("/auth/passkeys/authenticate/verify", s.passkeyHandler.FinishAuthentication, s.authRateLimiter.Middleware)
+	authGroup.POST("/auth/passkeys/register/options", s.passkeyHandler.BeginRegistration)
+	authGroup.POST("/auth/passkeys/register/verify", s.passkeyHandler.FinishRegistration)
+	authGroup.GET("/auth/passkeys", s.passkeyHandler.List)
+	authGroup.PUT("/auth/passkeys/:id", s.passkeyHandler.Rename)
+	authGroup.DELETE("/auth/passkeys/:id", s.passkeyHandler.Delete)
 }
 
 func (s *Server) registerSystemRoutes(apiGroup, authGroup *echo.Group) {
+	apiGroup.GET("/github-stars", s.getGithubStars)
 	apiGroup.GET("/system/public", s.settingsHandler.GetPublicSettings)
 	apiGroup.GET("/system/setup-status", s.onboardingHandler.SetupStatus)
 	apiGroup.POST("/system/setup/import", s.migrationHandler.ImportDuringSetup)
 	authGroup.GET("/system/stats", s.systemHandler.GetStats)
+	authGroup.GET("/system/monitor/stream", s.serverHandler.StreamMonitor, s.authGuard.RequireScope("server:read"))
 	apiGroup.POST("/system/restart", s.systemHandler.Restart, s.authGuard.RequireRole("admin"))
 	apiGroup.POST("/system/maintenance/cleanup", s.systemHandler.Cleanup, s.authGuard.RequireRole("admin"))
 	apiGroup.POST("/system/export", s.migrationHandler.Export, s.authGuard.RequireRole("admin"))
 	apiGroup.POST("/system/import", s.migrationHandler.Import, s.authGuard.RequireRole("admin"))
 	apiGroup.POST("/system/takeover/scan", s.takeoverHandler.Scan, s.authGuard.RequireRole("admin"))
 	apiGroup.POST("/system/takeover/adopt", s.takeoverHandler.Adopt, s.authGuard.RequireRole("admin"))
+	apiGroup.POST("/system/local-cli-session", s.systemHandler.CreateLocalCLISession)
 	authGroup.GET("/system/takeover/runs", s.takeoverHandler.ListRuns, s.authGuard.RequireRole("admin"))
 	authGroup.GET("/system/takeover/runs/:id", s.takeoverHandler.GetRun, s.authGuard.RequireRole("admin"))
 }
@@ -135,8 +158,12 @@ func (s *Server) registerProjectRoutes(apiGroup, authGroup *echo.Group) {
 
 	authGroup.GET("/projects/:id", s.projectHandler.GetProject, projectAuth)
 	authGroup.DELETE("/projects/:id", s.projectHandler.DeleteProject, projectAuthOwner)
+	authGroup.GET("/projects/:id/members", s.projectHandler.ListMembers, projectAuth)
+	authGroup.POST("/projects/:id/members", s.projectHandler.AddMember, projectAuthAdmin)
+	authGroup.DELETE("/projects/:id/members/:memberId", s.projectHandler.RemoveMember, projectAuthAdmin)
 
 	authGroup.GET("/domains", s.domainHandler.ListAll)
+	authGroup.GET("/projects/:id/domains", s.domainHandler.ListByProject, projectAuth)
 	authGroup.GET("/services/:id/domains", s.domainHandler.ListByService)
 	authGroup.POST("/services/:id/domains", s.domainHandler.Create)
 	authGroup.DELETE("/domains/:id", s.domainHandler.Delete)
@@ -146,12 +173,15 @@ func (s *Server) registerProjectRoutes(apiGroup, authGroup *echo.Group) {
 	authGroup.GET("/projects/:id/env", s.projectEnvHandler.GetVars, projectAuth, s.authGuard.RequireScope("env:read"))
 	authGroup.PUT("/projects/:id/env", s.projectEnvHandler.SetVars, projectAuthAdmin, s.authGuard.RequireScope("env:write"))
 	authGroup.POST("/projects/:id/env", s.projectEnvHandler.SetVars, projectAuthAdmin, s.authGuard.RequireScope("env:write"))
+	authGroup.POST("/projects/:id/env/migrate-commands", s.projectEnvHandler.MigrateCommands, projectAuthAdmin, s.authGuard.RequireScope("env:write"))
 	authGroup.POST("/projects/:id/environments", s.environmentHandler.Create, projectAuthAdmin)
 	authGroup.GET("/projects/:id/environments", s.environmentHandler.ListByProject, projectAuth)
 	authGroup.GET("/projects/:id/apps", s.appServiceHandler.ListByProject, projectAuth)
 	authGroup.GET("/projects/:id/services", s.appServiceHandler.ListByProject, projectAuth)
 	authGroup.GET("/projects/:id/deployments", s.deploymentHandler.ListProjectDeployments, projectAuth)
 	authGroup.POST("/projects/:id/deploy", s.deploymentHandler.TriggerProject, projectAuthAdmin)
+	authGroup.GET("/projects/:id/rollback-capacity", s.rollbackSettingsHandler.GetRollbackCapacity, projectAuth)
+	authGroup.PATCH("/projects/:id/rollback-settings", s.rollbackSettingsHandler.UpdateRollbackSettings, projectAuthAdmin)
 
 	authGroup.GET("/project-apps", s.projectAppHandler.List)
 	authGroup.POST("/project-apps", s.projectAppHandler.Create)
@@ -180,6 +210,26 @@ func (s *Server) registerServerRoutes(apiGroup, authGroup *echo.Group) {
 	authGroup.PATCH("/servers/:id", s.serverHandler.Update, s.authGuard.RequireScope("server:write"))
 	authGroup.POST("/servers/test-ssh", s.serverHandler.TestSSH, s.authGuard.RequireScope("server:write"))
 	authGroup.DELETE("/servers/:id", s.serverHandler.Delete, s.authGuard.RequireScope("server:write"))
+	authGroup.GET("/servers/:id/components", s.serverHandler.GetComponents, s.authGuard.RequireScope("server:read"))
+	authGroup.POST("/servers/:id/scan-ports", s.serverHandler.ScanPorts, s.authGuard.RequireScope("server:read"))
+	authGroup.GET("/servers/:id/rate-limit", s.serverHandler.GetRateLimit, s.authGuard.RequireScope("server:read"))
+	authGroup.PUT("/servers/:id/rate-limit", s.serverHandler.UpdateRateLimit, s.authGuard.RequireScope("server:write"))
+	authGroup.GET("/servers/:id/network-settings", s.serverHandler.GetNetworkSettings, s.authGuard.RequireScope("server:read"))
+	authGroup.PATCH("/servers/:id/network-settings", s.serverHandler.UpdateNetworkSettings, s.authGuard.RequireScope("server:write"))
+	authGroup.GET("/servers/:id/managed/info", s.serverHandler.GetManagedInfo, s.authGuard.RequireScope("server:read"))
+	authGroup.POST("/servers/:id/managed/boot-logs", s.serverHandler.GetManagedBootLogs, s.authGuard.RequireScope("server:read"))
+	authGroup.GET("/servers/:id/managed/ssh", s.serverHandler.GetManagedSshStatus, s.authGuard.RequireScope("server:read"))
+	authGroup.PATCH("/servers/:id/managed/ssh", s.serverHandler.SetManagedSsh, s.authGuard.RequireScope("server:write"))
+	authGroup.PUT("/servers/:id/managed/ssh/key", s.serverHandler.SetManagedSshKey, s.authGuard.RequireScope("server:write"))
+	authGroup.PUT("/servers/:id/managed/ssh/password", s.serverHandler.SetManagedSshPassword, s.authGuard.RequireScope("server:write"))
+	authGroup.GET("/servers/:id/managed/runtime-api", s.serverHandler.GetManagedRuntimeStatus, s.authGuard.RequireScope("server:read"))
+	authGroup.POST("/servers/:id/managed/runtime-api/enable", s.serverHandler.EnableManagedRuntime, s.authGuard.RequireScope("server:write"))
+	authGroup.POST("/servers/:id/managed/runtime-api/credential", s.serverHandler.GetManagedRuntimeCredential, s.authGuard.RequireScope("server:write"))
+	authGroup.POST("/servers/:id/managed/runtime-api/rotate", s.serverHandler.RotateManagedRuntimeCredential, s.authGuard.RequireScope("server:write"))
+	authGroup.GET("/servers/:id/managed/workloads", s.serverHandler.GetManagedWorkloads, s.authGuard.RequireScope("server:read"))
+	authGroup.POST("/servers/:id/managed/workloads", s.serverHandler.CreateManagedWorkload, s.authGuard.RequireScope("server:write"))
+	authGroup.POST("/servers/:id/managed/workloads/control", s.serverHandler.ControlManagedWorkload, s.authGuard.RequireScope("server:write"))
+	authGroup.POST("/servers/:id/managed/workloads/logs", s.serverHandler.GetManagedWorkloadLogs, s.authGuard.RequireScope("server:read"))
 	apiGroup.GET("/ws/servers/:serverId/metrics", s.serverMetricsWSHandler.Handle)
 }
 
@@ -187,6 +237,7 @@ func (s *Server) registerOrganizationRoutes(authGroup *echo.Group) {
 	authGroup.GET("/organizations", s.orgHandler.List)
 	authGroup.POST("/organizations", s.orgHandler.Create)
 	authGroup.GET("/organizations/:id", s.orgHandler.Get, s.authGuard.RequireOrgRole(models.MemberPermissionMember))
+	authGroup.PUT("/organizations/:id", s.orgHandler.Update, s.authGuard.RequireOrgRole(models.MemberPermissionAdmin))
 	authGroup.DELETE("/organizations/:id", s.orgHandler.Delete, s.authGuard.RequireOrgRole(models.MemberPermissionOwner))
 	authGroup.GET("/organizations/:id/members", s.orgHandler.ListMembers, s.authGuard.RequireOrgRole(models.MemberPermissionMember))
 	authGroup.POST("/organizations/:id/members", s.orgHandler.InviteMember, s.authGuard.RequireOrgRole(models.MemberPermissionAdmin))
@@ -208,6 +259,8 @@ func (s *Server) registerDatabaseRoutes(authGroup *echo.Group) {
 	authGroup.POST("/databases/:id/import", s.dbHandler.ImportData, s.authGuard.RequireScope("database:manage"))
 
 	authGroup.GET("/databases/:id/schemas", s.dbHandler.GetSchemas, s.authGuard.RequireScope("database:manage"))
+	authGroup.GET("/databases/:id/redis/keys", s.dbHandler.GetRedisKeys, s.authGuard.RequireScope("database:manage"))
+	authGroup.DELETE("/databases/:id/redis/keys/:key", s.dbHandler.DeleteRedisKey, s.authGuard.RequireScope("database:manage"))
 	authGroup.GET("/databases/:id/data/:table", s.dbHandler.GetTableData, s.authGuard.RequireScope("database:manage"))
 	authGroup.POST("/databases/:id/data/:table", s.dbHandler.InsertTableRow, s.authGuard.RequireScope("database:manage"))
 	authGroup.PUT("/databases/:id/data/:table", s.dbHandler.UpdateTableRow, s.authGuard.RequireScope("database:manage"))

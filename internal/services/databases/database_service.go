@@ -8,10 +8,10 @@ import (
 
 	"github.com/google/uuid"
 
-	"codedock.run/codedock/internal/engine/deploy"
-	"codedock.run/codedock/internal/models"
-	"codedock.run/codedock/internal/repositories"
-	"codedock.run/codedock/internal/utils"
+	"codedock/internal/engine/deploy"
+	"codedock/internal/models"
+	"codedock/internal/repositories"
+	"codedock/internal/utils"
 )
 
 type DatabaseService struct {
@@ -107,15 +107,15 @@ func (s *DatabaseService) GetDatabase(ctx context.Context, id string) (*models.D
 	return s.repo.GetByID(ctx, id)
 }
 
-func (s *DatabaseService) ListDatabases(ctx context.Context) ([]*models.Database, error) {
-	return s.repo.List(ctx)
+func (s *DatabaseService) ListDatabases(ctx context.Context, search string) ([]*models.Database, error) {
+	return s.repo.List(ctx, search)
 }
 
-func (s *DatabaseService) ListDatabasesByProject(ctx context.Context, projectID string) ([]*models.Database, error) {
+func (s *DatabaseService) ListDatabasesByProject(ctx context.Context, projectID string, search string) ([]*models.Database, error) {
 	if projectID == "" {
 		return nil, errors.New("project id is required")
 	}
-	return s.repo.ListByProject(ctx, projectID)
+	return s.repo.ListByProject(ctx, projectID, search)
 }
 
 func (s *DatabaseService) UpdateDatabase(ctx context.Context, db *models.Database) error {
@@ -131,7 +131,7 @@ func (s *DatabaseService) DeleteDatabase(ctx context.Context, id string) error {
 		return errors.New("id is required")
 	}
 	if s.deployer != nil {
-		_ = s.deployer.Stop(ctx, id)
+		return s.deployer.Remove(ctx, id, func() error { return s.repo.Delete(ctx, id) })
 	}
 	return s.repo.Delete(ctx, id)
 }
@@ -171,7 +171,7 @@ func (s *DatabaseService) StopDatabase(ctx context.Context, id string) error {
 		return errors.New("database not found")
 	}
 	if s.deployer != nil {
-		_ = s.deployer.Stop(ctx, id)
+		return s.deployer.Stop(ctx, id)
 	}
 	db.Status = models.DatabaseStatusStopped
 	db.UpdatedAt = time.Now()

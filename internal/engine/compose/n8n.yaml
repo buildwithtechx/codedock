@@ -2,9 +2,21 @@ x-codedock:
   is_one_click: true
   name: n8n
   description: Open-source workflow automation
+  category: automation
+  icon: n8n
+  secrets:
+    - var: N8N_ENCRYPTION_KEY
+      label: Encryption key
+      length: 24
 services:
   n8n:
     image: n8nio/n8n
     restart: always
     ports:
       - "5678"
+    environment:
+      - N8N_ENCRYPTION_KEY=${secret:N8N_ENCRYPTION_KEY}
+    volumes:
+      - n8n-data:/home/node/.n8n
+volumes:
+  n8n-data:

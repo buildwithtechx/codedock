@@ -1,106 +1,84 @@
-import { Check, Loader2, Mail, User } from 'lucide-react';
-import { useState } from 'react';
-import { toast } from 'sonner';
-import { Button } from '#/components/ui/button';
+import { Button } from '@codedock/ui/button';
 import {
   Dialog,
   DialogClose,
   DialogContent,
   DialogDescription,
   DialogTitle,
-} from '#/components/ui/dialog';
-import { Input } from '#/components/ui/input';
-import { InputOTP, InputOTPGroup, InputOTPSlot } from '#/components/ui/input-otp';
-import { Row, Section } from '#/components/ui/section';
+} from '@codedock/ui/dialog';
+import { Input } from '@codedock/ui/input';
+import { InputOTP, InputOTPGroup, InputOTPSlot } from '@codedock/ui/input-otp';
+import { Check, Loader2, Lock, Mail, User } from 'lucide-react';
+import { useEffect, useState } from 'react';
+import { toast } from 'sonner';
+import { SettingsRow } from '#/features/settings/settings-row';
+import { SettingsSection } from '#/features/settings/settings-section';
 import {
   useChangePassword,
   useGetProfile,
   useRequestEmailChange,
   useUpdateProfile,
   useVerifyEmailChange,
-} from '#/features/profile';
+} from '#/hooks/use-profile';
 
-export function ProfileNameForm() {
+export function ProfileDetailsForm() {
   const { data: profile, isLoading } = useGetProfile();
   const updateProfile = useUpdateProfile();
-  const [name, setName] = useState('');
-
-  // Sync state once profile loads
-  if (!isLoading && profile?.data && !name && profile.data.name) {
-    setName(profile.data.name);
-  }
-
-  const handleSave = (e: React.FormEvent) => {
-    e.preventDefault();
-    updateProfile.mutate(
-      { name },
-      {
-        onSuccess: () => toast.success('Profile name updated!'),
-        onError: (err) => toast.error(err.message),
-      }
-    );
-  };
-
-  return (
-    <form onSubmit={handleSave}>
-      <Section
-        icon={<User className="h-4 w-4" />}
-        title="Profile Name"
-        action={
-          <Button
-            type="submit"
-            size="sm"
-            disabled={isLoading || updateProfile.isPending || name === profile?.data?.name}
-          >
-            {updateProfile.isPending ? (
-              <Loader2 className="mr-2 h-4 w-4 animate-spin" />
-            ) : (
-              <Check className="mr-2 h-4 w-4" />
-            )}
-            Save Changes
-          </Button>
-        }
-      >
-        <Row label="Full Name" description="Update your display name.">
-          <Input
-            id="name"
-            placeholder="John Doe"
-            value={name}
-            onChange={(e) => setName(e.target.value)}
-            className="h-10 w-full"
-          />
-        </Row>
-      </Section>
-    </form>
-  );
-}
-
-export function ProfileEmailForm() {
-  const { data: profile, isLoading } = useGetProfile();
   const requestEmailChange = useRequestEmailChange();
   const verifyEmailChange = useVerifyEmailChange();
 
+  const [name, setName] = useState('');
   const [email, setEmail] = useState('');
   const [otpOpen, setOtpOpen] = useState(false);
   const [otp, setOtp] = useState('');
 
-  // Sync state once profile loads
-  if (!isLoading && profile?.data && !email && profile.data.email) {
-    setEmail(profile.data.email);
-  }
+  useEffect(() => {
+    if (profile?.data) {
+      if (profile.data.name !== undefined) setName(profile.data.name);
+      if (profile.data.email !== undefined) setEmail(profile.data.email);
+    }
+  }, [profile?.data]);
 
-  const handleRequest = (e: React.FormEvent) => {
+  const originalName = profile?.data?.name ?? '';
+  const originalEmail = profile?.data?.email ?? '';
+  const isNameChanged = name.trim() !== originalName;
+  const isEmailChanged = email.trim().toLowerCase() !== originalEmail.toLowerCase();
+  const isPending = updateProfile.isPending || requestEmailChange.isPending;
+
+  const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault();
-    requestEmailChange.mutate(
-      { newEmail: email },
-      {
-        onSuccess: () => {
-          setOtpOpen(true);
-          toast.success('Verification code sent to your new email.');
-        },
-        onError: (err) => toast.error(err.message),
+    if (!name.trim()) {
+      toast.error('Profile name cannot be empty');
+      return;
+    }
+    if (!email.trim()) {
+      toast.error('Email address cannot be empty');
+      return;
+    }
+
+    if (isNameChanged && !isEmailChanged) {
+      updateProfile.mutate(
+        { name: name.trim() },
+        {
+          onSuccess: () => toast.success('Profile updated successfully'),
+          onError: (err) => toast.error(err.message),
+        }
+      );
+    } else if (isEmailChanged) {
+      if (isNameChanged) {
+        updateProfile.mutate({ name: name.trim() });
       }
-    );
+      requestEmailChange.mutate(
+        { newEmail: email.trim() },
+        {
+          onSuccess: () => {
+            setOtpOpen(true);
+            toast.success('Verification code sent to your new email');
+          },
+          onError: (err) => toast.error(err.message),
+        }
+      );
+    }
   };
 
   const handleVerify = (e: React.FormEvent) => {
@@ -120,39 +98,56 @@ export function ProfileEmailForm() {
 
   return (
     <>
-      <form onSubmit={handleRequest}>
-        <Section
-          icon={<Mail className="h-4 w-4" />}
-          title="Email Address"
-          action={
-            <Button
-              type="submit"
-              size="sm"
-              disabled={isLoading || requestEmailChange.isPending || email === profile?.data?.email}
-            >
-              {requestEmailChange.isPending ? (
-                <Loader2 className="mr-2 h-4 w-4 animate-spin" />
-              ) : (
-                <Check className="mr-2 h-4 w-4" />
-              )}
-              Save Changes
-            </Button>
-          }
+      <form onSubmit={handleSubmit}>
+        <SettingsSection
+          icon={<User className="size-4" />}
+          title="Profile Information"
+          description="Update your personal account details and primary email address."
         >
-          <Row
-            label="New Email Address"
-            description="Change the email address associated with your account."
+          <SettingsRow
+            label="Full Name"
+            description="Shown on your profile and across team workspaces."
           >
             <Input
-              id="email"
+              id="profile-name"
+              placeholder="John Doe"
+              value={name}
+              onChange={(e) => setName(e.target.value)}
+              className="w-full text-sm"
+            />
+          </SettingsRow>
+
+          <SettingsRow
+            label="Email Address"
+            description="The primary email address used for login and notifications."
+            bordered={false}
+          >
+            <Input
+              id="profile-email"
               type="email"
               placeholder="john@example.com"
               value={email}
               onChange={(e) => setEmail(e.target.value)}
-              className="h-10 w-full"
+              className="w-full text-sm"
             />
-          </Row>
-        </Section>
+          </SettingsRow>
+
+          <div className="flex justify-end border-border/40 border-t pt-4">
+            <Button
+              type="submit"
+              size="sm"
+              disabled={isLoading || isPending || (!isNameChanged && !isEmailChanged)}
+              className="gap-1.5"
+            >
+              {isPending ? (
+                <Loader2 className="h-3.5 w-3.5 animate-spin" />
+              ) : (
+                <Check className="h-3.5 w-3.5" />
+              )}
+              <span>Save Profile</span>
+            </Button>
+          </div>
+        </SettingsSection>
       </form>
 
       <Dialog open={otpOpen} onOpenChange={setOtpOpen}>
@@ -238,61 +233,55 @@ export function ProfilePasswordForm() {
 
   return (
     <form onSubmit={handleSave}>
-      <Section
-        icon={
-          <svg
-            xmlns="http://www.w3.org/2000/svg"
-            width="24"
-            height="24"
-            viewBox="0 0 24 24"
-            fill="none"
-            stroke="currentColor"
-            strokeWidth="2"
-            strokeLinecap="round"
-            strokeLinejoin="round"
-            className="h-4 w-4"
-          >
-            <rect width="18" height="11" x="3" y="11" rx="2" ry="2" />
-            <path d="M7 11V7a5 5 0 0 1 10 0v4" />
-          </svg>
-        }
-        title="Change Password"
-        action={
+      <SettingsSection
+        icon={<Lock className="size-4" />}
+        title="Password & Security"
+        description="Ensure your account is using a secure and robust password."
+      >
+        <SettingsRow label="Current Password" description="Update the password you use to sign in.">
+          <Input
+            id="oldPassword"
+            type="password"
+            value={oldPassword}
+            onChange={(e) => setOldPassword(e.target.value)}
+            className="w-full text-sm"
+            placeholder="Current Password"
+          />
+        </SettingsRow>
+        <SettingsRow
+          label="New Password"
+          description="Must be at least 8 characters long."
+          bordered={false}
+        >
+          <Input
+            id="newPassword"
+            type="password"
+            value={newPassword}
+            onChange={(e) => setNewPassword(e.target.value)}
+            className="w-full text-sm"
+            placeholder="New Password"
+          />
+        </SettingsRow>
+
+        <div className="flex justify-end border-border/40 border-t pt-4">
           <Button
             type="submit"
             size="sm"
             disabled={changePassword.isPending || !oldPassword || !newPassword}
+            className="gap-1.5"
           >
             {changePassword.isPending ? (
               <Loader2 className="mr-2 h-4 w-4 animate-spin" />
             ) : (
               <Check className="mr-2 h-4 w-4" />
             )}
-            Save Changes
+            <span>Update Password</span>
           </Button>
-        }
-      >
-        <Row label="Current Password" description="Update the password you use to sign in.">
-          <Input
-            id="oldPassword"
-            type="password"
-            value={oldPassword}
-            onChange={(e) => setOldPassword(e.target.value)}
-            className="h-10 w-full"
-            placeholder="Current Password"
-          />
-        </Row>
-        <Row label="New Password" description="Must be at least 8 characters long.">
-          <Input
-            id="newPassword"
-            type="password"
-            value={newPassword}
-            onChange={(e) => setNewPassword(e.target.value)}
-            className="h-10 w-full"
-            placeholder="New Password"
-          />
-        </Row>
-      </Section>
+        </div>
+      </SettingsSection>
     </form>
   );
 }
+
+export const ProfileNameForm = ProfileDetailsForm;
+export const ProfileEmailForm = ProfileDetailsForm;

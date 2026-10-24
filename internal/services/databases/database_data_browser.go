@@ -7,7 +7,7 @@ import (
 	"fmt"
 	"strings"
 
-	"codedock.run/codedock/internal/models"
+	"codedock/internal/models"
 )
 
 func (s *DatabaseService) GetSchemas(ctx context.Context, id string) ([]models.TableSchema, error) {

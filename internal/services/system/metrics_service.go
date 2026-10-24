@@ -7,17 +7,21 @@ import (
 	"net/http"
 	"net/url"
 	"time"
+
+	"codedock/internal/config"
 )
 
 type MetricsService struct {
 	tsdbURL    string
 	httpClient *http.Client
+	enabled    bool
 }
 
 func NewMetricsService() *MetricsService {
 	return &MetricsService{
 		tsdbURL:    "http://127.0.0.1:8428",
 		httpClient: &http.Client{Timeout: 10 * time.Second},
+		enabled:    config.Get().Observability.Enabled,
 	}
 }
 
@@ -29,6 +33,9 @@ type ServiceMetricsOpts struct {
 }
 
 func (s *MetricsService) GetServiceMetrics(ctx context.Context, opts ServiceMetricsOpts) (map[string]any, error) {
+	if !s.enabled {
+		return nil, ErrObservabilityDisabled
+	}
 	cpuQuery := fmt.Sprintf(`rate(container_cpu_usage_seconds_total{container_label_codedock_service="%s"}[5m])`, opts.ServiceID)
 	memQuery := fmt.Sprintf(`container_memory_usage_bytes{container_label_codedock_service="%s"}`, opts.ServiceID)
 	netRxQuery := fmt.Sprintf(`rate(container_network_receive_bytes_total{container_label_codedock_service="%s"}[5m])`, opts.ServiceID)

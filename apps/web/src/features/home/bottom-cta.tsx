@@ -1,32 +1,25 @@
-import { Cloud } from 'lucide-react';
-
+import { InstallCommand } from '../../components/install-command';
+import { SiteLink } from '../../components/site-link';
+import { productLinks } from '../../lib/product-links';
 export function BottomCta() {
   return (
-    <section className="relative overflow-hidden py-24 md:py-32">
-      <div className="pointer-events-none absolute inset-0 z-0 bg-[radial-gradient(ellipse_at_center,var(--color-primary)_0%,transparent_60%)] opacity-15" />
-
-      <div className="relative z-10 mx-auto max-w-4xl px-6 text-center">
-        <h2 className="mb-6 text-balance font-extrabold text-4xl text-foreground tracking-tight md:text-5xl">
-          Ready to own your infrastructure?
-        </h2>
-        <p className="mx-auto mb-10 max-w-2xl text-lg text-muted-foreground">
-          Stop renting Heroku dynos. Take back control with an open-source daemon and a powerful
-          fleet control plane. Deploy your first app in 60 seconds.
+    <section className="relative overflow-hidden px-6 py-24 text-center">
+      <div className="pointer-events-none absolute inset-0 bg-[radial-gradient(ellipse_at_center,var(--color-primary),transparent_65%)] opacity-10" />
+      <div className="relative mx-auto max-w-3xl">
+        <h2 className="font-bold text-3xl md:text-5xl">Make your server a place to ship.</h2>
+        <p className="mx-auto mt-5 max-w-xl text-muted-foreground">
+          Install on Linux, create your account in the browser and deploy your first service. The
+          installer handles the initial configuration.
         </p>
-
-        <div className="flex flex-col items-center justify-center gap-4 sm:flex-row">
-          <div className="flex w-full items-center gap-2 rounded-lg border border-border bg-background/80 px-5 py-3.5 font-mono text-sm shadow-xl backdrop-blur-md sm:w-auto">
-            <span className="shrink-0 font-bold text-primary">$</span>
-            <code className="text-foreground">curl -fsSL https://get.codedock.run | bash</code>
-          </div>
-          <a
-            href="https://app.codedock.run"
-            className="flex w-full items-center justify-center gap-2 rounded-lg bg-primary px-8 py-3.5 font-semibold text-white shadow-lg shadow-primary/25 transition-colors hover:bg-primary-hover sm:w-auto"
-          >
-            <Cloud className="size-5" />
-            Get Cloud
-          </a>
+        <div className="mx-auto mt-8 max-w-xl">
+          <InstallCommand source="bottom_cta" />
         </div>
+        <SiteLink
+          href={productLinks.installation}
+          className="mt-6 inline-block font-medium text-primary"
+        >
+          Read the installation guide →
+        </SiteLink>
       </div>
     </section>
   );

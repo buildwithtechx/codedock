@@ -1,16 +1,15 @@
 FROM node:22-alpine AS dashboard-builder
 WORKDIR /app
 
-COPY package*.json ./
+COPY package.json package-lock.json ./
 COPY apps/dashboard/package.json ./apps/dashboard/
-COPY apps/desktop/package.json ./apps/desktop/
-COPY apps/docs/package.json ./apps/docs/
-COPY apps/web/package.json ./apps/web/
-COPY packages/cli/package.json ./packages/cli/
-RUN npm ci
+COPY packages/setup/package.json ./packages/setup/
+COPY packages/ui/package.json ./packages/ui/
+RUN npm ci --workspace=@codedock/dashboard --include-workspace-root
 
-COPY apps/ ./apps/
-COPY packages/ ./packages/
+COPY packages/setup/ ./packages/setup/
+COPY packages/ui/ ./packages/ui/
+COPY apps/dashboard/ ./apps/dashboard/
 COPY tsconfig.base.json ./
 
 RUN npm run build:dashboard
@@ -23,7 +22,9 @@ RUN apk add --no-cache git ca-certificates tzdata
 COPY go.mod go.sum ./
 RUN go mod download
 
-COPY . .
+COPY cmd/ ./cmd/
+COPY internal/ ./internal/
+COPY apps/dashboard/*.go ./apps/dashboard/
 COPY --from=dashboard-builder /app/apps/dashboard/dist ./apps/dashboard/dist
 
 ARG VERSION=dev
@@ -32,7 +33,7 @@ RUN CGO_ENABLED=0 GOOS=linux go build -a -installsuffix cgo -ldflags="-w -s -X m
 FROM alpine:3.21 AS production
 WORKDIR /codedock
 
-RUN apk add --no-cache ca-certificates tzdata docker-cli git openssh-client curl
+RUN apk add --no-cache ca-certificates tzdata docker-cli docker-cli-compose git openssh-client curl
 
 COPY --from=daemon-builder /codedockd /usr/local/bin/codedockd
 RUN mkdir -p /codedock/data

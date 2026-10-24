@@ -10,7 +10,7 @@ import (
 	"testing"
 	"time"
 
-	"codedock.run/codedock/internal/models"
+	"codedock/internal/models"
 )
 
 type mockS3Transport struct {
@@ -39,6 +39,10 @@ func newMockStore() *mockStore {
 		configs: make(map[string]*models.BackupConfig),
 		s3dests: make(map[string]*models.S3Destination),
 	}
+}
+
+func (m *mockStore) ControlPlaneSnapshot(context.Context) ([]byte, error) {
+	return []byte("snapshot fixture"), nil
 }
 
 func (m *mockStore) ListAllActiveBackupConfigs() ([]*models.BackupConfig, error) {
@@ -128,16 +132,9 @@ func TestMaxStorageGBOverflow(t *testing.T) {
 
 func TestDisableLocalGuard(t *testing.T) {
 	store := newMockStore()
-	tmpData := t.TempDir()
-	prev := os.Getenv("CODEDOCK_DATA_DIR")
-	os.Setenv("CODEDOCK_DATA_DIR", tmpData)
-	defer os.Setenv("CODEDOCK_DATA_DIR", prev)
 
 	dir := t.TempDir()
 	bm := NewBackupManager(nil, store, dir)
-
-	dbFile := filepath.Join(tmpData, "codedock.db")
-	_ = os.WriteFile(dbFile, []byte("test db content"), 0o600)
 
 	cfg := &models.BackupConfig{
 		ID:            "cfg-disable-local",

@@ -7,13 +7,13 @@ import (
 
 	"github.com/labstack/echo/v4"
 
-	"codedock.run/codedock/internal/utils"
+	"codedock/internal/utils"
 
-	"codedock.run/codedock/internal/http/middleware"
-	"codedock.run/codedock/internal/models"
-	authservices "codedock.run/codedock/internal/services/auth"
-	databaseservices "codedock.run/codedock/internal/services/databases"
-	projectservices "codedock.run/codedock/internal/services/projects"
+	"codedock/internal/http/middleware"
+	"codedock/internal/models"
+	authservices "codedock/internal/services/auth"
+	databaseservices "codedock/internal/services/databases"
+	projectservices "codedock/internal/services/projects"
 )
 
 type DatabaseHandler struct {
@@ -44,7 +44,7 @@ func (h *DatabaseHandler) verifyProjectOwnership(c echo.Context, projectID strin
 }
 
 func (h *DatabaseHandler) ListDatabases(c echo.Context) error {
-	databases, err := h.databaseService.ListDatabases(c.Request().Context())
+	databases, err := h.databaseService.ListDatabases(c.Request().Context(), c.QueryParam("search"))
 	if err != nil {
 		return utils.Error(c, http.StatusInternalServerError, err.Error())
 	}

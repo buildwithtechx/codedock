@@ -1,19 +1,14 @@
+import type { DomainConfig } from '@codedock/contracts';
+import { Button } from '@codedock/ui/button';
+import { Input } from '@codedock/ui/input';
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@codedock/ui/select';
 import { CheckCircle2, Globe, Loader2, RefreshCw, Search, Trash2 } from 'lucide-react';
 import { useState } from 'react';
 import { toast } from 'sonner';
-import { Button } from '#/components/ui/button';
-import { Input } from '#/components/ui/input';
-import {
-  Select,
-  SelectContent,
-  SelectItem,
-  SelectTrigger,
-  SelectValue,
-} from '#/components/ui/select';
 import { useDomainVerification } from '#/features/dns/domain-verification';
-import { useDeleteDomain } from '#/features/dns/hooks';
-import type { DomainConfig } from '#/features/projects';
 import { DnsStatusBadge } from '#/features/services/dns-status-badge';
+import { useDeleteDomain } from '#/hooks/use-dns';
+import { DomainEmptyState } from './domain-empty-state';
 
 interface DomainAuditTableProps {
   domains: DomainConfig[];
@@ -57,10 +52,14 @@ export function DomainAuditTable({ domains, isLoading }: DomainAuditTableProps) 
 
   if (isLoading) {
     return (
-      <div className="flex items-center justify-center py-12 text-muted-foreground">
-        <Loader2 className="mr-2 h-5 w-5 animate-spin" /> Loading configured domains...
+      <div className="flex items-center justify-center py-16 text-muted-foreground text-sm">
+        <Loader2 className="mr-2 h-5 w-5 animate-spin text-primary" /> Loading configured domains...
       </div>
     );
+  }
+
+  if (domains.length === 0) {
+    return <DomainEmptyState />;
   }
 
   return (
@@ -70,14 +69,14 @@ export function DomainAuditTable({ domains, isLoading }: DomainAuditTableProps) 
           <div className="relative max-w-sm flex-1">
             <Search className="absolute top-2.5 left-2.5 h-4 w-4 text-muted-foreground" />
             <Input
-              placeholder="Search domain..."
+              placeholder="Search domains..."
               value={search}
               onChange={(e) => setSearch(e.target.value)}
               className="pl-9 text-sm"
             />
           </div>
           <Select value={statusFilter} onValueChange={setStatusFilter}>
-            <SelectTrigger className="w-36 text-xs">
+            <SelectTrigger className="w-40 text-xs">
               <SelectValue placeholder="All Statuses" />
             </SelectTrigger>
             <SelectContent>
@@ -106,14 +105,30 @@ export function DomainAuditTable({ domains, isLoading }: DomainAuditTableProps) 
       </div>
 
       {filteredDomains.length === 0 ? (
-        <div className="rounded-2xl border border-dashed p-8 text-center text-muted-foreground text-sm">
-          <Globe className="mx-auto mb-2 h-8 w-8 opacity-40" />
-          No domains found matching criteria.
+        <div className="flex flex-col items-center justify-center rounded-2xl border border-border/50 bg-card/40 py-16 text-center">
+          <div className="mb-3 flex h-12 w-12 items-center justify-center rounded-2xl bg-muted/60 text-muted-foreground">
+            <Globe className="h-6 w-6" />
+          </div>
+          <h4 className="font-semibold text-foreground text-sm">No matching domains found</h4>
+          <p className="mt-1 max-w-sm text-muted-foreground text-xs leading-relaxed">
+            No domains matched your active search query or status filter.
+          </p>
+          <Button
+            variant="outline"
+            size="sm"
+            onClick={() => {
+              setSearch('');
+              setStatusFilter('all');
+            }}
+            className="mt-4 h-8 font-medium text-xs"
+          >
+            Reset Filters
+          </Button>
         </div>
       ) : (
-        <div className="overflow-x-auto rounded-2xl border border-border/60 bg-card/40">
+        <div className="overflow-x-auto rounded-2xl border border-border/50 bg-card shadow-sm">
           <table className="w-full min-w-[760px] whitespace-nowrap text-left text-sm">
-            <thead className="border-b bg-muted/40 font-semibold text-muted-foreground text-xs uppercase tracking-wider">
+            <thead className="border-border/50 border-b bg-muted/30 font-semibold text-[11px] text-muted-foreground uppercase tracking-wider">
               <tr>
                 <th className="px-4 py-3">Domain</th>
                 <th className="px-4 py-3">Service</th>
@@ -128,8 +143,10 @@ export function DomainAuditTable({ domains, isLoading }: DomainAuditTableProps) 
                 const isVerifying = verifyingMap[domain.id];
 
                 return (
-                  <tr key={domain.id} className="transition-colors hover:bg-card/60">
-                    <td className="px-4 py-3.5 font-medium font-mono">{domain.domainName}</td>
+                  <tr key={domain.id} className="transition-colors hover:bg-muted/20">
+                    <td className="px-4 py-3.5 font-medium font-mono text-sm">
+                      {domain.domainName}
+                    </td>
                     <td className="px-4 py-3.5 text-muted-foreground text-xs">
                       {domain.serviceId ? (
                         <span className="font-mono text-xs">{domain.serviceId.slice(0, 8)}...</span>
@@ -164,7 +181,7 @@ export function DomainAuditTable({ domains, isLoading }: DomainAuditTableProps) 
                           size="sm"
                           onClick={() => handleVerifyOne(domain.id)}
                           disabled={isVerifying || isVerifyingAll}
-                          className="h-8 gap-1 text-xs"
+                          className="h-8 gap-1.5 text-xs"
                         >
                           {isVerifying ? (
                             <Loader2 className="h-3.5 w-3.5 animate-spin" />

@@ -6,8 +6,8 @@ import (
 	"os"
 	"strings"
 
-	"codedock.run/codedock/internal/repositories"
-	"codedock.run/codedock/internal/utils"
+	"codedock/internal/repositories"
+	"codedock/internal/utils"
 )
 
 func printDeploymentURL(settingsRepo *repositories.SettingsRepo, appName string) {

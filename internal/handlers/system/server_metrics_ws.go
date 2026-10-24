@@ -3,18 +3,24 @@ package system
 import (
 	"log/slog"
 	"net/http"
+	"time"
 
-	handlerutils "codedock.run/codedock/internal/handlers/utils"
+	handlerutils "codedock/internal/handlers/utils"
 
-	"codedock.run/codedock/internal/engine/observability"
-	"codedock.run/codedock/internal/http/middleware"
-	"codedock.run/codedock/internal/models"
-	authservices "codedock.run/codedock/internal/services/auth"
-	systemservices "codedock.run/codedock/internal/services/system"
-	"codedock.run/codedock/internal/utils"
+	"codedock/internal/engine/observability"
+	"codedock/internal/http/middleware"
+	"codedock/internal/models"
+	authservices "codedock/internal/services/auth"
+	systemservices "codedock/internal/services/system"
+	"codedock/internal/utils"
+
 	"github.com/gorilla/websocket"
 	"github.com/labstack/echo/v4"
 )
+
+func getHostMetricsPayload() []byte {
+	return observability.GetHostMetricsPayload()
+}
 
 type ServerMetricsWSHandler struct {
 	upgrader      websocket.Upgrader
@@ -36,6 +42,7 @@ func NewServerMetricsWSHandler(ts *authservices.TokenService, ss systemservices.
 				}
 				return handlerutils.IsAllowedWebSocketOrigin(r, origin)
 			},
+			Subprotocols: []string{"auth", "bearer"},
 		},
 		tokenService:  ts,
 		serverService: ss,
@@ -87,7 +94,12 @@ func (h *ServerMetricsWSHandler) Handle(c echo.Context) error {
 		}
 	}
 
-	ws, err := h.upgrader.Upgrade(c.Response().Writer, c.Request(), nil)
+	responseHeader := http.Header{}
+	if c.Request().Header.Get("Sec-WebSocket-Protocol") != "" {
+		responseHeader.Set("Sec-WebSocket-Protocol", "auth")
+	}
+
+	ws, err := h.upgrader.Upgrade(c.Response().Writer, c.Request(), responseHeader)
 	if err != nil {
 		slog.Error("failed to upgrade server metrics ws", "err", err)
 		return err
@@ -97,12 +109,29 @@ func (h *ServerMetricsWSHandler) Handle(c echo.Context) error {
 	defer observability.GlobalUIMetricsHub.RemoveClient(serverID, ws)
 	defer ws.Close()
 
+	done := make(chan struct{})
+	go func() {
+		defer close(done)
+		for {
+			if _, _, err := ws.ReadMessage(); err != nil {
+				return
+			}
+		}
+	}()
+
+	_ = ws.WriteMessage(websocket.TextMessage, getHostMetricsPayload())
+
+	ticker := time.NewTicker(2 * time.Second)
+	defer ticker.Stop()
+
 	for {
-		_, _, err := ws.ReadMessage()
-		if err != nil {
-			break
+		select {
+		case <-done:
+			return nil
+		case <-ticker.C:
+			if err := ws.WriteMessage(websocket.TextMessage, getHostMetricsPayload()); err != nil {
+				return nil
+			}
 		}
 	}
-
-	return nil
 }

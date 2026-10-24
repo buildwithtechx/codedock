@@ -1,19 +1,18 @@
 import { DatabaseBackup, Loader2, Play, Settings2 } from 'lucide-react';
 import { useEffect, useState } from 'react';
 import { toast } from 'sonner';
-import { Button } from '#/components/ui/button';
+import { Button } from '@codedock/ui/button';
 import {
   useCreate,
   useDeleteRecord,
   useList,
   useListAllRecords,
   useListS3Destinations,
-  useRestore,
   useTriggerDatabaseBackup,
   useUpdate,
-} from '#/features/backups';
-import type { BackupRecord } from '#/features/backups/interfaces';
-import type { Database } from '#/features/databases/interfaces';
+} from '#/hooks/use-backups';
+import type { BackupRecord } from '#/interfaces/backups';
+import type { Database } from '#/interfaces/databases';
 import { DatabaseBackupScheduleForm } from './database-backup-schedule-form';
 import { DatabaseBackupTable } from './database-backup-table';
 import { DatabaseRestoreDialog } from './database-restore-dialog';
@@ -30,7 +29,6 @@ export function BackupManager({ database }: { database: Database }) {
   const triggerDatabaseBackup = useTriggerDatabaseBackup();
   const createConfig = useCreate();
   const updateConfig = useUpdate();
-  const restoreMutation = useRestore();
   const deleteRecordMutation = useDeleteRecord();
 
   const configs = configsData?.data || [];
@@ -118,17 +116,6 @@ export function BackupManager({ database }: { database: Database }) {
     }
   };
 
-  const handleConfirmRestore = async (recordId: string) => {
-    try {
-      await restoreMutation.mutateAsync({ id: recordId });
-      toast.success('Database restore triggered successfully');
-      setSelectedRecordForRestore(null);
-      void refetchRecords();
-    } catch (error) {
-      toast.error(error instanceof Error ? error.message : 'Failed to restore database');
-    }
-  };
-
   const handleDeleteRecord = async (configId: string, recordId: string) => {
     if (!window.confirm('Are you sure you want to delete this snapshot?')) return;
     try {
@@ -208,17 +195,14 @@ export function BackupManager({ database }: { database: Database }) {
         onRestore={(record) => setSelectedRecordForRestore(record)}
         onDelete={handleDeleteRecord}
         onBackupNow={handleBackupNow}
-        restorePending={restoreMutation.isPending}
+        restorePending={false}
         deletePending={deleteRecordMutation.isPending}
         backupPending={triggerDatabaseBackup.isPending}
       />
 
       <DatabaseRestoreDialog
         record={selectedRecordForRestore}
-        databaseName={database.name}
         onClose={() => setSelectedRecordForRestore(null)}
-        onConfirm={handleConfirmRestore}
-        isPending={restoreMutation.isPending}
       />
     </div>
   );

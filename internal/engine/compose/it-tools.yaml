@@ -1,0 +1,12 @@
+x-codedock:
+  is_one_click: true
+  name: IT Tools
+  description: Handy utilities for developers in one page
+  category: devtools
+  icon: it-tools
+services:
+  it-tools:
+    image: corentinth/it-tools
+    restart: always
+    ports:
+      - "80"

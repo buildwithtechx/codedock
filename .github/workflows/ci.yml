@@ -5,6 +5,7 @@ on:
     branches: [main, dev]
   pull_request:
     branches: [main, dev]
+  workflow_call:
 
 permissions:
   contents: read
@@ -24,8 +25,40 @@ jobs:
           cache: npm
       - run: npm ci
       - run: npm run build:dashboard
+      - run: npm run build:daemon
       - run: go vet ./...
       - run: go test -race ./...
+
+  go-postgres:
+    runs-on: ubuntu-latest
+    services:
+      postgres:
+        image: postgres:16-alpine
+        env:
+          POSTGRES_USER: codedock
+          POSTGRES_PASSWORD: codedock
+          POSTGRES_DB: codedock_test
+        ports:
+          - 5432:5432
+        options: >-
+          --health-cmd "pg_isready -U codedock -d codedock_test"
+          --health-interval 5s
+          --health-timeout 3s
+          --health-retries 12
+    env:
+      CODEDOCK_TEST_PG_URL: postgres://codedock:codedock@localhost:5432/codedock_test?sslmode=disable
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-go@v5
+        with:
+          go-version-file: go.mod
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 24
+          cache: npm
+      - run: npm ci
+      - run: npm run build:dashboard
+      - run: go test -race ./internal/repositories/... ./internal/engine/systemdb/... ./cmd/...
 
   typescript:
     runs-on: ubuntu-latest
@@ -39,9 +72,48 @@ jobs:
       - run: npm run format
       - run: npm run typecheck
       - run: npm run build:dashboard
-      - run: npm run build:packages
-      - run: npm run typecheck:packages
       - uses: actions/setup-go@v5
         with:
           go-version-file: go.mod
       - run: npm run test
+
+  websites:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 24
+          cache: npm
+      - run: npm ci
+      - run: npm run typecheck --workspace=@codedock/web
+      - run: npm run test --workspace=@codedock/web
+      - run: npm run build:web
+      - run: npm run build:docs
+
+  clients:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 24
+          cache: npm
+      - run: npm ci
+      - run: npm run typecheck:mobile
+      - run: npm run typecheck:extension
+      - run: npm run test:mobile
+      - run: npm run test:extension
+      - name: Validate Expo mobile configuration
+        run: npx expo config --type public
+        working-directory: apps/mobile
+      - run: npm run build:extension
+      - run: npm run package:extension
+      - name: Upload VS Code Extension VSIX
+        uses: actions/upload-artifact@v4
+        with:
+          name: vscode-codedock-extension
+          path: apps/extension/*.vsix
+          retention-days: 14
+
+

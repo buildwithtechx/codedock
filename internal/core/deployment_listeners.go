@@ -10,8 +10,9 @@ import (
 	"strings"
 	"time"
 
-	"codedock.run/codedock/internal/models"
-	"codedock.run/codedock/internal/repositories"
+	"codedock/internal/config"
+	"codedock/internal/models"
+	"codedock/internal/repositories"
 )
 
 type DeploymentListeners struct {
@@ -28,13 +29,28 @@ func (l *DeploymentListeners) SendNotification(e DeploymentCompleted) {
 	if len(commit) > 7 {
 		commit = commit[:7]
 	}
+
+	eventType := models.EventDeployFailed
+	statusLower := strings.ToLower(e.Status)
+	if statusLower == "success" || statusLower == "succeeded" {
+		eventType = models.EventDeploySucceeded
+	} else if statusLower == "cancelled" || statusLower == "canceled" {
+		eventType = models.EventDeployCancelled
+	}
+
+	baseURL := strings.TrimRight(config.Get().Server.DashboardURL, "/")
+	if baseURL == "" {
+		baseURL = "http://localhost:8080"
+	}
+
 	msg := fmt.Sprintf("Deploy %s: %s (%s)", e.Status, e.ServiceID, commit)
 	notifEvent := &models.NotificationEvent{
+		EventType: eventType,
 		ProjectID: e.ProjectID,
 		Level:     e.Status,
 		Title:     "Deployment " + e.Status,
 		Message:   msg,
-		URL:       fmt.Sprintf("https://codedock.local/projects/%s/services/%s", e.ProjectID, e.ServiceID),
+		URL:       fmt.Sprintf("%s/projects/%s/services/%s", baseURL, e.ProjectID, e.ServiceID),
 	}
 	l.dispatcher.Dispatch(notifEvent)
 }

@@ -7,8 +7,8 @@ import (
 
 	"github.com/google/uuid"
 
-	"codedock.run/codedock/internal/models"
-	"codedock.run/codedock/internal/repositories"
+	"codedock/internal/models"
+	"codedock/internal/repositories"
 )
 
 func runDatabases(args []string) {
@@ -32,7 +32,7 @@ func runDatabases(args []string) {
 
 	switch cmd {
 	case "list":
-		dbs, err := dbRepo.List(context.Background())
+		dbs, err := dbRepo.List(context.Background(), "")
 		if err != nil {
 			exitError("Failed to list databases: %v", err)
 		}

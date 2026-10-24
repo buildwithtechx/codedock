@@ -6,27 +6,32 @@ import (
 
 	"github.com/labstack/echo/v4"
 
-	"codedock.run/codedock/internal/utils"
+	"codedock/internal/utils"
 
-	"codedock.run/codedock/internal/models"
-	backupservices "codedock.run/codedock/internal/services/backups"
-	databaseservices "codedock.run/codedock/internal/services/databases"
-	projectservices "codedock.run/codedock/internal/services/projects"
+	"codedock/internal/models"
+	authservices "codedock/internal/services/auth"
+	backupservices "codedock/internal/services/backups"
+	databaseservices "codedock/internal/services/databases"
+	"codedock/internal/services/operations"
+	projectservices "codedock/internal/services/projects"
 )
 
 type BackupHandler struct {
+	operations     *operations.Service
 	backupService  *backupservices.BackupService
 	appService     *projectservices.AppService
 	dbService      *databaseservices.DatabaseService
 	projectService *projectservices.ProjectService
+	auditService   *authservices.AuditService
 }
 
-func NewBackupHandler(backup *backupservices.BackupService, app *projectservices.AppService, db *databaseservices.DatabaseService, proj *projectservices.ProjectService) *BackupHandler {
+func NewBackupHandler(backup *backupservices.BackupService, app *projectservices.AppService, db *databaseservices.DatabaseService, proj *projectservices.ProjectService, auditService *authservices.AuditService) *BackupHandler {
 	return &BackupHandler{
 		backupService:  backup,
 		appService:     app,
 		dbService:      db,
 		projectService: proj,
+		auditService:   auditService,
 	}
 }
 
@@ -112,9 +117,18 @@ func (h *BackupHandler) Create(c echo.Context) error {
 		return utils.Error(c, http.StatusForbidden, "insufficient admin permissions to create backup for this resource")
 	}
 
+	if err := h.validatePolicy(c, &cfg); err != nil {
+		return err
+	}
 	if err := h.backupService.CreateConfig(c.Request().Context(), &cfg); err != nil {
 		return utils.Error(c, http.StatusInternalServerError, err.Error())
 	}
+	h.auditService.LogAction(c.Request().Context(), authservices.AuditActionOpts{
+		UserID:    utils.AuditActorID(c),
+		Action:    "backup.create",
+		Resource:  cfg.ID,
+		IPAddress: c.RealIP(),
+	})
 	cfg.DbPassword = "********"
 	return utils.Created(c, "Created successfully", cfg)
 }
@@ -136,16 +150,17 @@ func (h *BackupHandler) Update(c echo.Context) error {
 	}
 
 	var req struct {
+		PreDeployment   *bool  `json:"preDeployment"`
 		Name            string `json:"name"`
 		Description     string `json:"description"`
 		DbUser          string `json:"dbUser"`
 		DbPassword      string `json:"dbPassword"`
 		Schedule        string `json:"schedule"`
 		Timezone        string `json:"timezone"`
-		Timeout         int    `json:"timeout"`
-		RetentionDays   int    `json:"retentionDays"`
-		MaxBackups      int    `json:"maxBackups"`
-		MaxStorageGB    int    `json:"maxStorageGB"`
+		Timeout         *int   `json:"timeout"`
+		RetentionDays   *int   `json:"retentionDays"`
+		MaxBackups      *int   `json:"maxBackups"`
+		MaxStorageGB    *int   `json:"maxStorageGB"`
 		S3DestinationID string `json:"s3DestinationId"`
 		DatabaseID      string `json:"databaseId"`
 		BackupEnabled   *bool  `json:"backupEnabled"`
@@ -174,25 +189,28 @@ func (h *BackupHandler) Update(c echo.Context) error {
 	if req.Timezone != "" {
 		existing.Timezone = req.Timezone
 	}
-	if req.Timeout != 0 {
-		existing.Timeout = req.Timeout
+	if req.Timeout != nil {
+		existing.Timeout = *req.Timeout
 	}
-	if req.RetentionDays != 0 {
-		existing.RetentionDays = req.RetentionDays
+	if req.RetentionDays != nil {
+		existing.RetentionDays = *req.RetentionDays
 	}
-	if req.MaxBackups != 0 {
-		existing.MaxBackups = req.MaxBackups
+	if req.MaxBackups != nil {
+		existing.MaxBackups = *req.MaxBackups
 	}
-	if req.MaxStorageGB != 0 {
-		existing.MaxStorageGB = req.MaxStorageGB
+	if req.MaxStorageGB != nil {
+		existing.MaxStorageGB = *req.MaxStorageGB
 	}
 	if req.S3DestinationID != "" {
 		existing.S3DestinationID = req.S3DestinationID
 	}
-	if req.DatabaseID != "" {
-		existing.DatabaseID = req.DatabaseID
+	if req.DatabaseID != "" && req.DatabaseID != existing.DatabaseID {
+		return utils.Error(c, http.StatusBadRequest, "backup producer is immutable; create a separate policy")
 	}
 
+	if req.PreDeployment != nil {
+		existing.PreDeployment = *req.PreDeployment
+	}
 	if req.BackupEnabled != nil {
 		existing.BackupEnabled = *req.BackupEnabled
 	}
@@ -203,6 +221,9 @@ func (h *BackupHandler) Update(c echo.Context) error {
 		existing.DisableLocal = *req.DisableLocal
 	}
 
+	if err := h.validatePolicy(c, existing); err != nil {
+		return err
+	}
 	if err := h.backupService.UpdateConfig(c.Request().Context(), existing); err != nil {
 		return utils.Error(c, http.StatusInternalServerError, err.Error())
 	}
@@ -249,6 +270,12 @@ func (h *BackupHandler) Delete(c echo.Context) error {
 	if err := h.backupService.DeleteConfig(c.Request().Context(), id); err != nil {
 		return utils.Error(c, http.StatusInternalServerError, err.Error())
 	}
+	h.auditService.LogAction(c.Request().Context(), authservices.AuditActionOpts{
+		UserID:    utils.AuditActorID(c),
+		Action:    "backup.delete",
+		Resource:  id,
+		IPAddress: c.RealIP(),
+	})
 	return c.NoContent(http.StatusNoContent)
 }
 
@@ -270,5 +297,11 @@ func (h *BackupHandler) Trigger(c echo.Context) error {
 	if err != nil {
 		return utils.Error(c, http.StatusInternalServerError, err.Error())
 	}
+	h.auditService.LogAction(c.Request().Context(), authservices.AuditActionOpts{
+		UserID:    utils.AuditActorID(c),
+		Action:    "backup.trigger",
+		Resource:  id,
+		IPAddress: c.RealIP(),
+	})
 	return utils.Success(c, "Operation successful", rec)
 }

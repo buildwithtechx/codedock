@@ -1,275 +1,48 @@
 ---
-title: Environment and Domains API
-description: Environment variable and service domain endpoints with payload and response examples.
+title: Variables and Domains API
+description: Project variables, service variables and domain request formats.
 ---
 
-Environment variables and domains belong to services.
+## Project variables
 
-All examples assume:
-
-```bash
-export CODEDOCK_URL="https://pilot.example.com"
-export CODEDOCK_API_KEY="ap_..."
-```
-
-## Set Environment Variable
-
-```txt
-POST /api/services/:serviceId/env
-```
-
-Required access: `write`
-
-Project scope: service project must be visible to the key.
-
-Payload:
+`GET /api/projects/:id/env` reads a map of variables and requires environment-read scope. `POST` or `PUT` to the same path sets supplied values and requires project administrator access and environment-write scope.
 
 ```json
-{
-  "key": "NODE_ENV",
-  "value": "production"
-}
+{"variables":{"NODE_ENV":"production","PORT":"3000"}}
 ```
 
-Example:
+The setter updates supplied keys individually; it is not an atomic replacement of the whole map.
 
-```bash
-curl -X POST "$CODEDOCK_URL/api/services/svc_web/env" \
-  -H "Authorization: Bearer $CODEDOCK_API_KEY" \
-  -H "Content-Type: application/json" \
-  -d '{"key":"NODE_ENV","value":"production"}'
-```
+## Service variables
 
-Response:
+| Method | Path | Purpose |
+| --- | --- | --- |
+| GET | `/api/services/:serviceId/variables` | List variables |
+| GET | `/api/services/:serviceId/env-suggestions` | Suggested variables |
+| POST | `/api/services/:serviceId/variables` | Create a variable |
+| PUT | `/api/services/:serviceId/variables/:id` | Update the variable |
+| DELETE | `/api/services/:serviceId/variables/:id` | Delete the variable |
+
+Creation and update accept variable fields such as `key` and `value`. Project, service and environment association is resolved or validated by the handler. Writes require administrator access.
 
 ```json
-{
-  "ok": true
-}
+{"key":"NODE_ENV","value":"production"}
 ```
 
-The same endpoint creates or updates a variable. Environment variable keys must match:
+## Domains
 
-```txt
-^[A-Z_][A-Z0-9_]*$
-```
+| Method | Path | Purpose |
+| --- | --- | --- |
+| GET | `/api/domains` | List visible domains |
+| GET | `/api/services/:id/domains` | List service domains |
+| POST | `/api/services/:id/domains` | Create |
+| DELETE | `/api/domains/:id` | Delete |
+| GET or POST | `/api/domains/:id/verify` | Verify |
 
-## Delete Environment Variable
-
-```txt
-DELETE /api/services/:serviceId/env/:envId
-```
-
-Required access: `write`
-
-Project scope: service project must be visible to the key.
-
-Example:
-
-```bash
-curl -X DELETE "$CODEDOCK_URL/api/services/svc_web/env/env_123" \
-  -H "Authorization: Bearer $CODEDOCK_API_KEY"
-```
-
-Response:
+Creation accepts `domainName`, optional `redirectTo` and `pathPrefix`. DNS provider-backed creation requires administrator or owner access in addition to service access.
 
 ```json
-{
-  "ok": true
-}
+{"domainName":"app.example.com","pathPrefix":"/"}
 ```
 
-## Add Domain
-
-```txt
-POST /api/services/:serviceId/domains
-```
-
-Required access: `write`
-
-Project scope: service project must be visible to the key.
-
-Workers do not accept custom domains.
-
-Payload:
-
-```json
-{
-  "hostname": "app.example.com"
-}
-```
-
-Example:
-
-```bash
-curl -X POST "$CODEDOCK_URL/api/services/svc_web/domains" \
-  -H "Authorization: Bearer $CODEDOCK_API_KEY" \
-  -H "Content-Type: application/json" \
-  -d '{"hostname":"app.example.com"}'
-```
-
-Response:
-
-```json
-{
-  "ok": true,
-  "traefik": {
-    "ok": true,
-    "detail": "Traefik reloaded"
-  }
-}
-```
-
-The created domain appears in `GET /api/services/:serviceId/overview`.
-
-## Update Domain
-
-```txt
-PATCH /api/services/:serviceId/domains/:domainId
-```
-
-Required access: `write`
-
-Payload:
-
-```json
-{
-  "hostname": "www.example.com"
-}
-```
-
-Response:
-
-```json
-{
-  "ok": true,
-  "traefik": {
-    "ok": true,
-    "detail": "Traefik reloaded"
-  }
-}
-```
-
-## Delete Domain
-
-```txt
-DELETE /api/services/:serviceId/domains/:domainId
-```
-
-Required access: `write`
-
-Example:
-
-```bash
-curl -X DELETE "$CODEDOCK_URL/api/services/svc_web/domains/domain_123" \
-  -H "Authorization: Bearer $CODEDOCK_API_KEY"
-```
-
-Response:
-
-```json
-{
-  "ok": true,
-  "traefik": {
-    "ok": true,
-    "detail": "Traefik reloaded"
-  }
-}
-```
-
-## Apply DNS Provider Record
-
-```txt
-POST /api/services/:serviceId/domains/:domainId/dns-records
-```
-
-Required access: `write`
-
-Project scope: service project must be visible to the key.
-
-This endpoint uses a DNS provider that has already been connected in System Settings.
-
-Payload:
-
-```json
-{
-  "providerId": "cloudflare"
-}
-```
-
-Supported provider IDs:
-
-- `cloudflare`
-- `namecheap`
-- `spaceship`
-
-Example:
-
-```bash
-curl -X POST "$CODEDOCK_URL/api/services/svc_web/domains/domain_123/dns-records" \
-  -H "Authorization: Bearer $CODEDOCK_API_KEY" \
-  -H "Content-Type: application/json" \
-  -d '{"providerId":"cloudflare"}'
-```
-
-Response:
-
-```json
-{
-  "ok": true,
-  "result": {
-    "provider": "cloudflare",
-    "providerName": "Cloudflare",
-    "action": "created",
-    "hostname": "app.example.com",
-    "recordType": "A",
-    "host": "app",
-    "zone": "example.com",
-    "targetIp": "203.0.113.10"
-  },
-  "domain": {
-    "id": "domain_123",
-    "serviceId": "svc_web",
-    "hostname": "app.example.com",
-    "status": "active",
-    "createdAt": "2026-06-10T08:41:00.000Z",
-    "updatedAt": "2026-06-10T08:42:00.000Z"
-  }
-}
-```
-
-## Read Environment and Domains
-
-Environment variables and domains are returned by service overview:
-
-```txt
-GET /api/services/:serviceId/overview
-```
-
-Response excerpt:
-
-```json
-{
-  "env": [
-    {
-      "id": "env_123",
-      "key": "NODE_ENV",
-      "hasValue": true,
-      "value": "production",
-      "resolvedValue": "production",
-      "createdAt": "2026-06-10T08:40:00.000Z",
-      "updatedAt": "2026-06-10T08:40:00.000Z"
-    }
-  ],
-  "domains": [
-    {
-      "id": "domain_123",
-      "serviceId": "svc_web",
-      "hostname": "app.example.com",
-      "status": "active",
-      "createdAt": "2026-06-10T08:41:00.000Z",
-      "updatedAt": "2026-06-10T08:42:00.000Z"
-    }
-  ]
-}
-```
+See [domains and TLS](/operations/domains-and-dns/) for DNS and Traefik requirements and [Compose import](/deployments/compose/) for configuration that is not carried over from a Compose file.

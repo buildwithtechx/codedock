@@ -1,15 +1,15 @@
-import { Button } from '#/components/ui/button';
-import { useEnabledOAuthProviders } from '#/hooks/use-oauth';
-import { oauthService } from '#/services/oauth';
+import { Button } from '@codedock/ui/button';
+import { useEnabledOAuthProviders, useTriggerOAuthLogin } from '#/hooks/use-oauth';
 
 export const OAuthButtons = () => {
   const { data: enabledProvidersData } = useEnabledOAuthProviders();
+  const triggerOAuthLogin = useTriggerOAuthLogin();
   const enabledProviders = (enabledProvidersData?.data || []).map((p) =>
     p.providerName.toLowerCase()
   );
 
   const handleOAuthLogin = (provider: string) => {
-    oauthService.triggerOAuthLogin(provider);
+    triggerOAuthLogin(provider);
   };
 
   if (!enabledProviders.length) return null;
@@ -23,7 +23,7 @@ export const OAuthButtons = () => {
             variant="outline"
             type="button"
             onClick={() => handleOAuthLogin(provider)}
-            className="h-12 w-full capitalize"
+            className="w-full capitalize"
           >
             Continue with {provider}
           </Button>

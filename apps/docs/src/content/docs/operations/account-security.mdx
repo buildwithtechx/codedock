@@ -23,6 +23,25 @@ Protect your Codedock account from unauthorized access by enabling Two-Factor Au
 
 Once enabled, you will be prompted to enter a TOTP code during every login.
 
+## Passkeys (FIDO2 / WebAuthn)
+
+Codedock supports passwordless, phishing-resistant authentication using FIDO2 and WebAuthn passkeys. You can sign in using Touch ID, Face ID, Windows Hello, hardware security keys (such as YubiKeys), or modern password managers.
+
+### Adding a Passkey
+
+<Steps>
+1. Open **Account Settings** from your profile menu.
+2. Select the **Security** tab and locate the **Passkeys** section.
+3. Click **Add Passkey** and follow your browser prompt to verify your biometric or security key.
+4. Name your passkey with a recognizable label (e.g., "MacBook Touch ID", "Backup YubiKey").
+</Steps>
+
+### Hostname Binding & Security Notes
+
+- **Domain Binding (RP ID)**: Passkeys are cryptographically bound to the hostname derived from `CODEDOCK_DASHBOARD_URL`. If you change your dashboard domain or migrate hostnames, passkeys registered under the previous hostname will be orphaned by the browser and must be re-registered.
+- **HTTPS Enforcement**: Modern browsers strictly mandate an HTTPS connection to use WebAuthn credentials. Plain HTTP is disallowed (browsers exempt `localhost` and `127.0.0.1` for local development).
+- **Two-Factor Synergy**: If TOTP is enabled on your account, Codedock requires your 6-digit TOTP verification code after passkey authentication to fulfill two-factor policy requirements.
+
 ## Personal Access Tokens (PATs)
 
 Personal Access Tokens allow you to authenticate with the Codedock CLI or directly against the Codedock REST API without using your email and password. 

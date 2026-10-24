@@ -7,6 +7,7 @@ import (
 	"net/http"
 	"os"
 	"os/signal"
+	"path/filepath"
 	"runtime"
 	"syscall"
 	"time"
@@ -14,18 +15,16 @@ import (
 	"github.com/docker/docker/client"
 	"github.com/joho/godotenv"
 
-	_ "modernc.org/sqlite"
+	"codedock/cmd/codedockd/commands"
+	"codedock/internal/config"
+	"codedock/internal/engine/deploy"
+	"codedock/internal/engine/networking"
+	"codedock/internal/engine/observability"
+	cdkhttp "codedock/internal/http"
+	"codedock/internal/services/system"
 
-	"codedock.run/codedock/cmd/codedockd/commands"
-	"codedock.run/codedock/internal/config"
-	"codedock.run/codedock/internal/engine/deploy"
-	"codedock.run/codedock/internal/engine/networking"
-	"codedock.run/codedock/internal/engine/observability"
-	codedockhttp "codedock.run/codedock/internal/http"
-	"codedock.run/codedock/internal/services/system"
-
-	"codedock.run/codedock/internal/telemetry"
-	"codedock.run/codedock/internal/version"
+	"codedock/internal/telemetry"
+	"codedock/internal/version"
 )
 
 var codedockVersion = version.Version
@@ -41,8 +40,9 @@ func startServer() {
 	defer db.Close()
 
 	_, _ = db.Exec(`
-		INSERT OR IGNORE INTO servers (id, user_id, name, ip_address, status, is_local, ssh_transport, created_at, updated_at)
-		VALUES ('local', 'system', 'Local Host', '127.0.0.1', 'online', 1, 'direct', CURRENT_TIMESTAMP, CURRENT_TIMESTAMP)
+		INSERT INTO servers (id, user_id, name, ip_address, status, is_local, ssh_transport, created_at, updated_at)
+		VALUES ('local', 'system', 'Codedock Control Plane', '127.0.0.1', 'online', TRUE, 'direct', CURRENT_TIMESTAMP, CURRENT_TIMESTAMP)
+		ON CONFLICT (id) DO UPDATE SET name = 'Codedock Control Plane' WHERE servers.id = 'local' AND servers.name = 'Local Host'
 	`)
 
 	telemetry.Init()
@@ -59,25 +59,38 @@ func startServer() {
 	}
 
 	traefikMgr := networking.NewTraefikManager(dockerClient, config.Get().Security.TLSEmail)
+	traefikLogDir := filepath.Join(dataDir, "traefik-logs")
+	if abs, err := filepath.Abs(traefikLogDir); err == nil {
+		traefikLogDir = abs
+	}
+	if err := os.MkdirAll(traefikLogDir, 0o755); err != nil {
+		slog.Warn("failed to prepare Traefik log dir", "err", err)
+	} else {
+		traefikMgr.SetLogDir(traefikLogDir)
+	}
 	if err := traefikMgr.EnsureTraefikRunning(context.Background()); err != nil {
 		slog.Warn("failed to start Traefik proxy", "err", err)
 	}
 
-	tsdbMgr := observability.NewTSDBManager(dockerClient)
-	if err := tsdbMgr.EnsureTSDBRunning(context.Background()); err != nil {
-		slog.Warn("failed to start TSDB", "err", err)
+	if config.Get().Observability.Enabled {
+		tsdbMgr := observability.NewTSDBManager(dockerClient)
+		if err := tsdbMgr.EnsureTSDBRunning(context.Background()); err != nil {
+			slog.Warn("failed to start TSDB", "err", err)
+		}
+
+		lokiMgr := observability.NewLokiManager(dockerClient)
+		if err := lokiMgr.EnsureLokiRunning(context.Background()); err != nil {
+			slog.Warn("failed to start Loki", "err", err)
+		}
+
+		metricsWorker := observability.NewMetricsWorker(dockerClient)
+		metricsWorker.Start()
+
+		logWorker := observability.NewLogWorker(dockerClient)
+		logWorker.Start(context.Background())
+	} else {
+		slog.Info("observability stack disabled, skipping Loki and TSDB")
 	}
-
-	lokiMgr := observability.NewLokiManager(dockerClient)
-	if err := lokiMgr.EnsureLokiRunning(context.Background()); err != nil {
-		slog.Warn("failed to start Loki", "err", err)
-	}
-
-	metricsWorker := observability.NewMetricsWorker(dockerClient)
-	metricsWorker.Start()
-
-	logWorker := observability.NewLogWorker(dockerClient)
-	logWorker.Start(context.Background())
 
 	system.StartTelemetryReporter(db, codedockVersion)
 
@@ -86,7 +99,7 @@ func startServer() {
 	addr := host + ":" + port
 
 	deployer := deploy.NewDeployer(dockerClient, commands.NewDBDeployerStore(db, vlt))
-	apiServer, err := codedockhttp.NewServer(db, vlt, deployer, traefikMgr, dockerClient, dataDir)
+	apiServer, err := cdkhttp.NewServer(db, vlt, deployer, traefikMgr, dockerClient, dataDir)
 	if err != nil {
 		slog.Error("failed to initialize server", "err", err)
 		os.Exit(1)
@@ -129,7 +142,7 @@ func runMCP() {
 	dockerClient, _ := client.NewClientWithOpts(client.FromEnv, client.WithAPIVersionNegotiation())
 	deployer := deploy.NewDeployer(dockerClient, commands.NewDBDeployerStore(db, vlt))
 	traefikMgr := networking.NewTraefikManager(dockerClient, config.Get().Security.TLSEmail)
-	apiServer, err := codedockhttp.NewServer(db, vlt, deployer, traefikMgr, dockerClient, "")
+	apiServer, err := cdkhttp.NewServer(db, vlt, deployer, traefikMgr, dockerClient, "")
 	if err != nil {
 		slog.Error("failed to initialize server", "err", err)
 		os.Exit(1)

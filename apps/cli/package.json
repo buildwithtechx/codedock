@@ -1,0 +1,70 @@
+{
+  "name": "codedock",
+  "version": "0.1.0",
+  "publishConfig": {
+    "access": "public"
+  },
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/buildwithtechx/codedock",
+    "directory": "apps/cli"
+  },
+  "type": "module",
+  "description": "Codedock CLI & programmatic client SDK",
+  "license": "Apache-2.0",
+  "main": "./dist/sdk/index.cjs",
+  "module": "./dist/sdk/index.js",
+  "types": "./dist/sdk/index.d.ts",
+  "exports": {
+    ".": {
+      "import": {
+        "types": "./dist/sdk/index.d.ts",
+        "default": "./dist/sdk/index.js"
+      },
+      "require": {
+        "types": "./dist/sdk/index.d.cts",
+        "default": "./dist/sdk/index.cjs"
+      }
+    },
+    "./client": {
+      "import": {
+        "types": "./dist/sdk/client.d.ts",
+        "default": "./dist/sdk/client.js"
+      },
+      "require": {
+        "types": "./dist/sdk/client.d.cts",
+        "default": "./dist/sdk/client.cjs"
+      }
+    },
+    "./lib": "./lib.js",
+    "./package.json": "./package.json"
+  },
+  "files": [
+    "bin/codedock.js",
+    "install.js",
+    "lib.js",
+    "dist",
+    "LICENSE"
+  ],
+  "engines": {
+    "node": ">=18"
+  },
+  "bin": {
+    "codedock": "./bin/codedock.js"
+  },
+  "scripts": {
+    "prepack": "node scripts/stage-sdk.mjs",
+    "postinstall": "node ./install.js",
+    "test": "node --test lib.test.js"
+  },
+  "keywords": [
+    "codedock",
+    "paas",
+    "docker",
+    "self-hosted",
+    "deploy",
+    "cli",
+    "sdk"
+  ],
+  "author": "TechX"
+}

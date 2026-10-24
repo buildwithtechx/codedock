@@ -1,12 +1,12 @@
-import { Check, RefreshCw, Trash2 } from 'lucide-react';
-import { Button } from '#/components/ui/button';
+import { Button } from '@codedock/ui/button';
 import {
   Dialog,
   DialogClose,
   DialogContent,
   DialogDescription,
   DialogTitle,
-} from '#/components/ui/dialog';
+} from '@codedock/ui/dialog';
+import { Check, RefreshCw, Trash2 } from 'lucide-react';
 
 interface MaintenanceDialogsProps {
   confirmCleanup: boolean;

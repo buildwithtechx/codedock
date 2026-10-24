@@ -5,6 +5,7 @@ on:
   push:
     tags:
       - "packages-v*"
+      - "v*"
 
 permissions:
   contents: read
@@ -26,20 +27,14 @@ jobs:
       - name: Install dependencies
         run: npm ci
 
-      - name: Build packages
-        run: npm run build:packages
+      - name: Test wrapper
+        run: npm run test:wrapper
 
-      - name: Check package contents
-        run: |
-          npm pack --dry-run --workspace packages/cli
+      - name: Test SDK
+        run: npm test --workspace=@codedock/sdk
 
-      - name: Upload build artifacts
-        uses: actions/upload-artifact@v4
-        with:
-          name: package-dist
-          path: |
-            packages/*/dist/
-          retention-days: 1
+      - name: Verify package packaging and exports
+        run: node scripts/verify-package.mjs
 
   publish:
     name: Publish packages to npm
@@ -60,11 +55,21 @@ jobs:
           cache: npm
           registry-url: "https://registry.npmjs.org"
 
-      - name: Download build artifacts
-        uses: actions/download-artifact@v4
-        with:
-          name: package-dist
-          path: packages
+      - name: Install dependencies
+        run: npm ci
+
+      - name: Verify tag matches package version
+        if: github.event_name == 'push'
+        run: |
+          VERSION=$(node -p "require('./apps/cli/package.json').version")
+          test "packages-v${VERSION}" = "${GITHUB_REF_NAME}" || { echo "Tag ${GITHUB_REF_NAME} != packages-v${VERSION}"; exit 1; }
+
+      - name: Verify GitHub release exists for this version
+        env:
+          GH_TOKEN: ${{ github.token }}
+        run: |
+          VERSION=$(node -p "require('./apps/cli/package.json').version")
+          gh release view "v${VERSION}" --repo "${{ github.repository }}" >/dev/null || { echo "Missing GitHub release v${VERSION}"; exit 1; }
 
       - name: Verify trusted publishing toolchain
         run: |
@@ -75,4 +80,53 @@ jobs:
         env:
           NODE_AUTH_TOKEN: ${{ secrets.NPM_TOKEN }}
         run: |
-          npm publish --provenance --access public --workspace packages/cli
+          npm publish --provenance --access public --workspace=codedock
+
+  publish-extension:
+    name: Package and publish VS Code extension
+    if: (github.event_name == 'workflow_dispatch' && github.ref == format('refs/heads/{0}', github.event.repository.default_branch)) || (github.event_name == 'push' && startsWith(github.ref, 'refs/tags/'))
+    runs-on: ubuntu-latest
+    permissions:
+      contents: write
+    env:
+      VSCE_PAT: ${{ secrets.VSCE_PAT }}
+    steps:
+      - name: Check out repository
+        uses: actions/checkout@v4
+
+      - name: Set up Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: 24
+          cache: npm
+
+      - name: Install dependencies
+        run: npm ci
+
+      - name: Compile and package extension
+        run: |
+          npm run build:extension
+          npm run package:extension
+
+      - name: Attach VSIX artifact to GitHub Release
+        if: startsWith(github.ref, 'refs/tags/')
+        env:
+          GH_TOKEN: ${{ github.token }}
+        run: |
+          VSIX_FILE=$(ls apps/extension/*.vsix | head -n 1)
+          if [ -n "$VSIX_FILE" ]; then
+            TAG="${GITHUB_REF#refs/tags/}"
+            if [[ "$TAG" == packages-v* ]]; then
+              RELEASE_TAG="v${TAG#packages-v}"
+            else
+              RELEASE_TAG="$TAG"
+            fi
+            gh release upload "$RELEASE_TAG" "$VSIX_FILE" --clobber || gh release upload "$TAG" "$VSIX_FILE" --clobber || true
+          fi
+
+      - name: Publish to VS Code Marketplace
+        if: env.VSCE_PAT != ''
+        run: |
+          npx vsce publish --no-dependencies --pat "$VSCE_PAT"
+        working-directory: apps/extension
+

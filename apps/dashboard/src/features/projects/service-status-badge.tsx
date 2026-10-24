@@ -1,11 +1,16 @@
-export function StatusBadge({ status }: { status: string }) {
+export function StatusBadge({ status, hint }: { status: string; hint?: string }) {
   const s = (status || '').toLowerCase();
   let color = 'bg-gray-500/10 text-gray-500 border-gray-500/20';
   let dot = 'bg-gray-500';
+  let label = status || 'Unknown';
 
   if (s === 'running' || s === 'online' || s === 'healthy') {
     color = 'bg-emerald-500/10 text-emerald-500 border-emerald-500/20';
     dot = 'bg-emerald-500 shadow-[0_0_8px_rgba(16,185,129,0.4)]';
+  } else if (s === 'attention' || s === 'restart_loop' || s === 'action_required') {
+    color = 'bg-rose-500/10 text-rose-500 border-rose-500/20';
+    dot = 'bg-rose-500 animate-pulse';
+    label = 'Action Required';
   } else if (s === 'failed' || s === 'error' || s === 'stopped') {
     color = 'bg-red-500/10 text-red-500 border-red-500/20';
     dot = 'bg-red-500';
@@ -16,10 +21,11 @@ export function StatusBadge({ status }: { status: string }) {
 
   return (
     <div
+      title={hint}
       className={`flex items-center gap-1.5 rounded-full border px-2.5 py-0.5 font-medium text-xs ${color}`}
     >
       <div className={`h-1.5 w-1.5 rounded-full ${dot}`} />
-      <span className="capitalize">{status || 'Unknown'}</span>
+      <span className="capitalize">{label}</span>
     </div>
   );
 }

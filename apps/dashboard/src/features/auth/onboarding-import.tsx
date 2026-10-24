@@ -1,7 +1,7 @@
 import { ArrowUpRight, FileUp, Loader2, LockKeyhole, Upload } from 'lucide-react';
 import { useRef, useState } from 'react';
 import { toast } from 'sonner';
-import { Button } from '#/components/ui/button';
+import { Button } from '@codedock/ui/button';
 import {
   Dialog,
   DialogContent,
@@ -9,10 +9,10 @@ import {
   DialogHeader,
   DialogTitle,
   DialogTrigger,
-} from '#/components/ui/dialog';
-import { Input } from '#/components/ui/input';
-import { Label } from '#/components/ui/label';
-import { useGetSetupStatus } from '#/features/settings';
+} from '@codedock/ui/dialog';
+import { Input } from '@codedock/ui/input';
+import { Label } from '@codedock/ui/label';
+import { useGetSetupStatus } from '#/hooks/use-settings';
 import { apiClient } from '#/lib/api-client';
 
 export function OnboardingImport({ triggerClassName }: { triggerClassName?: string } = {}) {
@@ -53,7 +53,7 @@ export function OnboardingImport({ triggerClassName }: { triggerClassName?: stri
           type="button"
           className={
             triggerClassName ||
-            'group flex w-fit items-center gap-2 rounded-lg px-1 py-2 font-semibold text-white text-xs uppercase tracking-[0.12em] transition-colors hover:bg-white/10 hover:text-[#d8c7ff]'
+            'group flex w-fit items-center gap-2 rounded-lg px-1 py-2 font-semibold text-white text-xs uppercase tracking-[0.12em] transition-colors hover:bg-white/10 hover:text-brand-soft'
           }
         >
           <FileUp className="size-4" />
@@ -124,7 +124,7 @@ export function OnboardingImport({ triggerClassName }: { triggerClassName?: stri
                     value={passphrase}
                     onChange={(event) => setPassphrase(event.target.value)}
                     placeholder="Enter the export passphrase"
-                    className="h-12 pl-10"
+                    className="pl-10"
                     required
                   />
                 </div>
@@ -133,7 +133,7 @@ export function OnboardingImport({ triggerClassName }: { triggerClassName?: stri
             <div className="mt-8">
               <Button
                 type="submit"
-                className="h-12 w-full"
+                className="w-full"
                 disabled={isImporting || !fileName || !passphrase}
               >
                 {isImporting && <Loader2 className="animate-spin" />}

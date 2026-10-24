@@ -1,0 +1,74 @@
+---
+title: Managed Cloud Servers (Hetzner)
+description: Automated cloud server provisioning and fleet scaling with Hetzner Cloud.
+---
+
+import { Steps, Tabs, TabItem, Aside, Badge } from "@astrojs/starlight/components";
+
+Codedock provides native integration with **Hetzner Cloud** to automatically provision, configure, and scale Linux worker servers with zero manual SSH setup.
+
+## Overview
+
+While standard worker hosts require you to manually bring a Linux server with Docker and configure SSH access, Managed Servers automate the entire lifecycle through the cloud provider API.
+
+When you add a Managed Server:
+1. Codedock requests a new cloud VPS from Hetzner Cloud.
+2. An isolated, high-security SSH key pair is dynamically generated.
+3. The server boots with a cloud-init bootstrap script that installs Docker, sets up firewall rules, and configures daemon networking.
+4. The server automatically joins your Codedock worker fleet and begins accepting container workloads.
+
+## Setup & Provisioning
+
+<Steps>
+1. **Generate API Token**: Create an API Token with read & write permissions in the Hetzner Cloud Console.
+2. **Connect Cloud Provider**: In Codedock, navigate to **Admin Settings → Cloud Integrations**, enter your Hetzner Cloud API Token, and save.
+3. **Provision Worker**:
+   - Open **Fleet Management → Servers**.
+   - Click **Add Server** and choose **Managed Cloud (Hetzner)**.
+   - Enter your server name (e.g. `worker-eu-01`).
+   - Select your datacenter location and compute tier.
+   - Click **Provision Server**.
+</Steps>
+
+## Server Types & Datacenters
+
+<Tabs>
+  <TabItem label="Datacenter Locations" icon="seti:graphql">
+    - **Nuremberg, Germany (`nbg1`)**: Central Europe, low latency.
+    - **Falkenstein, Germany (`fsn1`)**: Major EU hub, high capacity.
+    - **Helsinki, Finland (`hel1`)**: Northern Europe, green energy.
+    - **Ashburn, USA (`ash`)**: North America East Coast.
+  </TabItem>
+  <TabItem label="Compute Tiers" icon="laptop">
+    - **`cx22`**: 2 vCPU, 4GB RAM — Ideal for lightweight microservices and staging.
+    - **`cpx31`**: 4 vCPU, 8GB RAM — High concurrency, CI runners, and heavy web traffic.
+    - **`cpx51`**: 16 vCPU, 32GB RAM — Production database clusters and memory-intensive apps.
+  </TabItem>
+</Tabs>
+
+## Provisioning Stages
+
+Codedock provides live status updates as the server progresses through initialization:
+
+| Stage | Status | Description |
+| --- | --- | --- |
+| 1 | `initializing` | Generating cryptographic keys and validating API quotas. |
+| 2 | `creating` | Dispatching the VPS creation request to Hetzner Cloud. |
+| 3 | `booting` | Waiting for IPv4 assignment and initial OS boot. |
+| 4 | `installing` | Running the automated cloud-init bootstrap script to install Docker and dependencies. |
+| 5 | `online` | Control plane connects over secure SSH, verifies health, and marks the server ready. |
+
+<Aside type="tip" title="Live Boot Logs">
+Click **View Boot Logs** in the server details panel at any time to stream the live cloud-init installation output as Docker packages install.
+</Aside>
+
+## Automated Credentials & Security
+
+Managed Servers handle key management automatically:
+- **SSH Key Injection**: Public keys are registered in Hetzner Cloud and injected into root authorized keys during boot.
+- **Runtime API Credentials**: Codedock generates dedicated worker API tokens for mutual authentication.
+- **Credential Rotation**: Rotate worker runtime credentials or SSH access with one click via **Server Settings → Rotate Credentials**.
+
+<Aside type="caution" title="Cloud Resource Cleanup">
+When deleting a managed server, Codedock prompts you to choose whether to retain or permanently terminate the underlying Hetzner VPS to prevent accidental cloud billing.
+</Aside>

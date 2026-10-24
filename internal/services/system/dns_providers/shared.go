@@ -14,7 +14,7 @@ import (
 
 	"golang.org/x/net/publicsuffix"
 
-	"codedock.run/codedock/internal/models"
+	"codedock/internal/models"
 )
 
 const (

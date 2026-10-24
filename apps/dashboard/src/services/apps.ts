@@ -1,4 +1,5 @@
 import type {
+  AppService,
   CreateAppResponse,
   CreateAppServiceRequest,
   CreateServiceVarRequest,
@@ -9,8 +10,15 @@ import type {
   UpdateAppServiceRequest,
   UpdateServiceVarRequest,
   Variable,
-} from '#/features/services';
+} from '#/interfaces/services';
 import type { BaseResponse } from '#/interfaces/base';
+import type {
+  InstallAppInput,
+  InstallPreview,
+  OneClickAppDetails,
+  OneClickDeployRequest,
+  OneClickDeployResponse,
+} from '#/interfaces/templates';
 import { apiClient } from '#/lib/api-client';
 import { handleApiError } from '#/lib/error';
 
@@ -176,4 +184,74 @@ export const appsService = {
       throw handleApiError(error);
     }
   },
+
+  listInstalled: async (organizationId: string): Promise<AppService[]> => {
+    try {
+      const response = await apiClient.get<BaseResponse<AppService[]>>(
+        `/apps?organizationId=${encodeURIComponent(organizationId)}`
+      );
+      return response.data;
+    } catch (error) {
+      throw handleApiError(error);
+    }
+  },
+
+  listCatalog: async (): Promise<OneClickAppDetails[]> => {
+    try {
+      const response = await apiClient.get<{ data: OneClickAppDetails[] }>('/one-click');
+      return response.data;
+    } catch (error) {
+      throw handleApiError(error);
+    }
+  },
+
+  getCatalogApp: async (appId: string): Promise<OneClickAppDetails> => {
+    try {
+      const response = await apiClient.get<{ data: OneClickAppDetails }>(
+        `/one-click/${encodeURIComponent(appId)}`
+      );
+      return response.data;
+    } catch (error) {
+      throw handleApiError(error);
+    }
+  },
+
+  reviewInstall: async (payload: InstallAppInput): Promise<InstallPreview> => {
+    try {
+      const response = await apiClient.post<{ data: InstallPreview }>('/one-click/review', payload);
+      return response.data;
+    } catch (error) {
+      throw handleApiError(error);
+    }
+  },
+
+  deployCatalogApp: async (payload: OneClickDeployRequest): Promise<OneClickDeployResponse> => {
+    try {
+      return await apiClient.post<OneClickDeployResponse>('/one-click/deploy', payload);
+    } catch (error) {
+      throw handleApiError(error);
+    }
+  },
+
+  addCustom: async (template: unknown): Promise<OneClickAppDetails> => {
+    try {
+      const response = await apiClient.post<{ data: OneClickAppDetails }>(
+        '/one-click/custom',
+        template
+      );
+      return response.data;
+    } catch (error) {
+      throw handleApiError(error);
+    }
+  },
+
+  removeCustom: async (appId: string): Promise<void> => {
+    try {
+      await apiClient.delete(`/one-click/custom/${encodeURIComponent(appId)}`);
+    } catch (error) {
+      throw handleApiError(error);
+    }
+  },
 };
+
+export const appsApi = appsService;

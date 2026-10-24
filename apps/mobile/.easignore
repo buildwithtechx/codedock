@@ -1,0 +1,6 @@
+# Runtime data & docker volumes
+data/
+data/**
+**/data/**
+tmp/
+bin/

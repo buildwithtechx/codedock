@@ -29,7 +29,7 @@ export function ServiceContextSidebar({
 
   return (
     <div className="space-y-3">
-      <section className="rounded-2xl bg-card p-4">
+      <section className="rounded-2xl border border-border/50 bg-card p-4 shadow-xs">
         <div className="min-w-0">
           <p className="text-muted-foreground text-xs">{type}</p>
           <h2 className="mt-0.5 truncate font-semibold text-sm">{name}</h2>
@@ -48,7 +48,10 @@ export function ServiceContextSidebar({
         </div>
       </section>
 
-      <nav className="rounded-2xl bg-card p-2" aria-label="Service sections">
+      <nav
+        className="rounded-2xl border border-border/50 bg-card p-2 shadow-xs"
+        aria-label="Service sections"
+      >
         {Object.entries(groups).map(([group, groupTabs], index) => (
           <div key={group} className={index === 0 ? '' : 'mt-4'}>
             <p className="px-3 pb-1.5 font-semibold text-[10px] text-muted-foreground uppercase tracking-[0.16em]">

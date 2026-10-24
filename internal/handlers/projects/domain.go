@@ -5,11 +5,12 @@ import (
 
 	"github.com/labstack/echo/v4"
 
-	"codedock.run/codedock/internal/models"
-	"codedock.run/codedock/internal/repositories"
-	projectservices "codedock.run/codedock/internal/services/projects"
-	systemservices "codedock.run/codedock/internal/services/system"
-	"codedock.run/codedock/internal/utils"
+	"codedock/internal/models"
+	"codedock/internal/repositories"
+	authservices "codedock/internal/services/auth"
+	projectservices "codedock/internal/services/projects"
+	systemservices "codedock/internal/services/system"
+	"codedock/internal/utils"
 )
 
 type DomainHandler struct {
@@ -17,14 +18,16 @@ type DomainHandler struct {
 	appService     *projectservices.AppService
 	projectService *projectservices.ProjectService
 	settingsRepo   repositories.SettingsRepository
+	auditService   *authservices.AuditService
 }
 
-func NewDomainHandler(s *projectservices.EnvironmentService, app *projectservices.AppService, proj *projectservices.ProjectService, settingsRepo repositories.SettingsRepository) *DomainHandler {
+func NewDomainHandler(s *projectservices.EnvironmentService, app *projectservices.AppService, proj *projectservices.ProjectService, settingsRepo repositories.SettingsRepository, auditService *authservices.AuditService) *DomainHandler {
 	return &DomainHandler{
 		envService:     s,
 		appService:     app,
 		projectService: proj,
 		settingsRepo:   settingsRepo,
+		auditService:   auditService,
 	}
 }
 
@@ -94,6 +97,34 @@ func (h *DomainHandler) ListByService(c echo.Context) error {
 	return utils.Success(c, "Operation successful", domains)
 }
 
+func (h *DomainHandler) ListByProject(c echo.Context) error {
+	projectID := c.Param("id")
+	if projectID == "" {
+		return utils.Error(c, http.StatusBadRequest, "missing project id parameter")
+	}
+
+	domains, err := h.envService.ListAllDomains(c.Request().Context())
+	if err != nil {
+		return utils.Error(c, http.StatusInternalServerError, err.Error())
+	}
+	services, err := h.appService.ListByProject(c.Request().Context(), projectID)
+	if err != nil {
+		return utils.Error(c, http.StatusInternalServerError, err.Error())
+	}
+	serviceMap := make(map[string]bool)
+	for _, s := range services {
+		serviceMap[s.ID] = true
+	}
+
+	projectDomains := make([]models.DomainConfig, 0)
+	for _, d := range domains {
+		if serviceMap[d.ServiceID] {
+			projectDomains = append(projectDomains, d)
+		}
+	}
+	return utils.Success(c, "Operation successful", projectDomains)
+}
+
 func (h *DomainHandler) Create(c echo.Context) error {
 	serviceID := c.Param("id")
 	if serviceID == "" {
@@ -128,6 +159,13 @@ func (h *DomainHandler) Create(c echo.Context) error {
 		}
 		return utils.Error(c, http.StatusInternalServerError, err.Error())
 	}
+	h.auditService.LogAction(c.Request().Context(), authservices.AuditActionOpts{
+		UserID:    utils.AuditActorID(c),
+		Action:    "domain.create",
+		Resource:  created.ID,
+		IPAddress: c.RealIP(),
+		Details:   map[string]string{"domain": req.DomainName},
+	})
 	return utils.Created(c, "Created successfully", created)
 }
 
@@ -154,6 +192,13 @@ func (h *DomainHandler) Delete(c echo.Context) error {
 	if err := h.envService.DeleteDomain(c.Request().Context(), id); err != nil {
 		return utils.Error(c, http.StatusInternalServerError, err.Error())
 	}
+	h.auditService.LogAction(c.Request().Context(), authservices.AuditActionOpts{
+		UserID:    utils.AuditActorID(c),
+		Action:    "domain.delete",
+		Resource:  id,
+		IPAddress: c.RealIP(),
+		Details:   map[string]string{"domain": domain.DomainName},
+	})
 	return c.NoContent(http.StatusNoContent)
 }
 

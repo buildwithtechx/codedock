@@ -25,5 +25,6 @@ export const useGetEnvironmentCanvas = (envId: string) => {
     queryKey: ['canvas', 'getEnvironmentCanvas', envId].filter(Boolean),
     queryFn: () => canvasService.getEnvironmentCanvas(envId),
     enabled: Boolean(envId),
+    refetchInterval: 5000,
   });
 };

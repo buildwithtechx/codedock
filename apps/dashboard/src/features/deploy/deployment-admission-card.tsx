@@ -1,0 +1,105 @@
+import { CheckCircle2, Clock, Cpu, RefreshCw } from 'lucide-react';
+import { toast } from 'sonner';
+import { Badge } from '@codedock/ui/badge';
+import { Button } from '@codedock/ui/button';
+import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@codedock/ui/card';
+import { Progress } from '@codedock/ui/progress';
+import { type BuildAdmissionStatus } from '#/services/checks';
+import { useBuildAdmission } from '#/hooks/use-checks';
+
+interface DeploymentAdmissionCardProps {
+  projectId: string;
+  initialAdmission?: BuildAdmissionStatus | null;
+}
+
+export function DeploymentAdmissionCard({
+  projectId,
+  initialAdmission,
+}: DeploymentAdmissionCardProps) {
+  const { data: admissionData, isFetching: isRefreshing, refetch } = useBuildAdmission(projectId);
+  const admission = admissionData ??
+    initialAdmission ?? {
+      canAdmit: true,
+      activeBuilds: 1,
+      maxConcurrentBuilds: 4,
+      queuePosition: 0,
+      estimatedWaitSeconds: 0,
+      reason: 'Capacity available for immediate execution',
+    };
+
+  const handleRefresh = async () => {
+    try {
+      await refetch();
+      toast.success('Admission quota refreshed');
+    } catch {
+      toast.error('Failed to refresh build admission status');
+    }
+  };
+
+  if (!admission) return null;
+
+  const usagePercent = Math.min(
+    100,
+    Math.round((admission.activeBuilds / Math.max(1, admission.maxConcurrentBuilds)) * 100)
+  );
+
+  return (
+    <Card className="border-border/70 shadow-sm">
+      <CardHeader className="flex flex-row items-center justify-between pb-3">
+        <div className="space-y-1">
+          <div className="flex items-center gap-2">
+            <Cpu className="size-4 text-primary" />
+            <CardTitle className="font-semibold text-base">Build Admission & Concurrency</CardTitle>
+          </div>
+          <CardDescription className="text-xs">
+            Guarantees fair execution slots and prevents container host memory exhaustion.
+          </CardDescription>
+        </div>
+        <div className="flex items-center gap-2">
+          <Badge variant={admission.canAdmit ? 'success' : 'secondary'} className="gap-1 text-xs">
+            {admission.canAdmit ? (
+              <CheckCircle2 className="size-3 text-emerald-500" />
+            ) : (
+              <Clock className="size-3 text-amber-500" />
+            )}
+            <span>
+              {admission.canAdmit ? 'Admission Ready' : `Queued (#${admission.queuePosition})`}
+            </span>
+          </Badge>
+          <Button
+            type="button"
+            variant="ghost"
+            size="icon"
+            onClick={handleRefresh}
+            disabled={isRefreshing}
+            className="size-7"
+            aria-label="Refresh admission"
+          >
+            <RefreshCw className={`size-3.5 ${isRefreshing ? 'animate-spin' : ''}`} />
+          </Button>
+        </div>
+      </CardHeader>
+
+      <CardContent className="space-y-4 pt-1">
+        <div className="space-y-1.5">
+          <div className="flex justify-between text-muted-foreground text-xs">
+            <span>Concurrent Slot Utilization</span>
+            <span className="font-medium text-foreground">
+              {admission.activeBuilds} of {admission.maxConcurrentBuilds} active
+            </span>
+          </div>
+          <Progress value={usagePercent} className="h-2" />
+        </div>
+
+        <div className="flex flex-wrap items-center justify-between gap-2 rounded-lg border border-border/50 bg-muted/30 p-2.5 text-muted-foreground text-xs">
+          <span>{admission.reason}</span>
+          {admission.estimatedWaitSeconds > 0 && (
+            <span className="font-mono text-foreground">
+              ~{admission.estimatedWaitSeconds}s wait
+            </span>
+          )}
+        </div>
+      </CardContent>
+    </Card>
+  );
+}

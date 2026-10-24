@@ -7,12 +7,14 @@ import (
 	"os"
 	"path/filepath"
 
-	_ "modernc.org/sqlite"
+	"github.com/docker/docker/client"
 
-	"codedock.run/codedock/internal/config"
-	"codedock.run/codedock/internal/models"
-	"codedock.run/codedock/internal/repositories"
-	"codedock.run/codedock/internal/utils"
+	cdkdb "codedock/db"
+	"codedock/internal/config"
+	"codedock/internal/engine/systemdb"
+	"codedock/internal/models"
+	"codedock/internal/repositories"
+	"codedock/internal/utils"
 )
 
 type DBDeployerStore struct {
@@ -62,6 +64,9 @@ func (a *DBDeployerStore) GetRegistry(id string) (*models.Registry, error) {
 
 func InitDataDir() (string, *sql.DB, *utils.Vault) {
 	dataDir := config.Get().Server.DataDir
+	if abs, err := filepath.Abs(dataDir); err == nil {
+		dataDir = abs
+	}
 	if err := os.MkdirAll(dataDir, 0o700); err != nil {
 		slog.Error("failed to create data directory", "err", err)
 		os.Exit(1)
@@ -70,24 +75,39 @@ func InitDataDir() (string, *sql.DB, *utils.Vault) {
 		slog.Error("failed to enforce 0700 permissions on data directory", "err", err)
 		os.Exit(1)
 	}
-	if err := config.PrepareSelfHosted(config.Get()); err != nil {
-		slog.Error("failed to prepare self-hosted configuration", "err", err)
-		os.Exit(1)
-	}
 	vlt, err := utils.NewVault(dataDir)
 	if err != nil {
 		slog.Error("failed to initialize secrets vault", "err", err)
 		os.Exit(1)
 	}
-	dbPath := filepath.Join(dataDir, "codedock.db")
-	db, err := sql.Open("sqlite", dbPath+"?_pragma=journal_mode(WAL)&_pragma=busy_timeout(5000)&_pragma=foreign_keys(ON)")
+	databaseURL := config.Get().Database.URL
+	if databaseURL == "" {
+		dockerClient, err := client.NewClientWithOpts(client.FromEnv, client.WithAPIVersionNegotiation())
+		if err != nil {
+			slog.Error("docker is required for the embedded database", "err", err, "hint", "start docker or set CODEDOCK_DATABASE_URL")
+			os.Exit(1)
+		}
+		supervisor := systemdb.NewSupervisor(dockerClient, systemdb.ContainerName, dataDir, config.Get().Postgres.Image, config.Get().Postgres.Port)
+		supervisor.SetConnectHost(config.Get().Postgres.Host)
+		supervisor.SetNetwork(config.Get().Postgres.Network)
+		databaseURL, err = supervisor.EnsureRunning(context.Background())
+		if err != nil {
+			slog.Error("failed to provision embedded database", "err", err)
+			os.Exit(1)
+		}
+	}
+	sqlDB, err := repositories.OpenDatabase(databaseURL)
 	if err != nil {
-		slog.Error("failed to open SQLite database", "err", err)
+		slog.Error("failed to open database", "err", err)
 		os.Exit(1)
 	}
-	if err := repositories.RunMigrations(db); err != nil {
+	if err := cdkdb.RunMigrations(sqlDB); err != nil {
 		slog.Error("failed to run database migrations", "err", err)
 		os.Exit(1)
 	}
-	return dataDir, db, vlt
+	if err := config.PrepareSelfHosted(context.Background(), config.Get(), repositories.NewSelfHostedRepo(sqlDB)); err != nil {
+		slog.Error("failed to prepare self-hosted configuration", "err", err)
+		os.Exit(1)
+	}
+	return dataDir, sqlDB, vlt
 }

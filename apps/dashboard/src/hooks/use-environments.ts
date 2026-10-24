@@ -1,11 +1,13 @@
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
 import { environmentsService } from '#/services/environments';
 
+export const projectEnvironmentsQueryOptions = (projectId: string) => ({
+  queryKey: ['environments', 'listByProject', projectId].filter(Boolean),
+  queryFn: () => environmentsService.listByProject(projectId),
+});
+
 export const useListByProject = (projectId: string) => {
-  return useQuery({
-    queryKey: ['environments', 'listByProject', projectId].filter(Boolean),
-    queryFn: () => environmentsService.listByProject(projectId),
-  });
+  return useQuery(projectEnvironmentsQueryOptions(projectId));
 };
 
 export const useCreateEnvironment = () => {

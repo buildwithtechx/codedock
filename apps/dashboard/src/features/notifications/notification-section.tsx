@@ -1,7 +1,7 @@
 import { Zap } from 'lucide-react';
 import type React from 'react';
-import { Button } from '#/components/ui/button';
-import { Switch } from '#/components/ui/switch';
+import { Button } from '@codedock/ui/button';
+import { Switch } from '@codedock/ui/switch';
 
 export type NotificationSectionProps = {
   icon: React.ReactNode;

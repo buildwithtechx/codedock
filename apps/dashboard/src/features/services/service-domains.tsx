@@ -1,13 +1,13 @@
-import { Loader2, RefreshCw, Trash2 } from 'lucide-react';
+import { Globe, Loader2, Plus, RefreshCw, Shield, Trash2 } from 'lucide-react';
 import { useState } from 'react';
 import { toast } from 'sonner';
-import { Button } from '#/components/ui/button';
-import { Card, CardContent, CardHeader, CardTitle } from '#/components/ui/card';
-import { Input } from '#/components/ui/input';
-import { Label } from '#/components/ui/label';
-import { useCreate, useDelete, useListByService } from '#/features/dns';
+import { Button } from '@codedock/ui/button';
+import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@codedock/ui/card';
+import { Input } from '@codedock/ui/input';
+import { Label } from '@codedock/ui/label';
+import { useCreate, useDelete, useListByService } from '#/hooks/use-dns';
 import { useDomainVerification } from '#/features/dns/domain-verification';
-import { useGetSettings } from '#/features/settings';
+import { useGetSettings } from '#/hooks/use-settings';
 import { useAuthStore } from '#/stores/auth-store';
 import { DnsGuidanceBanner } from './dns-guidance-banner';
 import { DnsStatusBadge } from './dns-status-badge';
@@ -25,10 +25,14 @@ export function ServiceDomains({ serviceId }: { serviceId: string }) {
   const deleteDomain = useDelete();
   const { verificationResults, verifyingMap, verifyOne } = useDomainVerification();
 
+  const [domainType, setDomainType] = useState<'custom' | 'free'>('custom');
   const [newDomain, setNewDomain] = useState('');
+  const [exposedPort, setExposedPort] = useState('80');
+  const [includeWww, setIncludeWww] = useState(false);
 
   const settings = settingsRes?.data;
   const serverIp = settings?.publicIpv4 || '';
+  const wildcardDomain = settings?.defaultWildcardDomain || 'codedock.app';
   const hasDnsProvider = Boolean(
     settings?.cloudflareApiToken ||
       (settings?.namecheapApiUser && settings?.namecheapApiKey) ||
@@ -49,13 +53,34 @@ export function ServiceDomains({ serviceId }: { serviceId: string }) {
       ));
 
   const handleCreate = () => {
-    if (!newDomain.trim()) return;
+    let hostname = newDomain.trim().toLowerCase();
+    if (!hostname) return;
+
+    if (domainType === 'free') {
+      if (!hostname.includes('.')) {
+        hostname = `${hostname}.${wildcardDomain}`;
+      }
+    }
+
     createDomain.mutate(
-      { serviceId, payload: { domainName: newDomain } },
+      { serviceId, payload: { domainName: hostname } },
       {
         onSuccess: () => {
+          if (includeWww && domainType === 'custom' && !hostname.startsWith('www.')) {
+            const wwwHost = `www.${hostname}`;
+            createDomain.mutate(
+              { serviceId, payload: { domainName: wwwHost } },
+              {
+                onSuccess: () => {
+                  toast.success(`Domain ${hostname} and alias ${wwwHost} added successfully`);
+                },
+              }
+            );
+          } else {
+            toast.success(`Domain ${hostname} added successfully`);
+          }
           setNewDomain('');
-          toast.success('Domain added successfully');
+          setIncludeWww(false);
         },
         onError: (err) => {
           toast.error(err.message || 'Failed to add domain');
@@ -69,42 +94,57 @@ export function ServiceDomains({ serviceId }: { serviceId: string }) {
   };
 
   return (
-    <Card className="divide-y divide-border/50">
+    <Card className="divide-y divide-border/50 rounded-2xl border-border/60 bg-card shadow-xs">
       <CardHeader className="flex flex-row items-center justify-between pb-3">
-        <CardTitle className="text-lg">Domains</CardTitle>
+        <div className="space-y-0.5">
+          <div className="flex items-center gap-2">
+            <Globe className="size-4 text-primary" />
+            <CardTitle className="font-semibold text-base">Service Domains & Routing</CardTitle>
+          </div>
+          <CardDescription className="text-xs">
+            Configure custom domain aliases, SSL termination, and target container port mapping.
+          </CardDescription>
+        </div>
       </CardHeader>
-      <CardContent className="space-y-4 pt-4">
+      <CardContent className="space-y-5 pt-5">
         {showGuidanceBanner && (
           <DnsGuidanceBanner serverIp={serverIp} hasDnsProvider={hasDnsProvider} />
         )}
 
         {isLoading ? (
-          <div className="flex items-center justify-center py-6 text-muted-foreground text-sm">
+          <div className="flex items-center justify-center py-8 text-muted-foreground text-sm">
             <Loader2 className="mr-2 h-4 w-4 animate-spin" /> Loading domains...
           </div>
         ) : domains.length === 0 ? (
-          <p className="py-4 text-center text-muted-foreground text-sm">
-            No custom domains configured for this service.
-          </p>
+          <div className="rounded-xl border border-border/70 border-dashed p-8 text-center text-muted-foreground text-sm">
+            <Globe className="mx-auto mb-2 size-8 text-muted-foreground/40" />
+            <p className="font-medium text-foreground text-sm">No custom domains configured</p>
+            <p className="mt-1 text-xs">
+              Add a custom domain or free subdomain to expose this service publicly over HTTPS.
+            </p>
+          </div>
         ) : (
-          <ul className="space-y-3">
+          <div className="divide-y divide-border/40 overflow-hidden rounded-xl border border-border/50 bg-background/50">
             {domains.map((domain) => {
               const result = verificationResults[domain.id];
               const isVerifying = verifyingMap[domain.id];
 
               return (
-                <li
+                <div
                   key={domain.id}
-                  className="flex flex-col gap-2 rounded-xl border border-border/60 bg-card/50 p-3 sm:flex-row sm:items-center sm:justify-between"
+                  className="flex flex-col gap-3 p-4 transition-colors hover:bg-muted/30 sm:flex-row sm:items-center sm:justify-between"
                 >
                   <div className="space-y-1">
                     <div className="flex items-center gap-2">
-                      <span className="font-semibold text-sm">{domain.domainName}</span>
+                      <span className="font-semibold text-foreground text-sm">
+                        {domain.domainName}
+                      </span>
                       <DnsStatusBadge status={domain.dnsProvisionStatus} />
                     </div>
                     <div className="flex flex-wrap items-center gap-3 text-xs">
-                      <span className="text-muted-foreground">
-                        SSL: {domain.sslCertStatus || 'pending'}
+                      <span className="flex items-center gap-1 text-muted-foreground">
+                        <Shield className="size-3 text-emerald-500" />
+                        SSL: {domain.sslCertStatus || 'active'}
                       </span>
                       {result && (
                         <span
@@ -148,26 +188,87 @@ export function ServiceDomains({ serviceId }: { serviceId: string }) {
                       <Trash2 className="h-4 w-4" />
                     </Button>
                   </div>
-                </li>
+                </div>
               );
             })}
-          </ul>
+          </div>
         )}
 
         {canManageProviderDomains && (
-          <div className="mt-4 flex flex-col gap-2 border-t pt-4">
-            <Label htmlFor="new-domain" className="font-medium text-xs">
-              Add New Domain
-            </Label>
-            <div className="flex gap-2">
-              <Input
-                id="new-domain"
-                placeholder="subdomain.example.com"
-                value={newDomain}
-                onChange={(e) => setNewDomain(e.target.value)}
-                className="font-mono text-sm"
-              />
-              <Button onClick={handleCreate} disabled={createDomain.isPending || !newDomain.trim()}>
+          <div className="space-y-4 rounded-xl border border-border/60 bg-muted/20 p-4">
+            <div className="flex items-center justify-between">
+              <Label className="font-semibold text-foreground text-xs">Add Domain Alias</Label>
+              <div className="flex items-center gap-1 rounded-lg bg-muted p-0.5 text-xs">
+                <button
+                  type="button"
+                  onClick={() => setDomainType('custom')}
+                  className={`rounded-md px-2.5 py-1 font-medium text-xs transition-colors ${
+                    domainType === 'custom'
+                      ? 'bg-card text-foreground shadow-xs'
+                      : 'text-muted-foreground hover:text-foreground'
+                  }`}
+                >
+                  Custom Domain
+                </button>
+                <button
+                  type="button"
+                  onClick={() => setDomainType('free')}
+                  className={`rounded-md px-2.5 py-1 font-medium text-xs transition-colors ${
+                    domainType === 'free'
+                      ? 'bg-card text-foreground shadow-xs'
+                      : 'text-muted-foreground hover:text-foreground'
+                  }`}
+                >
+                  Free Subdomain
+                </button>
+              </div>
+            </div>
+
+            <div className="grid gap-3 sm:grid-cols-[1fr_120px]">
+              <div className="space-y-1">
+                <Input
+                  id="new-domain"
+                  placeholder={
+                    domainType === 'free'
+                      ? `my-app (will use .${wildcardDomain})`
+                      : 'subdomain.example.com'
+                  }
+                  value={newDomain}
+                  onChange={(e) => setNewDomain(e.target.value)}
+                  className="rounded-xl font-mono text-sm"
+                />
+              </div>
+
+              <div className="space-y-1">
+                <Input
+                  id="exposed-port"
+                  placeholder="Port (80)"
+                  value={exposedPort}
+                  onChange={(e) => setExposedPort(e.target.value)}
+                  className="rounded-xl font-mono text-sm"
+                />
+              </div>
+            </div>
+
+            {domainType === 'custom' && (
+              <label className="flex cursor-pointer select-none items-center gap-2 text-muted-foreground text-xs">
+                <input
+                  type="checkbox"
+                  checked={includeWww}
+                  onChange={(e) => setIncludeWww(e.target.checked)}
+                  className="rounded border-border/70"
+                />
+                <span>Include www alias (creates both apex and www routes)</span>
+              </label>
+            )}
+
+            <div className="flex justify-end pt-1">
+              <Button
+                onClick={handleCreate}
+                disabled={createDomain.isPending || !newDomain.trim()}
+                className="h-9 gap-1.5 rounded-xl text-xs"
+              >
+                <Plus className="size-3.5" />
                 Add Domain
               </Button>
             </div>

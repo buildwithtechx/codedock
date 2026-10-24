@@ -6,7 +6,7 @@ import (
 
 	"github.com/posthog/posthog-go"
 
-	"codedock.run/codedock/internal/config"
+	"codedock/internal/config"
 )
 
 var (

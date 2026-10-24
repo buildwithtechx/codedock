@@ -4,8 +4,8 @@ import (
 	"context"
 	"errors"
 
-	"codedock.run/codedock/internal/models"
-	"codedock.run/codedock/internal/repositories"
+	"codedock/internal/models"
+	"codedock/internal/repositories"
 )
 
 type ServerlessService interface {

@@ -2,14 +2,14 @@ package backups
 
 import (
 	"errors"
+	"mime"
 	"net/http"
-	"path/filepath"
 	"strconv"
 
 	"github.com/labstack/echo/v4"
 
-	"codedock.run/codedock/internal/models"
-	"codedock.run/codedock/internal/utils"
+	"codedock/internal/models"
+	"codedock/internal/utils"
 )
 
 func (h *BackupHandler) ListAllRecords(c echo.Context) error {
@@ -105,10 +105,21 @@ func (h *BackupHandler) DownloadRecord(c echo.Context) error {
 		return utils.Error(c, http.StatusNotFound, "record not found")
 	}
 
-	if rec.FilePath == "" {
-		return utils.Error(c, http.StatusNotFound, "local backup file not available")
+	archive, filename, err := h.backupService.OpenArchive(c.Request().Context(), recordID)
+	if err != nil {
+		var notFound *utils.NotFoundError
+		if errors.As(err, &notFound) {
+			return utils.Error(c, http.StatusNotFound, "backup archive not found")
+		}
+		return utils.Error(c, http.StatusBadGateway, "backup archive is unavailable")
 	}
-	return c.Attachment(rec.FilePath, filepath.Base(rec.FilePath))
+	defer func() {
+		if err := archive.Close(); err != nil {
+			c.Logger().Warnf("close backup archive: %v", err)
+		}
+	}()
+	c.Response().Header().Set("Content-Disposition", mime.FormatMediaType("attachment", map[string]string{"filename": filename}))
+	return c.Stream(http.StatusOK, "application/octet-stream", archive)
 }
 
 func (h *BackupHandler) DeleteRecord(c echo.Context) error {
@@ -148,48 +159,7 @@ func (h *BackupHandler) DeleteRecord(c echo.Context) error {
 }
 
 func (h *BackupHandler) Restore(c echo.Context) error {
-	id := c.Param("id")
-	if id == "" {
-		return utils.Error(c, http.StatusBadRequest, "missing record id parameter")
-	}
-
-	var rec *models.BackupRecord
-	var cfg *models.BackupConfig
-
-	directRec, err := h.backupService.GetRecord(c.Request().Context(), id)
-	if err == nil && directRec != nil {
-		rec = directRec
-		cfg, _ = h.backupService.GetConfig(c.Request().Context(), rec.BackupConfigID)
-	} else {
-		directCfg, cfgErr := h.backupService.GetConfig(c.Request().Context(), id)
-		if cfgErr == nil && directCfg != nil {
-			cfg = directCfg
-			records, _ := h.backupService.ListRecordsByConfig(c.Request().Context(), id)
-			for _, r := range records {
-				if r.Status == models.BackupRecordStatusCompleted {
-					rec = r
-					break
-				}
-			}
-		}
-	}
-
-	if rec == nil {
-		return utils.Error(c, http.StatusNotFound, "backup record not found")
-	}
-	if cfg == nil {
-		return utils.Error(c, http.StatusNotFound, "backup config not found")
-	}
-
-	if !h.hasAdminAccess(c, cfg.DatabaseID, cfg.ServiceID) {
-		return utils.Error(c, http.StatusForbidden, "insufficient admin permissions to restore this backup")
-	}
-
-	err = h.backupService.RestoreBackup(c.Request().Context(), rec.ID)
-	if err != nil {
-		return utils.Error(c, http.StatusInternalServerError, err.Error())
-	}
-	return utils.Success(c, "Backup successfully restored", nil)
+	return echo.NewHTTPError(http.StatusGone, "Use the reviewed restore prepare/apply workflow")
 }
 
 func (h *BackupHandler) ListRecordsByDatabase(c echo.Context) error {

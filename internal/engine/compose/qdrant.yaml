@@ -1,0 +1,22 @@
+x-codedock:
+  is_one_click: true
+  name: Qdrant
+  description: Vector database for search and AI embeddings
+  category: database
+  icon: qdrant
+  secrets:
+    - var: QDRANT_API_KEY
+      label: API key
+      length: 32
+services:
+  qdrant:
+    image: qdrant/qdrant
+    restart: always
+    ports:
+      - "6333"
+    environment:
+      - QDRANT__SERVICE__API_KEY=${secret:QDRANT_API_KEY}
+    volumes:
+      - qdrant-data:/qdrant/storage
+volumes:
+  qdrant-data:

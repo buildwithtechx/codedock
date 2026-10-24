@@ -1,4 +1,4 @@
-version: "3.8"
+﻿version: "3.8"
 services:
   timescaledb:
     image: timescale/timescaledb:latest-pg16
@@ -16,3 +16,5 @@ services:
       - POSTGRES_DB=${db.database_name}
     volumes:
       - timescaledb-data:/var/lib/postgresql/data
+volumes:
+  timescaledb-data:

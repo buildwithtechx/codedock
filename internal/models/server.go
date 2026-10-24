@@ -1,6 +1,9 @@
 package models
 
-import "time"
+import (
+	"encoding/json"
+	"time"
+)
 
 type ServerStatus string
 
@@ -28,10 +31,17 @@ type Server struct {
 	SSHJumpHost    string       `json:"sshJumpHost,omitempty" db:"ssh_jump_host"`
 	IsControlPlane bool         `json:"isControlPlane" db:"-"`
 	Status         ServerStatus `json:"status" db:"status"`
+	Provider       string       `json:"provider,omitempty" db:"provider"`
+	ExternalID     string       `json:"externalId,omitempty" db:"external_id"`
+	Region         string       `json:"region,omitempty" db:"region"`
+	ServerType     string       `json:"serverType,omitempty" db:"server_type"`
 	WorkerToken    string       `json:"workerToken,omitempty" db:"worker_token"`
 	LastSeenAt     *time.Time   `json:"lastSeenAt,omitempty" db:"last_seen_at"`
 
-	Metrics []byte `json:"metrics,omitempty" db:"metrics"`
+	Managed      *CloudWorkspaceSummary `json:"managed,omitempty" db:"-"`
+	Capabilities *ServerCapabilities    `json:"capabilities,omitempty" db:"-"`
+
+	Metrics json.RawMessage `json:"metrics,omitempty" db:"metrics"`
 
 	CreatedAt time.Time `json:"createdAt" db:"created_at"`
 	UpdatedAt time.Time `json:"updatedAt" db:"updated_at"`
@@ -74,4 +84,35 @@ type TestSSHRequest struct {
 	SSHKey        string `json:"sshKey"`
 	SSHPrivateKey string `json:"sshPrivateKey,omitempty"`
 	SSHPassword   string `json:"sshPassword"`
+}
+
+type ServerComponentStatus struct {
+	Name        string `json:"name"`
+	Label       string `json:"label"`
+	Description string `json:"description"`
+	Installable bool   `json:"installable"`
+	Installed   bool   `json:"installed"`
+	Version     string `json:"version,omitempty"`
+	Healthy     bool   `json:"healthy"`
+	Message     string `json:"message"`
+}
+
+type ServerListener struct {
+	Port     int    `json:"port"`
+	Protocol string `json:"protocol"`
+	State    string `json:"state"`
+	Exposed  bool   `json:"exposed"`
+	Process  string `json:"process"`
+}
+
+type ServerPortScanResult struct {
+	Scanned   bool             `json:"scanned"`
+	ServerID  string           `json:"serverId"`
+	Listeners []ServerListener `json:"listeners"`
+}
+
+type ServerRateLimitConfig struct {
+	RPS       int      `json:"rps"`
+	Burst     int      `json:"burst"`
+	Whitelist []string `json:"whitelist"`
 }

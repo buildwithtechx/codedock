@@ -1,0 +1,23 @@
+x-codedock:
+  is_one_click: true
+  name: Grafana
+  description: Observability dashboards and alerting
+  category: monitoring
+  icon: grafana
+  secrets:
+    - var: GF_ADMIN_PASSWORD
+      label: Admin password
+      length: 24
+services:
+  grafana:
+    image: grafana/grafana
+    restart: always
+    ports:
+      - "3000"
+    environment:
+      - GF_SECURITY_ADMIN_USER=admin
+      - GF_SECURITY_ADMIN_PASSWORD=${secret:GF_ADMIN_PASSWORD}
+    volumes:
+      - grafana-data:/var/lib/grafana
+volumes:
+  grafana-data:

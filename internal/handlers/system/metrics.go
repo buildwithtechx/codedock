@@ -1,11 +1,12 @@
 package system
 
 import (
+	"errors"
 	"net/http"
 	"time"
 
-	systemservices "codedock.run/codedock/internal/services/system"
-	"codedock.run/codedock/internal/utils"
+	systemservices "codedock/internal/services/system"
+	"codedock/internal/utils"
 	"github.com/labstack/echo/v4"
 )
 
@@ -55,6 +56,9 @@ func (h *MetricsHandler) GetHistoricalMetrics(c echo.Context) error {
 	}
 	data, err := h.metricsService.GetServiceMetrics(c.Request().Context(), opts)
 	if err != nil {
+		if errors.Is(err, systemservices.ErrObservabilityDisabled) {
+			return utils.Error(c, http.StatusServiceUnavailable, err.Error())
+		}
 		return utils.Error(c, http.StatusInternalServerError, err.Error())
 	}
 

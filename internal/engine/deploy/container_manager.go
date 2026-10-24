@@ -5,6 +5,7 @@ import (
 	"fmt"
 	"io"
 	"strings"
+	"time"
 
 	"github.com/containerd/errdefs"
 	"github.com/docker/docker/api/types"
@@ -12,14 +13,15 @@ import (
 	"github.com/docker/docker/client"
 	"github.com/docker/go-connections/nat"
 
-	"codedock.run/codedock/internal/engine/observability"
-	"codedock.run/codedock/internal/models"
-	"codedock.run/codedock/internal/utils"
+	"codedock/internal/engine/observability"
+	"codedock/internal/models"
+	"codedock/internal/utils"
 )
 
 type ContainerManager struct {
 	dockerClient *client.Client
 	store        ContainerManagerStore
+	volumes      VolumeOperations
 }
 
 func NewContainerManager(dockerClient *client.Client, st ContainerManagerStore) *ContainerManager {
@@ -27,24 +29,39 @@ func NewContainerManager(dockerClient *client.Client, st ContainerManagerStore) 
 }
 
 type ContainerRunOptions struct {
-	Name            string
-	ImageTag        string
-	ServiceID       string
-	Domain          string
-	InternalPort    int
-	RuntimeMode     models.RuntimeMode
-	Envs            []string
-	Cmd             []string
-	MemoryLimitMB   int
-	CPURequest      float64
-	HealthCheckPath string
-	Volumes         []models.ServiceVolume
-	MaintenanceMode bool
-	LogDrains       []*models.LogDrain
-	ExtraLabels     map[string]string
+	NetworkName            string `json:"networkName,omitempty"`
+	Name                   string
+	ImageTag               string
+	ServiceID              string
+	ProjectID              string
+	PreviousContainerID    string
+	Domain                 string
+	Hosts                  []RouteHost
+	InternalPort           int
+	RuntimeMode            models.RuntimeMode
+	Envs                   []string
+	Cmd                    []string
+	MemoryLimitMB          int
+	SwapDisabled           bool
+	CPURequest             float64
+	HealthCheckPath        string
+	Volumes                []models.ServiceVolume
+	MaintenanceMode        bool
+	StopGracePeriodSeconds int
+	LogDrains              []*models.LogDrain
+	ExtraLabels            map[string]string
 }
 
 func (c *ContainerManager) CreateAndStart(ctx context.Context, opts ContainerRunOptions) (string, error) {
+	release, err := c.acquireService(opts.ServiceID)
+	if err != nil {
+		return "", err
+	}
+	defer release()
+	return c.createAndStart(ctx, opts)
+}
+
+func (c *ContainerManager) createAndStart(ctx context.Context, opts ContainerRunOptions) (string, error) {
 	containerPort, err := nat.NewPort("tcp", fmt.Sprintf("%d", opts.InternalPort))
 	if err != nil {
 		return "", fmt.Errorf("invalid port definition: %w", err)
@@ -63,21 +80,36 @@ func (c *ContainerManager) CreateAndStart(ctx context.Context, opts ContainerRun
 	}
 
 	config := &container.Config{
-		Image: opts.ImageTag,
-		Env:   opts.Envs,
-		Cmd:   opts.Cmd,
+		Image:  opts.ImageTag,
+		Env:    opts.Envs,
+		Cmd:    opts.Cmd,
+		Labels: map[string]string{},
 	}
+	for key, value := range opts.ExtraLabels {
+		config.Labels[key] = value
+	}
+	config.Labels["codedock.service_id"] = opts.ServiceID
 
 	if opts.HealthCheckPath != "" {
 	}
 
 	if opts.RuntimeMode != models.RuntimeModeWorker {
 		config.ExposedPorts = nat.PortSet{containerPort: struct{}{}}
-		if opts.ServiceID != "" && opts.Domain != "" {
-			config.Labels = c.buildTraefikLabels(opts.ServiceID, opts.Domain, opts.InternalPort, opts.HealthCheckPath, opts.ExtraLabels)
+		if opts.ServiceID != "" && len(opts.Hosts) > 0 {
+			config.Labels = c.buildTraefikLabels(opts.ServiceID, opts.Hosts, opts.InternalPort, opts.HealthCheckPath, opts.ExtraLabels)
 		}
+	} else {
+		filtered := make([]string, 0, len(opts.Envs)+1)
+		for _, e := range opts.Envs {
+			if !strings.HasPrefix(e, "PORT=") {
+				filtered = append(filtered, e)
+			}
+		}
+		filtered = append(filtered, "PORT")
+		config.Env = filtered
 	}
 
+	config.Labels["codedock.service_id"] = opts.ServiceID
 	var binds []string
 	if len(opts.Volumes) > 0 {
 		for _, v := range opts.Volumes {
@@ -88,23 +120,46 @@ func (c *ContainerManager) CreateAndStart(ctx context.Context, opts ContainerRun
 		}
 	}
 
+	resolvedBinds, err := ResolveImageVolumeBinds(ctx, c.dockerClient, opts.ServiceID, opts.ProjectID, binds, opts.ImageTag, opts.PreviousContainerID)
+	if err != nil {
+		return "", fmt.Errorf("resolve image volume binds: %w", err)
+	}
+	binds = resolvedBinds
+
+	networkName := opts.NetworkName
+	if networkName == "" {
+		networkName = utils.GetRuntimeNetwork()
+	}
+	memBytes := utils.MegaBytesToBytes(opts.MemoryLimitMB)
 	hostConfig := &container.HostConfig{
 		RestartPolicy: container.RestartPolicy{Name: "always"},
 		Resources: container.Resources{
-			Memory:   utils.MegaBytesToBytes(opts.MemoryLimitMB),
+			Memory:   memBytes,
 			NanoCPUs: utils.CPURequestToNanoCPUs(opts.CPURequest),
 		},
-		NetworkMode: container.NetworkMode(utils.GetRuntimeNetwork()),
+		NetworkMode: container.NetworkMode(networkName),
 		DNS:         c.getCustomDNSResolvers(),
 		Binds:       binds,
 	}
+	if opts.SwapDisabled && memBytes > 0 {
+		hostConfig.Resources.MemorySwap = memBytes
+	}
+	if opts.StopGracePeriodSeconds > 0 {
+		timeout := opts.StopGracePeriodSeconds
+		config.StopTimeout = &timeout
+	}
 
-	_ = c.StopAndRemove(ctx, opts.Name)
 	resp, err := c.dockerClient.ContainerCreate(ctx, config, hostConfig, nil, nil, opts.Name)
 	if err != nil {
 		return "", fmt.Errorf("docker container create failed: %w", err)
 	}
 	if err := c.dockerClient.ContainerStart(ctx, resp.ID, container.StartOptions{}); err != nil {
+		cleanupCtx, cancel := context.WithTimeout(context.Background(), 10*time.Second)
+		defer cancel()
+		cleanupErr := c.dockerClient.ContainerRemove(cleanupCtx, resp.ID, container.RemoveOptions{Force: true})
+		if cleanupErr != nil {
+			return "", fmt.Errorf("start container: %w; cleanup: %v", err, cleanupErr)
+		}
 		return "", fmt.Errorf("docker container start failed: %w", err)
 	}
 
@@ -115,21 +170,33 @@ func (c *ContainerManager) CreateAndStart(ctx context.Context, opts ContainerRun
 	return resp.ID, nil
 }
 
-func (c *ContainerManager) buildTraefikLabels(serviceID, domain string, internalPort int, healthCheckPath string, extra map[string]string) map[string]string {
+func (c *ContainerManager) buildTraefikLabels(serviceID string, hosts []RouteHost, internalPort int, healthCheckPath string, extra map[string]string) map[string]string {
 	labels := map[string]string{}
 	for k, v := range extra {
 		labels[k] = v
 	}
 	labels["traefik.enable"] = "true"
-	labels[fmt.Sprintf("traefik.http.routers.%s.rule", serviceID)] = fmt.Sprintf("Host(`%s`)", domain)
-	labels[fmt.Sprintf("traefik.http.routers.%s.tls", serviceID)] = "true"
-	labels[fmt.Sprintf("traefik.http.routers.%s.tls.certresolver", serviceID)] = "letsencrypt"
 	labels[fmt.Sprintf("traefik.http.services.%s.loadbalancer.server.port", serviceID)] = fmt.Sprintf("%d", internalPort)
 
 	if healthCheckPath != "" {
 		labels[fmt.Sprintf("traefik.http.services.%s.loadbalancer.healthcheck.path", serviceID)] = healthCheckPath
 		labels[fmt.Sprintf("traefik.http.services.%s.loadbalancer.healthcheck.interval", serviceID)] = "5s"
 		labels[fmt.Sprintf("traefik.http.services.%s.loadbalancer.healthcheck.timeout", serviceID)] = "2s"
+	}
+
+	for i, host := range hosts {
+		router := serviceID
+		if i > 0 {
+			router = fmt.Sprintf("%s-%d", serviceID, i)
+		}
+		rule := fmt.Sprintf("Host(`%s`)", host.Host)
+		if host.PathPrefix != "" {
+			rule = fmt.Sprintf("%s && PathPrefix(`%s`)", rule, host.PathPrefix)
+		}
+		labels[fmt.Sprintf("traefik.http.routers.%s.rule", router)] = rule
+		labels[fmt.Sprintf("traefik.http.routers.%s.service", router)] = serviceID
+		labels[fmt.Sprintf("traefik.http.routers.%s.tls", router)] = "true"
+		labels[fmt.Sprintf("traefik.http.routers.%s.tls.certresolver", router)] = "letsencrypt"
 	}
 	return labels
 }

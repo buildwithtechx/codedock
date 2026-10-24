@@ -5,7 +5,7 @@ import (
 	"hash/fnv"
 	"strings"
 
-	"codedock.run/codedock/internal/config"
+	"codedock/internal/config"
 )
 
 func GenerateAppDomain(projectNameOrID string, hostIP string, wildcardDomain string) string {

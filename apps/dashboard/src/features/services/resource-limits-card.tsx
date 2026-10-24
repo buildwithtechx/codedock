@@ -1,6 +1,6 @@
 import { useEffect, useState } from 'react';
 import { toast } from 'sonner';
-import { Button } from '#/components/ui/button';
+import { Button } from '@codedock/ui/button';
 import {
   Card,
   CardContent,
@@ -8,10 +8,11 @@ import {
   CardFooter,
   CardHeader,
   CardTitle,
-} from '#/components/ui/card';
-import { Input } from '#/components/ui/input';
-import { Label } from '#/components/ui/label';
-import type { AppService } from '#/features/services';
+} from '@codedock/ui/card';
+import { Checkbox } from '@codedock/ui/checkbox';
+import { Input } from '@codedock/ui/input';
+import { Label } from '@codedock/ui/label';
+import type { AppService } from '#/interfaces/services';
 import { useUpdateApp } from '#/hooks/use-apps';
 
 interface ResourceLimitsProps {
@@ -22,21 +23,30 @@ export function ResourceLimitsCard({ app }: ResourceLimitsProps) {
   const { mutateAsync: updateApp, isPending } = useUpdateApp();
   const [cpuLimit, setCpuLimit] = useState(app.cpuLimit?.toString() || '');
   const [memoryLimit, setMemoryLimit] = useState(app.memoryLimit?.toString() || '');
+  const [swapDisabled, setSwapDisabled] = useState(Boolean(app.swapDisabled));
 
   // Reset local state if app data updates externally
   useEffect(() => {
     setCpuLimit(app.cpuLimit?.toString() || '');
     setMemoryLimit(app.memoryLimit?.toString() || '');
-  }, [app.cpuLimit, app.memoryLimit]);
+    setSwapDisabled(Boolean(app.swapDisabled));
+  }, [app.cpuLimit, app.memoryLimit, app.swapDisabled]);
 
   const handleSave = async () => {
+    const memMb = memoryLimit ? parseInt(memoryLimit, 10) : undefined;
+    if (swapDisabled && (!memMb || memMb <= 0)) {
+      toast.error('Disabling swap requires a positive memory limit.');
+      return;
+    }
+
     try {
       await updateApp({
         appId: app.id,
         payload: {
           ...app,
           cpuLimit: cpuLimit ? parseFloat(cpuLimit) : undefined,
-          memoryLimit: memoryLimit ? parseInt(memoryLimit, 10) : undefined,
+          memoryLimit: memMb,
+          swapDisabled,
         },
       });
       toast.success('Resource limits updated');
@@ -91,6 +101,23 @@ export function ResourceLimitsCard({ app }: ResourceLimitsProps) {
                 Leave empty for unbounded memory. Minimum is 64 MB.
               </p>
             </div>
+          </div>
+        </div>
+
+        <div className="flex items-start space-x-3 rounded-md border p-3">
+          <Checkbox
+            id="swapDisabled"
+            checked={swapDisabled}
+            onCheckedChange={(checked) => setSwapDisabled(Boolean(checked))}
+          />
+          <div className="space-y-1 leading-none">
+            <Label htmlFor="swapDisabled" className="cursor-pointer font-medium text-sm">
+              Disable swap memory
+            </Label>
+            <p className="text-muted-foreground text-xs">
+              Runs this container without swap. Requires a positive memory limit and a Docker host
+              with swap accounting enabled.
+            </p>
           </div>
         </div>
       </CardContent>

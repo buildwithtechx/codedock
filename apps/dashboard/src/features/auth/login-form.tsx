@@ -1,13 +1,16 @@
 import { zodResolver } from '@hookform/resolvers/zod';
+import { browserSupportsWebAuthn } from '@simplewebauthn/browser';
 import { Link } from '@tanstack/react-router';
-import { Eye, EyeOff, KeyRound, Lock, Mail } from 'lucide-react';
+import { Eye, EyeOff, Fingerprint, KeyRound, Loader2, Lock, Mail } from 'lucide-react';
 import { useState } from 'react';
 import { useForm } from 'react-hook-form';
 import { z } from 'zod';
-import { Button } from '#/components/ui/button';
-import { Input } from '#/components/ui/input';
-import { Label } from '#/components/ui/label';
-import { useLogin } from '#/features/auth';
+import { Button } from '@codedock/ui/button';
+import { Input } from '@codedock/ui/input';
+import { Label } from '@codedock/ui/label';
+import { useLogin } from '#/hooks/use-auth';
+import { usePasskeyLogin } from '#/hooks/use-passkeys';
+import type { AuthenticationResponseJSON } from '#/interfaces/passkey';
 
 const loginSchema = z.object({
   email: z.string().email('Please enter a valid email address'),
@@ -23,8 +26,13 @@ type TOTPSchema = z.infer<typeof totpSchema>;
 
 export const LoginForm = () => {
   const { mutateAsync: login, isPending } = useLogin();
+  const { mutateAsync: passkeyLogin, isPending: isPasskeyPending } = usePasskeyLogin();
   const [showPassword, setShowPassword] = useState(false);
   const [pendingCredentials, setPendingCredentials] = useState<LoginSchema | null>(null);
+  const [pendingPasskeyAssertion, setPendingPasskeyAssertion] =
+    useState<AuthenticationResponseJSON | null>(null);
+
+  const webAuthnSupported = typeof window !== 'undefined' && browserSupportsWebAuthn();
 
   const loginForm = useForm<LoginSchema>({
     resolver: zodResolver(loginSchema),
@@ -47,7 +55,27 @@ export const LoginForm = () => {
     }
   };
 
+  const handlePasskeySignIn = async () => {
+    try {
+      const result = await passkeyLogin();
+      if (result?.requires2FA && result.assertion) {
+        setPendingPasskeyAssertion(result.assertion);
+      }
+    } catch {
+      // Error handling is handled in usePasskeyLogin
+    }
+  };
+
   const onTOTPSubmit = async (data: TOTPSchema) => {
+    if (pendingPasskeyAssertion) {
+      try {
+        await passkeyLogin({ totpCode: data.totpCode, assertion: pendingPasskeyAssertion });
+      } catch {
+        totpForm.setError('totpCode', { message: 'Invalid verification code' });
+      }
+      return;
+    }
+
     if (!pendingCredentials) return;
     try {
       await login({ ...pendingCredentials, totpCode: data.totpCode });
@@ -56,13 +84,13 @@ export const LoginForm = () => {
     }
   };
 
-  if (pendingCredentials) {
+  if (pendingCredentials || pendingPasskeyAssertion) {
     return (
       <form onSubmit={totpForm.handleSubmit(onTOTPSubmit)} className="space-y-5">
         <div className="space-y-1">
           <p className="font-medium text-foreground text-sm">Two-factor authentication</p>
           <p className="text-muted-foreground text-xs">
-            Enter the 6-digit code from your authenticator app.
+            Enter the code from your authenticator app.
           </p>
         </div>
         <div className="space-y-1.5">
@@ -78,7 +106,7 @@ export const LoginForm = () => {
               autoComplete="one-time-code"
               placeholder="000000"
               maxLength={8}
-              className="h-12 pl-10 text-center tracking-[0.28em]"
+              className="pl-10 text-center tracking-[0.28em]"
               {...totpForm.register('totpCode')}
             />
           </div>
@@ -92,13 +120,16 @@ export const LoginForm = () => {
           <Button
             type="button"
             variant="outline"
-            onClick={() => setPendingCredentials(null)}
-            className="h-12 flex-1"
+            onClick={() => {
+              setPendingCredentials(null);
+              setPendingPasskeyAssertion(null);
+            }}
+            className="flex-1"
           >
             Back
           </Button>
-          <Button type="submit" disabled={isPending} className="h-12 flex-1">
-            {isPending ? 'Verifying...' : 'Verify'}
+          <Button type="submit" disabled={isPending || isPasskeyPending} className="flex-1">
+            {isPending || isPasskeyPending ? 'Verifying...' : 'Verify'}
           </Button>
         </div>
       </form>
@@ -117,7 +148,7 @@ export const LoginForm = () => {
             id="email"
             type="email"
             placeholder="name@example.com"
-            className="h-12 pl-10"
+            className="pl-10"
             {...loginForm.register('email')}
           />
         </div>
@@ -145,7 +176,8 @@ export const LoginForm = () => {
           <Input
             id="password"
             type={showPassword ? 'text' : 'password'}
-            className="h-12 pr-10 pl-10"
+            placeholder="Enter your password"
+            className="pr-10 pl-10"
             {...loginForm.register('password')}
           />
           <button
@@ -163,9 +195,37 @@ export const LoginForm = () => {
         )}
       </div>
 
-      <Button type="submit" disabled={isPending} className="h-12 w-full">
+      <Button type="submit" disabled={isPending || isPasskeyPending} className="w-full">
         {isPending ? 'Signing in...' : 'Sign In'}
       </Button>
+
+      {webAuthnSupported && (
+        <>
+          <div className="relative my-4">
+            <div className="absolute inset-0 flex items-center">
+              <span className="w-full border-t border-border/60" />
+            </div>
+            <div className="relative flex justify-center text-xs uppercase">
+              <span className="bg-card px-2 font-mono text-muted-foreground text-xs">Or</span>
+            </div>
+          </div>
+
+          <Button
+            type="button"
+            variant="outline"
+            disabled={isPending || isPasskeyPending}
+            onClick={handlePasskeySignIn}
+            className="w-full gap-2"
+          >
+            {isPasskeyPending ? (
+              <Loader2 className="h-4 w-4 animate-spin" />
+            ) : (
+              <Fingerprint className="h-4 w-4 text-primary" />
+            )}
+            Sign in with a passkey
+          </Button>
+        </>
+      )}
     </form>
   );
 };
