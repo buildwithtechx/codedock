@@ -112,6 +112,7 @@ type Server struct {
 	rollbackSettingsHandler   *projects.RollbackSettingsHandler
 	routeProtectionHandler    *projects.RouteProtectionHandler
 	edgeAuthHandler           *system.EdgeAuthHandler
+	securityHandler           *system.SecurityHandler
 }
 
 func (s *Server) ServeHTTP(w http.ResponseWriter, r *http.Request) {

@@ -167,6 +167,14 @@ func (s *Server) registerSettingsRoutes(apiGroup, authGroup *echo.Group) {
 func (s *Server) registerMiscRoutes(apiGroup, authGroup *echo.Group) {
 	apiGroup.GET("/meta", s.getMeta)
 	authGroup.GET("/docs/openapi.json", serveOpenAPISpec)
+
+	// Security Advisories & Non-Invasive Runtime Audits
+	authGroup.GET("/updates/advisories", s.securityHandler.GetAdvisories)
+	authGroup.GET("/updates/:projectId/security", s.securityHandler.GetProjectSecurity)
+	authGroup.POST("/updates/:projectId/security/check", s.securityHandler.CheckProject)
+	authGroup.PUT("/updates/:projectId/security/policy", s.securityHandler.SetProjectPolicy)
+	authGroup.POST("/updates/:projectId/security/apply", s.securityHandler.ApplyRemediation)
+
 	authGroup.GET("/projects/:id/stacks", s.composeStackHandler.List)
 	authGroup.GET("/projects/:id/stacks/:stackId/config", s.composeStackHandler.Config, s.authGuard.RequireScope("env:read"))
 	authGroup.POST("/projects/:id/stacks/review", s.composeStackHandler.Review)

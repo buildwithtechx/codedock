@@ -2,7 +2,11 @@ import { Button } from '@codedock/ui/button';
 import { createFileRoute } from '@tanstack/react-router';
 import { AlertTriangle, Trash2 } from 'lucide-react';
 import { useState } from 'react';
-import { ProjectDeleteDialog, ProjectRollbackSettings } from '#/features/projects';
+import {
+  ProjectDeleteDialog,
+  ProjectRollbackSettings,
+  ProjectSecuritySettings,
+} from '#/features/projects';
 import { ProjectMembers } from '#/features/projects/project-members';
 import { ProjectTokens } from '#/features/projects/project-tokens';
 import { ProjectRegistries } from '#/features/registries/project-registries';
@@ -60,6 +64,8 @@ function SettingsRouteComponent() {
         <section className="rounded-2xl border border-border/50 bg-card p-6 shadow-xs">
           <ProjectRollbackSettings projectId={projectId} />
         </section>
+
+        <ProjectSecuritySettings projectId={projectId} />
 
         <SettingsSection
           icon={<AlertTriangle className="size-4 text-destructive" />}

@@ -4,6 +4,7 @@ import (
 	"context"
 	"database/sql"
 	"fmt"
+	"log/slog"
 	"path/filepath"
 	"strings"
 	"time"
@@ -31,6 +32,7 @@ import (
 	"codedock/internal/http/mcp"
 	"codedock/internal/http/middleware"
 	"codedock/internal/models"
+	"codedock/internal/modules/security"
 	"codedock/internal/notifications"
 	"codedock/internal/repositories"
 	authservices "codedock/internal/services/auth"
@@ -328,6 +330,14 @@ func NewServer(db *sql.DB, v *utils.Vault, deployer *deploy.Deployer, traefikMan
 	serverNetworksHandler := system.NewServerNetworksHandler()
 	actionsHandler := system.NewActionsHandler()
 	supportHandler := system.NewSupportHandler()
+
+	securityVerifier, err := security.NewVerifier("")
+	if err != nil {
+		slog.Error("failed to initialize security verifier", "error", err)
+	}
+	securityFeedManager := security.NewFeedManager(db, securityVerifier, "")
+	securityService := security.NewSecurityService(db, securityFeedManager, projectRepo, appRepo, deployRepo, deploymentService)
+	securityHandler := system.NewSecurityHandler(securityService)
 	serverMetricsWSHandler := system.NewServerMetricsWSHandler(tokenService, serverService, userRepo)
 	serviceLogsWSHandler := system.NewServiceLogsWSHandler(tokenService, appService, projectService, userRepo)
 	serviceLogsWSHandler.Streams = deploymentService
@@ -436,6 +446,7 @@ func NewServer(db *sql.DB, v *utils.Vault, deployer *deploy.Deployer, traefikMan
 		rollbackSettingsHandler: rollbackSettingsHandler,
 		routeProtectionHandler:  routeProtectionHandler,
 		edgeAuthHandler:         edgeAuthHandler,
+		securityHandler:         securityHandler,
 	}
 
 	if err := configureManaged(srv, db, v, serverRepo, userRepo, orgRepo, sshManager, operationService); err != nil {

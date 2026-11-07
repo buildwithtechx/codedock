@@ -7,5 +7,6 @@ export { ProjectGitRepoDialog } from './project-git-repo-dialog';
 export { ProjectGitServiceSource } from './project-git-service-source';
 export { ProjectGitTab } from './project-git-tab';
 export { ProjectRollbackSettings } from './project-rollback-settings';
+export { ProjectSecuritySettings } from './project-security-settings';
 export { ProjectVariablesTab } from './project-variables-tab';
 export { ServiceDetailDrawer } from './service-detail-drawer';

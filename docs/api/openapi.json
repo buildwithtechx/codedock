@@ -64263,6 +64263,11 @@
                     "data": {
                       "description": "Server",
                       "properties": {
+                        "buildCacheBudgetBytes": {
+                          "description": "Build-cache budget in bytes",
+                          "format": "int32",
+                          "type": "integer"
+                        },
                         "createdAt": {
                           "description": "Creation time",
                           "format": "date-time",
@@ -100146,6 +100151,11 @@
                       "items": {
                         "description": "Server",
                         "properties": {
+                          "buildCacheBudgetBytes": {
+                            "description": "Build-cache budget in bytes",
+                            "format": "int32",
+                            "type": "integer"
+                          },
                           "createdAt": {
                             "description": "Creation time",
                             "format": "date-time",
@@ -100475,6 +100485,11 @@
                     "data": {
                       "description": "Server",
                       "properties": {
+                        "buildCacheBudgetBytes": {
+                          "description": "Build-cache budget in bytes",
+                          "format": "int32",
+                          "type": "integer"
+                        },
                         "createdAt": {
                           "description": "Creation time",
                           "format": "date-time",
@@ -101222,6 +101237,11 @@
                     "data": {
                       "description": "Server",
                       "properties": {
+                        "buildCacheBudgetBytes": {
+                          "description": "Build-cache budget in bytes",
+                          "format": "int32",
+                          "type": "integer"
+                        },
                         "createdAt": {
                           "description": "Creation time",
                           "format": "date-time",
@@ -101527,6 +101547,11 @@
               "schema": {
                 "description": "Update server",
                 "properties": {
+                  "buildCacheBudgetBytes": {
+                    "description": "Build-cache budget in bytes",
+                    "format": "int32",
+                    "type": "integer"
+                  },
                   "ipAddress": {
                     "description": "IP address",
                     "type": "string"
@@ -101565,6 +101590,11 @@
                     "data": {
                       "description": "Server",
                       "properties": {
+                        "buildCacheBudgetBytes": {
+                          "description": "Build-cache budget in bytes",
+                          "format": "int32",
+                          "type": "integer"
+                        },
                         "createdAt": {
                           "description": "Creation time",
                           "format": "date-time",
@@ -124596,6 +124626,1516 @@
           "takeover"
         ],
         "x-auth": "instance admin"
+      }
+    },
+    "/api/updates/advisories": {
+      "get": {
+        "operationId": "getUpdatesAdvisories",
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "description": "Codedock API envelope",
+                  "properties": {
+                    "data": {
+                      "description": "Advisories response",
+                      "properties": {
+                        "advisories": {
+                          "description": "Advisories",
+                          "items": {
+                            "description": "Security advisory",
+                            "properties": {
+                              "action": {
+                                "description": "Action",
+                                "type": "string"
+                              },
+                              "id": {
+                                "description": "ID",
+                                "type": "string"
+                              },
+                              "message": {
+                                "description": "Message",
+                                "type": "string"
+                              },
+                              "revision": {
+                                "description": "Revision",
+                                "format": "int32",
+                                "type": "integer"
+                              },
+                              "severity": {
+                                "description": "Severity",
+                                "type": "string"
+                              },
+                              "title": {
+                                "description": "Title",
+                                "type": "string"
+                              },
+                              "url": {
+                                "description": "URL",
+                                "type": "string"
+                              }
+                            },
+                            "required": [
+                              "id",
+                              "revision",
+                              "title",
+                              "severity",
+                              "message",
+                              "url",
+                              "action"
+                            ],
+                            "type": "object"
+                          },
+                          "type": "array"
+                        },
+                        "affectedProjects": {
+                          "description": "Affected projects",
+                          "items": {
+                            "description": "Project security",
+                            "properties": {
+                              "autoRefresh": {
+                                "description": "Auto refresh",
+                                "type": "boolean"
+                              },
+                              "checkedAt": {
+                                "description": "Checked at",
+                                "format": "date-time",
+                                "type": "string"
+                              },
+                              "deploymentId": {
+                                "description": "Deployment ID",
+                                "type": "string"
+                              },
+                              "findings": {
+                                "description": "Findings",
+                                "items": {
+                                  "description": "Finding",
+                                  "properties": {
+                                    "action": {
+                                      "description": "Action",
+                                      "type": "string"
+                                    },
+                                    "advisoryId": {
+                                      "description": "Advisory ID",
+                                      "type": "string"
+                                    },
+                                    "canRefresh": {
+                                      "description": "Can refresh",
+                                      "type": "boolean"
+                                    },
+                                    "confidence": {
+                                      "description": "Confidence",
+                                      "type": "string"
+                                    },
+                                    "evidence": {
+                                      "description": "Evidence",
+                                      "type": "string"
+                                    },
+                                    "imageChangeRequired": {
+                                      "description": "Image change required",
+                                      "type": "boolean"
+                                    },
+                                    "runtimeUpgradeRequired": {
+                                      "description": "Runtime upgrade required",
+                                      "type": "boolean"
+                                    },
+                                    "serviceName": {
+                                      "description": "Service name",
+                                      "type": "string"
+                                    },
+                                    "severity": {
+                                      "description": "Severity",
+                                      "type": "string"
+                                    },
+                                    "title": {
+                                      "description": "Title",
+                                      "type": "string"
+                                    }
+                                  },
+                                  "required": [
+                                    "advisoryId",
+                                    "title",
+                                    "severity",
+                                    "action",
+                                    "confidence"
+                                  ],
+                                  "type": "object"
+                                },
+                                "type": "array"
+                              },
+                              "projectId": {
+                                "description": "Project ID",
+                                "type": "string"
+                              }
+                            },
+                            "required": [
+                              "projectId"
+                            ],
+                            "type": "object"
+                          },
+                          "type": "array"
+                        },
+                        "checkedAt": {
+                          "description": "Checked at",
+                          "format": "date-time",
+                          "type": "string"
+                        },
+                        "expiresAt": {
+                          "description": "Expires at",
+                          "format": "date-time",
+                          "type": "string"
+                        },
+                        "revision": {
+                          "description": "Revision",
+                          "format": "int32",
+                          "type": "integer"
+                        },
+                        "stale": {
+                          "description": "Stale",
+                          "type": "boolean"
+                        }
+                      },
+                      "required": [
+                        "revision",
+                        "stale",
+                        "advisories",
+                        "affectedProjects"
+                      ],
+                      "type": "object"
+                    },
+                    "executionTime": {
+                      "description": "Handler seconds",
+                      "format": "double",
+                      "type": "number"
+                    },
+                    "message": {
+                      "description": "Human-readable message",
+                      "type": "string"
+                    },
+                    "path": {
+                      "description": "Request path",
+                      "type": "string"
+                    },
+                    "status": {
+                      "description": "Result status",
+                      "enum": [
+                        "success"
+                      ],
+                      "type": "string"
+                    }
+                  },
+                  "required": [
+                    "status",
+                    "message"
+                  ],
+                  "type": "object"
+                }
+              }
+            },
+            "description": "Get security advisories"
+          },
+          "400": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "description": "Codedock API error",
+                  "properties": {
+                    "message": {
+                      "description": "Human-readable message",
+                      "type": "string"
+                    },
+                    "path": {
+                      "description": "Request path",
+                      "type": "string"
+                    },
+                    "status": {
+                      "description": "Result status",
+                      "enum": [
+                        "error"
+                      ],
+                      "type": "string"
+                    }
+                  },
+                  "required": [
+                    "status",
+                    "message"
+                  ],
+                  "type": "object"
+                }
+              }
+            },
+            "description": "Invalid request"
+          },
+          "401": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "description": "Codedock API error",
+                  "properties": {
+                    "message": {
+                      "description": "Human-readable message",
+                      "type": "string"
+                    },
+                    "path": {
+                      "description": "Request path",
+                      "type": "string"
+                    },
+                    "status": {
+                      "description": "Result status",
+                      "enum": [
+                        "error"
+                      ],
+                      "type": "string"
+                    }
+                  },
+                  "required": [
+                    "status",
+                    "message"
+                  ],
+                  "type": "object"
+                }
+              }
+            },
+            "description": "Missing or invalid credentials"
+          },
+          "403": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "description": "Codedock API error",
+                  "properties": {
+                    "message": {
+                      "description": "Human-readable message",
+                      "type": "string"
+                    },
+                    "path": {
+                      "description": "Request path",
+                      "type": "string"
+                    },
+                    "status": {
+                      "description": "Result status",
+                      "enum": [
+                        "error"
+                      ],
+                      "type": "string"
+                    }
+                  },
+                  "required": [
+                    "status",
+                    "message"
+                  ],
+                  "type": "object"
+                }
+              }
+            },
+            "description": "Insufficient permissions"
+          },
+          "500": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "description": "Codedock API error",
+                  "properties": {
+                    "message": {
+                      "description": "Human-readable message",
+                      "type": "string"
+                    },
+                    "path": {
+                      "description": "Request path",
+                      "type": "string"
+                    },
+                    "status": {
+                      "description": "Result status",
+                      "enum": [
+                        "error"
+                      ],
+                      "type": "string"
+                    }
+                  },
+                  "required": [
+                    "status",
+                    "message"
+                  ],
+                  "type": "object"
+                }
+              }
+            },
+            "description": "Server error"
+          }
+        },
+        "security": [
+          {
+            "bearerAuth": []
+          }
+        ],
+        "summary": "Get security advisories",
+        "tags": [
+          "updates"
+        ],
+        "x-auth": "authenticated"
+      }
+    },
+    "/api/updates/{projectId}/security": {
+      "get": {
+        "operationId": "getUpdatesProjectIdSecurity",
+        "parameters": [
+          {
+            "description": "projectId",
+            "in": "path",
+            "name": "projectId",
+            "required": true,
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "description": "Codedock API envelope",
+                  "properties": {
+                    "data": {
+                      "description": "Project security",
+                      "properties": {
+                        "autoRefresh": {
+                          "description": "Auto refresh",
+                          "type": "boolean"
+                        },
+                        "checkedAt": {
+                          "description": "Checked at",
+                          "format": "date-time",
+                          "type": "string"
+                        },
+                        "deploymentId": {
+                          "description": "Deployment ID",
+                          "type": "string"
+                        },
+                        "findings": {
+                          "description": "Findings",
+                          "items": {
+                            "description": "Finding",
+                            "properties": {
+                              "action": {
+                                "description": "Action",
+                                "type": "string"
+                              },
+                              "advisoryId": {
+                                "description": "Advisory ID",
+                                "type": "string"
+                              },
+                              "canRefresh": {
+                                "description": "Can refresh",
+                                "type": "boolean"
+                              },
+                              "confidence": {
+                                "description": "Confidence",
+                                "type": "string"
+                              },
+                              "evidence": {
+                                "description": "Evidence",
+                                "type": "string"
+                              },
+                              "imageChangeRequired": {
+                                "description": "Image change required",
+                                "type": "boolean"
+                              },
+                              "runtimeUpgradeRequired": {
+                                "description": "Runtime upgrade required",
+                                "type": "boolean"
+                              },
+                              "serviceName": {
+                                "description": "Service name",
+                                "type": "string"
+                              },
+                              "severity": {
+                                "description": "Severity",
+                                "type": "string"
+                              },
+                              "title": {
+                                "description": "Title",
+                                "type": "string"
+                              }
+                            },
+                            "required": [
+                              "advisoryId",
+                              "title",
+                              "severity",
+                              "action",
+                              "confidence"
+                            ],
+                            "type": "object"
+                          },
+                          "type": "array"
+                        },
+                        "projectId": {
+                          "description": "Project ID",
+                          "type": "string"
+                        }
+                      },
+                      "required": [
+                        "projectId"
+                      ],
+                      "type": "object"
+                    },
+                    "executionTime": {
+                      "description": "Handler seconds",
+                      "format": "double",
+                      "type": "number"
+                    },
+                    "message": {
+                      "description": "Human-readable message",
+                      "type": "string"
+                    },
+                    "path": {
+                      "description": "Request path",
+                      "type": "string"
+                    },
+                    "status": {
+                      "description": "Result status",
+                      "enum": [
+                        "success"
+                      ],
+                      "type": "string"
+                    }
+                  },
+                  "required": [
+                    "status",
+                    "message"
+                  ],
+                  "type": "object"
+                }
+              }
+            },
+            "description": "Get project security findings"
+          },
+          "400": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "description": "Codedock API error",
+                  "properties": {
+                    "message": {
+                      "description": "Human-readable message",
+                      "type": "string"
+                    },
+                    "path": {
+                      "description": "Request path",
+                      "type": "string"
+                    },
+                    "status": {
+                      "description": "Result status",
+                      "enum": [
+                        "error"
+                      ],
+                      "type": "string"
+                    }
+                  },
+                  "required": [
+                    "status",
+                    "message"
+                  ],
+                  "type": "object"
+                }
+              }
+            },
+            "description": "Invalid request"
+          },
+          "401": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "description": "Codedock API error",
+                  "properties": {
+                    "message": {
+                      "description": "Human-readable message",
+                      "type": "string"
+                    },
+                    "path": {
+                      "description": "Request path",
+                      "type": "string"
+                    },
+                    "status": {
+                      "description": "Result status",
+                      "enum": [
+                        "error"
+                      ],
+                      "type": "string"
+                    }
+                  },
+                  "required": [
+                    "status",
+                    "message"
+                  ],
+                  "type": "object"
+                }
+              }
+            },
+            "description": "Missing or invalid credentials"
+          },
+          "403": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "description": "Codedock API error",
+                  "properties": {
+                    "message": {
+                      "description": "Human-readable message",
+                      "type": "string"
+                    },
+                    "path": {
+                      "description": "Request path",
+                      "type": "string"
+                    },
+                    "status": {
+                      "description": "Result status",
+                      "enum": [
+                        "error"
+                      ],
+                      "type": "string"
+                    }
+                  },
+                  "required": [
+                    "status",
+                    "message"
+                  ],
+                  "type": "object"
+                }
+              }
+            },
+            "description": "Insufficient permissions"
+          },
+          "404": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "description": "Codedock API error",
+                  "properties": {
+                    "message": {
+                      "description": "Human-readable message",
+                      "type": "string"
+                    },
+                    "path": {
+                      "description": "Request path",
+                      "type": "string"
+                    },
+                    "status": {
+                      "description": "Result status",
+                      "enum": [
+                        "error"
+                      ],
+                      "type": "string"
+                    }
+                  },
+                  "required": [
+                    "status",
+                    "message"
+                  ],
+                  "type": "object"
+                }
+              }
+            },
+            "description": "Resource not found"
+          },
+          "500": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "description": "Codedock API error",
+                  "properties": {
+                    "message": {
+                      "description": "Human-readable message",
+                      "type": "string"
+                    },
+                    "path": {
+                      "description": "Request path",
+                      "type": "string"
+                    },
+                    "status": {
+                      "description": "Result status",
+                      "enum": [
+                        "error"
+                      ],
+                      "type": "string"
+                    }
+                  },
+                  "required": [
+                    "status",
+                    "message"
+                  ],
+                  "type": "object"
+                }
+              }
+            },
+            "description": "Server error"
+          }
+        },
+        "security": [
+          {
+            "bearerAuth": []
+          }
+        ],
+        "summary": "Get project security findings",
+        "tags": [
+          "updates"
+        ],
+        "x-auth": "authenticated"
+      }
+    },
+    "/api/updates/{projectId}/security/apply": {
+      "post": {
+        "operationId": "postUpdatesProjectIdSecurityApply",
+        "parameters": [
+          {
+            "description": "projectId",
+            "in": "path",
+            "name": "projectId",
+            "required": true,
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "description": "Remediation",
+                "properties": {
+                  "advisoryId": {
+                    "description": "Advisory ID",
+                    "type": "string"
+                  },
+                  "deploymentId": {
+                    "description": "Deployment ID",
+                    "type": "string"
+                  }
+                },
+                "required": [
+                  "advisoryId"
+                ],
+                "type": "object"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "description": "Codedock API envelope",
+                  "properties": {
+                    "data": {
+                      "description": "Refresh attempt",
+                      "properties": {
+                        "advisoryId": {
+                          "description": "Advisory ID",
+                          "type": "string"
+                        },
+                        "createdAt": {
+                          "description": "Created at",
+                          "format": "date-time",
+                          "type": "string"
+                        },
+                        "deploymentId": {
+                          "description": "Deployment ID",
+                          "type": "string"
+                        },
+                        "error": {
+                          "description": "Error message",
+                          "type": "string"
+                        },
+                        "id": {
+                          "description": "Attempt ID",
+                          "type": "string"
+                        },
+                        "projectId": {
+                          "description": "Project ID",
+                          "type": "string"
+                        },
+                        "status": {
+                          "description": "Status",
+                          "type": "string"
+                        }
+                      },
+                      "required": [
+                        "id",
+                        "projectId",
+                        "advisoryId",
+                        "status",
+                        "createdAt"
+                      ],
+                      "type": "object"
+                    },
+                    "executionTime": {
+                      "description": "Handler seconds",
+                      "format": "double",
+                      "type": "number"
+                    },
+                    "message": {
+                      "description": "Human-readable message",
+                      "type": "string"
+                    },
+                    "path": {
+                      "description": "Request path",
+                      "type": "string"
+                    },
+                    "status": {
+                      "description": "Result status",
+                      "enum": [
+                        "success"
+                      ],
+                      "type": "string"
+                    }
+                  },
+                  "required": [
+                    "status",
+                    "message"
+                  ],
+                  "type": "object"
+                }
+              }
+            },
+            "description": "Apply security remediation"
+          },
+          "400": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "description": "Codedock API error",
+                  "properties": {
+                    "message": {
+                      "description": "Human-readable message",
+                      "type": "string"
+                    },
+                    "path": {
+                      "description": "Request path",
+                      "type": "string"
+                    },
+                    "status": {
+                      "description": "Result status",
+                      "enum": [
+                        "error"
+                      ],
+                      "type": "string"
+                    }
+                  },
+                  "required": [
+                    "status",
+                    "message"
+                  ],
+                  "type": "object"
+                }
+              }
+            },
+            "description": "Invalid request"
+          },
+          "401": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "description": "Codedock API error",
+                  "properties": {
+                    "message": {
+                      "description": "Human-readable message",
+                      "type": "string"
+                    },
+                    "path": {
+                      "description": "Request path",
+                      "type": "string"
+                    },
+                    "status": {
+                      "description": "Result status",
+                      "enum": [
+                        "error"
+                      ],
+                      "type": "string"
+                    }
+                  },
+                  "required": [
+                    "status",
+                    "message"
+                  ],
+                  "type": "object"
+                }
+              }
+            },
+            "description": "Missing or invalid credentials"
+          },
+          "403": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "description": "Codedock API error",
+                  "properties": {
+                    "message": {
+                      "description": "Human-readable message",
+                      "type": "string"
+                    },
+                    "path": {
+                      "description": "Request path",
+                      "type": "string"
+                    },
+                    "status": {
+                      "description": "Result status",
+                      "enum": [
+                        "error"
+                      ],
+                      "type": "string"
+                    }
+                  },
+                  "required": [
+                    "status",
+                    "message"
+                  ],
+                  "type": "object"
+                }
+              }
+            },
+            "description": "Insufficient permissions"
+          },
+          "404": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "description": "Codedock API error",
+                  "properties": {
+                    "message": {
+                      "description": "Human-readable message",
+                      "type": "string"
+                    },
+                    "path": {
+                      "description": "Request path",
+                      "type": "string"
+                    },
+                    "status": {
+                      "description": "Result status",
+                      "enum": [
+                        "error"
+                      ],
+                      "type": "string"
+                    }
+                  },
+                  "required": [
+                    "status",
+                    "message"
+                  ],
+                  "type": "object"
+                }
+              }
+            },
+            "description": "Resource not found"
+          },
+          "500": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "description": "Codedock API error",
+                  "properties": {
+                    "message": {
+                      "description": "Human-readable message",
+                      "type": "string"
+                    },
+                    "path": {
+                      "description": "Request path",
+                      "type": "string"
+                    },
+                    "status": {
+                      "description": "Result status",
+                      "enum": [
+                        "error"
+                      ],
+                      "type": "string"
+                    }
+                  },
+                  "required": [
+                    "status",
+                    "message"
+                  ],
+                  "type": "object"
+                }
+              }
+            },
+            "description": "Server error"
+          }
+        },
+        "security": [
+          {
+            "bearerAuth": []
+          }
+        ],
+        "summary": "Apply security remediation",
+        "tags": [
+          "updates"
+        ],
+        "x-auth": "authenticated"
+      }
+    },
+    "/api/updates/{projectId}/security/check": {
+      "post": {
+        "operationId": "postUpdatesProjectIdSecurityCheck",
+        "parameters": [
+          {
+            "description": "projectId",
+            "in": "path",
+            "name": "projectId",
+            "required": true,
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "description": "Codedock API envelope",
+                  "properties": {
+                    "data": {
+                      "description": "Project security",
+                      "properties": {
+                        "autoRefresh": {
+                          "description": "Auto refresh",
+                          "type": "boolean"
+                        },
+                        "checkedAt": {
+                          "description": "Checked at",
+                          "format": "date-time",
+                          "type": "string"
+                        },
+                        "deploymentId": {
+                          "description": "Deployment ID",
+                          "type": "string"
+                        },
+                        "findings": {
+                          "description": "Findings",
+                          "items": {
+                            "description": "Finding",
+                            "properties": {
+                              "action": {
+                                "description": "Action",
+                                "type": "string"
+                              },
+                              "advisoryId": {
+                                "description": "Advisory ID",
+                                "type": "string"
+                              },
+                              "canRefresh": {
+                                "description": "Can refresh",
+                                "type": "boolean"
+                              },
+                              "confidence": {
+                                "description": "Confidence",
+                                "type": "string"
+                              },
+                              "evidence": {
+                                "description": "Evidence",
+                                "type": "string"
+                              },
+                              "imageChangeRequired": {
+                                "description": "Image change required",
+                                "type": "boolean"
+                              },
+                              "runtimeUpgradeRequired": {
+                                "description": "Runtime upgrade required",
+                                "type": "boolean"
+                              },
+                              "serviceName": {
+                                "description": "Service name",
+                                "type": "string"
+                              },
+                              "severity": {
+                                "description": "Severity",
+                                "type": "string"
+                              },
+                              "title": {
+                                "description": "Title",
+                                "type": "string"
+                              }
+                            },
+                            "required": [
+                              "advisoryId",
+                              "title",
+                              "severity",
+                              "action",
+                              "confidence"
+                            ],
+                            "type": "object"
+                          },
+                          "type": "array"
+                        },
+                        "projectId": {
+                          "description": "Project ID",
+                          "type": "string"
+                        }
+                      },
+                      "required": [
+                        "projectId"
+                      ],
+                      "type": "object"
+                    },
+                    "executionTime": {
+                      "description": "Handler seconds",
+                      "format": "double",
+                      "type": "number"
+                    },
+                    "message": {
+                      "description": "Human-readable message",
+                      "type": "string"
+                    },
+                    "path": {
+                      "description": "Request path",
+                      "type": "string"
+                    },
+                    "status": {
+                      "description": "Result status",
+                      "enum": [
+                        "success"
+                      ],
+                      "type": "string"
+                    }
+                  },
+                  "required": [
+                    "status",
+                    "message"
+                  ],
+                  "type": "object"
+                }
+              }
+            },
+            "description": "Check project security"
+          },
+          "400": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "description": "Codedock API error",
+                  "properties": {
+                    "message": {
+                      "description": "Human-readable message",
+                      "type": "string"
+                    },
+                    "path": {
+                      "description": "Request path",
+                      "type": "string"
+                    },
+                    "status": {
+                      "description": "Result status",
+                      "enum": [
+                        "error"
+                      ],
+                      "type": "string"
+                    }
+                  },
+                  "required": [
+                    "status",
+                    "message"
+                  ],
+                  "type": "object"
+                }
+              }
+            },
+            "description": "Invalid request"
+          },
+          "401": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "description": "Codedock API error",
+                  "properties": {
+                    "message": {
+                      "description": "Human-readable message",
+                      "type": "string"
+                    },
+                    "path": {
+                      "description": "Request path",
+                      "type": "string"
+                    },
+                    "status": {
+                      "description": "Result status",
+                      "enum": [
+                        "error"
+                      ],
+                      "type": "string"
+                    }
+                  },
+                  "required": [
+                    "status",
+                    "message"
+                  ],
+                  "type": "object"
+                }
+              }
+            },
+            "description": "Missing or invalid credentials"
+          },
+          "403": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "description": "Codedock API error",
+                  "properties": {
+                    "message": {
+                      "description": "Human-readable message",
+                      "type": "string"
+                    },
+                    "path": {
+                      "description": "Request path",
+                      "type": "string"
+                    },
+                    "status": {
+                      "description": "Result status",
+                      "enum": [
+                        "error"
+                      ],
+                      "type": "string"
+                    }
+                  },
+                  "required": [
+                    "status",
+                    "message"
+                  ],
+                  "type": "object"
+                }
+              }
+            },
+            "description": "Insufficient permissions"
+          },
+          "404": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "description": "Codedock API error",
+                  "properties": {
+                    "message": {
+                      "description": "Human-readable message",
+                      "type": "string"
+                    },
+                    "path": {
+                      "description": "Request path",
+                      "type": "string"
+                    },
+                    "status": {
+                      "description": "Result status",
+                      "enum": [
+                        "error"
+                      ],
+                      "type": "string"
+                    }
+                  },
+                  "required": [
+                    "status",
+                    "message"
+                  ],
+                  "type": "object"
+                }
+              }
+            },
+            "description": "Resource not found"
+          },
+          "500": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "description": "Codedock API error",
+                  "properties": {
+                    "message": {
+                      "description": "Human-readable message",
+                      "type": "string"
+                    },
+                    "path": {
+                      "description": "Request path",
+                      "type": "string"
+                    },
+                    "status": {
+                      "description": "Result status",
+                      "enum": [
+                        "error"
+                      ],
+                      "type": "string"
+                    }
+                  },
+                  "required": [
+                    "status",
+                    "message"
+                  ],
+                  "type": "object"
+                }
+              }
+            },
+            "description": "Server error"
+          }
+        },
+        "security": [
+          {
+            "bearerAuth": []
+          }
+        ],
+        "summary": "Check project security",
+        "tags": [
+          "updates"
+        ],
+        "x-auth": "authenticated"
+      }
+    },
+    "/api/updates/{projectId}/security/policy": {
+      "put": {
+        "operationId": "putUpdatesProjectIdSecurityPolicy",
+        "parameters": [
+          {
+            "description": "projectId",
+            "in": "path",
+            "name": "projectId",
+            "required": true,
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "description": "Policy",
+                "properties": {
+                  "autoRefresh": {
+                    "description": "Auto refresh",
+                    "type": "boolean"
+                  }
+                },
+                "required": [
+                  "autoRefresh"
+                ],
+                "type": "object"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "description": "Codedock API envelope",
+                  "properties": {
+                    "data": {
+                      "description": "Empty result",
+                      "properties": {
+                        "result": {
+                          "description": "Result detail",
+                          "type": "string"
+                        }
+                      },
+                      "type": "object"
+                    },
+                    "executionTime": {
+                      "description": "Handler seconds",
+                      "format": "double",
+                      "type": "number"
+                    },
+                    "message": {
+                      "description": "Human-readable message",
+                      "type": "string"
+                    },
+                    "path": {
+                      "description": "Request path",
+                      "type": "string"
+                    },
+                    "status": {
+                      "description": "Result status",
+                      "enum": [
+                        "success"
+                      ],
+                      "type": "string"
+                    }
+                  },
+                  "required": [
+                    "status",
+                    "message"
+                  ],
+                  "type": "object"
+                }
+              }
+            },
+            "description": "Set project security policy"
+          },
+          "400": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "description": "Codedock API error",
+                  "properties": {
+                    "message": {
+                      "description": "Human-readable message",
+                      "type": "string"
+                    },
+                    "path": {
+                      "description": "Request path",
+                      "type": "string"
+                    },
+                    "status": {
+                      "description": "Result status",
+                      "enum": [
+                        "error"
+                      ],
+                      "type": "string"
+                    }
+                  },
+                  "required": [
+                    "status",
+                    "message"
+                  ],
+                  "type": "object"
+                }
+              }
+            },
+            "description": "Invalid request"
+          },
+          "401": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "description": "Codedock API error",
+                  "properties": {
+                    "message": {
+                      "description": "Human-readable message",
+                      "type": "string"
+                    },
+                    "path": {
+                      "description": "Request path",
+                      "type": "string"
+                    },
+                    "status": {
+                      "description": "Result status",
+                      "enum": [
+                        "error"
+                      ],
+                      "type": "string"
+                    }
+                  },
+                  "required": [
+                    "status",
+                    "message"
+                  ],
+                  "type": "object"
+                }
+              }
+            },
+            "description": "Missing or invalid credentials"
+          },
+          "403": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "description": "Codedock API error",
+                  "properties": {
+                    "message": {
+                      "description": "Human-readable message",
+                      "type": "string"
+                    },
+                    "path": {
+                      "description": "Request path",
+                      "type": "string"
+                    },
+                    "status": {
+                      "description": "Result status",
+                      "enum": [
+                        "error"
+                      ],
+                      "type": "string"
+                    }
+                  },
+                  "required": [
+                    "status",
+                    "message"
+                  ],
+                  "type": "object"
+                }
+              }
+            },
+            "description": "Insufficient permissions"
+          },
+          "404": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "description": "Codedock API error",
+                  "properties": {
+                    "message": {
+                      "description": "Human-readable message",
+                      "type": "string"
+                    },
+                    "path": {
+                      "description": "Request path",
+                      "type": "string"
+                    },
+                    "status": {
+                      "description": "Result status",
+                      "enum": [
+                        "error"
+                      ],
+                      "type": "string"
+                    }
+                  },
+                  "required": [
+                    "status",
+                    "message"
+                  ],
+                  "type": "object"
+                }
+              }
+            },
+            "description": "Resource not found"
+          },
+          "500": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "description": "Codedock API error",
+                  "properties": {
+                    "message": {
+                      "description": "Human-readable message",
+                      "type": "string"
+                    },
+                    "path": {
+                      "description": "Request path",
+                      "type": "string"
+                    },
+                    "status": {
+                      "description": "Result status",
+                      "enum": [
+                        "error"
+                      ],
+                      "type": "string"
+                    }
+                  },
+                  "required": [
+                    "status",
+                    "message"
+                  ],
+                  "type": "object"
+                }
+              }
+            },
+            "description": "Server error"
+          }
+        },
+        "security": [
+          {
+            "bearerAuth": []
+          }
+        ],
+        "summary": "Set project security policy",
+        "tags": [
+          "updates"
+        ],
+        "x-auth": "authenticated"
       }
     },
     "/api/users": {

@@ -15,6 +15,7 @@ import { BottomDock } from './bottom-dock';
 import { CommandPalette } from './command-palette';
 import { TopHeader } from './top-header';
 import { UpdateCenter } from './update-center';
+import { SecurityBanner } from '#/components/security/security-banner';
 
 export function AppLayout({ children }: { children: React.ReactNode }) {
   const pathname = useRouterState({
@@ -108,6 +109,7 @@ export function AppLayout({ children }: { children: React.ReactNode }) {
                 </Button>
               </div>
             )}
+            <SecurityBanner />
             {children}
             <div className="mt-8 flex justify-center pb-8">
               <button

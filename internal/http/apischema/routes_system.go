@@ -300,9 +300,54 @@ func supportReceiptSchema() Schema {
 	)
 }
 
+func advisorySchema() Schema {
+	return Obj("Security advisory",
+		RF("id", Str("ID")),
+		RF("revision", Int("Revision")),
+		RF("title", Str("Title")),
+		RF("severity", Str("Severity")),
+		RF("message", Str("Message")),
+		RF("url", Str("URL")),
+		RF("action", Str("Action")),
+	)
+}
+
+func projectSecuritySchema() Schema {
+	return Obj("Project security",
+		RF("projectId", Str("Project ID")),
+		F("deploymentId", Str("Deployment ID")),
+		F("checkedAt", DateTime("Checked at")),
+		F("autoRefresh", Bool("Auto refresh")),
+		F("findings", Arr("Findings", Obj("Finding",
+			RF("advisoryId", Str("Advisory ID")),
+			RF("title", Str("Title")),
+			RF("severity", Str("Severity")),
+			RF("action", Str("Action")),
+			RF("confidence", Str("Confidence")),
+			F("serviceName", Str("Service name")),
+			F("evidence", Str("Evidence")),
+			F("canRefresh", Bool("Can refresh")),
+			F("runtimeUpgradeRequired", Bool("Runtime upgrade required")),
+			F("imageChangeRequired", Bool("Image change required")),
+		))),
+	)
+}
+
+func advisoriesResponseSchema() Schema {
+	return Obj("Advisories response",
+		RF("revision", Int("Revision")),
+		F("checkedAt", DateTime("Checked at")),
+		F("expiresAt", DateTime("Expires at")),
+		RF("stale", Bool("Stale")),
+		RF("advisories", Arr("Advisories", advisorySchema())),
+		RF("affectedProjects", Arr("Affected projects", projectSecuritySchema())),
+	)
+}
+
 func systemOperations() []Operation {
 	system := "system"
 	settings := "settings"
+	updates := "updates"
 	takeover := "takeover"
 	dns := "dns"
 	tasks := "tasks"
@@ -337,6 +382,11 @@ func systemOperations() []Operation {
 		{Method: "GET", Path: "/api/settings/updates/status", Summary: "Get update status", Tags: []string{settings}, Auth: AuthUser, Response: Obj("Update status", F("currentVersion", Str("Current version")), F("latestVersion", Str("Latest version")), F("lastUpdateCheck", Str("Last check")))},
 		{Method: "POST", Path: "/api/settings/updates/check", Summary: "Check for updates", Tags: []string{settings}, Auth: AuthAdmin, Response: Obj("Update status", F("currentVersion", Str("Current version")), F("latestVersion", Str("Latest version")))},
 		{Method: "POST", Path: "/api/settings/updates/deploy", Summary: "Deploy an update", Tags: []string{settings}, Auth: AuthAdmin, Code: 202, Response: EmptySchema()},
+		{Method: "GET", Path: "/api/updates/advisories", Summary: "Get security advisories", Tags: []string{updates}, Auth: AuthUser, Response: advisoriesResponseSchema()},
+		{Method: "GET", Path: "/api/updates/:projectId/security", Summary: "Get project security findings", Tags: []string{updates}, Auth: AuthUser, Response: projectSecuritySchema()},
+		{Method: "POST", Path: "/api/updates/:projectId/security/check", Summary: "Check project security", Tags: []string{updates}, Auth: AuthUser, Response: projectSecuritySchema()},
+		{Method: "PUT", Path: "/api/updates/:projectId/security/policy", Summary: "Set project security policy", Tags: []string{updates}, Auth: AuthUser, Request: JSON(Obj("Policy", RF("autoRefresh", Bool("Auto refresh")))), Response: EmptySchema()},
+		{Method: "POST", Path: "/api/updates/:projectId/security/apply", Summary: "Apply security remediation", Tags: []string{updates}, Auth: AuthUser, Request: JSON(Obj("Remediation", RF("advisoryId", Str("Advisory ID")), F("deploymentId", Str("Deployment ID")))), Response: Obj("Refresh attempt", RF("id", Str("Attempt ID")), RF("projectId", Str("Project ID")), F("deploymentId", Str("Deployment ID")), RF("advisoryId", Str("Advisory ID")), RF("status", Str("Status")), F("error", Str("Error message")), RF("createdAt", DateTime("Created at")))},
 		{Method: "GET", Path: "/api/settings/git_apps/github", Summary: "List GitHub apps", Tags: []string{settings}, Auth: AuthUser, Response: Arr("Apps", githubAppSchema())},
 		{Method: "GET", Path: "/api/settings/git_apps/github/:id", Summary: "Get a GitHub app", Tags: []string{settings}, Auth: AuthUser, Response: githubAppSchema()},
 		{Method: "PUT", Path: "/api/settings/git_apps/github", Summary: "Save a GitHub app", Tags: []string{settings}, Auth: AuthAdmin, Request: JSON(githubAppSchema()), Response: githubAppSchema()},
