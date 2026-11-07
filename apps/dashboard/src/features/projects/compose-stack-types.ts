@@ -17,11 +17,18 @@ export interface ComposeServiceResult {
   exitCode: number;
 }
 
+export interface ComposeSourceChanges {
+  added: string[];
+  changed: string[];
+  removed: string[];
+}
+
 export interface ComposeStackReview {
   config: string;
   digest: string;
   services: string[];
   effects: string[];
+  changes?: ComposeSourceChanges;
 }
 
 export const activeStackStates = new Set([

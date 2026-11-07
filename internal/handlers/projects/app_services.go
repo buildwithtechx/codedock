@@ -47,7 +47,7 @@ func (h *AppHandler) Create(c echo.Context) error {
 	if req.RuntimeMode == "docker" {
 		req.RuntimeMode = models.RuntimeModeWeb
 	}
-	if req.RuntimeMode != "" && req.RuntimeMode != models.RuntimeModeWeb && req.RuntimeMode != models.RuntimeModeWorker {
+	if req.RuntimeMode != "" && req.RuntimeMode != models.RuntimeModeWeb && req.RuntimeMode != models.RuntimeModeWorker && req.RuntimeMode != models.RuntimeModeStatic {
 		return utils.Error(c, http.StatusBadRequest, "unsupported runtime")
 	}
 	env, err := h.envService.GetEnvironment(c.Request().Context(), envID)
@@ -238,6 +238,9 @@ func (h *AppHandler) Update(c echo.Context) error {
 	existing.EnablePRPreviews = req.EnablePRPreviews
 	existing.ImageRef = req.ImageRef
 	existing.RegistryID = req.RegistryID
+	if req.SPAFallback != nil {
+		existing.SPAFallback = req.SPAFallback
+	}
 	if err := h.appService.UpdateAppService(c.Request().Context(), existing); err != nil {
 		return utils.Error(c, http.StatusInternalServerError, err.Error())
 	}

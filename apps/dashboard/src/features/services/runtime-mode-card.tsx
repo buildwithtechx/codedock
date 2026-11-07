@@ -1,11 +1,12 @@
-import { useMutation, useQueryClient } from '@tanstack/react-query';
-import { useState } from 'react';
-import { toast } from 'sonner';
 import { Badge } from '@codedock/ui/badge';
 import { Button } from '@codedock/ui/button';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@codedock/ui/card';
 import { Input } from '@codedock/ui/input';
 import { Label } from '@codedock/ui/label';
+import { Switch } from '@codedock/ui/switch';
+import { useMutation, useQueryClient } from '@tanstack/react-query';
+import { useState } from 'react';
+import { toast } from 'sonner';
 import { apiClient } from '#/lib/api-client';
 
 interface RuntimeModeCardProps {
@@ -13,6 +14,7 @@ interface RuntimeModeCardProps {
   initialData?: {
     runtimeMode?: 'web' | 'worker' | 'static';
     internalPort?: number;
+    spaFallback?: boolean;
   };
 }
 
@@ -22,6 +24,7 @@ export function RuntimeModeCard({ serviceId, initialData }: RuntimeModeCardProps
     initialData?.runtimeMode || 'web'
   );
   const [internalPort, setInternalPort] = useState(initialData?.internalPort || 3000);
+  const [spaFallback, setSpaFallback] = useState(initialData?.spaFallback !== false);
 
   const updateMutation = useMutation({
     mutationFn: async (data: Record<string, unknown>) => {
@@ -39,6 +42,7 @@ export function RuntimeModeCard({ serviceId, initialData }: RuntimeModeCardProps
     updateMutation.mutate({
       runtimeMode,
       internalPort: runtimeMode === 'web' ? internalPort : undefined,
+      spaFallback: runtimeMode === 'static' ? spaFallback : undefined,
     });
   };
 
@@ -119,6 +123,21 @@ export function RuntimeModeCard({ serviceId, initialData }: RuntimeModeCardProps
             <p className="text-xs text-zinc-500">
               The port your application server listens on (e.g., 3000, 8080).
             </p>
+          </div>
+        )}
+
+        {runtimeMode === 'static' && (
+          <div className="flex items-center justify-between rounded-md border bg-muted/20 p-4">
+            <div className="space-y-0.5 pr-4">
+              <Label htmlFor="spaFallback" className="font-medium text-sm">
+                SPA fallback
+              </Label>
+              <p className="text-muted-foreground text-xs">
+                Static sites: serve index.html for missing paths. Turn off for a real 404, using
+                404.html when available. Redeploy container-hosted sites to apply changes.
+              </p>
+            </div>
+            <Switch id="spaFallback" checked={spaFallback} onCheckedChange={setSpaFallback} />
           </div>
         )}
 

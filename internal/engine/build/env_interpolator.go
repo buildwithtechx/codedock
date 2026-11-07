@@ -45,3 +45,26 @@ func resolveValue(value string, registry map[string]map[string]string) string {
 		return match
 	})
 }
+
+var cmdEnvPattern = regexp.MustCompile(`\$\{([a-zA-Z_][a-zA-Z0-9_]*)\}|\$([a-zA-Z_][a-zA-Z0-9_]*)`)
+
+// ReinterpolateCommand replaces ${VAR} and $VAR placeholders in an authored command
+// string using the provided runtime environment variables.
+func ReinterpolateCommand(command string, env map[string]string) string {
+	if command == "" || len(env) == 0 {
+		return command
+	}
+	return cmdEnvPattern.ReplaceAllStringFunc(command, func(match string) string {
+		parts := cmdEnvPattern.FindStringSubmatch(match)
+		var key string
+		if parts[1] != "" {
+			key = parts[1]
+		} else {
+			key = parts[2]
+		}
+		if val, ok := env[key]; ok {
+			return val
+		}
+		return match
+	})
+}

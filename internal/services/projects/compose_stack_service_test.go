@@ -4,6 +4,7 @@ import (
 	"codedock/internal/models"
 	"context"
 	"fmt"
+	"strings"
 	"testing"
 	"time"
 )
@@ -116,5 +117,68 @@ func TestStackBackupFailurePreventsRuntimeActivation(t *testing.T) {
 		}
 	case <-time.After(2 * time.Second):
 		t.Fatal("runtime activated despite failed backup")
+	}
+}
+
+type stackTestRuntimeCustom struct {
+	canonicalConfig string
+}
+
+func (r *stackTestRuntimeCustom) Canonical(context.Context, string, string, map[string]string) (string, error) {
+	return r.canonicalConfig, nil
+}
+func (r *stackTestRuntimeCustom) ValidatePorts(context.Context, string, string) error { return nil }
+func (r *stackTestRuntimeCustom) Results(context.Context, string) ([]models.ComposeServiceResult, error) {
+	return nil, nil
+}
+func (r *stackTestRuntimeCustom) Apply(context.Context, *models.ComposeStack, func(string) error) error {
+	return nil
+}
+
+func TestStackReviewDetectsSourceChangesAndRetiresRemovedServices(t *testing.T) {
+	previousConfig := `{"services":{"web":{"image":"nginx:1.20"},"worker":{"image":"redis:6"},"oldsvc":{"image":"busybox"}}}`
+	store := &stackTestStore{
+		stack: &models.ComposeStack{
+			ID:        "00000000-0000-0000-0000-000000000001",
+			ProjectID: "project-1",
+			Config:    previousConfig,
+		},
+	}
+	runtime := &stackTestRuntimeCustom{
+		canonicalConfig: `{"services":{"web":{"image":"nginx:1.25"},"worker":{"image":"redis:6"},"newapi":{"image":"golang:1.22"}}}`,
+	}
+	service := NewComposeStackService(store, runtime)
+	req := models.ComposeStackRequest{
+		ID:            "00000000-0000-0000-0000-000000000001",
+		ProjectID:     "project-1",
+		EnvironmentID: "env-1",
+		Name:          "prod-stack",
+		Content:       "version: '3'",
+	}
+	review, err := service.Review(context.Background(), req)
+	if err != nil {
+		t.Fatalf("unexpected error: %v", err)
+	}
+	if review.Changes == nil {
+		t.Fatalf("expected review changes to be non-nil")
+	}
+	if len(review.Changes.Added) != 1 || review.Changes.Added[0] != "newapi" {
+		t.Errorf("expected added [newapi], got: %v", review.Changes.Added)
+	}
+	if len(review.Changes.Changed) != 1 || review.Changes.Changed[0] != "web" {
+		t.Errorf("expected changed [web], got: %v", review.Changes.Changed)
+	}
+	if len(review.Changes.Removed) != 1 || review.Changes.Removed[0] != "oldsvc" {
+		t.Errorf("expected removed [oldsvc], got: %v", review.Changes.Removed)
+	}
+	foundRetirementEffect := false
+	for _, effect := range review.Effects {
+		if strings.Contains(effect, "Removed services (oldsvc) will be stopped, unrouted, and pruned safely.") {
+			foundRetirementEffect = true
+			break
+		}
+	}
+	if !foundRetirementEffect {
+		t.Errorf("expected effects to note removed services retirement, got: %v", review.Effects)
 	}
 }

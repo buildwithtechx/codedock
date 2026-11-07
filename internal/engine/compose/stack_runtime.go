@@ -83,7 +83,7 @@ func (r *StackRuntime) Apply(ctx context.Context, stack *models.ComposeStack, pr
 	if err := progress("STARTING"); err != nil {
 		return err
 	}
-	if _, err := r.command(ctx, stack.ID, stack.Config, nil, "up", "--detach", "--no-build", "--pull", "never", "--wait", "--wait-timeout", "120"); err != nil {
+	if _, err := r.command(ctx, stack.ID, stack.Config, nil, "up", "--detach", "--no-build", "--pull", "never", "--wait", "--wait-timeout", "120", "--remove-orphans"); err != nil {
 		return fmt.Errorf("stack activation was interrupted or failed; some services may have changed. Review per-service states before retrying: %w", err)
 	}
 	return progress("READINESS")

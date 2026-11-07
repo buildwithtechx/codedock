@@ -174,6 +174,7 @@ type AppService struct {
 	StopGracePeriodSeconds int              `json:"stopGracePeriodSeconds,omitempty" db:"stop_grace_period_seconds"`
 	RuntimeVersion         string           `json:"runtimeVersion,omitempty" db:"runtime_version"`
 	RegistryID             *string          `json:"registryId,omitempty" db:"registry_id"`
+	SPAFallback            *bool            `json:"spaFallback,omitempty" db:"spa_fallback"`
 
 	Volumes []ServiceVolume   `json:"volumes,omitempty" db:"-"`
 	Roles   []ServiceRoleSpec `json:"roles,omitempty" db:"-"`
@@ -216,6 +217,7 @@ type CreateAppServiceRequest struct {
 	RuntimeVersion         string      `json:"runtimeVersion,omitempty"`
 	MaintenanceMode        bool        `json:"maintenanceMode,omitempty"`
 	RegistryID             *string     `json:"registryId,omitempty"`
+	SPAFallback            *bool       `json:"spaFallback,omitempty"`
 }
 
 type UpdateAppServiceRequest struct {
@@ -246,6 +248,7 @@ type UpdateAppServiceRequest struct {
 	StopGracePeriodSeconds int         `json:"stopGracePeriodSeconds,omitempty"`
 	RuntimeVersion         string      `json:"runtimeVersion,omitempty"`
 	RegistryID             *string     `json:"registryId,omitempty"`
+	SPAFallback            *bool       `json:"spaFallback,omitempty"`
 }
 
 type Variable struct {

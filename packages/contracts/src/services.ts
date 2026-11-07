@@ -51,6 +51,7 @@ export interface AppService {
   deployToken?: string;
   appId?: string;
   replicas?: number;
+  spaFallback?: boolean;
 }
 
 export interface Variable {
@@ -101,6 +102,7 @@ export interface CreateAppServiceRequest {
   memoryLimit?: number;
   swapDisabled?: boolean;
   stack?: string;
+  spaFallback?: boolean;
 }
 
 export interface UpdateAppServiceRequest {
@@ -131,6 +133,7 @@ export interface UpdateAppServiceRequest {
   optimize?: boolean;
   stack?: string;
   stopGracePeriodSeconds?: number;
+  spaFallback?: boolean;
 }
 
 export interface CreateServiceVarRequest {

@@ -81,7 +81,58 @@ func (s *ComposeStackService) Review(ctx context.Context, request models.Compose
 		services = append(services, name)
 	}
 	sort.Strings(services)
-	return &models.ComposeReview{Config: config, Digest: composeReviewDigest(request, config), Services: services, Effects: []string{"Save the complete resolved configuration, encrypted on disk.", "Build and pull all images before changing existing containers.", "Start services in dependency order and wait for health checks.", "Reuse owned named volumes and networks on retry. No volumes are deleted.", "Activation failures or cancellation may leave partially updated services; inspect each service before retrying.", "Services removed from the configuration remain running until explicitly removed."}}, nil
+
+	var changes *models.ComposeSourceChanges
+	if request.ProjectID != "" && request.ID != "" {
+		if existing, err := s.store.Get(ctx, request.ProjectID, request.ID); err == nil && existing != nil && existing.Config != "" {
+			var oldDoc struct {
+				Services map[string]json.RawMessage `json:"services"`
+			}
+			if err := json.Unmarshal([]byte(existing.Config), &oldDoc); err == nil {
+				changes = &models.ComposeSourceChanges{
+					Added:   []string{},
+					Changed: []string{},
+					Removed: []string{},
+				}
+				for name, newRaw := range document.Services {
+					if oldRaw, ok := oldDoc.Services[name]; !ok {
+						changes.Added = append(changes.Added, name)
+					} else if string(newRaw) != string(oldRaw) {
+						changes.Changed = append(changes.Changed, name)
+					}
+				}
+				for name := range oldDoc.Services {
+					if _, ok := document.Services[name]; !ok {
+						changes.Removed = append(changes.Removed, name)
+					}
+				}
+				sort.Strings(changes.Added)
+				sort.Strings(changes.Changed)
+				sort.Strings(changes.Removed)
+			}
+		}
+	}
+
+	effects := []string{
+		"Save the complete resolved configuration, encrypted on disk.",
+		"Build and pull all images before changing existing containers.",
+		"Start services in dependency order and wait for health checks.",
+		"Reuse owned named volumes and networks on retry. No volumes are deleted.",
+		"Activation failures or cancellation may leave partially updated services; inspect each service before retrying.",
+	}
+	if changes != nil && len(changes.Removed) > 0 {
+		effects = append(effects, fmt.Sprintf("Removed services (%s) will be stopped, unrouted, and pruned safely.", strings.Join(changes.Removed, ", ")))
+	} else {
+		effects = append(effects, "Services removed from the configuration are safely retired and unrouted.")
+	}
+
+	return &models.ComposeReview{
+		Config:   config,
+		Digest:   composeReviewDigest(request, config),
+		Services: services,
+		Effects:  effects,
+		Changes:  changes,
+	}, nil
 }
 
 func composeReviewDigest(request models.ComposeStackRequest, config string) string {

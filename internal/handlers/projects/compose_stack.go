@@ -61,6 +61,7 @@ func (h *ComposeStackHandler) Review(c echo.Context) error {
 	if err != nil {
 		return err
 	}
+	request.ProjectID = c.Param("id")
 	review, err := h.stacks.Review(c.Request().Context(), *request)
 	if err != nil {
 		return utils.Error(c, http.StatusBadRequest, err.Error())

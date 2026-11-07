@@ -1,13 +1,14 @@
-import { useMutation, useQuery } from '@tanstack/react-query';
-import { RefreshCw } from 'lucide-react';
-import { useRef, useState } from 'react';
 import { Button } from '@codedock/ui/button';
 import { Input } from '@codedock/ui/input';
 import { Label } from '@codedock/ui/label';
+import { useMutation, useQuery } from '@tanstack/react-query';
+import { RefreshCw } from 'lucide-react';
+import { useRef, useState } from 'react';
 import { useListByProject } from '#/hooks/use-environments';
 import type { BaseResponse } from '#/interfaces/base';
 import { apiClient } from '#/lib/api-client';
 import { parseSetupVariables } from '../sources/application-setup-types';
+import { ComposeChangeSummary } from './compose-change-summary';
 import { ComposeStackCard } from './compose-stack-card';
 import type { ComposeStack, ComposeStackReview } from './compose-stack-types';
 
@@ -209,6 +210,7 @@ export function ComposeDeployForm({ projectId }: { projectId: string }) {
         {currentReview && (
           <div className="space-y-3">
             <h3 className="font-medium">Deployment review</h3>
+            <ComposeChangeSummary changes={currentReview.changes} />
             <ul className="list-disc space-y-1 pl-5 text-sm">
               {currentReview.effects.map((effect) => (
                 <li key={effect}>{effect}</li>

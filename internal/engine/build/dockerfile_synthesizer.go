@@ -35,8 +35,18 @@ func synthesizeDockerfile(stack string, opts BuildOptions) (string, error) {
 		return "", fmt.Errorf("failed to read embedded dockerfile template %s: %w", templateName, err)
 	}
 
+	dockerfile := string(content)
+	if templateName == "templates/static.Dockerfile" {
+		spaRule := "try_files $uri $uri/ /index.html;"
+		if opts.AppConfig != nil && opts.AppConfig.SPAFallback != nil && !*opts.AppConfig.SPAFallback {
+			spaRule = "try_files $uri $uri/ =404;\\n    }\\n    error_page 404 /404.html;\\n    location = /404.html {\\n        internal;"
+		}
+		nginxConf := fmt.Sprintf("RUN printf 'server {\\n    listen 80;\\n    server_name _;\\n    root /usr/share/nginx/html;\\n    index index.html;\\n    location / {\\n        %s\\n    }\\n}\\n' > /etc/nginx/conf.d/default.conf\n\n", spaRule)
+		dockerfile = strings.Replace(dockerfile, "EXPOSE 80", nginxConf+"EXPOSE 80", 1)
+	}
+
 	if opts.AppConfig == nil {
-		return string(content), nil
+		return dockerfile, nil
 	}
 
 	overrides := dockerfileOverrides{
@@ -46,10 +56,10 @@ func synthesizeDockerfile(stack string, opts BuildOptions) (string, error) {
 	}
 
 	if overrides.InstallCommand == "" && overrides.BuildCommand == "" && overrides.StartCommand == "" {
-		return string(content), nil
+		return dockerfile, nil
 	}
 
-	return applyDockerfileOverrides(string(content), overrides), nil
+	return applyDockerfileOverrides(dockerfile, overrides), nil
 }
 
 func applyDockerfileOverrides(dockerfile string, o dockerfileOverrides) string {

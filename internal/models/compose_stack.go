@@ -1,6 +1,7 @@
 package models
 
 type ComposeStackRequest struct {
+	ProjectID     string            `json:"projectId,omitempty"`
 	RepositoryURL string            `json:"repositoryUrl,omitempty"`
 	Branch        string            `json:"branch,omitempty"`
 	RootDirectory string            `json:"rootDirectory,omitempty"`
@@ -26,11 +27,18 @@ type ComposeStack struct {
 	Config        string `json:"-" db:"encrypted_config"`
 }
 
+type ComposeSourceChanges struct {
+	Added   []string `json:"added"`
+	Changed []string `json:"changed"`
+	Removed []string `json:"removed"`
+}
+
 type ComposeReview struct {
-	Config   string   `json:"config"`
-	Digest   string   `json:"digest"`
-	Services []string `json:"services"`
-	Effects  []string `json:"effects"`
+	Config   string                `json:"config"`
+	Digest   string                `json:"digest"`
+	Services []string              `json:"services"`
+	Effects  []string              `json:"effects"`
+	Changes  *ComposeSourceChanges `json:"changes,omitempty"`
 }
 
 type ComposeServiceResult struct {

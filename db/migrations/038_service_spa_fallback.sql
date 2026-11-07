@@ -1,0 +1,1 @@
+ALTER TABLE app_services ADD COLUMN spa_fallback BOOLEAN DEFAULT TRUE;
