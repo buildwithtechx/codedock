@@ -14,7 +14,7 @@ export function parseGitUrl(raw: string): PendingImport | null {
   }
   try {
     const parsed = new URL(value);
-    if (!['https:', 'http:', 'ssh:'].includes(parsed.protocol)) return null;
+    if (!['https:', 'http:'].includes(parsed.protocol)) return null;
     if (parsed.username || parsed.password || parsed.port) return null;
     const parts = parsed.pathname.replace(/\/+$/, '').slice(1).split('/');
     if (parts.length < 2) return null;

@@ -233,14 +233,7 @@ export function DeployRuntimeCard({
           )}
           <CommandEnvironmentNotice
             commands={{ installCommand, buildCommand }}
-            migrateDraft={(cmds, vars) => {
-              if (onMigrateDraft) {
-                onMigrateDraft(cmds, vars);
-              } else {
-                if (cmds.installCommand !== undefined) onInstallCommandChange(cmds.installCommand);
-                if (cmds.buildCommand !== undefined) onBuildCommandChange(cmds.buildCommand);
-              }
-            }}
+            migrateDraft={onMigrateDraft}
           />
         </div>
       )}

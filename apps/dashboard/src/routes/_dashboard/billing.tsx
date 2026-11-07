@@ -92,7 +92,7 @@ function BillingPage() {
 
   const handleAddCredits = async (cents: number) => {
     try {
-      const pack = topupPacks.find((p) => p.priceCents === cents) ?? topupPacks[0];
+      const pack = topupPacks.find((p) => p.priceCents === cents);
       if (!pack) return;
       const { url } = await purchaseTopupMutation.mutateAsync({
         packId: pack.id,

@@ -3,10 +3,14 @@ WORKDIR /app
 
 COPY package.json package-lock.json ./
 COPY apps/dashboard/package.json ./apps/dashboard/
+COPY packages/contracts/package.json ./packages/contracts/
+COPY packages/core/package.json ./packages/core/
 COPY packages/setup/package.json ./packages/setup/
 COPY packages/ui/package.json ./packages/ui/
 RUN npm ci --workspace=@codedock/dashboard --include-workspace-root
 
+COPY packages/contracts/ ./packages/contracts/
+COPY packages/core/ ./packages/core/
 COPY packages/setup/ ./packages/setup/
 COPY packages/ui/ ./packages/ui/
 COPY apps/dashboard/ ./apps/dashboard/
@@ -22,6 +26,7 @@ RUN apk add --no-cache git ca-certificates tzdata
 COPY go.mod go.sum ./
 RUN go mod download
 
+COPY db/ ./db/
 COPY cmd/ ./cmd/
 COPY internal/ ./internal/
 COPY apps/dashboard/*.go ./apps/dashboard/

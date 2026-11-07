@@ -14,6 +14,7 @@ import { Badge } from '@codedock/ui/badge';
 import { Button } from '@codedock/ui/button';
 import type { DomainBase } from '@codedock/contracts';
 import { RouteProtectionButton } from '#/features/dns';
+import { DomainIngressSettings } from '#/features/ingress/domain-ingress-settings';
 
 interface ProjectDomainsListProps {
   domains: DomainBase[];
@@ -91,6 +92,7 @@ export function ProjectDomainsList({
 
         <div className="flex items-center gap-2">
           <RouteProtectionButton hostname={dom.domainName} projectId={projectId} />
+          <DomainIngressSettings domainId={dom.id} hostname={dom.domainName} />
           <Button
             variant="outline"
             size="sm"

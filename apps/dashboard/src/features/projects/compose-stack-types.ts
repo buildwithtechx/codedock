@@ -24,7 +24,13 @@ export interface ComposeStackReview {
   effects: string[];
 }
 
-export const activeStackStates = new Set(['PREPARING', 'BUILDING', 'STARTING', 'READINESS']);
+export const activeStackStates = new Set([
+  'BACKING_UP',
+  'PREPARING',
+  'BUILDING',
+  'STARTING',
+  'READINESS',
+]);
 
 export function stackResults(stack: ComposeStack): ComposeServiceResult[] {
   try {

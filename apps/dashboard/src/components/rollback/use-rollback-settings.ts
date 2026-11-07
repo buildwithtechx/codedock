@@ -58,6 +58,7 @@ export function useRollbackSettings(projectId?: string | null, enabled = true) {
     toggleStrategy: () =>
       save('strategy', {
         defaultRollbackStrategy: capacity?.strategy === 'snapshot' ? 'git' : 'snapshot',
+        rollbackWindow: capacity?.explicit ?? null,
       }),
   };
 }

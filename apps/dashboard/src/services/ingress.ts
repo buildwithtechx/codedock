@@ -56,18 +56,25 @@ export const ingressService = {
   },
 
   getDomain: async (domainId: string): Promise<IngressHostname | null> => {
-    const query = `?domainId=${encodeURIComponent(domainId)}`;
-    const res = await apiClient.get<{ data: IngressHostname[] }>(`/dns/ingress/hostnames${query}`);
-    return res.data?.[0] ?? null;
+    const res = await apiClient.get<{ data: IngressHostname | null }>(
+      `/dns/ingress/domains/${encodeURIComponent(domainId)}`
+    );
+    return res.data ?? null;
   },
 
   bindDomain: async (input: IngressDomainInput): Promise<IngressHostname> => {
-    const res = await apiClient.put<{ data: IngressHostname }>('/dns/ingress/domain', input);
+    const res = await apiClient.put<{ data: IngressHostname }>(
+      `/dns/ingress/domains/${encodeURIComponent(input.domainId)}`,
+      { connectionId: input.connectionId, accessPolicyId: input.accessPolicyId }
+    );
     return res.data;
   },
 
   setDomain: async (input: IngressDomainInput): Promise<IngressHostname> => {
-    const res = await apiClient.put<{ data: IngressHostname }>('/dns/ingress/domain', input);
+    const res = await apiClient.put<{ data: IngressHostname }>(
+      `/dns/ingress/domains/${encodeURIComponent(input.domainId)}`,
+      { connectionId: input.connectionId, accessPolicyId: input.accessPolicyId }
+    );
     return res.data;
   },
 };

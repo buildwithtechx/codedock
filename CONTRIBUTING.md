@@ -110,7 +110,7 @@ Leave `CODEDOCK_DATABASE_URL` empty and the daemon provisions an embedded
 1. Create an empty database the daemon can connect to:
 
 ```bash
-createuser codedock
+createuser -P -d codedock   # enter 'secret' when prompted for password
 createdb -O codedock codedock
 ```
 

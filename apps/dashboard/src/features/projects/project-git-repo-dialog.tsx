@@ -29,14 +29,19 @@ export function ProjectGitRepoDialog({
   title,
   description,
 }: ProjectGitRepoDialogProps) {
-  const { data: statusRes } = useGetStatus();
+  const { data: statusRes, isError: isStatusError, refetch: refetchStatus } = useGetStatus();
   const connections = useMemo(
     () => (statusRes?.data ?? []).filter((connection) => connection.connected),
     [statusRes]
   );
   const [provider, setProvider] = useState('');
   const [query, setQuery] = useState('');
-  const { data: reposRes, isLoading } = useListGitRepos(provider);
+  const {
+    data: reposRes,
+    isLoading,
+    isError: isReposError,
+    refetch: refetchRepos,
+  } = useListGitRepos(provider);
   const repositories = useMemo(() => {
     const repos = reposRes?.data ?? [];
     const needle = query.trim().toLowerCase();
@@ -51,6 +56,19 @@ export function ProjectGitRepoDialog({
           <DialogTitle>{title}</DialogTitle>
           <DialogDescription>{description}</DialogDescription>
         </DialogHeader>
+        {isStatusError && (
+          <div className="flex items-center justify-between rounded-lg border border-destructive/30 bg-destructive/10 p-3 text-destructive text-xs">
+            <span>Failed to load connected Git accounts.</span>
+            <Button
+              size="sm"
+              variant="outline"
+              className="h-7 text-xs"
+              onClick={() => void refetchStatus()}
+            >
+              Retry
+            </Button>
+          </div>
+        )}
         <div className="space-y-2">
           <Label>Git account</Label>
           <Select value={provider} onValueChange={setProvider}>
@@ -78,7 +96,19 @@ export function ProjectGitRepoDialog({
           </div>
         )}
         <div className="max-h-72 overflow-y-auto rounded-xl border border-border/60">
-          {!provider ? (
+          {isReposError ? (
+            <div className="flex flex-col items-center justify-center gap-2 p-6 text-center text-sm">
+              <p className="text-destructive">Failed to load repositories for this account.</p>
+              <Button
+                size="sm"
+                variant="outline"
+                className="h-7 text-xs"
+                onClick={() => void refetchRepos()}
+              >
+                Retry
+              </Button>
+            </div>
+          ) : !provider ? (
             <p className="p-5 text-center text-muted-foreground text-sm">
               Connect a git account in Settings to browse its repositories.
             </p>
