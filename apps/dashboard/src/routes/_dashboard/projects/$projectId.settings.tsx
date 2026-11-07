@@ -18,7 +18,7 @@ function SettingsRouteComponent() {
   const { data: projectResponse } = useGetProject(projectId);
   const [deleteOpen, setDeleteOpen] = useState(false);
 
-  const project = projectResponse?.data ?? { id: projectId, name: 'Project' };
+  const project = projectResponse?.data;
 
   return (
     <div className="mx-auto flex w-full max-w-5xl flex-col gap-6">
@@ -53,14 +53,17 @@ function SettingsRouteComponent() {
               <h3 className="font-medium text-foreground text-sm">Delete this project</h3>
               <p className="max-w-xl text-muted-foreground text-xs leading-relaxed">
                 Permanently removes{' '}
-                <span className="font-semibold text-foreground">{project.name}</span>, along with
-                all of its apps, services, containers, and environment configurations. This action
-                cannot be undone.
+                <span className="font-semibold text-foreground">
+                  {project?.name ?? 'this project'}
+                </span>
+                , along with all of its apps, services, containers, and environment configurations.
+                This action cannot be undone.
               </p>
             </div>
             <Button
               variant="destructive"
               size="sm"
+              disabled={!project}
               onClick={() => setDeleteOpen(true)}
               className="shrink-0 gap-2"
             >
@@ -71,12 +74,14 @@ function SettingsRouteComponent() {
         </SettingsSection>
       </div>
 
-      <ProjectDeleteDialog
-        isOpen={deleteOpen}
-        onOpenChange={setDeleteOpen}
-        project={project}
-        redirectToProjectsOnDelete
-      />
+      {project && (
+        <ProjectDeleteDialog
+          isOpen={deleteOpen}
+          onOpenChange={setDeleteOpen}
+          project={project}
+          redirectToProjectsOnDelete
+        />
+      )}
     </div>
   );
 }

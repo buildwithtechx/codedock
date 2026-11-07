@@ -17,12 +17,12 @@ export function parseGitUrl(raw: string): PendingImport | null {
     if (!['https:', 'http:'].includes(parsed.protocol)) return null;
     if (parsed.username || parsed.password || parsed.port) return null;
     const parts = parsed.pathname.replace(/\/+$/, '').slice(1).split('/');
-    if (parts.length < 2) return null;
-    const [owner, repoRaw] = parts.slice(-2);
+    if (parts.length !== 2) return null;
+    const [owner, repoRaw] = parts;
     const repo = (repoRaw ?? '').replace(/\.git$/, '');
     if (!owner || !repo) return null;
     if (!/^[A-Za-z0-9_.-]+$/.test(owner) || !/^[A-Za-z0-9_.-]+$/.test(repo)) return null;
-    return { repositoryUrl: value, branch: 'main', name: repo };
+    return { repositoryUrl: `https://${parsed.host}/${owner}/${repo}`, branch: 'main', name: repo };
   } catch {
     return null;
   }
