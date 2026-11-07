@@ -163,6 +163,7 @@ func applyServerMetadata(srv *models.Server) {
 	}
 	isCloud := config.Get().Cloud.Enabled
 	isManaged := srv.Provider != "" || srv.ServerType == "managed" || isCloud
+	buildCacheBudgetSupported := !srv.IsLocal && !srv.IsControlPlane && srv.ID != controlPlaneServerID
 	if isManaged {
 		srv.Capabilities = &models.ServerCapabilities{
 			Monitor:           true,
@@ -171,6 +172,7 @@ func applyServerMetadata(srv *models.Server) {
 			HostConfiguration: false,
 			SSH:               true,
 			NetworkSettings:   true,
+			BuildCacheBudget:  buildCacheBudgetSupported,
 		}
 		if srv.Managed == nil {
 			tier := "pro"
@@ -205,6 +207,7 @@ func applyServerMetadata(srv *models.Server) {
 			HostConfiguration: true,
 			SSH:               true,
 			NetworkSettings:   false,
+			BuildCacheBudget:  buildCacheBudgetSupported,
 		}
 	}
 }

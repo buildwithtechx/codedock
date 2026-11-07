@@ -252,6 +252,21 @@ func (s *serverService) UpdateServer(ctx context.Context, id, userID string, req
 	if req.SSHJumpHost != nil {
 		server.SSHJumpHost = *req.SSHJumpHost
 	}
+	if req.BuildCacheBudgetBytes != nil {
+		if server.IsLocal || server.IsControlPlane || server.ID == controlPlaneServerID {
+			return nil, fmt.Errorf("build-cache budgets apply to remote deployment servers, whose builds use managed BuildKit caches")
+		}
+		if *req.BuildCacheBudgetBytes <= 0 {
+			server.BuildCacheBudgetBytes = nil
+		} else {
+			const minBudget = int64(1073741824)     // 1 GiB
+			const maxBudget = int64(70368744177664) // 64 TiB
+			if *req.BuildCacheBudgetBytes < minBudget || *req.BuildCacheBudgetBytes > maxBudget {
+				return nil, fmt.Errorf("build-cache budget must be between 1 GiB and 64 TiB")
+			}
+			server.BuildCacheBudgetBytes = req.BuildCacheBudgetBytes
+		}
+	}
 
 	if err := validateServerConnection(server.IsLocal, server.SSHPort, server.SSHTransport, server.SSHJumpHost, serverPrivateKey(server.SSHKey, server.SSHPrivateKey), server.SSHPassword); err != nil {
 		return nil, err
@@ -262,8 +277,21 @@ func (s *serverService) UpdateServer(ctx context.Context, id, userID string, req
 		return nil, fmt.Errorf("failed to update server: %w", err)
 	}
 
-	if s.sshManager != nil {
+	connectionChanged := req.SSHHost != nil ||
+		req.SSHPort != nil ||
+		req.SSHUser != nil ||
+		req.SSHAuthMethod != nil ||
+		req.SSHKey != nil ||
+		req.SSHPrivateKey != nil ||
+		req.SSHPassword != nil ||
+		req.SSHTransport != nil ||
+		req.SSHJumpHost != nil ||
+		req.IPAddress != nil ||
+		req.IsLocal != nil
+
+	if s.sshManager != nil && connectionChanged {
 		s.sshManager.RemoveClient(id)
 	}
+	applyServerMetadata(server)
 	return server, nil
 }

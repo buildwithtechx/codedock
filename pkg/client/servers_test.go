@@ -88,6 +88,36 @@ func TestDeleteServer(t *testing.T) {
 	}
 }
 
+func TestUpdateServer(t *testing.T) {
+	var received models.UpdateServerRequest
+	budget := int64(24 * 1024 * 1024 * 1024)
+	client, done := stubServer(t, func(w http.ResponseWriter, r *http.Request) {
+		if r.URL.Path != "/api/v1/servers/srv-update" || r.Method != http.MethodPatch {
+			w.WriteHeader(http.StatusNotFound)
+			return
+		}
+		if err := json.NewDecoder(r.Body).Decode(&received); err != nil {
+			w.WriteHeader(http.StatusBadRequest)
+			return
+		}
+		writeJSON(w, http.StatusOK, map[string]any{"data": models.Server{
+			ID:                    "srv-update",
+			BuildCacheBudgetBytes: received.BuildCacheBudgetBytes,
+		}})
+	})
+	defer done()
+
+	server, err := client.UpdateServer("srv-update", &models.UpdateServerRequest{
+		BuildCacheBudgetBytes: &budget,
+	})
+	if err != nil {
+		t.Fatal(err)
+	}
+	if server.ID != "srv-update" || server.BuildCacheBudgetBytes == nil || *server.BuildCacheBudgetBytes != budget {
+		t.Fatalf("unexpected update roundtrip: %+v", server)
+	}
+}
+
 func TestServerNetworkSettings(t *testing.T) {
 	var patched models.UpdateServerNetworkSettingsRequest
 	internet := true

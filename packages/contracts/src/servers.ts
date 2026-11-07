@@ -1,3 +1,6 @@
+export const BUILD_CACHE_BUDGET_MIN_BYTES = 1073741824; // 1 GiB
+export const BUILD_CACHE_BUDGET_MAX_BYTES = 70368744177664; // 64 TiB
+
 export interface ServerMetric {
   timestamp: string;
   cpuPercent: number;
@@ -83,6 +86,7 @@ export interface CreateServerRequest {
   sshPassword?: string;
   sshTransport?: 'direct' | 'cloudflare';
   sshJumpHost?: string;
+  buildCacheBudgetBytes?: number | null;
 }
 
 export interface UpdateServerRequest {
@@ -98,6 +102,7 @@ export interface UpdateServerRequest {
   sshPassword?: string;
   sshTransport?: 'direct' | 'cloudflare';
   sshJumpHost?: string;
+  buildCacheBudgetBytes?: number | null;
 }
 
 export interface TestSSHRequest {

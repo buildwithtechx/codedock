@@ -38,6 +38,8 @@ type Server struct {
 	WorkerToken    string       `json:"workerToken,omitempty" db:"worker_token"`
 	LastSeenAt     *time.Time   `json:"lastSeenAt,omitempty" db:"last_seen_at"`
 
+	BuildCacheBudgetBytes *int64 `json:"buildCacheBudgetBytes,omitempty" db:"build_cache_budget_bytes"`
+
 	Managed      *CloudWorkspaceSummary `json:"managed,omitempty" db:"-"`
 	Capabilities *ServerCapabilities    `json:"capabilities,omitempty" db:"-"`
 
@@ -63,18 +65,19 @@ type CreateServerRequest struct {
 }
 
 type UpdateServerRequest struct {
-	Name          *string `json:"name,omitempty"`
-	IPAddress     *string `json:"ipAddress,omitempty"`
-	IsLocal       *bool   `json:"isLocal,omitempty"`
-	SSHHost       *string `json:"sshHost,omitempty"`
-	SSHPort       *int    `json:"sshPort,omitempty"`
-	SSHUser       *string `json:"sshUser,omitempty"`
-	SSHAuthMethod *string `json:"sshAuthMethod,omitempty"`
-	SSHKey        *string `json:"sshKey,omitempty"`
-	SSHPrivateKey *string `json:"sshPrivateKey,omitempty"`
-	SSHPassword   *string `json:"sshPassword,omitempty"`
-	SSHTransport  *string `json:"sshTransport,omitempty"`
-	SSHJumpHost   *string `json:"sshJumpHost,omitempty"`
+	Name                  *string `json:"name,omitempty"`
+	IPAddress             *string `json:"ipAddress,omitempty"`
+	IsLocal               *bool   `json:"isLocal,omitempty"`
+	SSHHost               *string `json:"sshHost,omitempty"`
+	SSHPort               *int    `json:"sshPort,omitempty"`
+	SSHUser               *string `json:"sshUser,omitempty"`
+	SSHAuthMethod         *string `json:"sshAuthMethod,omitempty"`
+	SSHKey                *string `json:"sshKey,omitempty"`
+	SSHPrivateKey         *string `json:"sshPrivateKey,omitempty"`
+	SSHPassword           *string `json:"sshPassword,omitempty"`
+	SSHTransport          *string `json:"sshTransport,omitempty"`
+	SSHJumpHost           *string `json:"sshJumpHost,omitempty"`
+	BuildCacheBudgetBytes *int64  `json:"buildCacheBudgetBytes,omitempty"`
 }
 
 type TestSSHRequest struct {

@@ -98,6 +98,7 @@ type ManagedCacheRecord struct {
 
 type PruneOptions struct {
 	KeepBytes           uint64
+	ConfiguredBudget    *int64
 	ProjectID           string
 	Now                 time.Time
 	ProtectedProjectIDs map[string]bool
@@ -113,7 +114,15 @@ type PruneResult struct {
 func PruneManagedBuildCaches(ctx context.Context, docker DockerVolumeClient, opts PruneOptions) (PruneResult, error) {
 	keepBytes := opts.KeepBytes
 	if keepBytes == 0 {
-		keepBytes = DefaultBuildCacheKeepBytes
+		if opts.Storage != nil {
+			if calculated, err := BuildCacheKeepBytes(*opts.Storage, opts.ConfiguredBudget); err == nil {
+				keepBytes = calculated
+			} else {
+				keepBytes = DefaultBuildCacheKeepBytes
+			}
+		} else {
+			keepBytes = DefaultBuildCacheKeepBytes
+		}
 	}
 	now := opts.Now
 	if now.IsZero() {
@@ -202,7 +211,9 @@ func PruneManagedBuildCaches(ctx context.Context, docker DockerVolumeClient, opt
 
 		expired := now.Sub(rec.UsedAt) > DefaultBuildCacheAge
 		pressure := false
+		effectiveKeep := keepBytes
 		if storage != nil {
+			effectiveKeep = PressureAdjustedKeepBytes(*storage, totalBytes, keepBytes)
 			pressure = storage.FreeBytes < BuildStorageReserve(*storage) || (storage.FreeInodes != nil && *storage.FreeInodes == 0)
 		}
 
@@ -210,7 +221,7 @@ func PruneManagedBuildCaches(ctx context.Context, docker DockerVolumeClient, opt
 		if opts.ProjectID != "" {
 			shouldPrune = rec.ProjectID == opts.ProjectID
 		} else {
-			shouldPrune = expired || pressure || totalBytes > keepBytes
+			shouldPrune = expired || pressure || totalBytes > effectiveKeep
 		}
 
 		if !shouldPrune {

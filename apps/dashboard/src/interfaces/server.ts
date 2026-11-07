@@ -34,6 +34,7 @@ export interface Server {
   status: string;
   workerToken?: string;
   lastSeenAt?: string;
+  buildCacheBudgetBytes?: number | null;
   managed?: CloudWorkspaceSummary | null;
   capabilities?: ServerCapabilities | null;
   gpu?: ServerGPUInfo | null;
@@ -111,6 +112,7 @@ export interface ServerCapabilities {
   hostConfiguration?: boolean;
   ssh?: boolean;
   networkSettings?: boolean;
+  buildCacheBudget?: boolean;
 }
 
 export interface CloudWorkspaceOperation {

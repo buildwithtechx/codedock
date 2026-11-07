@@ -7,6 +7,7 @@ type ServerCapabilities struct {
 	HostConfiguration bool `json:"hostConfiguration"`
 	SSH               bool `json:"ssh"`
 	NetworkSettings   bool `json:"networkSettings"`
+	BuildCacheBudget  bool `json:"buildCacheBudget"`
 }
 
 type ServerNetworkSettings struct {

@@ -169,6 +169,7 @@ func ServerSchema() Schema {
 		F("externalId", Str("External ID")),
 		F("region", Str("Region")),
 		F("serverType", Str("Server type")),
+		F("buildCacheBudgetBytes", Int("Build-cache budget in bytes")),
 		F("lastSeenAt", DateTime("Last successful contact")),
 	}
 	return Obj("Server", append(props, Timestamps()...)...)

@@ -4,6 +4,7 @@ import { Button } from '@codedock/ui/button';
 import { MetricChartCard } from '#/features/services/metric-chart-card';
 import { parseServerMetrics, type Server } from '#/interfaces/server';
 import { cn } from '#/lib/utils';
+import { BuildCacheCard } from './build-cache-card';
 import {
   formatBytes,
   type LiveMetricsSnapshot,
@@ -156,6 +157,10 @@ export function ServerOverviewTab({ server }: { server: Server }) {
           formatTooltip={(v) => `${v.toFixed(2)}%`}
         />
       </div>
+
+      {(server.capabilities?.buildCacheBudget || server.buildCacheBudgetBytes !== undefined) && (
+        <BuildCacheCard server={server} />
+      )}
     </div>
   );
 }

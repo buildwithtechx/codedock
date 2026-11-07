@@ -1,7 +1,9 @@
 package build
 
 import (
+	"fmt"
 	"os"
+	"strings"
 	"testing"
 )
 
@@ -152,5 +154,109 @@ func TestFormatCacheMount(t *testing.T) {
 
 	if _, err := FormatCacheMount("test-id", "/root/unsafe;rm -rf /"); err == nil {
 		t.Fatal("expected error for unsafe path with semicolon")
+	}
+}
+
+func TestBuildCacheKeepBytes(t *testing.T) {
+	const gib = 1024 * 1024 * 1024
+	storage := BuildStorage{
+		TotalBytes: 100 * gib,
+		FreeBytes:  50 * gib,
+	}
+
+	t.Run("automatic budget calculates 20 percent of disk", func(t *testing.T) {
+		keep, err := BuildCacheKeepBytes(storage, nil)
+		if err != nil {
+			t.Fatalf("unexpected error: %v", err)
+		}
+		expected := uint64(20 * gib)
+		if keep != expected {
+			t.Fatalf("expected %d, got %d", expected, keep)
+		}
+	})
+
+	t.Run("custom valid budget within disk bounds", func(t *testing.T) {
+		budget := int64(24 * gib)
+		keep, err := BuildCacheKeepBytes(storage, &budget)
+		if err != nil {
+			t.Fatalf("unexpected error: %v", err)
+		}
+		if keep != uint64(budget) {
+			t.Fatalf("expected %d, got %d", budget, keep)
+		}
+	})
+
+	t.Run("custom budget exceeding disk minus reserve is clamped", func(t *testing.T) {
+		budget := int64(500 * gib)
+		keep, err := BuildCacheKeepBytes(storage, &budget)
+		if err != nil {
+			t.Fatalf("unexpected error: %v", err)
+		}
+		// Reserve for 100 GiB is 2 GiB (min(2 GiB, 10 GiB)).
+		// Max budget is 100 - 2 = 98 GiB.
+		expected := uint64(98 * gib)
+		if keep != expected {
+			t.Fatalf("expected %d, got %d", expected, keep)
+		}
+	})
+
+	t.Run("invalid budget returns error", func(t *testing.T) {
+		invalid := int64(0)
+		if _, err := BuildCacheKeepBytes(storage, &invalid); err == nil {
+			t.Fatal("expected error for budget <= 0")
+		}
+		negative := int64(-10)
+		if _, err := BuildCacheKeepBytes(storage, &negative); err == nil {
+			t.Fatal("expected error for negative budget")
+		}
+	})
+}
+
+func TestPressureAdjustedKeepBytes(t *testing.T) {
+	const gib = 1024 * 1024 * 1024
+	storage := BuildStorage{
+		TotalBytes: 100 * gib,
+		FreeBytes:  50 * gib, // Target is 20 GiB (20%), so plenty of free space
+	}
+
+	t.Run("unconstrained when plenty of free space", func(t *testing.T) {
+		budget := uint64(24 * gib)
+		adjusted := PressureAdjustedKeepBytes(storage, 15*gib, budget)
+		if adjusted != budget {
+			t.Fatalf("expected %d, got %d", budget, adjusted)
+		}
+	})
+
+	t.Run("shrinks under disk pressure towards floor", func(t *testing.T) {
+		underPressure := BuildStorage{
+			TotalBytes: 100 * gib,
+			FreeBytes:  10 * gib, // Target is 20 GiB, 10 GiB below target
+		}
+		// Floor is min(5 GiB, 10 GiB) = 5 GiB.
+		// idle (8 GiB) + free (10 GiB) - target (20 GiB) = -2 GiB -> clamped to floor 5 GiB.
+		adjusted := PressureAdjustedKeepBytes(underPressure, 8*gib, 24*gib)
+		expected := uint64(5 * gib)
+		if adjusted != expected {
+			t.Fatalf("expected %d, got %d", expected, adjusted)
+		}
+	})
+}
+
+func TestBuildKitCacheConfig(t *testing.T) {
+	const gib = 1024 * 1024 * 1024
+	storage := BuildStorage{
+		TotalBytes: 100 * gib,
+		FreeBytes:  50 * gib,
+	}
+
+	cfg, err := BuildKitCacheConfig(storage, nil)
+	if err != nil {
+		t.Fatalf("unexpected error: %v", err)
+	}
+	if !strings.Contains(cfg, fmt.Sprintf("maxUsedSpace = %d", 20*gib)) {
+		t.Fatalf("expected maxUsedSpace in config, got:\n%s", cfg)
+	}
+	if !strings.Contains(cfg, `minFreeSpace = "20%"`) {
+		t.Fatalf("expected minFreeSpace in config, got:\n%s", cfg)
 	}
 }

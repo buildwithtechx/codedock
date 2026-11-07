@@ -53,6 +53,28 @@ func (c *Client) CreateServer(req *models.CreateServerRequest) (*models.Server, 
 	return result.Data, nil
 }
 
+func (c *Client) UpdateServer(id string, req *models.UpdateServerRequest) (*models.Server, error) {
+	resp, err := c.sendRequest("PATCH", fmt.Sprintf("/servers/%s", id), req)
+	if err != nil {
+		return nil, err
+	}
+	defer resp.Body.Close()
+
+	if resp.StatusCode != nethttp.StatusOK {
+		body, _ := io.ReadAll(resp.Body)
+		return nil, fmt.Errorf("failed to update server (status %d): %s", resp.StatusCode, string(body))
+	}
+
+	var result struct {
+		Data *models.Server `json:"data"`
+	}
+	if err := json.NewDecoder(resp.Body).Decode(&result); err != nil {
+		return nil, err
+	}
+
+	return result.Data, nil
+}
+
 func (c *Client) DeleteServer(id string) error {
 	resp, err := c.sendRequest("DELETE", fmt.Sprintf("/servers/%s", id), nil)
 	if err != nil {

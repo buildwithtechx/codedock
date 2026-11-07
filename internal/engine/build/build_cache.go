@@ -3,6 +3,7 @@ package build
 import (
 	"errors"
 	"fmt"
+	"math"
 	"os"
 	"regexp"
 	"strconv"
@@ -10,8 +11,12 @@ import (
 )
 
 const (
-	MaxBuildStorageReserveBytes uint64 = 2 * 1024 * 1024 * 1024
-	DefaultBuildCacheKeepBytes  uint64 = 5 * 1024 * 1024 * 1024
+	MaxBuildStorageReserveBytes uint64  = 2 * 1024 * 1024 * 1024
+	DefaultBuildCacheKeepBytes  uint64  = 5 * 1024 * 1024 * 1024
+	BuildCacheDiskFraction      float64 = 0.20
+	BuildStorageGCFreeFraction  float64 = 0.20
+	MinBuildCacheBudgetBytes    int64   = 1073741824     // 1 GiB
+	MaxBuildCacheBudgetBytes    int64   = 70368744177664 // 64 TiB
 )
 
 var (
@@ -58,6 +63,62 @@ func BuildStorageReserve(storage BuildStorage) uint64 {
 		return tenPercent
 	}
 	return MaxBuildStorageReserveBytes
+}
+
+// BuildCacheKeepBytes calculates the keep bytes for build caches.
+// When configuredBudget is nil, it returns 20% of the total storage.
+// When configuredBudget is specified, it ensures the budget is positive and does not exceed TotalBytes - Reserve.
+func BuildCacheKeepBytes(storage BuildStorage, configuredBudget *int64) (uint64, error) {
+	if configuredBudget == nil {
+		return uint64(float64(storage.TotalBytes) * BuildCacheDiskFraction), nil
+	}
+	if *configuredBudget <= 0 {
+		return 0, errors.New("invalid configured build-cache budget")
+	}
+	reserve := BuildStorageReserve(storage)
+	var maxBudget uint64
+	if storage.TotalBytes > reserve {
+		maxBudget = storage.TotalBytes - reserve
+	}
+	budget := uint64(*configuredBudget)
+	if budget > maxBudget {
+		budget = maxBudget
+	}
+	return budget, nil
+}
+
+// PressureAdjustedKeepBytes adjusts the budget under disk pressure.
+// If free space is below the 20% GC target, idle caches shrink to what fits above the target,
+// but never below min(5 GiB, 10% of total disk).
+func PressureAdjustedKeepBytes(storage BuildStorage, idleCacheBytes uint64, budgetBytes uint64) uint64 {
+	freeTarget := uint64(math.Ceil(float64(storage.TotalBytes) * BuildStorageGCFreeFraction))
+	if storage.FreeBytes >= freeTarget {
+		return budgetBytes
+	}
+	floor := DefaultBuildCacheKeepBytes
+	tenPercent := storage.TotalBytes / 10
+	if tenPercent < floor {
+		floor = tenPercent
+	}
+	candidate := int64(idleCacheBytes) + int64(storage.FreeBytes) - int64(freeTarget)
+	if candidate < int64(floor) {
+		candidate = int64(floor)
+	}
+	res := uint64(candidate)
+	if res > budgetBytes {
+		return budgetBytes
+	}
+	return res
+}
+
+// BuildKitCacheConfig formats the buildkitd.toml worker.oci cache configuration.
+func BuildKitCacheConfig(storage BuildStorage, configuredBudget *int64) (string, error) {
+	keepBytes, err := BuildCacheKeepBytes(storage, configuredBudget)
+	if err != nil {
+		return "", err
+	}
+	return fmt.Sprintf("insecure-entitlements = []\n[worker.oci]\nnetworkMode = \"bridge\"\ngc = true\nreservedSpace = 0\nmaxUsedSpace = %d\nminFreeSpace = \"%d%%\"\n",
+		keepBytes, int(BuildStorageGCFreeFraction*100)), nil
 }
 
 func AssertBuildStorage(storage BuildStorage) error {

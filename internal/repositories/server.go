@@ -53,15 +53,15 @@ func (r *postgresServerRepository) Create(ctx context.Context, server *models.Se
 			id, user_id, name, ip_address, is_local,
 			ssh_host, ssh_port, ssh_user, ssh_auth_method,
 			ssh_key, ssh_private_key, ssh_password, ssh_transport, ssh_jump_host,
-			status, provider, external_id, region, server_type, worker_token, last_seen_at, metrics, created_at, updated_at
+			status, provider, external_id, region, server_type, worker_token, last_seen_at, metrics, build_cache_budget_bytes, created_at, updated_at
 		)
-		VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10, $11, $12, $13, $14, $15, $16, $17, $18, $19, $20, $21, $22, $23, $24)
+		VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10, $11, $12, $13, $14, $15, $16, $17, $18, $19, $20, $21, $22, $23, $24, $25)
 	`
 	_, err = r.db.ExecContext(ctx, query,
 		server.ID, server.UserID, server.Name, server.IPAddress, server.IsLocal,
 		server.SSHHost, server.SSHPort, server.SSHUser, server.SSHAuthMethod,
 		sshKey, sshPrivateKey, sshPassword, server.SSHTransport, server.SSHJumpHost,
-		server.Status, server.Provider, server.ExternalID, server.Region, server.ServerType, server.WorkerToken, lastSeenAt, string(server.Metrics), server.CreatedAt, server.UpdatedAt,
+		server.Status, server.Provider, server.ExternalID, server.Region, server.ServerType, server.WorkerToken, lastSeenAt, string(server.Metrics), server.BuildCacheBudgetBytes, server.CreatedAt, server.UpdatedAt,
 	)
 	if err != nil {
 		return fmt.Errorf("failed to create server: %w", err)
@@ -101,14 +101,15 @@ func (r *postgresServerRepository) Update(ctx context.Context, server *models.Se
 			external_id = $15,
 			region = $16,
 			server_type = $17,
-			updated_at = $18
-		WHERE id = $19
+			build_cache_budget_bytes = $18,
+			updated_at = $19
+		WHERE id = $20
 	`
 	_, err = r.db.ExecContext(ctx, query,
 		server.Name, server.IPAddress, server.IsLocal,
 		server.SSHHost, server.SSHPort, server.SSHUser, server.SSHAuthMethod,
 		sshKey, sshPrivateKey, sshPassword, server.SSHTransport, server.SSHJumpHost,
-		server.Status, server.Provider, server.ExternalID, server.Region, server.ServerType, server.UpdatedAt, server.ID,
+		server.Status, server.Provider, server.ExternalID, server.Region, server.ServerType, server.BuildCacheBudgetBytes, server.UpdatedAt, server.ID,
 	)
 	if err != nil {
 		return fmt.Errorf("failed to update server: %w", err)
@@ -122,7 +123,7 @@ const serverSelectColumns = `
 	COALESCE(ssh_auth_method, 'key'), COALESCE(ssh_key, ''), COALESCE(ssh_private_key, ''),
 	COALESCE(ssh_password, ''), COALESCE(ssh_transport, 'direct'), COALESCE(ssh_jump_host, ''),
 	status, COALESCE(provider, ''), COALESCE(external_id, ''), COALESCE(region, ''), COALESCE(server_type, ''),
-	worker_token, last_seen_at, metrics, created_at, updated_at
+	worker_token, last_seen_at, metrics, build_cache_budget_bytes, created_at, updated_at
 `
 
 func (r *postgresServerRepository) GetByID(ctx context.Context, id string) (*models.Server, error) {
@@ -205,7 +206,7 @@ func (r *postgresServerRepository) scanRow(row *sql.Row) (*models.Server, error)
 		&s.SSHHost, &s.SSHPort, &s.SSHUser, &s.SSHAuthMethod,
 		&s.SSHKey, &s.SSHPrivateKey, &s.SSHPassword, &s.SSHTransport, &s.SSHJumpHost,
 		&s.Status, &s.Provider, &s.ExternalID, &s.Region, &s.ServerType,
-		&s.WorkerToken, &s.LastSeenAt, &metricsRaw, &s.CreatedAt, &s.UpdatedAt,
+		&s.WorkerToken, &s.LastSeenAt, &metricsRaw, &s.BuildCacheBudgetBytes, &s.CreatedAt, &s.UpdatedAt,
 	)
 	if err != nil {
 		if err == sql.ErrNoRows {
@@ -232,7 +233,7 @@ func (r *postgresServerRepository) scanRows(rows *sql.Rows) (*models.Server, err
 		&s.SSHHost, &s.SSHPort, &s.SSHUser, &s.SSHAuthMethod,
 		&s.SSHKey, &s.SSHPrivateKey, &s.SSHPassword, &s.SSHTransport, &s.SSHJumpHost,
 		&s.Status, &s.Provider, &s.ExternalID, &s.Region, &s.ServerType,
-		&s.WorkerToken, &s.LastSeenAt, &metricsRaw, &s.CreatedAt, &s.UpdatedAt,
+		&s.WorkerToken, &s.LastSeenAt, &metricsRaw, &s.BuildCacheBudgetBytes, &s.CreatedAt, &s.UpdatedAt,
 	)
 	if err != nil {
 		return nil, fmt.Errorf("failed to scan server: %w", err)
