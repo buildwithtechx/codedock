@@ -1,13 +1,12 @@
-import { ArrowLeft, MailPlus, Plus, RefreshCw, Server, Trash2 } from 'lucide-react';
-import { useState } from 'react';
-import { toast } from 'sonner';
-import { PageHeader } from '#/components/layout/page-header';
 import { Button } from '@codedock/ui/button';
 import { Card, CardContent } from '@codedock/ui/card';
 import { Input } from '@codedock/ui/input';
-import { QueryErrorState } from '#/components/query-error-state';
 import { Skeleton } from '@codedock/ui/skeleton';
-import { useGetPublicSettings } from '#/hooks/use-settings';
+import { ArrowLeft, MailPlus, Plus, RefreshCw, Server, Shield, Trash2 } from 'lucide-react';
+import { useState } from 'react';
+import { toast } from 'sonner';
+import { PageHeader } from '#/components/layout/page-header';
+import { QueryErrorState } from '#/components/query-error-state';
 import {
   useCreateMailDomain,
   useCreateMailServer,
@@ -16,7 +15,10 @@ import {
   useListMailDomains,
   useListMailServers,
 } from '#/hooks/use-mail';
+import { useGetPublicSettings } from '#/hooks/use-settings';
+import { CalendarContactsCard } from './calendar-contacts-card';
 import { CloudMailClient } from './cloud-mail-client';
+import { Fail2banDrawer } from './fail2ban-drawer';
 import { MailDomainPanel } from './mail-domain-panel';
 import { MailServerList } from './mail-server-list';
 import { MailSetupForm } from './mail-setup-form';
@@ -28,12 +30,12 @@ export function MailPage() {
   const [selectedServer, setSelectedServer] = useState<string | null>(null);
   const [selectedDomain, setSelectedDomain] = useState<string | null>(null);
   const [newDomain, setNewDomain] = useState('');
+  const [fail2banOpen, setFail2banOpen] = useState(false);
 
   const { data: servers = [], isLoading, isFetching, isError, refetch } = useListMailServers();
   const createServer = useCreateMailServer();
   const deleteServer = useDeleteMailServer();
 
-  // Active server is either explicit selection, or the sole server if exactly 1 exists
   const activeServer =
     servers.find((server) => server.id === selectedServer) ??
     (servers.length === 1 && !isAddingNew ? servers[0] : null);
@@ -184,90 +186,110 @@ export function MailPage() {
           )}
 
           <div className="grid grid-cols-1 gap-6 lg:grid-cols-3">
-            <Card className="border-border/60 bg-card lg:col-span-1">
-              <CardContent className="space-y-4 p-5">
-                <div className="flex items-center gap-3 border-border/40 border-b pb-4">
-                  <div className="flex size-9 shrink-0 items-center justify-center rounded-xl bg-violet-500/10 text-violet-500">
-                    <Server className="size-4" />
-                  </div>
-                  <div className="min-w-0 flex-1">
-                    <p className="truncate font-semibold text-foreground text-sm">
-                      {activeServer.domain}
-                    </p>
-                    <p className="truncate font-mono text-muted-foreground text-xs">
-                      {activeServer.maildUrl}
-                    </p>
-                  </div>
-                  <Button
-                    variant="ghost"
-                    size="icon"
-                    aria-label={`Remove ${activeServer.domain}`}
-                    disabled={deleteServer.isPending}
-                    onClick={() => handleDeleteServer(activeServer.id)}
-                  >
-                    <Trash2 className="size-4 text-muted-foreground hover:text-destructive" />
-                  </Button>
-                </div>
-
-                <div className="space-y-2">
-                  <div className="flex items-center justify-between">
-                    <span className="font-semibold text-muted-foreground text-xs uppercase tracking-wider">
-                      Domains ({domains.length})
-                    </span>
-                  </div>
-
-                  <div className="flex gap-2">
-                    <Input
-                      id="mail-new-domain"
-                      placeholder="Add domain, e.g. app.io"
-                      value={newDomain}
-                      onChange={(e) => setNewDomain(e.target.value)}
-                      className="h-8 rounded-lg text-xs"
-                    />
-                    <Button
-                      size="sm"
-                      className="h-8"
-                      disabled={newDomain.trim() === '' || createDomain.isPending}
-                      onClick={() => {
-                        createDomain.mutate(newDomain.trim(), {
-                          onSuccess: () => setNewDomain(''),
-                        });
-                      }}
-                    >
-                      <Plus className="size-3.5" />
-                    </Button>
-                  </div>
-
-                  <ul className="space-y-1 pt-2">
-                    {domains.map((domain) => (
-                      <li
-                        key={domain.id}
-                        className={`flex cursor-pointer items-center justify-between rounded-lg p-2 text-xs transition-colors ${
-                          activeDomain?.id === domain.id
-                            ? 'bg-primary/10 font-medium text-primary'
-                            : 'text-foreground hover:bg-muted/40'
-                        }`}
-                        onClick={() => setSelectedDomain(domain.id)}
+            <div className="space-y-6 lg:col-span-1">
+              <Card className="border-border/60 bg-card">
+                <CardContent className="space-y-4 p-5">
+                  <div className="flex items-center gap-3 border-border/40 border-b pb-4">
+                    <div className="flex size-9 shrink-0 items-center justify-center rounded-xl bg-violet-500/10 text-violet-500">
+                      <Server className="size-4" />
+                    </div>
+                    <div className="min-w-0 flex-1">
+                      <p className="truncate font-semibold text-foreground text-sm">
+                        {activeServer.domain}
+                      </p>
+                      <p className="truncate font-mono text-muted-foreground text-xs">
+                        {activeServer.maildUrl}
+                      </p>
+                    </div>
+                    <div className="flex shrink-0 items-center gap-1">
+                      <Button
+                        variant="outline"
+                        size="sm"
+                        onClick={() => setFail2banOpen(true)}
+                        className="h-8 gap-1.5 text-xs"
                       >
-                        <span className="truncate font-mono">{domain.name}</span>
-                        <Button
-                          variant="ghost"
-                          size="icon"
-                          className="size-6 text-muted-foreground hover:text-destructive"
-                          disabled={deleteDomain.isPending}
-                          onClick={(e) => {
-                            e.stopPropagation();
-                            deleteDomain.mutate(domain.id);
-                          }}
+                        <Shield className="size-3.5 text-primary" />
+                        Fail2ban
+                      </Button>
+                      <Button
+                        variant="ghost"
+                        size="icon"
+                        aria-label={`Remove ${activeServer.domain}`}
+                        disabled={deleteServer.isPending}
+                        onClick={() => handleDeleteServer(activeServer.id)}
+                      >
+                        <Trash2 className="size-4 text-muted-foreground hover:text-destructive" />
+                      </Button>
+                    </div>
+                  </div>
+
+                  <div className="space-y-2">
+                    <div className="flex items-center justify-between">
+                      <span className="font-semibold text-muted-foreground text-xs uppercase tracking-wider">
+                        Domains ({domains.length})
+                      </span>
+                    </div>
+
+                    <div className="flex gap-2">
+                      <Input
+                        id="mail-new-domain"
+                        placeholder="Add domain, e.g. app.io"
+                        value={newDomain}
+                        onChange={(e) => setNewDomain(e.target.value)}
+                        className="h-8 rounded-lg text-xs"
+                      />
+                      <Button
+                        size="sm"
+                        className="h-8"
+                        disabled={newDomain.trim() === '' || createDomain.isPending}
+                        onClick={() => {
+                          createDomain.mutate(newDomain.trim(), {
+                            onSuccess: () => setNewDomain(''),
+                          });
+                        }}
+                      >
+                        <Plus className="size-3.5" />
+                      </Button>
+                    </div>
+
+                    <ul className="space-y-1 pt-2">
+                      {domains.map((domain) => (
+                        <li
+                          key={domain.id}
+                          className={`flex items-center justify-between rounded-lg p-1 text-xs transition-colors ${
+                            activeDomain?.id === domain.id
+                              ? 'bg-primary/10 font-medium text-primary'
+                              : 'text-foreground hover:bg-muted/40'
+                          }`}
                         >
-                          <Trash2 className="size-3.5" />
-                        </Button>
-                      </li>
-                    ))}
-                  </ul>
-                </div>
-              </CardContent>
-            </Card>
+                          <button
+                            type="button"
+                            className="flex-1 truncate text-left p-1 font-mono focus:outline-none"
+                            onClick={() => setSelectedDomain(domain.id)}
+                          >
+                            {domain.name}
+                          </button>
+                          <Button
+                            variant="ghost"
+                            size="icon"
+                            className="size-6 text-muted-foreground hover:text-destructive"
+                            disabled={deleteDomain.isPending}
+                            onClick={(e) => {
+                              e.stopPropagation();
+                              deleteDomain.mutate(domain.id);
+                            }}
+                          >
+                            <Trash2 className="size-3.5" />
+                          </Button>
+                        </li>
+                      ))}
+                    </ul>
+                  </div>
+                </CardContent>
+              </Card>
+
+              <CalendarContactsCard serverDomain={activeServer.domain} />
+            </div>
 
             <div className="lg:col-span-2">
               {activeDomain ? (
@@ -287,6 +309,15 @@ export function MailPage() {
           </div>
         </div>
       ) : null}
+
+      {activeServer && (
+        <Fail2banDrawer
+          serverId={activeServer.id}
+          serverName={activeServer.domain}
+          isOpen={fail2banOpen}
+          onClose={() => setFail2banOpen(false)}
+        />
+      )}
     </div>
   );
 }

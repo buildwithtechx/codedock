@@ -132,7 +132,7 @@ export function ProjectSecurityCard({
         </div>
       ) : (
         <div className="space-y-3">
-          {findings.map((finding) => (
+          {findings.map((finding: AdvisoryFinding) => (
             <div
               key={`${finding.advisoryId}-${finding.serviceName}`}
               className="space-y-2.5 rounded-lg border border-border/50 bg-background/50 p-3.5"

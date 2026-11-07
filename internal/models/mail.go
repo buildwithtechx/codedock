@@ -102,3 +102,44 @@ type ProbeMailCertRequest struct {
 	Host string `json:"host"`
 	Port int    `json:"port"`
 }
+
+type Fail2banJail struct {
+	Jail            string   `json:"jail"`
+	CurrentlyFailed int      `json:"currentlyFailed"`
+	TotalFailed     int      `json:"totalFailed"`
+	CurrentlyBanned int      `json:"currentlyBanned"`
+	TotalBanned     int      `json:"totalBanned"`
+	BannedIPs       []string `json:"bannedIps"`
+}
+
+type Fail2banStatusResponse struct {
+	Jails     []string                `json:"jails"`
+	Details   map[string]Fail2banJail `json:"details"`
+	CheckedAt string                  `json:"checkedAt"`
+	CanManage bool                    `json:"canManage"`
+}
+
+type Fail2banActionRequest struct {
+	IP   string `json:"ip"`
+	Jail string `json:"jail,omitempty"`
+}
+
+type Fail2banActionResponse struct {
+	Success bool   `json:"success"`
+	Output  string `json:"output,omitempty"`
+}
+
+type MailAlias struct {
+	ID          string `json:"id"`
+	DomainID    string `json:"domainId"`
+	Source      string `json:"source"`
+	Destination string `json:"destination"`
+	Active      bool   `json:"active"`
+	CreatedAt   string `json:"createdAt"`
+	UpdatedAt   string `json:"updatedAt"`
+}
+
+type CreateMailAliasRequest struct {
+	Source      string `json:"source"`
+	Destination string `json:"destination"`
+}

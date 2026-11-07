@@ -1,19 +1,19 @@
 import JSZip from 'jszip';
 import {
-  INCOMPLETE_NOTE,
-  MAX_COLUMNS,
-  MAX_ROWS,
-  MAX_SHEETS,
-  STYLES,
-  type XmlNode,
   columnIndex,
   descendants,
   elements,
   escapeHtml,
+  INCOMPLETE_NOTE,
+  MAX_COLUMNS,
+  MAX_ROWS,
+  MAX_SHEETS,
   plainText,
   readXml,
   renderTable,
+  STYLES,
   textOf,
+  type XmlNode,
 } from './office-preview-xml';
 
 export { escapeHtml } from './office-preview-xml';

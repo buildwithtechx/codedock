@@ -251,6 +251,131 @@ func (h *MailHandler) ProbeCert(c echo.Context) error {
 	return utils.Success(c, "Certificate probed successfully", cert)
 }
 
+func (h *MailHandler) GetFail2banStatus(c echo.Context) error {
+	server, err := h.scopedServer(c, models.MemberPermissionMember)
+	if err != nil {
+		return err
+	}
+	jail := c.QueryParam("jail")
+	status, err := h.mailService.GetFail2banStatus(c.Request().Context(), server.ID, jail)
+	if err != nil {
+		return h.mapMailError(c, err)
+	}
+	return utils.Success(c, "Fail2ban status fetched successfully", status)
+}
+
+func (h *MailHandler) BanIP(c echo.Context) error {
+	server, err := h.scopedServer(c, models.MemberPermissionAdmin)
+	if err != nil {
+		return err
+	}
+	var req models.Fail2banActionRequest
+	if err := c.Bind(&req); err != nil {
+		return utils.Error(c, http.StatusBadRequest, "invalid payload")
+	}
+	resp, err := h.mailService.BanIP(c.Request().Context(), server.ID, req.IP, req.Jail)
+	if err != nil {
+		return h.mapMailError(c, err)
+	}
+	h.auditService.LogAction(c.Request().Context(), authservices.AuditActionOpts{
+		UserID:    utils.AuditActorID(c),
+		Action:    "mail.fail2ban.ban",
+		Resource:  server.ID,
+		IPAddress: c.RealIP(),
+		Details:   map[string]string{"ip": req.IP, "jail": req.Jail},
+	})
+	return utils.Success(c, "IP banned successfully", resp)
+}
+
+func (h *MailHandler) UnbanIP(c echo.Context) error {
+	server, err := h.scopedServer(c, models.MemberPermissionAdmin)
+	if err != nil {
+		return err
+	}
+	var req models.Fail2banActionRequest
+	if err := c.Bind(&req); err != nil {
+		return utils.Error(c, http.StatusBadRequest, "invalid payload")
+	}
+	resp, err := h.mailService.UnbanIP(c.Request().Context(), server.ID, req.IP, req.Jail)
+	if err != nil {
+		return h.mapMailError(c, err)
+	}
+	h.auditService.LogAction(c.Request().Context(), authservices.AuditActionOpts{
+		UserID:    utils.AuditActorID(c),
+		Action:    "mail.fail2ban.unban",
+		Resource:  server.ID,
+		IPAddress: c.RealIP(),
+		Details:   map[string]string{"ip": req.IP, "jail": req.Jail},
+	})
+	return utils.Success(c, "IP unbanned successfully", resp)
+}
+
+func (h *MailHandler) ListAliases(c echo.Context) error {
+	server, err := h.scopedServer(c, models.MemberPermissionMember)
+	if err != nil {
+		return err
+	}
+	domainID := c.Param("domainId")
+	if domainID == "" {
+		return utils.Error(c, http.StatusBadRequest, "domainId is required")
+	}
+	aliases, err := h.mailService.ListAliases(c.Request().Context(), server.ID, domainID)
+	if err != nil {
+		return h.mapMailError(c, err)
+	}
+	return utils.Success(c, "Aliases fetched successfully", aliases)
+}
+
+func (h *MailHandler) CreateAlias(c echo.Context) error {
+	server, err := h.scopedServer(c, models.MemberPermissionAdmin)
+	if err != nil {
+		return err
+	}
+	domainID := c.Param("domainId")
+	if domainID == "" {
+		return utils.Error(c, http.StatusBadRequest, "domainId is required")
+	}
+	var req models.CreateMailAliasRequest
+	if err := c.Bind(&req); err != nil {
+		return utils.Error(c, http.StatusBadRequest, "invalid payload")
+	}
+	alias, err := h.mailService.CreateAlias(c.Request().Context(), server.ID, domainID, req)
+	if err != nil {
+		return h.mapMailError(c, err)
+	}
+	h.auditService.LogAction(c.Request().Context(), authservices.AuditActionOpts{
+		UserID:    utils.AuditActorID(c),
+		Action:    "mail.alias.create",
+		Resource:  alias.ID,
+		IPAddress: c.RealIP(),
+		Details:   map[string]string{"source": alias.Source, "destination": alias.Destination},
+	})
+	return utils.Success(c, "Alias created successfully", alias)
+}
+
+func (h *MailHandler) DeleteAlias(c echo.Context) error {
+	server, err := h.scopedServer(c, models.MemberPermissionAdmin)
+	if err != nil {
+		return err
+	}
+	domainID := c.Param("domainId")
+	aliasID := c.Param("aliasId")
+	if domainID == "" || aliasID == "" {
+		return utils.Error(c, http.StatusBadRequest, "domainId and aliasId are required")
+	}
+	if err := h.mailService.DeleteAlias(c.Request().Context(), server.ID, domainID, aliasID); err != nil {
+		return h.mapMailError(c, err)
+	}
+	h.auditService.LogAction(c.Request().Context(), authservices.AuditActionOpts{
+		UserID:    utils.AuditActorID(c),
+		Action:    "mail.alias.delete",
+		Resource:  aliasID,
+		IPAddress: c.RealIP(),
+		Details:   map[string]string{"domainId": domainID, "aliasId": aliasID},
+	})
+	return utils.Success(c, "Alias deleted successfully", nil)
+}
+
 func (h *MailHandler) scopedServer(c echo.Context, minPermission models.MemberPermission) (*models.MailServer, error) {
 	id := c.Param("id")
 	if id == "" {

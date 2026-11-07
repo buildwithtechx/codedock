@@ -18,4 +18,10 @@ func (s *Server) registerMailRoutes(authGroup *echo.Group) {
 	authGroup.GET("/mail/servers/:id/domains/:domainId/checks", s.mailHandler.GetChecks)
 	authGroup.GET("/mail/servers/:id/certs", s.mailHandler.ListCerts)
 	authGroup.POST("/mail/servers/:id/certs/probe", s.mailHandler.ProbeCert)
+	authGroup.GET("/mail/servers/:id/fail2ban/status", s.mailHandler.GetFail2banStatus)
+	authGroup.POST("/mail/servers/:id/fail2ban/ban", s.mailHandler.BanIP)
+	authGroup.POST("/mail/servers/:id/fail2ban/unban", s.mailHandler.UnbanIP)
+	authGroup.GET("/mail/servers/:id/domains/:domainId/aliases", s.mailHandler.ListAliases)
+	authGroup.POST("/mail/servers/:id/domains/:domainId/aliases", s.mailHandler.CreateAlias)
+	authGroup.DELETE("/mail/servers/:id/domains/:domainId/aliases/:aliasId", s.mailHandler.DeleteAlias)
 }

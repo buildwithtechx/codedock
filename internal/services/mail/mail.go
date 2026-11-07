@@ -197,6 +197,106 @@ func (s *MailService) ProbeCert(ctx context.Context, id, host string, port int) 
 	return &cert, nil
 }
 
+func (s *MailService) GetFail2banStatus(ctx context.Context, id, jail string) (*models.Fail2banStatusResponse, error) {
+	server, err := s.resolve(ctx, id)
+	if err != nil {
+		return nil, err
+	}
+	path := "/api/fail2ban/status"
+	if jail != "" {
+		if err := ValidateJailName(jail); err != nil {
+			return nil, err
+		}
+		path += "?jail=" + jail
+	}
+	var resp models.Fail2banStatusResponse
+	if err := s.do(ctx, server, http.MethodGet, path, nil, &resp); err != nil {
+		return nil, err
+	}
+	resp.CanManage = true
+	return &resp, nil
+}
+
+func (s *MailService) BanIP(ctx context.Context, id, ip, jail string) (*models.Fail2banActionResponse, error) {
+	if err := ValidateIP(ip); err != nil {
+		return nil, err
+	}
+	if err := ValidateJailName(jail); err != nil {
+		return nil, err
+	}
+	server, err := s.resolve(ctx, id)
+	if err != nil {
+		return nil, err
+	}
+	var resp models.Fail2banActionResponse
+	req := models.Fail2banActionRequest{IP: ip, Jail: jail}
+	if err := s.do(ctx, server, http.MethodPost, "/api/fail2ban/ban", req, &resp); err != nil {
+		return nil, err
+	}
+	return &resp, nil
+}
+
+func (s *MailService) UnbanIP(ctx context.Context, id, ip, jail string) (*models.Fail2banActionResponse, error) {
+	if err := ValidateIP(ip); err != nil {
+		return nil, err
+	}
+	if jail != "" {
+		if err := ValidateJailName(jail); err != nil {
+			return nil, err
+		}
+	}
+	server, err := s.resolve(ctx, id)
+	if err != nil {
+		return nil, err
+	}
+	var resp models.Fail2banActionResponse
+	req := models.Fail2banActionRequest{IP: ip, Jail: jail}
+	if err := s.do(ctx, server, http.MethodPost, "/api/fail2ban/unban", req, &resp); err != nil {
+		return nil, err
+	}
+	return &resp, nil
+}
+
+func (s *MailService) ListAliases(ctx context.Context, id, domainID string) ([]models.MailAlias, error) {
+	server, err := s.resolve(ctx, id)
+	if err != nil {
+		return nil, err
+	}
+	var aliases []models.MailAlias
+	if err := s.do(ctx, server, http.MethodGet, "/api/domains/"+domainID+"/aliases", nil, &aliases); err != nil {
+		return nil, err
+	}
+	if aliases == nil {
+		aliases = []models.MailAlias{}
+	}
+	return aliases, nil
+}
+
+func (s *MailService) CreateAlias(ctx context.Context, id, domainID string, req models.CreateMailAliasRequest) (*models.MailAlias, error) {
+	server, err := s.resolve(ctx, id)
+	if err != nil {
+		return nil, err
+	}
+	req.Source = strings.TrimSpace(req.Source)
+	req.Destination = strings.TrimSpace(req.Destination)
+	if req.Source == "" || req.Destination == "" {
+		return nil, fmt.Errorf("source and destination are required")
+	}
+	var alias models.MailAlias
+	if err := s.do(ctx, server, http.MethodPost, "/api/domains/"+domainID+"/aliases", req, &alias); err != nil {
+		return nil, err
+	}
+	return &alias, nil
+}
+
+func (s *MailService) DeleteAlias(ctx context.Context, id, domainID, aliasID string) error {
+	server, err := s.resolve(ctx, id)
+	if err != nil {
+		return err
+	}
+	return s.do(ctx, server, http.MethodDelete, "/api/domains/"+domainID+"/aliases/"+aliasID, nil, nil)
+}
+
 func (s *MailService) resolve(ctx context.Context, id string) (*models.MailServer, error) {
 	server, err := s.repo.GetByID(ctx, id)
 	if err != nil {

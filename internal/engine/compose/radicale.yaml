@@ -1,0 +1,32 @@
+x-codedock:
+  is_one_click: true
+  verified: true
+  name: Radicale
+  description: Calendars and contacts for your mailboxes. Sync native CalDAV and CardDAV clients using your existing IMAP account, with data stored on your chosen server.
+  category: mail
+  icon: calendar
+  inputs:
+    - var: IMAP_HOST
+      label: IMAP hostname
+      required: true
+services:
+  radicale:
+    image: ghcr.io/kozea/radicale:3.9.0
+    restart: unless-stopped
+    ports:
+      - "5232"
+    environment:
+      - IMAP_HOST=${input:IMAP_HOST}
+    entrypoint: ["/bin/sh", "-eu", "-c"]
+    command:
+      - 'exec /app/bin/python /app/bin/radicale --config "" --server-hosts 0.0.0.0:5232 --auth-type imap --auth-imap-host="${IMAP_HOST}:993" --auth-imap-security tls --auth-lc-username --auth-urldecode-username --no-auth-cache-logins --rights-type owner_only --storage-filesystem-folder /var/lib/radicale/collections'
+    volumes:
+      - radicale_data:/var/lib/radicale
+    healthcheck:
+      test: ["CMD", "curl", "--fail", "--silent", "--output", "/dev/null", "http://127.0.0.1:5232/.well-known/caldav"]
+      interval: 30s
+      timeout: 5s
+      retries: 3
+      start_period: 10s
+volumes:
+  radicale_data:

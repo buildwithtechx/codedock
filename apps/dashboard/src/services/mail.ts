@@ -1,3 +1,9 @@
+import type {
+  CreateMailAliasRequest,
+  Fail2banActionResponse,
+  Fail2banStatus,
+  MailAlias,
+} from '@codedock/contracts';
 import type { BaseResponse } from '#/interfaces/base';
 import type {
   CreateMailServerRequest,
@@ -146,6 +152,79 @@ export const mailService = {
     try {
       const res = await apiClient.get<BaseResponse<MailCert[]>>(`/mail/servers/${serverId}/certs`);
       return res.data;
+    } catch (err) {
+      throw handleApiError(err);
+    }
+  },
+
+  getFail2banStatus: async (serverId: string, jail?: string): Promise<Fail2banStatus> => {
+    try {
+      const path = jail
+        ? `/mail/servers/${serverId}/fail2ban/status?jail=${encodeURIComponent(jail)}`
+        : `/mail/servers/${serverId}/fail2ban/status`;
+      const res = await apiClient.get<BaseResponse<Fail2banStatus>>(path);
+      return res.data;
+    } catch (err) {
+      throw handleApiError(err);
+    }
+  },
+
+  banIP: async (serverId: string, ip: string, jail: string): Promise<Fail2banActionResponse> => {
+    try {
+      const res = await apiClient.post<BaseResponse<Fail2banActionResponse>>(
+        `/mail/servers/${serverId}/fail2ban/ban`,
+        { ip, jail }
+      );
+      return res.data;
+    } catch (err) {
+      throw handleApiError(err);
+    }
+  },
+
+  unbanIP: async (serverId: string, ip: string, jail?: string): Promise<Fail2banActionResponse> => {
+    try {
+      const res = await apiClient.post<BaseResponse<Fail2banActionResponse>>(
+        `/mail/servers/${serverId}/fail2ban/unban`,
+        { ip, jail }
+      );
+      return res.data;
+    } catch (err) {
+      throw handleApiError(err);
+    }
+  },
+
+  listAliases: async (serverId: string, domainId: string): Promise<MailAlias[]> => {
+    try {
+      const res = await apiClient.get<BaseResponse<MailAlias[]>>(
+        `/mail/servers/${serverId}/domains/${domainId}/aliases`
+      );
+      return res.data;
+    } catch (err) {
+      throw handleApiError(err);
+    }
+  },
+
+  createAlias: async (
+    serverId: string,
+    domainId: string,
+    req: CreateMailAliasRequest
+  ): Promise<MailAlias> => {
+    try {
+      const res = await apiClient.post<BaseResponse<MailAlias>>(
+        `/mail/servers/${serverId}/domains/${domainId}/aliases`,
+        req
+      );
+      return res.data;
+    } catch (err) {
+      throw handleApiError(err);
+    }
+  },
+
+  deleteAlias: async (serverId: string, domainId: string, aliasId: string): Promise<void> => {
+    try {
+      await apiClient.delete<BaseResponse<null>>(
+        `/mail/servers/${serverId}/domains/${domainId}/aliases/${aliasId}`
+      );
     } catch (err) {
       throw handleApiError(err);
     }

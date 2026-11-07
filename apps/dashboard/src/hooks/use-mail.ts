@@ -1,3 +1,4 @@
+import type { CreateMailAliasRequest } from '@codedock/contracts';
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
 import type { CreateMailServerRequest } from '#/interfaces/mail';
 import { mailService } from '#/services/mail';
@@ -120,3 +121,69 @@ export const useMailCerts = (serverId?: string) =>
     queryFn: () => (serverId ? mailService.listCerts(serverId) : Promise.resolve([])),
     enabled: Boolean(serverId),
   });
+
+export const useFail2banStatus = (serverId?: string, isOpen = true) =>
+  useQuery({
+    queryKey: ['mail-servers', serverId, 'fail2ban'],
+    queryFn: () => (serverId ? mailService.getFail2banStatus(serverId) : Promise.resolve(null)),
+    enabled: Boolean(serverId && isOpen),
+    refetchInterval: isOpen ? 10_000 : false,
+  });
+
+export const useBanIP = (serverId?: string) => {
+  const qc = useQueryClient();
+  return useMutation({
+    mutationFn: ({ ip, jail }: { ip: string; jail: string }) => {
+      if (!serverId) throw new Error('No mail server selected');
+      return mailService.banIP(serverId, ip, jail);
+    },
+    onSuccess: () => qc.invalidateQueries({ queryKey: ['mail-servers', serverId, 'fail2ban'] }),
+  });
+};
+
+export const useUnbanIP = (serverId?: string) => {
+  const qc = useQueryClient();
+  return useMutation({
+    mutationFn: ({ ip, jail }: { ip: string; jail?: string }) => {
+      if (!serverId) throw new Error('No mail server selected');
+      return mailService.unbanIP(serverId, ip, jail);
+    },
+    onSuccess: () => qc.invalidateQueries({ queryKey: ['mail-servers', serverId, 'fail2ban'] }),
+  });
+};
+
+export const useListAliases = (serverId?: string, domainId?: string) =>
+  useQuery({
+    queryKey: ['mail-servers', serverId, 'domains', domainId, 'aliases'],
+    queryFn: () =>
+      serverId && domainId ? mailService.listAliases(serverId, domainId) : Promise.resolve([]),
+    enabled: Boolean(serverId && domainId),
+  });
+
+export const useCreateAlias = (serverId?: string, domainId?: string) => {
+  const qc = useQueryClient();
+  return useMutation({
+    mutationFn: (req: CreateMailAliasRequest) => {
+      if (!serverId || !domainId) throw new Error('No domain selected');
+      return mailService.createAlias(serverId, domainId, req);
+    },
+    onSuccess: () =>
+      qc.invalidateQueries({
+        queryKey: ['mail-servers', serverId, 'domains', domainId, 'aliases'],
+      }),
+  });
+};
+
+export const useDeleteAlias = (serverId?: string, domainId?: string) => {
+  const qc = useQueryClient();
+  return useMutation({
+    mutationFn: (aliasId: string) => {
+      if (!serverId || !domainId) throw new Error('No domain selected');
+      return mailService.deleteAlias(serverId, domainId, aliasId);
+    },
+    onSuccess: () =>
+      qc.invalidateQueries({
+        queryKey: ['mail-servers', serverId, 'domains', domainId, 'aliases'],
+      }),
+  });
+};

@@ -1,6 +1,6 @@
+import { Button } from '@codedock/ui/button';
 import { Link } from '@tanstack/react-router';
 import { LayoutGrid, Sparkles } from 'lucide-react';
-import { Button } from '@codedock/ui/button';
 
 interface CloudMailClientProps {
   onSelfHost?: () => void;

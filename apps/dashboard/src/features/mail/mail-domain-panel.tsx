@@ -1,3 +1,10 @@
+import { Alert, AlertDescription } from '@codedock/ui/alert';
+import { Badge } from '@codedock/ui/badge';
+import { Button } from '@codedock/ui/button';
+import { Card, CardContent, CardHeader, CardTitle } from '@codedock/ui/card';
+import { Input } from '@codedock/ui/input';
+import { Label } from '@codedock/ui/label';
+import { Tabs, TabsContent, TabsList, TabsTrigger } from '@codedock/ui/tabs';
 import {
   CheckCircle2,
   KeyRound,
@@ -8,14 +15,7 @@ import {
   XCircle,
 } from 'lucide-react';
 import { useState } from 'react';
-import { Alert, AlertDescription } from '@codedock/ui/alert';
-import { Badge } from '@codedock/ui/badge';
-import { Button } from '@codedock/ui/button';
-import { Card, CardContent, CardHeader, CardTitle } from '@codedock/ui/card';
-import { Input } from '@codedock/ui/input';
-import { Label } from '@codedock/ui/label';
 import { QueryErrorState } from '#/components/query-error-state';
-import { Tabs, TabsContent, TabsList, TabsTrigger } from '@codedock/ui/tabs';
 import {
   useCreateDkim,
   useCreateMailbox,
@@ -24,6 +24,7 @@ import {
   useMailChecks,
   useMailDns,
 } from '#/hooks/use-mail';
+import { AliasesTab } from './aliases-tab';
 
 export function MailDomainPanel({
   serverId,
@@ -86,9 +87,13 @@ export function MailDomainPanel({
       <Tabs defaultValue="mailboxes">
         <TabsList>
           <TabsTrigger value="mailboxes">Mailboxes</TabsTrigger>
+          <TabsTrigger value="aliases">Aliases</TabsTrigger>
           <TabsTrigger value="dns">DNS</TabsTrigger>
           <TabsTrigger value="checks">Checks</TabsTrigger>
         </TabsList>
+        <TabsContent value="aliases" className="space-y-4">
+          <AliasesTab serverId={serverId} domainId={domainId} domainName={domainName} />
+        </TabsContent>
         <TabsContent value="mailboxes" className="space-y-4">
           <Card className="border-border/60 bg-card">
             <CardHeader>

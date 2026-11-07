@@ -80,6 +80,45 @@ func mailCertSchema() Schema {
 	)
 }
 
+func fail2banJailSchema() Schema {
+	return Obj("Fail2ban jail",
+		RF("jail", Str("Jail name")),
+		RF("currentlyFailed", Int("Currently failed")),
+		RF("totalFailed", Int("Total failed")),
+		RF("currentlyBanned", Int("Currently banned")),
+		RF("totalBanned", Int("Total banned")),
+		RF("bannedIps", Arr("Banned IPs", Str("IP address"))),
+	)
+}
+
+func fail2banStatusSchema() Schema {
+	return Obj("Fail2ban status",
+		RF("jails", Arr("Jails", Str("Jail name"))),
+		RF("details", Map("Jail details", fail2banJailSchema())),
+		RF("checkedAt", DateTime("Checked at")),
+		RF("canManage", Bool("Can manage")),
+	)
+}
+
+func fail2banActionSchema() Schema {
+	return Obj("Fail2ban action result",
+		RF("success", Bool("Success")),
+		F("output", Str("Command output")),
+	)
+}
+
+func mailAliasSchema() Schema {
+	return Obj("Mail alias",
+		RF("id", ID("Alias ID")),
+		RF("domainId", Str("Domain ID")),
+		RF("source", Str("Source address")),
+		RF("destination", Str("Destination address")),
+		RF("active", Bool("Active")),
+		F("createdAt", DateTime("Creation time")),
+		F("updatedAt", DateTime("Update time")),
+	)
+}
+
 func mailOperations() []Operation {
 	mail := "mail"
 	return []Operation{
@@ -98,5 +137,11 @@ func mailOperations() []Operation {
 		{Method: "GET", Path: "/api/mail/servers/:id/domains/:domainId/checks", Summary: "Run deliverability checks", Tags: []string{mail}, Auth: AuthUser, Response: Obj("Check report", RF("domain", Str("Domain name")), RF("checks", Arr("Checks", mailCheckSchema())))},
 		{Method: "GET", Path: "/api/mail/servers/:id/certs", Summary: "List tracked certificates", Tags: []string{mail}, Auth: AuthUser, Response: Arr("Certificates", mailCertSchema())},
 		{Method: "POST", Path: "/api/mail/servers/:id/certs/probe", Summary: "Probe a certificate", Tags: []string{mail}, Auth: AuthOrgAdmin, Request: JSON(Obj("Probe certificate", RF("host", Str("Hostname")), F("port", Int("Port")))), Response: mailCertSchema()},
+		{Method: "GET", Path: "/api/mail/servers/:id/fail2ban/status", Summary: "Get Fail2ban status", Tags: []string{mail}, Auth: AuthUser, Response: fail2banStatusSchema()},
+		{Method: "POST", Path: "/api/mail/servers/:id/fail2ban/ban", Summary: "Ban IP address", Tags: []string{mail}, Auth: AuthOrgAdmin, Request: JSON(Obj("Ban IP", RF("ip", Str("IP address")), RF("jail", Str("Jail name")))), Response: fail2banActionSchema()},
+		{Method: "POST", Path: "/api/mail/servers/:id/fail2ban/unban", Summary: "Unban IP address", Tags: []string{mail}, Auth: AuthOrgAdmin, Request: JSON(Obj("Unban IP", RF("ip", Str("IP address")), F("jail", Str("Jail name")))), Response: fail2banActionSchema()},
+		{Method: "GET", Path: "/api/mail/servers/:id/domains/:domainId/aliases", Summary: "List mail aliases", Tags: []string{mail}, Auth: AuthUser, Response: Arr("Aliases", mailAliasSchema())},
+		{Method: "POST", Path: "/api/mail/servers/:id/domains/:domainId/aliases", Summary: "Create a mail alias", Tags: []string{mail}, Auth: AuthOrgAdmin, Code: 201, Request: JSON(Obj("Create alias", RF("source", Str("Source address")), RF("destination", Str("Destination address")))), Response: mailAliasSchema()},
+		{Method: "DELETE", Path: "/api/mail/servers/:id/domains/:domainId/aliases/:aliasId", Summary: "Delete a mail alias", Tags: []string{mail}, Auth: AuthOrgAdmin, Raw: true, Code: 204, Response: EmptySchema()},
 	}
 }

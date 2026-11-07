@@ -1,3 +1,11 @@
+import { Button } from '@codedock/ui/button';
+import {
+  DropdownMenu,
+  DropdownMenuContent,
+  DropdownMenuItem,
+  DropdownMenuSeparator,
+  DropdownMenuTrigger,
+} from '@codedock/ui/dropdown-menu';
 import {
   Activity,
   AlertCircle,
@@ -9,14 +17,6 @@ import {
   Server,
   Trash2,
 } from 'lucide-react';
-import { Button } from '@codedock/ui/button';
-import {
-  DropdownMenu,
-  DropdownMenuContent,
-  DropdownMenuItem,
-  DropdownMenuSeparator,
-  DropdownMenuTrigger,
-} from '@codedock/ui/dropdown-menu';
 
 export interface MailServerItem {
   id: string;
