@@ -10,8 +10,8 @@ import (
 	"net/http"
 	"time"
 
-	"codedock.run/codedock/internal/models"
-	"codedock.run/codedock/internal/repositories"
+	"codedock/internal/models"
+	"codedock/internal/repositories"
 )
 
 type AISettingsService struct {
@@ -48,15 +48,25 @@ func (s *AISettingsService) DiagnoseLogs(ctx context.Context, logs string) (stri
 
 	switch provider {
 	case "anthropic":
-		return "", errors.New("Anthropic is not fully supported for this endpoint yet")
+		baseURL = "https://api.anthropic.com/v1"
+		apiKey = settings.AnthropicKey
+		modelName = settings.AnthropicModel
+		if modelName == "" {
+			modelName = "claude-sonnet-4-6"
+		}
 	case "google":
-		return "", errors.New("Google is not fully supported for this endpoint yet")
+		baseURL = "https://generativelanguage.googleapis.com/v1beta/openai"
+		apiKey = settings.GoogleKey
+		modelName = settings.GoogleModel
+		if modelName == "" {
+			modelName = "gemini-2.5-pro"
+		}
 	case "groq":
 		baseURL = "https://api.groq.com/openai/v1"
 		apiKey = settings.GroqKey
 		modelName = settings.GroqModel
 		if modelName == "" {
-			modelName = "llama3-8b-8192"
+			modelName = "llama-3.3-70b-versatile"
 		}
 	case "mistral":
 		baseURL = "https://api.mistral.ai/v1"
@@ -77,14 +87,14 @@ func (s *AISettingsService) DiagnoseLogs(ctx context.Context, logs string) (stri
 		apiKey = settings.XAIKey
 		modelName = settings.XAIModel
 		if modelName == "" {
-			modelName = "grok-beta"
+			modelName = "grok-4.7"
 		}
 	case "moonshot":
 		baseURL = "https://api.moonshot.cn/v1"
 		apiKey = settings.MoonshotKey
 		modelName = settings.MoonshotModel
 		if modelName == "" {
-			modelName = "moonshot-v1-8k"
+			modelName = "kimi-k3"
 		}
 	case "openai":
 		fallthrough
@@ -93,7 +103,7 @@ func (s *AISettingsService) DiagnoseLogs(ctx context.Context, logs string) (stri
 		apiKey = settings.OpenAIKey
 		modelName = settings.OpenAIModel
 		if modelName == "" {
-			modelName = "gpt-4o"
+			modelName = "gpt-6-astra"
 		}
 	}
 

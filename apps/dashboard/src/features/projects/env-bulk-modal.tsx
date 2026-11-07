@@ -1,8 +1,8 @@
 import { FileText, Import, X } from 'lucide-react';
 import { useState } from 'react';
 import { toast } from 'sonner';
-import { Button } from '#/components/ui/button';
-import { Card } from '#/components/ui/card';
+import { Button } from '@codedock/ui/button';
+import { Card } from '@codedock/ui/card';
 import { type EnvEntry, parseDotenv } from '#/lib/dotenv';
 
 interface EnvBulkModalProps {

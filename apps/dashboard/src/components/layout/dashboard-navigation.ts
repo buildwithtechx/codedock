@@ -1,17 +1,25 @@
 import type { LucideIcon } from 'lucide-react';
 import {
   Activity,
+  Bot,
   ClipboardList,
   Clock,
   CloudCog,
+  CreditCard,
   FolderKanban,
   Globe2,
   HardDrive,
+  HelpCircle,
+  Home,
   Key,
-  LayoutDashboard,
+  KeyRound,
+  LayoutGrid,
+  Mail,
+  PlayCircle,
   Rocket,
   Server,
   Settings,
+  ShieldCheck,
   UserRound,
 } from 'lucide-react';
 
@@ -29,7 +37,7 @@ export const primaryNavigation: DashboardNavigationItem[] = [
     title: 'Home',
     description: 'Organization overview',
     to: '/',
-    icon: LayoutDashboard,
+    icon: Home,
     exact: true,
   },
   {
@@ -39,10 +47,22 @@ export const primaryNavigation: DashboardNavigationItem[] = [
     icon: FolderKanban,
   },
   {
+    title: 'Apps',
+    description: 'Deployed services across projects',
+    to: '/apps',
+    icon: LayoutGrid,
+  },
+  {
     title: 'Deployments',
-    description: 'Release activity and status',
+    description: 'Release activity and background builds',
     to: '/deployments',
     icon: Rocket,
+  },
+  {
+    title: 'Actions',
+    description: 'CI workflows and runner execution',
+    to: '/actions',
+    icon: PlayCircle,
   },
   {
     title: 'Monitoring',
@@ -52,18 +72,31 @@ export const primaryNavigation: DashboardNavigationItem[] = [
   },
 ];
 
-export const infrastructureNavigation: DashboardNavigationItem[] = [
+export const getInfrastructureNavigation = (isCloud: boolean): DashboardNavigationItem[] => [
+  isCloud
+    ? {
+        title: 'Cloud spaces',
+        description: 'Cloud compute, networks and managed instances',
+        to: '/servers',
+        icon: Server,
+      }
+    : {
+        title: 'Servers',
+        description: 'Deployment targets and runtime capacity',
+        to: '/servers',
+        icon: Server,
+      },
   {
-    title: 'Servers',
-    description: 'Deployment targets and runtime capacity',
-    to: '/servers',
-    icon: Server,
+    title: 'Domains',
+    description: 'Domain routing and SSL verification',
+    to: '/domains',
+    icon: Globe2,
   },
   {
-    title: 'Domains & DNS',
-    description: 'Domain routing and SSL verification',
-    to: '/dns',
-    icon: Globe2,
+    title: 'Emails',
+    description: 'Mail servers, mailboxes and deliverability',
+    to: '/emails',
+    icon: Mail,
   },
   {
     title: 'Jobs',
@@ -71,15 +104,23 @@ export const infrastructureNavigation: DashboardNavigationItem[] = [
     to: '/jobs',
     icon: Clock,
   },
-];
-
-export const systemNavigation: DashboardNavigationItem[] = [
   {
     title: 'Backups',
     description: 'Backup destinations and restores',
     to: '/backups',
     icon: HardDrive,
-    exact: true,
+  },
+];
+
+export const infrastructureNavigation: DashboardNavigationItem[] =
+  getInfrastructureNavigation(false);
+
+export const systemNavigation: DashboardNavigationItem[] = [
+  {
+    title: 'Settings',
+    description: 'Instance and workspace configuration',
+    to: '/settings',
+    icon: Settings,
   },
   {
     title: 'Audit Logs',
@@ -87,28 +128,81 @@ export const systemNavigation: DashboardNavigationItem[] = [
     to: '/audit',
     icon: ClipboardList,
   },
+];
+
+export const getSystemNavigation = (isCloud: boolean): DashboardNavigationItem[] => {
+  if (!isCloud) {
+    return systemNavigation;
+  }
+  return [
+    systemNavigation[0],
+    {
+      title: 'Billing & Usage',
+      description: 'Manage subscription and compute plans',
+      to: '/billing',
+      icon: CreditCard,
+    },
+    systemNavigation[1],
+  ];
+};
+
+export const getHelpNavigation = (isCloud: boolean): DashboardNavigationItem[] => {
+  if (!isCloud) {
+    return [];
+  }
+  return [
+    {
+      title: 'Support',
+      description: 'Tickets, help center, and cloud assistance',
+      to: '/support',
+      icon: HelpCircle,
+    },
+  ];
+};
+
+export const hiddenNavigation: DashboardNavigationItem[] = [
   {
-    title: 'API Access',
-    description: 'Personal access tokens',
-    to: '/api-access',
-    icon: Key,
+    title: 'Deployments',
+    description: 'Release activity and status',
+    to: '/deployments',
+    icon: Rocket,
   },
   {
-    title: 'Settings',
-    description: 'Instance and workspace configuration',
-    to: '/settings',
-    icon: Settings,
-    exact: true,
+    title: 'Domains',
+    description: 'Domain routing and SSL verification',
+    to: '/domains',
+    icon: Globe2,
   },
 ];
 
 export const contextualNavigation: DashboardNavigationItem[] = [
   {
-    title: 'Sources',
+    title: 'Credentials',
+    description: 'DNS providers, tokens, and registry credentials',
+    to: '/settings',
+    icon: KeyRound,
+    search: { tab: 'credentials' },
+  },
+  {
+    title: 'MCP',
+    description: 'Model Context Protocol server configuration',
+    to: '/settings',
+    icon: Bot,
+    search: { tab: 'mcp' },
+  },
+  {
+    title: 'Git',
     description: 'Git providers and registries',
     to: '/settings',
     icon: CloudCog,
-    search: { tab: 'sources' },
+    search: { tab: 'git' },
+  },
+  {
+    title: 'Tokens',
+    description: 'Personal access tokens',
+    to: '/settings',
+    icon: Key,
+    search: { tab: 'tokens' },
   },
   {
     title: 'Team',
@@ -117,10 +211,26 @@ export const contextualNavigation: DashboardNavigationItem[] = [
     icon: UserRound,
     search: { tab: 'team' },
   },
+  {
+    title: 'Profile & Security',
+    description: 'Account settings, password, and 2FA',
+    to: '/profile',
+    icon: ShieldCheck,
+  },
 ];
 
-export const commandNavigation: DashboardNavigationItem[] = [
+const rawCommandItems: DashboardNavigationItem[] = [
   ...primaryNavigation,
   ...infrastructureNavigation,
   ...systemNavigation,
+  ...hiddenNavigation,
+  ...contextualNavigation,
 ];
+
+const seenNavKeys = new Set<string>();
+export const commandNavigation: DashboardNavigationItem[] = rawCommandItems.filter((item) => {
+  const key = `${item.title}:${item.to}`;
+  if (seenNavKeys.has(key)) return false;
+  seenNavKeys.add(key);
+  return true;
+});

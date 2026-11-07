@@ -8,8 +8,8 @@ import (
 	"github.com/google/uuid"
 	"github.com/spf13/cobra"
 
-	"codedock.run/codedock/internal/utils"
-	"codedock.run/codedock/pkg/types"
+	"codedock/internal/models"
+	"codedock/internal/utils"
 )
 
 var (
@@ -62,7 +62,7 @@ func runLocalDirectoryDeploy(targetDir string) {
 		if len(projects) > 0 {
 			projectID = projects[0].ID
 		} else {
-			p, err := client.CreateProject(&types.CreateProjectRequest{
+			p, err := client.CreateProject(&models.CreateProjectRequest{
 				Name:        "default-project",
 				Description: "Default Project",
 			})

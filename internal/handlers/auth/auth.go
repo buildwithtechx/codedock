@@ -4,22 +4,23 @@ import (
 	"net/http"
 	"strings"
 
-	handlerutils "codedock.run/codedock/internal/handlers/utils"
+	handlerutils "codedock/internal/handlers/utils"
 
 	"github.com/labstack/echo/v4"
 
-	"codedock.run/codedock/internal/models"
-	authservices "codedock.run/codedock/internal/services/auth"
-	"codedock.run/codedock/internal/telemetry"
-	"codedock.run/codedock/internal/utils"
+	"codedock/internal/models"
+	authservices "codedock/internal/services/auth"
+	"codedock/internal/telemetry"
+	"codedock/internal/utils"
 )
 
 type AuthHandler struct {
-	authService *authservices.AuthService
+	authService  *authservices.AuthService
+	auditService *authservices.AuditService
 }
 
-func NewAuthHandler(s *authservices.AuthService) *AuthHandler {
-	return &AuthHandler{authService: s}
+func NewAuthHandler(s *authservices.AuthService, auditService *authservices.AuditService) *AuthHandler {
+	return &AuthHandler{authService: s, auditService: auditService}
 }
 
 type AuthRequest struct {
@@ -99,6 +100,12 @@ func (h *AuthHandler) Register(c echo.Context) error {
 		"email": u.Email,
 		"name":  u.Name,
 	})
+	h.auditService.LogAction(c.Request().Context(), authservices.AuditActionOpts{
+		UserID:    u.ID,
+		Action:    "auth.signup",
+		Resource:  u.ID,
+		IPAddress: c.RealIP(),
+	})
 	return utils.Success(c, "Registration successful", models.AuthResponse{
 		User:         u,
 		Token:        token,
@@ -119,6 +126,12 @@ func (h *AuthHandler) Login(c echo.Context) error {
 	handlerutils.SetRefreshCookie(c, refreshToken)
 	telemetry.Track(u.Email, "user_logged_in", map[string]any{
 		"email": u.Email,
+	})
+	h.auditService.LogAction(c.Request().Context(), authservices.AuditActionOpts{
+		UserID:    u.ID,
+		Action:    "auth.login",
+		Resource:  u.ID,
+		IPAddress: c.RealIP(),
 	})
 	return utils.Success(c, "Login successful", models.AuthResponse{
 		User:         u,

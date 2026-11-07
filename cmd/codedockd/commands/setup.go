@@ -10,10 +10,10 @@ import (
 
 	"github.com/google/uuid"
 
-	"codedock.run/codedock/internal/config"
-	"codedock.run/codedock/internal/models"
-	"codedock.run/codedock/internal/repositories"
-	"codedock.run/codedock/internal/utils"
+	"codedock/internal/config"
+	"codedock/internal/models"
+	"codedock/internal/repositories"
+	"codedock/internal/utils"
 )
 
 func runSetup() {
@@ -98,7 +98,7 @@ func createSetupOwner(repo *repositories.UserRepo) string {
 }
 
 func saveSetupOptions(db *sql.DB, vault *utils.Vault, domain, tlsEmail string) error {
-	if err := config.SaveSelfHostedOptions(config.Get(), domain, tlsEmail); err != nil {
+	if err := config.SaveSelfHostedOptions(context.Background(), config.Get(), repositories.NewSelfHostedRepo(db), domain, tlsEmail); err != nil {
 		return err
 	}
 	repo := repositories.NewSettingsRepo(db, vault)

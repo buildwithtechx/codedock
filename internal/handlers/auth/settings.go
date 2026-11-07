@@ -6,12 +6,13 @@ import (
 
 	"github.com/labstack/echo/v4"
 
-	"codedock.run/codedock/internal/config"
-	"codedock.run/codedock/internal/models"
-	"codedock.run/codedock/internal/utils"
+	"codedock/internal/config"
+	"codedock/internal/models"
+	"codedock/internal/utils"
+	"codedock/internal/version"
 
-	authservices "codedock.run/codedock/internal/services/auth"
-	systemservices "codedock.run/codedock/internal/services/system"
+	authservices "codedock/internal/services/auth"
+	systemservices "codedock/internal/services/system"
 )
 
 type SettingsHandler struct {
@@ -63,12 +64,36 @@ func (h *SettingsHandler) GetPublicSettings(c echo.Context) error {
 
 	cfg := config.Get()
 	publicSettings := map[string]any{
-		"registrationEnabled": s.RegistrationEnabled,
-		"siteName":            s.SiteName,
-		"emailEnabled":        notif.SMTPEnabled || notif.ResendEnabled || (cfg.SMTP.Host != "" && cfg.SMTP.From != "") || cfg.Resend.APIKey != "",
-		"cloudMode":           cfg.Cloud.Enabled,
+		"registrationEnabled":   s.RegistrationEnabled,
+		"siteName":              s.SiteName,
+		"emailEnabled":          notif.SMTPEnabled || notif.ResendEnabled || (cfg.SMTP.Host != "" && cfg.SMTP.From != "") || cfg.Resend.APIKey != "",
+		"cloudMode":             cfg.Cloud.Enabled,
+		"selfHosted":            !cfg.Cloud.Enabled,
+		"version":               version.Version,
+		"hostDomain":            cfg.Server.Domain,
+		"defaultWildcardDomain": cfg.Domains.WildcardDomain,
+		"serverIp":              cfg.Server.HostIP,
 	}
 	return utils.Success(c, "Operation successful", publicSettings)
+}
+
+func (h *SettingsHandler) GetHealthEnv(c echo.Context) error {
+	cfg := config.Get()
+	return c.JSON(http.StatusOK, map[string]any{
+		"selfHosted":            !cfg.Cloud.Enabled,
+		"cloudMode":             cfg.Cloud.Enabled,
+		"deployMode":            "docker",
+		"isServerHost":          !cfg.Cloud.Enabled,
+		"hostControlEnabled":    true,
+		"version":               version.Version,
+		"authMode":              "local",
+		"authProviders":         []string{},
+		"productMode":           "platform",
+		"teamMode":              "single_user",
+		"hostDomain":            cfg.Server.Domain,
+		"defaultWildcardDomain": cfg.Domains.WildcardDomain,
+		"serverIp":              cfg.Server.HostIP,
+	})
 }
 
 func (h *SettingsHandler) UpdateSettings(c echo.Context) error {

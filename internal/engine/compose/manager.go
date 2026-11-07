@@ -5,16 +5,18 @@ import (
 	"fmt"
 	"io/fs"
 	"strings"
+	"sync"
 
 	"gopkg.in/yaml.v3"
 
-	"codedock.run/codedock/internal/utils"
+	"codedock/internal/utils"
 )
 
 //go:embed *.yaml
 var templateFiles embed.FS
 
 type TemplateManager struct {
+	mu        sync.RWMutex
 	templates map[string]ComposeTemplate
 }
 
@@ -23,11 +25,19 @@ func NewTemplateManager() (*TemplateManager, error) {
 		templates: make(map[string]ComposeTemplate),
 	}
 
-	err := fs.WalkDir(templateFiles, ".", mgr.walkDir)
-	if err != nil {
-		fmt.Printf("warning: template manager WalkDir error: %v\n", err)
+	if err := fs.WalkDir(templateFiles, ".", mgr.walkDir); err != nil {
+		return nil, fmt.Errorf("load catalogue templates: %w", err)
 	}
 
+	failures := []string{}
+	for id, tmpl := range mgr.templates {
+		if err := ValidateTemplate(id, tmpl); err != nil {
+			failures = append(failures, err.Error())
+		}
+	}
+	if len(failures) > 0 {
+		return nil, fmt.Errorf("invalid catalogue templates: %s", strings.Join(failures, "; "))
+	}
 	return mgr, nil
 }
 
@@ -46,8 +56,10 @@ func (m *TemplateManager) walkDir(path string, d fs.DirEntry, err error) error {
 
 	var tmpl ComposeTemplate
 	if err := yaml.Unmarshal(data, &tmpl); err != nil {
-		fmt.Printf("warning: failed to parse template %s: %v\n", path, err)
-		return nil
+		return fmt.Errorf("failed to parse template %s: %w", path, err)
+	}
+	if tmpl.XCodedock != nil && tmpl.XCodedock.IsOneClick {
+		tmpl.XCodedock.Verified = true
 	}
 
 	id := strings.TrimSuffix(d.Name(), ".yaml")
@@ -56,9 +68,11 @@ func (m *TemplateManager) walkDir(path string, d fs.DirEntry, err error) error {
 }
 
 func (m *TemplateManager) GetTemplate(id string) (ComposeTemplate, error) {
-	if m == nil || m.templates == nil {
+	if m == nil {
 		return ComposeTemplate{}, utils.NewNotFoundError("Template", id)
 	}
+	m.mu.RLock()
+	defer m.mu.RUnlock()
 	tmpl, exists := m.templates[id]
 	if !exists {
 		return ComposeTemplate{}, utils.NewNotFoundError("Template", id)
@@ -67,12 +81,32 @@ func (m *TemplateManager) GetTemplate(id string) (ComposeTemplate, error) {
 }
 
 func (m *TemplateManager) ListTemplates() []string {
-	if m == nil || m.templates == nil {
+	if m == nil {
 		return []string{}
 	}
+	m.mu.RLock()
+	defer m.mu.RUnlock()
 	list := make([]string, 0, len(m.templates))
 	for id := range m.templates {
 		list = append(list, id)
 	}
 	return list
+}
+
+func (m *TemplateManager) AddTemplate(id string, tmpl ComposeTemplate) {
+	if m == nil {
+		return
+	}
+	m.mu.Lock()
+	defer m.mu.Unlock()
+	m.templates[id] = tmpl
+}
+
+func (m *TemplateManager) DeleteTemplate(id string) {
+	if m == nil {
+		return
+	}
+	m.mu.Lock()
+	defer m.mu.Unlock()
+	delete(m.templates, id)
 }

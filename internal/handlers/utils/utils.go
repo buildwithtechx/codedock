@@ -7,9 +7,9 @@ import (
 
 	"github.com/labstack/echo/v4"
 
-	"codedock.run/codedock/internal/config"
-	"codedock.run/codedock/internal/models"
-	"codedock.run/codedock/internal/utils"
+	"codedock/internal/config"
+	"codedock/internal/models"
+	"codedock/internal/utils"
 )
 
 func SetAuthCookie(c echo.Context, token string) {
@@ -91,6 +91,11 @@ func IsAllowedWebSocketOrigin(r *http.Request, origin string) bool {
 	}
 	if dashURL := config.Get().Server.DashboardURL; dashURL != "" {
 		allowed = append(allowed, dashURL)
+	}
+	for _, extra := range config.Get().Server.ExtraCORSOrigins {
+		if extra != "" {
+			allowed = append(allowed, extra)
+		}
 	}
 	for _, a := range allowed {
 		if strings.EqualFold(strings.TrimRight(origin, "/"), strings.TrimRight(a, "/")) {

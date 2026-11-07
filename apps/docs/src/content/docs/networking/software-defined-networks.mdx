@@ -1,0 +1,44 @@
+---
+title: Software-Defined Networks & Watchdog
+description: Multi-network topologies, isolated Docker networks, and atomic commit watchdogs.
+---
+
+import { Steps, Tabs, TabItem, Aside } from "@astrojs/starlight/components";
+
+Codedock provides **Software-Defined Networking (SDN)** capabilities that isolate container communications, secure lateral traffic between services, and protect server connectivity using an automated two-phase commit watchdog.
+
+## Container Network Isolation
+
+By default, every Codedock Project Environment receives an isolated, user-defined Docker bridge network:
+- **Private DNS Resolution**: Containers within the same project communicate using service names as hostnames (e.g. `http://api:3000` or `postgres:5432`).
+- **Zero Lateral Access**: Containers in Project A cannot reach containers in Project B unless explicitly connected through a shared network.
+- **Port Masking**: Database ports (PostgreSQL 5432, Redis 6379) remain strictly internal to the container network and are never exposed to the public Internet unless Public Access is toggled on.
+
+## Multi-Network Topologies
+
+For complex multi-tier setups, you can define custom networks:
+
+<Tabs>
+  <TabItem label="Bridge Networks" icon="seti:docker">
+    Standard isolated network on a single host. Ideal for decoupling public frontend tiers from private backend database tiers on a single server.
+  </TabItem>
+  <TabItem label="Overlay Networks" icon="seti:graphql">
+    Multi-host distributed network for clustered environments, allowing containers on different physical worker servers to communicate privately over encrypted tunnels.
+  </TabItem>
+</Tabs>
+
+## Two-Phase Commit Watchdog
+
+Modifying host network interfaces, firewall rules, or Docker bridges carries the risk of accidentally severing control plane SSH or API access. Codedock prevents permanent lockouts using a **Two-Phase Commit Watchdog**:
+
+<Steps>
+1. **Arm Watchdog**: When a network topology change is requested, Codedock initiates a timed watchdog operation (`GET /api/system/networks/operations/:operationId/watchdog`).
+2. **Apply Changes**: Modifications are applied in a temporary, testable state.
+3. **Verify Connectivity**: The control plane runs automated end-to-end health checks across the modified network.
+4. **Automatic Reversion**: If the host fails to check in before the watchdog timer expires (default: 60 seconds), the daemon automatically rolls back to the known-good network state (`POST .../watchdog/rollback`), preventing server lockouts.
+5. **Commit**: If connectivity checks succeed, the configuration is committed permanently (`POST .../watchdog/commit`).
+</Steps>
+
+<Aside type="caution" title="Failsafe Recovery">
+The watchdog timer runs independently on the host node. Even if network changes completely sever inbound and outbound traffic, the local timer triggers rollback automatically without requiring remote instructions.
+</Aside>

@@ -2,9 +2,15 @@ x-codedock:
   is_one_click: true
   name: Uptime Kuma
   description: Self-hosted uptime monitoring
+  category: monitoring
+  icon: uptimekuma
 services:
   uptimekuma:
     image: louislam/uptime-kuma
     restart: always
     ports:
       - "3001"
+    volumes:
+      - uptimekuma-data:/app/data
+volumes:
+  uptimekuma-data:

@@ -6,7 +6,7 @@ import (
 	"net/http/httptest"
 	"testing"
 
-	"codedock.run/codedock/internal/config"
+	"codedock/internal/config"
 	"github.com/labstack/echo/v4"
 )
 

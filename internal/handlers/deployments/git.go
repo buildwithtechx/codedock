@@ -3,14 +3,14 @@ package deployments
 import (
 	"net/http"
 
-	handlerutils "codedock.run/codedock/internal/handlers/utils"
+	handlerutils "codedock/internal/handlers/utils"
 
 	"github.com/labstack/echo/v4"
 
-	"codedock.run/codedock/internal/utils"
+	"codedock/internal/utils"
 
-	"codedock.run/codedock/internal/models"
-	deploymentservices "codedock.run/codedock/internal/services/deployments"
+	"codedock/internal/models"
+	deploymentservices "codedock/internal/services/deployments"
 )
 
 type GitHandler struct {
@@ -75,4 +75,22 @@ func (h *GitHandler) ListRepos(c echo.Context) error {
 		return utils.Error(c, http.StatusBadRequest, err.Error())
 	}
 	return utils.Success(c, "Operation successful", repos)
+}
+
+func (h *GitHandler) RepoTree(c echo.Context) error {
+	userID := handlerutils.ExtractUserID(c)
+	var req models.RepoTreeRequest
+	_ = c.Bind(&req)
+	if req.RepositoryURL == "" {
+		req.RepositoryURL = c.QueryParam("repositoryUrl")
+		req.Branch = c.QueryParam("branch")
+	}
+	if req.RepositoryURL == "" {
+		return utils.Error(c, http.StatusBadRequest, "repositoryUrl is required")
+	}
+	tree, err := h.gitService.GetRepoTree(c.Request().Context(), userID, req.RepositoryURL, req.Branch)
+	if err != nil {
+		return utils.Error(c, http.StatusBadRequest, err.Error())
+	}
+	return utils.Success(c, "Operation successful", tree)
 }

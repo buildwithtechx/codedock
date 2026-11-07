@@ -1,4 +1,4 @@
-version: "3.8"
+﻿version: "3.8"
 services:
   clickhouse:
     image: clickhouse/clickhouse-server:latest
@@ -23,3 +23,5 @@ services:
       - CLICKHOUSE_DB=${db.database_name}
     volumes:
       - clickhouse-data:/var/lib/clickhouse
+volumes:
+  clickhouse-data:

@@ -13,10 +13,10 @@ import (
 	"github.com/docker/docker/client"
 	"github.com/google/uuid"
 
-	"codedock.run/codedock/internal/engine/deploy"
-	"codedock.run/codedock/internal/models"
-	"codedock.run/codedock/internal/repositories"
-	"codedock.run/codedock/internal/utils"
+	"codedock/internal/engine/deploy"
+	"codedock/internal/models"
+	"codedock/internal/repositories"
+	"codedock/internal/utils"
 )
 
 type deployArgs struct {
@@ -170,7 +170,7 @@ func selectOrCreateProject(projectRepo *repositories.ProjectRepo, projectID stri
 	if projectID != "" {
 		return projectID
 	}
-	projects, _, _ := projectRepo.ListAll(context.Background(), 1000, 0)
+	projects, _, _ := projectRepo.ListAll(context.Background(), "", 1000, 0)
 	if len(projects) > 0 {
 		fmt.Println("📁 Select a project for this deployment:")
 		fmt.Println("  [0] Create a new project")

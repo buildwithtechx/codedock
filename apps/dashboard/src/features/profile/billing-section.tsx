@@ -1,9 +1,15 @@
+import { Button } from '@codedock/ui/button';
 import { CreditCard, Loader2 } from 'lucide-react';
-import { useEffect } from 'react';
-import { Button } from '#/components/ui/button';
-import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '#/components/ui/card';
+import { useEffect, useState } from 'react';
+import { toast } from 'sonner';
 import { env } from '#/env';
-import { useBillingConfig, useCreateCheckoutSession } from '#/hooks/use-billing';
+import { SettingsRow } from '#/features/settings/settings-row';
+import { SettingsSection } from '#/features/settings/settings-section';
+import {
+  useBillingConfig,
+  useCreateCheckoutSession,
+  useCreatePortalSession,
+} from '#/hooks/use-billing';
 import { refreshAuthSession } from '#/lib/auth-refresh';
 import { useAuthStore } from '#/stores/auth-store';
 
@@ -11,6 +17,8 @@ export function BillingSection() {
   const user = useAuthStore((s) => s.user);
   const { data: config, isLoading } = useBillingConfig();
   const { mutateAsync: createCheckoutSession, isPending } = useCreateCheckoutSession();
+  const createPortalSession = useCreatePortalSession();
+  const [loadingPortal, setLoadingPortal] = useState(false);
 
   useEffect(() => {
     if (typeof window === 'undefined' || !window.location.search.includes('billing=success')) {
@@ -48,49 +56,72 @@ export function BillingSection() {
     }
   };
 
+  const handleManagePortal = async () => {
+    setLoadingPortal(true);
+    try {
+      const { url } = await createPortalSession.mutateAsync();
+      if (url) window.location.href = url;
+    } catch {
+      toast.error('Unable to open billing portal');
+    } finally {
+      setLoadingPortal(false);
+    }
+  };
+
   const isPro = user?.planType === 'pro';
 
   return (
-    <Card>
-      <CardHeader>
-        <CardTitle className="flex items-center gap-2">
-          <CreditCard className="h-5 w-5" />
-          Billing & Plan
-        </CardTitle>
-        <CardDescription>Manage your subscription and billing details.</CardDescription>
-      </CardHeader>
-      <CardContent>
-        {isLoading ? (
-          <Loader2 className="h-5 w-5 animate-spin" />
-        ) : (
-          <div className="space-y-4">
-            <div className="flex items-center justify-between rounded-lg border bg-card p-4">
-              <div>
-                <h3 className="font-semibold text-lg">{isPro ? 'Pro Plan' : 'Hobby Plan'}</h3>
-                <p className="text-muted-foreground text-sm">
-                  {isPro
-                    ? 'You are currently on the Pro plan with all features unlocked.'
-                    : 'You are on the free Hobby plan. Upgrade to unlock more features.'}
-                </p>
-              </div>
-              {!isPro && config?.plans.find((p) => p.id === 'pro')?.priceId && (
-                <Button
-                  onClick={() => handleUpgrade(config.plans.find((p) => p.id === 'pro')!.priceId!)}
-                  disabled={isPending}
-                >
-                  {isPending && <Loader2 className="mr-2 h-4 w-4 animate-spin" />}
-                  Upgrade to Pro
-                </Button>
-              )}
-              {isPro && (
-                <Button variant="outline" disabled>
-                  Manage Subscription
-                </Button>
-              )}
-            </div>
+    <SettingsSection
+      icon={<CreditCard className="size-4 text-primary" />}
+      title="Billing & Plan"
+      description="Manage your subscription and billing details."
+    >
+      {isLoading ? (
+        <div className="flex items-center justify-center py-6">
+          <Loader2 className="size-5 animate-spin text-muted-foreground" />
+        </div>
+      ) : (
+        <SettingsRow
+          label={isPro ? 'Pro Plan' : 'Hobby Plan'}
+          description={
+            isPro
+              ? 'You are currently on the Pro plan with all features unlocked.'
+              : 'You are on the free Hobby plan. Upgrade to unlock more features.'
+          }
+          bordered={false}
+        >
+          <div className="flex items-center gap-3">
+            <span
+              className={`inline-flex items-center rounded-full px-2.5 py-0.5 font-medium text-xs ${
+                isPro ? 'bg-emerald-500/10 text-emerald-500' : 'bg-muted text-muted-foreground'
+              }`}
+            >
+              {isPro ? 'Active' : 'Free'}
+            </span>
+            {!isPro && config?.plans.find((p) => p.id === 'pro')?.priceId && (
+              <Button
+                size="sm"
+                onClick={() => handleUpgrade(config.plans.find((p) => p.id === 'pro')!.priceId!)}
+                disabled={isPending}
+              >
+                {isPending && <Loader2 className="mr-2 h-4 w-4 animate-spin" />}
+                Upgrade to Pro
+              </Button>
+            )}
+            {isPro && (
+              <Button
+                variant="outline"
+                size="sm"
+                onClick={handleManagePortal}
+                disabled={loadingPortal}
+              >
+                {loadingPortal && <Loader2 className="mr-2 h-4 w-4 animate-spin" />}
+                Manage Subscription
+              </Button>
+            )}
           </div>
-        )}
-      </CardContent>
-    </Card>
+        </SettingsRow>
+      )}
+    </SettingsSection>
   );
 }

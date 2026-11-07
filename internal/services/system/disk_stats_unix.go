@@ -6,7 +6,7 @@ import (
 	"math"
 	"syscall"
 
-	"codedock.run/codedock/internal/models"
+	"codedock/internal/models"
 )
 
 func getDiskStats() models.DiskStats {

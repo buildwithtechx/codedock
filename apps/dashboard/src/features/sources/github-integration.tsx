@@ -2,14 +2,15 @@ import { useNavigate, useRouterState } from '@tanstack/react-router';
 import { Edit, Plus, Trash } from 'lucide-react';
 import { useEffect, useState } from 'react';
 import { toast } from 'sonner';
-import { Button } from '#/components/ui/button';
-import type { GithubApp } from '#/features/settings';
+import { Button } from '@codedock/ui/button';
+import type { GithubApp } from '#/interfaces/settings';
 import {
   useDeleteGitApp,
   useExchangeGithubManifest,
   useGetGitApps,
   useSaveGitApp,
-} from '#/features/settings';
+} from '#/hooks/use-settings';
+import { SettingsSection } from '#/features/settings/settings-section';
 import { GithubAppDialogs, GithubIcon } from './github-app-dialogs';
 
 export function GithubIntegration() {
@@ -41,13 +42,13 @@ export function GithubIntegration() {
         { code },
         {
           onSuccess: () => {
-            navigate({ to: '/settings', search: { tab: 'sources' } as never, replace: true });
+            navigate({ to: '/settings', search: { tab: 'git' } as never, replace: true });
             toast.success('GitHub App connected successfully!');
             setIsEditing(false);
             setEditingApp(null);
           },
           onError: (err) => {
-            navigate({ to: '/settings', search: { tab: 'sources' } as never, replace: true });
+            navigate({ to: '/settings', search: { tab: 'git' } as never, replace: true });
             toast.error(err.message || 'Failed to connect GitHub App');
           },
         }
@@ -159,117 +160,85 @@ export function GithubIntegration() {
 
   return (
     <div className="space-y-6">
-      <div className="mb-5 flex items-center justify-between">
-        <div className="flex items-center gap-3">
-          <div className="flex h-12 w-12 shrink-0 items-center justify-center rounded-lg border border-primary/20 bg-primary/10 text-primary">
-            <GithubIcon className="h-6 w-6" />
-          </div>
-          <div>
-            <h2 className="font-semibold text-lg">Connected GitHub Apps</h2>
-            <p className="text-muted-foreground text-sm">
-              Connect GitHub Apps to automatically deploy pushed commits.
-            </p>
-          </div>
-        </div>
-        <Button
-          className="gap-2"
-          onClick={() => {
-            setEditingApp(null);
-            setIsEditing(true);
-          }}
-        >
-          <Plus className="h-4 w-4" />
-          ADD GITHUB APP
-        </Button>
-      </div>
-
-      {apps.length > 0 ? (
-        <div className="grid grid-cols-1 gap-4">
-          {apps.map((app) => (
-            <div key={app.id} className="rounded-xl border border-border/80 bg-card p-6 shadow-sm">
-              <div className="flex items-start justify-between">
-                <div className="flex items-start gap-4">
-                  <div className="flex h-12 w-12 shrink-0 items-center justify-center rounded-lg border border-primary/20 bg-primary/10 text-primary">
-                    <GithubIcon className="h-6 w-6" />
-                  </div>
-                  <div className="space-y-1">
-                    <p className="font-bold text-[10px] text-muted-foreground uppercase tracking-widest">
-                      GITHUB INTEGRATION
-                    </p>
-                    <div className="flex items-center gap-3">
-                      <h2 className="font-bold text-xl tracking-tight">
-                        {app.name || 'GitHub App'}
-                      </h2>
-                      <div className="rounded border border-primary/30 bg-primary/10 px-2 py-0.5 font-semibold text-[10px] text-primary uppercase tracking-widest">
-                        CONNECTED
-                      </div>
-                    </div>
-                  </div>
-                </div>
-                <div className="flex items-center gap-2">
-                  <Button
-                    variant="outline"
-                    size="icon"
-                    className="h-10 w-10 border-border bg-background hover:bg-muted"
-                    onClick={() => {
-                      setEditingApp(app);
-                      setIsEditing(true);
-                    }}
-                  >
-                    <Edit className="h-4 w-4" />
-                  </Button>
-                  <Button
-                    variant="outline"
-                    size="icon"
-                    className="border/50 h-10 w-10 bg-transparent hover:bg-destructive/10 hover:text-destructive"
-                    onClick={() => setDeletingApp(app.id)}
-                    disabled={deleteMutation.isPending}
-                  >
-                    <Trash className="h-4 w-4" />
-                  </Button>
-                </div>
-              </div>
-
-              <div className="mt-6 grid grid-cols-1 gap-4 md:grid-cols-2">
-                <div className="border/50 rounded-lg border bg-background/50 p-4">
-                  <p className="font-medium text-[10px] text-muted-foreground uppercase tracking-widest">
-                    APP SLUG
-                  </p>
-                  <p className="mt-2 font-mono text-sm">{app.name || 'Not set'}</p>
-                </div>
-                <div className="border/50 rounded-lg border bg-background/50 p-4">
-                  <p className="font-medium text-[10px] text-muted-foreground uppercase tracking-widest">
-                    APP ID
-                  </p>
-                  <p className="mt-2 truncate font-mono text-sm">{app.appId || 'Not set'}</p>
-                </div>
-              </div>
-            </div>
-          ))}
-        </div>
-      ) : (
-        <div className="flex h-64 flex-col items-center justify-center rounded-xl border border border-dashed bg-card/40">
-          <div className="flex h-12 w-12 items-center justify-center rounded-xl border border-primary/20 bg-primary/10">
-            <GithubIcon className="h-5 w-5 text-primary" />
-          </div>
-          <h3 className="mt-4 font-bold text-foreground text-lg tracking-tight">
-            No GitHub Apps connected
-          </h3>
-          <p className="mt-1 max-w-sm text-center text-muted-foreground text-sm">
-            Connect a GitHub App to deploy repositories and receive webhooks.
-          </p>
+      <SettingsSection
+        icon={<GithubIcon className="size-4 text-primary" />}
+        title="Connected GitHub Apps"
+        description="Connect GitHub Apps to automatically deploy pushed commits."
+        action={
           <Button
-            className="mt-6 gap-2"
+            size="sm"
+            className="gap-1.5"
             onClick={() => {
               setEditingApp(null);
               setIsEditing(true);
             }}
           >
             <Plus className="h-4 w-4" />
-            CONNECT GITHUB APP
+            Add GitHub App
           </Button>
-        </div>
-      )}
+        }
+      >
+        {apps.length > 0 ? (
+          <div className="space-y-4">
+            {apps.map((app) => (
+              <div key={app.id} className="rounded-xl border border-border/50 bg-background/50 p-5">
+                <div className="flex items-start justify-between">
+                  <div className="flex items-start gap-4">
+                    <div className="flex h-10 w-10 shrink-0 items-center justify-center rounded-xl border border-border/50 bg-background">
+                      <GithubIcon className="h-5 w-5" />
+                    </div>
+                    <div className="space-y-1">
+                      <div className="flex items-center gap-2">
+                        <h3 className="font-semibold text-base text-foreground">
+                          {app.name || 'GitHub App'}
+                        </h3>
+                        <div className="rounded border border-primary/30 bg-primary/10 px-2 py-0.5 font-semibold text-[10px] text-primary uppercase tracking-widest">
+                          CONNECTED
+                        </div>
+                      </div>
+                      <p className="font-mono text-muted-foreground text-xs">
+                        App ID: {app.appId || 'Not set'}
+                      </p>
+                    </div>
+                  </div>
+                  <div className="flex items-center gap-2">
+                    <Button
+                      variant="outline"
+                      size="icon"
+                      className="h-8 w-8"
+                      onClick={() => {
+                        setEditingApp(app);
+                        setIsEditing(true);
+                      }}
+                    >
+                      <Edit className="h-3.5 w-3.5" />
+                    </Button>
+                    <Button
+                      variant="outline"
+                      size="icon"
+                      className="h-8 w-8 text-destructive hover:bg-destructive/10 hover:text-destructive"
+                      onClick={() => setDeletingApp(app.id)}
+                      disabled={deleteMutation.isPending}
+                    >
+                      <Trash className="h-3.5 w-3.5" />
+                    </Button>
+                  </div>
+                </div>
+              </div>
+            ))}
+          </div>
+        ) : (
+          <div className="flex flex-col items-center justify-center rounded-xl border border-border/60 border-dashed py-10 text-center">
+            <div className="flex h-10 w-10 items-center justify-center rounded-xl bg-muted text-muted-foreground">
+              <GithubIcon className="h-5 w-5" />
+            </div>
+            <h4 className="mt-3 font-medium text-foreground text-sm">No GitHub Apps connected</h4>
+            <p className="mt-1 max-w-sm text-muted-foreground text-xs">
+              Connect a GitHub App to deploy repositories and receive webhooks automatically.
+            </p>
+          </div>
+        )}
+      </SettingsSection>
 
       <GithubAppDialogs
         isEditing={isEditing}

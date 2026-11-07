@@ -1,16 +1,18 @@
 import type {
+  CancelDeploymentResponse,
   ExplainDeploymentResponse,
   GetDeploymentLogsResponse,
-  GetDiagnosticsResponse,
+  GetDeploymentResponse,
   GetServiceMetricsResponse,
   ListDeploymentsResponse,
   ListOrganizationDeploymentsParams,
   ListOrganizationDeploymentsResponse,
   ListPRPreviewsResponse,
   RollbackDeploymentResponse,
+  TogglePinResponse,
   TriggerDeploymentRequest,
   TriggerDeploymentResponse,
-} from '#/features/services';
+} from '#/interfaces/services';
 import { apiClient } from '#/lib/api-client';
 import { handleApiError } from '#/lib/error';
 
@@ -25,6 +27,7 @@ export const deploymentsService = {
       if (params.serviceId) query.set('serviceId', params.serviceId);
       if (params.status) query.set('status', params.status);
       if (params.search) query.set('search', params.search);
+      if (params.days) query.set('days', String(params.days));
       if (params.page) query.set('page', String(params.page));
       if (params.limit) query.set('limit', String(params.limit));
       return await apiClient.get<ListOrganizationDeploymentsResponse>(`/deployments?${query}`);
@@ -74,11 +77,43 @@ export const deploymentsService = {
     }
   },
 
+  get: async (deploymentId: string): Promise<GetDeploymentResponse> => {
+    try {
+      return await apiClient.get<GetDeploymentResponse>(`/deployments/${deploymentId}`);
+    } catch (error) {
+      throw handleApiError(error);
+    }
+  },
+
+  cancel: async (deploymentId: string): Promise<CancelDeploymentResponse> => {
+    try {
+      return await apiClient.post<CancelDeploymentResponse>(`/deployments/${deploymentId}/cancel`);
+    } catch (error) {
+      throw handleApiError(error);
+    }
+  },
+
   rollback: async (deploymentId: string): Promise<RollbackDeploymentResponse> => {
     try {
       return await apiClient.post<RollbackDeploymentResponse>(
         `/deployments/${deploymentId}/rollback`
       );
+    } catch (error) {
+      throw handleApiError(error);
+    }
+  },
+
+  retry: async (deploymentId: string): Promise<TriggerDeploymentResponse> => {
+    try {
+      return await apiClient.post<TriggerDeploymentResponse>(`/deployments/${deploymentId}/retry`);
+    } catch (error) {
+      throw handleApiError(error);
+    }
+  },
+
+  togglePin: async (deploymentId: string): Promise<TogglePinResponse> => {
+    try {
+      return await apiClient.post<TogglePinResponse>(`/deployments/${deploymentId}/pin`);
     } catch (error) {
       throw handleApiError(error);
     }
@@ -95,16 +130,6 @@ export const deploymentsService = {
   getMetrics: async (serviceId: string): Promise<GetServiceMetricsResponse> => {
     try {
       return await apiClient.get<GetServiceMetricsResponse>(`/services/${serviceId}/metrics`);
-    } catch (error) {
-      throw handleApiError(error);
-    }
-  },
-
-  diagnostics: async (deploymentId: string): Promise<GetDiagnosticsResponse> => {
-    try {
-      return await apiClient.post<GetDiagnosticsResponse>(
-        `/deployments/${deploymentId}/diagnostics`
-      );
     } catch (error) {
       throw handleApiError(error);
     }

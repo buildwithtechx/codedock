@@ -14,8 +14,8 @@ import (
 
 	"github.com/google/uuid"
 
-	"codedock.run/codedock/internal/models"
-	"codedock.run/codedock/internal/services/projects"
+	"codedock/internal/models"
+	"codedock/internal/services/projects"
 )
 
 type ArchiveService struct {

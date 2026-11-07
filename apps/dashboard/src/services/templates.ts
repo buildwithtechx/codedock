@@ -1,7 +1,10 @@
-import type { OneClickApp } from '#/features/databases';
 import type {
   ArchiveDeployResponse,
   ComposeDeployResponse,
+  ExampleApp,
+  InstallAppInput,
+  InstallPreview,
+  OneClickAppDetails,
   OneClickDeployRequest,
   OneClickDeployResponse,
 } from '#/interfaces/templates';
@@ -9,22 +12,36 @@ import { apiClient } from '#/lib/api-client';
 import { handleApiError } from '#/lib/error';
 
 export const templatesService = {
-  listOneClickApps: async (): Promise<OneClickApp[]> => {
+  listOneClickApps: async (): Promise<OneClickAppDetails[]> => {
     try {
-      const response = await apiClient.get<{ data: OneClickApp[] }>('/one-click');
+      const response = await apiClient.get<{ data: OneClickAppDetails[] }>('/one-click');
       return response.data;
     } catch (error) {
       throw handleApiError(error);
     }
   },
 
-  listExampleApps: async (): Promise<
-    { id: string; name: string; description: string; repo: string; icon?: string }[]
-  > => {
+  listExampleApps: async (): Promise<ExampleApp[]> => {
     try {
-      const response = await apiClient.get<{
-        data: { id: string; name: string; description: string; repo: string; icon?: string }[];
-      }>('/examples');
+      const response = await apiClient.get<{ data: ExampleApp[] }>('/examples');
+      return response.data;
+    } catch (error) {
+      throw handleApiError(error);
+    }
+  },
+
+  getOneClickApp: async (appId: string): Promise<OneClickAppDetails> => {
+    try {
+      const response = await apiClient.get<{ data: OneClickAppDetails }>(`/one-click/${appId}`);
+      return response.data;
+    } catch (error) {
+      throw handleApiError(error);
+    }
+  },
+
+  reviewOneClickInstall: async (payload: InstallAppInput): Promise<InstallPreview> => {
+    try {
+      const response = await apiClient.post<{ data: InstallPreview }>('/one-click/review', payload);
       return response.data;
     } catch (error) {
       throw handleApiError(error);

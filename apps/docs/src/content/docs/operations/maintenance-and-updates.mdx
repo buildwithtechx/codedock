@@ -58,11 +58,13 @@ When **Auto Update Enabled** is turned on in System Settings, Codedock will:
 
 Your running applications and databases will *not* go offline during a Codedock update. Only the dashboard and control plane API will be momentarily unavailable while the container restarts.
 
-### Manual Updates
+### Manual Updates & Live Upgrade Progress
 
-If you prefer to update Codedock manually, you can turn off Auto Updates. When a new version is available, it will be highlighted in the dashboard.
+If you prefer to update Codedock manually, you can turn off Auto Updates. When a new version is available, an **Update Available** pill appears in the top dashboard bar and inside **Settings → Updates**.
 
-You can trigger a manual update via the UI, or by running the following on your server:
+Clicking **Upgrade Now** opens the **Live Instance Upgrade Modal**, which tracks the 5-stage zero-downtime upgrade pipeline in real time (`Checking Release` → `Pulling Image` → `Migrating Schema` → `Restarting Daemon` → `Verifying Health`), streams live step logs, and automatically polls `/healthz` until the control plane reconnects on the new release.
+
+You can also trigger a manual update on your server via CLI:
 
 ```bash
 codedockd update

@@ -1,0 +1,18 @@
+x-codedock:
+  is_one_click: true
+  name: FreshRSS
+  description: Self-hosted RSS and Atom feed reader
+  category: productivity
+  icon: freshrss
+services:
+  freshrss:
+    image: freshrss/freshrss
+    restart: always
+    ports:
+      - "80"
+    volumes:
+      - freshrss-data:/var/www/FreshRSS/data
+      - freshrss-ext:/var/www/FreshRSS/extensions
+volumes:
+  freshrss-data:
+  freshrss-ext:

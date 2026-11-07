@@ -1,0 +1,18 @@
+x-codedock:
+  is_one_click: true
+  name: PocketBase
+  description: Open-source backend with database, auth and file storage in one binary
+  category: backend
+  icon: pocketbase
+services:
+  pocketbase:
+    image: pocketbase/pocketbase
+    restart: always
+    ports:
+      - "8090"
+    volumes:
+      - pb-data:/pb/data
+      - pb-public:/pb/pb_public
+volumes:
+  pb-data:
+  pb-public:

@@ -1,0 +1,135 @@
+---
+title: Model Context Protocol (MCP) & Ask AI Copilot
+description: Connect Claude Code, Cursor, VS Code, Codex, Windsurf, and Zed to Codedock, or use the built-in Instance-Aware Ask AI Copilot.
+---
+
+import { Tabs, TabItem, Aside, Steps, Badge } from "@astrojs/starlight/components";
+
+Codedock provides a full **Model Context Protocol (MCP) Server** (`2024-11-05`) alongside a built-in, **Instance-Aware "Ask AI" Copilot** in the dashboard, CLI, VS Code extension, and mobile app.
+
+## Built-In "Ask AI" Instance Copilot
+
+Open the **Ask AI** right sidebar from anywhere in the dashboard by clicking **Ask AI** in the top header or pressing `⌘I` / `Ctrl+I`.
+
+- **Live Instance Context**: Automatically knows your projects, services, databases, servers, domains, backups, and active issues.
+- **`@` Resource Mentions**: Type `@` in the composer to tag specific projects, services, databases, or servers directly into your prompt.
+- **Agent vs. Plan Mode**:
+  - **Agent Mode**: Automatically runs read-only MCP tools to inspect your instance and queues mutating or destructive tools (`trigger_deployment`, `restart_service`, `create_backup`) as **Approval Cards** requiring explicit confirmation before execution.
+  - **Plan Mode**: Inspects your instance state and formulates a step-by-step architecture or remediation plan without queueing mutations.
+- **8 Supported AI Providers + Local Fallback**: Configure **OpenAI**, **Anthropic**, **Google Gemini**, **Mistral**, **Groq**, **DeepSeek**, **xAI**, or **Moonshot (Kimi)** under **Settings → AI Models**. Even before an API key is configured, the local deterministic Instance Copilot remains active.
+
+---
+
+## MCP Transport Modes
+
+Codedock supports all three standard MCP transport protocols:
+
+<Tabs>
+  <TabItem label="Streamable HTTP (Recommended)" icon="rocket">
+    Stateless JSON-RPC 2.0 over HTTP — supported natively by Claude Code, Cursor, VS Code Copilot, Codex, and Windsurf:
+    - **Endpoint**: `POST /api/mcp` (or `POST /api/v1/mcp`)
+    - **Header**: `Authorization: Bearer <YOUR_PAT_TOKEN>`
+  </TabItem>
+  <TabItem label="SSE Mode (Persistent)" icon="laptop">
+    Connect remote agents over persistent Server-Sent Events:
+    - **SSE Stream**: `GET /api/mcp/sse`
+    - **Message Endpoint**: `POST /api/mcp/messages`
+    - **Header**: `Authorization: Bearer <YOUR_PAT_TOKEN>`
+  </TabItem>
+  <TabItem label="Stdio Mode (CLI & Daemon)" icon="seti:shell">
+    Bridge local stdio-only MCP clients to your remote Codedock instance using the CLI:
+    ```sh
+    codedock mcp serve
+    ```
+    Or run directly on the control-plane host:
+    ```sh
+    codedockd mcp
+    ```
+  </TabItem>
+</Tabs>
+
+## IDE & Client Setup
+
+You can copy pre-filled setup snippets (or launch the 1-click Cursor deeplink) directly from **Dashboard → Settings → MCP Server**, or use the configurations below:
+
+<Tabs>
+  <TabItem label="Claude Code" icon="seti:shell">
+    ```sh
+    claude mcp add --transport http codedock https://codedock.example.com/api/mcp \
+      --header "Authorization: Bearer <YOUR_PAT_TOKEN>"
+    ```
+  </TabItem>
+  <TabItem label="Cursor" icon="seti:code-climate">
+    Add to `~/.cursor/mcp.json` (or click **Install in Cursor** in **Settings → MCP Server**):
+    ```json
+    {
+      "mcpServers": {
+        "codedock": {
+          "url": "https://codedock.example.com/api/mcp",
+          "headers": {
+            "Authorization": "Bearer <YOUR_PAT_TOKEN>"
+          }
+        }
+      }
+    }
+    ```
+  </TabItem>
+  <TabItem label="VS Code" icon="seti:visualstudio">
+    Run the **Codedock: Configure MCP Server (`.vscode/mcp.json`)** command from the Codedock VS Code Extension, or register via terminal:
+    ```sh
+    code --add-mcp '{"name":"codedock","type":"http","url":"https://codedock.example.com/api/mcp"}'
+    ```
+  </TabItem>
+  <TabItem label="Codex / Windsurf / Zed" icon="laptop">
+    - **Codex CLI**:
+      ```sh
+      codex mcp add codedock --url https://codedock.example.com/api/mcp
+      ```
+    - **Windsurf (`~/.codeium/windsurf/mcp_config.json`)**:
+      ```json
+      {
+        "mcpServers": {
+          "codedock": {
+            "serverUrl": "https://codedock.example.com/api/mcp"
+          }
+        }
+      }
+      ```
+    - **Zed / Claude Desktop (via CLI stdio bridge)**:
+      ```json
+      {
+        "mcpServers": {
+          "codedock": {
+            "command": "codedock",
+            "args": ["mcp", "serve"]
+          }
+        }
+      }
+      ```
+  </TabItem>
+</Tabs>
+
+<Aside type="tip" title="Scoped Personal Access Tokens">
+Generate a dedicated Personal Access Token under **Settings → MCP Server** or **Keys & Tokens** with granular scopes (`server:read`, `logs:read`, `env:read`, `database:manage`, `backup:read`).
+</Aside>
+
+## Registered MCP Tools (36 Tools & 3 Prompts)
+
+Inspect the live catalog anytime via `codedock mcp tools` or `GET /api/mcp/tools`.
+
+| Category | Tools | Description |
+| --- | --- | --- |
+| **Projects & Environments** | `list_projects`, `get_project`, `create_project`, `delete_project`, `list_environments`, `create_environment` | Inspect and manage projects, environments, and topologies. |
+| **Applications & Services** | `list_services`, `get_service`, `get_service_runtime`, `restart_service`, `stop_service`, `redeploy_service`, `list_service_variables`, `set_service_variable` | Manage application containers, runtime state, and environment variables. |
+| **Deployments & Logs** | `list_deployments`, `get_deployment`, `trigger_deployment`, `rollback_deployment`, `cancel_deployment`, `get_deployment_logs`, `explain_deployment_failure` | Trigger builds, stream/tail logs, rollback releases, and diagnose build failures. |
+| **Databases & Storage** | `list_databases`, `get_database`, `create_database`, `start_database`, `stop_database`, `restart_database`, `query_database` | Provision managed databases, control lifecycle, and run read-only SQL queries. |
+| **Servers & Clusters** | `list_servers`, `get_server`, `test_server_ssh`, `list_clusters` | Inspect worker nodes, SSH connectivity, and HA clusters. |
+| **Domains, DNS & Ingress** | `list_domains`, `create_domain`, `verify_domain`, `list_dns_records`, `list_ingress_routes` | Manage custom domains, TLS verification, DNS records, and L7 ingress routes. |
+| **Backups & Recovery** | `list_backups`, `create_backup`, `trigger_backup`, `list_s3_destinations` | Inspect backup policies, trigger immediate snapshots, and verify S3 targets. |
+| **Actions, Cron & Templates** | `list_action_workflows`, `list_action_runs`, `dispatch_action_workflow`, `list_scheduled_tasks`, `trigger_scheduled_task`, `list_one_click_templates`, `deploy_one_click_template` | Dispatch CI/CD workflows, trigger cron jobs, and deploy One-Click catalog templates. |
+| **System & Audit** | `get_system_stats`, `list_audit_logs`, `check_system_updates` | Query host resource metrics, audit trail events, and platform release status. |
+
+### Built-In MCP Prompts
+- `diagnose-deployment`: Inspects deployment metadata, build logs, and runtime state to identify root causes.
+- `audit-server-fleet`: Summarizes worker server health, CPU/RAM/disk pressure, and unreachable nodes.
+- `review-project-readiness`: Evaluates domains, TLS, backup coverage, and health checks for a project.

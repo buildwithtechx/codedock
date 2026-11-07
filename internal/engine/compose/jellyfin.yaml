@@ -1,0 +1,20 @@
+x-codedock:
+  is_one_click: true
+  name: Jellyfin
+  description: The free software media system for movies, shows, music, and live TV streaming.
+  category: media
+  icon: jellyfin
+services:
+  jellyfin:
+    image: jellyfin/jellyfin:latest
+    restart: always
+    ports:
+      - "8096"
+    volumes:
+      - jellyfin-config:/config
+      - jellyfin-cache:/cache
+      - jellyfin-media:/media
+volumes:
+  jellyfin-config:
+  jellyfin-cache:
+  jellyfin-media:

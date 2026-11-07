@@ -1,0 +1,43 @@
+---
+title: Server Takeover & Docker Adoption
+description: Scan existing Linux hosts and adopt running Docker containers into Codedock without downtime.
+---
+
+import { Steps, Tabs, TabItem, Aside } from "@astrojs/starlight/components";
+
+Codedock's **Server Takeover** feature allows you to onboard existing Linux servers that are already running production Docker containers, adopting workloads with zero container restarts and zero downtime.
+
+## Why Use Server Takeover?
+
+- **Zero-Downtime Migration**: Existing containers continue serving web traffic uninterrupted while Codedock inspects and imports their configurations.
+- **Migrate from Any Platform**: Import workloads running via manual `docker compose`, Coolify, CapRover, Portainer, or standalone containers.
+- **Automated Extraction**: Reads environment variables, volume mount paths, exposed ports, and restart policies automatically.
+
+## Adoption Workflow
+
+<Steps>
+1. **Scan Host**:
+   - In **Fleet Management → Servers**, select your server and click **Scan for Existing Workloads** (or `POST /api/system/takeover/scan`).
+   - Codedock inspects running containers, image tags, bound ports, volumes, and network configurations.
+
+2. **Review Discovered Workloads**:
+   - Deselect system containers (monitoring agents, diagnostic tools) that you don't want Codedock to manage.
+   - Assign containers to their target Codedock Projects and Environments.
+   - Review host port bindings and assign custom domains.
+
+3. **Execute Adoption**:
+   - Click **Adopt Selected Services** (or `POST /api/system/takeover/adopt`).
+   - Codedock creates project records and links Traefik ingress rules without restarting active containers.
+</Steps>
+
+<Aside type="tip" title="Non-Destructive Operation">
+Adoption is strictly non-destructive. If you ever need to disconnect Codedock from an adopted host, running containers remain intact and continue operating as standard Docker containers.
+</Aside>
+
+## Post-Adoption Features
+
+Once adopted, your applications unlock full Codedock PaaS capabilities:
+- **Continuous Deployment**: Link a Git repository to trigger automated builds on future code pushes.
+- **Live Logs & Metrics**: Stream stdout/stderr container logs and track real-time CPU/RAM usage.
+- **Automated Backups**: Configure scheduled snapshots to S3 or Cloudflare R2 for adopted databases (PostgreSQL, MySQL, Redis).
+- **Interactive Terminal**: Open web terminal sessions into adopted containers from your browser or VS Code.

@@ -1,5 +1,5 @@
-import { Input } from '#/components/ui/input';
-import { Label } from '#/components/ui/label';
+import { Input } from '@codedock/ui/input';
+import { Label } from '@codedock/ui/label';
 
 interface ServerSshAdvancedFieldsProps {
   sshJumpHost: string;

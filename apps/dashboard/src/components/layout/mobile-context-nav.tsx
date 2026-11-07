@@ -22,7 +22,7 @@ export function MobileContextNav({
     >
       {items.map((item) => (
         <Link
-          key={item.to}
+          key={`${item.title}:${item.to}`}
           to={item.to as never}
           className={`flex shrink-0 items-center gap-2 rounded-lg px-3 py-2 font-medium text-sm transition-colors ${
             item.active

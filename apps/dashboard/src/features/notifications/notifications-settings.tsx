@@ -1,15 +1,18 @@
-import { Check } from 'lucide-react';
+import { Bell, BellRing, Check } from 'lucide-react';
 import { useEffect, useRef, useState } from 'react';
 import { toast } from 'sonner';
-import { Button } from '#/components/ui/button';
-import { Skeleton } from '#/components/ui/skeleton';
-import { Switch } from '#/components/ui/switch';
+import { Button } from '@codedock/ui/button';
+import { Skeleton } from '@codedock/ui/skeleton';
 import {
   useGetNotificationSettings,
   useTestNotification,
   useUpdateNotificationSettings,
-} from '#/features/settings';
+} from '#/hooks/use-notifications';
+import { PreferenceRow } from '#/features/settings/preference-row';
+import { SettingsSection } from '#/features/settings/settings-section';
 import { NotificationChannelsList, type NotifSettingsForm } from './notification-channels-list';
+import { NotificationDeliveryHistory } from './notification-delivery-history';
+import { NotificationSubscriptionsTable } from './notification-subscriptions-table';
 
 const EMPTY: NotifSettingsForm = {
   discordWebhookUrl: '',
@@ -34,11 +37,14 @@ const EMPTY: NotifSettingsForm = {
   pushoverEnabled: false,
   genericWebhookUrl: '',
   genericWebhookEnabled: false,
+  expoPushToken: '',
+  expoEnabled: false,
   notificationAlerts: true,
 };
 
 const notificationFields: Record<string, (keyof NotifSettingsForm)[]> = {
   alerts: ['notificationAlerts'],
+  expo: ['expoPushToken', 'expoEnabled'],
   discord: ['discordWebhookUrl', 'discordPingEnabled', 'discordEnabled'],
   slack: ['slackWebhookUrl', 'slackEnabled'],
   telegram: ['telegramBotToken', 'telegramChatId', 'telegramEnabled'],
@@ -94,6 +100,8 @@ export const NotificationsSettings = () => {
         pushoverEnabled: (s.pushoverEnabled as boolean) ?? false,
         genericWebhookUrl: (s.genericWebhookUrl as string) ?? '',
         genericWebhookEnabled: (s.genericWebhookEnabled as boolean) ?? false,
+        expoPushToken: (s.expoPushToken as string) ?? '',
+        expoEnabled: (s.expoEnabled as boolean) ?? false,
         notificationAlerts: (s.notificationAlerts as boolean) ?? true,
       };
 
@@ -162,35 +170,49 @@ export const NotificationsSettings = () => {
 
   return (
     <div className="space-y-6">
-      <section className="flex flex-col gap-4 rounded-2xl bg-card p-5 sm:flex-row sm:items-center sm:justify-between">
-        <div>
-          <h3 className="font-semibold text-sm">Alert behavior</h3>
-          <p className="mt-1 text-muted-foreground text-sm">
-            Enable or pause delivery across every configured channel.
-          </p>
-        </div>
-        <div className="flex items-center gap-3">
-          <Switch
+      <SettingsSection
+        collapsible
+        icon={<Bell className="size-4 text-primary" />}
+        title="Alert Behavior"
+        description="Enable or pause delivery across every configured channel."
+      >
+        <div className="space-y-4">
+          <PreferenceRow
+            title="Notification Alerts"
+            hint="When paused, notifications for failed deployments, container restarts, and runtime warnings will be suppressed across all configured communication channels."
             checked={form.notificationAlerts}
-            onCheckedChange={(v: boolean) => set('notificationAlerts', v)}
+            onChange={(v: boolean) => set('notificationAlerts', v)}
           />
-          <Button size="sm" onClick={() => handleSave('alerts')} disabled={isSavingAny}>
-            <Check className="mr-2 h-4 w-4" />
-            {savingProvider === 'alerts' ? 'Saving...' : 'Save'}
-          </Button>
+          <div className="flex justify-end border-border/40 border-t pt-4">
+            <Button size="sm" onClick={() => handleSave('alerts')} disabled={isSavingAny}>
+              <Check className="mr-2 h-4 w-4" />
+              {savingProvider === 'alerts' ? 'Saving...' : 'Save Alerts'}
+            </Button>
+          </div>
         </div>
-      </section>
+      </SettingsSection>
 
-      <NotificationChannelsList
-        form={form}
-        set={set}
-        handleSave={handleSave}
-        handleTest={handleTest}
-        savingProvider={savingProvider}
-        testingProvider={testingProvider}
-        testing={testing}
-        disabled={isSavingAny}
-      />
+      <SettingsSection
+        collapsible
+        icon={<BellRing className="size-4 text-primary" />}
+        title="Notification Channels"
+        description="Connect third-party webhook and chat integrations for automated alerts and deployment notifications."
+      >
+        <NotificationChannelsList
+          form={form}
+          set={set}
+          handleSave={handleSave}
+          handleTest={handleTest}
+          savingProvider={savingProvider}
+          testingProvider={testingProvider}
+          testing={testing}
+          disabled={isSavingAny}
+        />
+      </SettingsSection>
+
+      <NotificationSubscriptionsTable />
+
+      <NotificationDeliveryHistory />
     </div>
   );
 };

@@ -7,7 +7,7 @@ import (
 	"syscall"
 	"unsafe"
 
-	"codedock.run/codedock/internal/models"
+	"codedock/internal/models"
 )
 
 func getDiskStats() models.DiskStats {

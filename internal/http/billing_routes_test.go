@@ -7,11 +7,11 @@ import (
 
 	"github.com/labstack/echo/v4"
 
-	"codedock.run/codedock/internal/config"
-	"codedock.run/codedock/internal/handlers/system"
-	"codedock.run/codedock/internal/http/middleware"
-	"codedock.run/codedock/internal/models"
-	authservices "codedock.run/codedock/internal/services/auth"
+	"codedock/internal/config"
+	"codedock/internal/handlers/system"
+	"codedock/internal/http/middleware"
+	"codedock/internal/models"
+	authservices "codedock/internal/services/auth"
 )
 
 func TestBillingRoutesRespectDeploymentMode(t *testing.T) {
@@ -43,6 +43,8 @@ func TestBillingRoutesRespectDeploymentMode(t *testing.T) {
 			{http.MethodGet, "/api/billing/config", 200},
 			{http.MethodPost, "/api/billing/checkout", 401},
 			{http.MethodPost, "/api/billing/webhook", 400},
+			{http.MethodGet, "/api/billing/pending", 401},
+			{http.MethodPost, "/api/billing/checkouts/chk_123/cancel", 401},
 		} {
 			request := httptest.NewRequest(check.method, check.path, nil)
 			if !cloud || check.path != "/api/billing/webhook" {

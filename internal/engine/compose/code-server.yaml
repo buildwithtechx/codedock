@@ -1,0 +1,22 @@
+x-codedock:
+  is_one_click: true
+  name: code-server
+  description: VS Code in the browser with a persistent workspace
+  category: devtools
+  icon: code-server
+  secrets:
+    - var: CODE_SERVER_PASSWORD
+      label: Login password
+      length: 24
+services:
+  code-server:
+    image: codercom/code-server
+    restart: always
+    ports:
+      - "8080"
+    environment:
+      - PASSWORD=${secret:CODE_SERVER_PASSWORD}
+    volumes:
+      - code-data:/home/coder/project
+volumes:
+  code-data:

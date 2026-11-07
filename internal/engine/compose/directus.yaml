@@ -1,0 +1,30 @@
+x-codedock:
+  is_one_click: true
+  name: Directus
+  description: Headless CMS and data platform over any SQL database
+  category: cms
+  icon: directus
+  secrets:
+    - var: DIRECTUS_KEY
+      label: Encryption key
+      length: 32
+    - var: DIRECTUS_SECRET
+      label: Session secret
+      length: 32
+services:
+  directus:
+    image: directus/directus
+    restart: always
+    ports:
+      - "8055"
+    environment:
+      - KEY=${secret:DIRECTUS_KEY}
+      - SECRET=${secret:DIRECTUS_SECRET}
+      - DB_CLIENT=sqlite3
+      - DB_FILENAME=/directus/database/data.db
+    volumes:
+      - directus-data:/directus/database
+      - directus-uploads:/directus/uploads
+volumes:
+  directus-data:
+  directus-uploads:

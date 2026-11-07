@@ -10,7 +10,7 @@ import (
 	"strings"
 	"time"
 
-	"codedock.run/codedock/internal/config"
+	"codedock/internal/config"
 )
 
 func runBackup() {

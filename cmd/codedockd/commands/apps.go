@@ -8,8 +8,8 @@ import (
 
 	"github.com/google/uuid"
 
-	"codedock.run/codedock/internal/models"
-	"codedock.run/codedock/internal/repositories"
+	"codedock/internal/models"
+	"codedock/internal/repositories"
 )
 
 func runApps(args []string) {
@@ -36,7 +36,7 @@ func runApps(args []string) {
 
 	switch cmd {
 	case "list":
-		projects, _, _ := projectRepo.ListAll(context.Background(), 1000, 0)
+		projects, _, _ := projectRepo.ListAll(context.Background(), "", 1000, 0)
 		for _, p := range projects {
 			apps, _ := appRepo.ListByProject(context.Background(), p.ID)
 			if len(apps) == 0 {

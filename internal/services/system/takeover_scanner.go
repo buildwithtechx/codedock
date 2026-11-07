@@ -10,7 +10,7 @@ import (
 
 	"golang.org/x/crypto/ssh"
 
-	"codedock.run/codedock/internal/models"
+	"codedock/internal/models"
 )
 
 type TakeoverScanner struct{}

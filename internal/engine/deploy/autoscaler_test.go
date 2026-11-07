@@ -1,8 +1,8 @@
 package deploy
 
 import (
-	"codedock.run/codedock/internal/engine/observability"
-	"codedock.run/codedock/internal/models"
+	"codedock/internal/engine/observability"
+	"codedock/internal/models"
 	"context"
 	"errors"
 	"strings"
@@ -12,7 +12,7 @@ import (
 
 type scalingTestApps struct{ app *models.AppService }
 
-func (s scalingTestApps) ListAll(context.Context) ([]*models.AppService, error) {
+func (s scalingTestApps) ListAll(context.Context, string) ([]*models.AppService, error) {
 	return []*models.AppService{s.app}, nil
 }
 

@@ -1,9 +1,9 @@
 package deployments
 
 import (
-	"codedock.run/codedock/internal/models"
-	deploymentservices "codedock.run/codedock/internal/services/deployments"
-	"codedock.run/codedock/internal/utils"
+	"codedock/internal/models"
+	deploymentservices "codedock/internal/services/deployments"
+	"codedock/internal/utils"
 	"github.com/labstack/echo/v4"
 )
 

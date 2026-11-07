@@ -1,7 +1,7 @@
 import { Check, ChevronDown, Layers, Plus } from 'lucide-react';
 import { useState } from 'react';
-import { Badge } from '#/components/ui/badge';
-import { Button } from '#/components/ui/button';
+import { Badge } from '@codedock/ui/badge';
+import { Button } from '@codedock/ui/button';
 import {
   Dialog,
   DialogContent,
@@ -9,16 +9,16 @@ import {
   DialogFooter,
   DialogHeader,
   DialogTitle,
-} from '#/components/ui/dialog';
+} from '@codedock/ui/dialog';
 import {
   DropdownMenu,
   DropdownMenuContent,
   DropdownMenuItem,
   DropdownMenuSeparator,
   DropdownMenuTrigger,
-} from '#/components/ui/dropdown-menu';
-import { Input } from '#/components/ui/input';
-import { Label } from '#/components/ui/label';
+} from '@codedock/ui/dropdown-menu';
+import { Input } from '@codedock/ui/input';
+import { Label } from '@codedock/ui/label';
 import { useCreateEnvironment, useListByProject } from '#/hooks/use-environments';
 
 interface EnvironmentSwitcherProps {

@@ -1,4 +1,4 @@
-version: "3.8"
+﻿version: "3.8"
 services:
   mysql:
     image: mysql:8.0
@@ -19,3 +19,5 @@ services:
       - MYSQL_DATABASE=${db.database_name}
     volumes:
       - mysql-data:/var/lib/mysql
+volumes:
+  mysql-data:

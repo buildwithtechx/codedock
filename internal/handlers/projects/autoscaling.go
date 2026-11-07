@@ -1,9 +1,9 @@
 package projects
 
 import (
-	"codedock.run/codedock/internal/models"
-	projectservices "codedock.run/codedock/internal/services/projects"
-	"codedock.run/codedock/internal/utils"
+	"codedock/internal/models"
+	projectservices "codedock/internal/services/projects"
+	"codedock/internal/utils"
 	"github.com/labstack/echo/v4"
 	"net/http"
 )

@@ -9,12 +9,21 @@ export interface TemplateRecipe {
 export const templateRecipes: TemplateRecipe[] = [
   {
     id: 'postgres',
-    name: 'PostgreSQL',
+    name: 'PostgreSQL + pgAdmin',
     category: 'Databases',
     workflow: 'Database workflow',
     description:
-      'Relational storage with database provisioning, SQL Studio, and backup configuration.',
+      'A persistent PostgreSQL database with pgAdmin for browser-based administration and SQL queries.',
     docsPath: '/deployments/templates/#postgres',
+  },
+  {
+    id: 'mariadb',
+    name: 'MariaDB + Adminer',
+    category: 'Databases',
+    workflow: 'Database workflow',
+    description:
+      'A MySQL-compatible database with a lightweight Adminer control panel for queries, tables, and exports.',
+    docsPath: '/deployments/templates/#mariadb',
   },
   {
     id: 'mysql',

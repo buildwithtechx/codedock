@@ -1,8 +1,8 @@
 import { useQueryClient } from '@tanstack/react-query';
 import { useState } from 'react';
 import { toast } from 'sonner';
-import { useVerifyDomain } from './hooks';
-import type { DomainVerifyResult } from './interfaces';
+import { useVerifyDomain } from '#/hooks/use-dns';
+import type { DomainVerifyResult } from '#/interfaces/dns';
 
 interface DomainSummary {
   id: string;

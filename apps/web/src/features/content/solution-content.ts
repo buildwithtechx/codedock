@@ -21,7 +21,7 @@ export const solutionContent = {
         title: 'Understand the moving parts',
         body: 'The Go daemon serves the dashboard and coordinates Docker. Traefik handles application routing; builders and database tools run as separate containers.',
         points: [
-          'SQLite stores control plane state',
+          'Postgres stores control plane state',
           'Persistent data includes secrets and the encrypted vault',
           'Docker, Traefik, and build tools remain runtime dependencies',
         ],

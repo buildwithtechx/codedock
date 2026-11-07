@@ -1,0 +1,2 @@
+ALTER TABLE notification_settings ADD COLUMN IF NOT EXISTS expo_push_token TEXT NOT NULL DEFAULT '';
+ALTER TABLE notification_settings ADD COLUMN IF NOT EXISTS expo_enabled BOOLEAN NOT NULL DEFAULT FALSE;

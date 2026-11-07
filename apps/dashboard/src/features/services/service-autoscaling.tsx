@@ -1,11 +1,12 @@
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
+import { RefreshCw } from 'lucide-react';
 import { useState } from 'react';
 import { toast } from 'sonner';
-import { Button } from '#/components/ui/button';
-import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '#/components/ui/card';
-import { Input } from '#/components/ui/input';
-import { Label } from '#/components/ui/label';
-import { Switch } from '#/components/ui/switch';
+import { Button } from '@codedock/ui/button';
+import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@codedock/ui/card';
+import { Input } from '@codedock/ui/input';
+import { Label } from '@codedock/ui/label';
+import { Switch } from '@codedock/ui/switch';
 import { apiClient } from '#/lib/api-client';
 
 type ScalingPolicy = {
@@ -62,7 +63,8 @@ export function ServiceAutoscaling({ serviceId }: { serviceId: string }) {
         {query.isError && (
           <p role="alert">
             Could not load autoscaling policy.{' '}
-            <Button variant="outline" onClick={() => query.refetch()}>
+            <Button variant="outline" onClick={() => void query.refetch()} className="gap-1.5">
+              <RefreshCw className={`size-3.5 ${query.isFetching ? 'animate-spin' : ''}`} />
               Retry
             </Button>
           </p>
@@ -121,7 +123,7 @@ export function ServiceAutoscaling({ serviceId }: { serviceId: string }) {
               <p>Last decision: {query.data?.data.lastDecision || 'Not evaluated yet'}</p>
               <p>
                 Last CPU sample:{' '}
-                {query.data?.data.lastEvaluatedAt
+                {query.data?.data.lastCpu != null
                   ? `${query.data.data.lastCpu.toFixed(2)}%`
                   : 'Unavailable'}
               </p>

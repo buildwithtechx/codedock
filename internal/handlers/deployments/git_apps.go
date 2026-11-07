@@ -6,9 +6,9 @@ import (
 
 	"github.com/labstack/echo/v4"
 
-	"codedock.run/codedock/internal/models"
-	deploymentservices "codedock.run/codedock/internal/services/deployments"
-	"codedock.run/codedock/internal/utils"
+	"codedock/internal/models"
+	deploymentservices "codedock/internal/services/deployments"
+	"codedock/internal/utils"
 )
 
 type GitAppsHandler struct {

@@ -1,7 +1,7 @@
 import { FitAddon } from '@xterm/addon-fit';
 import { SearchAddon } from '@xterm/addon-search';
 import { Terminal } from '@xterm/xterm';
-import { env } from '#/env';
+import { websocketUrl } from '#/lib/websocket';
 import '@xterm/xterm/css/xterm.css';
 import { useEffect, useRef, useState } from 'react';
 import { useAuthStore } from '#/stores/auth-store';
@@ -45,9 +45,7 @@ export function LiveLogsViewer({ serviceId, deploymentId }: LiveLogsViewerProps)
     const handleResize = () => fitAddon.fit();
     window.addEventListener('resize', handleResize);
 
-    const protocol = window.location.protocol === 'https:' ? 'wss:' : 'ws:';
-    const wsHost = env.VITE_API_URL.replace(/^http(s?):\/\//, '');
-    let wsUrl = `${protocol}//${wsHost}/api/services/${serviceId}/logs`;
+    let wsUrl = websocketUrl(`/services/${serviceId}/logs`);
     if (deploymentId) {
       wsUrl += `?deploymentId=${deploymentId}`;
     }

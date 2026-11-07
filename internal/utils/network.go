@@ -6,7 +6,7 @@ import (
 	"github.com/docker/docker/api/types/network"
 	"github.com/docker/docker/client"
 
-	"codedock.run/codedock/internal/config"
+	"codedock/internal/config"
 )
 
 func GetDataDir() string {

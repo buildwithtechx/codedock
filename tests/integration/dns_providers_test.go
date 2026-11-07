@@ -11,8 +11,8 @@ import (
 	"sync"
 	"testing"
 
-	"codedock.run/codedock/internal/models"
-	dnsproviders "codedock.run/codedock/internal/services/system/dns_providers"
+	"codedock/internal/models"
+	dnsproviders "codedock/internal/services/system/dns_providers"
 )
 
 type providerSettingsRepo struct {

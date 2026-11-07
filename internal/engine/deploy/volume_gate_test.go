@@ -1,7 +1,7 @@
 package deploy
 
 import (
-	"codedock.run/codedock/internal/models"
+	"codedock/internal/models"
 	"context"
 	"github.com/docker/docker/client"
 	"strings"

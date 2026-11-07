@@ -18,9 +18,14 @@ import (
 
 	"github.com/google/uuid"
 
-	"codedock.run/codedock/internal/models"
-	"codedock.run/codedock/internal/repositories"
-	"codedock.run/codedock/internal/utils"
+	"codedock/internal/models"
+	"codedock/internal/repositories"
+	"codedock/internal/utils"
+)
+
+var (
+	validBranchRegex     = regexp.MustCompile(`^[a-zA-Z0-9._/-]+$`)
+	validCommitHashRegex = regexp.MustCompile(`^[a-fA-F0-9]{7,40}$`)
 )
 
 type GitService struct {
@@ -135,6 +140,50 @@ func (s *GitService) CloneOrPullAppRepository(ctx context.Context, app *models.A
 	return s.SyncCodebase(ctx, app, targetDir, logWriter)
 }
 
+func (s *GitService) CloneOrPullAppRepositoryAtCommit(ctx context.Context, app *models.AppService, commitHash string, targetDir string, logWriter io.Writer) error {
+	return s.SyncCodebaseAtCommit(ctx, app, commitHash, targetDir, logWriter)
+}
+
+func (s *GitService) SyncCodebaseAtCommit(ctx context.Context, app *models.AppService, commitHash string, targetDir string, logWriter io.Writer) error {
+	if err := s.SyncCodebase(ctx, app, targetDir, logWriter); err != nil {
+		return err
+	}
+	cleanCommit := strings.TrimSpace(commitHash)
+	if cleanCommit == "" || !validCommitHashRegex.MatchString(cleanCommit) {
+		return nil
+	}
+	if logWriter != nil {
+		fmt.Fprintf(logWriter, "📌 [GitService] Checking out pinned commit %s...\n", cleanCommit)
+	}
+	fetchCmd := exec.CommandContext(ctx, "git", "-C", targetDir, "fetch", "origin", cleanCommit)
+	_ = fetchCmd.Run()
+	checkoutCmd := exec.CommandContext(ctx, "git", "-C", targetDir, "checkout", cleanCommit)
+	if out, err := checkoutCmd.CombinedOutput(); err != nil {
+		return utils.NewDeploymentError(fmt.Sprintf("git checkout commit %s failed: %s", cleanCommit, string(out)), err)
+	}
+	if logWriter != nil {
+		fmt.Fprintf(logWriter, "✅ [GitService] Checked out commit %s.\n", cleanCommit)
+	}
+	cleanURL, token := s.getAuthTokenIfAvailable(ctx, app.RepositoryURL, app.GitUserID)
+	return SyncAndInitSubmodules(ctx, targetDir, buildGitConfigArgs(cleanURL, token), logWriter)
+}
+
+func buildGitConfigArgs(cleanURL, token string) []string {
+	gitConfigArgs := []string{"-c", "http.followRedirects=false", "-c", "protocol.file.allow=never"}
+	if token != "" {
+		username := "x-access-token"
+		if strings.Contains(cleanURL, "https://gitlab.com/") {
+			username = "oauth2"
+		}
+		if strings.Contains(cleanURL, "https://bitbucket.org/") {
+			username = "x-token-auth"
+		}
+		authHeader := fmt.Sprintf("Authorization: Basic %s", base64.StdEncoding.EncodeToString([]byte(username+":"+token)))
+		gitConfigArgs = append(gitConfigArgs, "-c", fmt.Sprintf("http.extraheader=%s", authHeader))
+	}
+	return gitConfigArgs
+}
+
 func (s *GitService) SyncCodebase(ctx context.Context, app *models.AppService, targetDir string, logWriter io.Writer) error {
 	if app == nil {
 		return errors.New("app service is nil")
@@ -147,17 +196,12 @@ func (s *GitService) SyncCodebase(ctx context.Context, app *models.AppService, t
 	if branch == "" {
 		branch = "main"
 	}
-	validBranch := regexp.MustCompile(`^[a-zA-Z0-9._/-]+$`)
-	if !validBranch.MatchString(branch) {
+	if !validBranchRegex.MatchString(branch) {
 		return errors.New("invalid branch name")
 	}
 
-	cleanURL, token := s.getAuthTokenIfAvailable(ctx, repoURL)
-	var gitConfigArgs []string
-	if token != "" {
-		authHeader := fmt.Sprintf("Authorization: Basic %s", base64.StdEncoding.EncodeToString([]byte("x-access-token:"+token)))
-		gitConfigArgs = []string{"-c", fmt.Sprintf("http.extraheader=%s", authHeader)}
-	}
+	cleanURL, token := s.getAuthTokenIfAvailable(ctx, repoURL, app.GitUserID)
+	gitConfigArgs := buildGitConfigArgs(cleanURL, token)
 
 	if logWriter != nil {
 		fmt.Fprintf(logWriter, "📥 [GitService] Preparing to sync codebase from %s (branch: %s)...\n", cleanURL, branch)
@@ -179,7 +223,7 @@ func (s *GitService) SyncCodebase(ctx context.Context, app *models.AppService, t
 		if logWriter != nil {
 			fmt.Fprintf(logWriter, "✅ [GitService] Successfully updated local repository to latest commit on %s.\n", branch)
 		}
-		return nil
+		return SyncAndInitSubmodules(ctx, targetDir, gitConfigArgs, logWriter)
 	}
 	_ = os.RemoveAll(targetDir)
 	if err := os.MkdirAll(filepath.Dir(targetDir), 0o755); err != nil {
@@ -211,10 +255,10 @@ func (s *GitService) SyncCodebase(ctx context.Context, app *models.AppService, t
 	if logWriter != nil {
 		fmt.Fprintf(logWriter, "✅ [GitService] Successfully cloned repository into %s.\n", targetDir)
 	}
-	return nil
+	return SyncAndInitSubmodules(ctx, targetDir, gitConfigArgs, logWriter)
 }
 
-func (s *GitService) getAuthTokenIfAvailable(ctx context.Context, repoURL string) (string, string) {
+func (s *GitService) getAuthTokenIfAvailable(ctx context.Context, repoURL, userID string) (string, string) {
 	u, err := url.Parse(repoURL)
 	if err != nil {
 		return repoURL, ""
@@ -224,13 +268,11 @@ func (s *GitService) getAuthTokenIfAvailable(ctx context.Context, repoURL string
 	if u.Scheme != "https" {
 		return cleanURL, ""
 	}
-	var provider string
-	if strings.Contains(u.Host, "github.com") {
-		provider = "github"
-	} else {
+	provider := map[string]string{"github.com": "github", "gitlab.com": "gitlab", "bitbucket.org": "bitbucket"}[strings.ToLower(u.Host)]
+	if provider == "" || userID == "" {
 		return cleanURL, ""
 	}
-	gp, err := s.repo.GetAnyProviderByType(ctx, provider)
+	gp, err := s.repo.GetProvider(ctx, userID, provider)
 	if err != nil || gp == nil || gp.AccessToken == "" {
 		return cleanURL, ""
 	}

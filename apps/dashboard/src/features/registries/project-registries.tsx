@@ -1,7 +1,7 @@
 import { Loader2, Plus, Trash2 } from 'lucide-react';
 import { useState } from 'react';
 import { toast } from 'sonner';
-import { Button } from '#/components/ui/button';
+import { Button } from '@codedock/ui/button';
 import {
   Dialog,
   DialogContent,
@@ -9,18 +9,11 @@ import {
   DialogFooter,
   DialogHeader,
   DialogTitle,
-} from '#/components/ui/dialog';
-import { Input } from '#/components/ui/input';
-import {
-  Table,
-  TableBody,
-  TableCell,
-  TableHead,
-  TableHeader,
-  TableRow,
-} from '#/components/ui/table';
-import type { Registry } from '#/features/registries';
-import { useCreateRegistry, useDeleteRegistry, useListRegistries } from '#/features/registries';
+} from '@codedock/ui/dialog';
+import { Input } from '@codedock/ui/input';
+import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@codedock/ui/table';
+import type { Registry } from '#/interfaces/registries';
+import { useCreateRegistry, useDeleteRegistry, useListRegistries } from '#/hooks/use-registries';
 
 export function ProjectRegistries({ projectId }: { projectId: string }) {
   const { data: registries, isLoading } = useListRegistries(projectId);

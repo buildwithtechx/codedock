@@ -6,12 +6,12 @@ import (
 
 	"github.com/labstack/echo/v4"
 
-	"codedock.run/codedock/internal/utils"
+	"codedock/internal/utils"
 
-	"codedock.run/codedock/internal/http/middleware"
-	"codedock.run/codedock/internal/models"
-	projectservices "codedock.run/codedock/internal/services/projects"
-	"codedock.run/codedock/internal/telemetry"
+	"codedock/internal/http/middleware"
+	"codedock/internal/models"
+	projectservices "codedock/internal/services/projects"
+	"codedock/internal/telemetry"
 )
 
 type ProjectHandler struct {
@@ -34,19 +34,26 @@ func (h *ProjectHandler) ListProjects(c echo.Context) error {
 	}
 	offset := (page - 1) * limit
 	orgID := c.QueryParam("organizationId")
-	if orgID == "" {
-		return utils.Error(c, http.StatusBadRequest, "organizationId is required")
-	}
-
 	user := middleware.GetUserClaimsFromContext(c.Request().Context())
 	if user == nil {
 		return utils.Error(c, http.StatusUnauthorized, "unauthorized")
 	}
-	if !h.projectService.HasOrgPermission(c.Request().Context(), orgID, user.UserID, user.Role, "") {
+
+	if orgID == "" {
+		org, err := h.projectService.GetOrCreateDefaultOrganization(c.Request().Context(), user.UserID)
+		if err != nil {
+			return utils.Error(c, http.StatusInternalServerError, err.Error())
+		}
+		if org != nil {
+			orgID = org.ID
+		}
+	}
+
+	if orgID != "" && !h.projectService.HasOrgPermission(c.Request().Context(), orgID, user.UserID, user.Role, "") {
 		return utils.Error(c, http.StatusForbidden, "insufficient permissions for this organization")
 	}
 
-	projects, total, err := h.projectService.ListProjectsByOrganization(c.Request().Context(), orgID, limit, offset)
+	projects, total, err := h.projectService.ListProjectsByOrganization(c.Request().Context(), orgID, c.QueryParam("search"), limit, offset)
 	if err != nil {
 		return utils.Error(c, http.StatusInternalServerError, err.Error())
 	}

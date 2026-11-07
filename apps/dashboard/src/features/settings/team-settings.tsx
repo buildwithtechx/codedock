@@ -1,6 +1,6 @@
 import { Building2 } from 'lucide-react';
-import { useListOrganizations } from '#/features/organizations';
 import { OrganizationMembers } from '#/features/organizations/organization-members';
+import { useListOrganizations } from '#/hooks/use-organizations';
 import { useOrganizationStore } from '#/stores/organization-store';
 
 export function TeamSettings() {
@@ -26,5 +26,9 @@ export function TeamSettings() {
     );
   }
 
-  return <OrganizationMembers organizationId={organizationId} />;
+  const currentOrg = organizations?.find((o) => o.id === organizationId);
+
+  return (
+    <OrganizationMembers organizationId={organizationId} organizationName={currentOrg?.name} />
+  );
 }

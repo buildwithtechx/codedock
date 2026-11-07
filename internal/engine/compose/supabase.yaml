@@ -1,0 +1,206 @@
+x-codedock:
+  is_one_click: true
+  verified: true
+  name: Supabase
+  description: Full self-hosted Supabase — Postgres, Auth, REST, Realtime, Storage, and Studio behind one API gateway.
+  category: backend
+  icon: supabase
+  connection_string: postgresql://postgres:${secret:POSTGRES_PASSWORD}@db:5432/postgres
+  secrets:
+    - var: POSTGRES_PASSWORD
+      label: Database password
+      length: 24
+    - var: JWT_SECRET
+      label: JWT secret
+      length: 32
+    - var: ANON_KEY
+      label: Anon public API key
+      length: 40
+    - var: SERVICE_ROLE_KEY
+      label: Service role secret API key
+      length: 40
+    - var: SECRET_KEY_BASE
+      label: Realtime secret key base
+      length: 32
+    - var: PG_META_CRYPTO_KEY
+      label: Metadata crypto key
+      length: 32
+    - var: DASHBOARD_PASSWORD
+      label: Studio dashboard password
+      length: 20
+  inputs:
+    - var: DASHBOARD_USERNAME
+      label: Studio dashboard username
+      default: supabase
+      required: false
+services:
+  kong:
+    image: kong:3.9.1
+    restart: always
+    ports:
+      - "8000"
+    depends_on:
+      - auth
+      - rest
+      - realtime
+      - storage
+      - meta
+      - studio
+    environment:
+      - KONG_DATABASE=off
+      - KONG_DECLARATIVE_CONFIG=/usr/local/kong/kong.yml
+      - KONG_ROUTER_FLAVOR=traditional_compatible
+      - KONG_DNS_ORDER=LAST,A,CNAME
+      - KONG_PLUGINS=request-transformer,cors,key-auth,acl,basic-auth,request-termination
+      - KONG_NGINX_PROXY_PROXY_BUFFER_SIZE=160k
+      - KONG_NGINX_PROXY_PROXY_BUFFERS=64 160k
+    healthcheck:
+      test: ["CMD", "kong", "health"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+  auth:
+    image: supabase/gotrue:v2.189.0
+    restart: always
+    depends_on:
+      - db
+    environment:
+      - GOTRUE_API_HOST=0.0.0.0
+      - GOTRUE_API_PORT=9999
+      - GOTRUE_DB_DRIVER=postgres
+      - GOTRUE_DB_DATABASE_URL=postgres://supabase_auth_admin:${secret:POSTGRES_PASSWORD}@db:5432/postgres
+      - GOTRUE_DISABLE_SIGNUP=false
+      - GOTRUE_JWT_ADMIN_ROLES=service_role
+      - GOTRUE_JWT_AUD=authenticated
+      - GOTRUE_JWT_DEFAULT_GROUP_NAME=authenticated
+      - GOTRUE_JWT_EXP=3600
+      - GOTRUE_JWT_SECRET=${secret:JWT_SECRET}
+      - GOTRUE_EXTERNAL_EMAIL_ENABLED=true
+      - GOTRUE_MAILER_AUTOCONFIRM=true
+    healthcheck:
+      test: ["CMD-SHELL", "wget --no-verbose --tries=1 --spider http://localhost:9999/health || exit 1"]
+      interval: 10s
+      timeout: 5s
+      retries: 3
+  rest:
+    image: postgrest/postgrest:v14.12
+    restart: always
+    depends_on:
+      - db
+    environment:
+      - PGRST_DB_URI=postgres://authenticator:${secret:POSTGRES_PASSWORD}@db:5432/postgres
+      - PGRST_DB_SCHEMAS=public,storage,graphql_public
+      - PGRST_DB_ANON_ROLE=anon
+      - PGRST_JWT_SECRET=${secret:JWT_SECRET}
+      - PGRST_DB_USE_LEGACY_GUCS=false
+      - PGRST_APP_SETTINGS_JWT_SECRET=${secret:JWT_SECRET}
+      - PGRST_APP_SETTINGS_JWT_EXP=3600
+  realtime:
+    image: supabase/realtime:v2.102.3
+    restart: always
+    depends_on:
+      - db
+    environment:
+      - PORT=4000
+      - DB_HOST=db
+      - DB_PORT=5432
+      - DB_USER=supabase_admin
+      - DB_PASSWORD=${secret:POSTGRES_PASSWORD}
+      - DB_NAME=postgres
+      - DB_AFTER_CONNECT_QUERY=SET search_path TO _realtime
+      - DB_ENC_KEY=supabaserealtime
+      - API_JWT_SECRET=${secret:JWT_SECRET}
+      - SECRET_KEY_BASE=${secret:SECRET_KEY_BASE}
+      - METRICS_JWT_SECRET=${secret:JWT_SECRET}
+      - ERL_AFLAGS=-proto_dist inet_tcp
+      - DNS_NODES=''
+      - RLIMIT_NOFILE=10000
+      - APP_NAME=realtime
+      - SEED_SELF_HOST=true
+      - RUN_JANITOR=true
+  storage:
+    image: supabase/storage-api:v1.60.4
+    restart: always
+    depends_on:
+      - db
+      - rest
+    environment:
+      - ANON_KEY=${secret:ANON_KEY}
+      - SERVICE_KEY=${secret:SERVICE_ROLE_KEY}
+      - POSTGREST_URL=http://rest:3000
+      - AUTH_JWT_SECRET=${secret:JWT_SECRET}
+      - DATABASE_URL=postgres://supabase_storage_admin:${secret:POSTGRES_PASSWORD}@db:5432/postgres
+      - FILE_SIZE_LIMIT=52428800
+      - STORAGE_BACKEND=file
+      - FILE_STORAGE_BACKEND_PATH=/var/lib/storage
+      - TENANT_ID=stub
+      - REGION=stub
+      - GLOBAL_S3_BUCKET=stub
+    volumes:
+      - supabase-storage-data:/var/lib/storage
+    healthcheck:
+      test: ["CMD-SHELL", "wget --no-verbose --tries=1 --spider http://localhost:5000/status || exit 1"]
+      interval: 10s
+      timeout: 5s
+      retries: 3
+  meta:
+    image: supabase/postgres-meta:v0.96.6
+    restart: always
+    depends_on:
+      - db
+    environment:
+      - PG_META_PORT=8080
+      - PG_META_DB_HOST=db
+      - PG_META_DB_PORT=5432
+      - PG_META_DB_NAME=postgres
+      - PG_META_DB_USER=postgres
+      - PG_META_DB_PASSWORD=${secret:POSTGRES_PASSWORD}
+      - CRYPTO_KEY=${secret:PG_META_CRYPTO_KEY}
+  studio:
+    image: supabase/studio:2025.02.19
+    restart: always
+    depends_on:
+      - meta
+    ports:
+      - "3000"
+    environment:
+      - HOSTNAME=0.0.0.0
+      - STUDIO_PG_META_URL=http://meta:8080
+      - POSTGRES_PASSWORD=${secret:POSTGRES_PASSWORD}
+      - POSTGRES_USER_READ_WRITE=postgres
+      - DEFAULT_ORGANIZATION_NAME=Default Organization
+      - DEFAULT_PROJECT_NAME=Default Project
+      - SUPABASE_URL=http://kong:8000
+      - SUPABASE_ANON_KEY=${secret:ANON_KEY}
+      - SUPABASE_SERVICE_KEY=${secret:SERVICE_ROLE_KEY}
+      - AUTH_JWT_SECRET=${secret:JWT_SECRET}
+      - PG_META_CRYPTO_KEY=${secret:PG_META_CRYPTO_KEY}
+      - POSTGRES_HOST=db
+      - POSTGRES_PORT=5432
+      - POSTGRES_DB=postgres
+      - PGRST_DB_SCHEMAS=public,storage,graphql_public
+      - STUDIO_DEFAULT_USERNAME=${input:DASHBOARD_USERNAME}
+      - STUDIO_DEFAULT_PASSWORD=${secret:DASHBOARD_PASSWORD}
+  db:
+    image: supabase/postgres:17.6.1.136
+    restart: always
+    ports:
+      - "5432"
+    environment:
+      - POSTGRES_HOST=/var/run/postgresql
+      - PGPORT=5432
+      - POSTGRES_PORT=5432
+      - POSTGRES_PASSWORD=${secret:POSTGRES_PASSWORD}
+      - PGDATABASE=postgres
+      - POSTGRES_DB=postgres
+      - JWT_EXP=3600
+    volumes:
+      - supabase-db-data:/var/lib/postgresql/data
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U postgres -d postgres"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+volumes:
+  supabase-db-data:
+  supabase-storage-data:

@@ -45,6 +45,24 @@ export const useDisconnectGit = () => {
   });
 };
 
+export const useRepoTree = (
+  req: { repositoryUrl: string; branch?: string },
+  options?: { enabled?: boolean }
+) => {
+  return useQuery({
+    queryKey: ['git', 'tree', req.repositoryUrl, req.branch],
+    queryFn: () => gitService.getRepoTree(req),
+    enabled: options?.enabled ?? Boolean(req.repositoryUrl && req.repositoryUrl !== 'custom'),
+  });
+};
+
+export const useInspectRepository = () => {
+  return useMutation({
+    mutationFn: (req: { repositoryUrl: string; branch?: string; rootDirectory?: string }) =>
+      gitService.inspectRepository(req),
+  });
+};
+
 export const useConnect = useConnectGit;
 export const useDisconnect = useDisconnectGit;
 export const useGetStatus = useGitStatus;

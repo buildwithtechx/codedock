@@ -5,7 +5,28 @@ description: Registered API methods, paths and middleware requirements.
 
 This catalogue follows the current route registrations. Access labels describe route middleware only; handlers also check resource ownership, account state, credentials or signatures. WebSockets authenticate in their own handlers. `Handler / middleware` does not mean anonymous access is allowed.
 
-Read [API conventions](/api/) first. Paths use `:parameter` placeholders. Linked definitions identify each handler; request DTOs and response behavior live in the handler and model files. This inventory is not an exhaustive OpenAPI schema.
+## List filtering and search
+
+List endpoints accept an optional `search` query parameter that matches
+case-insensitively across the resource's name-like columns:
+
+| Endpoint | Matched columns |
+| --- | --- |
+| `GET /api/projects` | name, slug, description |
+| `GET /api/deployments` | service name, project name, branch, commit hash |
+| `GET /api/databases` | name, engine, database name |
+| `GET /api/apps` | service name, domain, repository URL |
+| `GET /api/servers` | name, SSH host |
+
+`%`, `_` and `\` in the term always match literally, never as wildcards. An
+empty or missing term returns the unfiltered list.
+
+`GET /api/audit-logs` and `GET /api/audit-logs/facets` accept `q` instead:
+free text matched against the action, resource ID, and actor email or name.
+Resource names resolve to IDs first, so searching a project or server name
+finds entries that stored only its ID. Facet counts follow the same filter.
+
+Read [API conventions](/reference/api/) first. Paths use `:parameter` placeholders. Linked definitions identify each handler; request DTOs and response behavior live in the handler and model files. The exhaustive machine-readable schema is `docs/api/openapi.json` in the repository, also served at runtime as `GET /api/docs/openapi.json`; the Go suite fails when a route lacks a registry entry.
 
 ## Auth
 
@@ -270,8 +291,14 @@ Read [API conventions](/api/) first. Paths use `:parameter` placeholders. Linked
 | GET | `/api/projects/:id/summary` | Authenticated | [`canvasHandler.GetCanvasSummary`](https://github.com/buildwithtechx/codedock/blob/main/internal/http/routes_app.go) |
 | GET | `/api/environments/:id/canvas` | Authenticated | [`canvasHandler.GetEnvironmentCanvas`](https://github.com/buildwithtechx/codedock/blob/main/internal/http/routes_app.go) |
 | GET | `/api/audit-logs` | Authenticated; instance admin | [`auditLogHandler.List`](https://github.com/buildwithtechx/codedock/blob/main/internal/http/routes_app.go) |
-| GET | `/api/mcp/sse` | Authenticated | [`HandleMCPSSE`](https://github.com/buildwithtechx/codedock/blob/main/internal/http/routes_app.go) |
-| POST | `/api/mcp/messages` | Authenticated | [`HandleMCPMessage`](https://github.com/buildwithtechx/codedock/blob/main/internal/http/routes_app.go) |
+| GET | `/api/mcp/status` | Authenticated | [`handleMcpStatus`](https://github.com/buildwithtechx/codedock/blob/main/internal/http/routes_mcp_ai.go) |
+| GET | `/api/mcp/tools` | Authenticated | [`handleMcpTools`](https://github.com/buildwithtechx/codedock/blob/main/internal/http/routes_mcp_ai.go) |
+| POST | `/api/mcp` | Authenticated | [`handleMcpStreamableHTTP`](https://github.com/buildwithtechx/codedock/blob/main/internal/http/routes_mcp_ai.go) |
+| GET | `/api/mcp/sse` | Authenticated | [`HandleMCPSSE`](https://github.com/buildwithtechx/codedock/blob/main/internal/http/routes_mcp_ai.go) |
+| POST | `/api/mcp/messages` | Authenticated | [`HandleMCPMessage`](https://github.com/buildwithtechx/codedock/blob/main/internal/http/routes_mcp_ai.go) |
+| GET | `/api/ai/assistant/context` | Authenticated | [`assistant.HandleContext`](https://github.com/buildwithtechx/codedock/blob/main/internal/http/routes_mcp_ai.go) |
+| POST | `/api/ai/assistant/chat` | Authenticated | [`assistant.HandleChat`](https://github.com/buildwithtechx/codedock/blob/main/internal/http/routes_mcp_ai.go) |
+| POST | `/api/ai/assistant/actions/:actionId/confirm` | Authenticated | [`assistant.HandleConfirmAction`](https://github.com/buildwithtechx/codedock/blob/main/internal/http/routes_mcp_ai.go) |
 | GET | `/api/ws/terminal/:id` | Handler / middleware | [`terminalHandler.HandleWebSocket`](https://github.com/buildwithtechx/codedock/blob/main/internal/http/routes_app.go) |
 | GET | `/api/ws/services/:id/terminal` | Handler / middleware | [`terminalHandler.HandleWebSocket`](https://github.com/buildwithtechx/codedock/blob/main/internal/http/routes_app.go) |
 

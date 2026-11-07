@@ -1,11 +1,11 @@
 import { Copy, Globe, ShieldCheck } from 'lucide-react';
 import { toast } from 'sonner';
 
-import { Badge } from '#/components/ui/badge';
-import { Button } from '#/components/ui/button';
-import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '#/components/ui/card';
-import { Input } from '#/components/ui/input';
-import { Switch } from '#/components/ui/switch';
+import { Badge } from '@codedock/ui/badge';
+import { Button } from '@codedock/ui/button';
+import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@codedock/ui/card';
+import { Input } from '@codedock/ui/input';
+import { Switch } from '@codedock/ui/switch';
 
 interface DatabaseNetworkingProps {
   database: {

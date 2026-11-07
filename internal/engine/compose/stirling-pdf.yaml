@@ -1,0 +1,16 @@
+x-codedock:
+  is_one_click: true
+  name: Stirling PDF
+  description: PDF tools for merging, splitting, converting and OCR
+  category: productivity
+  icon: stirling-pdf
+services:
+  stirling-pdf:
+    image: frooodle/s-pdf
+    restart: always
+    ports:
+      - "8080"
+    volumes:
+      - stirling-configs:/configs
+volumes:
+  stirling-configs:

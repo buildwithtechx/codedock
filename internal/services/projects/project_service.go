@@ -9,9 +9,9 @@ import (
 
 	"github.com/google/uuid"
 
-	"codedock.run/codedock/internal/models"
-	"codedock.run/codedock/internal/repositories"
-	"codedock.run/codedock/internal/utils"
+	"codedock/internal/models"
+	"codedock/internal/repositories"
+	"codedock/internal/utils"
 )
 
 type ProjectService struct {
@@ -173,7 +173,7 @@ func (s *ProjectService) HasPermission(ctx context.Context, projectID, userID st
 }
 
 func (s *ProjectService) AccessibleServiceIDs(ctx context.Context, userID string, userRole models.UserRole) (map[string]struct{}, error) {
-	services, err := s.appRepo.ListAll(ctx)
+	services, err := s.appRepo.ListAll(ctx, "")
 	if err != nil {
 		return nil, err
 	}
@@ -218,12 +218,12 @@ func (s *ProjectService) IsMemberOrOwner(ctx context.Context, projectID string, 
 	hasPerm := s.HasPermission(ctx, projectID, userID, userRole, "")
 	return hasPerm
 }
-func (s *ProjectService) ListProjectsByOrganization(ctx context.Context, organizationID string, limit, offset int) ([]models.ProjectConfig, int, error) {
-	return s.projectRepo.ListByOrganization(ctx, organizationID, limit, offset)
+func (s *ProjectService) ListProjectsByOrganization(ctx context.Context, organizationID string, search string, limit, offset int) ([]models.ProjectConfig, int, error) {
+	return s.projectRepo.ListByOrganization(ctx, organizationID, search, limit, offset)
 }
 
-func (s *ProjectService) ListProjects(ctx context.Context, limit, offset int) ([]models.ProjectConfig, int, error) {
-	return s.projectRepo.ListAll(ctx, limit, offset)
+func (s *ProjectService) ListProjects(ctx context.Context, search string, limit, offset int) ([]models.ProjectConfig, int, error) {
+	return s.projectRepo.ListAll(ctx, search, limit, offset)
 }
 
 func (s *ProjectService) CountProjectsByUser(ctx context.Context, userID string) (int, error) {

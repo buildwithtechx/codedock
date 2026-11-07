@@ -1,4 +1,4 @@
-import type { CreateJobRequest, Job } from '#/features/services';
+import type { CreateJobRequest, Job } from '#/interfaces/services';
 import type { BaseResponse } from '#/interfaces/base';
 import { apiClient } from '#/lib/api-client';
 import { handleApiError } from '#/lib/error';

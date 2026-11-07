@@ -7,9 +7,9 @@ import (
 	"runtime"
 	"time"
 
-	"codedock.run/codedock/internal/config"
-	"codedock.run/codedock/internal/repositories"
-	"codedock.run/codedock/internal/telemetry"
+	"codedock/internal/config"
+	"codedock/internal/repositories"
+	"codedock/internal/telemetry"
 )
 
 func StartTelemetryReporter(db *sql.DB, version string) {
@@ -38,7 +38,7 @@ func pingTelemetry(db *sql.DB, version string) {
 	}
 
 	appRepo := repositories.NewAppServiceRepo(db)
-	apps, err := appRepo.ListAll(context.Background())
+	apps, err := appRepo.ListAll(context.Background(), "")
 	activeApps := 0
 	if err == nil {
 		activeApps = len(apps)

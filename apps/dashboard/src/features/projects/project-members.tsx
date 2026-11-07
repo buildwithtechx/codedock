@@ -1,26 +1,13 @@
 import { Loader2, Plus, Trash2 } from 'lucide-react';
 import { useState } from 'react';
 import { toast } from 'sonner';
-import { Button } from '#/components/ui/button';
-import { Input } from '#/components/ui/input';
-import { Label } from '#/components/ui/label';
-import {
-  Select,
-  SelectContent,
-  SelectItem,
-  SelectTrigger,
-  SelectValue,
-} from '#/components/ui/select';
-import {
-  Table,
-  TableBody,
-  TableCell,
-  TableHead,
-  TableHeader,
-  TableRow,
-} from '#/components/ui/table';
-import { useGetProfile } from '#/features/profile';
-import { useAddMember, useListMembers, useRemoveMember } from '#/features/projects';
+import { Button } from '@codedock/ui/button';
+import { Input } from '@codedock/ui/input';
+import { Label } from '@codedock/ui/label';
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@codedock/ui/select';
+import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@codedock/ui/table';
+import { useGetProfile } from '#/hooks/use-profile';
+import { useAddMember, useListMembers, useRemoveMember } from '#/hooks/use-projects';
 
 export function ProjectMembers({ projectId }: { projectId: string }) {
   const { data: members, isLoading } = useListMembers(projectId);

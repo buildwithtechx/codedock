@@ -1,53 +1,209 @@
 import { Link } from '@tanstack/react-router';
-import { Database, GitBranch, Globe2, LayoutTemplate, Plus, Rocket } from 'lucide-react';
-import { Button } from '#/components/ui/button';
+import { GitBranch, Plus } from 'lucide-react';
+import { Button } from '@codedock/ui/button';
 
 export function HomeFirstProject({ onCreateProject }: { onCreateProject: () => void }) {
   return (
-    <section className="flex min-h-[25rem] items-center justify-center px-6 py-10 text-center">
-      <div className="max-w-lg">
-        <div className="relative mx-auto h-42 w-72" aria-hidden="true">
-          <span className="absolute top-5 left-5 flex h-11 w-11 items-center justify-center rounded-xl bg-background text-muted-foreground">
-            <GitBranch className="h-5 w-5" />
-          </span>
-          <span className="absolute top-5 right-5 flex h-11 w-11 items-center justify-center rounded-xl bg-background text-muted-foreground">
-            <Globe2 className="h-5 w-5" />
-          </span>
-          <span className="absolute bottom-4 left-10 flex h-11 w-11 items-center justify-center rounded-xl bg-background text-muted-foreground">
-            <Rocket className="h-5 w-5" />
-          </span>
-          <span className="absolute right-10 bottom-4 flex h-11 w-11 items-center justify-center rounded-xl bg-background text-muted-foreground">
-            <Database className="h-5 w-5" />
-          </span>
-          <span className="absolute top-1/2 left-1/2 h-20 w-20 -translate-x-1/2 -translate-y-1/2 rounded-full border border-primary/25 bg-primary/8" />
-          <span className="absolute top-1/2 left-1/2 flex h-14 w-14 -translate-x-1/2 -translate-y-1/2 items-center justify-center rounded-2xl bg-primary text-primary-foreground shadow-lg shadow-primary/20">
-            <Plus className="h-6 w-6" />
-          </span>
-          <span className="absolute top-1/2 left-13 h-px w-16 -rotate-24 bg-border" />
-          <span className="absolute top-1/2 right-13 h-px w-16 rotate-24 bg-border" />
-          <span className="absolute bottom-11 left-18 h-px w-16 rotate-27 bg-border" />
-          <span className="absolute right-18 bottom-11 h-px w-16 -rotate-27 bg-border" />
-        </div>
-        <h2 className="mt-6 font-medium text-foreground/90 text-xl tracking-[-0.02em]">
-          Build the first project
-        </h2>
-        <p className="mx-auto mt-2 max-w-md text-muted-foreground/75 text-sm leading-6">
-          Projects are the operational boundary for your applications, environments, releases, and
-          domains.
-        </p>
-        <div className="mt-6 flex flex-col items-center justify-center gap-2 sm:flex-row">
-          <Button className="gap-2 px-5" onClick={onCreateProject}>
-            <Plus className="h-4 w-4" />
-            Create project
-          </Button>
-          <Button asChild variant="secondary" className="px-5">
-            <Link to="/projects/new" search={{ template: 'one-click' }}>
-              <LayoutTemplate className="h-4 w-4" />
-              Browse templates
-            </Link>
-          </Button>
-        </div>
+    <section className="px-6 pt-5 pb-7 text-center sm:pt-7 sm:pb-8">
+      <div className="relative mx-auto mb-3 h-36 w-72 max-w-full">
+        <svg
+          className="absolute inset-0 h-full w-full"
+          viewBox="0 0 288 132"
+          fill="none"
+          aria-hidden="true"
+        >
+          <g
+            stroke="currentColor"
+            strokeWidth="1.5"
+            strokeDasharray="4 4"
+            className="text-border"
+            fill="none"
+          >
+            <path d="M71 32 Q 100 42 123 58" />
+            <path d="M71 96 Q 100 90 123 74" />
+            <path d="M165 58 Q 188 42 217 32" />
+            <path d="M165 74 Q 188 90 217 96" />
+          </g>
+
+          <circle cx="98.5" cy="43.5" r="2.4" className="fill-muted-foreground/40" />
+          <circle cx="98.5" cy="87.5" r="2" className="fill-muted-foreground/30" />
+          <circle cx="189.5" cy="43.5" r="2.4" className="fill-muted-foreground/40" />
+          <circle cx="189.5" cy="87.5" r="2" className="fill-muted-foreground/30" />
+
+          <g transform="translate(52 32)">
+            <rect
+              x="-19"
+              y="-17"
+              width="38"
+              height="34"
+              rx="10"
+              className="fill-card stroke-border"
+              strokeWidth="1.5"
+            />
+            <g
+              fill="none"
+              className="stroke-muted-foreground"
+              strokeWidth="1.6"
+              strokeLinecap="round"
+              strokeLinejoin="round"
+            >
+              <circle cx="-6" cy="5" r="3.2" />
+              <circle cx="6" cy="-6" r="3.2" />
+              <path d="M-6 1.8v-3.8a4 4 0 0 1 4-4h4.8" />
+            </g>
+          </g>
+          <text
+            x="52"
+            y="60"
+            textAnchor="middle"
+            className="fill-muted-foreground font-medium text-[7px]"
+          >
+            Repo
+          </text>
+
+          <g transform="translate(52 96)">
+            <rect
+              x="-19"
+              y="-17"
+              width="38"
+              height="34"
+              rx="10"
+              className="fill-card stroke-border"
+              strokeWidth="1.5"
+            />
+            <g
+              fill="none"
+              className="stroke-muted-foreground"
+              strokeWidth="1.6"
+              strokeLinecap="round"
+              strokeLinejoin="round"
+            >
+              <path d="M0 7V-6" />
+              <path d="M-5 -1l5 -5.5 5 5.5" />
+              <path d="M-7 9.5h14" />
+            </g>
+          </g>
+          <text
+            x="52"
+            y="124"
+            textAnchor="middle"
+            className="fill-muted-foreground font-medium text-[7px]"
+          >
+            Deploy
+          </text>
+
+          <g transform="translate(236 32)">
+            <rect
+              x="-19"
+              y="-17"
+              width="38"
+              height="34"
+              rx="10"
+              className="fill-card stroke-border"
+              strokeWidth="1.5"
+            />
+            <g
+              fill="none"
+              className="stroke-muted-foreground"
+              strokeWidth="1.6"
+              strokeLinecap="round"
+              strokeLinejoin="round"
+            >
+              <circle cx="0" cy="0" r="8" />
+              <path d="M-8 0h16" />
+              <path d="M0 -8c4 3.6 4 12.4 0 16" />
+              <path d="M0 -8c-4 3.6-4 12.4 0 16" />
+            </g>
+          </g>
+          <text
+            x="236"
+            y="60"
+            textAnchor="middle"
+            className="fill-muted-foreground font-medium text-[7px]"
+          >
+            Domain
+          </text>
+
+          <g transform="translate(236 96)">
+            <rect
+              x="-19"
+              y="-17"
+              width="38"
+              height="34"
+              rx="10"
+              className="fill-card stroke-border"
+              strokeWidth="1.5"
+            />
+            <g
+              fill="none"
+              className="stroke-muted-foreground"
+              strokeWidth="1.6"
+              strokeLinecap="round"
+              strokeLinejoin="round"
+            >
+              <ellipse cx="0" cy="-5" rx="8" ry="3" />
+              <path d="M-8 -5v9.5c0 1.7 3.6 3 8 3s8-1.3 8-3V-5" />
+              <path d="M-8 -0.5c0 1.7 3.6 3 8 3s8-1.3 8-3" />
+            </g>
+          </g>
+          <text
+            x="236"
+            y="124"
+            textAnchor="middle"
+            className="fill-muted-foreground font-medium text-[7px]"
+          >
+            Data
+          </text>
+
+          <circle cx="144" cy="66" r="27" className="fill-primary/5" />
+          <g transform="translate(126 48) scale(0.5625)">
+            <rect width="64" height="64" rx="16" fill="#101827" />
+            <path
+              d="M18 22h17a9 9 0 0 1 9 9v2a9 9 0 0 1-9 9H29"
+              stroke="#60A5FA"
+              strokeWidth="6"
+              strokeLinecap="round"
+            />
+            <path
+              d="M46 42H29a9 9 0 0 1-9-9v-2a9 9 0 0 1 9-9h6"
+              stroke="#A78BFA"
+              strokeWidth="6"
+              strokeLinecap="round"
+            />
+            <path d="M31 32h2" stroke="#F8FAFC" strokeWidth="6" strokeLinecap="round" />
+          </g>
+          <circle cx="158" cy="52" r="4.2" className="fill-card" />
+          <circle cx="158" cy="52" r="2.8" className="fill-emerald-500" />
+        </svg>
       </div>
+
+      <h2
+        className="mt-4 font-medium text-foreground/85 text-xl"
+        style={{ letterSpacing: '-0.2px' }}
+      >
+        Ship your first project
+      </h2>
+      <p className="mx-auto mt-1.5 mb-5 max-w-sm text-muted-foreground/80 text-sm leading-relaxed">
+        Connect a repository and Codedock builds, deploys, and secures it. No pipelines to wire by
+        hand.
+      </p>
+      <div className="flex flex-col items-center justify-center gap-3 sm:flex-row">
+        <Button className="gap-2 px-6" onClick={onCreateProject}>
+          <Plus className="h-4 w-4" />
+          Create project
+        </Button>
+        <Button asChild variant="secondary" className="gap-2 px-6">
+          <Link to="/library">
+            <GitBranch className="h-4 w-4" />
+            Import from Git
+          </Link>
+        </Button>
+      </div>
+      <p className="mt-5 text-muted-foreground/60 text-xs">
+        Tip: press{' '}
+        <kbd className="rounded bg-muted px-1.5 py-0.5 font-mono text-[10px]">&#8984; K</kbd> to
+        jump anywhere
+      </p>
     </section>
   );
 }

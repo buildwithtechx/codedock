@@ -13,7 +13,7 @@ Application resources use `/apps` routes. Database resources have separate `/dat
 {"name":"web","projectId":"PROJECT_ID","repositoryUrl":"https://github.com/your-org/your-app","branch":"main","rootDirectory":".","runtimeMode":"web","buildEngine":"dockerfile","dockerfilePath":"Dockerfile","internalPort":3000}
 ```
 
-For a prebuilt container, set `imageRef` instead of a source repository. Configure variables separately. The [service DTO](https://github.com/buildwithtechx/codedock/blob/main/pkg/types/service.go) defines install, build and start commands, static output, health checks and resource limits.
+For a prebuilt container, set `imageRef` instead of a source repository. Configure variables separately. The [service DTO](https://github.com/buildwithtechx/codedock/blob/main/internal/models/deployment.go) defines install, build and start commands, static output, health checks and resource limits.
 
 ## Operations
 

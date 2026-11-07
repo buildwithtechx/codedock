@@ -4,7 +4,10 @@ import type {
   GetGitStatusResponse,
   ListGitBranchesResponse,
   ListGitReposResponse,
+  RepoTreeEntry,
+  RepositoryInspection,
 } from '#/interfaces/git';
+import type { BaseResponse } from '#/interfaces/base';
 import { apiClient } from '#/lib/api-client';
 import { handleApiError } from '#/lib/error';
 
@@ -46,6 +49,29 @@ export const gitService = {
       return await apiClient.get<ListGitBranchesResponse>(
         `/git/branches?provider=${provider}&repo=${encodeURIComponent(repo)}`
       );
+    } catch (error) {
+      throw handleApiError(error);
+    }
+  },
+
+  getRepoTree: async (payload: {
+    repositoryUrl: string;
+    branch?: string;
+  }): Promise<BaseResponse<RepoTreeEntry[]>> => {
+    try {
+      return await apiClient.post<BaseResponse<RepoTreeEntry[]>>('/git/tree', payload);
+    } catch (error) {
+      throw handleApiError(error);
+    }
+  },
+
+  inspectRepository: async (payload: {
+    repositoryUrl: string;
+    branch?: string;
+    rootDirectory?: string;
+  }): Promise<BaseResponse<RepositoryInspection>> => {
+    try {
+      return await apiClient.post<BaseResponse<RepositoryInspection>>('/git/inspect', payload);
     } catch (error) {
       throw handleApiError(error);
     }

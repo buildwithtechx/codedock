@@ -26,7 +26,7 @@ type RefreshTokenRepo struct {
 }
 
 func NewRefreshTokenRepo(db *sql.DB) *RefreshTokenRepo {
-	return &RefreshTokenRepo{db: sqlx.NewDb(db, "sqlite")}
+	return &RefreshTokenRepo{db: sqlx.NewDb(db, "pgx")}
 }
 
 func HashToken(token string) string {
@@ -38,8 +38,9 @@ func (r *RefreshTokenRepo) StoreToken(ctx context.Context, userID, tokenHash str
 	r.mu.Lock()
 	defer r.mu.Unlock()
 	_, err := r.db.ExecContext(ctx,
-		`INSERT OR REPLACE INTO refresh_token_revocations (id, token_hash, user_id, expires_at)
-		 VALUES (?, ?, ?, ?)`,
+		`INSERT INTO refresh_token_revocations (id, token_hash, user_id, expires_at)
+		 VALUES ($1, $2, $3, $4)
+		 ON CONFLICT (token_hash) DO UPDATE SET id = excluded.id, user_id = excluded.user_id, expires_at = excluded.expires_at, revoked_at = NULL`,
 		uuid.New().String(), tokenHash, userID, expiresAt,
 	)
 	if err != nil {
@@ -51,7 +52,7 @@ func (r *RefreshTokenRepo) StoreToken(ctx context.Context, userID, tokenHash str
 func (r *RefreshTokenRepo) IsRevoked(ctx context.Context, tokenHash string) (bool, error) {
 	var revokedAt *time.Time
 	err := r.db.QueryRowContext(ctx,
-		`SELECT revoked_at FROM refresh_token_revocations WHERE token_hash = ?`, tokenHash,
+		`SELECT revoked_at FROM refresh_token_revocations WHERE token_hash = $1`, tokenHash,
 	).Scan(&revokedAt)
 	if err == sql.ErrNoRows {
 		return false, nil
@@ -69,7 +70,7 @@ func (r *RefreshTokenRepo) RevokeToken(ctx context.Context, tokenHash string) er
 	r.mu.Lock()
 	defer r.mu.Unlock()
 	_, err := r.db.ExecContext(ctx,
-		`UPDATE refresh_token_revocations SET revoked_at = CURRENT_TIMESTAMP WHERE token_hash = ?`, tokenHash,
+		`UPDATE refresh_token_revocations SET revoked_at = CURRENT_TIMESTAMP WHERE token_hash = $1`, tokenHash,
 	)
 	if err != nil {
 		return fmt.Errorf("revoke token: %w", err)
@@ -81,7 +82,7 @@ func (r *RefreshTokenRepo) RevokeAllForUser(ctx context.Context, userID string) 
 	r.mu.Lock()
 	defer r.mu.Unlock()
 	_, err := r.db.ExecContext(ctx,
-		`UPDATE refresh_token_revocations SET revoked_at = CURRENT_TIMESTAMP WHERE user_id = ? AND revoked_at IS NULL`, userID,
+		`UPDATE refresh_token_revocations SET revoked_at = CURRENT_TIMESTAMP WHERE user_id = $1 AND revoked_at IS NULL`, userID,
 	)
 	if err != nil {
 		return fmt.Errorf("revoke all tokens for user: %w", err)
@@ -92,7 +93,7 @@ func (r *RefreshTokenRepo) RevokeAllForUser(ctx context.Context, userID string) 
 func (r *RefreshTokenRepo) PruneExpired(ctx context.Context) error {
 	r.mu.Lock()
 	defer r.mu.Unlock()
-	_, err := r.db.ExecContext(ctx, `DELETE FROM refresh_token_revocations WHERE expires_at < ?`, time.Now())
+	_, err := r.db.ExecContext(ctx, `DELETE FROM refresh_token_revocations WHERE expires_at < $1`, time.Now())
 	if err != nil {
 		return fmt.Errorf("prune expired tokens: %w", err)
 	}

@@ -5,6 +5,7 @@ import (
 	"fmt"
 	"io"
 	"log/slog"
+	"path/filepath"
 	"strings"
 	"time"
 
@@ -16,17 +17,36 @@ import (
 	"github.com/docker/docker/client"
 	"github.com/docker/go-connections/nat"
 
-	"codedock.run/codedock/internal/config"
+	"codedock/internal/config"
 )
 
 const (
 	TraefikContainerName = "codedock-traefik"
 	CodedockNetworkName  = "codedock-network"
+	DynamicDir           = "/etc/codedock/traefik-dynamic"
 )
 
 type TraefikManager struct {
 	dockerClient *client.Client
 	tlsEmail     string
+	logDir       string
+}
+
+func (m *TraefikManager) SetLogDir(dir string) {
+	if dir != "" {
+		if abs, err := filepath.Abs(dir); err == nil {
+			m.logDir = abs
+			return
+		}
+	}
+	m.logDir = dir
+}
+
+func (m *TraefikManager) AccessLogPath() string {
+	if m == nil || m.logDir == "" {
+		return ""
+	}
+	return m.logDir + "/access.json"
 }
 
 func NewTraefikManager(cli *client.Client, tlsEmail string) *TraefikManager {
@@ -49,17 +69,17 @@ func (m *TraefikManager) EnsureTraefikRunning(ctx context.Context) error {
 		}
 	}
 
-	if err == nil && existing.Config != nil && traefikCertificateEmail(existing.Config.Cmd) != m.tlsEmail {
+	if err == nil && existing.Config != nil && !equalStrings(existing.Config.Cmd, m.buildTraefikCmdArgs()) {
 		if existing.State != nil && existing.State.Running {
 			if err := m.dockerClient.ContainerStop(ctx, TraefikContainerName, container.StopOptions{}); err != nil {
-				return fmt.Errorf("stop proxy to apply certificate settings: %w", err)
+				return fmt.Errorf("stop proxy to apply configuration: %w", err)
 			}
 		}
 		if err := m.dockerClient.ContainerRemove(ctx, TraefikContainerName, container.RemoveOptions{}); err != nil {
 			return fmt.Errorf("replace proxy configuration: %w", err)
 		}
 		if err := m.createTraefikContainer(ctx); err != nil {
-			return fmt.Errorf("apply proxy certificate settings: %w", err)
+			return fmt.Errorf("apply proxy configuration: %w", err)
 		}
 	}
 
@@ -157,6 +177,8 @@ func (m *TraefikManager) buildTraefikCmdArgs() []string {
 		"--providers.docker=true",
 		"--providers.docker.exposedbydefault=false",
 		"--providers.docker.network=codedock-network",
+		"--providers.file.directory=/dynamic",
+		"--providers.file.watch=true",
 		"--entrypoints.web.address=:80",
 		"--entrypoints.websecure.address=:443",
 		"--api.insecure=true",
@@ -176,6 +198,19 @@ func (m *TraefikManager) buildTraefikCmdArgs() []string {
 	if dockerHost := config.Get().Traefik.DockerHost; dockerHost != "" {
 		cmdArgs = append(cmdArgs, "--providers.docker.endpoint="+dockerHost)
 	}
+	if m.logDir != "" {
+		cmdArgs = append(cmdArgs, "--accesslog=true", "--accesslog.format=json", "--accesslog.filepath=/var/log/traefik/access.json")
+	}
+
+	trustedProxies := GetEdgeTrustedProxies()
+	if len(trustedProxies) > 0 {
+		trustedList := strings.Join(trustedProxies, ",")
+		cmdArgs = append(cmdArgs,
+			"--entrypoints.web.forwardedheaders.trustedips="+trustedList,
+			"--entrypoints.websecure.forwardedheaders.trustedips="+trustedList,
+		)
+	}
+
 	return cmdArgs
 }
 
@@ -192,17 +227,29 @@ func (m *TraefikManager) buildTraefikMounts() []mount.Mount {
 			Target:   "/var/run/docker.sock",
 			ReadOnly: true,
 		},
+		{
+			Type:   mount.TypeBind,
+			Source: DynamicDir,
+			Target: "/dynamic",
+		},
 	}
 	return append(mounts, m.buildTraefikDataMounts()...)
 }
 
 func (m *TraefikManager) buildTraefikDataMounts() []mount.Mount {
-	mounts := make([]mount.Mount, 0, 1)
+	mounts := make([]mount.Mount, 0, 2)
 	if m.tlsEmail != "" {
 		mounts = append(mounts, mount.Mount{
 			Type:   mount.TypeVolume,
 			Source: "codedock-traefik-acme",
 			Target: "/letsencrypt",
+		})
+	}
+	if m.logDir != "" {
+		mounts = append(mounts, mount.Mount{
+			Type:   mount.TypeBind,
+			Source: m.logDir,
+			Target: "/var/log/traefik",
 		})
 	}
 	return mounts
@@ -228,4 +275,16 @@ func traefikCertificateEmail(args []string) string {
 		}
 	}
 	return ""
+}
+
+func equalStrings(left, right []string) bool {
+	if len(left) != len(right) {
+		return false
+	}
+	for i := range left {
+		if left[i] != right[i] {
+			return false
+		}
+	}
+	return true
 }

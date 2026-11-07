@@ -1,7 +1,7 @@
 package notifications
 
 import (
-	"codedock.run/codedock/internal/models"
+	"codedock/internal/models"
 )
 
 func SendGenericWebhook(webhookURL string, event *models.NotificationEvent) error {

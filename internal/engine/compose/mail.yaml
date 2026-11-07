@@ -1,0 +1,65 @@
+x-codedock:
+  is_one_click: true
+  verified: true
+  name: Codedock Mail
+  description: Your own mail on your own domain — SMTP/IMAP, mailboxes and webmail on one server. Or keep the mailboxes you already have and just run the webmail.
+  category: mail
+  icon: mail
+  secrets:
+    - var: MAILD_API_TOKEN
+      label: maild API token
+      length: 32
+    - var: POSTGRES_PASSWORD
+      label: Postgres password
+      length: 24
+  inputs:
+    - var: MAIL_DOMAIN
+      label: Primary mail domain
+      required: true
+    - var: STALWART_URL
+      label: Engine management URL
+      required: false
+    - var: STALWART_SECRET
+      label: Engine admin secret
+      required: false
+services:
+  maild:
+    image: ghcr.io/buildwithtechx/codedock-mail:latest
+    restart: always
+    ports:
+      - "8081"
+    depends_on:
+      - postgres
+    environment:
+      - PORT=8081
+      - DATABASE_URL=postgres://mail:${secret:POSTGRES_PASSWORD}@postgres:5432/mail?sslmode=disable
+      - MAIL_DOMAIN=${input:MAIL_DOMAIN}
+      - STALWART_URL=${input:STALWART_URL}
+      - STALWART_USER=admin
+      - STALWART_SECRET=${input:STALWART_SECRET}
+      - MAILD_API_TOKEN=${secret:MAILD_API_TOKEN}
+    healthcheck:
+      test: ["CMD-SHELL", "wget -qO- http://localhost:8081/health || exit 1"]
+      interval: 30s
+      timeout: 5s
+      retries: 3
+      start_period: 20s
+  postgres:
+    image: postgres:16-alpine
+    restart: always
+    environment:
+      - POSTGRES_USER=mail
+      - POSTGRES_PASSWORD=${secret:POSTGRES_PASSWORD}
+      - POSTGRES_DB=mail
+    volumes:
+      - mail-db:/var/lib/postgresql/data
+  webmail:
+    image: djmaze/snappymail:2.38.2
+    restart: always
+    ports:
+      - "8888"
+    volumes:
+      - snappymail-data:/var/lib/snappymail
+volumes:
+  mail-db:
+  snappymail-data:

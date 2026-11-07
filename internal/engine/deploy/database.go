@@ -14,9 +14,9 @@ import (
 	"github.com/docker/docker/api/types/network"
 	"github.com/docker/docker/client"
 
-	"codedock.run/codedock/internal/engine/compose"
-	"codedock.run/codedock/internal/models"
-	"codedock.run/codedock/internal/utils"
+	"codedock/internal/engine/compose"
+	"codedock/internal/models"
+	"codedock/internal/utils"
 )
 
 type DatabaseDeployer struct {
@@ -176,7 +176,7 @@ func (d *DatabaseDeployer) buildContainerConfig(dbConfig *models.Database) (stri
 func (d *DatabaseDeployer) createContainerSettings(dbConfig *models.Database, containerName, imageName string, envVars, cmd []string, containerMountPath string) (*container.Config, *container.HostConfig, *network.NetworkingConfig) {
 	volumeName := fmt.Sprintf("codedock-db-data-%s", dbConfig.ID)
 
-	labels := make(map[string]string)
+	labels := map[string]string{"codedock.database_id": dbConfig.ID}
 	if dbConfig.ExternalDNS != "" {
 		labels["traefik.enable"] = "true"
 		labels[fmt.Sprintf("traefik.tcp.routers.%s.rule", containerName)] = fmt.Sprintf("HostSNI(`%s`)", dbConfig.ExternalDNS)

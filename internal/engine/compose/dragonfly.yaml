@@ -1,4 +1,4 @@
-version: "3.8"
+﻿version: "3.8"
 services:
   dragonfly:
     image: docker.dragonflydb.io/dragonflydb/dragonfly:latest
@@ -14,3 +14,5 @@ services:
       - ${db.password}
     volumes:
       - dragonfly-data:/data
+volumes:
+  dragonfly-data:

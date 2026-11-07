@@ -4,8 +4,8 @@ import (
 	"context"
 	"errors"
 
-	"codedock.run/codedock/internal/config"
-	"codedock.run/codedock/internal/models"
+	"codedock/internal/config"
+	"codedock/internal/models"
 )
 
 type NotificationDispatcher interface {

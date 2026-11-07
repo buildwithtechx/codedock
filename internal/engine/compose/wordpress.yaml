@@ -2,6 +2,12 @@ x-codedock:
   is_one_click: true
   name: WordPress
   description: CMS & blogging platform
+  category: cms
+  icon: wordpress
+  secrets:
+    - var: DB_PASSWORD
+      label: Database password
+      length: 24
 services:
   wordpress:
     image: wordpress
@@ -10,14 +16,23 @@ services:
       - "80"
     environment:
       - WORDPRESS_DB_HOST=db
-      - WORDPRESS_DB_USER=exampleuser
-      - WORDPRESS_DB_PASSWORD=examplepass
-      - WORDPRESS_DB_NAME=exampledb
+      - WORDPRESS_DB_USER=wordpress
+      - WORDPRESS_DB_PASSWORD=${secret:DB_PASSWORD}
+      - WORDPRESS_DB_NAME=wordpress
+    volumes:
+      - wordpress-data:/var/www/html
+    depends_on:
+      - db
   db:
     image: mysql:5.7
     restart: always
     environment:
-      - MYSQL_DATABASE=exampledb
-      - MYSQL_USER=exampleuser
-      - MYSQL_PASSWORD=examplepass
-      - MYSQL_RANDOM_ROOT_PASSWORD='1'
+      - MYSQL_DATABASE=wordpress
+      - MYSQL_USER=wordpress
+      - MYSQL_PASSWORD=${secret:DB_PASSWORD}
+      - MYSQL_RANDOM_ROOT_PASSWORD=1
+    volumes:
+      - wordpress-db:/var/lib/mysql
+volumes:
+  wordpress-data:
+  wordpress-db:

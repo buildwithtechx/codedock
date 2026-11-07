@@ -1,19 +1,17 @@
 import { Copy, Loader2, Plus, Trash2 } from 'lucide-react';
 import { useState } from 'react';
 import { toast } from 'sonner';
-import { Button } from '#/components/ui/button';
-import { Input } from '#/components/ui/input';
-import { Label } from '#/components/ui/label';
+import { Button } from '@codedock/ui/button';
+import { Input } from '@codedock/ui/input';
+import { Label } from '@codedock/ui/label';
+import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@codedock/ui/table';
+import { useGetProfile } from '#/hooks/use-profile';
 import {
-  Table,
-  TableBody,
-  TableCell,
-  TableHead,
-  TableHeader,
-  TableRow,
-} from '#/components/ui/table';
-import { useGetProfile } from '#/features/profile';
-import { useCreateToken, useDeleteToken, useListMembers, useListTokens } from '#/features/projects';
+  useCreateToken,
+  useDeleteToken,
+  useListMembers,
+  useListTokens,
+} from '#/hooks/use-projects';
 
 export function ProjectTokens({ projectId }: { projectId: string }) {
   const { data: tokens, isLoading } = useListTokens(projectId);

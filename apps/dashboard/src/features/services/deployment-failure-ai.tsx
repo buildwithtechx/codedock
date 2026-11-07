@@ -1,7 +1,7 @@
 import { AlertCircle, Bot, Code2, Loader2, Terminal } from 'lucide-react';
 import { useState } from 'react';
-import { Alert, AlertDescription, AlertTitle } from '#/components/ui/alert';
-import { Button } from '#/components/ui/button';
+import { Alert, AlertDescription, AlertTitle } from '@codedock/ui/alert';
+import { Button } from '@codedock/ui/button';
 import { useExplainFailure } from '#/hooks/use-deployments';
 
 interface DeploymentFailureAiProps {
@@ -25,7 +25,7 @@ export function DeploymentFailureAi({ deploymentId }: DeploymentFailureAiProps) 
               This deployment encountered an error during the build or startup phase.
             </p>
           </div>
-          <Button onClick={() => setEnabled(true)} variant="outline" className="gap-2 bg-white">
+          <Button onClick={() => setEnabled(true)} variant="outline" className="gap-2">
             <Bot className="h-4 w-4" />
             Analyze with AI
           </Button>

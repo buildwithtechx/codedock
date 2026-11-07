@@ -1,0 +1,217 @@
+package projects
+
+import (
+	"fmt"
+	"sort"
+	"strings"
+
+	"codedock/internal/engine/compose"
+	"codedock/internal/models"
+)
+
+func extractOneClickApp(id string, tmpl *compose.ComposeTemplate) *models.OneClickApp {
+	meta := findOneClickMetadata(tmpl)
+	if meta == nil {
+		return nil
+	}
+	endpoints := extractEndpoints(tmpl)
+	defaultPort := extractPort(tmpl)
+	if len(endpoints) == 0 && defaultPort > 0 {
+		endpoints = []models.OneClickEndpoint{{
+			Label: meta.Name,
+			Port:  defaultPort,
+			Kind:  "http",
+		}}
+	}
+	gpu := meta.GPU
+	hasGpu := gpu != ""
+	var shmSize string
+	for _, svc := range tmpl.Services {
+		if svc.GPUs != nil {
+			hasGpu = true
+		}
+		if svc.ShmSize != nil && shmSize == "" {
+			shmSize = fmt.Sprintf("%v", svc.ShmSize)
+		}
+	}
+	if hasGpu && gpu == "" {
+		gpu = "recommended"
+	}
+	return &models.OneClickApp{
+		ID:           id,
+		Name:         meta.Name,
+		Description:  meta.Description,
+		Icon:         meta.Icon,
+		Category:     catalogCategory(meta.Category),
+		DockerImage:  catalogPrimaryImage(tmpl),
+		DefaultPort:  defaultPort,
+		Endpoints:    endpoints,
+		Services:     catalogServiceNames(tmpl),
+		Volumes:      catalogVolumeNames(tmpl),
+		EnvVariables: catalogEnvVariables(tmpl, meta),
+		Verified:     meta.Verified,
+		GPU:          gpu,
+		HasGPU:       hasGpu,
+		ShmSize:      shmSize,
+	}
+}
+
+func findOneClickMetadata(tmpl *compose.ComposeTemplate) *compose.CodedockMetadata {
+	if tmpl.XCodedock != nil && tmpl.XCodedock.IsOneClick {
+		return tmpl.XCodedock
+	}
+	for _, name := range catalogServiceNames(tmpl) {
+		if meta := tmpl.Services[name].XCodedock; meta != nil && meta.IsOneClick {
+			return meta
+		}
+	}
+	return nil
+}
+
+func catalogCategory(value string) string {
+	if strings.TrimSpace(value) == "" {
+		return "apps"
+	}
+	return value
+}
+
+func catalogPrimaryImage(tmpl *compose.ComposeTemplate) string {
+	for _, name := range catalogServiceNames(tmpl) {
+		if len(tmpl.Services[name].Ports) > 0 {
+			return tmpl.Services[name].Image
+		}
+	}
+	names := catalogServiceNames(tmpl)
+	if len(names) == 0 {
+		return ""
+	}
+	return tmpl.Services[names[0]].Image
+}
+
+func catalogServiceNames(tmpl *compose.ComposeTemplate) []string {
+	names := make([]string, 0, len(tmpl.Services))
+	for name := range tmpl.Services {
+		names = append(names, name)
+	}
+	sort.Strings(names)
+	return names
+}
+
+func catalogVolumeNames(tmpl *compose.ComposeTemplate) []string {
+	seen := map[string]bool{}
+	names := []string{}
+	for _, serviceName := range catalogServiceNames(tmpl) {
+		for _, entry := range tmpl.Services[serviceName].Volumes {
+			mount, err := compose.ParseCatalogVolume(entry)
+			if err != nil || seen[mount.Source] {
+				continue
+			}
+			seen[mount.Source] = true
+			names = append(names, mount.Source)
+		}
+	}
+	return names
+}
+
+func catalogEnvVariables(tmpl *compose.ComposeTemplate, meta *compose.CodedockMetadata) []models.OneClickEnvVar {
+	secrets := map[string]compose.CodedockSecretSpec{}
+	for _, spec := range meta.Secrets {
+		secrets[spec.Var] = spec
+	}
+	inputs := map[string]compose.CodedockInputSpec{}
+	for _, spec := range meta.Inputs {
+		inputs[spec.Var] = spec
+	}
+	variables := []models.OneClickEnvVar{}
+	seen := map[string]bool{}
+	for _, serviceName := range catalogServiceNames(tmpl) {
+		for _, entry := range tmpl.Services[serviceName].Environment {
+			key, value, _ := strings.Cut(entry, "=")
+			if seen[key] {
+				continue
+			}
+			seen[key] = true
+			variable := models.OneClickEnvVar{Key: key, Label: key}
+			if ref, ok := catalogPlaceholderReference(value, "secret"); ok {
+				variable.Secret = true
+				if spec, declared := secrets[ref]; declared && spec.Label != "" {
+					variable.Label = spec.Label
+				}
+			} else if ref, ok := catalogPlaceholderReference(value, "input"); ok {
+				variable.Input = true
+				if spec, declared := inputs[ref]; declared {
+					if spec.Label != "" {
+						variable.Label = spec.Label
+					}
+					variable.DefaultValue = spec.Default
+					variable.Required = spec.Required
+				}
+			} else if !strings.Contains(value, "${") {
+				variable.DefaultValue = value
+			}
+			variables = append(variables, variable)
+		}
+	}
+	return variables
+}
+
+func catalogPlaceholderReference(value, kind string) (string, bool) {
+	prefix := "${" + kind + ":"
+	start := strings.Index(value, prefix)
+	if start < 0 {
+		return "", false
+	}
+	rest := value[start+len(prefix):]
+	end := strings.Index(rest, "}")
+	if end <= 0 {
+		return "", false
+	}
+	return rest[:end], true
+}
+
+func extractPort(tmpl *compose.ComposeTemplate) int {
+	for _, name := range catalogServiceNames(tmpl) {
+		service := tmpl.Services[name]
+		if len(service.Ports) == 0 {
+			continue
+		}
+		if mapping, err := compose.ParseCatalogPort(service.Ports[0]); err == nil {
+			if mapping.Host > 0 {
+				return mapping.Host
+			}
+			return mapping.Container
+		}
+	}
+	return 3000
+}
+
+func extractEndpoints(tmpl *compose.ComposeTemplate) []models.OneClickEndpoint {
+	endpoints := []models.OneClickEndpoint{}
+	seen := map[int]bool{}
+	for _, name := range catalogServiceNames(tmpl) {
+		service := tmpl.Services[name]
+		for _, portStr := range service.Ports {
+			if mapping, err := compose.ParseCatalogPort(portStr); err == nil {
+				targetPort := mapping.Host
+				if targetPort == 0 {
+					targetPort = mapping.Container
+				}
+				if targetPort > 0 && !seen[targetPort] {
+					seen[targetPort] = true
+					label := name
+					if targetPort == 9001 {
+						label = "Console"
+					} else if targetPort == 9000 {
+						label = "S3 API"
+					}
+					endpoints = append(endpoints, models.OneClickEndpoint{
+						Label: label,
+						Port:  targetPort,
+						Kind:  "http",
+					})
+				}
+			}
+		}
+	}
+	return endpoints
+}

@@ -5,11 +5,11 @@ import (
 
 	"github.com/labstack/echo/v4"
 
-	"codedock.run/codedock/internal/utils"
+	"codedock/internal/utils"
 
-	"codedock.run/codedock/internal/models"
-	authservices "codedock.run/codedock/internal/services/auth"
-	projectservices "codedock.run/codedock/internal/services/projects"
+	"codedock/internal/models"
+	authservices "codedock/internal/services/auth"
+	projectservices "codedock/internal/services/projects"
 )
 
 type ServiceVarHandler struct {
@@ -46,6 +46,9 @@ func (h *ServiceVarHandler) Create(c echo.Context) error {
 	req.EnvironmentID = svc.EnvironmentID
 	created, err := h.appService.CreateVariable(c.Request().Context(), &req)
 	if err != nil {
+		if req.ExpectedTopologyRevision != "" {
+			return utils.Error(c, http.StatusConflict, err.Error())
+		}
 		return utils.Error(c, http.StatusInternalServerError, err.Error())
 	}
 

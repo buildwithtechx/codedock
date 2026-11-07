@@ -2,16 +2,18 @@ package databases
 
 import (
 	"context"
+	"crypto/rand"
+	"encoding/hex"
 	"errors"
 	"strings"
 	"time"
 
 	"github.com/google/uuid"
 
-	"codedock.run/codedock/internal/engine/deploy"
-	"codedock.run/codedock/internal/models"
-	"codedock.run/codedock/internal/repositories"
-	"codedock.run/codedock/internal/utils"
+	"codedock/internal/engine/deploy"
+	"codedock/internal/models"
+	"codedock/internal/repositories"
+	"codedock/internal/utils"
 )
 
 type DatabaseService struct {
@@ -66,21 +68,31 @@ func (s *DatabaseService) CreateDatabaseFromRequest(ctx context.Context, req *mo
 		switch strings.ToLower(string(req.Engine)) {
 		case "postgres", "postgresql":
 			req.Port = 5432
-		case "mysql":
+		case "mysql", "mariadb":
 			req.Port = 3306
 		case "redis":
 			req.Port = 6379
 		case "mongodb", "mongo":
 			req.Port = 27017
+		case "typesense":
+			req.Port = 8108
 		default:
 			req.Port = 5432
 		}
 	}
-	if req.Username == "" && strings.ToLower(string(req.Engine)) != "redis" {
+	if req.Username == "" && strings.ToLower(string(req.Engine)) != "redis" && strings.ToLower(string(req.Engine)) != "typesense" {
 		req.Username = "codedockadmin"
 	}
-	if req.DatabaseName == "" {
+	if req.DatabaseName == "" && strings.ToLower(string(req.Engine)) != "typesense" {
 		req.DatabaseName = "appdb"
+	}
+	if req.Password == "" {
+		b := make([]byte, 16)
+		if _, err := rand.Read(b); err == nil {
+			req.Password = hex.EncodeToString(b)
+		} else {
+			req.Password = uuid.New().String()
+		}
 	}
 	db := &models.Database{
 		ProjectID:          req.ProjectID,
@@ -107,15 +119,15 @@ func (s *DatabaseService) GetDatabase(ctx context.Context, id string) (*models.D
 	return s.repo.GetByID(ctx, id)
 }
 
-func (s *DatabaseService) ListDatabases(ctx context.Context) ([]*models.Database, error) {
-	return s.repo.List(ctx)
+func (s *DatabaseService) ListDatabases(ctx context.Context, search string) ([]*models.Database, error) {
+	return s.repo.List(ctx, search)
 }
 
-func (s *DatabaseService) ListDatabasesByProject(ctx context.Context, projectID string) ([]*models.Database, error) {
+func (s *DatabaseService) ListDatabasesByProject(ctx context.Context, projectID string, search string) ([]*models.Database, error) {
 	if projectID == "" {
 		return nil, errors.New("project id is required")
 	}
-	return s.repo.ListByProject(ctx, projectID)
+	return s.repo.ListByProject(ctx, projectID, search)
 }
 
 func (s *DatabaseService) UpdateDatabase(ctx context.Context, db *models.Database) error {

@@ -11,17 +11,11 @@ import {
 } from 'lucide-react';
 import { useState } from 'react';
 import { toast } from 'sonner';
-import { Badge } from '#/components/ui/badge';
-import { Button } from '#/components/ui/button';
-import {
-  Sheet,
-  SheetContent,
-  SheetDescription,
-  SheetHeader,
-  SheetTitle,
-} from '#/components/ui/sheet';
-import type { AppService } from '#/features/services';
-import { appsService } from '#/services/apps';
+import { Badge } from '@codedock/ui/badge';
+import { Button } from '@codedock/ui/button';
+import { Sheet, SheetContent, SheetDescription, SheetHeader, SheetTitle } from '@codedock/ui/sheet';
+import type { AppService } from '#/interfaces/services';
+import { useRedeployApp, useRestartApp, useStopApp } from '#/hooks/use-apps';
 
 interface ServiceDetailDrawerProps {
   service: AppService | null;
@@ -37,15 +31,18 @@ export function ServiceDetailDrawer({
   onRefresh,
 }: ServiceDetailDrawerProps) {
   const [actionLoading, setActionLoading] = useState(false);
+  const restartAppMutation = useRestartApp();
+  const redeployAppMutation = useRedeployApp();
+  const stopAppMutation = useStopApp();
 
   if (!service) return null;
 
   const handleAction = async (action: 'restart' | 'redeploy' | 'stop') => {
     setActionLoading(true);
     try {
-      if (action === 'restart') await appsService.restartApp(service.id);
-      if (action === 'redeploy') await appsService.redeployApp(service.id);
-      if (action === 'stop') await appsService.stopApp(service.id);
+      if (action === 'restart') await restartAppMutation.mutateAsync({ appId: service.id });
+      if (action === 'redeploy') await redeployAppMutation.mutateAsync({ appId: service.id });
+      if (action === 'stop') await stopAppMutation.mutateAsync({ appId: service.id });
       onRefresh?.();
     } catch (err) {
       toast.error(err instanceof Error ? err.message : `Failed to ${action} service`);
@@ -173,7 +170,7 @@ export function ServiceDetailDrawer({
               {service.containerId && (
                 <div className="flex items-center justify-between">
                   <span className="text-muted-foreground">Container ID</span>
-                  <span className="max-w-[180px] truncate font-medium font-mono">
+                  <span className="max-w-45 truncate font-medium font-mono">
                     {service.containerId.slice(0, 12)}
                   </span>
                 </div>

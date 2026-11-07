@@ -3,24 +3,11 @@ import { flexRender, getCoreRowModel, useReactTable } from '@tanstack/react-tabl
 import { ChevronLeft, ChevronRight, Database, Filter, Plus } from 'lucide-react';
 import { useMemo, useState } from 'react';
 
-import { Button } from '#/components/ui/button';
-import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '#/components/ui/card';
-import { Input } from '#/components/ui/input';
-import {
-  Select,
-  SelectContent,
-  SelectItem,
-  SelectTrigger,
-  SelectValue,
-} from '#/components/ui/select';
-import {
-  Table,
-  TableBody,
-  TableCell,
-  TableHead,
-  TableHeader,
-  TableRow,
-} from '#/components/ui/table';
+import { Button } from '@codedock/ui/button';
+import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@codedock/ui/card';
+import { Input } from '@codedock/ui/input';
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@codedock/ui/select';
+import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@codedock/ui/table';
 import { RowEditorModal } from '#/features/databases/row-editor-modal';
 import { apiClient } from '#/lib/api-client';
 

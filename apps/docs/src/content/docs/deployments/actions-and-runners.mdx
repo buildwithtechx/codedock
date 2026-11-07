@@ -1,0 +1,52 @@
+---
+title: Actions & CI/CD Runners
+description: Native containerized workflows and self-hosted CI runner management.
+---
+
+import { Steps, Tabs, TabItem, Aside } from "@astrojs/starlight/components";
+
+Codedock includes a built-in **Actions Engine** and **Runner Catalog** that allows you to execute containerized CI/CD pipelines, automated build scripts, and self-hosted GitHub Actions or GitLab CI runners directly on your server fleet.
+
+## Actions Architecture
+
+```
+[ Git Push / Webhook ] ───► [ Codedock Actions Engine ] ───► [ Isolated Runner Container ]
+                                       │                               │
+                                       ▼                               ▼
+                             [ Live Log Streaming ]         [ Build Artifact / Deployment ]
+```
+
+## Runner Platforms
+
+<Tabs>
+  <TabItem label="GitHub Actions" icon="github">
+    Self-hosted `actions-runner` containers paired directly with your GitHub organizations or repositories. No cloud runner minute caps.
+  </TabItem>
+  <TabItem label="GitLab CI" icon="gitlab">
+    Native GitLab runner instances executing jobs for your self-hosted or cloud GitLab projects with Docker-in-Docker support.
+  </TabItem>
+  <TabItem label="Generic Docker Runners" icon="seti:docker">
+    Generic automation runners for executing scheduled bash scripts, database seeders, or security scans inside ephemeral containers.
+  </TabItem>
+</Tabs>
+
+## Registering a Runner
+
+<Steps>
+1. In the Codedock dashboard, navigate to **Actions → Runners**.
+2. Click **Register Runner** (or use `POST /api/actions/runners`).
+3. Select your runner platform (GitHub, GitLab, or Generic).
+4. Enter your registration token and target host server.
+5. Codedock pulls the runner container image, registers with your Git provider, and starts polling for CI jobs.
+</Steps>
+
+## Workflows & Pipelines
+
+- **Pipeline Definition**: Write declarative workflow steps executed inside ephemeral Docker containers.
+- **Workflow Triggers**: Trigger workflows from Git webhooks, project deployment events, or manual clicks.
+- **Live Execution Streaming**: Watch build and test output live in the Codedock dashboard via WebSocket log streams.
+- **Run Controls**: Cancel in-flight jobs (`POST /api/actions/runs/:id/cancel`) or retry failed workflow runs (`POST /api/actions/runs/:id/retry`) with one click.
+
+<Aside type="tip" title="Resource Isolation & Cleanup">
+Before dispatching intensive builds, Codedock inspects runner destinations (`POST /api/actions/runners/inspect`) to verify CPU/RAM availability. Dangling images, build caches, and temporary directories are automatically pruned after job completion.
+</Aside>

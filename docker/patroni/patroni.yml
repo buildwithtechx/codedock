@@ -1,0 +1,53 @@
+scope: codedock
+namespace: /codedock/
+name: patroni-node
+
+restapi:
+  listen: 0.0.0.0:8008
+  connect_address: patroni-node:8008
+
+etcd3:
+  hosts: etcd-1:2379,etcd-2:2379,etcd-3:2379
+
+bootstrap:
+  dcs:
+    ttl: 30
+    loop_wait: 10
+    retry_timeout: 10
+    maximum_lag_on_failover: 1048576
+    synchronous_mode: true
+    synchronous_mode_strict: true
+    synchronous_node_count: 1
+    postgresql:
+      use_pg_rewind: true
+      parameters:
+        max_connections: 200
+        shared_buffers: 256MB
+  initdb:
+    - encoding: UTF8
+    - locale: C.UTF-8
+  pg_hba:
+    - local all all trust
+    - host replication replicator 0.0.0.0/0 scram-sha-256
+    - host all all 0.0.0.0/0 scram-sha-256
+  post_bootstrap: /post_bootstrap.py
+
+postgresql:
+  listen: 0.0.0.0:5432
+  connect_address: patroni-node:5432
+  data_dir: /var/lib/postgresql/data/pgdata
+  bin_dir: /usr/lib/postgresql/16/bin
+  authentication:
+    replication:
+      username: replicator
+      password: changeme
+    superuser:
+      username: postgres
+      password: changeme
+  parameters:
+    unix_socket_directories: /tmp
+    password_encryption: scram-sha-256
+
+tags:
+  nofailover: false
+  noloadbalance: false

@@ -12,7 +12,7 @@ import (
 	"github.com/docker/docker/api/types/container"
 	"github.com/docker/docker/client"
 
-	"codedock.run/codedock/internal/engine/networking"
+	"codedock/internal/engine/networking"
 )
 
 type MetricsWorker struct {
@@ -80,9 +80,9 @@ func (w *MetricsWorker) collectAndPush() {
 
 		tags := fmt.Sprintf(`container_id="%s",container_name="%s",service_id="%s"`, c.ID, containerName, serviceID)
 
-		sb.WriteString(fmt.Sprintf("container_cpu_usage_percent{%s} %f %d\n", tags, health.CPUUsagePercentage, timestamp))
-		sb.WriteString(fmt.Sprintf("container_memory_usage_bytes{%s} %d %d\n", tags, health.MemoryUsageBytes, timestamp))
-		sb.WriteString(fmt.Sprintf("container_memory_limit_bytes{%s} %d %d\n", tags, health.MemoryLimitBytes, timestamp))
+		fmt.Fprintf(&sb, "container_cpu_usage_percent{%s} %f %d\n", tags, health.CPUUsagePercentage, timestamp)
+		fmt.Fprintf(&sb, "container_memory_usage_bytes{%s} %d %d\n", tags, health.MemoryUsageBytes, timestamp)
+		fmt.Fprintf(&sb, "container_memory_limit_bytes{%s} %d %d\n", tags, health.MemoryLimitBytes, timestamp)
 	}
 
 	if sb.Len() == 0 {

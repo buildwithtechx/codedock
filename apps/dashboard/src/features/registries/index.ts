@@ -1,3 +1,1 @@
-export * from './api';
-export * from './hooks';
-export * from './interfaces';
+export { ProjectRegistries } from './project-registries';

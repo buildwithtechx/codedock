@@ -4,50 +4,76 @@ import (
 	"context"
 	"database/sql"
 	"errors"
+	"fmt"
 	"time"
 
-	"codedock.run/codedock/internal/models"
-	"codedock.run/codedock/internal/utils"
+	"codedock/internal/models"
+	"codedock/internal/utils"
 )
 
 func (r *CanvasRepo) GetEnvironmentCanvas(ctx context.Context, environmentID string) (*models.EnvironmentCanvas, error) {
 	r.mu.Lock()
 	defer r.mu.Unlock()
 	var env models.EnvironmentConfig
-	err := r.db.GetContext(ctx, &env, `SELECT id, project_id, name, is_default, created_at, updated_at FROM environments WHERE id = ?`, environmentID)
+	err := r.db.GetContext(ctx, &env, `SELECT id, project_id, name, is_default, created_at, updated_at FROM environments WHERE id = $1`, environmentID)
 	if err == sql.ErrNoRows {
 		return nil, utils.NewNotFoundError("Environment", environmentID)
 	}
 	if err != nil {
 		return nil, err
 	}
-	apps, _ := r.listAppServicesByEnvironment(ctx, environmentID)
-	dbs, _ := r.listDatabasesByEnvironment(ctx, environmentID)
+	apps, err := r.listAppServicesByEnvironment(ctx, environmentID)
+	if err != nil {
+		return nil, fmt.Errorf("load canvas applications: %w", err)
+	}
+	dbs, err := r.listDatabasesByEnvironment(ctx, environmentID)
+	if err != nil {
+		return nil, fmt.Errorf("load canvas databases: %w", err)
+	}
 	var dbsPtrs []*models.Database
 	for i := range dbs {
 		dbsPtrs = append(dbsPtrs, &dbs[i])
 	}
-	return &models.EnvironmentCanvas{
-		Environment: &env,
-		Apps:        apps,
-		Databases:   dbsPtrs,
-	}, nil
+	clusterDatabases := []models.ClusterData{}
+	if r.clusterData != nil {
+		all, err := r.clusterData.ListByProject(ctx, env.ProjectID)
+		if err != nil {
+			return nil, fmt.Errorf("load canvas cluster databases: %w", err)
+		}
+		for _, record := range all {
+			if record.Spec.EnvironmentID != "" && record.Spec.EnvironmentID != environmentID {
+				continue
+			}
+			clusterDatabases = append(clusterDatabases, record)
+		}
+	}
+	canvas := &models.EnvironmentCanvas{
+		Environment:      &env,
+		Apps:             apps,
+		Databases:        dbsPtrs,
+		ClusterDatabases: clusterDatabases,
+	}
+	if err := r.projectTopology(ctx, canvas); err != nil {
+		return nil, fmt.Errorf("project topology: %w", err)
+	}
+	return canvas, nil
 }
 
 type projectRow struct {
 	ID          string    `db:"id"`
 	Name        string    `db:"name"`
 	Description string    `db:"description"`
+	ServerID    string    `db:"server_id"`
 	CreatedAt   time.Time `db:"created_at"`
 	UpdatedAt   time.Time `db:"updated_at"`
 }
 
 func (r *CanvasRepo) listAllProjects(ctx context.Context, organizationID string) ([]projectRow, error) {
 	var projects []projectRow
-	query := `SELECT id, name, COALESCE(description,'') as description, created_at, updated_at FROM projects`
+	query := `SELECT id, name, COALESCE(description,'') as description, COALESCE(server_id,'') as server_id, created_at, updated_at FROM projects`
 	args := make([]any, 0, 1)
 	if organizationID != "" {
-		query += ` WHERE organization_id = ?`
+		query += ` WHERE organization_id = $1`
 		args = append(args, organizationID)
 	}
 	query += ` ORDER BY created_at DESC`
@@ -63,7 +89,7 @@ func (r *CanvasRepo) listAllProjects(ctx context.Context, organizationID string)
 
 func (r *CanvasRepo) getProject(id string) (*projectRow, error) {
 	var p projectRow
-	err := r.db.Get(&p, `SELECT id, name, COALESCE(description,'') as description, created_at, updated_at FROM projects WHERE id = ?`, id)
+	err := r.db.Get(&p, `SELECT id, name, COALESCE(description,'') as description, COALESCE(server_id,'') as server_id, created_at, updated_at FROM projects WHERE id = $1`, id)
 	if errors.Is(err, sql.ErrNoRows) {
 		return nil, utils.NewNotFoundError("CanvasEnvironment", id)
 	}
@@ -94,15 +120,15 @@ func (r *CanvasRepo) listAllEnvironments(ctx context.Context) ([]*models.Environ
 }
 
 func (r *CanvasRepo) listAllAppServices() ([]*models.AppService, error) {
-	return r.scanAppServices(context.Background(), `SELECT id, project_id, environment_id, name, COALESCE(repository_url,'') as repository_url, COALESCE(image_ref,'') as image_ref, COALESCE(branch,'') as branch, internal_port, COALESCE(domain,'') as domain, COALESCE(container_id,'') as container_id, status, replicas, COALESCE(maintenance_mode, 0) as maintenance_mode, created_at, updated_at FROM app_services ORDER BY created_at DESC`)
+	return r.scanAppServices(context.Background(), `SELECT id, project_id, environment_id, name, COALESCE(repository_url,'') as repository_url, COALESCE(image_ref,'') as image_ref, COALESCE(branch,'') as branch, internal_port, COALESCE(domain,'') as domain, COALESCE(container_id,'') as container_id, status, replicas, COALESCE(maintenance_mode, FALSE) as maintenance_mode, created_at, updated_at FROM app_services ORDER BY created_at DESC`)
 }
 
 func (r *CanvasRepo) listAppServicesByProject(projectID string) ([]*models.AppService, error) {
-	return r.scanAppServices(context.Background(), `SELECT id, project_id, environment_id, name, COALESCE(repository_url,'') as repository_url, COALESCE(image_ref,'') as image_ref, COALESCE(branch,'') as branch, internal_port, COALESCE(domain,'') as domain, COALESCE(container_id,'') as container_id, status, replicas, COALESCE(maintenance_mode, 0) as maintenance_mode, created_at, updated_at FROM app_services WHERE project_id = ? ORDER BY created_at DESC`, projectID)
+	return r.scanAppServices(context.Background(), `SELECT id, project_id, environment_id, name, COALESCE(repository_url,'') as repository_url, COALESCE(image_ref,'') as image_ref, COALESCE(branch,'') as branch, internal_port, COALESCE(domain,'') as domain, COALESCE(container_id,'') as container_id, status, replicas, COALESCE(maintenance_mode, FALSE) as maintenance_mode, created_at, updated_at FROM app_services WHERE project_id = $1 ORDER BY created_at DESC`, projectID)
 }
 
 func (r *CanvasRepo) listAppServicesByEnvironment(ctx context.Context, environmentID string) ([]*models.AppService, error) {
-	return r.scanAppServices(ctx, `SELECT id, project_id, environment_id, name, COALESCE(repository_url,'') as repository_url, COALESCE(image_ref,'') as image_ref, COALESCE(branch,'') as branch, internal_port, COALESCE(domain,'') as domain, COALESCE(container_id,'') as container_id, status, replicas, COALESCE(maintenance_mode, 0) as maintenance_mode, created_at, updated_at FROM app_services WHERE environment_id = ? ORDER BY created_at DESC`, environmentID)
+	return r.scanAppServices(ctx, `SELECT id, project_id, environment_id, name, COALESCE(repository_url,'') as repository_url, COALESCE(image_ref,'') as image_ref, COALESCE(branch,'') as branch, internal_port, COALESCE(domain,'') as domain, COALESCE(container_id,'') as container_id, status, replicas, COALESCE(maintenance_mode, FALSE) as maintenance_mode, created_at, updated_at FROM app_services WHERE environment_id = $1 ORDER BY created_at DESC`, environmentID)
 }
 
 func (r *CanvasRepo) scanAppServices(ctx context.Context, query string, args ...any) ([]*models.AppService, error) {
@@ -122,11 +148,11 @@ func (r *CanvasRepo) listAllDatabases() ([]models.Database, error) {
 }
 
 func (r *CanvasRepo) listDatabasesByProject(projectID string) ([]models.Database, error) {
-	return r.scanDatabases(context.Background(), `SELECT id, COALESCE(project_id,'') as project_id, COALESCE(environment_id,'') as environment_id, name, engine, version, port, username, database_name, volume_path, COALESCE(container_id,'') as container_id, status, COALESCE(internal_dns,'') as internal_dns, COALESCE(external_dns,'') as external_dns, created_at, updated_at FROM databases WHERE project_id = ? ORDER BY created_at DESC`, projectID)
+	return r.scanDatabases(context.Background(), `SELECT id, COALESCE(project_id,'') as project_id, COALESCE(environment_id,'') as environment_id, name, engine, version, port, username, database_name, volume_path, COALESCE(container_id,'') as container_id, status, COALESCE(internal_dns,'') as internal_dns, COALESCE(external_dns,'') as external_dns, created_at, updated_at FROM databases WHERE project_id = $1 ORDER BY created_at DESC`, projectID)
 }
 
 func (r *CanvasRepo) listDatabasesByEnvironment(ctx context.Context, environmentID string) ([]models.Database, error) {
-	return r.scanDatabases(ctx, `SELECT id, COALESCE(project_id,'') as project_id, COALESCE(environment_id,'') as environment_id, name, engine, version, port, username, database_name, volume_path, COALESCE(container_id,'') as container_id, status, COALESCE(internal_dns,'') as internal_dns, COALESCE(external_dns,'') as external_dns, created_at, updated_at FROM databases WHERE environment_id = ? ORDER BY created_at DESC`, environmentID)
+	return r.scanDatabases(ctx, `SELECT id, COALESCE(project_id,'') as project_id, COALESCE(environment_id,'') as environment_id, name, engine, version, port, username, database_name, volume_path, COALESCE(container_id,'') as container_id, status, COALESCE(internal_dns,'') as internal_dns, COALESCE(external_dns,'') as external_dns, created_at, updated_at FROM databases WHERE environment_id = $1 ORDER BY created_at DESC`, environmentID)
 }
 
 func (r *CanvasRepo) scanDatabases(ctx context.Context, query string, args ...any) ([]models.Database, error) {

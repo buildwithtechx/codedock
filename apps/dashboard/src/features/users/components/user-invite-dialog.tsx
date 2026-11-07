@@ -1,24 +1,18 @@
 import { Check, Mail } from 'lucide-react';
 import { useState } from 'react';
 import { toast } from 'sonner';
-import { Button } from '#/components/ui/button';
+import { Button } from '@codedock/ui/button';
 import {
   Dialog,
   DialogClose,
   DialogContent,
   DialogDescription,
   DialogTitle,
-} from '#/components/ui/dialog';
-import { Input } from '#/components/ui/input';
-import { Label } from '#/components/ui/label';
-import {
-  Select,
-  SelectContent,
-  SelectItem,
-  SelectTrigger,
-  SelectValue,
-} from '#/components/ui/select';
-import { useInviteUser } from '#/features/users';
+} from '@codedock/ui/dialog';
+import { Input } from '@codedock/ui/input';
+import { Label } from '@codedock/ui/label';
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@codedock/ui/select';
+import { useInviteUser } from '#/hooks/use-users';
 
 interface UserInviteDialogProps {
   open: boolean;
@@ -88,7 +82,7 @@ export function UserInviteDialog({ open, onOpenChange }: UserInviteDialogProps) 
                   value={inviteEmail}
                   onChange={(e) => setInviteEmail(e.target.value)}
                   required
-                  className="h-10 rounded-lg border-border/50 bg-background/80 px-3 text-sm transition-all duration-300 focus:border-primary/50 focus:ring-1 focus:ring-primary/20"
+                  className="rounded-lg border-border/50 bg-background/80 px-3 text-sm transition-all duration-300 focus:border-primary/50 focus:ring-1 focus:ring-primary/20"
                 />
               </div>
 
@@ -102,7 +96,7 @@ export function UserInviteDialog({ open, onOpenChange }: UserInviteDialogProps) 
                 <Select value={role} onValueChange={setRole}>
                   <SelectTrigger
                     id="role"
-                    className="h-10 rounded-lg border-border/50 bg-background/80 px-3 text-sm transition-all duration-300 focus:border-primary/50 focus:ring-1 focus:ring-primary/20"
+                    className="rounded-lg border-border/50 bg-background/80 px-3 text-sm transition-all duration-300 focus:border-primary/50 focus:ring-1 focus:ring-primary/20"
                   >
                     <SelectValue placeholder="Select role" />
                   </SelectTrigger>

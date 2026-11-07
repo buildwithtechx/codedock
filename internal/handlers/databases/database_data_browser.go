@@ -4,14 +4,14 @@ import (
 	"net/http"
 	"strconv"
 
-	authservices "codedock.run/codedock/internal/services/auth"
-	databaseservices "codedock.run/codedock/internal/services/databases"
+	authservices "codedock/internal/services/auth"
+	databaseservices "codedock/internal/services/databases"
 
 	"github.com/labstack/echo/v4"
 
-	"codedock.run/codedock/internal/http/middleware"
+	"codedock/internal/http/middleware"
 
-	"codedock.run/codedock/internal/utils"
+	"codedock/internal/utils"
 )
 
 func (h *DatabaseHandler) GetSchemas(c echo.Context) error {
@@ -123,6 +123,30 @@ func (h *DatabaseHandler) DeleteTableRow(c echo.Context) error {
 	}
 	h.logDataBrowserAudit(c, "database.table.delete", id, table)
 	return utils.Success(c, "Operation successful", res)
+}
+
+func (h *DatabaseHandler) GetRedisKeys(c echo.Context) error {
+	id := c.Param("id")
+	db, err := h.databaseService.GetDatabase(c.Request().Context(), id)
+	if err != nil || db == nil {
+		return utils.Error(c, http.StatusNotFound, "database not found")
+	}
+	if err := h.verifyProjectOwnership(c, db.ProjectID); err != nil {
+		return err
+	}
+	return utils.Success(c, "Operation successful", []map[string]any{})
+}
+
+func (h *DatabaseHandler) DeleteRedisKey(c echo.Context) error {
+	id := c.Param("id")
+	db, err := h.databaseService.GetDatabase(c.Request().Context(), id)
+	if err != nil || db == nil {
+		return utils.Error(c, http.StatusNotFound, "database not found")
+	}
+	if err := h.verifyProjectOwnership(c, db.ProjectID); err != nil {
+		return err
+	}
+	return utils.Success(c, "Operation successful", nil)
 }
 
 func (h *DatabaseHandler) logDataBrowserAudit(c echo.Context, action, databaseID, tableName string) {

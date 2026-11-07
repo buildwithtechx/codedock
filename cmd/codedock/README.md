@@ -8,10 +8,18 @@ The `codedock` binary is the remote client for your self-hosted Codedock server.
 curl -fsSL https://get.codedock.run/cli | sh
 ```
 
-Or if you have Go installed:
+Or via npm, which installs this same prebuilt binary (needs Node 18+):
 
 ```sh
-go install codedock.run/codedock/cmd/codedock@latest
+npm install -g codedock
+```
+
+Or from source if you have Go and git installed:
+
+```sh
+git clone https://github.com/buildwithtechx/codedock.git
+cd codedock
+go install ./cmd/codedock
 ```
 
 After installing, authenticate against your server:
@@ -29,7 +37,7 @@ This prompts for your server URL, email, and password and saves credentials to `
 ```sh
 codedock login                            # Authenticate to your server
 codedock logout                           # Clear saved credentials
-codedock me                               # Show current logged-in user
+codedock me                               # Show current logged-in user (whoami works too)
 ```
 
 ### Projects
@@ -95,10 +103,29 @@ codedock db backups trigger <id>
 codedock db backups history <id>
 ```
 
+### Servers
+
+```sh
+codedock servers list                    # List servers
+codedock servers create --name <name>    # Add a server (--ip, --port, --user, --key, --is-local)
+codedock servers delete <id>             # Delete a server
+```
+
 ### Deployments
 
 ```sh
 codedock deploy <service-id>              # Trigger a remote deployment
+codedock deploy .                         # Package and deploy a local directory
+```
+
+### MCP & AI Copilot
+
+```sh
+codedock mcp serve                        # Start stdio JSON-RPC 2.0 MCP bridge
+codedock mcp status                       # Check MCP server capabilities & endpoints
+codedock mcp tools                        # List all MCP tools on the instance
+codedock ai "Inspect unhealthy services"  # Ask the instance-aware Codedock AI Copilot
+codedock ai confirm <action-id>           # Approve and execute a pending AI action
 ```
 
 ## Config

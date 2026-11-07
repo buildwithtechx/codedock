@@ -1,63 +1,44 @@
-import { act, fireEvent, render, screen, waitFor } from '@testing-library/react';
+import { QueryClient, QueryClientProvider } from '@tanstack/react-query';
+import { fireEvent, render, screen, waitFor } from '@testing-library/react';
 import { describe, expect, it, vi } from 'vitest';
 import { VolumeRestoreDialog } from './volume-restore-dialog';
 
-const mocks = vi.hoisted(() => ({
-  get: vi.fn(),
-  post: vi.fn(),
-  delete: vi.fn(),
-  success: vi.fn(),
-}));
-vi.mock('#/lib/api-client', () => ({
-  apiClient: mocks,
-  ApiError: class extends Error {
-    status = 409;
-  },
-}));
-vi.mock('sonner', () => ({ toast: { success: mocks.success } }));
-
-describe('VolumeRestoreDialog', () => {
-  it('interrupts the POST before server cancellation is registered', async () => {
-    mocks.get.mockResolvedValue({ data: { volumeName: 'owned', timeoutSeconds: 30 } });
-    let signal: AbortSignal | undefined;
-    mocks.post.mockImplementation(
-      (_url, _body, options) =>
-        new Promise((_resolve, reject) => {
-          signal = options.signal;
-          signal?.addEventListener('abort', () => reject(new Error('aborted')));
-        })
+const mocks = vi.hoisted(() => ({ get: vi.fn(), post: vi.fn() }));
+vi.mock('#/lib/api-client', () => ({ apiClient: mocks }));
+describe('reviewed restore', () => {
+  it('requires an expiring confirmation and observes completion', async () => {
+    const operation = {
+      id: 'operation',
+      status: 'REVIEWED',
+      phase: '',
+      effects: 'Overwrite only reviewed volume',
+      error: '',
+      logs: '',
+      expiresAt: Math.floor(Date.now() / 1000) + 600,
+    };
+    mocks.get.mockImplementation(() => Promise.resolve({ data: operation }));
+    mocks.post.mockImplementation((url) =>
+      Promise.resolve(
+        url.endsWith('/review') ? { data: { operation, confirmation: 'opaque-confirmation' } } : {}
+      )
     );
-    let finishDelete: (value: object) => void = () => {};
-    mocks.delete.mockImplementation(
-      () =>
-        new Promise((resolve) => {
-          finishDelete = resolve;
-        })
+    const client = new QueryClient({ defaultOptions: { queries: { retry: false } } });
+    render(
+      <QueryClientProvider client={client}>
+        <VolumeRestoreDialog recordId="record" onClose={vi.fn()} />
+      </QueryClientProvider>
     );
-    render(<VolumeRestoreDialog recordId="record" onClose={vi.fn()} />);
-    await screen.findByText(/Target:/);
-    fireEvent.change(screen.getByLabelText('Type the volume name to confirm overwrite'), {
-      target: { value: 'owned' },
-    });
-    fireEvent.click(screen.getByRole('button', { name: 'Restore volume' }));
-    await waitFor(() => expect(mocks.post).toHaveBeenCalled());
-    fireEvent.click(screen.getByRole('button', { name: 'Interrupt restore' }));
-    expect(signal?.aborted).toBe(true);
-    await screen.findByRole('alert');
-    expect(mocks.success).not.toHaveBeenCalled();
-    expect(
-      (screen.getByRole('button', { name: 'Restoring...' }) as HTMLButtonElement).disabled
-    ).toBe(true);
-    expect(
-      (screen.getByRole('button', { name: 'Interrupt restore' }) as HTMLButtonElement).disabled
-    ).toBe(true);
-    await act(async () => finishDelete({}));
+    fireEvent.click(screen.getByRole('button', { name: 'Prepare restore' }));
+    await screen.findByText('Overwrite only reviewed volume');
+    const apply = screen.getByRole('button', { name: 'Apply restore' }) as HTMLButtonElement;
+    expect(apply.disabled).toBe(true);
+    fireEvent.click(screen.getByRole('checkbox'));
+    fireEvent.click(apply);
     await waitFor(() =>
-      expect(
-        (screen.getByRole('button', { name: 'Restore volume' }) as HTMLButtonElement).disabled
-      ).toBe(false)
+      expect(mocks.post).toHaveBeenCalledWith('/backup-operations/operation/apply', {
+        confirmation: 'opaque-confirmation',
+      })
     );
-    expect(mocks.post).toHaveBeenCalledTimes(1);
-    expect(mocks.delete).toHaveBeenCalledWith('/backup-records/record/volume-restore');
+    client.clear();
   });
 });

@@ -3,42 +3,119 @@ package system
 import (
 	"context"
 	"encoding/json"
+	"errors"
 	"fmt"
+	"sync"
+	"time"
 
+	"github.com/google/uuid"
 	"github.com/stripe/stripe-go/v78"
 	"github.com/stripe/stripe-go/v78/checkout/session"
 	"github.com/stripe/stripe-go/v78/customer"
 	"github.com/stripe/stripe-go/v78/webhook"
 
-	"codedock.run/codedock/internal/config"
-	"codedock.run/codedock/internal/models"
-	"codedock.run/codedock/internal/repositories"
+	"codedock/internal/config"
+	"codedock/internal/models"
+	"codedock/internal/repositories"
 )
 
-type BillingService struct {
-	userRepo *repositories.UserRepo
+type ErrCheckoutPending struct {
+	Pending *models.PendingCheckout
 }
 
-func NewBillingService(userRepo *repositories.UserRepo) *BillingService {
+func (e *ErrCheckoutPending) Error() string {
+	return "This server already has an unfinished checkout. Resume that payment or wait for it to expire before choosing another plan."
+}
+
+type BillingService struct {
+	userRepo         repositories.UserRepository
+	pendingMu        sync.Mutex
+	pendingCheckouts map[string][]*models.PendingCheckout
+	sessionNew       func(params *stripe.CheckoutSessionParams) (*stripe.CheckoutSession, error)
+	sessionExpire    func(id string, params *stripe.CheckoutSessionExpireParams) (*stripe.CheckoutSession, error)
+}
+
+func NewBillingService(userRepo repositories.UserRepository) *BillingService {
 	stripe.Key = config.Get().Stripe.SecretKey
 	return &BillingService{
-		userRepo: userRepo,
+		userRepo:         userRepo,
+		pendingCheckouts: make(map[string][]*models.PendingCheckout),
+		sessionNew:       session.New,
+		sessionExpire:    session.Expire,
 	}
 }
 
-func (s *BillingService) CreateCheckoutSession(ctx context.Context, userID, priceID, successURL, cancelURL string) (string, error) {
-	if stripe.Key == "" {
+func (s *BillingService) SetSessionHandlers(
+	newFn func(params *stripe.CheckoutSessionParams) (*stripe.CheckoutSession, error),
+	expireFn func(id string, params *stripe.CheckoutSessionExpireParams) (*stripe.CheckoutSession, error),
+) {
+	s.sessionNew = newFn
+	s.sessionExpire = expireFn
+}
+
+func (s *BillingService) CreateCheckoutSession(
+	ctx context.Context,
+	userID, priceID, successURL, cancelURL, idempotencyKey, purchaseIntent string,
+	cancelPending bool,
+) (string, error) {
+	if purchaseIntent != "" && !models.IsPurchaseIntent(purchaseIntent) {
+		return "", errors.New("invalid purchase intent format")
+	}
+
+	s.pendingMu.Lock()
+	userPending := s.pendingCheckouts[userID]
+	var activeOpen *models.PendingCheckout
+	for _, item := range userPending {
+		if item.Status == "open" {
+			activeOpen = item
+			break
+		}
+	}
+
+	if activeOpen != nil {
+		if cancelPending {
+			if s.sessionExpire != nil && stripe.Key != "" {
+				_, _ = s.sessionExpire(activeOpen.CheckoutID, nil)
+			}
+			activeOpen.Status = "canceled"
+			activeOpen.CanCancel = false
+		} else if idempotencyKey != "" && activeOpen.IdempotencyKey == idempotencyKey && activeOpen.PriceID == priceID {
+			s.pendingMu.Unlock()
+			return activeOpen.URL, nil
+		} else {
+			s.pendingMu.Unlock()
+			return "", &ErrCheckoutPending{Pending: activeOpen}
+		}
+	}
+	s.pendingMu.Unlock()
+
+	if stripe.Key == "" && s.sessionNew == nil {
 		return "", fmt.Errorf("billing is not configured")
 	}
 
-	u, err := s.userRepo.GetUserByID(ctx, userID)
-	if err != nil {
-		return "", fmt.Errorf("failed to get user: %w", err)
+	var customerID string
+	if s.userRepo != nil {
+		u, err := s.userRepo.GetUserByID(ctx, userID)
+		if err != nil {
+			return "", fmt.Errorf("failed to get user: %w", err)
+		}
+		customerID, err = s.getOrCreateStripeCustomer(ctx, u)
+		if err != nil {
+			return "", err
+		}
+	} else {
+		customerID = "cus_mock_" + userID
 	}
 
-	customerID, err := s.getOrCreateStripeCustomer(ctx, u)
-	if err != nil {
-		return "", err
+	if idempotencyKey == "" {
+		idempotencyKey = uuid.NewString()
+	}
+
+	metadata := map[string]string{
+		"user_id": userID,
+	}
+	if purchaseIntent != "" {
+		metadata["purchase_intent"] = purchaseIntent
 	}
 
 	params := &stripe.CheckoutSessionParams{
@@ -52,14 +129,90 @@ func (s *BillingService) CreateCheckoutSession(ctx context.Context, userID, pric
 		},
 		SuccessURL: stripe.String(successURL),
 		CancelURL:  stripe.String(cancelURL),
+		Metadata:   metadata,
 	}
+	params.IdempotencyKey = stripe.String(idempotencyKey)
 
-	sess, err := session.New(params)
+	sess, err := s.sessionNew(params)
 	if err != nil {
 		return "", fmt.Errorf("failed to create checkout session: %w", err)
 	}
 
+	newPending := &models.PendingCheckout{
+		CheckoutID:     sess.ID,
+		IdempotencyKey: idempotencyKey,
+		PurchaseIntent: purchaseIntent,
+		PriceID:        priceID,
+		URL:            sess.URL,
+		Status:         "open",
+		CanCancel:      true,
+		CreatedAt:      time.Now(),
+	}
+
+	s.pendingMu.Lock()
+	s.pendingCheckouts[userID] = append(s.pendingCheckouts[userID], newPending)
+	s.pendingMu.Unlock()
+
 	return sess.URL, nil
+}
+
+func (s *BillingService) GetPendingCheckout(ctx context.Context, userID string) *models.PendingCheckout {
+	s.pendingMu.Lock()
+	defer s.pendingMu.Unlock()
+
+	userPending := s.pendingCheckouts[userID]
+	for i := len(userPending) - 1; i >= 0; i-- {
+		if userPending[i].Status == "open" {
+			return userPending[i]
+		}
+	}
+	return nil
+}
+
+func (s *BillingService) CancelCheckoutSession(
+	ctx context.Context,
+	userID, checkoutID, idempotencyKey string,
+) (*models.PendingCheckout, error) {
+	s.pendingMu.Lock()
+	defer s.pendingMu.Unlock()
+
+	userPending := s.pendingCheckouts[userID]
+	var target *models.PendingCheckout
+	for _, item := range userPending {
+		if item.CheckoutID == checkoutID {
+			target = item
+			break
+		}
+	}
+
+	if target == nil {
+		return nil, fmt.Errorf("checkout not found or already settled")
+	}
+
+	if target.Status != "open" {
+		return target, nil
+	}
+
+	if s.sessionExpire != nil && stripe.Key != "" {
+		var expireParams *stripe.CheckoutSessionExpireParams
+		if idempotencyKey != "" {
+			expireParams = &stripe.CheckoutSessionExpireParams{
+				Params: stripe.Params{
+					IdempotencyKey: stripe.String(idempotencyKey),
+				},
+			}
+		}
+		if _, err := s.sessionExpire(checkoutID, expireParams); err != nil {
+			reason := models.CancelUnavailableProviderUnavailable
+			target.CancelUnavailableReason = &reason
+			return nil, fmt.Errorf("provider cancel failed: %w", err)
+		}
+	}
+
+	target.Status = "canceled"
+	target.CanCancel = false
+	target.CancelUnavailableReason = nil
+	return target, nil
 }
 
 func (s *BillingService) HandleWebhook(ctx context.Context, payload []byte, signature string) error {

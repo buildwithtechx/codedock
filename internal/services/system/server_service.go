@@ -9,10 +9,10 @@ import (
 
 	"github.com/google/uuid"
 
-	"codedock.run/codedock/internal/config"
-	"codedock.run/codedock/internal/engine/ssh"
-	"codedock.run/codedock/internal/models"
-	"codedock.run/codedock/internal/repositories"
+	"codedock/internal/config"
+	"codedock/internal/engine/ssh"
+	"codedock/internal/models"
+	"codedock/internal/repositories"
 )
 
 const controlPlaneServerID = "codedock-control-plane"
@@ -21,7 +21,7 @@ type ServerService interface {
 	CreateServer(ctx context.Context, userID string, req models.CreateServerRequest) (*models.Server, error)
 	UpdateServer(ctx context.Context, id, userID string, req models.UpdateServerRequest) (*models.Server, error)
 	TestSSH(ctx context.Context, req models.TestSSHRequest) error
-	ListServersByUser(ctx context.Context, userID string) ([]*models.Server, error)
+	ListServersByUser(ctx context.Context, userID string, search string) ([]*models.Server, error)
 	GetServer(ctx context.Context, id, userID string) (*models.Server, error)
 	DeleteServer(ctx context.Context, id, userID string) error
 }
@@ -90,7 +90,7 @@ func (s *serverService) CreateServer(ctx context.Context, userID string, req mod
 	}
 
 	if config.Get().Cloud.Enabled && u.PlanType != "pro" {
-		servers, err := s.serverRepo.ListByUser(ctx, userID)
+		servers, err := s.serverRepo.ListByUser(ctx, userID, "")
 		if err != nil {
 			return nil, fmt.Errorf("failed to check server limit: %w", err)
 		}
@@ -202,7 +202,9 @@ func (s *serverService) UpdateServer(ctx context.Context, id, userID string, req
 	if server == nil {
 		return nil, fmt.Errorf("server not found")
 	}
-	if server.UserID != userID {
+	user, _ := s.userRepo.GetUserByID(ctx, userID)
+	isAdmin := user != nil && (user.Role == models.UserRoleOwner || user.Role == models.UserRoleAdmin)
+	if !isAdmin && server.UserID != userID {
 		return nil, fmt.Errorf("unauthorized to update server")
 	}
 

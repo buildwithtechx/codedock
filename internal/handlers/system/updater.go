@@ -5,9 +5,9 @@ import (
 
 	"github.com/labstack/echo/v4"
 
-	"codedock.run/codedock/internal/utils"
+	"codedock/internal/utils"
 
-	systemservices "codedock.run/codedock/internal/services/system"
+	systemservices "codedock/internal/services/system"
 )
 
 type UpdaterHandler struct {

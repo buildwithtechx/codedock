@@ -1,17 +1,13 @@
 package repositories
 
 import (
-	"codedock.run/codedock/internal/models"
+	"codedock/internal/models"
 	"context"
 	"testing"
 )
 
 func TestPersonalTokenLookupAndRevocation(t *testing.T) {
-	db := openTestDB(t)
-	db.SetMaxOpenConns(1)
-	if err := RunMigrations(db); err != nil {
-		t.Fatal(err)
-	}
+	db := openPGTestDB(t)
 	if _, err := db.Exec(`INSERT INTO users(id,email,name,password_hash) VALUES('user','user@example.com','User','hash')`); err != nil {
 		t.Fatal(err)
 	}
@@ -34,11 +30,7 @@ func TestPersonalTokenLookupAndRevocation(t *testing.T) {
 }
 
 func TestPersonalTokenResolvesNestedProjectResources(t *testing.T) {
-	db := openTestDB(t)
-	db.SetMaxOpenConns(1)
-	if err := RunMigrations(db); err != nil {
-		t.Fatal(err)
-	}
+	db := openPGTestDB(t)
 	for _, query := range []string{
 		`INSERT INTO organizations(id,name) VALUES('org','Org')`,
 		`INSERT INTO project_apps(id,organization_id,name,slug) VALUES('app','org','App','app')`,

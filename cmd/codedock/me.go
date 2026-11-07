@@ -8,8 +8,9 @@ import (
 )
 
 var meCmd = &cobra.Command{
-	Use:   "me",
-	Short: "Show current logged-in user",
+	Use:     "me",
+	Aliases: []string{"whoami"},
+	Short:   "Show current logged-in user",
 	Run: func(cmd *cobra.Command, args []string) {
 		client := getClient()
 

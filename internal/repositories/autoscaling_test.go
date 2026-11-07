@@ -7,11 +7,7 @@ import (
 )
 
 func TestAutoscalingPersistenceAndReservationGuards(t *testing.T) {
-	db := openTestDB(t)
-	db.SetMaxOpenConns(1)
-	if err := RunMigrations(db); err != nil {
-		t.Fatal(err)
-	}
+	db := openPGTestDB(t)
 	for _, q := range []string{
 		`INSERT INTO organizations(id,name) VALUES('org','Org')`,
 		`INSERT INTO project_apps(id,organization_id,name,slug) VALUES('app','org','App','app')`,

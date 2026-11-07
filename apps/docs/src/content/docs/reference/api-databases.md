@@ -13,7 +13,7 @@ The model constants include `postgres`, `mysql`, `mariadb`, `redis`, `mongodb` a
 {"projectId":"PROJECT_ID","name":"primary","engine":"postgres","version":"16","databaseName":"app","username":"app","password":"YOUR_GENERATED_PASSWORD"}
 ```
 
-See the [database DTO](https://github.com/buildwithtechx/codedock/blob/main/pkg/types/database.go) for all creation fields.
+See the [database DTO](https://github.com/buildwithtechx/codedock/blob/main/internal/models/database.go) for all creation fields.
 
 ## Manage a database
 

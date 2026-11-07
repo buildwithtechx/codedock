@@ -1,29 +1,17 @@
-import { Check } from 'lucide-react';
+import { Lock } from 'lucide-react';
 import React, { useEffect, useState } from 'react';
 import { toast } from 'sonner';
-import { Button } from '#/components/ui/button';
-import { Input } from '#/components/ui/input';
-import { Label } from '#/components/ui/label';
-import { Skeleton } from '#/components/ui/skeleton';
-import { Switch } from '#/components/ui/switch';
+import { Skeleton } from '@codedock/ui/skeleton';
+import { SettingsSection } from '#/features/settings/settings-section';
 import { useListOAuthProviders, useSaveOAuthProvider } from '#/hooks/use-oauth';
 import type { SaveOAuthProviderRequest } from '#/interfaces/oauth';
+import { OAuthProviderCard, type OAuthProviderDef } from './oauth-provider-card';
 
-type ProviderConfig = {
-  id: string;
-  name: string;
-  fields: {
-    key: keyof SaveOAuthProviderRequest;
-    label: string;
-    placeholder: string;
-    type?: string;
-  }[];
-};
-
-const PROVIDERS: ProviderConfig[] = [
+const PROVIDERS: OAuthProviderDef[] = [
   {
     id: 'github',
     name: 'GitHub',
+    icon: '/git-providers/github-icon.svg',
     fields: [
       { key: 'clientId', label: 'Client ID', placeholder: 'Iv1.abc123...' },
       { key: 'clientSecret', label: 'Client Secret', placeholder: '••••••••', type: 'password' },
@@ -32,6 +20,7 @@ const PROVIDERS: ProviderConfig[] = [
   {
     id: 'gitlab',
     name: 'GitLab',
+    icon: '/git-providers/gitlab-icon.svg',
     fields: [
       { key: 'clientId', label: 'Application ID', placeholder: 'abc123...' },
       { key: 'clientSecret', label: 'Secret', placeholder: '••••••••', type: 'password' },
@@ -45,6 +34,7 @@ const PROVIDERS: ProviderConfig[] = [
   {
     id: 'google',
     name: 'Google',
+    icon: '/oauth-providers/google.svg',
     fields: [
       { key: 'clientId', label: 'Client ID', placeholder: '123456789.apps.googleusercontent.com' },
       { key: 'clientSecret', label: 'Client Secret', placeholder: 'GOCSPX-...', type: 'password' },
@@ -53,6 +43,7 @@ const PROVIDERS: ProviderConfig[] = [
   {
     id: 'microsoft',
     name: 'Microsoft',
+    icon: '/oauth-providers/microsoft.svg',
     fields: [
       {
         key: 'clientId',
@@ -115,7 +106,7 @@ export const OAuthProvidersList = () => {
     setForm((f) => ({ ...f, [providerId]: { ...f[providerId], [key]: value } }));
   };
 
-  const handleSaveProvider = async (provider: ProviderConfig) => {
+  const handleSaveProvider = async (provider: OAuthProviderDef) => {
     setSaving(provider.id);
     try {
       const state = form[provider.id] as SaveOAuthProviderRequest;
@@ -142,61 +133,31 @@ export const OAuthProvidersList = () => {
     return (
       <div className="space-y-4">
         {[...Array(4)].map((_, i) => (
-          <Skeleton key={i} className="h-32 w-full rounded-xl" />
+          <Skeleton key={i} className="h-32 w-full rounded-2xl" />
         ))}
       </div>
     );
   }
 
   return (
-    <div className="space-y-6">
-      <p className="text-muted-foreground text-sm">
-        The redirect URI is{' '}
-        <code className="rounded bg-muted px-1.5 py-0.5 font-mono text-xs">
-          {window.location.origin}/api/auth/oauth/[provider]/callback
-        </code>
-      </p>
-
-      {PROVIDERS.map((provider) => {
-        const state = form[provider.id] ?? {};
-        return (
-          <div key={provider.id} className="rounded-2xl bg-card p-6">
-            <div className="mb-5 flex items-center justify-between">
-              <span className="font-semibold text-sm">{provider.name}</span>
-              <div className="flex items-center gap-2.5">
-                <span className="text-muted-foreground text-xs">
-                  {state.enabled ? 'Enabled' : 'Disabled'}
-                </span>
-                <Switch
-                  checked={state.enabled ?? false}
-                  onCheckedChange={(v) => set(provider.id, 'enabled', v)}
-                />
-              </div>
-            </div>
-
-            <div className="grid grid-cols-1 gap-4 sm:grid-cols-2">
-              {provider.fields.map((f) => (
-                <div key={f.key} className="space-y-1.5">
-                  <Label className="text-xs">{f.label}</Label>
-                  <Input
-                    type={f.type ?? 'text'}
-                    value={(state[f.key] as string) ?? ''}
-                    onChange={(e) => set(provider.id, f.key, e.target.value)}
-                    placeholder={f.placeholder}
-                    className="font-mono text-xs"
-                  />
-                </div>
-              ))}
-            </div>
-            <div className="mt-5 flex justify-end">
-              <Button size="sm" onClick={() => handleSaveProvider(provider)} disabled={isPending}>
-                <Check className="mr-2 h-4 w-4" />
-                {saving === provider.id ? 'Saving...' : `Save ${provider.name}`}
-              </Button>
-            </div>
-          </div>
-        );
-      })}
-    </div>
+    <SettingsSection
+      icon={<Lock className="size-4 text-primary" />}
+      title="OAuth Authentication"
+      description="Configure single sign-on providers for your workspace users."
+    >
+      <div className="space-y-4">
+        {PROVIDERS.map((provider) => (
+          <OAuthProviderCard
+            key={provider.id}
+            provider={provider}
+            state={form[provider.id] ?? {}}
+            isPending={isPending}
+            isSaving={saving === provider.id}
+            onFieldChange={(key, val) => set(provider.id, key, val)}
+            onSave={() => handleSaveProvider(provider)}
+          />
+        ))}
+      </div>
+    </SettingsSection>
   );
 };

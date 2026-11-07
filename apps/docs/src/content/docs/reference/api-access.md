@@ -23,7 +23,7 @@ For scripts, use the remote CLI login flow or a project token accepted by the ta
 curl "$CODEDOCK_URL/api/projects/$PROJECT_ID"   -H "Authorization: Bearer $CODEDOCK_TOKEN"
 ```
 
-Browser cookie requests have CSRF requirements. See [API overview](/api/) for authentication and response behavior and [endpoint catalogue](/reference/api-endpoints/) for route-specific middleware wiring.
+Browser cookie requests have CSRF requirements. See [API overview](/reference/api/) for authentication and response behavior and [endpoint catalogue](/reference/api-endpoints/) for route-specific middleware wiring.
 
 ## Personal API tokens
 
@@ -34,3 +34,7 @@ Create personal tokens in profile token management. Send the returned `vpt_` cre
 **Specific projects** limits access to the selected projects and their services, environments, databases, deployments and backups. Unscoped collection endpoints are denied for these tokens; request a selected project's resources through its scoped routes. Recognized project, environment, service and database ID references in query parameters or JSON bodies are checked against the selected projects, including snake_case aliases. Requests with bodies must use JSON; other body formats are rejected for specific-project personal tokens. Project scope narrows the owner's existing permissions and grants no additional membership.
 
 Account changes, token management, interactive terminals and instance role-restricted operations require a user session. Existing project API tokens retain their separate project and operation scopes.
+
+## API Stability Policy
+
+The `/api/v1/*` endpoint surface is frozen and stable. All breaking changes, backwards-incompatible contract mutations, or removed fields are deferred to `/api/v2/*`. Minor additive fields and optional parameters may be introduced within `/api/v1/*` without breaking existing SDK and API clients.

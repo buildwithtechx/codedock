@@ -1,5 +1,5 @@
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
-import type { OneClickDeployRequest } from '#/interfaces/templates';
+import type { InstallAppInput, OneClickDeployRequest } from '#/interfaces/templates';
 import { templatesService } from '#/services/templates';
 
 export const useListOneClickApps = () => {
@@ -16,12 +16,27 @@ export const useListExampleApps = () => {
   });
 };
 
+export const useOneClickApp = (appId: string) => {
+  return useQuery({
+    queryKey: ['oneClickApp', appId],
+    queryFn: () => templatesService.getOneClickApp(appId),
+    enabled: appId.length > 0,
+  });
+};
+
+export const useReviewOneClickInstall = () => {
+  return useMutation({
+    mutationFn: (payload: InstallAppInput) => templatesService.reviewOneClickInstall(payload),
+  });
+};
+
 export const useDeployOneClickApp = () => {
   const queryClient = useQueryClient();
   return useMutation({
     mutationFn: (payload: OneClickDeployRequest) => templatesService.deployOneClickApp(payload),
     onSuccess: async () => {
       await queryClient.invalidateQueries({ queryKey: ['apps'] });
+      await queryClient.invalidateQueries({ queryKey: ['projects'] });
     },
   });
 };

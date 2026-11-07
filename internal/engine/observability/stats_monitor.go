@@ -5,7 +5,7 @@ import (
 	"encoding/json"
 	"time"
 
-	"codedock.run/codedock/internal/utils"
+	"codedock/internal/utils"
 	"github.com/docker/docker/client"
 )
 

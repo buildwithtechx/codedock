@@ -7,8 +7,8 @@ import (
 
 	"github.com/google/uuid"
 
-	"codedock.run/codedock/internal/models"
-	"codedock.run/codedock/internal/repositories"
+	"codedock/internal/models"
+	"codedock/internal/repositories"
 )
 
 type AppService struct {
@@ -95,11 +95,11 @@ func (s *AppService) ListByProject(ctx context.Context, projectID string) ([]*mo
 	return apps, nil
 }
 
-func (s *AppService) ListByOrganization(ctx context.Context, organizationID string) ([]*models.AppService, error) {
+func (s *AppService) ListByOrganization(ctx context.Context, organizationID string, search string) ([]*models.AppService, error) {
 	if organizationID == "" {
 		return nil, errors.New("organization id required")
 	}
-	return s.repo.ListByOrganization(ctx, organizationID)
+	return s.repo.ListByOrganization(ctx, organizationID, search)
 }
 
 func (s *AppService) UpdateAppService(ctx context.Context, svc *models.AppService) error {
@@ -232,6 +232,25 @@ func (s *AppService) DeleteVolume(ctx context.Context, id string) error {
 	return s.volumeRepo.Delete(ctx, id)
 }
 
+func (s *AppService) EmptyVolume(ctx context.Context, serviceID, volumeID string) (*models.ServiceVolume, string, error) {
+	if serviceID == "" || volumeID == "" {
+		return nil, "", errors.New("serviceId and volumeId are required")
+	}
+	vol, err := s.volumeRepo.GetByID(ctx, volumeID)
+	if err != nil {
+		return nil, "", err
+	}
+	if vol == nil || vol.ServiceID != serviceID {
+		return nil, "", errors.New("volume not found for service")
+	}
+	previousHostPath := vol.HostPath
+	vol.HostPath = "codedock-fresh-" + uuid.New().String()
+	if err := s.volumeRepo.Update(ctx, vol); err != nil {
+		return nil, "", err
+	}
+	return vol, previousHostPath, nil
+}
+
 func (s *AppService) CreateLogDrain(ctx context.Context, d *models.LogDrain) (*models.LogDrain, error) {
 	if d == nil {
 		return nil, errors.New("log drain is nil")
@@ -267,4 +286,8 @@ func (s *AppService) DeleteLogDrain(ctx context.Context, id, serviceID string) e
 		return errors.New("id and serviceId are required")
 	}
 	return s.repo.DeleteLogDrain(ctx, id, serviceID)
+}
+
+func (s *AppService) ListAllServices(ctx context.Context, search string) ([]*models.AppService, error) {
+	return s.repo.ListAll(ctx, search)
 }

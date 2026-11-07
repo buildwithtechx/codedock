@@ -1,8 +1,8 @@
 package deploy
 
 import (
-	"codedock.run/codedock/internal/engine/observability"
-	"codedock.run/codedock/internal/models"
+	"codedock/internal/engine/observability"
+	"codedock/internal/models"
 	"context"
 	"fmt"
 	"log/slog"
@@ -12,7 +12,7 @@ import (
 )
 
 type AppRepository interface {
-	ListAll(context.Context) ([]*models.AppService, error)
+	ListAll(context.Context, string) ([]*models.AppService, error)
 }
 type DeploymentCreator interface {
 	CreateDeployment(context.Context, *models.Deployment) (*models.Deployment, error)
@@ -101,7 +101,7 @@ func (a *AutoscalerWorker) checkAndScale(ctx context.Context) {
 	if len(policies) == 0 {
 		return
 	}
-	apps, err := a.appRepo.ListAll(ctx)
+	apps, err := a.appRepo.ListAll(ctx, "")
 	if err != nil {
 		slog.Error("list autoscaling apps", "error", err)
 		return
@@ -115,6 +115,15 @@ func (a *AutoscalerWorker) checkAndScale(ctx context.Context) {
 		if app == nil || app.Status != models.AppServiceStatusRunning || app.ContainerID == "" {
 			a.observe(ctx, p, 0, "service is not running", false)
 			continue
+		}
+		if eligibility, ok := a.deploymentService.(interface {
+			ScalingEligible(context.Context, string) (bool, error)
+		}); ok {
+			supported, err := eligibility.ScalingEligible(ctx, app.ID)
+			if err != nil || !supported {
+				a.observe(ctx, p, 0, "selected runtime does not support Docker autoscaling", false)
+				continue
+			}
 		}
 		health, err := a.statsMonitor.GetHealth(ctx, app.ContainerID)
 		if err != nil || health == nil {

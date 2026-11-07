@@ -7,42 +7,37 @@ import (
 	"encoding/json"
 	"net/http"
 	"net/http/httptest"
-	"path/filepath"
 	"testing"
 
-	_ "modernc.org/sqlite"
-
-	codedockhttp "codedock.run/codedock/internal/http"
-	"codedock.run/codedock/internal/models"
-	"codedock.run/codedock/internal/repositories"
-	authservices "codedock.run/codedock/internal/services/auth"
-	"codedock.run/codedock/internal/utils"
+	cdkdb "codedock/db"
+	cdkhttp "codedock/internal/http"
+	"codedock/internal/models"
+	"codedock/internal/repositories"
+	authservices "codedock/internal/services/auth"
+	"codedock/internal/testdb"
+	"codedock/internal/utils"
 	"github.com/docker/docker/client"
 )
 
-func setupTestApp(t *testing.T) (*codedockhttp.Server, *sql.DB, string, string) {
+func setupTestApp(t *testing.T) (*cdkhttp.Server, *sql.DB, string, string) {
+	jwtSecret := "super-secure-integration-test-jwt-secret-32-chars!"
+	t.Setenv("CODEDOCK_JWT_SECRET", jwtSecret)
+
 	dataDir := t.TempDir()
 	vlt, err := utils.NewVault(dataDir)
 	if err != nil {
 		t.Fatalf("failed to create vault: %v", err)
 	}
 
-	dbPath := filepath.Join(dataDir, "codedock.db")
-	db, err := sql.Open("sqlite", dbPath+"?_pragma=journal_mode(WAL)&_pragma=busy_timeout(5000)&_pragma=foreign_keys(ON)")
-	if err != nil {
-		t.Fatalf("failed to open database: %v", err)
-	}
+	db := testdb.Open(t)
 
-	if err := repositories.RunMigrations(db); err != nil {
+	if err := cdkdb.RunMigrations(db); err != nil {
 		t.Fatalf("failed to run migrations: %v", err)
 	}
 
-	jwtSecret := "super-secure-integration-test-jwt-secret-32-chars!"
-	t.Setenv("CODEDOCK_JWT_SECRET", jwtSecret)
-
 	dockerClient, _ := client.NewClientWithOpts(client.FromEnv, client.WithAPIVersionNegotiation())
 
-	server, err := codedockhttp.NewServer(db, vlt, nil, nil, dockerClient, dataDir)
+	server, err := cdkhttp.NewServer(db, vlt, nil, nil, dockerClient, dataDir)
 	if err != nil {
 		t.Fatalf("failed to create server: %v", err)
 	}

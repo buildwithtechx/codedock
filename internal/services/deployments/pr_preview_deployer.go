@@ -14,13 +14,13 @@ import (
 
 	"github.com/google/uuid"
 
-	"codedock.run/codedock/internal/config"
-	"codedock.run/codedock/internal/engine/deploy"
-	"codedock.run/codedock/internal/engine/ssh"
-	"codedock.run/codedock/internal/models"
-	"codedock.run/codedock/internal/repositories"
-	"codedock.run/codedock/internal/services/projects"
-	"codedock.run/codedock/internal/utils"
+	"codedock/internal/config"
+	"codedock/internal/engine/deploy"
+	"codedock/internal/engine/ssh"
+	"codedock/internal/models"
+	"codedock/internal/repositories"
+	"codedock/internal/services/projects"
+	"codedock/internal/utils"
 )
 
 type PRPreviewService struct {
@@ -66,14 +66,14 @@ func (s *PRPreviewService) DeployPRPreview(ctx context.Context, opts DeployPRPre
 	if err != nil || app == nil {
 		return nil, utils.NewNotFoundError("AppService", opts.AppID)
 	}
-	previewDomain := fmt.Sprintf("pr-%d.%s", opts.PRNumber, app.Domain)
-	if app.Domain == "" {
-		magicDomain := config.Get().Domains.MagicDomain
-		if magicDomain == "" {
-			magicDomain = "sslip.io"
-		}
-		previewDomain = fmt.Sprintf("pr-%d.%s.%s", opts.PRNumber, app.Name, magicDomain)
+	if err := validatePreviewCommands(app.InstallCommand, app.BuildCommand, app.StartCommand); err != nil {
+		return nil, err
 	}
+	if err := validatePreviewVolumes(app.Volumes); err != nil {
+		return nil, err
+	}
+	magicDomain := config.Get().Domains.MagicDomain
+	previewDomain := generatePreviewDomain(app.Domain, magicDomain, app.Name, app.ProjectID, opts.PRNumber)
 	preview := &models.PRPreview{
 		ID:            uuid.NewString(),
 		ServiceID:     app.ID,

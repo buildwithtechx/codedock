@@ -11,10 +11,9 @@ import (
 	"github.com/docker/docker/api/types/container"
 	"github.com/docker/docker/pkg/stdcopy"
 
-	"codedock.run/codedock/internal/models"
-	"codedock.run/codedock/internal/utils"
+	"codedock/internal/models"
 
-	"codedock.run/codedock/internal/engine/compose"
+	"codedock/internal/engine/compose"
 )
 
 func (bm *BackupManager) RestoreBackup(ctx context.Context, recordID string) error {
@@ -59,12 +58,19 @@ func (bm *BackupManager) RestoreBackup(ctx context.Context, recordID string) err
 }
 
 func (bm *BackupManager) buildRestoreCommand(cfg *models.BackupConfig) (string, []string, error) {
+	if strings.TrimSpace(cfg.CustomRestoreCommand) != "" {
+		containerName, err := bm.serviceContainer(context.Background(), cfg.ServiceID)
+		if err != nil {
+			return "", nil, err
+		}
+		return containerName, splitShellCommand(cfg.CustomRestoreCommand), nil
+	}
 	if cfg.DatabaseID != "" {
 		db, err := bm.store.GetDatabase(cfg.DatabaseID)
 		if err != nil || db == nil {
 			return "", nil, fmt.Errorf("target database %s not found", cfg.DatabaseID)
 		}
-		containerName := utils.NormalizeContainerName(db.ID)
+		containerName := databaseContainerIdentity(db)
 		tmplMgr, err := compose.NewTemplateManager()
 		if err != nil {
 			return "", nil, fmt.Errorf("failed to init template manager: %v", err)

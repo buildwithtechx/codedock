@@ -1,12 +1,19 @@
-import { createFileRoute, Outlet } from '@tanstack/react-router';
+import { createFileRoute, Navigate, Outlet, useLocation } from '@tanstack/react-router';
 import { FaDiscord, FaGithub, FaXTwitter } from 'react-icons/fa6';
 import { OnboardingImport } from '#/features/auth';
+import { useGetSetupStatus } from '#/hooks/use-settings';
 import { useSystemStore } from '#/stores/system-store';
 
 export const Route = createFileRoute('/_auth')({ component: AuthLayout });
 
 function AuthLayout() {
   const siteName = useSystemStore((state) => state.siteName);
+  const { data: setupStatus, isLoading } = useGetSetupStatus();
+  const location = useLocation();
+
+  if (!isLoading && setupStatus?.data?.setupRequired && location.pathname !== '/signup') {
+    return <Navigate to="/signup" replace />;
+  }
 
   return (
     <main className="grid min-h-dvh bg-background text-foreground lg:grid-cols-[minmax(0,0.94fr)_minmax(34rem,1.06fr)]">
@@ -40,9 +47,9 @@ function AuthLayout() {
           />
           <div
             aria-hidden
-            className="absolute top-24 left-24 size-24 rounded-full bg-[#d8c7ff]/15"
+            className="absolute top-24 left-24 size-24 rounded-full bg-brand-soft/15"
           />
-          <p className="relative font-semibold text-[#d8c7ff] text-[10px] uppercase tracking-[0.18em]">
+          <p className="relative font-semibold text-[10px] text-brand-soft uppercase tracking-[0.18em]">
             Built for your stack
           </p>
           <h2 className="relative mt-5 max-w-sm font-bold text-4xl leading-[0.98] tracking-[-0.045em] xl:text-5xl">
@@ -56,7 +63,7 @@ function AuthLayout() {
           </p>
           <div className="relative mt-10 flex max-w-sm items-center gap-3">
             <span className="h-px flex-1 bg-white/25" />
-            <span className="size-2 rounded-full bg-[#d8c7ff] shadow-[0_0_18px_rgba(216,199,255,0.9)]" />
+            <span className="size-2 rounded-full bg-brand-soft shadow-[0_0_18px_rgba(216,199,255,0.9)]" />
             <span className="h-px flex-2 bg-white/15" />
           </div>
         </div>

@@ -1,18 +1,48 @@
-version: "3.8"
+x-codedock:
+  is_one_click: true
+  is_database: true
+  name: PostgreSQL + pgAdmin
+  description: A persistent PostgreSQL database with pgAdmin for browser-based administration and SQL queries.
+  category: database
+  icon: postgres
+  secrets:
+    - var: DB_PASSWORD
+      label: Database password
+      length: 24
+    - var: PGADMIN_PASSWORD
+      label: pgAdmin password
+      length: 24
 services:
+  pgadmin:
+    image: dpage/pgadmin4:9
+    restart: always
+    ports:
+      - "5050"
+    environment:
+      - PGADMIN_DEFAULT_EMAIL=admin@example.com
+      - PGADMIN_DEFAULT_PASSWORD=${secret:PGADMIN_PASSWORD}
+      - PGADMIN_DISABLE_POSTFIX=1
+      - PGADMIN_LISTEN_PORT=5050
+    depends_on:
+      - postgres
+    volumes:
+      - pgadmin-data:/var/lib/pgadmin
   postgres:
     image: postgres:16-alpine
-    x-codedock:
-      is_database: true
-      connection_string: "postgresql://${db.username}:${db.password}@${host}:${port}/${db.database_name}"
-      backup:
-        command: ["pg_dump", "-U", "${db.username}", "${db.database_name}"]
-        file_extension: ".sql"
-      restore:
-        command: ["psql", "-U", "${db.username}", "-d", "${db.database_name}"]
+    restart: always
+    ports:
+      - "5432"
     environment:
-      - POSTGRES_USER=${db.username}
-      - POSTGRES_PASSWORD=${db.password}
-      - POSTGRES_DB=${db.database_name}
+      - POSTGRES_USER=codedock
+      - POSTGRES_PASSWORD=${secret:DB_PASSWORD}
+      - POSTGRES_DB=app
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U codedock -d app"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
     volumes:
-      - pg-data:/var/lib/postgresql/data
+      - postgres-data:/var/lib/postgresql/data
+volumes:
+  postgres-data:
+  pgadmin-data:

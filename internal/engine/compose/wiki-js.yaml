@@ -1,0 +1,44 @@
+x-codedock:
+  is_one_click: true
+  name: Wiki.js
+  description: A powerful and extensible open source wiki software built on Node.js and PostgreSQL.
+  category: docs
+  icon: wiki-js
+  secrets:
+    - var: DB_PASSWORD
+      label: Database password
+      length: 24
+services:
+  wiki:
+    image: ghcr.io/requarks/wiki:2
+    restart: always
+    ports:
+      - "3000"
+    environment:
+      - DB_TYPE=postgres
+      - DB_HOST=wiki-db
+      - DB_PORT=5432
+      - DB_USER=wikijs
+      - DB_PASS=${secret:DB_PASSWORD}
+      - DB_NAME=wiki
+    depends_on:
+      - wiki-db
+    volumes:
+      - wiki-data:/wiki/data
+  wiki-db:
+    image: postgres:16-alpine
+    restart: always
+    environment:
+      - POSTGRES_DB=wiki
+      - POSTGRES_USER=wikijs
+      - POSTGRES_PASSWORD=${secret:DB_PASSWORD}
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U wikijs -d wiki"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+    volumes:
+      - wiki-db-data:/var/lib/postgresql/data
+volumes:
+  wiki-data:
+  wiki-db-data:

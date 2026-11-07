@@ -1,0 +1,307 @@
+import { Button } from '@codedock/ui/button';
+import { Check, ChevronLeft, ChevronRight, Copy, ExternalLink } from 'lucide-react';
+import { useCallback, useEffect, useRef, useState } from 'react';
+
+type ClientDefinition = {
+  id: string;
+  name: string;
+  icon: string;
+  color: string;
+  getSetup: (endpoint: string) => {
+    label: string;
+    code?: string;
+    steps?: string[];
+    note?: string;
+    deeplink?: string;
+    deeplinkText?: string;
+  };
+};
+
+function encodeConfig(config: Record<string, unknown>): string {
+  try {
+    return encodeURIComponent(btoa(JSON.stringify(config)));
+  } catch {
+    return '';
+  }
+}
+
+const CLIENTS: ClientDefinition[] = [
+  {
+    id: 'claude-code',
+    name: 'Claude Code',
+    icon: '/icons/claude.png',
+    color: '#CC785C',
+    getSetup: (e) => ({
+      label: 'Run command in your project directory',
+      code: `claude mcp add --transport ${e.endsWith('/sse') ? 'sse' : 'http'} codedock ${e}`,
+      note: 'Claude Code automatically prompts to authorize access in your browser on first command execution.',
+    }),
+  },
+  {
+    id: 'cursor',
+    name: 'Cursor',
+    icon: '/icons/cursor.png',
+    color: 'currentColor',
+    getSetup: (e) => ({
+      label: 'Add to ~/.cursor/mcp.json or Cursor Features Settings',
+      code: JSON.stringify({ mcpServers: { codedock: { url: e } } }, null, 2),
+      deeplink: `cursor://anysphere.cursor-deeplink/mcp/install?name=codedock&config=${encodeConfig({ url: e })}`,
+      deeplinkText: 'Install in Cursor',
+      note: 'Save the configuration and restart Cursor to activate Codedock tools in agent mode.',
+    }),
+  },
+  {
+    id: 'codex',
+    name: 'Codex',
+    icon: '/icons/openai.png',
+    color: '#10A37F',
+    getSetup: (e) => ({
+      label: 'Register server and authenticate',
+      code: `codex mcp add codedock --url ${e}\ncodex mcp login codedock`,
+      note: 'Registers Codedock across local Codex CLI and editor tools.',
+    }),
+  },
+  {
+    id: 'vscode',
+    name: 'VS Code',
+    icon: '/icons/copilot.png',
+    color: '#007ACC',
+    getSetup: (e) => ({
+      label: 'Register in VS Code terminal or .vscode/mcp.json',
+      code: `code --add-mcp '{"name":"codedock","type":"${e.endsWith('/sse') ? 'sse' : 'http'}","url":"${e}"}'`,
+      note: 'Works seamlessly with GitHub Copilot agent mode and MCP extensions.',
+    }),
+  },
+  {
+    id: 'claude-desktop',
+    name: 'Claude Desktop',
+    icon: '/icons/claude.png',
+    color: '#CC785C',
+    getSetup: (e) => ({
+      label: 'Add to claude_desktop_config.json',
+      code: JSON.stringify({ mcpServers: { codedock: { url: e } } }, null, 2),
+      steps: [
+        'Open Claude Desktop Settings → Developer or Connectors.',
+        'Click Edit Config to open claude_desktop_config.json.',
+        'Paste the JSON block below under mcpServers and restart Claude.',
+      ],
+      note: 'Requires Claude Desktop with MCP connector support enabled.',
+    }),
+  },
+  {
+    id: 'windsurf',
+    name: 'Windsurf',
+    icon: '/icons/windsurf.png',
+    color: '#09B6A2',
+    getSetup: (e) => ({
+      label: 'Add to ~/.codeium/windsurf/mcp_config.json',
+      code: JSON.stringify({ mcpServers: { codedock: { serverUrl: e } } }, null, 2),
+      note: 'Cascade AI in Windsurf can immediately query Codedock services and deployments.',
+    }),
+  },
+  {
+    id: 'zed',
+    name: 'Zed',
+    icon: '/icons/zed.png',
+    color: '#5970EA',
+    getSetup: (e) => ({
+      label: 'Add to Zed settings.json',
+      code: JSON.stringify(
+        {
+          context_servers: {
+            codedock: {
+              source: 'custom',
+              command: { path: 'npx', args: ['-y', 'mcp-remote', e] },
+            },
+          },
+        },
+        null,
+        2
+      ),
+      note: 'Bridges remote Codedock endpoints through mcp-remote in Zed.',
+    }),
+  },
+  {
+    id: 'generic',
+    name: 'Other',
+    icon: '/icons/mcp.png',
+    color: '#8B5CF6',
+    getSetup: (e) => ({
+      label: 'Universal MCP client configuration',
+      code: JSON.stringify({ mcpServers: { codedock: { url: e } } }, null, 2),
+      note: 'Compatible with any client supporting standard Model Context Protocol Streamable-HTTP or SSE transports.',
+    }),
+  },
+];
+
+export function McpClientSetup({ endpoint }: { endpoint: string }) {
+  const [selectedId, setSelectedId] = useState(CLIENTS[0].id);
+  const [copied, setCopied] = useState(false);
+  const tabsRef = useRef<HTMLDivElement>(null);
+  const [canScrollLeft, setCanScrollLeft] = useState(false);
+  const [canScrollRight, setCanScrollRight] = useState(false);
+
+  const checkScroll = useCallback(() => {
+    const el = tabsRef.current;
+    if (!el) return;
+    setCanScrollLeft(el.scrollLeft > 4);
+    setCanScrollRight(el.scrollLeft + el.clientWidth < el.scrollWidth - 4);
+  }, []);
+
+  useEffect(() => {
+    const el = tabsRef.current;
+    checkScroll();
+    window.addEventListener('resize', checkScroll);
+    const ro = typeof ResizeObserver !== 'undefined' ? new ResizeObserver(checkScroll) : null;
+    if (el && ro) ro.observe(el);
+    return () => {
+      window.removeEventListener('resize', checkScroll);
+      ro?.disconnect();
+    };
+  }, [checkScroll]);
+
+  const scrollTabs = (dir: 'left' | 'right') => {
+    tabsRef.current?.scrollBy({ left: dir === 'left' ? -200 : 200, behavior: 'smooth' });
+  };
+
+  const selectedClient = CLIENTS.find((c) => c.id === selectedId) || CLIENTS[0];
+  const setup = selectedClient.getSetup(endpoint);
+
+  const copyCode = async () => {
+    if (!setup.code) return;
+    await navigator.clipboard.writeText(setup.code);
+    setCopied(true);
+    setTimeout(() => setCopied(false), 2000);
+  };
+
+  return (
+    <div className="space-y-4">
+      <div>
+        <p className="mb-2 font-medium text-foreground text-xs">Add to your AI client</p>
+        <div className="group relative">
+          {canScrollLeft && (
+            <div className="absolute top-0 bottom-1 left-0 z-10 flex items-center bg-gradient-to-r from-card via-card/85 to-transparent pr-3">
+              <Button
+                type="button"
+                variant="outline"
+                size="icon"
+                onClick={() => scrollTabs('left')}
+                className="h-7 w-7 rounded-full bg-card shadow-sm hover:bg-accent"
+                aria-label="Scroll clients left"
+              >
+                <ChevronLeft className="h-3.5 w-3.5" />
+              </Button>
+            </div>
+          )}
+
+          <div
+            ref={tabsRef}
+            onScroll={checkScroll}
+            onWheel={(e) => {
+              if (Math.abs(e.deltaY) > Math.abs(e.deltaX)) {
+                e.currentTarget.scrollLeft += e.deltaY;
+              }
+            }}
+            className="scrollbar-none flex min-w-0 flex-nowrap items-center gap-1.5 overflow-x-auto scroll-smooth pb-1"
+          >
+            {CLIENTS.map((client) => {
+              const isActive = client.id === selectedId;
+              return (
+                <button
+                  key={client.id}
+                  type="button"
+                  onClick={() => setSelectedId(client.id)}
+                  className={`flex shrink-0 items-center gap-2 rounded-lg border px-3 py-1.5 font-medium text-xs transition-colors ${
+                    isActive
+                      ? 'border-primary/60 bg-primary/10 text-foreground'
+                      : 'border-border/60 text-muted-foreground hover:bg-muted/40 hover:text-foreground'
+                  }`}
+                >
+                  <span
+                    aria-hidden="true"
+                    className="inline-block size-4 shrink-0"
+                    style={{
+                      backgroundColor: client.color,
+                      maskImage: `url(${client.icon})`,
+                      WebkitMaskImage: `url(${client.icon})`,
+                      maskSize: 'contain',
+                      WebkitMaskSize: 'contain',
+                      maskRepeat: 'no-repeat',
+                      WebkitMaskRepeat: 'no-repeat',
+                      maskPosition: 'center',
+                      WebkitMaskPosition: 'center',
+                    }}
+                  />
+                  <span>{client.name}</span>
+                </button>
+              );
+            })}
+          </div>
+
+          {canScrollRight && (
+            <div className="absolute top-0 right-0 bottom-1 z-10 flex items-center bg-gradient-to-l from-card via-card/85 to-transparent pl-3">
+              <Button
+                type="button"
+                variant="outline"
+                size="icon"
+                onClick={() => scrollTabs('right')}
+                className="h-7 w-7 rounded-full bg-card shadow-sm hover:bg-accent"
+                aria-label="Scroll clients right"
+              >
+                <ChevronRight className="h-3.5 w-3.5" />
+              </Button>
+            </div>
+          )}
+        </div>
+      </div>
+
+      <div className="space-y-2">
+        <div className="flex items-center justify-between">
+          <p className="font-medium text-foreground text-xs">{setup.label}</p>
+          {setup.deeplink && (
+            <a
+              href={setup.deeplink}
+              className="inline-flex items-center gap-1 font-medium text-primary text-xs hover:underline"
+            >
+              {setup.deeplinkText}
+              <ExternalLink className="size-3" />
+            </a>
+          )}
+        </div>
+
+        {setup.steps && (
+          <ol className="list-decimal space-y-1.5 rounded-xl border border-border/50 bg-muted/20 py-3 ps-8 pe-4 text-muted-foreground text-xs leading-relaxed">
+            {setup.steps.map((step, i) => (
+              <li key={i}>{step}</li>
+            ))}
+          </ol>
+        )}
+
+        {setup.code && (
+          <div className="relative">
+            <pre className="overflow-x-auto rounded-xl border border-border/60 bg-muted/30 p-3.5 pe-14 font-mono text-xs leading-relaxed">
+              {setup.code}
+            </pre>
+            <Button
+              variant="ghost"
+              size="icon"
+              onClick={copyCode}
+              className="absolute top-2 right-2 size-7 text-muted-foreground hover:text-foreground"
+              aria-label="Copy code"
+            >
+              {copied ? (
+                <Check className="size-3.5 text-emerald-500" />
+              ) : (
+                <Copy className="size-3.5" />
+              )}
+            </Button>
+          </div>
+        )}
+
+        {setup.note && (
+          <p className="text-muted-foreground text-xs leading-relaxed">{setup.note}</p>
+        )}
+      </div>
+    </div>
+  );
+}

@@ -8,9 +8,9 @@ import (
 
 	"github.com/google/uuid"
 
-	"codedock.run/codedock/internal/config"
-	"codedock.run/codedock/internal/models"
-	"codedock.run/codedock/internal/utils"
+	"codedock/internal/config"
+	"codedock/internal/models"
+	"codedock/internal/utils"
 )
 
 func isEmailEnabled(cfg *models.NotificationSettings) bool {

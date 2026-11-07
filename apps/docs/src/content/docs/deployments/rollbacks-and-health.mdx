@@ -1,0 +1,62 @@
+---
+title: Rollbacks & Attention Health
+description: Rollback capacity retention, instant recovery, and resource attention issues.
+---
+
+import { Tabs, TabItem, Aside, Steps, Badge } from "@astrojs/starlight/components";
+
+Codedock is designed for resilient operations, combining zero-downtime instant rollbacks with automated **Attention Health** diagnostics that actively monitor container crash loops, resource exhaustion, and Out-Of-Memory (OOM) events.
+
+## Zero-Downtime Rollbacks
+
+When a new code deployment introduces an unexpected bug or regression, you can revert to a known-good release version instantly:
+
+<Steps>
+1. Open your Service and navigate to the **Deployments** tab.
+2. Locate the previous successful deployment.
+3. Click **Rollback to this Release** (or trigger via `POST /api/deployments/:id/rollback`).
+4. Codedock switches Traefik ingress traffic to the previous image snapshot and starts the healthy container before stopping the faulty version, ensuring zero downtime.
+</Steps>
+
+## Rollback Retention Policies
+
+To ensure rollback images remain available without exhausting host disk space, Codedock provides granular **Rollback Retention Settings**:
+
+<Tabs>
+  <TabItem label="Retention Period" icon="seti:clock">
+    Configure `rollback_retention_days` (e.g. 7, 14, or 30 days). Obsolete images older than this threshold are automatically pruned during scheduled maintenance sweeps.
+  </TabItem>
+  <TabItem label="Capacity Cap" icon="seti:folder">
+    Set a maximum number of historical image versions retained per service. Check current storage consumption anytime via `GET /api/projects/:id/rollback-capacity`.
+  </TabItem>
+  <TabItem label="Pinned Deployments" icon="star">
+    Lock critical stable releases by clicking **Pin Deployment** (`POST /api/deployments/:id/pin`). Pinned deployments are permanently exempted from automatic pruning.
+  </TabItem>
+</Tabs>
+
+## Attention Issues & Health Diagnostics
+
+Codedock's health detection engine (`attention_issues`) analyzes container runtime events and flags potential operational issues before they lead to outages:
+
+```
+┌────────────────────────────────────────────────────────┐
+│                   Attention Dashboard                  │
+├───────────────────┬──────────────┬─────────────────────┤
+│ Issue Type        │ Service      │ Diagnostic Details  │
+├───────────────────┼──────────────┼─────────────────────┤
+│ OOMKilled         │ api-server   │ Memory limit 512MB  │
+│ CrashLoopBackOff  │ payment-svc  │ Exit code 137       │
+│ DiskPressure      │ worker-01    │ Storage above 85%   │
+└───────────────────┴──────────────┴─────────────────────┘
+```
+
+### Detected Conditions
+
+- **Out-Of-Memory (OOM) Crashes**: Detects when Linux kills a container due to memory starvation (`State.OOMKilled`). Codedock alerts you with the exact memory ceiling and recommends increased allocations.
+- **Crash Loops**: Identifies containers that exit repeatedly with non-zero exit codes within a short timeframe, linking directly to container crash logs.
+- **Resource Saturation**: Warns when CPU throttling or disk I/O bottlenecks cause latency spikes in web requests.
+- **Ingress Misconfigurations**: Highlights services whose exposed ports do not match container listening ports.
+
+<Aside type="caution" title="Automated Alert Routing">
+Attention issues can be routed directly to your mobile phone or team chat channels via **Server Settings → Notifications → Resource Attention**.
+</Aside>

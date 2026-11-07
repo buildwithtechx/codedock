@@ -36,6 +36,20 @@ Other software can be deployed as application containers with explicit configura
 
 The API uses `POST /api/databases`. See [database API fields](/reference/api-databases/).
 
+## High Availability & Read Replicas (K3s Scaling)
+
+On Kubernetes and K3s-managed nodes, databases support stateful cluster scaling:
+
+1. **Quick Scale Profiles**:
+   - **Solo (1 instance)**: Standard standalone primary instance.
+   - **Pair (2 instances)**: Primary writer with 1 synchronous or asynchronous streaming read replica.
+   - **HA (3 instances)**: Quorum-backed high availability cluster with automatic leader election and failover.
+2. **Read-Only Splitting**:
+   - When scaled to 2 or more instances, Codedock automatically provisions `<service>-ro` read-only Kubernetes services.
+   - Connected application services receive `DATABASE_READ_URL` and `DATABASE_READ_HOST` environment variables alongside the primary writer credentials.
+3. **Reviewed Scaling Plan**:
+   - Every topology or scale adjustment generates a deterministic snapshot plan hash, allowing operators to inspect member roles, replicas, and storage allocations before executing.
+
 ## Connect an application
 
 Copy the connection values from the database resource into the application's variables. Use a hostname and port reachable from that application, and keep credentials in secret settings. Do not assume creation injects the correct connection string into every service.

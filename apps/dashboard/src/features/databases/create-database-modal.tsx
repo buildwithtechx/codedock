@@ -1,27 +1,22 @@
 import { zodResolver } from '@hookform/resolvers/zod';
 import { useMutation, useQueryClient } from '@tanstack/react-query';
+import { Database } from 'lucide-react';
 import { useForm } from 'react-hook-form';
 import { toast } from 'sonner';
 import { z } from 'zod';
-import { Button } from '#/components/ui/button';
+import { Button } from '@codedock/ui/button';
 import {
   Dialog,
   DialogContent,
   DialogDescription,
   DialogHeader,
   DialogTitle,
-} from '#/components/ui/dialog';
-import { Input } from '#/components/ui/input';
-import { Label } from '#/components/ui/label';
-import {
-  Select,
-  SelectContent,
-  SelectItem,
-  SelectTrigger,
-  SelectValue,
-} from '#/components/ui/select';
-import { Switch } from '#/components/ui/switch';
-import type { CreateDatabaseResponse, DatabaseEngine } from '#/features/databases';
+} from '@codedock/ui/dialog';
+import { Input } from '@codedock/ui/input';
+import { Label } from '@codedock/ui/label';
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@codedock/ui/select';
+import { Switch } from '@codedock/ui/switch';
+import type { CreateDatabaseResponse, DatabaseEngine } from '#/interfaces/databases';
 import { apiClient } from '#/lib/api-client';
 
 const engines: { label: string; value: DatabaseEngine }[] = [
@@ -115,7 +110,7 @@ export function CreateDatabaseModal({
   return (
     <Dialog open={isOpen} onOpenChange={onOpenChange}>
       <DialogContent className="max-h-[80vh] overflow-y-auto sm:max-w-md">
-        <DialogHeader>
+        <DialogHeader icon={Database}>
           <DialogTitle>Provision Database</DialogTitle>
           <DialogDescription>Select a database engine to spin up a new instance.</DialogDescription>
         </DialogHeader>

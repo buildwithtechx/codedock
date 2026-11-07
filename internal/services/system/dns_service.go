@@ -5,8 +5,8 @@ import (
 	"fmt"
 	"log/slog"
 
-	"codedock.run/codedock/internal/models"
-	"codedock.run/codedock/internal/repositories"
+	"codedock/internal/models"
+	"codedock/internal/repositories"
 )
 
 type DNSService struct {

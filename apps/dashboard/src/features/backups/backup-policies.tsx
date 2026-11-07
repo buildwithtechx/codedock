@@ -1,18 +1,23 @@
-import { Clock, Database, Loader2, Play, Shield, Trash2 } from 'lucide-react';
+import {
+  BookOpen,
+  Clock,
+  Database,
+  ExternalLink,
+  Loader2,
+  Play,
+  Shield,
+  Trash2,
+} from 'lucide-react';
 import { useState } from 'react';
 import { toast } from 'sonner';
-import { Button } from '#/components/ui/button';
-import { Switch } from '#/components/ui/switch';
-import {
-  Table,
-  TableBody,
-  TableCell,
-  TableHead,
-  TableHeader,
-  TableRow,
-} from '#/components/ui/table';
-import { useDelete, useTrigger, useUpdate } from '#/features/backups';
-import type { BackupConfig } from './interfaces';
+import { Button } from '@codedock/ui/button';
+import { Checkbox } from '@codedock/ui/checkbox';
+import { Switch } from '@codedock/ui/switch';
+import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@codedock/ui/table';
+import { useDelete, useTrigger, useUpdate } from '#/hooks/use-backups';
+import type { BackupConfig } from '#/interfaces/backups';
+
+const DOCS_URL = 'https://docs.codedock.run';
 
 type BackupPoliciesProps = {
   configs: BackupConfig[];
@@ -88,6 +93,13 @@ export function BackupPolicies({ configs, isLoading }: BackupPoliciesProps) {
           <p className="mt-1 text-xs">
             Policies define automated cron schedules and retention periods for databases.
           </p>
+          <Button asChild size="sm" variant="secondary" className="mt-4">
+            <a href={DOCS_URL} target="_blank" rel="noopener noreferrer">
+              <BookOpen className="size-3.5" />
+              Docs
+              <ExternalLink className="size-3 opacity-60" />
+            </a>
+          </Button>
         </div>
       ) : (
         <div className="overflow-x-auto">
@@ -137,6 +149,24 @@ export function BackupPolicies({ configs, isLoading }: BackupPoliciesProps) {
                       onCheckedChange={() => handleToggleEnabled(config)}
                       aria-label="Toggle policy"
                     />
+                    <label
+                      htmlFor={`pre-deploy-${config.id}`}
+                      className="mt-2 flex items-center gap-2 text-xs"
+                    >
+                      <Checkbox
+                        id={`pre-deploy-${config.id}`}
+                        checked={config.preDeployment ?? false}
+                        disabled={!config.projectId || updateBackup.isPending}
+                        onCheckedChange={(checked) =>
+                          updateBackup.mutate({
+                            id: config.id,
+                            payload: { ...config, preDeployment: checked === true },
+                          })
+                        }
+                        aria-label="Require verified backup before deployment"
+                      />
+                      Require verified backup before deployment
+                    </label>
                   </TableCell>
                   <TableCell className="text-right">
                     <div className="flex items-center justify-end gap-1.5">

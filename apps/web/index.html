@@ -1,0 +1,29 @@
+<!doctype html>
+<html lang="en" class="dark">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <meta
+      name="description"
+      content="The open-source Heroku & Vercel alternative. Deploy apps, databases, backups, and services to your own server with zero vendor lock-in."
+    />
+    <meta name="theme-color" content="#0a0a0f" />
+    <link rel="icon" type="image/svg+xml" href="/favicon.svg" />
+    <link rel="icon" href="/favicon.ico" />
+    <title>Codedock — Ship fast, own your infrastructure</title>
+    <script>
+      try {
+        var stored = localStorage.getItem('codedock-theme') || 'dark';
+        var theme = stored === 'system' ? (matchMedia('(prefers-color-scheme: dark)').matches ? 'dark' : 'light') : stored;
+        document.documentElement.classList.remove('light', 'dark');
+        document.documentElement.classList.add(theme);
+      } catch {
+        document.documentElement.classList.add('dark');
+      }
+    </script>
+  </head>
+  <body class="min-h-screen overflow-x-hidden bg-background font-sans text-foreground antialiased">
+    <div id="root"></div>
+    <script type="module" src="/src/main.tsx"></script>
+  </body>
+</html>

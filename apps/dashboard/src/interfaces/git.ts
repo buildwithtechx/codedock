@@ -27,6 +27,39 @@ export interface ConnectGitRequest {
   accountName?: string;
 }
 
+export interface RepoTreeEntry {
+  path: string;
+  type: string;
+}
+
+export interface MonorepoCandidateApp {
+  name: string;
+  rootDirectory: string;
+  framework: string;
+  internalPort: number;
+  buildEngine: string;
+  packageManager?: string;
+  installCommand?: string;
+  buildCommand?: string;
+  startCommand?: string;
+  dockerfilePath?: string;
+}
+
+export interface RepositoryInspection {
+  framework: string;
+  packageManager: string;
+  installCommand: string;
+  buildCommand: string;
+  startCommand: string;
+  internalPort: number;
+  staticOutput: string;
+  buildEngine: string;
+  dockerfilePath: string;
+  warnings: string[];
+  candidateApps?: MonorepoCandidateApp[];
+  isMonorepo?: boolean;
+}
+
 export type GetGitStatusResponse = BaseResponse<GitStatus[]>;
 export type ListGitReposResponse = BaseResponse<GitRepo[]>;
 export type ListGitBranchesResponse = BaseResponse<GitBranch[]>;

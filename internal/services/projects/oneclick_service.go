@@ -3,34 +3,31 @@ package projects
 import (
 	"context"
 	"errors"
-	"time"
+	"sort"
+	"strings"
 
 	"github.com/google/uuid"
 
-	"codedock.run/codedock/internal/engine/compose"
-	"codedock.run/codedock/internal/engine/deploy"
-	"codedock.run/codedock/internal/models"
-	"codedock.run/codedock/internal/repositories"
+	"codedock/internal/engine/compose"
+	"codedock/internal/models"
+	"codedock/internal/repositories"
 )
 
 type OneClickService struct {
 	tmplManager *compose.TemplateManager
-	dbDeployer  *deploy.DatabaseDeployer
+	stacks      *ComposeStackService
 	envRepo     repositories.EnvironmentRepository
-	dbRepo      repositories.DatabaseRepository
 }
 
 func NewOneClickService(
 	tm *compose.TemplateManager,
-	dd *deploy.DatabaseDeployer,
+	stacks *ComposeStackService,
 	er repositories.EnvironmentRepository,
-	dr repositories.DatabaseRepository,
 ) *OneClickService {
 	return &OneClickService{
 		tmplManager: tm,
-		dbDeployer:  dd,
+		stacks:      stacks,
 		envRepo:     er,
-		dbRepo:      dr,
 	}
 }
 
@@ -41,139 +38,181 @@ func (s *OneClickService) ListApps() []models.OneClickApp {
 		if err != nil {
 			continue
 		}
-		app := extractOneClickApp(id, &tmpl)
-		if app != nil {
+		if app := extractOneClickApp(id, &tmpl); app != nil {
 			apps = append(apps, *app)
 		}
 	}
+	sort.Slice(apps, func(i, j int) bool { return apps[i].Name < apps[j].Name })
 	return apps
 }
 
-func (s *OneClickService) DeployApp(ctx context.Context, appID, projectID, name string) (*models.Database, error) {
+func (s *OneClickService) GetApp(appID string) (*models.OneClickApp, error) {
 	tmpl, err := s.tmplManager.GetTemplate(appID)
 	if err != nil {
 		return nil, errors.New("unknown app: " + appID)
 	}
-
-	meta := findOneClickMetadata(&tmpl)
-	if meta == nil {
+	app := extractOneClickApp(appID, &tmpl)
+	if app == nil {
 		return nil, errors.New("app has no one-click metadata")
 	}
-
-	if projectID == "" {
-		return nil, errors.New("projectId is required")
-	}
-
-	envs, err := s.envRepo.ListByProject(ctx, projectID)
-	if err != nil || len(envs) == 0 {
-		return nil, errors.New("project has no environments")
-	}
-
-	appName := name
-	if appName == "" {
-		appName = meta.Name
-	}
-
-	db := buildDatabaseRecord(projectID, envs[0].ID, appID, appName, extractPort(&tmpl))
-	db.Password = uuid.New().String()[:16]
-
-	if err := s.dbRepo.Create(ctx, db); err != nil {
-		return nil, err
-	}
-
-	if s.dbDeployer == nil {
-		return db, nil
-	}
-
-	containerID, err := s.dbDeployer.SpinUp(ctx, db)
-	if err != nil {
-		db.Status = models.DatabaseStatusError
-		_ = s.dbRepo.Update(ctx, db)
-		return nil, err
-	}
-
-	db.ContainerID = containerID
-	db.Status = models.DatabaseStatusRunning
-	_ = s.dbRepo.Update(ctx, db)
-	return db, nil
+	return app, nil
 }
 
-func extractOneClickApp(id string, tmpl *compose.ComposeTemplate) *models.OneClickApp {
-	if tmpl.XCodedock != nil && tmpl.XCodedock.IsOneClick {
-		return &models.OneClickApp{
-			ID:          id,
-			Name:        tmpl.XCodedock.Name,
-			Description: tmpl.XCodedock.Description,
-			Port:        extractPort(tmpl),
-		}
+func (s *OneClickService) AddCustomApp(tmpl compose.ComposeTemplate) (*models.OneClickApp, error) {
+	if tmpl.XCodedock == nil {
+		tmpl.XCodedock = &compose.CodedockMetadata{}
 	}
-	for _, svc := range tmpl.Services {
-		if svc.XCodedock != nil && svc.XCodedock.IsOneClick {
-			return &models.OneClickApp{
-				ID:          id,
-				Name:        svc.XCodedock.Name,
-				Description: svc.XCodedock.Description,
-				Port:        parsePortFromString(svc.Ports),
-			}
-		}
-	}
-	return nil
-}
-
-func findOneClickMetadata(tmpl *compose.ComposeTemplate) *compose.CodedockMetadata {
-	if tmpl.XCodedock != nil && tmpl.XCodedock.IsOneClick {
-		return tmpl.XCodedock
-	}
-	for _, svc := range tmpl.Services {
-		if svc.XCodedock != nil && svc.XCodedock.IsOneClick {
-			return svc.XCodedock
-		}
-	}
-	return nil
-}
-
-func extractPort(tmpl *compose.ComposeTemplate) int {
-	for _, svc := range tmpl.Services {
-		if svc.XCodedock != nil && svc.XCodedock.IsOneClick && len(svc.Ports) > 0 {
-			return parsePortFromString(svc.Ports)
-		}
-		if tmpl.XCodedock != nil && tmpl.XCodedock.IsOneClick && len(svc.Ports) > 0 {
-			return parsePortFromString(svc.Ports)
-		}
-	}
-	return 3000
-}
-
-func parsePortFromString(ports []string) int {
-	if len(ports) == 0 {
-		return 3000
-	}
-	var p int
-	for _, c := range ports[0] {
-		if c >= '0' && c <= '9' {
-			p = p*10 + int(c-'0')
-		} else {
+	tmpl.XCodedock.IsOneClick = true
+	tmpl.XCodedock.Verified = false
+	if tmpl.XCodedock.Name == "" {
+		for name := range tmpl.Services {
+			tmpl.XCodedock.Name = name
 			break
 		}
 	}
-	if p <= 0 {
-		return 3000
+	if tmpl.XCodedock.Name == "" {
+		return nil, errors.New("custom app must define a name or at least one service")
 	}
-	return p
+	id := strings.ToLower(strings.ReplaceAll(tmpl.XCodedock.Name, " ", "-"))
+	if tmpl.XCodedock.Category == "" {
+		tmpl.XCodedock.Category = "other"
+	}
+	s.tmplManager.AddTemplate(id, tmpl)
+	app := extractOneClickApp(id, &tmpl)
+	return app, nil
 }
 
-func buildDatabaseRecord(projectID, envID, engineID, name string, port int) *models.Database {
-	return &models.Database{
+func (s *OneClickService) RemoveCustomApp(id string) error {
+	s.tmplManager.DeleteTemplate(id)
+	return nil
+}
+
+func (s *OneClickService) ReviewInstall(_ context.Context, input models.InstallAppInput) (*models.InstallPreview, error) {
+	tmpl, err := s.tmplManager.GetTemplate(input.AppID)
+	if err != nil {
+		return nil, errors.New("unknown app: " + input.AppID)
+	}
+	if findOneClickMetadata(&tmpl) == nil {
+		return nil, errors.New("app has no one-click metadata")
+	}
+	plan, err := compose.ResolveInstallPlan(input.AppID, tmpl, installRequest(input), nil)
+	if err != nil {
+		return nil, err
+	}
+	return previewInstall(input.AppID, plan.Masked()), nil
+}
+
+func (s *OneClickService) InstallApp(ctx context.Context, input models.InstallAppInput) (*models.AppInstallResult, error) {
+	tmpl, err := s.tmplManager.GetTemplate(input.AppID)
+	if err != nil {
+		return nil, errors.New("unknown app: " + input.AppID)
+	}
+	if findOneClickMetadata(&tmpl) == nil {
+		return nil, errors.New("app has no one-click metadata")
+	}
+	if input.ProjectID == "" {
+		return nil, errors.New("projectId is required")
+	}
+	envID, err := s.resolveEnvironment(ctx, input.ProjectID, input.EnvironmentID)
+	if err != nil {
+		return nil, err
+	}
+	plan, err := compose.ResolveInstallPlan(input.AppID, tmpl, installRequest(input), nil)
+	if err != nil {
+		return nil, err
+	}
+	if input.Digest != "" && input.Digest != plan.Digest {
+		return nil, errors.New("install inputs changed since review; review again before installing")
+	}
+	return s.installStack(ctx, input, envID, plan)
+}
+
+func (s *OneClickService) resolveEnvironment(ctx context.Context, projectID, environmentID string) (string, error) {
+	envs, err := s.envRepo.ListByProject(ctx, projectID)
+	if err != nil || len(envs) == 0 {
+		return "", errors.New("project has no environments")
+	}
+	if environmentID == "" {
+		return envs[0].ID, nil
+	}
+	for _, env := range envs {
+		if env.ID == environmentID {
+			return env.ID, nil
+		}
+	}
+	return "", errors.New("environment does not belong to project")
+}
+
+func (s *OneClickService) installStack(ctx context.Context, input models.InstallAppInput, envID string, plan *compose.InstallPlan) (*models.AppInstallResult, error) {
+	if s.stacks == nil {
+		return nil, errors.New("stack installer is unavailable")
+	}
+	appName := input.Name
+	if appName == "" {
+		appName = input.AppID
+	}
+	request := models.ComposeStackRequest{
 		ID:            uuid.New().String(),
-		ProjectID:     projectID,
 		EnvironmentID: envID,
-		Name:          name,
-		Engine:        models.DatabaseEngine(engineID),
-		Port:          port,
-		Status:        models.DatabaseStatusCreated,
-		Username:      "codedock",
-		DatabaseName:  "codedock",
-		CreatedAt:     time.Now(),
-		UpdatedAt:     time.Now(),
+		Name:          appName,
+		Content:       plan.ComposeYAML,
+		Revision:      0,
+	}
+	review, err := s.stacks.Review(ctx, request)
+	if err != nil {
+		return nil, err
+	}
+	request.Digest = review.Digest
+	stack, err := s.stacks.Save(ctx, input.ProjectID, request)
+	if err != nil {
+		return nil, err
+	}
+	if err := s.stacks.Deploy(ctx, input.ProjectID, stack.ID); err != nil {
+		return nil, err
+	}
+	return &models.AppInstallResult{Kind: "stack", Stack: stack}, nil
+}
+
+func installRequest(input models.InstallAppInput) compose.InstallRequest {
+	name := input.Name
+	if name == "" {
+		name = input.AppID
+	}
+	return compose.InstallRequest{
+		Name:        name,
+		Secrets:     input.Secrets,
+		Environment: input.Environment,
+		HostPort:    input.HostPort,
+		Domain:      input.Domain,
+	}
+}
+
+func previewInstall(appID string, plan *compose.InstallPlan) *models.InstallPreview {
+	services := make([]models.InstallPreviewService, 0, len(plan.Services))
+	for _, service := range plan.Services {
+		services = append(services, models.InstallPreviewService{
+			Service: service.Service,
+			Image:   service.Image,
+			Env:     service.Env,
+			Ports:   service.Ports,
+		})
+	}
+	volumes := make([]models.InstallPreviewVolume, 0, len(plan.Volumes))
+	for _, volume := range plan.Volumes {
+		volumes = append(volumes, models.InstallPreviewVolume{
+			Service: volume.Service,
+			Name:    volume.Name,
+			Target:  volume.Target,
+		})
+	}
+	return &models.InstallPreview{
+		AppID:            appID,
+		Name:             plan.Name,
+		Services:         services,
+		Volumes:          volumes,
+		GeneratedSecrets: plan.GeneratedSecrets,
+		ComposeYAML:      plan.ComposeYAML,
+		Digest:           plan.Digest,
+		Kind:             "stack",
 	}
 }

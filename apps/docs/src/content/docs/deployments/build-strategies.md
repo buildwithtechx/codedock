@@ -26,6 +26,15 @@ COPY . .
 CMD ["node", "index.js"]
 ```
 
+## Monorepo Detection & Multi-Service Repositories
+
+When connecting a monorepo containing multiple applications (such as Turborepo, Nx, pnpm workspaces, or Cargo workspaces):
+
+1. **Candidate App Detection**: Codedock inspects workspace manifests (`package.json`, `pnpm-workspace.yaml`, `turbo.json`, `Cargo.toml`, `go.work`) and subdirectories (`apps/*`, `packages/*`, `services/*`).
+2. **Interactive App Selection**: The deployment wizard displays checkboxes for all discovered candidate apps, letting you deploy individual packages or all of them simultaneously.
+3. **Repository Path Browser**: Navigate repository subdirectories or pick Dockerfile locations directly from a live interactive repository tree browser without guessing relative paths.
+4. **Smart Push Admission**: Only commits touching a service's root directory or global workspace manifests trigger rebuilds; unrelated workspace commits are skipped automatically.
+
 ## Nixpacks and Railpack selection
 
 The builder currently invokes `nixpacks build /app --name IMAGE`. Service install, build and start overrides become `--install-cmd`, `--build-cmd` and `--start-cmd`. Environment variables are passed using `--env`.

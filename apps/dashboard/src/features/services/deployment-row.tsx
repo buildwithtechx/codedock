@@ -1,6 +1,6 @@
 import { formatDistanceToNow } from 'date-fns';
-import { Badge } from '#/components/ui/badge';
-import { Card, CardContent } from '#/components/ui/card';
+import { Badge } from '@codedock/ui/badge';
+import { Card, CardContent } from '@codedock/ui/card';
 
 export interface Deployment {
   id: string;

@@ -5,7 +5,7 @@ import (
 	"fmt"
 	"strings"
 
-	"codedock.run/codedock/internal/models"
+	"codedock/internal/models"
 )
 
 func BuildMiddlewareLabels(serviceName string, rules []*models.RouteRule) map[string]string {
