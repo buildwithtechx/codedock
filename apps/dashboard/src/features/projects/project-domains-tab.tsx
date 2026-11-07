@@ -9,10 +9,11 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@
 import { useCreateDomain, useDeleteDomain, useVerifyDomain } from '#/hooks/use-dns';
 import { useGetSettings } from '#/hooks/use-settings';
 import { useListByProject as useListAppsByProject } from '#/hooks/use-apps';
-import { useListProjectDomains } from '#/hooks/use-projects';
+import { useGetProject, useListProjectDomains } from '#/hooks/use-projects';
 import { ProjectDomainsList } from './project-domains-list';
 
 export function ProjectDomainsTab({ projectId }: { projectId: string }) {
+  const { data: projectRes } = useGetProject(projectId);
   const {
     data: domainsRes,
     isLoading: domainsLoading,
@@ -201,6 +202,7 @@ export function ProjectDomainsTab({ projectId }: { projectId: string }) {
             <ProjectDomainsList
               domains={domains}
               projectId={projectId}
+              serverId={projectRes?.data?.serverId}
               verifyingId={verifyingId}
               onVerify={handleVerify}
               onDelete={handleDelete}

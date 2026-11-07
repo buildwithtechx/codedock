@@ -15,7 +15,7 @@ export const Route = createFileRoute('/_dashboard/projects/$projectId/settings')
 
 function SettingsRouteComponent() {
   const { projectId } = Route.useParams();
-  const { data: projectResponse } = useGetProject(projectId);
+  const { data: projectResponse, isError, error, refetch } = useGetProject(projectId);
   const [deleteOpen, setDeleteOpen] = useState(false);
 
   const project = projectResponse?.data;
@@ -23,6 +23,26 @@ function SettingsRouteComponent() {
   return (
     <div className="mx-auto flex w-full max-w-5xl flex-col gap-6">
       <h1 className="font-bold text-2xl">Project Settings</h1>
+
+      {isError && (
+        <div
+          role="alert"
+          className="flex items-center justify-between rounded-xl border border-destructive/30 bg-destructive/10 p-4 text-destructive text-sm"
+        >
+          <span>
+            Failed to load project details:{' '}
+            {error instanceof Error ? error.message : 'Unknown error'}
+          </span>
+          <Button
+            size="sm"
+            variant="outline"
+            onClick={() => void refetch()}
+            className="h-8 text-xs"
+          >
+            Retry
+          </Button>
+        </div>
+      )}
 
       <div className="grid grid-cols-1 gap-6">
         <section className="rounded-2xl border border-border/50 bg-card p-6 shadow-xs">

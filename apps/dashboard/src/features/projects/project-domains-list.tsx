@@ -19,6 +19,7 @@ import { DomainIngressSettings } from '#/features/ingress/domain-ingress-setting
 interface ProjectDomainsListProps {
   domains: DomainBase[];
   projectId: string;
+  serverId?: string;
   verifyingId: string | null;
   onVerify: (id: string) => void;
   onDelete: (id: string) => void;
@@ -29,6 +30,7 @@ interface ProjectDomainsListProps {
 export function ProjectDomainsList({
   domains,
   projectId,
+  serverId,
   verifyingId,
   onVerify,
   onDelete,
@@ -92,7 +94,7 @@ export function ProjectDomainsList({
 
         <div className="flex items-center gap-2">
           <RouteProtectionButton hostname={dom.domainName} projectId={projectId} />
-          <DomainIngressSettings domainId={dom.id} hostname={dom.domainName} />
+          <DomainIngressSettings domainId={dom.id} hostname={dom.domainName} serverId={serverId} />
           <Button
             variant="outline"
             size="sm"

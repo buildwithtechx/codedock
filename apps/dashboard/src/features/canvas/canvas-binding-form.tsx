@@ -95,7 +95,6 @@ export function CanvasBindingForm({ canvas }: { canvas: OperationalCanvas }) {
       : ['DATABASE_URL'];
     const defaultKey = availableKeys[0] ?? 'DATABASE_URL';
     setSourceKey(defaultKey);
-    setKey(defaultKey);
   };
 
   const save = useMutation({

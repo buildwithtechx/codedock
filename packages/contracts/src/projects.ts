@@ -33,6 +33,7 @@ export interface ProjectConfig {
   id: string;
   name: string;
   description?: string;
+  serverId?: string;
   defaultRollbackStrategy?: 'snapshot' | 'git';
   rollbackWindow?: number | null;
   snapshotSizeBytes?: number | null;

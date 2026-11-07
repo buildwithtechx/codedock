@@ -22,7 +22,13 @@ export function parseGitUrl(raw: string): PendingImport | null {
     const repo = (repoRaw ?? '').replace(/\.git$/, '');
     if (!owner || !repo) return null;
     if (!/^[A-Za-z0-9_.-]+$/.test(owner) || !/^[A-Za-z0-9_.-]+$/.test(repo)) return null;
-    return { repositoryUrl: `https://${parsed.host}/${owner}/${repo}`, branch: 'main', name: repo };
+    const hasGitSuffix = (repoRaw ?? '').endsWith('.git');
+    const suffix = hasGitSuffix ? '.git' : '';
+    return {
+      repositoryUrl: `${parsed.protocol}//${parsed.host}/${owner}/${repo}${suffix}`,
+      branch: 'main',
+      name: repo,
+    };
   } catch {
     return null;
   }

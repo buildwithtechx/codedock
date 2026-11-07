@@ -57,7 +57,10 @@ export function ProjectGitRepoDialog({
           <DialogDescription>{description}</DialogDescription>
         </DialogHeader>
         {isStatusError && (
-          <div className="flex items-center justify-between rounded-lg border border-destructive/30 bg-destructive/10 p-3 text-destructive text-xs">
+          <div
+            role="alert"
+            className="flex items-center justify-between rounded-lg border border-destructive/30 bg-destructive/10 p-3 text-destructive text-xs"
+          >
             <span>Failed to load connected Git accounts.</span>
             <Button
               size="sm"
@@ -97,7 +100,10 @@ export function ProjectGitRepoDialog({
         )}
         <div className="max-h-72 overflow-y-auto rounded-xl border border-border/60">
           {isReposError ? (
-            <div className="flex flex-col items-center justify-center gap-2 p-6 text-center text-sm">
+            <div
+              role="alert"
+              className="flex flex-col items-center justify-center gap-2 p-6 text-center text-sm"
+            >
               <p className="text-destructive">Failed to load repositories for this account.</p>
               <Button
                 size="sm"

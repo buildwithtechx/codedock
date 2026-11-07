@@ -62,19 +62,19 @@ export const ingressService = {
     return res.data ?? null;
   },
 
-  bindDomain: async (input: IngressDomainInput): Promise<IngressHostname> => {
-    const res = await apiClient.put<{ data: IngressHostname }>(
+  bindDomain: async (input: IngressDomainInput): Promise<IngressHostname | null> => {
+    const res = await apiClient.put<{ data: IngressHostname | null }>(
       `/dns/ingress/domains/${encodeURIComponent(input.domainId)}`,
       { connectionId: input.connectionId, accessPolicyId: input.accessPolicyId }
     );
-    return res.data;
+    return res.data ?? null;
   },
 
-  setDomain: async (input: IngressDomainInput): Promise<IngressHostname> => {
-    const res = await apiClient.put<{ data: IngressHostname }>(
+  setDomain: async (input: IngressDomainInput): Promise<IngressHostname | null> => {
+    const res = await apiClient.put<{ data: IngressHostname | null }>(
       `/dns/ingress/domains/${encodeURIComponent(input.domainId)}`,
       { connectionId: input.connectionId, accessPolicyId: input.accessPolicyId }
     );
-    return res.data;
+    return res.data ?? null;
   },
 };
