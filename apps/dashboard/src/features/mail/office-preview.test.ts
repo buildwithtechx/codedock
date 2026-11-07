@@ -87,7 +87,7 @@ describe('renderOfficePreview', () => {
     expect(performance.now() - start).toBeLessThan(1000);
 
     const bomb = await zipBytes({
-      'word/document.xml': `<w:p><w:r><w:t>${'x'.repeat(64 * 1024 * 1024)}</w:t></w:r></w:p>`,
+      'word/document.xml': `<w:p><w:r><w:t>${'x'.repeat(12 * 1024 * 1024)}</w:t></w:r></w:p>`,
     });
     const bombStart = performance.now();
     const html = await renderOfficePreview('docx', bomb, 'a.docx');

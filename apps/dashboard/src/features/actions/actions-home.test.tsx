@@ -79,9 +79,9 @@ describe('ActionsHome', () => {
     );
 
     expect(screen.getByRole('heading', { name: /^Actions$/i })).toBeDefined();
-    expect(screen.getByRole('button', { name: /workflows/i })).toBeDefined();
-    expect(screen.getByRole('button', { name: /^runs/i })).toBeDefined();
-    expect(screen.getByRole('button', { name: /^runners/i })).toBeDefined();
+    expect(screen.getByRole('tab', { name: /workflows/i })).toBeDefined();
+    expect(screen.getByRole('tab', { name: /^runs/i })).toBeDefined();
+    expect(screen.getByRole('tab', { name: /^runners/i })).toBeDefined();
   });
 
   it('navigates to run workspace on run click', async () => {
@@ -93,8 +93,8 @@ describe('ActionsHome', () => {
       />
     );
 
-    const runsTabButton = screen.getByRole('button', { name: /^runs/i });
-    fireEvent.click(runsTabButton);
+    const runsTabButton = screen.getByRole('tab', { name: /^runs/i });
+    fireEvent.mouseDown(runsTabButton);
 
     const runCard = await screen.findByText('Build and Verify');
     fireEvent.click(runCard);
@@ -144,8 +144,8 @@ describe('ActionsHome', () => {
       />
     );
 
-    const runnersTabButton = screen.getByRole('button', { name: /^runners/i });
-    fireEvent.click(runnersTabButton);
+    const runnersTabButton = screen.getByRole('tab', { name: /^runners/i });
+    fireEvent.mouseDown(runnersTabButton);
 
     const deleteBtn = await screen.findByRole('button', {
       name: /delete runner ubuntu 22\.04 fast/i,

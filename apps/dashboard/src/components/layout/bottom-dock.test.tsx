@@ -21,14 +21,10 @@ describe('BottomDock', () => {
     });
   });
 
-  it('renders collapsed pill when closed and opens on click', () => {
-    render(<BottomDock />);
-
-    const openBtn = screen.getByRole('button', { name: /Logs & Terminal/i });
-    expect(openBtn).toBeTruthy();
-
-    fireEvent.click(openBtn);
-    expect(useDockStore.getState().isOpen).toBe(true);
+  it('renders nothing when closed', () => {
+    const { container } = render(<BottomDock />);
+    expect(container.firstChild).toBeNull();
+    expect(useDockStore.getState().isOpen).toBe(false);
   });
 
   it('toggles open/close on Cmd+J key press', () => {
