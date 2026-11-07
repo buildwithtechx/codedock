@@ -8,8 +8,8 @@ import (
 	"strings"
 	"text/tabwriter"
 
-	"codedock/cmd/codedock/client"
 	"codedock/cmd/codedock/config"
+	"codedock/pkg/client"
 	"github.com/spf13/cobra"
 )
 

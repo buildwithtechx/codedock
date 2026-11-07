@@ -4,8 +4,8 @@ import (
 	"fmt"
 	"os"
 
-	"codedock/cmd/codedock/client"
 	"codedock/cmd/codedock/config"
+	"codedock/pkg/client"
 )
 
 func getClient() *client.Client {

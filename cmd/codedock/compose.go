@@ -4,7 +4,7 @@ import (
 	"fmt"
 	"os"
 
-	codedockclient "codedock/cmd/codedock/client"
+	codedockclient "codedock/pkg/client"
 	"github.com/spf13/cobra"
 )
 
