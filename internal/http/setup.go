@@ -24,7 +24,6 @@ import (
 	"codedock/internal/engine/ssh"
 	"codedock/internal/handlers/auth"
 	"codedock/internal/handlers/backups"
-	chatapphandlers "codedock/internal/handlers/chatapps"
 	"codedock/internal/handlers/databases"
 	"codedock/internal/handlers/deployments"
 	"codedock/internal/handlers/mail"
@@ -33,12 +32,12 @@ import (
 	"codedock/internal/http/mcp"
 	"codedock/internal/http/middleware"
 	"codedock/internal/models"
+	"codedock/internal/modules/chatapps"
 	"codedock/internal/modules/security"
 	"codedock/internal/notifications"
 	"codedock/internal/repositories"
 	authservices "codedock/internal/services/auth"
 	backupservices "codedock/internal/services/backups"
-	chatappservices "codedock/internal/services/chatapps"
 	databaseservices "codedock/internal/services/databases"
 	deploymentservices "codedock/internal/services/deployments"
 	mailservices "codedock/internal/services/mail"
@@ -341,10 +340,10 @@ func NewServer(db *sql.DB, v *utils.Vault, deployer *deploy.Deployer, traefikMan
 	securityService := security.NewSecurityService(db, securityFeedManager, projectRepo, appRepo, deployRepo, deploymentService)
 	securityHandler := system.NewSecurityHandler(securityService)
 
-	chatAppRepo := repositories.NewChatAppRepo(db)
-	chatAppService := chatappservices.NewService(chatAppRepo, v)
-	chatAppDispatcher := chatappservices.NewDispatcher(chatAppService, projectService, appService, deploymentService)
-	chatAppHandler := chatapphandlers.NewHandler(chatAppService, chatAppDispatcher)
+	chatAppRepo := chatapps.NewRepository(db)
+	chatAppService := chatapps.NewService(chatAppRepo, v)
+	chatAppDispatcher := chatapps.NewDispatcher(chatAppService, projectService, appService, deploymentService)
+	chatAppHandler := chatapps.NewHandler(chatAppService, chatAppDispatcher)
 
 	serverMetricsWSHandler := system.NewServerMetricsWSHandler(tokenService, serverService, userRepo)
 	serviceLogsWSHandler := system.NewServiceLogsWSHandler(tokenService, appService, projectService, userRepo)

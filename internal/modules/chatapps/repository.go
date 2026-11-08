@@ -1,4 +1,4 @@
-package repositories
+package chatapps
 
 import (
 	"context"
@@ -7,40 +7,38 @@ import (
 	"errors"
 	"fmt"
 	"time"
-
-	"codedock/internal/models"
 )
 
-type ChatAppRepository interface {
-	CreateConnection(ctx context.Context, conn *models.ChatAppConnection) error
-	GetConnection(ctx context.Context, id string) (*models.ChatAppConnection, error)
-	ListConnectionsByUser(ctx context.Context, userID string) ([]*models.ChatAppConnection, error)
-	UpdateConnection(ctx context.Context, conn *models.ChatAppConnection) error
+type Repository interface {
+	CreateConnection(ctx context.Context, conn *ChatAppConnection) error
+	GetConnection(ctx context.Context, id string) (*ChatAppConnection, error)
+	ListConnectionsByUser(ctx context.Context, userID string) ([]*ChatAppConnection, error)
+	UpdateConnection(ctx context.Context, conn *ChatAppConnection) error
 	DeleteConnection(ctx context.Context, id string) error
 
-	CreateIdentity(ctx context.Context, identity *models.ChatAppIdentity) error
-	GetIdentityByExternal(ctx context.Context, connectionID string, extUserID string) (*models.ChatAppIdentity, error)
-	ListIdentitiesByConnection(ctx context.Context, connectionID string) ([]*models.ChatAppIdentity, error)
+	CreateIdentity(ctx context.Context, identity *ChatAppIdentity) error
+	GetIdentityByExternal(ctx context.Context, connectionID string, extUserID string) (*ChatAppIdentity, error)
+	ListIdentitiesByConnection(ctx context.Context, connectionID string) ([]*ChatAppIdentity, error)
 	DeleteIdentity(ctx context.Context, id string) error
 
-	CreateChallenge(ctx context.Context, ch *models.ChatAppChallenge) error
-	GetChallengeByToken(ctx context.Context, token string) (*models.ChatAppChallenge, error)
-	VerifyChallenge(ctx context.Context, token string, code string) (*models.ChatAppChallenge, error)
+	CreateChallenge(ctx context.Context, ch *ChatAppChallenge) error
+	GetChallengeByToken(ctx context.Context, token string) (*ChatAppChallenge, error)
+	VerifyChallenge(ctx context.Context, token string, code string) (*ChatAppChallenge, error)
 
-	CreateCommand(ctx context.Context, cmd *models.ChatAppCommand) error
-	GetCommandByConfirmationToken(ctx context.Context, token string) (*models.ChatAppCommand, error)
+	CreateCommand(ctx context.Context, cmd *ChatAppCommand) error
+	GetCommandByConfirmationToken(ctx context.Context, token string) (*ChatAppCommand, error)
 	MarkCommandConfirmed(ctx context.Context, id string, response string) error
 }
 
-type chatAppRepo struct {
+type repo struct {
 	db *sql.DB
 }
 
-func NewChatAppRepo(db *sql.DB) ChatAppRepository {
-	return &chatAppRepo{db: db}
+func NewRepository(db *sql.DB) Repository {
+	return &repo{db: db}
 }
 
-func (r *chatAppRepo) CreateConnection(ctx context.Context, conn *models.ChatAppConnection) error {
+func (r *repo) CreateConnection(ctx context.Context, conn *ChatAppConnection) error {
 	configJSON, err := json.Marshal(conn.Config)
 	if err != nil {
 		configJSON = []byte("{}")
@@ -65,13 +63,13 @@ func (r *chatAppRepo) CreateConnection(ctx context.Context, conn *models.ChatApp
 	return err
 }
 
-func (r *chatAppRepo) GetConnection(ctx context.Context, id string) (*models.ChatAppConnection, error) {
+func (r *repo) GetConnection(ctx context.Context, id string) (*ChatAppConnection, error) {
 	query := `
 		SELECT id, user_id, provider, transport, purpose, name, bot_username,
 		       credentials_encrypted, config, enabled, status, last_error, last_event_at, created_at, updated_at
 		FROM chat_app_connections WHERE id = $1
 	`
-	var conn models.ChatAppConnection
+	var conn ChatAppConnection
 	var provider, transport, purpose, status string
 	var configBytes []byte
 
@@ -87,10 +85,10 @@ func (r *chatAppRepo) GetConnection(ctx context.Context, id string) (*models.Cha
 		return nil, fmt.Errorf("get chat connection: %w", err)
 	}
 
-	conn.Provider = models.ChatAppProvider(provider)
-	conn.Transport = models.ChatAppTransport(transport)
-	conn.Purpose = models.ChatAppPurpose(purpose)
-	conn.Status = models.ChatAppStatus(status)
+	conn.Provider = ChatAppProvider(provider)
+	conn.Transport = ChatAppTransport(transport)
+	conn.Purpose = ChatAppPurpose(purpose)
+	conn.Status = ChatAppStatus(status)
 	if len(configBytes) > 0 {
 		_ = json.Unmarshal(configBytes, &conn.Config)
 	}
@@ -100,7 +98,7 @@ func (r *chatAppRepo) GetConnection(ctx context.Context, id string) (*models.Cha
 	return &conn, nil
 }
 
-func (r *chatAppRepo) ListConnectionsByUser(ctx context.Context, userID string) ([]*models.ChatAppConnection, error) {
+func (r *repo) ListConnectionsByUser(ctx context.Context, userID string) ([]*ChatAppConnection, error) {
 	query := `
 		SELECT id, user_id, provider, transport, purpose, name, bot_username,
 		       credentials_encrypted, config, enabled, status, last_error, last_event_at, created_at, updated_at
@@ -112,9 +110,9 @@ func (r *chatAppRepo) ListConnectionsByUser(ctx context.Context, userID string) 
 	}
 	defer rows.Close()
 
-	var list []*models.ChatAppConnection
+	var list []*ChatAppConnection
 	for rows.Next() {
-		var conn models.ChatAppConnection
+		var conn ChatAppConnection
 		var provider, transport, purpose, status string
 		var configBytes []byte
 
@@ -125,10 +123,10 @@ func (r *chatAppRepo) ListConnectionsByUser(ctx context.Context, userID string) 
 		); err != nil {
 			return nil, err
 		}
-		conn.Provider = models.ChatAppProvider(provider)
-		conn.Transport = models.ChatAppTransport(transport)
-		conn.Purpose = models.ChatAppPurpose(purpose)
-		conn.Status = models.ChatAppStatus(status)
+		conn.Provider = ChatAppProvider(provider)
+		conn.Transport = ChatAppTransport(transport)
+		conn.Purpose = ChatAppPurpose(purpose)
+		conn.Status = ChatAppStatus(status)
 		if len(configBytes) > 0 {
 			_ = json.Unmarshal(configBytes, &conn.Config)
 		}
@@ -140,7 +138,7 @@ func (r *chatAppRepo) ListConnectionsByUser(ctx context.Context, userID string) 
 	return list, nil
 }
 
-func (r *chatAppRepo) UpdateConnection(ctx context.Context, conn *models.ChatAppConnection) error {
+func (r *repo) UpdateConnection(ctx context.Context, conn *ChatAppConnection) error {
 	configJSON, err := json.Marshal(conn.Config)
 	if err != nil {
 		configJSON = []byte("{}")
@@ -161,12 +159,12 @@ func (r *chatAppRepo) UpdateConnection(ctx context.Context, conn *models.ChatApp
 	return err
 }
 
-func (r *chatAppRepo) DeleteConnection(ctx context.Context, id string) error {
+func (r *repo) DeleteConnection(ctx context.Context, id string) error {
 	_, err := r.db.ExecContext(ctx, `DELETE FROM chat_app_connections WHERE id = $1`, id)
 	return err
 }
 
-func (r *chatAppRepo) CreateIdentity(ctx context.Context, identity *models.ChatAppIdentity) error {
+func (r *repo) CreateIdentity(ctx context.Context, identity *ChatAppIdentity) error {
 	permsJSON, err := json.Marshal(identity.Permissions)
 	if err != nil {
 		permsJSON = []byte("[]")
@@ -198,14 +196,14 @@ func (r *chatAppRepo) CreateIdentity(ctx context.Context, identity *models.ChatA
 	return err
 }
 
-func (r *chatAppRepo) GetIdentityByExternal(ctx context.Context, connectionID string, extUserID string) (*models.ChatAppIdentity, error) {
+func (r *repo) GetIdentityByExternal(ctx context.Context, connectionID string, extUserID string) (*ChatAppIdentity, error) {
 	query := `
 		SELECT id, connection_id, user_id, provider, external_user_id, external_username,
 		       role, permissions, active, paired_at, created_at, updated_at
 		FROM chat_app_identities
 		WHERE connection_id = $1 AND external_user_id = $2 AND active = TRUE
 	`
-	var idt models.ChatAppIdentity
+	var idt ChatAppIdentity
 	var provider string
 	var permsBytes []byte
 
@@ -220,14 +218,14 @@ func (r *chatAppRepo) GetIdentityByExternal(ctx context.Context, connectionID st
 		}
 		return nil, fmt.Errorf("get chat identity: %w", err)
 	}
-	idt.Provider = models.ChatAppProvider(provider)
+	idt.Provider = ChatAppProvider(provider)
 	if len(permsBytes) > 0 {
 		_ = json.Unmarshal(permsBytes, &idt.Permissions)
 	}
 	return &idt, nil
 }
 
-func (r *chatAppRepo) ListIdentitiesByConnection(ctx context.Context, connectionID string) ([]*models.ChatAppIdentity, error) {
+func (r *repo) ListIdentitiesByConnection(ctx context.Context, connectionID string) ([]*ChatAppIdentity, error) {
 	query := `
 		SELECT id, connection_id, user_id, provider, external_user_id, external_username,
 		       role, permissions, active, paired_at, created_at, updated_at
@@ -240,9 +238,9 @@ func (r *chatAppRepo) ListIdentitiesByConnection(ctx context.Context, connection
 	}
 	defer rows.Close()
 
-	var list []*models.ChatAppIdentity
+	var list []*ChatAppIdentity
 	for rows.Next() {
-		var idt models.ChatAppIdentity
+		var idt ChatAppIdentity
 		var provider string
 		var permsBytes []byte
 
@@ -253,7 +251,7 @@ func (r *chatAppRepo) ListIdentitiesByConnection(ctx context.Context, connection
 		); err != nil {
 			return nil, err
 		}
-		idt.Provider = models.ChatAppProvider(provider)
+		idt.Provider = ChatAppProvider(provider)
 		if len(permsBytes) > 0 {
 			_ = json.Unmarshal(permsBytes, &idt.Permissions)
 		}
@@ -262,12 +260,12 @@ func (r *chatAppRepo) ListIdentitiesByConnection(ctx context.Context, connection
 	return list, nil
 }
 
-func (r *chatAppRepo) DeleteIdentity(ctx context.Context, id string) error {
+func (r *repo) DeleteIdentity(ctx context.Context, id string) error {
 	_, err := r.db.ExecContext(ctx, `DELETE FROM chat_app_identities WHERE id = $1`, id)
 	return err
 }
 
-func (r *chatAppRepo) CreateChallenge(ctx context.Context, ch *models.ChatAppChallenge) error {
+func (r *repo) CreateChallenge(ctx context.Context, ch *ChatAppChallenge) error {
 	now := time.Now().UTC()
 	if ch.CreatedAt.IsZero() {
 		ch.CreatedAt = now
@@ -285,14 +283,14 @@ func (r *chatAppRepo) CreateChallenge(ctx context.Context, ch *models.ChatAppCha
 	return err
 }
 
-func (r *chatAppRepo) GetChallengeByToken(ctx context.Context, token string) (*models.ChatAppChallenge, error) {
+func (r *repo) GetChallengeByToken(ctx context.Context, token string) (*ChatAppChallenge, error) {
 	query := `
 		SELECT id, connection_id, provider, external_user_id, external_channel_id,
 		       token, code, expires_at, verified_at, created_at
 		FROM chat_app_challenges
 		WHERE token = $1
 	`
-	var ch models.ChatAppChallenge
+	var ch ChatAppChallenge
 	var provider string
 	err := r.db.QueryRowContext(ctx, query, token).Scan(
 		&ch.ID, &ch.ConnectionID, &provider, &ch.ExternalUserID, &ch.ExternalChannelID,
@@ -304,18 +302,18 @@ func (r *chatAppRepo) GetChallengeByToken(ctx context.Context, token string) (*m
 		}
 		return nil, fmt.Errorf("get challenge: %w", err)
 	}
-	ch.Provider = models.ChatAppProvider(provider)
+	ch.Provider = ChatAppProvider(provider)
 	return &ch, nil
 }
 
-func (r *chatAppRepo) VerifyChallenge(ctx context.Context, token string, code string) (*models.ChatAppChallenge, error) {
+func (r *repo) VerifyChallenge(ctx context.Context, token string, code string) (*ChatAppChallenge, error) {
 	query := `
 		SELECT id, connection_id, provider, external_user_id, external_channel_id,
 		       token, code, expires_at, verified_at, created_at
 		FROM chat_app_challenges
 		WHERE (token = $1 OR code = $2) AND expires_at > CURRENT_TIMESTAMP
 	`
-	var ch models.ChatAppChallenge
+	var ch ChatAppChallenge
 	var provider string
 	err := r.db.QueryRowContext(ctx, query, token, code).Scan(
 		&ch.ID, &ch.ConnectionID, &provider, &ch.ExternalUserID, &ch.ExternalChannelID,
@@ -323,11 +321,11 @@ func (r *chatAppRepo) VerifyChallenge(ctx context.Context, token string, code st
 	)
 	if err != nil {
 		if errors.Is(err, sql.ErrNoRows) {
-			return nil, errors.New("challenge expired or invalid")
+			return nil, ErrChallengeExpired
 		}
 		return nil, err
 	}
-	ch.Provider = models.ChatAppProvider(provider)
+	ch.Provider = ChatAppProvider(provider)
 
 	now := time.Now().UTC()
 	_, _ = r.db.ExecContext(ctx, `UPDATE chat_app_challenges SET verified_at = $1 WHERE id = $2`, now, ch.ID)
@@ -335,7 +333,7 @@ func (r *chatAppRepo) VerifyChallenge(ctx context.Context, token string, code st
 	return &ch, nil
 }
 
-func (r *chatAppRepo) CreateCommand(ctx context.Context, cmd *models.ChatAppCommand) error {
+func (r *repo) CreateCommand(ctx context.Context, cmd *ChatAppCommand) error {
 	now := time.Now().UTC()
 	if cmd.CreatedAt.IsZero() {
 		cmd.CreatedAt = now
@@ -353,14 +351,14 @@ func (r *chatAppRepo) CreateCommand(ctx context.Context, cmd *models.ChatAppComm
 	return err
 }
 
-func (r *chatAppRepo) GetCommandByConfirmationToken(ctx context.Context, token string) (*models.ChatAppCommand, error) {
+func (r *repo) GetCommandByConfirmationToken(ctx context.Context, token string) (*ChatAppCommand, error) {
 	query := `
 		SELECT id, connection_id, identity_id, provider, command, args, status,
 		       response, confirmation_token, confirmed_at, created_at
 		FROM chat_app_commands
 		WHERE confirmation_token = $1 AND status = 'awaiting_confirmation'
 	`
-	var cmd models.ChatAppCommand
+	var cmd ChatAppCommand
 	var provider string
 	err := r.db.QueryRowContext(ctx, query, token).Scan(
 		&cmd.ID, &cmd.ConnectionID, &cmd.IdentityID, &provider, &cmd.Command, &cmd.Args,
@@ -372,11 +370,11 @@ func (r *chatAppRepo) GetCommandByConfirmationToken(ctx context.Context, token s
 		}
 		return nil, fmt.Errorf("get command by token: %w", err)
 	}
-	cmd.Provider = models.ChatAppProvider(provider)
+	cmd.Provider = ChatAppProvider(provider)
 	return &cmd, nil
 }
 
-func (r *chatAppRepo) MarkCommandConfirmed(ctx context.Context, id string, response string) error {
+func (r *repo) MarkCommandConfirmed(ctx context.Context, id string, response string) error {
 	now := time.Now().UTC()
 	query := `
 		UPDATE chat_app_commands

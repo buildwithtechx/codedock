@@ -8,35 +8,34 @@ import (
 	"testing"
 	"time"
 
-	"codedock/internal/models"
-	chatappservices "codedock/internal/services/chatapps"
+	chatapps "codedock/internal/modules/chatapps"
 )
 
 type memoryChatRepo struct {
 	mu          sync.Mutex
-	connections map[string]*models.ChatAppConnection
-	identities  map[string]*models.ChatAppIdentity
-	challenges  map[string]*models.ChatAppChallenge
-	commands    map[string]*models.ChatAppCommand
+	connections map[string]*chatapps.ChatAppConnection
+	identities  map[string]*chatapps.ChatAppIdentity
+	challenges  map[string]*chatapps.ChatAppChallenge
+	commands    map[string]*chatapps.ChatAppCommand
 }
 
 func newMemoryRepo() *memoryChatRepo {
 	return &memoryChatRepo{
-		connections: make(map[string]*models.ChatAppConnection),
-		identities:  make(map[string]*models.ChatAppIdentity),
-		challenges:  make(map[string]*models.ChatAppChallenge),
-		commands:    make(map[string]*models.ChatAppCommand),
+		connections: make(map[string]*chatapps.ChatAppConnection),
+		identities:  make(map[string]*chatapps.ChatAppIdentity),
+		challenges:  make(map[string]*chatapps.ChatAppChallenge),
+		commands:    make(map[string]*chatapps.ChatAppCommand),
 	}
 }
 
-func (m *memoryChatRepo) CreateConnection(ctx context.Context, conn *models.ChatAppConnection) error {
+func (m *memoryChatRepo) CreateConnection(ctx context.Context, conn *chatapps.ChatAppConnection) error {
 	m.mu.Lock()
 	defer m.mu.Unlock()
 	m.connections[conn.ID] = conn
 	return nil
 }
 
-func (m *memoryChatRepo) GetConnection(ctx context.Context, id string) (*models.ChatAppConnection, error) {
+func (m *memoryChatRepo) GetConnection(ctx context.Context, id string) (*chatapps.ChatAppConnection, error) {
 	m.mu.Lock()
 	defer m.mu.Unlock()
 	c, ok := m.connections[id]
@@ -46,10 +45,10 @@ func (m *memoryChatRepo) GetConnection(ctx context.Context, id string) (*models.
 	return c, nil
 }
 
-func (m *memoryChatRepo) ListConnectionsByUser(ctx context.Context, userID string) ([]*models.ChatAppConnection, error) {
+func (m *memoryChatRepo) ListConnectionsByUser(ctx context.Context, userID string) ([]*chatapps.ChatAppConnection, error) {
 	m.mu.Lock()
 	defer m.mu.Unlock()
-	var list []*models.ChatAppConnection
+	var list []*chatapps.ChatAppConnection
 	for _, c := range m.connections {
 		if c.UserID == userID {
 			list = append(list, c)
@@ -58,7 +57,7 @@ func (m *memoryChatRepo) ListConnectionsByUser(ctx context.Context, userID strin
 	return list, nil
 }
 
-func (m *memoryChatRepo) UpdateConnection(ctx context.Context, conn *models.ChatAppConnection) error {
+func (m *memoryChatRepo) UpdateConnection(ctx context.Context, conn *chatapps.ChatAppConnection) error {
 	m.mu.Lock()
 	defer m.mu.Unlock()
 	m.connections[conn.ID] = conn
@@ -72,14 +71,14 @@ func (m *memoryChatRepo) DeleteConnection(ctx context.Context, id string) error 
 	return nil
 }
 
-func (m *memoryChatRepo) CreateIdentity(ctx context.Context, identity *models.ChatAppIdentity) error {
+func (m *memoryChatRepo) CreateIdentity(ctx context.Context, identity *chatapps.ChatAppIdentity) error {
 	m.mu.Lock()
 	defer m.mu.Unlock()
 	m.identities[identity.ConnectionID+":"+identity.ExternalUserID] = identity
 	return nil
 }
 
-func (m *memoryChatRepo) GetIdentityByExternal(ctx context.Context, connectionID string, extUserID string) (*models.ChatAppIdentity, error) {
+func (m *memoryChatRepo) GetIdentityByExternal(ctx context.Context, connectionID string, extUserID string) (*chatapps.ChatAppIdentity, error) {
 	m.mu.Lock()
 	defer m.mu.Unlock()
 	idt, ok := m.identities[connectionID+":"+extUserID]
@@ -89,10 +88,10 @@ func (m *memoryChatRepo) GetIdentityByExternal(ctx context.Context, connectionID
 	return idt, nil
 }
 
-func (m *memoryChatRepo) ListIdentitiesByConnection(ctx context.Context, connectionID string) ([]*models.ChatAppIdentity, error) {
+func (m *memoryChatRepo) ListIdentitiesByConnection(ctx context.Context, connectionID string) ([]*chatapps.ChatAppIdentity, error) {
 	m.mu.Lock()
 	defer m.mu.Unlock()
-	var list []*models.ChatAppIdentity
+	var list []*chatapps.ChatAppIdentity
 	for _, idt := range m.identities {
 		if idt.ConnectionID == connectionID {
 			list = append(list, idt)
@@ -113,14 +112,14 @@ func (m *memoryChatRepo) DeleteIdentity(ctx context.Context, id string) error {
 	return nil
 }
 
-func (m *memoryChatRepo) CreateChallenge(ctx context.Context, ch *models.ChatAppChallenge) error {
+func (m *memoryChatRepo) CreateChallenge(ctx context.Context, ch *chatapps.ChatAppChallenge) error {
 	m.mu.Lock()
 	defer m.mu.Unlock()
 	m.challenges[ch.Token] = ch
 	return nil
 }
 
-func (m *memoryChatRepo) GetChallengeByToken(ctx context.Context, token string) (*models.ChatAppChallenge, error) {
+func (m *memoryChatRepo) GetChallengeByToken(ctx context.Context, token string) (*chatapps.ChatAppChallenge, error) {
 	m.mu.Lock()
 	defer m.mu.Unlock()
 	ch, ok := m.challenges[token]
@@ -130,7 +129,7 @@ func (m *memoryChatRepo) GetChallengeByToken(ctx context.Context, token string) 
 	return ch, nil
 }
 
-func (m *memoryChatRepo) VerifyChallenge(ctx context.Context, token string, code string) (*models.ChatAppChallenge, error) {
+func (m *memoryChatRepo) VerifyChallenge(ctx context.Context, token string, code string) (*chatapps.ChatAppChallenge, error) {
 	m.mu.Lock()
 	defer m.mu.Unlock()
 	for _, ch := range m.challenges {
@@ -146,14 +145,14 @@ func (m *memoryChatRepo) VerifyChallenge(ctx context.Context, token string, code
 	return nil, errors.New("invalid code or token")
 }
 
-func (m *memoryChatRepo) CreateCommand(ctx context.Context, cmd *models.ChatAppCommand) error {
+func (m *memoryChatRepo) CreateCommand(ctx context.Context, cmd *chatapps.ChatAppCommand) error {
 	m.mu.Lock()
 	defer m.mu.Unlock()
 	m.commands[cmd.ID] = cmd
 	return nil
 }
 
-func (m *memoryChatRepo) GetCommandByConfirmationToken(ctx context.Context, token string) (*models.ChatAppCommand, error) {
+func (m *memoryChatRepo) GetCommandByConfirmationToken(ctx context.Context, token string) (*chatapps.ChatAppCommand, error) {
 	m.mu.Lock()
 	defer m.mu.Unlock()
 	for _, cmd := range m.commands {
@@ -180,20 +179,20 @@ func (m *memoryChatRepo) MarkCommandConfirmed(ctx context.Context, id string, re
 func TestChatApps_PairingFlow(t *testing.T) {
 	ctx := context.Background()
 	repo := newMemoryRepo()
-	svc := chatappservices.NewService(repo, nil)
+	svc := chatapps.NewService(repo, nil)
 
-	conn, err := svc.CreateConnection(ctx, "user_1", models.CreateChatAppRequest{
-		Provider: models.ChatAppProviderSlack,
+	conn, err := svc.CreateConnection(ctx, "user_1", chatapps.CreateChatAppRequest{
+		Provider: chatapps.ChatAppProviderSlack,
 		Name:     "Test Slack Bot",
 	})
 	if err != nil {
 		t.Fatalf("create connection: %v", err)
 	}
 
-	dispatcher := chatappservices.NewDispatcher(svc, nil, nil, nil)
+	dispatcher := chatapps.NewDispatcher(svc, nil, nil, nil)
 
 	// 1. Unpaired user attempts command
-	resp, err := dispatcher.DispatchCommand(ctx, models.ChatCommandRequest{
+	resp, err := dispatcher.DispatchCommand(ctx, chatapps.ChatCommandRequest{
 		ConnectionID:   conn.ID,
 		Provider:       conn.Provider,
 		ExternalUserID: "slack_user_999",
@@ -207,7 +206,7 @@ func TestChatApps_PairingFlow(t *testing.T) {
 	}
 
 	// 2. User initiates pairing
-	resp, err = dispatcher.DispatchCommand(ctx, models.ChatCommandRequest{
+	resp, err = dispatcher.DispatchCommand(ctx, chatapps.ChatCommandRequest{
 		ConnectionID:      conn.ID,
 		Provider:          conn.Provider,
 		ExternalUserID:    "slack_user_999",
@@ -234,7 +233,7 @@ func TestChatApps_PairingFlow(t *testing.T) {
 	}
 
 	// 3. Complete verification with wrong code
-	resp, _ = dispatcher.DispatchCommand(ctx, models.ChatCommandRequest{
+	resp, _ = dispatcher.DispatchCommand(ctx, chatapps.ChatCommandRequest{
 		ConnectionID:   conn.ID,
 		Provider:       conn.Provider,
 		ExternalUserID: "slack_user_999",
@@ -245,7 +244,7 @@ func TestChatApps_PairingFlow(t *testing.T) {
 	}
 
 	// 4. Complete verification with correct code
-	resp, _ = dispatcher.DispatchCommand(ctx, models.ChatCommandRequest{
+	resp, _ = dispatcher.DispatchCommand(ctx, chatapps.ChatCommandRequest{
 		ConnectionID:   conn.ID,
 		Provider:       conn.Provider,
 		ExternalUserID: "slack_user_999",
@@ -256,7 +255,7 @@ func TestChatApps_PairingFlow(t *testing.T) {
 	}
 
 	// 5. Help command now works
-	resp, _ = dispatcher.DispatchCommand(ctx, models.ChatCommandRequest{
+	resp, _ = dispatcher.DispatchCommand(ctx, chatapps.ChatCommandRequest{
 		ConnectionID:   conn.ID,
 		Provider:       conn.Provider,
 		ExternalUserID: "slack_user_999",
@@ -267,7 +266,7 @@ func TestChatApps_PairingFlow(t *testing.T) {
 	}
 
 	// 6. Logs command gives deep link, not secrets
-	resp, _ = dispatcher.DispatchCommand(ctx, models.ChatCommandRequest{
+	resp, _ = dispatcher.DispatchCommand(ctx, chatapps.ChatCommandRequest{
 		ConnectionID:   conn.ID,
 		Provider:       conn.Provider,
 		ExternalUserID: "slack_user_999",
@@ -278,7 +277,7 @@ func TestChatApps_PairingFlow(t *testing.T) {
 	}
 
 	// 7. Redeploy requires confirmation token
-	resp, _ = dispatcher.DispatchCommand(ctx, models.ChatCommandRequest{
+	resp, _ = dispatcher.DispatchCommand(ctx, chatapps.ChatCommandRequest{
 		ConnectionID:   conn.ID,
 		Provider:       conn.Provider,
 		ExternalUserID: "slack_user_999",
@@ -289,7 +288,7 @@ func TestChatApps_PairingFlow(t *testing.T) {
 	}
 
 	// 8. Confirm execution
-	resp, _ = dispatcher.DispatchCommand(ctx, models.ChatCommandRequest{
+	resp, _ = dispatcher.DispatchCommand(ctx, chatapps.ChatCommandRequest{
 		ConnectionID:   conn.ID,
 		Provider:       conn.Provider,
 		ExternalUserID: "slack_user_999",

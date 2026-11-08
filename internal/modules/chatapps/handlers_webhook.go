@@ -9,8 +9,7 @@ import (
 
 	"github.com/labstack/echo/v4"
 
-	"codedock/internal/models"
-	"codedock/internal/services/chatapps/transports"
+	"codedock/internal/modules/chatapps/transports"
 	"codedock/internal/utils"
 )
 
@@ -33,7 +32,7 @@ func (h *Handler) WebhookIngress(c echo.Context) error {
 	var extUserID, extUsername, extChannelID, commandText string
 
 	switch conn.Provider {
-	case models.ChatAppProviderSlack:
+	case ChatAppProviderSlack:
 		sig := c.Request().Header.Get("X-Slack-Signature")
 		ts := c.Request().Header.Get("X-Slack-Request-Timestamp")
 		if secret := creds["signing_secret"]; secret != "" {
@@ -48,7 +47,7 @@ func (h *Handler) WebhookIngress(c echo.Context) error {
 		extChannelID = c.Request().FormValue("channel_id")
 		commandText = c.Request().FormValue("command") + " " + c.Request().FormValue("text")
 
-	case models.ChatAppProviderDiscord:
+	case ChatAppProviderDiscord:
 		sig := c.Request().Header.Get("X-Signature-Ed25519")
 		ts := c.Request().Header.Get("X-Signature-Timestamp")
 		if pubKey := creds["public_key"]; pubKey != "" {
@@ -80,7 +79,7 @@ func (h *Handler) WebhookIngress(c echo.Context) error {
 			}
 		}
 
-	case models.ChatAppProviderTelegram:
+	case ChatAppProviderTelegram:
 		tokenHeader := c.Request().Header.Get("X-Telegram-Bot-Api-Secret-Token")
 		if secret := creds["secret_token"]; secret != "" {
 			if err := transports.VerifyTelegramSecret(secret, tokenHeader); err != nil {
@@ -96,7 +95,7 @@ func (h *Handler) WebhookIngress(c echo.Context) error {
 			extChannelID = strconv.FormatInt(update.Message.Chat.ID, 10)
 		}
 
-	case models.ChatAppProviderTeams:
+	case ChatAppProviderTeams:
 		authHeader := c.Request().Header.Get("Authorization")
 		if appID := creds["app_id"]; appID != "" {
 			if err := transports.VerifyTeamsRequest(appID, authHeader); err != nil {
@@ -115,7 +114,7 @@ func (h *Handler) WebhookIngress(c echo.Context) error {
 		return c.JSON(http.StatusOK, IngressIgnoredResponse{Status: "ignored", Reason: "empty command"})
 	}
 
-	cmdReq := models.ChatCommandRequest{
+	cmdReq := ChatCommandRequest{
 		ConnectionID:      conn.ID,
 		Provider:          conn.Provider,
 		ExternalUserID:    extUserID,
@@ -129,7 +128,7 @@ func (h *Handler) WebhookIngress(c echo.Context) error {
 		return c.JSON(http.StatusOK, SimpleTextResponse{Text: "Error: " + err.Error()})
 	}
 
-	if conn.Provider == models.ChatAppProviderDiscord {
+	if conn.Provider == ChatAppProviderDiscord {
 		return c.JSON(http.StatusOK, DiscordInteractionResponse{
 			Type: 4,
 			Data: &DiscordInteractionDataOut{

@@ -19,16 +19,6 @@ const (
 	SecondaryDomain = "codedock-security-advisories-v1\n"
 )
 
-var (
-	ErrInvalidProof     = errors.New("invalid security advisory proof")
-	ErrSignatureInvalid = errors.New("advisory signature verification failed")
-	ErrPayloadTooLarge  = errors.New("advisory payload exceeds maximum size limit")
-	ErrRollbackDetected = errors.New("advisory manifest revision is older than stored minimum revision")
-	ErrClockSkew        = errors.New("advisory manifest issued in the future")
-	ErrManifestExpired  = errors.New("advisory manifest has expired")
-	ErrInvalidFormat    = errors.New("unsupported advisory manifest format")
-)
-
 type Verifier struct {
 	publicKey ed25519.PublicKey
 }

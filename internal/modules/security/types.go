@@ -101,32 +101,3 @@ type AdvisoryFinding struct {
 	ImageChangeRequired    bool                  `json:"imageChangeRequired"`
 	RuntimePatch           *SecurityRuntimePatch `json:"runtimePatch,omitempty"`
 }
-
-type RefreshAttempt struct {
-	ID           string    `json:"id"`
-	ProjectID    string    `json:"projectId"`
-	DeploymentID string    `json:"deploymentId"`
-	AdvisoryID   string    `json:"advisoryId"`
-	Status       string    `json:"status"` // pending, queued, verified, failed
-	Error        string    `json:"error,omitempty"`
-	CreatedAt    time.Time `json:"createdAt"`
-}
-
-type ProjectSecurityResult struct {
-	ProjectID            string            `json:"projectId"`
-	DeploymentID         string            `json:"deploymentId"`
-	CheckedAt            time.Time         `json:"checkedAt"`
-	AutoRefresh          bool              `json:"autoRefresh"`
-	Findings             []AdvisoryFinding `json:"findings"`
-	UnknownServices      []string          `json:"unknownServices,omitempty"`
-	ActiveRefreshAttempt *RefreshAttempt   `json:"activeRefreshAttempt,omitempty"`
-}
-
-type AdvisoriesResponse struct {
-	Revision         int64                   `json:"revision"`
-	CheckedAt        time.Time               `json:"checkedAt"`
-	ExpiresAt        time.Time               `json:"expiresAt"`
-	Stale            bool                    `json:"stale"`
-	Advisories       []SecurityAdvisory      `json:"advisories"`
-	AffectedProjects []ProjectSecurityResult `json:"affectedProjects"`
-}

@@ -9,6 +9,20 @@ import (
 	"codedock/internal/utils"
 )
 
+// Handler handles HTTP requests for Chat App connections, identities, pairing, and webhooks
+type Handler struct {
+	service    *Service
+	dispatcher *Dispatcher
+}
+
+// NewHandler creates a new chat apps HTTP handler
+func NewHandler(service *Service, dispatcher *Dispatcher) *Handler {
+	return &Handler{
+		service:    service,
+		dispatcher: dispatcher,
+	}
+}
+
 // List returns all configured chat app connections for the authenticated user
 func (h *Handler) List(c echo.Context) error {
 	userID := handlerutils.ExtractUserID(c)

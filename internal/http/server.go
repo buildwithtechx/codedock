@@ -15,7 +15,6 @@ import (
 	"codedock/internal/engine/ssh"
 	"codedock/internal/handlers/auth"
 	"codedock/internal/handlers/backups"
-	chatapphandlers "codedock/internal/handlers/chatapps"
 	"codedock/internal/handlers/databases"
 	"codedock/internal/handlers/deployments"
 	"codedock/internal/handlers/mail"
@@ -24,6 +23,7 @@ import (
 	"codedock/internal/http/mcp"
 	"codedock/internal/http/middleware"
 	"codedock/internal/models"
+	"codedock/internal/modules/chatapps"
 	authservices "codedock/internal/services/auth"
 	"codedock/internal/services/migrations"
 	projectservices "codedock/internal/services/projects"
@@ -83,7 +83,7 @@ type Server struct {
 	systemHandler             *system.SystemHandler
 	composeHandler            *projects.ComposeHandler
 	composeStackHandler       *projects.ComposeStackHandler
-	chatAppHandler            *chatapphandlers.Handler
+	chatAppHandler            *chatapps.Handler
 	oneClickHandler           *projects.OneClickHandler
 	archiveHandler            *deployments.ArchiveHandler
 	migrationHandler          *system.MigrationHandler

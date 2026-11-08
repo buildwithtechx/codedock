@@ -8,11 +8,11 @@ import (
 	"strings"
 	"time"
 
+	"github.com/google/uuid"
+
 	"codedock/internal/models"
 	"codedock/internal/services/deployments"
 	"codedock/internal/services/projects"
-
-	"github.com/google/uuid"
 )
 
 type Dispatcher struct {
@@ -60,7 +60,7 @@ func parseCommandLine(raw string) (string, string) {
 	return cmd, args
 }
 
-func (d *Dispatcher) DispatchCommand(ctx context.Context, req models.ChatCommandRequest) (*models.ChatCommandResponse, error) {
+func (d *Dispatcher) DispatchCommand(ctx context.Context, req ChatCommandRequest) (*ChatCommandResponse, error) {
 	cmd, args := parseCommandLine(req.RawCommand)
 
 	// 1. Unauthenticated / Pairing Commands
@@ -77,13 +77,13 @@ func (d *Dispatcher) DispatchCommand(ctx context.Context, req models.ChatCommand
 				"`/codedock verify %s`\n*(Expires in 15 minutes)*",
 			ch.Token, ch.Code,
 		)
-		return &models.ChatCommandResponse{Text: msg}, nil
+		return &ChatCommandResponse{Text: msg}, nil
 	}
 
 	if cmd == "verify" {
 		code := strings.TrimSpace(args)
 		if code == "" {
-			return &models.ChatCommandResponse{Text: "Please provide your 6-digit verification code: `/codedock verify <code>`"}, nil
+			return &ChatCommandResponse{Text: "Please provide your 6-digit verification code: `/codedock verify <code>`"}, nil
 		}
 		conn, err := d.service.GetConnection(ctx, req.ConnectionID)
 		if err != nil {
@@ -91,7 +91,7 @@ func (d *Dispatcher) DispatchCommand(ctx context.Context, req models.ChatCommand
 		}
 		identity, err := d.service.VerifyPairing(ctx, conn.UserID, "", code)
 		if err != nil {
-			return &models.ChatCommandResponse{Text: fmt.Sprintf("❌ Verification failed: %v", err)}, nil
+			return &ChatCommandResponse{Text: fmt.Sprintf("❌ Verification failed: %v", err)}, nil
 		}
 		msg := fmt.Sprintf(
 			"✅ **Account Successfully Linked!**\n\n"+
@@ -99,13 +99,13 @@ func (d *Dispatcher) DispatchCommand(ctx context.Context, req models.ChatCommand
 				"Type `/codedock help` to view available commands.",
 			identity.Provider, identity.ExternalUserID, identity.UserID,
 		)
-		return &models.ChatCommandResponse{Text: msg}, nil
+		return &ChatCommandResponse{Text: msg}, nil
 	}
 
 	// 2. Identity Verification (Strict Access Control)
 	identity, err := d.service.Repo().GetIdentityByExternal(ctx, req.ConnectionID, req.ExternalUserID)
 	if err != nil || identity == nil || !identity.Active {
-		return &models.ChatCommandResponse{
+		return &ChatCommandResponse{
 			Text: "🔒 **Authentication Required**\n\n" +
 				"You must pair your Codedock account before inspecting projects or triggering actions.\n" +
 				"Type `/codedock link` to begin pairing.",
@@ -126,18 +126,18 @@ func (d *Dispatcher) DispatchCommand(ctx context.Context, req models.ChatCommand
 			"| `/codedock confirm <token>` | Confirm a pending mutating action |\n" +
 			"| `/codedock ask <query>` | Ask Codedock AI infrastructure co-pilot |\n" +
 			"| `/codedock link` | Pair a new account or refresh credentials |\n"
-		return &models.ChatCommandResponse{Text: helpText}, nil
+		return &ChatCommandResponse{Text: helpText}, nil
 
 	case "projects":
 		if d.projectService == nil {
-			return &models.ChatCommandResponse{Text: "Project service unavailable"}, nil
+			return &ChatCommandResponse{Text: "Project service unavailable"}, nil
 		}
 		projectsList, _, err := d.projectService.ListProjects(ctx, "", 25, 0)
 		if err != nil {
 			return nil, err
 		}
 		if len(projectsList) == 0 {
-			return &models.ChatCommandResponse{Text: "No projects found in this Codedock instance."}, nil
+			return &ChatCommandResponse{Text: "No projects found in this Codedock instance."}, nil
 		}
 		var sb strings.Builder
 		sb.WriteString(fmt.Sprintf("### 📂 Codedock Projects (%d)\n\n", len(projectsList)))
@@ -154,12 +154,12 @@ func (d *Dispatcher) DispatchCommand(ctx context.Context, req models.ChatCommand
 				}
 			}
 		}
-		return &models.ChatCommandResponse{Text: sb.String()}, nil
+		return &ChatCommandResponse{Text: sb.String()}, nil
 
 	case "status":
 		target := strings.TrimSpace(args)
 		if target == "" {
-			return &models.ChatCommandResponse{Text: "Usage: `/codedock status <project_or_service_id>`"}, nil
+			return &ChatCommandResponse{Text: "Usage: `/codedock status <project_or_service_id>`"}, nil
 		}
 		if d.appService != nil {
 			if app, err := d.appService.GetAppService(ctx, target); err == nil && app != nil {
@@ -174,21 +174,21 @@ func (d *Dispatcher) DispatchCommand(ctx context.Context, req models.ChatCommand
 					app.Name, app.ID, app.Status, app.ImageRef, app.Branch,
 					app.Domain, app.UpdatedAt.Format(time.RFC3339),
 				)
-				return &models.ChatCommandResponse{Text: msg}, nil
+				return &ChatCommandResponse{Text: msg}, nil
 			}
 		}
 		if d.projectService != nil {
 			if proj, err := d.projectService.GetProject(ctx, target); err == nil && proj != nil {
 				msg := fmt.Sprintf("### 📂 Project: %s (`%s`)\n%s\n", proj.Name, proj.ID, proj.Description)
-				return &models.ChatCommandResponse{Text: msg}, nil
+				return &ChatCommandResponse{Text: msg}, nil
 			}
 		}
-		return &models.ChatCommandResponse{Text: fmt.Sprintf("Resource `%s` not found.", target)}, nil
+		return &ChatCommandResponse{Text: fmt.Sprintf("Resource `%s` not found.", target)}, nil
 
 	case "logs":
 		target := strings.TrimSpace(args)
 		if target == "" {
-			return &models.ChatCommandResponse{Text: "Usage: `/codedock logs <service_id>`"}, nil
+			return &ChatCommandResponse{Text: "Usage: `/codedock logs <service_id>`"}, nil
 		}
 		// Security safeguard: Do not dump raw text or secrets in chat channels
 		deepLink := fmt.Sprintf("/services/%s", target)
@@ -208,12 +208,12 @@ func (d *Dispatcher) DispatchCommand(ctx context.Context, req models.ChatCommand
 				"[Open Secure Container Logs](%s)",
 			name, status, deepLink,
 		)
-		return &models.ChatCommandResponse{Text: msg, DeepLink: &deepLink}, nil
+		return &ChatCommandResponse{Text: msg, DeepLink: &deepLink}, nil
 
 	case "redeploy", "restart":
 		target := strings.TrimSpace(args)
 		if target == "" {
-			return &models.ChatCommandResponse{Text: fmt.Sprintf("Usage: `/codedock %s <service_id>`", cmd)}, nil
+			return &ChatCommandResponse{Text: fmt.Sprintf("Usage: `/codedock %s <service_id>`", cmd)}, nil
 		}
 		var appName string = target
 		if d.appService != nil {
@@ -227,7 +227,7 @@ func (d *Dispatcher) DispatchCommand(ctx context.Context, req models.ChatCommand
 		_, _ = rand.Read(tokenBytes)
 		confirmToken := "cf_" + hex.EncodeToString(tokenBytes)
 
-		dbCmd := &models.ChatAppCommand{
+		dbCmd := &ChatAppCommand{
 			ID:                "cmd_" + uuid.NewString()[:12],
 			ConnectionID:      req.ConnectionID,
 			IdentityID:        &identity.ID,
@@ -246,7 +246,7 @@ func (d *Dispatcher) DispatchCommand(ctx context.Context, req models.ChatCommand
 				"`/codedock confirm %s`",
 			cmd, appName, target, confirmToken,
 		)
-		return &models.ChatCommandResponse{
+		return &ChatCommandResponse{
 			Text:                 msg,
 			RequiresConfirmation: true,
 			ConfirmationToken:    &confirmToken,
@@ -255,11 +255,11 @@ func (d *Dispatcher) DispatchCommand(ctx context.Context, req models.ChatCommand
 	case "confirm":
 		token := strings.TrimSpace(args)
 		if token == "" {
-			return &models.ChatCommandResponse{Text: "Usage: `/codedock confirm <token>`"}, nil
+			return &ChatCommandResponse{Text: "Usage: `/codedock confirm <token>`"}, nil
 		}
 		pendingCmd, err := d.service.Repo().GetCommandByConfirmationToken(ctx, token)
 		if err != nil || pendingCmd == nil {
-			return &models.ChatCommandResponse{Text: "❌ Invalid or expired confirmation token."}, nil
+			return &ChatCommandResponse{Text: "❌ Invalid or expired confirmation token."}, nil
 		}
 
 		// Execute the confirmed mutating action
@@ -300,19 +300,19 @@ func (d *Dispatcher) DispatchCommand(ctx context.Context, req models.ChatCommand
 		}
 
 		_ = d.service.Repo().MarkCommandConfirmed(ctx, pendingCmd.ID, resultMsg)
-		return &models.ChatCommandResponse{Text: resultMsg}, nil
+		return &ChatCommandResponse{Text: resultMsg}, nil
 
 	case "ask":
 		query := strings.TrimSpace(args)
 		if query == "" {
-			return &models.ChatCommandResponse{Text: "Usage: `/codedock ask <question>`"}, nil
+			return &ChatCommandResponse{Text: "Usage: `/codedock ask <question>`"}, nil
 		}
-		return &models.ChatCommandResponse{
+		return &ChatCommandResponse{
 			Text: fmt.Sprintf("🤖 **Codedock AI** (User: `%s`):\nI received your query: %q\nTo view full interactive analysis and tool execution cards, open the Codedock dashboard.", identity.ExternalUsername, query),
 		}, nil
 
 	default:
-		return &models.ChatCommandResponse{
+		return &ChatCommandResponse{
 			Text: fmt.Sprintf("Unknown command: `%s`. Type `/codedock help` for available commands.", cmd),
 		}, nil
 	}

@@ -8,6 +8,7 @@ import (
 	"codedock/apps/dashboard"
 	"codedock/internal/config"
 	"codedock/internal/models"
+	"codedock/internal/modules/chatapps"
 	"github.com/labstack/echo/v4"
 )
 
@@ -176,19 +177,7 @@ func (s *Server) registerMiscRoutes(apiGroup, authGroup *echo.Group) {
 	authGroup.POST("/updates/:projectId/security/apply", s.securityHandler.ApplyRemediation)
 
 	// Chat Apps Integrations (Slack, Discord, Telegram, Teams)
-	authGroup.GET("/chat-apps", s.chatAppHandler.List)
-	authGroup.POST("/chat-apps", s.chatAppHandler.Create)
-	authGroup.GET("/chat-apps/:id", s.chatAppHandler.Get)
-	authGroup.PATCH("/chat-apps/:id", s.chatAppHandler.Update)
-	authGroup.DELETE("/chat-apps/:id", s.chatAppHandler.Delete)
-	authGroup.POST("/chat-apps/:id/test", s.chatAppHandler.Test)
-	authGroup.GET("/chat-apps/:id/identities", s.chatAppHandler.ListIdentities)
-	authGroup.DELETE("/chat-apps/identities/:id", s.chatAppHandler.DeleteIdentity)
-	authGroup.GET("/chat-apps/pairing/challenge/:token", s.chatAppHandler.GetChallenge)
-	authGroup.POST("/chat-apps/pairing/verify", s.chatAppHandler.VerifyPairing)
-
-	// Public Webhook Ingress (signature checked per transport in handler)
-	apiGroup.POST("/chat-apps/webhooks/:id", s.chatAppHandler.WebhookIngress)
+	chatapps.RegisterRoutes(apiGroup, authGroup, s.chatAppHandler)
 
 	authGroup.GET("/projects/:id/stacks", s.composeStackHandler.List)
 	authGroup.GET("/projects/:id/stacks/:stackId/config", s.composeStackHandler.Config, s.authGuard.RequireScope("env:read"))
