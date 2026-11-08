@@ -4,11 +4,9 @@ import (
 	"context"
 	"strings"
 	"time"
-
-	"codedock/internal/models"
 )
 
-func (s *Service) detectProvider(ctx context.Context, cfg *models.ServerSettings, domain, recordType, value string) string {
+func (s *Service) detectProvider(ctx context.Context, cfg *DNSConfig, domain, recordType, value string) string {
 	domain = strings.ToLower(strings.TrimSuffix(strings.TrimSpace(domain), "."))
 	if cfg.CloudflareAPIToken != "" {
 		probeCtx, cancel := context.WithTimeout(ctx, 5*time.Second)

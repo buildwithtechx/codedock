@@ -9,39 +9,39 @@ import (
 	"io"
 	"net/http"
 	"time"
-
-	"codedock/internal/models"
-	"codedock/internal/repositories"
 )
 
+type DeploymentContext struct {
+	ServiceName    string
+	RuntimeMode    string
+	RepositoryURL  string
+	Branch         string
+	RootDirectory  string
+	InstallCommand string
+	BuildCommand   string
+	StartCommand   string
+	Status         string
+	BuildLogs      string
+}
+
 type AnalysisService struct {
-	deploymentRepo repositories.DeploymentRepository
-	appRepo        repositories.AppServiceRepository
-	aiRepo         Repository
-	httpClient     *http.Client
+	aiRepo     Repository
+	httpClient *http.Client
 }
 
-func NewAnalysisService(d repositories.DeploymentRepository, a repositories.AppServiceRepository, aiRepo Repository) *AnalysisService {
+func NewAnalysisService(aiRepo Repository) *AnalysisService {
 	return &AnalysisService{
-		deploymentRepo: d,
-		appRepo:        a,
-		aiRepo:         aiRepo,
-		httpClient:     &http.Client{Timeout: 60 * time.Second},
+		aiRepo:     aiRepo,
+		httpClient: &http.Client{Timeout: 60 * time.Second},
 	}
 }
 
-func (s *AnalysisService) ExplainDeploymentFailure(ctx context.Context, deploymentID string) (*AIExplanationResponse, error) {
-	deployment, err := s.deploymentRepo.GetByID(ctx, deploymentID)
-	if err != nil {
-		return nil, fmt.Errorf("deployment not found: %w", err)
+func (s *AnalysisService) ExplainDeploymentFailure(ctx context.Context, d *DeploymentContext) (*AIExplanationResponse, error) {
+	if d == nil {
+		return nil, errors.New("deployment context is required")
 	}
-	if deployment.Status != models.DeploymentStatusFailed {
+	if d.Status != "failed" {
 		return nil, ErrDeploymentNotFailed
-	}
-
-	app, err := s.appRepo.GetByID(ctx, deployment.ServiceID)
-	if err != nil {
-		return nil, fmt.Errorf("service not found: %w", err)
 	}
 
 	aiSettings, err := s.aiRepo.GetAISettings(ctx)
@@ -110,12 +110,12 @@ func (s *AnalysisService) ExplainDeploymentFailure(ctx context.Context, deployme
 		return nil, fmt.Errorf("%s API key is missing in AI settings", provider)
 	}
 
-	prompt := buildPrompt(deployment, app)
+	prompt := buildPrompt(d)
 
 	return callOpenAI(ctx, s.httpClient, baseURL, apiKey, modelName, prompt)
 }
 
-func buildPrompt(d *models.Deployment, s *models.AppService) string {
+func buildPrompt(d *DeploymentContext) string {
 	maxLogChars := 30000
 	logs := d.BuildLogs
 	if len(logs) > maxLogChars {
@@ -147,7 +147,7 @@ Start command: %s
 Deployment status: %s
 
 Deployment logs:
-%s`, s.Name, s.RuntimeMode, s.RepositoryURL, s.Branch, s.RootDirectory, s.InstallCommand, s.BuildCommand, s.StartCommand, d.Status, logs)
+%s`, d.ServiceName, d.RuntimeMode, d.RepositoryURL, d.Branch, d.RootDirectory, d.InstallCommand, d.BuildCommand, d.StartCommand, d.Status, logs)
 }
 
 func callOpenAI(ctx context.Context, client *http.Client, baseURL, apiKey, model, prompt string) (*AIExplanationResponse, error) {

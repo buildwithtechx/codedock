@@ -7,12 +7,35 @@ import (
 	"codedock/internal/repositories"
 )
 
+type settingsAdapter struct {
+	repo repositories.SettingsRepository
+}
+
+func (a *settingsAdapter) GetDNSConfig(ctx context.Context) (*dnsproviders.DNSConfig, error) {
+	if a.repo == nil {
+		return nil, nil
+	}
+	cfg, err := a.repo.GetServerSettings(ctx)
+	if err != nil || cfg == nil {
+		return nil, err
+	}
+	return &dnsproviders.DNSConfig{
+		PublicIPv4:         cfg.PublicIPv4,
+		CloudflareAPIToken: cfg.CloudflareAPIToken,
+		NamecheapAPIKey:    cfg.NamecheapAPIKey,
+		NamecheapAPIUser:   cfg.NamecheapAPIUser,
+		NamecheapClientIP:  cfg.NamecheapClientIP,
+		SpaceshipAPIKey:    cfg.SpaceshipAPIKey,
+		SpaceshipAPISecret: cfg.SpaceshipAPISecret,
+	}, nil
+}
+
 type ProviderService struct {
 	providers *dnsproviders.Service
 }
 
 func NewProviderService(repo repositories.SettingsRepository) *ProviderService {
-	return &ProviderService{providers: dnsproviders.New(repo)}
+	return &ProviderService{providers: dnsproviders.New(&settingsAdapter{repo: repo})}
 }
 
 func (s *ProviderService) ProvisionARecord(ctx context.Context, domain string) (string, string, error) {

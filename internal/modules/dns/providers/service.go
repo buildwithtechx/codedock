@@ -4,21 +4,19 @@ import (
 	"context"
 	"fmt"
 	"net/http"
-
-	"codedock/internal/repositories"
 )
 
 type Service struct {
-	settingsRepo  repositories.SettingsRepository
-	newHTTPClient func() *http.Client
+	settingsReader SettingsReader
+	newHTTPClient  func() *http.Client
 }
 
-func New(repo repositories.SettingsRepository) *Service {
-	return &Service{settingsRepo: repo, newHTTPClient: newProviderHTTPClient}
+func New(reader SettingsReader) *Service {
+	return &Service{settingsReader: reader, newHTTPClient: newProviderHTTPClient}
 }
 
-func NewWithHTTPClient(repo repositories.SettingsRepository, newHTTPClient func() *http.Client) *Service {
-	return &Service{settingsRepo: repo, newHTTPClient: newHTTPClient}
+func NewWithHTTPClient(reader SettingsReader, newHTTPClient func() *http.Client) *Service {
+	return &Service{settingsReader: reader, newHTTPClient: newHTTPClient}
 }
 
 func (s *Service) httpClient() *http.Client {
@@ -29,7 +27,10 @@ func (s *Service) httpClient() *http.Client {
 }
 
 func (s *Service) ProvisionARecord(ctx context.Context, domain string) (string, string, error) {
-	cfg, err := s.settingsRepo.GetServerSettings(ctx)
+	if s.settingsReader == nil {
+		return "", "", fmt.Errorf("settings reader not configured")
+	}
+	cfg, err := s.settingsReader.GetDNSConfig(ctx)
 	if err != nil {
 		return "", "", err
 	}
@@ -52,7 +53,10 @@ func (s *Service) DeprovisionARecord(ctx context.Context, domain, provider, valu
 }
 
 func (s *Service) ProvisionRecord(ctx context.Context, domain, recordType, value string) (string, error) {
-	cfg, err := s.settingsRepo.GetServerSettings(ctx)
+	if s.settingsReader == nil {
+		return "", fmt.Errorf("settings reader not configured")
+	}
+	cfg, err := s.settingsReader.GetDNSConfig(ctx)
 	if err != nil {
 		return "", err
 	}
@@ -60,39 +64,32 @@ func (s *Service) ProvisionRecord(ctx context.Context, domain, recordType, value
 		return "", fmt.Errorf("server settings not configured")
 	}
 
-	var lastErr error
 	if cfg.CloudflareAPIToken != "" {
 		if err := s.provisionCloudflare(ctx, cfg.CloudflareAPIToken, domain, recordType, value); err == nil {
 			return dnsProviderCloudflare, nil
-		} else {
-			lastErr = fmt.Errorf("cloudflare: %w", err)
 		}
 	}
 
 	if cfg.NamecheapAPIKey != "" && cfg.NamecheapAPIUser != "" {
 		if err := s.provisionNamecheap(ctx, cfg, domain, recordType, value); err == nil {
 			return dnsProviderNamecheap, nil
-		} else {
-			lastErr = fmt.Errorf("namecheap: %w", err)
 		}
 	}
 
 	if cfg.SpaceshipAPIKey != "" && cfg.SpaceshipAPISecret != "" {
 		if err := s.provisionSpaceship(ctx, cfg.SpaceshipAPIKey, cfg.SpaceshipAPISecret, domain, recordType, value); err == nil {
 			return dnsProviderSpaceship, nil
-		} else {
-			lastErr = fmt.Errorf("spaceship: %w", err)
 		}
 	}
 
-	if lastErr != nil {
-		return "", fmt.Errorf("failed to provision dns record for %s: %w", domain, lastErr)
-	}
-	return "", fmt.Errorf("failed to provision dns record for %s: no provider credentials configured", domain)
+	return "", fmt.Errorf("no configured DNS provider could provision record for %s", domain)
 }
 
 func (s *Service) DeprovisionRecord(ctx context.Context, domain, recordType, value, provider string) error {
-	cfg, err := s.settingsRepo.GetServerSettings(ctx)
+	if s.settingsReader == nil {
+		return fmt.Errorf("settings reader not configured")
+	}
+	cfg, err := s.settingsReader.GetDNSConfig(ctx)
 	if err != nil {
 		return err
 	}
@@ -107,23 +104,23 @@ func (s *Service) DeprovisionRecord(ctx context.Context, domain, recordType, val
 	switch provider {
 	case dnsProviderCloudflare:
 		if cfg.CloudflareAPIToken == "" {
-			return fmt.Errorf("cloudflare credentials missing during deprovision")
+			return fmt.Errorf("cloudflare API token not set")
 		}
 		return s.deprovisionCloudflare(ctx, cfg.CloudflareAPIToken, domain, recordType, value)
 	case dnsProviderNamecheap:
 		if cfg.NamecheapAPIKey == "" || cfg.NamecheapAPIUser == "" {
-			return fmt.Errorf("namecheap credentials missing during deprovision")
+			return fmt.Errorf("namecheap API credentials not set")
 		}
 		return s.deprovisionNamecheap(ctx, cfg, domain, recordType, value)
 	case dnsProviderSpaceship:
 		if cfg.SpaceshipAPIKey == "" {
-			return fmt.Errorf("spaceship credentials missing during deprovision")
+			return fmt.Errorf("spaceship API key not set")
 		}
 		if cfg.SpaceshipAPISecret == "" {
-			return fmt.Errorf("spaceship API secret missing during deprovision")
+			return fmt.Errorf("spaceship API secret not set")
 		}
 		return s.deprovisionSpaceship(ctx, cfg.SpaceshipAPIKey, cfg.SpaceshipAPISecret, domain, recordType, value)
+	default:
+		return fmt.Errorf("unsupported or undetectable DNS provider %q", provider)
 	}
-
-	return fmt.Errorf("dns provider not found for %s", domain)
 }

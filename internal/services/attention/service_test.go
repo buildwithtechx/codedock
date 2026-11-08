@@ -11,6 +11,7 @@ import (
 	cdkdb "codedock/db"
 	"codedock/internal/engine/dockerprobe"
 	"codedock/internal/models"
+	backupmodule "codedock/internal/modules/backups"
 	"codedock/internal/repositories"
 	"codedock/internal/services/migrations"
 	projectservices "codedock/internal/services/projects"
@@ -32,17 +33,17 @@ func (f *fakeHealth) GetHealth(ctx context.Context, containerID string) (Attenti
 }
 
 type fakeBackups struct {
-	records   []*models.BackupRecord
+	records   []*backupmodule.BackupRecord
 	triggered []string
 }
 
-func (f *fakeBackups) ListRecordsByConfigs(ctx context.Context, configIDs []string, limit int) ([]*models.BackupRecord, error) {
+func (f *fakeBackups) ListRecordsByConfigs(ctx context.Context, configIDs []string, limit int) ([]*backupmodule.BackupRecord, error) {
 	return f.records, nil
 }
 
-func (f *fakeBackups) TriggerBackup(ctx context.Context, configID string) (*models.BackupRecord, error) {
+func (f *fakeBackups) TriggerBackup(ctx context.Context, configID string) (*backupmodule.BackupRecord, error) {
 	f.triggered = append(f.triggered, configID)
-	return &models.BackupRecord{ID: "rec-new", BackupConfigID: configID}, nil
+	return &backupmodule.BackupRecord{ID: "rec-new", BackupConfigID: configID}, nil
 }
 
 type fakeWorkloads struct {
@@ -138,7 +139,7 @@ func TestAttentionEvaluatesAndActs(t *testing.T) {
 	if err := deployRepo.Create(ctx, &models.Deployment{OrganizationID: orgID, ProjectID: "proj-1", ServiceID: svcID, Status: models.DeploymentStatusFailed}); err != nil {
 		t.Fatalf("create deployment: %v", err)
 	}
-	backups.records = []*models.BackupRecord{{ID: "rec-1", BackupConfigID: "cfg-1", Status: "failed", Logs: "disk full"}}
+	backups.records = []*backupmodule.BackupRecord{{ID: "rec-1", BackupConfigID: "cfg-1", Status: "failed", Logs: "disk full"}}
 	if err := service.Evaluate(ctx, "member", orgID); err != nil {
 		t.Fatalf("evaluate: %v", err)
 	}

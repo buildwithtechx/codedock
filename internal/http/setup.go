@@ -23,7 +23,6 @@ import (
 	"codedock/internal/engine/observability"
 	"codedock/internal/engine/ssh"
 	"codedock/internal/handlers/auth"
-	"codedock/internal/handlers/backups"
 	"codedock/internal/handlers/databases"
 	"codedock/internal/handlers/deployments"
 	"codedock/internal/handlers/projects"
@@ -31,6 +30,7 @@ import (
 	"codedock/internal/http/mcp"
 	"codedock/internal/http/middleware"
 	"codedock/internal/models"
+	backupmodule "codedock/internal/modules/backups"
 	"codedock/internal/modules/chatapps"
 	"codedock/internal/modules/dns"
 	mailmodule "codedock/internal/modules/mail"
@@ -38,7 +38,6 @@ import (
 	"codedock/internal/notifications"
 	"codedock/internal/repositories"
 	authservices "codedock/internal/services/auth"
-	backupservices "codedock/internal/services/backups"
 	databaseservices "codedock/internal/services/databases"
 	deploymentservices "codedock/internal/services/deployments"
 	"codedock/internal/services/operations"
@@ -190,9 +189,11 @@ func NewServer(db *sql.DB, v *utils.Vault, deployer *deploy.Deployer, traefikMan
 	if err := operationService.Recover(context.Background()); err != nil {
 		return nil, fmt.Errorf("recover operations: %w", err)
 	}
-	backupService := backupservices.NewBackupService(backupRepo, s3DestinationRepo, backupManager)
-	backupService.SetBatches(repositories.NewPolicyBatchRepo(db))
-	backupService.SetSFTP(repositories.NewSFTPDestinationRepo(db))
+	backupModRepo := backupmodule.NewRepository(db, v)
+	backupModRepo.SetSnapshotDumper(newSystemSnapshotDumper(dataDir))
+	backupService := backupmodule.NewService(backupModRepo, backupModRepo, backupmodule.NewManager(backupManager))
+	backupService.SetBatches(backupModRepo)
+	backupService.SetSFTP(backupmodule.NewSFTPRepository(db))
 	backupManager.OnBackupFailed = func(recordID, errStr string) {
 		baseURL := strings.TrimRight(config.Get().Server.DashboardURL, "/")
 		if baseURL == "" {
@@ -268,7 +269,7 @@ func NewServer(db *sql.DB, v *utils.Vault, deployer *deploy.Deployer, traefikMan
 	_ = networking.EnsureTraefikAccessRoute(networking.DynamicDir, config.Get().Server.Port)
 	serviceVarHandler := projects.NewServiceVarHandler(appService, auditService, envSuggestionService)
 	projectSettingsHandler := projects.NewProjectSettingsHandler(projectSettingsService)
-	backupHandler := backups.NewBackupHandler(backupService, appService, databaseService, projectService, auditService)
+	backupHandler := backupmodule.NewHandler(backupService)
 	backupHandler.SetOperations(operationService)
 	settingsHandler := auth.NewSettingsHandler(settingsService, notifSettingsService)
 	notifSettingsHandler := system.NewNotificationSettingsHandler(notifSettingsService, orgRepo)
@@ -337,12 +338,12 @@ func NewServer(db *sql.DB, v *utils.Vault, deployer *deploy.Deployer, traefikMan
 		slog.Error("failed to initialize security verifier", "error", err)
 	}
 	securityFeedManager := security.NewFeedManager(db, securityVerifier, "")
-	securityService := security.NewSecurityService(db, securityFeedManager, projectRepo, appRepo, deployRepo, deploymentService)
+	securityService := security.NewSecurityService(db, securityFeedManager, nil, nil, nil, nil)
 	securityHandler := system.NewSecurityHandler(securityService)
 
 	chatAppRepo := chatapps.NewRepository(db)
 	chatAppService := chatapps.NewService(chatAppRepo, v)
-	chatAppDispatcher := chatapps.NewDispatcher(chatAppService, projectService, appService, deploymentService)
+	chatAppDispatcher := chatapps.NewDispatcher(chatAppService, nil)
 	chatAppHandler := chatapps.NewHandler(chatAppService, chatAppDispatcher)
 
 	serverMetricsWSHandler := system.NewServerMetricsWSHandler(tokenService, serverService, userRepo)
@@ -370,7 +371,7 @@ func NewServer(db *sql.DB, v *utils.Vault, deployer *deploy.Deployer, traefikMan
 
 	mailRepo := mailmodule.NewRepository(db, v)
 	mailService := mailmodule.NewService(mailRepo)
-	mailHandler := mailmodule.NewHandler(mailService, projectService, auditService)
+	mailHandler := mailmodule.NewHandler(mailService, nil, nil)
 
 	authLimiter := middleware.NewRateLimiter(10, time.Minute)
 	otpLimiter := middleware.NewRateLimiter(5, time.Minute)

@@ -13,9 +13,21 @@ import (
 	"time"
 
 	"golang.org/x/net/publicsuffix"
-
-	"codedock/internal/models"
 )
+
+type DNSConfig struct {
+	PublicIPv4         string
+	CloudflareAPIToken string
+	NamecheapAPIKey    string
+	NamecheapAPIUser   string
+	NamecheapClientIP  string
+	SpaceshipAPIKey    string
+	SpaceshipAPISecret string
+}
+
+type SettingsReader interface {
+	GetDNSConfig(ctx context.Context) (*DNSConfig, error)
+}
 
 const (
 	dnsProviderCloudflare = "cloudflare"
@@ -159,7 +171,7 @@ func namecheapRecordExists(body []byte, subDomain, recordType, value string) boo
 	return false
 }
 
-func buildNamecheapSetHostsQuery(parts []string, cfg *models.ServerSettings, hosts []namecheapHost) url.Values {
+func buildNamecheapSetHostsQuery(parts []string, cfg *DNSConfig, hosts []namecheapHost) url.Values {
 	values := url.Values{}
 	values.Set("ApiUser", cfg.NamecheapAPIUser)
 	values.Set("ApiKey", cfg.NamecheapAPIKey)

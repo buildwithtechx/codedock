@@ -2,7 +2,7 @@ package http
 
 import (
 	"codedock/internal/models"
-	"codedock/internal/services/backups"
+	"codedock/internal/modules/backups"
 	"codedock/internal/services/projects"
 	"context"
 	"fmt"
@@ -12,7 +12,7 @@ type backupUsers interface {
 	GetUserByID(context.Context, string) (*models.User, error)
 }
 
-func configureScheduledBackupAuthorization(service *backups.BackupService, users backupUsers, projects *projects.ProjectService) {
+func configureScheduledBackupAuthorization(service *backups.Service, users backupUsers, projects *projects.ProjectService) {
 	service.RunAuthorization = func(ctx context.Context, userID, project string) error {
 		user, err := users.GetUserByID(ctx, userID)
 		if err != nil || user == nil || !user.IsActive {

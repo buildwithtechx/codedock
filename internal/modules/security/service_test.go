@@ -3,16 +3,31 @@ package security
 import (
 	"context"
 	"testing"
-
-	"codedock/internal/models"
 )
 
 type mockAppRepo struct {
-	services []*models.AppService
+	services []*SecurityAppService
 }
 
-func (m *mockAppRepo) Create(ctx context.Context, svc *models.AppService) error { return nil }
-func (m *mockAppRepo) GetByID(ctx context.Context, id string) (*models.AppService, error) {
+func (m *mockAppRepo) ListAppServices(ctx context.Context, projectID string) ([]*SecurityAppService, error) {
+	var res []*SecurityAppService
+	for _, s := range m.services {
+		res = append(res, s)
+	}
+	return res, nil
+}
+
+func (m *mockAppRepo) UpdateAppService(ctx context.Context, svc *SecurityAppService) error {
+	for i, s := range m.services {
+		if s.ID == svc.ID {
+			m.services[i] = svc
+			return nil
+		}
+	}
+	return nil
+}
+
+func (m *mockAppRepo) GetByID(ctx context.Context, id string) (*SecurityAppService, error) {
 	for _, s := range m.services {
 		if s.ID == id {
 			return s, nil
@@ -20,49 +35,14 @@ func (m *mockAppRepo) GetByID(ctx context.Context, id string) (*models.AppServic
 	}
 	return nil, nil
 }
-func (m *mockAppRepo) ListByEnvironment(ctx context.Context, environmentID string) ([]*models.AppService, error) {
-	return nil, nil
-}
-func (m *mockAppRepo) ListByProject(ctx context.Context, projectID string) ([]*models.AppService, error) {
-	var res []*models.AppService
-	for _, s := range m.services {
-		if s.ProjectID == projectID {
-			res = append(res, s)
-		}
-	}
-	return res, nil
-}
-func (m *mockAppRepo) ListByOrganization(ctx context.Context, organizationID string, search string) ([]*models.AppService, error) {
-	return nil, nil
-}
-func (m *mockAppRepo) ListAll(ctx context.Context, search string) ([]*models.AppService, error) {
-	return nil, nil
-}
-func (m *mockAppRepo) SearchIDsByName(ctx context.Context, term string, limit int) ([]string, error) {
-	return nil, nil
-}
-func (m *mockAppRepo) Update(ctx context.Context, svc *models.AppService) error { return nil }
-func (m *mockAppRepo) Delete(ctx context.Context, id string) error              { return nil }
-func (m *mockAppRepo) CreateWebhook(ctx context.Context, w *models.Webhook) error {
-	return nil
-}
-func (m *mockAppRepo) ListWebhooksByService(ctx context.Context, serviceID string) ([]*models.Webhook, error) {
-	return nil, nil
-}
-func (m *mockAppRepo) DeleteWebhook(ctx context.Context, id, serviceID string) error { return nil }
-func (m *mockAppRepo) CreateLogDrain(ctx context.Context, d *models.LogDrain) error  { return nil }
-func (m *mockAppRepo) ListLogDrainsByService(ctx context.Context, serviceID string) ([]*models.LogDrain, error) {
-	return nil, nil
-}
-func (m *mockAppRepo) DeleteLogDrain(ctx context.Context, id, serviceID string) error { return nil }
 
 type mockDeployTrigger struct {
-	created []*models.Deployment
+	created []string
 }
 
-func (m *mockDeployTrigger) CreateDeployment(ctx context.Context, d *models.Deployment) (*models.Deployment, error) {
-	m.created = append(m.created, d)
-	return d, nil
+func (m *mockDeployTrigger) TriggerRemediation(ctx context.Context, serviceID string) error {
+	m.created = append(m.created, serviceID)
+	return nil
 }
 
 func TestSecurityService(t *testing.T) {
@@ -73,13 +53,11 @@ func TestSecurityService(t *testing.T) {
 	feedManager := NewFeedManager(nil, verifier, "")
 
 	appRepo := &mockAppRepo{
-		services: []*models.AppService{
+		services: []*SecurityAppService{
 			{
 				ID:             "svc-node",
-				ProjectID:      "proj-1",
 				Name:           "web",
-				ImageRef:       "node:22-alpine",
-				Stack:          "node",
+				BuildImage:     "node:22-alpine",
 				RuntimeVersion: "22.23.3", // matches CVE-2026-111497-node (< 22.23.4)
 			},
 		},

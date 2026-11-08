@@ -13,6 +13,7 @@ import (
 
 	"codedock/internal/engine/hetzner"
 	"codedock/internal/models"
+	"codedock/internal/modules/backups"
 	"codedock/internal/repositories"
 	"codedock/internal/services/migrations"
 )
@@ -25,8 +26,8 @@ type WorkloadDeployer interface {
 }
 
 type BackupRunner interface {
-	ListRecordsByConfigs(ctx context.Context, configIDs []string, limit int) ([]*models.BackupRecord, error)
-	TriggerBackup(ctx context.Context, configID string) (*models.BackupRecord, error)
+	ListRecordsByConfigs(ctx context.Context, configIDs []string, limit int) ([]*backups.BackupRecord, error)
+	TriggerBackup(ctx context.Context, configID string) (*backups.BackupRecord, error)
 }
 
 type HealthReader interface {

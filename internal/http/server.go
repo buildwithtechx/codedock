@@ -14,7 +14,6 @@ import (
 	"codedock/internal/engine/networking"
 	"codedock/internal/engine/ssh"
 	"codedock/internal/handlers/auth"
-	"codedock/internal/handlers/backups"
 	"codedock/internal/handlers/databases"
 	"codedock/internal/handlers/deployments"
 	"codedock/internal/handlers/projects"
@@ -22,6 +21,7 @@ import (
 	"codedock/internal/http/mcp"
 	"codedock/internal/http/middleware"
 	"codedock/internal/models"
+	backupmodule "codedock/internal/modules/backups"
 	"codedock/internal/modules/chatapps"
 	"codedock/internal/modules/dns"
 	mailmodule "codedock/internal/modules/mail"
@@ -59,7 +59,7 @@ type Server struct {
 	deploymentHandler         *deployments.DeploymentHandler
 	serviceVarHandler         *projects.ServiceVarHandler
 	projectSettingsHandler    *projects.ProjectSettingsHandler
-	backupHandler             *backups.BackupHandler
+	backupHandler             *backupmodule.Handler
 	settingsHandler           *auth.SettingsHandler
 	appearanceHandler         *auth.AppearanceHandler
 	notifSettingsHandler      *system.NotificationSettingsHandler

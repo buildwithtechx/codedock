@@ -9,6 +9,7 @@ import (
 	"codedock/internal/config"
 	"codedock/internal/models"
 	"codedock/internal/modules/ai"
+	backupmodule "codedock/internal/modules/backups"
 	"codedock/internal/modules/chatapps"
 	"codedock/internal/modules/dns"
 	"github.com/labstack/echo/v4"
@@ -101,38 +102,11 @@ func (s *Server) registerBackupRoutes(authGroup *echo.Group) {
 	authGroup.GET("/operations", s.operationHandler.List, s.authGuard.RequireScope("backup:read"))
 	authGroup.GET("/operations/:operationId", s.operationHandler.Get, s.authGuard.RequireScope("backup:read"))
 	authGroup.POST("/operations/:operationId/cancel", s.operationHandler.Cancel, s.authGuard.RequireScope("backup:write"))
-	authGroup.POST("/backups/:id/runs", s.backupHandler.StartRun, s.authGuard.RequireScope("backup:write"))
-	authGroup.POST("/backup-records/:recordId/restore/review", s.backupHandler.PrepareRestore, s.authGuard.RequireScope("backup:write"))
-	authGroup.POST("/backup-operations/:operationId/apply", s.backupHandler.ApplyRestore, s.authGuard.RequireScope("backup:write"))
-	authGroup.PUT("/backup-records/:recordId/protection", s.backupHandler.ProtectRecord, s.authGuard.RequireScope("backup:write"))
-	authGroup.GET("/backups", s.backupHandler.List)
-	authGroup.POST("/backups", s.backupHandler.Create)
-	authGroup.GET("/backups/:id", s.backupHandler.Get)
-	authGroup.PUT("/backups/:id", s.backupHandler.Update, s.authGuard.RequireScope("backup:write"))
-	authGroup.DELETE("/backups/:id", s.backupHandler.Delete)
-	authGroup.POST("/backups/:id/trigger", s.backupHandler.Trigger)
-	authGroup.POST("/backups/:id/restore", s.backupHandler.Restore)
-	authGroup.GET("/backups/:id/records", s.backupHandler.ListRecords)
-	authGroup.GET("/backups/:id/records/:recordId/download", s.backupHandler.DownloadRecord)
-	authGroup.DELETE("/backups/:id/records/:recordId", s.backupHandler.DeleteRecord)
-	authGroup.GET("/backup-records", s.backupHandler.ListAllRecords)
-	authGroup.GET("/backup-records/:recordId/volume-restore", s.backupHandler.VolumeRestoreTarget)
-	authGroup.POST("/backup-records/:recordId/volume-restore", s.backupHandler.RestoreVolume)
-	authGroup.DELETE("/backup-records/:recordId/volume-restore", s.backupHandler.CancelVolumeRestore)
-	authGroup.GET("/s3-destinations", s.backupHandler.ListS3Destinations, s.authGuard.RequireRole("admin"))
-	authGroup.POST("/s3-destinations", s.backupHandler.CreateS3Destination, s.authGuard.RequireRole("admin"))
-	authGroup.POST("/s3-destinations/verify", s.backupHandler.VerifyS3Draft, s.authGuard.RequireRole("admin"))
-	authGroup.PUT("/s3-destinations/:id", s.backupHandler.UpdateS3Destination, s.authGuard.RequireRole("admin"))
-	authGroup.POST("/s3-destinations/:id/verify", s.backupHandler.VerifyS3Destination, s.authGuard.RequireRole("admin"))
-	authGroup.POST("/s3-destinations/:id/default", s.backupHandler.SetDefaultS3Destination, s.authGuard.RequireRole("admin"))
-	authGroup.DELETE("/s3-destinations/:id", s.backupHandler.DeleteS3Destination, s.authGuard.RequireRole("admin"))
-	authGroup.GET("/sftp-destinations", s.backupHandler.ListSFTPDestinations, s.authGuard.RequireRole("admin"))
-	authGroup.POST("/sftp-destinations", s.backupHandler.CreateSFTPDestination, s.authGuard.RequireRole("admin"))
-	authGroup.POST("/sftp-destinations/:id/verify", s.backupHandler.VerifySFTPDestination, s.authGuard.RequireRole("admin"))
-	authGroup.DELETE("/sftp-destinations/:id", s.backupHandler.DeleteSFTPDestination, s.authGuard.RequireRole("admin"))
-	authGroup.GET("/projects/:id/policy-batches", s.backupHandler.ListBatches, s.authGuard.RequireRole("admin"))
-	authGroup.POST("/projects/:id/policy-batches", s.backupHandler.CreateBatch, s.authGuard.RequireRole("admin"))
-	authGroup.POST("/policy-batches/:batchId/trigger", s.backupHandler.TriggerBatch, s.authGuard.RequireRole("admin"))
+	backupmodule.RegisterRoutes(authGroup, s.backupHandler, backupmodule.RouteMiddleware{
+		Admin:          s.authGuard.RequireRole("admin"),
+		BackupWrite:    s.authGuard.RequireScope("backup:write"),
+		DatabaseManage: s.authGuard.RequireScope("database:manage"),
+	})
 }
 
 func (s *Server) registerSettingsRoutes(apiGroup, authGroup *echo.Group) {

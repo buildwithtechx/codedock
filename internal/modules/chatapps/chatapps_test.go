@@ -189,7 +189,7 @@ func TestChatApps_PairingFlow(t *testing.T) {
 		t.Fatalf("create connection: %v", err)
 	}
 
-	dispatcher := chatapps.NewDispatcher(svc, nil, nil, nil)
+	dispatcher := chatapps.NewDispatcher(svc, nil)
 
 	// 1. Unpaired user attempts command
 	resp, err := dispatcher.DispatchCommand(ctx, chatapps.ChatCommandRequest{

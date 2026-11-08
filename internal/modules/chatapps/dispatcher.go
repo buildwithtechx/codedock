@@ -2,43 +2,54 @@ package chatapps
 
 import (
 	"context"
-	"crypto/rand"
-	"encoding/hex"
 	"fmt"
 	"strings"
-	"time"
-
-	"github.com/google/uuid"
-
-	"codedock/internal/models"
-	"codedock/internal/services/deployments"
-	"codedock/internal/services/projects"
 )
 
-type Dispatcher struct {
-	service           *Service
-	projectService    *projects.ProjectService
-	appService        *projects.AppService
-	deploymentService *deployments.DeploymentService
+type ProjectSummary struct {
+	ID          string
+	Name        string
+	Description string
 }
 
-func NewDispatcher(
-	service *Service,
-	projectService *projects.ProjectService,
-	appService *projects.AppService,
-	deploymentService *deployments.DeploymentService,
-) *Dispatcher {
+type AppServiceSummary struct {
+	ID        string
+	Name      string
+	Status    string
+	Domain    string
+	ImageRef  string
+	Branch    string
+	UpdatedAt string
+}
+
+type CommandRunner interface {
+	ListProjects(ctx context.Context, limit, offset int) ([]ProjectSummary, error)
+	GetProject(ctx context.Context, id string) (*ProjectSummary, error)
+	ListAppServices(ctx context.Context, projectID string) ([]AppServiceSummary, error)
+	GetAppService(ctx context.Context, id string) (*AppServiceSummary, error)
+	RedeployApp(ctx context.Context, appID, username, provider string) (string, error)
+	RestartApp(ctx context.Context, appID string) error
+}
+
+type Dispatcher struct {
+	service *Service
+	runner  CommandRunner
+}
+
+func NewDispatcher(service *Service, runner CommandRunner) *Dispatcher {
+	if runner == nil && service != nil && service.repo != nil {
+		if r, ok := service.repo.(CommandRunner); ok {
+			runner = r
+		}
+	}
 	return &Dispatcher{
-		service:           service,
-		projectService:    projectService,
-		appService:        appService,
-		deploymentService: deploymentService,
+		service: service,
+		runner:  runner,
 	}
 }
 
 func parseCommandLine(raw string) (string, string) {
 	trimmed := strings.TrimSpace(raw)
-	// Strip prefix e.g. "/codedock" or "/openship" or "codedock"
 	if strings.HasPrefix(trimmed, "/") {
 		trimmed = trimmed[1:]
 	}
@@ -112,208 +123,5 @@ func (d *Dispatcher) DispatchCommand(ctx context.Context, req ChatCommandRequest
 		}, nil
 	}
 
-	// 3. Authenticated Commands
-	switch cmd {
-	case "help":
-		helpText := "### 🚢 Codedock Chat Assistant Commands\n\n" +
-			"| Command | Description |\n" +
-			"|---|---|\n" +
-			"| `/codedock projects` | List all accessible projects and current health |\n" +
-			"| `/codedock status <id>` | Show service details, container health, and domain |\n" +
-			"| `/codedock logs <id>` | View container status and get secure logs deep link |\n" +
-			"| `/codedock redeploy <id>` | Trigger redeployment (requires confirmation) |\n" +
-			"| `/codedock restart <id>` | Restart container service (requires confirmation) |\n" +
-			"| `/codedock confirm <token>` | Confirm a pending mutating action |\n" +
-			"| `/codedock ask <query>` | Ask Codedock AI infrastructure co-pilot |\n" +
-			"| `/codedock link` | Pair a new account or refresh credentials |\n"
-		return &ChatCommandResponse{Text: helpText}, nil
-
-	case "projects":
-		if d.projectService == nil {
-			return &ChatCommandResponse{Text: "Project service unavailable"}, nil
-		}
-		projectsList, _, err := d.projectService.ListProjects(ctx, "", 25, 0)
-		if err != nil {
-			return nil, err
-		}
-		if len(projectsList) == 0 {
-			return &ChatCommandResponse{Text: "No projects found in this Codedock instance."}, nil
-		}
-		var sb strings.Builder
-		sb.WriteString(fmt.Sprintf("### 📂 Codedock Projects (%d)\n\n", len(projectsList)))
-		for _, p := range projectsList {
-			fmt.Fprintf(&sb, "- **%s** (`%s`)\n", p.Name, p.ID)
-			if d.appService != nil {
-				apps, _ := d.appService.ListByProject(ctx, p.ID)
-				for _, a := range apps {
-					domain := a.Domain
-					if domain == "" {
-						domain = "no public domain"
-					}
-					fmt.Fprintf(&sb, "  • Service `%s`: **%s** (%s)\n", a.Name, a.Status, domain)
-				}
-			}
-		}
-		return &ChatCommandResponse{Text: sb.String()}, nil
-
-	case "status":
-		target := strings.TrimSpace(args)
-		if target == "" {
-			return &ChatCommandResponse{Text: "Usage: `/codedock status <project_or_service_id>`"}, nil
-		}
-		if d.appService != nil {
-			if app, err := d.appService.GetAppService(ctx, target); err == nil && app != nil {
-				msg := fmt.Sprintf(
-					"### 📦 Service Status: %s\n\n"+
-						"- **ID**: `%s`\n"+
-						"- **Status**: `%s`\n"+
-						"- **Image**: `%s`\n"+
-						"- **Branch**: `%s`\n"+
-						"- **Domain**: %s\n"+
-						"- **Updated**: %s\n",
-					app.Name, app.ID, app.Status, app.ImageRef, app.Branch,
-					app.Domain, app.UpdatedAt.Format(time.RFC3339),
-				)
-				return &ChatCommandResponse{Text: msg}, nil
-			}
-		}
-		if d.projectService != nil {
-			if proj, err := d.projectService.GetProject(ctx, target); err == nil && proj != nil {
-				msg := fmt.Sprintf("### 📂 Project: %s (`%s`)\n%s\n", proj.Name, proj.ID, proj.Description)
-				return &ChatCommandResponse{Text: msg}, nil
-			}
-		}
-		return &ChatCommandResponse{Text: fmt.Sprintf("Resource `%s` not found.", target)}, nil
-
-	case "logs":
-		target := strings.TrimSpace(args)
-		if target == "" {
-			return &ChatCommandResponse{Text: "Usage: `/codedock logs <service_id>`"}, nil
-		}
-		// Security safeguard: Do not dump raw text or secrets in chat channels
-		deepLink := fmt.Sprintf("/services/%s", target)
-		status := "Unknown"
-		name := target
-		if d.appService != nil {
-			if app, err := d.appService.GetAppService(ctx, target); err == nil && app != nil {
-				status = string(app.Status)
-				name = app.Name
-			}
-		}
-		msg := fmt.Sprintf(
-			"📋 **Service Logs for %s**\n\n"+
-				"- **Current Status**: `%s`\n\n"+
-				"To prevent accidental leakage of sensitive tokens or internal environment variables, "+
-				"raw container logs are gated in the dashboard:\n"+
-				"[Open Secure Container Logs](%s)",
-			name, status, deepLink,
-		)
-		return &ChatCommandResponse{Text: msg, DeepLink: &deepLink}, nil
-
-	case "redeploy", "restart":
-		target := strings.TrimSpace(args)
-		if target == "" {
-			return &ChatCommandResponse{Text: fmt.Sprintf("Usage: `/codedock %s <service_id>`", cmd)}, nil
-		}
-		var appName string = target
-		if d.appService != nil {
-			if app, err := d.appService.GetAppService(ctx, target); err == nil && app != nil {
-				appName = app.Name
-			}
-		}
-
-		// Mutating operation requires confirmation token
-		tokenBytes := make([]byte, 8)
-		_, _ = rand.Read(tokenBytes)
-		confirmToken := "cf_" + hex.EncodeToString(tokenBytes)
-
-		dbCmd := &ChatAppCommand{
-			ID:                "cmd_" + uuid.NewString()[:12],
-			ConnectionID:      req.ConnectionID,
-			IdentityID:        &identity.ID,
-			Provider:          req.Provider,
-			Command:           cmd,
-			Args:              target,
-			Status:            "awaiting_confirmation",
-			ConfirmationToken: &confirmToken,
-		}
-		_ = d.service.Repo().CreateCommand(ctx, dbCmd)
-
-		msg := fmt.Sprintf(
-			"⚠️ **Confirmation Required**\n\n"+
-				"You are about to **%s** service `%s` (`%s`).\n\n"+
-				"To execute this action, reply in this channel within 5 minutes:\n"+
-				"`/codedock confirm %s`",
-			cmd, appName, target, confirmToken,
-		)
-		return &ChatCommandResponse{
-			Text:                 msg,
-			RequiresConfirmation: true,
-			ConfirmationToken:    &confirmToken,
-		}, nil
-
-	case "confirm":
-		token := strings.TrimSpace(args)
-		if token == "" {
-			return &ChatCommandResponse{Text: "Usage: `/codedock confirm <token>`"}, nil
-		}
-		pendingCmd, err := d.service.Repo().GetCommandByConfirmationToken(ctx, token)
-		if err != nil || pendingCmd == nil {
-			return &ChatCommandResponse{Text: "❌ Invalid or expired confirmation token."}, nil
-		}
-
-		// Execute the confirmed mutating action
-		var resultMsg string
-		if pendingCmd.Command == "redeploy" {
-			if d.deploymentService != nil && d.appService != nil {
-				if app, err := d.appService.GetAppService(ctx, pendingCmd.Args); err == nil && app != nil {
-					newDep := &models.Deployment{
-						ServiceID:     app.ID,
-						EnvironmentID: app.EnvironmentID,
-						ProjectID:     app.ProjectID,
-						Status:        "BUILDING",
-						CommitMessage: "Chat Command Redeploy by " + req.ExternalUsername,
-						Branch:        app.Branch,
-						Trigger:       "Chat: " + string(req.Provider),
-					}
-					created, err := d.deploymentService.CreateDeployment(ctx, newDep)
-					if err == nil && created != nil {
-						d.deploymentService.ExecuteDeploymentAsync(created)
-						resultMsg = fmt.Sprintf("🚀 **Redeployment Triggered** for `%s` (Deployment `%s`).", app.Name, created.ID)
-					}
-				}
-			}
-		} else if pendingCmd.Command == "restart" {
-			if d.deploymentService != nil && d.appService != nil {
-				if app, err := d.appService.GetAppService(ctx, pendingCmd.Args); err == nil && app != nil {
-					if err := d.deploymentService.RestartAppService(ctx, app); err == nil {
-						app.Status = models.AppServiceStatusRunning
-						_ = d.appService.UpdateAppService(ctx, app)
-						resultMsg = fmt.Sprintf("🔄 **Service Restarted** successfully for `%s`.", app.Name)
-					}
-				}
-			}
-		}
-
-		if resultMsg == "" {
-			resultMsg = fmt.Sprintf("Action `%s` executed for resource `%s`.", pendingCmd.Command, pendingCmd.Args)
-		}
-
-		_ = d.service.Repo().MarkCommandConfirmed(ctx, pendingCmd.ID, resultMsg)
-		return &ChatCommandResponse{Text: resultMsg}, nil
-
-	case "ask":
-		query := strings.TrimSpace(args)
-		if query == "" {
-			return &ChatCommandResponse{Text: "Usage: `/codedock ask <question>`"}, nil
-		}
-		return &ChatCommandResponse{
-			Text: fmt.Sprintf("🤖 **Codedock AI** (User: `%s`):\nI received your query: %q\nTo view full interactive analysis and tool execution cards, open the Codedock dashboard.", identity.ExternalUsername, query),
-		}, nil
-
-	default:
-		return &ChatCommandResponse{
-			Text: fmt.Sprintf("Unknown command: `%s`. Type `/codedock help` for available commands.", cmd),
-		}, nil
-	}
+	return d.executeAuthenticatedCommand(ctx, req, identity, cmd, args)
 }

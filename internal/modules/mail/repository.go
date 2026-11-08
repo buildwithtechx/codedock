@@ -101,3 +101,41 @@ func (r *repo) Delete(ctx context.Context, id string) error {
 	}
 	return nil
 }
+
+func (r *repo) GetDefaultOrgID(ctx context.Context, userID string) (string, error) {
+	if r.db == nil {
+		return "", nil
+	}
+	var orgID string
+	err := r.db.GetContext(ctx, &orgID, `SELECT id FROM organizations WHERE owner_id = $1 ORDER BY created_at ASC LIMIT 1`, userID)
+	if err != nil {
+		return "", nil
+	}
+	return orgID, nil
+}
+
+func (r *repo) HasOrgPermission(ctx context.Context, orgID, userID, role, minPermission string) bool {
+	if role == "admin" || role == "owner" {
+		return true
+	}
+	if r.db == nil {
+		return false
+	}
+	var perm string
+	err := r.db.GetContext(ctx, &perm, `SELECT permission FROM organization_members WHERE organization_id = $1 AND user_id = $2`, orgID, userID)
+	if err != nil {
+		return false
+	}
+	if minPermission == PermissionAdmin {
+		return perm == PermissionAdmin || perm == "owner"
+	}
+	return perm != ""
+}
+
+func (r *repo) LogAction(ctx context.Context, userID, action, resource, ip string, details map[string]string) {
+	if r.db == nil {
+		return
+	}
+	_, _ = r.db.ExecContext(ctx, `INSERT INTO audit_logs (id, user_id, action, resource, ip_address, created_at) VALUES ($1, $2, $3, $4, $5, $6)`,
+		uuid.NewString(), userID, action, resource, ip, time.Now().UTC().Format(time.RFC3339))
+}

@@ -9,8 +9,6 @@ import (
 	"net/url"
 	"strings"
 	"sync"
-
-	"codedock/internal/models"
 )
 
 type namecheapApiResponse struct {
@@ -50,7 +48,7 @@ func validateNamecheapResponse(body []byte) error {
 	return fmt.Errorf("namecheap api error: %s", strings.Join(messages, "; "))
 }
 
-func fetchNamecheapHosts(ctx context.Context, client *http.Client, cfg *models.ServerSettings, sld, tld string) ([]byte, error) {
+func fetchNamecheapHosts(ctx context.Context, client *http.Client, cfg *DNSConfig, sld, tld string) ([]byte, error) {
 	u := "https://api.namecheap.com/xml.response"
 	getQ := url.Values{}
 	getQ.Set("ApiUser", cfg.NamecheapAPIUser)
@@ -107,7 +105,7 @@ func lockNamecheap(domain string) func() {
 	}
 }
 
-func (s *Service) provisionNamecheap(ctx context.Context, cfg *models.ServerSettings, domain, recordType, value string) error {
+func (s *Service) provisionNamecheap(ctx context.Context, cfg *DNSConfig, domain, recordType, value string) error {
 	rootDomain := getRootDomain(domain)
 	unlock := lockNamecheap(rootDomain)
 	defer unlock()
@@ -160,7 +158,7 @@ func (s *Service) provisionNamecheap(ctx context.Context, cfg *models.ServerSett
 	return nil
 }
 
-func (s *Service) deprovisionNamecheap(ctx context.Context, cfg *models.ServerSettings, domain, recordType, value string) error {
+func (s *Service) deprovisionNamecheap(ctx context.Context, cfg *DNSConfig, domain, recordType, value string) error {
 	normalizedDomain := strings.ToLower(strings.TrimSuffix(strings.TrimSpace(domain), "."))
 	rootDomain := getRootDomain(normalizedDomain)
 	unlock := lockNamecheap(rootDomain)
@@ -224,7 +222,7 @@ func (s *Service) deprovisionNamecheap(ctx context.Context, cfg *models.ServerSe
 	return nil
 }
 
-func (s *Service) setNamecheapDefaultDNS(ctx context.Context, client *http.Client, cfg *models.ServerSettings, sld, tld string) error {
+func (s *Service) setNamecheapDefaultDNS(ctx context.Context, client *http.Client, cfg *DNSConfig, sld, tld string) error {
 	query := url.Values{}
 	query.Set("ApiUser", cfg.NamecheapAPIUser)
 	query.Set("ApiKey", cfg.NamecheapAPIKey)

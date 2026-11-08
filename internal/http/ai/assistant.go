@@ -11,7 +11,7 @@ import (
 
 	"codedock/internal/config"
 	"codedock/internal/http/mcp"
-	"codedock/internal/models"
+	aimodule "codedock/internal/modules/ai"
 	"codedock/internal/services/databases"
 	"codedock/internal/services/projects"
 	"codedock/internal/version"
@@ -113,7 +113,7 @@ type Dependencies struct {
 	ProjectService *projects.ProjectService
 	AppService     *projects.AppService
 	DBService      *databases.DatabaseService
-	Settings       *models.AISettings
+	Settings       *aimodule.AISettings
 }
 
 var (
