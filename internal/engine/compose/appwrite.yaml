@@ -1,0 +1,83 @@
+x-codedock:
+  is_one_click: true
+  verified: true
+  name: Appwrite
+  description: Full self-hosted Firebase alternative with Auth, Realtime Database, File Storage, and Cloud Functions.
+  category: backend
+  icon: appwrite
+  connection_string: postgresql://appwrite:${secret:DB_PASSWORD}@db:5432/appwrite
+  secrets:
+    - var: DB_PASSWORD
+      label: Database password
+      length: 24
+    - var: OPENSSL_KEY_V1
+      label: Encryption key
+      length: 32
+  inputs:
+    - var: ADMIN_EMAIL
+      label: System admin email
+      default: admin@codedock.local
+      required: false
+services:
+  appwrite:
+    image: appwrite/appwrite:1.6.0
+    restart: always
+    ports:
+      - "8080:80"
+    depends_on:
+      - db
+      - redis
+    environment:
+      - _APP_ENV=production
+      - _APP_LOCALE=en
+      - _APP_OPTIONS_ABUSE=enabled
+      - _APP_OPTIONS_FORCE_HTTPS=disabled
+      - _APP_OPENSSL_KEY_V1=${secret:OPENSSL_KEY_V1}
+      - _APP_SYSTEM_SECURITY_EMAIL_ADDRESS=${input:ADMIN_EMAIL}
+      - _APP_DB_HOST=db
+      - _APP_DB_PORT=5432
+      - _APP_DB_SCHEMA=appwrite
+      - _APP_DB_USER=appwrite
+      - _APP_DB_PASS=${secret:DB_PASSWORD}
+      - _APP_REDIS_HOST=redis
+      - _APP_REDIS_PORT=6379
+    volumes:
+      - appwrite-uploads:/storage/uploads
+      - appwrite-cache:/storage/cache
+      - appwrite-config:/storage/config
+      - appwrite-certificates:/storage/certificates
+      - appwrite-functions:/storage/functions
+    healthcheck:
+      test: ["CMD-SHELL", "wget -q -O /dev/null http://localhost/v1/health || exit 1"]
+      interval: 15s
+      timeout: 5s
+      retries: 5
+      start_period: 30s
+  db:
+    image: postgres:16-alpine
+    restart: always
+    environment:
+      - POSTGRES_DB=appwrite
+      - POSTGRES_USER=appwrite
+      - POSTGRES_PASSWORD=${secret:DB_PASSWORD}
+    volumes:
+      - appwrite-db:/var/lib/postgresql/data
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U appwrite -d appwrite"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+  redis:
+    image: redis:7-alpine
+    restart: always
+    volumes:
+      - appwrite-redis:/data
+volumes:
+  appwrite-uploads:
+  appwrite-cache:
+  appwrite-config:
+  appwrite-certificates:
+  appwrite-functions:
+  appwrite-db:
+  appwrite-redis:
+

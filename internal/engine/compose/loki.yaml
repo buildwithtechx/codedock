@@ -1,0 +1,29 @@
+x-codedock:
+  is_one_click: true
+  verified: true
+  name: Loki
+  description: Multi-tenant, cost-effective log aggregation engine by Grafana Labs.
+  category: analytics
+  icon: loki
+services:
+  loki:
+    image: grafana/loki:3.7.9
+    restart: unless-stopped
+    ports:
+      - "3100"
+    command:
+      - "-config.file=/etc/loki/local-config.yaml"
+      - "-compactor.retention-enabled=true"
+      - "-compactor.delete-request-store=filesystem"
+      - "-store.retention=744h"
+    volumes:
+      - loki-data:/loki
+    healthcheck:
+      test: ["CMD-SHELL", "wget -q -O /dev/null http://127.0.0.1:3100/ready || exit 1"]
+      interval: 15s
+      timeout: 5s
+      retries: 5
+      start_period: 20s
+volumes:
+  loki-data:
+

@@ -1,0 +1,35 @@
+x-codedock:
+  is_one_click: true
+  verified: true
+  name: Beszel
+  description: Lightweight, privacy-focused server and container monitoring hub with alerts and low overhead.
+  category: analytics
+  icon: beszel
+  secrets:
+    - var: USER_PASSWORD
+      label: Admin initial password
+      length: 20
+  inputs:
+    - var: USER_EMAIL
+      label: Admin email
+      default: admin@codedock.local
+      required: false
+services:
+  beszel:
+    image: henrygd/beszel:0.19.0
+    restart: unless-stopped
+    ports:
+      - "8090"
+    environment:
+      - USER_EMAIL=${input:USER_EMAIL}
+      - USER_PASSWORD=${secret:USER_PASSWORD}
+    volumes:
+      - beszel-data:/beszel_data
+    healthcheck:
+      test: ["CMD", "/beszel", "health", "--url", "http://127.0.0.1:8090"]
+      interval: 15s
+      timeout: 5s
+      retries: 5
+      start_period: 10s
+volumes:
+  beszel-data:

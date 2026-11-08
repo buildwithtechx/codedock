@@ -21,6 +21,8 @@ const PNG_LOGOS = new Set([
   'openwebui',
   'open-webui',
   'vllm',
+  'listmonk',
+  'loki',
 ]);
 
 function resolveLogoSrc(icon: string): string {

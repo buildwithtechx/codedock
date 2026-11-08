@@ -1,0 +1,68 @@
+x-codedock:
+  is_one_click: true
+  verified: true
+  name: Listmonk
+  description: High-performance, self-hosted newsletter and mailing campaign manager with PostgreSQL.
+  category: mail
+  icon: listmonk
+  connection_string: postgresql://listmonk:${secret:POSTGRES_PASSWORD}@listmonk-db:5432/listmonk
+  secrets:
+    - var: POSTGRES_PASSWORD
+      label: Database password
+      length: 24
+    - var: LISTMONK_ADMIN_PASSWORD
+      label: Admin password
+      length: 24
+  inputs:
+    - var: LISTMONK_ADMIN_USER
+      label: Admin username
+      default: admin
+      required: false
+services:
+  listmonk-db:
+    image: postgres:16-alpine
+    restart: unless-stopped
+    environment:
+      - POSTGRES_USER=listmonk
+      - POSTGRES_PASSWORD=${secret:POSTGRES_PASSWORD}
+      - POSTGRES_DB=listmonk
+    volumes:
+      - listmonk-db-data:/var/lib/postgresql/data
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U listmonk -d listmonk"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+  listmonk:
+    image: listmonk/listmonk:v6.2.0
+    restart: unless-stopped
+    depends_on:
+      - listmonk-db
+    ports:
+      - "9000"
+    command:
+      - "sh"
+      - "-c"
+      - "./listmonk --install --idempotent --yes && exec ./listmonk"
+    environment:
+      - LISTMONK_app__address=0.0.0.0:9000
+      - LISTMONK_db__host=listmonk-db
+      - LISTMONK_db__port=5432
+      - LISTMONK_db__user=listmonk
+      - LISTMONK_db__password=${secret:POSTGRES_PASSWORD}
+      - LISTMONK_db__database=listmonk
+      - LISTMONK_db__ssl_mode=disable
+      - LISTMONK_ADMIN_USER=${input:LISTMONK_ADMIN_USER}
+      - LISTMONK_ADMIN_PASSWORD=${secret:LISTMONK_ADMIN_PASSWORD}
+    volumes:
+      - listmonk-uploads:/listmonk/uploads
+    healthcheck:
+      test: ["CMD-SHELL", "wget -q -O /dev/null http://127.0.0.1:9000/health || exit 1"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+      start_period: 20s
+volumes:
+  listmonk-db-data:
+  listmonk-uploads:
+

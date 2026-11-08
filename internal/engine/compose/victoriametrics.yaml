@@ -1,0 +1,39 @@
+x-codedock:
+  is_one_click: true
+  verified: true
+  name: VictoriaMetrics
+  description: Fast, cost-effective drop-in replacement for Prometheus long-term metric storage and Grafana dashboards.
+  category: analytics
+  icon: victoriametrics
+  secrets:
+    - var: VM_AUTH_PASSWORD
+      label: Auth password
+      length: 24
+  inputs:
+    - var: VM_AUTH_USER
+      label: Auth username
+      default: admin
+      required: false
+services:
+  victoriametrics:
+    image: victoriametrics/victoria-metrics:v1.154.1
+    restart: unless-stopped
+    ports:
+      - "8428"
+    command:
+      - "-storageDataPath=/storage"
+      - "-retentionPeriod=1y"
+      - "-envflag.enable"
+    environment:
+      - httpAuth_username=${input:VM_AUTH_USER}
+      - httpAuth_password=${secret:VM_AUTH_PASSWORD}
+    volumes:
+      - vm-data:/storage
+    healthcheck:
+      test: ["CMD-SHELL", "wget -q -O /dev/null http://127.0.0.1:8428/health || exit 1"]
+      interval: 15s
+      timeout: 5s
+      retries: 5
+      start_period: 20s
+volumes:
+  vm-data:

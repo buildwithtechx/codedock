@@ -1,0 +1,38 @@
+x-codedock:
+  is_one_click: true
+  verified: true
+  name: pgAdmin 4
+  description: Official web management console and development platform for PostgreSQL databases.
+  category: database
+  icon: pgadmin4
+  secrets:
+    - var: PGADMIN_DEFAULT_PASSWORD
+      label: Admin initial password
+      length: 24
+  inputs:
+    - var: PGADMIN_DEFAULT_EMAIL
+      label: Admin email
+      default: admin@codedock.local
+      required: false
+services:
+  pgadmin4:
+    image: dpage/pgadmin4:9.18
+    restart: unless-stopped
+    ports:
+      - "5050"
+    environment:
+      - PGADMIN_DEFAULT_EMAIL=${input:PGADMIN_DEFAULT_EMAIL}
+      - PGADMIN_DEFAULT_PASSWORD=${secret:PGADMIN_DEFAULT_PASSWORD}
+      - PGADMIN_DISABLE_POSTFIX=1
+      - PGADMIN_LISTEN_PORT=5050
+    volumes:
+      - pgadmin-data:/var/lib/pgadmin
+    healthcheck:
+      test: ["CMD-SHELL", "wget -q -O /dev/null http://127.0.0.1:5050/misc/ping || exit 1"]
+      interval: 15s
+      timeout: 5s
+      retries: 5
+      start_period: 30s
+volumes:
+  pgadmin-data:
+

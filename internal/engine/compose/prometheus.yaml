@@ -1,0 +1,29 @@
+x-codedock:
+  is_one_click: true
+  verified: true
+  name: Prometheus
+  description: Leading open-source systems monitoring and alerting toolkit with dimensional metrics and PromQL.
+  category: analytics
+  icon: prometheus
+services:
+  prometheus:
+    image: prom/prometheus:v3.15.1
+    restart: unless-stopped
+    ports:
+      - "9090"
+    command:
+      - "--config.file=/etc/prometheus/prometheus.yml"
+      - "--storage.tsdb.path=/prometheus"
+      - "--storage.tsdb.retention.time=30d"
+      - "--web.enable-lifecycle"
+    volumes:
+      - prometheus-data:/prometheus
+    healthcheck:
+      test: ["CMD-SHELL", "wget -q -O /dev/null http://127.0.0.1:9090/-/healthy || exit 1"]
+      interval: 15s
+      timeout: 5s
+      retries: 5
+      start_period: 20s
+volumes:
+  prometheus-data:
+

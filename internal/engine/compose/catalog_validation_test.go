@@ -187,3 +187,44 @@ func TestParseCatalogPort(t *testing.T) {
 		}
 	}
 }
+
+func TestExpandedCatalogueStacksPresent(t *testing.T) {
+	manager, err := NewTemplateManager()
+	if err != nil {
+		t.Fatal(err)
+	}
+
+	targets := []struct {
+		id       string
+		category string
+	}{
+		{"appwrite", "backend"},
+		{"beszel", "analytics"},
+		{"listmonk", "mail"},
+		{"loki", "analytics"},
+		{"prometheus", "analytics"},
+		{"pgadmin4", "database"},
+		{"victoriametrics", "analytics"},
+	}
+
+	for _, target := range targets {
+		t.Run(target.id, func(t *testing.T) {
+			tmpl, err := manager.GetTemplate(target.id)
+			if err != nil {
+				t.Fatalf("expected template %s to exist: %v", target.id, err)
+			}
+			if tmpl.XCodedock == nil {
+				t.Fatalf("expected template %s to have x-codedock metadata", target.id)
+			}
+			if !tmpl.XCodedock.IsOneClick {
+				t.Errorf("expected template %s to be marked is_one_click", target.id)
+			}
+			if tmpl.XCodedock.Category != target.category {
+				t.Errorf("expected category %s, got %s", target.category, tmpl.XCodedock.Category)
+			}
+			if len(tmpl.Services) == 0 {
+				t.Errorf("template %s has no services", target.id)
+			}
+		})
+	}
+}
