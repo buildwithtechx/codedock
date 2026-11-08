@@ -1,4 +1,4 @@
-package system
+package monitoring
 
 import (
 	"errors"
@@ -8,18 +8,20 @@ import (
 	"github.com/labstack/echo/v4"
 
 	"codedock/internal/config"
-	"codedock/internal/models"
-	systemservices "codedock/internal/services/system"
+	"codedock/internal/utils"
 )
 
-type BillingHandler struct {
-	billingSvc *systemservices.BillingService
+type CheckoutPendingError interface {
+	error
+	PendingSession() any
 }
 
-func NewBillingHandler(billingSvc *systemservices.BillingService) *BillingHandler {
-	return &BillingHandler{
-		billingSvc: billingSvc,
-	}
+type BillingHandler struct {
+	service BillingService
+}
+
+func NewBillingHandler(service BillingService) *BillingHandler {
+	return &BillingHandler{service: service}
 }
 
 type CreateCheckoutRequest struct {
@@ -39,10 +41,38 @@ type CancelCheckoutRequest struct {
 	IdempotencyKey string `json:"idempotencyKey,omitempty"`
 }
 
+func (h *BillingHandler) GetConfig(c echo.Context) error {
+	if h.service != nil {
+		cfg, err := h.service.GetConfig(c.Request().Context())
+		if err == nil && cfg != nil {
+			return c.JSON(http.StatusOK, cfg)
+		}
+	}
+	cfg := config.Get()
+	return c.JSON(http.StatusOK, map[string]any{
+		"publishableKey": cfg.Stripe.PublishableKey,
+		"plans": []map[string]any{
+			{
+				"id":       "free",
+				"name":     "Hobby",
+				"price":    0,
+				"features": []string{"1 Project", "Basic Support"},
+			},
+			{
+				"id":       "pro",
+				"name":     "Pro",
+				"price":    9.99,
+				"priceId":  cfg.Stripe.PriceIDPro,
+				"features": []string{"Unlimited Projects", "Priority Support", "Analytics"},
+			},
+		},
+	})
+}
+
 func (h *BillingHandler) CreateCheckoutSession(c echo.Context) error {
-	claims, ok := c.Get("user").(*models.UserClaims)
-	if !ok || claims == nil {
-		return echo.NewHTTPError(http.StatusUnauthorized, "unauthorized")
+	userID := utils.ExtractUserID(c)
+	if userID == "" {
+		return utils.Error(c, http.StatusUnauthorized, "unauthorized")
 	}
 
 	var req CreateCheckoutRequest
@@ -50,27 +80,27 @@ func (h *BillingHandler) CreateCheckoutSession(c echo.Context) error {
 		return echo.NewHTTPError(http.StatusBadRequest, err.Error())
 	}
 
-	if h.billingSvc == nil {
+	if h.service == nil {
 		return echo.NewHTTPError(http.StatusServiceUnavailable, "billing service not initialized")
 	}
 
-	url, err := h.billingSvc.CreateCheckoutSession(
-		c.Request().Context(),
-		claims.UserID,
-		req.PriceID,
-		req.SuccessURL,
-		req.CancelURL,
-		req.IdempotencyKey,
-		req.PurchaseIntent,
-		req.CancelPending,
-	)
+	opts := CreateCheckoutSessionOpts{
+		PriceID:        req.PriceID,
+		SuccessURL:     req.SuccessURL,
+		CancelURL:      req.CancelURL,
+		IdempotencyKey: req.IdempotencyKey,
+		PurchaseIntent: req.PurchaseIntent,
+		CancelPending:  req.CancelPending,
+	}
+
+	url, err := h.service.CreateCheckoutSession(c.Request().Context(), userID, opts)
 	if err != nil {
-		var pendingErr *systemservices.ErrCheckoutPending
-		if errors.As(err, &pendingErr) {
+		var pendErr CheckoutPendingError
+		if errors.As(err, &pendErr) {
 			return c.JSON(http.StatusConflict, map[string]any{
 				"code":    "CLOUD_WORKSPACE_CHECKOUT_PENDING",
-				"error":   pendingErr.Error(),
-				"pending": pendingErr.Pending,
+				"error":   pendErr.Error(),
+				"pending": pendErr.PendingSession(),
 			})
 		}
 		return echo.NewHTTPError(http.StatusInternalServerError, err.Error())
@@ -80,28 +110,31 @@ func (h *BillingHandler) CreateCheckoutSession(c echo.Context) error {
 }
 
 func (h *BillingHandler) GetPendingCheckout(c echo.Context) error {
-	claims, ok := c.Get("user").(*models.UserClaims)
-	if !ok || claims == nil {
-		return echo.NewHTTPError(http.StatusUnauthorized, "unauthorized")
+	userID := utils.ExtractUserID(c)
+	if userID == "" {
+		return utils.Error(c, http.StatusUnauthorized, "unauthorized")
 	}
 
-	if h.billingSvc == nil {
+	if h.service == nil {
 		return echo.NewHTTPError(http.StatusServiceUnavailable, "billing service not initialized")
 	}
 
-	pending := h.billingSvc.GetPendingCheckout(c.Request().Context(), claims.UserID)
+	pending, err := h.service.GetPendingCheckout(c.Request().Context(), userID)
+	if err != nil {
+		return echo.NewHTTPError(http.StatusInternalServerError, err.Error())
+	}
 	return c.JSON(http.StatusOK, map[string]any{
 		"pending": pending,
 	})
 }
 
 func (h *BillingHandler) CancelCheckoutSession(c echo.Context) error {
-	claims, ok := c.Get("user").(*models.UserClaims)
-	if !ok || claims == nil {
-		return echo.NewHTTPError(http.StatusUnauthorized, "unauthorized")
+	userID := utils.ExtractUserID(c)
+	if userID == "" {
+		return utils.Error(c, http.StatusUnauthorized, "unauthorized")
 	}
 
-	if h.billingSvc == nil {
+	if h.service == nil {
 		return echo.NewHTTPError(http.StatusServiceUnavailable, "billing service not initialized")
 	}
 
@@ -113,7 +146,7 @@ func (h *BillingHandler) CancelCheckoutSession(c echo.Context) error {
 	var req CancelCheckoutRequest
 	_ = c.Bind(&req)
 
-	checkout, err := h.billingSvc.CancelCheckoutSession(c.Request().Context(), claims.UserID, checkoutID, req.IdempotencyKey)
+	checkout, err := h.service.CancelCheckoutSession(c.Request().Context(), userID, checkoutID, req.IdempotencyKey)
 	if err != nil {
 		return echo.NewHTTPError(http.StatusBadRequest, err.Error())
 	}
@@ -135,35 +168,13 @@ func (h *BillingHandler) Webhook(c echo.Context) error {
 		return echo.NewHTTPError(http.StatusBadRequest, "missing signature")
 	}
 
-	if h.billingSvc == nil {
+	if h.service == nil {
 		return echo.NewHTTPError(http.StatusServiceUnavailable, "billing service not initialized")
 	}
 
-	if err := h.billingSvc.HandleWebhook(c.Request().Context(), payload, sigHeader); err != nil {
+	if err := h.service.HandleWebhook(c.Request().Context(), payload, sigHeader); err != nil {
 		return echo.NewHTTPError(http.StatusBadRequest, err.Error())
 	}
 
 	return c.NoContent(http.StatusOK)
-}
-
-func (h *BillingHandler) GetConfig(c echo.Context) error {
-	cfg := config.Get()
-	return c.JSON(http.StatusOK, map[string]any{
-		"publishableKey": cfg.Stripe.PublishableKey,
-		"plans": []map[string]any{
-			{
-				"id":       "free",
-				"name":     "Hobby",
-				"price":    0,
-				"features": []string{"1 Project", "Basic Support"},
-			},
-			{
-				"id":       "pro",
-				"name":     "Pro",
-				"price":    9.99,
-				"priceId":  cfg.Stripe.PriceIDPro,
-				"features": []string{"Unlimited Projects", "Priority Support", "Analytics"},
-			},
-		},
-	})
 }

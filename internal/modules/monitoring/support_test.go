@@ -1,4 +1,4 @@
-package system
+package monitoring
 
 import (
 	"bytes"
@@ -7,15 +7,19 @@ import (
 	"net/http/httptest"
 	"testing"
 
-	"codedock/internal/models"
-
 	"github.com/labstack/echo/v4"
 )
+
+type testSupportClaims struct {
+	UserID string
+	Email  string
+	Role   string
+}
 
 func TestSupportHandler_Lifecycle(t *testing.T) {
 	e := echo.New()
 	handler := NewSupportHandler()
-	claims := &models.UserClaims{
+	claims := &testSupportClaims{
 		UserID: "user-123",
 		Email:  "testuser@codedock.local",
 		Role:   "owner",
@@ -30,7 +34,7 @@ func TestSupportHandler_Lifecycle(t *testing.T) {
 	if err := handler.GetSession(c); err != nil {
 		t.Fatalf("unexpected GetSession error: %v", err)
 	}
-	var session models.CloudSupportSession
+	var session CloudSupportSession
 	if err := json.Unmarshal(rec.Body.Bytes(), &session); err != nil {
 		t.Fatalf("failed to decode session: %v", err)
 	}
@@ -39,11 +43,11 @@ func TestSupportHandler_Lifecycle(t *testing.T) {
 	}
 
 	// 2. CreateTicket
-	inputBody, _ := json.Marshal(models.CloudSupportCustomerInput{
+	inputBody, _ := json.Marshal(CloudSupportCustomerInput{
 		RequestID: "req-1",
 		Subject:   "Deployment failing to route",
 		Message:   "Our ingress gateway is giving a 502 error after restart.",
-		Category:  models.CloudSupportCategoryDeployment,
+		Category:  CloudSupportCategoryDeployment,
 	})
 	req = httptest.NewRequest(http.MethodPost, "/api/cloud/support/mine", bytes.NewReader(inputBody))
 	req.Header.Set(echo.HeaderContentType, echo.MIMEApplicationJSON)
@@ -57,7 +61,7 @@ func TestSupportHandler_Lifecycle(t *testing.T) {
 	if rec.Code != http.StatusCreated {
 		t.Fatalf("expected 201 Created, got %d", rec.Code)
 	}
-	var receipt models.CloudSupportReceipt
+	var receipt CloudSupportReceipt
 	if err := json.Unmarshal(rec.Body.Bytes(), &receipt); err != nil {
 		t.Fatalf("failed to decode receipt: %v", err)
 	}
@@ -74,7 +78,7 @@ func TestSupportHandler_Lifecycle(t *testing.T) {
 	if err := handler.ListTickets(c); err != nil {
 		t.Fatalf("unexpected ListTickets error: %v", err)
 	}
-	var list models.CloudSupportCustomerList
+	var list CloudSupportCustomerList
 	if err := json.Unmarshal(rec.Body.Bytes(), &list); err != nil {
 		t.Fatalf("failed to decode ticket list: %v", err)
 	}
@@ -93,7 +97,7 @@ func TestSupportHandler_Lifecycle(t *testing.T) {
 	if err := handler.GetTicket(c); err != nil {
 		t.Fatalf("unexpected GetTicket error: %v", err)
 	}
-	var detail models.CloudSupportCustomerDetail
+	var detail CloudSupportCustomerDetail
 	if err := json.Unmarshal(rec.Body.Bytes(), &detail); err != nil {
 		t.Fatalf("failed to decode ticket detail: %v", err)
 	}
@@ -102,7 +106,7 @@ func TestSupportHandler_Lifecycle(t *testing.T) {
 	}
 
 	// 5. ReplyTicket
-	replyBody, _ := json.Marshal(models.CloudSupportCustomerReply{
+	replyBody, _ := json.Marshal(CloudSupportCustomerReply{
 		RequestID: "req-2",
 		Message:   "Here is additional diagnostic log output.",
 	})
@@ -120,7 +124,7 @@ func TestSupportHandler_Lifecycle(t *testing.T) {
 	if rec.Code != http.StatusCreated {
 		t.Fatalf("expected 201 Created, got %d", rec.Code)
 	}
-	var replyDetail models.CloudSupportCustomerDetail
+	var replyDetail CloudSupportCustomerDetail
 	if err := json.Unmarshal(rec.Body.Bytes(), &replyDetail); err != nil {
 		t.Fatalf("failed to decode detail after reply: %v", err)
 	}
@@ -129,8 +133,8 @@ func TestSupportHandler_Lifecycle(t *testing.T) {
 	}
 
 	// 6. UpdateStatus
-	statusBody, _ := json.Marshal(models.CloudSupportCustomerStatus{
-		Status: models.CloudSupportStatusResolved,
+	statusBody, _ := json.Marshal(CloudSupportCustomerStatus{
+		Status: CloudSupportStatusResolved,
 	})
 	req = httptest.NewRequest(http.MethodPatch, "/api/cloud/support/mine/"+receipt.ID, bytes.NewReader(statusBody))
 	req.Header.Set(echo.HeaderContentType, echo.MIMEApplicationJSON)
@@ -143,11 +147,11 @@ func TestSupportHandler_Lifecycle(t *testing.T) {
 	if err := handler.UpdateStatus(c); err != nil {
 		t.Fatalf("unexpected UpdateStatus error: %v", err)
 	}
-	var resolvedDetail models.CloudSupportCustomerDetail
+	var resolvedDetail CloudSupportCustomerDetail
 	if err := json.Unmarshal(rec.Body.Bytes(), &resolvedDetail); err != nil {
 		t.Fatalf("failed to decode detail after status update: %v", err)
 	}
-	if resolvedDetail.Ticket.Status != models.CloudSupportStatusResolved {
+	if resolvedDetail.Ticket.Status != CloudSupportStatusResolved {
 		t.Fatalf("expected status resolved, got %s", resolvedDetail.Ticket.Status)
 	}
 }

@@ -1,4 +1,4 @@
-package system
+package monitoring
 
 import (
 	"context"
@@ -7,37 +7,38 @@ import (
 	"strings"
 	"time"
 
-	"codedock/internal/http/middleware"
-	"codedock/internal/models"
-	projectservices "codedock/internal/services/projects"
-	"codedock/internal/utils"
 	"github.com/golang-jwt/jwt/v5"
 	"github.com/gorilla/websocket"
 	"github.com/labstack/echo/v4"
-	"io"
+
+	"codedock/internal/utils"
 )
 
-type tokenValidator interface {
+type TokenValidator interface {
 	ValidateToken(token string) (jwt.MapClaims, error)
 }
 
-type userStatusProvider interface {
-	GetUserByID(ctx context.Context, id string) (*models.User, error)
+type UserValidator interface {
+	IsUserActive(ctx context.Context, userID string) (bool, error)
 }
 
-type ServiceLogStreams interface {
-	StreamServiceLogs(context.Context, string, io.Writer) error
+type ServiceAccessChecker interface {
+	HasAccess(ctx context.Context, serviceID, userID, role string) (bool, error)
 }
+
 type ServiceLogsWSHandler struct {
-	Streams        ServiceLogStreams
-	upgrader       websocket.Upgrader
-	tokenService   tokenValidator
-	appService     *projectservices.AppService
-	projectService *projectservices.ProjectService
-	userRepo       userStatusProvider
+	Streams       ServiceLogStreamer
+	upgrader      websocket.Upgrader
+	tokenService  TokenValidator
+	accessChecker ServiceAccessChecker
+	userValidator UserValidator
 }
 
-func NewServiceLogsWSHandler(ts tokenValidator, as *projectservices.AppService, ps *projectservices.ProjectService, ur userStatusProvider) *ServiceLogsWSHandler {
+func NewServiceLogsWSHandler(
+	ts TokenValidator,
+	ac ServiceAccessChecker,
+	uv UserValidator,
+) *ServiceLogsWSHandler {
 	return &ServiceLogsWSHandler{
 		upgrader: websocket.Upgrader{
 			Subprotocols: []string{"bearer"},
@@ -52,10 +53,9 @@ func NewServiceLogsWSHandler(ts tokenValidator, as *projectservices.AppService, 
 				return utils.IsAllowedWebSocketOrigin(r, origin)
 			},
 		},
-		tokenService:   ts,
-		appService:     as,
-		projectService: ps,
-		userRepo:       ur,
+		tokenService:  ts,
+		accessChecker: ac,
+		userValidator: uv,
 	}
 }
 
@@ -70,7 +70,7 @@ func (h *ServiceLogsWSHandler) Handle(c echo.Context) error {
 
 	var claimsMap map[string]interface{}
 	if h.tokenService != nil {
-		tokenStr := middleware.ExtractTokenFromRequest(c)
+		tokenStr := extractWSToken(c)
 		if tokenStr == "" {
 			return utils.Error(c, http.StatusUnauthorized, "missing authentication token")
 		}
@@ -82,27 +82,20 @@ func (h *ServiceLogsWSHandler) Handle(c echo.Context) error {
 		claimsMap = cm
 
 		userID, _ := claimsMap["sub"].(string)
-		if userID != "" && h.userRepo != nil {
-			u, err := h.userRepo.GetUserByID(c.Request().Context(), userID)
-			if err != nil || u == nil || !u.IsActive {
+		if userID != "" && h.userValidator != nil {
+			active, err := h.userValidator.IsUserActive(c.Request().Context(), userID)
+			if err != nil || !active {
 				return utils.Error(c, http.StatusUnauthorized, "user account not found or deactivated")
 			}
 		}
 	}
 
-	if h.appService != nil {
-		svc, err := h.appService.GetAppService(c.Request().Context(), serviceID)
-		if err != nil || svc == nil {
-			return utils.Error(c, http.StatusNotFound, "service not found")
-		}
-		if h.projectService != nil && claimsMap != nil {
-			userID, _ := claimsMap["sub"].(string)
-			role, _ := claimsMap["role"].(string)
-			if role != "admin" {
-				if !h.projectService.HasPermission(c.Request().Context(), svc.ProjectID, userID, models.UserRole(role), "") {
-					return utils.Error(c, http.StatusForbidden, "insufficient permissions to access service logs")
-				}
-			}
+	if h.accessChecker != nil && claimsMap != nil {
+		userID, _ := claimsMap["sub"].(string)
+		role, _ := claimsMap["role"].(string)
+		hasAccess, err := h.accessChecker.HasAccess(c.Request().Context(), serviceID, userID, role)
+		if err != nil || !hasAccess {
+			return utils.Error(c, http.StatusForbidden, "insufficient permissions to access service logs")
 		}
 	}
 
@@ -119,8 +112,8 @@ func (h *ServiceLogsWSHandler) Handle(c echo.Context) error {
 		slog.Error("failed to upgrade service logs ws", "err", err)
 		return err
 	}
-
 	defer ws.Close()
+
 	ctx, cancel := context.WithCancel(c.Request().Context())
 	defer cancel()
 	go func() {
@@ -131,19 +124,47 @@ func (h *ServiceLogsWSHandler) Handle(c echo.Context) error {
 			}
 		}
 	}()
+
 	if h.Streams == nil {
 		_ = ws.WriteMessage(websocket.TextMessage, []byte("Log stream unavailable"))
 		return nil
 	}
-	if err := h.Streams.StreamServiceLogs(ctx, serviceID, serviceLogWriter{ws}); err != nil && ctx.Err() == nil {
+	if err := h.Streams.StreamServiceLogs(ctx, serviceID, serviceLogWSWriter{ws}); err != nil && ctx.Err() == nil {
 		_ = ws.WriteMessage(websocket.TextMessage, []byte("Log stream failed: "+err.Error()))
 	}
 	return nil
 }
 
-type serviceLogWriter struct{ ws *websocket.Conn }
+func extractWSToken(c echo.Context) string {
+	authHeader := c.Request().Header.Get("Authorization")
+	if authHeader != "" && strings.HasPrefix(authHeader, "Bearer ") {
+		return strings.TrimSpace(strings.TrimPrefix(authHeader, "Bearer "))
+	}
+	if q := c.QueryParam("token"); q != "" {
+		return strings.TrimSpace(q)
+	}
+	if wsProtocols := c.Request().Header.Get("Sec-WebSocket-Protocol"); wsProtocols != "" {
+		parts := strings.Split(wsProtocols, ",")
+		for i := 0; i < len(parts)-1; i++ {
+			key := strings.TrimSpace(strings.ToLower(parts[i]))
+			val := strings.TrimSpace(parts[i+1])
+			if (key == "auth" || key == "bearer" || key == "token") && val != "" {
+				return val
+			}
+		}
+		for _, part := range parts {
+			trimmed := strings.TrimSpace(part)
+			if strings.HasPrefix(strings.ToLower(trimmed), "bearer ") {
+				return strings.TrimSpace(trimmed[7:])
+			}
+		}
+	}
+	return ""
+}
 
-func (w serviceLogWriter) Write(data []byte) (int, error) {
+type serviceLogWSWriter struct{ ws *websocket.Conn }
+
+func (w serviceLogWSWriter) Write(data []byte) (int, error) {
 	if err := w.ws.SetWriteDeadline(time.Now().Add(15 * time.Second)); err != nil {
 		return 0, err
 	}

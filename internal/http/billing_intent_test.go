@@ -11,8 +11,8 @@ import (
 	"github.com/stripe/stripe-go/v78"
 
 	"codedock/internal/config"
-	"codedock/internal/handlers/system"
 	"codedock/internal/models"
+	"codedock/internal/modules/monitoring"
 	systemservices "codedock/internal/services/system"
 )
 
@@ -37,7 +37,7 @@ func TestBillingHandlerPendingFlow(t *testing.T) {
 		},
 	)
 
-	handler := system.NewBillingHandler(svc)
+	handler := monitoring.NewBillingHandler(&billingServiceAdapter{svc: svc})
 	e := echo.New()
 
 	authMiddleware := func(next echo.HandlerFunc) echo.HandlerFunc {

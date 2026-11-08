@@ -1,4 +1,4 @@
-package system
+package monitoring
 
 import (
 	"net/http"
@@ -6,42 +6,51 @@ import (
 	"github.com/labstack/echo/v4"
 
 	"codedock/internal/utils"
-
-	systemservices "codedock/internal/services/system"
 )
 
 type UpdaterHandler struct {
-	updaterService *systemservices.UpdaterService
+	service UpdaterService
 }
 
-func NewUpdaterHandler(s *systemservices.UpdaterService) *UpdaterHandler {
-	return &UpdaterHandler{updaterService: s}
+func NewUpdaterHandler(s UpdaterService) *UpdaterHandler {
+	return &UpdaterHandler{service: s}
 }
 
 func (h *UpdaterHandler) GetUpdateStatus(c echo.Context) error {
-	if h.updaterService == nil {
+	if h.service == nil {
 		return utils.Error(c, http.StatusInternalServerError, "updater service not initialized")
 	}
-	status := h.updaterService.GetStatus()
+	status := h.service.GetStatus()
 	return utils.Success(c, "Operation successful", status)
 }
 
 func (h *UpdaterHandler) CheckUpdate(c echo.Context) error {
-	if h.updaterService == nil {
+	if h.service == nil {
 		return utils.Error(c, http.StatusInternalServerError, "updater service not initialized")
 	}
-	if _, err := h.updaterService.CheckForUpdates(c.Request().Context()); err != nil {
+	status, err := h.service.CheckUpdate(c.Request().Context())
+	if err != nil {
 		return utils.Error(c, http.StatusInternalServerError, err.Error())
 	}
-	status := h.updaterService.GetStatus()
+	return utils.Success(c, "Operation successful", status)
+}
+
+func (h *UpdaterHandler) ApplyUpdate(c echo.Context) error {
+	if h.service == nil {
+		return utils.Error(c, http.StatusInternalServerError, "updater service not initialized")
+	}
+	status, err := h.service.ApplyUpdate(c.Request().Context())
+	if err != nil {
+		return utils.Error(c, http.StatusInternalServerError, err.Error())
+	}
 	return utils.Success(c, "Operation successful", status)
 }
 
 func (h *UpdaterHandler) DeployUpdate(c echo.Context) error {
-	if h.updaterService == nil {
+	if h.service == nil {
 		return utils.Error(c, http.StatusInternalServerError, "updater service not initialized")
 	}
-	if err := h.updaterService.DeployUpdate(c.Request().Context()); err != nil {
+	if _, err := h.service.ApplyUpdate(c.Request().Context()); err != nil {
 		return utils.Error(c, http.StatusInternalServerError, err.Error())
 	}
 	return utils.Accepted(c, "update deployment triggered", nil)

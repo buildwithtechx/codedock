@@ -9,7 +9,6 @@ import (
 	"github.com/mark3labs/mcp-go/server"
 
 	"codedock/internal/engine/deploy"
-	"codedock/internal/handlers/system"
 	"codedock/internal/http/mcp"
 	"codedock/internal/http/middleware"
 	"codedock/internal/models"
@@ -28,6 +27,7 @@ import (
 	gitmod "codedock/internal/modules/git"
 	mailmodule "codedock/internal/modules/mail"
 	modmigrations "codedock/internal/modules/migrations"
+	modmonitoring "codedock/internal/modules/monitoring"
 	"codedock/internal/modules/organizations"
 	projectsmod "codedock/internal/modules/projects"
 	securitymod "codedock/internal/modules/security"
@@ -45,7 +45,7 @@ import (
 type Server struct {
 	clusterDataHandler         *modclusters.DataHandler
 	clusterHandler             *modclusters.Handler
-	operationHandler           *system.OperationHandler
+	operationHandler           *modmonitoring.OperationHandler
 	router                     *echo.Echo
 	mcpBridge                  *mcp.Bridge
 	authRateLimiter            *middleware.RateLimiter
@@ -68,7 +68,7 @@ type Server struct {
 	appWebhookHandler          *appsmod.WebhookHandler
 	autoscalingHandler         *appsmod.AutoscalingHandler
 	dbHandler                  *databases.DatabaseHandler
-	scheduledTaskHandler       *system.ScheduledTaskHandler
+	scheduledTaskHandler       *modmonitoring.ScheduledTaskHandler
 	canvasHandler              *projectsmod.CanvasHandler
 	terminalHandler            *deploymentsmod.TerminalHandler
 	deploymentHandler          *deploymentsmod.DeploymentHandler
@@ -79,9 +79,9 @@ type Server struct {
 	backupHandler              *backupmodule.Handler
 	settingsHandler            *settings.SettingsHandler
 	appearanceHandler          *users.AppearanceHandler
-	notifSettingsHandler       *system.NotificationSettingsHandler
+	notifSettingsHandler       *modmonitoring.NotificationSettingsHandler
 	aiSettingsHandler          *aimod.Handler
-	updaterHandler             *system.UpdaterHandler
+	updaterHandler             *modmonitoring.UpdaterHandler
 	userHandler                *users.UserHandler
 	authHandler                *auth.AuthHandler
 	oauthHandler               *auth.OAuthHandler
@@ -96,8 +96,8 @@ type Server struct {
 	orgHandler                 *organizations.OrganizationHandler
 	environmentHandler         *environments.EnvironmentHandler
 	domainHandler              *domainsmod.DomainHandler
-	notificationHandler        *system.NotificationHandler
-	systemHandler              *system.SystemHandler
+	notificationHandler        *modmonitoring.NotificationHandler
+	systemHandler              *modmonitoring.SystemHandler
 	composeHandler             *projectsmod.ComposeHandler
 	composeStackHandler        *projectsmod.ComposeStackHandler
 	chatAppHandler             *chatapps.Handler
@@ -105,27 +105,27 @@ type Server struct {
 	migrationHandler           *modmigrations.BundleHandler
 	onboardingHandler          *users.OnboardingHandler
 	dnsHandler                 *dns.Handler
-	metricsHandler             *system.MetricsHandler
-	logHandler                 *system.LogHandler
+	metricsHandler             *modmonitoring.MetricsHandler
+	logHandler                 *modmonitoring.LogHandler
 	auditLogHandler            *audit.AuditLogHandler
-	exampleHandler             *system.ExampleHandler
+	exampleHandler             *modmonitoring.ExampleHandler
 	serverHandler              *servers.Handler
 	managedHandler             *servers.ManagedHandler
 	migrationLifecycleHandler  *modmigrations.LifecycleHandler
 	migrationService           *migrations.Service
-	analyticsHandler           *system.AnalyticsHandler
-	attentionHandler           *system.AttentionHandler
-	billingHandler             *system.BillingHandler
+	analyticsHandler           *modmonitoring.AnalyticsHandler
+	attentionHandler           *modmonitoring.AttentionHandler
+	billingHandler             *modmonitoring.BillingHandler
 	serverMetricsWSHandler     *servers.ServerMetricsWSHandler
-	serviceLogsWSHandler       *system.ServiceLogsWSHandler
+	serviceLogsWSHandler       *modmonitoring.ServiceLogsWSHandler
 	takeoverHandler            *servers.TakeoverHandler
 	routeRuleHandler           *environments.RouteRuleHandler
 	mailHandler                *mailmodule.Handler
-	ingressHandler             *system.IngressHandler
+	ingressHandler             *modmonitoring.IngressHandler
 	serverNetworksHandler      *servers.ServerNetworksHandler
-	actionsHandler             *system.ActionsHandler
+	actionsHandler             *modmonitoring.ActionsHandler
 	checksHandler              *projectsmod.ChecksHandler
-	supportHandler             *system.SupportHandler
+	supportHandler             *modmonitoring.SupportHandler
 	routeProtectionHandler     *environments.RouteProtectionHandler
 	edgeAuthHandler            *environments.EdgeAuthHandler
 	securityHandler            *securitymod.Handler

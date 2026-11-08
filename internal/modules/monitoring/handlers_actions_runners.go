@@ -1,4 +1,4 @@
-package system
+package monitoring
 
 import (
 	"encoding/hex"
@@ -6,35 +6,34 @@ import (
 	"strings"
 	"time"
 
-	"codedock/internal/models"
-	"codedock/internal/utils"
-
 	"github.com/labstack/echo/v4"
+
+	"codedock/internal/utils"
 )
 
 func (h *ActionsHandler) ListRunners(c echo.Context) error {
 	h.mu.RLock()
 	defer h.mu.RUnlock()
 
-	var list []*models.ActionRunner
+	var list []*ActionRunner
 	for _, runner := range h.runners {
 		list = append(list, runner)
 	}
 	if list == nil {
-		list = make([]*models.ActionRunner, 0)
+		list = make([]*ActionRunner, 0)
 	}
 	return utils.Success(c, "Runners retrieved", list)
 }
 
 func (h *ActionsHandler) InspectDestination(c echo.Context) error {
-	var req models.InspectDestinationRequest
+	var req InspectDestinationRequest
 	if err := c.Bind(&req); err != nil || req.ServerID == "" {
 		return echo.NewHTTPError(http.StatusBadRequest, "serverId is required")
 	}
 
 	dist := "ubuntu"
 	ver := "22.04"
-	capabilities := &models.ActionCapabilities{
+	capabilities := &ActionCapabilities{
 		OS:                 "linux",
 		Architecture:       "x64",
 		Docker:             true,
@@ -50,7 +49,7 @@ func (h *ActionsHandler) InspectDestination(c echo.Context) error {
 }
 
 func (h *ActionsHandler) CreateRunner(c echo.Context) error {
-	var req models.CreateRunnerRequest
+	var req CreateRunnerRequest
 	if err := c.Bind(&req); err != nil {
 		return echo.NewHTTPError(http.StatusBadRequest, "invalid runner payload")
 	}
@@ -103,13 +102,13 @@ func (h *ActionsHandler) CreateRunner(c echo.Context) error {
 	labels := []string{"self-hosted", "linux", "x64"}
 	for _, l := range req.Config.Labels {
 		trimmed := strings.TrimSpace(l)
-		if trimmed != "" && !contains(labels, trimmed) {
+		if trimmed != "" && !containsStr(labels, trimmed) {
 			labels = append(labels, trimmed)
 		}
 	}
 	for _, l := range req.Labels {
 		trimmed := strings.TrimSpace(l)
-		if trimmed != "" && !contains(labels, trimmed) {
+		if trimmed != "" && !containsStr(labels, trimmed) {
 			labels = append(labels, trimmed)
 		}
 	}
@@ -127,7 +126,7 @@ func (h *ActionsHandler) CreateRunner(c echo.Context) error {
 
 	dist := "ubuntu"
 	ver := "22.04"
-	cap := &models.ActionCapabilities{
+	cap := &ActionCapabilities{
 		OS:                 "linux",
 		Architecture:       "x64",
 		Docker:             true,
@@ -139,7 +138,7 @@ func (h *ActionsHandler) CreateRunner(c echo.Context) error {
 		Version:            &ver,
 	}
 
-	runner := &models.ActionRunner{
+	runner := &ActionRunner{
 		ID:            "runner-" + hex.EncodeToString(generateActionBytes(6)),
 		Name:          req.Name,
 		ServerID:      serverIDPtr,
@@ -174,7 +173,7 @@ func (h *ActionsHandler) DeleteRunner(c echo.Context) error {
 	return utils.Success(c, "Runner deleted", map[string]string{"id": id})
 }
 
-func contains(slice []string, val string) bool {
+func containsStr(slice []string, val string) bool {
 	for _, item := range slice {
 		if item == val {
 			return true

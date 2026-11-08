@@ -10,7 +10,6 @@ import (
 	"github.com/labstack/echo/v4"
 
 	"codedock/internal/config"
-	"codedock/internal/handlers/system"
 	"codedock/internal/http/apischema"
 	"codedock/internal/http/middleware"
 	appsmod "codedock/internal/modules/apps"
@@ -21,6 +20,7 @@ import (
 	environments "codedock/internal/modules/environments"
 	gitmod "codedock/internal/modules/git"
 	modmigrations "codedock/internal/modules/migrations"
+	modmonitoring "codedock/internal/modules/monitoring"
 	projectsmod "codedock/internal/modules/projects"
 	serversmod "codedock/internal/modules/servers"
 )
@@ -72,8 +72,8 @@ func schemaTestRouter(t *testing.T) *echo.Echo {
 		gitInspectionHandler:       &gitmod.InspectionHandler{},
 		gitAppsHandler:             &gitmod.AppsHandler{},
 		webhookHandler:             &gitmod.WebhookHandler{},
-		metricsHandler:             &system.MetricsHandler{},
-		logHandler:                 &system.LogHandler{},
+		metricsHandler:             &modmonitoring.MetricsHandler{},
+		logHandler:                 &modmonitoring.LogHandler{},
 		serverHandler:              &serversmod.Handler{},
 		managedHandler:             &serversmod.ManagedHandler{},
 		takeoverHandler:            &serversmod.TakeoverHandler{},

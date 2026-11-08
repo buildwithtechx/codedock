@@ -1,4 +1,4 @@
-package system
+package monitoring
 
 import (
 	"crypto/rand"
@@ -7,25 +7,24 @@ import (
 	"sync"
 	"time"
 
-	"codedock/internal/models"
-	"codedock/internal/utils"
-
 	"github.com/labstack/echo/v4"
+
+	"codedock/internal/utils"
 )
 
 type ActionsHandler struct {
 	mu        sync.RWMutex
-	workflows map[string]*models.ActionWorkflow
-	runs      map[string]*models.ActionRun
-	runners   map[string]*models.ActionRunner
+	workflows map[string]*ActionWorkflow
+	runs      map[string]*ActionRun
+	runners   map[string]*ActionRunner
 	runCount  int
 }
 
 func NewActionsHandler() *ActionsHandler {
 	return &ActionsHandler{
-		workflows: make(map[string]*models.ActionWorkflow),
-		runs:      make(map[string]*models.ActionRun),
-		runners:   make(map[string]*models.ActionRunner),
+		workflows: make(map[string]*ActionWorkflow),
+		runs:      make(map[string]*ActionRun),
+		runners:   make(map[string]*ActionRunner),
 	}
 }
 
@@ -33,18 +32,18 @@ func (h *ActionsHandler) ListWorkflows(c echo.Context) error {
 	h.mu.RLock()
 	defer h.mu.RUnlock()
 
-	var list []*models.ActionWorkflow
+	var list []*ActionWorkflow
 	for _, wf := range h.workflows {
 		list = append(list, wf)
 	}
 	if list == nil {
-		list = make([]*models.ActionWorkflow, 0)
+		list = make([]*ActionWorkflow, 0)
 	}
 	return utils.Success(c, "Workflows retrieved", list)
 }
 
 func (h *ActionsHandler) CreateWorkflow(c echo.Context) error {
-	var req models.CreateWorkflowRequest
+	var req CreateWorkflowRequest
 	if err := c.Bind(&req); err != nil {
 		return echo.NewHTTPError(http.StatusBadRequest, "invalid create workflow payload")
 	}
@@ -56,7 +55,7 @@ func (h *ActionsHandler) CreateWorkflow(c echo.Context) error {
 	defer h.mu.Unlock()
 
 	now := time.Now().UTC().Format(time.RFC3339)
-	wf := &models.ActionWorkflow{
+	wf := &ActionWorkflow{
 		ID:          "wf-" + hex.EncodeToString(generateActionBytes(6)),
 		ProjectID:   req.ProjectID,
 		Name:        req.Name,
@@ -87,7 +86,7 @@ func (h *ActionsHandler) DispatchWorkflow(c echo.Context) error {
 
 	h.runCount++
 	now := time.Now().UTC().Format(time.RFC3339)
-	newRun := &models.ActionRun{
+	newRun := &ActionRun{
 		ID:          "run-" + hex.EncodeToString(generateActionBytes(6)),
 		WorkflowID:  wf.ID,
 		Name:        wf.Name,
@@ -109,12 +108,12 @@ func (h *ActionsHandler) ListRuns(c echo.Context) error {
 	h.mu.RLock()
 	defer h.mu.RUnlock()
 
-	var list []*models.ActionRun
+	var list []*ActionRun
 	for _, r := range h.runs {
 		list = append(list, r)
 	}
 	if list == nil {
-		list = make([]*models.ActionRun, 0)
+		list = make([]*ActionRun, 0)
 	}
 	return utils.Success(c, "Action runs retrieved", list)
 }
@@ -143,7 +142,7 @@ func (h *ActionsHandler) RetryRun(c echo.Context) error {
 
 	h.runCount++
 	now := time.Now().UTC().Format(time.RFC3339)
-	newRun := &models.ActionRun{
+	newRun := &ActionRun{
 		ID:          "run-" + hex.EncodeToString(generateActionBytes(6)),
 		WorkflowID:  run.WorkflowID,
 		Name:        run.Name,

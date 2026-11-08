@@ -7,10 +7,10 @@ import (
 
 	"github.com/labstack/echo/v4"
 
-	"codedock/internal/handlers/system"
 	"codedock/internal/models"
 	"codedock/internal/modules/audit"
 	backupmodule "codedock/internal/modules/backups"
+	"codedock/internal/modules/monitoring"
 	"codedock/internal/platform/networking"
 	"codedock/internal/platform/observability"
 	traffic "codedock/internal/platform/observability"
@@ -64,8 +64,8 @@ func configureAnalytics(
 	analyticsService := analytics.NewService(trafficRepo, deployRepo, projectRepo, appRepo, domainRepo, userRepo, orgRepo, attentionRepo, usage)
 	attentionService := attention.NewService(attentionRepo, deployRepo, appRepo, projectRepo, userRepo, orgRepo, backupService, migrationService, managedRepo, serverRepo, &statsHealthAdapter{monitor: statsMonitor}, deploymentService)
 
-	server.analyticsHandler = system.NewAnalyticsHandler(analyticsService)
-	server.attentionHandler = system.NewAttentionHandler(attentionService, auditService)
+	server.analyticsHandler = monitoring.NewAnalyticsHandler(&analyticsServiceAdapter{svc: analyticsService})
+	server.attentionHandler = monitoring.NewAttentionHandler(&attentionServiceAdapter{svc: attentionService})
 
 	if path := traefikManager.AccessLogPath(); path != "" {
 		geoResolver, _ := traffic.NewGeoIPResolver(os.Getenv("GEOIP_DB_PATH"))

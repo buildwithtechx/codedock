@@ -1,4 +1,4 @@
-package system
+package monitoring
 
 import (
 	"context"
@@ -7,22 +7,32 @@ import (
 
 	"github.com/labstack/echo/v4"
 
-	"codedock/internal/models"
-	"codedock/internal/repositories"
-	systemservices "codedock/internal/services/system"
 	"codedock/internal/utils"
 )
 
+type NotificationSettingsServiceFull interface {
+	GetNotificationSettings(ctx context.Context) (*NotificationSettings, error)
+	UpdateNotificationSettings(ctx context.Context, settings *NotificationSettings) error
+	ListSubscriptions(ctx context.Context, userID, orgID string) (any, error)
+	UpsertSubscription(ctx context.Context, userID, orgID, category string, channels []string, enabled bool) (any, error)
+	ListDefaults(ctx context.Context, orgID string) (any, error)
+	UpsertDefault(ctx context.Context, orgID, category string, channels []string, enabled bool) (any, error)
+	ListDeliveries(ctx context.Context, limit int) (any, error)
+	RegisterDeviceToken(ctx context.Context, userID, token, platform string) (any, error)
+	DeleteDeviceToken(ctx context.Context, userID, token string) error
+	ListDeviceTokens(ctx context.Context, userID string) (any, error)
+	ResolveOrgID(ctx context.Context, userID string) string
+}
+
 type NotificationSettingsHandler struct {
-	notifSettingsService *systemservices.NotificationSettingsService
-	orgRepo              repositories.OrganizationRepository
+	service NotificationSettingsServiceFull
 }
 
-func NewNotificationSettingsHandler(s *systemservices.NotificationSettingsService, orgRepo repositories.OrganizationRepository) *NotificationSettingsHandler {
-	return &NotificationSettingsHandler{notifSettingsService: s, orgRepo: orgRepo}
+func NewNotificationSettingsHandler(s NotificationSettingsServiceFull) *NotificationSettingsHandler {
+	return &NotificationSettingsHandler{service: s}
 }
 
-func maskNotificationSecrets(s *models.NotificationSettings) {
+func maskNotificationSecrets(s *NotificationSettings) {
 	if s.SMTPPassword != "" {
 		s.SMTPPassword = "********"
 	}
@@ -41,7 +51,7 @@ func maskNotificationSecrets(s *models.NotificationSettings) {
 }
 
 func (h *NotificationSettingsHandler) GetNotificationSettings(c echo.Context) error {
-	s, err := h.notifSettingsService.GetNotificationSettings(c.Request().Context())
+	s, err := h.service.GetNotificationSettings(c.Request().Context())
 	if err != nil {
 		return utils.Error(c, http.StatusInternalServerError, err.Error())
 	}
@@ -52,7 +62,7 @@ func (h *NotificationSettingsHandler) GetNotificationSettings(c echo.Context) er
 }
 
 func (h *NotificationSettingsHandler) UpdateNotificationSettings(c echo.Context) error {
-	existing, err := h.notifSettingsService.GetNotificationSettings(c.Request().Context())
+	existing, err := h.service.GetNotificationSettings(c.Request().Context())
 	if err != nil {
 		return utils.Error(c, http.StatusInternalServerError, "failed to fetch existing notification settings")
 	}
@@ -83,7 +93,7 @@ func (h *NotificationSettingsHandler) UpdateNotificationSettings(c echo.Context)
 		existing.SlackWebhookURL = realSlack
 	}
 
-	if err := h.notifSettingsService.UpdateNotificationSettings(c.Request().Context(), existing); err != nil {
+	if err := h.service.UpdateNotificationSettings(c.Request().Context(), existing); err != nil {
 		return utils.Error(c, http.StatusInternalServerError, err.Error())
 	}
 
@@ -102,13 +112,7 @@ func (h *NotificationSettingsHandler) resolveOrgID(ctx context.Context, c echo.C
 	if orgID != "" && orgID != "default" {
 		return orgID
 	}
-	if h.orgRepo != nil && userID != "" {
-		orgs, err := h.orgRepo.ListByUser(ctx, userID)
-		if err == nil && len(orgs) > 0 && orgs[0] != nil && orgs[0].ID != "" {
-			return orgs[0].ID
-		}
-	}
-	return orgID
+	return h.service.ResolveOrgID(ctx, userID)
 }
 
 func (h *NotificationSettingsHandler) ListSubscriptions(c echo.Context) error {
@@ -118,9 +122,9 @@ func (h *NotificationSettingsHandler) ListSubscriptions(c echo.Context) error {
 	}
 	orgID := h.resolveOrgID(c.Request().Context(), c, userID)
 	if orgID == "" || orgID == "default" {
-		return utils.Success(c, "Operation successful", []models.NotificationSubscription{})
+		return utils.Success(c, "Operation successful", []any{})
 	}
-	subs, err := h.notifSettingsService.ListSubscriptions(c.Request().Context(), userID, orgID)
+	subs, err := h.service.ListSubscriptions(c.Request().Context(), userID, orgID)
 	if err != nil {
 		return utils.Error(c, http.StatusInternalServerError, err.Error())
 	}
@@ -132,7 +136,7 @@ func (h *NotificationSettingsHandler) UpsertSubscription(c echo.Context) error {
 	if userID == "" {
 		return utils.Error(c, http.StatusUnauthorized, "unauthorized")
 	}
-	var req models.UpsertSubscriptionRequest
+	var req UpsertSubscriptionRequest
 	if err := c.Bind(&req); err != nil {
 		return utils.Error(c, http.StatusBadRequest, err.Error())
 	}
@@ -140,14 +144,8 @@ func (h *NotificationSettingsHandler) UpsertSubscription(c echo.Context) error {
 	if orgID == "" || orgID == "default" {
 		return utils.Error(c, http.StatusBadRequest, "organization not found")
 	}
-	sub := models.NotificationSubscription{
-		UserID:         userID,
-		OrganizationID: orgID,
-		Category:       req.Category,
-		Channels:       req.Channels,
-		Enabled:        req.Enabled,
-	}
-	if err := h.notifSettingsService.UpsertSubscription(c.Request().Context(), &sub); err != nil {
+	sub, err := h.service.UpsertSubscription(c.Request().Context(), userID, orgID, req.Category, req.Channels, req.Enabled)
+	if err != nil {
 		return utils.Error(c, http.StatusInternalServerError, err.Error())
 	}
 	return utils.Success(c, "Subscription updated successfully", sub)
@@ -157,9 +155,9 @@ func (h *NotificationSettingsHandler) ListDefaults(c echo.Context) error {
 	userID := utils.ExtractUserID(c)
 	orgID := h.resolveOrgID(c.Request().Context(), c, userID)
 	if orgID == "" || orgID == "default" {
-		return utils.Success(c, "Operation successful", []models.NotificationDefault{})
+		return utils.Success(c, "Operation successful", []any{})
 	}
-	defs, err := h.notifSettingsService.ListDefaults(c.Request().Context(), orgID)
+	defs, err := h.service.ListDefaults(c.Request().Context(), orgID)
 	if err != nil {
 		return utils.Error(c, http.StatusInternalServerError, err.Error())
 	}
@@ -168,7 +166,11 @@ func (h *NotificationSettingsHandler) ListDefaults(c echo.Context) error {
 
 func (h *NotificationSettingsHandler) UpsertDefault(c echo.Context) error {
 	userID := utils.ExtractUserID(c)
-	var req models.UpsertDefaultRequest
+	var req struct {
+		Category string   `json:"category"`
+		Channels []string `json:"channels"`
+		Enabled  bool     `json:"enabled"`
+	}
 	if err := c.Bind(&req); err != nil {
 		return utils.Error(c, http.StatusBadRequest, err.Error())
 	}
@@ -176,13 +178,8 @@ func (h *NotificationSettingsHandler) UpsertDefault(c echo.Context) error {
 	if orgID == "" || orgID == "default" {
 		return utils.Error(c, http.StatusBadRequest, "organization not found")
 	}
-	def := models.NotificationDefault{
-		OrganizationID: orgID,
-		Category:       req.Category,
-		Channels:       req.Channels,
-		Enabled:        req.Enabled,
-	}
-	if err := h.notifSettingsService.UpsertDefault(c.Request().Context(), &def); err != nil {
+	def, err := h.service.UpsertDefault(c.Request().Context(), orgID, req.Category, req.Channels, req.Enabled)
+	if err != nil {
 		return utils.Error(c, http.StatusInternalServerError, err.Error())
 	}
 	return utils.Success(c, "Default updated successfully", def)
@@ -190,12 +187,9 @@ func (h *NotificationSettingsHandler) UpsertDefault(c echo.Context) error {
 
 func (h *NotificationSettingsHandler) ListDeliveries(c echo.Context) error {
 	limit, _ := strconv.Atoi(c.QueryParam("limit"))
-	deliveries, err := h.notifSettingsService.ListDeliveries(c.Request().Context(), limit)
+	deliveries, err := h.service.ListDeliveries(c.Request().Context(), limit)
 	if err != nil {
 		return utils.Error(c, http.StatusInternalServerError, err.Error())
-	}
-	if deliveries == nil {
-		deliveries = []models.NotificationDelivery{}
 	}
 	return utils.Success(c, "Operation successful", deliveries)
 }
@@ -205,16 +199,17 @@ func (h *NotificationSettingsHandler) RegisterDeviceToken(c echo.Context) error 
 	if userID == "" {
 		return utils.Error(c, http.StatusUnauthorized, "unauthorized")
 	}
-
-	var req models.RegisterDeviceTokenRequest
+	var req struct {
+		Token    string `json:"token"`
+		Platform string `json:"platform"`
+	}
 	if err := c.Bind(&req); err != nil {
 		return utils.Error(c, http.StatusBadRequest, err.Error())
 	}
 	if req.Token == "" {
 		return utils.Error(c, http.StatusBadRequest, "token is required")
 	}
-
-	token, err := h.notifSettingsService.RegisterDeviceToken(c.Request().Context(), userID, req.Token, req.Platform)
+	token, err := h.service.RegisterDeviceToken(c.Request().Context(), userID, req.Token, req.Platform)
 	if err != nil {
 		return utils.Error(c, http.StatusInternalServerError, err.Error())
 	}
@@ -226,7 +221,6 @@ func (h *NotificationSettingsHandler) DeleteDeviceToken(c echo.Context) error {
 	if userID == "" {
 		return utils.Error(c, http.StatusUnauthorized, "unauthorized")
 	}
-
 	token := c.Param("token")
 	if token == "" {
 		token = c.QueryParam("token")
@@ -234,8 +228,7 @@ func (h *NotificationSettingsHandler) DeleteDeviceToken(c echo.Context) error {
 	if token == "" {
 		return utils.Error(c, http.StatusBadRequest, "token parameter is required")
 	}
-
-	if err := h.notifSettingsService.DeleteDeviceToken(c.Request().Context(), userID, token); err != nil {
+	if err := h.service.DeleteDeviceToken(c.Request().Context(), userID, token); err != nil {
 		return utils.Error(c, http.StatusInternalServerError, err.Error())
 	}
 	return utils.Success(c, "Device token deleted successfully", nil)
@@ -246,13 +239,34 @@ func (h *NotificationSettingsHandler) ListDeviceTokens(c echo.Context) error {
 	if userID == "" {
 		return utils.Error(c, http.StatusUnauthorized, "unauthorized")
 	}
-
-	tokens, err := h.notifSettingsService.ListDeviceTokens(c.Request().Context(), userID)
+	tokens, err := h.service.ListDeviceTokens(c.Request().Context(), userID)
 	if err != nil {
 		return utils.Error(c, http.StatusInternalServerError, err.Error())
 	}
-	if tokens == nil {
-		tokens = []*models.DeviceToken{}
-	}
 	return utils.Success(c, "Operation successful", tokens)
+}
+
+type NotificationHandler struct {
+	service NotificationService
+}
+
+func NewNotificationHandler(ns NotificationService) *NotificationHandler {
+	return &NotificationHandler{service: ns}
+}
+
+func (h *NotificationHandler) TestNotification(c echo.Context) error {
+	if c.Request().Method != http.MethodPost {
+		return utils.Error(c, http.StatusMethodNotAllowed, "Method not allowed")
+	}
+	var req TestNotificationRequest
+	if err := c.Bind(&req); err != nil {
+		return utils.Error(c, http.StatusBadRequest, "invalid payload")
+	}
+	if req.Provider == "" {
+		return utils.Error(c, http.StatusBadRequest, "Provider required")
+	}
+	if err := h.service.TestNotification(c.Request().Context(), req.Provider); err != nil {
+		return utils.Error(c, http.StatusBadRequest, err.Error())
+	}
+	return utils.Success(c, "Test notification queued", nil)
 }

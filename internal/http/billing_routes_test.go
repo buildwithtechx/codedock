@@ -8,9 +8,9 @@ import (
 	"github.com/labstack/echo/v4"
 
 	"codedock/internal/config"
-	"codedock/internal/handlers/system"
 	"codedock/internal/http/middleware"
 	"codedock/internal/modules/auth"
+	"codedock/internal/modules/monitoring"
 	"codedock/internal/modules/users"
 )
 
@@ -32,7 +32,7 @@ func TestBillingRoutesRespectDeploymentMode(t *testing.T) {
 		cfg.Cloud.Enabled = cloud
 		router := echo.New()
 		configureEchoMiddleware(router)
-		server := &Server{router: router, billingHandler: system.NewBillingHandler(nil)}
+		server := &Server{router: router, billingHandler: monitoring.NewBillingHandler(nil)}
 		api := router.Group("/api")
 		server.registerBillingRoutes(api, api.Group("", guard.RequireAuth()))
 		router.GET("/*", func(c echo.Context) error { return c.String(200, "dashboard") })

@@ -1,68 +1,91 @@
-package system
+package monitoring
 
 import (
+	"context"
 	"net/http"
+	"time"
 
 	"github.com/labstack/echo/v4"
 
 	"codedock/internal/utils"
-
-	"codedock/internal/models"
-	projectservices "codedock/internal/services/projects"
-	systemservices "codedock/internal/services/system"
 )
 
+type ScheduledTask struct {
+	ID         string    `json:"id" db:"id"`
+	ServiceID  string    `json:"serviceId" db:"service_id"`
+	Name       string    `json:"name" db:"name"`
+	Schedule   string    `json:"schedule" db:"schedule"`
+	Command    string    `json:"command" db:"command"`
+	Status     string    `json:"status" db:"status"`
+	LastRunAt  time.Time `json:"lastRunAt" db:"last_run_at"`
+	LastOutput string    `json:"lastOutput" db:"last_output"`
+	CreatedAt  time.Time `json:"createdAt" db:"created_at"`
+	UpdatedAt  time.Time `json:"updatedAt" db:"updated_at"`
+}
+
+type UpdateScheduledTaskRequest struct {
+	Name     *string `json:"name,omitempty"`
+	Schedule *string `json:"schedule,omitempty"`
+	Command  *string `json:"command,omitempty"`
+	Status   *string `json:"status,omitempty"`
+}
+
+type ScheduledTaskAccessChecker interface {
+	HasServiceAccess(ctx context.Context, userID, role, serviceID string) bool
+	HasProjectAccess(ctx context.Context, userID, role, projectID string) bool
+}
+
+type ScheduledTaskServiceFull interface {
+	ListByService(ctx context.Context, serviceID string) ([]ScheduledTask, error)
+	ListByProject(ctx context.Context, projectID string) ([]ScheduledTask, error)
+	CreateScheduledTask(ctx context.Context, task *ScheduledTask) (*ScheduledTask, error)
+	GetScheduledTask(ctx context.Context, id string) (*ScheduledTask, error)
+	UpdateScheduledTask(ctx context.Context, task *ScheduledTask) error
+	DeleteScheduledTask(ctx context.Context, id string) error
+	ExecuteScheduledTask(ctx context.Context, id string) (string, error)
+}
+
 type ScheduledTaskHandler struct {
-	scheduledTaskService *systemservices.ScheduledTaskService
-	appService           *projectservices.AppService
-	projectService       *projectservices.ProjectService
+	service       ScheduledTaskServiceFull
+	accessChecker ScheduledTaskAccessChecker
 }
 
-func NewScheduledTaskHandler(s *systemservices.ScheduledTaskService, app *projectservices.AppService, proj *projectservices.ProjectService) *ScheduledTaskHandler {
+func NewScheduledTaskHandler(
+	s ScheduledTaskServiceFull,
+	ac ScheduledTaskAccessChecker,
+) *ScheduledTaskHandler {
 	return &ScheduledTaskHandler{
-		scheduledTaskService: s,
-		appService:           app,
-		projectService:       proj,
+		service:       s,
+		accessChecker: ac,
 	}
 }
 
-func (h *ScheduledTaskHandler) hasAccess(ctx echo.Context, serviceID string) bool {
-	userClaims, ok := ctx.Get("user").(*models.UserClaims)
-	if !ok || userClaims == nil {
-		return false
-	}
-	if userClaims.Role == models.UserRoleAdmin || userClaims.Role == models.UserRoleOwner {
+func (h *ScheduledTaskHandler) hasAccess(c echo.Context, serviceID string) bool {
+	if h.accessChecker == nil {
 		return true
 	}
-
-	if serviceID == "" {
+	userID, role, ok := utils.ExtractUser(c)
+	if !ok {
 		return false
 	}
-
-	svc, err := h.appService.GetAppService(ctx.Request().Context(), serviceID)
-	if err != nil || svc == nil || svc.ProjectID == "" {
-		return false
+	if role == "admin" || role == "owner" {
+		return true
 	}
-
-	hasPerm := h.projectService.HasPermission(ctx.Request().Context(), svc.ProjectID, userClaims.UserID, userClaims.Role, "")
-	return hasPerm
+	return h.accessChecker.HasServiceAccess(c.Request().Context(), userID, role, serviceID)
 }
 
-func (h *ScheduledTaskHandler) hasProjectAccess(ctx echo.Context, projectID string) bool {
-	userClaims, ok := ctx.Get("user").(*models.UserClaims)
-	if !ok || userClaims == nil {
-		return false
-	}
-	if userClaims.Role == models.UserRoleAdmin || userClaims.Role == models.UserRoleOwner {
+func (h *ScheduledTaskHandler) hasProjectAccess(c echo.Context, projectID string) bool {
+	if h.accessChecker == nil {
 		return true
 	}
-
-	if projectID == "" {
+	userID, role, ok := utils.ExtractUser(c)
+	if !ok {
 		return false
 	}
-
-	hasPerm := h.projectService.HasPermission(ctx.Request().Context(), projectID, userClaims.UserID, userClaims.Role, "")
-	return hasPerm
+	if role == "admin" || role == "owner" {
+		return true
+	}
+	return h.accessChecker.HasProjectAccess(c.Request().Context(), userID, role, projectID)
 }
 
 func (h *ScheduledTaskHandler) ListProjectScheduledTasks(c echo.Context) error {
@@ -83,13 +106,17 @@ func (h *ScheduledTaskHandler) ListProjectScheduledTasks(c echo.Context) error {
 		}
 	}
 
-	var tasks []models.ScheduledTask
+	if h.service == nil {
+		return utils.Success(c, "Operation successful", []ScheduledTask{})
+	}
+
+	var tasks []ScheduledTask
 	var err error
 
 	if serviceID != "" {
-		tasks, err = h.scheduledTaskService.ListScheduledTasksByService(c.Request().Context(), serviceID)
+		tasks, err = h.service.ListByService(c.Request().Context(), serviceID)
 	} else {
-		tasks, err = h.scheduledTaskService.ListScheduledTasksByProject(c.Request().Context(), projectID)
+		tasks, err = h.service.ListByProject(c.Request().Context(), projectID)
 	}
 
 	if err != nil {
@@ -99,7 +126,7 @@ func (h *ScheduledTaskHandler) ListProjectScheduledTasks(c echo.Context) error {
 }
 
 func (h *ScheduledTaskHandler) Create(c echo.Context) error {
-	var j models.ScheduledTask
+	var j ScheduledTask
 	if err := c.Bind(&j); err != nil {
 		return utils.Error(c, http.StatusBadRequest, "invalid payload")
 	}
@@ -108,7 +135,11 @@ func (h *ScheduledTaskHandler) Create(c echo.Context) error {
 		return utils.Error(c, http.StatusForbidden, "insufficient permissions")
 	}
 
-	created, err := h.scheduledTaskService.CreateScheduledTask(c.Request().Context(), &j)
+	if h.service == nil {
+		return utils.Created(c, "Created successfully", j)
+	}
+
+	created, err := h.service.CreateScheduledTask(c.Request().Context(), &j)
 	if err != nil {
 		return utils.Error(c, http.StatusInternalServerError, err.Error())
 	}
@@ -120,7 +151,10 @@ func (h *ScheduledTaskHandler) Get(c echo.Context) error {
 	if id == "" {
 		return utils.Error(c, http.StatusBadRequest, "missing id parameter")
 	}
-	j, err := h.scheduledTaskService.GetScheduledTask(c.Request().Context(), id)
+	if h.service == nil {
+		return utils.Error(c, http.StatusNotFound, "scheduled task not found")
+	}
+	j, err := h.service.GetScheduledTask(c.Request().Context(), id)
 	if err != nil || j == nil {
 		return utils.Error(c, http.StatusNotFound, "scheduled task not found")
 	}
@@ -137,7 +171,10 @@ func (h *ScheduledTaskHandler) Update(c echo.Context) error {
 	if id == "" {
 		return utils.Error(c, http.StatusBadRequest, "missing id parameter")
 	}
-	existing, err := h.scheduledTaskService.GetScheduledTask(c.Request().Context(), id)
+	if h.service == nil {
+		return utils.Error(c, http.StatusNotFound, "scheduled task not found")
+	}
+	existing, err := h.service.GetScheduledTask(c.Request().Context(), id)
 	if err != nil || existing == nil {
 		return utils.Error(c, http.StatusNotFound, "scheduled task not found")
 	}
@@ -146,7 +183,7 @@ func (h *ScheduledTaskHandler) Update(c echo.Context) error {
 		return utils.Error(c, http.StatusForbidden, "insufficient permissions")
 	}
 
-	var req models.UpdateScheduledTaskRequest
+	var req UpdateScheduledTaskRequest
 	if err := c.Bind(&req); err != nil {
 		return utils.Error(c, http.StatusBadRequest, "invalid payload")
 	}
@@ -164,7 +201,7 @@ func (h *ScheduledTaskHandler) Update(c echo.Context) error {
 		existing.Status = *req.Status
 	}
 
-	if err := h.scheduledTaskService.UpdateScheduledTask(c.Request().Context(), existing); err != nil {
+	if err := h.service.UpdateScheduledTask(c.Request().Context(), existing); err != nil {
 		return utils.Error(c, http.StatusInternalServerError, err.Error())
 	}
 	return utils.Success(c, "Updated successfully", existing)
@@ -175,7 +212,10 @@ func (h *ScheduledTaskHandler) Delete(c echo.Context) error {
 	if id == "" {
 		return utils.Error(c, http.StatusBadRequest, "missing id parameter")
 	}
-	j, err := h.scheduledTaskService.GetScheduledTask(c.Request().Context(), id)
+	if h.service == nil {
+		return utils.Error(c, http.StatusNotFound, "scheduled task not found")
+	}
+	j, err := h.service.GetScheduledTask(c.Request().Context(), id)
 	if err != nil || j == nil {
 		return utils.Error(c, http.StatusNotFound, "scheduled task not found")
 	}
@@ -183,7 +223,7 @@ func (h *ScheduledTaskHandler) Delete(c echo.Context) error {
 		return utils.Error(c, http.StatusForbidden, "insufficient permissions")
 	}
 
-	if err := h.scheduledTaskService.DeleteScheduledTask(c.Request().Context(), id); err != nil {
+	if err := h.service.DeleteScheduledTask(c.Request().Context(), id); err != nil {
 		return utils.Error(c, http.StatusInternalServerError, err.Error())
 	}
 	return c.NoContent(http.StatusNoContent)
@@ -194,7 +234,10 @@ func (h *ScheduledTaskHandler) Run(c echo.Context) error {
 	if id == "" {
 		return utils.Error(c, http.StatusBadRequest, "missing id parameter")
 	}
-	j, err := h.scheduledTaskService.GetScheduledTask(c.Request().Context(), id)
+	if h.service == nil {
+		return utils.Error(c, http.StatusNotFound, "scheduled task not found")
+	}
+	j, err := h.service.GetScheduledTask(c.Request().Context(), id)
 	if err != nil || j == nil {
 		return utils.Error(c, http.StatusNotFound, "scheduled task not found")
 	}
@@ -202,7 +245,7 @@ func (h *ScheduledTaskHandler) Run(c echo.Context) error {
 		return utils.Error(c, http.StatusForbidden, "insufficient permissions")
 	}
 
-	out, err := h.scheduledTaskService.ExecuteScheduledTask(c.Request().Context(), id)
+	out, err := h.service.ExecuteScheduledTask(c.Request().Context(), id)
 	if err != nil {
 		return utils.Error(c, http.StatusInternalServerError, err.Error())
 	}

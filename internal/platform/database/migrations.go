@@ -104,6 +104,14 @@ func loadApplied(db *sql.DB) (map[string]string, error) {
 	return applied, rows.Err()
 }
 
+func SchemaFiles(fsys fs.FS) ([]string, error) {
+	return schemaFiles(fsys)
+}
+
+func FileChecksum(content []byte) string {
+	return fileChecksum(content)
+}
+
 func schemaFiles(fsys fs.FS) ([]string, error) {
 	entries, err := fs.ReadDir(fsys, ".")
 	if err != nil {

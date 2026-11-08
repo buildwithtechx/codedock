@@ -1,4 +1,4 @@
-package system
+package monitoring
 
 import (
 	"bytes"
@@ -6,8 +6,6 @@ import (
 	"net/http"
 	"net/http/httptest"
 	"testing"
-
-	"codedock/internal/models"
 
 	"github.com/labstack/echo/v4"
 )
@@ -24,7 +22,7 @@ func TestActionsHandler_Lifecycle(t *testing.T) {
 		t.Fatalf("unexpected ListWorkflows error: %v", err)
 	}
 	var wfResp struct {
-		Data []*models.ActionWorkflow `json:"data"`
+		Data []*ActionWorkflow `json:"data"`
 	}
 	if err := json.Unmarshal(rec.Body.Bytes(), &wfResp); err != nil {
 		t.Fatalf("failed to decode workflows: %v", err)
@@ -34,7 +32,7 @@ func TestActionsHandler_Lifecycle(t *testing.T) {
 	}
 
 	// 2. Create a new workflow
-	createBody, _ := json.Marshal(models.CreateWorkflowRequest{
+	createBody, _ := json.Marshal(CreateWorkflowRequest{
 		Name:        "Deploy Production",
 		Description: "Staged deployment pipeline",
 		Trigger:     "manual",
@@ -48,7 +46,7 @@ func TestActionsHandler_Lifecycle(t *testing.T) {
 		t.Fatalf("unexpected CreateWorkflow error: %v", err)
 	}
 	var createdWf struct {
-		Data models.ActionWorkflow `json:"data"`
+		Data ActionWorkflow `json:"data"`
 	}
 	_ = json.Unmarshal(rec.Body.Bytes(), &createdWf)
 	if createdWf.Data.Name != "Deploy Production" {
@@ -73,7 +71,7 @@ func TestActionsHandler_Lifecycle(t *testing.T) {
 		t.Fatalf("unexpected ListRuns error: %v", err)
 	}
 	var runsResp struct {
-		Data []*models.ActionRun `json:"data"`
+		Data []*ActionRun `json:"data"`
 	}
 	_ = json.Unmarshal(rec.Body.Bytes(), &runsResp)
 	if len(runsResp.Data) == 0 {
@@ -91,7 +89,7 @@ func TestActionsHandler_Lifecycle(t *testing.T) {
 		t.Fatalf("unexpected RetryRun error: %v", err)
 	}
 	var retryResp struct {
-		Data models.ActionRun `json:"data"`
+		Data ActionRun `json:"data"`
 	}
 	_ = json.Unmarshal(rec.Body.Bytes(), &retryResp)
 	if retryResp.Data.Status != "running" {
@@ -109,7 +107,7 @@ func TestActionsHandler_Lifecycle(t *testing.T) {
 		t.Fatalf("unexpected CancelRun error: %v", err)
 	}
 	var cancelResp struct {
-		Data models.ActionRun `json:"data"`
+		Data ActionRun `json:"data"`
 	}
 	_ = json.Unmarshal(rec.Body.Bytes(), &cancelResp)
 	if cancelResp.Data.Status != "cancelled" {
@@ -117,7 +115,7 @@ func TestActionsHandler_Lifecycle(t *testing.T) {
 	}
 
 	// 6. Inspect destination capabilities
-	inspectBody, _ := json.Marshal(models.InspectDestinationRequest{ServerID: "srv-prod-1"})
+	inspectBody, _ := json.Marshal(InspectDestinationRequest{ServerID: "srv-prod-1"})
 	req = httptest.NewRequest(http.MethodPost, "/actions/runners/inspect", bytes.NewReader(inspectBody))
 	req.Header.Set(echo.HeaderContentType, echo.MIMEApplicationJSON)
 	rec = httptest.NewRecorder()
@@ -127,7 +125,7 @@ func TestActionsHandler_Lifecycle(t *testing.T) {
 	}
 
 	// 7. Register a new runner
-	runnerBody, _ := json.Marshal(models.CreateRunnerRequest{
+	runnerBody, _ := json.Marshal(CreateRunnerRequest{
 		ServerID: "srv-prod-1",
 		Name:     "ARM64 Native Runner",
 		Mode:     "native",
@@ -142,7 +140,7 @@ func TestActionsHandler_Lifecycle(t *testing.T) {
 		t.Fatalf("unexpected CreateRunner error: %v", err)
 	}
 	var runnerResp struct {
-		Data models.ActionRunner `json:"data"`
+		Data ActionRunner `json:"data"`
 	}
 	_ = json.Unmarshal(rec.Body.Bytes(), &runnerResp)
 

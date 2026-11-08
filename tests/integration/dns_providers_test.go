@@ -23,6 +23,21 @@ func (r providerSettingsRepo) GetServerSettings(context.Context) (*models.Server
 	return r.settings, nil
 }
 
+func (r providerSettingsRepo) GetDNSConfig(context.Context) (*dnsproviders.DNSConfig, error) {
+	if r.settings == nil {
+		return &dnsproviders.DNSConfig{}, nil
+	}
+	return &dnsproviders.DNSConfig{
+		PublicIPv4:         r.settings.PublicIPv4,
+		CloudflareAPIToken: r.settings.CloudflareAPIToken,
+		NamecheapAPIKey:    r.settings.NamecheapAPIKey,
+		NamecheapAPIUser:   r.settings.NamecheapAPIUser,
+		NamecheapClientIP:  r.settings.NamecheapClientIP,
+		SpaceshipAPIKey:    r.settings.SpaceshipAPIKey,
+		SpaceshipAPISecret: r.settings.SpaceshipAPISecret,
+	}, nil
+}
+
 func (providerSettingsRepo) UpdateServerSettings(context.Context, *models.ServerSettings) error {
 	return nil
 }

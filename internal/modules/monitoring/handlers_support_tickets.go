@@ -1,22 +1,22 @@
-package system
+package monitoring
 
 import (
 	"net/http"
 	"strings"
 	"time"
 
-	"codedock/internal/models"
-
 	"github.com/labstack/echo/v4"
+
+	"codedock/internal/utils"
 )
 
 func (h *SupportHandler) CreateTicket(c echo.Context) error {
-	claims, ok := c.Get("user").(*models.UserClaims)
-	if !ok || claims == nil || claims.UserID == "" {
+	userID := utils.ExtractUserID(c)
+	if userID == "" {
 		return echo.NewHTTPError(http.StatusUnauthorized, "Authentication required")
 	}
 
-	var input models.CloudSupportCustomerInput
+	var input CloudSupportCustomerInput
 	if err := c.Bind(&input); err != nil {
 		return echo.NewHTTPError(http.StatusBadRequest, "Invalid request body")
 	}
@@ -29,18 +29,18 @@ func (h *SupportHandler) CreateTicket(c echo.Context) error {
 
 	category := input.Category
 	if category == "" {
-		category = models.CloudSupportCategoryGeneral
+		category = CloudSupportCategoryGeneral
 	}
 
 	now := time.Now().UTC()
 	ticketID := generateSupportID()
 
-	record := &models.CloudSupportTicketRecord{
+	record := &CloudSupportTicketRecord{
 		ID:        ticketID,
-		AccountID: claims.UserID,
+		AccountID: userID,
 		Subject:   subject,
 		Category:  category,
-		Status:    models.CloudSupportStatusOpen,
+		Status:    CloudSupportStatusOpen,
 		Message:   message,
 		CreatedAt: now,
 		UpdatedAt: now,
@@ -48,18 +48,18 @@ func (h *SupportHandler) CreateTicket(c echo.Context) error {
 
 	h.mu.Lock()
 	h.tickets[ticketID] = record
-	h.messages[ticketID] = []*models.CloudSupportMessageRecord{}
+	h.messages[ticketID] = []*CloudSupportMessageRecord{}
 	h.mu.Unlock()
 
-	return c.JSON(http.StatusCreated, models.CloudSupportReceipt{
+	return c.JSON(http.StatusCreated, CloudSupportReceipt{
 		ID:        ticketID,
 		CreatedAt: now.Format(time.RFC3339),
 	})
 }
 
 func (h *SupportHandler) GetTicket(c echo.Context) error {
-	claims, ok := c.Get("user").(*models.UserClaims)
-	if !ok || claims == nil || claims.UserID == "" {
+	userID := utils.ExtractUserID(c)
+	if userID == "" {
 		return echo.NewHTTPError(http.StatusUnauthorized, "Authentication required")
 	}
 
@@ -70,13 +70,13 @@ func (h *SupportHandler) GetTicket(c echo.Context) error {
 	msgs := h.messages[id]
 	h.mu.RUnlock()
 
-	if !exists || record.AccountID != claims.UserID {
+	if !exists || record.AccountID != userID {
 		return echo.NewHTTPError(http.StatusNotFound, "Ticket not found")
 	}
 
-	var messageItems []models.CloudSupportCustomerMessageItem
+	var messageItems []CloudSupportCustomerMessageItem
 	for _, m := range msgs {
-		messageItems = append(messageItems, models.CloudSupportCustomerMessageItem{
+		messageItems = append(messageItems, CloudSupportCustomerMessageItem{
 			ID:        m.ID,
 			Author:    m.Author,
 			Body:      m.Body,
@@ -84,12 +84,12 @@ func (h *SupportHandler) GetTicket(c echo.Context) error {
 		})
 	}
 	if messageItems == nil {
-		messageItems = []models.CloudSupportCustomerMessageItem{}
+		messageItems = []CloudSupportCustomerMessageItem{}
 	}
 
-	detail := models.CloudSupportCustomerDetail{
-		Ticket: models.CloudSupportCustomerTicketDetail{
-			CloudSupportCustomerTicket: models.CloudSupportCustomerTicket{
+	detail := CloudSupportCustomerDetail{
+		Ticket: CloudSupportCustomerTicketDetail{
+			CloudSupportCustomerTicket: CloudSupportCustomerTicket{
 				ID:        record.ID,
 				Subject:   record.Subject,
 				Category:  record.Category,
@@ -106,14 +106,14 @@ func (h *SupportHandler) GetTicket(c echo.Context) error {
 }
 
 func (h *SupportHandler) ReplyTicket(c echo.Context) error {
-	claims, ok := c.Get("user").(*models.UserClaims)
-	if !ok || claims == nil || claims.UserID == "" {
+	userID := utils.ExtractUserID(c)
+	if userID == "" {
 		return echo.NewHTTPError(http.StatusUnauthorized, "Authentication required")
 	}
 
 	id := c.Param("id")
 
-	var input models.CloudSupportCustomerReply
+	var input CloudSupportCustomerReply
 	if err := c.Bind(&input); err != nil {
 		return echo.NewHTTPError(http.StatusBadRequest, "Invalid request body")
 	}
@@ -125,17 +125,17 @@ func (h *SupportHandler) ReplyTicket(c echo.Context) error {
 
 	h.mu.Lock()
 	record, exists := h.tickets[id]
-	if !exists || record.AccountID != claims.UserID {
+	if !exists || record.AccountID != userID {
 		h.mu.Unlock()
 		return echo.NewHTTPError(http.StatusNotFound, "Ticket not found")
 	}
 
 	now := time.Now().UTC()
 	record.UpdatedAt = now
-	msgRecord := &models.CloudSupportMessageRecord{
+	msgRecord := &CloudSupportMessageRecord{
 		ID:        generateMessageID(),
 		TicketID:  id,
-		Author:    models.CloudSupportAuthorCustomer,
+		Author:    CloudSupportAuthorCustomer,
 		Body:      body,
 		CreatedAt: now,
 	}
@@ -143,9 +143,9 @@ func (h *SupportHandler) ReplyTicket(c echo.Context) error {
 	msgs := h.messages[id]
 	h.mu.Unlock()
 
-	var messageItems []models.CloudSupportCustomerMessageItem
+	var messageItems []CloudSupportCustomerMessageItem
 	for _, m := range msgs {
-		messageItems = append(messageItems, models.CloudSupportCustomerMessageItem{
+		messageItems = append(messageItems, CloudSupportCustomerMessageItem{
 			ID:        m.ID,
 			Author:    m.Author,
 			Body:      m.Body,
@@ -153,9 +153,9 @@ func (h *SupportHandler) ReplyTicket(c echo.Context) error {
 		})
 	}
 
-	return c.JSON(http.StatusCreated, models.CloudSupportCustomerDetail{
-		Ticket: models.CloudSupportCustomerTicketDetail{
-			CloudSupportCustomerTicket: models.CloudSupportCustomerTicket{
+	return c.JSON(http.StatusCreated, CloudSupportCustomerDetail{
+		Ticket: CloudSupportCustomerTicketDetail{
+			CloudSupportCustomerTicket: CloudSupportCustomerTicket{
 				ID:        record.ID,
 				Subject:   record.Subject,
 				Category:  record.Category,

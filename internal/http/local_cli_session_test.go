@@ -12,9 +12,9 @@ import (
 	"github.com/labstack/echo/v4"
 
 	"codedock/internal/config"
-	"codedock/internal/handlers/system"
 	"codedock/internal/models"
 	authservices "codedock/internal/modules/auth"
+	"codedock/internal/modules/monitoring"
 	systemservices "codedock/internal/services/system"
 )
 
@@ -79,7 +79,11 @@ func TestLocalCLISession(t *testing.T) {
 		},
 	}
 
-	handler := system.NewSystemHandler(systemservices.NewSystemService(), repo, tokenSvc)
+	handler := monitoring.NewSystemHandler(
+		&systemServiceAdapter{svc: systemservices.NewSystemService()},
+		&systemAdminFinderAdapter{userRepo: repo},
+		&systemTokenGenAdapter{tokenService: tokenSvc},
+	)
 	e := echo.New()
 
 	t.Run("rejects missing internal token", func(t *testing.T) {

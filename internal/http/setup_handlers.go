@@ -11,7 +11,6 @@ import (
 
 	"codedock/internal/config"
 	"codedock/internal/engine/deploy"
-	"codedock/internal/handlers/system"
 	"codedock/internal/http/mcp"
 	"codedock/internal/http/middleware"
 	aimod "codedock/internal/modules/ai"
@@ -188,17 +187,11 @@ func buildServerInstance(d *serverSetupDeps) (*Server, error) {
 	}
 	securityService := security.NewSecurityService(d.db, security.NewFeedManager(d.db, securityVerifier, ""), nil, nil, nil, nil)
 	chatAppService := chatapps.NewService(chatapps.NewRepository(d.db), d.v)
-	serviceLogsWSHandler := system.NewServiceLogsWSHandler(d.tokenService, d.appService, d.projectService, d.userRepo)
-	serviceLogsWSHandler.Streams = d.deploymentService
-
-	var billingHandler *system.BillingHandler
-	if config.Get().Cloud.Enabled {
-		billingHandler = system.NewBillingHandler(systemservices.NewBillingService(d.userRepo))
-	}
+	monHandlers := createMonitoringHandlers(d, updaterService, metricsService, logService)
 	_ = networking.EnsureTraefikAccessRoute(networking.DynamicDir, config.Get().Server.Port)
 
 	srv := &Server{
-		operationHandler:           system.NewOperationHandler(d.operationService),
+		operationHandler:           monHandlers.operationHandler,
 		router:                     d.e,
 		mcpBridge:                  d.bridge,
 		authRateLimiter:            middleware.NewRateLimiter(10, time.Minute),
@@ -220,7 +213,7 @@ func buildServerInstance(d *serverSetupDeps) (*Server, error) {
 		appWebhookHandler:          appWebhookHandler,
 		autoscalingHandler:         autoscalingHandler,
 		dbHandler:                  databases.NewHandler(d.databaseService),
-		scheduledTaskHandler:       system.NewScheduledTaskHandler(d.scheduledTaskService, d.appService, d.projectService),
+		scheduledTaskHandler:       monHandlers.scheduledTaskHandler,
 		canvasHandler:              canvasHandler,
 		terminalHandler:            terminalHandler,
 		deploymentHandler:          deploymentHandler,
@@ -231,9 +224,9 @@ func buildServerInstance(d *serverSetupDeps) (*Server, error) {
 		backupHandler:              backupHandler,
 		settingsHandler:            settingsmodule.NewSettingsHandler(d.settingsService),
 		appearanceHandler:          users.NewAppearanceHandler(d.userModRepo),
-		notifSettingsHandler:       system.NewNotificationSettingsHandler(d.notifSettingsService, d.orgRepo),
+		notifSettingsHandler:       monHandlers.notifSettingsHandler,
 		aiSettingsHandler:          aimod.NewHandler(d.aiSettingsService),
-		updaterHandler:             system.NewUpdaterHandler(updaterService),
+		updaterHandler:             monHandlers.updaterHandler,
 		userHandler:                users.NewUserHandler(d.userService, d.mailerService, d.auditService),
 		authHandler:                d.authMod.AuthHandler,
 		oauthHandler:               d.authMod.OAuthHandler,
@@ -248,8 +241,8 @@ func buildServerInstance(d *serverSetupDeps) (*Server, error) {
 		orgHandler:                 organizations.NewOrganizationHandler(d.orgService, d.auditService),
 		environmentHandler:         envHandler,
 		domainHandler:              domainHandler,
-		notificationHandler:        system.NewNotificationHandler(systemservices.NewNotificationService(d.dispatcherService)),
-		systemHandler:              system.NewSystemHandler(systemservices.NewSystemService(), d.userRepo, d.tokenService),
+		notificationHandler:        monHandlers.notificationHandler,
+		systemHandler:              monHandlers.systemHandler,
 		composeHandler:             composeHandler,
 		composeStackHandler:        composeStackHandler,
 		chatAppHandler:             chatapps.NewHandler(chatAppService, chatapps.NewDispatcher(chatAppService, nil)),
@@ -257,23 +250,23 @@ func buildServerInstance(d *serverSetupDeps) (*Server, error) {
 		migrationHandler:           modmigrations.NewBundleHandler(&migrationBundleAdapter{service: migrationService}, &migrationUserCounterAdapter{users: d.userService}, middleware.NewRateLimiter(5, time.Minute)),
 		onboardingHandler:          users.NewOnboardingHandler(d.userService),
 		dnsHandler:                 dns.NewHandler(dnsService),
-		metricsHandler:             system.NewMetricsHandler(metricsService),
-		logHandler:                 system.NewLogHandler(logService),
+		metricsHandler:             monHandlers.metricsHandler,
+		logHandler:                 monHandlers.logHandler,
 		auditLogHandler:            audit.NewAuditLogHandler(d.auditService),
-		exampleHandler:             system.NewExampleHandler(systemservices.NewExampleService()),
+		exampleHandler:             monHandlers.exampleHandler,
 		serverHandler:              serversHandler,
 		sshManager:                 d.sshManager,
-		billingHandler:             billingHandler,
+		billingHandler:             monHandlers.billingHandler,
 		serverMetricsWSHandler:     serversWSHandler,
-		serviceLogsWSHandler:       serviceLogsWSHandler,
+		serviceLogsWSHandler:       monHandlers.serviceLogsWSHandler,
 		takeoverHandler:            serversTakeoverHandler,
 		routeRuleHandler:           routeRuleHandler,
 		mailHandler:                mailmodule.NewHandler(mailmodule.NewService(mailmodule.NewRepository(d.db, d.v)), nil, nil),
-		ingressHandler:             system.NewIngressHandlerWithDeps(repositories.NewIngressRepository(d.db), systemservices.NewCloudflareIngressService(nil)),
+		ingressHandler:             monHandlers.ingressHandler,
 		serverNetworksHandler:      serversNetworksHandler,
-		actionsHandler:             system.NewActionsHandler(),
+		actionsHandler:             monHandlers.actionsHandler,
 		checksHandler:              checksHandler,
-		supportHandler:             system.NewSupportHandler(),
+		supportHandler:             monHandlers.supportHandler,
 		routeProtectionHandler:     protectionHandler,
 		edgeAuthHandler:            edgeAuthHandler,
 		securityHandler:            security.NewHandler(securityService),

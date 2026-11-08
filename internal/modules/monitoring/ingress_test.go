@@ -1,4 +1,4 @@
-package system
+package monitoring
 
 import (
 	"bytes"
@@ -6,8 +6,6 @@ import (
 	"net/http"
 	"net/http/httptest"
 	"testing"
-
-	"codedock/internal/models"
 
 	"github.com/labstack/echo/v4"
 )
@@ -17,7 +15,7 @@ func TestIngressHandler_Lifecycle(t *testing.T) {
 	handler := NewIngressHandler()
 
 	// 1. Discover
-	discoverBody, _ := json.Marshal(models.IngressDiscoverRequest{
+	discoverBody, _ := json.Marshal(IngressDiscoverRequest{
 		CredentialID: "cf-cred-1",
 	})
 	req := httptest.NewRequest(http.MethodPost, "/dns/ingress/discover", bytes.NewReader(discoverBody))
@@ -32,7 +30,7 @@ func TestIngressHandler_Lifecycle(t *testing.T) {
 	}
 
 	// 2. Connect
-	connectBody, _ := json.Marshal(models.IngressConnectRequest{
+	connectBody, _ := json.Marshal(IngressConnectRequest{
 		ServerID:          "srv-alpha",
 		CredentialID:      "cf-cred-1",
 		AccountID:         "cf-acc-primary",
@@ -52,8 +50,8 @@ func TestIngressHandler_Lifecycle(t *testing.T) {
 	}
 
 	var connectResp struct {
-		Status string                   `json:"status"`
-		Data   models.IngressConnection `json:"data"`
+		Status string            `json:"status"`
+		Data   IngressConnection `json:"data"`
 	}
 	if err := json.Unmarshal(rec.Body.Bytes(), &connectResp); err != nil {
 		t.Fatalf("failed to parse connect response: %v", err)
@@ -81,7 +79,7 @@ func TestIngressHandler_Lifecycle(t *testing.T) {
 	}
 
 	// 4. Update
-	updateBody, _ := json.Marshal(models.IngressUpdateRequest{
+	updateBody, _ := json.Marshal(IngressUpdateRequest{
 		DefaultForDomains: false,
 	})
 	req = httptest.NewRequest(http.MethodPut, "/dns/ingress/"+connID, bytes.NewReader(updateBody))
@@ -111,7 +109,7 @@ func TestIngressHandler_Lifecycle(t *testing.T) {
 	}
 
 	// 6. Domain mapping
-	domainBody, _ := json.Marshal(models.IngressDomainRequest{
+	domainBody, _ := json.Marshal(IngressDomainRequest{
 		ConnectionID: &connID,
 	})
 	req = httptest.NewRequest(http.MethodPut, "/dns/ingress/domains/app.codedock.dev", bytes.NewReader(domainBody))

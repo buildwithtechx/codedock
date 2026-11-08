@@ -9,7 +9,7 @@ import (
 	"github.com/google/uuid"
 
 	cdkdb "codedock/db"
-	"codedock/internal/engine/compose"
+	compose "codedock/internal/platform/docker"
 	"codedock/internal/models"
 	"codedock/internal/repositories"
 	projectservices "codedock/internal/services/projects"

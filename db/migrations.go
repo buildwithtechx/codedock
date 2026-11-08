@@ -27,3 +27,11 @@ func RunMigrationsFromFS(db *sql.DB, fsys fs.FS) error {
 func SplitStatements(content string) []string {
 	return database.SplitStatements(content)
 }
+
+func schemaFiles(fsys fs.FS) ([]string, error) {
+	return database.SchemaFiles(fsys)
+}
+
+func fileChecksum(content []byte) string {
+	return database.FileChecksum(content)
+}
