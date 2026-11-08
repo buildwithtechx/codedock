@@ -6,16 +6,18 @@ import (
 
 	"github.com/labstack/echo/v4"
 
+	"codedock/internal/modules/audit"
+	"codedock/internal/modules/users"
 	"codedock/internal/telemetry"
 	"codedock/internal/utils"
 )
 
 type AuthHandler struct {
 	authService  *AuthService
-	auditService *AuditService
+	auditService *audit.AuditService
 }
 
-func NewAuthHandler(s *AuthService, auditService *AuditService) *AuthHandler {
+func NewAuthHandler(s *AuthService, auditService *audit.AuditService) *AuthHandler {
 	return &AuthHandler{authService: s, auditService: auditService}
 }
 
@@ -75,7 +77,7 @@ func (h *AuthHandler) Register(c echo.Context) error {
 		"email": u.Email,
 		"name":  u.Name,
 	})
-	h.auditService.LogAction(c.Request().Context(), AuditActionOpts{
+	h.auditService.LogAction(c.Request().Context(), audit.AuditActionOpts{
 		UserID:    u.ID,
 		Action:    "auth.signup",
 		Resource:  u.ID,
@@ -102,7 +104,7 @@ func (h *AuthHandler) Login(c echo.Context) error {
 	telemetry.Track(u.Email, "user_logged_in", map[string]any{
 		"email": u.Email,
 	})
-	h.auditService.LogAction(c.Request().Context(), AuditActionOpts{
+	h.auditService.LogAction(c.Request().Context(), audit.AuditActionOpts{
 		UserID:    u.ID,
 		Action:    "auth.login",
 		Resource:  u.ID,
@@ -156,7 +158,7 @@ func (h *AuthHandler) AdminInviteUser(c echo.Context) error {
 		return utils.Error(c, http.StatusBadRequest, "email is required")
 	}
 	if req.Role == "" {
-		req.Role = string(UserRoleMember)
+		req.Role = string(users.UserRoleMember)
 	}
 
 	origin := c.Request().Header.Get("Origin")
@@ -167,7 +169,7 @@ func (h *AuthHandler) AdminInviteUser(c echo.Context) error {
 		origin = "http://localhost:3000"
 	}
 
-	u, err := h.authService.InviteUser(c.Request().Context(), req.Email, UserRole(req.Role), origin)
+	u, err := h.authService.InviteUser(c.Request().Context(), req.Email, users.UserRole(req.Role), origin)
 	if err != nil {
 		return utils.Error(c, http.StatusInternalServerError, err.Error())
 	}

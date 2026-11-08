@@ -1,4 +1,4 @@
-package auth
+package audit
 
 import (
 	"context"
@@ -201,7 +201,7 @@ func (r *AuditLogRepo) GetSettings(ctx context.Context, orgID string) (*AuditSet
 		return &AuditSettings{
 			OrganizationID: orgID,
 			Enabled:        true,
-			RetentionDays:  90,
+			RetentionDays:  DefaultRetentionDays,
 		}, nil
 	}
 	if err != nil {

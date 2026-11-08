@@ -9,6 +9,8 @@ import (
 	"github.com/descope/virtualwebauthn"
 	"github.com/go-webauthn/webauthn/protocol"
 	"github.com/google/uuid"
+
+	"codedock/internal/modules/users"
 )
 
 func TestPasskeyVirtualCeremonyAnd2FAGating(t *testing.T) {
@@ -20,7 +22,7 @@ func TestPasskeyVirtualCeremonyAnd2FAGating(t *testing.T) {
 		Origin: "http://localhost:3000",
 	}
 
-	user := &User{
+	user := &users.User{
 		ID:          uuid.NewString(),
 		Email:       "virtual-passkey@example.com",
 		Name:        "Virtual WebAuthn User",
@@ -123,7 +125,7 @@ func TestPasskeyVirtualCeremonyDirectLogin(t *testing.T) {
 		Origin: "http://localhost:3000",
 	}
 
-	user := &User{
+	user := &users.User{
 		ID:          uuid.NewString(),
 		Email:       "direct-passkey@example.com",
 		Name:        "Direct Passkey User",

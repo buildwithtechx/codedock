@@ -7,6 +7,7 @@ import (
 	"github.com/golang-jwt/jwt/v5"
 
 	"codedock/internal/config"
+	"codedock/internal/modules/users"
 )
 
 type TokenService struct {
@@ -30,7 +31,7 @@ func NewTokenService() (*TokenService, error) {
 	}, nil
 }
 
-func (ts *TokenService) GenerateToken(u *User) (string, error) {
+func (ts *TokenService) GenerateToken(u *users.User) (string, error) {
 	if u == nil {
 		return "", errors.New("user cannot be nil when generating token")
 	}
@@ -65,7 +66,7 @@ func (ts *TokenService) ValidateToken(tokenStr string) (jwt.MapClaims, error) {
 	return claims, nil
 }
 
-func (ts *TokenService) GeneratePasswordResetToken(u *User) (string, error) {
+func (ts *TokenService) GeneratePasswordResetToken(u *users.User) (string, error) {
 	pwdHash := u.PasswordHash
 	if len(pwdHash) > 10 {
 		pwdHash = pwdHash[:10]
@@ -107,7 +108,7 @@ func (ts *TokenService) ValidatePasswordResetToken(tokenStr string) (string, str
 	return email, pwdHash, nil
 }
 
-func (ts *TokenService) GenerateRefreshToken(u *User) (string, error) {
+func (ts *TokenService) GenerateRefreshToken(u *users.User) (string, error) {
 	if u == nil {
 		return "", errors.New("user cannot be nil when generating token")
 	}
@@ -184,7 +185,7 @@ func (ts *TokenService) ValidateEmailVerificationToken(tokenStr string) (string,
 
 	email, ok := claims["email"].(string)
 	if !ok || email == "" {
-		return "", errors.New("invalid token claims")
+		return "", "", errors.New("invalid token claims")
 	}
 	return email, nil
 }

@@ -8,6 +8,8 @@ import (
 
 	"github.com/google/uuid"
 
+	"codedock/internal/modules/settings"
+	"codedock/internal/modules/users"
 	"codedock/internal/utils"
 )
 
@@ -16,16 +18,16 @@ type Mailer interface {
 }
 
 type AuthService struct {
-	userRepo         UserRepository
-	settingsRepo     SettingsRepository
+	userRepo         users.UserRepository
+	settingsRepo     settings.SettingsRepository
 	tokenService     *TokenService
 	mailer           Mailer
 	refreshTokenRepo RefreshTokenRepository
 }
 
 func NewAuthService(
-	ur UserRepository,
-	sr SettingsRepository,
+	ur users.UserRepository,
+	sr settings.SettingsRepository,
 	ts *TokenService,
 	mailer Mailer,
 	rtr RefreshTokenRepository,
@@ -49,12 +51,12 @@ func (a *AuthService) getBaseUrl(ctx context.Context, fallback string) string {
 	return fallback
 }
 
-func (a *AuthService) Register(ctx context.Context, name, email, password, originUrl string) (*User, string, string, error) {
+func (a *AuthService) Register(ctx context.Context, name, email, password, originUrl string) (*users.User, string, string, error) {
 	if email == "" || password == "" || name == "" {
 		return nil, "", "", errors.New("name, email and password are required")
 	}
-	FirstUserSetupLock.Lock()
-	defer FirstUserSetupLock.Unlock()
+	users.FirstUserSetupLock.Lock()
+	defer users.FirstUserSetupLock.Unlock()
 
 	_, total, _ := a.userRepo.ListUsers(ctx, 1, 0)
 	isInitial := total == 0
@@ -86,11 +88,11 @@ func (a *AuthService) Register(ctx context.Context, name, email, password, origi
 	if err != nil {
 		return nil, "", "", err
 	}
-	role := UserRoleMember
+	role := users.UserRoleMember
 	if total == 0 {
-		role = UserRoleOwner
+		role = users.UserRoleOwner
 	}
-	u := &User{
+	u := &users.User{
 		ID:            uuid.New().String(),
 		Email:         email,
 		Name:          name,
@@ -122,7 +124,7 @@ func (a *AuthService) Register(ctx context.Context, name, email, password, origi
 	return &uCopy, token, refreshToken, nil
 }
 
-func (a *AuthService) Login(ctx context.Context, email, password, totpCode string) (*User, string, string, error) {
+func (a *AuthService) Login(ctx context.Context, email, password, totpCode string) (*users.User, string, string, error) {
 	if email == "" || password == "" {
 		return nil, "", "", errors.New("email and password are required")
 	}
@@ -183,7 +185,7 @@ func (a *AuthService) Login(ctx context.Context, email, password, totpCode strin
 	return &uCopy, token, refreshToken, nil
 }
 
-func (a *AuthService) RefreshToken(ctx context.Context, refreshTokenStr string) (*User, string, string, error) {
+func (a *AuthService) RefreshToken(ctx context.Context, refreshTokenStr string) (*users.User, string, string, error) {
 	if refreshTokenStr == "" {
 		return nil, "", "", errors.New("refresh token is required")
 	}

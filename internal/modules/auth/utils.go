@@ -5,6 +5,8 @@ import (
 	"reflect"
 
 	"github.com/labstack/echo/v4"
+
+	"codedock/internal/modules/users"
 )
 
 func setAuthCookie(c echo.Context, token string) {
@@ -55,7 +57,7 @@ func clearRefreshCookie(c echo.Context) {
 
 func extractClaims(c echo.Context) (userID, email string) {
 	if u := c.Get("user"); u != nil {
-		if claims, ok := u.(*UserClaims); ok && claims != nil {
+		if claims, ok := u.(*users.UserClaims); ok && claims != nil {
 			return claims.UserID, claims.Email
 		}
 		v := reflect.ValueOf(u)
@@ -77,11 +79,4 @@ func extractClaims(c echo.Context) (userID, email string) {
 func extractUserID(c echo.Context) string {
 	id, _ := extractClaims(c)
 	return id
-}
-
-func auditActorID(c echo.Context) string {
-	if id := extractUserID(c); id != "" {
-		return id
-	}
-	return "system"
 }

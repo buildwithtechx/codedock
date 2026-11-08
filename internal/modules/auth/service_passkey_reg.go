@@ -13,6 +13,8 @@ import (
 	"github.com/go-webauthn/webauthn/protocol"
 	"github.com/go-webauthn/webauthn/webauthn"
 	"github.com/google/uuid"
+
+	"codedock/internal/modules/audit"
 )
 
 func (s *PasskeyService) BeginRegistration(ctx context.Context, userID string) (*protocol.CredentialCreation, error) {
@@ -120,7 +122,7 @@ func (s *PasskeyService) FinishRegistration(ctx context.Context, userID, name st
 		return nil, err
 	}
 
-	s.auditService.LogAction(ctx, AuditActionOpts{
+	s.auditService.LogAction(ctx, audit.AuditActionOpts{
 		UserID:    userID,
 		Action:    "auth.passkey.create",
 		Resource:  record.ID,

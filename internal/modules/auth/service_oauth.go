@@ -11,18 +11,19 @@ import (
 	"github.com/google/uuid"
 
 	"codedock/internal/config"
+	"codedock/internal/modules/users"
 	"codedock/internal/utils"
 )
 
 type OAuthService struct {
 	oauthRepo       OAuthRepository
-	userRepo        UserRepository
+	userRepo        users.UserRepository
 	tokenService    *TokenService
 	pendingTOTP     sync.Map
 	pendingRecovery sync.Map
 }
 
-func NewOAuthService(or OAuthRepository, ur UserRepository, ts *TokenService) *OAuthService {
+func NewOAuthService(or OAuthRepository, ur users.UserRepository, ts *TokenService) *OAuthService {
 	return &OAuthService{
 		oauthRepo:    or,
 		userRepo:     ur,
@@ -152,7 +153,7 @@ func (s *OAuthService) UpdateUserTOTP(ctx context.Context, userID string, enable
 	return s.oauthRepo.UpdateUserTOTP(ctx, userID, enabled, secret, recoveryCodes)
 }
 
-func (s *OAuthService) HandleCallback(ctx context.Context, providerName, code string) (string, string, *User, error) {
+func (s *OAuthService) HandleCallback(ctx context.Context, providerName, code string) (string, string, *users.User, error) {
 	p, err := s.GetProvider(ctx, providerName)
 	if err != nil || p == nil {
 		return "", "", nil, errors.New("oauth provider not found: " + providerName)
@@ -170,18 +171,18 @@ func (s *OAuthService) HandleCallback(ctx context.Context, providerName, code st
 		u = nil
 	}
 	if u == nil {
-		FirstUserSetupLock.Lock()
+		users.FirstUserSetupLock.Lock()
 		u, err = s.userRepo.GetUserByEmail(ctx, email)
 		var notFound *utils.NotFoundError
 		if errors.As(err, &notFound) {
 			err = nil
 		}
 		if err == nil && u == nil {
-			role := UserRoleMember
+			role := users.UserRoleMember
 			if count, err := s.userRepo.CountUsers(ctx); err == nil && count == 0 {
-				role = UserRoleOwner
+				role = users.UserRoleOwner
 			}
-			u = &User{
+			u = &users.User{
 				ID:           uuid.New().String(),
 				Email:        email,
 				PasswordHash: "oauth-login-no-password",
@@ -191,11 +192,11 @@ func (s *OAuthService) HandleCallback(ctx context.Context, providerName, code st
 				UpdatedAt:    time.Now(),
 			}
 			if err := s.userRepo.CreateUser(ctx, u); err != nil {
-				FirstUserSetupLock.Unlock()
+				users.FirstUserSetupLock.Unlock()
 				return "", "", nil, errors.New("failed to create user account from oauth: " + err.Error())
 			}
 		}
-		FirstUserSetupLock.Unlock()
+		users.FirstUserSetupLock.Unlock()
 		if err != nil && u == nil {
 			return "", "", nil, err
 		}

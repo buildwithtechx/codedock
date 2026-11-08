@@ -1,4 +1,4 @@
-package auth
+package audit
 
 import (
 	"context"
@@ -94,7 +94,7 @@ type fakeSearchRepo struct {
 
 func (f *fakeSearchRepo) SearchIDsByName(_ context.Context, term string, limit int) ([]string, error) {
 	f.terms = append(f.terms, term)
-	if limit != auditSearchResolverLimit {
+	if limit != AuditSearchResolverLimit {
 		return nil, errors.New("unexpected limit")
 	}
 	return f.ids, f.err

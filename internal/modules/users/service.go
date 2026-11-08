@@ -1,4 +1,4 @@
-package auth
+package users
 
 import (
 	"context"
@@ -34,7 +34,7 @@ func (s *UserService) CountUsers(ctx context.Context) (int, error) {
 
 func (s *UserService) CreateUser(ctx context.Context, u *User) error {
 	if u.Email == "" {
-		return errors.New("user email is required")
+		return ErrUserEmailRequired
 	}
 	if u.ID == "" {
 		u.ID = uuid.New().String()
@@ -49,14 +49,14 @@ func (s *UserService) CreateUser(ctx context.Context, u *User) error {
 
 func (s *UserService) GetUserByEmail(ctx context.Context, email string) (*User, error) {
 	if email == "" {
-		return nil, errors.New("email is required")
+		return nil, ErrUserEmailRequired
 	}
 	return s.userRepo.GetUserByEmail(ctx, email)
 }
 
 func (s *UserService) GetUserByID(ctx context.Context, id string) (*User, error) {
 	if id == "" {
-		return nil, errors.New("user id is required")
+		return nil, ErrUserIDRequired
 	}
 	return s.userRepo.GetUserByID(ctx, id)
 }
@@ -76,12 +76,12 @@ func (s *UserService) ChangePassword(ctx context.Context, userID, oldPassword, n
 	}
 
 	if !utils.CheckPasswordHash(oldPassword, u.PasswordHash) {
-		return errors.New("invalid old password")
+		return ErrInvalidOldPassword
 	}
 
 	hashed, err := utils.HashPassword(newPassword)
 	if err != nil {
-		return errors.New("failed to hash new password")
+		return ErrHashPasswordFailed
 	}
 
 	u.PasswordHash = string(hashed)
@@ -163,7 +163,7 @@ func (s *UserService) CreatePAT(ctx context.Context, userID, name string, access
 
 func (s *UserService) ListPATs(ctx context.Context, userID string) ([]*PersonalAccessToken, error) {
 	if userID == "" {
-		return nil, errors.New("userId is required")
+		return nil, ErrUserIDRequired
 	}
 	return s.userRepo.ListPATs(ctx, userID)
 }

@@ -6,7 +6,7 @@ import (
 
 type AuthRouteDeps struct {
 	AuthHandler       *AuthHandler
-	UserHandler       *UserHandler
+	GetProfile        echo.HandlerFunc
 	OAuthHandler      *OAuthHandler
 	DeviceFlowHandler *DeviceFlowHandler
 	PasskeyHandler    *PasskeyHandler
@@ -18,9 +18,6 @@ type AuthRouteDeps struct {
 func RegisterAuthRoutes(apiGroup, authGroup *echo.Group, deps AuthRouteDeps) {
 	if deps.AuthHandler == nil {
 		deps.AuthHandler = &AuthHandler{}
-	}
-	if deps.UserHandler == nil {
-		deps.UserHandler = &UserHandler{}
 	}
 	if deps.OAuthHandler == nil {
 		deps.OAuthHandler = &OAuthHandler{}
@@ -41,7 +38,9 @@ func RegisterAuthRoutes(apiGroup, authGroup *echo.Group, deps AuthRouteDeps) {
 	apiGroup.POST("/auth/email/resend", deps.AuthHandler.ResendVerificationEmail, deps.AuthRateLimit)
 	apiGroup.POST("/auth/email/verify", deps.AuthHandler.VerifyEmail, deps.AuthRateLimit)
 	apiGroup.POST("/auth/logout", deps.AuthHandler.Logout)
-	authGroup.GET("/auth/me", deps.UserHandler.GetProfile)
+	if deps.GetProfile != nil {
+		authGroup.GET("/auth/me", deps.GetProfile)
+	}
 
 	apiGroup.GET("/auth/oauth/providers/enabled", deps.OAuthHandler.ListEnabledProviders)
 	apiGroup.GET("/auth/oauth/:provider", deps.OAuthHandler.OAuthRedirect)
@@ -62,49 +61,4 @@ func RegisterAuthRoutes(apiGroup, authGroup *echo.Group, deps AuthRouteDeps) {
 	authGroup.GET("/auth/passkeys", deps.PasskeyHandler.List)
 	authGroup.PUT("/auth/passkeys/:id", deps.PasskeyHandler.Rename)
 	authGroup.DELETE("/auth/passkeys/:id", deps.PasskeyHandler.Delete)
-}
-
-func RegisterUserRoutes(authGroup *echo.Group, userHandler *UserHandler, authHandler *AuthHandler, requireAdmin, otpRateLimit echo.MiddlewareFunc) {
-	if userHandler == nil {
-		userHandler = &UserHandler{}
-	}
-	if authHandler == nil {
-		authHandler = &AuthHandler{}
-	}
-	authGroup.GET("/users", userHandler.ListUsers, requireAdmin)
-	authGroup.POST("/users/invite", authHandler.AdminInviteUser, requireAdmin)
-	authGroup.DELETE("/users/:id", userHandler.DeleteUser, requireAdmin)
-	authGroup.GET("/profile", userHandler.GetProfile)
-	authGroup.PUT("/profile", userHandler.UpdateProfile)
-	authGroup.POST("/profile/email/request", userHandler.RequestEmailChange)
-	authGroup.POST("/profile/email/verify", userHandler.VerifyEmailChange, otpRateLimit)
-	authGroup.PUT("/profile/password", userHandler.ChangePassword)
-	authGroup.GET("/profile/tokens", userHandler.ListPATs)
-	authGroup.POST("/profile/tokens", userHandler.CreatePAT)
-	authGroup.DELETE("/profile/tokens/:id", userHandler.DeletePAT)
-}
-
-func RegisterOrganizationRoutes(authGroup *echo.Group, orgHandler *OrganizationHandler, requireMember, requireAdmin, requireOwner echo.MiddlewareFunc) {
-	if orgHandler == nil {
-		orgHandler = &OrganizationHandler{}
-	}
-	authGroup.GET("/organizations", orgHandler.List)
-	authGroup.POST("/organizations", orgHandler.Create)
-	authGroup.GET("/organizations/:id", orgHandler.Get, requireMember)
-	authGroup.PUT("/organizations/:id", orgHandler.Update, requireAdmin)
-	authGroup.DELETE("/organizations/:id", orgHandler.Delete, requireOwner)
-	authGroup.GET("/organizations/:id/members", orgHandler.ListMembers, requireMember)
-	authGroup.POST("/organizations/:id/members", orgHandler.InviteMember, requireAdmin)
-	authGroup.PUT("/organizations/:id/members/:userId", orgHandler.UpdateMember, requireAdmin)
-	authGroup.DELETE("/organizations/:id/members/:memberId", orgHandler.RemoveMember, requireAdmin)
-}
-
-func RegisterAuditRoutes(authGroup *echo.Group, auditHandler *AuditLogHandler, requireAdmin echo.MiddlewareFunc) {
-	if auditHandler == nil {
-		auditHandler = &AuditLogHandler{}
-	}
-	authGroup.GET("/audit-logs", auditHandler.List, requireAdmin)
-	authGroup.GET("/audit-logs/facets", auditHandler.Facets, requireAdmin)
-	authGroup.GET("/audit-logs/settings", auditHandler.GetSettings, requireAdmin)
-	authGroup.PUT("/audit-logs/settings", auditHandler.UpdateSettings, requireAdmin)
 }

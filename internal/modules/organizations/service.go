@@ -1,8 +1,7 @@
-package auth
+package organizations
 
 import (
 	"context"
-	"errors"
 	"strings"
 	"time"
 
@@ -12,12 +11,11 @@ import (
 )
 
 type OrganizationService struct {
-	orgRepo  OrganizationRepository
-	userRepo UserRepository
+	orgRepo OrganizationRepository
 }
 
-func NewOrganizationService(orgRepo OrganizationRepository, userRepo UserRepository) *OrganizationService {
-	return &OrganizationService{orgRepo: orgRepo, userRepo: userRepo}
+func NewOrganizationService(orgRepo OrganizationRepository) *OrganizationService {
+	return &OrganizationService{orgRepo: orgRepo}
 }
 
 func (s *OrganizationService) isRequesterOwnerOrAdmin(ctx context.Context, orgID, requesterUserID string) bool {
@@ -28,18 +26,16 @@ func (s *OrganizationService) isRequesterOwnerOrAdmin(ctx context.Context, orgID
 	if err == nil && requester != nil && requester.Permission == MemberPermissionOwner {
 		return true
 	}
-	if s.userRepo != nil {
-		u, err := s.userRepo.GetUserByID(ctx, requesterUserID)
-		if err == nil && u != nil && (u.Role == UserRoleAdmin || u.Role == UserRoleOwner) {
-			return true
-		}
+	role, err := s.orgRepo.GetUserRole(ctx, requesterUserID)
+	if err == nil && (role == "admin" || role == "owner") {
+		return true
 	}
 	return false
 }
 
 func (s *OrganizationService) CreateOrganization(ctx context.Context, userID, name string) (*Organization, error) {
 	if userID == "" {
-		return nil, errors.New("user id is required")
+		return nil, ErrUserIDRequired
 	}
 	name = strings.TrimSpace(name)
 	if name == "" {
@@ -77,10 +73,10 @@ func (s *OrganizationService) GetOrganization(ctx context.Context, id string) (*
 
 func (s *OrganizationService) UpdateOrganization(ctx context.Context, requesterUserID, id, name string) (*Organization, error) {
 	if name == "" {
-		return nil, errors.New("name is required")
+		return nil, ErrNameRequired
 	}
 	if !s.isRequesterOwnerOrAdmin(ctx, id, requesterUserID) {
-		return nil, errors.New("insufficient permissions to update organization")
+		return nil, ErrInsufficientPermissions
 	}
 	org, err := s.orgRepo.GetByID(ctx, id)
 	if err != nil {
@@ -100,16 +96,16 @@ func (s *OrganizationService) DeleteOrganization(ctx context.Context, id string)
 
 func (s *OrganizationService) InviteMember(ctx context.Context, requesterUserID, orgID, email string, permission MemberPermission) (*OrganizationMember, error) {
 	if email == "" {
-		return nil, errors.New("email is required")
+		return nil, ErrEmailRequired
 	}
 	if permission == MemberPermissionOwner {
 		if !s.isRequesterOwnerOrAdmin(ctx, orgID, requesterUserID) {
-			return nil, errors.New("only organization owners can invite new owners")
+			return nil, ErrOwnerInviteOnly
 		}
 	}
 	existing, _ := s.orgRepo.GetMemberByEmail(ctx, orgID, email)
 	if existing != nil {
-		return nil, errors.New("user already invited or is a member")
+		return nil, ErrAlreadyInvitedOrMember
 	}
 
 	member := &OrganizationMember{
@@ -133,7 +129,7 @@ func (s *OrganizationService) ListMembers(ctx context.Context, orgID string) ([]
 
 func (s *OrganizationService) RemoveMember(ctx context.Context, memberID string) error {
 	if memberID == "" {
-		return errors.New("member id is required")
+		return ErrMemberIDRequired
 	}
 	target, err := s.orgRepo.GetMemberByID(ctx, memberID)
 	if err != nil {
@@ -149,7 +145,7 @@ func (s *OrganizationService) RemoveMember(ctx context.Context, memberID string)
 				}
 			}
 			if activeOwnerCount <= 1 {
-				return errors.New("cannot remove the last owner of an organization")
+				return ErrCannotRemoveLastOwner
 			}
 		}
 	}
@@ -161,11 +157,11 @@ func (s *OrganizationService) UpdateMemberPermission(ctx context.Context, reques
 
 	targetMember, err := s.orgRepo.GetMember(ctx, orgID, targetUserID)
 	if err != nil || targetMember == nil {
-		return errors.New("target member not found")
+		return ErrTargetMemberNotFound
 	}
 
 	if (permission == MemberPermissionOwner || targetMember.Permission == MemberPermissionOwner) && !isOwnerOrAdmin {
-		return errors.New("only organization owners can manage owner permissions")
+		return ErrOwnerManageOnly
 	}
 
 	if targetMember.Permission == MemberPermissionOwner && permission != MemberPermissionOwner {
@@ -178,7 +174,7 @@ func (s *OrganizationService) UpdateMemberPermission(ctx context.Context, reques
 				}
 			}
 			if activeOwnerCount <= 1 {
-				return errors.New("cannot demote the last owner of an organization")
+				return ErrCannotDemoteLastOwner
 			}
 		}
 	}

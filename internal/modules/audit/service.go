@@ -1,4 +1,4 @@
-package auth
+package audit
 
 import (
 	"context"
@@ -9,8 +9,6 @@ import (
 
 	"github.com/google/uuid"
 )
-
-const auditSearchResolverLimit = 200
 
 type AuditResourceSearcher interface {
 	SearchResourceIDs(ctx context.Context, term string) []string
@@ -42,25 +40,25 @@ func (s *auditResourceSearcher) SearchResourceIDs(ctx context.Context, term stri
 			if s.projects == nil {
 				return nil, nil
 			}
-			return s.projects.SearchIDsByName(ctx, term, auditSearchResolverLimit)
+			return s.projects.SearchIDsByName(ctx, term, AuditSearchResolverLimit)
 		},
 		func(ctx context.Context) ([]string, error) {
 			if s.servers == nil {
 				return nil, nil
 			}
-			return s.servers.SearchIDsByName(ctx, term, auditSearchResolverLimit)
+			return s.servers.SearchIDsByName(ctx, term, AuditSearchResolverLimit)
 		},
 		func(ctx context.Context) ([]string, error) {
 			if s.databases == nil {
 				return nil, nil
 			}
-			return s.databases.SearchIDsByName(ctx, term, auditSearchResolverLimit)
+			return s.databases.SearchIDsByName(ctx, term, AuditSearchResolverLimit)
 		},
 		func(ctx context.Context) ([]string, error) {
 			if s.apps == nil {
 				return nil, nil
 			}
-			return s.apps.SearchIDsByName(ctx, term, auditSearchResolverLimit)
+			return s.apps.SearchIDsByName(ctx, term, AuditSearchResolverLimit)
 		},
 	}
 	results := make([][]string, len(resolvers))

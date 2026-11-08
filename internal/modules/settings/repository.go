@@ -1,4 +1,4 @@
-package auth
+package settings
 
 import (
 	"context"
@@ -124,12 +124,12 @@ func (r *SettingsRepo) GetServerSettings(ctx context.Context) (*ServerSettings, 
 	err := scanServerSettings(r.db.QueryRowContext(ctx, `SELECT `+serverSettingsColumns+` FROM server_settings WHERE id = 'global' LIMIT 1`), &cfg)
 	if errors.Is(err, sql.ErrNoRows) {
 		defaultSettings := &ServerSettings{
-			ID:                   "global",
+			ID:                   DefaultSettingsID,
 			RegistrationEnabled:  true,
 			DNSValidationEnabled: true,
-			CustomDNSResolvers:   "1.1.1.1",
+			CustomDNSResolvers:   DefaultCustomDNSResolvers,
 			MCPServerEnabled:     true,
-			UpdateCheckCron:      "0 * * * *",
+			UpdateCheckCron:      DefaultUpdateCheckCron,
 			AutoUpdateEnabled:    false,
 			CurrentVersion:       "0.1.0",
 			LatestVersion:        "0.1.0",
@@ -155,7 +155,7 @@ func (r *SettingsRepo) GetServerSettings(ctx context.Context) (*ServerSettings, 
 
 func (r *SettingsRepo) UpdateServerSettings(ctx context.Context, cfg *ServerSettings) error {
 	if cfg.ID == "" {
-		cfg.ID = "global"
+		cfg.ID = DefaultSettingsID
 	}
 	cfg.UpdatedAt = time.Now().UTC().Format(time.RFC3339)
 	r.mu.Lock()

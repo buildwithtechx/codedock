@@ -9,6 +9,8 @@ import (
 	"github.com/google/uuid"
 
 	"codedock/internal/config"
+	"codedock/internal/modules/audit"
+	"codedock/internal/modules/users"
 )
 
 type memoryPasskeyRepo struct {
@@ -98,23 +100,23 @@ func (m *memoryPasskeyRepo) GetAndConsumeChallenge(_ context.Context, challenge,
 }
 
 type memoryUserRepo struct {
-	UserRepository
-	users map[string]*User
+	users.UserRepository
+	users map[string]*users.User
 }
 
-func (m *memoryUserRepo) CreateUser(_ context.Context, u *User) error {
+func (m *memoryUserRepo) CreateUser(_ context.Context, u *users.User) error {
 	m.users[u.ID] = u
 	return nil
 }
 
-func (m *memoryUserRepo) GetUserByID(_ context.Context, id string) (*User, error) {
+func (m *memoryUserRepo) GetUserByID(_ context.Context, id string) (*users.User, error) {
 	if u, ok := m.users[id]; ok {
 		return u, nil
 	}
 	return nil, errors.New("not found")
 }
 
-func (m *memoryUserRepo) UpdateUser(_ context.Context, u *User) error {
+func (m *memoryUserRepo) UpdateUser(_ context.Context, u *users.User) error {
 	m.users[u.ID] = u
 	return nil
 }
@@ -130,12 +132,12 @@ func setupTestPasskeyService(t *testing.T) (*PasskeyService, *memoryPasskeyRepo,
 	cfg.Security.JWTSecret = "test-jwt-secret-for-passkeys-unit-testing"
 
 	passkeyRepo := newMemoryPasskeyRepo()
-	userRepo := &memoryUserRepo{users: make(map[string]*User)}
+	userRepo := &memoryUserRepo{users: make(map[string]*users.User)}
 	tokenService, err := NewTokenService()
 	if err != nil {
 		t.Fatalf("token service: %v", err)
 	}
-	svc, err := NewPasskeyService(passkeyRepo, userRepo, tokenService, nil, NewAuditService(nil, nil))
+	svc, err := NewPasskeyService(passkeyRepo, userRepo, tokenService, nil, audit.NewAuditService(nil, nil))
 	if err != nil {
 		t.Fatalf("create passkey service: %v", err)
 	}
@@ -146,7 +148,7 @@ func TestPasskeyRegistrationCeremony(t *testing.T) {
 	svc, repo, userRepo := setupTestPasskeyService(t)
 	ctx := context.Background()
 
-	user := &User{
+	user := &users.User{
 		ID:       uuid.NewString(),
 		Email:    "passkey-test@example.com",
 		Name:     "Passkey User",
@@ -187,7 +189,7 @@ func TestPasskeyAuthenticationCeremonyAnd2FA(t *testing.T) {
 	svc, repo, userRepo := setupTestPasskeyService(t)
 	ctx := context.Background()
 
-	user := &User{
+	user := &users.User{
 		ID:          uuid.NewString(),
 		Email:       "totp-user@example.com",
 		Name:        "TOTP User",

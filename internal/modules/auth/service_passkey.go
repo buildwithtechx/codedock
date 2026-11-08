@@ -14,23 +14,25 @@ import (
 	"github.com/go-webauthn/webauthn/webauthn"
 
 	"codedock/internal/config"
+	"codedock/internal/modules/audit"
+	"codedock/internal/modules/users"
 )
 
 type PasskeyService struct {
 	webauthn         *webauthn.WebAuthn
 	passkeyRepo      PasskeyRepository
-	userRepo         UserRepository
+	userRepo         users.UserRepository
 	tokenService     *TokenService
 	refreshTokenRepo RefreshTokenRepository
-	auditService     *AuditService
+	auditService     *audit.AuditService
 }
 
 func NewPasskeyService(
 	passkeyRepo PasskeyRepository,
-	userRepo UserRepository,
+	userRepo users.UserRepository,
 	tokenService *TokenService,
 	refreshTokenRepo RefreshTokenRepository,
-	auditService *AuditService,
+	auditService *audit.AuditService,
 ) (*PasskeyService, error) {
 	cfg := config.Get()
 	dashboardURL := cfg.Server.DashboardURL
@@ -97,7 +99,7 @@ func (s *PasskeyService) BeginAuthentication(ctx context.Context) (*protocol.Cre
 	return options, nil
 }
 
-func (s *PasskeyService) FinishAuthentication(ctx context.Context, parsed *protocol.ParsedCredentialAssertionData, totpCode, ip string) (*User, string, string, error) {
+func (s *PasskeyService) FinishAuthentication(ctx context.Context, parsed *protocol.ParsedCredentialAssertionData, totpCode, ip string) (*users.User, string, string, error) {
 	if parsed == nil {
 		return nil, "", "", errors.New("missing assertion data")
 	}
@@ -178,7 +180,7 @@ func (s *PasskeyService) FinishAuthentication(ctx context.Context, parsed *proto
 	u.LastLogin = &now
 	_ = s.userRepo.UpdateUser(ctx, u)
 
-	s.auditService.LogAction(ctx, AuditActionOpts{
+	s.auditService.LogAction(ctx, audit.AuditActionOpts{
 		UserID:    u.ID,
 		Action:    "auth.login.passkey",
 		Resource:  storedCred.ID,
@@ -206,7 +208,7 @@ func (s *PasskeyService) RenamePasskey(ctx context.Context, id, userID, name, ip
 	if err := s.passkeyRepo.RenameCredential(ctx, id, userID, name); err != nil {
 		return err
 	}
-	s.auditService.LogAction(ctx, AuditActionOpts{
+	s.auditService.LogAction(ctx, audit.AuditActionOpts{
 		UserID:    userID,
 		Action:    "auth.passkey.rename",
 		Resource:  id,
@@ -219,7 +221,7 @@ func (s *PasskeyService) DeletePasskey(ctx context.Context, id, userID, ip strin
 	if err := s.passkeyRepo.DeleteCredential(ctx, id, userID); err != nil {
 		return err
 	}
-	s.auditService.LogAction(ctx, AuditActionOpts{
+	s.auditService.LogAction(ctx, audit.AuditActionOpts{
 		UserID:    userID,
 		Action:    "auth.passkey.delete",
 		Resource:  id,

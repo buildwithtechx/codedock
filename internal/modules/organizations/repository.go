@@ -1,4 +1,4 @@
-package auth
+package organizations
 
 import (
 	"context"
@@ -24,6 +24,7 @@ type OrganizationRepository interface {
 	UpdateMember(ctx context.Context, member *OrganizationMember) error
 	RemoveMember(ctx context.Context, id string) error
 	ListInvitesByEmail(ctx context.Context, email string) ([]*OrganizationMember, error)
+	GetUserRole(ctx context.Context, userID string) (string, error)
 }
 
 type organizationRepository struct {
@@ -185,4 +186,13 @@ func (r *organizationRepository) ListInvitesByEmail(ctx context.Context, email s
 		members = make([]*OrganizationMember, 0)
 	}
 	return members, err
+}
+
+func (r *organizationRepository) GetUserRole(ctx context.Context, userID string) (string, error) {
+	var role string
+	err := r.db.GetContext(ctx, &role, `SELECT role FROM users WHERE id = $1`, userID)
+	if err == sql.ErrNoRows {
+		return "", nil
+	}
+	return role, err
 }

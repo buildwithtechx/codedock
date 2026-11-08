@@ -7,6 +7,8 @@ import (
 
 	"github.com/go-webauthn/webauthn/protocol"
 	"github.com/go-webauthn/webauthn/webauthn"
+
+	"codedock/internal/modules/users"
 )
 
 type webAuthnUser struct {
@@ -22,7 +24,7 @@ func (u *webAuthnUser) WebAuthnDisplayName() string                { return u.di
 func (u *webAuthnUser) WebAuthnIcon() string                       { return "" }
 func (u *webAuthnUser) WebAuthnCredentials() []webauthn.Credential { return u.credentials }
 
-func toWebAuthnUser(user *User, creds []*PasskeyCredential) *webAuthnUser {
+func toWebAuthnUser(user *users.User, creds []*PasskeyCredential) *webAuthnUser {
 	var webCreds []webauthn.Credential
 	for _, c := range creds {
 		credID, err := base64.RawURLEncoding.DecodeString(c.CredentialID)

@@ -1,4 +1,4 @@
-package auth
+package audit
 
 import (
 	"net/http"
@@ -21,7 +21,7 @@ func (h *AuditLogHandler) List(c echo.Context) error {
 	limitParam := c.QueryParam("limit")
 	limit, err := strconv.Atoi(limitParam)
 	if err != nil || limit <= 0 {
-		limit = 100
+		limit = DefaultPageLimit
 	}
 
 	offsetParam := c.QueryParam("offset")
@@ -66,7 +66,7 @@ func (h *AuditLogHandler) GetSettings(c echo.Context) error {
 }
 
 func (h *AuditLogHandler) UpdateSettings(c echo.Context) error {
-	var req AuditSettings
+	var req UpdateAuditSettingsRequest
 	if err := c.Bind(&req); err != nil {
 		return utils.Error(c, http.StatusBadRequest, "invalid request")
 	}

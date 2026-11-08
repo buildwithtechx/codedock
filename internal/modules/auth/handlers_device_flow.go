@@ -7,19 +7,21 @@ import (
 
 	"github.com/labstack/echo/v4"
 
+	"codedock/internal/modules/audit"
+	"codedock/internal/modules/users"
 	"codedock/internal/utils"
 )
 
 type DeviceFlowHandler struct {
 	deviceFlowService *DeviceFlowService
-	userService       *UserService
-	auditService      *AuditService
+	userService       *users.UserService
+	auditService      *audit.AuditService
 }
 
 func NewDeviceFlowHandler(
 	deviceFlowService *DeviceFlowService,
-	userService *UserService,
-	auditService *AuditService,
+	userService *users.UserService,
+	auditService *audit.AuditService,
 ) *DeviceFlowHandler {
 	return &DeviceFlowHandler{
 		deviceFlowService: deviceFlowService,
@@ -167,7 +169,7 @@ func (h *DeviceFlowHandler) AuthorizeDevice(c echo.Context) error {
 		return utils.Error(c, http.StatusBadRequest, err.Error())
 	}
 
-	h.auditService.LogAction(c.Request().Context(), AuditActionOpts{
+	h.auditService.LogAction(c.Request().Context(), audit.AuditActionOpts{
 		UserID:    userID,
 		Action:    "token.device_authorized",
 		Resource:  pat.ID,

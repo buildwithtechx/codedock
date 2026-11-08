@@ -1,19 +1,20 @@
-package auth
+package organizations
 
 import (
 	"net/http"
 
 	"github.com/labstack/echo/v4"
 
+	"codedock/internal/modules/audit"
 	"codedock/internal/utils"
 )
 
 type OrganizationHandler struct {
 	orgService   *OrganizationService
-	auditService *AuditService
+	auditService *audit.AuditService
 }
 
-func NewOrganizationHandler(orgService *OrganizationService, auditService *AuditService) *OrganizationHandler {
+func NewOrganizationHandler(orgService *OrganizationService, auditService *audit.AuditService) *OrganizationHandler {
 	return &OrganizationHandler{orgService: orgService, auditService: auditService}
 }
 
@@ -32,7 +33,7 @@ func (h *OrganizationHandler) Create(c echo.Context) error {
 	if err != nil {
 		return utils.Error(c, http.StatusInternalServerError, err.Error())
 	}
-	h.auditService.LogAction(c.Request().Context(), AuditActionOpts{
+	h.auditService.LogAction(c.Request().Context(), audit.AuditActionOpts{
 		UserID:    userID,
 		Action:    "organization.create",
 		Resource:  org.ID,
@@ -73,9 +74,7 @@ func (h *OrganizationHandler) Update(c echo.Context) error {
 	if userID == "" {
 		return utils.Error(c, http.StatusUnauthorized, "unauthorized")
 	}
-	var req struct {
-		Name string `json:"name"`
-	}
+	var req UpdateOrganizationRequest
 	if err := c.Bind(&req); err != nil {
 		return utils.Error(c, http.StatusBadRequest, "invalid request body")
 	}
@@ -83,7 +82,7 @@ func (h *OrganizationHandler) Update(c echo.Context) error {
 	if err != nil {
 		return utils.Error(c, http.StatusBadRequest, err.Error())
 	}
-	h.auditService.LogAction(c.Request().Context(), AuditActionOpts{
+	h.auditService.LogAction(c.Request().Context(), audit.AuditActionOpts{
 		UserID:    userID,
 		Action:    "organization.update",
 		Resource:  id,
@@ -98,7 +97,7 @@ func (h *OrganizationHandler) Delete(c echo.Context) error {
 	if err := h.orgService.DeleteOrganization(c.Request().Context(), id); err != nil {
 		return utils.Error(c, http.StatusInternalServerError, err.Error())
 	}
-	h.auditService.LogAction(c.Request().Context(), AuditActionOpts{
+	h.auditService.LogAction(c.Request().Context(), audit.AuditActionOpts{
 		UserID:    auditActorID(c),
 		Action:    "organization.delete",
 		Resource:  id,
@@ -131,7 +130,7 @@ func (h *OrganizationHandler) InviteMember(c echo.Context) error {
 		return utils.Error(c, http.StatusInternalServerError, err.Error())
 	}
 	member.InviteLink = "/invite/" + member.ID
-	h.auditService.LogAction(c.Request().Context(), AuditActionOpts{
+	h.auditService.LogAction(c.Request().Context(), audit.AuditActionOpts{
 		UserID:    userID,
 		Action:    "member.invite",
 		Resource:  orgID,
@@ -148,16 +147,14 @@ func (h *OrganizationHandler) UpdateMember(c echo.Context) error {
 	}
 	orgID := c.Param("id")
 	userID := c.Param("userId")
-	var req struct {
-		Permission MemberPermission `json:"permission"`
-	}
+	var req UpdateOrganizationMemberRequest
 	if err := c.Bind(&req); err != nil {
 		return utils.Error(c, http.StatusBadRequest, "invalid request")
 	}
 	if err := h.orgService.UpdateMemberPermission(c.Request().Context(), requesterID, orgID, userID, req.Permission); err != nil {
 		return utils.Error(c, http.StatusInternalServerError, err.Error())
 	}
-	h.auditService.LogAction(c.Request().Context(), AuditActionOpts{
+	h.auditService.LogAction(c.Request().Context(), audit.AuditActionOpts{
 		UserID:    requesterID,
 		Action:    "member.role",
 		Resource:  orgID,
@@ -172,7 +169,7 @@ func (h *OrganizationHandler) RemoveMember(c echo.Context) error {
 	if err := h.orgService.RemoveMember(c.Request().Context(), memberID); err != nil {
 		return utils.Error(c, http.StatusInternalServerError, err.Error())
 	}
-	h.auditService.LogAction(c.Request().Context(), AuditActionOpts{
+	h.auditService.LogAction(c.Request().Context(), audit.AuditActionOpts{
 		UserID:    auditActorID(c),
 		Action:    "member.remove",
 		Resource:  c.Param("id"),

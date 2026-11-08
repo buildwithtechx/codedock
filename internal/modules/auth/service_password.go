@@ -9,6 +9,7 @@ import (
 	"github.com/google/uuid"
 
 	"codedock/internal/config"
+	"codedock/internal/modules/users"
 	"codedock/internal/utils"
 )
 
@@ -90,7 +91,7 @@ func (a *AuthService) ResetPassword(ctx context.Context, tokenStr, newPassword s
 	return nil
 }
 
-func (a *AuthService) InviteUser(ctx context.Context, email string, role UserRole, originUrl string) (*User, error) {
+func (a *AuthService) InviteUser(ctx context.Context, email string, role users.UserRole, originUrl string) (*users.User, error) {
 	if email == "" {
 		return nil, errors.New("email is required")
 	}
@@ -98,7 +99,7 @@ func (a *AuthService) InviteUser(ctx context.Context, email string, role UserRol
 	if existing != nil {
 		return existing, nil
 	}
-	u := &User{
+	u := &users.User{
 		ID:           uuid.New().String(),
 		Email:        email,
 		Name:         strings.Split(email, "@")[0],

@@ -1,22 +1,28 @@
-package auth
+package users
 
 import (
+	"context"
 	"net/http"
 	"strconv"
 	"strings"
 
 	"github.com/labstack/echo/v4"
 
+	"codedock/internal/modules/audit"
 	"codedock/internal/utils"
 )
+
+type Mailer interface {
+	SendSystemEmail(ctx context.Context, templateName string, toAddress string, subject string, data any) error
+}
 
 type UserHandler struct {
 	userService  *UserService
 	mailer       Mailer
-	auditService *AuditService
+	auditService *audit.AuditService
 }
 
-func NewUserHandler(s *UserService, mailer Mailer, auditService *AuditService) *UserHandler {
+func NewUserHandler(s *UserService, mailer Mailer, auditService *audit.AuditService) *UserHandler {
 	return &UserHandler{userService: s, mailer: mailer, auditService: auditService}
 }
 
@@ -51,7 +57,7 @@ func (h *UserHandler) DeleteUser(c echo.Context) error {
 	if err := h.userService.DeleteUser(c.Request().Context(), id); err != nil {
 		return utils.Error(c, http.StatusInternalServerError, err.Error())
 	}
-	h.auditService.LogAction(c.Request().Context(), AuditActionOpts{
+	h.auditService.LogAction(c.Request().Context(), audit.AuditActionOpts{
 		UserID:    auditActorID(c),
 		Action:    "user.delete",
 		Resource:  id,
@@ -75,7 +81,7 @@ func (h *UserHandler) ChangePassword(c echo.Context) error {
 	if err := h.userService.ChangePassword(c.Request().Context(), userID, payload.OldPassword, payload.NewPassword); err != nil {
 		return utils.Error(c, http.StatusBadRequest, err.Error())
 	}
-	h.auditService.LogAction(c.Request().Context(), AuditActionOpts{
+	h.auditService.LogAction(c.Request().Context(), audit.AuditActionOpts{
 		UserID:    userID,
 		Action:    "user.password",
 		Resource:  userID,
@@ -197,7 +203,7 @@ func (h *UserHandler) CreatePAT(c echo.Context) error {
 		}
 		return utils.Error(c, http.StatusInternalServerError, "failed to create personal token")
 	}
-	h.auditService.LogAction(c.Request().Context(), AuditActionOpts{
+	h.auditService.LogAction(c.Request().Context(), audit.AuditActionOpts{
 		UserID:    userID,
 		Action:    "token.create",
 		Resource:  pat.ID,
@@ -234,7 +240,7 @@ func (h *UserHandler) DeletePAT(c echo.Context) error {
 	if err := h.userService.DeletePAT(c.Request().Context(), tokenID, userID); err != nil {
 		return utils.Error(c, http.StatusInternalServerError, err.Error())
 	}
-	h.auditService.LogAction(c.Request().Context(), AuditActionOpts{
+	h.auditService.LogAction(c.Request().Context(), audit.AuditActionOpts{
 		UserID:    userID,
 		Action:    "token.delete",
 		Resource:  tokenID,

@@ -1,27 +1,26 @@
 package auth
 
-import "time"
+import (
+	"time"
+
+	"codedock/internal/modules/users"
+)
 
 type AuthResponse struct {
-	User         *User  `json:"user"`
-	Token        string `json:"token"`
-	RefreshToken string `json:"refreshToken,omitempty"`
+	User         *users.User `json:"user"`
+	Token        string      `json:"token"`
+	RefreshToken string      `json:"refreshToken,omitempty"`
 }
 
 type TokenResponse struct {
-	User         *User  `json:"user"`
-	Token        string `json:"token"`
-	RefreshToken string `json:"refreshToken,omitempty"`
+	User         *users.User `json:"user"`
+	Token        string      `json:"token"`
+	RefreshToken string      `json:"refreshToken,omitempty"`
 }
 
 type TwoFASetupResponse struct {
 	QRCodeURI     string   `json:"qrCodeUri"`
 	RecoveryCodes []string `json:"recoveryCodes"`
-}
-
-type CreatePATResponse struct {
-	Token *PersonalAccessToken `json:"token"`
-	Plain string               `json:"plain"`
 }
 
 type PasskeyResponse struct {
