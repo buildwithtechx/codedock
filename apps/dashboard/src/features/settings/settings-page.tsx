@@ -80,8 +80,8 @@ const TAB_GROUPS: TabGroup[] = [
   {
     label: 'AI & Automation',
     tabs: [
-      { id: 'ai', label: 'AI Models', icon: <Brain className="h-4 w-4" /> },
-      { id: 'mcp', label: 'MCP Servers', icon: <Bot className="h-4 w-4" /> },
+      { id: 'ai', label: 'AI Models', icon: <Bot className="h-4 w-4" /> },
+      { id: 'mcp', label: 'MCP Servers', icon: <Brain className="h-4 w-4" /> },
     ],
   },
   {
@@ -104,7 +104,8 @@ export const SettingsLayout = () => {
     select: (state) => state.location.search as { tab?: string; view?: string; code?: string },
   });
 
-  const rawTab = search.tab === 'credentials' ? 'dns' : search.tab;
+  const rawTab =
+    search.tab === 'credentials' ? 'dns' : search.tab === 'assistant' ? 'ai' : search.tab;
 
   // Handle redirects for standalone pages
   useEffect(() => {

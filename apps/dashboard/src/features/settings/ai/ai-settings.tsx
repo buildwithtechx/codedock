@@ -1,4 +1,6 @@
-import { Brain } from 'lucide-react';
+import { Button } from '@codedock/ui/button';
+import { Link } from '@tanstack/react-router';
+import { ArrowRight, Bot, Brain, ExternalLink, MessageSquare, Radio } from 'lucide-react';
 import React, { useState } from 'react';
 import { toast } from 'sonner';
 import { AI_PROVIDER_CATALOG } from '#/constants/ai';
@@ -150,47 +152,119 @@ export function AISettings() {
     });
   };
 
+  const hasAnyKey = PROVIDERS.some((p) => Boolean(localKeys[p.keyField]));
+  const isAssistantEnabled = defaultProvider !== 'none' || hasAnyKey;
+
   return (
-    <SettingsSection
-      icon={<Brain className="size-4 text-primary" />}
-      title="AI Providers"
-      description="Configure API keys and model parameters for platform AI services."
-      action={
-        <div className="flex items-center gap-2">
-          <span className="text-muted-foreground text-xs uppercase tracking-wider">Default:</span>
-          <span className="rounded-md border border-border/60 bg-muted/40 px-2 py-0.5 font-semibold text-foreground text-xs">
-            {defaultProvider === 'none'
-              ? 'None'
-              : PROVIDERS.find((p) => p.id === defaultProvider)?.name || defaultProvider}
+    <div className="space-y-6">
+      {/* Your Assistant Card */}
+      <section className="rounded-2xl border border-border/50 bg-card p-5 shadow-xs sm:p-6">
+        <div className="flex items-start justify-between gap-4">
+          <div className="flex items-start gap-4">
+            <span className="flex h-11 w-11 shrink-0 items-center justify-center rounded-xl bg-muted text-primary">
+              <Bot className="h-6 w-6" />
+            </span>
+            <div>
+              <h2 className="font-medium text-foreground text-lg">Your assistant</h2>
+              <p className="mt-1 max-w-xl text-muted-foreground text-sm leading-6">
+                Your connected agent, your apps, your permissions. Manage its access here and build
+                event-driven flows in Automations.
+              </p>
+            </div>
+          </div>
+          <span
+            className={`rounded-full px-3 py-1 font-medium text-xs ${
+              isAssistantEnabled
+                ? 'bg-emerald-500/10 text-emerald-500'
+                : 'bg-muted text-muted-foreground'
+            }`}
+          >
+            {isAssistantEnabled ? 'Enabled' : 'Off'}
           </span>
         </div>
-      }
-    >
-      <div className="space-y-4">
-        {PROVIDERS.map((provider) => {
-          const currentModel =
-            localModels[provider.modelField] ||
-            (settings?.data?.[provider.modelField] as string) ||
-            provider.models[0]?.id ||
-            '';
-          const currentKeyVal = localKeys[provider.keyField] ?? '';
 
-          return (
-            <AiProviderCard
-              key={provider.id}
-              provider={provider}
-              currentModel={currentModel}
-              currentKey={currentKeyVal}
-              isDefault={defaultProvider === provider.id}
-              isPending={updateSettings.isPending}
-              onModelChange={(modelId) => handleUpdateModel(provider.modelField, modelId)}
-              onKeyChange={(val) => setLocalKeys((prev) => ({ ...prev, [provider.keyField]: val }))}
-              onSetDefault={() => handleSetDefault(provider.id)}
-              onSave={() => handleSaveProvider(provider)}
-            />
-          );
-        })}
-      </div>
-    </SettingsSection>
+        <div className="mt-5">
+          <Button asChild size="default" className="gap-2 rounded-xl">
+            <Link to="/assistant">
+              {isAssistantEnabled ? 'Open assistant' : 'Enable assistant'}
+              <ArrowRight className="h-4 w-4" />
+            </Link>
+          </Button>
+        </div>
+      </section>
+
+      {/* Chat apps & notifications Card */}
+      <section className="rounded-2xl border border-border/50 bg-card p-5 shadow-xs sm:p-6">
+        <h3 className="font-medium text-base text-foreground">Chat apps & notifications</h3>
+        <p className="mt-2 text-muted-foreground text-sm leading-6">
+          Talk to your assistant from chat apps, control deployments with commands, and choose where
+          automation results arrive.
+        </p>
+        <div className="mt-5 flex flex-wrap gap-3">
+          <Link
+            to="/settings"
+            search={{ tab: 'chat-apps' } as never}
+            className="inline-flex items-center gap-1.5 rounded-xl border border-border/50 bg-muted/60 px-4 py-2.5 font-medium text-foreground text-sm transition-colors hover:bg-muted"
+          >
+            <MessageSquare className="h-4 w-4 text-muted-foreground" />
+            Chat apps
+            <ExternalLink className="h-3.5 w-3.5 opacity-60" />
+          </Link>
+          <Link
+            to="/settings"
+            search={{ tab: 'notifications' } as never}
+            className="inline-flex items-center gap-1.5 rounded-xl border border-border/50 bg-muted/60 px-4 py-2.5 font-medium text-foreground text-sm transition-colors hover:bg-muted"
+          >
+            <Radio className="h-4 w-4 text-muted-foreground" />
+            Notification channels
+            <ExternalLink className="h-3.5 w-3.5 opacity-60" />
+          </Link>
+        </div>
+      </section>
+
+      <SettingsSection
+        icon={<Brain className="size-4 text-primary" />}
+        title="AI Providers"
+        description="Configure API keys and model parameters for platform AI services."
+        action={
+          <div className="flex items-center gap-2">
+            <span className="text-muted-foreground text-xs uppercase tracking-wider">Default:</span>
+            <span className="rounded-md border border-border/60 bg-muted/40 px-2 py-0.5 font-semibold text-foreground text-xs">
+              {defaultProvider === 'none'
+                ? 'None'
+                : PROVIDERS.find((p) => p.id === defaultProvider)?.name || defaultProvider}
+            </span>
+          </div>
+        }
+      >
+        <div className="space-y-4">
+          {PROVIDERS.map((provider) => {
+            const currentModel =
+              localModels[provider.modelField] ||
+              (settings?.data?.[provider.modelField] as string) ||
+              provider.models[0]?.id ||
+              '';
+            const currentKeyVal = localKeys[provider.keyField] ?? '';
+
+            return (
+              <AiProviderCard
+                key={provider.id}
+                provider={provider}
+                currentModel={currentModel}
+                currentKey={currentKeyVal}
+                isDefault={defaultProvider === provider.id}
+                isPending={updateSettings.isPending}
+                onModelChange={(modelId) => handleUpdateModel(provider.modelField, modelId)}
+                onKeyChange={(val) =>
+                  setLocalKeys((prev) => ({ ...prev, [provider.keyField]: val }))
+                }
+                onSetDefault={() => handleSetDefault(provider.id)}
+                onSave={() => handleSaveProvider(provider)}
+              />
+            );
+          })}
+        </div>
+      </SettingsSection>
+    </div>
   );
 }

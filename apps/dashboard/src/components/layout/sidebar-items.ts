@@ -1,6 +1,7 @@
 import {
   Activity,
   Archive,
+  Bot,
   Clock,
   FolderKanban,
   Globe2,
@@ -40,6 +41,11 @@ export function getSidebarSections(counts: SidebarCounts): {
         icon: Activity,
         statusDot: counts.hasIssues ? 'warning' : null,
       },
+      {
+        title: 'Agents',
+        url: '/assistant',
+        icon: Bot,
+      },
     ],
     infrastructureItems: [
       {
@@ -68,6 +74,7 @@ export const HEADER_SECTION_TITLES: Record<string, string> = {
   servers: 'Servers',
   actions: 'Actions',
   monitoring: 'Analytics',
+  assistant: 'AI Agents',
   jobs: 'Cron Jobs',
   backups: 'Backups',
   emails: 'Emails',

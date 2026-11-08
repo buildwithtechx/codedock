@@ -128,6 +128,13 @@ describe('SettingsLayout Modernization', () => {
     expect(screen.getByTestId('dns-content')).toBeDefined();
   });
 
+  it('maps assistant tab query parameter to ai models tab seamlessly', () => {
+    currentSearch = { tab: 'assistant' };
+    render(<SettingsLayout />);
+
+    expect(screen.getByTestId('ai-content')).toBeDefined();
+  });
+
   it('renders AppearanceEditor when view is appearance', () => {
     currentSearch = { tab: 'general', view: 'appearance' } as never;
     render(<SettingsLayout />);

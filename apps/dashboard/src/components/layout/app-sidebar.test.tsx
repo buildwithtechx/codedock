@@ -76,6 +76,7 @@ describe('AppSidebar (Coolify & Dokploy Developer Design)', () => {
     expect(screen.getByText('Deployments')).toBeDefined();
     expect(screen.getByText('Actions')).toBeDefined();
     expect(screen.getByText('Analytics')).toBeDefined();
+    expect(screen.getByText('Agents')).toBeDefined();
     expect(screen.queryByText('Terminal')).toBeNull();
 
     // Infrastructure

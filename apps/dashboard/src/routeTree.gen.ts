@@ -21,6 +21,7 @@ import { Route as AuthVerifyEmailRouteImport } from './routes/_auth/verify-email
 import { Route as DashboardIndexRouteImport } from './routes/_dashboard/index'
 import { Route as DashboardActionsRouteImport } from './routes/_dashboard/actions'
 import { Route as DashboardAppsRouteImport } from './routes/_dashboard/apps'
+import { Route as DashboardAssistantRouteImport } from './routes/_dashboard/assistant'
 import { Route as DashboardAuditRouteImport } from './routes/_dashboard/audit'
 import { Route as DashboardBackupsRouteImport } from './routes/_dashboard/backups'
 import { Route as DashboardBillingRouteImport } from './routes/_dashboard/billing'
@@ -147,6 +148,11 @@ const DashboardActionsRoute = DashboardActionsRouteImport.update({
 const DashboardAppsRoute = DashboardAppsRouteImport.update({
   id: '/apps',
   path: '/apps',
+  getParentRoute: () => DashboardRoute,
+} as any)
+const DashboardAssistantRoute = DashboardAssistantRouteImport.update({
+  id: '/assistant',
+  path: '/assistant',
   getParentRoute: () => DashboardRoute,
 } as any)
 const DashboardAuditRoute = DashboardAuditRouteImport.update({
@@ -537,6 +543,7 @@ export interface FileRoutesByFullPath {
   '/verify-email': typeof AuthVerifyEmailRoute
   '/actions': typeof DashboardActionsRouteWithChildren
   '/apps': typeof DashboardAppsRouteWithChildren
+  '/assistant': typeof DashboardAssistantRoute
   '/audit': typeof DashboardAuditRoute
   '/backups': typeof DashboardBackupsRouteWithChildren
   '/billing': typeof DashboardBillingRoute
@@ -616,6 +623,7 @@ export interface FileRoutesByTo {
   '/signin': typeof AuthSigninRoute
   '/signup': typeof AuthSignupRoute
   '/verify-email': typeof AuthVerifyEmailRoute
+  '/assistant': typeof DashboardAssistantRoute
   '/audit': typeof DashboardAuditRoute
   '/billing': typeof DashboardBillingRoute
   '/dns': typeof DashboardDnsRoute
@@ -688,6 +696,7 @@ export interface FileRoutesById {
   '/_auth/verify-email': typeof AuthVerifyEmailRoute
   '/_dashboard/actions': typeof DashboardActionsRouteWithChildren
   '/_dashboard/apps': typeof DashboardAppsRouteWithChildren
+  '/_dashboard/assistant': typeof DashboardAssistantRoute
   '/_dashboard/audit': typeof DashboardAuditRoute
   '/_dashboard/backups': typeof DashboardBackupsRouteWithChildren
   '/_dashboard/billing': typeof DashboardBillingRoute
@@ -772,6 +781,7 @@ export interface FileRouteTypes {
     | '/verify-email'
     | '/actions'
     | '/apps'
+    | '/assistant'
     | '/audit'
     | '/backups'
     | '/billing'
@@ -851,6 +861,7 @@ export interface FileRouteTypes {
     | '/signin'
     | '/signup'
     | '/verify-email'
+    | '/assistant'
     | '/audit'
     | '/billing'
     | '/dns'
@@ -922,6 +933,7 @@ export interface FileRouteTypes {
     | '/_auth/verify-email'
     | '/_dashboard/actions'
     | '/_dashboard/apps'
+    | '/_dashboard/assistant'
     | '/_dashboard/audit'
     | '/_dashboard/backups'
     | '/_dashboard/billing'
@@ -1084,6 +1096,13 @@ declare module '@tanstack/react-router' {
       path: '/apps'
       fullPath: '/apps'
       preLoaderRoute: typeof DashboardAppsRouteImport
+      parentRoute: typeof DashboardRoute
+    }
+    '/_dashboard/assistant': {
+      id: '/_dashboard/assistant'
+      path: '/assistant'
+      fullPath: '/assistant'
+      preLoaderRoute: typeof DashboardAssistantRouteImport
       parentRoute: typeof DashboardRoute
     }
     '/_dashboard/audit': {
@@ -1839,6 +1858,7 @@ const DashboardServicesServiceIdRouteWithChildren =
 interface DashboardRouteChildren {
   DashboardActionsRoute: typeof DashboardActionsRouteWithChildren
   DashboardAppsRoute: typeof DashboardAppsRouteWithChildren
+  DashboardAssistantRoute: typeof DashboardAssistantRoute
   DashboardAuditRoute: typeof DashboardAuditRoute
   DashboardBackupsRoute: typeof DashboardBackupsRouteWithChildren
   DashboardBillingRoute: typeof DashboardBillingRoute
@@ -1866,6 +1886,7 @@ interface DashboardRouteChildren {
 const DashboardRouteChildren: DashboardRouteChildren = {
   DashboardActionsRoute: DashboardActionsRouteWithChildren,
   DashboardAppsRoute: DashboardAppsRouteWithChildren,
+  DashboardAssistantRoute: DashboardAssistantRoute,
   DashboardAuditRoute: DashboardAuditRoute,
   DashboardBackupsRoute: DashboardBackupsRouteWithChildren,
   DashboardBillingRoute: DashboardBillingRoute,
