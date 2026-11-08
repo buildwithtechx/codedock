@@ -14,14 +14,14 @@ import (
 type Handler struct {
 	projectService         *Service
 	projectSettingsService *ProjectSettingsService
-	orgProvider            OrganizationProvider
+	orgLookup              UserOrgLookup
 }
 
-func NewHandler(s *Service, pss *ProjectSettingsService, op OrganizationProvider) *Handler {
+func NewHandler(s *Service, pss *ProjectSettingsService, ol UserOrgLookup) *Handler {
 	return &Handler{
 		projectService:         s,
 		projectSettingsService: pss,
-		orgProvider:            op,
+		orgLookup:              ol,
 	}
 }
 
@@ -42,13 +42,10 @@ func (h *Handler) ListProjects(c echo.Context) error {
 	}
 	role := users.UserRole(roleStr)
 
-	if orgID == "" && h.orgProvider != nil {
-		org, err := h.orgProvider.GetOrCreateDefaultOrganization(c.Request().Context(), userID)
-		if err != nil {
-			return utils.Error(c, http.StatusInternalServerError, err.Error())
-		}
-		if org != nil {
-			orgID = org.ID
+	if orgID == "" && h.orgLookup != nil {
+		orgs, err := h.orgLookup.ListOrganizationsByUser(c.Request().Context(), userID)
+		if err == nil && len(orgs) > 0 {
+			orgID = orgs[0].ID
 		}
 	}
 
@@ -82,12 +79,11 @@ func (h *Handler) CreateProject(c echo.Context) error {
 	planType := utils.ExtractStructField(c.Get("user"), "PlanType")
 
 	if ok && userID != "" {
-		if req.OrganizationID == "" && h.orgProvider != nil {
-			organization, err := h.orgProvider.GetOrCreateDefaultOrganization(c.Request().Context(), userID)
-			if err != nil {
-				return utils.Error(c, http.StatusInternalServerError, err.Error())
+		if req.OrganizationID == "" && h.orgLookup != nil {
+			orgs, err := h.orgLookup.ListOrganizationsByUser(c.Request().Context(), userID)
+			if err == nil && len(orgs) > 0 {
+				req.OrganizationID = orgs[0].ID
 			}
-			req.OrganizationID = organization.ID
 		}
 
 		if req.OrganizationID != "" {

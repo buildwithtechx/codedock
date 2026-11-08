@@ -9,7 +9,6 @@ import (
 )
 
 type OrganizationRepository interface {
-	Create(ctx context.Context, org *Organization) error
 	CreateWithOwner(ctx context.Context, org *Organization, owner *OrganizationMember) error
 	GetByID(ctx context.Context, id string) (*Organization, error)
 	ListByUser(ctx context.Context, userID string) ([]*Organization, error)
@@ -36,15 +35,6 @@ const organizationMemberColumns = `id, organization_id, user_id, email, permissi
 
 func NewOrganizationRepository(db *sql.DB) OrganizationRepository {
 	return &organizationRepository{db: sqlx.NewDb(db, "pgx")}
-}
-
-func (r *organizationRepository) Create(ctx context.Context, org *Organization) error {
-	query := `
-		INSERT INTO organizations (id, name, created_at, updated_at)
-		VALUES (:id, :name, :created_at, :updated_at)
-	`
-	_, err := r.db.NamedExecContext(ctx, query, org)
-	return err
 }
 
 func (r *organizationRepository) CreateWithOwner(ctx context.Context, org *Organization, owner *OrganizationMember) error {

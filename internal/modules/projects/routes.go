@@ -15,10 +15,6 @@ func RegisterRoutes(g *echo.Group, cfg RoutesConfig) {
 		g.POST("/projects", cfg.Handler.CreateProject)
 		g.GET("/projects/:id", cfg.Handler.GetProject)
 		g.DELETE("/projects/:id", cfg.Handler.DeleteProject)
-
-		g.GET("/projects/:id/members", cfg.Handler.ListMembers)
-		g.POST("/projects/:id/members", cfg.Handler.AddMember)
-		g.DELETE("/projects/:id/members/:memberId", cfg.Handler.RemoveMember)
 	}
 
 	if cfg.AppHandler != nil {

@@ -14,13 +14,10 @@ import (
 
 type OrganizationRepository interface {
 	GetMember(ctx context.Context, organizationID, userID string) (*organizations.OrganizationMember, error)
-	ListMembers(ctx context.Context, organizationID string) ([]*organizations.OrganizationMember, error)
-	AddMember(ctx context.Context, member *organizations.OrganizationMember) error
-	RemoveMember(ctx context.Context, memberID string) error
 }
 
-type OrganizationProvider interface {
-	GetOrCreateDefaultOrganization(ctx context.Context, userID string) (*organizations.Organization, error)
+type UserOrgLookup interface {
+	ListOrganizationsByUser(ctx context.Context, userID string) ([]*organizations.Organization, error)
 }
 
 type Service struct {
