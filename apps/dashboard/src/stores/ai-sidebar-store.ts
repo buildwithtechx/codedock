@@ -15,15 +15,20 @@ interface AiSidebarState {
   mode: 'ask' | 'agent';
   threads: AiConversationThread[];
   activeThreadId: string;
+  pendingPrompt: string | null;
+  autoSendPrompt: boolean;
   openSidebar: () => void;
   closeSidebar: () => void;
   toggleSidebar: () => void;
   toggleExpanded: () => void;
   setMode: (mode: 'ask' | 'agent') => void;
+  openWithPrompt: (prompt: string, autoSend?: boolean) => void;
+  clearPendingPrompt: () => void;
   startNewThread: () => string;
   selectThread: (id: string) => void;
   deleteThread: (id: string) => void;
   appendMessage: (msg: AiTurnMessage) => void;
+  dismissQuestions: (messageId: string, questionGroupId: string) => void;
   updateActionStatus: (
     messageId: string,
     actionId: string,
@@ -69,11 +74,20 @@ export const useAiSidebarStore = create<AiSidebarState>((set) => ({
   mode: 'ask',
   threads: initialThreads,
   activeThreadId: initialThreads[0].id,
+  pendingPrompt: null,
+  autoSendPrompt: false,
   openSidebar: () => set({ isOpen: true }),
   closeSidebar: () => set({ isOpen: false }),
   toggleSidebar: () => set((s) => ({ isOpen: !s.isOpen })),
   toggleExpanded: () => set((s) => ({ isExpanded: !s.isExpanded })),
   setMode: (mode) => set({ mode }),
+  openWithPrompt: (prompt, autoSend = true) =>
+    set({
+      isOpen: true,
+      pendingPrompt: prompt,
+      autoSendPrompt: autoSend,
+    }),
+  clearPendingPrompt: () => set({ pendingPrompt: null, autoSendPrompt: false }),
   startNewThread: () => {
     const fresh = createEmptyThread();
     set((s) => {
@@ -105,6 +119,25 @@ export const useAiSidebarStore = create<AiSidebarState>((set) => ({
             ? msg.content.slice(0, 42)
             : t.title;
         return { ...t, title, updatedAt: new Date().toISOString(), messages };
+      });
+      saveThreads(next);
+      return { threads: next };
+    }),
+  dismissQuestions: (messageId, questionGroupId) =>
+    set((s) => {
+      const next = s.threads.map((t) => {
+        if (t.id !== s.activeThreadId) return t;
+        return {
+          ...t,
+          messages: t.messages.map((m) =>
+            m.id !== messageId
+              ? m
+              : {
+                  ...m,
+                  questions: m.questions?.filter((q) => q.id !== questionGroupId),
+                }
+          ),
+        };
       });
       saveThreads(next);
       return { threads: next };

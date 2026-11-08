@@ -1,8 +1,9 @@
+import { Avatar, AvatarBadge, AvatarFallback, AvatarImage } from '@codedock/ui/avatar';
 import { Link } from '@tanstack/react-router';
 import {
   AlertTriangle,
   ArrowRight,
-  Box,
+  type Box,
   Database,
   ExternalLink,
   Globe,
@@ -13,7 +14,6 @@ import {
   Sparkles,
   Terminal,
 } from 'lucide-react';
-import { Avatar, AvatarBadge, AvatarFallback, AvatarImage } from '@codedock/ui/avatar';
 import { CodedockLogo } from '#/components/layout/codedock-logo';
 import { useGetPublicSettings } from '#/hooks/use-settings';
 import type { AiProviderStatusSummary } from '#/interfaces/ai';
@@ -78,7 +78,7 @@ function getTimeGreeting(): string {
 
 function CodedockAiEmblem() {
   return (
-    <div className="relative mx-auto flex h-20 w-20 items-center justify-center select-none">
+    <div className="relative mx-auto flex h-20 w-20 select-none items-center justify-center">
       <div
         aria-hidden="true"
         className="pointer-events-none absolute inset-0 rounded-2xl bg-primary/15 blur-xl"
@@ -196,7 +196,7 @@ export function AskAiWelcome({
             <Link
               to="/settings"
               search={{ tab: 'ai' } as never}
-              className="font-mono font-medium text-[11px] text-foreground hover:text-primary"
+              className="font-medium font-mono text-[11px] text-foreground hover:text-primary"
             >
               {providerStatus.activeProviderName} · {providerStatus.activeModel}
             </Link>
@@ -209,7 +209,7 @@ export function AskAiWelcome({
         <CodedockAiEmblem />
 
         <div className="mt-2 text-center">
-          <h2 className="font-semibold text-foreground text-base tracking-tight">
+          <h2 className="font-semibold text-base text-foreground tracking-tight">
             {greeting} — Codedock Copilot
           </h2>
           <p className="mt-0.5 text-muted-foreground text-xs">

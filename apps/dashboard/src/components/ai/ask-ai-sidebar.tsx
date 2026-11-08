@@ -1,7 +1,3 @@
-import { useRouterState } from '@tanstack/react-router';
-import { ChevronDown, Maximize2, MessageSquare, Minimize2, Plus, Trash2, X } from 'lucide-react';
-import { useCallback, useEffect } from 'react';
-import { toast } from 'sonner';
 import {
   DropdownMenu,
   DropdownMenuContent,
@@ -10,11 +6,16 @@ import {
   DropdownMenuSeparator,
   DropdownMenuTrigger,
 } from '@codedock/ui';
+import { useRouterState } from '@tanstack/react-router';
+import { ChevronDown, Maximize2, MessageSquare, Minimize2, Plus, Trash2, X } from 'lucide-react';
+import { useCallback, useEffect } from 'react';
+import { toast } from 'sonner';
 import { useAiProviderStatus, useSendAiChat } from '#/hooks/use-ai';
 import type { AiResourceTag } from '#/interfaces/ai';
 import { useAiSidebarStore } from '#/stores/ai-sidebar-store';
 import { AskAiComposer } from './ask-ai-composer';
 import { AskAiMessages } from './ask-ai-messages';
+import { AskAiQuestions } from './ask-ai-questions';
 import { AskAiWelcome } from './ask-ai-welcome';
 
 export function AskAiSidebar() {
@@ -27,6 +28,10 @@ export function AskAiSidebar() {
     mode,
     threads,
     activeThreadId,
+    pendingPrompt,
+    autoSendPrompt,
+    clearPendingPrompt,
+    dismissQuestions,
     toggleSidebar,
     closeSidebar,
     toggleExpanded,
@@ -87,6 +92,7 @@ export function AskAiSidebar() {
           createdAt: new Date().toISOString(),
           steps: payload?.steps,
           pendingActions: payload?.pendingActions,
+          questions: payload?.questions,
         });
       } catch (err) {
         const message =
@@ -111,6 +117,21 @@ export function AskAiSidebar() {
       sendChatMutation,
     ]
   );
+
+  useEffect(() => {
+    if (isOpen && pendingPrompt) {
+      const prompt = pendingPrompt;
+      const shouldAutoSend = autoSendPrompt;
+      clearPendingPrompt();
+      if (shouldAutoSend) {
+        void handleSendMessage(prompt, []);
+      }
+    }
+  }, [isOpen, pendingPrompt, autoSendPrompt, clearPendingPrompt, handleSendMessage]);
+
+  const pendingQuestionMessage = [...(activeThread?.messages || [])]
+    .reverse()
+    .find((m) => m.role === 'assistant' && m.questions && m.questions.length > 0);
 
   if (!isOpen) return null;
 
@@ -197,17 +218,37 @@ export function AskAiSidebar() {
         </div>
       </div>
 
-      {/* Main Content Area: Welcome State or Active Conversation */}
-      <div className="flex min-h-0 flex-1 flex-col overflow-hidden">
-        {hasMessages && activeThread ? (
-          <AskAiMessages messages={activeThread.messages} isThinking={isSending} />
-        ) : (
-          <AskAiWelcome
-            providerStatus={providerStatus}
-            onSelectPrompt={(prompt) => void handleSendMessage(prompt, [])}
-          />
-        )}
+      {/* Main Content Area: Welcome State or Active Conversation with Question Backdrop */}
+      <div className="group/conversation relative isolate flex min-h-0 flex-1 flex-col overflow-hidden">
+        <div className="relative z-0 flex min-h-0 flex-1 flex-col">
+          {hasMessages && activeThread ? (
+            <AskAiMessages messages={activeThread.messages} isThinking={isSending} />
+          ) : (
+            <AskAiWelcome
+              providerStatus={providerStatus}
+              onSelectPrompt={(prompt) => void handleSendMessage(prompt, [])}
+            />
+          )}
+        </div>
+        <div
+          aria-hidden="true"
+          data-assistant-question-backdrop
+          className="pointer-events-none absolute inset-0 z-10 bg-background/20 opacity-0 backdrop-blur-[6px] group-has-[[data-assistant-questions-open=true]]/conversation:opacity-100 motion-safe:transition-opacity motion-safe:duration-150"
+        />
       </div>
+
+      {/* Interactive Question Card */}
+      {pendingQuestionMessage?.questions && pendingQuestionMessage.questions.length > 0 && (
+        <div className="px-3 pt-2">
+          <AskAiQuestions
+            messageId={pendingQuestionMessage.id}
+            questions={pendingQuestionMessage.questions}
+            disabled={isSending}
+            onAnswer={(text) => void handleSendMessage(text, [])}
+            onDismiss={(gid) => dismissQuestions(pendingQuestionMessage.id, gid)}
+          />
+        </div>
+      )}
 
       {/* Bottom Composer */}
       <AskAiComposer

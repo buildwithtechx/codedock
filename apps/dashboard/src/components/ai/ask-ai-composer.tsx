@@ -1,6 +1,3 @@
-import { Link } from '@tanstack/react-router';
-import { ArrowUp, Box, Database, Edit3, SlidersHorizontal, Terminal, X, Zap } from 'lucide-react';
-import { type KeyboardEvent, useMemo, useState } from 'react';
 import {
   DropdownMenu,
   DropdownMenuContent,
@@ -9,6 +6,9 @@ import {
   DropdownMenuSeparator,
   DropdownMenuTrigger,
 } from '@codedock/ui';
+import { Link } from '@tanstack/react-router';
+import { ArrowUp, Box, Database, Edit3, SlidersHorizontal, Terminal, X, Zap } from 'lucide-react';
+import { type KeyboardEvent, useMemo, useState } from 'react';
 import { useAiResources } from '#/hooks/use-ai';
 import type { AiProviderStatusSummary, AiResourceTag } from '#/interfaces/ai';
 import { useAiSidebarStore } from '#/stores/ai-sidebar-store';

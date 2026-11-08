@@ -12,3 +12,4 @@ export * from './auth';
 export * from './updates';
 export * from './mail';
 export * from './management-billing';
+export * from './ai';

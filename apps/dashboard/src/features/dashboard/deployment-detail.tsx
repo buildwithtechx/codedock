@@ -1,14 +1,12 @@
+import { Badge } from '@codedock/ui/badge';
+import { Button } from '@codedock/ui/button';
+import { Tabs, TabsContent, TabsList, TabsTrigger } from '@codedock/ui/tabs';
 import { Link } from '@tanstack/react-router';
 import { AlertCircle, ArrowLeft, Ban, Bot, Loader2, Play, RotateCcw } from 'lucide-react';
 import { useState } from 'react';
 import { toast } from 'sonner';
 import { PageHeader } from '#/components/layout/page-header';
-import { Badge } from '@codedock/ui/badge';
-import { Button } from '@codedock/ui/button';
 import { QueryErrorState } from '#/components/query-error-state';
-import { Tabs, TabsContent, TabsList, TabsTrigger } from '@codedock/ui/tabs';
-import { useListProjects } from '#/hooks/use-projects';
-import type { Deployment } from '#/interfaces/services';
 import { DeploymentFailureAi } from '#/features/services/deployment-failure-ai';
 import { useGetApp } from '#/hooks/use-apps';
 import {
@@ -17,6 +15,9 @@ import {
   useRetryDeployment,
   useRollback,
 } from '#/hooks/use-deployments';
+import { useListProjects } from '#/hooks/use-projects';
+import type { Deployment } from '#/interfaces/services';
+import { useAiSidebarStore } from '#/stores/ai-sidebar-store';
 import { DeploymentLogs } from './deployment-logs';
 import { DeploymentResourceNotice } from './deployment-resource-notice';
 import { DeploymentRollbackDialog } from './deployment-rollback-dialog';
@@ -50,6 +51,7 @@ export function DeploymentDetail({ deploymentId }: { deploymentId: string }) {
   const cancelDeployment = useCancelDeployment();
   const rollbackDeployment = useRollback();
   const retryDeployment = useRetryDeployment();
+  const openWithPrompt = useAiSidebarStore((s) => s.openWithPrompt);
 
   if (isLoading) {
     return (
@@ -157,6 +159,19 @@ export function DeploymentDetail({ deploymentId }: { deploymentId: string }) {
                   <Play className="h-4 w-4" />
                 )}
                 Retry deployment
+              </Button>
+            )}
+            {normalizedStatus === 'FAILED' && (
+              <Button
+                variant="secondary"
+                onClick={() => {
+                  const prompt = `Investigate failed deployment ${deployment.id}. Service ID: ${deployment.serviceId}. Use tools to inspect current status and logs. Explain likely cause with evidence and suggest next steps. Investigate first; do not change anything.`;
+                  openWithPrompt(prompt, true);
+                }}
+                className="gap-2"
+              >
+                <Bot className="h-4 w-4 text-primary" />
+                Investigate with AI
               </Button>
             )}
             {canRollback && (
@@ -277,7 +292,7 @@ function DeploymentOverview({
               {item.label}
             </p>
             <p
-              className={`mt-1.5 wrap-break-word text-sm ${
+              className={`wrap-break-word mt-1.5 text-sm ${
                 item.mono ? 'font-mono text-[13px]' : 'font-medium'
               }`}
             >

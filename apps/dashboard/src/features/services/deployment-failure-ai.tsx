@@ -1,8 +1,9 @@
-import { AlertCircle, Bot, Code2, Loader2, Terminal } from 'lucide-react';
-import { useState } from 'react';
 import { Alert, AlertDescription, AlertTitle } from '@codedock/ui/alert';
 import { Button } from '@codedock/ui/button';
+import { AlertCircle, Bot, Code2, Loader2, MessageSquare, Terminal } from 'lucide-react';
+import { useState } from 'react';
 import { useExplainFailure } from '#/hooks/use-deployments';
+import { useAiSidebarStore } from '#/stores/ai-sidebar-store';
 
 interface DeploymentFailureAiProps {
   deploymentId: string;
@@ -10,6 +11,7 @@ interface DeploymentFailureAiProps {
 
 export function DeploymentFailureAi({ deploymentId }: DeploymentFailureAiProps) {
   const [enabled, setEnabled] = useState(false);
+  const openWithPrompt = useAiSidebarStore((s) => s.openWithPrompt);
   const { data, isLoading, error } = useExplainFailure(deploymentId, enabled);
 
   if (!enabled) {
@@ -25,10 +27,22 @@ export function DeploymentFailureAi({ deploymentId }: DeploymentFailureAiProps) 
               This deployment encountered an error during the build or startup phase.
             </p>
           </div>
-          <Button onClick={() => setEnabled(true)} variant="outline" className="gap-2">
-            <Bot className="h-4 w-4" />
-            Analyze with AI
-          </Button>
+          <div className="flex items-center gap-2">
+            <Button
+              onClick={() => {
+                const prompt = `Investigate failed deployment ${deploymentId}. Use tools to inspect current status and logs. Explain likely cause with evidence and suggest next steps. Investigate first; do not change anything.`;
+                openWithPrompt(prompt, true);
+              }}
+              variant="default"
+              className="gap-2"
+            >
+              <Bot className="h-4 w-4" />
+              Investigate with AI
+            </Button>
+            <Button onClick={() => setEnabled(true)} variant="outline" className="gap-2">
+              Analyze in place
+            </Button>
+          </div>
         </div>
       </div>
     );
@@ -67,17 +81,31 @@ export function DeploymentFailureAi({ deploymentId }: DeploymentFailureAiProps) 
       <div className="flex items-center gap-2 border-b bg-gray-50/80 px-4 py-3">
         <Bot className="h-5 w-5 text-primary" />
         <h3 className="font-medium">AI Failure Analysis</h3>
-        <span
-          className={`ml-auto rounded-full px-2 py-0.5 text-xs ${
-            explanation.confidence === 'high'
-              ? 'bg-green-100 text-green-700'
-              : explanation.confidence === 'medium'
-                ? 'bg-yellow-100 text-yellow-700'
-                : 'bg-gray-100 text-gray-700'
-          }`}
-        >
-          {explanation.confidence} confidence
-        </span>
+        <div className="ml-auto flex items-center gap-2">
+          <Button
+            size="sm"
+            variant="ghost"
+            onClick={() => {
+              const prompt = `Investigate failed deployment ${deploymentId}. Use tools to inspect current status and logs. Explain likely cause with evidence and suggest next steps. Investigate first; do not change anything.`;
+              openWithPrompt(prompt, true);
+            }}
+            className="h-7 gap-1.5 px-2 text-xs"
+          >
+            <MessageSquare className="h-3.5 w-3.5" />
+            Continue in Chat
+          </Button>
+          <span
+            className={`rounded-full px-2 py-0.5 text-xs ${
+              explanation.confidence === 'high'
+                ? 'bg-green-100 text-green-700'
+                : explanation.confidence === 'medium'
+                  ? 'bg-yellow-100 text-yellow-700'
+                  : 'bg-gray-100 text-gray-700'
+            }`}
+          >
+            {explanation.confidence} confidence
+          </span>
+        </div>
       </div>
 
       <div className="space-y-6 p-4">

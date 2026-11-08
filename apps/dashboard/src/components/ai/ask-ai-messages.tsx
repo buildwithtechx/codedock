@@ -1,8 +1,8 @@
+import { Avatar, AvatarFallback, AvatarImage } from '@codedock/ui/avatar';
+import { Button } from '@codedock/ui/button';
 import { AlertTriangle, CheckCircle2, Loader2, Play, Terminal, XCircle } from 'lucide-react';
 import { useEffect, useRef, useState } from 'react';
 import { toast } from 'sonner';
-import { Avatar, AvatarFallback, AvatarImage } from '@codedock/ui/avatar';
-import { Button } from '@codedock/ui/button';
 import { CodedockLogo } from '#/components/layout/codedock-logo';
 import { useConfirmAiAction } from '#/hooks/use-ai';
 import type { AiPendingAction, AiTurnMessage } from '#/interfaces/ai';

@@ -47,6 +47,28 @@ type PendingAction struct {
 	Destructive bool           `json:"destructive"`
 }
 
+type QuestionOption struct {
+	ID          string `json:"id"`
+	Label       string `json:"label"`
+	Description string `json:"description,omitempty"`
+}
+
+type QuestionItem struct {
+	ID          string           `json:"id"`
+	Title       string           `json:"title"`
+	AllowOther  bool             `json:"allowOther,omitempty"`
+	Optional    bool             `json:"optional,omitempty"`
+	MultiSelect bool             `json:"multiSelect,omitempty"`
+	IsSecret    bool             `json:"isSecret,omitempty"`
+	Options     []QuestionOption `json:"options,omitempty"`
+}
+
+type QuestionGroup struct {
+	ID        string         `json:"id"`
+	Title     string         `json:"title"`
+	Questions []QuestionItem `json:"questions"`
+}
+
 type ChatRequest struct {
 	Messages    []ChatMessage `json:"messages"`
 	Mode        string        `json:"mode"`
@@ -64,6 +86,7 @@ type ChatResponse struct {
 	Steps           []ToolStep      `json:"steps,omitempty"`
 	PendingActions  []PendingAction `json:"pendingActions,omitempty"`
 	ExecutedActions []string        `json:"executedActions,omitempty"`
+	Questions       []QuestionGroup `json:"questions,omitempty"`
 }
 
 type Dependencies struct {
@@ -155,8 +178,59 @@ func buildInstanceContext(ctx context.Context, currentPath string, mentions []Re
 }
 
 func curatedTools(bridge *mcp.Bridge) []map[string]any {
+	var out []map[string]any
+	// Built-in interactive decision / question tool
+	out = append(out, map[string]any{
+		"type": "function",
+		"function": map[string]any{
+			"name":        "ask_user_decision",
+			"description": "Ask the user one or more questions or prompt them for a structured decision before proceeding with a modification or choice.",
+			"parameters": map[string]any{
+				"type": "object",
+				"properties": map[string]any{
+					"title": map[string]any{
+						"type":        "string",
+						"description": "Short headline or title of the question group",
+					},
+					"questions": map[string]any{
+						"type": "array",
+						"items": map[string]any{
+							"type": "object",
+							"properties": map[string]any{
+								"id":    map[string]any{"type": "string"},
+								"title": map[string]any{"type": "string"},
+								"allowOther": map[string]any{
+									"type":        "boolean",
+									"description": "Whether the user can provide a custom text response in addition to options",
+								},
+								"multiSelect": map[string]any{
+									"type":        "boolean",
+									"description": "Whether multiple options can be chosen",
+								},
+								"options": map[string]any{
+									"type": "array",
+									"items": map[string]any{
+										"type": "object",
+										"properties": map[string]any{
+											"id":          map[string]any{"type": "string"},
+											"label":       map[string]any{"type": "string"},
+											"description": map[string]any{"type": "string"},
+										},
+										"required": []string{"id", "label"},
+									},
+								},
+							},
+							"required": []string{"id", "title"},
+						},
+					},
+				},
+				"required": []string{"title", "questions"},
+			},
+		},
+	})
+
 	if bridge == nil {
-		return nil
+		return out
 	}
 	names := []string{
 		"get_projects", "get_projects_by_id", "get_apps", "get_apps_by_id",
@@ -164,7 +238,6 @@ func curatedTools(bridge *mcp.Bridge) []map[string]any {
 		"get_databases", "get_databases_by_id", "get_deployments", "get_system_stats",
 		"get_attention", "get_issues", "get_one_click", "get_backups", "get_jobs",
 	}
-	var out []map[string]any
 	for _, n := range names {
 		if t, ok := bridge.FindTool(n); ok {
 			out = append(out, map[string]any{
@@ -192,6 +265,7 @@ func HandleChat(ctx context.Context, req ChatRequest, meta mcp.DispatchMeta, dep
 	var steps []ToolStep
 	var pending []PendingAction
 	var executed []string
+	var questions []QuestionGroup
 
 	for hop := 0; hop < 3; hop++ {
 		assistantMsg, callErr := callCompletion(ctx, ep, sysPrompt, msgs, tools)
@@ -202,11 +276,29 @@ func HandleChat(ctx context.Context, req ChatRequest, meta mcp.DispatchMeta, dep
 			return ChatResponse{
 				Reply: assistantMsg.Content, Provider: ep.Provider, Model: ep.Model,
 				Configured: true, Steps: steps, PendingActions: pending, ExecutedActions: executed,
+				Questions: questions,
 			}, nil
 		}
 
 		msgs = append(msgs, assistantMsg)
 		for _, tc := range assistantMsg.ToolCalls {
+			if tc.Function.Name == "ask_user_decision" {
+				var qGroup QuestionGroup
+				if err := json.Unmarshal([]byte(tc.Function.Arguments), &qGroup); err == nil {
+					if qGroup.ID == "" {
+						qGroup.ID = "q_" + uuid.NewString()[:8]
+					}
+					questions = append(questions, qGroup)
+					steps = append(steps, ToolStep{
+						ID:     tc.ID,
+						Tool:   "ask_user_decision",
+						Label:  "Waiting for your answer: " + qGroup.Title,
+						Status: "pending",
+					})
+				}
+				continue
+			}
+
 			toolDef, ok := deps.Bridge.FindTool(tc.Function.Name)
 			if !ok {
 				continue
@@ -243,6 +335,18 @@ func HandleChat(ctx context.Context, req ChatRequest, meta mcp.DispatchMeta, dep
 			steps = append(steps, ToolStep{ID: tc.ID, Tool: toolDef.Name, Label: toolDef.Description, Status: status})
 			msgs = append(msgs, ChatMessage{Role: "tool", ToolCallID: tc.ID, Content: res.Text})
 		}
+
+		if len(questions) > 0 {
+			replyText := assistantMsg.Content
+			if strings.TrimSpace(replyText) == "" {
+				replyText = "Please answer the question above to continue."
+			}
+			return ChatResponse{
+				Reply: replyText, Provider: ep.Provider, Model: ep.Model,
+				Configured: true, Steps: steps, PendingActions: pending, ExecutedActions: executed,
+				Questions: questions,
+			}, nil
+		}
 	}
 
 	finalMsg, err := callCompletion(ctx, ep, sysPrompt, msgs, nil)
@@ -252,6 +356,7 @@ func HandleChat(ctx context.Context, req ChatRequest, meta mcp.DispatchMeta, dep
 	return ChatResponse{
 		Reply: finalMsg.Content, Provider: ep.Provider, Model: ep.Model,
 		Configured: true, Steps: steps, PendingActions: pending, ExecutedActions: executed,
+		Questions: questions,
 	}, nil
 }
 
