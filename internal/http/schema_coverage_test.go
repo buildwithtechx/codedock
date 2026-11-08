@@ -10,9 +10,16 @@ import (
 	"github.com/labstack/echo/v4"
 
 	"codedock/internal/config"
+	"codedock/internal/handlers/system"
 	"codedock/internal/http/apischema"
 	"codedock/internal/http/middleware"
+	appsmod "codedock/internal/modules/apps"
 	"codedock/internal/modules/auth"
+	deploymentsmod "codedock/internal/modules/deployments"
+	domainsmod "codedock/internal/modules/domains"
+	environments "codedock/internal/modules/environments"
+	gitmod "codedock/internal/modules/git"
+	projectsmod "codedock/internal/modules/projects"
 )
 
 const openAPIGoldenPath = "../../docs/api/openapi.json"
@@ -30,12 +37,40 @@ func schemaTestRouter(t *testing.T) *echo.Echo {
 	}
 	router := echo.New()
 	server := &Server{
-		router:          router,
-		authGuard:       middleware.NewAuthGuard(tokens, nil, nil, nil, nil, nil),
-		authRateLimiter: middleware.NewRateLimiter(10, time.Minute),
-		otpRateLimiter:  middleware.NewRateLimiter(5, time.Minute),
-		aiRateLimiter:   middleware.NewRateLimiter(5, time.Minute),
-		passkeyHandler:  auth.NewPasskeyHandler(nil),
+		router:                     router,
+		authGuard:                  middleware.NewAuthGuard(tokens, nil, nil, nil, nil, nil),
+		authRateLimiter:            middleware.NewRateLimiter(10, time.Minute),
+		otpRateLimiter:             middleware.NewRateLimiter(5, time.Minute),
+		aiRateLimiter:              middleware.NewRateLimiter(5, time.Minute),
+		passkeyHandler:             auth.NewPasskeyHandler(nil),
+		appServiceHandler:          &appsmod.Handler{},
+		appVarHandler:              &appsmod.VariableHandler{},
+		appVolumeHandler:           &appsmod.VolumeHandler{},
+		appWebhookHandler:          &appsmod.WebhookHandler{},
+		autoscalingHandler:         &appsmod.AutoscalingHandler{},
+		projectHandler:             &projectsmod.Handler{},
+		projectAppHandler:          &projectsmod.ProjectAppHandler{},
+		projectSettingsHandler:     &projectsmod.ProjectSettingsHandler{},
+		checksHandler:              &projectsmod.ChecksHandler{},
+		canvasHandler:              &projectsmod.CanvasHandler{},
+		composeStackHandler:        &projectsmod.ComposeStackHandler{},
+		composeHandler:             &projectsmod.ComposeHandler{},
+		oneClickHandler:            &projectsmod.OneClickHandler{},
+		environmentHandler:         &environments.EnvironmentHandler{},
+		routeProtectionHandler:     &environments.RouteProtectionHandler{},
+		routeRuleHandler:           &environments.RouteRuleHandler{},
+		domainHandler:              &domainsmod.DomainHandler{},
+		deploymentHandler:          &deploymentsmod.DeploymentHandler{},
+		deploymentLifecycleHandler: &deploymentsmod.LifecycleHandler{},
+		archiveHandler:             &deploymentsmod.ArchiveHandler{},
+		registryHandler:            &deploymentsmod.RegistryHandler{},
+		terminalHandler:            &deploymentsmod.TerminalHandler{},
+		gitHandler:                 &gitmod.ProvidersHandler{},
+		gitInspectionHandler:       &gitmod.InspectionHandler{},
+		gitAppsHandler:             &gitmod.AppsHandler{},
+		webhookHandler:             &gitmod.WebhookHandler{},
+		metricsHandler:             &system.MetricsHandler{},
+		logHandler:                 &system.LogHandler{},
 	}
 	apiGroup := router.Group("/api")
 	authGroup := apiGroup.Group("", server.authGuard.RequireAuth())
@@ -50,7 +85,7 @@ func schemaTestRouter(t *testing.T) *echo.Echo {
 	server.registerAnalyticsRoutes(authGroup)
 	server.registerDatabaseRoutes(authGroup)
 	server.registerAppRoutes(apiGroup, authGroup)
-	server.registerDeploymentRoutes(authGroup)
+	server.registerDeploymentRoutes(apiGroup, authGroup)
 	server.registerBackupRoutes(authGroup)
 	server.registerClusterRoutes(authGroup)
 	server.registerSettingsRoutes(apiGroup, authGroup)

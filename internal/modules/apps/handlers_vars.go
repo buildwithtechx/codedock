@@ -18,7 +18,10 @@ func NewVariableHandler(s *Service, ac AccessChecker) *VariableHandler {
 }
 
 func (h *VariableHandler) List(c echo.Context) error {
-	serviceID := c.Param("id")
+	serviceID := c.Param("serviceId")
+	if serviceID == "" {
+		serviceID = c.Param("id")
+	}
 	if serviceID == "" {
 		return utils.Error(c, http.StatusBadRequest, "missing service id")
 	}
@@ -31,7 +34,10 @@ func (h *VariableHandler) List(c echo.Context) error {
 }
 
 func (h *VariableHandler) Create(c echo.Context) error {
-	serviceID := c.Param("id")
+	serviceID := c.Param("serviceId")
+	if serviceID == "" {
+		serviceID = c.Param("id")
+	}
 	if serviceID == "" {
 		return utils.Error(c, http.StatusBadRequest, "missing service id")
 	}
@@ -58,7 +64,10 @@ func (h *VariableHandler) Create(c echo.Context) error {
 }
 
 func (h *VariableHandler) Update(c echo.Context) error {
-	id := c.Param("varId")
+	id := c.Param("id")
+	if id == "" {
+		id = c.Param("varId")
+	}
 	if id == "" {
 		return utils.Error(c, http.StatusBadRequest, "missing variable id")
 	}
@@ -90,7 +99,10 @@ func (h *VariableHandler) Update(c echo.Context) error {
 }
 
 func (h *VariableHandler) Delete(c echo.Context) error {
-	id := c.Param("varId")
+	id := c.Param("id")
+	if id == "" {
+		id = c.Param("varId")
+	}
 	if id == "" {
 		return utils.Error(c, http.StatusBadRequest, "missing variable id")
 	}
@@ -99,4 +111,8 @@ func (h *VariableHandler) Delete(c echo.Context) error {
 		return utils.Error(c, http.StatusInternalServerError, err.Error())
 	}
 	return c.NoContent(http.StatusNoContent)
+}
+
+func (h *VariableHandler) Suggest(c echo.Context) error {
+	return utils.Success(c, "Suggestions", []any{})
 }

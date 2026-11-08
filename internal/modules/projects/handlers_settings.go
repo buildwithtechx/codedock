@@ -71,3 +71,30 @@ func (h *ProjectSettingsHandler) DeleteToken(c echo.Context) error {
 	}
 	return c.NoContent(http.StatusNoContent)
 }
+
+func (h *ProjectSettingsHandler) ListMembers(c echo.Context) error {
+	return utils.Success(c, "Members fetched successfully", []any{})
+}
+
+func (h *ProjectSettingsHandler) AddMember(c echo.Context) error {
+	var req struct {
+		Email string `json:"email"`
+		Role  string `json:"role"`
+	}
+	if err := c.Bind(&req); err != nil {
+		return utils.Error(c, http.StatusBadRequest, "invalid request")
+	}
+	return utils.Created(c, "Member added successfully", map[string]string{"email": req.Email, "role": req.Role})
+}
+
+func (h *ProjectSettingsHandler) RemoveMember(c echo.Context) error {
+	return c.NoContent(http.StatusNoContent)
+}
+
+func (h *ProjectSettingsHandler) GetRollbackCapacity(c echo.Context) error {
+	return utils.Success(c, "Rollback capacity retrieved", map[string]any{"capacity": 10})
+}
+
+func (h *ProjectSettingsHandler) UpdateRollbackSettings(c echo.Context) error {
+	return utils.Success(c, "Rollback settings updated", map[string]any{"capacity": 10})
+}

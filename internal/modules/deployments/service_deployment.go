@@ -33,17 +33,19 @@ type DeployEngine interface {
 }
 
 type DeploymentService struct {
-	repo           DeploymentRepository
-	appLookup      AppServiceLookup
-	projectLookup  ProjectLookup
-	codeSync       CodeSyncProvider
-	deployEngine   DeployEngine
-	statsMonitor   *observability.StatsMonitor
-	admissionGuard *BuildAdmissionGuard
-	operationMu    sync.Mutex
-	operations     map[string]context.CancelFunc
-	localDocker    *client.Client
-	Runtime        any
+	repo                    DeploymentRepository
+	appLookup               AppServiceLookup
+	projectLookup           ProjectLookup
+	codeSync                CodeSyncProvider
+	deployEngine            DeployEngine
+	statsMonitor            *observability.StatsMonitor
+	admissionGuard          *BuildAdmissionGuard
+	operationMu             sync.Mutex
+	operations              map[string]context.CancelFunc
+	localDocker             *client.Client
+	Runtime                 any
+	BeforeDeployment        func(ctx context.Context, serviceID string) error
+	BeforeProjectDeployment func(ctx context.Context, projectID string) error
 }
 
 func NewDeploymentService(
@@ -75,6 +77,21 @@ func (s *DeploymentService) DockerForProject(ctx context.Context, projectID stri
 		return s.localDocker, func() {}, nil
 	}
 	return nil, func() {}, errors.New("docker client unavailable")
+}
+
+func (s *DeploymentService) CanvasDockerTargets(ctx context.Context, projectID string) (*client.Client, func(), error) {
+	return s.DockerForProject(ctx, projectID)
+}
+
+func (s *DeploymentService) DockerForService(ctx context.Context, serviceID string) (*client.Client, func(), error) {
+	if s.localDocker != nil {
+		return s.localDocker, func() {}, nil
+	}
+	return nil, func() {}, errors.New("docker client unavailable")
+}
+
+func (s *DeploymentService) StreamServiceLogs(ctx context.Context, serviceID string, out io.Writer) error {
+	return nil
 }
 
 func (s *DeploymentService) SetRuntime(r any) {

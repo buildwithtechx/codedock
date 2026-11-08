@@ -14,20 +14,45 @@ func RegisterRoutes(g *echo.Group, cfg RoutesConfig) {
 	if cfg.Handler != nil {
 		g.GET("/apps", cfg.Handler.ListAll)
 		g.GET("/projects/:id/apps", cfg.Handler.ListByProject)
+		g.GET("/projects/:id/services", cfg.Handler.ListByProject)
 		g.GET("/environments/:id/apps", cfg.Handler.ListByEnvironment)
 		g.POST("/environments/:id/apps", cfg.Handler.Create)
 		g.GET("/apps/:id", cfg.Handler.Get)
 		g.PUT("/apps/:id", cfg.Handler.Update)
-		g.PATCH("/apps/:id", cfg.Handler.Update)
 		g.DELETE("/apps/:id", cfg.Handler.Delete)
+
+		// Lifecycle & Build
+		g.POST("/apps/:id/stop", cfg.Handler.StopService)
+		g.POST("/apps/:id/restart", cfg.Handler.RestartService)
+		g.POST("/apps/:id/redeploy", cfg.Handler.RedeployService)
+		g.PUT("/apps/:id/build", cfg.Handler.UpdateBuildSettings)
+
+		// Runtime updates
+		g.GET("/projects/:id/runtime-updates", cfg.Handler.CheckProjectRuntimeUpdates)
+		g.POST("/projects/:id/runtime-updates", cfg.Handler.ApplyProjectRuntimeUpdates)
+		g.GET("/apps/:id/runtime-updates", cfg.Handler.CheckAppRuntimeUpdates)
+		g.POST("/apps/:id/runtime-updates", cfg.Handler.ApplyAppRuntimeUpdates)
+
+		// Runtime operations & observation
+		g.GET("/apps/:id/runtime", cfg.Handler.GetRuntime)
+		g.GET("/apps/:id/runtime/operation", cfg.Handler.RuntimeOperation)
+		g.POST("/apps/:id/runtime/review", cfg.Handler.ReviewRuntime)
+		g.POST("/apps/:id/runtime/apply", cfg.Handler.ApplyRuntime)
+		g.GET("/apps/:id/runtime/observe", cfg.Handler.ObserveRuntime)
+		g.GET("/apps/:id/runtime/logs", cfg.Handler.RuntimeLogs)
+		g.GET("/apps/:id/runtime/logs/stream", cfg.Handler.RuntimeLogStream)
+		g.GET("/apps/:id/runtime/graph", cfg.Handler.InstanceGraph)
+		g.GET("/apps/:id/runtime/resources", cfg.Handler.ResourceSummary)
+		g.GET("/apps/:id/runtime/exec-terminal", cfg.Handler.RuntimeExecTerminal)
+		g.POST("/apps/:id/runtime/exec", cfg.Handler.RuntimeExec)
 	}
 
 	if cfg.VariableHandler != nil {
-		g.GET("/apps/:id/vars", cfg.VariableHandler.List)
-		g.POST("/apps/:id/vars", cfg.VariableHandler.Create)
-		g.PUT("/apps/:id/vars/:varId", cfg.VariableHandler.Update)
-		g.PATCH("/apps/:id/vars/:varId", cfg.VariableHandler.Update)
-		g.DELETE("/apps/:id/vars/:varId", cfg.VariableHandler.Delete)
+		g.GET("/services/:serviceId/variables", cfg.VariableHandler.List)
+		g.POST("/services/:serviceId/variables", cfg.VariableHandler.Create)
+		g.PUT("/services/:serviceId/variables/:id", cfg.VariableHandler.Update)
+		g.DELETE("/services/:serviceId/variables/:id", cfg.VariableHandler.Delete)
+		g.GET("/services/:serviceId/env-suggestions", cfg.VariableHandler.Suggest)
 	}
 
 	if cfg.VolumeHandler != nil {
@@ -42,15 +67,15 @@ func RegisterRoutes(g *echo.Group, cfg RoutesConfig) {
 		g.POST("/apps/:id/webhooks", cfg.WebhookHandler.CreateWebhook)
 		g.DELETE("/apps/:id/webhooks/:webhookId", cfg.WebhookHandler.DeleteWebhook)
 
-		g.GET("/apps/:id/drains", cfg.WebhookHandler.ListLogDrains)
-		g.POST("/apps/:id/drains", cfg.WebhookHandler.CreateLogDrain)
-		g.DELETE("/apps/:id/drains/:drainId", cfg.WebhookHandler.DeleteLogDrain)
+		g.GET("/apps/:id/log-drains", cfg.WebhookHandler.ListLogDrains)
+		g.POST("/apps/:id/log-drains", cfg.WebhookHandler.CreateLogDrain)
+		g.DELETE("/apps/:id/log-drains/:drainId", cfg.WebhookHandler.DeleteLogDrain)
 	}
 
 	if cfg.AutoscalingHandler != nil {
-		g.GET("/apps/:id/autoscaling", cfg.AutoscalingHandler.Get)
-		g.PUT("/apps/:id/autoscaling", cfg.AutoscalingHandler.Update)
-		g.GET("/apps/:id/serverless", cfg.AutoscalingHandler.GetServerlessCode)
-		g.POST("/apps/:id/serverless", cfg.AutoscalingHandler.SaveServerlessCode)
+		g.GET("/services/:serviceId/autoscaling", cfg.AutoscalingHandler.Get)
+		g.PUT("/services/:serviceId/autoscaling", cfg.AutoscalingHandler.Update)
+		g.GET("/services/:serviceId/serverless/code", cfg.AutoscalingHandler.GetServerlessCode)
+		g.POST("/services/:serviceId/serverless/code", cfg.AutoscalingHandler.SaveServerlessCode)
 	}
 }

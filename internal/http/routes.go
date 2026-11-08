@@ -6,8 +6,11 @@ import (
 	"codedock/internal/models"
 	"codedock/internal/modules/auth"
 	"codedock/internal/modules/databases"
+	"codedock/internal/modules/domains"
+	"codedock/internal/modules/environments"
 	mailmodule "codedock/internal/modules/mail"
 	"codedock/internal/modules/organizations"
+	"codedock/internal/modules/projects"
 	"codedock/internal/modules/users"
 	"codedock/internal/utils"
 )
@@ -29,7 +32,7 @@ func (s *Server) registerRoutes() {
 	s.registerAnalyticsRoutes(authGroup)
 	s.registerDatabaseRoutes(authGroup)
 	s.registerAppRoutes(apiGroup, authGroup)
-	s.registerDeploymentRoutes(authGroup)
+	s.registerDeploymentRoutes(apiGroup, authGroup)
 	s.registerBackupRoutes(authGroup)
 	s.registerClusterRoutes(authGroup)
 	s.registerSettingsRoutes(apiGroup, authGroup)
@@ -136,61 +139,30 @@ func (s *Server) registerUserRoutes(apiGroup, authGroup *echo.Group) {
 }
 
 func (s *Server) registerProjectRoutes(apiGroup, authGroup *echo.Group) {
-	authGroup.GET("/projects", s.projectHandler.ListProjects)
-	authGroup.POST("/projects", s.projectHandler.CreateProject)
-
-	projectAuth := s.authGuard.RequireProjectRole("")
-	projectAuthAdmin := s.authGuard.RequireProjectRole(models.MemberPermissionAdmin)
-	projectAuthOwner := s.authGuard.RequireProjectRole(models.MemberPermissionOwner)
-
-	authGroup.GET("/projects/:id", s.projectHandler.GetProject, projectAuth)
-	authGroup.DELETE("/projects/:id", s.projectHandler.DeleteProject, projectAuthOwner)
-	authGroup.GET("/projects/:id/members", s.projectHandler.ListMembers, projectAuth)
-	authGroup.POST("/projects/:id/members", s.projectHandler.AddMember, projectAuthAdmin)
-	authGroup.DELETE("/projects/:id/members/:memberId", s.projectHandler.RemoveMember, projectAuthAdmin)
-
-	authGroup.GET("/domains", s.domainHandler.ListAll)
-	authGroup.GET("/projects/:id/domains", s.domainHandler.ListByProject, projectAuth)
-	authGroup.GET("/services/:id/domains", s.domainHandler.ListByService)
-	authGroup.POST("/services/:id/domains", s.domainHandler.Create)
-	authGroup.DELETE("/domains/:id", s.domainHandler.Delete)
-	authGroup.POST("/domains/:id/verify", s.domainHandler.Verify)
-	authGroup.GET("/domains/:id/verify", s.domainHandler.Verify)
-
-	authGroup.GET("/projects/:id/route-protection", s.routeProtectionHandler.List, projectAuth)
-	authGroup.POST("/projects/:id/route-protection", s.routeProtectionHandler.Change, projectAuth)
-
-	authGroup.GET("/projects/:id/env", s.projectEnvHandler.GetVars, projectAuth, s.authGuard.RequireScope("env:read"))
-	authGroup.PUT("/projects/:id/env", s.projectEnvHandler.SetVars, projectAuthAdmin, s.authGuard.RequireScope("env:write"))
-	authGroup.POST("/projects/:id/env", s.projectEnvHandler.SetVars, projectAuthAdmin, s.authGuard.RequireScope("env:write"))
-	authGroup.POST("/projects/:id/env/migrate-commands", s.projectEnvHandler.MigrateCommands, projectAuthAdmin, s.authGuard.RequireScope("env:write"))
-	authGroup.POST("/projects/:id/environments", s.environmentHandler.Create, projectAuthAdmin)
-	authGroup.GET("/projects/:id/environments", s.environmentHandler.ListByProject, projectAuth)
-	authGroup.GET("/projects/:id/apps", s.appServiceHandler.ListByProject, projectAuth)
-	authGroup.GET("/projects/:id/services", s.appServiceHandler.ListByProject, projectAuth)
-	authGroup.GET("/projects/:id/deployments", s.deploymentHandler.ListProjectDeployments, projectAuth)
-	authGroup.POST("/projects/:id/deploy", s.deploymentHandler.TriggerProject, projectAuthAdmin)
-	authGroup.GET("/projects/:id/rollback-capacity", s.rollbackSettingsHandler.GetRollbackCapacity, projectAuth)
-	authGroup.PATCH("/projects/:id/rollback-settings", s.rollbackSettingsHandler.UpdateRollbackSettings, projectAuthAdmin)
-
-	authGroup.GET("/project-apps", s.projectAppHandler.List)
-	authGroup.POST("/project-apps", s.projectAppHandler.Create)
-	authGroup.GET("/project-apps/:id", s.projectAppHandler.Get)
-	authGroup.PUT("/project-apps/:id", s.projectAppHandler.Update)
-	authGroup.DELETE("/project-apps/:id", s.projectAppHandler.Delete)
-
-	authGroup.GET("/projects/:projectId/tokens", s.projectSettingsHandler.ListTokens, projectAuthAdmin, s.authGuard.RequireScope("env:read"))
-	authGroup.POST("/projects/:projectId/tokens", s.projectSettingsHandler.CreateToken, projectAuthAdmin, s.authGuard.RequireScope("env:write"))
-	authGroup.DELETE("/projects/:projectId/tokens/:id", s.projectSettingsHandler.DeleteToken, projectAuthAdmin, s.authGuard.RequireScope("env:write"))
-
-	authGroup.GET("/projects/:projectId/registries", s.registryHandler.List, projectAuthAdmin)
-	authGroup.POST("/projects/:projectId/registries", s.registryHandler.Create, projectAuthAdmin)
-	authGroup.DELETE("/projects/:projectId/registries/:id", s.registryHandler.Delete, projectAuthAdmin)
-
-	authGroup.GET("/services/:serviceId/route-rules", s.routeRuleHandler.List, s.RequireServiceRole(""))
-	authGroup.POST("/services/:serviceId/route-rules", s.routeRuleHandler.Create, s.RequireServiceRole(models.MemberPermissionAdmin))
-	authGroup.PATCH("/services/:serviceId/route-rules/:ruleId", s.routeRuleHandler.Update, s.RequireServiceRole(models.MemberPermissionAdmin))
-	authGroup.DELETE("/services/:serviceId/route-rules/:ruleId", s.routeRuleHandler.Delete, s.RequireServiceRole(models.MemberPermissionAdmin))
+	if s.projectHandler != nil {
+		projects.RegisterRoutes(authGroup, projects.RoutesConfig{
+			Handler:             s.projectHandler,
+			AppHandler:          s.projectAppHandler,
+			SettingsHandler:     s.projectSettingsHandler,
+			ChecksHandler:       s.checksHandler,
+			CanvasHandler:       s.canvasHandler,
+			ComposeStackHandler: s.composeStackHandler,
+			ComposeHandler:      s.composeHandler,
+			OneClickHandler:     s.oneClickHandler,
+		})
+	}
+	if s.environmentHandler != nil {
+		environments.RegisterRoutes(authGroup, environments.RoutesConfig{
+			EnvHandler:        s.environmentHandler,
+			ProtectionHandler: s.routeProtectionHandler,
+			RouteRuleHandler:  s.routeRuleHandler,
+		})
+	}
+	if s.domainHandler != nil {
+		domains.RegisterRoutes(authGroup, domains.RoutesConfig{
+			Handler: s.domainHandler,
+		})
+	}
 }
 
 func (s *Server) registerServerRoutes(apiGroup, authGroup *echo.Group) {

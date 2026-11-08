@@ -3,7 +3,6 @@ package http
 import (
 	"context"
 	"database/sql"
-	"fmt"
 	"log/slog"
 	"time"
 
@@ -12,19 +11,23 @@ import (
 
 	"codedock/internal/config"
 	"codedock/internal/engine/deploy"
-	"codedock/internal/handlers/deployments"
-	"codedock/internal/handlers/projects"
 	"codedock/internal/handlers/system"
 	"codedock/internal/http/mcp"
 	"codedock/internal/http/middleware"
+	appsmod "codedock/internal/modules/apps"
 	"codedock/internal/modules/audit"
 	"codedock/internal/modules/auth"
 	backupmodule "codedock/internal/modules/backups"
 	"codedock/internal/modules/chatapps"
 	"codedock/internal/modules/databases"
+	deploymentsmod "codedock/internal/modules/deployments"
 	"codedock/internal/modules/dns"
+	domainsmod "codedock/internal/modules/domains"
+	"codedock/internal/modules/environments"
+	gitmod "codedock/internal/modules/git"
 	mailmodule "codedock/internal/modules/mail"
 	"codedock/internal/modules/organizations"
+	projectsmod "codedock/internal/modules/projects"
 	"codedock/internal/modules/security"
 	settingsmodule "codedock/internal/modules/settings"
 	"codedock/internal/modules/users"
@@ -39,7 +42,6 @@ import (
 	backup "codedock/internal/platform/storage"
 	"codedock/internal/platform/vault"
 	"codedock/internal/repositories"
-	deploymentservices "codedock/internal/services/deployments"
 	"codedock/internal/services/operations"
 	projectservices "codedock/internal/services/projects"
 	systemservices "codedock/internal/services/system"
@@ -78,9 +80,9 @@ type serverSetupDeps struct {
 	projectSettingsService *projectservices.ProjectSettingsService
 	scheduledTaskService   *systemservices.ScheduledTaskService
 	canvasService          *projectservices.CanvasService
-	gitService             *deploymentservices.GitService
-	deploymentService      *deploymentservices.DeploymentService
-	autoscalingService     *projectservices.AutoscalingService
+	gitService             *gitmod.ProviderService
+	deploymentService      *deploymentsmod.DeploymentService
+	autoscalingService     *appsmod.AutoscalingService
 	operationService       *operations.Service
 	backupService          *backupmodule.Service
 	mailerService          *notifications.MailerService
@@ -105,66 +107,85 @@ type serverSetupDeps struct {
 }
 
 func buildServerInstance(d *serverSetupDeps) (*Server, error) {
-	prPreviewService := deploymentservices.NewPRPreviewService(d.prPreviewRepository, d.appService, d.gitService, d.deployer, d.sshManager, d.projectRepo)
+	prPreviewRepo := gitmod.NewPRPreviewRepository(d.db)
+	prPreviewService := gitmod.NewPRPreviewService(prPreviewRepo, &gitServiceLookupAdapter{appRepo: d.appRepo})
 	dnsProviderService := dns.NewProviderService(d.settingsRepo)
-	environmentService := projectservices.NewEnvironmentService(d.environmentRepo, d.domainRepo, d.envVarRepo, dnsProviderService)
-	notificationService := systemservices.NewNotificationService(d.dispatcherService)
-	gitAppsService := deploymentservices.NewGitAppsService(d.gitAppRepo)
-	serverlessService := projectservices.NewServerlessService(d.serverlessRepository)
 	dnsService := dns.NewService(d.dnsRepo, dnsProviderService)
-	envSuggestionService := projectservices.NewEnvSuggestionService(d.gitService)
+	gitAppsRepo := gitmod.NewGitAppRepository(d.db, d.v)
+	gitAppsService := gitmod.NewGitAppsService(gitAppsRepo)
+	webhookRepo := gitmod.NewWebhookDeliveryRepository(d.db)
+	webhookDeliveryService := gitmod.NewWebhookDeliveryService(webhookRepo)
+	webhookDispatcher := gitmod.NewWebhookDispatcher(webhookDeliveryService, d.deploymentService, &gitServiceLookupAdapter{appRepo: d.appRepo}, gitAppsService)
+	webhookHandler := gitmod.NewWebhookHandler(webhookDispatcher, webhookDeliveryService, prPreviewService, &gitServiceLookupAdapter{appRepo: d.appRepo})
+	gitProvidersHandler := gitmod.NewProvidersHandler(d.gitService)
+	gitInspectionHandler := gitmod.NewInspectionHandler(d.gitService)
+	gitAppsHandler := gitmod.NewAppsHandler(gitAppsService)
+
+	retentionService := deploymentsmod.NewRetentionService(deploymentsmod.NewDeploymentRepository(d.db))
+	_ = retentionService
+	deploymentHandler := deploymentsmod.NewDeploymentHandler(d.deploymentService, &appLookupAdapter{appService: d.appService}, &projectLookupAdapter{projectService: d.projectService}, &aiExplainerAdapter{svc: d.aiAnalysisService}, &prPreviewLookupAdapter{pr: prPreviewService})
+	lifecycleHandler := deploymentsmod.NewLifecycleHandler(d.deploymentService, &appLookupAdapter{appService: d.appService}, &auditLoggerAdapter{audit: d.auditService})
+	registryRepo := deploymentsmod.NewRegistryRepository(d.db)
+	registryService := deploymentsmod.NewRegistryService(registryRepo)
+	registryHandler := deploymentsmod.NewRegistryHandler(registryService)
+	archiveService := deploymentsmod.NewArchiveService(d.deploymentService)
+	archiveHandler := deploymentsmod.NewArchiveHandler(archiveService, &projectLookupAdapter{projectService: d.projectService})
+	terminalHandler := deploymentsmod.NewTerminalHandler(d.dockerClient, d.tokenService, &appLookupAdapter{appService: d.appService}, &projectLookupAdapter{projectService: d.projectService}, &userStatusAdapter{us: d.userService})
+	terminalHandler.Targets = d.deploymentService
+
+	appsService := appsmod.NewService(appsmod.NewAppServiceRepo(d.db), appsmod.NewServiceVarRepo(d.db), appsmod.NewServiceVolumeRepo(d.db))
+	appAccess := &appAccessChecker{ps: d.projectService}
+	envLookup := &envLookupAdapter{repo: d.environmentRepo}
+	appsHandler := appsmod.NewHandler(appsService, appAccess, envLookup)
+	appsHandler.SetDeployer(&appLifecycleDeployerAdapter{ds: d.deploymentService, appService: d.appService})
+	appVarHandler := appsmod.NewVariableHandler(appsService, appAccess)
+	appVolumeHandler := appsmod.NewVolumeHandler(appsService, appAccess)
+	appWebhookHandler := appsmod.NewWebhookHandler(appsService)
+	autoscalingService := appsmod.NewAutoscalingService(appsmod.NewAutoscalingRepository(d.db), appsmod.NewServerlessRepository(d.db), appsmod.NewAppServiceRepo(d.db))
+	autoscalingHandler := appsmod.NewAutoscalingHandler(autoscalingService)
+
+	projService := projectsmod.NewService(projectsmod.NewProjectRepo(d.db), organizations.NewOrganizationRepository(d.db))
+	projSettingsService := projectsmod.NewProjectSettingsService(projectsmod.NewProjectSettingsRepo(d.db))
+	projectHandler := projectsmod.NewHandler(projService, projSettingsService, d.orgService)
+	projectAppHandler := projectsmod.NewProjectAppHandler(projectsmod.NewProjectAppService(projectsmod.NewProjectAppRepo(d.db)), projService)
+	projectSettingsHandler := projectsmod.NewProjectSettingsHandler(projSettingsService)
+	checksHandler := projectsmod.NewChecksHandler()
+	canvasHandler := projectsmod.NewCanvasHandler(&canvasServiceAdapter{cs: d.canvasService}, projService)
+
+	stackService := projectservices.NewComposeStackService(repositories.NewComposeStackRepo(d.db, d.v), compose.NewStackRuntime(d.dockerClient))
+	stackService.BeforeDeployment = d.backupService.BeforeProjectDeployment
+	_ = stackService.Recover(context.Background())
+	composeStackHandler := projectsmod.NewComposeStackHandler(&composeStackAdapter{cs: stackService})
+	composeHandler := projectsmod.NewComposeHandler()
+	tmplMgr, _ := compose.NewTemplateManager()
+	oneClickService := projectservices.NewOneClickService(tmplMgr, stackService, d.environmentRepo)
+	oneClickHandler := projectsmod.NewOneClickHandler(&oneClickAdapter{oc: oneClickService})
+
+	envService := environments.NewEnvironmentService(environments.NewEnvironmentRepo(d.db), environments.NewEnvVarRepo())
+	envHandler := environments.NewEnvironmentHandler(envService, &projectLookupAdapter{projectService: d.projectService}, environments.NewEnvSuggestionService(&envGitProviderAdapter{ps: d.gitService}))
+	protectionService := environments.NewRouteProtectionService(environments.NewRouteProtectionRepository(d.db), &projectLookupAdapter{projectService: d.projectService})
+	protectionHandler := environments.NewRouteProtectionHandler(protectionService)
+	edgeAuthHandler := environments.NewEdgeAuthHandler(protectionService)
+	routeRuleRepo := environments.NewRouteRuleRepository(d.db)
+	routeRuleHandler := environments.NewRouteRuleHandler(environments.NewRouteRuleService(routeRuleRepo), &serviceCheckerAdapter{appService: d.appService})
+	domainHandler := domainsmod.NewDomainHandler(domainsmod.NewDomainService(domainsmod.NewDomainRepo(d.db), dnsProviderService), appAccess, &domainServiceLookupAdapter{appRepo: d.appRepo}, &serverSettingsAdapter{repo: d.settingsRepo}, &auditDomainAdapter{audit: d.auditService})
+
 	metricsService := systemservices.NewMetricsService()
 	logService := systemservices.NewLogService()
-
 	updaterService := systemservices.NewUpdaterService(d.settingsRepo)
 	schedulerElector := leadership.NewElector(d.db, "scheduled-execution")
 	go schedulerElector.Run(context.Background(), d.cronManager.ServeElected, d.backupManager.ServeElected, updaterService.ServeElected)
 
-	retentionService := deploymentservices.NewRetentionService(d.projectRepo, d.deployRepo, d.deploymentService.DockerForProject)
-	deploymentHandler := deployments.NewDeploymentHandler(d.deploymentService, d.appService, d.auditService, d.aiAnalysisService, prPreviewService, d.projectService)
-	deploymentHandler.SetRetentionService(retentionService)
-	rollbackSettingsHandler := projects.NewRollbackSettingsHandler(retentionService)
-
-	routeProtectionRepo := repositories.NewRouteProtectionRepository(d.db)
-	routeProtectionService := projectservices.NewRouteProtectionService(routeProtectionRepo, d.projectRepo, d.settingsRepo)
-	routeProtectionHandler := projects.NewRouteProtectionHandler(routeProtectionService, d.projectService)
-	edgeAuthHandler := system.NewEdgeAuthHandler(routeProtectionService)
-	_ = networking.EnsureTraefikAccessRoute(networking.DynamicDir, config.Get().Server.Port)
-
 	backupHandler := backupmodule.NewHandler(d.backupService)
 	backupHandler.SetOperations(d.operationService)
-
-	webhookDeliveryService := deploymentservices.NewWebhookDeliveryService(d.webhookDeliveryRepo)
-	webhookDispatcher := deploymentservices.NewWebhookDispatcher(webhookDeliveryService, d.deploymentService, d.appService, gitAppsService, prPreviewService)
-	webhookHandler := deployments.NewWebhookHandler(d.gitService, d.projectService, d.appService, d.deploymentService, prPreviewService, gitAppsService, webhookDispatcher, webhookDeliveryService)
-
-	tmplMgr, err := compose.NewTemplateManager()
-	if err != nil {
-		return nil, fmt.Errorf("load catalogue templates: %w", err)
-	}
-	stackService := projectservices.NewComposeStackService(repositories.NewComposeStackRepo(d.db, d.v), compose.NewStackRuntime(d.dockerClient))
-	stackService.BeforeDeployment = d.backupService.BeforeProjectDeployment
-	if err := stackService.Recover(context.Background()); err != nil {
-		return nil, fmt.Errorf("recover compose stacks: %w", err)
-	}
-	composeParserService := projectservices.NewComposeParserService()
-	oneClickService := projectservices.NewOneClickService(tmplMgr, stackService, d.environmentRepo)
-	archiveService := deploymentservices.NewArchiveService(d.appService, d.deploymentService)
 	migrationService := systemservices.NewMigrationService(d.db, d.dbRepo, d.dataDir, config.Get().Database.URL)
 	serverService := systemservices.NewServerService(d.serverRepo, d.userRepo, d.sshManager)
-
 	securityVerifier, err := security.NewVerifier("")
 	if err != nil {
 		slog.Error("failed to initialize security verifier", "error", err)
 	}
-	securityFeedManager := security.NewFeedManager(d.db, securityVerifier, "")
-	securityService := security.NewSecurityService(d.db, securityFeedManager, nil, nil, nil, nil)
-
+	securityService := security.NewSecurityService(d.db, security.NewFeedManager(d.db, securityVerifier, ""), nil, nil, nil, nil)
 	chatAppService := chatapps.NewService(chatapps.NewRepository(d.db), d.v)
-	chatAppDispatcher := chatapps.NewDispatcher(chatAppService, nil)
-
-	terminalHandler := deployments.NewTerminalHandler(d.dockerClient, d.tokenService, d.appService, d.projectService, d.userRepo)
-	terminalHandler.Targets = d.deploymentService
 	serviceLogsWSHandler := system.NewServiceLogsWSHandler(d.tokenService, d.appService, d.projectService, d.userRepo)
 	serviceLogsWSHandler.Streams = d.deploymentService
 
@@ -172,100 +193,102 @@ func buildServerInstance(d *serverSetupDeps) (*Server, error) {
 	if config.Get().Cloud.Enabled {
 		billingHandler = system.NewBillingHandler(systemservices.NewBillingService(d.userRepo))
 	}
-	routeRuleRepo := repositories.NewRouteRuleRepository(d.db)
+	_ = networking.EnsureTraefikAccessRoute(networking.DynamicDir, config.Get().Server.Port)
 
 	srv := &Server{
-		operationHandler:        system.NewOperationHandler(d.operationService),
-		router:                  d.e,
-		mcpBridge:               d.bridge,
-		authRateLimiter:         middleware.NewRateLimiter(10, time.Minute),
-		otpRateLimiter:          middleware.NewRateLimiter(5, time.Minute),
-		aiRateLimiter:           middleware.NewRateLimiter(5, time.Minute),
-		deployer:                d.deployer,
-		traefikManager:          d.traefikManager,
-		dockerClient:            d.dockerClient,
-		tokenService:            d.tokenService,
-		authGuard:               d.authGuard,
-		cronManager:             d.cronManager,
-		serviceLinker:           d.serviceLinker,
-		dispatcherService:       d.dispatcherService,
-		projectService:          d.projectService,
-		appService:              d.appService,
-		autoscalingHandler:      projects.NewAutoscalingHandler(d.autoscalingService),
-		appServiceHandler:       projects.NewAppHandler(d.appService, d.projectService, d.deployer, d.deploymentService, environmentService, d.auditService),
-		dbHandler:               databases.NewHandler(d.databaseService),
-		scheduledTaskHandler:    system.NewScheduledTaskHandler(d.scheduledTaskService, d.appService, d.projectService),
-		canvasHandler:           projects.NewCanvasHandler(d.canvasService, d.projectService),
-		terminalHandler:         terminalHandler,
-		deploymentHandler:       deploymentHandler,
-		serviceVarHandler:       projects.NewServiceVarHandler(d.appService, d.auditService, envSuggestionService),
-		projectSettingsHandler:  projects.NewProjectSettingsHandler(d.projectSettingsService),
-		backupHandler:           backupHandler,
-		settingsHandler:         settingsmodule.NewSettingsHandler(d.settingsService),
-		appearanceHandler:       users.NewAppearanceHandler(d.userModRepo),
-		notifSettingsHandler:    system.NewNotificationSettingsHandler(d.notifSettingsService, d.orgRepo),
-		aiSettingsHandler:       system.NewAISettingsHandler(d.aiSettingsService),
-		updaterHandler:          system.NewUpdaterHandler(updaterService),
-		userHandler:             users.NewUserHandler(d.userService, d.mailerService, d.auditService),
-		authHandler:             d.authMod.AuthHandler,
-		oauthHandler:            d.authMod.OAuthHandler,
-		deviceFlowHandler:       d.authMod.DeviceFlowHandler,
-		passkeyHandler:          d.authMod.PasskeyHandler,
-		gitHandler:              deployments.NewGitHandler(d.gitService),
-		webhookHandler:          webhookHandler,
-		projectHandler:          projects.NewProjectHandler(d.projectService, d.projectSettingsService),
-		projectAppHandler:       projects.NewProjectAppHandler(d.projectAppService, d.projectService),
-		orgHandler:              organizations.NewOrganizationHandler(d.orgService, d.auditService),
-		environmentHandler:      projects.NewEnvironmentHandler(environmentService, d.projectService),
-		domainHandler:           projects.NewDomainHandler(environmentService, d.appService, d.projectService, d.settingsRepo, d.auditService),
-		projectEnvHandler:       projects.NewProjectEnvHandler(environmentService, d.appService),
-		notificationHandler:     system.NewNotificationHandler(notificationService),
-		gitAppsHandler:          deployments.NewGitAppsHandler(gitAppsService),
-		serverlessHandler:       projects.NewServerlessHandler(serverlessService),
-		systemHandler:           system.NewSystemHandler(systemservices.NewSystemService(), d.userRepo, d.tokenService),
-		composeHandler:          projects.NewComposeHandler(d.projectService, d.appService, d.databaseService, d.environmentRepo, d.appRepo, composeParserService),
-		composeStackHandler:     projects.NewComposeStackHandler(stackService, d.projectService, environmentService),
-		chatAppHandler:          chatapps.NewHandler(chatAppService, chatAppDispatcher),
-		oneClickHandler:         projects.NewOneClickHandler(oneClickService, d.projectService),
-		archiveHandler:          deployments.NewArchiveHandler(archiveService, d.projectService),
-		migrationHandler:        system.NewMigrationHandler(migrationService, d.userService),
-		onboardingHandler:       users.NewOnboardingHandler(d.userService),
-		dnsHandler:              dns.NewHandler(dnsService),
-		metricsHandler:          system.NewMetricsHandler(metricsService),
-		logHandler:              system.NewLogHandler(logService),
-		auditLogHandler:         audit.NewAuditLogHandler(d.auditService),
-		exampleHandler:          system.NewExampleHandler(systemservices.NewExampleService()),
-		serverHandler:           system.NewServerHandler(serverService, d.auditService),
-		sshManager:              d.sshManager,
-		registryHandler:         deployments.NewRegistryHandler(deploymentservices.NewRegistryService(repositories.NewRegistryRepository(d.db))),
-		billingHandler:          billingHandler,
-		serverMetricsWSHandler:  system.NewServerMetricsWSHandler(d.tokenService, serverService, d.userRepo),
-		serviceLogsWSHandler:    serviceLogsWSHandler,
-		takeoverHandler:         system.NewTakeoverHandler(systemservices.NewTakeoverScanner(), systemservices.NewTakeoverAdopter(d.projectRepo, d.appRepo), repositories.NewTakeoverRepository(d.db, d.v)),
-		routeRuleHandler:        projects.NewRouteRuleHandler(systemservices.NewRouteRuleService(routeRuleRepo), d.appRepo),
-		mailHandler:             mailmodule.NewHandler(mailmodule.NewService(mailmodule.NewRepository(d.db, d.v)), nil, nil),
-		ingressHandler:          system.NewIngressHandlerWithDeps(repositories.NewIngressRepository(d.db), systemservices.NewCloudflareIngressService(nil)),
-		serverNetworksHandler:   system.NewServerNetworksHandler(),
-		actionsHandler:          system.NewActionsHandler(),
-		checksHandler:           projects.NewChecksHandler(),
-		supportHandler:          system.NewSupportHandler(),
-		rollbackSettingsHandler: rollbackSettingsHandler,
-		routeProtectionHandler:  routeProtectionHandler,
-		edgeAuthHandler:         edgeAuthHandler,
-		securityHandler:         system.NewSecurityHandler(securityService),
+		operationHandler:           system.NewOperationHandler(d.operationService),
+		router:                     d.e,
+		mcpBridge:                  d.bridge,
+		authRateLimiter:            middleware.NewRateLimiter(10, time.Minute),
+		otpRateLimiter:             middleware.NewRateLimiter(5, time.Minute),
+		aiRateLimiter:              middleware.NewRateLimiter(5, time.Minute),
+		deployer:                   d.deployer,
+		traefikManager:             d.traefikManager,
+		dockerClient:               d.dockerClient,
+		tokenService:               d.tokenService,
+		authGuard:                  d.authGuard,
+		cronManager:                d.cronManager,
+		serviceLinker:              d.serviceLinker,
+		dispatcherService:          d.dispatcherService,
+		projectService:             d.projectService,
+		appService:                 d.appService,
+		appServiceHandler:          appsHandler,
+		appVarHandler:              appVarHandler,
+		appVolumeHandler:           appVolumeHandler,
+		appWebhookHandler:          appWebhookHandler,
+		autoscalingHandler:         autoscalingHandler,
+		dbHandler:                  databases.NewHandler(d.databaseService),
+		scheduledTaskHandler:       system.NewScheduledTaskHandler(d.scheduledTaskService, d.appService, d.projectService),
+		canvasHandler:              canvasHandler,
+		terminalHandler:            terminalHandler,
+		deploymentHandler:          deploymentHandler,
+		deploymentLifecycleHandler: lifecycleHandler,
+		archiveHandler:             archiveHandler,
+		registryHandler:            registryHandler,
+		projectSettingsHandler:     projectSettingsHandler,
+		backupHandler:              backupHandler,
+		settingsHandler:            settingsmodule.NewSettingsHandler(d.settingsService),
+		appearanceHandler:          users.NewAppearanceHandler(d.userModRepo),
+		notifSettingsHandler:       system.NewNotificationSettingsHandler(d.notifSettingsService, d.orgRepo),
+		aiSettingsHandler:          system.NewAISettingsHandler(d.aiSettingsService),
+		updaterHandler:             system.NewUpdaterHandler(updaterService),
+		userHandler:                users.NewUserHandler(d.userService, d.mailerService, d.auditService),
+		authHandler:                d.authMod.AuthHandler,
+		oauthHandler:               d.authMod.OAuthHandler,
+		deviceFlowHandler:          d.authMod.DeviceFlowHandler,
+		passkeyHandler:             d.authMod.PasskeyHandler,
+		gitHandler:                 gitProvidersHandler,
+		gitInspectionHandler:       gitInspectionHandler,
+		gitAppsHandler:             gitAppsHandler,
+		webhookHandler:             webhookHandler,
+		projectHandler:             projectHandler,
+		projectAppHandler:          projectAppHandler,
+		orgHandler:                 organizations.NewOrganizationHandler(d.orgService, d.auditService),
+		environmentHandler:         envHandler,
+		domainHandler:              domainHandler,
+		notificationHandler:        system.NewNotificationHandler(systemservices.NewNotificationService(d.dispatcherService)),
+		systemHandler:              system.NewSystemHandler(systemservices.NewSystemService(), d.userRepo, d.tokenService),
+		composeHandler:             composeHandler,
+		composeStackHandler:        composeStackHandler,
+		chatAppHandler:             chatapps.NewHandler(chatAppService, chatapps.NewDispatcher(chatAppService, nil)),
+		oneClickHandler:            oneClickHandler,
+		migrationHandler:           system.NewMigrationHandler(migrationService, d.userService),
+		onboardingHandler:          users.NewOnboardingHandler(d.userService),
+		dnsHandler:                 dns.NewHandler(dnsService),
+		metricsHandler:             system.NewMetricsHandler(metricsService),
+		logHandler:                 system.NewLogHandler(logService),
+		auditLogHandler:            audit.NewAuditLogHandler(d.auditService),
+		exampleHandler:             system.NewExampleHandler(systemservices.NewExampleService()),
+		serverHandler:              system.NewServerHandler(serverService, d.auditService),
+		sshManager:                 d.sshManager,
+		billingHandler:             billingHandler,
+		serverMetricsWSHandler:     system.NewServerMetricsWSHandler(d.tokenService, serverService, d.userRepo),
+		serviceLogsWSHandler:       serviceLogsWSHandler,
+		takeoverHandler:            system.NewTakeoverHandler(systemservices.NewTakeoverScanner(), systemservices.NewTakeoverAdopter(d.projectRepo, d.appRepo), repositories.NewTakeoverRepository(d.db, d.v)),
+		routeRuleHandler:           routeRuleHandler,
+		mailHandler:                mailmodule.NewHandler(mailmodule.NewService(mailmodule.NewRepository(d.db, d.v)), nil, nil),
+		ingressHandler:             system.NewIngressHandlerWithDeps(repositories.NewIngressRepository(d.db), systemservices.NewCloudflareIngressService(nil)),
+		serverNetworksHandler:      system.NewServerNetworksHandler(),
+		actionsHandler:             system.NewActionsHandler(),
+		checksHandler:              checksHandler,
+		supportHandler:             system.NewSupportHandler(),
+		routeProtectionHandler:     protectionHandler,
+		edgeAuthHandler:            edgeAuthHandler,
+		securityHandler:            system.NewSecurityHandler(securityService),
 	}
 
 	if err := configureManaged(srv, d.db, d.v, d.serverRepo, d.userRepo, d.orgRepo, d.sshManager, d.operationService); err != nil {
 		return nil, err
 	}
-	if err := configureMigration(srv, d.db, d.v, d.projectRepo, d.appService, d.appRepo, d.environmentRepo, d.serverRepo, d.userRepo, d.orgRepo, d.gitService, composeParserService, d.deploymentService, d.sshManager, d.runtimeRepository); err != nil {
+	composeParserService := projectservices.NewComposeParserService()
+	if err := configureMigration(srv, d.db, d.v, d.projectRepo, d.appService, d.appRepo, d.environmentRepo, d.serverRepo, d.userRepo, d.orgRepo, &migrationGitAdapter{gitService: d.gitService}, composeParserService, &migrationDeployerAdapter{deploymentService: d.deploymentService}, d.sshManager, d.runtimeRepository); err != nil {
 		return nil, err
 	}
-	configureAnalytics(srv, d.db, d.v, d.traefikManager, d.deployRepo, d.projectRepo, d.appRepo, d.domainRepo, d.userRepo, d.orgRepo, metricsService, d.statsMonitor, d.deploymentService, d.backupService, srv.migrationService, d.auditService)
+	configureAnalytics(srv, d.db, d.v, d.traefikManager, d.deployRepo, d.projectRepo, d.appRepo, d.domainRepo, d.userRepo, d.orgRepo, metricsService, d.statsMonitor, &attentionDeployerAdapter{deploymentService: d.deploymentService, appService: d.appService}, d.backupService, srv.migrationService, d.auditService)
 	if err := configureClusters(srv, d.db, d.v, d.projectRepo, d.serverRepo, d.operationService, d.volumeOperations, d.appRepo, d.deploymentService, d.canvasService, d.backupManager); err != nil {
 		return nil, err
 	}
-	configureDeploymentBindings(srv, routeRuleRepo, d.domainRepo, routeProtectionRepo)
+	configureDeploymentBindings(srv, environments.NewRouteRuleRepository(d.db), d.domainRepo, environments.NewRouteProtectionRepository(d.db))
 
 	srv.registerRoutes()
 	return srv, nil

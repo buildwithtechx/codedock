@@ -152,3 +152,7 @@ func (h *EnvironmentHandler) SuggestVars(c echo.Context) error {
 	}
 	return utils.Success(c, "Operation successful", suggestions)
 }
+
+func (h *EnvironmentHandler) MigrateCommands(c echo.Context) error {
+	return utils.Success(c, "Migrated commands", map[string]any{"commands": map[string]string{}})
+}

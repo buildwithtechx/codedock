@@ -9,11 +9,11 @@ import (
 	"github.com/mark3labs/mcp-go/server"
 
 	"codedock/internal/engine/deploy"
-	"codedock/internal/handlers/projects"
 	"codedock/internal/handlers/system"
 	"codedock/internal/http/mcp"
 	"codedock/internal/http/middleware"
 	"codedock/internal/models"
+	appsmod "codedock/internal/modules/apps"
 	"codedock/internal/modules/audit"
 	"codedock/internal/modules/auth"
 	backupmodule "codedock/internal/modules/backups"
@@ -21,10 +21,12 @@ import (
 	"codedock/internal/modules/databases"
 	deploymentsmod "codedock/internal/modules/deployments"
 	"codedock/internal/modules/dns"
+	domainsmod "codedock/internal/modules/domains"
 	"codedock/internal/modules/environments"
 	gitmod "codedock/internal/modules/git"
 	mailmodule "codedock/internal/modules/mail"
 	"codedock/internal/modules/organizations"
+	projectsmod "codedock/internal/modules/projects"
 	"codedock/internal/modules/settings"
 	"codedock/internal/modules/users"
 	"codedock/internal/platform/networking"
@@ -55,16 +57,20 @@ type Server struct {
 	dispatcherService          *core.DispatcherService
 	projectService             *projectservices.ProjectService
 	appService                 *projectservices.AppService
-	appServiceHandler          *projects.AppHandler
-	autoscalingHandler         *projects.AutoscalingHandler
+	appServiceHandler          *appsmod.Handler
+	appVarHandler              *appsmod.VariableHandler
+	appVolumeHandler           *appsmod.VolumeHandler
+	appWebhookHandler          *appsmod.WebhookHandler
+	autoscalingHandler         *appsmod.AutoscalingHandler
 	dbHandler                  *databases.DatabaseHandler
 	scheduledTaskHandler       *system.ScheduledTaskHandler
-	canvasHandler              *projects.CanvasHandler
+	canvasHandler              *projectsmod.CanvasHandler
 	terminalHandler            *deploymentsmod.TerminalHandler
 	deploymentHandler          *deploymentsmod.DeploymentHandler
 	deploymentLifecycleHandler *deploymentsmod.LifecycleHandler
-	serviceVarHandler          *projects.ServiceVarHandler
-	projectSettingsHandler     *projects.ProjectSettingsHandler
+	archiveHandler             *deploymentsmod.ArchiveHandler
+	registryHandler            *deploymentsmod.RegistryHandler
+	projectSettingsHandler     *projectsmod.ProjectSettingsHandler
 	backupHandler              *backupmodule.Handler
 	settingsHandler            *settings.SettingsHandler
 	appearanceHandler          *users.AppearanceHandler
@@ -78,22 +84,19 @@ type Server struct {
 	passkeyHandler             *auth.PasskeyHandler
 	gitHandler                 *gitmod.ProvidersHandler
 	gitInspectionHandler       *gitmod.InspectionHandler
-	webhookHandler             *gitmod.WebhookHandler
-	projectHandler             *projects.ProjectHandler
-	projectAppHandler          *projects.ProjectAppHandler
-	orgHandler                 *organizations.OrganizationHandler
-	environmentHandler         *projects.EnvironmentHandler
-	domainHandler              *projects.DomainHandler
-	projectEnvHandler          *projects.ProjectEnvHandler
-	notificationHandler        *system.NotificationHandler
 	gitAppsHandler             *gitmod.AppsHandler
-	serverlessHandler          *projects.ServerlessHandler
+	webhookHandler             *gitmod.WebhookHandler
+	projectHandler             *projectsmod.Handler
+	projectAppHandler          *projectsmod.ProjectAppHandler
+	orgHandler                 *organizations.OrganizationHandler
+	environmentHandler         *environments.EnvironmentHandler
+	domainHandler              *domainsmod.DomainHandler
+	notificationHandler        *system.NotificationHandler
 	systemHandler              *system.SystemHandler
-	composeHandler             *projects.ComposeHandler
-	composeStackHandler        *projects.ComposeStackHandler
+	composeHandler             *projectsmod.ComposeHandler
+	composeStackHandler        *projectsmod.ComposeStackHandler
 	chatAppHandler             *chatapps.Handler
-	oneClickHandler            *projects.OneClickHandler
-	archiveHandler             *deploymentsmod.ArchiveHandler
+	oneClickHandler            *projectsmod.OneClickHandler
 	migrationHandler           *system.MigrationHandler
 	onboardingHandler          *users.OnboardingHandler
 	dnsHandler                 *dns.Handler
@@ -107,17 +110,16 @@ type Server struct {
 	migrationService           *migrations.Service
 	analyticsHandler           *system.AnalyticsHandler
 	attentionHandler           *system.AttentionHandler
-	registryHandler            *deploymentsmod.RegistryHandler
 	billingHandler             *system.BillingHandler
 	serverMetricsWSHandler     *system.ServerMetricsWSHandler
 	serviceLogsWSHandler       *system.ServiceLogsWSHandler
 	takeoverHandler            *system.TakeoverHandler
-	routeRuleHandler           *projects.RouteRuleHandler
+	routeRuleHandler           *environments.RouteRuleHandler
 	mailHandler                *mailmodule.Handler
 	ingressHandler             *system.IngressHandler
 	serverNetworksHandler      *system.ServerNetworksHandler
 	actionsHandler             *system.ActionsHandler
-	checksHandler              *projects.ChecksHandler
+	checksHandler              *projectsmod.ChecksHandler
 	supportHandler             *system.SupportHandler
 	routeProtectionHandler     *environments.RouteProtectionHandler
 	edgeAuthHandler            *environments.EdgeAuthHandler

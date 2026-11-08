@@ -23,6 +23,8 @@ type Handler struct {
 	service   *Service
 	access    AccessChecker
 	envLookup EnvironmentLookup
+	deployer  LifecycleDeployer
+	runtime   RuntimeEngine
 }
 
 func NewHandler(s *Service, ac AccessChecker, el EnvironmentLookup) *Handler {

@@ -101,6 +101,12 @@ func (s *DeploymentService) executeDeployment(ctx context.Context, d *Deployment
 		}
 	}
 
+	if s.BeforeDeployment != nil {
+		if err := s.BeforeDeployment(ctx, d.ServiceID); err != nil {
+			return "", fmt.Errorf("pre-deployment backup: %w", err)
+		}
+	}
+
 	if s.deployEngine != nil {
 		fmt.Fprintf(logWriter, "🚀 Launching build & deploy for %s...\n", app.Name)
 		containerID, err := s.deployEngine.DeployApp(ctx, app, sourceDir, logWriter)

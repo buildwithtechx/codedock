@@ -14,9 +14,10 @@ func RegisterRoutes(g *echo.Group, cfg RoutesConfig) {
 		g.POST("/projects/:id/environments", cfg.EnvHandler.Create)
 		g.GET("/projects/:id/environments", cfg.EnvHandler.ListByProject)
 		g.DELETE("/environments/:id", cfg.EnvHandler.Delete)
-		g.GET("/projects/:id/env/vars", cfg.EnvHandler.GetVars)
-		g.POST("/projects/:id/env/vars", cfg.EnvHandler.SetVars)
-		g.GET("/projects/:id/env/suggest", cfg.EnvHandler.SuggestVars)
+		g.GET("/projects/:id/env", cfg.EnvHandler.GetVars)
+		g.POST("/projects/:id/env", cfg.EnvHandler.SetVars)
+		g.PUT("/projects/:id/env", cfg.EnvHandler.SetVars)
+		g.POST("/projects/:id/env/migrate-commands", cfg.EnvHandler.MigrateCommands)
 	}
 
 	if cfg.ProtectionHandler != nil {

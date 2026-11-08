@@ -1,0 +1,286 @@
+package servers
+
+import (
+	"context"
+	"database/sql"
+	"encoding/json"
+	"fmt"
+	"strings"
+	"time"
+)
+
+type Vault interface {
+	Encrypt(plaintext string) (string, error)
+	Decrypt(ciphertext string) (string, error)
+}
+
+type Repository interface {
+	Create(ctx context.Context, server *Server) error
+	Update(ctx context.Context, server *Server) error
+	GetByID(ctx context.Context, id string) (*Server, error)
+	GetByToken(ctx context.Context, token string) (*Server, error)
+	ListByUser(ctx context.Context, userID string, search string) ([]*Server, error)
+	SearchIDsByName(ctx context.Context, term string, limit int) ([]string, error)
+	UpdateStatus(ctx context.Context, id string, status ServerStatus) error
+	UpdateMetrics(ctx context.Context, id string, metricsJSON []byte) error
+	Delete(ctx context.Context, id string) error
+}
+
+type postgresRepository struct {
+	db    *sql.DB
+	vault Vault
+}
+
+func NewRepository(db *sql.DB, vault Vault) Repository {
+	return &postgresRepository{db: db, vault: vault}
+}
+
+func (r *postgresRepository) Create(ctx context.Context, server *Server) error {
+	sshKey, err := r.encryptSecret(server.SSHKey)
+	if err != nil {
+		return fmt.Errorf("failed to encrypt SSH key: %w", err)
+	}
+	sshPrivateKey, err := r.encryptSecret(server.SSHPrivateKey)
+	if err != nil {
+		return fmt.Errorf("failed to encrypt SSH private key: %w", err)
+	}
+	sshPassword, err := r.encryptSecret(server.SSHPassword)
+	if err != nil {
+		return fmt.Errorf("failed to encrypt SSH password: %w", err)
+	}
+	var lastSeenAt any
+	if server.LastSeenAt != nil {
+		lastSeenAt = *server.LastSeenAt
+	}
+	query := `
+		INSERT INTO servers (
+			id, user_id, name, ip_address, is_local,
+			ssh_host, ssh_port, ssh_user, ssh_auth_method,
+			ssh_key, ssh_private_key, ssh_password, ssh_transport, ssh_jump_host,
+			status, provider, external_id, region, server_type, worker_token, last_seen_at, metrics, build_cache_budget_bytes, created_at, updated_at
+		)
+		VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10, $11, $12, $13, $14, $15, $16, $17, $18, $19, $20, $21, $22, $23, $24, $25)
+	`
+	_, err = r.db.ExecContext(ctx, query,
+		server.ID, server.UserID, server.Name, server.IPAddress, server.IsLocal,
+		server.SSHHost, server.SSHPort, server.SSHUser, server.SSHAuthMethod,
+		sshKey, sshPrivateKey, sshPassword, server.SSHTransport, server.SSHJumpHost,
+		server.Status, server.Provider, server.ExternalID, server.Region, server.ServerType, server.WorkerToken, lastSeenAt, string(server.Metrics), server.BuildCacheBudgetBytes, server.CreatedAt, server.UpdatedAt,
+	)
+	if err != nil {
+		return fmt.Errorf("failed to create server: %w", err)
+	}
+	return nil
+}
+
+func (r *postgresRepository) Update(ctx context.Context, server *Server) error {
+	sshKey, err := r.encryptSecret(server.SSHKey)
+	if err != nil {
+		return fmt.Errorf("failed to encrypt SSH key: %w", err)
+	}
+	sshPrivateKey, err := r.encryptSecret(server.SSHPrivateKey)
+	if err != nil {
+		return fmt.Errorf("failed to encrypt SSH private key: %w", err)
+	}
+	sshPassword, err := r.encryptSecret(server.SSHPassword)
+	if err != nil {
+		return fmt.Errorf("failed to encrypt SSH password: %w", err)
+	}
+	query := `
+		UPDATE servers SET
+			name = $1,
+			ip_address = $2,
+			is_local = $3,
+			ssh_host = $4,
+			ssh_port = $5,
+			ssh_user = $6,
+			ssh_auth_method = $7,
+			ssh_key = $8,
+			ssh_private_key = $9,
+			ssh_password = $10,
+			ssh_transport = $11,
+			ssh_jump_host = $12,
+			status = $13,
+			provider = $14,
+			external_id = $15,
+			region = $16,
+			server_type = $17,
+			build_cache_budget_bytes = $18,
+			updated_at = $19
+		WHERE id = $20
+	`
+	_, err = r.db.ExecContext(ctx, query,
+		server.Name, server.IPAddress, server.IsLocal,
+		server.SSHHost, server.SSHPort, server.SSHUser, server.SSHAuthMethod,
+		sshKey, sshPrivateKey, sshPassword, server.SSHTransport, server.SSHJumpHost,
+		server.Status, server.Provider, server.ExternalID, server.Region, server.ServerType, server.BuildCacheBudgetBytes, server.UpdatedAt, server.ID,
+	)
+	if err != nil {
+		return fmt.Errorf("failed to update server: %w", err)
+	}
+	return nil
+}
+
+const serverSelectColumns = `
+	id, user_id, name, ip_address, COALESCE(is_local, FALSE),
+	COALESCE(ssh_host, ''), COALESCE(ssh_port, 22), COALESCE(ssh_user, 'root'),
+	COALESCE(ssh_auth_method, 'key'), COALESCE(ssh_key, ''), COALESCE(ssh_private_key, ''),
+	COALESCE(ssh_password, ''), COALESCE(ssh_transport, 'direct'), COALESCE(ssh_jump_host, ''),
+	status, COALESCE(provider, ''), COALESCE(external_id, ''), COALESCE(region, ''), COALESCE(server_type, ''),
+	worker_token, last_seen_at, metrics, build_cache_budget_bytes, created_at, updated_at
+`
+
+func (r *postgresRepository) GetByID(ctx context.Context, id string) (*Server, error) {
+	query := fmt.Sprintf(`SELECT %s FROM servers WHERE id = $1`, serverSelectColumns)
+	row := r.db.QueryRowContext(ctx, query, id)
+	return r.scanRow(row)
+}
+
+func (r *postgresRepository) GetByToken(ctx context.Context, token string) (*Server, error) {
+	query := fmt.Sprintf(`SELECT %s FROM servers WHERE worker_token = $1`, serverSelectColumns)
+	row := r.db.QueryRowContext(ctx, query, token)
+	return r.scanRow(row)
+}
+
+func (r *postgresRepository) ListByUser(ctx context.Context, userID string, search string) ([]*Server, error) {
+	search = strings.TrimSpace(search)
+	pattern := "%" + search + "%"
+	query := fmt.Sprintf(`SELECT %s FROM servers WHERE (user_id = $1 OR (user_id = 'system' AND is_local = TRUE)) AND ($2 = '' OR name ILIKE $3 OR ssh_host ILIKE $3) ORDER BY created_at DESC`, serverSelectColumns)
+	rows, err := r.db.QueryContext(ctx, query, userID, search, pattern)
+	if err != nil {
+		return nil, fmt.Errorf("failed to list servers: %w", err)
+	}
+	defer rows.Close()
+
+	var servers []*Server
+	for rows.Next() {
+		server, err := r.scanRows(rows)
+		if err != nil {
+			return nil, err
+		}
+		servers = append(servers, server)
+	}
+	return servers, nil
+}
+
+func (r *postgresRepository) SearchIDsByName(ctx context.Context, term string, limit int) ([]string, error) {
+	if limit <= 0 {
+		limit = 200
+	}
+	pattern := "%" + strings.TrimSpace(term) + "%"
+	rows, err := r.db.QueryContext(ctx, `SELECT id FROM servers WHERE name ILIKE $1 OR ssh_host ILIKE $1 LIMIT $2`, pattern, limit)
+	if err != nil {
+		return nil, fmt.Errorf("search server ids by name: %w", err)
+	}
+	defer rows.Close()
+	ids := make([]string, 0)
+	for rows.Next() {
+		var id string
+		if err := rows.Scan(&id); err != nil {
+			return nil, fmt.Errorf("scan server id: %w", err)
+		}
+		ids = append(ids, id)
+	}
+	return ids, rows.Err()
+}
+
+func (r *postgresRepository) UpdateStatus(ctx context.Context, id string, status ServerStatus) error {
+	query := `UPDATE servers SET status = $1, updated_at = CURRENT_TIMESTAMP WHERE id = $2`
+	_, err := r.db.ExecContext(ctx, query, status, id)
+	return err
+}
+
+func (r *postgresRepository) UpdateMetrics(ctx context.Context, id string, metricsJSON []byte) error {
+	query := `UPDATE servers SET metrics = $1, last_seen_at = CURRENT_TIMESTAMP, updated_at = CURRENT_TIMESTAMP WHERE id = $2`
+	_, err := r.db.ExecContext(ctx, query, string(metricsJSON), id)
+	return err
+}
+
+func (r *postgresRepository) Delete(ctx context.Context, id string) error {
+	query := `DELETE FROM servers WHERE id = $1`
+	_, err := r.db.ExecContext(ctx, query, id)
+	return err
+}
+
+func (r *postgresRepository) scanRow(row *sql.Row) (*Server, error) {
+	var s Server
+	var metricsRaw sql.NullString
+	err := row.Scan(
+		&s.ID, &s.UserID, &s.Name, &s.IPAddress, &s.IsLocal,
+		&s.SSHHost, &s.SSHPort, &s.SSHUser, &s.SSHAuthMethod,
+		&s.SSHKey, &s.SSHPrivateKey, &s.SSHPassword, &s.SSHTransport, &s.SSHJumpHost,
+		&s.Status, &s.Provider, &s.ExternalID, &s.Region, &s.ServerType,
+		&s.WorkerToken, &s.LastSeenAt, &metricsRaw, &s.BuildCacheBudgetBytes, &s.CreatedAt, &s.UpdatedAt,
+	)
+	if err != nil {
+		if err == sql.ErrNoRows {
+			return nil, nil
+		}
+		return nil, fmt.Errorf("failed to scan server: %w", err)
+	}
+	if metricsRaw.Valid && metricsRaw.String != "" {
+		s.Metrics = json.RawMessage(metricsRaw.String)
+	} else {
+		s.Metrics = json.RawMessage("{}")
+	}
+	if err := r.decryptSecrets(&s); err != nil {
+		return nil, err
+	}
+	return &s, nil
+}
+
+func (r *postgresRepository) scanRows(rows *sql.Rows) (*Server, error) {
+	var s Server
+	var metricsRaw sql.NullString
+	err := rows.Scan(
+		&s.ID, &s.UserID, &s.Name, &s.IPAddress, &s.IsLocal,
+		&s.SSHHost, &s.SSHPort, &s.SSHUser, &s.SSHAuthMethod,
+		&s.SSHKey, &s.SSHPrivateKey, &s.SSHPassword, &s.SSHTransport, &s.SSHJumpHost,
+		&s.Status, &s.Provider, &s.ExternalID, &s.Region, &s.ServerType,
+		&s.WorkerToken, &s.LastSeenAt, &metricsRaw, &s.BuildCacheBudgetBytes, &s.CreatedAt, &s.UpdatedAt,
+	)
+	if err != nil {
+		return nil, fmt.Errorf("failed to scan server: %w", err)
+	}
+	if metricsRaw.Valid && metricsRaw.String != "" {
+		s.Metrics = json.RawMessage(metricsRaw.String)
+	} else {
+		s.Metrics = json.RawMessage("{}")
+	}
+	if err := r.decryptSecrets(&s); err != nil {
+		return nil, err
+	}
+	return &s, nil
+}
+
+func (r *postgresRepository) encryptSecret(value string) (string, error) {
+	if value == "" || r.vault == nil {
+		return value, nil
+	}
+	if _, err := r.vault.Decrypt(value); err == nil {
+		return value, nil
+	}
+	return r.vault.Encrypt(value)
+}
+
+func (r *postgresRepository) decryptSecrets(server *Server) error {
+	if r.vault == nil {
+		return nil
+	}
+	if server.SSHKey != "" {
+		if value, err := r.vault.Decrypt(server.SSHKey); err == nil {
+			server.SSHKey = value
+		}
+	}
+	if server.SSHPrivateKey != "" {
+		if value, err := r.vault.Decrypt(server.SSHPrivateKey); err == nil {
+			server.SSHPrivateKey = value
+		}
+	}
+	if server.SSHPassword != "" {
+		if value, err := r.vault.Decrypt(server.SSHPassword); err == nil {
+			server.SSHPassword = value
+		}
+	}
+	return nil
+}

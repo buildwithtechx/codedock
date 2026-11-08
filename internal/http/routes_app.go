@@ -9,95 +9,71 @@ import (
 	"codedock/internal/config"
 	"codedock/internal/models"
 	"codedock/internal/modules/ai"
+	appsmod "codedock/internal/modules/apps"
 	"codedock/internal/modules/audit"
 	backupmodule "codedock/internal/modules/backups"
 	"codedock/internal/modules/chatapps"
+	deploymentsmod "codedock/internal/modules/deployments"
 	"codedock/internal/modules/dns"
+	gitmod "codedock/internal/modules/git"
 	"codedock/internal/modules/settings"
 	"github.com/labstack/echo/v4"
 )
 
 func (s *Server) registerAppRoutes(apiGroup, authGroup *echo.Group) {
-	authGroup.POST("/projects/:id/repository-inspection", s.gitHandler.InspectRepository, s.RequireProjectRole(models.MemberPermissionAdmin))
-	serviceAuthAdmin := s.RequireServiceRole(models.MemberPermissionAdmin)
-	serviceAuthOwner := s.RequireServiceRole(models.MemberPermissionOwner)
-	serviceAuth := s.RequireServiceRole("")
+	appsmod.RegisterRoutes(authGroup, appsmod.RoutesConfig{
+		Handler:            s.appServiceHandler,
+		VariableHandler:    s.appVarHandler,
+		VolumeHandler:      s.appVolumeHandler,
+		WebhookHandler:     s.appWebhookHandler,
+		AutoscalingHandler: s.autoscalingHandler,
+	})
 
-	authGroup.GET("/environments/:id/apps", s.appServiceHandler.ListByEnvironment)
-	authGroup.POST("/environments/:id/apps", s.appServiceHandler.Create)
-	authGroup.DELETE("/environments/:id", s.environmentHandler.Delete)
-	authGroup.GET("/apps", s.appServiceHandler.ListByOrganization)
-	authGroup.GET("/apps/:id", s.appServiceHandler.Get, serviceAuth)
-	authGroup.GET("/apps/:id/runtime", s.appServiceHandler.GetRuntime, serviceAuth)
-	authGroup.GET("/apps/:id/runtime/operation", s.appServiceHandler.RuntimeOperation, serviceAuthAdmin)
 	authGroup.GET("/projects/:id/runtime-clusters", s.clusterHandler.List, s.RequireProjectRole(models.MemberPermissionAdmin))
-	authGroup.GET("/projects/:id/runtime-updates", s.appServiceHandler.CheckProjectRuntimeUpdates, s.RequireProjectRole(""))
-	authGroup.POST("/projects/:id/runtime-updates", s.appServiceHandler.ApplyProjectRuntimeUpdates, s.RequireProjectRole(models.MemberPermissionAdmin))
-	authGroup.GET("/projects/:id/deployments/admission", s.checksHandler.GetAdmission)
-	authGroup.GET("/projects/:id/checks", s.checksHandler.GetChecks)
-	authGroup.PUT("/projects/:id/checks", s.checksHandler.UpdateChecks, s.RequireProjectRole(models.MemberPermissionAdmin))
-	authGroup.POST("/apps/:id/runtime/review", s.appServiceHandler.ReviewRuntime, serviceAuthAdmin)
-	authGroup.POST("/apps/:id/runtime/apply", s.appServiceHandler.ApplyRuntime, serviceAuthAdmin)
-	authGroup.GET("/apps/:id/runtime/observe", s.appServiceHandler.ObserveRuntime, serviceAuth, s.authGuard.RequireScope("logs:read"))
-	authGroup.GET("/apps/:id/runtime/logs", s.appServiceHandler.RuntimeLogs, serviceAuth, s.authGuard.RequireScope("logs:read"))
-	authGroup.GET("/apps/:id/runtime/logs/stream", s.appServiceHandler.RuntimeLogStream, serviceAuth, s.authGuard.RequireScope("logs:read"))
-	authGroup.GET("/apps/:id/runtime/graph", s.appServiceHandler.InstanceGraph, serviceAuth, s.authGuard.RequireScope("logs:read"))
-	authGroup.GET("/apps/:id/runtime/resources", s.appServiceHandler.ResourceSummary, serviceAuth)
-	authGroup.GET("/apps/:id/runtime/exec-terminal", s.appServiceHandler.RuntimeExecTerminal, serviceAuthAdmin, s.authGuard.RequireScope("terminal:write"))
-	authGroup.POST("/apps/:id/runtime/exec", s.appServiceHandler.RuntimeExec, serviceAuthAdmin, s.authGuard.RequireScope("terminal:write"))
-	authGroup.PUT("/apps/:id", s.appServiceHandler.Update, serviceAuthAdmin)
-	authGroup.PUT("/apps/:id/build", s.appServiceHandler.UpdateBuildSettings, serviceAuthAdmin)
-	authGroup.DELETE("/apps/:id", s.appServiceHandler.Delete, serviceAuthOwner)
-	authGroup.POST("/apps/:id/stop", s.appServiceHandler.StopService, serviceAuthAdmin)
-	authGroup.POST("/apps/:id/redeploy", s.appServiceHandler.RedeployService, serviceAuthAdmin)
-	authGroup.POST("/apps/:id/restart", s.appServiceHandler.RestartService, serviceAuthAdmin)
-	appsGroup := authGroup.Group("/apps")
-
-	appsGroup.GET("/:id/webhooks", s.appServiceHandler.ListWebhooks, serviceAuth)
-	appsGroup.POST("/:id/webhooks", s.appServiceHandler.CreateWebhook, serviceAuthAdmin)
-	appsGroup.DELETE("/:id/webhooks/:webhookId", s.appServiceHandler.DeleteWebhook, serviceAuthAdmin)
-	appsGroup.GET("/:id/volumes", s.appServiceHandler.ListVolumes, serviceAuth)
-	appsGroup.POST("/:id/volumes", s.appServiceHandler.CreateVolume, serviceAuthAdmin)
-	appsGroup.DELETE("/:id/volumes/:volumeId", s.appServiceHandler.DeleteVolume, serviceAuthAdmin)
-	appsGroup.POST("/:id/volumes/:volumeId/empty", s.appServiceHandler.EmptyVolume, serviceAuthAdmin)
-	appsGroup.GET("/:id/runtime-updates", s.appServiceHandler.CheckAppRuntimeUpdates, serviceAuth)
-	appsGroup.POST("/:id/runtime-updates", s.appServiceHandler.ApplyAppRuntimeUpdates, serviceAuthAdmin)
-	appsGroup.GET("/:id/log-drains", s.appServiceHandler.ListLogDrains, serviceAuth)
-	appsGroup.POST("/:id/log-drains", s.appServiceHandler.CreateLogDrain, serviceAuthAdmin)
-	appsGroup.DELETE("/:id/log-drains/:drainId", s.appServiceHandler.DeleteLogDrain, serviceAuthAdmin)
-
-	authGroup.GET("/services/:serviceId/variables", s.serviceVarHandler.List, serviceAuth)
-	authGroup.GET("/services/:serviceId/env-suggestions", s.serviceVarHandler.Suggest, serviceAuth)
-	authGroup.POST("/services/:serviceId/variables", s.serviceVarHandler.Create, serviceAuthAdmin)
-	authGroup.PUT("/services/:serviceId/variables/:id", s.serviceVarHandler.Update, serviceAuthAdmin)
-	authGroup.DELETE("/services/:serviceId/variables/:id", s.serviceVarHandler.Delete, serviceAuthAdmin)
-
-	authGroup.GET("/services/:serviceId/serverless/code", s.serverlessHandler.GetCode, serviceAuth)
-	authGroup.POST("/services/:serviceId/serverless/code", s.serverlessHandler.SaveCode, serviceAuthAdmin)
-
 	apiGroup.GET("/services/:serviceId/logs", s.serviceLogsWSHandler.Handle)
 }
 
-func (s *Server) registerDeploymentRoutes(authGroup *echo.Group) {
-	serviceAuthAdmin := s.RequireServiceRole(models.MemberPermissionAdmin)
+func (s *Server) registerDeploymentRoutes(apiGroup, authGroup *echo.Group) {
 	serviceAuth := s.RequireServiceRole("")
 
-	authGroup.GET("/deployments", s.deploymentHandler.ListOrganizationDeployments)
-	authGroup.GET("/deployments/:id", s.deploymentHandler.Get)
-	authGroup.GET("/services/:serviceId/deployments", s.deploymentHandler.ListServiceDeployments, serviceAuth)
-	authGroup.GET("/services/:serviceId/previews", s.deploymentHandler.ListPRPreviews, serviceAuth)
-	authGroup.POST("/services/:serviceId/deploy", s.deploymentHandler.Trigger, serviceAuthAdmin)
-	authGroup.POST("/deployments/:id/rollback", s.deploymentHandler.Rollback)
-	authGroup.POST("/deployments/:id/retry", s.deploymentHandler.Retry)
-	authGroup.POST("/deployments/:id/pin", s.deploymentHandler.TogglePin)
-	authGroup.POST("/deployments/:id/cancel", s.deploymentHandler.Cancel)
-	authGroup.GET("/deployments/:id/logs", s.deploymentHandler.GetLogs, s.authGuard.RequireScope("logs:read"))
-	authGroup.GET("/deployments/:id/explain", s.deploymentHandler.ExplainFailure)
-	authGroup.GET("/services/:serviceId/metrics", s.deploymentHandler.GetMetrics, serviceAuth)
-	authGroup.GET("/services/:serviceId/metrics/historical", s.metricsHandler.GetHistoricalMetrics, serviceAuth)
-	authGroup.GET("/services/:serviceId/autoscaling", s.autoscalingHandler.Get, s.RequireServiceRole(""))
-	authGroup.PUT("/services/:serviceId/autoscaling", s.autoscalingHandler.Save, s.RequireServiceRole(models.MemberPermissionAdmin))
-	authGroup.GET("/services/:serviceId/logs/historical", s.logHandler.GetHistoricalLogs, serviceAuth)
+	deploymentsmod.RegisterRoutes(
+		apiGroup,
+		authGroup,
+		s.deploymentHandler,
+		s.deploymentLifecycleHandler,
+		s.archiveHandler,
+		s.registryHandler,
+		s.terminalHandler,
+		deploymentsmod.RouteMiddleware{
+			Admin:              s.authGuard.RequireRole("admin"),
+			ServiceAuth:        serviceAuth,
+			ServiceAdmin:       s.RequireServiceRole(models.MemberPermissionAdmin),
+			ProjectAuth:        s.RequireProjectRole(""),
+			ProjectAdmin:       s.RequireProjectRole(models.MemberPermissionAdmin),
+			RequireProjectRole: func(r string) echo.MiddlewareFunc { return s.RequireProjectRole(models.MemberPermission(r)) },
+			RequireScope:       s.authGuard.RequireScope,
+		},
+	)
+
+	gitmod.RegisterRoutes(
+		apiGroup,
+		authGroup,
+		s.gitHandler,
+		s.gitInspectionHandler,
+		s.gitAppsHandler,
+		s.webhookHandler,
+		gitmod.RouteMiddleware{
+			Admin:              s.authGuard.RequireRole("admin"),
+			RequireProjectRole: func(r string) echo.MiddlewareFunc { return s.RequireProjectRole(models.MemberPermission(r)) },
+		},
+	)
+
+	if s.metricsHandler != nil {
+		authGroup.GET("/services/:serviceId/metrics/historical", s.metricsHandler.GetHistoricalMetrics, serviceAuth)
+	}
+	if s.logHandler != nil {
+		authGroup.GET("/services/:serviceId/logs/historical", s.logHandler.GetHistoricalLogs, serviceAuth)
+	}
 }
 
 func (s *Server) registerBackupRoutes(authGroup *echo.Group) {
@@ -131,12 +107,6 @@ func (s *Server) registerSettingsRoutes(apiGroup, authGroup *echo.Group) {
 	apiGroup.POST("/settings/updates/deploy", s.updaterHandler.DeployUpdate, s.authGuard.RequireRole("admin"))
 	apiGroup.GET("/settings/oauth/providers", s.oauthHandler.ListProviders, s.authGuard.RequireRole("admin"))
 	apiGroup.PUT("/settings/oauth/providers", s.oauthHandler.SaveProvider, s.authGuard.RequireRole("admin"))
-
-	apiGroup.POST("/settings/git_apps/github/manifest-callback", s.gitAppsHandler.ExchangeGithubManifestCode, s.authGuard.RequireRole("admin"))
-	authGroup.GET("/settings/git_apps/github", s.gitAppsHandler.ListGithubApps)
-	authGroup.GET("/settings/git_apps/github/:id", s.gitAppsHandler.GetGithubApp)
-	apiGroup.PUT("/settings/git_apps/github", s.gitAppsHandler.SaveGithubApp, s.authGuard.RequireRole("admin"))
-	apiGroup.DELETE("/settings/git_apps/github/:id", s.gitAppsHandler.DeleteGithubApp, s.authGuard.RequireRole("admin"))
 	apiGroup.POST("/settings/notifications/test", s.notificationHandler.TestNotification, s.authGuard.RequireRole("admin"))
 }
 
@@ -154,26 +124,7 @@ func (s *Server) registerMiscRoutes(apiGroup, authGroup *echo.Group) {
 	// Chat Apps Integrations (Slack, Discord, Telegram, Teams)
 	chatapps.RegisterRoutes(apiGroup, authGroup, s.chatAppHandler)
 
-	authGroup.GET("/projects/:id/stacks", s.composeStackHandler.List)
-	authGroup.GET("/projects/:id/stacks/:stackId/config", s.composeStackHandler.Config, s.authGuard.RequireScope("env:read"))
-	authGroup.POST("/projects/:id/stacks/review", s.composeStackHandler.Review)
-	authGroup.POST("/projects/:id/stacks", s.composeStackHandler.Save)
-	authGroup.POST("/projects/:id/stacks/:stackId/deploy", s.composeStackHandler.Deploy)
-	authGroup.POST("/projects/:id/stacks/:stackId/cancel", s.composeStackHandler.Cancel)
-	authGroup.POST("/projects/:id/stacks/:stackId/restart", s.composeStackHandler.Restart)
-	authGroup.POST("/projects/:id/stacks/:stackId/stop", s.composeStackHandler.Stop)
-	authGroup.PUT("/environments/:id/canvas", s.canvasHandler.ApplyTopology)
-	authGroup.GET("/environments/:id/canvas/observe", s.canvasHandler.ObserveResource, s.authGuard.RequireScope("logs:read"))
-	authGroup.POST("/compose/deploy", s.composeHandler.Deploy)
-	authGroup.POST("/compose/analyze", s.composeHandler.Analyze)
-	authGroup.POST("/deploy/archive", s.archiveHandler.DeployArchive)
 	authGroup.GET("/examples", s.exampleHandler.List)
-	authGroup.GET("/one-click", s.oneClickHandler.List)
-	authGroup.GET("/one-click/:id", s.oneClickHandler.Get)
-	authGroup.POST("/one-click/review", s.oneClickHandler.Review)
-	authGroup.POST("/one-click/deploy", s.oneClickHandler.Deploy)
-	authGroup.POST("/one-click/custom", s.oneClickHandler.AddCustom)
-	authGroup.DELETE("/one-click/custom/:id", s.oneClickHandler.DeleteCustom)
 	dns.RegisterRoutes(authGroup, s.dnsHandler, s.authGuard.RequireRole("admin"))
 	authGroup.GET("/actions/workflows", s.actionsHandler.ListWorkflows)
 	authGroup.POST("/actions/workflows", s.actionsHandler.CreateWorkflow, s.authGuard.RequireRole("admin"))
@@ -222,24 +173,8 @@ func (s *Server) registerMiscRoutes(apiGroup, authGroup *echo.Group) {
 	authGroup.PUT("/jobs/:id", s.scheduledTaskHandler.Update)
 	authGroup.DELETE("/jobs/:id", s.scheduledTaskHandler.Delete)
 	authGroup.POST("/jobs/:id/trigger", s.scheduledTaskHandler.Run)
-	authGroup.POST("/git/connect", s.gitHandler.Connect)
-	authGroup.GET("/git/status", s.gitHandler.Status)
-	authGroup.DELETE("/git/connect/:provider", s.gitHandler.Disconnect)
-	authGroup.GET("/git/repos", s.gitHandler.ListRepos)
-	authGroup.POST("/git/tree", s.gitHandler.RepoTree)
-	authGroup.GET("/git/tree", s.gitHandler.RepoTree)
-	authGroup.POST("/git/inspect", s.gitHandler.InspectRepository)
-	apiGroup.POST("/webhooks/git/services/:serviceId", s.webhookHandler.HandleServiceWebhook)
-	apiGroup.POST("/webhooks/github/services/:serviceId", s.webhookHandler.HandleGitHubWebhook)
-	apiGroup.POST("/webhooks/github", s.webhookHandler.HandleGitHubWebhook)
-	authGroup.GET("/projects/:id/webhooks/deliveries", s.webhookHandler.ListProjectDeliveries)
-	authGroup.GET("/canvas/projects", s.canvasHandler.ListCanvasSummaries)
-	authGroup.GET("/projects/:id/summary", s.canvasHandler.GetCanvasSummary)
-	authGroup.GET("/environments/:id/canvas", s.canvasHandler.GetEnvironmentCanvas)
 	audit.RegisterRoutes(authGroup, s.auditLogHandler, s.authGuard.RequireRole("admin"))
 	s.registerMcpAndAiRoutes(authGroup)
-	apiGroup.GET("/ws/terminal/:id", s.terminalHandler.HandleWebSocket)
-	apiGroup.GET("/ws/services/:id/terminal", s.terminalHandler.HandleWebSocket)
 }
 
 func (s *Server) registerBillingRoutes(apiGroup, authGroup *echo.Group) {

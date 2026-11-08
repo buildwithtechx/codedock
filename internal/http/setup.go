@@ -16,11 +16,14 @@ import (
 	"codedock/internal/http/mcp"
 	"codedock/internal/http/middleware"
 	"codedock/internal/models"
+	appsmod "codedock/internal/modules/apps"
 	"codedock/internal/modules/audit"
 	"codedock/internal/modules/auth"
 	backupmodule "codedock/internal/modules/backups"
 	"codedock/internal/modules/databases"
+	deploymentsmod "codedock/internal/modules/deployments"
 	"codedock/internal/modules/dns"
+	gitmod "codedock/internal/modules/git"
 	"codedock/internal/modules/organizations"
 	settingsmodule "codedock/internal/modules/settings"
 	"codedock/internal/modules/users"
@@ -33,7 +36,6 @@ import (
 	backup "codedock/internal/platform/storage"
 	"codedock/internal/platform/vault"
 	"codedock/internal/repositories"
-	deploymentservices "codedock/internal/services/deployments"
 	"codedock/internal/services/operations"
 	projectservices "codedock/internal/services/projects"
 	systemservices "codedock/internal/services/system"
@@ -78,7 +80,6 @@ func NewServer(db *sql.DB, v *vault.Vault, deployer *deploy.Deployer, traefikMan
 	if err := deployRepo.RecoverInterrupted(context.Background()); err != nil {
 		return nil, fmt.Errorf("recover deployments: %w", err)
 	}
-	gitRepo := repositories.NewGitRepo(db, v)
 	prPreviewRepository := repositories.NewPRPreviewRepository(db)
 	domainRepo := repositories.NewDomainRepo(db)
 	gitAppRepo := repositories.NewGitAppRepo(db, v)
@@ -95,7 +96,6 @@ func NewServer(db *sql.DB, v *vault.Vault, deployer *deploy.Deployer, traefikMan
 	}
 
 	cronManager := cron.NewCronManager(dockerClient, httpEngineAdapter)
-
 	serverSettings, _ := settingsRepo.GetServerSettings(context.Background())
 	if serverSettings != nil && serverSettings.DockerCleanupCron != "" {
 		_ = cronManager.ScheduleDockerCleanup(serverSettings.DockerCleanupCron)
@@ -161,22 +161,31 @@ func NewServer(db *sql.DB, v *vault.Vault, deployer *deploy.Deployer, traefikMan
 	scheduledTaskService := systemservices.NewScheduledTaskService(scheduledTaskRepo, cronManager)
 	canvasService := projectservices.NewCanvasService(canvasRepo)
 	canvasService.SetRuntime(observability.NewCanvasRuntime(dockerClient))
-	gitService := deploymentservices.NewGitService(gitRepo)
-	statsMonitor := observability.NewStatsMonitor(dockerClient)
-	deploymentService := deploymentservices.NewDeploymentService(deployRepo, appRepo, projectRepo, deployer, gitService, statsMonitor, volumeRepo, sshManager)
-	deploymentService.LocalDocker = dockerClient
-	deploymentService.Databases = dbRepo
-	aiAnalysisService := projectservices.NewAIAnalysisService(deployRepo, appRepo, aiRepo)
 
+	gitProviderRepo := gitmod.NewGitProviderRepository(db, v)
+	gitService := gitmod.NewProviderService(gitProviderRepo)
+	statsMonitor := observability.NewStatsMonitor(dockerClient)
+	deploymentRepo := deploymentsmod.NewDeploymentRepository(db)
+	deploymentService := deploymentsmod.NewDeploymentService(
+		deploymentRepo,
+		&appLookupAdapter{appService: appService},
+		&projectLookupAdapter{projectService: projectService},
+		gitService,
+		&deployEngineAdapter{deployer: deployer, appService: appService},
+		statsMonitor,
+	)
+	deploymentService.SetLocalDocker(dockerClient)
+
+	aiAnalysisService := projectservices.NewAIAnalysisService(deployRepo, appRepo, aiRepo)
 	runtimeRepository := repositories.NewRuntimeRepo(db, v)
 	if err := runtimeRepository.SyncKinds(context.Background()); err != nil {
 		return nil, fmt.Errorf("recover runtime kinds: %w", err)
 	}
-	deploymentService.RuntimeKinds = runtimeRepository
+	deploymentService.SetRuntime(runtimeRepository)
+
 	autoscalingRepo := repositories.NewAutoscalingRepo(db)
-	autoscalingService := projectservices.NewAutoscalingService(autoscalingRepo, appRepo, projectRepo)
-	autoscalingService.SetRuntimes(runtimeRepository)
-	autoscaler := deploy.NewAutoscalerWorker(appRepo, statsMonitor, deploymentService, autoscalingRepo)
+	autoscalingService := appsmod.NewAutoscalingService(appsmod.NewAutoscalingRepository(db), appsmod.NewServerlessRepository(db), appsmod.NewAppServiceRepo(db))
+	autoscaler := deploy.NewAutoscalerWorker(appRepo, statsMonitor, &autoscalerDeploymentAdapter{ds: deploymentService}, autoscalingRepo)
 
 	operationService := operations.NewService(repositories.NewOperationRepo(db, v))
 	if err := operationService.Recover(context.Background()); err != nil {
@@ -212,8 +221,9 @@ func NewServer(db *sql.DB, v *vault.Vault, deployer *deploy.Deployer, traefikMan
 	}
 	configureRemoteBackups(backupManager, projectRepo, serverRepo, sshManager)
 	backupService.SetOperations(operationService)
-	deploymentService.SetRemoteTargets(serverRepo, volumeOperations)
-	deploymentService.BeforeProjectDeployment = backupService.BeforeProjectDeployment
+	deploymentService.BeforeProjectDeployment = func(ctx context.Context, projectID string) error {
+		return backupService.BeforeProjectDeployment(ctx, projectID, "")
+	}
 	deploymentService.BeforeDeployment = backupService.BeforeDeployment
 	autoscaler.Start()
 

@@ -1,11 +1,9 @@
 package apps
 
 import (
-	"net/http"
-
-	"github.com/labstack/echo/v4"
-
 	"codedock/internal/utils"
+	"github.com/labstack/echo/v4"
+	"net/http"
 )
 
 type AutoscalingHandler struct {
@@ -16,8 +14,16 @@ func NewAutoscalingHandler(s *AutoscalingService) *AutoscalingHandler {
 	return &AutoscalingHandler{service: s}
 }
 
+func (h *AutoscalingHandler) getServiceID(c echo.Context) string {
+	id := c.Param("serviceId")
+	if id == "" {
+		id = c.Param("id")
+	}
+	return id
+}
+
 func (h *AutoscalingHandler) Get(c echo.Context) error {
-	serviceID := c.Param("id")
+	serviceID := h.getServiceID(c)
 	if serviceID == "" {
 		return utils.Error(c, http.StatusBadRequest, "missing service id")
 	}
@@ -30,7 +36,7 @@ func (h *AutoscalingHandler) Get(c echo.Context) error {
 }
 
 func (h *AutoscalingHandler) Update(c echo.Context) error {
-	serviceID := c.Param("id")
+	serviceID := h.getServiceID(c)
 	if serviceID == "" {
 		return utils.Error(c, http.StatusBadRequest, "missing service id")
 	}
@@ -48,7 +54,7 @@ func (h *AutoscalingHandler) Update(c echo.Context) error {
 }
 
 func (h *AutoscalingHandler) SaveServerlessCode(c echo.Context) error {
-	serviceID := c.Param("id")
+	serviceID := h.getServiceID(c)
 	if serviceID == "" {
 		return utils.Error(c, http.StatusBadRequest, "missing service id")
 	}
@@ -69,7 +75,7 @@ func (h *AutoscalingHandler) SaveServerlessCode(c echo.Context) error {
 }
 
 func (h *AutoscalingHandler) GetServerlessCode(c echo.Context) error {
-	serviceID := c.Param("id")
+	serviceID := h.getServiceID(c)
 	if serviceID == "" {
 		return utils.Error(c, http.StatusBadRequest, "missing service id")
 	}
