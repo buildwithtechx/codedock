@@ -11,8 +11,8 @@ import (
 
 	"codedock/internal/config"
 	"codedock/internal/models"
+	authservices "codedock/internal/modules/auth"
 	"codedock/internal/repositories"
-	authservices "codedock/internal/services/auth"
 	systemservices "codedock/internal/services/system"
 	"codedock/internal/utils"
 )
@@ -86,7 +86,13 @@ func (h *SystemHandler) CreateLocalCLISession(c echo.Context) error {
 		return utils.Error(c, http.StatusConflict, "No local administrator is available. Complete Codedock setup first.")
 	}
 
-	token, err := h.tokenService.GenerateToken(admin)
+	token, err := h.tokenService.GenerateToken(&authservices.User{
+		ID:            admin.ID,
+		Email:         admin.Email,
+		Role:          authservices.UserRole(admin.Role),
+		EmailVerified: admin.EmailVerified,
+		TOTPEnabled:   admin.TOTPEnabled,
+	})
 	if err != nil {
 		return utils.Error(c, http.StatusInternalServerError, "failed to mint CLI session token")
 	}

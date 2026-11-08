@@ -12,8 +12,8 @@ import (
 	cdkdb "codedock/db"
 	cdkhttp "codedock/internal/http"
 	"codedock/internal/models"
+	authservices "codedock/internal/modules/auth"
 	"codedock/internal/repositories"
-	authservices "codedock/internal/services/auth"
 	"codedock/internal/testdb"
 	"codedock/internal/utils"
 	"github.com/docker/docker/client"
@@ -111,7 +111,13 @@ func TestDeactivatedUserAuthenticationBlocking(t *testing.T) {
 		t.Fatalf("failed to create test user: %v", err)
 	}
 
-	tokenStr, err := tokenService.GenerateToken(user)
+	tokenStr, err := tokenService.GenerateToken(&authservices.User{
+		ID:            user.ID,
+		Email:         user.Email,
+		Role:          authservices.UserRole(user.Role),
+		EmailVerified: user.EmailVerified,
+		TOTPEnabled:   user.TOTPEnabled,
+	})
 	if err != nil {
 		t.Fatalf("failed to generate token: %v", err)
 	}

@@ -6,7 +6,23 @@ import (
 	"time"
 
 	"github.com/google/uuid"
+
+	"codedock/internal/config"
+	"codedock/internal/engine/systemdb"
 )
+
+func NewSystemSnapshotDumper(dataDir string) func(ctx context.Context) ([]byte, error) {
+	return func(ctx context.Context) ([]byte, error) {
+		if databaseURL := config.Get().Database.URL; databaseURL != "" {
+			return systemdb.DumpURL(ctx, databaseURL)
+		}
+		password, err := systemdb.ReadPassword(dataDir)
+		if err != nil {
+			return nil, err
+		}
+		return systemdb.DumpContainer(ctx, systemdb.ContainerName, systemdb.DBUser, systemdb.DBName, password)
+	}
+}
 
 func (r *repo) ProtectRecord(ctx context.Context, id string, until int64) error {
 	r.mu.Lock()
@@ -100,4 +116,26 @@ func (r *repo) LogAudit(ctx context.Context, userID, action, resource, ip string
 	}
 	_, _ = r.db.ExecContext(ctx, `INSERT INTO audit_logs (id, user_id, action, resource, ip_address, created_at) VALUES ($1, $2, $3, $4, $5, $6)`,
 		uuid.NewString(), userID, action, resource, ip, time.Now().UTC().Format(time.RFC3339))
+}
+
+func (r *repo) AuthorizeScheduledRun(ctx context.Context, userID, project string) error {
+	if r.db == nil {
+		return nil
+	}
+	var role string
+	var isActive bool
+	err := r.db.QueryRowContext(ctx, `SELECT role, is_active FROM users WHERE id = $1`, userID).Scan(&role, &isActive)
+	if err != nil || !isActive {
+		return fmt.Errorf("scheduled backup owner is unavailable")
+	}
+	if project == "" {
+		if role != "owner" && role != "admin" {
+			return fmt.Errorf("control-plane backups require an instance administrator")
+		}
+		return nil
+	}
+	if !r.HasProjectPermission(ctx, project, userID, role, "admin") {
+		return fmt.Errorf("scheduled backup owner no longer has project admin access")
+	}
+	return nil
 }

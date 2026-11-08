@@ -6,7 +6,7 @@ import (
 	"fmt"
 	"net/http"
 
-	"codedock/internal/services/databases"
+	"codedock/internal/modules/databases"
 	"codedock/internal/services/projects"
 	"codedock/internal/version"
 	mcpgo "github.com/mark3labs/mcp-go/mcp"

@@ -25,11 +25,17 @@ type Service struct {
 }
 
 func NewService(br ConfigRepository, sr S3Repository, m Manager) *Service {
-	return &Service{
+	svc := &Service{
 		backupRepo: br,
 		s3Repo:     sr,
 		manager:    m,
 	}
+	if authz, ok := br.(interface {
+		AuthorizeScheduledRun(context.Context, string, string) error
+	}); ok {
+		svc.RunAuthorization = authz.AuthorizeScheduledRun
+	}
+	return svc
 }
 
 func (s *Service) SetOperations(service any) {

@@ -4,6 +4,9 @@ import (
 	"github.com/labstack/echo/v4"
 
 	"codedock/internal/models"
+	"codedock/internal/modules/auth"
+	"codedock/internal/modules/databases"
+	mailmodule "codedock/internal/modules/mail"
 	"codedock/internal/utils"
 )
 
@@ -88,36 +91,16 @@ func (s *Server) RequireServiceRole(minPermission models.MemberPermission) echo.
 }
 
 func (s *Server) registerAuthRoutes(apiGroup, authGroup *echo.Group) {
-	apiGroup.GET("/auth/csrf", bootstrapCSRF)
-	apiGroup.POST("/auth/signup", s.authHandler.Register, s.authRateLimiter.Middleware)
-	apiGroup.POST("/auth/signin", s.authHandler.Login, s.authRateLimiter.Middleware)
-	apiGroup.POST("/auth/refresh", s.authHandler.Refresh)
-	apiGroup.POST("/auth/forgot-password", s.authHandler.ForgotPassword, s.authRateLimiter.Middleware)
-	apiGroup.POST("/auth/reset-password", s.authHandler.ResetPassword, s.authRateLimiter.Middleware)
-	apiGroup.POST("/auth/email/resend", s.authHandler.ResendVerificationEmail, s.authRateLimiter.Middleware)
-	apiGroup.POST("/auth/email/verify", s.authHandler.VerifyEmail, s.authRateLimiter.Middleware)
-	apiGroup.POST("/auth/logout", s.authHandler.Logout)
-	authGroup.GET("/auth/me", s.userHandler.GetProfile)
-
-	apiGroup.GET("/auth/oauth/providers/enabled", s.oauthHandler.ListEnabledProviders)
-	apiGroup.GET("/auth/oauth/:provider", s.oauthHandler.OAuthRedirect)
-	apiGroup.GET("/auth/oauth/:provider/callback", s.oauthHandler.OAuthCallback)
-	authGroup.POST("/auth/2fa/setup", s.oauthHandler.Setup2FA)
-	authGroup.POST("/auth/2fa/verify", s.oauthHandler.Verify2FA)
-	authGroup.POST("/auth/2fa/disable", s.oauthHandler.Disable2FA, s.otpRateLimiter.Middleware)
-
-	apiGroup.POST("/auth/device/code", s.deviceFlowHandler.CreateDeviceCode)
-	apiGroup.POST("/auth/device/token", s.deviceFlowHandler.PollDeviceToken)
-	apiGroup.GET("/auth/device/verify", s.deviceFlowHandler.VerifyUserCode)
-	authGroup.POST("/auth/device/authorize", s.deviceFlowHandler.AuthorizeDevice)
-
-	apiGroup.POST("/auth/passkeys/authenticate/options", s.passkeyHandler.BeginAuthentication, s.authRateLimiter.Middleware)
-	apiGroup.POST("/auth/passkeys/authenticate/verify", s.passkeyHandler.FinishAuthentication, s.authRateLimiter.Middleware)
-	authGroup.POST("/auth/passkeys/register/options", s.passkeyHandler.BeginRegistration)
-	authGroup.POST("/auth/passkeys/register/verify", s.passkeyHandler.FinishRegistration)
-	authGroup.GET("/auth/passkeys", s.passkeyHandler.List)
-	authGroup.PUT("/auth/passkeys/:id", s.passkeyHandler.Rename)
-	authGroup.DELETE("/auth/passkeys/:id", s.passkeyHandler.Delete)
+	auth.RegisterAuthRoutes(apiGroup, authGroup, auth.AuthRouteDeps{
+		AuthHandler:       s.authHandler,
+		UserHandler:       s.userHandler,
+		OAuthHandler:      s.oauthHandler,
+		DeviceFlowHandler: s.deviceFlowHandler,
+		PasskeyHandler:    s.passkeyHandler,
+		BootstrapCSRF:     bootstrapCSRF,
+		AuthRateLimit:     s.authRateLimiter.Middleware,
+		OTPRateLimit:      s.otpRateLimiter.Middleware,
+	})
 }
 
 func (s *Server) registerSystemRoutes(apiGroup, authGroup *echo.Group) {
@@ -139,17 +122,7 @@ func (s *Server) registerSystemRoutes(apiGroup, authGroup *echo.Group) {
 }
 
 func (s *Server) registerUserRoutes(apiGroup, authGroup *echo.Group) {
-	authGroup.GET("/users", s.userHandler.ListUsers, s.authGuard.RequireRole("admin"))
-	authGroup.POST("/users/invite", s.authHandler.AdminInviteUser, s.authGuard.RequireRole("admin"))
-	authGroup.DELETE("/users/:id", s.userHandler.DeleteUser, s.authGuard.RequireRole("admin"))
-	authGroup.GET("/profile", s.userHandler.GetProfile)
-	authGroup.PUT("/profile", s.userHandler.UpdateProfile)
-	authGroup.POST("/profile/email/request", s.userHandler.RequestEmailChange)
-	authGroup.POST("/profile/email/verify", s.userHandler.VerifyEmailChange, s.otpRateLimiter.Middleware)
-	authGroup.PUT("/profile/password", s.userHandler.ChangePassword)
-	authGroup.GET("/profile/tokens", s.userHandler.ListPATs)
-	authGroup.POST("/profile/tokens", s.userHandler.CreatePAT)
-	authGroup.DELETE("/profile/tokens/:id", s.userHandler.DeletePAT)
+	auth.RegisterUserRoutes(authGroup, s.userHandler, s.authHandler, s.authGuard.RequireRole("admin"), s.otpRateLimiter.Middleware)
 }
 
 func (s *Server) registerProjectRoutes(apiGroup, authGroup *echo.Group) {
@@ -241,35 +214,19 @@ func (s *Server) registerServerRoutes(apiGroup, authGroup *echo.Group) {
 }
 
 func (s *Server) registerOrganizationRoutes(authGroup *echo.Group) {
-	authGroup.GET("/organizations", s.orgHandler.List)
-	authGroup.POST("/organizations", s.orgHandler.Create)
-	authGroup.GET("/organizations/:id", s.orgHandler.Get, s.authGuard.RequireOrgRole(models.MemberPermissionMember))
-	authGroup.PUT("/organizations/:id", s.orgHandler.Update, s.authGuard.RequireOrgRole(models.MemberPermissionAdmin))
-	authGroup.DELETE("/organizations/:id", s.orgHandler.Delete, s.authGuard.RequireOrgRole(models.MemberPermissionOwner))
-	authGroup.GET("/organizations/:id/members", s.orgHandler.ListMembers, s.authGuard.RequireOrgRole(models.MemberPermissionMember))
-	authGroup.POST("/organizations/:id/members", s.orgHandler.InviteMember, s.authGuard.RequireOrgRole(models.MemberPermissionAdmin))
-	authGroup.PUT("/organizations/:id/members/:userId", s.orgHandler.UpdateMember, s.authGuard.RequireOrgRole(models.MemberPermissionAdmin))
-	authGroup.DELETE("/organizations/:id/members/:memberId", s.orgHandler.RemoveMember, s.authGuard.RequireOrgRole(models.MemberPermissionAdmin))
+	auth.RegisterOrganizationRoutes(
+		authGroup,
+		s.orgHandler,
+		s.authGuard.RequireOrgRole(models.MemberPermissionMember),
+		s.authGuard.RequireOrgRole(models.MemberPermissionAdmin),
+		s.authGuard.RequireOrgRole(models.MemberPermissionOwner),
+	)
 }
 
 func (s *Server) registerDatabaseRoutes(authGroup *echo.Group) {
-	authGroup.GET("/databases", s.dbHandler.ListDatabases, s.authGuard.RequireScope("database:manage"))
-	authGroup.POST("/databases", s.dbHandler.CreateDatabase, s.authGuard.RequireScope("database:manage"))
-	authGroup.GET("/databases/:id", s.dbHandler.GetDatabase, s.authGuard.RequireScope("database:manage"))
-	authGroup.PUT("/databases/:id", s.dbHandler.UpdateDatabase, s.authGuard.RequireScope("database:manage"))
-	authGroup.DELETE("/databases/:id", s.dbHandler.DeleteDatabase, s.authGuard.RequireScope("database:manage"))
-	authGroup.POST("/databases/:id/start", s.dbHandler.StartDatabase, s.authGuard.RequireScope("database:manage"))
-	authGroup.POST("/databases/:id/stop", s.dbHandler.StopDatabase, s.authGuard.RequireScope("database:manage"))
-	authGroup.POST("/databases/:id/restart", s.dbHandler.RestartDatabase, s.authGuard.RequireScope("database:manage"))
-	authGroup.POST("/databases/:id/credentials/reveal", s.dbHandler.RevealCredentials, s.authGuard.RequireScope("database:manage"))
-	authGroup.POST("/databases/:id/query", s.dbHandler.QueryDatabase, s.authGuard.RequireScope("database:manage"))
-	authGroup.POST("/databases/:id/import", s.dbHandler.ImportData, s.authGuard.RequireScope("database:manage"))
+	databases.RegisterRoutes(authGroup, s.dbHandler, s.authGuard.RequireScope)
+}
 
-	authGroup.GET("/databases/:id/schemas", s.dbHandler.GetSchemas, s.authGuard.RequireScope("database:manage"))
-	authGroup.GET("/databases/:id/redis/keys", s.dbHandler.GetRedisKeys, s.authGuard.RequireScope("database:manage"))
-	authGroup.DELETE("/databases/:id/redis/keys/:key", s.dbHandler.DeleteRedisKey, s.authGuard.RequireScope("database:manage"))
-	authGroup.GET("/databases/:id/data/:table", s.dbHandler.GetTableData, s.authGuard.RequireScope("database:manage"))
-	authGroup.POST("/databases/:id/data/:table", s.dbHandler.InsertTableRow, s.authGuard.RequireScope("database:manage"))
-	authGroup.PUT("/databases/:id/data/:table", s.dbHandler.UpdateTableRow, s.authGuard.RequireScope("database:manage"))
-	authGroup.DELETE("/databases/:id/data/:table", s.dbHandler.DeleteTableRow, s.authGuard.RequireScope("database:manage"))
+func (s *Server) registerMailRoutes(authGroup *echo.Group) {
+	mailmodule.RegisterRoutes(authGroup, s.mailHandler)
 }

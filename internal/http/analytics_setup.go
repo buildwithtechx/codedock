@@ -12,11 +12,11 @@ import (
 	"codedock/internal/engine/traffic"
 	"codedock/internal/handlers/system"
 	"codedock/internal/models"
+	"codedock/internal/modules/auth"
 	backupmodule "codedock/internal/modules/backups"
 	"codedock/internal/repositories"
 	"codedock/internal/services/analytics"
 	"codedock/internal/services/attention"
-	authservices "codedock/internal/services/auth"
 	deploymentservices "codedock/internal/services/deployments"
 	"codedock/internal/services/migrations"
 	systemservices "codedock/internal/services/system"
@@ -54,7 +54,7 @@ func configureAnalytics(
 	deploymentService *deploymentservices.DeploymentService,
 	backupService *backupmodule.Service,
 	migrationService *migrations.Service,
-	auditService *authservices.AuditService,
+	auditService *auth.AuditService,
 ) {
 	trafficRepo := repositories.NewTrafficRepository(db)
 	attentionRepo := repositories.NewAttentionRepository(db)

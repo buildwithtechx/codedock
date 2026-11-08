@@ -8,7 +8,7 @@ import (
 	"github.com/labstack/echo/v4"
 
 	"codedock/internal/models"
-	authservices "codedock/internal/services/auth"
+	authservices "codedock/internal/modules/auth"
 	"codedock/internal/utils"
 )
 

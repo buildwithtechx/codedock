@@ -12,7 +12,7 @@ import (
 	"codedock/internal/config"
 	"codedock/internal/http/mcp"
 	aimodule "codedock/internal/modules/ai"
-	"codedock/internal/services/databases"
+	"codedock/internal/modules/databases"
 	"codedock/internal/services/projects"
 	"codedock/internal/version"
 
@@ -138,7 +138,7 @@ func ListResources(ctx context.Context, deps Dependencies) []ResourceTag {
 	if deps.DBService != nil {
 		dbs, _ := deps.DBService.ListDatabases(ctx, "")
 		for _, d := range dbs {
-			items = append(items, ResourceTag{ID: d.ID, Type: "database", Name: d.Name, Subtitle: d.Engine, Status: d.Status, Href: "/projects"})
+			items = append(items, ResourceTag{ID: d.ID, Type: "database", Name: d.Name, Subtitle: string(d.Engine), Status: string(d.Status), Href: "/projects"})
 		}
 	}
 	return items

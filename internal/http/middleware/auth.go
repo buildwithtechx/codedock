@@ -10,8 +10,8 @@ import (
 	"github.com/labstack/echo/v4"
 
 	"codedock/internal/models"
+	"codedock/internal/modules/auth"
 	"codedock/internal/repositories"
-	"codedock/internal/services/auth"
 )
 
 type contextKey string
@@ -19,7 +19,7 @@ type contextKey string
 const userClaimsKey contextKey = "user_claims"
 
 type SettingsProvider interface {
-	GetSettings(context.Context) (*models.ServerSettings, error)
+	GetSettings(context.Context) (*auth.ServerSettings, error)
 }
 
 type ProjectTokenProvider interface {

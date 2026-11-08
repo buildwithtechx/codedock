@@ -22,23 +22,21 @@ import (
 	"codedock/internal/engine/networking"
 	"codedock/internal/engine/observability"
 	"codedock/internal/engine/ssh"
-	"codedock/internal/handlers/auth"
-	"codedock/internal/handlers/databases"
 	"codedock/internal/handlers/deployments"
 	"codedock/internal/handlers/projects"
 	"codedock/internal/handlers/system"
 	"codedock/internal/http/mcp"
 	"codedock/internal/http/middleware"
 	"codedock/internal/models"
+	"codedock/internal/modules/auth"
 	backupmodule "codedock/internal/modules/backups"
 	"codedock/internal/modules/chatapps"
+	"codedock/internal/modules/databases"
 	"codedock/internal/modules/dns"
 	mailmodule "codedock/internal/modules/mail"
 	"codedock/internal/modules/security"
 	"codedock/internal/notifications"
 	"codedock/internal/repositories"
-	authservices "codedock/internal/services/auth"
-	databaseservices "codedock/internal/services/databases"
 	deploymentservices "codedock/internal/services/deployments"
 	"codedock/internal/services/operations"
 	projectservices "codedock/internal/services/projects"
@@ -74,7 +72,7 @@ func NewServer(db *sql.DB, v *utils.Vault, deployer *deploy.Deployer, traefikMan
 	envVarRepo := repositories.NewEnvRepo(db, v)
 	scheduledTaskRepo := repositories.NewScheduledTaskRepo(db)
 	backupRepo := repositories.NewBackupRepo(db, v)
-	backupRepo.SetSnapshotDumper(newSystemSnapshotDumper(dataDir))
+	backupRepo.SetSnapshotDumper(backupmodule.NewSystemSnapshotDumper(dataDir))
 	s3DestinationRepo := repositories.NewS3DestinationRepo(db, v)
 	serverlessRepository := repositories.NewServerlessRepository(db)
 	projectSettingsRepo := repositories.NewProjectSettingsRepo(db)
@@ -86,17 +84,13 @@ func NewServer(db *sql.DB, v *utils.Vault, deployer *deploy.Deployer, traefikMan
 	if err := deployRepo.RecoverInterrupted(context.Background()); err != nil {
 		return nil, fmt.Errorf("recover deployments: %w", err)
 	}
-	oauthRepo := repositories.NewOAuthRepo(db)
 	gitRepo := repositories.NewGitRepo(db, v)
 	prPreviewRepository := repositories.NewPRPreviewRepository(db)
 	domainRepo := repositories.NewDomainRepo(db)
 	gitAppRepo := repositories.NewGitAppRepo(db, v)
 	dnsRepo := dns.NewRepository(db)
-	auditRepository := repositories.NewAuditLogRepo(db)
 	volumeRepo := repositories.NewServiceVolumeRepo(db)
 	orgRepo := repositories.NewOrganizationRepository(db)
-	refreshTokenRepo := repositories.NewRefreshTokenRepo(db)
-	passkeyRepo := repositories.NewPasskeyRepo(db)
 	webhookDeliveryRepo := repositories.NewWebhookDeliveryRepo(db)
 
 	httpEngineAdapter := newEngineAdapter(settingsRepo, appRepo, envVarRepo, dbRepo, projectRepo, scheduledTaskRepo, backupRepo, s3DestinationRepo, serviceVarRepo, serverlessRepository)
@@ -105,8 +99,6 @@ func NewServer(db *sql.DB, v *utils.Vault, deployer *deploy.Deployer, traefikMan
 	if deployer != nil {
 		deployer.SetVolumeOperations(volumeOperations)
 	}
-	databaseDeployer := deploy.NewDatabaseDeployer(dockerClient, httpEngineAdapter)
-	databaseDeployer.SetVolumeOperations(volumeOperations)
 
 	cronManager := cron.NewCronManager(dockerClient, httpEngineAdapter)
 
@@ -124,12 +116,8 @@ func NewServer(db *sql.DB, v *utils.Vault, deployer *deploy.Deployer, traefikMan
 	projectService := projectservices.NewProjectService(projectRepo, environmentRepo, appRepo, serviceVarRepo, settingsRepo, orgRepo)
 	projectAppService := projectservices.NewProjectAppService(projectAppRepo)
 	appService := projectservices.NewAppService(appRepo, serviceVarRepo, volumeRepo)
-	databaseService := databaseservices.NewDatabaseService(dbRepo, databaseDeployer)
-	tokenService, err := authservices.NewTokenService()
-	if err != nil {
-		return nil, fmt.Errorf("token service: %w", err)
-	}
-	settingsService := authservices.NewSettingsService(settingsRepo)
+	dbModRepo := databases.NewRepository(db, v)
+	databaseService := databases.NewService(dbModRepo, databases.NewDockerDeployer(dockerClient, dbModRepo, volumeOperations))
 	deviceTokenRepo := repositories.NewDeviceTokenRepo(db)
 	notifSettingsService := systemservices.NewNotificationSettingsService(notifRepo, repositories.NewNotificationDeliveryRepo(db), deviceTokenRepo)
 	aiSettingsService := projectservices.NewAISettingsService(aiRepo)
@@ -140,8 +128,15 @@ func NewServer(db *sql.DB, v *utils.Vault, deployer *deploy.Deployer, traefikMan
 	if err != nil {
 		return nil, fmt.Errorf("mailer service: %w", err)
 	}
-	authService := authservices.NewAuthService(userRepo, settingsRepo, notifRepo, projectSettingsRepo, tokenService, mailerService, refreshTokenRepo)
-	projectSettingsService := projectservices.NewProjectSettingsService(projectSettingsRepo, userRepo, authService)
+	authMod, err := auth.NewModule(db, v, mailerService)
+	if err != nil {
+		return nil, err
+	}
+	tokenService := authMod.TokenService
+	settingsService := authMod.SettingsService
+	auditService := authMod.AuditService
+	userService := authMod.UserService
+	projectSettingsService := projectservices.NewProjectSettingsService(projectSettingsRepo, userRepo, authMod.AuthService)
 	dispatcherService := core.NewDispatcherService(settingsRepo, notifRepo, userRepo, repositories.NewNotificationDeliveryRepo(db), mailerService, deviceTokenRepo)
 
 	deploymentListeners := core.NewDeploymentListeners(dispatcherService, appRepo)
@@ -166,7 +161,6 @@ func NewServer(db *sql.DB, v *utils.Vault, deployer *deploy.Deployer, traefikMan
 	scheduledTaskService := systemservices.NewScheduledTaskService(scheduledTaskRepo, cronManager)
 	canvasService := projectservices.NewCanvasService(canvasRepo)
 	canvasService.SetRuntime(observability.NewCanvasRuntime(dockerClient))
-	orgService := authservices.NewOrganizationService(orgRepo, userRepo)
 	gitService := deploymentservices.NewGitService(gitRepo)
 	statsMonitor := observability.NewStatsMonitor(dockerClient)
 	deploymentService := deploymentservices.NewDeploymentService(deployRepo, appRepo, projectRepo, deployer, gitService, statsMonitor, volumeRepo, sshManager)
@@ -190,7 +184,7 @@ func NewServer(db *sql.DB, v *utils.Vault, deployer *deploy.Deployer, traefikMan
 		return nil, fmt.Errorf("recover operations: %w", err)
 	}
 	backupModRepo := backupmodule.NewRepository(db, v)
-	backupModRepo.SetSnapshotDumper(newSystemSnapshotDumper(dataDir))
+	backupModRepo.SetSnapshotDumper(backupmodule.NewSystemSnapshotDumper(dataDir))
 	backupService := backupmodule.NewService(backupModRepo, backupModRepo, backupmodule.NewManager(backupManager))
 	backupService.SetBatches(backupModRepo)
 	backupService.SetSFTP(backupmodule.NewSFTPRepository(db))
@@ -219,13 +213,10 @@ func NewServer(db *sql.DB, v *utils.Vault, deployer *deploy.Deployer, traefikMan
 	}
 	configureRemoteBackups(backupManager, projectRepo, serverRepo, sshManager)
 	backupService.SetOperations(operationService)
-	configureScheduledBackupAuthorization(backupService, userRepo, projectService)
 	deploymentService.SetRemoteTargets(serverRepo, volumeOperations)
 	deploymentService.BeforeProjectDeployment = backupService.BeforeProjectDeployment
 	deploymentService.BeforeDeployment = backupService.BeforeDeployment
 	autoscaler.Start()
-	userService := authservices.NewUserService(userRepo)
-	oAuthService := authservices.NewOAuthService(oauthRepo, userRepo, tokenService)
 	prPreviewService := deploymentservices.NewPRPreviewService(prPreviewRepository, appService, gitService, deployer, sshManager, projectRepo)
 	dnsProviderService := dns.NewProviderService(settingsRepo)
 	environmentService := projectservices.NewEnvironmentService(environmentRepo, domainRepo, envVarRepo, dnsProviderService)
@@ -236,7 +227,6 @@ func NewServer(db *sql.DB, v *utils.Vault, deployer *deploy.Deployer, traefikMan
 	envSuggestionService := projectservices.NewEnvSuggestionService(gitService)
 	metricsService := systemservices.NewMetricsService()
 	logService := systemservices.NewLogService()
-	auditService := authservices.NewAuditService(auditRepository, authservices.NewAuditResourceSearcher(projectRepo, serverRepo, dbRepo, appRepo))
 
 	updaterService := systemservices.NewUpdaterService(settingsRepo)
 	schedulerElector := leadership.NewElector(db, "scheduled-execution")
@@ -249,14 +239,13 @@ func NewServer(db *sql.DB, v *utils.Vault, deployer *deploy.Deployer, traefikMan
 	authGuard.PersonalResources = repositories.NewPersonalTokenResources(db)
 
 	appHandler := projects.NewAppHandler(appService, projectService, deployer, deploymentService, environmentService, auditService)
-	databaseHandler := databases.NewDatabaseHandler(databaseService, projectService, auditService)
+	databaseHandler := databases.NewHandler(databaseService)
 	scheduledTaskHandler := system.NewScheduledTaskHandler(scheduledTaskService, appService, projectService)
 	canvasHandler := projects.NewCanvasHandler(canvasService, projectService)
 	terminalHandler := deployments.NewTerminalHandler(dockerClient, tokenService, appService, projectService, userRepo)
 	terminalHandler.Targets = deploymentService
 	projectHandler := projects.NewProjectHandler(projectService, projectSettingsService)
 	projectAppHandler := projects.NewProjectAppHandler(projectAppService, projectService)
-	orgHandler := auth.NewOrganizationHandler(orgService, auditService)
 	environmentHandler := projects.NewEnvironmentHandler(environmentService, projectService)
 	deploymentHandler := deployments.NewDeploymentHandler(deploymentService, appService, auditService, aiAnalysisService, prPreviewService, projectService)
 	retentionService := deploymentservices.NewRetentionService(projectRepo, deployRepo, deploymentService.DockerForProject)
@@ -271,20 +260,9 @@ func NewServer(db *sql.DB, v *utils.Vault, deployer *deploy.Deployer, traefikMan
 	projectSettingsHandler := projects.NewProjectSettingsHandler(projectSettingsService)
 	backupHandler := backupmodule.NewHandler(backupService)
 	backupHandler.SetOperations(operationService)
-	settingsHandler := auth.NewSettingsHandler(settingsService, notifSettingsService)
 	notifSettingsHandler := system.NewNotificationSettingsHandler(notifSettingsService, orgRepo)
 	aiSettingsHandler := system.NewAISettingsHandler(aiSettingsService)
 	updaterHandler := system.NewUpdaterHandler(updaterService)
-	userHandler := auth.NewUserHandler(userService, mailerService, auditService)
-	authHandler := auth.NewAuthHandler(authService, auditService)
-	oAuthHandler := auth.NewOAuthHandler(oAuthService)
-	deviceFlowService := authservices.NewDeviceFlowService()
-	deviceFlowHandler := auth.NewDeviceFlowHandler(deviceFlowService, userService, auditService)
-	passkeyService, err := authservices.NewPasskeyService(passkeyRepo, userRepo, tokenService, refreshTokenRepo, auditService)
-	if err != nil {
-		return nil, fmt.Errorf("initialize passkey service: %w", err)
-	}
-	passkeyHandler := auth.NewPasskeyHandler(passkeyService)
 	gitHandler := deployments.NewGitHandler(gitService)
 	webhookDeliveryService := deploymentservices.NewWebhookDeliveryService(webhookDeliveryRepo)
 	webhookDispatcher := deploymentservices.NewWebhookDispatcher(webhookDeliveryService, deploymentService, appService, gitAppsService, prPreviewService)
@@ -315,12 +293,9 @@ func NewServer(db *sql.DB, v *utils.Vault, deployer *deploy.Deployer, traefikMan
 	systemHandler := system.NewSystemHandler(systemService, userRepo, tokenService)
 	migrationService := systemservices.NewMigrationService(db, dbRepo, dataDir, config.Get().Database.URL)
 	migrationHandler := system.NewMigrationHandler(migrationService, userService)
-	onboardingHandler := auth.NewOnboardingHandler(userService)
-	appearanceHandler := auth.NewAppearanceHandler(userRepo)
-	dnsHandler := dns.NewHandler(dnsService, auditService)
+	dnsHandler := dns.NewHandler(dnsService)
 	metricsHandler := system.NewMetricsHandler(metricsService)
 	logHandler := system.NewLogHandler(logService)
-	auditLogHandler := auth.NewAuditLogHandler(auditService)
 	exampleService := systemservices.NewExampleService()
 	exampleHandler := system.NewExampleHandler(exampleService)
 
@@ -404,21 +379,21 @@ func NewServer(db *sql.DB, v *utils.Vault, deployer *deploy.Deployer, traefikMan
 		serviceVarHandler:       serviceVarHandler,
 		projectSettingsHandler:  projectSettingsHandler,
 		backupHandler:           backupHandler,
-		settingsHandler:         settingsHandler,
-		appearanceHandler:       appearanceHandler,
+		settingsHandler:         authMod.SettingsHandler,
+		appearanceHandler:       authMod.AppearanceHandler,
 		notifSettingsHandler:    notifSettingsHandler,
 		aiSettingsHandler:       aiSettingsHandler,
 		updaterHandler:          updaterHandler,
-		userHandler:             userHandler,
-		authHandler:             authHandler,
-		oauthHandler:            oAuthHandler,
-		deviceFlowHandler:       deviceFlowHandler,
-		passkeyHandler:          passkeyHandler,
+		userHandler:             authMod.UserHandler,
+		authHandler:             authMod.AuthHandler,
+		oauthHandler:            authMod.OAuthHandler,
+		deviceFlowHandler:       authMod.DeviceFlowHandler,
+		passkeyHandler:          authMod.PasskeyHandler,
 		gitHandler:              gitHandler,
 		webhookHandler:          webhookHandler,
 		projectHandler:          projectHandler,
 		projectAppHandler:       projectAppHandler,
-		orgHandler:              orgHandler,
+		orgHandler:              authMod.OrgHandler,
 		environmentHandler:      environmentHandler,
 		domainHandler:           domainHandler,
 		projectEnvHandler:       projectEnvHandler,
@@ -432,11 +407,11 @@ func NewServer(db *sql.DB, v *utils.Vault, deployer *deploy.Deployer, traefikMan
 		oneClickHandler:         oneClickHandler,
 		archiveHandler:          archiveHandler,
 		migrationHandler:        migrationHandler,
-		onboardingHandler:       onboardingHandler,
+		onboardingHandler:       authMod.OnboardingHandler,
 		dnsHandler:              dnsHandler,
 		metricsHandler:          metricsHandler,
 		logHandler:              logHandler,
-		auditLogHandler:         auditLogHandler,
+		auditLogHandler:         authMod.AuditLogHandler,
 		exampleHandler:          exampleHandler,
 		serverHandler:           serverHandler,
 		sshManager:              sshManager,

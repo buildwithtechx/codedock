@@ -6,17 +6,15 @@ import (
 
 	"github.com/labstack/echo/v4"
 
-	authservices "codedock/internal/services/auth"
 	"codedock/internal/utils"
 )
 
 type Handler struct {
-	dnsService   *Service
-	auditService *authservices.AuditService
+	dnsService *Service
 }
 
-func NewHandler(dnsService *Service, auditService *authservices.AuditService) *Handler {
-	return &Handler{dnsService: dnsService, auditService: auditService}
+func NewHandler(dnsService *Service) *Handler {
+	return &Handler{dnsService: dnsService}
 }
 
 func (h *Handler) Create(c echo.Context) error {
@@ -33,14 +31,9 @@ func (h *Handler) Create(c echo.Context) error {
 		return utils.Error(c, http.StatusInternalServerError, err.Error())
 	}
 
-	if h.auditService != nil {
-		h.auditService.LogAction(c.Request().Context(), authservices.AuditActionOpts{
-			UserID:    utils.AuditActorID(c),
-			Action:    "dns.create",
-			Resource:  record.ID,
-			IPAddress: c.RealIP(),
-			Details:   map[string]string{"domain": req.DomainName, "record": req.RecordName, "type": req.RecordType},
-		})
+	if h.dnsService != nil {
+		h.dnsService.LogAction(c.Request().Context(), utils.AuditActorID(c), "dns.create", record.ID, c.RealIP(),
+			map[string]string{"domain": req.DomainName, "record": req.RecordName, "type": req.RecordType})
 	}
 	return utils.Created(c, "DNS record created successfully", record)
 }
@@ -91,13 +84,8 @@ func (h *Handler) Delete(c echo.Context) error {
 		return utils.Error(c, http.StatusInternalServerError, err.Error())
 	}
 
-	if h.auditService != nil {
-		h.auditService.LogAction(c.Request().Context(), authservices.AuditActionOpts{
-			UserID:    utils.AuditActorID(c),
-			Action:    "dns.delete",
-			Resource:  id,
-			IPAddress: c.RealIP(),
-		})
+	if h.dnsService != nil {
+		h.dnsService.LogAction(c.Request().Context(), utils.AuditActorID(c), "dns.delete", id, c.RealIP(), nil)
 	}
 	return c.NoContent(http.StatusNoContent)
 }

@@ -1,0 +1,160 @@
+package databases
+
+import (
+	"net/http"
+	"strconv"
+
+	"github.com/labstack/echo/v4"
+
+	"codedock/internal/http/middleware"
+	"codedock/internal/utils"
+)
+
+func (h *Handler) GetSchemas(c echo.Context) error {
+	id := c.Param("id")
+	db, err := h.service.GetDatabase(c.Request().Context(), id)
+	if err != nil || db == nil {
+		return utils.Error(c, http.StatusNotFound, "database not found")
+	}
+	if err := h.verifyProjectOwnership(c, db.ProjectID); err != nil {
+		return err
+	}
+	schemas, err := h.service.GetSchemas(c.Request().Context(), id)
+	if err != nil {
+		return utils.Error(c, http.StatusInternalServerError, err.Error())
+	}
+	return utils.Success(c, "Operation successful", schemas)
+}
+
+func (h *Handler) GetTableData(c echo.Context) error {
+	id := c.Param("id")
+	table := c.Param("table")
+	limit, _ := strconv.Atoi(c.QueryParam("limit"))
+	if limit <= 0 {
+		limit = 100
+	}
+	offset, _ := strconv.Atoi(c.QueryParam("offset"))
+
+	db, err := h.service.GetDatabase(c.Request().Context(), id)
+	if err != nil || db == nil {
+		return utils.Error(c, http.StatusNotFound, "database not found")
+	}
+	if err := h.verifyProjectOwnership(c, db.ProjectID); err != nil {
+		return err
+	}
+	data, err := h.service.GetTableData(c.Request().Context(), id, table, limit, offset)
+	if err != nil {
+		return utils.Error(c, http.StatusInternalServerError, err.Error())
+	}
+	return utils.Success(c, "Operation successful", data)
+}
+
+func (h *Handler) InsertTableRow(c echo.Context) error {
+	id := c.Param("id")
+	table := c.Param("table")
+	db, err := h.service.GetDatabase(c.Request().Context(), id)
+	if err != nil || db == nil {
+		return utils.Error(c, http.StatusNotFound, "database not found")
+	}
+	if err := h.verifyProjectOwnership(c, db.ProjectID); err != nil {
+		return err
+	}
+	var data map[string]any
+	if err := c.Bind(&data); err != nil {
+		return utils.Error(c, http.StatusBadRequest, "invalid payload")
+	}
+	res, err := h.service.InsertTableRow(c.Request().Context(), id, table, data)
+	if err != nil {
+		return utils.Error(c, http.StatusInternalServerError, err.Error())
+	}
+	h.logDataBrowserAudit(c, "database.table.insert", id, table)
+	return utils.Success(c, "Operation successful", res)
+}
+
+func (h *Handler) UpdateTableRow(c echo.Context) error {
+	id := c.Param("id")
+	table := c.Param("table")
+	db, err := h.service.GetDatabase(c.Request().Context(), id)
+	if err != nil || db == nil {
+		return utils.Error(c, http.StatusNotFound, "database not found")
+	}
+	if err := h.verifyProjectOwnership(c, db.ProjectID); err != nil {
+		return err
+	}
+	var req map[string]map[string]any
+	if err := c.Bind(&req); err != nil {
+		return utils.Error(c, http.StatusBadRequest, "invalid payload")
+	}
+	opts := UpdateTableRowOpts{
+		ID:    id,
+		Table: table,
+		Keys:  req["keys"],
+		Data:  req["data"],
+	}
+	res, err := h.service.UpdateTableRow(c.Request().Context(), opts)
+	if err != nil {
+		return utils.Error(c, http.StatusInternalServerError, err.Error())
+	}
+	h.logDataBrowserAudit(c, "database.table.update", id, table)
+	return utils.Success(c, "Operation successful", res)
+}
+
+func (h *Handler) DeleteTableRow(c echo.Context) error {
+	id := c.Param("id")
+	table := c.Param("table")
+	db, err := h.service.GetDatabase(c.Request().Context(), id)
+	if err != nil || db == nil {
+		return utils.Error(c, http.StatusNotFound, "database not found")
+	}
+	if err := h.verifyProjectOwnership(c, db.ProjectID); err != nil {
+		return err
+	}
+	var keys map[string]any
+	if err := c.Bind(&keys); err != nil {
+		return utils.Error(c, http.StatusBadRequest, "invalid payload")
+	}
+	res, err := h.service.DeleteTableRow(c.Request().Context(), id, table, keys)
+	if err != nil {
+		return utils.Error(c, http.StatusInternalServerError, err.Error())
+	}
+	h.logDataBrowserAudit(c, "database.table.delete", id, table)
+	return utils.Success(c, "Operation successful", res)
+}
+
+func (h *Handler) GetRedisKeys(c echo.Context) error {
+	id := c.Param("id")
+	db, err := h.service.GetDatabase(c.Request().Context(), id)
+	if err != nil || db == nil {
+		return utils.Error(c, http.StatusNotFound, "database not found")
+	}
+	if err := h.verifyProjectOwnership(c, db.ProjectID); err != nil {
+		return err
+	}
+	return utils.Success(c, "Operation successful", []map[string]any{})
+}
+
+func (h *Handler) DeleteRedisKey(c echo.Context) error {
+	id := c.Param("id")
+	db, err := h.service.GetDatabase(c.Request().Context(), id)
+	if err != nil || db == nil {
+		return utils.Error(c, http.StatusNotFound, "database not found")
+	}
+	if err := h.verifyProjectOwnership(c, db.ProjectID); err != nil {
+		return err
+	}
+	return utils.Success(c, "Operation successful", nil)
+}
+
+func (h *Handler) logDataBrowserAudit(c echo.Context, action, databaseID, tableName string) {
+	userID := ""
+	if user := middleware.GetUserClaimsFromContext(c.Request().Context()); user != nil {
+		userID = user.UserID
+	}
+	h.service.LogAction(c.Request().Context(), AuditLogEntry{
+		UserID:    userID,
+		Action:    action,
+		Resource:  databaseID,
+		IPAddress: c.RealIP(),
+		Details:   map[string]any{"table": tableName, "database_id": databaseID},
+	})
+}

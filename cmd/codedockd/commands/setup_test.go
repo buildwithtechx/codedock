@@ -10,9 +10,8 @@ import (
 	_ "github.com/jackc/pgx/v5/stdlib"
 
 	"codedock/internal/config"
-	"codedock/internal/models"
+	"codedock/internal/modules/auth"
 	"codedock/internal/repositories"
-	authservices "codedock/internal/services/auth"
 )
 
 func setupTestDatabaseURL(t *testing.T) string {
@@ -69,11 +68,11 @@ func TestFirstRunWithoutEnvironmentAndSavedSetup(t *testing.T) {
 			t.Error(err)
 		}
 	}()
-	tokens, err := authservices.NewTokenService()
+	tokens, err := auth.NewTokenService()
 	if err != nil {
 		t.Fatal(err)
 	}
-	token, err := tokens.GenerateToken(&models.User{ID: "owner", Email: "owner@example.com", Role: models.UserRoleOwner})
+	token, err := tokens.GenerateToken(&auth.User{ID: "owner", Email: "owner@example.com", Role: auth.UserRoleOwner})
 	if err != nil {
 		t.Fatal(err)
 	}
@@ -92,7 +91,7 @@ func TestFirstRunWithoutEnvironmentAndSavedSetup(t *testing.T) {
 	if err := config.PrepareSelfHosted(context.Background(), cfg, repositories.NewSelfHostedRepo(db)); err != nil {
 		t.Fatal(err)
 	}
-	restarted, err := authservices.NewTokenService()
+	restarted, err := auth.NewTokenService()
 	if err != nil {
 		t.Fatal(err)
 	}

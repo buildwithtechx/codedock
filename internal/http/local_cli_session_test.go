@@ -14,7 +14,7 @@ import (
 	"codedock/internal/config"
 	"codedock/internal/handlers/system"
 	"codedock/internal/models"
-	authservices "codedock/internal/services/auth"
+	authservices "codedock/internal/modules/auth"
 	systemservices "codedock/internal/services/system"
 )
 

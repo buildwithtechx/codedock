@@ -3,6 +3,7 @@ package dns
 import (
 	"context"
 	"database/sql"
+	"encoding/json"
 	"errors"
 	"sync"
 	"time"
@@ -99,4 +100,16 @@ func (r *repo) Delete(ctx context.Context, id string) error {
 
 	_, err := r.db.ExecContext(ctx, `DELETE FROM dns_records WHERE id = $1`, id)
 	return err
+}
+
+func (r *repo) LogAction(ctx context.Context, userID, action, resource, ipAddress string, details any) {
+	if r.db == nil {
+		return
+	}
+	detailsJSON, _ := json.Marshal(details)
+	_, _ = r.db.ExecContext(ctx, `
+		INSERT INTO audit_logs (id, user_id, action, resource, ip_address, details, created_at)
+		VALUES ($1, $2, $3, $4, $5, $6, $7)`,
+		uuid.NewString(), userID, action, resource, ipAddress, string(detailsJSON), time.Now().UTC(),
+	)
 }

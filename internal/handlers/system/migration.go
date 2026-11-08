@@ -10,7 +10,7 @@ import (
 	"github.com/labstack/echo/v4"
 
 	"codedock/internal/http/middleware"
-	"codedock/internal/repositories"
+	"codedock/internal/modules/auth"
 	systemservices "codedock/internal/services/system"
 	"codedock/internal/utils"
 )
@@ -76,8 +76,8 @@ func (h *MigrationHandler) ImportDuringSetup(c echo.Context) error {
 
 	c.Request().Body = http.MaxBytesReader(c.Response().Writer, c.Request().Body, maxSetupBundleUploadBytes)
 
-	repositories.FirstUserSetupLock.Lock()
-	defer repositories.FirstUserSetupLock.Unlock()
+	auth.FirstUserSetupLock.Lock()
+	defer auth.FirstUserSetupLock.Unlock()
 
 	count, err := h.userCounter.CountUsers(c.Request().Context())
 	if err != nil {

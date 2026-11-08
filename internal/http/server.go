@@ -13,19 +13,18 @@ import (
 	"codedock/internal/engine/deploy"
 	"codedock/internal/engine/networking"
 	"codedock/internal/engine/ssh"
-	"codedock/internal/handlers/auth"
-	"codedock/internal/handlers/databases"
 	"codedock/internal/handlers/deployments"
 	"codedock/internal/handlers/projects"
 	"codedock/internal/handlers/system"
 	"codedock/internal/http/mcp"
 	"codedock/internal/http/middleware"
 	"codedock/internal/models"
+	"codedock/internal/modules/auth"
 	backupmodule "codedock/internal/modules/backups"
 	"codedock/internal/modules/chatapps"
+	"codedock/internal/modules/databases"
 	"codedock/internal/modules/dns"
 	mailmodule "codedock/internal/modules/mail"
-	authservices "codedock/internal/services/auth"
 	"codedock/internal/services/migrations"
 	projectservices "codedock/internal/services/projects"
 )
@@ -43,7 +42,7 @@ type Server struct {
 	traefikManager            *networking.TraefikManager
 	dockerClient              *client.Client
 	sshManager                *ssh.SSHManager
-	tokenService              *authservices.TokenService
+	tokenService              *auth.TokenService
 	authGuard                 *middleware.AuthGuard
 	cronManager               *cron.CronManager
 	serviceLinker             *projectservices.ServiceLinker
@@ -143,4 +142,23 @@ func (s *Server) HandleMCPSSE(c echo.Context) error {
 func (s *Server) HandleMCPMessage(c echo.Context) error {
 	s.mcpBridge.SSEServer().MessageHandler().ServeHTTP(c.Response().Writer, c.Request())
 	return nil
+}
+
+func (s *Server) RequireProjectRole(permission models.MemberPermission) echo.MiddlewareFunc {
+	return func(next echo.HandlerFunc) echo.HandlerFunc {
+		return func(c echo.Context) error {
+			user := middleware.GetUserClaimsFromContext(c.Request().Context())
+			if user == nil {
+				return echo.NewHTTPError(http.StatusUnauthorized, "unauthorized")
+			}
+			project := c.Param("id")
+			if selected, ok := c.Get("project_id").(string); ok && selected != "" && selected != project {
+				return echo.NewHTTPError(http.StatusForbidden, "token does not have access to this project")
+			}
+			if !s.projectService.HasPermission(c.Request().Context(), project, user.UserID, models.UserRole(user.Role), permission) {
+				return echo.NewHTTPError(http.StatusForbidden, "project permission required")
+			}
+			return next(c)
+		}
+	}
 }

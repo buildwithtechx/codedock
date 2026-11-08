@@ -19,7 +19,7 @@ func TestDNSHandler_Create_InvalidPayload(t *testing.T) {
 
 	repo := newMemoryDNSRepo()
 	svc := NewService(repo, nil)
-	h := NewHandler(svc, nil)
+	h := NewHandler(svc)
 
 	err := h.Create(c)
 	if err != nil {
@@ -40,7 +40,7 @@ func TestDNSHandler_Create_Success(t *testing.T) {
 
 	repo := newMemoryDNSRepo()
 	svc := NewService(repo, nil)
-	h := NewHandler(svc, nil)
+	h := NewHandler(svc)
 
 	err := h.Create(c)
 	if err != nil {
@@ -61,7 +61,7 @@ func TestDNSHandler_Delete_MissingID(t *testing.T) {
 
 	repo := newMemoryDNSRepo()
 	svc := NewService(repo, nil)
-	h := NewHandler(svc, nil)
+	h := NewHandler(svc)
 
 	err := h.Delete(c)
 	if err != nil {
@@ -87,7 +87,7 @@ func TestDNSHandler_List_Success(t *testing.T) {
 		RecordValue: "10.0.0.1",
 	})
 	svc := NewService(repo, nil)
-	h := NewHandler(svc, nil)
+	h := NewHandler(svc)
 
 	err := h.List(c)
 	if err != nil {

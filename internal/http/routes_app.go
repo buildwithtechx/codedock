@@ -9,6 +9,7 @@ import (
 	"codedock/internal/config"
 	"codedock/internal/models"
 	"codedock/internal/modules/ai"
+	"codedock/internal/modules/auth"
 	backupmodule "codedock/internal/modules/backups"
 	"codedock/internal/modules/chatapps"
 	"codedock/internal/modules/dns"
@@ -235,10 +236,7 @@ func (s *Server) registerMiscRoutes(apiGroup, authGroup *echo.Group) {
 	authGroup.GET("/canvas/projects", s.canvasHandler.ListCanvasSummaries)
 	authGroup.GET("/projects/:id/summary", s.canvasHandler.GetCanvasSummary)
 	authGroup.GET("/environments/:id/canvas", s.canvasHandler.GetEnvironmentCanvas)
-	authGroup.GET("/audit-logs", s.auditLogHandler.List, s.authGuard.RequireRole("admin"))
-	authGroup.GET("/audit-logs/facets", s.auditLogHandler.Facets, s.authGuard.RequireRole("admin"))
-	authGroup.GET("/audit-logs/settings", s.auditLogHandler.GetSettings, s.authGuard.RequireRole("admin"))
-	authGroup.PUT("/audit-logs/settings", s.auditLogHandler.UpdateSettings, s.authGuard.RequireRole("admin"))
+	auth.RegisterAuditRoutes(authGroup, s.auditLogHandler, s.authGuard.RequireRole("admin"))
 	s.registerMcpAndAiRoutes(authGroup)
 	apiGroup.GET("/ws/terminal/:id", s.terminalHandler.HandleWebSocket)
 	apiGroup.GET("/ws/services/:id/terminal", s.terminalHandler.HandleWebSocket)

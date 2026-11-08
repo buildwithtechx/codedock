@@ -81,3 +81,11 @@ func (s *Service) UpdateRecord(ctx context.Context, id string, req *UpdateDNSRec
 func (s *Service) DeleteRecord(ctx context.Context, id string) error {
 	return s.repo.Delete(ctx, id)
 }
+
+func (s *Service) LogAction(ctx context.Context, userID, action, resource, ipAddress string, details any) {
+	if logger, ok := s.repo.(interface {
+		LogAction(ctx context.Context, userID, action, resource, ipAddress string, details any)
+	}); ok {
+		logger.LogAction(ctx, userID, action, resource, ipAddress, details)
+	}
+}

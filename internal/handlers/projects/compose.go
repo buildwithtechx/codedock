@@ -8,8 +8,8 @@ import (
 	"github.com/labstack/echo/v4"
 
 	"codedock/internal/models"
+	"codedock/internal/modules/databases"
 	"codedock/internal/repositories"
-	databaseservices "codedock/internal/services/databases"
 	projectservices "codedock/internal/services/projects"
 	"codedock/internal/utils"
 )
@@ -17,7 +17,7 @@ import (
 type ComposeHandler struct {
 	projectService  *projectservices.ProjectService
 	appService      *projectservices.AppService
-	databaseService *databaseservices.DatabaseService
+	databaseService *databases.Service
 	envRepo         repositories.EnvironmentRepository
 	appRepo         repositories.AppServiceRepository
 	composeParser   *projectservices.ComposeParserService
@@ -26,7 +26,7 @@ type ComposeHandler struct {
 func NewComposeHandler(
 	ps *projectservices.ProjectService,
 	as *projectservices.AppService,
-	ds *databaseservices.DatabaseService,
+	ds *databases.Service,
 	er repositories.EnvironmentRepository,
 	ar repositories.AppServiceRepository,
 	cp *projectservices.ComposeParserService,
@@ -78,10 +78,10 @@ func (h *ComposeHandler) provisionComposeResources(ctx context.Context, result *
 	var createdCount int
 
 	for _, dbReq := range result.Databases {
-		db := &models.Database{
+		db := &databases.Database{
 			ProjectID:    dbReq.ProjectID,
 			Name:         dbReq.Name,
-			Engine:       dbReq.Engine,
+			Engine:       databases.DatabaseEngine(dbReq.Engine),
 			Version:      dbReq.Version,
 			Port:         dbReq.Port,
 			Username:     dbReq.Username,

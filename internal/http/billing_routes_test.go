@@ -10,8 +10,7 @@ import (
 	"codedock/internal/config"
 	"codedock/internal/handlers/system"
 	"codedock/internal/http/middleware"
-	"codedock/internal/models"
-	authservices "codedock/internal/services/auth"
+	"codedock/internal/modules/auth"
 )
 
 func TestBillingRoutesRespectDeploymentMode(t *testing.T) {
@@ -19,11 +18,11 @@ func TestBillingRoutesRespectDeploymentMode(t *testing.T) {
 	previous := *cfg
 	t.Cleanup(func() { *cfg = previous })
 	cfg.Security.JWTSecret = "billing-test-secret"
-	tokens, err := authservices.NewTokenService()
+	tokens, err := auth.NewTokenService()
 	if err != nil {
 		t.Fatal(err)
 	}
-	token, err := tokens.GenerateToken(&models.User{ID: "owner", Role: models.UserRoleOwner})
+	token, err := tokens.GenerateToken(&auth.User{ID: "owner", Role: auth.UserRoleOwner})
 	if err != nil {
 		t.Fatal(err)
 	}

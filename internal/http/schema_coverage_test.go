@@ -10,10 +10,9 @@ import (
 	"github.com/labstack/echo/v4"
 
 	"codedock/internal/config"
-	authhandlers "codedock/internal/handlers/auth"
 	"codedock/internal/http/apischema"
 	"codedock/internal/http/middleware"
-	authservices "codedock/internal/services/auth"
+	"codedock/internal/modules/auth"
 )
 
 const openAPIGoldenPath = "../../docs/api/openapi.json"
@@ -25,7 +24,7 @@ func schemaTestRouter(t *testing.T) *echo.Echo {
 	t.Cleanup(func() { *cfg = previous })
 	cfg.Security.JWTSecret = "schema-test-secret"
 	cfg.Cloud.Enabled = true
-	tokens, err := authservices.NewTokenService()
+	tokens, err := auth.NewTokenService()
 	if err != nil {
 		t.Fatal(err)
 	}
@@ -36,7 +35,7 @@ func schemaTestRouter(t *testing.T) *echo.Echo {
 		authRateLimiter: middleware.NewRateLimiter(10, time.Minute),
 		otpRateLimiter:  middleware.NewRateLimiter(5, time.Minute),
 		aiRateLimiter:   middleware.NewRateLimiter(5, time.Minute),
-		passkeyHandler:  authhandlers.NewPasskeyHandler(nil),
+		passkeyHandler:  auth.NewPasskeyHandler(nil),
 	}
 	apiGroup := router.Group("/api")
 	authGroup := apiGroup.Group("", server.authGuard.RequireAuth())

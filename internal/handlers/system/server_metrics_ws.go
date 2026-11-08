@@ -10,7 +10,7 @@ import (
 	"codedock/internal/engine/observability"
 	"codedock/internal/http/middleware"
 	"codedock/internal/models"
-	authservices "codedock/internal/services/auth"
+	authservices "codedock/internal/modules/auth"
 	systemservices "codedock/internal/services/system"
 	"codedock/internal/utils"
 
