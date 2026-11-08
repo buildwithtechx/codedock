@@ -5,7 +5,6 @@ import (
 
 	"github.com/labstack/echo/v4"
 
-	handlerutils "codedock/internal/handlers/utils"
 	"codedock/internal/utils"
 )
 
@@ -43,7 +42,7 @@ func (h *Handler) GetChallenge(c echo.Context) error {
 
 // VerifyPairing completes pairing between an external chat identity and the authenticated user
 func (h *Handler) VerifyPairing(c echo.Context) error {
-	userID := handlerutils.ExtractUserID(c)
+	userID := utils.ExtractUserID(c)
 	if userID == "" {
 		return utils.Error(c, http.StatusUnauthorized, "unauthorized")
 	}

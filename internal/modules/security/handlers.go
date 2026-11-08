@@ -5,7 +5,6 @@ import (
 
 	"github.com/labstack/echo/v4"
 
-	handlerutils "codedock/internal/handlers/utils"
 	"codedock/internal/utils"
 )
 
@@ -21,7 +20,7 @@ func NewHandler(service SecurityService) *Handler {
 
 // GetAdvisories returns all platform security advisories and affected projects
 func (h *Handler) GetAdvisories(c echo.Context) error {
-	userID := handlerutils.ExtractUserID(c)
+	userID := utils.ExtractUserID(c)
 	if userID == "" {
 		return utils.Error(c, http.StatusUnauthorized, "unauthorized")
 	}
@@ -36,7 +35,7 @@ func (h *Handler) GetAdvisories(c echo.Context) error {
 
 // GetProjectSecurity returns findings and remediation options for a project
 func (h *Handler) GetProjectSecurity(c echo.Context) error {
-	userID := handlerutils.ExtractUserID(c)
+	userID := utils.ExtractUserID(c)
 	if userID == "" {
 		return utils.Error(c, http.StatusUnauthorized, "unauthorized")
 	}
@@ -56,7 +55,7 @@ func (h *Handler) GetProjectSecurity(c echo.Context) error {
 
 // CheckProject triggers an on-demand security scan for a project
 func (h *Handler) CheckProject(c echo.Context) error {
-	userID := handlerutils.ExtractUserID(c)
+	userID := utils.ExtractUserID(c)
 	if userID == "" {
 		return utils.Error(c, http.StatusUnauthorized, "unauthorized")
 	}
@@ -76,7 +75,7 @@ func (h *Handler) CheckProject(c echo.Context) error {
 
 // SetProjectPolicy updates automatic advisory remediation policy for a project
 func (h *Handler) SetProjectPolicy(c echo.Context) error {
-	userID := handlerutils.ExtractUserID(c)
+	userID := utils.ExtractUserID(c)
 	if userID == "" {
 		return utils.Error(c, http.StatusUnauthorized, "unauthorized")
 	}
@@ -100,7 +99,7 @@ func (h *Handler) SetProjectPolicy(c echo.Context) error {
 
 // ApplyRemediation queues an automated image rebuild or runtime patch for an advisory
 func (h *Handler) ApplyRemediation(c echo.Context) error {
-	userID := handlerutils.ExtractUserID(c)
+	userID := utils.ExtractUserID(c)
 	if userID == "" {
 		return utils.Error(c, http.StatusUnauthorized, "unauthorized")
 	}

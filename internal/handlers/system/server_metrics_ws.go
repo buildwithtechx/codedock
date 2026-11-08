@@ -5,8 +5,6 @@ import (
 	"net/http"
 	"time"
 
-	handlerutils "codedock/internal/handlers/utils"
-
 	"codedock/internal/http/middleware"
 	"codedock/internal/models"
 	authservices "codedock/internal/modules/auth"
@@ -40,7 +38,7 @@ func NewServerMetricsWSHandler(ts *authservices.TokenService, ss systemservices.
 					}
 					return false
 				}
-				return handlerutils.IsAllowedWebSocketOrigin(r, origin)
+				return utils.IsAllowedWebSocketOrigin(r, origin)
 			},
 			Subprotocols: []string{"auth", "bearer"},
 		},
@@ -51,7 +49,7 @@ func NewServerMetricsWSHandler(ts *authservices.TokenService, ss systemservices.
 }
 
 func (h *ServerMetricsWSHandler) Handle(c echo.Context) error {
-	if err := handlerutils.ValidateWebSocketCSWSH(c); err != nil {
+	if err := utils.ValidateWebSocketCSWSH(c); err != nil {
 		return err
 	}
 	serverID := c.Param("serverId")

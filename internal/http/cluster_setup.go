@@ -10,7 +10,6 @@ import (
 	"codedock/internal/repositories"
 	"codedock/internal/services/clusterdata"
 	"codedock/internal/services/clusters"
-	"codedock/internal/services/deployments"
 	"codedock/internal/services/operations"
 	projectservices "codedock/internal/services/projects"
 	"codedock/internal/services/runtimes"
@@ -22,7 +21,12 @@ import (
 	"time"
 )
 
-func configureClusters(server *Server, db *sql.DB, vlt *vault.Vault, projects *repositories.ProjectRepo, servers repositories.ServerRepository, operations *operations.Service, gate clusters.Gate, apps repositories.AppServiceRepository, deployments *deployments.DeploymentService, canvas *projectservices.CanvasService, backups *backup.BackupManager) error {
+type ClusterDeployer interface {
+	observability.CanvasDockerTargets
+	SetRuntime(r any)
+}
+
+func configureClusters(server *Server, db *sql.DB, vlt *vault.Vault, projects *repositories.ProjectRepo, servers repositories.ServerRepository, operations *operations.Service, gate clusters.Gate, apps repositories.AppServiceRepository, deployments ClusterDeployer, canvas *projectservices.CanvasService, backups *backup.BackupManager) error {
 	repository := repositories.NewClusterRepo(db, vlt)
 	if err := repository.Recover(context.Background()); err != nil {
 		return fmt.Errorf("recover cluster operations: %w", err)
@@ -49,9 +53,10 @@ func configureClusters(server *Server, db *sql.DB, vlt *vault.Vault, projects *r
 	reconcileCtx, cancelReconciliation := context.WithCancel(context.Background())
 	server.router.Server.RegisterOnShutdown(cancelReconciliation)
 	go runtime.RunReconciler(reconcileCtx)
-	deployments.Runtime = runtime
+	if deployments != nil {
+		deployments.SetRuntime(runtime)
+	}
 	backups.SetNativeData(runtime.BackupNativeData, runtime.RestoreNativeData)
-	server.appServiceHandler.Runtime = runtime
 	canvasRuntime := observability.NewCanvasRuntime(server.dockerClient)
 	canvasRuntime.Cluster = runtime
 	canvasRuntime.Targets = deployments

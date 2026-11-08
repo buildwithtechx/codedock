@@ -17,7 +17,6 @@ import (
 	dockerprobe "codedock/internal/platform/docker"
 	enginessh "codedock/internal/platform/ssh"
 	"codedock/internal/repositories"
-	deploymentservices "codedock/internal/services/deployments"
 	projectservices "codedock/internal/services/projects"
 )
 
@@ -25,6 +24,10 @@ type AppDeployer interface {
 	DeployAppService(ctx context.Context, appID, sourceDir string, logWriter io.Writer) (string, error)
 	StopAppService(ctx context.Context, app *models.AppService) error
 	RemoveAppService(ctx context.Context, app *models.AppService) error
+}
+
+type GitSyncer interface {
+	CloneOrPullAppRepository(ctx context.Context, app *models.AppService, targetDir string, logWriter io.Writer) error
 }
 
 type RunnerFactory func(source *models.MigrationSource) dockerprobe.Runner
@@ -40,7 +43,7 @@ type Service struct {
 	servers    repositories.ServerRepository
 	users      *repositories.UserRepo
 	orgs       repositories.OrganizationRepository
-	git        *deploymentservices.GitService
+	git        GitSyncer
 	composer   *projectservices.ComposeParserService
 	deployer   AppDeployer
 	ssh        *enginessh.SSHManager
@@ -71,7 +74,7 @@ func NewService(
 	servers repositories.ServerRepository,
 	users *repositories.UserRepo,
 	orgs repositories.OrganizationRepository,
-	git *deploymentservices.GitService,
+	git GitSyncer,
 	composer *projectservices.ComposeParserService,
 	deployer AppDeployer,
 	sshManager *enginessh.SSHManager,

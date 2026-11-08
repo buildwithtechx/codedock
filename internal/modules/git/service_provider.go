@@ -4,7 +4,12 @@ import (
 	"context"
 	"errors"
 	"fmt"
+	"io"
 	"net/http"
+	"os"
+	"os/exec"
+	"path/filepath"
+	"strings"
 	"time"
 
 	"github.com/google/uuid"
@@ -98,6 +103,67 @@ func (s *ProviderService) GetAnyProviderByType(ctx context.Context, provider str
 		return nil, errors.New("provider required")
 	}
 	return s.repo.GetAnyProviderByType(ctx, provider)
+}
+
+func (s *ProviderService) SyncCodebase(ctx context.Context, repoURL, branch, commitHash, targetDir string, logWriter io.Writer) error {
+	repoURL = strings.TrimSpace(repoURL)
+	if repoURL == "" {
+		return errors.New("repository url required")
+	}
+	branch = strings.TrimSpace(branch)
+	if branch == "" {
+		branch = "main"
+	}
+
+	gitDir := filepath.Join(targetDir, ".git")
+	if _, err := os.Stat(gitDir); err == nil {
+		if logWriter != nil {
+			fmt.Fprintf(logWriter, "🔄 Existing local repository detected; pulling latest %s...\n", branch)
+		}
+		fetchCmd := exec.CommandContext(ctx, "git", "-C", targetDir, "fetch", "origin", branch)
+		_ = fetchCmd.Run()
+		targetCommit := "origin/" + branch
+		if commitHash != "" {
+			targetCommit = commitHash
+		}
+		resetCmd := exec.CommandContext(ctx, "git", "-C", targetDir, "reset", "--hard", targetCommit)
+		if out, err := resetCmd.CombinedOutput(); err != nil {
+			return fmt.Errorf("git reset failed: %s: %w", string(out), err)
+		}
+		return nil
+	}
+
+	_ = os.RemoveAll(targetDir)
+	if err := os.MkdirAll(filepath.Dir(targetDir), 0o755); err != nil {
+		return fmt.Errorf("failed to create directory: %w", err)
+	}
+
+	cloneArgs := []string{"clone", "--depth", "1", "-b", branch, repoURL, targetDir}
+	if logWriter != nil {
+		fmt.Fprintf(logWriter, "🚀 Cloning repository branch %s...\n", branch)
+	}
+	cloneCmd := exec.CommandContext(ctx, "git", cloneArgs...)
+	if out, err := cloneCmd.CombinedOutput(); err != nil {
+		// Fallback without branch flag if main does not exist
+		fallbackCmd := exec.CommandContext(ctx, "git", "clone", "--depth", "1", repoURL, targetDir)
+		if fbOut, fbErr := fallbackCmd.CombinedOutput(); fbErr != nil {
+			return fmt.Errorf("git clone failed: %s: %w", string(out)+string(fbOut), fbErr)
+		}
+	}
+
+	if commitHash != "" {
+		fetchCmd := exec.CommandContext(ctx, "git", "-C", targetDir, "fetch", "origin", commitHash)
+		_ = fetchCmd.Run()
+		checkoutCmd := exec.CommandContext(ctx, "git", "-C", targetDir, "checkout", commitHash)
+		if out, err := checkoutCmd.CombinedOutput(); err != nil {
+			return fmt.Errorf("git checkout %s failed: %s: %w", commitHash, string(out), err)
+		}
+	}
+
+	if logWriter != nil {
+		fmt.Fprintf(logWriter, "✅ Repository synced successfully to %s.\n", targetDir)
+	}
+	return nil
 }
 
 func (s *ProviderService) ListProvidersByUser(ctx context.Context, userID string) ([]*GitProviderConfig, error) {

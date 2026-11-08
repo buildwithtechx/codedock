@@ -7,8 +7,6 @@ import (
 	"strings"
 	"time"
 
-	handlerutils "codedock/internal/handlers/utils"
-
 	"codedock/internal/http/middleware"
 	"codedock/internal/models"
 	projectservices "codedock/internal/services/projects"
@@ -51,7 +49,7 @@ func NewServiceLogsWSHandler(ts tokenValidator, as *projectservices.AppService, 
 					}
 					return false
 				}
-				return handlerutils.IsAllowedWebSocketOrigin(r, origin)
+				return utils.IsAllowedWebSocketOrigin(r, origin)
 			},
 		},
 		tokenService:   ts,
@@ -62,7 +60,7 @@ func NewServiceLogsWSHandler(ts tokenValidator, as *projectservices.AppService, 
 }
 
 func (h *ServiceLogsWSHandler) Handle(c echo.Context) error {
-	if err := handlerutils.ValidateWebSocketCSWSH(c); err != nil {
+	if err := utils.ValidateWebSocketCSWSH(c); err != nil {
 		return err
 	}
 	serviceID := c.Param("serviceId")

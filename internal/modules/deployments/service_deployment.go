@@ -7,6 +7,7 @@ import (
 	"sync"
 	"time"
 
+	"github.com/docker/docker/client"
 	"github.com/google/uuid"
 
 	"codedock/internal/platform/observability"
@@ -41,6 +42,8 @@ type DeploymentService struct {
 	admissionGuard *BuildAdmissionGuard
 	operationMu    sync.Mutex
 	operations     map[string]context.CancelFunc
+	localDocker    *client.Client
+	Runtime        any
 }
 
 func NewDeploymentService(
@@ -61,6 +64,21 @@ func NewDeploymentService(
 		admissionGuard: NewBuildAdmissionGuard(),
 		operations:     make(map[string]context.CancelFunc),
 	}
+}
+
+func (s *DeploymentService) SetLocalDocker(c *client.Client) {
+	s.localDocker = c
+}
+
+func (s *DeploymentService) DockerForProject(ctx context.Context, projectID string) (*client.Client, func(), error) {
+	if s.localDocker != nil {
+		return s.localDocker, func() {}, nil
+	}
+	return nil, func() {}, errors.New("docker client unavailable")
+}
+
+func (s *DeploymentService) SetRuntime(r any) {
+	s.Runtime = r
 }
 
 func (s *DeploymentService) CreateDeployment(ctx context.Context, d *Deployment) (*Deployment, error) {

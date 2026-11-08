@@ -12,7 +12,6 @@ import (
 	"codedock/internal/platform/ssh"
 	"codedock/internal/platform/vault"
 	"codedock/internal/repositories"
-	deploymentservices "codedock/internal/services/deployments"
 	"codedock/internal/services/migrations"
 	projectservices "codedock/internal/services/projects"
 )
@@ -28,9 +27,9 @@ func configureMigration(
 	servers repositories.ServerRepository,
 	users *repositories.UserRepo,
 	orgs repositories.OrganizationRepository,
-	git *deploymentservices.GitService,
+	git migrations.GitSyncer,
 	composer *projectservices.ComposeParserService,
-	deployer *deploymentservices.DeploymentService,
+	deployer migrations.AppDeployer,
 	sshManager *ssh.SSHManager,
 	runtimes *repositories.RuntimeRepo,
 ) error {

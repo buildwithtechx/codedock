@@ -7,7 +7,6 @@ import (
 
 	"github.com/labstack/echo/v4"
 
-	handlerutils "codedock/internal/handlers/utils"
 	"codedock/internal/models"
 	"codedock/internal/repositories"
 	systemservices "codedock/internal/services/system"
@@ -113,7 +112,7 @@ func (h *NotificationSettingsHandler) resolveOrgID(ctx context.Context, c echo.C
 }
 
 func (h *NotificationSettingsHandler) ListSubscriptions(c echo.Context) error {
-	userID := handlerutils.ExtractUserID(c)
+	userID := utils.ExtractUserID(c)
 	if userID == "" {
 		return utils.Error(c, http.StatusUnauthorized, "unauthorized")
 	}
@@ -129,7 +128,7 @@ func (h *NotificationSettingsHandler) ListSubscriptions(c echo.Context) error {
 }
 
 func (h *NotificationSettingsHandler) UpsertSubscription(c echo.Context) error {
-	userID := handlerutils.ExtractUserID(c)
+	userID := utils.ExtractUserID(c)
 	if userID == "" {
 		return utils.Error(c, http.StatusUnauthorized, "unauthorized")
 	}
@@ -155,7 +154,7 @@ func (h *NotificationSettingsHandler) UpsertSubscription(c echo.Context) error {
 }
 
 func (h *NotificationSettingsHandler) ListDefaults(c echo.Context) error {
-	userID := handlerutils.ExtractUserID(c)
+	userID := utils.ExtractUserID(c)
 	orgID := h.resolveOrgID(c.Request().Context(), c, userID)
 	if orgID == "" || orgID == "default" {
 		return utils.Success(c, "Operation successful", []models.NotificationDefault{})
@@ -168,7 +167,7 @@ func (h *NotificationSettingsHandler) ListDefaults(c echo.Context) error {
 }
 
 func (h *NotificationSettingsHandler) UpsertDefault(c echo.Context) error {
-	userID := handlerutils.ExtractUserID(c)
+	userID := utils.ExtractUserID(c)
 	var req models.UpsertDefaultRequest
 	if err := c.Bind(&req); err != nil {
 		return utils.Error(c, http.StatusBadRequest, err.Error())
@@ -202,7 +201,7 @@ func (h *NotificationSettingsHandler) ListDeliveries(c echo.Context) error {
 }
 
 func (h *NotificationSettingsHandler) RegisterDeviceToken(c echo.Context) error {
-	userID := handlerutils.ExtractUserID(c)
+	userID := utils.ExtractUserID(c)
 	if userID == "" {
 		return utils.Error(c, http.StatusUnauthorized, "unauthorized")
 	}
@@ -223,7 +222,7 @@ func (h *NotificationSettingsHandler) RegisterDeviceToken(c echo.Context) error 
 }
 
 func (h *NotificationSettingsHandler) DeleteDeviceToken(c echo.Context) error {
-	userID := handlerutils.ExtractUserID(c)
+	userID := utils.ExtractUserID(c)
 	if userID == "" {
 		return utils.Error(c, http.StatusUnauthorized, "unauthorized")
 	}
@@ -243,7 +242,7 @@ func (h *NotificationSettingsHandler) DeleteDeviceToken(c echo.Context) error {
 }
 
 func (h *NotificationSettingsHandler) ListDeviceTokens(c echo.Context) error {
-	userID := handlerutils.ExtractUserID(c)
+	userID := utils.ExtractUserID(c)
 	if userID == "" {
 		return utils.Error(c, http.StatusUnauthorized, "unauthorized")
 	}

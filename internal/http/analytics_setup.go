@@ -18,7 +18,6 @@ import (
 	"codedock/internal/repositories"
 	"codedock/internal/services/analytics"
 	"codedock/internal/services/attention"
-	deploymentservices "codedock/internal/services/deployments"
 	"codedock/internal/services/migrations"
 	systemservices "codedock/internal/services/system"
 )
@@ -51,7 +50,7 @@ func configureAnalytics(
 	orgRepo repositories.OrganizationRepository,
 	metricsService *systemservices.MetricsService,
 	statsMonitor *observability.StatsMonitor,
-	deploymentService *deploymentservices.DeploymentService,
+	deploymentService attention.WorkloadDeployer,
 	backupService *backupmodule.Service,
 	migrationService *migrations.Service,
 	auditService *audit.AuditService,
