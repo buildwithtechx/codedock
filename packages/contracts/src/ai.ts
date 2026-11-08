@@ -90,16 +90,64 @@ export interface AiTurnMessage {
   questions?: AiQuestionGroup[];
 }
 
+export type AiPersonaId = 'general' | 'logs' | 'security' | 'devops';
+
+export interface AiPersonaDefinition {
+  id: AiPersonaId;
+  name: string;
+  description: string;
+  icon: 'bot' | 'terminal' | 'shield-check' | 'rocket';
+  readOnly: boolean;
+  systemHint: string;
+}
+
+export const AI_PERSONAS: readonly AiPersonaDefinition[] = [
+  {
+    id: 'general',
+    name: 'General Assistant',
+    description: 'General workspace questions, navigation, and guidance',
+    icon: 'bot',
+    readOnly: false,
+    systemHint: 'General DevOps and platform co-pilot',
+  },
+  {
+    id: 'logs',
+    name: 'Logs Investigator',
+    description: 'Diagnose container crashes, exit codes, stderr/stdout, and restart loops',
+    icon: 'terminal',
+    readOnly: true,
+    systemHint: 'Container runtime & build log diagnostic specialist',
+  },
+  {
+    id: 'security',
+    name: 'Security Reviewer',
+    description: 'Audit runtime CVEs, signed security advisories, and semver patches',
+    icon: 'shield-check',
+    readOnly: true,
+    systemHint: 'Vulnerability and container image security specialist',
+  },
+  {
+    id: 'devops',
+    name: 'DevOps Co-pilot',
+    description: 'Active operations: inspect infrastructure, configure domains, deploy and scale',
+    icon: 'rocket',
+    readOnly: false,
+    systemHint: 'Active infrastructure lifecycle and deployment coordinator',
+  },
+] as const;
+
 export interface AiConversationThread {
   id: string;
   title: string;
   updatedAt: string;
   messages: AiTurnMessage[];
+  persona?: AiPersonaId;
 }
 
 export interface AiChatRequestPayload {
   messages: Array<{ role: 'user' | 'assistant'; content: string }>;
   mode: 'ask' | 'agent';
+  persona?: AiPersonaId;
   provider?: string;
   model?: string;
   currentPath?: string;

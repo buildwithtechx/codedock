@@ -24,6 +24,7 @@ import (
 	"codedock/internal/engine/ssh"
 	"codedock/internal/handlers/auth"
 	"codedock/internal/handlers/backups"
+	chatapphandlers "codedock/internal/handlers/chatapps"
 	"codedock/internal/handlers/databases"
 	"codedock/internal/handlers/deployments"
 	"codedock/internal/handlers/mail"
@@ -37,6 +38,7 @@ import (
 	"codedock/internal/repositories"
 	authservices "codedock/internal/services/auth"
 	backupservices "codedock/internal/services/backups"
+	chatappservices "codedock/internal/services/chatapps"
 	databaseservices "codedock/internal/services/databases"
 	deploymentservices "codedock/internal/services/deployments"
 	mailservices "codedock/internal/services/mail"
@@ -338,6 +340,12 @@ func NewServer(db *sql.DB, v *utils.Vault, deployer *deploy.Deployer, traefikMan
 	securityFeedManager := security.NewFeedManager(db, securityVerifier, "")
 	securityService := security.NewSecurityService(db, securityFeedManager, projectRepo, appRepo, deployRepo, deploymentService)
 	securityHandler := system.NewSecurityHandler(securityService)
+
+	chatAppRepo := repositories.NewChatAppRepo(db)
+	chatAppService := chatappservices.NewService(chatAppRepo, v)
+	chatAppDispatcher := chatappservices.NewDispatcher(chatAppService, projectService, appService, deploymentService)
+	chatAppHandler := chatapphandlers.NewHandler(chatAppService, chatAppDispatcher)
+
 	serverMetricsWSHandler := system.NewServerMetricsWSHandler(tokenService, serverService, userRepo)
 	serviceLogsWSHandler := system.NewServiceLogsWSHandler(tokenService, appService, projectService, userRepo)
 	serviceLogsWSHandler.Streams = deploymentService
@@ -420,6 +428,7 @@ func NewServer(db *sql.DB, v *utils.Vault, deployer *deploy.Deployer, traefikMan
 		systemHandler:           systemHandler,
 		composeHandler:          composeHandler,
 		composeStackHandler:     composeStackHandler,
+		chatAppHandler:          chatAppHandler,
 		oneClickHandler:         oneClickHandler,
 		archiveHandler:          archiveHandler,
 		migrationHandler:        migrationHandler,

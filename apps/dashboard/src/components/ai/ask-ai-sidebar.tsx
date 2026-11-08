@@ -7,11 +7,23 @@ import {
   DropdownMenuTrigger,
 } from '@codedock/ui';
 import { useRouterState } from '@tanstack/react-router';
-import { ChevronDown, Maximize2, MessageSquare, Minimize2, Plus, Trash2, X } from 'lucide-react';
+import {
+  Bot,
+  ChevronDown,
+  Maximize2,
+  MessageSquare,
+  Minimize2,
+  Plus,
+  Rocket,
+  ShieldCheck,
+  Terminal,
+  Trash2,
+  X,
+} from 'lucide-react';
 import { useCallback, useEffect } from 'react';
 import { toast } from 'sonner';
 import { useAiProviderStatus, useSendAiChat } from '#/hooks/use-ai';
-import type { AiResourceTag } from '#/interfaces/ai';
+import { AI_PERSONAS, type AiResourceTag } from '#/interfaces/ai';
 import { useAiSidebarStore } from '#/stores/ai-sidebar-store';
 import { AskAiComposer } from './ask-ai-composer';
 import { AskAiMessages } from './ask-ai-messages';
@@ -26,6 +38,7 @@ export function AskAiSidebar() {
     isOpen,
     isExpanded,
     mode,
+    activePersona,
     threads,
     activeThreadId,
     pendingPrompt,
@@ -35,11 +48,14 @@ export function AskAiSidebar() {
     toggleSidebar,
     closeSidebar,
     toggleExpanded,
+    setPersona,
     startNewThread,
     selectThread,
     deleteThread,
     appendMessage,
   } = useAiSidebarStore();
+
+  const activePersonaDef = AI_PERSONAS.find((p) => p.id === activePersona) || AI_PERSONAS[0];
 
   const { status: providerStatus } = useAiProviderStatus();
   const sendChatMutation = useSendAiChat();
@@ -79,6 +95,7 @@ export function AskAiSidebar() {
         const payload = await sendChatMutation.mutateAsync({
           messages: [...priorMessages, { role: 'user', content: text }],
           mode,
+          persona: activePersona,
           provider: providerStatus.activeProviderId ?? undefined,
           model: providerStatus.activeProviderId != null ? providerStatus.activeModel : undefined,
           currentPath: pathname,
@@ -216,6 +233,82 @@ export function AskAiSidebar() {
             <X className="size-4" />
           </button>
         </div>
+      </div>
+
+      {/* Specialist AI Persona Selector Bar */}
+      <div className="flex h-10 shrink-0 items-center justify-between border-sidebar-border/60 border-b bg-sidebar-accent/25 px-3 py-1.5 text-xs">
+        <div className="flex min-w-0 items-center gap-1.5">
+          <DropdownMenu>
+            <DropdownMenuTrigger asChild>
+              <button
+                type="button"
+                aria-label="Select AI Persona"
+                className="inline-flex max-w-full items-center gap-1.5 rounded-md border border-border/60 bg-background/80 px-2 py-0.5 font-medium text-foreground text-xs shadow-xs transition-colors hover:bg-background"
+              >
+                {activePersonaDef.icon === 'terminal' && (
+                  <Terminal className="size-3 shrink-0 text-amber-500" />
+                )}
+                {activePersonaDef.icon === 'shield-check' && (
+                  <ShieldCheck className="size-3 shrink-0 text-emerald-500" />
+                )}
+                {activePersonaDef.icon === 'rocket' && (
+                  <Rocket className="size-3 shrink-0 text-blue-500" />
+                )}
+                {activePersonaDef.icon === 'bot' && (
+                  <Bot className="size-3 shrink-0 text-primary" />
+                )}
+                <span className="truncate">{activePersonaDef.name}</span>
+                {activePersonaDef.readOnly && (
+                  <span className="rounded bg-muted px-1 py-0.2 font-semibold text-[9px] text-muted-foreground uppercase tracking-wider">
+                    Read-only
+                  </span>
+                )}
+                <ChevronDown className="size-3 shrink-0 text-muted-foreground" />
+              </button>
+            </DropdownMenuTrigger>
+            <DropdownMenuContent align="start" className="w-68 p-1">
+              <DropdownMenuLabel className="font-normal text-[11px] text-muted-foreground">
+                Specialist Copilot Personas
+              </DropdownMenuLabel>
+              <DropdownMenuSeparator />
+              {AI_PERSONAS.map((p) => {
+                const isSelected = p.id === activePersona;
+                return (
+                  <DropdownMenuItem
+                    key={p.id}
+                    onSelect={() => setPersona(p.id)}
+                    className={`flex cursor-pointer flex-col items-start gap-0.5 rounded px-2 py-1.5 text-xs ${
+                      isSelected ? 'bg-sidebar-accent font-medium' : ''
+                    }`}
+                  >
+                    <div className="flex w-full items-center justify-between">
+                      <span className="flex items-center gap-1.5">
+                        {p.icon === 'terminal' && <Terminal className="size-3.5 text-amber-500" />}
+                        {p.icon === 'shield-check' && (
+                          <ShieldCheck className="size-3.5 text-emerald-500" />
+                        )}
+                        {p.icon === 'rocket' && <Rocket className="size-3.5 text-blue-500" />}
+                        {p.icon === 'bot' && <Bot className="size-3.5 text-primary" />}
+                        <span>{p.name}</span>
+                      </span>
+                      {p.readOnly && (
+                        <span className="rounded bg-muted px-1 py-0.2 font-semibold text-[9px] text-muted-foreground uppercase tracking-wider">
+                          Read-only
+                        </span>
+                      )}
+                    </div>
+                    <p className="line-clamp-2 text-[11px] text-muted-foreground">
+                      {p.description}
+                    </p>
+                  </DropdownMenuItem>
+                );
+              })}
+            </DropdownMenuContent>
+          </DropdownMenu>
+        </div>
+        <span className="hidden max-w-32 truncate text-[10px] text-muted-foreground sm:inline">
+          {activePersonaDef.systemHint}
+        </span>
       </div>
 
       {/* Main Content Area: Welcome State or Active Conversation with Question Backdrop */}

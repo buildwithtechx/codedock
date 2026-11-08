@@ -2,17 +2,26 @@ import { create } from 'zustand';
 import type {
   AiConversationThread,
   AiPendingAction,
+  AiPersonaId,
   AiResourceTag,
   AiToolStep,
   AiTurnMessage,
 } from '#/interfaces/ai';
 
-export type { AiConversationThread, AiPendingAction, AiResourceTag, AiToolStep, AiTurnMessage };
+export type {
+  AiConversationThread,
+  AiPendingAction,
+  AiPersonaId,
+  AiResourceTag,
+  AiToolStep,
+  AiTurnMessage,
+};
 
 interface AiSidebarState {
   isOpen: boolean;
   isExpanded: boolean;
   mode: 'ask' | 'agent';
+  activePersona: AiPersonaId;
   threads: AiConversationThread[];
   activeThreadId: string;
   pendingPrompt: string | null;
@@ -22,9 +31,10 @@ interface AiSidebarState {
   toggleSidebar: () => void;
   toggleExpanded: () => void;
   setMode: (mode: 'ask' | 'agent') => void;
+  setPersona: (persona: AiPersonaId) => void;
   openWithPrompt: (prompt: string, autoSend?: boolean) => void;
   clearPendingPrompt: () => void;
-  startNewThread: () => string;
+  startNewThread: (persona?: AiPersonaId) => string;
   selectThread: (id: string) => void;
   deleteThread: (id: string) => void;
   appendMessage: (msg: AiTurnMessage) => void;
@@ -38,12 +48,13 @@ interface AiSidebarState {
 
 const STORAGE_KEY = 'codedock_ai_threads_v1';
 
-function createEmptyThread(): AiConversationThread {
+function createEmptyThread(persona: AiPersonaId = 'general'): AiConversationThread {
   return {
     id: `thread_${Date.now().toString(36)}`,
     title: 'New conversation',
     updatedAt: new Date().toISOString(),
     messages: [],
+    persona,
   };
 }
 
@@ -72,6 +83,7 @@ export const useAiSidebarStore = create<AiSidebarState>((set) => ({
   isOpen: false,
   isExpanded: false,
   mode: 'ask',
+  activePersona: initialThreads[0]?.persona || 'general',
   threads: initialThreads,
   activeThreadId: initialThreads[0].id,
   pendingPrompt: null,
@@ -81,6 +93,12 @@ export const useAiSidebarStore = create<AiSidebarState>((set) => ({
   toggleSidebar: () => set((s) => ({ isOpen: !s.isOpen })),
   toggleExpanded: () => set((s) => ({ isExpanded: !s.isExpanded })),
   setMode: (mode) => set({ mode }),
+  setPersona: (persona) =>
+    set((s) => {
+      const next = s.threads.map((t) => (t.id === s.activeThreadId ? { ...t, persona } : t));
+      saveThreads(next);
+      return { activePersona: persona, threads: next };
+    }),
   openWithPrompt: (prompt, autoSend = true) =>
     set({
       isOpen: true,
@@ -88,25 +106,40 @@ export const useAiSidebarStore = create<AiSidebarState>((set) => ({
       autoSendPrompt: autoSend,
     }),
   clearPendingPrompt: () => set({ pendingPrompt: null, autoSendPrompt: false }),
-  startNewThread: () => {
-    const fresh = createEmptyThread();
+  startNewThread: (persona) => {
+    let threadId = '';
     set((s) => {
+      const targetPersona = persona || s.activePersona || 'general';
+      const fresh = createEmptyThread(targetPersona);
+      threadId = fresh.id;
       const kept = s.threads.filter((t) => t.messages.length > 0);
       const next = [fresh, ...kept];
       saveThreads(next);
-      return { threads: next, activeThreadId: fresh.id };
+      return { threads: next, activeThreadId: fresh.id, activePersona: targetPersona };
     });
-    return fresh.id;
+    return threadId;
   },
-  selectThread: (id) => set({ activeThreadId: id }),
+  selectThread: (id) =>
+    set((s) => {
+      const target = s.threads.find((t) => t.id === id);
+      return {
+        activeThreadId: id,
+        activePersona: target?.persona || 'general',
+      };
+    }),
   deleteThread: (id) =>
     set((s) => {
       const remaining = s.threads.filter((t) => t.id !== id);
       const next = remaining.length > 0 ? remaining : [createEmptyThread()];
       saveThreads(next);
+      const nextActive =
+        s.activeThreadId === id
+          ? next[0]
+          : s.threads.find((t) => t.id === s.activeThreadId) || next[0];
       return {
         threads: next,
-        activeThreadId: s.activeThreadId === id ? next[0].id : s.activeThreadId,
+        activeThreadId: nextActive.id,
+        activePersona: nextActive.persona || 'general',
       };
     }),
   appendMessage: (msg) =>

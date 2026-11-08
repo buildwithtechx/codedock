@@ -1,12 +1,14 @@
 package ai
 
 import (
+	"context"
 	"encoding/json"
+	"strings"
 	"testing"
 )
 
 func TestCuratedTools_IncludesDecisionTool(t *testing.T) {
-	tools := curatedTools(nil)
+	tools := curatedTools(nil, "general")
 	if len(tools) == 0 {
 		t.Fatalf("expected at least 1 curated tool, got 0")
 	}
@@ -38,6 +40,50 @@ func TestCuratedTools_IncludesDecisionTool(t *testing.T) {
 
 	if !found {
 		t.Errorf("expected ask_user_decision tool in curatedTools")
+	}
+}
+
+func TestCuratedTools_PersonaFiltering(t *testing.T) {
+	if !IsReadOnlyPersona("logs") {
+		t.Errorf("expected logs persona to be read-only")
+	}
+	if !IsReadOnlyPersona("security") {
+		t.Errorf("expected security persona to be read-only")
+	}
+	if IsReadOnlyPersona("devops") {
+		t.Errorf("expected devops persona to allow mutations")
+	}
+	if IsReadOnlyPersona("general") {
+		t.Errorf("expected general persona to allow mutations")
+	}
+
+	if PersonaDisplayName("logs") != "Logs Investigator" {
+		t.Errorf("unexpected display name: %s", PersonaDisplayName("logs"))
+	}
+	if PersonaDisplayName("security") != "Security Reviewer" {
+		t.Errorf("unexpected display name: %s", PersonaDisplayName("security"))
+	}
+	if PersonaDisplayName("devops") != "DevOps Co-pilot" {
+		t.Errorf("unexpected display name: %s", PersonaDisplayName("devops"))
+	}
+}
+
+func TestBuildInstanceContext_Personas(t *testing.T) {
+	ctx := context.Background()
+
+	logsCtx := buildInstanceContext(ctx, "/projects", nil, Dependencies{}, "logs")
+	if !strings.Contains(logsCtx, "Logs Investigator") || !strings.Contains(logsCtx, "strict read-only") {
+		t.Errorf("expected logs investigator prompt with read-only constraint, got: %s", logsCtx)
+	}
+
+	secCtx := buildInstanceContext(ctx, "/projects", nil, Dependencies{}, "security")
+	if !strings.Contains(secCtx, "Security Reviewer") || !strings.Contains(secCtx, "strict read-only") {
+		t.Errorf("expected security reviewer prompt with read-only constraint, got: %s", secCtx)
+	}
+
+	devopsCtx := buildInstanceContext(ctx, "/projects", nil, Dependencies{}, "devops")
+	if !strings.Contains(devopsCtx, "DevOps Co-pilot") {
+		t.Errorf("expected devops prompt, got: %s", devopsCtx)
 	}
 }
 

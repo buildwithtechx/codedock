@@ -72,10 +72,29 @@ type QuestionGroup struct {
 type ChatRequest struct {
 	Messages    []ChatMessage `json:"messages"`
 	Mode        string        `json:"mode"`
+	Persona     string        `json:"persona,omitempty"`
 	Provider    string        `json:"provider,omitempty"`
 	Model       string        `json:"model,omitempty"`
 	CurrentPath string        `json:"currentPath,omitempty"`
 	Mentions    []ResourceTag `json:"mentions,omitempty"`
+}
+
+func IsReadOnlyPersona(persona string) bool {
+	p := strings.ToLower(strings.TrimSpace(persona))
+	return p == "logs" || p == "security"
+}
+
+func PersonaDisplayName(persona string) string {
+	switch strings.ToLower(strings.TrimSpace(persona)) {
+	case "logs":
+		return "Logs Investigator"
+	case "security":
+		return "Security Reviewer"
+	case "devops":
+		return "DevOps Co-pilot"
+	default:
+		return "General Assistant"
+	}
 }
 
 type ChatResponse struct {
@@ -125,14 +144,28 @@ func ListResources(ctx context.Context, deps Dependencies) []ResourceTag {
 	return items
 }
 
-func buildInstanceContext(ctx context.Context, currentPath string, mentions []ResourceTag, deps Dependencies) string {
+func buildInstanceContext(ctx context.Context, currentPath string, mentions []ResourceTag, deps Dependencies, persona string) string {
 	var sb strings.Builder
 	mode := "self-hosted"
 	if config.Get().Cloud.Enabled {
 		mode = "cloud"
 	}
-	sb.WriteString("You are Codedock AI, the built-in DevOps and infrastructure co-pilot for this Codedock instance.\n")
-	fmt.Fprintf(&sb, "Instance Version: %s | Mode: %s | User Current UI Route: %s\n\n", version.Version, mode, currentPath)
+	switch strings.ToLower(strings.TrimSpace(persona)) {
+	case "logs":
+		sb.WriteString("You are Codedock Logs Investigator, a specialized diagnostic engineer for this Codedock instance.\n")
+		sb.WriteString("Your primary mission: trace container crashes, exit codes (e.g. 137 OOMKilled, 1 crash), stderr/stdout logs, restart loops, and failed healthchecks. Pinpoint failure lines, explain causes, and provide exact remediations.\n")
+		sb.WriteString("Strict Enforcement: You operate in strict read-only mode. You cannot execute mutating operations.\n\n")
+	case "security":
+		sb.WriteString("You are Codedock Security Reviewer, a specialized container and platform security auditor for this Codedock instance.\n")
+		sb.WriteString("Your primary mission: inspect signed runtime advisories, container digests, CVE disclosures, and precision semver patch reviews.\n")
+		sb.WriteString("Strict Enforcement: You operate in strict read-only mode. You cannot execute mutating operations.\n\n")
+	case "devops":
+		sb.WriteString("You are Codedock DevOps Co-pilot, an active infrastructure coordinator for this Codedock instance.\n")
+		sb.WriteString("Your primary mission: monitor instance health, configure domains and routing, execute authorized deployments, and scale container replicas.\n\n")
+	default:
+		sb.WriteString("You are Codedock AI, the built-in DevOps and infrastructure co-pilot for this Codedock instance.\n")
+	}
+	fmt.Fprintf(&sb, "Instance Version: %s | Mode: %s | User Current UI Route: %s | Active Persona: %s\n\n", version.Version, mode, currentPath, PersonaDisplayName(persona))
 
 	if deps.ProjectService != nil {
 		projectList, _, _ := deps.ProjectService.ListProjects(ctx, "", 30, 0)
@@ -177,7 +210,7 @@ func buildInstanceContext(ctx context.Context, currentPath string, mentions []Re
 	return sb.String()
 }
 
-func curatedTools(bridge *mcp.Bridge) []map[string]any {
+func curatedTools(bridge *mcp.Bridge, persona string) []map[string]any {
 	var out []map[string]any
 	// Built-in interactive decision / question tool
 	out = append(out, map[string]any{
@@ -232,11 +265,20 @@ func curatedTools(bridge *mcp.Bridge) []map[string]any {
 	if bridge == nil {
 		return out
 	}
-	names := []string{
-		"get_projects", "get_projects_by_id", "get_apps", "get_apps_by_id",
-		"post_apps_by_id_redeploy", "post_apps_by_id_restart", "post_apps_by_id_stop",
-		"get_databases", "get_databases_by_id", "get_deployments", "get_system_stats",
-		"get_attention", "get_issues", "get_one_click", "get_backups", "get_jobs",
+	var names []string
+	if IsReadOnlyPersona(persona) {
+		names = []string{
+			"get_projects", "get_projects_by_id", "get_apps", "get_apps_by_id",
+			"get_databases", "get_databases_by_id", "get_deployments", "get_system_stats",
+			"get_attention", "get_issues", "get_one_click", "get_backups", "get_jobs",
+		}
+	} else {
+		names = []string{
+			"get_projects", "get_projects_by_id", "get_apps", "get_apps_by_id",
+			"post_apps_by_id_redeploy", "post_apps_by_id_restart", "post_apps_by_id_stop",
+			"get_databases", "get_databases_by_id", "get_deployments", "get_system_stats",
+			"get_attention", "get_issues", "get_one_click", "get_backups", "get_jobs",
+		}
 	}
 	for _, n := range names {
 		if t, ok := bridge.FindTool(n); ok {
@@ -250,7 +292,7 @@ func curatedTools(bridge *mcp.Bridge) []map[string]any {
 }
 
 func HandleChat(ctx context.Context, req ChatRequest, meta mcp.DispatchMeta, deps Dependencies) (ChatResponse, error) {
-	sysPrompt := buildInstanceContext(ctx, req.CurrentPath, req.Mentions, deps)
+	sysPrompt := buildInstanceContext(ctx, req.CurrentPath, req.Mentions, deps, req.Persona)
 	ep, err := resolveProviderEndpoint(deps.Settings, req.Provider, req.Model)
 	if err != nil {
 		reply, steps, pending := buildLocalFallback(ctx, req, deps)
@@ -260,7 +302,7 @@ func HandleChat(ctx context.Context, req ChatRequest, meta mcp.DispatchMeta, dep
 		}, nil
 	}
 
-	tools := curatedTools(deps.Bridge)
+	tools := curatedTools(deps.Bridge, req.Persona)
 	msgs := append([]ChatMessage{}, req.Messages...)
 	var steps []ToolStep
 	var pending []PendingAction
@@ -305,6 +347,22 @@ func HandleChat(ctx context.Context, req ChatRequest, meta mcp.DispatchMeta, dep
 			}
 			var args map[string]any
 			_ = json.Unmarshal([]byte(tc.Function.Arguments), &args)
+
+			if IsReadOnlyPersona(req.Persona) && !toolDef.Annotations.ReadOnlyHint {
+				steps = append(steps, ToolStep{
+					ID:     tc.ID,
+					Tool:   toolDef.Name,
+					Label:  fmt.Sprintf("Blocked: %s operates in read-only mode", PersonaDisplayName(req.Persona)),
+					Status: "error",
+					Detail: "Mutating actions are disallowed under this persona",
+				})
+				msgs = append(msgs, ChatMessage{
+					Role:       "tool",
+					ToolCallID: tc.ID,
+					Content:    fmt.Sprintf(`{"error":"forbidden","message":"Persona %s is strictly read-only and cannot invoke mutating tool %s"}`, PersonaDisplayName(req.Persona), toolDef.Name),
+				})
+				continue
+			}
 
 			if !toolDef.Annotations.ReadOnlyHint && (req.Mode != "agent" || toolDef.Annotations.DestructiveHint) {
 				actID := "act_" + uuid.NewString()[:8]

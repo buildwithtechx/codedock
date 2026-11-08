@@ -6,6 +6,7 @@ import {
   GitBranch,
   Globe,
   Lock,
+  MessageSquare,
   Network,
   Server,
   Settings as SettingsIcon,
@@ -23,6 +24,7 @@ import { useAiSidebarStore } from '#/stores/ai-sidebar-store';
 import { useAuthStore } from '#/stores/auth-store';
 import { AISettings } from './ai/ai-settings';
 import { AppearanceEditor } from './appearance-editor/appearance-editor';
+import { ChatAppsSettings } from './chat-apps/chat-apps-settings';
 import { GeneralSettings } from './general-settings';
 import { InstanceInfo } from './instance-info';
 import { MaintenancePage } from './maintenance-settings';
@@ -39,6 +41,7 @@ export type TabId =
   | 'dns'
   | 'git'
   | 'oauth'
+  | 'chat-apps'
   | 'ai'
   | 'mcp'
   | 'server'
@@ -71,6 +74,7 @@ const TAB_GROUPS: TabGroup[] = [
       { id: 'dns', label: 'DNS Providers', icon: <Globe className="h-4 w-4" /> },
       { id: 'git', label: 'Git', icon: <GitBranch className="h-4 w-4" /> },
       { id: 'oauth', label: 'OAuth & SSO', icon: <Lock className="h-4 w-4" /> },
+      { id: 'chat-apps', label: 'Chat Apps', icon: <MessageSquare className="h-4 w-4" /> },
     ],
   },
   {
@@ -134,6 +138,7 @@ export const SettingsLayout = () => {
       </div>
     ),
     oauth: <OAuthProvidersList />,
+    'chat-apps': <ChatAppsSettings />,
     ai: <AISettings />,
     mcp: <McpSettings />,
     server: <ServerSettingsTab />,

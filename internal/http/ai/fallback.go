@@ -58,6 +58,9 @@ func buildLocalFallback(ctx context.Context, req ChatRequest, deps Dependencies)
 	var pending []PendingAction
 
 	if targetServiceID != "" && deps.Bridge != nil && (strings.Contains(lastPrompt, "redeploy") || strings.Contains(lastPrompt, "restart") || strings.Contains(lastPrompt, "stop")) {
+		if IsReadOnlyPersona(req.Persona) {
+			return fmt.Sprintf("As **%s**, I operate in strict **read-only** mode to protect environments. Mutating actions (such as modifying `%s`) are disabled. Switch to the **DevOps Co-pilot** or **General Assistant** persona to execute mutations.", PersonaDisplayName(req.Persona), targetServiceName), steps, nil
+		}
 		toolName := "post_apps_by_id_redeploy"
 		title := "Redeploy service " + targetServiceName
 		destructive := false

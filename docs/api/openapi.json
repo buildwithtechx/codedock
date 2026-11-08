@@ -24878,6 +24878,2975 @@
         "x-auth": "authenticated"
       }
     },
+    "/api/chat-apps": {
+      "get": {
+        "operationId": "getChatApps",
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "description": "Codedock API envelope",
+                  "properties": {
+                    "data": {
+                      "description": "Chat connections",
+                      "items": {
+                        "description": "Chat connection",
+                        "properties": {
+                          "botUsername": {
+                            "description": "Bot username",
+                            "type": "string"
+                          },
+                          "config": {
+                            "description": "Config"
+                          },
+                          "createdAt": {
+                            "description": "Created timestamp",
+                            "format": "date-time",
+                            "type": "string"
+                          },
+                          "enabled": {
+                            "description": "Enabled",
+                            "type": "boolean"
+                          },
+                          "id": {
+                            "description": "Connection ID",
+                            "type": "string"
+                          },
+                          "lastError": {
+                            "description": "Last error",
+                            "type": "string"
+                          },
+                          "lastEventAt": {
+                            "description": "Last event timestamp",
+                            "format": "date-time",
+                            "type": "string"
+                          },
+                          "name": {
+                            "description": "Name",
+                            "type": "string"
+                          },
+                          "provider": {
+                            "description": "Provider",
+                            "type": "string"
+                          },
+                          "purpose": {
+                            "description": "Purpose",
+                            "type": "string"
+                          },
+                          "status": {
+                            "description": "Status",
+                            "type": "string"
+                          },
+                          "transport": {
+                            "description": "Transport",
+                            "type": "string"
+                          },
+                          "updatedAt": {
+                            "description": "Updated timestamp",
+                            "format": "date-time",
+                            "type": "string"
+                          },
+                          "userId": {
+                            "description": "User ID",
+                            "type": "string"
+                          }
+                        },
+                        "required": [
+                          "id",
+                          "userId",
+                          "provider",
+                          "transport",
+                          "purpose",
+                          "name",
+                          "enabled",
+                          "status",
+                          "createdAt",
+                          "updatedAt"
+                        ],
+                        "type": "object"
+                      },
+                      "type": "array"
+                    },
+                    "executionTime": {
+                      "description": "Handler seconds",
+                      "format": "double",
+                      "type": "number"
+                    },
+                    "message": {
+                      "description": "Human-readable message",
+                      "type": "string"
+                    },
+                    "path": {
+                      "description": "Request path",
+                      "type": "string"
+                    },
+                    "status": {
+                      "description": "Result status",
+                      "enum": [
+                        "success"
+                      ],
+                      "type": "string"
+                    }
+                  },
+                  "required": [
+                    "status",
+                    "message"
+                  ],
+                  "type": "object"
+                }
+              }
+            },
+            "description": "List chat connections"
+          },
+          "400": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "description": "Codedock API error",
+                  "properties": {
+                    "message": {
+                      "description": "Human-readable message",
+                      "type": "string"
+                    },
+                    "path": {
+                      "description": "Request path",
+                      "type": "string"
+                    },
+                    "status": {
+                      "description": "Result status",
+                      "enum": [
+                        "error"
+                      ],
+                      "type": "string"
+                    }
+                  },
+                  "required": [
+                    "status",
+                    "message"
+                  ],
+                  "type": "object"
+                }
+              }
+            },
+            "description": "Invalid request"
+          },
+          "401": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "description": "Codedock API error",
+                  "properties": {
+                    "message": {
+                      "description": "Human-readable message",
+                      "type": "string"
+                    },
+                    "path": {
+                      "description": "Request path",
+                      "type": "string"
+                    },
+                    "status": {
+                      "description": "Result status",
+                      "enum": [
+                        "error"
+                      ],
+                      "type": "string"
+                    }
+                  },
+                  "required": [
+                    "status",
+                    "message"
+                  ],
+                  "type": "object"
+                }
+              }
+            },
+            "description": "Missing or invalid credentials"
+          },
+          "403": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "description": "Codedock API error",
+                  "properties": {
+                    "message": {
+                      "description": "Human-readable message",
+                      "type": "string"
+                    },
+                    "path": {
+                      "description": "Request path",
+                      "type": "string"
+                    },
+                    "status": {
+                      "description": "Result status",
+                      "enum": [
+                        "error"
+                      ],
+                      "type": "string"
+                    }
+                  },
+                  "required": [
+                    "status",
+                    "message"
+                  ],
+                  "type": "object"
+                }
+              }
+            },
+            "description": "Insufficient permissions"
+          },
+          "500": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "description": "Codedock API error",
+                  "properties": {
+                    "message": {
+                      "description": "Human-readable message",
+                      "type": "string"
+                    },
+                    "path": {
+                      "description": "Request path",
+                      "type": "string"
+                    },
+                    "status": {
+                      "description": "Result status",
+                      "enum": [
+                        "error"
+                      ],
+                      "type": "string"
+                    }
+                  },
+                  "required": [
+                    "status",
+                    "message"
+                  ],
+                  "type": "object"
+                }
+              }
+            },
+            "description": "Server error"
+          }
+        },
+        "security": [
+          {
+            "bearerAuth": []
+          }
+        ],
+        "summary": "List chat connections",
+        "tags": [
+          "settings"
+        ],
+        "x-auth": "authenticated"
+      },
+      "post": {
+        "operationId": "postChatApps",
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "description": "Create chat app",
+                "properties": {
+                  "botUsername": {
+                    "description": "Bot username",
+                    "type": "string"
+                  },
+                  "config": {
+                    "description": "Config"
+                  },
+                  "credentials": {
+                    "description": "Credentials"
+                  },
+                  "name": {
+                    "description": "Name",
+                    "type": "string"
+                  },
+                  "provider": {
+                    "description": "Provider",
+                    "type": "string"
+                  },
+                  "purpose": {
+                    "description": "Purpose",
+                    "type": "string"
+                  },
+                  "transport": {
+                    "description": "Transport",
+                    "type": "string"
+                  }
+                },
+                "required": [
+                  "provider"
+                ],
+                "type": "object"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "description": "Codedock API envelope",
+                  "properties": {
+                    "data": {
+                      "description": "Chat connection",
+                      "properties": {
+                        "botUsername": {
+                          "description": "Bot username",
+                          "type": "string"
+                        },
+                        "config": {
+                          "description": "Config"
+                        },
+                        "createdAt": {
+                          "description": "Created timestamp",
+                          "format": "date-time",
+                          "type": "string"
+                        },
+                        "enabled": {
+                          "description": "Enabled",
+                          "type": "boolean"
+                        },
+                        "id": {
+                          "description": "Connection ID",
+                          "type": "string"
+                        },
+                        "lastError": {
+                          "description": "Last error",
+                          "type": "string"
+                        },
+                        "lastEventAt": {
+                          "description": "Last event timestamp",
+                          "format": "date-time",
+                          "type": "string"
+                        },
+                        "name": {
+                          "description": "Name",
+                          "type": "string"
+                        },
+                        "provider": {
+                          "description": "Provider",
+                          "type": "string"
+                        },
+                        "purpose": {
+                          "description": "Purpose",
+                          "type": "string"
+                        },
+                        "status": {
+                          "description": "Status",
+                          "type": "string"
+                        },
+                        "transport": {
+                          "description": "Transport",
+                          "type": "string"
+                        },
+                        "updatedAt": {
+                          "description": "Updated timestamp",
+                          "format": "date-time",
+                          "type": "string"
+                        },
+                        "userId": {
+                          "description": "User ID",
+                          "type": "string"
+                        }
+                      },
+                      "required": [
+                        "id",
+                        "userId",
+                        "provider",
+                        "transport",
+                        "purpose",
+                        "name",
+                        "enabled",
+                        "status",
+                        "createdAt",
+                        "updatedAt"
+                      ],
+                      "type": "object"
+                    },
+                    "executionTime": {
+                      "description": "Handler seconds",
+                      "format": "double",
+                      "type": "number"
+                    },
+                    "message": {
+                      "description": "Human-readable message",
+                      "type": "string"
+                    },
+                    "path": {
+                      "description": "Request path",
+                      "type": "string"
+                    },
+                    "status": {
+                      "description": "Result status",
+                      "enum": [
+                        "success"
+                      ],
+                      "type": "string"
+                    }
+                  },
+                  "required": [
+                    "status",
+                    "message"
+                  ],
+                  "type": "object"
+                }
+              }
+            },
+            "description": "Create chat connection"
+          },
+          "400": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "description": "Codedock API error",
+                  "properties": {
+                    "message": {
+                      "description": "Human-readable message",
+                      "type": "string"
+                    },
+                    "path": {
+                      "description": "Request path",
+                      "type": "string"
+                    },
+                    "status": {
+                      "description": "Result status",
+                      "enum": [
+                        "error"
+                      ],
+                      "type": "string"
+                    }
+                  },
+                  "required": [
+                    "status",
+                    "message"
+                  ],
+                  "type": "object"
+                }
+              }
+            },
+            "description": "Invalid request"
+          },
+          "401": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "description": "Codedock API error",
+                  "properties": {
+                    "message": {
+                      "description": "Human-readable message",
+                      "type": "string"
+                    },
+                    "path": {
+                      "description": "Request path",
+                      "type": "string"
+                    },
+                    "status": {
+                      "description": "Result status",
+                      "enum": [
+                        "error"
+                      ],
+                      "type": "string"
+                    }
+                  },
+                  "required": [
+                    "status",
+                    "message"
+                  ],
+                  "type": "object"
+                }
+              }
+            },
+            "description": "Missing or invalid credentials"
+          },
+          "403": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "description": "Codedock API error",
+                  "properties": {
+                    "message": {
+                      "description": "Human-readable message",
+                      "type": "string"
+                    },
+                    "path": {
+                      "description": "Request path",
+                      "type": "string"
+                    },
+                    "status": {
+                      "description": "Result status",
+                      "enum": [
+                        "error"
+                      ],
+                      "type": "string"
+                    }
+                  },
+                  "required": [
+                    "status",
+                    "message"
+                  ],
+                  "type": "object"
+                }
+              }
+            },
+            "description": "Insufficient permissions"
+          },
+          "500": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "description": "Codedock API error",
+                  "properties": {
+                    "message": {
+                      "description": "Human-readable message",
+                      "type": "string"
+                    },
+                    "path": {
+                      "description": "Request path",
+                      "type": "string"
+                    },
+                    "status": {
+                      "description": "Result status",
+                      "enum": [
+                        "error"
+                      ],
+                      "type": "string"
+                    }
+                  },
+                  "required": [
+                    "status",
+                    "message"
+                  ],
+                  "type": "object"
+                }
+              }
+            },
+            "description": "Server error"
+          }
+        },
+        "security": [
+          {
+            "bearerAuth": []
+          }
+        ],
+        "summary": "Create chat connection",
+        "tags": [
+          "settings"
+        ],
+        "x-auth": "authenticated"
+      }
+    },
+    "/api/chat-apps/identities/{id}": {
+      "delete": {
+        "operationId": "deleteChatAppsIdentitiesId",
+        "parameters": [
+          {
+            "description": "id",
+            "in": "path",
+            "name": "id",
+            "required": true,
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "description": "Codedock API envelope",
+                  "properties": {
+                    "data": {
+                      "description": "Empty result",
+                      "properties": {
+                        "result": {
+                          "description": "Result detail",
+                          "type": "string"
+                        }
+                      },
+                      "type": "object"
+                    },
+                    "executionTime": {
+                      "description": "Handler seconds",
+                      "format": "double",
+                      "type": "number"
+                    },
+                    "message": {
+                      "description": "Human-readable message",
+                      "type": "string"
+                    },
+                    "path": {
+                      "description": "Request path",
+                      "type": "string"
+                    },
+                    "status": {
+                      "description": "Result status",
+                      "enum": [
+                        "success"
+                      ],
+                      "type": "string"
+                    }
+                  },
+                  "required": [
+                    "status",
+                    "message"
+                  ],
+                  "type": "object"
+                }
+              }
+            },
+            "description": "Unlink paired identity"
+          },
+          "400": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "description": "Codedock API error",
+                  "properties": {
+                    "message": {
+                      "description": "Human-readable message",
+                      "type": "string"
+                    },
+                    "path": {
+                      "description": "Request path",
+                      "type": "string"
+                    },
+                    "status": {
+                      "description": "Result status",
+                      "enum": [
+                        "error"
+                      ],
+                      "type": "string"
+                    }
+                  },
+                  "required": [
+                    "status",
+                    "message"
+                  ],
+                  "type": "object"
+                }
+              }
+            },
+            "description": "Invalid request"
+          },
+          "401": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "description": "Codedock API error",
+                  "properties": {
+                    "message": {
+                      "description": "Human-readable message",
+                      "type": "string"
+                    },
+                    "path": {
+                      "description": "Request path",
+                      "type": "string"
+                    },
+                    "status": {
+                      "description": "Result status",
+                      "enum": [
+                        "error"
+                      ],
+                      "type": "string"
+                    }
+                  },
+                  "required": [
+                    "status",
+                    "message"
+                  ],
+                  "type": "object"
+                }
+              }
+            },
+            "description": "Missing or invalid credentials"
+          },
+          "403": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "description": "Codedock API error",
+                  "properties": {
+                    "message": {
+                      "description": "Human-readable message",
+                      "type": "string"
+                    },
+                    "path": {
+                      "description": "Request path",
+                      "type": "string"
+                    },
+                    "status": {
+                      "description": "Result status",
+                      "enum": [
+                        "error"
+                      ],
+                      "type": "string"
+                    }
+                  },
+                  "required": [
+                    "status",
+                    "message"
+                  ],
+                  "type": "object"
+                }
+              }
+            },
+            "description": "Insufficient permissions"
+          },
+          "404": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "description": "Codedock API error",
+                  "properties": {
+                    "message": {
+                      "description": "Human-readable message",
+                      "type": "string"
+                    },
+                    "path": {
+                      "description": "Request path",
+                      "type": "string"
+                    },
+                    "status": {
+                      "description": "Result status",
+                      "enum": [
+                        "error"
+                      ],
+                      "type": "string"
+                    }
+                  },
+                  "required": [
+                    "status",
+                    "message"
+                  ],
+                  "type": "object"
+                }
+              }
+            },
+            "description": "Resource not found"
+          },
+          "500": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "description": "Codedock API error",
+                  "properties": {
+                    "message": {
+                      "description": "Human-readable message",
+                      "type": "string"
+                    },
+                    "path": {
+                      "description": "Request path",
+                      "type": "string"
+                    },
+                    "status": {
+                      "description": "Result status",
+                      "enum": [
+                        "error"
+                      ],
+                      "type": "string"
+                    }
+                  },
+                  "required": [
+                    "status",
+                    "message"
+                  ],
+                  "type": "object"
+                }
+              }
+            },
+            "description": "Server error"
+          }
+        },
+        "security": [
+          {
+            "bearerAuth": []
+          }
+        ],
+        "summary": "Unlink paired identity",
+        "tags": [
+          "settings"
+        ],
+        "x-auth": "authenticated"
+      }
+    },
+    "/api/chat-apps/pairing/challenge/{token}": {
+      "get": {
+        "operationId": "getChatAppsPairingChallengeToken",
+        "parameters": [
+          {
+            "description": "token",
+            "in": "path",
+            "name": "token",
+            "required": true,
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "description": "Codedock API envelope",
+                  "properties": {
+                    "data": {
+                      "description": "Chat challenge",
+                      "properties": {
+                        "code": {
+                          "description": "Code",
+                          "type": "string"
+                        },
+                        "connectionId": {
+                          "description": "Connection ID",
+                          "type": "string"
+                        },
+                        "createdAt": {
+                          "description": "Created timestamp",
+                          "format": "date-time",
+                          "type": "string"
+                        },
+                        "expiresAt": {
+                          "description": "Expires timestamp",
+                          "format": "date-time",
+                          "type": "string"
+                        },
+                        "externalChannelId": {
+                          "description": "External channel ID",
+                          "type": "string"
+                        },
+                        "externalUserId": {
+                          "description": "External user ID",
+                          "type": "string"
+                        },
+                        "id": {
+                          "description": "Challenge ID",
+                          "type": "string"
+                        },
+                        "provider": {
+                          "description": "Provider",
+                          "type": "string"
+                        },
+                        "token": {
+                          "description": "Token",
+                          "type": "string"
+                        },
+                        "verifiedAt": {
+                          "description": "Verified timestamp",
+                          "format": "date-time",
+                          "type": "string"
+                        }
+                      },
+                      "required": [
+                        "id",
+                        "connectionId",
+                        "provider",
+                        "externalUserId",
+                        "token",
+                        "code",
+                        "expiresAt",
+                        "createdAt"
+                      ],
+                      "type": "object"
+                    },
+                    "executionTime": {
+                      "description": "Handler seconds",
+                      "format": "double",
+                      "type": "number"
+                    },
+                    "message": {
+                      "description": "Human-readable message",
+                      "type": "string"
+                    },
+                    "path": {
+                      "description": "Request path",
+                      "type": "string"
+                    },
+                    "status": {
+                      "description": "Result status",
+                      "enum": [
+                        "success"
+                      ],
+                      "type": "string"
+                    }
+                  },
+                  "required": [
+                    "status",
+                    "message"
+                  ],
+                  "type": "object"
+                }
+              }
+            },
+            "description": "Get pairing challenge"
+          },
+          "400": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "description": "Codedock API error",
+                  "properties": {
+                    "message": {
+                      "description": "Human-readable message",
+                      "type": "string"
+                    },
+                    "path": {
+                      "description": "Request path",
+                      "type": "string"
+                    },
+                    "status": {
+                      "description": "Result status",
+                      "enum": [
+                        "error"
+                      ],
+                      "type": "string"
+                    }
+                  },
+                  "required": [
+                    "status",
+                    "message"
+                  ],
+                  "type": "object"
+                }
+              }
+            },
+            "description": "Invalid request"
+          },
+          "401": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "description": "Codedock API error",
+                  "properties": {
+                    "message": {
+                      "description": "Human-readable message",
+                      "type": "string"
+                    },
+                    "path": {
+                      "description": "Request path",
+                      "type": "string"
+                    },
+                    "status": {
+                      "description": "Result status",
+                      "enum": [
+                        "error"
+                      ],
+                      "type": "string"
+                    }
+                  },
+                  "required": [
+                    "status",
+                    "message"
+                  ],
+                  "type": "object"
+                }
+              }
+            },
+            "description": "Missing or invalid credentials"
+          },
+          "403": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "description": "Codedock API error",
+                  "properties": {
+                    "message": {
+                      "description": "Human-readable message",
+                      "type": "string"
+                    },
+                    "path": {
+                      "description": "Request path",
+                      "type": "string"
+                    },
+                    "status": {
+                      "description": "Result status",
+                      "enum": [
+                        "error"
+                      ],
+                      "type": "string"
+                    }
+                  },
+                  "required": [
+                    "status",
+                    "message"
+                  ],
+                  "type": "object"
+                }
+              }
+            },
+            "description": "Insufficient permissions"
+          },
+          "404": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "description": "Codedock API error",
+                  "properties": {
+                    "message": {
+                      "description": "Human-readable message",
+                      "type": "string"
+                    },
+                    "path": {
+                      "description": "Request path",
+                      "type": "string"
+                    },
+                    "status": {
+                      "description": "Result status",
+                      "enum": [
+                        "error"
+                      ],
+                      "type": "string"
+                    }
+                  },
+                  "required": [
+                    "status",
+                    "message"
+                  ],
+                  "type": "object"
+                }
+              }
+            },
+            "description": "Resource not found"
+          },
+          "500": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "description": "Codedock API error",
+                  "properties": {
+                    "message": {
+                      "description": "Human-readable message",
+                      "type": "string"
+                    },
+                    "path": {
+                      "description": "Request path",
+                      "type": "string"
+                    },
+                    "status": {
+                      "description": "Result status",
+                      "enum": [
+                        "error"
+                      ],
+                      "type": "string"
+                    }
+                  },
+                  "required": [
+                    "status",
+                    "message"
+                  ],
+                  "type": "object"
+                }
+              }
+            },
+            "description": "Server error"
+          }
+        },
+        "security": [
+          {
+            "bearerAuth": []
+          }
+        ],
+        "summary": "Get pairing challenge",
+        "tags": [
+          "settings"
+        ],
+        "x-auth": "authenticated"
+      }
+    },
+    "/api/chat-apps/pairing/verify": {
+      "post": {
+        "operationId": "postChatAppsPairingVerify",
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "description": "Verify",
+                "properties": {
+                  "code": {
+                    "description": "Verification code",
+                    "type": "string"
+                  },
+                  "token": {
+                    "description": "Challenge token",
+                    "type": "string"
+                  }
+                },
+                "required": [
+                  "code"
+                ],
+                "type": "object"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "description": "Codedock API envelope",
+                  "properties": {
+                    "data": {
+                      "description": "Chat identity",
+                      "properties": {
+                        "active": {
+                          "description": "Active",
+                          "type": "boolean"
+                        },
+                        "connectionId": {
+                          "description": "Connection ID",
+                          "type": "string"
+                        },
+                        "createdAt": {
+                          "description": "Created timestamp",
+                          "format": "date-time",
+                          "type": "string"
+                        },
+                        "externalUserId": {
+                          "description": "External user ID",
+                          "type": "string"
+                        },
+                        "externalUsername": {
+                          "description": "External username",
+                          "type": "string"
+                        },
+                        "id": {
+                          "description": "Identity ID",
+                          "type": "string"
+                        },
+                        "pairedAt": {
+                          "description": "Paired timestamp",
+                          "format": "date-time",
+                          "type": "string"
+                        },
+                        "permissions": {
+                          "description": "Permissions",
+                          "items": {
+                            "description": "Permission",
+                            "type": "string"
+                          },
+                          "type": "array"
+                        },
+                        "provider": {
+                          "description": "Provider",
+                          "type": "string"
+                        },
+                        "role": {
+                          "description": "Role",
+                          "type": "string"
+                        },
+                        "updatedAt": {
+                          "description": "Updated timestamp",
+                          "format": "date-time",
+                          "type": "string"
+                        },
+                        "userId": {
+                          "description": "User ID",
+                          "type": "string"
+                        }
+                      },
+                      "required": [
+                        "id",
+                        "connectionId",
+                        "userId",
+                        "provider",
+                        "externalUserId",
+                        "role",
+                        "active",
+                        "pairedAt",
+                        "createdAt",
+                        "updatedAt"
+                      ],
+                      "type": "object"
+                    },
+                    "executionTime": {
+                      "description": "Handler seconds",
+                      "format": "double",
+                      "type": "number"
+                    },
+                    "message": {
+                      "description": "Human-readable message",
+                      "type": "string"
+                    },
+                    "path": {
+                      "description": "Request path",
+                      "type": "string"
+                    },
+                    "status": {
+                      "description": "Result status",
+                      "enum": [
+                        "success"
+                      ],
+                      "type": "string"
+                    }
+                  },
+                  "required": [
+                    "status",
+                    "message"
+                  ],
+                  "type": "object"
+                }
+              }
+            },
+            "description": "Verify pairing code"
+          },
+          "400": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "description": "Codedock API error",
+                  "properties": {
+                    "message": {
+                      "description": "Human-readable message",
+                      "type": "string"
+                    },
+                    "path": {
+                      "description": "Request path",
+                      "type": "string"
+                    },
+                    "status": {
+                      "description": "Result status",
+                      "enum": [
+                        "error"
+                      ],
+                      "type": "string"
+                    }
+                  },
+                  "required": [
+                    "status",
+                    "message"
+                  ],
+                  "type": "object"
+                }
+              }
+            },
+            "description": "Invalid request"
+          },
+          "401": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "description": "Codedock API error",
+                  "properties": {
+                    "message": {
+                      "description": "Human-readable message",
+                      "type": "string"
+                    },
+                    "path": {
+                      "description": "Request path",
+                      "type": "string"
+                    },
+                    "status": {
+                      "description": "Result status",
+                      "enum": [
+                        "error"
+                      ],
+                      "type": "string"
+                    }
+                  },
+                  "required": [
+                    "status",
+                    "message"
+                  ],
+                  "type": "object"
+                }
+              }
+            },
+            "description": "Missing or invalid credentials"
+          },
+          "403": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "description": "Codedock API error",
+                  "properties": {
+                    "message": {
+                      "description": "Human-readable message",
+                      "type": "string"
+                    },
+                    "path": {
+                      "description": "Request path",
+                      "type": "string"
+                    },
+                    "status": {
+                      "description": "Result status",
+                      "enum": [
+                        "error"
+                      ],
+                      "type": "string"
+                    }
+                  },
+                  "required": [
+                    "status",
+                    "message"
+                  ],
+                  "type": "object"
+                }
+              }
+            },
+            "description": "Insufficient permissions"
+          },
+          "500": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "description": "Codedock API error",
+                  "properties": {
+                    "message": {
+                      "description": "Human-readable message",
+                      "type": "string"
+                    },
+                    "path": {
+                      "description": "Request path",
+                      "type": "string"
+                    },
+                    "status": {
+                      "description": "Result status",
+                      "enum": [
+                        "error"
+                      ],
+                      "type": "string"
+                    }
+                  },
+                  "required": [
+                    "status",
+                    "message"
+                  ],
+                  "type": "object"
+                }
+              }
+            },
+            "description": "Server error"
+          }
+        },
+        "security": [
+          {
+            "bearerAuth": []
+          }
+        ],
+        "summary": "Verify pairing code",
+        "tags": [
+          "settings"
+        ],
+        "x-auth": "authenticated"
+      }
+    },
+    "/api/chat-apps/webhooks/{id}": {
+      "post": {
+        "operationId": "postChatAppsWebhooksId",
+        "parameters": [
+          {
+            "description": "id",
+            "in": "path",
+            "name": "id",
+            "required": true,
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "description": "Webhook payload"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "description": "Codedock API envelope",
+                  "properties": {
+                    "data": {
+                      "description": "Webhook response",
+                      "properties": {
+                        "status": {
+                          "description": "Status",
+                          "type": "string"
+                        },
+                        "text": {
+                          "description": "Response text",
+                          "type": "string"
+                        }
+                      },
+                      "type": "object"
+                    },
+                    "executionTime": {
+                      "description": "Handler seconds",
+                      "format": "double",
+                      "type": "number"
+                    },
+                    "message": {
+                      "description": "Human-readable message",
+                      "type": "string"
+                    },
+                    "path": {
+                      "description": "Request path",
+                      "type": "string"
+                    },
+                    "status": {
+                      "description": "Result status",
+                      "enum": [
+                        "success"
+                      ],
+                      "type": "string"
+                    }
+                  },
+                  "required": [
+                    "status",
+                    "message"
+                  ],
+                  "type": "object"
+                }
+              }
+            },
+            "description": "Ingress webhook from chat app"
+          },
+          "400": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "description": "Codedock API error",
+                  "properties": {
+                    "message": {
+                      "description": "Human-readable message",
+                      "type": "string"
+                    },
+                    "path": {
+                      "description": "Request path",
+                      "type": "string"
+                    },
+                    "status": {
+                      "description": "Result status",
+                      "enum": [
+                        "error"
+                      ],
+                      "type": "string"
+                    }
+                  },
+                  "required": [
+                    "status",
+                    "message"
+                  ],
+                  "type": "object"
+                }
+              }
+            },
+            "description": "Invalid request"
+          },
+          "404": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "description": "Codedock API error",
+                  "properties": {
+                    "message": {
+                      "description": "Human-readable message",
+                      "type": "string"
+                    },
+                    "path": {
+                      "description": "Request path",
+                      "type": "string"
+                    },
+                    "status": {
+                      "description": "Result status",
+                      "enum": [
+                        "error"
+                      ],
+                      "type": "string"
+                    }
+                  },
+                  "required": [
+                    "status",
+                    "message"
+                  ],
+                  "type": "object"
+                }
+              }
+            },
+            "description": "Resource not found"
+          },
+          "500": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "description": "Codedock API error",
+                  "properties": {
+                    "message": {
+                      "description": "Human-readable message",
+                      "type": "string"
+                    },
+                    "path": {
+                      "description": "Request path",
+                      "type": "string"
+                    },
+                    "status": {
+                      "description": "Result status",
+                      "enum": [
+                        "error"
+                      ],
+                      "type": "string"
+                    }
+                  },
+                  "required": [
+                    "status",
+                    "message"
+                  ],
+                  "type": "object"
+                }
+              }
+            },
+            "description": "Server error"
+          }
+        },
+        "summary": "Ingress webhook from chat app",
+        "tags": [
+          "settings"
+        ]
+      }
+    },
+    "/api/chat-apps/{id}": {
+      "delete": {
+        "operationId": "deleteChatAppsId",
+        "parameters": [
+          {
+            "description": "id",
+            "in": "path",
+            "name": "id",
+            "required": true,
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "description": "Codedock API envelope",
+                  "properties": {
+                    "data": {
+                      "description": "Empty result",
+                      "properties": {
+                        "result": {
+                          "description": "Result detail",
+                          "type": "string"
+                        }
+                      },
+                      "type": "object"
+                    },
+                    "executionTime": {
+                      "description": "Handler seconds",
+                      "format": "double",
+                      "type": "number"
+                    },
+                    "message": {
+                      "description": "Human-readable message",
+                      "type": "string"
+                    },
+                    "path": {
+                      "description": "Request path",
+                      "type": "string"
+                    },
+                    "status": {
+                      "description": "Result status",
+                      "enum": [
+                        "success"
+                      ],
+                      "type": "string"
+                    }
+                  },
+                  "required": [
+                    "status",
+                    "message"
+                  ],
+                  "type": "object"
+                }
+              }
+            },
+            "description": "Delete chat connection"
+          },
+          "400": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "description": "Codedock API error",
+                  "properties": {
+                    "message": {
+                      "description": "Human-readable message",
+                      "type": "string"
+                    },
+                    "path": {
+                      "description": "Request path",
+                      "type": "string"
+                    },
+                    "status": {
+                      "description": "Result status",
+                      "enum": [
+                        "error"
+                      ],
+                      "type": "string"
+                    }
+                  },
+                  "required": [
+                    "status",
+                    "message"
+                  ],
+                  "type": "object"
+                }
+              }
+            },
+            "description": "Invalid request"
+          },
+          "401": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "description": "Codedock API error",
+                  "properties": {
+                    "message": {
+                      "description": "Human-readable message",
+                      "type": "string"
+                    },
+                    "path": {
+                      "description": "Request path",
+                      "type": "string"
+                    },
+                    "status": {
+                      "description": "Result status",
+                      "enum": [
+                        "error"
+                      ],
+                      "type": "string"
+                    }
+                  },
+                  "required": [
+                    "status",
+                    "message"
+                  ],
+                  "type": "object"
+                }
+              }
+            },
+            "description": "Missing or invalid credentials"
+          },
+          "403": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "description": "Codedock API error",
+                  "properties": {
+                    "message": {
+                      "description": "Human-readable message",
+                      "type": "string"
+                    },
+                    "path": {
+                      "description": "Request path",
+                      "type": "string"
+                    },
+                    "status": {
+                      "description": "Result status",
+                      "enum": [
+                        "error"
+                      ],
+                      "type": "string"
+                    }
+                  },
+                  "required": [
+                    "status",
+                    "message"
+                  ],
+                  "type": "object"
+                }
+              }
+            },
+            "description": "Insufficient permissions"
+          },
+          "404": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "description": "Codedock API error",
+                  "properties": {
+                    "message": {
+                      "description": "Human-readable message",
+                      "type": "string"
+                    },
+                    "path": {
+                      "description": "Request path",
+                      "type": "string"
+                    },
+                    "status": {
+                      "description": "Result status",
+                      "enum": [
+                        "error"
+                      ],
+                      "type": "string"
+                    }
+                  },
+                  "required": [
+                    "status",
+                    "message"
+                  ],
+                  "type": "object"
+                }
+              }
+            },
+            "description": "Resource not found"
+          },
+          "500": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "description": "Codedock API error",
+                  "properties": {
+                    "message": {
+                      "description": "Human-readable message",
+                      "type": "string"
+                    },
+                    "path": {
+                      "description": "Request path",
+                      "type": "string"
+                    },
+                    "status": {
+                      "description": "Result status",
+                      "enum": [
+                        "error"
+                      ],
+                      "type": "string"
+                    }
+                  },
+                  "required": [
+                    "status",
+                    "message"
+                  ],
+                  "type": "object"
+                }
+              }
+            },
+            "description": "Server error"
+          }
+        },
+        "security": [
+          {
+            "bearerAuth": []
+          }
+        ],
+        "summary": "Delete chat connection",
+        "tags": [
+          "settings"
+        ],
+        "x-auth": "authenticated"
+      },
+      "get": {
+        "operationId": "getChatAppsId",
+        "parameters": [
+          {
+            "description": "id",
+            "in": "path",
+            "name": "id",
+            "required": true,
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "description": "Codedock API envelope",
+                  "properties": {
+                    "data": {
+                      "description": "Chat connection",
+                      "properties": {
+                        "botUsername": {
+                          "description": "Bot username",
+                          "type": "string"
+                        },
+                        "config": {
+                          "description": "Config"
+                        },
+                        "createdAt": {
+                          "description": "Created timestamp",
+                          "format": "date-time",
+                          "type": "string"
+                        },
+                        "enabled": {
+                          "description": "Enabled",
+                          "type": "boolean"
+                        },
+                        "id": {
+                          "description": "Connection ID",
+                          "type": "string"
+                        },
+                        "lastError": {
+                          "description": "Last error",
+                          "type": "string"
+                        },
+                        "lastEventAt": {
+                          "description": "Last event timestamp",
+                          "format": "date-time",
+                          "type": "string"
+                        },
+                        "name": {
+                          "description": "Name",
+                          "type": "string"
+                        },
+                        "provider": {
+                          "description": "Provider",
+                          "type": "string"
+                        },
+                        "purpose": {
+                          "description": "Purpose",
+                          "type": "string"
+                        },
+                        "status": {
+                          "description": "Status",
+                          "type": "string"
+                        },
+                        "transport": {
+                          "description": "Transport",
+                          "type": "string"
+                        },
+                        "updatedAt": {
+                          "description": "Updated timestamp",
+                          "format": "date-time",
+                          "type": "string"
+                        },
+                        "userId": {
+                          "description": "User ID",
+                          "type": "string"
+                        }
+                      },
+                      "required": [
+                        "id",
+                        "userId",
+                        "provider",
+                        "transport",
+                        "purpose",
+                        "name",
+                        "enabled",
+                        "status",
+                        "createdAt",
+                        "updatedAt"
+                      ],
+                      "type": "object"
+                    },
+                    "executionTime": {
+                      "description": "Handler seconds",
+                      "format": "double",
+                      "type": "number"
+                    },
+                    "message": {
+                      "description": "Human-readable message",
+                      "type": "string"
+                    },
+                    "path": {
+                      "description": "Request path",
+                      "type": "string"
+                    },
+                    "status": {
+                      "description": "Result status",
+                      "enum": [
+                        "success"
+                      ],
+                      "type": "string"
+                    }
+                  },
+                  "required": [
+                    "status",
+                    "message"
+                  ],
+                  "type": "object"
+                }
+              }
+            },
+            "description": "Get chat connection"
+          },
+          "400": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "description": "Codedock API error",
+                  "properties": {
+                    "message": {
+                      "description": "Human-readable message",
+                      "type": "string"
+                    },
+                    "path": {
+                      "description": "Request path",
+                      "type": "string"
+                    },
+                    "status": {
+                      "description": "Result status",
+                      "enum": [
+                        "error"
+                      ],
+                      "type": "string"
+                    }
+                  },
+                  "required": [
+                    "status",
+                    "message"
+                  ],
+                  "type": "object"
+                }
+              }
+            },
+            "description": "Invalid request"
+          },
+          "401": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "description": "Codedock API error",
+                  "properties": {
+                    "message": {
+                      "description": "Human-readable message",
+                      "type": "string"
+                    },
+                    "path": {
+                      "description": "Request path",
+                      "type": "string"
+                    },
+                    "status": {
+                      "description": "Result status",
+                      "enum": [
+                        "error"
+                      ],
+                      "type": "string"
+                    }
+                  },
+                  "required": [
+                    "status",
+                    "message"
+                  ],
+                  "type": "object"
+                }
+              }
+            },
+            "description": "Missing or invalid credentials"
+          },
+          "403": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "description": "Codedock API error",
+                  "properties": {
+                    "message": {
+                      "description": "Human-readable message",
+                      "type": "string"
+                    },
+                    "path": {
+                      "description": "Request path",
+                      "type": "string"
+                    },
+                    "status": {
+                      "description": "Result status",
+                      "enum": [
+                        "error"
+                      ],
+                      "type": "string"
+                    }
+                  },
+                  "required": [
+                    "status",
+                    "message"
+                  ],
+                  "type": "object"
+                }
+              }
+            },
+            "description": "Insufficient permissions"
+          },
+          "404": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "description": "Codedock API error",
+                  "properties": {
+                    "message": {
+                      "description": "Human-readable message",
+                      "type": "string"
+                    },
+                    "path": {
+                      "description": "Request path",
+                      "type": "string"
+                    },
+                    "status": {
+                      "description": "Result status",
+                      "enum": [
+                        "error"
+                      ],
+                      "type": "string"
+                    }
+                  },
+                  "required": [
+                    "status",
+                    "message"
+                  ],
+                  "type": "object"
+                }
+              }
+            },
+            "description": "Resource not found"
+          },
+          "500": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "description": "Codedock API error",
+                  "properties": {
+                    "message": {
+                      "description": "Human-readable message",
+                      "type": "string"
+                    },
+                    "path": {
+                      "description": "Request path",
+                      "type": "string"
+                    },
+                    "status": {
+                      "description": "Result status",
+                      "enum": [
+                        "error"
+                      ],
+                      "type": "string"
+                    }
+                  },
+                  "required": [
+                    "status",
+                    "message"
+                  ],
+                  "type": "object"
+                }
+              }
+            },
+            "description": "Server error"
+          }
+        },
+        "security": [
+          {
+            "bearerAuth": []
+          }
+        ],
+        "summary": "Get chat connection",
+        "tags": [
+          "settings"
+        ],
+        "x-auth": "authenticated"
+      },
+      "patch": {
+        "operationId": "patchChatAppsId",
+        "parameters": [
+          {
+            "description": "id",
+            "in": "path",
+            "name": "id",
+            "required": true,
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "description": "Update chat app",
+                "properties": {
+                  "botUsername": {
+                    "description": "Bot username",
+                    "type": "string"
+                  },
+                  "config": {
+                    "description": "Config"
+                  },
+                  "credentials": {
+                    "description": "Credentials"
+                  },
+                  "enabled": {
+                    "description": "Enabled",
+                    "type": "boolean"
+                  },
+                  "name": {
+                    "description": "Name",
+                    "type": "string"
+                  },
+                  "purpose": {
+                    "description": "Purpose",
+                    "type": "string"
+                  },
+                  "transport": {
+                    "description": "Transport",
+                    "type": "string"
+                  }
+                },
+                "type": "object"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "description": "Codedock API envelope",
+                  "properties": {
+                    "data": {
+                      "description": "Chat connection",
+                      "properties": {
+                        "botUsername": {
+                          "description": "Bot username",
+                          "type": "string"
+                        },
+                        "config": {
+                          "description": "Config"
+                        },
+                        "createdAt": {
+                          "description": "Created timestamp",
+                          "format": "date-time",
+                          "type": "string"
+                        },
+                        "enabled": {
+                          "description": "Enabled",
+                          "type": "boolean"
+                        },
+                        "id": {
+                          "description": "Connection ID",
+                          "type": "string"
+                        },
+                        "lastError": {
+                          "description": "Last error",
+                          "type": "string"
+                        },
+                        "lastEventAt": {
+                          "description": "Last event timestamp",
+                          "format": "date-time",
+                          "type": "string"
+                        },
+                        "name": {
+                          "description": "Name",
+                          "type": "string"
+                        },
+                        "provider": {
+                          "description": "Provider",
+                          "type": "string"
+                        },
+                        "purpose": {
+                          "description": "Purpose",
+                          "type": "string"
+                        },
+                        "status": {
+                          "description": "Status",
+                          "type": "string"
+                        },
+                        "transport": {
+                          "description": "Transport",
+                          "type": "string"
+                        },
+                        "updatedAt": {
+                          "description": "Updated timestamp",
+                          "format": "date-time",
+                          "type": "string"
+                        },
+                        "userId": {
+                          "description": "User ID",
+                          "type": "string"
+                        }
+                      },
+                      "required": [
+                        "id",
+                        "userId",
+                        "provider",
+                        "transport",
+                        "purpose",
+                        "name",
+                        "enabled",
+                        "status",
+                        "createdAt",
+                        "updatedAt"
+                      ],
+                      "type": "object"
+                    },
+                    "executionTime": {
+                      "description": "Handler seconds",
+                      "format": "double",
+                      "type": "number"
+                    },
+                    "message": {
+                      "description": "Human-readable message",
+                      "type": "string"
+                    },
+                    "path": {
+                      "description": "Request path",
+                      "type": "string"
+                    },
+                    "status": {
+                      "description": "Result status",
+                      "enum": [
+                        "success"
+                      ],
+                      "type": "string"
+                    }
+                  },
+                  "required": [
+                    "status",
+                    "message"
+                  ],
+                  "type": "object"
+                }
+              }
+            },
+            "description": "Update chat connection"
+          },
+          "400": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "description": "Codedock API error",
+                  "properties": {
+                    "message": {
+                      "description": "Human-readable message",
+                      "type": "string"
+                    },
+                    "path": {
+                      "description": "Request path",
+                      "type": "string"
+                    },
+                    "status": {
+                      "description": "Result status",
+                      "enum": [
+                        "error"
+                      ],
+                      "type": "string"
+                    }
+                  },
+                  "required": [
+                    "status",
+                    "message"
+                  ],
+                  "type": "object"
+                }
+              }
+            },
+            "description": "Invalid request"
+          },
+          "401": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "description": "Codedock API error",
+                  "properties": {
+                    "message": {
+                      "description": "Human-readable message",
+                      "type": "string"
+                    },
+                    "path": {
+                      "description": "Request path",
+                      "type": "string"
+                    },
+                    "status": {
+                      "description": "Result status",
+                      "enum": [
+                        "error"
+                      ],
+                      "type": "string"
+                    }
+                  },
+                  "required": [
+                    "status",
+                    "message"
+                  ],
+                  "type": "object"
+                }
+              }
+            },
+            "description": "Missing or invalid credentials"
+          },
+          "403": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "description": "Codedock API error",
+                  "properties": {
+                    "message": {
+                      "description": "Human-readable message",
+                      "type": "string"
+                    },
+                    "path": {
+                      "description": "Request path",
+                      "type": "string"
+                    },
+                    "status": {
+                      "description": "Result status",
+                      "enum": [
+                        "error"
+                      ],
+                      "type": "string"
+                    }
+                  },
+                  "required": [
+                    "status",
+                    "message"
+                  ],
+                  "type": "object"
+                }
+              }
+            },
+            "description": "Insufficient permissions"
+          },
+          "404": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "description": "Codedock API error",
+                  "properties": {
+                    "message": {
+                      "description": "Human-readable message",
+                      "type": "string"
+                    },
+                    "path": {
+                      "description": "Request path",
+                      "type": "string"
+                    },
+                    "status": {
+                      "description": "Result status",
+                      "enum": [
+                        "error"
+                      ],
+                      "type": "string"
+                    }
+                  },
+                  "required": [
+                    "status",
+                    "message"
+                  ],
+                  "type": "object"
+                }
+              }
+            },
+            "description": "Resource not found"
+          },
+          "500": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "description": "Codedock API error",
+                  "properties": {
+                    "message": {
+                      "description": "Human-readable message",
+                      "type": "string"
+                    },
+                    "path": {
+                      "description": "Request path",
+                      "type": "string"
+                    },
+                    "status": {
+                      "description": "Result status",
+                      "enum": [
+                        "error"
+                      ],
+                      "type": "string"
+                    }
+                  },
+                  "required": [
+                    "status",
+                    "message"
+                  ],
+                  "type": "object"
+                }
+              }
+            },
+            "description": "Server error"
+          }
+        },
+        "security": [
+          {
+            "bearerAuth": []
+          }
+        ],
+        "summary": "Update chat connection",
+        "tags": [
+          "settings"
+        ],
+        "x-auth": "authenticated"
+      }
+    },
+    "/api/chat-apps/{id}/identities": {
+      "get": {
+        "operationId": "getChatAppsIdIdentities",
+        "parameters": [
+          {
+            "description": "id",
+            "in": "path",
+            "name": "id",
+            "required": true,
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "description": "Codedock API envelope",
+                  "properties": {
+                    "data": {
+                      "description": "Chat identities",
+                      "items": {
+                        "description": "Chat identity",
+                        "properties": {
+                          "active": {
+                            "description": "Active",
+                            "type": "boolean"
+                          },
+                          "connectionId": {
+                            "description": "Connection ID",
+                            "type": "string"
+                          },
+                          "createdAt": {
+                            "description": "Created timestamp",
+                            "format": "date-time",
+                            "type": "string"
+                          },
+                          "externalUserId": {
+                            "description": "External user ID",
+                            "type": "string"
+                          },
+                          "externalUsername": {
+                            "description": "External username",
+                            "type": "string"
+                          },
+                          "id": {
+                            "description": "Identity ID",
+                            "type": "string"
+                          },
+                          "pairedAt": {
+                            "description": "Paired timestamp",
+                            "format": "date-time",
+                            "type": "string"
+                          },
+                          "permissions": {
+                            "description": "Permissions",
+                            "items": {
+                              "description": "Permission",
+                              "type": "string"
+                            },
+                            "type": "array"
+                          },
+                          "provider": {
+                            "description": "Provider",
+                            "type": "string"
+                          },
+                          "role": {
+                            "description": "Role",
+                            "type": "string"
+                          },
+                          "updatedAt": {
+                            "description": "Updated timestamp",
+                            "format": "date-time",
+                            "type": "string"
+                          },
+                          "userId": {
+                            "description": "User ID",
+                            "type": "string"
+                          }
+                        },
+                        "required": [
+                          "id",
+                          "connectionId",
+                          "userId",
+                          "provider",
+                          "externalUserId",
+                          "role",
+                          "active",
+                          "pairedAt",
+                          "createdAt",
+                          "updatedAt"
+                        ],
+                        "type": "object"
+                      },
+                      "type": "array"
+                    },
+                    "executionTime": {
+                      "description": "Handler seconds",
+                      "format": "double",
+                      "type": "number"
+                    },
+                    "message": {
+                      "description": "Human-readable message",
+                      "type": "string"
+                    },
+                    "path": {
+                      "description": "Request path",
+                      "type": "string"
+                    },
+                    "status": {
+                      "description": "Result status",
+                      "enum": [
+                        "success"
+                      ],
+                      "type": "string"
+                    }
+                  },
+                  "required": [
+                    "status",
+                    "message"
+                  ],
+                  "type": "object"
+                }
+              }
+            },
+            "description": "List paired identities"
+          },
+          "400": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "description": "Codedock API error",
+                  "properties": {
+                    "message": {
+                      "description": "Human-readable message",
+                      "type": "string"
+                    },
+                    "path": {
+                      "description": "Request path",
+                      "type": "string"
+                    },
+                    "status": {
+                      "description": "Result status",
+                      "enum": [
+                        "error"
+                      ],
+                      "type": "string"
+                    }
+                  },
+                  "required": [
+                    "status",
+                    "message"
+                  ],
+                  "type": "object"
+                }
+              }
+            },
+            "description": "Invalid request"
+          },
+          "401": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "description": "Codedock API error",
+                  "properties": {
+                    "message": {
+                      "description": "Human-readable message",
+                      "type": "string"
+                    },
+                    "path": {
+                      "description": "Request path",
+                      "type": "string"
+                    },
+                    "status": {
+                      "description": "Result status",
+                      "enum": [
+                        "error"
+                      ],
+                      "type": "string"
+                    }
+                  },
+                  "required": [
+                    "status",
+                    "message"
+                  ],
+                  "type": "object"
+                }
+              }
+            },
+            "description": "Missing or invalid credentials"
+          },
+          "403": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "description": "Codedock API error",
+                  "properties": {
+                    "message": {
+                      "description": "Human-readable message",
+                      "type": "string"
+                    },
+                    "path": {
+                      "description": "Request path",
+                      "type": "string"
+                    },
+                    "status": {
+                      "description": "Result status",
+                      "enum": [
+                        "error"
+                      ],
+                      "type": "string"
+                    }
+                  },
+                  "required": [
+                    "status",
+                    "message"
+                  ],
+                  "type": "object"
+                }
+              }
+            },
+            "description": "Insufficient permissions"
+          },
+          "404": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "description": "Codedock API error",
+                  "properties": {
+                    "message": {
+                      "description": "Human-readable message",
+                      "type": "string"
+                    },
+                    "path": {
+                      "description": "Request path",
+                      "type": "string"
+                    },
+                    "status": {
+                      "description": "Result status",
+                      "enum": [
+                        "error"
+                      ],
+                      "type": "string"
+                    }
+                  },
+                  "required": [
+                    "status",
+                    "message"
+                  ],
+                  "type": "object"
+                }
+              }
+            },
+            "description": "Resource not found"
+          },
+          "500": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "description": "Codedock API error",
+                  "properties": {
+                    "message": {
+                      "description": "Human-readable message",
+                      "type": "string"
+                    },
+                    "path": {
+                      "description": "Request path",
+                      "type": "string"
+                    },
+                    "status": {
+                      "description": "Result status",
+                      "enum": [
+                        "error"
+                      ],
+                      "type": "string"
+                    }
+                  },
+                  "required": [
+                    "status",
+                    "message"
+                  ],
+                  "type": "object"
+                }
+              }
+            },
+            "description": "Server error"
+          }
+        },
+        "security": [
+          {
+            "bearerAuth": []
+          }
+        ],
+        "summary": "List paired identities",
+        "tags": [
+          "settings"
+        ],
+        "x-auth": "authenticated"
+      }
+    },
+    "/api/chat-apps/{id}/test": {
+      "post": {
+        "operationId": "postChatAppsIdTest",
+        "parameters": [
+          {
+            "description": "id",
+            "in": "path",
+            "name": "id",
+            "required": true,
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "description": "Codedock API envelope",
+                  "properties": {
+                    "data": {
+                      "description": "Test result",
+                      "properties": {
+                        "checked_at": {
+                          "description": "Checked at",
+                          "type": "string"
+                        },
+                        "id": {
+                          "description": "Connection ID",
+                          "type": "string"
+                        },
+                        "ok": {
+                          "description": "OK",
+                          "type": "boolean"
+                        },
+                        "provider": {
+                          "description": "Provider",
+                          "type": "string"
+                        },
+                        "status": {
+                          "description": "Status",
+                          "type": "string"
+                        }
+                      },
+                      "required": [
+                        "id",
+                        "provider",
+                        "status",
+                        "ok",
+                        "checked_at"
+                      ],
+                      "type": "object"
+                    },
+                    "executionTime": {
+                      "description": "Handler seconds",
+                      "format": "double",
+                      "type": "number"
+                    },
+                    "message": {
+                      "description": "Human-readable message",
+                      "type": "string"
+                    },
+                    "path": {
+                      "description": "Request path",
+                      "type": "string"
+                    },
+                    "status": {
+                      "description": "Result status",
+                      "enum": [
+                        "success"
+                      ],
+                      "type": "string"
+                    }
+                  },
+                  "required": [
+                    "status",
+                    "message"
+                  ],
+                  "type": "object"
+                }
+              }
+            },
+            "description": "Test chat connection"
+          },
+          "400": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "description": "Codedock API error",
+                  "properties": {
+                    "message": {
+                      "description": "Human-readable message",
+                      "type": "string"
+                    },
+                    "path": {
+                      "description": "Request path",
+                      "type": "string"
+                    },
+                    "status": {
+                      "description": "Result status",
+                      "enum": [
+                        "error"
+                      ],
+                      "type": "string"
+                    }
+                  },
+                  "required": [
+                    "status",
+                    "message"
+                  ],
+                  "type": "object"
+                }
+              }
+            },
+            "description": "Invalid request"
+          },
+          "401": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "description": "Codedock API error",
+                  "properties": {
+                    "message": {
+                      "description": "Human-readable message",
+                      "type": "string"
+                    },
+                    "path": {
+                      "description": "Request path",
+                      "type": "string"
+                    },
+                    "status": {
+                      "description": "Result status",
+                      "enum": [
+                        "error"
+                      ],
+                      "type": "string"
+                    }
+                  },
+                  "required": [
+                    "status",
+                    "message"
+                  ],
+                  "type": "object"
+                }
+              }
+            },
+            "description": "Missing or invalid credentials"
+          },
+          "403": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "description": "Codedock API error",
+                  "properties": {
+                    "message": {
+                      "description": "Human-readable message",
+                      "type": "string"
+                    },
+                    "path": {
+                      "description": "Request path",
+                      "type": "string"
+                    },
+                    "status": {
+                      "description": "Result status",
+                      "enum": [
+                        "error"
+                      ],
+                      "type": "string"
+                    }
+                  },
+                  "required": [
+                    "status",
+                    "message"
+                  ],
+                  "type": "object"
+                }
+              }
+            },
+            "description": "Insufficient permissions"
+          },
+          "404": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "description": "Codedock API error",
+                  "properties": {
+                    "message": {
+                      "description": "Human-readable message",
+                      "type": "string"
+                    },
+                    "path": {
+                      "description": "Request path",
+                      "type": "string"
+                    },
+                    "status": {
+                      "description": "Result status",
+                      "enum": [
+                        "error"
+                      ],
+                      "type": "string"
+                    }
+                  },
+                  "required": [
+                    "status",
+                    "message"
+                  ],
+                  "type": "object"
+                }
+              }
+            },
+            "description": "Resource not found"
+          },
+          "500": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "description": "Codedock API error",
+                  "properties": {
+                    "message": {
+                      "description": "Human-readable message",
+                      "type": "string"
+                    },
+                    "path": {
+                      "description": "Request path",
+                      "type": "string"
+                    },
+                    "status": {
+                      "description": "Result status",
+                      "enum": [
+                        "error"
+                      ],
+                      "type": "string"
+                    }
+                  },
+                  "required": [
+                    "status",
+                    "message"
+                  ],
+                  "type": "object"
+                }
+              }
+            },
+            "description": "Server error"
+          }
+        },
+        "security": [
+          {
+            "bearerAuth": []
+          }
+        ],
+        "summary": "Test chat connection",
+        "tags": [
+          "settings"
+        ],
+        "x-auth": "authenticated"
+      }
+    },
     "/api/cloud/support/mine": {
       "get": {
         "operationId": "getCloudSupportMine",

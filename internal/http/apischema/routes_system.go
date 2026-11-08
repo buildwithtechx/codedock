@@ -217,6 +217,57 @@ func actionJobSchema() Schema {
 	)
 }
 
+func chatAppConnectionSchema() Schema {
+	return Obj("Chat connection",
+		RF("id", Str("Connection ID")),
+		RF("userId", Str("User ID")),
+		RF("provider", Str("Provider")),
+		RF("transport", Str("Transport")),
+		RF("purpose", Str("Purpose")),
+		RF("name", Str("Name")),
+		F("botUsername", Str("Bot username")),
+		F("config", Any("Config")),
+		RF("enabled", Bool("Enabled")),
+		RF("status", Str("Status")),
+		F("lastError", Str("Last error")),
+		F("lastEventAt", DateTime("Last event timestamp")),
+		RF("createdAt", DateTime("Created timestamp")),
+		RF("updatedAt", DateTime("Updated timestamp")),
+	)
+}
+
+func chatAppIdentitySchema() Schema {
+	return Obj("Chat identity",
+		RF("id", Str("Identity ID")),
+		RF("connectionId", Str("Connection ID")),
+		RF("userId", Str("User ID")),
+		RF("provider", Str("Provider")),
+		RF("externalUserId", Str("External user ID")),
+		F("externalUsername", Str("External username")),
+		RF("role", Str("Role")),
+		F("permissions", Arr("Permissions", Str("Permission"))),
+		RF("active", Bool("Active")),
+		RF("pairedAt", DateTime("Paired timestamp")),
+		RF("createdAt", DateTime("Created timestamp")),
+		RF("updatedAt", DateTime("Updated timestamp")),
+	)
+}
+
+func chatAppChallengeSchema() Schema {
+	return Obj("Chat challenge",
+		RF("id", Str("Challenge ID")),
+		RF("connectionId", Str("Connection ID")),
+		RF("provider", Str("Provider")),
+		RF("externalUserId", Str("External user ID")),
+		F("externalChannelId", Str("External channel ID")),
+		RF("token", Str("Token")),
+		RF("code", Str("Code")),
+		RF("expiresAt", DateTime("Expires timestamp")),
+		F("verifiedAt", DateTime("Verified timestamp")),
+		RF("createdAt", DateTime("Created timestamp")),
+	)
+}
+
 func actionRunSchema() Schema {
 	return Obj("Action run",
 		RF("id", Str("Run ID")),
@@ -382,6 +433,20 @@ func systemOperations() []Operation {
 		{Method: "GET", Path: "/api/settings/updates/status", Summary: "Get update status", Tags: []string{settings}, Auth: AuthUser, Response: Obj("Update status", F("currentVersion", Str("Current version")), F("latestVersion", Str("Latest version")), F("lastUpdateCheck", Str("Last check")))},
 		{Method: "POST", Path: "/api/settings/updates/check", Summary: "Check for updates", Tags: []string{settings}, Auth: AuthAdmin, Response: Obj("Update status", F("currentVersion", Str("Current version")), F("latestVersion", Str("Latest version")))},
 		{Method: "POST", Path: "/api/settings/updates/deploy", Summary: "Deploy an update", Tags: []string{settings}, Auth: AuthAdmin, Code: 202, Response: EmptySchema()},
+
+		// Chat Apps Integrations
+		{Method: "GET", Path: "/api/chat-apps", Summary: "List chat connections", Tags: []string{settings}, Auth: AuthUser, Response: Arr("Chat connections", chatAppConnectionSchema())},
+		{Method: "POST", Path: "/api/chat-apps", Summary: "Create chat connection", Tags: []string{settings}, Auth: AuthUser, Request: JSON(Obj("Create chat app", RF("provider", Str("Provider")), F("transport", Str("Transport")), F("purpose", Str("Purpose")), F("name", Str("Name")), F("botUsername", Str("Bot username")), F("credentials", Any("Credentials")), F("config", Any("Config")))), Response: chatAppConnectionSchema()},
+		{Method: "GET", Path: "/api/chat-apps/:id", Summary: "Get chat connection", Tags: []string{settings}, Auth: AuthUser, Response: chatAppConnectionSchema()},
+		{Method: "PATCH", Path: "/api/chat-apps/:id", Summary: "Update chat connection", Tags: []string{settings}, Auth: AuthUser, Request: JSON(Obj("Update chat app", F("name", Str("Name")), F("transport", Str("Transport")), F("purpose", Str("Purpose")), F("botUsername", Str("Bot username")), F("enabled", Bool("Enabled")), F("credentials", Any("Credentials")), F("config", Any("Config")))), Response: chatAppConnectionSchema()},
+		{Method: "DELETE", Path: "/api/chat-apps/:id", Summary: "Delete chat connection", Tags: []string{settings}, Auth: AuthUser, Response: EmptySchema()},
+		{Method: "POST", Path: "/api/chat-apps/:id/test", Summary: "Test chat connection", Tags: []string{settings}, Auth: AuthUser, Response: Obj("Test result", RF("id", Str("Connection ID")), RF("provider", Str("Provider")), RF("status", Str("Status")), RF("ok", Bool("OK")), RF("checked_at", Str("Checked at")))},
+		{Method: "GET", Path: "/api/chat-apps/:id/identities", Summary: "List paired identities", Tags: []string{settings}, Auth: AuthUser, Response: Arr("Chat identities", chatAppIdentitySchema())},
+		{Method: "DELETE", Path: "/api/chat-apps/identities/:id", Summary: "Unlink paired identity", Tags: []string{settings}, Auth: AuthUser, Response: EmptySchema()},
+		{Method: "GET", Path: "/api/chat-apps/pairing/challenge/:token", Summary: "Get pairing challenge", Tags: []string{settings}, Auth: AuthUser, Response: chatAppChallengeSchema()},
+		{Method: "POST", Path: "/api/chat-apps/pairing/verify", Summary: "Verify pairing code", Tags: []string{settings}, Auth: AuthUser, Request: JSON(Obj("Verify", RF("code", Str("Verification code")), F("token", Str("Challenge token")))), Response: chatAppIdentitySchema()},
+		{Method: "POST", Path: "/api/chat-apps/webhooks/:id", Summary: "Ingress webhook from chat app", Tags: []string{settings}, Auth: "", Request: JSON(Any("Webhook payload")), Response: Obj("Webhook response", F("text", Str("Response text")), F("status", Str("Status")))},
+
 		{Method: "GET", Path: "/api/updates/advisories", Summary: "Get security advisories", Tags: []string{updates}, Auth: AuthUser, Response: advisoriesResponseSchema()},
 		{Method: "GET", Path: "/api/updates/:projectId/security", Summary: "Get project security findings", Tags: []string{updates}, Auth: AuthUser, Response: projectSecuritySchema()},
 		{Method: "POST", Path: "/api/updates/:projectId/security/check", Summary: "Check project security", Tags: []string{updates}, Auth: AuthUser, Response: projectSecuritySchema()},
