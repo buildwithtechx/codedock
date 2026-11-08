@@ -1,0 +1,97 @@
+package apps
+
+import (
+	"context"
+	"database/sql"
+	"errors"
+	"sync"
+	"time"
+
+	"github.com/google/uuid"
+	"github.com/jmoiron/sqlx"
+
+	"codedock/internal/utils"
+)
+
+type ServiceVarRepository interface {
+	Create(ctx context.Context, v *Variable) error
+	Update(ctx context.Context, v *Variable) error
+	GetByID(ctx context.Context, id string) (*Variable, error)
+	ListByService(ctx context.Context, serviceID string) ([]*Variable, error)
+	Delete(ctx context.Context, id string) error
+}
+
+type ServiceVarRepo struct {
+	db *sqlx.DB
+	mu sync.Mutex
+}
+
+func NewServiceVarRepo(db *sql.DB) *ServiceVarRepo {
+	return &ServiceVarRepo{db: sqlx.NewDb(db, "pgx")}
+}
+
+func (r *ServiceVarRepo) Create(ctx context.Context, v *Variable) error {
+	r.mu.Lock()
+	defer r.mu.Unlock()
+	if v.ID == "" {
+		v.ID = uuid.NewString()
+	}
+	now := time.Now().UTC()
+	if v.CreatedAt.IsZero() {
+		v.CreatedAt = now
+	}
+	v.UpdatedAt = now
+
+	_, err := r.db.Exec(`INSERT INTO service_vars (id, service_id, environment_id, key, value, is_secret, created_at, updated_at)
+		VALUES ($1, $2, $3, $4, $5, $6, $7, $8)
+		ON CONFLICT(service_id, key) DO UPDATE SET value = excluded.value, is_secret = excluded.is_secret, updated_at = excluded.updated_at`,
+		v.ID, v.ServiceID, v.EnvironmentID, v.Key, v.Value, v.IsSecret, v.CreatedAt, v.UpdatedAt)
+	return err
+}
+
+func (r *ServiceVarRepo) Update(_ context.Context, v *Variable) error {
+	r.mu.Lock()
+	defer r.mu.Unlock()
+	v.UpdatedAt = time.Now().UTC()
+
+	_, err := r.db.Exec(`UPDATE service_vars SET key = $1, value = $2, is_secret = $3, updated_at = $4 WHERE id = $5`,
+		v.Key, v.Value, v.IsSecret, v.UpdatedAt, v.ID)
+	return err
+}
+
+func (r *ServiceVarRepo) GetByID(_ context.Context, id string) (*Variable, error) {
+	r.mu.Lock()
+	defer r.mu.Unlock()
+	var v Variable
+
+	err := r.db.Get(&v, `SELECT id, service_id, COALESCE(environment_id, '') AS environment_id, key, value, is_secret, created_at, updated_at FROM service_vars WHERE id = $1`, id)
+	if errors.Is(err, sql.ErrNoRows) {
+		return nil, utils.NewNotFoundError("Variable", id)
+	}
+	if err != nil {
+		return nil, err
+	}
+	return &v, nil
+}
+
+func (r *ServiceVarRepo) ListByService(_ context.Context, serviceID string) ([]*Variable, error) {
+	r.mu.Lock()
+	defer r.mu.Unlock()
+
+	var list []*Variable
+	err := r.db.Select(&list, `SELECT id, service_id, COALESCE(environment_id, '') AS environment_id, key, value, is_secret, created_at, updated_at FROM service_vars WHERE service_id = $1 ORDER BY key ASC`, serviceID)
+	if err != nil {
+		return nil, err
+	}
+	if list == nil {
+		list = make([]*Variable, 0)
+	}
+	return list, nil
+}
+
+func (r *ServiceVarRepo) Delete(_ context.Context, id string) error {
+	r.mu.Lock()
+	defer r.mu.Unlock()
+	_, err := r.db.Exec(`DELETE FROM service_vars WHERE id = $1`, id)
+	return err
+}
