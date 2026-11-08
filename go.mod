@@ -6,6 +6,7 @@ toolchain go1.26.5
 
 require (
 	github.com/containerd/errdefs v1.0.0
+	github.com/descope/virtualwebauthn v1.0.5
 	github.com/docker/docker v28.5.2+incompatible
 	github.com/docker/go-connections v0.8.0
 	github.com/go-sql-driver/mysql v1.10.0
@@ -24,6 +25,7 @@ require (
 	github.com/redis/go-redis/v9 v9.21.0
 	github.com/robfig/cron/v3 v3.0.1
 	github.com/spf13/cobra v1.10.2
+	github.com/stretchr/testify v1.12.1
 	github.com/stripe/stripe-go/v78 v78.12.0
 	golang.org/x/crypto v0.57.0
 	golang.org/x/net v0.58.0
@@ -39,7 +41,6 @@ require (
 	github.com/cespare/xxhash/v2 v2.3.0 // indirect
 	github.com/containerd/errdefs/pkg v0.3.0 // indirect
 	github.com/containerd/log v0.1.0 // indirect
-	github.com/descope/virtualwebauthn v1.0.5 // indirect
 	github.com/distribution/reference v0.6.0 // indirect
 	github.com/dlclark/regexp2 v1.12.0 // indirect
 	github.com/docker/go-units v0.5.0 // indirect
@@ -88,6 +89,7 @@ require (
 	go.opentelemetry.io/otel/metric v1.44.0 // indirect
 	go.opentelemetry.io/otel/trace v1.44.0 // indirect
 	go.uber.org/atomic v1.11.0 // indirect
+	go.yaml.in/yaml/v3 v3.0.5 // indirect
 	golang.org/x/sys v0.48.0 // indirect
 	golang.org/x/text v0.42.0 // indirect
 	golang.org/x/time v0.15.0 // indirect

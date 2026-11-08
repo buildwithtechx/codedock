@@ -8,6 +8,7 @@ import (
 	"codedock/apps/dashboard"
 	"codedock/internal/config"
 	"codedock/internal/models"
+	"codedock/internal/modules/ai"
 	"codedock/internal/modules/chatapps"
 	"codedock/internal/modules/dns"
 	"github.com/labstack/echo/v4"
@@ -139,9 +140,7 @@ func (s *Server) registerSettingsRoutes(apiGroup, authGroup *echo.Group) {
 	apiGroup.PUT("/settings", s.settingsHandler.UpdateSettings, s.authGuard.RequireRole("admin"))
 	authGroup.GET("/settings/appearance", s.appearanceHandler.GetAppearance)
 	authGroup.PUT("/settings/appearance", s.appearanceHandler.SetAppearance)
-	authGroup.GET("/ai", s.aiSettingsHandler.GetAISettings)
-	authGroup.POST("/ai/diagnose", s.aiSettingsHandler.DiagnoseLogs, s.aiRateLimiter.Middleware)
-	apiGroup.PUT("/ai", s.aiSettingsHandler.UpdateAISettings, s.authGuard.RequireRole("admin"))
+	ai.RegisterRoutes(authGroup, apiGroup, s.aiSettingsHandler, s.authGuard.RequireRole("admin"), s.aiRateLimiter.Middleware)
 	authGroup.GET("/notifications", s.notifSettingsHandler.GetNotificationSettings)
 	apiGroup.PUT("/notifications", s.notifSettingsHandler.UpdateNotificationSettings, s.authGuard.RequireRole("admin"))
 	authGroup.GET("/notifications/subscriptions", s.notifSettingsHandler.ListSubscriptions)
