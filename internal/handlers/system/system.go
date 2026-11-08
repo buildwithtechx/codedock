@@ -12,6 +12,7 @@ import (
 	"codedock/internal/config"
 	"codedock/internal/models"
 	authservices "codedock/internal/modules/auth"
+	"codedock/internal/modules/users"
 	"codedock/internal/repositories"
 	systemservices "codedock/internal/services/system"
 	"codedock/internal/utils"
@@ -86,10 +87,10 @@ func (h *SystemHandler) CreateLocalCLISession(c echo.Context) error {
 		return utils.Error(c, http.StatusConflict, "No local administrator is available. Complete Codedock setup first.")
 	}
 
-	token, err := h.tokenService.GenerateToken(&authservices.User{
+	token, err := h.tokenService.GenerateToken(&users.User{
 		ID:            admin.ID,
 		Email:         admin.Email,
-		Role:          authservices.UserRole(admin.Role),
+		Role:          users.UserRole(admin.Role),
 		EmailVerified: admin.EmailVerified,
 		TOTPEnabled:   admin.TOTPEnabled,
 	})

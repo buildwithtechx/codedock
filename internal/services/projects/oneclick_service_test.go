@@ -6,8 +6,8 @@ import (
 	"strings"
 	"testing"
 
-	"codedock/internal/engine/compose"
 	"codedock/internal/models"
+	compose "codedock/internal/platform/docker"
 	"codedock/internal/repositories"
 )
 

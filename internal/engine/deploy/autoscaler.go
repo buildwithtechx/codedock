@@ -1,8 +1,8 @@
 package deploy
 
 import (
-	"codedock/internal/engine/observability"
 	"codedock/internal/models"
+	"codedock/internal/platform/observability"
 	"context"
 	"fmt"
 	"log/slog"

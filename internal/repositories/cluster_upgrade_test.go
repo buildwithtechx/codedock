@@ -5,7 +5,7 @@ import (
 	"testing"
 
 	"codedock/internal/models"
-	"codedock/internal/utils"
+	"codedock/internal/platform/vault"
 )
 
 func TestClusterUpgradeJournalRoundtrip(t *testing.T) {
@@ -19,7 +19,7 @@ func TestClusterUpgradeJournalRoundtrip(t *testing.T) {
 			t.Fatalf("seed cluster upgrade dependencies: %v", err)
 		}
 	}
-	vault, err := utils.NewVault(t.TempDir())
+	vault, err := vault.NewVault(t.TempDir())
 	if err != nil {
 		t.Fatal(err)
 	}

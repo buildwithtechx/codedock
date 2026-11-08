@@ -18,9 +18,9 @@ import (
 	"codedock/cmd/codedockd/commands"
 	"codedock/internal/config"
 	"codedock/internal/engine/deploy"
-	"codedock/internal/engine/networking"
-	"codedock/internal/engine/observability"
 	cdkhttp "codedock/internal/http"
+	"codedock/internal/platform/networking"
+	"codedock/internal/platform/observability"
 	"codedock/internal/services/system"
 
 	"codedock/internal/telemetry"

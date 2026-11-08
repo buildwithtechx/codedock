@@ -13,9 +13,9 @@ import (
 	"github.com/docker/docker/client"
 	"github.com/docker/go-connections/nat"
 
-	"codedock/internal/engine/networking"
-	"codedock/internal/engine/observability"
 	"codedock/internal/models"
+	"codedock/internal/platform/networking"
+	"codedock/internal/platform/observability"
 	"codedock/internal/utils"
 )
 

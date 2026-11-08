@@ -7,20 +7,20 @@ import (
 
 	"github.com/labstack/echo/v4"
 
-	"codedock/internal/engine/networking"
-	"codedock/internal/engine/observability"
-	"codedock/internal/engine/traffic"
 	"codedock/internal/handlers/system"
 	"codedock/internal/models"
-	"codedock/internal/modules/auth"
+	"codedock/internal/modules/audit"
 	backupmodule "codedock/internal/modules/backups"
+	"codedock/internal/platform/networking"
+	"codedock/internal/platform/observability"
+	traffic "codedock/internal/platform/observability"
+	"codedock/internal/platform/vault"
 	"codedock/internal/repositories"
 	"codedock/internal/services/analytics"
 	"codedock/internal/services/attention"
 	deploymentservices "codedock/internal/services/deployments"
 	"codedock/internal/services/migrations"
 	systemservices "codedock/internal/services/system"
-	"codedock/internal/utils"
 )
 
 type statsHealthAdapter struct {
@@ -41,7 +41,7 @@ func (a *statsHealthAdapter) GetHealth(ctx context.Context, containerID string) 
 func configureAnalytics(
 	server *Server,
 	db *sql.DB,
-	vault *utils.Vault,
+	vlt *vault.Vault,
 	traefikManager *networking.TraefikManager,
 	deployRepo *repositories.DeploymentRepo,
 	projectRepo *repositories.ProjectRepo,
@@ -54,12 +54,12 @@ func configureAnalytics(
 	deploymentService *deploymentservices.DeploymentService,
 	backupService *backupmodule.Service,
 	migrationService *migrations.Service,
-	auditService *auth.AuditService,
+	auditService *audit.AuditService,
 ) {
 	trafficRepo := repositories.NewTrafficRepository(db)
 	attentionRepo := repositories.NewAttentionRepository(db)
-	managedRepo := repositories.NewManagedRepository(db, vault)
-	serverRepo := repositories.NewServerRepository(db, vault)
+	managedRepo := repositories.NewManagedRepository(db, vlt)
+	serverRepo := repositories.NewServerRepository(db, vlt)
 
 	usage := analytics.NewUsageReader(appRepo, metricsService, statsMonitor)
 	analyticsService := analytics.NewService(trafficRepo, deployRepo, projectRepo, appRepo, domainRepo, userRepo, orgRepo, attentionRepo, usage)

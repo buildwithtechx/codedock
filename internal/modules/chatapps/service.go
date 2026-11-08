@@ -12,18 +12,18 @@ import (
 
 	"github.com/google/uuid"
 
-	"codedock/internal/utils"
+	"codedock/internal/platform/vault"
 )
 
 type Service struct {
 	repo  Repository
-	vault *utils.Vault
+	vault *vault.Vault
 }
 
-func NewService(repo Repository, vault *utils.Vault) *Service {
+func NewService(repo Repository, v *vault.Vault) *Service {
 	return &Service{
 		repo:  repo,
-		vault: vault,
+		vault: v,
 	}
 }
 

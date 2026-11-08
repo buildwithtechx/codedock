@@ -12,7 +12,7 @@ import (
 	"github.com/google/uuid"
 	"github.com/jmoiron/sqlx"
 
-	"codedock/internal/utils"
+	"codedock/internal/platform/vault"
 )
 
 type Repository interface {
@@ -32,10 +32,10 @@ type Repository interface {
 
 type sqlRepository struct {
 	db    *sqlx.DB
-	vault *utils.Vault
+	vault *vault.Vault
 }
 
-func NewRepository(db *sql.DB, v *utils.Vault) Repository {
+func NewRepository(db *sql.DB, v *vault.Vault) Repository {
 	if db == nil {
 		return &sqlRepository{vault: v}
 	}

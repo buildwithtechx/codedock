@@ -8,7 +8,7 @@ import (
 	"github.com/google/uuid"
 
 	"codedock/internal/config"
-	"codedock/internal/engine/systemdb"
+	systemdb "codedock/internal/platform/database"
 )
 
 func NewSystemSnapshotDumper(dataDir string) func(ctx context.Context) ([]byte, error) {

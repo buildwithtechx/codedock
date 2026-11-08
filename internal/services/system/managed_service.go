@@ -13,8 +13,8 @@ import (
 
 	"codedock/internal/config"
 	"codedock/internal/engine/hetzner"
-	"codedock/internal/engine/ssh"
 	"codedock/internal/models"
+	"codedock/internal/platform/ssh"
 	"codedock/internal/repositories"
 	"codedock/internal/services/operations"
 )

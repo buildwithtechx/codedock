@@ -11,6 +11,7 @@ import (
 
 	"codedock/internal/config"
 	"codedock/internal/modules/auth"
+	"codedock/internal/modules/users"
 	"codedock/internal/repositories"
 )
 
@@ -72,7 +73,7 @@ func TestFirstRunWithoutEnvironmentAndSavedSetup(t *testing.T) {
 	if err != nil {
 		t.Fatal(err)
 	}
-	token, err := tokens.GenerateToken(&auth.User{ID: "owner", Email: "owner@example.com", Role: auth.UserRoleOwner})
+	token, err := tokens.GenerateToken(&users.User{ID: "owner", Email: "owner@example.com", Role: users.UserRoleOwner})
 	if err != nil {
 		t.Fatal(err)
 	}

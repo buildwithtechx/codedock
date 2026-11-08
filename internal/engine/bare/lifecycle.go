@@ -1,8 +1,8 @@
 package bare
 
 import (
-	"codedock/internal/engine/ssh"
 	"codedock/internal/models"
+	"codedock/internal/platform/ssh"
 	"context"
 	"fmt"
 	"strconv"

@@ -12,6 +12,7 @@ import (
 
 	"codedock/internal/config"
 	"codedock/internal/models"
+	"codedock/internal/platform/vault"
 	"codedock/internal/repositories"
 	"codedock/internal/utils"
 )
@@ -97,11 +98,11 @@ func createSetupOwner(repo *repositories.UserRepo) string {
 	return email
 }
 
-func saveSetupOptions(db *sql.DB, vault *utils.Vault, domain, tlsEmail string) error {
+func saveSetupOptions(db *sql.DB, v *vault.Vault, domain, tlsEmail string) error {
 	if err := config.SaveSelfHostedOptions(context.Background(), config.Get(), repositories.NewSelfHostedRepo(db), domain, tlsEmail); err != nil {
 		return err
 	}
-	repo := repositories.NewSettingsRepo(db, vault)
+	repo := repositories.NewSettingsRepo(db, v)
 	settings, err := repo.GetServerSettings(context.Background())
 	if err != nil {
 		return fmt.Errorf("load server settings: %w", err)

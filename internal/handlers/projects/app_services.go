@@ -8,7 +8,7 @@ import (
 
 	"codedock/internal/http/middleware"
 	"codedock/internal/models"
-	authservices "codedock/internal/modules/auth"
+	authservices "codedock/internal/modules/audit"
 	"codedock/internal/telemetry"
 	"codedock/internal/utils"
 )

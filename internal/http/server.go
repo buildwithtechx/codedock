@@ -8,23 +8,27 @@ import (
 	"github.com/labstack/echo/v4"
 	"github.com/mark3labs/mcp-go/server"
 
-	"codedock/internal/core"
-	"codedock/internal/engine/cron"
 	"codedock/internal/engine/deploy"
-	"codedock/internal/engine/networking"
-	"codedock/internal/engine/ssh"
 	"codedock/internal/handlers/deployments"
 	"codedock/internal/handlers/projects"
 	"codedock/internal/handlers/system"
 	"codedock/internal/http/mcp"
 	"codedock/internal/http/middleware"
 	"codedock/internal/models"
+	"codedock/internal/modules/audit"
 	"codedock/internal/modules/auth"
 	backupmodule "codedock/internal/modules/backups"
 	"codedock/internal/modules/chatapps"
 	"codedock/internal/modules/databases"
 	"codedock/internal/modules/dns"
 	mailmodule "codedock/internal/modules/mail"
+	"codedock/internal/modules/organizations"
+	"codedock/internal/modules/settings"
+	"codedock/internal/modules/users"
+	"codedock/internal/platform/networking"
+	core "codedock/internal/platform/notifications"
+	cron "codedock/internal/platform/scheduler"
+	"codedock/internal/platform/ssh"
 	"codedock/internal/services/migrations"
 	projectservices "codedock/internal/services/projects"
 )
@@ -59,12 +63,12 @@ type Server struct {
 	serviceVarHandler         *projects.ServiceVarHandler
 	projectSettingsHandler    *projects.ProjectSettingsHandler
 	backupHandler             *backupmodule.Handler
-	settingsHandler           *auth.SettingsHandler
-	appearanceHandler         *auth.AppearanceHandler
+	settingsHandler           *settings.SettingsHandler
+	appearanceHandler         *users.AppearanceHandler
 	notifSettingsHandler      *system.NotificationSettingsHandler
 	aiSettingsHandler         *system.AISettingsHandler
 	updaterHandler            *system.UpdaterHandler
-	userHandler               *auth.UserHandler
+	userHandler               *users.UserHandler
 	authHandler               *auth.AuthHandler
 	oauthHandler              *auth.OAuthHandler
 	deviceFlowHandler         *auth.DeviceFlowHandler
@@ -73,7 +77,7 @@ type Server struct {
 	webhookHandler            *deployments.WebhookHandler
 	projectHandler            *projects.ProjectHandler
 	projectAppHandler         *projects.ProjectAppHandler
-	orgHandler                *auth.OrganizationHandler
+	orgHandler                *organizations.OrganizationHandler
 	environmentHandler        *projects.EnvironmentHandler
 	domainHandler             *projects.DomainHandler
 	projectEnvHandler         *projects.ProjectEnvHandler
@@ -87,11 +91,11 @@ type Server struct {
 	oneClickHandler           *projects.OneClickHandler
 	archiveHandler            *deployments.ArchiveHandler
 	migrationHandler          *system.MigrationHandler
-	onboardingHandler         *auth.OnboardingHandler
+	onboardingHandler         *users.OnboardingHandler
 	dnsHandler                *dns.Handler
 	metricsHandler            *system.MetricsHandler
 	logHandler                *system.LogHandler
-	auditLogHandler           *auth.AuditLogHandler
+	auditLogHandler           *audit.AuditLogHandler
 	exampleHandler            *system.ExampleHandler
 	serverHandler             *system.ServerHandler
 	managedHandler            *system.ManagedHandler

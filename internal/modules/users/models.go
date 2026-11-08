@@ -29,6 +29,14 @@ type User struct {
 	StripePriceID        *string    `json:"stripePriceId,omitempty" db:"stripe_price_id"`
 }
 
+type UserClaims struct {
+	UserID      string   `json:"sub"`
+	Email       string   `json:"email"`
+	Role        UserRole `json:"role"`
+	TOTPEnabled bool     `json:"totpEnabled"`
+	PlanType    string   `json:"planType"`
+}
+
 type PersonalAccessToken struct {
 	ID              string     `json:"id" db:"id"`
 	UserID          string     `json:"userId" db:"user_id"`

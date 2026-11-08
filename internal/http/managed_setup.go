@@ -7,17 +7,17 @@ import (
 
 	"github.com/labstack/echo/v4"
 
-	"codedock/internal/engine/ssh"
 	"codedock/internal/handlers/system"
 	"codedock/internal/models"
+	"codedock/internal/platform/ssh"
+	"codedock/internal/platform/vault"
 	"codedock/internal/repositories"
 	"codedock/internal/services/operations"
 	systemservices "codedock/internal/services/system"
-	"codedock/internal/utils"
 )
 
-func configureManaged(server *Server, db *sql.DB, vault *utils.Vault, servers repositories.ServerRepository, users *repositories.UserRepo, orgs repositories.OrganizationRepository, sshManager *ssh.SSHManager, operationService *operations.Service) error {
-	repository := repositories.NewManagedRepository(db, vault)
+func configureManaged(server *Server, db *sql.DB, vlt *vault.Vault, servers repositories.ServerRepository, users *repositories.UserRepo, orgs repositories.OrganizationRepository, sshManager *ssh.SSHManager, operationService *operations.Service) error {
+	repository := repositories.NewManagedRepository(db, vlt)
 	service := systemservices.NewManagedService(repository, servers, orgs, users, sshManager, operationService, nil)
 	if err := service.Recover(context.Background()); err != nil {
 		return fmt.Errorf("recover managed servers: %w", err)

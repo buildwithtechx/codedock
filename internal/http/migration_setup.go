@@ -7,20 +7,20 @@ import (
 
 	"github.com/labstack/echo/v4"
 
-	"codedock/internal/engine/ssh"
 	"codedock/internal/handlers/system"
 	"codedock/internal/models"
+	"codedock/internal/platform/ssh"
+	"codedock/internal/platform/vault"
 	"codedock/internal/repositories"
 	deploymentservices "codedock/internal/services/deployments"
 	"codedock/internal/services/migrations"
 	projectservices "codedock/internal/services/projects"
-	"codedock/internal/utils"
 )
 
 func configureMigration(
 	server *Server,
 	db *sql.DB,
-	vault *utils.Vault,
+	vlt *vault.Vault,
 	projects *repositories.ProjectRepo,
 	apps *projectservices.AppService,
 	appRepo *repositories.AppServiceRepo,
@@ -34,7 +34,7 @@ func configureMigration(
 	sshManager *ssh.SSHManager,
 	runtimes *repositories.RuntimeRepo,
 ) error {
-	repository := repositories.NewMigrationRepository(db, vault)
+	repository := repositories.NewMigrationRepository(db, vlt)
 	service := migrations.NewService(repository, projects, apps, appRepo, repositories.NewServiceVolumeRepo(db), envs, servers, users, orgs, git, composer, deployer, sshManager, runtimes, nil, nil)
 	if err := service.Recover(context.Background()); err != nil {
 		return fmt.Errorf("recover migrations: %w", err)

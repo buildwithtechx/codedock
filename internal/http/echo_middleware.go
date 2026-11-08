@@ -12,7 +12,7 @@ import (
 	echomiddleware "github.com/labstack/echo/v4/middleware"
 
 	"codedock/internal/config"
-	"codedock/internal/engine/networking"
+	"codedock/internal/platform/networking"
 )
 
 func configureEchoMiddleware(e *echo.Echo) {

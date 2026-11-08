@@ -5,8 +5,8 @@ import (
 	"sort"
 	"strings"
 
-	"codedock/internal/engine/compose"
 	"codedock/internal/models"
+	compose "codedock/internal/platform/docker"
 )
 
 func extractOneClickApp(id string, tmpl *compose.ComposeTemplate) *models.OneClickApp {

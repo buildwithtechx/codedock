@@ -4,7 +4,6 @@ import (
 	"context"
 	"database/sql"
 	"fmt"
-	"log/slog"
 	"path/filepath"
 	"strings"
 	"time"
@@ -13,39 +12,34 @@ import (
 	"github.com/labstack/echo/v4"
 
 	"codedock/internal/config"
-	"codedock/internal/core"
-	"codedock/internal/engine/backup"
-	"codedock/internal/engine/compose"
-	"codedock/internal/engine/cron"
 	"codedock/internal/engine/deploy"
-	"codedock/internal/engine/leadership"
-	"codedock/internal/engine/networking"
-	"codedock/internal/engine/observability"
-	"codedock/internal/engine/ssh"
-	"codedock/internal/handlers/deployments"
-	"codedock/internal/handlers/projects"
-	"codedock/internal/handlers/system"
 	"codedock/internal/http/mcp"
 	"codedock/internal/http/middleware"
 	"codedock/internal/models"
+	"codedock/internal/modules/audit"
 	"codedock/internal/modules/auth"
 	backupmodule "codedock/internal/modules/backups"
-	"codedock/internal/modules/chatapps"
 	"codedock/internal/modules/databases"
 	"codedock/internal/modules/dns"
-	mailmodule "codedock/internal/modules/mail"
-	"codedock/internal/modules/security"
-	"codedock/internal/notifications"
+	"codedock/internal/modules/organizations"
+	settingsmodule "codedock/internal/modules/settings"
+	"codedock/internal/modules/users"
+	"codedock/internal/platform/networking"
+	"codedock/internal/platform/notifications"
+	core "codedock/internal/platform/notifications"
+	"codedock/internal/platform/observability"
+	cron "codedock/internal/platform/scheduler"
+	"codedock/internal/platform/ssh"
+	backup "codedock/internal/platform/storage"
+	"codedock/internal/platform/vault"
 	"codedock/internal/repositories"
 	deploymentservices "codedock/internal/services/deployments"
 	"codedock/internal/services/operations"
 	projectservices "codedock/internal/services/projects"
 	systemservices "codedock/internal/services/system"
-	"codedock/internal/utils"
 )
 
-func NewServer(db *sql.DB, v *utils.Vault, deployer *deploy.Deployer, traefikManager *networking.TraefikManager, dockerClient *client.Client, dataDir string) (*Server, error) {
-
+func NewServer(db *sql.DB, v *vault.Vault, deployer *deploy.Deployer, traefikManager *networking.TraefikManager, dockerClient *client.Client, dataDir string) (*Server, error) {
 	e := echo.New()
 	configureEchoMiddleware(e)
 	if deployer != nil {
@@ -102,12 +96,12 @@ func NewServer(db *sql.DB, v *utils.Vault, deployer *deploy.Deployer, traefikMan
 
 	cronManager := cron.NewCronManager(dockerClient, httpEngineAdapter)
 
-	settings, _ := settingsRepo.GetServerSettings(context.Background())
-	if settings != nil && settings.DockerCleanupCron != "" {
-		_ = cronManager.ScheduleDockerCleanup(settings.DockerCleanupCron)
+	serverSettings, _ := settingsRepo.GetServerSettings(context.Background())
+	if serverSettings != nil && serverSettings.DockerCleanupCron != "" {
+		_ = cronManager.ScheduleDockerCleanup(serverSettings.DockerCleanupCron)
 	}
-	if settings != nil && settings.DiskUsageCron != "" {
-		_ = cronManager.ScheduleDiskUsageCheck(settings.DiskUsageCron, settings.DiskUsageThreshold)
+	if serverSettings != nil && serverSettings.DiskUsageCron != "" {
+		_ = cronManager.ScheduleDiskUsageCheck(serverSettings.DiskUsageCron, serverSettings.DiskUsageThreshold)
 	}
 
 	backupManager := backup.NewBackupManager(dockerClient, httpEngineAdapter, "")
@@ -128,14 +122,20 @@ func NewServer(db *sql.DB, v *utils.Vault, deployer *deploy.Deployer, traefikMan
 	if err != nil {
 		return nil, fmt.Errorf("mailer service: %w", err)
 	}
-	authMod, err := auth.NewModule(db, v, mailerService)
+	userModRepo := users.NewUserRepo(db)
+	userService := users.NewUserService(userModRepo)
+	settingsModRepo := settingsmodule.NewSettingsRepo(db, v)
+	settingsService := settingsmodule.NewSettingsService(settingsModRepo)
+	auditRepo := audit.NewAuditLogRepo(db)
+	auditService := audit.NewAuditService(auditRepo, audit.NewSQLAuditResourceSearcher(db))
+	orgModRepo := organizations.NewOrganizationRepository(db)
+	orgService := organizations.NewOrganizationService(orgModRepo)
+
+	authMod, err := auth.NewModule(db, userModRepo, userService, settingsModRepo, auditService, mailerService)
 	if err != nil {
 		return nil, err
 	}
 	tokenService := authMod.TokenService
-	settingsService := authMod.SettingsService
-	auditService := authMod.AuditService
-	userService := authMod.UserService
 	projectSettingsService := projectservices.NewProjectSettingsService(projectSettingsRepo, userRepo, authMod.AuthService)
 	dispatcherService := core.NewDispatcherService(settingsRepo, notifRepo, userRepo, repositories.NewNotificationDeliveryRepo(db), mailerService, deviceTokenRepo)
 
@@ -176,7 +176,6 @@ func NewServer(db *sql.DB, v *utils.Vault, deployer *deploy.Deployer, traefikMan
 	autoscalingRepo := repositories.NewAutoscalingRepo(db)
 	autoscalingService := projectservices.NewAutoscalingService(autoscalingRepo, appRepo, projectRepo)
 	autoscalingService.SetRuntimes(runtimeRepository)
-	autoscalingHandler := projects.NewAutoscalingHandler(autoscalingService)
 	autoscaler := deploy.NewAutoscalerWorker(appRepo, statsMonitor, deploymentService, autoscalingRepo)
 
 	operationService := operations.NewService(repositories.NewOperationRepo(db, v))
@@ -217,234 +216,67 @@ func NewServer(db *sql.DB, v *utils.Vault, deployer *deploy.Deployer, traefikMan
 	deploymentService.BeforeProjectDeployment = backupService.BeforeProjectDeployment
 	deploymentService.BeforeDeployment = backupService.BeforeDeployment
 	autoscaler.Start()
-	prPreviewService := deploymentservices.NewPRPreviewService(prPreviewRepository, appService, gitService, deployer, sshManager, projectRepo)
-	dnsProviderService := dns.NewProviderService(settingsRepo)
-	environmentService := projectservices.NewEnvironmentService(environmentRepo, domainRepo, envVarRepo, dnsProviderService)
-	notificationService := systemservices.NewNotificationService(dispatcherService)
-	gitAppsService := deploymentservices.NewGitAppsService(gitAppRepo)
-	serverlessService := projectservices.NewServerlessService(serverlessRepository)
-	dnsService := dns.NewService(dnsRepo, dnsProviderService)
-	envSuggestionService := projectservices.NewEnvSuggestionService(gitService)
-	metricsService := systemservices.NewMetricsService()
-	logService := systemservices.NewLogService()
-
-	updaterService := systemservices.NewUpdaterService(settingsRepo)
-	schedulerElector := leadership.NewElector(db, "scheduled-execution")
-	go schedulerElector.Run(context.Background(), cronManager.ServeElected, backupManager.ServeElected, updaterService.ServeElected)
-
-	bridge := mcp.NewBridge(projectService, databaseService)
 
 	authGuard := middleware.NewAuthGuard(tokenService, settingsService, projectSettingsService, orgRepo, projectRepo, userRepo)
 	authGuard.PersonalTokens = userRepo
 	authGuard.PersonalResources = repositories.NewPersonalTokenResources(db)
 
-	appHandler := projects.NewAppHandler(appService, projectService, deployer, deploymentService, environmentService, auditService)
-	databaseHandler := databases.NewHandler(databaseService)
-	scheduledTaskHandler := system.NewScheduledTaskHandler(scheduledTaskService, appService, projectService)
-	canvasHandler := projects.NewCanvasHandler(canvasService, projectService)
-	terminalHandler := deployments.NewTerminalHandler(dockerClient, tokenService, appService, projectService, userRepo)
-	terminalHandler.Targets = deploymentService
-	projectHandler := projects.NewProjectHandler(projectService, projectSettingsService)
-	projectAppHandler := projects.NewProjectAppHandler(projectAppService, projectService)
-	environmentHandler := projects.NewEnvironmentHandler(environmentService, projectService)
-	deploymentHandler := deployments.NewDeploymentHandler(deploymentService, appService, auditService, aiAnalysisService, prPreviewService, projectService)
-	retentionService := deploymentservices.NewRetentionService(projectRepo, deployRepo, deploymentService.DockerForProject)
-	deploymentHandler.SetRetentionService(retentionService)
-	rollbackSettingsHandler := projects.NewRollbackSettingsHandler(retentionService)
-	routeProtectionRepo := repositories.NewRouteProtectionRepository(db)
-	routeProtectionService := projectservices.NewRouteProtectionService(routeProtectionRepo, projectRepo, settingsRepo)
-	routeProtectionHandler := projects.NewRouteProtectionHandler(routeProtectionService, projectService)
-	edgeAuthHandler := system.NewEdgeAuthHandler(routeProtectionService)
-	_ = networking.EnsureTraefikAccessRoute(networking.DynamicDir, config.Get().Server.Port)
-	serviceVarHandler := projects.NewServiceVarHandler(appService, auditService, envSuggestionService)
-	projectSettingsHandler := projects.NewProjectSettingsHandler(projectSettingsService)
-	backupHandler := backupmodule.NewHandler(backupService)
-	backupHandler.SetOperations(operationService)
-	notifSettingsHandler := system.NewNotificationSettingsHandler(notifSettingsService, orgRepo)
-	aiSettingsHandler := system.NewAISettingsHandler(aiSettingsService)
-	updaterHandler := system.NewUpdaterHandler(updaterService)
-	gitHandler := deployments.NewGitHandler(gitService)
-	webhookDeliveryService := deploymentservices.NewWebhookDeliveryService(webhookDeliveryRepo)
-	webhookDispatcher := deploymentservices.NewWebhookDispatcher(webhookDeliveryService, deploymentService, appService, gitAppsService, prPreviewService)
-	webhookHandler := deployments.NewWebhookHandler(gitService, projectService, appService, deploymentService, prPreviewService, gitAppsService, webhookDispatcher, webhookDeliveryService)
-
-	domainHandler := projects.NewDomainHandler(environmentService, appService, projectService, settingsRepo, auditService)
-	projectEnvHandler := projects.NewProjectEnvHandler(environmentService, appService)
-	notificationHandler := system.NewNotificationHandler(notificationService)
-	gitAppsHandler := deployments.NewGitAppsHandler(gitAppsService)
-	tmplMgr, err := compose.NewTemplateManager()
-	if err != nil {
-		return nil, fmt.Errorf("load catalogue templates: %w", err)
-	}
-	stackService := projectservices.NewComposeStackService(repositories.NewComposeStackRepo(db, v), compose.NewStackRuntime(dockerClient))
-	stackService.BeforeDeployment = backupService.BeforeProjectDeployment
-	if err := stackService.Recover(context.Background()); err != nil {
-		return nil, fmt.Errorf("recover compose stacks: %w", err)
-	}
-	composeStackHandler := projects.NewComposeStackHandler(stackService, projectService, environmentService)
-	composeParserService := projectservices.NewComposeParserService()
-	composeHandler := projects.NewComposeHandler(projectService, appService, databaseService, environmentRepo, appRepo, composeParserService)
-	oneClickService := projectservices.NewOneClickService(tmplMgr, stackService, environmentRepo)
-	oneClickHandler := projects.NewOneClickHandler(oneClickService, projectService)
-	archiveService := deploymentservices.NewArchiveService(appService, deploymentService)
-	archiveHandler := deployments.NewArchiveHandler(archiveService, projectService)
-	serverlessHandler := projects.NewServerlessHandler(serverlessService)
-	systemService := systemservices.NewSystemService()
-	systemHandler := system.NewSystemHandler(systemService, userRepo, tokenService)
-	migrationService := systemservices.NewMigrationService(db, dbRepo, dataDir, config.Get().Database.URL)
-	migrationHandler := system.NewMigrationHandler(migrationService, userService)
-	dnsHandler := dns.NewHandler(dnsService)
-	metricsHandler := system.NewMetricsHandler(metricsService)
-	logHandler := system.NewLogHandler(logService)
-	exampleService := systemservices.NewExampleService()
-	exampleHandler := system.NewExampleHandler(exampleService)
-
-	serverService := systemservices.NewServerService(serverRepo, userRepo, sshManager)
-	serverHandler := system.NewServerHandler(serverService, auditService)
-	ingressRepo := repositories.NewIngressRepository(db)
-	cfIngressService := systemservices.NewCloudflareIngressService(nil)
-	ingressHandler := system.NewIngressHandlerWithDeps(ingressRepo, cfIngressService)
-	serverNetworksHandler := system.NewServerNetworksHandler()
-	actionsHandler := system.NewActionsHandler()
-	supportHandler := system.NewSupportHandler()
-
-	securityVerifier, err := security.NewVerifier("")
-	if err != nil {
-		slog.Error("failed to initialize security verifier", "error", err)
-	}
-	securityFeedManager := security.NewFeedManager(db, securityVerifier, "")
-	securityService := security.NewSecurityService(db, securityFeedManager, nil, nil, nil, nil)
-	securityHandler := system.NewSecurityHandler(securityService)
-
-	chatAppRepo := chatapps.NewRepository(db)
-	chatAppService := chatapps.NewService(chatAppRepo, v)
-	chatAppDispatcher := chatapps.NewDispatcher(chatAppService, nil)
-	chatAppHandler := chatapps.NewHandler(chatAppService, chatAppDispatcher)
-
-	serverMetricsWSHandler := system.NewServerMetricsWSHandler(tokenService, serverService, userRepo)
-	serviceLogsWSHandler := system.NewServiceLogsWSHandler(tokenService, appService, projectService, userRepo)
-	serviceLogsWSHandler.Streams = deploymentService
-
-	registryRepo := repositories.NewRegistryRepository(db)
-	registryService := deploymentservices.NewRegistryService(registryRepo)
-	registryHandler := deployments.NewRegistryHandler(registryService)
-
-	var billingHandler *system.BillingHandler
-	if config.Get().Cloud.Enabled {
-		billingService := systemservices.NewBillingService(userRepo)
-		billingHandler = system.NewBillingHandler(billingService)
-	}
-
-	takeoverRepo := repositories.NewTakeoverRepository(db, v)
-	takeoverScanner := systemservices.NewTakeoverScanner()
-	takeoverAdopter := systemservices.NewTakeoverAdopter(projectRepo, appRepo)
-	takeoverHandler := system.NewTakeoverHandler(takeoverScanner, takeoverAdopter, takeoverRepo)
-
-	routeRuleRepo := repositories.NewRouteRuleRepository(db)
-	routeRuleService := systemservices.NewRouteRuleService(routeRuleRepo)
-	routeRuleHandler := projects.NewRouteRuleHandler(routeRuleService, appRepo)
-
-	mailRepo := mailmodule.NewRepository(db, v)
-	mailService := mailmodule.NewService(mailRepo)
-	mailHandler := mailmodule.NewHandler(mailService, nil, nil)
-
-	authLimiter := middleware.NewRateLimiter(10, time.Minute)
-	otpLimiter := middleware.NewRateLimiter(5, time.Minute)
-	aiLimiter := middleware.NewRateLimiter(5, time.Minute)
-
-	srv := &Server{
-		operationHandler:        system.NewOperationHandler(operationService),
-		router:                  e,
-		mcpBridge:               bridge,
-		authRateLimiter:         authLimiter,
-		otpRateLimiter:          otpLimiter,
-		aiRateLimiter:           aiLimiter,
-		deployer:                deployer,
-		traefikManager:          traefikManager,
-		dockerClient:            dockerClient,
-		tokenService:            tokenService,
-		authGuard:               authGuard,
-		cronManager:             cronManager,
-		serviceLinker:           serviceLinker,
-		dispatcherService:       dispatcherService,
-		projectService:          projectService,
-		appService:              appService,
-		autoscalingHandler:      autoscalingHandler,
-		appServiceHandler:       appHandler,
-		dbHandler:               databaseHandler,
-		scheduledTaskHandler:    scheduledTaskHandler,
-		canvasHandler:           canvasHandler,
-		terminalHandler:         terminalHandler,
-		deploymentHandler:       deploymentHandler,
-		serviceVarHandler:       serviceVarHandler,
-		projectSettingsHandler:  projectSettingsHandler,
-		backupHandler:           backupHandler,
-		settingsHandler:         authMod.SettingsHandler,
-		appearanceHandler:       authMod.AppearanceHandler,
-		notifSettingsHandler:    notifSettingsHandler,
-		aiSettingsHandler:       aiSettingsHandler,
-		updaterHandler:          updaterHandler,
-		userHandler:             authMod.UserHandler,
-		authHandler:             authMod.AuthHandler,
-		oauthHandler:            authMod.OAuthHandler,
-		deviceFlowHandler:       authMod.DeviceFlowHandler,
-		passkeyHandler:          authMod.PasskeyHandler,
-		gitHandler:              gitHandler,
-		webhookHandler:          webhookHandler,
-		projectHandler:          projectHandler,
-		projectAppHandler:       projectAppHandler,
-		orgHandler:              authMod.OrgHandler,
-		environmentHandler:      environmentHandler,
-		domainHandler:           domainHandler,
-		projectEnvHandler:       projectEnvHandler,
-		notificationHandler:     notificationHandler,
-		gitAppsHandler:          gitAppsHandler,
-		serverlessHandler:       serverlessHandler,
-		systemHandler:           systemHandler,
-		composeHandler:          composeHandler,
-		composeStackHandler:     composeStackHandler,
-		chatAppHandler:          chatAppHandler,
-		oneClickHandler:         oneClickHandler,
-		archiveHandler:          archiveHandler,
-		migrationHandler:        migrationHandler,
-		onboardingHandler:       authMod.OnboardingHandler,
-		dnsHandler:              dnsHandler,
-		metricsHandler:          metricsHandler,
-		logHandler:              logHandler,
-		auditLogHandler:         authMod.AuditLogHandler,
-		exampleHandler:          exampleHandler,
-		serverHandler:           serverHandler,
-		sshManager:              sshManager,
-		registryHandler:         registryHandler,
-		billingHandler:          billingHandler,
-		serverMetricsWSHandler:  serverMetricsWSHandler,
-		serviceLogsWSHandler:    serviceLogsWSHandler,
-		takeoverHandler:         takeoverHandler,
-		routeRuleHandler:        routeRuleHandler,
-		mailHandler:             mailHandler,
-		ingressHandler:          ingressHandler,
-		serverNetworksHandler:   serverNetworksHandler,
-		actionsHandler:          actionsHandler,
-		checksHandler:           projects.NewChecksHandler(),
-		supportHandler:          supportHandler,
-		rollbackSettingsHandler: rollbackSettingsHandler,
-		routeProtectionHandler:  routeProtectionHandler,
-		edgeAuthHandler:         edgeAuthHandler,
-		securityHandler:         securityHandler,
-	}
-
-	if err := configureManaged(srv, db, v, serverRepo, userRepo, orgRepo, sshManager, operationService); err != nil {
-		return nil, err
-	}
-	if err := configureMigration(srv, db, v, projectRepo, appService, appRepo, environmentRepo, serverRepo, userRepo, orgRepo, gitService, composeParserService, deploymentService, sshManager, runtimeRepository); err != nil {
-		return nil, err
-	}
-	configureAnalytics(srv, db, v, traefikManager, deployRepo, projectRepo, appRepo, domainRepo, userRepo, orgRepo, metricsService, statsMonitor, deploymentService, backupService, srv.migrationService, auditService)
-	if err := configureClusters(srv, db, v, projectRepo, serverRepo, operationService, volumeOperations, appRepo, deploymentService, canvasService, backupManager); err != nil {
-		return nil, err
-	}
-	configureDeploymentBindings(srv, routeRuleRepo, domainRepo, routeProtectionRepo)
-
-	srv.registerRoutes()
-	return srv, nil
+	return buildServerInstance(&serverSetupDeps{
+		e:                      e,
+		db:                     db,
+		v:                      v,
+		dataDir:                dataDir,
+		deployer:               deployer,
+		traefikManager:         traefikManager,
+		dockerClient:           dockerClient,
+		bridge:                 mcp.NewBridge(projectService, databaseService),
+		authGuard:              authGuard,
+		tokenService:           tokenService,
+		cronManager:            cronManager,
+		backupManager:          backupManager,
+		sshManager:             sshManager,
+		statsMonitor:           statsMonitor,
+		volumeOperations:       volumeOperations,
+		serviceLinker:          serviceLinker,
+		dispatcherService:      dispatcherService,
+		projectService:         projectService,
+		projectAppService:      projectAppService,
+		appService:             appService,
+		databaseService:        databaseService,
+		notifSettingsService:   notifSettingsService,
+		aiSettingsService:      aiSettingsService,
+		aiAnalysisService:      aiAnalysisService,
+		userService:            userService,
+		settingsService:        settingsService,
+		auditService:           auditService,
+		orgService:             orgService,
+		authMod:                authMod,
+		projectSettingsService: projectSettingsService,
+		scheduledTaskService:   scheduledTaskService,
+		canvasService:          canvasService,
+		gitService:             gitService,
+		deploymentService:      deploymentService,
+		autoscalingService:     autoscalingService,
+		operationService:       operationService,
+		backupService:          backupService,
+		mailerService:          mailerService,
+		environmentRepo:        environmentRepo,
+		projectRepo:            projectRepo,
+		appRepo:                appRepo,
+		dbRepo:                 dbRepo,
+		settingsRepo:           settingsRepo,
+		envVarRepo:             envVarRepo,
+		serverlessRepository:   serverlessRepository,
+		userRepo:               userRepo,
+		userModRepo:            userModRepo,
+		deployRepo:             deployRepo,
+		prPreviewRepository:    prPreviewRepository,
+		domainRepo:             domainRepo,
+		gitAppRepo:             gitAppRepo,
+		dnsRepo:                dnsRepo,
+		orgRepo:                orgRepo,
+		webhookDeliveryRepo:    webhookDeliveryRepo,
+		serverRepo:             serverRepo,
+		runtimeRepository:      runtimeRepository,
+	})
 }

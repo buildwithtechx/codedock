@@ -11,6 +11,7 @@ import (
 
 	"codedock/internal/models"
 	"codedock/internal/modules/auth"
+	"codedock/internal/modules/settings"
 	"codedock/internal/repositories"
 )
 
@@ -19,7 +20,7 @@ type contextKey string
 const userClaimsKey contextKey = "user_claims"
 
 type SettingsProvider interface {
-	GetSettings(context.Context) (*auth.ServerSettings, error)
+	GetSettings(context.Context) (*settings.ServerSettings, error)
 }
 
 type ProjectTokenProvider interface {

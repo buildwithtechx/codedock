@@ -15,6 +15,7 @@ import (
 
 	"codedock/internal/engine/deploy"
 	"codedock/internal/models"
+	"codedock/internal/platform/storage"
 	"codedock/internal/repositories"
 	"codedock/internal/utils"
 )
@@ -135,7 +136,7 @@ func parseDeployArgs(args []string) deployArgs {
 					exitError("Failed to get absolute directory: %v", err)
 				}
 				tmpArchive := filepath.Join(os.TempDir(), fmt.Sprintf("codedock-deploy-%s.tar.gz", uuid.New().String()[:8]))
-				if err := utils.CreateTarGzArchive(absDir, tmpArchive); err != nil {
+				if err := storage.CreateTarGzArchive(absDir, tmpArchive); err != nil {
 					os.Remove(tmpArchive)
 					exitError("Failed to create archive: %v", err)
 				}

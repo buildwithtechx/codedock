@@ -185,7 +185,7 @@ func (ts *TokenService) ValidateEmailVerificationToken(tokenStr string) (string,
 
 	email, ok := claims["email"].(string)
 	if !ok || email == "" {
-		return "", "", errors.New("invalid token claims")
+		return "", errors.New("invalid token claims")
 	}
 	return email, nil
 }

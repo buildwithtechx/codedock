@@ -12,8 +12,8 @@ import (
 	"sync"
 	"time"
 
-	"codedock/internal/engine/compose"
 	"codedock/internal/models"
+	compose "codedock/internal/platform/docker"
 	"github.com/google/uuid"
 )
 

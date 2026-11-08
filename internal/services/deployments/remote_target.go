@@ -10,8 +10,8 @@ import (
 	"github.com/docker/docker/client"
 
 	"codedock/internal/engine/deploy"
-	"codedock/internal/engine/networking"
 	"codedock/internal/models"
+	"codedock/internal/platform/networking"
 	"codedock/internal/repositories"
 )
 

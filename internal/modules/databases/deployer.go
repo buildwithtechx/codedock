@@ -13,7 +13,7 @@ import (
 	"github.com/docker/docker/api/types/network"
 	"github.com/docker/docker/client"
 
-	"codedock/internal/engine/compose"
+	compose "codedock/internal/platform/docker"
 	"codedock/internal/utils"
 )
 

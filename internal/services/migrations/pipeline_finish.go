@@ -7,9 +7,9 @@ import (
 	"strings"
 	"time"
 
-	"codedock/internal/engine/dockerprobe"
-	"codedock/internal/engine/networking"
 	"codedock/internal/models"
+	dockerprobe "codedock/internal/platform/docker"
+	"codedock/internal/platform/networking"
 )
 
 func (e *pipelineExecutor) ask(ctx context.Context, prompt *models.MigrationPrompt) (promptAnswer, error) {

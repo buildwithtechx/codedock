@@ -7,8 +7,8 @@ import (
 
 	"github.com/google/uuid"
 
-	"codedock/internal/engine/cron"
 	"codedock/internal/models"
+	cron "codedock/internal/platform/scheduler"
 	"codedock/internal/repositories"
 )
 

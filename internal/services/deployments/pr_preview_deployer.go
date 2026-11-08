@@ -16,8 +16,8 @@ import (
 
 	"codedock/internal/config"
 	"codedock/internal/engine/deploy"
-	"codedock/internal/engine/ssh"
 	"codedock/internal/models"
+	"codedock/internal/platform/ssh"
 	"codedock/internal/repositories"
 	"codedock/internal/services/projects"
 	"codedock/internal/utils"

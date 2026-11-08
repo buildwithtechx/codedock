@@ -11,8 +11,8 @@ import (
 	"time"
 
 	cdkdb "codedock/db"
-	"codedock/internal/engine/dockerprobe"
 	"codedock/internal/models"
+	dockerprobe "codedock/internal/platform/docker"
 	"codedock/internal/repositories"
 	projectservices "codedock/internal/services/projects"
 	"codedock/internal/testdb"

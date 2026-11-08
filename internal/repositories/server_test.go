@@ -6,13 +6,13 @@ import (
 	"time"
 
 	"codedock/internal/models"
-	"codedock/internal/utils"
+	"codedock/internal/platform/vault"
 )
 
 func TestServerRoundtrip(t *testing.T) {
 	db := openPGTestDB(t)
 	ctx := context.Background()
-	vault, err := utils.NewVault(t.TempDir())
+	vault, err := vault.NewVault(t.TempDir())
 	if err != nil {
 		t.Fatal(err)
 	}
@@ -114,7 +114,7 @@ func TestServerRoundtrip(t *testing.T) {
 func TestServerSearchIDsByName(t *testing.T) {
 	db := openPGTestDB(t)
 	ctx := context.Background()
-	vault, err := utils.NewVault(t.TempDir())
+	vault, err := vault.NewVault(t.TempDir())
 	if err != nil {
 		t.Fatal(err)
 	}
@@ -147,7 +147,7 @@ func TestServerSearchIDsByName(t *testing.T) {
 func TestServerSearchFiltersByNameAndSSHHost(t *testing.T) {
 	db := openPGTestDB(t)
 	ctx := context.Background()
-	vault, err := utils.NewVault(t.TempDir())
+	vault, err := vault.NewVault(t.TempDir())
 	if err != nil {
 		t.Fatal(err)
 	}

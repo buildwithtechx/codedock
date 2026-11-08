@@ -5,7 +5,7 @@ import (
 	"fmt"
 	"time"
 
-	"codedock/internal/engine/observability"
+	"codedock/internal/platform/observability"
 	"codedock/internal/repositories"
 	systemservices "codedock/internal/services/system"
 )

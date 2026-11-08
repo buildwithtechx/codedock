@@ -9,7 +9,7 @@ import (
 	"github.com/docker/docker/api/types"
 	"github.com/docker/docker/client"
 
-	"codedock/internal/utils"
+	"codedock/internal/platform/storage"
 )
 
 type DockerfileBuilder struct {
@@ -25,7 +25,7 @@ func (d *DockerfileBuilder) Build(ctx context.Context, opts BuildOptions) (strin
 	if opts.LogWriter != nil {
 		fmt.Fprintf(opts.LogWriter, "📦 [Dockerfile] Packaging build context from %s...\n", opts.SourceDir)
 	}
-	tarContext, err := utils.CreateTarContext(opts.SourceDir)
+	tarContext, err := storage.CreateTarContext(opts.SourceDir)
 	if err != nil {
 		return "", fmt.Errorf("failed to create tar context: %w", err)
 	}

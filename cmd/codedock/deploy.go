@@ -9,7 +9,7 @@ import (
 	"github.com/spf13/cobra"
 
 	"codedock/internal/models"
-	"codedock/internal/utils"
+	"codedock/internal/platform/storage"
 )
 
 var (
@@ -81,7 +81,7 @@ func runLocalDirectoryDeploy(targetDir string) {
 
 	fmt.Printf("📦 Packaging local directory: %s...\n", absDir)
 	tmpArchive := filepath.Join(os.TempDir(), fmt.Sprintf("codedock-cli-%s.tar.gz", uuid.New().String()[:8]))
-	if err := utils.CreateTarGzArchive(absDir, tmpArchive); err != nil {
+	if err := storage.CreateTarGzArchive(absDir, tmpArchive); err != nil {
 		fmt.Printf("❌ Failed to package archive: %v\n", err)
 		os.Exit(1)
 	}

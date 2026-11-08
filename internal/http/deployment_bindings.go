@@ -3,8 +3,8 @@ package http
 import (
 	"context"
 
-	"codedock/internal/engine/networking"
 	"codedock/internal/models"
+	"codedock/internal/platform/networking"
 	"codedock/internal/repositories"
 )
 

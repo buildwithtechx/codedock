@@ -9,8 +9,8 @@ import (
 
 	"github.com/google/uuid"
 
-	"codedock/internal/engine/dockerprobe"
 	"codedock/internal/models"
+	dockerprobe "codedock/internal/platform/docker"
 )
 
 type AdoptedService struct {

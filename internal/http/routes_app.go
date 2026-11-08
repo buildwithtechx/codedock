@@ -9,10 +9,11 @@ import (
 	"codedock/internal/config"
 	"codedock/internal/models"
 	"codedock/internal/modules/ai"
-	"codedock/internal/modules/auth"
+	"codedock/internal/modules/audit"
 	backupmodule "codedock/internal/modules/backups"
 	"codedock/internal/modules/chatapps"
 	"codedock/internal/modules/dns"
+	"codedock/internal/modules/settings"
 	"github.com/labstack/echo/v4"
 )
 
@@ -111,8 +112,7 @@ func (s *Server) registerBackupRoutes(authGroup *echo.Group) {
 }
 
 func (s *Server) registerSettingsRoutes(apiGroup, authGroup *echo.Group) {
-	authGroup.GET("/settings", s.settingsHandler.GetSettings)
-	apiGroup.PUT("/settings", s.settingsHandler.UpdateSettings, s.authGuard.RequireRole("admin"))
+	settings.RegisterRoutes(apiGroup, authGroup, s.settingsHandler, s.authGuard.RequireRole("admin"))
 	authGroup.GET("/settings/appearance", s.appearanceHandler.GetAppearance)
 	authGroup.PUT("/settings/appearance", s.appearanceHandler.SetAppearance)
 	ai.RegisterRoutes(authGroup, apiGroup, s.aiSettingsHandler, s.authGuard.RequireRole("admin"), s.aiRateLimiter.Middleware)
@@ -236,7 +236,7 @@ func (s *Server) registerMiscRoutes(apiGroup, authGroup *echo.Group) {
 	authGroup.GET("/canvas/projects", s.canvasHandler.ListCanvasSummaries)
 	authGroup.GET("/projects/:id/summary", s.canvasHandler.GetCanvasSummary)
 	authGroup.GET("/environments/:id/canvas", s.canvasHandler.GetEnvironmentCanvas)
-	auth.RegisterAuditRoutes(authGroup, s.auditLogHandler, s.authGuard.RequireRole("admin"))
+	audit.RegisterRoutes(authGroup, s.auditLogHandler, s.authGuard.RequireRole("admin"))
 	s.registerMcpAndAiRoutes(authGroup)
 	apiGroup.GET("/ws/terminal/:id", s.terminalHandler.HandleWebSocket)
 	apiGroup.GET("/ws/services/:id/terminal", s.terminalHandler.HandleWebSocket)

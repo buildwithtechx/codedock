@@ -7,7 +7,7 @@ import (
 
 	"codedock/internal/engine/deploy"
 	"codedock/internal/http/middleware"
-	authservices "codedock/internal/modules/auth"
+	authservices "codedock/internal/modules/audit"
 	deploymentservices "codedock/internal/services/deployments"
 	projectservices "codedock/internal/services/projects"
 	"codedock/internal/services/runtimes"

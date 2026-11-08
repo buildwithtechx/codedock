@@ -1,11 +1,12 @@
 package http
 
 import (
-	"codedock/internal/engine/backup"
 	"codedock/internal/engine/bare"
 	"codedock/internal/engine/kubernetes"
-	"codedock/internal/engine/observability"
 	"codedock/internal/handlers/system"
+	"codedock/internal/platform/observability"
+	backup "codedock/internal/platform/storage"
+	"codedock/internal/platform/vault"
 	"codedock/internal/repositories"
 	"codedock/internal/services/clusterdata"
 	"codedock/internal/services/clusters"
@@ -13,7 +14,6 @@ import (
 	"codedock/internal/services/operations"
 	projectservices "codedock/internal/services/projects"
 	"codedock/internal/services/runtimes"
-	"codedock/internal/utils"
 	"context"
 	"database/sql"
 	"fmt"
@@ -22,8 +22,8 @@ import (
 	"time"
 )
 
-func configureClusters(server *Server, db *sql.DB, vault *utils.Vault, projects *repositories.ProjectRepo, servers repositories.ServerRepository, operations *operations.Service, gate clusters.Gate, apps repositories.AppServiceRepository, deployments *deployments.DeploymentService, canvas *projectservices.CanvasService, backups *backup.BackupManager) error {
-	repository := repositories.NewClusterRepo(db, vault)
+func configureClusters(server *Server, db *sql.DB, vlt *vault.Vault, projects *repositories.ProjectRepo, servers repositories.ServerRepository, operations *operations.Service, gate clusters.Gate, apps repositories.AppServiceRepository, deployments *deployments.DeploymentService, canvas *projectservices.CanvasService, backups *backup.BackupManager) error {
+	repository := repositories.NewClusterRepo(db, vlt)
 	if err := repository.Recover(context.Background()); err != nil {
 		return fmt.Errorf("recover cluster operations: %w", err)
 	}
@@ -33,14 +33,14 @@ func configureClusters(server *Server, db *sql.DB, vault *utils.Vault, projects 
 		return fmt.Errorf("recover cluster upgrades: %w", err)
 	}
 	server.clusterHandler = system.NewClusterHandler(service, operations)
-	dataService := clusterdata.NewService(repositories.NewClusterDataRepo(db, vault), repository, repositories.NewEnvironmentRepo(db), repositories.NewS3DestinationRepo(db, vault), runner, operations, gate, &http.Client{Timeout: time.Minute})
+	dataService := clusterdata.NewService(repositories.NewClusterDataRepo(db, vlt), repository, repositories.NewEnvironmentRepo(db), repositories.NewS3DestinationRepo(db, vlt), runner, operations, gate, &http.Client{Timeout: time.Minute})
 	dataService.SetSnapshots(repositories.NewRedisSnapshotRepo(db))
 	if err := dataService.Recover(context.Background()); err != nil {
 		return fmt.Errorf("recover cluster databases: %w", err)
 	}
 	server.clusterDataHandler = system.NewClusterDataHandler(dataService, operations)
 	server.clusterDataHandler.SetBindings(apps, repositories.NewServiceVarRepo(db))
-	runtime := runtimes.NewService(repositories.NewRuntimeRepo(db, vault), apps, repository, servers, kubernetes.NewWorkloadRuntime(runner), server.deployer, operations, gate)
+	runtime := runtimes.NewService(repositories.NewRuntimeRepo(db, vlt), apps, repository, servers, kubernetes.NewWorkloadRuntime(runner), server.deployer, operations, gate)
 	runtime.SetStreamer(runner)
 	runtime.SetBare(bare.NewRuntime(runner), projects)
 	if err := runtime.Recover(context.Background()); err != nil {

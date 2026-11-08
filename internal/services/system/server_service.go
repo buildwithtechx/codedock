@@ -10,8 +10,8 @@ import (
 	"github.com/google/uuid"
 
 	"codedock/internal/config"
-	"codedock/internal/engine/ssh"
 	"codedock/internal/models"
+	"codedock/internal/platform/ssh"
 	"codedock/internal/repositories"
 )
 

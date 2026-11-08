@@ -7,6 +7,8 @@ import (
 	"codedock/internal/modules/auth"
 	"codedock/internal/modules/databases"
 	mailmodule "codedock/internal/modules/mail"
+	"codedock/internal/modules/organizations"
+	"codedock/internal/modules/users"
 	"codedock/internal/utils"
 )
 
@@ -91,9 +93,13 @@ func (s *Server) RequireServiceRole(minPermission models.MemberPermission) echo.
 }
 
 func (s *Server) registerAuthRoutes(apiGroup, authGroup *echo.Group) {
+	uh := s.userHandler
+	if uh == nil {
+		uh = &users.UserHandler{}
+	}
 	auth.RegisterAuthRoutes(apiGroup, authGroup, auth.AuthRouteDeps{
 		AuthHandler:       s.authHandler,
-		UserHandler:       s.userHandler,
+		GetProfile:        uh.GetProfile,
 		OAuthHandler:      s.oauthHandler,
 		DeviceFlowHandler: s.deviceFlowHandler,
 		PasskeyHandler:    s.passkeyHandler,
@@ -122,7 +128,11 @@ func (s *Server) registerSystemRoutes(apiGroup, authGroup *echo.Group) {
 }
 
 func (s *Server) registerUserRoutes(apiGroup, authGroup *echo.Group) {
-	auth.RegisterUserRoutes(authGroup, s.userHandler, s.authHandler, s.authGuard.RequireRole("admin"), s.otpRateLimiter.Middleware)
+	ah := s.authHandler
+	if ah == nil {
+		ah = &auth.AuthHandler{}
+	}
+	users.RegisterRoutes(authGroup, s.userHandler, ah.AdminInviteUser, s.authGuard.RequireRole("admin"), s.otpRateLimiter.Middleware)
 }
 
 func (s *Server) registerProjectRoutes(apiGroup, authGroup *echo.Group) {
@@ -214,7 +224,7 @@ func (s *Server) registerServerRoutes(apiGroup, authGroup *echo.Group) {
 }
 
 func (s *Server) registerOrganizationRoutes(authGroup *echo.Group) {
-	auth.RegisterOrganizationRoutes(
+	organizations.RegisterRoutes(
 		authGroup,
 		s.orgHandler,
 		s.authGuard.RequireOrgRole(models.MemberPermissionMember),

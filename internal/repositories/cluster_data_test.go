@@ -2,7 +2,7 @@ package repositories
 
 import (
 	"codedock/internal/models"
-	"codedock/internal/utils"
+	"codedock/internal/platform/vault"
 	"context"
 	"encoding/json"
 	"strings"
@@ -16,7 +16,7 @@ func TestClusterDatabaseSecretsAreEncryptedAndHiddenFromListing(t *testing.T) {
 			t.Fatal(err)
 		}
 	}
-	vault, err := utils.NewVault(t.TempDir())
+	vault, err := vault.NewVault(t.TempDir())
 	if err != nil {
 		t.Fatal(err)
 	}

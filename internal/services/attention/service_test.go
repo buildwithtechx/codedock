@@ -9,9 +9,9 @@ import (
 	"time"
 
 	cdkdb "codedock/db"
-	"codedock/internal/engine/dockerprobe"
 	"codedock/internal/models"
 	backupmodule "codedock/internal/modules/backups"
+	dockerprobe "codedock/internal/platform/docker"
 	"codedock/internal/repositories"
 	"codedock/internal/services/migrations"
 	projectservices "codedock/internal/services/projects"

@@ -6,7 +6,7 @@ import (
 	"time"
 
 	"codedock/internal/models"
-	"codedock/internal/utils"
+	"codedock/internal/platform/vault"
 )
 
 func TestProjectRoundtrip(t *testing.T) {
@@ -97,7 +97,7 @@ func TestProjectRoundtrip(t *testing.T) {
 	if len(envs) != 1 || !envs[0].IsDefault {
 		t.Fatalf("expected default environment, got %+v", envs)
 	}
-	vault, err := utils.NewVault(t.TempDir())
+	vault, err := vault.NewVault(t.TempDir())
 	if err != nil {
 		t.Fatalf("new vault: %v", err)
 	}

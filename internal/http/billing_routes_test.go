@@ -11,6 +11,7 @@ import (
 	"codedock/internal/handlers/system"
 	"codedock/internal/http/middleware"
 	"codedock/internal/modules/auth"
+	"codedock/internal/modules/users"
 )
 
 func TestBillingRoutesRespectDeploymentMode(t *testing.T) {
@@ -22,7 +23,7 @@ func TestBillingRoutesRespectDeploymentMode(t *testing.T) {
 	if err != nil {
 		t.Fatal(err)
 	}
-	token, err := tokens.GenerateToken(&auth.User{ID: "owner", Role: auth.UserRoleOwner})
+	token, err := tokens.GenerateToken(&users.User{ID: "owner", Role: users.UserRoleOwner})
 	if err != nil {
 		t.Fatal(err)
 	}

@@ -7,10 +7,10 @@ import (
 
 	handlerutils "codedock/internal/handlers/utils"
 
-	"codedock/internal/engine/observability"
 	"codedock/internal/http/middleware"
 	"codedock/internal/models"
 	authservices "codedock/internal/modules/auth"
+	"codedock/internal/platform/observability"
 	systemservices "codedock/internal/services/system"
 	"codedock/internal/utils"
 

@@ -1,8 +1,8 @@
 package kubernetes
 
 import (
-	"codedock/internal/engine/ssh"
 	"codedock/internal/models"
+	"codedock/internal/platform/ssh"
 	"context"
 	"encoding/base64"
 	"fmt"

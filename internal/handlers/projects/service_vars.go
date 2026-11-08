@@ -8,7 +8,7 @@ import (
 	"codedock/internal/utils"
 
 	"codedock/internal/models"
-	authservices "codedock/internal/modules/auth"
+	authservices "codedock/internal/modules/audit"
 	projectservices "codedock/internal/services/projects"
 )
 

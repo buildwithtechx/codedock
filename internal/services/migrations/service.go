@@ -13,9 +13,9 @@ import (
 
 	"github.com/google/uuid"
 
-	"codedock/internal/engine/dockerprobe"
-	enginessh "codedock/internal/engine/ssh"
 	"codedock/internal/models"
+	dockerprobe "codedock/internal/platform/docker"
+	enginessh "codedock/internal/platform/ssh"
 	"codedock/internal/repositories"
 	deploymentservices "codedock/internal/services/deployments"
 	projectservices "codedock/internal/services/projects"

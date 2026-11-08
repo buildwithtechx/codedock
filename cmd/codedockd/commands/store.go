@@ -11,18 +11,18 @@ import (
 
 	cdkdb "codedock/db"
 	"codedock/internal/config"
-	"codedock/internal/engine/systemdb"
 	"codedock/internal/models"
+	systemdb "codedock/internal/platform/database"
+	"codedock/internal/platform/vault"
 	"codedock/internal/repositories"
-	"codedock/internal/utils"
 )
 
 type DBDeployerStore struct {
 	DB    *sql.DB
-	Vault *utils.Vault
+	Vault *vault.Vault
 }
 
-func NewDBDeployerStore(db *sql.DB, vlt *utils.Vault) *DBDeployerStore {
+func NewDBDeployerStore(db *sql.DB, vlt *vault.Vault) *DBDeployerStore {
 	return &DBDeployerStore{DB: db, Vault: vlt}
 }
 
@@ -62,7 +62,7 @@ func (a *DBDeployerStore) GetRegistry(id string) (*models.Registry, error) {
 	return repo.Get(context.Background(), id)
 }
 
-func InitDataDir() (string, *sql.DB, *utils.Vault) {
+func InitDataDir() (string, *sql.DB, *vault.Vault) {
 	dataDir := config.Get().Server.DataDir
 	if abs, err := filepath.Abs(dataDir); err == nil {
 		dataDir = abs
@@ -75,7 +75,7 @@ func InitDataDir() (string, *sql.DB, *utils.Vault) {
 		slog.Error("failed to enforce 0700 permissions on data directory", "err", err)
 		os.Exit(1)
 	}
-	vlt, err := utils.NewVault(dataDir)
+	vlt, err := vault.NewVault(dataDir)
 	if err != nil {
 		slog.Error("failed to initialize secrets vault", "err", err)
 		os.Exit(1)

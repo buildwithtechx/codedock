@@ -12,9 +12,9 @@ import (
 	"github.com/google/uuid"
 
 	"codedock/internal/engine/deploy"
-	"codedock/internal/engine/observability"
-	"codedock/internal/engine/ssh"
 	"codedock/internal/models"
+	"codedock/internal/platform/observability"
+	"codedock/internal/platform/ssh"
 	"codedock/internal/repositories"
 )
 

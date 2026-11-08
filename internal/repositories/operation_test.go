@@ -2,8 +2,8 @@ package repositories
 
 import (
 	"codedock/internal/models"
+	"codedock/internal/platform/vault"
 	"codedock/internal/services/operations"
-	"codedock/internal/utils"
 	"context"
 	"strings"
 	"testing"
@@ -12,7 +12,7 @@ import (
 
 func TestOperationsEncryptReviewsAndRejectConflicts(t *testing.T) {
 	db := openPGTestDB(t)
-	vault, err := utils.NewVault(t.TempDir())
+	vault, err := vault.NewVault(t.TempDir())
 	if err != nil {
 		t.Fatal(err)
 	}

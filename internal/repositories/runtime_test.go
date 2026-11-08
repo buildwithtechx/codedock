@@ -2,7 +2,7 @@ package repositories
 
 import (
 	"codedock/internal/models"
-	"codedock/internal/utils"
+	"codedock/internal/platform/vault"
 	"context"
 	"strings"
 	"testing"
@@ -15,7 +15,7 @@ func TestRuntimeRecoveryJournalEncryptionAndRevisionConflicts(t *testing.T) {
 			t.Fatal(err)
 		}
 	}
-	vault, err := utils.NewVault(t.TempDir())
+	vault, err := vault.NewVault(t.TempDir())
 	if err != nil {
 		t.Fatal(err)
 	}
@@ -67,7 +67,7 @@ func TestDesiredWorkloadCommitIsAtomicAndEncrypted(t *testing.T) {
 			t.Fatal(err)
 		}
 	}
-	vault, err := utils.NewVault(t.TempDir())
+	vault, err := vault.NewVault(t.TempDir())
 	if err != nil {
 		t.Fatal(err)
 	}
@@ -114,7 +114,7 @@ func TestRuntimeDesiredIDsAndSyncKinds(t *testing.T) {
 			t.Fatal(err)
 		}
 	}
-	vault, err := utils.NewVault(t.TempDir())
+	vault, err := vault.NewVault(t.TempDir())
 	if err != nil {
 		t.Fatal(err)
 	}

@@ -5,8 +5,8 @@ import (
 	"fmt"
 	"strings"
 
-	"codedock/internal/engine/dockerprobe"
 	"codedock/internal/models"
+	dockerprobe "codedock/internal/platform/docker"
 )
 
 func (s *Service) PreviewMigration(ctx context.Context, userID, orgID string, req models.PreviewMigrationRequest) (*models.MigrationPreview, error) {

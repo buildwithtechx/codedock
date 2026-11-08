@@ -8,8 +8,8 @@ import (
 	"time"
 
 	"codedock/internal/engine/hetzner"
-	"codedock/internal/engine/ssh"
 	"codedock/internal/models"
+	"codedock/internal/platform/ssh"
 )
 
 func serverLabelSelector(serverID string) string {

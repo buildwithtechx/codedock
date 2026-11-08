@@ -7,8 +7,8 @@ import (
 	"time"
 
 	"codedock/internal/config"
-	"codedock/internal/engine/observability"
 	"codedock/internal/models"
+	"codedock/internal/platform/observability"
 	"codedock/internal/utils"
 )
 

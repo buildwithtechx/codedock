@@ -9,9 +9,9 @@ import (
 	"os/exec"
 	"time"
 
-	"codedock/internal/engine/networking"
-	"codedock/internal/engine/systemdb"
 	"codedock/internal/models"
+	systemdb "codedock/internal/platform/database"
+	"codedock/internal/platform/networking"
 	"codedock/internal/repositories"
 )
 

@@ -2,67 +2,67 @@ package settings
 
 import (
 	"context"
+	"errors"
 	"fmt"
-	"net"
-
-	"github.com/robfig/cron/v3"
-
-	"codedock/internal/config"
-	"codedock/internal/telemetry"
 )
 
 type SettingsService struct {
-	repo SettingsRepository
+	settingsRepo SettingsRepository
 }
 
-func NewSettingsService(r SettingsRepository) *SettingsService {
-	return &SettingsService{repo: r}
+func NewSettingsService(sr SettingsRepository) *SettingsService {
+	return &SettingsService{
+		settingsRepo: sr,
+	}
 }
 
 func (s *SettingsService) GetSettings(ctx context.Context) (*ServerSettings, error) {
-	cfg, err := s.repo.GetServerSettings(ctx)
-	if err != nil {
-		return nil, err
-	}
-	cfg.TelemetryEnabled = config.Get().Telemetry.Enabled
-	return cfg, nil
-}
-
-func (s *SettingsService) IsNotificationEmailEnabled(ctx context.Context) (bool, error) {
-	return s.repo.IsNotificationEmailEnabled(ctx)
+	return s.settingsRepo.GetServerSettings(ctx)
 }
 
 func (s *SettingsService) UpdateSettings(ctx context.Context, cfg *ServerSettings) error {
-	if cfg.PublicIPv4 != "" {
-		ip := net.ParseIP(cfg.PublicIPv4)
-		if ip == nil || ip.To4() == nil {
-			return fmt.Errorf("invalid public IPv4 address")
-		}
+	if cfg == nil {
+		return errors.New("server settings cannot be nil")
 	}
-	if cfg.PublicIPv6 != "" {
-		ip := net.ParseIP(cfg.PublicIPv6)
-		if ip == nil || ip.To4() != nil {
-			return fmt.Errorf("invalid public IPv6 address")
-		}
-	}
-	if cfg.DockerCleanupCron != "" {
-		if _, err := cron.ParseStandard(cfg.DockerCleanupCron); err != nil {
-			return fmt.Errorf("invalid docker cleanup cron expression: %w", err)
-		}
-	}
-	if cfg.DiskUsageCron != "" {
-		if _, err := cron.ParseStandard(cfg.DiskUsageCron); err != nil {
-			return fmt.Errorf("invalid disk usage cron expression: %w", err)
-		}
-	}
-	if cfg.UpdateCheckCron != "" {
-		if _, err := cron.ParseStandard(cfg.UpdateCheckCron); err != nil {
-			return fmt.Errorf("invalid update check cron expression: %w", err)
-		}
-	}
+	return s.settingsRepo.UpdateServerSettings(ctx, cfg)
+}
 
-	config.Get().Telemetry.Enabled = cfg.TelemetryEnabled
-	telemetry.Init()
+func (s *SettingsService) IsNotificationEmailEnabled(ctx context.Context) (bool, error) {
+	if s == nil || s.settingsRepo == nil {
+		return false, nil
+	}
+	return s.settingsRepo.IsNotificationEmailEnabled(ctx)
+}
 
-	return s.repo.UpdateServerSettings(ctx, cfg)
+func (s *SettingsService) CheckMCPEnabled(ctx context.Context) error {
+	settings, err := s.settingsRepo.GetServerSettings(ctx)
+	if err != nil {
+		return err
+	}
+	if settings != nil && !settings.MCPServerEnabled {
+		return errors.New("MCP server endpoint is currently disabled by the administrator")
+	}
+	return nil
+}
+
+func (s *SettingsService) ExecuteMCPTool(ctx context.Context, toolName string) ([]map[string]any, error) {
+	if err := s.CheckMCPEnabled(ctx); err != nil {
+		return nil, err
+	}
+	switch toolName {
+	case "list_projects":
+		projects, err := s.settingsRepo.ListProjects(ctx)
+		if err != nil {
+			return nil, err
+		}
+		return []map[string]any{
+			{"type": "text", "text": fmt.Sprintf("Found %d projects: %+v", len(projects), projects)},
+		}, nil
+	case "get_system_status":
+		return []map[string]any{
+			{"type": "text", "text": "Codedock system is healthy and operational."},
+		}, nil
+	default:
+		return nil, fmt.Errorf("Method/Tool not found: %s", toolName)
+	}
 }
