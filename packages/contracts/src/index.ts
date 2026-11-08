@@ -14,3 +14,4 @@ export * from './projects';
 export * from './servers';
 export * from './services';
 export * from './updates';
+export * from './chat-apps';

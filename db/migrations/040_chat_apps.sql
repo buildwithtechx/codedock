@@ -70,3 +70,4 @@ CREATE TABLE IF NOT EXISTS chat_app_commands (
 
 CREATE INDEX IF NOT EXISTS idx_chat_commands_conn ON chat_app_commands(connection_id);
 CREATE INDEX IF NOT EXISTS idx_chat_commands_token ON chat_app_commands(confirmation_token);
+
