@@ -173,6 +173,8 @@ type AppService struct {
 	Stack                  string           `json:"stack,omitempty" db:"stack"`
 	StopGracePeriodSeconds int              `json:"stopGracePeriodSeconds,omitempty" db:"stop_grace_period_seconds"`
 	RuntimeVersion         string           `json:"runtimeVersion,omitempty" db:"runtime_version"`
+	BuildImage             string           `json:"buildImage,omitempty" db:"build_image"`
+	RuntimeImage           string           `json:"runtimeImage,omitempty" db:"runtime_image"`
 	RegistryID             *string          `json:"registryId,omitempty" db:"registry_id"`
 	SPAFallback            *bool            `json:"spaFallback,omitempty" db:"spa_fallback"`
 
@@ -215,6 +217,8 @@ type CreateAppServiceRequest struct {
 	Stack                  string      `json:"stack,omitempty"`
 	StopGracePeriodSeconds int         `json:"stopGracePeriodSeconds,omitempty"`
 	RuntimeVersion         string      `json:"runtimeVersion,omitempty"`
+	BuildImage             string      `json:"buildImage,omitempty"`
+	RuntimeImage           string      `json:"runtimeImage,omitempty"`
 	MaintenanceMode        bool        `json:"maintenanceMode,omitempty"`
 	RegistryID             *string     `json:"registryId,omitempty"`
 	SPAFallback            *bool       `json:"spaFallback,omitempty"`
@@ -247,6 +251,8 @@ type UpdateAppServiceRequest struct {
 	Stack                  string      `json:"stack,omitempty"`
 	StopGracePeriodSeconds int         `json:"stopGracePeriodSeconds,omitempty"`
 	RuntimeVersion         string      `json:"runtimeVersion,omitempty"`
+	BuildImage             string      `json:"buildImage,omitempty"`
+	RuntimeImage           string      `json:"runtimeImage,omitempty"`
 	RegistryID             *string     `json:"registryId,omitempty"`
 	SPAFallback            *bool       `json:"spaFallback,omitempty"`
 }

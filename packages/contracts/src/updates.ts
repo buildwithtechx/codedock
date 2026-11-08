@@ -37,6 +37,16 @@ export interface SecurityAdvisory {
   action?: string;
 }
 
+/** Deterministic precision semver runtime patch for standard runtimes. */
+export interface SecurityRuntimePatch {
+  reviewId: string;
+  runtime: 'node' | 'bun';
+  currentVersion: string;
+  targetVersion: string;
+  buildImage: string;
+  runtimeImage: string;
+}
+
 /** Result of non-invasive security advisory match against a project/service. */
 export interface AdvisoryFinding {
   advisoryId: string;
@@ -45,10 +55,12 @@ export interface AdvisoryFinding {
   action: string;
   confidence: 'confirmed' | 'possible';
   serviceName?: string;
+  serviceId?: string;
   evidence?: string;
   canRefresh?: boolean;
   runtimeUpgradeRequired?: boolean;
   imageChangeRequired?: boolean;
+  runtimePatch?: SecurityRuntimePatch;
 }
 
 /** Security audit findings and policies for a project. */
@@ -90,4 +102,6 @@ export interface SetSecurityPolicyInput {
 export interface ApplySecurityInput {
   advisoryId: string;
   deploymentId?: string;
+  serviceId?: string;
+  runtimePatchId?: string;
 }

@@ -1,3 +1,5 @@
+import { Button } from '@codedock/ui/button';
+import { Input } from '@codedock/ui/input';
 import {
   Container,
   Flame,
@@ -9,14 +11,12 @@ import {
   Rocket,
 } from 'lucide-react';
 import { useState } from 'react';
-import { Button } from '@codedock/ui/button';
-import { Input } from '@codedock/ui/input';
-import { useGetPublicSettings, useGetSettings } from '#/hooks/use-settings';
-import { GithubIcon } from '#/features/sources/github-app-dialogs';
 import {
   RouteProtectionButton,
   type RouteProtectionDraft,
 } from '#/features/dns/route-protection-button';
+import { GithubIcon } from '#/features/sources/github-app-dialogs';
+import { useGetPublicSettings, useGetSettings } from '#/hooks/use-settings';
 
 interface DeploySidebarProps {
   repoName: string;
@@ -31,6 +31,7 @@ interface DeploySidebarProps {
   onDeploy: () => void;
   routeProtectionDraft?: RouteProtectionDraft;
   onRouteProtectionDraftChange?: (draft: RouteProtectionDraft | undefined) => void;
+  externalIngressHostnames?: Set<string>;
 }
 
 export function DeploySidebar({
@@ -46,6 +47,7 @@ export function DeploySidebar({
   onDeploy,
   routeProtectionDraft,
   onRouteProtectionDraftChange,
+  externalIngressHostnames,
 }: DeploySidebarProps) {
   const { data: publicRes } = useGetPublicSettings();
   const { data: settingsRes } = useGetSettings();
@@ -177,6 +179,12 @@ export function DeploySidebar({
             {activeDomain && (
               <RouteProtectionButton
                 hostname={activeDomain}
+                unsupported={
+                  isCloud ||
+                  domainMode !== 'custom' ||
+                  activeDomain.startsWith('*.') ||
+                  (externalIngressHostnames?.has(activeDomain.toLowerCase()) ?? false)
+                }
                 draft={routeProtectionDraft}
                 onDraftChange={onRouteProtectionDraftChange}
               />

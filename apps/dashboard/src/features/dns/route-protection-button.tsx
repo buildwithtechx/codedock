@@ -1,3 +1,15 @@
+import type { RouteProtectionAction, RouteProtectionDraft } from '@codedock/contracts';
+import { Badge } from '@codedock/ui/badge';
+import { Button } from '@codedock/ui/button';
+import {
+  Dialog,
+  DialogContent,
+  DialogDescription,
+  DialogHeader,
+  DialogTitle,
+} from '@codedock/ui/dialog';
+import { Input } from '@codedock/ui/input';
+import { Label } from '@codedock/ui/label';
 import {
   AlertTriangle,
   CheckCircle2,
@@ -11,18 +23,6 @@ import {
 } from 'lucide-react';
 import { useState } from 'react';
 import { toast } from 'sonner';
-import type { RouteProtectionAction, RouteProtectionDraft } from '@codedock/contracts';
-import { Badge } from '@codedock/ui/badge';
-import { Button } from '@codedock/ui/button';
-import {
-  Dialog,
-  DialogContent,
-  DialogDescription,
-  DialogHeader,
-  DialogTitle,
-} from '@codedock/ui/dialog';
-import { Input } from '@codedock/ui/input';
-import { Label } from '@codedock/ui/label';
 import { useChangeRouteProtection, useRouteProtection } from '#/hooks/use-route-protection';
 
 export type { RouteProtectionDraft };
@@ -115,8 +115,10 @@ export function RouteProtectionButton({
         variant="ghost"
         size="icon"
         onClick={() => setOpen(true)}
-        disabled={unsupported}
-        title="Route Password Protection"
+        disabled={isLoading}
+        title={
+          unsupported ? 'Route Password Protection (Unsupported)' : 'Route Password Protection'
+        }
         className={`h-8 w-8 rounded-xl ${
           isApplied
             ? 'text-primary hover:bg-primary/10 hover:text-primary'
@@ -138,15 +140,15 @@ export function RouteProtectionButton({
       <Dialog open={open} onOpenChange={setOpen}>
         <DialogContent className="max-w-md rounded-2xl p-6">
           <DialogHeader icon={Shield}>
-            <DialogTitle className="text-base font-semibold">Route Password Protection</DialogTitle>
-            <DialogDescription className="break-all font-mono text-xs text-muted-foreground">
+            <DialogTitle className="font-semibold text-base">Route Password Protection</DialogTitle>
+            <DialogDescription className="break-all font-mono text-muted-foreground text-xs">
               {hostname}
             </DialogDescription>
           </DialogHeader>
 
           <div className="space-y-4 pt-2">
             <div className="flex items-center justify-between rounded-xl border border-border/60 bg-muted/20 p-3">
-              <span className="text-xs font-medium text-foreground">Current Edge Status</span>
+              <span className="font-medium text-foreground text-xs">Current Edge Status</span>
               {draft ? (
                 <Badge
                   variant="outline"
@@ -175,121 +177,146 @@ export function RouteProtectionButton({
               )}
             </div>
 
-            <p className="text-xs text-muted-foreground">
+            <p className="text-muted-foreground text-xs">
               Gate incoming requests behind a secure Traefik edge challenge with PBKDF2-HMAC-SHA256
               session encryption.
             </p>
 
-            <form
-              onSubmit={(e) => {
-                e.preventDefault();
-                void handleAction('protect');
-              }}
-              className="space-y-3"
-            >
-              <div className="space-y-1.5">
-                <Label htmlFor={`pwd-${hostname}`} className="text-xs font-medium text-foreground">
-                  {isEnabled ? 'Change Route Password' : 'Set Route Password'}
-                </Label>
-                <Input
-                  id={`pwd-${hostname}`}
-                  type="password"
-                  placeholder="Minimum 12 characters"
-                  value={password}
-                  onChange={(e) => setPassword(e.target.value)}
-                  minLength={12}
-                  maxLength={256}
-                  disabled={changeProtection.isPending}
-                  className="rounded-xl font-mono text-xs"
-                />
-                <p className="text-[11px] text-muted-foreground">
-                  Must be at least 12 characters. Active sessions remain authenticated for 24 hours.
-                </p>
+            {unsupported ? (
+              <div
+                role="status"
+                className="rounded-xl border border-amber-500/30 bg-amber-500/10 p-3.5 text-amber-500 text-xs"
+              >
+                <div className="flex items-start gap-2">
+                  <AlertTriangle className="mt-0.5 size-4 shrink-0" />
+                  <div>
+                    <p className="font-medium text-foreground text-xs">Protection Not Supported</p>
+                    <p className="mt-0.5 text-[11px] text-muted-foreground">
+                      Password protection is not supported for hostnames behind external ingress or
+                      unmanaged edge proxies. Edge TLS termination must happen directly on this
+                      instance.
+                    </p>
+                  </div>
+                </div>
               </div>
+            ) : (
+              <>
+                <form
+                  onSubmit={(e) => {
+                    e.preventDefault();
+                    void handleAction('protect');
+                  }}
+                  className="space-y-3"
+                >
+                  <div className="space-y-1.5">
+                    <Label
+                      htmlFor={`pwd-${hostname}`}
+                      className="font-medium text-foreground text-xs"
+                    >
+                      {isEnabled ? 'Change Route Password' : 'Set Route Password'}
+                    </Label>
+                    <Input
+                      id={`pwd-${hostname}`}
+                      type="password"
+                      placeholder="Minimum 12 characters"
+                      value={password}
+                      onChange={(e) => setPassword(e.target.value)}
+                      minLength={12}
+                      maxLength={256}
+                      disabled={changeProtection.isPending}
+                      className="rounded-xl font-mono text-xs"
+                    />
+                    <p className="text-[11px] text-muted-foreground">
+                      Must be at least 12 characters. Active sessions remain authenticated for 24
+                      hours.
+                    </p>
+                  </div>
 
-              <Button
-                type="submit"
-                disabled={changeProtection.isPending || password.length < 12}
-                className="h-9 w-full gap-2 rounded-xl text-xs"
-              >
-                {changeProtection.isPending ? (
-                  <Loader2 className="size-3.5 animate-spin" />
-                ) : (
-                  <KeyRound className="size-3.5" />
-                )}
-                {isEnabled ? 'Update Password' : 'Enable Route Protection'}
-              </Button>
-            </form>
+                  <Button
+                    type="submit"
+                    disabled={changeProtection.isPending || password.length < 12}
+                    className="h-9 w-full gap-2 rounded-xl text-xs"
+                  >
+                    {changeProtection.isPending ? (
+                      <Loader2 className="size-3.5 animate-spin" />
+                    ) : (
+                      <KeyRound className="size-3.5" />
+                    )}
+                    {isEnabled ? 'Update Password' : 'Enable Route Protection'}
+                  </Button>
+                </form>
 
-            {isPending && projectId && (
-              <Button
-                type="button"
-                variant="outline"
-                size="sm"
-                onClick={() => void handleAction('retry')}
-                disabled={changeProtection.isPending}
-                className="h-8 w-full gap-1.5 rounded-xl text-xs"
-              >
-                <RefreshCw className="size-3" /> Retry Edge Synchronization
-              </Button>
-            )}
-
-            {isEnabled && (
-              <div className="space-y-2 border-t border-border/40 pt-3">
-                {projectId && (
+                {isPending && projectId && (
                   <Button
                     type="button"
                     variant="outline"
                     size="sm"
-                    onClick={() => void handleAction('revoke')}
+                    onClick={() => void handleAction('retry')}
                     disabled={changeProtection.isPending}
-                    className="h-8 w-full gap-1.5 rounded-xl text-xs text-muted-foreground hover:text-foreground"
+                    className="h-8 w-full gap-1.5 rounded-xl text-xs"
                   >
-                    <LogOut className="size-3" /> Revoke All Active Browser Sessions
+                    <RefreshCw className="size-3" /> Retry Edge Synchronization
                   </Button>
                 )}
 
-                {!confirmUnlock ? (
-                  <Button
-                    type="button"
-                    variant="ghost"
-                    size="sm"
-                    onClick={() => setConfirmUnlock(true)}
-                    disabled={changeProtection.isPending}
-                    className="h-8 w-full gap-1.5 rounded-xl text-xs text-destructive hover:bg-destructive/10 hover:text-destructive"
-                  >
-                    <Unlock className="size-3" /> Remove Protection
-                  </Button>
-                ) : (
-                  <div className="space-y-2 rounded-xl border border-destructive/30 bg-destructive/5 p-3">
-                    <p className="text-xs text-destructive">
-                      Make this route public to all incoming internet traffic?
-                    </p>
-                    <div className="flex gap-2">
+                {isEnabled && (
+                  <div className="space-y-2 border-border/40 border-t pt-3">
+                    {projectId && (
                       <Button
                         type="button"
-                        variant="destructive"
+                        variant="outline"
                         size="sm"
-                        onClick={() => void handleAction('unlock')}
+                        onClick={() => void handleAction('revoke')}
                         disabled={changeProtection.isPending}
-                        className="h-8 flex-1 rounded-xl text-xs"
+                        className="h-8 w-full gap-1.5 rounded-xl text-muted-foreground text-xs hover:text-foreground"
                       >
-                        Yes, Unlock Route
+                        <LogOut className="size-3" /> Revoke All Active Browser Sessions
                       </Button>
+                    )}
+
+                    {!confirmUnlock ? (
                       <Button
                         type="button"
                         variant="ghost"
                         size="sm"
-                        onClick={() => setConfirmUnlock(false)}
+                        onClick={() => setConfirmUnlock(true)}
                         disabled={changeProtection.isPending}
-                        className="h-8 flex-1 rounded-xl text-xs"
+                        className="h-8 w-full gap-1.5 rounded-xl text-destructive text-xs hover:bg-destructive/10 hover:text-destructive"
                       >
-                        Cancel
+                        <Unlock className="size-3" /> Remove Protection
                       </Button>
-                    </div>
+                    ) : (
+                      <div className="space-y-2 rounded-xl border border-destructive/30 bg-destructive/5 p-3">
+                        <p className="text-destructive text-xs">
+                          Make this route public to all incoming internet traffic?
+                        </p>
+                        <div className="flex gap-2">
+                          <Button
+                            type="button"
+                            variant="destructive"
+                            size="sm"
+                            onClick={() => void handleAction('unlock')}
+                            disabled={changeProtection.isPending}
+                            className="h-8 flex-1 rounded-xl text-xs"
+                          >
+                            Yes, Unlock Route
+                          </Button>
+                          <Button
+                            type="button"
+                            variant="ghost"
+                            size="sm"
+                            onClick={() => setConfirmUnlock(false)}
+                            disabled={changeProtection.isPending}
+                            className="h-8 flex-1 rounded-xl text-xs"
+                          >
+                            Cancel
+                          </Button>
+                        </div>
+                      </div>
+                    )}
                   </div>
                 )}
-              </div>
+              </>
             )}
           </div>
         </DialogContent>

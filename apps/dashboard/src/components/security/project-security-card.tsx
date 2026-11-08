@@ -46,6 +46,8 @@ export function ProjectSecurityCard({
       payload: {
         advisoryId: finding.advisoryId,
         deploymentId: data?.deploymentId,
+        serviceId: finding.serviceId,
+        runtimePatchId: finding.runtimePatch?.reviewId,
       },
     });
   };
@@ -160,6 +162,22 @@ export function ProjectSecurityCard({
               {finding.evidence && (
                 <div className="break-all rounded bg-muted/60 p-2 font-mono text-[11px] text-muted-foreground">
                   {finding.evidence}
+                </div>
+              )}
+
+              {finding.runtimePatch && (
+                <div className="flex items-center gap-2 rounded-lg border border-primary/20 bg-primary/5 px-2.5 py-1.5 text-xs">
+                  <span className="font-medium text-primary">Runtime Patch:</span>
+                  <span className="font-mono text-muted-foreground">
+                    {finding.runtimePatch.currentVersion}
+                  </span>
+                  <span className="font-bold text-primary">→</span>
+                  <span className="font-mono font-semibold text-foreground">
+                    {finding.runtimePatch.targetVersion}
+                  </span>
+                  <span className="text-[11px] text-muted-foreground">
+                    ({finding.runtimePatch.runtime})
+                  </span>
                 </div>
               )}
 

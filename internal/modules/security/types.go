@@ -93,11 +93,13 @@ type AdvisoryFinding struct {
 	Action                 Action     `json:"action"`
 	TargetKind             TargetKind `json:"targetKind"`
 	Confidence             Confidence `json:"confidence"`
-	ServiceName            string     `json:"serviceName"`
-	Evidence               string     `json:"evidence"`
-	CanRefresh             bool       `json:"canRefresh"`
-	RuntimeUpgradeRequired bool       `json:"runtimeUpgradeRequired"`
-	ImageChangeRequired    bool       `json:"imageChangeRequired"`
+	ServiceName            string                `json:"serviceName"`
+	ServiceID              string                `json:"serviceId,omitempty"`
+	Evidence               string                `json:"evidence"`
+	CanRefresh             bool                  `json:"canRefresh"`
+	RuntimeUpgradeRequired bool                  `json:"runtimeUpgradeRequired"`
+	ImageChangeRequired    bool                  `json:"imageChangeRequired"`
+	RuntimePatch           *SecurityRuntimePatch `json:"runtimePatch,omitempty"`
 }
 
 type RefreshAttempt struct {

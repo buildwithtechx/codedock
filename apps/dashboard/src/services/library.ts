@@ -37,12 +37,20 @@ export const libraryApi = {
     }
   },
 
-  async deployArchive(projectId: string, name: string, file: File): Promise<ArchiveDeployResponse> {
+  async deployArchive(
+    projectId: string,
+    name: string,
+    file: File,
+    stack?: string
+  ): Promise<ArchiveDeployResponse> {
     try {
       const formData = new FormData();
       formData.append('projectId', projectId);
       formData.append('name', name);
       formData.append('file', file);
+      if (stack) {
+        formData.append('stack', stack);
+      }
       return await apiClient.post<ArchiveDeployResponse>('/deploy/archive', formData);
     } catch (error) {
       throw handleApiError(error);

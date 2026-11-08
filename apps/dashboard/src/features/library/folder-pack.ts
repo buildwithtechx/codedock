@@ -89,6 +89,8 @@ export async function inspectFolderFiles(entries: FolderEntry[]): Promise<Folder
     framework = '.NET';
   } else if (paths.has('Dockerfile')) {
     framework = 'Docker';
+  } else if (paths.has('index.html') || [...paths].some((path) => path.endsWith('.html'))) {
+    framework = 'Static Site';
   }
   return { name, framework, packageManager, fileCount: entries.length };
 }

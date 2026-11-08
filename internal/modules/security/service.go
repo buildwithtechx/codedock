@@ -24,7 +24,7 @@ type SecurityService interface {
 	CheckProject(ctx context.Context, projectID string, force bool) (*ProjectSecurityResult, error)
 	GetProjectSecurity(ctx context.Context, projectID string) (*ProjectSecurityResult, error)
 	SetProjectPolicy(ctx context.Context, projectID string, autoRefresh bool) error
-	ApplyRemediation(ctx context.Context, projectID, advisoryID, deploymentID string) (*RefreshAttempt, error)
+	ApplyRemediation(ctx context.Context, projectID, advisoryID, deploymentID string, serviceID, runtimePatchID *string) (*RefreshAttempt, error)
 }
 
 type securityService struct {
@@ -172,14 +172,78 @@ func (s *securityService) CheckProject(ctx context.Context, projectID string, fo
 
 		serviceEvidences = append(serviceEvidences, ServiceEvidence{
 			ServiceName:     svc.Name,
+			ServiceID:       svc.ID,
 			Image:           image,
 			ImageDigest:     digest,
+			BuildImage:      svc.BuildImage,
+			RuntimeImage:    svc.RuntimeImage,
 			IsPinnedDigest:  isPinned,
 			RuntimeVersions: runtimeVersions,
 		})
 	}
 
 	findings := MatchAdvisories(manifest.Advisories, serviceEvidences)
+
+	// Enrich runtime findings with precision semver runtime patches
+	for i := range findings {
+		f := &findings[i]
+		if f.TargetKind == TargetKindRuntime {
+			for _, adv := range manifest.Advisories {
+				if adv.ID != f.AdvisoryID {
+					continue
+				}
+				for _, target := range adv.Targets {
+					if target.Kind != TargetKindRuntime || target.Fixed == nil || *target.Fixed == "" {
+						continue
+					}
+					for _, svc := range services {
+						if (f.ServiceID != "" && svc.ID == f.ServiceID) || (f.ServiceID == "" && svc.Name == f.ServiceName) {
+							ver := svc.RuntimeVersion
+							if ver == "" {
+								continue
+							}
+							buildImg := svc.BuildImage
+							runtimeImg := svc.RuntimeImage
+							if buildImg == "" {
+								if target.Runtime == "bun" {
+									buildImg = fmt.Sprintf("oven/bun:%s-alpine", ver)
+								} else {
+									buildImg = fmt.Sprintf("node:%s-bookworm-slim", ver)
+								}
+							}
+							if runtimeImg == "" {
+								if target.Runtime == "bun" {
+									runtimeImg = fmt.Sprintf("oven/bun:%s-alpine", ver)
+								} else {
+									runtimeImg = fmt.Sprintf("node:%s-bookworm-slim", ver)
+								}
+							}
+
+							patch, err := PlanSecurityRuntimePatch(
+								projectID,
+								activeDeploymentID,
+								adv.ID,
+								adv.Revision,
+								target.Runtime,
+								ver,
+								*target.Fixed,
+								buildImg,
+								runtimeImg,
+							)
+							if err != nil {
+								fmt.Printf("DEBUG patch err: %v\n", err)
+							}
+							if err == nil && patch != nil {
+								f.RuntimePatch = patch
+								f.CanRefresh = true
+								f.RuntimeUpgradeRequired = false
+							}
+						}
+					}
+				}
+			}
+		}
+	}
 	now := time.Now().UTC()
 
 	result := &ProjectSecurityResult{
@@ -224,7 +288,7 @@ func (s *securityService) SetProjectPolicy(ctx context.Context, projectID string
 	return nil
 }
 
-func (s *securityService) ApplyRemediation(ctx context.Context, projectID, advisoryID, deploymentID string) (*RefreshAttempt, error) {
+func (s *securityService) ApplyRemediation(ctx context.Context, projectID, advisoryID, deploymentID string, serviceID, runtimePatchID *string) (*RefreshAttempt, error) {
 	sec, err := s.GetProjectSecurity(ctx, projectID)
 	if err != nil {
 		return nil, err
@@ -243,6 +307,40 @@ func (s *securityService) ApplyRemediation(ctx context.Context, projectID, advis
 	}
 	if !targetFinding.CanRefresh {
 		return nil, errors.New("this advisory requires manual configuration review and cannot be refreshed automatically")
+	}
+
+	// Validate runtime patch review ID if provided
+	if runtimePatchID != nil && *runtimePatchID != "" {
+		if targetFinding.RuntimePatch == nil {
+			return nil, errors.New("no planned runtime patch available for this advisory")
+		}
+		if targetFinding.RuntimePatch.ReviewID != *runtimePatchID {
+			return nil, errors.New("the runtime patch has changed or expired; please review the updated patch")
+		}
+	}
+
+	// Persist patched images and version to project service if runtime patch is present
+	if targetFinding.RuntimePatch != nil {
+		services, err := s.appRepo.ListByProject(ctx, projectID)
+		if err == nil {
+			for _, svc := range services {
+				matchesService := false
+				if serviceID != nil && *serviceID != "" && svc.ID == *serviceID {
+					matchesService = true
+				} else if targetFinding.ServiceID != "" && svc.ID == targetFinding.ServiceID {
+					matchesService = true
+				} else if svc.Name == targetFinding.ServiceName || targetFinding.ServiceName == "" {
+					matchesService = true
+				}
+
+				if matchesService {
+					svc.BuildImage = targetFinding.RuntimePatch.BuildImage
+					svc.RuntimeImage = targetFinding.RuntimePatch.RuntimeImage
+					svc.RuntimeVersion = targetFinding.RuntimePatch.TargetVersion
+					_ = s.appRepo.Update(ctx, svc)
+				}
+			}
+		}
 	}
 
 	attempt := &RefreshAttempt{
@@ -268,7 +366,16 @@ func (s *securityService) ApplyRemediation(ctx context.Context, projectID, advis
 	if s.deployTrigger != nil {
 		services, _ := s.appRepo.ListByProject(ctx, projectID)
 		for _, svc := range services {
-			if svc.Name == targetFinding.ServiceName || targetFinding.ServiceName == "" {
+			matchesService := false
+			if serviceID != nil && *serviceID != "" && svc.ID == *serviceID {
+				matchesService = true
+			} else if targetFinding.ServiceID != "" && svc.ID == targetFinding.ServiceID {
+				matchesService = true
+			} else if svc.Name == targetFinding.ServiceName || targetFinding.ServiceName == "" {
+				matchesService = true
+			}
+
+			if matchesService {
 				_, _ = s.deployTrigger.CreateDeployment(ctx, &models.Deployment{
 					ID:        uuid.New().String(),
 					ServiceID: svc.ID,

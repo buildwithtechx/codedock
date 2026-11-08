@@ -98,8 +98,10 @@ func (h *SecurityHandler) SetProjectPolicy(c echo.Context) error {
 }
 
 type ApplyRemediationRequest struct {
-	AdvisoryID   string `json:"advisoryId"`
-	DeploymentID string `json:"deploymentId"`
+	AdvisoryID     string  `json:"advisoryId"`
+	DeploymentID   string  `json:"deploymentId"`
+	ServiceID      *string `json:"serviceId,omitempty"`
+	RuntimePatchID *string `json:"runtimePatchId,omitempty"`
 }
 
 func (h *SecurityHandler) ApplyRemediation(c echo.Context) error {
@@ -121,7 +123,7 @@ func (h *SecurityHandler) ApplyRemediation(c echo.Context) error {
 		return utils.Error(c, http.StatusBadRequest, "advisoryId is required")
 	}
 
-	resp, err := h.securityService.ApplyRemediation(c.Request().Context(), projectID, req.AdvisoryID, req.DeploymentID)
+	resp, err := h.securityService.ApplyRemediation(c.Request().Context(), projectID, req.AdvisoryID, req.DeploymentID, req.ServiceID, req.RuntimePatchID)
 	if err != nil {
 		return utils.Error(c, http.StatusBadRequest, err.Error())
 	}

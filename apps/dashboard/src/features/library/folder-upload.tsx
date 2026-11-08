@@ -1,10 +1,10 @@
-import { ArrowRight, FolderPlus, FolderUp, Loader2, Package, X } from 'lucide-react';
-import { useEffect, useRef, useState } from 'react';
-import { toast } from 'sonner';
 import { Button } from '@codedock/ui/button';
 import { Input } from '@codedock/ui/input';
 import { Label } from '@codedock/ui/label';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@codedock/ui/select';
+import { ArrowRight, FolderPlus, FolderUp, Loader2, Package, X } from 'lucide-react';
+import { useEffect, useRef, useState } from 'react';
+import { toast } from 'sonner';
 import { useDeployLibraryArchive } from '#/hooks/use-library';
 import { useListOrganizations } from '#/hooks/use-organizations';
 import { useCreateProject, useListAllProjects } from '#/hooks/use-projects';
@@ -37,6 +37,7 @@ export function FolderUpload({ fixedProjectId }: { fixedProjectId?: string }) {
   const [projectId, setProjectId] = useState(fixedProjectId || NEW_PROJECT_VALUE);
   const [deployedProjectId, setDeployedProjectId] = useState(fixedProjectId || '');
   const [name, setName] = useState('');
+  const [stack, setStack] = useState('');
   const [archive, setArchive] = useState<File | null>(null);
   const [folder, setFolder] = useState<PickedFolder | null>(null);
   const [phase, setPhase] = useState<Phase>('idle');
@@ -83,6 +84,7 @@ export function FolderUpload({ fixedProjectId }: { fixedProjectId?: string }) {
   const clear = () => {
     setArchive(null);
     setFolder(null);
+    setStack('');
     setError('');
   };
 
@@ -109,6 +111,7 @@ export function FolderUpload({ fixedProjectId }: { fixedProjectId?: string }) {
     clear();
     setFolder({ ...inspection, entries });
     setName(inspection.name);
+    setStack(inspection.framework);
   };
 
   handlersRef.current = { handleArchiveFiles, handleFolderFiles };
@@ -141,6 +144,7 @@ export function FolderUpload({ fixedProjectId }: { fixedProjectId?: string }) {
         projectId: targetProjectId,
         name: name.trim(),
         file,
+        stack: stack || folder?.framework || 'Static Site',
       });
       setDeployedProjectId(targetProjectId);
       if (folder) {
@@ -148,7 +152,7 @@ export function FolderUpload({ fixedProjectId }: { fixedProjectId?: string }) {
           name: name.trim(),
           root: name.trim(),
           fileCount: folder.fileCount,
-          framework: folder.framework,
+          framework: stack || folder.framework,
           packageManager: folder.packageManager,
         });
       }
@@ -230,7 +234,7 @@ export function FolderUpload({ fixedProjectId }: { fixedProjectId?: string }) {
               )}
             </div>
 
-            <div className={fixedProjectId ? 'space-y-2' : 'grid gap-4 sm:grid-cols-2'}>
+            <div className="grid gap-4 sm:grid-cols-2">
               <div className="space-y-2">
                 <Label htmlFor="folder-name">Application name *</Label>
                 <Input
@@ -241,8 +245,28 @@ export function FolderUpload({ fixedProjectId }: { fixedProjectId?: string }) {
                   placeholder="my-app"
                 />
               </div>
+              <div className="space-y-2">
+                <Label htmlFor="folder-stack">Stack / Framework</Label>
+                <Select
+                  value={stack || (folder?.framework ?? 'Static Site')}
+                  onValueChange={setStack}
+                  disabled={busy}
+                >
+                  <SelectTrigger id="folder-stack" className="w-full">
+                    <SelectValue placeholder="Select stack" />
+                  </SelectTrigger>
+                  <SelectContent>
+                    <SelectItem value="Static Site">Static Site (HTML / CSS / JS)</SelectItem>
+                    <SelectItem value="Node.js">Node.js</SelectItem>
+                    <SelectItem value="Bun">Bun</SelectItem>
+                    <SelectItem value="Python">Python</SelectItem>
+                    <SelectItem value="Go">Go</SelectItem>
+                    <SelectItem value="Rust">Rust</SelectItem>
+                  </SelectContent>
+                </Select>
+              </div>
               {!fixedProjectId && (
-                <div className="space-y-2">
+                <div className="space-y-2 sm:col-span-2">
                   <Label htmlFor="folder-project">Destination project</Label>
                   <Select value={projectId} onValueChange={setProjectId} disabled={busy}>
                     <SelectTrigger id="folder-project" className="w-full">

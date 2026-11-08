@@ -45,6 +45,7 @@ func (h *ArchiveHandler) DeployArchive(c echo.Context) error {
 		}
 	}
 	appName := c.FormValue("name")
+	stack := c.FormValue("stack")
 
 	file, err := c.FormFile("file")
 	if err != nil {
@@ -74,7 +75,7 @@ func (h *ArchiveHandler) DeployArchive(c echo.Context) error {
 	}
 	defer os.Remove(tmpPath)
 
-	result, err := h.service.Deploy(c.Request().Context(), projectID, appName, tmpPath)
+	result, err := h.service.Deploy(c.Request().Context(), projectID, appName, tmpPath, stack)
 	if err != nil {
 		return utils.Error(c, http.StatusBadRequest, err.Error())
 	}

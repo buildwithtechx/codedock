@@ -98,3 +98,78 @@ func TestReinterpolateCommand(t *testing.T) {
 		})
 	}
 }
+
+func TestResolveBunToolchain(t *testing.T) {
+	t.Run("requires exact stable version", func(t *testing.T) {
+		_, err := ResolveBunToolchain("^1.4.4", "")
+		if err == nil {
+			t.Fatal("expected error for non-exact semver")
+		}
+	})
+
+	t.Run("refuses downgrade when repo requires newer version", func(t *testing.T) {
+		_, err := ResolveBunToolchain("1.4.4", "bun@1.5.0")
+		if err == nil {
+			t.Fatal("expected error for downgrade attempt")
+		}
+		if !strings.Contains(err.Error(), "the build will not downgrade bun") {
+			t.Errorf("expected downgrade error message, got: %v", err)
+		}
+	})
+
+	t.Run("refuses discarding integrity requirement", func(t *testing.T) {
+		_, err := ResolveBunToolchain("1.4.4", "bun@1.3.1+sha256:abcd1234ef5678")
+		if err == nil {
+			t.Fatal("expected error for discarding integrity requirement")
+		}
+		if !strings.Contains(err.Error(), "integrity requirement") {
+			t.Errorf("expected integrity error message, got: %v", err)
+		}
+	})
+
+	t.Run("allows valid toolchain override upgrade", func(t *testing.T) {
+		pin, err := ResolveBunToolchain("1.4.4", "bun@1.3.1")
+		if err != nil {
+			t.Fatalf("unexpected error: %v", err)
+		}
+		if pin != "bun@1.4.4" {
+			t.Errorf("pin = %q, want bun@1.4.4", pin)
+		}
+	})
+}
+
+func TestSynthesizeDockerfileBunToolchainAndImageOverride(t *testing.T) {
+	t.Run("replaces FROM with BuildImage and synthesizes bun Dockerfile", func(t *testing.T) {
+		res, err := synthesizeDockerfile("Bun", BuildOptions{
+			AppConfig: &models.AppService{
+				BuildImage: "oven/bun:1.4.4-alpine",
+			},
+		})
+		if err != nil {
+			t.Fatalf("unexpected error: %v", err)
+		}
+		if !strings.HasPrefix(res, "FROM oven/bun:1.4.4-alpine\n") {
+			t.Errorf("expected Dockerfile to start with custom BuildImage, got:\n%s", res)
+		}
+		if !strings.Contains(res, "bun install --frozen-lockfile") {
+			t.Errorf("expected bun Dockerfile template, got:\n%s", res)
+		}
+	})
+
+	t.Run("rejects synthesis if runtime image downgrades repository pin", func(t *testing.T) {
+		_, err := synthesizeDockerfile("Bun", BuildOptions{
+			AppConfig: &models.AppService{
+				BuildImage: "oven/bun:1.4.4-alpine",
+			},
+			EnvVars: map[string]string{
+				"PACKAGE_MANAGER": "bun@1.5.0",
+			},
+		})
+		if err == nil {
+			t.Fatal("expected error for build downgrade attempt")
+		}
+		if !strings.Contains(err.Error(), "the build will not downgrade bun") {
+			t.Errorf("expected downgrade error, got: %v", err)
+		}
+	})
+}

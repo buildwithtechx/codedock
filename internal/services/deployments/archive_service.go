@@ -36,8 +36,8 @@ type ArchiveDeployResult struct {
 	AppName     string `json:"appName"`
 }
 
-func (s *ArchiveService) Deploy(ctx context.Context, projectID, appName, archivePath string) (*ArchiveDeployResult, error) {
-	app, err := s.resolveOrCreateApp(ctx, projectID, appName)
+func (s *ArchiveService) Deploy(ctx context.Context, projectID, appName, archivePath, stack string) (*ArchiveDeployResult, error) {
+	app, err := s.resolveOrCreateApp(ctx, projectID, appName, stack)
 	if err != nil {
 		return nil, err
 	}
@@ -60,14 +60,34 @@ func (s *ArchiveService) Deploy(ctx context.Context, projectID, appName, archive
 	}, nil
 }
 
-func (s *ArchiveService) resolveOrCreateApp(ctx context.Context, projectID, appName string) (*models.AppService, error) {
+func (s *ArchiveService) resolveOrCreateApp(ctx context.Context, projectID, appName, stack string) (*models.AppService, error) {
 	apps, err := s.appService.ListByProject(ctx, projectID)
 	if err != nil {
 		return nil, fmt.Errorf("failed to list apps: %w", err)
 	}
 
+	port := 3000
+	runtimeMode := models.RuntimeModeWeb
+	staticOutput := ""
+	cleanStack := strings.TrimSpace(stack)
+	if strings.EqualFold(cleanStack, "static") || strings.EqualFold(cleanStack, "static site") || strings.HasPrefix(strings.ToLower(cleanStack), "static") {
+		port = 80
+		runtimeMode = models.RuntimeModeStatic
+		staticOutput = "."
+		cleanStack = "Static Site"
+	}
+
 	for _, a := range apps {
 		if a.Name == appName {
+			if cleanStack != "" && (a.Stack == "" || a.Stack != cleanStack) {
+				a.Stack = cleanStack
+				if runtimeMode == models.RuntimeModeStatic {
+					a.RuntimeMode = models.RuntimeModeStatic
+					a.InternalPort = 80
+					a.StaticOutput = "."
+				}
+				_ = s.appService.UpdateAppService(ctx, a)
+			}
 			return a, nil
 		}
 	}
@@ -76,7 +96,10 @@ func (s *ArchiveService) resolveOrCreateApp(ctx context.Context, projectID, appN
 		ID:           uuid.New().String(),
 		ProjectID:    projectID,
 		Name:         appName,
-		InternalPort: 3000,
+		Stack:        cleanStack,
+		RuntimeMode:  runtimeMode,
+		InternalPort: port,
+		StaticOutput: staticOutput,
 		Status:       "created",
 		CreatedAt:    time.Now(),
 		UpdatedAt:    time.Now(),

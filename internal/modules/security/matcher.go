@@ -7,8 +7,11 @@ import (
 
 type ServiceEvidence struct {
 	ServiceName     string            `json:"serviceName"`
+	ServiceID       string            `json:"serviceId,omitempty"`
 	Image           string            `json:"image"`
 	ImageDigest     string            `json:"imageDigest"`
+	BuildImage      string            `json:"buildImage,omitempty"`
+	RuntimeImage    string            `json:"runtimeImage,omitempty"`
 	RuntimeVersions map[string]string `json:"runtimeVersions"`
 	IsPinnedDigest  bool              `json:"isPinnedDigest"`
 }
@@ -129,6 +132,7 @@ func MatchAdvisories(advisories []SecurityAdvisory, services []ServiceEvidence) 
 							TargetKind:          target.Kind,
 							Confidence:          confidence,
 							ServiceName:         svc.ServiceName,
+							ServiceID:           svc.ServiceID,
 							Evidence:            evidence,
 							CanRefresh:          canRefresh,
 							ImageChangeRequired: svc.IsPinnedDigest,
@@ -166,6 +170,7 @@ func MatchAdvisories(advisories []SecurityAdvisory, services []ServiceEvidence) 
 							TargetKind:             target.Kind,
 							Confidence:             ConfidenceConfirmed,
 							ServiceName:            svc.ServiceName,
+							ServiceID:              svc.ServiceID,
 							Evidence:               fmt.Sprintf("%s %s", target.Runtime, ver),
 							CanRefresh:             canRefresh,
 							RuntimeUpgradeRequired: upgradeRequired,

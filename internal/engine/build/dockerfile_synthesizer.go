@@ -4,6 +4,8 @@ import (
 	"bytes"
 	"embed"
 	"fmt"
+	"regexp"
+	"strconv"
 	"strings"
 )
 
@@ -27,6 +29,8 @@ func synthesizeDockerfile(stack string, opts BuildOptions) (string, error) {
 		templateName = "templates/python.Dockerfile"
 	case strings.HasPrefix(stack, "Rust"):
 		templateName = "templates/rust.Dockerfile"
+	case strings.HasPrefix(stack, "Bun"):
+		templateName = "templates/bun.Dockerfile"
 	default:
 		templateName = "templates/static.Dockerfile"
 	}
@@ -47,6 +51,36 @@ func synthesizeDockerfile(stack string, opts BuildOptions) (string, error) {
 
 	if opts.AppConfig == nil {
 		return dockerfile, nil
+	}
+
+	if opts.AppConfig.BuildImage != "" {
+		firstLineEnd := strings.Index(dockerfile, "\n")
+		if firstLineEnd != -1 && strings.HasPrefix(dockerfile, "FROM ") {
+			dockerfile = "FROM " + opts.AppConfig.BuildImage + dockerfile[firstLineEnd:]
+		}
+	}
+
+	// Toolchain version validation and downgrade protection for Bun
+	isBun := strings.HasPrefix(stack, "Bun") || (opts.AppConfig.Stack != "" && strings.HasPrefix(opts.AppConfig.Stack, "Bun")) || strings.Contains(opts.AppConfig.BuildImage, "oven/bun")
+	if isBun {
+		selectedVer := opts.AppConfig.RuntimeVersion
+		if selectedVer == "" && opts.AppConfig.BuildImage != "" {
+			if idx := strings.Index(opts.AppConfig.BuildImage, ":"); idx != -1 {
+				tag := opts.AppConfig.BuildImage[idx+1:]
+				if tagMatch := regexp.MustCompile(`^(\d+\.\d+\.\d+)`).FindStringSubmatch(tag); tagMatch != nil {
+					selectedVer = tagMatch[1]
+				}
+			}
+		}
+		if selectedVer != "" {
+			declaredPM := ""
+			if opts.EnvVars != nil {
+				declaredPM = opts.EnvVars["PACKAGE_MANAGER"]
+			}
+			if _, err := ResolveBunToolchain(selectedVer, declaredPM); err != nil {
+				return "", err
+			}
+		}
 	}
 
 	overrides := dockerfileOverrides{
@@ -129,6 +163,50 @@ var stackVersionEnv = []struct {
 	{"Rust", "RUST"},
 	{"PHP", "PHP"},
 	{"Ruby", "RUBY"},
+	{"Bun", "BUN"},
+}
+
+// ResolveBunToolchain validates Bun version overrides, integrity hashes, and protects against silent downgrades.
+func ResolveBunToolchain(selectedVersion, declaredPackageManager string) (string, error) {
+	selectedVersion = strings.TrimSpace(selectedVersion)
+	if !regexp.MustCompile(`^\d+\.\d+\.\d+$`).MatchString(selectedVersion) {
+		return "", fmt.Errorf("bun version override requires an exact stable version (e.g. 1.4.4), got %q", selectedVersion)
+	}
+
+	declaredPackageManager = strings.TrimSpace(declaredPackageManager)
+	if declaredPackageManager != "" {
+		match := regexp.MustCompile(`^bun@(\d+\.\d+\.\d+)(?:\+([a-zA-Z0-9]+:[a-fA-F0-9]+))?`).FindStringSubmatch(declaredPackageManager)
+		if match != nil {
+			declaredVer := match[1]
+			integrityHash := match[2]
+
+			if integrityHash != "" && declaredVer != selectedVersion {
+				return "", fmt.Errorf("a version override cannot discard a packageManager integrity requirement (%s); update the repository pin first", declaredPackageManager)
+			}
+
+			if compareSemverParts(declaredVer, selectedVersion) > 0 {
+				return "", fmt.Errorf("the repository requires %s, newer than the selected bun version %s; select a compatible version; the build will not downgrade bun", declaredPackageManager, selectedVersion)
+			}
+		}
+	}
+
+	return "bun@" + selectedVersion, nil
+}
+
+func compareSemverParts(v1, v2 string) int {
+	p1 := strings.Split(v1, ".")
+	p2 := strings.Split(v2, ".")
+	for i := 0; i < len(p1) && i < len(p2); i++ {
+		n1, _ := strconv.Atoi(p1[i])
+		n2, _ := strconv.Atoi(p2[i])
+		if n1 != n2 {
+			if n1 < n2 {
+				return -1
+			}
+			return 1
+		}
+	}
+	return 0
 }
 
 func appRuntimeVersion(opts BuildOptions) string {
