@@ -111,15 +111,15 @@ func (s *Service) DiagnoseLogs(ctx context.Context, logs string) (string, error)
 	prompt := fmt.Sprintf("You are a DevOps AI assistant. Diagnose these logs and explain the error in plain English. Provide a fix if possible:\n\n%s", logs)
 
 	url := baseURL + "/chat/completions"
-	reqBody := map[string]any{
-		"model": modelName,
-		"messages": []map[string]string{
+	reqBody := OpenAIChatCompletionRequest{
+		Model: modelName,
+		Messages: []OpenAIChatMessage{
 			{
-				"role":    "user",
-				"content": prompt,
+				Role:    "user",
+				Content: prompt,
 			},
 		},
-		"temperature": 0.2,
+		Temperature: 0.2,
 	}
 
 	b, _ := json.Marshal(reqBody)
@@ -141,14 +141,7 @@ func (s *Service) DiagnoseLogs(ctx context.Context, logs string) (string, error)
 		return "", fmt.Errorf("AI API error (%d): %s", resp.StatusCode, string(bodyBytes))
 	}
 
-	var result struct {
-		Choices []struct {
-			Message struct {
-				Content string `json:"content"`
-			} `json:"message"`
-		} `json:"choices"`
-	}
-
+	var result OpenAIChatCompletionResponse
 	if err := json.Unmarshal(bodyBytes, &result); err != nil {
 		return "", fmt.Errorf("failed to parse AI response: %w", err)
 	}

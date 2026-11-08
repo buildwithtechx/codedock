@@ -1,5 +1,24 @@
 package ai
 
+type OpenAIChatChoiceMessage struct {
+	Role    string `json:"role"`
+	Content string `json:"content"`
+}
+
+type OpenAIChatChoice struct {
+	Index        int                     `json:"index"`
+	Message      OpenAIChatChoiceMessage `json:"message"`
+	FinishReason string                  `json:"finish_reason,omitempty"`
+}
+
+type OpenAIChatCompletionResponse struct {
+	ID      string             `json:"id,omitempty"`
+	Object  string             `json:"object,omitempty"`
+	Created int64              `json:"created,omitempty"`
+	Model   string             `json:"model,omitempty"`
+	Choices []OpenAIChatChoice `json:"choices"`
+}
+
 // RedactAISettings masks confidential provider API keys before returning settings over the network
 func RedactAISettings(s *AISettings) *AISettings {
 	if s == nil {

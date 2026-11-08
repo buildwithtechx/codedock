@@ -157,20 +157,20 @@ func callOpenAI(ctx context.Context, client *http.Client, baseURL, apiKey, model
 		baseURL = baseURL + "/chat/completions"
 	}
 
-	reqBody := map[string]any{
-		"model": model,
-		"messages": []map[string]string{
+	reqBody := OpenAIChatCompletionRequest{
+		Model: model,
+		Messages: []OpenAIChatMessage{
 			{
-				"role":    "user",
-				"content": prompt,
+				Role:    "user",
+				Content: prompt,
 			},
 		},
-		"temperature": 0.2,
-		"response_format": map[string]any{
-			"type": "json_schema",
-			"json_schema": map[string]any{
-				"name": "deployment_failure_explanation",
-				"schema": map[string]any{
+		Temperature: 0.2,
+		ResponseFormat: &OpenAIResponseFormat{
+			Type: "json_schema",
+			JSONSchema: &OpenAIJSONSchemaSpec{
+				Name: "deployment_failure_explanation",
+				Schema: map[string]any{
 					"type": "object",
 					"properties": map[string]any{
 						"summary":         map[string]any{"type": "string"},
@@ -183,7 +183,7 @@ func callOpenAI(ctx context.Context, client *http.Client, baseURL, apiKey, model
 					"required":             []string{"summary", "cause", "suggestedFix", "confidence", "commands", "relatedLogLines"},
 					"additionalProperties": false,
 				},
-				"strict": true,
+				Strict: true,
 			},
 		},
 	}
@@ -207,14 +207,7 @@ func callOpenAI(ctx context.Context, client *http.Client, baseURL, apiKey, model
 		return nil, fmt.Errorf("OpenAI API error (%d): %s", resp.StatusCode, string(bodyBytes))
 	}
 
-	var result struct {
-		Choices []struct {
-			Message struct {
-				Content string `json:"content"`
-			} `json:"message"`
-		} `json:"choices"`
-	}
-
+	var result OpenAIChatCompletionResponse
 	if err := json.Unmarshal(bodyBytes, &result); err != nil {
 		return nil, fmt.Errorf("failed to parse OpenAI response: %w", err)
 	}
