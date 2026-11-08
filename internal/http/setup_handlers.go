@@ -179,7 +179,7 @@ func buildServerInstance(d *serverSetupDeps) (*Server, error) {
 	backupHandler := backupmodule.NewHandler(d.backupService)
 	backupHandler.SetOperations(d.operationService)
 	migrationService := systemservices.NewMigrationService(d.db, d.dbRepo, d.dataDir, config.Get().Database.URL)
-	serverService := systemservices.NewServerService(d.serverRepo, d.userRepo, d.sshManager)
+	serversHandler, serversWSHandler, serversTakeoverHandler, serversNetworksHandler := createServerHandlers(d)
 	securityVerifier, err := security.NewVerifier("")
 	if err != nil {
 		slog.Error("failed to initialize security verifier", "error", err)
@@ -259,16 +259,16 @@ func buildServerInstance(d *serverSetupDeps) (*Server, error) {
 		logHandler:                 system.NewLogHandler(logService),
 		auditLogHandler:            audit.NewAuditLogHandler(d.auditService),
 		exampleHandler:             system.NewExampleHandler(systemservices.NewExampleService()),
-		serverHandler:              system.NewServerHandler(serverService, d.auditService),
+		serverHandler:              serversHandler,
 		sshManager:                 d.sshManager,
 		billingHandler:             billingHandler,
-		serverMetricsWSHandler:     system.NewServerMetricsWSHandler(d.tokenService, serverService, d.userRepo),
+		serverMetricsWSHandler:     serversWSHandler,
 		serviceLogsWSHandler:       serviceLogsWSHandler,
-		takeoverHandler:            system.NewTakeoverHandler(systemservices.NewTakeoverScanner(), systemservices.NewTakeoverAdopter(d.projectRepo, d.appRepo), repositories.NewTakeoverRepository(d.db, d.v)),
+		takeoverHandler:            serversTakeoverHandler,
 		routeRuleHandler:           routeRuleHandler,
 		mailHandler:                mailmodule.NewHandler(mailmodule.NewService(mailmodule.NewRepository(d.db, d.v)), nil, nil),
 		ingressHandler:             system.NewIngressHandlerWithDeps(repositories.NewIngressRepository(d.db), systemservices.NewCloudflareIngressService(nil)),
-		serverNetworksHandler:      system.NewServerNetworksHandler(),
+		serverNetworksHandler:      serversNetworksHandler,
 		actionsHandler:             system.NewActionsHandler(),
 		checksHandler:              checksHandler,
 		supportHandler:             system.NewSupportHandler(),

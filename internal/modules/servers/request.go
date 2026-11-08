@@ -49,11 +49,17 @@ type UpdateServerNetworkSettingsRequest struct {
 }
 
 type CreateNetworkRequest struct {
-	Name     string `json:"name"`
-	Driver   string `json:"driver,omitempty"`
-	Subnet   string `json:"subnet,omitempty"`
-	Gateway  string `json:"gateway,omitempty"`
-	Internal bool   `json:"internal,omitempty"`
+	Name             string `json:"name"`
+	Mode             string `json:"mode,omitempty"`
+	SubnetCIDR       string `json:"subnetCidr,omitempty"`
+	MTU              int    `json:"mtu,omitempty"`
+	VerificationPort int    `json:"verificationPort,omitempty"`
+	Members          any    `json:"members,omitempty"`
+	AccessPolicy     any    `json:"accessPolicy,omitempty"`
+}
+
+type ReviseNetworkAccessRequest struct {
+	AccessPolicy any `json:"accessPolicy"`
 }
 
 type ManagedBootLogsRequest struct {

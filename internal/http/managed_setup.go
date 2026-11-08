@@ -7,8 +7,7 @@ import (
 
 	"github.com/labstack/echo/v4"
 
-	"codedock/internal/handlers/system"
-	"codedock/internal/models"
+	"codedock/internal/modules/servers"
 	"codedock/internal/platform/ssh"
 	"codedock/internal/platform/vault"
 	"codedock/internal/repositories"
@@ -16,32 +15,16 @@ import (
 	systemservices "codedock/internal/services/system"
 )
 
-func configureManaged(server *Server, db *sql.DB, vlt *vault.Vault, servers repositories.ServerRepository, users *repositories.UserRepo, orgs repositories.OrganizationRepository, sshManager *ssh.SSHManager, operationService *operations.Service) error {
+func configureManaged(server *Server, db *sql.DB, vlt *vault.Vault, serverRepo repositories.ServerRepository, users *repositories.UserRepo, orgs repositories.OrganizationRepository, sshManager *ssh.SSHManager, operationService *operations.Service) error {
 	repository := repositories.NewManagedRepository(db, vlt)
-	service := systemservices.NewManagedService(repository, servers, orgs, users, sshManager, operationService, nil)
+	service := systemservices.NewManagedService(repository, serverRepo, orgs, users, sshManager, operationService, nil)
 	if err := service.Recover(context.Background()); err != nil {
 		return fmt.Errorf("recover managed servers: %w", err)
 	}
-	server.managedHandler = system.NewManagedHandler(service)
+	server.managedHandler = servers.NewManagedHandler(&managedServiceAdapter{svc: service})
 	return nil
 }
 
 func (s *Server) registerManagedRoutes(authGroup *echo.Group) {
-	member := s.authGuard.RequireOrgRole(models.MemberPermissionMember)
-	admin := s.authGuard.RequireOrgRole(models.MemberPermissionAdmin)
-
-	authGroup.GET("/managed/catalog", s.managedHandler.Catalog)
-	authGroup.GET("/organizations/:id/managed/credentials", s.managedHandler.ListCredentials, member)
-	authGroup.POST("/organizations/:id/managed/credentials", s.managedHandler.CreateCredential, admin)
-	authGroup.DELETE("/organizations/:id/managed/credentials/:credentialId", s.managedHandler.DeleteCredential, admin)
-	authGroup.GET("/organizations/:id/managed/credentials/:credentialId/offers", s.managedHandler.Offers, member, s.authGuard.RequireScope("server:read"))
-	authGroup.GET("/organizations/:id/managed/quota", s.managedHandler.GetQuota, member)
-	authGroup.PUT("/organizations/:id/managed/quota", s.managedHandler.SetQuota, admin)
-	authGroup.POST("/organizations/:id/managed/servers/review", s.managedHandler.ReviewProvision, member, s.authGuard.RequireScope("server:write"))
-	authGroup.POST("/organizations/:id/managed/servers/:serverId/refresh", s.managedHandler.RefreshServer, member, s.authGuard.RequireScope("server:read"))
-	authGroup.POST("/organizations/:id/managed/servers/:serverId/resize/review", s.managedHandler.ReviewResize, admin)
-	authGroup.POST("/organizations/:id/managed/servers/:serverId/delete/review", s.managedHandler.ReviewDelete, admin)
-	authGroup.GET("/managed-operations/:operationId", s.managedHandler.GetOperation, s.authGuard.RequireScope("server:read"))
-	authGroup.GET("/managed-operations/:operationId/stream", s.managedHandler.StreamOperation, s.authGuard.RequireScope("server:read"))
-	authGroup.POST("/managed-operations/:operationId/apply", s.managedHandler.ApplyOperation, s.authGuard.RequireScope("server:write"))
+	// Managed routes are registered in registerServerRoutes via servers.RegisterRoutes
 }

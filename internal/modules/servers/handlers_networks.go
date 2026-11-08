@@ -1,4 +1,4 @@
-package system
+package servers
 
 import (
 	"crypto/rand"
@@ -7,22 +7,21 @@ import (
 	"sync"
 	"time"
 
-	"codedock/internal/models"
-	"codedock/internal/utils"
-
 	"github.com/labstack/echo/v4"
+
+	"codedock/internal/utils"
 )
 
 type ServerNetworksHandler struct {
 	mu        sync.RWMutex
-	networks  map[string]*models.ServerNetwork
-	watchdogs map[string]*models.NetworkRollbackWatchdog
+	networks  map[string]*ServerNetwork
+	watchdogs map[string]*NetworkRollbackWatchdog
 }
 
 func NewServerNetworksHandler() *ServerNetworksHandler {
 	return &ServerNetworksHandler{
-		networks:  make(map[string]*models.ServerNetwork),
-		watchdogs: make(map[string]*models.NetworkRollbackWatchdog),
+		networks:  make(map[string]*ServerNetwork),
+		watchdogs: make(map[string]*NetworkRollbackWatchdog),
 	}
 }
 
@@ -30,12 +29,12 @@ func (h *ServerNetworksHandler) List(c echo.Context) error {
 	h.mu.RLock()
 	defer h.mu.RUnlock()
 
-	var list []*models.ServerNetwork
+	var list []*ServerNetwork
 	for _, net := range h.networks {
 		list = append(list, net)
 	}
 	if list == nil {
-		list = make([]*models.ServerNetwork, 0)
+		list = make([]*ServerNetwork, 0)
 	}
 	return utils.Success(c, "Server networks retrieved", list)
 }
@@ -53,7 +52,7 @@ func (h *ServerNetworksHandler) Get(c echo.Context) error {
 }
 
 func (h *ServerNetworksHandler) Create(c echo.Context) error {
-	var req models.CreateNetworkRequest
+	var req CreateNetworkRequest
 	if err := c.Bind(&req); err != nil {
 		return echo.NewHTTPError(http.StatusBadRequest, "invalid create network payload")
 	}
@@ -63,7 +62,7 @@ func (h *ServerNetworksHandler) Create(c echo.Context) error {
 
 	mode := req.Mode
 	if mode == "" {
-		mode = string(models.NetworkModeWireguard)
+		mode = "wireguard"
 	}
 	mtu := req.MTU
 	if mtu <= 0 {
@@ -85,9 +84,8 @@ func (h *ServerNetworksHandler) Create(c echo.Context) error {
 	opID := "op-" + hex.EncodeToString(generateBytes(6))
 	netID := "net-" + hex.EncodeToString(generateBytes(6))
 
-	// Arm 120s rollback watchdog
 	expiresAt := time.Now().Add(120 * time.Second).UTC().Format(time.RFC3339)
-	watchdog := &models.NetworkRollbackWatchdog{
+	watchdog := &NetworkRollbackWatchdog{
 		OperationID:      opID,
 		Armed:            true,
 		TimeoutSeconds:   120,
@@ -98,7 +96,7 @@ func (h *ServerNetworksHandler) Create(c echo.Context) error {
 		Status:           "armed",
 	}
 
-	net := &models.ServerNetwork{
+	net := &ServerNetwork{
 		ID:               netID,
 		Name:             req.Name,
 		Mode:             mode,
@@ -122,7 +120,7 @@ func (h *ServerNetworksHandler) Create(c echo.Context) error {
 
 func (h *ServerNetworksHandler) ReviseAccess(c echo.Context) error {
 	id := c.Param("id")
-	var req models.ReviseNetworkAccessRequest
+	var req ReviseNetworkAccessRequest
 	if err := c.Bind(&req); err != nil {
 		return echo.NewHTTPError(http.StatusBadRequest, "invalid access policy payload")
 	}
@@ -152,7 +150,6 @@ func (h *ServerNetworksHandler) GetWatchdog(c echo.Context) error {
 		return echo.NewHTTPError(http.StatusNotFound, "rollback watchdog not found")
 	}
 
-	// Calculate remaining seconds
 	expTime, err := time.Parse(time.RFC3339, watchdog.ExpiresAt)
 	if err == nil {
 		rem := int(time.Until(expTime).Seconds())
@@ -188,7 +185,6 @@ func (h *ServerNetworksHandler) CommitWatchdog(c echo.Context) error {
 	watchdog.CanRollback = false
 	watchdog.Status = "committed"
 
-	// Mark associated network ready
 	for _, net := range h.networks {
 		if net.Watchdog != nil && net.Watchdog.OperationID == opID {
 			net.Status = "verified"
@@ -217,7 +213,6 @@ func (h *ServerNetworksHandler) RollbackWatchdog(c echo.Context) error {
 	watchdog.CanRollback = false
 	watchdog.Status = "rolled_back"
 
-	// Mark associated network rolled back
 	for _, net := range h.networks {
 		if net.Watchdog != nil && net.Watchdog.OperationID == opID {
 			net.Status = "rolled_back"

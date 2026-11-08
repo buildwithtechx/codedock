@@ -11,6 +11,7 @@ import (
 	mailmodule "codedock/internal/modules/mail"
 	"codedock/internal/modules/organizations"
 	"codedock/internal/modules/projects"
+	serversmod "codedock/internal/modules/servers"
 	"codedock/internal/modules/users"
 	"codedock/internal/utils"
 )
@@ -118,16 +119,11 @@ func (s *Server) registerSystemRoutes(apiGroup, authGroup *echo.Group) {
 	apiGroup.GET("/system/setup-status", s.onboardingHandler.SetupStatus)
 	apiGroup.POST("/system/setup/import", s.migrationHandler.ImportDuringSetup)
 	authGroup.GET("/system/stats", s.systemHandler.GetStats)
-	authGroup.GET("/system/monitor/stream", s.serverHandler.StreamMonitor, s.authGuard.RequireScope("server:read"))
 	apiGroup.POST("/system/restart", s.systemHandler.Restart, s.authGuard.RequireRole("admin"))
 	apiGroup.POST("/system/maintenance/cleanup", s.systemHandler.Cleanup, s.authGuard.RequireRole("admin"))
 	apiGroup.POST("/system/export", s.migrationHandler.Export, s.authGuard.RequireRole("admin"))
 	apiGroup.POST("/system/import", s.migrationHandler.Import, s.authGuard.RequireRole("admin"))
-	apiGroup.POST("/system/takeover/scan", s.takeoverHandler.Scan, s.authGuard.RequireRole("admin"))
-	apiGroup.POST("/system/takeover/adopt", s.takeoverHandler.Adopt, s.authGuard.RequireRole("admin"))
 	apiGroup.POST("/system/local-cli-session", s.systemHandler.CreateLocalCLISession)
-	authGroup.GET("/system/takeover/runs", s.takeoverHandler.ListRuns, s.authGuard.RequireRole("admin"))
-	authGroup.GET("/system/takeover/runs/:id", s.takeoverHandler.GetRun, s.authGuard.RequireRole("admin"))
 }
 
 func (s *Server) registerUserRoutes(apiGroup, authGroup *echo.Group) {
@@ -166,33 +162,20 @@ func (s *Server) registerProjectRoutes(apiGroup, authGroup *echo.Group) {
 }
 
 func (s *Server) registerServerRoutes(apiGroup, authGroup *echo.Group) {
-	authGroup.GET("/servers", s.serverHandler.List, s.authGuard.RequireScope("server:read"))
-	authGroup.GET("/servers/:id", s.serverHandler.Get, s.authGuard.RequireScope("server:read"))
-	authGroup.POST("/servers", s.serverHandler.Create, s.authGuard.RequireScope("server:write"))
-	authGroup.PATCH("/servers/:id", s.serverHandler.Update, s.authGuard.RequireScope("server:write"))
-	authGroup.POST("/servers/test-ssh", s.serverHandler.TestSSH, s.authGuard.RequireScope("server:write"))
-	authGroup.DELETE("/servers/:id", s.serverHandler.Delete, s.authGuard.RequireScope("server:write"))
-	authGroup.GET("/servers/:id/components", s.serverHandler.GetComponents, s.authGuard.RequireScope("server:read"))
-	authGroup.POST("/servers/:id/scan-ports", s.serverHandler.ScanPorts, s.authGuard.RequireScope("server:read"))
-	authGroup.GET("/servers/:id/rate-limit", s.serverHandler.GetRateLimit, s.authGuard.RequireScope("server:read"))
-	authGroup.PUT("/servers/:id/rate-limit", s.serverHandler.UpdateRateLimit, s.authGuard.RequireScope("server:write"))
-	authGroup.GET("/servers/:id/network-settings", s.serverHandler.GetNetworkSettings, s.authGuard.RequireScope("server:read"))
-	authGroup.PATCH("/servers/:id/network-settings", s.serverHandler.UpdateNetworkSettings, s.authGuard.RequireScope("server:write"))
-	authGroup.GET("/servers/:id/managed/info", s.serverHandler.GetManagedInfo, s.authGuard.RequireScope("server:read"))
-	authGroup.POST("/servers/:id/managed/boot-logs", s.serverHandler.GetManagedBootLogs, s.authGuard.RequireScope("server:read"))
-	authGroup.GET("/servers/:id/managed/ssh", s.serverHandler.GetManagedSshStatus, s.authGuard.RequireScope("server:read"))
-	authGroup.PATCH("/servers/:id/managed/ssh", s.serverHandler.SetManagedSsh, s.authGuard.RequireScope("server:write"))
-	authGroup.PUT("/servers/:id/managed/ssh/key", s.serverHandler.SetManagedSshKey, s.authGuard.RequireScope("server:write"))
-	authGroup.PUT("/servers/:id/managed/ssh/password", s.serverHandler.SetManagedSshPassword, s.authGuard.RequireScope("server:write"))
-	authGroup.GET("/servers/:id/managed/runtime-api", s.serverHandler.GetManagedRuntimeStatus, s.authGuard.RequireScope("server:read"))
-	authGroup.POST("/servers/:id/managed/runtime-api/enable", s.serverHandler.EnableManagedRuntime, s.authGuard.RequireScope("server:write"))
-	authGroup.POST("/servers/:id/managed/runtime-api/credential", s.serverHandler.GetManagedRuntimeCredential, s.authGuard.RequireScope("server:write"))
-	authGroup.POST("/servers/:id/managed/runtime-api/rotate", s.serverHandler.RotateManagedRuntimeCredential, s.authGuard.RequireScope("server:write"))
-	authGroup.GET("/servers/:id/managed/workloads", s.serverHandler.GetManagedWorkloads, s.authGuard.RequireScope("server:read"))
-	authGroup.POST("/servers/:id/managed/workloads", s.serverHandler.CreateManagedWorkload, s.authGuard.RequireScope("server:write"))
-	authGroup.POST("/servers/:id/managed/workloads/control", s.serverHandler.ControlManagedWorkload, s.authGuard.RequireScope("server:write"))
-	authGroup.POST("/servers/:id/managed/workloads/logs", s.serverHandler.GetManagedWorkloadLogs, s.authGuard.RequireScope("server:read"))
-	apiGroup.GET("/ws/servers/:serverId/metrics", s.serverMetricsWSHandler.Handle)
+	serversmod.RegisterRoutes(apiGroup, authGroup, serversmod.RoutesConfig{
+		Handler:         s.serverHandler,
+		ManagedHandler:  s.managedHandler,
+		TakeoverHandler: s.takeoverHandler,
+		NetworksHandler: s.serverNetworksHandler,
+		WSHandler:       s.serverMetricsWSHandler,
+		Middleware: serversmod.RouteMiddleware{
+			ServerRead:  s.authGuard.RequireScope("server:read"),
+			ServerWrite: s.authGuard.RequireScope("server:write"),
+			Admin:       s.authGuard.RequireRole("admin"),
+			OrgMember:   s.authGuard.RequireOrgRole(models.MemberPermissionMember),
+			OrgAdmin:    s.authGuard.RequireOrgRole(models.MemberPermissionAdmin),
+		},
+	})
 }
 
 func (s *Server) registerOrganizationRoutes(authGroup *echo.Group) {

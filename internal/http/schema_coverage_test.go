@@ -20,6 +20,7 @@ import (
 	environments "codedock/internal/modules/environments"
 	gitmod "codedock/internal/modules/git"
 	projectsmod "codedock/internal/modules/projects"
+	serversmod "codedock/internal/modules/servers"
 )
 
 const openAPIGoldenPath = "../../docs/api/openapi.json"
@@ -71,6 +72,11 @@ func schemaTestRouter(t *testing.T) *echo.Echo {
 		webhookHandler:             &gitmod.WebhookHandler{},
 		metricsHandler:             &system.MetricsHandler{},
 		logHandler:                 &system.LogHandler{},
+		serverHandler:              &serversmod.Handler{},
+		managedHandler:             &serversmod.ManagedHandler{},
+		takeoverHandler:            &serversmod.TakeoverHandler{},
+		serverNetworksHandler:      &serversmod.ServerNetworksHandler{},
+		serverMetricsWSHandler:     &serversmod.ServerMetricsWSHandler{},
 	}
 	apiGroup := router.Group("/api")
 	authGroup := apiGroup.Group("", server.authGuard.RequireAuth())

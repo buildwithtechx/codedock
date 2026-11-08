@@ -90,16 +90,28 @@ type ServerNetworkSettings struct {
 }
 
 type ServerNetwork struct {
-	ID        string    `json:"id"`
-	Name      string    `json:"name"`
-	Driver    string    `json:"driver"`
-	Subnet    string    `json:"subnet,omitempty"`
-	Gateway   string    `json:"gateway,omitempty"`
-	Internal  bool      `json:"internal"`
-	CreatedAt time.Time `json:"createdAt"`
+	ID               string                   `json:"id"`
+	Name             string                   `json:"name"`
+	Mode             string                   `json:"mode"`
+	SubnetCIDR       string                   `json:"subnetCidr"`
+	MTU              int                      `json:"mtu"`
+	VerificationPort int                      `json:"verificationPort"`
+	Status           string                   `json:"status"`
+	Revision         int                      `json:"revision"`
+	Members          any                      `json:"members,omitempty"`
+	AccessPolicy     any                      `json:"accessPolicy,omitempty"`
+	Watchdog         *NetworkRollbackWatchdog `json:"watchdog,omitempty"`
+	CreatedAt        string                   `json:"createdAt"`
+	UpdatedAt        string                   `json:"updatedAt"`
 }
 
 type NetworkRollbackWatchdog struct {
-	ServerID  string    `json:"serverId"`
-	ExpiresAt time.Time `json:"expiresAt"`
+	OperationID      string `json:"operationId"`
+	Armed            bool   `json:"armed"`
+	TimeoutSeconds   int    `json:"timeoutSeconds"`
+	RemainingSeconds int    `json:"remainingSeconds"`
+	ExpiresAt        string `json:"expiresAt"`
+	CanCommit        bool   `json:"canCommit"`
+	CanRollback      bool   `json:"canRollback"`
+	Status           string `json:"status"`
 }

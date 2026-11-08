@@ -27,6 +27,7 @@ import (
 	mailmodule "codedock/internal/modules/mail"
 	"codedock/internal/modules/organizations"
 	projectsmod "codedock/internal/modules/projects"
+	"codedock/internal/modules/servers"
 	"codedock/internal/modules/settings"
 	"codedock/internal/modules/users"
 	"codedock/internal/platform/networking"
@@ -104,20 +105,20 @@ type Server struct {
 	logHandler                 *system.LogHandler
 	auditLogHandler            *audit.AuditLogHandler
 	exampleHandler             *system.ExampleHandler
-	serverHandler              *system.ServerHandler
-	managedHandler             *system.ManagedHandler
+	serverHandler              *servers.Handler
+	managedHandler             *servers.ManagedHandler
 	migrationLifecycleHandler  *system.MigrationLifecycleHandler
 	migrationService           *migrations.Service
 	analyticsHandler           *system.AnalyticsHandler
 	attentionHandler           *system.AttentionHandler
 	billingHandler             *system.BillingHandler
-	serverMetricsWSHandler     *system.ServerMetricsWSHandler
+	serverMetricsWSHandler     *servers.ServerMetricsWSHandler
 	serviceLogsWSHandler       *system.ServiceLogsWSHandler
-	takeoverHandler            *system.TakeoverHandler
+	takeoverHandler            *servers.TakeoverHandler
 	routeRuleHandler           *environments.RouteRuleHandler
 	mailHandler                *mailmodule.Handler
 	ingressHandler             *system.IngressHandler
-	serverNetworksHandler      *system.ServerNetworksHandler
+	serverNetworksHandler      *servers.ServerNetworksHandler
 	actionsHandler             *system.ActionsHandler
 	checksHandler              *projectsmod.ChecksHandler
 	supportHandler             *system.SupportHandler
