@@ -61,6 +61,14 @@ func (h *AppHandler) UpdateBuildSettings(c echo.Context) error {
 	if err != nil {
 		return utils.Error(c, http.StatusBadRequest, err.Error())
 	}
+	if strings.TrimSpace(req.BuildCmd) != "" && strings.TrimSpace(req.InstallCmd) == "" {
+		return utils.Error(c, http.StatusBadRequest, "installCommand cannot be empty when a build command is specified. Enter the required commands before saving.")
+	}
+	if strings.TrimSpace(existing.StaticOutput) == "" && strings.TrimSpace(req.StaticOutputDir) == "" {
+		if strings.TrimSpace(req.StartCmd) == "" && existing.ImageRef == "" {
+			return utils.Error(c, http.StatusBadRequest, "startCommand cannot be empty for this build configuration. Enter the required commands before saving.")
+		}
+	}
 	existing.StaticOutput = req.StaticOutputDir
 	existing.InstallCommand = req.InstallCmd
 	existing.BuildCommand = req.BuildCmd
