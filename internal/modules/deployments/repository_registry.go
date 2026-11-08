@@ -1,0 +1,73 @@
+package deployments
+
+import (
+	"context"
+	"database/sql"
+	"errors"
+	"time"
+
+	"github.com/google/uuid"
+	"github.com/jmoiron/sqlx"
+)
+
+type RegistryRepository interface {
+	Create(ctx context.Context, registry *Registry) error
+	ListByProject(ctx context.Context, projectID string) ([]*Registry, error)
+	Get(ctx context.Context, id string) (*Registry, error)
+	Delete(ctx context.Context, id string) error
+}
+
+type postgresRegistryRepository struct {
+	db *sqlx.DB
+}
+
+func NewRegistryRepository(db *sql.DB) RegistryRepository {
+	return &postgresRegistryRepository{db: sqlx.NewDb(db, "pgx")}
+}
+
+func (r *postgresRegistryRepository) Create(ctx context.Context, registry *Registry) error {
+	if registry.ID == "" {
+		registry.ID = uuid.NewString()
+	}
+	now := time.Now().UTC()
+	registry.CreatedAt = now
+	registry.UpdatedAt = now
+
+	query := `
+		INSERT INTO registries (id, project_id, name, registry_url, username, password_token, created_at, updated_at)
+		VALUES ($1, $2, $3, $4, $5, $6, $7, $8)
+	`
+	_, err := r.db.ExecContext(ctx, query,
+		registry.ID, registry.ProjectID, registry.Name, registry.RegistryURL,
+		registry.Username, registry.PasswordToken, registry.CreatedAt, registry.UpdatedAt)
+	return err
+}
+
+func (r *postgresRegistryRepository) ListByProject(ctx context.Context, projectID string) ([]*Registry, error) {
+	var registries []*Registry
+	query := `SELECT id, project_id, name, registry_url, username, password_token, created_at, updated_at FROM registries WHERE project_id = $1 ORDER BY created_at DESC`
+	err := r.db.SelectContext(ctx, &registries, query, projectID)
+	if err != nil {
+		return nil, err
+	}
+	if registries == nil {
+		registries = make([]*Registry, 0)
+	}
+	return registries, nil
+}
+
+func (r *postgresRegistryRepository) Get(ctx context.Context, id string) (*Registry, error) {
+	var registry Registry
+	query := `SELECT id, project_id, name, registry_url, username, password_token, created_at, updated_at FROM registries WHERE id = $1`
+	err := r.db.GetContext(ctx, &registry, query, id)
+	if errors.Is(err, sql.ErrNoRows) {
+		return nil, ErrRegistryNotFound
+	}
+	return &registry, err
+}
+
+func (r *postgresRegistryRepository) Delete(ctx context.Context, id string) error {
+	query := `DELETE FROM registries WHERE id = $1`
+	_, err := r.db.ExecContext(ctx, query, id)
+	return err
+}
