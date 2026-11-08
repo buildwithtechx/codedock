@@ -85,14 +85,14 @@ type SignedProof struct {
 }
 
 type AdvisoryFinding struct {
-	AdvisoryID             string     `json:"advisoryId"`
-	Title                  string     `json:"title"`
-	Severity               Severity   `json:"severity"`
-	Message                string     `json:"message"`
-	URL                    string     `json:"url"`
-	Action                 Action     `json:"action"`
-	TargetKind             TargetKind `json:"targetKind"`
-	Confidence             Confidence `json:"confidence"`
+	AdvisoryID             string                `json:"advisoryId"`
+	Title                  string                `json:"title"`
+	Severity               Severity              `json:"severity"`
+	Message                string                `json:"message"`
+	URL                    string                `json:"url"`
+	Action                 Action                `json:"action"`
+	TargetKind             TargetKind            `json:"targetKind"`
+	Confidence             Confidence            `json:"confidence"`
 	ServiceName            string                `json:"serviceName"`
 	ServiceID              string                `json:"serviceId,omitempty"`
 	Evidence               string                `json:"evidence"`

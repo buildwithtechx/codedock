@@ -21,8 +21,8 @@ type ManagedImageInfo struct {
 
 type PatchedRuntimeImages struct {
 	TargetVersion string `json:"targetVersion"`
-	BuildImage     string `json:"buildImage"`
-	RuntimeImage   string `json:"runtimeImage"`
+	BuildImage    string `json:"buildImage"`
+	RuntimeImage  string `json:"runtimeImage"`
 }
 
 type SecurityRuntimePatch struct {
@@ -133,8 +133,8 @@ func SecurityRuntimeImages(runtime, currentVersion, fixed, buildImage, runtimeIm
 	if MatchesRange(floor.String(), fixed) {
 		return &PatchedRuntimeImages{
 			TargetVersion: floor.String(),
-			BuildImage:     fmt.Sprintf("%s:%s%s", builderInfo.Repository, floor.String(), builderInfo.Variant),
-			RuntimeImage:   fmt.Sprintf("%s:%s%s", runtimeInfo.Repository, floor.String(), runtimeInfo.Variant),
+			BuildImage:    fmt.Sprintf("%s:%s%s", builderInfo.Repository, floor.String(), builderInfo.Variant),
+			RuntimeImage:  fmt.Sprintf("%s:%s%s", runtimeInfo.Repository, floor.String(), runtimeInfo.Variant),
 		}, nil
 	}
 
@@ -183,8 +183,8 @@ func SecurityRuntimeImages(runtime, currentVersion, fixed, buildImage, runtimeIm
 
 	return &PatchedRuntimeImages{
 		TargetVersion: targetVersion,
-		BuildImage:     newBuildImage,
-		RuntimeImage:   newRuntimeImage,
+		BuildImage:    newBuildImage,
+		RuntimeImage:  newRuntimeImage,
 	}, nil
 }
 

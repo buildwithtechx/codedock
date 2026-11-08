@@ -51,4 +51,3 @@ describe('inspectFolderFiles', () => {
     expect(result.name).toBe('my-service');
   });
 });
-

@@ -18,848 +18,746 @@ export interface AppCatalogEntry {
 
 export const appCatalog: AppCatalogEntry[] = [
   {
-    "id": "appwrite",
-    "name": "Appwrite",
-    "description": "Full self-hosted Firebase alternative with Auth, Realtime Database, File Storage, and Cloud Functions.",
-    "category": "backend",
-    "icon": "appwrite",
-    "verified": true,
-    "services": [
-      "appwrite",
-      "db",
-      "redis"
-    ],
-    "secrets": [
+    id: 'appwrite',
+    name: 'Appwrite',
+    description:
+      'Full self-hosted Firebase alternative with Auth, Realtime Database, File Storage, and Cloud Functions.',
+    category: 'backend',
+    icon: 'appwrite',
+    verified: true,
+    services: ['appwrite', 'db', 'redis'],
+    secrets: [
       {
-        "var": "DB_PASSWORD",
-        "label": "Database password",
-        "length": 24
+        var: 'DB_PASSWORD',
+        label: 'Database password',
+        length: 24,
       },
       {
-        "var": "OPENSSL_KEY_V1",
-        "label": "Encryption key",
-        "length": 32
-      }
-    ]
+        var: 'OPENSSL_KEY_V1',
+        label: 'Encryption key',
+        length: 32,
+      },
+    ],
   },
   {
-    "id": "authentik",
-    "name": "Authentik",
-    "description": "Self-hosted identity provider with single sign-on, social login and application outposts.",
-    "category": "security",
-    "icon": "authentik",
-    "verified": false,
-    "services": [
-      "server",
-      "worker",
-      "db",
-      "redis"
-    ],
-    "secrets": [
+    id: 'authentik',
+    name: 'Authentik',
+    description:
+      'Self-hosted identity provider with single sign-on, social login and application outposts.',
+    category: 'security',
+    icon: 'authentik',
+    verified: false,
+    services: ['server', 'worker', 'db', 'redis'],
+    secrets: [
       {
-        "var": "DB_PASSWORD",
-        "label": "Database password",
-        "length": 24
+        var: 'DB_PASSWORD',
+        label: 'Database password',
+        length: 24,
       },
       {
-        "var": "AUTHENTIK_SECRET_KEY",
-        "label": "Authentik secret key",
-        "length": 60
-      }
-    ]
+        var: 'AUTHENTIK_SECRET_KEY',
+        label: 'Authentik secret key',
+        length: 60,
+      },
+    ],
   },
   {
-    "id": "beszel",
-    "name": "Beszel",
-    "description": "Lightweight, privacy-focused server and container monitoring hub with alerts and low overhead.",
-    "category": "analytics",
-    "icon": "beszel",
-    "verified": true,
-    "services": [
-      "beszel"
-    ],
-    "secrets": [
+    id: 'beszel',
+    name: 'Beszel',
+    description:
+      'Lightweight, privacy-focused server and container monitoring hub with alerts and low overhead.',
+    category: 'analytics',
+    icon: 'beszel',
+    verified: true,
+    services: ['beszel'],
+    secrets: [
       {
-        "var": "USER_PASSWORD",
-        "label": "Admin initial password",
-        "length": 20
-      }
-    ]
+        var: 'USER_PASSWORD',
+        label: 'Admin initial password',
+        length: 20,
+      },
+    ],
   },
   {
-    "id": "calcom",
-    "name": "Cal.com",
-    "description": "Open-source scheduling platform",
-    "category": "productivity",
-    "icon": "calcom",
-    "verified": false,
-    "services": [
-      "calcom"
-    ],
-    "secrets": []
+    id: 'calcom',
+    name: 'Cal.com',
+    description: 'Open-source scheduling platform',
+    category: 'productivity',
+    icon: 'calcom',
+    verified: false,
+    services: ['calcom'],
+    secrets: [],
   },
   {
-    "id": "code-server",
-    "name": "code-server",
-    "description": "VS Code in the browser with a persistent workspace",
-    "category": "devtools",
-    "icon": "code-server",
-    "verified": false,
-    "services": [
-      "code-server"
-    ],
-    "secrets": [
+    id: 'code-server',
+    name: 'code-server',
+    description: 'VS Code in the browser with a persistent workspace',
+    category: 'devtools',
+    icon: 'code-server',
+    verified: false,
+    services: ['code-server'],
+    secrets: [
       {
-        "var": "CODE_SERVER_PASSWORD",
-        "label": "Login password",
-        "length": 24
-      }
-    ]
+        var: 'CODE_SERVER_PASSWORD',
+        label: 'Login password',
+        length: 24,
+      },
+    ],
   },
   {
-    "id": "mail",
-    "name": "Codedock Mail",
-    "description": "Your own mail on your own domain — SMTP/IMAP, mailboxes and webmail on one server. Or keep the mailboxes you already have and just run the webmail.",
-    "category": "mail",
-    "icon": "mail",
-    "verified": true,
-    "services": [
-      "maild",
-      "postgres",
-      "webmail"
-    ],
-    "secrets": [
+    id: 'mail',
+    name: 'Codedock Mail',
+    description:
+      'Your own mail on your own domain — SMTP/IMAP, mailboxes and webmail on one server. Or keep the mailboxes you already have and just run the webmail.',
+    category: 'mail',
+    icon: 'mail',
+    verified: true,
+    services: ['maild', 'postgres', 'webmail'],
+    secrets: [
       {
-        "var": "MAILD_API_TOKEN",
-        "label": "maild API token",
-        "length": 32
+        var: 'MAILD_API_TOKEN',
+        label: 'maild API token',
+        length: 32,
       },
       {
-        "var": "POSTGRES_PASSWORD",
-        "label": "Postgres password",
-        "length": 24
-      }
-    ]
+        var: 'POSTGRES_PASSWORD',
+        label: 'Postgres password',
+        length: 24,
+      },
+    ],
   },
   {
-    "id": "convex",
-    "name": "Convex",
-    "description": "Self-hosted Convex reactive backend + dashboard, with a persistent data volume.",
-    "category": "backend",
-    "icon": "convex",
-    "verified": true,
-    "services": [
-      "backend",
-      "dashboard"
-    ],
-    "secrets": [
+    id: 'convex',
+    name: 'Convex',
+    description: 'Self-hosted Convex reactive backend + dashboard, with a persistent data volume.',
+    category: 'backend',
+    icon: 'convex',
+    verified: true,
+    services: ['backend', 'dashboard'],
+    secrets: [
       {
-        "var": "INSTANCE_SECRET",
-        "label": "Instance secret",
-        "length": 32
-      }
-    ]
+        var: 'INSTANCE_SECRET',
+        label: 'Instance secret',
+        length: 32,
+      },
+    ],
   },
   {
-    "id": "directus",
-    "name": "Directus",
-    "description": "Headless CMS and data platform over any SQL database",
-    "category": "cms",
-    "icon": "directus",
-    "verified": false,
-    "services": [
-      "directus"
-    ],
-    "secrets": [
+    id: 'directus',
+    name: 'Directus',
+    description: 'Headless CMS and data platform over any SQL database',
+    category: 'cms',
+    icon: 'directus',
+    verified: false,
+    services: ['directus'],
+    secrets: [
       {
-        "var": "DIRECTUS_KEY",
-        "label": "Encryption key",
-        "length": 32
+        var: 'DIRECTUS_KEY',
+        label: 'Encryption key',
+        length: 32,
       },
       {
-        "var": "DIRECTUS_SECRET",
-        "label": "Session secret",
-        "length": 32
-      }
-    ]
+        var: 'DIRECTUS_SECRET',
+        label: 'Session secret',
+        length: 32,
+      },
+    ],
   },
   {
-    "id": "freshrss",
-    "name": "FreshRSS",
-    "description": "Self-hosted RSS and Atom feed reader",
-    "category": "productivity",
-    "icon": "freshrss",
-    "verified": false,
-    "services": [
-      "freshrss"
-    ],
-    "secrets": []
+    id: 'freshrss',
+    name: 'FreshRSS',
+    description: 'Self-hosted RSS and Atom feed reader',
+    category: 'productivity',
+    icon: 'freshrss',
+    verified: false,
+    services: ['freshrss'],
+    secrets: [],
   },
   {
-    "id": "ghost",
-    "name": "Ghost",
-    "description": "Publishing for blogs, newsletters, and membership sites, with a focused editor and your own database.",
-    "category": "cms",
-    "icon": "ghost",
-    "verified": true,
-    "services": [
-      "ghost"
-    ],
-    "secrets": []
+    id: 'ghost',
+    name: 'Ghost',
+    description:
+      'Publishing for blogs, newsletters, and membership sites, with a focused editor and your own database.',
+    category: 'cms',
+    icon: 'ghost',
+    verified: true,
+    services: ['ghost'],
+    secrets: [],
   },
   {
-    "id": "gitea",
-    "name": "Gitea",
-    "description": "Self-hosted Git service",
-    "category": "devtools",
-    "icon": "gitea",
-    "verified": false,
-    "services": [
-      "gitea"
-    ],
-    "secrets": []
+    id: 'gitea',
+    name: 'Gitea',
+    description: 'Self-hosted Git service',
+    category: 'devtools',
+    icon: 'gitea',
+    verified: false,
+    services: ['gitea'],
+    secrets: [],
   },
   {
-    "id": "grafana",
-    "name": "Grafana",
-    "description": "Observability dashboards and alerting",
-    "category": "monitoring",
-    "icon": "grafana",
-    "verified": false,
-    "services": [
-      "grafana"
-    ],
-    "secrets": [
+    id: 'grafana',
+    name: 'Grafana',
+    description: 'Observability dashboards and alerting',
+    category: 'monitoring',
+    icon: 'grafana',
+    verified: false,
+    services: ['grafana'],
+    secrets: [
       {
-        "var": "GF_ADMIN_PASSWORD",
-        "label": "Admin password",
-        "length": 24
-      }
-    ]
+        var: 'GF_ADMIN_PASSWORD',
+        label: 'Admin password',
+        length: 24,
+      },
+    ],
   },
   {
-    "id": "homepage",
-    "name": "Homepage",
-    "description": "A modern, highly customizable application dashboard with integrations for Docker and services.",
-    "category": "utilities",
-    "icon": "homepage",
-    "verified": false,
-    "services": [
-      "homepage"
-    ],
-    "secrets": []
+    id: 'homepage',
+    name: 'Homepage',
+    description:
+      'A modern, highly customizable application dashboard with integrations for Docker and services.',
+    category: 'utilities',
+    icon: 'homepage',
+    verified: false,
+    services: ['homepage'],
+    secrets: [],
   },
   {
-    "id": "immich",
-    "name": "Immich",
-    "description": "Self-hosted photo and video management solution with vector search and machine learning.",
-    "category": "media",
-    "icon": "immich",
-    "verified": false,
-    "services": [
-      "immich-server",
-      "immich-machine-learning",
-      "immich-redis",
-      "immich-db"
-    ],
-    "secrets": [
+    id: 'immich',
+    name: 'Immich',
+    description:
+      'Self-hosted photo and video management solution with vector search and machine learning.',
+    category: 'media',
+    icon: 'immich',
+    verified: false,
+    services: ['immich-server', 'immich-machine-learning', 'immich-redis', 'immich-db'],
+    secrets: [
       {
-        "var": "DB_PASSWORD",
-        "label": "Database password",
-        "length": 24
-      }
-    ]
+        var: 'DB_PASSWORD',
+        label: 'Database password',
+        length: 24,
+      },
+    ],
   },
   {
-    "id": "it-tools",
-    "name": "IT Tools",
-    "description": "Handy utilities for developers in one page",
-    "category": "devtools",
-    "icon": "it-tools",
-    "verified": false,
-    "services": [
-      "it-tools"
-    ],
-    "secrets": []
+    id: 'it-tools',
+    name: 'IT Tools',
+    description: 'Handy utilities for developers in one page',
+    category: 'devtools',
+    icon: 'it-tools',
+    verified: false,
+    services: ['it-tools'],
+    secrets: [],
   },
   {
-    "id": "jellyfin",
-    "name": "Jellyfin",
-    "description": "The free software media system for movies, shows, music, and live TV streaming.",
-    "category": "media",
-    "icon": "jellyfin",
-    "verified": false,
-    "services": [
-      "jellyfin"
-    ],
-    "secrets": []
+    id: 'jellyfin',
+    name: 'Jellyfin',
+    description: 'The free software media system for movies, shows, music, and live TV streaming.',
+    category: 'media',
+    icon: 'jellyfin',
+    verified: false,
+    services: ['jellyfin'],
+    secrets: [],
   },
   {
-    "id": "listmonk",
-    "name": "Listmonk",
-    "description": "High-performance, self-hosted newsletter and mailing campaign manager with PostgreSQL.",
-    "category": "mail",
-    "icon": "listmonk",
-    "verified": true,
-    "services": [
-      "listmonk-db",
-      "listmonk"
-    ],
-    "secrets": [
+    id: 'listmonk',
+    name: 'Listmonk',
+    description:
+      'High-performance, self-hosted newsletter and mailing campaign manager with PostgreSQL.',
+    category: 'mail',
+    icon: 'listmonk',
+    verified: true,
+    services: ['listmonk-db', 'listmonk'],
+    secrets: [
       {
-        "var": "POSTGRES_PASSWORD",
-        "label": "Database password",
-        "length": 24
+        var: 'POSTGRES_PASSWORD',
+        label: 'Database password',
+        length: 24,
       },
       {
-        "var": "LISTMONK_ADMIN_PASSWORD",
-        "label": "Admin password",
-        "length": 24
-      }
-    ]
+        var: 'LISTMONK_ADMIN_PASSWORD',
+        label: 'Admin password',
+        length: 24,
+      },
+    ],
   },
   {
-    "id": "loki",
-    "name": "Loki",
-    "description": "Multi-tenant, cost-effective log aggregation engine by Grafana Labs.",
-    "category": "analytics",
-    "icon": "loki",
-    "verified": true,
-    "services": [
-      "loki"
-    ],
-    "secrets": []
+    id: 'loki',
+    name: 'Loki',
+    description: 'Multi-tenant, cost-effective log aggregation engine by Grafana Labs.',
+    category: 'analytics',
+    icon: 'loki',
+    verified: true,
+    services: ['loki'],
+    secrets: [],
   },
   {
-    "id": "mariadb",
-    "name": "MariaDB + Adminer",
-    "description": "A MySQL-compatible database with a lightweight Adminer control panel for queries, tables, and exports.",
-    "category": "database",
-    "icon": "mariadb",
-    "verified": false,
-    "services": [
-      "adminer",
-      "mariadb"
-    ],
-    "secrets": [
+    id: 'mariadb',
+    name: 'MariaDB + Adminer',
+    description:
+      'A MySQL-compatible database with a lightweight Adminer control panel for queries, tables, and exports.',
+    category: 'database',
+    icon: 'mariadb',
+    verified: false,
+    services: ['adminer', 'mariadb'],
+    secrets: [
       {
-        "var": "ROOT_PASSWORD",
-        "label": "Database root password",
-        "length": 24
+        var: 'ROOT_PASSWORD',
+        label: 'Database root password',
+        length: 24,
       },
       {
-        "var": "DB_PASSWORD",
-        "label": "Database user password",
-        "length": 24
-      }
-    ]
+        var: 'DB_PASSWORD',
+        label: 'Database user password',
+        length: 24,
+      },
+    ],
   },
   {
-    "id": "meilisearch",
-    "name": "Meilisearch",
-    "description": "Fast instant-search engine with a REST API",
-    "category": "search",
-    "icon": "meilisearch",
-    "verified": false,
-    "services": [
-      "meilisearch"
-    ],
-    "secrets": [
+    id: 'meilisearch',
+    name: 'Meilisearch',
+    description: 'Fast instant-search engine with a REST API',
+    category: 'search',
+    icon: 'meilisearch',
+    verified: false,
+    services: ['meilisearch'],
+    secrets: [
       {
-        "var": "MEILI_MASTER_KEY",
-        "label": "Master key",
-        "length": 32
-      }
-    ]
+        var: 'MEILI_MASTER_KEY',
+        label: 'Master key',
+        length: 32,
+      },
+    ],
   },
   {
-    "id": "metabase",
-    "name": "Metabase",
-    "description": "Business intelligence dashboards over your databases",
-    "category": "analytics",
-    "icon": "metabase",
-    "verified": false,
-    "services": [
-      "metabase",
-      "db"
-    ],
-    "secrets": [
+    id: 'metabase',
+    name: 'Metabase',
+    description: 'Business intelligence dashboards over your databases',
+    category: 'analytics',
+    icon: 'metabase',
+    verified: false,
+    services: ['metabase', 'db'],
+    secrets: [
       {
-        "var": "DB_PASSWORD",
-        "label": "Database password",
-        "length": 24
-      }
-    ]
+        var: 'DB_PASSWORD',
+        label: 'Database password',
+        length: 24,
+      },
+    ],
   },
   {
-    "id": "minio",
-    "name": "MinIO",
-    "description": "S3-compatible object storage",
-    "category": "storage",
-    "icon": "minio",
-    "verified": false,
-    "services": [
-      "minio"
-    ],
-    "secrets": [
+    id: 'minio',
+    name: 'MinIO',
+    description: 'S3-compatible object storage',
+    category: 'storage',
+    icon: 'minio',
+    verified: false,
+    services: ['minio'],
+    secrets: [
       {
-        "var": "MINIO_ROOT_USER",
-        "label": "Root username",
-        "length": 12
+        var: 'MINIO_ROOT_USER',
+        label: 'Root username',
+        length: 12,
       },
       {
-        "var": "MINIO_ROOT_PASSWORD",
-        "label": "Root password",
-        "length": 24
-      }
-    ]
+        var: 'MINIO_ROOT_PASSWORD',
+        label: 'Root password',
+        length: 24,
+      },
+    ],
   },
   {
-    "id": "n8n",
-    "name": "n8n",
-    "description": "Open-source workflow automation",
-    "category": "automation",
-    "icon": "n8n",
-    "verified": false,
-    "services": [
-      "n8n"
-    ],
-    "secrets": [
+    id: 'n8n',
+    name: 'n8n',
+    description: 'Open-source workflow automation',
+    category: 'automation',
+    icon: 'n8n',
+    verified: false,
+    services: ['n8n'],
+    secrets: [
       {
-        "var": "N8N_ENCRYPTION_KEY",
-        "label": "Encryption key",
-        "length": 24
-      }
-    ]
+        var: 'N8N_ENCRYPTION_KEY',
+        label: 'Encryption key',
+        length: 24,
+      },
+    ],
   },
   {
-    "id": "neon",
-    "name": "Neon",
-    "description": "Self-hosted Neon — serverless Postgres with database branching, web console and per-branch connection strings.",
-    "category": "database",
-    "icon": "neon",
-    "verified": true,
-    "services": [
-      "neond"
-    ],
-    "secrets": [
+    id: 'neon',
+    name: 'Neon',
+    description:
+      'Self-hosted Neon — serverless Postgres with database branching, web console and per-branch connection strings.',
+    category: 'database',
+    icon: 'neon',
+    verified: true,
+    services: ['neond'],
+    secrets: [
       {
-        "var": "SERVER_SECRET",
-        "label": "Server management secret",
-        "length": 32
+        var: 'SERVER_SECRET',
+        label: 'Server management secret',
+        length: 32,
       },
       {
-        "var": "ADMIN_PASSWORD",
-        "label": "Console admin password",
-        "length": 24
+        var: 'ADMIN_PASSWORD',
+        label: 'Console admin password',
+        length: 24,
       },
       {
-        "var": "PG_PASSWORD",
-        "label": "Branch database password",
-        "length": 24
-      }
-    ]
+        var: 'PG_PASSWORD',
+        label: 'Branch database password',
+        length: 24,
+      },
+    ],
   },
   {
-    "id": "nextcloud",
-    "name": "Nextcloud",
-    "description": "Self-hosted cloud storage & collaboration",
-    "category": "storage",
-    "icon": "nextcloud",
-    "verified": false,
-    "services": [
-      "nextcloud",
-      "db"
-    ],
-    "secrets": [
+    id: 'nextcloud',
+    name: 'Nextcloud',
+    description: 'Self-hosted cloud storage & collaboration',
+    category: 'storage',
+    icon: 'nextcloud',
+    verified: false,
+    services: ['nextcloud', 'db'],
+    secrets: [
       {
-        "var": "POSTGRES_PASSWORD",
-        "label": "Database password",
-        "length": 24
-      }
-    ]
+        var: 'POSTGRES_PASSWORD',
+        label: 'Database password',
+        length: 24,
+      },
+    ],
   },
   {
-    "id": "nocodb",
-    "name": "NocoDB",
-    "description": "Open-source Airtable alternative",
-    "category": "database",
-    "icon": "nocodb",
-    "verified": false,
-    "services": [
-      "nocodb"
-    ],
-    "secrets": [
+    id: 'nocodb',
+    name: 'NocoDB',
+    description: 'Open-source Airtable alternative',
+    category: 'database',
+    icon: 'nocodb',
+    verified: false,
+    services: ['nocodb'],
+    secrets: [
       {
-        "var": "NC_AUTH_JWT_SECRET",
-        "label": "Auth JWT secret",
-        "length": 32
-      }
-    ]
+        var: 'NC_AUTH_JWT_SECRET',
+        label: 'Auth JWT secret',
+        length: 32,
+      },
+    ],
   },
   {
-    "id": "odoo",
-    "name": "Odoo",
-    "description": "Business apps suite with CRM, sales, inventory and accounting on Postgres.",
-    "category": "productivity",
-    "icon": "odoo",
-    "verified": false,
-    "services": [
-      "odoo",
-      "db"
-    ],
-    "secrets": [
+    id: 'odoo',
+    name: 'Odoo',
+    description: 'Business apps suite with CRM, sales, inventory and accounting on Postgres.',
+    category: 'productivity',
+    icon: 'odoo',
+    verified: false,
+    services: ['odoo', 'db'],
+    secrets: [
       {
-        "var": "DB_PASSWORD",
-        "label": "Database password",
-        "length": 24
-      }
-    ]
+        var: 'DB_PASSWORD',
+        label: 'Database password',
+        length: 24,
+      },
+    ],
   },
   {
-    "id": "ollama",
-    "name": "Ollama",
-    "description": "Get up and running with large language models locally or with GPU acceleration",
-    "category": "ai",
-    "icon": "ollama",
-    "verified": false,
-    "services": [
-      "ollama"
-    ],
-    "secrets": []
+    id: 'ollama',
+    name: 'Ollama',
+    description: 'Get up and running with large language models locally or with GPU acceleration',
+    category: 'ai',
+    icon: 'ollama',
+    verified: false,
+    services: ['ollama'],
+    secrets: [],
   },
   {
-    "id": "openwebui",
-    "name": "Open WebUI",
-    "description": "User-friendly web interface for local LLMs and Ollama",
-    "category": "ai",
-    "icon": "open-webui",
-    "verified": false,
-    "services": [
-      "open-webui"
-    ],
-    "secrets": []
+    id: 'openwebui',
+    name: 'Open WebUI',
+    description: 'User-friendly web interface for local LLMs and Ollama',
+    category: 'ai',
+    icon: 'open-webui',
+    verified: false,
+    services: ['open-webui'],
+    secrets: [],
   },
   {
-    "id": "paperless-ngx",
-    "name": "Paperless-ngx",
-    "description": "Archive and search scanned documents with OCR, private database, and persistent original files.",
-    "category": "productivity",
-    "icon": "paperless-ngx",
-    "verified": false,
-    "services": [
-      "paperless",
-      "paperless-db",
-      "paperless-broker"
-    ],
-    "secrets": [
+    id: 'paperless-ngx',
+    name: 'Paperless-ngx',
+    description:
+      'Archive and search scanned documents with OCR, private database, and persistent original files.',
+    category: 'productivity',
+    icon: 'paperless-ngx',
+    verified: false,
+    services: ['paperless', 'paperless-db', 'paperless-broker'],
+    secrets: [
       {
-        "var": "DB_PASSWORD",
-        "label": "Database password",
-        "length": 24
+        var: 'DB_PASSWORD',
+        label: 'Database password',
+        length: 24,
       },
       {
-        "var": "SECRET_KEY",
-        "label": "Paperless secret key",
-        "length": 32
+        var: 'SECRET_KEY',
+        label: 'Paperless secret key',
+        length: 32,
       },
       {
-        "var": "ADMIN_PASSWORD",
-        "label": "Initial administrator password",
-        "length": 20
-      }
-    ]
+        var: 'ADMIN_PASSWORD',
+        label: 'Initial administrator password',
+        length: 20,
+      },
+    ],
   },
   {
-    "id": "pgadmin4",
-    "name": "pgAdmin 4",
-    "description": "Official web management console and development platform for PostgreSQL databases.",
-    "category": "database",
-    "icon": "pgadmin4",
-    "verified": true,
-    "services": [
-      "pgadmin4"
-    ],
-    "secrets": [
+    id: 'pgadmin4',
+    name: 'pgAdmin 4',
+    description:
+      'Official web management console and development platform for PostgreSQL databases.',
+    category: 'database',
+    icon: 'pgadmin4',
+    verified: true,
+    services: ['pgadmin4'],
+    secrets: [
       {
-        "var": "PGADMIN_DEFAULT_PASSWORD",
-        "label": "Admin initial password",
-        "length": 24
-      }
-    ]
+        var: 'PGADMIN_DEFAULT_PASSWORD',
+        label: 'Admin initial password',
+        length: 24,
+      },
+    ],
   },
   {
-    "id": "plausible",
-    "name": "Plausible",
-    "description": "Privacy-friendly web analytics",
-    "category": "analytics",
-    "icon": "plausible",
-    "verified": false,
-    "services": [
-      "plausible",
-      "db"
-    ],
-    "secrets": [
+    id: 'plausible',
+    name: 'Plausible',
+    description: 'Privacy-friendly web analytics',
+    category: 'analytics',
+    icon: 'plausible',
+    verified: false,
+    services: ['plausible', 'db'],
+    secrets: [
       {
-        "var": "SECRET_KEY_BASE",
-        "label": "Secret key base",
-        "length": 48
+        var: 'SECRET_KEY_BASE',
+        label: 'Secret key base',
+        length: 48,
       },
       {
-        "var": "DB_PASSWORD",
-        "label": "Database password",
-        "length": 24
-      }
-    ]
+        var: 'DB_PASSWORD',
+        label: 'Database password',
+        length: 24,
+      },
+    ],
   },
   {
-    "id": "pocketbase",
-    "name": "PocketBase",
-    "description": "Open-source backend with database, auth and file storage in one binary",
-    "category": "backend",
-    "icon": "pocketbase",
-    "verified": false,
-    "services": [
-      "pocketbase"
-    ],
-    "secrets": []
+    id: 'pocketbase',
+    name: 'PocketBase',
+    description: 'Open-source backend with database, auth and file storage in one binary',
+    category: 'backend',
+    icon: 'pocketbase',
+    verified: false,
+    services: ['pocketbase'],
+    secrets: [],
   },
   {
-    "id": "postgres",
-    "name": "PostgreSQL + pgAdmin",
-    "description": "A persistent PostgreSQL database with pgAdmin for browser-based administration and SQL queries.",
-    "category": "database",
-    "icon": "postgres",
-    "verified": false,
-    "services": [
-      "pgadmin",
-      "postgres"
-    ],
-    "secrets": [
+    id: 'postgres',
+    name: 'PostgreSQL + pgAdmin',
+    description:
+      'A persistent PostgreSQL database with pgAdmin for browser-based administration and SQL queries.',
+    category: 'database',
+    icon: 'postgres',
+    verified: false,
+    services: ['pgadmin', 'postgres'],
+    secrets: [
       {
-        "var": "DB_PASSWORD",
-        "label": "Database password",
-        "length": 24
+        var: 'DB_PASSWORD',
+        label: 'Database password',
+        length: 24,
       },
       {
-        "var": "PGADMIN_PASSWORD",
-        "label": "pgAdmin password",
-        "length": 24
-      }
-    ]
+        var: 'PGADMIN_PASSWORD',
+        label: 'pgAdmin password',
+        length: 24,
+      },
+    ],
   },
   {
-    "id": "prometheus",
-    "name": "Prometheus",
-    "description": "Leading open-source systems monitoring and alerting toolkit with dimensional metrics and PromQL.",
-    "category": "analytics",
-    "icon": "prometheus",
-    "verified": true,
-    "services": [
-      "prometheus"
-    ],
-    "secrets": []
+    id: 'prometheus',
+    name: 'Prometheus',
+    description:
+      'Leading open-source systems monitoring and alerting toolkit with dimensional metrics and PromQL.',
+    category: 'analytics',
+    icon: 'prometheus',
+    verified: true,
+    services: ['prometheus'],
+    secrets: [],
   },
   {
-    "id": "qdrant",
-    "name": "Qdrant",
-    "description": "Vector database for search and AI embeddings",
-    "category": "database",
-    "icon": "qdrant",
-    "verified": false,
-    "services": [
-      "qdrant"
-    ],
-    "secrets": [
+    id: 'qdrant',
+    name: 'Qdrant',
+    description: 'Vector database for search and AI embeddings',
+    category: 'database',
+    icon: 'qdrant',
+    verified: false,
+    services: ['qdrant'],
+    secrets: [
       {
-        "var": "QDRANT_API_KEY",
-        "label": "API key",
-        "length": 32
-      }
-    ]
+        var: 'QDRANT_API_KEY',
+        label: 'API key',
+        length: 32,
+      },
+    ],
   },
   {
-    "id": "radicale",
-    "name": "Radicale",
-    "description": "Calendars and contacts for your mailboxes. Sync native CalDAV and CardDAV clients using your existing IMAP account, with data stored on your chosen server.",
-    "category": "mail",
-    "icon": "calendar",
-    "verified": true,
-    "services": [
-      "radicale"
-    ],
-    "secrets": []
+    id: 'radicale',
+    name: 'Radicale',
+    description:
+      'Calendars and contacts for your mailboxes. Sync native CalDAV and CardDAV clients using your existing IMAP account, with data stored on your chosen server.',
+    category: 'mail',
+    icon: 'calendar',
+    verified: true,
+    services: ['radicale'],
+    secrets: [],
   },
   {
-    "id": "stirling-pdf",
-    "name": "Stirling PDF",
-    "description": "PDF tools for merging, splitting, converting and OCR",
-    "category": "productivity",
-    "icon": "stirling-pdf",
-    "verified": false,
-    "services": [
-      "stirling-pdf"
-    ],
-    "secrets": []
+    id: 'stirling-pdf',
+    name: 'Stirling PDF',
+    description: 'PDF tools for merging, splitting, converting and OCR',
+    category: 'productivity',
+    icon: 'stirling-pdf',
+    verified: false,
+    services: ['stirling-pdf'],
+    secrets: [],
   },
   {
-    "id": "supabase",
-    "name": "Supabase",
-    "description": "Full self-hosted Supabase — Postgres, Auth, REST, Realtime, Storage, and Studio behind one API gateway.",
-    "category": "backend",
-    "icon": "supabase",
-    "verified": true,
-    "services": [
-      "kong",
-      "auth",
-      "rest",
-      "realtime",
-      "storage",
-      "meta",
-      "studio",
-      "db"
-    ],
-    "secrets": [
+    id: 'supabase',
+    name: 'Supabase',
+    description:
+      'Full self-hosted Supabase — Postgres, Auth, REST, Realtime, Storage, and Studio behind one API gateway.',
+    category: 'backend',
+    icon: 'supabase',
+    verified: true,
+    services: ['kong', 'auth', 'rest', 'realtime', 'storage', 'meta', 'studio', 'db'],
+    secrets: [
       {
-        "var": "POSTGRES_PASSWORD",
-        "label": "Database password",
-        "length": 24
+        var: 'POSTGRES_PASSWORD',
+        label: 'Database password',
+        length: 24,
       },
       {
-        "var": "JWT_SECRET",
-        "label": "JWT secret",
-        "length": 32
+        var: 'JWT_SECRET',
+        label: 'JWT secret',
+        length: 32,
       },
       {
-        "var": "ANON_KEY",
-        "label": "Anon public API key",
-        "length": 40
+        var: 'ANON_KEY',
+        label: 'Anon public API key',
+        length: 40,
       },
       {
-        "var": "SERVICE_ROLE_KEY",
-        "label": "Service role secret API key",
-        "length": 40
+        var: 'SERVICE_ROLE_KEY',
+        label: 'Service role secret API key',
+        length: 40,
       },
       {
-        "var": "SECRET_KEY_BASE",
-        "label": "Realtime secret key base",
-        "length": 32
+        var: 'SECRET_KEY_BASE',
+        label: 'Realtime secret key base',
+        length: 32,
       },
       {
-        "var": "PG_META_CRYPTO_KEY",
-        "label": "Metadata crypto key",
-        "length": 32
+        var: 'PG_META_CRYPTO_KEY',
+        label: 'Metadata crypto key',
+        length: 32,
       },
       {
-        "var": "DASHBOARD_PASSWORD",
-        "label": "Studio dashboard password",
-        "length": 20
-      }
-    ]
+        var: 'DASHBOARD_PASSWORD',
+        label: 'Studio dashboard password',
+        length: 20,
+      },
+    ],
   },
   {
-    "id": "umami",
-    "name": "Umami",
-    "description": "Simple privacy-focused web analytics",
-    "category": "analytics",
-    "icon": "umami",
-    "verified": false,
-    "services": [
-      "umami",
-      "db"
-    ],
-    "secrets": [
+    id: 'umami',
+    name: 'Umami',
+    description: 'Simple privacy-focused web analytics',
+    category: 'analytics',
+    icon: 'umami',
+    verified: false,
+    services: ['umami', 'db'],
+    secrets: [
       {
-        "var": "DB_PASSWORD",
-        "label": "Database password",
-        "length": 24
-      }
-    ]
+        var: 'DB_PASSWORD',
+        label: 'Database password',
+        length: 24,
+      },
+    ],
   },
   {
-    "id": "uptimekuma",
-    "name": "Uptime Kuma",
-    "description": "Self-hosted uptime monitoring",
-    "category": "monitoring",
-    "icon": "uptimekuma",
-    "verified": false,
-    "services": [
-      "uptimekuma"
-    ],
-    "secrets": []
+    id: 'uptimekuma',
+    name: 'Uptime Kuma',
+    description: 'Self-hosted uptime monitoring',
+    category: 'monitoring',
+    icon: 'uptimekuma',
+    verified: false,
+    services: ['uptimekuma'],
+    secrets: [],
   },
   {
-    "id": "vaultwarden",
-    "name": "Vaultwarden",
-    "description": "Lightweight Bitwarden-compatible password manager",
-    "category": "security",
-    "icon": "vaultwarden",
-    "verified": false,
-    "services": [
-      "vaultwarden"
-    ],
-    "secrets": [
+    id: 'vaultwarden',
+    name: 'Vaultwarden',
+    description: 'Lightweight Bitwarden-compatible password manager',
+    category: 'security',
+    icon: 'vaultwarden',
+    verified: false,
+    services: ['vaultwarden'],
+    secrets: [
       {
-        "var": "ADMIN_TOKEN",
-        "label": "Admin panel token",
-        "length": 24
-      }
-    ]
+        var: 'ADMIN_TOKEN',
+        label: 'Admin panel token',
+        length: 24,
+      },
+    ],
   },
   {
-    "id": "victoriametrics",
-    "name": "VictoriaMetrics",
-    "description": "Fast, cost-effective drop-in replacement for Prometheus long-term metric storage and Grafana dashboards.",
-    "category": "analytics",
-    "icon": "victoriametrics",
-    "verified": true,
-    "services": [
-      "victoriametrics"
-    ],
-    "secrets": [
+    id: 'victoriametrics',
+    name: 'VictoriaMetrics',
+    description:
+      'Fast, cost-effective drop-in replacement for Prometheus long-term metric storage and Grafana dashboards.',
+    category: 'analytics',
+    icon: 'victoriametrics',
+    verified: true,
+    services: ['victoriametrics'],
+    secrets: [
       {
-        "var": "VM_AUTH_PASSWORD",
-        "label": "Auth password",
-        "length": 24
-      }
-    ]
+        var: 'VM_AUTH_PASSWORD',
+        label: 'Auth password',
+        length: 24,
+      },
+    ],
   },
   {
-    "id": "wiki-js",
-    "name": "Wiki.js",
-    "description": "A powerful and extensible open source wiki software built on Node.js and PostgreSQL.",
-    "category": "docs",
-    "icon": "wiki-js",
-    "verified": false,
-    "services": [
-      "wiki",
-      "wiki-db"
-    ],
-    "secrets": [
+    id: 'wiki-js',
+    name: 'Wiki.js',
+    description:
+      'A powerful and extensible open source wiki software built on Node.js and PostgreSQL.',
+    category: 'docs',
+    icon: 'wiki-js',
+    verified: false,
+    services: ['wiki', 'wiki-db'],
+    secrets: [
       {
-        "var": "DB_PASSWORD",
-        "label": "Database password",
-        "length": 24
-      }
-    ]
+        var: 'DB_PASSWORD',
+        label: 'Database password',
+        length: 24,
+      },
+    ],
   },
   {
-    "id": "wordpress",
-    "name": "WordPress",
-    "description": "CMS & blogging platform",
-    "category": "cms",
-    "icon": "wordpress",
-    "verified": false,
-    "services": [
-      "wordpress",
-      "db"
-    ],
-    "secrets": [
+    id: 'wordpress',
+    name: 'WordPress',
+    description: 'CMS & blogging platform',
+    category: 'cms',
+    icon: 'wordpress',
+    verified: false,
+    services: ['wordpress', 'db'],
+    secrets: [
       {
-        "var": "DB_PASSWORD",
-        "label": "Database password",
-        "length": 24
-      }
-    ]
-  }
+        var: 'DB_PASSWORD',
+        label: 'Database password',
+        length: 24,
+      },
+    ],
+  },
 ];

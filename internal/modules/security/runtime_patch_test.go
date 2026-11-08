@@ -196,4 +196,3 @@ func TestPlanSecurityRuntimePatchAndValidateReviewID(t *testing.T) {
 		t.Fatal("ValidateReviewID should fail for changed revision")
 	}
 }
-

@@ -74,4 +74,3 @@ export interface Mailbox {
   createdAt: string;
   updatedAt: string;
 }
-
