@@ -111,7 +111,7 @@ func (h *DeviceFlowHandler) VerifyUserCode(c echo.Context) error {
 }
 
 func (h *DeviceFlowHandler) AuthorizeDevice(c echo.Context) error {
-	userID := extractUserID(c)
+	userID := utils.ExtractUserID(c)
 	if userID == "" {
 		return utils.Error(c, http.StatusUnauthorized, "authentication required")
 	}

@@ -5,6 +5,8 @@ import (
 	"net/http"
 
 	"github.com/labstack/echo/v4"
+
+	"codedock/internal/utils"
 )
 
 func (h *Handler) getProjectID(ctx context.Context, databaseID, serviceID string) string {
@@ -15,7 +17,7 @@ func (h *Handler) getProjectID(ctx context.Context, databaseID, serviceID string
 }
 
 func (h *Handler) hasAccess(c echo.Context, databaseID, serviceID string) bool {
-	userID, role, ok := extractUser(c)
+	userID, role, ok := utils.ExtractUser(c)
 	if !ok {
 		return false
 	}
@@ -30,7 +32,7 @@ func (h *Handler) hasAccess(c echo.Context, databaseID, serviceID string) bool {
 }
 
 func (h *Handler) hasAdminAccess(c echo.Context, databaseID, serviceID string) bool {
-	userID, role, ok := extractUser(c)
+	userID, role, ok := utils.ExtractUser(c)
 	if !ok {
 		return false
 	}
@@ -59,7 +61,7 @@ func (h *Handler) validatePolicy(c echo.Context, cfg *BackupConfig) error {
 	}
 	cfg.ProjectID = projectID
 
-	userID, _, _ := extractUser(c)
+	userID, _, _ := utils.ExtractUser(c)
 	if cfg.OwnerID == "" {
 		cfg.OwnerID = userID
 	}

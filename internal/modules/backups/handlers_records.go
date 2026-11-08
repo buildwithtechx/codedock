@@ -20,7 +20,7 @@ func (h *Handler) ListAllRecords(c echo.Context) error {
 			limit = l
 		}
 	}
-	_, role, ok := extractUser(c)
+	_, role, ok := utils.ExtractUser(c)
 	if !ok {
 		return utils.Error(c, http.StatusUnauthorized, ErrUnauthorized.Error())
 	}
@@ -141,7 +141,7 @@ func (h *Handler) DeleteRecord(c echo.Context) error {
 		return utils.Error(c, http.StatusInternalServerError, err.Error())
 	}
 	if h.auditLogger != nil {
-		h.auditLogger(c.Request().Context(), auditActorID(c), "backup.record_delete", recordID, c.RealIP())
+		h.auditLogger(c.Request().Context(), utils.AuditActorID(c), "backup.record_delete", recordID, c.RealIP())
 	}
 	return c.NoContent(http.StatusNoContent)
 }
@@ -183,7 +183,7 @@ func (h *Handler) TriggerDatabaseBackup(c echo.Context) error {
 		return utils.Error(c, http.StatusInternalServerError, err.Error())
 	}
 	if h.auditLogger != nil {
-		h.auditLogger(c.Request().Context(), auditActorID(c), "backup.trigger", cfg.ID, c.RealIP())
+		h.auditLogger(c.Request().Context(), utils.AuditActorID(c), "backup.trigger", cfg.ID, c.RealIP())
 	}
 	return utils.Success(c, "Backup triggered successfully", rec)
 }

@@ -18,7 +18,7 @@ func NewAppearanceHandler(userRepo UserRepository) *AppearanceHandler {
 }
 
 func (h *AppearanceHandler) GetAppearance(c echo.Context) error {
-	userID := extractUserID(c)
+	userID := utils.ExtractUserID(c)
 	if userID == "" {
 		return utils.Error(c, http.StatusUnauthorized, "unauthorized")
 	}
@@ -37,7 +37,7 @@ func (h *AppearanceHandler) GetAppearance(c echo.Context) error {
 }
 
 func (h *AppearanceHandler) SetAppearance(c echo.Context) error {
-	userID := extractUserID(c)
+	userID := utils.ExtractUserID(c)
 	if userID == "" {
 		return utils.Error(c, http.StatusUnauthorized, "unauthorized")
 	}

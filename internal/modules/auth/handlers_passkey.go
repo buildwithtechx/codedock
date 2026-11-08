@@ -23,7 +23,7 @@ func NewPasskeyHandler(s *PasskeyService) *PasskeyHandler {
 }
 
 func (h *PasskeyHandler) BeginRegistration(c echo.Context) error {
-	userID := extractUserID(c)
+	userID := utils.ExtractUserID(c)
 	if userID == "" {
 		return utils.Error(c, http.StatusUnauthorized, "unauthorized access")
 	}
@@ -36,7 +36,7 @@ func (h *PasskeyHandler) BeginRegistration(c echo.Context) error {
 }
 
 func (h *PasskeyHandler) FinishRegistration(c echo.Context) error {
-	userID := extractUserID(c)
+	userID := utils.ExtractUserID(c)
 	if userID == "" {
 		return utils.Error(c, http.StatusUnauthorized, "unauthorized access")
 	}
@@ -144,7 +144,7 @@ func (h *PasskeyHandler) FinishAuthentication(c echo.Context) error {
 }
 
 func (h *PasskeyHandler) List(c echo.Context) error {
-	userID := extractUserID(c)
+	userID := utils.ExtractUserID(c)
 	if userID == "" {
 		return utils.Error(c, http.StatusUnauthorized, "unauthorized access")
 	}
@@ -157,7 +157,7 @@ func (h *PasskeyHandler) List(c echo.Context) error {
 }
 
 func (h *PasskeyHandler) Rename(c echo.Context) error {
-	userID := extractUserID(c)
+	userID := utils.ExtractUserID(c)
 	if userID == "" {
 		return utils.Error(c, http.StatusUnauthorized, "unauthorized access")
 	}
@@ -179,7 +179,7 @@ func (h *PasskeyHandler) Rename(c echo.Context) error {
 }
 
 func (h *PasskeyHandler) Delete(c echo.Context) error {
-	userID := extractUserID(c)
+	userID := utils.ExtractUserID(c)
 	if userID == "" {
 		return utils.Error(c, http.StatusUnauthorized, "unauthorized access")
 	}

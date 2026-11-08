@@ -58,7 +58,7 @@ func (h *UserHandler) DeleteUser(c echo.Context) error {
 		return utils.Error(c, http.StatusInternalServerError, err.Error())
 	}
 	h.auditService.LogAction(c.Request().Context(), audit.AuditActionOpts{
-		UserID:    auditActorID(c),
+		UserID:    utils.AuditActorID(c),
 		Action:    "user.delete",
 		Resource:  id,
 		IPAddress: c.RealIP(),
@@ -67,7 +67,7 @@ func (h *UserHandler) DeleteUser(c echo.Context) error {
 }
 
 func (h *UserHandler) ChangePassword(c echo.Context) error {
-	userID := extractUserID(c)
+	userID := utils.ExtractUserID(c)
 	if userID == "" {
 		return utils.Error(c, http.StatusUnauthorized, "unauthorized access")
 	}
@@ -91,7 +91,7 @@ func (h *UserHandler) ChangePassword(c echo.Context) error {
 }
 
 func (h *UserHandler) GetProfile(c echo.Context) error {
-	userID := extractUserID(c)
+	userID := utils.ExtractUserID(c)
 	if userID == "" {
 		return utils.Error(c, http.StatusUnauthorized, "unauthorized access")
 	}
@@ -105,7 +105,7 @@ func (h *UserHandler) GetProfile(c echo.Context) error {
 }
 
 func (h *UserHandler) UpdateProfile(c echo.Context) error {
-	userID := extractUserID(c)
+	userID := utils.ExtractUserID(c)
 	if userID == "" {
 		return utils.Error(c, http.StatusUnauthorized, "unauthorized access")
 	}
@@ -132,7 +132,7 @@ func (h *UserHandler) UpdateProfile(c echo.Context) error {
 }
 
 func (h *UserHandler) RequestEmailChange(c echo.Context) error {
-	userID := extractUserID(c)
+	userID := utils.ExtractUserID(c)
 	if userID == "" {
 		return utils.Error(c, http.StatusUnauthorized, "unauthorized access")
 	}
@@ -160,7 +160,7 @@ func (h *UserHandler) RequestEmailChange(c echo.Context) error {
 }
 
 func (h *UserHandler) VerifyEmailChange(c echo.Context) error {
-	userID := extractUserID(c)
+	userID := utils.ExtractUserID(c)
 	if userID == "" {
 		return utils.Error(c, http.StatusUnauthorized, "unauthorized access")
 	}
@@ -188,7 +188,7 @@ func (h *UserHandler) VerifyEmailChange(c echo.Context) error {
 }
 
 func (h *UserHandler) CreatePAT(c echo.Context) error {
-	userID := extractUserID(c)
+	userID := utils.ExtractUserID(c)
 	if userID == "" {
 		return utils.Error(c, http.StatusUnauthorized, "unauthorized access")
 	}
@@ -214,7 +214,7 @@ func (h *UserHandler) CreatePAT(c echo.Context) error {
 }
 
 func (h *UserHandler) ListPATs(c echo.Context) error {
-	userID := extractUserID(c)
+	userID := utils.ExtractUserID(c)
 	if userID == "" {
 		return utils.Error(c, http.StatusUnauthorized, "unauthorized access")
 	}
@@ -226,7 +226,7 @@ func (h *UserHandler) ListPATs(c echo.Context) error {
 }
 
 func (h *UserHandler) DeletePAT(c echo.Context) error {
-	userID := extractUserID(c)
+	userID := utils.ExtractUserID(c)
 	if userID == "" {
 		return utils.Error(c, http.StatusUnauthorized, "unauthorized access")
 	}

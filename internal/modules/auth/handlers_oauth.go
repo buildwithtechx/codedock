@@ -122,7 +122,7 @@ func (h *OAuthHandler) OAuthCallback(c echo.Context) error {
 }
 
 func (h *OAuthHandler) Setup2FA(c echo.Context) error {
-	userID, email := extractClaims(c)
+	userID, email := utils.ExtractClaims(c)
 	if userID == "" {
 		return utils.Error(c, http.StatusUnauthorized, "unauthorized access")
 	}
@@ -134,7 +134,7 @@ func (h *OAuthHandler) Setup2FA(c echo.Context) error {
 }
 
 func (h *OAuthHandler) Verify2FA(c echo.Context) error {
-	userID := extractUserID(c)
+	userID := utils.ExtractUserID(c)
 	if userID == "" {
 		return utils.Error(c, http.StatusUnauthorized, "unauthorized access")
 	}
@@ -149,7 +149,7 @@ func (h *OAuthHandler) Verify2FA(c echo.Context) error {
 }
 
 func (h *OAuthHandler) Disable2FA(c echo.Context) error {
-	userID := extractUserID(c)
+	userID := utils.ExtractUserID(c)
 	if userID == "" {
 		return utils.Error(c, http.StatusUnauthorized, "unauthorized access")
 	}

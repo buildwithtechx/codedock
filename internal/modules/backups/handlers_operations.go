@@ -43,7 +43,7 @@ func (h *Handler) CreateBatch(c echo.Context) error {
 		return utils.Error(c, http.StatusInternalServerError, err.Error())
 	}
 	if h.auditLogger != nil {
-		h.auditLogger(c.Request().Context(), auditActorID(c), "backup.batch_create", batch.ID, c.RealIP())
+		h.auditLogger(c.Request().Context(), utils.AuditActorID(c), "backup.batch_create", batch.ID, c.RealIP())
 	}
 	return utils.Created(c, "Backup batch created successfully", batch)
 }
@@ -58,7 +58,7 @@ func (h *Handler) TriggerBatch(c echo.Context) error {
 		return utils.Error(c, http.StatusInternalServerError, err.Error())
 	}
 	if h.auditLogger != nil {
-		h.auditLogger(c.Request().Context(), auditActorID(c), "backup.batch_trigger", batchID, c.RealIP())
+		h.auditLogger(c.Request().Context(), utils.AuditActorID(c), "backup.batch_trigger", batchID, c.RealIP())
 	}
 	return utils.Success(c, "Backup batch triggered", summary)
 }
@@ -80,7 +80,7 @@ func (h *Handler) authorizedRecord(c echo.Context, id string) (*BackupConfig, st
 }
 
 func (h *Handler) StartRun(c echo.Context) error {
-	userID, _, ok := extractUser(c)
+	userID, _, ok := utils.ExtractUser(c)
 	if !ok || userID == "" {
 		return echo.NewHTTPError(http.StatusUnauthorized, ErrUnauthorized.Error())
 	}
@@ -103,7 +103,7 @@ func (h *Handler) StartRun(c echo.Context) error {
 }
 
 func (h *Handler) PrepareRestore(c echo.Context) error {
-	userID, _, ok := extractUser(c)
+	userID, _, ok := utils.ExtractUser(c)
 	if !ok || userID == "" {
 		return echo.NewHTTPError(http.StatusUnauthorized, ErrUnauthorized.Error())
 	}
@@ -129,7 +129,7 @@ func (h *Handler) PrepareRestore(c echo.Context) error {
 }
 
 func (h *Handler) ApplyRestore(c echo.Context) error {
-	userID, _, ok := extractUser(c)
+	userID, _, ok := utils.ExtractUser(c)
 	if !ok || userID == "" {
 		return echo.NewHTTPError(http.StatusUnauthorized, ErrUnauthorized.Error())
 	}
@@ -143,10 +143,10 @@ func (h *Handler) ApplyRestore(c echo.Context) error {
 	if err != nil || op == nil {
 		return echo.NewHTTPError(http.StatusNotFound, "restore operation not found")
 	}
-	opUser := extractStructField(op, "UserID")
-	opKind := extractStructField(op, "Kind")
-	opPayload := extractStructField(op, "Payload")
-	opID := extractStructField(op, "ID")
+	opUser := utils.ExtractStructField(op, "UserID")
+	opKind := utils.ExtractStructField(op, "Kind")
+	opPayload := utils.ExtractStructField(op, "Payload")
+	opID := utils.ExtractStructField(op, "ID")
 	if opUser != userID || opKind != "restore" {
 		return echo.NewHTTPError(http.StatusNotFound, "restore operation not found")
 	}

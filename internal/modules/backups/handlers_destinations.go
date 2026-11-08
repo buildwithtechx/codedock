@@ -46,7 +46,7 @@ func (h *Handler) CreateS3Destination(c echo.Context) error {
 		return utils.Error(c, http.StatusInternalServerError, err.Error())
 	}
 	if h.auditLogger != nil {
-		h.auditLogger(c.Request().Context(), auditActorID(c), "backup.s3_destination_create", dest.ID, c.RealIP())
+		h.auditLogger(c.Request().Context(), utils.AuditActorID(c), "backup.s3_destination_create", dest.ID, c.RealIP())
 	}
 	RedactS3Destination(&dest)
 	return utils.Created(c, "S3 destination created successfully", dest)
@@ -127,7 +127,7 @@ func (h *Handler) UpdateS3Destination(c echo.Context) error {
 		return utils.Error(c, http.StatusInternalServerError, err.Error())
 	}
 	if h.auditLogger != nil {
-		h.auditLogger(c.Request().Context(), auditActorID(c), "backup.s3_destination_update", id, c.RealIP())
+		h.auditLogger(c.Request().Context(), utils.AuditActorID(c), "backup.s3_destination_update", id, c.RealIP())
 	}
 	RedactS3Destination(dest)
 	return utils.Success(c, "S3 destination updated successfully", dest)
@@ -158,7 +158,7 @@ func (h *Handler) SetDefaultS3Destination(c echo.Context) error {
 		return utils.Error(c, http.StatusInternalServerError, err.Error())
 	}
 	if h.auditLogger != nil {
-		h.auditLogger(c.Request().Context(), auditActorID(c), "backup.s3_destination_default", id, c.RealIP())
+		h.auditLogger(c.Request().Context(), utils.AuditActorID(c), "backup.s3_destination_default", id, c.RealIP())
 	}
 	return utils.Success(c, "Default S3 destination updated successfully", nil)
 }
@@ -172,7 +172,7 @@ func (h *Handler) DeleteS3Destination(c echo.Context) error {
 		return utils.Error(c, http.StatusInternalServerError, err.Error())
 	}
 	if h.auditLogger != nil {
-		h.auditLogger(c.Request().Context(), auditActorID(c), "backup.s3_destination_delete", id, c.RealIP())
+		h.auditLogger(c.Request().Context(), utils.AuditActorID(c), "backup.s3_destination_delete", id, c.RealIP())
 	}
 	return c.NoContent(http.StatusNoContent)
 }
@@ -209,7 +209,7 @@ func (h *Handler) CreateSFTPDestination(c echo.Context) error {
 		return utils.Error(c, http.StatusInternalServerError, err.Error())
 	}
 	if h.auditLogger != nil {
-		h.auditLogger(c.Request().Context(), auditActorID(c), "backup.sftp_destination_create", dest.ID, c.RealIP())
+		h.auditLogger(c.Request().Context(), utils.AuditActorID(c), "backup.sftp_destination_create", dest.ID, c.RealIP())
 	}
 	RedactSFTPDestination(&dest)
 	return utils.Created(c, "SFTP destination created successfully", dest)
@@ -240,7 +240,7 @@ func (h *Handler) DeleteSFTPDestination(c echo.Context) error {
 		return utils.Error(c, http.StatusInternalServerError, err.Error())
 	}
 	if h.auditLogger != nil {
-		h.auditLogger(c.Request().Context(), auditActorID(c), "backup.sftp_destination_delete", id, c.RealIP())
+		h.auditLogger(c.Request().Context(), utils.AuditActorID(c), "backup.sftp_destination_delete", id, c.RealIP())
 	}
 	return c.NoContent(http.StatusNoContent)
 }

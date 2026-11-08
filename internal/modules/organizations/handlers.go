@@ -19,7 +19,7 @@ func NewOrganizationHandler(orgService *OrganizationService, auditService *audit
 }
 
 func (h *OrganizationHandler) Create(c echo.Context) error {
-	userID := extractUserID(c)
+	userID := utils.ExtractUserID(c)
 	if userID == "" {
 		return utils.Error(c, http.StatusUnauthorized, "unauthorized")
 	}
@@ -44,7 +44,7 @@ func (h *OrganizationHandler) Create(c echo.Context) error {
 }
 
 func (h *OrganizationHandler) List(c echo.Context) error {
-	userID := extractUserID(c)
+	userID := utils.ExtractUserID(c)
 	if userID == "" {
 		return utils.Error(c, http.StatusUnauthorized, "unauthorized")
 	}
@@ -70,7 +70,7 @@ func (h *OrganizationHandler) Get(c echo.Context) error {
 
 func (h *OrganizationHandler) Update(c echo.Context) error {
 	id := c.Param("id")
-	userID := extractUserID(c)
+	userID := utils.ExtractUserID(c)
 	if userID == "" {
 		return utils.Error(c, http.StatusUnauthorized, "unauthorized")
 	}
@@ -98,7 +98,7 @@ func (h *OrganizationHandler) Delete(c echo.Context) error {
 		return utils.Error(c, http.StatusInternalServerError, err.Error())
 	}
 	h.auditService.LogAction(c.Request().Context(), audit.AuditActionOpts{
-		UserID:    auditActorID(c),
+		UserID:    utils.AuditActorID(c),
 		Action:    "organization.delete",
 		Resource:  id,
 		IPAddress: c.RealIP(),
@@ -116,7 +116,7 @@ func (h *OrganizationHandler) ListMembers(c echo.Context) error {
 }
 
 func (h *OrganizationHandler) InviteMember(c echo.Context) error {
-	userID := extractUserID(c)
+	userID := utils.ExtractUserID(c)
 	if userID == "" {
 		return utils.Error(c, http.StatusUnauthorized, "unauthorized")
 	}
@@ -141,7 +141,7 @@ func (h *OrganizationHandler) InviteMember(c echo.Context) error {
 }
 
 func (h *OrganizationHandler) UpdateMember(c echo.Context) error {
-	requesterID := extractUserID(c)
+	requesterID := utils.ExtractUserID(c)
 	if requesterID == "" {
 		return utils.Error(c, http.StatusUnauthorized, "unauthorized")
 	}
@@ -170,7 +170,7 @@ func (h *OrganizationHandler) RemoveMember(c echo.Context) error {
 		return utils.Error(c, http.StatusInternalServerError, err.Error())
 	}
 	h.auditService.LogAction(c.Request().Context(), audit.AuditActionOpts{
-		UserID:    auditActorID(c),
+		UserID:    utils.AuditActorID(c),
 		Action:    "member.remove",
 		Resource:  c.Param("id"),
 		IPAddress: c.RealIP(),

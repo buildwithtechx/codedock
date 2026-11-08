@@ -93,7 +93,7 @@ func (h *Handler) Create(c echo.Context) error {
 		return utils.Error(c, http.StatusInternalServerError, err.Error())
 	}
 	if h.auditLogger != nil {
-		h.auditLogger(c.Request().Context(), auditActorID(c), "backup.create", cfg.ID, c.RealIP())
+		h.auditLogger(c.Request().Context(), utils.AuditActorID(c), "backup.create", cfg.ID, c.RealIP())
 	}
 	RedactBackupConfig(&cfg)
 	return utils.Created(c, "Created successfully", cfg)
@@ -218,7 +218,7 @@ func (h *Handler) Delete(c echo.Context) error {
 		return utils.Error(c, http.StatusInternalServerError, err.Error())
 	}
 	if h.auditLogger != nil {
-		h.auditLogger(c.Request().Context(), auditActorID(c), "backup.delete", id, c.RealIP())
+		h.auditLogger(c.Request().Context(), utils.AuditActorID(c), "backup.delete", id, c.RealIP())
 	}
 	return c.NoContent(http.StatusNoContent)
 }
@@ -242,7 +242,7 @@ func (h *Handler) Trigger(c echo.Context) error {
 		return utils.Error(c, http.StatusInternalServerError, err.Error())
 	}
 	if h.auditLogger != nil {
-		h.auditLogger(c.Request().Context(), auditActorID(c), "backup.trigger", id, c.RealIP())
+		h.auditLogger(c.Request().Context(), utils.AuditActorID(c), "backup.trigger", id, c.RealIP())
 	}
 	return utils.Success(c, "Operation successful", rec)
 }
@@ -265,7 +265,7 @@ func (h *Handler) Restore(c echo.Context) error {
 		return utils.Error(c, http.StatusInternalServerError, err.Error())
 	}
 	if h.auditLogger != nil {
-		h.auditLogger(c.Request().Context(), auditActorID(c), "backup.restore", id, c.RealIP())
+		h.auditLogger(c.Request().Context(), utils.AuditActorID(c), "backup.restore", id, c.RealIP())
 	}
 	return utils.Success(c, "Restore initiated", nil)
 }
