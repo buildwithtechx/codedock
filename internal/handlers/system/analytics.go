@@ -2,6 +2,7 @@ package system
 
 import (
 	"encoding/json"
+	"fmt"
 	"net/http"
 	"strconv"
 	"time"
@@ -238,4 +239,22 @@ func (h *AnalyticsHandler) Live(c echo.Context) error {
 		return utils.Error(c, http.StatusBadRequest, err.Error())
 	}
 	return utils.Success(c, "Live traffic retrieved", overview)
+}
+
+func startEventStream(c echo.Context) (http.ResponseWriter, http.Flusher, bool) {
+	writer := c.Response().Writer
+	flush, ok := writer.(http.Flusher)
+	if !ok {
+		return nil, nil, false
+	}
+	header := writer.Header()
+	header.Set("Content-Type", "text/event-stream")
+	header.Set("Cache-Control", "no-cache")
+	header.Set("Connection", "keep-alive")
+	return writer, flush, true
+}
+
+func writeStreamEvent(writer http.ResponseWriter, flush http.Flusher, event, data string) {
+	fmt.Fprintf(writer, "event: %s\ndata: %s\n\n", event, data)
+	flush.Flush()
 }

@@ -1,7 +1,6 @@
-package system
+package migrations
 
 import (
-	"context"
 	"fmt"
 	"io"
 	"net/http"
@@ -9,39 +8,30 @@ import (
 
 	"github.com/labstack/echo/v4"
 
-	"codedock/internal/http/middleware"
 	"codedock/internal/modules/users"
-	systemservices "codedock/internal/services/system"
 	"codedock/internal/utils"
 )
 
-const (
-	maxSetupBundleUploadBytes = 32 * 1024 * 1024  // 32MB pre-auth setup upload limit
-	maxBundleUploadBytes      = 500 * 1024 * 1024 // 500MB authenticated upload limit
-)
-
-type MigrationHandler struct {
-	service     *systemservices.MigrationService
-	userCounter interface {
-		CountUsers(context.Context) (int, error)
-	}
-	setupLimiter *middleware.RateLimiter
+type Limiter interface {
+	Allow(key string) bool
 }
 
-func NewMigrationHandler(s *systemservices.MigrationService, userCounter interface {
-	CountUsers(context.Context) (int, error)
-}) *MigrationHandler {
-	return &MigrationHandler{
+type BundleHandler struct {
+	service      BundleService
+	userCounter  UserCounter
+	setupLimiter Limiter
+}
+
+func NewBundleHandler(s BundleService, userCounter UserCounter, setupLimiter Limiter) *BundleHandler {
+	return &BundleHandler{
 		service:      s,
 		userCounter:  userCounter,
-		setupLimiter: middleware.NewRateLimiter(5, time.Minute),
+		setupLimiter: setupLimiter,
 	}
 }
 
-func (h *MigrationHandler) Export(c echo.Context) error {
-	var req struct {
-		Passphrase string `json:"passphrase"`
-	}
+func (h *BundleHandler) Export(c echo.Context) error {
+	var req ExportRequest
 	if err := c.Bind(&req); err != nil || req.Passphrase == "" {
 		return utils.Error(c, http.StatusBadRequest, "passphrase is required in request body")
 	}
@@ -59,11 +49,11 @@ func (h *MigrationHandler) Export(c echo.Context) error {
 	return nil
 }
 
-func (h *MigrationHandler) Import(c echo.Context) error {
-	return h.importBundle(c, maxBundleUploadBytes)
+func (h *BundleHandler) Import(c echo.Context) error {
+	return h.importBundle(c, MaxBundleUploadBytes)
 }
 
-func (h *MigrationHandler) ImportDuringSetup(c echo.Context) error {
+func (h *BundleHandler) ImportDuringSetup(c echo.Context) error {
 	if h.setupLimiter != nil {
 		key := c.RealIP()
 		if !h.setupLimiter.Allow(key) {
@@ -74,7 +64,7 @@ func (h *MigrationHandler) ImportDuringSetup(c echo.Context) error {
 		}
 	}
 
-	c.Request().Body = http.MaxBytesReader(c.Response().Writer, c.Request().Body, maxSetupBundleUploadBytes)
+	c.Request().Body = http.MaxBytesReader(c.Response().Writer, c.Request().Body, MaxSetupBundleUploadBytes)
 
 	users.FirstUserSetupLock.Lock()
 	defer users.FirstUserSetupLock.Unlock()
@@ -87,10 +77,10 @@ func (h *MigrationHandler) ImportDuringSetup(c echo.Context) error {
 		return utils.Error(c, http.StatusForbidden, "setup import is only available before the first account is created")
 	}
 
-	return h.importBundle(c, maxSetupBundleUploadBytes)
+	return h.importBundle(c, MaxSetupBundleUploadBytes)
 }
 
-func (h *MigrationHandler) importBundle(c echo.Context, maxAllowedBytes int64) error {
+func (h *BundleHandler) importBundle(c echo.Context, maxAllowedBytes int64) error {
 	passphrase := c.FormValue("passphrase")
 	if passphrase == "" {
 		return utils.Error(c, http.StatusBadRequest, "passphrase form value is required")

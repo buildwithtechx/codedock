@@ -26,6 +26,7 @@ import (
 	"codedock/internal/modules/environments"
 	gitmod "codedock/internal/modules/git"
 	mailmodule "codedock/internal/modules/mail"
+	modmigrations "codedock/internal/modules/migrations"
 	"codedock/internal/modules/organizations"
 	projectsmod "codedock/internal/modules/projects"
 	"codedock/internal/modules/servers"
@@ -99,7 +100,7 @@ type Server struct {
 	composeStackHandler        *projectsmod.ComposeStackHandler
 	chatAppHandler             *chatapps.Handler
 	oneClickHandler            *projectsmod.OneClickHandler
-	migrationHandler           *system.MigrationHandler
+	migrationHandler           *modmigrations.BundleHandler
 	onboardingHandler          *users.OnboardingHandler
 	dnsHandler                 *dns.Handler
 	metricsHandler             *system.MetricsHandler
@@ -108,7 +109,7 @@ type Server struct {
 	exampleHandler             *system.ExampleHandler
 	serverHandler              *servers.Handler
 	managedHandler             *servers.ManagedHandler
-	migrationLifecycleHandler  *system.MigrationLifecycleHandler
+	migrationLifecycleHandler  *modmigrations.LifecycleHandler
 	migrationService           *migrations.Service
 	analyticsHandler           *system.AnalyticsHandler
 	attentionHandler           *system.AttentionHandler

@@ -26,6 +26,7 @@ import (
 	"codedock/internal/modules/environments"
 	gitmod "codedock/internal/modules/git"
 	mailmodule "codedock/internal/modules/mail"
+	modmigrations "codedock/internal/modules/migrations"
 	"codedock/internal/modules/organizations"
 	projectsmod "codedock/internal/modules/projects"
 	"codedock/internal/modules/security"
@@ -252,7 +253,7 @@ func buildServerInstance(d *serverSetupDeps) (*Server, error) {
 		composeStackHandler:        composeStackHandler,
 		chatAppHandler:             chatapps.NewHandler(chatAppService, chatapps.NewDispatcher(chatAppService, nil)),
 		oneClickHandler:            oneClickHandler,
-		migrationHandler:           system.NewMigrationHandler(migrationService, d.userService),
+		migrationHandler:           modmigrations.NewBundleHandler(&migrationBundleAdapter{service: migrationService}, &migrationUserCounterAdapter{users: d.userService}, middleware.NewRateLimiter(5, time.Minute)),
 		onboardingHandler:          users.NewOnboardingHandler(d.userService),
 		dnsHandler:                 dns.NewHandler(dnsService),
 		metricsHandler:             system.NewMetricsHandler(metricsService),
