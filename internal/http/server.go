@@ -13,6 +13,7 @@ import (
 	"codedock/internal/http/mcp"
 	"codedock/internal/http/middleware"
 	"codedock/internal/models"
+	aimod "codedock/internal/modules/ai"
 	appsmod "codedock/internal/modules/apps"
 	"codedock/internal/modules/audit"
 	"codedock/internal/modules/auth"
@@ -29,6 +30,7 @@ import (
 	modmigrations "codedock/internal/modules/migrations"
 	"codedock/internal/modules/organizations"
 	projectsmod "codedock/internal/modules/projects"
+	securitymod "codedock/internal/modules/security"
 	"codedock/internal/modules/servers"
 	"codedock/internal/modules/settings"
 	"codedock/internal/modules/users"
@@ -78,7 +80,7 @@ type Server struct {
 	settingsHandler            *settings.SettingsHandler
 	appearanceHandler          *users.AppearanceHandler
 	notifSettingsHandler       *system.NotificationSettingsHandler
-	aiSettingsHandler          *system.AISettingsHandler
+	aiSettingsHandler          *aimod.Handler
 	updaterHandler             *system.UpdaterHandler
 	userHandler                *users.UserHandler
 	authHandler                *auth.AuthHandler
@@ -126,7 +128,7 @@ type Server struct {
 	supportHandler             *system.SupportHandler
 	routeProtectionHandler     *environments.RouteProtectionHandler
 	edgeAuthHandler            *environments.EdgeAuthHandler
-	securityHandler            *system.SecurityHandler
+	securityHandler            *securitymod.Handler
 }
 
 func (s *Server) ServeHTTP(w http.ResponseWriter, r *http.Request) {

@@ -14,6 +14,7 @@ import (
 	"codedock/internal/handlers/system"
 	"codedock/internal/http/mcp"
 	"codedock/internal/http/middleware"
+	aimod "codedock/internal/modules/ai"
 	appsmod "codedock/internal/modules/apps"
 	"codedock/internal/modules/audit"
 	"codedock/internal/modules/auth"
@@ -231,7 +232,7 @@ func buildServerInstance(d *serverSetupDeps) (*Server, error) {
 		settingsHandler:            settingsmodule.NewSettingsHandler(d.settingsService),
 		appearanceHandler:          users.NewAppearanceHandler(d.userModRepo),
 		notifSettingsHandler:       system.NewNotificationSettingsHandler(d.notifSettingsService, d.orgRepo),
-		aiSettingsHandler:          system.NewAISettingsHandler(d.aiSettingsService),
+		aiSettingsHandler:          aimod.NewHandler(d.aiSettingsService),
 		updaterHandler:             system.NewUpdaterHandler(updaterService),
 		userHandler:                users.NewUserHandler(d.userService, d.mailerService, d.auditService),
 		authHandler:                d.authMod.AuthHandler,
@@ -275,7 +276,7 @@ func buildServerInstance(d *serverSetupDeps) (*Server, error) {
 		supportHandler:             system.NewSupportHandler(),
 		routeProtectionHandler:     protectionHandler,
 		edgeAuthHandler:            edgeAuthHandler,
-		securityHandler:            system.NewSecurityHandler(securityService),
+		securityHandler:            security.NewHandler(securityService),
 	}
 
 	if err := configureManaged(srv, d.db, d.v, d.serverRepo, d.userRepo, d.orgRepo, d.sshManager, d.operationService); err != nil {
