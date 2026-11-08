@@ -1,4 +1,4 @@
-package repositories
+package mail
 
 import (
 	"context"
@@ -9,28 +9,31 @@ import (
 
 	"github.com/google/uuid"
 	"github.com/jmoiron/sqlx"
-
-	"codedock/internal/models"
 )
 
-type MailRepository interface {
-	Create(ctx context.Context, server *models.MailServer) error
-	GetByID(ctx context.Context, id string) (*models.MailServer, error)
-	ListByOrganization(ctx context.Context, orgID string) ([]*models.MailServer, error)
+type Vault interface {
+	Encrypt(string) (string, error)
+	Decrypt(string) (string, error)
+}
+
+type Repository interface {
+	Create(ctx context.Context, server *MailServer) error
+	GetByID(ctx context.Context, id string) (*MailServer, error)
+	ListByOrganization(ctx context.Context, orgID string) ([]*MailServer, error)
 	Delete(ctx context.Context, id string) error
 }
 
-type MailRepo struct {
+type repo struct {
 	db    *sqlx.DB
 	mu    sync.Mutex
 	vault Vault
 }
 
-func NewMailRepo(db *sql.DB, v Vault) *MailRepo {
-	return &MailRepo{db: sqlx.NewDb(db, "pgx"), vault: v}
+func NewRepository(db *sql.DB, v Vault) Repository {
+	return &repo{db: sqlx.NewDb(db, "pgx"), vault: v}
 }
 
-func (r *MailRepo) Create(ctx context.Context, server *models.MailServer) error {
+func (r *repo) Create(ctx context.Context, server *MailServer) error {
 	if server.ID == "" {
 		server.ID = uuid.New().String()
 	}
@@ -56,8 +59,8 @@ func (r *MailRepo) Create(ctx context.Context, server *models.MailServer) error 
 	return nil
 }
 
-func (r *MailRepo) GetByID(ctx context.Context, id string) (*models.MailServer, error) {
-	var server models.MailServer
+func (r *repo) GetByID(ctx context.Context, id string) (*MailServer, error) {
+	var server MailServer
 	if err := r.db.GetContext(ctx, &server, `SELECT id, organization_id, server_id, domain, maild_url, webmail_url, api_token, created_at, updated_at FROM mail_servers WHERE id = $1`, id); err != nil {
 		return nil, fmt.Errorf("failed to get mail server: %w", err)
 	}
@@ -71,8 +74,8 @@ func (r *MailRepo) GetByID(ctx context.Context, id string) (*models.MailServer, 
 	return &server, nil
 }
 
-func (r *MailRepo) ListByOrganization(ctx context.Context, orgID string) ([]*models.MailServer, error) {
-	servers := []*models.MailServer{}
+func (r *repo) ListByOrganization(ctx context.Context, orgID string) ([]*MailServer, error) {
+	servers := []*MailServer{}
 	if err := r.db.SelectContext(ctx, &servers, `SELECT id, organization_id, server_id, domain, maild_url, webmail_url, api_token, created_at, updated_at FROM mail_servers WHERE organization_id = $1 ORDER BY domain`, orgID); err != nil {
 		return nil, fmt.Errorf("failed to list mail servers: %w", err)
 	}
@@ -82,7 +85,7 @@ func (r *MailRepo) ListByOrganization(ctx context.Context, orgID string) ([]*mod
 	return servers, nil
 }
 
-func (r *MailRepo) Delete(ctx context.Context, id string) error {
+func (r *repo) Delete(ctx context.Context, id string) error {
 	r.mu.Lock()
 	defer r.mu.Unlock()
 	result, err := r.db.ExecContext(ctx, `DELETE FROM mail_servers WHERE id = $1`, id)

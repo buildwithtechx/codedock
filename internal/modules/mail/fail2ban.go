@@ -8,8 +8,6 @@ import (
 	"strconv"
 	"strings"
 	"time"
-
-	"codedock/internal/models"
 )
 
 var (
@@ -86,7 +84,7 @@ func ParseFail2banStatus(output string) ([]string, error) {
 	return jails, nil
 }
 
-func ParseFail2banJailStatus(jail string, output string) (*models.Fail2banJail, error) {
+func ParseFail2banJailStatus(jail string, output string) (*Fail2banJail, error) {
 	headerMatch := jailHeaderRegex.FindStringSubmatch(output)
 	if headerMatch == nil || strings.TrimSpace(headerMatch[1]) != jail {
 		return nil, fmt.Errorf("output does not match expected jail %q", jail)
@@ -143,7 +141,7 @@ func ParseFail2banJailStatus(jail string, output string) (*models.Fail2banJail, 
 		return nil, fmt.Errorf("banned IP count mismatch: header reported %d but found %d", currentBanned, len(bannedIPs))
 	}
 
-	return &models.Fail2banJail{
+	return &Fail2banJail{
 		Jail:            jail,
 		CurrentlyFailed: currentFailed,
 		TotalFailed:     totalFailed,
@@ -153,8 +151,8 @@ func ParseFail2banJailStatus(jail string, output string) (*models.Fail2banJail, 
 	}, nil
 }
 
-func FormatFail2banSnapshot(jails []string, details map[string]models.Fail2banJail, canManage bool) *models.Fail2banStatusResponse {
-	return &models.Fail2banStatusResponse{
+func FormatFail2banSnapshot(jails []string, details map[string]Fail2banJail, canManage bool) *Fail2banStatusResponse {
+	return &Fail2banStatusResponse{
 		Jails:     jails,
 		Details:   details,
 		CheckedAt: time.Now().UTC().Format(time.RFC3339),

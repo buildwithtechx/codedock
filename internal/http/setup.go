@@ -26,13 +26,13 @@ import (
 	"codedock/internal/handlers/backups"
 	"codedock/internal/handlers/databases"
 	"codedock/internal/handlers/deployments"
-	"codedock/internal/handlers/mail"
 	"codedock/internal/handlers/projects"
 	"codedock/internal/handlers/system"
 	"codedock/internal/http/mcp"
 	"codedock/internal/http/middleware"
 	"codedock/internal/models"
 	"codedock/internal/modules/chatapps"
+	mailmodule "codedock/internal/modules/mail"
 	"codedock/internal/modules/security"
 	"codedock/internal/notifications"
 	"codedock/internal/repositories"
@@ -40,7 +40,6 @@ import (
 	backupservices "codedock/internal/services/backups"
 	databaseservices "codedock/internal/services/databases"
 	deploymentservices "codedock/internal/services/deployments"
-	mailservices "codedock/internal/services/mail"
 	"codedock/internal/services/operations"
 	projectservices "codedock/internal/services/projects"
 	systemservices "codedock/internal/services/system"
@@ -368,9 +367,9 @@ func NewServer(db *sql.DB, v *utils.Vault, deployer *deploy.Deployer, traefikMan
 	routeRuleService := systemservices.NewRouteRuleService(routeRuleRepo)
 	routeRuleHandler := projects.NewRouteRuleHandler(routeRuleService, appRepo)
 
-	mailRepo := repositories.NewMailRepo(db, v)
-	mailService := mailservices.NewMailService(mailRepo)
-	mailHandler := mail.NewMailHandler(mailService, projectService, auditService)
+	mailRepo := mailmodule.NewRepository(db, v)
+	mailService := mailmodule.NewService(mailRepo)
+	mailHandler := mailmodule.NewHandler(mailService, projectService, auditService)
 
 	authLimiter := middleware.NewRateLimiter(10, time.Minute)
 	otpLimiter := middleware.NewRateLimiter(5, time.Minute)

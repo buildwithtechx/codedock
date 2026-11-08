@@ -8,33 +8,30 @@ import (
 	"net/http"
 	"net/http/httptest"
 	"testing"
-
-	"codedock/internal/models"
-	"codedock/internal/repositories"
 )
 
 type stubMailRepo struct {
-	server *models.MailServer
+	server *MailServer
 }
 
-func (s *stubMailRepo) Create(ctx context.Context, server *models.MailServer) error {
+func (s *stubMailRepo) Create(ctx context.Context, server *MailServer) error {
 	s.server = server
 	return nil
 }
 
-func (s *stubMailRepo) GetByID(ctx context.Context, id string) (*models.MailServer, error) {
+func (s *stubMailRepo) GetByID(ctx context.Context, id string) (*MailServer, error) {
 	return s.server, nil
 }
 
-func (s *stubMailRepo) ListByOrganization(ctx context.Context, orgID string) ([]*models.MailServer, error) {
-	return []*models.MailServer{s.server}, nil
+func (s *stubMailRepo) ListByOrganization(ctx context.Context, orgID string) ([]*MailServer, error) {
+	return []*MailServer{s.server}, nil
 }
 
 func (s *stubMailRepo) Delete(ctx context.Context, id string) error {
 	return nil
 }
 
-var _ repositories.MailRepository = (*stubMailRepo)(nil)
+var _ Repository = (*stubMailRepo)(nil)
 
 type capturedMailRequest struct {
 	method string
@@ -43,7 +40,7 @@ type capturedMailRequest struct {
 	body   map[string]any
 }
 
-func newMailStub(t *testing.T, status int, response string, captured *capturedMailRequest) *MailService {
+func newMailStub(t *testing.T, status int, response string, captured *capturedMailRequest) *Service {
 	t.Helper()
 	var stubServer *httptest.Server
 	stubServer = httptest.NewServer(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
@@ -60,7 +57,7 @@ func newMailStub(t *testing.T, status int, response string, captured *capturedMa
 		_, _ = w.Write([]byte(response))
 	}))
 	t.Cleanup(stubServer.Close)
-	return NewMailService(&stubMailRepo{server: &models.MailServer{
+	return NewService(&stubMailRepo{server: &MailServer{
 		ID:       "srv-1",
 		MaildURL: stubServer.URL,
 		APIToken: "token-123",
@@ -113,8 +110,8 @@ func TestDeleteNoContent(t *testing.T) {
 }
 
 func TestCreateServerValidation(t *testing.T) {
-	service := NewMailService(&stubMailRepo{})
-	if _, err := service.CreateServer(context.Background(), &models.CreateMailServerRequest{}); err == nil {
+	service := NewService(&stubMailRepo{})
+	if _, err := service.CreateServer(context.Background(), &CreateMailServerRequest{}); err == nil {
 		t.Fatalf("expected validation error")
 	}
 }

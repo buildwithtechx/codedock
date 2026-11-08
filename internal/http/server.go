@@ -17,13 +17,13 @@ import (
 	"codedock/internal/handlers/backups"
 	"codedock/internal/handlers/databases"
 	"codedock/internal/handlers/deployments"
-	"codedock/internal/handlers/mail"
 	"codedock/internal/handlers/projects"
 	"codedock/internal/handlers/system"
 	"codedock/internal/http/mcp"
 	"codedock/internal/http/middleware"
 	"codedock/internal/models"
 	"codedock/internal/modules/chatapps"
+	mailmodule "codedock/internal/modules/mail"
 	authservices "codedock/internal/services/auth"
 	"codedock/internal/services/migrations"
 	projectservices "codedock/internal/services/projects"
@@ -105,7 +105,7 @@ type Server struct {
 	serviceLogsWSHandler      *system.ServiceLogsWSHandler
 	takeoverHandler           *system.TakeoverHandler
 	routeRuleHandler          *projects.RouteRuleHandler
-	mailHandler               *mail.MailHandler
+	mailHandler               *mailmodule.Handler
 	ingressHandler            *system.IngressHandler
 	serverNetworksHandler     *system.ServerNetworksHandler
 	actionsHandler            *system.ActionsHandler

@@ -3,31 +3,32 @@ package mail
 import (
 	"bytes"
 	"context"
+	"database/sql"
 	"encoding/json"
+	"errors"
 	"fmt"
 	"io"
 	"net/http"
 	"strings"
-	"time"
-
-	"codedock/internal/models"
-	"codedock/internal/repositories"
 )
 
-type MailService struct {
-	repo   repositories.MailRepository
+type Service struct {
+	repo   Repository
 	client *http.Client
 }
 
-func NewMailService(repo repositories.MailRepository) *MailService {
-	return &MailService{repo: repo, client: &http.Client{Timeout: 15 * time.Second}}
+func NewService(repo Repository) *Service {
+	return &Service{
+		repo:   repo,
+		client: &http.Client{Timeout: DefaultHTTPTimeout},
+	}
 }
 
-func (s *MailService) CreateServer(ctx context.Context, req *models.CreateMailServerRequest) (*models.MailServer, error) {
+func (s *Service) CreateServer(ctx context.Context, req *CreateMailServerRequest) (*MailServer, error) {
 	if req.OrganizationID == "" || req.Domain == "" || req.MaildURL == "" || req.APIToken == "" {
-		return nil, fmt.Errorf("organization, domain, maild url, and api token are required")
+		return nil, ErrServerRequired
 	}
-	server := &models.MailServer{
+	server := &MailServer{
 		OrganizationID: req.OrganizationID,
 		ServerID:       req.ServerID,
 		Domain:         strings.TrimSpace(req.Domain),
@@ -41,53 +42,53 @@ func (s *MailService) CreateServer(ctx context.Context, req *models.CreateMailSe
 	return server, nil
 }
 
-func (s *MailService) ListServers(ctx context.Context, orgID string) ([]*models.MailServer, error) {
+func (s *Service) ListServers(ctx context.Context, orgID string) ([]*MailServer, error) {
 	return s.repo.ListByOrganization(ctx, orgID)
 }
 
-func (s *MailService) GetServer(ctx context.Context, id string) (*models.MailServer, error) {
+func (s *Service) GetServer(ctx context.Context, id string) (*MailServer, error) {
 	server, err := s.repo.GetByID(ctx, id)
 	if err != nil {
-		return nil, mapRepoError(err)
+		return nil, s.mapRepoError(err)
 	}
 	return server, nil
 }
 
-func (s *MailService) DeleteServer(ctx context.Context, id string) error {
+func (s *Service) DeleteServer(ctx context.Context, id string) error {
 	if err := s.repo.Delete(ctx, id); err != nil {
-		return mapRepoError(err)
+		return s.mapRepoError(err)
 	}
 	return nil
 }
 
-func (s *MailService) ListDomains(ctx context.Context, id string) ([]models.MailDomain, error) {
+func (s *Service) ListDomains(ctx context.Context, id string) ([]MailDomain, error) {
 	server, err := s.resolve(ctx, id)
 	if err != nil {
 		return nil, err
 	}
-	var domains []models.MailDomain
+	var domains []MailDomain
 	if err := s.do(ctx, server, http.MethodGet, "/api/domains", nil, &domains); err != nil {
 		return nil, err
 	}
 	if domains == nil {
-		domains = []models.MailDomain{}
+		domains = []MailDomain{}
 	}
 	return domains, nil
 }
 
-func (s *MailService) CreateDomain(ctx context.Context, id, name string) (*models.MailDomain, error) {
+func (s *Service) CreateDomain(ctx context.Context, id, name string) (*MailDomain, error) {
 	server, err := s.resolve(ctx, id)
 	if err != nil {
 		return nil, err
 	}
-	var domain models.MailDomain
-	if err := s.do(ctx, server, http.MethodPost, "/api/domains", models.CreateMailDomainRequest{Name: name}, &domain); err != nil {
+	var domain MailDomain
+	if err := s.do(ctx, server, http.MethodPost, "/api/domains", CreateMailDomainRequest{Name: name}, &domain); err != nil {
 		return nil, err
 	}
 	return &domain, nil
 }
 
-func (s *MailService) DeleteDomain(ctx context.Context, id, domainID string) error {
+func (s *Service) DeleteDomain(ctx context.Context, id, domainID string) error {
 	server, err := s.resolve(ctx, id)
 	if err != nil {
 		return err
@@ -95,34 +96,34 @@ func (s *MailService) DeleteDomain(ctx context.Context, id, domainID string) err
 	return s.do(ctx, server, http.MethodDelete, "/api/domains/"+domainID, nil, nil)
 }
 
-func (s *MailService) ListMailboxes(ctx context.Context, id, domainID string) ([]models.Mailbox, error) {
+func (s *Service) ListMailboxes(ctx context.Context, id, domainID string) ([]Mailbox, error) {
 	server, err := s.resolve(ctx, id)
 	if err != nil {
 		return nil, err
 	}
-	var mailboxes []models.Mailbox
+	var mailboxes []Mailbox
 	if err := s.do(ctx, server, http.MethodGet, "/api/domains/"+domainID+"/mailboxes", nil, &mailboxes); err != nil {
 		return nil, err
 	}
 	if mailboxes == nil {
-		mailboxes = []models.Mailbox{}
+		mailboxes = []Mailbox{}
 	}
 	return mailboxes, nil
 }
 
-func (s *MailService) CreateMailbox(ctx context.Context, id, domainID, localPart string) (*models.MailboxCredentials, error) {
+func (s *Service) CreateMailbox(ctx context.Context, id, domainID, localPart string) (*MailboxCredentials, error) {
 	server, err := s.resolve(ctx, id)
 	if err != nil {
 		return nil, err
 	}
-	var credentials models.MailboxCredentials
-	if err := s.do(ctx, server, http.MethodPost, "/api/domains/"+domainID+"/mailboxes", models.CreateMailboxRequest{LocalPart: localPart}, &credentials); err != nil {
+	var credentials MailboxCredentials
+	if err := s.do(ctx, server, http.MethodPost, "/api/domains/"+domainID+"/mailboxes", CreateMailboxRequest{LocalPart: localPart}, &credentials); err != nil {
 		return nil, err
 	}
 	return &credentials, nil
 }
 
-func (s *MailService) DeleteMailbox(ctx context.Context, id, domainID, mailboxID string) error {
+func (s *Service) DeleteMailbox(ctx context.Context, id, domainID, mailboxID string) error {
 	server, err := s.resolve(ctx, id)
 	if err != nil {
 		return err
@@ -130,31 +131,31 @@ func (s *MailService) DeleteMailbox(ctx context.Context, id, domainID, mailboxID
 	return s.do(ctx, server, http.MethodDelete, "/api/domains/"+domainID+"/mailboxes/"+mailboxID, nil, nil)
 }
 
-func (s *MailService) CreateDKIM(ctx context.Context, id, domainID, selector, algorithm string) (*models.DKIMKey, error) {
+func (s *Service) CreateDKIM(ctx context.Context, id, domainID, selector, algorithm string) (*DKIMKey, error) {
 	server, err := s.resolve(ctx, id)
 	if err != nil {
 		return nil, err
 	}
-	var key models.DKIMKey
-	if err := s.do(ctx, server, http.MethodPost, "/api/domains/"+domainID+"/dkim", models.CreateDKIMRequest{Selector: selector, Algorithm: algorithm}, &key); err != nil {
+	var key DKIMKey
+	if err := s.do(ctx, server, http.MethodPost, "/api/domains/"+domainID+"/dkim", CreateDKIMRequest{Selector: selector, Algorithm: algorithm}, &key); err != nil {
 		return nil, err
 	}
 	return &key, nil
 }
 
-func (s *MailService) GetDNS(ctx context.Context, id, domainID string) (*models.DNSResponse, error) {
+func (s *Service) GetDNS(ctx context.Context, id, domainID string) (*DNSResponse, error) {
 	server, err := s.resolve(ctx, id)
 	if err != nil {
 		return nil, err
 	}
-	var response models.DNSResponse
+	var response DNSResponse
 	if err := s.do(ctx, server, http.MethodGet, "/api/domains/"+domainID+"/dns", nil, &response); err != nil {
 		return nil, err
 	}
 	return &response, nil
 }
 
-func (s *MailService) GetChecks(ctx context.Context, id, domainID, ip string) (*models.MailCheckReport, error) {
+func (s *Service) GetChecks(ctx context.Context, id, domainID, ip string) (*MailCheckReport, error) {
 	server, err := s.resolve(ctx, id)
 	if err != nil {
 		return nil, err
@@ -163,41 +164,41 @@ func (s *MailService) GetChecks(ctx context.Context, id, domainID, ip string) (*
 	if ip != "" {
 		path += "?ip=" + ip
 	}
-	var report models.MailCheckReport
+	var report MailCheckReport
 	if err := s.do(ctx, server, http.MethodGet, path, nil, &report); err != nil {
 		return nil, err
 	}
 	return &report, nil
 }
 
-func (s *MailService) ListCerts(ctx context.Context, id string) ([]models.MailCert, error) {
+func (s *Service) ListCerts(ctx context.Context, id string) ([]MailCert, error) {
 	server, err := s.resolve(ctx, id)
 	if err != nil {
 		return nil, err
 	}
-	var certs []models.MailCert
+	var certs []MailCert
 	if err := s.do(ctx, server, http.MethodGet, "/api/certs", nil, &certs); err != nil {
 		return nil, err
 	}
 	if certs == nil {
-		certs = []models.MailCert{}
+		certs = []MailCert{}
 	}
 	return certs, nil
 }
 
-func (s *MailService) ProbeCert(ctx context.Context, id, host string, port int) (*models.MailCert, error) {
+func (s *Service) ProbeCert(ctx context.Context, id, host string, port int) (*MailCert, error) {
 	server, err := s.resolve(ctx, id)
 	if err != nil {
 		return nil, err
 	}
-	var cert models.MailCert
-	if err := s.do(ctx, server, http.MethodPost, "/api/certs/probe", models.ProbeMailCertRequest{Host: host, Port: port}, &cert); err != nil {
+	var cert MailCert
+	if err := s.do(ctx, server, http.MethodPost, "/api/certs/probe", ProbeMailCertRequest{Host: host, Port: port}, &cert); err != nil {
 		return nil, err
 	}
 	return &cert, nil
 }
 
-func (s *MailService) GetFail2banStatus(ctx context.Context, id, jail string) (*models.Fail2banStatusResponse, error) {
+func (s *Service) GetFail2banStatus(ctx context.Context, id, jail string) (*Fail2banStatusResponse, error) {
 	server, err := s.resolve(ctx, id)
 	if err != nil {
 		return nil, err
@@ -209,7 +210,7 @@ func (s *MailService) GetFail2banStatus(ctx context.Context, id, jail string) (*
 		}
 		path += "?jail=" + jail
 	}
-	var resp models.Fail2banStatusResponse
+	var resp Fail2banStatusResponse
 	if err := s.do(ctx, server, http.MethodGet, path, nil, &resp); err != nil {
 		return nil, err
 	}
@@ -217,7 +218,7 @@ func (s *MailService) GetFail2banStatus(ctx context.Context, id, jail string) (*
 	return &resp, nil
 }
 
-func (s *MailService) BanIP(ctx context.Context, id, ip, jail string) (*models.Fail2banActionResponse, error) {
+func (s *Service) BanIP(ctx context.Context, id, ip, jail string) (*Fail2banActionResponse, error) {
 	if err := ValidateIP(ip); err != nil {
 		return nil, err
 	}
@@ -228,15 +229,15 @@ func (s *MailService) BanIP(ctx context.Context, id, ip, jail string) (*models.F
 	if err != nil {
 		return nil, err
 	}
-	var resp models.Fail2banActionResponse
-	req := models.Fail2banActionRequest{IP: ip, Jail: jail}
+	var resp Fail2banActionResponse
+	req := Fail2banActionRequest{IP: ip, Jail: jail}
 	if err := s.do(ctx, server, http.MethodPost, "/api/fail2ban/ban", req, &resp); err != nil {
 		return nil, err
 	}
 	return &resp, nil
 }
 
-func (s *MailService) UnbanIP(ctx context.Context, id, ip, jail string) (*models.Fail2banActionResponse, error) {
+func (s *Service) UnbanIP(ctx context.Context, id, ip, jail string) (*Fail2banActionResponse, error) {
 	if err := ValidateIP(ip); err != nil {
 		return nil, err
 	}
@@ -249,30 +250,30 @@ func (s *MailService) UnbanIP(ctx context.Context, id, ip, jail string) (*models
 	if err != nil {
 		return nil, err
 	}
-	var resp models.Fail2banActionResponse
-	req := models.Fail2banActionRequest{IP: ip, Jail: jail}
+	var resp Fail2banActionResponse
+	req := Fail2banActionRequest{IP: ip, Jail: jail}
 	if err := s.do(ctx, server, http.MethodPost, "/api/fail2ban/unban", req, &resp); err != nil {
 		return nil, err
 	}
 	return &resp, nil
 }
 
-func (s *MailService) ListAliases(ctx context.Context, id, domainID string) ([]models.MailAlias, error) {
+func (s *Service) ListAliases(ctx context.Context, id, domainID string) ([]MailAlias, error) {
 	server, err := s.resolve(ctx, id)
 	if err != nil {
 		return nil, err
 	}
-	var aliases []models.MailAlias
+	var aliases []MailAlias
 	if err := s.do(ctx, server, http.MethodGet, "/api/domains/"+domainID+"/aliases", nil, &aliases); err != nil {
 		return nil, err
 	}
 	if aliases == nil {
-		aliases = []models.MailAlias{}
+		aliases = []MailAlias{}
 	}
 	return aliases, nil
 }
 
-func (s *MailService) CreateAlias(ctx context.Context, id, domainID string, req models.CreateMailAliasRequest) (*models.MailAlias, error) {
+func (s *Service) CreateAlias(ctx context.Context, id, domainID string, req CreateMailAliasRequest) (*MailAlias, error) {
 	server, err := s.resolve(ctx, id)
 	if err != nil {
 		return nil, err
@@ -282,14 +283,14 @@ func (s *MailService) CreateAlias(ctx context.Context, id, domainID string, req 
 	if req.Source == "" || req.Destination == "" {
 		return nil, fmt.Errorf("source and destination are required")
 	}
-	var alias models.MailAlias
+	var alias MailAlias
 	if err := s.do(ctx, server, http.MethodPost, "/api/domains/"+domainID+"/aliases", req, &alias); err != nil {
 		return nil, err
 	}
 	return &alias, nil
 }
 
-func (s *MailService) DeleteAlias(ctx context.Context, id, domainID, aliasID string) error {
+func (s *Service) DeleteAlias(ctx context.Context, id, domainID, aliasID string) error {
 	server, err := s.resolve(ctx, id)
 	if err != nil {
 		return err
@@ -297,10 +298,10 @@ func (s *MailService) DeleteAlias(ctx context.Context, id, domainID, aliasID str
 	return s.do(ctx, server, http.MethodDelete, "/api/domains/"+domainID+"/aliases/"+aliasID, nil, nil)
 }
 
-func (s *MailService) resolve(ctx context.Context, id string) (*models.MailServer, error) {
+func (s *Service) resolve(ctx context.Context, id string) (*MailServer, error) {
 	server, err := s.repo.GetByID(ctx, id)
 	if err != nil {
-		return nil, mapRepoError(err)
+		return nil, s.mapRepoError(err)
 	}
 	return server, nil
 }
@@ -312,7 +313,7 @@ func v1Path(path string) string {
 	return path
 }
 
-func (s *MailService) do(ctx context.Context, server *models.MailServer, method, path string, body any, out any) error {
+func (s *Service) do(ctx context.Context, server *MailServer, method, path string, body any, out any) error {
 	var encoded []byte
 	if body != nil {
 		var err error
@@ -362,7 +363,7 @@ func (s *MailService) do(ctx context.Context, server *models.MailServer, method,
 		return nil
 	}
 	if resp.StatusCode >= 400 {
-		return mapStatusError(resp.StatusCode, raw)
+		return s.mapStatusError(resp.StatusCode, raw)
 	}
 	if out != nil && len(raw) > 0 {
 		if err := json.Unmarshal(raw, out); err != nil {
@@ -370,4 +371,29 @@ func (s *MailService) do(ctx context.Context, server *models.MailServer, method,
 		}
 	}
 	return nil
+}
+
+func (s *Service) mapStatusError(status int, raw []byte) error {
+	var payload struct {
+		Error string `json:"error"`
+	}
+	message := strings.TrimSpace(string(raw))
+	if err := json.Unmarshal(raw, &payload); err == nil && payload.Error != "" {
+		message = payload.Error
+	}
+	switch status {
+	case http.StatusNotFound:
+		return ErrMailNotFound
+	case http.StatusConflict:
+		return ErrMailExists
+	default:
+		return fmt.Errorf("maild: status %d: %s", status, message)
+	}
+}
+
+func (s *Service) mapRepoError(err error) error {
+	if errors.Is(err, sql.ErrNoRows) {
+		return ErrMailNotFound
+	}
+	return err
 }

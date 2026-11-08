@@ -8,8 +8,6 @@ import (
 	"net/http/httptest"
 	"strings"
 	"testing"
-
-	"codedock/internal/models"
 )
 
 type recordedCall struct {
@@ -39,14 +37,14 @@ func newMaildStub(t *testing.T, calls *[]recordedCall, bodies map[string][]byte)
 	register := func(base string) {
 		mux.HandleFunc(base+"/domains", func(w http.ResponseWriter, r *http.Request) {
 			if r.Method == http.MethodGet {
-				respond(w, r, http.StatusOK, []models.MailDomain{{ID: "dom-1", Name: "example.com"}})
+				respond(w, r, http.StatusOK, []MailDomain{{ID: "dom-1", Name: "example.com"}})
 				return
 			}
-			var req models.CreateMailDomainRequest
+			var req CreateMailDomainRequest
 			raw, _ := io.ReadAll(r.Body)
 			_ = json.Unmarshal(raw, &req)
 			bodies["create-domain"] = raw
-			respond(w, r, http.StatusCreated, models.MailDomain{ID: "dom-2", Name: req.Name})
+			respond(w, r, http.StatusCreated, MailDomain{ID: "dom-2", Name: req.Name})
 		})
 		mux.HandleFunc(base+"/domains/", func(w http.ResponseWriter, r *http.Request) {
 			rest := strings.TrimPrefix(r.URL.Path, base+"/domains/")
@@ -54,19 +52,19 @@ func newMaildStub(t *testing.T, calls *[]recordedCall, bodies map[string][]byte)
 			case rest == "missing":
 				respond(w, r, http.StatusNotFound, map[string]string{"error": "nope"})
 			case strings.HasSuffix(rest, "/mailboxes") && r.Method == http.MethodGet:
-				respond(w, r, http.StatusOK, []models.Mailbox{{ID: "mb-1", DomainID: "dom-1", LocalPart: "ops", Address: "ops@example.com"}})
+				respond(w, r, http.StatusOK, []Mailbox{{ID: "mb-1", DomainID: "dom-1", LocalPart: "ops", Address: "ops@example.com"}})
 			case strings.HasSuffix(rest, "/mailboxes") && r.Method == http.MethodPost:
-				var req models.CreateMailboxRequest
+				var req CreateMailboxRequest
 				raw, _ := io.ReadAll(r.Body)
 				_ = json.Unmarshal(raw, &req)
 				bodies["create-mailbox"] = raw
-				respond(w, r, http.StatusCreated, models.MailboxCredentials{Mailbox: models.Mailbox{ID: "mb-2", DomainID: "dom-1", LocalPart: req.LocalPart}, Password: "secret"})
+				respond(w, r, http.StatusCreated, MailboxCredentials{Mailbox: Mailbox{ID: "mb-2", DomainID: "dom-1", LocalPart: req.LocalPart}, Password: "secret"})
 			case strings.HasSuffix(rest, "/dkim"):
-				respond(w, r, http.StatusCreated, models.DKIMKey{ID: "key-1", DomainID: "dom-1", Selector: "mail", Algorithm: "rsa"})
+				respond(w, r, http.StatusCreated, DKIMKey{ID: "key-1", DomainID: "dom-1", Selector: "mail", Algorithm: "rsa"})
 			case strings.HasSuffix(rest, "/dns"):
-				respond(w, r, http.StatusOK, models.DNSResponse{Domain: "example.com", Records: []models.MailDNSRecord{}})
+				respond(w, r, http.StatusOK, DNSResponse{Domain: "example.com", Records: []MailDNSRecord{}})
 			case strings.HasSuffix(rest, "/checks"):
-				respond(w, r, http.StatusOK, models.MailCheckReport{Domain: "example.com", Checks: []models.MailCheck{}})
+				respond(w, r, http.StatusOK, MailCheckReport{Domain: "example.com", Checks: []MailCheck{}})
 			case r.Method == http.MethodDelete:
 				respond(w, r, http.StatusNoContent, nil)
 			default:
@@ -74,10 +72,10 @@ func newMaildStub(t *testing.T, calls *[]recordedCall, bodies map[string][]byte)
 			}
 		})
 		mux.HandleFunc(base+"/certs", func(w http.ResponseWriter, r *http.Request) {
-			respond(w, r, http.StatusOK, []models.MailCert{{ID: "cert-1", Hostname: "mail.example.com"}})
+			respond(w, r, http.StatusOK, []MailCert{{ID: "cert-1", Hostname: "mail.example.com"}})
 		})
 		mux.HandleFunc(base+"/certs/probe", func(w http.ResponseWriter, r *http.Request) {
-			respond(w, r, http.StatusOK, models.MailCert{ID: "cert-1", Hostname: "mail.example.com"})
+			respond(w, r, http.StatusOK, MailCert{ID: "cert-1", Hostname: "mail.example.com"})
 		})
 	}
 	register("/api/v1")
@@ -89,7 +87,7 @@ func TestMaildContractPaths(t *testing.T) {
 	bodies := map[string][]byte{}
 	maild := newMaildStub(t, &calls, bodies)
 	defer maild.Close()
-	service := NewMailService(&stubMailRepo{server: &models.MailServer{ID: "srv-1", MaildURL: maild.URL, APIToken: "test-token"}})
+	service := NewService(&stubMailRepo{server: &MailServer{ID: "srv-1", MaildURL: maild.URL, APIToken: "test-token"}})
 	ctx := context.Background()
 
 	if _, err := service.ListDomains(ctx, "srv-1"); err != nil {
@@ -163,7 +161,7 @@ func TestMaildContractNotFound(t *testing.T) {
 	var calls []recordedCall
 	maild := newMaildStub(t, &calls, map[string][]byte{})
 	defer maild.Close()
-	service := NewMailService(&stubMailRepo{server: &models.MailServer{ID: "srv-1", MaildURL: maild.URL, APIToken: "test-token"}})
+	service := NewService(&stubMailRepo{server: &MailServer{ID: "srv-1", MaildURL: maild.URL, APIToken: "test-token"}})
 	err := service.DeleteDomain(context.Background(), "srv-1", "missing")
 	if err != ErrMailNotFound {
 		t.Fatalf("expected not-found mapping, got %v", err)
@@ -171,7 +169,7 @@ func TestMaildContractNotFound(t *testing.T) {
 }
 
 func TestMaildUnreachable(t *testing.T) {
-	service := NewMailService(&stubMailRepo{server: &models.MailServer{ID: "srv-1", MaildURL: "http://127.0.0.1:1", APIToken: "test-token"}})
+	service := NewService(&stubMailRepo{server: &MailServer{ID: "srv-1", MaildURL: "http://127.0.0.1:1", APIToken: "test-token"}})
 	_, err := service.ListDomains(context.Background(), "srv-1")
 	if err == nil || !strings.Contains(err.Error(), "unreachable") {
 		t.Fatalf("expected unreachable error, got %v", err)
@@ -182,12 +180,12 @@ func TestMaildContractFallbackToUnversioned(t *testing.T) {
 	mux := http.NewServeMux()
 	mux.HandleFunc("/api/domains", func(w http.ResponseWriter, r *http.Request) {
 		w.Header().Set("Content-Type", "application/json")
-		_ = json.NewEncoder(w).Encode([]models.MailDomain{{ID: "dom-fallback", Name: "fallback.com"}})
+		_ = json.NewEncoder(w).Encode([]MailDomain{{ID: "dom-fallback", Name: "fallback.com"}})
 	})
 	server := httptest.NewServer(mux)
 	defer server.Close()
 
-	svc := NewMailService(&stubMailRepo{server: &models.MailServer{ID: "srv-legacy", MaildURL: server.URL, APIToken: "token"}})
+	svc := NewService(&stubMailRepo{server: &MailServer{ID: "srv-legacy", MaildURL: server.URL, APIToken: "token"}})
 	domains, err := svc.ListDomains(context.Background(), "srv-legacy")
 	if err != nil {
 		t.Fatalf("expected fallback to succeed, got %v", err)

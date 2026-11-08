@@ -1,4 +1,4 @@
-package models
+package mail
 
 type MailServer struct {
 	ID             string `json:"id" db:"id"`
@@ -12,24 +12,11 @@ type MailServer struct {
 	UpdatedAt      string `json:"updatedAt" db:"updated_at"`
 }
 
-type CreateMailServerRequest struct {
-	OrganizationID string `json:"organizationId"`
-	ServerID       string `json:"serverId,omitempty"`
-	Domain         string `json:"domain"`
-	MaildURL       string `json:"maildUrl"`
-	WebmailURL     string `json:"webmailUrl,omitempty"`
-	APIToken       string `json:"apiToken"`
-}
-
 type MailDomain struct {
 	ID        string `json:"id"`
 	Name      string `json:"name"`
 	CreatedAt string `json:"createdAt"`
 	UpdatedAt string `json:"updatedAt"`
-}
-
-type CreateMailDomainRequest struct {
-	Name string `json:"name"`
 }
 
 type Mailbox struct {
@@ -41,18 +28,9 @@ type Mailbox struct {
 	UpdatedAt string `json:"updatedAt"`
 }
 
-type CreateMailboxRequest struct {
-	LocalPart string `json:"localPart"`
-}
-
 type MailboxCredentials struct {
 	Mailbox
 	Password string `json:"password,omitempty"`
-}
-
-type CreateDKIMRequest struct {
-	Selector  string `json:"selector"`
-	Algorithm string `json:"algorithm"`
 }
 
 type DKIMKey struct {
@@ -98,11 +76,6 @@ type MailCert struct {
 	UpdatedAt string `json:"updatedAt"`
 }
 
-type ProbeMailCertRequest struct {
-	Host string `json:"host"`
-	Port int    `json:"port"`
-}
-
 type Fail2banJail struct {
 	Jail            string   `json:"jail"`
 	CurrentlyFailed int      `json:"currentlyFailed"`
@@ -119,11 +92,6 @@ type Fail2banStatusResponse struct {
 	CanManage bool                    `json:"canManage"`
 }
 
-type Fail2banActionRequest struct {
-	IP   string `json:"ip"`
-	Jail string `json:"jail,omitempty"`
-}
-
 type Fail2banActionResponse struct {
 	Success bool   `json:"success"`
 	Output  string `json:"output,omitempty"`
@@ -137,9 +105,4 @@ type MailAlias struct {
 	Active      bool   `json:"active"`
 	CreatedAt   string `json:"createdAt"`
 	UpdatedAt   string `json:"updatedAt"`
-}
-
-type CreateMailAliasRequest struct {
-	Source      string `json:"source"`
-	Destination string `json:"destination"`
 }
