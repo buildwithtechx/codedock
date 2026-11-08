@@ -100,4 +100,3 @@ func (r *repo) Delete(ctx context.Context, id string) error {
 	_, err := r.db.ExecContext(ctx, `DELETE FROM dns_records WHERE id = $1`, id)
 	return err
 }
-

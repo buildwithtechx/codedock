@@ -101,4 +101,3 @@ func (h *Handler) Delete(c echo.Context) error {
 	}
 	return c.NoContent(http.StatusNoContent)
 }
-

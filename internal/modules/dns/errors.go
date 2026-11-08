@@ -9,4 +9,3 @@ var (
 	ErrInvalidPayload = errors.New("invalid request payload")
 	ErrMissingID      = errors.New("missing record id")
 )
-

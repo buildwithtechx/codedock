@@ -30,4 +30,3 @@ func (s *ProviderService) ProvisionRecord(ctx context.Context, domain, recordTyp
 func (s *ProviderService) DeprovisionRecord(ctx context.Context, domain, recordType, value, provider string) error {
 	return s.providers.DeprovisionRecord(ctx, domain, recordType, value, provider)
 }
-

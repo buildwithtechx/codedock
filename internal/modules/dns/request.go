@@ -14,4 +14,3 @@ type UpdateDNSRecordRequest struct {
 	RecordValue string `json:"recordValue"`
 	TTL         int    `json:"ttl,omitempty"`
 }
-

@@ -5,4 +5,3 @@ const (
 	ProvisionStatusSuccess = "provisioned"
 	ProvisionStatusFailed  = "failed"
 )
-

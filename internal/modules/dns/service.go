@@ -81,4 +81,3 @@ func (s *Service) UpdateRecord(ctx context.Context, id string, req *UpdateDNSRec
 func (s *Service) DeleteRecord(ctx context.Context, id string) error {
 	return s.repo.Delete(ctx, id)
 }
-

@@ -32,4 +32,3 @@ func RedactAISettings(s *AISettings) *AISettings {
 	}
 	return &cp
 }
-

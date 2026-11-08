@@ -159,4 +159,3 @@ func (s *Service) DiagnoseLogs(ctx context.Context, logs string) (string, error)
 
 	return result.Choices[0].Message.Content, nil
 }
-

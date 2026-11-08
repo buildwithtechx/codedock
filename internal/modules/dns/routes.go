@@ -15,4 +15,3 @@ func RegisterRoutes(authGroup *echo.Group, h *Handler, middleware ...echo.Middle
 	authGroup.PUT("/dns/:id", h.Update, middleware...)
 	authGroup.DELETE("/dns/:id", h.Delete, middleware...)
 }
-

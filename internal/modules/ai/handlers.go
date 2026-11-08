@@ -107,4 +107,3 @@ func (h *Handler) DiagnoseLogs(c echo.Context) error {
 
 	return c.String(http.StatusOK, diagnosis)
 }
-

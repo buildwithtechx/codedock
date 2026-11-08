@@ -102,4 +102,3 @@ func TestRegisterRoutes_NilSafety(t *testing.T) {
 		RegisterRoutes(authGroup, apiGroup, nil, nil)
 	})
 }
-

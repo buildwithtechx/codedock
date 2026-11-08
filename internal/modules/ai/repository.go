@@ -114,4 +114,3 @@ func (r *repo) UpdateAISettings(ctx context.Context, cfg *AISettings) error {
 	}
 	return nil
 }
-

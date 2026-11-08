@@ -7,4 +7,3 @@ type UpdateAISettingsRequest struct {
 type AIDiagnoseRequest struct {
 	Prompt string `json:"prompt"`
 }
-

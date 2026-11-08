@@ -85,4 +85,3 @@ func TestAIService_GetAndUpdate(t *testing.T) {
 	require.NoError(t, err)
 	assert.Equal(t, "gpt-4.5", updated.OpenAIModel)
 }
-

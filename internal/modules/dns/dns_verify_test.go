@@ -36,4 +36,3 @@ func TestEvaluateResolvedIPs_MixedRecords(t *testing.T) {
 		t.Fatalf("expected resolvedIP to report the matching address, got %q", resolvedIP)
 	}
 }
-

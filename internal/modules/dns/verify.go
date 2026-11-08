@@ -57,4 +57,3 @@ func VerifyDomain(ctx context.Context, domainName, expectedIP string) (bool, str
 	verified, resolvedIP := evaluateResolvedIPs(ips, expectedIP)
 	return verified, resolvedIP, nil
 }
-

@@ -116,4 +116,3 @@ func TestDNSService_CRUD(t *testing.T) {
 		t.Fatalf("expected 0 records after delete, got %d", len(afterDelete))
 	}
 }
-

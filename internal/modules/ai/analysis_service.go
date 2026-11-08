@@ -230,4 +230,3 @@ func callOpenAI(ctx context.Context, client *http.Client, baseURL, apiKey, model
 
 	return &explanation, nil
 }
-

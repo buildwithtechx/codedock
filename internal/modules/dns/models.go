@@ -22,4 +22,3 @@ type DomainVerifyResult struct {
 	ServerIP   string `json:"serverIp"`
 	Message    string `json:"message"`
 }
-
