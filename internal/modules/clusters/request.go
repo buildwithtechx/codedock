@@ -30,22 +30,42 @@ type OperationApply struct {
 	Confirmation string `json:"confirmation"`
 }
 
-type RedisSnapshotApplyRequest struct {
-	S3DestinationID string `json:"s3DestinationId"`
-}
-
-type RedisRestoreApplyRequest struct {
-	SnapshotID string `json:"snapshotId"`
-}
-
-type RedisFailoverApplyRequest struct {
-	NodeID string `json:"nodeId"`
+type BindingReviewRequest struct {
+	AppID      string `json:"appId"`
+	DatabaseID string `json:"databaseId"`
 }
 
 type BindingApplyRequest struct {
-	ServiceID string `json:"serviceId"`
+	OperationID  string `json:"operationId"`
+	Confirmation string `json:"confirmation"`
+}
+
+type LifecycleReviewRequest struct {
+	DatabaseID string `json:"databaseId"`
+	Action     string `json:"action"`
 }
 
 type LifecycleApplyRequest struct {
-	Action string `json:"action"`
+	OperationID  string `json:"operationId"`
+	Confirmation string `json:"confirmation"`
+}
+
+type RedisSnapshotApplyRequest struct {
+	OperationID  string `json:"operationId"`
+	Confirmation string `json:"confirmation"`
+}
+
+type RedisRestoreReviewRequest struct {
+	SnapshotID string `json:"snapshotId"`
+	TargetID   string `json:"targetId"`
+}
+
+type RedisRestoreApplyRequest struct {
+	OperationID  string `json:"operationId"`
+	Confirmation string `json:"confirmation"`
+}
+
+type RedisFailoverApplyRequest struct {
+	OperationID  string `json:"operationId"`
+	Confirmation string `json:"confirmation"`
 }

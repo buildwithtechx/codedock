@@ -18,6 +18,7 @@ import (
 	"codedock/internal/modules/auth"
 	backupmodule "codedock/internal/modules/backups"
 	"codedock/internal/modules/chatapps"
+	modclusters "codedock/internal/modules/clusters"
 	"codedock/internal/modules/databases"
 	deploymentsmod "codedock/internal/modules/deployments"
 	"codedock/internal/modules/dns"
@@ -39,8 +40,8 @@ import (
 )
 
 type Server struct {
-	clusterDataHandler         *system.ClusterDataHandler
-	clusterHandler             *system.ClusterHandler
+	clusterDataHandler         *modclusters.DataHandler
+	clusterHandler             *modclusters.Handler
 	operationHandler           *system.OperationHandler
 	router                     *echo.Echo
 	mcpBridge                  *mcp.Bridge

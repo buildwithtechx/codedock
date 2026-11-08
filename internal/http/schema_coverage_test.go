@@ -15,6 +15,7 @@ import (
 	"codedock/internal/http/middleware"
 	appsmod "codedock/internal/modules/apps"
 	"codedock/internal/modules/auth"
+	modclusters "codedock/internal/modules/clusters"
 	deploymentsmod "codedock/internal/modules/deployments"
 	domainsmod "codedock/internal/modules/domains"
 	environments "codedock/internal/modules/environments"
@@ -77,6 +78,8 @@ func schemaTestRouter(t *testing.T) *echo.Echo {
 		takeoverHandler:            &serversmod.TakeoverHandler{},
 		serverNetworksHandler:      &serversmod.ServerNetworksHandler{},
 		serverMetricsWSHandler:     &serversmod.ServerMetricsWSHandler{},
+		clusterHandler:             modclusters.NewHandler(nil),
+		clusterDataHandler:         modclusters.NewDataHandler(nil),
 	}
 	apiGroup := router.Group("/api")
 	authGroup := apiGroup.Group("", server.authGuard.RequireAuth())

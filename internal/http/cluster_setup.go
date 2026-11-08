@@ -1,9 +1,17 @@
 package http
 
 import (
+	"context"
+	"database/sql"
+	"fmt"
+	"net/http"
+	"time"
+
+	"github.com/labstack/echo/v4"
+
 	"codedock/internal/engine/bare"
 	"codedock/internal/engine/kubernetes"
-	"codedock/internal/handlers/system"
+	modclusters "codedock/internal/modules/clusters"
 	"codedock/internal/platform/observability"
 	backup "codedock/internal/platform/storage"
 	"codedock/internal/platform/vault"
@@ -13,12 +21,6 @@ import (
 	"codedock/internal/services/operations"
 	projectservices "codedock/internal/services/projects"
 	"codedock/internal/services/runtimes"
-	"context"
-	"database/sql"
-	"fmt"
-	"github.com/labstack/echo/v4"
-	"net/http"
-	"time"
 )
 
 type ClusterDeployer interface {
@@ -36,14 +38,21 @@ func configureClusters(server *Server, db *sql.DB, vlt *vault.Vault, projects *r
 	if err := service.RecoverUpgrades(context.Background()); err != nil {
 		return fmt.Errorf("recover cluster upgrades: %w", err)
 	}
-	server.clusterHandler = system.NewClusterHandler(service, operations)
+	server.clusterHandler = modclusters.NewHandler(&clusterServiceAdapter{
+		service:    service,
+		operations: operations,
+	})
 	dataService := clusterdata.NewService(repositories.NewClusterDataRepo(db, vlt), repository, repositories.NewEnvironmentRepo(db), repositories.NewS3DestinationRepo(db, vlt), runner, operations, gate, &http.Client{Timeout: time.Minute})
 	dataService.SetSnapshots(repositories.NewRedisSnapshotRepo(db))
 	if err := dataService.Recover(context.Background()); err != nil {
 		return fmt.Errorf("recover cluster databases: %w", err)
 	}
-	server.clusterDataHandler = system.NewClusterDataHandler(dataService, operations)
-	server.clusterDataHandler.SetBindings(apps, repositories.NewServiceVarRepo(db))
+	server.clusterDataHandler = modclusters.NewDataHandler(&clusterDataServiceAdapter{
+		service:    dataService,
+		operations: operations,
+		apps:       apps,
+		vars:       repositories.NewServiceVarRepo(db),
+	})
 	runtime := runtimes.NewService(repositories.NewRuntimeRepo(db, vlt), apps, repository, servers, kubernetes.NewWorkloadRuntime(runner), server.deployer, operations, gate)
 	runtime.SetStreamer(runner)
 	runtime.SetBare(bare.NewRuntime(runner), projects)
@@ -65,38 +74,12 @@ func configureClusters(server *Server, db *sql.DB, vlt *vault.Vault, projects *r
 }
 
 func (s *Server) registerClusterRoutes(group *echo.Group) {
-	admin := s.authGuard.RequireRole("admin")
-	group.GET("/projects/:id/clusters/:clusterId/databases", s.clusterDataHandler.List, admin)
-	group.POST("/projects/:id/clusters/:clusterId/databases/review", s.clusterDataHandler.Review, admin)
-	group.GET("/projects/:id/clusters/:clusterId/databases/:databaseId/credentials", s.clusterDataHandler.Credentials, admin, s.authGuard.RequireScope("database:manage"))
-	group.GET("/projects/:id/clusters/:clusterId/databases/:databaseId/backups", s.clusterDataHandler.Backups, admin)
-	group.POST("/projects/:id/clusters/:clusterId/databases/:databaseId/verify", s.clusterDataHandler.Verify, admin)
-	group.POST("/projects/:id/clusters/:clusterId/databases/:databaseId/snapshots/review", s.clusterDataHandler.ReviewRedisSnapshot, admin)
-	group.POST("/projects/:id/clusters/:clusterId/databases/:databaseId/snapshots/apply", s.clusterDataHandler.ApplyRedisSnapshot, admin)
-	group.GET("/projects/:id/clusters/:clusterId/databases/:databaseId/snapshots", s.clusterDataHandler.ListRedisSnapshots, admin)
-	group.POST("/projects/:id/clusters/:clusterId/databases/:databaseId/restores/review", s.clusterDataHandler.ReviewRedisRestore, admin)
-	group.POST("/projects/:id/clusters/:clusterId/databases/:databaseId/restores/apply", s.clusterDataHandler.ApplyRedisRestore, admin)
-	group.POST("/projects/:id/clusters/:clusterId/databases/:databaseId/failover/review", s.clusterDataHandler.ReviewRedisFailover, admin)
-	group.POST("/projects/:id/clusters/:clusterId/databases/:databaseId/failover/apply", s.clusterDataHandler.ApplyRedisFailover, admin)
-	group.POST("/projects/:id/clusters/:clusterId/databases/bindings/review", s.clusterDataHandler.ReviewBinding, admin)
-	group.POST("/projects/:id/clusters/:clusterId/databases/bindings/apply", s.clusterDataHandler.ApplyBinding, admin)
-	group.POST("/projects/:id/clusters/:clusterId/databases/lifecycle/review", s.clusterDataHandler.ReviewLifecycle, admin)
-	group.POST("/projects/:id/clusters/:clusterId/databases/lifecycle/apply", s.clusterDataHandler.ApplyLifecycle, admin)
-	group.POST("/cluster-data-operations/:operationId/apply", s.clusterDataHandler.Apply, admin)
-	group.GET("/cluster-data-operations/:operationId", s.clusterDataHandler.Operation, admin)
-	group.POST("/cluster-data-operations/:operationId/cancel", s.clusterDataHandler.Cancel, admin)
-	group.GET("/projects/:id/clusters", s.clusterHandler.List, admin)
-	group.GET("/projects/:id/clusters/:clusterId/storage", s.clusterHandler.Storage, admin)
-	group.GET("/projects/:id/clusters/:clusterId/storage/health", s.clusterHandler.StorageHealth, admin)
-	group.GET("/projects/:id/clusters/:clusterId/preflight", s.clusterHandler.Preflight, admin)
-	group.POST("/projects/:id/clusters/:clusterId/storage/review", s.clusterHandler.ReviewStorage, admin)
-	group.POST("/cluster-storage-operations/:operationId/apply", s.clusterHandler.ApplyStorage, admin)
-	group.POST("/projects/:id/clusters/review", s.clusterHandler.Review, admin)
-	group.POST("/cluster-operations/:operationId/apply", s.clusterHandler.Apply, admin)
-	group.GET("/cluster-operations/:operationId", s.clusterHandler.GetOperation, admin)
-	group.POST("/cluster-operations/:operationId/cancel", s.clusterHandler.Cancel, admin)
-	group.GET("/system/compute-clusters/:clusterId/scaling", s.clusterHandler.GetScaling, admin)
-	group.POST("/system/compute-clusters/:clusterId/scaling/setup", s.clusterHandler.SetupScaling, admin)
-	group.POST("/system/compute-clusters/:clusterId/scaling/retry", s.clusterHandler.RetryScaling, admin)
-	group.POST("/system/compute-clusters/:clusterId/scaling/remove", s.clusterHandler.RemoveScaling, admin)
+	modclusters.RegisterRoutes(group, modclusters.RoutesConfig{
+		Handler:     s.clusterHandler,
+		DataHandler: s.clusterDataHandler,
+		Middleware: modclusters.RouteMiddleware{
+			Admin:          s.authGuard.RequireRole("admin"),
+			DatabaseManage: s.authGuard.RequireScope("database:manage"),
+		},
+	})
 }

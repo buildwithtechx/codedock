@@ -1,4 +1,4 @@
-package system
+package clusters
 
 import (
 	"encoding/json"
@@ -6,14 +6,12 @@ import (
 	"net/http/httptest"
 	"testing"
 
-	"codedock/internal/models"
-
 	"github.com/labstack/echo/v4"
 )
 
 func TestClusterHandler_ScalingLifecycle(t *testing.T) {
 	e := echo.New()
-	handler := NewClusterHandler(nil, nil)
+	handler := NewHandler(nil)
 
 	clusterID := "cls-prod-1"
 
@@ -27,8 +25,8 @@ func TestClusterHandler_ScalingLifecycle(t *testing.T) {
 		t.Fatalf("unexpected GetScaling error: %v", err)
 	}
 	var getResp struct {
-		Status string                 `json:"status"`
-		Data   *models.ClusterScaling `json:"data"`
+		Status string          `json:"status"`
+		Data   *ClusterScaling `json:"data"`
 	}
 	if err := json.Unmarshal(rec.Body.Bytes(), &getResp); err != nil {
 		t.Fatalf("failed to parse get response: %v", err)
@@ -86,13 +84,22 @@ func TestClusterHandler_ScalingLifecycle(t *testing.T) {
 		t.Fatalf("unexpected GetScaling error: %v", err)
 	}
 	var finalResp struct {
-		Status string                 `json:"status"`
-		Data   *models.ClusterScaling `json:"data"`
+		Status string          `json:"status"`
+		Data   *ClusterScaling `json:"data"`
 	}
 	if err := json.Unmarshal(rec.Body.Bytes(), &finalResp); err != nil {
 		t.Fatalf("failed to parse get response: %v", err)
 	}
 	if finalResp.Data.Status != "removed" {
 		t.Fatalf("expected status 'removed', got %q", finalResp.Data.Status)
+	}
+}
+
+func TestClusterDataReviewRequiresAuthenticatedOwner(t *testing.T) {
+	context := echo.New().NewContext(httptest.NewRequest(http.MethodPost, "/review", nil), httptest.NewRecorder())
+	if err := (&DataHandler{}).Review(context); err == nil {
+		t.Fatal("anonymous database review accepted")
+	} else if response, ok := err.(*echo.HTTPError); !ok || response.Code != http.StatusUnauthorized {
+		t.Fatal(err)
 	}
 }
