@@ -23,6 +23,7 @@ import (
 	"codedock/internal/http/middleware"
 	"codedock/internal/models"
 	"codedock/internal/modules/chatapps"
+	"codedock/internal/modules/dns"
 	mailmodule "codedock/internal/modules/mail"
 	authservices "codedock/internal/services/auth"
 	"codedock/internal/services/migrations"
@@ -88,7 +89,7 @@ type Server struct {
 	archiveHandler            *deployments.ArchiveHandler
 	migrationHandler          *system.MigrationHandler
 	onboardingHandler         *auth.OnboardingHandler
-	dnsHandler                *system.DNSHandler
+	dnsHandler                *dns.Handler
 	metricsHandler            *system.MetricsHandler
 	logHandler                *system.LogHandler
 	auditLogHandler           *auth.AuditLogHandler

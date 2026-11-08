@@ -35,6 +35,7 @@ type CreateDomainRequest struct {
 	RedirectTo string `json:"redirectTo,omitempty"`
 	PathPrefix string `json:"pathPrefix,omitempty"`
 }
+
 type DomainVerifyResult struct {
 	DomainID   string `json:"domainId"`
 	DomainName string `json:"domainName"`

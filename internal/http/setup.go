@@ -32,6 +32,7 @@ import (
 	"codedock/internal/http/middleware"
 	"codedock/internal/models"
 	"codedock/internal/modules/chatapps"
+	"codedock/internal/modules/dns"
 	mailmodule "codedock/internal/modules/mail"
 	"codedock/internal/modules/security"
 	"codedock/internal/notifications"
@@ -91,7 +92,7 @@ func NewServer(db *sql.DB, v *utils.Vault, deployer *deploy.Deployer, traefikMan
 	prPreviewRepository := repositories.NewPRPreviewRepository(db)
 	domainRepo := repositories.NewDomainRepo(db)
 	gitAppRepo := repositories.NewGitAppRepo(db, v)
-	dnsRepo := repositories.NewDNSRepo(db)
+	dnsRepo := dns.NewRepository(db)
 	auditRepository := repositories.NewAuditLogRepo(db)
 	volumeRepo := repositories.NewServiceVolumeRepo(db)
 	orgRepo := repositories.NewOrganizationRepository(db)
@@ -225,12 +226,12 @@ func NewServer(db *sql.DB, v *utils.Vault, deployer *deploy.Deployer, traefikMan
 	userService := authservices.NewUserService(userRepo)
 	oAuthService := authservices.NewOAuthService(oauthRepo, userRepo, tokenService)
 	prPreviewService := deploymentservices.NewPRPreviewService(prPreviewRepository, appService, gitService, deployer, sshManager, projectRepo)
-	dnsProviderService := systemservices.NewDNSProviderService(settingsRepo)
+	dnsProviderService := dns.NewProviderService(settingsRepo)
 	environmentService := projectservices.NewEnvironmentService(environmentRepo, domainRepo, envVarRepo, dnsProviderService)
 	notificationService := systemservices.NewNotificationService(dispatcherService)
 	gitAppsService := deploymentservices.NewGitAppsService(gitAppRepo)
 	serverlessService := projectservices.NewServerlessService(serverlessRepository)
-	dnsService := systemservices.NewDNSService(dnsRepo, dnsProviderService)
+	dnsService := dns.NewService(dnsRepo, dnsProviderService)
 	envSuggestionService := projectservices.NewEnvSuggestionService(gitService)
 	metricsService := systemservices.NewMetricsService()
 	logService := systemservices.NewLogService()
@@ -315,7 +316,7 @@ func NewServer(db *sql.DB, v *utils.Vault, deployer *deploy.Deployer, traefikMan
 	migrationHandler := system.NewMigrationHandler(migrationService, userService)
 	onboardingHandler := auth.NewOnboardingHandler(userService)
 	appearanceHandler := auth.NewAppearanceHandler(userRepo)
-	dnsHandler := system.NewDNSHandler(dnsService, auditService)
+	dnsHandler := dns.NewHandler(dnsService, auditService)
 	metricsHandler := system.NewMetricsHandler(metricsService)
 	logHandler := system.NewLogHandler(logService)
 	auditLogHandler := auth.NewAuditLogHandler(auditService)

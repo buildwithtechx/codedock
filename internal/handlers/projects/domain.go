@@ -6,10 +6,10 @@ import (
 	"github.com/labstack/echo/v4"
 
 	"codedock/internal/models"
+	"codedock/internal/modules/dns"
 	"codedock/internal/repositories"
 	authservices "codedock/internal/services/auth"
 	projectservices "codedock/internal/services/projects"
-	systemservices "codedock/internal/services/system"
 	"codedock/internal/utils"
 )
 
@@ -242,7 +242,7 @@ func (h *DomainHandler) Verify(c echo.Context) error {
 		})
 	}
 
-	verified, resolvedIP, err := systemservices.VerifyDomain(c.Request().Context(), domain.DomainName, serverIP)
+	verified, resolvedIP, err := dns.VerifyDomain(c.Request().Context(), domain.DomainName, serverIP)
 	if err != nil {
 		return utils.Error(c, http.StatusInternalServerError, err.Error())
 	}

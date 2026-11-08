@@ -1,4 +1,4 @@
-package system
+package dns
 
 import (
 	"context"
@@ -32,7 +32,7 @@ func evaluateResolvedIPs(ips []net.IP, expectedIP string) (bool, string) {
 
 func VerifyDomain(ctx context.Context, domainName, expectedIP string) (bool, string, error) {
 	if domainName == "" {
-		return false, "", fmt.Errorf("domainName is required")
+		return false, "", ErrDomainRequired
 	}
 
 	lookupCtx, cancel := context.WithTimeout(ctx, 5*time.Second)
@@ -57,3 +57,4 @@ func VerifyDomain(ctx context.Context, domainName, expectedIP string) (bool, str
 	verified, resolvedIP := evaluateResolvedIPs(ips, expectedIP)
 	return verified, resolvedIP, nil
 }
+

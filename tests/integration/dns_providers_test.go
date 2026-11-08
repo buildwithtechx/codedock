@@ -12,7 +12,7 @@ import (
 	"testing"
 
 	"codedock/internal/models"
-	dnsproviders "codedock/internal/services/system/dns_providers"
+	dnsproviders "codedock/internal/modules/dns/providers"
 )
 
 type providerSettingsRepo struct {

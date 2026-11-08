@@ -9,6 +9,7 @@ import (
 	"codedock/internal/config"
 	"codedock/internal/models"
 	"codedock/internal/modules/chatapps"
+	"codedock/internal/modules/dns"
 	"github.com/labstack/echo/v4"
 )
 
@@ -199,10 +200,7 @@ func (s *Server) registerMiscRoutes(apiGroup, authGroup *echo.Group) {
 	authGroup.POST("/one-click/deploy", s.oneClickHandler.Deploy)
 	authGroup.POST("/one-click/custom", s.oneClickHandler.AddCustom)
 	authGroup.DELETE("/one-click/custom/:id", s.oneClickHandler.DeleteCustom)
-	authGroup.POST("/dns", s.dnsHandler.Create, s.authGuard.RequireRole("admin"))
-	authGroup.GET("/dns", s.dnsHandler.List, s.authGuard.RequireRole("admin"))
-	authGroup.PUT("/dns/:id", s.dnsHandler.Update, s.authGuard.RequireRole("admin"))
-	authGroup.DELETE("/dns/:id", s.dnsHandler.Delete, s.authGuard.RequireRole("admin"))
+	dns.RegisterRoutes(authGroup, s.dnsHandler, s.authGuard.RequireRole("admin"))
 	authGroup.GET("/actions/workflows", s.actionsHandler.ListWorkflows)
 	authGroup.POST("/actions/workflows", s.actionsHandler.CreateWorkflow, s.authGuard.RequireRole("admin"))
 	authGroup.POST("/actions/workflows/:id/dispatch", s.actionsHandler.DispatchWorkflow)
