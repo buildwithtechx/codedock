@@ -110,7 +110,7 @@ type serverSetupDeps struct {
 func buildServerInstance(d *serverSetupDeps) (*Server, error) {
 	prPreviewRepo := gitmod.NewPRPreviewRepository(d.db)
 	prPreviewService := gitmod.NewPRPreviewService(prPreviewRepo, &gitServiceLookupAdapter{appRepo: d.appRepo})
-	dnsProviderService := dns.NewProviderService(d.settingsRepo)
+	dnsProviderService := dns.NewProviderService(&dnsSettingsAdapter{repo: d.settingsRepo})
 	dnsService := dns.NewService(d.dnsRepo, dnsProviderService)
 	gitAppsRepo := gitmod.NewGitAppRepository(d.db, d.v)
 	gitAppsService := gitmod.NewGitAppsService(gitAppsRepo)

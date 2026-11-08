@@ -1,5 +1,81 @@
 package clusters
 
+type Vault interface {
+	Encrypt(plaintext []byte) (string, error)
+	Decrypt(ciphertext string) ([]byte, error)
+}
+
+type ProjectConfig struct {
+	ID             string `json:"id"`
+	OrganizationID string `json:"organizationId"`
+	Name           string `json:"name"`
+	ServerID       string `json:"serverId"`
+}
+
+type Server struct {
+	ID             string `json:"id"`
+	OrganizationID string `json:"organizationId"`
+	Name           string `json:"name"`
+	IP             string `json:"ip"`
+}
+
+type Operation struct {
+	ID        string `json:"id" db:"id"`
+	UserID    string `json:"-" db:"user_id"`
+	ProjectID string `json:"projectId" db:"project_id"`
+	Kind      string `json:"kind" db:"kind"`
+	Target    string `json:"target" db:"target"`
+	Status    string `json:"status" db:"status"`
+	Phase     string `json:"phase" db:"phase"`
+	Effects   string `json:"effects" db:"effects"`
+	Payload   string `json:"-" db:"encrypted_payload"`
+	Snapshot  string `json:"-" db:"snapshot"`
+	TokenHash string `json:"-" db:"token_hash"`
+	Error     string `json:"error" db:"error"`
+	Logs      string `json:"logs" db:"logs"`
+	ExpiresAt int64  `json:"expiresAt" db:"expires_at"`
+	UpdatedAt string `json:"updatedAt" db:"updated_at"`
+}
+
+type OperationReview struct {
+	Operation    *Operation `json:"operation"`
+	Confirmation string     `json:"confirmation"`
+}
+
+type AppService struct {
+	ID            string `json:"id"`
+	ProjectID     string `json:"projectId"`
+	EnvironmentID string `json:"environmentId"`
+	Name          string `json:"name"`
+}
+
+type Variable struct {
+	ID                       string `json:"id"`
+	ServiceID                string `json:"serviceId"`
+	EnvironmentID            string `json:"environmentId"`
+	Key                      string `json:"key"`
+	Value                    string `json:"value"`
+	IsSecret                 bool   `json:"isSecret"`
+	ExpectedTopologyRevision string `json:"expectedTopologyRevision"`
+	CreatedAt                string `json:"createdAt"`
+	UpdatedAt                string `json:"updatedAt"`
+}
+
+type EnvironmentConfig struct {
+	ID        string `json:"id"`
+	ProjectID string `json:"projectId"`
+	Name      string `json:"name"`
+}
+
+type S3Destination struct {
+	ID        string `json:"id"`
+	Bucket    string `json:"bucket"`
+	Endpoint  string `json:"endpoint"`
+	Region    string `json:"region"`
+	AccessKey string `json:"accessKey"`
+	SecretKey string `json:"secretKey"`
+}
+
 type ClusterNode struct {
 	ServerID    string `json:"serverId"`
 	PrivateIP   string `json:"privateIp"`

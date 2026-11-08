@@ -9,7 +9,7 @@ import (
 	"codedock/internal/utils"
 )
 
-type OneClickService interface {
+type OneClickOperations interface {
 	ListApps() any
 	GetApp(id string) (any, error)
 	AddCustomApp(tmpl any) (any, error)
@@ -19,10 +19,10 @@ type OneClickService interface {
 }
 
 type OneClickHandler struct {
-	service OneClickService
+	service OneClickOperations
 }
 
-func NewOneClickHandler(s OneClickService) *OneClickHandler {
+func NewOneClickHandler(s OneClickOperations) *OneClickHandler {
 	return &OneClickHandler{service: s}
 }
 

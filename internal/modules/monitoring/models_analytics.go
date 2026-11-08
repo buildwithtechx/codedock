@@ -144,3 +144,12 @@ type PendingCheckout struct {
 	URL       string `json:"url,omitempty"`
 	CreatedAt string `json:"createdAt"`
 }
+
+type DomainConfig struct {
+	ID            string `json:"id,omitempty"`
+	ServiceID     string `json:"serviceId"`
+	DomainName    string `json:"domainName"`
+	SSLCertStatus string `json:"sslCertStatus,omitempty"`
+	SSLCertIssuer string `json:"sslCertIssuer,omitempty"`
+	PathPrefix    string `json:"pathPrefix,omitempty"`
+}

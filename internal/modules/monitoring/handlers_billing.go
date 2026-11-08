@@ -17,10 +17,10 @@ type CheckoutPendingError interface {
 }
 
 type BillingHandler struct {
-	service BillingService
+	service BillingOperations
 }
 
-func NewBillingHandler(service BillingService) *BillingHandler {
+func NewBillingHandler(service BillingOperations) *BillingHandler {
 	return &BillingHandler{service: service}
 }
 

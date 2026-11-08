@@ -23,12 +23,12 @@ type TokenGenerator interface {
 }
 
 type SystemHandler struct {
-	service     SystemService
+	service     SystemOperations
 	adminFinder FoundingAdminFinder
 	tokenGen    TokenGenerator
 }
 
-func NewSystemHandler(s SystemService, adminFinder FoundingAdminFinder, tokenGen TokenGenerator) *SystemHandler {
+func NewSystemHandler(s SystemOperations, adminFinder FoundingAdminFinder, tokenGen TokenGenerator) *SystemHandler {
 	return &SystemHandler{
 		service:     s,
 		adminFinder: adminFinder,

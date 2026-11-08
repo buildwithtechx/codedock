@@ -11,10 +11,10 @@ import (
 )
 
 type MetricsHandler struct {
-	service MetricsService
+	service MetricsOperations
 }
 
-func NewMetricsHandler(s MetricsService) *MetricsHandler {
+func NewMetricsHandler(s MetricsOperations) *MetricsHandler {
 	return &MetricsHandler{service: s}
 }
 
@@ -41,10 +41,10 @@ func (h *MetricsHandler) GetHistoricalMetrics(c echo.Context) error {
 }
 
 type LogHandler struct {
-	service LogService
+	service LogOperations
 }
 
-func NewLogHandler(s LogService) *LogHandler {
+func NewLogHandler(s LogOperations) *LogHandler {
 	return &LogHandler{service: s}
 }
 

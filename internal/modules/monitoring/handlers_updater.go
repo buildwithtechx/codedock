@@ -9,10 +9,10 @@ import (
 )
 
 type UpdaterHandler struct {
-	service UpdaterService
+	service UpdaterOperations
 }
 
-func NewUpdaterHandler(s UpdaterService) *UpdaterHandler {
+func NewUpdaterHandler(s UpdaterOperations) *UpdaterHandler {
 	return &UpdaterHandler{service: s}
 }
 

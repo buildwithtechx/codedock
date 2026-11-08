@@ -9,7 +9,7 @@ import (
 	"codedock/internal/utils"
 )
 
-type ComposeStackService interface {
+type ComposeStackOperations interface {
 	List(ctx context.Context, projectID string) (any, error)
 	Config(ctx context.Context, projectID, stackID string) (any, error)
 	Review(ctx context.Context, projectID string, req any) (any, error)
@@ -21,10 +21,10 @@ type ComposeStackService interface {
 }
 
 type ComposeStackHandler struct {
-	stacks ComposeStackService
+	stacks ComposeStackOperations
 }
 
-func NewComposeStackHandler(stacks ComposeStackService) *ComposeStackHandler {
+func NewComposeStackHandler(stacks ComposeStackOperations) *ComposeStackHandler {
 	return &ComposeStackHandler{stacks: stacks}
 }
 

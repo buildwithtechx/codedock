@@ -2,6 +2,40 @@ package monitoring
 
 import "time"
 
+type Vault interface {
+	Encrypt(plaintext []byte) (string, error)
+	Decrypt(ciphertext string) ([]byte, error)
+}
+
+type NotificationDelivery struct {
+	ID        string `json:"id" db:"id"`
+	EventType string `json:"eventType" db:"event_type"`
+	Channel   string `json:"channel" db:"channel"`
+	Title     string `json:"title" db:"title"`
+	Success   bool   `json:"success" db:"success"`
+	Error     string `json:"error" db:"error"`
+	CreatedAt string `json:"createdAt" db:"created_at"`
+}
+
+type NotificationSubscription struct {
+	ID             string   `json:"id"`
+	UserID         string   `json:"userId"`
+	OrganizationID string   `json:"organizationId"`
+	Category       string   `json:"category"`
+	Channels       []string `json:"channels"`
+	Enabled        bool     `json:"enabled"`
+	CreatedAt      string   `json:"createdAt"`
+	UpdatedAt      string   `json:"updatedAt"`
+}
+
+type NotificationDefault struct {
+	OrganizationID string   `json:"organizationId"`
+	Category       string   `json:"category"`
+	Channels       []string `json:"channels"`
+	Enabled        bool     `json:"enabled"`
+	UpdatedAt      string   `json:"updatedAt"`
+}
+
 type ActionWorkflow struct {
 	ID          string `json:"id" db:"id"`
 	ProjectID   string `json:"projectId,omitempty" db:"project_id"`
@@ -190,9 +224,19 @@ type CloudSupportCustomerTicket struct {
 
 type Operation struct {
 	ID        string `json:"id" db:"id"`
-	UserID    string `json:"userId" db:"user_id"`
+	UserID    string `json:"-" db:"user_id"`
+	ProjectID string `json:"projectId" db:"project_id"`
 	Kind      string `json:"kind" db:"kind"`
+	Target    string `json:"target" db:"target"`
 	Status    string `json:"status" db:"status"`
+	Phase     string `json:"phase" db:"phase"`
+	Effects   string `json:"effects" db:"effects"`
+	Payload   string `json:"-" db:"encrypted_payload"`
+	Snapshot  string `json:"-" db:"snapshot"`
+	TokenHash string `json:"-" db:"token_hash"`
+	Error     string `json:"error" db:"error"`
+	Logs      string `json:"logs" db:"logs"`
+	ExpiresAt int64  `json:"expiresAt" db:"expires_at"`
 	CreatedAt string `json:"createdAt" db:"created_at"`
 	UpdatedAt string `json:"updatedAt" db:"updated_at"`
 }

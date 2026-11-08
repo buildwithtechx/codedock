@@ -1,0 +1,167 @@
+package projects
+
+import (
+	"context"
+	"database/sql"
+	"errors"
+	"fmt"
+	"time"
+
+	"codedock/internal/utils"
+)
+
+func (r *CanvasRepo) GetEnvironmentCanvas(ctx context.Context, environmentID string) (*EnvironmentCanvas, error) {
+	r.mu.Lock()
+	defer r.mu.Unlock()
+	var env EnvironmentConfig
+	err := r.db.GetContext(ctx, &env, `SELECT id, project_id, name, is_default, created_at, updated_at FROM environments WHERE id = $1`, environmentID)
+	if err == sql.ErrNoRows {
+		return nil, utils.NewNotFoundError("Environment", environmentID)
+	}
+	if err != nil {
+		return nil, err
+	}
+	apps, err := r.listAppServicesByEnvironment(ctx, environmentID)
+	if err != nil {
+		return nil, fmt.Errorf("load canvas applications: %w", err)
+	}
+	dbs, err := r.listDatabasesByEnvironment(ctx, environmentID)
+	if err != nil {
+		return nil, fmt.Errorf("load canvas databases: %w", err)
+	}
+	var dbsPtrs []*Database
+	for i := range dbs {
+		dbsPtrs = append(dbsPtrs, &dbs[i])
+	}
+	clusterDatabases := []ClusterData{}
+	if r.clusterData != nil {
+		all, err := r.clusterData.ListByProject(ctx, env.ProjectID)
+		if err != nil {
+			return nil, fmt.Errorf("load canvas cluster databases: %w", err)
+		}
+		for _, record := range all {
+			if record.Spec.EnvironmentID != "" && record.Spec.EnvironmentID != environmentID {
+				continue
+			}
+			clusterDatabases = append(clusterDatabases, record)
+		}
+	}
+	canvas := &EnvironmentCanvas{
+		Environment:      &env,
+		Apps:             apps,
+		Databases:        dbsPtrs,
+		ClusterDatabases: clusterDatabases,
+	}
+	if err := r.projectTopology(ctx, canvas); err != nil {
+		return nil, fmt.Errorf("project topology: %w", err)
+	}
+	return canvas, nil
+}
+
+type projectRow struct {
+	ID          string    `db:"id"`
+	Name        string    `db:"name"`
+	Description string    `db:"description"`
+	ServerID    string    `db:"server_id"`
+	CreatedAt   time.Time `db:"created_at"`
+	UpdatedAt   time.Time `db:"updated_at"`
+}
+
+func (r *CanvasRepo) listAllProjects(ctx context.Context, organizationID string) ([]projectRow, error) {
+	var projects []projectRow
+	query := `SELECT id, name, COALESCE(description,'') as description, COALESCE(server_id,'') as server_id, created_at, updated_at FROM projects`
+	args := make([]any, 0, 1)
+	if organizationID != "" {
+		query += ` WHERE organization_id = $1`
+		args = append(args, organizationID)
+	}
+	query += ` ORDER BY created_at DESC`
+	err := r.db.SelectContext(ctx, &projects, query, args...)
+	if err != nil {
+		return nil, err
+	}
+	if projects == nil {
+		projects = make([]projectRow, 0)
+	}
+	return projects, nil
+}
+
+func (r *CanvasRepo) getProject(id string) (*projectRow, error) {
+	var p projectRow
+	err := r.db.Get(&p, `SELECT id, name, COALESCE(description,'') as description, COALESCE(server_id,'') as server_id, created_at, updated_at FROM projects WHERE id = $1`, id)
+	if errors.Is(err, sql.ErrNoRows) {
+		return nil, utils.NewNotFoundError("CanvasEnvironment", id)
+	}
+	if err != nil {
+		return nil, err
+	}
+	return &p, nil
+}
+
+func (r *CanvasRepo) listAllEnvironments(ctx context.Context) ([]*EnvironmentConfig, error) {
+	envs, err := r.environments.ListByProject(ctx, "")
+	if err == nil && len(envs) > 0 {
+		var result []*EnvironmentConfig
+		for i := range envs {
+			result = append(result, envs[i])
+		}
+		return result, nil
+	}
+	var result []*EnvironmentConfig
+	err = r.db.SelectContext(ctx, &result, `SELECT id, project_id, name, is_default, created_at, updated_at FROM environments ORDER BY is_default DESC, created_at ASC`)
+	if err != nil {
+		return nil, err
+	}
+	if result == nil {
+		result = make([]*EnvironmentConfig, 0)
+	}
+	return result, nil
+}
+
+func (r *CanvasRepo) listAllAppServices() ([]*AppService, error) {
+	return r.scanAppServices(context.Background(), `SELECT id, project_id, environment_id, name, COALESCE(repository_url,'') as repository_url, COALESCE(image_ref,'') as image_ref, COALESCE(branch,'') as branch, internal_port, COALESCE(domain,'') as domain, COALESCE(container_id,'') as container_id, status, replicas, COALESCE(maintenance_mode, FALSE) as maintenance_mode, created_at, updated_at FROM app_services ORDER BY created_at DESC`)
+}
+
+func (r *CanvasRepo) listAppServicesByProject(projectID string) ([]*AppService, error) {
+	return r.scanAppServices(context.Background(), `SELECT id, project_id, environment_id, name, COALESCE(repository_url,'') as repository_url, COALESCE(image_ref,'') as image_ref, COALESCE(branch,'') as branch, internal_port, COALESCE(domain,'') as domain, COALESCE(container_id,'') as container_id, status, replicas, COALESCE(maintenance_mode, FALSE) as maintenance_mode, created_at, updated_at FROM app_services WHERE project_id = $1 ORDER BY created_at DESC`, projectID)
+}
+
+func (r *CanvasRepo) listAppServicesByEnvironment(ctx context.Context, environmentID string) ([]*AppService, error) {
+	return r.scanAppServices(ctx, `SELECT id, project_id, environment_id, name, COALESCE(repository_url,'') as repository_url, COALESCE(image_ref,'') as image_ref, COALESCE(branch,'') as branch, internal_port, COALESCE(domain,'') as domain, COALESCE(container_id,'') as container_id, status, replicas, COALESCE(maintenance_mode, FALSE) as maintenance_mode, created_at, updated_at FROM app_services WHERE environment_id = $1 ORDER BY created_at DESC`, environmentID)
+}
+
+func (r *CanvasRepo) scanAppServices(ctx context.Context, query string, args ...any) ([]*AppService, error) {
+	var apps []*AppService
+	err := r.db.SelectContext(ctx, &apps, query, args...)
+	if err != nil {
+		return nil, err
+	}
+	if apps == nil {
+		apps = make([]*AppService, 0)
+	}
+	return apps, nil
+}
+
+func (r *CanvasRepo) listAllDatabases() ([]Database, error) {
+	return r.scanDatabases(context.Background(), `SELECT id, COALESCE(project_id,'') as project_id, COALESCE(environment_id,'') as environment_id, name, engine, version, port, username, database_name, volume_path, COALESCE(container_id,'') as container_id, status, COALESCE(internal_dns,'') as internal_dns, COALESCE(external_dns,'') as external_dns, created_at, updated_at FROM databases ORDER BY created_at DESC`)
+}
+
+func (r *CanvasRepo) listDatabasesByProject(projectID string) ([]Database, error) {
+	return r.scanDatabases(context.Background(), `SELECT id, COALESCE(project_id,'') as project_id, COALESCE(environment_id,'') as environment_id, name, engine, version, port, username, database_name, volume_path, COALESCE(container_id,'') as container_id, status, COALESCE(internal_dns,'') as internal_dns, COALESCE(external_dns,'') as external_dns, created_at, updated_at FROM databases WHERE project_id = $1 ORDER BY created_at DESC`, projectID)
+}
+
+func (r *CanvasRepo) listDatabasesByEnvironment(ctx context.Context, environmentID string) ([]Database, error) {
+	return r.scanDatabases(ctx, `SELECT id, COALESCE(project_id,'') as project_id, COALESCE(environment_id,'') as environment_id, name, engine, version, port, username, database_name, volume_path, COALESCE(container_id,'') as container_id, status, COALESCE(internal_dns,'') as internal_dns, COALESCE(external_dns,'') as external_dns, created_at, updated_at FROM databases WHERE environment_id = $1 ORDER BY created_at DESC`, environmentID)
+}
+
+func (r *CanvasRepo) scanDatabases(ctx context.Context, query string, args ...any) ([]Database, error) {
+	var dbs []Database
+	err := r.db.SelectContext(ctx, &dbs, query, args...)
+	if err != nil {
+		return nil, err
+	}
+	if dbs == nil {
+		dbs = make([]Database, 0)
+	}
+	return dbs, nil
+}

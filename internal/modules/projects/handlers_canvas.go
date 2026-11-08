@@ -9,7 +9,7 @@ import (
 	"codedock/internal/utils"
 )
 
-type CanvasService interface {
+type CanvasOperations interface {
 	ListSummaries(ctx context.Context, organizationID string) (any, error)
 	GetSummary(ctx context.Context, id string) (any, error)
 	GetEnvironmentCanvas(ctx context.Context, id string) (any, error)
@@ -18,11 +18,11 @@ type CanvasService interface {
 }
 
 type CanvasHandler struct {
-	canvas  CanvasService
+	canvas  CanvasOperations
 	project *Service
 }
 
-func NewCanvasHandler(cs CanvasService, ps *Service) *CanvasHandler {
+func NewCanvasHandler(cs CanvasOperations, ps *Service) *CanvasHandler {
 	return &CanvasHandler{canvas: cs, project: ps}
 }
 

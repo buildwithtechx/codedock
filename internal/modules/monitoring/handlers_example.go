@@ -7,10 +7,10 @@ import (
 )
 
 type ExampleHandler struct {
-	service ExampleService
+	service ExampleOperations
 }
 
-func NewExampleHandler(s ExampleService) *ExampleHandler {
+func NewExampleHandler(s ExampleOperations) *ExampleHandler {
 	return &ExampleHandler{service: s}
 }
 

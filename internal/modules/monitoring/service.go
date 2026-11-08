@@ -39,7 +39,7 @@ type CreateCheckoutSessionOpts struct {
 	CancelPending  bool
 }
 
-type BillingService interface {
+type BillingOperations interface {
 	GetConfig(ctx context.Context) (any, error)
 	CreateCheckoutSession(ctx context.Context, userID string, opts CreateCheckoutSessionOpts) (string, error)
 	GetPendingCheckout(ctx context.Context, userID string) (any, error)
@@ -47,21 +47,21 @@ type BillingService interface {
 	HandleWebhook(ctx context.Context, payload []byte, sig string) error
 }
 
-type MetricsService interface {
+type MetricsOperations interface {
 	GetServiceMetrics(ctx context.Context, serviceID, rangeParam string) (any, error)
 }
 
-type LogService interface {
+type LogOperations interface {
 	GetHistoricalLogs(ctx context.Context, serviceID, rangeParam string, limit int) (any, error)
 }
 
-type SystemService interface {
+type SystemOperations interface {
 	GetStats(ctx context.Context) (any, error)
 	Restart(ctx context.Context) error
 	Cleanup(ctx context.Context) error
 }
 
-type UpdaterService interface {
+type UpdaterOperations interface {
 	GetStatus() any
 	CheckUpdate(ctx context.Context) (any, error)
 	ApplyUpdate(ctx context.Context) (any, error)
@@ -77,7 +77,7 @@ type NotificationService interface {
 	TestNotification(ctx context.Context, provider string) error
 }
 
-type NotificationSettingsService interface {
+type NotificationSettingsOperations interface {
 	GetSettings(ctx context.Context) (*NotificationSettings, error)
 	UpdateSettings(ctx context.Context, req UpdateNotificationSettingsRequest) (*NotificationSettings, error)
 	ListDeliveries(ctx context.Context, limit int) (any, error)
@@ -95,7 +95,7 @@ type IngressService interface {
 	SetDomain(ctx context.Context, domainID string, req IngressDomainRequest) (any, error)
 }
 
-type ExampleService interface {
+type ExampleOperations interface {
 	ListExamples() (any, error)
 }
 
@@ -103,7 +103,7 @@ type ServiceLogStreamer interface {
 	StreamServiceLogs(ctx context.Context, serviceID string, w io.Writer) error
 }
 
-type ScheduledTaskService interface {
+type ScheduledTaskOperations interface {
 	ListTasks(ctx context.Context, projectID, serviceID string) (any, error)
 	RunTask(ctx context.Context, taskID string) error
 	CancelTask(ctx context.Context, taskID string) error

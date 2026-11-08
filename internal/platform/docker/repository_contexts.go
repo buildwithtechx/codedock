@@ -1,15 +1,22 @@
 package docker
 
 import (
-	"codedock/internal/models"
 	"fmt"
-	"gopkg.in/yaml.v3"
 	"net/url"
 	"path"
 	"strings"
+
+	"gopkg.in/yaml.v3"
 )
 
-func ResolveRepositoryContexts(request models.ComposeStackRequest) (string, error) {
+type RepositoryContextRequest struct {
+	RepositoryURL string `json:"repositoryUrl,omitempty"`
+	Branch        string `json:"branch,omitempty"`
+	RootDirectory string `json:"rootDirectory,omitempty"`
+	Content       string `json:"content"`
+}
+
+func ResolveRepositoryContexts(request RepositoryContextRequest) (string, error) {
 	if request.RepositoryURL == "" {
 		return request.Content, nil
 	}

@@ -1,5 +1,10 @@
 package migrations
 
+type Vault interface {
+	Encrypt(plaintext []byte) (string, error)
+	Decrypt(ciphertext string) ([]byte, error)
+}
+
 type MigrationSource struct {
 	ID             string `json:"id" db:"id"`
 	OrganizationID string `json:"organizationId" db:"organization_id"`

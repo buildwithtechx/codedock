@@ -9,12 +9,36 @@ import (
 	"codedock/internal/models"
 	"codedock/internal/modules/audit"
 	deploymentsmod "codedock/internal/modules/deployments"
+	dnsproviders "codedock/internal/modules/dns/providers"
 	"codedock/internal/modules/environments"
 	gitmod "codedock/internal/modules/git"
 	"codedock/internal/platform/networking"
 	"codedock/internal/repositories"
 	projectservices "codedock/internal/services/projects"
 )
+
+type dnsSettingsAdapter struct {
+	repo repositories.SettingsRepository
+}
+
+func (a *dnsSettingsAdapter) GetDNSConfig(ctx context.Context) (*dnsproviders.DNSConfig, error) {
+	if a.repo == nil {
+		return nil, nil
+	}
+	cfg, err := a.repo.GetServerSettings(ctx)
+	if err != nil || cfg == nil {
+		return nil, err
+	}
+	return &dnsproviders.DNSConfig{
+		PublicIPv4:         cfg.PublicIPv4,
+		CloudflareAPIToken: cfg.CloudflareAPIToken,
+		NamecheapAPIKey:    cfg.NamecheapAPIKey,
+		NamecheapAPIUser:   cfg.NamecheapAPIUser,
+		NamecheapClientIP:  cfg.NamecheapClientIP,
+		SpaceshipAPIKey:    cfg.SpaceshipAPIKey,
+		SpaceshipAPISecret: cfg.SpaceshipAPISecret,
+	}, nil
+}
 
 type gitServiceLookupAdapter struct {
 	appRepo *repositories.AppServiceRepo
