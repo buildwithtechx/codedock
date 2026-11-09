@@ -1,9 +1,11 @@
-package apps
+package autoscaling
 
 import (
-	"codedock/internal/utils"
-	"github.com/labstack/echo/v4"
 	"net/http"
+
+	"github.com/labstack/echo/v4"
+
+	"codedock/internal/utils"
 )
 
 type AutoscalingHandler struct {
@@ -50,28 +52,7 @@ func (h *AutoscalingHandler) Update(c echo.Context) error {
 	if err := h.service.UpdatePolicy(c.Request().Context(), &policy); err != nil {
 		return utils.Error(c, http.StatusInternalServerError, err.Error())
 	}
-	return utils.Success(c, "Autoscaling policy updated", policy)
-}
-
-func (h *AutoscalingHandler) SaveServerlessCode(c echo.Context) error {
-	serviceID := h.getServiceID(c)
-	if serviceID == "" {
-		return utils.Error(c, http.StatusBadRequest, "missing service id")
-	}
-
-	var req SaveServerlessCodeRequest
-	if err := c.Bind(&req); err != nil {
-		return utils.Error(c, http.StatusBadRequest, "invalid payload")
-	}
-	if req.Runtime == "" {
-		return utils.Error(c, http.StatusBadRequest, "runtime is required")
-	}
-
-	code, err := h.service.SaveServerlessCode(c.Request().Context(), serviceID, req.Runtime, req.CodeContent)
-	if err != nil {
-		return utils.Error(c, http.StatusInternalServerError, err.Error())
-	}
-	return utils.Success(c, "Serverless code saved", code)
+	return utils.Success(c, "Operation successful", policy)
 }
 
 func (h *AutoscalingHandler) GetServerlessCode(c echo.Context) error {
@@ -81,6 +62,27 @@ func (h *AutoscalingHandler) GetServerlessCode(c echo.Context) error {
 	}
 
 	code, err := h.service.GetServerlessCode(c.Request().Context(), serviceID)
+	if err != nil {
+		return utils.Error(c, http.StatusNotFound, "serverless code not found")
+	}
+	return utils.Success(c, "Operation successful", code)
+}
+
+func (h *AutoscalingHandler) SaveServerlessCode(c echo.Context) error {
+	serviceID := h.getServiceID(c)
+	if serviceID == "" {
+		return utils.Error(c, http.StatusBadRequest, "missing service id")
+	}
+
+	var payload struct {
+		Runtime     string `json:"runtime"`
+		CodeContent string `json:"codeContent"`
+	}
+	if err := c.Bind(&payload); err != nil {
+		return utils.Error(c, http.StatusBadRequest, "invalid payload")
+	}
+
+	code, err := h.service.SaveServerlessCode(c.Request().Context(), serviceID, payload.Runtime, payload.CodeContent)
 	if err != nil {
 		return utils.Error(c, http.StatusInternalServerError, err.Error())
 	}

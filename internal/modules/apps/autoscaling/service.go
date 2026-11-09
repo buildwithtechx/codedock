@@ -1,9 +1,11 @@
-package apps
+package autoscaling
 
 import (
 	"context"
 	"errors"
 )
+
+type AppServiceRepository interface{}
 
 type AutoscalingService struct {
 	autoRepo       AutoscalingRepository

@@ -1,6 +1,10 @@
 package apps
 
-import "github.com/labstack/echo/v4"
+import (
+	"github.com/labstack/echo/v4"
+
+	"codedock/internal/modules/apps/autoscaling"
+)
 
 type RoutesConfig struct {
 	Handler            *Handler
@@ -73,9 +77,6 @@ func RegisterRoutes(g *echo.Group, cfg RoutesConfig) {
 	}
 
 	if cfg.AutoscalingHandler != nil {
-		g.GET("/services/:serviceId/autoscaling", cfg.AutoscalingHandler.Get)
-		g.PUT("/services/:serviceId/autoscaling", cfg.AutoscalingHandler.Update)
-		g.GET("/services/:serviceId/serverless/code", cfg.AutoscalingHandler.GetServerlessCode)
-		g.POST("/services/:serviceId/serverless/code", cfg.AutoscalingHandler.SaveServerlessCode)
+		autoscaling.RegisterRoutes(g, cfg.AutoscalingHandler)
 	}
 }
