@@ -10,7 +10,7 @@ import (
 
 	"github.com/google/uuid"
 
-	"codedock/internal/http/mcp"
+	"codedock/internal/modules/mcp"
 )
 
 func curatedTools(bridge *mcp.Bridge, persona string) []map[string]any {

@@ -7,7 +7,6 @@ import (
 	"github.com/labstack/echo/v4"
 
 	"codedock/internal/engine/deploy"
-	"codedock/internal/http/mcp"
 	"codedock/internal/http/middleware"
 	aimod "codedock/internal/modules/ai"
 	appsmod "codedock/internal/modules/apps"
@@ -18,6 +17,7 @@ import (
 	"codedock/internal/modules/databases"
 	deploymentsmod "codedock/internal/modules/deployments"
 	"codedock/internal/modules/dns"
+	"codedock/internal/modules/mcp"
 	domainsmod "codedock/internal/modules/domains"
 	"codedock/internal/modules/environments"
 	gitmod "codedock/internal/modules/git"

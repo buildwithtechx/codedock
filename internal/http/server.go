@@ -9,7 +9,7 @@ import (
 	"github.com/mark3labs/mcp-go/server"
 
 	"codedock/internal/engine/deploy"
-	"codedock/internal/http/mcp"
+	"codedock/internal/modules/mcp"
 	"codedock/internal/http/middleware"
 	actions "codedock/internal/modules/actions"
 	aimod "codedock/internal/modules/ai"

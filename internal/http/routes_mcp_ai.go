@@ -5,8 +5,8 @@ import (
 	"net/http"
 
 	"codedock/internal/config"
-	"codedock/internal/http/ai"
-	"codedock/internal/http/mcp"
+	"codedock/internal/modules/ai"
+	"codedock/internal/modules/mcp"
 	"codedock/internal/utils"
 	"codedock/internal/version"
 

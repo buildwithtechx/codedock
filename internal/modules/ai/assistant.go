@@ -7,10 +7,9 @@ import (
 	"sync"
 
 	"codedock/internal/config"
-	"codedock/internal/http/mcp"
-	aimodule "codedock/internal/modules/ai"
 	"codedock/internal/modules/apps"
 	"codedock/internal/modules/databases"
+	"codedock/internal/modules/mcp"
 	"codedock/internal/modules/projects"
 	"codedock/internal/version"
 )
@@ -89,7 +88,7 @@ type Dependencies struct {
 	ProjectService *projects.Service
 	AppService     *apps.Service
 	DBService      *databases.DatabaseService
-	Settings       *aimodule.AISettings
+	Settings       *AISettings
 }
 
 var (

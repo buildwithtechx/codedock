@@ -8,7 +8,7 @@ import (
 	"strings"
 	"testing"
 
-	"codedock/internal/http/mcp"
+	"codedock/internal/modules/mcp"
 	"codedock/internal/modules/users"
 
 	"github.com/labstack/echo/v4"

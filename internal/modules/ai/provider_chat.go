@@ -10,8 +10,6 @@ import (
 	"net/http"
 	"strings"
 	"time"
-
-	aimodule "codedock/internal/modules/ai"
 )
 
 type ChatMessage struct {
@@ -37,7 +35,7 @@ type resolvedEndpoint struct {
 	Model    string
 }
 
-func resolveProviderEndpoint(settings *aimodule.AISettings, overrideProvider, overrideModel string) (resolvedEndpoint, error) {
+func resolveProviderEndpoint(settings *AISettings, overrideProvider, overrideModel string) (resolvedEndpoint, error) {
 	if settings == nil {
 		return resolvedEndpoint{}, errors.New("AI settings are not configured")
 	}
@@ -102,7 +100,7 @@ func resolveProviderEndpoint(settings *aimodule.AISettings, overrideProvider, ov
 	return ep, nil
 }
 
-func keyForProvider(s *aimodule.AISettings, p string) string {
+func keyForProvider(s *AISettings, p string) string {
 	switch p {
 	case "openai":
 		return s.OpenAIKey
