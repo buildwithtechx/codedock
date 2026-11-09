@@ -63,9 +63,3 @@ type ExampleOperations interface {
 type ServiceLogStreamer interface {
 	StreamServiceLogs(ctx context.Context, serviceID string, w io.Writer) error
 }
-
-type ScheduledTaskOperations interface {
-	ListTasks(ctx context.Context, projectID, serviceID string) (any, error)
-	RunTask(ctx context.Context, taskID string) error
-	CancelTask(ctx context.Context, taskID string) error
-}

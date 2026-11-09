@@ -7,7 +7,6 @@ type RoutesConfig struct {
 	Metrics       *MetricsHandler
 	Logs          *LogHandler
 	Updater       *UpdaterHandler
-	ScheduledTask *ScheduledTaskHandler
 	Analytics     *AnalyticsHandler
 	Attention     *AttentionHandler
 	Operation     *OperationHandler
@@ -46,20 +45,6 @@ func RegisterRoutes(authGroup, apiGroup *echo.Group, cfg RoutesConfig) {
 			apiGroup.POST("/settings/updates/check", cfg.Updater.CheckUpdate)
 			apiGroup.POST("/settings/updates/deploy", cfg.Updater.DeployUpdate)
 		}
-	}
-	if cfg.ScheduledTask != nil {
-		authGroup.GET("/scheduled-tasks", cfg.ScheduledTask.ListProjectScheduledTasks)
-		authGroup.POST("/scheduled-tasks", cfg.ScheduledTask.Create)
-		authGroup.GET("/scheduled-tasks/:id", cfg.ScheduledTask.Get)
-		authGroup.PUT("/scheduled-tasks/:id", cfg.ScheduledTask.Update)
-		authGroup.DELETE("/scheduled-tasks/:id", cfg.ScheduledTask.Delete)
-		authGroup.POST("/scheduled-tasks/:id/trigger", cfg.ScheduledTask.Run)
-		authGroup.GET("/jobs", cfg.ScheduledTask.ListProjectScheduledTasks)
-		authGroup.POST("/jobs", cfg.ScheduledTask.Create)
-		authGroup.GET("/jobs/:id", cfg.ScheduledTask.Get)
-		authGroup.PUT("/jobs/:id", cfg.ScheduledTask.Update)
-		authGroup.DELETE("/jobs/:id", cfg.ScheduledTask.Delete)
-		authGroup.POST("/jobs/:id/trigger", cfg.ScheduledTask.Run)
 	}
 	if cfg.Operation != nil {
 		authGroup.GET("/operations", cfg.Operation.List)

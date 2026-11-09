@@ -1,4 +1,4 @@
-package monitoring
+package tasks
 
 import (
 	"context"
@@ -9,6 +9,27 @@ import (
 
 	cron "codedock/internal/platform/scheduler"
 )
+
+type ScheduledTaskOperations interface {
+	CreateScheduledTask(ctx context.Context, task *ScheduledTask) (*ScheduledTask, error)
+	GetScheduledTask(ctx context.Context, id string) (*ScheduledTask, error)
+	ListAllScheduledTasks(ctx context.Context) ([]ScheduledTask, error)
+	ListScheduledTasksByProject(ctx context.Context, projectID string) ([]ScheduledTask, error)
+	ListScheduledTasksByService(ctx context.Context, serviceID string) ([]ScheduledTask, error)
+	UpdateScheduledTask(ctx context.Context, task *ScheduledTask) error
+	DeleteScheduledTask(ctx context.Context, id string) error
+	ExecuteScheduledTask(ctx context.Context, id string) (string, error)
+}
+
+type ScheduledTaskServiceFull interface {
+	ListByService(ctx context.Context, serviceID string) ([]ScheduledTask, error)
+	ListByProject(ctx context.Context, projectID string) ([]ScheduledTask, error)
+	CreateScheduledTask(ctx context.Context, task *ScheduledTask) (*ScheduledTask, error)
+	GetScheduledTask(ctx context.Context, id string) (*ScheduledTask, error)
+	UpdateScheduledTask(ctx context.Context, task *ScheduledTask) error
+	DeleteScheduledTask(ctx context.Context, id string) error
+	ExecuteScheduledTask(ctx context.Context, id string) (string, error)
+}
 
 type ScheduledTaskService struct {
 	repo    ScheduledTaskRepository
@@ -61,22 +82,24 @@ func (s *ScheduledTaskService) ListAllScheduledTasks(ctx context.Context) ([]Sch
 }
 
 func (s *ScheduledTaskService) ListScheduledTasksByProject(ctx context.Context, projectID string) ([]ScheduledTask, error) {
-	if projectID == "" {
-		return nil, errors.New("project id required")
-	}
+	return s.repo.ListByProject(ctx, projectID)
+}
+
+func (s *ScheduledTaskService) ListByProject(ctx context.Context, projectID string) ([]ScheduledTask, error) {
 	return s.repo.ListByProject(ctx, projectID)
 }
 
 func (s *ScheduledTaskService) ListScheduledTasksByService(ctx context.Context, serviceID string) ([]ScheduledTask, error) {
-	if serviceID == "" {
-		return nil, errors.New("service id required")
-	}
+	return s.repo.ListByService(ctx, serviceID)
+}
+
+func (s *ScheduledTaskService) ListByService(ctx context.Context, serviceID string) ([]ScheduledTask, error) {
 	return s.repo.ListByService(ctx, serviceID)
 }
 
 func (s *ScheduledTaskService) UpdateScheduledTask(ctx context.Context, j *ScheduledTask) error {
 	if j == nil || j.ID == "" {
-		return errors.New("valid scheduledTask required for update")
+		return errors.New("scheduledTask with id required")
 	}
 	j.UpdatedAt = time.Now()
 	if err := s.repo.Update(ctx, j); err != nil {
@@ -97,15 +120,18 @@ func (s *ScheduledTaskService) DeleteScheduledTask(ctx context.Context, id strin
 	if id == "" {
 		return errors.New("id required")
 	}
+	if err := s.repo.Delete(ctx, id); err != nil {
+		return err
+	}
 	if s.manager != nil {
 		s.manager.UnregisterScheduledTask(id)
 	}
-	return s.repo.Delete(ctx, id)
+	return nil
 }
 
 func (s *ScheduledTaskService) ExecuteScheduledTask(ctx context.Context, id string) (string, error) {
 	if s.manager == nil {
-		return "", errors.New("cron manager not available")
+		return "", errors.New("cron manager not configured")
 	}
 	return s.manager.ExecuteScheduledTask(ctx, id)
 }

@@ -1,4 +1,4 @@
-package monitoring
+package tasks
 
 import (
 	"context"

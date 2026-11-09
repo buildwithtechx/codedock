@@ -1,48 +1,17 @@
-package monitoring
+package tasks
 
 import (
 	"context"
 	"net/http"
-	"time"
 
 	"github.com/labstack/echo/v4"
 
 	"codedock/internal/utils"
 )
 
-type ScheduledTask struct {
-	ID         string    `json:"id" db:"id"`
-	ServiceID  string    `json:"serviceId" db:"service_id"`
-	Name       string    `json:"name" db:"name"`
-	Schedule   string    `json:"schedule" db:"schedule"`
-	Command    string    `json:"command" db:"command"`
-	Status     string    `json:"status" db:"status"`
-	LastRunAt  time.Time `json:"lastRunAt" db:"last_run_at"`
-	LastOutput string    `json:"lastOutput" db:"last_output"`
-	CreatedAt  time.Time `json:"createdAt" db:"created_at"`
-	UpdatedAt  time.Time `json:"updatedAt" db:"updated_at"`
-}
-
-type UpdateScheduledTaskRequest struct {
-	Name     *string `json:"name,omitempty"`
-	Schedule *string `json:"schedule,omitempty"`
-	Command  *string `json:"command,omitempty"`
-	Status   *string `json:"status,omitempty"`
-}
-
 type ScheduledTaskAccessChecker interface {
 	HasServiceAccess(ctx context.Context, userID, role, serviceID string) bool
 	HasProjectAccess(ctx context.Context, userID, role, projectID string) bool
-}
-
-type ScheduledTaskServiceFull interface {
-	ListByService(ctx context.Context, serviceID string) ([]ScheduledTask, error)
-	ListByProject(ctx context.Context, projectID string) ([]ScheduledTask, error)
-	CreateScheduledTask(ctx context.Context, task *ScheduledTask) (*ScheduledTask, error)
-	GetScheduledTask(ctx context.Context, id string) (*ScheduledTask, error)
-	UpdateScheduledTask(ctx context.Context, task *ScheduledTask) error
-	DeleteScheduledTask(ctx context.Context, id string) error
-	ExecuteScheduledTask(ctx context.Context, id string) (string, error)
 }
 
 type ScheduledTaskHandler struct {

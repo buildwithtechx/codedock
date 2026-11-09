@@ -34,6 +34,7 @@ import (
 	projectsmod "codedock/internal/modules/projects"
 	"codedock/internal/modules/servers"
 	settingsmodule "codedock/internal/modules/settings"
+	"codedock/internal/modules/tasks"
 	"codedock/internal/modules/users"
 	"codedock/internal/platform/networking"
 	"codedock/internal/platform/notifications"
@@ -69,7 +70,7 @@ func NewServer(db *sql.DB, v *vault.Vault, deployer *deploy.Deployer, traefikMan
 	notifRepo := notifsmod.NewNotificationSettingsRepo(db)
 	aiRepo := aimod.NewRepository(db)
 	envVarRepo := projectsmod.NewEnvRepo(db, v)
-	scheduledTaskRepo := monitoring.NewScheduledTaskRepo(db)
+	scheduledTaskRepo := tasks.NewScheduledTaskRepo(db)
 	backupRepo := backupmodule.NewRepository(db, v)
 	backupRepo.SetSnapshotDumper(backupmodule.NewSystemSnapshotDumper(dataDir))
 	serverlessRepository := appsmod.NewServerlessRepository(db)
@@ -163,7 +164,7 @@ func NewServer(db *sql.DB, v *vault.Vault, deployer *deploy.Deployer, traefikMan
 		})
 	}
 
-	scheduledTaskService := monitoring.NewScheduledTaskService(scheduledTaskRepo, cronManager)
+	scheduledTaskService := tasks.NewScheduledTaskService(scheduledTaskRepo, cronManager)
 	canvasService := canvas.NewCanvasService(canvasRepo)
 	canvasService.SetRuntime(&canvasRuntimeAdapter{rt: observability.NewCanvasRuntime(dockerClient)})
 

@@ -9,8 +9,8 @@ import (
 	"codedock/internal/modules/apps"
 	"codedock/internal/modules/backups"
 	"codedock/internal/modules/databases"
-	"codedock/internal/modules/monitoring"
 	"codedock/internal/modules/projects"
+	"codedock/internal/modules/tasks"
 	"codedock/internal/platform/scheduler"
 	"codedock/internal/platform/storage"
 )
@@ -19,7 +19,7 @@ type engineAdapter struct {
 	appRepo           apps.AppServiceRepository
 	dbRepo            databases.Repository
 	projectRepo       projects.ProjectRepository
-	scheduledTaskRepo monitoring.ScheduledTaskRepository
+	scheduledTaskRepo tasks.ScheduledTaskRepository
 	backupRepo        backups.Repository
 	sftpRepo          backups.SFTPRepository
 }
@@ -28,7 +28,7 @@ func newEngineAdapter(
 	appRepo apps.AppServiceRepository,
 	dbRepo databases.Repository,
 	projectRepo projects.ProjectRepository,
-	scheduledTaskRepo monitoring.ScheduledTaskRepository,
+	scheduledTaskRepo tasks.ScheduledTaskRepository,
 	backupRepo backups.Repository,
 ) *engineAdapter {
 	return &engineAdapter{
@@ -112,7 +112,7 @@ func (a *engineAdapter) GetAppService(id string) (*scheduler.AppService, error) 
 }
 
 func (a *engineAdapter) UpdateScheduledTaskStatusAndOutput(id string, status scheduler.ScheduledTaskStatus, lastRunAt *time.Time, output string) error {
-	return a.scheduledTaskRepo.UpdateStatus(context.Background(), id, monitoring.ScheduledTaskStatus(status), lastRunAt, output)
+	return a.scheduledTaskRepo.UpdateStatus(context.Background(), id, tasks.ScheduledTaskStatus(status), lastRunAt, output)
 }
 
 func (a *engineAdapter) ListAllActiveBackupConfigs() ([]*storage.BackupConfig, error) {

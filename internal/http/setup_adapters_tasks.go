@@ -5,44 +5,44 @@ import (
 	"errors"
 
 	"codedock/internal/modules/apps"
-	"codedock/internal/modules/monitoring"
 	"codedock/internal/modules/projects"
+	"codedock/internal/modules/tasks"
 	"codedock/internal/modules/users"
 )
 
 type scheduledTaskServiceAdapter struct {
-	svc *monitoring.ScheduledTaskService
+	svc *tasks.ScheduledTaskService
 }
 
-func (s *scheduledTaskServiceAdapter) ListByService(ctx context.Context, serviceID string) ([]monitoring.ScheduledTask, error) {
+func (s *scheduledTaskServiceAdapter) ListByService(ctx context.Context, serviceID string) ([]tasks.ScheduledTask, error) {
 	if s.svc == nil {
-		return []monitoring.ScheduledTask{}, nil
+		return []tasks.ScheduledTask{}, nil
 	}
 	return s.svc.ListScheduledTasksByService(ctx, serviceID)
 }
 
-func (s *scheduledTaskServiceAdapter) ListByProject(ctx context.Context, projectID string) ([]monitoring.ScheduledTask, error) {
+func (s *scheduledTaskServiceAdapter) ListByProject(ctx context.Context, projectID string) ([]tasks.ScheduledTask, error) {
 	if s.svc == nil {
-		return []monitoring.ScheduledTask{}, nil
+		return []tasks.ScheduledTask{}, nil
 	}
 	return s.svc.ListScheduledTasksByProject(ctx, projectID)
 }
 
-func (s *scheduledTaskServiceAdapter) CreateScheduledTask(ctx context.Context, task *monitoring.ScheduledTask) (*monitoring.ScheduledTask, error) {
+func (s *scheduledTaskServiceAdapter) CreateScheduledTask(ctx context.Context, task *tasks.ScheduledTask) (*tasks.ScheduledTask, error) {
 	if s.svc == nil {
 		return nil, errors.New("task service unavailable")
 	}
 	return s.svc.CreateScheduledTask(ctx, task)
 }
 
-func (s *scheduledTaskServiceAdapter) GetScheduledTask(ctx context.Context, id string) (*monitoring.ScheduledTask, error) {
+func (s *scheduledTaskServiceAdapter) GetScheduledTask(ctx context.Context, id string) (*tasks.ScheduledTask, error) {
 	if s.svc == nil {
 		return nil, errors.New("task service unavailable")
 	}
 	return s.svc.GetScheduledTask(ctx, id)
 }
 
-func (s *scheduledTaskServiceAdapter) UpdateScheduledTask(ctx context.Context, task *monitoring.ScheduledTask) error {
+func (s *scheduledTaskServiceAdapter) UpdateScheduledTask(ctx context.Context, task *tasks.ScheduledTask) error {
 	if s.svc == nil {
 		return errors.New("task service unavailable")
 	}

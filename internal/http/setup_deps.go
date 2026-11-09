@@ -27,6 +27,7 @@ import (
 	projectsmod "codedock/internal/modules/projects"
 	"codedock/internal/modules/servers"
 	settingsmodule "codedock/internal/modules/settings"
+	"codedock/internal/modules/tasks"
 	"codedock/internal/modules/users"
 	"codedock/internal/platform/networking"
 	"codedock/internal/platform/notifications"
@@ -68,7 +69,7 @@ type serverSetupDeps struct {
 	orgService             *organizations.OrganizationService
 	authMod                *auth.Module
 	projectSettingsService *projectsmod.ProjectSettingsService
-	scheduledTaskService   *monitoring.ScheduledTaskService
+	scheduledTaskService   *tasks.ScheduledTaskService
 	canvasService          *canvas.CanvasService
 	gitService             *gitmod.ProviderService
 	deploymentService      *deploymentsmod.DeploymentService

@@ -20,6 +20,7 @@ import (
 	"codedock/internal/modules/organizations"
 	"codedock/internal/modules/settings"
 	"codedock/internal/modules/support"
+	"codedock/internal/modules/tasks"
 	"github.com/labstack/echo/v4"
 )
 
@@ -122,18 +123,7 @@ func (s *Server) registerMiscRoutes(apiGroup, authGroup *echo.Group) {
 	dns.RegisterIngressRoutes(authGroup, s.ingressHandler, s.authGuard.RequireRole("admin"))
 	actions.RegisterRoutes(authGroup, s.authGuard.RequireRole("admin"), s.actionsHandler)
 	support.RegisterRoutes(authGroup, s.supportHandler)
-	authGroup.GET("/scheduled-tasks", s.scheduledTaskHandler.ListProjectScheduledTasks)
-	authGroup.POST("/scheduled-tasks", s.scheduledTaskHandler.Create)
-	authGroup.GET("/scheduled-tasks/:id", s.scheduledTaskHandler.Get)
-	authGroup.PUT("/scheduled-tasks/:id", s.scheduledTaskHandler.Update)
-	authGroup.DELETE("/scheduled-tasks/:id", s.scheduledTaskHandler.Delete)
-	authGroup.POST("/scheduled-tasks/:id/trigger", s.scheduledTaskHandler.Run)
-	authGroup.GET("/jobs", s.scheduledTaskHandler.ListProjectScheduledTasks)
-	authGroup.POST("/jobs", s.scheduledTaskHandler.Create)
-	authGroup.GET("/jobs/:id", s.scheduledTaskHandler.Get)
-	authGroup.PUT("/jobs/:id", s.scheduledTaskHandler.Update)
-	authGroup.DELETE("/jobs/:id", s.scheduledTaskHandler.Delete)
-	authGroup.POST("/jobs/:id/trigger", s.scheduledTaskHandler.Run)
+	tasks.RegisterRoutes(authGroup, s.scheduledTaskHandler)
 	audit.RegisterRoutes(authGroup, s.auditLogHandler, s.authGuard.RequireRole("admin"))
 	s.registerMcpAndAiRoutes(authGroup)
 }

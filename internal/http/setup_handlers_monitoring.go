@@ -4,11 +4,12 @@ import (
 	"codedock/internal/modules/dns"
 	"codedock/internal/modules/monitoring"
 	notifsmod "codedock/internal/modules/notifications"
+	"codedock/internal/modules/tasks"
 )
 
 type monitoringHandlersGroup struct {
 	operationHandler     *monitoring.OperationHandler
-	scheduledTaskHandler *monitoring.ScheduledTaskHandler
+	scheduledTaskHandler *tasks.ScheduledTaskHandler
 	notifSettingsHandler *notifsmod.NotificationSettingsHandler
 	updaterHandler       *monitoring.UpdaterHandler
 	notificationHandler  *notifsmod.NotificationHandler
@@ -40,7 +41,7 @@ func createMonitoringHandlers(
 
 	return monitoringHandlersGroup{
 		operationHandler: monitoring.NewOperationHandler(&operationsServiceAdapter{svc: d.operationService}),
-		scheduledTaskHandler: monitoring.NewScheduledTaskHandler(
+		scheduledTaskHandler: tasks.NewScheduledTaskHandler(
 			&scheduledTaskServiceAdapter{svc: d.scheduledTaskService},
 			&scheduledTaskAccessAdapter{appService: d.appService, projectService: d.projectService},
 		),

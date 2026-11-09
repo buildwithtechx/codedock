@@ -37,6 +37,7 @@ import (
 	"codedock/internal/modules/servers"
 	"codedock/internal/modules/settings"
 	"codedock/internal/modules/support"
+	"codedock/internal/modules/tasks"
 	"codedock/internal/modules/users"
 	"codedock/internal/platform/networking"
 	core "codedock/internal/platform/notifications"
@@ -70,7 +71,7 @@ type Server struct {
 	appWebhookHandler          *appsmod.WebhookHandler
 	autoscalingHandler         *appsmod.AutoscalingHandler
 	dbHandler                  *databases.DatabaseHandler
-	scheduledTaskHandler       *modmonitoring.ScheduledTaskHandler
+	scheduledTaskHandler       *tasks.ScheduledTaskHandler
 	canvasHandler              *canvas.CanvasHandler
 	terminalHandler            *deploymentsmod.TerminalHandler
 	deploymentHandler          *deploymentsmod.DeploymentHandler
