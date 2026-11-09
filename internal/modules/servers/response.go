@@ -58,4 +58,3 @@ type DockerInspectResult struct {
 type dockerPsRow = DockerPsRow
 type dockerInspectMount = DockerInspectMount
 type dockerInspectResult = DockerInspectResult
-

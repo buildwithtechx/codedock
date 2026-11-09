@@ -7,20 +7,20 @@ import (
 )
 
 type BillingConfig struct {
-	PublishableKey string         `json:"publishableKey"`
-	Plans          []BillingPlan  `json:"plans"`
-	IsConfigured   bool           `json:"isConfigured"`
-	Enabled        bool           `json:"enabled,omitempty"`
-	Mode           string         `json:"mode,omitempty"`
+	PublishableKey string        `json:"publishableKey"`
+	Plans          []BillingPlan `json:"plans"`
+	IsConfigured   bool          `json:"isConfigured"`
+	Enabled        bool          `json:"enabled,omitempty"`
+	Mode           string        `json:"mode,omitempty"`
 }
 
 type BillingPlan struct {
-	ID          string   `json:"id"`
-	Name        string   `json:"name"`
-	Description string   `json:"description"`
-	PriceMonthly int     `json:"priceMonthly"`
-	Features    []string `json:"features"`
-	PriceID     string   `json:"priceId,omitempty"`
+	ID           string   `json:"id"`
+	Name         string   `json:"name"`
+	Description  string   `json:"description"`
+	PriceMonthly int      `json:"priceMonthly"`
+	Features     []string `json:"features"`
+	PriceID      string   `json:"priceId,omitempty"`
 }
 
 type PendingCheckout struct {
