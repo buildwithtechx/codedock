@@ -1,5 +1,7 @@
 package apps
 
+import "codedock/internal/modules/apps/webhooks"
+
 type AppServiceStatus string
 
 const (
@@ -31,9 +33,9 @@ const (
 	RuntimeModeWeb        RuntimeMode = "web"
 )
 
-type DrainType string
+type DrainType = webhooks.DrainType
 
 const (
-	DrainTypeHTTP   DrainType = "http"
-	DrainTypeSyslog DrainType = "syslog"
+	DrainTypeHTTP   = webhooks.DrainTypeHTTP
+	DrainTypeSyslog = webhooks.DrainTypeSyslog
 )

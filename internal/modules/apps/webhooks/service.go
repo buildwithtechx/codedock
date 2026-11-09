@@ -1,4 +1,4 @@
-package apps
+package webhooks
 
 import (
 	"context"
@@ -7,6 +7,23 @@ import (
 
 	"github.com/google/uuid"
 )
+
+type WebhookService interface {
+	CreateWebhook(ctx context.Context, w *Webhook) (*Webhook, error)
+	ListWebhooks(ctx context.Context, serviceID string) ([]*Webhook, error)
+	DeleteWebhook(ctx context.Context, id, serviceID string) error
+	CreateLogDrain(ctx context.Context, d *LogDrain) (*LogDrain, error)
+	ListLogDrains(ctx context.Context, serviceID string) ([]*LogDrain, error)
+	DeleteLogDrain(ctx context.Context, id, serviceID string) error
+}
+
+type Service struct {
+	repo Repository
+}
+
+func NewService(repo Repository) *Service {
+	return &Service{repo: repo}
+}
 
 func (s *Service) CreateWebhook(ctx context.Context, w *Webhook) (*Webhook, error) {
 	if w == nil {

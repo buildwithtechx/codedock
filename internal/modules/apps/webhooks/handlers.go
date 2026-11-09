@@ -1,4 +1,4 @@
-package apps
+package webhooks
 
 import (
 	"net/http"
@@ -9,10 +9,10 @@ import (
 )
 
 type WebhookHandler struct {
-	service *Service
+	service WebhookService
 }
 
-func NewWebhookHandler(s *Service) *WebhookHandler {
+func NewWebhookHandler(s WebhookService) *WebhookHandler {
 	return &WebhookHandler{service: s}
 }
 

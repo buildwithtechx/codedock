@@ -6,6 +6,7 @@ import (
 	"codedock/internal/modules/apps/autoscaling"
 	"codedock/internal/modules/apps/vars"
 	"codedock/internal/modules/apps/volumes"
+	"codedock/internal/modules/apps/webhooks"
 )
 
 type RoutesConfig struct {
@@ -62,13 +63,7 @@ func RegisterRoutes(g *echo.Group, cfg RoutesConfig) {
 	}
 
 	if cfg.WebhookHandler != nil {
-		g.GET("/apps/:id/webhooks", cfg.WebhookHandler.ListWebhooks)
-		g.POST("/apps/:id/webhooks", cfg.WebhookHandler.CreateWebhook)
-		g.DELETE("/apps/:id/webhooks/:webhookId", cfg.WebhookHandler.DeleteWebhook)
-
-		g.GET("/apps/:id/log-drains", cfg.WebhookHandler.ListLogDrains)
-		g.POST("/apps/:id/log-drains", cfg.WebhookHandler.CreateLogDrain)
-		g.DELETE("/apps/:id/log-drains/:drainId", cfg.WebhookHandler.DeleteLogDrain)
+		webhooks.RegisterRoutes(g, cfg.WebhookHandler)
 	}
 
 	if cfg.AutoscalingHandler != nil {

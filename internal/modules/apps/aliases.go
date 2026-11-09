@@ -4,6 +4,7 @@ import (
 	"codedock/internal/modules/apps/autoscaling"
 	"codedock/internal/modules/apps/vars"
 	"codedock/internal/modules/apps/volumes"
+	"codedock/internal/modules/apps/webhooks"
 )
 
 // Autoscaling aliases
@@ -38,4 +39,13 @@ type ServiceVolumeRepository = volumes.ServiceVolumeRepository
 var (
 	NewServiceVolumeRepo = volumes.NewServiceVolumeRepo
 	NewVolumeHandler     = volumes.NewVolumeHandler
+)
+
+// Webhooks aliases
+type WebhookHandler = webhooks.WebhookHandler
+type WebhookRepository = webhooks.Repository
+
+var (
+	NewWebhookHandler    = webhooks.NewWebhookHandler
+	NewWebhookRepository = webhooks.NewRepository
 )

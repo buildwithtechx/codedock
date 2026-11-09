@@ -9,6 +9,7 @@ import (
 
 	"codedock/internal/modules/apps/vars"
 	"codedock/internal/modules/apps/volumes"
+	"codedock/internal/modules/apps/webhooks"
 )
 
 type Service struct {
@@ -162,4 +163,28 @@ func (s *Service) DeleteVolume(ctx context.Context, id string) error {
 
 func (s *Service) EmptyVolume(ctx context.Context, serviceID, volumeID string) (*ServiceVolume, string, error) {
 	return volumes.NewService(s.volumeRepo).EmptyVolume(ctx, serviceID, volumeID)
+}
+
+func (s *Service) CreateWebhook(ctx context.Context, w *Webhook) (*Webhook, error) {
+	return webhooks.NewService(s.repo).CreateWebhook(ctx, w)
+}
+
+func (s *Service) ListWebhooks(ctx context.Context, serviceID string) ([]*Webhook, error) {
+	return webhooks.NewService(s.repo).ListWebhooks(ctx, serviceID)
+}
+
+func (s *Service) DeleteWebhook(ctx context.Context, id, serviceID string) error {
+	return webhooks.NewService(s.repo).DeleteWebhook(ctx, id, serviceID)
+}
+
+func (s *Service) CreateLogDrain(ctx context.Context, d *LogDrain) (*LogDrain, error) {
+	return webhooks.NewService(s.repo).CreateLogDrain(ctx, d)
+}
+
+func (s *Service) ListLogDrains(ctx context.Context, serviceID string) ([]*LogDrain, error) {
+	return webhooks.NewService(s.repo).ListLogDrains(ctx, serviceID)
+}
+
+func (s *Service) DeleteLogDrain(ctx context.Context, id, serviceID string) error {
+	return webhooks.NewService(s.repo).DeleteLogDrain(ctx, id, serviceID)
 }

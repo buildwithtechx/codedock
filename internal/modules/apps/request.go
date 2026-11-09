@@ -3,6 +3,7 @@ package apps
 import (
 	"codedock/internal/modules/apps/vars"
 	"codedock/internal/modules/apps/volumes"
+	"codedock/internal/modules/apps/webhooks"
 )
 
 type CreateAppServiceRequest struct {
@@ -68,18 +69,8 @@ type UpdateVariableRequest = vars.UpdateVariableRequest
 
 type CreateVolumeRequest = volumes.CreateVolumeRequest
 
-type CreateWebhookRequest struct {
-	URL    string `json:"url"`
-	Secret string `json:"secret,omitempty"`
-	Events string `json:"events,omitempty"`
-}
-
-type CreateLogDrainRequest struct {
-	ProjectID   string    `json:"projectId"`
-	DrainType   DrainType `json:"drainType"`
-	EndpointURL string    `json:"endpointUrl"`
-	APIKey      string    `json:"apiKey,omitempty"`
-}
+type CreateWebhookRequest = webhooks.CreateWebhookRequest
+type CreateLogDrainRequest = webhooks.CreateLogDrainRequest
 
 type SaveServerlessCodeRequest struct {
 	Runtime     string `json:"runtime"`
