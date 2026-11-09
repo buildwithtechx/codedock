@@ -1,4 +1,4 @@
-package servers
+package takeover
 
 import (
 	"context"
@@ -8,6 +8,11 @@ import (
 
 	"github.com/google/uuid"
 )
+
+type Vault interface {
+	Encrypt(string) (string, error)
+	Decrypt(string) (string, error)
+}
 
 type TakeoverRepository interface {
 	Create(ctx context.Context, run *TakeoverRun) error

@@ -1,6 +1,8 @@
 package servers
 
 import (
+	"crypto/rand"
+	"encoding/hex"
 	"fmt"
 	"net/http"
 	"sync"
@@ -10,6 +12,12 @@ import (
 
 	"codedock/internal/utils"
 )
+
+func randomTokenHex(n int) string {
+	b := make([]byte, n)
+	rand.Read(b)
+	return hex.EncodeToString(b)
+}
 
 var (
 	workloadStoreMu sync.Mutex

@@ -1,6 +1,25 @@
-package servers
+package takeover
 
 import "time"
+
+type TakeoverPlatform string
+
+const (
+	TakeoverPlatformDokploy TakeoverPlatform = "dokploy"
+	TakeoverPlatformCoolify TakeoverPlatform = "coolify"
+	TakeoverPlatformDokku   TakeoverPlatform = "dokku"
+	TakeoverPlatformDocker  TakeoverPlatform = "docker"
+)
+
+type TakeoverStatus string
+
+const (
+	TakeoverStatusScanning TakeoverStatus = "scanning"
+	TakeoverStatusScanned  TakeoverStatus = "scanned"
+	TakeoverStatusAdopting TakeoverStatus = "adopting"
+	TakeoverStatusDone     TakeoverStatus = "done"
+	TakeoverStatusFailed   TakeoverStatus = "failed"
+)
 
 type TakeoverRun struct {
 	ID                string           `json:"id"`
@@ -31,4 +50,19 @@ type DiscoveredStack struct {
 	ComposeProjects []string              `json:"composeProjects"`
 	Platform        TakeoverPlatform      `json:"platform"`
 	Host            string                `json:"host"`
+}
+
+type TakeoverScanRequest struct {
+	Host           string           `json:"host"`
+	SSHUser        string           `json:"sshUser"`
+	SSHKey         string           `json:"sshKey"`
+	SSHFingerprint string           `json:"sshFingerprint,omitempty"`
+	Platform       TakeoverPlatform `json:"platform"`
+}
+
+type TakeoverAdoptRequest struct {
+	RunID        string   `json:"runId"`
+	ProjectName  string   `json:"projectName"`
+	ServiceNames []string `json:"serviceNames"`
+	ImportEnv    bool     `json:"importEnv"`
 }

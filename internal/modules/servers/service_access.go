@@ -7,6 +7,7 @@ import (
 	"time"
 
 	"codedock/internal/config"
+	"codedock/internal/modules/servers/managed"
 	"codedock/internal/platform/observability"
 )
 
@@ -185,7 +186,7 @@ func applyServerMetadata(srv *Server) {
 			if srv.Status != ServerStatusOnline && !srv.IsLocal {
 				state = string(srv.Status)
 			}
-			srv.Managed = &CloudWorkspaceSummary{
+			srv.Managed = &managed.CloudWorkspaceSummary{
 				ID:                 srv.ID,
 				ServerID:           srv.ID,
 				Name:               srv.Name,
@@ -193,7 +194,7 @@ func applyServerMetadata(srv *Server) {
 				SubscriptionStatus: "active",
 				ProjectCount:       0,
 				State:              state,
-				Resources: &ManagedServerResources{
+				Resources: &managed.ManagedServerResources{
 					CPUCores: 4,
 					MemoryMB: 8192,
 					DiskMB:   80000,

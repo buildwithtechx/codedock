@@ -1,4 +1,4 @@
-package servers
+package takeover
 
 import (
 	"context"
@@ -11,6 +11,33 @@ import (
 	"github.com/google/uuid"
 	"golang.org/x/crypto/ssh"
 )
+
+type dockerPsRow struct {
+	ID    string `json:"ID"`
+	Names string `json:"Names"`
+	Image string `json:"Image"`
+	State string `json:"State"`
+	Ports string `json:"Ports"`
+}
+
+type dockerInspectMount struct {
+	Source string `json:"Source"`
+	Type   string `json:"Type"`
+}
+
+type dockerInspectResult struct {
+	Name   string `json:"Name"`
+	Config struct {
+		Image  string            `json:"Image"`
+		Env    []string          `json:"Env"`
+		Labels map[string]string `json:"Labels"`
+	} `json:"Config"`
+	HostConfig struct {
+		Binds        []string               `json:"Binds"`
+		PortBindings map[string]interface{} `json:"PortBindings"`
+	} `json:"HostConfig"`
+	Mounts []dockerInspectMount `json:"Mounts"`
+}
 
 type ProjectCreator interface {
 	CreateProject(ctx context.Context, id, name, description string) error

@@ -8,6 +8,8 @@ import (
 	"codedock/internal/modules/auth"
 	"codedock/internal/modules/projects"
 	"codedock/internal/modules/servers"
+	"codedock/internal/modules/servers/networks"
+	"codedock/internal/modules/servers/takeover"
 	"codedock/internal/modules/users"
 	"codedock/internal/platform/ssh"
 )
@@ -146,17 +148,17 @@ func (a *serverTokenValidatorAdapter) ValidateToken(tokenStr string) (map[string
 	return res, nil
 }
 
-func createServerHandlers(d *serverSetupDeps) (*servers.Handler, *servers.ServerMetricsWSHandler, *servers.TakeoverHandler, *servers.ServerNetworksHandler) {
+func createServerHandlers(d *serverSetupDeps) (*servers.Handler, *servers.ServerMetricsWSHandler, *takeover.TakeoverHandler, *networks.ServerNetworksHandler) {
 	serversRepo := servers.NewRepository(d.db, d.v)
 	serversUserLookup := &serverUserLookupAdapter{users: d.userRepo}
 	serversService := servers.NewService(serversRepo, serversUserLookup, d.sshManager)
 	serverAudit := &serverAuditLoggerAdapter{audit: &auditDomainAdapter{audit: d.auditService}}
 	serversHandler := servers.NewHandler(serversService, serverAudit)
-	takeoverRepo := servers.NewTakeoverRepository(d.db, d.v)
+	takeoverRepo := takeover.NewTakeoverRepository(d.db, d.v)
 	takeoverCreator := &projectCreatorAdapter{projects: d.projectRepo, apps: d.appRepo}
-	takeoverService := servers.NewTakeoverService(takeoverRepo, takeoverCreator)
-	serversTakeoverHandler := servers.NewTakeoverHandler(takeoverService, takeoverRepo)
-	serversNetworksHandler := servers.NewServerNetworksHandler()
+	takeoverService := takeover.NewTakeoverService(takeoverRepo, takeoverCreator)
+	serversTakeoverHandler := takeover.NewTakeoverHandler(takeoverService, takeoverRepo)
+	serversNetworksHandler := networks.NewServerNetworksHandler()
 	serversWSHandler := servers.NewServerMetricsWSHandler(&serverTokenValidatorAdapter{tokens: d.tokenService}, serversService, serversUserLookup)
 	return serversHandler, serversWSHandler, serversTakeoverHandler, serversNetworksHandler
 }

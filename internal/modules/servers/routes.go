@@ -1,12 +1,18 @@
 package servers
 
-import "github.com/labstack/echo/v4"
+import (
+	"github.com/labstack/echo/v4"
+
+	"codedock/internal/modules/servers/managed"
+	"codedock/internal/modules/servers/networks"
+	"codedock/internal/modules/servers/takeover"
+)
 
 type RoutesConfig struct {
 	Handler         *Handler
-	ManagedHandler  *ManagedHandler
-	TakeoverHandler *TakeoverHandler
-	NetworksHandler *ServerNetworksHandler
+	ManagedHandler  *managed.ManagedHandler
+	TakeoverHandler *takeover.TakeoverHandler
+	NetworksHandler *networks.ServerNetworksHandler
 	WSHandler       *ServerMetricsWSHandler
 	Middleware      RouteMiddleware
 }
@@ -53,14 +59,7 @@ func RegisterRoutes(apiGroup, authGroup *echo.Group, cfg RoutesConfig) {
 	}
 
 	if cfg.NetworksHandler != nil {
-		authGroup.GET("/system/networks", cfg.NetworksHandler.List)
-		authGroup.GET("/system/networks/:id", cfg.NetworksHandler.Get)
-		authGroup.POST("/system/networks", cfg.NetworksHandler.Create, mw.Admin)
-		authGroup.PUT("/system/networks/:id/access", cfg.NetworksHandler.ReviseAccess, mw.Admin)
-		authGroup.DELETE("/system/networks/:id", cfg.NetworksHandler.Delete, mw.Admin)
-		authGroup.GET("/system/networks/operations/:operationId/watchdog", cfg.NetworksHandler.GetWatchdog)
-		authGroup.POST("/system/networks/operations/:operationId/watchdog/commit", cfg.NetworksHandler.CommitWatchdog, mw.Admin)
-		authGroup.POST("/system/networks/operations/:operationId/watchdog/rollback", cfg.NetworksHandler.RollbackWatchdog, mw.Admin)
+		networks.RegisterRoutes(authGroup, cfg.NetworksHandler, mw.Admin)
 	}
 
 	if cfg.WSHandler != nil {
@@ -68,26 +67,15 @@ func RegisterRoutes(apiGroup, authGroup *echo.Group, cfg RoutesConfig) {
 	}
 
 	if cfg.TakeoverHandler != nil {
-		apiGroup.POST("/system/takeover/scan", cfg.TakeoverHandler.Scan, mw.Admin)
-		apiGroup.POST("/system/takeover/adopt", cfg.TakeoverHandler.Adopt, mw.Admin)
-		authGroup.GET("/system/takeover/runs", cfg.TakeoverHandler.ListRuns, mw.Admin)
-		authGroup.GET("/system/takeover/runs/:id", cfg.TakeoverHandler.GetRun, mw.Admin)
+		takeover.RegisterRoutes(authGroup, apiGroup, cfg.TakeoverHandler, mw.Admin)
 	}
 
 	if cfg.ManagedHandler != nil {
-		authGroup.GET("/managed/catalog", cfg.ManagedHandler.Catalog)
-		authGroup.GET("/organizations/:id/managed/credentials", cfg.ManagedHandler.ListCredentials, mw.OrgMember)
-		authGroup.POST("/organizations/:id/managed/credentials", cfg.ManagedHandler.CreateCredential, mw.OrgAdmin)
-		authGroup.DELETE("/organizations/:id/managed/credentials/:credentialId", cfg.ManagedHandler.DeleteCredential, mw.OrgAdmin)
-		authGroup.GET("/organizations/:id/managed/credentials/:credentialId/offers", cfg.ManagedHandler.Offers, mw.OrgMember, mw.ServerRead)
-		authGroup.GET("/organizations/:id/managed/quota", cfg.ManagedHandler.GetQuota, mw.OrgMember)
-		authGroup.PUT("/organizations/:id/managed/quota", cfg.ManagedHandler.SetQuota, mw.OrgAdmin)
-		authGroup.POST("/organizations/:id/managed/servers/review", cfg.ManagedHandler.ReviewProvision, mw.OrgMember, mw.ServerWrite)
-		authGroup.POST("/organizations/:id/managed/servers/:serverId/refresh", cfg.ManagedHandler.RefreshServer, mw.OrgMember, mw.ServerRead)
-		authGroup.POST("/organizations/:id/managed/servers/:serverId/resize/review", cfg.ManagedHandler.ReviewResize, mw.OrgAdmin)
-		authGroup.POST("/organizations/:id/managed/servers/:serverId/delete/review", cfg.ManagedHandler.ReviewDelete, mw.OrgAdmin)
-		authGroup.GET("/managed-operations/:operationId", cfg.ManagedHandler.GetOperation, mw.ServerRead)
-		authGroup.GET("/managed-operations/:operationId/stream", cfg.ManagedHandler.StreamOperation, mw.ServerRead)
-		authGroup.POST("/managed-operations/:operationId/apply", cfg.ManagedHandler.ApplyOperation, mw.ServerWrite)
+		managed.RegisterRoutes(authGroup, cfg.ManagedHandler, managed.RouteMiddleware{
+			OrgMember:   mw.OrgMember,
+			OrgAdmin:    mw.OrgAdmin,
+			ServerRead:  mw.ServerRead,
+			ServerWrite: mw.ServerWrite,
+		})
 	}
 }

@@ -38,6 +38,9 @@ import (
 	projectsmod "codedock/internal/modules/projects"
 	securitymod "codedock/internal/modules/security"
 	"codedock/internal/modules/servers"
+	"codedock/internal/modules/servers/managed"
+	"codedock/internal/modules/servers/networks"
+	"codedock/internal/modules/servers/takeover"
 	"codedock/internal/modules/settings"
 	"codedock/internal/modules/support"
 	systemmod "codedock/internal/modules/system"
@@ -117,18 +120,18 @@ type Server struct {
 	auditLogHandler            *audit.AuditLogHandler
 	exampleHandler             *modmonitoring.ExampleHandler
 	serverHandler              *servers.Handler
-	managedHandler             *servers.ManagedHandler
+	managedHandler             *managed.ManagedHandler
 	migrationLifecycleHandler  *modmigrations.LifecycleHandler
 	analyticsHandler           *modmonitoring.AnalyticsHandler
 	attentionHandler           *modmonitoring.AttentionHandler
 	billingHandler             *billing.BillingHandler
 	serverMetricsWSHandler     *servers.ServerMetricsWSHandler
 	serviceLogsWSHandler       *modmonitoring.ServiceLogsWSHandler
-	takeoverHandler            *servers.TakeoverHandler
+	takeoverHandler            *takeover.TakeoverHandler
 	routeRuleHandler           *environments.RouteRuleHandler
 	mailHandler                *mailmodule.Handler
 	ingressHandler             *ingress.IngressHandler
-	serverNetworksHandler      *servers.ServerNetworksHandler
+	serverNetworksHandler      *networks.ServerNetworksHandler
 	actionsHandler             *actions.ActionsHandler
 	checksHandler              *projectsmod.ChecksHandler
 	supportHandler             *support.SupportHandler

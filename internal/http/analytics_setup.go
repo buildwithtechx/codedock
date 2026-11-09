@@ -11,6 +11,7 @@ import (
 	backupmodule "codedock/internal/modules/backups"
 	"codedock/internal/modules/monitoring"
 	"codedock/internal/modules/servers"
+	"codedock/internal/modules/servers/managed"
 	"codedock/internal/platform/networking"
 	"codedock/internal/platform/observability"
 	traffic "codedock/internal/platform/observability"
@@ -33,7 +34,7 @@ func (a *statsHealthAdapter) GetHealth(ctx context.Context, containerID string) 
 }
 
 type attentionManagedAdapter struct {
-	repo servers.ManagedRepository
+	repo managed.ManagedRepository
 }
 
 func (a *attentionManagedAdapter) GetQuota(ctx context.Context, orgID string) (*monitoring.ManagedQuota, error) {
@@ -114,7 +115,7 @@ func configureAnalytics(
 ) {
 	trafficRepo := monitoring.NewTrafficRepository(db)
 	attentionRepo := monitoring.NewAttentionRepository(db)
-	managedRepo := &attentionManagedAdapter{repo: servers.NewManagedRepository(db, vlt)}
+	managedRepo := &attentionManagedAdapter{repo: managed.NewManagedRepository(db, vlt)}
 	serverRepo := &attentionServerAdapter{repo: servers.NewRepository(db, vlt)}
 
 	usage := monitoring.NewUsageReader(appRepo, metricsService, statsMonitor)

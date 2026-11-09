@@ -1,4 +1,16 @@
-package servers
+package managed
+
+type ManagedProvider string
+
+const (
+	ManagedProviderHetzner ManagedProvider = "hetzner"
+)
+
+const (
+	ManagedActionProvision = "provision"
+	ManagedActionResize    = "resize"
+	ManagedActionDelete    = "delete"
+)
 
 type ManagedCredential struct {
 	ID             string          `json:"id" db:"id"`
@@ -178,4 +190,14 @@ type CloudWorkspaceSummary struct {
 	Resources          *ManagedServerResources    `json:"resources,omitempty"`
 	Operation          *ManagedWorkspaceOperation `json:"operation,omitempty"`
 	CreatedAt          string                     `json:"createdAt"`
+}
+
+type ServerNetworkSettings struct {
+	InternetAccess *bool    `json:"internetAccess"`
+	IngressPorts   []int    `json:"ingressPorts"`
+	Egress         []string `json:"egress"`
+	PrivateIP      string   `json:"privateIp"`
+	OutboundIP     string   `json:"outboundIp"`
+	OutboundMode   string   `json:"outboundMode"`
+	Revision       string   `json:"revision"`
 }

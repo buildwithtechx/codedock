@@ -1,4 +1,4 @@
-package servers
+package managed
 
 import (
 	"context"
@@ -9,7 +9,13 @@ import (
 const (
 	defaultManagedMaxServers  = 5
 	defaultManagedMaxMemoryGB = 32
+	serverStatusProvisioning  = "provisioning"
 )
+
+type Vault interface {
+	Encrypt(string) (string, error)
+	Decrypt(string) (string, error)
+}
 
 type ManagedRepository interface {
 	CreateCredential(ctx context.Context, credential *ManagedCredential) error
@@ -173,7 +179,7 @@ func (r *postgresManagedRepository) ListProvisioningServerIDs(ctx context.Contex
 		SELECT m.server_id FROM managed_servers m
 		JOIN servers s ON s.id = m.server_id
 		WHERE s.status = $1
-	`, string(ServerStatusProvisioning))
+	`, serverStatusProvisioning)
 	if err != nil {
 		return nil, fmt.Errorf("failed to list provisioning servers: %w", err)
 	}

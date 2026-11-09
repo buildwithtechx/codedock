@@ -6,6 +6,7 @@ import (
 
 	"github.com/labstack/echo/v4"
 
+	"codedock/internal/modules/servers/managed"
 	"codedock/internal/utils"
 )
 
@@ -16,10 +17,15 @@ type AuditLogger interface {
 type Handler struct {
 	service Service
 	audit   AuditLogger
+	*managed.ControlsHandler
 }
 
 func NewHandler(service Service, audit AuditLogger) *Handler {
-	return &Handler{service: service, audit: audit}
+	return &Handler{
+		service:         service,
+		audit:           audit,
+		ControlsHandler: managed.NewControlsHandler(),
+	}
 }
 
 func (h *Handler) List(c echo.Context) error {

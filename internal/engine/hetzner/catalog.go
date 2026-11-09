@@ -4,7 +4,7 @@ import (
 	"context"
 	"strconv"
 
-	"codedock/internal/modules/servers"
+	"codedock/internal/modules/servers/managed"
 )
 
 func (a *Adapter) Verify(ctx context.Context) error {
@@ -12,30 +12,30 @@ func (a *Adapter) Verify(ctx context.Context) error {
 	return err
 }
 
-func (a *Adapter) Offers(ctx context.Context) (servers.ManagedOffers, error) {
+func (a *Adapter) Offers(ctx context.Context) (managed.ManagedOffers, error) {
 	locations, err := a.client.ListLocations(ctx)
 	if err != nil {
-		return servers.ManagedOffers{}, err
+		return managed.ManagedOffers{}, err
 	}
 	serverTypes, err := a.client.ListServerTypes(ctx)
 	if err != nil {
-		return servers.ManagedOffers{}, err
+		return managed.ManagedOffers{}, err
 	}
 	return buildOffers(locations, serverTypes), nil
 }
 
-func buildOffers(locations, serverTypes []map[string]any) servers.ManagedOffers {
+func buildOffers(locations, serverTypes []map[string]any) managed.ManagedOffers {
 	reviewedRegions := map[string]bool{}
 	for _, region := range Regions() {
 		reviewedRegions[region] = true
 	}
-	result := servers.ManagedOffers{Provider: servers.ManagedProviderHetzner, Images: Images(), Locations: []servers.ManagedLocation{}, Offers: []servers.ManagedOffer{}}
+	result := managed.ManagedOffers{Provider: managed.ManagedProviderHetzner, Images: Images(), Locations: []managed.ManagedLocation{}, Offers: []managed.ManagedOffer{}}
 	for _, location := range locations {
 		name := stringify(location["name"])
 		if !reviewedRegions[name] {
 			continue
 		}
-		result.Locations = append(result.Locations, servers.ManagedLocation{
+		result.Locations = append(result.Locations, managed.ManagedLocation{
 			Name:    name,
 			City:    stringify(location["city"]),
 			Country: stringify(location["country"]),
@@ -57,7 +57,7 @@ func buildOffers(locations, serverTypes []map[string]any) servers.ManagedOffers 
 		if len(prices) == 0 {
 			continue
 		}
-		result.Offers = append(result.Offers, servers.ManagedOffer{Tier: tier, Prices: prices})
+		result.Offers = append(result.Offers, managed.ManagedOffer{Tier: tier, Prices: prices})
 	}
 	return result
 }

@@ -27,6 +27,9 @@ import (
 	modmonitoring "codedock/internal/modules/monitoring"
 	projectsmod "codedock/internal/modules/projects"
 	serversmod "codedock/internal/modules/servers"
+	"codedock/internal/modules/servers/managed"
+	"codedock/internal/modules/servers/networks"
+	"codedock/internal/modules/servers/takeover"
 	"codedock/internal/modules/support"
 	systemmod "codedock/internal/modules/system"
 	templatesmod "codedock/internal/modules/templates"
@@ -81,9 +84,9 @@ func schemaTestRouter(t *testing.T) *echo.Echo {
 		metricsHandler:             &modmonitoring.MetricsHandler{},
 		logHandler:                 &modmonitoring.LogHandler{},
 		serverHandler:              &serversmod.Handler{},
-		managedHandler:             &serversmod.ManagedHandler{},
-		takeoverHandler:            &serversmod.TakeoverHandler{},
-		serverNetworksHandler:      &serversmod.ServerNetworksHandler{},
+		managedHandler:             &managed.ManagedHandler{},
+		takeoverHandler:            &takeover.TakeoverHandler{},
+		serverNetworksHandler:      &networks.ServerNetworksHandler{},
 		serverMetricsWSHandler:     &serversmod.ServerMetricsWSHandler{},
 		clusterHandler:             modclusters.NewHandler(nil),
 		clusterDataHandler:         modclusters.NewDataHandler(nil),

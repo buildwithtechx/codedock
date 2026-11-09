@@ -48,20 +48,6 @@ type UpdateServerNetworkSettingsRequest struct {
 	Confirm                bool     `json:"confirm"`
 }
 
-type CreateNetworkRequest struct {
-	Name             string `json:"name"`
-	Mode             string `json:"mode,omitempty"`
-	SubnetCIDR       string `json:"subnetCidr,omitempty"`
-	MTU              int    `json:"mtu,omitempty"`
-	VerificationPort int    `json:"verificationPort,omitempty"`
-	Members          any    `json:"members,omitempty"`
-	AccessPolicy     any    `json:"accessPolicy,omitempty"`
-}
-
-type ReviseNetworkAccessRequest struct {
-	AccessPolicy any `json:"accessPolicy"`
-}
-
 type ManagedBootLogsRequest struct {
 	Tail int `json:"tail"`
 }
@@ -101,43 +87,4 @@ type ControlManagedWorkloadRequest struct {
 type ManagedWorkloadLogsRequest struct {
 	WorkloadID string `json:"workloadId"`
 	Tail       int    `json:"tail"`
-}
-
-type CreateManagedCredentialRequest struct {
-	Provider ManagedProvider `json:"provider"`
-	Label    string          `json:"label"`
-	Token    string          `json:"token"`
-}
-
-type ReviewManagedProvisionRequest struct {
-	CredentialID string `json:"credentialId"`
-	ServerID     string `json:"serverId,omitempty"`
-	Name         string `json:"name"`
-	Region       string `json:"region"`
-	ServerType   string `json:"serverType"`
-	Image        string `json:"image"`
-}
-
-type ReviewManagedResizeRequest struct {
-	ServerType string `json:"serverType"`
-}
-
-type ManagedQuotaRequest struct {
-	MaxServers  int `json:"maxServers"`
-	MaxMemoryGB int `json:"maxMemoryGB"`
-}
-
-type TakeoverScanRequest struct {
-	Host           string           `json:"host"`
-	SSHUser        string           `json:"sshUser"`
-	SSHKey         string           `json:"sshKey"`
-	SSHFingerprint string           `json:"sshFingerprint,omitempty"`
-	Platform       TakeoverPlatform `json:"platform"`
-}
-
-type TakeoverAdoptRequest struct {
-	RunID        string   `json:"runId"`
-	ProjectName  string   `json:"projectName"`
-	ServiceNames []string `json:"serviceNames"`
-	ImportEnv    bool     `json:"importEnv"`
 }

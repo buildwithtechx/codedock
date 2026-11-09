@@ -8,13 +8,14 @@ import (
 	"codedock/internal/modules/operations"
 	"codedock/internal/modules/organizations"
 	"codedock/internal/modules/servers"
+	"codedock/internal/modules/servers/managed"
 	"codedock/internal/modules/users"
 	"codedock/internal/platform/ssh"
 	"codedock/internal/platform/vault"
 )
 
 func configureManaged(server *Server, db *sql.DB, vlt *vault.Vault, serverRepo servers.Repository, users users.UserRepository, orgs organizations.OrganizationRepository, sshManager *ssh.SSHManager, operationService *operations.OperationService) error {
-	server.managedHandler = servers.NewManagedHandler(nil)
+	server.managedHandler = managed.NewManagedHandler(nil)
 	return nil
 }
 
