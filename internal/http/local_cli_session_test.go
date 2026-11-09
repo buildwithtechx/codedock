@@ -12,7 +12,7 @@ import (
 
 	"codedock/internal/config"
 	authservices "codedock/internal/modules/auth"
-	"codedock/internal/modules/monitoring"
+	"codedock/internal/modules/system"
 	"codedock/internal/modules/users"
 )
 
@@ -80,8 +80,8 @@ func TestLocalCLISession(t *testing.T) {
 		},
 	}
 
-	handler := monitoring.NewSystemHandler(
-		&systemServiceAdapter{svc: monitoring.NewSystemService()},
+	handler := system.NewSystemHandler(
+		&systemServiceAdapter{svc: system.NewSystemService()},
 		&systemAdminFinderAdapter{userRepo: repo},
 		&systemTokenGenAdapter{tokenService: tokenSvc},
 	)

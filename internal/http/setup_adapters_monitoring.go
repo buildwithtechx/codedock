@@ -9,6 +9,7 @@ import (
 	"codedock/internal/modules/monitoring"
 	"codedock/internal/modules/operations"
 	settingsmodule "codedock/internal/modules/settings"
+	"codedock/internal/modules/system"
 	"codedock/internal/modules/users"
 )
 
@@ -99,7 +100,7 @@ func (l *logServiceAdapter) GetHistoricalLogs(ctx context.Context, serviceID, ra
 }
 
 type updaterServiceAdapter struct {
-	svc *monitoring.UpdaterService
+	svc *system.UpdaterService
 }
 
 func (u *updaterServiceAdapter) GetStatus() any {
@@ -124,7 +125,7 @@ func (u *updaterServiceAdapter) ApplyUpdate(ctx context.Context) (any, error) {
 }
 
 type systemServiceAdapter struct {
-	svc *monitoring.SystemService
+	svc *system.SystemService
 }
 
 func (s *systemServiceAdapter) GetStats(ctx context.Context) (any, error) {

@@ -1,4 +1,4 @@
-package monitoring
+package system
 
 import (
 	"context"
@@ -20,6 +20,12 @@ type FoundingAdminFinder interface {
 
 type TokenGenerator interface {
 	GenerateCLIToken(id, email, role string, verified, totp bool) (string, error)
+}
+
+type SystemOperations interface {
+	GetStats(ctx context.Context) (any, error)
+	Restart(ctx context.Context) error
+	Cleanup(ctx context.Context) error
 }
 
 type SystemHandler struct {

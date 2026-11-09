@@ -5,6 +5,7 @@ import (
 	"codedock/internal/modules/monitoring"
 	notifsmod "codedock/internal/modules/notifications"
 	"codedock/internal/modules/operations"
+	"codedock/internal/modules/system"
 	"codedock/internal/modules/tasks"
 )
 
@@ -12,9 +13,9 @@ type monitoringHandlersGroup struct {
 	operationHandler     *operations.OperationHandler
 	scheduledTaskHandler *tasks.ScheduledTaskHandler
 	notifSettingsHandler *notifsmod.NotificationSettingsHandler
-	updaterHandler       *monitoring.UpdaterHandler
+	updaterHandler       *system.UpdaterHandler
 	notificationHandler  *notifsmod.NotificationHandler
-	systemHandler        *monitoring.SystemHandler
+	systemHandler        *system.SystemHandler
 	metricsHandler       *monitoring.MetricsHandler
 	logHandler           *monitoring.LogHandler
 	exampleHandler       *monitoring.ExampleHandler
@@ -24,7 +25,7 @@ type monitoringHandlersGroup struct {
 
 func createMonitoringHandlers(
 	d *serverSetupDeps,
-	updaterService *monitoring.UpdaterService,
+	updaterService *system.UpdaterService,
 	metricsService *monitoring.MetricsService,
 	logService *monitoring.LogService,
 ) monitoringHandlersGroup {
@@ -50,10 +51,10 @@ func createMonitoringHandlers(
 			svc:     d.notifSettingsService,
 			orgRepo: d.orgRepo,
 		}),
-		updaterHandler:      monitoring.NewUpdaterHandler(&updaterServiceAdapter{svc: updaterService}),
+		updaterHandler:      system.NewUpdaterHandler(&updaterServiceAdapter{svc: updaterService}),
 		notificationHandler: notifsmod.NewNotificationHandler(&notificationServiceAdapter{}),
-		systemHandler: monitoring.NewSystemHandler(
-			&systemServiceAdapter{svc: monitoring.NewSystemService()},
+		systemHandler: system.NewSystemHandler(
+			&systemServiceAdapter{svc: system.NewSystemService()},
 			&systemAdminFinderAdapter{userRepo: d.userRepo},
 			&systemTokenGenAdapter{tokenService: d.tokenService},
 		),

@@ -38,6 +38,7 @@ import (
 	"codedock/internal/modules/servers"
 	"codedock/internal/modules/settings"
 	"codedock/internal/modules/support"
+	systemmod "codedock/internal/modules/system"
 	"codedock/internal/modules/tasks"
 	"codedock/internal/modules/users"
 	"codedock/internal/platform/networking"
@@ -85,7 +86,7 @@ type Server struct {
 	appearanceHandler          *users.AppearanceHandler
 	notifSettingsHandler       *notifsmod.NotificationSettingsHandler
 	aiSettingsHandler          *aimod.Handler
-	updaterHandler             *modmonitoring.UpdaterHandler
+	updaterHandler             *systemmod.UpdaterHandler
 	userHandler                *users.UserHandler
 	authHandler                *auth.AuthHandler
 	oauthHandler               *auth.OAuthHandler
@@ -101,7 +102,7 @@ type Server struct {
 	environmentHandler         *environments.EnvironmentHandler
 	domainHandler              *domainsmod.DomainHandler
 	notificationHandler        *notifsmod.NotificationHandler
-	systemHandler              *modmonitoring.SystemHandler
+	systemHandler              *systemmod.SystemHandler
 	composeStackHandler        *projectsmod.ComposeStackHandler
 	chatAppHandler             *chatapps.Handler
 	oneClickHandler            *projectsmod.OneClickHandler

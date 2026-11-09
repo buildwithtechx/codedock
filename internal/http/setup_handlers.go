@@ -28,6 +28,7 @@ import (
 	projectsmod "codedock/internal/modules/projects"
 	"codedock/internal/modules/security"
 	settingsmodule "codedock/internal/modules/settings"
+	"codedock/internal/modules/system"
 	"codedock/internal/modules/support"
 	"codedock/internal/modules/users"
 	compose "codedock/internal/platform/docker"
@@ -100,7 +101,7 @@ func buildServerInstance(d *serverSetupDeps) (*Server, error) {
 
 	metricsService := monitoring.NewMetricsService()
 	logService := monitoring.NewLogService()
-	updaterService := monitoring.NewUpdaterService(&monitoringSettingsAdapter{repo: d.settingsRepo})
+	updaterService := system.NewUpdaterService(d.settingsRepo)
 	schedulerElector := leadership.NewElector(d.db, "scheduled-execution")
 	go schedulerElector.Run(context.Background(), d.cronManager.ServeElected, d.backupManager.ServeElected, updaterService.ServeElected)
 

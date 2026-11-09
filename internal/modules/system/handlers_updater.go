@@ -1,12 +1,19 @@
-package monitoring
+package system
 
 import (
+	"context"
 	"net/http"
 
 	"github.com/labstack/echo/v4"
 
 	"codedock/internal/utils"
 )
+
+type UpdaterOperations interface {
+	GetStatus() any
+	CheckUpdate(ctx context.Context) (any, error)
+	ApplyUpdate(ctx context.Context) (any, error)
+}
 
 type UpdaterHandler struct {
 	service UpdaterOperations

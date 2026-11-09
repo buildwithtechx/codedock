@@ -38,18 +38,6 @@ type LogOperations interface {
 	GetHistoricalLogs(ctx context.Context, serviceID, rangeParam string, limit int) (any, error)
 }
 
-type SystemOperations interface {
-	GetStats(ctx context.Context) (any, error)
-	Restart(ctx context.Context) error
-	Cleanup(ctx context.Context) error
-}
-
-type UpdaterOperations interface {
-	GetStatus() any
-	CheckUpdate(ctx context.Context) (any, error)
-	ApplyUpdate(ctx context.Context) (any, error)
-}
-
 type ExampleOperations interface {
 	ListExamples() (any, error)
 }

@@ -1,4 +1,4 @@
-package monitoring
+package system
 
 import (
 	"context"
@@ -13,6 +13,7 @@ import (
 	"time"
 
 	"codedock/internal/config"
+	"codedock/internal/modules/settings"
 )
 
 const (
@@ -23,15 +24,9 @@ var (
 	semverPattern = regexp.MustCompile(`^v?\d+\.\d+\.\d+(-[\w.]+)?$`)
 )
 
-type UpdateInfo struct {
-	CurrentVersion  string `json:"currentVersion"`
-	LatestVersion   string `json:"latestVersion"`
-	HasUpdate       bool   `json:"hasUpdate"`
-	ReleaseNotes    string `json:"releaseNotes"`
-	DownloadURL     string `json:"downloadUrl"`
-	LastChecked     string `json:"lastChecked"`
-	AutoUpdate      bool   `json:"autoUpdate"`
-	UpdateCheckCron string `json:"updateCheckCron"`
+type SettingsRepository interface {
+	GetServerSettings(ctx context.Context) (*settings.ServerSettings, error)
+	UpdateServerSettings(ctx context.Context, cfg *settings.ServerSettings) error
 }
 
 type UpdaterService struct {
