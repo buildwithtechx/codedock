@@ -7,7 +7,7 @@ import (
 	"strconv"
 	"time"
 
-	"codedock/internal/models"
+	"codedock/internal/modules/servers"
 )
 
 const (
@@ -27,35 +27,35 @@ func NewProviderWithBaseURL(token, baseURL string) *Adapter {
 	return &Adapter{client: NewClientWithBaseURL(token, baseURL)}
 }
 
-func (a *Adapter) CreateServer(ctx context.Context, spec models.ManagedServerSpec) (models.ManagedInstance, error) {
+func (a *Adapter) CreateServer(ctx context.Context, spec servers.ManagedServerSpec) (servers.ManagedInstance, error) {
 	created, err := a.client.CreateServer(ctx, spec.Name, spec.ServerType, spec.Image, spec.Region, spec.SSHKeyName, spec.UserData, spec.Labels)
 	if err != nil {
-		return models.ManagedInstance{}, err
+		return servers.ManagedInstance{}, err
 	}
 	return parseInstance(created), nil
 }
 
-func (a *Adapter) GetServer(ctx context.Context, externalID string) (models.ManagedInstance, error) {
+func (a *Adapter) GetServer(ctx context.Context, externalID string) (servers.ManagedInstance, error) {
 	if externalID == "" {
-		return models.ManagedInstance{}, fmt.Errorf("hetzner server id is required")
+		return servers.ManagedInstance{}, fmt.Errorf("hetzner server id is required")
 	}
 	found, err := a.client.GetServer(ctx, externalID)
 	if err != nil {
-		return models.ManagedInstance{}, err
+		return servers.ManagedInstance{}, err
 	}
 	if found == nil {
-		return models.ManagedInstance{}, fmt.Errorf("hetzner server %s not found", externalID)
+		return servers.ManagedInstance{}, fmt.Errorf("hetzner server %s not found", externalID)
 	}
 	return parseInstance(found), nil
 }
 
-func (a *Adapter) FindServerByLabel(ctx context.Context, selector string) (models.ManagedInstance, error) {
+func (a *Adapter) FindServerByLabel(ctx context.Context, selector string) (servers.ManagedInstance, error) {
 	found, err := a.client.FindServerByLabel(ctx, selector)
 	if err != nil {
-		return models.ManagedInstance{}, err
+		return servers.ManagedInstance{}, err
 	}
 	if found == nil {
-		return models.ManagedInstance{}, nil
+		return servers.ManagedInstance{}, nil
 	}
 	return parseInstance(found), nil
 }
@@ -89,12 +89,12 @@ func (a *Adapter) ChangeType(ctx context.Context, externalID, serverType string,
 	return a.client.ChangeType(ctx, externalID, serverType, upgradeDisk)
 }
 
-func (a *Adapter) WaitForStatus(ctx context.Context, externalID string, wanted []string, timeout time.Duration) (models.ManagedInstance, error) {
+func (a *Adapter) WaitForStatus(ctx context.Context, externalID string, wanted []string, timeout time.Duration) (servers.ManagedInstance, error) {
 	deadline := time.Now().Add(timeout)
 	for {
 		instance, err := a.GetServer(ctx, externalID)
 		if err != nil {
-			return models.ManagedInstance{}, err
+			return servers.ManagedInstance{}, err
 		}
 		for _, status := range wanted {
 			if instance.Status == status {
@@ -145,11 +145,11 @@ func (a *Adapter) DeleteSSHKey(ctx context.Context, name string) error {
 	return nil
 }
 
-func parseInstance(server map[string]any) models.ManagedInstance {
+func parseInstance(server map[string]any) servers.ManagedInstance {
 	if server == nil {
-		return models.ManagedInstance{}
+		return servers.ManagedInstance{}
 	}
-	instance := models.ManagedInstance{
+	instance := servers.ManagedInstance{
 		ExternalID: stringify(server["id"]),
 		Name:       stringify(server["name"]),
 		Status:     stringify(server["status"]),

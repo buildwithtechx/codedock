@@ -6,7 +6,8 @@ import (
 
 	"github.com/labstack/echo/v4"
 
-	"codedock/internal/models"
+	"codedock/internal/modules/organizations"
+	"codedock/internal/modules/users"
 )
 
 func (g *AuthGuard) RequireAuth() echo.MiddlewareFunc {
@@ -46,7 +47,7 @@ func (g *AuthGuard) RequireScope(requiredScope string) echo.MiddlewareFunc {
 }
 
 func (g *AuthGuard) verifyScope(c echo.Context, requiredScope string) error {
-	userClaims, ok := c.Get("user").(*models.UserClaims)
+	userClaims, ok := c.Get("user").(*users.UserClaims)
 	if !ok || userClaims == nil {
 		return echo.NewHTTPError(http.StatusUnauthorized, "unauthorized")
 	}
@@ -90,7 +91,7 @@ func hasMatchingScope(scopes []string, required string) bool {
 	return false
 }
 
-func (g *AuthGuard) RequireProjectRole(minPermission models.MemberPermission) echo.MiddlewareFunc {
+func (g *AuthGuard) RequireProjectRole(minPermission organizations.MemberPermission) echo.MiddlewareFunc {
 	return func(next echo.HandlerFunc) echo.HandlerFunc {
 		return func(c echo.Context) error {
 			if err := g.verifyProjectRole(c, minPermission); err != nil {
@@ -101,13 +102,13 @@ func (g *AuthGuard) RequireProjectRole(minPermission models.MemberPermission) ec
 	}
 }
 
-func (g *AuthGuard) verifyProjectRole(c echo.Context, minPermission models.MemberPermission) error {
-	userClaims, ok := c.Get("user").(*models.UserClaims)
+func (g *AuthGuard) verifyProjectRole(c echo.Context, minPermission organizations.MemberPermission) error {
+	userClaims, ok := c.Get("user").(*users.UserClaims)
 	if !ok || userClaims == nil {
 		return echo.NewHTTPError(http.StatusUnauthorized, "unauthorized")
 	}
 
-	if userClaims.Role == models.UserRoleAdmin || userClaims.Role == models.UserRoleOwner {
+	if userClaims.Role == users.UserRoleAdmin || userClaims.Role == users.UserRoleOwner {
 		return nil
 	}
 
@@ -123,7 +124,7 @@ func (g *AuthGuard) verifyProjectRole(c echo.Context, minPermission models.Membe
 		if c.Get("project_id") != projectID {
 			return echo.NewHTTPError(http.StatusForbidden, "api token not authorized for this project")
 		}
-		if minPermission != "" && minPermission != models.MemberPermissionMember {
+		if minPermission != "" && minPermission != organizations.MemberPermissionMember {
 			return echo.NewHTTPError(http.StatusForbidden, "api tokens cannot perform administrative actions")
 		}
 		return nil
@@ -146,18 +147,18 @@ func (g *AuthGuard) verifyProjectRole(c echo.Context, minPermission models.Membe
 	if err != nil {
 		return echo.NewHTTPError(http.StatusInternalServerError, "failed to verify organization membership")
 	}
-	if member == nil || member.Status != models.MemberStatusAccepted {
+	if member == nil || member.Status != organizations.MemberStatusAccepted {
 		return echo.NewHTTPError(http.StatusForbidden, "you do not have access to this project's organization")
 	}
 
-	if minPermission != "" && member.Permission != minPermission && member.Permission != models.MemberPermissionAdmin && member.Permission != models.MemberPermissionOwner {
+	if minPermission != "" && member.Permission != minPermission && member.Permission != organizations.MemberPermissionAdmin && member.Permission != organizations.MemberPermissionOwner {
 		return echo.NewHTTPError(http.StatusForbidden, "insufficient organization permissions")
 	}
 
 	return nil
 }
 
-func (g *AuthGuard) RequireRole(requiredRole models.UserRole) echo.MiddlewareFunc {
+func (g *AuthGuard) RequireRole(requiredRole users.UserRole) echo.MiddlewareFunc {
 	return func(next echo.HandlerFunc) echo.HandlerFunc {
 		return func(c echo.Context) error {
 			if err := g.verifyRole(c, requiredRole); err != nil {
@@ -168,12 +169,12 @@ func (g *AuthGuard) RequireRole(requiredRole models.UserRole) echo.MiddlewareFun
 	}
 }
 
-func (g *AuthGuard) verifyRole(c echo.Context, requiredRole models.UserRole) error {
+func (g *AuthGuard) verifyRole(c echo.Context, requiredRole users.UserRole) error {
 	userClaims, err := g.baseAuth(c, true)
 	if err != nil {
 		return err
 	}
-	if userClaims.Role != requiredRole && userClaims.Role != models.UserRoleAdmin && userClaims.Role != models.UserRoleOwner {
+	if userClaims.Role != requiredRole && userClaims.Role != users.UserRoleAdmin && userClaims.Role != users.UserRoleOwner {
 		return echo.NewHTTPError(http.StatusForbidden, "insufficient instance permissions")
 	}
 	c.Set("user", userClaims)
@@ -182,14 +183,14 @@ func (g *AuthGuard) verifyRole(c echo.Context, requiredRole models.UserRole) err
 	return nil
 }
 
-func GetUserClaimsFromContext(ctx context.Context) *models.UserClaims {
-	if c, ok := ctx.Value(userClaimsKey).(*models.UserClaims); ok {
+func GetUserClaimsFromContext(ctx context.Context) *users.UserClaims {
+	if c, ok := ctx.Value(userClaimsKey).(*users.UserClaims); ok {
 		return c
 	}
 	return nil
 }
 
-func (g *AuthGuard) RequireOrgRole(minPermission models.MemberPermission) echo.MiddlewareFunc {
+func (g *AuthGuard) RequireOrgRole(minPermission organizations.MemberPermission) echo.MiddlewareFunc {
 	return func(next echo.HandlerFunc) echo.HandlerFunc {
 		return func(c echo.Context) error {
 			if err := g.verifyOrgRole(c, minPermission); err != nil {
@@ -200,13 +201,13 @@ func (g *AuthGuard) RequireOrgRole(minPermission models.MemberPermission) echo.M
 	}
 }
 
-func (g *AuthGuard) verifyOrgRole(c echo.Context, minPermission models.MemberPermission) error {
-	userClaims, ok := c.Get("user").(*models.UserClaims)
+func (g *AuthGuard) verifyOrgRole(c echo.Context, minPermission organizations.MemberPermission) error {
+	userClaims, ok := c.Get("user").(*users.UserClaims)
 	if !ok || userClaims == nil {
 		return echo.NewHTTPError(http.StatusUnauthorized, "unauthorized")
 	}
 
-	if userClaims.Role == models.UserRoleAdmin || userClaims.Role == models.UserRoleOwner {
+	if userClaims.Role == users.UserRoleAdmin || userClaims.Role == users.UserRoleOwner {
 		return nil
 	}
 
@@ -223,7 +224,7 @@ func (g *AuthGuard) verifyOrgRole(c echo.Context, minPermission models.MemberPer
 		if projectID != "" && g.ProjectRepo != nil {
 			project, err := g.ProjectRepo.Get(c.Request().Context(), projectID)
 			if err == nil && project != nil && project.OrganizationID == orgID {
-				if minPermission != "" && minPermission != models.MemberPermissionMember {
+				if minPermission != "" && minPermission != organizations.MemberPermissionMember {
 					return echo.NewHTTPError(http.StatusForbidden, "api tokens cannot perform administrative organization actions")
 				}
 				return nil
@@ -240,11 +241,11 @@ func (g *AuthGuard) verifyOrgRole(c echo.Context, minPermission models.MemberPer
 	if err != nil {
 		return echo.NewHTTPError(http.StatusInternalServerError, "failed to verify organization membership")
 	}
-	if member == nil || member.Status != models.MemberStatusAccepted {
+	if member == nil || member.Status != organizations.MemberStatusAccepted {
 		return echo.NewHTTPError(http.StatusForbidden, "you do not have access to this organization")
 	}
 
-	if minPermission != "" && member.Permission != minPermission && member.Permission != models.MemberPermissionAdmin && member.Permission != models.MemberPermissionOwner {
+	if minPermission != "" && member.Permission != minPermission && member.Permission != organizations.MemberPermissionAdmin && member.Permission != organizations.MemberPermissionOwner {
 		return echo.NewHTTPError(http.StatusForbidden, "insufficient organization permissions")
 	}
 

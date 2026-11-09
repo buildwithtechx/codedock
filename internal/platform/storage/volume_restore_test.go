@@ -1,7 +1,6 @@
 package storage
 
 import (
-	"codedock/internal/models"
 	"context"
 	"fmt"
 	"github.com/docker/docker/client"
@@ -16,7 +15,7 @@ type volumeTestStore struct {
 	ownerErr error
 }
 
-func (s *volumeTestStore) VolumeRestoreOwner(context.Context, *models.BackupConfig) (string, error) {
+func (s *volumeTestStore) VolumeRestoreOwner(context.Context, *BackupConfig) (string, error) {
 	return "owner", s.ownerErr
 }
 
@@ -63,12 +62,12 @@ func TestVolumeRestoreRequiresOwnedExistingStoppedTarget(t *testing.T) {
 			}
 			defer dockerClient.Close()
 			store := &volumeTestStore{mockStore: newMockStore()}
-			status := models.BackupRecordStatusCompleted
+			status := BackupRecordStatusCompleted
 			if test.incomplete {
-				status = models.BackupRecordStatusRunning
+				status = BackupRecordStatusRunning
 			}
-			store.records["record"] = &models.BackupRecord{ID: "record", BackupConfigID: "config", Status: status}
-			store.configs["config"] = &models.BackupConfig{ID: "config", ServiceID: "service", VolumeName: "owned", Timeout: 12}
+			store.records["record"] = &BackupRecord{ID: "record", BackupConfigID: "config", Status: status}
+			store.configs["config"] = &BackupConfig{ID: "config", ServiceID: "service", VolumeName: "owned", Timeout: 12}
 			manager := NewBackupManager(dockerClient, store, t.TempDir())
 			target, err := manager.ValidateVolumeRestore(context.Background(), "record")
 			if test.valid {

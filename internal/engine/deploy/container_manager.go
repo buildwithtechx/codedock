@@ -3,17 +3,14 @@ package deploy
 import (
 	"context"
 	"fmt"
-	"io"
 	"strings"
 	"time"
 
-	"github.com/containerd/errdefs"
-	"github.com/docker/docker/api/types"
 	"github.com/docker/docker/api/types/container"
 	"github.com/docker/docker/client"
 	"github.com/docker/go-connections/nat"
 
-	"codedock/internal/models"
+	appsmod "codedock/internal/modules/apps"
 	"codedock/internal/platform/networking"
 	"codedock/internal/platform/observability"
 	"codedock/internal/utils"
@@ -39,17 +36,17 @@ type ContainerRunOptions struct {
 	Domain                 string
 	Hosts                  []RouteHost
 	InternalPort           int
-	RuntimeMode            models.RuntimeMode
+	RuntimeMode            appsmod.RuntimeMode
 	Envs                   []string
 	Cmd                    []string
 	MemoryLimitMB          int
 	SwapDisabled           bool
 	CPURequest             float64
 	HealthCheckPath        string
-	Volumes                []models.ServiceVolume
+	Volumes                []appsmod.ServiceVolume
 	MaintenanceMode        bool
 	StopGracePeriodSeconds int
-	LogDrains              []*models.LogDrain
+	LogDrains              []*appsmod.LogDrain
 	ExtraLabels            map[string]string
 }
 
@@ -94,7 +91,7 @@ func (c *ContainerManager) createAndStart(ctx context.Context, opts ContainerRun
 	if opts.HealthCheckPath != "" {
 	}
 
-	if opts.RuntimeMode != models.RuntimeModeWorker {
+	if opts.RuntimeMode != appsmod.RuntimeModeWorker {
 		config.ExposedPorts = nat.PortSet{containerPort: struct{}{}}
 		if opts.ServiceID != "" && len(opts.Hosts) > 0 {
 			config.Labels = c.buildTraefikLabels(opts.ServiceID, opts.Hosts, opts.InternalPort, opts.HealthCheckPath, opts.ExtraLabels)
@@ -165,7 +162,20 @@ func (c *ContainerManager) createAndStart(ctx context.Context, opts ContainerRun
 	}
 
 	if len(opts.LogDrains) > 0 {
-		observability.StartLogDrains(context.Background(), c.dockerClient, resp.ID, opts.Name, opts.LogDrains)
+		drains := make([]*observability.LogDrain, len(opts.LogDrains))
+		for i, d := range opts.LogDrains {
+			drains[i] = &observability.LogDrain{
+				ID:          d.ID,
+				ServiceID:   d.ServiceID,
+				ProjectID:   d.ProjectID,
+				DrainType:   observability.LogDrainType(d.DrainType),
+				EndpointURL: d.EndpointURL,
+				AuthToken:   d.AuthToken,
+				CreatedAt:   d.CreatedAt,
+				UpdatedAt:   d.UpdatedAt,
+			}
+		}
+		observability.StartLogDrains(context.Background(), c.dockerClient, resp.ID, opts.Name, drains)
 	}
 
 	return resp.ID, nil
@@ -233,72 +243,4 @@ func (c *ContainerManager) getCustomDNSResolvers() []string {
 		}
 	}
 	return dnsList
-}
-
-func (c *ContainerManager) StopAndRemove(ctx context.Context, containerIDOrName string) error {
-	stopTimeout := 10
-	_ = c.dockerClient.ContainerStop(ctx, containerIDOrName, container.StopOptions{Timeout: &stopTimeout})
-	err := c.dockerClient.ContainerRemove(ctx, containerIDOrName, container.RemoveOptions{Force: true})
-	if err != nil && !errdefs.IsNotFound(err) {
-		return err
-	}
-	return nil
-}
-
-func (c *ContainerManager) Inspect(ctx context.Context, containerIDOrName string) (types.ContainerJSON, error) {
-	return c.dockerClient.ContainerInspect(ctx, containerIDOrName)
-}
-
-func (c *ContainerManager) StreamLogs(ctx context.Context, containerIDOrName string, out io.Writer) error {
-	logsReader, err := c.dockerClient.ContainerLogs(ctx, containerIDOrName, container.LogsOptions{
-		ShowStdout: true,
-		ShowStderr: true,
-		Follow:     true,
-		Tail:       "100",
-	})
-	if err != nil {
-		return fmt.Errorf("failed to open container logs stream: %w", err)
-	}
-	defer logsReader.Close()
-	_, err = io.Copy(out, logsReader)
-	return err
-}
-
-func (c *ContainerManager) CleanupOrphanedContainers(ctx context.Context, prefix string, excludeContainerNames []string) error {
-	containers, err := c.dockerClient.ContainerList(ctx, container.ListOptions{All: true})
-	if err != nil {
-		return fmt.Errorf("failed to list containers: %w", err)
-	}
-
-	excludeMap := make(map[string]bool)
-	for _, n := range excludeContainerNames {
-		excludeMap[n] = true
-		excludeMap["/"+n] = true
-	}
-
-	for _, ctn := range containers {
-		for _, name := range ctn.Names {
-			if strings.HasPrefix(name, "/"+prefix+"-") {
-				if !excludeMap[ctn.ID] && !excludeMap[name] {
-					_ = c.StopAndRemove(ctx, ctn.ID)
-				}
-				break
-			}
-		}
-	}
-	return nil
-}
-
-func validateHostPath(path string, serviceID string) error {
-	forbidden := []string{"/var/run/docker.sock", "/proc", "/sys", "/etc", "/root", "/boot"}
-	for _, f := range forbidden {
-		if strings.Contains(path, f) {
-			return fmt.Errorf("forbidden path")
-		}
-	}
-	expectedPrefix := fmt.Sprintf("/data/codedock/%s/", serviceID)
-	if !strings.HasPrefix(path, expectedPrefix) {
-		return fmt.Errorf("must start with %s", expectedPrefix)
-	}
-	return nil
 }

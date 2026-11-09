@@ -11,7 +11,7 @@ import (
 	"strings"
 
 	"codedock/internal/config"
-	"codedock/internal/models"
+	"codedock/internal/modules/users"
 	"codedock/internal/version"
 	"github.com/labstack/echo/v4"
 )
@@ -143,7 +143,7 @@ func jsonRpcErr(id any, code int, message string) map[string]any {
 	}
 }
 
-func (b *Bridge) HandleStreamableHTTP(c echo.Context, claims *models.UserClaims) error {
+func (b *Bridge) HandleStreamableHTTP(c echo.Context, claims *users.UserClaims) error {
 	var raw json.RawMessage
 	if err := json.NewDecoder(c.Request().Body).Decode(&raw); err != nil {
 		return c.JSON(http.StatusOK, jsonRpcErr(nil, -32700, "Parse error"))

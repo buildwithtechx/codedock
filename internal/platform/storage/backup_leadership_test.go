@@ -2,13 +2,11 @@ package storage
 
 import (
 	"testing"
-
-	"codedock/internal/models"
 )
 
 func TestBackupReconcileRegistersActiveConfigs(t *testing.T) {
 	store := newMockStore()
-	store.configs["cfg-one"] = &models.BackupConfig{ID: "cfg-one", Name: "one", Status: models.BackupConfigStatusActive, BackupEnabled: true, Schedule: "0 2 * * *"}
+	store.configs["cfg-one"] = &BackupConfig{ID: "cfg-one", Name: "one", Status: BackupConfigStatusActive, BackupEnabled: true, Schedule: "0 2 * * *"}
 	manager := NewBackupManager(nil, store, t.TempDir())
 	if err := manager.Reconcile(); err != nil {
 		t.Fatalf("reconcile: %v", err)
@@ -20,7 +18,7 @@ func TestBackupReconcileRegistersActiveConfigs(t *testing.T) {
 
 func TestBackupReconcileRemovesStaleConfigs(t *testing.T) {
 	store := newMockStore()
-	store.configs["cfg-one"] = &models.BackupConfig{ID: "cfg-one", Name: "one", Status: models.BackupConfigStatusActive, BackupEnabled: true, Schedule: "0 2 * * *"}
+	store.configs["cfg-one"] = &BackupConfig{ID: "cfg-one", Name: "one", Status: BackupConfigStatusActive, BackupEnabled: true, Schedule: "0 2 * * *"}
 	manager := NewBackupManager(nil, store, t.TempDir())
 	if err := manager.Reconcile(); err != nil {
 		t.Fatalf("reconcile: %v", err)
@@ -36,7 +34,7 @@ func TestBackupReconcileRemovesStaleConfigs(t *testing.T) {
 
 func TestBackupReconcileSkipsManualConfigs(t *testing.T) {
 	store := newMockStore()
-	store.configs["cfg-manual"] = &models.BackupConfig{ID: "cfg-manual", Name: "manual", Status: models.BackupConfigStatusActive, BackupEnabled: true, Schedule: "manual"}
+	store.configs["cfg-manual"] = &BackupConfig{ID: "cfg-manual", Name: "manual", Status: BackupConfigStatusActive, BackupEnabled: true, Schedule: "manual"}
 	manager := NewBackupManager(nil, store, t.TempDir())
 	if err := manager.Reconcile(); err != nil {
 		t.Fatalf("reconcile: %v", err)

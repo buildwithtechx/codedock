@@ -5,25 +5,23 @@ import (
 	"strconv"
 	"strings"
 	"sync"
-
-	"codedock/internal/models"
 )
 
 var (
-	globalConfig *models.Config
+	globalConfig *Config
 	once         sync.Once
 )
 
-func Get() *models.Config {
+func Get() *Config {
 	once.Do(func() {
 		globalConfig = Load()
 	})
 	return globalConfig
 }
 
-func Load() *models.Config {
-	return &models.Config{
-		Server: models.ServerConfig{
+func Load() *Config {
+	return &Config{
+		Server: ServerConfig{
 			Port:             getEnvInt("PORT", 8080),
 			Host:             getEnv("HOST", "0.0.0.0"),
 			DataDir:          getEnv("CODEDOCK_DATA_DIR", "data"),
@@ -35,20 +33,20 @@ func Load() *models.Config {
 			StaticDir:        getEnv("CODEDOCK_STATIC_DIR", ""),
 			ExtraCORSOrigins: getEnvSlice("CODEDOCK_EXTRA_CORS_ORIGINS"),
 		},
-		Security: models.SecurityConfig{
+		Security: SecurityConfig{
 			JWTSecret:     getEnv("CODEDOCK_JWT_SECRET", ""),
 			RefreshSecret: getEnv("CODEDOCK_REFRESH_SECRET", ""),
 			TLSEmail:      getEnv("CODEDOCK_TLS_EMAIL", ""),
 			VaultKey:      getEnv("CODEDOCK_VAULT_KEY", ""),
 		},
-		Docker: models.DockerConfig{
+		Docker: DockerConfig{
 			SocketPath:     getEnv("DOCKER_SOCKET_PATH", "/var/run/docker.sock"),
 			RuntimeNetwork: getEnv("CODEDOCK_RUNTIME_NETWORK", "codedock-network"),
 			PortStart:      getEnvInt("DEPLOY_HOST_PORT_START", 4100),
 			PortEnd:        getEnvInt("DEPLOY_HOST_PORT_END", 4999),
 			DryRun:         os.Getenv("DEPLOY_DRY_RUN") == "true",
 		},
-		Traefik: models.TraefikConfig{
+		Traefik: TraefikConfig{
 			HTTPPort:       getEnvInt("CODEDOCK_TRAEFIK_HTTP_PORT", 80),
 			HTTPSPort:      getEnvInt("CODEDOCK_TRAEFIK_HTTPS_PORT", 443),
 			APIPort:        getEnvInt("CODEDOCK_TRAEFIK_API_PORT", 8082),
@@ -57,71 +55,71 @@ func Load() *models.Config {
 			TrustedProxies: getEnvSlice("CODEDOCK_EDGE_TRUSTED_PROXIES"),
 			RealIPHeader:   getEnv("CODEDOCK_EDGE_REAL_IP_HEADER", ""),
 		},
-		Builder: models.BuilderConfig{
+		Builder: BuilderConfig{
 			NixpacksImage: getEnv("CODEDOCK_NIXPACKS_IMAGE", "ghcr.io/railwayapp/nixpacks:latest"),
 			PackImage:     getEnv("CODEDOCK_PACK_IMAGE", "buildpacksio/pack:latest"),
 			BuilderImage:  getEnv("CODEDOCK_BUILDER_IMAGE", ""),
 		},
-		Defaults: models.DefaultsConfig{
+		Defaults: DefaultsConfig{
 			AppPort:    getEnvInt("CODEDOCK_DEFAULT_APP_PORT", 3000),
 			MemoryMB:   int64(getEnvInt("CODEDOCK_DEFAULT_MEMORY_MB", 512)),
 			CPU:        getEnvFloat("CODEDOCK_DEFAULT_CPU", 0.5),
 			DBMemoryMB: int64(getEnvInt("CODEDOCK_DEFAULT_DB_MEMORY_MB", 1024)),
 			DBCPU:      getEnvFloat("CODEDOCK_DEFAULT_DB_CPU", 1.0),
 		},
-		Limits: models.LimitsConfig{
+		Limits: LimitsConfig{
 			MaxConcurrentBuilds: getEnvInt("CODEDOCK_MAX_CONCURRENT_BUILDS", 2),
 			DeploymentTimeout:   getEnvInt("CODEDOCK_DEPLOYMENT_TIMEOUT", 1800),
 		},
-		Domains: models.DomainsConfig{
+		Domains: DomainsConfig{
 			WildcardDomain: getEnv("CODEDOCK_WILDCARD_DOMAIN", ""),
 			MagicDomain:    getEnv("CODEDOCK_MAGIC_DOMAIN", ""),
 		},
-		Worker: models.WorkerConfig{
+		Worker: WorkerConfig{
 			UseWSS:      os.Getenv("CODEDOCK_USE_WSS") == "true",
 			WorkerToken: getEnv("CODEDOCK_WORKER_TOKEN", ""),
 		},
-		Updates: models.UpdatesConfig{
+		Updates: UpdatesConfig{
 			UpdateURL:   getEnv("CODEDOCK_UPDATE_URL", ""),
 			DownloadURL: getEnv("CODEDOCK_DOWNLOAD_URL", ""),
 		},
-		Telemetry: models.TelemetryConfig{
+		Telemetry: TelemetryConfig{
 			PosthogKey:  getEnv("POSTHOG_API_KEY", ""),
 			PosthogHost: getEnv("POSTHOG_HOST", ""),
 			Salt:        getEnv("POSTHOG_DISTINCT_ID_SALT", ""),
 		},
-		Cloud: models.CloudConfig{
+		Cloud: CloudConfig{
 			Enabled: os.Getenv("CODEDOCK_CLOUD_MODE") == "true",
 		},
-		Observability: models.ObservabilityConfig{
+		Observability: ObservabilityConfig{
 			Enabled: os.Getenv("CODEDOCK_OBSERVABILITY") != "false",
 		},
-		SMTP: models.SMTPConfig{
+		SMTP: SMTPConfig{
 			Host: getEnv("SMTP_HOST", ""),
 			Port: getEnvInt("SMTP_PORT", 587),
 			User: getEnv("SMTP_USER", ""),
 			Pass: getEnv("SMTP_PASS", ""),
 			From: getEnv("SMTP_FROM", ""),
 		},
-		Resend: models.ResendConfig{
+		Resend: ResendConfig{
 			APIKey: getEnv("RESEND_API_KEY", ""),
 		},
-		OAuth: models.OAuthConfig{
+		OAuth: OAuthConfig{
 			GitHubClientID:     firstEnv("GITHUB_CLIENT_ID", "CODEDOCK_GITHUB_CLIENT_ID"),
 			GitHubClientSecret: firstEnv("GITHUB_CLIENT_SECRET", "CODEDOCK_GITHUB_CLIENT_SECRET"),
 			GoogleClientID:     firstEnv("GOOGLE_CLIENT_ID", "CODEDOCK_GOOGLE_CLIENT_ID"),
 			GoogleClientSecret: firstEnv("GOOGLE_CLIENT_SECRET", "CODEDOCK_GOOGLE_CLIENT_SECRET"),
 		},
-		Stripe: models.StripeConfig{
+		Stripe: StripeConfig{
 			SecretKey:      getEnv("STRIPE_SECRET_KEY", ""),
 			PublishableKey: getEnv("STRIPE_PUBLISHABLE_KEY", ""),
 			WebhookSecret:  getEnv("STRIPE_WEBHOOK_SECRET", ""),
 			PriceIDPro:     getEnv("STRIPE_PRICE_ID_PRO", ""),
 		},
-		Database: models.DatabaseConfig{
+		Database: DatabaseConfig{
 			URL: getEnv("CODEDOCK_DATABASE_URL", ""),
 		},
-		Postgres: models.PostgresConfig{
+		Postgres: PostgresConfig{
 			Image:   getEnv("CODEDOCK_PG_IMAGE", "postgres:16-alpine"),
 			Port:    getEnvInt("CODEDOCK_PG_PORT", 5432),
 			Host:    getEnv("CODEDOCK_PG_HOST", "127.0.0.1"),

@@ -5,8 +5,6 @@ import (
 	"net/http"
 	"net/http/httptest"
 	"testing"
-
-	"codedock/internal/models"
 )
 
 func TestVerifyToken(t *testing.T) {
@@ -25,10 +23,10 @@ func TestVerifyToken(t *testing.T) {
 		json.NewEncoder(w).Encode(map[string]any{
 			"status":  "success",
 			"message": "Profile retrieved",
-			"data": &models.User{
+			"data": &User{
 				ID:    "user-123",
 				Email: "admin@codedock.local",
-				Role:  models.UserRoleAdmin,
+				Role:  UserRoleAdmin,
 			},
 		})
 	}))
@@ -64,10 +62,10 @@ func TestExchangeLocalCLISession(t *testing.T) {
 			}
 			w.Header().Set("Content-Type", "application/json")
 			json.NewEncoder(w).Encode(map[string]any{
-				"data": &models.User{
+				"data": &User{
 					ID:    "admin-root",
 					Email: "root@codedock.internal",
-					Role:  models.UserRoleAdmin,
+					Role:  UserRoleAdmin,
 				},
 			})
 		default:

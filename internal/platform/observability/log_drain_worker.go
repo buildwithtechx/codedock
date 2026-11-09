@@ -12,12 +12,11 @@ import (
 	"strings"
 	"time"
 
-	"codedock/internal/models"
 	"github.com/docker/docker/api/types/container"
 	"github.com/docker/docker/client"
 )
 
-func StartLogDrains(ctx context.Context, dockerClient *client.Client, containerID, serviceName string, drains []*models.LogDrain) {
+func StartLogDrains(ctx context.Context, dockerClient *client.Client, containerID, serviceName string, drains []*LogDrain) {
 	if len(drains) == 0 {
 		return
 	}
@@ -65,7 +64,7 @@ func StartLogDrains(ctx context.Context, dockerClient *client.Client, containerI
 	}()
 }
 
-func sendToDrain(drain *models.LogDrain, serviceName, logLine string) {
+func sendToDrain(drain *LogDrain, serviceName, logLine string) {
 	payload := map[string]any{
 		"service": serviceName,
 		"message": logLine,
@@ -73,18 +72,18 @@ func sendToDrain(drain *models.LogDrain, serviceName, logLine string) {
 	}
 
 	switch drain.DrainType {
-	case models.LogDrainTypeAxiom:
+	case LogDrainTypeAxiom:
 		sendHTTP(drain.EndpointURL, drain.AuthToken, []any{payload})
-	case models.LogDrainTypeNewRelic:
+	case LogDrainTypeNewRelic:
 		sendHTTP(drain.EndpointURL, drain.AuthToken, payload)
-	case models.LogDrainTypeDatadog:
+	case LogDrainTypeDatadog:
 		ddPayload := map[string]any{
 			"ddsource": "codedock",
 			"service":  serviceName,
 			"message":  logLine,
 		}
 		sendHTTP(drain.EndpointURL, drain.AuthToken, ddPayload)
-	case models.LogDrainTypeWebhook:
+	case LogDrainTypeWebhook:
 		sendHTTP(drain.EndpointURL, drain.AuthToken, payload)
 	}
 }

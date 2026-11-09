@@ -6,7 +6,7 @@ import (
 	"strings"
 	"text/tabwriter"
 
-	"codedock/internal/models"
+	pkgclient "codedock/pkg/client"
 	"github.com/spf13/cobra"
 )
 
@@ -70,7 +70,7 @@ var serverCreateCmd = &cobra.Command{
 		}
 
 		client := getClient()
-		server, err := client.CreateServer(&models.CreateServerRequest{
+		server, err := client.CreateServer(&pkgclient.CreateServerRequest{
 			Name:      name,
 			IPAddress: ip,
 			IsLocal:   isLocal,
@@ -165,7 +165,7 @@ var serverNetworkSetCmd = &cobra.Command{
 			fmt.Println("Refusing to change outbound settings without --confirm")
 			os.Exit(1)
 		}
-		updated, err := client.UpdateServerNetworkSettings(args[0], &models.UpdateServerNetworkSettingsRequest{
+		updated, err := client.UpdateServerNetworkSettings(args[0], &pkgclient.UpdateServerNetworkSettingsRequest{
 			InternetAccess:         internet,
 			ExpectedInternetAccess: current.InternetAccess == nil || *current.InternetAccess,
 			Egress:                 egress,

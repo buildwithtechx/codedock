@@ -13,8 +13,6 @@ import (
 
 	dockerclient "github.com/docker/docker/client"
 	"golang.org/x/crypto/ssh"
-
-	"codedock/internal/models"
 )
 
 type Config struct {
@@ -177,7 +175,7 @@ echo "{\"cpu\":${cpu:-0},\"mem\":\"${mem}\",\"disk\":\"${disk}\"}"
 		return nil, fmt.Errorf("failed to parse disk metrics: %w (scanned %d)", err, n)
 	}
 
-	payload := models.WorkerMetricsPayload{
+	payload := WorkerMetricsPayload{
 		CPUUsagePercentage: raw.CPU,
 		MemoryUsageBytes:   memUsed * 1024 * 1024,
 		MemoryLimitBytes:   memTotal * 1024 * 1024,

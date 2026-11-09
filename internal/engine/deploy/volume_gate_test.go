@@ -1,11 +1,14 @@
 package deploy
 
 import (
-	"codedock/internal/models"
 	"context"
-	"github.com/docker/docker/client"
 	"strings"
 	"testing"
+
+	"github.com/docker/docker/client"
+
+	appsmod "codedock/internal/modules/apps"
+	"codedock/internal/modules/databases"
 )
 
 func TestVolumeGateFencesDatabaseStartup(t *testing.T) {
@@ -22,11 +25,11 @@ func TestVolumeGateFencesDatabaseStartup(t *testing.T) {
 	defer cli.Close()
 	deployer := NewDatabaseDeployer(cli, nil)
 	deployer.SetVolumeOperations(gate)
-	_, err = deployer.SpinUp(context.Background(), &models.Database{ID: "db", Name: "database"})
+	_, err = deployer.SpinUp(context.Background(), &databases.Database{ID: "db", Name: "database"})
 	if err == nil || !strings.Contains(err.Error(), "busy") {
 		t.Fatalf("database startup escaped restore fence: %v", err)
 	}
-	if err := deployer.ImportData(context.Background(), &models.Database{ID: "db", Name: "database"}, "source"); err == nil || !strings.Contains(err.Error(), "busy") {
+	if err := deployer.ImportData(context.Background(), &databases.Database{ID: "db", Name: "database"}, "source"); err == nil || !strings.Contains(err.Error(), "busy") {
 		t.Fatalf("database import escaped restore fence: %v", err)
 	}
 	other, err := gate.AcquireVolume("other")
@@ -56,7 +59,7 @@ func TestVolumeGateFencesServiceStartsAndRestarts(t *testing.T) {
 		t.Fatalf("service startup escaped restore fence: %v", err)
 	}
 	deployer := &Deployer{containerManager: manager}
-	if err := deployer.RestartAppService(context.Background(), &models.AppService{ID: "app"}); err == nil || !strings.Contains(err.Error(), "busy") {
+	if err := deployer.RestartAppService(context.Background(), &appsmod.AppService{ID: "app"}); err == nil || !strings.Contains(err.Error(), "busy") {
 		t.Fatalf("service restart escaped restore fence: %v", err)
 	}
 }

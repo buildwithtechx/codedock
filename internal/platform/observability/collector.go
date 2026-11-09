@@ -9,12 +9,10 @@ import (
 	"os"
 	"sync"
 	"time"
-
-	"codedock/internal/models"
 )
 
 type SampleStore interface {
-	RecordBatch(ctx context.Context, samples []models.TrafficSample) error
+	RecordBatch(ctx context.Context, samples []TrafficSample) error
 	PathsEnabled(ctx context.Context, projectID string) (bool, error)
 	DeleteBefore(ctx context.Context, cutoff string) error
 	RetentionCutoff(days int) string
@@ -110,7 +108,7 @@ func (c *Collector) Collect(ctx context.Context) error {
 		return err
 	}
 	reader := bufio.NewReader(file)
-	var samples []models.TrafficSample
+	var samples []TrafficSample
 	position := offset
 	for {
 		line, err := reader.ReadString('\n')
@@ -135,17 +133,17 @@ func (c *Collector) Collect(ctx context.Context) error {
 	return nil
 }
 
-func (c *Collector) convert(ctx context.Context, line string) (models.TrafficSample, bool) {
+func (c *Collector) convert(ctx context.Context, line string) (TrafficSample, bool) {
 	entry, err := ParseAccessLine(line)
 	if err != nil {
-		return models.TrafficSample{}, false
+		return TrafficSample{}, false
 	}
 	projectID := ""
 	if c.attribute != nil {
 		projectID = c.attribute(entry.RequestHost)
 	}
 	if projectID == "" {
-		return models.TrafficSample{}, false
+		return TrafficSample{}, false
 	}
 	path := ""
 	if c.pathsEnabled(ctx, projectID) {
@@ -155,7 +153,7 @@ func (c *Collector) convert(ctx context.Context, line string) (models.TrafficSam
 	if c.geoip != nil && entry.ClientIP() != "" {
 		country = c.geoip.LookupCountry(entry.ClientIP())
 	}
-	return models.TrafficSample{
+	return TrafficSample{
 		Time:       entry.Timestamp().Format(time.RFC3339),
 		ProjectID:  projectID,
 		Domain:     entry.RequestHost,

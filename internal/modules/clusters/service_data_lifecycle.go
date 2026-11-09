@@ -125,7 +125,7 @@ func (s *ClusterDataService) ApplyLifecycle(ctx context.Context, user, id, confi
 		if current != op.Snapshot {
 			return fmt.Errorf("database or cluster changed since review")
 		}
-		if err := s.engine.VerifyCluster(ctx, latest, true); err != nil {
+		if err := s.engine.VerifyCluster(ctx, latest.ID, latest.Nodes, true); err != nil {
 			return err
 		}
 		node := latest.Nodes[0]

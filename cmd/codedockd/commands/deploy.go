@@ -14,22 +14,12 @@ import (
 	"github.com/google/uuid"
 
 	"codedock/internal/engine/deploy"
-	"codedock/internal/models"
-	"codedock/internal/platform/storage"
-	"codedock/internal/repositories"
+	"codedock/internal/modules/apps"
+	"codedock/internal/modules/environments"
+	"codedock/internal/modules/projects"
+	"codedock/internal/modules/settings"
 	"codedock/internal/utils"
 )
-
-type deployArgs struct {
-	gitURL      string
-	imageRef    string
-	archivePath string
-	dirName     string
-	projectID   string
-	branch      string
-	rootDir     string
-	port        int
-}
 
 func runDeploy(args []string) {
 	dArgs := parseDeployArgs(args)
@@ -60,10 +50,10 @@ func runDeploy(args []string) {
 		exitError("Failed to connect to Docker: %v", err)
 	}
 
-	envRepo := repositories.NewEnvironmentRepo(db)
-	appRepo := repositories.NewAppServiceRepo(db)
-	projectRepo := repositories.NewProjectRepo(db, envRepo)
-	settingsRepo := repositories.NewSettingsRepo(db, vlt)
+	envRepo := environments.NewEnvironmentRepo(db)
+	appRepo := apps.NewAppServiceRepo(db)
+	projectRepo := projects.NewProjectRepo(db, envRepo)
+	settingsRepo := settings.NewSettingsRepo(db, vlt)
 
 	appName := resolveAppName(dArgs.gitURL, dArgs.imageRef, dArgs.dirName)
 
@@ -77,118 +67,28 @@ func runDeploy(args []string) {
 	printDeploymentURL(settingsRepo, appName)
 }
 
-func parseDeployArgs(args []string) deployArgs {
-	d := deployArgs{
-		branch: "main",
-		port:   3000,
-	}
-	for i := 0; i < len(args); i++ {
-		switch args[i] {
-		case "--git", "-g":
-			if i+1 < len(args) {
-				d.gitURL = args[i+1]
-				i++
-			}
-		case "--image", "-i":
-			if i+1 < len(args) {
-				d.imageRef = args[i+1]
-				i++
-			}
-		case "--archive", "-a":
-			if i+1 < len(args) {
-				d.archivePath = args[i+1]
-				i++
-			}
-		case "--project", "-p":
-			if i+1 < len(args) {
-				d.projectID = args[i+1]
-				i++
-			}
-		case "--branch", "-b":
-			if i+1 < len(args) {
-				d.branch = args[i+1]
-				i++
-			}
-		case "--dir", "-d":
-			if i+1 < len(args) {
-				d.rootDir = args[i+1]
-				i++
-			}
-		case "--template", "-t":
-			if i+1 < len(args) {
-				templateName := args[i+1]
-				d.gitURL = "https://github.com/buildwithtechx/codedock-examples.git"
-				d.branch = "main"
-				d.rootDir = templateName
-				i++
-			}
-		case "--port":
-			if i+1 < len(args) {
-				if p, err := parseUint(args[i+1]); err == nil {
-					d.port = p
-				}
-				i++
-			}
-		default:
-			if fi, err := os.Stat(args[i]); err == nil && fi.IsDir() {
-				absDir, err := filepath.Abs(args[i])
-				if err != nil {
-					exitError("Failed to get absolute directory: %v", err)
-				}
-				tmpArchive := filepath.Join(os.TempDir(), fmt.Sprintf("codedock-deploy-%s.tar.gz", uuid.New().String()[:8]))
-				if err := storage.CreateTarGzArchive(absDir, tmpArchive); err != nil {
-					os.Remove(tmpArchive)
-					exitError("Failed to create archive: %v", err)
-				}
-				d.archivePath = tmpArchive
-				d.dirName = filepath.Base(absDir)
-			} else if strings.HasPrefix(args[i], "http") || strings.HasPrefix(args[i], "git@") {
-				d.gitURL = args[i]
-			} else if strings.Contains(args[i], ":") || strings.Contains(args[i], "/") {
-				d.imageRef = args[i]
-			}
-		}
-	}
-	return d
-}
-
-func resolveAppName(gitURL, imageRef, dirName string) string {
-	if dirName != "" {
-		return dirName
-	}
-	appName := extractRepoName(gitURL)
-	if appName == "app" && imageRef != "" {
-		appName = imageRef
-		if idx := strings.LastIndex(appName, "/"); idx >= 0 {
-			appName = appName[idx+1:]
-		}
-		appName = strings.Split(appName, ":")[0]
-	}
-	return appName
-}
-
-func selectOrCreateProject(projectRepo *repositories.ProjectRepo, projectID string) string {
+func selectOrCreateProject(projectRepo *projects.ProjectRepo, projectID string) string {
 	if projectID != "" {
 		return projectID
 	}
-	projects, _, _ := projectRepo.ListAll(context.Background(), "", 1000, 0)
-	if len(projects) > 0 {
+	projList, _, _ := projectRepo.ListAll(context.Background(), "", 1000, 0)
+	if len(projList) > 0 {
 		fmt.Println("📁 Select a project for this deployment:")
 		fmt.Println("  [0] Create a new project")
-		for i, p := range projects {
+		for i, p := range projList {
 			fmt.Printf("  [%d] %s (%s)\n", i+1, p.Name, p.ID[:8])
 		}
 		for {
-			fmt.Printf("Enter choice [0-%d]: ", len(projects))
+			fmt.Printf("Enter choice [0-%d]: ", len(projList))
 			var choice int
 			_, err := fmt.Scanln(&choice)
-			if err != nil || choice < 0 || choice > len(projects) {
+			if err != nil || choice < 0 || choice > len(projList) {
 				fmt.Println("Invalid choice.")
 				continue
 			}
 			if choice > 0 {
-				fmt.Printf("📁 Using project: %s (%s)\n", projects[choice-1].Name, projects[choice-1].ID[:8])
-				return projects[choice-1].ID
+				fmt.Printf("📁 Using project: %s (%s)\n", projList[choice-1].Name, projList[choice-1].ID[:8])
+				return projList[choice-1].ID
 			} else {
 				break
 			}
@@ -203,7 +103,7 @@ func selectOrCreateProject(projectRepo *repositories.ProjectRepo, projectID stri
 	if newName == "" {
 		newName = defaultName
 	}
-	p := &models.ProjectConfig{
+	p := &projects.ProjectConfig{
 		ID:        uuid.New().String(),
 		Name:      newName,
 		CreatedAt: time.Now(),
@@ -216,12 +116,12 @@ func selectOrCreateProject(projectRepo *repositories.ProjectRepo, projectID stri
 	return p.ID
 }
 
-func setupEnvironment(envRepo *repositories.EnvironmentRepo, projectID string) string {
+func setupEnvironment(envRepo *environments.EnvironmentRepo, projectID string) string {
 	envs, _ := envRepo.ListByProject(context.Background(), projectID)
 	if len(envs) > 0 {
 		return envs[0].ID
 	}
-	env := &models.EnvironmentConfig{
+	env := &environments.EnvironmentConfig{
 		ID:        uuid.New().String(),
 		ProjectID: projectID,
 		Name:      "production",
@@ -235,16 +135,16 @@ func setupEnvironment(envRepo *repositories.EnvironmentRepo, projectID string) s
 	return env.ID
 }
 
-func setupAppService(appRepo *repositories.AppServiceRepo, projectID, envID, appName string, dArgs deployArgs) *models.AppService {
-	apps, _ := appRepo.ListByProject(context.Background(), projectID)
-	for _, a := range apps {
+func setupAppService(appRepo *apps.AppServiceRepo, projectID, envID, appName string, dArgs deployArgs) *apps.AppService {
+	appList, _ := appRepo.ListByProject(context.Background(), projectID)
+	for _, a := range appList {
 		if a.Name == appName {
 			fmt.Printf("📦 Using existing app: %s (%s)\n", appName, a.ID[:8])
 			return a
 		}
 	}
 
-	svc := &models.AppService{
+	svc := &apps.AppService{
 		ID:            uuid.New().String(),
 		ProjectID:     projectID,
 		EnvironmentID: envID,
@@ -267,7 +167,7 @@ func setupAppService(appRepo *repositories.AppServiceRepo, projectID, envID, app
 	return svc
 }
 
-func performDeployment(deployer *deploy.Deployer, dockerClient *client.Client, svc *models.AppService, dArgs deployArgs, dataDir string) {
+func performDeployment(deployer *deploy.Deployer, dockerClient *client.Client, svc *apps.AppService, dArgs deployArgs, dataDir string) {
 	switch {
 	case dArgs.gitURL != "":
 		cloneDir := filepath.Join(dataDir, "builds", svc.ID)

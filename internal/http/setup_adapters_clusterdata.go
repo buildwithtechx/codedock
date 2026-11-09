@@ -4,18 +4,15 @@ import (
 	"context"
 	"fmt"
 
-	"codedock/internal/models"
 	modclusters "codedock/internal/modules/clusters"
-	"codedock/internal/repositories"
-	"codedock/internal/services/clusterdata"
-	"codedock/internal/services/operations"
+	"codedock/internal/modules/monitoring"
 )
 
 type clusterDataServiceAdapter struct {
-	service    *clusterdata.Service
-	operations *operations.Service
-	apps       repositories.AppServiceRepository
-	vars       repositories.ServiceVarRepository
+	service    *modclusters.ClusterDataService
+	operations *monitoring.OperationService
+	apps       modclusters.BindingApps
+	vars       modclusters.BindingVars
 }
 
 func (a *clusterDataServiceAdapter) List(ctx context.Context, projectID, clusterID string) (any, error) {
@@ -23,28 +20,7 @@ func (a *clusterDataServiceAdapter) List(ctx context.Context, projectID, cluster
 }
 
 func (a *clusterDataServiceAdapter) Review(ctx context.Context, userID, projectID, clusterID string, req modclusters.ClusterDataRequest) (any, error) {
-	legacyReq := models.ClusterDataRequest{
-		Action: req.Action,
-		Spec: models.ClusterDataSpec{
-			ID:              req.Spec.ID,
-			Name:            req.Spec.Name,
-			EnvironmentID:   req.Spec.EnvironmentID,
-			Engine:          req.Spec.Engine,
-			Image:           req.Spec.Image,
-			Instances:       req.Spec.Instances,
-			Shards:          req.Spec.Shards,
-			StorageGiB:      req.Spec.StorageGiB,
-			StorageClass:    req.Spec.StorageClass,
-			S3DestinationID: req.Spec.S3DestinationID,
-			Synchronous:     req.Spec.Synchronous,
-		},
-		SourceID:           req.SourceID,
-		RestoreTime:        req.RestoreTime,
-		OperatorVersion:    req.OperatorVersion,
-		BarmanVersion:      req.BarmanVersion,
-		CertManagerVersion: req.CertManagerVersion,
-	}
-	return a.service.Review(ctx, userID, projectID, clusterID, legacyReq)
+	return a.service.Review(ctx, userID, projectID, clusterID, req)
 }
 
 func (a *clusterDataServiceAdapter) Apply(ctx context.Context, userID, operationID, confirmation string) (any, error) {
@@ -108,7 +84,7 @@ func (a *clusterDataServiceAdapter) ApplyBinding(ctx context.Context, userID, op
 }
 
 func (a *clusterDataServiceAdapter) ReviewLifecycle(ctx context.Context, userID, projectID, clusterID, databaseID, action string) (any, error) {
-	return a.service.ReviewLifecycle(ctx, userID, projectID, clusterID, clusterdata.LifecycleRequest{
+	return a.service.ReviewLifecycle(ctx, userID, projectID, clusterID, modclusters.LifecycleRequest{
 		DatabaseID: databaseID,
 		Action:     action,
 	})

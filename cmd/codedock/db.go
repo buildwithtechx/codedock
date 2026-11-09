@@ -5,7 +5,7 @@ import (
 	"os"
 	"text/tabwriter"
 
-	"codedock/internal/models"
+	pkgclient "codedock/pkg/client"
 	"github.com/spf13/cobra"
 )
 
@@ -52,11 +52,11 @@ var dbCreateCmd = &cobra.Command{
 		}
 
 		client := getClient()
-		req := &models.CreateDatabaseRequest{
+		req := &pkgclient.CreateDatabaseRequest{
 			ProjectID:     projectID,
 			EnvironmentID: envID,
 			Name:          name,
-			Engine:        models.DatabaseEngine(engine),
+			Engine:        pkgclient.DatabaseEngine(engine),
 		}
 
 		created, err := client.CreateDatabase(req)
@@ -94,7 +94,7 @@ var dbImportCmd = &cobra.Command{
 		}
 
 		client := getClient()
-		req := &models.ImportDatabaseRequest{SourceURL: sourceURL}
+		req := &pkgclient.ImportDatabaseRequest{SourceURL: sourceURL}
 		if err := client.ImportDatabase(args[0], req); err != nil {
 			fmt.Printf("Error importing database data: %v\n", err)
 			os.Exit(1)

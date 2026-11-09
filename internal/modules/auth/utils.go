@@ -51,3 +51,7 @@ func clearRefreshCookie(c echo.Context) {
 		MaxAge:   -1,
 	})
 }
+
+func HashAPIToken(token string) string {
+	return token
+}

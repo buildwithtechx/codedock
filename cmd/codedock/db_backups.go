@@ -5,7 +5,7 @@ import (
 	"os"
 	"text/tabwriter"
 
-	"codedock/internal/models"
+	pkgclient "codedock/pkg/client"
 	"github.com/spf13/cobra"
 )
 
@@ -52,7 +52,7 @@ var backupCreateCmd = &cobra.Command{
 		}
 
 		client := getClient()
-		req := &models.BackupConfig{
+		req := &pkgclient.BackupConfig{
 			DatabaseID: databaseID,
 			Name:       name,
 			Schedule:   schedule,

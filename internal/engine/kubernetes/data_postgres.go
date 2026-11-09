@@ -1,12 +1,11 @@
 package kubernetes
 
 import (
-	"codedock/internal/models"
 	"fmt"
 	"path"
 )
 
-func postgresObjects(plan *models.ClusterDataPlan, metadata func(string) map[string]any, destination, source *models.S3Destination, sourceName string) (map[string]any, []map[string]any, error) {
+func postgresObjects(plan *ClusterDataPlan, metadata func(string) map[string]any, destination, source *S3Destination, sourceName string) (map[string]any, []map[string]any, error) {
 	spec := plan.Record.Spec
 	_, name := DataIdentity(spec)
 	storage := map[string]any{"size": fmt.Sprintf("%dGi", spec.StorageGiB)}
@@ -19,7 +18,7 @@ func postgresObjects(plan *models.ClusterDataPlan, metadata func(string) map[str
 		settings["postgresql"] = map[string]any{"parameters": map[string]string{"synchronous_commit": "remote_apply", "synchronous_standby_names": "ANY 1 (*)"}}
 	}
 	extra := []map[string]any{}
-	objectStore := func(suffix string, dest *models.S3Destination, serverName string) {
+	objectStore := func(suffix string, dest *S3Destination, serverName string) {
 		credentials := name + suffix + "-credentials"
 		storeName := name + suffix
 		extra = append(extra, map[string]any{"apiVersion": "v1", "kind": "Secret", "metadata": metadata(credentials), "type": "Opaque", "stringData": map[string]string{"ACCESS_KEY_ID": dest.AccessKeyID, "ACCESS_SECRET_KEY": dest.SecretAccessKey}})

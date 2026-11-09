@@ -7,8 +7,6 @@ import (
 	"strings"
 
 	"github.com/docker/docker/api/types/container"
-
-	"codedock/internal/models"
 )
 
 var nvidiaGpuIDRegex = regexp.MustCompile(`^(?:all|\d+(?::\d+)?|GPU-[A-Za-z0-9-]+|MIG-[A-Za-z0-9/-]+)$`)
@@ -19,7 +17,7 @@ func IsNvidiaGpuID(id string) bool {
 	return nvidiaGpuIDRegex.MatchString(selector)
 }
 
-func NormalizeComposeGpuRequests(value any) ([]models.GPURequest, error) {
+func NormalizeComposeGpuRequests(value any) ([]GPURequest, error) {
 	if value == nil {
 		return nil, nil
 	}
@@ -27,23 +25,23 @@ func NormalizeComposeGpuRequests(value any) ([]models.GPURequest, error) {
 	case string:
 		trimmed := strings.ToLower(strings.TrimSpace(v))
 		if trimmed == "all" {
-			return []models.GPURequest{{Driver: "nvidia", Count: "all", Capabilities: []string{"gpu"}}}, nil
+			return []GPURequest{{Driver: "nvidia", Count: "all", Capabilities: []string{"gpu"}}}, nil
 		}
 		return nil, errors.New("gpus must be all or a list of device requests")
 	case int:
 		if v < 0 || v > 64 {
 			return nil, errors.New("GPU count must be all or an integer between 0 and 64")
 		}
-		return []models.GPURequest{{Driver: "nvidia", Count: v, Capabilities: []string{"gpu"}}}, nil
-	case []models.GPURequest:
+		return []GPURequest{{Driver: "nvidia", Count: v, Capabilities: []string{"gpu"}}}, nil
+	case []GPURequest:
 		return NormalizeGPURequests(v)
-	case models.GPURequest:
-		return NormalizeGPURequests([]models.GPURequest{v})
+	case GPURequest:
+		return NormalizeGPURequests([]GPURequest{v})
 	case []any:
-		reqs := make([]models.GPURequest, 0, len(v))
+		reqs := make([]GPURequest, 0, len(v))
 		for _, item := range v {
 			if m, ok := item.(map[string]any); ok {
-				var req models.GPURequest
+				var req GPURequest
 				if drv, ok := m["driver"].(string); ok {
 					req.Driver = drv
 				}
@@ -77,7 +75,7 @@ func NormalizeComposeGpuRequests(value any) ([]models.GPURequest, error) {
 	}
 }
 
-func NormalizeGPURequests(requests []models.GPURequest) ([]models.GPURequest, error) {
+func NormalizeGPURequests(requests []GPURequest) ([]GPURequest, error) {
 	if len(requests) == 0 {
 		return nil, nil
 	}
@@ -85,7 +83,7 @@ func NormalizeGPURequests(requests []models.GPURequest) ([]models.GPURequest, er
 		return nil, errors.New("at most 16 GPU request groups are supported")
 	}
 
-	normalized := make([]models.GPURequest, 0, len(requests))
+	normalized := make([]GPURequest, 0, len(requests))
 	for _, req := range requests {
 		driver := strings.TrimSpace(strings.ToLower(req.Driver))
 		if driver == "" {
@@ -95,7 +93,7 @@ func NormalizeGPURequests(requests []models.GPURequest) ([]models.GPURequest, er
 			return nil, errors.New("GPU requests support only the NVIDIA driver")
 		}
 
-		out := models.GPURequest{
+		out := GPURequest{
 			Driver: "nvidia",
 		}
 
@@ -190,7 +188,7 @@ func NormalizeGPURequests(requests []models.GPURequest) ([]models.GPURequest, er
 	return normalized, nil
 }
 
-func ToDockerDeviceRequests(requests []models.GPURequest) ([]container.DeviceRequest, error) {
+func ToDockerDeviceRequests(requests []GPURequest) ([]container.DeviceRequest, error) {
 	normalized, err := NormalizeGPURequests(requests)
 	if err != nil {
 		return nil, fmt.Errorf("normalize GPU requests: %w", err)

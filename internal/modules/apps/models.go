@@ -11,8 +11,12 @@ type ServiceVolume struct {
 }
 
 type ServiceRoleSpec struct {
-	Role    string `json:"role"`
-	Command string `json:"command"`
+	Name            string `json:"name,omitempty"`
+	Role            string `json:"role,omitempty"`
+	Kind            string `json:"kind,omitempty"`
+	Command         string `json:"command"`
+	StopGracePeriod string `json:"stopGracePeriod,omitempty"`
+	Singleton       bool   `json:"singleton,omitempty"`
 }
 
 type AppService struct {
@@ -89,6 +93,7 @@ type LogDrain struct {
 	DrainType   DrainType `json:"drainType" db:"drain_type"`
 	EndpointURL string    `json:"endpointUrl" db:"endpoint_url"`
 	APIKey      string    `json:"apiKey,omitempty" db:"api_key"`
+	AuthToken   string    `json:"authToken,omitempty" db:"auth_token"`
 	CreatedAt   time.Time `json:"createdAt" db:"created_at"`
 	UpdatedAt   time.Time `json:"updatedAt" db:"updated_at"`
 }

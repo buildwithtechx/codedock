@@ -6,16 +6,14 @@ import (
 	"encoding/hex"
 	"errors"
 	"fmt"
-
-	"codedock/internal/models"
 )
 
 type SelfHostedStore interface {
-	Load(context.Context) (*models.SelfHostedConfig, error)
-	Save(context.Context, *models.SelfHostedConfig) error
+	Load(context.Context) (*SelfHostedConfig, error)
+	Save(context.Context, *SelfHostedConfig) error
 }
 
-func PrepareSelfHosted(ctx context.Context, cfg *models.Config, store SelfHostedStore) error {
+func PrepareSelfHosted(ctx context.Context, cfg *Config, store SelfHostedStore) error {
 	if cfg.Cloud.Enabled {
 		return nil
 	}
@@ -56,7 +54,7 @@ func PrepareSelfHosted(ctx context.Context, cfg *models.Config, store SelfHosted
 	return nil
 }
 
-func SaveSelfHostedOptions(ctx context.Context, cfg *models.Config, store SelfHostedStore, domain, tlsEmail string) error {
+func SaveSelfHostedOptions(ctx context.Context, cfg *Config, store SelfHostedStore, domain, tlsEmail string) error {
 	if cfg.Cloud.Enabled {
 		return errors.New("self-hosted setup is unavailable in cloud mode")
 	}

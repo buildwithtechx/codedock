@@ -2,11 +2,9 @@ package notifications
 
 import (
 	"fmt"
-
-	"codedock/internal/models"
 )
 
-func SendTelegramNotification(botToken, chatID string, event *models.NotificationEvent) error {
+func SendTelegramNotification(botToken, chatID string, event *NotificationEvent) error {
 	url := fmt.Sprintf("https://api.telegram.org/bot%s/sendMessage", botToken)
 	return postJSON(url, map[string]string{
 		"chat_id":    chatID,

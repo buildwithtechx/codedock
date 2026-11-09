@@ -66,7 +66,7 @@ func (h *SystemHandler) Cleanup(c echo.Context) error {
 
 func (h *SystemHandler) CreateLocalCLISession(c echo.Context) error {
 	if config.Get().Cloud.Enabled {
-		return utils.Error(c, http.StatusNotFound, "Not available in cloud mode")
+		return echo.NewHTTPError(http.StatusNotFound, "Not available in cloud mode")
 	}
 
 	internalToken := os.Getenv("CODEDOCK_INTERNAL_TOKEN")
@@ -74,26 +74,29 @@ func (h *SystemHandler) CreateLocalCLISession(c echo.Context) error {
 		internalToken = config.Get().Security.JWTSecret
 	}
 	reqToken := c.Request().Header.Get("X-Internal-Token")
+	if reqToken == "" {
+		reqToken = c.Request().Header.Get("X-Codedock-Internal-Token")
+	}
 	if internalToken == "" || reqToken == "" || reqToken != internalToken {
-		return utils.Error(c, http.StatusUnauthorized, "The installation's operator credential is required")
+		return echo.NewHTTPError(http.StatusUnauthorized, "The installation's operator credential is required")
 	}
 
 	if c.Request().Header.Get("Origin") != "" || c.Request().Header.Get("Sec-Fetch-Site") != "" {
-		return utils.Error(c, http.StatusForbidden, "Local CLI authentication is not available to browsers")
+		return echo.NewHTTPError(http.StatusForbidden, "Local CLI authentication is not available to browsers")
 	}
 
 	if h.adminFinder == nil || h.tokenGen == nil {
-		return utils.Error(c, http.StatusInternalServerError, "authentication service unavailable")
+		return echo.NewHTTPError(http.StatusInternalServerError, "authentication service unavailable")
 	}
 
 	id, email, role, verified, totp, err := h.adminFinder.FindFoundingAdmin(c.Request().Context())
 	if err != nil || id == "" || role != "admin" {
-		return utils.Error(c, http.StatusConflict, "No local administrator is available. Complete Codedock setup first.")
+		return echo.NewHTTPError(http.StatusConflict, "No local administrator is available. Complete Codedock setup first.")
 	}
 
 	token, err := h.tokenGen.GenerateCLIToken(id, email, role, verified, totp)
 	if err != nil {
-		return utils.Error(c, http.StatusInternalServerError, "failed to mint CLI session token")
+		return echo.NewHTTPError(http.StatusInternalServerError, "failed to mint CLI session token")
 	}
 
 	c.Response().Header().Set("Cache-Control", "no-store")

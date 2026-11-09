@@ -27,6 +27,8 @@ const (
 	RuntimeModeStandard   RuntimeMode = "standard"
 	RuntimeModeServerless RuntimeMode = "serverless"
 	RuntimeModeStatic     RuntimeMode = "static"
+	RuntimeModeWorker     RuntimeMode = "worker"
+	RuntimeModeWeb        RuntimeMode = "web"
 )
 
 type DrainType string

@@ -11,9 +11,9 @@ import (
 	"github.com/google/uuid"
 
 	"codedock/internal/config"
-	"codedock/internal/models"
+	"codedock/internal/modules/settings"
+	"codedock/internal/modules/users"
 	"codedock/internal/platform/vault"
-	"codedock/internal/repositories"
 	"codedock/internal/utils"
 )
 
@@ -28,7 +28,7 @@ func runSetup() {
 	if config.Get().Cloud.Enabled {
 		exitError("The setup wizard is for self-hosted installations")
 	}
-	repo := repositories.NewUserRepo(db)
+	repo := users.NewUserRepo(db)
 	users, _, err := repo.ListUsers(context.Background(), 1, 0)
 	if err != nil {
 		exitError("Check existing accounts: %v", err)
@@ -67,7 +67,7 @@ func runSetup() {
 	fmt.Println("Optional email and OAuth providers can be configured in dashboard settings.")
 }
 
-func createSetupOwner(repo *repositories.UserRepo) string {
+func createSetupOwner(repo *users.UserRepo) string {
 	fmt.Println("Create your instance owner account.")
 	email := prompt("Email: ")
 	address, err := mail.ParseAddress(email)
@@ -90,7 +90,7 @@ func createSetupOwner(repo *repositories.UserRepo) string {
 	if err != nil {
 		exitError("Hash password: %v", err)
 	}
-	user := &models.User{ID: uuid.New().String(), Email: email, Name: name, PasswordHash: hashed, Role: models.UserRoleOwner, IsActive: true, EmailVerified: true}
+	user := &users.User{ID: uuid.New().String(), Email: email, Name: name, PasswordHash: hashed, Role: users.UserRoleOwner, IsActive: true, EmailVerified: true}
 	if err := repo.CreateUser(context.Background(), user); err != nil {
 		exitError("Create instance owner: %v", err)
 	}
@@ -99,10 +99,10 @@ func createSetupOwner(repo *repositories.UserRepo) string {
 }
 
 func saveSetupOptions(db *sql.DB, v *vault.Vault, domain, tlsEmail string) error {
-	if err := config.SaveSelfHostedOptions(context.Background(), config.Get(), repositories.NewSelfHostedRepo(db), domain, tlsEmail); err != nil {
+	if err := config.SaveSelfHostedOptions(context.Background(), config.Get(), settings.NewSelfHostedRepo(db), domain, tlsEmail); err != nil {
 		return err
 	}
-	repo := repositories.NewSettingsRepo(db, v)
+	repo := settings.NewSettingsRepo(db, v)
 	settings, err := repo.GetServerSettings(context.Background())
 	if err != nil {
 		return fmt.Errorf("load server settings: %w", err)

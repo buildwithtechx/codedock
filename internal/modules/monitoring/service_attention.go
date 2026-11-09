@@ -2,7 +2,6 @@ package monitoring
 
 import (
 	"context"
-	"encoding/json"
 	"errors"
 	"fmt"
 	"io"
@@ -11,7 +10,6 @@ import (
 
 	"github.com/google/uuid"
 
-	"codedock/internal/engine/hetzner"
 	"codedock/internal/modules/backups"
 )
 
@@ -37,8 +35,8 @@ type AttentionHealth struct {
 }
 
 type MigrationRunner interface {
-	ListRuns(ctx context.Context, userID, orgID, status string) (any, error)
-	ResumeRun(ctx context.Context, userID, runID string, req any) (any, error)
+	ListRuns(ctx context.Context, userID, orgID, status string) ([]MigrationRun, error)
+	ResumeRun(ctx context.Context, userID, runID string, req ResumeMigrationRequest) (*MigrationResumeResult, error)
 }
 
 type AttentionManager struct {
@@ -46,7 +44,7 @@ type AttentionManager struct {
 	deploys    DeploymentRepository
 	apps       AppServiceRepository
 	projects   ProjectRepository
-	users      *UserRepo
+	users      UserRepo
 	orgs       OrganizationRepository
 	backups    BackupRunner
 	migrations MigrationRunner
@@ -64,7 +62,7 @@ func NewAttentionManager(
 	deploys DeploymentRepository,
 	apps AppServiceRepository,
 	projects ProjectRepository,
-	users *UserRepo,
+	users UserRepo,
 	orgs OrganizationRepository,
 	backups BackupRunner,
 	migrationService MigrationRunner,
@@ -72,8 +70,8 @@ func NewAttentionManager(
 	servers ServerRepository,
 	health HealthReader,
 	deployer WorkloadDeployer,
-) *Service {
-	return &Service{
+) *AttentionManager {
+	return &AttentionManager{
 		issues: issues, deploys: deploys, apps: apps, projects: projects,
 		users: users, orgs: orgs, backups: backups, migrations: migrationService,
 		managed: managed, servers: servers, health: health, deployer: deployer,

@@ -1,10 +1,8 @@
 package notifications
 
-import (
-	"codedock/internal/models"
-)
+import ()
 
-func SendPushoverNotification(appToken, userKey string, event *models.NotificationEvent) error {
+func SendPushoverNotification(appToken, userKey string, event *NotificationEvent) error {
 	return postJSON("https://api.pushover.net/1/messages.json", map[string]string{
 		"token":   appToken,
 		"user":    userKey,

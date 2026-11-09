@@ -12,8 +12,6 @@ import (
 	"net/http"
 	"strings"
 	"time"
-
-	"codedock/internal/models"
 )
 
 var metadataCIDRs = []string{
@@ -112,7 +110,7 @@ func canonicalPath(bucket string, key string) string {
 	return "/" + bucketPath + "/" + strings.Join(parts, "/")
 }
 
-func EnsureS3Bucket(ctx context.Context, dest *models.S3Destination) error {
+func EnsureS3Bucket(ctx context.Context, dest *S3Destination) error {
 	resp, err := signedS3Request(ctx, dest, http.MethodHead, "", nil, "")
 	if err != nil {
 		s3Err, ok := err.(*S3Error)
@@ -130,7 +128,7 @@ func EnsureS3Bucket(ctx context.Context, dest *models.S3Destination) error {
 	return nil
 }
 
-func signedS3Request(ctx context.Context, dest *models.S3Destination, method, key string, body []byte, contentType string) (*http.Response, error) {
+func signedS3Request(ctx context.Context, dest *S3Destination, method, key string, body []byte, contentType string) (*http.Response, error) {
 	if body == nil {
 		body = []byte{}
 	}
@@ -201,7 +199,7 @@ func signedS3Request(ctx context.Context, dest *models.S3Destination, method, ke
 	return resp, nil
 }
 
-func CheckS3Bucket(ctx context.Context, dest *models.S3Destination) error {
+func CheckS3Bucket(ctx context.Context, dest *S3Destination) error {
 	response, err := signedS3Request(ctx, dest, http.MethodHead, "", nil, "")
 	if err != nil {
 		return fmt.Errorf("check bucket access: %w", err)

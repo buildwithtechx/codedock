@@ -2,8 +2,6 @@ package ssh
 
 import (
 	"testing"
-
-	"codedock/internal/models"
 )
 
 func TestEvictedClientReleaseDoesNotAffectReplacement(t *testing.T) {
@@ -23,7 +21,7 @@ func TestEvictedClientReleaseDoesNotAffectReplacement(t *testing.T) {
 }
 
 func TestAssertOperatorSSHAccess(t *testing.T) {
-	server := &models.Server{
+	server := &Server{
 		ID:             "srv-1",
 		OrganizationID: "org-1",
 	}

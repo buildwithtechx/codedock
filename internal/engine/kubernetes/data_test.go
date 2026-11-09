@@ -1,15 +1,14 @@
 package kubernetes
 
 import (
-	"codedock/internal/models"
 	"context"
 	"encoding/json"
 	"strings"
 	"testing"
 )
 
-func dataFixture() *models.ClusterDataPlan {
-	return &models.ClusterDataPlan{Record: models.ClusterData{ID: "aaaaaaaa-aaaa-4aaa-8aaa-aaaaaaaaaaaa", ProjectID: "bbbbbbbb-bbbb-4bbb-8bbb-bbbbbbbbbbbb", Spec: models.ClusterDataSpec{ID: "aaaaaaaa-aaaa-4aaa-8aaa-aaaaaaaaaaaa", EnvironmentID: "cccccccc-cccc-4ccc-8ccc-cccccccccccc", Name: "database", Engine: "postgres", Image: "ghcr.io/cloudnative-pg/postgresql:17.6", Instances: 3, StorageGiB: 10, Synchronous: true}}, Password: "generated"}
+func dataFixture() *ClusterDataPlan {
+	return &ClusterDataPlan{Record: ClusterData{ID: "aaaaaaaa-aaaa-4aaa-8aaa-aaaaaaaaaaaa", ProjectID: "bbbbbbbb-bbbb-4bbb-8bbb-bbbbbbbbbbbb", Spec: ClusterDataSpec{ID: "aaaaaaaa-aaaa-4aaa-8aaa-aaaaaaaaaaaa", EnvironmentID: "cccccccc-cccc-4ccc-8ccc-cccccccccccc", Name: "database", Engine: "postgres", Image: "ghcr.io/cloudnative-pg/postgresql:17.6", Instances: 3, StorageGiB: 10, Synchronous: true}}, Password: "generated"}
 }
 func TestDataModesRequireDistinctNodesAndExactImages(t *testing.T) {
 	plan := dataFixture()
@@ -38,7 +37,7 @@ func TestDataModesRequireDistinctNodesAndExactImages(t *testing.T) {
 func TestPostgresRecoveryUsesSeparatePrefixAndNewCredentials(t *testing.T) {
 	plan := dataFixture()
 	plan.RestoreTime = "2026-10-06T18:00:00Z"
-	destination := &models.S3Destination{Bucket: "backups", PathPrefix: "prefix", AccessKeyID: "key", SecretAccessKey: "secret"}
+	destination := &S3Destination{Bucket: "backups", PathPrefix: "prefix", AccessKeyID: "key", SecretAccessKey: "secret"}
 	manifest, err := DataManifest(plan, destination, destination, "db-source")
 	if err != nil {
 		t.Fatal(err)
@@ -75,7 +74,7 @@ func TestDatabaseApplyRefusesForeignResources(t *testing.T) {
 
 type foreignDataCommands struct{ mutated bool }
 
-func (r *foreignDataCommands) Kubectl(ctx context.Context, node models.ClusterNode, args []string, input string) (string, error) {
+func (r *foreignDataCommands) Kubectl(ctx context.Context, node ClusterNode, args []string, input string) (string, error) {
 	if input != "" {
 		r.mutated = true
 	}
@@ -85,7 +84,7 @@ func TestDatabaseOwnershipFailurePreventsSubmission(t *testing.T) {
 	commands := &foreignDataCommands{}
 	runtime := NewWorkloadRuntime(commands)
 	manifest := `{"items":[{"apiVersion":"v1","kind":"Secret","metadata":{"name":"database","labels":{"codedock.run/project":"owner","codedock.run/database":"database"}}}]}`
-	if err := runtime.ApplyOwnedData(context.Background(), models.ClusterNode{}, manifest, func(string, string) error { return nil }); err == nil || commands.mutated {
+	if err := runtime.ApplyOwnedData(context.Background(), ClusterNode{}, manifest, func(string, string) error { return nil }); err == nil || commands.mutated {
 		t.Fatal("foreign resource was submitted for mutation")
 	}
 }
@@ -94,7 +93,7 @@ func TestDatabaseObservationRejectsMissingReadyInstances(t *testing.T) {
 	commands := &foreignDataCommands{}
 	runtime := NewWorkloadRuntime(commands)
 	record := dataFixture().Record
-	if err := runtime.DataObserved(context.Background(), models.ClusterNode{}, &record); err == nil {
+	if err := runtime.DataObserved(context.Background(), ClusterNode{}, &record); err == nil {
 		t.Fatal("foreign or incomplete runtime appeared healthy")
 	}
 }

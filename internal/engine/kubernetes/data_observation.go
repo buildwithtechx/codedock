@@ -1,14 +1,13 @@
 package kubernetes
 
 import (
-	"codedock/internal/models"
 	"context"
 	"encoding/json"
 	"fmt"
 	"strings"
 )
 
-func (r *WorkloadRuntime) dataPods(ctx context.Context, node models.ClusterNode, namespace, name string) ([]map[string]any, error) {
+func (r *WorkloadRuntime) dataPods(ctx context.Context, node ClusterNode, namespace, name string) ([]map[string]any, error) {
 	response, err := r.commands.Kubectl(ctx, node, []string{"-n", namespace, "get", "pods", "-l", "codedock.run/database=" + name, "-o", "json"}, "")
 	if err != nil {
 		return nil, err
@@ -26,7 +25,7 @@ func (r *WorkloadRuntime) dataPods(ctx context.Context, node models.ClusterNode,
 	return pods, nil
 }
 
-func (r *WorkloadRuntime) DataInspect(ctx context.Context, node models.ClusterNode, record *models.ClusterData) ([]string, []string, error) {
+func (r *WorkloadRuntime) DataInspect(ctx context.Context, node ClusterNode, record *ClusterData) ([]string, []string, error) {
 	namespace, name := DataIdentity(record.Spec)
 	roles := []string{}
 	volumes := []string{}
@@ -84,7 +83,7 @@ func (r *WorkloadRuntime) DataInspect(ctx context.Context, node models.ClusterNo
 	return roles, volumes, nil
 }
 
-func (r *WorkloadRuntime) DataConnectionCheck(ctx context.Context, node models.ClusterNode, record *models.ClusterData, password string) error {
+func (r *WorkloadRuntime) DataConnectionCheck(ctx context.Context, node ClusterNode, record *ClusterData, password string) error {
 	namespace, name := DataIdentity(record.Spec)
 	if password == "" {
 		return fmt.Errorf("database credentials unavailable")

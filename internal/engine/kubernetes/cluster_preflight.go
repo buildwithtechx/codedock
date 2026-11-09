@@ -1,7 +1,6 @@
 package kubernetes
 
 import (
-	"codedock/internal/models"
 	"context"
 	"encoding/json"
 	"fmt"
@@ -15,7 +14,7 @@ type NetworkPreflight struct {
 	Checks       []string `json:"checks"`
 }
 
-func (r *WorkloadRuntime) NetworkPreflight(ctx context.Context, node models.ClusterNode) (*NetworkPreflight, error) {
+func (r *WorkloadRuntime) NetworkPreflight(ctx context.Context, node ClusterNode) (*NetworkPreflight, error) {
 	preflight := &NetworkPreflight{}
 	raw, err := r.commands.Kubectl(ctx, node, []string{"get", "nodes", "-o", "json"}, "")
 	if err != nil {
@@ -61,7 +60,7 @@ func (r *WorkloadRuntime) NetworkPreflight(ctx context.Context, node models.Clus
 	return preflight, nil
 }
 
-func (r *WorkloadRuntime) CrossNodeProbe(ctx context.Context, node models.ClusterNode, peers []string) ([]string, error) {
+func (r *WorkloadRuntime) CrossNodeProbe(ctx context.Context, node ClusterNode, peers []string) ([]string, error) {
 	manifest := map[string]any{"apiVersion": "v1", "kind": "Pod", "metadata": map[string]any{"name": "codedock-net-probe", "namespace": "default", "labels": map[string]string{"codedock.run/probe": "net"}}, "spec": map[string]any{"restartPolicy": "Never", "containers": []map[string]any{{"name": "probe", "image": "busybox:1.36", "command": []string{"sh", "-ec", "trap 'exit 0' TERM; sleep 300"}}}}}
 	data, err := json.Marshal(manifest)
 	if err != nil {

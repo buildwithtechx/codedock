@@ -1,24 +1,29 @@
 package deploy
 
 import (
-	"codedock/internal/models"
 	"context"
 	"encoding/json"
-	"github.com/docker/docker/client"
 	"net/http"
 	"net/http/httptest"
 	"os"
 	"strings"
 	"testing"
+
+	"github.com/docker/docker/client"
+
+	appsmod "codedock/internal/modules/apps"
+	settingsmodule "codedock/internal/modules/settings"
 )
 
 type rolloutTestStore struct {
 	DeployerStore
-	saved *models.AppService
+	saved *appsmod.AppService
 }
 
-func (s *rolloutTestStore) GetServerSettings() (*models.ServerSettings, error) { return nil, nil }
-func (s *rolloutTestStore) UpdateAppService(app *models.AppService) error {
+func (s *rolloutTestStore) GetServerSettings() (*settingsmodule.ServerSettings, error) {
+	return nil, nil
+}
+func (s *rolloutTestStore) UpdateAppService(app *appsmod.AppService) error {
 	copy := *app
 	s.saved = &copy
 	return nil
@@ -34,68 +39,56 @@ func newRolloutFixture(t *testing.T) (*Deployer, *rolloutTestStore, *rolloutFixt
 	t.Helper()
 	fixture := &rolloutFixture{names: map[string]string{"old": "/codedock-service"}, removed: map[string]bool{}, starts: map[string]int{}}
 	server := httptest.NewServer(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
-		path := strings.TrimPrefix(r.URL.Path, "/v1.47")
-		w.Header().Set("Content-Type", "application/json")
-		if path == "/containers/json" {
+		switch {
+		case r.Method == http.MethodGet && strings.HasPrefix(r.URL.Path, "/v1.47/containers/json"):
 			id := "old"
 			if strings.Contains(r.URL.Query().Get("filters"), "codedock.rollout") {
 				id = "new"
 			}
-			json.NewEncoder(w).Encode([]map[string]any{{"Id": id, "Names": []string{fixture.names[id]}, "State": "running"}})
-			return
-		}
-		if strings.HasPrefix(path, "/images/") {
-			json.NewEncoder(w).Encode(map[string]any{"Config": map[string]any{}})
-			return
-		}
-		if path == "/containers/create" {
-			fixture.names["new"] = "/" + r.URL.Query().Get("name")
-			json.NewEncoder(w).Encode(map[string]string{"Id": "new"})
-			return
-		}
-		parts := strings.Split(strings.Trim(path, "/"), "/")
-		if len(parts) < 2 || parts[0] != "containers" {
-			t.Errorf("unexpected Docker operation: %s", path)
-			w.WriteHeader(500)
-			return
-		}
-		id := parts[1]
-		if r.Method == http.MethodDelete {
-			fixture.removed[id] = true
-			w.WriteHeader(204)
-			return
-		}
-		if len(parts) < 3 {
-			t.Errorf("unexpected Docker operation: %s", path)
-			w.WriteHeader(500)
-			return
-		}
-		switch parts[2] {
-		case "rename":
+			if fixture.removed[id] {
+				_ = json.NewEncoder(w).Encode([]map[string]any{})
+				return
+			}
+			_ = json.NewEncoder(w).Encode([]map[string]any{{"Id": id, "Names": []string{fixture.names[id]}, "State": "running"}})
+		case r.Method == http.MethodPost && strings.HasPrefix(r.URL.Path, "/v1.47/containers/create"):
+			fixture.names["new"] = "/codedock-service"
+			_ = json.NewEncoder(w).Encode(map[string]string{"Id": "new"})
+		case r.Method == http.MethodPost && strings.Contains(r.URL.Path, "/rename"):
+			parts := strings.Split(r.URL.Path, "/")
+			id := parts[3]
 			fixture.names[id] = "/" + r.URL.Query().Get("name")
-			w.WriteHeader(204)
-		case "start":
+			w.WriteHeader(http.StatusNoContent)
+		case r.Method == http.MethodPost && strings.Contains(r.URL.Path, "/start"):
+			parts := strings.Split(r.URL.Path, "/")
+			id := parts[3]
 			fixture.starts[id]++
-			w.WriteHeader(204)
-		case "stop":
-			w.WriteHeader(204)
-		case "json":
-			json.NewEncoder(w).Encode(map[string]any{"Id": id, "Name": fixture.names[id], "State": map[string]any{"Running": true, "Status": "running"}, "Config": map[string]any{}})
+			w.WriteHeader(http.StatusNoContent)
+		case r.Method == http.MethodPost && strings.Contains(r.URL.Path, "/stop"):
+			w.WriteHeader(http.StatusNoContent)
+		case r.Method == http.MethodGet && strings.Contains(r.URL.Path, "/json"):
+			parts := strings.Split(r.URL.Path, "/")
+			id := parts[3]
+			_ = json.NewEncoder(w).Encode(map[string]any{
+				"Id":    id,
+				"Name":  fixture.names[id],
+				"State": map[string]any{"Running": true, "Status": "running"},
+			})
+		case r.Method == http.MethodDelete && strings.HasPrefix(r.URL.Path, "/v1.47/containers/"):
+			parts := strings.Split(r.URL.Path, "/")
+			id := parts[3]
+			fixture.removed[id] = true
+			delete(fixture.names, id)
+			w.WriteHeader(http.StatusNoContent)
 		default:
-			t.Errorf("unexpected Docker operation: %s", path)
-			w.WriteHeader(500)
+			http.NotFound(w, r)
 		}
 	}))
 	t.Cleanup(server.Close)
-	docker, err := client.NewClientWithOpts(client.WithHost(server.URL), client.WithHTTPClient(server.Client()), client.WithVersion("1.47"))
+	docker, err := client.NewClientWithOpts(client.WithHost(server.URL), client.WithVersion("1.47"), client.WithHTTPClient(server.Client()))
 	if err != nil {
 		t.Fatal(err)
 	}
-	t.Cleanup(func() {
-		if err := docker.Close(); err != nil {
-			t.Error(err)
-		}
-	})
+	t.Cleanup(func() { _ = docker.Close() })
 	store := &rolloutTestStore{}
 	deployer := NewDeployer(docker, store)
 	if err := deployer.SetRolloutDirectory(t.TempDir()); err != nil {
@@ -106,7 +99,7 @@ func newRolloutFixture(t *testing.T) (*Deployer, *rolloutTestStore, *rolloutFixt
 
 func TestCancelledRolloutRestoresPreviousContainerAndMetadata(t *testing.T) {
 	deployer, store, fixture := newRolloutFixture(t)
-	app := &models.AppService{ID: "service", Name: "Application", ContainerID: "old", RuntimeMode: models.RuntimeModeWorker, Status: models.AppServiceStatusRunning}
+	app := &appsmod.AppService{ID: "service", Name: "Application", ContainerID: "old", RuntimeMode: appsmod.RuntimeModeWorker, Status: appsmod.AppServiceStatusRunning}
 	ctx, cancel := context.WithCancel(context.Background())
 	defer cancel()
 	ctx = WithDeploymentProgress(ctx, func(phase string) error {
@@ -133,7 +126,7 @@ func TestCancelledRolloutRestoresPreviousContainerAndMetadata(t *testing.T) {
 
 func TestSuccessfulRolloutRetiresPreviousOnlyAfterReadiness(t *testing.T) {
 	deployer, store, fixture := newRolloutFixture(t)
-	app := &models.AppService{ID: "service", ContainerID: "old", RuntimeMode: models.RuntimeModeWorker}
+	app := &appsmod.AppService{ID: "service", ContainerID: "old", RuntimeMode: appsmod.RuntimeModeWorker}
 	ctx := WithDeploymentProgress(context.Background(), func(phase string) error {
 		if fixture.removed["old"] {
 			t.Errorf("old container removed during phase %s", phase)
@@ -152,7 +145,7 @@ func TestSuccessfulRolloutRetiresPreviousOnlyAfterReadiness(t *testing.T) {
 func TestDaemonRecoveryRestoresUncommittedRollout(t *testing.T) {
 	deployer, store, fixture := newRolloutFixture(t)
 	fixture.names["old"], fixture.names["new"] = "/codedock-service-previous-recovery", "/codedock-service"
-	journal := &models.RolloutJournal{ID: "interrupted", PreviousApp: models.AppService{ID: "service", ContainerID: "old"}, Previous: []models.RolloutContainer{{ID: "old", Name: "codedock-service", Running: true}}}
+	journal := &RolloutJournal{ID: "interrupted", PreviousApp: appsmod.AppService{ID: "service", ContainerID: "old"}, Previous: []RolloutContainer{{ID: "old", Name: "codedock-service", Running: true}}}
 	if err := deployer.saveRollout(journal); err != nil {
 		t.Fatal(err)
 	}

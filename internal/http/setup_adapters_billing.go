@@ -5,24 +5,10 @@ import (
 	"errors"
 
 	"codedock/internal/modules/monitoring"
-	systemservices "codedock/internal/services/system"
 )
 
-type monitoringPendingError struct {
-	err     error
-	pending any
-}
-
-func (m *monitoringPendingError) Error() string {
-	return m.err.Error()
-}
-
-func (m *monitoringPendingError) PendingSession() any {
-	return m.pending
-}
-
 type billingServiceAdapter struct {
-	svc *systemservices.BillingService
+	svc *monitoring.BillingService
 }
 
 func (b *billingServiceAdapter) GetConfig(ctx context.Context) (any, error) {
@@ -33,7 +19,7 @@ func (b *billingServiceAdapter) CreateCheckoutSession(ctx context.Context, userI
 	if b.svc == nil {
 		return "", errors.New("billing service unavailable")
 	}
-	url, err := b.svc.CreateCheckoutSession(
+	return b.svc.CreateCheckoutSession(
 		ctx,
 		userID,
 		opts.PriceID,
@@ -43,14 +29,6 @@ func (b *billingServiceAdapter) CreateCheckoutSession(ctx context.Context, userI
 		opts.PurchaseIntent,
 		opts.CancelPending,
 	)
-	if err != nil {
-		var pendingErr *systemservices.ErrCheckoutPending
-		if errors.As(err, &pendingErr) {
-			return "", &monitoringPendingError{err: pendingErr, pending: pendingErr.Pending}
-		}
-		return "", err
-	}
-	return url, nil
 }
 
 func (b *billingServiceAdapter) GetPendingCheckout(ctx context.Context, userID string) (any, error) {

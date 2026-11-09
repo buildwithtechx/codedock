@@ -1,15 +1,14 @@
 package storage
 
 import (
-	"codedock/internal/models"
 	"context"
 	"github.com/docker/docker/client"
 )
 
-type DockerTarget func(context.Context, *models.BackupConfig) (*client.Client, func(), error)
+type DockerTarget func(context.Context, *BackupConfig) (*client.Client, func(), error)
 
 func (bm *BackupManager) SetDockerTarget(selector DockerTarget) { bm.dockerTarget = selector }
-func (bm *BackupManager) producer(ctx context.Context, cfg *models.BackupConfig) (*BackupManager, func(), error) {
+func (bm *BackupManager) producer(ctx context.Context, cfg *BackupConfig) (*BackupManager, func(), error) {
 	if bm.dockerTarget == nil {
 		return bm, func() {}, nil
 	}

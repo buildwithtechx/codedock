@@ -4,11 +4,11 @@ import (
 	"strings"
 	"testing"
 
-	"codedock/internal/models"
+	appsmod "codedock/internal/modules/apps"
 )
 
 func TestAssertRoleInventorySettled(t *testing.T) {
-	active := []models.RoleContainerRef{
+	active := []RoleContainerRef{
 		{ContainerID: "cont-1234567890ab", Role: "worker", Replica: 1},
 	}
 
@@ -28,10 +28,10 @@ func TestAssertRoleInventorySettled(t *testing.T) {
 }
 
 func TestPlanRoleReplicas(t *testing.T) {
-	desired := []models.ServiceRoleSpec{
+	desired := []appsmod.ServiceRoleSpec{
 		{Name: "worker", Kind: "worker", Command: "python worker.py", Singleton: true},
 	}
-	existing := []models.RoleContainerRef{
+	existing := []RoleContainerRef{
 		{ContainerID: "old-worker-1", Role: "worker", Replica: 1},
 	}
 
@@ -67,33 +67,33 @@ func TestPlanRoleReplicas(t *testing.T) {
 }
 
 func TestSettleHandover(t *testing.T) {
-	journal := &models.RoleHandoverJournal{
+	journal := &RoleHandoverJournal{
 		Version:  1,
 		Revision: 1,
-		Phase:    models.RoleHandoverPhaseCommitting,
+		Phase:    RoleHandoverPhaseCommitting,
 	}
 
 	// Committing phase settles forward instead of unwinding
-	if err := SettleHandover(journal, models.RoleHandoverPhasePreparing); err != nil {
+	if err := SettleHandover(journal, RoleHandoverPhasePreparing); err != nil {
 		t.Fatalf("unexpected settle error: %v", err)
 	}
-	if journal.Phase != models.RoleHandoverPhaseComplete {
+	if journal.Phase != RoleHandoverPhaseComplete {
 		t.Fatalf("expected PhaseComplete after settling committing, got %v", journal.Phase)
 	}
 
 	// Kept containers refuse new rollouts
-	journalKept := &models.RoleHandoverJournal{
+	journalKept := &RoleHandoverJournal{
 		Version:  1,
 		Revision: 2,
-		Phase:    models.RoleHandoverPhaseKept,
+		Phase:    RoleHandoverPhaseKept,
 	}
-	if err := SettleHandover(journalKept, models.RoleHandoverPhasePreparing); err == nil {
+	if err := SettleHandover(journalKept, RoleHandoverPhasePreparing); err == nil {
 		t.Fatalf("expected kept containers to refuse rollouts")
 	}
 }
 
 func TestValidateMultiServiceRoles(t *testing.T) {
-	roles := []models.ServiceRoleSpec{
+	roles := []appsmod.ServiceRoleSpec{
 		{Name: "worker", Kind: "worker", Command: "python worker.py"},
 	}
 

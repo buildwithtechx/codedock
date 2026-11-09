@@ -1,9 +1,7 @@
 package notifications
 
-import (
-	"codedock/internal/models"
-)
+import ()
 
-func SendGenericWebhook(webhookURL string, event *models.NotificationEvent) error {
+func SendGenericWebhook(webhookURL string, event *NotificationEvent) error {
 	return postJSON(webhookURL, event)
 }

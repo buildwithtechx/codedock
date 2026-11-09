@@ -9,7 +9,7 @@ import (
 	"testing"
 
 	"codedock/internal/http/mcp"
-	"codedock/internal/models"
+	"codedock/internal/modules/users"
 
 	"github.com/labstack/echo/v4"
 )
@@ -42,7 +42,7 @@ func TestMCPToolGenerationAndSafety(t *testing.T) {
 		t.Fatalf("expected route-backed tools get_projects and post_apps_by_id_redeploy to exist")
 	}
 
-	readOnlyClaims := &models.UserClaims{Role: "readonly"}
+	readOnlyClaims := &users.UserClaims{Role: "readonly"}
 	filtered := mcp.FilterToolsForClaims(tools, readOnlyClaims, false)
 	for _, ft := range filtered {
 		if !ft.Annotations.ReadOnlyHint {

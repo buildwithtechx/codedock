@@ -5,7 +5,7 @@ import (
 	"fmt"
 	"strings"
 
-	"codedock/internal/models"
+	appsmod "codedock/internal/modules/apps"
 )
 
 var (
@@ -15,15 +15,15 @@ var (
 )
 
 type RoleRolloutPlan struct {
-	Candidates  []models.RoleCandidate    `json:"candidates"`
-	Reused      []models.RoleContainerRef `json:"reused"`
-	Stopped     []models.RoleContainerRef `json:"stopped"`
-	PreserveWeb bool                      `json:"preserveWeb"`
+	Candidates  []RoleCandidate    `json:"candidates"`
+	Reused      []RoleContainerRef `json:"reused"`
+	Stopped     []RoleContainerRef `json:"stopped"`
+	PreserveWeb bool               `json:"preserveWeb"`
 }
 
 // AssertRoleInventorySettled fences deploys and rollouts with 409 if any unknown or unrecorded
 // role containers from earlier releases are still running.
-func AssertRoleInventorySettled(active []models.RoleContainerRef, unknownContainerIDs []string) error {
+func AssertRoleInventorySettled(active []RoleContainerRef, unknownContainerIDs []string) error {
 	known := make(map[string]bool)
 	for _, ref := range active {
 		known[ref.ContainerID] = true
@@ -49,8 +49,8 @@ func AssertRoleInventorySettled(active []models.RoleContainerRef, unknownContain
 // PlanRoleReplicas creates a rollout plan, enforcing deep-equal replica reuse across rollouts
 // when container definitions, image, and environment match.
 func PlanRoleReplicas(
-	desiredRoles []models.ServiceRoleSpec,
-	existingContainers []models.RoleContainerRef,
+	desiredRoles []appsmod.ServiceRoleSpec,
+	existingContainers []RoleContainerRef,
 	activeImageRef string,
 	desiredImageRef string,
 	webChanged bool,
@@ -60,14 +60,14 @@ func PlanRoleReplicas(
 	}
 
 	plan := &RoleRolloutPlan{
-		Candidates:  make([]models.RoleCandidate, 0),
-		Reused:      make([]models.RoleContainerRef, 0),
-		Stopped:     make([]models.RoleContainerRef, 0),
+		Candidates:  make([]RoleCandidate, 0),
+		Reused:      make([]RoleContainerRef, 0),
+		Stopped:     make([]RoleContainerRef, 0),
 		PreserveWeb: !webChanged,
 	}
 
 	sameImage := activeImageRef != "" && activeImageRef == desiredImageRef
-	existingByRole := make(map[string][]models.RoleContainerRef)
+	existingByRole := make(map[string][]RoleContainerRef)
 	for _, ref := range existingContainers {
 		existingByRole[ref.Role] = append(existingByRole[ref.Role], ref)
 	}
@@ -95,7 +95,7 @@ func PlanRoleReplicas(
 		}
 
 		for r := reusedCount + 1; r <= replicas; r++ {
-			plan.Candidates = append(plan.Candidates, models.RoleCandidate{
+			plan.Candidates = append(plan.Candidates, RoleCandidate{
 				Role:    spec.Name,
 				Replica: r,
 				Name:    fmt.Sprintf("role-%s-%d", spec.Name, r),
@@ -107,15 +107,15 @@ func PlanRoleReplicas(
 }
 
 // SettleHandover transitions the journal forward.
-func SettleHandover(journal *models.RoleHandoverJournal, nextPhase models.RoleHandoverPhase) error {
+func SettleHandover(journal *RoleHandoverJournal, nextPhase RoleHandoverPhase) error {
 	if journal == nil {
 		return nil
 	}
-	if journal.Phase == models.RoleHandoverPhaseKept && nextPhase != models.RoleHandoverPhaseComplete {
+	if journal.Phase == RoleHandoverPhaseKept && nextPhase != RoleHandoverPhaseComplete {
 		return fmt.Errorf("kept containers refuse rollouts until deployment is deleted")
 	}
-	if journal.Phase == models.RoleHandoverPhaseCommitting && nextPhase == models.RoleHandoverPhasePreparing {
-		journal.Phase = models.RoleHandoverPhaseComplete
+	if journal.Phase == RoleHandoverPhaseCommitting && nextPhase == RoleHandoverPhasePreparing {
+		journal.Phase = RoleHandoverPhaseComplete
 		return nil
 	}
 	journal.Phase = nextPhase
@@ -124,7 +124,7 @@ func SettleHandover(journal *models.RoleHandoverJournal, nextPhase models.RoleHa
 }
 
 // ValidateMultiServiceRoles verifies role configuration against multi-service deployment constraints.
-func ValidateMultiServiceRoles(roles []models.ServiceRoleSpec, isMultiService bool) error {
+func ValidateMultiServiceRoles(roles []appsmod.ServiceRoleSpec, isMultiService bool) error {
 	if len(roles) == 0 {
 		return nil
 	}

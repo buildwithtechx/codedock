@@ -1,15 +1,16 @@
 package kubernetes
 
 import (
-	"codedock/internal/models"
 	"encoding/json"
 	"fmt"
 	"net/url"
 	"sort"
 	"strings"
+
+	appsmod "codedock/internal/modules/apps"
 )
 
-func WorkloadManifest(workload *models.KubernetesWorkload) (string, error) {
+func WorkloadManifest(workload *appsmod.KubernetesWorkload) (string, error) {
 	if err := ValidateWorkload(workload); err != nil {
 		return "", err
 	}
@@ -50,7 +51,7 @@ func WorkloadManifest(workload *models.KubernetesWorkload) (string, error) {
 	} else {
 		probe["tcpSocket"] = map[string]any{"port": app.InternalPort}
 	}
-	if app.RuntimeMode != models.RuntimeModeWorker {
+	if app.RuntimeMode != appsmod.RuntimeModeWorker {
 		container["readinessProbe"] = probe
 	} else {
 		delete(container, "ports")
@@ -105,10 +106,10 @@ func WorkloadManifest(workload *models.KubernetesWorkload) (string, error) {
 		strategy = map[string]any{"type": "Recreate"}
 	}
 	objects = append(objects, object("apps/v1", "Deployment", name, map[string]any{"replicas": app.Replicas, "revisionHistoryLimit": 5, "progressDeadlineSeconds": 300, "strategy": strategy, "selector": map[string]any{"matchLabels": map[string]string{"codedock.run/service": app.ID}}, "template": map[string]any{"metadata": map[string]any{"labels": labels}, "spec": pod}}))
-	if app.RuntimeMode != models.RuntimeModeWorker {
+	if app.RuntimeMode != appsmod.RuntimeModeWorker {
 		objects = append(objects, object("v1", "Service", name, map[string]any{"selector": map[string]string{"codedock.run/service": app.ID}, "ports": []map[string]any{{"port": 80, "targetPort": app.InternalPort}}}))
 	}
-	if app.Domain != "" && app.RuntimeMode == models.RuntimeModeWeb {
+	if app.Domain != "" && app.RuntimeMode == appsmod.RuntimeModeWeb {
 		host := app.Domain
 		if strings.Contains(host, "://") {
 			parsed, err := url.Parse(host)

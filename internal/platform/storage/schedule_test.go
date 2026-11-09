@@ -1,7 +1,6 @@
 package storage
 
 import (
-	"codedock/internal/models"
 	"context"
 	"net/http"
 	"net/http/httptest"
@@ -10,7 +9,7 @@ import (
 
 func TestManualBackupRemovesRecurringSchedule(t *testing.T) {
 	manager := NewBackupManager(nil, nil, t.TempDir())
-	config := &models.BackupConfig{ID: "backup", Schedule: "0 2 * * *", Status: models.BackupConfigStatusActive, BackupEnabled: true}
+	config := &BackupConfig{ID: "backup", Schedule: "0 2 * * *", Status: BackupConfigStatusActive, BackupEnabled: true}
 	if err := manager.RegisterBackup(config); err != nil {
 		t.Fatal(err)
 	}
@@ -42,7 +41,7 @@ func TestBucketVerificationDoesNotCreateMissingBucket(t *testing.T) {
 	originalTransport := s3HTTPClient.Transport
 	s3HTTPClient.Transport = server.Client().Transport
 	t.Cleanup(func() { s3HTTPClient.Transport = originalTransport })
-	err := CheckS3Bucket(context.Background(), &models.S3Destination{Endpoint: server.URL, Bucket: "missing", Region: "us-east-1"})
+	err := CheckS3Bucket(context.Background(), &S3Destination{Endpoint: server.URL, Bucket: "missing", Region: "us-east-1"})
 	if err == nil {
 		t.Fatal("missing bucket verified successfully")
 	}

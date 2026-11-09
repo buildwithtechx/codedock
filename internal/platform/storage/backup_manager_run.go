@@ -13,11 +13,9 @@ import (
 	"time"
 
 	"github.com/google/uuid"
-
-	"codedock/internal/models"
 )
 
-func (bm *BackupManager) TriggerBackup(ctx context.Context, backupConfigID string) (*models.BackupRecord, error) {
+func (bm *BackupManager) TriggerBackup(ctx context.Context, backupConfigID string) (*BackupRecord, error) {
 	cfg, err := bm.store.GetBackupConfig(backupConfigID)
 	if err != nil || cfg == nil {
 		return nil, fmt.Errorf("backup config %s not found: %w", backupConfigID, err)
@@ -37,13 +35,13 @@ func (bm *BackupManager) TriggerBackup(ctx context.Context, backupConfigID strin
 		}
 		return producer.TriggerBackup(ctx, backupConfigID)
 	}
-	rec := &models.BackupRecord{
+	rec := &BackupRecord{
 		ID:                uuid.New().String(),
 		BackupConfigID:    cfg.ID,
 		DatabaseID:        cfg.DatabaseID,
 		S3DestinationID:   cfg.S3DestinationID,
 		SFTPDestinationID: cfg.SFTPDestinationID,
-		Status:            models.BackupRecordStatusRunning,
+		Status:            BackupRecordStatusRunning,
 		Logs:              fmt.Sprintf("Initiating automated backup '%s' at %s...\n", cfg.Name, time.Now().UTC().Format(time.RFC3339)),
 	}
 	if err := bm.store.CreateBackupRecord(rec); err != nil {
@@ -182,9 +180,9 @@ func (bm *BackupManager) TriggerBackup(ctx context.Context, backupConfigID strin
 		var s3Err error
 		s3URL, execLogs, s3Err = bm.handleS3Upload(ctx, cfg, fileName, dumpBytes, execLogs)
 		if s3Err != nil {
-			if err := bm.store.UpdateBackupRecord(models.UpdateBackupRecordOpts{
+			if err := bm.store.UpdateBackupRecord(UpdateBackupRecordOpts{
 				ID:            rec.ID,
-				Status:        models.BackupRecordStatusFailed,
+				Status:        BackupRecordStatusFailed,
 				FilePath:      filePath,
 				FileSizeBytes: sizeBytes,
 				Logs:          execLogs + fmt.Sprintf("Failed: %s\n", s3Err.Error()),
@@ -204,9 +202,9 @@ func (bm *BackupManager) TriggerBackup(ctx context.Context, backupConfigID strin
 		var sftpErr error
 		sftpURL, execLogs, sftpErr = bm.handleSFTPUpload(ctx, cfg, fileName, dumpBytes, execLogs)
 		if sftpErr != nil {
-			if err := bm.store.UpdateBackupRecord(models.UpdateBackupRecordOpts{
+			if err := bm.store.UpdateBackupRecord(UpdateBackupRecordOpts{
 				ID:            rec.ID,
-				Status:        models.BackupRecordStatusFailed,
+				Status:        BackupRecordStatusFailed,
 				FilePath:      filePath,
 				FileSizeBytes: sizeBytes,
 				Logs:          execLogs + fmt.Sprintf("Failed: %s\n", sftpErr.Error()),
@@ -245,19 +243,19 @@ func (bm *BackupManager) latestCompletedRecord(ctx context.Context, configID str
 		return ""
 	}
 	for _, record := range records {
-		if record.Status == models.BackupRecordStatusCompleted {
+		if record.Status == BackupRecordStatusCompleted {
 			return record.ID
 		}
 	}
 	return ""
 }
 
-func (bm *BackupManager) handleSFTPUpload(ctx context.Context, cfg *models.BackupConfig, fileName string, dumpBytes []byte, execLogs string) (string, string, error) {
+func (bm *BackupManager) handleSFTPUpload(ctx context.Context, cfg *BackupConfig, fileName string, dumpBytes []byte, execLogs string) (string, string, error) {
 	if cfg.SFTPDestinationID == "" {
 		return "", execLogs, fmt.Errorf("SFTP destination ID missing for config %s", cfg.ID)
 	}
 	getter, ok := bm.store.(interface {
-		GetSFTPDestination(string) (*models.SFTPDestination, error)
+		GetSFTPDestination(string) (*SFTPDestination, error)
 	})
 	if !ok {
 		return "", execLogs, fmt.Errorf("SFTP destination lookup unavailable")

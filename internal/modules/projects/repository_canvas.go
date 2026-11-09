@@ -10,8 +10,8 @@ import (
 )
 
 type Vault interface {
-	Encrypt(plaintext []byte) (string, error)
-	Decrypt(ciphertext string) ([]byte, error)
+	Encrypt(string) (string, error)
+	Decrypt(string) (string, error)
 }
 
 type EnvironmentRepository interface {

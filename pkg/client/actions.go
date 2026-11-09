@@ -5,11 +5,9 @@ import (
 	"fmt"
 	"io"
 	nethttp "net/http"
-
-	"codedock/internal/models"
 )
 
-func (c *Client) ListWorkflows() ([]*models.ActionWorkflow, error) {
+func (c *Client) ListWorkflows() ([]*ActionWorkflow, error) {
 	resp, err := c.sendRequest("GET", "/actions/workflows", nil)
 	if err != nil {
 		return nil, err
@@ -22,7 +20,7 @@ func (c *Client) ListWorkflows() ([]*models.ActionWorkflow, error) {
 	}
 
 	var result struct {
-		Data []*models.ActionWorkflow `json:"data"`
+		Data []*ActionWorkflow `json:"data"`
 	}
 	if err := json.NewDecoder(resp.Body).Decode(&result); err != nil {
 		return nil, err
@@ -31,7 +29,7 @@ func (c *Client) ListWorkflows() ([]*models.ActionWorkflow, error) {
 	return result.Data, nil
 }
 
-func (c *Client) ListRuns() ([]*models.ActionRun, error) {
+func (c *Client) ListRuns() ([]*ActionRun, error) {
 	resp, err := c.sendRequest("GET", "/actions/runs", nil)
 	if err != nil {
 		return nil, err
@@ -44,7 +42,7 @@ func (c *Client) ListRuns() ([]*models.ActionRun, error) {
 	}
 
 	var result struct {
-		Data []*models.ActionRun `json:"data"`
+		Data []*ActionRun `json:"data"`
 	}
 	if err := json.NewDecoder(resp.Body).Decode(&result); err != nil {
 		return nil, err
@@ -53,7 +51,7 @@ func (c *Client) ListRuns() ([]*models.ActionRun, error) {
 	return result.Data, nil
 }
 
-func (c *Client) RetryRun(id string) (*models.ActionRun, error) {
+func (c *Client) RetryRun(id string) (*ActionRun, error) {
 	resp, err := c.sendRequest("POST", fmt.Sprintf("/actions/runs/%s/retry", id), nil)
 	if err != nil {
 		return nil, err
@@ -66,7 +64,7 @@ func (c *Client) RetryRun(id string) (*models.ActionRun, error) {
 	}
 
 	var result struct {
-		Data *models.ActionRun `json:"data"`
+		Data *ActionRun `json:"data"`
 	}
 	if err := json.NewDecoder(resp.Body).Decode(&result); err != nil {
 		return nil, err
@@ -75,7 +73,7 @@ func (c *Client) RetryRun(id string) (*models.ActionRun, error) {
 	return result.Data, nil
 }
 
-func (c *Client) CancelRun(id string) (*models.ActionRun, error) {
+func (c *Client) CancelRun(id string) (*ActionRun, error) {
 	resp, err := c.sendRequest("POST", fmt.Sprintf("/actions/runs/%s/cancel", id), nil)
 	if err != nil {
 		return nil, err
@@ -88,7 +86,7 @@ func (c *Client) CancelRun(id string) (*models.ActionRun, error) {
 	}
 
 	var result struct {
-		Data *models.ActionRun `json:"data"`
+		Data *ActionRun `json:"data"`
 	}
 	if err := json.NewDecoder(resp.Body).Decode(&result); err != nil {
 		return nil, err
@@ -97,7 +95,7 @@ func (c *Client) CancelRun(id string) (*models.ActionRun, error) {
 	return result.Data, nil
 }
 
-func (c *Client) ListRunners() ([]*models.ActionRunner, error) {
+func (c *Client) ListRunners() ([]*ActionRunner, error) {
 	resp, err := c.sendRequest("GET", "/actions/runners", nil)
 	if err != nil {
 		return nil, err
@@ -110,7 +108,7 @@ func (c *Client) ListRunners() ([]*models.ActionRunner, error) {
 	}
 
 	var result struct {
-		Data []*models.ActionRunner `json:"data"`
+		Data []*ActionRunner `json:"data"`
 	}
 	if err := json.NewDecoder(resp.Body).Decode(&result); err != nil {
 		return nil, err

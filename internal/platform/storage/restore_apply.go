@@ -2,7 +2,6 @@ package storage
 
 import (
 	"bytes"
-	"codedock/internal/models"
 	"context"
 	"crypto/sha256"
 	"encoding/hex"
@@ -11,7 +10,7 @@ import (
 	"time"
 )
 
-func (bm *BackupManager) ApplyRestore(ctx context.Context, reviewed *models.RestoreTarget, progress func(string, string) error) error {
+func (bm *BackupManager) ApplyRestore(ctx context.Context, reviewed *RestoreTarget, progress func(string, string) error) error {
 	duration, err := bm.restoreTimeout(reviewed.RecordID)
 	if err != nil {
 		return err

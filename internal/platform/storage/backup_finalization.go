@@ -1,19 +1,18 @@
 package storage
 
 import (
-	"codedock/internal/models"
 	"fmt"
 	"time"
 )
 
-type FinalizeBackupOpts = models.BackupFinalization
+type FinalizeBackupOpts = BackupFinalization
 
-func (bm *BackupManager) finalizeBackupRecord(opts FinalizeBackupOpts) (*models.BackupRecord, error) {
+func (bm *BackupManager) finalizeBackupRecord(opts FinalizeBackupOpts) (*BackupRecord, error) {
 	nowStr := time.Now().UTC().Format(time.RFC3339)
 	finalLogs := opts.Record.Logs + opts.ExecLogs + "\nBackup run completed successfully."
-	if err := bm.store.UpdateBackupRecord(models.UpdateBackupRecordOpts{
+	if err := bm.store.UpdateBackupRecord(UpdateBackupRecordOpts{
 		ID:     opts.Record.ID,
-		Status: models.BackupRecordStatusCompleted,
+		Status: BackupRecordStatusCompleted,
 		SHA256: opts.Record.SHA256, VerifiedAt: opts.Record.VerifiedAt,
 		FilePath:       opts.FilePath,
 		S3URL:          opts.S3URL,
@@ -26,7 +25,7 @@ func (bm *BackupManager) finalizeBackupRecord(opts FinalizeBackupOpts) (*models.
 		return nil, fmt.Errorf("persist completed backup record: %w", err)
 	}
 
-	opts.Record.Status = models.BackupRecordStatusCompleted
+	opts.Record.Status = BackupRecordStatusCompleted
 	opts.Record.FilePath = opts.FilePath
 	opts.Record.FileSizeBytes = opts.SizeBytes
 	opts.Record.S3URL = opts.S3URL

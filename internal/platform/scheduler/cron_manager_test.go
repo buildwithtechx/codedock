@@ -3,36 +3,34 @@ package scheduler
 import (
 	"testing"
 	"time"
-
-	"codedock/internal/models"
 )
 
 type reconcileStore struct {
-	tasks []models.ScheduledTask
+	tasks []ScheduledTask
 }
 
-func (s *reconcileStore) ListScheduledTasks() ([]models.ScheduledTask, error) {
+func (s *reconcileStore) ListScheduledTasks() ([]ScheduledTask, error) {
 	return s.tasks, nil
 }
 
-func (s *reconcileStore) GetScheduledTask(id string) (*models.ScheduledTask, error) {
+func (s *reconcileStore) GetScheduledTask(id string) (*ScheduledTask, error) {
 	return nil, nil
 }
 
-func (s *reconcileStore) GetProject(id string) (*models.ProjectConfig, error) {
+func (s *reconcileStore) GetProject(id string) (*ProjectConfig, error) {
 	return nil, nil
 }
 
-func (s *reconcileStore) GetAppService(id string) (*models.AppService, error) {
+func (s *reconcileStore) GetAppService(id string) (*AppService, error) {
 	return nil, nil
 }
 
-func (s *reconcileStore) UpdateScheduledTaskStatusAndOutput(id string, status models.ScheduledTaskStatus, lastRunAt *time.Time, output string) error {
+func (s *reconcileStore) UpdateScheduledTaskStatusAndOutput(id string, status ScheduledTaskStatus, lastRunAt *time.Time, output string) error {
 	return nil
 }
 
 func TestReconcileRegistersActiveTasks(t *testing.T) {
-	store := &reconcileStore{tasks: []models.ScheduledTask{
+	store := &reconcileStore{tasks: []ScheduledTask{
 		{ID: "task-one", Name: "one", Schedule: "0 * * * *", Command: "echo one", Status: "active"},
 		{ID: "task-two", Name: "two", Schedule: "0 * * * *", Command: "echo two", Status: "paused"},
 	}}
@@ -49,7 +47,7 @@ func TestReconcileRegistersActiveTasks(t *testing.T) {
 }
 
 func TestReconcileRemovesStaleTasks(t *testing.T) {
-	store := &reconcileStore{tasks: []models.ScheduledTask{
+	store := &reconcileStore{tasks: []ScheduledTask{
 		{ID: "task-one", Name: "one", Schedule: "0 * * * *", Command: "echo one", Status: "active"},
 	}}
 	manager := NewCronManager(nil, store)

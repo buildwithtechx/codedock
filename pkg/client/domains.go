@@ -5,11 +5,9 @@ import (
 	"fmt"
 	"io"
 	nethttp "net/http"
-
-	"codedock/internal/models"
 )
 
-func (c *Client) ListDomains(serviceID string) ([]*models.DomainConfig, error) {
+func (c *Client) ListDomains(serviceID string) ([]*DomainConfig, error) {
 	resp, err := c.sendRequest("GET", fmt.Sprintf("/services/%s/domains", serviceID), nil)
 	if err != nil {
 		return nil, err
@@ -22,7 +20,7 @@ func (c *Client) ListDomains(serviceID string) ([]*models.DomainConfig, error) {
 	}
 
 	var result struct {
-		Data []*models.DomainConfig `json:"data"`
+		Data []*DomainConfig `json:"data"`
 	}
 	if err := json.NewDecoder(resp.Body).Decode(&result); err != nil {
 		return nil, err
@@ -31,7 +29,7 @@ func (c *Client) ListDomains(serviceID string) ([]*models.DomainConfig, error) {
 	return result.Data, nil
 }
 
-func (c *Client) AddDomain(serviceID string, req *models.DomainConfig) (*models.DomainConfig, error) {
+func (c *Client) AddDomain(serviceID string, req *DomainConfig) (*DomainConfig, error) {
 	resp, err := c.sendRequest("POST", fmt.Sprintf("/services/%s/domains", serviceID), req)
 	if err != nil {
 		return nil, err
@@ -44,7 +42,7 @@ func (c *Client) AddDomain(serviceID string, req *models.DomainConfig) (*models.
 	}
 
 	var result struct {
-		Data *models.DomainConfig `json:"data"`
+		Data *DomainConfig `json:"data"`
 	}
 	if err := json.NewDecoder(resp.Body).Decode(&result); err != nil {
 		return nil, err

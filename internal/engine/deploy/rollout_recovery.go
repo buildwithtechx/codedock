@@ -1,19 +1,19 @@
 package deploy
 
 import (
-	"codedock/internal/models"
 	"context"
 	"crypto/sha256"
 	"encoding/hex"
 	"encoding/json"
 	"errors"
 	"fmt"
-	"github.com/containerd/errdefs"
-	"github.com/docker/docker/api/types/container"
-	"github.com/docker/docker/api/types/filters"
 	"os"
 	"path/filepath"
 	"strings"
+
+	"github.com/containerd/errdefs"
+	"github.com/docker/docker/api/types/container"
+	"github.com/docker/docker/api/types/filters"
 )
 
 func (d *Deployer) SetRolloutDirectory(directory string) error {
@@ -29,7 +29,7 @@ func (d *Deployer) rolloutPath(service string) string {
 	return filepath.Join(d.rolloutDirectory, hex.EncodeToString(digest[:])+".json")
 }
 
-func (d *Deployer) saveRollout(journal *models.RolloutJournal) error {
+func (d *Deployer) saveRollout(journal *RolloutJournal) error {
 	if d.rolloutDirectory == "" {
 		return nil
 	}
@@ -82,7 +82,7 @@ func (d *Deployer) RecoverRollouts(ctx context.Context) error {
 		if err != nil {
 			return err
 		}
-		var journal models.RolloutJournal
+		var journal RolloutJournal
 		if err := json.Unmarshal(data, &journal); err != nil {
 			return fmt.Errorf("read rollout journal: %w", err)
 		}

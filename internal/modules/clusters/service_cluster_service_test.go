@@ -7,7 +7,7 @@ import (
 
 func TestClusterLocksReleasePartialAcquisitions(t *testing.T) {
 	gate := deploy.NewVolumeGate()
-	service := &Service{gate: gate}
+	service := &ClusterService{gate: gate}
 	release, err := gate.AcquireVolume("server:second")
 	if err != nil {
 		t.Fatal(err)

@@ -1,35 +1,36 @@
 package kubernetes
 
 import (
-	"codedock/internal/models"
 	"context"
 	"encoding/json"
 	"errors"
 	"fmt"
 	"time"
+
+	appsmod "codedock/internal/modules/apps"
 )
 
 type Commands interface {
-	Kubectl(context.Context, models.ClusterNode, []string, string) (string, error)
+	Kubectl(context.Context, ClusterNode, []string, string) (string, error)
 }
 type WorkloadRuntime struct{ commands Commands }
 
 func NewWorkloadRuntime(commands Commands) *WorkloadRuntime { return &WorkloadRuntime{commands} }
-func (r *WorkloadRuntime) Apply(ctx context.Context, node models.ClusterNode, manifest string) error {
+func (r *WorkloadRuntime) Apply(ctx context.Context, node ClusterNode, manifest string) error {
 	_, err := r.commands.Kubectl(ctx, node, []string{"apply", "--server-side", "--field-manager=codedock", "-f", "-"}, manifest)
 	if err != nil {
 		return fmt.Errorf("apply Kubernetes resources: %w", err)
 	}
 	return nil
 }
-func (r *WorkloadRuntime) Validate(ctx context.Context, node models.ClusterNode, manifest string) error {
+func (r *WorkloadRuntime) Validate(ctx context.Context, node ClusterNode, manifest string) error {
 	_, err := r.commands.Kubectl(ctx, node, []string{"apply", "--server-side", "--dry-run=server", "--field-manager=codedock", "-f", "-"}, manifest)
 	if err != nil {
 		return fmt.Errorf("validate Kubernetes target capabilities and resource configuration: %w", err)
 	}
 	return nil
 }
-func (r *WorkloadRuntime) Ready(ctx context.Context, node models.ClusterNode, app *models.AppService) error {
+func (r *WorkloadRuntime) Ready(ctx context.Context, node ClusterNode, app *appsmod.AppService) error {
 	namespace, name, err := WorkloadIdentity(app)
 	if err != nil {
 		return err
@@ -40,7 +41,7 @@ func (r *WorkloadRuntime) Ready(ctx context.Context, node models.ClusterNode, ap
 	}
 	return nil
 }
-func (r *WorkloadRuntime) Snapshot(ctx context.Context, node models.ClusterNode, workload *models.KubernetesWorkload) (string, error) {
+func (r *WorkloadRuntime) Snapshot(ctx context.Context, node ClusterNode, workload *appsmod.KubernetesWorkload) (string, error) {
 	manifest, err := WorkloadManifest(workload)
 	if err != nil {
 		return "", err
@@ -138,7 +139,7 @@ func sanitizeResource(resource map[string]any) {
 		}
 	}
 }
-func (r *WorkloadRuntime) Rollback(ctx context.Context, node models.ClusterNode, app *models.AppService, journal string) error {
+func (r *WorkloadRuntime) Rollback(ctx context.Context, node ClusterNode, app *appsmod.AppService, journal string) error {
 	_, name, err := WorkloadIdentity(app)
 	if err != nil {
 		return err

@@ -62,6 +62,11 @@ func (r *repo) ClaimRecordExpiry(ctx context.Context, id string) (bool, error) {
 	return count == 1, err
 }
 
+func (r *repo) RecoverRecords(ctx context.Context) error {
+	_, err := r.db.ExecContext(ctx, `UPDATE backup_records SET status='failed',logs=COALESCE(logs,'')||'\nDaemon restarted before backup completion. Retry the policy.',completed_at=$1 WHERE status IN ('running','expiring')`, time.Now().UTC().Format(time.RFC3339))
+	return err
+}
+
 func (r *repo) SetSnapshotDumper(dumper func(ctx context.Context) ([]byte, error)) {
 	r.snapshotDumper = dumper
 }

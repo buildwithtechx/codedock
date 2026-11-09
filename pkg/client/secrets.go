@@ -5,11 +5,9 @@ import (
 	"fmt"
 	"io"
 	nethttp "net/http"
-
-	"codedock/internal/models"
 )
 
-func (c *Client) GetSecrets(projectID string) (models.VarsRequest, error) {
+func (c *Client) GetSecrets(projectID string) (VarsRequest, error) {
 	resp, err := c.sendRequest("GET", fmt.Sprintf("/projects/%s/env", projectID), nil)
 	if err != nil {
 		return nil, err
@@ -22,7 +20,7 @@ func (c *Client) GetSecrets(projectID string) (models.VarsRequest, error) {
 	}
 
 	var result struct {
-		Data models.VarsRequest `json:"data"`
+		Data VarsRequest `json:"data"`
 	}
 	if err := json.NewDecoder(resp.Body).Decode(&result); err != nil {
 		return nil, err
@@ -31,7 +29,7 @@ func (c *Client) GetSecrets(projectID string) (models.VarsRequest, error) {
 	return result.Data, nil
 }
 
-func (c *Client) SetSecrets(projectID string, req models.SetEnvVarsRequest) error {
+func (c *Client) SetSecrets(projectID string, req SetEnvVarsRequest) error {
 	resp, err := c.sendRequest("PUT", fmt.Sprintf("/projects/%s/env", projectID), req)
 	if err != nil {
 		return err

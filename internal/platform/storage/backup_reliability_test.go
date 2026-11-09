@@ -10,22 +10,21 @@ import (
 	"testing"
 	"time"
 
-	"codedock/internal/models"
 	"github.com/docker/docker/client"
 )
 
 type databaseBackupStore struct {
 	*mockStore
-	database *models.Database
+	database *Database
 }
 
-func (s *databaseBackupStore) GetDatabase(id string) (*models.Database, error) {
+func (s *databaseBackupStore) GetDatabase(id string) (*Database, error) {
 	return s.database, nil
 }
 
 type failingBackupStore struct{ *mockStore }
 
-func (s *failingBackupStore) UpdateBackupRecord(opts models.UpdateBackupRecordOpts) error {
+func (s *failingBackupStore) UpdateBackupRecord(opts UpdateBackupRecordOpts) error {
 	return errors.New("storage unavailable")
 }
 
@@ -55,7 +54,7 @@ func TestScheduleTimezoneAndInvalidReplacement(t *testing.T) {
 		}
 	}
 	manager := NewBackupManager(nil, nil, t.TempDir())
-	cfg := &models.BackupConfig{ID: "backup", Schedule: "0 2 * * *", Timezone: "Africa/Lagos", BackupEnabled: true, Status: models.BackupConfigStatusActive}
+	cfg := &BackupConfig{ID: "backup", Schedule: "0 2 * * *", Timezone: "Africa/Lagos", BackupEnabled: true, Status: BackupConfigStatusActive}
 	if err := manager.RegisterBackup(cfg); err != nil {
 		t.Fatal(err)
 	}
@@ -80,7 +79,7 @@ func TestUploadUsesDestinationPrefix(t *testing.T) {
 	}))
 	defer server.Close()
 	manager := NewBackupManager(nil, nil, t.TempDir())
-	dest := &models.S3Destination{Endpoint: server.URL, Bucket: "archives", PathPrefix: "/team/database backups/"}
+	dest := &S3Destination{Endpoint: server.URL, Bucket: "archives", PathPrefix: "/team/database backups/"}
 	uri, err := manager.uploadToS3(context.Background(), dest, "backup.sql", []byte("dump"))
 	if err != nil {
 		t.Fatal(err)
@@ -95,9 +94,9 @@ func TestUploadUsesDestinationPrefix(t *testing.T) {
 }
 
 func TestUnavailableBackupRuntimeAndUnsupportedEngineFail(t *testing.T) {
-	store := &databaseBackupStore{mockStore: newMockStore(), database: &models.Database{ID: "database", Engine: models.DatabaseEngine("nats")}}
+	store := &databaseBackupStore{mockStore: newMockStore(), database: &Database{ID: "database", Engine: DatabaseEngine("nats")}}
 	manager := NewBackupManager(nil, store, t.TempDir())
-	cfg := &models.BackupConfig{ID: "backup", DatabaseID: "database", BackupEnabled: true}
+	cfg := &BackupConfig{ID: "backup", DatabaseID: "database", BackupEnabled: true}
 	if _, _, _, err := manager.buildDumpCommand(cfg); err == nil {
 		t.Fatal("engine without dump metadata accepted")
 	}
@@ -120,7 +119,7 @@ func TestUnavailableBackupRuntimeAndUnsupportedEngineFail(t *testing.T) {
 		t.Fatal("unavailable volume backup reported success")
 	}
 	for _, record := range store.records {
-		if record.Status != models.BackupRecordStatusFailed {
+		if record.Status != BackupRecordStatusFailed {
 			t.Fatalf("wrong failed run status: %s", record.Status)
 		}
 	}
@@ -128,7 +127,7 @@ func TestUnavailableBackupRuntimeAndUnsupportedEngineFail(t *testing.T) {
 
 func TestCompletionPersistenceFailureIsReturned(t *testing.T) {
 	manager := NewBackupManager(nil, &failingBackupStore{newMockStore()}, t.TempDir())
-	record, err := manager.finalizeBackupRecord(FinalizeBackupOpts{Record: &models.BackupRecord{ID: "record"}})
+	record, err := manager.finalizeBackupRecord(FinalizeBackupOpts{Record: &BackupRecord{ID: "record"}})
 	if err == nil || record != nil {
 		t.Fatal("unpersisted completion reported success")
 	}

@@ -1,7 +1,6 @@
 package kubernetes
 
 import (
-	"codedock/internal/models"
 	"encoding/json"
 	"fmt"
 	"github.com/google/uuid"
@@ -15,7 +14,7 @@ var (
 	redisImagePattern         = regexp.MustCompile(`^redis:[0-9]+\.[0-9]+\.[0-9]+[-a-zA-Z0-9.]*$`)
 )
 
-func ValidateDataSpec(spec models.ClusterDataSpec, nodes int) error {
+func ValidateDataSpec(spec ClusterDataSpec, nodes int) error {
 	for _, id := range []string{spec.ID, spec.EnvironmentID} {
 		if _, err := uuid.Parse(id); err != nil {
 			return fmt.Errorf("database and environment identities must be UUIDs")
@@ -65,10 +64,10 @@ func ValidateDataSpec(spec models.ClusterDataSpec, nodes int) error {
 	}
 	return nil
 }
-func DataIdentity(spec models.ClusterDataSpec) (string, string) {
+func DataIdentity(spec ClusterDataSpec) (string, string) {
 	return "codedock-" + spec.EnvironmentID, "db-" + spec.ID
 }
-func DataManifest(plan *models.ClusterDataPlan, destination, source *models.S3Destination, sourceName string) (string, error) {
+func DataManifest(plan *ClusterDataPlan, destination, source *S3Destination, sourceName string) (string, error) {
 	spec := plan.Record.Spec
 	namespace, name := DataIdentity(spec)
 	labels := map[string]string{"codedock.run/project": plan.Record.ProjectID, "codedock.run/database": spec.ID, "codedock.run/environment": spec.EnvironmentID}

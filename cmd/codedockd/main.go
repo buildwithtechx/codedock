@@ -19,9 +19,9 @@ import (
 	"codedock/internal/config"
 	"codedock/internal/engine/deploy"
 	cdkhttp "codedock/internal/http"
+	"codedock/internal/modules/monitoring"
 	"codedock/internal/platform/networking"
 	"codedock/internal/platform/observability"
-	"codedock/internal/services/system"
 
 	"codedock/internal/telemetry"
 	"codedock/internal/version"
@@ -92,7 +92,7 @@ func startServer() {
 		slog.Info("observability stack disabled, skipping Loki and TSDB")
 	}
 
-	system.StartTelemetryReporter(db, codedockVersion)
+	monitoring.StartTelemetryReporter(db, codedockVersion)
 
 	host := config.Get().Server.Host
 	port := fmt.Sprintf("%d", config.Get().Server.Port)

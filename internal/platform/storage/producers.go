@@ -9,8 +9,6 @@ import (
 	"path/filepath"
 	"strings"
 
-	"codedock/internal/models"
-
 	"github.com/docker/docker/api/types/container"
 	"github.com/docker/docker/pkg/stdcopy"
 )
@@ -51,7 +49,7 @@ func splitShellCommand(command string) []string {
 	return []string{"sh", "-ec", command}
 }
 
-func (bm *BackupManager) quiesceTarget(ctx context.Context, cfg *models.BackupConfig, containerName string) (func(), error) {
+func (bm *BackupManager) quiesceTarget(ctx context.Context, cfg *BackupConfig, containerName string) (func(), error) {
 	quiesce := strings.TrimSpace(cfg.QuiesceCommand)
 	unquiesce := strings.TrimSpace(cfg.UnquiesceCommand)
 	if quiesce == "" && unquiesce == "" {
@@ -76,7 +74,7 @@ func (bm *BackupManager) quiesceTarget(ctx context.Context, cfg *models.BackupCo
 	return release, nil
 }
 
-func (bm *BackupManager) executeVolumeBackupIncremental(ctx context.Context, cfg *models.BackupConfig, volumeName string) ([]byte, string, error) {
+func (bm *BackupManager) executeVolumeBackupIncremental(ctx context.Context, cfg *BackupConfig, volumeName string) ([]byte, string, error) {
 	if bm.dockerClient == nil {
 		return nil, "", fmt.Errorf("volume backup requires a Docker client")
 	}
@@ -176,7 +174,7 @@ func (bm *BackupManager) executeFileBackup(ctx context.Context, sourcePath strin
 
 func (bm *BackupManager) serviceContainer(ctx context.Context, serviceID string) (string, error) {
 	finder, ok := bm.store.(interface {
-		GetAppService(string) (*models.AppService, error)
+		GetAppService(string) (*AppService, error)
 	})
 	if !ok {
 		return "", fmt.Errorf("service container lookup unavailable")
@@ -188,7 +186,7 @@ func (bm *BackupManager) serviceContainer(ctx context.Context, serviceID string)
 	return app.ContainerID, nil
 }
 
-func (bm *BackupManager) executeCustomBackup(ctx context.Context, cfg *models.BackupConfig) ([]byte, string, error) {
+func (bm *BackupManager) executeCustomBackup(ctx context.Context, cfg *BackupConfig) ([]byte, string, error) {
 	if strings.TrimSpace(cfg.CustomBackupCommand) == "" {
 		return nil, "", fmt.Errorf("custom backup command is empty")
 	}

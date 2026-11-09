@@ -74,8 +74,8 @@ type ProjectConfig struct {
 }
 
 type Vault interface {
-	Encrypt(plaintext []byte) (string, error)
-	Decrypt(ciphertext string) ([]byte, error)
+	Encrypt(plaintext string) (string, error)
+	Decrypt(ciphertext string) (string, error)
 }
 
 type RuntimeDatabase struct {
@@ -106,16 +106,19 @@ type RuntimeVolume struct {
 }
 
 type RuntimeClusterNode struct {
-	ID   string `json:"id"`
-	Name string `json:"name"`
-	IP   string `json:"ip"`
+	ServerID    string `json:"serverId"`
+	PrivateIP   string `json:"privateIp"`
+	Interface   string `json:"interface"`
+	Fingerprint string `json:"fingerprint"`
 }
 
 type RuntimeRegistry struct {
-	ID        string `json:"id"`
-	ServerURL string `json:"serverUrl"`
-	Username  string `json:"username"`
-	Password  string `json:"password"`
+	ID            string `json:"id"`
+	RegistryURL   string `json:"registryUrl,omitempty"`
+	ServerURL     string `json:"serverUrl,omitempty"`
+	Username      string `json:"username"`
+	Password      string `json:"password,omitempty"`
+	PasswordToken string `json:"passwordToken,omitempty"`
 }
 
 type RuntimeTarget struct {

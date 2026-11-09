@@ -8,8 +8,6 @@ import (
 	"net/http"
 	"strings"
 	"time"
-
-	"codedock/internal/models"
 )
 
 var expoPushAPIURL = "https://exp.host/--/api/v2/push/send"
@@ -42,16 +40,16 @@ func IsExpoPushToken(token string) bool {
 	return strings.HasPrefix(token, "ExponentPushToken[") || strings.HasPrefix(token, "ExpoPushToken[")
 }
 
-func SendExpoNotification(token string, event *models.NotificationEvent) error {
+func SendExpoNotification(token string, event *NotificationEvent) error {
 	client := &http.Client{Timeout: 10 * time.Second}
 	return SendExpoNotificationWithAuth(client, expoPushAPIURL, token, "", event)
 }
 
-func SendExpoNotificationWithClient(httpClient *http.Client, apiURL, token string, event *models.NotificationEvent) error {
+func SendExpoNotificationWithClient(httpClient *http.Client, apiURL, token string, event *NotificationEvent) error {
 	return SendExpoNotificationWithAuth(httpClient, apiURL, token, "", event)
 }
 
-func SendExpoNotificationWithAuth(httpClient *http.Client, apiURL, token, accessToken string, event *models.NotificationEvent) error {
+func SendExpoNotificationWithAuth(httpClient *http.Client, apiURL, token, accessToken string, event *NotificationEvent) error {
 	if !IsExpoPushToken(token) {
 		return fmt.Errorf("invalid expo push token: %s", token)
 	}

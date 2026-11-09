@@ -7,8 +7,7 @@ import (
 
 	"github.com/google/uuid"
 
-	"codedock/internal/models"
-	"codedock/internal/repositories"
+	"codedock/internal/modules/databases"
 )
 
 func runDatabases(args []string) {
@@ -26,13 +25,13 @@ func runDatabases(args []string) {
 	_, db, vlt := InitDataDir()
 	defer db.Close()
 
-	dbRepo := repositories.NewDatabaseRepo(db, vlt)
+	dbRepo := databases.NewRepository(db, vlt)
 
 	cmd := args[0]
 
 	switch cmd {
 	case "list":
-		dbs, err := dbRepo.List(context.Background(), "")
+		dbs, err := dbRepo.ListAll(context.Background(), "")
 		if err != nil {
 			exitError("Failed to list databases: %v", err)
 		}
@@ -98,14 +97,14 @@ func runDatabases(args []string) {
 		engine = mapEngine(engine)
 		port := defaultPortForEngine(engine)
 
-		database := &models.Database{
+		database := &databases.Database{
 			ID:           uuid.New().String(),
 			ProjectID:    projectID,
 			Name:         name,
-			Engine:       models.DatabaseEngine(engine),
+			Engine:       databases.DatabaseEngine(engine),
 			Version:      version,
 			Port:         port,
-			Status:       models.DatabaseStatusCreated,
+			Status:       databases.DatabaseStatusCreated,
 			Username:     "codedock",
 			DatabaseName: "codedock",
 			CreatedAt:    time.Now(),

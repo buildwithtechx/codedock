@@ -13,7 +13,7 @@ import (
 )
 
 type dataStoreFixture struct {
-	Store
+	DataStore
 	plan *ClusterDataPlan
 }
 
@@ -21,7 +21,7 @@ func (s dataStoreFixture) Get(context.Context, string) (*ClusterDataPlan, error)
 	return s.plan, nil
 }
 func TestCredentialsRequireMatchingProjectAndCluster(t *testing.T) {
-	service := &Service{store: dataStoreFixture{plan: &ClusterDataPlan{Record: ClusterData{ProjectID: "owner", ClusterID: "cluster", Status: "READY"}, Password: "secret"}}}
+	service := &ClusterDataService{store: dataStoreFixture{plan: &ClusterDataPlan{Record: ClusterData{ProjectID: "owner", ClusterID: "cluster", Status: "READY"}, Password: "secret"}}}
 	if _, err := service.Credentials(context.Background(), "foreign", "cluster", "database"); err == nil {
 		t.Fatal("foreign project received credentials")
 	}
@@ -38,7 +38,7 @@ func (t *manifestTransport) RoundTrip(request *http.Request) (*http.Response, er
 }
 func TestOperatorReviewPinsAndOwnsFetchedManifests(t *testing.T) {
 	transport := &manifestTransport{}
-	service := &Service{http: &http.Client{Transport: transport}}
+	service := &ClusterDataService{http: &http.Client{Transport: transport}}
 	request := ClusterDataRequest{OperatorVersion: "1.28.4", BarmanVersion: "0.15.1", CertManagerVersion: "1.21.2"}
 	manifests, err := service.operatorManifests(context.Background(), "owned-cluster", request)
 	if err != nil || len(manifests) != 3 {

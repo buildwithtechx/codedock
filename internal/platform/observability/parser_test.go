@@ -6,8 +6,6 @@ import (
 	"path/filepath"
 	"testing"
 	"time"
-
-	"codedock/internal/models"
 )
 
 func TestParseAccessLine(t *testing.T) {
@@ -51,12 +49,12 @@ func TestClassifyCountry(t *testing.T) {
 }
 
 type recordingStore struct {
-	samples []models.TrafficSample
+	samples []TrafficSample
 	paths   map[string]bool
 	cutoffs []string
 }
 
-func (s *recordingStore) RecordBatch(ctx context.Context, samples []models.TrafficSample) error {
+func (s *recordingStore) RecordBatch(ctx context.Context, samples []TrafficSample) error {
 	s.samples = append(s.samples, samples...)
 	return nil
 }

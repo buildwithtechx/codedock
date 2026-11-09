@@ -9,7 +9,6 @@ import (
 	"path/filepath"
 	"strings"
 
-	"codedock/internal/models"
 	"codedock/internal/utils"
 )
 
@@ -67,7 +66,7 @@ func (bm *BackupManager) OpenBackupArchive(ctx context.Context, recordID string)
 		return response.Body, path.Base(key), nil
 	}
 	getter, ok := bm.store.(interface {
-		GetSFTPDestination(string) (*models.SFTPDestination, error)
+		GetSFTPDestination(string) (*SFTPDestination, error)
 	})
 	if !ok {
 		return nil, "", fmt.Errorf("SFTP destination lookup unavailable")

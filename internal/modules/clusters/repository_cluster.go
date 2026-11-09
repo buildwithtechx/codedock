@@ -26,7 +26,7 @@ func (r *ClusterRepo) Get(ctx context.Context, id string) (*Cluster, error) {
 	if err != nil {
 		return nil, fmt.Errorf("decrypt cluster token: %w", err)
 	}
-	cluster.JoinToken = token
+	cluster.JoinToken = string(token)
 	if err := json.Unmarshal([]byte(cluster.NodesJSON), &cluster.Nodes); err != nil {
 		return nil, err
 	}
@@ -74,6 +74,7 @@ func (r *ClusterRepo) Save(ctx context.Context, cluster *Cluster, previous int) 
 	}
 	return err
 }
+
 func (r *ClusterRepo) Observe(ctx context.Context, id, status, message string) error {
 	_, err := r.db.ExecContext(ctx, `UPDATE clusters SET status=$1,error=$2,updated_at=$3 WHERE id=$4`, status, message, time.Now().UTC().Format(time.RFC3339Nano), id)
 	return err

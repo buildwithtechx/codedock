@@ -1,17 +1,16 @@
 package kubernetes
 
 import (
-	"codedock/internal/models"
 	"context"
 	"encoding/json"
 	"fmt"
 )
 
-func (r *WorkloadRuntime) VerifyCluster(ctx context.Context, cluster *models.Cluster, requireReady bool) error {
-	if len(cluster.Nodes) == 0 {
+func (r *WorkloadRuntime) VerifyCluster(ctx context.Context, clusterID string, nodes []ClusterNode, requireReady bool) error {
+	if len(nodes) == 0 {
 		return fmt.Errorf("cluster has no control plane")
 	}
-	raw, err := r.commands.Kubectl(ctx, cluster.Nodes[0], []string{"get", "nodes", "-o", "json"}, "")
+	raw, err := r.commands.Kubectl(ctx, nodes[0], []string{"get", "nodes", "-o", "json"}, "")
 	if err != nil {
 		return err
 	}
@@ -25,7 +24,7 @@ func (r *WorkloadRuntime) VerifyCluster(ctx context.Context, cluster *models.Clu
 	for _, object := range response.Items {
 		metadata, _ := object["metadata"].(map[string]any)
 		labels, _ := metadata["labels"].(map[string]any)
-		if labels["codedock.run/cluster"] != cluster.ID {
+		if labels["codedock.run/cluster"] != clusterID {
 			return fmt.Errorf("control plane contains an unregistered cluster node")
 		}
 		name, _ := metadata["name"].(string)
@@ -40,10 +39,10 @@ func (r *WorkloadRuntime) VerifyCluster(ctx context.Context, cluster *models.Clu
 		}
 		observed[name] = ready
 	}
-	if len(observed) != len(cluster.Nodes) {
+	if len(observed) != len(nodes) {
 		return fmt.Errorf("observed node count differs from registered cluster")
 	}
-	for _, node := range cluster.Nodes {
+	for _, node := range nodes {
 		ready, exists := observed["codedock-"+node.ServerID]
 		if !exists || (requireReady && !ready) {
 			return fmt.Errorf("registered cluster node is missing or not ready")

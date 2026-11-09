@@ -1,13 +1,14 @@
 package bare
 
 import (
-	"codedock/internal/models"
-	"codedock/internal/platform/ssh"
 	"context"
 	"strings"
+
+	appsmod "codedock/internal/modules/apps"
+	"codedock/internal/platform/ssh"
 )
 
-func recoveryScript(app *models.AppService) (string, error) {
+func recoveryScript(app *appsmod.AppService) (string, error) {
 	base, unit, _, err := identity(app)
 	if err != nil {
 		return "", err
@@ -41,7 +42,7 @@ rm -f "$base/pending"
 `, nil
 }
 
-func (r *Runtime) CurrentRelease(ctx context.Context, app *models.AppService, target models.RuntimeTarget) (string, error) {
+func (r *Runtime) CurrentRelease(ctx context.Context, app *appsmod.AppService, target appsmod.RuntimeTarget) (string, error) {
 	base, _, _, err := identity(app)
 	if err != nil {
 		return "", err
@@ -51,6 +52,6 @@ func (r *Runtime) CurrentRelease(ctx context.Context, app *models.AppService, ta
 		return "", err
 	}
 	guard := "if ! test -e " + ssh.ShellQuote(base) + "; then exit 0; fi\n"
-	raw, err := r.runner.Host(ctx, target.BareNode, guard+script+"if test -L \"$base/current\"; then basename \"$(readlink \"$base/current\")\"; fi\n")
+	raw, err := r.runner.Host(ctx, toClusterNode(target.BareNode), guard+script+"if test -L \"$base/current\"; then basename \"$(readlink \"$base/current\")\"; fi\n")
 	return strings.TrimSpace(raw), err
 }

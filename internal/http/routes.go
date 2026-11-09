@@ -3,7 +3,6 @@ package http
 import (
 	"github.com/labstack/echo/v4"
 
-	"codedock/internal/models"
 	"codedock/internal/modules/auth"
 	"codedock/internal/modules/databases"
 	"codedock/internal/modules/domains"
@@ -54,7 +53,7 @@ func (s *Server) registerRoutes() {
 	s.setupSPAFallback()
 }
 
-func (s *Server) RequireServiceRole(minPermission models.MemberPermission) echo.MiddlewareFunc {
+func (s *Server) RequireServiceRole(minPermission organizations.MemberPermission) echo.MiddlewareFunc {
 	return func(next echo.HandlerFunc) echo.HandlerFunc {
 		return func(c echo.Context) error {
 			serviceID := c.Param("serviceId")
@@ -69,7 +68,7 @@ func (s *Server) RequireServiceRole(minPermission models.MemberPermission) echo.
 			if userClaims == nil {
 				return utils.Error(c, 401, "unauthorized")
 			}
-			if userClaims.Role == models.UserRoleAdmin || userClaims.Role == models.UserRoleOwner {
+			if userClaims.Role == users.UserRoleAdmin || userClaims.Role == users.UserRoleOwner {
 				return next(c)
 			}
 
@@ -82,7 +81,7 @@ func (s *Server) RequireServiceRole(minPermission models.MemberPermission) echo.
 				if c.Get("project_id") != svc.ProjectID {
 					return utils.Error(c, 403, "api token not authorized for this project")
 				}
-				if minPermission != "" && minPermission != models.MemberPermissionMember {
+				if minPermission != "" && minPermission != organizations.MemberPermissionMember {
 					return utils.Error(c, 403, "api tokens cannot perform admin/owner actions")
 				}
 				return next(c)
@@ -172,8 +171,8 @@ func (s *Server) registerServerRoutes(apiGroup, authGroup *echo.Group) {
 			ServerRead:  s.authGuard.RequireScope("server:read"),
 			ServerWrite: s.authGuard.RequireScope("server:write"),
 			Admin:       s.authGuard.RequireRole("admin"),
-			OrgMember:   s.authGuard.RequireOrgRole(models.MemberPermissionMember),
-			OrgAdmin:    s.authGuard.RequireOrgRole(models.MemberPermissionAdmin),
+			OrgMember:   s.authGuard.RequireOrgRole(organizations.MemberPermissionMember),
+			OrgAdmin:    s.authGuard.RequireOrgRole(organizations.MemberPermissionAdmin),
 		},
 	})
 }
@@ -182,9 +181,9 @@ func (s *Server) registerOrganizationRoutes(authGroup *echo.Group) {
 	organizations.RegisterRoutes(
 		authGroup,
 		s.orgHandler,
-		s.authGuard.RequireOrgRole(models.MemberPermissionMember),
-		s.authGuard.RequireOrgRole(models.MemberPermissionAdmin),
-		s.authGuard.RequireOrgRole(models.MemberPermissionOwner),
+		s.authGuard.RequireOrgRole(organizations.MemberPermissionMember),
+		s.authGuard.RequireOrgRole(organizations.MemberPermissionAdmin),
+		s.authGuard.RequireOrgRole(organizations.MemberPermissionOwner),
 	)
 }
 

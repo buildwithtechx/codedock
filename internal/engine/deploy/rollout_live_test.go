@@ -1,18 +1,20 @@
 package deploy
 
 import (
-	"codedock/internal/models"
-	"codedock/internal/utils"
 	"context"
+	"io"
+	"os"
+	"testing"
+	"time"
+
 	"github.com/docker/docker/api/types/container"
 	"github.com/docker/docker/api/types/image"
 	"github.com/docker/docker/api/types/network"
 	"github.com/docker/docker/client"
 	"github.com/google/uuid"
-	"io"
-	"os"
-	"testing"
-	"time"
+
+	appsmod "codedock/internal/modules/apps"
+	"codedock/internal/utils"
 )
 
 func TestLiveCancelledRolloutKeepsPreviousWorker(t *testing.T) {
@@ -58,7 +60,7 @@ func TestLiveCancelledRolloutKeepsPreviousWorker(t *testing.T) {
 	if err := deployer.SetRolloutDirectory(t.TempDir()); err != nil {
 		t.Fatal(err)
 	}
-	app := &models.AppService{ID: uuid.NewString(), RuntimeMode: models.RuntimeModeWorker, Status: models.AppServiceStatusRunning}
+	app := &appsmod.AppService{ID: uuid.NewString(), RuntimeMode: appsmod.RuntimeModeWorker, Status: appsmod.AppServiceStatusRunning}
 	opts := ContainerRunOptions{Name: utils.NormalizeContainerName(app.ID), ImageTag: "alpine:3.21", ServiceID: app.ID, RuntimeMode: app.RuntimeMode, InternalPort: 3000, Cmd: []string{"sleep", "600"}, ExtraLabels: map[string]string{}, NetworkName: isolatedNetwork}
 	previous, err := deployer.containerManager.CreateAndStart(ctx, opts)
 	if err != nil {

@@ -11,8 +11,8 @@ import (
 
 	"codedock/internal/config"
 	"codedock/internal/modules/auth"
+	"codedock/internal/modules/settings"
 	"codedock/internal/modules/users"
-	"codedock/internal/repositories"
 )
 
 func setupTestDatabaseURL(t *testing.T) string {
@@ -80,16 +80,16 @@ func TestFirstRunWithoutEnvironmentAndSavedSetup(t *testing.T) {
 	if err := saveSetupOptions(db, vault, "apps.example.com", "owner@example.com"); err != nil {
 		t.Fatal(err)
 	}
-	settings, err := repositories.NewSettingsRepo(db, vault).GetServerSettings(context.Background())
+	srvSettings, err := settings.NewSettingsRepo(db, vault).GetServerSettings(context.Background())
 	if err != nil {
 		t.Fatal(err)
 	}
-	if settings.DefaultWildcardDomain != "apps.example.com" {
+	if srvSettings.DefaultWildcardDomain != "apps.example.com" {
 		t.Fatal("wizard did not persist the app domain")
 	}
 	cfg.Security.JWTSecret = ""
 	cfg.Security.RefreshSecret = ""
-	if err := config.PrepareSelfHosted(context.Background(), cfg, repositories.NewSelfHostedRepo(db)); err != nil {
+	if err := config.PrepareSelfHosted(context.Background(), cfg, settings.NewSelfHostedRepo(db)); err != nil {
 		t.Fatal(err)
 	}
 	restarted, err := auth.NewTokenService()

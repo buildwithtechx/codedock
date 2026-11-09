@@ -5,22 +5,19 @@ import (
 	"net/http"
 	"net/http/httptest"
 	"testing"
-
-	"codedock/internal/models"
-	"codedock/internal/repositories"
 )
 
 type stubNotifSettingsRepo struct {
-	repositories.NotificationSettingsRepository
-	settings      *models.NotificationSettings
-	subscriptions map[string][]models.NotificationSubscription
+	NotificationSettingsRepository
+	settings      *NotificationSettings
+	subscriptions map[string][]NotificationSubscription
 }
 
-func (s *stubNotifSettingsRepo) GetNotificationSettings(context.Context) (*models.NotificationSettings, error) {
+func (s *stubNotifSettingsRepo) GetNotificationSettings(context.Context) (*NotificationSettings, error) {
 	return s.settings, nil
 }
 
-func (s *stubNotifSettingsRepo) ListSubscriptions(_ context.Context, userID, _ string) ([]models.NotificationSubscription, error) {
+func (s *stubNotifSettingsRepo) ListSubscriptions(_ context.Context, userID, _ string) ([]NotificationSubscription, error) {
 	if s.subscriptions != nil {
 		return s.subscriptions[userID], nil
 	}
@@ -28,21 +25,21 @@ func (s *stubNotifSettingsRepo) ListSubscriptions(_ context.Context, userID, _ s
 }
 
 type stubDeliveriesRepo struct {
-	repositories.NotificationDeliveryRepository
-	recorded []*models.NotificationDelivery
+	NotificationDeliveryRepository
+	recorded []*NotificationDelivery
 }
 
-func (s *stubDeliveriesRepo) RecordDelivery(_ context.Context, delivery *models.NotificationDelivery) error {
+func (s *stubDeliveriesRepo) RecordDelivery(_ context.Context, delivery *NotificationDelivery) error {
 	s.recorded = append(s.recorded, delivery)
 	return nil
 }
 
 type stubDeviceTokenRepo struct {
-	repositories.DeviceTokenRepository
-	tokens []*models.DeviceToken
+	DeviceTokenRepository
+	tokens []*DeviceToken
 }
 
-func (s *stubDeviceTokenRepo) ListAllTokens(context.Context) ([]*models.DeviceToken, error) {
+func (s *stubDeviceTokenRepo) ListAllTokens(context.Context) ([]*DeviceToken, error) {
 	return s.tokens, nil
 }
 
@@ -52,11 +49,11 @@ func TestDispatcherRecordsSuccessfulDelivery(t *testing.T) {
 	}))
 	defer server.Close()
 	deliveries := &stubDeliveriesRepo{}
-	dispatcher := NewDispatcherService(nil, &stubNotifSettingsRepo{settings: &models.NotificationSettings{
+	dispatcher := NewDispatcherService(nil, &stubNotifSettingsRepo{settings: &NotificationSettings{
 		DiscordEnabled:    true,
 		DiscordWebhookURL: server.URL,
 	}}, nil, deliveries, nil, nil)
-	err := dispatcher.Send(&models.NotificationEvent{EventType: "test_global_discord", Title: "hello"})
+	err := dispatcher.Send(&NotificationEvent{EventType: "test_global_discord", Title: "hello"})
 	if err != nil {
 		t.Fatalf("send test notification: %v", err)
 	}
@@ -71,8 +68,8 @@ func TestDispatcherRecordsSuccessfulDelivery(t *testing.T) {
 
 func TestDispatcherRecordsFailedDelivery(t *testing.T) {
 	deliveries := &stubDeliveriesRepo{}
-	dispatcher := NewDispatcherService(nil, &stubNotifSettingsRepo{settings: &models.NotificationSettings{}}, nil, deliveries, nil, nil)
-	err := dispatcher.Send(&models.NotificationEvent{EventType: "test_global_slack", Title: "hello"})
+	dispatcher := NewDispatcherService(nil, &stubNotifSettingsRepo{settings: &NotificationSettings{}}, nil, deliveries, nil, nil)
+	err := dispatcher.Send(&NotificationEvent{EventType: "test_global_slack", Title: "hello"})
 	if err == nil {
 		t.Fatal("expected send to fail for unconfigured provider")
 	}
@@ -100,7 +97,7 @@ func TestDispatcherFanoutRealEvent(t *testing.T) {
 	defer slackServer.Close()
 
 	deliveries := &stubDeliveriesRepo{}
-	settings := &models.NotificationSettings{
+	settings := &NotificationSettings{
 		NotificationAlerts: true,
 		DiscordEnabled:     true,
 		DiscordWebhookURL:  discordServer.URL,
@@ -109,8 +106,8 @@ func TestDispatcherFanoutRealEvent(t *testing.T) {
 	}
 
 	dispatcher := NewDispatcherService(nil, &stubNotifSettingsRepo{settings: settings}, nil, deliveries, nil, nil)
-	err := dispatcher.Send(&models.NotificationEvent{
-		EventType: models.EventDeploySucceeded,
+	err := dispatcher.Send(&NotificationEvent{
+		EventType: EventDeploySucceeded,
 		Title:     "Deploy Succeeded",
 		Message:   "Service web deployed",
 		Level:     "success",
@@ -127,15 +124,15 @@ func TestDispatcherFanoutRealEvent(t *testing.T) {
 
 func TestDispatcherSilencedWhenAlertsDisabled(t *testing.T) {
 	deliveries := &stubDeliveriesRepo{}
-	settings := &models.NotificationSettings{
+	settings := &NotificationSettings{
 		NotificationAlerts: false,
 		DiscordEnabled:     true,
 		DiscordWebhookURL:  "https://discord.com/api/webhooks/test",
 	}
 
 	dispatcher := NewDispatcherService(nil, &stubNotifSettingsRepo{settings: settings}, nil, deliveries, nil, nil)
-	err := dispatcher.Send(&models.NotificationEvent{
-		EventType: models.EventDeployFailed,
+	err := dispatcher.Send(&NotificationEvent{
+		EventType: EventDeployFailed,
 		Title:     "Deploy Failed",
 	})
 	if err != nil {
@@ -149,19 +146,19 @@ func TestDispatcherSilencedWhenAlertsDisabled(t *testing.T) {
 
 func TestDispatcherFanoutExpoPush(t *testing.T) {
 	deliveries := &stubDeliveriesRepo{}
-	settings := &models.NotificationSettings{
+	settings := &NotificationSettings{
 		NotificationAlerts: true,
 	}
 	deviceTokens := &stubDeviceTokenRepo{
-		tokens: []*models.DeviceToken{
+		tokens: []*DeviceToken{
 			{Token: "ExponentPushToken[device-mobile-1]", Platform: "expo"},
 			{Token: "unsupported-raw-token", Platform: "ios"}, // Non-expo token skipped
 		},
 	}
 
 	dispatcher := NewDispatcherService(nil, &stubNotifSettingsRepo{settings: settings}, nil, deliveries, nil, deviceTokens)
-	_ = dispatcher.Send(&models.NotificationEvent{
-		EventType: models.EventServerUnreachable,
+	_ = dispatcher.Send(&NotificationEvent{
+		EventType: EventServerUnreachable,
 		Title:     "Server unreachable: srv-1",
 		Message:   "Docker connection lost",
 		Level:     "error",
@@ -177,13 +174,13 @@ func TestDispatcherFanoutExpoPush(t *testing.T) {
 
 func TestDispatcherEnforcesUserCategorySubscription(t *testing.T) {
 	deliveries := &stubDeliveriesRepo{}
-	settings := &models.NotificationSettings{
+	settings := &NotificationSettings{
 		NotificationAlerts: true,
 	}
 
 	notifRepo := &stubNotifSettingsRepo{
 		settings: settings,
-		subscriptions: map[string][]models.NotificationSubscription{
+		subscriptions: map[string][]NotificationSubscription{
 			"user-opted-out": {
 				{Category: "deployment", Enabled: false},
 			},
@@ -194,15 +191,15 @@ func TestDispatcherEnforcesUserCategorySubscription(t *testing.T) {
 	}
 
 	deviceTokens := &stubDeviceTokenRepo{
-		tokens: []*models.DeviceToken{
+		tokens: []*DeviceToken{
 			{UserID: "user-opted-out", Token: "ExponentPushToken[user-1-phone]", Platform: "expo"},
 			{UserID: "user-opted-in", Token: "ExponentPushToken[user-2-phone]", Platform: "expo"},
 		},
 	}
 
 	dispatcher := NewDispatcherService(nil, notifRepo, nil, deliveries, nil, deviceTokens)
-	_ = dispatcher.Send(&models.NotificationEvent{
-		EventType: models.EventDeploySucceeded,
+	_ = dispatcher.Send(&NotificationEvent{
+		EventType: EventDeploySucceeded,
 		Title:     "Deploy Succeeded",
 		Message:   "Production release completed",
 	})
@@ -215,13 +212,13 @@ func TestDispatcherEnforcesUserCategorySubscription(t *testing.T) {
 
 func TestDispatcherSpecificEventOverridesCategory(t *testing.T) {
 	deliveries := &stubDeliveriesRepo{}
-	settings := &models.NotificationSettings{
+	settings := &NotificationSettings{
 		NotificationAlerts: true,
 	}
 
 	notifRepo := &stubNotifSettingsRepo{
 		settings: settings,
-		subscriptions: map[string][]models.NotificationSubscription{
+		subscriptions: map[string][]NotificationSubscription{
 			"user-granular": {
 				{Category: "deployment", Enabled: true},
 				{Category: "deploy.succeeded", Enabled: false},
@@ -230,7 +227,7 @@ func TestDispatcherSpecificEventOverridesCategory(t *testing.T) {
 	}
 
 	deviceTokens := &stubDeviceTokenRepo{
-		tokens: []*models.DeviceToken{
+		tokens: []*DeviceToken{
 			{UserID: "user-granular", Token: "ExponentPushToken[user-granular-phone]", Platform: "expo"},
 		},
 	}
@@ -238,8 +235,8 @@ func TestDispatcherSpecificEventOverridesCategory(t *testing.T) {
 	dispatcher := NewDispatcherService(nil, notifRepo, nil, deliveries, nil, deviceTokens)
 
 	// deploy.succeeded is specifically disabled -> 0 deliveries
-	_ = dispatcher.Send(&models.NotificationEvent{
-		EventType: models.EventDeploySucceeded,
+	_ = dispatcher.Send(&NotificationEvent{
+		EventType: EventDeploySucceeded,
 		Title:     "Deploy Succeeded",
 	})
 	if len(deliveries.recorded) != 0 {
@@ -247,8 +244,8 @@ func TestDispatcherSpecificEventOverridesCategory(t *testing.T) {
 	}
 
 	// deploy.failed falls back to category 'deployment' which is enabled -> 1 delivery
-	_ = dispatcher.Send(&models.NotificationEvent{
-		EventType: models.EventDeployFailed,
+	_ = dispatcher.Send(&NotificationEvent{
+		EventType: EventDeployFailed,
 		Title:     "Deploy Failed",
 	})
 	if len(deliveries.recorded) != 1 {
@@ -259,17 +256,17 @@ func TestDispatcherSpecificEventOverridesCategory(t *testing.T) {
 func TestDispatcherGlobalExpoProviderConfigured(t *testing.T) {
 	dispatcher := &DispatcherService{}
 
-	s1 := &models.NotificationSettings{ExpoEnabled: true, ExpoPushToken: "ExponentPushToken[test-channel-token]"}
+	s1 := &NotificationSettings{ExpoEnabled: true, ExpoPushToken: "ExponentPushToken[test-channel-token]"}
 	if !dispatcher.isProviderConfigured(s1, "expo") {
 		t.Fatalf("expected expo provider to be configured")
 	}
 
-	s2 := &models.NotificationSettings{ExpoEnabled: false, ExpoPushToken: "ExponentPushToken[test-channel-token]"}
+	s2 := &NotificationSettings{ExpoEnabled: false, ExpoPushToken: "ExponentPushToken[test-channel-token]"}
 	if dispatcher.isProviderConfigured(s2, "expo") {
 		t.Fatalf("expected disabled expo provider not to be configured")
 	}
 
-	s3 := &models.NotificationSettings{ExpoEnabled: true, ExpoPushToken: ""}
+	s3 := &NotificationSettings{ExpoEnabled: true, ExpoPushToken: ""}
 	if dispatcher.isProviderConfigured(s3, "expo") {
 		t.Fatalf("expected empty token expo provider not to be configured")
 	}

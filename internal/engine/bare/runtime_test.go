@@ -1,7 +1,6 @@
 package bare
 
 import (
-	"codedock/internal/models"
 	"context"
 	"encoding/base64"
 	"io"
@@ -11,11 +10,14 @@ import (
 	"runtime"
 	"strings"
 	"testing"
+
+	"codedock/internal/engine/kubernetes"
+	appsmod "codedock/internal/modules/apps"
 )
 
-func nativeFixture() (*models.AppService, models.RuntimeTarget) {
-	app := &models.AppService{ID: "aaaaaaaa-aaaa-4aaa-8aaa-aaaaaaaaaaaa", ProjectID: "bbbbbbbb-bbbb-4bbb-8bbb-bbbbbbbbbbbb", RuntimeMode: models.RuntimeModeWorker, Replicas: 1}
-	target := models.RuntimeTarget{Kind: "bare", BareNode: models.ClusterNode{ServerID: "cccccccc-cccc-4ccc-8ccc-cccccccccccc", PrivateIP: "192.168.1.10", Interface: "eth0", Fingerprint: "SHA256:" + base64.RawStdEncoding.EncodeToString(make([]byte, 32))}, BareReleaseURL: "https://example.com/app", BareSHA256: strings.Repeat("a", 64), BareCommand: []string{"./app"}}
+func nativeFixture() (*appsmod.AppService, appsmod.RuntimeTarget) {
+	app := &appsmod.AppService{ID: "aaaaaaaa-aaaa-4aaa-8aaa-aaaaaaaaaaaa", ProjectID: "bbbbbbbb-bbbb-4bbb-8bbb-bbbbbbbbbbbb", RuntimeMode: appsmod.RuntimeModeWorker, Replicas: 1}
+	target := appsmod.RuntimeTarget{Kind: "bare", BareNode: appsmod.RuntimeClusterNode{ServerID: "cccccccc-cccc-4ccc-8ccc-cccccccccccc", PrivateIP: "192.168.1.10", Interface: "eth0", Fingerprint: "SHA256:" + base64.RawStdEncoding.EncodeToString(make([]byte, 32))}, BareReleaseURL: "https://example.com/app", BareSHA256: strings.Repeat("a", 64), BareCommand: []string{"./app"}}
 	return app, target
 }
 func TestNativeValidationRejectsUnverifiedArtifactsAndUnsupportedScaling(t *testing.T) {
@@ -55,14 +57,14 @@ func TestNativeValidationRejectsUnverifiedArtifactsAndUnsupportedScaling(t *test
 
 type nativeRunner struct{ calls int }
 
-func (r *nativeRunner) Script(context.Context, models.ClusterNode, string, string) error {
+func (r *nativeRunner) Script(context.Context, kubernetes.ClusterNode, string, string) error {
 	r.calls++
 	return nil
 }
-func (r *nativeRunner) StreamHost(context.Context, models.ClusterNode, string, io.Reader, io.Writer) error {
+func (r *nativeRunner) StreamHost(context.Context, kubernetes.ClusterNode, string, io.Reader, io.Writer) error {
 	return nil
 }
-func (r *nativeRunner) Host(context.Context, models.ClusterNode, string) (string, error) {
+func (r *nativeRunner) Host(context.Context, kubernetes.ClusterNode, string) (string, error) {
 	return "ActiveState=failed\nSubState=failed\nNRestarts=3\nMemoryCurrent=0\n", nil
 }
 func TestNativeFailedServiceIsObservedAndUnsupportedLifecycleDoesNotExecute(t *testing.T) {

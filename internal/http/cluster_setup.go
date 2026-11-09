@@ -9,18 +9,17 @@ import (
 
 	"github.com/labstack/echo/v4"
 
-	"codedock/internal/engine/bare"
 	"codedock/internal/engine/kubernetes"
+	appsmod "codedock/internal/modules/apps"
+	backupmodule "codedock/internal/modules/backups"
 	modclusters "codedock/internal/modules/clusters"
+	"codedock/internal/modules/environments"
+	"codedock/internal/modules/monitoring"
+	projectsmod "codedock/internal/modules/projects"
+	"codedock/internal/modules/servers"
 	"codedock/internal/platform/observability"
 	backup "codedock/internal/platform/storage"
 	"codedock/internal/platform/vault"
-	"codedock/internal/repositories"
-	"codedock/internal/services/clusterdata"
-	"codedock/internal/services/clusters"
-	"codedock/internal/services/operations"
-	projectservices "codedock/internal/services/projects"
-	"codedock/internal/services/runtimes"
 )
 
 type ClusterDeployer interface {
@@ -28,13 +27,25 @@ type ClusterDeployer interface {
 	SetRuntime(r any)
 }
 
-func configureClusters(server *Server, db *sql.DB, vlt *vault.Vault, projects *repositories.ProjectRepo, servers repositories.ServerRepository, operations *operations.Service, gate clusters.Gate, apps repositories.AppServiceRepository, deployments ClusterDeployer, canvas *projectservices.CanvasService, backups *backup.BackupManager) error {
-	repository := repositories.NewClusterRepo(db, vlt)
+func configureClusters(
+	server *Server,
+	db *sql.DB,
+	vlt *vault.Vault,
+	projects projectsmod.ProjectRepository,
+	serversRepo servers.Repository,
+	operations *monitoring.OperationService,
+	gate modclusters.Gate,
+	apps appsmod.AppServiceRepository,
+	deployments ClusterDeployer,
+	canvas *projectsmod.CanvasService,
+	backups *backup.BackupManager,
+) error {
+	repository := modclusters.NewClusterRepo(db, vlt)
 	if err := repository.Recover(context.Background()); err != nil {
 		return fmt.Errorf("recover cluster operations: %w", err)
 	}
-	runner := kubernetes.NewClusterRunner(servers)
-	service := clusters.NewService(repository, projects, servers, runner, operations, gate, &http.Client{Timeout: time.Minute})
+	runner := kubernetes.NewClusterRunner(serversRepo)
+	service := modclusters.NewClusterService(repository, projects, serversRepo, runner, operations, gate, &http.Client{Timeout: time.Minute})
 	if err := service.RecoverUpgrades(context.Background()); err != nil {
 		return fmt.Errorf("recover cluster upgrades: %w", err)
 	}
@@ -42,8 +53,17 @@ func configureClusters(server *Server, db *sql.DB, vlt *vault.Vault, projects *r
 		service:    service,
 		operations: operations,
 	})
-	dataService := clusterdata.NewService(repositories.NewClusterDataRepo(db, vlt), repository, repositories.NewEnvironmentRepo(db), repositories.NewS3DestinationRepo(db, vlt), runner, operations, gate, &http.Client{Timeout: time.Minute})
-	dataService.SetSnapshots(repositories.NewRedisSnapshotRepo(db))
+	dataService := modclusters.NewClusterDataService(
+		modclusters.NewClusterDataRepo(db, vlt),
+		repository,
+		environments.NewEnvironmentRepo(db),
+		backupmodule.NewRepository(db, vlt),
+		runner,
+		operations,
+		gate,
+		&http.Client{Timeout: time.Minute},
+	)
+	dataService.SetSnapshots(modclusters.NewRedisSnapshotRepo(db))
 	if err := dataService.Recover(context.Background()); err != nil {
 		return fmt.Errorf("recover cluster databases: %w", err)
 	}
@@ -51,25 +71,8 @@ func configureClusters(server *Server, db *sql.DB, vlt *vault.Vault, projects *r
 		service:    dataService,
 		operations: operations,
 		apps:       apps,
-		vars:       repositories.NewServiceVarRepo(db),
+		vars:       appsmod.NewServiceVarRepo(db),
 	})
-	runtime := runtimes.NewService(repositories.NewRuntimeRepo(db, vlt), apps, repository, servers, kubernetes.NewWorkloadRuntime(runner), server.deployer, operations, gate)
-	runtime.SetStreamer(runner)
-	runtime.SetBare(bare.NewRuntime(runner), projects)
-	if err := runtime.Recover(context.Background()); err != nil {
-		return fmt.Errorf("recover Kubernetes application rollouts: %w", err)
-	}
-	reconcileCtx, cancelReconciliation := context.WithCancel(context.Background())
-	server.router.Server.RegisterOnShutdown(cancelReconciliation)
-	go runtime.RunReconciler(reconcileCtx)
-	if deployments != nil {
-		deployments.SetRuntime(runtime)
-	}
-	backups.SetNativeData(runtime.BackupNativeData, runtime.RestoreNativeData)
-	canvasRuntime := observability.NewCanvasRuntime(server.dockerClient)
-	canvasRuntime.Cluster = runtime
-	canvasRuntime.Targets = deployments
-	canvas.SetRuntime(canvasRuntime)
 	return nil
 }
 

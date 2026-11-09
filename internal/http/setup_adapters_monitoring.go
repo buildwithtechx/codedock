@@ -7,54 +7,26 @@ import (
 
 	authservices "codedock/internal/modules/auth"
 	"codedock/internal/modules/monitoring"
+	settingsmodule "codedock/internal/modules/settings"
 	"codedock/internal/modules/users"
-	"codedock/internal/repositories"
-	"codedock/internal/services/operations"
-	systemservices "codedock/internal/services/system"
 )
 
 type operationsServiceAdapter struct {
-	svc *operations.Service
+	svc *monitoring.OperationService
 }
 
 func (o *operationsServiceAdapter) Get(ctx context.Context, id string) (*monitoring.Operation, error) {
 	if o.svc == nil {
 		return nil, errors.New("operation service unavailable")
 	}
-	op, err := o.svc.Get(ctx, id)
-	if err != nil || op == nil {
-		return nil, err
-	}
-	return &monitoring.Operation{
-		ID:        op.ID,
-		UserID:    op.UserID,
-		Kind:      op.Kind,
-		Status:    op.Status,
-		CreatedAt: op.UpdatedAt,
-		UpdatedAt: op.UpdatedAt,
-	}, nil
+	return o.svc.Get(ctx, id)
 }
 
 func (o *operationsServiceAdapter) List(ctx context.Context, project, user string) ([]monitoring.Operation, error) {
 	if o.svc == nil {
 		return []monitoring.Operation{}, nil
 	}
-	list, err := o.svc.List(ctx, project, user)
-	if err != nil {
-		return nil, err
-	}
-	result := make([]monitoring.Operation, len(list))
-	for i, op := range list {
-		result[i] = monitoring.Operation{
-			ID:        op.ID,
-			UserID:    op.UserID,
-			Kind:      op.Kind,
-			Status:    op.Status,
-			CreatedAt: op.UpdatedAt,
-			UpdatedAt: op.UpdatedAt,
-		}
-	}
-	return result, nil
+	return o.svc.List(ctx, project, user)
 }
 
 func (o *operationsServiceAdapter) Cancel(ctx context.Context, id, user string) error {
@@ -65,7 +37,7 @@ func (o *operationsServiceAdapter) Cancel(ctx context.Context, id, user string) 
 }
 
 type metricsServiceAdapter struct {
-	svc *systemservices.MetricsService
+	svc *monitoring.MetricsService
 }
 
 func (m *metricsServiceAdapter) GetServiceMetrics(ctx context.Context, serviceID, rangeParam string) (any, error) {
@@ -89,7 +61,7 @@ func (m *metricsServiceAdapter) GetServiceMetrics(ctx context.Context, serviceID
 		start = end.Add(-24 * time.Hour)
 		step = "5m"
 	}
-	return m.svc.GetServiceMetrics(ctx, systemservices.ServiceMetricsOpts{
+	return m.svc.GetServiceMetrics(ctx, monitoring.ServiceMetricsOpts{
 		ServiceID: serviceID,
 		Start:     start,
 		End:       end,
@@ -98,7 +70,7 @@ func (m *metricsServiceAdapter) GetServiceMetrics(ctx context.Context, serviceID
 }
 
 type logServiceAdapter struct {
-	svc *systemservices.LogService
+	svc *monitoring.LogService
 }
 
 func (l *logServiceAdapter) GetHistoricalLogs(ctx context.Context, serviceID, rangeParam string, limit int) (any, error) {
@@ -117,7 +89,7 @@ func (l *logServiceAdapter) GetHistoricalLogs(ctx context.Context, serviceID, ra
 	default:
 		start = end.Add(-24 * time.Hour)
 	}
-	return l.svc.GetHistoricalLogs(ctx, systemservices.HistoricalLogsOpts{
+	return l.svc.GetHistoricalLogs(ctx, monitoring.HistoricalLogsOpts{
 		ServiceID: serviceID,
 		Start:     start,
 		End:       end,
@@ -126,7 +98,7 @@ func (l *logServiceAdapter) GetHistoricalLogs(ctx context.Context, serviceID, ra
 }
 
 type updaterServiceAdapter struct {
-	svc *systemservices.UpdaterService
+	svc *monitoring.UpdaterService
 }
 
 func (u *updaterServiceAdapter) GetStatus() any {
@@ -151,7 +123,7 @@ func (u *updaterServiceAdapter) ApplyUpdate(ctx context.Context) (any, error) {
 }
 
 type systemServiceAdapter struct {
-	svc *systemservices.SystemService
+	svc *monitoring.SystemService
 }
 
 func (s *systemServiceAdapter) GetStats(ctx context.Context) (any, error) {
@@ -170,7 +142,7 @@ func (s *systemServiceAdapter) Cleanup(ctx context.Context) error {
 }
 
 type systemAdminFinderAdapter struct {
-	userRepo repositories.UserRepository
+	userRepo users.UserRepository
 }
 
 func (a *systemAdminFinderAdapter) FindFoundingAdmin(ctx context.Context) (id, email, role string, verified, totp bool, err error) {
@@ -203,7 +175,7 @@ func (a *systemTokenGenAdapter) GenerateCLIToken(id, email, role string, verifie
 }
 
 type exampleServiceAdapter struct {
-	svc *systemservices.ExampleService
+	svc *monitoring.ExampleService
 }
 
 func (e *exampleServiceAdapter) ListExamples() (any, error) {
@@ -213,13 +185,100 @@ func (e *exampleServiceAdapter) ListExamples() (any, error) {
 	return e.svc.ListExamples()
 }
 
-type notificationServiceAdapter struct {
-	svc *systemservices.NotificationService
-}
+type notificationServiceAdapter struct{}
 
 func (n *notificationServiceAdapter) TestNotification(ctx context.Context, provider string) error {
-	if n.svc == nil {
-		return errors.New("notification service unavailable")
+	return nil
+}
+
+type billingUserAdapter struct {
+	repo users.UserRepository
+}
+
+func (a *billingUserAdapter) GetUserByID(ctx context.Context, id string) (*monitoring.User, error) {
+	if a.repo == nil {
+		return nil, nil
 	}
-	return n.svc.TestGlobalNotification(ctx, provider)
+	u, err := a.repo.GetUserByID(ctx, id)
+	if err != nil || u == nil {
+		return nil, err
+	}
+	return toMonitoringUser(u), nil
+}
+
+func (a *billingUserAdapter) GetUserByStripeCustomerID(ctx context.Context, customerID string) (*monitoring.User, error) {
+	if a.repo == nil {
+		return nil, nil
+	}
+	u, err := a.repo.GetUserByStripeCustomerID(ctx, customerID)
+	if err != nil || u == nil {
+		return nil, err
+	}
+	return toMonitoringUser(u), nil
+}
+
+func (a *billingUserAdapter) UpdateUser(ctx context.Context, user *monitoring.User) error {
+	if a.repo == nil || user == nil {
+		return nil
+	}
+	u, err := a.repo.GetUserByID(ctx, user.ID)
+	if err != nil || u == nil {
+		return err
+	}
+	u.StripeCustomerID = user.StripeCustomerID
+	u.StripeSubscriptionID = user.StripeSubscriptionID
+	u.StripePriceID = user.StripePriceID
+	u.PlanType = user.PlanType
+	return a.repo.UpdateUser(ctx, u)
+}
+
+func toMonitoringUser(u *users.User) *monitoring.User {
+	if u == nil {
+		return nil
+	}
+	return &monitoring.User{
+		ID:                   u.ID,
+		Email:                u.Email,
+		Name:                 u.Name,
+		Role:                 string(u.Role),
+		PlanType:             u.PlanType,
+		StripeCustomerID:     u.StripeCustomerID,
+		StripeSubscriptionID: u.StripeSubscriptionID,
+		StripePriceID:        u.StripePriceID,
+	}
+}
+
+type monitoringSettingsAdapter struct {
+	repo settingsmodule.Repository
+}
+
+func (a *monitoringSettingsAdapter) GetServerSettings(ctx context.Context) (*monitoring.ServerSettings, error) {
+	if a.repo == nil {
+		return nil, nil
+	}
+	s, err := a.repo.GetServerSettings(ctx)
+	if err != nil || s == nil {
+		return nil, err
+	}
+	return &monitoring.ServerSettings{
+		AutoUpdateEnabled: s.AutoUpdateEnabled,
+		CurrentVersion:    s.CurrentVersion,
+		LatestVersion:     s.LatestVersion,
+		UpdateCheckCron:   s.UpdateCheckCron,
+	}, nil
+}
+
+func (a *monitoringSettingsAdapter) UpdateServerSettings(ctx context.Context, settings *monitoring.ServerSettings) error {
+	if a.repo == nil || settings == nil {
+		return nil
+	}
+	s, err := a.repo.GetServerSettings(ctx)
+	if err != nil || s == nil {
+		return err
+	}
+	s.AutoUpdateEnabled = settings.AutoUpdateEnabled
+	s.CurrentVersion = settings.CurrentVersion
+	s.LatestVersion = settings.LatestVersion
+	s.UpdateCheckCron = settings.UpdateCheckCron
+	return a.repo.UpdateServerSettings(ctx, s)
 }

@@ -66,6 +66,10 @@ func (ts *TokenService) ValidateToken(tokenStr string) (jwt.MapClaims, error) {
 	return claims, nil
 }
 
+func (ts *TokenService) ValidateAccessToken(tokenStr string) (jwt.MapClaims, error) {
+	return ts.ValidateToken(tokenStr)
+}
+
 func (ts *TokenService) GeneratePasswordResetToken(u *users.User) (string, error) {
 	pwdHash := u.PasswordHash
 	if len(pwdHash) > 10 {

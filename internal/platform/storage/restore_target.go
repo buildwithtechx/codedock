@@ -1,7 +1,6 @@
 package storage
 
 import (
-	"codedock/internal/models"
 	"context"
 	"crypto/sha256"
 	"encoding/hex"
@@ -11,7 +10,7 @@ import (
 	"time"
 )
 
-func (bm *BackupManager) forConfig(ctx context.Context, cfg *models.BackupConfig) (*BackupManager, func(), error) {
+func (bm *BackupManager) forConfig(ctx context.Context, cfg *BackupConfig) (*BackupManager, func(), error) {
 	return bm.producer(ctx, cfg)
 }
 
@@ -53,7 +52,7 @@ func (bm *BackupManager) clearRestoreProtection(ctx context.Context, id string, 
 	_ = clearer.ClearRestoreProtection(ctx, id, deadline)
 }
 
-func (bm *BackupManager) PrepareRestore(ctx context.Context, id, databaseID string) (*models.RestoreTarget, error) {
+func (bm *BackupManager) PrepareRestore(ctx context.Context, id, databaseID string) (*RestoreTarget, error) {
 	digest, err := bm.VerifyArchive(ctx, id)
 	if err != nil {
 		return nil, err
@@ -66,7 +65,7 @@ func (bm *BackupManager) PrepareRestore(ctx context.Context, id, databaseID stri
 	if err != nil {
 		return nil, err
 	}
-	target := &models.RestoreTarget{RecordID: id, SHA256: digest, Mode: "in-place"}
+	target := &RestoreTarget{RecordID: id, SHA256: digest, Mode: "in-place"}
 	var fingerprint string
 	if cfg.VolumeName != "" {
 		if databaseID != "" {
@@ -131,7 +130,7 @@ func (bm *BackupManager) PrepareRestore(ctx context.Context, id, databaseID stri
 			return nil, fmt.Errorf("restore target must use the same database engine")
 		}
 		projects, ok := bm.store.(interface {
-			GetProject(string) (*models.ProjectConfig, error)
+			GetProject(string) (*ProjectConfig, error)
 		})
 		if !ok {
 			return nil, fmt.Errorf("restore target validation unavailable")

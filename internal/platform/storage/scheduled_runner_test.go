@@ -1,7 +1,6 @@
 package storage
 
 import (
-	"codedock/internal/models"
 	"context"
 	"testing"
 	"time"
@@ -21,7 +20,7 @@ func TestCronDispatchesToDurableRunnerWithPolicyTimeout(t *testing.T) {
 		}
 		return nil
 	})
-	cfg := &models.BackupConfig{ID: "policy", Schedule: "0 2 * * *", Timeout: 5, Status: models.BackupConfigStatusActive, BackupEnabled: true}
+	cfg := &BackupConfig{ID: "policy", Schedule: "0 2 * * *", Timeout: 5, Status: BackupConfigStatusActive, BackupEnabled: true}
 	if err := manager.RegisterBackup(cfg); err != nil {
 		t.Fatal(err)
 	}

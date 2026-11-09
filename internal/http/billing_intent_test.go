@@ -11,9 +11,8 @@ import (
 	"github.com/stripe/stripe-go/v78"
 
 	"codedock/internal/config"
-	"codedock/internal/models"
 	"codedock/internal/modules/monitoring"
-	systemservices "codedock/internal/services/system"
+	"codedock/internal/modules/users"
 )
 
 func TestBillingHandlerPendingFlow(t *testing.T) {
@@ -21,7 +20,7 @@ func TestBillingHandlerPendingFlow(t *testing.T) {
 	cfg.Cloud.Enabled = true
 	t.Cleanup(func() { cfg.Cloud.Enabled = false })
 
-	svc := systemservices.NewBillingService(nil)
+	svc := monitoring.NewBillingService(nil)
 	svc.SetSessionHandlers(
 		func(params *stripe.CheckoutSessionParams) (*stripe.CheckoutSession, error) {
 			return &stripe.CheckoutSession{
@@ -42,7 +41,7 @@ func TestBillingHandlerPendingFlow(t *testing.T) {
 
 	authMiddleware := func(next echo.HandlerFunc) echo.HandlerFunc {
 		return func(c echo.Context) error {
-			c.Set("user", &models.UserClaims{
+			c.Set("user", &users.UserClaims{
 				UserID: "user_test_http",
 				Email:  "billing@test.local",
 			})

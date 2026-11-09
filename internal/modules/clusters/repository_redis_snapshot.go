@@ -18,6 +18,13 @@ func NewRedisSnapshotRepo(db *sql.DB) *RedisSnapshotRepo {
 	return &RedisSnapshotRepo{db: sqlx.NewDb(db, "pgx")}
 }
 
+func nullableID(id string) any {
+	if id == "" {
+		return nil
+	}
+	return id
+}
+
 func (r *RedisSnapshotRepo) Create(ctx context.Context, snapshot *RedisSnapshot) error {
 	if snapshot.ID == "" {
 		snapshot.ID = uuid.NewString()

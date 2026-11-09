@@ -1,7 +1,8 @@
 package deploy
 
 import (
-	"codedock/internal/models"
+	appsmod "codedock/internal/modules/apps"
+	deploymentsmod "codedock/internal/modules/deployments"
 	"codedock/internal/platform/observability"
 	"context"
 	"fmt"
@@ -12,19 +13,19 @@ import (
 )
 
 type AppRepository interface {
-	ListAll(context.Context, string) ([]*models.AppService, error)
+	ListAll(context.Context, string) ([]*appsmod.AppService, error)
 }
 type DeploymentCreator interface {
-	CreateDeployment(context.Context, *models.Deployment) (*models.Deployment, error)
-	ExecuteDeploymentAsync(*models.Deployment)
+	CreateDeployment(context.Context, *deploymentsmod.Deployment) (*deploymentsmod.Deployment, error)
+	ExecuteDeploymentAsync(*deploymentsmod.Deployment)
 }
 type ScalingMetrics interface {
 	GetHealth(context.Context, string) (*observability.ContainerHealth, error)
 }
 type ScalingStore interface {
-	ListEnabled(context.Context) ([]*models.AutoscalingPolicy, error)
-	Observe(context.Context, *models.AutoscalingPolicy, float64, string, bool) error
-	SetReplicas(context.Context, *models.AutoscalingPolicy, int, int) (bool, error)
+	ListEnabled(context.Context) ([]*appsmod.AutoscalingPolicy, error)
+	Observe(context.Context, *appsmod.AutoscalingPolicy, float64, string, bool) error
+	SetReplicas(context.Context, *appsmod.AutoscalingPolicy, int, int) (bool, error)
 	RollbackReplicas(context.Context, string, int, int) error
 }
 type AutoscalerWorker struct {
@@ -40,6 +41,7 @@ type AutoscalerWorker struct {
 func NewAutoscalerWorker(apps AppRepository, metrics ScalingMetrics, deployments DeploymentCreator, policies ScalingStore) *AutoscalerWorker {
 	return &AutoscalerWorker{appRepo: apps, statsMonitor: metrics, deploymentService: deployments, policies: policies, quit: make(chan struct{})}
 }
+
 func (a *AutoscalerWorker) Start() {
 	a.startOnce.Do(func() {
 		go func() {
@@ -60,7 +62,7 @@ func (a *AutoscalerWorker) Start() {
 }
 func (a *AutoscalerWorker) Stop() { a.stopOnce.Do(func() { close(a.quit) }) }
 
-func scalingTarget(p *models.AutoscalingPolicy, current int, cpu float64, now time.Time) (int, string) {
+func scalingTarget(p *appsmod.AutoscalingPolicy, current int, cpu float64, now time.Time) (int, string) {
 	if !p.Enabled {
 		return current, "disabled"
 	}
@@ -84,7 +86,7 @@ func scalingTarget(p *models.AutoscalingPolicy, current int, cpu float64, now ti
 	}
 	return current, "within thresholds or at replica limit"
 }
-func (a *AutoscalerWorker) observe(ctx context.Context, p *models.AutoscalingPolicy, cpu float64, reason string, scaled bool) {
+func (a *AutoscalerWorker) observe(ctx context.Context, p *appsmod.AutoscalingPolicy, cpu float64, reason string, scaled bool) {
 	if math.IsNaN(cpu) || math.IsInf(cpu, 0) {
 		cpu = 0
 	}
@@ -106,13 +108,13 @@ func (a *AutoscalerWorker) checkAndScale(ctx context.Context) {
 		slog.Error("list autoscaling apps", "error", err)
 		return
 	}
-	byID := make(map[string]*models.AppService, len(apps))
+	byID := make(map[string]*appsmod.AppService, len(apps))
 	for _, app := range apps {
 		byID[app.ID] = app
 	}
 	for _, p := range policies {
 		app := byID[p.ServiceID]
-		if app == nil || app.Status != models.AppServiceStatusRunning || app.ContainerID == "" {
+		if app == nil || app.Status != appsmod.AppServiceStatusRunning || app.ContainerID == "" {
 			a.observe(ctx, p, 0, "service is not running", false)
 			continue
 		}
@@ -148,7 +150,7 @@ func (a *AutoscalerWorker) checkAndScale(ctx context.Context) {
 			a.observe(ctx, p, health.CPUUsagePercentage, "skipped: policy changed, remote target, active deployment or replicas changed", false)
 			continue
 		}
-		created, err := a.deploymentService.CreateDeployment(ctx, &models.Deployment{ServiceID: app.ID, ProjectID: app.ProjectID, EnvironmentID: app.EnvironmentID, Status: models.DeploymentStatusPending, Branch: app.Branch, Trigger: "Auto-Scaler", CommitMessage: fmt.Sprintf("Autoscale %d to %d replicas: %s (CPU %.2f%%)", current, target, reason, health.CPUUsagePercentage)})
+		created, err := a.deploymentService.CreateDeployment(ctx, &deploymentsmod.Deployment{ServiceID: app.ID, ProjectID: app.ProjectID, EnvironmentID: app.EnvironmentID, Status: deploymentsmod.DeploymentStatusPending, Branch: app.Branch, Trigger: "Auto-Scaler", CommitMessage: fmt.Sprintf("Autoscale %d to %d replicas: %s (CPU %.2f%%)", current, target, reason, health.CPUUsagePercentage)})
 		if err != nil || created == nil {
 			recovery, cancel := context.WithTimeout(context.Background(), 10*time.Second)
 			if rollbackErr := a.policies.RollbackReplicas(recovery, app.ID, target, current); rollbackErr != nil {

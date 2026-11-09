@@ -1,12 +1,11 @@
 package kubernetes
 
 import (
-	"codedock/internal/models"
 	"fmt"
 	"strings"
 )
 
-func redisObjects(spec models.ClusterDataSpec, metadata func(string) map[string]any, labels map[string]string) []map[string]any {
+func redisObjects(spec ClusterDataSpec, metadata func(string) map[string]any, labels map[string]string) []map[string]any {
 	if spec.Shards > 1 {
 		return redisClusterObjects(spec, metadata, labels)
 	}
@@ -38,7 +37,7 @@ if test "$(hostname)" != ` + name + `-0; then redis-cli --raw INFO replication |
 	return []map[string]any{service, primary, stateful}
 }
 
-func redisClusterObjects(spec models.ClusterDataSpec, metadata func(string) map[string]any, labels map[string]string) []map[string]any {
+func redisClusterObjects(spec ClusterDataSpec, metadata func(string) map[string]any, labels map[string]string) []map[string]any {
 	_, base := DataIdentity(spec)
 	objects := []map[string]any{}
 	password := map[string]any{"valueFrom": map[string]any{"secretKeyRef": map[string]string{"name": base + "-auth", "key": "password"}}}

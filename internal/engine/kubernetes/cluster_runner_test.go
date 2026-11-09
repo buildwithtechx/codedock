@@ -1,13 +1,12 @@
 package kubernetes
 
 import (
-	"codedock/internal/models"
 	"encoding/base64"
 	"testing"
 )
 
 func TestValidateNodeRequiresPrivateNonOverlappingNetworkAndRealFingerprint(t *testing.T) {
-	valid := models.ClusterNode{ServerID: "96572286-6660-4dd6-b22d-40952f879001", PrivateIP: "192.168.3.4", Interface: "ens3", Fingerprint: "SHA256:" + base64.RawStdEncoding.EncodeToString(make([]byte, 32))}
+	valid := ClusterNode{ServerID: "96572286-6660-4dd6-b22d-40952f879001", PrivateIP: "192.168.3.4", Interface: "ens3", Fingerprint: "SHA256:" + base64.RawStdEncoding.EncodeToString(make([]byte, 32))}
 	if err := ValidateNode(valid); err != nil {
 		t.Fatal(err)
 	}

@@ -253,7 +253,7 @@ func (r *postgresMigrationRepository) encryptSecret(value string) (string, error
 	if _, err := r.vault.Decrypt(value); err == nil {
 		return value, nil
 	}
-	return r.vault.Encrypt([]byte(value))
+	return r.vault.Encrypt(value)
 }
 
 func (r *postgresMigrationRepository) decryptSource(source *MigrationSource) {
@@ -262,12 +262,12 @@ func (r *postgresMigrationRepository) decryptSource(source *MigrationSource) {
 	}
 	if source.SSHKey != "" {
 		if plain, err := r.vault.Decrypt(source.SSHKey); err == nil {
-			source.SSHKey = string(plain)
+			source.SSHKey = plain
 		}
 	}
 	if source.SSHPassword != "" {
 		if plain, err := r.vault.Decrypt(source.SSHPassword); err == nil {
-			source.SSHPassword = string(plain)
+			source.SSHPassword = plain
 		}
 	}
 }

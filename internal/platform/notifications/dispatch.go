@@ -5,17 +5,14 @@ import (
 	"fmt"
 	"log/slog"
 	"strings"
-
-	"codedock/internal/models"
-	"codedock/internal/repositories"
 )
 
 type DispatcherService struct {
-	settingsRepo repositories.SettingsRepository
-	notifRepo    repositories.NotificationSettingsRepository
-	userRepo     repositories.UserRepository
-	deliveries   repositories.NotificationDeliveryRepository
-	deviceTokens repositories.DeviceTokenRepository
+	settingsRepo SettingsRepository
+	notifRepo    NotificationSettingsRepository
+	userRepo     UserRepository
+	deliveries   NotificationDeliveryRepository
+	deviceTokens DeviceTokenRepository
 	mailer       interface {
 		SendSystemEmail(ctx context.Context, templateName string, toAddress string, subject string, data any) error
 	}
@@ -26,12 +23,12 @@ type Mailer interface {
 }
 
 func NewDispatcherService(
-	settingsRepo repositories.SettingsRepository,
-	notifRepo repositories.NotificationSettingsRepository,
-	userRepo repositories.UserRepository,
-	deliveries repositories.NotificationDeliveryRepository,
+	settingsRepo SettingsRepository,
+	notifRepo NotificationSettingsRepository,
+	userRepo UserRepository,
+	deliveries NotificationDeliveryRepository,
 	mailer Mailer,
-	deviceTokens repositories.DeviceTokenRepository,
+	deviceTokens DeviceTokenRepository,
 ) *DispatcherService {
 	return &DispatcherService{
 		settingsRepo: settingsRepo,
@@ -43,7 +40,7 @@ func NewDispatcherService(
 	}
 }
 
-func (d *DispatcherService) Dispatch(event *models.NotificationEvent) {
+func (d *DispatcherService) Dispatch(event *NotificationEvent) {
 	go func() {
 		if err := d.Send(event); err != nil {
 			slog.Error("failed to dispatch event", "title", event.Title, "type", event.EventType, "err", err)
@@ -51,7 +48,7 @@ func (d *DispatcherService) Dispatch(event *models.NotificationEvent) {
 	}()
 }
 
-func (d *DispatcherService) Send(event *models.NotificationEvent) error {
+func (d *DispatcherService) Send(event *NotificationEvent) error {
 	if strings.HasPrefix(event.EventType, "test_global_") {
 		return d.sendGlobalTest(event)
 	}
@@ -84,7 +81,7 @@ func (d *DispatcherService) Send(event *models.NotificationEvent) error {
 	if d.deviceTokens != nil {
 		tokens, err := d.deviceTokens.ListAllTokens(ctx)
 		if err == nil && len(tokens) > 0 {
-			category := models.GetNotificationCategory(event.EventType)
+			category := GetNotificationCategory(event.EventType)
 			userPrefsCache := make(map[string]bool)
 
 			for _, dt := range tokens {
@@ -119,7 +116,7 @@ func (d *DispatcherService) Send(event *models.NotificationEvent) error {
 	return nil
 }
 
-func (d *DispatcherService) isProviderConfigured(settings *models.NotificationSettings, provider string) bool {
+func (d *DispatcherService) isProviderConfigured(settings *NotificationSettings, provider string) bool {
 	switch provider {
 	case "discord":
 		return settings.DiscordEnabled && settings.DiscordWebhookURL != ""
@@ -137,7 +134,7 @@ func (d *DispatcherService) isProviderConfigured(settings *models.NotificationSe
 	return false
 }
 
-func (d *DispatcherService) sendGlobalTest(event *models.NotificationEvent) error {
+func (d *DispatcherService) sendGlobalTest(event *NotificationEvent) error {
 	ctx := context.Background()
 	settings, err := d.notifRepo.GetNotificationSettings(ctx)
 	if err != nil || settings == nil {
@@ -150,11 +147,11 @@ func (d *DispatcherService) sendGlobalTest(event *models.NotificationEvent) erro
 	return err
 }
 
-func (d *DispatcherService) recordDelivery(ctx context.Context, event *models.NotificationEvent, channel string, err error) {
+func (d *DispatcherService) recordDelivery(ctx context.Context, event *NotificationEvent, channel string, err error) {
 	if d.deliveries == nil {
 		return
 	}
-	entry := &models.NotificationDelivery{EventType: event.EventType, Channel: channel, Title: event.Title, Success: err == nil}
+	entry := &NotificationDelivery{EventType: event.EventType, Channel: channel, Title: event.Title, Success: err == nil}
 	if err != nil {
 		entry.Error = err.Error()
 	}
@@ -163,7 +160,7 @@ func (d *DispatcherService) recordDelivery(ctx context.Context, event *models.No
 	}
 }
 
-func (d *DispatcherService) sendToProvider(settings *models.NotificationSettings, provider string, event *models.NotificationEvent) error {
+func (d *DispatcherService) sendToProvider(settings *NotificationSettings, provider string, event *NotificationEvent) error {
 	switch provider {
 	case "discord":
 		if settings.DiscordEnabled && settings.DiscordWebhookURL != "" {

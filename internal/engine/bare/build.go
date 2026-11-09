@@ -1,12 +1,13 @@
 package bare
 
 import (
-	"codedock/internal/models"
-	"codedock/internal/platform/ssh"
 	"fmt"
+
+	appsmod "codedock/internal/modules/apps"
+	"codedock/internal/platform/ssh"
 )
 
-func toolchainScript(target models.RuntimeTarget) string {
+func toolchainScript(target appsmod.RuntimeTarget) string {
 	ensure := ""
 	switch target.BareToolchain {
 	case "go":
@@ -21,7 +22,7 @@ func toolchainScript(target models.RuntimeTarget) string {
 	return ensure
 }
 
-func sourceBuildStage(target models.RuntimeTarget) string {
+func sourceBuildStage(target appsmod.RuntimeTarget) string {
 	branch := target.BareBranch
 	if branch == "" {
 		branch = "main"
@@ -58,12 +59,12 @@ func sourceBuildStage(target models.RuntimeTarget) string {
 	return stage
 }
 
-func routingFile(app *models.AppService) string {
+func routingFile(app *appsmod.AppService) string {
 	return "/etc/codedock/traefik-dynamic/codedock-app-" + app.ID + ".yaml"
 }
 
-func routingStage(app *models.AppService) string {
-	if app.Domain == "" || app.RuntimeMode == models.RuntimeModeWorker {
+func routingStage(app *appsmod.AppService) string {
+	if app.Domain == "" || app.RuntimeMode == appsmod.RuntimeModeWorker {
 		return "rm -f " + ssh.ShellQuote(routingFile(app)) + "\n"
 	}
 	document := fmt.Sprintf("http:\n  routers:\n    codedock-app-%s:\n      rule: Host(`%s`)\n      entryPoints: [web, websecure]\n      service: codedock-app-%s\n  services:\n    codedock-app-%s:\n      loadBalancer:\n        servers:\n        - url: 'http://host.docker.internal:%d'\n", app.ID, app.Domain, app.ID, app.ID, app.InternalPort)

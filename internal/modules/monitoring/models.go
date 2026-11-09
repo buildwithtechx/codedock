@@ -1,40 +1,20 @@
 package monitoring
 
-import "time"
+import (
+	"time"
+
+	"codedock/internal/platform/notifications"
+)
 
 type Vault interface {
-	Encrypt(plaintext []byte) (string, error)
-	Decrypt(ciphertext string) ([]byte, error)
+	Encrypt(string) (string, error)
+	Decrypt(string) (string, error)
 }
 
-type NotificationDelivery struct {
-	ID        string `json:"id" db:"id"`
-	EventType string `json:"eventType" db:"event_type"`
-	Channel   string `json:"channel" db:"channel"`
-	Title     string `json:"title" db:"title"`
-	Success   bool   `json:"success" db:"success"`
-	Error     string `json:"error" db:"error"`
-	CreatedAt string `json:"createdAt" db:"created_at"`
-}
+type NotificationDelivery = notifications.NotificationDelivery
 
-type NotificationSubscription struct {
-	ID             string   `json:"id"`
-	UserID         string   `json:"userId"`
-	OrganizationID string   `json:"organizationId"`
-	Category       string   `json:"category"`
-	Channels       []string `json:"channels"`
-	Enabled        bool     `json:"enabled"`
-	CreatedAt      string   `json:"createdAt"`
-	UpdatedAt      string   `json:"updatedAt"`
-}
-
-type NotificationDefault struct {
-	OrganizationID string   `json:"organizationId"`
-	Category       string   `json:"category"`
-	Channels       []string `json:"channels"`
-	Enabled        bool     `json:"enabled"`
-	UpdatedAt      string   `json:"updatedAt"`
-}
+type NotificationSubscription = notifications.NotificationSubscription
+type NotificationDefault = notifications.NotificationDefault
 
 type ActionWorkflow struct {
 	ID          string `json:"id" db:"id"`
@@ -154,36 +134,7 @@ type IngressHostname struct {
 	UpdatedAt      string  `json:"updatedAt" db:"updated_at"`
 }
 
-type NotificationSettings struct {
-	ID                    string `json:"id"`
-	DiscordWebhookURL     string `json:"discordWebhookUrl,omitempty"`
-	DiscordPingEnabled    bool   `json:"discordPingEnabled"`
-	DiscordEnabled        bool   `json:"discordEnabled"`
-	SlackWebhookURL       string `json:"slackWebhookUrl,omitempty"`
-	SlackEnabled          bool   `json:"slackEnabled"`
-	TelegramBotToken      string `json:"telegramBotToken,omitempty"`
-	TelegramChatID        string `json:"telegramChatId,omitempty"`
-	TelegramEnabled       bool   `json:"telegramEnabled"`
-	SMTPHost              string `json:"smtpHost,omitempty"`
-	SMTPPort              int    `json:"smtpPort,omitempty"`
-	SMTPUser              string `json:"smtpUser,omitempty"`
-	SMTPPassword          string `json:"smtpPassword,omitempty"`
-	SMTPFromName          string `json:"smtpFromName,omitempty"`
-	SMTPFromAddress       string `json:"smtpFromAddress,omitempty"`
-	SMTPEnabled           bool   `json:"smtpEnabled"`
-	ResendAPIKey          string `json:"resendApiKey,omitempty"`
-	ResendEnabled         bool   `json:"resendEnabled"`
-	PushoverUserKey       string `json:"pushoverUserKey,omitempty"`
-	PushoverAPIToken      string `json:"pushoverApiToken,omitempty"`
-	PushoverEnabled       bool   `json:"pushoverEnabled"`
-	GenericWebhookURL     string `json:"genericWebhookUrl,omitempty"`
-	GenericWebhookEnabled bool   `json:"genericWebhookEnabled"`
-	ExpoPushToken         string `json:"expoPushToken,omitempty"`
-	ExpoEnabled           bool   `json:"expoEnabled"`
-	NotificationAlerts    bool   `json:"notificationAlerts"`
-	CreatedAt             string `json:"createdAt"`
-	UpdatedAt             string `json:"updatedAt"`
-}
+type NotificationSettings = notifications.NotificationSettings
 
 type NotificationEvent struct {
 	Title     string `json:"title"`
@@ -241,11 +192,53 @@ type Operation struct {
 	UpdatedAt string `json:"updatedAt" db:"updated_at"`
 }
 
+type OperationReview struct {
+	Operation    *Operation `json:"operation"`
+	Confirmation string     `json:"confirmation"`
+}
+
 type SystemStats struct {
-	CPUUsage    float64 `json:"cpuUsage"`
-	MemoryUsage float64 `json:"memoryUsage"`
-	DiskUsage   float64 `json:"diskUsage"`
-	Uptime      int64   `json:"uptime"`
+	CPU       CPUStats    `json:"cpu"`
+	Memory    MemoryStats `json:"memory"`
+	Disk      DiskStats   `json:"disk"`
+	Uptime    int64       `json:"uptimeSeconds"`
+	LoadAvg   [3]float64  `json:"loadAvg"`
+	Processes int         `json:"processes"`
+	Docker    DockerStats `json:"docker"`
+}
+
+type DockerStats struct {
+	Images        DockerLayerStat `json:"images"`
+	Containers    DockerLayerStat `json:"containers"`
+	Volumes       DockerLayerStat `json:"volumes"`
+	BuildCache    DockerLayerStat `json:"buildCache"`
+	ReclaimableGB float64         `json:"reclaimableGb"`
+}
+
+type DockerLayerStat struct {
+	Active      string `json:"active"`
+	TotalCount  string `json:"totalCount"`
+	Size        string `json:"size"`
+	Reclaimable string `json:"reclaimable"`
+}
+
+type CPUStats struct {
+	Percent float64 `json:"percent"`
+	Cores   int     `json:"cores"`
+}
+
+type MemoryStats struct {
+	TotalMB int64   `json:"totalMb"`
+	UsedMB  int64   `json:"usedMb"`
+	FreeMB  int64   `json:"freeMb"`
+	Percent float64 `json:"percent"`
+}
+
+type DiskStats struct {
+	TotalGB int64   `json:"totalGb"`
+	UsedGB  int64   `json:"usedGb"`
+	FreeGB  int64   `json:"freeGb"`
+	Percent float64 `json:"percent"`
 }
 
 type UpdateStatus struct {

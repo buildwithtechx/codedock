@@ -6,7 +6,6 @@ import (
 	"io"
 	"log/slog"
 	"strings"
-	"time"
 
 	"github.com/docker/docker/api/types/container"
 	"github.com/docker/docker/api/types/image"
@@ -14,7 +13,7 @@ import (
 	"github.com/docker/docker/api/types/network"
 	"github.com/docker/docker/client"
 
-	"codedock/internal/models"
+	"codedock/internal/modules/databases"
 	compose "codedock/internal/platform/docker"
 	"codedock/internal/utils"
 )
@@ -32,7 +31,7 @@ func NewDatabaseDeployer(dockerClient *client.Client, s DatabaseDeployerStore) *
 	}
 }
 
-func (d *DatabaseDeployer) SpinUp(ctx context.Context, dbConfig *models.Database) (string, error) {
+func (d *DatabaseDeployer) SpinUp(ctx context.Context, dbConfig *databases.Database) (string, error) {
 	if d.dockerClient == nil {
 		return "", fmt.Errorf("docker daemon connection is not available")
 	}
@@ -91,16 +90,16 @@ func (d *DatabaseDeployer) SpinUp(ctx context.Context, dbConfig *models.Database
 		return "", fmt.Errorf("failed to start database container: %w", err)
 	}
 	internalDNS := fmt.Sprintf("%s:%d", containerName, dbConfig.Port)
-	if err := d.store.UpdateDatabaseStatus(dbConfig.ID, models.DatabaseStatusRunning, created.ID); err != nil {
+	if err := d.store.UpdateDatabaseStatus(dbConfig.ID, databases.DatabaseStatusRunning, created.ID); err != nil {
 		slog.Warn("failed to update database status", "error", err)
 	}
 	dbConfig.ContainerID = created.ID
-	dbConfig.Status = models.DatabaseStatusRunning
+	dbConfig.Status = databases.DatabaseStatusRunning
 	dbConfig.InternalDNS = internalDNS
 	return created.ID, nil
 }
 
-func (d *DatabaseDeployer) buildContainerConfig(dbConfig *models.Database) (string, []string, []string, string, error) {
+func (d *DatabaseDeployer) buildContainerConfig(dbConfig *databases.Database) (string, []string, []string, string, error) {
 	var imageName string
 	var envVars []string
 	var cmd []string
@@ -173,7 +172,7 @@ func (d *DatabaseDeployer) buildContainerConfig(dbConfig *models.Database) (stri
 	return imageName, envVars, cmd, containerMountPath, nil
 }
 
-func (d *DatabaseDeployer) createContainerSettings(dbConfig *models.Database, containerName, imageName string, envVars, cmd []string, containerMountPath string) (*container.Config, *container.HostConfig, *network.NetworkingConfig) {
+func (d *DatabaseDeployer) createContainerSettings(dbConfig *databases.Database, containerName, imageName string, envVars, cmd []string, containerMountPath string) (*container.Config, *container.HostConfig, *network.NetworkingConfig) {
 	volumeName := fmt.Sprintf("codedock-db-data-%s", dbConfig.ID)
 
 	labels := map[string]string{"codedock.database_id": dbConfig.ID}
@@ -224,85 +223,4 @@ func (d *DatabaseDeployer) createContainerSettings(dbConfig *models.Database, co
 	}
 
 	return containerCfg, hostCfg, netCfg
-}
-
-func (d *DatabaseDeployer) ImportData(ctx context.Context, dbConfig *models.Database, sourceURL string) error {
-	if d.dockerClient == nil {
-		return fmt.Errorf("docker daemon connection is not available")
-	}
-	release, err := d.acquireVolume(dbConfig.ID)
-	if err != nil {
-		return err
-	}
-	defer release()
-	if utils.IsDryRun() {
-		return nil
-	}
-
-	containerName := utils.NormalizeContainerName(fmt.Sprintf("codedock-db-%s", dbConfig.Name))
-
-	switch strings.ToLower(string(dbConfig.Engine)) {
-	case "postgres":
-		cmd := fmt.Sprintf("pg_dump -Fc \"%s\" | pg_restore -U %s -d %s -1", sourceURL, dbConfig.Username, dbConfig.DatabaseName)
-		execConfig := container.ExecOptions{
-			Cmd:          []string{"sh", "-c", cmd},
-			AttachStderr: true,
-			AttachStdout: true,
-		}
-		execID, err := d.dockerClient.ContainerExecCreate(ctx, containerName, execConfig)
-		if err != nil {
-			return fmt.Errorf("failed to create exec for pg_dump: %w", err)
-		}
-		err = d.dockerClient.ContainerExecStart(ctx, execID.ID, container.ExecStartOptions{})
-		if err != nil {
-			return fmt.Errorf("failed to start exec for pg_dump: %w", err)
-		}
-		for {
-			inspect, err := d.dockerClient.ContainerExecInspect(ctx, execID.ID)
-			if err != nil {
-				return fmt.Errorf("failed to inspect exec: %w", err)
-			}
-			if !inspect.Running {
-				if inspect.ExitCode != 0 {
-					return fmt.Errorf("pg_dump/restore failed with exit code %d", inspect.ExitCode)
-				}
-				break
-			}
-			time.Sleep(1 * time.Second)
-		}
-		return nil
-
-	case "redis":
-		cmd := fmt.Sprintf("redis-cli -u \"%s\" --rdb /data/dump.rdb", sourceURL)
-		execConfig := container.ExecOptions{
-			Cmd:          []string{"sh", "-c", cmd},
-			AttachStderr: true,
-			AttachStdout: true,
-		}
-		execID, err := d.dockerClient.ContainerExecCreate(ctx, containerName, execConfig)
-		if err != nil {
-			return fmt.Errorf("failed to create exec for redis-cli: %w", err)
-		}
-		err = d.dockerClient.ContainerExecStart(ctx, execID.ID, container.ExecStartOptions{})
-		if err != nil {
-			return fmt.Errorf("failed to start exec for redis-cli: %w", err)
-		}
-		for {
-			inspect, err := d.dockerClient.ContainerExecInspect(ctx, execID.ID)
-			if err != nil {
-				return fmt.Errorf("failed to inspect exec: %w", err)
-			}
-			if !inspect.Running {
-				if inspect.ExitCode != 0 {
-					return fmt.Errorf("redis-cli failed with exit code %d", inspect.ExitCode)
-				}
-				break
-			}
-			time.Sleep(1 * time.Second)
-		}
-		return d.dockerClient.ContainerRestart(ctx, containerName, container.StopOptions{})
-
-	default:
-		return fmt.Errorf("data import not supported for engine %s", dbConfig.Engine)
-	}
 }

@@ -5,11 +5,9 @@ import (
 	"fmt"
 	"io"
 	nethttp "net/http"
-
-	"codedock/internal/models"
 )
 
-func (c *Client) ListDatabases(projectID string) ([]*models.Database, error) {
+func (c *Client) ListDatabases(projectID string) ([]*Database, error) {
 	url := "/databases"
 	if projectID != "" {
 		url = fmt.Sprintf("/databases?projectId=%s", projectID)
@@ -26,7 +24,7 @@ func (c *Client) ListDatabases(projectID string) ([]*models.Database, error) {
 	}
 
 	var result struct {
-		Data []*models.Database `json:"data"`
+		Data []*Database `json:"data"`
 	}
 	if err := json.NewDecoder(resp.Body).Decode(&result); err != nil {
 		return nil, err
@@ -35,7 +33,7 @@ func (c *Client) ListDatabases(projectID string) ([]*models.Database, error) {
 	return result.Data, nil
 }
 
-func (c *Client) GetDatabase(id string) (*models.Database, error) {
+func (c *Client) GetDatabase(id string) (*Database, error) {
 	resp, err := c.sendRequest("GET", fmt.Sprintf("/databases/%s", id), nil)
 	if err != nil {
 		return nil, err
@@ -48,7 +46,7 @@ func (c *Client) GetDatabase(id string) (*models.Database, error) {
 	}
 
 	var result struct {
-		Data *models.Database `json:"data"`
+		Data *Database `json:"data"`
 	}
 	if err := json.NewDecoder(resp.Body).Decode(&result); err != nil {
 		return nil, err
@@ -57,7 +55,7 @@ func (c *Client) GetDatabase(id string) (*models.Database, error) {
 	return result.Data, nil
 }
 
-func (c *Client) CreateDatabase(req *models.CreateDatabaseRequest) (*models.Database, error) {
+func (c *Client) CreateDatabase(req *CreateDatabaseRequest) (*Database, error) {
 	resp, err := c.sendRequest("POST", "/databases", req)
 	if err != nil {
 		return nil, err
@@ -70,7 +68,7 @@ func (c *Client) CreateDatabase(req *models.CreateDatabaseRequest) (*models.Data
 	}
 
 	var result struct {
-		Data *models.Database `json:"data"`
+		Data *Database `json:"data"`
 	}
 	if err := json.NewDecoder(resp.Body).Decode(&result); err != nil {
 		return nil, err
@@ -94,7 +92,7 @@ func (c *Client) DeleteDatabase(id string) error {
 	return nil
 }
 
-func (c *Client) ImportDatabase(id string, req *models.ImportDatabaseRequest) error {
+func (c *Client) ImportDatabase(id string, req *ImportDatabaseRequest) error {
 	resp, err := c.sendRequest("POST", fmt.Sprintf("/databases/%s/import", id), req)
 	if err != nil {
 		return err

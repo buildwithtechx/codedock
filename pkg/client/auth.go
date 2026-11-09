@@ -5,8 +5,6 @@ import (
 	"fmt"
 	"io"
 	"net/http"
-
-	"codedock/internal/models"
 )
 
 type AuthRequest struct {
@@ -16,8 +14,8 @@ type AuthRequest struct {
 }
 
 type AuthResponse struct {
-	Token string       `json:"token"`
-	User  *models.User `json:"user"`
+	Token string `json:"token"`
+	User  *User  `json:"user"`
 }
 
 func (c *Client) Login(email, password string) (*AuthResponse, error) {
@@ -71,7 +69,7 @@ func (c *Client) Logout() error {
 	return nil
 }
 
-func (c *Client) VerifyToken(token string) (*models.User, error) {
+func (c *Client) VerifyToken(token string) (*User, error) {
 	c.Token = token
 	return c.Me()
 }

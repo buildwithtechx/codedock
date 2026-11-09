@@ -5,11 +5,9 @@ import (
 	"fmt"
 	"io"
 	nethttp "net/http"
-
-	"codedock/internal/models"
 )
 
-func (c *Client) ListIngressConnections() ([]*models.IngressConnection, error) {
+func (c *Client) ListIngressConnections() ([]*IngressConnection, error) {
 	resp, err := c.sendRequest("GET", "/dns/ingress", nil)
 	if err != nil {
 		return nil, err
@@ -22,7 +20,7 @@ func (c *Client) ListIngressConnections() ([]*models.IngressConnection, error) {
 	}
 
 	var result struct {
-		Data []*models.IngressConnection `json:"data"`
+		Data []*IngressConnection `json:"data"`
 	}
 	if err := json.NewDecoder(resp.Body).Decode(&result); err != nil {
 		return nil, err
@@ -31,7 +29,7 @@ func (c *Client) ListIngressConnections() ([]*models.IngressConnection, error) {
 	return result.Data, nil
 }
 
-func (c *Client) ConnectIngress(serverId, name, connector string) (*models.IngressConnection, error) {
+func (c *Client) ConnectIngress(serverId, name, connector string) (*IngressConnection, error) {
 	req := map[string]string{
 		"serverId":  serverId,
 		"name":      name,
@@ -49,7 +47,7 @@ func (c *Client) ConnectIngress(serverId, name, connector string) (*models.Ingre
 	}
 
 	var result struct {
-		Data *models.IngressConnection `json:"data"`
+		Data *IngressConnection `json:"data"`
 	}
 	if err := json.NewDecoder(resp.Body).Decode(&result); err != nil {
 		return nil, err
@@ -58,7 +56,7 @@ func (c *Client) ConnectIngress(serverId, name, connector string) (*models.Ingre
 	return result.Data, nil
 }
 
-func (c *Client) RetryIngress(id string) (*models.IngressConnection, error) {
+func (c *Client) RetryIngress(id string) (*IngressConnection, error) {
 	resp, err := c.sendRequest("POST", fmt.Sprintf("/dns/ingress/%s/retry", id), nil)
 	if err != nil {
 		return nil, err
@@ -71,7 +69,7 @@ func (c *Client) RetryIngress(id string) (*models.IngressConnection, error) {
 	}
 
 	var result struct {
-		Data *models.IngressConnection `json:"data"`
+		Data *IngressConnection `json:"data"`
 	}
 	if err := json.NewDecoder(resp.Body).Decode(&result); err != nil {
 		return nil, err

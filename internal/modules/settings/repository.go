@@ -25,6 +25,8 @@ type SettingsRepository interface {
 	IsNotificationEmailEnabled(ctx context.Context) (bool, error)
 }
 
+type Repository = SettingsRepository
+
 type SettingsRepo struct {
 	db    *sqlx.DB
 	vault Vault

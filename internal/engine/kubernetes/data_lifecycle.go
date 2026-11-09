@@ -1,14 +1,13 @@
 package kubernetes
 
 import (
-	"codedock/internal/models"
 	"context"
 	"encoding/json"
 	"fmt"
 	"strings"
 )
 
-func dataOwnedLabels(record *models.ClusterData) map[string]string {
+func dataOwnedLabels(record *ClusterData) map[string]string {
 	return map[string]string{
 		"codedock.run/project":     record.ProjectID,
 		"codedock.run/database":    record.Spec.ID,
@@ -16,7 +15,7 @@ func dataOwnedLabels(record *models.ClusterData) map[string]string {
 	}
 }
 
-func (r *WorkloadRuntime) verifyDataOwned(object map[string]any, record *models.ClusterData) error {
+func (r *WorkloadRuntime) verifyDataOwned(object map[string]any, record *ClusterData) error {
 	metadata, _ := object["metadata"].(map[string]any)
 	labels, _ := metadata["labels"].(map[string]any)
 	for key, value := range dataOwnedLabels(record) {
@@ -27,7 +26,7 @@ func (r *WorkloadRuntime) verifyDataOwned(object map[string]any, record *models.
 	return nil
 }
 
-func (r *WorkloadRuntime) deleteDataKind(ctx context.Context, node models.ClusterNode, namespace, kind, name string, record *models.ClusterData) error {
+func (r *WorkloadRuntime) deleteDataKind(ctx context.Context, node ClusterNode, namespace, kind, name string, record *ClusterData) error {
 	response, err := r.commands.Kubectl(ctx, node, []string{"-n", namespace, "get", kind, name, "--ignore-not-found", "-o", "json"}, "")
 	if err != nil {
 		return err
@@ -46,7 +45,7 @@ func (r *WorkloadRuntime) deleteDataKind(ctx context.Context, node models.Cluste
 	return err
 }
 
-func (r *WorkloadRuntime) deleteDataPVCs(ctx context.Context, node models.ClusterNode, namespace string, record *models.ClusterData) error {
+func (r *WorkloadRuntime) deleteDataPVCs(ctx context.Context, node ClusterNode, namespace string, record *ClusterData) error {
 	response, err := r.commands.Kubectl(ctx, node, []string{"-n", namespace, "get", "pvc", "-l", "codedock.run/database=" + record.Spec.ID, "-o", "json"}, "")
 	if err != nil {
 		return err
@@ -73,7 +72,7 @@ func (r *WorkloadRuntime) deleteDataPVCs(ctx context.Context, node models.Cluste
 	return nil
 }
 
-func (r *WorkloadRuntime) StopOwnedData(ctx context.Context, node models.ClusterNode, record *models.ClusterData) error {
+func (r *WorkloadRuntime) StopOwnedData(ctx context.Context, node ClusterNode, record *ClusterData) error {
 	namespace, name := DataIdentity(record.Spec)
 	if record.Spec.Engine == "postgres" {
 		if err := r.deleteDataKind(ctx, node, namespace, "cluster.postgresql.cnpg.io", name, record); err != nil {
@@ -90,7 +89,7 @@ func (r *WorkloadRuntime) StopOwnedData(ctx context.Context, node models.Cluster
 	return nil
 }
 
-func (r *WorkloadRuntime) RemoveOwnedData(ctx context.Context, node models.ClusterNode, record *models.ClusterData) error {
+func (r *WorkloadRuntime) RemoveOwnedData(ctx context.Context, node ClusterNode, record *ClusterData) error {
 	namespace, name := DataIdentity(record.Spec)
 	if record.Spec.Engine == "postgres" {
 		if err := r.deleteDataKind(ctx, node, namespace, "cluster.postgresql.cnpg.io", name, record); err != nil {

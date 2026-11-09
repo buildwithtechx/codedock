@@ -12,18 +12,18 @@ import (
 	"strings"
 	"time"
 
-	"codedock/internal/models"
+	"codedock/internal/modules/users"
 	"github.com/labstack/echo/v4"
 )
 
 type PersonalTokenProvider interface {
-	GetPATByHash(context.Context, string) (*models.PersonalAccessToken, error)
+	GetPATByHash(context.Context, string) (*users.PersonalAccessToken, error)
 }
 type PersonalResourceProvider interface {
 	ProjectForResource(context.Context, string, string) (string, error)
 }
 
-func (g *AuthGuard) validatePersonalToken(c echo.Context, raw string, deny bool) (*models.UserClaims, error) {
+func (g *AuthGuard) validatePersonalToken(c echo.Context, raw string, deny bool) (*users.UserClaims, error) {
 	if deny {
 		return nil, echo.NewHTTPError(http.StatusForbidden, "personal tokens cannot access role-restricted endpoints")
 	}
@@ -43,11 +43,11 @@ func (g *AuthGuard) validatePersonalToken(c echo.Context, raw string, deny bool)
 		return nil, echo.NewHTTPError(http.StatusUnauthorized, "token owner unavailable or inactive")
 	}
 	c.Set("personal_token", pat)
-	return &models.UserClaims{UserID: user.ID, Email: user.Email, Role: user.Role, PlanType: string(user.PlanType)}, nil
+	return &users.UserClaims{UserID: user.ID, Email: user.Email, Role: user.Role, PlanType: string(user.PlanType)}, nil
 }
 
 func (g *AuthGuard) authorizePersonalRequest(c echo.Context) error {
-	pat, ok := c.Get("personal_token").(*models.PersonalAccessToken)
+	pat, ok := c.Get("personal_token").(*users.PersonalAccessToken)
 	if !ok {
 		return nil
 	}

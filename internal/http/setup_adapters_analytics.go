@@ -4,14 +4,11 @@ import (
 	"context"
 	"strconv"
 
-	"codedock/internal/models"
 	"codedock/internal/modules/monitoring"
-	"codedock/internal/services/analytics"
-	"codedock/internal/services/attention"
 )
 
 type analyticsServiceAdapter struct {
-	svc *analytics.Service
+	svc *monitoring.Service
 }
 
 func (a *analyticsServiceAdapter) Periods(ctx context.Context, orgID string) (any, error) {
@@ -110,7 +107,7 @@ func (a *analyticsServiceAdapter) CurrentUsage(ctx context.Context, projectID st
 }
 
 type attentionServiceAdapter struct {
-	svc *attention.Service
+	svc *monitoring.AttentionManager
 }
 
 func (a *attentionServiceAdapter) List(ctx context.Context, userID, orgID string) (any, error) {
@@ -158,9 +155,6 @@ func (a *attentionServiceAdapter) Act(ctx context.Context, userID, orgID, issueI
 	if a.svc == nil {
 		return nil
 	}
-	_, err := a.svc.Act(ctx, userID, orgID, issueID, models.AttentionActionRequest{
-		Action: req.Action,
-		Params: req.Params,
-	})
+	_, err := a.svc.Act(ctx, userID, orgID, issueID, req)
 	return err
 }

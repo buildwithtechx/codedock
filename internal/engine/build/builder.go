@@ -11,7 +11,8 @@ import (
 	"golang.org/x/sync/semaphore"
 
 	"codedock/internal/config"
-	"codedock/internal/models"
+	appsmod "codedock/internal/modules/apps"
+	projectsmod "codedock/internal/modules/projects"
 )
 
 type BuildStrategy string
@@ -25,14 +26,14 @@ const (
 )
 
 type BuildOptions struct {
-	ProjectID      string                `json:"projectId"`
-	ServiceID      string                `json:"serviceId,omitempty"`
-	SourceDir      string                `json:"sourceDir"`
-	DockerfilePath string                `json:"dockerfilePath,omitempty"`
-	LogWriter      io.Writer             `json:"-"`
-	ProjectConfig  *models.ProjectConfig `json:"projectConfig,omitempty"`
-	AppConfig      *models.AppService    `json:"appConfig,omitempty"`
-	EnvVars        map[string]string     `json:"envVars,omitempty"`
+	ProjectID      string                     `json:"projectId"`
+	ServiceID      string                     `json:"serviceId,omitempty"`
+	SourceDir      string                     `json:"sourceDir"`
+	DockerfilePath string                     `json:"dockerfilePath,omitempty"`
+	LogWriter      io.Writer                  `json:"-"`
+	ProjectConfig  *projectsmod.ProjectConfig `json:"projectConfig,omitempty"`
+	AppConfig      *appsmod.AppService        `json:"appConfig,omitempty"`
+	EnvVars        map[string]string          `json:"envVars,omitempty"`
 }
 
 type Builder interface {
@@ -96,8 +97,8 @@ func (b *EngineBuilder) Build(ctx context.Context, opts BuildOptions) (string, e
 	}
 }
 
-func (b *EngineBuilder) DetectStrategy(sourceDir, dockerfilePath string, app *models.AppService) BuildStrategy {
-	if app != nil && app.BuildEngine == models.BuildEngineServerless {
+func (b *EngineBuilder) DetectStrategy(sourceDir, dockerfilePath string, app *appsmod.AppService) BuildStrategy {
+	if app != nil && app.BuildEngine == appsmod.BuildEngineServerless {
 		return StrategyServerless
 	}
 
@@ -110,7 +111,7 @@ func (b *EngineBuilder) DetectStrategy(sourceDir, dockerfilePath string, app *mo
 		return StrategyDockerfile
 	}
 
-	if app != nil && app.BuildEngine != "" && app.BuildEngine != models.BuildEngineAuto {
+	if app != nil && app.BuildEngine != "" && app.BuildEngine != appsmod.BuildEngineAuto {
 		return BuildStrategy(app.BuildEngine)
 	}
 

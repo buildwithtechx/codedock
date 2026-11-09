@@ -1,11 +1,10 @@
 package storage
 
 import (
-	"codedock/internal/models"
 	"codedock/internal/utils"
 )
 
-func databaseContainerIdentity(database *models.Database) string {
+func databaseContainerIdentity(database *Database) string {
 	if database.ContainerID != "" {
 		return database.ContainerID
 	}

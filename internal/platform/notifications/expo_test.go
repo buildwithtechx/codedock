@@ -5,8 +5,6 @@ import (
 	"net/http"
 	"net/http/httptest"
 	"testing"
-
-	"codedock/internal/models"
 )
 
 func TestIsExpoPushToken(t *testing.T) {
@@ -36,7 +34,7 @@ func TestSendExpoNotificationSuccess(t *testing.T) {
 	}))
 	defer server.Close()
 
-	event := &models.NotificationEvent{
+	event := &NotificationEvent{
 		Title:     "Deploy Succeeded",
 		Message:   "Application web deployed successfully",
 		Level:     "success",
@@ -64,7 +62,7 @@ func TestSendExpoNotificationSuccess(t *testing.T) {
 
 func TestSendExpoNotificationErrorHandling(t *testing.T) {
 	// Rejects invalid token format
-	err := SendExpoNotificationWithClient(http.DefaultClient, "http://localhost", "bad-token", &models.NotificationEvent{})
+	err := SendExpoNotificationWithClient(http.DefaultClient, "http://localhost", "bad-token", &NotificationEvent{})
 	if err == nil {
 		t.Fatal("expected error on invalid token format")
 	}
@@ -76,7 +74,7 @@ func TestSendExpoNotificationErrorHandling(t *testing.T) {
 	}))
 	defer server.Close()
 
-	err = SendExpoNotificationWithClient(server.Client(), server.URL, "ExponentPushToken[test-token]", &models.NotificationEvent{Title: "hi"})
+	err = SendExpoNotificationWithClient(server.Client(), server.URL, "ExponentPushToken[test-token]", &NotificationEvent{Title: "hi"})
 	if err == nil {
 		t.Fatal("expected error on server error response")
 	}

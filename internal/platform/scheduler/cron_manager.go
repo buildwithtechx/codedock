@@ -16,16 +16,15 @@ import (
 	"github.com/docker/docker/pkg/stdcopy"
 	cronv3 "github.com/robfig/cron/v3"
 
-	"codedock/internal/models"
 	"codedock/internal/utils"
 )
 
 type Store interface {
-	ListScheduledTasks() ([]models.ScheduledTask, error)
-	GetScheduledTask(id string) (*models.ScheduledTask, error)
-	GetProject(id string) (*models.ProjectConfig, error)
-	GetAppService(id string) (*models.AppService, error)
-	UpdateScheduledTaskStatusAndOutput(id string, status models.ScheduledTaskStatus, lastRunAt *time.Time, output string) error
+	ListScheduledTasks() ([]ScheduledTask, error)
+	GetScheduledTask(id string) (*ScheduledTask, error)
+	GetProject(id string) (*ProjectConfig, error)
+	GetAppService(id string) (*AppService, error)
+	UpdateScheduledTaskStatusAndOutput(id string, status ScheduledTaskStatus, lastRunAt *time.Time, output string) error
 }
 
 const (
@@ -66,7 +65,7 @@ func (cm *CronManager) Reconcile() error {
 	}
 	cm.mu.Lock()
 	defer cm.mu.Unlock()
-	active := make(map[string]*models.ScheduledTask, len(scheduledTasks))
+	active := make(map[string]*ScheduledTask, len(scheduledTasks))
 	for i := range scheduledTasks {
 		if scheduledTasks[i].Status == "active" {
 			scheduledTaskCopy := scheduledTasks[i]
@@ -116,13 +115,13 @@ func (cm *CronManager) Stop() {
 	}
 }
 
-func (cm *CronManager) RegisterScheduledTask(j *models.ScheduledTask) error {
+func (cm *CronManager) RegisterScheduledTask(j *ScheduledTask) error {
 	cm.mu.Lock()
 	defer cm.mu.Unlock()
 	return cm.registerScheduledTaskLocked(j)
 }
 
-func (cm *CronManager) registerScheduledTaskLocked(j *models.ScheduledTask) error {
+func (cm *CronManager) registerScheduledTaskLocked(j *ScheduledTask) error {
 	if entryID, exists := cm.entries[j.ID]; exists {
 		cm.cronEngine.Remove(entryID)
 		delete(cm.entries, j.ID)
@@ -170,7 +169,7 @@ func (cm *CronManager) ExecuteScheduledTask(ctx context.Context, scheduledTaskID
 	if err != nil || !inspectResp.State.Running {
 		errMsg := fmt.Sprintf("cannot run scheduledTask: service container %s (%s) is stopped or not found", app.Name, containerName)
 		now := time.Now()
-		if updateErr := cm.store.UpdateScheduledTaskStatusAndOutput(scheduledTaskID, models.ScheduledTaskStatusError, &now, errMsg); updateErr != nil {
+		if updateErr := cm.store.UpdateScheduledTaskStatusAndOutput(scheduledTaskID, ScheduledTaskStatusError, &now, errMsg); updateErr != nil {
 			slog.Warn("failed to update scheduled task status", "error", updateErr)
 		}
 		return errMsg, errors.New(errMsg)
@@ -183,7 +182,7 @@ func (cm *CronManager) ExecuteScheduledTask(ctx context.Context, scheduledTaskID
 	execCreateResp, err := cm.dockerClient.ContainerExecCreate(ctx, inspectResp.ID, execConfig)
 	if err != nil {
 		now := time.Now()
-		if updateErr := cm.store.UpdateScheduledTaskStatusAndOutput(scheduledTaskID, models.ScheduledTaskStatusError, &now, err.Error()); updateErr != nil {
+		if updateErr := cm.store.UpdateScheduledTaskStatusAndOutput(scheduledTaskID, ScheduledTaskStatusError, &now, err.Error()); updateErr != nil {
 			slog.Warn("failed to update scheduled task status", "error", updateErr)
 		}
 		return "", fmt.Errorf("failed to create container exec for scheduledTask %s: %w", j.Name, err)
@@ -191,7 +190,7 @@ func (cm *CronManager) ExecuteScheduledTask(ctx context.Context, scheduledTaskID
 	attachResp, err := cm.dockerClient.ContainerExecAttach(ctx, execCreateResp.ID, container.ExecAttachOptions{})
 	if err != nil {
 		now := time.Now()
-		if updateErr := cm.store.UpdateScheduledTaskStatusAndOutput(scheduledTaskID, models.ScheduledTaskStatusError, &now, err.Error()); updateErr != nil {
+		if updateErr := cm.store.UpdateScheduledTaskStatusAndOutput(scheduledTaskID, ScheduledTaskStatusError, &now, err.Error()); updateErr != nil {
 			slog.Warn("failed to update scheduled task status", "error", updateErr)
 		}
 		return "", fmt.Errorf("failed to attach to container exec for scheduledTask %s: %w", j.Name, err)
@@ -209,7 +208,7 @@ func (cm *CronManager) ExecuteScheduledTask(ctx context.Context, scheduledTaskID
 		output += stderrBuf.String()
 	}
 	now := time.Now()
-	if updateErr := cm.store.UpdateScheduledTaskStatusAndOutput(scheduledTaskID, models.ScheduledTaskStatusActive, &now, output); updateErr != nil {
+	if updateErr := cm.store.UpdateScheduledTaskStatusAndOutput(scheduledTaskID, ScheduledTaskStatusActive, &now, output); updateErr != nil {
 		slog.Warn("failed to update scheduled task status", "error", updateErr)
 	}
 	return output, nil

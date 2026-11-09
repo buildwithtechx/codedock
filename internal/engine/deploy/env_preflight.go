@@ -8,7 +8,7 @@ import (
 	"strings"
 
 	"codedock/internal/engine/build"
-	"codedock/internal/models"
+	appsmod "codedock/internal/modules/apps"
 )
 
 // Regex to detect Docker Compose required variable syntax:
@@ -92,7 +92,7 @@ func FormatRequiredEnvError(missing []MissingEnvVariable) error {
 
 // AssertRequiredServiceEnvironment performs an early pre-flight validation on the service's
 // environment before git cloning or docker image builds begin.
-func AssertRequiredServiceEnvironment(ctx context.Context, deployer *Deployer, app *models.AppService) error {
+func AssertRequiredServiceEnvironment(ctx context.Context, deployer *Deployer, app *appsmod.AppService) error {
 	if deployer == nil || app == nil {
 		return nil
 	}

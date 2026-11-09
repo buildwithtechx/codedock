@@ -1,15 +1,16 @@
 package kubernetes
 
 import (
-	"codedock/internal/models"
 	"encoding/json"
 	"fmt"
 	"math"
 	"strconv"
 	"strings"
+
+	appsmod "codedock/internal/modules/apps"
 )
 
-func applyPodMetrics(observation *models.WorkloadObservation, raw string) error {
+func applyPodMetrics(observation *appsmod.WorkloadObservation, raw string) error {
 	var response struct {
 		Items []struct {
 			Metadata struct {

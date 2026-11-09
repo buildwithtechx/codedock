@@ -7,7 +7,7 @@ import (
 	"net/http"
 
 	"codedock/internal/modules/databases"
-	"codedock/internal/services/projects"
+	projectsmod "codedock/internal/modules/projects"
 	"codedock/internal/version"
 	mcpgo "github.com/mark3labs/mcp-go/mcp"
 	"github.com/mark3labs/mcp-go/server"
@@ -19,11 +19,11 @@ type Bridge struct {
 	dispatcher     http.Handler
 	tools          []ToolDef
 	toolByName     map[string]ToolDef
-	projectService *projects.ProjectService
+	projectService *projectsmod.Service
 	dbService      *databases.DatabaseService
 }
 
-func NewBridge(ps *projects.ProjectService, db *databases.DatabaseService) *Bridge {
+func NewBridge(ps *projectsmod.Service, db *databases.DatabaseService) *Bridge {
 	mcpServer := server.NewMCPServer(
 		"codedock-mcp",
 		version.Version,

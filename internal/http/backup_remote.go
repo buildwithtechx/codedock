@@ -1,18 +1,28 @@
 package http
 
 import (
-	"codedock/internal/models"
-	"codedock/internal/platform/ssh"
-	backup "codedock/internal/platform/storage"
-	"codedock/internal/repositories"
 	"context"
 	"fmt"
-	"github.com/docker/docker/client"
 	"log/slog"
+
+	"github.com/docker/docker/client"
+
+	projectsmod "codedock/internal/modules/projects"
+	serversmod "codedock/internal/modules/servers"
+	"codedock/internal/platform/ssh"
+	backup "codedock/internal/platform/storage"
 )
 
-func configureRemoteBackups(manager *backup.BackupManager, projects repositories.ProjectRepository, servers repositories.ServerRepository, ssh *ssh.SSHManager) {
-	manager.SetDockerTarget(func(ctx context.Context, cfg *models.BackupConfig) (*client.Client, func(), error) {
+type ProjectBackupTargetLookup interface {
+	Get(ctx context.Context, id string) (*projectsmod.ProjectConfig, error)
+}
+
+type ServerBackupTargetLookup interface {
+	GetByID(ctx context.Context, id string) (*serversmod.Server, error)
+}
+
+func configureRemoteBackups(manager *backup.BackupManager, projects ProjectBackupTargetLookup, servers ServerBackupTargetLookup, sshMgr *ssh.SSHManager) {
+	manager.SetDockerTarget(func(ctx context.Context, cfg *backup.BackupConfig) (*client.Client, func(), error) {
 		if cfg.ProjectID == "" {
 			return nil, func() {}, nil
 		}
@@ -30,7 +40,25 @@ func configureRemoteBackups(manager *backup.BackupManager, projects repositories
 		if server.IsLocal || server.OrganizationID != project.OrganizationID {
 			return nil, nil, fmt.Errorf("backup target organization changed")
 		}
-		docker, release, err := ssh.GetDockerClient(ctx, server)
+		sshServer := &ssh.Server{
+			ID:             server.ID,
+			OrganizationID: server.OrganizationID,
+			UserID:         server.UserID,
+			Name:           server.Name,
+			IPAddress:      server.IPAddress,
+			IsLocal:        server.IsLocal,
+			SSHHost:        server.SSHHost,
+			SSHPort:        server.SSHPort,
+			SSHUser:        server.SSHUser,
+			SSHAuthMethod:  server.SSHAuthMethod,
+			SSHKey:         server.SSHKey,
+			SSHPrivateKey:  server.SSHPrivateKey,
+			SSHPassword:    server.SSHPassword,
+			SSHTransport:   server.SSHTransport,
+			SSHJumpHost:    server.SSHJumpHost,
+			Status:         ssh.ServerStatus(server.Status),
+		}
+		docker, release, err := sshMgr.GetDockerClient(ctx, sshServer)
 		if err != nil {
 			return nil, nil, err
 		}

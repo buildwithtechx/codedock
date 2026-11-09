@@ -1,86 +1,36 @@
 package clusters
 
+import (
+	"context"
+
+	"codedock/internal/engine/kubernetes"
+	appsmod "codedock/internal/modules/apps"
+	backups "codedock/internal/modules/backups"
+	environments "codedock/internal/modules/environments"
+	monitoring "codedock/internal/modules/monitoring"
+	projectsmod "codedock/internal/modules/projects"
+	servers "codedock/internal/modules/servers"
+)
+
 type Vault interface {
-	Encrypt(plaintext []byte) (string, error)
-	Decrypt(ciphertext string) ([]byte, error)
+	Encrypt(string) (string, error)
+	Decrypt(string) (string, error)
 }
 
-type ProjectConfig struct {
-	ID             string `json:"id"`
-	OrganizationID string `json:"organizationId"`
-	Name           string `json:"name"`
-	ServerID       string `json:"serverId"`
-}
+type ProjectConfig = projectsmod.ProjectConfig
+type Server = servers.Server
+type Operation = monitoring.Operation
+type OperationReview = monitoring.OperationReview
+type AppService = appsmod.AppService
+type Variable = appsmod.Variable
+type EnvironmentConfig = environments.EnvironmentConfig
+type S3Destination = backups.S3Destination
+type ClusterNode = kubernetes.ClusterNode
 
-type Server struct {
-	ID             string `json:"id"`
-	OrganizationID string `json:"organizationId"`
-	Name           string `json:"name"`
-	IP             string `json:"ip"`
-}
-
-type Operation struct {
-	ID        string `json:"id" db:"id"`
-	UserID    string `json:"-" db:"user_id"`
-	ProjectID string `json:"projectId" db:"project_id"`
-	Kind      string `json:"kind" db:"kind"`
-	Target    string `json:"target" db:"target"`
-	Status    string `json:"status" db:"status"`
-	Phase     string `json:"phase" db:"phase"`
-	Effects   string `json:"effects" db:"effects"`
-	Payload   string `json:"-" db:"encrypted_payload"`
-	Snapshot  string `json:"-" db:"snapshot"`
-	TokenHash string `json:"-" db:"token_hash"`
-	Error     string `json:"error" db:"error"`
-	Logs      string `json:"logs" db:"logs"`
-	ExpiresAt int64  `json:"expiresAt" db:"expires_at"`
-	UpdatedAt string `json:"updatedAt" db:"updated_at"`
-}
-
-type OperationReview struct {
-	Operation    *Operation `json:"operation"`
-	Confirmation string     `json:"confirmation"`
-}
-
-type AppService struct {
-	ID            string `json:"id"`
-	ProjectID     string `json:"projectId"`
-	EnvironmentID string `json:"environmentId"`
-	Name          string `json:"name"`
-}
-
-type Variable struct {
-	ID                       string `json:"id"`
-	ServiceID                string `json:"serviceId"`
-	EnvironmentID            string `json:"environmentId"`
-	Key                      string `json:"key"`
-	Value                    string `json:"value"`
-	IsSecret                 bool   `json:"isSecret"`
-	ExpectedTopologyRevision string `json:"expectedTopologyRevision"`
-	CreatedAt                string `json:"createdAt"`
-	UpdatedAt                string `json:"updatedAt"`
-}
-
-type EnvironmentConfig struct {
-	ID        string `json:"id"`
-	ProjectID string `json:"projectId"`
-	Name      string `json:"name"`
-}
-
-type S3Destination struct {
-	ID        string `json:"id"`
-	Bucket    string `json:"bucket"`
-	Endpoint  string `json:"endpoint"`
-	Region    string `json:"region"`
-	AccessKey string `json:"accessKey"`
-	SecretKey string `json:"secretKey"`
-}
-
-type ClusterNode struct {
-	ServerID    string `json:"serverId"`
-	PrivateIP   string `json:"privateIp"`
-	Interface   string `json:"interface"`
-	Fingerprint string `json:"fingerprint"`
+type OperationsService interface {
+	Review(ctx context.Context, user, project, kind, target, payload, snapshot, effects string) (*OperationReview, error)
+	Get(ctx context.Context, id string) (*Operation, error)
+	Apply(ctx context.Context, id, user, confirmation, snapshot string, fn func(ctx context.Context, op *Operation, progress func(string, string) error) error) error
 }
 
 type ClusterScaling struct {

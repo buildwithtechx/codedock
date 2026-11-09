@@ -2,7 +2,6 @@ package kubernetes
 
 import (
 	"bytes"
-	"codedock/internal/models"
 	"context"
 	"crypto/hmac"
 	"crypto/sha256"
@@ -16,7 +15,7 @@ import (
 
 var redisS3Client = &http.Client{Timeout: 120 * time.Second}
 
-func redisS3Put(ctx context.Context, dest *models.S3Destination, key string, body []byte) error {
+func redisS3Put(ctx context.Context, dest *S3Destination, key string, body []byte) error {
 	payload := sha256.Sum256(body)
 	payloadHash := hex.EncodeToString(payload[:])
 	now := time.Now().UTC()
@@ -85,7 +84,7 @@ func redisS3Put(ctx context.Context, dest *models.S3Destination, key string, bod
 	return nil
 }
 
-func redisS3Get(ctx context.Context, dest *models.S3Destination, key string) ([]byte, error) {
+func redisS3Get(ctx context.Context, dest *S3Destination, key string) ([]byte, error) {
 	payloadHash := "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
 	now := time.Now().UTC()
 	full := now.Format("20060102T150405Z")
@@ -152,7 +151,7 @@ func redisS3Get(ctx context.Context, dest *models.S3Destination, key string) ([]
 	return io.ReadAll(io.LimitReader(response.Body, 512*1024*1024))
 }
 
-func (r *WorkloadRuntime) RedisSnapshot(ctx context.Context, node models.ClusterNode, record *models.ClusterData, password string, dest *models.S3Destination, key string) (int64, error) {
+func (r *WorkloadRuntime) RedisSnapshot(ctx context.Context, node ClusterNode, record *ClusterData, password string, dest *S3Destination, key string) (int64, error) {
 	namespace, name := DataIdentity(record.Spec)
 	pods, err := r.dataPods(ctx, node, namespace, name)
 	if err != nil || len(pods) == 0 {
@@ -185,7 +184,7 @@ func (r *WorkloadRuntime) RedisSnapshot(ctx context.Context, node models.Cluster
 	return int64(len(body)), nil
 }
 
-func (r *WorkloadRuntime) RedisRestore(ctx context.Context, node models.ClusterNode, record *models.ClusterData, password string, dest *models.S3Destination, key string) error {
+func (r *WorkloadRuntime) RedisRestore(ctx context.Context, node ClusterNode, record *ClusterData, password string, dest *S3Destination, key string) error {
 	namespace, name := DataIdentity(record.Spec)
 	body, err := redisS3Get(ctx, dest, key)
 	if err != nil {
@@ -212,7 +211,7 @@ func (r *WorkloadRuntime) RedisRestore(ctx context.Context, node models.ClusterN
 	return r.DataObserved(ctx, node, record)
 }
 
-func (r *WorkloadRuntime) RedisFailover(ctx context.Context, node models.ClusterNode, record *models.ClusterData) error {
+func (r *WorkloadRuntime) RedisFailover(ctx context.Context, node ClusterNode, record *ClusterData) error {
 	namespace, name := DataIdentity(record.Spec)
 	if _, err := r.commands.Kubectl(ctx, node, []string{"-n", namespace, "delete", "pod", name + "-0", "--wait=true", "--timeout=180s"}, ""); err != nil {
 		return err

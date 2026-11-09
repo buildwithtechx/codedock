@@ -1,7 +1,6 @@
 package kubernetes
 
 import (
-	"codedock/internal/models"
 	"context"
 	"encoding/json"
 	"fmt"
@@ -15,7 +14,7 @@ type StorageInventory struct {
 	DefaultClass   string           `json:"defaultClass"`
 }
 
-func kubectlList(ctx context.Context, commands Commands, node models.ClusterNode, args []string) ([]map[string]any, error) {
+func kubectlList(ctx context.Context, commands Commands, node ClusterNode, args []string) ([]map[string]any, error) {
 	response, err := commands.Kubectl(ctx, node, append(args, "-o", "json"), "")
 	if err != nil {
 		return nil, err
@@ -33,7 +32,7 @@ func kubectlList(ctx context.Context, commands Commands, node models.ClusterNode
 	return result, nil
 }
 
-func (r *WorkloadRuntime) StorageInventory(ctx context.Context, node models.ClusterNode) (*StorageInventory, error) {
+func (r *WorkloadRuntime) StorageInventory(ctx context.Context, node ClusterNode) (*StorageInventory, error) {
 	classes, err := kubectlList(ctx, r.commands, node, []string{"get", "storageclass"})
 	if err != nil {
 		return nil, err
@@ -63,7 +62,7 @@ func (r *WorkloadRuntime) StorageInventory(ctx context.Context, node models.Clus
 	return inventory, nil
 }
 
-func (r *WorkloadRuntime) StorageHealth(ctx context.Context, node models.ClusterNode) error {
+func (r *WorkloadRuntime) StorageHealth(ctx context.Context, node ClusterNode) error {
 	inventory, err := r.StorageInventory(ctx, node)
 	if err != nil {
 		return err

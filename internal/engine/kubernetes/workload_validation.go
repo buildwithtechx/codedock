@@ -1,14 +1,16 @@
 package kubernetes
 
 import (
-	"codedock/internal/models"
 	"fmt"
-	"github.com/google/uuid"
 	"net"
 	"net/url"
 	"path"
 	"regexp"
 	"strings"
+
+	"github.com/google/uuid"
+
+	appsmod "codedock/internal/modules/apps"
 )
 
 var (
@@ -18,7 +20,7 @@ var (
 	envVarNamePattern   = regexp.MustCompile(`^[A-Za-z_][A-Za-z0-9_]*$`)
 )
 
-func WorkloadIdentity(app *models.AppService) (string, string, error) {
+func WorkloadIdentity(app *appsmod.AppService) (string, string, error) {
 	if _, err := uuid.Parse(app.ID); err != nil {
 		return "", "", fmt.Errorf("invalid service identity")
 	}
@@ -27,7 +29,7 @@ func WorkloadIdentity(app *models.AppService) (string, string, error) {
 	}
 	return "codedock-" + app.EnvironmentID, "app-" + app.ID, nil
 }
-func ValidateWorkload(workload *models.KubernetesWorkload) error {
+func ValidateWorkload(workload *appsmod.KubernetesWorkload) error {
 	app, target := &workload.App, &workload.Target
 	if _, _, err := WorkloadIdentity(app); err != nil {
 		return err
@@ -41,10 +43,10 @@ func ValidateWorkload(workload *models.KubernetesWorkload) error {
 	if app.Replicas < 1 || app.Replicas > 64 {
 		return fmt.Errorf("Kubernetes replica count must be between one and sixty-four")
 	}
-	if app.RuntimeMode != models.RuntimeModeWorker && (app.InternalPort < 1 || app.InternalPort > 65535) {
+	if app.RuntimeMode != appsmod.RuntimeModeWorker && (app.InternalPort < 1 || app.InternalPort > 65535) {
 		return fmt.Errorf("select a valid internal port")
 	}
-	if app.RuntimeMode == models.RuntimeModeWorker && (app.HealthCheckPath != "" || app.Domain != "") {
+	if app.RuntimeMode == appsmod.RuntimeModeWorker && (app.HealthCheckPath != "" || app.Domain != "") {
 		return fmt.Errorf("workers cannot expose HTTP routing or readiness paths")
 	}
 	if app.CPULimit < 0 || app.MemoryLimit < 0 {

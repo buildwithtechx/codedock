@@ -9,16 +9,54 @@ import (
 	"github.com/google/uuid"
 
 	cdkdb "codedock/db"
-	"codedock/internal/models"
+	"codedock/internal/modules/environments"
+	"codedock/internal/modules/projects"
 	compose "codedock/internal/platform/docker"
-	"codedock/internal/repositories"
-	projectservices "codedock/internal/services/projects"
 	"codedock/internal/testdb"
 	"codedock/internal/utils"
 )
 
 type oneclickIntegrationRuntime struct {
-	projectservices.ComposeStackRuntime
+	projects.ComposeStackRuntime
+}
+
+type oneClickEnvAdapter struct {
+	repo *environments.EnvironmentRepo
+}
+
+func (a *oneClickEnvAdapter) ListByProject(ctx context.Context, projectID string) ([]*projects.EnvironmentConfig, error) {
+	envs, err := a.repo.ListByProject(ctx, projectID)
+	if err != nil {
+		return nil, err
+	}
+	res := make([]*projects.EnvironmentConfig, len(envs))
+	for i, e := range envs {
+		res[i] = &projects.EnvironmentConfig{
+			ID:        e.ID,
+			ProjectID: e.ProjectID,
+			Name:      e.Name,
+			IsDefault: e.IsDefault,
+		}
+	}
+	return res, nil
+}
+
+func (a *oneClickEnvAdapter) GetDefaultByProject(ctx context.Context, projectID string) (*projects.EnvironmentConfig, error) {
+	envs, err := a.repo.ListByProject(ctx, projectID)
+	if err != nil {
+		return nil, err
+	}
+	for _, env := range envs {
+		if env.IsDefault {
+			return &projects.EnvironmentConfig{
+				ID:        env.ID,
+				ProjectID: env.ProjectID,
+				Name:      env.Name,
+				IsDefault: env.IsDefault,
+			}, nil
+		}
+	}
+	return nil, nil
 }
 
 func (r *oneclickIntegrationRuntime) Canonical(_ context.Context, _ string, source string, _ map[string]string) (string, error) {
@@ -33,15 +71,15 @@ func (r *oneclickIntegrationRuntime) ValidatePorts(_ context.Context, _ string, 
 	return nil
 }
 
-func (r *oneclickIntegrationRuntime) Apply(_ context.Context, _ *models.ComposeStack, _ func(string) error) error {
+func (r *oneclickIntegrationRuntime) Apply(_ context.Context, _ *projects.ComposeStack, _ func(string) error) error {
 	return nil
 }
 
-func (r *oneclickIntegrationRuntime) Results(_ context.Context, _ string) ([]models.ComposeServiceResult, error) {
+func (r *oneclickIntegrationRuntime) Results(_ context.Context, _ string) ([]projects.ComposeServiceResult, error) {
 	return nil, nil
 }
 
-func newOneClickIntegrationService(t *testing.T) (*projectservices.OneClickService, *repositories.ComposeStackRepo, string) {
+func newOneClickIntegrationService(t *testing.T) (*projects.OneClickService, *projects.ComposeStackRepo, string) {
 	db := testdb.Open(t)
 	if err := cdkdb.RunMigrations(db); err != nil {
 		t.Fatalf("failed to run migrations: %v", err)
@@ -53,9 +91,9 @@ func newOneClickIntegrationService(t *testing.T) (*projectservices.OneClickServi
 	if _, err := db.Exec(`INSERT INTO organizations (id, name) VALUES ('org-catalog', 'Catalog') ON CONFLICT (id) DO NOTHING`); err != nil {
 		t.Fatalf("failed to seed organization: %v", err)
 	}
-	envRepo := repositories.NewEnvironmentRepo(db)
-	projectRepo := repositories.NewProjectRepo(db, envRepo)
-	project := &models.ProjectConfig{ID: uuid.NewString(), OrganizationID: "org-catalog", Name: "Catalog Integration"}
+	envRepo := environments.NewEnvironmentRepo(db)
+	projectRepo := projects.NewProjectRepo(db, envRepo)
+	project := &projects.ProjectConfig{ID: uuid.NewString(), OrganizationID: "org-catalog", Name: "Catalog Integration"}
 	if err := projectRepo.Create(context.Background(), project); err != nil {
 		t.Fatalf("failed to create project: %v", err)
 	}
@@ -67,9 +105,9 @@ func newOneClickIntegrationService(t *testing.T) (*projectservices.OneClickServi
 	if err != nil {
 		t.Fatalf("failed to load templates: %v", err)
 	}
-	store := repositories.NewComposeStackRepo(db, vlt)
-	stacks := projectservices.NewComposeStackService(store, &oneclickIntegrationRuntime{})
-	service := projectservices.NewOneClickService(tmplMgr, stacks, envRepo)
+	store := projects.NewComposeStackRepo(db, vlt)
+	stacks := projects.NewComposeStackService(store, &oneclickIntegrationRuntime{})
+	service := projects.NewOneClickService(tmplMgr, stacks, &oneClickEnvAdapter{repo: envRepo})
 	return service, store, project.ID
 }
 
@@ -77,7 +115,7 @@ func TestOneClickInstallPersistsStack(t *testing.T) {
 	service, store, projectID := newOneClickIntegrationService(t)
 	ctx := context.Background()
 
-	preview, err := service.ReviewInstall(ctx, models.InstallAppInput{
+	preview, err := service.ReviewInstall(ctx, projects.InstallAppInput{
 		AppID:       "plausible",
 		ProjectID:   projectID,
 		Name:        "stats",
@@ -93,7 +131,7 @@ func TestOneClickInstallPersistsStack(t *testing.T) {
 		t.Fatalf("expected rendered healthcheck in document:\n%s", preview.ComposeYAML)
 	}
 
-	installReview, err := service.ReviewInstall(ctx, models.InstallAppInput{
+	installReview, err := service.ReviewInstall(ctx, projects.InstallAppInput{
 		AppID:     "n8n",
 		ProjectID: projectID,
 		Name:      "automation",
@@ -101,7 +139,7 @@ func TestOneClickInstallPersistsStack(t *testing.T) {
 	if err != nil {
 		t.Fatalf("expected install review to succeed: %v", err)
 	}
-	result, err := service.InstallApp(ctx, models.InstallAppInput{
+	result, err := service.InstallApp(ctx, projects.InstallAppInput{
 		AppID:     "n8n",
 		ProjectID: projectID,
 		Name:      "automation",
@@ -121,7 +159,7 @@ func TestOneClickInstallPersistsStack(t *testing.T) {
 		t.Fatalf("expected rendered image in stored stack, got:\n%s", stored.Config)
 	}
 
-	_, err = service.InstallApp(ctx, models.InstallAppInput{
+	_, err = service.InstallApp(ctx, projects.InstallAppInput{
 		AppID:     "n8n",
 		ProjectID: projectID,
 		Name:      "automation",

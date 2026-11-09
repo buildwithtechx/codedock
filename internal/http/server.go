@@ -11,7 +11,6 @@ import (
 	"codedock/internal/engine/deploy"
 	"codedock/internal/http/mcp"
 	"codedock/internal/http/middleware"
-	"codedock/internal/models"
 	aimod "codedock/internal/modules/ai"
 	appsmod "codedock/internal/modules/apps"
 	"codedock/internal/modules/audit"
@@ -38,8 +37,6 @@ import (
 	core "codedock/internal/platform/notifications"
 	cron "codedock/internal/platform/scheduler"
 	"codedock/internal/platform/ssh"
-	"codedock/internal/services/migrations"
-	projectservices "codedock/internal/services/projects"
 )
 
 type Server struct {
@@ -58,10 +55,10 @@ type Server struct {
 	tokenService               *auth.TokenService
 	authGuard                  *middleware.AuthGuard
 	cronManager                *cron.CronManager
-	serviceLinker              *projectservices.ServiceLinker
+	serviceLinker              *appsmod.ServiceLinker
 	dispatcherService          *core.DispatcherService
-	projectService             *projectservices.ProjectService
-	appService                 *projectservices.AppService
+	projectService             *projectsmod.Service
+	appService                 *appsmod.Service
 	appServiceHandler          *appsmod.Handler
 	appVarHandler              *appsmod.VariableHandler
 	appVolumeHandler           *appsmod.VolumeHandler
@@ -112,7 +109,6 @@ type Server struct {
 	serverHandler              *servers.Handler
 	managedHandler             *servers.ManagedHandler
 	migrationLifecycleHandler  *modmigrations.LifecycleHandler
-	migrationService           *migrations.Service
 	analyticsHandler           *modmonitoring.AnalyticsHandler
 	attentionHandler           *modmonitoring.AttentionHandler
 	billingHandler             *modmonitoring.BillingHandler
@@ -139,7 +135,7 @@ func (s *Server) Handler() http.Handler {
 	return s.router
 }
 
-func GetUserClaimsFromContext(ctx context.Context) *models.UserClaims {
+func GetUserClaimsFromContext(ctx context.Context) *middleware.UserClaims {
 	return middleware.GetUserClaimsFromContext(ctx)
 }
 
@@ -158,7 +154,7 @@ func (s *Server) HandleMCPMessage(c echo.Context) error {
 	return nil
 }
 
-func (s *Server) RequireProjectRole(permission models.MemberPermission) echo.MiddlewareFunc {
+func (s *Server) RequireProjectRole(permission organizations.MemberPermission) echo.MiddlewareFunc {
 	return func(next echo.HandlerFunc) echo.HandlerFunc {
 		return func(c echo.Context) error {
 			user := middleware.GetUserClaimsFromContext(c.Request().Context())
@@ -169,7 +165,7 @@ func (s *Server) RequireProjectRole(permission models.MemberPermission) echo.Mid
 			if selected, ok := c.Get("project_id").(string); ok && selected != "" && selected != project {
 				return echo.NewHTTPError(http.StatusForbidden, "token does not have access to this project")
 			}
-			if !s.projectService.HasPermission(c.Request().Context(), project, user.UserID, models.UserRole(user.Role), permission) {
+			if !s.projectService.HasPermission(c.Request().Context(), project, user.UserID, users.UserRole(user.Role), permission) {
 				return echo.NewHTTPError(http.StatusForbidden, "project permission required")
 			}
 			return next(c)

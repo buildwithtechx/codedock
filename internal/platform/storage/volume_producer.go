@@ -1,17 +1,16 @@
 package storage
 
 import (
-	"codedock/internal/models"
 	"context"
 	"fmt"
 	"github.com/docker/docker/api/types/mount"
 )
 
-func (bm *BackupManager) validateVolumeProducer(ctx context.Context, cfg *models.BackupConfig) error {
+func (bm *BackupManager) validateVolumeProducer(ctx context.Context, cfg *BackupConfig) error {
 	var id string
 	var err error
 	if owner, ok := bm.store.(interface {
-		VolumeBackupOwner(context.Context, *models.BackupConfig) (string, error)
+		VolumeBackupOwner(context.Context, *BackupConfig) (string, error)
 	}); ok {
 		id, err = owner.VolumeBackupOwner(ctx, cfg)
 	} else if owner, ok := bm.store.(VolumeRestoreOwner); ok {

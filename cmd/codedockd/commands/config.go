@@ -7,13 +7,14 @@ import (
 	"strings"
 
 	"codedock/internal/config"
-	"codedock/internal/repositories"
+	"codedock/internal/modules/monitoring"
+	"codedock/internal/modules/settings"
 )
 
 func runConfig() {
 	_, db, vault := InitDataDir()
-	repo := repositories.NewSettingsRepo(db, vault)
-	notifRepo := repositories.NewNotificationSettingsRepo(db)
+	repo := settings.NewSettingsRepo(db, vault)
+	notifRepo := monitoring.NewNotificationSettingsRepo(db)
 	settings, err := repo.GetServerSettings(context.Background())
 	if err != nil {
 		exitError("Failed to load settings: %v", err)

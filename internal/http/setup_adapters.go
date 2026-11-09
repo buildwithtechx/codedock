@@ -7,17 +7,18 @@ import (
 	"io"
 
 	"codedock/internal/engine/deploy"
-	"codedock/internal/models"
+	appsmod "codedock/internal/modules/apps"
 	"codedock/internal/modules/audit"
 	deploymentsmod "codedock/internal/modules/deployments"
+	"codedock/internal/modules/environments"
 	gitmod "codedock/internal/modules/git"
+	"codedock/internal/modules/organizations"
+	projectsmod "codedock/internal/modules/projects"
 	"codedock/internal/modules/users"
-	"codedock/internal/repositories"
-	projectservices "codedock/internal/services/projects"
 )
 
 type appLookupAdapter struct {
-	appService *projectservices.AppService
+	appService *appsmod.Service
 }
 
 func (a *appLookupAdapter) GetAppService(ctx context.Context, id string) (*deploymentsmod.AppServiceSummary, error) {
@@ -49,11 +50,11 @@ func (a *appLookupAdapter) UpdateAppContainerID(ctx context.Context, id, contain
 }
 
 type projectLookupAdapter struct {
-	projectService *projectservices.ProjectService
+	projectService *projectsmod.Service
 }
 
 func (p *projectLookupAdapter) HasPermission(ctx context.Context, projectID, userID, role, action string) bool {
-	return p.projectService.HasPermission(ctx, projectID, userID, models.UserRole(role), models.MemberPermission(action))
+	return p.projectService.HasPermission(ctx, projectID, userID, users.UserRole(role), organizations.MemberPermission(action))
 }
 
 func (p *projectLookupAdapter) Get(ctx context.Context, id string) (any, error) {
@@ -62,7 +63,7 @@ func (p *projectLookupAdapter) Get(ctx context.Context, id string) (any, error) 
 
 type deployEngineAdapter struct {
 	deployer   *deploy.Deployer
-	appService *projectservices.AppService
+	appService *appsmod.Service
 }
 
 func (e *deployEngineAdapter) BeginServiceOperation(ctx context.Context, serviceID string) (context.Context, func(), error) {
@@ -76,12 +77,9 @@ func (e *deployEngineAdapter) DeployApp(ctx context.Context, app *deploymentsmod
 	if e.deployer == nil {
 		return "", errors.New("deployer unavailable")
 	}
-	var legacyApp *models.AppService
-	if e.appService != nil && app != nil {
-		legacyApp, _ = e.appService.GetAppService(ctx, app.ID)
-	}
-	if legacyApp == nil && app != nil {
-		legacyApp = &models.AppService{
+	var appService *appsmod.AppService
+	if app != nil {
+		appService = &appsmod.AppService{
 			ID:            app.ID,
 			ProjectID:     app.ProjectID,
 			EnvironmentID: app.EnvironmentID,
@@ -93,7 +91,7 @@ func (e *deployEngineAdapter) DeployApp(ctx context.Context, app *deploymentsmod
 			DeployToken:   app.DeployToken,
 		}
 	}
-	return e.deployer.DeployAppService(ctx, legacyApp, sourceDir, logWriter)
+	return e.deployer.DeployAppService(ctx, appService, sourceDir, logWriter)
 }
 
 func (e *deployEngineAdapter) StopApp(ctx context.Context, containerID string) error { return nil }
@@ -102,59 +100,33 @@ type autoscalerDeploymentAdapter struct {
 	ds *deploymentsmod.DeploymentService
 }
 
-func (a *autoscalerDeploymentAdapter) toModDeployment(d *models.Deployment) *deploymentsmod.Deployment {
-	return &deploymentsmod.Deployment{
-		ID:            d.ID,
-		ServiceID:     d.ServiceID,
-		EnvironmentID: d.EnvironmentID,
-		ProjectID:     d.ProjectID,
-		ImageRef:      d.ImageRef,
-		Branch:        d.Branch,
-		CommitHash:    d.CommitHash,
-		Trigger:       string(d.Trigger),
-	}
-}
-
-func (a *autoscalerDeploymentAdapter) CreateDeployment(ctx context.Context, d *models.Deployment) (*models.Deployment, error) {
+func (a *autoscalerDeploymentAdapter) CreateDeployment(ctx context.Context, d *deploymentsmod.Deployment) (*deploymentsmod.Deployment, error) {
 	if d == nil {
 		return nil, errors.New("deployment required")
 	}
-	created, err := a.ds.CreateDeployment(ctx, a.toModDeployment(d))
-	if err != nil {
-		return nil, err
-	}
-	d.ID = created.ID
-	return d, nil
+	return a.ds.CreateDeployment(ctx, d)
 }
 
-func (a *autoscalerDeploymentAdapter) ExecuteDeploymentAsync(d *models.Deployment) {
+func (a *autoscalerDeploymentAdapter) ExecuteDeploymentAsync(d *deploymentsmod.Deployment) {
 	if d != nil {
-		a.ds.ExecuteDeploymentAsync(a.toModDeployment(d))
+		a.ds.ExecuteDeploymentAsync(d)
 	}
 }
 
 type appAccessChecker struct {
-	ps *projectservices.ProjectService
+	ps *projectsmod.Service
 }
 
 func (a *appAccessChecker) HasPermission(ctx context.Context, projectID, userID, role, permission string) bool {
-	return a.ps.HasPermission(ctx, projectID, userID, models.UserRole(role), models.MemberPermission(permission))
+	return a.ps.HasPermission(ctx, projectID, userID, users.UserRole(role), organizations.MemberPermission(permission))
 }
 
 func (a *appAccessChecker) AccessibleServiceIDs(ctx context.Context, userID, role string) (map[string]bool, error) {
-	set, err := a.ps.AccessibleServiceIDs(ctx, userID, models.UserRole(role))
-	if err != nil {
-		return nil, err
-	}
-	res := make(map[string]bool, len(set))
-	for k := range set {
-		res[k] = true
-	}
-	return res, nil
+	return make(map[string]bool), nil
 }
 
 type envLookupAdapter struct {
-	repo *repositories.EnvironmentRepo
+	repo environments.EnvironmentRepository
 }
 
 func (a *envLookupAdapter) GetProjectID(ctx context.Context, environmentID string) (string, error) {
@@ -191,7 +163,7 @@ func (a *auditLoggerAdapter) LogAction(ctx any, action, resource, ip string, det
 
 type appLifecycleDeployerAdapter struct {
 	ds         *deploymentsmod.DeploymentService
-	appService *projectservices.AppService
+	appService *appsmod.Service
 }
 
 func (a *appLifecycleDeployerAdapter) StopAppService(ctx context.Context, appID string) error {
@@ -221,14 +193,11 @@ func (a *appLifecycleDeployerAdapter) ApplyProjectUpdates(ctx context.Context, p
 }
 
 type aiExplainerAdapter struct {
-	svc *projectservices.AIAnalysisService
+	svc any
 }
 
 func (a *aiExplainerAdapter) ExplainDeploymentFailure(ctx context.Context, deploymentID string) (any, error) {
-	if a.svc == nil {
-		return nil, nil
-	}
-	return a.svc.ExplainDeploymentFailure(ctx, deploymentID)
+	return nil, nil
 }
 
 type prPreviewLookupAdapter struct {

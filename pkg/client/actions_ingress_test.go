@@ -5,8 +5,6 @@ import (
 	"net/http"
 	"net/http/httptest"
 	"testing"
-
-	"codedock/internal/models"
 )
 
 func TestIngressClientOperations(t *testing.T) {
@@ -16,7 +14,7 @@ func TestIngressClientOperations(t *testing.T) {
 		case r.Method == "GET" && r.URL.Path == "/api/v1/dns/ingress":
 			json.NewEncoder(w).Encode(map[string]any{
 				"status": "success",
-				"data": []*models.IngressConnection{
+				"data": []*IngressConnection{
 					{
 						ID:       "ing-1",
 						ServerID: "srv-1",
@@ -28,7 +26,7 @@ func TestIngressClientOperations(t *testing.T) {
 		case r.Method == "POST" && r.URL.Path == "/api/v1/dns/ingress":
 			json.NewEncoder(w).Encode(map[string]any{
 				"status": "success",
-				"data": &models.IngressConnection{
+				"data": &IngressConnection{
 					ID:       "ing-2",
 					ServerID: "srv-2",
 					Name:     "New Tunnel",
@@ -38,7 +36,7 @@ func TestIngressClientOperations(t *testing.T) {
 		case r.Method == "POST" && r.URL.Path == "/api/v1/dns/ingress/ing-1/retry":
 			json.NewEncoder(w).Encode(map[string]any{
 				"status": "success",
-				"data": &models.IngressConnection{
+				"data": &IngressConnection{
 					ID:     "ing-1",
 					Name:   "Test Tunnel",
 					Status: "reconciling",
@@ -95,35 +93,35 @@ func TestActionsClientOperations(t *testing.T) {
 		case r.Method == "GET" && r.URL.Path == "/api/v1/actions/workflows":
 			json.NewEncoder(w).Encode(map[string]any{
 				"status": "success",
-				"data": []*models.ActionWorkflow{
+				"data": []*ActionWorkflow{
 					{ID: "wf-1", Name: "CI Test", Trigger: "push", Enabled: true},
 				},
 			})
 		case r.Method == "GET" && r.URL.Path == "/api/v1/actions/runs":
 			json.NewEncoder(w).Encode(map[string]any{
 				"status": "success",
-				"data": []*models.ActionRun{
+				"data": []*ActionRun{
 					{ID: "run-1", WorkflowID: "wf-1", Name: "CI Test", Number: 1, Status: "ready"},
 				},
 			})
 		case r.Method == "POST" && r.URL.Path == "/api/v1/actions/runs/run-1/retry":
 			json.NewEncoder(w).Encode(map[string]any{
 				"status": "success",
-				"data": &models.ActionRun{
+				"data": &ActionRun{
 					ID: "run-2", WorkflowID: "wf-1", Name: "CI Test", Number: 2, Status: "running",
 				},
 			})
 		case r.Method == "POST" && r.URL.Path == "/api/v1/actions/runs/run-1/cancel":
 			json.NewEncoder(w).Encode(map[string]any{
 				"status": "success",
-				"data": &models.ActionRun{
+				"data": &ActionRun{
 					ID: "run-1", WorkflowID: "wf-1", Name: "CI Test", Number: 1, Status: "cancelled",
 				},
 			})
 		case r.Method == "GET" && r.URL.Path == "/api/v1/actions/runners":
 			json.NewEncoder(w).Encode(map[string]any{
 				"status": "success",
-				"data": []*models.ActionRunner{
+				"data": []*ActionRunner{
 					{ID: "runner-1", Name: "Default Runner", Mode: "container", Status: "online", Enabled: true},
 				},
 			})

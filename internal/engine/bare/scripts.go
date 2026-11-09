@@ -1,17 +1,19 @@
 package bare
 
 import (
-	"codedock/internal/models"
-	"codedock/internal/platform/ssh"
 	"fmt"
-	"github.com/google/uuid"
 	"regexp"
 	"strings"
+
+	"github.com/google/uuid"
+
+	appsmod "codedock/internal/modules/apps"
+	"codedock/internal/platform/ssh"
 )
 
 var envIdentifierPattern = regexp.MustCompile(`^[A-Za-z_][A-Za-z0-9_]*$`)
 
-func identity(app *models.AppService) (string, string, string, error) {
+func identity(app *appsmod.AppService) (string, string, string, error) {
 	if _, err := uuid.Parse(app.ID); err != nil {
 		return "", "", "", err
 	}
@@ -20,14 +22,14 @@ func identity(app *models.AppService) (string, string, string, error) {
 	}
 	return "/opt/codedock/services/" + app.ID, "codedock-app-" + app.ID, "cd-" + strings.ReplaceAll(app.ID, "-", "")[:20], nil
 }
-func ownedScript(app *models.AppService) (string, error) {
+func ownedScript(app *appsmod.AppService) (string, error) {
 	base, unit, user, err := identity(app)
 	if err != nil {
 		return "", err
 	}
 	return "set -eu\numask 077\nbase=" + ssh.ShellQuote(base) + "\nunit=" + ssh.ShellQuote(unit) + "\nuser=" + ssh.ShellQuote(user) + "\ntest ! -L \"$base\"\ntest \"$(cat \"$base/owner\")\" = " + ssh.ShellQuote(app.ProjectID) + "\nexec 9>\"$base/lock\"\nflock -n 9\n", nil
 }
-func DeploymentScript(app *models.AppService, target models.RuntimeTarget, variables map[string]string, release string) (string, error) {
+func DeploymentScript(app *appsmod.AppService, target appsmod.RuntimeTarget, variables map[string]string, release string) (string, error) {
 	if err := Validate(app, target); err != nil {
 		return "", err
 	}
@@ -115,9 +117,9 @@ systemctl restart "$unit"
 	script += readinessScript(app)
 	return script, nil
 }
-func readinessScript(app *models.AppService) string {
+func readinessScript(app *appsmod.AppService) string {
 	command := "systemctl is-active --quiet \"$unit\""
-	if app.RuntimeMode != models.RuntimeModeWorker {
+	if app.RuntimeMode != appsmod.RuntimeModeWorker {
 		path := app.HealthCheckPath
 		if path == "" {
 			path = "/"

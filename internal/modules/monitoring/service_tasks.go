@@ -42,7 +42,9 @@ func (s *ScheduledTaskService) CreateScheduledTask(ctx context.Context, j *Sched
 		return nil, err
 	}
 	if s.manager != nil && j.Status == string(ScheduledTaskStatusActive) {
-		_ = s.manager.RegisterScheduledTask(j)
+		_ = s.manager.RegisterScheduledTask(&cron.ScheduledTask{
+			ID: j.ID, ServiceID: j.ServiceID, Name: j.Name, Schedule: j.Schedule, Command: j.Command, Status: cron.ScheduledTaskStatus(j.Status),
+		})
 	}
 	return j, nil
 }
@@ -83,7 +85,9 @@ func (s *ScheduledTaskService) UpdateScheduledTask(ctx context.Context, j *Sched
 	if s.manager != nil {
 		s.manager.UnregisterScheduledTask(j.ID)
 		if j.Status == string(ScheduledTaskStatusActive) {
-			_ = s.manager.RegisterScheduledTask(j)
+			_ = s.manager.RegisterScheduledTask(&cron.ScheduledTask{
+				ID: j.ID, ServiceID: j.ServiceID, Name: j.Name, Schedule: j.Schedule, Command: j.Command, Status: cron.ScheduledTaskStatus(j.Status),
+			})
 		}
 	}
 	return nil

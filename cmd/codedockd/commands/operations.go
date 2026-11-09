@@ -8,8 +8,8 @@ import (
 
 	"github.com/google/uuid"
 
-	"codedock/internal/models"
-	"codedock/internal/repositories"
+	"codedock/internal/modules/deployments"
+	"codedock/internal/modules/domains"
 )
 
 func runDeployments(args []string) {
@@ -26,7 +26,7 @@ func runDeployments(args []string) {
 	_, db, _ := InitDataDir()
 	defer db.Close()
 
-	deployRepo := repositories.NewDeploymentRepo(db)
+	deployRepo := deployments.NewDeploymentRepository(db)
 
 	serviceID := ""
 	for i := 1; i < len(args); i++ {
@@ -111,7 +111,7 @@ func runDomains(args []string) {
 	_, db, _ := InitDataDir()
 	defer db.Close()
 
-	domainRepo := repositories.NewDomainRepo(db)
+	domainRepo := domains.NewDomainRepo(db)
 
 	cmd := args[0]
 
@@ -152,7 +152,7 @@ func runDomains(args []string) {
 		if serviceID == "" {
 			exitError("--service <id> is required")
 		}
-		cfg := &models.DomainConfig{
+		cfg := &domains.DomainConfig{
 			ID:         uuid.New().String(),
 			ServiceID:  serviceID,
 			DomainName: domain,

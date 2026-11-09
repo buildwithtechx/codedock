@@ -5,7 +5,7 @@ import (
 	"os"
 	"text/tabwriter"
 
-	"codedock/internal/models"
+	pkgclient "codedock/pkg/client"
 	"github.com/spf13/cobra"
 )
 
@@ -48,7 +48,7 @@ var projectCreateCmd = &cobra.Command{
 		}
 
 		client := getClient()
-		req := &models.CreateProjectRequest{
+		req := &pkgclient.CreateProjectRequest{
 			Name:        name,
 			Description: desc,
 		}

@@ -1,23 +1,25 @@
 package clusters
 
 import (
-	"codedock/internal/engine/kubernetes"
-	"codedock/internal/services/operations"
 	"context"
 	"crypto/rand"
 	"crypto/sha256"
+	"encoding/base64"
 	"encoding/hex"
 	"encoding/json"
 	"fmt"
-	"github.com/google/uuid"
 	"io"
+	"net"
 	"net/http"
 	"regexp"
 	"strings"
+
+	"github.com/google/uuid"
 )
 
 var (
-	k3sVersionPattern = regexp.MustCompile(`^v1\.[0-9]+\.[0-9]+\+k3s[0-9]+$`)
+	k3sVersionPattern       = regexp.MustCompile(`^v1\.[0-9]+\.[0-9]+\+k3s[0-9]+$`)
+	networkInterfacePattern = regexp.MustCompile(`^[A-Za-z0-9_.:-]{1,32}$`)
 )
 
 type Store interface {
@@ -45,13 +47,13 @@ type ClusterService struct {
 	projects   Projects
 	servers    Servers
 	runner     Runner
-	operations *operations.Service
+	operations OperationsService
 	gate       Gate
 	http       *http.Client
 }
 
-func NewClusterService(store Store, projects Projects, servers Servers, runner Runner, ops *operations.Service, gate Gate, httpClient *http.Client) *Service {
-	return &Service{store: store, projects: projects, servers: servers, runner: runner, operations: ops, gate: gate, http: httpClient}
+func NewClusterService(store Store, projects Projects, servers Servers, runner Runner, ops OperationsService, gate Gate, httpClient *http.Client) *ClusterService {
+	return &ClusterService{store: store, projects: projects, servers: servers, runner: runner, operations: ops, gate: gate, http: httpClient}
 }
 func (s *ClusterService) Get(ctx context.Context, id string) (*Cluster, error) {
 	return s.store.Get(ctx, id)
@@ -169,7 +171,7 @@ func (s *ClusterService) Review(ctx context.Context, user, projectID string, req
 func (s *ClusterService) validateNodes(ctx context.Context, user string, cluster *Cluster) error {
 	ids, ips, fingerprints := map[string]bool{}, map[string]bool{}, map[string]bool{}
 	for _, node := range cluster.Nodes {
-		if err := kubernetes.ValidateNode(node); err != nil {
+		if err := validateClusterNode(node); err != nil {
 			return err
 		}
 		if ids[node.ServerID] || ips[node.PrivateIP] || fingerprints[node.Fingerprint] {
@@ -250,4 +252,31 @@ func (s *ClusterService) downloadInstaller(ctx context.Context) (string, error) 
 		return "", fmt.Errorf("K3s installer unavailable or oversized")
 	}
 	return string(data), nil
+}
+
+func validateClusterNode(node ClusterNode) error {
+	if _, err := uuid.Parse(node.ServerID); err != nil {
+		return fmt.Errorf("select a valid registered server identity")
+	}
+	ip := net.ParseIP(node.PrivateIP)
+	if ip == nil || !ip.IsPrivate() || ip.To4() == nil {
+		return fmt.Errorf("cluster nodes need a private IPv4 address")
+	}
+	for _, value := range []string{"10.42.0.0/16", "10.43.0.0/16"} {
+		_, network, err := net.ParseCIDR(value)
+		if err != nil {
+			return err
+		}
+		if network.Contains(ip) {
+			return fmt.Errorf("private node addresses cannot overlap the default K3s pod or service network")
+		}
+	}
+	if !networkInterfacePattern.MatchString(node.Interface) {
+		return fmt.Errorf("select a valid private network interface")
+	}
+	fingerprint, err := base64.RawStdEncoding.DecodeString(strings.TrimPrefix(node.Fingerprint, "SHA256:"))
+	if !strings.HasPrefix(node.Fingerprint, "SHA256:") || err != nil || len(fingerprint) != 32 {
+		return fmt.Errorf("verify the SSH host fingerprint before preparing a cluster operation")
+	}
+	return nil
 }

@@ -11,10 +11,12 @@ import (
 
 	cdkdb "codedock/db"
 	"codedock/internal/config"
-	"codedock/internal/models"
+	"codedock/internal/modules/apps"
+	"codedock/internal/modules/deployments"
+	"codedock/internal/modules/projects"
+	"codedock/internal/modules/settings"
 	systemdb "codedock/internal/platform/database"
 	"codedock/internal/platform/vault"
-	"codedock/internal/repositories"
 )
 
 type DBDeployerStore struct {
@@ -26,40 +28,36 @@ func NewDBDeployerStore(db *sql.DB, vlt *vault.Vault) *DBDeployerStore {
 	return &DBDeployerStore{DB: db, Vault: vlt}
 }
 
-func (a *DBDeployerStore) GetServerSettings() (*models.ServerSettings, error) {
-	return repositories.NewSettingsRepo(a.DB, a.Vault).GetServerSettings(context.Background())
+func (a *DBDeployerStore) GetServerSettings() (*settings.ServerSettings, error) {
+	return settings.NewSettingsRepo(a.DB, a.Vault).GetServerSettings(context.Background())
 }
 
-func (a *DBDeployerStore) ListAppServicesByProject(projectID string) ([]*models.AppService, error) {
-	return repositories.NewAppServiceRepo(a.DB).ListByProject(context.Background(), projectID)
+func (a *DBDeployerStore) ListAppServicesByProject(projectID string) ([]*apps.AppService, error) {
+	return apps.NewAppServiceRepo(a.DB).ListByProject(context.Background(), projectID)
 }
 
 func (a *DBDeployerStore) GetEnvVars(projectID string) (map[string]string, error) {
-	return repositories.NewEnvRepo(a.DB, a.Vault).GetVars(context.Background(), projectID)
+	return projects.NewEnvRepo(a.DB, a.Vault).GetVars(context.Background(), projectID)
 }
 
-func (a *DBDeployerStore) ListServiceVariables(serviceID string) ([]*models.Variable, error) {
-	svVarRepo := repositories.NewServiceVarRepo(a.DB)
-	return svVarRepo.ListByService(context.Background(), serviceID)
+func (a *DBDeployerStore) ListServiceVariables(serviceID string) ([]*apps.Variable, error) {
+	return apps.NewServiceVarRepo(a.DB).ListByService(context.Background(), serviceID)
 }
 
-func (a *DBDeployerStore) ListLogDrainsByService(serviceID string) ([]*models.LogDrain, error) {
-	return repositories.NewAppServiceRepo(a.DB).ListLogDrainsByService(context.Background(), serviceID)
+func (a *DBDeployerStore) ListLogDrainsByService(serviceID string) ([]*apps.LogDrain, error) {
+	return apps.NewAppServiceRepo(a.DB).ListLogDrainsByService(context.Background(), serviceID)
 }
 
-func (a *DBDeployerStore) GetServerlessFunctionCode(serviceID string) (*models.ServerlessFunctionCode, error) {
-	svlsRepo := repositories.NewServerlessRepository(a.DB)
-	return svlsRepo.GetCodeByServiceID(context.Background(), serviceID)
+func (a *DBDeployerStore) GetServerlessFunctionCode(serviceID string) (*apps.ServerlessFunctionCode, error) {
+	return apps.NewServerlessRepository(a.DB).GetCodeByServiceID(context.Background(), serviceID)
 }
 
-func (a *DBDeployerStore) UpdateAppService(app *models.AppService) error {
-	repo := repositories.NewAppServiceRepo(a.DB)
-	return repo.Update(context.Background(), app)
+func (a *DBDeployerStore) UpdateAppService(app *apps.AppService) error {
+	return apps.NewAppServiceRepo(a.DB).Update(context.Background(), app)
 }
 
-func (a *DBDeployerStore) GetRegistry(id string) (*models.Registry, error) {
-	repo := repositories.NewRegistryRepository(a.DB)
-	return repo.Get(context.Background(), id)
+func (a *DBDeployerStore) GetRegistry(id string) (*deployments.Registry, error) {
+	return deployments.NewRegistryRepository(a.DB).Get(context.Background(), id)
 }
 
 func InitDataDir() (string, *sql.DB, *vault.Vault) {
@@ -96,7 +94,7 @@ func InitDataDir() (string, *sql.DB, *vault.Vault) {
 			os.Exit(1)
 		}
 	}
-	sqlDB, err := repositories.OpenDatabase(databaseURL)
+	sqlDB, err := systemdb.OpenDatabase(databaseURL)
 	if err != nil {
 		slog.Error("failed to open database", "err", err)
 		os.Exit(1)
@@ -105,7 +103,7 @@ func InitDataDir() (string, *sql.DB, *vault.Vault) {
 		slog.Error("failed to run database migrations", "err", err)
 		os.Exit(1)
 	}
-	if err := config.PrepareSelfHosted(context.Background(), config.Get(), repositories.NewSelfHostedRepo(sqlDB)); err != nil {
+	if err := config.PrepareSelfHosted(context.Background(), config.Get(), settings.NewSelfHostedRepo(sqlDB)); err != nil {
 		slog.Error("failed to prepare self-hosted configuration", "err", err)
 		os.Exit(1)
 	}

@@ -2,9 +2,11 @@ package monitoring
 
 import (
 	"context"
+	"encoding/json"
 	"fmt"
-	"strings"
 	"time"
+
+	"codedock/internal/engine/hetzner"
 )
 
 func (s *AttentionManager) scanDeployments(ctx context.Context, _ string, orgID string) ([]*AttentionIssue, error) {

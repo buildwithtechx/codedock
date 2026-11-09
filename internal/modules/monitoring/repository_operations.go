@@ -17,7 +17,7 @@ func NewOperationRepo(db *sql.DB, vault Vault) *OperationRepo {
 	return &OperationRepo{db: sqlx.NewDb(db, "pgx"), vault: vault}
 }
 func (r *OperationRepo) Create(ctx context.Context, op *Operation) error {
-	encrypted, err := r.vault.Encrypt([]byte(op.Payload))
+	encrypted, err := r.vault.Encrypt(op.Payload)
 	if err != nil {
 		return fmt.Errorf("encrypt operation: %w", err)
 	}
@@ -33,7 +33,7 @@ func (r *OperationRepo) Get(ctx context.Context, id string) (*Operation, error) 
 	if err != nil {
 		return nil, fmt.Errorf("decrypt operation: %w", err)
 	}
-	op.Payload = string(payload)
+	op.Payload = payload
 	return &op, nil
 }
 func (r *OperationRepo) List(ctx context.Context, project, user string) ([]Operation, error) {

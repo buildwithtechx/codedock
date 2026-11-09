@@ -1,7 +1,6 @@
 package storage
 
 import (
-	"codedock/internal/models"
 	"context"
 	"crypto/sha256"
 	"encoding/hex"
@@ -61,6 +60,6 @@ func (bm *BackupManager) VerifyArchive(ctx context.Context, id string) (string, 
 	return actual, nil
 }
 
-func modelsVerification(record *models.BackupRecord, actual string) models.UpdateBackupRecordOpts {
-	return models.UpdateBackupRecordOpts{ID: record.ID, Status: record.Status, FilePath: record.FilePath, S3URL: record.S3URL, S3DestinationID: record.S3DestinationID, FileSizeBytes: record.FileSizeBytes, Logs: record.Logs, CompletedAt: record.CompletedAt, SHA256: actual, VerifiedAt: time.Now().UTC().Format(time.RFC3339)}
+func modelsVerification(record *BackupRecord, actual string) UpdateBackupRecordOpts {
+	return UpdateBackupRecordOpts{ID: record.ID, Status: record.Status, FilePath: record.FilePath, S3URL: record.S3URL, S3DestinationID: record.S3DestinationID, FileSizeBytes: record.FileSizeBytes, Logs: record.Logs, CompletedAt: record.CompletedAt, SHA256: actual, VerifiedAt: time.Now().UTC().Format(time.RFC3339)}
 }

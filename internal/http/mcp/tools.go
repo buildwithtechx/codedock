@@ -5,7 +5,7 @@ import (
 	"strings"
 
 	"codedock/internal/http/apischema"
-	"codedock/internal/models"
+	"codedock/internal/modules/users"
 )
 
 type ToolAnnotations struct {
@@ -215,9 +215,9 @@ func AllTools() []ToolDef {
 	return tools
 }
 
-func FilterToolsForClaims(tools []ToolDef, claims *models.UserClaims, cloudEnabled bool) []ToolDef {
+func FilterToolsForClaims(tools []ToolDef, claims *users.UserClaims, cloudEnabled bool) []ToolDef {
 	var out []ToolDef
-	isAdmin := claims == nil || claims.Role == models.UserRoleAdmin || claims.Role == models.UserRoleOwner
+	isAdmin := claims == nil || claims.Role == users.UserRoleAdmin || claims.Role == users.UserRoleOwner
 	isReadOnly := claims != nil && claims.Role == "readonly"
 
 	for _, t := range tools {

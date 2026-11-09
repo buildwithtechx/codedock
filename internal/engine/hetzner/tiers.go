@@ -1,7 +1,6 @@
 package hetzner
 
 import (
-	"codedock/internal/models"
 	"crypto/ed25519"
 	"crypto/rand"
 	"encoding/pem"
@@ -9,10 +8,12 @@ import (
 	"strings"
 
 	"golang.org/x/crypto/ssh"
+
+	"codedock/internal/modules/servers"
 )
 
-func Tiers() []models.ManagedTier {
-	return []models.ManagedTier{
+func Tiers() []servers.ManagedTier {
+	return []servers.ManagedTier{
 		{Name: "cx23", Cores: 2, MemoryGB: 4, DiskGB: 40, MonthlyPrice: 3.49},
 		{Name: "cx33", Cores: 4, MemoryGB: 8, DiskGB: 80, MonthlyPrice: 5.49},
 		{Name: "cx43", Cores: 8, MemoryGB: 16, DiskGB: 160, MonthlyPrice: 9.49},
@@ -24,13 +25,13 @@ func Tiers() []models.ManagedTier {
 	}
 }
 
-func TierByName(name string) (models.ManagedTier, error) {
+func TierByName(name string) (servers.ManagedTier, error) {
 	for _, tier := range Tiers() {
 		if tier.Name == name {
 			return tier, nil
 		}
 	}
-	return models.ManagedTier{}, fmt.Errorf("select a reviewed server tier")
+	return servers.ManagedTier{}, fmt.Errorf("select a reviewed server tier")
 }
 
 func Regions() []string { return []string{"fsn1", "nbg1", "hel1", "ash", "hil", "sin"} }

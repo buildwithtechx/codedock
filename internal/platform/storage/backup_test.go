@@ -9,8 +9,6 @@ import (
 	"strings"
 	"testing"
 	"time"
-
-	"codedock/internal/models"
 )
 
 type mockS3Transport struct {
@@ -28,16 +26,16 @@ func (m *mockS3Transport) RoundTrip(req *http.Request) (*http.Response, error) {
 }
 
 type mockStore struct {
-	records map[string]*models.BackupRecord
-	configs map[string]*models.BackupConfig
-	s3dests map[string]*models.S3Destination
+	records map[string]*BackupRecord
+	configs map[string]*BackupConfig
+	s3dests map[string]*S3Destination
 }
 
 func newMockStore() *mockStore {
 	return &mockStore{
-		records: make(map[string]*models.BackupRecord),
-		configs: make(map[string]*models.BackupConfig),
-		s3dests: make(map[string]*models.S3Destination),
+		records: make(map[string]*BackupRecord),
+		configs: make(map[string]*BackupConfig),
+		s3dests: make(map[string]*S3Destination),
 	}
 }
 
@@ -45,31 +43,31 @@ func (m *mockStore) ControlPlaneSnapshot(context.Context) ([]byte, error) {
 	return []byte("snapshot fixture"), nil
 }
 
-func (m *mockStore) ListAllActiveBackupConfigs() ([]*models.BackupConfig, error) {
-	var list []*models.BackupConfig
+func (m *mockStore) ListAllActiveBackupConfigs() ([]*BackupConfig, error) {
+	var list []*BackupConfig
 	for _, c := range m.configs {
 		list = append(list, c)
 	}
 	return list, nil
 }
 
-func (m *mockStore) GetBackupConfig(id string) (*models.BackupConfig, error) {
+func (m *mockStore) GetBackupConfig(id string) (*BackupConfig, error) {
 	if c, ok := m.configs[id]; ok {
 		return c, nil
 	}
 	return nil, nil
 }
 
-func (m *mockStore) CreateBackupRecord(rec *models.BackupRecord) error {
+func (m *mockStore) CreateBackupRecord(rec *BackupRecord) error {
 	m.records[rec.ID] = rec
 	return nil
 }
 
-func (m *mockStore) GetDatabase(id string) (*models.Database, error) {
+func (m *mockStore) GetDatabase(id string) (*Database, error) {
 	return nil, nil
 }
 
-func (m *mockStore) UpdateBackupRecord(opts models.UpdateBackupRecordOpts) error {
+func (m *mockStore) UpdateBackupRecord(opts UpdateBackupRecordOpts) error {
 	if rec, ok := m.records[opts.ID]; ok {
 		rec.Status = opts.Status
 		rec.FilePath = opts.FilePath
@@ -80,22 +78,22 @@ func (m *mockStore) UpdateBackupRecord(opts models.UpdateBackupRecordOpts) error
 	return nil
 }
 
-func (m *mockStore) GetS3Destination(id string) (*models.S3Destination, error) {
+func (m *mockStore) GetS3Destination(id string) (*S3Destination, error) {
 	if d, ok := m.s3dests[id]; ok {
 		return d, nil
 	}
 	return nil, nil
 }
 
-func (m *mockStore) GetBackupRecord(id string) (*models.BackupRecord, error) {
+func (m *mockStore) GetBackupRecord(id string) (*BackupRecord, error) {
 	if r, ok := m.records[id]; ok {
 		return r, nil
 	}
 	return nil, nil
 }
 
-func (m *mockStore) ListBackupRecords(backupConfigID string) ([]*models.BackupRecord, error) {
-	var list []*models.BackupRecord
+func (m *mockStore) ListBackupRecords(backupConfigID string) ([]*BackupRecord, error) {
+	var list []*BackupRecord
 	for _, r := range m.records {
 		if r.BackupConfigID == backupConfigID {
 			list = append(list, r)
@@ -109,15 +107,15 @@ func TestMaxStorageGBOverflow(t *testing.T) {
 	dir := t.TempDir()
 	bm := NewBackupManager(nil, store, dir)
 
-	cfg := &models.BackupConfig{
+	cfg := &BackupConfig{
 		ID:           "cfg-1",
 		MaxStorageGB: 9000000000,
 	}
 
-	rec := &models.BackupRecord{
+	rec := &BackupRecord{
 		ID:             "rec-1",
 		BackupConfigID: cfg.ID,
-		Status:         models.BackupRecordStatusCompleted,
+		Status:         BackupRecordStatusCompleted,
 		FileSizeBytes:  1024,
 		StartedAt:      time.Now().UTC().Format(time.RFC3339),
 	}
@@ -125,7 +123,7 @@ func TestMaxStorageGBOverflow(t *testing.T) {
 
 	bm.enforceRetentionPolicy(cfg)
 
-	if rec.Status == models.BackupRecordStatusExpired {
+	if rec.Status == BackupRecordStatusExpired {
 		t.Fatalf("expected record to stay active when storage limit is not exceeded")
 	}
 }
@@ -136,7 +134,7 @@ func TestDisableLocalGuard(t *testing.T) {
 	dir := t.TempDir()
 	bm := NewBackupManager(nil, store, dir)
 
-	cfg := &models.BackupConfig{
+	cfg := &BackupConfig{
 		ID:            "cfg-disable-local",
 		BackupEnabled: true,
 		DisableLocal:  true,
@@ -162,13 +160,13 @@ func TestEnforceRetentionPolicyS3Cleanup(t *testing.T) {
 	dir := t.TempDir()
 	bm := NewBackupManager(nil, store, dir)
 
-	cfg := &models.BackupConfig{
+	cfg := &BackupConfig{
 		ID:              "cfg-retention",
 		RetentionDays:   1,
 		S3DestinationID: "dest-1",
 	}
 
-	dest := &models.S3Destination{
+	dest := &S3Destination{
 		ID:              "dest-1",
 		Bucket:          "mybucket",
 		Endpoint:        "s3.amazonaws.com",
@@ -181,11 +179,11 @@ func TestEnforceRetentionPolicyS3Cleanup(t *testing.T) {
 	dummyFile := filepath.Join(dir, "old_backup.db")
 	_ = os.WriteFile(dummyFile, []byte("data"), 0o600)
 
-	rec := &models.BackupRecord{
+	rec := &BackupRecord{
 		ID:              "rec-old",
 		BackupConfigID:  cfg.ID,
 		S3DestinationID: "dest-1",
-		Status:          models.BackupRecordStatusCompleted,
+		Status:          BackupRecordStatusCompleted,
 		FilePath:        dummyFile,
 		S3URL:           "s3://mybucket/backup_old.db",
 		StartedAt:       oldTime,
@@ -198,7 +196,7 @@ func TestEnforceRetentionPolicyS3Cleanup(t *testing.T) {
 
 	bm.enforceRetentionPolicy(cfg)
 
-	if rec.Status != models.BackupRecordStatusExpired {
+	if rec.Status != BackupRecordStatusExpired {
 		t.Fatalf("expected record status to be expired, got %s", rec.Status)
 	}
 	if _, err := os.Stat(dummyFile); !os.IsNotExist(err) {
@@ -223,13 +221,13 @@ func TestEnforceRetentionPolicyS3DeleteError(t *testing.T) {
 		s3HTTPClient.Transport = &mockS3Transport{}
 	}()
 
-	cfg := &models.BackupConfig{
+	cfg := &BackupConfig{
 		ID:              "cfg-retention-err",
 		RetentionDays:   1,
 		S3DestinationID: "dest-1",
 	}
 
-	dest := &models.S3Destination{
+	dest := &S3Destination{
 		ID:              "dest-1",
 		Bucket:          "mybucket",
 		Endpoint:        "s3.amazonaws.com",
@@ -243,11 +241,11 @@ func TestEnforceRetentionPolicyS3DeleteError(t *testing.T) {
 	_ = os.WriteFile(dummyFile, []byte("data"), 0o600)
 	defer os.Remove(dummyFile)
 
-	rec := &models.BackupRecord{
+	rec := &BackupRecord{
 		ID:              "rec-old-err",
 		BackupConfigID:  cfg.ID,
 		S3DestinationID: "dest-1",
-		Status:          models.BackupRecordStatusCompleted,
+		Status:          BackupRecordStatusCompleted,
 		FilePath:        dummyFile,
 		S3URL:           "s3://mybucket/backup_old_err.db",
 		StartedAt:       oldTime,
@@ -256,7 +254,7 @@ func TestEnforceRetentionPolicyS3DeleteError(t *testing.T) {
 
 	bm.enforceRetentionPolicy(cfg)
 
-	if rec.Status == models.BackupRecordStatusExpired {
+	if rec.Status == BackupRecordStatusExpired {
 		t.Fatalf("expected record to not be expired when S3 DELETE fails")
 	}
 }

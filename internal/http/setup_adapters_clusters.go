@@ -4,15 +4,13 @@ import (
 	"context"
 	"fmt"
 
-	"codedock/internal/models"
 	modclusters "codedock/internal/modules/clusters"
-	"codedock/internal/services/clusters"
-	"codedock/internal/services/operations"
+	"codedock/internal/modules/monitoring"
 )
 
 type clusterServiceAdapter struct {
-	service    *clusters.Service
-	operations *operations.Service
+	service    *modclusters.ClusterService
+	operations *monitoring.OperationService
 }
 
 func (a *clusterServiceAdapter) List(ctx context.Context, projectID string) (any, error) {
@@ -20,30 +18,7 @@ func (a *clusterServiceAdapter) List(ctx context.Context, projectID string) (any
 }
 
 func (a *clusterServiceAdapter) Review(ctx context.Context, userID, projectID string, req modclusters.ClusterReviewRequest) (any, error) {
-	legacyNodes := make([]models.ClusterNode, len(req.Cluster.Nodes))
-	for i, n := range req.Cluster.Nodes {
-		legacyNodes[i] = models.ClusterNode{
-			ServerID:    n.ServerID,
-			PrivateIP:   n.PrivateIP,
-			Interface:   n.Interface,
-			Fingerprint: n.Fingerprint,
-		}
-	}
-	legacyReq := models.ClusterReviewRequest{
-		Cluster: models.Cluster{
-			ID:             req.Cluster.ID,
-			ProjectID:      req.Cluster.ProjectID,
-			OrganizationID: req.Cluster.OrganizationID,
-			Name:           req.Cluster.Name,
-			Version:        req.Cluster.Version,
-			Controls:       req.Cluster.Controls,
-			Nodes:          legacyNodes,
-			Revision:       req.Cluster.Revision,
-			Status:         req.Cluster.Status,
-		},
-		Action: req.Action,
-	}
-	return a.service.Review(ctx, userID, projectID, legacyReq)
+	return a.service.Review(ctx, userID, projectID, req)
 }
 
 func (a *clusterServiceAdapter) Apply(ctx context.Context, userID, operationID, confirmation string) (any, error) {
@@ -86,7 +61,7 @@ func (a *clusterServiceAdapter) NetworkPreflight(ctx context.Context, projectID,
 }
 
 func (a *clusterServiceAdapter) ReviewStorageSetup(ctx context.Context, userID, projectID, clusterID string, req modclusters.StorageSetupRequest) (any, error) {
-	return a.service.ReviewStorageSetup(ctx, userID, projectID, clusterID, models.StorageSetupRequest{Version: req.Version})
+	return a.service.ReviewStorageSetup(ctx, userID, projectID, clusterID, req)
 }
 
 func (a *clusterServiceAdapter) ApplyStorageSetup(ctx context.Context, userID, operationID, confirmation string) (any, error) {

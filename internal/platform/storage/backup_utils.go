@@ -7,11 +7,9 @@ import (
 	"sort"
 	"strings"
 	"time"
-
-	"codedock/internal/models"
 )
 
-func (bm *BackupManager) uploadToS3(ctx context.Context, dest *models.S3Destination, fileName string, data []byte) (string, error) {
+func (bm *BackupManager) uploadToS3(ctx context.Context, dest *S3Destination, fileName string, data []byte) (string, error) {
 	key := strings.Trim(dest.PathPrefix, "/")
 	if key != "" {
 		key += "/"
@@ -27,15 +25,15 @@ func (bm *BackupManager) uploadToS3(ctx context.Context, dest *models.S3Destinat
 	return fmt.Sprintf("s3://%s/%s", dest.Bucket, key), nil
 }
 
-func (bm *BackupManager) enforceRetentionPolicy(cfg *models.BackupConfig) {
+func (bm *BackupManager) enforceRetentionPolicy(cfg *BackupConfig) {
 	records, err := bm.store.ListBackupRecords(cfg.ID)
 	if err != nil || len(records) == 0 {
 		return
 	}
 
-	var activeRecords []*models.BackupRecord
+	var activeRecords []*BackupRecord
 	for _, rec := range records {
-		if rec.Status == models.BackupRecordStatusCompleted && rec.ProtectedUntil <= time.Now().Unix() {
+		if rec.Status == BackupRecordStatusCompleted && rec.ProtectedUntil <= time.Now().Unix() {
 			activeRecords = append(activeRecords, rec)
 		}
 	}
@@ -43,7 +41,7 @@ func (bm *BackupManager) enforceRetentionPolicy(cfg *models.BackupConfig) {
 		return
 	}
 
-	toExpire := make(map[string]*models.BackupRecord)
+	toExpire := make(map[string]*BackupRecord)
 
 	if cfg.RetentionDays > 0 {
 		cutoff := time.Now().Add(-time.Duration(cfg.RetentionDays) * 24 * time.Hour)
@@ -55,7 +53,7 @@ func (bm *BackupManager) enforceRetentionPolicy(cfg *models.BackupConfig) {
 		}
 	}
 
-	var validRecords []*models.BackupRecord
+	var validRecords []*BackupRecord
 	for _, rec := range activeRecords {
 		if _, expired := toExpire[rec.ID]; !expired {
 			validRecords = append(validRecords, rec)

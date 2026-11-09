@@ -2,7 +2,6 @@ package observability
 
 import (
 	"bytes"
-	"codedock/internal/models"
 	"context"
 	"fmt"
 	"github.com/docker/docker/api/types/container"
@@ -11,7 +10,7 @@ import (
 	"time"
 )
 
-func (r *CanvasRuntime) Read(ctx context.Context, canvas *models.EnvironmentCanvas, nodeID string) (*models.RuntimeObservation, error) {
+func (r *CanvasRuntime) Read(ctx context.Context, canvas *EnvironmentCanvas, nodeID string) (*RuntimeObservation, error) {
 	if canvas == nil {
 		return nil, fmt.Errorf("canvas unavailable")
 	}
@@ -33,7 +32,7 @@ func (r *CanvasRuntime) Read(ctx context.Context, canvas *models.EnvironmentCanv
 				if err != nil {
 					return nil, err
 				}
-				return &models.RuntimeObservation{Logs: logs, Metrics: map[string]any{"runtimeKind": observed.Kind, "status": observed.Status, "desiredReplicas": observed.Desired, "availableReplicas": observed.Available, "metricsAvailable": observed.MetricsAvailable, "metricsError": observed.MetricsError, "pods": observed.Pods}}, nil
+				return &RuntimeObservation{Logs: logs, Metrics: map[string]any{"runtimeKind": observed.Kind, "status": observed.Status, "desiredReplicas": observed.Desired, "availableReplicas": observed.Available, "metricsAvailable": observed.MetricsAvailable, "metricsError": observed.MetricsError, "pods": observed.Pods}}, nil
 			}
 		}
 	}
@@ -95,5 +94,5 @@ func (r *CanvasRuntime) Read(ctx context.Context, canvas *models.EnvironmentCanv
 	if err != nil {
 		return nil, fmt.Errorf("decode runtime logs: %w", err)
 	}
-	return &models.RuntimeObservation{Logs: logs.String(), Metrics: map[string]any{"status": health.Status, "cpuPercent": health.CPUUsagePercentage, "memoryBytes": health.MemoryUsageBytes, "memoryLimitBytes": health.MemoryLimitBytes, "uptimeSeconds": health.UptimeSeconds}}, nil
+	return &RuntimeObservation{Logs: logs.String(), Metrics: map[string]any{"status": health.Status, "cpuPercent": health.CPUUsagePercentage, "memoryBytes": health.MemoryUsageBytes, "memoryLimitBytes": health.MemoryLimitBytes, "uptimeSeconds": health.UptimeSeconds}}, nil
 }

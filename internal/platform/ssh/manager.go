@@ -7,10 +7,13 @@ import (
 	"time"
 
 	dockerclient "github.com/docker/docker/client"
-
-	"codedock/internal/models"
-	"codedock/internal/repositories"
 )
+
+type ServerRepository interface {
+	UpdateStatus(ctx context.Context, id string, status ServerStatus) error
+	UpdateMetrics(ctx context.Context, id string, metrics []byte) error
+	ListByUser(ctx context.Context, userID, orgID string) ([]*Server, error)
+}
 
 type clientEntry struct {
 	client *Client
@@ -21,18 +24,18 @@ type clientEntry struct {
 type SSHManager struct {
 	mu                  sync.Mutex
 	clients             map[string]*clientEntry
-	serverRepo          repositories.ServerRepository
-	OnServerUnreachable func(server *models.Server, err error)
+	serverRepo          ServerRepository
+	OnServerUnreachable func(server *Server, err error)
 }
 
-func NewSSHManager(repo repositories.ServerRepository) *SSHManager {
+func NewSSHManager(repo ServerRepository) *SSHManager {
 	return &SSHManager{
 		clients:    make(map[string]*clientEntry),
 		serverRepo: repo,
 	}
 }
 
-func (m *SSHManager) GetClient(server *models.Server) (*Client, func(), error) {
+func (m *SSHManager) GetClient(server *Server) (*Client, func(), error) {
 	if server == nil {
 		return nil, nil, fmt.Errorf("server cannot be nil")
 	}
@@ -81,7 +84,7 @@ func (m *SSHManager) releaseClient(entry *clientEntry) {
 	}
 }
 
-func (m *SSHManager) GetDockerClient(ctx context.Context, server *models.Server) (*dockerclient.Client, func(), error) {
+func (m *SSHManager) GetDockerClient(ctx context.Context, server *Server) (*dockerclient.Client, func(), error) {
 	client, release, err := m.GetClient(server)
 	if err != nil {
 		return nil, nil, err
@@ -115,13 +118,13 @@ func (m *SSHManager) TestConnection(ctx context.Context, cfg Config) error {
 	return nil
 }
 
-func (m *SSHManager) RefreshServerStatus(ctx context.Context, server *models.Server) error {
+func (m *SSHManager) RefreshServerStatus(ctx context.Context, server *Server) error {
 	client, release, err := m.GetClient(server)
 	if err != nil {
-		if server.Status != models.ServerStatusOffline && m.OnServerUnreachable != nil {
+		if server.Status != ServerStatusOffline && m.OnServerUnreachable != nil {
 			m.OnServerUnreachable(server, err)
 		}
-		_ = m.serverRepo.UpdateStatus(ctx, server.ID, models.ServerStatusOffline)
+		_ = m.serverRepo.UpdateStatus(ctx, server.ID, ServerStatusOffline)
 		return err
 	}
 	defer release()
@@ -129,10 +132,10 @@ func (m *SSHManager) RefreshServerStatus(ctx context.Context, server *models.Ser
 	metrics, err := client.CollectMetrics(ctx)
 	if err != nil {
 		m.RemoveClient(server.ID)
-		if server.Status != models.ServerStatusOffline && m.OnServerUnreachable != nil {
+		if server.Status != ServerStatusOffline && m.OnServerUnreachable != nil {
 			m.OnServerUnreachable(server, err)
 		}
-		_ = m.serverRepo.UpdateStatus(ctx, server.ID, models.ServerStatusOffline)
+		_ = m.serverRepo.UpdateStatus(ctx, server.ID, ServerStatusOffline)
 		return fmt.Errorf("failed to collect remote metrics: %w", err)
 	}
 
@@ -140,7 +143,7 @@ func (m *SSHManager) RefreshServerStatus(ctx context.Context, server *models.Ser
 		return fmt.Errorf("failed to update metrics: %w", err)
 	}
 
-	return m.serverRepo.UpdateStatus(ctx, server.ID, models.ServerStatusOnline)
+	return m.serverRepo.UpdateStatus(ctx, server.ID, ServerStatusOnline)
 }
 
 func (m *SSHManager) RemoveClient(serverID string) {
@@ -179,7 +182,7 @@ func (m *SSHManager) StartMetricsPoller(ctx context.Context, userID string) {
 }
 
 // AssertOperatorSSHAccess ensures tenant boundaries are enforced on SSH connections.
-func AssertOperatorSSHAccess(server *models.Server, expectedOrgID string) error {
+func AssertOperatorSSHAccess(server *Server, expectedOrgID string) error {
 	if server == nil {
 		return fmt.Errorf("server cannot be nil")
 	}

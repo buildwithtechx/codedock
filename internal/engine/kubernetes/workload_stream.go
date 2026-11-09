@@ -1,20 +1,21 @@
 package kubernetes
 
 import (
-	"codedock/internal/models"
 	"context"
 	"encoding/json"
 	"fmt"
 	"io"
 	"strings"
+
+	appsmod "codedock/internal/modules/apps"
 )
 
 type Streamer interface {
-	StreamKubectl(context.Context, models.ClusterNode, []string, io.Writer) error
-	StreamKubectlPTY(context.Context, models.ClusterNode, []string, io.Reader, io.Writer) error
+	StreamKubectl(context.Context, ClusterNode, []string, io.Writer) error
+	StreamKubectlPTY(context.Context, ClusterNode, []string, io.Reader, io.Writer) error
 }
 
-func (r *WorkloadRuntime) resolvePod(ctx context.Context, node models.ClusterNode, app *models.AppService, pod string) (string, string, error) {
+func (r *WorkloadRuntime) resolvePod(ctx context.Context, node ClusterNode, app *appsmod.AppService, pod string) (string, string, error) {
 	observation, err := r.Observe(ctx, node, app)
 	if err != nil {
 		return "", "", err
@@ -31,7 +32,7 @@ func (r *WorkloadRuntime) resolvePod(ctx context.Context, node models.ClusterNod
 	return "", "", fmt.Errorf("select a ready pod owned by this service")
 }
 
-func (r *WorkloadRuntime) StreamLogs(ctx context.Context, streamer Streamer, node models.ClusterNode, app *models.AppService, pod string, output io.Writer) error {
+func (r *WorkloadRuntime) StreamLogs(ctx context.Context, streamer Streamer, node ClusterNode, app *appsmod.AppService, pod string, output io.Writer) error {
 	namespace, name, err := r.resolvePod(ctx, node, app, pod)
 	if err != nil {
 		return err
@@ -39,7 +40,7 @@ func (r *WorkloadRuntime) StreamLogs(ctx context.Context, streamer Streamer, nod
 	return streamer.StreamKubectl(ctx, node, []string{"-n", namespace, "logs", name, "-c", "app", "--follow", "--tail=200", "--timestamps"}, output)
 }
 
-func (r *WorkloadRuntime) StreamExec(ctx context.Context, streamer Streamer, node models.ClusterNode, app *models.AppService, pod string, command []string, input io.Reader, output io.Writer) error {
+func (r *WorkloadRuntime) StreamExec(ctx context.Context, streamer Streamer, node ClusterNode, app *appsmod.AppService, pod string, command []string, input io.Reader, output io.Writer) error {
 	if len(command) == 0 || len(command) > 64 {
 		return fmt.Errorf("provide one to sixty-four command arguments")
 	}
@@ -75,7 +76,7 @@ type InstanceGraph struct {
 	Edges []InstanceEdge `json:"edges"`
 }
 
-func (r *WorkloadRuntime) InstanceGraph(ctx context.Context, node models.ClusterNode, app *models.AppService) (*InstanceGraph, error) {
+func (r *WorkloadRuntime) InstanceGraph(ctx context.Context, node ClusterNode, app *appsmod.AppService) (*InstanceGraph, error) {
 	observation, err := r.Observe(ctx, node, app)
 	if err != nil {
 		return nil, err
@@ -123,7 +124,7 @@ type ResourceControl struct {
 	Message string `json:"message"`
 }
 
-func (r *WorkloadRuntime) ResourceSummary(ctx context.Context, node models.ClusterNode, app *models.AppService) ([]ResourceControl, error) {
+func (r *WorkloadRuntime) ResourceSummary(ctx context.Context, node ClusterNode, app *appsmod.AppService) ([]ResourceControl, error) {
 	namespace, name, err := WorkloadIdentity(app)
 	if err != nil {
 		return nil, err

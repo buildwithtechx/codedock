@@ -8,8 +8,9 @@ import (
 
 	"github.com/google/uuid"
 
-	"codedock/internal/models"
-	"codedock/internal/repositories"
+	"codedock/internal/modules/apps"
+	"codedock/internal/modules/environments"
+	"codedock/internal/modules/projects"
 )
 
 func runApps(args []string) {
@@ -27,10 +28,10 @@ func runApps(args []string) {
 	_, db, _ := InitDataDir()
 	defer db.Close()
 
-	appRepo := repositories.NewAppServiceRepo(db)
-	svcVarRepo := repositories.NewServiceVarRepo(db)
-	envRepo := repositories.NewEnvironmentRepo(db)
-	projectRepo := repositories.NewProjectRepo(db, envRepo)
+	appRepo := apps.NewAppServiceRepo(db)
+	svcVarRepo := apps.NewServiceVarRepo(db)
+	envRepo := environments.NewEnvironmentRepo(db)
+	projectRepo := projects.NewProjectRepo(db, envRepo)
 
 	cmd := args[0]
 
@@ -118,7 +119,7 @@ func runApps(args []string) {
 			}
 		}
 
-		svc := &models.AppService{
+		svc := &apps.AppService{
 			ID:            uuid.New().String(),
 			ProjectID:     projectID,
 			EnvironmentID: envID,

@@ -18,7 +18,7 @@ type Service struct {
 	projects ProjectRepository
 	apps     AppServiceRepository
 	domains  DomainLister
-	users    *UserRepo
+	users    UserRepo
 	orgs     OrganizationRepository
 	issues   AttentionRepository
 	usage    *UsageReader
@@ -34,7 +34,7 @@ func NewService(
 	projects ProjectRepository,
 	apps AppServiceRepository,
 	domains DomainLister,
-	users *UserRepo,
+	users UserRepo,
 	orgs OrganizationRepository,
 	issues AttentionRepository,
 	usage *UsageReader,

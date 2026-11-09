@@ -1,30 +1,32 @@
 package middleware
 
 import (
-	"codedock/internal/models"
 	"context"
 	"crypto/sha256"
 	"encoding/hex"
 	"fmt"
-	"github.com/labstack/echo/v4"
 	"net/http"
 	"net/http/httptest"
 	"strings"
 	"testing"
 	"time"
+
+	"github.com/labstack/echo/v4"
+
+	"codedock/internal/modules/users"
 )
 
 type personalTestStore struct {
-	token *models.PersonalAccessToken
-	user  *models.User
+	token *users.PersonalAccessToken
+	user  *users.User
 	hash  string
 }
 
-func (s *personalTestStore) GetPATByHash(_ context.Context, hash string) (*models.PersonalAccessToken, error) {
+func (s *personalTestStore) GetPATByHash(_ context.Context, hash string) (*users.PersonalAccessToken, error) {
 	s.hash = hash
 	return s.token, nil
 }
-func (s *personalTestStore) GetUserByID(context.Context, string) (*models.User, error) {
+func (s *personalTestStore) GetUserByID(context.Context, string) (*users.User, error) {
 	return s.user, nil
 }
 func (s *personalTestStore) ProjectForResource(_ context.Context, kind, id string) (string, error) {
@@ -66,7 +68,7 @@ func TestPersonalTokensEnforcePolicyAndOwnerStatus(t *testing.T) {
 		t.Run(test.name, func(t *testing.T) {
 			allowed := `["allowed"]`
 			expires := time.Now().Add(time.Hour)
-			store := &personalTestStore{token: &models.PersonalAccessToken{UserID: "owner", AccessLevel: "read_write", ProjectScope: "all", ExpiresAt: &expires}, user: &models.User{ID: "owner", IsActive: !test.inactive, Role: models.UserRoleMember}}
+			store := &personalTestStore{token: &users.PersonalAccessToken{UserID: "owner", AccessLevel: "read_write", ProjectScope: "all", ExpiresAt: &expires}, user: &users.User{ID: "owner", IsActive: !test.inactive, Role: users.UserRoleMember}}
 			if test.read {
 				store.token.AccessLevel = "read"
 			}

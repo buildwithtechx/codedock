@@ -1,14 +1,13 @@
 package kubernetes
 
 import (
-	"codedock/internal/models"
 	"context"
 	"encoding/json"
 	"fmt"
 	"strings"
 )
 
-func (r *WorkloadRuntime) ApplyOwnedData(ctx context.Context, node models.ClusterNode, manifest string, progress func(string, string) error) error {
+func (r *WorkloadRuntime) ApplyOwnedData(ctx context.Context, node ClusterNode, manifest string, progress func(string, string) error) error {
 	var document struct {
 		Items []map[string]any `json:"items"`
 	}
@@ -93,7 +92,7 @@ func matchingDataOwner(existing, desired map[string]any) error {
 	}
 	return nil
 }
-func (r *WorkloadRuntime) DataReady(ctx context.Context, node models.ClusterNode, record *models.ClusterData) error {
+func (r *WorkloadRuntime) DataReady(ctx context.Context, node ClusterNode, record *ClusterData) error {
 	namespace, name := DataIdentity(record.Spec)
 	if record.Spec.Engine == "postgres" {
 		resource := "cluster.postgresql.cnpg.io"
@@ -118,7 +117,7 @@ func (r *WorkloadRuntime) DataReady(ctx context.Context, node models.ClusterNode
 	}
 	return r.DataObserved(ctx, node, record)
 }
-func (r *WorkloadRuntime) DataObserved(ctx context.Context, node models.ClusterNode, record *models.ClusterData) error {
+func (r *WorkloadRuntime) DataObserved(ctx context.Context, node ClusterNode, record *ClusterData) error {
 	namespace, name := DataIdentity(record.Spec)
 	if record.Spec.Engine == "postgres" {
 		resource := "cluster.postgresql.cnpg.io"

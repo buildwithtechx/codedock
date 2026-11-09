@@ -2,8 +2,6 @@ package docker
 
 import (
 	"testing"
-
-	"codedock/internal/models"
 )
 
 func TestIsNvidiaGpuID(t *testing.T) {
@@ -39,7 +37,7 @@ func TestIsNvidiaGpuID(t *testing.T) {
 
 func TestNormalizeGPURequests(t *testing.T) {
 	t.Run("defaults to all with gpu capability", func(t *testing.T) {
-		reqs := []models.GPURequest{{}}
+		reqs := []GPURequest{{}}
 		got, err := NormalizeGPURequests(reqs)
 		if err != nil {
 			t.Fatalf("unexpected error: %v", err)
@@ -53,7 +51,7 @@ func TestNormalizeGPURequests(t *testing.T) {
 	})
 
 	t.Run("specific count", func(t *testing.T) {
-		reqs := []models.GPURequest{{Count: 2}}
+		reqs := []GPURequest{{Count: 2}}
 		got, err := NormalizeGPURequests(reqs)
 		if err != nil {
 			t.Fatalf("unexpected error: %v", err)
@@ -64,7 +62,7 @@ func TestNormalizeGPURequests(t *testing.T) {
 	})
 
 	t.Run("rejects count and device_ids combined", func(t *testing.T) {
-		reqs := []models.GPURequest{{Count: 1, DeviceIDs: []string{"0"}}}
+		reqs := []GPURequest{{Count: 1, DeviceIDs: []string{"0"}}}
 		_, err := NormalizeGPURequests(reqs)
 		if err == nil {
 			t.Fatalf("expected error combining count and device_ids")
@@ -72,7 +70,7 @@ func TestNormalizeGPURequests(t *testing.T) {
 	})
 
 	t.Run("rejects non-nvidia driver", func(t *testing.T) {
-		reqs := []models.GPURequest{{Driver: "rocm"}}
+		reqs := []GPURequest{{Driver: "rocm"}}
 		_, err := NormalizeGPURequests(reqs)
 		if err == nil {
 			t.Fatalf("expected error for non-nvidia driver")
@@ -80,7 +78,7 @@ func TestNormalizeGPURequests(t *testing.T) {
 	})
 
 	t.Run("specific device IDs", func(t *testing.T) {
-		reqs := []models.GPURequest{{DeviceIDs: []string{"0", "GPU-test-1"}}}
+		reqs := []GPURequest{{DeviceIDs: []string{"0", "GPU-test-1"}}}
 		got, err := NormalizeGPURequests(reqs)
 		if err != nil {
 			t.Fatalf("unexpected error: %v", err)
@@ -93,7 +91,7 @@ func TestNormalizeGPURequests(t *testing.T) {
 
 func TestToDockerDeviceRequests(t *testing.T) {
 	t.Run("translates count all to -1", func(t *testing.T) {
-		reqs := []models.GPURequest{{Count: "all"}}
+		reqs := []GPURequest{{Count: "all"}}
 		dockerReqs, err := ToDockerDeviceRequests(reqs)
 		if err != nil {
 			t.Fatalf("unexpected error: %v", err)
@@ -107,7 +105,7 @@ func TestToDockerDeviceRequests(t *testing.T) {
 	})
 
 	t.Run("translates specific devices", func(t *testing.T) {
-		reqs := []models.GPURequest{{DeviceIDs: []string{"0"}}}
+		reqs := []GPURequest{{DeviceIDs: []string{"0"}}}
 		dockerReqs, err := ToDockerDeviceRequests(reqs)
 		if err != nil {
 			t.Fatalf("unexpected error: %v", err)

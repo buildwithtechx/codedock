@@ -5,11 +5,9 @@ import (
 	"fmt"
 	"io"
 	"net/http"
-
-	"codedock/internal/models"
 )
 
-func (c *Client) Me() (*models.User, error) {
+func (c *Client) Me() (*User, error) {
 	resp, err := c.sendRequest("GET", "/auth/me", nil)
 	if err != nil {
 		return nil, err
@@ -22,7 +20,7 @@ func (c *Client) Me() (*models.User, error) {
 	}
 
 	var result struct {
-		Data *models.User `json:"data"`
+		Data *User `json:"data"`
 	}
 	if err := json.NewDecoder(resp.Body).Decode(&result); err != nil {
 		return nil, err

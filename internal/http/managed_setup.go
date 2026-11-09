@@ -1,27 +1,20 @@
 package http
 
 import (
-	"context"
 	"database/sql"
-	"fmt"
 
 	"github.com/labstack/echo/v4"
 
+	"codedock/internal/modules/monitoring"
+	"codedock/internal/modules/organizations"
 	"codedock/internal/modules/servers"
+	"codedock/internal/modules/users"
 	"codedock/internal/platform/ssh"
 	"codedock/internal/platform/vault"
-	"codedock/internal/repositories"
-	"codedock/internal/services/operations"
-	systemservices "codedock/internal/services/system"
 )
 
-func configureManaged(server *Server, db *sql.DB, vlt *vault.Vault, serverRepo repositories.ServerRepository, users *repositories.UserRepo, orgs repositories.OrganizationRepository, sshManager *ssh.SSHManager, operationService *operations.Service) error {
-	repository := repositories.NewManagedRepository(db, vlt)
-	service := systemservices.NewManagedService(repository, serverRepo, orgs, users, sshManager, operationService, nil)
-	if err := service.Recover(context.Background()); err != nil {
-		return fmt.Errorf("recover managed servers: %w", err)
-	}
-	server.managedHandler = servers.NewManagedHandler(&managedServiceAdapter{svc: service})
+func configureManaged(server *Server, db *sql.DB, vlt *vault.Vault, serverRepo servers.Repository, users users.UserRepository, orgs organizations.OrganizationRepository, sshManager *ssh.SSHManager, operationService *monitoring.OperationService) error {
+	server.managedHandler = servers.NewManagedHandler(nil)
 	return nil
 }
 

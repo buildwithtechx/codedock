@@ -6,11 +6,11 @@ import (
 	"os"
 	"path/filepath"
 
-	"codedock/internal/models"
+	appsmod "codedock/internal/modules/apps"
 )
 
-func (d *Deployer) prepareServerlessCode(app *models.AppService, sourceDir string, logWriter io.Writer) error {
-	if app.BuildEngine != models.BuildEngineServerless {
+func (d *Deployer) prepareServerlessCode(app *appsmod.AppService, sourceDir string, logWriter io.Writer) error {
+	if app.BuildEngine != appsmod.BuildEngineServerless {
 		return nil
 	}
 

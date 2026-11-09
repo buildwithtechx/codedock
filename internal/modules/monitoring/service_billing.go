@@ -2,7 +2,6 @@ package monitoring
 
 import (
 	"context"
-	"encoding/json"
 	"errors"
 	"fmt"
 	"sync"
@@ -11,8 +10,6 @@ import (
 	"github.com/google/uuid"
 	"github.com/stripe/stripe-go/v78"
 	"github.com/stripe/stripe-go/v78/checkout/session"
-	"github.com/stripe/stripe-go/v78/customer"
-	"github.com/stripe/stripe-go/v78/webhook"
 
 	"codedock/internal/config"
 )
@@ -23,6 +20,10 @@ type ErrCheckoutPending struct {
 
 func (e *ErrCheckoutPending) Error() string {
 	return "This server already has an unfinished checkout. Resume that payment or wait for it to expire before choosing another plan."
+}
+
+func (e *ErrCheckoutPending) PendingSession() any {
+	return e.Pending
 }
 
 type BillingService struct {

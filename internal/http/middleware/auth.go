@@ -9,31 +9,38 @@ import (
 
 	"github.com/labstack/echo/v4"
 
-	"codedock/internal/models"
 	"codedock/internal/modules/auth"
+	"codedock/internal/modules/organizations"
+	"codedock/internal/modules/projects"
 	"codedock/internal/modules/settings"
-	"codedock/internal/repositories"
+	"codedock/internal/modules/users"
 )
 
 type contextKey string
 
 const userClaimsKey contextKey = "user_claims"
 
+type UserClaims = users.UserClaims
+
 type SettingsProvider interface {
 	GetSettings(context.Context) (*settings.ServerSettings, error)
 }
 
 type ProjectTokenProvider interface {
-	GetTokenByHash(ctx context.Context, tokenHash string) (*models.ProjectToken, error)
+	GetTokenByHash(ctx context.Context, tokenHash string) (*projects.ProjectToken, error)
 	UpdateTokenLastUsed(ctx context.Context, id string) error
 }
 
 type OrganizationMemberProvider interface {
-	GetMember(ctx context.Context, orgID, userID string) (*models.OrganizationMember, error)
+	GetMember(ctx context.Context, orgID, userID string) (*organizations.OrganizationMember, error)
 }
 
 type UserStatusProvider interface {
-	GetUserByID(ctx context.Context, id string) (*models.User, error)
+	GetUserByID(ctx context.Context, id string) (*users.User, error)
+}
+
+type ProjectProvider interface {
+	Get(ctx context.Context, id string) (*projects.ProjectConfig, error)
 }
 
 type AuthGuard struct {
@@ -43,11 +50,11 @@ type AuthGuard struct {
 	Settings           SettingsProvider
 	ProjectTokens      ProjectTokenProvider
 	OrgMembers         OrganizationMemberProvider
-	ProjectRepo        repositories.ProjectRepository
+	ProjectRepo        ProjectProvider
 	UserStatusProvider UserStatusProvider
 }
 
-func NewAuthGuard(ts *auth.TokenService, sp SettingsProvider, pt ProjectTokenProvider, orgMembers OrganizationMemberProvider, pr repositories.ProjectRepository, userStatus UserStatusProvider) *AuthGuard {
+func NewAuthGuard(ts *auth.TokenService, sp SettingsProvider, pt ProjectTokenProvider, orgMembers OrganizationMemberProvider, pr ProjectProvider, userStatus UserStatusProvider) *AuthGuard {
 	return &AuthGuard{TokenService: ts, Settings: sp, ProjectTokens: pt, OrgMembers: orgMembers, ProjectRepo: pr, UserStatusProvider: userStatus}
 }
 
@@ -62,69 +69,68 @@ func (g *AuthGuard) checkIPAllowlist(c echo.Context) error {
 	if settings == nil || strings.TrimSpace(settings.IPAllowlist) == "" {
 		return nil
 	}
+
 	clientIP := c.RealIP()
-	if !IsIPAllowed(clientIP, settings.IPAllowlist) {
-		return echo.NewHTTPError(http.StatusForbidden, fmt.Sprintf("access denied from IP address %s by server allowlist policy", clientIP))
+	allowedIPs := strings.Split(settings.IPAllowlist, ",")
+	for _, ip := range allowedIPs {
+		if strings.TrimSpace(ip) == clientIP {
+			return nil
+		}
 	}
-	return nil
+	return echo.NewHTTPError(http.StatusForbidden, "IP address not allowed")
 }
 
-func (g *AuthGuard) validateAPIToken(c echo.Context, tokenStr string, denyAPITokens bool) (*models.UserClaims, error) {
+func (g *AuthGuard) validateAPIToken(c echo.Context, tokenStr string, denyAPITokens bool) (*users.UserClaims, error) {
 	if denyAPITokens {
 		return nil, echo.NewHTTPError(http.StatusForbidden, "API tokens cannot access role-restricted endpoints")
 	}
 	if g.ProjectTokens == nil {
 		return nil, echo.NewHTTPError(http.StatusUnauthorized, "API tokens not supported")
 	}
-	pt, err := g.ProjectTokens.GetTokenByHash(c.Request().Context(), tokenStr)
-	if err != nil {
-		return nil, echo.NewHTTPError(http.StatusUnauthorized, "invalid or revoked API token")
+	tokenHash := auth.HashAPIToken(tokenStr)
+	token, err := g.ProjectTokens.GetTokenByHash(c.Request().Context(), tokenHash)
+	if err != nil || token == nil {
+		return nil, echo.NewHTTPError(http.StatusUnauthorized, "invalid API token")
 	}
-	if pt.ExpiresAt != nil && pt.ExpiresAt.Before(time.Now()) {
+	if token.ExpiresAt != nil && token.ExpiresAt.Before(time.Now()) {
 		return nil, echo.NewHTTPError(http.StatusUnauthorized, "API token has expired")
 	}
-	if len(pt.IPAllowlist) > 0 {
-		if !IsIPAllowed(c.RealIP(), strings.Join(pt.IPAllowlist, ",")) {
-			return nil, echo.NewHTTPError(http.StatusForbidden, "IP address not allowed for this API token")
-		}
-	}
-	_ = g.ProjectTokens.UpdateTokenLastUsed(c.Request().Context(), pt.ID)
 
-	c.Set("api_scopes", pt.Scopes)
-	c.Set("project_id", pt.ProjectID)
-	c.Set("environment_id", pt.EnvironmentID)
+	_ = g.ProjectTokens.UpdateTokenLastUsed(c.Request().Context(), token.ID)
+	c.Set("project_id", token.ProjectID)
 
-	return &models.UserClaims{
-		UserID: "api-token-" + pt.ID,
-		Email:  "api@" + pt.ProjectID + ".codedock.local",
-		Role:   "api",
+	return &users.UserClaims{
+		UserID:   "api-token:" + token.ID,
+		Email:    "api-token@" + token.ProjectID,
+		Role:     users.UserRole("token"),
+		PlanType: "pro",
 	}, nil
 }
 
-func (g *AuthGuard) validateJWT(c echo.Context, tokenStr string) (*models.UserClaims, error) {
-	claimsMap, err := g.TokenService.ValidateToken(tokenStr)
+func (g *AuthGuard) validateJWT(c echo.Context, tokenStr string) (*users.UserClaims, error) {
+	claimsMap, err := g.TokenService.ValidateAccessToken(tokenStr)
 	if err != nil {
-		return nil, echo.NewHTTPError(http.StatusUnauthorized, "invalid authentication token: "+err.Error())
+		return nil, echo.NewHTTPError(http.StatusUnauthorized, "invalid or expired token")
 	}
 
 	userID := fmt.Sprintf("%v", claimsMap["sub"])
-	if g.UserStatusProvider != nil && userID != "" {
+	if g.UserStatusProvider != nil {
 		u, err := g.UserStatusProvider.GetUserByID(c.Request().Context(), userID)
 		if err != nil || u == nil || !u.IsActive {
-			return nil, echo.NewHTTPError(http.StatusUnauthorized, "user account not found or deactivated")
+			return nil, echo.NewHTTPError(http.StatusUnauthorized, "user account is deactivated")
 		}
 	}
 
-	totpEnabled, _ := claimsMap["totpEnabled"].(bool)
-	return &models.UserClaims{
+	totpEnabled, _ := claimsMap["totp_enabled"].(bool)
+	return &users.UserClaims{
 		UserID:      userID,
 		Email:       fmt.Sprintf("%v", claimsMap["email"]),
-		Role:        models.UserRole(fmt.Sprintf("%v", claimsMap["role"])),
+		Role:        users.UserRole(fmt.Sprintf("%v", claimsMap["role"])),
 		TOTPEnabled: totpEnabled,
 	}, nil
 }
 
-func (g *AuthGuard) baseAuth(c echo.Context, denyAPITokens bool) (*models.UserClaims, error) {
+func (g *AuthGuard) baseAuth(c echo.Context, denyAPITokens bool) (*users.UserClaims, error) {
 	if err := g.checkIPAllowlist(c); err != nil {
 		return nil, err
 	}

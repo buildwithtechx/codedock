@@ -3,8 +3,6 @@ package http
 import (
 	"codedock/internal/config"
 	"codedock/internal/modules/monitoring"
-	"codedock/internal/repositories"
-	systemservices "codedock/internal/services/system"
 )
 
 type monitoringHandlersGroup struct {
@@ -26,9 +24,9 @@ type monitoringHandlersGroup struct {
 
 func createMonitoringHandlers(
 	d *serverSetupDeps,
-	updaterService *systemservices.UpdaterService,
-	metricsService *systemservices.MetricsService,
-	logService *systemservices.LogService,
+	updaterService *monitoring.UpdaterService,
+	metricsService *monitoring.MetricsService,
+	logService *monitoring.LogService,
 ) monitoringHandlersGroup {
 	wsHandler := monitoring.NewServiceLogsWSHandler(
 		d.tokenService,
@@ -39,12 +37,12 @@ func createMonitoringHandlers(
 
 	var billingHandler *monitoring.BillingHandler
 	if config.Get().Cloud.Enabled {
-		billingHandler = monitoring.NewBillingHandler(&billingServiceAdapter{svc: systemservices.NewBillingService(d.userRepo)})
+		billingHandler = monitoring.NewBillingHandler(&billingServiceAdapter{svc: monitoring.NewBillingService(&billingUserAdapter{repo: d.userRepo})})
 	}
 
 	ingressAdapter := &ingressServiceAdapter{
-		repo:  repositories.NewIngressRepository(d.db),
-		cfSvc: systemservices.NewCloudflareIngressService(nil),
+		repo:  monitoring.NewIngressRepository(d.db),
+		cfSvc: monitoring.NewCloudflareIngressService(nil),
 	}
 
 	return monitoringHandlersGroup{
@@ -57,18 +55,16 @@ func createMonitoringHandlers(
 			svc:     d.notifSettingsService,
 			orgRepo: d.orgRepo,
 		}),
-		updaterHandler: monitoring.NewUpdaterHandler(&updaterServiceAdapter{svc: updaterService}),
-		notificationHandler: monitoring.NewNotificationHandler(&notificationServiceAdapter{
-			svc: systemservices.NewNotificationService(d.dispatcherService),
-		}),
+		updaterHandler:      monitoring.NewUpdaterHandler(&updaterServiceAdapter{svc: updaterService}),
+		notificationHandler: monitoring.NewNotificationHandler(&notificationServiceAdapter{}),
 		systemHandler: monitoring.NewSystemHandler(
-			&systemServiceAdapter{svc: systemservices.NewSystemService()},
+			&systemServiceAdapter{svc: monitoring.NewSystemService()},
 			&systemAdminFinderAdapter{userRepo: d.userRepo},
 			&systemTokenGenAdapter{tokenService: d.tokenService},
 		),
 		metricsHandler:       monitoring.NewMetricsHandler(&metricsServiceAdapter{svc: metricsService}),
 		logHandler:           monitoring.NewLogHandler(&logServiceAdapter{svc: logService}),
-		exampleHandler:       monitoring.NewExampleHandler(&exampleServiceAdapter{svc: systemservices.NewExampleService()}),
+		exampleHandler:       monitoring.NewExampleHandler(&exampleServiceAdapter{svc: monitoring.NewExampleService()}),
 		billingHandler:       billingHandler,
 		serviceLogsWSHandler: wsHandler,
 		ingressHandler:       monitoring.NewIngressHandler(ingressAdapter),

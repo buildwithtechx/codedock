@@ -8,8 +8,8 @@ import (
 
 	"github.com/google/uuid"
 
-	"codedock/internal/models"
-	"codedock/internal/repositories"
+	"codedock/internal/modules/environments"
+	"codedock/internal/modules/projects"
 )
 
 func runProjects(args []string) {
@@ -27,8 +27,8 @@ func runProjects(args []string) {
 	_, db, _ := InitDataDir()
 	defer db.Close()
 
-	envRepo := repositories.NewEnvironmentRepo(db)
-	projectRepo := repositories.NewProjectRepo(db, envRepo)
+	envRepo := environments.NewEnvironmentRepo(db)
+	projectRepo := projects.NewProjectRepo(db, envRepo)
 
 	cmd := args[0]
 
@@ -77,7 +77,7 @@ func runProjects(args []string) {
 			}
 		}
 
-		proj := &models.ProjectConfig{
+		proj := &projects.ProjectConfig{
 			ID:          uuid.New().String(),
 			Name:        name,
 			Description: description,
@@ -89,7 +89,7 @@ func runProjects(args []string) {
 		}
 		fmt.Printf("✅ Project created: %s (%s)\n", name, proj.ID[:8])
 
-		env := &models.EnvironmentConfig{
+		env := &environments.EnvironmentConfig{
 			ID:        uuid.New().String(),
 			ProjectID: proj.ID,
 			Name:      "production",
@@ -142,7 +142,7 @@ func runEnvVars(args []string) {
 	_, db, vlt := InitDataDir()
 	defer db.Close()
 
-	envRepo := repositories.NewEnvRepo(db, vlt)
+	envRepo := projects.NewEnvRepo(db, vlt)
 
 	projectID := ""
 	for i := 1; i < len(args); i++ {

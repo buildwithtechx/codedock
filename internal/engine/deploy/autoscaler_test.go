@@ -1,7 +1,8 @@
 package deploy
 
 import (
-	"codedock/internal/models"
+	appsmod "codedock/internal/modules/apps"
+	deploymentsmod "codedock/internal/modules/deployments"
 	"codedock/internal/platform/observability"
 	"context"
 	"errors"
@@ -10,10 +11,10 @@ import (
 	"time"
 )
 
-type scalingTestApps struct{ app *models.AppService }
+type scalingTestApps struct{ app *appsmod.AppService }
 
-func (s scalingTestApps) ListAll(context.Context, string) ([]*models.AppService, error) {
-	return []*models.AppService{s.app}, nil
+func (s scalingTestApps) ListAll(context.Context, string) ([]*appsmod.AppService, error) {
+	return []*appsmod.AppService{s.app}, nil
 }
 
 type scalingTestMetrics struct {
@@ -27,7 +28,7 @@ func (s *scalingTestMetrics) GetHealth(context.Context, string) (*observability.
 }
 
 type scalingTestStore struct {
-	policies         []*models.AutoscalingPolicy
+	policies         []*appsmod.AutoscalingPolicy
 	reserved         bool
 	from, to         int
 	rolledBack       bool
@@ -35,14 +36,14 @@ type scalingTestStore struct {
 	decision         string
 }
 
-func (s *scalingTestStore) ListEnabled(context.Context) ([]*models.AutoscalingPolicy, error) {
+func (s *scalingTestStore) ListEnabled(context.Context) ([]*appsmod.AutoscalingPolicy, error) {
 	return s.policies, nil
 }
-func (s *scalingTestStore) Observe(_ context.Context, _ *models.AutoscalingPolicy, _ float64, reason string, _ bool) error {
+func (s *scalingTestStore) Observe(_ context.Context, _ *appsmod.AutoscalingPolicy, _ float64, reason string, _ bool) error {
 	s.decision = reason
 	return nil
 }
-func (s *scalingTestStore) SetReplicas(_ context.Context, _ *models.AutoscalingPolicy, from, to int) (bool, error) {
+func (s *scalingTestStore) SetReplicas(_ context.Context, _ *appsmod.AutoscalingPolicy, from, to int) (bool, error) {
 	s.from = from
 	s.to = to
 	return s.reserved, nil
@@ -59,7 +60,7 @@ type scalingTestDeployments struct {
 	executed bool
 }
 
-func (s *scalingTestDeployments) CreateDeployment(_ context.Context, d *models.Deployment) (*models.Deployment, error) {
+func (s *scalingTestDeployments) CreateDeployment(_ context.Context, d *deploymentsmod.Deployment) (*deploymentsmod.Deployment, error) {
 	if s.cancel != nil {
 		s.cancel()
 	}
@@ -69,7 +70,9 @@ func (s *scalingTestDeployments) CreateDeployment(_ context.Context, d *models.D
 	d.ID = "deployment"
 	return d, nil
 }
-func (s *scalingTestDeployments) ExecuteDeploymentAsync(*models.Deployment) { s.executed = true }
+func (s *scalingTestDeployments) ExecuteDeploymentAsync(*deploymentsmod.Deployment) {
+	s.executed = true
+}
 
 func TestAutoscalingOptInLimitsAndCooldown(t *testing.T) {
 	now := time.Now()
@@ -86,7 +89,7 @@ func TestAutoscalingOptInLimitsAndCooldown(t *testing.T) {
 		{"cooldown", true, 2, 99, now.Format(time.RFC3339Nano), 2},
 	} {
 		t.Run(test.name, func(t *testing.T) {
-			p := models.DefaultAutoscalingPolicy("app")
+			p := appsmod.DefaultAutoscalingPolicy("app")
 			p.Enabled = test.enabled
 			p.LastScaledAt = test.last
 			target, _ := scalingTarget(p, test.current, test.cpu, now)
@@ -99,11 +102,11 @@ func TestAutoscalingOptInLimitsAndCooldown(t *testing.T) {
 }
 func TestAutoscalingReservationAndFailedQueue(t *testing.T) {
 	for _, failure := range []bool{false, true} {
-		policy := models.DefaultAutoscalingPolicy("app")
+		policy := appsmod.DefaultAutoscalingPolicy("app")
 		policy.Enabled = true
-		store := &scalingTestStore{policies: []*models.AutoscalingPolicy{policy}, reserved: true}
+		store := &scalingTestStore{policies: []*appsmod.AutoscalingPolicy{policy}, reserved: true}
 		deployments := &scalingTestDeployments{failure: failure}
-		app := &models.AppService{ID: "app", Status: models.AppServiceStatusRunning, ContainerID: "container", Replicas: 2}
+		app := &appsmod.AppService{ID: "app", Status: appsmod.AppServiceStatusRunning, ContainerID: "container", Replicas: 2}
 		worker := NewAutoscalerWorker(scalingTestApps{app}, &scalingTestMetrics{cpu: 95}, deployments, store)
 		worker.checkAndScale(context.Background())
 		if store.from != 2 || store.to != 3 {
@@ -119,13 +122,13 @@ func TestAutoscalingReservationAndFailedQueue(t *testing.T) {
 }
 
 func TestAutoscalingCanceledCreationRecoversWithFreshContext(t *testing.T) {
-	policy := models.DefaultAutoscalingPolicy("app")
+	policy := appsmod.DefaultAutoscalingPolicy("app")
 	policy.Enabled = true
-	store := &scalingTestStore{policies: []*models.AutoscalingPolicy{policy}, reserved: true}
+	store := &scalingTestStore{policies: []*appsmod.AutoscalingPolicy{policy}, reserved: true}
 	ctx, cancel := context.WithCancel(context.Background())
 	defer cancel()
 	deployments := &scalingTestDeployments{failure: true, cancel: cancel}
-	app := &models.AppService{ID: "app", Status: models.AppServiceStatusRunning, ContainerID: "container", Replicas: 2}
+	app := &appsmod.AppService{ID: "app", Status: appsmod.AppServiceStatusRunning, ContainerID: "container", Replicas: 2}
 	worker := NewAutoscalerWorker(scalingTestApps{app}, &scalingTestMetrics{cpu: 95}, deployments, store)
 	worker.checkAndScale(ctx)
 	if !store.rolledBack || store.rollbackCanceled || !strings.Contains(store.decision, "failed") {

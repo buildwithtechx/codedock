@@ -6,217 +6,248 @@ import (
 	"fmt"
 	"time"
 
-	"codedock/internal/models"
-	"codedock/internal/repositories"
-	"codedock/internal/utils"
+	"codedock/internal/modules/apps"
+	"codedock/internal/modules/backups"
+	"codedock/internal/modules/databases"
+	"codedock/internal/modules/monitoring"
+	"codedock/internal/modules/projects"
+	"codedock/internal/platform/scheduler"
+	"codedock/internal/platform/storage"
 )
 
 type engineAdapter struct {
-	settingsRepo      repositories.SettingsRepository
-	appRepo           repositories.AppServiceRepository
-	envRepo           repositories.EnvRepository
-	dbRepo            repositories.DatabaseRepository
-	projectRepo       repositories.ProjectRepository
-	scheduledTaskRepo repositories.ScheduledTaskRepository
-	backupRepo        repositories.BackupRepository
-	s3Repo            repositories.S3DestinationRepository
-	sftpRepo          *repositories.SFTPDestinationRepo
-	serviceVarRepo    repositories.ServiceVarRepository
-	serverlessRepo    repositories.ServerlessRepository
+	appRepo           apps.AppServiceRepository
+	dbRepo            databases.Repository
+	projectRepo       projects.ProjectRepository
+	scheduledTaskRepo monitoring.ScheduledTaskRepository
+	backupRepo        backups.Repository
+	sftpRepo          backups.SFTPRepository
 }
 
 func newEngineAdapter(
-	settingsRepo repositories.SettingsRepository,
-	appRepo repositories.AppServiceRepository,
-	envRepo repositories.EnvRepository,
-	dbRepo repositories.DatabaseRepository,
-	projectRepo repositories.ProjectRepository,
-	scheduledTaskRepo repositories.ScheduledTaskRepository,
-	backupRepo repositories.BackupRepository,
-	s3Repo repositories.S3DestinationRepository,
-	serviceVarRepo repositories.ServiceVarRepository,
-	serverlessRepo repositories.ServerlessRepository,
+	appRepo apps.AppServiceRepository,
+	dbRepo databases.Repository,
+	projectRepo projects.ProjectRepository,
+	scheduledTaskRepo monitoring.ScheduledTaskRepository,
+	backupRepo backups.Repository,
 ) *engineAdapter {
 	return &engineAdapter{
-		settingsRepo:      settingsRepo,
 		appRepo:           appRepo,
-		envRepo:           envRepo,
 		dbRepo:            dbRepo,
 		projectRepo:       projectRepo,
 		scheduledTaskRepo: scheduledTaskRepo,
 		backupRepo:        backupRepo,
-		s3Repo:            s3Repo,
-		serviceVarRepo:    serviceVarRepo,
-		serverlessRepo:    serverlessRepo,
 	}
 }
 
-func (a *engineAdapter) GetServerSettings() (*models.ServerSettings, error) {
-	return a.settingsRepo.GetServerSettings(context.Background())
-}
-
-func (a *engineAdapter) ListAppServicesByProject(projectID string) ([]*models.AppService, error) {
-	return a.appRepo.ListByProject(context.Background(), projectID)
-}
-
-func (a *engineAdapter) GetEnvVars(projectID string) (map[string]string, error) {
-	return a.envRepo.GetVars(context.Background(), projectID)
-}
-
-func (a *engineAdapter) ListServiceVariables(serviceID string) ([]*models.Variable, error) {
-	return a.serviceVarRepo.ListByService(context.Background(), serviceID)
-}
-
-func (a *engineAdapter) GetServerlessFunctionCode(serviceID string) (*models.ServerlessFunctionCode, error) {
-	return a.serverlessRepo.GetCodeByServiceID(context.Background(), serviceID)
-}
-
-func (a *engineAdapter) GetDatabase(id string) (*models.Database, error) {
-	return a.dbRepo.GetByID(context.Background(), id)
-}
-
-func (a *engineAdapter) ListScheduledTasks() ([]models.ScheduledTask, error) {
-	return a.scheduledTaskRepo.ListAll(context.Background())
-}
-
-func (a *engineAdapter) GetScheduledTask(id string) (*models.ScheduledTask, error) {
-	return a.scheduledTaskRepo.GetByID(context.Background(), id)
-}
-
-func (a *engineAdapter) GetProject(id string) (*models.ProjectConfig, error) {
-	return a.projectRepo.Get(context.Background(), id)
-}
-
-func (a *engineAdapter) GetAppService(id string) (*models.AppService, error) {
-	return a.appRepo.GetByID(context.Background(), id)
-}
-
-func (a *engineAdapter) UpdateScheduledTaskStatusAndOutput(id string, status models.ScheduledTaskStatus, lastRunAt *time.Time, output string) error {
-	return a.scheduledTaskRepo.UpdateStatus(context.Background(), id, status, lastRunAt, output)
-}
-
-func (a *engineAdapter) ListAllActiveBackupConfigs() ([]*models.BackupConfig, error) {
-	return a.backupRepo.ListAllActiveConfigs(context.Background())
-}
-
-func (a *engineAdapter) GetBackupConfig(id string) (*models.BackupConfig, error) {
-	return a.backupRepo.GetConfigByID(context.Background(), id)
-}
-
-func (a *engineAdapter) CreateBackupRecord(rec *models.BackupRecord) error {
-	return a.backupRepo.CreateRecord(context.Background(), rec)
-}
-
-func (a *engineAdapter) UpdateBackupRecord(opts models.UpdateBackupRecordOpts) error {
-	rec, err := a.backupRepo.GetRecordByID(context.Background(), opts.ID)
+func (a *engineAdapter) ListScheduledTasks() ([]scheduler.ScheduledTask, error) {
+	tasks, err := a.scheduledTaskRepo.ListAll(context.Background())
 	if err != nil {
-		return err
+		return nil, err
 	}
-	if opts.SHA256 != "" {
-		rec.SHA256 = opts.SHA256
-		rec.VerifiedAt = opts.VerifiedAt
+	res := make([]scheduler.ScheduledTask, len(tasks))
+	for i, t := range tasks {
+		var lastRun *time.Time
+		if !t.LastRunAt.IsZero() {
+			lr := t.LastRunAt
+			lastRun = &lr
+		}
+		res[i] = scheduler.ScheduledTask{
+			ID:         t.ID,
+			ServiceID:  t.ServiceID,
+			Name:       t.Name,
+			Schedule:   t.Schedule,
+			Command:    t.Command,
+			Status:     scheduler.ScheduledTaskStatus(t.Status),
+			LastRunAt:  lastRun,
+			LastOutput: t.LastOutput,
+		}
 	}
-	rec.Status = opts.Status
-	rec.FilePath = opts.FilePath
-	rec.S3URL = opts.S3URL
-	rec.SFTPURL = opts.SFTPURL
-	rec.ParentRecordID = opts.ParentRecordID
-	if opts.S3DestinationID != "" {
-		rec.S3DestinationID = opts.S3DestinationID
+	return res, nil
+}
+
+func (a *engineAdapter) GetScheduledTask(id string) (*scheduler.ScheduledTask, error) {
+	t, err := a.scheduledTaskRepo.GetByID(context.Background(), id)
+	if err != nil || t == nil {
+		return nil, err
 	}
-	if opts.SFTPDestinationID != "" {
-		rec.SFTPDestinationID = opts.SFTPDestinationID
+	var lastRun *time.Time
+	if !t.LastRunAt.IsZero() {
+		lr := t.LastRunAt
+		lastRun = &lr
 	}
-	rec.Logs = opts.Logs
-	rec.FileSizeBytes = opts.FileSizeBytes
-	rec.CompletedAt = opts.CompletedAt
+	return &scheduler.ScheduledTask{
+		ID:         t.ID,
+		ServiceID:  t.ServiceID,
+		Name:       t.Name,
+		Schedule:   t.Schedule,
+		Command:    t.Command,
+		Status:     scheduler.ScheduledTaskStatus(t.Status),
+		LastRunAt:  lastRun,
+		LastOutput: t.LastOutput,
+	}, nil
+}
+
+func (a *engineAdapter) GetProject(id string) (*scheduler.ProjectConfig, error) {
+	p, err := a.projectRepo.Get(context.Background(), id)
+	if err != nil || p == nil {
+		return nil, err
+	}
+	return &scheduler.ProjectConfig{
+		ID:   p.ID,
+		Name: p.Name,
+	}, nil
+}
+
+func (a *engineAdapter) GetAppService(id string) (*scheduler.AppService, error) {
+	app, err := a.appRepo.GetByID(context.Background(), id)
+	if err != nil || app == nil {
+		return nil, err
+	}
+	return &scheduler.AppService{
+		ID:          app.ID,
+		ContainerID: app.ContainerID,
+		Name:        app.Name,
+	}, nil
+}
+
+func (a *engineAdapter) UpdateScheduledTaskStatusAndOutput(id string, status scheduler.ScheduledTaskStatus, lastRunAt *time.Time, output string) error {
+	return a.scheduledTaskRepo.UpdateStatus(context.Background(), id, monitoring.ScheduledTaskStatus(status), lastRunAt, output)
+}
+
+func (a *engineAdapter) ListAllActiveBackupConfigs() ([]*storage.BackupConfig, error) {
+	configs, err := a.backupRepo.ListAllActiveConfigs(context.Background())
+	if err != nil {
+		return nil, err
+	}
+	res := make([]*storage.BackupConfig, len(configs))
+	for i, c := range configs {
+		res[i] = toStorageBackupConfig(c)
+	}
+	return res, nil
+}
+
+func (a *engineAdapter) GetBackupConfig(id string) (*storage.BackupConfig, error) {
+	c, err := a.backupRepo.GetConfigByID(context.Background(), id)
+	if err != nil || c == nil {
+		return nil, err
+	}
+	return toStorageBackupConfig(c), nil
+}
+
+func (a *engineAdapter) CreateBackupRecord(rec *storage.BackupRecord) error {
+	if rec == nil {
+		return errors.New("record is nil")
+	}
+	modRec := toModuleBackupRecord(rec)
+	return a.backupRepo.CreateRecord(context.Background(), modRec)
+}
+
+func (a *engineAdapter) UpdateBackupRecord(opts storage.UpdateBackupRecordOpts) error {
+	rec := &backups.BackupRecord{
+		ID:                opts.ID,
+		Status:            backups.RecordStatus(opts.Status),
+		FilePath:          opts.FilePath,
+		FileSizeBytes:     opts.FileSizeBytes,
+		S3URL:             opts.S3URL,
+		SFTPURL:           opts.SFTPURL,
+		ParentRecordID:    opts.ParentRecordID,
+		S3DestinationID:   opts.S3DestinationID,
+		SFTPDestinationID: opts.SFTPDestinationID,
+		Logs:              opts.Logs,
+		SHA256:            opts.SHA256,
+		VerifiedAt:        opts.VerifiedAt,
+		CompletedAt:       opts.CompletedAt,
+	}
 	return a.backupRepo.UpdateRecord(context.Background(), rec)
 }
 
-func (a *engineAdapter) GetBackupRecord(id string) (*models.BackupRecord, error) {
-	return a.backupRepo.GetRecordByID(context.Background(), id)
+func (a *engineAdapter) GetBackupRecord(id string) (*storage.BackupRecord, error) {
+	rec, err := a.backupRepo.GetRecordByID(context.Background(), id)
+	if err != nil || rec == nil {
+		return nil, err
+	}
+	return toStorageBackupRecord(rec), nil
 }
 
-func (a *engineAdapter) GetS3Destination(id string) (*models.S3Destination, error) {
-	return a.s3Repo.GetS3Destination(context.Background(), id)
+func (a *engineAdapter) GetDatabase(id string) (*storage.Database, error) {
+	db, err := a.dbRepo.GetByID(context.Background(), id)
+	if err != nil || db == nil {
+		return nil, err
+	}
+	return &storage.Database{
+		ID:           db.ID,
+		ProjectID:    db.ProjectID,
+		Name:         db.Name,
+		Engine:       storage.DatabaseEngine(db.Engine),
+		Version:      db.Version,
+		ContainerID:  db.ContainerID,
+		Status:       storage.DatabaseStatus(db.Status),
+		InternalPort: db.Port,
+		DatabaseName: db.DatabaseName,
+		User:         db.Username,
+		Username:     db.Username,
+		Password:     db.Password,
+	}, nil
 }
 
-func (a *engineAdapter) GetSFTPDestination(id string) (*models.SFTPDestination, error) {
+func (a *engineAdapter) GetS3Destination(id string) (*storage.S3Destination, error) {
+	dest, err := a.backupRepo.GetS3Destination(context.Background(), id)
+	if err != nil || dest == nil {
+		return nil, err
+	}
+	return &storage.S3Destination{
+		ID:              dest.ID,
+		Name:            dest.Name,
+		Description:     dest.Description,
+		Provider:        dest.Provider,
+		Endpoint:        dest.Endpoint,
+		Bucket:          dest.Bucket,
+		Region:          dest.Region,
+		PathPrefix:      dest.PathPrefix,
+		IsDefault:       dest.IsDefault,
+		LastVerifiedAt:  dest.LastVerifiedAt,
+		LastVerifyError: dest.LastVerifyError,
+		AccessKeyID:     dest.AccessKeyID,
+		SecretAccessKey: dest.SecretAccessKey,
+		CreatedAt:       dest.CreatedAt,
+	}, nil
+}
+
+func (a *engineAdapter) GetSFTPDestination(id string) (*storage.SFTPDestination, error) {
 	if a.sftpRepo == nil {
 		return nil, fmt.Errorf("sftp storage unavailable")
 	}
-	return a.sftpRepo.Get(context.Background(), id)
-}
-
-func (a *engineAdapter) ListBackupRecords(backupConfigID string) ([]*models.BackupRecord, error) {
-	return a.backupRepo.ListRecordsByConfig(context.Background(), backupConfigID)
-}
-
-func (a *engineAdapter) ClaimRecordExpiry(ctx context.Context, id string) (bool, error) {
-	store, ok := a.backupRepo.(interface {
-		ClaimRecordExpiry(context.Context, string) (bool, error)
-	})
-	if !ok {
-		return false, fmt.Errorf("backup retention protection storage unavailable")
+	dest, err := a.sftpRepo.Get(context.Background(), id)
+	if err != nil || dest == nil {
+		return nil, err
 	}
-	return store.ClaimRecordExpiry(ctx, id)
+	return &storage.SFTPDestination{
+		ID:              dest.ID,
+		OrganizationID:  dest.OrganizationID,
+		ProjectID:       dest.ProjectID,
+		Name:            dest.Name,
+		Description:     dest.Description,
+		Host:            dest.Host,
+		Port:            dest.Port,
+		Username:        dest.Username,
+		Password:        dest.Password,
+		PrivateKey:      dest.PrivateKey,
+		PathPrefix:      dest.PathPrefix,
+		LastVerifiedAt:  dest.LastVerifiedAt,
+		LastVerifyError: dest.LastVerifyError,
+		CreatedAt:       dest.CreatedAt,
+	}, nil
 }
 
-func (a *engineAdapter) ControlPlaneSnapshot(ctx context.Context) ([]byte, error) {
-	store, ok := a.backupRepo.(interface {
-		ControlPlaneSnapshot(context.Context) ([]byte, error)
-	})
-	if !ok {
-		return nil, fmt.Errorf("consistent control-plane snapshots unavailable")
-	}
-	return store.ControlPlaneSnapshot(ctx)
-}
-
-func (a *engineAdapter) VolumeRestoreOwner(ctx context.Context, cfg *models.BackupConfig) (string, error) {
-	return a.volumeOwner(ctx, cfg, false)
-}
-
-func (a *engineAdapter) VolumeBackupOwner(ctx context.Context, cfg *models.BackupConfig) (string, error) {
-	return a.volumeOwner(ctx, cfg, true)
-}
-
-func (a *engineAdapter) volumeOwner(ctx context.Context, cfg *models.BackupConfig, allowRemote bool) (string, error) {
-	var projectID, containerID string
-	if cfg.ServiceID != "" && cfg.DatabaseID != "" {
-		return "", errors.New("volume backup must have exactly one owner")
-	}
-	if cfg.ServiceID != "" {
-		app, err := a.appRepo.GetByID(ctx, cfg.ServiceID)
-		if err != nil {
-			return "", fmt.Errorf("load volume service: %w", err)
-		}
-		projectID = app.ProjectID
-		containerID = utils.NormalizeContainerName(app.ID)
-		if app.ContainerID != "" {
-			containerID = app.ContainerID
-		}
-	} else if cfg.DatabaseID != "" && cfg.DatabaseID != "global" {
-		db, err := a.dbRepo.GetByID(ctx, cfg.DatabaseID)
-		if err != nil {
-			return "", fmt.Errorf("load volume database: %w", err)
-		}
-		projectID = db.ProjectID
-		containerID = db.ContainerID
-		if containerID == "" {
-			containerID = utils.NormalizeContainerName("codedock-db-" + db.Name)
-		}
-		if cfg.VolumeName != "codedock-db-data-"+db.ID {
-			return "", errors.New("volume is not the database data volume")
-		}
-	} else {
-		return "", errors.New("volume backup requires a registered service or database owner")
-	}
-	project, err := a.projectRepo.Get(ctx, projectID)
+func (a *engineAdapter) ListBackupRecords(backupConfigID string) ([]*storage.BackupRecord, error) {
+	records, err := a.backupRepo.ListRecordsByConfig(context.Background(), backupConfigID)
 	if err != nil {
-		return "", fmt.Errorf("load volume project: %w", err)
+		return nil, err
 	}
-	if project.ServerID != "" && !allowRemote {
-		return "", errors.New("volume restore supports local Docker targets only")
+	res := make([]*storage.BackupRecord, len(records))
+	for i, r := range records {
+		res[i] = toStorageBackupRecord(r)
 	}
-	return containerID, nil
+	return res, nil
 }

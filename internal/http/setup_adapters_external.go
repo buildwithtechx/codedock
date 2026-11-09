@@ -6,19 +6,20 @@ import (
 	"fmt"
 	"io"
 
-	"codedock/internal/models"
+	appsmod "codedock/internal/modules/apps"
 	"codedock/internal/modules/audit"
 	deploymentsmod "codedock/internal/modules/deployments"
 	dnsproviders "codedock/internal/modules/dns/providers"
+	domainsmod "codedock/internal/modules/domains"
 	"codedock/internal/modules/environments"
 	gitmod "codedock/internal/modules/git"
+	"codedock/internal/modules/monitoring"
+	settingsmodule "codedock/internal/modules/settings"
 	"codedock/internal/platform/networking"
-	"codedock/internal/repositories"
-	projectservices "codedock/internal/services/projects"
 )
 
 type dnsSettingsAdapter struct {
-	repo repositories.SettingsRepository
+	repo settingsmodule.Repository
 }
 
 func (a *dnsSettingsAdapter) GetDNSConfig(ctx context.Context) (*dnsproviders.DNSConfig, error) {
@@ -41,10 +42,10 @@ func (a *dnsSettingsAdapter) GetDNSConfig(ctx context.Context) (*dnsproviders.DN
 }
 
 type gitServiceLookupAdapter struct {
-	appRepo *repositories.AppServiceRepo
+	appRepo appsmod.AppServiceRepository
 }
 
-func toGitServiceInfo(app *models.AppService) *gitmod.ServiceInfo {
+func toGitServiceInfo(app *appsmod.AppService) *gitmod.ServiceInfo {
 	if app == nil {
 		return nil
 	}
@@ -84,7 +85,7 @@ func (a *gitServiceLookupAdapter) ListServices(ctx context.Context) ([]*gitmod.S
 }
 
 type domainServiceLookupAdapter struct {
-	appRepo *repositories.AppServiceRepo
+	appRepo appsmod.AppServiceRepository
 }
 
 func (d *domainServiceLookupAdapter) GetProjectID(ctx context.Context, serviceID string) (string, error) {
@@ -108,7 +109,7 @@ func (d *domainServiceLookupAdapter) ListServiceIDsByProject(ctx context.Context
 }
 
 type serverSettingsAdapter struct {
-	repo *repositories.SettingsRepo
+	repo settingsmodule.Repository
 }
 
 func (s *serverSettingsAdapter) GetPublicIPv4(ctx context.Context) (string, error) {
@@ -128,7 +129,7 @@ func (a *auditDomainAdapter) Log(ctx context.Context, userID, action, resource, 
 }
 
 type serviceCheckerAdapter struct {
-	appService *projectservices.AppService
+	appService *appsmod.Service
 }
 
 func (s *serviceCheckerAdapter) CheckServiceExists(ctx context.Context, serviceID string) bool {
@@ -144,11 +145,11 @@ func (m *migrationDeployerAdapter) DeployAppService(ctx context.Context, appID, 
 	return m.deploymentService.TriggerDeployment(ctx, appID, "", "", "", "migration", "")
 }
 
-func (m *migrationDeployerAdapter) StopAppService(ctx context.Context, app *models.AppService) error {
+func (m *migrationDeployerAdapter) StopAppService(ctx context.Context, app *appsmod.AppService) error {
 	return nil
 }
 
-func (m *migrationDeployerAdapter) RemoveAppService(ctx context.Context, app *models.AppService) error {
+func (m *migrationDeployerAdapter) RemoveAppService(ctx context.Context, app *appsmod.AppService) error {
 	return nil
 }
 
@@ -156,7 +157,7 @@ type migrationGitAdapter struct {
 	gitService *gitmod.ProviderService
 }
 
-func (g *migrationGitAdapter) CloneOrPullAppRepository(ctx context.Context, app *models.AppService, targetDir string, logWriter io.Writer) error {
+func (g *migrationGitAdapter) CloneOrPullAppRepository(ctx context.Context, app *appsmod.AppService, targetDir string, logWriter io.Writer) error {
 	if app == nil {
 		return errors.New("app required")
 	}
@@ -165,7 +166,7 @@ func (g *migrationGitAdapter) CloneOrPullAppRepository(ctx context.Context, app 
 
 type attentionDeployerAdapter struct {
 	deploymentService *deploymentsmod.DeploymentService
-	appService        *projectservices.AppService
+	appService        *appsmod.Service
 }
 
 func (a *attentionDeployerAdapter) DeployAppService(ctx context.Context, appID, sourceDir string, logWriter io.Writer) (string, error) {
@@ -176,15 +177,19 @@ func (a *attentionDeployerAdapter) DeployAppService(ctx context.Context, appID, 
 	return a.deploymentService.TriggerDeployment(ctx, app.ID, app.EnvironmentID, app.ProjectID, app.Branch, "attention", "")
 }
 
-func (a *attentionDeployerAdapter) RestartAppService(ctx context.Context, app *models.AppService) error {
+func (a *attentionDeployerAdapter) RestartAppService(ctx context.Context, app *monitoring.AppService) error {
 	if app == nil {
 		return errors.New("app required")
 	}
-	_, err := a.deploymentService.TriggerDeployment(ctx, app.ID, app.EnvironmentID, app.ProjectID, app.Branch, "restart", "")
+	appSvc, err := a.appService.GetAppService(ctx, app.ID)
+	if err != nil || appSvc == nil {
+		return fmt.Errorf("app not found")
+	}
+	_, err = a.deploymentService.TriggerDeployment(ctx, appSvc.ID, appSvc.EnvironmentID, appSvc.ProjectID, appSvc.Branch, "restart", "")
 	return err
 }
 
-func configureDeploymentBindings(srv *Server, routeRuleRepo environments.RouteRuleRepository, domainRepo *repositories.DomainRepo, routeProtectionRepo environments.RouteProtectionRepository) {
+func configureDeploymentBindings(srv *Server, routeRuleRepo environments.RouteRuleRepository, domainRepo domainsmod.DomainRepository, routeProtectionRepo environments.RouteProtectionRepository) {
 	if srv.deployer == nil {
 		return
 	}
@@ -212,22 +217,20 @@ func configureDeploymentBindings(srv *Server, routeRuleRepo environments.RouteRu
 		if err != nil {
 			return nil, err
 		}
-		mRules := make([]*models.RouteRule, len(rules))
+		mRules := make([]*networking.RouteRule, len(rules))
 		for i, r := range rules {
-			mRules[i] = &models.RouteRule{
+			mRules[i] = &networking.RouteRule{
 				ID:        r.ID,
 				ServiceID: r.ServiceID,
 				Name:      r.Name,
 				Enabled:   r.Enabled,
-				RuleType:  models.RouteRuleType(r.RuleType),
+				RuleType:  networking.RouteRuleType(r.RuleType),
 				SpecJSON:  r.SpecJSON,
-				CreatedAt: r.CreatedAt,
-				UpdatedAt: r.UpdatedAt,
 			}
 		}
 		return networking.BuildMiddlewareLabels(serviceName, mRules), nil
 	}
-	srv.deployer.DomainFetcher = func(ctx context.Context, serviceID string) ([]models.DomainConfig, error) {
+	srv.deployer.DomainFetcher = func(ctx context.Context, serviceID string) ([]domainsmod.DomainConfig, error) {
 		if srv.appService != nil {
 			if app, err := srv.appService.GetAppService(ctx, serviceID); err == nil && app != nil && app.ProjectID != "" {
 				if services, err := srv.appService.ListByProject(ctx, app.ProjectID); err == nil && len(services) == 1 {
@@ -235,6 +238,26 @@ func configureDeploymentBindings(srv *Server, routeRuleRepo environments.RouteRu
 				}
 			}
 		}
-		return domainRepo.ListByService(ctx, serviceID)
+		list, err := domainRepo.ListByService(ctx, serviceID)
+		if err != nil {
+			return nil, err
+		}
+		res := make([]domainsmod.DomainConfig, len(list))
+		for i, d := range list {
+			res[i] = domainsmod.DomainConfig{
+				ID:                 d.ID,
+				ServiceID:          d.ServiceID,
+				DomainName:         d.DomainName,
+				RedirectTo:         d.RedirectTo,
+				SSLCertStatus:      d.SSLCertStatus,
+				PathPrefix:         d.PathPrefix,
+				DNSProvisionStatus: d.DNSProvisionStatus,
+				DNSProvider:        d.DNSProvider,
+				DNSProvisionedIP:   d.DNSProvisionedIP,
+				CreatedAt:          d.CreatedAt,
+				UpdatedAt:          d.UpdatedAt,
+			}
+		}
+		return res, nil
 	}
 }

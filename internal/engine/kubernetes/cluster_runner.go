@@ -1,28 +1,37 @@
 package kubernetes
 
 import (
-	"codedock/internal/models"
-	"codedock/internal/platform/ssh"
 	"context"
 	"encoding/base64"
 	"fmt"
-	"github.com/google/uuid"
 	"io"
 	"log/slog"
 	"net"
 	"regexp"
 	"strings"
+
+	"github.com/google/uuid"
+
+	"codedock/internal/modules/servers"
+	"codedock/internal/platform/ssh"
 )
 
 var networkInterfacePattern = regexp.MustCompile(`^[A-Za-z0-9_.:-]{1,32}$`)
 
+type ClusterNode struct {
+	ServerID    string `json:"serverId"`
+	PrivateIP   string `json:"privateIp"`
+	Interface   string `json:"interface"`
+	Fingerprint string `json:"fingerprint"`
+}
+
 type ClusterServers interface {
-	GetByID(context.Context, string) (*models.Server, error)
+	GetByID(context.Context, string) (*servers.Server, error)
 }
 type ClusterRunner struct{ servers ClusterServers }
 
 func NewClusterRunner(servers ClusterServers) *ClusterRunner { return &ClusterRunner{servers: servers} }
-func ValidateNode(node models.ClusterNode) error {
+func ValidateNode(node ClusterNode) error {
 	if _, err := uuid.Parse(node.ServerID); err != nil {
 		return fmt.Errorf("select a valid registered server identity")
 	}
@@ -48,7 +57,7 @@ func ValidateNode(node models.ClusterNode) error {
 	}
 	return nil
 }
-func (r *ClusterRunner) client(ctx context.Context, node models.ClusterNode) (*ssh.Client, error) {
+func (r *ClusterRunner) client(ctx context.Context, node ClusterNode) (*ssh.Client, error) {
 	if err := ValidateNode(node); err != nil {
 		return nil, err
 	}
@@ -71,7 +80,7 @@ func closeClient(client *ssh.Client) {
 		slog.Warn("close cluster SSH connection", "error", err)
 	}
 }
-func (r *ClusterRunner) Preflight(ctx context.Context, node models.ClusterNode, clusterID string, leader bool) error {
+func (r *ClusterRunner) Preflight(ctx context.Context, node ClusterNode, clusterID string, leader bool) error {
 	client, err := r.client(ctx, node)
 	if err != nil {
 		return err
@@ -98,7 +107,7 @@ if test -e /etc/codedock-cluster; then test "$(cat /etc/codedock-cluster)" = %s;
 	}
 	return nil
 }
-func (r *ClusterRunner) Script(ctx context.Context, node models.ClusterNode, id, script string) error {
+func (r *ClusterRunner) Script(ctx context.Context, node ClusterNode, id, script string) error {
 	client, err := r.client(ctx, node)
 	if err != nil {
 		return err
@@ -107,7 +116,7 @@ func (r *ClusterRunner) Script(ctx context.Context, node models.ClusterNode, id,
 	_, err = client.RunManagedScript(ctx, id, script)
 	return err
 }
-func (r *ClusterRunner) Kubectl(ctx context.Context, node models.ClusterNode, args []string, input string) (string, error) {
+func (r *ClusterRunner) Kubectl(ctx context.Context, node ClusterNode, args []string, input string) (string, error) {
 	client, err := r.client(ctx, node)
 	if err != nil {
 		return "", err
@@ -120,7 +129,7 @@ func (r *ClusterRunner) Kubectl(ctx context.Context, node models.ClusterNode, ar
 	return client.RunWithInput(ctx, client.RootCommand("k3s kubectl "+strings.Join(quoted, " ")), strings.NewReader(input))
 }
 
-func (r *ClusterRunner) StreamKubectl(ctx context.Context, node models.ClusterNode, args []string, output io.Writer) error {
+func (r *ClusterRunner) StreamKubectl(ctx context.Context, node ClusterNode, args []string, output io.Writer) error {
 	client, err := r.client(ctx, node)
 	if err != nil {
 		return err
@@ -133,7 +142,7 @@ func (r *ClusterRunner) StreamKubectl(ctx context.Context, node models.ClusterNo
 	return client.Stream(ctx, client.RootCommand("k3s kubectl "+strings.Join(quoted, " ")), nil, output)
 }
 
-func (r *ClusterRunner) StreamKubectlPTY(ctx context.Context, node models.ClusterNode, args []string, input io.Reader, output io.Writer) error {
+func (r *ClusterRunner) StreamKubectlPTY(ctx context.Context, node ClusterNode, args []string, input io.Reader, output io.Writer) error {
 	client, err := r.client(ctx, node)
 	if err != nil {
 		return err
@@ -146,7 +155,7 @@ func (r *ClusterRunner) StreamKubectlPTY(ctx context.Context, node models.Cluste
 	return client.StreamPTY(ctx, client.RootCommand("k3s kubectl "+strings.Join(quoted, " ")), input, output)
 }
 
-func (r *ClusterRunner) Host(ctx context.Context, node models.ClusterNode, script string) (string, error) {
+func (r *ClusterRunner) Host(ctx context.Context, node ClusterNode, script string) (string, error) {
 	client, err := r.client(ctx, node)
 	if err != nil {
 		return "", err
@@ -155,7 +164,7 @@ func (r *ClusterRunner) Host(ctx context.Context, node models.ClusterNode, scrip
 	return client.RunWithInput(ctx, client.RootCommand("sh -s"), strings.NewReader(script))
 }
 
-func (r *ClusterRunner) StreamHost(ctx context.Context, node models.ClusterNode, script string, input io.Reader, output io.Writer) error {
+func (r *ClusterRunner) StreamHost(ctx context.Context, node ClusterNode, script string, input io.Reader, output io.Writer) error {
 	client, err := r.client(ctx, node)
 	if err != nil {
 		return err
@@ -164,7 +173,7 @@ func (r *ClusterRunner) StreamHost(ctx context.Context, node models.ClusterNode,
 	return client.Stream(ctx, client.RootCommand("sh -c "+ssh.ShellQuote(script)), input, output)
 }
 
-func (r *ClusterRunner) VerifyPorts(ctx context.Context, node models.ClusterNode, control bool) error {
+func (r *ClusterRunner) VerifyPorts(ctx context.Context, node ClusterNode, control bool) error {
 	ports := "8472 10250"
 	if control {
 		ports = "6443 8472 10250"

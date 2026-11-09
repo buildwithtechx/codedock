@@ -10,11 +10,11 @@ import (
 	"github.com/docker/docker/errdefs"
 	"github.com/google/uuid"
 
-	"codedock/internal/models"
+	appsmod "codedock/internal/modules/apps"
 	"codedock/internal/utils"
 )
 
-func (d *Deployer) ExecuteRollingUpdate(ctx context.Context, app *models.AppService, newImageTag string, logWriter io.Writer) error {
+func (d *Deployer) ExecuteRollingUpdate(ctx context.Context, app *appsmod.AppService, newImageTag string, logWriter io.Writer) error {
 	replicas := app.Replicas
 	if replicas <= 1 {
 		appCopy := *app
@@ -103,7 +103,7 @@ func (d *Deployer) ExecuteRollingUpdate(ctx context.Context, app *models.AppServ
 	return nil
 }
 
-func (d *Deployer) ExecuteOneOffTask(ctx context.Context, app *models.AppService, command string, logWriter io.Writer) error {
+func (d *Deployer) ExecuteOneOffTask(ctx context.Context, app *appsmod.AppService, command string, logWriter io.Writer) error {
 	containerName := fmt.Sprintf("%s-task-%s", utils.NormalizeContainerName(app.ID), uuid.NewString()[:6])
 	if logWriter != nil {
 		fmt.Fprintf(logWriter, "🏃 [Deployer] Running one-off task in container %s: %s\n", containerName, command)
@@ -139,7 +139,7 @@ func (d *Deployer) ExecuteOneOffTask(ctx context.Context, app *models.AppService
 		Name:            containerName,
 		ImageTag:        imageTag,
 		ServiceID:       app.ID,
-		RuntimeMode:     models.RuntimeModeWorker,
+		RuntimeMode:     appsmod.RuntimeModeWorker,
 		Envs:            envSlice,
 		Cmd:             strings.Fields(command),
 		MemoryLimitMB:   app.MemoryLimit,
@@ -173,7 +173,7 @@ func (d *Deployer) ExecuteOneOffTask(ctx context.Context, app *models.AppService
 	return nil
 }
 
-func (d *Deployer) RestartAppService(ctx context.Context, app *models.AppService) error {
+func (d *Deployer) RestartAppService(ctx context.Context, app *appsmod.AppService) error {
 	release, err := d.containerManager.acquireService(app.ID)
 	if err != nil {
 		return err
@@ -210,6 +210,6 @@ func (d *Deployer) RestartAppService(ctx context.Context, app *models.AppService
 		}
 	}
 
-	app.Status = models.AppServiceStatusRunning
+	app.Status = appsmod.AppServiceStatusRunning
 	return d.store.UpdateAppService(app)
 }

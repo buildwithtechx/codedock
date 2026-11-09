@@ -8,8 +8,6 @@ import (
 	nethttp "net/http"
 	"os"
 	"path/filepath"
-
-	"codedock/internal/models"
 )
 
 type ArchiveDeployResult struct {
@@ -18,7 +16,7 @@ type ArchiveDeployResult struct {
 	AppName     string `json:"appName"`
 }
 
-func (c *Client) TriggerDeployment(serviceID string) (*models.Deployment, error) {
+func (c *Client) TriggerDeployment(serviceID string) (*Deployment, error) {
 	resp, err := c.sendRequest("POST", fmt.Sprintf("/services/%s/deploy", serviceID), nil)
 	if err != nil {
 		return nil, err
@@ -31,7 +29,7 @@ func (c *Client) TriggerDeployment(serviceID string) (*models.Deployment, error)
 	}
 
 	var result struct {
-		Data *models.Deployment `json:"data"`
+		Data *Deployment `json:"data"`
 	}
 	if err := json.NewDecoder(resp.Body).Decode(&result); err != nil {
 		return nil, err
@@ -103,7 +101,7 @@ func (c *Client) DeployArchive(projectID, appName, archivePath string) (*Archive
 	return res.Data, nil
 }
 
-func (c *Client) ListDeployments(serviceID string) ([]models.Deployment, error) {
+func (c *Client) ListDeployments(serviceID string) ([]Deployment, error) {
 	resp, err := c.sendRequest("GET", fmt.Sprintf("/services/%s/deployments", serviceID), nil)
 	if err != nil {
 		return nil, err
@@ -116,7 +114,7 @@ func (c *Client) ListDeployments(serviceID string) ([]models.Deployment, error) 
 	}
 
 	var result struct {
-		Data []models.Deployment `json:"data"`
+		Data []Deployment `json:"data"`
 	}
 	if err := json.NewDecoder(resp.Body).Decode(&result); err != nil {
 		return nil, err
@@ -147,7 +145,7 @@ func (c *Client) GetDeploymentLogs(deploymentID string) (string, error) {
 	return result.Data, nil
 }
 
-func (c *Client) GetServiceMetrics(serviceID string) ([]models.ServiceMetric, error) {
+func (c *Client) GetServiceMetrics(serviceID string) ([]ServiceMetric, error) {
 	resp, err := c.sendRequest("GET", fmt.Sprintf("/services/%s/metrics", serviceID), nil)
 	if err != nil {
 		return nil, err
@@ -160,7 +158,7 @@ func (c *Client) GetServiceMetrics(serviceID string) ([]models.ServiceMetric, er
 	}
 
 	var result struct {
-		Data []models.ServiceMetric `json:"data"`
+		Data []ServiceMetric `json:"data"`
 	}
 	if err := json.NewDecoder(resp.Body).Decode(&result); err != nil {
 		return nil, err

@@ -5,11 +5,9 @@ import (
 	"fmt"
 	"io"
 	nethttp "net/http"
-
-	"codedock/internal/models"
 )
 
-func (c *Client) ListServers() ([]*models.Server, error) {
+func (c *Client) ListServers() ([]*Server, error) {
 	resp, err := c.sendRequest("GET", "/servers", nil)
 	if err != nil {
 		return nil, err
@@ -22,7 +20,7 @@ func (c *Client) ListServers() ([]*models.Server, error) {
 	}
 
 	var result struct {
-		Data []*models.Server `json:"data"`
+		Data []*Server `json:"data"`
 	}
 	if err := json.NewDecoder(resp.Body).Decode(&result); err != nil {
 		return nil, err
@@ -31,7 +29,7 @@ func (c *Client) ListServers() ([]*models.Server, error) {
 	return result.Data, nil
 }
 
-func (c *Client) CreateServer(req *models.CreateServerRequest) (*models.Server, error) {
+func (c *Client) CreateServer(req *CreateServerRequest) (*Server, error) {
 	resp, err := c.sendRequest("POST", "/servers", req)
 	if err != nil {
 		return nil, err
@@ -44,7 +42,7 @@ func (c *Client) CreateServer(req *models.CreateServerRequest) (*models.Server, 
 	}
 
 	var result struct {
-		Data *models.Server `json:"data"`
+		Data *Server `json:"data"`
 	}
 	if err := json.NewDecoder(resp.Body).Decode(&result); err != nil {
 		return nil, err
@@ -53,7 +51,7 @@ func (c *Client) CreateServer(req *models.CreateServerRequest) (*models.Server, 
 	return result.Data, nil
 }
 
-func (c *Client) UpdateServer(id string, req *models.UpdateServerRequest) (*models.Server, error) {
+func (c *Client) UpdateServer(id string, req *UpdateServerRequest) (*Server, error) {
 	resp, err := c.sendRequest("PATCH", fmt.Sprintf("/servers/%s", id), req)
 	if err != nil {
 		return nil, err
@@ -66,7 +64,7 @@ func (c *Client) UpdateServer(id string, req *models.UpdateServerRequest) (*mode
 	}
 
 	var result struct {
-		Data *models.Server `json:"data"`
+		Data *Server `json:"data"`
 	}
 	if err := json.NewDecoder(resp.Body).Decode(&result); err != nil {
 		return nil, err
@@ -90,7 +88,7 @@ func (c *Client) DeleteServer(id string) error {
 	return nil
 }
 
-func (c *Client) GetServerNetworkSettings(id string) (*models.ServerNetworkSettings, error) {
+func (c *Client) GetServerNetworkSettings(id string) (*ServerNetworkSettings, error) {
 	resp, err := c.sendRequest("GET", fmt.Sprintf("/servers/%s/network-settings", id), nil)
 	if err != nil {
 		return nil, err
@@ -103,7 +101,7 @@ func (c *Client) GetServerNetworkSettings(id string) (*models.ServerNetworkSetti
 	}
 
 	var result struct {
-		Data *models.ServerNetworkSettings `json:"data"`
+		Data *ServerNetworkSettings `json:"data"`
 	}
 	if err := json.NewDecoder(resp.Body).Decode(&result); err != nil {
 		return nil, err
@@ -111,7 +109,7 @@ func (c *Client) GetServerNetworkSettings(id string) (*models.ServerNetworkSetti
 	return result.Data, nil
 }
 
-func (c *Client) UpdateServerNetworkSettings(id string, req *models.UpdateServerNetworkSettingsRequest) (*models.ServerNetworkSettings, error) {
+func (c *Client) UpdateServerNetworkSettings(id string, req *UpdateServerNetworkSettingsRequest) (*ServerNetworkSettings, error) {
 	resp, err := c.sendRequest("PATCH", fmt.Sprintf("/servers/%s/network-settings", id), req)
 	if err != nil {
 		return nil, err
@@ -124,7 +122,7 @@ func (c *Client) UpdateServerNetworkSettings(id string, req *models.UpdateServer
 	}
 
 	var result struct {
-		Data *models.ServerNetworkSettings `json:"data"`
+		Data *ServerNetworkSettings `json:"data"`
 	}
 	if err := json.NewDecoder(resp.Body).Decode(&result); err != nil {
 		return nil, err

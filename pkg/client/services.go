@@ -5,11 +5,9 @@ import (
 	"fmt"
 	"io"
 	nethttp "net/http"
-
-	"codedock/internal/models"
 )
 
-func (c *Client) ListServices(environmentID string) ([]*models.AppService, error) {
+func (c *Client) ListServices(environmentID string) ([]*AppService, error) {
 	resp, err := c.sendRequest("GET", fmt.Sprintf("/environments/%s/services", environmentID), nil)
 	if err != nil {
 		return nil, err
@@ -22,7 +20,7 @@ func (c *Client) ListServices(environmentID string) ([]*models.AppService, error
 	}
 
 	var result struct {
-		Data []*models.AppService `json:"data"`
+		Data []*AppService `json:"data"`
 	}
 	if err := json.NewDecoder(resp.Body).Decode(&result); err != nil {
 		return nil, err
@@ -31,7 +29,7 @@ func (c *Client) ListServices(environmentID string) ([]*models.AppService, error
 	return result.Data, nil
 }
 
-func (c *Client) CreateService(service *models.AppService) (*models.AppService, error) {
+func (c *Client) CreateService(service *AppService) (*AppService, error) {
 	resp, err := c.sendRequest("POST", "/services", service)
 	if err != nil {
 		return nil, err
@@ -44,7 +42,7 @@ func (c *Client) CreateService(service *models.AppService) (*models.AppService, 
 	}
 
 	var result struct {
-		Data *models.AppService `json:"data"`
+		Data *AppService `json:"data"`
 	}
 	if err := json.NewDecoder(resp.Body).Decode(&result); err != nil {
 		return nil, err
@@ -53,7 +51,7 @@ func (c *Client) CreateService(service *models.AppService) (*models.AppService, 
 	return result.Data, nil
 }
 
-func (c *Client) GetService(id string) (*models.AppService, error) {
+func (c *Client) GetService(id string) (*AppService, error) {
 	resp, err := c.sendRequest("GET", fmt.Sprintf("/services/%s", id), nil)
 	if err != nil {
 		return nil, err
@@ -66,7 +64,7 @@ func (c *Client) GetService(id string) (*models.AppService, error) {
 	}
 
 	var result struct {
-		Data *models.AppService `json:"data"`
+		Data *AppService `json:"data"`
 	}
 	if err := json.NewDecoder(resp.Body).Decode(&result); err != nil {
 		return nil, err

@@ -1,11 +1,12 @@
 package deploy
 
 import (
-	"codedock/internal/models"
 	"context"
 	"io"
+
+	appsmod "codedock/internal/modules/apps"
 )
 
-func (d *Deployer) NativeEnvironment(ctx context.Context, app *models.AppService, logs io.Writer) (map[string]string, error) {
+func (d *Deployer) NativeEnvironment(ctx context.Context, app *appsmod.AppService, logs io.Writer) (map[string]string, error) {
 	return d.getEnvironmentVariables(ctx, app, logs)
 }

@@ -8,7 +8,7 @@ import (
 	"strings"
 	"text/tabwriter"
 
-	"codedock/internal/models"
+	pkgclient "codedock/pkg/client"
 	"github.com/spf13/cobra"
 )
 
@@ -79,7 +79,7 @@ var routeProtectionProtectCmd = &cobra.Command{
 		}
 
 		client := getClient()
-		res, err := client.ChangeRouteProtection(projectID, &models.RouteProtectionInput{
+		res, err := client.ChangeRouteProtection(projectID, &pkgclient.RouteProtectionInput{
 			Hostname: hostname,
 			Action:   "protect",
 			Password: password,
@@ -113,7 +113,7 @@ var routeProtectionUnlockCmd = &cobra.Command{
 		}
 
 		client := getClient()
-		res, err := client.ChangeRouteProtection(projectID, &models.RouteProtectionInput{
+		res, err := client.ChangeRouteProtection(projectID, &pkgclient.RouteProtectionInput{
 			Hostname: hostname,
 			Action:   "unlock",
 		})
@@ -135,7 +135,7 @@ var routeProtectionRevokeCmd = &cobra.Command{
 		hostname := args[1]
 
 		client := getClient()
-		res, err := client.ChangeRouteProtection(projectID, &models.RouteProtectionInput{
+		res, err := client.ChangeRouteProtection(projectID, &pkgclient.RouteProtectionInput{
 			Hostname: hostname,
 			Action:   "revoke",
 		})
@@ -157,7 +157,7 @@ var routeProtectionRetryCmd = &cobra.Command{
 		hostname := args[1]
 
 		client := getClient()
-		res, err := client.ChangeRouteProtection(projectID, &models.RouteProtectionInput{
+		res, err := client.ChangeRouteProtection(projectID, &pkgclient.RouteProtectionInput{
 			Hostname: hostname,
 			Action:   "retry",
 		})

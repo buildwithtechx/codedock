@@ -3,7 +3,7 @@ package deploy
 import (
 	"strings"
 
-	"codedock/internal/models"
+	domainsmod "codedock/internal/modules/domains"
 )
 
 type RouteHost struct {
@@ -12,11 +12,11 @@ type RouteHost struct {
 	Protected  bool
 }
 
-func NormalizeRouteHosts(primary string, domains []models.DomainConfig) []RouteHost {
+func NormalizeRouteHosts(primary string, domains []domainsmod.DomainConfig) []RouteHost {
 	return NormalizeRouteHostsWithProtection(primary, domains, nil)
 }
 
-func NormalizeRouteHostsWithProtection(primary string, domains []models.DomainConfig, isProtected func(string) bool) []RouteHost {
+func NormalizeRouteHostsWithProtection(primary string, domains []domainsmod.DomainConfig, isProtected func(string) bool) []RouteHost {
 	hosts := make([]RouteHost, 0, len(domains)+1)
 	seen := map[string]bool{}
 	primary = strings.ToLower(strings.TrimSpace(primary))
@@ -51,7 +51,7 @@ func NormalizeRouteHostsWithProtection(primary string, domains []models.DomainCo
 	return hosts
 }
 
-func domainPathPrefix(host string, domains []models.DomainConfig) string {
+func domainPathPrefix(host string, domains []domainsmod.DomainConfig) string {
 	for _, domain := range domains {
 		if strings.ToLower(strings.TrimSpace(domain.DomainName)) == host {
 			return domain.PathPrefix

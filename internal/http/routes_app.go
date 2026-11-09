@@ -7,7 +7,6 @@ import (
 
 	"codedock/apps/dashboard"
 	"codedock/internal/config"
-	"codedock/internal/models"
 	"codedock/internal/modules/ai"
 	appsmod "codedock/internal/modules/apps"
 	"codedock/internal/modules/audit"
@@ -16,6 +15,7 @@ import (
 	deploymentsmod "codedock/internal/modules/deployments"
 	"codedock/internal/modules/dns"
 	gitmod "codedock/internal/modules/git"
+	"codedock/internal/modules/organizations"
 	"codedock/internal/modules/settings"
 	"github.com/labstack/echo/v4"
 )
@@ -29,7 +29,7 @@ func (s *Server) registerAppRoutes(apiGroup, authGroup *echo.Group) {
 		AutoscalingHandler: s.autoscalingHandler,
 	})
 
-	authGroup.GET("/projects/:id/runtime-clusters", s.clusterHandler.List, s.RequireProjectRole(models.MemberPermissionAdmin))
+	authGroup.GET("/projects/:id/runtime-clusters", s.clusterHandler.List, s.RequireProjectRole(organizations.MemberPermissionAdmin))
 	apiGroup.GET("/services/:serviceId/logs", s.serviceLogsWSHandler.Handle)
 }
 
@@ -47,10 +47,10 @@ func (s *Server) registerDeploymentRoutes(apiGroup, authGroup *echo.Group) {
 		deploymentsmod.RouteMiddleware{
 			Admin:              s.authGuard.RequireRole("admin"),
 			ServiceAuth:        serviceAuth,
-			ServiceAdmin:       s.RequireServiceRole(models.MemberPermissionAdmin),
+			ServiceAdmin:       s.RequireServiceRole(organizations.MemberPermissionAdmin),
 			ProjectAuth:        s.RequireProjectRole(""),
-			ProjectAdmin:       s.RequireProjectRole(models.MemberPermissionAdmin),
-			RequireProjectRole: func(r string) echo.MiddlewareFunc { return s.RequireProjectRole(models.MemberPermission(r)) },
+			ProjectAdmin:       s.RequireProjectRole(organizations.MemberPermissionAdmin),
+			RequireProjectRole: func(r string) echo.MiddlewareFunc { return s.RequireProjectRole(organizations.MemberPermission(r)) },
 			RequireScope:       s.authGuard.RequireScope,
 		},
 	)
@@ -64,7 +64,7 @@ func (s *Server) registerDeploymentRoutes(apiGroup, authGroup *echo.Group) {
 		s.webhookHandler,
 		gitmod.RouteMiddleware{
 			Admin:              s.authGuard.RequireRole("admin"),
-			RequireProjectRole: func(r string) echo.MiddlewareFunc { return s.RequireProjectRole(models.MemberPermission(r)) },
+			RequireProjectRole: func(r string) echo.MiddlewareFunc { return s.RequireProjectRole(organizations.MemberPermission(r)) },
 		},
 	)
 

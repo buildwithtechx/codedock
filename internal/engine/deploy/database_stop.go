@@ -1,12 +1,14 @@
 package deploy
 
 import (
-	"codedock/internal/models"
-	"codedock/internal/utils"
 	"context"
 	"fmt"
+
 	"github.com/docker/docker/api/types/container"
 	"github.com/docker/docker/client"
+
+	"codedock/internal/modules/databases"
+	"codedock/internal/utils"
 )
 
 func (d *DatabaseDeployer) Stop(ctx context.Context, id string) error {
@@ -23,7 +25,7 @@ func (d *DatabaseDeployer) Stop(ctx context.Context, id string) error {
 		return utils.NewNotFoundError("Database", id)
 	}
 	if utils.IsDryRun() {
-		return d.store.UpdateDatabaseStatus(id, models.DatabaseStatusStopped, db.ContainerID)
+		return d.store.UpdateDatabaseStatus(id, databases.DatabaseStatusStopped, db.ContainerID)
 	}
 	if d.dockerClient == nil {
 		return fmt.Errorf("Docker is unavailable")
@@ -39,5 +41,5 @@ func (d *DatabaseDeployer) Stop(ctx context.Context, id string) error {
 	if err := d.dockerClient.ContainerStop(ctx, name, container.StopOptions{}); err != nil && !client.IsErrNotFound(err) {
 		return fmt.Errorf("stop database container: %w", err)
 	}
-	return d.store.UpdateDatabaseStatus(id, models.DatabaseStatusStopped, db.ContainerID)
+	return d.store.UpdateDatabaseStatus(id, databases.DatabaseStatusStopped, db.ContainerID)
 }

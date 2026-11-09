@@ -2,82 +2,167 @@ package http
 
 import (
 	"context"
+	"strings"
+	"time"
 
-	"codedock/internal/models"
+	"codedock/internal/modules/apps"
 	"codedock/internal/modules/monitoring"
-	"codedock/internal/repositories"
-	projectservices "codedock/internal/services/projects"
-	systemservices "codedock/internal/services/system"
+	"codedock/internal/modules/organizations"
+	"codedock/internal/modules/projects"
+	settingsmodule "codedock/internal/modules/settings"
+	"codedock/internal/modules/users"
+	"codedock/internal/platform/notifications"
 )
 
+type notifSettingsAdapter struct {
+	repo settingsmodule.Repository
+}
+
+func (a *notifSettingsAdapter) GetServerSettings(ctx context.Context) (*notifications.ServerSettings, error) {
+	if a.repo == nil {
+		return nil, nil
+	}
+	s, err := a.repo.GetServerSettings(ctx)
+	if err != nil || s == nil {
+		return nil, err
+	}
+	return &notifications.ServerSettings{
+		InstanceName: s.SiteName,
+	}, nil
+}
+
+type notifUserLookupAdapter struct {
+	repo users.UserRepository
+}
+
+func (a *notifUserLookupAdapter) GetUserByID(ctx context.Context, id string) (*notifications.User, error) {
+	if a.repo == nil {
+		return nil, nil
+	}
+	u, err := a.repo.GetUserByID(ctx, id)
+	if err != nil || u == nil {
+		return nil, err
+	}
+	return &notifications.User{
+		ID:    u.ID,
+		Email: u.Email,
+	}, nil
+}
+
+type notifDeviceTokenAdapter struct {
+	repo monitoring.DeviceTokenRepository
+}
+
+func (a *notifDeviceTokenAdapter) ListTokensByUser(ctx context.Context, userID string) ([]*notifications.DeviceToken, error) {
+	if a.repo == nil {
+		return []*notifications.DeviceToken{}, nil
+	}
+	tokens, err := a.repo.ListTokensByUser(ctx, userID)
+	if err != nil {
+		return nil, err
+	}
+	res := make([]*notifications.DeviceToken, len(tokens))
+	for i, t := range tokens {
+		res[i] = &notifications.DeviceToken{
+			ID:        t.ID,
+			UserID:    t.UserID,
+			Token:     t.Token,
+			Platform:  t.Platform,
+			CreatedAt: t.CreatedAt.Format(time.RFC3339),
+		}
+	}
+	return res, nil
+}
+
+func (a *notifDeviceTokenAdapter) ListAllTokens(ctx context.Context) ([]*notifications.DeviceToken, error) {
+	if a.repo == nil {
+		return []*notifications.DeviceToken{}, nil
+	}
+	tokens, err := a.repo.ListAllTokens(ctx)
+	if err != nil {
+		return nil, err
+	}
+	res := make([]*notifications.DeviceToken, len(tokens))
+	for i, t := range tokens {
+		res[i] = &notifications.DeviceToken{
+			ID:        t.ID,
+			UserID:    t.UserID,
+			Token:     t.Token,
+			Platform:  t.Platform,
+			CreatedAt: t.CreatedAt.Format(time.RFC3339),
+		}
+	}
+	return res, nil
+}
+
+type notifAppRepoAdapter struct {
+	repo apps.AppServiceRepository
+}
+
+func (a *notifAppRepoAdapter) GetByID(ctx context.Context, id string) (*notifications.AppService, error) {
+	if a.repo == nil {
+		return nil, nil
+	}
+	app, err := a.repo.GetByID(ctx, id)
+	if err != nil || app == nil {
+		return nil, err
+	}
+	return &notifications.AppService{
+		ID:        app.ID,
+		ProjectID: app.ProjectID,
+		Name:      app.Name,
+		Branch:    app.Branch,
+	}, nil
+}
+
+func (a *notifAppRepoAdapter) ListWebhooksByService(ctx context.Context, serviceID string) ([]*notifications.Webhook, error) {
+	if a.repo == nil {
+		return []*notifications.Webhook{}, nil
+	}
+	hooks, err := a.repo.ListWebhooksByService(ctx, serviceID)
+	if err != nil {
+		return nil, err
+	}
+	res := make([]*notifications.Webhook, len(hooks))
+	for i, h := range hooks {
+		var events []string
+		if h.Events != "" {
+			events = strings.Split(h.Events, ",")
+		}
+		res[i] = &notifications.Webhook{
+			ID:        h.ID,
+			ServiceID: h.ServiceID,
+			URL:       h.URL,
+			Secret:    h.Secret,
+			Events:    events,
+			Enabled:   true,
+		}
+	}
+	return res, nil
+}
+
 type notifSettingsServiceAdapter struct {
-	svc     *systemservices.NotificationSettingsService
-	orgRepo repositories.OrganizationRepository
+	svc     *monitoring.NotificationSettingsService
+	orgRepo organizations.OrganizationRepository
 }
 
 func (n *notifSettingsServiceAdapter) GetNotificationSettings(ctx context.Context) (*monitoring.NotificationSettings, error) {
 	if n.svc == nil {
 		return &monitoring.NotificationSettings{}, nil
 	}
-	s, err := n.svc.GetNotificationSettings(ctx)
-	if err != nil || s == nil {
-		return nil, err
-	}
-	return &monitoring.NotificationSettings{
-		ID:                 s.ID,
-		DiscordWebhookURL:  s.DiscordWebhookURL,
-		DiscordPingEnabled: s.DiscordPingEnabled,
-		DiscordEnabled:     s.DiscordEnabled,
-		SlackWebhookURL:    s.SlackWebhookURL,
-		SlackEnabled:       s.SlackEnabled,
-		TelegramBotToken:   s.TelegramBotToken,
-		TelegramChatID:     s.TelegramChatID,
-		TelegramEnabled:    s.TelegramEnabled,
-		SMTPHost:           s.SMTPHost,
-		SMTPPort:           s.SMTPPort,
-		SMTPUser:           s.SMTPUser,
-		SMTPPassword:       s.SMTPPassword,
-		SMTPFromName:       s.SMTPFromName,
-		SMTPFromAddress:    s.SMTPFromAddress,
-		SMTPEnabled:        s.SMTPEnabled,
-		ResendAPIKey:       s.ResendAPIKey,
-		ResendEnabled:      s.ResendEnabled,
-		PushoverUserKey:    s.PushoverUserKey,
-		PushoverAPIToken:   s.PushoverAPIToken,
-	}, nil
+	return n.svc.GetNotificationSettings(ctx)
 }
 
 func (n *notifSettingsServiceAdapter) UpdateNotificationSettings(ctx context.Context, settings *monitoring.NotificationSettings) error {
 	if n.svc == nil {
 		return nil
 	}
-	return n.svc.UpdateNotificationSettings(ctx, &models.NotificationSettings{
-		ID:                 settings.ID,
-		DiscordWebhookURL:  settings.DiscordWebhookURL,
-		DiscordPingEnabled: settings.DiscordPingEnabled,
-		DiscordEnabled:     settings.DiscordEnabled,
-		SlackWebhookURL:    settings.SlackWebhookURL,
-		SlackEnabled:       settings.SlackEnabled,
-		TelegramBotToken:   settings.TelegramBotToken,
-		TelegramChatID:     settings.TelegramChatID,
-		TelegramEnabled:    settings.TelegramEnabled,
-		SMTPHost:           settings.SMTPHost,
-		SMTPPort:           settings.SMTPPort,
-		SMTPUser:           settings.SMTPUser,
-		SMTPPassword:       settings.SMTPPassword,
-		SMTPFromName:       settings.SMTPFromName,
-		SMTPFromAddress:    settings.SMTPFromAddress,
-		SMTPEnabled:        settings.SMTPEnabled,
-		ResendAPIKey:       settings.ResendAPIKey,
-		ResendEnabled:      settings.ResendEnabled,
-		PushoverUserKey:    settings.PushoverUserKey,
-		PushoverAPIToken:   settings.PushoverAPIToken,
-	})
+	return n.svc.UpdateNotificationSettings(ctx, settings)
 }
 
 func (n *notifSettingsServiceAdapter) ListSubscriptions(ctx context.Context, userID, orgID string) (any, error) {
 	if n.svc == nil {
-		return []models.NotificationSubscription{}, nil
+		return []monitoring.NotificationSubscription{}, nil
 	}
 	return n.svc.ListSubscriptions(ctx, userID, orgID)
 }
@@ -86,7 +171,7 @@ func (n *notifSettingsServiceAdapter) UpsertSubscription(ctx context.Context, us
 	if n.svc == nil {
 		return nil, nil
 	}
-	sub := &models.NotificationSubscription{
+	sub := &monitoring.NotificationSubscription{
 		UserID:         userID,
 		OrganizationID: orgID,
 		Category:       category,
@@ -101,7 +186,7 @@ func (n *notifSettingsServiceAdapter) UpsertSubscription(ctx context.Context, us
 
 func (n *notifSettingsServiceAdapter) ListDefaults(ctx context.Context, orgID string) (any, error) {
 	if n.svc == nil {
-		return []models.NotificationDefault{}, nil
+		return []monitoring.NotificationDefault{}, nil
 	}
 	return n.svc.ListDefaults(ctx, orgID)
 }
@@ -110,7 +195,7 @@ func (n *notifSettingsServiceAdapter) UpsertDefault(ctx context.Context, orgID, 
 	if n.svc == nil {
 		return nil, nil
 	}
-	def := &models.NotificationDefault{
+	def := &monitoring.NotificationDefault{
 		OrganizationID: orgID,
 		Category:       category,
 		Channels:       channels,
@@ -124,7 +209,7 @@ func (n *notifSettingsServiceAdapter) UpsertDefault(ctx context.Context, orgID, 
 
 func (n *notifSettingsServiceAdapter) ListDeliveries(ctx context.Context, limit int) (any, error) {
 	if n.svc == nil {
-		return []models.NotificationDelivery{}, nil
+		return []monitoring.NotificationDelivery{}, nil
 	}
 	return n.svc.ListDeliveries(ctx, limit)
 }
@@ -145,7 +230,7 @@ func (n *notifSettingsServiceAdapter) DeleteDeviceToken(ctx context.Context, use
 
 func (n *notifSettingsServiceAdapter) ListDeviceTokens(ctx context.Context, userID string) (any, error) {
 	if n.svc == nil {
-		return []*models.DeviceToken{}, nil
+		return []*monitoring.DeviceToken{}, nil
 	}
 	return n.svc.ListDeviceTokens(ctx, userID)
 }
@@ -162,8 +247,8 @@ func (n *notifSettingsServiceAdapter) ResolveOrgID(ctx context.Context, userID s
 }
 
 type wsAccessCheckerAdapter struct {
-	appService     *projectservices.AppService
-	projectService *projectservices.ProjectService
+	appService     *apps.Service
+	projectService *projects.Service
 }
 
 func (w *wsAccessCheckerAdapter) HasAccess(ctx context.Context, serviceID, userID, role string) (bool, error) {
@@ -177,11 +262,11 @@ func (w *wsAccessCheckerAdapter) HasAccess(ctx context.Context, serviceID, userI
 	if err != nil || svc == nil {
 		return false, err
 	}
-	return w.projectService.HasPermission(ctx, svc.ProjectID, userID, models.UserRole(role), ""), nil
+	return w.projectService.HasPermission(ctx, svc.ProjectID, userID, users.UserRole(role), ""), nil
 }
 
 type wsUserValidatorAdapter struct {
-	userRepo repositories.UserRepository
+	userRepo users.UserRepository
 }
 
 func (w *wsUserValidatorAdapter) IsUserActive(ctx context.Context, userID string) (bool, error) {

@@ -2,21 +2,14 @@ package http
 
 import (
 	"context"
-	"database/sql"
 	"log/slog"
 	"time"
 
-	"github.com/docker/docker/client"
-	"github.com/labstack/echo/v4"
-
 	"codedock/internal/config"
-	"codedock/internal/engine/deploy"
-	"codedock/internal/http/mcp"
 	"codedock/internal/http/middleware"
 	aimod "codedock/internal/modules/ai"
 	appsmod "codedock/internal/modules/apps"
 	"codedock/internal/modules/audit"
-	"codedock/internal/modules/auth"
 	backupmodule "codedock/internal/modules/backups"
 	"codedock/internal/modules/chatapps"
 	"codedock/internal/modules/databases"
@@ -27,6 +20,7 @@ import (
 	gitmod "codedock/internal/modules/git"
 	mailmodule "codedock/internal/modules/mail"
 	modmigrations "codedock/internal/modules/migrations"
+	"codedock/internal/modules/monitoring"
 	"codedock/internal/modules/organizations"
 	projectsmod "codedock/internal/modules/projects"
 	"codedock/internal/modules/security"
@@ -34,78 +28,8 @@ import (
 	"codedock/internal/modules/users"
 	compose "codedock/internal/platform/docker"
 	"codedock/internal/platform/networking"
-	"codedock/internal/platform/notifications"
-	core "codedock/internal/platform/notifications"
-	"codedock/internal/platform/observability"
-	cron "codedock/internal/platform/scheduler"
 	leadership "codedock/internal/platform/scheduler"
-	"codedock/internal/platform/ssh"
-	backup "codedock/internal/platform/storage"
-	"codedock/internal/platform/vault"
-	"codedock/internal/repositories"
-	"codedock/internal/services/operations"
-	projectservices "codedock/internal/services/projects"
-	systemservices "codedock/internal/services/system"
 )
-
-type serverSetupDeps struct {
-	e                      *echo.Echo
-	db                     *sql.DB
-	v                      *vault.Vault
-	dataDir                string
-	deployer               *deploy.Deployer
-	traefikManager         *networking.TraefikManager
-	dockerClient           *client.Client
-	bridge                 *mcp.Bridge
-	authGuard              *middleware.AuthGuard
-	tokenService           *auth.TokenService
-	cronManager            *cron.CronManager
-	backupManager          *backup.BackupManager
-	sshManager             *ssh.SSHManager
-	statsMonitor           *observability.StatsMonitor
-	volumeOperations       *deploy.VolumeGate
-	serviceLinker          *projectservices.ServiceLinker
-	dispatcherService      *core.DispatcherService
-	projectService         *projectservices.ProjectService
-	projectAppService      *projectservices.ProjectAppService
-	appService             *projectservices.AppService
-	databaseService        *databases.Service
-	notifSettingsService   *systemservices.NotificationSettingsService
-	aiSettingsService      *projectservices.AISettingsService
-	aiAnalysisService      *projectservices.AIAnalysisService
-	userService            *users.UserService
-	settingsService        *settingsmodule.SettingsService
-	auditService           *audit.AuditService
-	orgService             *organizations.OrganizationService
-	authMod                *auth.Module
-	projectSettingsService *projectservices.ProjectSettingsService
-	scheduledTaskService   *systemservices.ScheduledTaskService
-	canvasService          *projectservices.CanvasService
-	gitService             *gitmod.ProviderService
-	deploymentService      *deploymentsmod.DeploymentService
-	autoscalingService     *appsmod.AutoscalingService
-	operationService       *operations.Service
-	backupService          *backupmodule.Service
-	mailerService          *notifications.MailerService
-	environmentRepo        *repositories.EnvironmentRepo
-	projectRepo            *repositories.ProjectRepo
-	appRepo                *repositories.AppServiceRepo
-	dbRepo                 *repositories.DatabaseRepo
-	settingsRepo           *repositories.SettingsRepo
-	envVarRepo             *repositories.EnvRepo
-	serverlessRepository   repositories.ServerlessRepository
-	userRepo               *repositories.UserRepo
-	userModRepo            users.UserRepository
-	deployRepo             *repositories.DeploymentRepo
-	prPreviewRepository    repositories.PRPreviewRepository
-	domainRepo             *repositories.DomainRepo
-	gitAppRepo             *repositories.GitAppRepo
-	dnsRepo                dns.Repository
-	orgRepo                repositories.OrganizationRepository
-	webhookDeliveryRepo    repositories.WebhookDeliveryRepository
-	serverRepo             repositories.ServerRepository
-	runtimeRepository      *repositories.RuntimeRepo
-}
 
 func buildServerInstance(d *serverSetupDeps) (*Server, error) {
 	prPreviewRepo := gitmod.NewPRPreviewRepository(d.db)
@@ -134,7 +58,7 @@ func buildServerInstance(d *serverSetupDeps) (*Server, error) {
 	terminalHandler := deploymentsmod.NewTerminalHandler(d.dockerClient, d.tokenService, &appLookupAdapter{appService: d.appService}, &projectLookupAdapter{projectService: d.projectService}, &userStatusAdapter{us: d.userService})
 	terminalHandler.Targets = d.deploymentService
 
-	appsService := appsmod.NewService(appsmod.NewAppServiceRepo(d.db), appsmod.NewServiceVarRepo(d.db), appsmod.NewServiceVolumeRepo(d.db))
+	appsService := appsmod.NewService(d.appRepo, appsmod.NewServiceVarRepo(d.db), appsmod.NewServiceVolumeRepo(d.db))
 	appAccess := &appAccessChecker{ps: d.projectService}
 	envLookup := &envLookupAdapter{repo: d.environmentRepo}
 	appsHandler := appsmod.NewHandler(appsService, appAccess, envLookup)
@@ -142,44 +66,44 @@ func buildServerInstance(d *serverSetupDeps) (*Server, error) {
 	appVarHandler := appsmod.NewVariableHandler(appsService, appAccess)
 	appVolumeHandler := appsmod.NewVolumeHandler(appsService, appAccess)
 	appWebhookHandler := appsmod.NewWebhookHandler(appsService)
-	autoscalingService := appsmod.NewAutoscalingService(appsmod.NewAutoscalingRepository(d.db), appsmod.NewServerlessRepository(d.db), appsmod.NewAppServiceRepo(d.db))
+	autoscalingService := appsmod.NewAutoscalingService(appsmod.NewAutoscalingRepository(d.db), appsmod.NewServerlessRepository(d.db), d.appRepo)
 	autoscalingHandler := appsmod.NewAutoscalingHandler(autoscalingService)
 
-	projService := projectsmod.NewService(projectsmod.NewProjectRepo(d.db), organizations.NewOrganizationRepository(d.db))
+	projService := projectsmod.NewService(d.projectRepo, d.orgRepo)
 	projSettingsService := projectsmod.NewProjectSettingsService(projectsmod.NewProjectSettingsRepo(d.db))
 	projectHandler := projectsmod.NewHandler(projService, projSettingsService, d.orgService)
-	projectAppHandler := projectsmod.NewProjectAppHandler(projectsmod.NewProjectAppService(projectsmod.NewProjectAppRepo(d.db)), projService)
+	projectAppHandler := projectsmod.NewProjectAppHandler(d.projectAppService, projService)
 	projectSettingsHandler := projectsmod.NewProjectSettingsHandler(projSettingsService)
 	checksHandler := projectsmod.NewChecksHandler()
 	canvasHandler := projectsmod.NewCanvasHandler(&canvasServiceAdapter{cs: d.canvasService}, projService)
 
-	stackService := projectservices.NewComposeStackService(repositories.NewComposeStackRepo(d.db, d.v), compose.NewStackRuntime(d.dockerClient))
+	stackService := projectsmod.NewComposeStackService(projectsmod.NewComposeStackRepo(d.db, d.v), &composeStackRuntimeAdapter{rt: compose.NewStackRuntime(d.dockerClient)})
 	stackService.BeforeDeployment = d.backupService.BeforeProjectDeployment
 	_ = stackService.Recover(context.Background())
 	composeStackHandler := projectsmod.NewComposeStackHandler(&composeStackAdapter{cs: stackService})
 	composeHandler := projectsmod.NewComposeHandler()
 	tmplMgr, _ := compose.NewTemplateManager()
-	oneClickService := projectservices.NewOneClickService(tmplMgr, stackService, d.environmentRepo)
+	oneClickService := projectsmod.NewOneClickService(tmplMgr, stackService, &projectEnvAdapter{repo: d.environmentRepo})
 	oneClickHandler := projectsmod.NewOneClickHandler(&oneClickAdapter{oc: oneClickService})
 
-	envService := environments.NewEnvironmentService(environments.NewEnvironmentRepo(d.db), environments.NewEnvVarRepo())
+	envService := environments.NewEnvironmentService(d.environmentRepo, environments.NewEnvVarRepo())
 	envHandler := environments.NewEnvironmentHandler(envService, &projectLookupAdapter{projectService: d.projectService}, environments.NewEnvSuggestionService(&envGitProviderAdapter{ps: d.gitService}))
 	protectionService := environments.NewRouteProtectionService(environments.NewRouteProtectionRepository(d.db), &projectLookupAdapter{projectService: d.projectService})
 	protectionHandler := environments.NewRouteProtectionHandler(protectionService)
 	edgeAuthHandler := environments.NewEdgeAuthHandler(protectionService)
 	routeRuleRepo := environments.NewRouteRuleRepository(d.db)
 	routeRuleHandler := environments.NewRouteRuleHandler(environments.NewRouteRuleService(routeRuleRepo), &serviceCheckerAdapter{appService: d.appService})
-	domainHandler := domainsmod.NewDomainHandler(domainsmod.NewDomainService(domainsmod.NewDomainRepo(d.db), dnsProviderService), appAccess, &domainServiceLookupAdapter{appRepo: d.appRepo}, &serverSettingsAdapter{repo: d.settingsRepo}, &auditDomainAdapter{audit: d.auditService})
+	domainHandler := domainsmod.NewDomainHandler(domainsmod.NewDomainService(d.domainRepo, dnsProviderService), appAccess, &domainServiceLookupAdapter{appRepo: d.appRepo}, &serverSettingsAdapter{repo: d.settingsRepo}, &auditDomainAdapter{audit: d.auditService})
 
-	metricsService := systemservices.NewMetricsService()
-	logService := systemservices.NewLogService()
-	updaterService := systemservices.NewUpdaterService(d.settingsRepo)
+	metricsService := monitoring.NewMetricsService()
+	logService := monitoring.NewLogService()
+	updaterService := monitoring.NewUpdaterService(&monitoringSettingsAdapter{repo: d.settingsRepo})
 	schedulerElector := leadership.NewElector(d.db, "scheduled-execution")
 	go schedulerElector.Run(context.Background(), d.cronManager.ServeElected, d.backupManager.ServeElected, updaterService.ServeElected)
 
 	backupHandler := backupmodule.NewHandler(d.backupService)
 	backupHandler.SetOperations(d.operationService)
-	migrationService := systemservices.NewMigrationService(d.db, d.dbRepo, d.dataDir, config.Get().Database.URL)
+	migrationService := modmigrations.NewBundleService(d.db, d.dbRepo, d.dataDir, config.Get().Database.URL)
 	serversHandler, serversWSHandler, serversTakeoverHandler, serversNetworksHandler := createServerHandlers(d)
 	securityVerifier, err := security.NewVerifier("")
 	if err != nil {
@@ -247,7 +171,7 @@ func buildServerInstance(d *serverSetupDeps) (*Server, error) {
 		composeStackHandler:        composeStackHandler,
 		chatAppHandler:             chatapps.NewHandler(chatAppService, chatapps.NewDispatcher(chatAppService, nil)),
 		oneClickHandler:            oneClickHandler,
-		migrationHandler:           modmigrations.NewBundleHandler(&migrationBundleAdapter{service: migrationService}, &migrationUserCounterAdapter{users: d.userService}, middleware.NewRateLimiter(5, time.Minute)),
+		migrationHandler:           modmigrations.NewBundleHandler(&migrationBundleAdapter{service: migrationService}, &migrationUserCounterAdapter{users: d.userRepo}, middleware.NewRateLimiter(5, time.Minute)),
 		onboardingHandler:          users.NewOnboardingHandler(d.userService),
 		dnsHandler:                 dns.NewHandler(dnsService),
 		metricsHandler:             monHandlers.metricsHandler,
@@ -275,11 +199,27 @@ func buildServerInstance(d *serverSetupDeps) (*Server, error) {
 	if err := configureManaged(srv, d.db, d.v, d.serverRepo, d.userRepo, d.orgRepo, d.sshManager, d.operationService); err != nil {
 		return nil, err
 	}
-	composeParserService := projectservices.NewComposeParserService()
-	if err := configureMigration(srv, d.db, d.v, d.projectRepo, d.appService, d.appRepo, d.environmentRepo, d.serverRepo, d.userRepo, d.orgRepo, &migrationGitAdapter{gitService: d.gitService}, composeParserService, &migrationDeployerAdapter{deploymentService: d.deploymentService}, d.sshManager, d.runtimeRepository); err != nil {
+	if err := configureMigration(srv, d.db, d.v); err != nil {
 		return nil, err
 	}
-	configureAnalytics(srv, d.db, d.v, d.traefikManager, d.deployRepo, d.projectRepo, d.appRepo, d.domainRepo, d.userRepo, d.orgRepo, metricsService, d.statsMonitor, &attentionDeployerAdapter{deploymentService: d.deploymentService, appService: d.appService}, d.backupService, srv.migrationService, d.auditService)
+	configureAnalytics(
+		srv,
+		d.db,
+		d.v,
+		d.traefikManager,
+		&analyticsDeployRepoAdapter{repo: d.deployRepo},
+		&analyticsProjectRepoAdapter{repo: d.projectRepo},
+		&analyticsAppRepoAdapter{repo: d.appRepo},
+		&analyticsDomainListerAdapter{repo: d.domainRepo},
+		&analyticsUserRepoAdapter{repo: d.userRepo},
+		&analyticsOrgRepoAdapter{repo: d.orgRepo},
+		metricsService,
+		d.statsMonitor,
+		&attentionDeployerAdapter{deploymentService: d.deploymentService, appService: d.appService},
+		d.backupService,
+		nil,
+		d.auditService,
+	)
 	if err := configureClusters(srv, d.db, d.v, d.projectRepo, d.serverRepo, d.operationService, d.volumeOperations, d.appRepo, d.deploymentService, d.canvasService, d.backupManager); err != nil {
 		return nil, err
 	}

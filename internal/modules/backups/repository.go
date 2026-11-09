@@ -68,6 +68,7 @@ type Repository interface {
 	ClaimRecordExpiry(ctx context.Context, id string) (bool, error)
 	SetSnapshotDumper(dumper func(ctx context.Context) ([]byte, error))
 	ControlPlaneSnapshot(ctx context.Context) ([]byte, error)
+	RecoverRecords(ctx context.Context) error
 }
 
 type repo struct {

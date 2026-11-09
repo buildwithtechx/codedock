@@ -1,7 +1,6 @@
 package storage
 
 import (
-	"codedock/internal/models"
 	"context"
 	"encoding/json"
 	"errors"
@@ -21,10 +20,10 @@ type VolumeOperations interface{ AcquireVolume(string) (func(), error) }
 func (bm *BackupManager) SetVolumeOperations(volumes VolumeOperations) { bm.volumeOperations = volumes }
 
 type VolumeRestoreOwner interface {
-	VolumeRestoreOwner(context.Context, *models.BackupConfig) (string, error)
+	VolumeRestoreOwner(context.Context, *BackupConfig) (string, error)
 }
 
-func (bm *BackupManager) ValidateVolumeRestore(ctx context.Context, recordID string) (*models.VolumeRestoreTarget, error) {
+func (bm *BackupManager) ValidateVolumeRestore(ctx context.Context, recordID string) (*VolumeRestoreTarget, error) {
 	if bm.dockerClient == nil {
 		return nil, errors.New("volume restore requires Docker")
 	}
@@ -32,7 +31,7 @@ func (bm *BackupManager) ValidateVolumeRestore(ctx context.Context, recordID str
 	if err != nil {
 		return nil, fmt.Errorf("load volume backup record: %w", err)
 	}
-	if rec == nil || rec.Status != models.BackupRecordStatusCompleted {
+	if rec == nil || rec.Status != BackupRecordStatusCompleted {
 		return nil, errors.New("volume restore requires a completed backup")
 	}
 	cfg, err := bm.store.GetBackupConfig(rec.BackupConfigID)
@@ -92,7 +91,7 @@ func (bm *BackupManager) ValidateVolumeRestore(ctx context.Context, recordID str
 	if cfg.ServiceID != "" {
 		ownerOperation = "service:" + cfg.ServiceID
 	}
-	return &models.VolumeRestoreTarget{OwnerOperation: ownerOperation, RecordID: recordID, VolumeName: cfg.VolumeName, ContainerID: containerID, VolumeCreatedAt: volume.CreatedAt, TimeoutSeconds: timeout}, nil
+	return &VolumeRestoreTarget{OwnerOperation: ownerOperation, RecordID: recordID, VolumeName: cfg.VolumeName, ContainerID: containerID, VolumeCreatedAt: volume.CreatedAt, TimeoutSeconds: timeout}, nil
 }
 
 func (bm *BackupManager) CancelVolumeRestore(recordID string) bool {

@@ -7,20 +7,17 @@ import (
 	"errors"
 	"time"
 
-	"codedock/internal/models"
 	"codedock/internal/modules/monitoring"
-	"codedock/internal/repositories"
-	systemservices "codedock/internal/services/system"
 )
 
 type ingressServiceAdapter struct {
-	repo  repositories.IngressRepository
-	cfSvc *systemservices.CloudflareIngressService
+	repo  monitoring.IngressRepository
+	cfSvc *monitoring.CloudflareIngressService
 }
 
 func (i *ingressServiceAdapter) List(ctx context.Context, serverID string) (any, error) {
 	if i.repo == nil {
-		return []models.IngressConnection{}, nil
+		return []monitoring.IngressConnection{}, nil
 	}
 	return i.repo.ListConnections(ctx, serverID)
 }
@@ -97,7 +94,7 @@ func (i *ingressServiceAdapter) Connect(ctx context.Context, req monitoring.Ingr
 	_, _ = rand.Read(b)
 	id := "ing-" + hex.EncodeToString(b)
 	now := time.Now().UTC().Format(time.RFC3339)
-	conn := &models.IngressConnection{
+	conn := &monitoring.IngressConnection{
 		ID:                    id,
 		ServerID:              req.ServerID,
 		CredentialID:          req.CredentialID,
@@ -116,7 +113,7 @@ func (i *ingressServiceAdapter) Connect(ctx context.Context, req monitoring.Ingr
 	if err := i.repo.SaveConnection(ctx, conn); err != nil {
 		return nil, err
 	}
-	return toMonitoringIngressConn(conn), nil
+	return conn, nil
 }
 
 func (i *ingressServiceAdapter) Update(ctx context.Context, id string, req monitoring.IngressUpdateRequest) (*monitoring.IngressConnection, error) {
@@ -133,7 +130,7 @@ func (i *ingressServiceAdapter) Update(ctx context.Context, id string, req monit
 	if err := i.repo.SaveConnection(ctx, conn); err != nil {
 		return nil, err
 	}
-	return toMonitoringIngressConn(conn), nil
+	return conn, nil
 }
 
 func (i *ingressServiceAdapter) Retry(ctx context.Context, id string) (*monitoring.IngressConnection, error) {
@@ -150,7 +147,7 @@ func (i *ingressServiceAdapter) Retry(ctx context.Context, id string) (*monitori
 	if err := i.repo.SaveConnection(ctx, conn); err != nil {
 		return nil, err
 	}
-	return toMonitoringIngressConn(conn), nil
+	return conn, nil
 }
 
 func (i *ingressServiceAdapter) Disconnect(ctx context.Context, id string) error {
@@ -180,7 +177,7 @@ func (i *ingressServiceAdapter) SetDomain(ctx context.Context, domainID string, 
 	}
 	b := make([]byte, 8)
 	_, _ = rand.Read(b)
-	hostname := &models.IngressHostname{
+	hostname := &monitoring.IngressHostname{
 		ID:             "igh-" + hex.EncodeToString(b),
 		DomainID:       &domainID,
 		ConnectionID:   *req.ConnectionID,
@@ -194,27 +191,4 @@ func (i *ingressServiceAdapter) SetDomain(ctx context.Context, domainID string, 
 		return nil, err
 	}
 	return hostname, nil
-}
-
-func toMonitoringIngressConn(conn *models.IngressConnection) *monitoring.IngressConnection {
-	if conn == nil {
-		return nil
-	}
-	return &monitoring.IngressConnection{
-		ID:                    conn.ID,
-		ServerID:              conn.ServerID,
-		CredentialID:          conn.CredentialID,
-		AccountID:             conn.AccountID,
-		TunnelID:              conn.TunnelID,
-		Name:                  conn.Name,
-		Connector:             conn.Connector,
-		EdgePort:              conn.EdgePort,
-		ManagedTunnel:         conn.ManagedTunnel,
-		DefaultForDomains:     conn.DefaultForDomains,
-		DefaultAccessPolicyID: conn.DefaultAccessPolicyID,
-		Status:                conn.Status,
-		Error:                 conn.Error,
-		CreatedAt:             conn.CreatedAt,
-		UpdatedAt:             conn.UpdatedAt,
-	}
 }

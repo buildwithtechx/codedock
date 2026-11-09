@@ -11,15 +11,15 @@ import (
 	"sync"
 	"testing"
 
-	"codedock/internal/models"
 	dnsproviders "codedock/internal/modules/dns/providers"
+	settingsmodule "codedock/internal/modules/settings"
 )
 
 type providerSettingsRepo struct {
-	settings *models.ServerSettings
+	settings *settingsmodule.ServerSettings
 }
 
-func (r providerSettingsRepo) GetServerSettings(context.Context) (*models.ServerSettings, error) {
+func (r providerSettingsRepo) GetServerSettings(context.Context) (*settingsmodule.ServerSettings, error) {
 	return r.settings, nil
 }
 
@@ -38,7 +38,7 @@ func (r providerSettingsRepo) GetDNSConfig(context.Context) (*dnsproviders.DNSCo
 	}, nil
 }
 
-func (providerSettingsRepo) UpdateServerSettings(context.Context, *models.ServerSettings) error {
+func (providerSettingsRepo) UpdateServerSettings(context.Context, *settingsmodule.ServerSettings) error {
 	return nil
 }
 
@@ -105,12 +105,12 @@ func TestCloudflareProvisionAndDeprovision(t *testing.T) {
 	}))
 	defer server.Close()
 
-	service := dnsproviders.NewWithHTTPClient(providerSettingsRepo{settings: &models.ServerSettings{CloudflareAPIToken: "token"}}, providerClient(server.URL))
+	service := dnsproviders.NewWithHTTPClient(providerSettingsRepo{settings: &settingsmodule.ServerSettings{CloudflareAPIToken: "token"}}, providerClient(server.URL))
 	if _, err := service.ProvisionRecord(context.Background(), "app.example.com", "A", "192.0.2.10"); err == nil {
 		t.Fatal("expected existing Cloudflare record conflict")
 	}
 
-	deprovisionSettings := providerSettingsRepo{settings: &models.ServerSettings{CloudflareAPIToken: "token"}}
+	deprovisionSettings := providerSettingsRepo{settings: &settingsmodule.ServerSettings{CloudflareAPIToken: "token"}}
 	deprovisionService := dnsproviders.NewWithHTTPClient(deprovisionSettings, providerClient(server.URL))
 	if err := deprovisionService.DeprovisionRecord(context.Background(), "app.example.com", "A", "192.0.2.10", "cloudflare"); err != nil {
 		t.Fatalf("deprovision Cloudflare record: %v", err)
@@ -153,7 +153,7 @@ func TestNamecheapProvisionAndDeprovision(t *testing.T) {
 	}))
 	defer server.Close()
 
-	settings := &models.ServerSettings{NamecheapAPIUser: "user", NamecheapAPIKey: "key", NamecheapClientIP: "127.0.0.1"}
+	settings := &settingsmodule.ServerSettings{NamecheapAPIUser: "user", NamecheapAPIKey: "key", NamecheapClientIP: "127.0.0.1"}
 	service := dnsproviders.NewWithHTTPClient(providerSettingsRepo{settings: settings}, providerClient(server.URL))
 	if _, err := service.ProvisionRecord(context.Background(), "app.example.com", "A", "192.0.2.20"); err == nil {
 		t.Fatal("expected Namecheap conflict for an existing host/type")
@@ -225,7 +225,7 @@ func TestSpaceshipProvisionAndDeprovision(t *testing.T) {
 	}))
 	defer server.Close()
 
-	settings := &models.ServerSettings{SpaceshipAPIKey: "key", SpaceshipAPISecret: "secret"}
+	settings := &settingsmodule.ServerSettings{SpaceshipAPIKey: "key", SpaceshipAPISecret: "secret"}
 	service := dnsproviders.NewWithHTTPClient(providerSettingsRepo{settings: settings}, providerClient(server.URL))
 	if _, err := service.ProvisionRecord(context.Background(), "app.example.com", "A", "192.0.2.30"); err != nil {
 		t.Fatalf("provision Spaceship record: %v", err)

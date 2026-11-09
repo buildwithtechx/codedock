@@ -2,7 +2,6 @@ package docker
 
 import (
 	"bytes"
-	"codedock/internal/models"
 	"context"
 	"github.com/docker/docker/api/types/container"
 	"github.com/docker/docker/client"
@@ -54,7 +53,7 @@ volumes:
 	if err != nil {
 		t.Fatal(err)
 	}
-	stack := &models.ComposeStack{ID: id, Config: config}
+	stack := &ComposeStack{ID: id, Config: config}
 	t.Cleanup(func() {
 		cleanup, finish := context.WithTimeout(context.Background(), 30*time.Second)
 		defer finish()

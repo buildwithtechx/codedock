@@ -4,7 +4,7 @@ import (
 	"context"
 	"fmt"
 
-	"codedock/internal/repositories"
+	"codedock/internal/modules/users"
 	"codedock/internal/utils"
 )
 
@@ -12,7 +12,7 @@ func runResetPassword() {
 	_, db, _ := InitDataDir()
 
 	email := prompt("Admin email: ")
-	repo := repositories.NewUserRepo(db)
+	repo := users.NewUserRepo(db)
 	user, err := repo.GetUserByEmail(context.Background(), email)
 	if err != nil {
 		exitError("User with email %s not found", email)

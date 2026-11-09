@@ -4,7 +4,7 @@ import (
 	"strings"
 	"testing"
 
-	"codedock/internal/models"
+	appsmod "codedock/internal/modules/apps"
 )
 
 func TestSynthesizeDockerfileStaticSPAFallback(t *testing.T) {
@@ -13,7 +13,7 @@ func TestSynthesizeDockerfileStaticSPAFallback(t *testing.T) {
 
 	t.Run("default (nil) fallback renders index.html", func(t *testing.T) {
 		res, err := synthesizeDockerfile("Static", BuildOptions{
-			AppConfig: &models.AppService{},
+			AppConfig: &appsmod.AppService{},
 		})
 		if err != nil {
 			t.Fatalf("unexpected error: %v", err)
@@ -25,7 +25,7 @@ func TestSynthesizeDockerfileStaticSPAFallback(t *testing.T) {
 
 	t.Run("explicit true fallback renders index.html", func(t *testing.T) {
 		res, err := synthesizeDockerfile("Static", BuildOptions{
-			AppConfig: &models.AppService{
+			AppConfig: &appsmod.AppService{
 				SPAFallback: &trueVal,
 			},
 		})
@@ -39,7 +39,7 @@ func TestSynthesizeDockerfileStaticSPAFallback(t *testing.T) {
 
 	t.Run("explicit false fallback renders real 404 and 404.html", func(t *testing.T) {
 		res, err := synthesizeDockerfile("Static", BuildOptions{
-			AppConfig: &models.AppService{
+			AppConfig: &appsmod.AppService{
 				SPAFallback: &falseVal,
 			},
 		})
@@ -141,7 +141,7 @@ func TestResolveBunToolchain(t *testing.T) {
 func TestSynthesizeDockerfileBunToolchainAndImageOverride(t *testing.T) {
 	t.Run("replaces FROM with BuildImage and synthesizes bun Dockerfile", func(t *testing.T) {
 		res, err := synthesizeDockerfile("Bun", BuildOptions{
-			AppConfig: &models.AppService{
+			AppConfig: &appsmod.AppService{
 				BuildImage: "oven/bun:1.4.4-alpine",
 			},
 		})
@@ -158,7 +158,7 @@ func TestSynthesizeDockerfileBunToolchainAndImageOverride(t *testing.T) {
 
 	t.Run("rejects synthesis if runtime image downgrades repository pin", func(t *testing.T) {
 		_, err := synthesizeDockerfile("Bun", BuildOptions{
-			AppConfig: &models.AppService{
+			AppConfig: &appsmod.AppService{
 				BuildImage: "oven/bun:1.4.4-alpine",
 			},
 			EnvVars: map[string]string{

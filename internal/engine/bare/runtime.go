@@ -1,15 +1,17 @@
 package bare
 
 import (
-	"codedock/internal/engine/kubernetes"
-	"codedock/internal/models"
 	"context"
 	"fmt"
-	"github.com/google/uuid"
 	"io"
 	"net/url"
 	"regexp"
 	"strings"
+
+	"github.com/google/uuid"
+
+	"codedock/internal/engine/kubernetes"
+	appsmod "codedock/internal/modules/apps"
 )
 
 var (
@@ -18,26 +20,37 @@ var (
 )
 
 type Runner interface {
-	Script(context.Context, models.ClusterNode, string, string) error
-	Host(context.Context, models.ClusterNode, string) (string, error)
-	StreamHost(ctx context.Context, node models.ClusterNode, script string, input io.Reader, output io.Writer) error
+	Script(context.Context, kubernetes.ClusterNode, string, string) error
+	Host(context.Context, kubernetes.ClusterNode, string) (string, error)
+	StreamHost(ctx context.Context, node kubernetes.ClusterNode, script string, input io.Reader, output io.Writer) error
 }
+
 type Runtime struct{ runner Runner }
 
 func NewRuntime(runner Runner) *Runtime { return &Runtime{runner} }
-func ValidateIdentity(app *models.AppService, target models.RuntimeTarget) error {
+
+func toClusterNode(n appsmod.RuntimeClusterNode) kubernetes.ClusterNode {
+	return kubernetes.ClusterNode{
+		ServerID:    n.ServerID,
+		PrivateIP:   n.PrivateIP,
+		Interface:   n.Interface,
+		Fingerprint: n.Fingerprint,
+	}
+}
+
+func ValidateIdentity(app *appsmod.AppService, target appsmod.RuntimeTarget) error {
 	if _, err := uuid.Parse(app.ID); err != nil {
 		return fmt.Errorf("bare application requires a UUID")
 	}
 	if _, err := uuid.Parse(app.ProjectID); err != nil {
 		return fmt.Errorf("bare project requires a UUID")
 	}
-	if err := kubernetes.ValidateNode(target.BareNode); err != nil {
+	if err := kubernetes.ValidateNode(toClusterNode(target.BareNode)); err != nil {
 		return err
 	}
 	return nil
 }
-func Validate(app *models.AppService, target models.RuntimeTarget) error {
+func Validate(app *appsmod.AppService, target appsmod.RuntimeTarget) error {
 	if err := ValidateIdentity(app, target); err != nil {
 		return err
 	}
@@ -91,7 +104,7 @@ func Validate(app *models.AppService, target models.RuntimeTarget) error {
 	if app.Domain != "" && !managedDomainPattern.MatchString(strings.ToLower(app.Domain)) {
 		return fmt.Errorf("invalid managed HTTP domain")
 	}
-	if app.RuntimeMode != models.RuntimeModeWorker && (app.InternalPort < 1024 || app.InternalPort > 65535) {
+	if app.RuntimeMode != appsmod.RuntimeModeWorker && (app.InternalPort < 1024 || app.InternalPort > 65535) {
 		return fmt.Errorf("bare HTTP services need an unprivileged port from 1024 to 65535")
 	}
 	if app.HealthCheckPath != "" && (!strings.HasPrefix(app.HealthCheckPath, "/") || strings.ContainsAny(app.HealthCheckPath, "\r\n")) {
@@ -99,7 +112,7 @@ func Validate(app *models.AppService, target models.RuntimeTarget) error {
 	}
 	return nil
 }
-func (r *Runtime) Deploy(ctx context.Context, app *models.AppService, target models.RuntimeTarget, variables map[string]string, release string) error {
+func (r *Runtime) Deploy(ctx context.Context, app *appsmod.AppService, target appsmod.RuntimeTarget, variables map[string]string, release string) error {
 	if err := Validate(app, target); err != nil {
 		return err
 	}
@@ -107,19 +120,19 @@ func (r *Runtime) Deploy(ctx context.Context, app *models.AppService, target mod
 	if err != nil {
 		return err
 	}
-	return r.runner.Script(ctx, target.BareNode, app.ID, script)
+	return r.runner.Script(ctx, toClusterNode(target.BareNode), app.ID, script)
 }
-func (r *Runtime) Recover(ctx context.Context, app *models.AppService, target models.RuntimeTarget) error {
+func (r *Runtime) Recover(ctx context.Context, app *appsmod.AppService, target appsmod.RuntimeTarget) error {
 	script, err := recoveryScript(app)
 	if err != nil {
 		return err
 	}
-	return r.runner.Script(ctx, target.BareNode, app.ID, script)
+	return r.runner.Script(ctx, toClusterNode(target.BareNode), app.ID, script)
 }
-func (r *Runtime) Finalize(ctx context.Context, app *models.AppService, target models.RuntimeTarget) error {
+func (r *Runtime) Finalize(ctx context.Context, app *appsmod.AppService, target appsmod.RuntimeTarget) error {
 	script, err := ownedScript(app)
 	if err != nil {
 		return err
 	}
-	return r.runner.Script(ctx, target.BareNode, app.ID, script+"rm -f \"$base/pending\"\n")
+	return r.runner.Script(ctx, toClusterNode(target.BareNode), app.ID, script+"rm -f \"$base/pending\"\n")
 }

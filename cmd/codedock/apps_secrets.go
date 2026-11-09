@@ -6,7 +6,7 @@ import (
 	"strings"
 	"text/tabwriter"
 
-	"codedock/internal/models"
+	pkgclient "codedock/pkg/client"
 	"github.com/spf13/cobra"
 )
 
@@ -52,7 +52,7 @@ var secretsSetCmd = &cobra.Command{
 			os.Exit(1)
 		}
 
-		req := make(models.SetEnvVarsRequest)
+		req := make(pkgclient.SetEnvVarsRequest)
 		for _, arg := range args {
 			parts := strings.SplitN(arg, "=", 2)
 			if len(parts) != 2 {

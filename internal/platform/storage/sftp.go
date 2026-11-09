@@ -1,7 +1,6 @@
 package storage
 
 import (
-	"codedock/internal/models"
 	"context"
 	"fmt"
 	"io"
@@ -14,7 +13,7 @@ import (
 	"golang.org/x/crypto/ssh"
 )
 
-func sftpDial(ctx context.Context, dest *models.SFTPDestination) (*sftp.Client, error) {
+func sftpDial(ctx context.Context, dest *SFTPDestination) (*sftp.Client, error) {
 	if dest.Host == "" || dest.Username == "" {
 		return nil, fmt.Errorf("sftp destination needs a host and username")
 	}
@@ -59,7 +58,7 @@ func sftpDial(ctx context.Context, dest *models.SFTPDestination) (*sftp.Client, 
 	return sftpClient, nil
 }
 
-func VerifySFTP(ctx context.Context, dest *models.SFTPDestination) error {
+func VerifySFTP(ctx context.Context, dest *SFTPDestination) error {
 	if dest == nil {
 		return fmt.Errorf("sftp destination not found")
 	}
@@ -78,7 +77,7 @@ func sftpJoin(prefix, name string) string {
 	return path.Join(prefix, name)
 }
 
-func sftpPut(ctx context.Context, dest *models.SFTPDestination, name string, body []byte) (string, error) {
+func sftpPut(ctx context.Context, dest *SFTPDestination, name string, body []byte) (string, error) {
 	client, err := sftpDial(ctx, dest)
 	if err != nil {
 		return "", err
@@ -102,7 +101,7 @@ func sftpPut(ctx context.Context, dest *models.SFTPDestination, name string, bod
 	return "sftp://" + dest.Host + "/" + strings.TrimPrefix(key, "/"), nil
 }
 
-func sftpGet(ctx context.Context, dest *models.SFTPDestination, key string) (io.ReadCloser, error) {
+func sftpGet(ctx context.Context, dest *SFTPDestination, key string) (io.ReadCloser, error) {
 	client, err := sftpDial(ctx, dest)
 	if err != nil {
 		return nil, err
@@ -130,7 +129,7 @@ func (r *sftpReadCloser) Close() error {
 	return clientErr
 }
 
-func sftpRemove(ctx context.Context, dest *models.SFTPDestination, key string) error {
+func sftpRemove(ctx context.Context, dest *SFTPDestination, key string) error {
 	client, err := sftpDial(ctx, dest)
 	if err != nil {
 		return err

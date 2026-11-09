@@ -1,7 +1,6 @@
 package storage
 
 import (
-	"codedock/internal/models"
 	"context"
 	"errors"
 	"fmt"
@@ -11,7 +10,7 @@ import (
 	"time"
 )
 
-func (bm *BackupManager) expireRecord(cfg *models.BackupConfig, record *models.BackupRecord) (resultErr error) {
+func (bm *BackupManager) expireRecord(cfg *BackupConfig, record *BackupRecord) (resultErr error) {
 	ctx, cancel := context.WithTimeout(context.Background(), time.Minute)
 	defer cancel()
 	if store, ok := bm.store.(interface {
@@ -27,7 +26,7 @@ func (bm *BackupManager) expireRecord(cfg *models.BackupConfig, record *models.B
 		defer func() {
 			if resultErr != nil {
 				opts := modelsVerification(record, record.SHA256)
-				opts.Status = models.BackupRecordStatusFailed
+				opts.Status = BackupRecordStatusFailed
 				opts.Logs += "\nArchive cleanup was interrupted or failed; inspect storage before retrying."
 				resultErr = errors.Join(resultErr, bm.store.UpdateBackupRecord(opts))
 			}
@@ -36,7 +35,7 @@ func (bm *BackupManager) expireRecord(cfg *models.BackupConfig, record *models.B
 	return bm.removeArchive(ctx, cfg, record)
 }
 
-func (bm *BackupManager) removeArchive(ctx context.Context, cfg *models.BackupConfig, record *models.BackupRecord) error {
+func (bm *BackupManager) removeArchive(ctx context.Context, cfg *BackupConfig, record *BackupRecord) error {
 	if record.S3URL != "" {
 		id := record.S3DestinationID
 		if id == "" {
@@ -67,7 +66,7 @@ func (bm *BackupManager) removeArchive(ctx context.Context, cfg *models.BackupCo
 		}
 	}
 	opts := modelsVerification(record, record.SHA256)
-	opts.Status = models.BackupRecordStatusExpired
+	opts.Status = BackupRecordStatusExpired
 	opts.Logs += "\nArchive removed from storage."
 	opts.FilePath = ""
 	opts.S3URL = ""

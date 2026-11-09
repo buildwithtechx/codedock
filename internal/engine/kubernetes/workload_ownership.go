@@ -1,10 +1,11 @@
 package kubernetes
 
 import (
-	"codedock/internal/models"
 	"context"
 	"encoding/json"
 	"fmt"
+
+	appsmod "codedock/internal/modules/apps"
 )
 
 func validateExistingClaim(existing, desired map[string]any) error {
@@ -28,7 +29,7 @@ func validateExistingClaim(existing, desired map[string]any) error {
 	}
 	return nil
 }
-func (r *WorkloadRuntime) Namespace(ctx context.Context, node models.ClusterNode, app *models.AppService) error {
+func (r *WorkloadRuntime) Namespace(ctx context.Context, node ClusterNode, app *appsmod.AppService) error {
 	namespace, _, err := WorkloadIdentity(app)
 	if err != nil {
 		return err
@@ -56,7 +57,7 @@ func (r *WorkloadRuntime) Namespace(ctx context.Context, node models.ClusterNode
 	_, err = r.commands.Kubectl(ctx, node, []string{"create", "-f", "-"}, string(data))
 	return err
 }
-func (r *WorkloadRuntime) deleteOwned(ctx context.Context, node models.ClusterNode, app *models.AppService, kind, name string) error {
+func (r *WorkloadRuntime) deleteOwned(ctx context.Context, node ClusterNode, app *appsmod.AppService, kind, name string) error {
 	namespace, _, err := WorkloadIdentity(app)
 	if err != nil {
 		return err
@@ -94,7 +95,7 @@ func (r *WorkloadRuntime) deleteOwned(ctx context.Context, node models.ClusterNo
 	return err
 }
 
-func (r *WorkloadRuntime) Remove(ctx context.Context, node models.ClusterNode, app *models.AppService) error {
+func (r *WorkloadRuntime) Remove(ctx context.Context, node ClusterNode, app *appsmod.AppService) error {
 	namespace, name, err := WorkloadIdentity(app)
 	if err != nil {
 		return err

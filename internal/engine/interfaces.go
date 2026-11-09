@@ -4,7 +4,9 @@ import (
 	"time"
 
 	"codedock/internal/engine/deploy"
-	"codedock/internal/models"
+	appsmod "codedock/internal/modules/apps"
+	"codedock/internal/modules/monitoring"
+	projectsmod "codedock/internal/modules/projects"
 	backup "codedock/internal/platform/storage"
 )
 
@@ -15,11 +17,11 @@ type DatabaseDeployerStore = deploy.DatabaseDeployerStore
 type ContainerManagerStore = deploy.ContainerManagerStore
 
 type CronManagerStore interface {
-	ListScheduledTasks() ([]models.ScheduledTask, error)
-	GetScheduledTask(id string) (*models.ScheduledTask, error)
-	GetProject(id string) (*models.ProjectConfig, error)
-	GetAppService(id string) (*models.AppService, error)
-	UpdateScheduledTaskStatusAndOutput(id string, status models.ScheduledTaskStatus, lastRunAt *time.Time, output string) error
+	ListScheduledTasks() ([]monitoring.ScheduledTask, error)
+	GetScheduledTask(id string) (*monitoring.ScheduledTask, error)
+	GetProject(id string) (*projectsmod.ProjectConfig, error)
+	GetAppService(id string) (*appsmod.AppService, error)
+	UpdateScheduledTaskStatusAndOutput(id string, status monitoring.ScheduledTaskStatus, lastRunAt *time.Time, output string) error
 }
 
 type BackupManagerStore = backup.Store

@@ -5,7 +5,7 @@ import (
 	"net/http"
 	"testing"
 
-	"codedock/internal/repositories"
+	"codedock/internal/modules/users"
 )
 
 func TestE2ESetupStatusAndFirstUserSignup(t *testing.T) {
@@ -81,7 +81,7 @@ func TestE2ESignInAndDeactivatedUserBlocking(t *testing.T) {
 		t.Fatalf("expected authenticated GET /api/projects?organizationId=none to return 200, got status %d", res.StatusCode)
 	}
 
-	userRepo := repositories.NewUserRepo(h.db)
+	userRepo := users.NewUserRepo(h.db)
 	user, err := userRepo.GetUserByEmail(context.Background(), "user@codedock.local")
 	if err != nil || user == nil {
 		t.Fatalf("failed to query created user: %v", err)

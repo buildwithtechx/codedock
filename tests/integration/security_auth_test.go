@@ -11,10 +11,9 @@ import (
 
 	cdkdb "codedock/db"
 	cdkhttp "codedock/internal/http"
-	"codedock/internal/models"
 	authservices "codedock/internal/modules/auth"
+	"codedock/internal/modules/servers"
 	"codedock/internal/modules/users"
-	"codedock/internal/repositories"
 	"codedock/internal/testdb"
 	"codedock/internal/utils"
 	"github.com/docker/docker/client"
@@ -93,18 +92,18 @@ func TestDeactivatedUserAuthenticationBlocking(t *testing.T) {
 	server, db, _, _ := setupTestApp(t)
 	defer db.Close()
 
-	userRepo := repositories.NewUserRepo(db)
+	userRepo := users.NewUserRepo(db)
 	tokenService, err := authservices.NewTokenService()
 	if err != nil {
 		t.Fatalf("failed to initialize token service: %v", err)
 	}
 
 	ctx := context.Background()
-	user := &models.User{
+	user := &users.User{
 		Email:        "deactivated@example.com",
 		PasswordHash: "hashed",
 		Name:         "Deactivated User",
-		Role:         models.UserRoleMember,
+		Role:         users.UserRoleMember,
 		IsActive:     false,
 	}
 
@@ -112,13 +111,7 @@ func TestDeactivatedUserAuthenticationBlocking(t *testing.T) {
 		t.Fatalf("failed to create test user: %v", err)
 	}
 
-	tokenStr, err := tokenService.GenerateToken(&users.User{
-		ID:            user.ID,
-		Email:         user.Email,
-		Role:          users.UserRole(user.Role),
-		EmailVerified: user.EmailVerified,
-		TOTPEnabled:   user.TOTPEnabled,
-	})
+	tokenStr, err := tokenService.GenerateToken(user)
 	if err != nil {
 		t.Fatalf("failed to generate token: %v", err)
 	}
@@ -138,13 +131,13 @@ func TestWorkerTokenAuthenticationAndRevocation(t *testing.T) {
 	_, db, _, _ := setupTestApp(t)
 	defer db.Close()
 
-	serverRepo := repositories.NewServerRepository(db, nil)
+	serverRepo := servers.NewRepository(db, nil)
 	ctx := context.Background()
 
-	srv := &models.Server{
+	srv := &servers.Server{
 		Name:        "worker-test-node",
 		IPAddress:   "127.0.0.1",
-		Status:      models.ServerStatusOnline,
+		Status:      servers.ServerStatusOnline,
 		WorkerToken: "worker-secret-token-12345",
 	}
 

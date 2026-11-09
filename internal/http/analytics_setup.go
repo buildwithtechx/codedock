@@ -7,34 +7,91 @@ import (
 
 	"github.com/labstack/echo/v4"
 
-	"codedock/internal/models"
 	"codedock/internal/modules/audit"
 	backupmodule "codedock/internal/modules/backups"
 	"codedock/internal/modules/monitoring"
+	"codedock/internal/modules/servers"
 	"codedock/internal/platform/networking"
 	"codedock/internal/platform/observability"
 	traffic "codedock/internal/platform/observability"
 	"codedock/internal/platform/vault"
-	"codedock/internal/repositories"
-	"codedock/internal/services/analytics"
-	"codedock/internal/services/attention"
-	"codedock/internal/services/migrations"
-	systemservices "codedock/internal/services/system"
 )
 
 type statsHealthAdapter struct {
 	monitor *observability.StatsMonitor
 }
 
-func (a *statsHealthAdapter) GetHealth(ctx context.Context, containerID string) (attention.AttentionHealth, error) {
+func (a *statsHealthAdapter) GetHealth(ctx context.Context, containerID string) (monitoring.AttentionHealth, error) {
 	health, err := a.monitor.GetHealth(ctx, containerID)
 	if err != nil {
-		return attention.AttentionHealth{Status: "unknown"}, err
+		return monitoring.AttentionHealth{Status: "unknown"}, err
 	}
-	return attention.AttentionHealth{
+	return monitoring.AttentionHealth{
 		Status:  string(health.Status),
 		Running: health.Status == observability.ContainerHealthStatusRunning,
 	}, nil
+}
+
+type attentionManagedAdapter struct {
+	repo servers.ManagedRepository
+}
+
+func (a *attentionManagedAdapter) GetQuota(ctx context.Context, orgID string) (*monitoring.ManagedQuota, error) {
+	q, err := a.repo.GetQuota(ctx, orgID)
+	if err != nil || q == nil {
+		return nil, err
+	}
+	return &monitoring.ManagedQuota{MaxServers: q.MaxServers, MaxMemoryGB: q.MaxMemoryGB}, nil
+}
+
+func (a *attentionManagedAdapter) ListOrgServerIDs(ctx context.Context, orgID string) ([]string, error) {
+	return a.repo.ListOrgServerIDs(ctx, orgID)
+}
+
+type attentionServerAdapter struct {
+	repo servers.Repository
+}
+
+func (a *attentionServerAdapter) GetByID(ctx context.Context, id string) (*monitoring.Server, error) {
+	s, err := a.repo.GetByID(ctx, id)
+	if err != nil || s == nil {
+		return nil, err
+	}
+	return &monitoring.Server{ID: s.ID, ServerType: s.ServerType}, nil
+}
+
+type trafficCollectorAdapter struct {
+	repo monitoring.TrafficRepository
+}
+
+func (t *trafficCollectorAdapter) RecordBatch(ctx context.Context, samples []observability.TrafficSample) error {
+	mSamples := make([]monitoring.TrafficSample, len(samples))
+	for i, s := range samples {
+		mSamples[i] = monitoring.TrafficSample{
+			Time:       s.Time,
+			ProjectID:  s.ProjectID,
+			Domain:     s.Domain,
+			Path:       s.Path,
+			Status:     s.Status,
+			Bytes:      s.Bytes,
+			DurationMs: s.DurationMs,
+			ClientIP:   s.ClientIP,
+			Country:    s.Country,
+		}
+	}
+	return t.repo.RecordBatch(ctx, mSamples)
+}
+
+func (t *trafficCollectorAdapter) PathsEnabled(ctx context.Context, projectID string) (bool, error) {
+	return t.repo.PathsEnabled(ctx, projectID)
+}
+
+func (t *trafficCollectorAdapter) DeleteBefore(ctx context.Context, cutoff string) error {
+	return t.repo.DeleteBefore(ctx, cutoff)
+}
+
+func (t *trafficCollectorAdapter) RetentionCutoff(days int) string {
+	return t.repo.RetentionCutoff(days)
 }
 
 func configureAnalytics(
@@ -42,41 +99,41 @@ func configureAnalytics(
 	db *sql.DB,
 	vlt *vault.Vault,
 	traefikManager *networking.TraefikManager,
-	deployRepo *repositories.DeploymentRepo,
-	projectRepo *repositories.ProjectRepo,
-	appRepo *repositories.AppServiceRepo,
-	domainRepo *repositories.DomainRepo,
-	userRepo *repositories.UserRepo,
-	orgRepo repositories.OrganizationRepository,
-	metricsService *systemservices.MetricsService,
+	deployRepo monitoring.DeploymentRepository,
+	projectRepo monitoring.ProjectRepository,
+	appRepo monitoring.AppServiceRepository,
+	domainRepo monitoring.DomainLister,
+	userRepo monitoring.UserRepo,
+	orgRepo monitoring.OrganizationRepository,
+	metricsService *monitoring.MetricsService,
 	statsMonitor *observability.StatsMonitor,
-	deploymentService attention.WorkloadDeployer,
+	deploymentService monitoring.WorkloadDeployer,
 	backupService *backupmodule.Service,
-	migrationService *migrations.Service,
+	migrationService monitoring.MigrationRunner,
 	auditService *audit.AuditService,
 ) {
-	trafficRepo := repositories.NewTrafficRepository(db)
-	attentionRepo := repositories.NewAttentionRepository(db)
-	managedRepo := repositories.NewManagedRepository(db, vlt)
-	serverRepo := repositories.NewServerRepository(db, vlt)
+	trafficRepo := monitoring.NewTrafficRepository(db)
+	attentionRepo := monitoring.NewAttentionRepository(db)
+	managedRepo := &attentionManagedAdapter{repo: servers.NewManagedRepository(db, vlt)}
+	serverRepo := &attentionServerAdapter{repo: servers.NewRepository(db, vlt)}
 
-	usage := analytics.NewUsageReader(appRepo, metricsService, statsMonitor)
-	analyticsService := analytics.NewService(trafficRepo, deployRepo, projectRepo, appRepo, domainRepo, userRepo, orgRepo, attentionRepo, usage)
-	attentionService := attention.NewService(attentionRepo, deployRepo, appRepo, projectRepo, userRepo, orgRepo, backupService, migrationService, managedRepo, serverRepo, &statsHealthAdapter{monitor: statsMonitor}, deploymentService)
+	usage := monitoring.NewUsageReader(appRepo, metricsService, statsMonitor)
+	analyticsService := monitoring.NewService(trafficRepo, deployRepo, projectRepo, appRepo, domainRepo, userRepo, orgRepo, attentionRepo, usage)
+	attentionService := monitoring.NewAttentionManager(attentionRepo, deployRepo, appRepo, projectRepo, userRepo, orgRepo, backupService, migrationService, managedRepo, serverRepo, &statsHealthAdapter{monitor: statsMonitor}, deploymentService)
 
 	server.analyticsHandler = monitoring.NewAnalyticsHandler(&analyticsServiceAdapter{svc: analyticsService})
 	server.attentionHandler = monitoring.NewAttentionHandler(&attentionServiceAdapter{svc: attentionService})
 
 	if path := traefikManager.AccessLogPath(); path != "" {
 		geoResolver, _ := traffic.NewGeoIPResolver(os.Getenv("GEOIP_DB_PATH"))
-		collector := traffic.NewCollector(path, trafficRepo, analyticsService.AttributeDomain, geoResolver)
+		collector := traffic.NewCollector(path, &trafficCollectorAdapter{repo: trafficRepo}, analyticsService.AttributeDomain, geoResolver)
 		go collector.Run(context.Background())
 	}
 }
 
 func (s *Server) registerAnalyticsRoutes(authGroup *echo.Group) {
-	member := s.authGuard.RequireOrgRole(models.MemberPermissionMember)
-	admin := s.authGuard.RequireOrgRole(models.MemberPermissionAdmin)
+	member := s.authGuard.RequireOrgRole("member")
+	admin := s.authGuard.RequireOrgRole("admin")
 	read := s.authGuard.RequireScope("server:read")
 	write := s.authGuard.RequireScope("server:write")
 

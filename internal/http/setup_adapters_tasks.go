@@ -4,123 +4,49 @@ import (
 	"context"
 	"errors"
 
-	"codedock/internal/models"
+	"codedock/internal/modules/apps"
 	"codedock/internal/modules/monitoring"
-	projectservices "codedock/internal/services/projects"
-	systemservices "codedock/internal/services/system"
+	"codedock/internal/modules/projects"
+	"codedock/internal/modules/users"
 )
 
 type scheduledTaskServiceAdapter struct {
-	svc *systemservices.ScheduledTaskService
+	svc *monitoring.ScheduledTaskService
 }
 
 func (s *scheduledTaskServiceAdapter) ListByService(ctx context.Context, serviceID string) ([]monitoring.ScheduledTask, error) {
 	if s.svc == nil {
 		return []monitoring.ScheduledTask{}, nil
 	}
-	tasks, err := s.svc.ListScheduledTasksByService(ctx, serviceID)
-	if err != nil {
-		return nil, err
-	}
-	res := make([]monitoring.ScheduledTask, len(tasks))
-	for i, t := range tasks {
-		res[i] = monitoring.ScheduledTask{
-			ID:         t.ID,
-			ServiceID:  t.ServiceID,
-			Name:       t.Name,
-			Schedule:   t.Schedule,
-			Command:    t.Command,
-			Status:     t.Status,
-			LastRunAt:  t.LastRunAt,
-			LastOutput: t.LastOutput,
-			CreatedAt:  t.CreatedAt,
-			UpdatedAt:  t.UpdatedAt,
-		}
-	}
-	return res, nil
+	return s.svc.ListScheduledTasksByService(ctx, serviceID)
 }
 
 func (s *scheduledTaskServiceAdapter) ListByProject(ctx context.Context, projectID string) ([]monitoring.ScheduledTask, error) {
 	if s.svc == nil {
 		return []monitoring.ScheduledTask{}, nil
 	}
-	tasks, err := s.svc.ListScheduledTasksByProject(ctx, projectID)
-	if err != nil {
-		return nil, err
-	}
-	res := make([]monitoring.ScheduledTask, len(tasks))
-	for i, t := range tasks {
-		res[i] = monitoring.ScheduledTask{
-			ID:         t.ID,
-			ServiceID:  t.ServiceID,
-			Name:       t.Name,
-			Schedule:   t.Schedule,
-			Command:    t.Command,
-			Status:     t.Status,
-			LastRunAt:  t.LastRunAt,
-			LastOutput: t.LastOutput,
-			CreatedAt:  t.CreatedAt,
-			UpdatedAt:  t.UpdatedAt,
-		}
-	}
-	return res, nil
+	return s.svc.ListScheduledTasksByProject(ctx, projectID)
 }
 
 func (s *scheduledTaskServiceAdapter) CreateScheduledTask(ctx context.Context, task *monitoring.ScheduledTask) (*monitoring.ScheduledTask, error) {
 	if s.svc == nil {
 		return nil, errors.New("task service unavailable")
 	}
-	m := &models.ScheduledTask{
-		ServiceID: task.ServiceID,
-		Name:      task.Name,
-		Schedule:  task.Schedule,
-		Command:   task.Command,
-	}
-	created, err := s.svc.CreateScheduledTask(ctx, m)
-	if err != nil || created == nil {
-		return nil, err
-	}
-	task.ID = created.ID
-	task.Status = created.Status
-	task.CreatedAt = created.CreatedAt
-	task.UpdatedAt = created.UpdatedAt
-	return task, nil
+	return s.svc.CreateScheduledTask(ctx, task)
 }
 
 func (s *scheduledTaskServiceAdapter) GetScheduledTask(ctx context.Context, id string) (*monitoring.ScheduledTask, error) {
 	if s.svc == nil {
 		return nil, errors.New("task service unavailable")
 	}
-	t, err := s.svc.GetScheduledTask(ctx, id)
-	if err != nil || t == nil {
-		return nil, err
-	}
-	return &monitoring.ScheduledTask{
-		ID:         t.ID,
-		ServiceID:  t.ServiceID,
-		Name:       t.Name,
-		Schedule:   t.Schedule,
-		Command:    t.Command,
-		Status:     t.Status,
-		LastRunAt:  t.LastRunAt,
-		LastOutput: t.LastOutput,
-		CreatedAt:  t.CreatedAt,
-		UpdatedAt:  t.UpdatedAt,
-	}, nil
+	return s.svc.GetScheduledTask(ctx, id)
 }
 
 func (s *scheduledTaskServiceAdapter) UpdateScheduledTask(ctx context.Context, task *monitoring.ScheduledTask) error {
 	if s.svc == nil {
 		return errors.New("task service unavailable")
 	}
-	return s.svc.UpdateScheduledTask(ctx, &models.ScheduledTask{
-		ID:        task.ID,
-		ServiceID: task.ServiceID,
-		Name:      task.Name,
-		Schedule:  task.Schedule,
-		Command:   task.Command,
-		Status:    task.Status,
-	})
+	return s.svc.UpdateScheduledTask(ctx, task)
 }
 
 func (s *scheduledTaskServiceAdapter) DeleteScheduledTask(ctx context.Context, id string) error {
@@ -138,8 +64,8 @@ func (s *scheduledTaskServiceAdapter) ExecuteScheduledTask(ctx context.Context, 
 }
 
 type scheduledTaskAccessAdapter struct {
-	appService     *projectservices.AppService
-	projectService *projectservices.ProjectService
+	appService     *apps.Service
+	projectService *projects.Service
 }
 
 func (a *scheduledTaskAccessAdapter) HasServiceAccess(ctx context.Context, userID, role, serviceID string) bool {
@@ -150,12 +76,12 @@ func (a *scheduledTaskAccessAdapter) HasServiceAccess(ctx context.Context, userI
 	if err != nil || svc == nil || svc.ProjectID == "" {
 		return false
 	}
-	return a.projectService.HasPermission(ctx, svc.ProjectID, userID, models.UserRole(role), "")
+	return a.projectService.HasPermission(ctx, svc.ProjectID, userID, users.UserRole(role), "")
 }
 
 func (a *scheduledTaskAccessAdapter) HasProjectAccess(ctx context.Context, userID, role, projectID string) bool {
 	if a.projectService == nil || projectID == "" {
 		return false
 	}
-	return a.projectService.HasPermission(ctx, projectID, userID, models.UserRole(role), "")
+	return a.projectService.HasPermission(ctx, projectID, userID, users.UserRole(role), "")
 }

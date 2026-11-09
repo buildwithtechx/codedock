@@ -13,8 +13,6 @@ import (
 	"errors"
 
 	"codedock/internal/config"
-	"codedock/internal/models"
-	"codedock/internal/services/system"
 	"codedock/internal/utils"
 )
 
@@ -22,17 +20,21 @@ type HTTPClient interface {
 	Do(req *http.Request) (*http.Response, error)
 }
 
+type NotificationSettingsProvider interface {
+	GetNotificationSettings(ctx context.Context) (*NotificationSettings, error)
+}
+
 type MailerService struct {
-	notifSettingsService *system.NotificationSettingsService
-	config               *models.Config
+	notifSettingsService NotificationSettingsProvider
+	config               *config.Config
 	httpClient           HTTPClient
 }
 
-func NewMailerService(notifSettings *system.NotificationSettingsService, cfg ...*models.Config) (*MailerService, error) {
+func NewMailerService(notifSettings NotificationSettingsProvider, cfg ...*config.Config) (*MailerService, error) {
 	if err := LoadTemplates(); err != nil {
 		return nil, fmt.Errorf("failed to load email templates: %w", err)
 	}
-	var selectedCfg *models.Config
+	var selectedCfg *config.Config
 	if len(cfg) > 0 && cfg[0] != nil {
 		selectedCfg = cfg[0]
 	} else {

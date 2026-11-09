@@ -5,8 +5,6 @@ import (
 	"net/http"
 	"net/http/httptest"
 	"testing"
-
-	"codedock/internal/models"
 )
 
 func stubServer(t *testing.T, handler http.HandlerFunc) (*Client, func()) {
@@ -31,7 +29,7 @@ func TestListServers(t *testing.T) {
 			w.WriteHeader(http.StatusUnauthorized)
 			return
 		}
-		writeJSON(w, http.StatusOK, map[string]any{"data": []models.Server{{ID: "srv-1", Name: "primary"}}})
+		writeJSON(w, http.StatusOK, map[string]any{"data": []Server{{ID: "srv-1", Name: "primary"}}})
 	})
 	defer done()
 
@@ -45,7 +43,7 @@ func TestListServers(t *testing.T) {
 }
 
 func TestCreateServer(t *testing.T) {
-	var received models.CreateServerRequest
+	var received CreateServerRequest
 	client, done := stubServer(t, func(w http.ResponseWriter, r *http.Request) {
 		if r.URL.Path != "/api/v1/servers" || r.Method != http.MethodPost {
 			w.WriteHeader(http.StatusNotFound)
@@ -55,11 +53,11 @@ func TestCreateServer(t *testing.T) {
 			w.WriteHeader(http.StatusBadRequest)
 			return
 		}
-		writeJSON(w, http.StatusCreated, map[string]any{"data": models.Server{ID: "srv-2", Name: received.Name}})
+		writeJSON(w, http.StatusCreated, map[string]any{"data": Server{ID: "srv-2", Name: received.Name}})
 	})
 	defer done()
 
-	server, err := client.CreateServer(&models.CreateServerRequest{Name: "edge", IPAddress: "10.0.0.2"})
+	server, err := client.CreateServer(&CreateServerRequest{Name: "edge", IPAddress: "10.0.0.2"})
 	if err != nil {
 		t.Fatal(err)
 	}
@@ -89,7 +87,7 @@ func TestDeleteServer(t *testing.T) {
 }
 
 func TestUpdateServer(t *testing.T) {
-	var received models.UpdateServerRequest
+	var received UpdateServerRequest
 	budget := int64(24 * 1024 * 1024 * 1024)
 	client, done := stubServer(t, func(w http.ResponseWriter, r *http.Request) {
 		if r.URL.Path != "/api/v1/servers/srv-update" || r.Method != http.MethodPatch {
@@ -100,14 +98,14 @@ func TestUpdateServer(t *testing.T) {
 			w.WriteHeader(http.StatusBadRequest)
 			return
 		}
-		writeJSON(w, http.StatusOK, map[string]any{"data": models.Server{
+		writeJSON(w, http.StatusOK, map[string]any{"data": Server{
 			ID:                    "srv-update",
 			BuildCacheBudgetBytes: received.BuildCacheBudgetBytes,
 		}})
 	})
 	defer done()
 
-	server, err := client.UpdateServer("srv-update", &models.UpdateServerRequest{
+	server, err := client.UpdateServer("srv-update", &UpdateServerRequest{
 		BuildCacheBudgetBytes: &budget,
 	})
 	if err != nil {
@@ -119,7 +117,7 @@ func TestUpdateServer(t *testing.T) {
 }
 
 func TestServerNetworkSettings(t *testing.T) {
-	var patched models.UpdateServerNetworkSettingsRequest
+	var patched UpdateServerNetworkSettingsRequest
 	internet := true
 	client, done := stubServer(t, func(w http.ResponseWriter, r *http.Request) {
 		if r.URL.Path != "/api/v1/servers/srv-1/network-settings" {
@@ -128,7 +126,7 @@ func TestServerNetworkSettings(t *testing.T) {
 		}
 		switch r.Method {
 		case http.MethodGet:
-			writeJSON(w, http.StatusOK, map[string]any{"data": models.ServerNetworkSettings{
+			writeJSON(w, http.StatusOK, map[string]any{"data": ServerNetworkSettings{
 				InternetAccess: &internet,
 				Egress:         []string{"api.example.com"},
 				Revision:       "abc",
@@ -138,7 +136,7 @@ func TestServerNetworkSettings(t *testing.T) {
 				w.WriteHeader(http.StatusBadRequest)
 				return
 			}
-			writeJSON(w, http.StatusOK, map[string]any{"data": models.ServerNetworkSettings{
+			writeJSON(w, http.StatusOK, map[string]any{"data": ServerNetworkSettings{
 				InternetAccess: &patched.InternetAccess,
 				Egress:         patched.Egress,
 			}})
@@ -157,7 +155,7 @@ func TestServerNetworkSettings(t *testing.T) {
 	}
 
 	off := false
-	updated, err := client.UpdateServerNetworkSettings("srv-1", &models.UpdateServerNetworkSettingsRequest{
+	updated, err := client.UpdateServerNetworkSettings("srv-1", &UpdateServerNetworkSettingsRequest{
 		InternetAccess:         off,
 		ExpectedInternetAccess: true,
 		Egress:                 []string{"api.example.com"},
@@ -187,7 +185,7 @@ func TestServersSurfaceErrors(t *testing.T) {
 	if _, err := client.ListServers(); err == nil {
 		t.Error("expected list error")
 	}
-	if _, err := client.CreateServer(&models.CreateServerRequest{Name: "x"}); err == nil {
+	if _, err := client.CreateServer(&CreateServerRequest{Name: "x"}); err == nil {
 		t.Error("expected create error")
 	}
 	if err := client.DeleteServer("srv-1"); err == nil {

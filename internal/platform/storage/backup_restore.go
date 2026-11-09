@@ -11,8 +11,6 @@ import (
 	"github.com/docker/docker/api/types/container"
 	"github.com/docker/docker/pkg/stdcopy"
 
-	"codedock/internal/models"
-
 	compose "codedock/internal/platform/docker"
 )
 
@@ -57,7 +55,7 @@ func (bm *BackupManager) RestoreBackup(ctx context.Context, recordID string) err
 	return bm.executeRestore(ctx, containerName, restoreCmd, data)
 }
 
-func (bm *BackupManager) buildRestoreCommand(cfg *models.BackupConfig) (string, []string, error) {
+func (bm *BackupManager) buildRestoreCommand(cfg *BackupConfig) (string, []string, error) {
 	if strings.TrimSpace(cfg.CustomRestoreCommand) != "" {
 		containerName, err := bm.serviceContainer(context.Background(), cfg.ServiceID)
 		if err != nil {

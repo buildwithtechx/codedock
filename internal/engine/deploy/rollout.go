@@ -8,7 +8,7 @@ import (
 	"os"
 	"time"
 
-	"codedock/internal/models"
+	appsmod "codedock/internal/modules/apps"
 	"codedock/internal/utils"
 	"github.com/containerd/errdefs"
 	"github.com/docker/docker/api/types/container"
@@ -32,7 +32,7 @@ func reportDeploymentProgress(ctx context.Context, phase string) error {
 	return nil
 }
 
-func (d *Deployer) replaceReplicas(ctx context.Context, app *models.AppService, opts ContainerRunOptions, replicas int, logs io.Writer) (result string, resultErr error) {
+func (d *Deployer) replaceReplicas(ctx context.Context, app *appsmod.AppService, opts ContainerRunOptions, replicas int, logs io.Writer) (result string, resultErr error) {
 	if d.rolloutDirectory != "" {
 		if _, err := os.Stat(d.rolloutPath(app.ID)); err == nil {
 			return "", fmt.Errorf("previous rollout cleanup is pending; recover it before retrying")
@@ -49,7 +49,7 @@ func (d *Deployer) replaceReplicas(ctx context.Context, app *models.AppService, 
 	if err != nil {
 		return "", fmt.Errorf("list previous containers: %w", err)
 	}
-	journal := &models.RolloutJournal{ID: uuid.NewString(), PreviousApp: *app, Previous: []models.RolloutContainer{}}
+	journal := &RolloutJournal{ID: uuid.NewString(), PreviousApp: *app, Previous: []RolloutContainer{}}
 	if err := d.saveRollout(journal); err != nil {
 		return "", fmt.Errorf("save rollout recovery: %w", err)
 	}
@@ -96,7 +96,7 @@ func (d *Deployer) replaceReplicas(ctx context.Context, app *models.AppService, 
 		if name != prefix && !isReplicaName(name, prefix) {
 			continue
 		}
-		saved := models.RolloutContainer{ID: old.ID, Name: name, Running: old.State == "running"}
+		saved := RolloutContainer{ID: old.ID, Name: name, Running: old.State == "running"}
 		journal.Previous = append(journal.Previous, saved)
 		if err := d.saveRollout(journal); err != nil {
 			return "", err
@@ -115,7 +115,7 @@ func (d *Deployer) replaceReplicas(ctx context.Context, app *models.AppService, 
 		if replicas > 1 {
 			opts.Name = fmt.Sprintf("%s-%d", prefix, i+1)
 		}
-		if opts.RuntimeMode != models.RuntimeModeWorker && opts.HealthCheckPath == "" {
+		if opts.RuntimeMode != appsmod.RuntimeModeWorker && opts.HealthCheckPath == "" {
 			opts.HealthCheckPath = "/"
 		}
 		id, err := manager.createAndStart(ctx, opts)
@@ -126,7 +126,7 @@ func (d *Deployer) replaceReplicas(ctx context.Context, app *models.AppService, 
 		if err := reportDeploymentProgress(ctx, "READINESS"); err != nil {
 			return "", err
 		}
-		if app.RuntimeMode == models.RuntimeModeWorker {
+		if app.RuntimeMode == appsmod.RuntimeModeWorker {
 			inspected, err := manager.Inspect(ctx, id)
 			if err != nil {
 				return "", err
@@ -153,7 +153,7 @@ func (d *Deployer) replaceReplicas(ctx context.Context, app *models.AppService, 
 	if err := reportDeploymentProgress(ctx, "ROUTING"); err != nil {
 		return "", err
 	}
-	app.ContainerID, app.Domain, app.Status = created[0], opts.Domain, models.AppServiceStatusRunning
+	app.ContainerID, app.Domain, app.Status = created[0], opts.Domain, appsmod.AppServiceStatusRunning
 	if err := d.store.UpdateAppService(app); err != nil {
 		return "", fmt.Errorf("save activated service: %w", err)
 	}

@@ -1,7 +1,6 @@
 package storage
 
 import (
-	"codedock/internal/models"
 	"context"
 	"fmt"
 	"github.com/docker/docker/client"
@@ -118,8 +117,8 @@ func TestVolumeRestoreStreamsArchiveAndRemovesHelper(t *testing.T) {
 		t.Fatal(err)
 	}
 	store := &volumeTestStore{mockStore: newMockStore()}
-	store.configs["config"] = &models.BackupConfig{ID: "config", ServiceID: "service", VolumeName: "owned", Timeout: 5}
-	store.records["record"] = &models.BackupRecord{ID: "record", BackupConfigID: "config", Status: models.BackupRecordStatusCompleted, FilePath: filename}
+	store.configs["config"] = &BackupConfig{ID: "config", ServiceID: "service", VolumeName: "owned", Timeout: 5}
+	store.records["record"] = &BackupRecord{ID: "record", BackupConfigID: "config", Status: BackupRecordStatusCompleted, FilePath: filename}
 	manager := NewBackupManager(dockerClient, store, t.TempDir())
 	manager.SetVolumeOperations(gate)
 	ctx, cancel := context.WithTimeout(context.Background(), 10*time.Second)

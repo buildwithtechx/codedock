@@ -3,7 +3,7 @@ package build
 import (
 	"testing"
 
-	"codedock/internal/models"
+	appsmod "codedock/internal/modules/apps"
 )
 
 func TestVersionBuildEnv(t *testing.T) {
@@ -26,7 +26,7 @@ func TestAppRuntimeVersion(t *testing.T) {
 	if got := appRuntimeVersion(BuildOptions{}); got != "" {
 		t.Fatalf("nil AppConfig should be empty, got %q", got)
 	}
-	got := appRuntimeVersion(BuildOptions{AppConfig: &models.AppService{RuntimeVersion: "  8.4 "}})
+	got := appRuntimeVersion(BuildOptions{AppConfig: &appsmod.AppService{RuntimeVersion: "  8.4 "}})
 	if got != "8.4" {
 		t.Fatalf("expected trimmed version, got %q", got)
 	}

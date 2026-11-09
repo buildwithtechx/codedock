@@ -8,8 +8,6 @@ import (
 	"os"
 	"path/filepath"
 	"testing"
-
-	"codedock/internal/models"
 )
 
 func TestArchiveDownloadUsesRecordedDestinationAndKey(t *testing.T) {
@@ -22,9 +20,9 @@ func TestArchiveDownloadUsesRecordedDestinationAndKey(t *testing.T) {
 	}))
 	defer server.Close()
 	store := newMockStore()
-	store.s3dests["original"] = &models.S3Destination{ID: "original", Endpoint: server.URL, Bucket: "archives", PathPrefix: "new-prefix"}
-	store.configs["config"] = &models.BackupConfig{ID: "config", S3DestinationID: "changed"}
-	store.records["record"] = &models.BackupRecord{ID: "record", BackupConfigID: "config", S3DestinationID: "original", S3URL: "s3://archives/old-prefix/backup.sql", FilePath: filepath.Join(t.TempDir(), "missing.sql")}
+	store.s3dests["original"] = &S3Destination{ID: "original", Endpoint: server.URL, Bucket: "archives", PathPrefix: "new-prefix"}
+	store.configs["config"] = &BackupConfig{ID: "config", S3DestinationID: "changed"}
+	store.records["record"] = &BackupRecord{ID: "record", BackupConfigID: "config", S3DestinationID: "original", S3URL: "s3://archives/old-prefix/backup.sql", FilePath: filepath.Join(t.TempDir(), "missing.sql")}
 	manager := NewBackupManager(nil, store, t.TempDir())
 	reader, name, err := manager.OpenBackupArchive(context.Background(), "record")
 	if err != nil {
@@ -53,7 +51,7 @@ func TestArchiveDownloadPrefersLocalArchive(t *testing.T) {
 	if err := os.WriteFile(filename, []byte("local archive"), 0o600); err != nil {
 		t.Fatal(err)
 	}
-	store.records["record"] = &models.BackupRecord{ID: "record", FilePath: filename, S3URL: "s3://unavailable/backup.sql"}
+	store.records["record"] = &BackupRecord{ID: "record", FilePath: filename, S3URL: "s3://unavailable/backup.sql"}
 	manager := NewBackupManager(nil, store, t.TempDir())
 	reader, name, err := manager.OpenBackupArchive(context.Background(), "record")
 	if err != nil {

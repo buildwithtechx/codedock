@@ -73,4 +73,11 @@ const (
 	EventBackupRestoreCompleted   = "backup.restore_completed"
 	EventDomainExpiring           = "domain.expiring"
 	EventDomainVerificationFailed = "domain.verification_failed"
+
+	DeploymentStatusActive = "active"
+	DeploymentStatusReady  = "ready"
+	DeploymentStatusFailed = "failed"
+
+	UserRoleOwner = "owner"
+	UserRoleAdmin = "admin"
 )

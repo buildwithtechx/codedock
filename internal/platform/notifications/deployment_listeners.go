@@ -11,16 +11,14 @@ import (
 	"time"
 
 	"codedock/internal/config"
-	"codedock/internal/models"
-	"codedock/internal/repositories"
 )
 
 type DeploymentListeners struct {
 	dispatcher *DispatcherService
-	appRepo    repositories.AppServiceRepository
+	appRepo    AppServiceRepository
 }
 
-func NewDeploymentListeners(dispatcher *DispatcherService, appRepo repositories.AppServiceRepository) *DeploymentListeners {
+func NewDeploymentListeners(dispatcher *DispatcherService, appRepo AppServiceRepository) *DeploymentListeners {
 	return &DeploymentListeners{dispatcher: dispatcher, appRepo: appRepo}
 }
 
@@ -30,12 +28,12 @@ func (l *DeploymentListeners) SendNotification(e DeploymentCompleted) {
 		commit = commit[:7]
 	}
 
-	eventType := models.EventDeployFailed
+	eventType := EventDeployFailed
 	statusLower := strings.ToLower(e.Status)
 	if statusLower == "success" || statusLower == "succeeded" {
-		eventType = models.EventDeploySucceeded
+		eventType = EventDeploySucceeded
 	} else if statusLower == "cancelled" || statusLower == "canceled" {
-		eventType = models.EventDeployCancelled
+		eventType = EventDeployCancelled
 	}
 
 	baseURL := strings.TrimRight(config.Get().Server.DashboardURL, "/")
@@ -44,7 +42,7 @@ func (l *DeploymentListeners) SendNotification(e DeploymentCompleted) {
 	}
 
 	msg := fmt.Sprintf("Deploy %s: %s (%s)", e.Status, e.ServiceID, commit)
-	notifEvent := &models.NotificationEvent{
+	notifEvent := &NotificationEvent{
 		EventType: eventType,
 		ProjectID: e.ProjectID,
 		Level:     e.Status,

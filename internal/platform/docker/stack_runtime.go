@@ -12,7 +12,6 @@ import (
 	"regexp"
 	"strings"
 
-	"codedock/internal/models"
 	"github.com/docker/docker/api/types/container"
 	"github.com/docker/docker/api/types/filters"
 	"github.com/docker/docker/client"
@@ -46,7 +45,7 @@ func (r *StackRuntime) Canonical(ctx context.Context, id, content string, variab
 	return string(output), nil
 }
 
-func (r *StackRuntime) Apply(ctx context.Context, stack *models.ComposeStack, progress func(string) error) error {
+func (r *StackRuntime) Apply(ctx context.Context, stack *ComposeStack, progress func(string) error) error {
 	if r.docker == nil {
 		return fmt.Errorf("local Docker is unavailable")
 	}
@@ -89,7 +88,7 @@ func (r *StackRuntime) Apply(ctx context.Context, stack *models.ComposeStack, pr
 	return progress("READINESS")
 }
 
-func (r *StackRuntime) Results(ctx context.Context, id string) ([]models.ComposeServiceResult, error) {
+func (r *StackRuntime) Results(ctx context.Context, id string) ([]ComposeServiceResult, error) {
 	if r.docker == nil {
 		return nil, fmt.Errorf("local Docker is unavailable")
 	}
@@ -97,7 +96,7 @@ func (r *StackRuntime) Results(ctx context.Context, id string) ([]models.Compose
 	if err != nil {
 		return nil, fmt.Errorf("observe stack: %w", err)
 	}
-	results := []models.ComposeServiceResult{}
+	results := []ComposeServiceResult{}
 	for _, current := range containers {
 		inspected, err := r.docker.ContainerInspect(ctx, current.ID)
 		if err != nil {
@@ -110,7 +109,7 @@ func (r *StackRuntime) Results(ctx context.Context, id string) ([]models.Compose
 		if inspected.State.Health != nil {
 			health = inspected.State.Health.Status
 		}
-		results = append(results, models.ComposeServiceResult{Name: current.Labels["com.docker.compose.service"], ContainerID: current.ID, State: inspected.State.Status, Health: health, ExitCode: inspected.State.ExitCode})
+		results = append(results, ComposeServiceResult{Name: current.Labels["com.docker.compose.service"], ContainerID: current.ID, State: inspected.State.Status, Health: health, ExitCode: inspected.State.ExitCode})
 	}
 	return results, nil
 }

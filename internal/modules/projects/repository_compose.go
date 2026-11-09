@@ -32,12 +32,12 @@ func (r *ComposeStackRepo) Get(ctx context.Context, projectID, id string) (*Comp
 	if err != nil {
 		return nil, fmt.Errorf("decrypt stack: %w", err)
 	}
-	stack.Config = string(config)
+	stack.Config = config
 	return &stack, nil
 }
 
 func (r *ComposeStackRepo) Save(ctx context.Context, stack *ComposeStack, previousRevision int) error {
-	encrypted, err := r.vault.Encrypt([]byte(stack.Config))
+	encrypted, err := r.vault.Encrypt(stack.Config)
 	if err != nil {
 		return fmt.Errorf("encrypt stack: %w", err)
 	}

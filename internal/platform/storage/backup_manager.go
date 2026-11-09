@@ -15,19 +15,18 @@ import (
 	"github.com/docker/docker/client"
 	"github.com/robfig/cron/v3"
 
-	"codedock/internal/models"
 	"codedock/internal/utils"
 )
 
 type Store interface {
-	ListAllActiveBackupConfigs() ([]*models.BackupConfig, error)
-	GetBackupConfig(id string) (*models.BackupConfig, error)
-	CreateBackupRecord(rec *models.BackupRecord) error
-	GetDatabase(id string) (*models.Database, error)
-	UpdateBackupRecord(opts models.UpdateBackupRecordOpts) error
-	GetS3Destination(id string) (*models.S3Destination, error)
-	GetBackupRecord(id string) (*models.BackupRecord, error)
-	ListBackupRecords(backupConfigID string) ([]*models.BackupRecord, error)
+	ListAllActiveBackupConfigs() ([]*BackupConfig, error)
+	GetBackupConfig(id string) (*BackupConfig, error)
+	CreateBackupRecord(rec *BackupRecord) error
+	GetDatabase(id string) (*Database, error)
+	UpdateBackupRecord(opts UpdateBackupRecordOpts) error
+	GetS3Destination(id string) (*S3Destination, error)
+	GetBackupRecord(id string) (*BackupRecord, error)
+	ListBackupRecords(backupConfigID string) ([]*BackupRecord, error)
 }
 
 type BackupManager struct {
@@ -97,14 +96,14 @@ func (bm *BackupManager) Stop() {
 	}
 }
 
-func (bm *BackupManager) RegisterBackup(cfg *models.BackupConfig) error {
+func (bm *BackupManager) RegisterBackup(cfg *BackupConfig) error {
 	bm.mu.Lock()
 	defer bm.mu.Unlock()
 	return bm.registerBackupLocked(cfg)
 }
 
-func (bm *BackupManager) registerBackupLocked(cfg *models.BackupConfig) error {
-	active := cfg.Status == models.BackupConfigStatusActive && cfg.BackupEnabled && strings.TrimSpace(cfg.Schedule) != "manual"
+func (bm *BackupManager) registerBackupLocked(cfg *BackupConfig) error {
+	active := cfg.Status == BackupConfigStatusActive && cfg.BackupEnabled && strings.TrimSpace(cfg.Schedule) != "manual"
 	var schedule cron.Schedule
 	if active {
 		var err error
@@ -153,18 +152,18 @@ func (bm *BackupManager) UnregisterBackup(backupConfigID string) {
 	}
 }
 
-func (bm *BackupManager) failBackupRecord(recID, errStr string) (*models.BackupRecord, error) {
+func (bm *BackupManager) failBackupRecord(recID, errStr string) (*BackupRecord, error) {
 	return bm.failBackupWithLogs(recID, "", errStr)
 }
 
-func (bm *BackupManager) failBackupWithLogs(recID, priorLogs, errStr string) (*models.BackupRecord, error) {
+func (bm *BackupManager) failBackupWithLogs(recID, priorLogs, errStr string) (*BackupRecord, error) {
 	if bm.OnBackupFailed != nil {
 		bm.OnBackupFailed(recID, errStr)
 	}
 	logs := priorLogs + fmt.Sprintf("Failed: %s\n", errStr)
-	if err := bm.store.UpdateBackupRecord(models.UpdateBackupRecordOpts{
+	if err := bm.store.UpdateBackupRecord(UpdateBackupRecordOpts{
 		ID:          recID,
-		Status:      models.BackupRecordStatusFailed,
+		Status:      BackupRecordStatusFailed,
 		Logs:        logs,
 		CompletedAt: time.Now().UTC().Format(time.RFC3339),
 	}); err != nil {

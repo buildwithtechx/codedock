@@ -6,11 +6,11 @@ import (
 	"os"
 	"strings"
 
-	"codedock/internal/repositories"
+	"codedock/internal/modules/settings"
 	"codedock/internal/utils"
 )
 
-func printDeploymentURL(settingsRepo *repositories.SettingsRepo, appName string) {
+func printDeploymentURL(settingsRepo *settings.SettingsRepo, appName string) {
 	wildcard := ""
 	settings, err := settingsRepo.GetServerSettings(context.Background())
 	if err == nil {

@@ -1,12 +1,12 @@
 package clusters
 
 import (
-	"codedock/internal/engine/kubernetes"
-	"codedock/internal/services/operations"
 	"context"
 	"fmt"
 	"net/http"
 	"time"
+
+	"codedock/internal/engine/kubernetes"
 )
 
 type DataStore interface {
@@ -34,13 +34,13 @@ type ClusterDataService struct {
 	destinations Destinations
 	engine       *kubernetes.WorkloadRuntime
 	commands     kubernetes.Commands
-	operations   *operations.Service
+	operations   OperationsService
 	gate         Gate
 	http         *http.Client
 }
 
-func NewClusterDataService(store DataStore, clusters Clusters, environments Environments, destinations Destinations, commands kubernetes.Commands, operations *operations.Service, gate DataGate, http *http.Client) *Service {
-	return &Service{store: store, clusters: clusters, environments: environments, destinations: destinations, engine: kubernetes.NewWorkloadRuntime(commands), commands: commands, operations: operations, gate: gate, http: http}
+func NewClusterDataService(store DataStore, clusters Clusters, environments Environments, destinations Destinations, commands kubernetes.Commands, operations OperationsService, gate DataGate, http *http.Client) *ClusterDataService {
+	return &ClusterDataService{store: store, clusters: clusters, environments: environments, destinations: destinations, engine: kubernetes.NewWorkloadRuntime(commands), commands: commands, operations: operations, gate: gate, http: http}
 }
 
 func (s *ClusterDataService) SetSnapshots(store RedisSnapshotStore) { s.snapshots = store }

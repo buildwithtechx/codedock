@@ -4,11 +4,9 @@ import (
 	"encoding/json"
 	"fmt"
 	"strings"
-
-	"codedock/internal/models"
 )
 
-func BuildMiddlewareLabels(serviceName string, rules []*models.RouteRule) map[string]string {
+func BuildMiddlewareLabels(serviceName string, rules []*RouteRule) map[string]string {
 	labels := make(map[string]string)
 	var middlewareNames []string
 
@@ -20,17 +18,17 @@ func BuildMiddlewareLabels(serviceName string, rules []*models.RouteRule) map[st
 		var ruleLabels map[string]string
 
 		switch rule.RuleType {
-		case models.RouteRuleTypeRateLimit:
+		case RouteRuleTypeRateLimit:
 			ruleLabels = buildRateLimitLabels(key, rule.SpecJSON)
 			if len(ruleLabels) > 0 {
 				middlewareNames = append(middlewareNames, key+"-ratelimit@docker")
 			}
-		case models.RouteRuleTypeIPAllowlist:
+		case RouteRuleTypeIPAllowlist:
 			ruleLabels = buildIPAllowlistLabels(key, rule.SpecJSON)
 			if len(ruleLabels) > 0 {
 				middlewareNames = append(middlewareNames, key+"-ipallow@docker")
 			}
-		case models.RouteRuleTypeHeaders:
+		case RouteRuleTypeHeaders:
 			ruleLabels = buildHeadersLabels(key, rule.SpecJSON)
 			if len(ruleLabels) > 0 {
 				middlewareNames = append(middlewareNames, key+"-headers@docker")
@@ -51,7 +49,7 @@ func BuildMiddlewareLabels(serviceName string, rules []*models.RouteRule) map[st
 }
 
 func buildRateLimitLabels(key, specJSON string) map[string]string {
-	var spec models.RateLimitSpec
+	var spec RateLimitSpec
 	if err := json.Unmarshal([]byte(specJSON), &spec); err != nil || spec.Average <= 0 {
 		return nil
 	}
@@ -68,7 +66,7 @@ func buildRateLimitLabels(key, specJSON string) map[string]string {
 }
 
 func buildIPAllowlistLabels(key, specJSON string) map[string]string {
-	var spec models.IPListSpec
+	var spec IPListSpec
 	if err := json.Unmarshal([]byte(specJSON), &spec); err != nil || len(spec.CIDRs) == 0 {
 		return nil
 	}
@@ -78,7 +76,7 @@ func buildIPAllowlistLabels(key, specJSON string) map[string]string {
 }
 
 func buildHeadersLabels(key, specJSON string) map[string]string {
-	var spec models.HeadersSpec
+	var spec HeadersSpec
 	if err := json.Unmarshal([]byte(specJSON), &spec); err != nil {
 		return nil
 	}
@@ -93,7 +91,7 @@ func buildHeadersLabels(key, specJSON string) map[string]string {
 	return labels
 }
 
-func ApplyMiddlewareLabels(existing map[string]string, serviceName string, rules []*models.RouteRule) map[string]string {
+func ApplyMiddlewareLabels(existing map[string]string, serviceName string, rules []*RouteRule) map[string]string {
 	extra := BuildMiddlewareLabels(serviceName, rules)
 	if existing == nil {
 		existing = make(map[string]string)

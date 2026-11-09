@@ -5,21 +5,19 @@ import (
 	"encoding/hex"
 	"errors"
 	"testing"
-
-	"codedock/internal/models"
 )
 
 type memorySelfHostedStore struct {
-	stored models.SelfHostedConfig
+	stored SelfHostedConfig
 	saves  int
 }
 
-func (s *memorySelfHostedStore) Load(context.Context) (*models.SelfHostedConfig, error) {
+func (s *memorySelfHostedStore) Load(context.Context) (*SelfHostedConfig, error) {
 	stored := s.stored
 	return &stored, nil
 }
 
-func (s *memorySelfHostedStore) Save(_ context.Context, stored *models.SelfHostedConfig) error {
+func (s *memorySelfHostedStore) Save(_ context.Context, stored *SelfHostedConfig) error {
 	s.stored = *stored
 	s.saves++
 	return nil
@@ -29,11 +27,11 @@ type failingSelfHostedStore struct {
 	saved bool
 }
 
-func (s *failingSelfHostedStore) Load(context.Context) (*models.SelfHostedConfig, error) {
+func (s *failingSelfHostedStore) Load(context.Context) (*SelfHostedConfig, error) {
 	return nil, errors.New("storage unavailable")
 }
 
-func (s *failingSelfHostedStore) Save(_ context.Context, _ *models.SelfHostedConfig) error {
+func (s *failingSelfHostedStore) Save(_ context.Context, _ *SelfHostedConfig) error {
 	s.saved = true
 	return nil
 }
@@ -41,7 +39,7 @@ func (s *failingSelfHostedStore) Save(_ context.Context, _ *models.SelfHostedCon
 func TestSelfHostedSecretsSurviveRestart(t *testing.T) {
 	ctx := context.Background()
 	store := &memorySelfHostedStore{}
-	first := &models.Config{}
+	first := &Config{}
 	if err := PrepareSelfHosted(ctx, first, store); err != nil {
 		t.Fatal(err)
 	}
@@ -58,7 +56,7 @@ func TestSelfHostedSecretsSurviveRestart(t *testing.T) {
 	if err := SaveSelfHostedOptions(ctx, first, store, "apps.example.com", "owner@example.com"); err != nil {
 		t.Fatal(err)
 	}
-	second := &models.Config{}
+	second := &Config{}
 	if err := PrepareSelfHosted(ctx, second, store); err != nil {
 		t.Fatal(err)
 	}
@@ -73,7 +71,7 @@ func TestSelfHostedSecretsSurviveRestart(t *testing.T) {
 func TestSelfHostedExplicitSecretsTakePrecedence(t *testing.T) {
 	ctx := context.Background()
 	store := &memorySelfHostedStore{}
-	cfg := &models.Config{Security: models.SecurityConfig{JWTSecret: "existing-jwt", RefreshSecret: "existing-refresh"}}
+	cfg := &Config{Security: SecurityConfig{JWTSecret: "existing-jwt", RefreshSecret: "existing-refresh"}}
 	if err := PrepareSelfHosted(ctx, cfg, store); err != nil {
 		t.Fatal(err)
 	}
@@ -91,7 +89,7 @@ func TestSelfHostedExplicitSecretsTakePrecedence(t *testing.T) {
 
 func TestSelfHostedStorageFailureIsNotOverwritten(t *testing.T) {
 	store := &failingSelfHostedStore{}
-	if err := PrepareSelfHosted(context.Background(), &models.Config{}, store); err == nil {
+	if err := PrepareSelfHosted(context.Background(), &Config{}, store); err == nil {
 		t.Fatal("storage failure must fail")
 	}
 	if store.saved {
@@ -100,7 +98,7 @@ func TestSelfHostedStorageFailureIsNotOverwritten(t *testing.T) {
 }
 
 func TestCloudDoesNotGenerateSelfHostedSecrets(t *testing.T) {
-	cfg := &models.Config{Cloud: models.CloudConfig{Enabled: true}}
+	cfg := &Config{Cloud: CloudConfig{Enabled: true}}
 	if err := PrepareSelfHosted(context.Background(), cfg, nil); err != nil {
 		t.Fatal(err)
 	}
@@ -112,7 +110,7 @@ func TestCloudDoesNotGenerateSelfHostedSecrets(t *testing.T) {
 func TestSelfHostedOptionsCanBeCleared(t *testing.T) {
 	ctx := context.Background()
 	store := &memorySelfHostedStore{}
-	cfg := &models.Config{}
+	cfg := &Config{}
 	if err := PrepareSelfHosted(ctx, cfg, store); err != nil {
 		t.Fatal(err)
 	}
@@ -122,7 +120,7 @@ func TestSelfHostedOptionsCanBeCleared(t *testing.T) {
 	if err := SaveSelfHostedOptions(ctx, cfg, store, "", ""); err != nil {
 		t.Fatal(err)
 	}
-	restarted := &models.Config{}
+	restarted := &Config{}
 	if err := PrepareSelfHosted(ctx, restarted, store); err != nil {
 		t.Fatal(err)
 	}

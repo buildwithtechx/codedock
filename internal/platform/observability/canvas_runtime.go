@@ -1,7 +1,6 @@
 package observability
 
 import (
-	"codedock/internal/models"
 	"context"
 	"fmt"
 	"github.com/containerd/errdefs"
@@ -11,7 +10,7 @@ import (
 
 type ClusterObservations interface {
 	Handles(context.Context, string) (bool, error)
-	Observe(context.Context, string) (*models.WorkloadObservation, error)
+	Observe(context.Context, string) (*WorkloadObservation, error)
 	Logs(context.Context, string) (string, error)
 }
 type CanvasDockerTargets interface {
@@ -25,7 +24,7 @@ type CanvasRuntime struct {
 
 func NewCanvasRuntime(docker *client.Client) *CanvasRuntime { return &CanvasRuntime{docker: docker} }
 
-func (r *CanvasRuntime) Observe(ctx context.Context, canvas *models.EnvironmentCanvas) {
+func (r *CanvasRuntime) Observe(ctx context.Context, canvas *EnvironmentCanvas) {
 	if canvas == nil {
 		return
 	}
@@ -99,7 +98,7 @@ func (r *CanvasRuntime) Observe(ctx context.Context, canvas *models.EnvironmentC
 	}
 }
 
-func (r *CanvasRuntime) canvasDocker(ctx context.Context, canvas *models.EnvironmentCanvas) (*client.Client, func(), error) {
+func (r *CanvasRuntime) canvasDocker(ctx context.Context, canvas *EnvironmentCanvas) (*client.Client, func(), error) {
 	if r.Targets == nil {
 		return r.docker, func() {}, nil
 	}

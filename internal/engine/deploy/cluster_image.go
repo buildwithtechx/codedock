@@ -2,7 +2,7 @@ package deploy
 
 import (
 	"codedock/internal/engine/build"
-	"codedock/internal/models"
+	appsmod "codedock/internal/modules/apps"
 	"context"
 	"encoding/base64"
 	"encoding/json"
@@ -17,12 +17,12 @@ import (
 	"strings"
 )
 
-func (d *Deployer) PrepareClusterWorkload(ctx context.Context, app *models.AppService, target models.RuntimeTarget, source string, logs io.Writer) (*models.KubernetesWorkload, error) {
+func (d *Deployer) PrepareClusterWorkload(ctx context.Context, app *appsmod.AppService, target appsmod.RuntimeTarget, source string, logs io.Writer) (*appsmod.KubernetesWorkload, error) {
 	variables, err := d.getEnvironmentVariables(ctx, app, logs)
 	if err != nil {
 		return nil, err
 	}
-	workload := &models.KubernetesWorkload{App: *app, Target: target, Image: app.ImageRef, Variables: variables}
+	workload := &appsmod.KubernetesWorkload{App: *app, Target: target, Image: app.ImageRef, Variables: variables}
 	registryID := target.RegistryID
 	if registryID == "" && app.RegistryID != nil {
 		registryID = *app.RegistryID
@@ -35,7 +35,13 @@ func (d *Deployer) PrepareClusterWorkload(ctx context.Context, app *models.AppSe
 		if credentials == nil || credentials.ProjectID != app.ProjectID {
 			return nil, fmt.Errorf("registry must belong to this project")
 		}
-		workload.Registry = credentials
+		workload.Registry = &appsmod.RuntimeRegistry{
+			ID:            credentials.ID,
+			RegistryURL:   credentials.RegistryURL,
+			ServerURL:     credentials.RegistryURL,
+			Username:      credentials.Username,
+			PasswordToken: credentials.PasswordToken,
+		}
 	}
 	if workload.App.Replicas <= 0 {
 		workload.App.Replicas = 1

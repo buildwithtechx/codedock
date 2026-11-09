@@ -15,30 +15,31 @@ import (
 	"codedock/internal/engine/deploy"
 	"codedock/internal/http/mcp"
 	"codedock/internal/http/middleware"
-	"codedock/internal/models"
+	aimod "codedock/internal/modules/ai"
 	appsmod "codedock/internal/modules/apps"
 	"codedock/internal/modules/audit"
 	"codedock/internal/modules/auth"
 	backupmodule "codedock/internal/modules/backups"
+	modclusters "codedock/internal/modules/clusters"
 	"codedock/internal/modules/databases"
 	deploymentsmod "codedock/internal/modules/deployments"
 	"codedock/internal/modules/dns"
+	domainsmod "codedock/internal/modules/domains"
+	"codedock/internal/modules/environments"
 	gitmod "codedock/internal/modules/git"
+	"codedock/internal/modules/monitoring"
 	"codedock/internal/modules/organizations"
+	projectsmod "codedock/internal/modules/projects"
+	"codedock/internal/modules/servers"
 	settingsmodule "codedock/internal/modules/settings"
 	"codedock/internal/modules/users"
 	"codedock/internal/platform/networking"
 	"codedock/internal/platform/notifications"
-	core "codedock/internal/platform/notifications"
 	"codedock/internal/platform/observability"
 	cron "codedock/internal/platform/scheduler"
 	"codedock/internal/platform/ssh"
 	backup "codedock/internal/platform/storage"
 	"codedock/internal/platform/vault"
-	"codedock/internal/repositories"
-	"codedock/internal/services/operations"
-	projectservices "codedock/internal/services/projects"
-	systemservices "codedock/internal/services/system"
 )
 
 func NewServer(db *sql.DB, v *vault.Vault, deployer *deploy.Deployer, traefikManager *networking.TraefikManager, dockerClient *client.Client, dataDir string) (*Server, error) {
@@ -56,40 +57,39 @@ func NewServer(db *sql.DB, v *vault.Vault, deployer *deploy.Deployer, traefikMan
 		}
 	}
 
-	environmentRepo := repositories.NewEnvironmentRepo(db)
-	projectRepo := repositories.NewProjectRepo(db, environmentRepo)
-	projectAppRepo := repositories.NewProjectAppRepo(db)
-	appRepo := repositories.NewAppServiceRepo(db)
-	serviceVarRepo := repositories.NewServiceVarRepo(db)
-	dbRepo := repositories.NewDatabaseRepo(db, v)
-	settingsRepo := repositories.NewSettingsRepo(db, v)
-	notifRepo := repositories.NewNotificationSettingsRepo(db)
-	aiRepo := repositories.NewAISettingsRepo(db)
-	envVarRepo := repositories.NewEnvRepo(db, v)
-	scheduledTaskRepo := repositories.NewScheduledTaskRepo(db)
-	backupRepo := repositories.NewBackupRepo(db, v)
+	environmentRepo := environments.NewEnvironmentRepo(db)
+	projectRepo := projectsmod.NewProjectRepo(db)
+	projectAppRepo := projectsmod.NewProjectAppRepo(db)
+	appRepo := appsmod.NewAppServiceRepo(db)
+	serviceVarRepo := appsmod.NewServiceVarRepo(db)
+	dbRepo := databases.NewRepository(db, v)
+	settingsRepo := settingsmodule.NewSettingsRepo(db, v)
+	notifRepo := monitoring.NewNotificationSettingsRepo(db)
+	aiRepo := aimod.NewRepository(db)
+	envVarRepo := projectsmod.NewEnvRepo(db, v)
+	scheduledTaskRepo := monitoring.NewScheduledTaskRepo(db)
+	backupRepo := backupmodule.NewRepository(db, v)
 	backupRepo.SetSnapshotDumper(backupmodule.NewSystemSnapshotDumper(dataDir))
-	s3DestinationRepo := repositories.NewS3DestinationRepo(db, v)
-	serverlessRepository := repositories.NewServerlessRepository(db)
-	projectSettingsRepo := repositories.NewProjectSettingsRepo(db)
-	userRepo := repositories.NewUserRepo(db)
-	canvasRepo := repositories.NewCanvasRepo(db, environmentRepo)
+	serverlessRepository := appsmod.NewServerlessRepository(db)
+	projectSettingsRepo := projectsmod.NewProjectSettingsRepo(db)
+	userRepo := users.NewUserRepo(db)
+	canvasRepo := projectsmod.NewCanvasRepo(db, &projectEnvAdapter{repo: environmentRepo})
 	canvasRepo.SetVault(v)
-	canvasRepo.SetClusterData(repositories.NewClusterDataRepo(db, v))
-	deployRepo := repositories.NewDeploymentRepo(db)
+	canvasRepo.SetClusterData(&canvasClusterDataAdapter{repo: modclusters.NewClusterDataRepo(db, v)})
+	deployRepo := deploymentsmod.NewDeploymentRepository(db)
 	if err := deployRepo.RecoverInterrupted(context.Background()); err != nil {
 		return nil, fmt.Errorf("recover deployments: %w", err)
 	}
-	prPreviewRepository := repositories.NewPRPreviewRepository(db)
-	domainRepo := repositories.NewDomainRepo(db)
-	gitAppRepo := repositories.NewGitAppRepo(db, v)
+	prPreviewRepository := gitmod.NewPRPreviewRepository(db)
+	domainRepo := domainsmod.NewDomainRepo(db)
+	gitAppRepo := gitmod.NewGitAppRepository(db, v)
 	dnsRepo := dns.NewRepository(db)
-	volumeRepo := repositories.NewServiceVolumeRepo(db)
-	orgRepo := repositories.NewOrganizationRepository(db)
-	webhookDeliveryRepo := repositories.NewWebhookDeliveryRepo(db)
+	volumeRepo := appsmod.NewServiceVolumeRepo(db)
+	orgRepo := organizations.NewOrganizationRepository(db)
+	webhookDeliveryRepo := gitmod.NewWebhookDeliveryRepository(db)
 
-	httpEngineAdapter := newEngineAdapter(settingsRepo, appRepo, envVarRepo, dbRepo, projectRepo, scheduledTaskRepo, backupRepo, s3DestinationRepo, serviceVarRepo, serverlessRepository)
-	httpEngineAdapter.sftpRepo = repositories.NewSFTPDestinationRepo(db)
+	httpEngineAdapter := newEngineAdapter(appRepo, dbRepo, projectRepo, scheduledTaskRepo, backupRepo)
+	httpEngineAdapter.sftpRepo = backupmodule.NewSFTPRepository(db)
 	volumeOperations := deploy.NewVolumeGate()
 	if deployer != nil {
 		deployer.SetVolumeOperations(volumeOperations)
@@ -107,50 +107,53 @@ func NewServer(db *sql.DB, v *vault.Vault, deployer *deploy.Deployer, traefikMan
 	backupManager := backup.NewBackupManager(dockerClient, httpEngineAdapter, "")
 	backupManager.SetVolumeOperations(volumeOperations)
 
-	projectService := projectservices.NewProjectService(projectRepo, environmentRepo, appRepo, serviceVarRepo, settingsRepo, orgRepo)
-	projectAppService := projectservices.NewProjectAppService(projectAppRepo)
-	appService := projectservices.NewAppService(appRepo, serviceVarRepo, volumeRepo)
-	dbModRepo := databases.NewRepository(db, v)
-	databaseService := databases.NewService(dbModRepo, databases.NewDockerDeployer(dockerClient, dbModRepo, volumeOperations))
-	deviceTokenRepo := repositories.NewDeviceTokenRepo(db)
-	notifSettingsService := systemservices.NewNotificationSettingsService(notifRepo, repositories.NewNotificationDeliveryRepo(db), deviceTokenRepo)
-	aiSettingsService := projectservices.NewAISettingsService(aiRepo)
-	serviceLinker := projectservices.NewServiceLinker(dbRepo)
+	projectService := projectsmod.NewService(projectRepo, orgRepo)
+	projectAppService := projectsmod.NewProjectAppService(projectAppRepo)
+	appService := appsmod.NewService(appRepo, serviceVarRepo, volumeRepo)
+	databaseService := databases.NewService(dbRepo, databases.NewDockerDeployer(dockerClient, dbRepo, volumeOperations))
+	deviceTokenRepo := monitoring.NewDeviceTokenRepo(db)
+	notifSettingsService := monitoring.NewNotificationSettingsService(notifRepo, monitoring.NewNotificationDeliveryRepo(db), deviceTokenRepo)
+	aiSettingsService := aimod.NewService(aiRepo)
+	serviceLinker := appsmod.NewServiceLinker(&appDatabaseAdapter{repo: dbRepo})
 	serviceLinker.SetApplications(appRepo, serviceVarRepo)
-	serviceLinker.SetClusterData(repositories.NewClusterDataRepo(db, v))
+	serviceLinker.SetClusterData(&appClusterPlansAdapter{repo: modclusters.NewClusterDataRepo(db, v)})
 	mailerService, err := notifications.NewMailerService(notifSettingsService)
 	if err != nil {
 		return nil, fmt.Errorf("mailer service: %w", err)
 	}
-	userModRepo := users.NewUserRepo(db)
-	userService := users.NewUserService(userModRepo)
-	settingsModRepo := settingsmodule.NewSettingsRepo(db, v)
-	settingsService := settingsmodule.NewSettingsService(settingsModRepo)
+	userService := users.NewUserService(userRepo)
+	settingsService := settingsmodule.NewSettingsService(settingsRepo)
 	auditRepo := audit.NewAuditLogRepo(db)
 	auditService := audit.NewAuditService(auditRepo, audit.NewSQLAuditResourceSearcher(db))
-	orgModRepo := organizations.NewOrganizationRepository(db)
-	orgService := organizations.NewOrganizationService(orgModRepo)
+	orgService := organizations.NewOrganizationService(orgRepo)
 
-	authMod, err := auth.NewModule(db, userModRepo, userService, settingsModRepo, auditService, mailerService)
+	authMod, err := auth.NewModule(db, userRepo, userService, settingsRepo, auditService, mailerService)
 	if err != nil {
 		return nil, err
 	}
 	tokenService := authMod.TokenService
-	projectSettingsService := projectservices.NewProjectSettingsService(projectSettingsRepo, userRepo, authMod.AuthService)
-	dispatcherService := core.NewDispatcherService(settingsRepo, notifRepo, userRepo, repositories.NewNotificationDeliveryRepo(db), mailerService, deviceTokenRepo)
+	projectSettingsService := projectsmod.NewProjectSettingsService(projectSettingsRepo)
+	dispatcherService := notifications.NewDispatcherService(
+		&notifSettingsAdapter{repo: settingsRepo},
+		notifRepo,
+		&notifUserLookupAdapter{repo: userRepo},
+		monitoring.NewNotificationDeliveryRepo(db),
+		mailerService,
+		&notifDeviceTokenAdapter{repo: deviceTokenRepo},
+	)
 
-	deploymentListeners := core.NewDeploymentListeners(dispatcherService, appRepo)
+	deploymentListeners := notifications.NewDeploymentListeners(dispatcherService, &notifAppRepoAdapter{repo: appRepo})
 	deploymentListeners.Register()
 
-	serverRepo := repositories.NewServerRepository(db, v)
-	sshManager := ssh.NewSSHManager(serverRepo)
-	sshManager.OnServerUnreachable = func(server *models.Server, err error) {
+	serverRepo := servers.NewRepository(db, v)
+	sshManager := ssh.NewSSHManager(&sshServerRepoAdapter{repo: serverRepo})
+	sshManager.OnServerUnreachable = func(server *ssh.Server, err error) {
 		baseURL := strings.TrimRight(config.Get().Server.DashboardURL, "/")
 		if baseURL == "" {
 			baseURL = "http://localhost:8080"
 		}
-		dispatcherService.Dispatch(&models.NotificationEvent{
-			EventType: models.EventServerUnreachable,
+		dispatcherService.Dispatch(&notifications.NotificationEvent{
+			EventType: notifications.EventServerUnreachable,
 			Title:     "Server unreachable: " + server.Name,
 			Message:   fmt.Sprintf("Cannot reach Docker daemon on server %s (%s): %v", server.Name, server.IPAddress, err),
 			Level:     "error",
@@ -158,9 +161,9 @@ func NewServer(db *sql.DB, v *vault.Vault, deployer *deploy.Deployer, traefikMan
 		})
 	}
 
-	scheduledTaskService := systemservices.NewScheduledTaskService(scheduledTaskRepo, cronManager)
-	canvasService := projectservices.NewCanvasService(canvasRepo)
-	canvasService.SetRuntime(observability.NewCanvasRuntime(dockerClient))
+	scheduledTaskService := monitoring.NewScheduledTaskService(scheduledTaskRepo, cronManager)
+	canvasService := projectsmod.NewCanvasService(canvasRepo)
+	canvasService.SetRuntime(&canvasRuntimeAdapter{rt: observability.NewCanvasRuntime(dockerClient)})
 
 	gitProviderRepo := gitmod.NewGitProviderRepository(db, v)
 	gitService := gitmod.NewProviderService(gitProviderRepo)
@@ -176,18 +179,18 @@ func NewServer(db *sql.DB, v *vault.Vault, deployer *deploy.Deployer, traefikMan
 	)
 	deploymentService.SetLocalDocker(dockerClient)
 
-	aiAnalysisService := projectservices.NewAIAnalysisService(deployRepo, appRepo, aiRepo)
-	runtimeRepository := repositories.NewRuntimeRepo(db, v)
+	aiAnalysisService := aimod.NewAnalysisService(aiRepo)
+	runtimeRepository := appsmod.NewRuntimeRepo(db, v)
 	if err := runtimeRepository.SyncKinds(context.Background()); err != nil {
 		return nil, fmt.Errorf("recover runtime kinds: %w", err)
 	}
 	deploymentService.SetRuntime(runtimeRepository)
 
-	autoscalingRepo := repositories.NewAutoscalingRepo(db)
-	autoscalingService := appsmod.NewAutoscalingService(appsmod.NewAutoscalingRepository(db), appsmod.NewServerlessRepository(db), appsmod.NewAppServiceRepo(db))
+	autoscalingRepo := appsmod.NewWorkerAutoscalingRepo(db)
+	autoscalingService := appsmod.NewAutoscalingService(appsmod.NewAutoscalingRepository(db), serverlessRepository, appRepo)
 	autoscaler := deploy.NewAutoscalerWorker(appRepo, statsMonitor, &autoscalerDeploymentAdapter{ds: deploymentService}, autoscalingRepo)
 
-	operationService := operations.NewService(repositories.NewOperationRepo(db, v))
+	operationService := monitoring.NewOperationService(monitoring.NewOperationRepo(db, v))
 	if err := operationService.Recover(context.Background()); err != nil {
 		return nil, fmt.Errorf("recover operations: %w", err)
 	}
@@ -201,8 +204,8 @@ func NewServer(db *sql.DB, v *vault.Vault, deployer *deploy.Deployer, traefikMan
 		if baseURL == "" {
 			baseURL = "http://localhost:8080"
 		}
-		dispatcherService.Dispatch(&models.NotificationEvent{
-			EventType: models.EventBackupFailed,
+		dispatcherService.Dispatch(&notifications.NotificationEvent{
+			EventType: notifications.EventBackupFailed,
 			Title:     "Backup failed: " + recordID,
 			Message:   fmt.Sprintf("Backup execution failed: %s", errStr),
 			Level:     "error",
@@ -229,7 +232,7 @@ func NewServer(db *sql.DB, v *vault.Vault, deployer *deploy.Deployer, traefikMan
 
 	authGuard := middleware.NewAuthGuard(tokenService, settingsService, projectSettingsService, orgRepo, projectRepo, userRepo)
 	authGuard.PersonalTokens = userRepo
-	authGuard.PersonalResources = repositories.NewPersonalTokenResources(db)
+	authGuard.PersonalResources = users.NewPersonalTokenResources(db)
 
 	return buildServerInstance(&serverSetupDeps{
 		e:                      e,
@@ -278,7 +281,7 @@ func NewServer(db *sql.DB, v *vault.Vault, deployer *deploy.Deployer, traefikMan
 		envVarRepo:             envVarRepo,
 		serverlessRepository:   serverlessRepository,
 		userRepo:               userRepo,
-		userModRepo:            userModRepo,
+		userModRepo:            userRepo,
 		deployRepo:             deployRepo,
 		prPreviewRepository:    prPreviewRepository,
 		domainRepo:             domainRepo,

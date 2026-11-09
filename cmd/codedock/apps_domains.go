@@ -5,7 +5,7 @@ import (
 	"os"
 	"text/tabwriter"
 
-	"codedock/internal/models"
+	pkgclient "codedock/pkg/client"
 	"github.com/spf13/cobra"
 )
 
@@ -55,7 +55,7 @@ var domainsAddCmd = &cobra.Command{
 		pathPrefix, _ := cmd.Flags().GetString("prefix")
 
 		client := getClient()
-		req := &models.DomainConfig{
+		req := &pkgclient.DomainConfig{
 			DomainName: domainName,
 			ServiceID:  serviceID,
 			RedirectTo: redirectTo,

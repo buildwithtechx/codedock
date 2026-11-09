@@ -1,21 +1,23 @@
 package kubernetes
 
 import (
-	"codedock/internal/models"
 	"context"
 	"encoding/json"
-	"github.com/google/uuid"
 	"math"
 	"strings"
 	"testing"
+
+	"github.com/google/uuid"
+
+	appsmod "codedock/internal/modules/apps"
 )
 
-func testWorkload() *models.KubernetesWorkload {
-	return &models.KubernetesWorkload{App: models.AppService{ID: uuid.NewString(), ProjectID: uuid.NewString(), EnvironmentID: uuid.NewString(), Replicas: 1, InternalPort: 3000, RuntimeMode: models.RuntimeModeWeb}, Target: models.RuntimeTarget{Kind: "kubernetes", ClusterID: uuid.NewString()}, Image: "registry.example.com/app:version", Variables: map[string]string{"SECRET": "private"}}
+func testWorkload() *appsmod.KubernetesWorkload {
+	return &appsmod.KubernetesWorkload{App: appsmod.AppService{ID: uuid.NewString(), ProjectID: uuid.NewString(), EnvironmentID: uuid.NewString(), Replicas: 1, InternalPort: 3000, RuntimeMode: appsmod.RuntimeModeWeb}, Target: appsmod.RuntimeTarget{Kind: "kubernetes", ClusterID: uuid.NewString()}, Image: "registry.example.com/app:version", Variables: map[string]string{"SECRET": "private"}}
 }
 func TestWorkersHaveNoHTTPReadinessOrService(t *testing.T) {
 	workload := testWorkload()
-	workload.App.RuntimeMode = models.RuntimeModeWorker
+	workload.App.RuntimeMode = appsmod.RuntimeModeWorker
 	workload.App.InternalPort = 0
 	raw, err := WorkloadManifest(workload)
 	if err != nil {
@@ -32,7 +34,7 @@ func TestWorkersHaveNoHTTPReadinessOrService(t *testing.T) {
 func TestPersistentStorageRequiresExplicitSharedReplicaSupport(t *testing.T) {
 	workload := testWorkload()
 	workload.App.Replicas = 2
-	workload.Target.Volumes = []models.RuntimeVolume{{Name: "data", MountPath: "/data", SizeGiB: 10}}
+	workload.Target.Volumes = []appsmod.RuntimeVolume{{Name: "data", MountPath: "/data", SizeGiB: 10}}
 	if err := ValidateWorkload(workload); err == nil {
 		t.Fatal("replicated workload accepted single-writer storage")
 	}
@@ -52,7 +54,7 @@ type fakeWorkloadCommands struct {
 	inputs []string
 }
 
-func (f *fakeWorkloadCommands) Kubectl(_ context.Context, _ models.ClusterNode, args []string, input string) (string, error) {
+func (f *fakeWorkloadCommands) Kubectl(_ context.Context, _ ClusterNode, args []string, input string) (string, error) {
 	f.calls = append(f.calls, args)
 	f.inputs = append(f.inputs, input)
 	return f.output, nil
@@ -70,7 +72,7 @@ func TestRecoveryRefusesForeignResources(t *testing.T) {
 	}
 	commands := &fakeWorkloadCommands{}
 	runtime := NewWorkloadRuntime(commands)
-	if err := runtime.Rollback(context.Background(), models.ClusterNode{}, &workload.App, string(data)); err == nil {
+	if err := runtime.Rollback(context.Background(), ClusterNode{}, &workload.App, string(data)); err == nil {
 		t.Fatal("foreign recovery journal accepted")
 	}
 	if len(commands.calls) != 0 {
@@ -101,7 +103,7 @@ func TestCleanupBindsUIDAndUsesIngressResourcePath(t *testing.T) {
 	}
 	commands := &fakeWorkloadCommands{output: string(raw)}
 	runtime := NewWorkloadRuntime(commands)
-	if err := runtime.deleteOwned(context.Background(), models.ClusterNode{}, &workload.App, "ingress", name); err != nil {
+	if err := runtime.deleteOwned(context.Background(), ClusterNode{}, &workload.App, "ingress", name); err != nil {
 		t.Fatal(err)
 	}
 	var deletion struct {

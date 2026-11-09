@@ -12,7 +12,7 @@ import (
 
 	"codedock/internal/config"
 	"codedock/internal/engine/build"
-	"codedock/internal/models"
+	appsmod "codedock/internal/modules/apps"
 )
 
 func ApplyCustomDNS(hostCfg *container.HostConfig, customDNS string) {
@@ -32,7 +32,7 @@ func ApplyCustomDNS(hostCfg *container.HostConfig, customDNS string) {
 	}
 }
 
-func (d *Deployer) getEnvironmentVariables(ctx context.Context, app *models.AppService, logWriter io.Writer) (map[string]string, error) {
+func (d *Deployer) getEnvironmentVariables(ctx context.Context, app *appsmod.AppService, logWriter io.Writer) (map[string]string, error) {
 	envVarsMap, err := d.store.GetEnvVars(app.ProjectID)
 	if err != nil {
 		return nil, fmt.Errorf("load shared project variables: %w", err)
@@ -98,8 +98,8 @@ func defaultCPURequest() float64 {
 	return config.Get().Defaults.CPU
 }
 
-func (d *Deployer) verifyHealthCheck(ctx context.Context, app *models.AppService, containerName string, logWriter io.Writer) error {
-	if app.RuntimeMode == models.RuntimeModeWorker {
+func (d *Deployer) verifyHealthCheck(ctx context.Context, app *appsmod.AppService, containerName string, logWriter io.Writer) error {
+	if app.RuntimeMode == appsmod.RuntimeModeWorker {
 		if logWriter != nil {
 			fmt.Fprintf(logWriter, "✅ [Deployer] Worker mode detected. Skipping HTTP health check.\n")
 		}

@@ -1,23 +1,24 @@
 package deploy
 
 import (
-	"codedock/internal/models"
 	"context"
 	"os"
 	"os/exec"
 	"testing"
+
+	"codedock/internal/modules/databases"
 )
 
 type stoppedDatabaseStore struct {
 	DatabaseDeployerStore
-	status    models.DatabaseStatus
+	status    databases.DatabaseStatus
 	container string
 }
 
-func (s *stoppedDatabaseStore) GetDatabase(string) (*models.Database, error) {
-	return &models.Database{ID: "db", Name: "database", Status: models.DatabaseStatusRunning, ContainerID: "dry-run-container"}, nil
+func (s *stoppedDatabaseStore) GetDatabase(string) (*databases.Database, error) {
+	return &databases.Database{ID: "db", Name: "database", Status: databases.DatabaseStatusRunning, ContainerID: "dry-run-container"}, nil
 }
-func (s *stoppedDatabaseStore) UpdateDatabaseStatus(_ string, status models.DatabaseStatus, container string) error {
+func (s *stoppedDatabaseStore) UpdateDatabaseStatus(_ string, status databases.DatabaseStatus, container string) error {
 	s.status = status
 	s.container = container
 	return nil
@@ -38,7 +39,7 @@ func TestDatabaseStopDryRunPersistsStatus(t *testing.T) {
 	if err := deployer.Stop(context.Background(), "db"); err != nil {
 		t.Fatal(err)
 	}
-	if store.status != models.DatabaseStatusStopped || store.container != "dry-run-container" {
+	if store.status != databases.DatabaseStatusStopped || store.container != "dry-run-container" {
 		t.Fatal("dry-run stop did not persist stopped status and preserve its container identity")
 	}
 }

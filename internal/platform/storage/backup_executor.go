@@ -10,8 +10,6 @@ import (
 	"github.com/docker/docker/api/types/container"
 	"github.com/docker/docker/pkg/stdcopy"
 
-	"codedock/internal/models"
-
 	compose "codedock/internal/platform/docker"
 )
 
@@ -79,7 +77,7 @@ func (bm *BackupManager) executeVolumeBackup(ctx context.Context, volumeName str
 	return stdoutBuf.Bytes(), stderrBuf.String(), nil
 }
 
-func (bm *BackupManager) buildDumpCommand(cfg *models.BackupConfig) (string, []string, string, error) {
+func (bm *BackupManager) buildDumpCommand(cfg *BackupConfig) (string, []string, string, error) {
 	if cfg.DatabaseID != "" {
 		db, err := bm.store.GetDatabase(cfg.DatabaseID)
 		if err != nil || db == nil {
@@ -166,7 +164,7 @@ func (bm *BackupManager) executeDump(ctx context.Context, containerName string, 
 	return stdoutBuf.Bytes(), stderrBuf.String(), nil
 }
 
-func (bm *BackupManager) handleS3Upload(ctx context.Context, cfg *models.BackupConfig, fileName string, dumpBytes []byte, execLogs string) (string, string, error) {
+func (bm *BackupManager) handleS3Upload(ctx context.Context, cfg *BackupConfig, fileName string, dumpBytes []byte, execLogs string) (string, string, error) {
 	if cfg.S3DestinationID == "" {
 		return "", execLogs, fmt.Errorf("S3 destination ID missing for config %s", cfg.ID)
 	}

@@ -3,11 +3,11 @@ package deploy
 import (
 	"testing"
 
-	"codedock/internal/models"
+	domainsmod "codedock/internal/modules/domains"
 )
 
 func TestNormalizeRouteHostsKeepsAliasesSharingAPort(t *testing.T) {
-	hosts := NormalizeRouteHosts("web.example.com", []models.DomainConfig{
+	hosts := NormalizeRouteHosts("web.example.com", []domainsmod.DomainConfig{
 		{DomainName: "web.example.com"},
 		{DomainName: "alias.example.com"},
 		{DomainName: "alias.example.com"},
@@ -32,7 +32,7 @@ func TestNormalizeRouteHostsPrimaryFirstAndEmpty(t *testing.T) {
 	if hosts := NormalizeRouteHosts("", nil); len(hosts) != 0 {
 		t.Fatalf("expected no hosts, got %#v", hosts)
 	}
-	hosts := NormalizeRouteHosts("primary.example.com", []models.DomainConfig{{DomainName: ""}})
+	hosts := NormalizeRouteHosts("primary.example.com", []domainsmod.DomainConfig{{DomainName: ""}})
 	if len(hosts) != 1 || hosts[0].Host != "primary.example.com" {
 		t.Fatalf("expected only the primary, got %#v", hosts)
 	}

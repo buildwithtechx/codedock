@@ -5,8 +5,6 @@ import (
 	"fmt"
 	"log/slog"
 	"time"
-
-	"codedock/internal/models"
 )
 
 func (bm *BackupManager) Reconcile() error {
@@ -16,7 +14,7 @@ func (bm *BackupManager) Reconcile() error {
 	}
 	bm.mu.Lock()
 	defer bm.mu.Unlock()
-	active := make(map[string]*models.BackupConfig, len(cfgs))
+	active := make(map[string]*BackupConfig, len(cfgs))
 	for _, cfg := range cfgs {
 		active[cfg.ID] = cfg
 		if err := bm.registerBackupLocked(cfg); err != nil {

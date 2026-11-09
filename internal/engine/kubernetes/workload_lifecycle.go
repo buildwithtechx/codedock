@@ -1,14 +1,15 @@
 package kubernetes
 
 import (
-	"codedock/internal/models"
 	"context"
 	"encoding/json"
 	"fmt"
 	"strings"
+
+	appsmod "codedock/internal/modules/apps"
 )
 
-func (r *WorkloadRuntime) Lifecycle(ctx context.Context, node models.ClusterNode, app *models.AppService, action string, replicas int) error {
+func (r *WorkloadRuntime) Lifecycle(ctx context.Context, node ClusterNode, app *appsmod.AppService, action string, replicas int) error {
 	namespace, name, err := WorkloadIdentity(app)
 	if err != nil {
 		return err
@@ -46,12 +47,13 @@ func (r *WorkloadRuntime) Lifecycle(ctx context.Context, node models.ClusterNode
 	}
 	return nil
 }
-func (r *WorkloadRuntime) Observe(ctx context.Context, node models.ClusterNode, app *models.AppService) (*models.WorkloadObservation, error) {
+
+func (r *WorkloadRuntime) Observe(ctx context.Context, node ClusterNode, app *appsmod.AppService) (*appsmod.WorkloadObservation, error) {
 	namespace, name, err := WorkloadIdentity(app)
 	if err != nil {
 		return nil, err
 	}
-	result := &models.WorkloadObservation{Kind: "kubernetes", Status: "NOT_DEPLOYED", Pods: []models.RuntimePod{}}
+	result := &appsmod.WorkloadObservation{Kind: "kubernetes", Status: "NOT_DEPLOYED", Pods: []appsmod.RuntimePod{}}
 	raw, err := r.commands.Kubectl(ctx, node, []string{"-n", namespace, "get", "deployment", name, "--ignore-not-found", "-o", "json"}, "")
 	if err != nil {
 		return nil, err
@@ -105,7 +107,7 @@ func (r *WorkloadRuntime) Observe(ctx context.Context, node models.ClusterNode, 
 		metadata, _ := pod["metadata"].(map[string]any)
 		spec, _ := pod["spec"].(map[string]any)
 		status, _ := pod["status"].(map[string]any)
-		item := models.RuntimePod{Name: value(metadata["name"]), Node: value(spec["nodeName"]), Phase: value(status["phase"])}
+		item := appsmod.RuntimePod{Name: value(metadata["name"]), Node: value(spec["nodeName"]), Phase: value(status["phase"])}
 		containers, _ := status["containerStatuses"].([]any)
 		item.Ready = len(containers) > 0
 		for _, raw := range containers {
@@ -130,7 +132,7 @@ func (r *WorkloadRuntime) Observe(ctx context.Context, node models.ClusterNode, 
 }
 func number(value any) float64 { result, _ := value.(float64); return result }
 func value(raw any) string     { result, _ := raw.(string); return result }
-func (r *WorkloadRuntime) Logs(ctx context.Context, node models.ClusterNode, app *models.AppService) (string, error) {
+func (r *WorkloadRuntime) Logs(ctx context.Context, node ClusterNode, app *appsmod.AppService) (string, error) {
 	observation, err := r.Observe(ctx, node, app)
 	if err != nil {
 		return "", err
@@ -149,7 +151,7 @@ func (r *WorkloadRuntime) Logs(ctx context.Context, node models.ClusterNode, app
 	}
 	return output.String(), nil
 }
-func (r *WorkloadRuntime) Exec(ctx context.Context, node models.ClusterNode, app *models.AppService, request models.RuntimeExecRequest) (string, error) {
+func (r *WorkloadRuntime) Exec(ctx context.Context, node ClusterNode, app *appsmod.AppService, request appsmod.RuntimeExecRequest) (string, error) {
 	if len(request.Command) == 0 || len(request.Command) > 64 {
 		return "", fmt.Errorf("provide one to sixty-four command arguments")
 	}
