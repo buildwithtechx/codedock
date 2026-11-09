@@ -6,6 +6,8 @@ import (
 	"time"
 
 	"github.com/google/uuid"
+
+	"codedock/internal/modules/apps/vars"
 )
 
 type Service struct {
@@ -123,4 +125,24 @@ func (s *Service) ListAllServices(ctx context.Context, search string) ([]*AppSer
 
 func (s *Service) SearchIDsByName(ctx context.Context, term string, limit int) ([]string, error) {
 	return s.repo.SearchIDsByName(ctx, term, limit)
+}
+
+func (s *Service) CreateVariable(ctx context.Context, v *Variable) (*Variable, error) {
+	return vars.NewService(s.varRepo).CreateVariable(ctx, v)
+}
+
+func (s *Service) UpdateVariable(ctx context.Context, v *Variable) error {
+	return vars.NewService(s.varRepo).UpdateVariable(ctx, v)
+}
+
+func (s *Service) GetVariable(ctx context.Context, id string) (*Variable, error) {
+	return vars.NewService(s.varRepo).GetVariable(ctx, id)
+}
+
+func (s *Service) ListVariablesByService(ctx context.Context, serviceID string) ([]*Variable, error) {
+	return vars.NewService(s.varRepo).ListVariablesByService(ctx, serviceID)
+}
+
+func (s *Service) DeleteVariable(ctx context.Context, id string) error {
+	return vars.NewService(s.varRepo).DeleteVariable(ctx, id)
 }

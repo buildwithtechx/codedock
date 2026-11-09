@@ -4,6 +4,7 @@ import (
 	"github.com/labstack/echo/v4"
 
 	"codedock/internal/modules/apps/autoscaling"
+	"codedock/internal/modules/apps/vars"
 )
 
 type RoutesConfig struct {
@@ -52,11 +53,7 @@ func RegisterRoutes(g *echo.Group, cfg RoutesConfig) {
 	}
 
 	if cfg.VariableHandler != nil {
-		g.GET("/services/:serviceId/variables", cfg.VariableHandler.List)
-		g.POST("/services/:serviceId/variables", cfg.VariableHandler.Create)
-		g.PUT("/services/:serviceId/variables/:id", cfg.VariableHandler.Update)
-		g.DELETE("/services/:serviceId/variables/:id", cfg.VariableHandler.Delete)
-		g.GET("/services/:serviceId/env-suggestions", cfg.VariableHandler.Suggest)
+		vars.RegisterRoutes(g, cfg.VariableHandler)
 	}
 
 	if cfg.VolumeHandler != nil {

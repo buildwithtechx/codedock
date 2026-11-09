@@ -2,6 +2,7 @@ package apps
 
 import (
 	"codedock/internal/modules/apps/autoscaling"
+	"codedock/internal/modules/apps/vars"
 )
 
 // Autoscaling aliases
@@ -17,4 +18,14 @@ var (
 	NewWorkerAutoscalingRepo = autoscaling.NewWorkerAutoscalingRepo
 	NewAutoscalingService    = autoscaling.NewAutoscalingService
 	NewAutoscalingHandler    = autoscaling.NewAutoscalingHandler
+)
+
+// Vars aliases
+type VariableHandler = vars.VariableHandler
+type ServiceVarRepository = vars.ServiceVarRepository
+type ServiceVarRepo = vars.ServiceVarRepo
+
+var (
+	NewServiceVarRepo  = vars.NewServiceVarRepo
+	NewVariableHandler = vars.NewVariableHandler
 )

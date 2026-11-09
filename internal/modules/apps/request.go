@@ -1,5 +1,7 @@
 package apps
 
+import "codedock/internal/modules/apps/vars"
+
 type CreateAppServiceRequest struct {
 	ProjectID              string      `json:"projectId"`
 	AppID                  string      `json:"appId,omitempty"`
@@ -58,17 +60,8 @@ type UpdateAppServiceRequest struct {
 	Optimize        *bool             `json:"optimize,omitempty"`
 }
 
-type CreateVariableRequest struct {
-	Key      string `json:"key"`
-	Value    string `json:"value"`
-	IsSecret bool   `json:"isSecret,omitempty"`
-}
-
-type UpdateVariableRequest struct {
-	Key      *string `json:"key,omitempty"`
-	Value    *string `json:"value,omitempty"`
-	IsSecret *bool   `json:"isSecret,omitempty"`
-}
+type CreateVariableRequest = vars.CreateVariableRequest
+type UpdateVariableRequest = vars.UpdateVariableRequest
 
 type CreateVolumeRequest struct {
 	HostPath      string `json:"hostPath"`

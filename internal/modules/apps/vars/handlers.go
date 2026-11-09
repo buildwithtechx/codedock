@@ -1,6 +1,7 @@
-package apps
+package vars
 
 import (
+	"context"
 	"net/http"
 
 	"github.com/labstack/echo/v4"
@@ -8,12 +9,25 @@ import (
 	"codedock/internal/utils"
 )
 
+type ServiceInterface interface {
+	CreateVariable(ctx context.Context, v *Variable) (*Variable, error)
+	UpdateVariable(ctx context.Context, v *Variable) error
+	GetVariable(ctx context.Context, id string) (*Variable, error)
+	ListVariablesByService(ctx context.Context, serviceID string) ([]*Variable, error)
+	DeleteVariable(ctx context.Context, id string) error
+}
+
+type AccessChecker interface {
+	HasPermission(ctx context.Context, projectID, userID, role, permission string) bool
+	AccessibleServiceIDs(ctx context.Context, userID, role string) (map[string]bool, error)
+}
+
 type VariableHandler struct {
-	service *Service
+	service ServiceInterface
 	access  AccessChecker
 }
 
-func NewVariableHandler(s *Service, ac AccessChecker) *VariableHandler {
+func NewVariableHandler(s ServiceInterface, ac AccessChecker) *VariableHandler {
 	return &VariableHandler{service: s, access: ac}
 }
 
