@@ -1,4 +1,4 @@
-package monitoring
+package dns
 
 import (
 	"context"
@@ -65,63 +65,64 @@ func (r *sqlIngressRepo) ListConnections(ctx context.Context, serverID string) (
 	}
 	defer rows.Close()
 
-	var list []*IngressConnection
+	var result []*IngressConnection
 	for rows.Next() {
 		var c IngressConnection
-		var tCreatedAt, tUpdatedAt time.Time
-		var tunnelID, defaultPolicy, errText sql.NullString
-		if err := rows.Scan(&c.ID, &c.ServerID, &c.CredentialID, &c.AccountID, &tunnelID, &c.Name, &c.Connector, &c.EdgePort, &c.ManagedTunnel, &c.DefaultForDomains, &defaultPolicy, &c.Status, &errText, &tCreatedAt, &tUpdatedAt); err != nil {
+		var defaultAccessPolicyID, tunnelID, errStr sql.NullString
+		if err := rows.Scan(
+			&c.ID, &c.ServerID, &c.CredentialID, &c.AccountID, &tunnelID,
+			&c.Name, &c.Connector, &c.EdgePort, &c.ManagedTunnel, &c.DefaultForDomains,
+			&defaultAccessPolicyID, &c.Status, &errStr, &c.CreatedAt, &c.UpdatedAt,
+		); err != nil {
 			return nil, err
+		}
+		if defaultAccessPolicyID.Valid {
+			c.DefaultAccessPolicyID = &defaultAccessPolicyID.String
 		}
 		if tunnelID.Valid {
 			c.TunnelID = &tunnelID.String
 		}
-		if defaultPolicy.Valid {
-			c.DefaultAccessPolicyID = &defaultPolicy.String
+		if errStr.Valid {
+			c.Error = &errStr.String
 		}
-		if errText.Valid {
-			c.Error = &errText.String
-		}
-		c.CreatedAt = tCreatedAt.Format(time.RFC3339)
-		c.UpdatedAt = tUpdatedAt.Format(time.RFC3339)
-		list = append(list, &c)
+		result = append(result, &c)
 	}
-	if list == nil {
-		list = make([]*IngressConnection, 0)
+	if result == nil {
+		result = make([]*IngressConnection, 0)
 	}
-	return list, nil
+	return result, nil
 }
 
 func (r *sqlIngressRepo) GetConnection(ctx context.Context, id string) (*IngressConnection, error) {
 	if r.db == nil {
 		r.mu.RLock()
 		defer r.mu.RUnlock()
-		c, ok := r.memConns[id]
-		if !ok {
-			return nil, fmt.Errorf("connection not found")
+		if conn, ok := r.memConns[id]; ok {
+			return conn, nil
 		}
-		return c, nil
+		return nil, fmt.Errorf("ingress connection not found: %s", id)
 	}
 
 	query := `SELECT id, server_id, credential_id, account_id, tunnel_id, name, connector, edge_port, managed_tunnel, default_for_domains, default_access_policy_id, status, error, created_at, updated_at FROM ingress_connections WHERE id = $1`
 	var c IngressConnection
-	var tCreatedAt, tUpdatedAt time.Time
-	var tunnelID, defaultPolicy, errText sql.NullString
-	err := r.db.QueryRowContext(ctx, query, id).Scan(&c.ID, &c.ServerID, &c.CredentialID, &c.AccountID, &tunnelID, &c.Name, &c.Connector, &c.EdgePort, &c.ManagedTunnel, &c.DefaultForDomains, &defaultPolicy, &c.Status, &errText, &tCreatedAt, &tUpdatedAt)
+	var defaultAccessPolicyID, tunnelID, errStr sql.NullString
+	err := r.db.QueryRowContext(ctx, query, id).Scan(
+		&c.ID, &c.ServerID, &c.CredentialID, &c.AccountID, &tunnelID,
+		&c.Name, &c.Connector, &c.EdgePort, &c.ManagedTunnel, &c.DefaultForDomains,
+		&defaultAccessPolicyID, &c.Status, &errStr, &c.CreatedAt, &c.UpdatedAt,
+	)
 	if err != nil {
 		return nil, err
+	}
+	if defaultAccessPolicyID.Valid {
+		c.DefaultAccessPolicyID = &defaultAccessPolicyID.String
 	}
 	if tunnelID.Valid {
 		c.TunnelID = &tunnelID.String
 	}
-	if defaultPolicy.Valid {
-		c.DefaultAccessPolicyID = &defaultPolicy.String
+	if errStr.Valid {
+		c.Error = &errStr.String
 	}
-	if errText.Valid {
-		c.Error = &errText.String
-	}
-	c.CreatedAt = tCreatedAt.Format(time.RFC3339)
-	c.UpdatedAt = tUpdatedAt.Format(time.RFC3339)
 	return &c, nil
 }
 
@@ -134,14 +135,27 @@ func (r *sqlIngressRepo) SaveConnection(ctx context.Context, conn *IngressConnec
 	}
 
 	query := `INSERT INTO ingress_connections (id, server_id, credential_id, account_id, tunnel_id, name, connector, edge_port, managed_tunnel, default_for_domains, default_access_policy_id, status, error, created_at, updated_at)
-VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10, $11, $12, $13, NOW(), NOW())
-ON CONFLICT (id) DO UPDATE SET
-	default_for_domains = EXCLUDED.default_for_domains,
-	default_access_policy_id = EXCLUDED.default_access_policy_id,
-	status = EXCLUDED.status,
-	error = EXCLUDED.error,
-	updated_at = NOW()`
-	_, err := r.db.ExecContext(ctx, query, conn.ID, conn.ServerID, conn.CredentialID, conn.AccountID, conn.TunnelID, conn.Name, conn.Connector, conn.EdgePort, conn.ManagedTunnel, conn.DefaultForDomains, conn.DefaultAccessPolicyID, conn.Status, conn.Error)
+		VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10, $11, $12, $13, $14, $15)
+		ON CONFLICT(id) DO UPDATE SET
+			server_id=EXCLUDED.server_id,
+			credential_id=EXCLUDED.credential_id,
+			account_id=EXCLUDED.account_id,
+			tunnel_id=EXCLUDED.tunnel_id,
+			name=EXCLUDED.name,
+			connector=EXCLUDED.connector,
+			edge_port=EXCLUDED.edge_port,
+			managed_tunnel=EXCLUDED.managed_tunnel,
+			default_for_domains=EXCLUDED.default_for_domains,
+			default_access_policy_id=EXCLUDED.default_access_policy_id,
+			status=EXCLUDED.status,
+			error=EXCLUDED.error,
+			updated_at=EXCLUDED.updated_at`
+
+	_, err := r.db.ExecContext(ctx, query,
+		conn.ID, conn.ServerID, conn.CredentialID, conn.AccountID, conn.TunnelID,
+		conn.Name, conn.Connector, conn.EdgePort, conn.ManagedTunnel, conn.DefaultForDomains,
+		conn.DefaultAccessPolicyID, conn.Status, conn.Error, conn.CreatedAt, conn.UpdatedAt,
+	)
 	return err
 }
 
@@ -152,6 +166,7 @@ func (r *sqlIngressRepo) DeleteConnection(ctx context.Context, id string) error 
 		delete(r.memConns, id)
 		return nil
 	}
+
 	_, err := r.db.ExecContext(ctx, `DELETE FROM ingress_connections WHERE id = $1`, id)
 	return err
 }
@@ -160,34 +175,33 @@ func (r *sqlIngressRepo) GetHostname(ctx context.Context, domainID string) (*Ing
 	if r.db == nil {
 		r.mu.RLock()
 		defer r.mu.RUnlock()
-		h, ok := r.memHosts[domainID]
-		if !ok {
-			return nil, nil
+		if h, ok := r.memHosts[domainID]; ok {
+			return h, nil
 		}
-		return h, nil
+		return nil, nil
 	}
 
 	query := `SELECT id, domain_id, connection_id, hostname, access_policy_id, status, phase, error, updated_at FROM ingress_hostnames WHERE domain_id = $1`
 	var h IngressHostname
-	var dID, polID, errText sql.NullString
-	var tUpdatedAt time.Time
-	err := r.db.QueryRowContext(ctx, query, domainID).Scan(&h.ID, &dID, &h.ConnectionID, &h.Hostname, &polID, &h.Status, &h.Phase, &errText, &tUpdatedAt)
+	var domainIDStr, policyIDStr, errStr sql.NullString
+	err := r.db.QueryRowContext(ctx, query, domainID).Scan(
+		&h.ID, &domainIDStr, &h.ConnectionID, &h.Hostname, &policyIDStr, &h.Status, &h.Phase, &errStr, &h.UpdatedAt,
+	)
 	if err == sql.ErrNoRows {
 		return nil, nil
 	}
 	if err != nil {
 		return nil, err
 	}
-	if dID.Valid {
-		h.DomainID = &dID.String
+	if domainIDStr.Valid {
+		h.DomainID = &domainIDStr.String
 	}
-	if polID.Valid {
-		h.AccessPolicyID = &polID.String
+	if policyIDStr.Valid {
+		h.AccessPolicyID = &policyIDStr.String
 	}
-	if errText.Valid {
-		h.Error = &errText.String
+	if errStr.Valid {
+		h.Error = &errStr.String
 	}
-	h.UpdatedAt = tUpdatedAt.Format(time.RFC3339)
 	return &h, nil
 }
 
@@ -201,16 +215,27 @@ func (r *sqlIngressRepo) SaveHostname(ctx context.Context, host *IngressHostname
 		return nil
 	}
 
+	now := time.Now().UTC().Format(time.RFC3339)
+	if host.UpdatedAt == "" {
+		host.UpdatedAt = now
+	}
+
 	query := `INSERT INTO ingress_hostnames (id, domain_id, connection_id, hostname, access_policy_id, status, phase, error, updated_at)
-VALUES ($1, $2, $3, $4, $5, $6, $7, $8, NOW())
-ON CONFLICT (id) DO UPDATE SET
-	connection_id = EXCLUDED.connection_id,
-	access_policy_id = EXCLUDED.access_policy_id,
-	status = EXCLUDED.status,
-	phase = EXCLUDED.phase,
-	error = EXCLUDED.error,
-	updated_at = NOW()`
-	_, err := r.db.ExecContext(ctx, query, host.ID, host.DomainID, host.ConnectionID, host.Hostname, host.AccessPolicyID, host.Status, host.Phase, host.Error)
+		VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9)
+		ON CONFLICT(id) DO UPDATE SET
+			domain_id=EXCLUDED.domain_id,
+			connection_id=EXCLUDED.connection_id,
+			hostname=EXCLUDED.hostname,
+			access_policy_id=EXCLUDED.access_policy_id,
+			status=EXCLUDED.status,
+			phase=EXCLUDED.phase,
+			error=EXCLUDED.error,
+			updated_at=EXCLUDED.updated_at`
+
+	_, err := r.db.ExecContext(ctx, query,
+		host.ID, host.DomainID, host.ConnectionID, host.Hostname, host.AccessPolicyID,
+		host.Status, host.Phase, host.Error, host.UpdatedAt,
+	)
 	return err
 }
 
@@ -221,6 +246,7 @@ func (r *sqlIngressRepo) DeleteHostname(ctx context.Context, domainID string) er
 		delete(r.memHosts, domainID)
 		return nil
 	}
+
 	_, err := r.db.ExecContext(ctx, `DELETE FROM ingress_hostnames WHERE domain_id = $1`, domainID)
 	return err
 }

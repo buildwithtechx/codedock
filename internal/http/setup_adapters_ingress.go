@@ -7,22 +7,22 @@ import (
 	"errors"
 	"time"
 
-	"codedock/internal/modules/monitoring"
+	"codedock/internal/modules/dns"
 )
 
 type ingressServiceAdapter struct {
-	repo  monitoring.IngressRepository
-	cfSvc *monitoring.CloudflareIngressService
+	repo  dns.IngressRepository
+	cfSvc *dns.CloudflareIngressService
 }
 
 func (i *ingressServiceAdapter) List(ctx context.Context, serverID string) (any, error) {
 	if i.repo == nil {
-		return []monitoring.IngressConnection{}, nil
+		return []dns.IngressConnection{}, nil
 	}
 	return i.repo.ListConnections(ctx, serverID)
 }
 
-func (i *ingressServiceAdapter) Discover(ctx context.Context, req monitoring.IngressDiscoverRequest) (*monitoring.IngressDiscoveryResult, error) {
+func (i *ingressServiceAdapter) Discover(ctx context.Context, req dns.IngressDiscoverRequest) (*dns.IngressDiscoveryResult, error) {
 	if i.cfSvc != nil {
 		accounts, err := i.cfSvc.ListAccounts(ctx, req.CredentialID)
 		if err == nil && len(accounts) > 0 {
@@ -32,51 +32,51 @@ func (i *ingressServiceAdapter) Discover(ctx context.Context, req monitoring.Ing
 			}
 			tunnels, _ := i.cfSvc.ListTunnels(ctx, req.CredentialID, accountID)
 			policies, _ := i.cfSvc.ListAccessPolicies(ctx, req.CredentialID, accountID)
-			var tunList []monitoring.IngressDiscoveryTunnel
+			var tunList []dns.IngressDiscoveryTunnel
 			for _, t := range tunnels {
-				tunList = append(tunList, monitoring.IngressDiscoveryTunnel{
+				tunList = append(tunList, dns.IngressDiscoveryTunnel{
 					ID:     t.ID,
 					Name:   t.Name,
 					Remote: t.Remote,
 					Status: t.Status,
 				})
 			}
-			var polList []monitoring.IngressDiscoveryPolicy
+			var polList []dns.IngressDiscoveryPolicy
 			for _, p := range policies {
-				polList = append(polList, monitoring.IngressDiscoveryPolicy{
+				polList = append(polList, dns.IngressDiscoveryPolicy{
 					ID:       p.ID,
 					Name:     p.Name,
 					Decision: p.Decision,
 				})
 			}
-			var accList []monitoring.IngressDiscoveryAccount
+			var accList []dns.IngressDiscoveryAccount
 			for _, a := range accounts {
-				accList = append(accList, monitoring.IngressDiscoveryAccount{
+				accList = append(accList, dns.IngressDiscoveryAccount{
 					ID:   a.ID,
 					Name: a.Name,
 				})
 			}
-			return &monitoring.IngressDiscoveryResult{
+			return &dns.IngressDiscoveryResult{
 				Accounts: accList,
 				Tunnels:  tunList,
 				Policies: polList,
 			}, nil
 		}
 	}
-	return &monitoring.IngressDiscoveryResult{
-		Accounts: []monitoring.IngressDiscoveryAccount{
+	return &dns.IngressDiscoveryResult{
+		Accounts: []dns.IngressDiscoveryAccount{
 			{ID: "cf-acc-primary", Name: "Primary Cloudflare Account"},
 		},
-		Tunnels: []monitoring.IngressDiscoveryTunnel{
+		Tunnels: []dns.IngressDiscoveryTunnel{
 			{ID: "cf-tun-edge-1", Name: "codedock-edge-tunnel", Remote: true, Status: "healthy"},
 		},
-		Policies: []monitoring.IngressDiscoveryPolicy{
+		Policies: []dns.IngressDiscoveryPolicy{
 			{ID: "cf-pol-bypass", Name: "Allow Team SSO", Decision: "allow"},
 		},
 	}, nil
 }
 
-func (i *ingressServiceAdapter) Connect(ctx context.Context, req monitoring.IngressConnectRequest) (*monitoring.IngressConnection, error) {
+func (i *ingressServiceAdapter) Connect(ctx context.Context, req dns.IngressConnectRequest) (*dns.IngressConnection, error) {
 	if i.repo == nil {
 		return nil, errors.New("ingress repo unavailable")
 	}
@@ -94,7 +94,7 @@ func (i *ingressServiceAdapter) Connect(ctx context.Context, req monitoring.Ingr
 	_, _ = rand.Read(b)
 	id := "ing-" + hex.EncodeToString(b)
 	now := time.Now().UTC().Format(time.RFC3339)
-	conn := &monitoring.IngressConnection{
+	conn := &dns.IngressConnection{
 		ID:                    id,
 		ServerID:              req.ServerID,
 		CredentialID:          req.CredentialID,
@@ -116,7 +116,7 @@ func (i *ingressServiceAdapter) Connect(ctx context.Context, req monitoring.Ingr
 	return conn, nil
 }
 
-func (i *ingressServiceAdapter) Update(ctx context.Context, id string, req monitoring.IngressUpdateRequest) (*monitoring.IngressConnection, error) {
+func (i *ingressServiceAdapter) Update(ctx context.Context, id string, req dns.IngressUpdateRequest) (*dns.IngressConnection, error) {
 	if i.repo == nil {
 		return nil, errors.New("ingress repo unavailable")
 	}
@@ -133,7 +133,7 @@ func (i *ingressServiceAdapter) Update(ctx context.Context, id string, req monit
 	return conn, nil
 }
 
-func (i *ingressServiceAdapter) Retry(ctx context.Context, id string) (*monitoring.IngressConnection, error) {
+func (i *ingressServiceAdapter) Retry(ctx context.Context, id string) (*dns.IngressConnection, error) {
 	if i.repo == nil {
 		return nil, errors.New("ingress repo unavailable")
 	}
@@ -167,7 +167,7 @@ func (i *ingressServiceAdapter) GetDomain(ctx context.Context, domainID string) 
 	return i.repo.GetHostname(ctx, domainID)
 }
 
-func (i *ingressServiceAdapter) SetDomain(ctx context.Context, domainID string, req monitoring.IngressDomainRequest) (any, error) {
+func (i *ingressServiceAdapter) SetDomain(ctx context.Context, domainID string, req dns.IngressDomainRequest) (any, error) {
 	if i.repo == nil {
 		return nil, errors.New("ingress repo unavailable")
 	}
@@ -177,7 +177,7 @@ func (i *ingressServiceAdapter) SetDomain(ctx context.Context, domainID string, 
 	}
 	b := make([]byte, 8)
 	_, _ = rand.Read(b)
-	hostname := &monitoring.IngressHostname{
+	hostname := &dns.IngressHostname{
 		ID:             "igh-" + hex.EncodeToString(b),
 		DomainID:       &domainID,
 		ConnectionID:   *req.ConnectionID,

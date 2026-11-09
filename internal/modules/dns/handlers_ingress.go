@@ -1,12 +1,24 @@
-package monitoring
+package dns
 
 import (
+	"context"
 	"net/http"
 
 	"github.com/labstack/echo/v4"
 
 	"codedock/internal/utils"
 )
+
+type IngressService interface {
+	List(ctx context.Context, serverID string) (any, error)
+	Discover(ctx context.Context, req IngressDiscoverRequest) (*IngressDiscoveryResult, error)
+	Connect(ctx context.Context, req IngressConnectRequest) (*IngressConnection, error)
+	Update(ctx context.Context, id string, req IngressUpdateRequest) (*IngressConnection, error)
+	Retry(ctx context.Context, id string) (*IngressConnection, error)
+	Disconnect(ctx context.Context, id string) error
+	GetDomain(ctx context.Context, domainID string) (any, error)
+	SetDomain(ctx context.Context, domainID string, req IngressDomainRequest) (any, error)
+}
 
 type IngressHandler struct {
 	service IngressService
@@ -63,7 +75,7 @@ func (h *IngressHandler) Update(c echo.Context) error {
 	}
 	conn, err := h.service.Update(c.Request().Context(), id, req)
 	if err != nil {
-		return echo.NewHTTPError(http.StatusNotFound, "ingress connection not found")
+		return utils.Error(c, http.StatusNotFound, err.Error())
 	}
 	return utils.Success(c, "Ingress connection updated", conn)
 }
@@ -72,40 +84,37 @@ func (h *IngressHandler) Retry(c echo.Context) error {
 	id := c.Param("id")
 	conn, err := h.service.Retry(c.Request().Context(), id)
 	if err != nil {
-		return echo.NewHTTPError(http.StatusNotFound, "ingress connection not found")
+		return utils.Error(c, http.StatusNotFound, err.Error())
 	}
-	return utils.Success(c, "Ingress connection reconciled", conn)
+	return utils.Success(c, "Ingress connection retry initiated", conn)
 }
 
 func (h *IngressHandler) Disconnect(c echo.Context) error {
 	id := c.Param("id")
 	if err := h.service.Disconnect(c.Request().Context(), id); err != nil {
-		return echo.NewHTTPError(http.StatusNotFound, "ingress connection not found")
+		return utils.Error(c, http.StatusNotFound, err.Error())
 	}
-	return utils.Success(c, "Ingress connection removed", map[string]bool{"success": true})
+	return utils.Success(c, "Ingress tunnel disconnected", map[string]string{"id": id})
 }
 
 func (h *IngressHandler) GetDomain(c echo.Context) error {
 	domainID := c.Param("domainId")
-	host, err := h.service.GetDomain(c.Request().Context(), domainID)
-	if err != nil || host == nil {
-		return utils.Success(c, "No ingress configured for domain", nil)
+	mapping, err := h.service.GetDomain(c.Request().Context(), domainID)
+	if err != nil {
+		return utils.Error(c, http.StatusInternalServerError, err.Error())
 	}
-	return utils.Success(c, "Domain ingress retrieved", host)
+	return utils.Success(c, "Domain ingress retrieved", mapping)
 }
 
 func (h *IngressHandler) SetDomain(c echo.Context) error {
 	domainID := c.Param("domainId")
 	var req IngressDomainRequest
 	if err := c.Bind(&req); err != nil {
-		return echo.NewHTTPError(http.StatusBadRequest, "invalid domain ingress payload")
+		return echo.NewHTTPError(http.StatusBadRequest, "invalid ingress domain payload")
 	}
-	host, err := h.service.SetDomain(c.Request().Context(), domainID, req)
+	mapping, err := h.service.SetDomain(c.Request().Context(), domainID, req)
 	if err != nil {
-		return echo.NewHTTPError(http.StatusInternalServerError, "failed to map domain ingress: "+err.Error())
+		return utils.Error(c, http.StatusBadRequest, err.Error())
 	}
-	if host == nil {
-		return utils.Success(c, "Domain ingress disassociated", nil)
-	}
-	return utils.Success(c, "Domain ingress mapped", host)
+	return utils.Success(c, "Domain ingress configured", mapping)
 }

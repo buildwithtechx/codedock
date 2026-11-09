@@ -14,36 +14,6 @@ type NotificationDelivery = notifications.NotificationDelivery
 type NotificationSubscription = notifications.NotificationSubscription
 type NotificationDefault = notifications.NotificationDefault
 
-type IngressConnection struct {
-	ID                    string  `json:"id" db:"id"`
-	ServerID              string  `json:"serverId" db:"server_id"`
-	CredentialID          string  `json:"credentialId" db:"credential_id"`
-	AccountID             string  `json:"accountId" db:"account_id"`
-	TunnelID              *string `json:"tunnelId" db:"tunnel_id"`
-	Name                  string  `json:"name" db:"name"`
-	Connector             string  `json:"connector" db:"connector"`
-	EdgePort              int     `json:"edgePort" db:"edge_port"`
-	ManagedTunnel         bool    `json:"managedTunnel" db:"managed_tunnel"`
-	DefaultForDomains     bool    `json:"defaultForDomains" db:"default_for_domains"`
-	DefaultAccessPolicyID *string `json:"defaultAccessPolicyId" db:"default_access_policy_id"`
-	Status                string  `json:"status" db:"status"`
-	Error                 *string `json:"error" db:"error"`
-	CreatedAt             string  `json:"createdAt" db:"created_at"`
-	UpdatedAt             string  `json:"updatedAt" db:"updated_at"`
-}
-
-type IngressHostname struct {
-	ID             string  `json:"id" db:"id"`
-	DomainID       *string `json:"domainId" db:"domain_id"`
-	ConnectionID   string  `json:"connectionId" db:"connection_id"`
-	Hostname       string  `json:"hostname" db:"hostname"`
-	AccessPolicyID *string `json:"accessPolicyId" db:"access_policy_id"`
-	Status         string  `json:"status" db:"status"`
-	Phase          string  `json:"phase" db:"phase"`
-	Error          *string `json:"error" db:"error"`
-	UpdatedAt      string  `json:"updatedAt" db:"updated_at"`
-}
-
 type NotificationSettings = notifications.NotificationSettings
 
 type NotificationEvent struct {

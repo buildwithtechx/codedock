@@ -18,6 +18,7 @@ import (
 	"codedock/internal/modules/canvas"
 	modclusters "codedock/internal/modules/clusters"
 	deploymentsmod "codedock/internal/modules/deployments"
+	"codedock/internal/modules/dns"
 	domainsmod "codedock/internal/modules/domains"
 	environments "codedock/internal/modules/environments"
 	gitmod "codedock/internal/modules/git"
@@ -87,6 +88,7 @@ func schemaTestRouter(t *testing.T) *echo.Echo {
 		migrationHandler:           modmigrations.NewBundleHandler(nil, nil, nil),
 		supportHandler:             support.NewSupportHandler(),
 		actionsHandler:             actions.NewActionsHandler(),
+		ingressHandler:             &dns.IngressHandler{},
 	}
 	apiGroup := router.Group("/api")
 	authGroup := apiGroup.Group("", server.authGuard.RequireAuth())

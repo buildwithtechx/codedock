@@ -1,4 +1,4 @@
-package monitoring
+package dns
 
 import (
 	"context"

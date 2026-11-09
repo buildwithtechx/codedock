@@ -67,17 +67,6 @@ type NotificationSettingsOperations interface {
 	RegisterDeviceToken(ctx context.Context, userID, token, platform string) error
 }
 
-type IngressService interface {
-	List(ctx context.Context, serverID string) (any, error)
-	Discover(ctx context.Context, req IngressDiscoverRequest) (*IngressDiscoveryResult, error)
-	Connect(ctx context.Context, req IngressConnectRequest) (*IngressConnection, error)
-	Update(ctx context.Context, id string, req IngressUpdateRequest) (*IngressConnection, error)
-	Retry(ctx context.Context, id string) (*IngressConnection, error)
-	Disconnect(ctx context.Context, id string) error
-	GetDomain(ctx context.Context, domainID string) (any, error)
-	SetDomain(ctx context.Context, domainID string, req IngressDomainRequest) (any, error)
-}
-
 type ExampleOperations interface {
 	ListExamples() (any, error)
 }

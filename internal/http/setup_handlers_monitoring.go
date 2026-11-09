@@ -1,6 +1,7 @@
 package http
 
 import (
+	"codedock/internal/modules/dns"
 	"codedock/internal/modules/monitoring"
 )
 
@@ -15,7 +16,7 @@ type monitoringHandlersGroup struct {
 	logHandler           *monitoring.LogHandler
 	exampleHandler       *monitoring.ExampleHandler
 	serviceLogsWSHandler *monitoring.ServiceLogsWSHandler
-	ingressHandler       *monitoring.IngressHandler
+	ingressHandler       *dns.IngressHandler
 }
 
 func createMonitoringHandlers(
@@ -32,8 +33,8 @@ func createMonitoringHandlers(
 	wsHandler.Streams = d.deploymentService
 
 	ingressAdapter := &ingressServiceAdapter{
-		repo:  monitoring.NewIngressRepository(d.db),
-		cfSvc: monitoring.NewCloudflareIngressService(nil),
+		repo:  dns.NewIngressRepository(d.db),
+		cfSvc: dns.NewCloudflareIngressService(nil),
 	}
 
 	return monitoringHandlersGroup{
@@ -57,6 +58,6 @@ func createMonitoringHandlers(
 		logHandler:           monitoring.NewLogHandler(&logServiceAdapter{svc: logService}),
 		exampleHandler:       monitoring.NewExampleHandler(&exampleServiceAdapter{svc: monitoring.NewExampleService()}),
 		serviceLogsWSHandler: wsHandler,
-		ingressHandler:       monitoring.NewIngressHandler(ingressAdapter),
+		ingressHandler:       dns.NewIngressHandler(ingressAdapter),
 	}
 }

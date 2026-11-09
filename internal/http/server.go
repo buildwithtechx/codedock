@@ -120,7 +120,7 @@ type Server struct {
 	takeoverHandler            *servers.TakeoverHandler
 	routeRuleHandler           *environments.RouteRuleHandler
 	mailHandler                *mailmodule.Handler
-	ingressHandler             *modmonitoring.IngressHandler
+	ingressHandler             *dns.IngressHandler
 	serverNetworksHandler      *servers.ServerNetworksHandler
 	actionsHandler             *actions.ActionsHandler
 	checksHandler              *projectsmod.ChecksHandler

@@ -10,7 +10,6 @@ type RoutesConfig struct {
 	Notification  *NotificationHandler
 	NotifSettings *NotificationSettingsHandler
 	ScheduledTask *ScheduledTaskHandler
-	Ingress       *IngressHandler
 	Analytics     *AnalyticsHandler
 	Attention     *AttentionHandler
 	Operation     *OperationHandler
@@ -72,20 +71,6 @@ func RegisterRoutes(authGroup, apiGroup *echo.Group, cfg RoutesConfig) {
 		authGroup.PUT("/jobs/:id", cfg.ScheduledTask.Update)
 		authGroup.DELETE("/jobs/:id", cfg.ScheduledTask.Delete)
 		authGroup.POST("/jobs/:id/trigger", cfg.ScheduledTask.Run)
-	}
-	if cfg.Ingress != nil {
-		authGroup.GET("/dns/ingress", cfg.Ingress.List)
-		authGroup.POST("/dns/ingress/discover", cfg.Ingress.Discover)
-		authGroup.POST("/dns/ingress", cfg.Ingress.Connect)
-		authGroup.PUT("/dns/ingress/:id", cfg.Ingress.Update)
-		authGroup.POST("/dns/ingress/:id/retry", cfg.Ingress.Retry)
-		authGroup.DELETE("/dns/ingress/:id", cfg.Ingress.Disconnect)
-		authGroup.GET("/dns/ingress/domains/:domainId", cfg.Ingress.GetDomain)
-		if admin != nil {
-			authGroup.PUT("/dns/ingress/domains/:domainId", cfg.Ingress.SetDomain, admin)
-		} else {
-			authGroup.PUT("/dns/ingress/domains/:domainId", cfg.Ingress.SetDomain)
-		}
 	}
 	if cfg.Operation != nil {
 		authGroup.GET("/operations", cfg.Operation.List)

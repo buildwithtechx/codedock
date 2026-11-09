@@ -1,4 +1,4 @@
-package monitoring
+package telemetry
 
 import (
 	"context"
@@ -8,7 +8,6 @@ import (
 	"time"
 
 	"codedock/internal/config"
-	"codedock/internal/telemetry"
 )
 
 func StartTelemetryReporter(db *sql.DB, version string) {
@@ -38,7 +37,7 @@ func pingTelemetry(db *sql.DB, version string) {
 
 	slog.Info("telemetry", "instance", instanceID, "version", version, "os", runtime.GOOS, "arch", runtime.GOARCH, "apps", activeApps)
 
-	telemetry.Track(instanceID, "telemetry_heartbeat", map[string]any{
+	Track(instanceID, "telemetry_heartbeat", map[string]any{
 		"version":     version,
 		"os":          runtime.GOOS,
 		"arch":        runtime.GOARCH,

@@ -1,4 +1,4 @@
-package monitoring
+package dns
 
 import (
 	"encoding/json"
@@ -8,28 +8,6 @@ import (
 	"strings"
 	"time"
 )
-
-type IngressRule struct {
-	Hostname      string         `json:"hostname,omitempty"`
-	Service       string         `json:"service"`
-	Path          string         `json:"path,omitempty"`
-	OriginRequest map[string]any `json:"originRequest,omitempty"`
-}
-
-type TunnelConfig struct {
-	Ingress []IngressRule `json:"ingress"`
-}
-
-type AccessApp struct {
-	ID                string           `json:"id"`
-	Name              string           `json:"name,omitempty"`
-	Type              string           `json:"type,omitempty"`
-	Domain            string           `json:"domain,omitempty"`
-	AUD               string           `json:"aud,omitempty"`
-	Policies          []string         `json:"policies,omitempty"`
-	Destinations      []map[string]any `json:"destinations,omitempty"`
-	SelfHostedDomains []string         `json:"self_hosted_domains,omitempty"`
-}
 
 type CloudflareIngressService struct {
 	httpClient *http.Client
