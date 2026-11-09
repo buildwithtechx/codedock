@@ -29,6 +29,7 @@ import (
 	"codedock/internal/modules/environments"
 	gitmod "codedock/internal/modules/git"
 	"codedock/internal/modules/monitoring"
+	notifsmod "codedock/internal/modules/notifications"
 	"codedock/internal/modules/organizations"
 	projectsmod "codedock/internal/modules/projects"
 	"codedock/internal/modules/servers"
@@ -65,7 +66,7 @@ func NewServer(db *sql.DB, v *vault.Vault, deployer *deploy.Deployer, traefikMan
 	serviceVarRepo := appsmod.NewServiceVarRepo(db)
 	dbRepo := databases.NewRepository(db, v)
 	settingsRepo := settingsmodule.NewSettingsRepo(db, v)
-	notifRepo := monitoring.NewNotificationSettingsRepo(db)
+	notifRepo := notifsmod.NewNotificationSettingsRepo(db)
 	aiRepo := aimod.NewRepository(db)
 	envVarRepo := projectsmod.NewEnvRepo(db, v)
 	scheduledTaskRepo := monitoring.NewScheduledTaskRepo(db)
@@ -112,8 +113,8 @@ func NewServer(db *sql.DB, v *vault.Vault, deployer *deploy.Deployer, traefikMan
 	projectAppService := projectsmod.NewProjectAppService(projectAppRepo)
 	appService := appsmod.NewService(appRepo, serviceVarRepo, volumeRepo)
 	databaseService := databases.NewService(dbRepo, databases.NewDockerDeployer(dockerClient, dbRepo, volumeOperations))
-	deviceTokenRepo := monitoring.NewDeviceTokenRepo(db)
-	notifSettingsService := monitoring.NewNotificationSettingsService(notifRepo, monitoring.NewNotificationDeliveryRepo(db), deviceTokenRepo)
+	deviceTokenRepo := notifsmod.NewDeviceTokenRepo(db)
+	notifSettingsService := notifsmod.NewNotificationSettingsService(notifRepo, notifsmod.NewNotificationDeliveryRepo(db), deviceTokenRepo)
 	aiSettingsService := aimod.NewService(aiRepo)
 	serviceLinker := appsmod.NewServiceLinker(&appDatabaseAdapter{repo: dbRepo})
 	serviceLinker.SetApplications(appRepo, serviceVarRepo)
@@ -138,7 +139,7 @@ func NewServer(db *sql.DB, v *vault.Vault, deployer *deploy.Deployer, traefikMan
 		&notifSettingsAdapter{repo: settingsRepo},
 		notifRepo,
 		&notifUserLookupAdapter{repo: userRepo},
-		monitoring.NewNotificationDeliveryRepo(db),
+		notifsmod.NewNotificationDeliveryRepo(db),
 		mailerService,
 		&notifDeviceTokenAdapter{repo: deviceTokenRepo},
 	)

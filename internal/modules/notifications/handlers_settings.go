@@ -1,4 +1,4 @@
-package monitoring
+package notifications
 
 import (
 	"context"
@@ -74,7 +74,7 @@ func (h *NotificationSettingsHandler) UpdateNotificationSettings(c echo.Context)
 	realSlack := existing.SlackWebhookURL
 
 	if err := c.Bind(existing); err != nil {
-		return utils.Error(c, http.StatusBadRequest, err.Error())
+		return utils.Error(c, http.StatusBadRequest, "invalid request payload")
 	}
 
 	if existing.SMTPPassword == "********" {
@@ -102,17 +102,17 @@ func (h *NotificationSettingsHandler) UpdateNotificationSettings(c echo.Context)
 }
 
 func (h *NotificationSettingsHandler) resolveOrgID(ctx context.Context, c echo.Context, userID string) string {
-	orgID := c.QueryParam("organizationId")
+	orgID := c.QueryParam("orgId")
 	if orgID == "" {
-		orgID = c.QueryParam("orgId")
+		orgID = c.QueryParam("organizationId")
 	}
-	if orgID == "" {
-		orgID = c.Request().Header.Get("X-Organization-Id")
+	if orgID == "default" {
+		orgID = ""
 	}
-	if orgID != "" && orgID != "default" {
-		return orgID
+	if orgID == "" && h.service != nil {
+		orgID = h.service.ResolveOrgID(ctx, userID)
 	}
-	return h.service.ResolveOrgID(ctx, userID)
+	return orgID
 }
 
 func (h *NotificationSettingsHandler) ListSubscriptions(c echo.Context) error {
@@ -166,11 +166,7 @@ func (h *NotificationSettingsHandler) ListDefaults(c echo.Context) error {
 
 func (h *NotificationSettingsHandler) UpsertDefault(c echo.Context) error {
 	userID := utils.ExtractUserID(c)
-	var req struct {
-		Category string   `json:"category"`
-		Channels []string `json:"channels"`
-		Enabled  bool     `json:"enabled"`
-	}
+	var req UpsertDefaultRequest
 	if err := c.Bind(&req); err != nil {
 		return utils.Error(c, http.StatusBadRequest, err.Error())
 	}
@@ -199,10 +195,7 @@ func (h *NotificationSettingsHandler) RegisterDeviceToken(c echo.Context) error 
 	if userID == "" {
 		return utils.Error(c, http.StatusUnauthorized, "unauthorized")
 	}
-	var req struct {
-		Token    string `json:"token"`
-		Platform string `json:"platform"`
-	}
+	var req RegisterDeviceRequest
 	if err := c.Bind(&req); err != nil {
 		return utils.Error(c, http.StatusBadRequest, err.Error())
 	}
@@ -244,29 +237,4 @@ func (h *NotificationSettingsHandler) ListDeviceTokens(c echo.Context) error {
 		return utils.Error(c, http.StatusInternalServerError, err.Error())
 	}
 	return utils.Success(c, "Operation successful", tokens)
-}
-
-type NotificationHandler struct {
-	service NotificationService
-}
-
-func NewNotificationHandler(ns NotificationService) *NotificationHandler {
-	return &NotificationHandler{service: ns}
-}
-
-func (h *NotificationHandler) TestNotification(c echo.Context) error {
-	if c.Request().Method != http.MethodPost {
-		return utils.Error(c, http.StatusMethodNotAllowed, "Method not allowed")
-	}
-	var req TestNotificationRequest
-	if err := c.Bind(&req); err != nil {
-		return utils.Error(c, http.StatusBadRequest, "invalid payload")
-	}
-	if req.Provider == "" {
-		return utils.Error(c, http.StatusBadRequest, "Provider required")
-	}
-	if err := h.service.TestNotification(c.Request().Context(), req.Provider); err != nil {
-		return utils.Error(c, http.StatusBadRequest, err.Error())
-	}
-	return utils.Success(c, "Test notification queued", nil)
 }

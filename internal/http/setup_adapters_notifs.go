@@ -6,7 +6,7 @@ import (
 	"time"
 
 	"codedock/internal/modules/apps"
-	"codedock/internal/modules/monitoring"
+	notifsmod "codedock/internal/modules/notifications"
 	"codedock/internal/modules/organizations"
 	"codedock/internal/modules/projects"
 	settingsmodule "codedock/internal/modules/settings"
@@ -50,7 +50,7 @@ func (a *notifUserLookupAdapter) GetUserByID(ctx context.Context, id string) (*n
 }
 
 type notifDeviceTokenAdapter struct {
-	repo monitoring.DeviceTokenRepository
+	repo notifsmod.DeviceTokenRepository
 }
 
 func (a *notifDeviceTokenAdapter) ListTokensByUser(ctx context.Context, userID string) ([]*notifications.DeviceToken, error) {
@@ -142,18 +142,18 @@ func (a *notifAppRepoAdapter) ListWebhooksByService(ctx context.Context, service
 }
 
 type notifSettingsServiceAdapter struct {
-	svc     *monitoring.NotificationSettingsService
+	svc     *notifsmod.NotificationSettingsService
 	orgRepo organizations.OrganizationRepository
 }
 
-func (n *notifSettingsServiceAdapter) GetNotificationSettings(ctx context.Context) (*monitoring.NotificationSettings, error) {
+func (n *notifSettingsServiceAdapter) GetNotificationSettings(ctx context.Context) (*notifsmod.NotificationSettings, error) {
 	if n.svc == nil {
-		return &monitoring.NotificationSettings{}, nil
+		return &notifsmod.NotificationSettings{}, nil
 	}
 	return n.svc.GetNotificationSettings(ctx)
 }
 
-func (n *notifSettingsServiceAdapter) UpdateNotificationSettings(ctx context.Context, settings *monitoring.NotificationSettings) error {
+func (n *notifSettingsServiceAdapter) UpdateNotificationSettings(ctx context.Context, settings *notifsmod.NotificationSettings) error {
 	if n.svc == nil {
 		return nil
 	}
@@ -162,7 +162,7 @@ func (n *notifSettingsServiceAdapter) UpdateNotificationSettings(ctx context.Con
 
 func (n *notifSettingsServiceAdapter) ListSubscriptions(ctx context.Context, userID, orgID string) (any, error) {
 	if n.svc == nil {
-		return []monitoring.NotificationSubscription{}, nil
+		return []notifsmod.NotificationSubscription{}, nil
 	}
 	return n.svc.ListSubscriptions(ctx, userID, orgID)
 }
@@ -171,7 +171,7 @@ func (n *notifSettingsServiceAdapter) UpsertSubscription(ctx context.Context, us
 	if n.svc == nil {
 		return nil, nil
 	}
-	sub := &monitoring.NotificationSubscription{
+	sub := &notifsmod.NotificationSubscription{
 		UserID:         userID,
 		OrganizationID: orgID,
 		Category:       category,
@@ -186,7 +186,7 @@ func (n *notifSettingsServiceAdapter) UpsertSubscription(ctx context.Context, us
 
 func (n *notifSettingsServiceAdapter) ListDefaults(ctx context.Context, orgID string) (any, error) {
 	if n.svc == nil {
-		return []monitoring.NotificationDefault{}, nil
+		return []notifsmod.NotificationDefault{}, nil
 	}
 	return n.svc.ListDefaults(ctx, orgID)
 }
@@ -195,7 +195,7 @@ func (n *notifSettingsServiceAdapter) UpsertDefault(ctx context.Context, orgID, 
 	if n.svc == nil {
 		return nil, nil
 	}
-	def := &monitoring.NotificationDefault{
+	def := &notifsmod.NotificationDefault{
 		OrganizationID: orgID,
 		Category:       category,
 		Channels:       channels,
@@ -209,7 +209,7 @@ func (n *notifSettingsServiceAdapter) UpsertDefault(ctx context.Context, orgID, 
 
 func (n *notifSettingsServiceAdapter) ListDeliveries(ctx context.Context, limit int) (any, error) {
 	if n.svc == nil {
-		return []monitoring.NotificationDelivery{}, nil
+		return []notifsmod.NotificationDelivery{}, nil
 	}
 	return n.svc.ListDeliveries(ctx, limit)
 }
@@ -230,7 +230,7 @@ func (n *notifSettingsServiceAdapter) DeleteDeviceToken(ctx context.Context, use
 
 func (n *notifSettingsServiceAdapter) ListDeviceTokens(ctx context.Context, userID string) (any, error) {
 	if n.svc == nil {
-		return []*monitoring.DeviceToken{}, nil
+		return []*notifsmod.DeviceToken{}, nil
 	}
 	return n.svc.ListDeviceTokens(ctx, userID)
 }

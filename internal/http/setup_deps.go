@@ -22,6 +22,7 @@ import (
 	"codedock/internal/modules/environments"
 	gitmod "codedock/internal/modules/git"
 	"codedock/internal/modules/monitoring"
+	notifsmod "codedock/internal/modules/notifications"
 	"codedock/internal/modules/organizations"
 	projectsmod "codedock/internal/modules/projects"
 	"codedock/internal/modules/servers"
@@ -58,7 +59,7 @@ type serverSetupDeps struct {
 	projectAppService      *projectsmod.ProjectAppService
 	appService             *appsmod.Service
 	databaseService        *databases.Service
-	notifSettingsService   *monitoring.NotificationSettingsService
+	notifSettingsService   *notifsmod.NotificationSettingsService
 	aiSettingsService      *aimod.Service
 	aiAnalysisService      *aimod.AnalysisService
 	userService            *users.UserService

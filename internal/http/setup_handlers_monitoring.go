@@ -3,14 +3,15 @@ package http
 import (
 	"codedock/internal/modules/dns"
 	"codedock/internal/modules/monitoring"
+	notifsmod "codedock/internal/modules/notifications"
 )
 
 type monitoringHandlersGroup struct {
 	operationHandler     *monitoring.OperationHandler
 	scheduledTaskHandler *monitoring.ScheduledTaskHandler
-	notifSettingsHandler *monitoring.NotificationSettingsHandler
+	notifSettingsHandler *notifsmod.NotificationSettingsHandler
 	updaterHandler       *monitoring.UpdaterHandler
-	notificationHandler  *monitoring.NotificationHandler
+	notificationHandler  *notifsmod.NotificationHandler
 	systemHandler        *monitoring.SystemHandler
 	metricsHandler       *monitoring.MetricsHandler
 	logHandler           *monitoring.LogHandler
@@ -43,12 +44,12 @@ func createMonitoringHandlers(
 			&scheduledTaskServiceAdapter{svc: d.scheduledTaskService},
 			&scheduledTaskAccessAdapter{appService: d.appService, projectService: d.projectService},
 		),
-		notifSettingsHandler: monitoring.NewNotificationSettingsHandler(&notifSettingsServiceAdapter{
+		notifSettingsHandler: notifsmod.NewNotificationSettingsHandler(&notifSettingsServiceAdapter{
 			svc:     d.notifSettingsService,
 			orgRepo: d.orgRepo,
 		}),
 		updaterHandler:      monitoring.NewUpdaterHandler(&updaterServiceAdapter{svc: updaterService}),
-		notificationHandler: monitoring.NewNotificationHandler(&notificationServiceAdapter{}),
+		notificationHandler: notifsmod.NewNotificationHandler(&notificationServiceAdapter{}),
 		systemHandler: monitoring.NewSystemHandler(
 			&systemServiceAdapter{svc: monitoring.NewSystemService()},
 			&systemAdminFinderAdapter{userRepo: d.userRepo},

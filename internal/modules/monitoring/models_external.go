@@ -108,14 +108,6 @@ type ServerSettings struct {
 	UpdateCheckCron   string `json:"updateCheckCron,omitempty"`
 }
 
-type DeviceToken struct {
-	ID        string    `json:"id"`
-	UserID    string    `json:"userId"`
-	Token     string    `json:"token"`
-	Platform  string    `json:"platform"`
-	CreatedAt time.Time `json:"createdAt"`
-}
-
 type ExampleApp struct {
 	ID          string `json:"id"`
 	Name        string `json:"name"`
@@ -170,11 +162,4 @@ type ManagedRepository interface {
 type SettingsRepository interface {
 	GetServerSettings(ctx context.Context) (*ServerSettings, error)
 	UpdateServerSettings(ctx context.Context, settings *ServerSettings) error
-}
-
-type DeviceTokenRepository interface {
-	RegisterToken(ctx context.Context, userID, token, platform string) (*DeviceToken, error)
-	DeleteToken(ctx context.Context, userID, token string) error
-	ListTokensByUser(ctx context.Context, userID string) ([]*DeviceToken, error)
-	ListAllTokens(ctx context.Context) ([]*DeviceToken, error)
 }

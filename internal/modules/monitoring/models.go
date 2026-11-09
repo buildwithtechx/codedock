@@ -1,28 +1,8 @@
 package monitoring
 
-import (
-	"codedock/internal/platform/notifications"
-)
-
 type Vault interface {
 	Encrypt(string) (string, error)
 	Decrypt(string) (string, error)
-}
-
-type NotificationDelivery = notifications.NotificationDelivery
-
-type NotificationSubscription = notifications.NotificationSubscription
-type NotificationDefault = notifications.NotificationDefault
-
-type NotificationSettings = notifications.NotificationSettings
-
-type NotificationEvent struct {
-	Title     string `json:"title"`
-	Message   string `json:"message"`
-	Level     string `json:"level"`
-	EventType string `json:"eventType"`
-	ProjectID string `json:"projectId,omitempty"`
-	URL       string `json:"url,omitempty"`
 }
 
 type Operation struct {

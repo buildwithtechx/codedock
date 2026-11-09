@@ -7,8 +7,6 @@ type RoutesConfig struct {
 	Metrics       *MetricsHandler
 	Logs          *LogHandler
 	Updater       *UpdaterHandler
-	Notification  *NotificationHandler
-	NotifSettings *NotificationSettingsHandler
 	ScheduledTask *ScheduledTaskHandler
 	Analytics     *AnalyticsHandler
 	Attention     *AttentionHandler
@@ -48,15 +46,6 @@ func RegisterRoutes(authGroup, apiGroup *echo.Group, cfg RoutesConfig) {
 			apiGroup.POST("/settings/updates/check", cfg.Updater.CheckUpdate)
 			apiGroup.POST("/settings/updates/deploy", cfg.Updater.DeployUpdate)
 		}
-	}
-	if cfg.Notification != nil {
-		authGroup.POST("/notifications/test", cfg.Notification.TestNotification)
-	}
-	if cfg.NotifSettings != nil {
-		authGroup.GET("/settings/notifications", cfg.NotifSettings.GetNotificationSettings)
-		authGroup.POST("/settings/notifications", cfg.NotifSettings.UpdateNotificationSettings)
-		authGroup.GET("/settings/notifications/deliveries", cfg.NotifSettings.ListDeliveries)
-		authGroup.POST("/settings/notifications/devices", cfg.NotifSettings.RegisterDeviceToken)
 	}
 	if cfg.ScheduledTask != nil {
 		authGroup.GET("/scheduled-tasks", cfg.ScheduledTask.ListProjectScheduledTasks)

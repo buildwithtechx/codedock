@@ -1,4 +1,4 @@
-package monitoring
+package notifications
 
 import (
 	"context"
@@ -9,6 +9,13 @@ import (
 	"github.com/google/uuid"
 	"github.com/jmoiron/sqlx"
 )
+
+type DeviceTokenRepository interface {
+	RegisterToken(ctx context.Context, userID, token, platform string) (*DeviceToken, error)
+	DeleteToken(ctx context.Context, userID, token string) error
+	ListTokensByUser(ctx context.Context, userID string) ([]*DeviceToken, error)
+	ListAllTokens(ctx context.Context) ([]*DeviceToken, error)
+}
 
 type DeviceTokenRepo struct {
 	db *sqlx.DB

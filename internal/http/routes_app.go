@@ -16,6 +16,7 @@ import (
 	deploymentsmod "codedock/internal/modules/deployments"
 	"codedock/internal/modules/dns"
 	gitmod "codedock/internal/modules/git"
+	notifsmod "codedock/internal/modules/notifications"
 	"codedock/internal/modules/organizations"
 	"codedock/internal/modules/settings"
 	"codedock/internal/modules/support"
@@ -94,22 +95,12 @@ func (s *Server) registerSettingsRoutes(apiGroup, authGroup *echo.Group) {
 	authGroup.GET("/settings/appearance", s.appearanceHandler.GetAppearance)
 	authGroup.PUT("/settings/appearance", s.appearanceHandler.SetAppearance)
 	ai.RegisterRoutes(authGroup, apiGroup, s.aiSettingsHandler, s.authGuard.RequireRole("admin"), s.aiRateLimiter.Middleware)
-	authGroup.GET("/notifications", s.notifSettingsHandler.GetNotificationSettings)
-	apiGroup.PUT("/notifications", s.notifSettingsHandler.UpdateNotificationSettings, s.authGuard.RequireRole("admin"))
-	authGroup.GET("/notifications/subscriptions", s.notifSettingsHandler.ListSubscriptions)
-	authGroup.PUT("/notifications/subscriptions", s.notifSettingsHandler.UpsertSubscription)
-	authGroup.GET("/notifications/defaults", s.notifSettingsHandler.ListDefaults)
-	apiGroup.PUT("/notifications/defaults", s.notifSettingsHandler.UpsertDefault, s.authGuard.RequireRole("admin"))
-	authGroup.GET("/notifications/deliveries", s.notifSettingsHandler.ListDeliveries)
-	authGroup.GET("/notifications/devices", s.notifSettingsHandler.ListDeviceTokens)
-	authGroup.POST("/notifications/devices", s.notifSettingsHandler.RegisterDeviceToken)
-	authGroup.DELETE("/notifications/devices/:token", s.notifSettingsHandler.DeleteDeviceToken)
+	notifsmod.RegisterRoutes(apiGroup, authGroup, s.notificationHandler, s.notifSettingsHandler, s.authGuard.RequireRole("admin"))
 	authGroup.GET("/settings/updates/status", s.updaterHandler.GetUpdateStatus)
 	apiGroup.POST("/settings/updates/check", s.updaterHandler.CheckUpdate, s.authGuard.RequireRole("admin"))
 	apiGroup.POST("/settings/updates/deploy", s.updaterHandler.DeployUpdate, s.authGuard.RequireRole("admin"))
 	apiGroup.GET("/settings/oauth/providers", s.oauthHandler.ListProviders, s.authGuard.RequireRole("admin"))
 	apiGroup.PUT("/settings/oauth/providers", s.oauthHandler.SaveProvider, s.authGuard.RequireRole("admin"))
-	apiGroup.POST("/settings/notifications/test", s.notificationHandler.TestNotification, s.authGuard.RequireRole("admin"))
 }
 
 func (s *Server) registerMiscRoutes(apiGroup, authGroup *echo.Group) {

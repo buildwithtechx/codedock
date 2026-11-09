@@ -30,6 +30,7 @@ import (
 	mailmodule "codedock/internal/modules/mail"
 	modmigrations "codedock/internal/modules/migrations"
 	modmonitoring "codedock/internal/modules/monitoring"
+	notifsmod "codedock/internal/modules/notifications"
 	"codedock/internal/modules/organizations"
 	projectsmod "codedock/internal/modules/projects"
 	securitymod "codedock/internal/modules/security"
@@ -80,7 +81,7 @@ type Server struct {
 	backupHandler              *backupmodule.Handler
 	settingsHandler            *settings.SettingsHandler
 	appearanceHandler          *users.AppearanceHandler
-	notifSettingsHandler       *modmonitoring.NotificationSettingsHandler
+	notifSettingsHandler       *notifsmod.NotificationSettingsHandler
 	aiSettingsHandler          *aimod.Handler
 	updaterHandler             *modmonitoring.UpdaterHandler
 	userHandler                *users.UserHandler
@@ -97,7 +98,7 @@ type Server struct {
 	orgHandler                 *organizations.OrganizationHandler
 	environmentHandler         *environments.EnvironmentHandler
 	domainHandler              *domainsmod.DomainHandler
-	notificationHandler        *modmonitoring.NotificationHandler
+	notificationHandler        *notifsmod.NotificationHandler
 	systemHandler              *modmonitoring.SystemHandler
 	composeStackHandler        *projectsmod.ComposeStackHandler
 	chatAppHandler             *chatapps.Handler
