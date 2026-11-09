@@ -106,7 +106,6 @@ func schemaTestRouter(t *testing.T) *echo.Echo {
 	server.registerProjectRoutes(apiGroup, authGroup)
 	server.registerOrganizationRoutes(authGroup)
 	server.registerServerRoutes(apiGroup, authGroup)
-	server.registerManagedRoutes(authGroup)
 	server.registerMigrationRoutes(authGroup)
 	server.registerAnalyticsRoutes(authGroup)
 	server.registerDatabaseRoutes(authGroup)

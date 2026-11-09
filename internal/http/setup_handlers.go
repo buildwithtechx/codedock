@@ -15,6 +15,7 @@ import (
 	"codedock/internal/modules/billing"
 	"codedock/internal/modules/canvas"
 	"codedock/internal/modules/chatapps"
+	modclusters "codedock/internal/modules/clusters"
 	composemod "codedock/internal/modules/compose"
 	"codedock/internal/modules/databases"
 	deploymentsmod "codedock/internal/modules/deployments"
@@ -28,6 +29,7 @@ import (
 	"codedock/internal/modules/organizations"
 	projectsmod "codedock/internal/modules/projects"
 	"codedock/internal/modules/security"
+	"codedock/internal/modules/servers/managed"
 	settingsmodule "codedock/internal/modules/settings"
 	"codedock/internal/modules/support"
 	"codedock/internal/modules/system"
@@ -206,17 +208,16 @@ func buildServerInstance(d *serverSetupDeps) (*Server, error) {
 		securityHandler:            security.NewHandler(securityService),
 	}
 
-	if err := configureManaged(srv, d.db, d.v, d.serverRepo, d.userRepo, d.orgRepo, d.sshManager, d.operationService); err != nil {
-		return nil, err
+	srv.managedHandler = managed.NewManagedHandler(nil)
+	srv.migrationLifecycleHandler = modmigrations.NewLifecycleHandler(nil)
+	accessLogPath := ""
+	if d.traefikManager != nil {
+		accessLogPath = d.traefikManager.AccessLogPath()
 	}
-	if err := configureMigration(srv, d.db, d.v); err != nil {
-		return nil, err
-	}
-	configureAnalytics(
-		srv,
+	analyticsServices := monitoring.InitAnalyticsServices(
 		d.db,
 		d.v,
-		d.traefikManager,
+		accessLogPath,
 		&analyticsDeployRepoAdapter{repo: d.deployRepo},
 		&analyticsProjectRepoAdapter{repo: d.projectRepo},
 		&analyticsAppRepoAdapter{repo: d.appRepo},
@@ -228,11 +229,23 @@ func buildServerInstance(d *serverSetupDeps) (*Server, error) {
 		&attentionDeployerAdapter{deploymentService: d.deploymentService, appService: d.appService},
 		d.backupService,
 		nil,
-		d.auditService,
 	)
-	if err := configureClusters(srv, d.db, d.v, d.projectRepo, d.serverRepo, d.operationService, d.volumeOperations, d.appRepo, d.deploymentService, d.canvasService, d.backupManager); err != nil {
+	srv.analyticsHandler = monitoring.NewAnalyticsHandler(&analyticsServiceAdapter{svc: analyticsServices.AnalyticsService})
+	srv.attentionHandler = monitoring.NewAttentionHandler(&attentionServiceAdapter{svc: analyticsServices.AttentionService})
+	clusterServices, err := modclusters.InitClusterServices(d.db, d.v, d.projectRepo, d.serverRepo, d.operationService, d.volumeOperations)
+	if err != nil {
 		return nil, err
 	}
+	srv.clusterHandler = modclusters.NewHandler(&clusterServiceAdapter{
+		service:    clusterServices.Service,
+		operations: d.operationService,
+	})
+	srv.clusterDataHandler = modclusters.NewDataHandler(&clusterDataServiceAdapter{
+		service:    clusterServices.DataService,
+		operations: d.operationService,
+		apps:       d.appRepo,
+		vars:       appsmod.NewServiceVarRepo(d.db),
+	})
 	configureDeploymentBindings(srv, environments.NewRouteRuleRepository(d.db), d.domainRepo, environments.NewRouteProtectionRepository(d.db))
 
 	srv.registerRoutes()

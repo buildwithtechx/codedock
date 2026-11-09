@@ -5,11 +5,13 @@ import (
 
 	"codedock/internal/modules/auth"
 	"codedock/internal/modules/canvas"
+	modclusters "codedock/internal/modules/clusters"
 	composemod "codedock/internal/modules/compose"
 	"codedock/internal/modules/databases"
 	"codedock/internal/modules/domains"
 	"codedock/internal/modules/environments"
 	mailmodule "codedock/internal/modules/mail"
+	modmigrations "codedock/internal/modules/migrations"
 	"codedock/internal/modules/organizations"
 	"codedock/internal/modules/projects"
 	serversmod "codedock/internal/modules/servers"
@@ -31,7 +33,6 @@ func (s *Server) registerRoutes() {
 	s.registerProjectRoutes(apiGroup, authGroup)
 	s.registerOrganizationRoutes(authGroup)
 	s.registerServerRoutes(apiGroup, authGroup)
-	s.registerManagedRoutes(authGroup)
 	s.registerMigrationRoutes(authGroup)
 	s.registerAnalyticsRoutes(authGroup)
 	s.registerDatabaseRoutes(authGroup)
@@ -207,4 +208,27 @@ func (s *Server) registerDatabaseRoutes(authGroup *echo.Group) {
 
 func (s *Server) registerMailRoutes(authGroup *echo.Group) {
 	mailmodule.RegisterRoutes(authGroup, s.mailHandler)
+}
+
+func (s *Server) registerMigrationRoutes(authGroup *echo.Group) {
+	modmigrations.RegisterRoutes(nil, authGroup, modmigrations.RoutesConfig{
+		LifecycleHandler: s.migrationLifecycleHandler,
+		Middleware: modmigrations.RouteMiddleware{
+			OrgMember:   s.authGuard.RequireOrgRole("member"),
+			OrgAdmin:    s.authGuard.RequireOrgRole("admin"),
+			ServerRead:  s.authGuard.RequireScope("server:read"),
+			ServerWrite: s.authGuard.RequireScope("server:write"),
+		},
+	})
+}
+
+func (s *Server) registerClusterRoutes(group *echo.Group) {
+	modclusters.RegisterRoutes(group, modclusters.RoutesConfig{
+		Handler:     s.clusterHandler,
+		DataHandler: s.clusterDataHandler,
+		Middleware: modclusters.RouteMiddleware{
+			Admin:          s.authGuard.RequireRole("admin"),
+			DatabaseManage: s.authGuard.RequireScope("database:manage"),
+		},
+	})
 }
