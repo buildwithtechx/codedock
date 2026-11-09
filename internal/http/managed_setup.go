@@ -5,7 +5,7 @@ import (
 
 	"github.com/labstack/echo/v4"
 
-	"codedock/internal/modules/monitoring"
+	"codedock/internal/modules/operations"
 	"codedock/internal/modules/organizations"
 	"codedock/internal/modules/servers"
 	"codedock/internal/modules/users"
@@ -13,7 +13,7 @@ import (
 	"codedock/internal/platform/vault"
 )
 
-func configureManaged(server *Server, db *sql.DB, vlt *vault.Vault, serverRepo servers.Repository, users users.UserRepository, orgs organizations.OrganizationRepository, sshManager *ssh.SSHManager, operationService *monitoring.OperationService) error {
+func configureManaged(server *Server, db *sql.DB, vlt *vault.Vault, serverRepo servers.Repository, users users.UserRepository, orgs organizations.OrganizationRepository, sshManager *ssh.SSHManager, operationService *operations.OperationService) error {
 	server.managedHandler = servers.NewManagedHandler(nil)
 	return nil
 }

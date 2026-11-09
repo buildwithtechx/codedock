@@ -29,7 +29,7 @@ function ServiceJobsRoute() {
   const { data: jobsResponse, isLoading: isLoadingJobs } = useQuery({
     queryKey: ['jobs', 'service', serviceId],
     queryFn: async () => {
-      const res: any = await apiClient.get(`/jobs?serviceId=${serviceId}`);
+      const res: any = await apiClient.get(`/scheduled-tasks?serviceId=${serviceId}`);
       return res.data;
     },
   });
@@ -38,7 +38,7 @@ function ServiceJobsRoute() {
 
   const createMutation = useMutation({
     mutationFn: async (data: any) => {
-      return apiClient.post('/jobs', data);
+      return apiClient.post('/scheduled-tasks', data);
     },
     onSuccess: () => {
       toast.success('Job created successfully');
@@ -55,7 +55,7 @@ function ServiceJobsRoute() {
 
   const deleteMutation = useMutation({
     mutationFn: async (jobId: string) => {
-      return apiClient.delete(`/jobs/${jobId}`);
+      return apiClient.delete(`/scheduled-tasks/${jobId}`);
     },
     onSuccess: () => {
       toast.success('Job deleted successfully');
@@ -68,7 +68,7 @@ function ServiceJobsRoute() {
 
   const runMutation = useMutation({
     mutationFn: async (jobId: string) => {
-      return apiClient.post(`/jobs/${jobId}/trigger`);
+      return apiClient.post(`/scheduled-tasks/${jobId}/trigger`);
     },
     onSuccess: () => {
       toast.success('Job triggered successfully');

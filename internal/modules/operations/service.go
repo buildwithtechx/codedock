@@ -1,4 +1,4 @@
-package monitoring
+package operations
 
 import (
 	"context"
@@ -15,13 +15,10 @@ import (
 	"github.com/google/uuid"
 )
 
-type OperationStore interface {
-	Create(context.Context, *Operation) error
-	Get(context.Context, string) (*Operation, error)
-	List(context.Context, string, string) ([]Operation, error)
-	Claim(context.Context, string, string) error
-	Observe(context.Context, string, string, string, string, string) error
-	Recover(context.Context) error
+type OperationsService interface {
+	Get(ctx context.Context, id string) (*Operation, error)
+	List(ctx context.Context, project, user string) ([]Operation, error)
+	Cancel(ctx context.Context, id, user string) error
 }
 
 type OperationService struct {

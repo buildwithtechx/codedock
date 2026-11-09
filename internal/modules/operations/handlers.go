@@ -1,4 +1,4 @@
-package monitoring
+package operations
 
 import (
 	"net/http"

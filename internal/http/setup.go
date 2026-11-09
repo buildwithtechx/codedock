@@ -28,8 +28,8 @@ import (
 	domainsmod "codedock/internal/modules/domains"
 	"codedock/internal/modules/environments"
 	gitmod "codedock/internal/modules/git"
-	"codedock/internal/modules/monitoring"
 	notifsmod "codedock/internal/modules/notifications"
+	"codedock/internal/modules/operations"
 	"codedock/internal/modules/organizations"
 	projectsmod "codedock/internal/modules/projects"
 	"codedock/internal/modules/servers"
@@ -193,7 +193,7 @@ func NewServer(db *sql.DB, v *vault.Vault, deployer *deploy.Deployer, traefikMan
 	autoscalingService := appsmod.NewAutoscalingService(appsmod.NewAutoscalingRepository(db), serverlessRepository, appRepo)
 	autoscaler := deploy.NewAutoscalerWorker(appRepo, statsMonitor, &autoscalerDeploymentAdapter{ds: deploymentService}, autoscalingRepo)
 
-	operationService := monitoring.NewOperationService(monitoring.NewOperationRepo(db, v))
+	operationService := operations.NewOperationService(operations.NewOperationRepo(db, v))
 	if err := operationService.Recover(context.Background()); err != nil {
 		return nil, fmt.Errorf("recover operations: %w", err)
 	}

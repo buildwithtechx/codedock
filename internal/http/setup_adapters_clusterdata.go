@@ -5,12 +5,12 @@ import (
 	"fmt"
 
 	modclusters "codedock/internal/modules/clusters"
-	"codedock/internal/modules/monitoring"
+	"codedock/internal/modules/operations"
 )
 
 type clusterDataServiceAdapter struct {
 	service    *modclusters.ClusterDataService
-	operations *monitoring.OperationService
+	operations *operations.OperationService
 	apps       modclusters.BindingApps
 	vars       modclusters.BindingVars
 }

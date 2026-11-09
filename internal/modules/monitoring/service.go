@@ -50,12 +50,6 @@ type UpdaterOperations interface {
 	ApplyUpdate(ctx context.Context) (any, error)
 }
 
-type OperationsService interface {
-	Get(ctx context.Context, id string) (*Operation, error)
-	List(ctx context.Context, project, user string) ([]Operation, error)
-	Cancel(ctx context.Context, id, user string) error
-}
-
 type ExampleOperations interface {
 	ListExamples() (any, error)
 }

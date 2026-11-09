@@ -9,7 +9,6 @@ type RoutesConfig struct {
 	Updater       *UpdaterHandler
 	Analytics     *AnalyticsHandler
 	Attention     *AttentionHandler
-	Operation     *OperationHandler
 	Example       *ExampleHandler
 	ServiceLogsWS *ServiceLogsWSHandler
 	AdminAuth     echo.MiddlewareFunc
@@ -45,11 +44,6 @@ func RegisterRoutes(authGroup, apiGroup *echo.Group, cfg RoutesConfig) {
 			apiGroup.POST("/settings/updates/check", cfg.Updater.CheckUpdate)
 			apiGroup.POST("/settings/updates/deploy", cfg.Updater.DeployUpdate)
 		}
-	}
-	if cfg.Operation != nil {
-		authGroup.GET("/operations", cfg.Operation.List)
-		authGroup.GET("/operations/:operationId", cfg.Operation.Get)
-		authGroup.POST("/operations/:operationId/cancel", cfg.Operation.Cancel)
 	}
 	if cfg.Example != nil {
 		authGroup.GET("/examples", cfg.Example.List)

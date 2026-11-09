@@ -17,6 +17,7 @@ import (
 	"codedock/internal/modules/dns"
 	gitmod "codedock/internal/modules/git"
 	notifsmod "codedock/internal/modules/notifications"
+	"codedock/internal/modules/operations"
 	"codedock/internal/modules/organizations"
 	"codedock/internal/modules/settings"
 	"codedock/internal/modules/support"
@@ -81,9 +82,7 @@ func (s *Server) registerDeploymentRoutes(apiGroup, authGroup *echo.Group) {
 }
 
 func (s *Server) registerBackupRoutes(authGroup *echo.Group) {
-	authGroup.GET("/operations", s.operationHandler.List, s.authGuard.RequireScope("backup:read"))
-	authGroup.GET("/operations/:operationId", s.operationHandler.Get, s.authGuard.RequireScope("backup:read"))
-	authGroup.POST("/operations/:operationId/cancel", s.operationHandler.Cancel, s.authGuard.RequireScope("backup:write"))
+	operations.RegisterRoutes(authGroup, s.operationHandler, s.authGuard.RequireScope("backup:read"), s.authGuard.RequireScope("backup:write"))
 	backupmodule.RegisterRoutes(authGroup, s.backupHandler, backupmodule.RouteMiddleware{
 		Admin:          s.authGuard.RequireRole("admin"),
 		BackupWrite:    s.authGuard.RequireScope("backup:write"),

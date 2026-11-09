@@ -21,8 +21,8 @@ import (
 	domainsmod "codedock/internal/modules/domains"
 	"codedock/internal/modules/environments"
 	gitmod "codedock/internal/modules/git"
-	"codedock/internal/modules/monitoring"
 	notifsmod "codedock/internal/modules/notifications"
+	"codedock/internal/modules/operations"
 	"codedock/internal/modules/organizations"
 	projectsmod "codedock/internal/modules/projects"
 	"codedock/internal/modules/servers"
@@ -74,7 +74,7 @@ type serverSetupDeps struct {
 	gitService             *gitmod.ProviderService
 	deploymentService      *deploymentsmod.DeploymentService
 	autoscalingService     *appsmod.AutoscalingService
-	operationService       *monitoring.OperationService
+	operationService       *operations.OperationService
 	backupService          *backupmodule.Service
 	mailerService          *notifications.MailerService
 	environmentRepo        *environments.EnvironmentRepo

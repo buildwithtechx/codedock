@@ -31,6 +31,7 @@ import (
 	modmigrations "codedock/internal/modules/migrations"
 	modmonitoring "codedock/internal/modules/monitoring"
 	notifsmod "codedock/internal/modules/notifications"
+	"codedock/internal/modules/operations"
 	"codedock/internal/modules/organizations"
 	projectsmod "codedock/internal/modules/projects"
 	securitymod "codedock/internal/modules/security"
@@ -48,7 +49,7 @@ import (
 type Server struct {
 	clusterDataHandler         *modclusters.DataHandler
 	clusterHandler             *modclusters.Handler
-	operationHandler           *modmonitoring.OperationHandler
+	operationHandler           *operations.OperationHandler
 	router                     *echo.Echo
 	mcpBridge                  *mcp.Bridge
 	authRateLimiter            *middleware.RateLimiter

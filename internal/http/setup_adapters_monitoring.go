@@ -7,24 +7,25 @@ import (
 
 	authservices "codedock/internal/modules/auth"
 	"codedock/internal/modules/monitoring"
+	"codedock/internal/modules/operations"
 	settingsmodule "codedock/internal/modules/settings"
 	"codedock/internal/modules/users"
 )
 
 type operationsServiceAdapter struct {
-	svc *monitoring.OperationService
+	svc *operations.OperationService
 }
 
-func (o *operationsServiceAdapter) Get(ctx context.Context, id string) (*monitoring.Operation, error) {
+func (o *operationsServiceAdapter) Get(ctx context.Context, id string) (*operations.Operation, error) {
 	if o.svc == nil {
 		return nil, errors.New("operation service unavailable")
 	}
 	return o.svc.Get(ctx, id)
 }
 
-func (o *operationsServiceAdapter) List(ctx context.Context, project, user string) ([]monitoring.Operation, error) {
+func (o *operationsServiceAdapter) List(ctx context.Context, project, user string) ([]operations.Operation, error) {
 	if o.svc == nil {
-		return []monitoring.Operation{}, nil
+		return []operations.Operation{}, nil
 	}
 	return o.svc.List(ctx, project, user)
 }

@@ -15,7 +15,7 @@ import (
 	"codedock/internal/modules/canvas"
 	modclusters "codedock/internal/modules/clusters"
 	"codedock/internal/modules/environments"
-	"codedock/internal/modules/monitoring"
+	"codedock/internal/modules/operations"
 	projectsmod "codedock/internal/modules/projects"
 	"codedock/internal/modules/servers"
 	"codedock/internal/platform/observability"
@@ -34,7 +34,7 @@ func configureClusters(
 	vlt *vault.Vault,
 	projects projectsmod.ProjectRepository,
 	serversRepo servers.Repository,
-	operations *monitoring.OperationService,
+	operations *operations.OperationService,
 	gate modclusters.Gate,
 	apps appsmod.AppServiceRepository,
 	deployments ClusterDeployer,

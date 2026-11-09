@@ -5,12 +5,12 @@ import (
 	"fmt"
 
 	modclusters "codedock/internal/modules/clusters"
-	"codedock/internal/modules/monitoring"
+	"codedock/internal/modules/operations"
 )
 
 type clusterServiceAdapter struct {
 	service    *modclusters.ClusterService
-	operations *monitoring.OperationService
+	operations *operations.OperationService
 }
 
 func (a *clusterServiceAdapter) List(ctx context.Context, projectID string) (any, error) {

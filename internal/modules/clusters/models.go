@@ -7,7 +7,7 @@ import (
 	appsmod "codedock/internal/modules/apps"
 	backups "codedock/internal/modules/backups"
 	environments "codedock/internal/modules/environments"
-	monitoring "codedock/internal/modules/monitoring"
+	"codedock/internal/modules/operations"
 	projectsmod "codedock/internal/modules/projects"
 	servers "codedock/internal/modules/servers"
 )
@@ -19,8 +19,8 @@ type Vault interface {
 
 type ProjectConfig = projectsmod.ProjectConfig
 type Server = servers.Server
-type Operation = monitoring.Operation
-type OperationReview = monitoring.OperationReview
+type Operation = operations.Operation
+type OperationReview = operations.OperationReview
 type AppService = appsmod.AppService
 type Variable = appsmod.Variable
 type EnvironmentConfig = environments.EnvironmentConfig
