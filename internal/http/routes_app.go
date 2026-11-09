@@ -96,9 +96,6 @@ func (s *Server) registerSettingsRoutes(apiGroup, authGroup *echo.Group) {
 	authGroup.PUT("/settings/appearance", s.appearanceHandler.SetAppearance)
 	ai.RegisterRoutes(authGroup, apiGroup, s.aiSettingsHandler, s.authGuard.RequireRole("admin"), s.aiRateLimiter.Middleware)
 	notifsmod.RegisterRoutes(apiGroup, authGroup, s.notificationHandler, s.notifSettingsHandler, s.authGuard.RequireRole("admin"))
-	authGroup.GET("/settings/updates/status", s.updaterHandler.GetUpdateStatus)
-	apiGroup.POST("/settings/updates/check", s.updaterHandler.CheckUpdate, s.authGuard.RequireRole("admin"))
-	apiGroup.POST("/settings/updates/deploy", s.updaterHandler.DeployUpdate, s.authGuard.RequireRole("admin"))
 	apiGroup.GET("/settings/oauth/providers", s.oauthHandler.ListProviders, s.authGuard.RequireRole("admin"))
 	apiGroup.PUT("/settings/oauth/providers", s.oauthHandler.SaveProvider, s.authGuard.RequireRole("admin"))
 }

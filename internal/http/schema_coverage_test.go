@@ -28,6 +28,7 @@ import (
 	projectsmod "codedock/internal/modules/projects"
 	serversmod "codedock/internal/modules/servers"
 	"codedock/internal/modules/support"
+	systemmod "codedock/internal/modules/system"
 	templatesmod "codedock/internal/modules/templates"
 )
 
@@ -91,6 +92,8 @@ func schemaTestRouter(t *testing.T) *echo.Echo {
 		supportHandler:             support.NewSupportHandler(),
 		actionsHandler:             actions.NewActionsHandler(),
 		ingressHandler:             &dns.IngressHandler{},
+		systemHandler:              &systemmod.SystemHandler{},
+		updaterHandler:             &systemmod.UpdaterHandler{},
 	}
 	apiGroup := router.Group("/api")
 	authGroup := apiGroup.Group("", server.authGuard.RequireAuth())

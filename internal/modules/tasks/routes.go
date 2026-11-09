@@ -16,12 +16,4 @@ func RegisterRoutes(authGroup *echo.Group, h *ScheduledTaskHandler) {
 	authGroup.PUT("/scheduled-tasks/:id", h.Update)
 	authGroup.DELETE("/scheduled-tasks/:id", h.Delete)
 	authGroup.POST("/scheduled-tasks/:id/trigger", h.Run)
-
-	// Legacy /jobs alias routes
-	authGroup.GET("/jobs", h.ListProjectScheduledTasks)
-	authGroup.POST("/jobs", h.Create)
-	authGroup.GET("/jobs/:id", h.Get)
-	authGroup.PUT("/jobs/:id", h.Update)
-	authGroup.DELETE("/jobs/:id", h.Delete)
-	authGroup.POST("/jobs/:id/trigger", h.Run)
 }

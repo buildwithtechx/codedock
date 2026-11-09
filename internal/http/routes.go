@@ -13,6 +13,7 @@ import (
 	"codedock/internal/modules/organizations"
 	"codedock/internal/modules/projects"
 	serversmod "codedock/internal/modules/servers"
+	systemmod "codedock/internal/modules/system"
 	templatesmod "codedock/internal/modules/templates"
 	"codedock/internal/modules/users"
 	"codedock/internal/utils"
@@ -120,12 +121,13 @@ func (s *Server) registerSystemRoutes(apiGroup, authGroup *echo.Group) {
 	apiGroup.GET("/system/public", s.settingsHandler.GetPublicSettings)
 	apiGroup.GET("/system/setup-status", s.onboardingHandler.SetupStatus)
 	apiGroup.POST("/system/setup/import", s.migrationHandler.ImportDuringSetup)
-	authGroup.GET("/system/stats", s.systemHandler.GetStats)
-	apiGroup.POST("/system/restart", s.systemHandler.Restart, s.authGuard.RequireRole("admin"))
-	apiGroup.POST("/system/maintenance/cleanup", s.systemHandler.Cleanup, s.authGuard.RequireRole("admin"))
 	apiGroup.POST("/system/export", s.migrationHandler.Export, s.authGuard.RequireRole("admin"))
 	apiGroup.POST("/system/import", s.migrationHandler.Import, s.authGuard.RequireRole("admin"))
-	apiGroup.POST("/system/local-cli-session", s.systemHandler.CreateLocalCLISession)
+	systemmod.RegisterRoutes(authGroup, apiGroup, systemmod.RoutesConfig{
+		System:    s.systemHandler,
+		Updater:   s.updaterHandler,
+		AdminAuth: s.authGuard.RequireRole("admin"),
+	})
 }
 
 func (s *Server) registerUserRoutes(apiGroup, authGroup *echo.Group) {
