@@ -1,40 +1,71 @@
-import type { CreateDatabaseRequest } from '#/interfaces/databases';
-
-import type { CreateAppServiceRequest } from '#/interfaces/services';
+import type { BaseResponse } from '#/interfaces/base';
 import { apiClient } from '#/lib/api-client';
 
-export interface ComposeAnalyzeRequest {
+export interface ComposeStackItem {
+  id: string;
   projectId: string;
-  composeContent: string;
+  environmentId: string;
+  name: string;
+  content: string;
+  status: string;
+  createdAt: string;
+  updatedAt: string;
 }
 
-export interface ComposeAnalyzeResponse {
-  appServices: CreateAppServiceRequest[];
-  databases: CreateDatabaseRequest[];
+export interface ComposeReviewPayload {
+  name: string;
+  content: string;
+  variables?: string;
+  rootDirectory?: string;
+  environmentId?: string;
 }
 
-class ComposeService {
-  async analyze(req: ComposeAnalyzeRequest): Promise<ComposeAnalyzeResponse> {
-    const response = await apiClient.post<{ data: ComposeAnalyzeResponse }>(
-      `/projects/${req.projectId}/compose/analyze`,
-      req
+export const composeService = {
+  list: async (projectId: string): Promise<ComposeStackItem[]> => {
+    const res = await apiClient.get<BaseResponse<ComposeStackItem[]>>(
+      `/projects/${encodeURIComponent(projectId)}/stacks`
     );
-    return response.data;
-  }
+    return res.data ?? [];
+  },
 
-  async deploy(projectId: string, composeContent: string): Promise<any> {
-    const formData = new FormData();
-    formData.append('projectId', projectId);
-
-    const blob = new Blob([composeContent], { type: 'text/yaml' });
-    formData.append('file', blob, 'docker-compose.yml');
-
-    const response = await apiClient.post<{ data: any }>(
-      `/projects/${projectId}/compose/deploy`,
-      formData
+  review: async (projectId: string, payload: ComposeReviewPayload): Promise<any> => {
+    const res = await apiClient.post<BaseResponse<any>>(
+      `/projects/${encodeURIComponent(projectId)}/stacks/review`,
+      payload
     );
-    return response.data;
-  }
-}
+    return res.data;
+  },
 
-export const composeService = new ComposeService();
+  save: async (projectId: string, payload: any): Promise<ComposeStackItem> => {
+    const res = await apiClient.post<BaseResponse<ComposeStackItem>>(
+      `/projects/${encodeURIComponent(projectId)}/stacks`,
+      payload
+    );
+    return res.data;
+  },
+
+  deploy: async (projectId: string, stackId: string): Promise<any> => {
+    const res = await apiClient.post<BaseResponse<any>>(
+      `/projects/${encodeURIComponent(projectId)}/stacks/${encodeURIComponent(stackId)}/deploy`
+    );
+    return res.data;
+  },
+
+  action: async (
+    projectId: string,
+    stackId: string,
+    action: 'restart' | 'stop' | 'cancel'
+  ): Promise<any> => {
+    const res = await apiClient.post<BaseResponse<any>>(
+      `/projects/${encodeURIComponent(projectId)}/stacks/${encodeURIComponent(stackId)}/${encodeURIComponent(action)}`
+    );
+    return res.data;
+  },
+
+  config: async (projectId: string, stackId: string): Promise<string> => {
+    const res = await apiClient.get<BaseResponse<{ config: string }>>(
+      `/projects/${encodeURIComponent(projectId)}/stacks/${encodeURIComponent(stackId)}/config`
+    );
+    return res.data?.config ?? '';
+  },
+};
