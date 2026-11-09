@@ -1,4 +1,4 @@
-package http
+package adapters
 
 import (
 	"context"
@@ -7,37 +7,41 @@ import (
 	"codedock/internal/modules/users"
 )
 
-type billingUserAdapter struct {
-	repo users.UserRepository
+type BillingUserAdapter struct {
+	Repo users.UserRepository
 }
 
-func (a *billingUserAdapter) GetUserByID(ctx context.Context, id string) (*billing.User, error) {
-	if a.repo == nil {
+func NewBillingUserAdapter(repo users.UserRepository) *BillingUserAdapter {
+	return &BillingUserAdapter{Repo: repo}
+}
+
+func (a *BillingUserAdapter) GetUserByID(ctx context.Context, id string) (*billing.User, error) {
+	if a.Repo == nil {
 		return nil, nil
 	}
-	u, err := a.repo.GetUserByID(ctx, id)
+	u, err := a.Repo.GetUserByID(ctx, id)
 	if err != nil || u == nil {
 		return nil, err
 	}
 	return toBillingUser(u), nil
 }
 
-func (a *billingUserAdapter) GetUserByStripeCustomerID(ctx context.Context, customerID string) (*billing.User, error) {
-	if a.repo == nil {
+func (a *BillingUserAdapter) GetUserByStripeCustomerID(ctx context.Context, customerID string) (*billing.User, error) {
+	if a.Repo == nil {
 		return nil, nil
 	}
-	u, err := a.repo.GetUserByStripeCustomerID(ctx, customerID)
+	u, err := a.Repo.GetUserByStripeCustomerID(ctx, customerID)
 	if err != nil || u == nil {
 		return nil, err
 	}
 	return toBillingUser(u), nil
 }
 
-func (a *billingUserAdapter) UpdateUser(ctx context.Context, user *billing.User) error {
-	if a.repo == nil || user == nil {
+func (a *BillingUserAdapter) UpdateUser(ctx context.Context, user *billing.User) error {
+	if a.Repo == nil || user == nil {
 		return nil
 	}
-	u, err := a.repo.GetUserByID(ctx, user.ID)
+	u, err := a.Repo.GetUserByID(ctx, user.ID)
 	if err != nil || u == nil {
 		return err
 	}
@@ -45,7 +49,7 @@ func (a *billingUserAdapter) UpdateUser(ctx context.Context, user *billing.User)
 	u.StripeSubscriptionID = user.StripeSubscriptionID
 	u.StripePriceID = user.StripePriceID
 	u.PlanType = user.PlanType
-	return a.repo.UpdateUser(ctx, u)
+	return a.Repo.UpdateUser(ctx, u)
 }
 
 func toBillingUser(u *users.User) *billing.User {

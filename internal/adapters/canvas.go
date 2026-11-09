@@ -1,4 +1,4 @@
-package http
+package adapters
 
 import (
 	"context"
@@ -11,16 +11,16 @@ import (
 	"codedock/internal/platform/observability"
 )
 
-type canvasRuntimeAdapter struct {
-	rt *observability.CanvasRuntime
+type CanvasRuntimeAdapter struct {
+	Rt *observability.CanvasRuntime
 }
 
-func (a *canvasRuntimeAdapter) Observe(ctx context.Context, c *canvas.EnvironmentCanvas) {
-	if a.rt == nil || c == nil {
+func (a *CanvasRuntimeAdapter) Observe(ctx context.Context, c *canvas.EnvironmentCanvas) {
+	if a.Rt == nil || c == nil {
 		return
 	}
 	obsCanvas := toObservabilityCanvas(c)
-	a.rt.Observe(ctx, obsCanvas)
+	a.Rt.Observe(ctx, obsCanvas)
 	for i := range c.Nodes {
 		for _, on := range obsCanvas.Nodes {
 			if c.Nodes[i].ID == on.ID {
@@ -31,12 +31,12 @@ func (a *canvasRuntimeAdapter) Observe(ctx context.Context, c *canvas.Environmen
 	}
 }
 
-func (a *canvasRuntimeAdapter) Read(ctx context.Context, c *canvas.EnvironmentCanvas, nodeID string) (*canvas.RuntimeObservation, error) {
-	if a.rt == nil || c == nil {
+func (a *CanvasRuntimeAdapter) Read(ctx context.Context, c *canvas.EnvironmentCanvas, nodeID string) (*canvas.RuntimeObservation, error) {
+	if a.Rt == nil || c == nil {
 		return nil, fmt.Errorf("runtime unavailable")
 	}
 	obsCanvas := toObservabilityCanvas(c)
-	obs, err := a.rt.Read(ctx, obsCanvas, nodeID)
+	obs, err := a.Rt.Read(ctx, obsCanvas, nodeID)
 	if err != nil {
 		return nil, err
 	}
@@ -112,26 +112,26 @@ func toObservabilityCanvas(c *canvas.EnvironmentCanvas) *observability.Environme
 	}
 }
 
-type composeStackRuntimeAdapter struct {
-	rt *docker.StackRuntime
+type ComposeStackRuntimeAdapter struct {
+	Rt *docker.StackRuntime
 }
 
-func (a *composeStackRuntimeAdapter) Canonical(ctx context.Context, name, config string, env map[string]string) (string, error) {
-	if a.rt == nil {
+func (a *ComposeStackRuntimeAdapter) Canonical(ctx context.Context, name, config string, env map[string]string) (string, error) {
+	if a.Rt == nil {
 		return "", fmt.Errorf("runtime unavailable")
 	}
-	return a.rt.Canonical(ctx, name, config, env)
+	return a.Rt.Canonical(ctx, name, config, env)
 }
 
-func (a *composeStackRuntimeAdapter) ValidatePorts(ctx context.Context, name, config string) error {
-	if a.rt == nil {
+func (a *ComposeStackRuntimeAdapter) ValidatePorts(ctx context.Context, name, config string) error {
+	if a.Rt == nil {
 		return fmt.Errorf("runtime unavailable")
 	}
-	return a.rt.ValidatePorts(ctx, name, config)
+	return a.Rt.ValidatePorts(ctx, name, config)
 }
 
-func (a *composeStackRuntimeAdapter) Apply(ctx context.Context, stack *composemod.ComposeStack, progress func(string) error) error {
-	if a.rt == nil || stack == nil {
+func (a *ComposeStackRuntimeAdapter) Apply(ctx context.Context, stack *composemod.ComposeStack, progress func(string) error) error {
+	if a.Rt == nil || stack == nil {
 		return fmt.Errorf("runtime unavailable")
 	}
 	dStack := &docker.ComposeStack{
@@ -146,14 +146,14 @@ func (a *composeStackRuntimeAdapter) Apply(ctx context.Context, stack *composemo
 		Results:       stack.Results,
 		UpdatedAt:     stack.UpdatedAt,
 	}
-	return a.rt.Apply(ctx, dStack, progress)
+	return a.Rt.Apply(ctx, dStack, progress)
 }
 
-func (a *composeStackRuntimeAdapter) Results(ctx context.Context, projectID string) ([]composemod.ComposeServiceResult, error) {
-	if a.rt == nil {
+func (a *ComposeStackRuntimeAdapter) Results(ctx context.Context, projectID string) ([]composemod.ComposeServiceResult, error) {
+	if a.Rt == nil {
 		return nil, fmt.Errorf("runtime unavailable")
 	}
-	res, err := a.rt.Results(ctx, projectID)
+	res, err := a.Rt.Results(ctx, projectID)
 	if err != nil {
 		return nil, err
 	}
@@ -170,15 +170,15 @@ func (a *composeStackRuntimeAdapter) Results(ctx context.Context, projectID stri
 	return out, nil
 }
 
-type canvasEnvAdapter struct {
-	repo *environments.EnvironmentRepo
+type CanvasEnvAdapter struct {
+	Repo *environments.EnvironmentRepo
 }
 
-func (a *canvasEnvAdapter) ListByProject(ctx context.Context, projectID string) ([]*canvas.EnvironmentConfig, error) {
-	if a.repo == nil {
+func (a *CanvasEnvAdapter) ListByProject(ctx context.Context, projectID string) ([]*canvas.EnvironmentConfig, error) {
+	if a.Repo == nil {
 		return []*canvas.EnvironmentConfig{}, nil
 	}
-	envs, err := a.repo.ListByProject(ctx, projectID)
+	envs, err := a.Repo.ListByProject(ctx, projectID)
 	if err != nil {
 		return nil, err
 	}
@@ -189,11 +189,11 @@ func (a *canvasEnvAdapter) ListByProject(ctx context.Context, projectID string) 
 	return res, nil
 }
 
-func (a *canvasEnvAdapter) GetDefaultByProject(ctx context.Context, projectID string) (*canvas.EnvironmentConfig, error) {
-	if a.repo == nil {
+func (a *CanvasEnvAdapter) GetDefaultByProject(ctx context.Context, projectID string) (*canvas.EnvironmentConfig, error) {
+	if a.Repo == nil {
 		return nil, nil
 	}
-	envs, err := a.repo.ListByProject(ctx, projectID)
+	envs, err := a.Repo.ListByProject(ctx, projectID)
 	if err != nil {
 		return nil, err
 	}

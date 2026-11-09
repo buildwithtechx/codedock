@@ -13,6 +13,17 @@ type AuthRouteDeps struct {
 	BootstrapCSRF     echo.HandlerFunc
 	AuthRateLimit     echo.MiddlewareFunc
 	OTPRateLimit      echo.MiddlewareFunc
+	AdminAuth         echo.MiddlewareFunc
+}
+
+func withMw(mws ...echo.MiddlewareFunc) []echo.MiddlewareFunc {
+	var active []echo.MiddlewareFunc
+	for _, m := range mws {
+		if m != nil {
+			active = append(active, m)
+		}
+	}
+	return active
 }
 
 func RegisterAuthRoutes(apiGroup, authGroup *echo.Group, deps AuthRouteDeps) {
@@ -43,6 +54,8 @@ func RegisterAuthRoutes(apiGroup, authGroup *echo.Group, deps AuthRouteDeps) {
 	}
 
 	apiGroup.GET("/auth/oauth/providers/enabled", deps.OAuthHandler.ListEnabledProviders)
+	apiGroup.GET("/settings/oauth/providers", deps.OAuthHandler.ListProviders, withMw(deps.AdminAuth)...)
+	apiGroup.PUT("/settings/oauth/providers", deps.OAuthHandler.SaveProvider, withMw(deps.AdminAuth)...)
 	apiGroup.GET("/auth/oauth/:provider", deps.OAuthHandler.OAuthRedirect)
 	apiGroup.GET("/auth/oauth/:provider/callback", deps.OAuthHandler.OAuthCallback)
 	authGroup.POST("/auth/2fa/setup", deps.OAuthHandler.Setup2FA)

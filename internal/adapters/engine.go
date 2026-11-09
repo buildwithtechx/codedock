@@ -1,4 +1,4 @@
-package http
+package adapters
 
 import (
 	"context"
@@ -15,7 +15,7 @@ import (
 	"codedock/internal/platform/storage"
 )
 
-type engineAdapter struct {
+type EngineAdapter struct {
 	appRepo           apps.AppServiceRepository
 	dbRepo            databases.Repository
 	projectRepo       projects.ProjectRepository
@@ -24,14 +24,14 @@ type engineAdapter struct {
 	sftpRepo          backups.SFTPRepository
 }
 
-func newEngineAdapter(
+func NewEngineAdapter(
 	appRepo apps.AppServiceRepository,
 	dbRepo databases.Repository,
 	projectRepo projects.ProjectRepository,
 	scheduledTaskRepo tasks.ScheduledTaskRepository,
 	backupRepo backups.Repository,
-) *engineAdapter {
-	return &engineAdapter{
+) *EngineAdapter {
+	return &EngineAdapter{
 		appRepo:           appRepo,
 		dbRepo:            dbRepo,
 		projectRepo:       projectRepo,
@@ -40,13 +40,17 @@ func newEngineAdapter(
 	}
 }
 
-func (a *engineAdapter) ListScheduledTasks() ([]scheduler.ScheduledTask, error) {
-	tasks, err := a.scheduledTaskRepo.ListAll(context.Background())
+func (a *EngineAdapter) SetSFTPRepo(repo backups.SFTPRepository) {
+	a.sftpRepo = repo
+}
+
+func (a *EngineAdapter) ListScheduledTasks() ([]scheduler.ScheduledTask, error) {
+	tasksList, err := a.scheduledTaskRepo.ListAll(context.Background())
 	if err != nil {
 		return nil, err
 	}
-	res := make([]scheduler.ScheduledTask, len(tasks))
-	for i, t := range tasks {
+	res := make([]scheduler.ScheduledTask, len(tasksList))
+	for i, t := range tasksList {
 		var lastRun *time.Time
 		if !t.LastRunAt.IsZero() {
 			lr := t.LastRunAt
@@ -66,7 +70,7 @@ func (a *engineAdapter) ListScheduledTasks() ([]scheduler.ScheduledTask, error) 
 	return res, nil
 }
 
-func (a *engineAdapter) GetScheduledTask(id string) (*scheduler.ScheduledTask, error) {
+func (a *EngineAdapter) GetScheduledTask(id string) (*scheduler.ScheduledTask, error) {
 	t, err := a.scheduledTaskRepo.GetByID(context.Background(), id)
 	if err != nil || t == nil {
 		return nil, err
@@ -88,7 +92,7 @@ func (a *engineAdapter) GetScheduledTask(id string) (*scheduler.ScheduledTask, e
 	}, nil
 }
 
-func (a *engineAdapter) GetProject(id string) (*scheduler.ProjectConfig, error) {
+func (a *EngineAdapter) GetProject(id string) (*scheduler.ProjectConfig, error) {
 	p, err := a.projectRepo.Get(context.Background(), id)
 	if err != nil || p == nil {
 		return nil, err
@@ -99,7 +103,7 @@ func (a *engineAdapter) GetProject(id string) (*scheduler.ProjectConfig, error) 
 	}, nil
 }
 
-func (a *engineAdapter) GetAppService(id string) (*scheduler.AppService, error) {
+func (a *EngineAdapter) GetAppService(id string) (*scheduler.AppService, error) {
 	app, err := a.appRepo.GetByID(context.Background(), id)
 	if err != nil || app == nil {
 		return nil, err
@@ -111,11 +115,11 @@ func (a *engineAdapter) GetAppService(id string) (*scheduler.AppService, error) 
 	}, nil
 }
 
-func (a *engineAdapter) UpdateScheduledTaskStatusAndOutput(id string, status scheduler.ScheduledTaskStatus, lastRunAt *time.Time, output string) error {
+func (a *EngineAdapter) UpdateScheduledTaskStatusAndOutput(id string, status scheduler.ScheduledTaskStatus, lastRunAt *time.Time, output string) error {
 	return a.scheduledTaskRepo.UpdateStatus(context.Background(), id, tasks.ScheduledTaskStatus(status), lastRunAt, output)
 }
 
-func (a *engineAdapter) ListAllActiveBackupConfigs() ([]*storage.BackupConfig, error) {
+func (a *EngineAdapter) ListAllActiveBackupConfigs() ([]*storage.BackupConfig, error) {
 	configs, err := a.backupRepo.ListAllActiveConfigs(context.Background())
 	if err != nil {
 		return nil, err
@@ -127,7 +131,7 @@ func (a *engineAdapter) ListAllActiveBackupConfigs() ([]*storage.BackupConfig, e
 	return res, nil
 }
 
-func (a *engineAdapter) GetBackupConfig(id string) (*storage.BackupConfig, error) {
+func (a *EngineAdapter) GetBackupConfig(id string) (*storage.BackupConfig, error) {
 	c, err := a.backupRepo.GetConfigByID(context.Background(), id)
 	if err != nil || c == nil {
 		return nil, err
@@ -135,7 +139,7 @@ func (a *engineAdapter) GetBackupConfig(id string) (*storage.BackupConfig, error
 	return toStorageBackupConfig(c), nil
 }
 
-func (a *engineAdapter) CreateBackupRecord(rec *storage.BackupRecord) error {
+func (a *EngineAdapter) CreateBackupRecord(rec *storage.BackupRecord) error {
 	if rec == nil {
 		return errors.New("record is nil")
 	}
@@ -143,7 +147,7 @@ func (a *engineAdapter) CreateBackupRecord(rec *storage.BackupRecord) error {
 	return a.backupRepo.CreateRecord(context.Background(), modRec)
 }
 
-func (a *engineAdapter) UpdateBackupRecord(opts storage.UpdateBackupRecordOpts) error {
+func (a *EngineAdapter) UpdateBackupRecord(opts storage.UpdateBackupRecordOpts) error {
 	rec := &backups.BackupRecord{
 		ID:                opts.ID,
 		Status:            backups.RecordStatus(opts.Status),
@@ -162,7 +166,7 @@ func (a *engineAdapter) UpdateBackupRecord(opts storage.UpdateBackupRecordOpts) 
 	return a.backupRepo.UpdateRecord(context.Background(), rec)
 }
 
-func (a *engineAdapter) GetBackupRecord(id string) (*storage.BackupRecord, error) {
+func (a *EngineAdapter) GetBackupRecord(id string) (*storage.BackupRecord, error) {
 	rec, err := a.backupRepo.GetRecordByID(context.Background(), id)
 	if err != nil || rec == nil {
 		return nil, err
@@ -170,7 +174,7 @@ func (a *engineAdapter) GetBackupRecord(id string) (*storage.BackupRecord, error
 	return toStorageBackupRecord(rec), nil
 }
 
-func (a *engineAdapter) GetDatabase(id string) (*storage.Database, error) {
+func (a *EngineAdapter) GetDatabase(id string) (*storage.Database, error) {
 	db, err := a.dbRepo.GetByID(context.Background(), id)
 	if err != nil || db == nil {
 		return nil, err
@@ -191,7 +195,7 @@ func (a *engineAdapter) GetDatabase(id string) (*storage.Database, error) {
 	}, nil
 }
 
-func (a *engineAdapter) GetS3Destination(id string) (*storage.S3Destination, error) {
+func (a *EngineAdapter) GetS3Destination(id string) (*storage.S3Destination, error) {
 	dest, err := a.backupRepo.GetS3Destination(context.Background(), id)
 	if err != nil || dest == nil {
 		return nil, err
@@ -214,7 +218,7 @@ func (a *engineAdapter) GetS3Destination(id string) (*storage.S3Destination, err
 	}, nil
 }
 
-func (a *engineAdapter) GetSFTPDestination(id string) (*storage.SFTPDestination, error) {
+func (a *EngineAdapter) GetSFTPDestination(id string) (*storage.SFTPDestination, error) {
 	if a.sftpRepo == nil {
 		return nil, fmt.Errorf("sftp storage unavailable")
 	}
@@ -240,7 +244,7 @@ func (a *engineAdapter) GetSFTPDestination(id string) (*storage.SFTPDestination,
 	}, nil
 }
 
-func (a *engineAdapter) ListBackupRecords(backupConfigID string) ([]*storage.BackupRecord, error) {
+func (a *EngineAdapter) ListBackupRecords(backupConfigID string) ([]*storage.BackupRecord, error) {
 	records, err := a.backupRepo.ListRecordsByConfig(context.Background(), backupConfigID)
 	if err != nil {
 		return nil, err

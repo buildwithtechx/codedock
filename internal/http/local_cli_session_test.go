@@ -10,6 +10,7 @@ import (
 
 	"github.com/labstack/echo/v4"
 
+	"codedock/internal/adapters"
 	"codedock/internal/config"
 	authservices "codedock/internal/modules/auth"
 	"codedock/internal/modules/system"
@@ -81,9 +82,9 @@ func TestLocalCLISession(t *testing.T) {
 	}
 
 	handler := system.NewSystemHandler(
-		&systemServiceAdapter{svc: system.NewSystemService()},
-		&systemAdminFinderAdapter{userRepo: repo},
-		&systemTokenGenAdapter{tokenService: tokenSvc},
+		&adapters.SystemServiceAdapter{Svc: system.NewSystemService()},
+		&adapters.SystemAdminFinderAdapter{UserRepo: repo},
+		&adapters.SystemTokenGenAdapter{TokenService: tokenSvc},
 	)
 
 	e := echo.New()

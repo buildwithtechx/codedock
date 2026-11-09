@@ -1,4 +1,4 @@
-package http
+package adapters
 
 import (
 	"context"
@@ -9,15 +9,15 @@ import (
 	"codedock/internal/modules/databases"
 )
 
-type appDatabaseAdapter struct {
-	repo databases.Repository
+type AppDatabaseAdapter struct {
+	Repo databases.Repository
 }
 
-func (a *appDatabaseAdapter) ListByProject(ctx context.Context, projectID string, search string) ([]*appsmod.Database, error) {
-	if a.repo == nil {
+func (a *AppDatabaseAdapter) ListByProject(ctx context.Context, projectID string, search string) ([]*appsmod.Database, error) {
+	if a.Repo == nil {
 		return nil, nil
 	}
-	dbs, err := a.repo.ListByProject(ctx, projectID)
+	dbs, err := a.Repo.ListByProject(ctx, projectID)
 	if err != nil {
 		return nil, err
 	}
@@ -40,15 +40,15 @@ func (a *appDatabaseAdapter) ListByProject(ctx context.Context, projectID string
 	return res, nil
 }
 
-type appClusterPlansAdapter struct {
-	repo *modclusters.ClusterDataRepo
+type AppClusterPlansAdapter struct {
+	Repo *modclusters.ClusterDataRepo
 }
 
-func (a *appClusterPlansAdapter) Get(ctx context.Context, id string) (*appsmod.ClusterDataPlan, error) {
-	if a.repo == nil {
+func (a *AppClusterPlansAdapter) Get(ctx context.Context, id string) (*appsmod.ClusterDataPlan, error) {
+	if a.Repo == nil {
 		return nil, nil
 	}
-	plan, err := a.repo.Get(ctx, id)
+	plan, err := a.Repo.Get(ctx, id)
 	if err != nil || plan == nil {
 		return nil, err
 	}
@@ -70,11 +70,11 @@ func (a *appClusterPlansAdapter) Get(ctx context.Context, id string) (*appsmod.C
 	}, nil
 }
 
-func (a *appClusterPlansAdapter) ListByProject(ctx context.Context, project string) ([]appsmod.ClusterData, error) {
-	if a.repo == nil {
+func (a *AppClusterPlansAdapter) ListByProject(ctx context.Context, project string) ([]appsmod.ClusterData, error) {
+	if a.Repo == nil {
 		return nil, nil
 	}
-	items, err := a.repo.ListByProject(ctx, project)
+	items, err := a.Repo.ListByProject(ctx, project)
 	if err != nil {
 		return nil, err
 	}

@@ -14,6 +14,16 @@ type RouteMiddleware struct {
 	RequireScope       func(scope string) echo.MiddlewareFunc
 }
 
+func withMw(mws ...echo.MiddlewareFunc) []echo.MiddlewareFunc {
+	var active []echo.MiddlewareFunc
+	for _, m := range mws {
+		if m != nil {
+			active = append(active, m)
+		}
+	}
+	return active
+}
+
 func RegisterRoutes(
 	apiGroup *echo.Group,
 	authGroup *echo.Group,
@@ -28,47 +38,24 @@ func RegisterRoutes(
 	if authGroup != nil && depHandler != nil {
 		authGroup.GET("/deployments", depHandler.ListOrganizationDeployments)
 		authGroup.GET("/deployments/:id", depHandler.Get)
+		authGroup.GET("/projects/:id/deployments", depHandler.ListProjectDeployments, withMw(mw.ProjectAuth)...)
+		authGroup.GET("/services/:serviceId/deployments", depHandler.ListServiceDeployments, withMw(mw.ServiceAuth)...)
+		authGroup.GET("/services/:serviceId/previews", depHandler.ListPRPreviews, withMw(mw.ServiceAuth)...)
+		authGroup.GET("/services/:serviceId/metrics", depHandler.GetMetrics, withMw(mw.ServiceAuth)...)
 
-		if mw.ProjectAuth != nil {
-			authGroup.GET("/projects/:id/deployments", depHandler.ListProjectDeployments, mw.ProjectAuth)
-		} else {
-			authGroup.GET("/projects/:id/deployments", depHandler.ListProjectDeployments)
-		}
-
-		if mw.ServiceAuth != nil {
-			authGroup.GET("/services/:serviceId/deployments", depHandler.ListServiceDeployments, mw.ServiceAuth)
-			authGroup.GET("/services/:serviceId/previews", depHandler.ListPRPreviews, mw.ServiceAuth)
-			authGroup.GET("/services/:serviceId/metrics", depHandler.GetMetrics, mw.ServiceAuth)
-		} else {
-			authGroup.GET("/services/:serviceId/deployments", depHandler.ListServiceDeployments)
-			authGroup.GET("/services/:serviceId/previews", depHandler.ListPRPreviews)
-			authGroup.GET("/services/:serviceId/metrics", depHandler.GetMetrics)
-		}
-
+		var logsMw []echo.MiddlewareFunc
 		if mw.RequireScope != nil {
-			authGroup.GET("/deployments/:id/logs", depHandler.GetLogs, mw.RequireScope("logs:read"))
-		} else {
-			authGroup.GET("/deployments/:id/logs", depHandler.GetLogs)
+			logsMw = append(logsMw, mw.RequireScope("logs:read"))
 		}
+		authGroup.GET("/deployments/:id/logs", depHandler.GetLogs, logsMw...)
 		authGroup.GET("/deployments/:id/explain", depHandler.ExplainFailure)
 	}
 
 	// Lifecycle operations
 	if authGroup != nil && lifecycleHandler != nil {
 		authGroup.GET("/projects/:id/deployments/admission", lifecycleHandler.GetAdmission)
-
-		if mw.ServiceAdmin != nil {
-			authGroup.POST("/services/:serviceId/deploy", lifecycleHandler.Trigger, mw.ServiceAdmin)
-		} else {
-			authGroup.POST("/services/:serviceId/deploy", lifecycleHandler.Trigger)
-		}
-
-		if mw.ProjectAdmin != nil {
-			authGroup.POST("/projects/:id/deploy", lifecycleHandler.TriggerProject, mw.ProjectAdmin)
-		} else {
-			authGroup.POST("/projects/:id/deploy", lifecycleHandler.TriggerProject)
-		}
-
+		authGroup.POST("/services/:serviceId/deploy", lifecycleHandler.Trigger, withMw(mw.ServiceAdmin)...)
+		authGroup.POST("/projects/:id/deploy", lifecycleHandler.TriggerProject, withMw(mw.ProjectAdmin)...)
 		authGroup.POST("/deployments/:id/rollback", lifecycleHandler.Rollback)
 		authGroup.POST("/deployments/:id/retry", lifecycleHandler.Retry)
 		authGroup.POST("/deployments/:id/pin", lifecycleHandler.TogglePin)
@@ -82,15 +69,9 @@ func RegisterRoutes(
 
 	// Registries
 	if authGroup != nil && registryHandler != nil {
-		if mw.ProjectAdmin != nil {
-			authGroup.GET("/projects/:projectId/registries", registryHandler.List, mw.ProjectAdmin)
-			authGroup.POST("/projects/:projectId/registries", registryHandler.Create, mw.ProjectAdmin)
-			authGroup.DELETE("/projects/:projectId/registries/:id", registryHandler.Delete, mw.ProjectAdmin)
-		} else {
-			authGroup.GET("/projects/:projectId/registries", registryHandler.List)
-			authGroup.POST("/projects/:projectId/registries", registryHandler.Create)
-			authGroup.DELETE("/projects/:projectId/registries/:id", registryHandler.Delete)
-		}
+		authGroup.GET("/projects/:projectId/registries", registryHandler.List, withMw(mw.ProjectAdmin)...)
+		authGroup.POST("/projects/:projectId/registries", registryHandler.Create, withMw(mw.ProjectAdmin)...)
+		authGroup.DELETE("/projects/:projectId/registries/:id", registryHandler.Delete, withMw(mw.ProjectAdmin)...)
 	}
 
 	// Terminal WebSockets

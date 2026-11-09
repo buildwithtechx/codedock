@@ -1,4 +1,4 @@
-package http
+package adapters
 
 import (
 	"context"
@@ -12,12 +12,12 @@ import (
 	"codedock/internal/modules/users"
 )
 
-type analyticsDeployRepoAdapter struct {
-	repo deploymentsmod.DeploymentRepository
+type AnalyticsDeployRepoAdapter struct {
+	Repo deploymentsmod.DeploymentRepository
 }
 
-func (a *analyticsDeployRepoAdapter) ListByOrganization(ctx context.Context, filter monitoring.DeploymentListFilter) ([]monitoring.DeploymentRecord, int, error) {
-	if a.repo == nil {
+func (a *AnalyticsDeployRepoAdapter) ListByOrganization(ctx context.Context, filter monitoring.DeploymentListFilter) ([]monitoring.DeploymentRecord, int, error) {
+	if a.Repo == nil {
 		return nil, 0, nil
 	}
 	f := deploymentsmod.DeploymentListFilter{
@@ -27,7 +27,7 @@ func (a *analyticsDeployRepoAdapter) ListByOrganization(ctx context.Context, fil
 		Limit:          filter.Limit,
 		Offset:         filter.Offset,
 	}
-	items, count, err := a.repo.ListByOrganization(ctx, f)
+	items, count, err := a.Repo.ListByOrganization(ctx, f)
 	if err != nil {
 		return nil, 0, err
 	}
@@ -46,15 +46,15 @@ func (a *analyticsDeployRepoAdapter) ListByOrganization(ctx context.Context, fil
 	return res, count, nil
 }
 
-type analyticsProjectRepoAdapter struct {
-	repo projectsmod.ProjectRepository
+type AnalyticsProjectRepoAdapter struct {
+	Repo projectsmod.ProjectRepository
 }
 
-func (a *analyticsProjectRepoAdapter) GetByOrganization(ctx context.Context, projectID, orgID string) (*monitoring.Project, error) {
-	if a.repo == nil {
+func (a *AnalyticsProjectRepoAdapter) GetByOrganization(ctx context.Context, projectID, orgID string) (*monitoring.Project, error) {
+	if a.Repo == nil {
 		return nil, nil
 	}
-	p, err := a.repo.GetByOrganization(ctx, projectID, orgID)
+	p, err := a.Repo.GetByOrganization(ctx, projectID, orgID)
 	if err != nil || p == nil {
 		return nil, err
 	}
@@ -65,11 +65,11 @@ func (a *analyticsProjectRepoAdapter) GetByOrganization(ctx context.Context, pro
 	}, nil
 }
 
-func (a *analyticsProjectRepoAdapter) ListByOrganization(ctx context.Context, orgID, search string, limit, offset int) ([]monitoring.Project, int, error) {
-	if a.repo == nil {
+func (a *AnalyticsProjectRepoAdapter) ListByOrganization(ctx context.Context, orgID, search string, limit, offset int) ([]monitoring.Project, int, error) {
+	if a.Repo == nil {
 		return nil, 0, nil
 	}
-	list, total, err := a.repo.ListByOrganization(ctx, orgID, search, limit, offset)
+	list, total, err := a.Repo.ListByOrganization(ctx, orgID, search, limit, offset)
 	if err != nil {
 		return nil, 0, err
 	}
@@ -84,15 +84,15 @@ func (a *analyticsProjectRepoAdapter) ListByOrganization(ctx context.Context, or
 	return res, total, nil
 }
 
-type analyticsAppRepoAdapter struct {
-	repo appsmod.AppServiceRepository
+type AnalyticsAppRepoAdapter struct {
+	Repo appsmod.AppServiceRepository
 }
 
-func (a *analyticsAppRepoAdapter) GetByID(ctx context.Context, id string) (*monitoring.AppService, error) {
-	if a.repo == nil {
+func (a *AnalyticsAppRepoAdapter) GetByID(ctx context.Context, id string) (*monitoring.AppService, error) {
+	if a.Repo == nil {
 		return nil, nil
 	}
-	app, err := a.repo.GetByID(ctx, id)
+	app, err := a.Repo.GetByID(ctx, id)
 	if err != nil || app == nil {
 		return nil, err
 	}
@@ -106,11 +106,11 @@ func (a *analyticsAppRepoAdapter) GetByID(ctx context.Context, id string) (*moni
 	}, nil
 }
 
-func (a *analyticsAppRepoAdapter) ListByProject(ctx context.Context, projectID string) ([]monitoring.AppService, error) {
-	if a.repo == nil {
+func (a *AnalyticsAppRepoAdapter) ListByProject(ctx context.Context, projectID string) ([]monitoring.AppService, error) {
+	if a.Repo == nil {
 		return nil, nil
 	}
-	apps, err := a.repo.ListByProject(ctx, projectID)
+	apps, err := a.Repo.ListByProject(ctx, projectID)
 	if err != nil {
 		return nil, err
 	}
@@ -128,15 +128,15 @@ func (a *analyticsAppRepoAdapter) ListByProject(ctx context.Context, projectID s
 	return res, nil
 }
 
-type analyticsDomainListerAdapter struct {
-	repo domainsmod.DomainRepository
+type AnalyticsDomainListerAdapter struct {
+	Repo domainsmod.DomainRepository
 }
 
-func (a *analyticsDomainListerAdapter) ListAll(ctx context.Context) ([]monitoring.DomainConfig, error) {
-	if a.repo == nil {
+func (a *AnalyticsDomainListerAdapter) ListAll(ctx context.Context) ([]monitoring.DomainConfig, error) {
+	if a.Repo == nil {
 		return nil, nil
 	}
-	list, err := a.repo.ListAll(ctx)
+	list, err := a.Repo.ListAll(ctx)
 	if err != nil {
 		return nil, err
 	}
@@ -153,30 +153,30 @@ func (a *analyticsDomainListerAdapter) ListAll(ctx context.Context) ([]monitorin
 	return res, nil
 }
 
-type analyticsUserRepoAdapter struct {
-	repo users.UserRepository
+type AnalyticsUserRepoAdapter struct {
+	Repo users.UserRepository
 }
 
-func (a *analyticsUserRepoAdapter) GetUserByID(ctx context.Context, id string) (*monitoring.User, error) {
-	if a.repo == nil {
+func (a *AnalyticsUserRepoAdapter) GetUserByID(ctx context.Context, id string) (*monitoring.User, error) {
+	if a.Repo == nil {
 		return nil, nil
 	}
-	u, err := a.repo.GetUserByID(ctx, id)
+	u, err := a.Repo.GetUserByID(ctx, id)
 	if err != nil || u == nil {
 		return nil, err
 	}
 	return toMonitoringUser(u), nil
 }
 
-type analyticsOrgRepoAdapter struct {
-	repo organizations.OrganizationRepository
+type AnalyticsOrgRepoAdapter struct {
+	Repo organizations.OrganizationRepository
 }
 
-func (a *analyticsOrgRepoAdapter) GetMember(ctx context.Context, orgID, userID string) (*monitoring.OrgMember, error) {
-	if a.repo == nil {
+func (a *AnalyticsOrgRepoAdapter) GetMember(ctx context.Context, orgID, userID string) (*monitoring.OrgMember, error) {
+	if a.Repo == nil {
 		return nil, nil
 	}
-	m, err := a.repo.GetMember(ctx, orgID, userID)
+	m, err := a.Repo.GetMember(ctx, orgID, userID)
 	if err != nil || m == nil {
 		return nil, err
 	}

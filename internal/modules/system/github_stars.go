@@ -1,4 +1,4 @@
-package http
+package system
 
 import (
 	"encoding/json"
@@ -17,7 +17,7 @@ type githubStarsCache struct {
 
 var starsCache = &githubStarsCache{}
 
-func (s *Server) getGithubStars(c echo.Context) error {
+func GetGithubStars(c echo.Context) error {
 	starsCache.mu.RLock()
 	if time.Since(starsCache.fetchedAt) < 15*time.Minute && starsCache.stars > 0 {
 		stars := starsCache.stars

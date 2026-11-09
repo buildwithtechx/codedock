@@ -1,10 +1,24 @@
 package billing
 
-import "github.com/labstack/echo/v4"
+import (
+	"net/http"
 
-func RegisterRoutes(apiGroup, authGroup *echo.Group, h *BillingHandler) {
-	if h == nil {
+	"github.com/labstack/echo/v4"
+)
+
+func RegisterRoutes(apiGroup, authGroup *echo.Group, h *BillingHandler, cloudEnabled bool) {
+	if !cloudEnabled {
+		if apiGroup != nil {
+			unavailable := func(c echo.Context) error {
+				return echo.NewHTTPError(http.StatusNotFound, "billing is unavailable on self-hosted instances")
+			}
+			apiGroup.Any("/billing", unavailable)
+			apiGroup.Any("/billing/*", unavailable)
+		}
 		return
+	}
+	if h == nil {
+		h = &BillingHandler{}
 	}
 	if apiGroup != nil {
 		apiGroup.POST("/billing/webhook", h.Webhook)

@@ -1,4 +1,4 @@
-package http
+package adapters
 
 import (
 	"context"
@@ -10,23 +10,23 @@ import (
 	"codedock/internal/utils"
 )
 
-func (a *engineAdapter) ClaimRecordExpiry(ctx context.Context, id string) (bool, error) {
+func (a *EngineAdapter) ClaimRecordExpiry(ctx context.Context, id string) (bool, error) {
 	return a.backupRepo.ClaimRecordExpiry(ctx, id)
 }
 
-func (a *engineAdapter) ControlPlaneSnapshot(ctx context.Context) ([]byte, error) {
+func (a *EngineAdapter) ControlPlaneSnapshot(ctx context.Context) ([]byte, error) {
 	return a.backupRepo.ControlPlaneSnapshot(ctx)
 }
 
-func (a *engineAdapter) VolumeRestoreOwner(ctx context.Context, cfg *storage.BackupConfig) (string, error) {
+func (a *EngineAdapter) VolumeRestoreOwner(ctx context.Context, cfg *storage.BackupConfig) (string, error) {
 	return a.volumeOwner(ctx, cfg, false)
 }
 
-func (a *engineAdapter) VolumeBackupOwner(ctx context.Context, cfg *storage.BackupConfig) (string, error) {
+func (a *EngineAdapter) VolumeBackupOwner(ctx context.Context, cfg *storage.BackupConfig) (string, error) {
 	return a.volumeOwner(ctx, cfg, true)
 }
 
-func (a *engineAdapter) volumeOwner(ctx context.Context, cfg *storage.BackupConfig, allowRemote bool) (string, error) {
+func (a *EngineAdapter) volumeOwner(ctx context.Context, cfg *storage.BackupConfig, allowRemote bool) (string, error) {
 	var projectID, containerID string
 	if cfg.ServiceID != "" && cfg.DatabaseID != "" {
 		return "", errors.New("volume backup must have exactly one owner")

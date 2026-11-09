@@ -83,6 +83,10 @@ func schemaTestRouter(t *testing.T) *echo.Echo {
 		webhookHandler:             &gitmod.WebhookHandler{},
 		metricsHandler:             &modmonitoring.MetricsHandler{},
 		logHandler:                 &modmonitoring.LogHandler{},
+		analyticsHandler:           &modmonitoring.AnalyticsHandler{},
+		attentionHandler:           &modmonitoring.AttentionHandler{},
+		exampleHandler:             &modmonitoring.ExampleHandler{},
+		serviceLogsWSHandler:       &modmonitoring.ServiceLogsWSHandler{},
 		serverHandler:              &serversmod.Handler{},
 		managedHandler:             &managed.ManagedHandler{},
 		takeoverHandler:            &takeover.TakeoverHandler{},
@@ -106,8 +110,8 @@ func schemaTestRouter(t *testing.T) *echo.Echo {
 	server.registerProjectRoutes(apiGroup, authGroup)
 	server.registerOrganizationRoutes(authGroup)
 	server.registerServerRoutes(apiGroup, authGroup)
-	server.registerMigrationRoutes(authGroup)
-	server.registerAnalyticsRoutes(authGroup)
+	server.registerMigrationRoutes(apiGroup, authGroup)
+	server.registerAnalyticsRoutes(apiGroup, authGroup)
 	server.registerDatabaseRoutes(authGroup)
 	server.registerAppRoutes(apiGroup, authGroup)
 	server.registerDeploymentRoutes(apiGroup, authGroup)

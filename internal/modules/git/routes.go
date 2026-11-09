@@ -9,6 +9,16 @@ type RouteMiddleware struct {
 	RequireProjectRole func(role string) echo.MiddlewareFunc
 }
 
+func withMw(mws ...echo.MiddlewareFunc) []echo.MiddlewareFunc {
+	var active []echo.MiddlewareFunc
+	for _, m := range mws {
+		if m != nil {
+			active = append(active, m)
+		}
+	}
+	return active
+}
+
 func RegisterRoutes(
 	apiGroup *echo.Group,
 	authGroup *echo.Group,
@@ -31,25 +41,20 @@ func RegisterRoutes(
 		authGroup.POST("/git/tree", inspectionHandler.RepoTree)
 		authGroup.GET("/git/tree", inspectionHandler.RepoTree)
 		authGroup.POST("/git/inspect", inspectionHandler.InspectRepository)
+		var inspMw []echo.MiddlewareFunc
 		if mw.RequireProjectRole != nil {
-			authGroup.POST("/projects/:id/repository-inspection", inspectionHandler.InspectRepository, mw.RequireProjectRole("admin"))
-		} else {
-			authGroup.POST("/projects/:id/repository-inspection", inspectionHandler.InspectRepository)
+			inspMw = append(inspMw, mw.RequireProjectRole("admin"))
 		}
+		authGroup.POST("/projects/:id/repository-inspection", inspectionHandler.InspectRepository, inspMw...)
 	}
 
 	// GitHub Apps
 	if appsHandler != nil {
 		if apiGroup != nil {
-			if mw.Admin != nil {
-				apiGroup.POST("/settings/git_apps/github/manifest-callback", appsHandler.ExchangeGithubManifestCode, mw.Admin)
-				apiGroup.PUT("/settings/git_apps/github", appsHandler.SaveGithubApp, mw.Admin)
-				apiGroup.DELETE("/settings/git_apps/github/:id", appsHandler.DeleteGithubApp, mw.Admin)
-			} else {
-				apiGroup.POST("/settings/git_apps/github/manifest-callback", appsHandler.ExchangeGithubManifestCode)
-				apiGroup.PUT("/settings/git_apps/github", appsHandler.SaveGithubApp)
-				apiGroup.DELETE("/settings/git_apps/github/:id", appsHandler.DeleteGithubApp)
-			}
+			admin := withMw(mw.Admin)
+			apiGroup.POST("/settings/git_apps/github/manifest-callback", appsHandler.ExchangeGithubManifestCode, admin...)
+			apiGroup.PUT("/settings/git_apps/github", appsHandler.SaveGithubApp, admin...)
+			apiGroup.DELETE("/settings/git_apps/github/:id", appsHandler.DeleteGithubApp, admin...)
 		}
 		if authGroup != nil {
 			authGroup.GET("/settings/git_apps/github", appsHandler.ListGithubApps)

@@ -5,6 +5,7 @@ import (
 	"log/slog"
 	"time"
 
+	"codedock/internal/adapters"
 	"codedock/internal/config"
 	"codedock/internal/http/middleware"
 	actions "codedock/internal/modules/actions"
@@ -42,36 +43,36 @@ import (
 
 func buildServerInstance(d *serverSetupDeps) (*Server, error) {
 	prPreviewRepo := gitmod.NewPRPreviewRepository(d.db)
-	prPreviewService := gitmod.NewPRPreviewService(prPreviewRepo, &gitServiceLookupAdapter{appRepo: d.appRepo})
-	dnsProviderService := dns.NewProviderService(&dnsSettingsAdapter{repo: d.settingsRepo})
+	prPreviewService := gitmod.NewPRPreviewService(prPreviewRepo, &adapters.GitServiceLookupAdapter{AppRepo: d.appRepo})
+	dnsProviderService := dns.NewProviderService(&adapters.DNSSettingsAdapter{Repo: d.settingsRepo})
 	dnsService := dns.NewService(d.dnsRepo, dnsProviderService)
 	gitAppsRepo := gitmod.NewGitAppRepository(d.db, d.v)
 	gitAppsService := gitmod.NewGitAppsService(gitAppsRepo)
 	webhookRepo := gitmod.NewWebhookDeliveryRepository(d.db)
 	webhookDeliveryService := gitmod.NewWebhookDeliveryService(webhookRepo)
-	webhookDispatcher := gitmod.NewWebhookDispatcher(webhookDeliveryService, d.deploymentService, &gitServiceLookupAdapter{appRepo: d.appRepo}, gitAppsService)
-	webhookHandler := gitmod.NewWebhookHandler(webhookDispatcher, webhookDeliveryService, prPreviewService, &gitServiceLookupAdapter{appRepo: d.appRepo})
+	webhookDispatcher := gitmod.NewWebhookDispatcher(webhookDeliveryService, d.deploymentService, &adapters.GitServiceLookupAdapter{AppRepo: d.appRepo}, gitAppsService)
+	webhookHandler := gitmod.NewWebhookHandler(webhookDispatcher, webhookDeliveryService, prPreviewService, &adapters.GitServiceLookupAdapter{AppRepo: d.appRepo})
 	gitProvidersHandler := gitmod.NewProvidersHandler(d.gitService)
 	gitInspectionHandler := gitmod.NewInspectionHandler(d.gitService)
 	gitAppsHandler := gitmod.NewAppsHandler(gitAppsService)
 
 	retentionService := deploymentsmod.NewRetentionService(deploymentsmod.NewDeploymentRepository(d.db))
 	_ = retentionService
-	deploymentHandler := deploymentsmod.NewDeploymentHandler(d.deploymentService, &appLookupAdapter{appService: d.appService}, &projectLookupAdapter{projectService: d.projectService}, &aiExplainerAdapter{svc: d.aiAnalysisService}, &prPreviewLookupAdapter{pr: prPreviewService})
-	lifecycleHandler := deploymentsmod.NewLifecycleHandler(d.deploymentService, &appLookupAdapter{appService: d.appService}, &auditLoggerAdapter{audit: d.auditService})
+	deploymentHandler := deploymentsmod.NewDeploymentHandler(d.deploymentService, &adapters.AppLookupAdapter{AppService: d.appService}, &adapters.ProjectLookupAdapter{ProjectService: d.projectService}, &adapters.AIExplainerAdapter{Svc: d.aiAnalysisService}, &adapters.PRPreviewLookupAdapter{Pr: prPreviewService})
+	lifecycleHandler := deploymentsmod.NewLifecycleHandler(d.deploymentService, &adapters.AppLookupAdapter{AppService: d.appService}, &adapters.AuditLoggerAdapter{Audit: d.auditService})
 	registryRepo := deploymentsmod.NewRegistryRepository(d.db)
 	registryService := deploymentsmod.NewRegistryService(registryRepo)
 	registryHandler := deploymentsmod.NewRegistryHandler(registryService)
 	archiveService := deploymentsmod.NewArchiveService(d.deploymentService)
-	archiveHandler := deploymentsmod.NewArchiveHandler(archiveService, &projectLookupAdapter{projectService: d.projectService})
-	terminalHandler := deploymentsmod.NewTerminalHandler(d.dockerClient, d.tokenService, &appLookupAdapter{appService: d.appService}, &projectLookupAdapter{projectService: d.projectService}, &userStatusAdapter{us: d.userService})
+	archiveHandler := deploymentsmod.NewArchiveHandler(archiveService, &adapters.ProjectLookupAdapter{ProjectService: d.projectService})
+	terminalHandler := deploymentsmod.NewTerminalHandler(d.dockerClient, d.tokenService, &adapters.AppLookupAdapter{AppService: d.appService}, &adapters.ProjectLookupAdapter{ProjectService: d.projectService}, &adapters.UserStatusAdapter{Us: d.userService})
 	terminalHandler.Targets = d.deploymentService
 
 	appsService := appsmod.NewService(d.appRepo, appsmod.NewServiceVarRepo(d.db), appsmod.NewServiceVolumeRepo(d.db))
-	appAccess := &appAccessChecker{ps: d.projectService}
-	envLookup := &envLookupAdapter{repo: d.environmentRepo}
+	appAccess := &adapters.AppAccessChecker{Ps: d.projectService}
+	envLookup := &adapters.EnvLookupAdapter{Repo: d.environmentRepo}
 	appsHandler := appsmod.NewHandler(appsService, appAccess, envLookup)
-	appsHandler.SetDeployer(&appLifecycleDeployerAdapter{ds: d.deploymentService, appService: d.appService})
+	appsHandler.SetDeployer(&adapters.AppLifecycleDeployerAdapter{Ds: d.deploymentService, AppService: d.appService})
 	appVarHandler := appsmod.NewVariableHandler(appsService, appAccess)
 	appVolumeHandler := appsmod.NewVolumeHandler(appsService, appAccess)
 	appWebhookHandler := appsmod.NewWebhookHandler(appsService)
@@ -84,24 +85,24 @@ func buildServerInstance(d *serverSetupDeps) (*Server, error) {
 	projectAppHandler := projectsmod.NewProjectAppHandler(d.projectAppService, projService)
 	projectSettingsHandler := projectsmod.NewProjectSettingsHandler(projSettingsService)
 	checksHandler := projectsmod.NewChecksHandler()
-	canvasHandler := canvas.NewCanvasHandler(&canvasServiceAdapter{cs: d.canvasService})
+	canvasHandler := canvas.NewCanvasHandler(&adapters.CanvasServiceAdapter{Cs: d.canvasService})
 
-	stackService := composemod.NewComposeStackService(composemod.NewComposeStackRepo(d.db, d.v), &composeStackRuntimeAdapter{rt: compose.NewStackRuntime(d.dockerClient)})
+	stackService := composemod.NewComposeStackService(composemod.NewComposeStackRepo(d.db, d.v), &adapters.ComposeStackRuntimeAdapter{Rt: compose.NewStackRuntime(d.dockerClient)})
 	stackService.BeforeDeployment = d.backupService.BeforeProjectDeployment
 	_ = stackService.Recover(context.Background())
-	composeStackHandler := composemod.NewComposeStackHandler(&composeStackAdapter{cs: stackService})
+	composeStackHandler := composemod.NewComposeStackHandler(&adapters.ComposeStackAdapter{Cs: stackService})
 	tmplMgr, _ := compose.NewTemplateManager()
-	oneClickService := templatesmod.NewOneClickService(tmplMgr, stackService, &templateEnvAdapter{repo: d.environmentRepo})
-	oneClickHandler := templatesmod.NewOneClickHandler(&oneClickAdapter{oc: oneClickService})
+	oneClickService := templatesmod.NewOneClickService(tmplMgr, stackService, &adapters.TemplateEnvAdapter{Repo: d.environmentRepo})
+	oneClickHandler := templatesmod.NewOneClickHandler(&adapters.OneClickAdapter{Oc: oneClickService})
 
 	envService := environments.NewEnvironmentService(d.environmentRepo, environments.NewEnvVarRepo())
-	envHandler := environments.NewEnvironmentHandler(envService, &projectLookupAdapter{projectService: d.projectService}, environments.NewEnvSuggestionService(&envGitProviderAdapter{ps: d.gitService}))
-	protectionService := environments.NewRouteProtectionService(environments.NewRouteProtectionRepository(d.db), &projectLookupAdapter{projectService: d.projectService})
+	envHandler := environments.NewEnvironmentHandler(envService, &adapters.ProjectLookupAdapter{ProjectService: d.projectService}, environments.NewEnvSuggestionService(&adapters.EnvGitProviderAdapter{Ps: d.gitService}))
+	protectionService := environments.NewRouteProtectionService(environments.NewRouteProtectionRepository(d.db), &adapters.ProjectLookupAdapter{ProjectService: d.projectService})
 	protectionHandler := environments.NewRouteProtectionHandler(protectionService)
 	edgeAuthHandler := environments.NewEdgeAuthHandler(protectionService)
 	routeRuleRepo := environments.NewRouteRuleRepository(d.db)
-	routeRuleHandler := environments.NewRouteRuleHandler(environments.NewRouteRuleService(routeRuleRepo), &serviceCheckerAdapter{appService: d.appService})
-	domainHandler := domainsmod.NewDomainHandler(domainsmod.NewDomainService(d.domainRepo, dnsProviderService), appAccess, &domainServiceLookupAdapter{appRepo: d.appRepo}, &serverSettingsAdapter{repo: d.settingsRepo}, &auditDomainAdapter{audit: d.auditService})
+	routeRuleHandler := environments.NewRouteRuleHandler(environments.NewRouteRuleService(routeRuleRepo), &adapters.ServiceCheckerAdapter{AppService: d.appService})
+	domainHandler := domainsmod.NewDomainHandler(domainsmod.NewDomainService(d.domainRepo, dnsProviderService), appAccess, &adapters.DomainServiceLookupAdapter{AppRepo: d.appRepo}, &adapters.ServerSettingsAdapter{Repo: d.settingsRepo}, &adapters.AuditDomainAdapter{Audit: d.auditService})
 
 	metricsService := monitoring.NewMetricsService()
 	logService := monitoring.NewLogService()
@@ -122,7 +123,7 @@ func buildServerInstance(d *serverSetupDeps) (*Server, error) {
 	monHandlers := createMonitoringHandlers(d, updaterService, metricsService, logService)
 	var billingHandler *billing.BillingHandler
 	if config.Get().Cloud.Enabled {
-		billingHandler = billing.NewBillingHandler(billing.NewBillingService(&billingUserAdapter{repo: d.userRepo}))
+		billingHandler = billing.NewBillingHandler(billing.NewBillingService(adapters.NewBillingUserAdapter(d.userRepo)))
 	}
 	supportHandler := support.NewSupportHandler()
 	_ = networking.EnsureTraefikAccessRoute(networking.DynamicDir, config.Get().Server.Port)
@@ -183,7 +184,7 @@ func buildServerInstance(d *serverSetupDeps) (*Server, error) {
 		composeStackHandler:        composeStackHandler,
 		chatAppHandler:             chatapps.NewHandler(chatAppService, chatapps.NewDispatcher(chatAppService, nil)),
 		oneClickHandler:            oneClickHandler,
-		migrationHandler:           modmigrations.NewBundleHandler(&migrationBundleAdapter{service: migrationService}, &migrationUserCounterAdapter{users: d.userRepo}, middleware.NewRateLimiter(5, time.Minute)),
+		migrationHandler:           modmigrations.NewBundleHandler(&adapters.MigrationBundleAdapter{Service: migrationService}, &adapters.MigrationUserCounterAdapter{Users: d.userRepo}, middleware.NewRateLimiter(5, time.Minute)),
 		onboardingHandler:          users.NewOnboardingHandler(d.userService),
 		dnsHandler:                 dns.NewHandler(dnsService),
 		metricsHandler:             monHandlers.metricsHandler,
@@ -218,33 +219,33 @@ func buildServerInstance(d *serverSetupDeps) (*Server, error) {
 		d.db,
 		d.v,
 		accessLogPath,
-		&analyticsDeployRepoAdapter{repo: d.deployRepo},
-		&analyticsProjectRepoAdapter{repo: d.projectRepo},
-		&analyticsAppRepoAdapter{repo: d.appRepo},
-		&analyticsDomainListerAdapter{repo: d.domainRepo},
-		&analyticsUserRepoAdapter{repo: d.userRepo},
-		&analyticsOrgRepoAdapter{repo: d.orgRepo},
+		&adapters.AnalyticsDeployRepoAdapter{Repo: d.deployRepo},
+		&adapters.AnalyticsProjectRepoAdapter{Repo: d.projectRepo},
+		&adapters.AnalyticsAppRepoAdapter{Repo: d.appRepo},
+		&adapters.AnalyticsDomainListerAdapter{Repo: d.domainRepo},
+		&adapters.AnalyticsUserRepoAdapter{Repo: d.userRepo},
+		&adapters.AnalyticsOrgRepoAdapter{Repo: d.orgRepo},
 		metricsService,
 		d.statsMonitor,
-		&attentionDeployerAdapter{deploymentService: d.deploymentService, appService: d.appService},
+		&adapters.AttentionDeployerAdapter{DeploymentService: d.deploymentService, AppService: d.appService},
 		d.backupService,
 		nil,
 	)
-	srv.analyticsHandler = monitoring.NewAnalyticsHandler(&analyticsServiceAdapter{svc: analyticsServices.AnalyticsService})
-	srv.attentionHandler = monitoring.NewAttentionHandler(&attentionServiceAdapter{svc: analyticsServices.AttentionService})
+	srv.analyticsHandler = monitoring.NewAnalyticsHandler(&adapters.AnalyticsServiceAdapter{Svc: analyticsServices.AnalyticsService})
+	srv.attentionHandler = monitoring.NewAttentionHandler(&adapters.AttentionServiceAdapter{Svc: analyticsServices.AttentionService})
 	clusterServices, err := modclusters.InitClusterServices(d.db, d.v, d.projectRepo, d.serverRepo, d.operationService, d.volumeOperations)
 	if err != nil {
 		return nil, err
 	}
-	srv.clusterHandler = modclusters.NewHandler(&clusterServiceAdapter{
-		service:    clusterServices.Service,
-		operations: d.operationService,
+	srv.clusterHandler = modclusters.NewHandler(&adapters.ClusterServiceAdapter{
+		Service:    clusterServices.Service,
+		Operations: d.operationService,
 	})
-	srv.clusterDataHandler = modclusters.NewDataHandler(&clusterDataServiceAdapter{
-		service:    clusterServices.DataService,
-		operations: d.operationService,
-		apps:       d.appRepo,
-		vars:       appsmod.NewServiceVarRepo(d.db),
+	srv.clusterDataHandler = modclusters.NewDataHandler(&adapters.ClusterDataServiceAdapter{
+		Service:    clusterServices.DataService,
+		Operations: d.operationService,
+		Apps:       d.appRepo,
+		Vars:       appsmod.NewServiceVarRepo(d.db),
 	})
 	configureDeploymentBindings(srv, environments.NewRouteRuleRepository(d.db), d.domainRepo, environments.NewRouteProtectionRepository(d.db))
 

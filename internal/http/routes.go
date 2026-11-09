@@ -12,6 +12,7 @@ import (
 	"codedock/internal/modules/environments"
 	mailmodule "codedock/internal/modules/mail"
 	modmigrations "codedock/internal/modules/migrations"
+	"codedock/internal/modules/monitoring"
 	"codedock/internal/modules/organizations"
 	"codedock/internal/modules/projects"
 	serversmod "codedock/internal/modules/servers"
@@ -33,8 +34,8 @@ func (s *Server) registerRoutes() {
 	s.registerProjectRoutes(apiGroup, authGroup)
 	s.registerOrganizationRoutes(authGroup)
 	s.registerServerRoutes(apiGroup, authGroup)
-	s.registerMigrationRoutes(authGroup)
-	s.registerAnalyticsRoutes(authGroup)
+	s.registerMigrationRoutes(apiGroup, authGroup)
+	s.registerAnalyticsRoutes(apiGroup, authGroup)
 	s.registerDatabaseRoutes(authGroup)
 	s.registerAppRoutes(apiGroup, authGroup)
 	s.registerDeploymentRoutes(apiGroup, authGroup)
@@ -51,9 +52,7 @@ func (s *Server) registerRoutes() {
 	s.router.GET("/health/env", s.settingsHandler.GetHealthEnv)
 	apiGroup.GET("/health/env", s.settingsHandler.GetHealthEnv)
 
-	s.router.GET("/api/v1/edge/auth", s.edgeAuthHandler.Verify)
-	s.router.GET("/_codedock/access", s.edgeAuthHandler.LoginForm)
-	s.router.POST("/_codedock/access", s.edgeAuthHandler.Login)
+	environments.RegisterEdgeAuthRoutes(s.router, s.edgeAuthHandler)
 
 	s.setupSPAFallback()
 }
@@ -114,16 +113,11 @@ func (s *Server) registerAuthRoutes(apiGroup, authGroup *echo.Group) {
 		BootstrapCSRF:     bootstrapCSRF,
 		AuthRateLimit:     s.authRateLimiter.Middleware,
 		OTPRateLimit:      s.otpRateLimiter.Middleware,
+		AdminAuth:         s.authGuard.RequireRole("admin"),
 	})
 }
 
 func (s *Server) registerSystemRoutes(apiGroup, authGroup *echo.Group) {
-	apiGroup.GET("/github-stars", s.getGithubStars)
-	apiGroup.GET("/system/public", s.settingsHandler.GetPublicSettings)
-	apiGroup.GET("/system/setup-status", s.onboardingHandler.SetupStatus)
-	apiGroup.POST("/system/setup/import", s.migrationHandler.ImportDuringSetup)
-	apiGroup.POST("/system/export", s.migrationHandler.Export, s.authGuard.RequireRole("admin"))
-	apiGroup.POST("/system/import", s.migrationHandler.Import, s.authGuard.RequireRole("admin"))
 	systemmod.RegisterRoutes(authGroup, apiGroup, systemmod.RoutesConfig{
 		System:    s.systemHandler,
 		Updater:   s.updaterHandler,
@@ -137,6 +131,7 @@ func (s *Server) registerUserRoutes(apiGroup, authGroup *echo.Group) {
 		ah = &auth.AuthHandler{}
 	}
 	users.RegisterRoutes(authGroup, s.userHandler, ah.AdminInviteUser, s.authGuard.RequireRole("admin"), s.otpRateLimiter.Middleware)
+	users.RegisterOnboardingRoutes(apiGroup, s.onboardingHandler)
 }
 
 func (s *Server) registerProjectRoutes(apiGroup, authGroup *echo.Group) {
@@ -210,14 +205,16 @@ func (s *Server) registerMailRoutes(authGroup *echo.Group) {
 	mailmodule.RegisterRoutes(authGroup, s.mailHandler)
 }
 
-func (s *Server) registerMigrationRoutes(authGroup *echo.Group) {
-	modmigrations.RegisterRoutes(nil, authGroup, modmigrations.RoutesConfig{
+func (s *Server) registerMigrationRoutes(apiGroup, authGroup *echo.Group) {
+	modmigrations.RegisterRoutes(apiGroup, authGroup, modmigrations.RoutesConfig{
 		LifecycleHandler: s.migrationLifecycleHandler,
+		BundleHandler:    s.migrationHandler,
 		Middleware: modmigrations.RouteMiddleware{
 			OrgMember:   s.authGuard.RequireOrgRole("member"),
 			OrgAdmin:    s.authGuard.RequireOrgRole("admin"),
 			ServerRead:  s.authGuard.RequireScope("server:read"),
 			ServerWrite: s.authGuard.RequireScope("server:write"),
+			Admin:       s.authGuard.RequireRole("admin"),
 		},
 	})
 }
@@ -229,6 +226,25 @@ func (s *Server) registerClusterRoutes(group *echo.Group) {
 		Middleware: modclusters.RouteMiddleware{
 			Admin:          s.authGuard.RequireRole("admin"),
 			DatabaseManage: s.authGuard.RequireScope("database:manage"),
+		},
+	})
+}
+
+func (s *Server) registerAnalyticsRoutes(apiGroup, authGroup *echo.Group) {
+	serviceAuth := s.RequireServiceRole("")
+	monitoring.RegisterRoutes(authGroup, apiGroup, monitoring.RoutesConfig{
+		Analytics:     s.analyticsHandler,
+		Attention:     s.attentionHandler,
+		Metrics:       s.metricsHandler,
+		Logs:          s.logHandler,
+		ServiceLogsWS: s.serviceLogsWSHandler,
+		Example:       s.exampleHandler,
+		Middleware: monitoring.RouteMiddleware{
+			OrgMember:   s.authGuard.RequireOrgRole("member"),
+			OrgAdmin:    s.authGuard.RequireOrgRole("admin"),
+			ReadScope:   s.authGuard.RequireScope("server:read"),
+			WriteScope:  s.authGuard.RequireScope("server:write"),
+			ServiceAuth: serviceAuth,
 		},
 	})
 }

@@ -1,4 +1,4 @@
-package http
+package backups
 
 import (
 	"context"
@@ -21,7 +21,7 @@ type ServerBackupTargetLookup interface {
 	GetByID(ctx context.Context, id string) (*serversmod.Server, error)
 }
 
-func configureRemoteBackups(manager *backup.BackupManager, projects ProjectBackupTargetLookup, servers ServerBackupTargetLookup, sshMgr *ssh.SSHManager) {
+func ConfigureRemoteBackups(manager *backup.BackupManager, projects ProjectBackupTargetLookup, servers ServerBackupTargetLookup, sshMgr *ssh.SSHManager) {
 	manager.SetDockerTarget(func(ctx context.Context, cfg *backup.BackupConfig) (*client.Client, func(), error) {
 		if cfg.ProjectID == "" {
 			return nil, func() {}, nil

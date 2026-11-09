@@ -11,6 +11,7 @@ import (
 	"github.com/docker/docker/client"
 	"github.com/labstack/echo/v4"
 
+	"codedock/internal/adapters"
 	"codedock/internal/config"
 	"codedock/internal/engine/deploy"
 	"codedock/internal/http/middleware"
@@ -76,9 +77,9 @@ func NewServer(db *sql.DB, v *vault.Vault, deployer *deploy.Deployer, traefikMan
 	serverlessRepository := appsmod.NewServerlessRepository(db)
 	projectSettingsRepo := projectsmod.NewProjectSettingsRepo(db)
 	userRepo := users.NewUserRepo(db)
-	canvasRepo := canvas.NewCanvasRepo(db, &canvasEnvAdapter{repo: environmentRepo})
+	canvasRepo := canvas.NewCanvasRepo(db, &adapters.CanvasEnvAdapter{Repo: environmentRepo})
 	canvasRepo.SetVault(v)
-	canvasRepo.SetClusterData(&canvasClusterDataAdapter{repo: modclusters.NewClusterDataRepo(db, v)})
+	canvasRepo.SetClusterData(&adapters.CanvasClusterDataAdapter{Repo: modclusters.NewClusterDataRepo(db, v)})
 	deployRepo := deploymentsmod.NewDeploymentRepository(db)
 	if err := deployRepo.RecoverInterrupted(context.Background()); err != nil {
 		return nil, fmt.Errorf("recover deployments: %w", err)
@@ -91,8 +92,8 @@ func NewServer(db *sql.DB, v *vault.Vault, deployer *deploy.Deployer, traefikMan
 	orgRepo := organizations.NewOrganizationRepository(db)
 	webhookDeliveryRepo := gitmod.NewWebhookDeliveryRepository(db)
 
-	httpEngineAdapter := newEngineAdapter(appRepo, dbRepo, projectRepo, scheduledTaskRepo, backupRepo)
-	httpEngineAdapter.sftpRepo = backupmodule.NewSFTPRepository(db)
+	httpEngineAdapter := adapters.NewEngineAdapter(appRepo, dbRepo, projectRepo, scheduledTaskRepo, backupRepo)
+	httpEngineAdapter.SetSFTPRepo(backupmodule.NewSFTPRepository(db))
 	volumeOperations := deploy.NewVolumeGate()
 	if deployer != nil {
 		deployer.SetVolumeOperations(volumeOperations)
@@ -117,9 +118,9 @@ func NewServer(db *sql.DB, v *vault.Vault, deployer *deploy.Deployer, traefikMan
 	deviceTokenRepo := notifsmod.NewDeviceTokenRepo(db)
 	notifSettingsService := notifsmod.NewNotificationSettingsService(notifRepo, notifsmod.NewNotificationDeliveryRepo(db), deviceTokenRepo)
 	aiSettingsService := aimod.NewService(aiRepo)
-	serviceLinker := appsmod.NewServiceLinker(&appDatabaseAdapter{repo: dbRepo})
+	serviceLinker := appsmod.NewServiceLinker(&adapters.AppDatabaseAdapter{Repo: dbRepo})
 	serviceLinker.SetApplications(appRepo, serviceVarRepo)
-	serviceLinker.SetClusterData(&appClusterPlansAdapter{repo: modclusters.NewClusterDataRepo(db, v)})
+	serviceLinker.SetClusterData(&adapters.AppClusterPlansAdapter{Repo: modclusters.NewClusterDataRepo(db, v)})
 	mailerService, err := notifications.NewMailerService(notifSettingsService)
 	if err != nil {
 		return nil, fmt.Errorf("mailer service: %w", err)
@@ -137,19 +138,19 @@ func NewServer(db *sql.DB, v *vault.Vault, deployer *deploy.Deployer, traefikMan
 	tokenService := authMod.TokenService
 	projectSettingsService := projectsmod.NewProjectSettingsService(projectSettingsRepo)
 	dispatcherService := notifications.NewDispatcherService(
-		&notifSettingsAdapter{repo: settingsRepo},
+		&adapters.NotifSettingsAdapter{Repo: settingsRepo},
 		notifRepo,
-		&notifUserLookupAdapter{repo: userRepo},
+		&adapters.NotifUserLookupAdapter{Repo: userRepo},
 		notifsmod.NewNotificationDeliveryRepo(db),
 		mailerService,
-		&notifDeviceTokenAdapter{repo: deviceTokenRepo},
+		&adapters.NotifDeviceTokenAdapter{Repo: deviceTokenRepo},
 	)
 
-	deploymentListeners := notifications.NewDeploymentListeners(dispatcherService, &notifAppRepoAdapter{repo: appRepo})
+	deploymentListeners := notifications.NewDeploymentListeners(dispatcherService, &adapters.NotifAppRepoAdapter{Repo: appRepo})
 	deploymentListeners.Register()
 
 	serverRepo := servers.NewRepository(db, v)
-	sshManager := ssh.NewSSHManager(&sshServerRepoAdapter{repo: serverRepo})
+	sshManager := ssh.NewSSHManager(&adapters.SSHServerRepoAdapter{Repo: serverRepo})
 	sshManager.OnServerUnreachable = func(server *ssh.Server, err error) {
 		baseURL := strings.TrimRight(config.Get().Server.DashboardURL, "/")
 		if baseURL == "" {
@@ -166,7 +167,7 @@ func NewServer(db *sql.DB, v *vault.Vault, deployer *deploy.Deployer, traefikMan
 
 	scheduledTaskService := tasks.NewScheduledTaskService(scheduledTaskRepo, cronManager)
 	canvasService := canvas.NewCanvasService(canvasRepo)
-	canvasService.SetRuntime(&canvasRuntimeAdapter{rt: observability.NewCanvasRuntime(dockerClient)})
+	canvasService.SetRuntime(&adapters.CanvasRuntimeAdapter{Rt: observability.NewCanvasRuntime(dockerClient)})
 
 	gitProviderRepo := gitmod.NewGitProviderRepository(db, v)
 	gitService := gitmod.NewProviderService(gitProviderRepo)
@@ -174,10 +175,10 @@ func NewServer(db *sql.DB, v *vault.Vault, deployer *deploy.Deployer, traefikMan
 	deploymentRepo := deploymentsmod.NewDeploymentRepository(db)
 	deploymentService := deploymentsmod.NewDeploymentService(
 		deploymentRepo,
-		&appLookupAdapter{appService: appService},
-		&projectLookupAdapter{projectService: projectService},
+		&adapters.AppLookupAdapter{AppService: appService},
+		&adapters.ProjectLookupAdapter{ProjectService: projectService},
 		gitService,
-		&deployEngineAdapter{deployer: deployer, appService: appService},
+		&adapters.DeployEngineAdapter{Deployer: deployer, AppService: appService},
 		statsMonitor,
 	)
 	deploymentService.SetLocalDocker(dockerClient)
@@ -191,7 +192,7 @@ func NewServer(db *sql.DB, v *vault.Vault, deployer *deploy.Deployer, traefikMan
 
 	autoscalingRepo := appsmod.NewWorkerAutoscalingRepo(db)
 	autoscalingService := appsmod.NewAutoscalingService(appsmod.NewAutoscalingRepository(db), serverlessRepository, appRepo)
-	autoscaler := deploy.NewAutoscalerWorker(appRepo, statsMonitor, &autoscalerDeploymentAdapter{ds: deploymentService}, autoscalingRepo)
+	autoscaler := deploy.NewAutoscalerWorker(appRepo, statsMonitor, &adapters.AutoscalerDeploymentAdapter{Ds: deploymentService}, autoscalingRepo)
 
 	operationService := operations.NewOperationService(operations.NewOperationRepo(db, v))
 	if err := operationService.Recover(context.Background()); err != nil {
@@ -225,7 +226,7 @@ func NewServer(db *sql.DB, v *vault.Vault, deployer *deploy.Deployer, traefikMan
 	if err := backupRepo.RecoverRecords(context.Background()); err != nil {
 		return nil, fmt.Errorf("recover backup records: %w", err)
 	}
-	configureRemoteBackups(backupManager, projectRepo, serverRepo, sshManager)
+	backupmodule.ConfigureRemoteBackups(backupManager, projectRepo, serverRepo, sshManager)
 	backupService.SetOperations(operationService)
 	deploymentService.BeforeProjectDeployment = func(ctx context.Context, projectID string) error {
 		return backupService.BeforeProjectDeployment(ctx, projectID, "")

@@ -2,6 +2,16 @@ package operations
 
 import "github.com/labstack/echo/v4"
 
+func withMw(mws ...echo.MiddlewareFunc) []echo.MiddlewareFunc {
+	var active []echo.MiddlewareFunc
+	for _, m := range mws {
+		if m != nil {
+			active = append(active, m)
+		}
+	}
+	return active
+}
+
 func RegisterRoutes(authGroup *echo.Group, h *OperationHandler, readMw, writeMw echo.MiddlewareFunc) {
 	if authGroup == nil {
 		return
@@ -10,17 +20,7 @@ func RegisterRoutes(authGroup *echo.Group, h *OperationHandler, readMw, writeMw 
 		h = &OperationHandler{}
 	}
 
-	if readMw != nil {
-		authGroup.GET("/operations", h.List, readMw)
-		authGroup.GET("/operations/:operationId", h.Get, readMw)
-	} else {
-		authGroup.GET("/operations", h.List)
-		authGroup.GET("/operations/:operationId", h.Get)
-	}
-
-	if writeMw != nil {
-		authGroup.POST("/operations/:operationId/cancel", h.Cancel, writeMw)
-	} else {
-		authGroup.POST("/operations/:operationId/cancel", h.Cancel)
-	}
+	authGroup.GET("/operations", h.List, withMw(readMw)...)
+	authGroup.GET("/operations/:operationId", h.Get, withMw(readMw)...)
+	authGroup.POST("/operations/:operationId/cancel", h.Cancel, withMw(writeMw)...)
 }

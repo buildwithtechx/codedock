@@ -1,7 +1,6 @@
 package http
 
 import (
-	"fmt"
 	"net/http"
 
 	"codedock/internal/config"
@@ -34,46 +33,22 @@ func (s *Server) registerMcpAndAiRoutes(authGroup *echo.Group) {
 	}
 
 	// OAuth 2.1 Protected Resource Discovery for MCP clients
-	s.router.GET("/.well-known/oauth-protected-resource", s.handleOAuthProtectedResource)
-	s.router.GET("/.well-known/oauth-protected-resource/*", s.handleOAuthProtectedResource)
-
-	// Stateless Streamable-HTTP JSON-RPC 2.0 (POST /api/mcp & /api/v1/mcp)
-	authGroup.POST("/mcp", s.handleMCPStreamableHTTP)
-	authGroup.GET("/mcp", func(c echo.Context) error {
-		return c.JSON(http.StatusMethodNotAllowed, map[string]any{
-			"error": "Streamable-HTTP MCP endpoint accepts POST JSON-RPC 2.0 requests; use /api/mcp/sse for SSE streams.",
-		})
-	})
-	authGroup.GET("/mcp/catalog", s.handleMCPCatalog)
-
-	// Persistent SSE MCP endpoints (/api/mcp/sse + /api/v1/mcp/sse)
-	authGroup.GET("/mcp/sse", s.HandleMCPSSE)
-	authGroup.POST("/mcp/messages", s.HandleMCPMessage)
-	authGroup.POST("/mcp/message", s.HandleMCPMessage)
+	mcp.RegisterOAuthProtectedResourceRoutes(s.router)
 
 	v1Group := s.router.Group("/api/v1", s.authGuard.RequireAuth())
-	v1Group.POST("/mcp", s.handleMCPStreamableHTTP)
-	v1Group.GET("/mcp/catalog", s.handleMCPCatalog)
-	v1Group.GET("/mcp/sse", s.HandleMCPSSE)
-	v1Group.POST("/mcp/messages", s.HandleMCPMessage)
-	v1Group.POST("/mcp/message", s.HandleMCPMessage)
+	groups := []*echo.Group{authGroup, v1Group}
 
-	// Instance-Aware AI Co-Pilot endpoints
-	authGroup.GET("/ai/resources", s.handleListAiResources)
-	authGroup.POST("/ai/chat", s.handleAiChat)
-	authGroup.POST("/ai/actions/confirm", s.handleConfirmAiAction)
-	v1Group.GET("/ai/resources", s.handleListAiResources)
-	v1Group.POST("/ai/chat", s.handleAiChat)
-	v1Group.POST("/ai/actions/confirm", s.handleConfirmAiAction)
-}
+	mcp.RegisterRoutes(groups, mcp.RoutesConfig{
+		StreamableHTTP: s.handleMCPStreamableHTTP,
+		Catalog:        s.handleMCPCatalog,
+		SSE:            s.HandleMCPSSE,
+		Message:        s.HandleMCPMessage,
+	})
 
-func (s *Server) handleOAuthProtectedResource(c echo.Context) error {
-	base := fmt.Sprintf("%s://%s", c.Scheme(), c.Request().Host)
-	return c.JSON(http.StatusOK, map[string]any{
-		"resource":                 base + "/api/mcp",
-		"authorization_servers":    []string{base},
-		"bearer_methods_supported": []string{"header"},
-		"scopes_supported":         []string{"read", "write", "admin"},
+	ai.RegisterAssistantRoutes(groups, ai.AssistantRoutesConfig{
+		ListResources: s.handleListAiResources,
+		Chat:          s.handleAiChat,
+		ConfirmAction: s.handleConfirmAiAction,
 	})
 }
 

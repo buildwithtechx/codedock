@@ -18,3 +18,12 @@ func RegisterRoutes(authGroup *echo.Group, userHandler *UserHandler, adminInvite
 	authGroup.POST("/profile/tokens", userHandler.CreatePAT)
 	authGroup.DELETE("/profile/tokens/:id", userHandler.DeletePAT)
 }
+
+func RegisterOnboardingRoutes(apiGroup *echo.Group, onboarding *OnboardingHandler) {
+	if onboarding == nil {
+		onboarding = &OnboardingHandler{}
+	}
+	if apiGroup != nil {
+		apiGroup.GET("/system/setup-status", onboarding.SetupStatus)
+	}
+}
