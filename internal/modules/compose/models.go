@@ -1,4 +1,4 @@
-package projects
+package compose
 
 type ComposeStackRequest struct {
 	ProjectID     string            `json:"projectId,omitempty"`

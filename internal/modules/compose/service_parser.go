@@ -1,4 +1,4 @@
-package projects
+package compose
 
 import (
 	"strings"
@@ -18,8 +18,8 @@ type ParsedComposeResult struct {
 }
 
 func (s *ComposeParserService) Parse(composeData []byte, projectID string) (*ParsedComposeResult, error) {
-	var compose UserComposeFile
-	if err := yaml.Unmarshal(composeData, &compose); err != nil {
+	var userCompose UserComposeFile
+	if err := yaml.Unmarshal(composeData, &userCompose); err != nil {
 		return nil, err
 	}
 
@@ -28,7 +28,7 @@ func (s *ComposeParserService) Parse(composeData []byte, projectID string) (*Par
 		Databases:   make([]CreateDatabaseRequest, 0),
 	}
 
-	for name, svc := range compose.Services {
+	for name, svc := range userCompose.Services {
 		imageLower := strings.ToLower(svc.Image)
 		engine := detectDatabaseEngine(imageLower)
 

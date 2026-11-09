@@ -6,9 +6,11 @@ import (
 
 	"codedock/internal/modules/canvas"
 	modclusters "codedock/internal/modules/clusters"
+	composemod "codedock/internal/modules/compose"
 	"codedock/internal/modules/environments"
 	gitmod "codedock/internal/modules/git"
 	projectsmod "codedock/internal/modules/projects"
+	templatesmod "codedock/internal/modules/templates"
 	docker "codedock/internal/platform/docker"
 )
 
@@ -56,7 +58,7 @@ func (c *canvasServiceAdapter) ReadObservation(ctx context.Context, canv any, no
 }
 
 type composeStackAdapter struct {
-	cs *projectsmod.ComposeStackService
+	cs *composemod.ComposeStackService
 }
 
 func (c *composeStackAdapter) List(ctx context.Context, projectID string) (any, error) {
@@ -68,12 +70,12 @@ func (c *composeStackAdapter) Config(ctx context.Context, projectID, stackID str
 }
 
 func (c *composeStackAdapter) Review(ctx context.Context, projectID string, req any) (any, error) {
-	r, _ := req.(projectsmod.ComposeStackRequest)
+	r, _ := req.(composemod.ComposeStackRequest)
 	return c.cs.Review(ctx, r)
 }
 
 func (c *composeStackAdapter) Save(ctx context.Context, projectID string, req any) (any, error) {
-	r, _ := req.(projectsmod.ComposeStackRequest)
+	r, _ := req.(composemod.ComposeStackRequest)
 	return c.cs.Save(ctx, projectID, r)
 }
 
@@ -95,7 +97,7 @@ func (c *composeStackAdapter) Stop(ctx context.Context, projectID, stackID strin
 }
 
 type oneClickAdapter struct {
-	oc *projectsmod.OneClickService
+	oc *templatesmod.OneClickService
 }
 
 func (o *oneClickAdapter) ListApps() any {
@@ -118,14 +120,14 @@ func (o *oneClickAdapter) DeleteCustomApp(id string) error {
 }
 
 func (o *oneClickAdapter) Review(ctx context.Context, req any) (any, error) {
-	if r, ok := req.(projectsmod.InstallAppInput); ok {
+	if r, ok := req.(templatesmod.InstallAppInput); ok {
 		return o.oc.ReviewInstall(ctx, r)
 	}
 	return nil, fmt.Errorf("invalid review request")
 }
 
 func (o *oneClickAdapter) Deploy(ctx context.Context, req any) (any, error) {
-	if r, ok := req.(projectsmod.InstallAppInput); ok {
+	if r, ok := req.(templatesmod.InstallAppInput); ok {
 		return o.oc.InstallApp(ctx, r)
 	}
 	return nil, fmt.Errorf("invalid deploy request")
@@ -188,6 +190,30 @@ func (a *projectEnvAdapter) GetDefaultByProject(ctx context.Context, projectID s
 		}, nil
 	}
 	return nil, nil
+}
+
+type templateEnvAdapter struct {
+	repo *environments.EnvironmentRepo
+}
+
+func (a *templateEnvAdapter) ListByProject(ctx context.Context, projectID string) ([]*templatesmod.EnvironmentConfig, error) {
+	if a.repo == nil {
+		return []*templatesmod.EnvironmentConfig{}, nil
+	}
+	envs, err := a.repo.ListByProject(ctx, projectID)
+	if err != nil {
+		return nil, err
+	}
+	res := make([]*templatesmod.EnvironmentConfig, len(envs))
+	for i := range envs {
+		res[i] = &templatesmod.EnvironmentConfig{
+			ID:        envs[i].ID,
+			ProjectID: envs[i].ProjectID,
+			Name:      envs[i].Name,
+			IsDefault: envs[i].IsDefault,
+		}
+	}
+	return res, nil
 }
 
 type canvasClusterDataAdapter struct {

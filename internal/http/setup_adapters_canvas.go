@@ -5,8 +5,8 @@ import (
 	"fmt"
 
 	"codedock/internal/modules/canvas"
+	composemod "codedock/internal/modules/compose"
 	"codedock/internal/modules/environments"
-	projectsmod "codedock/internal/modules/projects"
 	docker "codedock/internal/platform/docker"
 	"codedock/internal/platform/observability"
 )
@@ -130,7 +130,7 @@ func (a *composeStackRuntimeAdapter) ValidatePorts(ctx context.Context, name, co
 	return a.rt.ValidatePorts(ctx, name, config)
 }
 
-func (a *composeStackRuntimeAdapter) Apply(ctx context.Context, stack *projectsmod.ComposeStack, progress func(string) error) error {
+func (a *composeStackRuntimeAdapter) Apply(ctx context.Context, stack *composemod.ComposeStack, progress func(string) error) error {
 	if a.rt == nil || stack == nil {
 		return fmt.Errorf("runtime unavailable")
 	}
@@ -149,7 +149,7 @@ func (a *composeStackRuntimeAdapter) Apply(ctx context.Context, stack *projectsm
 	return a.rt.Apply(ctx, dStack, progress)
 }
 
-func (a *composeStackRuntimeAdapter) Results(ctx context.Context, projectID string) ([]projectsmod.ComposeServiceResult, error) {
+func (a *composeStackRuntimeAdapter) Results(ctx context.Context, projectID string) ([]composemod.ComposeServiceResult, error) {
 	if a.rt == nil {
 		return nil, fmt.Errorf("runtime unavailable")
 	}
@@ -157,9 +157,9 @@ func (a *composeStackRuntimeAdapter) Results(ctx context.Context, projectID stri
 	if err != nil {
 		return nil, err
 	}
-	out := make([]projectsmod.ComposeServiceResult, len(res))
+	out := make([]composemod.ComposeServiceResult, len(res))
 	for i, r := range res {
-		out[i] = projectsmod.ComposeServiceResult{
+		out[i] = composemod.ComposeServiceResult{
 			Name:        r.Name,
 			ContainerID: r.ContainerID,
 			State:       r.State,

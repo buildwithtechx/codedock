@@ -21,6 +21,7 @@ import (
 	"codedock/internal/modules/canvas"
 	"codedock/internal/modules/chatapps"
 	modclusters "codedock/internal/modules/clusters"
+	composemod "codedock/internal/modules/compose"
 	"codedock/internal/modules/databases"
 	deploymentsmod "codedock/internal/modules/deployments"
 	"codedock/internal/modules/dns"
@@ -40,6 +41,7 @@ import (
 	"codedock/internal/modules/support"
 	systemmod "codedock/internal/modules/system"
 	"codedock/internal/modules/tasks"
+	templatesmod "codedock/internal/modules/templates"
 	"codedock/internal/modules/users"
 	"codedock/internal/platform/networking"
 	core "codedock/internal/platform/notifications"
@@ -103,9 +105,9 @@ type Server struct {
 	domainHandler              *domainsmod.DomainHandler
 	notificationHandler        *notifsmod.NotificationHandler
 	systemHandler              *systemmod.SystemHandler
-	composeStackHandler        *projectsmod.ComposeStackHandler
+	composeStackHandler        *composemod.ComposeStackHandler
 	chatAppHandler             *chatapps.Handler
-	oneClickHandler            *projectsmod.OneClickHandler
+	oneClickHandler            *templatesmod.OneClickHandler
 	migrationHandler           *modmigrations.BundleHandler
 	onboardingHandler          *users.OnboardingHandler
 	dnsHandler                 *dns.Handler

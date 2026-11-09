@@ -17,6 +17,7 @@ import (
 	"codedock/internal/modules/auth"
 	"codedock/internal/modules/canvas"
 	modclusters "codedock/internal/modules/clusters"
+	composemod "codedock/internal/modules/compose"
 	deploymentsmod "codedock/internal/modules/deployments"
 	"codedock/internal/modules/dns"
 	domainsmod "codedock/internal/modules/domains"
@@ -27,6 +28,7 @@ import (
 	projectsmod "codedock/internal/modules/projects"
 	serversmod "codedock/internal/modules/servers"
 	"codedock/internal/modules/support"
+	templatesmod "codedock/internal/modules/templates"
 )
 
 const openAPIGoldenPath = "../../docs/api/openapi.json"
@@ -60,8 +62,8 @@ func schemaTestRouter(t *testing.T) *echo.Echo {
 		projectSettingsHandler:     &projectsmod.ProjectSettingsHandler{},
 		checksHandler:              &projectsmod.ChecksHandler{},
 		canvasHandler:              &canvas.CanvasHandler{},
-		composeStackHandler:        &projectsmod.ComposeStackHandler{},
-		oneClickHandler:            &projectsmod.OneClickHandler{},
+		composeStackHandler:        &composemod.ComposeStackHandler{},
+		oneClickHandler:            &templatesmod.OneClickHandler{},
 		environmentHandler:         &environments.EnvironmentHandler{},
 		routeProtectionHandler:     &environments.RouteProtectionHandler{},
 		routeRuleHandler:           &environments.RouteRuleHandler{},

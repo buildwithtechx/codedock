@@ -1,4 +1,4 @@
-package projects
+package compose
 
 import (
 	"encoding/json"

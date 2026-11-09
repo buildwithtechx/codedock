@@ -1,4 +1,4 @@
-package projects
+package compose
 
 import (
 	"context"
@@ -12,18 +12,9 @@ import (
 	"sync"
 	"time"
 
-	compose "codedock/internal/platform/docker"
+	dockerplatform "codedock/internal/platform/docker"
 	"github.com/google/uuid"
 )
-
-type ComposeStackStore interface {
-	List(context.Context, string) ([]ComposeStack, error)
-	Get(context.Context, string, string) (*ComposeStack, error)
-	Save(context.Context, *ComposeStack, int) error
-	Claim(context.Context, string, string, int) error
-	Observe(context.Context, string, string, string, string) error
-	Recover(context.Context) error
-}
 
 type ComposeStackRuntime interface {
 	Canonical(context.Context, string, string, map[string]string) (string, error)
@@ -58,7 +49,7 @@ func (s *ComposeStackService) Review(ctx context.Context, request ComposeStackRe
 	}
 	ctx, cancel := context.WithTimeout(ctx, 30*time.Second)
 	defer cancel()
-	source, err := compose.ResolveRepositoryContexts(compose.RepositoryContextRequest{
+	source, err := dockerplatform.ResolveRepositoryContexts(dockerplatform.RepositoryContextRequest{
 		RepositoryURL: request.RepositoryURL,
 		Branch:        request.Branch,
 		RootDirectory: request.RootDirectory,
@@ -98,15 +89,16 @@ func (s *ComposeStackService) Review(ctx context.Context, request ComposeStackRe
 					Changed: []string{},
 					Removed: []string{},
 				}
-				for name, newRaw := range document.Services {
-					if oldRaw, ok := oldDoc.Services[name]; !ok {
+				for name, current := range document.Services {
+					old, exists := oldDoc.Services[name]
+					if !exists {
 						changes.Added = append(changes.Added, name)
-					} else if string(newRaw) != string(oldRaw) {
+					} else if string(current) != string(old) {
 						changes.Changed = append(changes.Changed, name)
 					}
 				}
 				for name := range oldDoc.Services {
-					if _, ok := document.Services[name]; !ok {
+					if _, exists := document.Services[name]; !exists {
 						changes.Removed = append(changes.Removed, name)
 					}
 				}
@@ -129,7 +121,6 @@ func (s *ComposeStackService) Review(ctx context.Context, request ComposeStackRe
 	} else {
 		effects = append(effects, "Services removed from the configuration are safely retired and unrouted.")
 	}
-
 	return &ComposeReview{
 		Config:   config,
 		Digest:   composeReviewDigest(request, config),
@@ -140,8 +131,8 @@ func (s *ComposeStackService) Review(ctx context.Context, request ComposeStackRe
 }
 
 func composeReviewDigest(request ComposeStackRequest, config string) string {
-	digest := sha256.Sum256(fmt.Appendf(nil, "%q|%q|%q|%q|%d", request.ID, request.EnvironmentID, request.Name, config, request.Revision))
-	return hex.EncodeToString(digest[:])
+	sum := sha256.Sum256([]byte(fmt.Sprintf("%s:%s:%s:%s:%s:%d:%s", request.ID, request.EnvironmentID, request.Name, request.RepositoryURL, request.Branch, request.Revision, config)))
+	return hex.EncodeToString(sum[:])
 }
 
 func (s *ComposeStackService) Save(ctx context.Context, project string, request ComposeStackRequest) (*ComposeStack, error) {
@@ -149,14 +140,20 @@ func (s *ComposeStackService) Save(ctx context.Context, project string, request 
 	if err != nil {
 		return nil, err
 	}
-	if request.Digest != review.Digest {
-		return nil, fmt.Errorf("configuration changed since review; review again before saving")
+	if request.Digest == "" || request.Digest != review.Digest {
+		return nil, fmt.Errorf("configuration changed during review; re-review before saving")
 	}
-	stack := &ComposeStack{ID: request.ID, ProjectID: project, EnvironmentID: request.EnvironmentID, Name: request.Name, Config: review.Config, Status: "saved", Results: "[]"}
+	stack := &ComposeStack{
+		ID:            request.ID,
+		ProjectID:     project,
+		EnvironmentID: request.EnvironmentID,
+		Name:          request.Name,
+		Config:        review.Config,
+	}
 	if err := s.store.Save(ctx, stack, request.Revision); err != nil {
 		return nil, err
 	}
-	return stack, nil
+	return s.store.Get(ctx, project, stack.ID)
 }
 
 func (s *ComposeStackService) Deploy(ctx context.Context, project, id string) error {
@@ -226,4 +223,14 @@ func (s *ComposeStackService) Cancel(project, id string) error {
 	}
 	cancel()
 	return nil
+}
+
+func (s *ComposeStackService) Restart(ctx context.Context, project, id string) error {
+	slog.Info("Restarting stack", "project", project, "id", id)
+	return s.Deploy(ctx, project, id)
+}
+
+func (s *ComposeStackService) Stop(ctx context.Context, project, id string) error {
+	slog.Info("Stopping stack", "project", project, "id", id)
+	return s.store.Observe(ctx, id, "STOPPED", "Stack stopped manually", "")
 }

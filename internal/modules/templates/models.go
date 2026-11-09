@@ -1,9 +1,23 @@
-package projects
+package templates
 
 import (
+	"context"
 	"encoding/json"
 	"time"
+
+	composemod "codedock/internal/modules/compose"
 )
+
+type EnvironmentConfig struct {
+	ID        string `json:"id"`
+	ProjectID string `json:"projectId"`
+	Name      string `json:"name"`
+	IsDefault bool   `json:"isDefault"`
+}
+
+type EnvironmentRepository interface {
+	ListByProject(ctx context.Context, projectID string) ([]*EnvironmentConfig, error)
+}
 
 type OneClickEnvVar struct {
 	Key          string `json:"key"`
@@ -76,9 +90,9 @@ type InstallPreview struct {
 }
 
 type AppInstallResult struct {
-	Kind      string        `json:"kind"`
-	ProjectID string        `json:"projectId,omitempty"`
-	Stack     *ComposeStack `json:"stack,omitempty"`
+	Kind      string                   `json:"kind"`
+	ProjectID string                   `json:"projectId,omitempty"`
+	Stack     *composemod.ComposeStack `json:"stack,omitempty"`
 }
 
 type CustomAppTemplate struct {

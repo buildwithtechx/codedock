@@ -15,6 +15,7 @@ import (
 	"codedock/internal/modules/billing"
 	"codedock/internal/modules/canvas"
 	"codedock/internal/modules/chatapps"
+	composemod "codedock/internal/modules/compose"
 	"codedock/internal/modules/databases"
 	deploymentsmod "codedock/internal/modules/deployments"
 	"codedock/internal/modules/dns"
@@ -28,8 +29,9 @@ import (
 	projectsmod "codedock/internal/modules/projects"
 	"codedock/internal/modules/security"
 	settingsmodule "codedock/internal/modules/settings"
-	"codedock/internal/modules/system"
 	"codedock/internal/modules/support"
+	"codedock/internal/modules/system"
+	templatesmod "codedock/internal/modules/templates"
 	"codedock/internal/modules/users"
 	compose "codedock/internal/platform/docker"
 	"codedock/internal/platform/networking"
@@ -82,13 +84,13 @@ func buildServerInstance(d *serverSetupDeps) (*Server, error) {
 	checksHandler := projectsmod.NewChecksHandler()
 	canvasHandler := canvas.NewCanvasHandler(&canvasServiceAdapter{cs: d.canvasService})
 
-	stackService := projectsmod.NewComposeStackService(projectsmod.NewComposeStackRepo(d.db, d.v), &composeStackRuntimeAdapter{rt: compose.NewStackRuntime(d.dockerClient)})
+	stackService := composemod.NewComposeStackService(composemod.NewComposeStackRepo(d.db, d.v), &composeStackRuntimeAdapter{rt: compose.NewStackRuntime(d.dockerClient)})
 	stackService.BeforeDeployment = d.backupService.BeforeProjectDeployment
 	_ = stackService.Recover(context.Background())
-	composeStackHandler := projectsmod.NewComposeStackHandler(&composeStackAdapter{cs: stackService})
+	composeStackHandler := composemod.NewComposeStackHandler(&composeStackAdapter{cs: stackService})
 	tmplMgr, _ := compose.NewTemplateManager()
-	oneClickService := projectsmod.NewOneClickService(tmplMgr, stackService, &projectEnvAdapter{repo: d.environmentRepo})
-	oneClickHandler := projectsmod.NewOneClickHandler(&oneClickAdapter{oc: oneClickService})
+	oneClickService := templatesmod.NewOneClickService(tmplMgr, stackService, &templateEnvAdapter{repo: d.environmentRepo})
+	oneClickHandler := templatesmod.NewOneClickHandler(&oneClickAdapter{oc: oneClickService})
 
 	envService := environments.NewEnvironmentService(d.environmentRepo, environments.NewEnvVarRepo())
 	envHandler := environments.NewEnvironmentHandler(envService, &projectLookupAdapter{projectService: d.projectService}, environments.NewEnvSuggestionService(&envGitProviderAdapter{ps: d.gitService}))

@@ -1,4 +1,4 @@
-package projects
+package templates
 
 import (
 	"context"
@@ -6,7 +6,8 @@ import (
 	"strings"
 	"testing"
 
-	compose "codedock/internal/platform/docker"
+	composemod "codedock/internal/modules/compose"
+	dockercompose "codedock/internal/platform/docker"
 )
 
 type oneClickTestEnvRepo struct {
@@ -19,15 +20,15 @@ func (r *oneClickTestEnvRepo) ListByProject(_ context.Context, _ string) ([]*Env
 }
 
 type oneClickTestStackStore struct {
-	ComposeStackStore
-	stack *ComposeStack
+	composemod.ComposeStackStore
+	stack *composemod.ComposeStack
 }
 
-func (s *oneClickTestStackStore) Get(_ context.Context, _, _ string) (*ComposeStack, error) {
+func (s *oneClickTestStackStore) Get(_ context.Context, _, _ string) (*composemod.ComposeStack, error) {
 	return s.stack, nil
 }
 
-func (s *oneClickTestStackStore) Save(_ context.Context, stack *ComposeStack, previousRevision int) error {
+func (s *oneClickTestStackStore) Save(_ context.Context, stack *composemod.ComposeStack, previousRevision int) error {
 	if s.stack == nil || s.stack.ID != stack.ID {
 		if previousRevision != 0 {
 			return fmt.Errorf("stack changed or is deploying; reload and review again")
@@ -46,7 +47,7 @@ func (s *oneClickTestStackStore) Observe(_ context.Context, _, _, _ string, _ st
 	return nil
 }
 
-type oneClickTestStackRuntime struct{ ComposeStackRuntime }
+type oneClickTestStackRuntime struct{ composemod.ComposeStackRuntime }
 
 func (r *oneClickTestStackRuntime) Canonical(_ context.Context, _ string, _ string, _ map[string]string) (string, error) {
 	return `{"services":{"plausible":{"image":"plausible/analytics"},"db":{"image":"postgres:16-alpine"}}}`, nil
@@ -56,22 +57,22 @@ func (r *oneClickTestStackRuntime) ValidatePorts(_ context.Context, _ string, _ 
 	return nil
 }
 
-func (r *oneClickTestStackRuntime) Apply(_ context.Context, _ *ComposeStack, progress func(string) error) error {
+func (r *oneClickTestStackRuntime) Apply(_ context.Context, _ *composemod.ComposeStack, progress func(string) error) error {
 	return progress("READY")
 }
 
-func (r *oneClickTestStackRuntime) Results(_ context.Context, _ string) ([]ComposeServiceResult, error) {
+func (r *oneClickTestStackRuntime) Results(_ context.Context, _ string) ([]composemod.ComposeServiceResult, error) {
 	return nil, nil
 }
 
 func oneClickTestService(t *testing.T) (*OneClickService, *oneClickTestStackStore) {
 	t.Helper()
-	manager, err := compose.NewTemplateManager()
+	manager, err := dockercompose.NewTemplateManager()
 	if err != nil {
 		t.Fatal(err)
 	}
-	stackStore := &oneClickTestStackStore{stack: &ComposeStack{Revision: 1}}
-	stacks := NewComposeStackService(stackStore, &oneClickTestStackRuntime{})
+	stackStore := &oneClickTestStackStore{stack: &composemod.ComposeStack{Revision: 1}}
+	stacks := composemod.NewComposeStackService(stackStore, &oneClickTestStackRuntime{})
 	envRepo := &oneClickTestEnvRepo{envs: []*EnvironmentConfig{{ID: "env-1", ProjectID: "project-1"}}}
 	return NewOneClickService(manager, stacks, envRepo), stackStore
 }

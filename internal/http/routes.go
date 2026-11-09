@@ -5,6 +5,7 @@ import (
 
 	"codedock/internal/modules/auth"
 	"codedock/internal/modules/canvas"
+	composemod "codedock/internal/modules/compose"
 	"codedock/internal/modules/databases"
 	"codedock/internal/modules/domains"
 	"codedock/internal/modules/environments"
@@ -12,6 +13,7 @@ import (
 	"codedock/internal/modules/organizations"
 	"codedock/internal/modules/projects"
 	serversmod "codedock/internal/modules/servers"
+	templatesmod "codedock/internal/modules/templates"
 	"codedock/internal/modules/users"
 	"codedock/internal/utils"
 )
@@ -137,12 +139,20 @@ func (s *Server) registerUserRoutes(apiGroup, authGroup *echo.Group) {
 func (s *Server) registerProjectRoutes(apiGroup, authGroup *echo.Group) {
 	if s.projectHandler != nil {
 		projects.RegisterRoutes(authGroup, projects.RoutesConfig{
-			Handler:             s.projectHandler,
-			AppHandler:          s.projectAppHandler,
-			SettingsHandler:     s.projectSettingsHandler,
-			ChecksHandler:       s.checksHandler,
-			ComposeStackHandler: s.composeStackHandler,
-			OneClickHandler:     s.oneClickHandler,
+			Handler:         s.projectHandler,
+			AppHandler:      s.projectAppHandler,
+			SettingsHandler: s.projectSettingsHandler,
+			ChecksHandler:   s.checksHandler,
+		})
+	}
+	if s.composeStackHandler != nil {
+		composemod.RegisterRoutes(authGroup, composemod.RoutesConfig{
+			Handler: s.composeStackHandler,
+		})
+	}
+	if s.oneClickHandler != nil {
+		templatesmod.RegisterRoutes(authGroup, templatesmod.RoutesConfig{
+			Handler: s.oneClickHandler,
 		})
 	}
 	if s.canvasHandler != nil {

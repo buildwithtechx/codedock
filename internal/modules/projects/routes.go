@@ -3,12 +3,10 @@ package projects
 import "github.com/labstack/echo/v4"
 
 type RoutesConfig struct {
-	Handler             *Handler
-	AppHandler          *ProjectAppHandler
-	SettingsHandler     *ProjectSettingsHandler
-	ChecksHandler       *ChecksHandler
-	ComposeStackHandler *ComposeStackHandler
-	OneClickHandler     *OneClickHandler
+	Handler         *Handler
+	AppHandler      *ProjectAppHandler
+	SettingsHandler *ProjectSettingsHandler
+	ChecksHandler   *ChecksHandler
 }
 
 func RegisterRoutes(g *echo.Group, cfg RoutesConfig) {
@@ -42,25 +40,5 @@ func RegisterRoutes(g *echo.Group, cfg RoutesConfig) {
 		g.GET("/projects/:id/deployments/admission", cfg.ChecksHandler.GetAdmission)
 		g.GET("/projects/:id/checks", cfg.ChecksHandler.GetChecks)
 		g.PUT("/projects/:id/checks", cfg.ChecksHandler.UpdateChecks)
-	}
-
-	if cfg.ComposeStackHandler != nil {
-		g.GET("/projects/:id/stacks", cfg.ComposeStackHandler.List)
-		g.GET("/projects/:id/stacks/:stackId/config", cfg.ComposeStackHandler.Config)
-		g.POST("/projects/:id/stacks/review", cfg.ComposeStackHandler.Review)
-		g.POST("/projects/:id/stacks", cfg.ComposeStackHandler.Save)
-		g.POST("/projects/:id/stacks/:stackId/deploy", cfg.ComposeStackHandler.Deploy)
-		g.POST("/projects/:id/stacks/:stackId/cancel", cfg.ComposeStackHandler.Cancel)
-		g.POST("/projects/:id/stacks/:stackId/restart", cfg.ComposeStackHandler.Restart)
-		g.POST("/projects/:id/stacks/:stackId/stop", cfg.ComposeStackHandler.Stop)
-	}
-
-	if cfg.OneClickHandler != nil {
-		g.GET("/one-click", cfg.OneClickHandler.List)
-		g.GET("/one-click/:id", cfg.OneClickHandler.Get)
-		g.POST("/one-click/review", cfg.OneClickHandler.Review)
-		g.POST("/one-click/deploy", cfg.OneClickHandler.Deploy)
-		g.POST("/one-click/custom", cfg.OneClickHandler.AddCustom)
-		g.DELETE("/one-click/custom/:id", cfg.OneClickHandler.DeleteCustom)
 	}
 }

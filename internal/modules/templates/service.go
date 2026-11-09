@@ -1,4 +1,4 @@
-package projects
+package templates
 
 import (
 	"context"
@@ -8,18 +8,19 @@ import (
 
 	"github.com/google/uuid"
 
-	compose "codedock/internal/platform/docker"
+	composemod "codedock/internal/modules/compose"
+	dockercompose "codedock/internal/platform/docker"
 )
 
 type OneClickService struct {
-	tmplManager *compose.TemplateManager
-	stacks      *ComposeStackService
+	tmplManager *dockercompose.TemplateManager
+	stacks      *composemod.ComposeStackService
 	envRepo     EnvironmentRepository
 }
 
 func NewOneClickService(
-	tm *compose.TemplateManager,
-	stacks *ComposeStackService,
+	tm *dockercompose.TemplateManager,
+	stacks *composemod.ComposeStackService,
 	er EnvironmentRepository,
 ) *OneClickService {
 	return &OneClickService{
@@ -56,9 +57,9 @@ func (s *OneClickService) GetApp(appID string) (*OneClickApp, error) {
 	return app, nil
 }
 
-func (s *OneClickService) AddCustomApp(tmpl compose.ComposeTemplate) (*OneClickApp, error) {
+func (s *OneClickService) AddCustomApp(tmpl dockercompose.ComposeTemplate) (*OneClickApp, error) {
 	if tmpl.XCodedock == nil {
-		tmpl.XCodedock = &compose.CodedockMetadata{}
+		tmpl.XCodedock = &dockercompose.CodedockMetadata{}
 	}
 	tmpl.XCodedock.IsOneClick = true
 	tmpl.XCodedock.Verified = false
@@ -93,7 +94,7 @@ func (s *OneClickService) ReviewInstall(_ context.Context, input InstallAppInput
 	if findOneClickMetadata(&tmpl) == nil {
 		return nil, errors.New("app has no one-click metadata")
 	}
-	plan, err := compose.ResolveInstallPlan(input.AppID, tmpl, installRequest(input), nil)
+	plan, err := dockercompose.ResolveInstallPlan(input.AppID, tmpl, installRequest(input), nil)
 	if err != nil {
 		return nil, err
 	}
@@ -115,7 +116,7 @@ func (s *OneClickService) InstallApp(ctx context.Context, input InstallAppInput)
 	if err != nil {
 		return nil, err
 	}
-	plan, err := compose.ResolveInstallPlan(input.AppID, tmpl, installRequest(input), nil)
+	plan, err := dockercompose.ResolveInstallPlan(input.AppID, tmpl, installRequest(input), nil)
 	if err != nil {
 		return nil, err
 	}
@@ -141,7 +142,7 @@ func (s *OneClickService) resolveEnvironment(ctx context.Context, projectID, env
 	return "", errors.New("environment does not belong to project")
 }
 
-func (s *OneClickService) installStack(ctx context.Context, input InstallAppInput, envID string, plan *compose.InstallPlan) (*AppInstallResult, error) {
+func (s *OneClickService) installStack(ctx context.Context, input InstallAppInput, envID string, plan *dockercompose.InstallPlan) (*AppInstallResult, error) {
 	if s.stacks == nil {
 		return nil, errors.New("stack installer is unavailable")
 	}
@@ -149,7 +150,7 @@ func (s *OneClickService) installStack(ctx context.Context, input InstallAppInpu
 	if appName == "" {
 		appName = input.AppID
 	}
-	request := ComposeStackRequest{
+	request := composemod.ComposeStackRequest{
 		ID:            uuid.New().String(),
 		EnvironmentID: envID,
 		Name:          appName,
@@ -171,12 +172,12 @@ func (s *OneClickService) installStack(ctx context.Context, input InstallAppInpu
 	return &AppInstallResult{Kind: "stack", Stack: stack}, nil
 }
 
-func installRequest(input InstallAppInput) compose.InstallRequest {
+func installRequest(input InstallAppInput) dockercompose.InstallRequest {
 	name := input.Name
 	if name == "" {
 		name = input.AppID
 	}
-	return compose.InstallRequest{
+	return dockercompose.InstallRequest{
 		Name:        name,
 		Secrets:     input.Secrets,
 		Environment: input.Environment,
@@ -185,7 +186,7 @@ func installRequest(input InstallAppInput) compose.InstallRequest {
 	}
 }
 
-func previewInstall(appID string, plan *compose.InstallPlan) *InstallPreview {
+func previewInstall(appID string, plan *dockercompose.InstallPlan) *InstallPreview {
 	services := make([]InstallPreviewService, 0, len(plan.Services))
 	for _, service := range plan.Services {
 		services = append(services, InstallPreviewService{
