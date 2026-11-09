@@ -1,4 +1,4 @@
-package apps
+package volumes
 
 import (
 	"context"
@@ -8,6 +8,21 @@ import (
 	"github.com/google/uuid"
 )
 
+type VolumeService interface {
+	CreateVolume(ctx context.Context, vol *ServiceVolume) (*ServiceVolume, error)
+	ListVolumes(ctx context.Context, serviceID string) ([]ServiceVolume, error)
+	DeleteVolume(ctx context.Context, id string) error
+	EmptyVolume(ctx context.Context, serviceID, volumeID string) (*ServiceVolume, string, error)
+}
+
+type Service struct {
+	repo ServiceVolumeRepository
+}
+
+func NewService(repo ServiceVolumeRepository) *Service {
+	return &Service{repo: repo}
+}
+
 func (s *Service) CreateVolume(ctx context.Context, vol *ServiceVolume) (*ServiceVolume, error) {
 	if vol.ServiceID == "" || vol.HostPath == "" || vol.ContainerPath == "" {
 		return nil, errors.New("serviceId, hostPath and containerPath are required")
@@ -16,7 +31,7 @@ func (s *Service) CreateVolume(ctx context.Context, vol *ServiceVolume) (*Servic
 		vol.ID = uuid.New().String()
 	}
 	vol.CreatedAt = time.Now().UTC()
-	if err := s.volumeRepo.Create(ctx, vol); err != nil {
+	if err := s.repo.Create(ctx, vol); err != nil {
 		return nil, err
 	}
 	return vol, nil
@@ -26,21 +41,21 @@ func (s *Service) ListVolumes(ctx context.Context, serviceID string) ([]ServiceV
 	if serviceID == "" {
 		return nil, errors.New("serviceId required")
 	}
-	return s.volumeRepo.ListByService(ctx, serviceID)
+	return s.repo.ListByService(ctx, serviceID)
 }
 
 func (s *Service) DeleteVolume(ctx context.Context, id string) error {
 	if id == "" {
 		return errors.New("id required")
 	}
-	return s.volumeRepo.Delete(ctx, id)
+	return s.repo.Delete(ctx, id)
 }
 
 func (s *Service) EmptyVolume(ctx context.Context, serviceID, volumeID string) (*ServiceVolume, string, error) {
 	if serviceID == "" || volumeID == "" {
 		return nil, "", errors.New("serviceId and volumeId are required")
 	}
-	vol, err := s.volumeRepo.GetByID(ctx, volumeID)
+	vol, err := s.repo.GetByID(ctx, volumeID)
 	if err != nil {
 		return nil, "", err
 	}
@@ -49,7 +64,7 @@ func (s *Service) EmptyVolume(ctx context.Context, serviceID, volumeID string) (
 	}
 	previousHostPath := vol.HostPath
 	vol.HostPath = "codedock-fresh-" + uuid.New().String()
-	if err := s.volumeRepo.Update(ctx, vol); err != nil {
+	if err := s.repo.Update(ctx, vol); err != nil {
 		return nil, "", err
 	}
 	return vol, previousHostPath, nil

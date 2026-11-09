@@ -5,15 +5,10 @@ import (
 
 	"codedock/internal/modules/apps/autoscaling"
 	"codedock/internal/modules/apps/vars"
+	"codedock/internal/modules/apps/volumes"
 )
 
-type ServiceVolume struct {
-	ID            string    `json:"id" db:"id"`
-	ServiceID     string    `json:"serviceId" db:"service_id"`
-	HostPath      string    `json:"hostPath" db:"host_path"`
-	ContainerPath string    `json:"containerPath" db:"container_path"`
-	CreatedAt     time.Time `json:"createdAt" db:"created_at"`
-}
+type ServiceVolume = volumes.ServiceVolume
 
 type ServiceRoleSpec struct {
 	Name            string `json:"name,omitempty"`

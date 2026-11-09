@@ -3,6 +3,7 @@ package apps
 import (
 	"codedock/internal/modules/apps/autoscaling"
 	"codedock/internal/modules/apps/vars"
+	"codedock/internal/modules/apps/volumes"
 )
 
 // Autoscaling aliases
@@ -28,4 +29,13 @@ type ServiceVarRepo = vars.ServiceVarRepo
 var (
 	NewServiceVarRepo  = vars.NewServiceVarRepo
 	NewVariableHandler = vars.NewVariableHandler
+)
+
+// Volumes aliases
+type VolumeHandler = volumes.VolumeHandler
+type ServiceVolumeRepository = volumes.ServiceVolumeRepository
+
+var (
+	NewServiceVolumeRepo = volumes.NewServiceVolumeRepo
+	NewVolumeHandler     = volumes.NewVolumeHandler
 )

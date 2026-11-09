@@ -5,6 +5,7 @@ import (
 
 	"codedock/internal/modules/apps/autoscaling"
 	"codedock/internal/modules/apps/vars"
+	"codedock/internal/modules/apps/volumes"
 )
 
 type RoutesConfig struct {
@@ -57,10 +58,7 @@ func RegisterRoutes(g *echo.Group, cfg RoutesConfig) {
 	}
 
 	if cfg.VolumeHandler != nil {
-		g.GET("/apps/:id/volumes", cfg.VolumeHandler.List)
-		g.POST("/apps/:id/volumes", cfg.VolumeHandler.Create)
-		g.DELETE("/apps/:id/volumes/:volumeId", cfg.VolumeHandler.Delete)
-		g.POST("/apps/:id/volumes/:volumeId/empty", cfg.VolumeHandler.EmptyVolume)
+		volumes.RegisterRoutes(g, cfg.VolumeHandler)
 	}
 
 	if cfg.WebhookHandler != nil {

@@ -1,6 +1,9 @@
 package apps
 
-import "codedock/internal/modules/apps/vars"
+import (
+	"codedock/internal/modules/apps/vars"
+	"codedock/internal/modules/apps/volumes"
+)
 
 type CreateAppServiceRequest struct {
 	ProjectID              string      `json:"projectId"`
@@ -63,10 +66,7 @@ type UpdateAppServiceRequest struct {
 type CreateVariableRequest = vars.CreateVariableRequest
 type UpdateVariableRequest = vars.UpdateVariableRequest
 
-type CreateVolumeRequest struct {
-	HostPath      string `json:"hostPath"`
-	ContainerPath string `json:"containerPath"`
-}
+type CreateVolumeRequest = volumes.CreateVolumeRequest
 
 type CreateWebhookRequest struct {
 	URL    string `json:"url"`

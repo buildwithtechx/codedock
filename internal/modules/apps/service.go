@@ -8,6 +8,7 @@ import (
 	"github.com/google/uuid"
 
 	"codedock/internal/modules/apps/vars"
+	"codedock/internal/modules/apps/volumes"
 )
 
 type Service struct {
@@ -145,4 +146,20 @@ func (s *Service) ListVariablesByService(ctx context.Context, serviceID string) 
 
 func (s *Service) DeleteVariable(ctx context.Context, id string) error {
 	return vars.NewService(s.varRepo).DeleteVariable(ctx, id)
+}
+
+func (s *Service) CreateVolume(ctx context.Context, vol *ServiceVolume) (*ServiceVolume, error) {
+	return volumes.NewService(s.volumeRepo).CreateVolume(ctx, vol)
+}
+
+func (s *Service) ListVolumes(ctx context.Context, serviceID string) ([]ServiceVolume, error) {
+	return volumes.NewService(s.volumeRepo).ListVolumes(ctx, serviceID)
+}
+
+func (s *Service) DeleteVolume(ctx context.Context, id string) error {
+	return volumes.NewService(s.volumeRepo).DeleteVolume(ctx, id)
+}
+
+func (s *Service) EmptyVolume(ctx context.Context, serviceID, volumeID string) (*ServiceVolume, string, error) {
+	return volumes.NewService(s.volumeRepo).EmptyVolume(ctx, serviceID, volumeID)
 }

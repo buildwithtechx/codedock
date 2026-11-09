@@ -1,4 +1,4 @@
-package apps
+package volumes
 
 import (
 	"context"
