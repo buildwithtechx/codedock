@@ -13,7 +13,6 @@ import (
 
 	"codedock/internal/config"
 	"codedock/internal/engine/deploy"
-	"codedock/internal/modules/mcp"
 	"codedock/internal/http/middleware"
 	aimod "codedock/internal/modules/ai"
 	appsmod "codedock/internal/modules/apps"
@@ -28,6 +27,7 @@ import (
 	domainsmod "codedock/internal/modules/domains"
 	"codedock/internal/modules/environments"
 	gitmod "codedock/internal/modules/git"
+	"codedock/internal/modules/mcp"
 	notifsmod "codedock/internal/modules/notifications"
 	"codedock/internal/modules/operations"
 	"codedock/internal/modules/organizations"

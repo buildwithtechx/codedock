@@ -9,7 +9,6 @@ import (
 	"github.com/mark3labs/mcp-go/server"
 
 	"codedock/internal/engine/deploy"
-	"codedock/internal/modules/mcp"
 	"codedock/internal/http/middleware"
 	actions "codedock/internal/modules/actions"
 	aimod "codedock/internal/modules/ai"
@@ -30,6 +29,7 @@ import (
 	"codedock/internal/modules/environments"
 	gitmod "codedock/internal/modules/git"
 	mailmodule "codedock/internal/modules/mail"
+	"codedock/internal/modules/mcp"
 	modmigrations "codedock/internal/modules/migrations"
 	modmonitoring "codedock/internal/modules/monitoring"
 	notifsmod "codedock/internal/modules/notifications"
