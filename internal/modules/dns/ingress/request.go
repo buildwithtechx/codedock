@@ -1,4 +1,4 @@
-package dns
+package ingress
 
 type IngressDiscoverRequest struct {
 	CredentialID    string  `json:"credentialId"`

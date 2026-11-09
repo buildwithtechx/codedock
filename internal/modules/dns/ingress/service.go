@@ -1,4 +1,4 @@
-package dns
+package ingress
 
 import (
 	"encoding/json"

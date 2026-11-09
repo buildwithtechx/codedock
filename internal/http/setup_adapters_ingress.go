@@ -7,22 +7,22 @@ import (
 	"errors"
 	"time"
 
-	"codedock/internal/modules/dns"
+	"codedock/internal/modules/dns/ingress"
 )
 
 type ingressServiceAdapter struct {
-	repo  dns.IngressRepository
-	cfSvc *dns.CloudflareIngressService
+	repo  ingress.IngressRepository
+	cfSvc *ingress.CloudflareIngressService
 }
 
 func (i *ingressServiceAdapter) List(ctx context.Context, serverID string) (any, error) {
 	if i.repo == nil {
-		return []dns.IngressConnection{}, nil
+		return []ingress.IngressConnection{}, nil
 	}
 	return i.repo.ListConnections(ctx, serverID)
 }
 
-func (i *ingressServiceAdapter) Discover(ctx context.Context, req dns.IngressDiscoverRequest) (*dns.IngressDiscoveryResult, error) {
+func (i *ingressServiceAdapter) Discover(ctx context.Context, req ingress.IngressDiscoverRequest) (*ingress.IngressDiscoveryResult, error) {
 	if i.cfSvc != nil {
 		accounts, err := i.cfSvc.ListAccounts(ctx, req.CredentialID)
 		if err == nil && len(accounts) > 0 {
@@ -32,51 +32,51 @@ func (i *ingressServiceAdapter) Discover(ctx context.Context, req dns.IngressDis
 			}
 			tunnels, _ := i.cfSvc.ListTunnels(ctx, req.CredentialID, accountID)
 			policies, _ := i.cfSvc.ListAccessPolicies(ctx, req.CredentialID, accountID)
-			var tunList []dns.IngressDiscoveryTunnel
+			var tunList []ingress.IngressDiscoveryTunnel
 			for _, t := range tunnels {
-				tunList = append(tunList, dns.IngressDiscoveryTunnel{
+				tunList = append(tunList, ingress.IngressDiscoveryTunnel{
 					ID:     t.ID,
 					Name:   t.Name,
 					Remote: t.Remote,
 					Status: t.Status,
 				})
 			}
-			var polList []dns.IngressDiscoveryPolicy
+			var polList []ingress.IngressDiscoveryPolicy
 			for _, p := range policies {
-				polList = append(polList, dns.IngressDiscoveryPolicy{
+				polList = append(polList, ingress.IngressDiscoveryPolicy{
 					ID:       p.ID,
 					Name:     p.Name,
 					Decision: p.Decision,
 				})
 			}
-			var accList []dns.IngressDiscoveryAccount
+			var accList []ingress.IngressDiscoveryAccount
 			for _, a := range accounts {
-				accList = append(accList, dns.IngressDiscoveryAccount{
+				accList = append(accList, ingress.IngressDiscoveryAccount{
 					ID:   a.ID,
 					Name: a.Name,
 				})
 			}
-			return &dns.IngressDiscoveryResult{
+			return &ingress.IngressDiscoveryResult{
 				Accounts: accList,
 				Tunnels:  tunList,
 				Policies: polList,
 			}, nil
 		}
 	}
-	return &dns.IngressDiscoveryResult{
-		Accounts: []dns.IngressDiscoveryAccount{
+	return &ingress.IngressDiscoveryResult{
+		Accounts: []ingress.IngressDiscoveryAccount{
 			{ID: "cf-acc-primary", Name: "Primary Cloudflare Account"},
 		},
-		Tunnels: []dns.IngressDiscoveryTunnel{
+		Tunnels: []ingress.IngressDiscoveryTunnel{
 			{ID: "cf-tun-edge-1", Name: "codedock-edge-tunnel", Remote: true, Status: "healthy"},
 		},
-		Policies: []dns.IngressDiscoveryPolicy{
+		Policies: []ingress.IngressDiscoveryPolicy{
 			{ID: "cf-pol-bypass", Name: "Allow Team SSO", Decision: "allow"},
 		},
 	}, nil
 }
 
-func (i *ingressServiceAdapter) Connect(ctx context.Context, req dns.IngressConnectRequest) (*dns.IngressConnection, error) {
+func (i *ingressServiceAdapter) Connect(ctx context.Context, req ingress.IngressConnectRequest) (*ingress.IngressConnection, error) {
 	if i.repo == nil {
 		return nil, errors.New("ingress repo unavailable")
 	}
@@ -94,7 +94,7 @@ func (i *ingressServiceAdapter) Connect(ctx context.Context, req dns.IngressConn
 	_, _ = rand.Read(b)
 	id := "ing-" + hex.EncodeToString(b)
 	now := time.Now().UTC().Format(time.RFC3339)
-	conn := &dns.IngressConnection{
+	conn := &ingress.IngressConnection{
 		ID:                    id,
 		ServerID:              req.ServerID,
 		CredentialID:          req.CredentialID,
@@ -116,7 +116,7 @@ func (i *ingressServiceAdapter) Connect(ctx context.Context, req dns.IngressConn
 	return conn, nil
 }
 
-func (i *ingressServiceAdapter) Update(ctx context.Context, id string, req dns.IngressUpdateRequest) (*dns.IngressConnection, error) {
+func (i *ingressServiceAdapter) Update(ctx context.Context, id string, req ingress.IngressUpdateRequest) (*ingress.IngressConnection, error) {
 	if i.repo == nil {
 		return nil, errors.New("ingress repo unavailable")
 	}
@@ -133,7 +133,7 @@ func (i *ingressServiceAdapter) Update(ctx context.Context, id string, req dns.I
 	return conn, nil
 }
 
-func (i *ingressServiceAdapter) Retry(ctx context.Context, id string) (*dns.IngressConnection, error) {
+func (i *ingressServiceAdapter) Retry(ctx context.Context, id string) (*ingress.IngressConnection, error) {
 	if i.repo == nil {
 		return nil, errors.New("ingress repo unavailable")
 	}
@@ -167,7 +167,7 @@ func (i *ingressServiceAdapter) GetDomain(ctx context.Context, domainID string) 
 	return i.repo.GetHostname(ctx, domainID)
 }
 
-func (i *ingressServiceAdapter) SetDomain(ctx context.Context, domainID string, req dns.IngressDomainRequest) (any, error) {
+func (i *ingressServiceAdapter) SetDomain(ctx context.Context, domainID string, req ingress.IngressDomainRequest) (any, error) {
 	if i.repo == nil {
 		return nil, errors.New("ingress repo unavailable")
 	}
@@ -177,7 +177,7 @@ func (i *ingressServiceAdapter) SetDomain(ctx context.Context, domainID string, 
 	}
 	b := make([]byte, 8)
 	_, _ = rand.Read(b)
-	hostname := &dns.IngressHostname{
+	hostname := &ingress.IngressHostname{
 		ID:             "igh-" + hex.EncodeToString(b),
 		DomainID:       &domainID,
 		ConnectionID:   *req.ConnectionID,

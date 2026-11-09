@@ -1,4 +1,4 @@
-package dns
+package ingress
 
 type IngressConnection struct {
 	ID                    string  `json:"id" db:"id"`

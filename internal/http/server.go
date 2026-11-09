@@ -25,6 +25,7 @@ import (
 	"codedock/internal/modules/databases"
 	deploymentsmod "codedock/internal/modules/deployments"
 	"codedock/internal/modules/dns"
+	"codedock/internal/modules/dns/ingress"
 	domainsmod "codedock/internal/modules/domains"
 	"codedock/internal/modules/environments"
 	gitmod "codedock/internal/modules/git"
@@ -126,7 +127,7 @@ type Server struct {
 	takeoverHandler            *servers.TakeoverHandler
 	routeRuleHandler           *environments.RouteRuleHandler
 	mailHandler                *mailmodule.Handler
-	ingressHandler             *dns.IngressHandler
+	ingressHandler             *ingress.IngressHandler
 	serverNetworksHandler      *servers.ServerNetworksHandler
 	actionsHandler             *actions.ActionsHandler
 	checksHandler              *projectsmod.ChecksHandler

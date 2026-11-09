@@ -1,7 +1,7 @@
 package http
 
 import (
-	"codedock/internal/modules/dns"
+	"codedock/internal/modules/dns/ingress"
 	"codedock/internal/modules/monitoring"
 	notifsmod "codedock/internal/modules/notifications"
 	"codedock/internal/modules/operations"
@@ -20,7 +20,7 @@ type monitoringHandlersGroup struct {
 	logHandler           *monitoring.LogHandler
 	exampleHandler       *monitoring.ExampleHandler
 	serviceLogsWSHandler *monitoring.ServiceLogsWSHandler
-	ingressHandler       *dns.IngressHandler
+	ingressHandler       *ingress.IngressHandler
 }
 
 func createMonitoringHandlers(
@@ -37,8 +37,8 @@ func createMonitoringHandlers(
 	wsHandler.Streams = d.deploymentService
 
 	ingressAdapter := &ingressServiceAdapter{
-		repo:  dns.NewIngressRepository(d.db),
-		cfSvc: dns.NewCloudflareIngressService(nil),
+		repo:  ingress.NewIngressRepository(d.db),
+		cfSvc: ingress.NewCloudflareIngressService(nil),
 	}
 
 	return monitoringHandlersGroup{
@@ -62,6 +62,6 @@ func createMonitoringHandlers(
 		logHandler:           monitoring.NewLogHandler(&logServiceAdapter{svc: logService}),
 		exampleHandler:       monitoring.NewExampleHandler(&exampleServiceAdapter{svc: monitoring.NewExampleService()}),
 		serviceLogsWSHandler: wsHandler,
-		ingressHandler:       dns.NewIngressHandler(ingressAdapter),
+		ingressHandler:       ingress.NewIngressHandler(ingressAdapter),
 	}
 }

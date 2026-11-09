@@ -19,7 +19,7 @@ import (
 	modclusters "codedock/internal/modules/clusters"
 	composemod "codedock/internal/modules/compose"
 	deploymentsmod "codedock/internal/modules/deployments"
-	"codedock/internal/modules/dns"
+	"codedock/internal/modules/dns/ingress"
 	domainsmod "codedock/internal/modules/domains"
 	environments "codedock/internal/modules/environments"
 	gitmod "codedock/internal/modules/git"
@@ -91,7 +91,7 @@ func schemaTestRouter(t *testing.T) *echo.Echo {
 		migrationHandler:           modmigrations.NewBundleHandler(nil, nil, nil),
 		supportHandler:             support.NewSupportHandler(),
 		actionsHandler:             actions.NewActionsHandler(),
-		ingressHandler:             &dns.IngressHandler{},
+		ingressHandler:             &ingress.IngressHandler{},
 		systemHandler:              &systemmod.SystemHandler{},
 		updaterHandler:             &systemmod.UpdaterHandler{},
 	}

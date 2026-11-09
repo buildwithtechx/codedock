@@ -15,6 +15,7 @@ import (
 	"codedock/internal/modules/chatapps"
 	deploymentsmod "codedock/internal/modules/deployments"
 	"codedock/internal/modules/dns"
+	"codedock/internal/modules/dns/ingress"
 	gitmod "codedock/internal/modules/git"
 	notifsmod "codedock/internal/modules/notifications"
 	"codedock/internal/modules/operations"
@@ -116,7 +117,7 @@ func (s *Server) registerMiscRoutes(apiGroup, authGroup *echo.Group) {
 
 	authGroup.GET("/examples", s.exampleHandler.List)
 	dns.RegisterRoutes(authGroup, s.dnsHandler, s.authGuard.RequireRole("admin"))
-	dns.RegisterIngressRoutes(authGroup, s.ingressHandler, s.authGuard.RequireRole("admin"))
+	ingress.RegisterRoutes(authGroup, s.ingressHandler, s.authGuard.RequireRole("admin"))
 	actions.RegisterRoutes(authGroup, s.authGuard.RequireRole("admin"), s.actionsHandler)
 	support.RegisterRoutes(authGroup, s.supportHandler)
 	tasks.RegisterRoutes(authGroup, s.scheduledTaskHandler)
