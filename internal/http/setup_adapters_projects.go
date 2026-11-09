@@ -4,6 +4,7 @@ import (
 	"context"
 	"fmt"
 
+	"codedock/internal/modules/canvas"
 	modclusters "codedock/internal/modules/clusters"
 	"codedock/internal/modules/environments"
 	gitmod "codedock/internal/modules/git"
@@ -29,7 +30,7 @@ func (a *envGitProviderAdapter) GetAnyProviderByType(ctx context.Context, provid
 }
 
 type canvasServiceAdapter struct {
-	cs *projectsmod.CanvasService
+	cs *canvas.CanvasService
 }
 
 func (c *canvasServiceAdapter) ListSummaries(ctx context.Context, organizationID string) (any, error) {
@@ -45,13 +46,13 @@ func (c *canvasServiceAdapter) GetEnvironmentCanvas(ctx context.Context, id stri
 }
 
 func (c *canvasServiceAdapter) ApplyTopology(ctx context.Context, envID string, req any) error {
-	r, _ := req.(projectsmod.TopologyApplyRequest)
+	r, _ := req.(canvas.TopologyApplyRequest)
 	return c.cs.ApplyTopology(ctx, envID, r)
 }
 
-func (c *canvasServiceAdapter) ReadObservation(ctx context.Context, canvas any, node string) (any, error) {
-	canv, _ := canvas.(*projectsmod.EnvironmentCanvas)
-	return c.cs.ReadObservation(ctx, canv, node)
+func (c *canvasServiceAdapter) ReadObservation(ctx context.Context, canv any, node string) (any, error) {
+	cnv, _ := canv.(*canvas.EnvironmentCanvas)
+	return c.cs.ReadObservation(ctx, cnv, node)
 }
 
 type composeStackAdapter struct {
@@ -193,7 +194,7 @@ type canvasClusterDataAdapter struct {
 	repo *modclusters.ClusterDataRepo
 }
 
-func (a *canvasClusterDataAdapter) ListByProject(ctx context.Context, project string) ([]projectsmod.ClusterData, error) {
+func (a *canvasClusterDataAdapter) ListByProject(ctx context.Context, project string) ([]canvas.ClusterData, error) {
 	if a.repo == nil {
 		return nil, nil
 	}
@@ -201,13 +202,13 @@ func (a *canvasClusterDataAdapter) ListByProject(ctx context.Context, project st
 	if err != nil {
 		return nil, err
 	}
-	res := make([]projectsmod.ClusterData, len(items))
+	res := make([]canvas.ClusterData, len(items))
 	for i, it := range items {
-		res[i] = projectsmod.ClusterData{
+		res[i] = canvas.ClusterData{
 			ID:        it.ID,
 			ClusterID: it.ClusterID,
 			ProjectID: it.ProjectID,
-			Spec: projectsmod.ClusterDataSpec{
+			Spec: canvas.ClusterDataSpec{
 				ID:              it.Spec.ID,
 				Name:            it.Spec.Name,
 				EnvironmentID:   it.Spec.EnvironmentID,

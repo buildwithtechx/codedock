@@ -1,7 +1,6 @@
 package http
 
 import (
-	"codedock/internal/config"
 	"codedock/internal/modules/monitoring"
 )
 
@@ -15,11 +14,8 @@ type monitoringHandlersGroup struct {
 	metricsHandler       *monitoring.MetricsHandler
 	logHandler           *monitoring.LogHandler
 	exampleHandler       *monitoring.ExampleHandler
-	billingHandler       *monitoring.BillingHandler
 	serviceLogsWSHandler *monitoring.ServiceLogsWSHandler
 	ingressHandler       *monitoring.IngressHandler
-	actionsHandler       *monitoring.ActionsHandler
-	supportHandler       *monitoring.SupportHandler
 }
 
 func createMonitoringHandlers(
@@ -34,11 +30,6 @@ func createMonitoringHandlers(
 		&wsUserValidatorAdapter{userRepo: d.userRepo},
 	)
 	wsHandler.Streams = d.deploymentService
-
-	var billingHandler *monitoring.BillingHandler
-	if config.Get().Cloud.Enabled {
-		billingHandler = monitoring.NewBillingHandler(&billingServiceAdapter{svc: monitoring.NewBillingService(&billingUserAdapter{repo: d.userRepo})})
-	}
 
 	ingressAdapter := &ingressServiceAdapter{
 		repo:  monitoring.NewIngressRepository(d.db),
@@ -65,10 +56,7 @@ func createMonitoringHandlers(
 		metricsHandler:       monitoring.NewMetricsHandler(&metricsServiceAdapter{svc: metricsService}),
 		logHandler:           monitoring.NewLogHandler(&logServiceAdapter{svc: logService}),
 		exampleHandler:       monitoring.NewExampleHandler(&exampleServiceAdapter{svc: monitoring.NewExampleService()}),
-		billingHandler:       billingHandler,
 		serviceLogsWSHandler: wsHandler,
 		ingressHandler:       monitoring.NewIngressHandler(ingressAdapter),
-		actionsHandler:       monitoring.NewActionsHandler(),
-		supportHandler:       monitoring.NewSupportHandler(),
 	}
 }

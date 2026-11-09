@@ -2,52 +2,64 @@ package http
 
 import (
 	"context"
-	"errors"
 
-	"codedock/internal/modules/monitoring"
+	"codedock/internal/modules/billing"
+	"codedock/internal/modules/users"
 )
 
-type billingServiceAdapter struct {
-	svc *monitoring.BillingService
+type billingUserAdapter struct {
+	repo users.UserRepository
 }
 
-func (b *billingServiceAdapter) GetConfig(ctx context.Context) (any, error) {
-	return nil, nil
-}
-
-func (b *billingServiceAdapter) CreateCheckoutSession(ctx context.Context, userID string, opts monitoring.CreateCheckoutSessionOpts) (string, error) {
-	if b.svc == nil {
-		return "", errors.New("billing service unavailable")
-	}
-	return b.svc.CreateCheckoutSession(
-		ctx,
-		userID,
-		opts.PriceID,
-		opts.SuccessURL,
-		opts.CancelURL,
-		opts.IdempotencyKey,
-		opts.PurchaseIntent,
-		opts.CancelPending,
-	)
-}
-
-func (b *billingServiceAdapter) GetPendingCheckout(ctx context.Context, userID string) (any, error) {
-	if b.svc == nil {
+func (a *billingUserAdapter) GetUserByID(ctx context.Context, id string) (*billing.User, error) {
+	if a.repo == nil {
 		return nil, nil
 	}
-	return b.svc.GetPendingCheckout(ctx, userID), nil
+	u, err := a.repo.GetUserByID(ctx, id)
+	if err != nil || u == nil {
+		return nil, err
+	}
+	return toBillingUser(u), nil
 }
 
-func (b *billingServiceAdapter) CancelCheckoutSession(ctx context.Context, userID, id, idempotencyKey string) (any, error) {
-	if b.svc == nil {
-		return nil, errors.New("billing service unavailable")
+func (a *billingUserAdapter) GetUserByStripeCustomerID(ctx context.Context, customerID string) (*billing.User, error) {
+	if a.repo == nil {
+		return nil, nil
 	}
-	return b.svc.CancelCheckoutSession(ctx, userID, id, idempotencyKey)
+	u, err := a.repo.GetUserByStripeCustomerID(ctx, customerID)
+	if err != nil || u == nil {
+		return nil, err
+	}
+	return toBillingUser(u), nil
 }
 
-func (b *billingServiceAdapter) HandleWebhook(ctx context.Context, payload []byte, sig string) error {
-	if b.svc == nil {
-		return errors.New("billing service unavailable")
+func (a *billingUserAdapter) UpdateUser(ctx context.Context, user *billing.User) error {
+	if a.repo == nil || user == nil {
+		return nil
 	}
-	return b.svc.HandleWebhook(ctx, payload, sig)
+	u, err := a.repo.GetUserByID(ctx, user.ID)
+	if err != nil || u == nil {
+		return err
+	}
+	u.StripeCustomerID = user.StripeCustomerID
+	u.StripeSubscriptionID = user.StripeSubscriptionID
+	u.StripePriceID = user.StripePriceID
+	u.PlanType = user.PlanType
+	return a.repo.UpdateUser(ctx, u)
+}
+
+func toBillingUser(u *users.User) *billing.User {
+	if u == nil {
+		return nil
+	}
+	return &billing.User{
+		ID:                   u.ID,
+		Email:                u.Email,
+		Name:                 u.Name,
+		Role:                 string(u.Role),
+		PlanType:             u.PlanType,
+		StripeCustomerID:     u.StripeCustomerID,
+		StripeSubscriptionID: u.StripeSubscriptionID,
+		StripePriceID:        u.StripePriceID,
+	}
 }

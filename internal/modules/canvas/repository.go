@@ -1,4 +1,4 @@
-package projects
+package canvas
 
 import (
 	"context"
@@ -42,6 +42,8 @@ func NewCanvasRepo(db *sql.DB, envRepo EnvironmentRepository) *CanvasRepo {
 }
 
 func (r *CanvasRepo) SetClusterData(lister ClusterDataLister) { r.clusterData = lister }
+
+func (r *CanvasRepo) SetVault(vault Vault) { r.vault = vault }
 
 func (r *CanvasRepo) ListCanvasSummaries(ctx context.Context, organizationID string) ([]CanvasSummary, error) {
 	r.mu.Lock()

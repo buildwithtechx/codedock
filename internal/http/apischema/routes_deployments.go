@@ -93,7 +93,6 @@ func installInputSchema() Schema {
 func deploymentOperations() []Operation {
 	deployments := "deployments"
 	git := "git"
-	compose := "compose"
 	catalog := "catalog"
 	return []Operation{
 		{Method: "GET", Path: "/api/deployments", Summary: "List organization deployments", Tags: []string{deployments}, Auth: AuthUser, Response: PaginatedSchema(Arr("Deployments", deploymentItemSchema())), Query: []Param{QueryParam("status", "Filter by status"), QueryParam("search", "Search text"), QueryParamInt("page", "Page"), QueryParamInt("limit", "Page size")}},
@@ -124,8 +123,6 @@ func deploymentOperations() []Operation {
 		{Method: "POST", Path: "/api/webhooks/github/services/:serviceId", Summary: "Handle a GitHub webhook", Tags: []string{git}, Raw: true, Code: 202, Request: JSON(Any("GitHub event")), Response: Str("Service branch")},
 		{Method: "POST", Path: "/api/webhooks/github", Summary: "Handle a GitHub webhook", Tags: []string{git}, Raw: true, Code: 200, Request: JSON(Any("GitHub event")), Response: Any("Webhook dispatch result")},
 		{Method: "GET", Path: "/api/projects/:id/webhooks/deliveries", Summary: "List webhook deliveries for a project", Tags: []string{git}, Auth: ProjectRole(""), Response: Any("Webhook deliveries"), Query: []Param{QueryParamInt("limit", "Page limit"), QueryParam("cursor", "Pagination cursor")}},
-		{Method: "POST", Path: "/api/compose/analyze", Summary: "Analyze a compose document", Tags: []string{compose}, Auth: AuthUser, Raw: true, Code: 410, Request: JSON(Obj("Analyze", RF("composeContent", Str("Compose content")), F("projectId", Str("Project ID")))), Response: errorSchema()},
-		{Method: "POST", Path: "/api/compose/deploy", Summary: "Deploy a compose file", Tags: []string{compose}, Auth: AuthUser, Raw: true, Code: 410, Request: Form(Obj("Upload", RF("file", Str("Compose file")), F("projectId", Str("Project ID")))), Response: errorSchema()},
 		{Method: "POST", Path: "/api/deploy/archive", Summary: "Deploy an archive", Tags: []string{deployments}, Auth: AuthUser, Request: Form(Obj("Upload", RF("file", Str("Archive file")), F("projectId", Str("Project ID")), F("name", Str("App name")))), Response: Any("Deploy result")},
 		{Method: "GET", Path: "/api/examples", Summary: "List example apps", Tags: []string{catalog}, Auth: AuthUser, Response: Arr("Examples", Obj("Example", RF("id", Str("ID")), RF("name", Str("Name")), RF("description", Str("Description")), RF("repo", Str("Repository")), F("icon", Str("Icon")), F("logo", Str("Logo URL"))))},
 		{Method: "GET", Path: "/api/one-click", Summary: "List one-click apps", Tags: []string{catalog}, Auth: AuthUser, Response: Arr("Apps", oneClickAppSchema())},

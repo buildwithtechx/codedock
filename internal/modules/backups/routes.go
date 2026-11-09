@@ -46,7 +46,6 @@ func RegisterRoutes(authGroup *echo.Group, h *Handler, mw RouteMiddleware) {
 
 	// Volume restore
 	authGroup.GET("/backup-records/:recordId/volume-restore", h.VolumeRestoreTarget)
-	authGroup.POST("/backup-records/:recordId/volume-restore", h.RestoreVolume)
 	authGroup.DELETE("/backup-records/:recordId/volume-restore", h.CancelVolumeRestore)
 
 	// S3 destinations

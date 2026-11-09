@@ -4,6 +4,7 @@ import (
 	"github.com/labstack/echo/v4"
 
 	"codedock/internal/modules/auth"
+	"codedock/internal/modules/canvas"
 	"codedock/internal/modules/databases"
 	"codedock/internal/modules/domains"
 	"codedock/internal/modules/environments"
@@ -140,11 +141,12 @@ func (s *Server) registerProjectRoutes(apiGroup, authGroup *echo.Group) {
 			AppHandler:          s.projectAppHandler,
 			SettingsHandler:     s.projectSettingsHandler,
 			ChecksHandler:       s.checksHandler,
-			CanvasHandler:       s.canvasHandler,
 			ComposeStackHandler: s.composeStackHandler,
-			ComposeHandler:      s.composeHandler,
 			OneClickHandler:     s.oneClickHandler,
 		})
+	}
+	if s.canvasHandler != nil {
+		canvas.RegisterRoutes(authGroup, s.canvasHandler)
 	}
 	if s.environmentHandler != nil {
 		environments.RegisterRoutes(authGroup, environments.RoutesConfig{

@@ -7,10 +7,13 @@ import (
 
 	"codedock/internal/config"
 	"codedock/internal/http/middleware"
+	actions "codedock/internal/modules/actions"
 	aimod "codedock/internal/modules/ai"
 	appsmod "codedock/internal/modules/apps"
 	"codedock/internal/modules/audit"
 	backupmodule "codedock/internal/modules/backups"
+	"codedock/internal/modules/billing"
+	"codedock/internal/modules/canvas"
 	"codedock/internal/modules/chatapps"
 	"codedock/internal/modules/databases"
 	deploymentsmod "codedock/internal/modules/deployments"
@@ -25,6 +28,7 @@ import (
 	projectsmod "codedock/internal/modules/projects"
 	"codedock/internal/modules/security"
 	settingsmodule "codedock/internal/modules/settings"
+	"codedock/internal/modules/support"
 	"codedock/internal/modules/users"
 	compose "codedock/internal/platform/docker"
 	"codedock/internal/platform/networking"
@@ -75,13 +79,12 @@ func buildServerInstance(d *serverSetupDeps) (*Server, error) {
 	projectAppHandler := projectsmod.NewProjectAppHandler(d.projectAppService, projService)
 	projectSettingsHandler := projectsmod.NewProjectSettingsHandler(projSettingsService)
 	checksHandler := projectsmod.NewChecksHandler()
-	canvasHandler := projectsmod.NewCanvasHandler(&canvasServiceAdapter{cs: d.canvasService}, projService)
+	canvasHandler := canvas.NewCanvasHandler(&canvasServiceAdapter{cs: d.canvasService})
 
 	stackService := projectsmod.NewComposeStackService(projectsmod.NewComposeStackRepo(d.db, d.v), &composeStackRuntimeAdapter{rt: compose.NewStackRuntime(d.dockerClient)})
 	stackService.BeforeDeployment = d.backupService.BeforeProjectDeployment
 	_ = stackService.Recover(context.Background())
 	composeStackHandler := projectsmod.NewComposeStackHandler(&composeStackAdapter{cs: stackService})
-	composeHandler := projectsmod.NewComposeHandler()
 	tmplMgr, _ := compose.NewTemplateManager()
 	oneClickService := projectsmod.NewOneClickService(tmplMgr, stackService, &projectEnvAdapter{repo: d.environmentRepo})
 	oneClickHandler := projectsmod.NewOneClickHandler(&oneClickAdapter{oc: oneClickService})
@@ -112,6 +115,11 @@ func buildServerInstance(d *serverSetupDeps) (*Server, error) {
 	securityService := security.NewSecurityService(d.db, security.NewFeedManager(d.db, securityVerifier, ""), nil, nil, nil, nil)
 	chatAppService := chatapps.NewService(chatapps.NewRepository(d.db), d.v)
 	monHandlers := createMonitoringHandlers(d, updaterService, metricsService, logService)
+	var billingHandler *billing.BillingHandler
+	if config.Get().Cloud.Enabled {
+		billingHandler = billing.NewBillingHandler(billing.NewBillingService(&billingUserAdapter{repo: d.userRepo}))
+	}
+	supportHandler := support.NewSupportHandler()
 	_ = networking.EnsureTraefikAccessRoute(networking.DynamicDir, config.Get().Server.Port)
 
 	srv := &Server{
@@ -167,7 +175,6 @@ func buildServerInstance(d *serverSetupDeps) (*Server, error) {
 		domainHandler:              domainHandler,
 		notificationHandler:        monHandlers.notificationHandler,
 		systemHandler:              monHandlers.systemHandler,
-		composeHandler:             composeHandler,
 		composeStackHandler:        composeStackHandler,
 		chatAppHandler:             chatapps.NewHandler(chatAppService, chatapps.NewDispatcher(chatAppService, nil)),
 		oneClickHandler:            oneClickHandler,
@@ -180,7 +187,7 @@ func buildServerInstance(d *serverSetupDeps) (*Server, error) {
 		exampleHandler:             monHandlers.exampleHandler,
 		serverHandler:              serversHandler,
 		sshManager:                 d.sshManager,
-		billingHandler:             monHandlers.billingHandler,
+		billingHandler:             billingHandler,
 		serverMetricsWSHandler:     serversWSHandler,
 		serviceLogsWSHandler:       monHandlers.serviceLogsWSHandler,
 		takeoverHandler:            serversTakeoverHandler,
@@ -188,9 +195,9 @@ func buildServerInstance(d *serverSetupDeps) (*Server, error) {
 		mailHandler:                mailmodule.NewHandler(mailmodule.NewService(mailmodule.NewRepository(d.db, d.v)), nil, nil),
 		ingressHandler:             monHandlers.ingressHandler,
 		serverNetworksHandler:      serversNetworksHandler,
-		actionsHandler:             monHandlers.actionsHandler,
+		actionsHandler:             actions.NewActionsHandler(),
 		checksHandler:              checksHandler,
-		supportHandler:             monHandlers.supportHandler,
+		supportHandler:             supportHandler,
 		routeProtectionHandler:     protectionHandler,
 		edgeAuthHandler:            edgeAuthHandler,
 		securityHandler:            security.NewHandler(securityService),

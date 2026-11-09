@@ -11,9 +11,6 @@ type RoutesConfig struct {
 	NotifSettings *NotificationSettingsHandler
 	ScheduledTask *ScheduledTaskHandler
 	Ingress       *IngressHandler
-	Actions       *ActionsHandler
-	Support       *SupportHandler
-	Billing       *BillingHandler
 	Analytics     *AnalyticsHandler
 	Attention     *AttentionHandler
 	Operation     *OperationHandler
@@ -89,35 +86,6 @@ func RegisterRoutes(authGroup, apiGroup *echo.Group, cfg RoutesConfig) {
 		} else {
 			authGroup.PUT("/dns/ingress/domains/:domainId", cfg.Ingress.SetDomain)
 		}
-	}
-	if cfg.Actions != nil {
-		authGroup.GET("/actions/workflows", cfg.Actions.ListWorkflows)
-		authGroup.POST("/actions/workflows", cfg.Actions.CreateWorkflow)
-		authGroup.DELETE("/actions/workflows/:id", cfg.Actions.DeleteWorkflow)
-		authGroup.POST("/actions/workflows/:id/dispatch", cfg.Actions.DispatchWorkflow)
-		authGroup.GET("/actions/runs", cfg.Actions.ListRuns)
-		authGroup.POST("/actions/runs/:id/retry", cfg.Actions.RetryRun)
-		authGroup.POST("/actions/runs/:id/cancel", cfg.Actions.CancelRun)
-		authGroup.DELETE("/actions/runs/:id", cfg.Actions.DeleteRun)
-		authGroup.GET("/actions/runners", cfg.Actions.ListRunners)
-		authGroup.POST("/actions/runners/inspect", cfg.Actions.InspectDestination)
-		authGroup.POST("/actions/runners", cfg.Actions.CreateRunner)
-		authGroup.DELETE("/actions/runners/:id", cfg.Actions.DeleteRunner)
-	}
-	if cfg.Support != nil {
-		authGroup.GET("/cloud/support/session", cfg.Support.GetSession)
-		authGroup.GET("/cloud/support/mine", cfg.Support.ListTickets)
-		authGroup.POST("/cloud/support/mine", cfg.Support.CreateTicket)
-		authGroup.GET("/cloud/support/mine/:id", cfg.Support.GetTicket)
-		authGroup.POST("/cloud/support/mine/:id/replies", cfg.Support.ReplyTicket)
-		authGroup.PATCH("/cloud/support/mine/:id", cfg.Support.UpdateStatus)
-	}
-	if cfg.Billing != nil {
-		apiGroup.POST("/billing/webhook", cfg.Billing.Webhook)
-		authGroup.GET("/billing/config", cfg.Billing.GetConfig)
-		authGroup.POST("/billing/checkout", cfg.Billing.CreateCheckoutSession)
-		authGroup.GET("/billing/pending", cfg.Billing.GetPendingCheckout)
-		authGroup.POST("/billing/checkouts/:id/cancel", cfg.Billing.CancelCheckoutSession)
 	}
 	if cfg.Operation != nil {
 		authGroup.GET("/operations", cfg.Operation.List)

@@ -1,6 +1,12 @@
-package projects
+package canvas
 
-import "time"
+import (
+	"time"
+
+	"codedock/internal/modules/environments"
+)
+
+type EnvironmentConfig = environments.EnvironmentConfig
 
 type CanvasSummary struct {
 	ID                 string             `json:"id"`
@@ -153,4 +159,23 @@ type TopologyApplyRequest struct {
 type RuntimeObservation struct {
 	Logs    string         `json:"logs"`
 	Metrics map[string]any `json:"metrics"`
+}
+
+type ComposeStack struct {
+	ID            string `json:"id" db:"id"`
+	ProjectID     string `json:"projectId" db:"project_id"`
+	EnvironmentID string `json:"environmentId" db:"environment_id"`
+	Name          string `json:"name" db:"name"`
+	Revision      int    `json:"revision" db:"revision"`
+	Status        string `json:"status" db:"status"`
+	Error         string `json:"error" db:"error"`
+	Results       string `json:"results" db:"results"`
+	UpdatedAt     string `json:"updatedAt" db:"updated_at"`
+	Config        string `json:"-" db:"encrypted_config"`
+}
+
+type ComposeServiceResult struct {
+	Name        string `json:"name"`
+	ContainerID string `json:"containerId,omitempty"`
+	State       string `json:"state,omitempty"`
 }

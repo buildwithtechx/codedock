@@ -221,10 +221,6 @@ func (h *Handler) VolumeRestoreTarget(c echo.Context) error {
 	})
 }
 
-func (h *Handler) RestoreVolume(c echo.Context) error {
-	return echo.NewHTTPError(http.StatusGone, "Use the reviewed restore prepare/apply workflow")
-}
-
 func (h *Handler) CancelVolumeRestore(c echo.Context) error {
 	id, err := h.authorizeVolumeRestore(c)
 	if err != nil {

@@ -7,9 +7,7 @@ type RoutesConfig struct {
 	AppHandler          *ProjectAppHandler
 	SettingsHandler     *ProjectSettingsHandler
 	ChecksHandler       *ChecksHandler
-	CanvasHandler       *CanvasHandler
 	ComposeStackHandler *ComposeStackHandler
-	ComposeHandler      *ComposeHandler
 	OneClickHandler     *OneClickHandler
 }
 
@@ -46,14 +44,6 @@ func RegisterRoutes(g *echo.Group, cfg RoutesConfig) {
 		g.PUT("/projects/:id/checks", cfg.ChecksHandler.UpdateChecks)
 	}
 
-	if cfg.CanvasHandler != nil {
-		g.GET("/canvas/projects", cfg.CanvasHandler.ListCanvasSummaries)
-		g.GET("/projects/:id/summary", cfg.CanvasHandler.GetCanvasSummary)
-		g.GET("/environments/:id/canvas", cfg.CanvasHandler.GetEnvironmentCanvas)
-		g.PUT("/environments/:id/canvas", cfg.CanvasHandler.ApplyTopology)
-		g.GET("/environments/:id/canvas/observe", cfg.CanvasHandler.ObserveResource)
-	}
-
 	if cfg.ComposeStackHandler != nil {
 		g.GET("/projects/:id/stacks", cfg.ComposeStackHandler.List)
 		g.GET("/projects/:id/stacks/:stackId/config", cfg.ComposeStackHandler.Config)
@@ -63,11 +53,6 @@ func RegisterRoutes(g *echo.Group, cfg RoutesConfig) {
 		g.POST("/projects/:id/stacks/:stackId/cancel", cfg.ComposeStackHandler.Cancel)
 		g.POST("/projects/:id/stacks/:stackId/restart", cfg.ComposeStackHandler.Restart)
 		g.POST("/projects/:id/stacks/:stackId/stop", cfg.ComposeStackHandler.Stop)
-	}
-
-	if cfg.ComposeHandler != nil {
-		g.POST("/compose/deploy", cfg.ComposeHandler.Deploy)
-		g.POST("/compose/analyze", cfg.ComposeHandler.Analyze)
 	}
 
 	if cfg.OneClickHandler != nil {

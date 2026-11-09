@@ -1,4 +1,4 @@
-package projects
+package canvas
 
 import (
 	"context"
@@ -6,9 +6,10 @@ import (
 	"encoding/hex"
 	"encoding/json"
 	"fmt"
-	"github.com/jmoiron/sqlx"
 	"regexp"
 	"strings"
+
+	"github.com/jmoiron/sqlx"
 )
 
 var canvasBindingPattern = regexp.MustCompile(`\$\{([a-zA-Z0-9_-]+)\.([a-zA-Z0-9_]+)\}`)

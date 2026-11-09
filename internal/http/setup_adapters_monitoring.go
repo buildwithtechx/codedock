@@ -191,47 +191,6 @@ func (n *notificationServiceAdapter) TestNotification(ctx context.Context, provi
 	return nil
 }
 
-type billingUserAdapter struct {
-	repo users.UserRepository
-}
-
-func (a *billingUserAdapter) GetUserByID(ctx context.Context, id string) (*monitoring.User, error) {
-	if a.repo == nil {
-		return nil, nil
-	}
-	u, err := a.repo.GetUserByID(ctx, id)
-	if err != nil || u == nil {
-		return nil, err
-	}
-	return toMonitoringUser(u), nil
-}
-
-func (a *billingUserAdapter) GetUserByStripeCustomerID(ctx context.Context, customerID string) (*monitoring.User, error) {
-	if a.repo == nil {
-		return nil, nil
-	}
-	u, err := a.repo.GetUserByStripeCustomerID(ctx, customerID)
-	if err != nil || u == nil {
-		return nil, err
-	}
-	return toMonitoringUser(u), nil
-}
-
-func (a *billingUserAdapter) UpdateUser(ctx context.Context, user *monitoring.User) error {
-	if a.repo == nil || user == nil {
-		return nil
-	}
-	u, err := a.repo.GetUserByID(ctx, user.ID)
-	if err != nil || u == nil {
-		return err
-	}
-	u.StripeCustomerID = user.StripeCustomerID
-	u.StripeSubscriptionID = user.StripeSubscriptionID
-	u.StripePriceID = user.StripePriceID
-	u.PlanType = user.PlanType
-	return a.repo.UpdateUser(ctx, u)
-}
-
 func toMonitoringUser(u *users.User) *monitoring.User {
 	if u == nil {
 		return nil

@@ -1,4 +1,4 @@
-package monitoring
+package actions
 
 import (
 	"crypto/rand"

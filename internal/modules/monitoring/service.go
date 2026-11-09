@@ -30,23 +30,6 @@ type AttentionService interface {
 	Act(ctx context.Context, userID, orgID, issueID string, req AttentionActionRequest) error
 }
 
-type CreateCheckoutSessionOpts struct {
-	PriceID        string
-	SuccessURL     string
-	CancelURL      string
-	IdempotencyKey string
-	PurchaseIntent string
-	CancelPending  bool
-}
-
-type BillingOperations interface {
-	GetConfig(ctx context.Context) (any, error)
-	CreateCheckoutSession(ctx context.Context, userID string, opts CreateCheckoutSessionOpts) (string, error)
-	GetPendingCheckout(ctx context.Context, userID string) (any, error)
-	CancelCheckoutSession(ctx context.Context, userID, id, idempotencyKey string) (any, error)
-	HandleWebhook(ctx context.Context, payload []byte, sig string) error
-}
-
 type MetricsOperations interface {
 	GetServiceMetrics(ctx context.Context, serviceID, rangeParam string) (any, error)
 }

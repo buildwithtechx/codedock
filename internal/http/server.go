@@ -11,11 +11,14 @@ import (
 	"codedock/internal/engine/deploy"
 	"codedock/internal/http/mcp"
 	"codedock/internal/http/middleware"
+	actions "codedock/internal/modules/actions"
 	aimod "codedock/internal/modules/ai"
 	appsmod "codedock/internal/modules/apps"
 	"codedock/internal/modules/audit"
 	"codedock/internal/modules/auth"
 	backupmodule "codedock/internal/modules/backups"
+	"codedock/internal/modules/billing"
+	"codedock/internal/modules/canvas"
 	"codedock/internal/modules/chatapps"
 	modclusters "codedock/internal/modules/clusters"
 	"codedock/internal/modules/databases"
@@ -32,6 +35,7 @@ import (
 	securitymod "codedock/internal/modules/security"
 	"codedock/internal/modules/servers"
 	"codedock/internal/modules/settings"
+	"codedock/internal/modules/support"
 	"codedock/internal/modules/users"
 	"codedock/internal/platform/networking"
 	core "codedock/internal/platform/notifications"
@@ -66,7 +70,7 @@ type Server struct {
 	autoscalingHandler         *appsmod.AutoscalingHandler
 	dbHandler                  *databases.DatabaseHandler
 	scheduledTaskHandler       *modmonitoring.ScheduledTaskHandler
-	canvasHandler              *projectsmod.CanvasHandler
+	canvasHandler              *canvas.CanvasHandler
 	terminalHandler            *deploymentsmod.TerminalHandler
 	deploymentHandler          *deploymentsmod.DeploymentHandler
 	deploymentLifecycleHandler *deploymentsmod.LifecycleHandler
@@ -95,7 +99,6 @@ type Server struct {
 	domainHandler              *domainsmod.DomainHandler
 	notificationHandler        *modmonitoring.NotificationHandler
 	systemHandler              *modmonitoring.SystemHandler
-	composeHandler             *projectsmod.ComposeHandler
 	composeStackHandler        *projectsmod.ComposeStackHandler
 	chatAppHandler             *chatapps.Handler
 	oneClickHandler            *projectsmod.OneClickHandler
@@ -111,7 +114,7 @@ type Server struct {
 	migrationLifecycleHandler  *modmigrations.LifecycleHandler
 	analyticsHandler           *modmonitoring.AnalyticsHandler
 	attentionHandler           *modmonitoring.AttentionHandler
-	billingHandler             *modmonitoring.BillingHandler
+	billingHandler             *billing.BillingHandler
 	serverMetricsWSHandler     *servers.ServerMetricsWSHandler
 	serviceLogsWSHandler       *modmonitoring.ServiceLogsWSHandler
 	takeoverHandler            *servers.TakeoverHandler
@@ -119,9 +122,9 @@ type Server struct {
 	mailHandler                *mailmodule.Handler
 	ingressHandler             *modmonitoring.IngressHandler
 	serverNetworksHandler      *servers.ServerNetworksHandler
-	actionsHandler             *modmonitoring.ActionsHandler
+	actionsHandler             *actions.ActionsHandler
 	checksHandler              *projectsmod.ChecksHandler
-	supportHandler             *modmonitoring.SupportHandler
+	supportHandler             *support.SupportHandler
 	routeProtectionHandler     *environments.RouteProtectionHandler
 	edgeAuthHandler            *environments.EdgeAuthHandler
 	securityHandler            *securitymod.Handler

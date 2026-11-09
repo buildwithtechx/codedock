@@ -1,8 +1,7 @@
-package projects
+package canvas
 
 import (
 	"context"
-	"errors"
 	"fmt"
 )
 
@@ -19,27 +18,27 @@ func NewCanvasService(r CanvasRepository) *CanvasService {
 
 func (s *CanvasService) ListSummaries(ctx context.Context, organizationID string) ([]CanvasSummary, error) {
 	if organizationID == "" {
-		return nil, errors.New("organization id required")
+		return nil, fmt.Errorf("organization is required")
 	}
 	return s.repo.ListCanvasSummaries(ctx, organizationID)
 }
 
 func (s *CanvasService) GetSummary(ctx context.Context, id string) (*CanvasSummary, error) {
 	if id == "" {
-		return nil, errors.New("id required")
+		return nil, fmt.Errorf("canvas id is required")
 	}
 	return s.repo.GetCanvasSummary(ctx, id)
 }
 
 func (s *CanvasService) GetEnvironmentCanvas(ctx context.Context, id string) (*EnvironmentCanvas, error) {
 	if id == "" {
-		return nil, errors.New("id required")
+		return nil, fmt.Errorf("environment id is required")
 	}
 	canvas, err := s.repo.GetEnvironmentCanvas(ctx, id)
 	if err != nil {
 		return nil, err
 	}
-	if s.runtime != nil {
+	if s.runtime != nil && canvas != nil {
 		s.runtime.Observe(ctx, canvas)
 	}
 	return canvas, nil
@@ -56,7 +55,7 @@ func (s *CanvasService) ApplyTopology(ctx context.Context, environment string, r
 		ApplyTopology(context.Context, string, TopologyApplyRequest) error
 	})
 	if !ok {
-		return fmt.Errorf("topology persistence unavailable")
+		return fmt.Errorf("topology modification unavailable")
 	}
 	return repo.ApplyTopology(ctx, environment, request)
 }

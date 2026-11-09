@@ -4,6 +4,8 @@ import (
 	"context"
 	"fmt"
 
+	"codedock/internal/modules/canvas"
+	"codedock/internal/modules/environments"
 	projectsmod "codedock/internal/modules/projects"
 	docker "codedock/internal/platform/docker"
 	"codedock/internal/platform/observability"
@@ -13,27 +15,27 @@ type canvasRuntimeAdapter struct {
 	rt *observability.CanvasRuntime
 }
 
-func (a *canvasRuntimeAdapter) Observe(ctx context.Context, canvas *projectsmod.EnvironmentCanvas) {
-	if a.rt == nil || canvas == nil {
+func (a *canvasRuntimeAdapter) Observe(ctx context.Context, c *canvas.EnvironmentCanvas) {
+	if a.rt == nil || c == nil {
 		return
 	}
-	obsCanvas := toObservabilityCanvas(canvas)
+	obsCanvas := toObservabilityCanvas(c)
 	a.rt.Observe(ctx, obsCanvas)
-	for i := range canvas.Nodes {
+	for i := range c.Nodes {
 		for _, on := range obsCanvas.Nodes {
-			if canvas.Nodes[i].ID == on.ID {
-				canvas.Nodes[i].Data = on.Data
+			if c.Nodes[i].ID == on.ID {
+				c.Nodes[i].Data = on.Data
 				break
 			}
 		}
 	}
 }
 
-func (a *canvasRuntimeAdapter) Read(ctx context.Context, canvas *projectsmod.EnvironmentCanvas, nodeID string) (*projectsmod.RuntimeObservation, error) {
-	if a.rt == nil || canvas == nil {
+func (a *canvasRuntimeAdapter) Read(ctx context.Context, c *canvas.EnvironmentCanvas, nodeID string) (*canvas.RuntimeObservation, error) {
+	if a.rt == nil || c == nil {
 		return nil, fmt.Errorf("runtime unavailable")
 	}
-	obsCanvas := toObservabilityCanvas(canvas)
+	obsCanvas := toObservabilityCanvas(c)
 	obs, err := a.rt.Read(ctx, obsCanvas, nodeID)
 	if err != nil {
 		return nil, err
@@ -41,13 +43,13 @@ func (a *canvasRuntimeAdapter) Read(ctx context.Context, canvas *projectsmod.Env
 	if obs == nil {
 		return nil, nil
 	}
-	return &projectsmod.RuntimeObservation{
+	return &canvas.RuntimeObservation{
 		Logs:    obs.Logs,
 		Metrics: obs.Metrics,
 	}, nil
 }
 
-func toObservabilityCanvas(c *projectsmod.EnvironmentCanvas) *observability.EnvironmentCanvas {
+func toObservabilityCanvas(c *canvas.EnvironmentCanvas) *observability.EnvironmentCanvas {
 	if c == nil {
 		return nil
 	}
@@ -166,4 +168,42 @@ func (a *composeStackRuntimeAdapter) Results(ctx context.Context, projectID stri
 		}
 	}
 	return out, nil
+}
+
+type canvasEnvAdapter struct {
+	repo *environments.EnvironmentRepo
+}
+
+func (a *canvasEnvAdapter) ListByProject(ctx context.Context, projectID string) ([]*canvas.EnvironmentConfig, error) {
+	if a.repo == nil {
+		return []*canvas.EnvironmentConfig{}, nil
+	}
+	envs, err := a.repo.ListByProject(ctx, projectID)
+	if err != nil {
+		return nil, err
+	}
+	res := make([]*canvas.EnvironmentConfig, len(envs))
+	for i := range envs {
+		res[i] = &envs[i]
+	}
+	return res, nil
+}
+
+func (a *canvasEnvAdapter) GetDefaultByProject(ctx context.Context, projectID string) (*canvas.EnvironmentConfig, error) {
+	if a.repo == nil {
+		return nil, nil
+	}
+	envs, err := a.repo.ListByProject(ctx, projectID)
+	if err != nil {
+		return nil, err
+	}
+	for i := range envs {
+		if envs[i].IsDefault {
+			return &envs[i], nil
+		}
+	}
+	if len(envs) > 0 {
+		return &envs[0], nil
+	}
+	return nil, nil
 }

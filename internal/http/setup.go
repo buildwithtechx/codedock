@@ -20,6 +20,7 @@ import (
 	"codedock/internal/modules/audit"
 	"codedock/internal/modules/auth"
 	backupmodule "codedock/internal/modules/backups"
+	"codedock/internal/modules/canvas"
 	modclusters "codedock/internal/modules/clusters"
 	"codedock/internal/modules/databases"
 	deploymentsmod "codedock/internal/modules/deployments"
@@ -73,7 +74,7 @@ func NewServer(db *sql.DB, v *vault.Vault, deployer *deploy.Deployer, traefikMan
 	serverlessRepository := appsmod.NewServerlessRepository(db)
 	projectSettingsRepo := projectsmod.NewProjectSettingsRepo(db)
 	userRepo := users.NewUserRepo(db)
-	canvasRepo := projectsmod.NewCanvasRepo(db, &projectEnvAdapter{repo: environmentRepo})
+	canvasRepo := canvas.NewCanvasRepo(db, &canvasEnvAdapter{repo: environmentRepo})
 	canvasRepo.SetVault(v)
 	canvasRepo.SetClusterData(&canvasClusterDataAdapter{repo: modclusters.NewClusterDataRepo(db, v)})
 	deployRepo := deploymentsmod.NewDeploymentRepository(db)
@@ -162,7 +163,7 @@ func NewServer(db *sql.DB, v *vault.Vault, deployer *deploy.Deployer, traefikMan
 	}
 
 	scheduledTaskService := monitoring.NewScheduledTaskService(scheduledTaskRepo, cronManager)
-	canvasService := projectsmod.NewCanvasService(canvasRepo)
+	canvasService := canvas.NewCanvasService(canvasRepo)
 	canvasService.SetRuntime(&canvasRuntimeAdapter{rt: observability.NewCanvasRuntime(dockerClient)})
 
 	gitProviderRepo := gitmod.NewGitProviderRepository(db, v)

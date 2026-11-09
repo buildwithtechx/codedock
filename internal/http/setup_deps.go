@@ -14,6 +14,7 @@ import (
 	"codedock/internal/modules/audit"
 	"codedock/internal/modules/auth"
 	backupmodule "codedock/internal/modules/backups"
+	"codedock/internal/modules/canvas"
 	"codedock/internal/modules/databases"
 	deploymentsmod "codedock/internal/modules/deployments"
 	"codedock/internal/modules/dns"
@@ -67,7 +68,7 @@ type serverSetupDeps struct {
 	authMod                *auth.Module
 	projectSettingsService *projectsmod.ProjectSettingsService
 	scheduledTaskService   *monitoring.ScheduledTaskService
-	canvasService          *projectsmod.CanvasService
+	canvasService          *canvas.CanvasService
 	gitService             *gitmod.ProviderService
 	deploymentService      *deploymentsmod.DeploymentService
 	autoscalingService     *appsmod.AutoscalingService

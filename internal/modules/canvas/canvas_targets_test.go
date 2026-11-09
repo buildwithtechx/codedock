@@ -1,8 +1,11 @@
-package projects
+package canvas
 
 import (
 	"context"
+	"database/sql"
 	"testing"
+
+	"codedock/internal/testdb"
 )
 
 type canvasTestEnvRepo struct{}
@@ -12,6 +15,11 @@ func (r *canvasTestEnvRepo) ListByProject(ctx context.Context, projectID string)
 }
 func (r *canvasTestEnvRepo) GetDefaultByProject(ctx context.Context, projectID string) (*EnvironmentConfig, error) {
 	return nil, nil
+}
+
+func openPGTestDB(t *testing.T) *sql.DB {
+	t.Helper()
+	return testdb.Open(t)
 }
 
 func TestCanvasSummariesResolveDeployTargets(t *testing.T) {

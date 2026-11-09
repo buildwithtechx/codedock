@@ -12,6 +12,7 @@ import (
 	"codedock/internal/engine/kubernetes"
 	appsmod "codedock/internal/modules/apps"
 	backupmodule "codedock/internal/modules/backups"
+	"codedock/internal/modules/canvas"
 	modclusters "codedock/internal/modules/clusters"
 	"codedock/internal/modules/environments"
 	"codedock/internal/modules/monitoring"
@@ -37,7 +38,7 @@ func configureClusters(
 	gate modclusters.Gate,
 	apps appsmod.AppServiceRepository,
 	deployments ClusterDeployer,
-	canvas *projectsmod.CanvasService,
+	canvas *canvas.CanvasService,
 	backups *backup.BackupManager,
 ) error {
 	repository := modclusters.NewClusterRepo(db, vlt)

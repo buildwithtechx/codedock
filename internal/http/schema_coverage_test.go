@@ -12,8 +12,10 @@ import (
 	"codedock/internal/config"
 	"codedock/internal/http/apischema"
 	"codedock/internal/http/middleware"
+	actions "codedock/internal/modules/actions"
 	appsmod "codedock/internal/modules/apps"
 	"codedock/internal/modules/auth"
+	"codedock/internal/modules/canvas"
 	modclusters "codedock/internal/modules/clusters"
 	deploymentsmod "codedock/internal/modules/deployments"
 	domainsmod "codedock/internal/modules/domains"
@@ -23,6 +25,7 @@ import (
 	modmonitoring "codedock/internal/modules/monitoring"
 	projectsmod "codedock/internal/modules/projects"
 	serversmod "codedock/internal/modules/servers"
+	"codedock/internal/modules/support"
 )
 
 const openAPIGoldenPath = "../../docs/api/openapi.json"
@@ -55,9 +58,8 @@ func schemaTestRouter(t *testing.T) *echo.Echo {
 		projectAppHandler:          &projectsmod.ProjectAppHandler{},
 		projectSettingsHandler:     &projectsmod.ProjectSettingsHandler{},
 		checksHandler:              &projectsmod.ChecksHandler{},
-		canvasHandler:              &projectsmod.CanvasHandler{},
+		canvasHandler:              &canvas.CanvasHandler{},
 		composeStackHandler:        &projectsmod.ComposeStackHandler{},
-		composeHandler:             &projectsmod.ComposeHandler{},
 		oneClickHandler:            &projectsmod.OneClickHandler{},
 		environmentHandler:         &environments.EnvironmentHandler{},
 		routeProtectionHandler:     &environments.RouteProtectionHandler{},
@@ -83,6 +85,8 @@ func schemaTestRouter(t *testing.T) *echo.Echo {
 		clusterDataHandler:         modclusters.NewDataHandler(nil),
 		migrationLifecycleHandler:  modmigrations.NewLifecycleHandler(nil),
 		migrationHandler:           modmigrations.NewBundleHandler(nil, nil, nil),
+		supportHandler:             support.NewSupportHandler(),
+		actionsHandler:             actions.NewActionsHandler(),
 	}
 	apiGroup := router.Group("/api")
 	authGroup := apiGroup.Group("", server.authGuard.RequireAuth())

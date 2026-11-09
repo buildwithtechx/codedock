@@ -1,4 +1,4 @@
-package monitoring
+package billing
 
 import (
 	"context"
@@ -13,18 +13,6 @@ import (
 
 	"codedock/internal/config"
 )
-
-type ErrCheckoutPending struct {
-	Pending *PendingCheckout
-}
-
-func (e *ErrCheckoutPending) Error() string {
-	return "This server already has an unfinished checkout. Resume that payment or wait for it to expire before choosing another plan."
-}
-
-func (e *ErrCheckoutPending) PendingSession() any {
-	return e.Pending
-}
 
 type BillingService struct {
 	userRepo         UserRepository
@@ -52,12 +40,37 @@ func (s *BillingService) SetSessionHandlers(
 	s.sessionExpire = expireFn
 }
 
+func (s *BillingService) GetConfig(ctx context.Context) (any, error) {
+	cfg := config.Get()
+	return &BillingConfig{
+		PublishableKey: cfg.Stripe.PublishableKey,
+		IsConfigured:   cfg.Stripe.PublishableKey != "",
+		Plans: []BillingPlan{
+			{
+				ID:           "free",
+				Name:         "Free Tier",
+				Description:  "Self-hosted basic version",
+				PriceMonthly: 0,
+				Features:     []string{"1 Project", "Basic Support"},
+			},
+			{
+				ID:           "pro",
+				Name:         "Pro Tier",
+				Description:  "Production servers with full managed features",
+				PriceMonthly: 29,
+				PriceID:      cfg.Stripe.PriceIDPro,
+				Features:     []string{"Unlimited Projects", "Priority Support", "Analytics"},
+			},
+		},
+	}, nil
+}
+
 func (s *BillingService) CreateCheckoutSession(
 	ctx context.Context,
-	userID, priceID, successURL, cancelURL, idempotencyKey, purchaseIntent string,
-	cancelPending bool,
+	userID string,
+	opts CreateCheckoutSessionOpts,
 ) (string, error) {
-	if purchaseIntent != "" && !IsPurchaseIntent(purchaseIntent) {
+	if opts.PurchaseIntent != "" && !IsPurchaseIntent(opts.PurchaseIntent) {
 		return "", errors.New("invalid purchase intent format")
 	}
 
@@ -72,13 +85,13 @@ func (s *BillingService) CreateCheckoutSession(
 	}
 
 	if activeOpen != nil {
-		if cancelPending {
+		if opts.CancelPending {
 			if s.sessionExpire != nil && stripe.Key != "" {
 				_, _ = s.sessionExpire(activeOpen.CheckoutID, nil)
 			}
 			activeOpen.Status = "canceled"
 			activeOpen.CanCancel = false
-		} else if idempotencyKey != "" && activeOpen.IdempotencyKey == idempotencyKey && activeOpen.PriceID == priceID {
+		} else if opts.IdempotencyKey != "" && activeOpen.IdempotencyKey == opts.IdempotencyKey && activeOpen.PriceID == opts.PriceID {
 			s.pendingMu.Unlock()
 			return activeOpen.URL, nil
 		} else {
@@ -89,7 +102,7 @@ func (s *BillingService) CreateCheckoutSession(
 	s.pendingMu.Unlock()
 
 	if stripe.Key == "" && s.sessionNew == nil {
-		return "", fmt.Errorf("billing is not configured")
+		return "", ErrBillingNotConfigured
 	}
 
 	var customerID string
@@ -106,6 +119,7 @@ func (s *BillingService) CreateCheckoutSession(
 		customerID = "cus_mock_" + userID
 	}
 
+	idempotencyKey := opts.IdempotencyKey
 	if idempotencyKey == "" {
 		idempotencyKey = uuid.NewString()
 	}
@@ -113,8 +127,8 @@ func (s *BillingService) CreateCheckoutSession(
 	metadata := map[string]string{
 		"user_id": userID,
 	}
-	if purchaseIntent != "" {
-		metadata["purchase_intent"] = purchaseIntent
+	if opts.PurchaseIntent != "" {
+		metadata["purchase_intent"] = opts.PurchaseIntent
 	}
 
 	params := &stripe.CheckoutSessionParams{
@@ -122,12 +136,12 @@ func (s *BillingService) CreateCheckoutSession(
 		Mode:     stripe.String(string(stripe.CheckoutSessionModeSubscription)),
 		LineItems: []*stripe.CheckoutSessionLineItemParams{
 			{
-				Price:    stripe.String(priceID),
+				Price:    stripe.String(opts.PriceID),
 				Quantity: stripe.Int64(1),
 			},
 		},
-		SuccessURL: stripe.String(successURL),
-		CancelURL:  stripe.String(cancelURL),
+		SuccessURL: stripe.String(opts.SuccessURL),
+		CancelURL:  stripe.String(opts.CancelURL),
 		Metadata:   metadata,
 	}
 	params.IdempotencyKey = stripe.String(idempotencyKey)
@@ -140,8 +154,8 @@ func (s *BillingService) CreateCheckoutSession(
 	newPending := &PendingCheckout{
 		CheckoutID:     sess.ID,
 		IdempotencyKey: idempotencyKey,
-		PurchaseIntent: purchaseIntent,
-		PriceID:        priceID,
+		PurchaseIntent: opts.PurchaseIntent,
+		PriceID:        opts.PriceID,
 		URL:            sess.URL,
 		Status:         "open",
 		CanCancel:      true,

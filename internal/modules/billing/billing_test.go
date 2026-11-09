@@ -1,4 +1,4 @@
-package monitoring
+package billing
 
 import (
 	"context"
@@ -21,11 +21,11 @@ func (m *mockBillingService) GetConfig(ctx context.Context) (any, error) {
 func (m *mockBillingService) CreateCheckoutSession(ctx context.Context, userID string, opts CreateCheckoutSessionOpts) (string, error) {
 	return "https://stripe.com/checkout", nil
 }
-func (m *mockBillingService) GetPendingCheckout(ctx context.Context, userID string) (any, error) {
-	return map[string]string{"status": "pending"}, nil
+func (m *mockBillingService) GetPendingCheckout(ctx context.Context, userID string) *PendingCheckout {
+	return &PendingCheckout{Status: "pending"}
 }
-func (m *mockBillingService) CancelCheckoutSession(ctx context.Context, userID, id, idempotencyKey string) (any, error) {
-	return map[string]string{"id": id}, nil
+func (m *mockBillingService) CancelCheckoutSession(ctx context.Context, userID, id, idempotencyKey string) (*PendingCheckout, error) {
+	return &PendingCheckout{CheckoutID: id, Status: "canceled"}, nil
 }
 func (m *mockBillingService) HandleWebhook(ctx context.Context, payload []byte, sig string) error {
 	return nil

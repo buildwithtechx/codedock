@@ -1,12 +1,10 @@
-package projects
+package canvas
 
 import (
 	"context"
 	"encoding/json"
 	"fmt"
 )
-
-func (r *CanvasRepo) SetVault(vault Vault) { r.vault = vault }
 
 func (r *CanvasRepo) projectStacks(ctx context.Context, canvas *EnvironmentCanvas) error {
 	var stacks []ComposeStack

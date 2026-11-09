@@ -1,11 +1,22 @@
 package projects
 
 import (
+	"context"
 	"time"
 
 	"codedock/internal/modules/organizations"
 	"codedock/internal/modules/users"
 )
+
+type Vault interface {
+	Encrypt(string) (string, error)
+	Decrypt(string) (string, error)
+}
+
+type EnvironmentRepository interface {
+	ListByProject(ctx context.Context, projectID string) ([]*EnvironmentConfig, error)
+	GetDefaultByProject(ctx context.Context, projectID string) (*EnvironmentConfig, error)
+}
 
 type UserRole = users.UserRole
 type MemberPermission = organizations.MemberPermission

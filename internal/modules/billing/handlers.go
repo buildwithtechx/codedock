@@ -1,4 +1,4 @@
-package monitoring
+package billing
 
 import (
 	"errors"
@@ -11,34 +11,12 @@ import (
 	"codedock/internal/utils"
 )
 
-type CheckoutPendingError interface {
-	error
-	PendingSession() any
-}
-
 type BillingHandler struct {
 	service BillingOperations
 }
 
 func NewBillingHandler(service BillingOperations) *BillingHandler {
 	return &BillingHandler{service: service}
-}
-
-type CreateCheckoutRequest struct {
-	PriceID        string `json:"priceId"`
-	SuccessURL     string `json:"successUrl"`
-	CancelURL      string `json:"cancelUrl"`
-	IdempotencyKey string `json:"idempotencyKey,omitempty"`
-	PurchaseIntent string `json:"purchaseIntent,omitempty"`
-	CancelPending  bool   `json:"cancelPending,omitempty"`
-}
-
-type CreateCheckoutResponse struct {
-	URL string `json:"url"`
-}
-
-type CancelCheckoutRequest struct {
-	IdempotencyKey string `json:"idempotencyKey,omitempty"`
 }
 
 func (h *BillingHandler) GetConfig(c echo.Context) error {
@@ -119,10 +97,7 @@ func (h *BillingHandler) GetPendingCheckout(c echo.Context) error {
 		return echo.NewHTTPError(http.StatusServiceUnavailable, "billing service not initialized")
 	}
 
-	pending, err := h.service.GetPendingCheckout(c.Request().Context(), userID)
-	if err != nil {
-		return echo.NewHTTPError(http.StatusInternalServerError, err.Error())
-	}
+	pending := h.service.GetPendingCheckout(c.Request().Context(), userID)
 	return c.JSON(http.StatusOK, map[string]any{
 		"pending": pending,
 	})

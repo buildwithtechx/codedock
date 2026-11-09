@@ -1,4 +1,4 @@
-package projects
+package canvas
 
 import (
 	"context"
@@ -18,12 +18,11 @@ type CanvasOperations interface {
 }
 
 type CanvasHandler struct {
-	canvas  CanvasOperations
-	project *Service
+	canvas CanvasOperations
 }
 
-func NewCanvasHandler(cs CanvasOperations, ps *Service) *CanvasHandler {
-	return &CanvasHandler{canvas: cs, project: ps}
+func NewCanvasHandler(cs CanvasOperations, _ ...any) *CanvasHandler {
+	return &CanvasHandler{canvas: cs}
 }
 
 func (h *CanvasHandler) ListCanvasSummaries(c echo.Context) error {

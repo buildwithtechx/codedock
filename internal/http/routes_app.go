@@ -7,6 +7,7 @@ import (
 
 	"codedock/apps/dashboard"
 	"codedock/internal/config"
+	"codedock/internal/modules/actions"
 	"codedock/internal/modules/ai"
 	appsmod "codedock/internal/modules/apps"
 	"codedock/internal/modules/audit"
@@ -17,6 +18,7 @@ import (
 	gitmod "codedock/internal/modules/git"
 	"codedock/internal/modules/organizations"
 	"codedock/internal/modules/settings"
+	"codedock/internal/modules/support"
 	"github.com/labstack/echo/v4"
 )
 
@@ -126,19 +128,7 @@ func (s *Server) registerMiscRoutes(apiGroup, authGroup *echo.Group) {
 
 	authGroup.GET("/examples", s.exampleHandler.List)
 	dns.RegisterRoutes(authGroup, s.dnsHandler, s.authGuard.RequireRole("admin"))
-	authGroup.GET("/actions/workflows", s.actionsHandler.ListWorkflows)
-	authGroup.POST("/actions/workflows", s.actionsHandler.CreateWorkflow, s.authGuard.RequireRole("admin"))
-	authGroup.POST("/actions/workflows/:id/dispatch", s.actionsHandler.DispatchWorkflow)
-	authGroup.DELETE("/actions/workflows/:id", s.actionsHandler.DeleteWorkflow, s.authGuard.RequireRole("admin"))
-	authGroup.GET("/actions/runs", s.actionsHandler.ListRuns)
-	authGroup.GET("/actions/runs/:id", s.actionsHandler.GetRun)
-	authGroup.POST("/actions/runs/:id/retry", s.actionsHandler.RetryRun)
-	authGroup.POST("/actions/runs/:id/cancel", s.actionsHandler.CancelRun)
-	authGroup.DELETE("/actions/runs/:id", s.actionsHandler.DeleteRun, s.authGuard.RequireRole("admin"))
-	authGroup.GET("/actions/runners", s.actionsHandler.ListRunners)
-	authGroup.POST("/actions/runners", s.actionsHandler.CreateRunner, s.authGuard.RequireRole("admin"))
-	authGroup.POST("/actions/runners/inspect", s.actionsHandler.InspectDestination, s.authGuard.RequireRole("admin"))
-	authGroup.DELETE("/actions/runners/:id", s.actionsHandler.DeleteRunner, s.authGuard.RequireRole("admin"))
+	actions.RegisterRoutes(authGroup, s.authGuard.RequireRole("admin"), s.actionsHandler)
 	authGroup.GET("/dns/ingress", s.ingressHandler.List)
 	authGroup.POST("/dns/ingress/discover", s.ingressHandler.Discover)
 	authGroup.POST("/dns/ingress", s.ingressHandler.Connect, s.authGuard.RequireRole("admin"))
@@ -147,12 +137,7 @@ func (s *Server) registerMiscRoutes(apiGroup, authGroup *echo.Group) {
 	authGroup.DELETE("/dns/ingress/:id", s.ingressHandler.Disconnect, s.authGuard.RequireRole("admin"))
 	authGroup.GET("/dns/ingress/domains/:domainId", s.ingressHandler.GetDomain)
 	authGroup.PUT("/dns/ingress/domains/:domainId", s.ingressHandler.SetDomain, s.authGuard.RequireRole("admin"))
-	authGroup.GET("/cloud/support/session", s.supportHandler.GetSession)
-	authGroup.GET("/cloud/support/mine", s.supportHandler.ListTickets)
-	authGroup.POST("/cloud/support/mine", s.supportHandler.CreateTicket)
-	authGroup.GET("/cloud/support/mine/:id", s.supportHandler.GetTicket)
-	authGroup.POST("/cloud/support/mine/:id/replies", s.supportHandler.ReplyTicket)
-	authGroup.PATCH("/cloud/support/mine/:id", s.supportHandler.UpdateStatus)
+	support.RegisterRoutes(authGroup, s.supportHandler)
 	authGroup.GET("/scheduled-tasks", s.scheduledTaskHandler.ListProjectScheduledTasks)
 	authGroup.POST("/scheduled-tasks", s.scheduledTaskHandler.Create)
 	authGroup.GET("/scheduled-tasks/:id", s.scheduledTaskHandler.Get)

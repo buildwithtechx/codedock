@@ -15,6 +15,12 @@ type mockNotifService struct {
 	lastOrgID string
 }
 
+type testSupportClaims struct {
+	UserID string
+	Email  string
+	Role   string
+}
+
 func (m *mockNotifService) GetNotificationSettings(ctx context.Context) (*NotificationSettings, error) {
 	return &NotificationSettings{}, nil
 }
