@@ -7,7 +7,7 @@ import (
 	backups "codedock/internal/modules/backups"
 	"codedock/internal/modules/clusters/kubernetes"
 	environments "codedock/internal/modules/environments"
-	"codedock/internal/modules/operations"
+	"codedock/internal/modules/audit/operations"
 	projectsmod "codedock/internal/modules/projects"
 	servers "codedock/internal/modules/servers"
 )

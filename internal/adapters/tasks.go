@@ -6,7 +6,7 @@ import (
 
 	"codedock/internal/modules/apps"
 	"codedock/internal/modules/projects"
-	"codedock/internal/modules/tasks"
+	"codedock/internal/modules/apps/tasks"
 	"codedock/internal/modules/users"
 )
 

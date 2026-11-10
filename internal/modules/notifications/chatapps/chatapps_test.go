@@ -8,7 +8,7 @@ import (
 	"testing"
 	"time"
 
-	chatapps "codedock/internal/modules/chatapps"
+	chatapps "codedock/internal/modules/notifications/chatapps"
 )
 
 type memoryChatRepo struct {

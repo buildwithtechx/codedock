@@ -10,7 +10,7 @@ import (
 	"testing"
 	"time"
 
-	"codedock/internal/modules/chatapps/transports"
+	"codedock/internal/modules/notifications/chatapps/transports"
 )
 
 func TestSlackSignatureVerification(t *testing.T) {

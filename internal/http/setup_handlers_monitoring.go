@@ -5,9 +5,9 @@ import (
 	"codedock/internal/modules/dns/ingress"
 	"codedock/internal/modules/monitoring"
 	notifsmod "codedock/internal/modules/notifications"
-	"codedock/internal/modules/operations"
+	"codedock/internal/modules/audit/operations"
 	"codedock/internal/modules/system"
-	"codedock/internal/modules/tasks"
+	"codedock/internal/modules/apps/tasks"
 )
 
 type monitoringHandlersGroup struct {

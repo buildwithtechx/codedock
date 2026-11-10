@@ -10,7 +10,7 @@ import (
 	"codedock/internal/modules/backups"
 	"codedock/internal/modules/databases"
 	"codedock/internal/modules/projects"
-	"codedock/internal/modules/tasks"
+	"codedock/internal/modules/apps/tasks"
 	"codedock/internal/platform/scheduler"
 	"codedock/internal/platform/storage"
 )

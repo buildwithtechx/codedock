@@ -4,7 +4,7 @@ import (
 	"context"
 	"fmt"
 
-	"codedock/internal/modules/canvas"
+	"codedock/internal/modules/projects/canvas"
 	composemod "codedock/internal/modules/compose"
 	"codedock/internal/modules/environments"
 	docker "codedock/internal/platform/docker"

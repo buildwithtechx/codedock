@@ -15,7 +15,7 @@ import (
 	actions "codedock/internal/modules/actions"
 	appsmod "codedock/internal/modules/apps"
 	"codedock/internal/modules/auth"
-	"codedock/internal/modules/canvas"
+	"codedock/internal/modules/projects/canvas"
 	modclusters "codedock/internal/modules/clusters"
 	composemod "codedock/internal/modules/compose"
 	deploymentsmod "codedock/internal/modules/deployments"
