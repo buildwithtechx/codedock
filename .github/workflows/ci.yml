@@ -58,7 +58,7 @@ jobs:
           cache: npm
       - run: npm ci
       - run: npm run build:dashboard
-      - run: go test -race ./internal/repositories/... ./internal/engine/systemdb/... ./cmd/...
+      - run: go test -race ./...
 
   typescript:
     runs-on: ubuntu-latest

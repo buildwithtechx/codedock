@@ -6,12 +6,14 @@ on:
   workflow_dispatch: {}
   pull_request:
     paths:
-      - "internal/engine/compose/**"
+      - "internal/modules/compose/**"
+      - "internal/modules/templates/**"
       - ".github/workflows/catalog-health.yml"
   push:
     branches: [main]
     paths:
-      - "internal/engine/compose/**"
+      - "internal/modules/compose/**"
+      - "internal/modules/templates/**"
       - ".github/workflows/catalog-health.yml"
 
 permissions:
@@ -30,7 +32,7 @@ jobs:
       - uses: actions/setup-go@v5
         with:
           go-version-file: go.mod
-      - run: go test -v ./internal/engine/compose/...
+      - run: go test -v ./internal/modules/compose/... ./internal/modules/templates/...
 
   test-data-apps:
     name: Data App Container Health (${{ matrix.app }})
