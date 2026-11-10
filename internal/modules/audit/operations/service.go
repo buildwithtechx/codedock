@@ -15,12 +15,6 @@ import (
 	"github.com/google/uuid"
 )
 
-type OperationsService interface {
-	Get(ctx context.Context, id string) (*Operation, error)
-	List(ctx context.Context, project, user string) ([]Operation, error)
-	Cancel(ctx context.Context, id, user string) error
-}
-
 type OperationService struct {
 	store   OperationStore
 	mu      sync.Mutex

@@ -138,20 +138,21 @@ func (s *Service) CreateDatabase(ctx context.Context, db *Database) (*Database, 
 	}
 
 	if s.deployer != nil {
-		go func() {
+		dbCopy := *db
+		go func(target Database) {
 			bgCtx := context.Background()
-			containerID, err := s.deployer.SpinUp(bgCtx, db)
+			containerID, err := s.deployer.SpinUp(bgCtx, &target)
 			if err != nil {
 				slog.Error("failed to spin up database container", "error", err)
-				db.Status = DatabaseStatusError
-				_ = s.repo.Update(bgCtx, db)
+				target.Status = DatabaseStatusError
+				_ = s.repo.Update(bgCtx, &target)
 				return
 			}
-			db.ContainerID = containerID
-			db.Status = DatabaseStatusRunning
-			db.UpdatedAt = time.Now()
-			_ = s.repo.Update(bgCtx, db)
-		}()
+			target.ContainerID = containerID
+			target.Status = DatabaseStatusRunning
+			target.UpdatedAt = time.Now()
+			_ = s.repo.Update(bgCtx, &target)
+		}(dbCopy)
 	}
 
 	return db, nil

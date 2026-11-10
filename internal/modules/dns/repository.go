@@ -12,14 +12,6 @@ import (
 	"github.com/jmoiron/sqlx"
 )
 
-type Repository interface {
-	Create(ctx context.Context, record *DNSRecord) error
-	GetByID(ctx context.Context, id string) (*DNSRecord, error)
-	ListByDomain(ctx context.Context, domainName string) ([]*DNSRecord, error)
-	Delete(ctx context.Context, id string) error
-	Update(ctx context.Context, record *DNSRecord) error
-}
-
 type repo struct {
 	db *sqlx.DB
 	mu sync.Mutex

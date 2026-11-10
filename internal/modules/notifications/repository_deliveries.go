@@ -9,11 +9,6 @@ import (
 	"github.com/jmoiron/sqlx"
 )
 
-type NotificationDeliveryRepository interface {
-	RecordDelivery(ctx context.Context, delivery *NotificationDelivery) error
-	ListDeliveries(ctx context.Context, limit int) ([]NotificationDelivery, error)
-}
-
 type NotificationDeliveryRepo struct {
 	db *sqlx.DB
 }

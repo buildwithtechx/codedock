@@ -1,7 +1,6 @@
 package apps
 
 import (
-	"context"
 	"net/http"
 
 	"github.com/google/uuid"
@@ -9,15 +8,6 @@ import (
 
 	"codedock/internal/utils"
 )
-
-type AccessChecker interface {
-	HasPermission(ctx context.Context, projectID, userID, role, permission string) bool
-	AccessibleServiceIDs(ctx context.Context, userID, role string) (map[string]bool, error)
-}
-
-type EnvironmentLookup interface {
-	GetProjectID(ctx context.Context, environmentID string) (string, error)
-}
 
 type Handler struct {
 	service   *Service

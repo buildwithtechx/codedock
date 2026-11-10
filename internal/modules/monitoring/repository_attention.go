@@ -6,17 +6,6 @@ import (
 	"fmt"
 )
 
-type AttentionRepository interface {
-	Upsert(ctx context.Context, issue *AttentionIssue) error
-	Get(ctx context.Context, id string) (*AttentionIssue, error)
-	List(ctx context.Context, orgID, status string, limit int) ([]*AttentionIssue, error)
-	CountOpen(ctx context.Context, orgID string) (int, error)
-	SetStatus(ctx context.Context, id, orgID string, status AttentionStatus) error
-	ResolveMissing(ctx context.Context, orgID string, live []string) error
-	AppendDetail(ctx context.Context, id, line string) error
-	ClearResolved(ctx context.Context, orgID string) (int64, error)
-}
-
 type postgresAttentionRepository struct {
 	db *sql.DB
 }

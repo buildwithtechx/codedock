@@ -8,17 +8,6 @@ import (
 	"time"
 )
 
-type IngressRepository interface {
-	ListConnections(ctx context.Context, serverID string) ([]*IngressConnection, error)
-	GetConnection(ctx context.Context, id string) (*IngressConnection, error)
-	SaveConnection(ctx context.Context, conn *IngressConnection) error
-	DeleteConnection(ctx context.Context, id string) error
-
-	GetHostname(ctx context.Context, domainID string) (*IngressHostname, error)
-	SaveHostname(ctx context.Context, host *IngressHostname) error
-	DeleteHostname(ctx context.Context, domainID string) error
-}
-
 type sqlIngressRepo struct {
 	db *sql.DB
 	mu sync.RWMutex

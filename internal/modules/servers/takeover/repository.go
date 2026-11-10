@@ -9,20 +9,6 @@ import (
 	"github.com/google/uuid"
 )
 
-type Vault interface {
-	Encrypt(string) (string, error)
-	Decrypt(string) (string, error)
-}
-
-type TakeoverRepository interface {
-	Create(ctx context.Context, run *TakeoverRun) error
-	GetByID(ctx context.Context, id string) (*TakeoverRun, error)
-	UpdateStatus(ctx context.Context, id string, status TakeoverStatus, errMsg string) error
-	UpdateDiscovered(ctx context.Context, id string, discoveredJSON string) error
-	UpdateAdopted(ctx context.Context, id string, projectIDs []string) error
-	ListByUser(ctx context.Context, userID string) ([]*TakeoverRun, error)
-}
-
 type postgresTakeoverRepository struct {
 	db    *sql.DB
 	vault Vault

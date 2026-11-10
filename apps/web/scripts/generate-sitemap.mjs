@@ -6,7 +6,7 @@ import { parseCatalogEntry } from './generate-app-catalog.mjs';
 const here = dirname(fileURLToPath(import.meta.url));
 const siteUrl = process.env.VITE_SITE_URL || 'https://codedock.run';
 const routeTree = readFileSync(join(here, '..', 'src', 'routeTree.gen.ts'), 'utf8');
-const composeDir = join(here, '..', '..', '..', 'internal', 'engine', 'compose');
+const composeDir = join(here, '..', '..', '..', 'internal', 'platform', 'docker');
 
 const paths = new Set();
 for (const match of routeTree.matchAll(/'(\/[^']*)'/g)) {

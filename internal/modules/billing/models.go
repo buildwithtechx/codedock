@@ -1,7 +1,6 @@
 package billing
 
 import (
-	"context"
 	"regexp"
 	"time"
 )
@@ -62,18 +61,4 @@ type User struct {
 	StripeCustomerID     *string `json:"stripeCustomerId"`
 	StripeSubscriptionID *string `json:"stripeSubscriptionId"`
 	StripePriceID        *string `json:"stripePriceId"`
-}
-
-type UserRepository interface {
-	GetUserByID(ctx context.Context, id string) (*User, error)
-	GetUserByStripeCustomerID(ctx context.Context, customerID string) (*User, error)
-	UpdateUser(ctx context.Context, u *User) error
-}
-
-type BillingOperations interface {
-	GetConfig(ctx context.Context) (any, error)
-	CreateCheckoutSession(ctx context.Context, userID string, opts CreateCheckoutSessionOpts) (string, error)
-	GetPendingCheckout(ctx context.Context, userID string) *PendingCheckout
-	CancelCheckoutSession(ctx context.Context, userID, id, idempotencyKey string) (*PendingCheckout, error)
-	HandleWebhook(ctx context.Context, payload []byte, sig string) error
 }

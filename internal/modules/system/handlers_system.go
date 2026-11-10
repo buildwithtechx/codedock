@@ -1,7 +1,6 @@
 package system
 
 import (
-	"context"
 	"net/http"
 	"os"
 	"os/exec"
@@ -13,20 +12,6 @@ import (
 	"codedock/internal/config"
 	"codedock/internal/utils"
 )
-
-type FoundingAdminFinder interface {
-	FindFoundingAdmin(ctx context.Context) (id, email, role string, verified, totp bool, err error)
-}
-
-type TokenGenerator interface {
-	GenerateCLIToken(id, email, role string, verified, totp bool) (string, error)
-}
-
-type SystemOperations interface {
-	GetStats(ctx context.Context) (any, error)
-	Restart(ctx context.Context) error
-	Cleanup(ctx context.Context) error
-}
 
 type SystemHandler struct {
 	service     SystemOperations

@@ -86,9 +86,13 @@ func (h *VariableHandler) Update(c echo.Context) error {
 		return utils.Error(c, http.StatusBadRequest, "missing variable id")
 	}
 
+	serviceID := c.Param("serviceId")
 	existing, err := h.service.GetVariable(c.Request().Context(), id)
 	if err != nil || existing == nil {
 		return utils.Error(c, http.StatusNotFound, "variable not found")
+	}
+	if serviceID != "" && existing.ServiceID != serviceID {
+		return utils.Error(c, http.StatusBadRequest, "mismatched service id")
 	}
 
 	var req UpdateVariableRequest
@@ -119,6 +123,17 @@ func (h *VariableHandler) Delete(c echo.Context) error {
 	}
 	if id == "" {
 		return utils.Error(c, http.StatusBadRequest, "missing variable id")
+	}
+
+	serviceID := c.Param("serviceId")
+	if serviceID != "" {
+		existing, err := h.service.GetVariable(c.Request().Context(), id)
+		if err != nil || existing == nil {
+			return utils.Error(c, http.StatusNotFound, "variable not found")
+		}
+		if existing.ServiceID != serviceID {
+			return utils.Error(c, http.StatusBadRequest, "mismatched service id")
+		}
 	}
 
 	if err := h.service.DeleteVariable(c.Request().Context(), id); err != nil {

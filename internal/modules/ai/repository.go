@@ -13,11 +13,6 @@ import (
 	"github.com/jmoiron/sqlx"
 )
 
-type Repository interface {
-	GetAISettings(ctx context.Context) (*AISettings, error)
-	UpdateAISettings(ctx context.Context, cfg *AISettings) error
-}
-
 type repo struct {
 	db *sqlx.DB
 	mu sync.Mutex

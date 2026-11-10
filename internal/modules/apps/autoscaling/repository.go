@@ -10,16 +10,6 @@ import (
 	"github.com/jmoiron/sqlx"
 )
 
-type AutoscalingRepository interface {
-	GetByServiceID(ctx context.Context, serviceID string) (*AutoscalingPolicy, error)
-	Upsert(ctx context.Context, policy *AutoscalingPolicy) error
-}
-
-type ServerlessRepository interface {
-	SaveCode(ctx context.Context, serviceID, runtime, codeContent string) (*ServerlessFunctionCode, error)
-	GetCodeByServiceID(ctx context.Context, serviceID string) (*ServerlessFunctionCode, error)
-}
-
 type autoscalingRepo struct {
 	db *sqlx.DB
 }

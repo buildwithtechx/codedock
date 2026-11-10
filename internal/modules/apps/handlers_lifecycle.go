@@ -1,20 +1,12 @@
 package apps
 
 import (
-	"context"
 	"net/http"
 
 	"github.com/labstack/echo/v4"
 
 	"codedock/internal/utils"
 )
-
-type LifecycleDeployer interface {
-	StopAppService(ctx context.Context, appID string) error
-	RestartAppService(ctx context.Context, appID string) error
-	RedeployAppService(ctx context.Context, appID string) (any, error)
-	ApplyProjectUpdates(ctx context.Context, projectID string) (any, error)
-}
 
 func (h *Handler) SetDeployer(d LifecycleDeployer) {
 	h.deployer = d

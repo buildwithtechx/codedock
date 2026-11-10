@@ -38,3 +38,23 @@ type BundleService interface {
 type UserCounter interface {
 	CountUsers(ctx context.Context) (int, error)
 }
+
+// MigrationRepository defines persistence for migration source systems, runs, and logs.
+type MigrationRepository interface {
+	CreateSource(ctx context.Context, source *MigrationSource) error
+	GetSource(ctx context.Context, id string) (*MigrationSource, error)
+	ListSourcesByOrg(ctx context.Context, orgID string) ([]*MigrationSource, error)
+	DeleteSource(ctx context.Context, id string) error
+	CreateRun(ctx context.Context, run *MigrationRun) error
+	GetRun(ctx context.Context, id string) (*MigrationRun, error)
+	UpdateRun(ctx context.Context, run *MigrationRun) error
+	UpdateRunStatus(ctx context.Context, id string, status MigrationStatus, phase, errMsg string) error
+	AppendRunLogs(ctx context.Context, id, logs string) error
+	SetRunPrompt(ctx context.Context, id, prompt string) error
+	RequestCancel(ctx context.Context, id string) error
+	ListRunsByOrg(ctx context.Context, orgID string, limit int) ([]*MigrationRun, error)
+	ListRunsBySource(ctx context.Context, sourceID string, limit int) ([]*MigrationRun, error)
+	ActiveRunForSource(ctx context.Context, sourceID string) (*MigrationRun, error)
+	ListActive(ctx context.Context) ([]*MigrationRun, error)
+	DeleteRun(ctx context.Context, id string) error
+}

@@ -10,13 +10,6 @@ import (
 	"github.com/jmoiron/sqlx"
 )
 
-type RegistryRepository interface {
-	Create(ctx context.Context, registry *Registry) error
-	ListByProject(ctx context.Context, projectID string) ([]*Registry, error)
-	Get(ctx context.Context, id string) (*Registry, error)
-	Delete(ctx context.Context, id string) error
-}
-
 type postgresRegistryRepository struct {
 	db *sqlx.DB
 }

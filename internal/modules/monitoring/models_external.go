@@ -1,7 +1,6 @@
 package monitoring
 
 import (
-	"context"
 	"time"
 )
 
@@ -115,51 +114,4 @@ type ExampleApp struct {
 	Repo        string `json:"repo"`
 	Icon        string `json:"icon,omitempty"`
 	Logo        string `json:"logo,omitempty"`
-}
-
-type BackupRepository interface {
-	ListRecords(ctx context.Context, orgID string, limit int) ([]BackupRecord, error)
-	GetRecord(ctx context.Context, id string) (*BackupRecord, error)
-}
-
-type DeploymentRepository interface {
-	ListByOrganization(ctx context.Context, filter DeploymentListFilter) ([]DeploymentRecord, int, error)
-}
-
-type ProjectRepository interface {
-	GetByOrganization(ctx context.Context, projectID, orgID string) (*Project, error)
-	ListByOrganization(ctx context.Context, orgID, search string, limit, offset int) ([]Project, int, error)
-}
-
-type AppServiceRepository interface {
-	GetByID(ctx context.Context, id string) (*AppService, error)
-	ListByProject(ctx context.Context, projectID string) ([]AppService, error)
-}
-
-type UserRepo interface {
-	GetUserByID(ctx context.Context, id string) (*User, error)
-}
-
-type UserRepository interface {
-	GetUserByID(ctx context.Context, id string) (*User, error)
-	GetUserByStripeCustomerID(ctx context.Context, customerID string) (*User, error)
-	UpdateUser(ctx context.Context, user *User) error
-}
-
-type OrganizationRepository interface {
-	GetMember(ctx context.Context, orgID, userID string) (*OrgMember, error)
-}
-
-type ServerRepository interface {
-	GetByID(ctx context.Context, id string) (*Server, error)
-}
-
-type ManagedRepository interface {
-	GetQuota(ctx context.Context, orgID string) (*ManagedQuota, error)
-	ListOrgServerIDs(ctx context.Context, orgID string) ([]string, error)
-}
-
-type SettingsRepository interface {
-	GetServerSettings(ctx context.Context) (*ServerSettings, error)
-	UpdateServerSettings(ctx context.Context, settings *ServerSettings) error
 }

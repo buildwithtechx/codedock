@@ -7,14 +7,6 @@ import (
 	"github.com/jmoiron/sqlx"
 )
 
-type ServiceVolumeRepository interface {
-	Create(ctx context.Context, volume *ServiceVolume) error
-	GetByID(ctx context.Context, id string) (*ServiceVolume, error)
-	ListByService(ctx context.Context, serviceID string) ([]ServiceVolume, error)
-	Update(ctx context.Context, volume *ServiceVolume) error
-	Delete(ctx context.Context, id string) error
-}
-
 type serviceVolumeRepo struct {
 	db *sqlx.DB
 }

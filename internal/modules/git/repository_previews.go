@@ -8,14 +8,6 @@ import (
 	"github.com/jmoiron/sqlx"
 )
 
-type PRPreviewRepository interface {
-	Create(ctx context.Context, p *PRPreview) error
-	GetByAppAndPR(ctx context.Context, appID string, prNumber int) ([]*PRPreview, error)
-	GetByApp(ctx context.Context, appID string) ([]*PRPreview, error)
-	Update(ctx context.Context, p *PRPreview) error
-	Delete(ctx context.Context, id string) error
-}
-
 type prPreviewRepo struct {
 	db *sqlx.DB
 }

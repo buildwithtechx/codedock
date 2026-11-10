@@ -13,21 +13,6 @@ import (
 	"github.com/jmoiron/sqlx"
 )
 
-type DeploymentRepository interface {
-	Create(ctx context.Context, d *Deployment) error
-	GetByID(ctx context.Context, id string) (*Deployment, error)
-	ListByService(ctx context.Context, serviceID string, limit, offset int) ([]*Deployment, int, error)
-	ListByOrganization(ctx context.Context, filter DeploymentListFilter) ([]DeploymentListItem, int, error)
-	Update(ctx context.Context, d *Deployment) error
-	UpdateStatus(ctx context.Context, id string, status DeploymentStatus, buildLogs, containerID, resourceIssue string) error
-	SetPinned(ctx context.Context, id string, pinned bool) error
-	TogglePinned(ctx context.Context, id string) (bool, error)
-	ListForRetention(ctx context.Context, projectID string) ([]*Deployment, error)
-	SetArtifactRetainedAt(ctx context.Context, id string, at *time.Time) error
-	SetRestartLoop(ctx context.Context, id string, finding string) error
-	RecoverInterrupted(ctx context.Context) error
-}
-
 type deploymentRepo struct {
 	db *sqlx.DB
 	mu sync.Mutex

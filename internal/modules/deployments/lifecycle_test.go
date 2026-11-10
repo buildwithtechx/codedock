@@ -2,6 +2,7 @@ package deployments
 
 import (
 	"context"
+	"sync"
 	"testing"
 	"time"
 
@@ -10,6 +11,7 @@ import (
 )
 
 type mockRegistryRepo struct {
+	mu   sync.RWMutex
 	regs map[string]*Registry
 }
 
@@ -18,11 +20,15 @@ func newMockRegistryRepo() *mockRegistryRepo {
 }
 
 func (m *mockRegistryRepo) Create(ctx context.Context, reg *Registry) error {
+	m.mu.Lock()
+	defer m.mu.Unlock()
 	m.regs[reg.ID] = reg
 	return nil
 }
 
 func (m *mockRegistryRepo) ListByProject(ctx context.Context, projectID string) ([]*Registry, error) {
+	m.mu.RLock()
+	defer m.mu.RUnlock()
 	var list []*Registry
 	for _, r := range m.regs {
 		if r.ProjectID == projectID {
@@ -33,6 +39,8 @@ func (m *mockRegistryRepo) ListByProject(ctx context.Context, projectID string) 
 }
 
 func (m *mockRegistryRepo) Get(ctx context.Context, id string) (*Registry, error) {
+	m.mu.RLock()
+	defer m.mu.RUnlock()
 	r, ok := m.regs[id]
 	if !ok {
 		return nil, ErrRegistryNotFound
@@ -41,6 +49,8 @@ func (m *mockRegistryRepo) Get(ctx context.Context, id string) (*Registry, error
 }
 
 func (m *mockRegistryRepo) Delete(ctx context.Context, id string) error {
+	m.mu.Lock()
+	defer m.mu.Unlock()
 	delete(m.regs, id)
 	return nil
 }

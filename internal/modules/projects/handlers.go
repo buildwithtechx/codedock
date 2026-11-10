@@ -80,9 +80,9 @@ func (h *Handler) CreateProject(c echo.Context) error {
 
 	if ok && userID != "" {
 		if req.OrganizationID == "" && h.orgLookup != nil {
-			orgs, err := h.orgLookup.ListOrganizationsByUser(c.Request().Context(), userID)
-			if err == nil && len(orgs) > 0 {
-				req.OrganizationID = orgs[0].ID
+			org, err := h.orgLookup.GetOrCreateDefaultOrganization(c.Request().Context(), userID)
+			if err == nil && org != nil {
+				req.OrganizationID = org.ID
 			}
 		}
 

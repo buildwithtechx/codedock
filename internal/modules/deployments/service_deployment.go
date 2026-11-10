@@ -13,25 +13,6 @@ import (
 	"codedock/internal/platform/observability"
 )
 
-type AppServiceLookup interface {
-	GetAppService(ctx context.Context, id string) (*AppServiceSummary, error)
-	UpdateAppContainerID(ctx context.Context, id string, containerID string) error
-}
-
-type ProjectLookup interface {
-	HasPermission(ctx context.Context, projectID, userID, role, action string) bool
-}
-
-type CodeSyncProvider interface {
-	SyncCodebase(ctx context.Context, repoURL, branch, commitHash, targetDir string, logWriter io.Writer) error
-}
-
-type DeployEngine interface {
-	BeginServiceOperation(ctx context.Context, serviceID string) (context.Context, func(), error)
-	DeployApp(ctx context.Context, app *AppServiceSummary, sourceDir string, logWriter io.Writer) (string, error)
-	StopApp(ctx context.Context, containerID string) error
-}
-
 type DeploymentService struct {
 	repo                    DeploymentRepository
 	appLookup               AppServiceLookup

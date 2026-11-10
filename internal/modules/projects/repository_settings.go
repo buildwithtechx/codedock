@@ -14,14 +14,6 @@ import (
 	"codedock/internal/utils"
 )
 
-type ProjectSettingsRepository interface {
-	CreateToken(ctx context.Context, t *ProjectToken, fullToken string) error
-	ListTokensByProject(ctx context.Context, projectID string) ([]*ProjectToken, error)
-	DeleteToken(ctx context.Context, id, projectID string) error
-	GetTokenByHash(ctx context.Context, tokenHash string) (*ProjectToken, error)
-	UpdateTokenLastUsed(ctx context.Context, id string) error
-}
-
 type ProjectSettingsRepo struct {
 	db *sqlx.DB
 	mu sync.Mutex

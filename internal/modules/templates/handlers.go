@@ -1,22 +1,12 @@
 package templates
 
 import (
-	"context"
 	"net/http"
 
 	"github.com/labstack/echo/v4"
 
 	"codedock/internal/utils"
 )
-
-type OneClickOperations interface {
-	ListApps() any
-	GetApp(id string) (any, error)
-	AddCustomApp(tmpl any) (any, error)
-	DeleteCustomApp(id string) error
-	Review(ctx context.Context, req any) (any, error)
-	Deploy(ctx context.Context, req any) (any, error)
-}
 
 type OneClickHandler struct {
 	service OneClickOperations
@@ -73,9 +63,12 @@ func (h *OneClickHandler) Review(c echo.Context) error {
 	if h.service == nil {
 		return utils.Error(c, http.StatusServiceUnavailable, "service unavailable")
 	}
-	var req any
+	var req InstallAppInput
 	if err := c.Bind(&req); err != nil {
 		return utils.Error(c, http.StatusBadRequest, "invalid request: "+err.Error())
+	}
+	if req.ProjectID == "" {
+		return utils.Error(c, http.StatusBadRequest, "projectId is required")
 	}
 	result, err := h.service.Review(c.Request().Context(), req)
 	if err != nil {
@@ -88,13 +81,13 @@ func (h *OneClickHandler) Deploy(c echo.Context) error {
 	if h.service == nil {
 		return utils.Error(c, http.StatusServiceUnavailable, "service unavailable")
 	}
-	var req any
+	var req InstallAppInput
 	if err := c.Bind(&req); err != nil {
 		return utils.Error(c, http.StatusBadRequest, "invalid payload: "+err.Error())
 	}
 	created, err := h.service.Deploy(c.Request().Context(), req)
 	if err != nil {
-		return utils.Error(c, http.StatusInternalServerError, err.Error())
+		return utils.Error(c, http.StatusBadRequest, err.Error())
 	}
 	return utils.Accepted(c, "One-click deployment started", created)
 }

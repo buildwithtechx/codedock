@@ -8,14 +8,6 @@ import (
 	"time"
 )
 
-type SecurityService interface {
-	GetAdvisories(ctx context.Context) (*AdvisoriesResponse, error)
-	CheckProject(ctx context.Context, projectID string, force bool) (*ProjectSecurityResult, error)
-	GetProjectSecurity(ctx context.Context, projectID string) (*ProjectSecurityResult, error)
-	SetProjectPolicy(ctx context.Context, projectID string, autoRefresh bool) error
-	ApplyRemediation(ctx context.Context, projectID, advisoryID, deploymentID string, serviceID, runtimePatchID *string) (*RefreshAttempt, error)
-}
-
 type securityService struct {
 	db            *sql.DB
 	feedManager   *FeedManager

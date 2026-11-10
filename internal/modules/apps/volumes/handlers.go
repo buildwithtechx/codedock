@@ -1,7 +1,6 @@
 package volumes
 
 import (
-	"context"
 	"net/http"
 
 	"github.com/labstack/echo/v4"
@@ -9,24 +8,12 @@ import (
 	"codedock/internal/utils"
 )
 
-type ServiceInterface interface {
-	CreateVolume(ctx context.Context, vol *ServiceVolume) (*ServiceVolume, error)
-	ListVolumes(ctx context.Context, serviceID string) ([]ServiceVolume, error)
-	DeleteVolume(ctx context.Context, id string) error
-	EmptyVolume(ctx context.Context, serviceID, volumeID string) (*ServiceVolume, string, error)
-}
-
-type AccessChecker interface {
-	HasPermission(ctx context.Context, projectID, userID, role, permission string) bool
-	AccessibleServiceIDs(ctx context.Context, userID, role string) (map[string]bool, error)
-}
-
 type VolumeHandler struct {
-	service ServiceInterface
+	service VolumeService
 	access  AccessChecker
 }
 
-func NewVolumeHandler(s ServiceInterface, ac AccessChecker) *VolumeHandler {
+func NewVolumeHandler(s VolumeService, ac AccessChecker) *VolumeHandler {
 	return &VolumeHandler{service: s, access: ac}
 }
 

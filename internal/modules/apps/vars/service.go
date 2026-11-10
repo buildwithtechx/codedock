@@ -8,14 +8,6 @@ import (
 	"github.com/google/uuid"
 )
 
-type VariableService interface {
-	CreateVariable(ctx context.Context, v *Variable) (*Variable, error)
-	UpdateVariable(ctx context.Context, v *Variable) error
-	GetVariable(ctx context.Context, id string) (*Variable, error)
-	ListVariablesByService(ctx context.Context, serviceID string) ([]*Variable, error)
-	DeleteVariable(ctx context.Context, id string) error
-}
-
 type Service struct {
 	repo ServiceVarRepository
 }

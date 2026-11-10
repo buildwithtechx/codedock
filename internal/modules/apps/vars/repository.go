@@ -13,14 +13,6 @@ import (
 	"codedock/internal/utils"
 )
 
-type ServiceVarRepository interface {
-	Create(ctx context.Context, v *Variable) error
-	Update(ctx context.Context, v *Variable) error
-	GetByID(ctx context.Context, id string) (*Variable, error)
-	ListByService(ctx context.Context, serviceID string) ([]*Variable, error)
-	Delete(ctx context.Context, id string) error
-}
-
 type ServiceVarRepo struct {
 	db *sqlx.DB
 	mu sync.Mutex

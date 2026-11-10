@@ -2,6 +2,7 @@ package adapters
 
 import (
 	"context"
+	"encoding/json"
 	"fmt"
 
 	modclusters "codedock/internal/modules/clusters"
@@ -123,11 +124,21 @@ func (o *OneClickAdapter) Review(ctx context.Context, req any) (any, error) {
 	if r, ok := req.(templatesmod.InstallAppInput); ok {
 		return o.Oc.ReviewInstall(ctx, r)
 	}
+	var r templatesmod.InstallAppInput
+	data, _ := json.Marshal(req)
+	if err := json.Unmarshal(data, &r); err == nil && r.AppID != "" {
+		return o.Oc.ReviewInstall(ctx, r)
+	}
 	return nil, fmt.Errorf("invalid review request")
 }
 
 func (o *OneClickAdapter) Deploy(ctx context.Context, req any) (any, error) {
 	if r, ok := req.(templatesmod.InstallAppInput); ok {
+		return o.Oc.InstallApp(ctx, r)
+	}
+	var r templatesmod.InstallAppInput
+	data, _ := json.Marshal(req)
+	if err := json.Unmarshal(data, &r); err == nil && r.AppID != "" {
 		return o.Oc.InstallApp(ctx, r)
 	}
 	return nil, fmt.Errorf("invalid deploy request")

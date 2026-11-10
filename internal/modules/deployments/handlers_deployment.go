@@ -1,7 +1,6 @@
 package deployments
 
 import (
-	"context"
 	"net/http"
 	"strconv"
 
@@ -9,14 +8,6 @@ import (
 
 	"codedock/internal/utils"
 )
-
-type AIExplainer interface {
-	ExplainDeploymentFailure(ctx context.Context, deploymentID string) (any, error)
-}
-
-type PRPreviewLookup interface {
-	ListByApp(ctx context.Context, appID string) (any, error)
-}
 
 type DeploymentHandler struct {
 	service       *DeploymentService

@@ -2,6 +2,7 @@ package deployments
 
 import (
 	"context"
+	"sync"
 	"testing"
 	"time"
 
@@ -11,6 +12,7 @@ import (
 )
 
 type mockDeploymentRepo struct {
+	mu   sync.RWMutex
 	deps map[string]*Deployment
 }
 
@@ -19,11 +21,15 @@ func newMockDeploymentRepo() *mockDeploymentRepo {
 }
 
 func (m *mockDeploymentRepo) Create(ctx context.Context, d *Deployment) error {
+	m.mu.Lock()
+	defer m.mu.Unlock()
 	m.deps[d.ID] = d
 	return nil
 }
 
 func (m *mockDeploymentRepo) GetByID(ctx context.Context, id string) (*Deployment, error) {
+	m.mu.RLock()
+	defer m.mu.RUnlock()
 	d, ok := m.deps[id]
 	if !ok {
 		return nil, ErrDeploymentNotFound
@@ -32,6 +38,8 @@ func (m *mockDeploymentRepo) GetByID(ctx context.Context, id string) (*Deploymen
 }
 
 func (m *mockDeploymentRepo) ListByService(ctx context.Context, serviceID string, limit, offset int) ([]*Deployment, int, error) {
+	m.mu.RLock()
+	defer m.mu.RUnlock()
 	var list []*Deployment
 	for _, d := range m.deps {
 		if d.ServiceID == serviceID {
@@ -42,6 +50,8 @@ func (m *mockDeploymentRepo) ListByService(ctx context.Context, serviceID string
 }
 
 func (m *mockDeploymentRepo) ListByOrganization(ctx context.Context, filter DeploymentListFilter) ([]DeploymentListItem, int, error) {
+	m.mu.RLock()
+	defer m.mu.RUnlock()
 	var list []DeploymentListItem
 	for _, d := range m.deps {
 		list = append(list, DeploymentListItem{
@@ -55,11 +65,15 @@ func (m *mockDeploymentRepo) ListByOrganization(ctx context.Context, filter Depl
 }
 
 func (m *mockDeploymentRepo) Update(ctx context.Context, d *Deployment) error {
+	m.mu.Lock()
+	defer m.mu.Unlock()
 	m.deps[d.ID] = d
 	return nil
 }
 
 func (m *mockDeploymentRepo) UpdateStatus(ctx context.Context, id string, status DeploymentStatus, buildLogs, containerID, resourceIssue string) error {
+	m.mu.Lock()
+	defer m.mu.Unlock()
 	d, ok := m.deps[id]
 	if !ok {
 		return ErrDeploymentNotFound
@@ -72,6 +86,8 @@ func (m *mockDeploymentRepo) UpdateStatus(ctx context.Context, id string, status
 }
 
 func (m *mockDeploymentRepo) SetPinned(ctx context.Context, id string, pinned bool) error {
+	m.mu.Lock()
+	defer m.mu.Unlock()
 	d, ok := m.deps[id]
 	if !ok {
 		return ErrDeploymentNotFound
@@ -81,6 +97,8 @@ func (m *mockDeploymentRepo) SetPinned(ctx context.Context, id string, pinned bo
 }
 
 func (m *mockDeploymentRepo) TogglePinned(ctx context.Context, id string) (bool, error) {
+	m.mu.Lock()
+	defer m.mu.Unlock()
 	d, ok := m.deps[id]
 	if !ok {
 		return false, ErrDeploymentNotFound
@@ -90,6 +108,8 @@ func (m *mockDeploymentRepo) TogglePinned(ctx context.Context, id string) (bool,
 }
 
 func (m *mockDeploymentRepo) ListForRetention(ctx context.Context, projectID string) ([]*Deployment, error) {
+	m.mu.RLock()
+	defer m.mu.RUnlock()
 	var list []*Deployment
 	for _, d := range m.deps {
 		if d.ProjectID == projectID {
@@ -100,6 +120,8 @@ func (m *mockDeploymentRepo) ListForRetention(ctx context.Context, projectID str
 }
 
 func (m *mockDeploymentRepo) SetArtifactRetainedAt(ctx context.Context, id string, at *time.Time) error {
+	m.mu.Lock()
+	defer m.mu.Unlock()
 	d, ok := m.deps[id]
 	if !ok {
 		return ErrDeploymentNotFound

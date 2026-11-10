@@ -1,7 +1,5 @@
 package notifications
 
-import ()
-
 func SendPushoverNotification(appToken, userKey string, event *NotificationEvent) error {
 	return postJSON("https://api.pushover.net/1/messages.json", map[string]string{
 		"token":   appToken,

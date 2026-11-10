@@ -8,13 +8,6 @@ import (
 	"github.com/google/uuid"
 )
 
-type VolumeService interface {
-	CreateVolume(ctx context.Context, vol *ServiceVolume) (*ServiceVolume, error)
-	ListVolumes(ctx context.Context, serviceID string) ([]ServiceVolume, error)
-	DeleteVolume(ctx context.Context, id string) error
-	EmptyVolume(ctx context.Context, serviceID, volumeID string) (*ServiceVolume, string, error)
-}
-
 type Service struct {
 	repo ServiceVolumeRepository
 }

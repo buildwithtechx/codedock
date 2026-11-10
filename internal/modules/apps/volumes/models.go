@@ -9,8 +9,3 @@ type ServiceVolume struct {
 	ContainerPath string    `json:"containerPath" db:"container_path"`
 	CreatedAt     time.Time `json:"createdAt" db:"created_at"`
 }
-
-type CreateVolumeRequest struct {
-	HostPath      string `json:"hostPath"`
-	ContainerPath string `json:"containerPath"`
-}

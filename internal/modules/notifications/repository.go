@@ -15,15 +15,6 @@ import (
 	"github.com/jmoiron/sqlx"
 )
 
-type NotificationSettingsRepository interface {
-	GetNotificationSettings(ctx context.Context) (*NotificationSettings, error)
-	UpdateNotificationSettings(ctx context.Context, cfg *NotificationSettings) error
-	ListSubscriptions(ctx context.Context, userID, orgID string) ([]NotificationSubscription, error)
-	UpsertSubscription(ctx context.Context, sub *NotificationSubscription) error
-	ListDefaults(ctx context.Context, orgID string) ([]NotificationDefault, error)
-	UpsertDefault(ctx context.Context, def *NotificationDefault) error
-}
-
 type NotificationSettingsRepo struct {
 	db *sqlx.DB
 	mu sync.Mutex

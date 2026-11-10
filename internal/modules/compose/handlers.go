@@ -1,24 +1,12 @@
 package compose
 
 import (
-	"context"
 	"net/http"
 
 	"github.com/labstack/echo/v4"
 
 	"codedock/internal/utils"
 )
-
-type ComposeStackOperations interface {
-	List(ctx context.Context, projectID string) (any, error)
-	Config(ctx context.Context, projectID, stackID string) (any, error)
-	Review(ctx context.Context, projectID string, req any) (any, error)
-	Save(ctx context.Context, projectID string, req any) (any, error)
-	Deploy(ctx context.Context, projectID, stackID string) (any, error)
-	Cancel(ctx context.Context, projectID, stackID string) error
-	Restart(ctx context.Context, projectID, stackID string) error
-	Stop(ctx context.Context, projectID, stackID string) error
-}
 
 type ComposeStackHandler struct {
 	stacks ComposeStackOperations

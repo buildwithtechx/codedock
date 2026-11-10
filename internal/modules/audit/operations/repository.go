@@ -9,15 +9,6 @@ import (
 	"github.com/jmoiron/sqlx"
 )
 
-type OperationStore interface {
-	Create(context.Context, *Operation) error
-	Get(context.Context, string) (*Operation, error)
-	List(context.Context, string, string) ([]Operation, error)
-	Claim(context.Context, string, string) error
-	Observe(context.Context, string, string, string, string, string) error
-	Recover(context.Context) error
-}
-
 type OperationRepo struct {
 	db    *sqlx.DB
 	vault Vault

@@ -67,6 +67,17 @@ func (s *OrganizationService) ListOrganizationsByUser(ctx context.Context, userI
 	return s.orgRepo.ListByUser(ctx, userID)
 }
 
+func (s *OrganizationService) GetOrCreateDefaultOrganization(ctx context.Context, userID string) (*Organization, error) {
+	orgs, err := s.ListOrganizationsByUser(ctx, userID)
+	if err != nil {
+		return nil, err
+	}
+	if len(orgs) > 0 {
+		return orgs[0], nil
+	}
+	return s.CreateOrganization(ctx, userID, "Default")
+}
+
 func (s *OrganizationService) GetOrganization(ctx context.Context, id string) (*Organization, error) {
 	return s.orgRepo.GetByID(ctx, id)
 }

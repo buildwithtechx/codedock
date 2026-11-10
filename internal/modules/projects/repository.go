@@ -26,25 +26,6 @@ const projectSelectFields = `
 	created_at, updated_at
 `
 
-type ProjectRepository interface {
-	ListByOrganization(ctx context.Context, organizationID string, search string, limit, offset int) ([]ProjectConfig, int, error)
-	ListAll(ctx context.Context, search string, limit, offset int) ([]ProjectConfig, int, error)
-	Get(ctx context.Context, id string) (*ProjectConfig, error)
-	GetByOrganization(ctx context.Context, id, organizationID string) (*ProjectConfig, error)
-	CountByUser(ctx context.Context, userID string) (int, error)
-	SearchIDsByName(ctx context.Context, term string, limit int) ([]string, error)
-	Create(ctx context.Context, p *ProjectConfig) error
-	SetServer(ctx context.Context, projectID, serverID string) error
-	Delete(ctx context.Context, id string) error
-	UpdateRollbackSettings(ctx context.Context, projectID string, strategy *string, window *int) error
-	UpdateCapacityMeasurement(ctx context.Context, projectID string, snapshotSizeBytes int64) error
-}
-
-type EnvRepository interface {
-	GetVars(ctx context.Context, projectID string) (map[string]string, error)
-	SetVar(ctx context.Context, projectID, key, value string) error
-}
-
 type ProjectRepo struct {
 	db *sqlx.DB
 }
@@ -200,6 +181,12 @@ func (r *ProjectRepo) Create(ctx context.Context, p *ProjectConfig) error {
 	var orgID any
 	if p.OrganizationID != "" {
 		orgID = p.OrganizationID
+	} else {
+		var fallbackOrg string
+		if err := r.db.QueryRowContext(ctx, `SELECT id FROM organizations ORDER BY created_at ASC LIMIT 1`).Scan(&fallbackOrg); err == nil && fallbackOrg != "" {
+			orgID = fallbackOrg
+			p.OrganizationID = fallbackOrg
+		}
 	}
 
 	_, _ = r.db.Exec(

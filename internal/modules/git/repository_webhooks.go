@@ -10,14 +10,6 @@ import (
 	"github.com/google/uuid"
 )
 
-type WebhookDeliveryRepository interface {
-	ClaimGithub(ctx context.Context, input WebhookDeliveryInput) (ClaimResult, error)
-	Record(ctx context.Context, input WebhookDeliveryInput) (string, error)
-	MarkProcessed(ctx context.Context, id string, res WebhookDeliveryResult) error
-	ListByProject(ctx context.Context, projectID string, limit int, cursor string) ([]WebhookDelivery, string, error)
-	Prune(ctx context.Context, olderThan time.Duration) (int64, error)
-}
-
 type webhookDeliveryRepo struct {
 	db *sql.DB
 }

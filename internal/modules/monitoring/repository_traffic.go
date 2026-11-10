@@ -7,17 +7,6 @@ import (
 	"time"
 )
 
-type TrafficRepository interface {
-	RecordBatch(ctx context.Context, samples []TrafficSample) error
-	Summary(ctx context.Context, projectID, domain, from, to string) (*AnalyticsSummary, error)
-	Overview(ctx context.Context, projectID, domain, from, to, stepMinutes string) (*AnalyticsOverview, error)
-	Geo(ctx context.Context, projectID, from, to string) (*AnalyticsGeo, error)
-	PathsEnabled(ctx context.Context, projectID string) (bool, error)
-	SetPathsEnabled(ctx context.Context, projectID string, enabled bool) error
-	RetentionCutoff(days int) string
-	DeleteBefore(ctx context.Context, cutoff string) error
-}
-
 type postgresTrafficRepository struct {
 	db *sql.DB
 }

@@ -5,6 +5,7 @@ import (
 	"database/sql"
 	"testing"
 
+	cdkdb "codedock/internal/db"
 	"codedock/internal/testdb"
 )
 
@@ -19,7 +20,11 @@ func (r *canvasTestEnvRepo) GetDefaultByProject(ctx context.Context, projectID s
 
 func openPGTestDB(t *testing.T) *sql.DB {
 	t.Helper()
-	return testdb.Open(t)
+	db := testdb.Open(t)
+	if err := cdkdb.RunMigrations(db); err != nil {
+		t.Fatalf("run migrations on canvas test db: %v", err)
+	}
+	return db
 }
 
 func TestCanvasSummariesResolveDeployTargets(t *testing.T) {

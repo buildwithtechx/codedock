@@ -2,15 +2,26 @@ package apps
 
 import (
 	"context"
+	"database/sql"
 	"strings"
 	"testing"
 
+	cdkdb "codedock/internal/db"
 	"codedock/internal/platform/vault"
 	"codedock/internal/testdb"
 )
 
-func TestRuntimeRecoveryJournalEncryptionAndRevisionConflicts(t *testing.T) {
+func openRuntimeTestDB(t *testing.T) *sql.DB {
+	t.Helper()
 	db := testdb.Open(t)
+	if err := cdkdb.RunMigrations(db); err != nil {
+		t.Fatalf("run migrations on runtime test db: %v", err)
+	}
+	return db
+}
+
+func TestRuntimeRecoveryJournalEncryptionAndRevisionConflicts(t *testing.T) {
+	db := openRuntimeTestDB(t)
 	for _, query := range []string{`INSERT INTO organizations(id,name) VALUES('org','Org')`, `INSERT INTO project_apps(id,organization_id,name,slug) VALUES('app','org','App','app')`, `INSERT INTO projects(id,app_id,organization_id,name,slug) VALUES('project','app','org','Project','project')`, `INSERT INTO app_services(id,project_id,name) VALUES('service','project','Service')`} {
 		if _, err := db.Exec(query); err != nil {
 			t.Fatal(err)
@@ -62,7 +73,7 @@ func TestRuntimeRecoveryJournalEncryptionAndRevisionConflicts(t *testing.T) {
 }
 
 func TestDesiredWorkloadCommitIsAtomicAndEncrypted(t *testing.T) {
-	db := testdb.Open(t)
+	db := openRuntimeTestDB(t)
 	for _, query := range []string{`INSERT INTO organizations(id,name) VALUES('org','Org')`, `INSERT INTO project_apps(id,organization_id,name,slug) VALUES('app','org','App','app')`, `INSERT INTO projects(id,app_id,organization_id,name,slug) VALUES('project','app','org','Project','project')`, `INSERT INTO app_services(id,project_id,name) VALUES('service','project','Service')`} {
 		if _, err := db.Exec(query); err != nil {
 			t.Fatal(err)
@@ -109,7 +120,7 @@ func TestDesiredWorkloadCommitIsAtomicAndEncrypted(t *testing.T) {
 }
 
 func TestRuntimeDesiredIDsAndSyncKinds(t *testing.T) {
-	db := testdb.Open(t)
+	db := openRuntimeTestDB(t)
 	for _, query := range []string{`INSERT INTO organizations(id,name) VALUES('org','Org')`, `INSERT INTO project_apps(id,organization_id,name,slug) VALUES('app','org','App','app')`, `INSERT INTO projects(id,app_id,organization_id,name,slug) VALUES('project','app','org','Project','project')`, `INSERT INTO app_services(id,project_id,name) VALUES('service-one','project','One')`, `INSERT INTO app_services(id,project_id,name) VALUES('service-two','project','Two')`} {
 		if _, err := db.Exec(query); err != nil {
 			t.Fatal(err)

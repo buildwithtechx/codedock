@@ -11,18 +11,6 @@ import (
 	"github.com/jmoiron/sqlx"
 )
 
-type Vault interface {
-	Encrypt(string) (string, error)
-	Decrypt(string) (string, error)
-}
-
-type Repository interface {
-	Create(ctx context.Context, server *MailServer) error
-	GetByID(ctx context.Context, id string) (*MailServer, error)
-	ListByOrganization(ctx context.Context, orgID string) ([]*MailServer, error)
-	Delete(ctx context.Context, id string) error
-}
-
 type repo struct {
 	db    *sqlx.DB
 	mu    sync.Mutex

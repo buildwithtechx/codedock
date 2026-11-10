@@ -13,14 +13,6 @@ import (
 	"codedock/internal/utils"
 )
 
-type OAuthRepository interface {
-	ListProviders(ctx context.Context) ([]OAuthProviderConfig, error)
-	GetProvider(ctx context.Context, idOrName string) (*OAuthProviderConfig, error)
-	SaveProvider(ctx context.Context, p *OAuthProviderConfig) error
-	GetUserTOTPSecret(ctx context.Context, userID string) (secret string, recoveryCodes []string, err error)
-	UpdateUserTOTP(ctx context.Context, userID string, enabled bool, secret string, recoveryCodes []string) error
-}
-
 type OAuthRepo struct {
 	db *sqlx.DB
 }

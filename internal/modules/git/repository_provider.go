@@ -10,19 +10,6 @@ import (
 	"github.com/jmoiron/sqlx"
 )
 
-type Encryptor interface {
-	Encrypt(plainText string) (string, error)
-	Decrypt(cipherText string) (string, error)
-}
-
-type GitProviderRepository interface {
-	SaveProvider(ctx context.Context, gp *GitProviderConfig) error
-	GetProvider(ctx context.Context, userID, provider string) (*GitProviderConfig, error)
-	GetAnyProviderByType(ctx context.Context, provider string) (*GitProviderConfig, error)
-	ListProvidersByUser(ctx context.Context, userID string) ([]*GitProviderConfig, error)
-	DeleteProvider(ctx context.Context, userID, provider string) error
-}
-
 type gitProviderRepo struct {
 	db    *sqlx.DB
 	vault Encryptor

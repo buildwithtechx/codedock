@@ -5,8 +5,6 @@ import (
 	"errors"
 )
 
-type AppServiceRepository interface{}
-
 type AutoscalingService struct {
 	autoRepo       AutoscalingRepository
 	serverlessRepo ServerlessRepository

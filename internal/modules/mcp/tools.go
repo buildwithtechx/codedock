@@ -8,24 +8,6 @@ import (
 	"codedock/internal/modules/users"
 )
 
-type ToolAnnotations struct {
-	ReadOnlyHint    bool `json:"readOnlyHint"`
-	DestructiveHint bool `json:"destructiveHint"`
-}
-
-type ToolDef struct {
-	Name        string          `json:"name"`
-	Description string          `json:"description"`
-	Method      string          `json:"method"`
-	Path        string          `json:"path"`
-	Category    string          `json:"category"`
-	Auth        string          `json:"auth"`
-	PathParams  []string        `json:"pathParams"`
-	HasBody     bool            `json:"hasBody"`
-	Annotations ToolAnnotations `json:"annotations"`
-	InputSchema map[string]any  `json:"inputSchema"`
-}
-
 var nonAlphaNumRe = regexp.MustCompile(`[^a-zA-Z0-9]+`)
 
 func routeToToolName(method, path string) string {

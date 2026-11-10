@@ -26,23 +26,6 @@ type SecurityDeployment struct {
 	RawManifest string
 }
 
-type DeploymentTrigger interface {
-	TriggerRemediation(ctx context.Context, serviceID string) error
-}
-
-type ProjectProvider interface {
-	GetProject(ctx context.Context, id string) (*SecurityProject, error)
-}
-
-type AppServiceProvider interface {
-	ListAppServices(ctx context.Context, projectID string) ([]*SecurityAppService, error)
-	UpdateAppService(ctx context.Context, svc *SecurityAppService) error
-}
-
-type DeploymentProvider interface {
-	GetDeployment(ctx context.Context, id string) (*SecurityDeployment, error)
-}
-
 type sqlProvider struct {
 	db *sql.DB
 }

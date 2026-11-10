@@ -9,10 +9,6 @@ import (
 	"codedock/internal/utils"
 )
 
-type AuditLogger interface {
-	LogAction(ctx any, action, resource, ip string, details map[string]string)
-}
-
 type LifecycleHandler struct {
 	service   *DeploymentService
 	appLookup AppServiceLookup

@@ -13,15 +13,3 @@ type Variable struct {
 	CreatedAt                time.Time `json:"createdAt" db:"created_at"`
 	UpdatedAt                time.Time `json:"updatedAt" db:"updated_at"`
 }
-
-type CreateVariableRequest struct {
-	Key      string `json:"key"`
-	Value    string `json:"value"`
-	IsSecret bool   `json:"isSecret"`
-}
-
-type UpdateVariableRequest struct {
-	Key      *string `json:"key,omitempty"`
-	Value    *string `json:"value,omitempty"`
-	IsSecret *bool   `json:"isSecret,omitempty"`
-}

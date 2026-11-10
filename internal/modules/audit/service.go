@@ -10,14 +10,6 @@ import (
 	"github.com/google/uuid"
 )
 
-type AuditResourceSearcher interface {
-	SearchResourceIDs(ctx context.Context, term string) []string
-}
-
-type NameSearchable interface {
-	SearchIDsByName(ctx context.Context, term string, limit int) ([]string, error)
-}
-
 type auditResourceSearcher struct {
 	projects  NameSearchable
 	servers   NameSearchable

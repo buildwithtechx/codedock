@@ -8,12 +8,6 @@ import (
 	"github.com/google/uuid"
 )
 
-type OperationsService interface {
-	Review(ctx context.Context, user, project, kind, target, payload, snapshot, effects string) (any, error)
-	Apply(ctx context.Context, id, user, confirmation, snapshot string, runner func(ctx context.Context) error) error
-	GetPayload(ctx context.Context, id string) (string, error)
-}
-
 type Service struct {
 	RunAuthorization func(context.Context, string, string) error
 	operations       OperationsService

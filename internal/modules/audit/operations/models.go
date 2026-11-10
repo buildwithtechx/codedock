@@ -1,10 +1,5 @@
 package operations
 
-type Vault interface {
-	Encrypt(string) (string, error)
-	Decrypt(string) (string, error)
-}
-
 type Operation struct {
 	ID        string `json:"id" db:"id"`
 	UserID    string `json:"-" db:"user_id"`

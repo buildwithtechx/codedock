@@ -4,22 +4,7 @@ import (
 	"context"
 	"sync"
 	"time"
-
-	"github.com/docker/docker/client"
-	"github.com/golang-jwt/jwt/v5"
 )
-
-type TokenValidator interface {
-	ValidateToken(token string) (jwt.MapClaims, error)
-}
-
-type UserStatusLookup interface {
-	IsUserActive(ctx context.Context, userID string) (bool, error)
-}
-
-type TerminalDockerTargets interface {
-	DockerForService(ctx context.Context, serviceID string) (*client.Client, func(), error)
-}
 
 func VerifyTerminalAuthority(
 	ctx context.Context,

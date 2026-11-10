@@ -13,17 +13,6 @@ import (
 	"github.com/jmoiron/sqlx"
 )
 
-type ScheduledTaskRepository interface {
-	Create(ctx context.Context, j *ScheduledTask) error
-	GetByID(ctx context.Context, id string) (*ScheduledTask, error)
-	ListAll(ctx context.Context) ([]ScheduledTask, error)
-	ListByProject(ctx context.Context, projectID string) ([]ScheduledTask, error)
-	ListByService(ctx context.Context, serviceID string) ([]ScheduledTask, error)
-	Update(ctx context.Context, j *ScheduledTask) error
-	Delete(ctx context.Context, id string) error
-	UpdateStatus(ctx context.Context, id string, status ScheduledTaskStatus, lastRunAt *time.Time, output string) error
-}
-
 type ScheduledTaskRepo struct {
 	db *sqlx.DB
 	mu sync.Mutex

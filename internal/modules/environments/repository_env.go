@@ -12,18 +12,6 @@ import (
 	"github.com/jmoiron/sqlx"
 )
 
-type EnvironmentRepository interface {
-	Get(ctx context.Context, id string) (*EnvironmentConfig, error)
-	ListByProject(ctx context.Context, projectID string) ([]EnvironmentConfig, error)
-	Create(ctx context.Context, env *EnvironmentConfig) error
-	Delete(ctx context.Context, id string) error
-}
-
-type ProjectVarRepository interface {
-	GetVars(ctx context.Context, projectID string) (map[string]string, error)
-	SetVar(ctx context.Context, projectID, key, value string) error
-}
-
 type EnvironmentRepo struct {
 	mu sync.RWMutex
 	db *sqlx.DB

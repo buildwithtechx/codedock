@@ -12,18 +12,6 @@ import (
 	"github.com/jmoiron/sqlx"
 )
 
-type PasskeyRepository interface {
-	CreateCredential(ctx context.Context, cred *PasskeyCredential) error
-	GetCredentialByID(ctx context.Context, id string) (*PasskeyCredential, error)
-	GetCredentialByCredentialID(ctx context.Context, credentialID string) (*PasskeyCredential, error)
-	ListCredentialsByUserID(ctx context.Context, userID string) ([]*PasskeyCredential, error)
-	UpdateCredentialCounter(ctx context.Context, id string, counter int64, lastUsedAt time.Time) error
-	RenameCredential(ctx context.Context, id, userID, name string) error
-	DeleteCredential(ctx context.Context, id, userID string) error
-	SaveChallenge(ctx context.Context, challenge *PasskeyChallenge) error
-	GetAndConsumeChallenge(ctx context.Context, challenge, ceremonyType string) (*PasskeyChallenge, error)
-}
-
 type PasskeyRepo struct {
 	db *sqlx.DB
 }

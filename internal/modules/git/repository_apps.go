@@ -12,13 +12,6 @@ import (
 	"github.com/jmoiron/sqlx"
 )
 
-type GitAppRepository interface {
-	ListGithubApps(ctx context.Context) ([]GithubApp, error)
-	GetGithubApp(ctx context.Context, id string) (*GithubApp, error)
-	SaveGithubApp(ctx context.Context, app *GithubApp) error
-	DeleteGithubApp(ctx context.Context, id string) error
-}
-
 type gitAppRepo struct {
 	db    *sqlx.DB
 	vault Encryptor

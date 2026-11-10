@@ -15,21 +15,6 @@ import (
 	"codedock/internal/platform/vault"
 )
 
-type Repository interface {
-	Create(ctx context.Context, d *Database) error
-	GetByID(ctx context.Context, id string) (*Database, error)
-	ListAll(ctx context.Context, search string) ([]*Database, error)
-	ListByProject(ctx context.Context, projectID string) ([]*Database, error)
-	Update(ctx context.Context, d *Database) error
-	UpdateStatus(ctx context.Context, id string, status DatabaseStatus, containerID string) error
-	Delete(ctx context.Context, id string) error
-	GetNextAvailablePort(ctx context.Context) (int, error)
-	ProjectExists(ctx context.Context, projectID string) (bool, error)
-	IsProjectMemberOrOwner(ctx context.Context, projectID, userID, userRole string) bool
-	GetCustomDNSResolvers(ctx context.Context) string
-	LogAction(ctx context.Context, entry AuditLogEntry)
-}
-
 type sqlRepository struct {
 	db    *sqlx.DB
 	vault *vault.Vault

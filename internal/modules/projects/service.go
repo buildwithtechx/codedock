@@ -12,14 +12,6 @@ import (
 	"codedock/internal/utils"
 )
 
-type OrganizationRepository interface {
-	GetMember(ctx context.Context, organizationID, userID string) (*organizations.OrganizationMember, error)
-}
-
-type UserOrgLookup interface {
-	ListOrganizationsByUser(ctx context.Context, userID string) ([]*organizations.Organization, error)
-}
-
 type Service struct {
 	projectRepo ProjectRepository
 	orgRepo     OrganizationRepository

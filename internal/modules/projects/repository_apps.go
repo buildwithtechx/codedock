@@ -13,15 +13,6 @@ import (
 	"codedock/internal/utils"
 )
 
-type ProjectAppRepository interface {
-	ListByOrganization(ctx context.Context, organizationID string) ([]*ProjectApp, error)
-	GetByID(ctx context.Context, id string) (*ProjectApp, error)
-	GetBySlug(ctx context.Context, organizationID, slug string) (*ProjectApp, error)
-	Create(ctx context.Context, app *ProjectApp) error
-	Update(ctx context.Context, app *ProjectApp) error
-	Delete(ctx context.Context, id string) error
-}
-
 type ProjectAppRepo struct {
 	db *sqlx.DB
 }

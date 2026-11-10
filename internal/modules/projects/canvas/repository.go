@@ -9,32 +9,12 @@ import (
 	"github.com/jmoiron/sqlx"
 )
 
-type Vault interface {
-	Encrypt(string) (string, error)
-	Decrypt(string) (string, error)
-}
-
-type EnvironmentRepository interface {
-	ListByProject(ctx context.Context, projectID string) ([]*EnvironmentConfig, error)
-	GetDefaultByProject(ctx context.Context, projectID string) (*EnvironmentConfig, error)
-}
-
-type CanvasRepository interface {
-	ListCanvasSummaries(ctx context.Context, organizationID string) ([]CanvasSummary, error)
-	GetCanvasSummary(ctx context.Context, id string) (*CanvasSummary, error)
-	GetEnvironmentCanvas(ctx context.Context, id string) (*EnvironmentCanvas, error)
-}
-
 type CanvasRepo struct {
 	vault        Vault
 	db           *sqlx.DB
 	mu           sync.Mutex
 	environments EnvironmentRepository
 	clusterData  ClusterDataLister
-}
-
-type ClusterDataLister interface {
-	ListByProject(ctx context.Context, project string) ([]ClusterData, error)
 }
 
 func NewCanvasRepo(db *sql.DB, envRepo EnvironmentRepository) *CanvasRepo {

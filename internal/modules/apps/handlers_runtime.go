@@ -1,24 +1,12 @@
 package apps
 
 import (
-	"context"
 	"net/http"
 
 	"github.com/labstack/echo/v4"
 
 	"codedock/internal/utils"
 )
-
-type RuntimeEngine interface {
-	Get(ctx context.Context, id string) (any, error)
-	Operation(ctx context.Context, userID, id, opID string) (any, error)
-	Review(ctx context.Context, userID, id string, req any) (any, error)
-	ApplyForService(ctx context.Context, userID, id, opID, confirmation string) error
-	Observe(ctx context.Context, id string) (any, error)
-	Logs(ctx context.Context, id string) (any, error)
-	Graph(ctx context.Context, id string) (any, error)
-	Resources(ctx context.Context, id string) (any, error)
-}
 
 func (h *Handler) SetRuntime(r RuntimeEngine) {
 	h.runtime = r

@@ -12,14 +12,6 @@ import (
 	"github.com/jmoiron/sqlx"
 )
 
-type RefreshTokenRepository interface {
-	StoreToken(ctx context.Context, userID, tokenHash string, expiresAt time.Time) error
-	IsRevoked(ctx context.Context, tokenHash string) (bool, error)
-	RevokeToken(ctx context.Context, tokenHash string) error
-	RevokeAllForUser(ctx context.Context, userID string) error
-	PruneExpired(ctx context.Context) error
-}
-
 type RefreshTokenRepo struct {
 	db *sqlx.DB
 	mu sync.Mutex

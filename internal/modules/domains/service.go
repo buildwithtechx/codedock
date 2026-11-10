@@ -16,11 +16,6 @@ import (
 	"codedock/internal/utils"
 )
 
-type DomainDNSService interface {
-	ProvisionARecord(ctx context.Context, domain string) (string, string, error)
-	DeprovisionARecord(ctx context.Context, domain, provider, value string) error
-}
-
 func CanonicalDomainName(domain string) (string, error) {
 	canonical := strings.ToLower(strings.TrimSuffix(strings.TrimSpace(domain), "."))
 	if canonical == "" || strings.ContainsAny(canonical, " /\\") {

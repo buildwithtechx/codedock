@@ -4,17 +4,6 @@ import (
 	"context"
 )
 
-type NotificationService interface {
-	TestNotification(ctx context.Context, provider string) error
-}
-
-type NotificationSettingsOperations interface {
-	GetSettings(ctx context.Context) (*NotificationSettings, error)
-	UpdateSettings(ctx context.Context, req UpdateNotificationSettingsRequest) (*NotificationSettings, error)
-	ListDeliveries(ctx context.Context, limit int) (any, error)
-	RegisterDeviceToken(ctx context.Context, userID, token, platform string) error
-}
-
 type NotificationSettingsService struct {
 	repo         NotificationSettingsRepository
 	deliveries   NotificationDeliveryRepository

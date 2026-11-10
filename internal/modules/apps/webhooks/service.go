@@ -8,15 +8,6 @@ import (
 	"github.com/google/uuid"
 )
 
-type WebhookService interface {
-	CreateWebhook(ctx context.Context, w *Webhook) (*Webhook, error)
-	ListWebhooks(ctx context.Context, serviceID string) ([]*Webhook, error)
-	DeleteWebhook(ctx context.Context, id, serviceID string) error
-	CreateLogDrain(ctx context.Context, d *LogDrain) (*LogDrain, error)
-	ListLogDrains(ctx context.Context, serviceID string) ([]*LogDrain, error)
-	DeleteLogDrain(ctx context.Context, id, serviceID string) error
-}
-
 type Service struct {
 	repo Repository
 }
@@ -65,8 +56,8 @@ func (s *Service) CreateLogDrain(ctx context.Context, d *LogDrain) (*LogDrain, e
 	if d == nil {
 		return nil, errors.New("log drain is nil")
 	}
-	if d.ServiceID == "" || d.ProjectID == "" {
-		return nil, errors.New("serviceId and projectId are required")
+	if d.ServiceID == "" {
+		return nil, errors.New("serviceId is required")
 	}
 	if d.DrainType == "" || d.EndpointURL == "" {
 		return nil, errors.New("drainType and endpointUrl are required")

@@ -49,3 +49,4 @@ apps/cli/bin/*
 
 # Generated at build time
 apps/web/public/sitemap.xml
+*.vsix

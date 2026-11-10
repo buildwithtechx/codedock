@@ -9,15 +9,6 @@ import (
 	"github.com/google/uuid"
 )
 
-type RouteProtectionRepository interface {
-	ListByProject(ctx context.Context, projectID string) ([]RouteProtection, error)
-	Get(ctx context.Context, projectID, hostname string) (*RouteProtection, error)
-	GetByHostname(ctx context.Context, hostname string) (*RouteProtection, error)
-	Save(ctx context.Context, rp *RouteProtection) error
-	MarkApplied(ctx context.Context, projectID, hostname, revision string) error
-	Delete(ctx context.Context, projectID, hostname string) error
-}
-
 type postgresRouteProtectionRepository struct {
 	db *sql.DB
 }

@@ -1,7 +1,6 @@
 package apps
 
 import (
-	"context"
 	"time"
 )
 
@@ -73,11 +72,6 @@ type ProjectConfig struct {
 	ServerID string `json:"serverId"`
 }
 
-type Vault interface {
-	Encrypt(plaintext string) (string, error)
-	Decrypt(ciphertext string) (string, error)
-}
-
 type RuntimeDatabase struct {
 	ID            string `json:"id" db:"id"`
 	ProjectID     string `json:"projectId" db:"project_id"`
@@ -92,10 +86,6 @@ type RuntimeDatabase struct {
 }
 
 type Database = RuntimeDatabase
-
-type DatabaseRepository interface {
-	ListByProject(ctx context.Context, projectID string, search string) ([]*Database, error)
-}
 
 type RuntimeVolume struct {
 	Name         string `json:"name"`

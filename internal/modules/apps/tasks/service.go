@@ -10,27 +10,6 @@ import (
 	cron "codedock/internal/platform/scheduler"
 )
 
-type ScheduledTaskOperations interface {
-	CreateScheduledTask(ctx context.Context, task *ScheduledTask) (*ScheduledTask, error)
-	GetScheduledTask(ctx context.Context, id string) (*ScheduledTask, error)
-	ListAllScheduledTasks(ctx context.Context) ([]ScheduledTask, error)
-	ListScheduledTasksByProject(ctx context.Context, projectID string) ([]ScheduledTask, error)
-	ListScheduledTasksByService(ctx context.Context, serviceID string) ([]ScheduledTask, error)
-	UpdateScheduledTask(ctx context.Context, task *ScheduledTask) error
-	DeleteScheduledTask(ctx context.Context, id string) error
-	ExecuteScheduledTask(ctx context.Context, id string) (string, error)
-}
-
-type ScheduledTaskServiceFull interface {
-	ListByService(ctx context.Context, serviceID string) ([]ScheduledTask, error)
-	ListByProject(ctx context.Context, projectID string) ([]ScheduledTask, error)
-	CreateScheduledTask(ctx context.Context, task *ScheduledTask) (*ScheduledTask, error)
-	GetScheduledTask(ctx context.Context, id string) (*ScheduledTask, error)
-	UpdateScheduledTask(ctx context.Context, task *ScheduledTask) error
-	DeleteScheduledTask(ctx context.Context, id string) error
-	ExecuteScheduledTask(ctx context.Context, id string) (string, error)
-}
-
 type ScheduledTaskService struct {
 	repo    ScheduledTaskRepository
 	manager *cron.CronManager

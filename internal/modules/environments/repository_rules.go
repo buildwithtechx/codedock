@@ -10,14 +10,6 @@ import (
 	"github.com/google/uuid"
 )
 
-type RouteRuleRepository interface {
-	Create(ctx context.Context, rule *RouteRule) error
-	GetByID(ctx context.Context, id string) (*RouteRule, error)
-	ListByService(ctx context.Context, serviceID string) ([]*RouteRule, error)
-	Update(ctx context.Context, id string, name *string, enabled *bool, specJSON *string) error
-	Delete(ctx context.Context, id string) error
-}
-
 type postgresRouteRuleRepository struct {
 	db *sql.DB
 }

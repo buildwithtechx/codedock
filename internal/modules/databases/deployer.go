@@ -17,17 +17,6 @@ import (
 	"codedock/internal/utils"
 )
 
-type VolumeGate interface {
-	AcquireVolume(name string) (func(), error)
-}
-
-type Deployer interface {
-	SpinUp(ctx context.Context, dbConfig *Database) (string, error)
-	Stop(ctx context.Context, id string) error
-	Remove(ctx context.Context, id string, deleteRecord func() error) error
-	ImportData(ctx context.Context, dbConfig *Database, sourceURL string) error
-}
-
 type dockerDeployer struct {
 	dockerClient *client.Client
 	repo         Repository

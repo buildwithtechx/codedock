@@ -1,7 +1,6 @@
 package templates
 
 import (
-	"context"
 	"encoding/json"
 	"time"
 
@@ -13,10 +12,6 @@ type EnvironmentConfig struct {
 	ProjectID string `json:"projectId"`
 	Name      string `json:"name"`
 	IsDefault bool   `json:"isDefault"`
-}
-
-type EnvironmentRepository interface {
-	ListByProject(ctx context.Context, projectID string) ([]*EnvironmentConfig, error)
 }
 
 type OneClickEnvVar struct {

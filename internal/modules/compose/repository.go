@@ -9,20 +9,6 @@ import (
 	"github.com/jmoiron/sqlx"
 )
 
-type Vault interface {
-	Encrypt(string) (string, error)
-	Decrypt(string) (string, error)
-}
-
-type ComposeStackStore interface {
-	List(context.Context, string) ([]ComposeStack, error)
-	Get(context.Context, string, string) (*ComposeStack, error)
-	Save(context.Context, *ComposeStack, int) error
-	Claim(context.Context, string, string, int) error
-	Observe(context.Context, string, string, string, string) error
-	Recover(context.Context) error
-}
-
 type ComposeStackRepo struct {
 	db    *sqlx.DB
 	vault Vault
