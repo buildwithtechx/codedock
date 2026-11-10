@@ -89,7 +89,11 @@ func New(cfg Config) (*App, error) {
 	}
 
 	configureBindings(a, services)
-	configureListeners(services, cfg.Deployer)
+	accessLogPath := ""
+	if cfg.TraefikManager != nil {
+		accessLogPath = cfg.TraefikManager.AccessLogPath()
+	}
+	configureListeners(services, cfg.Deployer, accessLogPath)
 	a.wireRoutes(services)
 
 	return a, nil

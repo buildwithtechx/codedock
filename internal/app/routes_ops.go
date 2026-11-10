@@ -54,23 +54,13 @@ func (a *App) registerServerRoutes(apiGroup, authGroup *echo.Group, s *appServic
 }
 
 func (a *App) registerClusterRoutes(group *echo.Group, s *appServices) {
-	var clusterHandler *modclusters.Handler
-	var clusterDataHandler *modclusters.DataHandler
-	if a.db != nil {
-		clusterServices, _ := modclusters.InitClusterServices(a.db, a.vault, s.projectRepo, s.serverRepo, s.operationService, s.volumeOperations)
-		if clusterServices != nil {
-			clusterHandler = modclusters.NewHandler(&adapters.ClusterServiceAdapter{
-				Service:    clusterServices.Service,
-				Operations: s.operationService,
-			})
-			clusterDataHandler = modclusters.NewDataHandler(&adapters.ClusterDataServiceAdapter{
-				Service: clusterServices.DataService,
-			})
-		}
-	} else {
-		clusterHandler = modclusters.NewHandler(nil)
-		clusterDataHandler = modclusters.NewDataHandler(nil)
-	}
+	clusterHandler := modclusters.NewHandler(&adapters.ClusterServiceAdapter{
+		Service:    s.clusterService,
+		Operations: s.operationService,
+	})
+	clusterDataHandler := modclusters.NewDataHandler(&adapters.ClusterDataServiceAdapter{
+		Service: s.clusterDataService,
+	})
 
 	modclusters.RegisterRoutes(group, modclusters.RoutesConfig{
 		Handler:     clusterHandler,
@@ -134,33 +124,11 @@ func (a *App) registerAnalyticsRoutes(apiGroup, authGroup *echo.Group, s *appSer
 	)
 	wsHandler.Streams = s.deploymentService
 
-	accessLogPath := ""
-	if a.traefikManager != nil {
-		accessLogPath = a.traefikManager.AccessLogPath()
-	}
-	metricsService := modmonitoring.NewMetricsService()
-	analyticsServices := modmonitoring.InitAnalyticsServices(
-		a.db,
-		a.vault,
-		accessLogPath,
-		&adapters.AnalyticsDeployRepoAdapter{Repo: s.deployRepo},
-		&adapters.AnalyticsProjectRepoAdapter{Repo: s.projectRepo},
-		&adapters.AnalyticsAppRepoAdapter{Repo: s.appRepo},
-		&adapters.AnalyticsDomainListerAdapter{Repo: s.domainRepo},
-		&adapters.AnalyticsUserRepoAdapter{Repo: s.userRepo},
-		&adapters.AnalyticsOrgRepoAdapter{Repo: s.orgRepo},
-		metricsService,
-		s.statsMonitor,
-		&adapters.AttentionDeployerAdapter{DeploymentService: s.deploymentService, AppService: s.appService},
-		s.backupService,
-		nil,
-	)
-
-	analyticsHandler := modmonitoring.NewAnalyticsHandler(&adapters.AnalyticsServiceAdapter{Svc: analyticsServices.AnalyticsService})
-	attentionHandler := modmonitoring.NewAttentionHandler(&adapters.AttentionServiceAdapter{Svc: analyticsServices.AttentionService})
-	metricsHandler := modmonitoring.NewMetricsHandler(&adapters.MetricsServiceAdapter{Svc: metricsService})
-	logHandler := modmonitoring.NewLogHandler(&adapters.LogServiceAdapter{Svc: modmonitoring.NewLogService()})
-	exampleHandler := modmonitoring.NewExampleHandler(&adapters.ExampleServiceAdapter{Svc: modmonitoring.NewExampleService()})
+	analyticsHandler := modmonitoring.NewAnalyticsHandler(&adapters.AnalyticsServiceAdapter{Svc: s.analyticsService})
+	attentionHandler := modmonitoring.NewAttentionHandler(&adapters.AttentionServiceAdapter{Svc: s.attentionService})
+	metricsHandler := modmonitoring.NewMetricsHandler(&adapters.MetricsServiceAdapter{Svc: s.metricsService})
+	logHandler := modmonitoring.NewLogHandler(&adapters.LogServiceAdapter{Svc: s.logService})
+	exampleHandler := modmonitoring.NewExampleHandler(&adapters.ExampleServiceAdapter{Svc: s.exampleService})
 
 	serviceAuth := a.RequireServiceRole("")
 	modmonitoring.RegisterRoutes(authGroup, apiGroup, modmonitoring.RoutesConfig{

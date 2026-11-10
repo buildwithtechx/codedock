@@ -1,8 +1,6 @@
 package clusters
 
 import (
-	"context"
-
 	appsmod "codedock/internal/modules/apps"
 	"codedock/internal/modules/audit/operations"
 	backups "codedock/internal/modules/backups"
@@ -11,11 +9,6 @@ import (
 	projectsmod "codedock/internal/modules/projects"
 	servers "codedock/internal/modules/servers"
 )
-
-type Vault interface {
-	Encrypt(string) (string, error)
-	Decrypt(string) (string, error)
-}
 
 type ProjectConfig = projectsmod.ProjectConfig
 type Server = servers.Server
@@ -26,12 +19,6 @@ type Variable = appsmod.Variable
 type EnvironmentConfig = environments.EnvironmentConfig
 type S3Destination = backups.S3Destination
 type ClusterNode = kubernetes.ClusterNode
-
-type OperationsService interface {
-	Review(ctx context.Context, user, project, kind, target, payload, snapshot, effects string) (*OperationReview, error)
-	Get(ctx context.Context, id string) (*Operation, error)
-	Apply(ctx context.Context, id, user, confirmation, snapshot string, fn func(ctx context.Context, op *Operation, progress func(string, string) error) error) error
-}
 
 type ClusterScaling struct {
 	Status        string `json:"status"`

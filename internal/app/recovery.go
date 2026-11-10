@@ -37,5 +37,20 @@ func runRecovery(ctx context.Context, s *appServices) error {
 	if err := s.backupRepo.RecoverRecords(ctx); err != nil {
 		return fmt.Errorf("recover backup records: %w", err)
 	}
+	if s.clusterRepo != nil {
+		if err := s.clusterRepo.Recover(ctx); err != nil {
+			return fmt.Errorf("recover cluster operations: %w", err)
+		}
+	}
+	if s.clusterService != nil {
+		if err := s.clusterService.RecoverUpgrades(ctx); err != nil {
+			return fmt.Errorf("recover cluster upgrades: %w", err)
+		}
+	}
+	if s.clusterDataService != nil {
+		if err := s.clusterDataService.Recover(ctx); err != nil {
+			return fmt.Errorf("recover cluster data: %w", err)
+		}
+	}
 	return nil
 }

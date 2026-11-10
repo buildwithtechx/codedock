@@ -4,6 +4,17 @@ import (
 	"context"
 )
 
+type Vault interface {
+	Encrypt(string) (string, error)
+	Decrypt(string) (string, error)
+}
+
+type OperationsService interface {
+	Review(ctx context.Context, user, project, kind, target, payload, snapshot, effects string) (*OperationReview, error)
+	Get(ctx context.Context, id string) (*Operation, error)
+	Apply(ctx context.Context, id, user, confirmation, snapshot string, fn func(ctx context.Context, op *Operation, progress func(string, string) error) error) error
+}
+
 type Service interface {
 	List(ctx context.Context, projectID string) (any, error)
 	Review(ctx context.Context, userID, projectID string, req ClusterReviewRequest) (any, error)

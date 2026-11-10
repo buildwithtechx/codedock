@@ -19,6 +19,26 @@ type OpenAIChatCompletionResponse struct {
 	Choices []OpenAIChatChoice `json:"choices"`
 }
 
+type AIExplanationResponse struct {
+	Summary         string   `json:"summary"`
+	Cause           string   `json:"cause"`
+	SuggestedFix    string   `json:"suggestedFix"`
+	Confidence      string   `json:"confidence"`
+	Commands        []string `json:"commands"`
+	RelatedLogLines []string `json:"relatedLogLines"`
+}
+
+type ChatResponse struct {
+	Reply           string          `json:"reply"`
+	Provider        string          `json:"provider"`
+	Model           string          `json:"model"`
+	Configured      bool            `json:"configured"`
+	Steps           []ToolStep      `json:"steps,omitempty"`
+	PendingActions  []PendingAction `json:"pendingActions,omitempty"`
+	ExecutedActions []string        `json:"executedActions,omitempty"`
+	Questions       []QuestionGroup `json:"questions,omitempty"`
+}
+
 // RedactAISettings masks confidential provider API keys before returning settings over the network
 func RedactAISettings(s *AISettings) *AISettings {
 	if s == nil {

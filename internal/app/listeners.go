@@ -3,15 +3,18 @@ package app
 import (
 	"context"
 	"fmt"
+	"os"
 	"strings"
 
+	"codedock/internal/adapters"
 	"codedock/internal/config"
 	"codedock/internal/deploy"
 	"codedock/internal/platform/notifications"
+	"codedock/internal/platform/observability"
 	"codedock/internal/platform/ssh"
 )
 
-func configureListeners(s *appServices, deployer *deploy.Deployer) {
+func configureListeners(s *appServices, deployer *deploy.Deployer, accessLogPath string) {
 	serverSettings, _ := s.settingsRepo.GetServerSettings(context.Background())
 	if serverSettings != nil && serverSettings.DockerCleanupCron != "" {
 		_ = s.cronManager.ScheduleDockerCleanup(serverSettings.DockerCleanupCron)
@@ -56,4 +59,10 @@ func configureListeners(s *appServices, deployer *deploy.Deployer) {
 	s.deploymentService.BeforeDeployment = s.backupService.BeforeDeployment
 
 	s.autoscaler.Start()
+
+	if accessLogPath != "" && s.trafficRepo != nil && s.analyticsService != nil {
+		geoResolver, _ := observability.NewGeoIPResolver(os.Getenv("GEOIP_DB_PATH"))
+		collector := observability.NewCollector(accessLogPath, &adapters.TrafficCollectorAdapter{Repo: s.trafficRepo}, s.analyticsService.AttributeDomain, geoResolver)
+		go collector.Run(context.Background())
+	}
 }

@@ -30,3 +30,13 @@ type OpenAIChatCompletionRequest struct {
 	Temperature    float64               `json:"temperature"`
 	ResponseFormat *OpenAIResponseFormat `json:"response_format,omitempty"`
 }
+
+type ChatRequest struct {
+	Messages    []ChatMessage `json:"messages"`
+	Provider    string        `json:"provider,omitempty"`
+	Model       string        `json:"model,omitempty"`
+	Persona     string        `json:"persona,omitempty"`
+	CurrentPath string        `json:"currentPath,omitempty"`
+	Mentions    []ResourceTag `json:"mentions,omitempty"`
+	Mode        string        `json:"mode,omitempty"`
+}
