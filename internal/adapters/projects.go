@@ -4,12 +4,12 @@ import (
 	"context"
 	"fmt"
 
-	"codedock/internal/modules/projects/canvas"
 	modclusters "codedock/internal/modules/clusters"
 	composemod "codedock/internal/modules/compose"
 	"codedock/internal/modules/environments"
 	gitmod "codedock/internal/modules/git"
 	projectsmod "codedock/internal/modules/projects"
+	"codedock/internal/modules/projects/canvas"
 	templatesmod "codedock/internal/modules/templates"
 	docker "codedock/internal/platform/docker"
 )

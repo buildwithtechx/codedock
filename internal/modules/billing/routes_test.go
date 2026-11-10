@@ -1,17 +1,17 @@
-package http
+package billing_test
 
 import (
 	"net/http"
 	"net/http/httptest"
 	"testing"
 
-	"github.com/labstack/echo/v4"
-
 	"codedock/internal/config"
+	cdkhttp "codedock/internal/http"
 	"codedock/internal/http/middleware"
 	"codedock/internal/modules/auth"
 	"codedock/internal/modules/billing"
 	"codedock/internal/modules/users"
+	"github.com/labstack/echo/v4"
 )
 
 func TestBillingRoutesRespectDeploymentMode(t *testing.T) {
@@ -30,11 +30,9 @@ func TestBillingRoutesRespectDeploymentMode(t *testing.T) {
 	guard := middleware.NewAuthGuard(tokens, nil, nil, nil, nil, nil)
 	for _, cloud := range []bool{false, true} {
 		cfg.Cloud.Enabled = cloud
-		router := echo.New()
-		configureEchoMiddleware(router)
-		server := &Server{router: router, billingHandler: billing.NewBillingHandler(nil)}
+		router := cdkhttp.NewRouter()
 		api := router.Group("/api")
-		server.registerBillingRoutes(api, api.Group("", guard.RequireAuth()))
+		billing.RegisterRoutes(api, api.Group("", guard.RequireAuth()), billing.NewBillingHandler(nil), cloud)
 		router.GET("/*", func(c echo.Context) error { return c.String(200, "dashboard") })
 		for _, check := range []struct {
 			method, path string

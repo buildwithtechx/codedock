@@ -13,7 +13,8 @@ import (
 	echomiddleware "github.com/labstack/echo/v4/middleware"
 )
 
-func bootstrapCSRF(c echo.Context) error {
+// BootstrapCSRF generates or preserves a valid CSRF cookie and returns the token in JSON.
+func BootstrapCSRF(c echo.Context) error {
 	token := ""
 	if cookie, err := c.Cookie("csrf_token"); err == nil {
 		token = cookie.Value
@@ -42,3 +43,5 @@ func bootstrapCSRF(c echo.Context) error {
 	c.Response().Header().Set("Cache-Control", "no-store")
 	return c.JSON(http.StatusOK, map[string]string{"token": token})
 }
+
+var bootstrapCSRF = BootstrapCSRF

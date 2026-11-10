@@ -1,4 +1,4 @@
-package http
+package billing_test
 
 import (
 	"bytes"

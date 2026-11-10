@@ -4,10 +4,10 @@ import (
 	"context"
 
 	appsmod "codedock/internal/modules/apps"
+	"codedock/internal/modules/audit/operations"
 	backups "codedock/internal/modules/backups"
 	"codedock/internal/modules/clusters/kubernetes"
 	environments "codedock/internal/modules/environments"
-	"codedock/internal/modules/audit/operations"
 	projectsmod "codedock/internal/modules/projects"
 	servers "codedock/internal/modules/servers"
 )

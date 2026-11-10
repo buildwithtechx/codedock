@@ -8,10 +8,13 @@ import (
 	"codedock/internal/http/apischema"
 )
 
-func serveOpenAPISpec(c echo.Context) error {
+// ServeOpenAPISpec renders and serves the OpenAPI spec in JSON format.
+func ServeOpenAPISpec(c echo.Context) error {
 	rendered, err := apischema.Marshal()
 	if err != nil {
 		return echo.NewHTTPError(http.StatusInternalServerError, err.Error())
 	}
 	return c.JSONBlob(http.StatusOK, rendered)
 }
+
+var serveOpenAPISpec = ServeOpenAPISpec

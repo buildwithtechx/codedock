@@ -5,9 +5,9 @@ import (
 	"errors"
 	"time"
 
+	"codedock/internal/modules/audit/operations"
 	authservices "codedock/internal/modules/auth"
 	"codedock/internal/modules/monitoring"
-	"codedock/internal/modules/audit/operations"
 	settingsmodule "codedock/internal/modules/settings"
 	"codedock/internal/modules/system"
 	"codedock/internal/modules/users"

@@ -9,8 +9,8 @@ import (
 	"net/http/httptest"
 	"testing"
 
+	"codedock/internal/app"
 	cdkdb "codedock/internal/db"
-	cdkhttp "codedock/internal/http"
 	authservices "codedock/internal/modules/auth"
 	"codedock/internal/modules/servers"
 	"codedock/internal/modules/users"
@@ -19,7 +19,7 @@ import (
 	"github.com/docker/docker/client"
 )
 
-func setupTestApp(t *testing.T) (*cdkhttp.Server, *sql.DB, string, string) {
+func setupTestApp(t *testing.T) (*app.App, *sql.DB, string, string) {
 	jwtSecret := "super-secure-integration-test-jwt-secret-32-chars!"
 	t.Setenv("CODEDOCK_JWT_SECRET", jwtSecret)
 
@@ -37,7 +37,12 @@ func setupTestApp(t *testing.T) (*cdkhttp.Server, *sql.DB, string, string) {
 
 	dockerClient, _ := client.NewClientWithOpts(client.FromEnv, client.WithAPIVersionNegotiation())
 
-	server, err := cdkhttp.NewServer(db, vlt, nil, nil, dockerClient, dataDir)
+	server, err := app.New(app.Config{
+		DB:           db,
+		Vault:        vlt,
+		DockerClient: dockerClient,
+		DataDir:      dataDir,
+	})
 	if err != nil {
 		t.Fatalf("failed to create server: %v", err)
 	}

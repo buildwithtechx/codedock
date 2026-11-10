@@ -1,4 +1,4 @@
-package http
+package mcp_test
 
 import (
 	"bytes"
@@ -8,10 +8,10 @@ import (
 	"strings"
 	"testing"
 
+	"github.com/labstack/echo/v4"
+
 	"codedock/internal/modules/mcp"
 	"codedock/internal/modules/users"
-
-	"github.com/labstack/echo/v4"
 )
 
 func TestMCPToolGenerationAndSafety(t *testing.T) {
@@ -59,7 +59,6 @@ func TestMCPStreamableHTTPProtocol(t *testing.T) {
 
 	bridge := mcp.NewBridge(nil, nil)
 	bridge.SetDispatcher(e)
-	srv := &Server{router: e, mcpBridge: bridge}
 
 	initBody := `{"jsonrpc":"2.0","id":1,"method":"initialize","params":{"protocolVersion":"2025-06-18"}}`
 	req := httptest.NewRequest(http.MethodPost, "/api/mcp", bytes.NewBufferString(initBody))
@@ -67,8 +66,8 @@ func TestMCPStreamableHTTPProtocol(t *testing.T) {
 	rec := httptest.NewRecorder()
 	c := e.NewContext(req, rec)
 
-	if err := srv.handleMCPStreamableHTTP(c); err != nil {
-		t.Fatalf("handleMCPStreamableHTTP initialize failed: %v", err)
+	if err := bridge.HandleStreamableHTTP(c, nil); err != nil {
+		t.Fatalf("HandleStreamableHTTP initialize failed: %v", err)
 	}
 	if rec.Code != http.StatusOK {
 		t.Fatalf("expected 200 OK, got %d", rec.Code)
@@ -83,8 +82,8 @@ func TestMCPStreamableHTTPProtocol(t *testing.T) {
 	rec2 := httptest.NewRecorder()
 	c2 := e.NewContext(req2, rec2)
 
-	if err := srv.handleMCPStreamableHTTP(c2); err != nil {
-		t.Fatalf("handleMCPStreamableHTTP tools/call failed: %v", err)
+	if err := bridge.HandleStreamableHTTP(c2, nil); err != nil {
+		t.Fatalf("HandleStreamableHTTP tools/call failed: %v", err)
 	}
 	var rpcResp map[string]any
 	if err := json.Unmarshal(rec2.Body.Bytes(), &rpcResp); err != nil {

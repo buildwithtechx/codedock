@@ -16,9 +16,9 @@ import (
 	"github.com/joho/godotenv"
 
 	"codedock/cmd/codedockd/commands"
+	"codedock/internal/app"
 	"codedock/internal/config"
 	"codedock/internal/deploy"
-	cdkhttp "codedock/internal/http"
 	"codedock/internal/platform/networking"
 	"codedock/internal/platform/observability"
 
@@ -98,7 +98,14 @@ func startServer() {
 	addr := host + ":" + port
 
 	deployer := deploy.NewDeployer(dockerClient, commands.NewDBDeployerStore(db, vlt))
-	apiServer, err := cdkhttp.NewServer(db, vlt, deployer, traefikMgr, dockerClient, dataDir)
+	apiServer, err := app.New(app.Config{
+		DB:             db,
+		Vault:          vlt,
+		Deployer:       deployer,
+		TraefikManager: traefikMgr,
+		DockerClient:   dockerClient,
+		DataDir:        dataDir,
+	})
 	if err != nil {
 		slog.Error("failed to initialize server", "err", err)
 		os.Exit(1)
@@ -141,7 +148,13 @@ func runMCP() {
 	dockerClient, _ := client.NewClientWithOpts(client.FromEnv, client.WithAPIVersionNegotiation())
 	deployer := deploy.NewDeployer(dockerClient, commands.NewDBDeployerStore(db, vlt))
 	traefikMgr := networking.NewTraefikManager(dockerClient, config.Get().Security.TLSEmail)
-	apiServer, err := cdkhttp.NewServer(db, vlt, deployer, traefikMgr, dockerClient, "")
+	apiServer, err := app.New(app.Config{
+		DB:             db,
+		Vault:          vlt,
+		Deployer:       deployer,
+		TraefikManager: traefikMgr,
+		DockerClient:   dockerClient,
+	})
 	if err != nil {
 		slog.Error("failed to initialize server", "err", err)
 		os.Exit(1)

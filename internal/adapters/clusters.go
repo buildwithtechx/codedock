@@ -4,8 +4,8 @@ import (
 	"context"
 	"fmt"
 
-	modclusters "codedock/internal/modules/clusters"
 	"codedock/internal/modules/audit/operations"
+	modclusters "codedock/internal/modules/clusters"
 )
 
 type ClusterServiceAdapter struct {

@@ -14,8 +14,8 @@ import (
 
 	"github.com/docker/docker/client"
 
+	"codedock/internal/app"
 	cdkdb "codedock/internal/db"
-	cdkhttp "codedock/internal/http"
 	"codedock/internal/testdb"
 	"codedock/internal/utils"
 )
@@ -51,7 +51,12 @@ func newE2EHarness(t *testing.T) *e2eHarness {
 		dockerClient = nil
 	}
 
-	s, err := cdkhttp.NewServer(db, vlt, nil, nil, dockerClient, dataDir)
+	s, err := app.New(app.Config{
+		DB:           db,
+		Vault:        vlt,
+		DockerClient: dockerClient,
+		DataDir:      dataDir,
+	})
 	if err != nil {
 		t.Fatalf("failed to create http server: %v", err)
 	}

@@ -1,4 +1,4 @@
-package http
+package app
 
 import (
 	"encoding/json"
@@ -11,13 +11,13 @@ import (
 
 func TestGetMeta(t *testing.T) {
 	e := echo.New()
-	s := &Server{}
+	a := &App{}
 
 	req := httptest.NewRequest(http.MethodGet, "/api/meta", nil)
 	rec := httptest.NewRecorder()
 	c := e.NewContext(req, rec)
 
-	if err := s.getMeta(c); err != nil {
+	if err := a.getMeta(c); err != nil {
 		t.Fatalf("getMeta returned unexpected error: %v", err)
 	}
 

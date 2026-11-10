@@ -5,8 +5,8 @@ import (
 	"errors"
 
 	"codedock/internal/modules/apps"
-	"codedock/internal/modules/projects"
 	"codedock/internal/modules/apps/tasks"
+	"codedock/internal/modules/projects"
 	"codedock/internal/modules/users"
 )
 

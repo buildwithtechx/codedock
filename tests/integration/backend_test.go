@@ -6,8 +6,8 @@ import (
 
 	"github.com/docker/docker/client"
 
+	"codedock/internal/app"
 	cdkdb "codedock/internal/db"
-	cdkhttp "codedock/internal/http"
 	"codedock/internal/testdb"
 	"codedock/internal/utils"
 )
@@ -29,7 +29,12 @@ func TestCodedockBackendInitialization(t *testing.T) {
 
 	dockerClient, _ := client.NewClientWithOpts(client.FromEnv, client.WithAPIVersionNegotiation())
 
-	server, err := cdkhttp.NewServer(db, vlt, nil, nil, dockerClient, dataDir)
+	server, err := app.New(app.Config{
+		DB:           db,
+		Vault:        vlt,
+		DockerClient: dockerClient,
+		DataDir:      dataDir,
+	})
 	if err != nil {
 		t.Fatalf("failed to initialize server: %v", err)
 	}
