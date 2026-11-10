@@ -11,8 +11,8 @@ import (
 	"strings"
 	"testing"
 
-	"codedock/internal/engine/kubernetes"
 	appsmod "codedock/internal/modules/apps"
+	"codedock/internal/modules/clusters/kubernetes"
 )
 
 func nativeFixture() (*appsmod.AppService, appsmod.RuntimeTarget) {

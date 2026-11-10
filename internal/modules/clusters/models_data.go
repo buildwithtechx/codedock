@@ -1,6 +1,6 @@
 package clusters
 
-import "codedock/internal/engine/kubernetes"
+import "codedock/internal/modules/clusters/kubernetes"
 
 type ClusterDataSpec = kubernetes.ClusterDataSpec
 type ClusterData = kubernetes.ClusterData

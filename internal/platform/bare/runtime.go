@@ -10,8 +10,8 @@ import (
 
 	"github.com/google/uuid"
 
-	"codedock/internal/engine/kubernetes"
 	appsmod "codedock/internal/modules/apps"
+	"codedock/internal/modules/clusters/kubernetes"
 )
 
 var (

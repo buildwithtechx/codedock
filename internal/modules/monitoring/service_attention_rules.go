@@ -6,7 +6,7 @@ import (
 	"fmt"
 	"time"
 
-	"codedock/internal/engine/hetzner"
+	"codedock/internal/modules/servers/managed/hetzner"
 )
 
 func (s *AttentionManager) scanDeployments(ctx context.Context, _ string, orgID string) ([]*AttentionIssue, error) {

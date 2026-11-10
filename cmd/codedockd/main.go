@@ -17,7 +17,7 @@ import (
 
 	"codedock/cmd/codedockd/commands"
 	"codedock/internal/config"
-	"codedock/internal/engine/deploy"
+	"codedock/internal/deploy"
 	cdkhttp "codedock/internal/http"
 	"codedock/internal/platform/networking"
 	"codedock/internal/platform/observability"

@@ -3,9 +3,9 @@ package clusters
 import (
 	"context"
 
-	"codedock/internal/engine/kubernetes"
 	appsmod "codedock/internal/modules/apps"
 	backups "codedock/internal/modules/backups"
+	"codedock/internal/modules/clusters/kubernetes"
 	environments "codedock/internal/modules/environments"
 	"codedock/internal/modules/operations"
 	projectsmod "codedock/internal/modules/projects"

@@ -7,8 +7,8 @@ import (
 	"net/http"
 	"time"
 
-	"codedock/internal/engine/kubernetes"
 	backupmodule "codedock/internal/modules/backups"
+	"codedock/internal/modules/clusters/kubernetes"
 	"codedock/internal/modules/environments"
 	"codedock/internal/modules/operations"
 	projectsmod "codedock/internal/modules/projects"

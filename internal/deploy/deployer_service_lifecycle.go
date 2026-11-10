@@ -5,8 +5,8 @@ import (
 	"fmt"
 	"io"
 
-	"codedock/internal/engine/stacks"
 	appsmod "codedock/internal/modules/apps"
+	"codedock/internal/modules/git/stacks"
 	"codedock/internal/utils"
 )
 

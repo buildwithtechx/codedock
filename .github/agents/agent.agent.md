@@ -21,12 +21,11 @@ You are a senior software engineer specializing in this codebase — the Go + Ty
 | Layer                | Location                 | Purpose                             |
 | -------------------- | ------------------------ | ----------------------------------- |
 | Backend entrypoint   | `cmd/codedockd/main.go`   | HTTP server daemon startup          |
-| HTTP Handlers        | `internal/handlers/`     | Echo HTTP controllers per domain    |
-| Service Layer        | `internal/services/`     | Business logic & integrations       |
-| Database Repos       | `internal/repositories/` | SQLite persistence implementations  |
-| Domain Models        | `internal/models/`       | All domain structs & DTOs           |
-| Engine Runtime       | `internal/engine/`       | Container deployer, cron, backups   |
-| HTTP Router & Server | `internal/http/`         | Echo setup, CORS, middleware wiring |
+| Domain Modules       | `internal/modules/`      | Self-contained domain modules       |
+| Platform Drivers     | `internal/platform/`     | Infrastructure & runtime drivers    |
+| Deploy Runtime       | `internal/deploy/`       | Deployment & container rollout      |
+| Adapters             | `internal/adapters/`     | Inter-module glue adapters          |
+| HTTP Transport       | `internal/http/`         | Echo setup, CORS, middleware wiring |
 | Dashboard            | `apps/dashboard/`        | React 19 control panel GUI          |
 | Desktop App          | `apps/desktop/`          | Tauri 2.0 Rust desktop shell        |
 
@@ -40,7 +39,9 @@ You are a senior software engineer specializing in this codebase — the Go + Ty
 
 ### Go & Architecture
 
-- **Layered Monolith (`internal/`)**: Organized by clean functional layers (`internal/models/`, `internal/repositories/`, `internal/services/`, `internal/handlers/`, `internal/http/`, `internal/engine/`).
+- **Domain Modular Monolith (`internal/`)**: Organized by clean vertical domain modules (`internal/modules/`), platform drivers (`internal/platform/`), deployer (`internal/deploy/`), adapters (`internal/adapters/`), and thin HTTP router (`internal/http/`).
+- **Strict File Size Cap**: Every `.go` file **MUST be <= 300 LOC**.
+- **Zero Legacy Imports**: No imports of `internal/models`, `internal/repositories`, `internal/services`, `internal/handlers`, or `internal/engine`.
 - **Consumer-Defined Interfaces**: Define narrow interfaces where consumed (`Accept interfaces, return structs`).
 - **Go packages**: short, lowercase, single word — `cron`, `auth`, `apikeys`
 - No inline comments or GoDoc unless logic is non-obvious.
@@ -74,10 +75,10 @@ You are a senior software engineer specializing in this codebase — the Go + Ty
 | ---------------------- | -------------------------------------------- |
 | Backend entrypoint     | `cmd/codedockd/main.go`                       |
 | HTTP server setup      | `internal/http/server.go`                    |
-| Auth handlers          | `internal/handlers/auth/auth.go`             |
-| Project CRUD           | `internal/handlers/projects/project.go`      |
-| Database management    | `internal/handlers/databases/database.go`   |
-| Engine deployer        | `internal/engine/docker_deployer.go`         |
+| Auth module            | `internal/modules/auth/`                     |
+| Project module         | `internal/modules/projects/`                 |
+| Database module        | `internal/modules/databases/`                |
+| Deployer runtime       | `internal/deploy/deployer.go`                |
 | Dashboard router       | `apps/dashboard/src/router.tsx`              |
 | Dashboard root layout  | `apps/dashboard/src/routes/__root.tsx`       |
 | Dashboard styles       | `apps/dashboard/src/styles.css`              |

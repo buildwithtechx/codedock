@@ -6,7 +6,7 @@ import (
 	"net/http"
 	"time"
 
-	"codedock/internal/engine/kubernetes"
+	"codedock/internal/modules/clusters/kubernetes"
 )
 
 type DataStore interface {

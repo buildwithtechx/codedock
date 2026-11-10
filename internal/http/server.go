@@ -8,7 +8,7 @@ import (
 	"github.com/labstack/echo/v4"
 	"github.com/mark3labs/mcp-go/server"
 
-	"codedock/internal/engine/deploy"
+	"codedock/internal/deploy"
 	"codedock/internal/http/middleware"
 	actions "codedock/internal/modules/actions"
 	aimod "codedock/internal/modules/ai"

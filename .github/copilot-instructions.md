@@ -16,12 +16,11 @@ This is the Codedock codebase — an open-source, self-hosted PaaS that turns an
 ### Backend (`cmd/`, `internal/`)
 
 1. **Entrypoint** — `cmd/codedockd/main.go`: HTTP server daemon, wires dependencies
-2. **Models** — `internal/models/`: Domain structs, DTOs, database entities (no circular imports)
-3. **Repositories** — `internal/repositories/`: Database persistence, SQL interfaces, SQLite implementations
-4. **Services** — `internal/services/`: Business logic, external integrations
-5. **Handlers** — `internal/handlers/`: HTTP controllers, Echo route handlers
-6. **HTTP Setup** — `internal/http/`: Server setup, routes, CORS, auth middleware
-7. **Engine** — `internal/engine/`: Container engine, Docker deployer, runtime management, cron, backup workers
+2. **Domain Modules** — `internal/modules/`: Self-contained vertical slices (`apps`, `auth`, `clusters`, `databases`, `deployments`, `git`, `monitoring`, `projects`, `servers`, `system`, `users`, etc.) containing models, repositories, services, handlers, and routes.
+3. **Platform Infrastructure** — `internal/platform/`: Infrastructure drivers and runtime execution utilities (`bare`, `build`, `database`, `docker`, `networking`, `notifications`, `observability`, `scheduler`, `ssh`, `storage`, `vault`).
+4. **Deploy Execution Engine** — `internal/deploy/`: Container deployment runtime, rollout state machine, cutover decider, autoscaler.
+5. **Adapters** — `internal/adapters/`: Glue adapters between modules and runtime engines (modules never import `adapters`).
+6. **HTTP Transport** — `internal/http/`: Server setup, route registration, Echo middleware, and presentation.
 
 ### Apps Monorepo (`apps/`)
 
@@ -32,7 +31,9 @@ This is the Codedock codebase — an open-source, self-hosted PaaS that turns an
 
 ### Go & Architecture
 
-- **Layered Monolith Architecture (`internal/`)**: All Go code inside `internal/` must be organized by clean functional layers: `models/`, `repositories/`, `services/`, `handlers/`, `http/`, and `engine/`. Avoid domain-driven vertical slices.
+- **Domain-Oriented Modular Monolith (`internal/`)**: All Go code inside `internal/` is organized by self-contained domain modules (`internal/modules/`), platform drivers (`internal/platform/`), deploy runtime (`internal/deploy/`), adapters (`internal/adapters/`), and thin HTTP router (`internal/http/`).
+- **Strict File Size Cap**: Every `.go` file **MUST be <= 300 LOC**.
+- **Zero Legacy Imports**: Zero imports of legacy directories (`internal/models`, `internal/repositories`, `internal/services`, `internal/handlers`, `internal/engine`).
 - **Consumer-Defined Interfaces**: Define narrow interfaces where they are _consumed_ (`Accept interfaces, return structs`).
 - **Files**: `snake_case.go` — `container_health.go`
 - **Packages**: short, lowercase, single word — `cron`, `auth`, `apikeys`
@@ -67,9 +68,9 @@ This is the Codedock codebase — an open-source, self-hosted PaaS that turns an
 
 ## Navigation Tips
 
-- **Find a handler**: `internal/handlers/<domain>/<handler>.go`
-- **Find a repository**: `internal/repositories/<entity>.go`
-- **Find a service**: `internal/services/<domain>/<service>.go`
+- **Find a domain module**: `internal/modules/<domain>/` (handlers, models, repos, services, routes)
+- **Find a platform driver**: `internal/platform/<capability>/`
+- **Find deployment runtime**: `internal/deploy/`
 - **Find a dashboard route**: `apps/dashboard/src/routes/` (TanStack Router file-based)
 - **Find a dashboard component**: `apps/dashboard/src/components/<domain>/`
 

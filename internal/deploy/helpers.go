@@ -11,8 +11,8 @@ import (
 	"github.com/docker/docker/api/types/container"
 
 	"codedock/internal/config"
-	"codedock/internal/engine/build"
 	appsmod "codedock/internal/modules/apps"
+	"codedock/internal/platform/build"
 )
 
 func ApplyCustomDNS(hostCfg *container.HostConfig, customDNS string) {

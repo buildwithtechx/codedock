@@ -1,7 +1,7 @@
 package clusters
 
 import (
-	"codedock/internal/engine/deploy"
+	"codedock/internal/deploy"
 	"testing"
 )
 

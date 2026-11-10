@@ -12,7 +12,7 @@ import (
 	"strings"
 	"time"
 
-	"codedock/internal/engine/stacks"
+	"codedock/internal/modules/git/stacks"
 )
 
 func (s *ProviderService) InspectRepository(ctx context.Context, userID string, request RepositoryInspectionRequest) (*InspectionResult, error) {

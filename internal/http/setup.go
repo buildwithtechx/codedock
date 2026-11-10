@@ -13,7 +13,7 @@ import (
 
 	"codedock/internal/adapters"
 	"codedock/internal/config"
-	"codedock/internal/engine/deploy"
+	"codedock/internal/deploy"
 	"codedock/internal/http/middleware"
 	aimod "codedock/internal/modules/ai"
 	appsmod "codedock/internal/modules/apps"

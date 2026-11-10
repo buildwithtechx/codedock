@@ -6,7 +6,7 @@ import (
 	"fmt"
 	"io"
 
-	"codedock/internal/engine/deploy"
+	"codedock/internal/deploy"
 	appsmod "codedock/internal/modules/apps"
 	"codedock/internal/modules/audit"
 	deploymentsmod "codedock/internal/modules/deployments"

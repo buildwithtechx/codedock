@@ -40,13 +40,14 @@
 
 ## Go Conventions & Architecture
 
-- **Layered Monolith Architecture (`internal/`):** All Go code inside `internal/` must be organized by clean functional layers:
-  - `internal/models/` — ALL domain structs, DTOs, and database entities (no circular imports).
-  - `internal/repositories/` — ALL database persistence, SQL interfaces, and Postgres implementations (`project.go`, `user.go`, `auth.go`).
-  - `internal/services/` — ALL business logic and external integrations (`auth.go`, `git.go`, `deploy.go`).
-  - `internal/handlers/` — ALL HTTP controllers and Echo route handlers (`auth.go`, `project.go`, `oauth.go`).
-  - `internal/http/` — HTTP server setup, routes, CORS, and auth middleware wiring.
-  - `internal/engine/` — Container engine, Docker deployer, runtime management, cron, and backup workers.
+- **Self-Contained Domain-Oriented Modular Monolith (`internal/`):**
+  - `internal/modules/` — Self-contained domain modules (`apps`, `auth`, `clusters`, `databases`, `deployments`, `git`, `monitoring`, `projects`, `servers`, `system`, `users`, etc.) containing models, repositories, services, handlers, and routes.
+  - `internal/platform/` — Infrastructure drivers and runtime execution utilities (`bare`, `build`, `database`, `docker`, `networking`, `notifications`, `observability`, `scheduler`, `ssh`, `storage`, `vault`).
+  - `internal/deploy/` — Container deployment runtime, rollout state machine, cutover decider, autoscaler.
+  - `internal/adapters/` — Integration adapters between modules and runtime engines.
+  - `internal/http/` — HTTP transport layer, Echo setup, CORS, and auth middleware wiring.
+  - **Strict File Size Cap:** Every `.go` file **MUST be <= 300 LOC**.
+  - **Zero Legacy Imports:** No imports of `internal/models`, `internal/repositories`, `internal/services`, `internal/handlers`, or `internal/engine`.
 - **Consumer-Defined Interfaces:** Define narrow interfaces where consumed (`Accept interfaces, return structs`).
 - **Max 350 lines per file:** If a file exceeds 350 lines, split into smaller focused files.
 - **No comments or GoDoc allowed:** Code must be self-explanatory without comments.

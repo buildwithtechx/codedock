@@ -7,8 +7,8 @@ import (
 	"sort"
 	"strings"
 
-	"codedock/internal/engine/build"
 	appsmod "codedock/internal/modules/apps"
+	"codedock/internal/platform/build"
 )
 
 // Regex to detect Docker Compose required variable syntax:

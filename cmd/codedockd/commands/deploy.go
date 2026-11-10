@@ -13,7 +13,7 @@ import (
 	"github.com/docker/docker/client"
 	"github.com/google/uuid"
 
-	"codedock/internal/engine/deploy"
+	"codedock/internal/deploy"
 	"codedock/internal/modules/apps"
 	"codedock/internal/modules/environments"
 	"codedock/internal/modules/projects"

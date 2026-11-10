@@ -1,7 +1,7 @@
 package clusters
 
 import (
-	"codedock/internal/engine/kubernetes"
+	"codedock/internal/modules/clusters/kubernetes"
 	"context"
 	"crypto/sha256"
 	"encoding/hex"
