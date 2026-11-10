@@ -11,7 +11,7 @@ import (
 
 	_ "github.com/jackc/pgx/v5/stdlib"
 
-	cdkdb "codedock/db"
+	cdkdb "codedock/internal/db"
 	"codedock/internal/platform/database"
 )
 

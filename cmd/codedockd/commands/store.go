@@ -9,7 +9,7 @@ import (
 
 	"github.com/docker/docker/client"
 
-	cdkdb "codedock/db"
+	cdkdb "codedock/internal/db"
 	"codedock/internal/config"
 	"codedock/internal/modules/apps"
 	"codedock/internal/modules/deployments"

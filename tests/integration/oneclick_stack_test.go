@@ -8,7 +8,7 @@ import (
 
 	"github.com/google/uuid"
 
-	cdkdb "codedock/db"
+	cdkdb "codedock/internal/db"
 	composemod "codedock/internal/modules/compose"
 	"codedock/internal/modules/environments"
 	"codedock/internal/modules/projects"

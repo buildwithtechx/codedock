@@ -9,7 +9,7 @@ import (
 	"net/http/httptest"
 	"testing"
 
-	cdkdb "codedock/db"
+	cdkdb "codedock/internal/db"
 	cdkhttp "codedock/internal/http"
 	authservices "codedock/internal/modules/auth"
 	"codedock/internal/modules/servers"

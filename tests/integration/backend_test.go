@@ -6,7 +6,7 @@ import (
 
 	"github.com/docker/docker/client"
 
-	cdkdb "codedock/db"
+	cdkdb "codedock/internal/db"
 	cdkhttp "codedock/internal/http"
 	"codedock/internal/testdb"
 	"codedock/internal/utils"
